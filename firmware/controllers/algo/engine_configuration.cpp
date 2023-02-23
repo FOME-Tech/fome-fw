@@ -995,7 +995,7 @@ void resetConfigurationExt(engine_type_e engineType) {
 
 void validateConfiguration() {
 	if (engineConfiguration->adcVcc > 5.0f || engineConfiguration->adcVcc < 1.0f) {
-		engineConfiguration->adcVcc = 3.ff;
+		engineConfiguration->adcVcc = 3.3f;
 	}
 	if (engineConfiguration->instantRpmRange == 0) {
         // todo: extract constant in instant_rpm_calculator.h?
