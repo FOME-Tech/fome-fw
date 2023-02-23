@@ -138,7 +138,15 @@ TEST(AirmassModes, FallbackMap) {
 	StrictMock<MockVp3d> mapFallback;
 
 	// Failed map -> use 75
-	EXPECT_CALL(mapFallback, getValue(5678, 20)).WillOnce(Return(75));
+	{
+		InSequence is;
+
+		// Working map -> return 33 (should be unused)
+		EXPECT_CALL(mapFallback, getValue(1234, 20)).WillOnce(Return(33));
+
+		// Failed map -> use 75
+		EXPECT_CALL(mapFallback, getValue(5678, 20)).WillOnce(Return(75));
+	}
 
 	EngineTestHelper eth(TEST_ENGINE);
 
