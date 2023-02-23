@@ -151,15 +151,8 @@ TEST(AirmassModes, FallbackMap) {
 	Sensor::setMockValue(SensorType::Map, 40);
 	EXPECT_FLOAT_EQ(dut.getMap(1234), 40);
 
-	// Failed MAP sensor, should use fixed value
-	Sensor::resetMockValue(SensorType::Map);
-	engineConfiguration->enableMapEstimationTableFallback = false;
-	engineConfiguration->failedMapFallback = 33;
-	EXPECT_FLOAT_EQ(dut.getMap(2345), 33);
-
 	// Failed MAP sensor, should use table
 	Sensor::resetMockValue(SensorType::Map);
-	engineConfiguration->enableMapEstimationTableFallback = true;
 	EXPECT_FLOAT_EQ(dut.getMap(5678), 75);
 }
 
