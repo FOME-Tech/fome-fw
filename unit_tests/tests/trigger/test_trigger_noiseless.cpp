@@ -79,7 +79,6 @@ static void fireNoisyCycle60_2(EngineTestHelper *eth, int numCycles, int duratio
 
 static void resetTrigger(EngineTestHelper &eth) {
 	eth.applyTriggerWaveform();
-	eth.engine.triggerCentral.noiseFilter.resetAccumSignalData();
 	// reset error counter
 	eth.engine.triggerCentral.triggerState.totalTriggerErrorCounter = 0;
 }
