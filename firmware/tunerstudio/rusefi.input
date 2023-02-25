@@ -4173,11 +4173,11 @@ dialog = tcuControls, "Transmission Settings"
 		field = "SENT sentEtbType",							sentEtbType
 
 	dialog = harleyAcr, "Harley Automatic Compression Release"
-		field = "Pin", acrPin
+		field = "Pin",	acrPin
 		field = "#ACR is disabled after the specified number"
 		field = "#of revolutions, plus degrees of engine phase"
-		field = "Disable after revolutions"
-		field = "Disable after engine phase"
+		field = "Disable after revolutions",	acrRevolutions
+		field = "Disable after engine phase",	acrDisablePhase
 
 	dialog = parkingLot, "Experimental/Broken"
 		field = "I understand ECU Locking",				yesUnderstandLocking

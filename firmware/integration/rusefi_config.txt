@@ -587,7 +587,7 @@ custom spi_device_e 1 bits, U08, @OFFSET@, [0:2], "Off", "SPI1", "SPI2", "SPI3",
 adc_channel_e throttlePedalPositionAdcChannel;Throttle pedal position first channel
 	pin_output_mode_e tle6240_csPinMode;
 
-	uint8_t acrRevolutions;;"", 1, 0, 0, 0, 10
+	uint8_t acrRevolutions;;"", 1, 0, 0, 10, 0
 
 float globalFuelCorrection;;"coef", 1, 0, 0, 1000, 2
 
