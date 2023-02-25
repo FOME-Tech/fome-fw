@@ -44,10 +44,16 @@ static bool getAcrState() {
 void HarleyAcr::onSlowCallback() {
 	// skip if no pin
 	if (!isBrainPinValid(engineConfiguration->acrPin)) {
+		m_active = false;
 		return;
 	}
 
 	bool acrState = getAcrState();
 	engine->outputChannels.acrActive = acrState;
 	enginePins.harleyAcr.setValue(acrState);
+	m_active = acrState;
+}
+
+bool HarleyAcr::isActive() const {
+	return m_active;
 }
