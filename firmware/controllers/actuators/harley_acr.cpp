@@ -21,13 +21,13 @@ static bool getAcrState() {
 		return false;
 	}
 
-	float wrappedPhase = currentPhase.Value > 360 ? currentPhase.Value - 360 : currentPhase.Value;
-
 	int revCount = getTriggerCentral()->triggerState.getCrankSynchronizationCounter();
 	if (revCount > engineConfiguration->acrRevolutions) {
 		// Enough revs have elapsed that we're done with ACR
 		return false;
 	} else if (revCount == engineConfiguration->acrRevolutions) {
+		float wrappedPhase = currentPhase.Value > 360 ? currentPhase.Value - 360 : currentPhase.Value;
+
 		// We're on the rev where ACR should be disabled part way through
 		if (wrappedPhase > engineConfiguration->acrDisablePhase) {
 			return false;
