@@ -106,7 +106,13 @@ bool RegisteredOutputPin::isPinConfigurationChanged() {
 
 void RegisteredOutputPin::init() {
 	brain_pin_e        newPin = *(brain_pin_e       *) ((void *) (&((char*) engineConfiguration)[m_pinOffset]));
-    pin_output_mode_e *newMode = (pin_output_mode_e *) ((void *) (&((char*) engineConfiguration)[m_pinModeOffset]));
+
+	pin_output_mode_e* newMode;
+	if (m_hasPinMode) {
+		newMode = (pin_output_mode_e *) ((void *) (&((char*) engineConfiguration)[m_pinModeOffset]));
+	} else {
+		newMode = &DEFAULT_OUTPUT;
+	}
 
     if (isPinConfigurationChanged()) {
 		this->initPin(registrationName, newPin, newMode);
