@@ -67,8 +67,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->displayLogicLevelsInEngineSniffer;
 		case -647008743:
 			return engineConfiguration->useTLE8888_stepper;
-		case 1992465535:
-			return engineConfiguration->enableMapEstimationTableFallback;
 		case 671821024:
 			return engineConfiguration->usescriptTableForCanSniffingFiltering;
 		case -1073210355:
@@ -181,8 +179,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->trigger.customSkippedToothCount;
 		case 2070727975:
 			return engineConfiguration->airByRpmTaper;
-		case -1730107688:
-			return engineConfiguration->failedMapFallback;
 		case -1965075262:
 			return engineConfiguration->boostControlSafeDutyCycle;
 		case 1371979578:
@@ -251,8 +247,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->rusefiVerbose29b;
 		case -956913549:
 			return engineConfiguration->isVerboseAlternator;
-		case -1055678778:
-			return engineConfiguration->verboseQuad;
 		case -920116109:
 			return engineConfiguration->useStepperIdle;
 		case -2068213709:
@@ -275,8 +269,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->coastingFuelCutEnabled;
 		case -2101952506:
 			return engineConfiguration->useIacTableForCoasting;
-		case 957244017:
-			return engineConfiguration->useNoiselessTriggerDecoder;
 		case 11736566:
 			return engineConfiguration->useIdleTimingPidControl;
 		case -2096650725:
@@ -1159,11 +1151,6 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->useTLE8888_stepper = (int)value;
 		return;
 	}
-		case 1992465535:
-	{
-		engineConfiguration->enableMapEstimationTableFallback = (int)value;
-		return;
-	}
 		case 671821024:
 	{
 		engineConfiguration->usescriptTableForCanSniffingFiltering = (int)value;
@@ -1321,7 +1308,7 @@ void setConfigValueByName(const char *name, float value) {
 	}
 		case -962678774:
 	{
-		engineConfiguration->specs.displacement = value;
+		engineConfiguration->specs.displacement = (int)value;
 		return;
 	}
 		case -601272985:
@@ -1396,12 +1383,12 @@ void setConfigValueByName(const char *name, float value) {
 	}
 		case -853358747:
 	{
-		engineConfiguration->fanOnTemperature = value;
+		engineConfiguration->fanOnTemperature = (int)value;
 		return;
 	}
 		case 4686563:
 	{
-		engineConfiguration->fanOffTemperature = value;
+		engineConfiguration->fanOffTemperature = (int)value;
 		return;
 	}
 		case 991724096:
@@ -1444,11 +1431,6 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->airByRpmTaper = value;
 		return;
 	}
-		case -1730107688:
-	{
-		engineConfiguration->failedMapFallback = (int)value;
-		return;
-	}
 		case -1965075262:
 	{
 		engineConfiguration->boostControlSafeDutyCycle = (int)value;
@@ -1471,22 +1453,22 @@ void setConfigValueByName(const char *name, float value) {
 	}
 		case -241663117:
 	{
-		engineConfiguration->afr.v1 = value;
+		engineConfiguration->afr.v1 = (int)value;
 		return;
 	}
 		case 1273287930:
 	{
-		engineConfiguration->afr.value1 = value;
+		engineConfiguration->afr.value1 = (int)value;
 		return;
 	}
 		case -241663116:
 	{
-		engineConfiguration->afr.v2 = value;
+		engineConfiguration->afr.v2 = (int)value;
 		return;
 	}
 		case 1273287931:
 	{
-		engineConfiguration->afr.value2 = value;
+		engineConfiguration->afr.value2 = (int)value;
 		return;
 	}
 		case 1474689568:
@@ -1619,11 +1601,6 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->isVerboseAlternator = (int)value;
 		return;
 	}
-		case -1055678778:
-	{
-		engineConfiguration->verboseQuad = (int)value;
-		return;
-	}
 		case -920116109:
 	{
 		engineConfiguration->useStepperIdle = (int)value;
@@ -1677,11 +1654,6 @@ void setConfigValueByName(const char *name, float value) {
 		case -2101952506:
 	{
 		engineConfiguration->useIacTableForCoasting = (int)value;
-		return;
-	}
-		case 957244017:
-	{
-		engineConfiguration->useNoiselessTriggerDecoder = (int)value;
 		return;
 	}
 		case 11736566:
