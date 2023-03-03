@@ -41,7 +41,8 @@ float getAfr(SensorType type) {
 			+ engineConfiguration->egoValueShift;
 }
 
-static void initEgoSensor(afr_sensor_s *sensor, ego_sensor_e type) {
+void setEgoSensor(ego_sensor_e type) {
+	auto sensor = &engineConfiguration->afr;
 
 	switch (type) {
 	case ES_BPSX_D1:
@@ -77,9 +78,4 @@ static void initEgoSensor(afr_sensor_s *sensor, ego_sensor_e type) {
 		firmwareError(CUSTOM_EGO_TYPE, "Unexpected EGO %d", type);
 		break;
 	}
-}
-
-void setEgoSensor(ego_sensor_e type) {
-	engineConfiguration->afr_type = type;
-	initEgoSensor(&engineConfiguration->afr, type);
 }
