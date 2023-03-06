@@ -9,10 +9,8 @@
 
 #include "rusefi_types.h"
 
-void updateDevConsoleState(void);
-void startStatusThreads(void);
-void initStatusLoop(void);
-
-struct Writer;
+void updateDevConsoleState();
+void startStatusThreads();
+void initStatusLoop();
 
 void printOverallStatus();

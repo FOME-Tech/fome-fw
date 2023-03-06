@@ -414,7 +414,7 @@ injector_s injector
 
 bit isForcedInduction;Does the vehicle have a turbo or supercharger?
 bit useFordRedundantTps;On some Ford and Toyota vehicles one of the throttle sensors is not linear on the full range, i.e. in the specific range of the positions we effectively have only one sensor.
-bit isVerboseAuxPid1
+bit unused88b2
 bit overrideTriggerGaps
 bit enableFan1WithAc;Turn on this fan when AC is on.
 bit enableFan2WithAc;Turn on this fan when AC is on.
@@ -1437,6 +1437,8 @@ pin_output_mode_e tcu_32_solenoid_pin_mode
 pwm_freq_t tcu_pc_solenoid_freq
 output_pin_e tcu_32_solenoid_pin
 pwm_freq_t tcu_32_solenoid_freq
+
+output_pin_e acrPin2;
 
 float etbMinimumPosition;;"%", 1, 0, 0.01, 100, 2
 
