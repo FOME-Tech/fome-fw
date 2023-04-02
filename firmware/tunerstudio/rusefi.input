@@ -762,28 +762,28 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		columnLabel = "param", "bias"
 		xAxis = 0, 100, 11
 		yAxis = 0, 100, 5
-		xBins = boostOpenLoopBlends1_blendBins, boostOpenLoopBlends1_blendVal
+		xBins = boostOpenLoopBlends1_blendBins, boostOpenLoopBlendParameter1
 		yBins = boostOpenLoopBlends1_blendValues
 
 	curve = boostOpenLoopBlend2Bias, "Boost open loop blend 2 bias"
 		columnLabel = "param", "bias"
 		xAxis = 0, 100, 11
 		yAxis = 0, 100, 5
-		xBins = boostOpenLoopBlends2_blendBins, boostOpenLoopBlends2_blendVal
+		xBins = boostOpenLoopBlends2_blendBins, boostOpenLoopBlendParameter2
 		yBins = boostOpenLoopBlends2_blendValues
 
 	curve = boostClosedLoopBlend1Bias, "Boost Closed loop blend 1 bias"
 		columnLabel = "param", "bias"
 		xAxis = 0, 100, 11
 		yAxis = 0, 100, 5
-		xBins = boostClosedLoopBlends1_blendBins, boostClosedLoopBlends1_blendVal
+		xBins = boostClosedLoopBlends1_blendBins, boostClosedLoopBlendParameter1
 		yBins = boostClosedLoopBlends1_blendValues
 
 	curve = boostClosedLoopBlend2Bias, "Boost Closed loop blend 2 bias"
 		columnLabel = "param", "bias"
 		xAxis = 0, 100, 11
 		yAxis = 0, 100, 5
-		xBins = boostClosedLoopBlends2_blendBins, boostClosedLoopBlends2_blendVal
+		xBins = boostClosedLoopBlends2_blendBins, boostClosedLoopBlendParameter2
 		yBins = boostClosedLoopBlends2_blendValues
 
 	curve = throttleEffectiveArea, "Throttle effective area"

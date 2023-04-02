@@ -73,6 +73,7 @@ expected<float> BoostController::getSetpoint() {
 	for (size_t i = 0; i < efi::size(config->boostClosedLoopBlends); i++) {
 		auto result = calculateBlend(config->boostClosedLoopBlends[i], rpm, driverIntent.Value);
 
+		engine->outputChannels.boostClosedLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostClosedLoopBlendBias[i] = result.Bias;
 		engine->outputChannels.boostClosedLoopBlendOutput[i] = result.Value;
 
@@ -103,6 +104,7 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 	for (size_t i = 0; i < efi::size(config->boostOpenLoopBlends); i++) {
 		auto result = calculateBlend(config->boostOpenLoopBlends[i], rpm, driverIntent.Value);
 
+		engine->outputChannels.boostOpenLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostOpenLoopBlendBias[i] = result.Bias;
 		engine->outputChannels.boostOpenLoopBlendOutput[i] = result.Value;
 
