@@ -1764,14 +1764,14 @@ menuDialog = main
 		subMenu = boostTargetDialog,	"Boost control target", { isBoostControlEnabled && boostType == 1 }
 
 		groupMenu = "Boost blend tables"
-		groupChildMenu = boostOpenBlend1Cfg,		"Open loop 1 bias"
-		groupChildMenu = boostOpenBlend1Table,		"Open loop 1 adder"
-		groupChildMenu = boostOpenBlend2Cfg,		"Open loop 2 bias"
-		groupChildMenu = boostOpenBlend2Table,		"Open loop 2 adder"
-		groupChildMenu = boostClosedBlend1Cfg,		"Closed loop 1 bias"
-		groupChildMenu = boostClosedBlend2Table,	"Closed loop 1 adder"
-		groupChildMenu = boostClosedBlend2Cfg,		"Closed loop 2 bias"
-		groupChildMenu = boostClosedBlend2Table,	"Closed loop 2 adder"
+		groupChildMenu = boostOpenBlend1Cfg,		"Open loop 1 bias",		{ isBoostControlEnabled }
+		groupChildMenu = boostOpenBlend1Table,		"Open loop 1 adder",	{ isBoostControlEnabled && boostOpenLoopBlends1_blendParameter != 0 }
+		groupChildMenu = boostOpenBlend2Cfg,		"Open loop 2 bias",		{ isBoostControlEnabled }
+		groupChildMenu = boostOpenBlend2Table,		"Open loop 2 adder",	{ isBoostControlEnabled && boostOpenLoopBlends2_blendParameter != 0 }
+		groupChildMenu = boostClosedBlend1Cfg,		"Closed loop 1 bias",	{ isBoostControlEnabled && boostType == 1 }
+		groupChildMenu = boostClosedBlend2Table,	"Closed loop 1 adder",	{ isBoostControlEnabled && boostType == 1 && boostClosedLoopBlends1_blendParameter != 0 }
+		groupChildMenu = boostClosedBlend2Cfg,		"Closed loop 2 bias",	{ isBoostControlEnabled && boostType == 1 }
+		groupChildMenu = boostClosedBlend2Table,	"Closed loop 2 adder",	{ isBoostControlEnabled && boostType == 1 && boostClosedLoopBlends2_blendParameter != 0 }
 
 		subMenu = boostEtbPid,			"ETB-style Wastegate Actuator", { etbFunctions1 == @@dc_function_e_DC_Wastegate@@ || etbFunctions2 == @@dc_function_e_DC_Wastegate@@ }
 
