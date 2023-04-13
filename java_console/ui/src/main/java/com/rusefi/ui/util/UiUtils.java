@@ -57,7 +57,7 @@ public class UiUtils {
     }
 
     private static BufferedImage getScreenShot(Component component) {
-        AutoupdateUtil.assertAwtThread();
+        assertAwtThread();
         // http://stackoverflow.com/questions/5853879/swing-obtain-image-of-jframe/5853992
         BufferedImage image = new BufferedImage(component.getWidth(), component.getHeight(), BufferedImage.TYPE_INT_RGB);
         // call the Component's paint method, using
@@ -93,7 +93,40 @@ public class UiUtils {
      * todo: one 'trueXXX' method should be enough, which one?
      */
     public static void trueLayout(Component component) {
-        AutoupdateUtil.trueLayout(component);
+        assertAwtThread();
+        if (component == null)
+            return;
+        component.invalidate();
+        component.validate();
+        component.repaint();
+    }
+
+    private static void assertAwtThread() {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            Exception e = new IllegalStateException("Not on AWT thread but " + Thread.currentThread().getName());
+
+            StringBuilder trace = new StringBuilder(e + "\n");
+            for(StackTraceElement element : e.getStackTrace())
+                trace.append(element.toString()).append("\n");
+            SwingUtilities.invokeLater(() -> {
+                Window w = getSelectedWindow(Window.getWindows());
+                JOptionPane.showMessageDialog(w, trace, "Error", JOptionPane.ERROR_MESSAGE);
+            });
+        }
+    }
+
+    private static Window getSelectedWindow(Window[] windows) {
+        for (Window window : windows) {
+            if (window.isActive()) {
+                return window;
+            } else {
+                Window[] ownedWindows = window.getOwnedWindows();
+                if (ownedWindows != null) {
+                    return getSelectedWindow(ownedWindows);
+                }
+            }
+        }
+        return null;
     }
 
     public static java.util.List<Component> getAllComponents(final Container c) {
@@ -121,7 +154,10 @@ public class UiUtils {
     }
 
     public static JComponent wrap(JComponent component) {
-        return AutoupdateUtil.wrap(component);
+        AutoupdateUtil.assertAwtThread();
+        JPanel result = new JPanel();
+        result.add(component);
+        return result;
     }
 
     public static JButton createSaveImageButton() {

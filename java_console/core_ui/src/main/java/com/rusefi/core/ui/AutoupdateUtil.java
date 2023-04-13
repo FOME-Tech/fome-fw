@@ -21,13 +21,6 @@ public class AutoupdateUtil {
     // todo: figure out a better way to work with absolute path
     private static final String APPICON = "/appicon.png";
 
-    public static JComponent wrap(JComponent component) {
-        AutoupdateUtil.assertAwtThread();
-        JPanel result = new JPanel();
-        result.add(component);
-        return result;
-    }
-
     static class ProgressView {
         private final FrameHelper frameHelper;
         private final JProgressBar progressBar;
@@ -119,43 +112,6 @@ public class AutoupdateUtil {
         );
     }
 
-    public static void trueLayout(Component component) {
-        assertAwtThread();
-        if (component == null)
-            return;
-        component.invalidate();
-        component.validate();
-        component.repaint();
-    }
-
-    private static Window getSelectedWindow(Window[] windows) {
-        for (Window window : windows) {
-            if (window.isActive()) {
-                return window;
-            } else {
-                Window[] ownedWindows = window.getOwnedWindows();
-                if (ownedWindows != null) {
-                    return getSelectedWindow(ownedWindows);
-                }
-            }
-        }
-        return null;
-    }
-
-    public static void assertAwtThread() {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            Exception e = new IllegalStateException("Not on AWT thread but " + Thread.currentThread().getName());
-
-            StringBuilder trace = new StringBuilder(e + "\n");
-            for(StackTraceElement element : e.getStackTrace())
-                trace.append(element.toString()).append("\n");
-            SwingUtilities.invokeLater(() -> {
-                Window w = getSelectedWindow(Window.getWindows());
-                JOptionPane.showMessageDialog(w, trace, "Error", JOptionPane.ERROR_MESSAGE);
-            });
-        }
-    }
-
     public static boolean hasExistingFile(String zipFileName, long completeFileSize, long lastModified) {
         File file = new File(zipFileName);
         System.out.println("We have " + file.length() + " " + new Date(file.lastModified()) + " " + file.getAbsolutePath());
@@ -179,12 +135,5 @@ public class AutoupdateUtil {
         ImageIcon icon = loadIcon(APPICON);
         if (icon != null)
             frame.setIconImage(icon.getImage());
-    }
-
-    public static void pack(Window window) {
-        trueLayout(window);
-        if (window != null)
-            window.pack();
-        trueLayout(window);
     }
 }
