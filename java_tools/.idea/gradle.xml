@@ -10,7 +10,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/../java_console/autotest" />
-            <option value="$PROJECT_DIR$/../java_console/autoupdate" />
             <option value="$PROJECT_DIR$/../java_console/core_ui" />
             <option value="$PROJECT_DIR$/../java_console/inifile" />
             <option value="$PROJECT_DIR$/../java_console/io" />
@@ -25,8 +24,6 @@
             <option value="$PROJECT_DIR$/bin2header" />
             <option value="$PROJECT_DIR$/configuration_definition" />
             <option value="$PROJECT_DIR$/enum_to_string" />
-            <option value="$PROJECT_DIR$/gcc_map_reader" />
-            <option value="$PROJECT_DIR$/logicdata2c" />
           </set>
         </option>
       </GradleProjectSettings>

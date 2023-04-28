@@ -29,11 +29,11 @@ WarningCodeState::WarningCodeState() {
 
 void WarningCodeState::clear() {
 	warningCounter = 0;
-	lastErrorCode = 0;
+	lastErrorCode = ObdCode::None;
 	recentWarnings.clear();
 }
 
-void WarningCodeState::addWarningCode(obd_code_e code) {
+void WarningCodeState::addWarningCode(ObdCode code) {
 	warningCounter++;
 	lastErrorCode = code;
 
@@ -65,7 +65,7 @@ bool WarningCodeState::isWarningNow() const {
 }
 
 // Check whether a particular warning is active
-bool WarningCodeState::isWarningNow(obd_code_e code) const {
+bool WarningCodeState::isWarningNow(ObdCode code) const {
 	warning_t* warn = recentWarnings.find(code);
 
 	// No warning found at all
@@ -110,7 +110,7 @@ void EngineState::periodicFastCallback() {
 
 #if EFI_ENGINE_CONTROL
 	if (!engine->slowCallBackWasInvoked) {
-		warning(CUSTOM_SLOW_NOT_INVOKED, "Slow not invoked yet");
+		warning(ObdCode::CUSTOM_SLOW_NOT_INVOKED, "Slow not invoked yet");
 	}
 	efitick_t nowNt = getTimeNowNt();
 	
@@ -234,7 +234,7 @@ bool isLockedFromUser() {
 	int lock = engineConfiguration->tuneHidingKey;
 	bool isLocked = lock > 0;
 	if (isLocked) {
-		firmwareError(OBD_PCM_Processor_Fault, "password protected");
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "password protected");
 	}
 	return isLocked;
 }

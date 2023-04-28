@@ -33,7 +33,7 @@ static void testCritical() {
 }
 
 static void myerror() {
-	firmwareError(CUSTOM_ERR_TEST_ERROR, "firmwareError: %d", getRusEfiVersion());
+	firmwareError(ObdCode::CUSTOM_ERR_TEST_ERROR, "firmwareError: %d", getRusEfiVersion());
 }
 
 static void sayHello() {
@@ -78,7 +78,7 @@ static void sayHello() {
 
 	int flashSize = TM_ID_GetFlashSize();
 	if (flashSize < MIN_FLASH_SIZE) {
-		firmwareError(OBD_PCM_Processor_Fault, "Expected at least %dK of flash but found %dK", MIN_FLASH_SIZE, flashSize);
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Expected at least %dK of flash but found %dK", MIN_FLASH_SIZE, flashSize);
 	}
 
 	// todo: bug, at the moment we report 1MB on dual-bank F7
@@ -91,7 +91,7 @@ static void sayHello() {
 	chThdSleepMilliseconds(5);
 }
 
-void validateStack(const char*msg, obd_code_e code, int desiredStackUnusedSize) {
+void validateStack(const char*msg, ObdCode code, int desiredStackUnusedSize) {
 #if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 	int unusedStack = CountFreeStackSpace(chThdGetSelfX()->wabase);
 	if (unusedStack < desiredStackUnusedSize) {
@@ -132,7 +132,7 @@ static void cmd_threads() {
 		efiPrintf("%s\t%08x\t%lu\t%d", tp->name, tp->wabase, tp->time, freeBytes);
 
 		if (freeBytes < 100) {
-			firmwareError(OBD_PCM_Processor_Fault, "Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
+			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
 		}
 
 		tp = chRegNextThread(tp);

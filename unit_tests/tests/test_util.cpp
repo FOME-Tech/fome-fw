@@ -10,7 +10,6 @@
 #include <string.h>
 
 #include "cyclic_buffer.h"
-#include "histogram.h"
 
 #include "malfunction_central.h"
 #include "cli_registry.h"
@@ -93,60 +92,19 @@ TEST(util, cyclicBuffer) {
 
 }
 
-TEST(util, histogram) {
-	initHistogramsModule();
-
-	ASSERT_EQ(80, histogramGetIndex(239));
-	ASSERT_EQ(223, histogramGetIndex(239239));
-	ASSERT_EQ(364, histogramGetIndex(239239239));
-
-	histogram_s h;
-
-	initHistogram(&h, "test");
-
-	int result[5];
-	ASSERT_EQ(0, hsReport(&h, result));
-
-	hsAdd(&h, 10);
-	ASSERT_EQ(1, hsReport(&h, result));
-	ASSERT_EQ(10, result[0]);
-
-	// let's add same value one more time
-	hsAdd(&h, 10);
-	ASSERT_EQ(2, hsReport(&h, result));
-	ASSERT_EQ(10, result[0]);
-	ASSERT_EQ(10, result[1]);
-
-	hsAdd(&h, 10);
-	hsAdd(&h, 10);
-	hsAdd(&h, 10);
-
-	hsAdd(&h, 1000);
-	hsAdd(&h, 100);
-
-	ASSERT_EQ(5, hsReport(&h, result));
-
-	ASSERT_EQ(5, result[0]);
-	ASSERT_EQ(10, result[1]);
-	ASSERT_EQ(10, result[2]);
-	ASSERT_EQ(100, result[3]);
-	// values are not expected to be exactly the same, it's the shape what matters
-	ASSERT_EQ(1011, result[4]);
-}
-
 static void testMalfunctionCentralRemoveNonExistent() {
 	clearWarnings();
 
 	// this should not crash
-	removeError(OBD_TPS1_Correlation);
+	removeError(ObdCode::OBD_TPS1_Correlation);
 }
 
 static void testMalfunctionCentralSameElementAgain() {
 	clearWarnings();
 	error_codes_set_s localCopy;
 
-	addError(OBD_TPS1_Correlation);
-	addError(OBD_TPS1_Correlation);
+	addError(ObdCode::OBD_TPS1_Correlation);
+	addError(ObdCode::OBD_TPS1_Correlation);
 	getErrorCodes(&localCopy);
 	ASSERT_EQ(1, localCopy.count);
 }
@@ -155,10 +113,10 @@ static void testMalfunctionCentralRemoveFirstElement() {
 	clearWarnings();
 	error_codes_set_s localCopy;
 
-	obd_code_e firstElement = OBD_TPS1_Correlation;
+	ObdCode firstElement = ObdCode::OBD_TPS1_Correlation;
 	addError(firstElement);
 
-	obd_code_e secondElement = OBD_TPS2_Correlation;
+	ObdCode secondElement = ObdCode::OBD_TPS2_Correlation;
 	addError(secondElement);
 	getErrorCodes(&localCopy);
 	ASSERT_EQ(2, localCopy.count);
@@ -184,7 +142,7 @@ TEST(misc, testMalfunctionCentral) {
 	getErrorCodes(&localCopy);
 	ASSERT_EQ(0, localCopy.count);
 
-	obd_code_e code = OBD_TPS1_Correlation;
+	ObdCode code = ObdCode::OBD_TPS1_Correlation;
 	// let's add one error and validate
 	addError(code);
 
@@ -193,18 +151,18 @@ TEST(misc, testMalfunctionCentral) {
 	ASSERT_EQ(code, localCopy.error_codes[0]);
 
 	// let's remove value which is not in the collection
-	removeError((obd_code_e) 22);
+	removeError((ObdCode) 22);
 	// element not present - nothing to removed
 	ASSERT_EQ(1, localCopy.count);
 	ASSERT_EQ(code, localCopy.error_codes[0]);
 
-	code = OBD_TPS2_Correlation;
+	code = ObdCode::OBD_TPS2_Correlation;
 	addError(code);
 	getErrorCodes(&localCopy);
 	// todo:	ASSERT_EQ(2, localCopy.count);
 
 	for (int code = 0; code < 100; code++) {
-		addError((obd_code_e) code);
+		addError((ObdCode) code);
 	}
 	getErrorCodes(&localCopy);
 	ASSERT_EQ(MAX_ERROR_CODES_COUNT, localCopy.count);

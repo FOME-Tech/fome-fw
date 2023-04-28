@@ -4,19 +4,7 @@
  * Handles injection scheduling
  */
 
-#include "global.h"
-#include <rusefi/arrays.h>
-#include <rusefi/isnan.h>
-#include "fuel_schedule.h"
-#include "event_registry.h"
-#include "fuel_schedule.h"
-#include "trigger_decoder.h"
-#include "engine_math.h"
-
-// dependency injection
-#include "engine_state.h"
-#include "rpm_calculator_api.h"
-// end of injection
+#include "pch.h"
 
 #if EFI_ENGINE_CONTROL
 
@@ -55,18 +43,18 @@ static float getInjectionAngleCorrection(float fuelMs, float oneDegreeUs) {
 		return 0;
 	}
 
-	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(fuelMs), "NaN fuelMs", false);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(fuelMs), "NaN fuelMs", false);
 
 	angle_t injectionDurationAngle = MS2US(fuelMs) / oneDegreeUs;
-	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(injectionDurationAngle), "NaN injectionDurationAngle", false);
-	assertAngleRange(injectionDurationAngle, "injectionDuration_r", CUSTOM_INJ_DURATION);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(injectionDurationAngle), "NaN injectionDurationAngle", false);
+	assertAngleRange(injectionDurationAngle, "injectionDuration_r", ObdCode::CUSTOM_INJ_DURATION);
 
 	if (mode == InjectionTimingMode::Center) {
 		// Center of injection is half-corrected for duration
 		return injectionDurationAngle * 0.5f;
 	} else {
-			// End of injection gets "full correction" so we advance opening by the full duration
-			return injectionDurationAngle;
+		// End of injection gets "full correction" so we advance opening by the full duration
+		return injectionDurationAngle;
 	}
 }
 
@@ -96,15 +84,15 @@ expected<float> InjectionEvent::computeInjectionAngle(int cylinderIndex) const {
 	}
 
 	angle_t openingAngle = injectionOffset - injectionDurationAngle;
-	assertAngleRange(openingAngle, "openingAngle_r", CUSTOM_ERR_6554);
+	assertAngleRange(openingAngle, "openingAngle_r", ObdCode::CUSTOM_ERR_6554);
 
 	// Convert from cylinder-relative to cylinder-1-relative
 	openingAngle += getCylinderAngle(cylinderIndex, cylinderNumber);
 
-	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(openingAngle), "findAngle#3", false);
-	assertAngleRange(openingAngle, "findAngle#a33", CUSTOM_ERR_6544);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(openingAngle), "findAngle#3", false);
+	assertAngleRange(openingAngle, "findAngle#a33", ObdCode::CUSTOM_ERR_6544);
 
-	wrapAngle2(openingAngle, "addFuel#2", CUSTOM_ERR_6555, getEngineCycle(getEngineRotationState()->getOperationMode()));
+	wrapAngle2(openingAngle, "addFuel#2", ObdCode::CUSTOM_ERR_6555, getEngineCycle(getEngineRotationState()->getOperationMode()));
 
 #if EFI_UNIT_TEST
 	printf("registerInjectionEvent openingAngle=%.2f inj %d\r\n", openingAngle, cylinderNumber);
@@ -137,6 +125,7 @@ bool FuelSchedule::addFuelEventsForCylinder(int i) {
 	}
 
 	injection_mode_e mode = getCurrentInjectionMode();
+	engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
 
 	// We need two outputs if:
 	// - we are running batch fuel, and have "use two wire batch" enabled
@@ -155,7 +144,7 @@ bool FuelSchedule::addFuelEventsForCylinder(int i) {
 		// Loop over the first half of the firing order twice
 		injectorIndex = i % (engineConfiguration->cylindersCount / 2);
 	} else {
-		firmwareError(CUSTOM_OBD_UNEXPECTED_INJECTION_MODE, "Unexpected injection mode %d", mode);
+		firmwareError(ObdCode::CUSTOM_OBD_UNEXPECTED_INJECTION_MODE, "Unexpected injection mode %d", mode);
 		injectorIndex = 0;
 	}
 

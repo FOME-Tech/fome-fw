@@ -291,12 +291,9 @@ INCDIR = \
   $(TESTINC) \
   $(BOOTLOADERINC) \
   $(CHIBIOS)/os/various \
-  $(CHIBIOS)/os/hal/lib/peripherals/sensors \
   $(RUSEFI_LIB_INC) \
   $(CONFDIR) \
   ext/FatFS \
-  $(PROJECT_DIR)/hw_layer/mass_storage \
-  $(PROJECT_DIR)/hw_layer/serial_over_usb \
   $(PROJECT_DIR)/hw_layer/mass_storage \
   $(HW_INC) \
   development/hw_layer \
@@ -384,7 +381,3 @@ openblt_clean:
 # Enable precompiled header
 include $(PROJECT_DIR)/rusefi_pch.mk
 include $(PROJECT_DIR)/gitversion.mk
-
-POST_MAKE_ALL_RULE_HOOK: $(BUILDDIR)/$(PROJECT).elf
-	@java -jar ../java_tools/gcc_map_reader.jar $(BUILDDIR)/$(PROJECT).map | grep Total || echo Unable to run gcc_map_reader
-	@$(TRGT)objdump -h $(BUILDDIR)/$(PROJECT).elf | grep -w ram4

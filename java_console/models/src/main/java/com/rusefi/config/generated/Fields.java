@@ -368,7 +368,7 @@ public class Fields {
 	public static final int ETB_BIAS_CURVE_LENGTH = 8;
 	public static final int ETB_COUNT = 2;
 	public static final int ETB_HW_MAX_FREQUENCY = 3000;
-	public static final int FLASH_DATA_VERSION = 20004;
+	public static final int FLASH_DATA_VERSION = 20005;
 	public static final int FUEL_LEVEL_TABLE_COUNT = 8;
 	public static final int FUEL_LOAD_COUNT = 16;
 	public static final int fuel_pressure_sensor_mode_e_FPM_Absolute = 0;
@@ -1194,7 +1194,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.04.02.f407-discovery.3084666459";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.04.28.f407-discovery.3483407254";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final char TS_TEST_COMMAND = 't';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1384;
@@ -2357,7 +2357,8 @@ public class Fields {
 	public static final Field LUADIGITALINPUTPINMODES6 = Field.create("LUADIGITALINPUTPINMODES6", 3665, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field LUADIGITALINPUTPINMODES7 = Field.create("LUADIGITALINPUTPINMODES7", 3666, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field LUADIGITALINPUTPINMODES8 = Field.create("LUADIGITALINPUTPINMODES8", 3667, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
-	public static final Field MAINUNUSEDEND = Field.create("MAINUNUSEDEND", 3668, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field RPMHARDLIMITHYST = Field.create("RPMHARDLIMITHYST", 3668, FieldType.INT8).setScale(10.0).setBaseOffset(0);
+	public static final Field MAINUNUSEDEND = Field.create("MAINUNUSEDEND", 3669, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field ETBBIASBINS = Field.create("ETBBIASBINS", 3764, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field ETBBIASVALUES = Field.create("ETBBIASVALUES", 3796, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field IACPIDMULTTABLE = Field.create("IACPIDMULTTABLE", 3828, FieldType.INT8).setScale(0.05).setBaseOffset(0);
@@ -3669,6 +3670,7 @@ public class Fields {
 	LUADIGITALINPUTPINMODES6,
 	LUADIGITALINPUTPINMODES7,
 	LUADIGITALINPUTPINMODES8,
+	RPMHARDLIMITHYST,
 	MAINUNUSEDEND,
 	ETBBIASBINS,
 	ETBBIASVALUES,

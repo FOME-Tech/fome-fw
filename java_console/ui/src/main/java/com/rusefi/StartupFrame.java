@@ -4,10 +4,8 @@ import com.devexperts.logging.Logging;
 import com.rusefi.autodetect.PortDetector;
 import com.rusefi.autodetect.SerialAutoChecker;
 import com.rusefi.core.io.BundleUtil;
-import com.rusefi.core.ui.AutoupdateUtil;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.serial.BaudRateHolder;
-import com.rusefi.maintenance.DriverInstall;
 import com.rusefi.maintenance.ExecHelper;
 import com.rusefi.maintenance.ProgramSelector;
 import com.rusefi.ui.util.HorizontalLine;
@@ -84,7 +82,8 @@ public class StartupFrame {
                 }
             }
         });
-        AutoupdateUtil.setAppIcon(frame);
+        frame.setResizable(false);
+        UiUtils.setAppIcon(frame);
     }
 
     @NotNull
@@ -96,13 +95,6 @@ public class StartupFrame {
     public void chooseSerialPort() {
         realHardwarePanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(Color.darkGray), "Real stm32"));
         miscPanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(Color.darkGray), "Miscellaneous"));
-
-        if (FileLog.isWindows()) {
-            setToolTip(comboPorts, "Use 'Device Manager' icon above to launch Device Manager",
-                    "In 'Ports' section look for ",
-                    "'STMicroelectronics Virtual COM Port' for USB port",
-                    "'USB Serial Port' for TTL port");
-        }
 
         connectPanel.add(comboPorts);
         final JComboBox<String> comboSpeeds = createSpeedCombo();
@@ -130,15 +122,8 @@ public class StartupFrame {
         leftPanel.add(realHardwarePanel);
         leftPanel.add(miscPanel);
 
-        if (FileLog.isWindows()) {
-            JPanel topButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
-            topButtons.add(createShowDeviceManagerButton());
-            topButtons.add(DriverInstall.createButton());
-            realHardwarePanel.add(topButtons, "right, wrap");
-        }
         realHardwarePanel.add(connectPanel, "right, wrap");
         realHardwarePanel.add(noPortsMessage, "right, wrap");
-        installMessage(noPortsMessage, "Check you cables. Check your drivers. Do you want to start simulator maybe?");
 
         ProgramSelector selector = new ProgramSelector(comboPorts);
 
@@ -188,8 +173,8 @@ public class StartupFrame {
         JLabel logo = createLogoLabel();
         if (logo != null)
             rightPanel.add(logo);
-        rightPanel.add(new JLabel("rusEFI (c) 2012-2023"));
         rightPanel.add(new JLabel("FOME (c) 2023-2023"));
+        rightPanel.add(new JLabel("rusEFI (c) 2012-2023"));
         rightPanel.add(new JLabel("Version " + Launcher.CONSOLE_VERSION));
 
         JPanel content = new JPanel(new BorderLayout());
@@ -230,7 +215,6 @@ public class StartupFrame {
             return null;
         JLabel logo = new JLabel(logoIcon);
         logo.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
-        logo.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return logo;
     }
 
@@ -243,12 +227,10 @@ public class StartupFrame {
             logoName = LOGO_PATH + "logo_proteus.png";
         } else if (bundle.contains("_alphax")) {
             logoName = LOGO_PATH + "logo_alphax.png";
-        } else if (bundle.contains("_mre")) {
-            logoName = LOGO_PATH + "logo_mre.png";
         } else {
             logoName = LOGO;
         }
-        return AutoupdateUtil.loadIcon(logoName);
+        return UiUtils.loadIcon(logoName);
     }
 
     private void connectButtonAction(JComboBox<String> comboSpeeds) {
@@ -293,24 +275,6 @@ public class StartupFrame {
                 JOptionPane.showMessageDialog(null, "Function test passed: " + isSuccess + "\nSee log folder for details.");
             }
         };
-    }
-
-    private Component createShowDeviceManagerButton() {
-        JButton showDeviceManager = new JButton(AutoupdateUtil.loadIcon("DeviceManager.png"));
-        showDeviceManager.setMargin(new Insets(0, 0, 0, 0));
-        showDeviceManager.setToolTipText("Show Device Manager");
-        showDeviceManager.addActionListener(event -> {
-            try {
-                Runtime.getRuntime().exec(ExecHelper.getBatchCommand("devmgmt.msc"));
-            } catch (IOException ex) {
-                throw new IllegalStateException(ex);
-            }
-        });
-        return showDeviceManager;
-    }
-
-    private void installMessage(JComponent component, String s) {
-        component.setToolTipText(s);
     }
 
     public void disposeFrameAndProceed() {
