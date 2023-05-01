@@ -35,15 +35,13 @@ Online and offline (PDF) versions of the user manual available here: https://wik
 
 # External Links
 
-TODO
-
- <!-- * [Forum](http://rusefi.com/forum)
- * [Documentation](https://github.com/rusefi/rusefi/wiki)
- * [Doxygen documentation](http://rusefi.com/docs/html)
- * [General source code Q&A](http://rusefi.com/forum/viewtopic.php?f=5&t=10)
- * [Facebook](https://www.facebook.com/rusEfiECU)
- * [YouTube](https://www.youtube.com/user/rusefi)
- * [Patreon](https://www.patreon.com/rusefi) -->
+ * [Wiki](https://wiki.fome.tech/)
+ * [Forum](https://www.fome.tech/forum)
+ * [Discord](https://discord.com/invite/5FQj4DMz)
+ * [Facebook](https://www.facebook.com/fome.tech)
+<!--
+ * [YouTube](https://www.youtube.com/)
+-->
 
 # Contributors
 
