@@ -11,7 +11,7 @@
 
 # [FOME: Free Open Motorsports ECU](https://www.fome.tech/)
 
-Welcome to FOME, a project intended to provide OEM quality open source engine controls with a focus on user-friendly design, stability and ease of use.  
+Welcome to FOME, a project intended to provide OEM quality open source engine controls and [free software](https://www.fsf.org/about/what-is-free-software) with a focus on user-friendly design, stability and ease of use.  
 
 FOME intends to narrow the gap between the features and functions seen on modern OEM engine control systems and that expected from stand-alone engine control systems. At the same time FOME intends to improve the ease of working with these systems and help provide access to the learning resources needed to understand and tune engines effectively.  
 
