@@ -25,13 +25,13 @@ At present FOME shares a large amount of its core with the rusEFI project and mo
 
 Online and offline (PDF) versions of the user manual available here: https://wiki.fome.tech/
 
-# What do we have here?
- * [Firmware](/firmware) Source code for open source engine control unit for stm32 chips
- * [FOME console](/java_console) ECU debugging/development software
- * [Simulator](/simulator) Windows or Linux version of firmware allows exploration without any hardware 
- * [Unit Tests](/unit_tests) Unit tests of firmware
- * [Misc tools](/java_tools) Misc development utilities
- * [misc/Jenkins](/misc/jenkins) Continuous integration scripts
+# What Do We Have Here?
+ * [Firmware](/firmware) - Source code for open source engine control unit for stm32 chips
+ * [FOME console](/java_console) - ECU debugging/development software
+ * [Simulator](/simulator) - Windows or Linux version of firmware allows exploration without any hardware
+ * [Unit Tests](/unit_tests) - Unit tests of firmware
+ * [Misc tools](/java_tools) - Misc development utilities
+ * [misc/Jenkins](/misc/jenkins) - Continuous integration scripts
 
 # External Links
 
