@@ -63,4 +63,4 @@ Check out https://rusefi.com/forum/viewtopic.php?f=5&t=9
 
 # Release Notes
 
-See [the changelog](firmware/CHANGELOG.md)
+See [the changelog](firmware/CHANGELOG.md), or [by release](https://github.com/FOME-Tech/fome-fw/releases).
