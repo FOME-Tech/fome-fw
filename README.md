@@ -49,10 +49,12 @@ This project exists thanks to all the people who contribute their time, expertis
 
 If you'd like to get involved, see [contributing](CONTRIBUTING.md).
 
-## Cloning the repository
+## Getting Started
 
+Clone the repository:  
 `git clone https://github.com/FOME-Tech/fome-fw.git`
 
+Initialize the checkout:  
 `git submodule update --init`
 
 ## Building
