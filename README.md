@@ -2,7 +2,7 @@
 
 <b>GPL open-source ECU</b>
 
-[![Release](https://img.shields.io/github/v/release/FOME-Tech/fome-fw?style=flat)](https://github.com/FOME-Tech/fome-fw/releases/latest)![Last Commit](https://img.shields.io/github/last-commit/FOME-Tech/fome-fw?style=flat)
+[![Release](https://img.shields.io/github/v/release/FOME-Tech/fome-fw?style=flat)](https://github.com/FOME-Tech/fome-fw/releases/latest) ![Last Commit](https://img.shields.io/github/last-commit/FOME-Tech/fome-fw?style=flat)
 [![Unit Tests](https://img.shields.io/github/actions/workflow/status/FOME-Tech/fome-fw/build-unit-tests.yaml?label=Unit%20Tests&branch=master)](https://github.com/FOME-Tech/fome-fw/actions/workflows/build-unit-tests.yaml)
 ![GitHub commits since latest release (by date)](https://img.shields.io/github/commits-since/FOME-Tech/fome-fw/latest?color=blueviolet&label=Commits%20Since%20Release)
 [![FOME Discord](https://img.shields.io/discord/1060875162892898324?label=Discord&logo=Discord)](https://discord.gg/5kC7vvpk7z)
