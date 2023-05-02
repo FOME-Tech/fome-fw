@@ -30,6 +30,7 @@ Release template (copy/paste this for new release):
 
 ### Added
  - Detected gear and wastegate position to CAN format
+ - Blend tables for boost open and closed loop control #73
 
 ### Fixed
  - Sensor checker wasn't checking sensors
