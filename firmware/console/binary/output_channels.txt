@@ -20,7 +20,7 @@ bit needBurn;
 
 bit sd_msd;SD is MSD
 bit isFan2On;Radiator Fan2
-bit acrActive;Holley ACR Active
+bit acrActive;Harley ACR Active
 bit toothLogReady;Tooth Logger Ready
 bit isTpsError;Error: TPS
 bit isCltError;Error: CLT
