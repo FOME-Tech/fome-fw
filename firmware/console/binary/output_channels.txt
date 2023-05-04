@@ -13,7 +13,7 @@ bit sd_present
 bit sd_logging_internal
 bit triggerScopeReady
 bit antilagTriggered
-bit isFanOn;radiator fan
+bit isFanOn;Radiator Fan
 bit isO2HeaterOn;
 bit checkEngine;
 bit needBurn;
