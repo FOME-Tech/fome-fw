@@ -18,23 +18,23 @@ bit isO2HeaterOn;
 bit checkEngine;
 bit needBurn;
 
-bit sd_msd
-bit isFan2On
-bit acrActive;
-bit toothLogReady;
-bit isTpsError;
-bit isCltError;
-bit isMapError;
-bit isIatError;
-bit isTriggerError;
-bit hasCriticalError;
-bit isWarnNow;
-bit isPedalError;
-bit launchTriggered;
-bit isTps2Error;
-bit isIdleClosedLoop;
-bit injectorFault;
-bit ignitionFault;
+bit sd_msd;SD is MSD
+bit isFan2On;Radiator Fan2
+bit acrActive;Holley ACR Active
+bit toothLogReady;Tooth Logger Ready
+bit isTpsError;TPS Error
+bit isCltError;CLT Error
+bit isMapError;MAP Error
+bit isIatError;IAT Error
+bit isTriggerError;Trigger Error
+bit hasCriticalError;ECM Critical Error
+bit isWarnNow;ECM Warning
+bit isPedalError;Pedal Error
+bit launchTriggered;Launch Control Triggered
+bit isTps2Error;TPS2 Error
+bit isIdleClosedLoop;Closed Loop Idle
+bit injectorFault;Injector Fault
+bit ignitionFault;Ignition Fault
 
 
 uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0
