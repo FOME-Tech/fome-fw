@@ -117,7 +117,7 @@ struct_no_prefix engine_configuration_s
 #define GAP_TRACKING_LENGTH 18
 
 #define CONSOLE_DATA_PROTOCOL_TAG " @"
-#define MAIN_HELP_URL "http://www.rusefi.com/"
+#define MAIN_HELP_URL "https://wiki.fome.tech/"
 
 #define ETB_BIAS_CURVE_LENGTH 8
 
