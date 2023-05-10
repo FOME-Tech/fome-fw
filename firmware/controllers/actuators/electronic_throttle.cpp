@@ -235,8 +235,8 @@ expected<percent_t> EtbController::observePlant() const {
 	return Sensor::get(m_positionSensor);
 }
 
-void EtbController::setIdlePosition(percent_t pos) {
-	m_idlePosition = pos;
+void EtbController::setIdlePosition(percent_t throttlePercent) {
+	m_idlePosition = throttlePercent;
 }
 
 void EtbController::setWastegatePosition(percent_t pos) {
@@ -285,8 +285,8 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	etbCurrentTarget = m_pedalMap->getValue(rpm, sanitizedPedal);
 
-	percent_t etbIdlePosition = clampF(0, m_idlePosition, 100);
-	percent_t etbIdleAddition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * etbIdlePosition;
+	// Ensure idle position is clamped to maximum
+	percent_t etbIdleAddition = clampF(0, m_idlePosition, engineConfiguration->etbIdleThrottleRange);
 
 	// Interpolate so that the idle adder just "compresses" the throttle's range upward.
 	// [0, 100] -> [idle, 100]
@@ -1026,10 +1026,22 @@ void initElectronicThrottle() {
 	doInitElectronicThrottle();
 }
 
-void setEtbIdlePosition(percent_t pos) {
+void setEtbIdlePosition(percent_t idlePosition) {
+	// First clamp to 0..100% idle position
+	idlePosition = clampF(0, idlePosition, 100);
+
+	percent_t throttlePosition;
+
+	if (engineConfiguration->useEtbModeledFlowIdle) {
+		// TODO
+		throttlePosition = 0;
+	} else {
+		throttlePosition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * idlePosition;
+	}
+
 	for (int i = 0; i < ETB_COUNT; i++) {
 		if (auto etb = engine->etbControllers[i]) {
-			etb->setIdlePosition(pos);
+			etb->setIdlePosition(throttlePosition);
 		}
 	}
 }
