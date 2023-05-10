@@ -259,15 +259,17 @@ TEST(etb, idlePlumbing) {
 
 	EngineTestHelper eth(TEST_ENGINE);
 
+	engineConfiguration->etbIdleThrottleRange = 20;
+
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 
 	for (int i = 0; i < ETB_COUNT; i++) {
 		engine->etbControllers[i] = &mocks[i];
 
-		EXPECT_CALL(mocks[i], setIdlePosition(33.0f));
+		EXPECT_CALL(mocks[i], setIdlePosition(testing::FloatEq(5.0f)));
 	}
 
-	applyIACposition(33.0f);
+	applyIACposition(25);
 }
 
 TEST(etb, testSetpointOnlyPedal) {
