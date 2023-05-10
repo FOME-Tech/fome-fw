@@ -87,6 +87,21 @@ float ThrottleModelBase::throttlePositionForFlow(float flow, float pressureRatio
 	return solver.solve(50, 0.1).value_or(0);
 }
 
+float ThrottleModelBase::throttlePositionForFlow(float flow, float pressureRatio) const {
+	// Inputs
+	// I guess 0 in case of failure is good enough?
+	float iat = Sensor::getOrZero(SensorType::Iat);
+
+	// Use TIP sensor
+	// or use Baro sensor if no TIP
+	// or use 101.325kPa (std atmosphere) if no Baro
+	auto tip = 	Sensor::hasSensor(SensorType::ThrottleInletPressure) ? Sensor::get(SensorType::ThrottleInletPressure) :
+				Sensor::hasSensor(SensorType::BarometricPressure) ? Sensor::get(SensorType::BarometricPressure) :
+				SensorResult(101.325f);
+
+	return throttlePositionForFlow(flow, pressureRatio, tip.value_or(101.325f), iat);
+}
+
 float ThrottleModelBase::estimateThrottleFlow(float tip, float tps, float map, float iat) {
 	// How much flow would the engine pull at 0.95 PR?
 	// The throttle won't flow much more than this in any scenario, even if the throttle could move more flow.
@@ -120,7 +135,6 @@ expected<float> ThrottleModelBase::estimateThrottleFlow(float map, float tps) {
 	// Use TIP sensor
 	// or use Baro sensor if no TIP
 	// or use 101.325kPa (std atmosphere) if no Baro
-	// TODO: have a real TIP sensor
 	auto tip = 	Sensor::hasSensor(SensorType::ThrottleInletPressure) ? Sensor::get(SensorType::ThrottleInletPressure) :
 				Sensor::hasSensor(SensorType::BarometricPressure) ? Sensor::get(SensorType::BarometricPressure) :
 				SensorResult(101.325f);
