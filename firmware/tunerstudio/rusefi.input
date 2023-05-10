@@ -3998,6 +3998,8 @@ dialog = tcuControls, "Transmission Settings"
 
 	dialog = etbIdleDialog, "ETB Idle"
 		field = "ETB idle maximum angle",				etbIdleThrottleRange
+		field = "Use throttle model linearization",		useEtbModeledFlowIdle
+		field = "Idle maximum airflow target", etbIdleMaximumFlow, { useEtbModeledFlowIdle == 1 }
 
 	dialog = etbDialogLeft
 		field = "https://rusefi.com/s/etb"
