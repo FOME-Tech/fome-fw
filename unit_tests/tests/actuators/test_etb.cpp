@@ -388,8 +388,8 @@ TEST(etb, setpointIdle) {
 	// Idle should now have 10% range
 	engineConfiguration->etbIdleThrottleRange = 10;
 
-	// 50% idle position should increase setpoint by 5% when closed, and 0% when open
-	etb.setIdlePosition(50);
+	// 5% TPS idle position should increase setpoint by 5% when closed, and 0% when open
+	etb.setIdlePosition(5);
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 	EXPECT_FLOAT_EQ(5, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
@@ -397,8 +397,8 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
 	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
 
-	// 100% setpoint should increase by 10% closed, scaled 0% at wot
-	etb.setIdlePosition(100);
+	// 10% TPS setpoint should increase by 10% closed, scaled 0% at wot
+	etb.setIdlePosition(10);
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 	EXPECT_FLOAT_EQ(10, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
@@ -406,8 +406,8 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
 	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
 
-	// 125% setpoint should clamp to 10% increase
-	etb.setIdlePosition(125);
+	// 12.5% TPS setpoint should clamp to 10% increase
+	etb.setIdlePosition(12.5f);
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 	EXPECT_FLOAT_EQ(10, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
