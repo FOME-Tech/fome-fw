@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "throttle_model.h"
 
+using ::testing::StrictMock;
+
 // From CFD modeled 70mm throttle
 static const float throttle70mmFlowBins[] =   {        2,     5,      10,    20,    30,    40,    60,   80,   85,    90,    91 };
 static const float throttle70mmFlowValues[] = { 0.000095, 0.002,  0.0107, 0.045, 0.103, 0.185, 0.438, 0.74, 0.77, 0.775, 0.775 };
@@ -53,6 +55,36 @@ TEST(ThrottleModel, InverseFlowLowPressureRatio) {
 	EXPECT_NEAR(100.00, model.throttlePositionForFlow(770, 0.3, 100, 0), 1e-2);
 	EXPECT_NEAR(100.00, model.throttlePositionForFlow(800, 0.3, 100, 0), 1e-2);
 	EXPECT_NEAR(100.00, model.throttlePositionForFlow(900, 0.3, 100, 0), 1e-2);
+}
+
+TEST(ThrottleModel, ModeledFlowIdle) {
+	EngineTestHelper eth(TEST_ENGINE);
+
+	StrictMock<MockEtb> etbMocks[ETB_COUNT];
+
+	Sensor::setMockValue(SensorType::ThrottleInletPressure, 101.325);
+	Sensor::setMockValue(SensorType::Iat, 20);
+
+	// install a mock throttle model with our flow curve above
+	MockThrottleModel model;
+	EXPECT_CALL(model, maxEngineFlow(::testing::_)).WillRepeatedly([](float map) { return map / 100 * 500; });
+	engine->module<ThrottleModel>().set(&model);
+
+	// Check that the engine's throttle model works as expected
+	ASSERT_NEAR( 9.80488f, engine->module<ThrottleModel>()->throttlePositionForFlow(10, 0.5), 1e-2);
+
+	for (int i = 0; i < ETB_COUNT; i++) {
+		engine->etbControllers[i] = &etbMocks[i];
+
+		// Expect a throttle position of 9.674%, just like the throttle model says
+		EXPECT_CALL(etbMocks[i], setIdlePosition(testing::FloatNear(9.805f, 1e-2)));
+	}
+
+	engineConfiguration->etbIdleThrottleRange = 20;
+	// 20g/s max flow @ 50% idle -> 10g/s expected
+	engineConfiguration->etbIdleMaximumFlow = 20;
+	engineConfiguration->useEtbModeledFlowIdle = true;
+	applyIACposition(50);
 }
 
 TEST(ThrottleModel, InverseFlowHighPressureRatio) {
