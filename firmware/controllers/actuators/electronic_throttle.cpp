@@ -1033,8 +1033,15 @@ void setEtbIdlePosition(percent_t idlePosition) {
 	percent_t throttlePosition;
 
 	if (engineConfiguration->useEtbModeledFlowIdle) {
-		// TODO
-		throttlePosition = 0;
+		float desiredFlowGs = idlePosition * engineConfiguration->etbIdleMaximumFlow;
+
+		// Assume that the engine idles at <=60kPa, so the flow through the throttle is always choked.
+		// Idling a little above that is OK since it won't change the estimated flow too much
+		constexpr float pressureRatio = 0.5f;
+
+		float posForFlow = engine->module<ThrottleModel>()->throttlePositionForFlow(desiredFlowGs, pressureRatio);
+
+		throttlePosition = clampF(0, posForFlow, engineConfiguration->etbIdleThrottleRange);
 	} else {
 		throttlePosition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * idlePosition;
 	}
