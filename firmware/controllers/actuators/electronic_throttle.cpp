@@ -1027,13 +1027,13 @@ void initElectronicThrottle() {
 }
 
 void setEtbIdlePosition(percent_t idlePosition) {
-	// First clamp to 0..100% idle position
-	idlePosition = clampF(0, idlePosition, 100);
+	// First clamp to 0..100% idle position, scale to 0..1
+	float idleFraction = PERCENT_DIV * clampF(0, idlePosition, 100);
 
 	percent_t throttlePosition;
 
 	if (engineConfiguration->useEtbModeledFlowIdle) {
-		float desiredFlowGs = idlePosition * engineConfiguration->etbIdleMaximumFlow;
+		float desiredFlowGs = idleFraction * engineConfiguration->etbIdleMaximumFlow;
 
 		// Assume that the engine idles at <=60kPa, so the flow through the throttle is always choked.
 		// Idling a little above that is OK since it won't change the estimated flow too much
@@ -1043,7 +1043,7 @@ void setEtbIdlePosition(percent_t idlePosition) {
 
 		throttlePosition = clampF(0, posForFlow, engineConfiguration->etbIdleThrottleRange);
 	} else {
-		throttlePosition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * idlePosition;
+		throttlePosition = idleFraction * engineConfiguration->etbIdleThrottleRange;
 	}
 
 	for (int i = 0; i < ETB_COUNT; i++) {

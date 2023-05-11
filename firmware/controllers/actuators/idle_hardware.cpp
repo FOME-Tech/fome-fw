@@ -28,15 +28,15 @@ static SimplePwm idleSolenoidOpen("idle open");
 static SimplePwm idleSolenoidClose("idle close");
 
 void applyIACposition(percent_t position) {
+#if EFI_ELECTRONIC_THROTTLE_BODY
+	setEtbIdlePosition(position);
+#endif // EFI_ELECTRONIC_THROTTLE_BODY
+
 	/**
 	 * currently idle level is an percent value (0-100 range), and PWM takes a float in the 0..1 range
 	 * todo: unify?
 	 */
 	float duty = PERCENT_TO_DUTY(position);
-
-#if EFI_ELECTRONIC_THROTTLE_BODY
-	setEtbIdlePosition(position);
-#endif // EFI_ELECTRONIC_THROTTLE_BODY
 
 #if EFI_UNIT_TEST
 	if (false) {
