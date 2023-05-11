@@ -1307,7 +1307,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 
 	uint8_t autoscale etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 0.1, 0, 0, 25, 0
-	uint16_t autoscale etbIdleMaximumFlow;When in modeled idle flow mode, 100% idle maps to this much airflow through the throttle.;"g/s", 0.1, 0, 0, 50, 1
+	uint16_t autoscale etbIdleMaximumFlow;When in modeled idle flow mode, 100% idle maps to this much airflow through the throttle.;"g/s", 0.1, 0, 0, 100, 1
 
 	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 2, 0
 
