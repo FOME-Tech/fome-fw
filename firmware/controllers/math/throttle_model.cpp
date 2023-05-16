@@ -87,7 +87,7 @@ float ThrottleModelBase::throttlePositionForFlow(float flow, float pressureRatio
 	return solver.solve(50, 0.1).value_or(0);
 }
 
-float ThrottleModelBase::throttlePositionForFlow(float flow, float pressureRatio) const {
+float ThrottleModelBase::throttlePositionForFlow(float flow, float map) const {
 	// Inputs
 	// I guess 0 in case of failure is good enough?
 	float iat = Sensor::getOrZero(SensorType::Iat);
@@ -99,7 +99,11 @@ float ThrottleModelBase::throttlePositionForFlow(float flow, float pressureRatio
 				Sensor::hasSensor(SensorType::BarometricPressure) ? Sensor::get(SensorType::BarometricPressure) :
 				SensorResult(101.325f);
 
-	return throttlePositionForFlow(flow, pressureRatio, tip.value_or(101.325f), iat);
+	float tipValue = tip.value_or(101.325);
+
+	float pressureRatio = map / tipValue;
+
+	return throttlePositionForFlow(flow, pressureRatio, tipValue, iat);
 }
 
 float ThrottleModelBase::estimateThrottleFlow(float tip, float tps, float map, float iat) {

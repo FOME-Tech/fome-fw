@@ -15,7 +15,7 @@ public:
 	float partThrottleFlow(float tps, float pressureRatio, float p_up, float iat) const;
 
 	float throttlePositionForFlow(float flow, float pressureRatio, float p_up, float iat) const;
-	float throttlePositionForFlow(float flow, float pressureRatio) const;
+	float throttlePositionForFlow(float flow, float map) const;
 
 protected:
 	// Given some TPS, what is the normalized choked flow in g/s?
