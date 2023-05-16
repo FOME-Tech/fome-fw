@@ -2,7 +2,7 @@
 
 #include "airmass.h"
 
-class MafAirmass final : public AirmassVeModelBase {
+class MafAirmass : public AirmassVeModelBase {
 public:
 	explicit MafAirmass(const ValueProvider3D& veTable) : AirmassVeModelBase(veTable) {}
 
