@@ -282,7 +282,6 @@ private:
 		while (true) {
 			benchSemaphore.wait();
 
-			// naive inter-thread communication - waiting for a flag
 			if (isBenchTestPending) {
 				isBenchTestPending = false;
 				runBench(brainPin, pinX, startDelayMs, onTime, offTime, count);
