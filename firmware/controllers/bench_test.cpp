@@ -276,7 +276,7 @@ void fuelPumpBench(void) {
 
 class BenchController : public ThreadController<UTILITY_THREAD_STACK_SIZE> {
 public:
-	BenchController() : ThreadController("BenchTest") { }
+	BenchController() : ThreadController("BenchTest", PRIO_BENCH_TEST) { }
 private:
 	void ThreadTask() override	{
 		while (true) {
