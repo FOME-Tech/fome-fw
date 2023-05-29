@@ -570,7 +570,6 @@ void initBenchTest() {
 	addConsoleAction(CMD_HPFP_BENCH, hpfpValveBench);
 
 	addConsoleActionFFFFF("luabench2", luaOutBench2);
-	instance.setPeriod(200 /*ms*/);
 	instance.start();
 	onConfigurationChangeBenchTest();
 }
