@@ -60,10 +60,10 @@ static void benchOn(OutputPin* output) {
 	output->setValue(true);
 }
 
-static char pin_error[64];
-
 static void benchOff(OutputPin* output) {
 #if EFI_PROD_CODE && (BOARD_EXT_GPIOCHIPS > 0)
+	static char pin_error[64];
+
 	brain_pin_diag_e diag = output->getDiag();
 	if (diag == PIN_INVALID) {
 		efiPrintf("No Diag on this pin");
