@@ -39,7 +39,7 @@ TEST(cranking, testFasterEngineSpinningUp) {
 
 	// check all events starting from now
 	// advance 1 revolution
-	// because we have trivial TT_ONE trigger here synchronization would happen with just one rise front
+	// because we have trivial trigger_type_e::TT_ONE trigger here synchronization would happen with just one rise front
 	eth.fireRise(200);
 
 	// check if the mode is changed
@@ -108,7 +108,7 @@ static void doTestFasterEngineSpinningUp60_2(int startUpDelayMs, int rpm1, int e
 	// turn on FasterEngineSpinUp mode
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
 
-	setupSimpleTestEngineWithMaf(&eth, IM_SEQUENTIAL, TT_TOOTHED_WHEEL_60_2);
+	setupSimpleTestEngineWithMaf(&eth, IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
 	eth.moveTimeForwardMs(startUpDelayMs);
 
 	// fire 30 tooth rise/fall signals

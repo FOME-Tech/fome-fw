@@ -21,7 +21,7 @@ TEST(real4g93, cranking) {
 	engineConfiguration->trigger.customTotalToothCount = 2;
 	engineConfiguration->trigger.customSkippedToothCount = 0;
 	engineConfiguration->skippedWheelOnCam = false;
-	eth.setTriggerType(TT_TOOTHED_WHEEL);
+	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
 
 	bool gotRpm = false;
 	bool gotSync = false;
@@ -66,7 +66,7 @@ TEST(real4g93, crankingOn11) {
 
 	engineConfiguration->isPhaseSyncRequiredForIgnition = true;
 
-	eth.setTriggerType(TT_MITSUBISHI_4G93);
+	eth.setTriggerType(trigger_type_e::TT_MITSUBISHI_4G93);
 
 	bool gotRpm = false;
 	while (reader.haveMore()) {
@@ -94,7 +94,7 @@ TEST(real4g93, crankingCamOnly) {
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
 	engineConfiguration->alwaysInstantRpm = true;
 
-	eth.setTriggerType(TT_MITSU_4G9x_CAM);
+	eth.setTriggerType(trigger_type_e::TT_MITSU_4G9x_CAM);
 
 	bool gotRpm = false;
 	bool gotSync = false;
