@@ -1909,7 +1909,7 @@ menuDialog = main
 		subMenu = throttleEffectiveArea, "Throttle effective area"
 
 		menu = "Help"
-			subMenu = helpGeneral,	"rusEFI Info"
+			subMenu = helpGeneral,	"FOME Info"
 
   menu = "&View"
 @@LIVE_DATA_MENU_FROM_FILE@@
@@ -3942,7 +3942,7 @@ dialog = tcuControls, "Transmission Settings"
 
 	help = vrThresholdHelp, "VR Sensor Threshold"
 		text = "This is about FOME VR Discrete decoder"
-		webHelp = "https://wiki.fome.tech"
+		webHelp = "https://wiki.fome.tech/r/vr"
 
 	help = tpsTpsHelp, "Acceleration Enrichment"
 		text = "More about Tps To Tps acceleration on the web"
