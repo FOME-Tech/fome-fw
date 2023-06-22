@@ -12,14 +12,12 @@
 #include "trigger_decoder.h"
 #include "main_trigger_callback.h"
 #include "listener_array.h"
-#include "tooth_logger.h"
 #include "logic_analyzer.h"
 
 #include "local_version_holder.h"
 #include "trigger_simulator.h"
 #include "trigger_emulator_algo.h"
 
-#include "tooth_logger.h"
 #include "map_averaging.h"
 #include "main_trigger_callback.h"
 #include "status_loop.h"
@@ -215,7 +213,7 @@ static void logVvtFront(bool isImportantFront, bool isRising, efitick_t nowNt, i
 	}
 
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
-	addEngineSnifferVvtEvent(index, isRising ? FrontDirection::UP : FrontDirection::DOWN);
+	addEngineSnifferVvtEvent(index, isRising);
 
 #if EFI_TOOTH_LOGGER
 	LogTriggerTooth(isRising ? SHAFT_SECONDARY_RISING : SHAFT_SECONDARY_FALLING, nowNt);
@@ -453,10 +451,10 @@ static void reportEventToWaveChart(trigger_event_e ckpSignalType, int triggerEve
 
 	bool isUp = isUpEvent[(int) ckpSignalType];
 
-	addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp ? FrontDirection::UP : FrontDirection::DOWN);
+	addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp);
 	if (addOppositeEvent) {
 		// let's add the opposite event right away
-		addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp ? FrontDirection::DOWN : FrontDirection::UP);
+		addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, !isUp);
 	}
 }
 
@@ -710,7 +708,7 @@ void triggerInfo(void) {
 			getTrigger_type_e(engineConfiguration->trigger.type), engineConfiguration->trigger.type,
 			getSyncEdge(TRIGGER_WAVEFORM(syncEdge)), TRIGGER_WAVEFORM(tdcPosition));
 
-	if (engineConfiguration->trigger.type == TT_TOOTHED_WHEEL) {
+	if (engineConfiguration->trigger.type == trigger_type_e::TT_TOOTHED_WHEEL) {
 		efiPrintf("total %d/skipped %d", engineConfiguration->trigger.customTotalToothCount,
 				engineConfiguration->trigger.customSkippedToothCount);
 	}
@@ -772,8 +770,6 @@ void triggerInfo(void) {
 		}
 	}
 
-	efiPrintf("trigger error extra LED: %s %s", hwPortname(engineConfiguration->triggerErrorPin),
-			getPin_output_mode_e(engineConfiguration->triggerErrorPinMode));
 	efiPrintf("primary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[0]));
 	efiPrintf("secondary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[1]));
 

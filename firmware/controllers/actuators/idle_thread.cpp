@@ -54,9 +54,11 @@ IIdleController::Phase IdleController::determinePhase(int rpm, int targetRpm, Se
 	}
 
 	// If rpm too high (but throttle not pressed), we're coasting
+	// ALSO, if still in the cranking taper, disable coasting
 	int maximumIdleRpm = targetRpm + engineConfiguration->idlePidRpmUpperLimit;
 	looksLikeCoasting = rpm > maximumIdleRpm;
-	if (looksLikeCoasting) {
+	looksLikeCrankToIdle = crankingTaperFraction < 1;
+	if (looksLikeCoasting && !looksLikeCrankToIdle) {
 		return Phase::Coasting;
 	}
 
@@ -68,7 +70,6 @@ IIdleController::Phase IdleController::determinePhase(int rpm, int targetRpm, Se
 	}
 
 	// If still in the cranking taper, disable closed loop idle
-	looksLikeCrankToIdle = crankingTaperFraction < 1;
 	if (looksLikeCrankToIdle) {
 		return Phase::CrankToIdleTaper;
 	}
@@ -317,7 +318,7 @@ float IdleController::getIdlePosition(float rpm) {
 
 		bool isAutomaticIdle = tps.Valid && engineConfiguration->idleMode == IM_AUTO;
 
-        isVerboseIAC = engineConfiguration->isVerboseIAC && isAutomaticIdle;
+		isVerboseIAC = engineConfiguration->isVerboseIAC && isAutomaticIdle;
 		if (isVerboseIAC) {
 			efiPrintf("Idle state %s", getIdle_state_e(idleState));
 			getIdlePid()->showPidStatus("idle");

@@ -148,8 +148,7 @@ EnginePins::EnginePins() :
 		secondIdleSolenoidPin("Idle Valve#2", CONFIG_OFFSET(secondSolenoidPin), CONFIG_OFFSET2(idle, solenoidPinMode)),
 		alternatorPin("Alternator control", CONFIG_PIN_OFFSETS(alternatorControl)),
 		checkEnginePin("checkEnginePin", CONFIG_PIN_OFFSETS(malfunctionIndicator)),
-		tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput)),
-		triggerDecoderErrorPin("led: trigger debug", CONFIG_PIN_OFFSETS(triggerError))
+		tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput))
 {
 	tachOut.name = PROTOCOL_TACH_NAME;
 	hpfpValve.name = PROTOCOL_HPFP_NAME;
@@ -352,7 +351,7 @@ void NamedOutputPin::setHigh() {
 	setValue(true);
 
 #if EFI_ENGINE_SNIFFER
-    addEngineSnifferOutputPinEvent(this, FrontDirection::UP);
+    addEngineSnifferOutputPinEvent(this, true);
 #endif /* EFI_ENGINE_SNIFFER */
 }
 
@@ -367,7 +366,7 @@ void NamedOutputPin::setLow() {
 	setValue(false);
 
 #if EFI_ENGINE_SNIFFER
-	addEngineSnifferOutputPinEvent(this, FrontDirection::DOWN);
+	addEngineSnifferOutputPinEvent(this, false);
 #endif /* EFI_ENGINE_SNIFFER */
 }
 
@@ -682,16 +681,12 @@ ioportid_t criticalErrorLedPort;
 ioportmask_t criticalErrorLedPin;
 uint8_t criticalErrorLedState;
 
-#ifndef LED_ERROR_BRAIN_PIN_MODE
-#define LED_ERROR_BRAIN_PIN_MODE OM_DEFAULT
-#endif /* LED_ERROR_BRAIN_PIN_MODE */
-
 #if EFI_PROD_CODE
 static void initErrorLed(Gpio led) {
-	enginePins.errorLedPin.initPin("led: CRITICAL status", led, (LED_ERROR_BRAIN_PIN_MODE));
+	enginePins.errorLedPin.initPin("led: CRITICAL status", led, (LED_PIN_MODE));
 	criticalErrorLedPort = getHwPort("CRITICAL", led);
 	criticalErrorLedPin = getHwPin("CRITICAL", led);
-	criticalErrorLedState = (LED_ERROR_BRAIN_PIN_MODE == OM_INVERTED) ? 0 : 1;
+	criticalErrorLedState = (LED_PIN_MODE == OM_INVERTED) ? 0 : 1;
 }
 #endif /* EFI_PROD_CODE */
 

@@ -108,7 +108,7 @@ public class AntilagSystem {
 	public static final String GAUGE_NAME_TCHARGE = "Air: SD tCharge";
 	public static final String GAUGE_NAME_THROTTLE_PEDAL = "Throttle pedal position";
 	public static final String GAUGE_NAME_TIME = "Time";
-	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing";
+	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing Base";
 	public static final String GAUGE_NAME_TPS = "TPS";
 	public static final String GAUGE_NAME_TPS2 = "TPS2";
 	public static final String GAUGE_NAME_TRG_ERR = "Trigger Error Counter";
@@ -155,19 +155,19 @@ public class AntilagSystem {
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int VE_BLEND_COUNT = 4;
-	public static final Field ISANTILAGCONDITION = Field.create("ISANTILAGCONDITION", 0, FieldType.BIT, 0).setBaseOffset(940);
-	public static final Field ALSMINRPMCONDITION = Field.create("ALSMINRPMCONDITION", 0, FieldType.BIT, 1).setBaseOffset(940);
-	public static final Field ALSMAXRPMCONDITION = Field.create("ALSMAXRPMCONDITION", 0, FieldType.BIT, 2).setBaseOffset(940);
-	public static final Field ALSMINCLTCONDITION = Field.create("ALSMINCLTCONDITION", 0, FieldType.BIT, 3).setBaseOffset(940);
-	public static final Field ALSMAXCLTCONDITION = Field.create("ALSMAXCLTCONDITION", 0, FieldType.BIT, 4).setBaseOffset(940);
-	public static final Field ALSMAXTHROTTLEINTENTCONDITION = Field.create("ALSMAXTHROTTLEINTENTCONDITION", 0, FieldType.BIT, 5).setBaseOffset(940);
-	public static final Field ISALSSWITCHACTIVATED = Field.create("ISALSSWITCHACTIVATED", 0, FieldType.BIT, 6).setBaseOffset(940);
-	public static final Field ALSACTIVATEPINSTATE = Field.create("ALSACTIVATEPINSTATE", 0, FieldType.BIT, 7).setBaseOffset(940);
-	public static final Field ALSSWITCHCONDITION = Field.create("ALSSWITCHCONDITION", 0, FieldType.BIT, 8).setBaseOffset(940);
-	public static final Field ALSTIMERCONDITION = Field.create("ALSTIMERCONDITION", 0, FieldType.BIT, 9).setBaseOffset(940);
-	public static final Field FUELALSCORRECTION = Field.create("FUELALSCORRECTION", 4, FieldType.FLOAT).setBaseOffset(940);
-	public static final Field TIMINGALSCORRECTION = Field.create("TIMINGALSCORRECTION", 8, FieldType.INT16).setScale(0.01).setBaseOffset(940);
-	public static final Field ALIGNMENTFILL_AT_10 = Field.create("ALIGNMENTFILL_AT_10", 10, FieldType.INT8).setScale(1.0).setBaseOffset(940);
+	public static final Field ISANTILAGCONDITION = Field.create("ISANTILAGCONDITION", 0, FieldType.BIT, 0).setBaseOffset(964);
+	public static final Field ALSMINRPMCONDITION = Field.create("ALSMINRPMCONDITION", 0, FieldType.BIT, 1).setBaseOffset(964);
+	public static final Field ALSMAXRPMCONDITION = Field.create("ALSMAXRPMCONDITION", 0, FieldType.BIT, 2).setBaseOffset(964);
+	public static final Field ALSMINCLTCONDITION = Field.create("ALSMINCLTCONDITION", 0, FieldType.BIT, 3).setBaseOffset(964);
+	public static final Field ALSMAXCLTCONDITION = Field.create("ALSMAXCLTCONDITION", 0, FieldType.BIT, 4).setBaseOffset(964);
+	public static final Field ALSMAXTHROTTLEINTENTCONDITION = Field.create("ALSMAXTHROTTLEINTENTCONDITION", 0, FieldType.BIT, 5).setBaseOffset(964);
+	public static final Field ISALSSWITCHACTIVATED = Field.create("ISALSSWITCHACTIVATED", 0, FieldType.BIT, 6).setBaseOffset(964);
+	public static final Field ALSACTIVATEPINSTATE = Field.create("ALSACTIVATEPINSTATE", 0, FieldType.BIT, 7).setBaseOffset(964);
+	public static final Field ALSSWITCHCONDITION = Field.create("ALSSWITCHCONDITION", 0, FieldType.BIT, 8).setBaseOffset(964);
+	public static final Field ALSTIMERCONDITION = Field.create("ALSTIMERCONDITION", 0, FieldType.BIT, 9).setBaseOffset(964);
+	public static final Field FUELALSCORRECTION = Field.create("FUELALSCORRECTION", 4, FieldType.FLOAT).setBaseOffset(964);
+	public static final Field TIMINGALSCORRECTION = Field.create("TIMINGALSCORRECTION", 8, FieldType.INT16).setScale(0.01).setBaseOffset(964);
+	public static final Field ALIGNMENTFILL_AT_10 = Field.create("ALIGNMENTFILL_AT_10", 10, FieldType.INT8).setScale(1.0).setBaseOffset(964);
 	public static final Field[] VALUES = {
 	ISANTILAGCONDITION,
 	ALSMINRPMCONDITION,

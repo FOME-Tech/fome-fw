@@ -19,24 +19,24 @@ static void commonRenix(TriggerWaveform *s) {
 
 	float currentAngle = 0;
 	for (int i = 0;i < 20;i++) {
-		s->addEventAngle(currentAngle + tooth / 2, TriggerValue::RISE);
-		s->addEventAngle(currentAngle + tooth, TriggerValue::FALL);
+		s->addEventAngle(currentAngle + tooth / 2, true);
+		s->addEventAngle(currentAngle + tooth, false);
 		currentAngle += tooth;
 	}
 
-	s->addEventAngle(currentAngle + tooth, TriggerValue::RISE);
+	s->addEventAngle(currentAngle + tooth, true);
 
 	// float math error accumulates at this point so we have to spell out 180
-	s->addEventAngle(s->getCycleDuration(), TriggerValue::FALL);
+	s->addEventAngle(s->getCycleDuration(), false);
 }
 
-// TT_RENIX_44_2_2
+// trigger_type_e::TT_RENIX_44_2_2
 void initializeRenix44_2_2(TriggerWaveform *s) {
 	s->initialize(FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR, SyncEdge::RiseOnly);
 	commonRenix(s);
 }
 
-// TT_RENIX_66_2_2_2
+// trigger_type_e::TT_RENIX_66_2_2_2
 void initializeRenix66_2_2(TriggerWaveform *s) {
 	s->initialize(FOUR_STROKE_THREE_TIMES_CRANK_SENSOR, SyncEdge::RiseOnly);
 	commonRenix(s);

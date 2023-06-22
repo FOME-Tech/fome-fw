@@ -71,6 +71,12 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->artificialTestMisfire;
 		case -1284359115:
 			return engineConfiguration->useFordRedundantPps;
+		case 1925843479:
+			return engineConfiguration->cltSensorPulldown;
+		case 1570551154:
+			return engineConfiguration->iatSensorPulldown;
+		case 445194564:
+			return engineConfiguration->allowIdenticalPps;
 		case 513872736:
 			return engineConfiguration->tpsMin;
 		case 513872482:
@@ -339,8 +345,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->verboseVVTDecoding;
 		case 1081026348:
 			return engineConfiguration->invertCamVVTSignal;
-		case 950993889:
-			return engineConfiguration->consumeObdSensors;
 		case 1509355728:
 			return engineConfiguration->knockBankCyl1;
 		case 1509355729:
@@ -1155,6 +1159,21 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->useFordRedundantPps = (int)value;
 		return;
 	}
+		case 1925843479:
+	{
+		engineConfiguration->cltSensorPulldown = (int)value;
+		return;
+	}
+		case 1570551154:
+	{
+		engineConfiguration->iatSensorPulldown = (int)value;
+		return;
+	}
+		case 445194564:
+	{
+		engineConfiguration->allowIdenticalPps = (int)value;
+		return;
+	}
 		case 513872736:
 	{
 		engineConfiguration->tpsMin = (int)value;
@@ -1823,11 +1842,6 @@ void setConfigValueByName(const char *name, float value) {
 		case 1081026348:
 	{
 		engineConfiguration->invertCamVVTSignal = (int)value;
-		return;
-	}
-		case 950993889:
-	{
-		engineConfiguration->consumeObdSensors = (int)value;
 		return;
 	}
 		case 1509355728:

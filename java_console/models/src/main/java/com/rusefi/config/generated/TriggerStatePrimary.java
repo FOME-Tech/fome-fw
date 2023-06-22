@@ -108,7 +108,7 @@ public class TriggerStatePrimary {
 	public static final String GAUGE_NAME_TCHARGE = "Air: SD tCharge";
 	public static final String GAUGE_NAME_THROTTLE_PEDAL = "Throttle pedal position";
 	public static final String GAUGE_NAME_TIME = "Time";
-	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing";
+	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing Base";
 	public static final String GAUGE_NAME_TPS = "TPS";
 	public static final String GAUGE_NAME_TPS2 = "TPS2";
 	public static final String GAUGE_NAME_TRG_ERR = "Trigger Error Counter";
@@ -155,7 +155,7 @@ public class TriggerStatePrimary {
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int VE_BLEND_COUNT = 4;
-	public static final Field M_HASSYNCHRONIZEDPHASE = Field.create("M_HASSYNCHRONIZEDPHASE", 0, FieldType.BIT, 0).setBaseOffset(1204);
+	public static final Field M_HASSYNCHRONIZEDPHASE = Field.create("M_HASSYNCHRONIZEDPHASE", 0, FieldType.BIT, 0).setBaseOffset(1228);
 	public static final Field[] VALUES = {
 	M_HASSYNCHRONIZEDPHASE,
 	};

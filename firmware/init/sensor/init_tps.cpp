@@ -101,14 +101,14 @@ public:
 	{
 	}
 
-	void init(bool isFordTps, RedundantFordTps* fordTps, float secondaryMaximum, const TpsConfig& primary, const TpsConfig& secondary) {
+	void init(bool isFordTps, RedundantFordTps* fordTps, float secondaryMaximum, const TpsConfig& primary, const TpsConfig& secondary, bool allowIdenticalSensors = false) {
 		bool hasFirst = m_pri.init(primary);
 		if (!hasFirst) {
 			// no input if we have no first channel
 			return;
 		}
 
-		{
+		if (!allowIdenticalSensors) {
 			// Check that the primary and secondary aren't too close together - if so, the user may have done
 			// an unsafe thing where they wired a single sensor to both inputs. Don't do that!
 			bool hasBothSensors = isAdcChannelValid(primary.channel) && isAdcChannelValid(secondary.channel);
@@ -186,41 +186,40 @@ void initTps() {
 	percent_t min = engineConfiguration->tpsErrorDetectionTooLow;
 	percent_t max = engineConfiguration->tpsErrorDetectionTooHigh;
 
-	if (!engineConfiguration->consumeObdSensors) {
-		bool isFordTps = engineConfiguration->useFordRedundantTps;
-		bool isFordPps = engineConfiguration->useFordRedundantPps;
+	bool isFordTps = engineConfiguration->useFordRedundantTps;
+	bool isFordPps = engineConfiguration->useFordRedundantPps;
 
-		float tpsSecondaryMaximum = engineConfiguration->tpsSecondaryMaximum;
-		if (tpsSecondaryMaximum < 20) {
-			// don't allow <20% split point
-			tpsSecondaryMaximum = 20;
-		}
-
-		tps1.init(isFordTps, &fordTps1, tpsSecondaryMaximum,
-			{ engineConfiguration->tps1_1AdcChannel, (float)engineConfiguration->tpsMin, (float)engineConfiguration->tpsMax, min, max },
-			{ engineConfiguration->tps1_2AdcChannel, (float)engineConfiguration->tps1SecondaryMin, (float)engineConfiguration->tps1SecondaryMax, min, max }
-		);
-
-		tps2.init(isFordTps, &fordTps2, tpsSecondaryMaximum,
-			{ engineConfiguration->tps2_1AdcChannel, (float)engineConfiguration->tps2Min, (float)engineConfiguration->tps2Max, min, max },
-			{ engineConfiguration->tps2_2AdcChannel, (float)engineConfiguration->tps2SecondaryMin, (float)engineConfiguration->tps2SecondaryMax, min, max }
-		);
-
-		float ppsSecondaryMaximum = engineConfiguration->ppsSecondaryMaximum;
-		if (ppsSecondaryMaximum < 20) {
-			// don't allow <20% split point
-			ppsSecondaryMaximum = 20;
-		}
-
-		// Pedal sensors
-		pedal.init(isFordPps, &fordPps, ppsSecondaryMaximum,
-			{ engineConfiguration->throttlePedalPositionAdcChannel, engineConfiguration->throttlePedalUpVoltage, engineConfiguration->throttlePedalWOTVoltage, min, max },
-			{ engineConfiguration->throttlePedalPositionSecondAdcChannel, engineConfiguration->throttlePedalSecondaryUpVoltage, engineConfiguration->throttlePedalSecondaryWOTVoltage, min, max }
-		);
-
-		// TPS-like stuff that isn't actually a TPS
-		wastegate.init({ engineConfiguration->wastegatePositionSensor, (float)engineConfiguration->wastegatePositionMin, (float)engineConfiguration->wastegatePositionMax, min, max });
+	float tpsSecondaryMaximum = engineConfiguration->tpsSecondaryMaximum;
+	if (tpsSecondaryMaximum < 20) {
+		// don't allow <20% split point
+		tpsSecondaryMaximum = 20;
 	}
+
+	tps1.init(isFordTps, &fordTps1, tpsSecondaryMaximum,
+		{ engineConfiguration->tps1_1AdcChannel, (float)engineConfiguration->tpsMin, (float)engineConfiguration->tpsMax, min, max },
+		{ engineConfiguration->tps1_2AdcChannel, (float)engineConfiguration->tps1SecondaryMin, (float)engineConfiguration->tps1SecondaryMax, min, max }
+	);
+
+	tps2.init(isFordTps, &fordTps2, tpsSecondaryMaximum,
+		{ engineConfiguration->tps2_1AdcChannel, (float)engineConfiguration->tps2Min, (float)engineConfiguration->tps2Max, min, max },
+		{ engineConfiguration->tps2_2AdcChannel, (float)engineConfiguration->tps2SecondaryMin, (float)engineConfiguration->tps2SecondaryMax, min, max }
+	);
+
+	float ppsSecondaryMaximum = engineConfiguration->ppsSecondaryMaximum;
+	if (ppsSecondaryMaximum < 20) {
+		// don't allow <20% split point
+		ppsSecondaryMaximum = 20;
+	}
+
+	// Pedal sensors
+	pedal.init(isFordPps, &fordPps, ppsSecondaryMaximum,
+		{ engineConfiguration->throttlePedalPositionAdcChannel, engineConfiguration->throttlePedalUpVoltage, engineConfiguration->throttlePedalWOTVoltage, min, max },
+		{ engineConfiguration->throttlePedalPositionSecondAdcChannel, engineConfiguration->throttlePedalSecondaryUpVoltage, engineConfiguration->throttlePedalSecondaryWOTVoltage, min, max },
+		engineConfiguration->allowIdenticalPps
+	);
+
+	// TPS-like stuff that isn't actually a TPS
+	wastegate.init({ engineConfiguration->wastegatePositionSensor, (float)engineConfiguration->wastegatePositionMin, (float)engineConfiguration->wastegatePositionMax, min, max });
 
 	// Route the pedal or TPS to driverIntent as appropriate
 	if (isAdcChannelValid(engineConfiguration->throttlePedalPositionAdcChannel)) {

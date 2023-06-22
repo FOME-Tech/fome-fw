@@ -28,8 +28,13 @@ Release template (copy/paste this for new release):
 
 ## Unreleased
 
+### Added
+ - Log per-cylinder true ignition timing (includes trim, knock retard, etc) #76
+ - Add mode for CLT/IAT sensors that are installed "high side" instead of typical "low side" #116
+
 ### Fixed
  - Improved bench test resolution (more usable for testing injectors, dwell, etc)
+ - Maximum knock retard table displays correct Y axis values in TunerStudio
 
 ## May 2023 Release
 

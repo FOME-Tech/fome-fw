@@ -222,9 +222,9 @@ void EtbController::onConfigurationChange(pid_s* previousConfiguration) {
 	if (m_motor && !m_pid.isSame(previousConfiguration)) {
 		m_shouldResetPid = true;
 	}
-    m_dutyRocAverage.init(engineConfiguration->etbRocExpAverageLength);
-    m_dutyAverage.init(engineConfiguration->etbExpAverageLength);
-    doInitElectronicThrottle();
+	m_dutyRocAverage.init(engineConfiguration->etbRocExpAverageLength);
+	m_dutyAverage.init(engineConfiguration->etbExpAverageLength);
+	doInitElectronicThrottle();
 }
 
 void EtbController::showStatus() {
@@ -297,9 +297,9 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	percent_t targetPosition = idlePosition + getLuaAdjustment();
 
 #if EFI_ANTILAG_SYSTEM 
-    if (engine->antilagController.isAntilagCondition) {
-	    targetPosition += engineConfiguration->ALSEtbAdd;
-    }
+	if (engine->antilagController.isAntilagCondition) {
+		targetPosition += engineConfiguration->ALSEtbAdd;
+	}
 #endif /* EFI_ANTILAG_SYSTEM */
 
 	// Apply any adjustment that this throttle alone needs
@@ -376,7 +376,7 @@ expected<percent_t> EtbController::getOpenLoop(percent_t target) {
 	if (m_function != DC_Wastegate) {
 		etbFeedForward = interpolate2d(target, config->etbBiasBins, config->etbBiasValues);
 	} else {
-	    etbFeedForward = 0;
+		etbFeedForward = 0;
 	}
 
 	return etbFeedForward;
@@ -541,10 +541,10 @@ bool EtbController::checkStatus() {
 #endif /* EFI_TUNER_STUDIO */
 
 	if (!isEtbMode()) {
-        // no validation for h-bridge or idle mode
-        return true;
-    }
-    // ETB-specific code belo. The whole mix-up between DC and ETB is shameful :(
+		// no validation for h-bridge or idle mode
+		return true;
+	}
+	// ETB-specific code belo. The whole mix-up between DC and ETB is shameful :(
 
 	m_pid.iTermMin = engineConfiguration->etb_iTermMin;
 	m_pid.iTermMax = engineConfiguration->etb_iTermMax;
@@ -583,20 +583,22 @@ bool EtbController::checkStatus() {
 
 	TpsState localReason = TpsState::None;
 	if (etbTpsErrorCounter > 50) {
-		localReason = TpsState::IntermittentTps;
+		// TODO: https://github.com/FOME-Tech/fome-fw/issues/169
+		// localReason = TpsState::IntermittentTps;
 #if EFI_SHAFT_POSITION_INPUT
 	} else if (engineConfiguration->disableEtbWhenEngineStopped && !engine->triggerCentral.engineMovedRecently()) {
 		localReason = TpsState::EngineStopped;
 #endif // EFI_SHAFT_POSITION_INPUT
 	} else if (etbPpsErrorCounter > 50) {
-		localReason = TpsState::IntermittentPps;
+		// TODO: https://github.com/FOME-Tech/fome-fw/issues/169
+		// localReason = TpsState::IntermittentPps;
 	} else if (engine->engineState.lua.luaDisableEtb) {
 		localReason = TpsState::Lua;
 	}
 
 	etbErrorCode = (int8_t)localReason;
 
-    return localReason == TpsState::None;
+	return localReason == TpsState::None;
 }
 
 void EtbController::update() {
@@ -613,7 +615,7 @@ void EtbController::update() {
 		return;
 	}
 
-    bool isOk = checkStatus();
+	bool isOk = checkStatus();
 
 	if (!isOk) {
 		// If engine is stopped and so configured, skip the ETB update entirely

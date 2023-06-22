@@ -108,7 +108,7 @@ public class IgnitionState {
 	public static final String GAUGE_NAME_TCHARGE = "Air: SD tCharge";
 	public static final String GAUGE_NAME_THROTTLE_PEDAL = "Throttle pedal position";
 	public static final String GAUGE_NAME_TIME = "Time";
-	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing";
+	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing Base";
 	public static final String GAUGE_NAME_TPS = "TPS";
 	public static final String GAUGE_NAME_TPS2 = "TPS2";
 	public static final String GAUGE_NAME_TRG_ERR = "Trigger Error Counter";
@@ -155,16 +155,16 @@ public class IgnitionState {
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int VE_BLEND_COUNT = 4;
-	public static final Field BASEDWELL = Field.create("BASEDWELL", 0, FieldType.FLOAT).setBaseOffset(836);
-	public static final Field SPARKDWELL = Field.create("SPARKDWELL", 4, FieldType.FLOAT).setBaseOffset(836);
-	public static final Field DWELLANGLE = Field.create("DWELLANGLE", 8, FieldType.FLOAT).setBaseOffset(836);
-	public static final Field CLTTIMINGCORRECTION = Field.create("CLTTIMINGCORRECTION", 12, FieldType.INT16).setScale(0.01).setBaseOffset(836);
-	public static final Field TIMINGIATCORRECTION = Field.create("TIMINGIATCORRECTION", 14, FieldType.INT16).setScale(0.01).setBaseOffset(836);
-	public static final Field TIMINGPIDCORRECTION = Field.create("TIMINGPIDCORRECTION", 16, FieldType.INT16).setScale(0.01).setBaseOffset(836);
-	public static final Field ALIGNMENTFILL_AT_18 = Field.create("ALIGNMENTFILL_AT_18", 18, FieldType.INT8).setScale(1.0).setBaseOffset(836);
-	public static final Field DWELLVOLTAGECORRECTION = Field.create("DWELLVOLTAGECORRECTION", 20, FieldType.FLOAT).setBaseOffset(836);
-	public static final Field LUATIMINGADD = Field.create("LUATIMINGADD", 24, FieldType.FLOAT).setBaseOffset(836);
-	public static final Field LUATIMINGMULT = Field.create("LUATIMINGMULT", 28, FieldType.FLOAT).setBaseOffset(836);
+	public static final Field BASEDWELL = Field.create("BASEDWELL", 0, FieldType.FLOAT).setBaseOffset(860);
+	public static final Field SPARKDWELL = Field.create("SPARKDWELL", 4, FieldType.FLOAT).setBaseOffset(860);
+	public static final Field DWELLANGLE = Field.create("DWELLANGLE", 8, FieldType.FLOAT).setBaseOffset(860);
+	public static final Field CLTTIMINGCORRECTION = Field.create("CLTTIMINGCORRECTION", 12, FieldType.INT16).setScale(0.01).setBaseOffset(860);
+	public static final Field TIMINGIATCORRECTION = Field.create("TIMINGIATCORRECTION", 14, FieldType.INT16).setScale(0.01).setBaseOffset(860);
+	public static final Field TIMINGPIDCORRECTION = Field.create("TIMINGPIDCORRECTION", 16, FieldType.INT16).setScale(0.01).setBaseOffset(860);
+	public static final Field ALIGNMENTFILL_AT_18 = Field.create("ALIGNMENTFILL_AT_18", 18, FieldType.INT8).setScale(1.0).setBaseOffset(860);
+	public static final Field DWELLVOLTAGECORRECTION = Field.create("DWELLVOLTAGECORRECTION", 20, FieldType.FLOAT).setBaseOffset(860);
+	public static final Field LUATIMINGADD = Field.create("LUATIMINGADD", 24, FieldType.FLOAT).setBaseOffset(860);
+	public static final Field LUATIMINGMULT = Field.create("LUATIMINGMULT", 28, FieldType.FLOAT).setBaseOffset(860);
 	public static final Field[] VALUES = {
 	BASEDWELL,
 	SPARKDWELL,

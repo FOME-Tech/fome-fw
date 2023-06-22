@@ -100,6 +100,15 @@ Experimental setting that will cause a misfire\nDO NOT ENABLE.
 ### useFordRedundantPps
 On some Ford and Toyota vehicles one of the pedal sensors is not linear on the full range, i.e. in the specific range of the positions we effectively have only one sensor.
 
+### cltSensorPulldown
+
+
+### iatSensorPulldown
+
+
+### allowIdenticalPps
+
+
 ### tpsMin
 Closed throttle, 1 volt = 200 units
 
@@ -501,9 +510,6 @@ Verbose info in console below engineSnifferRpmThreshold\nenable vvt_details
 
 ### invertCamVVTSignal
 get invertCamVVTSignal
-
-### consumeObdSensors
-This property is useful if using rusEFI as TCM or BCM only\nenable consumeObdSensors
 
 ### knockBankCyl1
 

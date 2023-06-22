@@ -12,7 +12,6 @@
 #include "fuel_math.h"
 #include "accel_enrichment.h"
 #include "advance_map.h"
-#include "tooth_logger.h"
 #include "logicdata.h"
 #include "hardware.h"
 
@@ -207,7 +206,7 @@ void EngineTestHelper::fireTriggerEventsWithDuration(float durationMs) {
 /**
  * Sends specified number of rise/fall trigger events, with specified amount of time between those.
  *
- * This is helpful for TT_ONE trigger wheel decoder and probably other decoders as well.
+ * This is helpful for trigger_type_e::TT_ONE trigger wheel decoder and probably other decoders as well.
  */
 void EngineTestHelper::fireTriggerEvents2(int count, float durationMs) {
 	for (int i = 0; i < count; i++) {
@@ -389,7 +388,7 @@ void EngineTestHelper::executeUntil(int timeUs) {
 
 void setupSimpleTestEngineWithMafAndTT_ONE_trigger(EngineTestHelper *eth, injection_mode_e injectionMode) {
 	setCamOperationMode();
-	setupSimpleTestEngineWithMaf(eth, injectionMode, TT_ONE);
+	setupSimpleTestEngineWithMaf(eth, injectionMode, trigger_type_e::TT_ONE);
 }
 
 void setVerboseTrigger(bool isEnabled) {

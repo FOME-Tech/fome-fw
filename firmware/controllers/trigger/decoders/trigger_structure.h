@@ -157,7 +157,7 @@ public:
 	 * These signals are used for trigger export only
 	 */
 	TriggerWheel triggerSignalIndeces[PWM_PHASE_MAX_COUNT];
-	TriggerValue triggerSignalStates[PWM_PHASE_MAX_COUNT];
+	bool triggerSignalStates[PWM_PHASE_MAX_COUNT];
 	// see also 'doesTriggerImplyOperationMode'
 	bool knownOperationMode = true;
 #endif
@@ -171,25 +171,21 @@ public:
 	 */
 	MultiChannelStateSequenceWithData<PWM_PHASE_MAX_COUNT> wave;
 
-	// todo: add a runtime validation which would verify that this field was set properly
-	// todo: maybe even automate this flag calculation?
-	TriggerValue initialState[PWM_PHASE_MAX_WAVE_PER_PWM];
-
 	bool isRiseEvent[PWM_PHASE_MAX_COUNT];
 
 	/**
 	 * @param angle (0..1]
 	 */
-	void addEvent(angle_t angle, TriggerValue const state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
+	void addEvent(angle_t angle, bool state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
 	/* (0..720] angle range
 	 * Deprecated! many usages should be replaced by addEvent360
 	 */
-	void addEvent720(angle_t angle, TriggerValue const state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
+	void addEvent720(angle_t angle, bool state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
 
 	/**
 	 * this method helps us use real world 360 degrees shape for FOUR_STROKE_CAM_SENSOR and FOUR_STROKE_CRANK_SENSOR
 	 */
-	void addEvent360(angle_t angle, TriggerValue const state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
+	void addEvent360(angle_t angle, bool state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
 
 	/**
 	 * This version of the method is best when same wheel could be mounted either on crank or cam
@@ -202,12 +198,12 @@ public:
 	 *
 	 * @param angle (0..360] or (0..720] depending on configuration
 	 */
-	void addEventAngle(angle_t angle, TriggerValue const state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
+	void addEventAngle(angle_t angle, bool state, TriggerWheel const channelIndex = TriggerWheel::T_PRIMARY);
 
 	/* (0..720] angle range
 	 * Deprecated?
 	 */
-	void addEventClamped(angle_t angle, TriggerValue const state, TriggerWheel const channelIndex, float filterLeft, float filterRight);
+	void addEventClamped(angle_t angle, bool state, TriggerWheel const channelIndex, float filterLeft, float filterRight);
 	operation_mode_e getWheelOperationMode() const;
 
 	void initialize(operation_mode_e operationMode, SyncEdge syncEdge);
