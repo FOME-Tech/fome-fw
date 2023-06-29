@@ -112,8 +112,7 @@ static bool vvtWithRealDecoder(vvt_mode_e vvtMode) {
 			&& vvtMode != VVT_2JZ
 			&& vvtMode != VVT_HONDA_K_INTAKE
 			&& vvtMode != VVT_MAP_V_TWIN
-			&& vvtMode != VVT_SECOND_HALF
-			&& vvtMode != VVT_FIRST_HALF;
+			&& vvtMode != VVT_SECOND_HALF;
 }
 
 angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
@@ -158,7 +157,6 @@ static angle_t adjustCrankPhase(int camIndex) {
 
 	vvt_mode_e vvtMode = engineConfiguration->vvtMode[camIndex];
 	switch (vvtMode) {
-	case VVT_FIRST_HALF:
 	case VVT_MAP_V_TWIN:
 	case VVT_MITSUBISHI_4G63:
 	case VVT_MITSUBISHI_4G9x:

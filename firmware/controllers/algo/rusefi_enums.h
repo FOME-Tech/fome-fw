@@ -60,10 +60,6 @@ typedef enum  __attribute__ ((__packed__)) {
 	VVT_MIATA_NB = 3,
 
 	/**
-	 * Single-tooth cam sensor mode where TDC and cam signal happen in the same 360 degree of 720 degree engine cycle
-	 */
-	VVT_FIRST_HALF = 4,
-	/**
 	 * @see TT_VVT_BOSCH_QUICK_START
 	 */
 	VVT_BOSCH_QUICK_START = 5,
