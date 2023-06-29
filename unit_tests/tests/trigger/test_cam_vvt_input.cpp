@@ -84,7 +84,7 @@ TEST(trigger, testCamInput) {
 
 	// changing to 'ONE TOOTH' trigger on CRANK with CAM/VVT
 	setCrankOperationMode();
-	engineConfiguration->vvtMode[0] = VVT_SECOND_HALF;
+	engineConfiguration->vvtMode[0] = VVT_SINGLE_TOOTH;
 	engineConfiguration->vvtOffsets[0] = 360;
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 	engineConfiguration->camInputs[0] = Gpio::A10; // we just need to indicate that we have CAM

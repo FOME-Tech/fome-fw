@@ -14,8 +14,8 @@ TEST(trigger, testQuadCam) {
 	setCrankOperationMode();
 
 	// changing to 'ONE TOOTH' trigger on CRANK with CAM/VVT
-	engineConfiguration->vvtMode[0] = VVT_SECOND_HALF;
-	engineConfiguration->vvtMode[1] = VVT_SECOND_HALF;
+	engineConfiguration->vvtMode[0] = VVT_SINGLE_TOOTH;
+	engineConfiguration->vvtMode[1] = VVT_SINGLE_TOOTH;
 
 	engineConfiguration->camInputs[0] = Gpio::A10; // we just need to indicate that we have CAM
 

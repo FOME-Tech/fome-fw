@@ -112,7 +112,7 @@ static bool vvtWithRealDecoder(vvt_mode_e vvtMode) {
 			&& vvtMode != VVT_2JZ
 			&& vvtMode != VVT_HONDA_K_INTAKE
 			&& vvtMode != VVT_MAP_V_TWIN
-			&& vvtMode != VVT_SECOND_HALF;
+			&& vvtMode != VVT_SINGLE_TOOTH;
 }
 
 angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
@@ -161,7 +161,7 @@ static angle_t adjustCrankPhase(int camIndex) {
 	case VVT_MITSUBISHI_4G63:
 	case VVT_MITSUBISHI_4G9x:
 		return tc->syncAndReport(getCrankDivider(operationMode), 1);
-	case VVT_SECOND_HALF:
+	case VVT_SINGLE_TOOTH:
 	case VVT_NISSAN_VQ:
 	case VVT_BOSCH_QUICK_START:
 		return tc->syncAndReport(getCrankDivider(operationMode), 0);

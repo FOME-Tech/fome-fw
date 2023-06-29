@@ -46,9 +46,9 @@ typedef enum  __attribute__ ((__packed__)) {
 	VVT_INACTIVE = 0,
 
 	/**
-	 * Single-tooth cam sensor mode where TDC and cam signal happen in opposite 360 degree of 720 degree engine cycle
+	 * Single tooth on the camshaft anywhere in the 720 degree cycle
 	 */
-	VVT_SECOND_HALF = 1,
+	VVT_SINGLE_TOOTH = 1,
 	/**
 	 * Toyota 2JZ has three cam tooth. We pick one of these three tooth to synchronize based on the expected angle position of the event
 	 */
