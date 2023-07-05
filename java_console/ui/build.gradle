@@ -25,7 +25,7 @@ dependencies {
 
 shadowJar {
     archivesBaseName = 'fome_console'
-	destinationDir = file("$rootDir/../java_console_binary")
+    destinationDir = file("$rootDir/../java_console_binary")
     archiveClassifier = ''
 
     manifest {
