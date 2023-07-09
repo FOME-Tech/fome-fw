@@ -1,6 +1,6 @@
 /**
  * @file obd_error_codes.h
- * @brief Standart OBD-II error codes
+ * @brief Standart and custom OBD-II error codes
  *
  * More info at http://www.obd-codes.com/faq/obd2-codes-explained.php
  *
@@ -14,16 +14,6 @@
 
 enum class ObdCode : uint16_t {
 	None = 0,
-//P0001 Fuel Volume Regulator Control Circuit/Open
-//P0002 Fuel Volume Regulator Control Circuit Range/Performance
-//P0003 Fuel Volume Regulator Control Circuit Low
-//P0004 Fuel Volume Regulator Control Circuit High
-//P0005 Fuel Shutoff Valve "A" Control Circuit/Open
-//P0006 Fuel Shutoff Valve "A" Control Circuit Low
-//P0007 Fuel Shutoff Valve "A" Control Circuit High
-//P0008 Engine Positions System Performance Bank 1
-//P0009 Engine Position System Performance Bank 2
-//P0010 "A" Camshaft Position Actuator Circuit (Bank 1)
 	//P0001 Fuel Volume Regulator Control Circuit/Open
 	//P0002 Fuel Volume Regulator Control Circuit Range/Performance
 	//P0003 Fuel Volume Regulator Control Circuit Low
