@@ -1,3 +1,4 @@
+#if !EFI_UNIT_TEST
 #include "pch.h"
 #include "value_lookup.h"
 float getOutputValueByName(const char *name) {
@@ -101,8 +102,6 @@ float getOutputValueByName(const char *name) {
 			return engine->outputChannels.veValue;
 		case -243031057:
 			return engine->outputChannels.injectionOffset;
-		case 1615892023:
-			return engine->outputChannels.injectorLagMs;
 		case 1726931380:
 			return engine->outputChannels.engineMakeCodeNameCrc16;
 		case 115540725:
@@ -650,3 +649,4 @@ float getOutputValueByName(const char *name) {
 	}
 	return EFI_ERROR_CODE;
 }
+#endif
