@@ -29,6 +29,8 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->isForcedInduction;
 		case -1284354759:
 			return engineConfiguration->useFordRedundantTps;
+		case 1451020756:
+			return engineConfiguration->lambdaProtectionEnable;
 		case 1362186948:
 			return engineConfiguration->overrideTriggerGaps;
 		case -298185774:
@@ -243,6 +245,10 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->compressionRatio;
 		case -1465119085:
 			return engineConfiguration->fordInjectorSmallPulseSlope;
+		case 1758659040:
+			return engineConfiguration->lambdaProtectionMinRpm;
+		case -2094010831:
+			return engineConfiguration->lambdaProtectionMinLoad;
 		case -722238362:
 			return engineConfiguration->is_enabled_spi_1;
 		case -722238361:
@@ -321,6 +327,12 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->antiLagRpmTreshold;
 		case 644409862:
 			return engineConfiguration->startCrankingDuration;
+		case 1758661224:
+			return engineConfiguration->lambdaProtectionMinTps;
+		case -1645106444:
+			return engineConfiguration->lambdaProtectionTimeout;
+		case 872435040:
+			return engineConfiguration->lambdaProtectionRestoreRpm;
 		case -1171325035:
 			return engineConfiguration->clutchUpPinInverted;
 		case -675074552:
@@ -519,8 +531,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->verboseTriggerSynchDetails;
 		case -795241238:
 			return engineConfiguration->isManualSpinningMode;
-		case -1248413509:
-			return engineConfiguration->twoWireBatchInjection;
 		case 240697653:
 			return engineConfiguration->neverInstantRpm;
 		case 201676494:
@@ -697,6 +707,10 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->injectorFlowAsMassFlow;
 		case -1655178001:
 			return engineConfiguration->benchTestOffTime;
+		case 872437224:
+			return engineConfiguration->lambdaProtectionRestoreTps;
+		case -1274631759:
+			return engineConfiguration->lambdaProtectionRestoreLoad;
 		case -1992945039:
 			return engineConfiguration->boostCutPressure;
 		case -1359134883:
@@ -1052,6 +1066,11 @@ void setConfigValueByName(const char *name, float value) {
 		case -1284354759:
 	{
 		engineConfiguration->useFordRedundantTps = (int)value;
+		return;
+	}
+		case 1451020756:
+	{
+		engineConfiguration->lambdaProtectionEnable = (int)value;
 		return;
 	}
 		case 1362186948:
@@ -1589,6 +1608,16 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->fordInjectorSmallPulseSlope = (int)value;
 		return;
 	}
+		case 1758659040:
+	{
+		engineConfiguration->lambdaProtectionMinRpm = (int)value;
+		return;
+	}
+		case -2094010831:
+	{
+		engineConfiguration->lambdaProtectionMinLoad = (int)value;
+		return;
+	}
 		case -722238362:
 	{
 		engineConfiguration->is_enabled_spi_1 = (int)value;
@@ -1782,6 +1811,21 @@ void setConfigValueByName(const char *name, float value) {
 		case 644409862:
 	{
 		engineConfiguration->startCrankingDuration = (int)value;
+		return;
+	}
+		case 1758661224:
+	{
+		engineConfiguration->lambdaProtectionMinTps = (int)value;
+		return;
+	}
+		case -1645106444:
+	{
+		engineConfiguration->lambdaProtectionTimeout = (int)value;
+		return;
+	}
+		case 872435040:
+	{
+		engineConfiguration->lambdaProtectionRestoreRpm = (int)value;
 		return;
 	}
 		case -1171325035:
@@ -2279,11 +2323,6 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->isManualSpinningMode = (int)value;
 		return;
 	}
-		case -1248413509:
-	{
-		engineConfiguration->twoWireBatchInjection = (int)value;
-		return;
-	}
 		case 240697653:
 	{
 		engineConfiguration->neverInstantRpm = (int)value;
@@ -2722,6 +2761,16 @@ void setConfigValueByName(const char *name, float value) {
 		case -1655178001:
 	{
 		engineConfiguration->benchTestOffTime = (int)value;
+		return;
+	}
+		case 872437224:
+	{
+		engineConfiguration->lambdaProtectionRestoreTps = (int)value;
+		return;
+	}
+		case -1274631759:
+	{
+		engineConfiguration->lambdaProtectionRestoreLoad = (int)value;
 		return;
 	}
 		case -1992945039:

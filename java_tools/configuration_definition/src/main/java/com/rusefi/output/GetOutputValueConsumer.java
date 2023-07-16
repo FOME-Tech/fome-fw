@@ -30,6 +30,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
     public String currentSectionPrefix = "engine->outputChannels";
     public String conditional;
+    public Boolean isPtr = false;
 
     public GetOutputValueConsumer(String fileName) {
         this.fileName = fileName;
@@ -55,7 +56,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
         }
 
         String userName = prefix + cf.getName();
-        String javaName = currentSectionPrefix + "." + prefix;
+        String javaName = currentSectionPrefix + (isPtr ? "->" : ".") + prefix;
 
         getterPairs.add(new VariableRecord(userName, javaName + cf.getName(),  null, conditional));
 
@@ -75,10 +76,12 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
         String fullSwitch = wrapSwitchStatement(switchBody);
 
-        return FILE_HEADER +
+        return  "#if !EFI_UNIT_TEST\n" +
+                FILE_HEADER +
                 "float getOutputValueByName(const char *name) {\n" +
                 fullSwitch +
-                getterBody + GetConfigValueConsumer.GET_METHOD_FOOTER;
+                getterBody + GetConfigValueConsumer.GET_METHOD_FOOTER +
+                "#endif\n";
     }
 
     @NotNull

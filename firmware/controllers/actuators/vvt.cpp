@@ -12,10 +12,6 @@
 
 #define NO_PIN_PERIOD 500
 
-#if defined(HAS_OS_ACCESS)
-#error "Unexpected OS ACCESS HERE"
-#endif /* HAS_OS_ACCESS */
-
 using vvt_map_t = Map3D<SCRIPT_TABLE_8, SCRIPT_TABLE_8, int8_t, uint16_t, uint16_t>;
 
 static vvt_map_t vvtTable1;
@@ -62,6 +58,8 @@ expected<angle_t> VvtController::getSetpoint() {
 	engine->outputChannels.vvtTargets[index] = target;
 #endif
 
+	vvtTarget = target;
+
 	return target;
 }
 
@@ -103,6 +101,8 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 	bool enabled = rpm > engineConfiguration->vvtControlMinRpm
 			&& engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) > engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND
 			 ;
+
+	vvtOutput = outputValue.value_or(0);
 
 	if (outputValue && enabled) {
 		m_pwm.setSimplePwmDutyCycle(PERCENT_TO_DUTY(outputValue.Value));
@@ -184,3 +184,16 @@ void initVvtActuators() {
 }
 
 #endif
+
+template<>
+const vvt_s* getLiveData(size_t idx) {
+#if EFI_AUX_PID
+	if (idx >= efi::size(instances)) {
+		return nullptr;
+	}
+
+	return &instances[idx];
+#else
+	return nullptr;
+#endif
+}

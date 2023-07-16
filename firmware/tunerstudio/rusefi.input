@@ -228,7 +228,7 @@ enable2ndByteCanID = false
 	ignModeList = bits, U08, [0:3], "Single Coil", "Sequential", "Wasted", "Two Coils"
 
 ; ClearReason
-	fuelIgnCutCodeList = bits, U08, [0:7], "None", "fatal error", "setting disabled", "RPM limit", "fault RPM limit", "boost cut", "oil pressure", "stop requested", "ETB problem", "launch control", "max injector duty", "flood clear", "engine sync", "kickstart", "ign off", "Lua", "ACR"
+	fuelIgnCutCodeList = bits, U08, [0:7], "None", "fatal error", "setting disabled", "RPM limit", "fault RPM limit", "boost cut", "oil pressure", "stop requested", "ETB problem", "launch control", "max injector duty", "flood clear", "engine sync", "kickstart", "ign off", "Lua", "ACR", "Lambda Prot"
 
 ; TpsState
 	etbCutCodeList = bits, U08, [0:7], "None", "engine stopped", "TPS error", "PPS error", "TPS noise", "PID noise", "Lua", "Manual", "N/A", "Redundancy", "PPS noise"
@@ -1156,6 +1156,12 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		gridOrient  = 250,	0, 340 ; Space 123 rotation of grid in degrees.
 		upDownLabel = "(RICHER)", "(LEANER)"
 
+	table = lambdaMaxDeviationTableTbl, lambdaMaxDeviationTableMap, "Maximum Lambda Deviation", 1
+		xyLabels = "RPM", ""
+		xBins = lambdaMaxDeviationRpmBins, RPMValue
+		yBins = lambdaMaxDeviationLoadBins, afrTableYAxis
+		zBins = lambdaMaxDeviationTable
+
 	table = iacPidMultTbl,  iacPidMultMap,  "IAC PID Multiplier Table",	1
 		;		constant, variable
 		xBins		= iacPidMultRpmBins,  RPMValue
@@ -1898,6 +1904,11 @@ menuDialog = main
 
 		subMenu = softwareKnock,			"Software knock" @@if_ts_show_software_knock
 		subMenu = maxKnockRetardTbl,		"Max knock retard" @@if_ts_show_software_knock
+
+		; TODO: move lambdaProtection to the fuel menu once ready
+		; https://github.com/FOME-Tech/fome-fw/issues/75
+		subMenu = lambdaProtection,			"Lambda Protection", 0, { isInjectionEnabled }
+
 		subMenu = std_separator
 
 		subMenu = std_separator
@@ -1909,7 +1920,7 @@ menuDialog = main
 		subMenu = throttleEffectiveArea, "Throttle effective area"
 
 		menu = "Help"
-			subMenu = helpGeneral,	"rusEFI Info"
+			subMenu = helpGeneral,	"FOME Info"
 
   menu = "&View"
 @@LIVE_DATA_MENU_FROM_FILE@@
@@ -2147,7 +2158,6 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Enabled",						isInjectionEnabled
 		field = "Mode",							injectionMode, {isInjectionEnabled == 1}
 		field = "#Batch injection with individual wiring"
-		field = "Individually wired Batch Fuel",				twoWireBatchInjection, {isInjectionEnabled == 1 && injectionMode == @@injection_mode_e_IM_BATCH@@ }
 		field = "Override VE table load axis",			veOverrideMode, { isInjectionEnabled }
 		field = "Override AFR table load axis",			afrOverrideMode, { isInjectionEnabled }
 		field = "Injection phase control mode",				injectionTimingMode, { isInjectionEnabled }
@@ -2187,7 +2197,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Vehicle weight",						vehicleWeight
 
 	dialog = engineMetadata, "Engine Metadata"
-		field = "#These metadata are used by rusEFI Online"
+		field = "#These metadata are used by https://tunes.fome.tech"
 		field = "Engine Make",							engineMake
 		field = "Manufacturer Engine Code",				engineCode
 		field = "Vehicle Name",							vehicleName
@@ -2223,7 +2233,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Invert Secondary",						invertSecondaryTriggerSignal, {triggerInputPins2 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) }
 
 	dialog = trigger_cams, "Cam Inputs"
-		field = "!https://rusefi.com/s/vvt"
+		field = "!https://wiki.fome.tech/r/vvt"
 		; todo: code generator to hard-code all triggers not requiring VVT?
 		; todo: https://github.com/rusefi/rusefi/issues/2077
 
@@ -3123,7 +3133,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "No2 Direction #1",						stepperDcIo2_directionPin1
 		field = "No2 Direction #2",						stepperDcIo2_directionPin2
 		field = "No2 Disable",							stepperDcIo2_disablePin
-	
+
 	dialog = stepperHbridgeHardware, "Stepper H-Bridge Hardware"
 		topicHelp = "stepperHbridgeHardwareHelp"
 		field = "Inverted driver pins",					stepperDcInvertedPins
@@ -3437,6 +3447,24 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		panel = stftPartitionSettingsPower, {fuelClosedLoopCorrectionEnabled == 1}
 		panel = stftPartitionSettingsOverrun, {fuelClosedLoopCorrectionEnabled == 1}
 
+	dialog = lambdaProtectionLeft, ""
+		field = "Enable lambda protection", lambdaProtectionEnable
+		field = "Check above load", lambdaProtectionMinLoad, { lambdaProtectionEnable }
+		field = "and above TPS", lambdaProtectionMinTps, { lambdaProtectionEnable }
+		field = "and above RPM", lambdaProtectionMinRpm, { lambdaProtectionEnable }
+		field = "and after delay", lambdaProtectionTimeout { lambdaProtectionEnable }
+		field = "Then cut fuel until:"
+		field = "Load less than", lambdaProtectionRestoreLoad, { lambdaProtectionEnable }
+		field = "and TPS less than", lambdaProtectionRestoreTps, { lambdaProtectionEnable }
+		field = "and RPM less than", lambdaProtectionRestoreRpm, { lambdaProtectionEnable }
+
+	dialog = lambdaProtectionRight, "Lambda Difference Table"
+		panel = lambdaMaxDeviationTableTbl
+
+	dialog = lambdaProtection, "Lambda Protection", border
+		panel = lambdaProtectionLeft, West
+		panel = lambdaProtectionRight, East
+
 	dialog = vvtPidDialog0, "Configuration"
 		field = "Activation Delay",						vvtActivationDelayMs
 		field = "Do not control below RPM",				vvtControlMinRpm
@@ -3609,11 +3637,11 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Engine Sniffer Threshold",			engineSnifferRpmThreshold
 
 	dialog = generalSettings, "Fuel"
-		field = "!https://rusefi.com/s/fuel"
+		field = "!https://wiki.fome.tech/r/fuel"
 		field = "Fuel strategy",						fuelAlgorithm
 
 	dialog = debugging, "Debug"
-		field = "!https://rusefi.com/s/debugmode"
+		field = "!https://wiki.fome.tech/r/debugmode"
 		field = "Debug mode",							debugMode
 
 	dialog = limitsSettings, "Limits"
@@ -3781,7 +3809,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "!Use FOME console for Lua script editing"
 		field = "#Call startPwm to initialize, then call"
 		field = "#setPwmDuty and setPwmFreq to vary duty/freq"
-		field = "#See rusefi.com/s/lua for more info"
+		field = "#See https://wiki.fome.tech/r/lua for more info"
 		field = "output #0",							luaOutputPins1
 		field = "output #1",							luaOutputPins2
 		field = "output #2",							luaOutputPins3
@@ -3913,7 +3941,7 @@ dialog = tcuControls, "Transmission Settings"
 
 	help = veTableDialogHelp, "Volumetric Efficiency"
 		text = "Volumetric Efficiency is used to calculate fuel in Speed Density mode. VE incorporates pressure ratio as measured by MAP sensor in boost (no VE ever above 105%ish)"
-		webHelp = "https://rusefi.com/s/fuel"
+		webHelp = "https://wiki.fome.tech/r/fuel"
 
 	help = stepperHbridgeHardwareHelp, "Stepper driven by Dual H-bridge"
 		text = "In case you are using two H-bridges driving 4-wire stepper. H-brigde control signals connected to MCU pins configured here."
@@ -3930,27 +3958,27 @@ dialog = tcuControls, "Transmission Settings"
 
 	help = fuelHelp, "Fuel Control"
 		text = "More about fuel control on the web"
-		webHelp = "https://rusefi.com/s/fuel"
+		webHelp = "https://wiki.fome.tech/r/fuel"
 
 	help = triggerHelp, "Trigger Settings"
 		text = "More about Trigger Settings on the web"
-		webHelp = "https://rusefi.com/s/trigger"
+		webHelp = "https://wiki.fome.tech/r/trigger"
 
 	help = etbHelp, "ETB Control"
 		text = "More about electronic throttle body on the web"
-		webHelp = "https://rusefi.com/s/etb"
+		webHelp = "https://wiki.fome.tech/r/etb"
 
 	help = vrThresholdHelp, "VR Sensor Threshold"
-		text = "This is about rusEFI VR Discrete decoder"
-		webHelp = "https://rusefi.com/"
+		text = "This is about FOME VR Discrete decoder"
+		webHelp = "https://wiki.fome.tech/r/vr"
 
 	help = tpsTpsHelp, "Acceleration Enrichment"
 		text = "More about Tps To Tps acceleration on the web"
-		webHelp = "https://rusefi.com/s/tpstps"
+		webHelp = "https://wiki.fome.tech/r/tpstps"
 
 	help = baseHelp, "Base Settings Control"
-		text = "More about rusefi on the web"
-		webHelp = "https://rusefi.com/"
+		text = "More about FOME on the web"
+		webHelp = "https://wiki.fome.tech"
 
 	dialog = veTableDialog
 		topicHelp = "veTableDialogHelp"
@@ -3973,7 +4001,7 @@ dialog = tcuControls, "Transmission Settings"
 		field = "ETB idle maximum angle",				etbIdleThrottleRange
 
 	dialog = etbDialogLeft
-		field = "https://rusefi.com/s/etb"
+		field = "https://wiki.fome.tech/r/etb"
 		field = "Disable ETB if engine is stopped",		disableEtbWhenEngineStopped
 		field = "Disable ETB Motor",					pauseEtbControl
 		field = "H-Bridge #1 function",					etbFunctions1
@@ -4272,9 +4300,9 @@ dialog = tcuControls, "Transmission Settings"
 		panel = allTriggerDebug
 		panel = harleyAcr
 
-		help = helpGeneral, "rusEFI General Help"
+		help = helpGeneral, "FOME General Help"
 		webHelp = @@MAIN_HELP_URL@@
-		text = "<img src='https://rusefi.com/style/logo_100.gif'>"
+		text = "<img src='https://wiki.fome.tech/img/logo-transparent.png'>"
 
 	dialog = vrThreshold1, "VR 1 Threshold"
 		field = "Pin", vrThreshold1_pin

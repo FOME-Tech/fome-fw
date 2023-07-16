@@ -98,7 +98,7 @@ enum class ObdCode : uint16_t {
 	//P0087 Fuel Rail/System Pressure - Too Low
 	//P0088 Fuel Rail/System Pressure - Too High
 	//P0089 Fuel Pressure Regulator 1 Performance
-	//P0090 Fuel Pressure Regulator 1 Control Circuit
+	OBD_Fuel_Pressure_Sensor_Missing = 90,
 	//P0091 Fuel Pressure Regulator 1 Control Circuit Low
 	//P0092 Fuel Pressure Regulator 1 Control Circuit High
 	//P0093 Fuel System Leak Detected - Large Leak
@@ -1724,7 +1724,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_6019 = 6019,
 
 	CUSTOM_6020 = 6020,
-	CUSTOM_OBD_UNEXPECTED_INJECTION_MODE = 6021,
+	CUSTOM_6021 = 6021,
 	CUSTOM_6022 = 6022,
 	CUSTOM_OBD_UNKNOWN_FIRING_ORDER = 6023,
 	CUSTOM_OBD_WRONG_FIRING_ORDER = 6024,
@@ -1762,9 +1762,9 @@ enum class ObdCode : uint16_t {
 	CUSTOM_TOO_LONG_CRANKING_FUEL_INJECTION = 6054,
 	CUSTOM_INTERPOLATE_NAN = 6055,
 	ERROR_HISTO_NAME = 6056,
-	CUSTOM_6057 = 6057,
+	// unused code: CUSTOM_6057 = 6057,
 	CUSTOM_OBD_HIGH_FREQUENCY = 6058,
-	CUSTOM_OBD_59 = 6059,
+	// unused code: CUSTOM_OBD_59 = 6059,
 
 	CUSTOM_OBD_MMC_START1 = 6060,
 	CUSTOM_OBD_MMC_START2 = 6061,
@@ -2113,7 +2113,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_INSTANT_MAP_DECODING = 6899,
 	STACK_USAGE_COMMUNICATION = 6900,
 	STACK_USAGE_MIL = 6901,
-	STACK_USAGE_BENCH = 6902,
+	CUSTOM_6902 = 6902,
 	STACK_USAGE_STATUS = 6903,
 	STACK_USAGE_4 = 6904,
 

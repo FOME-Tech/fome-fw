@@ -65,10 +65,9 @@ InjectionEvent::InjectionEvent() {
 // Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
 // or unexpected if unable to calculate the start angle due to missing information.
 expected<float> InjectionEvent::computeInjectionAngle(int cylinderIndex) const {
-	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs(); // local copy
+	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
 	if (cisnan(oneDegreeUs)) {
 		// in order to have fuel schedule we need to have current RPM
-		// wonder if this line slows engine startup?
 		return unexpected;
 	}
 
@@ -127,30 +126,13 @@ bool FuelSchedule::addFuelEventsForCylinder(int i) {
 	injection_mode_e mode = getCurrentInjectionMode();
 	engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
 
-	// We need two outputs if:
-	// - we are running batch fuel, and have "use two wire batch" enabled
-	// - running mode is sequential, but cranking mode is batch, so we should run two wire batch while cranking
-	//     (if we didn't, only half of injectors would fire while cranking)
-	bool isTwoWireBatch = engineConfiguration->twoWireBatchInjection || (engineConfiguration->injectionMode == IM_SEQUENTIAL);
+	// Map order index -> cylinder index (firing order)
+	// Single point only uses injector 1 (index 0)
+	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : ID2INDEX(getCylinderId(i));
 
-	int injectorIndex;
-	if (mode == IM_SIMULTANEOUS || mode == IM_SINGLE_POINT) {
-		// These modes only have one injector
-		injectorIndex = 0;
-	} else if (mode == IM_SEQUENTIAL || (mode == IM_BATCH && isTwoWireBatch)) {
-		// Map order index -> cylinder index (firing order)
-		injectorIndex = getCylinderId(i) - 1;
-	} else if (mode == IM_BATCH) {
-		// Loop over the first half of the firing order twice
-		injectorIndex = i % (engineConfiguration->cylindersCount / 2);
-	} else {
-		firmwareError(ObdCode::CUSTOM_OBD_UNEXPECTED_INJECTION_MODE, "Unexpected injection mode %d", mode);
-		injectorIndex = 0;
-	}
+	InjectorOutputPin *secondOutput = nullptr;
 
-	InjectorOutputPin *secondOutput;
-
-	if (mode == IM_BATCH && isTwoWireBatch) {
+	if (mode == IM_BATCH) {
 		/**
 		 * also fire the 2nd half of the injectors so that we can implement a batch mode on individual wires
 		 */
@@ -158,18 +140,13 @@ bool FuelSchedule::addFuelEventsForCylinder(int i) {
 		// Each injector gets fired as a primary (the same as sequential), but also
 		// fires the injector 360 degrees later in the firing order.
 		int secondOrder = (i + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
-		int secondIndex = getCylinderId(secondOrder) - 1;
+		int secondIndex = ID2INDEX(getCylinderId(secondOrder));
 		secondOutput = &enginePins.injectors[secondIndex];
-	} else {
-		secondOutput = nullptr;
 	}
 
-	InjectorOutputPin *output = &enginePins.injectors[injectorIndex];
-	bool isSimultaneous = mode == IM_SIMULTANEOUS;
-
-	ev->outputs[0] = output;
+	ev->outputs[0] = &enginePins.injectors[injectorIndex];
 	ev->outputs[1] = secondOutput;
-	ev->isSimultaneous = isSimultaneous;
+	ev->isSimultaneous = mode == IM_SIMULTANEOUS;
 	// Stash the cylinder number so we can select the correct fueling bank later
 	ev->cylinderNumber = injectorIndex;
 

@@ -37,6 +37,9 @@ Does the vehicle have a turbo or supercharger?
 ### useFordRedundantTps
 On some Ford and Toyota vehicles one of the throttle sensors is not linear on the full range, i.e. in the specific range of the positions we effectively have only one sensor.
 
+### lambdaProtectionEnable
+
+
 ### overrideTriggerGaps
 
 
@@ -358,6 +361,12 @@ Just for reference really, not taken into account by any logic at this point
 ### fordInjectorSmallPulseSlope
 
 
+### lambdaProtectionMinRpm
+
+
+### lambdaProtectionMinLoad
+
+
 ### is_enabled_spi_1
 
 
@@ -474,6 +483,15 @@ Below this throttle position, the engine is considered idling. If you have an el
 
 ### startCrankingDuration
 Maximum time to crank starter when start/stop button is pressed
+
+### lambdaProtectionMinTps
+
+
+### lambdaProtectionTimeout
+Only respond once lambda is out of range for this period of time. Use to avoid transients triggering lambda protection when not needed
+
+### lambdaProtectionRestoreRpm
+
 
 ### clutchUpPinInverted
 
@@ -772,9 +790,6 @@ Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
 ### isManualSpinningMode
 Usually if we have no trigger events that means engine is stopped\nUnless we are troubleshooting and spinning the engine by hand - this case a longer\ndelay is needed
 
-### twoWireBatchInjection
-This is needed if your coils are individually wired and you wish to use batch injection.\nenable two_wire_batch_injection
-
 ### neverInstantRpm
 
 
@@ -1038,6 +1053,12 @@ Select whether to configure injector flow in volumetric flow (defualt, cc/min) o
 
 ### benchTestOffTime
 Time between bench test pulses
+
+### lambdaProtectionRestoreTps
+
+
+### lambdaProtectionRestoreLoad
+
 
 ### boostCutPressure
 MAP value above which fuel is cut in case of overboost.\nSet to 0 to disable overboost cut.
