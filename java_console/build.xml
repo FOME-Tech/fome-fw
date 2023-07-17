@@ -77,6 +77,7 @@
             <src path="ui/src/main/java"/>
             <src path="ui/src/test/java"/>
             <src path="logging/src/main/java"/>
+            <compilerarg line="-Xlint"/>
             <!-- uncomment if you want to compile under java 11
             // see https://github.com/rusefi/rusefi/issues/1526
             please remove the space between '-' and '-add-exports' it should be double-dash
