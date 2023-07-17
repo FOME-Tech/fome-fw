@@ -49,6 +49,7 @@
 #include "fuel_schedule.h"
 #include "prime_injection.h"
 #include "throttle_model.h"
+#include "lambda_monitor.h"
 
 #ifndef EFI_UNIT_TEST
 #error EFI_UNIT_TEST must be defined!
@@ -157,7 +158,7 @@ public:
 	 * Slightly shorter helper function to keep the code looking clean.
 	 */
 	template<typename get_t>
-	auto & module() {
+	constexpr auto & module() {
 		return engineModules.get<get_t>();
 	}
 
@@ -181,6 +182,8 @@ public:
 #if EFI_BOOST_CONTROL
 	BoostController boostController;
 #endif // EFI_BOOST_CONTROL
+
+	LambdaMonitor lambdaMonitor;
 
 	IgnitionState ignitionState;
 	void resetLua();

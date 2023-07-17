@@ -905,7 +905,7 @@ public class Fields {
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int PEDAL_TO_TPS_SIZE = 8;
-	public static final int persistent_config_s_size = 22852;
+	public static final int persistent_config_s_size = 22884;
 	public static final int pid_s_size = 20;
 	public static final int PidAutoTune_AutoTunerState_AUTOTUNER_OFF = 0;
 	public static final int PidAutoTune_AutoTunerState_CONVERGED = 16;
@@ -1015,7 +1015,7 @@ public class Fields {
 	public static final int TOOTH_PACKET_SIZE = 2;
 	public static final String TOP_DEAD_CENTER_MESSAGE = "r";
 	public static final int TORQUE_CURVE_SIZE = 6;
-	public static final int TOTAL_CONFIG_SIZE = 22852;
+	public static final int TOTAL_CONFIG_SIZE = 22884;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int TPS_TPS_ACCEL_CLT_CORR_TABLE = 4;
 	public static final int TPS_TPS_ACCEL_TABLE = 8;
@@ -1181,10 +1181,10 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.06.11.f407-discovery.3178062656";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.07.09.f407-discovery.4223705144";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final char TS_TEST_COMMAND = 't';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1372;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1376;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
@@ -1257,6 +1257,7 @@ public class Fields {
 	public static final Field INJECTOR_BATTLAGCORR = Field.create("INJECTOR_BATTLAGCORR", 72, FieldType.INT16).setScale(0.01).setBaseOffset(0);
 	public static final Field ISFORCEDINDUCTION = Field.create("ISFORCEDINDUCTION", 88, FieldType.BIT, 0).setBaseOffset(0);
 	public static final Field USEFORDREDUNDANTTPS = Field.create("USEFORDREDUNDANTTPS", 88, FieldType.BIT, 1).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONENABLE = Field.create("LAMBDAPROTECTIONENABLE", 88, FieldType.BIT, 2).setBaseOffset(0);
 	public static final Field OVERRIDETRIGGERGAPS = Field.create("OVERRIDETRIGGERGAPS", 88, FieldType.BIT, 3).setBaseOffset(0);
 	public static final Field ENABLEFAN1WITHAC = Field.create("ENABLEFAN1WITHAC", 88, FieldType.BIT, 4).setBaseOffset(0);
 	public static final Field ENABLEFAN2WITHAC = Field.create("ENABLEFAN2WITHAC", 88, FieldType.BIT, 5).setBaseOffset(0);
@@ -1485,7 +1486,8 @@ public class Fields {
 	public static final Field TRIGGERSIMULATORPINS1 = Field.create("TRIGGERSIMULATORPINS1", 636, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field TRIGGERSIMULATORPINS2 = Field.create("TRIGGERSIMULATORPINS2", 638, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field FORDINJECTORSMALLPULSESLOPE = Field.create("FORDINJECTORSMALLPULSESLOPE", 640, FieldType.INT16).setScale(0.001).setBaseOffset(0);
-	public static final Field UNUSED638 = Field.create("UNUSED638", 642, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONMINRPM = Field.create("LAMBDAPROTECTIONMINRPM", 642, FieldType.INT8).setScale(100.0).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONMINLOAD = Field.create("LAMBDAPROTECTIONMINLOAD", 643, FieldType.INT8).setScale(10.0).setBaseOffset(0);
 	public static final Field IS_ENABLED_SPI_1 = Field.create("IS_ENABLED_SPI_1", 644, FieldType.BIT, 0).setBaseOffset(0);
 	public static final Field IS_ENABLED_SPI_2 = Field.create("IS_ENABLED_SPI_2", 644, FieldType.BIT, 1).setBaseOffset(0);
 	public static final Field IS_ENABLED_SPI_3 = Field.create("IS_ENABLED_SPI_3", 644, FieldType.BIT, 2).setBaseOffset(0);
@@ -1557,7 +1559,9 @@ public class Fields {
 	public static final Field TPS1SECONDARYMAX = Field.create("TPS1SECONDARYMAX", 742, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field ANTILAGRPMTRESHOLD = Field.create("ANTILAGRPMTRESHOLD", 744, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field STARTCRANKINGDURATION = Field.create("STARTCRANKINGDURATION", 746, FieldType.INT16).setScale(1.0).setBaseOffset(0);
-	public static final Field UNUSED748 = Field.create("UNUSED748", 748, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONMINTPS = Field.create("LAMBDAPROTECTIONMINTPS", 748, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONTIMEOUT = Field.create("LAMBDAPROTECTIONTIMEOUT", 749, FieldType.INT8).setScale(0.1).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONRESTORERPM = Field.create("LAMBDAPROTECTIONRESTORERPM", 750, FieldType.INT8).setScale(100.0).setBaseOffset(0);
 	public static final Field ACRELAYPINMODE = Field.create("ACRELAYPINMODE", 751, FieldType.INT8, pin_output_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field ACRELAYPIN = Field.create("ACRELAYPIN", 752, FieldType.INT16, output_pin_e).setScale(1.0).setBaseOffset(0);
 	public static final String[] maf_sensor_type_e = {"v0", "v1", "v2", "v3"};
@@ -1762,7 +1766,6 @@ public class Fields {
 	public static final Field USESEPARATEVEFORIDLE = Field.create("USESEPARATEVEFORIDLE", 1200, FieldType.BIT, 9).setBaseOffset(0);
 	public static final Field VERBOSETRIGGERSYNCHDETAILS = Field.create("VERBOSETRIGGERSYNCHDETAILS", 1200, FieldType.BIT, 10).setBaseOffset(0);
 	public static final Field ISMANUALSPINNINGMODE = Field.create("ISMANUALSPINNINGMODE", 1200, FieldType.BIT, 11).setBaseOffset(0);
-	public static final Field TWOWIREBATCHINJECTION = Field.create("TWOWIREBATCHINJECTION", 1200, FieldType.BIT, 12).setBaseOffset(0);
 	public static final Field NEVERINSTANTRPM = Field.create("NEVERINSTANTRPM", 1200, FieldType.BIT, 13).setBaseOffset(0);
 	public static final Field USEFIXEDBAROCORRFROMMAP = Field.create("USEFIXEDBAROCORRFROMMAP", 1200, FieldType.BIT, 15).setBaseOffset(0);
 	public static final Field USESEPARATEADVANCEFORCRANKING = Field.create("USESEPARATEADVANCEFORCRANKING", 1200, FieldType.BIT, 16).setBaseOffset(0);
@@ -1879,7 +1882,8 @@ public class Fields {
 	public static final Field CAN2OPENBLT = Field.create("CAN2OPENBLT", 1436, FieldType.BIT, 2).setBaseOffset(0);
 	public static final Field INJECTORFLOWASMASSFLOW = Field.create("INJECTORFLOWASMASSFLOW", 1436, FieldType.BIT, 3).setBaseOffset(0);
 	public static final Field BENCHTESTOFFTIME = Field.create("BENCHTESTOFFTIME", 1440, FieldType.INT8).setScale(5.0).setBaseOffset(0);
-	public static final Field UNUSED1445 = Field.create("UNUSED1445", 1441, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONRESTORETPS = Field.create("LAMBDAPROTECTIONRESTORETPS", 1441, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAPROTECTIONRESTORELOAD = Field.create("LAMBDAPROTECTIONRESTORELOAD", 1442, FieldType.INT8).setScale(10.0).setBaseOffset(0);
 	public static final Field LAUNCHACTIVATEPINMODE = Field.create("LAUNCHACTIVATEPINMODE", 1443, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field CAN2TXPIN = Field.create("CAN2TXPIN", 1444, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field CAN2RXPIN = Field.create("CAN2RXPIN", 1446, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
@@ -2606,6 +2610,9 @@ public class Fields {
 	public static final Field BOOSTCLOSEDLOOPBLENDS2_BLENDBINS = Field.create("BOOSTCLOSEDLOOPBLENDS2_BLENDBINS", 22826, FieldType.INT16).setScale(0.1).setBaseOffset(0);
 	public static final Field BOOSTCLOSEDLOOPBLENDS2_BLENDVALUES = Field.create("BOOSTCLOSEDLOOPBLENDS2_BLENDVALUES", 22842, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 	public static final Field BOOSTCLOSEDLOOPBLENDS2_ALIGNMENTFILL_AT_186 = Field.create("BOOSTCLOSEDLOOPBLENDS2_ALIGNMENTFILL_AT_186", 22850, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAMAXDEVIATIONTABLE = Field.create("LAMBDAMAXDEVIATIONTABLE", 22852, FieldType.INT8).setScale(0.01).setBaseOffset(0);
+	public static final Field LAMBDAMAXDEVIATIONLOADBINS = Field.create("LAMBDAMAXDEVIATIONLOADBINS", 22868, FieldType.INT16).setScale(1.0).setBaseOffset(0);
+	public static final Field LAMBDAMAXDEVIATIONRPMBINS = Field.create("LAMBDAMAXDEVIATIONRPMBINS", 22876, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field[] VALUES = {
 	ENGINETYPE,
 	SENSORSNIFFERRPMTHRESHOLD,
@@ -2626,6 +2633,7 @@ public class Fields {
 	INJECTOR_BATTLAGCORR,
 	ISFORCEDINDUCTION,
 	USEFORDREDUNDANTTPS,
+	LAMBDAPROTECTIONENABLE,
 	OVERRIDETRIGGERGAPS,
 	ENABLEFAN1WITHAC,
 	ENABLEFAN2WITHAC,
@@ -2844,7 +2852,8 @@ public class Fields {
 	TRIGGERSIMULATORPINS1,
 	TRIGGERSIMULATORPINS2,
 	FORDINJECTORSMALLPULSESLOPE,
-	UNUSED638,
+	LAMBDAPROTECTIONMINRPM,
+	LAMBDAPROTECTIONMINLOAD,
 	IS_ENABLED_SPI_1,
 	IS_ENABLED_SPI_2,
 	IS_ENABLED_SPI_3,
@@ -2916,7 +2925,9 @@ public class Fields {
 	TPS1SECONDARYMAX,
 	ANTILAGRPMTRESHOLD,
 	STARTCRANKINGDURATION,
-	UNUSED748,
+	LAMBDAPROTECTIONMINTPS,
+	LAMBDAPROTECTIONTIMEOUT,
+	LAMBDAPROTECTIONRESTORERPM,
 	ACRELAYPINMODE,
 	ACRELAYPIN,
 	MAFSENSORTYPE,
@@ -3117,7 +3128,6 @@ public class Fields {
 	USESEPARATEVEFORIDLE,
 	VERBOSETRIGGERSYNCHDETAILS,
 	ISMANUALSPINNINGMODE,
-	TWOWIREBATCHINJECTION,
 	NEVERINSTANTRPM,
 	USEFIXEDBAROCORRFROMMAP,
 	USESEPARATEADVANCEFORCRANKING,
@@ -3231,7 +3241,8 @@ public class Fields {
 	CAN2OPENBLT,
 	INJECTORFLOWASMASSFLOW,
 	BENCHTESTOFFTIME,
-	UNUSED1445,
+	LAMBDAPROTECTIONRESTORETPS,
+	LAMBDAPROTECTIONRESTORELOAD,
 	LAUNCHACTIVATEPINMODE,
 	CAN2TXPIN,
 	CAN2RXPIN,
@@ -3950,5 +3961,8 @@ public class Fields {
 	BOOSTCLOSEDLOOPBLENDS2_BLENDBINS,
 	BOOSTCLOSEDLOOPBLENDS2_BLENDVALUES,
 	BOOSTCLOSEDLOOPBLENDS2_ALIGNMENTFILL_AT_186,
+	LAMBDAMAXDEVIATIONTABLE,
+	LAMBDAMAXDEVIATIONLOADBINS,
+	LAMBDAMAXDEVIATIONRPMBINS,
 	};
 }
