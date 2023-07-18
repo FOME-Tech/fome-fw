@@ -62,9 +62,6 @@ jobs:
       working-directory: ./firmware
       run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector 0 0 11" -c "flash write_image "deliver/fome.bin" 0x08000000" -c "reset run" -c "shutdown"
 
-    - name: List serial ports
-      run: ls /dev/serial/by-id/
-
     # This both compiles and runs HW CI tests
     - name: Run Hardware CI
       run: .github/workflows/hw-ci/run_hw_ci.sh ${{matrix.test-suite}}
