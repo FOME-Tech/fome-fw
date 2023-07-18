@@ -1,6 +1,6 @@
 package com.rusefi;
 
-import com.rusefi.newparse.outputs.CStructWriter;
+// import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
@@ -195,8 +195,8 @@ public class ConfigDefinition {
             }
 
             // Write C structs
-            CStructWriter cStructs = new CStructWriter();
-            cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
+            // CStructWriter cStructs = new CStructWriter();
+            // cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
 
             // Write tunerstudio layout
             // TsWriter writer = new TsWriter();

@@ -88,6 +88,8 @@ public class LiveDataProcessor {
 
         GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("controllers/lua/generated/output_lookup_generated.cpp");
 
+        //OutputChannelWriter outputChannelWriter = new OutputChannelWriter(tsOutputsDestination + File.separator + "generated/output_channels.ini");
+
         EntryHandler handler = new EntryHandler() {
             @Override
             public void onEntry(String name, String javaName, String folder, String prepend, boolean withCDefines, String[] outputNames, String constexpr, String conditional, Boolean isPtr) throws IOException {
@@ -141,7 +143,7 @@ public class LiveDataProcessor {
                     RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
 
                     // if (outputNames.length == 0) {
-                    //     outputChannelWriter.writeOutputChannels(parseState, fragmentDialogConsumer,null);
+                    //     outputChannelWriter.writeOutputChannels(parseState, null);
                     // } else {
                     //     for (int i = 0; i < outputNames.length; i++) {
                     //         outputChannelWriter.writeOutputChannels(parseState, fragmentDialogConsumer, outputNames[i]);
