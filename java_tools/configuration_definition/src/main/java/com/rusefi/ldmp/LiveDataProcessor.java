@@ -5,6 +5,10 @@ import com.rusefi.EnumToString;
 import com.rusefi.InvokeReader;
 import com.rusefi.ReaderState;
 import com.rusefi.ReaderStateImpl;
+import com.rusefi.RusefiParseErrorStrategy;
+import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.outputs.OutputChannelWriter;
+import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.util.LazyFile;
 import org.yaml.snakeyaml.Yaml;
@@ -137,6 +141,26 @@ public class LiveDataProcessor {
                         gaugeConsumer.handleEndStruct(readerState, structure);
                     }
                 });
+
+                {
+                    ParseState parseState = new ParseState(state.getEnumsReader());
+
+                    parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
+
+                    if (prepend != null && !prepend.isEmpty()) {
+                        RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prepend);
+                    }
+
+                    RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
+
+                    // if (outputNames.length == 0) {
+                    //     outputChannelWriter.writeOutputChannels(parseState, fragmentDialogConsumer,null);
+                    // } else {
+                    //     for (int i = 0; i < outputNames.length; i++) {
+                    //         outputChannelWriter.writeOutputChannels(parseState, fragmentDialogConsumer, outputNames[i]);
+                    //     }
+                    // }
+                }
 
                 state.doJob();
 
