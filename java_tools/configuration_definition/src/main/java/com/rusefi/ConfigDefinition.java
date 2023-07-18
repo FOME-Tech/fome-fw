@@ -1,6 +1,7 @@
 package com.rusefi;
 
 import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.pinout.PinoutLogic;
 import com.rusefi.trigger.TriggerWheelTSLogic;
@@ -176,17 +177,17 @@ public class ConfigDefinition {
             // Load prepend files
             {
                 // Ignore duplicates of definitions made during prepend phase
-//                parseState.setDefinitionPolicy(Definition.OverwritePolicy.IgnoreNew);
+                parseState.setDefinitionPolicy(Definition.OverwritePolicy.IgnoreNew);
 
                 for (String prependFile : state.getPrependFiles()) {
-//                    RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prependFile);
+                    RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prependFile);
                 }
             }
 
             // Now load the main config file
             {
                 // don't allow duplicates in the main file
-//                parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
+                parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
 //                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.definitionInputFile);
             }
 
