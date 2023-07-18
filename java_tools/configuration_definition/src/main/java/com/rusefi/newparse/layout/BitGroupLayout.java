@@ -75,7 +75,6 @@ public class BitGroupLayout extends Layout {
 
                 if (bit.comment != null) {
                     ps.println("\t// " + bit.comment.replaceAll("[+]", "").replaceAll(";", "").replace("\\n", "\n\t// "));
-                    //ps.print('\t');
                 }
 
                 ps.println("\t// offset " + this.offsetWithinStruct + " bit " + i);
