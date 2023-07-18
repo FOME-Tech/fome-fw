@@ -1,11 +1,11 @@
 ! units,scale,offset,min,max,digits
 
 struct_no_prefix electronic_throttle_s
-	float idlePosition;"ETB: idlePosition";"per", 1,0, 0,10, 2
+	float idlePosition;"ETB: idlePosition";"per", 1, 0, 0, 10, 2
 	float trim;"ETB: trim"
-	float luaAdjustment;"ETB: luaAdjustment";"per", 1,0, 0,3, 2
+	float luaAdjustment;"ETB: luaAdjustment";"per", 1, 0, 0, 3, 2
 
-	float m_wastegatePosition;"DC: wastegatePosition";"per", 1,0, 0,3, 2
+	float m_wastegatePosition;"DC: wastegatePosition";"per", 1, 0, 0, 3, 2
 
 
 	custom percent_t 4 scalar, F32, @OFFSET@, "", 1, 0, 0, 100, 2
