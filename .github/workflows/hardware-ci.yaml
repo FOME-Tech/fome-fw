@@ -13,7 +13,6 @@ jobs:
           #   runs-on: hw-ci-f4-discovery
           #   test-suite: com.rusefi.HwCiF4Discovery
           #   folder: config/boards/f407-discovery
-          #   config-name: all
           #   openocd-script: ../.github/workflows/openocd_ci_f4_discovery.cfg
           #   serial-device: /dev/serial/by-id/usb-FOME_FOME_Engine_Management_ECU_2B003B000A51343033393930-if01
 
@@ -21,7 +20,6 @@ jobs:
             runs-on: hw-ci-f4-discovery-2
             test-suite: com.rusefi.HwCiF4Discovery
             folder: config/boards/f407-discovery
-            config-name: all
             openocd-script: ../.github/workflows/openocd_ci_f4_discovery.cfg
             serial-device: /dev/serial/by-id/usb-rusEFI_LLC_rusEFI_Engine_Management_ECU_2B003B000A51343033393930-if01
 
@@ -29,7 +27,6 @@ jobs:
           #   runs-on: hw-ci-proteus
           #   test-suite: com.rusefi.HwCiF4Proteus
           #   folder: config/boards/proteus
-          #   config-name: proteus_f4
           #   openocd-script: ../.github/workflows/openocd_ci_proteus.cfg
           #   serial-device: /dev/serial/by-id/usb-FOME_FOME_Engine_Management_ECU_41003D000451383037343335-if01
 
@@ -43,23 +40,6 @@ jobs:
     - name: Identify Agent
       run: uname -a
 
-# huh? why do we gen_config_default here if we gen_config_board later?
-    - name: Generate Configs for HW CI
-      working-directory: ./firmware/
-      run: ./gen_config_default.sh
-
-    - name: Generate Enum Strings
-      working-directory: ./firmware/
-      run: ./gen_enum_to_string.sh
-
-    - name: Generate Board config
-      working-directory: ./firmware/
-      run: bash gen_config_board.sh ${{matrix.folder}} ${{matrix.config-name}}
-
-    - name: Generate Live Documentation
-      working-directory: ./firmware/
-      run: ./gen_live_documentation.sh
-
     - name: Add compiler to PATH
       run: echo "$HOME/.rusefi-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
 
@@ -67,18 +47,13 @@ jobs:
     - name: Test/Identify Compiler
       run: arm-none-eabi-gcc -v
 
-    # We aren't guaranteed a clean machine every time, so manually clean the output
-    - name: Clean Build
-      working-directory: ./firmware
-      run: make clean
-
     - name: Set EXTRA env
       run: |
         echo "EXTRA_2_PARAMS=-DHARDWARE_CI" >> $GITHUB_ENV
         echo "HARDWARE_CI_SERIAL_DEVICE=${{matrix.serial-device}}" >> $GITHUB_ENV
 
     - name: Build Firmware
-      run: bash misc/jenkins/compile_other_versions/compile.sh ${{matrix.folder}} ${{matrix.build-target}}
+      run: .github/workflows/hw-ci/build_for_hw_ci.sh ${{matrix.folder}} ${{matrix.build-target}}
 
     - name: Check for STLINK
       run: lsusb | grep 'ST-LINK\|STLINK'
