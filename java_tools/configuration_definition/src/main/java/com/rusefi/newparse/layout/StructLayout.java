@@ -182,11 +182,6 @@ public class StructLayout extends Layout {
     }
 
     public void writeCLayoutRoot(PrintStream ps) {
-        if (this.comment != null) {
-            ps.println("/**\n * @brief " + this.comment);
-            ps.println("*/");
-        }
-
         ps.println("struct " + this.typeName + " {");
 
         this.children.forEach(c -> c.writeCLayout(ps));

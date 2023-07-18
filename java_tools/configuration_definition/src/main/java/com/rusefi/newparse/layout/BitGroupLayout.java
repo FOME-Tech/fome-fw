@@ -85,8 +85,6 @@ public class BitGroupLayout extends Layout {
                 ps.println("\t// offset " + this.offsetWithinStruct + " bit " + i);
                 ps.println("\tbool unusedBit_" + this.offsetWithinStruct + "_" + i + " : 1 {};");
             }
-
-            ps.println();
         }
     }
 
