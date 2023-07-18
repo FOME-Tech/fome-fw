@@ -1,5 +1,6 @@
 package com.rusefi;
 
+import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
@@ -65,6 +66,7 @@ public class ConfigDefinition {
 
         String tsInputFileFolder = null;
         String destCDefinesFileName = null;
+        String cHeaderDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String firingEnumFileName = null;
         String triggersInputFolder = null;
@@ -84,6 +86,7 @@ public class ConfigDefinition {
                     tsInputFileFolder = args[i + 1];
                     break;
                 case KEY_C_DESTINATION:
+                    cHeaderDestination = args[i + 1];
                     state.addCHeaderDestination(args[i + 1]);
                     break;
                 case KEY_ZERO_INIT:
@@ -188,12 +191,12 @@ public class ConfigDefinition {
             {
                 // don't allow duplicates in the main file
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
-//                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.definitionInputFile);
+                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.definitionInputFile);
             }
 
             // Write C structs
-            // CStructWriter cStructs = new CStructWriter();
-            // cStructs.writeCStructs(parseState, destCHeaderFileName + ".test");
+            CStructWriter cStructs = new CStructWriter();
+            cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
 
             // Write tunerstudio layout
             // TsWriter writer = new TsWriter();
