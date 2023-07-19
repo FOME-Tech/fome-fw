@@ -37,16 +37,15 @@ public:
 	void setOutput(expected<percent_t> outputValue) override;
 
 private:
-	Pid m_pid;
-	const ValueProvider3D* m_targetMap = nullptr;
-	int index = 0;
-
+	const int index = 0;
 	// Bank index, 0 or 1
 	const uint8_t m_bank = 0;
-
 	// Cam index, 0 = intake, 1 = exhaust
 	const uint8_t m_cam = 0;
 
+	Pid m_pid;
+
+	const ValueProvider3D* m_targetMap = nullptr;
 	IPwm* m_pwm = nullptr;
 };
 
