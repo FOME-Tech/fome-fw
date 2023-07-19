@@ -33,6 +33,11 @@ void VvtController::init(const ValueProvider3D* targetMap, IPwm* pwm) {
 }
 
 void VvtController::onFastCallback() {
+	if (!m_pwm || !m_targetMap) {
+		// not init yet
+		return;
+	}
+
 	if (engine->auxParametersVersion.isOld(engine->getGlobalConfigurationVersion())) {
 		m_pid.reset();
 	}
@@ -104,13 +109,9 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 	vvtOutput = outputValue.value_or(0);
 
 	if (outputValue && enabled) {
-		if (m_pwm) {
-			m_pwm->setSimplePwmDutyCycle(PERCENT_TO_DUTY(outputValue.Value));
-		}
+		m_pwm->setSimplePwmDutyCycle(PERCENT_TO_DUTY(outputValue.Value));
 	} else {
-		if (m_pwm) {
-			m_pwm->setSimplePwmDutyCycle(0);
-		}
+		m_pwm->setSimplePwmDutyCycle(0);
 
 		// we need to avoid accumulating iTerm while engine is not running
 		m_pid.reset();
