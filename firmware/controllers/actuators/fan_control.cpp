@@ -46,7 +46,7 @@ void FanController::onSlowCallback() {
 	}
 #endif
 
-	bool acActive = engine->module<AcController>().unmock().isAcEnabled();
+	bool acActive = engine->module<AcController>()->isAcEnabled();
 
 	auto& pin = getPin();
 
