@@ -141,7 +141,7 @@ public:
 		FuelPumpController,
 		MainRelayController,
 		IgnitionController,
-		AcController,
+		Mockable<AcController>,
 		FanControl1,
 		FanControl2,
 		PrimeController,
