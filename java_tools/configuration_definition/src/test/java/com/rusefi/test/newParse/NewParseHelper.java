@@ -17,7 +17,6 @@ public class NewParseHelper {
         return parseState;
     }
 
-    // TODO: We have to move either forward or backwards with newparse #4441
     public static String parseToTs(String input) throws IOException {
         ParseState state = parse(input);
 
@@ -47,7 +46,6 @@ public class NewParseHelper {
         return baos.toString(utf8);
     }
 
-    // TODO: We have to move either forward or backwards with newparse #4441
     public static String parseToC(String input) throws IOException {
         ParseState state = parse(input);
 
