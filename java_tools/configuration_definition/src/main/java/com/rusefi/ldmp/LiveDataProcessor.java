@@ -242,6 +242,7 @@ public class LiveDataProcessor {
 
         outputValueConsumer.endFile();
 
+        // return outputChannelWriter.getSize();
         return outputsSections.sensorTsPosition;
     }
 

@@ -37,4 +37,8 @@ public class OutputChannelWriter {
         cumulativeSize += sl.getSize();
         ps.println("; total TS size = " + cumulativeSize);
     }
+
+    public int getSize() {
+        return cumulativeSize;
+    }
 }
