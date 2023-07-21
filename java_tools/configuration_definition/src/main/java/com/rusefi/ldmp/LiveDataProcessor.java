@@ -95,7 +95,10 @@ public class LiveDataProcessor {
 
         GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("controllers/lua/generated/output_lookup_generated.cpp");
 
-        //OutputChannelWriter outputChannelWriter = new OutputChannelWriter(tsOutputsDestination + File.separator + "generated/output_channels.ini");
+        // OutputChannelWriter outputChannelWriter = new OutputChannelWriter(
+        //     tsOutputsDestination + File.separator + "/output_channels.ini",
+        //     tsOutputsDestination + File.separator + "/data_logs.ini"
+        // );
 
         EntryHandler handler = new EntryHandler() {
             @Override
