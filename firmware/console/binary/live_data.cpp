@@ -74,8 +74,8 @@ const fuel_computer_s* getLiveData(size_t) {
 template<>
 const fan_control_s* getLiveData(size_t idx) {
 	switch (idx) {
-		case 0: return &engine->fan1;
-		case 1: return &engine->fan2;
+		case 0: return &engine->module<FanControl1>().unmock();
+		case 1: return &engine->module<FanControl2>().unmock();
 		default: return nullptr;
 	}
 }
@@ -131,6 +131,21 @@ const trigger_state_s* getLiveData(size_t idx) {
 }
 
 template<>
+const vvt_s* getLiveData(size_t idx) {
+#if EFI_AUX_PID
+	switch (idx) {
+		case 0: return &engine->module<VvtController1>().unmock();
+		case 1: return &engine->module<VvtController2>().unmock();
+		case 2: return &engine->module<VvtController3>().unmock();
+		case 3: return &engine->module<VvtController4>().unmock();
+		default: return nullptr;
+	}
+#else
+	return nullptr;
+#endif
+}
+
+template<>
 const trigger_state_primary_s* getLiveData(size_t) {
 #if EFI_SHAFT_POSITION_INPUT
 	return &engine->triggerCentral.triggerState;
@@ -166,6 +181,11 @@ const sent_state_s* getLiveData(size_t) {
 template<>
 const throttle_model_s* getLiveData(size_t) {
 	return &engine->module<ThrottleModel>().unmock();
+}
+
+template<>
+const lambda_monitor_s* getLiveData(size_t) {
+	return &engine->lambdaMonitor;
 }
 
 static const FragmentEntry fragments[] = {

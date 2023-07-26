@@ -277,8 +277,7 @@ enable2ndByteCanID = false
 	requiresPowerCycle = idle_solenoidFrequency
 	requiresPowerCycle = boostPwmFrequency
 	requiresPowerCycle = alternatorPwmFrequency
-	requiresPowerCycle = vvtOutputFrequency1
-	requiresPowerCycle = vvtOutputFrequency2
+	requiresPowerCycle = vvtOutputFrequency
 	requiresPowerCycle = vvtPins1
 	requiresPowerCycle = vvtPins2
 	requiresPowerCycle = vvtPins3
@@ -583,7 +582,6 @@ enable2ndByteCanID = false
 		xBins		= cltFuelCorrBins, coolant
 		yBins		= cltFuelCorr
 		yBins		= wueAnalRecommend
-		;gauge		= cltGauge
 
 		lineLabel	= "Warmup Correction"
 		lineLabel	= "Recommended WUE"
@@ -838,7 +836,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		zBins		= scriptTable4
 
 	table = IgnRetardTableALS, IgnRetardALS,  "Ignition adjustment",   1
-      ;       constant, variable
       xBins       = alsIgnRetardrpmBins,  RPMValue
       yBins       = alsIgnRetardLoadBins,  TPSValue
       zBins       = ALSTimingRetardTable
@@ -847,7 +844,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
       upDownLabel = "(RICHER)", "(LEANER)"
 
    table = FuelAdderTableALS, FuelAdderALS,  "Fuel adjustment",   1
-      ;       constant, variable
       xBins       = alsFuelAdjustmentrpmBins,  RPMValue
       yBins       = alsFuelAdjustmentLoadBins,  TPSValue
       zBins       = ALSFuelAdjustment
@@ -856,7 +852,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
       upDownLabel = "(RICHER)", "(LEANER)"
 
 	table = baroCorrTbl,  baroCorrMap,  "Baro Correction",	1
-		;		constant, variable
 		xBins		= baroCorrRpmBins,  RPMValue
 		yBins		= baroCorrPressureBins,  baroPressure
 		zBins		= baroCorrTable
@@ -865,7 +860,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		upDownLabel = "(RICHER)", "(LEANER)"
 
 	table = ignitionTableTbl,  ignitionTableMap,  "Ignition Table",	1
-		;		constant, variable
 		xBins		= ignitionRpmBins,  RPMValue
 		yBins		= ignitionLoadBins,  ignitionLoad
 		zBins		= ignitionTable
@@ -946,7 +940,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		gridOrient  = 250, 0, 340
 
 	table = ignitionIatCorrTableTbl,  ignitionIatCorrTableMap,  "Ignition Intake Air Temp correction",	1
-		;		constant, variable
 		xBins		= ignitionIatCorrTempBins,  intake
 		yBins		= ignitionIatCorrLoadBins,  ignitionLoad
 		zBins		= ignitionIatCorrTable
@@ -955,7 +948,7 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		upDownLabel = "(RICHER)", "(LEANER)"
 
 	table = veTableTbl,  veTableMap,  "VE Table",	1
-		;		constant, variable
+		xyLabels = "RPM", "load"
 		xBins		= veRpmBins,  RPMValue
 		yBins		= veLoadBins, veTableYAxis
 		zBins		= veTable
@@ -964,6 +957,7 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		upDownLabel = "(RICHER)", "(LEANER)"
 
 	table = idleVeTableTbl, idleVeTable, "Idle VE"
+		xyLabels = "RPM", "load"
 		xBins		= idleVeRpmBins,  RPMValue
 		yBins		= idleVeLoadBins, veTableYAxis
 		zBins		= idleVeTable
@@ -1109,7 +1103,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 
 	table = injPhaseTableTbl,  injPhaseTableMap,  "Injection Phase",	1
 		topicHelp = "fuelHelp"
-		;		constant, variable
 		xBins		= injPhaseRpmBins,  RPMValue
 		yBins		= injPhaseLoadBins,  fuelingLoad
 		zBins		= injectionPhase
@@ -1118,7 +1111,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		upDownLabel = "(Later)", "(Sooner)"
 
 	table = pedalToTpsTbl,  pedalToTpsMap,  "ETB Pedal to TPS",	1
-		;		constant, variable
 		xBins		= pedalToTpsRpmBins,  RPMValue
 		yBins		= pedalToTpsPedalBins,  throttlePedalPosition
 		zBins		= pedalToTpsTable
@@ -1143,7 +1135,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 #else
 	table = afrTableTbl,  afrTableMap,  "Target AFR Table",	1
 #endif
-		;		constant, variable
 		xBins		= lambdaRpmBins,  RPMValue
 		yBins		= lambdaLoadBins, afrTableYAxis
 		zBins		= lambdaTable
@@ -1158,7 +1149,6 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		zBins = lambdaMaxDeviationTable
 
 	table = iacPidMultTbl,  iacPidMultMap,  "IAC PID Multiplier Table",	1
-		;		constant, variable
 		xBins		= iacPidMultRpmBins,  RPMValue
 		yBins		= iacPidMultLoadBins,  fuelingLoad
 		zBins		= iacPidMultTable
@@ -1208,7 +1198,41 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 
 
 [GaugeConfigurations]
-@@LIVE_DATA_GAUGES_FROM_FILE@@
+	gaugeCategory = "Fuel: math"
+totalFuelCorrectionGauge = totalFuelCorrection,"Fuel: Total correction", "mult", 0.0,3.0, 0.0,3.0, 0.0,3.0, 2,2
+running_timeSinceCrankingInSecsGauge = running_timeSinceCrankingInSecs,"running_ timeSinceCrankingInSecs", "secs", 0.0,600000.0, 0.0,600000.0, 0.0,600000.0, 0,0
+targetLambdaGauge = targetLambda,"Fuel: target lambda", "", 0.5,1.5, 0.5,1.5, 0.5,1.5, 2,2
+targetAFRGauge = targetAFR,"Fuel: target AFR", "ratio", 10.0,20.0, 10.0,20.0, 10.0,20.0, 2,2
+	gaugeCategory = "Timing"
+baseDwellGauge = baseDwell,"baseDwell", "ms", 0.0,30.0, 0.0,30.0, 0.0,30.0, 1,1
+sparkDwellGauge = sparkDwell,"Ign: Dwell", "ms", 0.0,30.0, 0.0,30.0, 0.0,30.0, 1,1
+dwellAngleGauge = dwellAngle,"ignition dwell duration", "deg", 0.0,120.0, 0.0,120.0, 0.0,120.0, 1,1
+cltTimingCorrectionGauge = cltTimingCorrection,"Ign: CLT correction", "deg", -20.0,20.0, -20.0,20.0, -20.0,20.0, 2,2
+timingIatCorrectionGauge = timingIatCorrection,"Ign: IAT correction", "deg", -20.0,20.0, -20.0,20.0, -20.0,20.0, 2,2
+timingPidCorrectionGauge = timingPidCorrection,"Idle: Timing adjustment", "deg", -20.0,20.0, -20.0,20.0, -20.0,20.0, 2,2
+luaTimingAddGauge = luaTimingAdd,"Ign: Lua timing add", "deg", -20.0,20.0, -20.0,20.0, -20.0,20.0, 2,2
+luaTimingMultGauge = luaTimingMult,"Ign: Lua timing mult", "deg", -20.0,20.0, -20.0,20.0, -20.0,20.0, 2,2
+	gaugeCategory = "Boost Control"
+luaTargetAddGauge = luaTargetAdd,"Boost: Lua target add", "v", -100.0,100.0, -100.0,100.0, -100.0,100.0, 1,1
+boostOutputGauge = boostOutput,"Boost: Output", "percent", -100.0,100.0, -100.0,100.0, -100.0,100.0, 2,2
+luaTargetMultGauge = luaTargetMult,"Boost: Lua target mult", "v", -100.0,100.0, -100.0,100.0, -100.0,100.0, 1,1
+openLoopPartGauge = openLoopPart,"Boost: Open loop", "v", -100.0,100.0, -100.0,100.0, -100.0,100.0, 1,1
+luaOpenLoopAddGauge = luaOpenLoopAdd,"Boost: Lua open loop add", "v", -100.0,100.0, -100.0,100.0, -100.0,100.0, 1,1
+boostControllerClosedLoopPartGauge = boostControllerClosedLoopPart,"Boost: Closed loop", "%", -50.0,50.0, -50.0,50.0, -50.0,50.0, 1,1
+boostControlTargetGauge = boostControlTarget,"Boost: Target", "kPa", 0.0,300.0, 0.0,300.0, 0.0,300.0, 1,1
+	gaugeCategory = "ETB more"
+idlePositionGauge = idlePosition,"ETB: idlePosition", "per", 0.0,10.0, 0.0,10.0, 0.0,10.0, 2,2
+luaAdjustmentGauge = luaAdjustment,"ETB: luaAdjustment", "per", 0.0,3.0, 0.0,3.0, 0.0,3.0, 2,2
+m_wastegatePositionGauge = m_wastegatePosition,"DC: wastegatePosition", "per", 0.0,3.0, 0.0,3.0, 0.0,3.0, 2,2
+etbDutyRateOfChangeGauge = etbDutyRateOfChange,"ETB duty rate of change", "per", -0.0,20.0, -0.0,20.0, -0.0,20.0, 2,2
+etbDutyAverageGauge = etbDutyAverage,"ETB average duty", "per", -20.0,50.0, -20.0,50.0, -20.0,50.0, 2,2
+etbTpsErrorCounterGauge = etbTpsErrorCounter,"ETB TPS error counter", "count", 0.0,3.0, 0.0,3.0, 0.0,3.0, 0,0
+etbPpsErrorCounterGauge = etbPpsErrorCounter,"ETB pedal error counter", "count", 0.0,3.0, 0.0,3.0, 0.0,3.0, 0,0
+dcOutput0Gauge = dcOutput0,"DC: output0", "per", 0.0,10.0, 0.0,10.0, 0.0,10.0, 2,2
+isEnabled0_intGauge = isEnabled0_int,"DC: en0", "per", 0.0,10.0, 0.0,10.0, 0.0,10.0, 2,2
+value0Gauge = value0,"ETB: SENT value0", "value", 0.0,3.0, 0.0,3.0, 0.0,3.0, 0,0
+value1Gauge = value1,"ETB: SENT value1", "value", 0.0,3.0, 0.0,3.0, 0.0,3.0, 0,0
+errorRateGauge = errorRate,"ETB: SENT error rate", "ratio", 0.0,3.0, 0.0,3.0, 0.0,3.0, 2,2
 
 gaugeCategory = Trigger
 	triggerErrorsCounterGauge = totalTriggerErrorCounter, "Trigger error count", "count",	0,	15000,	0,	0,	6000,  6000,	0,	0
@@ -1390,7 +1414,7 @@ gaugeCategory = Fueling
 	actualLastInjectionGauge	= actualLastInjection,	@@GAUGE_NAME_FUEL_LAST_INJECTION@@, "mSec",		0,	25.5,	1.0,	1.2,		20,	25,	3, 1
 	veValueGauge		= veValue,					"fuel: VE",				"",		0,	120,		10,	10,	100,	100,	1,	1
 
-	injectorLagMsGauge = injectorLagMs,		@@GAUGE_NAME_INJECTOR_LAG@@,		"mSec",		0,	10,	0,	0,		10,	10,	3, 1
+	injectorLagMsGauge = m_deadtime,		@@GAUGE_NAME_INJECTOR_LAG@@,		"mSec",		0,	10,	0,	0,		10,	10,	3, 1
 	fuelRunningGauge	= running_fuel,		@@GAUGE_NAME_FUEL_RUNNING@@,		"mg",		0,	100,	0,	0,		100,	100,	3, 1
 	baseFuelGauge	= running_baseFuel,		@@GAUGE_NAME_FUEL_BASE@@,		"mg",		0,	100, 0, 0, 100, 100,	2, 0
 	fuelPidCorrectionGauge = fuelPidCorrection1,		@@GAUGE_NAME_FUEL_TRIM@@,		"%",		-10,	10,	-8, -5, 5, 8,	3, 1
@@ -2174,10 +2198,12 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 
 	dialog = ignitionBasic, ""
 		field = "Enabled",						isIgnitionEnabled
-		field = "Mode",							ignitionMode, {isIgnitionEnabled == 1}
+		field = "Mode",							ignitionMode, {isIgnitionEnabled}
+		field = "Maximum timing advance",		maximumIgnitionTiming, {isIgnitionEnabled}
+		field = "Minimum timing advance",		minimumIgnitionTiming, {isIgnitionEnabled}
 		field = "Override ignition table load axis",	ignOverrideMode, {isIgnitionEnabled}
 		field = "#Use fixed timing while validating with a timing gun"
-		field = "Timing Mode",					timingMode, {isIgnitionEnabled == 1}
+		field = "Timing Mode",					timingMode, {isIgnitionEnabled}
 		field = "Fixed Timing",				fixedTiming, {isIgnitionEnabled == 1 && timingMode == 1}
 
 	dialog = ignitionSettings, "", xAxis
@@ -3467,7 +3493,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "VVT solenoid bank 1 exhaust",						vvtPins2
 		field = "VVT solenoid bank 2 intake",						vvtPins3
 		field = "VVT solenoid bank 2 exhaust",						vvtPins4
-		field = "PWM frequency",						vvtOutputFrequency1, {vvtPins1 != 0 || vvtPins2 != 0}
+		field = "PWM frequency",						vvtOutputFrequency, {vvtPins1 != 0 || vvtPins2 != 0}
 		field = "VVT solenoid intake cams control direction", invertVvtControlIntake, { vvtPins1 != 0 || vvtPins3 != 0 }
 		field = "VVT solenoid exhaust cams control direction", invertVvtControlExhaust, { vvtPins2 != 0 || vvtPins4 != 0 }
 

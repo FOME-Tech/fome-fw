@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20009
+#define FLASH_DATA_VERSION 20010
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -320,7 +320,7 @@ struct gppwm_channel
 	gppwm_channel_e rpmAxis;Selects the X axis to use for the table.;
 
 	int16_t[GPPWM_LOAD_COUNT] autoscale loadBins;;"load", 0.1, 0, -1000, 1000, 1
-	int16_t[GPPWM_RPM_COUNT] autoscale rpmBins;;"RPM", 1, 0, -30000, 30000, 0
+	int16_t[GPPWM_RPM_COUNT] rpmBins;;"RPM", 1, 0, -30000, 30000, 0
 	uint8_t[GPPWM_RPM_COUNT x GPPWM_LOAD_COUNT] autoscale table;;"duty", 0.5, 0, 0, 100, 1
 end_struct
 
@@ -340,7 +340,7 @@ adc_channel_e hwChannel;
 
 end_struct
 
-struct MAP_sensor_config_s @brief MAP averaging configuration
+struct MAP_sensor_config_s
 float[MAP_ANGLE_SIZE] samplingAngleBins;;"", 1, 0, 0, 18000, 2
 float[MAP_ANGLE_SIZE] samplingAngle;MAP averaging sampling start crank degree angle;"deg", 1, 0, -720, 720, 2
 float[MAP_WINDOW_SIZE] samplingWindowBins;;"", 1, 0, 0, 18000, 2
@@ -348,7 +348,7 @@ float[MAP_WINDOW_SIZE] samplingWindow;MAP averaging angle crank degree duration;
 air_pressure_sensor_config_s sensor
 end_struct
 
-struct_no_prefix thermistor_conf_s @brief Thermistor known values
+struct_no_prefix thermistor_conf_s
 	int autoscale tempC_1;these values are in Celcius;"*C", 0.01, 0, -40, 200, 1
 	int autoscale tempC_2;;"*C", 0.01, 0, -40, 200, 1
 	int autoscale tempC_3;;"*C", 0.01, 0, -40, 200, 1
@@ -359,7 +359,7 @@ struct_no_prefix thermistor_conf_s @brief Thermistor known values
 	uint32_t autoscale bias_resistor;Pull-up resistor value on your board;"Ohm", 0.1, 0, 0, 200000, 1
 end_struct
 
-struct linear_sensor_s @brief Linear sensor interpolation
+struct linear_sensor_s
 	adc_channel_e hwChannel;
 	float v1;;"volts", 1, 0, 0, 10, 2
 	float value1;;"kPa", 1, 0, 0, 1000000, 2
@@ -367,7 +367,7 @@ struct linear_sensor_s @brief Linear sensor interpolation
 	float value2;;"kPa", 1, 0, 0, 1000000, 2
 end_struct
 
-struct ThermistorConf @brief Thermistor curve parameters
+struct ThermistorConf
 	thermistor_conf_s config;
 	adc_channel_e adcChannel;
 end_struct
@@ -530,7 +530,7 @@ adc_channel_e fuelLevelSensor;This is the processor pin that your fuel level sen
 	float idle_derivativeFilterLoss;0.1 is a good default value;"x", 1, 0, -1000000, 1000000, 4
 	int trailingSparkAngle;just a temporary solution;"angle", 1, 0, 0, 720, 0
 
-struct trigger_config_s @brief Trigger wheel(s) configuration
+struct trigger_config_s
 
 #define trigger_type_e_enum "custom toothed wheel", "Ford Aspire", "Dodge Neon 1995", "Miata NA", "Mitsubishi Mess 4", "GM_7X", "Cooper R50", "Mazda SOHC 4", "60/2", "36/1", "Mercedes Two Segment", "Mitsubishi 4G93 11", "EZ30", "INVALID", "Dodge Neon 2003", "Mazda DOHC 1+4", "1+1", "INVALID", "Single Tooth", "Dodge Ram 1+16", "60/2 VW", "Benelli Tre", "Dodge Stratus", "36_2_2_2", "Nissan Primera", "dev 2JZ 3/34 simulator", "Rover K", "GM 24x 5 degree", "Honda CBR 600", "Mitsubishi 4G92/93/94 Cam 29", "Honda CBR 600 custom", "3/1 skipped", "Dodge Neon 2003 crank", "Miata NB", "Mitsubishi 4G63 Cam 34", "INVALID", "Subaru 7+6", "Jeep 18-2-2-2", "12 tooth crank", "Dodge Neon 1995 crank only", "Jeep XJ 4 cyl", "FiatIAQ_P8", "Mazda Z5", "INVALID", "Renix 44-2-2", "Renix 66-2-2-2", "Honda K 12+1", "INVALID", "36/2", "Subaru SVX", "1+16", "Subaru 7 without 6", "INVALID", "TriTach", "GM 60/2/2/2", "Skoda Favorit", "Barra 3+1 Cam", "Kawa KX450F", "Nissan VQ35", "INVALID", "Nissan VQ30", "Nissan QR25", "Mitsubishi 3A92", "Subaru SVX Crank 1", "Subaru SVX Cam VVT", "Ford PIP", "Suzuki G13B", "Honda K 4+1", "Nissan MR18 Crank", "32/2", "36-2-1", "36-2-1-1", "INVALID", "INVALID", "GM 24x 3 degree", "trg75"
 
@@ -606,7 +606,7 @@ engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other ca
 	uint8_t vssFilterReciprocal;Set this so your vehicle speed signal is responsive, but not noisy. Larger value give smoother but slower response.;"", 1, 0, 2, 200, 0
 
 	uint16_t autoscale vssGearRatio;Number of turns of your vehicle speed sensor per turn of the wheels. For example if your sensor is on the transmission output, enter your axle/differential ratio. If you are using a hub-mounted sensor, enter a value of 1.0.;"ratio", 0.001, 0, 0, 60, 3
-	uint8_t vssToothCount;Number of pulses output per revolution of the shaft where your VSS is mounted.  For example, GM applications of the T56 output 17 pulses per revolution of the transmission output shaft.;"count", 1, 0, 1, 100, 0
+	uint8_t vssToothCount;Number of pulses output per revolution of the shaft where your VSS is mounted. For example, GM applications of the T56 output 17 pulses per revolution of the transmission output shaft.;"count", 1, 0, 1, 100, 0
 
 	#define ve_override_e_enum "None", "MAP", "TPS"
 	custom ve_override_e 1 bits, U08, @OFFSET@, [0:1], @@ve_override_e_enum@@
@@ -776,7 +776,7 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 	int16_t antiLagRpmTreshold;;"rpm", 1, 0, 0, 20000, 0
 	uint16_t startCrankingDuration;Maximum time to crank starter when start/stop button is pressed;"Seconds", 1, 0, 0, 30, 0
 
-	uint8_t autoscale lambdaProtectionMinTps;;"%", 1, 0, 0, 100, 0
+	uint8_t lambdaProtectionMinTps;;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale lambdaProtectionTimeout;Only respond once lambda is out of range for this period of time. Use to avoid transients triggering lambda protection when not needed;"s", 0.1, 0, 0, 10, 1
 
 	uint8_t autoscale lambdaProtectionRestoreRpm;;"RPM", 100, 0, 0, 25000, 0
@@ -1002,7 +1002,7 @@ bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within th
 bit isPhaseSyncRequiredForIgnition;Some engines are OK running semi-random sequential while other engine require phase synchronization
 bit useCltBasedRpmLimit,"yes","no";If enabled, use a curve for RPM limit (based on coolant temperature) instead of a constant value.
 bit forceO2Heating,"yes","no";If enabled, don't wait for engine start to heat O2 sensors. WARNING: this will reduce the life of your sensor, as condensation in the exhaust from a cold start can crack the sensing element.
-bit invertVvtControlIntake, "retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
+bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
 bit invertVvtControlExhaust,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
 bit useBiQuadOnAuxSpeedSensors
 bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
@@ -1045,7 +1045,7 @@ custom pin_mode_e 1 bits, U08, @OFFSET@, [0:6], @@pin_mode_e_enum@@
 	pid_s alternatorControl;
 	pid_s etb;
 	Gpio[TRIGGER_INPUT_PIN_COUNT iterate] triggerInputDebugPins;
-	int16_t airTaperRpmRange;RPM range above upper limit for extra air taper,"RPM", 1, 0, 0, 1500, 0
+	int16_t airTaperRpmRange;RPM range above upper limit for extra air taper;"RPM", 1, 0, 0, 1500, 0
 	brain_input_pin_e turboSpeedSensorInputPin;
 int16_t tps2Min;;"ADC", 1, 0, 0, 1023, 0
 int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
@@ -1130,7 +1130,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	bit injectorFlowAsMassFlow,"mass flow","volumetric flow";Select whether to configure injector flow in volumetric flow (defualt, cc/min) or mass flow (g/s).
 	uint8_t autoscale benchTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 1
 
-	uint8_t autoscale lambdaProtectionRestoreTps;;"%", 1, 0, 0, 100, 0
+	uint8_t lambdaProtectionRestoreTps;;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale lambdaProtectionRestoreLoad;;"%", 10, 0, 0, 1000, 0
 
 	pin_input_mode_e launchActivatePinMode;
@@ -1159,7 +1159,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	float mapHighValueVoltage;MAP voltage for low point;"v", 1, 0, 0, 10, 2
 	float egoValueShift;EGO value correction;"value", 1, 0, -10, 10, 2
 
-	output_pin_e[CAM_INPUTS_COUNT iterate] vvtPins;VVT output\nTODO: rename to vvtOutputs
+	output_pin_e[CAM_INPUTS_COUNT iterate] vvtPins;VVT output solenoid pin for this cam
 
 	int crankingIACposition;This is the IAC position during cranking, some engines start better if given more air during cranking to improve cylinder filling.;"percent", 1, 0, -100, 100, 0
 	float tChargeMinRpmMinTps;;"", 1, 0, 0, 3, 4
@@ -1168,7 +1168,9 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	float tChargeMaxRpmMaxTps;;"", 1, 0, 0, 3, 4
 
 custom pwm_freq_t 2 scalar, U16, @OFFSET@, "Hz", 1, 0, 0, 3000, 0
-	pwm_freq_t[CAMS_PER_BANK iterate] vvtOutputFrequency;
+	pwm_freq_t vvtOutputFrequency
+	int8_t minimumIgnitionTiming;Minimim timing advance allowed. No spark on any cylinder will ever fire after this angle BTDC. For example, setting -10 here means no spark ever fires later than 10 deg ATDC. Note that this only concerns the primary spark: any trailing sparks or multispark may violate this constraint.;"deg BTDC", 1, 0, -90, 90, 0
+	int8_t maximumIgnitionTiming;Maximum timing advance allowed. No spark on any cylinder will ever fire before this angle BTDC. For example, setting 45 here means no spark ever fires earlier than 45 deg BTDC;"deg BTDC", 1, 0, -90, 90, 0
 	int alternatorPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
 
@@ -1258,12 +1260,12 @@ tChargeMode_e tChargeMode;
 
 	Gpio mc33816_cs;
 
-	float auxFrequencyFilter
+	float auxFrequencyFilter;;"hz", 1, 0, 0, 100, 1
 	int16_t vvtControlMinRpm;;"RPM", 1, 0, 0, 3000, 0
 
-    brain_input_pin_e[SENT_INPUT_COUNT iterate] sentInputPins;
+	brain_input_pin_e[SENT_INPUT_COUNT iterate] sentInputPins;
 
-    int8_t launchFuelAdderPercent
+	int8_t launchFuelAdderPercent;;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale etbJamTimeout;Time required to detect a stuck throttle.;"sec", 0.02, 0, 0, 5, 2
 	uint16_t etbExpAverageLength;By the way ETB PID runs at 500hz, length in 1/500 of second here.
 
@@ -1373,12 +1375,12 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 		vin_number_t vinNumber
 
 
-        uint16_t autoscale hpfpPumpVolume;Size of the pump chamber in cc.  Typical Bosch HDP5 has a 9.0mm diameter, typical BMW N* stroke is 4.4mm.;"cc", 0.001, 0, 0, 65, 3
+        uint16_t autoscale hpfpPumpVolume;Size of the pump chamber in cc. Typical Bosch HDP5 has a 9.0mm diameter, typical BMW N* stroke is 4.4mm.;"cc", 0.001, 0, 0, 65, 3
         uint8_t hpfpActivationAngle;How long to keep the valve activated (in order to allow the pump to build pressure and keep the valve open on its own);"deg", 1, 0, 0, 255, 0
-				uint8_t issFilterReciprocal
+		uint8_t issFilterReciprocal;;"", 1, 0, 0, 255, 0
         uint16_t autoscale hpfpPidP;;"%/kPa", 0.001, 0, 0, 65, 3
         uint16_t autoscale hpfpPidI;;"%/kPa/lobe", 0.00001, 0, 0, 0.65, 5
-        uint16_t hpfpTargetDecay;The fastest rate the target pressure can be reduced by.  This is because HPFP have no way to bleed off pressure other than injecting fuel.;"kPa/s", 1, 0, 0, 65000, 0
+        uint16_t hpfpTargetDecay;The fastest rate the target pressure can be reduced by. This is because HPFP have no way to bleed off pressure other than injecting fuel.;"kPa/s", 1, 0, 0, 65000, 0
         uint8_t[HPFP_LOBE_PROFILE_SIZE] autoscale hpfpLobeProfileQuantityBins;;"%", 0.5, 0, 0, 100, 1
         uint8_t[HPFP_LOBE_PROFILE_SIZE] autoscale hpfpLobeProfileAngle;;"deg", 0.5, 0, 0, 125, 1
         uint8_t[HPFP_DEADTIME_SIZE] hpfpDeadtimeVoltsBins;;"volts", 1, 0, 0, 255, 0
@@ -1453,7 +1455,7 @@ int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
 	int8_t ALSMaxCLT;;"C", 1, 0, 0, 105, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
-    uint8_t acRelayAlternatorDutyAdder
+	uint8_t acRelayAlternatorDutyAdder;;"%", 1, 0, 0, 100, 0
 	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
 	int ALSIdleAdd;;"%", 1, 0, 0, 100, 2
 	int ALSEtbAdd;;"%", 1, 0, 0, 100, 2

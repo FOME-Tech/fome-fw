@@ -50,6 +50,7 @@
 #include "prime_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
+#include "vvt.h"
 
 #ifndef EFI_UNIT_TEST
 #error EFI_UNIT_TEST must be defined!
@@ -140,7 +141,9 @@ public:
 		FuelPumpController,
 		MainRelayController,
 		IgnitionController,
-		AcController,
+		Mockable<AcController>,
+		FanControl1,
+		FanControl2,
 		PrimeController,
 		DfcoController,
 		HarleyAcr,
@@ -151,6 +154,12 @@ public:
 		KnockController,
 		SensorChecker,
 		LimpManager,
+#if EFI_AUX_PID
+		VvtController1,
+		VvtController2,
+		VvtController3,
+		VvtController4,
+#endif // EFI_AUX_PID
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
 
@@ -187,9 +196,6 @@ public:
 
 	IgnitionState ignitionState;
 	void resetLua();
-
-	FanControl1 fan1;
-	FanControl2 fan2;
 
 	efitick_t startStopStateLastPushTime = 0;
 

@@ -50,13 +50,24 @@ public class StringLayout extends Layout {
 
     @Override
     public void writeCLayout(PrintStream ps) {
-        this.writeCOffsetHeader(ps, null, null);
+        this.writeCOffsetHeader(ps, this.comment, null);
         ps.println("\tchar " + this.name + "[" + this.size + "];");
     }
 
     @Override
     public void writeCLayout(PrintStream ps, int[] arrayLength) {
-        this.writeCOffsetHeader(ps, null, null);
+        this.writeCOffsetHeader(ps, this.comment, null);
         ps.println("\tchar " + this.name + "[" + arrayLength[0] + "][" + this.size + "];");
+    }
+
+    @Override
+    public void writeCOffsetCheck(PrintStream ps, String parentTypeName) {
+        ps.print("static_assert(offsetof(");
+        ps.print(parentTypeName);
+        ps.print(", ");
+        ps.print(this.name);
+        ps.print(") == ");
+        ps.print(this.offsetWithinStruct);
+        ps.println(");");
     }
 }

@@ -5,6 +5,11 @@ import com.rusefi.EnumToString;
 import com.rusefi.InvokeReader;
 import com.rusefi.ReaderState;
 import com.rusefi.ReaderStateImpl;
+import com.rusefi.RusefiParseErrorStrategy;
+import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.outputs.CStructWriter;
+import com.rusefi.newparse.outputs.OutputChannelWriter;
+import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.util.LazyFile;
 import org.yaml.snakeyaml.Yaml;
@@ -13,6 +18,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,9 +32,7 @@ public class LiveDataProcessor {
 
     private final static String enumContentFileName = "console/binary/generated/live_data_ids.h";
 
-    private final static String tsOutputsDestination = "console/binary/";
-
-    private final GaugeConsumer gaugeConsumer = new GaugeConsumer(tsOutputsDestination + File.separator + "generated/gauges.ini");
+    private final static String tsOutputsDestination = "tunerstudio/generated/temp/";
 
     private final StringBuilder enumContent = new StringBuilder(header +
             "#pragma once\n" +
@@ -49,6 +54,10 @@ public class LiveDataProcessor {
             System.err.println("One parameter expected: name of live data yaml input file");
             System.exit(-1);
         }
+
+        // ensure outputs directory exists - it's gitignored
+        Files.createDirectories(Paths.get(tsOutputsDestination));
+
         String yamlFileName = args[0];
         Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(new FileReader(yamlFileName));
@@ -64,18 +73,13 @@ public class LiveDataProcessor {
             fw.write("#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition);
         }
 
-        try (FileWriter fw = new FileWriter("console/binary/generated/fancy_content.ini")) {
+        try (FileWriter fw = new FileWriter(tsOutputsDestination + "fancy_content.ini")) {
             fw.write(liveDataProcessor.fancyNewStuff.toString());
         }
 
-        try (FileWriter fw = new FileWriter("console/binary/generated/fancy_menu.ini")) {
+        try (FileWriter fw = new FileWriter(tsOutputsDestination + "fancy_menu.ini")) {
             fw.write(liveDataProcessor.fancyNewMenu.toString());
         }
-        liveDataProcessor.end();
-    }
-
-    private void end() throws IOException {
-        gaugeConsumer.endFile();
     }
 
     interface EntryHandler {
@@ -83,13 +87,15 @@ public class LiveDataProcessor {
     }
 
     private int handleYaml(Map<String, Object> data) throws IOException {
-        OutputsSectionConsumer outputsSections = new OutputsSectionConsumer(tsOutputsDestination + File.separator + "generated/output_channels.ini");
+        OutputsSectionConsumer outputsSections = new OutputsSectionConsumer(tsOutputsDestination + File.separator + "output_channels.ini");
 
-        ConfigurationConsumer dataLogConsumer = new DataLogConsumer(tsOutputsDestination + File.separator + "generated/data_logs.ini");
+        ConfigurationConsumer dataLogConsumer = new DataLogConsumer(tsOutputsDestination + File.separator + "data_logs.ini");
 
         SdCardFieldsContent sdCardFieldsConsumer = new SdCardFieldsContent();
 
         GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("controllers/lua/generated/output_lookup_generated.cpp");
+
+        //OutputChannelWriter outputChannelWriter = new OutputChannelWriter(tsOutputsDestination + File.separator + "generated/output_channels.ini");
 
         EntryHandler handler = new EntryHandler() {
             @Override
@@ -115,10 +121,14 @@ public class LiveDataProcessor {
                 if (extraPrepend != null)
                     state.addPrepend(extraPrepend);
                 state.addPrepend(prepend);
-                state.addCHeaderDestination(folder + File.separator + name + "_generated.h");
+                String cHeaderDestination = folder + File.separator + name + "_generated.h";
+                state.addCHeaderDestination(cHeaderDestination);
 
                 int baseOffset = outputsSections.getBaseOffset();
-                state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
+
+                if (javaName != null) {
+                    state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
+                }
 
                 if (constexpr != null) {
                     sdCardFieldsConsumer.home = constexpr;
@@ -131,12 +141,29 @@ public class LiveDataProcessor {
                     state.addDestination((state1, structure) -> outputValueConsumer.handleEndStruct(state1, structure));
 
                 }
-                state.addDestination(new ConfigurationConsumer() {
-                    @Override
-                    public void handleEndStruct(ReaderState readerState, ConfigStructure structure) throws IOException {
-                        gaugeConsumer.handleEndStruct(readerState, structure);
+
+                {
+                    ParseState parseState = new ParseState(state.getEnumsReader());
+
+                    parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
+
+                    if (prepend != null && !prepend.isEmpty()) {
+                        RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prepend);
                     }
-                });
+
+                    RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
+
+                    // CStructWriter cStructs = new CStructWriter();
+                    // cStructs.writeCStructs(parseState, cHeaderDestination);
+
+                    // if (outputNames.length == 0) {
+                    //     outputChannelWriter.writeOutputChannels(parseState, null);
+                    // } else {
+                    //     for (int i = 0; i < outputNames.length; i++) {
+                    //         outputChannelWriter.writeOutputChannels(parseState, outputNames[i]);
+                    //     }
+                    // }
+                }
 
                 state.doJob();
 
