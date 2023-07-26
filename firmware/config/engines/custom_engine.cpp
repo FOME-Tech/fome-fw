@@ -33,7 +33,6 @@
 static int periodIndex = 0;
 
 static OutputPin testPin;
-static scheduling_s testScheduling;
 
 static int test557[] = {5, 5, 10, 10, 20, 20, 50, 50, 100, 100, 200, 200, 500, 500, 500, 500};
 #define TEST_LEN 16
@@ -44,7 +43,7 @@ static void toggleTestAndScheduleNext(void *) {
 	testPin.toggle();
 	periodIndex = (periodIndex + 1) % TEST_LEN;
 	testTime += test557[periodIndex];
-	engine->executor.scheduleByTimestamp("test", &testScheduling, testTime, &toggleTestAndScheduleNext);
+	engine->executor.scheduleByTimestamp("test", nullptr, testTime, &toggleTestAndScheduleNext);
 }
 
 /**
