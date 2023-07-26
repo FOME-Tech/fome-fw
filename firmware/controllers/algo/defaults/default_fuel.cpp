@@ -294,4 +294,9 @@ void setDefaultFuel() {
 
 	// Lambda protection defaults
 	setDefaultLambdaProtection();
+
+	// Cut at 110% instantly
+	engineConfiguration->maxInjectorDutyInstant = 110;
+	engineConfiguration->maxInjectorDutySustained = 96;
+	engineConfiguration->maxInjectorDutySustainedTimeout = 0.5f;
 }
