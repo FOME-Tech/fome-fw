@@ -1,3 +1,4 @@
+#if !EFI_UNIT_TEST
 #include "pch.h"
 #include "value_lookup.h"
 float getOutputValueByName(const char *name) {
@@ -101,8 +102,6 @@ float getOutputValueByName(const char *name) {
 			return engine->outputChannels.veValue;
 		case -243031057:
 			return engine->outputChannels.injectionOffset;
-		case 1615892023:
-			return engine->outputChannels.injectorLagMs;
 		case 1726931380:
 			return engine->outputChannels.engineMakeCodeNameCrc16;
 		case 115540725:
@@ -569,6 +568,20 @@ float getOutputValueByName(const char *name) {
 		case -1712045196:
 			return engine->boostController.boostControlTarget;
 #endif
+		case 182391090:
+			return ___engine.module<FanControl1>()->cranking;
+		case -496961865:
+			return ___engine.module<FanControl1>()->notRunning;
+		case 142778571:
+			return ___engine.module<FanControl1>()->disabledWhileEngineStopped;
+		case 545954889:
+			return ___engine.module<FanControl1>()->brokenClt;
+		case 291043035:
+			return ___engine.module<FanControl1>()->enabledForAc;
+		case 193494032:
+			return ___engine.module<FanControl1>()->hot;
+		case 2090155911:
+			return ___engine.module<FanControl1>()->cold;
 		case 1649801578:
 			return engine->engineState.lua.fuelAdd;
 		case -1390672637:
@@ -647,6 +660,17 @@ float getOutputValueByName(const char *name) {
 			return engine->dc_motors.isEnabled0_int;
 		case 1691876092:
 			return engine->dc_motors.isEnabled0;
+		case -2132393748:
+			return ___engine.module<VvtController1>()->vvtTarget;
+		case 1990697206:
+			return ___engine.module<VvtController1>()->vvtOutput;
+		case 350535927:
+			return ___engine.lambdaMonitor.lambdaCurrentlyGood;
+		case 1849938842:
+			return ___engine.lambdaMonitor.lambdaMonitorCut;
+		case 481450608:
+			return ___engine.lambdaMonitor.lambdaTimeSinceGood;
 	}
 	return EFI_ERROR_CODE;
 }
+#endif

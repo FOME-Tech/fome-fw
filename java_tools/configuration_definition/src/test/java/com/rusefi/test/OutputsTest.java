@@ -4,7 +4,6 @@ import com.rusefi.BitState;
 import com.rusefi.ReaderStateImpl;
 import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.output.DataLogConsumer;
-import com.rusefi.output.GaugeConsumer;
 import com.rusefi.output.GetOutputValueConsumer;
 import com.rusefi.output.OutputsSectionConsumer;
 import org.jetbrains.annotations.NotNull;
@@ -18,9 +17,9 @@ import static org.junit.Assert.assertEquals;
 public class OutputsTest {
     @Test
     public void generateSomething() throws IOException {
-        ReaderStateImpl state = new ReaderStateImpl();
-        state.getVariableRegistry().register("GAUGE_NAME_FUEL_WALL_CORRECTION", "wall");
-        String test = "struct total\n" +
+        String test =
+                "#define GAUGE_NAME_FUEL_WALL_CORRECTION \"wall\"\n" +
+                "struct total\n" +
                 "float afr_type;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
                 "uint8_t afr_typet;@@GAUGE_NAME_FUEL_WALL_CORRECTION@@;\"ms\",      1,      0,       0, 3000,      0\n" +
                 "bit isForcedInduction;isForcedInduction\\nDoes the vehicle have a turbo or supercharger?\n" +
@@ -45,7 +44,7 @@ public class OutputsTest {
                 "m_requested_pump = scalar, F32, 12, \"\", 1, 0\n" +
                 "tCharge = scalar, F32, 16, \"\", 1, 0\n" +
                 "; total TS size = 20\n";
-        assertEquals(expectedLegacy, runOriginalImplementation(test, state).getContent());
+        assertEquals(expectedLegacy, runOriginalImplementation(test, new ReaderStateImpl()).getContent());
     }
 
     @Test(expected = BitState.TooManyBitsInARow.class)
@@ -145,6 +144,7 @@ public class OutputsTest {
         outputValueConsumer.conditional = "EFI_BOOST_CONTROL";
         state.readBufferedReader(test, (outputValueConsumer));
         assertEquals(
+                "#if !EFI_UNIT_TEST\n" +
                 "#include \"pch.h\"\n" +
                         "#include \"value_lookup.h\"\n" +
                         "float getOutputValueByName(const char *name) {\n" +
@@ -164,7 +164,8 @@ public class OutputsTest {
                         "#endif\n" +
                         "\t}\n" +
                         "\treturn EFI_ERROR_CODE;\n" +
-                        "}\n", outputValueConsumer.getContent());
+                        "}\n" +
+                        "#endif\n", outputValueConsumer.getContent());
     }
 
     @Test
@@ -181,22 +182,13 @@ public class OutputsTest {
         ReaderStateImpl state = new ReaderStateImpl();
         state.getVariableRegistry().register("GAUGE_CATEGORY", "Alternator");
         DataLogConsumer dataLogConsumer = new DataLogConsumer(null);
-        GaugeConsumer gaugeConsumer = new GaugeConsumer(null);
-        state.readBufferedReader(test, dataLogConsumer, gaugeConsumer);
+        state.readBufferedReader(test, dataLogConsumer);
         assertEquals(
                 "entry = alternatorStatus_iTerm, \"alternatorStatus_iTerm\", float,  \"%.3f\"\n" +
                         "entry = alternatorStatus_dTerm, \"alternatorStatus_dTerm\", float,  \"%.3f\"\n" +
                         "entry = idleStatus_iTerm, \"idleStatus_iTerm\", float,  \"%.3f\"\n" +
                         "entry = idleStatus_dTerm, \"idleStatus_dTerm\", float,  \"%.3f\"\n",
                 dataLogConsumer.getContent());
-
-        assertEquals("\tgaugeCategory = Alternator\n" +
-                        "alternatorStatus_iTermGauge = alternatorStatus_iTerm,\"alternatorStatus_ iTerm\", \"v\", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 4,4\n" +
-                        "alternatorStatus_dTermGauge = alternatorStatus_dTerm,\"alternatorStatus_ dTerm\", \"v\", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 4,4\n" +
-                        "idleStatus_iTermGauge = idleStatus_iTerm,\"idleStatus_ iTerm\", \"v\", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 4,4\n" +
-                        "idleStatus_dTermGauge = idleStatus_dTerm,\"idleStatus_ dTerm\", \"v\", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 4,4\n",
-                gaugeConsumer.getContent());
-
     }
 
     @Test

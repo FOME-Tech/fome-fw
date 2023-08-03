@@ -526,7 +526,7 @@ void setMazdaMiata2003EngineConfiguration() {
 	engineConfiguration->etb.pFactor = 12; // a bit lower p-factor seems to work better on TLE9201? MRE?
 	engineConfiguration->etb.iFactor = 	0;
 	engineConfiguration->etb.dFactor = 0;
-	engineConfiguration->etb.offset = 0;
+	engineConfiguration->etb.offset = 40;
 	engineConfiguration->etb.minValue = -60;
 	engineConfiguration->etb.maxValue = 50;
 
@@ -723,8 +723,6 @@ void setMiataNB2_Proteus() {
     engineConfiguration->injectionPins[1] = PROTEUS_LS_2;  // BLK
     engineConfiguration->injectionPins[2] = PROTEUS_LS_3; // GRN
     engineConfiguration->injectionPins[3] = PROTEUS_LS_4; // WHT
-    engineConfiguration->injectionPinMode = OM_DEFAULT;
-
 
     engineConfiguration->enableSoftwareKnock = true;
 

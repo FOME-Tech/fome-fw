@@ -331,6 +331,8 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->lambdaProtectionMinTps;
 		case -1645106444:
 			return engineConfiguration->lambdaProtectionTimeout;
+		case 872435040:
+			return engineConfiguration->lambdaProtectionRestoreRpm;
 		case -1171325035:
 			return engineConfiguration->clutchUpPinInverted;
 		case -675074552:
@@ -705,6 +707,10 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->injectorFlowAsMassFlow;
 		case -1655178001:
 			return engineConfiguration->benchTestOffTime;
+		case 872437224:
+			return engineConfiguration->lambdaProtectionRestoreTps;
+		case -1274631759:
+			return engineConfiguration->lambdaProtectionRestoreLoad;
 		case -1992945039:
 			return engineConfiguration->boostCutPressure;
 		case -1359134883:
@@ -725,6 +731,10 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->tChargeMaxRpmMinTps;
 		case -608466667:
 			return engineConfiguration->tChargeMaxRpmMaxTps;
+		case 298649674:
+			return engineConfiguration->minimumIgnitionTiming;
+		case -1726245940:
+			return engineConfiguration->maximumIgnitionTiming;
 		case 799798215:
 			return engineConfiguration->alternatorPwmFrequency;
 		case 1464880398:
@@ -1817,6 +1827,11 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->lambdaProtectionTimeout = (int)value;
 		return;
 	}
+		case 872435040:
+	{
+		engineConfiguration->lambdaProtectionRestoreRpm = (int)value;
+		return;
+	}
 		case -1171325035:
 	{
 		engineConfiguration->clutchUpPinInverted = (int)value;
@@ -2752,6 +2767,16 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->benchTestOffTime = (int)value;
 		return;
 	}
+		case 872437224:
+	{
+		engineConfiguration->lambdaProtectionRestoreTps = (int)value;
+		return;
+	}
+		case -1274631759:
+	{
+		engineConfiguration->lambdaProtectionRestoreLoad = (int)value;
+		return;
+	}
 		case -1992945039:
 	{
 		engineConfiguration->boostCutPressure = value;
@@ -2800,6 +2825,16 @@ void setConfigValueByName(const char *name, float value) {
 		case -608466667:
 	{
 		engineConfiguration->tChargeMaxRpmMaxTps = value;
+		return;
+	}
+		case 298649674:
+	{
+		engineConfiguration->minimumIgnitionTiming = (int)value;
+		return;
+	}
+		case -1726245940:
+	{
+		engineConfiguration->maximumIgnitionTiming = (int)value;
 		return;
 	}
 		case 799798215:

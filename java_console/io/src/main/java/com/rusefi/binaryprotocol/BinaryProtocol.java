@@ -18,7 +18,6 @@ import com.rusefi.io.commands.GetOutputsCommand;
 import com.rusefi.io.commands.HelloCommand;
 import com.rusefi.core.FileUtil;
 import com.rusefi.tune.xml.Msq;
-import com.rusefi.ui.livedocs.LiveDocsRegistry;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -42,7 +41,7 @@ import static com.rusefi.config.generated.Fields.*;
  */
 public class BinaryProtocol {
     private static final Logging log = getLogging(BinaryProtocol.class);
-    private static final ThreadFactory THREAD_FACTORY = new NamedThreadFactory("text pull");
+    private static final ThreadFactory THREAD_FACTORY = new NamedThreadFactory("ECU text pull", true);
 
     private static final String USE_PLAIN_PROTOCOL_PROPERTY = "protocol.plain";
     private static final String CONFIGURATION_RUSEFI_BINARY = "current_configuration.rusefi_binary";
@@ -231,13 +230,6 @@ public class BinaryProtocol {
                                         if (verbose)
                                             System.out.println("textListener");
                                     }
-                                }
-
-                                if (linkManager.isNeedPullLiveData()) {
-                                    LiveDocsRegistry.LiveDataProvider liveDataProvider = LiveDocsRegistry.getLiveDataProvider();
-                                    LiveDocsRegistry.INSTANCE.refresh(liveDataProvider);
-                                    if (verbose)
-                                        System.out.println("Got livedata");
                                 }
                             }
                         });

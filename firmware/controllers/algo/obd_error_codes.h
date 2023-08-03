@@ -1,6 +1,6 @@
 /**
  * @file obd_error_codes.h
- * @brief Standart OBD-II error codes
+ * @brief Standard and custom OBD-II error codes
  *
  * More info at http://www.obd-codes.com/faq/obd2-codes-explained.php
  *
@@ -14,16 +14,6 @@
 
 enum class ObdCode : uint16_t {
 	None = 0,
-//P0001 Fuel Volume Regulator Control Circuit/Open
-//P0002 Fuel Volume Regulator Control Circuit Range/Performance
-//P0003 Fuel Volume Regulator Control Circuit Low
-//P0004 Fuel Volume Regulator Control Circuit High
-//P0005 Fuel Shutoff Valve "A" Control Circuit/Open
-//P0006 Fuel Shutoff Valve "A" Control Circuit Low
-//P0007 Fuel Shutoff Valve "A" Control Circuit High
-//P0008 Engine Positions System Performance Bank 1
-//P0009 Engine Position System Performance Bank 2
-//P0010 "A" Camshaft Position Actuator Circuit (Bank 1)
 	//P0001 Fuel Volume Regulator Control Circuit/Open
 	//P0002 Fuel Volume Regulator Control Circuit Range/Performance
 	//P0003 Fuel Volume Regulator Control Circuit Low
@@ -1724,10 +1714,10 @@ enum class ObdCode : uint16_t {
 
 	CUSTOM_6010 = 6010,
 	CUSTOM_6011 = 6011,
-	CUSTOM_INTEPOLATE_ERROR = 6012,
-	CUSTOM_INTEPOLATE_ERROR_2 = 6013,
-	CUSTOM_INTEPOLATE_ERROR_3 = 6014,
-	CUSTOM_INTEPOLATE_ERROR_4 = 6015,
+	CUSTOM_ERR_INTERPOLATE_1 = 6012,
+	CUSTOM_ERR_INTERPOLATE_2 = 6013,
+	CUSTOM_ERR_INTERPOLATE_3 = 6014,
+	CUSTOM_ERR_INTERPOLATE_4 = 6015,
 	CUSTOM_PARAM_RANGE = 6016,
 	CUSTOM_MAF_NEEDED = 6017,
 	CUSTOM_UNKNOWN_ALGORITHM = 6018,
@@ -1772,9 +1762,9 @@ enum class ObdCode : uint16_t {
 	CUSTOM_TOO_LONG_CRANKING_FUEL_INJECTION = 6054,
 	CUSTOM_INTERPOLATE_NAN = 6055,
 	ERROR_HISTO_NAME = 6056,
-	CUSTOM_6057 = 6057,
+	// unused code: CUSTOM_6057 = 6057,
 	CUSTOM_OBD_HIGH_FREQUENCY = 6058,
-	CUSTOM_OBD_59 = 6059,
+	// unused code: CUSTOM_OBD_59 = 6059,
 
 	CUSTOM_OBD_MMC_START1 = 6060,
 	CUSTOM_OBD_MMC_START2 = 6061,
@@ -2123,7 +2113,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_INSTANT_MAP_DECODING = 6899,
 	STACK_USAGE_COMMUNICATION = 6900,
 	STACK_USAGE_MIL = 6901,
-	STACK_USAGE_BENCH = 6902,
+	CUSTOM_6902 = 6902,
 	STACK_USAGE_STATUS = 6903,
 	STACK_USAGE_4 = 6904,
 

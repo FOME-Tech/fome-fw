@@ -31,6 +31,8 @@ Release template (copy/paste this for new release):
 ### Added
  - Log per-cylinder true ignition timing (includes trim, knock retard, etc) #76
  - Add mode for CLT/IAT sensors that are installed "high side" instead of typical "low side" #116
+ - Automatic supply voltage compensation for VVT solenoids, giving more stable control as battery voltage changes #209
+ - Configurable ignition timing limits, adding safety particularly for engines running wasted spark with a large cam #211
 
 ### Fixed
  - Improved bench test resolution (more usable for testing injectors, dwell, etc)
@@ -56,4 +58,5 @@ Release template (copy/paste this for new release):
  - Restore built-in INI storage on STM32F7-based ECUs
  - Improve log field names, easier to find the channel you're looking for #98
 
-### For older changelog entries prior to fork from rusEFI, see CHANGELOG.rusefi.md
+### For older changelog entries prior to fork from rusEFI
+see [CHANGELOG.rusefi.md](CHANGELOG.rusefi.md)

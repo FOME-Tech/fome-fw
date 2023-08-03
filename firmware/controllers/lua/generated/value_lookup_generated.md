@@ -490,6 +490,9 @@ Maximum time to crank starter when start/stop button is pressed
 ### lambdaProtectionTimeout
 Only respond once lambda is out of range for this period of time. Use to avoid transients triggering lambda protection when not needed
 
+### lambdaProtectionRestoreRpm
+
+
 ### clutchUpPinInverted
 
 
@@ -914,7 +917,7 @@ Output Min Duty Cycle
 Output Max Duty Cycle
 
 ### airTaperRpmRange
-RPM range above upper limit for extra air taper,"RPM", 1, 0, 0, 1500, 0
+RPM range above upper limit for extra air taper
 
 ### tps2Min
 
@@ -1051,6 +1054,12 @@ Select whether to configure injector flow in volumetric flow (defualt, cc/min) o
 ### benchTestOffTime
 Time between bench test pulses
 
+### lambdaProtectionRestoreTps
+
+
+### lambdaProtectionRestoreLoad
+
+
 ### boostCutPressure
 MAP value above which fuel is cut in case of overboost.\nSet to 0 to disable overboost cut.
 
@@ -1080,6 +1089,12 @@ This is the IAC position during cranking, some engines start better if given mor
 
 ### tChargeMaxRpmMaxTps
 
+
+### minimumIgnitionTiming
+Minimim timing advance allowed. No spark on any cylinder will ever fire after this angle BTDC. For example, setting -10 here means no spark ever fires later than 10 deg ATDC. Note that this only concerns the primary spark: any trailing sparks or multispark may violate this constraint.
+
+### maximumIgnitionTiming
+Maximum timing advance allowed. No spark on any cylinder will ever fire before this angle BTDC. For example, setting 45 here means no spark ever fires earlier than 45 deg BTDC
 
 ### alternatorPwmFrequency
 
@@ -1196,13 +1211,13 @@ Cooling fan turn-on temperature threshold, in Celsius
 Cooling fan turn-off temperature threshold, in Celsius
 
 ### auxFrequencyFilter
-null
+
 
 ### vvtControlMinRpm
 
 
 ### launchFuelAdderPercent
-null
+
 
 ### etbJamTimeout
 Time required to detect a stuck throttle.
@@ -1385,7 +1400,7 @@ Size of the pump chamber in cc. Typical Bosch HDP5 has a 9.0mm diameter, typical
 How long to keep the valve activated (in order to allow the pump to build pressure and keep the valve open on its own)
 
 ### issFilterReciprocal
-null
+
 
 ### hpfpPidP
 
@@ -1454,7 +1469,7 @@ We need to give engine time to build oil pressure without diverting it to VVT
 
 
 ### acRelayAlternatorDutyAdder
-null
+
 
 ### instantRpmRange
 
