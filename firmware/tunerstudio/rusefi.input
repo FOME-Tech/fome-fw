@@ -1249,6 +1249,7 @@ gaugeCategory = Trigger
 
 gaugeCategory = Test Bench
 	testBenchIterGauge = testBenchIter, "Test Bench Iterations", "count", 0, {benchTestCount}, 0, 0, {benchTestCount}, {benchTestCount}, 0, 0
+	testIgnIterGauge = testBenchIter, "Ignition Test Iterations", "count", 0, {ignTestCount}, 0, 0, {ignTestCount}, {ignTestCount}, 0, 0
 
 gaugeCategory = LUA
 	luaInvocationCounterGauge = luaInvocationCounter,"luaInvocationCounter", "count", 0.0,0.0, 0.0,0.0, 0.0,0.0, 0,0
@@ -4127,7 +4128,7 @@ dialog = tcuControls, "Transmission Settings"
 		field = "ON time", ignTestOnTime
 		field = "OFF time", ignTestOffTime
 		commandButton = "Abort test", cmd_test_cancel
-		gauge = testBenchIterGauge
+		gauge = testIgnIterGauge
 
 	dialog = ignTest, "", xAxis
 		panel = ignTest_l
