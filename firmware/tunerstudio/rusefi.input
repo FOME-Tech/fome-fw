@@ -4123,9 +4123,9 @@ dialog = tcuControls, "Transmission Settings"
 		commandButton = "Spark #12", cmd_test_spk12, { cylindersCount >= 12 }
 
 	dialog = ignTest_c, ""
-		field = "Iterations", benchTestCount
-		field = "ON time", benchTestOnTime
-		field = "OFF time", benchTestOffTime
+		field = "Iterations", ignTestCount
+		field = "ON time", ignTestOnTime
+		field = "OFF time", ignTestOffTime
 		commandButton = "Abort test", cmd_test_cancel
 		gauge = testBenchIterGauge
 
