@@ -176,7 +176,6 @@ CSRC =  $(ALLCSRC) \
 	$(BOARDSRC) \
 	$(HW_LAYER_EMS) \
 	$(HW_LAYER_DRIVERS_CORE) \
-	$(FATFSSRC) \
 	$(PROJECT_DIR)/hw_layer/main_hardfault.c \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -185,9 +184,6 @@ CSRC =  $(ALLCSRC) \
 CPPSRC = $(ALLCPPSRC) \
 	$(HW_LAYER_EMS_CPP) \
 	$(BOARDCPPSRC) \
-	$(HW_SENSORS_SRC) \
-	$(TUNERSTUDIO_SRC_CPP) \
-	$(CONSOLE_SRC_CPP) \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
