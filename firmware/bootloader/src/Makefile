@@ -119,7 +119,7 @@ endif
 #
 
 # Define project name here
-PROJECT = bootloader
+PROJECT = fome_bl
 PROJECT_DIR = ..
 
 # Configure precompiled header
