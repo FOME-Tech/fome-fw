@@ -31,7 +31,7 @@ blt_bool FlashErase(blt_addr addr, blt_int32u len) {
 	return BLT_TRUE;
 }
 
-blt_bool FlashDone(void) {
+blt_bool FlashDone() {
 	return BLT_TRUE;
 }
 
