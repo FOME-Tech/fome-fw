@@ -26,9 +26,6 @@ DDEFS += -DUART_USE_WAIT=FALSE
 #Mass Storage
 DDEFS += -DEFI_EMBED_INI_MSD=TRUE
 
-#Linker options, flash size
-USE_OPT += -Wl,--defsym=FLASH_SIZE=1m
-
 # Shared variables
 ALLINC    += $(BOARDINC)
 

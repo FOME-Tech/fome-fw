@@ -3,8 +3,6 @@
 # see setup_linux_environment.sh but Windows is also totally fine
 #
 
-.PHONY: openblt
-
 CHIBIOS = ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
 RULESFILE = $(RULESPATH)/rules.mk
@@ -113,10 +111,6 @@ ifeq ($(USE_SMART_BUILD),)
   USE_SMART_BUILD = no
 endif
 
-ifeq ($(USE_BOOTLOADER),)
-  USE_BOOTLOADER = no
-endif
-
 ifeq ($(USE_OPENBLT),)
   USE_OPENBLT = no
 endif
@@ -205,18 +199,9 @@ endif
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
 include $(PROJECT_DIR)/common.mk
 
-ifeq ($(BOOTLOADERINC),)
-  # include default bootloader code
-  BOOTLOADERINC= $(PROJECT_DIR)/bootloader/
-endif
-
-ifeq ($(USE_BOOTLOADER),yes)
-  include $(PROJECT_DIR)/bootloader/bootloader.mk
-endif
-
 ifeq ($(USE_OPENBLT),yes)
   # Reserve start of flash for OpenBLT
-  USE_OPT += -Wl,--defsym=BOOTLOADER=1
+  USE_OPT += -Wl,--defsym=HAS_BOOTLOADER=1
   DDEFS += -DEFI_USE_OPENBLT=TRUE
 endif
 
@@ -235,7 +220,6 @@ CSRC =  check.c \
   $(BOARDSRC) \
   $(CHIBIOS_CONTRIB)/os/various/ramdisk.c \
   $(CHIBIOS)/os/various/evtimer.c \
-  $(BOOTLOADERSRC) \
   ${HW_MASS_STORAGE_SRC_C} \
   $(HW_LAYER_EMS) \
   $(HW_LAYER_DRIVERS_CORE) \
@@ -289,7 +273,6 @@ INCDIR = \
   $(BOARDINC) \
   $(ALLINC) \
   $(TESTINC) \
-  $(BOOTLOADERINC) \
   $(CHIBIOS)/os/various \
   $(RUSEFI_LIB_INC) \
   $(CONFDIR) \
@@ -371,12 +354,6 @@ ULIBS = -lm --specs=nano.specs -Wl,--sort-section=alignment
 ##############################################################################
 
 include $(RULESFILE)
-
-openblt:
-	make -f $(PROJECT_DIR)/hw_layer/openblt/openblt.mk BOARD_DIR=$(BOARD_DIR) PROJECT_BOARD=$(PROJECT_BOARD) PROJECT_CPU=$(PROJECT_CPU)
-
-openblt_clean:
-	make -f $(PROJECT_DIR)/hw_layer/openblt/openblt.mk clean BOARD_DIR=$(BOARD_DIR) PROJECT_BOARD=$(PROJECT_BOARD) PROJECT_CPU=$(PROJECT_CPU)
 
 # Enable precompiled header
 include $(PROJECT_DIR)/rusefi_pch.mk
