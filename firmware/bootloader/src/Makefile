@@ -56,13 +56,6 @@ ifeq ($(USE_LINK_GC),)
   USE_LINK_GC = yes
 endif
 
-ifeq ($(CCACHE_DIR),)
- $(info No CCACHE_DIR)
-else
- $(info CCACHE_DIR is ${CCACHE_DIR})
- CCPREFIX=ccache
-endif
-
 # Linker extra options here.
 ifeq ($(USE_LDOPT),)
   USE_LDOPT =
