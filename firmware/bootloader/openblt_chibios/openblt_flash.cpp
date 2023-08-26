@@ -9,8 +9,8 @@ extern "C" {
 void FlashInit() { }
 
 blt_bool FlashVerifyChecksum() {
+	// Naive check: if the first block is blank, there's no code there
 	return intFlashIsErased(FlashGetUserProgBaseAddress(), 4) ? BLT_FALSE : BLT_TRUE;
-	// return BLT_FALSE;
 }
 
 blt_addr FlashGetUserProgBaseAddress() {
