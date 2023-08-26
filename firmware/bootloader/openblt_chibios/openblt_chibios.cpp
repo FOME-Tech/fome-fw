@@ -18,32 +18,10 @@ blt_int32u TimerGet() {
 	return 0;
 }
 
-/************************************************************************************//**
-** \brief     Copies data from the source to the destination address.
-** \param     dest Destination address for the data.
-** \param     src  Source address of the data.
-** \param     len  length of the data in bytes.
-** \return    none.
-**
-****************************************************************************************/
 void CpuMemCopy(blt_addr dest, blt_addr src, blt_int16u len)
 {
-  blt_int8u *from, *to;
-
-  /* set casted pointers */
-  from = (blt_int8u *)src;
-  to = (blt_int8u *)dest;
-
-  /* copy all bytes from source address to destination address */
-  while (len-- > 0)
-  {
-    /* store byte value from source to destination */
-    *to++ = *from++;
-    /* keep the watchdog happy */
-    CopService();
-  }
-} /*** end of CpuMemCopy ***/
-
+	memcpy((void*)dest, (void*)src, len);
+}
 
 /** \brief Pointer to the user program's reset vector. */
 #define CPU_USER_PROGRAM_STARTADDR_PTR    ((blt_addr)(NvmGetUserProgBaseAddress() + 0x00000004))
