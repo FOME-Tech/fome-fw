@@ -30,7 +30,7 @@ RAM3_SIZE = DEFINED(STM32F4_HAS_SRAM3) ? 64k : 0;
 SDRAM_SIZE = DEFINED(STM32_HAS_SDRAM) ? 8M : 0;
 
 /* OpenBLT <-> main FW shared area */
-_OpenBLT_Shared_Params_Size = DEFINED(BOOTLOADER) ? 16 : 0;
+_OpenBLT_Shared_Params_Size = DEFINED(BOOTLOADER) || DEFINED(IS_BOOTLOADER) ? 16 : 0;
 
 MEMORY
 {
