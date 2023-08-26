@@ -245,6 +245,8 @@ INCDIR = $(ALLINC) \
 	$(PROJECT_DIR)/hw_layer/serial_over_usb \
 	$(PROJECT_DIR)/hw_layer/algo \
 	$(PROJECT_DIR)/hw_layer/sensors \
+	$(PROJECT_DIR)/controllers/sensors/impl \
+	$(PROJECT_DIR)/controllers/sensors/core \
 	$(PROJECT_DIR)/hw_layer/mass_storage \
 	$(PROJECT_DIR)/hw_layer/ports \
 	$(PROJECT_DIR)/console/binary/generated \
@@ -258,6 +260,7 @@ INCDIR = $(ALLINC) \
 	$(PROJECT_DIR)/controllers/sensors \
 	$(PROJECT_DIR)/init \
 	$(RUSEFI_LIB_INC) \
+	$(BOARDS_DIR) \
 	config
 
 BUILDDIR=blbuild
