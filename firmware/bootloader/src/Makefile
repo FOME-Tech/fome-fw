@@ -35,6 +35,9 @@ ifeq ($(USE_OPT),)
   USE_OPT = $(EXTRA_PARAMS) $(DEBUG_LEVEL_OPT) $(RFLAGS) -Wno-error=implicit-fallthrough -Wno-error=bool-operation -fomit-frame-pointer -falign-functions=16 -Werror -Wno-error=pointer-sign -Wno-error=unused-function -Wno-error=unused-variable -Wno-error=sign-compare -Wno-error=unused-parameter -Wno-error=missing-field-initializers -Werror=type-limits -Wno-error=strict-aliasing -Wno-error=attributes
 endif
 
+# Configure the linker script to build the bootloader, not the firmware
+USE_OPT += -Wl,--defsym=IS_BOOTLOADER=1
+
 # C specific options here (added to USE_OPT).
 ifeq ($(USE_COPT),)
   USE_COPT = -fgnu89-inline -std=gnu99 -Werror-implicit-function-declaration
@@ -176,6 +179,7 @@ CSRC =  $(ALLCSRC) \
 	$(BOARDSRC) \
 	$(HW_LAYER_EMS) \
 	$(HW_LAYER_DRIVERS_CORE) \
+	$(PROJECT_DIR)/hw_layer/openblt/shared_params.c \
 	$(PROJECT_DIR)/hw_layer/main_hardfault.c \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
@@ -253,6 +257,7 @@ INCDIR = $(ALLINC) \
 	$(PROJECT_DIR)/init \
 	$(RUSEFI_LIB_INC) \
 	$(BOARDS_DIR) \
+	$(PROJECT_DIR)/hw_layer/openblt \
 	config
 
 BUILDDIR=blbuild

@@ -3,6 +3,10 @@
 #include "usbconsole.h"
 #include "hardware.h"
 
+extern "C" {
+	#include "shared_params.h"
+}
+
 int main(void) {
 	halInit();
 	chSysInit();
@@ -11,6 +15,9 @@ int main(void) {
 
 	// Set up USB
 	usb_serial_start();
+
+	// Init openblt shared params
+	SharedParamsInit();
 
 	while (true) {
 		chThdSleepMilliseconds(1);
