@@ -4,6 +4,7 @@
 #include "hardware.h"
 
 extern "C" {
+	#include "boot.h"
 	#include "shared_params.h"
 }
 
@@ -19,8 +20,11 @@ int main(void) {
 	// Init openblt shared params
 	SharedParamsInit();
 
+	// Init openblt itself
+	BootInit();
+
 	while (true) {
-		chThdSleepMilliseconds(1);
+		BootTask();
 	}
 }
 

@@ -181,6 +181,10 @@ CSRC =  $(ALLCSRC) \
 	$(HW_LAYER_DRIVERS_CORE) \
 	$(PROJECT_DIR)/hw_layer/openblt/shared_params.c \
 	$(PROJECT_DIR)/hw_layer/main_hardfault.c \
+	$(PROJECT_DIR)/ext/openblt/Target/Source/boot.c \
+	$(PROJECT_DIR)/ext/openblt/Target/Source/backdoor.c \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/nvm.c \
+	$(PROJECT_DIR)/hw_layer/openblt/hooks.c \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # todo: reduce code duplication with primary Makefile!!!
@@ -191,6 +195,7 @@ CPPSRC = $(ALLCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \
 	src/rusefi_stubs.cpp \
 	src/main.cpp
 
@@ -258,6 +263,8 @@ INCDIR = $(ALLINC) \
 	$(RUSEFI_LIB_INC) \
 	$(BOARDS_DIR) \
 	$(PROJECT_DIR)/hw_layer/openblt \
+	$(PROJECT_DIR)/ext/openblt/Target/Source \
+	$(PROJECT_DIR)/bootloader/openblt_chibios \
 	config
 
 BUILDDIR=blbuild
