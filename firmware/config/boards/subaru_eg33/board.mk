@@ -4,12 +4,6 @@ BOARDCPPSRC = $(BOARD_DIR)/board_configuration.cpp
 # Required include directories
 BOARDINC += $(BOARD_DIR)/config/controllers/algo
 
-# Override LD script
-ifeq ($(USE_BOOTLOADER),yes)
-  # include Prometheus bootloader code
-  BOOTLOADERINC = $(PROJECT_DIR)/bootloader/subaru_eg33
-endif
-
 #LED
 DDEFS +=  -DLED_CRITICAL_ERROR_BRAIN_PIN=Gpio::G7
 
