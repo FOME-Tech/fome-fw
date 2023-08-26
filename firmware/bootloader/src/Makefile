@@ -7,7 +7,7 @@
 
 ifeq ($(DEBUG_LEVEL_OPT),)
   # this value would be used by default. For 'debug' configuration override with '-O0 -ggdb -g' or something along these lines
-  DEBUG_LEVEL_OPT = -O2
+  DEBUG_LEVEL_OPT = -Os -ggdb -g
   DDEFS += -DEFI_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_STACK_CHECK=FALSE -DCH_DBG_FILL_THREADS=FALSE -DCH_DBG_THREADS_PROFILING=FALSE
 endif
 
@@ -176,6 +176,7 @@ CSRC =  $(ALLCSRC) \
 	$(HW_LAYER_EMS) \
 	$(HW_LAYER_DRIVERS_CORE) \
 	$(FATFSSRC) \
+	$(PROJECT_DIR)/hw_layer/main_hardfault.c \
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # todo: reduce code duplication with primary Makefile!!!
@@ -220,7 +221,7 @@ TCPPSRC =
 
 # List ASM source files here
 # List ASM source files here
-ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM)
+ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM) $(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
 
 INCDIR = $(ALLINC) \
 	$(PCH_DIR) \

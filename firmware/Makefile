@@ -241,7 +241,7 @@ CSRC =  check.c \
   $(HW_LAYER_DRIVERS_CORE) \
   $(HW_LAYER_DRIVERS) \
   $(RUSEFI_LIB_C) \
-  main_hardfault.c
+  $(PROJECT_DIR)/hw_layer/main_hardfault.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -279,7 +279,7 @@ TCPPSRC =
 # List ASM source files here
 ASMXSRC = $(ALLXASMSRC) \
   $(RUSEFIASM) \
-  main_hardfault_asm.S
+  $(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
 
 #
 # WARNING! order of variables is important here - for instance cypress own folders should go before default folders

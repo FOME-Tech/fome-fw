@@ -29,6 +29,8 @@ LoggingWithStorage::LoggingWithStorage(const char *name) : Logging(name, DEFAULT
 
 void setPinConfigurationOverrides() { }
 
+void logHardFault(uint32_t type, uintptr_t faultAddress, struct port_extctx* ctx, uint32_t csfr) { }
+
 // this is supposed to be taken from chconf_common.h but it does not work? I am not sure why :(
 // TODO: make this be defined by chconf_common.h?
 //#if ! ENABLE_PERF_TRACE

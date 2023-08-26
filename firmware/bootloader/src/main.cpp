@@ -7,6 +7,8 @@ int main(void) {
 	halInit();
 	chSysInit();
 
+	baseMCUInit();
+
 	// set base pin configuration based on the board
 	setDefaultBasePins();
 /* at the moment SD card is not needed by bootloader
