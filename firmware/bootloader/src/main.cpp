@@ -14,9 +14,6 @@ int main(void) {
 
 	baseMCUInit();
 
-	// Set up USB
-	usb_serial_start();
-
 	// Init openblt shared params
 	SharedParamsInit();
 

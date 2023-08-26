@@ -181,8 +181,10 @@ CSRC =  $(ALLCSRC) \
 	$(HW_LAYER_DRIVERS_CORE) \
 	$(PROJECT_DIR)/hw_layer/openblt/shared_params.c \
 	$(PROJECT_DIR)/hw_layer/main_hardfault.c \
-	$(PROJECT_DIR)/ext/openblt/Target/Source/boot.c \
 	$(PROJECT_DIR)/ext/openblt/Target/Source/backdoor.c \
+	$(PROJECT_DIR)/ext/openblt/Target/Source/boot.c \
+	$(PROJECT_DIR)/ext/openblt/Target/Source/com.c \
+	$(PROJECT_DIR)/ext/openblt/Target/Source/xcp.c \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/nvm.c \
 	$(PROJECT_DIR)/hw_layer/openblt/hooks.c \
 
@@ -196,6 +198,8 @@ CPPSRC = $(ALLCPPSRC) \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_flash.cpp \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_usb.cpp \
 	src/rusefi_stubs.cpp \
 	src/main.cpp
 
