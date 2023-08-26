@@ -14,6 +14,8 @@ endif
 # let everyone know that we are compiling bootloader
 IS_RE_BOOTLOADER = yes
 
+DDEFS += -DENABLE_AUTO_DETECT_HSE=TRUE -DSTM32_HSECLK=25000000
+
 # disable some modules to shrink bootloader binary
 DDEFS += -DEFI_BOOTLOADER
 DDEFS += -DHAL_USE_EXT=FALSE -DHAL_USE_ICU=FALSE -DHAL_USE_PWM=FALSE -DHAL_USE_RTC=FALSE -DEF_LUA=FALSE
@@ -191,7 +193,6 @@ CPPSRC = $(ALLCPPSRC) \
 	$(PROJECT_DIR)/controllers/algo/engine_configuration.cpp \
 	$(PROJECT_DIR)/controllers/persistent_store.cpp \
 	$(PROJECT_DIR)/hw_layer/io_pins.cpp \
-	$(PROJECT_DIR)/hw_layer/serial_over_usb/usbcfg.cpp \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \

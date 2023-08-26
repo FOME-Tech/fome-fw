@@ -1,6 +1,6 @@
 
 #include "pch.h"
-
+#include "usbconsole.h"
 #include "hardware.h"
 
 int main(void) {
@@ -11,10 +11,9 @@ int main(void) {
 
 	// set base pin configuration based on the board
 	setDefaultBasePins();
-/* at the moment SD card is not needed by bootloader
-	// set SD card configuration also
-	setDefaultSdCardParameters();
-*/
+
+	// Set up USB
+	usb_serial_start();
 
 	while (true) {
 		chThdSleepMilliseconds(1);
