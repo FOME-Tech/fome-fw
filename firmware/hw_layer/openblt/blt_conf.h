@@ -137,22 +137,6 @@
 /** \brief Enable/disable hooks functions to override the user program checksum handling. */
 #define BOOT_NVM_CHECKSUM_HOOKS_ENABLE  (0)
 
-
-/****************************************************************************************
-*   F L A S H   M E M O R Y   D R I V E R   C O N F I G U R A T I O N
-****************************************************************************************/
-/** \brief Enable support for a custom flash layout table. It is located in
- *         flash_layout.c. This was done because the default flashLayout[] table
- *         in the bootloader's core defines flash map for single bank mode.
- *         RusEFI uses dual bank mode.
- */
-#define BOOT_FLASH_CUSTOM_LAYOUT_ENABLE (1)
-
-/** \brief Use one of 'reserved' IRQ vectors at the beginig on vector table.
- */
-#define BOOT_FLASH_VECTOR_TABLE_CS_OFFSET (0x1C)
-
-
 /****************************************************************************************
 *   W A T C H D O G   D R I V E R   C O N F I G U R A T I O N
 ****************************************************************************************/
