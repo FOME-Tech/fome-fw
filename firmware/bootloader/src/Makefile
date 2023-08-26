@@ -188,11 +188,6 @@ CPPSRC = $(ALLCPPSRC) \
 	$(HW_SENSORS_SRC) \
 	$(TUNERSTUDIO_SRC_CPP) \
 	$(CONSOLE_SRC_CPP) \
-	$(PROJECT_DIR)/console/binary/tunerstudio_io.cpp \
-	$(PROJECT_DIR)/console/binary/tunerstudio_io_serial.cpp \
-	$(PROJECT_DIR)/controllers/algo/engine_configuration.cpp \
-	$(PROJECT_DIR)/controllers/persistent_store.cpp \
-	$(PROJECT_DIR)/hw_layer/io_pins.cpp \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
