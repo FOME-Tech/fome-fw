@@ -2,6 +2,7 @@
 
 extern "C" {
 	#include "boot.h"
+	#include "flash.h"
 }
 
 void CpuInit() { }
@@ -10,17 +11,16 @@ void CopInit() { }
 void TimerInit() { }
 void TimerReset() { }
 
-void NvmInit() { }
-
 void CopService() { }
 void TimerUpdate() { }
 
-blt_addr NvmGetUserProgBaseAddress() {
-	return 0x08008000;
+void FlashInit() { }
+blt_bool FlashVerifyChecksum() {
+	return BLT_TRUE;
 }
 
-blt_bool NvmVerifyChecksum() {
-	return BLT_TRUE;
+blt_addr FlashGetUserProgBaseAddress() {
+	return 0x08008000;
 }
 
 /** \brief Pointer to the user program's reset vector. */
