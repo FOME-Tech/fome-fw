@@ -22,8 +22,6 @@ DDEFS += -DHAL_USE_FLASH=FALSE
 DDEFS += -DEFI_USE_UART_DMA=FALSE
 
 DDEFS += -DEFI_USB_SERIAL=TRUE -DHAL_USE_USB_MSD=FALSE
-# disable CAN
-DDEFS += -DEFI_CAN_SUPPORT=FALSE
 
 DDEFS += -DEFI_UNIT_TEST=0 -DEFI_PROD_CODE=1 -DEFI_SIMULATOR=0
 
@@ -187,6 +185,7 @@ CPPSRC = $(ALLCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_can.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_flash.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_usb.cpp \
