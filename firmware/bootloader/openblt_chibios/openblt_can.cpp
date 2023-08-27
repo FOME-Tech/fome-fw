@@ -2,6 +2,8 @@
 
 #include "hal.h"
 
+#include "can_hw.h"
+
 extern "C" {
 	#include "boot.h"
 }
@@ -13,7 +15,10 @@ extern "C" {
 ****************************************************************************************/
 extern "C" void CanInit(void)
 {
-	// TODO
+	// TODO: init pins?
+
+	auto cfg = findCanConfig(B500KBPS);
+	canStart(&CAND1, cfg);
 }
 
 

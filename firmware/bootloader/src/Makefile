@@ -183,6 +183,7 @@ CPPSRC = $(ALLCPPSRC) \
 	$(HW_LAYER_EMS_CPP) \
 	$(BOARDCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
+	$(PROJECT_DIR)/hw_layer/drivers/can/can_config.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_can.cpp \
