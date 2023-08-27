@@ -273,7 +273,6 @@ public class Fields {
 	public static final int engine_type_e_DODGE_NEON_1995 = 2;
 	public static final int engine_type_e_DODGE_NEON_2003_CRANK = 46;
 	public static final int engine_type_e_DODGE_RAM = 64;
-	public static final int engine_type_e_EEPROM_BENCH_ENGINE = 61;
 	public static final int engine_type_e_ET_UNUSED_11 = 11;
 	public static final int engine_type_e_ET_UNUSED_12 = 12;
 	public static final int engine_type_e_ET_UNUSED_13 = 13;
@@ -282,6 +281,7 @@ public class Fields {
 	public static final int engine_type_e_ET_UNUSED_33 = 33;
 	public static final int engine_type_e_ET_UNUSED_43 = 43;
 	public static final int engine_type_e_ET_UNUSED_57 = 57;
+	public static final int engine_type_e_ET_UNUSED_61 = 61;
 	public static final int engine_type_e_ET_UNUSED_92 = 92;
 	public static final int engine_type_e_ET_UNUSED_93 = 93;
 	public static final int engine_type_e_ET_UNUSED_97 = 97;
@@ -977,7 +977,6 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 178605401;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1179,7 +1178,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.08.25.f407-discovery.178605401";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.08.27.f407-discovery.2787437970";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final char TS_TEST_COMMAND = 't';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1380;
