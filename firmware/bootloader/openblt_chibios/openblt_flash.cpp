@@ -14,7 +14,11 @@ blt_bool FlashVerifyChecksum() {
 }
 
 blt_addr FlashGetUserProgBaseAddress() {
+#ifdef STM32H7XX
+	return 0x08020000;
+#else // not STM32H7
 	return 0x08008000;
+#endif
 }
 
 blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {

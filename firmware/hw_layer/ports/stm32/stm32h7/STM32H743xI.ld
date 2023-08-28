@@ -15,7 +15,7 @@
 */
 
 /* change address & length if bootloader */
-bootloader_size = 32k;
+bootloader_size = 128k;
 flash_start = 0x08000000 + (DEFINED(HAS_BOOTLOADER) ? bootloader_size : 0);
 flash_size = DEFINED(IS_BOOTLOADER) ? bootloader_size : 1M;
 image_size = DEFINED(HAS_BOOTLOADER) ? (flash_size - bootloader_size) : flash_size;
@@ -139,6 +139,20 @@ SECTIONS
         . = ALIGN(4);
         __eth_end__ = .;
     } > ETH_RAM
+
+    /* shared between main FW and OpenBLT */
+    .shared (NOLOAD) :
+    {
+        . = ALIGN(4);
+        _sshared = .;
+        __shared_start__ = _sshared;
+        *(.shared)
+        *(.shared.*)
+        KEEP(*(.shared))
+        . = ALIGN(4);
+        _eshared = .;
+        __shared_end__ = _eshared;
+    } > shared
 }
 
 /* Code rules inclusion.*/
