@@ -737,10 +737,10 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		setEngineProteusGearboxManInTheMiddle();
 		break;
 	case engine_type_e::POLYGONUS_MIATA_NA6:
-		setMiataNa6_Proteus();
+		setMiataNa6_Polygonus();
 		break;
 	case engine_type_e::POLYGONUS_MIATA_NB2:
-		setMiataNB2_Proteus();
+		setMiataNB2_Polygonus();
 		break;
 #ifdef HARDWARE_CI
 	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:

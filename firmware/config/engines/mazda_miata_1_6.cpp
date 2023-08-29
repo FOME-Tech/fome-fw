@@ -364,7 +364,7 @@ void setHellenNA6() {
 
 #include "proteus_meta.h"
 
-void setMiataNa6_Proteus() {
+void setMiataNa6_Polygonus() {
 	miataNAcommonEngineSettings();
 
 	// Triggers
