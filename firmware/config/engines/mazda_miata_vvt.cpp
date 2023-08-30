@@ -635,7 +635,7 @@ static void setMiataNB2_MRE_common() {
 /**
  * https://github.com/rusefi/rusefi/wiki/HOWTO-TCU-A42DE-on-Proteus
  */
-//#if HW_PROTEUS
+#if HW_PROTEUS
 void setMiataNB2_Proteus_TCU() {
 	engineConfiguration->tcuEnabled = true;
 
@@ -694,42 +694,42 @@ void setMiataNB2_Proteus_TCU() {
  * https://github.com/rusefi/rusefi/wiki/HOWTO-Miata-NB2-on-Proteus
  */
 void setMiataNB2_Polygonus() {
-    setMazdaMiataEngineNB2Defaults();
+	setMazdaMiataEngineNB2Defaults();
 
-    engineConfiguration->triggerInputPins[0] = PROTEUS_VR_1;
-    engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
-    engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_1;
+	engineConfiguration->triggerInputPins[0] = PROTEUS_VR_1;
+	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
+	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_1;
 	engineConfiguration->vvtPins[0] = PROTEUS_LS_13;
 	engineConfiguration->vehicleSpeedSensorInputPin = PROTEUS_DIGITAL_3;
 
 	engineConfiguration->alternatorControlPin = PROTEUS_HS_1;
 
-    // high-side driver with +12v VP jumper
-    engineConfiguration->tachOutputPin = PROTEUS_LS_14; // tachometer
-    engineConfiguration->tachPulsePerRev = 2;
+	// high-side driver with +12v VP jumper
+	engineConfiguration->tachOutputPin = PROTEUS_LS_14; // tachometer
+	engineConfiguration->tachPulsePerRev = 2;
 
-    engineConfiguration->ignitionMode = IM_WASTED_SPARK;
+	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 
-    //#if EFI_PROD_CODE
-    engineConfiguration->ignitionPins[0] = PROTEUS_IGN_1;
-    engineConfiguration->ignitionPins[1] = PROTEUS_IGN_2;
-    engineConfiguration->ignitionPins[2] = PROTEUS_IGN_3;
-    engineConfiguration->ignitionPins[3] = PROTEUS_IGN_4;
+#if EFI_PROD_CODE
+	engineConfiguration->ignitionPins[0] = PROTEUS_IGN_1;
+	engineConfiguration->ignitionPins[1] = PROTEUS_IGN_2;
+	engineConfiguration->ignitionPins[2] = PROTEUS_IGN_3;
+	engineConfiguration->ignitionPins[3] = PROTEUS_IGN_4;
 
-    engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
-    engineConfiguration->injectionMode = IM_SEQUENTIAL;
+	engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
+	engineConfiguration->injectionMode = IM_SEQUENTIAL;
 
 
-    engineConfiguration->injectionPins[0] = PROTEUS_LS_1;  // BLU  # pin 3/black35
-    engineConfiguration->injectionPins[1] = PROTEUS_LS_2;  // BLK
-    engineConfiguration->injectionPins[2] = PROTEUS_LS_3; // GRN
-    engineConfiguration->injectionPins[3] = PROTEUS_LS_4; // WHT
+	engineConfiguration->injectionPins[0] = PROTEUS_LS_1;  // BLU  # pin 3/black35
+	engineConfiguration->injectionPins[1] = PROTEUS_LS_2;  // BLK
+	engineConfiguration->injectionPins[2] = PROTEUS_LS_3; // GRN
+	engineConfiguration->injectionPins[3] = PROTEUS_LS_4; // WHT
 
-    engineConfiguration->enableSoftwareKnock = true;
+	engineConfiguration->enableSoftwareKnock = true;
 	engineConfiguration->cylinderBore = 78;
 	engineConfiguration->knockBandCustom = 6.8;
 
-    engineConfiguration->malfunctionIndicatorPin = PROTEUS_LS_11;
+	engineConfiguration->malfunctionIndicatorPin = PROTEUS_LS_11;
 
 	engineConfiguration->map.sensor.hwChannel = PROTEUS_IN_ANALOG_VOLT_1;
 	engineConfiguration->map.sensor.type = MT_MPXH6400;
@@ -739,12 +739,12 @@ void setMiataNB2_Polygonus() {
 	engineConfiguration->tpsMin = 92;
 	engineConfiguration->tpsMax = 872;
 
-    engineConfiguration->clt.adcChannel =  PROTEUS_IN_ANALOG_TEMP_3;
-    engineConfiguration->iat.adcChannel = PROTEUS_IN_ANALOG_TEMP_2;
+	engineConfiguration->clt.adcChannel =  PROTEUS_IN_ANALOG_TEMP_3;
+	engineConfiguration->iat.adcChannel = PROTEUS_IN_ANALOG_TEMP_2;
 
-    engineConfiguration->fuelPumpPin = PROTEUS_LS_7;
+	engineConfiguration->fuelPumpPin = PROTEUS_LS_7;
 
-    engineConfiguration->idle.solenoidPin = PROTEUS_LS_10;
+	engineConfiguration->idle.solenoidPin = PROTEUS_LS_10;
 
 	// Built in wideband controller on bus 2
 	engineConfiguration->enableAemXSeries = true;
@@ -769,11 +769,9 @@ void setMiataNB2_Polygonus() {
 	// Disable ETBs
 	engineConfiguration->etbFunctions[0] = dc_function_e::DC_None;
 	engineConfiguration->etbFunctions[1] = dc_function_e::DC_None;
-//#endif // EFI_PROD_CODE
-
-
+#endif // EFI_PROD_CODE
 }
-//#endif // HW_PROTEUS
+#endif // HW_PROTEUS
 
 #if HW_HELLEN
 void setHellenNB1() {
