@@ -754,6 +754,8 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->clutchDownPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
 	engineConfiguration->clutchDownPinInverted = true;
 
+	engineConfiguration->brakePedalPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
+
 	engineConfiguration->acRelayPin = PROTEUS_LS_8;
 
 	// Disable ETBs
@@ -769,8 +771,6 @@ void setMiataNB1_Polygonus() {
 
 	engineConfiguration->tpsMin = 102;
 	engineConfiguration->tpsMax = 727;
-
-	engineConfiguration->brakePedalPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
 
 	engineConfiguration->acSwitch = PROTEUS_DIGITAL_6;
 
@@ -824,6 +824,9 @@ void setMiataNB_MSM_Polygonus() {
 
 	// MSM has boost control!
 	engineConfiguration->boostControlPin = PROTEUS_HS_3;
+
+	// MSM gets a different IAT from the other NBs
+	engineConfiguration->iat.config = { 0, 40, 60, 112000, 17000, 8000, 0 };
 }
 #endif // HW_PROTEUS
 
