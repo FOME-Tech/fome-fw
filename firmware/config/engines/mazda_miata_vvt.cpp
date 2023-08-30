@@ -252,7 +252,6 @@ static void setCommonMazdaNB() {
 	engineConfiguration->trigger.type = trigger_type_e::TT_MIATA_VVT;
 	engineConfiguration->globalTriggerAngleOffset = 10;
 	engineConfiguration->vvtMode[0] = VVT_MIATA_NB;
-	engineConfiguration->vvtOffsets[0] = 95;
 
 	// Cranking
 	engineConfiguration->ignitionDwellForCrankingMs = 4;
@@ -404,6 +403,8 @@ static void setMazdaMiataEngineNB2Defaults() {
 	copyArray(config->vvtTable1RpmBins, vvt18fsioRpmBins);
 	copyArray(config->vvtTable1LoadBins, vvt18fsioLoadBins);
 	copyTable(config->vvtTable1, SCRIPT_TABLE_vvt_target);
+
+	engineConfiguration->vvtOffsets[0] = 95;
 
 	// VVT closed loop
 	engineConfiguration->auxPid[0].pFactor = 2;
@@ -801,7 +802,28 @@ void setMiataNB2_Polygonus() {
 	engineConfiguration->mainRelayPin = PROTEUS_LS_16;
 
 	engineConfiguration->acSwitch = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_6);
-#endif // EFI_PROD_CODE
+}
+
+void setMiataNB_MSM_Polygonus() {
+	setMazdaMiataEngineNB1Defaults();
+	setMiataNbPolygonusCommon();
+
+	strcpy(engineConfiguration->engineCode, "NB1");
+	engineConfiguration->compressionRatio = 9.5;
+	engineConfiguration->isForcedInduction = true;
+
+	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_1;
+
+	engineConfiguration->tpsMin = 92;
+	engineConfiguration->tpsMax = 872;
+
+	// NB2 has a main relay output, unlike NB1
+	engineConfiguration->mainRelayPin = PROTEUS_LS_16;
+
+	engineConfiguration->acSwitch = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_6);
+
+	// MSM has boost control!
+	engineConfiguration->boostControlPin = PROTEUS_HS_3;
 }
 #endif // HW_PROTEUS
 
