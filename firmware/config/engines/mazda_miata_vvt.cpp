@@ -751,7 +751,7 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->fan2Pin = PROTEUS_LS_5;
 	engineConfiguration->enableFan2WithAc = true;
 
-	engineConfiguration->clutchDownPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
+	engineConfiguration->clutchDownPin = PROTEUS_DIGITAL_4;
 	engineConfiguration->clutchDownPinInverted = true;
 
 	engineConfiguration->brakePedalPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
@@ -781,10 +781,20 @@ void setMiataNB1_Polygonus() {
 	engineConfiguration->lowPressureFuel.v2 = 4.5;
 	engineConfiguration->lowPressureFuel.value2 = 689.5;
 
-	// GPPWM1: 
+	// GPPWM1: VICS variable intake flap
 	engineConfiguration->gppwm[0].pin = PROTEUS_LS_16;
 	engineConfiguration->gppwm[0].pwmFrequency = 0;
 	engineConfiguration->gppwm[0].loadAxis = GPPWM_Tps;
+	engineConfiguration->gppwm[0].onAboveDuty = 60;
+	engineConfiguration->gppwm[0].offBelowDuty = 40;
+	strcpy(engineConfiguration->gpPwmNote[0], "VICS");
+	copyArray(engineConfiguration->gppwm[0].rpmBins, { 0, 1000, 2000, 2500, 3500, 5500, 6500, 7000 });
+	for (size_t i = 0; i < efi::size(engineConfiguration->gppwm[0].table); i++)
+	{
+		// Set the 3500 and 5500 rpm columns to 100
+		engineConfiguration->gppwm[0].table[i][4] = 100;
+		engineConfiguration->gppwm[0].table[i][5] = 100;
+	}
 }
 
 void setMiataNB2_Polygonus() {
