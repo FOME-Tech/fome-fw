@@ -198,12 +198,12 @@ enum class engine_type_e : uint32_t {
 
 	// Polygonus PnP presets
 	POLYGONUS_MIATA_NA6 = 4,
+	POLYGONUS_MIATA_NB1 = 11,
 	POLYGONUS_MIATA_NB2 = 67,
 
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
 	ET_UNUSED_17 = 17,
-	ET_UNUSED_11 = 11,
 	ET_UNUSED_12 = 12,
 	ET_UNUSED_13 = 13,
 	ET_UNUSED_15 = 15,

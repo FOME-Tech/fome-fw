@@ -739,6 +739,9 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::POLYGONUS_MIATA_NA6:
 		setMiataNa6_Polygonus();
 		break;
+	case engine_type_e::POLYGONUS_MIATA_NB1:
+		setMiataNB1_Polygonus();
+		break;
 	case engine_type_e::POLYGONUS_MIATA_NB2:
 		setMiataNB2_Polygonus();
 		break;
