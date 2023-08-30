@@ -745,6 +745,9 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::POLYGONUS_MIATA_NB2:
 		setMiataNB2_Polygonus();
 		break;
+	case engine_type_e::POLYGONUS_MIATA_MSM:
+		setMiataNB_MSM_Polygonus();
+		break;
 #ifdef HARDWARE_CI
 	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
 		setProteusAnalogPwmTest();
