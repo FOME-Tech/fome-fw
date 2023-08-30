@@ -231,8 +231,16 @@ static void setCommonMazdaNB() {
 
 	engineConfiguration->cylinderBore = 83;
 	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_MAZDA);
-	engineConfiguration->compressionRatio = 10;
 	engineConfiguration->vehicleWeight = 950;
+
+	/**
+	 * http://miataturbo.wikidot.com/fuel-injectors
+	 * 01-05 (purple) - #195500-4060
+	 */
+	engineConfiguration->injector.flow = 265;
+	engineConfiguration->fuelReferencePressure = 400; // 400 kPa, 58 psi
+	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
+
 
 	engineConfiguration->injectionMode = IM_SEQUENTIAL;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
@@ -370,7 +378,9 @@ static void setCommonMazdaNB() {
 
 static void setMazdaMiataEngineNB1Defaults() {
 	setCommonMazdaNB();
+
 	strcpy(engineConfiguration->engineCode, "NB1");
+	engineConfiguration->compressionRatio = 9.5;
 
 	// Vehicle speed/gears
 	engineConfiguration->totalGearsCount = 5;
@@ -386,17 +396,10 @@ static void setMazdaMiataEngineNB1Defaults() {
 }
 
 static void setMazdaMiataEngineNB2Defaults() {
-	strcpy(engineConfiguration->engineCode, "NB2");
-
-	/**
-	 * http://miataturbo.wikidot.com/fuel-injectors
-	 * 01-05 (purple) - #195500-4060
-	 */
-	engineConfiguration->injector.flow = 265;
-	engineConfiguration->fuelReferencePressure = 400; // 400 kPa, 58 psi
-	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
-
 	setCommonMazdaNB();
+
+	strcpy(engineConfiguration->engineCode, "NB2");
+	engineConfiguration->compressionRatio = 10;
 
 	copyArray(config->vvtTable1RpmBins, vvt18fsioRpmBins);
 	copyArray(config->vvtTable1LoadBins, vvt18fsioLoadBins);
@@ -690,16 +693,8 @@ void setMiataNB2_Proteus_TCU() {
 
 }
 
-/**
- * https://github.com/rusefi/rusefi/wiki/HOWTO-Miata-NB2-on-Proteus
- */
-void setMiataNB2_Polygonus() {
-	setMazdaMiataEngineNB2Defaults();
-
+void setMiataNbPolygonusCommon() {
 	engineConfiguration->triggerInputPins[0] = PROTEUS_VR_1;
-	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
-	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_1;
-	engineConfiguration->vvtPins[0] = PROTEUS_LS_13;
 	engineConfiguration->vehicleSpeedSensorInputPin = PROTEUS_DIGITAL_3;
 
 	engineConfiguration->alternatorControlPin = PROTEUS_HS_1;
@@ -710,7 +705,6 @@ void setMiataNB2_Polygonus() {
 
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 
-#if EFI_PROD_CODE
 	engineConfiguration->ignitionPins[0] = PROTEUS_IGN_1;
 	engineConfiguration->ignitionPins[1] = PROTEUS_IGN_2;
 	engineConfiguration->ignitionPins[2] = PROTEUS_IGN_3;
@@ -736,8 +730,6 @@ void setMiataNB2_Polygonus() {
 
 
 	engineConfiguration->tps1_1AdcChannel = PROTEUS_IN_ANALOG_VOLT_3;
-	engineConfiguration->tpsMin = 92;
-	engineConfiguration->tpsMax = 872;
 
 	engineConfiguration->clt.adcChannel =  PROTEUS_IN_ANALOG_TEMP_3;
 	engineConfiguration->iat.adcChannel = PROTEUS_IN_ANALOG_TEMP_2;
@@ -758,17 +750,57 @@ void setMiataNB2_Polygonus() {
 	engineConfiguration->fan2Pin = PROTEUS_LS_5;
 	engineConfiguration->enableFan2WithAc = true;
 
-	engineConfiguration->mainRelayPin = PROTEUS_LS_16;
-
 	engineConfiguration->clutchDownPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
 	engineConfiguration->clutchDownPinInverted = true;
 
-	engineConfiguration->acSwitch = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_6);
 	engineConfiguration->acRelayPin = PROTEUS_LS_8;
 
 	// Disable ETBs
 	engineConfiguration->etbFunctions[0] = dc_function_e::DC_None;
 	engineConfiguration->etbFunctions[1] = dc_function_e::DC_None;
+}
+
+void setMiataNB1_Polygonus() {
+	setMazdaMiataEngineNB1Defaults();
+	setMiataNbPolygonusCommon();
+
+	engineConfiguration->camInputs[0] = PROTEUS_VR_2;
+
+	engineConfiguration->tpsMin = 102;
+	engineConfiguration->tpsMax = 727;
+
+	engineConfiguration->brakePedalPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
+
+	engineConfiguration->acSwitch = PROTEUS_DIGITAL_6;
+
+	// Fuel pressure
+	engineConfiguration->lowPressureFuel.hwChannel = PROTEUS_IN_ANALOG_VOLT_6;
+	engineConfiguration->lowPressureFuel.v1 = 0.5;
+	engineConfiguration->lowPressureFuel.value1 = 0;
+	engineConfiguration->lowPressureFuel.v2 = 4.5;
+	engineConfiguration->lowPressureFuel.value2 = 689.5;
+
+	// GPPWM1: 
+	engineConfiguration->gppwm[0].pin = PROTEUS_LS_16;
+	engineConfiguration->gppwm[0].pwmFrequency = 0;
+	engineConfiguration->gppwm[0].loadAxis = GPPWM_Tps;
+}
+
+void setMiataNB2_Polygonus() {
+	setMazdaMiataEngineNB2Defaults();
+	setMiataNbPolygonusCommon();
+
+	// NB2 has VVT!
+	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_1;
+	engineConfiguration->vvtPins[0] = PROTEUS_LS_13;
+
+	engineConfiguration->tpsMin = 92;
+	engineConfiguration->tpsMax = 872;
+
+	// NB2 has a main relay output, unlike NB1
+	engineConfiguration->mainRelayPin = PROTEUS_LS_16;
+
+	engineConfiguration->acSwitch = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_6);
 #endif // EFI_PROD_CODE
 }
 #endif // HW_PROTEUS
