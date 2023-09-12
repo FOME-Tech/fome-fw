@@ -11,7 +11,7 @@ The ```translations``` directory contains non-English-language translations
 for TunerStudio.
 
 In TunerStudio some fields have little question mark on the left of the name for additional field tips.
-Those tips are defined in rusefi_config.txt
+Those tips are defined in `../integration/rusefi_config.txt`
 
 The initialization files are automatically generated from a combination
 of input files located both in this directory and in the board-specific
