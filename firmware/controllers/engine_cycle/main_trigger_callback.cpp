@@ -47,7 +47,6 @@
 #include "backup_ram.h"
 
 void endSimultaneousInjection(InjectionEvent *event) {
-	event->isScheduled = false;
 	endSimultaneousInjectionOnlyTogglePins();
 	getFuelSchedule()->addFuelEventsForCylinder(event->ownIndex);
 }
@@ -55,7 +54,6 @@ void endSimultaneousInjection(InjectionEvent *event) {
 void turnInjectionPinLow(InjectionEvent *event) {
 	efitick_t nowNt = getTimeNowNt();
 
-	event->isScheduled = false;
 	for (int i = 0;i<MAX_WIRES_COUNT;i++) {
 		InjectorOutputPin *output = event->outputs[i];
 		if (output) {
