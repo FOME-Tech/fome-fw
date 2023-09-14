@@ -582,7 +582,6 @@ enable2ndByteCanID = false
 		xBins		= cltFuelCorrBins, coolant
 		yBins		= cltFuelCorr
 		yBins		= wueAnalRecommend
-		;gauge		= cltGauge
 
 		lineLabel	= "Warmup Correction"
 		lineLabel	= "Recommended WUE"
@@ -1249,7 +1248,8 @@ gaugeCategory = Trigger
 	triggerVvtRiseGauge = triggerVvtRise,"triggerVvtRise", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 
 gaugeCategory = Test Bench
-	testBenchIterGauge = testBenchIter, "Test Bench Iterations", "count", -10, {benchTestCount + 10}, -5, 0, {benchTestCount}, {benchTestCount + 5}, 1, 1
+	testBenchIterGauge = testBenchIter, "Test Bench Iterations", "count", 0, {benchTestCount}, 0, 0, {benchTestCount}, {benchTestCount}, 0, 0
+	testIgnIterGauge = testBenchIter, "Ignition Test Iterations", "count", 0, {ignTestCount}, 0, 0, {ignTestCount}, {ignTestCount}, 0, 0
 
 gaugeCategory = LUA
 	luaInvocationCounterGauge = luaInvocationCounter,"luaInvocationCounter", "count", 0.0,0.0, 0.0,0.0, 0.0,0.0, 0,0
@@ -1648,7 +1648,8 @@ menuDialog = main
 	menu = "Fuel"
 		# basic
 		subMenu = injectorConfig,			"Injection configuration"
-		subMenu = injectionSettings,		"Injection hardware", 0, {isInjectionEnabled == 1}
+		subMenu = injectorPins,				"Injection hardware", 0, {isInjectionEnabled == 1}
+		subMenu = injTest,					"Injector test", 0, {isInjectionEnabled}
 		subMenu = cylinderBankSelect,		"Cylinder bank selection", 0, {isInjectionEnabled == 1}
 		subMenu = injectorNonlinear,		"Injector small-pulse correction", 0, {isInjectionEnabled == 1}
 
@@ -1713,6 +1714,7 @@ menuDialog = main
 
 	menu = "Ignition"
 		subMenu = ignitionSettings,			"Ignition settings"
+		subMenu = ignTest,					"Ignition coil test", 0, {isIgnitionEnabled}
 		subMenu = std_separator
 
 		subMenu = ignitionTableTbl,			"Ignition advance", 0, {isIgnitionEnabled}
@@ -1893,7 +1895,8 @@ menuDialog = main
 	menu = "&Controller"
 		subMenu = ecuStimulator,			"ECU stimulator"
 		subMenu = ioTest,					"Bench test"
-		subMenu = injTest,					"Injector test"
+		subMenu = injTest,					"Injector test", 0, {isInjectionEnabled}
+		subMenu = ignTest,					"Ignition coil test", 0, {isIgnitionEnabled}
 		subMenu = engineTypeDialog,			"Popular vehicles"
 		subMenu = std_separator
 
@@ -1995,6 +1998,11 @@ cmd_test_inj10 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_INJECTOR_CATEGORY
 cmd_test_inj11 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_INJECTOR_CATEGORY_16_hex@@\x00\x0b"
 cmd_test_inj12 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_INJECTOR_CATEGORY_16_hex@@\x00\x0c"
 
+cmd_test_cancel = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_CANCEL_16_hex@@"
+
+cmd_fuel_pump_on  = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_FUEL_PUMP_ON_16_hex@@"
+cmd_fuel_pump_off = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_FUEL_PUMP_OFF_16_hex@@"
+
 cmd_test_sol1 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_SOLENOID_CATEGORY_16_hex@@\x00\x01"
 cmd_test_sol2 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_SOLENOID_CATEGORY_16_hex@@\x00\x02"
 cmd_test_sol3 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_SOLENOID_CATEGORY_16_hex@@\x00\x03"
@@ -2003,7 +2011,6 @@ cmd_test_sol5 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_SOLENOID_CATEGORY_
 cmd_test_sol6 = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_SOLENOID_CATEGORY_16_hex@@\x00\x06"
 
 cmd_test_main_relay			= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_MAIN_RELAY_16_hex@@"
-cmd_test_fuel_pump				= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_FUEL_PUMP_16_hex@@"
 cmd_test_starter_relay			= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_STARTER_ENABLE_RELAY_16_hex@@"
 cmd_test_starter_disable_relay	= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_STARTER_DISABLE_RELAY_16_hex@@"
 cmd_test_ac_relay				= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_BENCH_CATEGORY_16_hex@@@@bench_mode_e_BENCH_AC_COMPRESSOR_RELAY_16_hex@@"
@@ -2030,7 +2037,6 @@ cmd_etb_autotune_stop		= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_X14_16_he
 cmd_etb_auto_calibrate_2	= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_X14_16_hex@@\x00\x11"
 cmd_wideband_firmare_update  = "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_X14_16_hex@@\x00\x12"
 cmd_enable_ext_stim			= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_X14_16_hex@@\x00\x13"
-cmd_nDBANK						= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_X14_16_hex@@\x00\x14"@@if_ts_show_f7_presets
 cmd_burn_without_flash		= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_X14_16_hex@@\x00\x15"
 
 cmd_set_wideband_idx_0		= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_WIDEBAND_16_hex@@\x00\x00"
@@ -2325,7 +2331,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Stoichiometric ratio",			stoichRatioPrimary, {isInjectionEnabled == 1}
 		field = "E100 stoichiometric ratio",	stoichRatioSecondary, {isInjectionEnabled == 1 && flexSensorPin != 0 }
 
-	dialog = injectorOutputSettings, "Injector Outputs",	yAxis
+	dialog = injectorPins, "Injector Outputs",	yAxis
 		field = "Use only first half of outputs for batch mode"
 		field = "Injection Output 1",						injectionPins1, {isInjectionEnabled == 1}
 		field = "Injection Output 2",						injectionPins2, {isInjectionEnabled == 1 && injectionMode != 3 && cylindersCount > 1}
@@ -2387,20 +2393,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		commandButton = "Lua Out #6",	cmd_test_lua6
 		commandButton = "Lua Out #7",	cmd_test_lua7
 		commandButton = "Lua Out #8",	cmd_test_lua8
-
-	dialog = testInjectors, "Injector Test"
-		commandButton = "Injector #1", cmd_test_inj1
-		commandButton = "Injector #2", cmd_test_inj2, { cylindersCount >= 2 }
-		commandButton = "Injector #3", cmd_test_inj3, { cylindersCount >= 3 }
-		commandButton = "Injector #4", cmd_test_inj4, { cylindersCount >= 4 }
-		commandButton = "Injector #5", cmd_test_inj5, { cylindersCount >= 5 }
-		commandButton = "Injector #6", cmd_test_inj6, { cylindersCount >= 6 }
-		commandButton = "Injector #7", cmd_test_inj7, { cylindersCount >= 7 }
-		commandButton = "Injector #8", cmd_test_inj8, { cylindersCount >= 8 }
-		commandButton = "Injector #9", cmd_test_inj9, { cylindersCount >= 9 }
-		commandButton = "Injector #10", cmd_test_inj10, { cylindersCount >= 10 }
-		commandButton = "Injector #11", cmd_test_inj11, { cylindersCount >= 11 }
-		commandButton = "Injector #12", cmd_test_inj12, { cylindersCount >= 12 }
+		commandButton = "Abort test", cmd_test_cancel
 
 	dialog = testSolenoids, "TCU Solenoid Test"
 		commandButton = "Solenoid #1", cmd_test_sol1
@@ -2409,24 +2402,13 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		commandButton = "Solenoid #4", cmd_test_sol4
 		commandButton = "Solenoid #5", cmd_test_sol5
 		commandButton = "Solenoid #6", cmd_test_sol6
+		commandButton = "Abort test", cmd_test_cancel
 
 	dialog = testOther
 		field = "Count", benchTestCount
 		field = "On Time", benchTestOnTime
 		field = "Off Time", benchTestOffTime
 		panel = testSolenoids
-
-	dialog = injectionSettingsEast, "", yAxis
-		panel = testInjectors
-		field = ""
-
-	dialog = injectionSettingsWest, "", yAxis
-		panel = injectorOutputSettings
-		field = ""
-
-	dialog = injectionSettings, "", xAxis
-		panel = injectionSettingsWest
-		panel = injectionSettingsEast
 
 	dialog = injectorConfig, "", yAxis
 		topicHelp = "fuelHelp"
@@ -2961,6 +2943,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		settingSelector = "Common IAT Sensors", {iat_adcChannel != 0}
 			settingOption = "GM IAT", iat_tempC_1=8.9,iat_resistance_1=7000,iat_tempC_2=30.6,iat_resistance_2=1930,iat_tempC_3=63.3,iat_resistance_3=560,useLinearIatSensor=0
 			settingOption = "Miata NA/NB", iat_tempC_1=-20,iat_resistance_1=16150,iat_tempC_2=40,iat_resistance_2=1150,iat_tempC_3=80,iat_resistance_3=330,useLinearIatSensor=0
+			settingOption = "Miata MSM IAT2", iat_tempC_1=0,iat_resistance_1=112000,iat_tempC_2=40,iat_resistance_2=17000,iat_tempC_3=60,iat_resistance_3=8000,useLinearIatSensor=0
 			settingOption = "Bosch Various", iat_tempC_1=-10,iat_resistance_1=9397,iat_tempC_2=30,iat_resistance_2=1707,iat_tempC_3=70,iat_resistance_3=436,useLinearIatSensor=0
 
 		field = "#Input three pairs of thermistor temperature and resistance."
@@ -4068,23 +4051,10 @@ dialog = tcuControls, "Transmission Settings"
 		panel = etbDialogLeft, West
 		panel = etbDialogRight, East
 
-	dialog = testSpark, "Spark"
-		commandButton = "Spark #1",  cmd_test_spk1
-		commandButton = "Spark #2",  cmd_test_spk2,  { cylindersCount >= 2 }
-		commandButton = "Spark #3",  cmd_test_spk3,  { cylindersCount >= 3 }
-		commandButton = "Spark #4",  cmd_test_spk4,  { cylindersCount >= 4 }
-		commandButton = "Spark #5",  cmd_test_spk5,  { cylindersCount >= 5 }
-		commandButton = "Spark #6",  cmd_test_spk6,  { cylindersCount >= 6 }
-		commandButton = "Spark #7",  cmd_test_spk7,  { cylindersCount >= 7 }
-		commandButton = "Spark #8",  cmd_test_spk8,  { cylindersCount >= 8 }
-		commandButton = "Spark #9",  cmd_test_spk9,  { cylindersCount >= 9 }
-		commandButton = "Spark #10", cmd_test_spk10, { cylindersCount >= 10 }
-		commandButton = "Spark #11", cmd_test_spk11, { cylindersCount >= 11 }
-		commandButton = "Spark #12", cmd_test_spk12, { cylindersCount >= 12 }
-
 	dialog = testMisc, "Misc"
 		commandButton = "Main Relay", cmd_test_main_relay@@if_ts_show_main_relay
-		commandButton = "Fuel Pump", cmd_test_fuel_pump
+		commandButton = "Fuel pump on", cmd_fuel_pump_on
+		commandButton = "Fuel pump off", cmd_fuel_pump_off
 		commandButton = "Cooling Fan", cmd_test_fan_1
 		commandButton = "Cooling Fan 2", cmd_test_fan_2
 		commandButton = "A/C Relay", cmd_test_ac_relay
@@ -4098,30 +4068,76 @@ dialog = tcuControls, "Transmission Settings"
 		commandButton = "Reset ECU", cmd_reset_controller
 		commandButton = "Reset to DFU", cmd_dfu
 		commandButton = "Reset to OpenBLT", cmd_openblt
-		commandButton = "F7 nDBANK fix", cmd_nDBANK@@if_ts_show_f7_presets
 		commandButton = "No flash Burn mode", cmd_burn_without_flash
 
 	; bench test
 	dialog = ioTest, "Bench Test & Commands", xAxis
-		panel = testSpark
-		panel = testInjectors
 		panel = testOther
 		panel = testLuaOut
 		panel = testMisc
 
 	; Injectors test
-	dialog = injTest_l, "Output test modes", yAxis
+	dialog = injTest_l, ""
+		commandButton = "Injector #1", cmd_test_inj1
+		commandButton = "Injector #2", cmd_test_inj2, { cylindersCount >= 2 }
+		commandButton = "Injector #3", cmd_test_inj3, { cylindersCount >= 3 }
+		commandButton = "Injector #4", cmd_test_inj4, { cylindersCount >= 4 }
+		commandButton = "Injector #5", cmd_test_inj5, { cylindersCount >= 5 }
+		commandButton = "Injector #6", cmd_test_inj6, { cylindersCount >= 6 }
+		commandButton = "Injector #7", cmd_test_inj7, { cylindersCount >= 7 }
+		commandButton = "Injector #8", cmd_test_inj8, { cylindersCount >= 8 }
+		commandButton = "Injector #9", cmd_test_inj9, { cylindersCount >= 9 }
+		commandButton = "Injector #10", cmd_test_inj10, { cylindersCount >= 10 }
+		commandButton = "Injector #11", cmd_test_inj11, { cylindersCount >= 11 }
+		commandButton = "Injector #12", cmd_test_inj12, { cylindersCount >= 12 }
+
+	dialog = injTest_c, "", yAxis
 		field = "Iterations", benchTestCount
-		field = "ON time", benchTestOffTime
-		field = "OFF time", benchTestOnTime
+		field = "ON time", benchTestOnTime
+		field = "OFF time", benchTestOffTime
+		field = ""
+		commandButton = "Abort test", cmd_test_cancel
+		field = ""
+		field = "Use these buttons to run the"
+		field = "fuel pump for testing injectors"
+		commandButton = "Fuel pump on", cmd_fuel_pump_on
+		commandButton = "Fuel pump off", cmd_fuel_pump_off
+		gauge = testBenchIterGauge
 
 	dialog = injTest_r, "Reference gauges", yAxis
 		gauge = VBattGauge,North
-		gauge = testBenchIterGauge,South
+		gauge = lowFuelPressureGauge
 
 	dialog = injTest, "", xAxis
 		panel = injTest_l
+		panel = injTest_c
 		panel = injTest_r
+
+	; Ignition coils test
+	dialog = ignTest_l, ""
+		commandButton = "Spark #1",  cmd_test_spk1
+		commandButton = "Spark #2",  cmd_test_spk2,  { cylindersCount >= 2 }
+		commandButton = "Spark #3",  cmd_test_spk3,  { cylindersCount >= 3 }
+		commandButton = "Spark #4",  cmd_test_spk4,  { cylindersCount >= 4 }
+		commandButton = "Spark #5",  cmd_test_spk5,  { cylindersCount >= 5 }
+		commandButton = "Spark #6",  cmd_test_spk6,  { cylindersCount >= 6 }
+		commandButton = "Spark #7",  cmd_test_spk7,  { cylindersCount >= 7 }
+		commandButton = "Spark #8",  cmd_test_spk8,  { cylindersCount >= 8 }
+		commandButton = "Spark #9",  cmd_test_spk9,  { cylindersCount >= 9 }
+		commandButton = "Spark #10", cmd_test_spk10, { cylindersCount >= 10 }
+		commandButton = "Spark #11", cmd_test_spk11, { cylindersCount >= 11 }
+		commandButton = "Spark #12", cmd_test_spk12, { cylindersCount >= 12 }
+
+	dialog = ignTest_c, ""
+		field = "Iterations", ignTestCount
+		field = "ON time", ignTestOnTime
+		field = "OFF time", ignTestOffTime
+		commandButton = "Abort test", cmd_test_cancel
+		gauge = testIgnIterGauge
+
+	dialog = ignTest, "", xAxis
+		panel = ignTest_l
+		panel = ignTest_c
 
 	dialog = widebandConfig, "CAN Wideband Config"
 		field = "!Please connect exactly one wideband controller before pressing these buttons!"

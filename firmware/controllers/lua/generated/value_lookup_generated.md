@@ -202,9 +202,6 @@ Engine displacement in litres
 ### cylindersCount
 Number of cylinder the engine has.
 
-### benchTestCount
-How many test bench pulses do you want
-
 ### benchTestOnTime
 Duration of each test pulse
 
@@ -222,6 +219,9 @@ Minimum TPS to enable boost control. Use this to avoid solenoid noise at idle, a
 
 ### boostControlMinMap
 Minimum MAP to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.
+
+### benchTestCount
+How many test bench pulses do you want
 
 ### crankingTimingAngle
 Ignition advance angle used during engine cranking, 5-10 degrees will work as a base setting for most engines.\nThere is tapering towards running timing advance
@@ -1000,6 +1000,9 @@ Above this speed, allow DFCO. Use this to prevent jerkiness from fuel enable/dis
 ### noFuelTrimAfterDfcoTime
 Pause closed loop fueling after deceleration fuel cut occurs. Set this to a little longer than however long is required for normal fueling behavior to resume after fuel cut.
 
+### ignTestOnTime
+Duration of each test pulse
+
 ### tpsAccelEnrichmentThreshold
 Maximum change delta of TPS percentage over the 'length'. Actual TPS change has to be above this value in order for TPS/TPS acceleration to kick in.
 
@@ -1494,4 +1497,10 @@ For Toyota ETCS-i, use ~69%
 
 ### rpmHardLimitHyst
 If the hard limit is 7200rpm and hysteresis is 200rpm, then when the ECU sees 7200rpm, fuel/ign will cut, and stay cut until 7000rpm (7200-200) is reached
+
+### ignTestCount
+How many test bench pulses do you want
+
+### ignTestOffTime
+Time between bench test pulses
 

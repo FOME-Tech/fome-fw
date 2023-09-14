@@ -76,8 +76,7 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 	case VVT_HONDA_K_EXHAUST:
 		return trigger_type_e::TT_HONDA_K_CAM_4_1;
 	case VVT_HONDA_K_INTAKE:
-	case VVT_FIRST_HALF:
-	case VVT_SECOND_HALF:
+	case VVT_SINGLE_TOOTH:
 	case VVT_MAP_V_TWIN:
 		return trigger_type_e::TT_ONE;
 	case VVT_FORD_ST170:
@@ -146,10 +145,6 @@ void Engine::periodicSlowCallback() {
 	updateGppwm();
 
 	engine->engineModules.apply_all([](auto & m) { m.onSlowCallback(); });
-
-#if EFI_BOOST_CONTROL
-	engine->boostController.update();
-#endif // EFI_BOOST_CONTROL
 
 #if (BOARD_TLE8888_COUNT > 0)
 	tle8888startup();
@@ -255,7 +250,7 @@ void Engine::resetLua() {
 	engineState.lua.luaDisableEtb = false;
 	engineState.lua.luaIgnCut = false;
 #if EFI_BOOST_CONTROL
-	boostController.resetLua();
+	module<BoostController>().unmock().resetLua();
 #endif // EFI_BOOST_CONTROL
 	ignitionState.luaTimingAdd = 0;
 	ignitionState.luaTimingMult = 1;

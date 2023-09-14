@@ -64,21 +64,23 @@ public class Fields {
 	public static final int AUX_DIGITAL_VALVE_COUNT = 2;
 	public static final int BANKS_COUNT = 2;
 	public static final int BARO_CORR_SIZE = 4;
-	public static final int bench_mode_e_BENCH_AC_COMPRESSOR_RELAY = 6;
-	public static final int bench_mode_e_BENCH_CHECK_ENGINE_LIGHT = 7;
-	public static final int bench_mode_e_BENCH_FAN_RELAY = 4;
-	public static final int bench_mode_e_BENCH_FAN_RELAY_2 = 5;
-	public static final int bench_mode_e_BENCH_FUEL_PUMP = 1;
-	public static final int bench_mode_e_BENCH_GPPWM1_VALVE = 10;
-	public static final int bench_mode_e_BENCH_GPPWM2_VALVE = 11;
-	public static final int bench_mode_e_BENCH_GPPWM3_VALVE = 12;
-	public static final int bench_mode_e_BENCH_GPPWM4_VALVE = 13;
-	public static final int bench_mode_e_BENCH_HPFP_VALVE = 9;
-	public static final int bench_mode_e_BENCH_IDLE_VALVE = 8;
+	public static final int bench_mode_e_BENCH_AC_COMPRESSOR_RELAY = 5;
+	public static final int bench_mode_e_BENCH_CANCEL = 14;
+	public static final int bench_mode_e_BENCH_CHECK_ENGINE_LIGHT = 6;
+	public static final int bench_mode_e_BENCH_FAN_RELAY = 3;
+	public static final int bench_mode_e_BENCH_FAN_RELAY_2 = 4;
+	public static final int bench_mode_e_BENCH_FUEL_PUMP_OFF = 16;
+	public static final int bench_mode_e_BENCH_FUEL_PUMP_ON = 15;
+	public static final int bench_mode_e_BENCH_GPPWM1_VALVE = 9;
+	public static final int bench_mode_e_BENCH_GPPWM2_VALVE = 10;
+	public static final int bench_mode_e_BENCH_GPPWM3_VALVE = 11;
+	public static final int bench_mode_e_BENCH_GPPWM4_VALVE = 12;
+	public static final int bench_mode_e_BENCH_HPFP_VALVE = 8;
+	public static final int bench_mode_e_BENCH_IDLE_VALVE = 7;
 	public static final int bench_mode_e_BENCH_MAIN_RELAY = 0;
-	public static final int bench_mode_e_BENCH_SECOND_IDLE_VALVE = 14;
-	public static final int bench_mode_e_BENCH_STARTER_DISABLE_RELAY = 3;
-	public static final int bench_mode_e_BENCH_STARTER_ENABLE_RELAY = 2;
+	public static final int bench_mode_e_BENCH_SECOND_IDLE_VALVE = 13;
+	public static final int bench_mode_e_BENCH_STARTER_DISABLE_RELAY = 2;
+	public static final int bench_mode_e_BENCH_STARTER_ENABLE_RELAY = 1;
 	public static final int blend_table_s_size = 188;
 	public static final int BLOCKING_FACTOR = 750;
 	public static final int BOOST_BLEND_COUNT = 2;
@@ -188,13 +190,19 @@ public class Fields {
 	public static final int debug_mode_e_DBG_0 = 0;
 	public static final int debug_mode_e_DBG_10 = 10;
 	public static final int debug_mode_e_DBG_11 = 11;
+	public static final int debug_mode_e_DBG_12 = 12;
+	public static final int debug_mode_e_DBG_13 = 13;
+	public static final int debug_mode_e_DBG_15 = 15;
 	public static final int debug_mode_e_DBG_16 = 16;
+	public static final int debug_mode_e_DBG_19 = 19;
 	public static final int debug_mode_e_DBG_2 = 2;
 	public static final int debug_mode_e_DBG_20 = 20;
+	public static final int debug_mode_e_DBG_21 = 21;
 	public static final int debug_mode_e_DBG_24 = 24;
 	public static final int debug_mode_e_DBG_25 = 25;
 	public static final int debug_mode_e_DBG_26 = 26;
 	public static final int debug_mode_e_DBG_29 = 29;
+	public static final int debug_mode_e_DBG_32 = 32;
 	public static final int debug_mode_e_DBG_34 = 34;
 	public static final int debug_mode_e_DBG_35 = 35;
 	public static final int debug_mode_e_DBG_36 = 36;
@@ -202,12 +210,10 @@ public class Fields {
 	public static final int debug_mode_e_DBG_38 = 38;
 	public static final int debug_mode_e_DBG_43 = 43;
 	public static final int debug_mode_e_DBG_46 = 46;
+	public static final int debug_mode_e_DBG_6 = 6;
 	public static final int debug_mode_e_DBG_7 = 7;
 	public static final int debug_mode_e_DBG_8 = 8;
 	public static final int debug_mode_e_DBG_9 = 9;
-	public static final int debug_mode_e_DBG_ANALOG_INPUTS = 21;
-	public static final int debug_mode_e_DBG_ANALOG_INPUTS2 = 32;
-	public static final int debug_mode_e_DBG_BENCH_TEST = 19;
 	public static final int debug_mode_e_DBG_COMPOSITE_LOG = 40;
 	public static final int debug_mode_e_DBG_DWELL_METRIC = 33;
 	public static final int debug_mode_e_DBG_DYNO_VIEW = 44;
@@ -217,20 +223,16 @@ public class Fields {
 	public static final int debug_mode_e_DBG_EXECUTOR = 18;
 	public static final int debug_mode_e_DBG_INSTANT_RPM = 22;
 	public static final int debug_mode_e_DBG_ION = 30;
-	public static final int debug_mode_e_DBG_KNOCK = 15;
 	public static final int debug_mode_e_DBG_LOGIC_ANALYZER = 45;
 	public static final int debug_mode_e_DBG_LUA = 48;
 	public static final int debug_mode_e_DBG_MAP = 27;
 	public static final int debug_mode_e_DBG_METRICS = 28;
-	public static final int debug_mode_e_DBG_SD_CARD = 13;
-	public static final int debug_mode_e_DBG_SOFT_SPARK_CUT = 6;
 	public static final int debug_mode_e_DBG_SR5_PROTOCOL = 14;
 	public static final int debug_mode_e_DBG_STEPPER_IDLE_CONTROL = 3;
 	public static final int debug_mode_e_DBG_TCU = 47;
 	public static final int debug_mode_e_DBG_TLE8888 = 31;
 	public static final int debug_mode_e_DBG_TPS_ACCEL = 1;
 	public static final int debug_mode_e_DBG_TRIGGER_COUNTERS = 5;
-	public static final int debug_mode_e_DBG_UNUSED12 = 12;
 	public static final int debug_mode_e_DBG_UNUSED41 = 41;
 	public static final int debug_mode_e_DBG_UNUSED_42 = 42;
 	public static final int debug_mode_e_UNUSED23 = 23;
@@ -271,14 +273,15 @@ public class Fields {
 	public static final int engine_type_e_DODGE_NEON_1995 = 2;
 	public static final int engine_type_e_DODGE_NEON_2003_CRANK = 46;
 	public static final int engine_type_e_DODGE_RAM = 64;
-	public static final int engine_type_e_EEPROM_BENCH_ENGINE = 61;
 	public static final int engine_type_e_ET_UNUSED_11 = 11;
 	public static final int engine_type_e_ET_UNUSED_12 = 12;
 	public static final int engine_type_e_ET_UNUSED_13 = 13;
 	public static final int engine_type_e_ET_UNUSED_15 = 15;
 	public static final int engine_type_e_ET_UNUSED_17 = 17;
 	public static final int engine_type_e_ET_UNUSED_33 = 33;
+	public static final int engine_type_e_ET_UNUSED_43 = 43;
 	public static final int engine_type_e_ET_UNUSED_57 = 57;
+	public static final int engine_type_e_ET_UNUSED_61 = 61;
 	public static final int engine_type_e_ET_UNUSED_92 = 92;
 	public static final int engine_type_e_ET_UNUSED_93 = 93;
 	public static final int engine_type_e_ET_UNUSED_97 = 97;
@@ -318,7 +321,6 @@ public class Fields {
 	public static final int engine_type_e_HELLEN_NB1_36 = 94;
 	public static final int engine_type_e_HELLEN_NB2 = 69;
 	public static final int engine_type_e_HELLEN_NB2_36 = 86;
-	public static final int engine_type_e_HONDA_600 = 43;
 	public static final int engine_type_e_L9779_BENCH_ENGINE = 60;
 	public static final int engine_type_e_MAZDA_MIATA_2003_BOARD_TEST = 55;
 	public static final int engine_type_e_MAZDA_MIATA_2003_NA_RAIL = 54;
@@ -368,7 +370,7 @@ public class Fields {
 	public static final int ETB_BIAS_CURVE_LENGTH = 8;
 	public static final int ETB_COUNT = 2;
 	public static final int ETB_HW_MAX_FREQUENCY = 3000;
-	public static final int FLASH_DATA_VERSION = 20010;
+	public static final int FLASH_DATA_VERSION = 20011;
 	public static final int FUEL_LEVEL_TABLE_COUNT = 8;
 	public static final int FUEL_LOAD_COUNT = 16;
 	public static final int fuel_pressure_sensor_mode_e_FPM_Absolute = 0;
@@ -975,7 +977,6 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 729152314;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1177,7 +1178,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.07.26.f407-discovery.729152314";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.09.14.f407-discovery.3194253959";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final char TS_TEST_COMMAND = 't';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1380;
@@ -1217,7 +1218,6 @@ public class Fields {
 	public static final int vvt_mode_e_VVT_2JZ = 2;
 	public static final int vvt_mode_e_VVT_BARRA_3_PLUS_1 = 8;
 	public static final int vvt_mode_e_VVT_BOSCH_QUICK_START = 5;
-	public static final int vvt_mode_e_VVT_FIRST_HALF = 4;
 	public static final int vvt_mode_e_VVT_FORD_ST170 = 7;
 	public static final int vvt_mode_e_VVT_HONDA_K_EXHAUST = 16;
 	public static final int vvt_mode_e_VVT_HONDA_K_INTAKE = 10;
@@ -1231,7 +1231,7 @@ public class Fields {
 	public static final int vvt_mode_e_VVT_MITSUBISHI_6G75 = 14;
 	public static final int vvt_mode_e_VVT_NISSAN_MR = 11;
 	public static final int vvt_mode_e_VVT_NISSAN_VQ = 9;
-	public static final int vvt_mode_e_VVT_SECOND_HALF = 1;
+	public static final int vvt_mode_e_VVT_SINGLE_TOOTH = 1;
 	public static final int vvt_mode_e_VVT_TOYOTA_4_1 = 6;
 	public static final int WWAE_TABLE_SIZE = 8;
 	public static final Field ENGINETYPE = Field.create("ENGINETYPE", 0, FieldType.INT).setScale(1.0).setBaseOffset(0);
@@ -1322,7 +1322,7 @@ public class Fields {
 	public static final Field TRIGGERSIMULATORRPM = Field.create("TRIGGERSIMULATORRPM", 330, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field CYLINDERSCOUNT = Field.create("CYLINDERSCOUNT", 332, FieldType.INT).setScale(1.0).setBaseOffset(0);
 	public static final Field FIRINGORDER = Field.create("FIRINGORDER", 336, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field BENCHTESTCOUNT = Field.create("BENCHTESTCOUNT", 337, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field UNUSEDOLDBENCHTEST = Field.create("UNUSEDOLDBENCHTEST", 337, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field BENCHTESTONTIME = Field.create("BENCHTESTONTIME", 338, FieldType.INT16).setScale(0.01).setBaseOffset(0);
 	public static final Field CYLINDERBORE = Field.create("CYLINDERBORE", 340, FieldType.FLOAT).setBaseOffset(0);
 	public static final String[] engine_load_mode_e = {"Speed Density", "MAF Air Charge", "Alpha-N", "Lua"};
@@ -1338,7 +1338,7 @@ public class Fields {
 	public static final Field BOOSTCONTROLMINMAP = Field.create("BOOSTCONTROLMINMAP", 355, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field TIMINGMODE = Field.create("TIMINGMODE", 356, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAFADCCHANNEL = Field.create("MAFADCCHANNEL", 357, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
-	public static final Field ALIGNMENTFILL_AT_358 = Field.create("ALIGNMENTFILL_AT_358", 358, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field BENCHTESTCOUNT = Field.create("BENCHTESTCOUNT", 358, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field CRANKINGTIMINGANGLE = Field.create("CRANKINGTIMINGANGLE", 360, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field GAPTRACKINGLENGTHOVERRIDE = Field.create("GAPTRACKINGLENGTHOVERRIDE", 364, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAXIDLEVSS = Field.create("MAXIDLEVSS", 365, FieldType.INT8).setScale(1.0).setBaseOffset(0);
@@ -1848,7 +1848,8 @@ public class Fields {
 	public static final Field COASTINGFUELCUTVSSLOW = Field.create("COASTINGFUELCUTVSSLOW", 1387, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field COASTINGFUELCUTVSSHIGH = Field.create("COASTINGFUELCUTVSSHIGH", 1388, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field NOFUELTRIMAFTERDFCOTIME = Field.create("NOFUELTRIMAFTERDFCOTIME", 1389, FieldType.INT8).setScale(0.1).setBaseOffset(0);
-	public static final Field ALIGNMENTFILL_AT_1390 = Field.create("ALIGNMENTFILL_AT_1390", 1390, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field IGNTESTONTIME = Field.create("IGNTESTONTIME", 1390, FieldType.INT8).setScale(0.1).setBaseOffset(0);
+	public static final Field ALIGNMENTFILL_AT_1391 = Field.create("ALIGNMENTFILL_AT_1391", 1391, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field TPSACCELENRICHMENTTHRESHOLD = Field.create("TPSACCELENRICHMENTTHRESHOLD", 1392, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field AUXSPEEDSENSORINPUTPIN1 = Field.create("AUXSPEEDSENSORINPUTPIN1", 1396, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
 	public static final Field AUXSPEEDSENSORINPUTPIN2 = Field.create("AUXSPEEDSENSORINPUTPIN2", 1398, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
@@ -1910,7 +1911,7 @@ public class Fields {
 	public static final Field MINIMUMIGNITIONTIMING = Field.create("MINIMUMIGNITIONTIMING", 1538, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAXIMUMIGNITIONTIMING = Field.create("MAXIMUMIGNITIONTIMING", 1539, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field ALTERNATORPWMFREQUENCY = Field.create("ALTERNATORPWMFREQUENCY", 1540, FieldType.INT).setScale(1.0).setBaseOffset(0);
-	public static final String[] vvt_mode_e = {"Inactive", "Single Tooth Second Half", "2JZ", "Miata NB2", "Single Tooth First Half", "Bosch Quick Start", "4/1", "ST 170", "Ford Barra 3+1", "Nissan VQ", "Honda K Intake", "Nissan MR18", "Mitsu 3A92", "VTwin by MAP", "Mitsu 6G75", "Mazda Skyactiv", "Honda K Exhaust", "Mitsubishi 4G92/93/94", "Mitsubishi 4G63"};
+	public static final String[] vvt_mode_e = {"Inactive", "Single Tooth", "2JZ", "Miata NB2", "INVALID", "Bosch Quick Start", "4/1", "ST 170", "Ford Barra 3+1", "Nissan VQ", "Honda K Intake", "Nissan MR18", "Mitsu 3A92", "VTwin by MAP", "Mitsu 6G75", "Mazda Skyactiv", "Honda K Exhaust", "Mitsubishi 4G92/93/94", "Mitsubishi 4G63"};
 	public static final Field VVTMODE1 = Field.create("VVTMODE1", 1544, FieldType.INT8, vvt_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field VVTMODE2 = Field.create("VVTMODE2", 1545, FieldType.INT8, vvt_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field FAN2EXTRAIDLE = Field.create("FAN2EXTRAIDLE", 1546, FieldType.INT8).setScale(1.0).setBaseOffset(0);
@@ -2344,7 +2345,9 @@ public class Fields {
 	public static final Field LUADIGITALINPUTPINMODES7 = Field.create("LUADIGITALINPUTPINMODES7", 3598, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field LUADIGITALINPUTPINMODES8 = Field.create("LUADIGITALINPUTPINMODES8", 3599, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field RPMHARDLIMITHYST = Field.create("RPMHARDLIMITHYST", 3600, FieldType.INT8).setScale(10.0).setBaseOffset(0);
-	public static final Field MAINUNUSEDEND = Field.create("MAINUNUSEDEND", 3601, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field IGNTESTCOUNT = Field.create("IGNTESTCOUNT", 3601, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field IGNTESTOFFTIME = Field.create("IGNTESTOFFTIME", 3602, FieldType.INT8).setScale(5.0).setBaseOffset(0);
+	public static final Field MAINUNUSEDEND = Field.create("MAINUNUSEDEND", 3603, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field ETBBIASBINS = Field.create("ETBBIASBINS", 3696, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field ETBBIASVALUES = Field.create("ETBBIASVALUES", 3728, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field IACPIDMULTTABLE = Field.create("IACPIDMULTTABLE", 3760, FieldType.INT8).setScale(0.05).setBaseOffset(0);
@@ -2697,7 +2700,7 @@ public class Fields {
 	TRIGGERSIMULATORRPM,
 	CYLINDERSCOUNT,
 	FIRINGORDER,
-	BENCHTESTCOUNT,
+	UNUSEDOLDBENCHTEST,
 	BENCHTESTONTIME,
 	CYLINDERBORE,
 	FUELALGORITHM,
@@ -2711,7 +2714,7 @@ public class Fields {
 	BOOSTCONTROLMINMAP,
 	TIMINGMODE,
 	MAFADCCHANNEL,
-	ALIGNMENTFILL_AT_358,
+	BENCHTESTCOUNT,
 	CRANKINGTIMINGANGLE,
 	GAPTRACKINGLENGTHOVERRIDE,
 	MAXIDLEVSS,
@@ -3210,7 +3213,8 @@ public class Fields {
 	COASTINGFUELCUTVSSLOW,
 	COASTINGFUELCUTVSSHIGH,
 	NOFUELTRIMAFTERDFCOTIME,
-	ALIGNMENTFILL_AT_1390,
+	IGNTESTONTIME,
+	ALIGNMENTFILL_AT_1391,
 	TPSACCELENRICHMENTTHRESHOLD,
 	AUXSPEEDSENSORINPUTPIN1,
 	AUXSPEEDSENSORINPUTPIN2,
@@ -3695,6 +3699,8 @@ public class Fields {
 	LUADIGITALINPUTPINMODES7,
 	LUADIGITALINPUTPINMODES8,
 	RPMHARDLIMITHYST,
+	IGNTESTCOUNT,
+	IGNTESTOFFTIME,
 	MAINUNUSEDEND,
 	ETBBIASBINS,
 	ETBBIASVALUES,

@@ -20,17 +20,14 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-// todo: rename this file
 #include "pch.h"
 
 #if EFI_ENGINE_CONTROL
 #if !EFI_UNIT_TEST
 
-
 #include "flash_main.h"
 #include "bench_test.h"
 #include "main_trigger_callback.h"
-#include "idle_thread.h"
 #include "periodic_thread_controller.h"
 #include "electronic_throttle.h"
 #include "malfunction_central.h"
@@ -52,7 +49,7 @@
 
 static bool isRunningBench = false;
 
-bool isRunningBenchTest(void) {
+bool isRunningBenchTest() {
 	return isRunningBench;
 }
 
@@ -75,25 +72,28 @@ static void benchOff(OutputPin* output) {
 	output->setValue(false);
 }
 
-static void runBench(brain_pin_e brainPin, OutputPin *output, float startDelayMs, float onTimeMs, float offTimeMs,
-		int count) {
-	int startDelayUs = MS2US(maxF(0.1, startDelayMs));
-	int onTimeUs = MS2US(maxF(0.1, onTimeMs));
-	int offTimeUs = MS2US(maxF(0.1, offTimeMs));
+struct BenchParams {
+	OutputPin* Pin;
+	float OnTimeMs;
+	float OffTimeMs;
+	size_t Count = 1;
+};
+
+static void runBench(BenchParams& params) {
+	int onTimeUs = MS2US(maxF(0.1, params.OnTimeMs));
+	int offTimeUs = MS2US(maxF(0.1, params.OffTimeMs));
 
 	if (onTimeUs > TOO_FAR_INTO_FUTURE_US) {
 		firmwareError(ObdCode::CUSTOM_ERR_BENCH_PARAM, "onTime above limit %dus", TOO_FAR_INTO_FUTURE_US);
 		return;
 	}
 
-	efiPrintf("Running bench: ON_TIME=%d us OFF_TIME=%d us Counter=%d", onTimeUs, offTimeUs, count);
-	efiPrintf("output on %s", hwPortname(brainPin));
-
-	chThdSleepMicroseconds(startDelayUs);
+	efiPrintf("Running bench: ON_TIME=%d us OFF_TIME=%d us Counter=%d", onTimeUs, offTimeUs, params.Count);
+	efiPrintf("output on %s", hwPortname(params.Pin->brainPin));
 
 	isRunningBench = true;
 
-	for (int i = 0; i < count; i++) {
+	for (size_t i = 0; isRunningBench && i < params.Count; i++) {
 		engine->outputChannels.testBenchIter = i;
 		efitick_t nowNt = getTimeNowNt();
 		// start in a short time so the scheduler can precisely schedule the start event
@@ -101,8 +101,8 @@ static void runBench(brain_pin_e brainPin, OutputPin *output, float startDelayMs
 		efitick_t endTime = startTime + US2NT(onTimeUs);
 
 		// Schedule both events
-		engine->executor.scheduleByTimestampNt("bstart", nullptr, startTime, {benchOn, output});
-		engine->executor.scheduleByTimestampNt("bend", nullptr, endTime, {benchOff, output});
+		engine->executor.scheduleByTimestampNt("bstart", nullptr, startTime, {benchOn, params.Pin});
+		engine->executor.scheduleByTimestampNt("bend", nullptr, endTime, {benchOff, params.Pin});
 
 		// Wait one full cycle time for the event + delay to happen
 		chThdSleepMicroseconds(onTimeUs + offTimeUs);
@@ -114,89 +114,80 @@ static void runBench(brain_pin_e brainPin, OutputPin *output, float startDelayMs
 	isRunningBench = false;
 }
 
-static volatile bool isBenchTestPending = false;
+static bool isBenchTestPending = false;
 static bool widebandUpdatePending = false;
-static float onTime;
-static float offTime;
-static float startDelayMs;
-static int count;
-static brain_pin_e brainPin;
-static OutputPin* pinX;
+
+static BenchParams benchParams;
 
 static chibios_rt::CounterSemaphore benchSemaphore(0);
 
-static void pinbench(float startdelay, float ontime, float offtime, int iterations,
-	OutputPin* pinParam, brain_pin_e brainPinParam)
+static void pinbench(float ontime, float offtime, size_t iterations, OutputPin& pin)
 {
-	startDelayMs = startdelay;
-	onTime = ontime;
-	offTime = offtime;
-	count = iterations;
-	pinX = pinParam;
-	brainPin = brainPinParam;
+	benchParams = { &pin, ontime, offtime, iterations };
+
 	// let's signal bench thread to wake up
 	isBenchTestPending = true;
 	benchSemaphore.signal();
 }
 
+static void cancelBenchTest() {
+	isRunningBench = false;
+}
+
 /*==========================================================================*/
 
-static void doRunFuelInjBench(size_t humanIndex, float delay, float onTime, float offTime, int count) {
+static void doRunFuelInjBench(size_t humanIndex, float onTime, float offTime, int count) {
 	if (humanIndex < 1 || humanIndex > engineConfiguration->cylindersCount) {
 		efiPrintf("Invalid index: %d", humanIndex);
 		return;
 	}
-	pinbench(delay, onTime, offTime, count,
-		&enginePins.injectors[humanIndex - 1], engineConfiguration->injectionPins[humanIndex - 1]);
+	pinbench(onTime, offTime, count, enginePins.injectors[humanIndex - 1]);
 }
 
-static void doRunSparkBench(size_t humanIndex, float delay, float onTime, float offTime, int count) {
+static void doRunSparkBench(size_t humanIndex, float onTime, float offTime, int count) {
 	if (humanIndex < 1 || humanIndex > engineConfiguration->cylindersCount) {
 		efiPrintf("Invalid index: %d", humanIndex);
 		return;
 	}
-	pinbench(delay, onTime, offTime, count,
-		&enginePins.coils[humanIndex - 1], engineConfiguration->ignitionPins[humanIndex - 1]);
+	pinbench(onTime, offTime, count, enginePins.coils[humanIndex - 1]);
 }
 
-static void doRunSolenoidBench(size_t humanIndex, float delay, float onTime, float offTime, int count) {
+static void doRunSolenoidBench(size_t humanIndex, float onTime, float offTime, int count) {
 	if (humanIndex < 1 || humanIndex > TCU_SOLENOID_COUNT) {
 		efiPrintf("Invalid index: %d", humanIndex);
 		return;
 	}
-	pinbench(delay, onTime, offTime, count,
-		&enginePins.tcuSolenoids[humanIndex - 1], engineConfiguration->tcu_solenoid[humanIndex - 1]);
+	pinbench(onTime, offTime, count, enginePins.tcuSolenoids[humanIndex - 1]);
 }
 
-static void doRunBenchTestLuaOutput(size_t humanIndex, float delay, float onTime, float offTime, int count) {
+static void doRunBenchTestLuaOutput(size_t humanIndex, float onTime, float offTime, int count) {
 	if (humanIndex < 1 || humanIndex > LUA_PWM_COUNT) {
 		efiPrintf("Invalid index: %d", humanIndex);
 		return;
 	}
-	pinbench(delay, onTime, offTime, count,
-		&enginePins.luaOutputPins[humanIndex - 1], engineConfiguration->luaOutputPins[humanIndex - 1]);
+	pinbench(onTime, offTime, count, enginePins.luaOutputPins[humanIndex - 1]);
 }
 
 /**
- * delay 100, cylinder #2, 5ms ON, 1000ms OFF, repeat 3 times
- * fuelInjBenchExt 100 2 5 1000 3
+ * cylinder #2, 5ms ON, 1000ms OFF, repeat 3 times
+ * fuelInjBenchExt 2 5 1000 3
  */
-static void fuelInjBenchExt(float delay, float humanIndex, float onTime, float offTime, float count) {
-	doRunFuelInjBench((int)humanIndex, delay, onTime, offTime, (int)count);
+static void fuelInjBenchExt(float humanIndex, float onTime, float offTime, float count) {
+	doRunFuelInjBench((int)humanIndex, onTime, offTime, (int)count);
 }
 
 /**
  * fuelbench 5 1000 2
  */
 static void fuelInjBench(float onTime, float offTime, float count) {
-	fuelInjBenchExt(0.0, 1, onTime, offTime, count);
+	fuelInjBenchExt(1, onTime, offTime, count);
 }
 
 /**
- * sparkbench2 0 1 5 1000 2
+ * sparkbench2 1 5 1000 2
  */
-static void sparkBenchExt(float delay, float humanIndex, float onTime, float offTime, float count) {
-	doRunSparkBench((int)humanIndex, delay, onTime, offTime, (int)count);
+static void sparkBenchExt(float humanIndex, float onTime, float offTime, float count) {
+	doRunSparkBench((int)humanIndex, onTime, offTime, (int)count);
 }
 
 /**
@@ -204,28 +195,27 @@ static void sparkBenchExt(float delay, float humanIndex, float onTime, float off
  * 5 ms ON, 400 ms OFF, two times
  */
 static void sparkBench(float onTime, float offTime, float count) {
-	sparkBenchExt(0.0, 1, onTime, offTime, count);
+	sparkBenchExt(1, onTime, offTime, count);
 }
 
 /**
- * delay 100, solenoid #2, 1000ms ON, 1000ms OFF, repeat 3 times
- * tcusolbench 100 2 1000 1000 3
+ * solenoid #2, 1000ms ON, 1000ms OFF, repeat 3 times
+ * tcusolbench 2 1000 1000 3
  */
-static void tcuSolenoidBench(float delay, float humanIndex, float onTime, float offTime, float count) {
-	doRunSolenoidBench((int)humanIndex, delay, onTime, offTime, (int)count);
+static void tcuSolenoidBench(float humanIndex, float onTime, float offTime, float count) {
+	doRunSolenoidBench((int)humanIndex, onTime, offTime, (int)count);
 }
 
 /**
- * delay 100, channel #1, 5ms ON, 1000ms OFF, repeat 3 times
- * fsiobench2 100 1 5 1000 3
+ * channel #1, 5ms ON, 1000ms OFF, repeat 3 times
+ * fsiobench2 1 5 1000 3
  */
-static void luaOutBench2(float delay, float humanIndex, float onTime, float offTime, float count) {
-	doRunBenchTestLuaOutput((int)humanIndex, delay, onTime, offTime, (int)count);
+static void luaOutBench2(float humanIndex, float onTime, float offTime, float count) {
+	doRunBenchTestLuaOutput((int)humanIndex, onTime, offTime, (int)count);
 }
 
 static void fanBenchExt(float onTime) {
-	pinbench(0.0, onTime, 100.0, 1.0,
-		&enginePins.fanRelay, engineConfiguration->fanPin);
+	pinbench(onTime, 100.0, 1.0, enginePins.fanRelay);
 }
 
 void fanBench(void) {
@@ -233,31 +223,26 @@ void fanBench(void) {
 }
 
 void fan2Bench(void) {
-	pinbench(0.0, 3000.0, 100.0, 1.0,
-		&enginePins.fanRelay2, engineConfiguration->fan2Pin);
+	pinbench(3000.0, 100.0, 1.0, enginePins.fanRelay2);
 }
 
 /**
  * we are blinking for 16 seconds so that one can click the button and walk around to see the light blinking
  */
 void milBench(void) {
-	pinbench(0.0, 500.0, 500.0, 16,
-		&enginePins.checkEnginePin, engineConfiguration->malfunctionIndicatorPin);
+	pinbench(500.0, 500.0, 16, enginePins.checkEnginePin);
 }
 
 void starterRelayBench(void) {
-	pinbench(0.0, 6000.0, 100.0, 1,
-		&enginePins.starterControl, engineConfiguration->starterControlPin);
+	pinbench(6000.0, 100.0, 1, enginePins.starterControl);
 }
 
 static void fuelPumpBenchExt(float durationMs) {
-	pinbench(0.0, durationMs, 100.0, 1.0,
-		&enginePins.fuelPumpRelay, engineConfiguration->fuelPumpPin);
+	pinbench(durationMs, 100.0, 1.0, enginePins.fuelPumpRelay);
 }
 
 void acRelayBench(void) {
-	pinbench(0.0, 1000.0, 100.0, 1,
-		&enginePins.acRelay, engineConfiguration->acRelayPin);
+	pinbench(1000.0, 100.0, 1, enginePins.acRelay);
 }
 
 static void mainRelayBench(void) {
@@ -266,8 +251,7 @@ static void mainRelayBench(void) {
 }
 
 static void hpfpValveBench(void) {
-	pinbench(1000.0, 20.0, engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount,
-		&enginePins.hpfpValve, engineConfiguration->hpfpValvePin);
+	pinbench(20.0, engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount, enginePins.hpfpValve);
 }
 
 void fuelPumpBench(void) {
@@ -284,7 +268,7 @@ private:
 
 			if (isBenchTestPending) {
 				isBenchTestPending = false;
-				runBench(brainPin, pinX, startDelayMs, onTime, offTime, count);
+				runBench(benchParams);
 			}
 
 			if (widebandUpdatePending) {
@@ -307,10 +291,6 @@ static void handleBenchCategory(uint16_t index) {
 	case BENCH_HPFP_VALVE:
 		hpfpValveBench();
 		return;
-	case BENCH_FUEL_PUMP:
-		// cmd_test_fuel_pump
-		fuelPumpBench();
-		return;
 	case BENCH_STARTER_ENABLE_RELAY:
 		starterRelayBench();
 		return;
@@ -332,6 +312,15 @@ static void handleBenchCategory(uint16_t index) {
 		return;
 	case BENCH_FAN_RELAY_2:
 		fan2Bench();
+		return;
+	case BENCH_CANCEL:
+		cancelBenchTest();
+		return;
+	case BENCH_FUEL_PUMP_ON:
+		engine->module<FuelPumpController>()->forcePumpState(true);
+		return;
+	case BENCH_FUEL_PUMP_OFF:
+		engine->module<FuelPumpController>()->forcePumpState(false);
 		return;
 	default:
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench function %d", index);
@@ -397,19 +386,6 @@ static void handleCommandX14(uint16_t index) {
 		widebandUpdatePending = true;
 		benchSemaphore.signal();
 		return;
-	case 0x14:
-#ifdef STM32F7
-		void sys_dual_bank(void);
-		/**
-		 * yes, this would instantly cause a hard fault as a random sequence of bytes is decoded as instructions
-		 * and that's the intended behavious - the point is to set flash properly and to re-flash once in proper configuration
-		 */
-		sys_dual_bank();
-		rebootNow();
-#else
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected dbank command", index);
-#endif
-		return;
 	case 0x15:
 #if EFI_PROD_CODE
 		extern bool burnWithoutFlash;
@@ -448,28 +424,28 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 
 	case TS_IGNITION_CATEGORY:
 		if (!running) {
-			doRunSparkBench(index, 300.0, engineConfiguration->benchTestOnTime,
-				engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount);
+			doRunSparkBench(index, engineConfiguration->ignTestOnTime,
+				engineConfiguration->ignTestOffTime, engineConfiguration->ignTestCount);
 		}
 		break;
 
 	case TS_INJECTOR_CATEGORY:
 		if (!running) {
-			doRunFuelInjBench(index, 300.0 , engineConfiguration->benchTestOnTime,
+			doRunFuelInjBench(index, engineConfiguration->benchTestOnTime,
 				engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount);
 		}
 		break;
 
 	case TS_SOLENOID_CATEGORY:
 		if (!running) {
-			doRunSolenoidBench(index, 300.0, 1000.0,
+			doRunSolenoidBench(index, 1000.0,
 				1000.0, engineConfiguration->benchTestCount);
 		}
 		break;
 
 	case TS_LUA_OUTPUT_CATEGORY:
 		if (!running) {
-			doRunBenchTestLuaOutput(index, 300.0, 4.0,
+			doRunBenchTestLuaOutput(index, 4.0,
 				engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount);
 		}
 		break;
@@ -544,12 +520,12 @@ void initBenchTest() {
 	addConsoleActionF("fuelpumpbench2", fuelPumpBenchExt);
 
 	addConsoleActionFFF(CMD_FUEL_BENCH, fuelInjBench);
-	addConsoleActionFFFFF("fuelbench2", fuelInjBenchExt);
+	addConsoleActionFFFF("fuelbench2", fuelInjBenchExt);
 
 	addConsoleActionFFF(CMD_SPARK_BENCH, sparkBench);
-	addConsoleActionFFFFF("sparkbench2", sparkBenchExt);
+	addConsoleActionFFFF("sparkbench2", sparkBenchExt);
 
-	addConsoleActionFFFFF("tcusolbench", tcuSolenoidBench);
+	addConsoleActionFFFF("tcusolbench", tcuSolenoidBench);
 
 	addConsoleAction(CMD_AC_RELAY_BENCH, acRelayBench);
 
@@ -568,7 +544,7 @@ void initBenchTest() {
 	addConsoleAction(CMD_MIL_BENCH, milBench);
 	addConsoleAction(CMD_HPFP_BENCH, hpfpValveBench);
 
-	addConsoleActionFFFFF("luabench2", luaOutBench2);
+	addConsoleActionFFFF("luabench2", luaOutBench2);
 	instance.start();
 	onConfigurationChangeBenchTest();
 }

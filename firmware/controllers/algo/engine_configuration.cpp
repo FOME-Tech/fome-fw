@@ -49,7 +49,6 @@
 #include "ford_1995_inline_6.h"
 
 #include "honda_k_dbc.h"
-#include "honda_600.h"
 #include "hyundai.h"
 
 #include "GY6_139QMB.h"
@@ -169,17 +168,11 @@ void incrementGlobalConfigurationVersion() {
 
 	boardOnConfigurationChange(&activeConfiguration);
 
-/**
- * All these callbacks could be implemented as listeners, but these days I am saving RAM
- */
 	engine->preCalculate();
 #if EFI_ALTERNATOR_CONTROL
 	onConfigurationChangeAlternatorCallback(&activeConfiguration);
 #endif /* EFI_ALTERNATOR_CONTROL */
 
-#if EFI_BOOST_CONTROL
-	onConfigurationChangeBoostCallback(&activeConfiguration);
-#endif
 #if EFI_ELECTRONIC_THROTTLE_BODY
 	onConfigurationChangeElectronicThrottleCallback(&activeConfiguration);
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
@@ -849,11 +842,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::L9779_BENCH_ENGINE:
 		setL9779TestConfiguration();
 		break;
-	case engine_type_e::EEPROM_BENCH_ENGINE:
-#if EFI_PROD_CODE
-		setEepromTestConfiguration();
-#endif
-		break;
 	case engine_type_e::TLE8888_BENCH_ENGINE:
 		setTle8888TestConfiguration();
 		break;
@@ -868,9 +856,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 	case engine_type_e::GY6_139QMB:
 		setGy6139qmbDefaultEngineConfiguration();
-		break;
-	case engine_type_e::HONDA_600:
-		setHonda600();
 		break;
 	case engine_type_e::FORD_ESCORT_GT:
 		setFordEscortGt();

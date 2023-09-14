@@ -112,8 +112,7 @@ static bool vvtWithRealDecoder(vvt_mode_e vvtMode) {
 			&& vvtMode != VVT_2JZ
 			&& vvtMode != VVT_HONDA_K_INTAKE
 			&& vvtMode != VVT_MAP_V_TWIN
-			&& vvtMode != VVT_SECOND_HALF
-			&& vvtMode != VVT_FIRST_HALF;
+			&& vvtMode != VVT_SINGLE_TOOTH;
 }
 
 angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
@@ -165,12 +164,11 @@ static angle_t adjustCrankPhase(int camIndex) {
 
 	vvt_mode_e vvtMode = engineConfiguration->vvtMode[camIndex];
 	switch (vvtMode) {
-	case VVT_FIRST_HALF:
 	case VVT_MAP_V_TWIN:
 	case VVT_MITSUBISHI_4G63:
 	case VVT_MITSUBISHI_4G9x:
 		return tc->syncAndReport(crankDivider, 1);
-	case VVT_SECOND_HALF:
+	case VVT_SINGLE_TOOTH:
 	case VVT_NISSAN_VQ:
 	case VVT_BOSCH_QUICK_START:
 	case VVT_MIATA_NB:
@@ -301,14 +299,15 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	}
 
 	switch(engineConfiguration->vvtMode[camIndex]) {
-	case VVT_2JZ:
-		// we do not know if we are in sync or out of sync, so we have to be looking for both possibilities
-		if ((currentPosition < engineConfiguration->scriptSetting[4]       || currentPosition > engineConfiguration->scriptSetting[5]) &&
-		    (currentPosition < engineConfiguration->scriptSetting[4] + 360 || currentPosition > engineConfiguration->scriptSetting[5] + 360)) {
-			// outside of the expected range
+	case VVT_2JZ: {
+		// Consider the tooth in the first 1/3 of the engine phase
+		bool inRange = angleFromPrimarySyncPoint > 0 && angleFromPrimarySyncPoint < (720 / 3);
+
+		if (!inRange) {
 			return;
 		}
-		break;
+
+		} break;
 	default:
 		// else, do nothing
 		break;
