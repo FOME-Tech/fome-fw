@@ -95,9 +95,6 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	 * see also injectorDutyCycle
 	 */
 	int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
-	if (injectionDuration * numberOfInjections > getEngineCycleDuration(rpm)) {
-		warning(ObdCode::CUSTOM_TOO_LONG_FUEL_INJECTION, "Too long fuel injection %.2fms", injectionDuration);
-	}
 
 	getEngineState()->fuelConsumption.consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
 
@@ -147,18 +144,6 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 				(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
-
-if (isScheduled) {
-#if EFI_PRINTF_FUEL_DETAILS
-		if (printFuelDebug) {
-			InjectorOutputPin *output = outputs[0];
-			printf("handleFuelInjectionEvent still used %s now=%.1fms\r\n", output->name, (int)getTimeNowUs() / 1000.0);
-		}
-#endif /*EFI_PRINTF_FUEL_DETAILS */
-		return; // this InjectionEvent is still needed for an extremely long injection scheduled previously
-	}
-
-	isScheduled = true;
 
 	action_s startAction, endAction;
 	// We use different callbacks based on whether we're running sequential mode or not - everything else is the same

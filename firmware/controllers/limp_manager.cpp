@@ -173,6 +173,7 @@ void LimpManager::updateState(int rpm, efitick_t nowNt) {
 
 		if (m_injectorDutyCutHysteresis.test(someLimitTripped, isUnderLowDuty)) {
 			allowFuel.clear(ClearReason::InjectorDutyCycle);
+			warning(ObdCode::CUSTOM_TOO_LONG_FUEL_INJECTION, "Injector duty cycle cut %.1f", injDutyCycle);
 		}
 	}
 

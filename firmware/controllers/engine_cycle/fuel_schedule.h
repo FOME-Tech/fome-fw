@@ -38,15 +38,6 @@ public:
 
 	float injectionStartAngle = 0;
 
-	/**
-	 * we need atomic flag so that we do not schedule a new pair of up/down before previous down was executed.
-	 *
-	 * That's because we want to be sure that no 'down' side callback would be ignored since we are counting to see
-	 * overlaps so we need the end counter to always have zero.
-	 * TODO: make watchdog decrement relevant counter
-	 */
-	bool isScheduled = false;
-
 	WallFuel wallFuel;
 };
 
