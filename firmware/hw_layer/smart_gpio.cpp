@@ -19,6 +19,7 @@
 #include "drivers/gpio/drv8860.h"
 #include "drivers/gpio/l9779.h"
 #include "drivers/gpio/tle9104.h"
+#include "drivers/gpio/can_gpio.h"
 
 #if (BOARD_TLE6240_COUNT > 0)
 // todo: migrate to TS or board config
@@ -287,6 +288,10 @@ void initSmartGpio() {
 #if (BOARD_TLE9104_COUNT > 0)
 	// No official boards have this IC
 #endif
+
+#if EFI_CAN_GPIO
+	canGpio_add(Gpio::CAN_PIN_0);
+#endif // EFI_CAN_GPIO
 
 	/* external chip init */
 	gpiochips_init();

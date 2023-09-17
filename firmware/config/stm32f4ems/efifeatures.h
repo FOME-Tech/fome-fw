@@ -203,6 +203,10 @@
 #define EFI_CAN_SERIAL TRUE
 #endif
 
+#ifndef EFI_CAN_GPIO
+#define EFI_CAN_GPIO TRUE
+#endif
+
 #define EFI_WIDEBAND_FIRMWARE_UPDATE TRUE
 
 #ifndef EFI_AUX_SERIAL
