@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20011
+#define FLASH_DATA_VERSION 20012
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -270,7 +270,7 @@ end_struct
 #define debug_mode_e_enum "INVALID", "TPS acceleration enrichment", "INVALID", "Stepper Idle Control", "Engine Load accl enrich", "Trigger Counters", "Soft Spark Cut", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "SD card", "sr5", "Knock", "INVALID", "Electronic Throttle", "Executor", "Bench Test / TS commands", "INVALID", "Analog inputs #1", "INSTANT_RPM", "INVALID", "Status", "INVALID", "INVALID", "MAP", "Metrics", "INVALID", "Ion Sense", "TLE8888", "Analog inputs #2", "Dwell Metric", "INVALID", "INVALID", "Boost Control", "INVALID", "INVALID", "ETB Autotune", "Composite Log", "INVALID", "INVALID", "INVALID", "Dyno_View", "Logic_Analyzer", "INVALID", "TCU", "Lua"
 custom debug_mode_e 1 bits, U08, @OFFSET@, [0:5], @@debug_mode_e_enum@@
 
-#define vvt_mode_e_enum "Inactive", "Single Tooth", "2JZ", "Miata NB2", "INVALID", "Bosch Quick Start", "4/1", "ST 170", "Ford Barra 3+1", "Nissan VQ", "Honda K Intake", "Nissan MR18", "Mitsu 3A92", "VTwin by MAP", "Mitsu 6G75", "Mazda Skyactiv", "Honda K Exhaust", "Mitsubishi 4G92/93/94", "Mitsubishi 4G63"
+#define vvt_mode_e_enum "Inactive", "Single Tooth", "Toyota 3 Tooth", "Miata NB2", "INVALID", "Bosch Quick Start", "4/1", "ST 170", "Ford Barra 3+1", "Nissan VQ", "Honda K Intake", "Nissan MR18", "Mitsu 3A92", "VTwin by MAP", "Mitsu 6G75", "Mazda Skyactiv", "Honda K Exhaust", "Mitsubishi 4G92/93/94", "Mitsubishi 4G63"
 custom vvt_mode_e 1 bits, U08, @OFFSET@, [0:5], @@vvt_mode_e_enum@@
 
 ! At the moment TIM1, TIM2, TIM3 and TIM9 are configured as ICU
@@ -450,7 +450,7 @@ ThermistorConf clt;todo: merge with channel settings, use full-scale Thermistor 
 ThermistorConf iat;
 	
 	int launchTimingRetard;;"deg", 1, 0, -180, 180, 2
-	float knockBandCustom;We calculate knock band based of cylinderBore\n Use this to override - kHz knock band override;"kHz", 1, 0, 0, 20, 2
+	float knockBandCustom;We calculate knock band based of cylinderBore\n Use this to override - kHz knock band override\nRequires power cycling to effect;"kHz", 1, 0, 0, 20, 2
 
 uint16_t autoscale displacement;Engine displacement in litres;"L", 0.001, 0, 0, 65, 3
 
@@ -844,7 +844,7 @@ sensor_chart_e sensorChartMode;rusEFI console Sensor Sniffer mode;
 	bit enableSoftwareKnock
 	bit verboseVVTDecoding;Verbose info in console below engineSnifferRpmThreshold\nenable vvt_details
 	bit invertCamVVTSignal;get invertCamVVTSignal
-	bit unused804b12
+	bit alphaNUseIat;In Alpha-N mode, compensate for air temperature.
 	bit knockBankCyl1,"Channel 2","Channel 1"
 	bit knockBankCyl2,"Channel 2","Channel 1"
 	bit knockBankCyl3,"Channel 2","Channel 1"
@@ -1475,11 +1475,22 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	uint8_t ignTestCount;How many test bench pulses do you want;"", 1, 0, 0, 50, 0
 	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
 
+	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
+
+	ThermistorConf oilTempSensor
+	ThermistorConf fuelTempSensor
+	ThermistorConf ambientTempSensor
+	ThermistorConf compressorDischargeTemperature
+
+	adc_channel_e throttleInletPressureChannel;Place the sensor before the throttle, but after any turbocharger/supercharger and intercoolers if fitted. Uses the same calibration as the MAP sensor.
+	adc_channel_e compressorDischargePressureChannel;Place the sensor after the turbocharger/supercharger, but before any intercoolers if fitted. Uses the same calibration as the MAP sensor.
+
 	uint8_t maxInjectorDutyInstant;If injector duty cycle hits this value, instantly cut fuel.;"%", 1, 0, 50, 200, 0
 	uint8_t maxInjectorDutySustained;If injector duty cycle hits this value for the specified delay time, cut fuel.;"%", 1, 0, 50, 120, 0
 	uint8_t autoscale maxInjectorDutySustainedTimeout;Timeout period for duty cycle over the sustained limit to trigger duty cycle protection.;"sec", 0.1, 0, 0, 5, 1
 
-uint8_t[90] mainUnusedEnd;;"units", 1, 0, 0, 1, 0
+
+uint8_t[251] mainUnusedEnd;;"units", 1, 0, 0, 1, 0
 
 ! end of engine_configuration_s
 end_struct

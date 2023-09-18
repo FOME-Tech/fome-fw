@@ -372,6 +372,18 @@ static void updateTempSensors() {
 
 	SensorResult auxTemp2 = Sensor::get(SensorType::AuxTemp2);
 	engine->outputChannels.auxTemp2 = auxTemp2.value_or(0);
+
+	SensorResult oilTemp = Sensor::get(SensorType::OilTemperature);
+	engine->outputChannels.oilTemp = oilTemp.value_or(0);
+
+	SensorResult fuelTemp = Sensor::get(SensorType::FuelTemperature);
+	engine->outputChannels.fuelTemp = fuelTemp.value_or(0);
+
+	SensorResult ambientTemp = Sensor::get(SensorType::AmbientTemperature);
+	engine->outputChannels.ambientTemp = ambientTemp.value_or(0);
+
+	SensorResult compressorDischargeTemp = Sensor::get(SensorType::CompressorDischargeTemperature);
+	engine->outputChannels.compressorDischargeTemp = compressorDischargeTemp.value_or(0);
 }
 
 static void updateThrottles() {
@@ -473,6 +485,9 @@ static void updatePressures() {
 	engine->outputChannels.baroPressure = Sensor::getOrZero(SensorType::BarometricPressure);
 	engine->outputChannels.MAPValue = Sensor::getOrZero(SensorType::Map);
 	engine->outputChannels.oilPressure = Sensor::getOrZero(SensorType::OilPressure);
+
+	engine->outputChannels.compressorDischargePressure = Sensor::getOrZero(SensorType::CompressorDischargePressure);
+	engine->outputChannels.throttleInletPressure = Sensor::getOrZero(SensorType::ThrottleInletPressure);
 
 	engine->outputChannels.auxLinear1 = Sensor::getOrZero(SensorType::AuxLinear1);
 	engine->outputChannels.auxLinear2 = Sensor::getOrZero(SensorType::AuxLinear2);

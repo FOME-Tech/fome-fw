@@ -38,12 +38,14 @@ Release template (copy/paste this for new release):
  - Configurable ignition timing limits, adding safety particularly for engines running wasted spark with a large cam #211
  - Improved injection, ignition bench test UI and functionality: More gauges, fuel pump on/off buttons for injector testing, and configurable duration/count #219
  - Preset for Mazdaspeed Miata (NB) IAT sensor
+ - Option to compensate Alpha-N fueling with intake air temperature
 
 ### Fixed
  - Improved bench test resolution (more usable for testing injectors, dwell, etc)
  - Maximum knock retard table displays correct Y axis values in TunerStudio
  - Make errors about fuel pressure sensors less aggressive #111 #117
  - Always operate in "two wire" mode for batch fuel, fixing batch firing order #23
+ - Fix "Toyota 3 Tooth Cam" VVT mode (1JZ, 2JZ, 1G, etc) actually works now #237
 
 ## May 2023 Release
 
