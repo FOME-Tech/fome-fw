@@ -191,7 +191,7 @@ Pull-up resistor value on your board
 
 
 ### knockBandCustom
-We calculate knock band based of cylinderBore\n Use this to override - kHz knock band override
+We calculate knock band based of cylinderBore\n Use this to override - kHz knock band override\nRequires power cycling to effect
 
 ### displacement
 Engine displacement in litres
@@ -528,6 +528,9 @@ Verbose info in console below engineSnifferRpmThreshold\nenable vvt_details
 
 ### invertCamVVTSignal
 get invertCamVVTSignal
+
+### alphaNUseIat
+In Alpha-N mode, compensate for air temperature.
 
 ### knockBankCyl1
 
@@ -1503,4 +1506,91 @@ How many test bench pulses do you want
 
 ### ignTestOffTime
 Time between bench test pulses
+
+### canVssScaling
+Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.
+
+### oilTempSensor.config.tempC_1
+these values are in Celcius
+
+### oilTempSensor.config.tempC_2
+
+
+### oilTempSensor.config.tempC_3
+
+
+### oilTempSensor.config.resistance_1
+
+
+### oilTempSensor.config.resistance_2
+
+
+### oilTempSensor.config.resistance_3
+
+
+### oilTempSensor.config.bias_resistor
+Pull-up resistor value on your board
+
+### fuelTempSensor.config.tempC_1
+these values are in Celcius
+
+### fuelTempSensor.config.tempC_2
+
+
+### fuelTempSensor.config.tempC_3
+
+
+### fuelTempSensor.config.resistance_1
+
+
+### fuelTempSensor.config.resistance_2
+
+
+### fuelTempSensor.config.resistance_3
+
+
+### fuelTempSensor.config.bias_resistor
+Pull-up resistor value on your board
+
+### ambientTempSensor.config.tempC_1
+these values are in Celcius
+
+### ambientTempSensor.config.tempC_2
+
+
+### ambientTempSensor.config.tempC_3
+
+
+### ambientTempSensor.config.resistance_1
+
+
+### ambientTempSensor.config.resistance_2
+
+
+### ambientTempSensor.config.resistance_3
+
+
+### ambientTempSensor.config.bias_resistor
+Pull-up resistor value on your board
+
+### compressorDischargeTemperature.config.tempC_1
+these values are in Celcius
+
+### compressorDischargeTemperature.config.tempC_2
+
+
+### compressorDischargeTemperature.config.tempC_3
+
+
+### compressorDischargeTemperature.config.resistance_1
+
+
+### compressorDischargeTemperature.config.resistance_2
+
+
+### compressorDischargeTemperature.config.resistance_3
+
+
+### compressorDischargeTemperature.config.bias_resistor
+Pull-up resistor value on your board
 

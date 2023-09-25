@@ -67,8 +67,8 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 	switch (vvtMode) {
 	case VVT_INACTIVE:
 		return trigger_type_e::TT_ONE;
-	case VVT_2JZ:
-		return trigger_type_e::TT_VVT_JZ;
+	case VVT_TOYOTA_3_TOOTH:
+		return trigger_type_e::TT_VVT_TOYOTA_3_TOOTH;
 	case VVT_MIATA_NB:
 		return trigger_type_e::TT_VVT_MIATA_NB;
 	case VVT_BOSCH_QUICK_START:
@@ -145,10 +145,6 @@ void Engine::periodicSlowCallback() {
 	updateGppwm();
 
 	engine->engineModules.apply_all([](auto & m) { m.onSlowCallback(); });
-
-#if EFI_BOOST_CONTROL
-	engine->boostController.update();
-#endif // EFI_BOOST_CONTROL
 
 #if (BOARD_TLE8888_COUNT > 0)
 	tle8888startup();
@@ -254,7 +250,7 @@ void Engine::resetLua() {
 	engineState.lua.luaDisableEtb = false;
 	engineState.lua.luaIgnCut = false;
 #if EFI_BOOST_CONTROL
-	boostController.resetLua();
+	module<BoostController>().unmock().resetLua();
 #endif // EFI_BOOST_CONTROL
 	ignitionState.luaTimingAdd = 0;
 	ignitionState.luaTimingMult = 1;

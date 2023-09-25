@@ -47,12 +47,22 @@ case DBG_10:
   return "DBG_10";
 case DBG_11:
   return "DBG_11";
+case DBG_12:
+  return "DBG_12";
+case DBG_13:
+  return "DBG_13";
+case DBG_15:
+  return "DBG_15";
 case DBG_16:
   return "DBG_16";
+case DBG_19:
+  return "DBG_19";
 case DBG_2:
   return "DBG_2";
 case DBG_20:
   return "DBG_20";
+case DBG_21:
+  return "DBG_21";
 case DBG_24:
   return "DBG_24";
 case DBG_25:
@@ -61,6 +71,8 @@ case DBG_26:
   return "DBG_26";
 case DBG_29:
   return "DBG_29";
+case DBG_32:
+  return "DBG_32";
 case DBG_34:
   return "DBG_34";
 case DBG_35:
@@ -75,18 +87,14 @@ case DBG_43:
   return "DBG_43";
 case DBG_46:
   return "DBG_46";
+case DBG_6:
+  return "DBG_6";
 case DBG_7:
   return "DBG_7";
 case DBG_8:
   return "DBG_8";
 case DBG_9:
   return "DBG_9";
-case DBG_ANALOG_INPUTS:
-  return "DBG_ANALOG_INPUTS";
-case DBG_ANALOG_INPUTS2:
-  return "DBG_ANALOG_INPUTS2";
-case DBG_BENCH_TEST:
-  return "DBG_BENCH_TEST";
 case DBG_COMPOSITE_LOG:
   return "DBG_COMPOSITE_LOG";
 case DBG_DWELL_METRIC:
@@ -105,8 +113,6 @@ case DBG_INSTANT_RPM:
   return "DBG_INSTANT_RPM";
 case DBG_ION:
   return "DBG_ION";
-case DBG_KNOCK:
-  return "DBG_KNOCK";
 case DBG_LOGIC_ANALYZER:
   return "DBG_LOGIC_ANALYZER";
 case DBG_LUA:
@@ -115,10 +121,6 @@ case DBG_MAP:
   return "DBG_MAP";
 case DBG_METRICS:
   return "DBG_METRICS";
-case DBG_SD_CARD:
-  return "DBG_SD_CARD";
-case DBG_SOFT_SPARK_CUT:
-  return "DBG_SOFT_SPARK_CUT";
 case DBG_SR5_PROTOCOL:
   return "DBG_SR5_PROTOCOL";
 case DBG_STEPPER_IDLE_CONTROL:
@@ -131,8 +133,6 @@ case DBG_TPS_ACCEL:
   return "DBG_TPS_ACCEL";
 case DBG_TRIGGER_COUNTERS:
   return "DBG_TRIGGER_COUNTERS";
-case DBG_UNUSED12:
-  return "DBG_UNUSED12";
 case DBG_UNUSED41:
   return "DBG_UNUSED41";
 case DBG_UNUSED_42:
@@ -493,8 +493,6 @@ case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:
   return "TT_VVT_BARRA_3_PLUS_1";
 case trigger_type_e::TT_VVT_BOSCH_QUICK_START:
   return "TT_VVT_BOSCH_QUICK_START";
-case trigger_type_e::TT_VVT_JZ:
-  return "TT_VVT_JZ";
 case trigger_type_e::TT_VVT_MAZDA_SKYACTIV:
   return "TT_VVT_MAZDA_SKYACTIV";
 case trigger_type_e::TT_VVT_MIATA_NB:
@@ -505,6 +503,8 @@ case trigger_type_e::TT_VVT_MITSUBISHI_6G75:
   return "TT_VVT_MITSUBISHI_6G75";
 case trigger_type_e::TT_VVT_NISSAN_VQ35:
   return "TT_VVT_NISSAN_VQ35";
+case trigger_type_e::TT_VVT_TOYOTA_3_TOOTH:
+  return "TT_VVT_TOYOTA_3_TOOTH";
 case trigger_type_e::TT_VVT_TOYOTA_4_1:
   return "TT_VVT_TOYOTA_4_1";
   }

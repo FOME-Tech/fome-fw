@@ -372,6 +372,18 @@ static void updateTempSensors() {
 
 	SensorResult auxTemp2 = Sensor::get(SensorType::AuxTemp2);
 	engine->outputChannels.auxTemp2 = auxTemp2.value_or(0);
+
+	SensorResult oilTemp = Sensor::get(SensorType::OilTemperature);
+	engine->outputChannels.oilTemp = oilTemp.value_or(0);
+
+	SensorResult fuelTemp = Sensor::get(SensorType::FuelTemperature);
+	engine->outputChannels.fuelTemp = fuelTemp.value_or(0);
+
+	SensorResult ambientTemp = Sensor::get(SensorType::AmbientTemperature);
+	engine->outputChannels.ambientTemp = ambientTemp.value_or(0);
+
+	SensorResult compressorDischargeTemp = Sensor::get(SensorType::CompressorDischargeTemperature);
+	engine->outputChannels.compressorDischargeTemp = compressorDischargeTemp.value_or(0);
 }
 
 static void updateThrottles() {
@@ -474,6 +486,9 @@ static void updatePressures() {
 	engine->outputChannels.MAPValue = Sensor::getOrZero(SensorType::Map);
 	engine->outputChannels.oilPressure = Sensor::getOrZero(SensorType::OilPressure);
 
+	engine->outputChannels.compressorDischargePressure = Sensor::getOrZero(SensorType::CompressorDischargePressure);
+	engine->outputChannels.throttleInletPressure = Sensor::getOrZero(SensorType::ThrottleInletPressure);
+
 	engine->outputChannels.auxLinear1 = Sensor::getOrZero(SensorType::AuxLinear1);
 	engine->outputChannels.auxLinear2 = Sensor::getOrZero(SensorType::AuxLinear2);
 }
@@ -558,13 +573,6 @@ static void updateFlags() {
 #if EFI_INTERNAL_FLASH
 	engine->outputChannels.needBurn = getNeedToWriteConfiguration();
 #endif /* EFI_INTERNAL_FLASH */
-}
-
-// weird thing: one of the reasons for this to be a separate method is stack usage reduction in non-optimized build
-// see https://github.com/rusefi/rusefi/issues/3302 and linked tickets
-static void updateTpsDebug() {
-	// TPS 1 pri/sec ratio - useful for ford ETB that has partial-range second channel
-	engine->outputChannels.debugFloatField5 = 100 * Sensor::getOrZero(SensorType::Tps1Primary) / Sensor::getOrZero(SensorType::Tps1Secondary);
 }
 
 // sensor state for EFI Analytics Tuner Studio
@@ -725,13 +733,6 @@ DcHardware *getdcHardware();
 		postMapState(tsOutputChannels);
 		break;
 #endif /* EFI_MAP_AVERAGING */
-	case DBG_ANALOG_INPUTS:
-		tsOutputChannels->debugFloatField4 = isAdcChannelValid(engineConfiguration->map.sensor.hwChannel) ? getVoltageDivided("map", engineConfiguration->map.sensor.hwChannel) : 0.0f;
-		tsOutputChannels->debugFloatField7 = isAdcChannelValid(engineConfiguration->afr.hwChannel) ? getVoltageDivided("ego", engineConfiguration->afr.hwChannel) : 0.0f;
-		break;
-	case DBG_ANALOG_INPUTS2:
-		updateTpsDebug();
-		break;
 	case DBG_INSTANT_RPM:
 		{
 #if EFI_SHAFT_POSITION_INPUT

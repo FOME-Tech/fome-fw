@@ -460,6 +460,18 @@ float getOutputValueByName(const char *name) {
 			return engine->outputChannels.Gego;
 		case 1092959609:
 			return engine->outputChannels.testBenchIter;
+		case 1628523935:
+			return engine->outputChannels.oilTemp;
+		case -1077373465:
+			return engine->outputChannels.fuelTemp;
+		case 309572379:
+			return engine->outputChannels.ambientTemp;
+		case 553570450:
+			return engine->outputChannels.compressorDischargeTemp;
+		case 1404346549:
+			return engine->outputChannels.compressorDischargePressure;
+		case 769340240:
+			return engine->outputChannels.throttleInletPressure;
 		case -1779658835:
 			return engine->fuelComputer.totalFuelCorrection;
 		case -1288205717:
@@ -486,6 +498,8 @@ float getOutputValueByName(const char *name) {
 			return engine->fuelComputer.sdTcharge_coff;
 		case 1650433343:
 			return engine->fuelComputer.sdAirMassInOneCylinder;
+		case 1599780729:
+			return engine->fuelComputer.normalizedCylinderFilling;
 		case -1777838088:
 			return engine->ignitionState.baseDwell;
 		case -903101570:
@@ -506,67 +520,67 @@ float getOutputValueByName(const char *name) {
 			return engine->ignitionState.luaTimingMult;
 #if EFI_BOOST_CONTROL
 		case -575666209:
-			return engine->boostController.isTpsInvalid;
+			return ___engine.module<BoostController>()->isTpsInvalid;
 #endif
 #if EFI_BOOST_CONTROL
 		case 1846215200:
-			return engine->boostController.m_shouldResetPid;
+			return ___engine.module<BoostController>()->m_shouldResetPid;
 #endif
 #if EFI_BOOST_CONTROL
 		case 1826317915:
-			return engine->boostController.isBelowClosedLoopThreshold;
+			return ___engine.module<BoostController>()->isBelowClosedLoopThreshold;
 #endif
 #if EFI_BOOST_CONTROL
 		case -1642402810:
-			return engine->boostController.isNotClosedLoop;
+			return ___engine.module<BoostController>()->isNotClosedLoop;
 #endif
 #if EFI_BOOST_CONTROL
 		case 2111912944:
-			return engine->boostController.isZeroRpm;
+			return ___engine.module<BoostController>()->isZeroRpm;
 #endif
 #if EFI_BOOST_CONTROL
 		case -2011570052:
-			return engine->boostController.hasInitBoost;
+			return ___engine.module<BoostController>()->hasInitBoost;
 #endif
 #if EFI_BOOST_CONTROL
 		case 193830616:
-			return engine->boostController.rpmTooLow;
+			return ___engine.module<BoostController>()->rpmTooLow;
 #endif
 #if EFI_BOOST_CONTROL
 		case -1033638560:
-			return engine->boostController.tpsTooLow;
+			return ___engine.module<BoostController>()->tpsTooLow;
 #endif
 #if EFI_BOOST_CONTROL
 		case -734877977:
-			return engine->boostController.mapTooLow;
+			return ___engine.module<BoostController>()->mapTooLow;
 #endif
 #if EFI_BOOST_CONTROL
 		case 119157463:
-			return engine->boostController.luaTargetAdd;
+			return ___engine.module<BoostController>()->luaTargetAdd;
 #endif
 #if EFI_BOOST_CONTROL
 		case 1239062717:
-			return engine->boostController.boostOutput;
+			return ___engine.module<BoostController>()->boostOutput;
 #endif
 #if EFI_BOOST_CONTROL
 		case -362320880:
-			return engine->boostController.luaTargetMult;
+			return ___engine.module<BoostController>()->luaTargetMult;
 #endif
 #if EFI_BOOST_CONTROL
 		case -1481117304:
-			return engine->boostController.openLoopPart;
+			return ___engine.module<BoostController>()->openLoopPart;
 #endif
 #if EFI_BOOST_CONTROL
 		case 1944984220:
-			return engine->boostController.luaOpenLoopAdd;
+			return ___engine.module<BoostController>()->luaOpenLoopAdd;
 #endif
 #if EFI_BOOST_CONTROL
 		case -707712709:
-			return engine->boostController.boostControllerClosedLoopPart;
+			return ___engine.module<BoostController>()->boostControllerClosedLoopPart;
 #endif
 #if EFI_BOOST_CONTROL
 		case -1712045196:
-			return engine->boostController.boostControlTarget;
+			return ___engine.module<BoostController>()->boostControlTarget;
 #endif
 		case 182391090:
 			return ___engine.module<FanControl1>()->cranking;
