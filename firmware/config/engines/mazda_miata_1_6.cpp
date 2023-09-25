@@ -385,6 +385,7 @@ void setHellenNA6() {
 	engineConfiguration->map.sensor.type = MT_MPX4250;
 }
 
+#if HW_PROTEUS
 #include "proteus_meta.h"
 
 void setMiataNa6_Polygonus() {
@@ -438,3 +439,4 @@ void setMiataNa6_Polygonus() {
 	engineConfiguration->etbFunctions[0] = dc_function_e::DC_None;
 	engineConfiguration->etbFunctions[1] = dc_function_e::DC_None;
 }
+#endif
