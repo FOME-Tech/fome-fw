@@ -347,8 +347,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->enableCanVss;
 		case 1382521617:
 			return engineConfiguration->enableInnovateLC2;
-		case 2046602309:
-			return engineConfiguration->showHumanReadableWarning;
 		case 1838375282:
 			return engineConfiguration->stftIgnoreErrorMagnitude;
 		case -1724873939:
@@ -447,8 +445,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->widebandOnSecondBus;
 		case 1611799720:
 			return engineConfiguration->fuelClosedLoopCorrectionEnabled;
-		case -546057276:
-			return engineConfiguration->isVerboseIAC;
 		case 885690524:
 			return engineConfiguration->boardUseTachPullUp;
 		case -1457484942:
@@ -1933,11 +1929,6 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->enableInnovateLC2 = (int)value;
 		return;
 	}
-		case 2046602309:
-	{
-		engineConfiguration->showHumanReadableWarning = (int)value;
-		return;
-	}
 		case 1838375282:
 	{
 		engineConfiguration->stftIgnoreErrorMagnitude = (int)value;
@@ -2181,11 +2172,6 @@ void setConfigValueByName(const char *name, float value) {
 		case 1611799720:
 	{
 		engineConfiguration->fuelClosedLoopCorrectionEnabled = (int)value;
-		return;
-	}
-		case -546057276:
-	{
-		engineConfiguration->isVerboseIAC = (int)value;
 		return;
 	}
 		case 885690524:
