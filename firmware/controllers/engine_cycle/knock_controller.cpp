@@ -102,10 +102,15 @@ void KnockControllerBase::onFastCallback() {
 		// Adjust knock retard under lock
 		chibios_rt::CriticalSectionLocker csl;
 
+		// Reduce knock retard at the requested rate
 		float newRetard = m_knockRetard - applyAmount;
 
 		// don't allow retard to go negative
-		m_knockRetard = maxF(0, newRetard);
+		if (newRetard < 0) {
+			m_knockRetard = 0;
+		} else {
+			m_knockRetard = newRetard;
+		}
 	}
 }
 
