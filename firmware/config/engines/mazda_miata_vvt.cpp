@@ -754,7 +754,9 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->clutchDownPin = PROTEUS_DIGITAL_4;
 	engineConfiguration->clutchDownPinInverted = true;
 
+#if EFI_PROD_CODE
 	engineConfiguration->brakePedalPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
+#endif // EFI_PROD_CODE
 
 	engineConfiguration->acRelayPin = PROTEUS_LS_8;
 
@@ -807,7 +809,9 @@ void setMiataPolygonusNB2Common() {
 	// NB2 has a main relay output, unlike NB1
 	engineConfiguration->mainRelayPin = PROTEUS_LS_16;
 
+#if EFI_PROD_CODE
 	engineConfiguration->acSwitch = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_6);
+#endif // EFI_PROD_CODE
 }
 
 void setMiataNB2_Polygonus() {

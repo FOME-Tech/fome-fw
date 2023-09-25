@@ -405,7 +405,9 @@ void setMiataNa6_Polygonus() {
 
 	engineConfiguration->tps1_1AdcChannel = PROTEUS_IN_ANALOG_VOLT_2;
 
+#if EFI_PROD_CODE
 	engineConfiguration->clutchDownPin = getAdcChannelBrainPin("", PROTEUS_IN_ANALOG_VOLT_5);
+#endif // EFI_PROD_CODE
 	engineConfiguration->clutchDownPinInverted = true;
 
 	// Fuel pressure
