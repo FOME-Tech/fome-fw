@@ -38,7 +38,7 @@ void VvtController::onFastCallback() {
 		return;
 	}
 
-	if (engine->auxParametersVersion.isOld(engine->getGlobalConfigurationVersion())) {
+	if (engine->vvtParametersVersion.isOld(engine->getGlobalConfigurationVersion())) {
 		m_pid.reset();
 	}
 
