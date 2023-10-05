@@ -188,10 +188,8 @@ static void handleFuel(int rpm, efitick_t nowNt, float currentPhase, float nextP
 		return;
 	}
 
-	/**
-	 * Injection events are defined by addFuelEvents() according to selected
-	 * fueling strategy
-	 */
+	// This is called in the fast callback already, but since we may have just achieved engine sync (and RPM)
+	// for the first time, force update the schedule so that we can inject immediately if necessary
 	FuelSchedule *fs = getFuelSchedule();
 	if (!fs->isReady) {
 		fs->addFuelEvents();
