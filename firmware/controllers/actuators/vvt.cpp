@@ -38,11 +38,13 @@ void VvtController::onFastCallback() {
 		return;
 	}
 
-	if (engine->auxParametersVersion.isOld(engine->getGlobalConfigurationVersion())) {
+	update();
+}
+
+void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+	if (!m_pid.isSame(&previousConfig->auxPid[index])) {
 		m_pid.reset();
 	}
-
-	update();
 }
 
 expected<angle_t> VvtController::observePlant() const {
@@ -128,7 +130,7 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 
 static const char *vvtOutputNames[CAM_INPUTS_COUNT] = {
 "Vvt Output#1",

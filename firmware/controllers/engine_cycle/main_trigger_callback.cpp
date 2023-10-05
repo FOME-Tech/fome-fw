@@ -94,7 +94,7 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	 */
 	int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
 
-	getEngineState()->fuelConsumption.consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
+	engine->module<TripOdometer>()->consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
 
 	if (this->cylinderNumber == 0) {
 		engine->outputChannels.actualLastInjection = injectionDuration;

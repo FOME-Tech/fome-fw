@@ -416,10 +416,12 @@ static void updateLambda() {
 	float lambdaValue = Sensor::getOrZero(SensorType::Lambda1);
 	engine->outputChannels.lambdaValue = lambdaValue;
 	engine->outputChannels.AFRValue = lambdaValue * engine->fuelComputer.stoichiometricRatio;
+	engine->outputChannels.afrGasolineScale = lambdaValue * STOICH_RATIO;
 
 	float lambda2Value = Sensor::getOrZero(SensorType::Lambda2);
 	engine->outputChannels.lambdaValue2 = lambda2Value;
 	engine->outputChannels.AFRValue2 = lambda2Value * engine->fuelComputer.stoichiometricRatio;
+	engine->outputChannels.afr2GasolineScale = lambda2Value * STOICH_RATIO;
 }
 
 static void updateFuelSensors() {
@@ -526,8 +528,13 @@ static void updateFuelCorrections() {
 }
 
 static void updateFuelResults() {
-	engine->outputChannels.fuelFlowRate = engine->engineState.fuelConsumption.getConsumptionGramPerSecond();
-	engine->outputChannels.totalFuelConsumption = engine->engineState.fuelConsumption.getConsumedGrams();
+	engine->outputChannels.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+	engine->outputChannels.totalFuelConsumption = engine->module<TripOdometer>()->getConsumedGrams();
+	engine->outputChannels.ignitionOnTime = engine->module<TripOdometer>()->getIgnitionOnTime();
+	engine->outputChannels.engineRunTime = engine->module<TripOdometer>()->getEngineRunTime();
+
+	// output channel in km
+	engine->outputChannels.distanceTraveled = 0.001f * engine->module<TripOdometer>()->getDistanceMeters();
 }
 
 static void updateFuelInfo() {
@@ -545,9 +552,6 @@ static void updateFuelInfo() {
 
 static void updateIgnition(int rpm) {
 	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
-
-	engine->outputChannels.knockCount = engine->module<KnockController>()->getKnockCount();
-	engine->outputChannels.knockRetard = engine->module<KnockController>()->getKnockRetard();
 }
 
 static void updateFlags() {

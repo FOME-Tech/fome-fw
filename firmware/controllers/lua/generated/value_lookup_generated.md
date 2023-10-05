@@ -64,9 +64,6 @@ TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT use two wire mode.
 ### isDoubleSolenoidIdle
 Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 
-### useEeprom
-
-
 ### useTLE8888_cranking_hack
 
 
@@ -95,7 +92,7 @@ For cranking either use the specified fixed base fuel mass, or use the normal ru
 
 
 ### verboseCan
-Print incoming and outgoing first bus CAN messages in rusEFI console
+Print incoming and outgoing first bus CAN messages in FOME console
 
 ### artificialTestMisfire
 Experimental setting that will cause a misfire\nDO NOT ENABLE.
@@ -380,7 +377,7 @@ Just for reference really, not taken into account by any logic at this point
 enable sd/disable sd
 
 ### rusefiVerbose29b
-Use 11 bit (standard) or 29 bit (extended) IDs for rusEFI verbose CAN format.
+Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
 
 ### isVerboseAlternator
 
@@ -395,7 +392,7 @@ This setting should only be used if you have a stepper motor idle valve and a st
 
 
 ### enableVerboseCanTx
-CAN broadcast using custom rusEFI protocol\nenable can_broadcast/disable can_broadcast
+CAN broadcast using custom FOME protocol\nenable can_broadcast/disable can_broadcast
 
 ### etb1configured
 
@@ -514,9 +511,6 @@ Read VSS from OEM CAN bus according to selected CAN vehicle configuration.
 ### enableInnovateLC2
 
 
-### showHumanReadableWarning
-
-
 ### stftIgnoreErrorMagnitude
 If enabled, adjust at a constant rate instead of a rate proportional to the current lambda error. This mode may be easier to tune, and more tolerant of sensor noise.
 
@@ -578,7 +572,7 @@ In Alpha-N mode, compensate for air temperature.
 If enabled we use four Push-Pull outputs to directly drive stepper idle air valve coilss
 
 ### verboseCan2
-Print incoming and outgoing second bus CAN messages in rusEFI console
+Print incoming and outgoing second bus CAN messages in FOME console
 
 ### boostPid.pFactor
 
@@ -664,9 +658,6 @@ Select which bus the wideband controller is attached to.
 ### fuelClosedLoopCorrectionEnabled
 Enables lambda sensor closed loop feedback for fuelling.
 
-### isVerboseIAC
-Print details into rusEFI console\nenable verbose_idle
-
 ### boardUseTachPullUp
 
 
@@ -701,10 +692,10 @@ Treat milliseconds value as duty cycle value, i.e. 0.5ms would become 50%
 This enables smart alternator control and activates the extra alternator settings.
 
 ### invertPrimaryTriggerSignal
-https://wiki.rusefi.com/Trigger-Configuration-Guide\nThis setting flips the signal from the primary engine speed sensor.
+Invert the signal from the primary trigger sensor.
 
 ### invertSecondaryTriggerSignal
-https://wiki.rusefi.com/Trigger-Configuration-Guide\nThis setting flips the signal from the secondary engine speed sensor.
+Invert the signal from the secondary trigger sensor.
 
 ### cutFuelOnHardLimit
 
