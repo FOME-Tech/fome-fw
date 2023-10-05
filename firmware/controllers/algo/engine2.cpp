@@ -161,6 +161,9 @@ void EngineState::periodicFastCallback() {
 		timingAdvance[i] = advance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
 	}
 
+	// Update injection start angles and output pairing
+	getFuelSchedule()->addFuelEvents();
+
 	// TODO: calculate me from a table!
 	trailingSparkAngle = engineConfiguration->trailingSparkAngle;
 

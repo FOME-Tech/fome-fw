@@ -57,11 +57,8 @@ public:
 	// Call this every trigger tooth.  It will schedule all required injector events.
 	void onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase, float nextPhase);
 
-	/**
-	 * this method schedules all fuel events for an engine cycle
-	 */
+	// Calculate injector opening angle, pins, and mode for all injectors
 	void addFuelEvents();
-	bool addFuelEventsForCylinder(int cylinderIndex);
 
 	void resetOverlapping();
 
@@ -70,6 +67,9 @@ public:
 	 */
 	InjectionEvent elements[MAX_CYLINDER_COUNT];
 	bool isReady = false;
+
+private:
+	bool addFuelEventsForCylinder(int cylinderIndex);
 };
 
 FuelSchedule * getFuelSchedule();
