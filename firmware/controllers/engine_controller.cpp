@@ -408,8 +408,6 @@ void commonInitEngineController() {
 	 * properly detect un-assigned output pins
 	 */
 	prepareOutputSignals();
-
-	engine->injectionEvents.addFuelEvents();
 #endif // EFI_ENGINE_CONTROL
 
 #if EFI_SENSOR_CHART
