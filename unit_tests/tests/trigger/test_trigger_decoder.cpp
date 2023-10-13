@@ -777,9 +777,6 @@ void doTestFuelSchedulerBug299smallAndMedium(int startUpDelayMs) {
 ////	assertInjectorDownEvent("8@9", 9, MS2US(55), 0);
 
 	ASSERT_EQ( 0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testFuelSchedulerBug299smallAndMedium";
-/*
-	ASSERT_EQ(ObdCode::CUSTOM_OBD_SKIPPED_FUEL, unitTestWarningCodeState.recentWarnings.get(0).Code);
-*/
 }
 
 void setInjectionMode(int value) {
@@ -1015,9 +1012,6 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 	eth.moveTimeForwardUs(MS2US(20));
 	eth.executeActions();
 	ASSERT_EQ( 0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testFuelSchedulerBug299smallAndLarge";
-	/*
-	ASSERT_EQ(ObdCode::CUSTOM_OBD_SKIPPED_FUEL, unitTestWarningCodeState.recentWarnings.get(0).Code);
-*/
 }
 
 TEST(big, testSparkReverseOrderBug319) {
