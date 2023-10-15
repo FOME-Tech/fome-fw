@@ -109,6 +109,7 @@ public:
 	RegisteredOutputPin checkEnginePin;
 
 	RegisteredNamedOutputPin tachOut;
+	RegisteredNamedOutputPin speedoOut;
 
 	OutputPin sdCsPin;
 	OutputPin accelerometerCs;
