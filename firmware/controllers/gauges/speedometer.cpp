@@ -22,7 +22,7 @@ void speedoUpdate() {
 	speedoPwm.setFrequency(freq);
 }
 
-void speedoInit() {
+void initSpeedometer() {
 	hasSpeedoInit = false;
 
 	if (!isBrainPinValid(engineConfiguration->speedometerOutputPin)) {

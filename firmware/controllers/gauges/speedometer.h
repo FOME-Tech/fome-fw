@@ -1,4 +1,4 @@
 #pragma once
 
-void speedoInit();
+void initSpeedometer();
 void speedoUpdate();
