@@ -149,7 +149,7 @@ EnginePins::EnginePins() :
 		alternatorPin("Alternator control", CONFIG_PIN_OFFSETS(alternatorControl)),
 		checkEnginePin("checkEnginePin", CONFIG_PIN_OFFSETS(malfunctionIndicator)),
 		tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput)),
-		speedoOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput))
+		speedoOut("speedoOut", CONFIG_OFFSET(speedometerOutputPin))
 {
 	hpfpValve.name = PROTOCOL_HPFP_NAME;
 
