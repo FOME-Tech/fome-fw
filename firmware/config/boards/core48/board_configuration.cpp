@@ -35,7 +35,17 @@ static void setIgnitionPins() {
 }
 
 
-void setSdCardConfigurationOverrides(void) {
+// PE3 is error LED, configured in board.mk
+Gpio getCommsLedPin() {
+	return Gpio::G13;
+}
+
+Gpio getRunningLedPin() {
+	return Gpio::G10;
+}
+
+Gpio getWarningLedPin() {
+	return Gpio::G11;
 }
 
 static void setEtbConfig() {
@@ -89,19 +99,10 @@ static void setStepperConfig() {
 	engineConfiguration->stepperEnablePin = Gpio::C7;
 }
 
-
-static void setLedPins() {
-	// G12 is error LED, configured in board.mk
-	//engineConfiguration->communicationLedPin = Gpio::G13;
-	//engineConfiguration->runningLedPin = Gpio::G10;
-	//engineConfiguration->warningLedPin = Gpio::G11;
-}
-
 static void setupSdCard() {
 	
 	//SD CARD overwrites
-	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_3;	
-	
+	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_3;		
 
 	engineConfiguration->is_enabled_spi_3 = true;
 	engineConfiguration->spi3sckPin = Gpio::C10;
@@ -125,10 +126,10 @@ static void setupEGT() {
 
 
 void setBoardConfigOverrides() {
+	setupVbatt();
 	setupSdCard();
 	setEtbConfig();
 	setStepperConfig();
-	setLedPins();
 	setupEGT();
 
 	engineConfiguration->clt.config.bias_resistor = 2490;
@@ -149,6 +150,10 @@ void setBoardConfigOverrides() {
 	//CAN 2 bus overwrites
 	engineConfiguration->can2RxPin = Gpio::B5;
 	engineConfiguration->can2TxPin = Gpio::B6;
+
+	//onboard lps22 barometer
+	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
+	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
 }
 
 static void setupDefaultSensorInputs() {
@@ -162,9 +167,6 @@ static void setupDefaultSensorInputs() {
 	
 	engineConfiguration->baroSensor.hwChannel = EFI_ADC_NONE;
 
-	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
-	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
-
 }
 
 
@@ -172,7 +174,6 @@ void setBoardDefaultConfiguration(void) {
 	setInjectorPins();
 	setIgnitionPins();
 	setupDefaultSensorInputs();
-	setupVbatt();
 
 
 	engineConfiguration->canWriteEnabled = true;
@@ -182,13 +183,14 @@ void setBoardDefaultConfiguration(void) {
 	engineConfiguration->canBaudRate = B500KBPS;
 	engineConfiguration->can2BaudRate = B500KBPS;
 
+	//ECU has two SD cards one fixed ine removable
 	engineConfiguration->sdCardCsPin = Gpio::B3;
 		
 	strncpy(config->luaScript, R"(
 
-function onTick()
+	function onTick()
 
-end
+	end
 
     )", efi::size(config->luaScript));
 }
