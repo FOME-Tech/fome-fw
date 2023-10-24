@@ -1,10 +1,10 @@
 /**
- * @file boards/core8/board.h
+ * @file boards/core48/board.h
  *
  * @author Ben Brazdziunas, 2022
  */
 
-#define BOARD_NAME "core8"
+#define BOARD_NAME "core48"
 
 #ifndef BOARD_IO_H
 #define BOARD_IO_H

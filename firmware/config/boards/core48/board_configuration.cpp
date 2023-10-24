@@ -1,7 +1,7 @@
 /**
  * @file boards/core48/board_configuration.cpp
  *
- * @brief Configuration defaults for the core8 board
+ * @brief Configuration defaults for the core48 board
  *
  * @author Ben Brazdziunas,  2022
  */
