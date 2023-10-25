@@ -12,7 +12,7 @@ Gpio getRunningLedPin() {
 }
 
 Gpio getWarningLedPin() {
-	// this board has no warning pin
+	// this board has no warning led
 	return Gpio::Unassigned;
 }
 
