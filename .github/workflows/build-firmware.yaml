@@ -78,7 +78,7 @@ jobs:
           ./firmware/ext/openblt/Host/BootCommander
 
   build-firmware:
-    needs: build-openblt-tools-linux, build-openblt-tools-macos
+    needs: [build-openblt-tools-linux, build-openblt-tools-macos]
     runs-on: ubuntu-latest-selfhost
 
     strategy:
