@@ -25,7 +25,7 @@ jobs:
 
     - name: cmake configure libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
     - name: make libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
@@ -33,7 +33,7 @@ jobs:
 
     - name: cmake configure BootCommander
       working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
-      run: cmake ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
     - name: make BootCommander
       working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
@@ -56,7 +56,7 @@ jobs:
 
     - name: cmake configure libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED=OFF ..
 
     - name: make libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
@@ -64,7 +64,7 @@ jobs:
 
     - name: cmake configure BootCommander
       working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
-      run: cmake ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
     - name: make BootCommander
       working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
@@ -72,9 +72,8 @@ jobs:
 
     - uses: actions/upload-artifact@v3
       with:
-        name: bootcommander-linux
+        name: bootcommander-macos
         path: |
-          ./firmware/ext/openblt/Host/libopenblt.so
           ./firmware/ext/openblt/Host/BootCommander
 
   build-firmware:
