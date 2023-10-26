@@ -25,7 +25,7 @@ jobs:
 
     - name: cmake configure libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED=OFF ..
 
     - name: make libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
@@ -42,9 +42,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: bootcommander-linux
-        path: |
-          ./firmware/ext/openblt/Host/libopenblt.so
-          ./firmware/ext/openblt/Host/BootCommander
+        path: ./firmware/ext/openblt/Host/BootCommander
 
   build-openblt-tools-macos:
     runs-on: macos-latest
@@ -73,8 +71,7 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: bootcommander-macos
-        path: |
-          ./firmware/ext/openblt/Host/BootCommander
+        path: ./firmware/ext/openblt/Host/BootCommander
 
   build-firmware:
     needs: [build-openblt-tools-linux, build-openblt-tools-macos]
@@ -331,11 +328,17 @@ jobs:
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
       run: OS="Windows_NT" bash misc/jenkins/build_simulator.sh
 
-    - name: Download OpenBLT BootCommander Tool
+    - name: Download OpenBLT BootCommander Tool (Linux)
       uses: actions/download-artifact@v3
       with:
         name: bootcommander-linux
-        path: ./firmware/ext/openblt/Host/
+        path: ./firmware/ext/openblt/Host/linux/
+
+    - name: Download OpenBLT BootCommander Tool (MacOS)
+      uses: actions/download-artifact@v3
+      with:
+        name: bootcommander-macos
+        path: ./firmware/ext/openblt/Host/macos/
 
     - name: Package Bundle
       if: ${{ env.full == 'true' }}
