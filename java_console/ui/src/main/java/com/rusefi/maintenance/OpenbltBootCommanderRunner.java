@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 public final class OpenbltBootCommanderRunner {
-    public static final boolean IS_WIN = ;
-
     private static String getBootCommanderBinary() {
         String osName = System.getProperty("os.name").toLowerCase();
         if (osName.contains("win")) {
