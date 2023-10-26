@@ -7,9 +7,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 public final class OpenbltBootCommanderRunner {
-    public static final boolean IS_WIN = System.getProperty("os.name").toLowerCase().contains("win");
+    public static final boolean IS_WIN = ;
 
-    private static final String BOOT_COMMANDER = "BootCommander" + (IS_WIN ? ".exe" : "");
+    private static String getBootCommanderBinary() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("win")) {
+            return "BootCommander.exe";
+        }
+
+        if (osName.contains("mac") || osName.contains("darwin")) {
+            return "macos/BootCommander";
+        }
+
+        return "linux/BootCommander";
+    }
+
+    private static final String BOOT_COMMANDER = getBootCommanderBinary();
     private static final String OPENBLT_BINARY_LOCATION = Launcher.TOOLS_PATH + File.separator + "openblt";
 
     public static void flashSerial(String port, String file, UpdateOperationCallbacks callbacks) {
