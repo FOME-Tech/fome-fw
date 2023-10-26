@@ -24,9 +24,11 @@ public:
 	VvtController(int index, int bankIndex, int camIndex);
 
 	void init(const ValueProvider3D* targetMap, IPwm* pwm);
+	void setTargetOffset(float targetOffset);
 
 	// EngineModule implementation
 	void onFastCallback() override;
+	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
 
 	// ClosedLoopController implementation
 	expected<angle_t> observePlant() const override;
@@ -47,6 +49,9 @@ private:
 
 	const ValueProvider3D* m_targetMap = nullptr;
 	IPwm* m_pwm = nullptr;
+
+	Timer m_targetOffsetTimer;
+	float m_targetOffset;
 };
 
 // Unique types for each VVT so they can be engine modules

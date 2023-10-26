@@ -94,7 +94,6 @@ void rusEfiFunctionalTest(void) {
 
 	initializeConsole();
 
-	initStatusLoop();
 	initDataStructures();
 
 
@@ -109,6 +108,7 @@ void rusEfiFunctionalTest(void) {
 
 	initTriggerCentral();
 	initTriggerEmulator();
+	initVvtActuators();
 
 	startStatusThreads();
 

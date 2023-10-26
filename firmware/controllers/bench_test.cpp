@@ -322,6 +322,20 @@ static void handleBenchCategory(uint16_t index) {
 	case BENCH_FUEL_PUMP_OFF:
 		engine->module<FuelPumpController>()->forcePumpState(false);
 		return;
+#if EFI_VVT_PID
+	case BENCH_VVT_1_TARGET_BUMP:
+		engine->module<VvtController1>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+		return;
+	case BENCH_VVT_2_TARGET_BUMP:
+		engine->module<VvtController2>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+		return;
+	case BENCH_VVT_3_TARGET_BUMP:
+		engine->module<VvtController3>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+		return;
+	case BENCH_VVT_4_TARGET_BUMP:
+		engine->module<VvtController4>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+		return;
+#endif // EFI_VVT_PID
 	default:
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench function %d", index);
 	}

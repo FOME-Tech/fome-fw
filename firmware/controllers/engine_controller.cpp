@@ -46,6 +46,7 @@
 #include "boost_control.h"
 #include "launch_control.h"
 #include "tachometer.h"
+#include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
 #include "buttonshift.h"
@@ -159,7 +160,7 @@ static void resetAccel() {
 
 	for (size_t i = 0; i < efi::size(engine->injectionEvents.elements); i++)
 	{
-		engine->injectionEvents.elements[i].wallFuel.resetWF();
+		engine->injectionEvents.elements[i].getWallFuel().resetWF();
 	}
 }
 
@@ -192,6 +193,10 @@ static void doPeriodicSlowCallback() {
 	}
 
 	engine->periodicSlowCallback();
+#else /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
+	#if EFI_INTERNAL_FLASH
+		writeToFlashIfPending();
+	#endif /* EFI_INTERNAL_FLASH */
 #endif /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
 
 #if EFI_TCU
@@ -468,6 +473,7 @@ void commonInitEngineController() {
 #endif /* EFI_UNIT_TEST */
 
 	initTachometer();
+	initSpeedometer();
 }
 
 // Returns false if there's an obvious problem with the loaded configuration
@@ -623,9 +629,9 @@ void initEngineController() {
 	initAlternatorCtrl();
 #endif /* EFI_ALTERNATOR_CONTROL */
 
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 	initVvtActuators();
-#endif /* EFI_AUX_PID */
+#endif /* EFI_VVT_PID */
 
 #if EFI_MALFUNCTION_INDICATOR
 	initMalfunctionIndicator();

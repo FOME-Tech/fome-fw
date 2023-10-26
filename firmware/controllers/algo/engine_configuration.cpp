@@ -168,17 +168,11 @@ void incrementGlobalConfigurationVersion() {
 
 	boardOnConfigurationChange(&activeConfiguration);
 
-/**
- * All these callbacks could be implemented as listeners, but these days I am saving RAM
- */
 	engine->preCalculate();
 #if EFI_ALTERNATOR_CONTROL
 	onConfigurationChangeAlternatorCallback(&activeConfiguration);
 #endif /* EFI_ALTERNATOR_CONTROL */
 
-#if EFI_BOOST_CONTROL
-	onConfigurationChangeBoostCallback(&activeConfiguration);
-#endif
 #if EFI_ELECTRONIC_THROTTLE_BODY
 	onConfigurationChangeElectronicThrottleCallback(&activeConfiguration);
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
@@ -414,6 +408,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->canSleepPeriodMs = 50;
 	engineConfiguration->canReadEnabled = true;
 	engineConfiguration->canWriteEnabled = true;
+	engineConfiguration->canVssScaling = 1.0f;
 
 	// Don't enable, but set default address
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
@@ -736,11 +731,17 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
 		setEngineProteusGearboxManInTheMiddle();
 		break;
-	case engine_type_e::PROTEUS_MIATA_NA6:
-		setMiataNa6_Proteus();
+	case engine_type_e::POLYGONUS_MIATA_NA6:
+		setMiataNa6_Polygonus();
 		break;
-	case engine_type_e::PROTEUS_MIATA_NB2:
-		setMiataNB2_Proteus();
+	case engine_type_e::POLYGONUS_MIATA_NB1:
+		setMiataNB1_Polygonus();
+		break;
+	case engine_type_e::POLYGONUS_MIATA_NB2:
+		setMiataNB2_Polygonus();
+		break;
+	case engine_type_e::POLYGONUS_MIATA_MSM:
+		setMiataNB_MSM_Polygonus();
 		break;
 #ifdef HARDWARE_CI
 	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:

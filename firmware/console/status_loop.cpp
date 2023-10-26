@@ -85,14 +85,8 @@ extern WaveChart waveChart;
 
 #include "sensor_chart.h"
 
-int warningEnabled = true;
-
 extern int maxTriggerReentrant;
 extern uint32_t maxLockedDuration;
-
-static void setWarningEnabled(int value) {
-	warningEnabled = value;
-}
 
 /**
  * This is useful if we are changing engine mode dynamically
@@ -148,7 +142,6 @@ static void printEngineSnifferPinMappings() {
 		extern const char *vvtNames[];
 		printOutPin(vvtNames[i], engineConfiguration->camInputs[i]);
 	}
-	printOutPin(PROTOCOL_TACH_NAME, engineConfiguration->tachOutputPin);
 #if EFI_LOGIC_ANALYZER
 	printOutPin(PROTOCOL_WA_CHANNEL_1, engineConfiguration->logicAnalyzerPins[0]);
 	printOutPin(PROTOCOL_WA_CHANNEL_2, engineConfiguration->logicAnalyzerPins[1]);
@@ -214,7 +207,6 @@ void updateDevConsoleState() {
 	// todo: unify with simulator!
 	if (hasFirmwareError()) {
 		efiPrintf("%s error: %s", CRITICAL_PREFIX, getCriticalErrorMessage());
-		warningEnabled = false;
 		return;
 	}
 #endif /* EFI_PROD_CODE */
@@ -241,18 +233,6 @@ void updateDevConsoleState() {
 	printWave(&logicAnalyzerLogger);
 	scheduleLogging(&logicAnalyzerLogger);
 #endif /* EFI_LOGIC_ANALYZER */
-}
-
-__attribute__((weak)) Gpio getCommsLedPin() {
-	return Gpio::Unassigned;
-}
-
-__attribute__((weak)) Gpio getWarningLedPin() {
-	return Gpio::Unassigned;
-}
-
-__attribute__((weak)) Gpio getRunningLedPin() {
-	return Gpio::Unassigned;
 }
 
 static OutputPin* leds[] = { &enginePins.warningLedPin, &enginePins.runningLedPin,
@@ -372,6 +352,18 @@ static void updateTempSensors() {
 
 	SensorResult auxTemp2 = Sensor::get(SensorType::AuxTemp2);
 	engine->outputChannels.auxTemp2 = auxTemp2.value_or(0);
+
+	SensorResult oilTemp = Sensor::get(SensorType::OilTemperature);
+	engine->outputChannels.oilTemp = oilTemp.value_or(0);
+
+	SensorResult fuelTemp = Sensor::get(SensorType::FuelTemperature);
+	engine->outputChannels.fuelTemp = fuelTemp.value_or(0);
+
+	SensorResult ambientTemp = Sensor::get(SensorType::AmbientTemperature);
+	engine->outputChannels.ambientTemp = ambientTemp.value_or(0);
+
+	SensorResult compressorDischargeTemp = Sensor::get(SensorType::CompressorDischargeTemperature);
+	engine->outputChannels.compressorDischargeTemp = compressorDischargeTemp.value_or(0);
 }
 
 static void updateThrottles() {
@@ -404,10 +396,12 @@ static void updateLambda() {
 	float lambdaValue = Sensor::getOrZero(SensorType::Lambda1);
 	engine->outputChannels.lambdaValue = lambdaValue;
 	engine->outputChannels.AFRValue = lambdaValue * engine->fuelComputer.stoichiometricRatio;
+	engine->outputChannels.afrGasolineScale = lambdaValue * STOICH_RATIO;
 
 	float lambda2Value = Sensor::getOrZero(SensorType::Lambda2);
 	engine->outputChannels.lambdaValue2 = lambda2Value;
 	engine->outputChannels.AFRValue2 = lambda2Value * engine->fuelComputer.stoichiometricRatio;
+	engine->outputChannels.afr2GasolineScale = lambda2Value * STOICH_RATIO;
 }
 
 static void updateFuelSensors() {
@@ -474,6 +468,9 @@ static void updatePressures() {
 	engine->outputChannels.MAPValue = Sensor::getOrZero(SensorType::Map);
 	engine->outputChannels.oilPressure = Sensor::getOrZero(SensorType::OilPressure);
 
+	engine->outputChannels.compressorDischargePressure = Sensor::getOrZero(SensorType::CompressorDischargePressure);
+	engine->outputChannels.throttleInletPressure = Sensor::getOrZero(SensorType::ThrottleInletPressure);
+
 	engine->outputChannels.auxLinear1 = Sensor::getOrZero(SensorType::AuxLinear1);
 	engine->outputChannels.auxLinear2 = Sensor::getOrZero(SensorType::AuxLinear2);
 }
@@ -511,28 +508,28 @@ static void updateFuelCorrections() {
 }
 
 static void updateFuelResults() {
-	engine->outputChannels.fuelFlowRate = engine->engineState.fuelConsumption.getConsumptionGramPerSecond();
-	engine->outputChannels.totalFuelConsumption = engine->engineState.fuelConsumption.getConsumedGrams();
+	engine->outputChannels.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+	engine->outputChannels.totalFuelConsumption = engine->module<TripOdometer>()->getConsumedGrams();
+	engine->outputChannels.ignitionOnTime = engine->module<TripOdometer>()->getIgnitionOnTime();
+	engine->outputChannels.engineRunTime = engine->module<TripOdometer>()->getEngineRunTime();
+
+	// output channel in km
+	engine->outputChannels.distanceTraveled = 0.001f * engine->module<TripOdometer>()->getDistanceMeters();
 }
 
 static void updateFuelInfo() {
 	updateFuelCorrections();
 	updateFuelResults();
 
-	const auto& wallFuel = engine->injectionEvents.elements[0].wallFuel;
+	const auto& wallFuel = engine->injectionEvents.elements[0].getWallFuel();
 	engine->outputChannels.wallFuelAmount = wallFuel.getWallFuel() * 1000;			// Convert grams to mg
 	engine->outputChannels.wallFuelCorrectionValue = wallFuel.wallFuelCorrection * 1000;	// Convert grams to mg
-
-	engine->outputChannels.injectionOffset = engine->engineState.injectionOffset;
 
 	engine->outputChannels.veValue = engine->engineState.currentVe;
 }
 
 static void updateIgnition(int rpm) {
 	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
-
-	engine->outputChannels.knockCount = engine->module<KnockController>()->getKnockCount();
-	engine->outputChannels.knockRetard = engine->module<KnockController>()->getKnockRetard();
 }
 
 static void updateFlags() {
@@ -558,13 +555,6 @@ static void updateFlags() {
 #if EFI_INTERNAL_FLASH
 	engine->outputChannels.needBurn = getNeedToWriteConfiguration();
 #endif /* EFI_INTERNAL_FLASH */
-}
-
-// weird thing: one of the reasons for this to be a separate method is stack usage reduction in non-optimized build
-// see https://github.com/rusefi/rusefi/issues/3302 and linked tickets
-static void updateTpsDebug() {
-	// TPS 1 pri/sec ratio - useful for ford ETB that has partial-range second channel
-	engine->outputChannels.debugFloatField5 = 100 * Sensor::getOrZero(SensorType::Tps1Primary) / Sensor::getOrZero(SensorType::Tps1Secondary);
 }
 
 // sensor state for EFI Analytics Tuner Studio
@@ -725,13 +715,6 @@ DcHardware *getdcHardware();
 		postMapState(tsOutputChannels);
 		break;
 #endif /* EFI_MAP_AVERAGING */
-	case DBG_ANALOG_INPUTS:
-		tsOutputChannels->debugFloatField4 = isAdcChannelValid(engineConfiguration->map.sensor.hwChannel) ? getVoltageDivided("map", engineConfiguration->map.sensor.hwChannel) : 0.0f;
-		tsOutputChannels->debugFloatField7 = isAdcChannelValid(engineConfiguration->afr.hwChannel) ? getVoltageDivided("ego", engineConfiguration->afr.hwChannel) : 0.0f;
-		break;
-	case DBG_ANALOG_INPUTS2:
-		updateTpsDebug();
-		break;
 	case DBG_INSTANT_RPM:
 		{
 #if EFI_SHAFT_POSITION_INPUT
@@ -756,10 +739,6 @@ DcHardware *getdcHardware();
 }
 
 #endif /* EFI_TUNER_STUDIO */
-
-void initStatusLoop() {
-	addConsoleActionI("warn", setWarningEnabled);
-}
 
 void startStatusThreads() {
 	// todo: refactoring needed, this file should probably be split into pieces

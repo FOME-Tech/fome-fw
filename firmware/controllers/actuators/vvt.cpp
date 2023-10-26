@@ -26,7 +26,7 @@ VvtController::VvtController(int index, int bankIndex, int camIndex)
 
 void VvtController::init(const ValueProvider3D* targetMap, IPwm* pwm) {
 	// Use the same settings for the Nth cam in every bank (ie, all exhaust cams use the same PID)
-	m_pid.initPidClass(&engineConfiguration->auxPid[index]);
+	m_pid.initPidClass(&engineConfiguration->auxPid[m_cam]);
 
 	m_targetMap = targetMap;
 	m_pwm = pwm;
@@ -38,11 +38,13 @@ void VvtController::onFastCallback() {
 		return;
 	}
 
-	if (engine->auxParametersVersion.isOld(engine->getGlobalConfigurationVersion())) {
+	update();
+}
+
+void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+	if (!m_pid.isSame(&previousConfig->auxPid[m_cam])) {
 		m_pid.reset();
 	}
-
-	update();
 }
 
 expected<angle_t> VvtController::observePlant() const {
@@ -58,6 +60,10 @@ expected<angle_t> VvtController::getSetpoint() {
 	float load = getFuelingLoad();
 	float target = m_targetMap->getValue(rpm, load);
 
+	if (!m_targetOffsetTimer.hasElapsedSec(2)) {
+		target += m_targetOffset;
+	}
+
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.vvtTargets[index] = target;
 #endif
@@ -66,6 +72,12 @@ expected<angle_t> VvtController::getSetpoint() {
 
 	return target;
 }
+
+void VvtController::setTargetOffset(float targetOffset) {
+	m_targetOffset = targetOffset;
+	m_targetOffsetTimer.reset();
+}
+
 
 expected<percent_t> VvtController::getOpenLoop(angle_t target) {
 	// TODO: could we do VVT open loop?
@@ -128,7 +140,7 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 
 static const char *vvtOutputNames[CAM_INPUTS_COUNT] = {
 "Vvt Output#1",

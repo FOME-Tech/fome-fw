@@ -16,9 +16,6 @@
 
 #define NAN_FREQUENCY_SLEEP_PERIOD_MS 100
 
-// 99% duty cycle
-#define FULL_PWM_THRESHOLD 0.99
-
 typedef struct {
 	/**
 	 * a copy so that all phases are executed on the same period, even if another thread
@@ -39,7 +36,7 @@ typedef struct {
 class PwmConfig;
 
 typedef void (pwm_cycle_callback)(PwmConfig *state);
-typedef void (pwm_gen_callback)(int stateIndex, void *arg);
+typedef void (pwm_gen_callback)(int stateIndex, PwmConfig* pwm);
 
 typedef enum {
 	PM_ZERO,
@@ -53,9 +50,8 @@ typedef enum {
 class PwmConfig {
 public:
 	PwmConfig();
-	void *arg = nullptr;
 
-	void weComplexInit(const char *msg,
+	void weComplexInit(
 			ExecutorInterface *executor,
 			MultiChannelStateSequence const * seq,
 			pwm_cycle_callback *pwmCycleCallback,

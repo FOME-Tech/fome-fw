@@ -13,6 +13,7 @@
 #include "state_sequence.h"
 #include "engine_configuration_generated_structures.h"
 #include <rusefi/isnan.h>
+#include "engine_state.h"
 
 #define FOUR_STROKE_ENGINE_CYCLE 720
 
@@ -26,26 +27,30 @@
 #define assertAngleRange(angle, msg, code) {}
 #endif
 
-/**
- * @brief Shifts angle into the [0..720) range for four stroke and [0..360) for two stroke
- * I guess this implementation would be faster than 'angle % engineCycle'
- */
-#define wrapAngle2(angle, msg, code, engineCycle)			   	    	    \
-	{																		\
-   	    if (cisnan(angle)) {                                                \
-		   firmwareError(ObdCode::CUSTOM_ERR_ANGLE, "a NaN %s", msg);                \
-		   angle = 0;                                                       \
-	    }                                                                   \
-		assertAngleRange(angle, msg, code);	   					            \
-		float engineCycleDurationLocalCopy = engineCycle;	                \
-		/* todo: split this method into 'fixAngleUp' and 'fixAngleDown'*/   \
-		/*       as a performance optimization?*/                           \
-		while (angle < 0)                       							\
-			angle += engineCycleDurationLocalCopy;   						\
-			/* todo: would 'if' work as good as 'while'? */                 \
-		while (angle >= engineCycleDurationLocalCopy)						\
-			angle -= engineCycleDurationLocalCopy;   						\
+// Shifts angle into the [0..720) range for four stroke and [0..360) for two stroke
+static inline void wrapAngle(angle_t& angle, const char* msg, ObdCode code) {
+	if (cisnan(angle)) {
+		firmwareError(ObdCode::CUSTOM_ERR_ANGLE, "a NaN %s", msg);
+		angle = 0;
 	}
+
+	assertAngleRange(angle, msg, code);
+	float engineCycle = getEngineState()->engineCycle;
+
+	while (angle < 0) {
+		angle += engineCycle;
+	}
+
+	while (angle >= engineCycle) {
+		angle -= engineCycle;
+	}
+}
+
+// proper method avoids un-wrapped state of variables
+static inline angle_t wrapAngleMethod(angle_t param, const char *msg = "", ObdCode code = ObdCode::OBD_PCM_Processor_Fault) {
+	wrapAngle(param, msg, code);
+	return param;
+}
 
 class TriggerDecoderBase;
 class TriggerFormDetails;

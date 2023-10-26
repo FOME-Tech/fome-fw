@@ -15,7 +15,39 @@ on:
         type: string
 
 jobs:
+  build-openblt-tools-linux:
+    runs-on: ubuntu-latest-selfhost
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: cmake configure libopenblt
+      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
+      run: cmake ..
+
+    - name: make libopenblt
+      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
+      run: make -j8
+
+    - name: cmake configure BootCommander
+      working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
+      run: cmake ..
+
+    - name: make BootCommander
+      working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
+      run: make -j8
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: bootcommander-linux
+        path: |
+          ./firmware/ext/openblt/Host/libopenblt.so
+          ./firmware/ext/openblt/Host/BootCommander
+
   build-firmware:
+    needs: build-openblt-tools-linux
     runs-on: ubuntu-latest-selfhost
 
     strategy:
@@ -32,21 +64,25 @@ jobs:
           #   folder: config/boards/hellen/hellen81
           #   ini-file: fome_hellen81.ini
 
-          - build-target: alphax-2chan
-            folder: config/boards/hellen/alphax-2chan
-            ini-file: fome_alphax-2chan.ini
+          # - build-target: alphax-2chan
+          #   folder: config/boards/hellen/alphax-2chan
+          #   ini-file: fome_alphax-2chan.ini
 
-          - build-target: alphax-4chan
-            folder: config/boards/hellen/alphax-4chan
-            ini-file: fome_alphax-4chan.ini
+          # - build-target: alphax-4chan
+          #   folder: config/boards/hellen/alphax-4chan
+          #   ini-file: fome_alphax-4chan.ini
 
-          - build-target: alphax-8chan
-            folder: config/boards/hellen/alphax-8chan
-            ini-file: fome_alphax-8chan.ini
+          # - build-target: alphax-8chan
+          #   folder: config/boards/hellen/alphax-8chan
+          #   ini-file: fome_alphax-8chan.ini
 
           # - build-target: harley81
           #   folder: config/boards/hellen/harley81
           #   ini-file: fome_harley81.ini
+
+          - build-target: small-can-board
+            folder: config/boards/hellen/small-can-board
+            ini-file: rusefi_small-can-board.ini
 
           # - build-target: hellen88bmw
           #   folder: config/boards/hellen/hellen88bmw
@@ -84,9 +120,9 @@ jobs:
           #   folder: config/boards/hellen/hellen-honda-k
           #   ini-file: fome_hellen-honda-k.ini
 
-          - build-target: hellen154hyundai
-            folder: config/boards/hellen/hellen154hyundai
-            ini-file: fome_hellen154hyundai.ini
+          # - build-target: hellen154hyundai
+          #   folder: config/boards/hellen/hellen154hyundai
+          #   ini-file: fome_hellen154hyundai.ini
 
           # - build-target: frankenso_na6
           #   folder: config/boards/frankenso
@@ -156,9 +192,13 @@ jobs:
           #   folder: config/boards/f429-discovery
           #   ini-file: fome_f429-discovery.ini
 
-          # - build-target: core8
-          #   folder: config/boards/core8
-          #   ini-file: fome_core8.ini
+          - build-target: core8
+            folder: config/boards/core8
+            ini-file: fome_core8.ini
+
+          - build-target: core48
+            folder: config/boards/core48
+            ini-file: fome_core48.ini
 
           # - build-target: 48way
           #   folder: config/boards/48way
@@ -190,7 +230,7 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -260,6 +300,12 @@ jobs:
       if: ${{ env.full == 'true' }}
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
       run: OS="Windows_NT" bash misc/jenkins/build_simulator.sh
+
+    - name: Download OpenBLT BootCommander Tool
+      uses: actions/download-artifact@v3
+      with:
+        name: bootcommander-linux
+        path: ./firmware/ext/openblt/Host/
 
     - name: Package Bundle
       if: ${{ env.full == 'true' }}

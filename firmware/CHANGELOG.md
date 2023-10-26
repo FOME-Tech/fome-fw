@@ -38,12 +38,21 @@ Release template (copy/paste this for new release):
  - Configurable ignition timing limits, adding safety particularly for engines running wasted spark with a large cam #211
  - Improved injection, ignition bench test UI and functionality: More gauges, fuel pump on/off buttons for injector testing, and configurable duration/count #219
  - Preset for Mazdaspeed Miata (NB) IAT sensor
+ - Option to compensate Alpha-N fueling with intake air temperature
+ - Gasoline-scale AFR gauge: instead of showing true AFR, show "gasoline scale" where 14.7 means stoichiometric
+ - Decode fuel temperature from flex fuel sensors #254
+ - Allow brief operation over 100% injector duty cycle and add configurable duty cycle limits #215
+ - Buttons to bump VVT targets for testing/PID tuning
 
 ### Fixed
  - Improved bench test resolution (more usable for testing injectors, dwell, etc)
  - Maximum knock retard table displays correct Y axis values in TunerStudio
  - Make errors about fuel pressure sensors less aggressive #111 #117
  - Always operate in "two wire" mode for batch fuel, fixing batch firing order #23
+ - Fix "Toyota 3 Tooth Cam" VVT mode (1JZ, 2JZ, 1G, etc) actually works now #237
+ - Fix autotune while TS project is in AFR mode - corrections now made properly for target AFR table values
+ - Changing idle stepper settings causes kernel panic #265
+ - Data log channel "Fuel: Injection timing SOI" indicates correct values
 
 ## May 2023 Release
 
