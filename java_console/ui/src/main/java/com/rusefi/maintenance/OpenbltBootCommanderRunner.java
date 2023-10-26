@@ -16,10 +16,10 @@ public final class OpenbltBootCommanderRunner {
         }
 
         if (osName.contains("mac") || osName.contains("darwin")) {
-            return "macos/BootCommander";
+            return "BootCommander_macos";
         }
 
-        return "linux/BootCommander";
+        return "BootCommander_linux";
     }
 
     private static final String BOOT_COMMANDER = getBootCommanderBinary();
