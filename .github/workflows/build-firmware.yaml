@@ -83,9 +83,9 @@ jobs:
       matrix:
         include:
           # Board configurations
-          # - build-target: hellen72
-          #   folder: config/boards/hellen/hellen72
-          #   ini-file: fome_hellen72.ini
+          - build-target: hellen72
+            folder: config/boards/hellen/hellen72
+            ini-file: fome_hellen72.ini
 
           # - build-target: hellen81
           #   folder: config/boards/hellen/hellen81
@@ -107,29 +107,29 @@ jobs:
           #   folder: config/boards/hellen/harley81
           #   ini-file: fome_harley81.ini
 
-          # - build-target: small-can-board
-          #   folder: config/boards/hellen/small-can-board
-          #   ini-file: rusefi_small-can-board.ini
+          - build-target: small-can-board
+            folder: config/boards/hellen/small-can-board
+            ini-file: rusefi_small-can-board.ini
 
           # - build-target: hellen88bmw
           #   folder: config/boards/hellen/hellen88bmw
           #   ini-file: fome_hellen88bmw.ini
 
-          # - build-target: hellen-nb1
-          #   folder: config/boards/hellen/hellen-nb1
-          #   ini-file: fome_hellen-nb1.ini
+          - build-target: hellen-nb1
+            folder: config/boards/hellen/hellen-nb1
+            ini-file: fome_hellen-nb1.ini
 
           # - build-target: hellen-gm-e67
           #   folder: config/boards/hellen/hellen-gm-e67
           #   ini-file: fome_hellen-gm-e67.ini
 
-          # - build-target: hellenNA8_96
-          #   folder: config/boards/hellen/hellenNA8_96
-          #   ini-file: fome_hellenNA8_96.ini
+          - build-target: hellenNA8_96
+            folder: config/boards/hellen/hellenNA8_96
+            ini-file: fome_hellenNA8_96.ini
 
-          # - build-target: hellenNA6
-          #   folder: config/boards/hellen/hellen64_miataNA6_94
-          #   ini-file: fome_hellenNA6.ini
+          - build-target: hellenNA6
+            folder: config/boards/hellen/hellen64_miataNA6_94
+            ini-file: fome_hellenNA6.ini
 
           # - build-target: hellen128
           #   folder: config/boards/hellen/hellen128
@@ -171,9 +171,9 @@ jobs:
           #   folder: config/boards/microrusefi
           #   ini-file: fome_mre_f4.ini
 
-          # - build-target: mre_f7
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f7.ini
+          - build-target: mre_f7
+            folder: config/boards/microrusefi
+            ini-file: fome_mre_f7.ini
 
           # - build-target: prometheus_405
           #   folder: config/boards/prometheus
@@ -183,21 +183,21 @@ jobs:
           #   folder: config/boards/prometheus
           #   ini-file: fome_prometheus_469.ini
 
-          # - build-target: proteus_f4
-          #   folder: config/boards/proteus
-          #   ini-file: fome_proteus_f4.ini
+          - build-target: proteus_f4
+            folder: config/boards/proteus
+            ini-file: fome_proteus_f4.ini
 
-          # - build-target: proteus_f7
-          #   folder: config/boards/proteus
-          #   ini-file: fome_proteus_f7.ini
+          - build-target: proteus_f7
+            folder: config/boards/proteus
+            ini-file: fome_proteus_f7.ini
 
-          # - build-target: proteus_h7
-          #   folder: config/boards/proteus
-          #   ini-file: fome_proteus_h7.ini
+          - build-target: proteus_h7
+            folder: config/boards/proteus
+            ini-file: fome_proteus_h7.ini
 
-          # - build-target: stm32f429_nucleo
-          #   folder: config/boards/nucleo_f429
-          #   ini-file: fome_stm32f429_nucleo.ini
+          - build-target: stm32f429_nucleo
+            folder: config/boards/nucleo_f429
+            ini-file: fome_stm32f429_nucleo.ini
 
           # - build-target: stm32f767_nucleo
           #   folder: config/boards/nucleo_f767
@@ -219,17 +219,13 @@ jobs:
           #   folder: config/boards/f429-discovery
           #   ini-file: fome_f429-discovery.ini
 
-          # - build-target: core8
-          #   folder: config/boards/core8
-          #   ini-file: fome_core8.ini
+          - build-target: core8
+            folder: config/boards/core8
+            ini-file: fome_core8.ini
 
-          # - build-target: core48
-          #   folder: config/boards/core48
-          #   ini-file: fome_core48.ini
-
-          # - build-target: 48way
-          #   folder: config/boards/48way
-          #   ini-file: fome_48way.ini
+          - build-target: core48
+            folder: config/boards/core48
+            ini-file: fome_core48.ini
 
           # - build-target: atlas
           #   folder: config/boards/atlas
