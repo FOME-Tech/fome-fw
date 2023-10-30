@@ -112,7 +112,7 @@ public:
 };
 
 template <typename TData>
-void transmitStruct(uint32_t id, bool isExtended, bool canChannel = false)
+void transmitStruct(uint32_t id, bool isExtended, bool canChannel)
 {
 	CanTxTyped<TData> frame(id, isExtended, canChannel);
 	// Destruction of an instance of CanTxMessage will transmit the message over the wire.
