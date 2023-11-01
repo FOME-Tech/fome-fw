@@ -24,8 +24,6 @@ blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
 	return (FLASH_RETURN_SUCCESS == intFlashWrite(addr, (const char*)data, len)) ? BLT_TRUE : BLT_FALSE;
 }
 
-static bool didEraseChecksum = false;
-
 blt_bool FlashErase(blt_addr addr, blt_int32u len) {
 	if (intFlashIsErased(addr, len)) {
 		// Already blank, we can skip the expensive erase operation
@@ -37,13 +35,6 @@ blt_bool FlashErase(blt_addr addr, blt_int32u len) {
 
 blt_bool FlashDone() {
 	return BLT_TRUE;
-}
-
-static uint32_t generateChecksum(blt_addr start, blt_addr end) {
-	void* startPtr = reinterpret_cast<void*>(start);
-	size_t size = end - start;
-
-	return crc32(startPtr, size);
 }
 
 blt_bool FlashWriteChecksum() {
