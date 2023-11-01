@@ -5,8 +5,8 @@ import com.rusefi.Launcher;
 import com.rusefi.Timeouts;
 import com.rusefi.autodetect.PortDetector;
 import com.rusefi.autodetect.SerialAutoChecker;
-import com.rusefi.core.io.BundleUtil;
 import com.rusefi.config.generated.Fields;
+import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.DfuHelper;
 import com.rusefi.io.IoStream;
 import com.rusefi.io.UpdateOperationCallbacks;
@@ -20,12 +20,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-
-import static com.rusefi.StartupFrame.appendBundleName;
 
 /**
  * @see FirmwareFlasher
@@ -34,7 +30,6 @@ public class DfuFlasher {
     private static final String DFU_BINARY_LOCATION = Launcher.TOOLS_PATH + File.separator + "STM32_Programmer_CLI/bin";
     private static final String DFU_BINARY = "STM32_Programmer_CLI.exe";
     private static final String WMIC_DFU_QUERY_COMMAND = "wmic path win32_pnpentity where \"Caption like '%STM32%' and Caption like '%Bootloader%'\" get Caption,ConfigManagerErrorCode /format:list";
-    private static final String WMIC_STLINK_QUERY_COMMAND = "wmic path win32_pnpentity where \"Caption like '%STLink%'\" get Caption,ConfigManagerErrorCode /format:list";
 
     public static void doAutoDfu(JComponent parent, String port, UpdateOperationCallbacks callbacks) {
         if (port == null) {
@@ -85,13 +80,7 @@ public class DfuFlasher {
             callbacks.log("Using selected " + port + "\n");
             IoStream stream = BufferedSerialIoStream.openPort(port);
             AtomicReference<String> signature = new AtomicReference<>();
-            new SerialAutoChecker(PortDetector.DetectorMode.DETECT_TS, port, new CountDownLatch(1)).checkResponse(stream, new Function<SerialAutoChecker.CallbackContext, Void>() {
-                @Override
-                public Void apply(SerialAutoChecker.CallbackContext callbackContext) {
-                    signature.set(callbackContext.getSignature());
-                    return null;
-                }
-            });
+            signature.set(SerialAutoChecker.checkResponse(stream));
             if (signature.get() == null) {
                 callbacks.log("*** ERROR *** FOME has not responded on selected " + port + "\n" +
                         "Maybe try automatic serial port detection?");
@@ -104,7 +93,6 @@ public class DfuFlasher {
             callbacks.log("Auto-detecting port...\n");
             // instead of opening the just-detected port we execute the command using the same stream we used to discover port
             // it's more reliable this way
-            // ISSUE: that's blocking stuff on UI thread at the moment, TODO smarter threading!
             port = PortDetector.autoDetectSerial(callbackContext -> {
                 boolean isSignatureValidatedLocal = DfuHelper.sendDfuRebootCommand(parent, callbackContext.getSignature(), callbackContext.getStream(), callbacks, command);
                 isSignatureValidated.set(isSignatureValidatedLocal);

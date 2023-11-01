@@ -206,27 +206,23 @@ static void populateFrame(Cams& msg) {
 	msg.Bank2ExhaustTarget = engine->outputChannels.vvtTargets[3];
 }
 
-struct Odometry {
-};
-
-static void populateFrame(Odometry& msg) {
-
-}
-
 void sendCanVerbose() {
 	auto base = engineConfiguration->verboseCanBaseAddress;
 	auto isExt = engineConfiguration->rusefiVerbose29b;
+	CanBusIndex canChannel =
+		engineConfiguration->canBroadcastUseChannelTwo
+			? CanBusIndex::Bus1
+			: CanBusIndex::Bus0;
 
-	transmitStruct<Status>		(base + 0, isExt);
-	transmitStruct<Speeds>		(base + 1, isExt);
-	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt);
-	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt);
-	transmitStruct<Sensors2>	(base + 4, isExt);
-	transmitStruct<Fueling>		(base + 5, isExt);
-	transmitStruct<Fueling2>	(base + 6, isExt);
-	transmitStruct<Fueling3>	(base + 7, isExt);
-	transmitStruct<Cams>		(base + 8, isExt);
-	transmitStruct<Odometry>	(base + 9, isExt);
+	transmitStruct<Status>		(base + 0, isExt, canChannel);
+	transmitStruct<Speeds>		(base + 1, isExt, canChannel);
+	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt, canChannel);
+	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt, canChannel);
+	transmitStruct<Sensors2>	(base + 4, isExt, canChannel);
+	transmitStruct<Fueling>		(base + 5, isExt, canChannel);
+	transmitStruct<Fueling2>	(base + 6, isExt, canChannel);
+	transmitStruct<Fueling3>	(base + 7, isExt, canChannel);
+	transmitStruct<Cams>		(base + 8, isExt, canChannel);
 }
 
 #endif // EFI_CAN_SUPPORT

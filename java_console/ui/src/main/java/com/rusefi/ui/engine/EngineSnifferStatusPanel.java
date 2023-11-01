@@ -2,7 +2,6 @@ package com.rusefi.ui.engine;
 
 import com.rusefi.waves.TimeAxisTranslator;
 import com.rusefi.waves.EngineReport;
-import com.rusefi.waves.ZoomProvider;
 import com.rusefi.waves.RevolutionLog;
 
 import javax.swing.*;
@@ -40,7 +39,7 @@ public class EngineSnifferStatusPanel {
              * Time which corresponds to the mouse cursor screen location
              */
             double time = translator.screenToTime(x, s.getWidth());
-            timeLabel.setText("" + String.format("%.5f sec", time));
+            timeLabel.setText(String.format("%.5f sec", time));
 
             String text = time2rpm == null ? "n/a" : time2rpm.getCrankAngleByTimeString(time);
             angleLabel.setText(text);

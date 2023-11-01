@@ -7,7 +7,6 @@ import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
-import com.rusefi.ui.StatusWindow;
 import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
 import org.jetbrains.annotations.NotNull;
@@ -16,8 +15,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -47,7 +44,7 @@ public class ProgramSelector {
     private final JPanel controls = new JPanel(new FlowLayout());
     private final JComboBox<String> mode = new JComboBox<>();
 
-    public ProgramSelector(JComboBox<String> comboPorts) {
+    public ProgramSelector(JComboBox<SerialPortScanner.PortResult> comboPorts) {
         content.add(controls, BorderLayout.NORTH);
         content.add(noHardware, BorderLayout.SOUTH);
         controls.setVisible(false);
@@ -65,12 +62,12 @@ public class ProgramSelector {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String selectedMode = (String) mode.getSelectedItem();
-                final String selectedPort = (String) comboPorts.getSelectedItem();
+                final String selectedPort = ((SerialPortScanner.PortResult) comboPorts.getSelectedItem()).port;
 
                 getConfig().getRoot().setProperty(getClass().getSimpleName(), selectedMode);
 
-                String jobName = null;
-                Consumer<UpdateOperationCallbacks> job = null;
+                String jobName;
+                Consumer<UpdateOperationCallbacks> job;
 
                 Objects.requireNonNull(selectedMode);
                 switch (selectedMode) {
@@ -144,7 +141,7 @@ public class ProgramSelector {
         String[] portsAfter = LinkManager.getCommPorts();
 
         // Check that the ECU disappeared from the "after" list
-        if (!PortDetector.AUTO.equals(fomePort) && Arrays.stream(portsAfter).anyMatch(fomePort::equals)) {
+        if (!PortDetector.AUTO.equals(fomePort) && Arrays.asList(portsAfter).contains(fomePort)) {
             callbacks.log("Looks like your ECU didn't reboot to OpenBLT");
             callbacks.error();
             return;
@@ -153,13 +150,13 @@ public class ProgramSelector {
         // Check that exactly one thing appeared in the "after" list
         ArrayList<String> newItems = new ArrayList<>();
         for (String s : portsAfter) {
-            if (!Arrays.stream(portsBefore).anyMatch(s::equals)) {
+            if (Arrays.stream(portsBefore).noneMatch(s::equals)) {
                 // This item is in the after list but not before list
                 newItems.add(s);
             }
         }
 
-        if (newItems.size() == 0) {
+        if (newItems.isEmpty()) {
             callbacks.log("Looks like your ECU disappeared during the update process. Please try again.");
             callbacks.error();
             return;
@@ -174,7 +171,16 @@ public class ProgramSelector {
 
         String openbltPort = newItems.get(0);
 
-        callbacks.log("Serial port " + openbltPort + " appeared, programming firmware...");
+        // Check that the one that appeared is indeed OpenBLT
+        boolean isOpenBlt = SerialPortScanner.isPortOpenblt(openbltPort);
+
+        if (!isOpenBlt) {
+            callbacks.log("A serial port appeared as it should, but OpenBLT didn't respond.");
+            callbacks.error();
+            return;
+        }
+
+        callbacks.log("Serial port " + openbltPort + " appeared and looks like OpenBLT, programming firmware...");
 
         flashOpenbltSerial(openbltPort, callbacks);
     }
@@ -206,14 +212,13 @@ public class ProgramSelector {
         noHardware.setVisible(currentHardware.isEmpty());
         controls.setVisible(!currentHardware.isEmpty());
 
-        boolean hasSerialPorts = !currentHardware.getKnownPorts().isEmpty();
         boolean hasDfuDevice = currentHardware.dfuFound;
         boolean hasEcu = currentHardware.hasAnyEcu;
         boolean hasOpenblt = currentHardware.hasAnyOpenblt;
 
         mode.removeAllItems();
         if (IS_WIN) {
-            if (hasSerialPorts) {
+            if (hasEcu) {
                 mode.addItem(AUTO_DFU);
             }
 

@@ -5,14 +5,33 @@ import com.rusefi.io.UpdateOperationCallbacks;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Locale;
 
 public final class OpenbltBootCommanderRunner {
-    public static final boolean IS_WIN = System.getProperty("os.name").toLowerCase().contains("win");
+    private static final String OS_NAME = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    private static final boolean IS_MAC = OS_NAME.contains("mac") || OS_NAME.contains("darwin");
 
-    private static final String BOOT_COMMANDER = "BootCommander" + (IS_WIN ? ".exe" : "");
+    private static String getBootCommanderBinary() {
+        if (OS_NAME.contains("win")) {
+            return "BootCommander.exe";
+        }
+
+        if (IS_MAC) {
+            return "BootCommander_macos";
+        }
+
+        return "BootCommander_linux";
+    }
+
+    private static final String BOOT_COMMANDER = getBootCommanderBinary();
     private static final String OPENBLT_BINARY_LOCATION = Launcher.TOOLS_PATH + File.separator + "openblt";
 
     public static void flashSerial(String port, String file, UpdateOperationCallbacks callbacks) {
+        // On macOS, prepend "/dev/" to the serial port name
+        if (IS_MAC) {
+            port = "/dev/" + port;
+        }
+
         runOpenblt(file, callbacks, "-s=xcp -t=xcp_rs232 -d=" + port);
     }
 
@@ -33,7 +52,7 @@ public final class OpenbltBootCommanderRunner {
 
             callbacks.log("Running BootCommander like: " + cmd);
 
-            ExecHelper.executeCommand(OPENBLT_BINARY_LOCATION, cmd, BOOT_COMMANDER, callbacks);
+            ExecHelper.executeCommand(".", cmd, OPENBLT_BINARY_LOCATION + "/" + BOOT_COMMANDER, callbacks);
 
             // TODO: check result
 

@@ -52,20 +52,22 @@ public class BaseCHeaderConsumer implements ConfigurationConsumer {
             return "";
         if (comment.trim().isEmpty())
             return "";
-        String result = "";
+        StringBuilder result = new StringBuilder();
         for (String line : comment.split("\\\\n")) {
-            result += linePrefix + line + EOL;
+            result.append(linePrefix);
+            result.append(line);
+            result.append(EOL);
         }
-        return result;
+        return result.toString();
     }
 
     @Override
     public void handleEndStruct(ReaderState readerState, ConfigStructure structure) {
         if (structure.getComment() != null) {
-            content.append(packComment(structure.getComment(), "// ") + EOL);
+            content.append(packComment(structure.getComment(), "// ")).append(EOL);
         }
 
-        content.append("struct " + structure.getName() + " {" + EOL);
+        content.append("struct ").append(structure.getName()).append(" {").append(EOL);
 
         FieldIteratorWithOffset iterator = new FieldIteratorWithOffset(structure.getcFields());
         for (int i = 0; i < structure.getcFields().size(); i++) {
@@ -77,7 +79,7 @@ public class BaseCHeaderConsumer implements ConfigurationConsumer {
         }
 
         content.append("};" + EOL);
-        content.append("static_assert(sizeof(" + structure.getName() + ") == " + iterator.currentOffset + ");\n");
+        content.append("static_assert(sizeof(").append(structure.getName()).append(") == ").append(iterator.currentOffset).append(");\n");
         content.append(EOL);
     }
 
