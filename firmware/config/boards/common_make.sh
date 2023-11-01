@@ -35,7 +35,7 @@ rm -f deliver/*
 rm build/fome.bin build/fome.srec
 
 # Extract the firmware's base address from the elf - it may be different depending on exact CPU
-firmwareBaseAddress="$(objdump -h -j .vectors build/fome.elf | awk '/.vectors/ {print $4 }')"
+firmwareBaseAddress="$(objdump -h -j .vectors build/fome.elf | awk '/.vectors/ {print $5 }')"
 checksumAddress="$(printf "%X\n" $((0x$firmwareBaseAddress+0x1c)))"
 
 echo "Base address is 0x$firmwareBaseAddress"
