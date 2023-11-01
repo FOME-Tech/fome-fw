@@ -20,12 +20,6 @@ blt_addr FlashGetUserProgBaseAddress() {
 #endif
 }
 
-// Returns the first address after the end of the user program
-static blt_addr FlashGetUserLastAddress() {
-	// maximum program size is 768k for BL + FW
-	return 0x08000000 + 768 * 1024;
-}
-
 blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
 	return (FLASH_RETURN_SUCCESS == intFlashWrite(addr, (const char*)data, len)) ? BLT_TRUE : BLT_FALSE;
 }
@@ -33,23 +27,12 @@ blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
 static bool didEraseChecksum = false;
 
 blt_bool FlashErase(blt_addr addr, blt_int32u len) {
-	if (!didEraseChecksum) {
-		didEraseChecksum = true;
-
-		// The first time we run an erase of any kind, erase the checksum from flash.
-		// We aren't guaranteed to independently erase this page (if the firmware image
-		// is small, for example), so force an erase the first time we're asked to erase
-		// something else.
-		if (FLASH_RETURN_SUCCESS != (FlashGetUserLastAddress() - sizeof(int32_t), sizeof(int32_t))) {
-			return BLT_FALSE;
-		}
+	if (intFlashIsErased(addr, len)) {
+		// Already blank, we can skip the expensive erase operation
+		return BLT_TRUE;
 	}
 
-	if (!intFlashIsErased(addr, len)) {
-		return (FLASH_RETURN_SUCCESS == intFlashErase(addr, len)) ? BLT_TRUE : BLT_FALSE;
-	}
-
-	return BLT_TRUE;
+	return (FLASH_RETURN_SUCCESS == intFlashErase(addr, len)) ? BLT_TRUE : BLT_FALSE;
 }
 
 blt_bool FlashDone() {
@@ -64,14 +47,7 @@ static uint32_t generateChecksum(blt_addr start, blt_addr end) {
 }
 
 blt_bool FlashWriteChecksum() {
-	blt_addr start = FlashGetUserProgBaseAddress();
-	// don't include the checksum field in the checksum
-	blt_addr end = FlashGetUserLastAddress() - sizeof(uint32_t);
-
-	uint32_t checksum = generateChecksum(start, end);
-
-	// Write the checksum in to flash!
-	return FlashWrite((blt_addr)end, 4, reinterpret_cast<uint8_t*>(&checksum));
+	return BLT_TRUE;
 }
 
 blt_bool FlashVerifyChecksum() {
