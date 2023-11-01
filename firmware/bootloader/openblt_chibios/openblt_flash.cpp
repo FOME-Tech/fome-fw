@@ -71,7 +71,7 @@ blt_bool FlashVerifyChecksum() {
 	// part before checksum+size
 	uint32_t calcChecksum = crc32(start, checksumOffset);
 	// part after checksum+size
-	calcChecksum = crc32inc(start + checksumOffset + 4, calcChecksum, imageSize - (checksumOffset - 4));
+	calcChecksum = crc32inc(start + checksumOffset + 4, calcChecksum, imageSize - (checksumOffset + 4));
 
 	uint32_t storedChecksum = *reinterpret_cast<uint32_t*>(start + checksumOffset);
 
