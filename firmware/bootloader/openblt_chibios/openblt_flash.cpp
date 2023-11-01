@@ -56,13 +56,24 @@ blt_bool FlashVerifyChecksum() {
 		return BLT_FALSE;
 	}
 
-	// Now do the actual CRC check to ensure we didn't get stuck with a half-written firmware image
-	blt_addr start = FlashGetUserProgBaseAddress();
-	// don't include the checksum field in the checksum
-	blt_addr end = FlashGetUserLastAddress() - sizeof(uint32_t);
+	static const size_t checksumOffset = 0x1C;
 
-	uint32_t calcChecksum = generateChecksum(start, end);
-	uint32_t storedChecksum = *(reinterpret_cast<uint32_t*>(end) + 1);
+	// Now do the actual CRC check to ensure we didn't get stuck with a half-written firmware image
+	uint8_t* start = reinterpret_cast<uint8_t*>(FlashGetUserProgBaseAddress());
+
+	size_t imageSize = *reinterpret_cast<size_t*>(start + checksumOffset + 4);
+
+	if (imageSize > 1024 * 1024) {
+		// impossibly large size, invalid
+		return BLT_FALSE;
+	}
+
+	// part before checksum+size
+	uint32_t calcChecksum = crc32(start, checksumOffset);
+	// part after checksum+size
+	calcChecksum = crc32inc(start + checksumOffset + 4, calcChecksum, imageSize - (checksumOffset - 4));
+
+	uint32_t storedChecksum = *reinterpret_cast<uint32_t*>(start + checksumOffset);
 
 	return calcChecksum == storedChecksum ? BLT_TRUE : BLT_FALSE;
 }
