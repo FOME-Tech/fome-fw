@@ -30,7 +30,21 @@ blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
 	return (FLASH_RETURN_SUCCESS == intFlashWrite(addr, (const char*)data, len)) ? BLT_TRUE : BLT_FALSE;
 }
 
+static bool didEraseChecksum = false;
+
 blt_bool FlashErase(blt_addr addr, blt_int32u len) {
+	if (!didEraseChecksum) {
+		didEraseChecksum = true;
+
+		// The first time we run an erase of any kind, erase the checksum from flash.
+		// We aren't guaranteed to independently erase this page (if the firmware image
+		// is small, for example), so force an erase the first time we're asked to erase
+		// something else.
+		if (FLASH_RETURN_SUCCESS != (FlashGetUserLastAddress() - sizeof(int32_t), sizeof(int32_t))) {
+			return BLT_FALSE;
+		}
+	}
+
 	if (!intFlashIsErased(addr, len)) {
 		return (FLASH_RETURN_SUCCESS == intFlashErase(addr, len)) ? BLT_TRUE : BLT_FALSE;
 	}
