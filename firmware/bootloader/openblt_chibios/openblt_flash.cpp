@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "flash_int.h"
 
+#include <rusefi/crc.h>
+
 extern "C" {
 	#include "boot.h"
 	#include "flash.h"
@@ -18,10 +20,14 @@ blt_addr FlashGetUserProgBaseAddress() {
 #endif
 }
 
+// Returns the first address after the end of the user program
+static blt_addr FlashGetUserLastAddress() {
+	// maximum program size is 768k for BL + FW
+	return 0x08000000 + 768 * 1024;
+}
+
 blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
 	return (FLASH_RETURN_SUCCESS == intFlashWrite(addr, (const char*)data, len)) ? BLT_TRUE : BLT_FALSE;
-	
-	return BLT_TRUE;
 }
 
 blt_bool FlashErase(blt_addr addr, blt_int32u len) {
@@ -36,11 +42,37 @@ blt_bool FlashDone() {
 	return BLT_TRUE;
 }
 
+static uint32_t generateChecksum(blt_addr start, blt_addr end) {
+	void* startPtr = reinterpret_cast<void*>(start);
+	size_t size = end - start;
+
+	return crc32(startPtr, size);
+}
+
 blt_bool FlashWriteChecksum() {
-	return BLT_TRUE;
+	blt_addr start = FlashGetUserProgBaseAddress();
+	// don't include the checksum field in the checksum
+	blt_addr end = FlashGetUserLastAddress() - sizeof(uint32_t);
+
+	uint32_t checksum = generateChecksum(start, end);
+
+	// Write the checksum in to flash!
+	return FlashWrite((blt_addr)end, 4, reinterpret_cast<uint8_t*>(&checksum));
 }
 
 blt_bool FlashVerifyChecksum() {
 	// Naive check: if the first block is blank, there's no code there
-	return intFlashIsErased(FlashGetUserProgBaseAddress(), 4) ? BLT_FALSE : BLT_TRUE;
+	if (intFlashIsErased(FlashGetUserProgBaseAddress(), 4)) {
+		return BLT_FALSE;
+	}
+
+	// Now do the actual CRC check to ensure we didn't get stuck with a half-written firmware image
+	blt_addr start = FlashGetUserProgBaseAddress();
+	// don't include the checksum field in the checksum
+	blt_addr end = FlashGetUserLastAddress() - sizeof(uint32_t);
+
+	uint32_t calcChecksum = generateChecksum(start, end);
+	uint32_t storedChecksum = *(reinterpret_cast<uint32_t*>(end) + 1);
+
+	return calcChecksum == storedChecksum ? BLT_TRUE : BLT_FALSE;
 }
