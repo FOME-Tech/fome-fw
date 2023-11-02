@@ -37,7 +37,7 @@ TEST(etb, initializationNoPedal) {
 TEST(etb, initializationMissingThrottle) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* engineConfiguration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_None;
 		engineConfiguration->etbFunctions[1] = DC_None;
 	});
@@ -63,7 +63,7 @@ TEST(etb, initializationSingleThrottle) {
 	EXPECT_CALL(mocks[0], isEtbMode())
 	      .WillOnce(Return(TRUE));
 
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* engineConfiguration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_Throttle1;
 		engineConfiguration->etbFunctions[1] = DC_None;
 	});
@@ -91,7 +91,7 @@ TEST(etb, initializationSingleThrottleInSecondSlot) {
 	EXPECT_CALL(mocks[1], isEtbMode())
 	      .WillOnce(Return(TRUE));
 
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* engineConfiguration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_None;
 		engineConfiguration->etbFunctions[1] = DC_Throttle1;
 	});
@@ -152,7 +152,7 @@ TEST(etb, initializationWastegate) {
 	EXPECT_CALL(mocks[0], isEtbMode())
 	      .WillOnce(Return(false));
 
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* engineConfiguration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_Wastegate;
 		engineConfiguration->etbFunctions[1] = DC_None;
 	});
@@ -436,23 +436,23 @@ TEST(etb, setpointRevLimit) {
 
 	// Below threshold, should return unadjusted throttle
 	Sensor::setMockValue(SensorType::Rpm,  1000);
-	EXPECT_EQ(80, etb.getSetpoint().value_or(-1));
+	EXPECT_NEAR(80, etb.getSetpoint().value_or(-1), 1e-4);
 
 	// At threshold, should return unadjusted throttle
 	Sensor::setMockValue(SensorType::Rpm,  5000);
-	EXPECT_EQ(80, etb.getSetpoint().value_or(-1));
+	EXPECT_NEAR(80, etb.getSetpoint().value_or(-1), 1e-4);
 
 	// Middle of range, should return half of unadjusted
 	Sensor::setMockValue(SensorType::Rpm, 5375);
-	EXPECT_EQ(40, etb.getSetpoint().value_or(-1));
+	EXPECT_NEAR(40, etb.getSetpoint().value_or(-1), 1e-4);
 
 	// At limit+range, should return 0
 	Sensor::setMockValue(SensorType::Rpm, 5750);
-	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
+	EXPECT_NEAR(1, etb.getSetpoint().value_or(-1), 1e-4);
 
 	// Above limit+range, should return 0
 	Sensor::setMockValue(SensorType::Rpm, 6000);
-	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
+	EXPECT_NEAR(1, etb.getSetpoint().value_or(-1), 1e-4);
 }
 
 TEST(etb, setpointNoPedalMap) {

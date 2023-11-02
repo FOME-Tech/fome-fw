@@ -21,7 +21,7 @@ RULESFILE = $(RULESPATH)/rules.mk
 PROJECT_CPU=simulator
 
 include ../firmware/rusefi.mk
-RULESFILE = ../firmware/rusefi_rules.mk
+include ../firmware/rusefi_rules.mk
 
 # Configure precompiled header
 PCH_DIR = $(PROJECT_DIR)/pch
@@ -76,6 +76,8 @@ endif
 ifeq ($(USE_CPPOPT),)
   USE_CPPOPT = -std=c++2a -Wno-register -fno-rtti
 endif
+
+USE_CPPOPT += $(RUSEFI_CPPOPT)
 
 # Enable this if you want the linker to remove unused code and data.
 ifeq ($(USE_LINK_GC),)

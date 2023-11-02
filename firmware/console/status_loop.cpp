@@ -455,9 +455,9 @@ static void updateRawSensors() {
 	engine->outputChannels.luaGauges[1] = Sensor::getOrZero(SensorType::LuaGauge2);
 
 	for (int i = 0; i < LUA_ANALOG_INPUT_COUNT; i++) {
-		adc_channel_e ch = engineConfiguration->auxAnalogInputs[i];
-		if (isAdcChannelValid(ch)) {
-			engine->outputChannels.rawAnalogInput[i] = getVoltageDivided("raw aux", ch);
+		adc_channel_e channel = engineConfiguration->auxAnalogInputs[i];
+		if (isAdcChannelValid(channel)) {
+			engine->outputChannels.rawAnalogInput[i] = getVoltageDivided("raw aux", channel);
 		}
 	}
 
@@ -576,11 +576,9 @@ void updateTunerStudioState() {
 	tsOutputChannels->tsConfigVersion = TS_FILE_VERSION;
 	static_assert(offsetof (TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
 
-DcHardware *getdcHardware();
-
-    DcHardware *dc = getdcHardware();
-    engine->dc_motors.dcOutput0 = dc->dcMotor.get();
-    engine->dc_motors.isEnabled0_int = dc->msg() == nullptr;
+	DcHardware *dc = getdcHardware();
+	engine->dc_motors.dcOutput0 = dc->dcMotor.get();
+	engine->dc_motors.isEnabled0_int = dc->msg() == nullptr;
 
 #if EFI_SHAFT_POSITION_INPUT
 

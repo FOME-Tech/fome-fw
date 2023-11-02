@@ -104,8 +104,6 @@ static void printErrorCounters() {
 /* 10mS when receiving byte by byte */
 #define TS_COMMUNICATION_TIMEOUT_SHORT	TIME_MS2I(10)
 
-static efitimems_t previousWriteReportMs = 0;
-
 static void resetTs() {
 	memset(&tsState, 0, sizeof(tsState));
 }
@@ -114,7 +112,7 @@ static void resetTs() {
 
 void tunerStudioDebug(TsChannelBase* tsChannel, const char *msg) {
 #if EFI_TUNER_STUDIO_VERBOSE
-	efiPrintf("%s: %s", tsChannel->name, msg);
+	efiPrintf("%s: %s", tsChannel->getName(), msg);
 #endif /* EFI_TUNER_STUDIO_VERBOSE */
 }
 
@@ -209,12 +207,6 @@ void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, ts_response_
 		return;
 	}
 
-	efitimems_t nowMs = getTimeNowMs();
-	if (nowMs - previousWriteReportMs > 5) {
-		previousWriteReportMs = nowMs;
-		efiPrintf("offset %d: value=%d", offset, value);
-	}
-
 	// Skip the write if a preset was just loaded - we don't want to overwrite it
 	if (!rebootForPresetPending) {
 		getWorkingPageAddr()[offset] = value;
@@ -275,7 +267,9 @@ static void sendResponseCode(ts_response_format_e mode, TsChannelBase *tsChannel
  * 'Burn' command is a command to commit the changes
  */
 static void handleBurnCommand(TsChannelBase* tsChannel, ts_response_format_e mode) {
-	efitimems_t nowMs = getTimeNowMs();
+	Timer t;
+	t.reset();
+
 	tsState.burnCommandCounter++;
 
 	efiPrintf("got B (Burn) %s", mode == TS_PLAIN ? "plain" : "CRC");
@@ -286,7 +280,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel, ts_response_format_e mod
 	}
 
 	sendResponseCode(mode, tsChannel, TS_RESPONSE_BURN_OK);
-	efiPrintf("BURN in %dms", getTimeNowMs() - nowMs);
+	efiPrintf("BURN in %dms", (int)(t.getElapsedSeconds() * 1e3));
 }
 
 #if EFI_TUNER_STUDIO && (EFI_PROD_CODE || EFI_SIMULATOR)
@@ -436,7 +430,7 @@ static int tsProcessOne(TsChannelBase* tsChannel) {
 
 	if (incomingPacketSize == 0 || expectedSize > sizeof(tsChannel->scratchBuffer)) {
 		if (tsChannel->in_sync) {
-			efiPrintf("process_ts: channel=%s invalid size: %d", tsChannel->name, incomingPacketSize);
+			efiPrintf("process_ts: channel=%s invalid size: %d", tsChannel->getName(), incomingPacketSize);
 			tunerStudioError(tsChannel, "process_ts: ERROR: CRC header size");
 			/* send error only if previously we were in sync */
 			sendErrorCode(tsChannel, TS_RESPONSE_UNDERRUN);
