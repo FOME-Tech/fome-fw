@@ -39,7 +39,7 @@ protected:
 	}
 };
 
-BlinkyThread blinky;
+static BlinkyThread blinky;
 
 int main(void) {
 	halInit();
