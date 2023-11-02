@@ -425,9 +425,6 @@ static void setTestBug299(EngineTestHelper *eth) {
 	EXPECT_CALL(*eth->mockAirmass, getAirmass(_, _))
 		.WillRepeatedly(Return(AirmassResult{0.1008001f, 50.0f}));
 
-	Engine *engine = &eth->engine;
-
-
 	eth->assertRpm(0, "RPM=0");
 
 	eth->fireTriggerEventsWithDuration(20);
@@ -532,8 +529,8 @@ static void setTestBug299(EngineTestHelper *eth) {
 }
 
 static void assertInjectors(const char *msg, int value0, int value1) {
-	EXPECT_EQ(value0, enginePins.injectors[0].currentLogicValue);
-	EXPECT_EQ(value1, enginePins.injectors[1].currentLogicValue);
+	EXPECT_EQ(value0, enginePins.injectors[0].m_currentLogicValue);
+	EXPECT_EQ(value1, enginePins.injectors[1].m_currentLogicValue);
 }
 
 static void setArray(float* p, size_t count, float value) {
@@ -731,7 +728,7 @@ void doTestFuelSchedulerBug299smallAndMedium(int startUpDelayMs) {
 	assertInjectionEventBatch("#03", &t->elements[0], 0, 3, 0, 315);
 
 
-	ASSERT_EQ( 1,  enginePins.injectors[0].currentLogicValue) << "inj#0";
+	ASSERT_EQ( 1,  enginePins.injectors[0].m_currentLogicValue) << "inj#0";
 
 	ASSERT_EQ( 1,  engine->executor.size()) << "Queue.size#04";
 	eth.assertInjectorDownEvent("08@0", 0, MS2US(10), 0);
@@ -924,7 +921,7 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 	eth.executeActions();
 
 	// injector #1 is low before the test
-	ASSERT_FALSE(enginePins.injectors[0].currentLogicValue) << "injector@0";
+	ASSERT_FALSE(enginePins.injectors[0].m_currentLogicValue) << "injector@0";
 
 	eth.firePrimaryTriggerRise();
 
@@ -948,11 +945,11 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 
 	engine->executor.executeAll(eth.getTimeNowUs() + 1);
 	// injector goes high...
-	ASSERT_FALSE(enginePins.injectors[0].currentLogicValue) << "injector@1";
+	ASSERT_FALSE(enginePins.injectors[0].m_currentLogicValue) << "injector@1";
 
 	engine->executor.executeAll(eth.getTimeNowUs() + MS2US(17.5) + 1);
 	// injector does not go low too soon, that's a feature :)
-	ASSERT_TRUE(enginePins.injectors[0].currentLogicValue) << "injector@2";
+	ASSERT_TRUE(enginePins.injectors[0].m_currentLogicValue) << "injector@2";
 
 
 	eth.fireFall(20);
@@ -968,7 +965,7 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 
 	engine->executor.executeAll(eth.getTimeNowUs() + MS2US(10) + 1);
 	// end of combined injection
-	ASSERT_FALSE(enginePins.injectors[0].currentLogicValue) << "injector@3";
+	ASSERT_FALSE(enginePins.injectors[0].m_currentLogicValue) << "injector@3";
 
 
 	eth.moveTimeForwardUs(MS2US(20));

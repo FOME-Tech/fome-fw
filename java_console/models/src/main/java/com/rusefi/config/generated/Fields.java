@@ -911,16 +911,6 @@ public class Fields {
 	public static final int PEDAL_TO_TPS_SIZE = 8;
 	public static final int persistent_config_s_size = 22996;
 	public static final int pid_s_size = 20;
-	public static final int PidAutoTune_AutoTunerState_AUTOTUNER_OFF = 0;
-	public static final int PidAutoTune_AutoTunerState_CONVERGED = 16;
-	public static final int PidAutoTune_AutoTunerState_FAILED = 128;
-	public static final int PidAutoTune_AutoTunerState_RELAY_STEP_DOWN = 8;
-	public static final int PidAutoTune_AutoTunerState_RELAY_STEP_UP = 4;
-	public static final int PidAutoTune_AutoTunerState_STEADY_STATE_AFTER_STEP_UP = 2;
-	public static final int PidAutoTune_AutoTunerState_STEADY_STATE_AT_BASELINE = 1;
-	public static final int PidAutoTune_Peak_MAXIMUM = 1;
-	public static final int PidAutoTune_Peak_MINIMUM = -1;
-	public static final int PidAutoTune_Peak_NOT_A_PEAK = 0;
 	public static final int pin_input_mode_e_PI_DEFAULT = 0;
 	public static final int pin_input_mode_e_PI_PULLDOWN = 2;
 	public static final int pin_input_mode_e_PI_PULLUP = 1;
@@ -1183,7 +1173,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.11.01.f407-discovery.2889015593";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2023.11.02.f407-discovery.2889015593";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final char TS_TEST_COMMAND = 't';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1380;
