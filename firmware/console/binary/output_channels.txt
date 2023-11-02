@@ -41,7 +41,7 @@ bit dfcoActive
 
 uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0
 
-uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
+int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	uint16_t autoscale speedToRpmRatio;@@GAUGE_NAME_GEAR_RATIO@@;"value",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 	uint8_t vehicleSpeedKph;@@GAUGE_NAME_VVS@@;"kph",1, 0, 0, 0, 1
@@ -64,7 +64,6 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint16_t autoscale baroPressure;;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 1
 
 	uint16_t autoscale lambdaValue;@@GAUGE_NAME_LAMBDA@@;"",{1/@@PACK_MULT_LAMBDA@@}, 0, 0, 0, 3
-	uint8_t autoscale knockRetard;@@GAUGE_NAME_KNOCK_RETARD@@;"deg",{1/10}, 0, 0, 0, 1
 
 	uint16_t autoscale VBatt;@@GAUGE_NAME_VBAT@@;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
 
@@ -95,7 +94,7 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint8_t currentInjectionMode;@@GAUGE_NAME_INJECTION_MODE@@
 
 	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 0
-! Idle & ETB
+! ETB
 	int16_t autoscale etbTarget;ETB Target;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 	int16_t autoscale etb1DutyCycle;@@GAUGE_NAME_ETB_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 1
 ! Fuel system
@@ -106,8 +105,6 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	int16_t autoscale TPS2Value;@@GAUGE_NAME_TPS2@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 	uint16_t tuneCrc16;@@GAUGE_NAME_TUNE_CRC16@@;"crc16", 1, 0, 0, 0, 0
-
-	float knockLevel;@@GAUGE_NAME_KNOCK_LEVEL@@;"Volts", 1, 0, 0, 0, 2
 
 ! integration magic: TS requires exact 'seconds' name
 	uint32_t seconds;@@GAUGE_NAME_UPTIME@@;"sec", 1, 0, 0, 0, 0
@@ -136,11 +133,6 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	int16_t autoscale wastegatePositionSensor;@@GAUGE_NAME_WG_POSITION@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 
-! todo: this not needed in light of TS_SIGNATURE but rusEFI console still uses it. Need to migrate
-! rusEFI console from TS_FILE_VERSION to TS_SIGNATURE :(
-	uint32_t tsConfigVersion;;"", 1, 0, 0, 0, 0
-
-
 	! These two fields indicate to TS that we'd like to set a particular field to a particular value
 	! We use a maintainConstantValue in TS for each field we'd like to set, like this:
 	!		maintainConstantValue = tpsMax, { (calibrationMode == 1 ) ? calibrationValue : tpsMax }
@@ -153,7 +145,11 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	! it wants to send have been sent.
 	float calibrationValue;;"", 1, 0, 0, 0, 0
 	uint8_t calibrationMode;;"", 1, 0, 0, 0, 0
-	uint8_t idleTargetPosition;Idle: Stepper target position;"", 1, 0, 0, 0, 0
+	uint8_t idleStepperTargetPosition;Idle: Stepper target position;"", 1, 0, 0, 0, 0
+
+! todo: this not needed in light of TS_SIGNATURE but rusEFI console still uses it. Need to migrate
+! rusEFI console from TS_FILE_VERSION to TS_SIGNATURE :(
+	uint32_t tsConfigVersion;;"", 1, 0, 0, 0, 0
 
 ! Errors
 	uint32_t totalTriggerErrorCounter;@@GAUGE_NAME_TRG_ERR@@;"counter",1, 0, 0, 0, 0
@@ -190,8 +186,6 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
 	int8_t tcuCurrentGear;@@GAUGE_NAME_CURRENT_GEAR@@;"gear", 1, 0, -1, 10, 0
 
-	int8_t[12 iterate] knock;Knock: Cyl;"dBv",1, 0, 0, 0, 0
-
 	uint16_t autoscale AFRValue;@@GAUGE_NAME_AFR@@;"AFR",{1/@@PACK_MULT_AFR@@}, 0, 0, 0, 2
 
 	uint16_t autoscale VssAcceleration;Vss Accel;"m/s2",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 2
@@ -208,7 +202,6 @@ uint16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	int16_t autoscale rawTps2Primary;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 
 	int16_t autoscale rawTps2Secondary;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
-	uint16_t knockCount;@@GAUGE_NAME_KNOCK_COUNTER@@;"",1, 0, 0, 0, 0
 
 	int16_t autoscale accelerationZ;@@GAUGE_NAME_ACCEL_Z@@;"G",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 0
 	int16_t autoscale accelerationRoll;@@GAUGE_NAME_ACCEL_ROLL@@;"G",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 0
@@ -357,5 +350,20 @@ float mapFast
 
 	uint16_t testBenchIter;;"count",1, 0, 0, 0, 0
 
-	uint8_t[140 iterate] unusedAtTheEnd;;"",1, 0, 0, 0, 0
+	int16_t autoscale oilTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale fuelTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale ambientTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale compressorDischargeTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+
+	uint16_t autoscale compressorDischargePressure;;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 1
+	uint16_t autoscale throttleInletPressure;;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 1
+
+	uint16_t ignitionOnTime;;"sec",1,0,0,0,1
+	uint16_t engineRunTime;;"sec",1,0,0,0,1
+	uint16_t autoscale distanceTraveled;;"km",0.1,0,0,0,1
+
+	uint16_t autoscale afrGasolineScale;@@GAUGE_NAME_AFR_GAS_SCALE@@;"AFR",{1/@@PACK_MULT_AFR@@}, 0, 0, 0, 2
+	uint16_t autoscale afr2GasolineScale;@@GAUGE_NAME_AFR2_GAS_SCALE@@;"AFR",{1/@@PACK_MULT_AFR@@}, 0, 0, 0, 2
+
+	uint8_t[120 iterate] unusedAtTheEnd;;"",1, 0, 0, 0, 0
 end_struct

@@ -29,12 +29,12 @@ struct Status {
 	uint8_t o2Heater : 1;
 	uint8_t lambdaProtectActive : 1;
 
-	uint8_t pad7 : 1;
-	uint8_t pad8 : 1;
+	uint8_t fan : 1;
+	uint8_t fan2 : 1;
 
 	uint8_t gear;
 
-	uint8_t pad[2];
+	uint16_t distanceTraveled;
 };
 
 static void populateFrame(Status& msg) {
@@ -47,8 +47,13 @@ static void populateFrame(Status& msg) {
 	msg.checkEngine = enginePins.checkEnginePin.getLogicValue();
 	msg.o2Heater = enginePins.o2heater.getLogicValue();
 	msg.lambdaProtectActive = engine->lambdaMonitor.isCut();
+	msg.fan = enginePins.fanRelay.getLogicValue();
+	msg.fan2 = enginePins.fanRelay2.getLogicValue();
 
 	msg.gear = Sensor::getOrZero(SensorType::DetectedGear);
+
+	// scale to units of 0.1km
+	msg.distanceTraveled = engine->module<TripOdometer>()->getDistanceMeters() / 100;
 }
 
 struct Speeds {
@@ -117,18 +122,18 @@ static void populateFrame(Sensors1& msg) {
 }
 
 struct Sensors2 {
-	scaled_afr afr; // deprecated
+	uint8_t pad[2];
+
 	scaled_pressure oilPressure;
-	scaled_angle vvtPos;	// deprecated
+	uint8_t oilTemp;
+	uint8_t fuelTemp;
 	scaled_voltage vbatt;
 };
 
 static void populateFrame(Sensors2& msg) {
-	msg.afr = Sensor::getOrZero(SensorType::Lambda1) * STOICH_RATIO;
 	msg.oilPressure = Sensor::get(SensorType::OilPressure).value_or(-1);
-#if EFI_SHAFT_POSITION_INPUT
-	msg.vvtPos = engine->triggerCentral.getVVTPosition(0, 0);
-#endif // EFI_SHAFT_POSITION_INPUT
+	msg.oilTemp = Sensor::getOrZero(SensorType::OilTemperature) + PACK_ADD_TEMPERATURE;
+	msg.fuelTemp = Sensor::getOrZero(SensorType::FuelTemperature) + PACK_ADD_TEMPERATURE;
 	msg.vbatt = Sensor::getOrZero(SensorType::BatteryVoltage);
 }
 
@@ -153,8 +158,8 @@ struct Fueling2 {
 };
 
 static void populateFrame(Fueling2& msg) {
-	msg.fuelConsumedGram = engine->engineState.fuelConsumption.getConsumedGrams();
-	msg.fuelFlowRate = engine->engineState.fuelConsumption.getConsumptionGramPerSecond();
+	msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
+	msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
 
 	for (size_t i = 0; i < 2; i++) {
 		msg.fuelTrim[i] = 100.0f * (engine->stftCorrection[i] - 1.0f);
@@ -204,16 +209,20 @@ static void populateFrame(Cams& msg) {
 void sendCanVerbose() {
 	auto base = engineConfiguration->verboseCanBaseAddress;
 	auto isExt = engineConfiguration->rusefiVerbose29b;
+	CanBusIndex canChannel =
+		engineConfiguration->canBroadcastUseChannelTwo
+			? CanBusIndex::Bus1
+			: CanBusIndex::Bus0;
 
-	transmitStruct<Status>		(base + 0, isExt);
-	transmitStruct<Speeds>		(base + 1, isExt);
-	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt);
-	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt);
-	transmitStruct<Sensors2>	(base + 4, isExt);
-	transmitStruct<Fueling>		(base + 5, isExt);
-	transmitStruct<Fueling2>	(base + 6, isExt);
-	transmitStruct<Fueling3>	(base + 7, isExt);
-	transmitStruct<Cams>		(base + 8, isExt);
+	transmitStruct<Status>		(base + 0, isExt, canChannel);
+	transmitStruct<Speeds>		(base + 1, isExt, canChannel);
+	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt, canChannel);
+	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt, canChannel);
+	transmitStruct<Sensors2>	(base + 4, isExt, canChannel);
+	transmitStruct<Fueling>		(base + 5, isExt, canChannel);
+	transmitStruct<Fueling2>	(base + 6, isExt, canChannel);
+	transmitStruct<Fueling3>	(base + 7, isExt, canChannel);
+	transmitStruct<Cams>		(base + 8, isExt, canChannel);
 }
 
 #endif // EFI_CAN_SUPPORT

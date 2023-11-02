@@ -153,11 +153,11 @@ static uint32_t getArray(lua_State* l, int paramIndex, uint8_t *data, uint32_t s
 
 #if EFI_CAN_SUPPORT || EFI_UNIT_TEST
 
-static int validateCanChannelAndConvertFromHumanIntoZeroIndex(lua_State* l) {
+static CanBusIndex validateCanChannelAndConvertFromHumanIntoZeroIndex(lua_State* l) {
 	lua_Integer channel = luaL_checkinteger(l, 1);
 	// TODO: support multiple channels
 	luaL_argcheck(l, channel == 1 || channel == 2, 1, "only buses 1 and 2 currently supported");
-	return channel - HUMAN_OFFSET;
+	return static_cast<CanBusIndex>(channel - HUMAN_OFFSET);
 }
 
 static int lua_txCan(lua_State* l) {
@@ -174,8 +174,7 @@ static int lua_txCan(lua_State* l) {
 	}
 
 	// conform ext parameter to true/false
-	CanTxMessage msg(id, 8, 0, ext == 0 ? false : true);
-	msg.busIndex = bus;
+	CanTxMessage msg(id, 8, bus, ext == 0 ? false : true);
 
 	// Unfortunately there is no way to inspect the length of a table,
 	// so we have to just iterate until we run out of numbers
@@ -507,7 +506,7 @@ int lua_canRxAdd(lua_State* l) {
 	uint32_t eid;
 
 	// defaults if not passed
-	int bus = ANY_BUS;
+	CanBusIndex bus = CanBusIndex::Any;
 	int callback = NO_CALLBACK;
 
 	switch (lua_gettop(l)) {
@@ -551,7 +550,7 @@ int lua_canRxAddMask(lua_State* l) {
 	uint32_t mask;
 
 	// defaults if not passed
-	int bus = ANY_BUS;
+	CanBusIndex bus = CanBusIndex::Any;
 	int callback = NO_CALLBACK;
 
 	switch (lua_gettop(l)) {
@@ -628,61 +627,61 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getSensor", lua_getSensorByName);
 	lua_register(l, "getSensorRaw", lua_getSensorRaw);
 	lua_register(l, "hasSensor", lua_hasSensor);
-	lua_register(l, "table3d", [](lua_State* l) {
-		auto humanTableIdx = luaL_checkinteger(l, 1);
-		auto x = luaL_checknumber(l, 2);
-		auto y = luaL_checknumber(l, 3);
+	lua_register(l, "table3d", [](lua_State* l2) {
+		auto humanTableIdx = luaL_checkinteger(l2, 1);
+		auto x = luaL_checknumber(l2, 2);
+		auto y = luaL_checknumber(l2, 3);
 
 		// index table, compute table lookup
 		auto result = getscriptTable(humanTableIdx - HUMAN_OFFSET)->getValue(x, y);
 
-		lua_pushnumber(l, result);
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 
-	lua_register(l, "curve", [](lua_State* l) {
+	lua_register(l, "curve", [](lua_State* l2) {
 		// index starting from 1
-		auto humanCurveIdx = luaL_checkinteger(l, 1);
-		auto x = luaL_checknumber(l, 2);
+		auto humanCurveIdx = luaL_checkinteger(l2, 1);
+		auto x = luaL_checknumber(l2, 2);
 
 		auto result = getCurveValue(humanCurveIdx - HUMAN_OFFSET, x);
 
-		lua_pushnumber(l, result);
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 
 #if EFI_SENT_SUPPORT
 	lua_register(l, "getSentValue",
-			[](lua_State* l) {
-			auto humanIndex = luaL_checkinteger(l, 1);
+			[](lua_State* l2) {
+			auto humanIndex = luaL_checkinteger(l2, 1);
 			auto value = getSentValue(humanIndex - 1);
-			lua_pushnumber(l, value);
+			lua_pushnumber(l2, value);
 			return 1;
 	});
 
 	lua_register(l, "getSentValues",
-			[](lua_State* l) {
+			[](lua_State* l2) {
 			uint16_t sig0;
 			uint16_t sig1;
-			auto humanIndex = luaL_checkinteger(l, 1);
+			auto humanIndex = luaL_checkinteger(l2, 1);
 			auto ret = getSentValues(humanIndex - 1, &sig0, &sig1);
-			lua_pushnumber(l, sig0);
-			lua_pushnumber(l, sig1);
+			lua_pushnumber(l2, sig0);
+			lua_pushnumber(l2, sig1);
 			return 2;
 	});
 #endif // EFI_SENT_SUPPORT
 
 #if EFI_LAUNCH_CONTROL
-	lua_register(l, "setSparkSkipRatio", [](lua_State* l) {
-		auto targetSkipRatio = luaL_checknumber(l, 1);
+	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
+		auto targetSkipRatio = luaL_checknumber(l2, 1);
 		engine->softSparkLimiter.setTargetSkipRatio(targetSkipRatio);
 		return 1;
 	});
 #endif // EFI_LAUNCH_CONTROL
 
 #if EFI_SHAFT_POSITION_INPUT && !EFI_UNIT_TEST
-	lua_register(l, "selfStimulateRPM", [](lua_State* l) {
-		auto rpm = luaL_checkinteger(l, 1);
+	lua_register(l, "selfStimulateRPM", [](lua_State* l2) {
+		auto rpm = luaL_checkinteger(l2, 1);
 		if (rpm < 1) {
 			disableTriggerStimulator();
 			return 0;
@@ -698,9 +697,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 	/**
 	 * same exact could be accomplished via LuaSensor just with more API
 	 */
-	lua_register(l, "setLuaGauge", [](lua_State* l) {
-		auto index = luaL_checkinteger(l, 1) - 1;
-		auto value = luaL_checknumber(l, 2);
+	lua_register(l, "setLuaGauge", [](lua_State* l2) {
+		auto index = luaL_checkinteger(l2, 1) - 1;
+		auto value = luaL_checknumber(l2, 2);
 		if (index < 0 || index >= LUA_GAUGE_COUNT)
 			return 0;
 		extern StoredValueSensor luaGauges[LUA_GAUGE_COUNT];
@@ -708,13 +707,13 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 0;
 	});
 
-	lua_register(l, "enableCanTx", [](lua_State* l) {
-		engine->allowCanTx = lua_toboolean(l, 1);
+	lua_register(l, "enableCanTx", [](lua_State* l2) {
+		engine->allowCanTx = lua_toboolean(l2, 1);
 		return 0;
 	});
 
 #if EFI_PROD_CODE
-	lua_register(l, "restartEtb", [](lua_State* l) {
+	lua_register(l, "restartEtb", [](lua_State* l2) {
 		// this is about Lua sensor acting in place of real analog PPS sensor
 		// todo: smarter implementation
 		doInitElectronicThrottle();
@@ -722,103 +721,103 @@ void configureRusefiLuaHooks(lua_State* l) {
 	});
 #endif // EFI_PROD_CODE
 
-	lua_register(l, "crc8_j1850", [](lua_State* l) {
+	lua_register(l, "crc8_j1850", [](lua_State* l2) {
 		uint8_t data[8];
-		uint32_t length = getArray(l, 1, data, sizeof(data));
-		auto trimLength = luaL_checkinteger(l, 2);
+		uint32_t length = getArray(l2, 1, data, sizeof(data));
+		auto trimLength = luaL_checkinteger(l2, 2);
 		int crc = crc8(data, minI(length, trimLength));
 
-		lua_pushnumber(l, crc);
+		lua_pushnumber(l2, crc);
 		return 1;
 	});
 
 #if EFI_BOOST_CONTROL
-	lua_register(l, "setBoostTargetAdd", [](lua_State* l) {
-		engine->boostController.luaTargetAdd = luaL_checknumber(l, 1);
+	lua_register(l, "setBoostTargetAdd", [](lua_State* l2) {
+		engine->module<BoostController>().unmock().luaTargetAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
-	lua_register(l, "setBoostTargetMult", [](lua_State* l) {
-		engine->boostController.luaTargetMult = luaL_checknumber(l, 1);
+	lua_register(l, "setBoostTargetMult", [](lua_State* l2) {
+		engine->module<BoostController>().unmock().luaTargetMult = luaL_checknumber(l2, 1);
 		return 0;
 	});
-	lua_register(l, "setBoostDutyAdd", [](lua_State* l) {
-		engine->boostController.luaOpenLoopAdd = luaL_checknumber(l, 1);
+	lua_register(l, "setBoostDutyAdd", [](lua_State* l2) {
+		engine->module<BoostController>().unmock().luaOpenLoopAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
 #endif // EFI_BOOST_CONTROL
 #if EFI_IDLE_CONTROL
-	lua_register(l, "setIdleAdd", [](lua_State* l) {
-		engine->module<IdleController>().unmock().luaAdd = luaL_checknumber(l, 1);
+	lua_register(l, "setIdleAdd", [](lua_State* l2) {
+		engine->module<IdleController>().unmock().luaAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
 #endif
-	lua_register(l, "setTimingAdd", [](lua_State* l) {
-		engine->ignitionState.luaTimingAdd = luaL_checknumber(l, 1);
+	lua_register(l, "setTimingAdd", [](lua_State* l2) {
+		engine->ignitionState.luaTimingAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
-	lua_register(l, "setTimingMult", [](lua_State* l) {
-		engine->ignitionState.luaTimingMult = luaL_checknumber(l, 1);
+	lua_register(l, "setTimingMult", [](lua_State* l2) {
+		engine->ignitionState.luaTimingMult = luaL_checknumber(l2, 1);
 		return 0;
 	});
-	lua_register(l, "setFuelAdd", [](lua_State* l) {
-		engine->engineState.lua.fuelAdd = luaL_checknumber(l, 1);
+	lua_register(l, "setFuelAdd", [](lua_State* l2) {
+		engine->engineState.lua.fuelAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
-	lua_register(l, "setFuelMult", [](lua_State* l) {
-		engine->engineState.lua.fuelMult = luaL_checknumber(l, 1);
+	lua_register(l, "setFuelMult", [](lua_State* l2) {
+		engine->engineState.lua.fuelMult = luaL_checknumber(l2, 1);
 		return 0;
 	});
 #if EFI_PROD_CODE
-	lua_register(l, "setEtbAdd", [](lua_State* l) {
-		auto luaAdjustment = luaL_checknumber(l, 1);
+	lua_register(l, "setEtbAdd", [](lua_State* l2) {
+		auto luaAdjustment = luaL_checknumber(l2, 1);
 
 		setEtbLuaAdjustment(luaAdjustment);
 
 		return 0;
 	});
-	lua_register(l, "setEtbDisabled", [](lua_State* l) {
-		engine->engineState.lua.luaDisableEtb = lua_toboolean(l, 1);
+	lua_register(l, "setEtbDisabled", [](lua_State* l2) {
+		engine->engineState.lua.luaDisableEtb = lua_toboolean(l2, 1);
 		return 0;
 	});
-	lua_register(l, "setIgnDisabled", [](lua_State* l) {
-		engine->engineState.lua.luaIgnCut = lua_toboolean(l, 1);
+	lua_register(l, "setIgnDisabled", [](lua_State* l2) {
+		engine->engineState.lua.luaIgnCut = lua_toboolean(l2, 1);
 		return 0;
 	});
 #endif // EFI_PROD_CODE
 
-	lua_register(l, "setClutchUpState", [](lua_State* l) {
-		engine->engineState.lua.clutchUpState = lua_toboolean(l, 1);
+	lua_register(l, "setClutchUpState", [](lua_State* l2) {
+		engine->engineState.lua.clutchUpState = lua_toboolean(l2, 1);
 		return 0;
 	});
 
-	lua_register(l, "setBrakePedalState", [](lua_State* l) {
-		engine->engineState.lua.brakePedalState = lua_toboolean(l, 1);
+	lua_register(l, "setBrakePedalState", [](lua_State* l2) {
+		engine->engineState.lua.brakePedalState = lua_toboolean(l2, 1);
 		return 0;
 	});
 
-	lua_register(l, "setAcRequestState", [](lua_State* l) {
-		engine->engineState.lua.acRequestState = lua_toboolean(l, 1);
+	lua_register(l, "setAcRequestState", [](lua_State* l2) {
+		engine->engineState.lua.acRequestState = lua_toboolean(l2, 1);
 		return 0;
 	});
 
-	lua_register(l, "getCalibration", [](lua_State* l) {
-		auto propertyName = luaL_checklstring(l, 1, nullptr);
+	lua_register(l, "getCalibration", [](lua_State* l2) {
+		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getConfigValueByName(propertyName);
-		lua_pushnumber(l, result);
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 
 #if EFI_PROD_CODE || EFI_SIMULATOR
-	lua_register(l, "getOutput", [](lua_State* l) {
-		auto propertyName = luaL_checklstring(l, 1, nullptr);
+	lua_register(l, "getOutput", [](lua_State* l2) {
+		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getOutputValueByName(propertyName);
-		lua_pushnumber(l, result);
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
 
 #if EFI_SHAFT_POSITION_INPUT
-	lua_register(l, "getEngineState", [](lua_State* l) {
+	lua_register(l, "getEngineState", [](lua_State* l2) {
 		spinning_state_e state = engine->rpmCalculator.getState();
 		int luaStateCode;
 		if (state == STOPPED) {
@@ -829,15 +828,15 @@ void configureRusefiLuaHooks(lua_State* l) {
 			// spinning-up or cranking
 			luaStateCode = 1;
 		}
-		lua_pushnumber(l, luaStateCode);
+		lua_pushnumber(l2, luaStateCode);
 		return 1;
 	});
 #endif //EFI_SHAFT_POSITION_INPUT
 
-	lua_register(l, "setCalibration", [](lua_State* l) {
-		auto propertyName = luaL_checklstring(l, 1, nullptr);
-		auto value = luaL_checknumber(l, 2);
-		auto incrementVersion = lua_toboolean(l, 3);
+	lua_register(l, "setCalibration", [](lua_State* l2) {
+		auto propertyName = luaL_checklstring(l2, 1, nullptr);
+		auto value = luaL_checknumber(l2, 2);
+		auto incrementVersion = lua_toboolean(l2, 3);
 		setConfigValueByName(propertyName, value);
 		if (incrementVersion) {
 			incrementGlobalConfigurationVersion();
@@ -845,31 +844,31 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 0;
 	});
 
-	lua_register(l, "getGlobalConfigurationVersion", [](lua_State* l) {
-		lua_pushnumber(l, engine->getGlobalConfigurationVersion());
+	lua_register(l, "getGlobalConfigurationVersion", [](lua_State* l2) {
+		lua_pushnumber(l2, engine->getGlobalConfigurationVersion());
 		return 1;
 	});
 
-	lua_register(l, "setAcDisabled", [](lua_State* l) {
-		auto value = lua_toboolean(l, 1);
+	lua_register(l, "setAcDisabled", [](lua_State* l2) {
+		auto value = lua_toboolean(l2, 1);
 		engine->module<AcController>().unmock().isDisabledByLua = value;
 		return 0;
 	});
-	lua_register(l, "getTimeSinceAcToggleMs", [](lua_State* l) {
+	lua_register(l, "getTimeSinceAcToggleMs", [](lua_State* l2) {
 		int result = US2MS(getTimeNowUs()) - engine->module<AcController>().unmock().acSwitchLastChangeTimeMs;
-		lua_pushnumber(l, result);
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 
 #if EFI_VEHICLE_SPEED
-	lua_register(l, "getCurrentGear", [](lua_State* l) {
-		lua_pushinteger(l, Sensor::getOrZero(SensorType::DetectedGear));
+	lua_register(l, "getCurrentGear", [](lua_State* l2) {
+		lua_pushinteger(l2, Sensor::getOrZero(SensorType::DetectedGear));
 		return 1;
 	});
 
-	lua_register(l, "getRpmInGear", [](lua_State* l) {
-		auto idx = luaL_checkinteger(l, 1);
-		lua_pushinteger(l, engine->module<GearDetector>()->getRpmInGear(idx));
+	lua_register(l, "getRpmInGear", [](lua_State* l2) {
+		auto idx = luaL_checkinteger(l2, 1);
+		lua_pushinteger(l2, engine->module<GearDetector>()->getRpmInGear(idx));
 		return 1;
 	});
 #endif // EFI_VEHICLE_SPEED
@@ -890,9 +889,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 0;
 	});
 #if EFI_SHAFT_POSITION_INPUT
-	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l) {
+	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
 		int result = engine->triggerCentral.m_lastEventTimer.getElapsedUs() / 1000;
-		lua_pushnumber(l, result);
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -906,4 +905,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 #if EFI_CAN_SUPPORT || EFI_UNIT_TEST
 	lua_register(l, "txCan", lua_txCan);
 #endif
+
+	lua_register(l, "resetOdometer", [](lua_State*) {
+		engine->module<TripOdometer>()->reset();
+		return 0;
+	});
 }

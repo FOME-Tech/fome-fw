@@ -107,9 +107,9 @@ static int getCrankDivider(operation_mode_e operationMode) {
 }
 
 static bool vvtWithRealDecoder(vvt_mode_e vvtMode) {
-	// todo: why does VVT_2JZ not use real decoder?
+	// todo: why does VVT_TOYOTA_3_TOOTH not use real decoder?
 	return vvtMode != VVT_INACTIVE
-			&& vvtMode != VVT_2JZ
+			&& vvtMode != VVT_TOYOTA_3_TOOTH
 			&& vvtMode != VVT_HONDA_K_INTAKE
 			&& vvtMode != VVT_MAP_V_TWIN
 			&& vvtMode != VVT_SINGLE_TOOTH;
@@ -172,7 +172,7 @@ static angle_t adjustCrankPhase(int camIndex) {
 	case VVT_NISSAN_VQ:
 	case VVT_BOSCH_QUICK_START:
 	case VVT_MIATA_NB:
-	case VVT_2JZ:
+	case VVT_TOYOTA_3_TOOTH:
 	case VVT_TOYOTA_4_1:
 	case VVT_FORD_ST170:
 	case VVT_BARRA_3_PLUS_1:
@@ -299,14 +299,15 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	}
 
 	switch(engineConfiguration->vvtMode[camIndex]) {
-	case VVT_2JZ:
-		// we do not know if we are in sync or out of sync, so we have to be looking for both possibilities
-		if ((currentPosition < engineConfiguration->scriptSetting[4]       || currentPosition > engineConfiguration->scriptSetting[5]) &&
-		    (currentPosition < engineConfiguration->scriptSetting[4] + 360 || currentPosition > engineConfiguration->scriptSetting[5] + 360)) {
-			// outside of the expected range
+	case VVT_TOYOTA_3_TOOTH: {
+		// Consider the tooth in the first 1/3 of the engine phase
+		bool inRange = angleFromPrimarySyncPoint > 0 && angleFromPrimarySyncPoint < (720 / 3);
+
+		if (!inRange) {
 			return;
 		}
-		break;
+
+		} break;
 	default:
 		// else, do nothing
 		break;
@@ -675,7 +676,7 @@ static void triggerShapeInfo() {
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	TriggerWaveform *shape = &getTriggerCentral()->triggerShape;
 	TriggerFormDetails *triggerFormDetails = &getTriggerCentral()->triggerFormDetails;
-	efiPrintf("syncEdge=%s", getSyncEdge(TRIGGER_WAVEFORM(syncEdge)));
+	efiPrintf("syncEdge=%s", getSyncEdge(TRIGGER_WAVEFORM(m_syncEdge)));
 	efiPrintf("gap from %.2f to %.2f", TRIGGER_WAVEFORM(syncronizationRatioFrom[0]), TRIGGER_WAVEFORM(syncronizationRatioTo[0]));
 
 	for (size_t i = 0; i < shape->getSize(); i++) {
@@ -704,7 +705,7 @@ void triggerInfo(void) {
 	efiPrintf("Template %s (%d) trigger %s (%d) syncEdge=%s tdcOffset=%.2f",
 			getEngine_type_e(engineConfiguration->engineType), engineConfiguration->engineType,
 			getTrigger_type_e(engineConfiguration->trigger.type), engineConfiguration->trigger.type,
-			getSyncEdge(TRIGGER_WAVEFORM(syncEdge)), TRIGGER_WAVEFORM(tdcPosition));
+			getSyncEdge(TRIGGER_WAVEFORM(m_syncEdge)), TRIGGER_WAVEFORM(tdcPosition));
 
 	if (engineConfiguration->trigger.type == trigger_type_e::TT_TOOTHED_WHEEL) {
 		efiPrintf("total %d/skipped %d", engineConfiguration->trigger.customTotalToothCount,
@@ -833,9 +834,9 @@ void onConfigurationChangeTriggerCallback() {
 	getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange = getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange || changed;
 }
 
-static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& config, TriggerDecoderBase &initState) {
-	shape.initializeTriggerWaveform(FOUR_STROKE_CAM_SENSOR, config);
-	shape.initializeSyncPoint(initState, config);
+static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& triggerConfig, TriggerDecoderBase &initState) {
+	shape.initializeTriggerWaveform(FOUR_STROKE_CAM_SENSOR, triggerConfig);
+	shape.initializeSyncPoint(initState, triggerConfig);
 }
 
 void TriggerCentral::validateCamVvtCounters() {

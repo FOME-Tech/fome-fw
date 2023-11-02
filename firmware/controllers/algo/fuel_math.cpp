@@ -177,7 +177,9 @@ static float getBaseFuelMass(int rpm) {
 	auto airmass = model->getAirmass(rpm, true);
 
 	// Plop some state for others to read
+	float normalizedCylinderFilling = 100 * airmass.CylinderAirmass / getStandardAirCharge();
 	engine->fuelComputer.sdAirMassInOneCylinder = airmass.CylinderAirmass;
+	engine->fuelComputer.normalizedCylinderFilling = normalizedCylinderFilling;
 	engine->engineState.fuelingLoad = airmass.EngineLoadPercent;
 	engine->engineState.ignitionLoad = engine->fuelComputer.getLoadOverride(airmass.EngineLoadPercent, engineConfiguration->ignOverrideMode);
 	
@@ -224,7 +226,7 @@ angle_t getInjectionOffset(float rpm, float load) {
 	}
 
 	angle_t result = value;
-	fixAngle(result, "inj offset#2", ObdCode::CUSTOM_ERR_6553);
+	wrapAngle(result, "inj offset#2", ObdCode::CUSTOM_ERR_6553);
 	return result;
 }
 
@@ -272,10 +274,6 @@ float getInjectionModeDurationMultiplier() {
 	}
 }
 
-/**
- * This is more like MOSFET duty cycle since durations include injector lag
- * @see getCoilDutyCycle
- */
 percent_t getInjectorDutyCycle(int rpm) {
 	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(engineConfiguration->injectionMode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);

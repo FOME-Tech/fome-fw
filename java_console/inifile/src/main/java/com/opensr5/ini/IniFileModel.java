@@ -25,16 +25,15 @@ public class IniFileModel {
     private static IniFileModel INSTANCE;
     private String dialogId;
     private String dialogUiName;
-    private Map<String, DialogModel> dialogs = new TreeMap<>();
-    private Map<String, DialogModel.Field> allFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, DialogModel> dialogs = new TreeMap<>();
+    private final Map<String, DialogModel.Field> allFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     // this is only used while reading model - TODO extract reader
-    private List<DialogModel.Field> fieldsOfCurrentDialog = new ArrayList<>();
+    private final List<DialogModel.Field> fieldsOfCurrentDialog = new ArrayList<>();
     public Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public Map<String, String> tooltips = new TreeMap<>();
     public Map<String, String> protocolMeta = new TreeMap<>();
     private boolean isConstantsSection;
-    private String currentSection;
 
     public static void main(String[] args) {
         log.info("Dialogs: " + IniFileModel.getInstance().dialogs);
@@ -143,7 +142,6 @@ public class IniFileModel {
 
             if (first.startsWith("[") && first.endsWith("]")) {
                 log.info("Section " + first);
-                currentSection = first;
                 isConstantsSection = first.equals("[Constants]");
             }
 
@@ -171,16 +169,21 @@ public class IniFileModel {
     }
 
     private void handleFieldDefinition(LinkedList<String> list) {
-        if (list.get(1).equals(FIELD_TYPE_SCALAR)) {
-            registerField(ScalarIniField.parse(list));
-        } else if (list.get(1).equals(FIELD_TYPE_STRING)) {
-            registerField(StringIniField.parse(list));
-        } else if (list.get(1).equals(FIELD_TYPE_ARRAY)) {
-            registerField(ArrayIniField.parse(list));
-        } else if (list.get(1).equals(FIELD_TYPE_BITS)) {
-            registerField(EnumIniField.parse(list));
-        } else {
-            throw new IllegalStateException("Unexpected " + list);
+        switch (list.get(1)) {
+            case FIELD_TYPE_SCALAR:
+                registerField(ScalarIniField.parse(list));
+                break;
+            case FIELD_TYPE_STRING:
+                registerField(StringIniField.parse(list));
+                break;
+            case FIELD_TYPE_ARRAY:
+                registerField(ArrayIniField.parse(list));
+                break;
+            case FIELD_TYPE_BITS:
+                registerField(EnumIniField.parse(list));
+                break;
+            default:
+                throw new IllegalStateException("Unexpected " + list);
         }
     }
 

@@ -33,36 +33,6 @@ case INJ_PolynomialAdder:
   }
  return NULL;
 }
-const char *getPidAutoTune_AutoTunerState(PidAutoTune_AutoTunerState value){
-switch(value) {
-case AUTOTUNER_OFF:
-  return "AUTOTUNER_OFF";
-case CONVERGED:
-  return "CONVERGED";
-case FAILED:
-  return "FAILED";
-case RELAY_STEP_DOWN:
-  return "RELAY_STEP_DOWN";
-case RELAY_STEP_UP:
-  return "RELAY_STEP_UP";
-case STEADY_STATE_AFTER_STEP_UP:
-  return "STEADY_STATE_AFTER_STEP_UP";
-case STEADY_STATE_AT_BASELINE:
-  return "STEADY_STATE_AT_BASELINE";
-  }
- return NULL;
-}
-const char *getPidAutoTune_Peak(PidAutoTune_Peak value){
-switch(value) {
-case MAXIMUM:
-  return "MAXIMUM";
-case MINIMUM:
-  return "MINIMUM";
-case NOT_A_PEAK:
-  return "NOT_A_PEAK";
-  }
- return NULL;
-}
 const char *getSelectedGear(SelectedGear value){
 switch(value) {
 case SelectedGear::Drive:
@@ -549,19 +519,6 @@ case AFR_Tps:
   }
  return NULL;
 }
-const char *getMaf_sensor_type_e(maf_sensor_type_e value){
-switch(value) {
-case Bosch0280218004:
-  return "Bosch0280218004";
-case Bosch0280218037:
-  return "Bosch0280218037";
-case CUSTOM:
-  return "CUSTOM";
-case DensoTODO:
-  return "DensoTODO";
-  }
- return NULL;
-}
 const char *getOperation_mode_e(operation_mode_e value){
 switch(value) {
 case FOUR_STROKE_CAM_SENSOR:
@@ -722,8 +679,6 @@ case VE_TPS:
 }
 const char *getVvt_mode_e(vvt_mode_e value){
 switch(value) {
-case VVT_2JZ:
-  return "VVT_2JZ";
 case VVT_BARRA_3_PLUS_1:
   return "VVT_BARRA_3_PLUS_1";
 case VVT_BOSCH_QUICK_START:
@@ -756,6 +711,8 @@ case VVT_NISSAN_VQ:
   return "VVT_NISSAN_VQ";
 case VVT_SINGLE_TOOTH:
   return "VVT_SINGLE_TOOTH";
+case VVT_TOYOTA_3_TOOTH:
+  return "VVT_TOYOTA_3_TOOTH";
 case VVT_TOYOTA_4_1:
   return "VVT_TOYOTA_4_1";
   }

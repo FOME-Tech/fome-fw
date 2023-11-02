@@ -2,7 +2,6 @@ package com.rusefi;
 
 import com.rusefi.util.SystemOut;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +15,7 @@ public class InvokeReader {
 
     private String[] args;
     private String outputPath;
-    private List<String> definitionInputFiles = new ArrayList<>();
+    private final List<String> definitionInputFiles = new ArrayList<>();
     private List<String> inputFiles = new ArrayList<>();
     private String inputPath = ".";
 
