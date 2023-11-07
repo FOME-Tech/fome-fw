@@ -42,7 +42,7 @@ void LimpManager::updateState(int rpm, efitick_t nowNt) {
 	Clearable allowFuel = engineConfiguration->isInjectionEnabled;
 	Clearable allowSpark = engineConfiguration->isIgnitionEnabled;
 
-#if !EFI_UNIT_TEST
+#if !EFI_UNIT_TEST && EFI_SHAFT_POSITION_INPUT
 	// if the ignition is off, cut fuel + spark
 	// UNLESS we're self stimulating, so you can test the ECU on the bench on USB
 	if (!m_ignitionOn && !engine->triggerCentral.directSelfStimulation) {
@@ -148,11 +148,33 @@ void LimpManager::updateState(int rpm, efitick_t nowNt) {
 		allowFuel.clear(ClearReason::StopRequested);
 	}
 
-	// If duty cycle is high, impose a fuel cut rev limiter.
-	// This is safer than attempting to limp along with injectors or a pump that are out of flow.
-	// only reset once below 20% duty to force the driver to lift
-	if (m_injectorDutyCutHysteresis.test(getInjectorDutyCycle(rpm), 96, 20)) {
-		allowFuel.clear(ClearReason::InjectorDutyCycle);
+	{
+		// If duty cycle is high, impose a fuel cut rev limiter.
+		// This is safer than attempting to limp along with injectors or a pump that are out of flow.
+		// Two conditions will trigger a cut:
+		// - An instantaneous excursion above maxInjectorDutyInstant
+		// - A sustained excursion above maxInjectorDutySustained for a duration of >= maxInjectorDutySustainedTimeout
+		// Only reset once below 20% duty to force the driver to lift off the pedal
+
+		auto injDutyCycle = getInjectorDutyCycle(rpm);
+		bool isOverInstantDutyCycle = injDutyCycle > engineConfiguration->maxInjectorDutyInstant;
+		bool isOverSustainedDutyCycle = injDutyCycle > engineConfiguration->maxInjectorDutySustained;
+		bool isUnderLowDuty = injDutyCycle < 20;
+
+		if (!isOverSustainedDutyCycle) {
+			// Duty cycle is OK, reset timer.
+			m_injectorDutySustainedTimer.reset(nowNt);
+		}
+
+		// True if isOverSustainedDutyCycle has been true for longer than the timeout
+		bool sustainedLimitTimedOut = m_injectorDutySustainedTimer.hasElapsedSec(engineConfiguration->maxInjectorDutySustainedTimeout);
+
+		bool someLimitTripped = isOverInstantDutyCycle || sustainedLimitTimedOut;
+
+		if (m_injectorDutyCutHysteresis.test(someLimitTripped, isUnderLowDuty)) {
+			allowFuel.clear(ClearReason::InjectorDutyCycle);
+			warning(ObdCode::CUSTOM_TOO_LONG_FUEL_INJECTION, "Injector duty cycle cut %.1f", injDutyCycle);
+		}
 	}
 
 	// If the pedal is pushed while not running, cut fuel to clear a flood condition.
@@ -227,20 +249,20 @@ bool LimpManager::allowTriggerInput() const {
 
 LimpState LimpManager::allowInjection() const {
 	if (!m_allowInjection) {
-		return {false, m_allowInjection.clearReason};
+		return {false, m_allowInjection.why()};
 	}
 	if (!m_transientAllowInjection) {
-		return {false, m_transientAllowInjection.clearReason};
+		return {false, m_transientAllowInjection.why()};
 	}
 	return {true, ClearReason::None};
 }
 
 LimpState LimpManager::allowIgnition() const {
 	if (!m_allowIgnition) {
-		return {false, m_allowIgnition.clearReason};
+		return {false, m_allowIgnition.why()};
 	}
 	if (!m_transientAllowIgnition) {
-		return {false, m_transientAllowIgnition.clearReason};
+		return {false, m_transientAllowIgnition.why()};
 	}
 	return {true, ClearReason::None};
 }

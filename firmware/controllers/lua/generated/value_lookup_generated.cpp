@@ -47,8 +47,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->etb_use_two_wires;
 		case 1097520823:
 			return engineConfiguration->isDoubleSolenoidIdle;
-		case -1572546086:
-			return engineConfiguration->useEeprom;
 		case -1279270887:
 			return engineConfiguration->useTLE8888_cranking_hack;
 		case 1156367906:
@@ -139,6 +137,8 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->triggerSimulatorRpm;
 		case -1578655365:
 			return engineConfiguration->cylindersCount;
+		case -107085459:
+			return engineConfiguration->vvtBumpAmount;
 		case -1992436143:
 			return engineConfiguration->benchTestOnTime;
 		case 1425664391:
@@ -347,8 +347,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->enableCanVss;
 		case 1382521617:
 			return engineConfiguration->enableInnovateLC2;
-		case 2046602309:
-			return engineConfiguration->showHumanReadableWarning;
 		case 1838375282:
 			return engineConfiguration->stftIgnoreErrorMagnitude;
 		case -1724873939:
@@ -357,6 +355,8 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->verboseVVTDecoding;
 		case 1081026348:
 			return engineConfiguration->invertCamVVTSignal;
+		case -253720028:
+			return engineConfiguration->alphaNUseIat;
 		case 1509355728:
 			return engineConfiguration->knockBankCyl1;
 		case 1509355729:
@@ -445,8 +445,6 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->widebandOnSecondBus;
 		case 1611799720:
 			return engineConfiguration->fuelClosedLoopCorrectionEnabled;
-		case -546057276:
-			return engineConfiguration->isVerboseIAC;
 		case 885690524:
 			return engineConfiguration->boardUseTachPullUp;
 		case -1457484942:
@@ -1007,6 +1005,72 @@ float getConfigValueByName(const char *name) {
 			return engineConfiguration->ignTestCount;
 		case 257613965:
 			return engineConfiguration->ignTestOffTime;
+		case -846143628:
+			return engineConfiguration->canVssScaling;
+		case -1460957868:
+			return engineConfiguration->oilTempSensor.config.tempC_1;
+		case -1460957867:
+			return engineConfiguration->oilTempSensor.config.tempC_2;
+		case -1460957866:
+			return engineConfiguration->oilTempSensor.config.tempC_3;
+		case -1297544724:
+			return engineConfiguration->oilTempSensor.config.resistance_1;
+		case -1297544723:
+			return engineConfiguration->oilTempSensor.config.resistance_2;
+		case -1297544722:
+			return engineConfiguration->oilTempSensor.config.resistance_3;
+		case -346622972:
+			return engineConfiguration->oilTempSensor.config.bias_resistor;
+		case -713764196:
+			return engineConfiguration->fuelTempSensor.config.tempC_1;
+		case -713764195:
+			return engineConfiguration->fuelTempSensor.config.tempC_2;
+		case -713764194:
+			return engineConfiguration->fuelTempSensor.config.tempC_3;
+		case -1195844556:
+			return engineConfiguration->fuelTempSensor.config.resistance_1;
+		case -1195844555:
+			return engineConfiguration->fuelTempSensor.config.resistance_2;
+		case -1195844554:
+			return engineConfiguration->fuelTempSensor.config.resistance_3;
+		case -1285484724:
+			return engineConfiguration->fuelTempSensor.config.bias_resistor;
+		case 275986512:
+			return engineConfiguration->ambientTempSensor.config.tempC_1;
+		case 275986513:
+			return engineConfiguration->ambientTempSensor.config.tempC_2;
+		case 275986514:
+			return engineConfiguration->ambientTempSensor.config.tempC_3;
+		case -1084296600:
+			return engineConfiguration->ambientTempSensor.config.resistance_1;
+		case -1084296599:
+			return engineConfiguration->ambientTempSensor.config.resistance_2;
+		case -1084296598:
+			return engineConfiguration->ambientTempSensor.config.resistance_3;
+		case -1899369472:
+			return engineConfiguration->ambientTempSensor.config.bias_resistor;
+		case -498450107:
+			return engineConfiguration->compressorDischargeTemperature.config.tempC_1;
+		case -498450106:
+			return engineConfiguration->compressorDischargeTemperature.config.tempC_2;
+		case -498450105:
+			return engineConfiguration->compressorDischargeTemperature.config.tempC_3;
+		case 878369917:
+			return engineConfiguration->compressorDischargeTemperature.config.resistance_1;
+		case 878369918:
+			return engineConfiguration->compressorDischargeTemperature.config.resistance_2;
+		case 878369919:
+			return engineConfiguration->compressorDischargeTemperature.config.resistance_3;
+		case -1555883851:
+			return engineConfiguration->compressorDischargeTemperature.config.bias_resistor;
+		case 896753456:
+			return engineConfiguration->maxInjectorDutyInstant;
+		case 1651400031:
+			return engineConfiguration->maxInjectorDutySustained;
+		case 263235302:
+			return engineConfiguration->maxInjectorDutySustainedTimeout;
+		case 1007396714:
+			return engineConfiguration->speedometerPulsePerKm;
 	}
 	return EFI_ERROR_CODE;
 }
@@ -1121,11 +1185,6 @@ void setConfigValueByName(const char *name, float value) {
 		case 1097520823:
 	{
 		engineConfiguration->isDoubleSolenoidIdle = (int)value;
-		return;
-	}
-		case -1572546086:
-	{
-		engineConfiguration->useEeprom = (int)value;
 		return;
 	}
 		case -1279270887:
@@ -1351,6 +1410,11 @@ void setConfigValueByName(const char *name, float value) {
 		case -1578655365:
 	{
 		engineConfiguration->cylindersCount = (int)value;
+		return;
+	}
+		case -107085459:
+	{
+		engineConfiguration->vvtBumpAmount = (int)value;
 		return;
 	}
 		case -1992436143:
@@ -1873,11 +1937,6 @@ void setConfigValueByName(const char *name, float value) {
 		engineConfiguration->enableInnovateLC2 = (int)value;
 		return;
 	}
-		case 2046602309:
-	{
-		engineConfiguration->showHumanReadableWarning = (int)value;
-		return;
-	}
 		case 1838375282:
 	{
 		engineConfiguration->stftIgnoreErrorMagnitude = (int)value;
@@ -1896,6 +1955,11 @@ void setConfigValueByName(const char *name, float value) {
 		case 1081026348:
 	{
 		engineConfiguration->invertCamVVTSignal = (int)value;
+		return;
+	}
+		case -253720028:
+	{
+		engineConfiguration->alphaNUseIat = (int)value;
 		return;
 	}
 		case 1509355728:
@@ -2116,11 +2180,6 @@ void setConfigValueByName(const char *name, float value) {
 		case 1611799720:
 	{
 		engineConfiguration->fuelClosedLoopCorrectionEnabled = (int)value;
-		return;
-	}
-		case -546057276:
-	{
-		engineConfiguration->isVerboseIAC = (int)value;
 		return;
 	}
 		case 885690524:
@@ -3521,6 +3580,171 @@ void setConfigValueByName(const char *name, float value) {
 		case 257613965:
 	{
 		engineConfiguration->ignTestOffTime = (int)value;
+		return;
+	}
+		case -846143628:
+	{
+		engineConfiguration->canVssScaling = (int)value;
+		return;
+	}
+		case -1460957868:
+	{
+		engineConfiguration->oilTempSensor.config.tempC_1 = (int)value;
+		return;
+	}
+		case -1460957867:
+	{
+		engineConfiguration->oilTempSensor.config.tempC_2 = (int)value;
+		return;
+	}
+		case -1460957866:
+	{
+		engineConfiguration->oilTempSensor.config.tempC_3 = (int)value;
+		return;
+	}
+		case -1297544724:
+	{
+		engineConfiguration->oilTempSensor.config.resistance_1 = (int)value;
+		return;
+	}
+		case -1297544723:
+	{
+		engineConfiguration->oilTempSensor.config.resistance_2 = (int)value;
+		return;
+	}
+		case -1297544722:
+	{
+		engineConfiguration->oilTempSensor.config.resistance_3 = (int)value;
+		return;
+	}
+		case -346622972:
+	{
+		engineConfiguration->oilTempSensor.config.bias_resistor = (int)value;
+		return;
+	}
+		case -713764196:
+	{
+		engineConfiguration->fuelTempSensor.config.tempC_1 = (int)value;
+		return;
+	}
+		case -713764195:
+	{
+		engineConfiguration->fuelTempSensor.config.tempC_2 = (int)value;
+		return;
+	}
+		case -713764194:
+	{
+		engineConfiguration->fuelTempSensor.config.tempC_3 = (int)value;
+		return;
+	}
+		case -1195844556:
+	{
+		engineConfiguration->fuelTempSensor.config.resistance_1 = (int)value;
+		return;
+	}
+		case -1195844555:
+	{
+		engineConfiguration->fuelTempSensor.config.resistance_2 = (int)value;
+		return;
+	}
+		case -1195844554:
+	{
+		engineConfiguration->fuelTempSensor.config.resistance_3 = (int)value;
+		return;
+	}
+		case -1285484724:
+	{
+		engineConfiguration->fuelTempSensor.config.bias_resistor = (int)value;
+		return;
+	}
+		case 275986512:
+	{
+		engineConfiguration->ambientTempSensor.config.tempC_1 = (int)value;
+		return;
+	}
+		case 275986513:
+	{
+		engineConfiguration->ambientTempSensor.config.tempC_2 = (int)value;
+		return;
+	}
+		case 275986514:
+	{
+		engineConfiguration->ambientTempSensor.config.tempC_3 = (int)value;
+		return;
+	}
+		case -1084296600:
+	{
+		engineConfiguration->ambientTempSensor.config.resistance_1 = (int)value;
+		return;
+	}
+		case -1084296599:
+	{
+		engineConfiguration->ambientTempSensor.config.resistance_2 = (int)value;
+		return;
+	}
+		case -1084296598:
+	{
+		engineConfiguration->ambientTempSensor.config.resistance_3 = (int)value;
+		return;
+	}
+		case -1899369472:
+	{
+		engineConfiguration->ambientTempSensor.config.bias_resistor = (int)value;
+		return;
+	}
+		case -498450107:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.tempC_1 = (int)value;
+		return;
+	}
+		case -498450106:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.tempC_2 = (int)value;
+		return;
+	}
+		case -498450105:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.tempC_3 = (int)value;
+		return;
+	}
+		case 878369917:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.resistance_1 = (int)value;
+		return;
+	}
+		case 878369918:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.resistance_2 = (int)value;
+		return;
+	}
+		case 878369919:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.resistance_3 = (int)value;
+		return;
+	}
+		case -1555883851:
+	{
+		engineConfiguration->compressorDischargeTemperature.config.bias_resistor = (int)value;
+		return;
+	}
+		case 896753456:
+	{
+		engineConfiguration->maxInjectorDutyInstant = (int)value;
+		return;
+	}
+		case 1651400031:
+	{
+		engineConfiguration->maxInjectorDutySustained = (int)value;
+		return;
+	}
+		case 263235302:
+	{
+		engineConfiguration->maxInjectorDutySustainedTimeout = (int)value;
+		return;
+	}
+		case 1007396714:
+	{
+		engineConfiguration->speedometerPulsePerKm = (int)value;
 		return;
 	}
 	}

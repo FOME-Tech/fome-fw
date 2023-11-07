@@ -24,6 +24,7 @@
 #include "idle_hardware.h"
 #include "gppwm.h"
 #include "tachometer.h"
+#include "speedometer.h"
 #include "dynoview.h"
 #include "boost_control.h"
 #include "fan_control.h"
@@ -67,8 +68,8 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 	switch (vvtMode) {
 	case VVT_INACTIVE:
 		return trigger_type_e::TT_ONE;
-	case VVT_2JZ:
-		return trigger_type_e::TT_VVT_JZ;
+	case VVT_TOYOTA_3_TOOTH:
+		return trigger_type_e::TT_VVT_TOYOTA_3_TOOTH;
 	case VVT_MIATA_NB:
 		return trigger_type_e::TT_VVT_MIATA_NB;
 	case VVT_BOSCH_QUICK_START:
@@ -145,10 +146,6 @@ void Engine::periodicSlowCallback() {
 	updateGppwm();
 
 	engine->engineModules.apply_all([](auto & m) { m.onSlowCallback(); });
-
-#if EFI_BOOST_CONTROL
-	engine->boostController.update();
-#endif // EFI_BOOST_CONTROL
 
 #if (BOARD_TLE8888_COUNT > 0)
 	tle8888startup();
@@ -240,7 +237,7 @@ int Engine::getGlobalConfigurationVersion(void) const {
 
 void Engine::reset() {
 	/**
-	 * it's important for fixAngle() that engineCycle field never has zero
+	 * it's important for wrapAngle() that engineCycle field never has zero
 	 */
 	engineState.engineCycle = getEngineCycle(FOUR_STROKE_CRANK_SENSOR);
 	resetLua();
@@ -254,7 +251,7 @@ void Engine::resetLua() {
 	engineState.lua.luaDisableEtb = false;
 	engineState.lua.luaIgnCut = false;
 #if EFI_BOOST_CONTROL
-	boostController.resetLua();
+	module<BoostController>().unmock().resetLua();
 #endif // EFI_BOOST_CONTROL
 	ignitionState.luaTimingAdd = 0;
 	ignitionState.luaTimingMult = 1;
@@ -272,9 +269,6 @@ void Engine::preCalculate() {
 	// we take 2 bytes of crc32, no idea if it's right to call it crc16 or not
 	// we have a hack here - we rely on the fact that engineMake is the first of three relevant fields
 	engine->outputChannels.engineMakeCodeNameCrc16 = crc32(engineConfiguration->engineMake, 3 * VEHICLE_INFO_SIZE);
-
-	// we need and can empty warning message for CRC purposes
-	memset(config->warning_message, 0, sizeof(error_message_t));
 	engine->outputChannels.tuneCrc16 = crc32(config, sizeof(persistent_config_s));
 #endif /* EFI_TUNER_STUDIO */
 }
@@ -387,7 +381,7 @@ todo: move to shutdown_controller.cpp
 */
 
 	// here we are in the shutdown (the ignition is off) or initial mode (after the firmware fresh start)
-	const efitick_t engineStopWaitTimeoutUs = 500000LL;	// 0.5 sec
+	// const efitick_t engineStopWaitTimeoutUs = 500000LL;	// 0.5 sec
 	// in shutdown mode, we need a small cooldown time between the ignition off and on
 /* this needs work or tests
 todo: move to shutdown_controller.cpp
@@ -480,7 +474,8 @@ void Engine::periodicFastCallback() {
 
 	engineState.periodicFastCallback();
 
-	tachSignalCallback();
+	tachUpdate();
+	speedoUpdate();
 
 	engine->engineModules.apply_all([](auto & m) { m.onFastCallback(); });
 }

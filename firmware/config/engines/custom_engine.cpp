@@ -17,7 +17,6 @@
 #include "mre_meta.h"
 #include "proteus_meta.h"
 #include "hellen_meta.h"
-#include "odometer.h"
 #include "defaults.h"
 
 #if EFI_ELECTRONIC_THROTTLE_BODY
@@ -313,7 +312,6 @@ void setTle8888TestConfiguration() {
 	engineConfiguration->spi1misoPin = Gpio::B4;
 	engineConfiguration->spi1sckPin = Gpio::B3; // please note that this pin is also SWO/SWD - Single Wire debug Output
 	engineConfiguration->is_enabled_spi_1 = true;
-	engineConfiguration->debugMode = DBG_TLE8888;
 
 	engineConfiguration->fuelPumpPin = Gpio::TLE8888_PIN_20;
 #endif /* BOARD_TLE8888_COUNT */
@@ -374,8 +372,6 @@ void setTle8888TestConfiguration() {
  */
 static void mreBoardOldTest() {
 #if (BOARD_TLE8888_COUNT > 0)
-	engineConfiguration->debugMode = DBG_TLE8888;
-
 	engineConfiguration->triggerSimulatorRpm = 202;
 	// set cranking_rpm 500
 	engineConfiguration->cranking.rpm = 100;

@@ -425,9 +425,6 @@ static void setTestBug299(EngineTestHelper *eth) {
 	EXPECT_CALL(*eth->mockAirmass, getAirmass(_, _))
 		.WillRepeatedly(Return(AirmassResult{0.1008001f, 50.0f}));
 
-	Engine *engine = &eth->engine;
-
-
 	eth->assertRpm(0, "RPM=0");
 
 	eth->fireTriggerEventsWithDuration(20);
@@ -532,8 +529,8 @@ static void setTestBug299(EngineTestHelper *eth) {
 }
 
 static void assertInjectors(const char *msg, int value0, int value1) {
-	EXPECT_EQ(value0, enginePins.injectors[0].currentLogicValue);
-	EXPECT_EQ(value1, enginePins.injectors[1].currentLogicValue);
+	EXPECT_EQ(value0, enginePins.injectors[0].m_currentLogicValue);
+	EXPECT_EQ(value1, enginePins.injectors[1].m_currentLogicValue);
 }
 
 static void setArray(float* p, size_t count, float value) {
@@ -731,7 +728,7 @@ void doTestFuelSchedulerBug299smallAndMedium(int startUpDelayMs) {
 	assertInjectionEventBatch("#03", &t->elements[0], 0, 3, 0, 315);
 
 
-	ASSERT_EQ( 1,  enginePins.injectors[0].currentLogicValue) << "inj#0";
+	ASSERT_EQ( 1,  enginePins.injectors[0].m_currentLogicValue) << "inj#0";
 
 	ASSERT_EQ( 1,  engine->executor.size()) << "Queue.size#04";
 	eth.assertInjectorDownEvent("08@0", 0, MS2US(10), 0);
@@ -745,7 +742,7 @@ void doTestFuelSchedulerBug299smallAndMedium(int startUpDelayMs) {
 
 	eth.executeActions();
 	eth.fireRise(20);
-	ASSERT_EQ( 7,  engine->executor.size()) << "Queue.size#05";
+	ASSERT_EQ(9,  engine->executor.size()) << "Queue.size#05";
 	eth.executeActions();
 
 
@@ -764,7 +761,7 @@ void doTestFuelSchedulerBug299smallAndMedium(int startUpDelayMs) {
 	assertInjectionEventBatch("#30", &t->elements[3], 1, 2, 0, 45);
 
 	 // todo: what's what? a mix of new something and old something?
-	ASSERT_EQ( 4,  engine->executor.size()) << "qs#5";
+	ASSERT_EQ(6,  engine->executor.size()) << "qs#5";
 //	assertInjectorDownEvent("8@0", 0, MS2US(5.0), 1);
 //	assertInjectorUpEvent("8@1", 1, MS2US(7.5), 1);
 //	assertInjectorDownEvent("8@2", 2, MS2US(15.0), 0);
@@ -777,9 +774,6 @@ void doTestFuelSchedulerBug299smallAndMedium(int startUpDelayMs) {
 ////	assertInjectorDownEvent("8@9", 9, MS2US(55), 0);
 
 	ASSERT_EQ( 0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testFuelSchedulerBug299smallAndMedium";
-/*
-	ASSERT_EQ(ObdCode::CUSTOM_OBD_SKIPPED_FUEL, unitTestWarningCodeState.recentWarnings.get(0).Code);
-*/
 }
 
 void setInjectionMode(int value) {
@@ -927,7 +921,7 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 	eth.executeActions();
 
 	// injector #1 is low before the test
-	ASSERT_FALSE(enginePins.injectors[0].currentLogicValue) << "injector@0";
+	ASSERT_FALSE(enginePins.injectors[0].m_currentLogicValue) << "injector@0";
 
 	eth.firePrimaryTriggerRise();
 
@@ -951,11 +945,11 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 
 	engine->executor.executeAll(eth.getTimeNowUs() + 1);
 	// injector goes high...
-	ASSERT_FALSE(enginePins.injectors[0].currentLogicValue) << "injector@1";
+	ASSERT_FALSE(enginePins.injectors[0].m_currentLogicValue) << "injector@1";
 
 	engine->executor.executeAll(eth.getTimeNowUs() + MS2US(17.5) + 1);
 	// injector does not go low too soon, that's a feature :)
-	ASSERT_TRUE(enginePins.injectors[0].currentLogicValue) << "injector@2";
+	ASSERT_TRUE(enginePins.injectors[0].m_currentLogicValue) << "injector@2";
 
 
 	eth.fireFall(20);
@@ -971,7 +965,7 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 
 	engine->executor.executeAll(eth.getTimeNowUs() + MS2US(10) + 1);
 	// end of combined injection
-	ASSERT_FALSE(enginePins.injectors[0].currentLogicValue) << "injector@3";
+	ASSERT_FALSE(enginePins.injectors[0].m_currentLogicValue) << "injector@3";
 
 
 	eth.moveTimeForwardUs(MS2US(20));
@@ -1015,9 +1009,6 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 	eth.moveTimeForwardUs(MS2US(20));
 	eth.executeActions();
 	ASSERT_EQ( 0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testFuelSchedulerBug299smallAndLarge";
-	/*
-	ASSERT_EQ(ObdCode::CUSTOM_OBD_SKIPPED_FUEL, unitTestWarningCodeState.recentWarnings.get(0).Code);
-*/
 }
 
 TEST(big, testSparkReverseOrderBug319) {

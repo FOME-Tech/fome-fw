@@ -47,22 +47,20 @@
 #include "backup_ram.h"
 
 void endSimultaneousInjection(InjectionEvent *event) {
-	event->isScheduled = false;
 	endSimultaneousInjectionOnlyTogglePins();
-	getFuelSchedule()->addFuelEventsForCylinder(event->ownIndex);
+	event->update();
 }
 
 void turnInjectionPinLow(InjectionEvent *event) {
 	efitick_t nowNt = getTimeNowNt();
 
-	event->isScheduled = false;
 	for (int i = 0;i<MAX_WIRES_COUNT;i++) {
 		InjectorOutputPin *output = event->outputs[i];
 		if (output) {
 			output->close(nowNt);
 		}
 	}
-	getFuelSchedule()->addFuelEventsForCylinder(event->ownIndex);
+	event->update();
 }
 
 void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase, float nextPhase) {
@@ -95,11 +93,8 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	 * see also injectorDutyCycle
 	 */
 	int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
-	if (injectionDuration * numberOfInjections > getEngineCycleDuration(rpm)) {
-		warning(ObdCode::CUSTOM_TOO_LONG_FUEL_INJECTION, "Too long fuel injection %.2fms", injectionDuration);
-	}
 
-	getEngineState()->fuelConsumption.consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
+	engine->module<TripOdometer>()->consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
 
 	if (this->cylinderNumber == 0) {
 		engine->outputChannels.actualLastInjection = injectionDuration;
@@ -125,40 +120,13 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 
 	floatus_t durationUs = MS2US(injectionDuration);
 
-
-	// we are ignoring low RPM in order not to handle "engine was stopped to engine now running" transition
-/*
- * Wall Wetting would totally skip fuel on sudden deceleration a
-	if (rpm > 2 * engineConfiguration->cranking.rpm) {
-		const char *outputName = outputs[0]->name;
-		if (engine->prevOutputName == outputName
-				&& engineConfiguration->injectionMode != IM_SIMULTANEOUS
-				&& engineConfiguration->injectionMode != IM_SINGLE_POINT) {
-			warning(ObdCode::CUSTOM_OBD_SKIPPED_FUEL, "looks like skipped fuel event revCounter=%d %s", getRevolutionCounter(), outputName);
-		}
-		engine->prevOutputName = outputName;
-	}
-*/
-
 #if EFI_PRINTF_FUEL_DETAILS
 	if (printFuelDebug) {
 		InjectorOutputPin *output = outputs[0];
-		printf("handleFuelInjectionEvent fuelout %s injection_duration %dus engineCycleDuration=%.1fms\t\n", output->name, (int)durationUs,
+		printf("handleFuelInjectionEvent fuelout %s injection_duration %dus engineCycleDuration=%.1fms\t\n", output->getName(), (int)durationUs,
 				(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
-
-if (isScheduled) {
-#if EFI_PRINTF_FUEL_DETAILS
-		if (printFuelDebug) {
-			InjectorOutputPin *output = outputs[0];
-			printf("handleFuelInjectionEvent still used %s now=%.1fms\r\n", output->name, (int)getTimeNowUs() / 1000.0);
-		}
-#endif /*EFI_PRINTF_FUEL_DETAILS */
-		return; // this InjectionEvent is still needed for an extremely long injection scheduled previously
-	}
-
-	isScheduled = true;
 
 	action_s startAction, endAction;
 	// We use different callbacks based on whether we're running sequential mode or not - everything else is the same
@@ -207,10 +175,8 @@ static void handleFuel(int rpm, efitick_t nowNt, float currentPhase, float nextP
 		return;
 	}
 
-	/**
-	 * Injection events are defined by addFuelEvents() according to selected
-	 * fueling strategy
-	 */
+	// This is called in the fast callback already, but since we may have just achieved engine sync (and RPM)
+	// for the first time, force update the schedule so that we can inject immediately if necessary
 	FuelSchedule *fs = getFuelSchedule();
 	if (!fs->isReady) {
 		fs->addFuelEvents();

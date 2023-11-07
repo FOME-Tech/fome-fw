@@ -6,7 +6,6 @@ import com.opensr5.ini.field.ScalarIniField;
 import com.rusefi.binaryprotocol.BinaryProtocolState;
 import com.rusefi.config.Field;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.rusEFIVersion;
 import com.rusefi.io.IoStream;
 import com.rusefi.io.LinkConnector;
 import com.rusefi.io.LinkManager;
@@ -28,7 +27,6 @@ import static com.rusefi.config.generated.Fields.TS_FILE_VERSION;
 import static com.rusefi.config.generated.Fields.TS_FILE_VERSION_OFFSET;
 import static com.rusefi.io.tcp.TcpConnector.LOCALHOST;
 import org.junit.Assert;
-import static org.junit.Assert.assertTrue;
 
 public class TestHelper extends MockitoTestHelper {
     private static final Logging log = getLogging(TestHelper.class);
@@ -51,7 +49,7 @@ public class TestHelper extends MockitoTestHelper {
     }
 
     @NotNull
-    public static BinaryProtocolServer createVirtualController(ConfigurationImage ci, int port, Listener serverSocketCreationCallback, BinaryProtocolServer.Context context) throws IOException {
+    public static BinaryProtocolServer createVirtualController(ConfigurationImage ci, int port, BinaryProtocolServer.Context context) throws IOException {
         BinaryProtocolState state = new BinaryProtocolState();
         state.setController(ci);
         byte[] currentOutputs = new byte[Fields.TS_TOTAL_OUTPUT_SIZE];
@@ -62,7 +60,7 @@ public class TestHelper extends MockitoTestHelper {
         LinkManager linkManager = new LinkManager();
         linkManager.setConnector(LinkConnector.getDetachedConnector(state));
         BinaryProtocolServer server = new BinaryProtocolServer();
-        server.start(linkManager, port, serverSocketCreationCallback, context);
+        server.start(linkManager, port, context);
         return server;
     }
 
@@ -80,9 +78,7 @@ public class TestHelper extends MockitoTestHelper {
     public static BinaryProtocolServer createVirtualController(int controllerPort, ConfigurationImage controllerImage, BinaryProtocolServer.Context context) throws InterruptedException {
         CountDownLatch controllerCreated = new CountDownLatch(1);
         try {
-            BinaryProtocolServer server = createVirtualController(controllerImage, controllerPort, parameter -> controllerCreated.countDown(), context);
-            assertLatch(controllerCreated);
-            return server;
+            return createVirtualController(controllerImage, controllerPort, context);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }

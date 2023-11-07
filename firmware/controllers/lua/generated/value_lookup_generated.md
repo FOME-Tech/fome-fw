@@ -64,9 +64,6 @@ TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT use two wire mode.
 ### isDoubleSolenoidIdle
 Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 
-### useEeprom
-
-
 ### useTLE8888_cranking_hack
 
 
@@ -95,7 +92,7 @@ For cranking either use the specified fixed base fuel mass, or use the normal ru
 
 
 ### verboseCan
-Print incoming and outgoing first bus CAN messages in rusEFI console
+Print incoming and outgoing first bus CAN messages in FOME console
 
 ### artificialTestMisfire
 Experimental setting that will cause a misfire\nDO NOT ENABLE.
@@ -191,7 +188,7 @@ Pull-up resistor value on your board
 
 
 ### knockBandCustom
-We calculate knock band based of cylinderBore\n Use this to override - kHz knock band override
+We calculate knock band based of cylinderBore\n Use this to override - kHz knock band override\nRequires power cycling to effect
 
 ### displacement
 Engine displacement in litres
@@ -201,6 +198,9 @@ Engine displacement in litres
 
 ### cylindersCount
 Number of cylinder the engine has.
+
+### vvtBumpAmount
+
 
 ### benchTestOnTime
 Duration of each test pulse
@@ -380,7 +380,7 @@ Just for reference really, not taken into account by any logic at this point
 enable sd/disable sd
 
 ### rusefiVerbose29b
-Use 11 bit (standard) or 29 bit (extended) IDs for rusEFI verbose CAN format.
+Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
 
 ### isVerboseAlternator
 
@@ -395,7 +395,7 @@ This setting should only be used if you have a stepper motor idle valve and a st
 
 
 ### enableVerboseCanTx
-CAN broadcast using custom rusEFI protocol\nenable can_broadcast/disable can_broadcast
+CAN broadcast using custom FOME protocol\nenable can_broadcast/disable can_broadcast
 
 ### etb1configured
 
@@ -514,9 +514,6 @@ Read VSS from OEM CAN bus according to selected CAN vehicle configuration.
 ### enableInnovateLC2
 
 
-### showHumanReadableWarning
-
-
 ### stftIgnoreErrorMagnitude
 If enabled, adjust at a constant rate instead of a rate proportional to the current lambda error. This mode may be easier to tune, and more tolerant of sensor noise.
 
@@ -528,6 +525,9 @@ Verbose info in console below engineSnifferRpmThreshold\nenable vvt_details
 
 ### invertCamVVTSignal
 get invertCamVVTSignal
+
+### alphaNUseIat
+In Alpha-N mode, compensate for air temperature.
 
 ### knockBankCyl1
 
@@ -575,7 +575,7 @@ get invertCamVVTSignal
 If enabled we use four Push-Pull outputs to directly drive stepper idle air valve coilss
 
 ### verboseCan2
-Print incoming and outgoing second bus CAN messages in rusEFI console
+Print incoming and outgoing second bus CAN messages in FOME console
 
 ### boostPid.pFactor
 
@@ -661,9 +661,6 @@ Select which bus the wideband controller is attached to.
 ### fuelClosedLoopCorrectionEnabled
 Enables lambda sensor closed loop feedback for fuelling.
 
-### isVerboseIAC
-Print details into rusEFI console\nenable verbose_idle
-
 ### boardUseTachPullUp
 
 
@@ -698,10 +695,10 @@ Treat milliseconds value as duty cycle value, i.e. 0.5ms would become 50%
 This enables smart alternator control and activates the extra alternator settings.
 
 ### invertPrimaryTriggerSignal
-https://wiki.rusefi.com/Trigger-Configuration-Guide\nThis setting flips the signal from the primary engine speed sensor.
+Invert the signal from the primary trigger sensor.
 
 ### invertSecondaryTriggerSignal
-https://wiki.rusefi.com/Trigger-Configuration-Guide\nThis setting flips the signal from the secondary engine speed sensor.
+Invert the signal from the secondary trigger sensor.
 
 ### cutFuelOnHardLimit
 
@@ -1503,4 +1500,103 @@ How many test bench pulses do you want
 
 ### ignTestOffTime
 Time between bench test pulses
+
+### canVssScaling
+Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.
+
+### oilTempSensor.config.tempC_1
+these values are in Celcius
+
+### oilTempSensor.config.tempC_2
+
+
+### oilTempSensor.config.tempC_3
+
+
+### oilTempSensor.config.resistance_1
+
+
+### oilTempSensor.config.resistance_2
+
+
+### oilTempSensor.config.resistance_3
+
+
+### oilTempSensor.config.bias_resistor
+Pull-up resistor value on your board
+
+### fuelTempSensor.config.tempC_1
+these values are in Celcius
+
+### fuelTempSensor.config.tempC_2
+
+
+### fuelTempSensor.config.tempC_3
+
+
+### fuelTempSensor.config.resistance_1
+
+
+### fuelTempSensor.config.resistance_2
+
+
+### fuelTempSensor.config.resistance_3
+
+
+### fuelTempSensor.config.bias_resistor
+Pull-up resistor value on your board
+
+### ambientTempSensor.config.tempC_1
+these values are in Celcius
+
+### ambientTempSensor.config.tempC_2
+
+
+### ambientTempSensor.config.tempC_3
+
+
+### ambientTempSensor.config.resistance_1
+
+
+### ambientTempSensor.config.resistance_2
+
+
+### ambientTempSensor.config.resistance_3
+
+
+### ambientTempSensor.config.bias_resistor
+Pull-up resistor value on your board
+
+### compressorDischargeTemperature.config.tempC_1
+these values are in Celcius
+
+### compressorDischargeTemperature.config.tempC_2
+
+
+### compressorDischargeTemperature.config.tempC_3
+
+
+### compressorDischargeTemperature.config.resistance_1
+
+
+### compressorDischargeTemperature.config.resistance_2
+
+
+### compressorDischargeTemperature.config.resistance_3
+
+
+### compressorDischargeTemperature.config.bias_resistor
+Pull-up resistor value on your board
+
+### maxInjectorDutyInstant
+If injector duty cycle hits this value, instantly cut fuel.
+
+### maxInjectorDutySustained
+If injector duty cycle hits this value for the specified delay time, cut fuel.
+
+### maxInjectorDutySustainedTimeout
+Timeout period for duty cycle over the sustained limit to trigger duty cycle protection.
+
+### speedometerPulsePerKm
+Number of speedometer pulses per kilometer travelled.
 

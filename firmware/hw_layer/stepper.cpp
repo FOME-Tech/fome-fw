@@ -167,7 +167,7 @@ void StepDirectionStepper::setDirection(bool isIncrementing) {
 		m_currentDirection = isIncrementing;
 	}
 
-	directionPin.setValue(isIncrementing);
+	m_directionPin.setValue(isIncrementing);
 }
 
 bool StepDirectionStepper::pulse() {
@@ -175,15 +175,15 @@ bool StepDirectionStepper::pulse() {
 	if (!engine->isMainRelayEnabled())
 		return false;
 
-	enablePin.setValue(false); // enable stepper
+	m_enablePin.setValue(false); // enable stepper
 
-	stepPin.setValue(true);
+	m_stepPin.setValue(true);
 	pause();
 
-	stepPin.setValue(false);
+	m_stepPin.setValue(false);
 	pause();
 
-	enablePin.setValue(true); // disable stepper
+	m_enablePin.setValue(true); // disable stepper
 
 	return true;
 }
@@ -213,25 +213,25 @@ void StepperMotor::initialize(StepperHw *hardware, int totalSteps) {
 }
 
 void StepDirectionStepper::initialize(brain_pin_e stepPin, brain_pin_e directionPin, pin_output_mode_e directionPinMode, float reactionTime, brain_pin_e enablePin, pin_output_mode_e enablePinMode) {
+	// avoid double-init
+	m_directionPin.deInit();
+	m_stepPin.deInit();
+	m_enablePin.deInit();
+
 	if (!isBrainPinValid(stepPin) || !isBrainPinValid(directionPin)) {
 		return;
 	}
 
 	setReactionTime(reactionTime);
 
-	this->directionPinMode = directionPinMode;
-	this->directionPin.initPin("Stepper DIR", directionPin, this->directionPinMode);
-
-	this->stepPinMode = OM_DEFAULT;	// todo: do we need configurable stepPinMode?
-	this->stepPin.initPin("Stepper step", stepPin, this->stepPinMode);
-
-	this->enablePinMode = enablePinMode;
-	this->enablePin.initPin("Stepper EN", enablePin, this->enablePinMode);
+	m_directionPin.initPin("Stepper DIR", directionPin, directionPinMode);
+	m_stepPin.initPin("Stepper step", stepPin);
+	m_enablePin.initPin("Stepper EN", enablePin, enablePinMode);
 
 	// All pins must be 0 for correct hardware startup (e.g. stepper auto-disabling circuit etc.).
-	this->enablePin.setValue(true); // disable stepper
-	this->stepPin.setValue(false);
-	this->directionPin.setValue(false);
+	m_enablePin.setValue(true); // disable stepper
+	m_stepPin.setValue(false);
+	m_directionPin.setValue(false);
 	m_currentDirection = false;
 }
 

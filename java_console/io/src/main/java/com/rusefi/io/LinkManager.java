@@ -113,8 +113,18 @@ public class LinkManager implements Closeable {
         SerialPort[] ports = SerialPort.getCommPorts();
         // wow sometimes driver returns same port name more than once?!
         TreeSet<String> names = new TreeSet<>();
-        for (SerialPort port : ports)
-            names.add(port.getSystemPortName());
+        for (SerialPort port : ports) {
+            String portName = port.getSystemPortName();
+
+            // Filter out some macOS trash
+            if (portName.contains("wlan-debug") ||
+                    portName.contains("Bluetooth-Incoming-Port") ||
+                    portName.startsWith("cu.")) {
+                continue;
+            }
+
+            names.add(portName);
+        }
         return names.toArray(new String[0]);
     }
 
@@ -197,7 +207,7 @@ public class LinkManager implements Closeable {
     public void startAndConnect(String port, ConnectionStateListener stateListener) {
         Objects.requireNonNull(port, "port");
         start(port, stateListener);
-        connector.connectAndReadConfiguration(new BinaryProtocol.Arguments(true), stateListener);
+        connector.connectAndReadConfiguration(stateListener);
     }
 
     @NotNull
@@ -230,12 +240,7 @@ public class LinkManager implements Closeable {
                 @Override
                 public IoStream call() {
                     messageListener.postMessage(getClass(), "Opening port: " + port);
-                    IoStream stream = BufferedSerialIoStream.openPort(port);
-                    if (stream == null) {
-                        // error already reported
-                        return null;
-                    }
-                    return stream;
+                    return BufferedSerialIoStream.openPort(port);
                 }
             };
             setConnector(new StreamConnector(this, ioStreamCallable));

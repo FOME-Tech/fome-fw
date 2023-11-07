@@ -316,14 +316,6 @@ float IdleController::getIdlePosition(float rpm) {
 		auto phase = determinePhase(rpm, targetRpm, tps, vehicleSpeed, crankingTaper);
 		m_lastPhase = phase;
 
-		bool isAutomaticIdle = tps.Valid && engineConfiguration->idleMode == IM_AUTO;
-
-		isVerboseIAC = engineConfiguration->isVerboseIAC && isAutomaticIdle;
-		if (isVerboseIAC) {
-			efiPrintf("Idle state %s", getIdle_state_e(idleState));
-			getIdlePid()->showPidStatus("idle");
-		}
-
 		finishIdleTestIfNeeded();
 		undoIdleBlipIfNeeded();
 
@@ -357,7 +349,7 @@ float IdleController::getIdlePosition(float rpm) {
 		}
 
 		extern StepperMotor iacMotor;
-		engine->outputChannels.idleTargetPosition = iacMotor.getTargetPosition();
+		engine->outputChannels.idleStepperTargetPosition = iacMotor.getTargetPosition();
 #endif /* EFI_TUNER_STUDIO */
 
 		currentIdlePosition = iacPosition;
