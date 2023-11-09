@@ -1,0 +1,64 @@
+name: Unit Tests on Windows
+
+on: [push,pull_request]
+
+jobs:
+  build:
+    runs-on: windows-2019
+
+
+
+
+
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - uses: actions/checkout@v4
+
+      - name: Checkout Submodules
+        run: |
+          git submodule update --init --depth=1 unit_tests/googletest
+          git submodule update --init --depth=1 firmware/libfirmware
+          git submodule update --init --depth=1 firmware/ext/lua
+          git submodule update --init --depth=1 firmware/controllers/lua/luaaa
+          git submodule update --init --depth=1 firmware/controllers/can/wideband_firmware    
+
+      - name: Set up MinGW
+        uses: egor-tensin/setup-mingw@v2
+        # 12 has pch https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105858
+        # 13 has x86 issue https://github.com/egor-tensin/setup-mingw/issues/14
+        with:
+          version: 8.1.0
+
+
+
+
+      - name: Print bash version
+        working-directory: .
+        run: bash --version
+
+      - name: Test Java Compiler
+        run: javac -version
+
+      - name: Generate Configs, Enums & Live Documentation
+        working-directory: ./firmware/
+        run: bash gen_default_everything.sh
+
+      - name: Print GCC version
+        working-directory: .
+        run: gcc -v
+
+      - name: Print make version
+        working-directory: .
+        run: make -v
+
+      - name: Compile
+        working-directory: unit_tests
+        run: make -j4
+
+      - name: Run Tests on Windows
+        working-directory: unit_tests
+        run: build/fome_test.exe
