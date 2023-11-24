@@ -18,7 +18,7 @@ static vvt_map_t vvtTable1;
 static vvt_map_t vvtTable2;
 
 VvtController::VvtController(int index, int bankIndex, int camIndex)
-	: index(index)
+	: m_index(index)
 	, m_bank(bankIndex)
 	, m_cam(camIndex)
 {
@@ -26,7 +26,7 @@ VvtController::VvtController(int index, int bankIndex, int camIndex)
 
 void VvtController::init(const ValueProvider3D* targetMap, IPwm* pwm) {
 	// Use the same settings for the Nth cam in every bank (ie, all exhaust cams use the same PID)
-	m_pid.initPidClass(&engineConfiguration->auxPid[index]);
+	m_pid.initPidClass(&engineConfiguration->auxPid[m_cam]);
 
 	m_targetMap = targetMap;
 	m_pwm = pwm;
@@ -38,11 +38,13 @@ void VvtController::onFastCallback() {
 		return;
 	}
 
-	if (engine->auxParametersVersion.isOld(engine->getGlobalConfigurationVersion())) {
+	update();
+}
+
+void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+	if (!m_pid.isSame(&previousConfig->auxPid[m_cam])) {
 		m_pid.reset();
 	}
-
-	update();
 }
 
 expected<angle_t> VvtController::observePlant() const {
@@ -58,14 +60,24 @@ expected<angle_t> VvtController::getSetpoint() {
 	float load = getFuelingLoad();
 	float target = m_targetMap->getValue(rpm, load);
 
+	if (!m_targetOffsetTimer.hasElapsedSec(2)) {
+		target += m_targetOffset;
+	}
+
 #if EFI_TUNER_STUDIO
-	engine->outputChannels.vvtTargets[index] = target;
+	engine->outputChannels.vvtTargets[m_index] = target;
 #endif
 
 	vvtTarget = target;
 
 	return target;
 }
+
+void VvtController::setTargetOffset(float targetOffset) {
+	m_targetOffset = targetOffset;
+	m_targetOffsetTimer.reset();
+}
+
 
 expected<percent_t> VvtController::getOpenLoop(angle_t target) {
 	// TODO: could we do VVT open loop?
@@ -93,25 +105,35 @@ expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observa
 	float retVal = m_pid.getOutput(target, observation);
 
 #if EFI_TUNER_STUDIO
-	m_pid.postState(engine->outputChannels.vvtStatus[index]);
+	m_pid.postState(engine->outputChannels.vvtStatus[m_index]);
 #endif /* EFI_TUNER_STUDIO */
 
 	return retVal;
 }
 
 void VvtController::setOutput(expected<percent_t> outputValue) {
-	float rpm = Sensor::getOrZero(SensorType::Rpm);
 #if EFI_SHAFT_POSITION_INPUT
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
 	bool enabled = rpm > engineConfiguration->vvtControlMinRpm
 			&& engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) > engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND
 			 ;
 
-	vvtOutput = outputValue.value_or(0);
-
 	if (outputValue && enabled) {
-		m_pwm->setSimplePwmDutyCycle(PERCENT_TO_DUTY(outputValue.Value));
+		float vvtPct = outputValue.Value;
+
+		// Compensate for battery voltage so that the % output is actually % solenoid current normalized
+		// to a 14v supply (boost duty when battery is low, etc)
+		float voltageRatio = 14 / Sensor::get(SensorType::BatteryVoltage).value_or(14);
+		vvtPct *= voltageRatio;
+
+		vvtOutput = vvtPct;
+
+		m_pwm->setSimplePwmDutyCycle(PERCENT_TO_DUTY(vvtPct));
 	} else {
 		m_pwm->setSimplePwmDutyCycle(0);
+
+		vvtOutput = 0;
 
 		// we need to avoid accumulating iTerm while engine is not running
 		m_pid.reset();
@@ -119,7 +141,7 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 
 static const char *vvtOutputNames[CAM_INPUTS_COUNT] = {
 "Vvt Output#1",

@@ -21,7 +21,7 @@ RULESFILE = $(RULESPATH)/rules.mk
 PROJECT_CPU=simulator
 
 include ../firmware/rusefi.mk
-RULESFILE = ../firmware/rusefi_rules.mk
+include ../firmware/rusefi_rules.mk
 
 # Configure precompiled header
 PCH_DIR = $(PROJECT_DIR)/pch
@@ -60,13 +60,6 @@ ifeq ($(SANITIZE),yes)
   USE_OPT += -fsanitize=address
 endif
 
-ifeq ($(CCACHE_DIR),)
-  $(info No CCACHE_DIR)
-else
-  $(info CCACHE_DIR is ${CCACHE_DIR})
-  CCPREFIX=ccache
-endif
-
 # C specific options here (added to USE_OPT).
 ifeq ($(USE_COPT),)
   USE_COPT = -std=gnu99
@@ -76,6 +69,8 @@ endif
 ifeq ($(USE_CPPOPT),)
   USE_CPPOPT = -std=c++2a -Wno-register -fno-rtti
 endif
+
+USE_CPPOPT += $(RUSEFI_CPPOPT)
 
 # Enable this if you want the linker to remove unused code and data.
 ifeq ($(USE_LINK_GC),)
@@ -222,8 +217,8 @@ else
   TRGT = 
 endif
 
-CC   = $(CCPREFIX) $(TRGT)gcc
-CPPC = $(CCPREFIX) $(TRGT)g++
+CC   = $(TRGT)gcc
+CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
 # NOTE: You can use C++ even without C++ support if you are careful. C++
 #       runtime support makes code size explode.

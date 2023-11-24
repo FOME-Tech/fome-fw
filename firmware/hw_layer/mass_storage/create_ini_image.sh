@@ -6,6 +6,11 @@
 # fail on error
 set -e
 
+if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ] || [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
+  echo No image on $(uname -s)
+  exit 0
+fi
+
 FULL_INI=$1
 H_OUTPUT=$2
 FS_SIZE=$3
@@ -13,7 +18,7 @@ SHORT_BOARDNAME=$4
 BOARD_SPECIFIC_URL=$5
 
 IMAGE=ramdisk.image
-ZIP=rusefi.ini.zip
+ZIP=fome.ini.zip
 
 # mkfs.fat and fatlabel are privileged on some systems
 PATH="$PATH:/usr/sbin"

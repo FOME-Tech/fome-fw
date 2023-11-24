@@ -3,16 +3,13 @@ package com.rusefi.maintenance;
 import com.opensr5.ini.IniFileModel;
 import com.rusefi.Launcher;
 import com.rusefi.Timeouts;
-import com.rusefi.autodetect.PortDetector;
-import com.rusefi.autodetect.SerialAutoChecker;
+import com.rusefi.config.generated.Fields;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.DfuHelper;
 import com.rusefi.io.IoStream;
+import com.rusefi.io.UpdateOperationCallbacks;
 import com.rusefi.io.serial.BufferedSerialIoStream;
-import com.rusefi.ui.StatusConsumer;
-import com.rusefi.ui.StatusWindow;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,31 +17,13 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
-import static com.rusefi.StartupFrame.appendBundleName;
-
-/**
- * @see FirmwareFlasher
- */
 public class DfuFlasher {
     private static final String DFU_BINARY_LOCATION = Launcher.TOOLS_PATH + File.separator + "STM32_Programmer_CLI/bin";
     private static final String DFU_BINARY = "STM32_Programmer_CLI.exe";
     private static final String WMIC_DFU_QUERY_COMMAND = "wmic path win32_pnpentity where \"Caption like '%STM32%' and Caption like '%Bootloader%'\" get Caption,ConfigManagerErrorCode /format:list";
-    private static final String WMIC_STLINK_QUERY_COMMAND = "wmic path win32_pnpentity where \"Caption like '%STLink%'\" get Caption,ConfigManagerErrorCode /format:list";
 
-    public static void doAutoDfu(Object selectedItem, JComponent parent) {
-        if (selectedItem == null) {
-            JOptionPane.showMessageDialog(parent, "Failed to locate serial ports");
-            return;
-        }
-        String port = selectedItem.toString();
-
-        StatusWindow wnd = createStatusWindow();
-
+    public static void doAutoDfu(JComponent parent, @NotNull String port, UpdateOperationCallbacks callbacks) {
         boolean needsEraseFirst = false;
         if (BundleUtil.getBundleTarget().contains("f7")) {
             int result = JOptionPane.showConfirmDialog(parent, "Firmware update requires a full erase of the ECU. If your tune is not saved in TunerStudio, it will be lost.\nEnsure that TunerStudio has your current tune saved!\n\nAfter updating, re-connect TunerStudio to restore your tune.\n\nPress OK to continue with the update, or Cancel to abort so you can save your tune.", "WARNING", JOptionPane.OK_CANCEL_OPTION);
@@ -57,110 +36,65 @@ public class DfuFlasher {
             needsEraseFirst = true;
         }
 
-        AtomicBoolean isSignatureValidated = rebootToDfu(parent, port, wnd);
-        if (isSignatureValidated == null)
-            return;
-        if (isSignatureValidated.get()) {
-            if (!ProgramSelector.IS_WIN) {
-                wnd.append("Switched to DFU mode!");
-                wnd.append("FOME console can only program on Windows");
-                return;
-            }
+        rebootToDfu(port, callbacks, Fields.CMD_REBOOT_DFU);
 
-            boolean finalNeedsEraseFirst = needsEraseFirst;
-            submitAction(() -> {
-                timeForDfuSwitch(wnd);
-                executeDFU(wnd, finalNeedsEraseFirst);
-            });
-        } else {
-            wnd.append("Please use manual DFU to change bundle type.");
+        if (!ProgramSelector.IS_WIN) {
+            callbacks.log("Switched to DFU mode!");
+            callbacks.log("FOME console can only program on Windows");
+            return;
         }
+
+        boolean finalNeedsEraseFirst = needsEraseFirst;
+        submitAction(() -> {
+            timeForDfuSwitch(callbacks);
+            executeDFU(callbacks, finalNeedsEraseFirst);
+        });
     }
 
     private static void submitAction(Runnable r) {
         ExecHelper.submitAction(r, DfuFlasher.class + " thread");
     }
 
-    @Nullable
-    public static AtomicBoolean rebootToDfu(JComponent parent, String port, StatusWindow wnd) {
-        AtomicBoolean isSignatureValidated = new AtomicBoolean(true);
-        if (!PortDetector.isAutoPort(port)) {
-            wnd.append("Using selected " + port + "\n");
-            IoStream stream = BufferedSerialIoStream.openPort(port);
-            AtomicReference<String> signature = new AtomicReference<>();
-            new SerialAutoChecker(PortDetector.DetectorMode.DETECT_TS, port, new CountDownLatch(1)).checkResponse(stream, new Function<SerialAutoChecker.CallbackContext, Void>() {
-                @Override
-                public Void apply(SerialAutoChecker.CallbackContext callbackContext) {
-                    signature.set(callbackContext.getSignature());
-                    return null;
-                }
-            });
-            if (signature.get() == null) {
-                wnd.append("*** ERROR *** FOME has not responded on selected " + port + "\n" +
-                        "Maybe try automatic serial port detection?");
-                wnd.setErrorState();
-                return null;
-            }
-            boolean isSignatureValidatedLocal = DfuHelper.sendDfuRebootCommand(parent, signature.get(), stream, wnd);
-            isSignatureValidated.set(isSignatureValidatedLocal);
-        } else {
-            wnd.append("Auto-detecting port...\n");
-            // instead of opening the just-detected port we execute the command using the same stream we used to discover port
-            // it's more reliable this way
-            // ISSUE: that's blocking stuff on UI thread at the moment, TODO smarter threading!
-            port = PortDetector.autoDetectSerial(callbackContext -> {
-                boolean isSignatureValidatedLocal = DfuHelper.sendDfuRebootCommand(parent, callbackContext.getSignature(), callbackContext.getStream(), wnd);
-                isSignatureValidated.set(isSignatureValidatedLocal);
-                return null;
-            }).getSerialPort();
-            if (port == null) {
-                wnd.append("*** ERROR *** FOME serial port not detected");
-                wnd.setErrorState();
-                return null;
-            } else {
-                wnd.append("Detected FOME on " + port + "\n");
-            }
-        }
-        return isSignatureValidated;
+    public static void rebootToDfu(String port, UpdateOperationCallbacks callbacks, String command) {
+        callbacks.log("Using selected " + port + "\n");
+        IoStream stream = BufferedSerialIoStream.openPort(port);
+
+        DfuHelper.sendDfuRebootCommand(stream, callbacks, command);
     }
 
-    @NotNull
-    protected static StatusWindow createStatusWindow() {
-        StatusWindow wnd = new StatusWindow();
-        wnd.showFrame(appendBundleName("DFU status " + Launcher.CONSOLE_VERSION));
-        return wnd;
-    }
-
-    public static void runDfuErase() {
-        StatusWindow wnd = createStatusWindow();
+    public static void runDfuEraseAsync(UpdateOperationCallbacks callbacks) {
         submitAction(() -> {
-            runDfuErase(wnd);
+            runDfuErase(callbacks);
             // it's a lengthy operation let's signal end
             Toolkit.getDefaultToolkit().beep();
         });
     }
 
-    private static void runDfuErase(StatusWindow wnd) {
-        ExecHelper.executeCommand(DFU_BINARY_LOCATION,
-            getDfuEraseCommand(),
-            DFU_BINARY, wnd, new StringBuffer());
+    private static void runDfuErase(UpdateOperationCallbacks callbacks) {
+        try {
+            ExecHelper.executeCommand(DFU_BINARY_LOCATION,
+                    getDfuEraseCommand(),
+                    DFU_BINARY, callbacks);
+        } catch (FileNotFoundException e) {
+            callbacks.log(e.toString());
+            callbacks.error();
+        }
     }
 
-    public static void runDfuProgramming() {
-        StatusWindow wnd = createStatusWindow();
-        submitAction(() -> executeDFU(wnd, false));
+    public static void runDfuProgramming(UpdateOperationCallbacks callbacks) {
+        submitAction(() -> executeDFU(callbacks, false));
     }
 
-    private static void executeDFU(StatusWindow wnd, boolean fullErase) {
-        boolean driverIsHappy = detectSTM32BootloaderDriverState(wnd);
+    private static void executeDFU(UpdateOperationCallbacks callbacks, boolean fullErase) {
+        boolean driverIsHappy = detectSTM32BootloaderDriverState(callbacks);
         if (!driverIsHappy) {
-            wnd.append("*** DRIVER ERROR? *** Did you have a chance to try 'Install Drivers' button on top of FOME console start screen?");
-            wnd.setErrorState();
+            callbacks.log("*** DRIVER ERROR? *** Did you have a chance to try 'Install Drivers' button on top of FOME console start screen?");
+            callbacks.error();
             return;
         }
 
         if (fullErase) {
-            runDfuErase(wnd);
+            runDfuErase(callbacks);
         }
 
         StringBuffer stdout = new StringBuffer();
@@ -168,65 +102,66 @@ public class DfuFlasher {
         try {
             errorResponse = ExecHelper.executeCommand(DFU_BINARY_LOCATION,
                     getDfuWriteCommand(),
-                    DFU_BINARY, wnd, stdout);
+                    DFU_BINARY, callbacks, stdout);
         } catch (FileNotFoundException e) {
-            wnd.append("ERROR: " + e);
-            wnd.setErrorState();
+            callbacks.log("ERROR: " + e);
+            callbacks.error();
             return;
         }
+
         if (stdout.toString().contains("Download verified successfully")) {
             // looks like sometimes we are not catching the last line of the response? 'Upgrade' happens before 'Verify'
-            wnd.append("SUCCESS!");
-            wnd.append("Please power cycle device to exit DFU mode");
-            wnd.setSuccessState();
+            callbacks.log("SUCCESS!");
+            callbacks.log("Please power cycle device to exit DFU mode");
+            callbacks.done();
         } else if (stdout.toString().contains("Target device not found")) {
-            wnd.append("ERROR: Device not connected or STM32 Bootloader driver not installed?");
-            appendWindowsVersion(wnd);
-            wnd.append("ERROR: Please try installing drivers using 'Install Drivers' button on FOME splash screen");
-            wnd.append("ERROR: Alternatively please install drivers using Device Manager pointing at 'drivers/silent_st_drivers/DFU_Driver' folder");
-            appendDeviceReport(wnd);
-            wnd.setErrorState();
+            callbacks.log("ERROR: Device not connected or STM32 Bootloader driver not installed?");
+            appendWindowsVersion(callbacks);
+            callbacks.log("ERROR: Please try installing drivers using 'Install Drivers' button on FOME splash screen");
+            callbacks.log("ERROR: Alternatively please install drivers using Device Manager pointing at 'drivers/silent_st_drivers/DFU_Driver' folder");
+            callbacks.error();
+            appendDeviceReport(callbacks);
         } else {
-            wnd.append(stdout.length() + " / " + errorResponse.length());
-            appendWindowsVersion(wnd);
-            appendDeviceReport(wnd);
-            wnd.setErrorState();
+            appendWindowsVersion(callbacks);
+            appendDeviceReport(callbacks);
+            callbacks.log(stdout.length() + " / " + errorResponse.length());
+            callbacks.error();
         }
     }
 
-    public static boolean detectSTM32BootloaderDriverState(StatusConsumer wnd) {
-        return detectDevice(wnd, WMIC_DFU_QUERY_COMMAND, "ConfigManagerErrorCode=0");
+    public static boolean detectSTM32BootloaderDriverState(UpdateOperationCallbacks callbacks) {
+        return detectDevice(callbacks, WMIC_DFU_QUERY_COMMAND, "ConfigManagerErrorCode=0");
     }
 
-    private static boolean detectDevice(StatusConsumer wnd, String queryCommand, String pattern) {
+    private static boolean detectDevice(UpdateOperationCallbacks callbacks, String queryCommand, String pattern) {
         //        long now = System.currentTimeMillis();
         StringBuffer output = new StringBuffer();
         StringBuffer error = new StringBuffer();
-        ExecHelper.executeCommand(queryCommand, wnd, output, error, null);
-        wnd.append(output.toString());
-        wnd.append(error.toString());
+        ExecHelper.executeCommand(queryCommand, callbacks, output, error, null);
+        callbacks.log(output.toString());
+        callbacks.log(error.toString());
 //        long cost = System.currentTimeMillis() - now;
 //        System.out.println("DFU lookup cost " + cost + "ms");
         return output.toString().contains(pattern);
     }
 
-    private static void appendWindowsVersion(StatusWindow wnd) {
-        wnd.append("ERROR: does not look like DFU has worked!");
+    private static void appendWindowsVersion(UpdateOperationCallbacks callbacks) {
+        callbacks.log("ERROR: does not look like DFU has worked!");
     }
 
-    private static void appendDeviceReport(StatusWindow wnd) {
+    private static void appendDeviceReport(UpdateOperationCallbacks callbacks) {
         for (String line : getDevicesReport()) {
             if (line.contains("STM Device in DFU Mode")) {
-                wnd.append(" ******************************************************************");
-                wnd.append(" ************* YOU NEED TO REMOVE LEGACY DFU DRIVER ***************");
-                wnd.append(" ******************************************************************");
+                callbacks.log(" ******************************************************************");
+                callbacks.log(" ************* YOU NEED TO REMOVE LEGACY DFU DRIVER ***************");
+                callbacks.log(" ******************************************************************");
             }
-            wnd.append("Devices: " + line);
+            callbacks.log("Devices: " + line);
         }
     }
 
-    private static void timeForDfuSwitch(StatusWindow wnd) {
-        wnd.append("Giving time for USB enumeration...");
+    private static void timeForDfuSwitch(UpdateOperationCallbacks callbacks) {
+        callbacks.log("Giving time for USB enumeration...");
         try {
             // two seconds not enough on my Windows 10
             Thread.sleep(3 * Timeouts.SECOND);

@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Checkout Submodules
       run: |
@@ -25,10 +25,6 @@ jobs:
       run: |
         sudo ./add-ubuntu-latest-apt-mirrors.sh
         sudo apt-get install sshpass sshpass mtools
-
-    - name: Generate Enum Strings
-      working-directory: ./firmware/
-      run: ./gen_enum_to_string.sh
 
     - name: Generate Live Documentation
       working-directory: ./firmware/
@@ -81,7 +77,7 @@ jobs:
     # We need to know what branch this is in order to push to the correct branch
     - name: Extract branch name
       shell: bash
-      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      run: echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
       id: extract_branch
 
     - name: Push configs

@@ -21,11 +21,9 @@ mkdir $FOLDER
 
 CONSOLE_FOLDER="$FOLDER/console"
 DRIVERS_FOLDER="$FOLDER/drivers"
-OPENBLT_FOLDER="$CONSOLE_FOLDER/openblt"
 
 mkdir $CONSOLE_FOLDER
 mkdir $DRIVERS_FOLDER
-mkdir $OPENBLT_FOLDER
 ls -l $FOLDER
 
 # this magic file is created manually using 'make_package2.bat'
@@ -51,8 +49,12 @@ cp misc/console_launcher/fome_*.exe     $CONSOLE_FOLDER
 cp java_console/*.dll                     $CONSOLE_FOLDER
 cp java_console/rusefi.xml                $CONSOLE_FOLDER
 cp -r java_console/bin                    $FOLDER
-cp firmware/ext/openblt/Host/BootCommander.exe $OPENBLT_FOLDER
-cp firmware/ext/openblt/Host/libopenblt.dll    $OPENBLT_FOLDER
+cp firmware/ext/openblt/Host/libopenblt.dll        $CONSOLE_FOLDER
+cp firmware/ext/openblt/Host/libopenblt.so         $CONSOLE_FOLDER
+cp firmware/ext/openblt/Host/libopenblt.dylib      $CONSOLE_FOLDER
+cp firmware/ext/openblt/Host/openblt_jni.dll    $CONSOLE_FOLDER
+cp firmware/ext/openblt/Host/libopenblt_jni.so     $CONSOLE_FOLDER
+cp firmware/ext/openblt/Host/libopenblt_jni.dylib  $CONSOLE_FOLDER
 
 cp misc/console_launcher/readme.html      $FOLDER
 
@@ -70,10 +72,10 @@ cp firmware/deliver/fome.dfu $FOLDER
 cp firmware/deliver/fome.hex $FOLDER
 
 # bootloader
-[ -e firmware/deliver/openblt.bin ] && { cp firmware/deliver/openblt.bin $FOLDER ; }
-[ -e firmware/deliver/openblt.dfu ] && { cp firmware/deliver/openblt.dfu $FOLDER ; }
+[ -e firmware/deliver/fome_bl.bin ] && { cp firmware/deliver/fome_bl.bin $FOLDER ; }
+[ -e firmware/deliver/fome_bl.dfu ] && { cp firmware/deliver/fome_bl.dfu $FOLDER ; }
 # update srec
-[ -e firmware/deliver/rusefi_update.srec ] && { cp firmware/deliver/rusefi_update.srec $FOLDER ; }
+[ -e firmware/deliver/fome_update.srec ] && { cp firmware/deliver/fome_update.srec $FOLDER ; }
 
 if [ -n "$BUNDLE_NAME" ]; then
     mv $FOLDER/fome.dfu $FOLDER/fome_$BUNDLE_NAME.dfu

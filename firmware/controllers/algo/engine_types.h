@@ -99,8 +99,6 @@ enum class engine_type_e : uint32_t {
 
 	PROTEUS_QC_TEST_BOARD = 42,
 
-	HONDA_600 = 43,
-
 	TOYOTA_2JZ_GTE_VVTi = 44,
 
 	TEST_ENGINE_VVT = 45,
@@ -141,8 +139,6 @@ enum class engine_type_e : uint32_t {
 
 	L9779_BENCH_ENGINE = 60,
 
-	EEPROM_BENCH_ENGINE = 61,
-
 	MRE_VW_B6 = 62,
 
 	PROTEUS_BMW_M73 = 63,
@@ -150,7 +146,6 @@ enum class engine_type_e : uint32_t {
 	DODGE_RAM = 64,
 	CITROEN_TU3JP = 65,
 
-	PROTEUS_MIATA_NB2 = 67,
 	MRE_M111 = 68,
 
 	HELLEN_NB2 = 69,
@@ -200,16 +195,22 @@ enum class engine_type_e : uint32_t {
 	HELLEN_154_HYUNDAI_COUPE_BK2 = 95,
 
 	WASTEGATE_PROTEUS_TEST = 96,
-	PROTEUS_MIATA_NA6 = 4,
+
+	// Polygonus PnP presets
+	POLYGONUS_MIATA_NA6 = 4,
+	POLYGONUS_MIATA_NB1 = 11,
+	POLYGONUS_MIATA_NB2 = 67,
+	POLYGONUS_MIATA_MSM = 12,
+
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
 	ET_UNUSED_17 = 17,
-	ET_UNUSED_11 = 11,
-	ET_UNUSED_12 = 12,
 	ET_UNUSED_13 = 13,
 	ET_UNUSED_15 = 15,
 	ET_UNUSED_33 = 33,
+	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
+	ET_UNUSED_61 = 61,
 
 	/**
 	 * this configuration has as few pins configured as possible
@@ -231,32 +232,26 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_STEPPER_IDLE_CONTROL = 3,
 	DBG_EL_ACCEL = 4,
 	DBG_TRIGGER_COUNTERS = 5,
-	DBG_SOFT_SPARK_CUT = 6,
+	DBG_6 = 6,
 	DBG_7 = 7,
 	DBG_8 = 8,
 	DBG_9 = 9,
 	DBG_10 = 10,
 	DBG_11 = 11,
-	DBG_UNUSED12 = 12,
-	DBG_SD_CARD = 13,
+	DBG_12 = 12,
+	DBG_13 = 13,
 	DBG_SR5_PROTOCOL = 14,
-	DBG_KNOCK = 15,
+	DBG_15 = 15,
 	DBG_16 = 16,
 	/**
 	 * See also DBG_ELECTRONIC_THROTTLE_EXTRA
 	 */
 	DBG_ELECTRONIC_THROTTLE_PID = 17,
 	DBG_EXECUTOR = 18,
-	/**
-	 * See tunerstudio.cpp
-	 */
-	DBG_BENCH_TEST = 19,
+
+	DBG_19 = 19,
 	DBG_20 = 20,
-	/**
-	 * ADC
-	 * See also DBG_ANALOG_INPUTS2
-	 */
-	DBG_ANALOG_INPUTS = 21,
+	DBG_21 = 21,
 
 	DBG_INSTANT_RPM = 22,
 	UNUSED23 = 23,
@@ -268,10 +263,7 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_29 = 29,
 	DBG_ION = 30,
 	DBG_TLE8888 = 31,
-	/**
-	 * See also DBG_ANALOG_INPUTS
-	 */
-	DBG_ANALOG_INPUTS2 = 32,
+	DBG_32 = 32,
 	DBG_DWELL_METRIC = 33,
 	DBG_34 = 34,
 	DBG_35 = 35,
@@ -333,7 +325,7 @@ enum class trigger_type_e : uint32_t {
 	 * VVT for 2JZ
 	 * three evenly spaces teeth
 	 */
-	TT_VVT_JZ = 17,
+	TT_VVT_TOYOTA_3_TOOTH = 17,
 	// just one channel with just one tooth
 	TT_ONE = 18,
 
@@ -544,19 +536,25 @@ typedef enum {
 } ts_command_e;
 
 typedef enum {
-	BENCH_MAIN_RELAY, // 0
-	BENCH_FUEL_PUMP,
+	BENCH_MAIN_RELAY,
 	BENCH_STARTER_ENABLE_RELAY,
 	BENCH_STARTER_DISABLE_RELAY,
 	BENCH_FAN_RELAY,
-	BENCH_FAN_RELAY_2, // 5
+	BENCH_FAN_RELAY_2,
 	BENCH_AC_COMPRESSOR_RELAY,
 	BENCH_CHECK_ENGINE_LIGHT,
-	BENCH_IDLE_VALVE, // 8
+	BENCH_IDLE_VALVE,
 	BENCH_HPFP_VALVE,
 	BENCH_GPPWM1_VALVE,
 	BENCH_GPPWM2_VALVE,
 	BENCH_GPPWM3_VALVE,
 	BENCH_GPPWM4_VALVE,
 	BENCH_SECOND_IDLE_VALVE,
+	BENCH_CANCEL,
+	BENCH_FUEL_PUMP_ON,
+	BENCH_FUEL_PUMP_OFF,
+	BENCH_VVT_1_TARGET_BUMP,
+	BENCH_VVT_2_TARGET_BUMP,
+	BENCH_VVT_3_TARGET_BUMP,
+	BENCH_VVT_4_TARGET_BUMP,
 } bench_mode_e;

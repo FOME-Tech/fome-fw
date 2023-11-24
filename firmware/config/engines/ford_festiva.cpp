@@ -68,8 +68,6 @@ void setFordEscortGt() {
 
 	engineConfiguration->trigger.type = trigger_type_e::TT_MAZDA_DOHC_1_4;
 
-	setDensoTODO(config);
-
 	engineConfiguration->globalFuelCorrection = 0.75;
 	engineConfiguration->displacement = 1.839;
 	setAlgorithm(LM_SPEED_DENSITY);
@@ -153,7 +151,6 @@ void setFordEscortGt() {
 	engineConfiguration->ignitionPins[1] = Gpio::C7;
 	engineConfiguration->ignitionPins[2] = Gpio::E8;
 	engineConfiguration->ignitionPins[3] = Gpio::E12;
-	engineConfiguration->ignitionPinMode = OM_DEFAULT;
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
 
@@ -182,7 +179,6 @@ void setFordEscortGt() {
 	engineConfiguration->idle.solenoidPin = Gpio::B9;
 
 	engineConfiguration->malfunctionIndicatorPin = Gpio::E5;
-	engineConfiguration->malfunctionIndicatorPinMode = OM_DEFAULT;
 
 	engineConfiguration->tunerStudioSerialSpeed = 19200;
 

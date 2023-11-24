@@ -121,8 +121,8 @@
 #define EFI_ALTERNATOR_CONTROL TRUE
 #endif
 
-#ifndef EFI_AUX_PID
-#define EFI_AUX_PID TRUE
+#ifndef EFI_VVT_PID
+#define EFI_VVT_PID TRUE
 #endif
 
 #define EFI_SIGNAL_EXECUTOR_SLEEP FALSE
@@ -278,7 +278,9 @@
 	// small memory F40x can't fit perf trace
 	#define ENABLE_PERF_TRACE FALSE
 
+	#ifndef LUA_USER_HEAP
 	#define LUA_USER_HEAP 25000
+	#endif
 #endif
 
 #ifndef EFI_LUA
@@ -289,12 +291,12 @@
 #define EFI_ENGINE_SNIFFER TRUE
 #endif
 
+#ifndef EFI_SENSOR_CHART
 #define EFI_SENSOR_CHART TRUE
+#endif
 
-#if defined __GNUC__
+#ifndef DL_OUTPUT_BUFFER
 #define DL_OUTPUT_BUFFER 6500
-#else
-#define DL_OUTPUT_BUFFER 8000
 #endif
 
 #define EFI_ELECTRONIC_THROTTLE_BODY TRUE
@@ -308,8 +310,9 @@
 //#define EFI_MALFUNCTION_INDICATOR FALSE
 #endif
 
+#ifndef EFI_MAP_AVERAGING
 #define EFI_MAP_AVERAGING TRUE
-//#define EFI_MAP_AVERAGING FALSE
+#endif
 
 // todo: most of this should become configurable
 
@@ -377,15 +380,6 @@
 
 #ifndef LED_CRITICAL_ERROR_BRAIN_PIN
 #define LED_CRITICAL_ERROR_BRAIN_PIN Gpio::D14
-#endif
-
-#ifndef CONFIG_RESET_SWITCH_PORT
-// looks like this feature is not extremely popular, we can try living without it now :)
-//#define CONFIG_RESET_SWITCH_PORT GPIOD
-#endif
-
-#ifndef CONFIG_RESET_SWITCH_PIN
-#define CONFIG_RESET_SWITCH_PIN 6
 #endif
 
 #ifndef EFI_STORAGE_INT_FLASH

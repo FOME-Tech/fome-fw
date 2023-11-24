@@ -46,23 +46,19 @@ typedef enum  __attribute__ ((__packed__)) {
 	VVT_INACTIVE = 0,
 
 	/**
-	 * Single-tooth cam sensor mode where TDC and cam signal happen in opposite 360 degree of 720 degree engine cycle
+	 * Single tooth on the camshaft anywhere in the 720 degree cycle
 	 */
-	VVT_SECOND_HALF = 1,
+	VVT_SINGLE_TOOTH = 1,
 	/**
 	 * Toyota 2JZ has three cam tooth. We pick one of these three tooth to synchronize based on the expected angle position of the event
 	 */
-	VVT_2JZ = 2,
+	VVT_TOYOTA_3_TOOTH = 2,
 	/**
 	 * Mazda NB2 has three cam tooth. We synchronize based on gap ratio.
 	 * @see TT_VVT_MIATA_NB
 	 */
 	VVT_MIATA_NB = 3,
 
-	/**
-	 * Single-tooth cam sensor mode where TDC and cam signal happen in the same 360 degree of 720 degree engine cycle
-	 */
-	VVT_FIRST_HALF = 4,
 	/**
 	 * @see TT_VVT_BOSCH_QUICK_START
 	 */
@@ -435,14 +431,6 @@ typedef enum {
 } gear_e;
 
 typedef enum __attribute__ ((__packed__)) {
-	CUSTOM = 0,
-	Bosch0280218037 = 1,
-	Bosch0280218004 = 2,
-	DensoTODO = 3,
-
-} maf_sensor_type_e;
-
-typedef enum __attribute__ ((__packed__)) {
 	/**
 	 * This is the default mode in which ECU controls timing dynamically
 	 */
@@ -481,24 +469,6 @@ typedef enum __attribute__ ((__packed__)) {
 	TCHARGE_MODE_AIR_INTERP_TABLE = 2,
 
 } tChargeMode_e;
-
-// peak type
-typedef enum {
-  MINIMUM = -1,
-  NOT_A_PEAK = 0,
-  MAXIMUM = 1
-} PidAutoTune_Peak;
-
-// auto tuner state
-typedef enum {
-  AUTOTUNER_OFF = 0,
-  STEADY_STATE_AT_BASELINE = 1,
-  STEADY_STATE_AFTER_STEP_UP = 2,
-  RELAY_STEP_UP = 4,
-  RELAY_STEP_DOWN = 8,
-  CONVERGED = 16,
-  FAILED = 128
-} PidAutoTune_AutoTunerState;
 
 typedef enum __attribute__ ((__packed__)) {
 	INIT = 0,

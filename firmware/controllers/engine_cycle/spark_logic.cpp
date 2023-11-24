@@ -24,8 +24,8 @@ static const char *prevSparkName = nullptr;
 
 static void fireSparkBySettingPinLow(IgnitionEvent *event, IgnitionOutputPin *output) {
 #if SPARK_EXTREME_LOGGING
-	efiPrintf("spark goes low  %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->name, (int)getTimeNowUs(),
-			output->currentLogicValue, output->outOfOrder, event->sparkId);
+	efiPrintf("spark goes low  %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->getName(), (int)getTimeNowUs(),
+			output->m_currentLogicValue, output->outOfOrder, event->sparkId);
 #endif /* SPARK_EXTREME_LOGGING */
 
 	/**
@@ -37,7 +37,7 @@ static void fireSparkBySettingPinLow(IgnitionEvent *event, IgnitionOutputPin *ou
 
 	output->signalFallSparkId = event->sparkId;
 
-	if (!output->currentLogicValue && !event->wasSparkLimited) {
+	if (!output->m_currentLogicValue && !event->wasSparkLimited) {
 		warning(ObdCode::CUSTOM_OUT_OF_ORDER_COIL, "out-of-order coil off %s", output->getName());
 		output->outOfOrder = true;
 	}
@@ -80,6 +80,17 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 									// Pull any extra timing for knock retard
 									- engine->module<KnockController>()->getKnockRetard();
 
+	// 10 ATDC ends up as 710, convert it to -10 so we can log and clamp correctly
+	if (finalIgnitionTiming > 360) {
+		finalIgnitionTiming -= 720;
+	}
+
+	// Clamp the final ignition timing to the configured limits
+	// finalIgnitionTiming is deg BTDC
+	// minimumIgnitionTiming limits maximium retard
+	// maximumIgnitionTiming limits maximum advance
+	finalIgnitionTiming = clampF(engineConfiguration->minimumIgnitionTiming, finalIgnitionTiming, engineConfiguration->maximumIgnitionTiming);
+
 	engine->outputChannels.ignitionAdvanceCyl[event->cylinderNumber] = finalIgnitionTiming;
 
 	angle_t sparkAngle =
@@ -89,7 +100,7 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 		+ getCylinderAngle(event->cylinderIndex, event->cylinderNumber);
 
 	efiAssertVoid(ObdCode::CUSTOM_SPARK_ANGLE_1, !cisnan(sparkAngle), "sparkAngle#1");
-	wrapAngle2(sparkAngle, "findAngle#2", ObdCode::CUSTOM_ERR_6550, getEngineCycle(getEngineRotationState()->getOperationMode()));
+	wrapAngle(sparkAngle, "findAngle#2", ObdCode::CUSTOM_ERR_6550);
 	event->sparkAngle = sparkAngle;
 
 	auto ignitionMode = getCurrentIgnitionMode();
@@ -118,27 +129,27 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6590, !cisnan(dwellStartAngle), "findAngle#5");
 
 	assertAngleRange(dwellStartAngle, "findAngle dwellStartAngle", ObdCode::CUSTOM_ERR_6550);
-	wrapAngle2(dwellStartAngle, "findAngle#7", ObdCode::CUSTOM_ERR_6550, getEngineCycle(getEngineRotationState()->getOperationMode()));
+	wrapAngle(dwellStartAngle, "findAngle#7", ObdCode::CUSTOM_ERR_6550);
 	event->dwellAngle = dwellStartAngle;
 }
 
 static void chargeTrailingSpark(IgnitionOutputPin* pin) {
 #if SPARK_EXTREME_LOGGING
-	efiPrintf("chargeTrailingSpark %s", pin->name);
+	efiPrintf("chargeTrailingSpark %s", pin->getName());
 #endif /* SPARK_EXTREME_LOGGING */
 	pin->setHigh();
 }
 
 static void fireTrailingSpark(IgnitionOutputPin* pin) {
 #if SPARK_EXTREME_LOGGING
-	efiPrintf("fireTrailingSpark %s", pin->name);
+	efiPrintf("fireTrailingSpark %s", pin->getName());
 #endif /* SPARK_EXTREME_LOGGING */
 	pin->setLow();
 }
 
 static void overFireSparkAndPrepareNextSchedule(IgnitionEvent *event) {
 #if SPARK_EXTREME_LOGGING
-	efiPrintf("overFireSparkAndPrepareNextSchedule %s", event->outputs[0]->name);
+	efiPrintf("overFireSparkAndPrepareNextSchedule %s", event->outputs[0]->getName());
 #endif /* SPARK_EXTREME_LOGGING */
 	fireSparkAndPrepareNextSchedule(event);
 }
@@ -243,8 +254,8 @@ static void startDwellByTurningSparkPinHigh(IgnitionEvent *event, IgnitionOutput
 
 
 #if SPARK_EXTREME_LOGGING
-	efiPrintf("spark goes high %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->name, (int)getTimeNowUs(),
-			output->currentLogicValue, output->outOfOrder, event->sparkId);
+	efiPrintf("spark goes high %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->getName(), (int)getTimeNowUs(),
+			output->m_currentLogicValue, output->outOfOrder, event->sparkId);
 #endif /* SPARK_EXTREME_LOGGING */
 
 	if (output->outOfOrder) {
@@ -316,7 +327,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event,
 	 */
 	if (!limitedSpark) {
 #if SPARK_EXTREME_LOGGING
-		efiPrintf("scheduling sparkUp %d %s now=%d %d later id=%d", getRevolutionCounter(), event->getOutputForLoggins()->name, (int)getTimeNowUs(), (int)angleOffset,
+		efiPrintf("scheduling sparkUp %d %s now=%d %d later id=%d", getRevolutionCounter(), event->getOutputForLoggins()->getName(), (int)getTimeNowUs(), (int)angleOffset,
 				event->sparkId);
 #endif /* SPARK_EXTREME_LOGGING */
 
@@ -348,11 +359,11 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event,
 
 	if (scheduled) {
 #if SPARK_EXTREME_LOGGING
-		efiPrintf("scheduling sparkDown %d %s now=%d later id=%d", getRevolutionCounter(), event->getOutputForLoggins()->name, (int)getTimeNowUs(), event->sparkId);
+		efiPrintf("scheduling sparkDown %d %s now=%d later id=%d", getRevolutionCounter(), event->getOutputForLoggins()->getName(), (int)getTimeNowUs(), event->sparkId);
 #endif /* FUEL_MATH_EXTREME_LOGGING */
 	} else {
 #if SPARK_EXTREME_LOGGING
-		efiPrintf("to queue sparkDown %d %s now=%d for id=%d angle=%.1f", getRevolutionCounter(), event->getOutputForLoggins()->name, (int)getTimeNowUs(), event->sparkId, sparkAngle);
+		efiPrintf("to queue sparkDown %d %s now=%d for id=%d angle=%.1f", getRevolutionCounter(), event->getOutputForLoggins()->getName(), (int)getTimeNowUs(), event->sparkId, sparkAngle);
 #endif /* SPARK_EXTREME_LOGGING */
 
 		if (!limitedSpark && engine->enableOverdwellProtection) {

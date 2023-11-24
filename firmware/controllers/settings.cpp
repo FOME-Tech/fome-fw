@@ -395,10 +395,6 @@ static void enableOrDisable(const char *param, bool isEnabled) {
 	} else if (strEqualCaseInsensitive(param, "boardUseTachPullUp")) {
 		engineConfiguration->boardUseTachPullUp = isEnabled;
 		incrementGlobalConfigurationVersion();
-	} else if (strEqualCaseInsensitive(param, "verbose_idle")) {
-		engineConfiguration->isVerboseIAC = isEnabled;
-	} else if (strEqualCaseInsensitive(param, "altdebug")) {
-		engineConfiguration->isVerboseAlternator = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "altcontrol")) {
 		engineConfiguration->isAlternatorControlEnabled = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "sd")) {
@@ -459,7 +455,7 @@ static void disable(const char *param) {
 /**
  * See 'LimpManager::isEngineStop' for code which actually stops engine
  */
-void scheduleStopEngine(void) {
+void scheduleStopEngine() {
 	doScheduleStopEngine();
 }
 
@@ -603,7 +599,7 @@ static void setValue(const char *paramStr, const char *valueStr) {
 	engine->resetEngineSnifferIfInTestMode();
 }
 
-void initSettings(void) {
+void initSettings() {
 #if EFI_SIMULATOR
 	printf("initSettings\n");
 #endif // EFI_SIMULATOR

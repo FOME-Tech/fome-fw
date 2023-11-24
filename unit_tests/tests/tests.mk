@@ -20,6 +20,7 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_real_gm_24x.cpp \
 	tests/trigger/test_real_k24a2.cpp \
 	tests/trigger/test_real_k20.cpp \
+	tests/trigger/test_real_toyota_3_tooth_cam.cpp \
 	tests/trigger/test_map_cam.cpp \
 	tests/trigger/test_rpm_multiplier.cpp \
 	tests/trigger/test_quad_cam.cpp \
@@ -68,7 +69,6 @@ TESTS_SRC_CPP = \
 	tests/test_log_buffer.cpp \
 	tests/test_signal_executor.cpp \
 	tests/test_cpp_memory_layout.cpp \
-	tests/test_pid_auto.cpp \
 	tests/test_pid.cpp \
 	tests/test_accel_enrichment.cpp \
 	tests/test_gpiochip.cpp \

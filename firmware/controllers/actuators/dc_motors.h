@@ -67,11 +67,12 @@ public:
 	}
 
 	const char *msg() {
-	    return dcMotor.msg;
+		return dcMotor.msg();
 	}
 
 	void stop() {
 		// todo: replace 'isStarted' with 'stop'
 	}
-
 };
+
+DcHardware *getdcHardware();

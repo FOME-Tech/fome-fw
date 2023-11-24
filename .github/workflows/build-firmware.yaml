@@ -15,7 +15,82 @@ on:
         type: string
 
 jobs:
+  build-libopenblt-linux:
+    runs-on: ubuntu-latest-selfhost
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: cmake configure libopenblt
+      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: make libopenblt
+      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
+      run: make -j8
+
+    - name: cmake configure libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: make libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
+      run: make -j8
+
+    - name: coalesce
+      run: |
+        mkdir deliver
+        cp ./firmware/ext/openblt/Host/libopenblt.so deliver/
+        cp ./misc/libopenblt_jni/build/libopenblt_jni.so deliver/
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: libopenblt-linux
+        path: |
+          ./deliver/libopenblt.so
+          ./deliver/libopenblt_jni.so
+
+  build-libopenblt-macos:
+    runs-on: macos-13
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: cmake configure libopenblt
+      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: make libopenblt
+      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
+      run: make -j8
+
+    - name: cmake configure libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
+
+    - name: make libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
+      run: make -j8
+
+    - name: coalesce
+      run: |
+        mkdir deliver
+        cp ./firmware/ext/openblt/Host/libopenblt.dylib deliver/
+        cp ./misc/libopenblt_jni/build/libopenblt_jni.dylib deliver/
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: libopenblt-macos
+        path: |
+          ./deliver/libopenblt.dylib
+          ./deliver/libopenblt_jni.dylib
+
   build-firmware:
+    needs: [build-libopenblt-linux, build-libopenblt-macos]
     runs-on: ubuntu-latest-selfhost
 
     strategy:
@@ -32,21 +107,25 @@ jobs:
           #   folder: config/boards/hellen/hellen81
           #   ini-file: fome_hellen81.ini
 
-          - build-target: alphax-2chan
-            folder: config/boards/hellen/alphax-2chan
-            ini-file: fome_alphax-2chan.ini
+          # - build-target: alphax-2chan
+          #   folder: config/boards/hellen/alphax-2chan
+          #   ini-file: fome_alphax-2chan.ini
 
-          - build-target: alphax-4chan
-            folder: config/boards/hellen/alphax-4chan
-            ini-file: fome_alphax-4chan.ini
+          # - build-target: alphax-4chan
+          #   folder: config/boards/hellen/alphax-4chan
+          #   ini-file: fome_alphax-4chan.ini
 
-          - build-target: alphax-8chan
-            folder: config/boards/hellen/alphax-8chan
-            ini-file: fome_alphax-8chan.ini
+          # - build-target: alphax-8chan
+          #   folder: config/boards/hellen/alphax-8chan
+          #   ini-file: fome_alphax-8chan.ini
 
           # - build-target: harley81
           #   folder: config/boards/hellen/harley81
           #   ini-file: fome_harley81.ini
+
+          - build-target: small-can-board
+            folder: config/boards/hellen/small-can-board
+            ini-file: rusefi_small-can-board.ini
 
           # - build-target: hellen88bmw
           #   folder: config/boards/hellen/hellen88bmw
@@ -84,9 +163,9 @@ jobs:
           #   folder: config/boards/hellen/hellen-honda-k
           #   ini-file: fome_hellen-honda-k.ini
 
-          - build-target: hellen154hyundai
-            folder: config/boards/hellen/hellen154hyundai
-            ini-file: fome_hellen154hyundai.ini
+          # - build-target: hellen154hyundai
+          #   folder: config/boards/hellen/hellen154hyundai
+          #   ini-file: fome_hellen154hyundai.ini
 
           # - build-target: frankenso_na6
           #   folder: config/boards/frankenso
@@ -156,13 +235,13 @@ jobs:
           #   folder: config/boards/f429-discovery
           #   ini-file: fome_f429-discovery.ini
 
-          # - build-target: core8
-          #   folder: config/boards/core8
-          #   ini-file: fome_core8.ini
+          - build-target: core8
+            folder: config/boards/core8
+            ini-file: fome_core8.ini
 
-          # - build-target: 48way
-          #   folder: config/boards/48way
-          #   ini-file: fome_48way.ini
+          - build-target: core48
+            folder: config/boards/core48
+            ini-file: fome_core48.ini
 
           # - build-target: atlas
           #   folder: config/boards/atlas
@@ -190,7 +269,7 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -210,11 +289,6 @@ jobs:
     - name: Generate Live Documentation
       working-directory: ./firmware/
       run: ./gen_live_documentation.sh
-
-      # live_data_ids.h is generated above so order of operations is important here!
-    - name: Generate Enum Strings
-      working-directory: ./firmware/
-      run: ./gen_enum_to_string.sh
 
     - name: Generate Configs for build-target
       working-directory: ./firmware/
@@ -266,19 +340,31 @@ jobs:
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
       run: OS="Windows_NT" bash misc/jenkins/build_simulator.sh
 
+    - name: Download LibOpenBLT Tool (Linux)
+      uses: actions/download-artifact@v3
+      with:
+        name: libopenblt-linux
+        path: ./firmware/ext/openblt/Host/
+
+    - name: Download LibOpenBLT Tool (MacOS)
+      uses: actions/download-artifact@v3
+      with:
+        name: libopenblt-macos
+        path: ./firmware/ext/openblt/Host/
+
     - name: Package Bundle
       if: ${{ env.full == 'true' }}
       run: bash misc/jenkins/compile_other_versions/prepare_bundle.sh ${{matrix.build-target}} "${{matrix.ini-file}}" ${{ toJSON(inputs.build_name) }}
 
-    - name: Upload INI to tunes.fome.tech
-      if: ${{ env.full == 'true' && env.upload == 'true' }}
-      uses: hyper-tuner/ini-upload-action@v1
-      with:
-        api-url: "${{ secrets.HYPER_TUNER_INI_UPLOAD_URL }}"
-        username: "${{ secrets.HYPER_TUNER_INI_UPLOAD_USERNAME }}"
-        password: "${{ secrets.HYPER_TUNER_INI_UPLOAD_PASSWORD }}"
-        path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
-        ecosystem: fome
+    # - name: Upload INI to tunes.fome.tech
+    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
+    #   uses: hyper-tuner/ini-upload-action@v1
+    #   with:
+    #     api-url: "${{ secrets.HYPER_TUNER_INI_UPLOAD_URL }}"
+    #     username: "${{ secrets.HYPER_TUNER_INI_UPLOAD_USERNAME }}"
+    #     password: "${{ secrets.HYPER_TUNER_INI_UPLOAD_PASSWORD }}"
+    #     path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
+    #     ecosystem: fome
 
     # - name: Upload .ini files
     #   if: ${{ env.full == 'true' && env.upload == 'true' }}

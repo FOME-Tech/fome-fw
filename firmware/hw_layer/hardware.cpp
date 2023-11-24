@@ -24,7 +24,6 @@
 #include "sensor_chart.h"
 #include "serial_hw.h"
 #include "idle_thread.h"
-#include "odometer.h"
 #include "kline.h"
 
 #if EFI_PROD_CODE
@@ -79,7 +78,7 @@ void unlockSpi(spi_device_e device) {
 	spiReleaseBus(getSpiDevice(device));
 }
 
-static void initSpiModules(engine_configuration_s *engineConfiguration) {
+static void initSpiModules() {
 	UNUSED(engineConfiguration);
 	if (engineConfiguration->is_enabled_spi_1) {
 		 turnOnSpi(SPI_DEVICE_1);
@@ -190,12 +189,6 @@ static void calcFastAdcIndexes() {
 #endif /* HAL_TRIGGER_USE_ADC */
 
 #endif/* HAL_USE_ADC */
-}
-
-static void adcConfigListener(Engine *engine) {
-	UNUSED(engine);
-	// todo: something is not right here - looks like should be a callback for each configuration change?
-	calcFastAdcIndexes();
 }
 
 void stopSpi(spi_device_e device) {
@@ -329,15 +322,15 @@ void applyNewHardwareSettings() {
 #if EFI_LOGIC_ANALYZER
 	startLogicAnalyzerPins();
 #endif /* EFI_LOGIC_ANALYZER */
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 	startVvtControlPins();
-#endif /* EFI_AUX_PID */
+#endif /* EFI_VVT_PID */
 
 #if EFI_SENT_SUPPORT
 	startSent();
 #endif
 
-	adcConfigListener(engine);
+	calcFastAdcIndexes();
 }
 
 // This function initializes hardware that can do so before configuration is loaded
@@ -399,9 +392,9 @@ void stopHardware() {
 	stopTriggerEmulatorPins();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
 
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 	stopVvtControlPins();
-#endif /* EFI_AUX_PID */
+#endif /* EFI_VVT_PID */
 }
 
 /**
@@ -440,12 +433,6 @@ void initHardware() {
 		return;
 	}
 
-#if STM32_I2C_USE_I2C3
-	if (engineConfiguration->useEeprom) {
-	    i2cStart(&EE_U2CD, &i2cfg);
-	}
-#endif // STM32_I2C_USE_I2C3
-
 	boardInitHardware();
 
 #if HAL_USE_ADC
@@ -464,7 +451,7 @@ void initHardware() {
 #endif // TRIGGER_SCOPE
 
 #if HAL_USE_SPI
-	initSpiModules(engineConfiguration);
+	initSpiModules();
 #endif /* HAL_USE_SPI */
 
 #if EFI_PROD_CODE && (BOARD_EXT_GPIOCHIPS > 0)

@@ -17,8 +17,6 @@ import com.rusefi.io.commands.ByteRange;
 import com.rusefi.io.commands.GetOutputsCommand;
 import com.rusefi.io.commands.HelloCommand;
 import com.rusefi.core.FileUtil;
-import com.rusefi.tune.xml.Msq;
-import com.rusefi.ui.livedocs.LiveDocsRegistry;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -45,8 +43,7 @@ public class BinaryProtocol {
     private static final ThreadFactory THREAD_FACTORY = new NamedThreadFactory("ECU text pull", true);
 
     private static final String USE_PLAIN_PROTOCOL_PROPERTY = "protocol.plain";
-    private static final String CONFIGURATION_RUSEFI_BINARY = "current_configuration.rusefi_binary";
-    private static final String CONFIGURATION_RUSEFI_XML = "current_configuration.msq";
+
     /**
      * This properly allows to switch to non-CRC32 mode
      * todo: finish this feature, assuming we even need it.
@@ -163,7 +160,7 @@ public class BinaryProtocol {
      *
      * @return true if everything fine
      */
-    public String connectAndReadConfiguration(Arguments arguments, DataListener listener) {
+    public String connectAndReadConfiguration(DataListener listener) {
         try {
             signature = getSignature(stream);
             log.info("Got " + signature + " signature");
@@ -176,7 +173,7 @@ public class BinaryProtocol {
         if (errorMessage != null)
             return errorMessage;
 
-        readImage(arguments, Fields.TOTAL_CONFIG_SIZE);
+        readImage(Fields.TOTAL_CONFIG_SIZE);
         if (isClosed)
             return "Failed to read calibration";
 
@@ -216,10 +213,11 @@ public class BinaryProtocol {
 //                    FileLog.rlog("queue: " + LinkManager.COMMUNICATION_QUEUE.toString());
                     if (linkManager.COMMUNICATION_QUEUE.isEmpty() && linkManager.getNeedPullData()) {
                         linkManager.submit(new Runnable() {
-                            private final boolean verbose = false; // todo: programmatically detect run under gradle?
                             @Override
                             public void run() {
                                 isGoodOutputChannels = requestOutputChannels();
+                                // todo: programmatically detect run under gradle?
+                                boolean verbose = false;
                                 if (verbose)
                                     System.out.println("requestOutputChannels " + isGoodOutputChannels);
                                 if (isGoodOutputChannels)
@@ -231,13 +229,6 @@ public class BinaryProtocol {
                                         if (verbose)
                                             System.out.println("textListener");
                                     }
-                                }
-
-                                if (linkManager.isNeedPullLiveData()) {
-                                    LiveDocsRegistry.LiveDataProvider liveDataProvider = LiveDocsRegistry.getLiveDataProvider();
-                                    LiveDocsRegistry.INSTANCE.refresh(liveDataProvider);
-                                    if (verbose)
-                                        System.out.println("Got livedata");
                                 }
                             }
                         });
@@ -294,31 +285,19 @@ public class BinaryProtocol {
     /**
      * read complete tune from physical data stream
      */
-    public void readImage(Arguments arguments, int size) {
-        ConfigurationImage image = getAndValidateLocallyCached();
+    public void readImage(int size) {
+        ConfigurationImage image = readFullImageFromController(size);
+        if (image == null)
+            return;
 
-        if (image == null) {
-            image = readFullImageFromController(arguments, size);
-            if (image == null)
-                return;
-        }
         setController(image);
         log.info("Got configuration from controller " + size + " byte(s)");
         ConnectionStatusLogic.INSTANCE.setValue(ConnectionStatusValue.CONNECTED);
     }
 
-    public static class Arguments {
-        final boolean saveFile;
-
-        public Arguments(boolean saveFile) {
-            this.saveFile = saveFile;
-        }
-    }
-
     @Nullable
-    private ConfigurationImage readFullImageFromController(Arguments arguments, int size) {
-        ConfigurationImage image;
-        image = new ConfigurationImage(size);
+    private ConfigurationImage readFullImageFromController(int size) {
+        final ConfigurationImage image = new ConfigurationImage(size);
 
         int offset = 0;
 
@@ -354,15 +333,7 @@ public class BinaryProtocol {
 
             offset += requestSize;
         }
-        if (arguments != null && arguments.saveFile) {
-            try {
-                ConfigurationImageFile.saveToFile(image, CONFIGURATION_RUSEFI_BINARY);
-                Msq tune = MsqFactory.valueOf(image);
-                tune.writeXmlFile(CONFIGURATION_RUSEFI_XML);
-            } catch (Exception e) {
-                System.err.println("Ignoring " + e);
-            }
-        }
+
         return image;
     }
 
@@ -387,31 +358,6 @@ public class BinaryProtocol {
         if (response == null || response.length < 1)
             return -1;
         return response[0] & 0xff;
-    }
-
-    private ConfigurationImage getAndValidateLocallyCached() {
-        if (DISABLE_LOCAL_CONFIGURATION_CACHE)
-            return null;
-        ConfigurationImage localCached;
-        try {
-            localCached = ConfigurationImageFile.readFromFile(CONFIGURATION_RUSEFI_BINARY);
-        } catch (IOException e) {
-            System.err.println("Error reading " + CONFIGURATION_RUSEFI_BINARY + ": no worries " + e);
-            return null;
-        }
-
-        if (localCached != null) {
-            int crcOfLocallyCachedConfiguration = IoHelper.getCrc32(localCached.getContent());
-            log.info(String.format(CONFIGURATION_RUSEFI_BINARY + " Local cache CRC %x\n", crcOfLocallyCachedConfiguration));
-
-            int crcFromController = getCrcFromController(localCached.getSize());
-
-            if (crcOfLocallyCachedConfiguration == crcFromController) {
-                return localCached;
-            }
-
-        }
-        return null;
     }
 
     public int getCrcFromController(int configSize) {
@@ -576,7 +522,7 @@ public class BinaryProtocol {
                 log.error("ERROR: TS_GET_TEXT failed");
                 return null;
             }
-            if (response != null && response.length == 1) {
+            if (response.length == 1) {
                 // todo: what is this sleep doing exactly?
                 Thread.sleep(100);
             }

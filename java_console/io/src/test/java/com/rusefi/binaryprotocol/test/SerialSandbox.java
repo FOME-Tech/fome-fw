@@ -6,7 +6,6 @@ import com.rusefi.io.HeartBeatListeners;
 import com.rusefi.io.LinkManager;
 
 import java.util.Date;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class SerialSandbox {
@@ -24,8 +23,7 @@ public class SerialSandbox {
         });
 
         LinkManager linkManager = new LinkManager()
-                .setNeedPullText(textPull) // todo: open issue #2
-                .setNeedPullLiveData(true);
+                .setNeedPullText(textPull); // todo: open issue #2
 
         try {
             linkManager.connect(port).await(60, TimeUnit.SECONDS);

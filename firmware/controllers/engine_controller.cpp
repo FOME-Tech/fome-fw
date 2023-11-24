@@ -46,6 +46,7 @@
 #include "boost_control.h"
 #include "launch_control.h"
 #include "tachometer.h"
+#include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
 #include "buttonshift.h"
@@ -69,10 +70,6 @@
 #if HAL_USE_ADC
 #include "AdcConfiguration.h"
 #endif /* HAL_USE_ADC */
-
-#if defined(EFI_BOOTLOADER_INCLUDE_CODE)
-#include "bootloader/bootloader.h"
-#endif /* EFI_BOOTLOADER_INCLUDE_CODE */
 
 #include "periodic_task.h"
 
@@ -163,7 +160,7 @@ static void resetAccel() {
 
 	for (size_t i = 0; i < efi::size(engine->injectionEvents.elements); i++)
 	{
-		engine->injectionEvents.elements[i].wallFuel.resetWF();
+		engine->injectionEvents.elements[i].getWallFuel().resetWF();
 	}
 }
 
@@ -196,6 +193,10 @@ static void doPeriodicSlowCallback() {
 	}
 
 	engine->periodicSlowCallback();
+#else /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
+	#if EFI_INTERNAL_FLASH
+		writeToFlashIfPending();
+	#endif /* EFI_INTERNAL_FLASH */
 #endif /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
 
 #if EFI_TCU
@@ -424,6 +425,22 @@ void commonInitEngineController() {
 	}
 #endif
 
+#if !EFI_UNIT_TEST && EFI_ENGINE_CONTROL
+	initBenchTest();
+#endif /* EFI_PROD_CODE && EFI_ENGINE_CONTROL */
+
+#if EFI_ALTERNATOR_CONTROL
+	initAlternatorCtrl();
+#endif /* EFI_ALTERNATOR_CONTROL */
+
+#if EFI_VVT_PID
+	initVvtActuators();
+#endif /* EFI_VVT_PID */
+
+#if EFI_MALFUNCTION_INDICATOR
+	initMalfunctionIndicator();
+#endif /* EFI_MALFUNCTION_INDICATOR */
+
 #if !EFI_UNIT_TEST
 	// This is tested independently - don't configure sensors for tests.
 	// This lets us selectively mock them for each test.
@@ -472,6 +489,7 @@ void commonInitEngineController() {
 #endif /* EFI_UNIT_TEST */
 
 	initTachometer();
+	initSpeedometer();
 }
 
 // Returns false if there's an obvious problem with the loaded configuration
@@ -599,10 +617,6 @@ bool validateConfig() {
 void initEngineController() {
 	addConsoleAction("sensorinfo", printSensorInfo);
 
-#if EFI_PROD_CODE && EFI_ENGINE_CONTROL
-	initBenchTest();
-#endif /* EFI_PROD_CODE && EFI_ENGINE_CONTROL */
-
 	commonInitEngineController();
 
 #if EFI_LOGIC_ANALYZER
@@ -622,23 +636,6 @@ void initEngineController() {
 #if EFI_PWM_TESTER
 	initPwmTester();
 #endif /* EFI_PWM_TESTER */
-
-#if EFI_ALTERNATOR_CONTROL
-	initAlternatorCtrl();
-#endif /* EFI_ALTERNATOR_CONTROL */
-
-#if EFI_AUX_PID
-	initVvtActuators();
-#endif /* EFI_AUX_PID */
-
-#if EFI_MALFUNCTION_INDICATOR
-	initMalfunctionIndicator();
-#endif /* EFI_MALFUNCTION_INDICATOR */
-
-#if EFI_PROD_CODE
-	addConsoleAction("reset_accel", resetAccel);
-#endif /* EFI_PROD_CODE */
-
 }
 
 /**
@@ -666,11 +663,6 @@ int getRusEfiVersion(void) {
 		return 123; // this is here to make the compiler happy about the unused array
 	if (UNUSED_CCM_SIZE[0] * 0 != 0)
 		return 3211; // this is here to make the compiler happy about the unused array
-#if defined(EFI_BOOTLOADER_INCLUDE_CODE)
-	// make bootloader code happy too
-	if (initBootloader() != 0)
-		return 123;
-#endif /* EFI_BOOTLOADER_INCLUDE_CODE */
 	return VCS_DATE;
 }
 #endif /* EFI_UNIT_TEST */

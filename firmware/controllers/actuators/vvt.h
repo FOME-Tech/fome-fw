@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "periodic_task.h"
 #include "closed_loop_controller.h"
 #include "pwm_generator_logic.h"
 #include "efi_pid.h"
@@ -24,9 +23,11 @@ public:
 	VvtController(int index, int bankIndex, int camIndex);
 
 	void init(const ValueProvider3D* targetMap, IPwm* pwm);
+	void setTargetOffset(float targetOffset);
 
 	// EngineModule implementation
 	void onFastCallback() override;
+	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
 
 	// ClosedLoopController implementation
 	expected<angle_t> observePlant() const override;
@@ -37,16 +38,19 @@ public:
 	void setOutput(expected<percent_t> outputValue) override;
 
 private:
-	const int index = 0;
+	const int m_index;
 	// Bank index, 0 or 1
-	const uint8_t m_bank = 0;
+	const uint8_t m_bank;
 	// Cam index, 0 = intake, 1 = exhaust
-	const uint8_t m_cam = 0;
+	const uint8_t m_cam;
 
 	Pid m_pid;
 
 	const ValueProvider3D* m_targetMap = nullptr;
 	IPwm* m_pwm = nullptr;
+
+	Timer m_targetOffsetTimer;
+	float m_targetOffset;
 };
 
 // Unique types for each VVT so they can be engine modules

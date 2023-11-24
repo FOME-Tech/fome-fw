@@ -35,12 +35,15 @@ public class NewParseHelper {
     public static String parseToOutputChannels(String input) throws IOException {
         ParseState state = parse(input);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final String utf8 = StandardCharsets.UTF_8.name();
 
-        PrintStream ps = new PrintStreamAlwaysUnix(baos, true, utf8);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
 
-        OutputChannelWriter writer = new OutputChannelWriter(ps);
+        PrintStream ps = new PrintStreamAlwaysUnix(baos, true, utf8);
+        PrintStream ps2 = new PrintStreamAlwaysUnix(baos2, true, utf8);
+
+        OutputChannelWriter writer = new OutputChannelWriter(ps, ps2);
         writer.writeOutputChannels(state, null);
 
         return baos.toString(utf8);

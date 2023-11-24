@@ -17,6 +17,8 @@
 
 // 1% duty cycle
 #define ZERO_PWM_THRESHOLD 0.01
+// 99% duty cycle
+#define FULL_PWM_THRESHOLD 0.99
 
 SimplePwm::SimplePwm()
 {
@@ -25,7 +27,7 @@ SimplePwm::SimplePwm()
 }
 
 SimplePwm::SimplePwm(const char *name) : SimplePwm()  {
-	this->name = name;
+	m_name = name;
 }
 
 PwmConfig::PwmConfig() {
@@ -35,11 +37,7 @@ PwmConfig::PwmConfig() {
 	periodNt = NAN;
 	mode = PM_NORMAL;
 	memset(&outputPins, 0, sizeof(outputPins));
-	pwmCycleCallback = nullptr;
-	stateChangeCallback = nullptr;
-	executor = nullptr;
-	name = "[noname]";
-	arg = this;
+	m_name = "[noname]";
 }
 
 /**
@@ -53,13 +51,13 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
 		return;
 	}
 	if (cisnan(dutyCycle)) {
-		warning(ObdCode::CUSTOM_DUTY_INVALID, "%s spwd:dutyCycle %.2f", name, dutyCycle);
+		warning(ObdCode::CUSTOM_DUTY_INVALID, "%s spwd:dutyCycle %.2f", m_name, dutyCycle);
 		return;
 	} else if (dutyCycle < 0) {
-		warning(ObdCode::CUSTOM_DUTY_TOO_LOW, "%s dutyCycle too low %.2f", name, dutyCycle);
+		warning(ObdCode::CUSTOM_DUTY_TOO_LOW, "%s dutyCycle too low %.2f", m_name, dutyCycle);
 		dutyCycle = 0;
 	} else if (dutyCycle > 1) {
-		warning(ObdCode::CUSTOM_PWM_DUTY_TOO_HIGH, "%s duty too high %.2f", name, dutyCycle);
+		warning(ObdCode::CUSTOM_PWM_DUTY_TOO_HIGH, "%s duty too high %.2f", m_name, dutyCycle);
 		dutyCycle = 1;
 	}
 
@@ -70,19 +68,21 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
 	}
 #endif
 
-	// Handle zero and full duty cycle.  This will cause the PWM output to behave like a plain digital output.
-	if (dutyCycle == 0.0f && stateChangeCallback) {
-		// Manually fire falling edge
-		stateChangeCallback(0, arg);
-	} else if (dutyCycle == 1.0f && stateChangeCallback) {
-		// Manually fire rising edge
-		stateChangeCallback(1, arg);
-	}
-
+	// Handle near-zero and near-full duty cycle.  This will cause the PWM output to behave like a plain digital output.
 	if (dutyCycle < ZERO_PWM_THRESHOLD) {
 		mode = PM_ZERO;
+
+		if (m_stateChangeCallback) {
+			// Manually fire falling edge
+			m_stateChangeCallback(0, this);
+		}
 	} else if (dutyCycle > FULL_PWM_THRESHOLD) {
 		mode = PM_FULL;
+
+		if (m_stateChangeCallback) {
+			// Manually fire rising edge
+			m_stateChangeCallback(1, this);
+		}
 	} else {
 		mode = PM_NORMAL;
 		seq.setSwitchTime(0, dutyCycle);
@@ -138,34 +138,35 @@ void PwmConfig::handleCycleStart() {
 		return;
 	}
 
-	if (pwmCycleCallback != NULL) {
-		pwmCycleCallback(this);
+	if (m_pwmCycleCallback) {
+		m_pwmCycleCallback(this);
 	}
-		// Compute the maximum number of iterations without overflowing a uint32_t worth of timestamp
-		uint32_t iterationLimitInt32 = (0xFFFFFFFF / periodNt) - 2;
 
-		// Maximum number of iterations that don't lose precision due to 32b float (~7 decimal significant figures)
-		// We want at least 0.01% timing precision (aka 1/10000 cycle, 0.072 degree for trigger stimulator), which
-		// means we can't do any more than 2^23 / 10000 cycles = 838 iterations before a reset
-		uint32_t iterationLimitFloat = 838;
+	// Compute the maximum number of iterations without overflowing a uint32_t worth of timestamp
+	uint32_t iterationLimitInt32 = (0xFFFFFFFF / periodNt) - 2;
 
-		uint32_t iterationLimit = minI(iterationLimitInt32, iterationLimitFloat);
+	// Maximum number of iterations that don't lose precision due to 32b float (~7 decimal significant figures)
+	// We want at least 0.01% timing precision (aka 1/10000 cycle, 0.072 degree for trigger stimulator), which
+	// means we can't do any more than 2^23 / 10000 cycles = 838 iterations before a reset
+	uint32_t iterationLimitFloat = 838;
 
-		efiAssertVoid(ObdCode::CUSTOM_ERR_6580, periodNt != 0, "period not initialized");
-		efiAssertVoid(ObdCode::CUSTOM_ERR_6580, iterationLimit > 0, "iterationLimit invalid");
-		if (forceCycleStart || safe.periodNt != periodNt || safe.iteration == iterationLimit) {
-			/**
-			 * period length has changed - we need to reset internal state
-			 */
-			safe.startNt = getTimeNowNt();
-			safe.iteration = 0;
-			safe.periodNt = periodNt;
+	uint32_t iterationLimit = minI(iterationLimitInt32, iterationLimitFloat);
 
-			forceCycleStart = false;
+	efiAssertVoid(ObdCode::CUSTOM_ERR_6580, periodNt != 0, "period not initialized");
+	efiAssertVoid(ObdCode::CUSTOM_ERR_6580, iterationLimit > 0, "iterationLimit invalid");
+	if (forceCycleStart || safe.periodNt != periodNt || safe.iteration == iterationLimit) {
+		/**
+		 * period length has changed - we need to reset internal state
+		 */
+		safe.startNt = getTimeNowNt();
+		safe.iteration = 0;
+		safe.periodNt = periodNt;
+
+		forceCycleStart = false;
 #if DEBUG_PWM
-			efiPrintf("state reset start=%d iteration=%d", state->safe.start, state->safe.iteration);
+		efiPrintf("state reset start=%d iteration=%d", state->safe.start, state->safe.iteration);
 #endif
-		}
+	}
 }
 
 /**
@@ -182,10 +183,11 @@ efitick_t PwmConfig::togglePwmState() {
 #endif
 
 	if (cisnan(periodNt)) {
-		/**
-		 * NaN period means PWM is paused, we also set the pin low
-		 */
-		stateChangeCallback(0, arg);
+		// NaN period means PWM is paused, we also set the pin low
+		if (m_stateChangeCallback) {
+			m_stateChangeCallback(0, this);
+		}
+
 		return getTimeNowNt() + MS2NT(NAN_FREQUENCY_SLEEP_PERIOD_MS);
 	}
 	if (mode != PM_NORMAL) {
@@ -212,12 +214,14 @@ efitick_t PwmConfig::togglePwmState() {
 
 	{
 		ScopePerf perf(PE::PwmConfigStateChangeCallback);
-		stateChangeCallback(cbStateIndex, arg);
+		if (m_stateChangeCallback) {
+			m_stateChangeCallback(cbStateIndex, this);
+		}
 	}
 
 	efitick_t nextSwitchTimeNt = getNextSwitchTimeNt(this);
 #if DEBUG_PWM
-	efiPrintf("%s: nextSwitchTime %d", state->name, nextSwitchTime);
+	efiPrintf("%s: nextSwitchTime %d", state->m_name, nextSwitchTime);
 #endif /* DEBUG_PWM */
 
 	// If we're very far behind schedule, restart the cycle fresh to avoid scheduling a huge pile of events all at once
@@ -257,12 +261,12 @@ static void timerCallback(PwmConfig *state) {
 		// we are here when PWM gets stopped
 		return;
 	}
-	if (state->executor == nullptr) {
-		firmwareError(ObdCode::CUSTOM_NULL_EXECUTOR, "exec on %s", state->name);
+	if (state->m_executor == nullptr) {
+		firmwareError(ObdCode::CUSTOM_NULL_EXECUTOR, "exec on %s", state->m_name);
 		return;
 	}
 
-	state->executor->scheduleByTimestampNt(state->name, &state->scheduling, switchTimeNt, { timerCallback, state });
+	state->m_executor->scheduleByTimestampNt(state->m_name, &state->scheduling, switchTimeNt, { timerCallback, state });
 	state->dbgNestingLevel--;
 }
 
@@ -281,11 +285,10 @@ void copyPwmParameters(PwmConfig *state, MultiChannelStateSequence const * seq) 
  * this method also starts the timer cycle
  * See also startSimplePwm
  */
-void PwmConfig::weComplexInit(const char *msg, ExecutorInterface *executor,
+void PwmConfig::weComplexInit(ExecutorInterface *executor,
 		MultiChannelStateSequence const * seq,
 		pwm_cycle_callback *pwmCycleCallback, pwm_gen_callback *stateChangeCallback) {
-	UNUSED(msg);
-	this->executor = executor;
+	m_executor = executor;
 	isStopRequested = false;
 
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6582, periodNt != 0, "period is not initialized");
@@ -299,8 +302,8 @@ void PwmConfig::weComplexInit(const char *msg, ExecutorInterface *executor,
 	}
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6583, seq->waveCount > 0, "waveCount should be positive");
 
-	this->pwmCycleCallback = pwmCycleCallback;
-	this->stateChangeCallback = stateChangeCallback;
+	m_pwmCycleCallback = pwmCycleCallback;
+	m_stateChangeCallback = stateChangeCallback;
 
 	copyPwmParameters(this, seq);
 
@@ -330,7 +333,7 @@ void startSimplePwm(SimplePwm *state, const char *msg, ExecutorInterface *execut
 
 	state->setFrequency(frequency);
 	state->setSimplePwmDutyCycle(dutyCycle);
-	state->weComplexInit(msg, executor, &state->seq, NULL, (pwm_gen_callback*)applyPinState);
+	state->weComplexInit(executor, &state->seq, nullptr, applyPinState);
 }
 
 void startSimplePwmExt(SimplePwm *state, const char *msg,
@@ -365,8 +368,6 @@ void startSimplePwmHard(SimplePwm *state, const char *msg,
 
 /**
  * This method controls the actual hardware pins
- *
- * This method takes ~350 ticks.
  */
 void applyPinState(int stateIndex, PwmConfig *state) /* pwm_gen_callback */ {
 #if EFI_PROD_CODE

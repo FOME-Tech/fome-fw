@@ -48,7 +48,7 @@
 #include "trigger_simulator.h"
 
 TriggerDecoderBase::TriggerDecoderBase(const char* name)
-	: name(name)
+	: m_name(name)
 {
 	resetState();
 }
@@ -156,7 +156,7 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 
 			efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, !cisnan(angle), "trgSyncNaN");
 			// Wrap the angle back in to [0, 720)
-			fixAngle(angle, "trgSync", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE_RANGE);
+			wrapAngle(angle, "trgSync", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE_RANGE);
 
 			if (shape->useOnlyRisingEdges) {
 				efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, triggerDefinitionIndex < triggerShapeLength, "trigger shape fail");
@@ -293,11 +293,11 @@ case SHAFT_SECONDARY_RISING:
 }
 
 void VvtTriggerDecoder::onNotEnoughTeeth(int actual, int expected) {
-	warning(ObdCode::CUSTOM_CAM_NOT_ENOUGH_TEETH, "cam %s trigger error: not enough teeth between sync points: actual %d expected %d", name, actual, expected);
+	warning(ObdCode::CUSTOM_CAM_NOT_ENOUGH_TEETH, "cam %s trigger error: not enough teeth between sync points: actual %d expected %d", m_name, actual, expected);
 }
 
 void VvtTriggerDecoder::onTooManyTeeth(int actual, int expected) {
-	warning(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH, "cam %s trigger error: too many teeth between sync points: %d > %d", name, actual, expected);
+	warning(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH, "cam %s trigger error: too many teeth between sync points: %d > %d", m_name, actual, expected);
 }
 
 bool TriggerDecoderBase::validateEventCounters(const TriggerWaveform& triggerShape) const {
@@ -350,7 +350,7 @@ static bool shouldConsiderEdge(const TriggerWaveform& triggerShape, TriggerWheel
 		return false;
 	}
 
-	switch (triggerShape.syncEdge) {
+	switch (triggerShape.m_syncEdge) {
 		case SyncEdge::Both: return true;
 		case SyncEdge::RiseOnly:
 		case SyncEdge::Rise: return isRising;
@@ -505,7 +505,6 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			}
 #else
 			if (printTriggerTrace) {
-				float gap = 1.0 * toothDurations[0] / toothDurations[1];
 				for (int i = 0;i<triggerShape.gapTrackingLength;i++) {
 					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
 					printf("%sindex=%d: gap=%.2f expected from %.2f to %.2f error=%s\r\n",
