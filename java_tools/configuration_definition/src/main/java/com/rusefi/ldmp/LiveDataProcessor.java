@@ -88,7 +88,7 @@ public class LiveDataProcessor {
 
         ConfigurationConsumer dataLogConsumer = new DataLogConsumer(tsOutputsDestination + File.separator + "data_logs.ini");
 
-        // SdCardFieldsContent sdCardFieldsConsumer = new SdCardFieldsContent();
+        SdCardFieldsContent sdCardFieldsConsumer = new SdCardFieldsContent();
 
         GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("controllers/lua/generated/output_lookup_generated.cpp");
 
