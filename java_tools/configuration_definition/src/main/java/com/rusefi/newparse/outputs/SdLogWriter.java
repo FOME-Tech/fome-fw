@@ -12,17 +12,21 @@ public class SdLogWriter {
     private final PrintStream ps;
 
     public SdLogWriter(String outputFile) throws FileNotFoundException {
-        this.ps = new PrintStreamAlwaysUnix(new FileOutputStream(outputFile));
+        this(new PrintStreamAlwaysUnix(new FileOutputStream(outputFile)));
     }
 
     public SdLogWriter(PrintStream ps) {
         this.ps = ps;
+
+        ps.println("static constexpr LogField fields[] = {");
+        ps.println("\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},");
     }
 
     public void writeSdLogs(ParseState parser, String sourceName) {
-        for (Struct s : parser.getStructs()) {
-            StructLayout sl = new StructLayout(0, "root", s);
-            sl.writeSdLogLayout(ps, sourceName);
-        }
+        // Assume the last struct is the one we want...
+        Struct s = parser.getStructs().get(parser.getStructs().size() - 1);
+
+        StructLayout sl = new StructLayout(0, "root", s);
+        sl.writeSdLogLayout(ps, sourceName);
     }
 }
