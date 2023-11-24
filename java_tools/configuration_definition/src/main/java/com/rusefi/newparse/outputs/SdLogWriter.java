@@ -19,10 +19,10 @@ public class SdLogWriter {
         this.ps = ps;
     }
 
-    public void writeSdLogs(ParseState parser) {
+    public void writeSdLogs(ParseState parser, String sourceName) {
         for (Struct s : parser.getStructs()) {
             StructLayout sl = new StructLayout(0, "root", s);
-            sl.writeSdLogLayout(ps);
+            sl.writeSdLogLayout(ps, sourceName);
         }
     }
 }
