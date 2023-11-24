@@ -9,7 +9,6 @@
 #if EFI_BOOST_CONTROL
 
 #include "boost_control.h"
-#include "pid_auto_tune.h"
 #include "electronic_throttle.h"
 
 #define NO_PIN_PERIOD 500
@@ -29,6 +28,8 @@ void BoostController::init(IPwm* pwm, const ValueProvider3D* openLoopMap, const 
 
 	m_pid.initPidClass(pidParams);
 	resetLua();
+
+	hasInitBoost = true;
 }
 
 void BoostController::resetLua() {
@@ -37,8 +38,8 @@ void BoostController::resetLua() {
 	luaOpenLoopAdd = 0;
 }
 
-void BoostController::onConfigurationChange(pid_s* previousConfiguration) {
-	if (!m_pid.isSame(previousConfiguration)) {
+void BoostController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+	if (!m_pid.isSame(&previousConfig->boostPid)) {
 		m_shouldResetPid = true;
 	}
 }
@@ -142,7 +143,7 @@ percent_t BoostController::getClosedLoopImpl(float target, float manifoldPressur
 		return 0;
 	}
 
-	return m_pid.getOutput(target, manifoldPressure, SLOW_CALLBACK_PERIOD_MS / 1000.0f);
+	return m_pid.getOutput(target, manifoldPressure, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 }
 
 expected<percent_t> BoostController::getClosedLoop(float target, float manifoldPressure) {
@@ -174,13 +175,13 @@ void BoostController::setOutput(expected<float> output) {
 	setEtbWastegatePosition(boostOutput);
 }
 
-void BoostController::update() {
+void BoostController::onFastCallback() {
 	if (!hasInitBoost) {
-	    return;
+		return;
 	}
 
-	m_pid.iTermMin = -50;
-	m_pid.iTermMax = 50;
+	m_pid.iTermMin = -20;
+	m_pid.iTermMax = 20;
 
 	rpmTooLow = Sensor::getOrZero(SensorType::Rpm) < engineConfiguration->boostControlMinRpm;
 	tpsTooLow = Sensor::getOrZero(SensorType::Tps1) < engineConfiguration->boostControlMinTps;
@@ -201,7 +202,6 @@ void setDefaultBoostParameters() {
 	engineConfiguration->boostPid.iFactor = 0.3;
 	engineConfiguration->boostPid.maxValue = 20;
 	engineConfiguration->boostPid.minValue = -20;
-	engineConfiguration->boostControlPinMode = OM_DEFAULT;
 
 	setLinearCurve(config->boostRpmBins, 0, 8000, 1);
 	setLinearCurve(config->boostTpsBins, 0, 100, 1);
@@ -237,10 +237,6 @@ void startBoostPin() {
 #endif /* EFI_UNIT_TEST */
 }
 
-void onConfigurationChangeBoostCallback(engine_configuration_s *previousConfiguration) {
-	engine->boostController.onConfigurationChange(&previousConfiguration->boostPid);
-}
-
 void initBoostCtrl() {
 	// todo: why do we have 'isBoostControlEnabled' setting exactly?
 	// 'initVvtActuators' is an example of a subsystem without explicit enable
@@ -264,12 +260,11 @@ void initBoostCtrl() {
 	boostMapClosed.init(config->boostTableClosedLoop, config->boostTpsBins, config->boostRpmBins);
 
 	// Set up boost controller instance
-	engine->boostController.init(&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
+	engine->module<BoostController>().unmock().init(&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
 
 #if !EFI_UNIT_TEST
 	startBoostPin();
 #endif
-	engine->boostController.hasInitBoost = true;
 }
 
 #endif

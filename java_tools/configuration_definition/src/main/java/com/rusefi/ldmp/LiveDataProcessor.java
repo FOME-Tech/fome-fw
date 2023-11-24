@@ -3,12 +3,9 @@ package com.rusefi.ldmp;
 import com.devexperts.logging.Logging;
 import com.rusefi.EnumToString;
 import com.rusefi.InvokeReader;
-import com.rusefi.ReaderState;
 import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
-import com.rusefi.newparse.outputs.CStructWriter;
-import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.util.LazyFile;
@@ -128,17 +125,20 @@ public class LiveDataProcessor {
                 state.addCHeaderDestination(cHeaderDestination);
 
                 int baseOffset = outputsSections.getBaseOffset();
-                state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
+
+                if (javaName != null) {
+                    state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
+                }
 
                 if (constexpr != null) {
                     sdCardFieldsConsumer.home = constexpr;
                     sdCardFieldsConsumer.isPtr = isPtr;
-                    state.addDestination((state1, structure) -> sdCardFieldsConsumer.handleEndStruct(state1, structure));
+                    state.addDestination(sdCardFieldsConsumer::handleEndStruct);
 
                     outputValueConsumer.currentSectionPrefix = constexpr;
                     outputValueConsumer.conditional = conditional;
                     outputValueConsumer.isPtr = isPtr;
-                    state.addDestination((state1, structure) -> outputValueConsumer.handleEndStruct(state1, structure));
+                    state.addDestination(outputValueConsumer::handleEndStruct);
 
                 }
 
@@ -176,9 +176,9 @@ public class LiveDataProcessor {
         };
 
 
-        ArrayList<LinkedHashMap> liveDocs = (ArrayList<LinkedHashMap>) data.get("Usages");
+        ArrayList<LinkedHashMap<String, Object>> liveDocs = (ArrayList<LinkedHashMap<String, Object>>) data.get("Usages");
 
-        for (LinkedHashMap entry : liveDocs) {
+        for (LinkedHashMap<String, Object> entry : liveDocs) {
             String name = (String) entry.get("name");
             String java = (String) entry.get("java");
             String folder = (String) entry.get("folder");

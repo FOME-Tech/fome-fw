@@ -107,8 +107,6 @@ typedef void (*Void)(void);
 
 using lua_script_t = char[LUA_SCRIPT_SIZE];
 
-using error_message_t = char[ERROR_BUFFER_SIZE];
-
 using vehicle_info_t = char[VEHICLE_INFO_SIZE];
 
 using vin_number_t = char[VIN_NUMBER_SIZE];
@@ -134,7 +132,7 @@ typedef void (*VoidIntVoidPtr)(int, void*);
 typedef void (*VoidFloat)(float);
 typedef void (*VoidFloatFloat)(float, float);
 typedef void (*VoidFloatFloatFloat)(float, float, float);
-typedef void (*VoidFloatFloatFloatFloatFloat)(float, float, float, float, float);
+typedef void (*VoidFloatFloatFloatFloat)(float, float, float, float);
 typedef void (*VoidFloatFloatVoidPtr)(float, float, void*);
 typedef void (*VoidIntInt)(int, int);
 typedef void (*VoidIntIntVoidPtr)(int, int, void*);

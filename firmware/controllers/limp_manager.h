@@ -50,14 +50,14 @@ public:
 	Clearable() : m_value(true) {}
 	Clearable(bool value) : m_value(value) {
 		if (!m_value) {
-			clearReason = ClearReason::Settings;
+			m_clearReason = ClearReason::Settings;
 		}
 	}
 
 	void clear(ClearReason clearReason) {
 		if (m_value) {
 			m_value = false;
-			this->clearReason = clearReason;
+			m_clearReason = clearReason;
 		}
 	}
 
@@ -65,9 +65,13 @@ public:
 		return m_value;
 	}
 
-	ClearReason clearReason = ClearReason::None;
+	ClearReason why() const {
+		return m_clearReason;
+	}
+
 private:
 	bool m_value = true;
+	ClearReason m_clearReason = ClearReason::None;
 };
 
 struct LimpState {
@@ -84,9 +88,13 @@ class Hysteresis {
 public:
 	// returns true if value > rising, false if value < falling, previous if falling < value < rising.
 	bool test(float value, float rising, float falling) {
-		if (value > rising) {
+		return test(value > rising, value < falling);
+	}
+
+	bool test (bool risingCondition, bool fallingCondition) {
+		if (risingCondition) {
 			m_state = true;
-		} else if (value < falling) {
+		} else if (fallingCondition) {
 			m_state = false;
 		}
 
@@ -146,6 +154,9 @@ private:
 
 	// Tracks how long since a cut (ignition or fuel) was active for any reason
 	Timer m_lastCutTime;
+
+	// Tracks how long injector duty has been over the sustained limit
+	Timer m_injectorDutySustainedTimer;
 };
 
 LimpManager * getLimpManager();

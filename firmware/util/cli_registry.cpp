@@ -41,8 +41,8 @@ void resetConsoleActions(void) {
 static void doAddAction(const char *token, action_type_e type, Void callback, void *param) {
 #if !defined(EFI_DISABLE_CONSOLE_ACTIONS)
 	for (uint32_t i = 0; i < efiStrlen(token);i++) {
-		char ch = token[i];
-		if (isupper(ch)) {
+		char c = token[i];
+		if (isupper(c)) {
 			firmwareError(ObdCode::CUSTOM_ERR_COMMAND_LOWER_CASE_EXPECTED, "lowerCase expected [%s]", token);
 		}
 	}
@@ -138,8 +138,8 @@ void addConsoleActionFFF(const char *token, VoidFloatFloatFloat callback) {
 	doAddAction(token, FLOAT_FLOAT_FLOAT_PARAMETER, (Void) callback, NULL);
 }
 
-void addConsoleActionFFFFF(const char *token, VoidFloatFloatFloatFloatFloat callback) {
-	doAddAction(token, FLOAT_FLOAT_FLOAT_FLOAT_FLOAT_PARAMETER, (Void) callback, NULL);
+void addConsoleActionFFFF(const char *token, VoidFloatFloatFloatFloat callback) {
+	doAddAction(token, FLOAT_FLOAT_FLOAT_FLOAT_PARAMETER, (Void) callback, NULL);
 }
 
 void addConsoleActionFFP(const char *token, VoidFloatFloatVoidPtr callback, void *param) {
@@ -167,8 +167,9 @@ static int getParameterCount(action_type_e parameterType) {
 	case STRING3_PARAMETER:
 	case FLOAT_FLOAT_FLOAT_PARAMETER:
 		return 3;
+	case FLOAT_FLOAT_FLOAT_FLOAT_PARAMETER:
+		return 4;
 	case STRING5_PARAMETER:
-	case FLOAT_FLOAT_FLOAT_FLOAT_FLOAT_PARAMETER:
 		return 5;
 	default:
 		return -1;
@@ -222,8 +223,8 @@ int findEndOfToken(const char *line) {
 int tokenLength(const char *msgp) {
 	int result = 0;
 	while (*msgp) {
-		char ch = *msgp++;
-		if (ch == SPACE_CHAR) {
+		char c = *msgp++;
+		if (c == SPACE_CHAR) {
 			break;
 		}
 		result++;
@@ -402,18 +403,18 @@ int handleActionWithParameter(TokenCallback *current, char *argv[], int argc) {
 		(*callbackS)(value[0], value[1], value[2]);
 		return 0;
 	}
-	case FLOAT_FLOAT_FLOAT_FLOAT_FLOAT_PARAMETER:
+	case FLOAT_FLOAT_FLOAT_FLOAT_PARAMETER:
 	{
-		float value[5];
-		for (int i = 0; i < 5; i++) {
+		float value[4];
+		for (int i = 0; i < 4; i++) {
 			value[i] = atoff(argv[i]);
 			if (cisnan(value[i])) {
 				efiPrintf("invalid float [%s]", argv[i]);
 				return -1;
 			}
 		}
-		VoidFloatFloatFloatFloatFloat callbackS = (VoidFloatFloatFloatFloatFloat) current->callback;
-		(*callbackS)(value[0], value[1], value[2], value[3], value[4]);
+		VoidFloatFloatFloatFloat callbackS = (VoidFloatFloatFloatFloat) current->callback;
+		(*callbackS)(value[0], value[1], value[2], value[3]);
 		return 0;
 	}
 	case INT_FLOAT_PARAMETER:

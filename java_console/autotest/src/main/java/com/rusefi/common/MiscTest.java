@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import static com.devexperts.util.TimeUtil.SECOND;
 import static com.rusefi.IoUtil.sleepSeconds;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class MiscTest extends RusefiTestBase {
@@ -24,6 +23,7 @@ public class MiscTest extends RusefiTestBase {
         double mcuTemp = Double.NaN;
         long start = System.currentTimeMillis();
         while (Double.isNaN(mcuTemp) && (System.currentTimeMillis() - start) < 5 * SECOND) {
+            //noinspection BusyWait
             Thread.sleep(100);
             mcuTemp = SensorCentral.getInstance().getValue(Sensor.INT_TEMP);
         }

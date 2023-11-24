@@ -55,7 +55,7 @@ const injector_model_s* getLiveData(size_t) {
 template<>
 const boost_control_s* getLiveData(size_t) {
 #if EFI_BOOST_CONTROL
-	return &engine->boostController;
+	return &engine->module<BoostController>().unmock();
 #else
 	return nullptr;
 #endif
@@ -132,7 +132,7 @@ const trigger_state_s* getLiveData(size_t idx) {
 
 template<>
 const vvt_s* getLiveData(size_t idx) {
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 	switch (idx) {
 		case 0: return &engine->module<VvtController1>().unmock();
 		case 1: return &engine->module<VvtController2>().unmock();
@@ -156,7 +156,7 @@ const trigger_state_primary_s* getLiveData(size_t) {
 
 template<>
 const wall_fuel_state_s* getLiveData(size_t) {
-	return &engine->injectionEvents.elements[0].wallFuel;
+	return &engine->injectionEvents.elements[0].getWallFuel();
 }
 
 template<>
@@ -181,6 +181,11 @@ const sent_state_s* getLiveData(size_t) {
 template<>
 const throttle_model_s* getLiveData(size_t) {
 	return &engine->module<ThrottleModel>().unmock();
+}
+
+template<>
+const lambda_monitor_s* getLiveData(size_t) {
+	return &engine->lambdaMonitor;
 }
 
 static const FragmentEntry fragments[] = {

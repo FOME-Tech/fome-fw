@@ -1,15 +1,10 @@
 package com.rusefi;
 
 import com.devexperts.logging.Logging;
-import com.rusefi.autodetect.PortDetector;
-import com.rusefi.autodetect.SerialAutoChecker;
 import com.rusefi.core.io.BundleUtil;
-import com.rusefi.io.LinkManager;
 import com.rusefi.io.serial.BaudRateHolder;
-import com.rusefi.maintenance.ExecHelper;
 import com.rusefi.maintenance.ProgramSelector;
 import com.rusefi.ui.util.HorizontalLine;
-import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
 import com.rusefi.util.IoUtils;
 import net.miginfocom.swing.MigLayout;
@@ -21,8 +16,6 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -49,7 +42,7 @@ public class StartupFrame {
     private final JFrame frame;
     private final JPanel connectPanel = new JPanel(new FlowLayout());
     // todo: move this line to the connectPanel
-    private final JComboBox<String> comboPorts = new JComboBox<>();
+    private final JComboBox<SerialPortScanner.PortResult> comboPorts = new JComboBox<>();
     private final JPanel leftPanel = new JPanel(new VerticalFlowLayout());
 
     private final JPanel realHardwarePanel = new JPanel(new MigLayout());
@@ -127,11 +120,11 @@ public class StartupFrame {
 
         ProgramSelector selector = new ProgramSelector(comboPorts);
 
+        realHardwarePanel.add(new HorizontalLine(), "right, wrap");
+
+        realHardwarePanel.add(selector.getControl(), "right, wrap");
+
         if (FileLog.isWindows()) {
-            realHardwarePanel.add(new HorizontalLine(), "right, wrap");
-
-            realHardwarePanel.add(selector.getControl(), "right, wrap");
-
             // for F7 builds we just build one file at the moment
 //            realHardwarePanel.add(new FirmwareFlasher(FirmwareFlasher.IMAGE_FILE, "ST-LINK Program Firmware", "Default firmware version for most users").getButton());
 
@@ -154,21 +147,6 @@ public class StartupFrame {
         miscPanel.add(SimulatorHelper.createSimulatorComponent(this));
 
         JPanel rightPanel = new JPanel(new VerticalFlowLayout());
-
-        if (BundleUtil.readBundleFullNameNotNull().contains("proteus_f7")) {
-            String text = "WARNING: Proteus F7";
-            URLLabel urlLabel = new URLLabel(text, "https://github.com/rusefi/rusefi/wiki/F7-requires-full-erase");
-            Color originalColor = urlLabel.getForeground();
-            new Timer(500, new ActionListener() {
-                int counter;
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // URL color is hard-coded, let's blink isUnderlined attribute as second best option
-                    urlLabel.setText(text, counter++ % 2 == 0);
-                }
-            }).start();
-            rightPanel.add(urlLabel);
-        }
 
         JLabel logo = createLogoLabel();
         if (logo != null)
@@ -194,7 +172,7 @@ public class StartupFrame {
     }
 
     private void applyKnownPorts(SerialPortScanner.AvailableHardware currentHardware) {
-        List<String> ports = currentHardware.getKnownPorts();
+        List<SerialPortScanner.PortResult> ports = currentHardware.getKnownPorts();
             log.info("Rendering available ports: " + ports);
             connectPanel.setVisible(!ports.isEmpty());
             noPortsMessage.setVisible(ports.isEmpty());
@@ -235,16 +213,23 @@ public class StartupFrame {
 
     private void connectButtonAction(JComboBox<String> comboSpeeds) {
         BaudRateHolder.INSTANCE.baudRate = Integer.parseInt((String) comboSpeeds.getSelectedItem());
-        String selectedPort = comboPorts.getSelectedItem().toString();
-        if (SerialPortScanner.AUTO_SERIAL.equals(selectedPort)) {
-            SerialAutoChecker.AutoDetectResult detectResult = PortDetector.autoDetectPort(StartupFrame.this.frame);
-            String autoDetectedPort = detectResult == null ? null : detectResult.getSerialPort();
-            if (autoDetectedPort == null)
-                return;
-            selectedPort = autoDetectedPort;
+        SerialPortScanner.PortResult selectedPort = ((SerialPortScanner.PortResult)comboPorts.getSelectedItem());
+
+        if (selectedPort == null) {
+            return;
         }
+
+        // Ensure that the bundle matches between the controller and console
+        if (!selectedPort.signature.matchesBundle()) {
+            int result = JOptionPane.showConfirmDialog(this.frame, "Looks like you're using the wrong console bundle for your controller.\nYou can attempt to proceed, but unexpected behavior may result.\nContinue at your own risk.", "WARNING", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result != JOptionPane.OK_OPTION) {
+                return;
+            }
+        }
+
         disposeFrameAndProceed();
-        new ConsoleUI(selectedPort);
+        new ConsoleUI(selectedPort.port);
     }
 
     /**
@@ -283,10 +268,12 @@ public class StartupFrame {
         SerialPortScanner.INSTANCE.stopTimer();
     }
 
-    private void applyPortSelectionToUIcontrol(List<String> ports) {
+    private void applyPortSelectionToUIcontrol(List<SerialPortScanner.PortResult> ports) {
         comboPorts.removeAllItems();
-        for (final String port : ports)
+        for (final SerialPortScanner.PortResult port : ports) {
             comboPorts.addItem(port);
+        }
+
         String defaultPort = getConfig().getRoot().getProperty(ConsoleUI.PORT_KEY);
         comboPorts.setSelectedItem(defaultPort);
         trueLayout(comboPorts);

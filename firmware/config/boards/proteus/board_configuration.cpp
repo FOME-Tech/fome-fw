@@ -41,12 +41,10 @@ static const brain_pin_e ignPins[] = {
 
 static void setInjectorPins() {
 	copyArray(engineConfiguration->injectionPins, injPins);
-	engineConfiguration->injectionPinMode = OM_DEFAULT;
 }
 
 static void setIgnitionPins() {
 	copyArray(engineConfiguration->ignitionPins, ignPins);
-	engineConfiguration->ignitionPinMode = OM_DEFAULT;
 }
 
 // PE3 is error LED, configured in board.mk
@@ -166,14 +164,7 @@ void setBoardDefaultConfiguration() {
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
 
-	engineConfiguration->cylindersCount = 8;
-	engineConfiguration->firingOrder = FO_1_8_7_2_6_5_4_3;
-
 	engineConfiguration->enableSoftwareKnock = true;
-
-	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
-	engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
-	engineConfiguration->injectionMode = IM_SIMULTANEOUS;
 
 	// If we're running as hardware CI, borrow a few extra pins for that
 #ifdef HARDWARE_CI
@@ -187,10 +178,29 @@ void boardPrepareForStop() {
 	palEnableLineEvent(PAL_LINE(GPIOD, 0), PAL_EVENT_MODE_RISING_EDGE);
 }
 
+static Gpio PROTEUS_OUTPUTS[] = {
+	PROTEUS_LS_1,
+	PROTEUS_LS_2,
+	PROTEUS_LS_3,
+	PROTEUS_LS_4,
+	PROTEUS_LS_5,
+	PROTEUS_LS_6,
+	PROTEUS_LS_7,
+	PROTEUS_LS_8,
+	PROTEUS_LS_9,
+	PROTEUS_LS_10,
+	PROTEUS_LS_11,
+	PROTEUS_LS_12,
+	PROTEUS_LS_13,
+	PROTEUS_LS_14,
+	PROTEUS_LS_15,
+	PROTEUS_LS_16,
+};
+
 int getBoardMetaOutputsCount() {
-    return efi::size(PROTEUS_OUTPUTS);
+	return efi::size(PROTEUS_OUTPUTS);
 }
 
 Gpio* getBoardMetaOutputs() {
-    return PROTEUS_OUTPUTS;
+	return PROTEUS_OUTPUTS;
 }

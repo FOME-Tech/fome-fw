@@ -103,9 +103,8 @@ void setTriggerEmulatorRPM(int rpm) {
 static void updateTriggerWaveformIfNeeded(PwmConfig *state) {
 	if (atTriggerVersion < engine->triggerCentral.triggerShape.version) {
 		atTriggerVersion = engine->triggerCentral.triggerShape.version;
-		efiPrintf("Stimulator: updating trigger shape: %d/%d %d", atTriggerVersion,
-				engine->getGlobalConfigurationVersion(), getTimeNowMs());
-
+		efiPrintf("Stimulator: updating trigger shape: %d/%d", atTriggerVersion,
+				engine->getGlobalConfigurationVersion());
 
 		TriggerWaveform *s = &engine->triggerCentral.triggerShape;
 		copyPwmParameters(state, &s->wave);
@@ -146,7 +145,7 @@ static void startSimulatedTriggerSignal() {
 
 	TriggerWaveform *s = &engine->triggerCentral.triggerShape;
 	setTriggerEmulatorRPM(engineConfiguration->triggerSimulatorRpm);
-	triggerSignal.weComplexInit("position sensor",
+	triggerSignal.weComplexInit(
 			&engine->executor,
 			&s->wave,
 			updateTriggerWaveformIfNeeded, (pwm_gen_callback*)emulatorApplyPinState);

@@ -104,8 +104,6 @@ static void printErrorCounters() {
 /* 10mS when receiving byte by byte */
 #define TS_COMMUNICATION_TIMEOUT_SHORT	TIME_MS2I(10)
 
-static efitimems_t previousWriteReportMs = 0;
-
 static void resetTs() {
 	memset(&tsState, 0, sizeof(tsState));
 }
@@ -114,7 +112,7 @@ static void resetTs() {
 
 void tunerStudioDebug(TsChannelBase* tsChannel, const char *msg) {
 #if EFI_TUNER_STUDIO_VERBOSE
-	efiPrintf("%s: %s", tsChannel->name, msg);
+	efiPrintf("%s: %s", tsChannel->getName(), msg);
 #endif /* EFI_TUNER_STUDIO_VERBOSE */
 }
 
@@ -209,12 +207,6 @@ void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, ts_response_
 		return;
 	}
 
-	efitimems_t nowMs = getTimeNowMs();
-	if (nowMs - previousWriteReportMs > 5) {
-		previousWriteReportMs = nowMs;
-		efiPrintf("offset %d: value=%d", offset, value);
-	}
-
 	// Skip the write if a preset was just loaded - we don't want to overwrite it
 	if (!rebootForPresetPending) {
 		getWorkingPageAddr()[offset] = value;
@@ -275,7 +267,9 @@ static void sendResponseCode(ts_response_format_e mode, TsChannelBase *tsChannel
  * 'Burn' command is a command to commit the changes
  */
 static void handleBurnCommand(TsChannelBase* tsChannel, ts_response_format_e mode) {
-	efitimems_t nowMs = getTimeNowMs();
+	Timer t;
+	t.reset();
+
 	tsState.burnCommandCounter++;
 
 	efiPrintf("got B (Burn) %s", mode == TS_PLAIN ? "plain" : "CRC");
@@ -286,7 +280,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel, ts_response_format_e mod
 	}
 
 	sendResponseCode(mode, tsChannel, TS_RESPONSE_BURN_OK);
-	efiPrintf("BURN in %dms", getTimeNowMs() - nowMs);
+	efiPrintf("BURN in %dms", (int)(t.getElapsedSeconds() * 1e3));
 }
 
 #if EFI_TUNER_STUDIO && (EFI_PROD_CODE || EFI_SIMULATOR)
@@ -302,7 +296,8 @@ static bool isKnownCommand(char command) {
 			|| command == TS_GET_FIRMWARE_VERSION
 			|| command == TS_PERF_TRACE_BEGIN
 			|| command == TS_PERF_TRACE_GET_BUFFER
-			|| command == TS_GET_CONFIG_ERROR;
+			|| command == TS_GET_CONFIG_ERROR
+			|| command == TS_QUERY_BOOTLOADER;
 }
 
 /**
@@ -436,7 +431,7 @@ static int tsProcessOne(TsChannelBase* tsChannel) {
 
 	if (incomingPacketSize == 0 || expectedSize > sizeof(tsChannel->scratchBuffer)) {
 		if (tsChannel->in_sync) {
-			efiPrintf("process_ts: channel=%s invalid size: %d", tsChannel->name, incomingPacketSize);
+			efiPrintf("process_ts: channel=%s invalid size: %d", tsChannel->getName(), incomingPacketSize);
 			tunerStudioError(tsChannel, "process_ts: ERROR: CRC header size");
 			/* send error only if previously we were in sync */
 			sendErrorCode(tsChannel, TS_RESPONSE_UNDERRUN);
@@ -652,14 +647,8 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, char *data, int inco
 			uint16_t subsystem = SWAP_UINT16(data16[0]);
 			uint16_t index = SWAP_UINT16(data16[1]);
 
-			if (engineConfiguration->debugMode == DBG_BENCH_TEST) {
-				engine->outputChannels.debugIntField1++;
-				engine->outputChannels.debugIntField2 = subsystem;
-				engine->outputChannels.debugIntField3 = index;
-			}
-
-#if EFI_PROD_CODE && EFI_ENGINE_CONTROL
-		executeTSCommand(subsystem, index);
+#if (EFI_PROD_CODE || EFI_SIMULATOR) && EFI_ENGINE_CONTROL
+			executeTSCommand(subsystem, index);
 #endif /* EFI_PROD_CODE */
 			sendOkResponse(tsChannel, TS_CRC);
 		}
@@ -732,6 +721,15 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, char *data, int inco
 	case TS_GET_CONFIG_ERROR: {
 		const char* configError = getCriticalErrorMessage();
 		tsChannel->sendResponse(TS_CRC, reinterpret_cast<const uint8_t*>(configError), strlen(configError), true);
+		break;
+	}
+	case TS_QUERY_BOOTLOADER: {
+		uint8_t bldata = TS_QUERY_BOOTLOADER_NONE;
+#if EFI_USE_OPENBLT
+		bldata = TS_QUERY_BOOTLOADER_OPENBLT;
+#endif
+
+		tsChannel->sendResponse(TS_CRC, &bldata, 1, false);
 		break;
 	}
 	default:

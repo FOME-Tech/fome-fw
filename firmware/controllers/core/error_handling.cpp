@@ -12,8 +12,6 @@
 static critical_msg_t warningBuffer;
 static critical_msg_t criticalErrorMessageBuffer;
 
-extern int warningEnabled;
-
 bool hasFirmwareErrorFlag = false;
 
 const char *dbg_panic_file;
@@ -133,7 +131,7 @@ bool warning(ObdCode code, const char *fmt, ...) {
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
 	// we just had this same warning, let's not spam
-	if (engine->engineState.warnings.isWarningNow(code) || !warningEnabled) {
+	if (engine->engineState.warnings.isWarningNow(code)) {
 		return true;
 	}
 
@@ -143,12 +141,6 @@ bool warning(ObdCode code, const char *fmt, ...) {
 	va_start(ap, fmt);
 	chvsnprintf(warningBuffer, sizeof(warningBuffer), fmt, ap);
 	va_end(ap);
-
-	if (engineConfiguration->showHumanReadableWarning) {
-#if EFI_TUNER_STUDIO
-  memcpy(persistentState.persistentConfiguration.warning_message, warningBuffer, sizeof(warningBuffer));
-#endif /* EFI_TUNER_STUDIO */
-	}
 
 	efiPrintf("WARNING: %s", warningBuffer);
 #else

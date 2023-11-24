@@ -51,6 +51,7 @@
 #include "throttle_model.h"
 #include "lambda_monitor.h"
 #include "vvt.h"
+#include "trip_odometer.h"
 
 #ifndef EFI_UNIT_TEST
 #error EFI_UNIT_TEST must be defined!
@@ -150,16 +151,20 @@ public:
 		Mockable<WallFuelController>,
 #if EFI_VEHICLE_SPEED
 		GearDetector,
+		TripOdometer,
 #endif // EFI_VEHICLE_SPEED
 		KnockController,
 		SensorChecker,
 		LimpManager,
-#if EFI_AUX_PID
+#if EFI_VVT_PID
 		VvtController1,
 		VvtController2,
 		VvtController3,
 		VvtController4,
-#endif // EFI_AUX_PID
+#endif // EFI_VVT_PID
+#if EFI_BOOST_CONTROL
+		BoostController,
+#endif // EFI_BOOST_CONTROL
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
 
@@ -188,10 +193,6 @@ public:
 	SoftSparkLimiter ALSsoftSparkLimiter;
 #endif /* EFI_ANTILAG_SYSTEM */
 
-#if EFI_BOOST_CONTROL
-	BoostController boostController;
-#endif // EFI_BOOST_CONTROL
-
 	LambdaMonitor lambdaMonitor;
 
 	IgnitionState ignitionState;
@@ -208,7 +209,6 @@ public:
 	void setConfig();
 
 	LocalVersionHolder versionForConfigurationListeners;
-	LocalVersionHolder auxParametersVersion;
 
 	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
 

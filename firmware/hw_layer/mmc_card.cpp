@@ -23,12 +23,13 @@
 static bool fs_ready = false;
 
 int totalLoggedBytes = 0;
+
+#if EFI_PROD_CODE
+
 static int fileCreatedCounter = 0;
 static int writeCounter = 0;
 static int totalWritesCounter = 0;
 static int totalSyncCounter = 0;
-
-#if EFI_PROD_CODE
 
 #include <stdio.h>
 #include <string.h>
@@ -546,13 +547,6 @@ void mlgLogger() {
 		}
 #endif
 
-		if (engineConfiguration->debugMode == DBG_SD_CARD) {
-			engine->outputChannels.debugIntField1 = totalLoggedBytes;
-			engine->outputChannels.debugIntField2 = totalWritesCounter;
-			engine->outputChannels.debugIntField3 = totalSyncCounter;
-			engine->outputChannels.debugIntField4 = fileCreatedCounter;
-		}
-
 		writeSdLogLine(logBuffer);
 
 		// Something went wrong (already handled), so cancel further writes
@@ -579,9 +573,11 @@ static void sdTriggerLogger() {
 	while (true) {
 		auto buffer = GetToothLoggerBufferBlocking();
 
-		logBuffer.write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
+		if (buffer) {
+			logBuffer.write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
+			ReturnToothLoggerBuffer(buffer);
+		}
 
-		ReturnToothLoggerBuffer(buffer);
 	}
 #endif /* EFI_TOOTH_LOGGER */
 }

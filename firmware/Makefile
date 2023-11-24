@@ -3,8 +3,6 @@
 # see setup_linux_environment.sh but Windows is also totally fine
 #
 
-.PHONY: openblt
-
 CHIBIOS = ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
 RULESFILE = $(RULESPATH)/rules.mk
@@ -45,15 +43,6 @@ ifeq ($(DEBUG_LEVEL_OPT),)
   # DEBUG_LEVEL_OPT = -O0 -ggdb -g
 endif
 
-
-ifeq ($(CCACHE_DIR),)
-  $(info No CCACHE_DIR)
-else
-  $(info CCACHE_DIR is ${CCACHE_DIR})
-  CCPREFIX=ccache
-endif
-
-
 # Compiler options here.
 # yes we have two kinds of EXTRA_*PARAMS so that we can define those in two different places independently
 #
@@ -80,6 +69,8 @@ endif
 
 # Hellen is one of the boards which cares
 USE_CPPOPT += -Wno-error=tautological-compare
+
+USE_CPPOPT += $(RUSEFI_CPPOPT)
 
 # Enable this if you want the linker to remove unused code and data
 ifeq ($(USE_LINK_GC),)
@@ -111,10 +102,6 @@ endif
 # without USE_SMART_BUILD all ChibiOS (including all drivers) are builded. And all drivers includes get included.
 ifeq ($(USE_SMART_BUILD),)
   USE_SMART_BUILD = no
-endif
-
-ifeq ($(USE_BOOTLOADER),)
-  USE_BOOTLOADER = no
 endif
 
 ifeq ($(USE_OPENBLT),)
@@ -166,6 +153,10 @@ MAKEFLAGS += ${NUMJOBS}
 
 BOARDINC = $(BOARD_DIR)
 include $(BOARD_DIR)/board.mk
+ifeq ($(SHORT_BOARD_NAME),)
+$(error SHORT_BOARD_NAME not set, something wrong with your board.mk file)
+endif
+DDEFS += -DSHORT_BOARD_NAME=$(SHORT_BOARD_NAME)
 
 # Include various ChibiOS mk files
 # Licensing files.
@@ -205,43 +196,34 @@ endif
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
 include $(PROJECT_DIR)/common.mk
 
-ifeq ($(BOOTLOADERINC),)
-  # include default bootloader code
-  BOOTLOADERINC= $(PROJECT_DIR)/bootloader/
-endif
-
-ifeq ($(USE_BOOTLOADER),yes)
-  include $(PROJECT_DIR)/bootloader/bootloader.mk
-endif
-
 ifeq ($(USE_OPENBLT),yes)
   # Reserve start of flash for OpenBLT
-  USE_OPT += -Wl,--defsym=BOOTLOADER=1
+  USE_OPT += -Wl,--defsym=HAS_BOOTLOADER=1
   DDEFS += -DEFI_USE_OPENBLT=TRUE
 endif
 
 $(info PROJECT_BOARD: $(PROJECT_BOARD))
 $(info BOARD_DIR:     $(BOARD_DIR))
 $(info PROJECT_CPU:   $(PROJECT_CPU))
+$(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
 $(info CPU_HWLAYER:   $(CPU_HWLAYER))
 $(info CONFDIR:       $(CONFDIR))
 $(info LDSCRIPT:      $(LDSCRIPT))
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
-# check.c goes first to throw error as soon as possible
-CSRC =  check.c \
+# gcc_version_check.c goes first to throw error as soon as possible
+CSRC =  gcc_version_check.c \
   $(ALLCSRC) \
   $(BOARDSRC) \
   $(CHIBIOS_CONTRIB)/os/various/ramdisk.c \
   $(CHIBIOS)/os/various/evtimer.c \
-  $(BOOTLOADERSRC) \
   ${HW_MASS_STORAGE_SRC_C} \
   $(HW_LAYER_EMS) \
   $(HW_LAYER_DRIVERS_CORE) \
   $(HW_LAYER_DRIVERS) \
   $(RUSEFI_LIB_C) \
-  main_hardfault.c
+  $(PROJECT_DIR)/hw_layer/main_hardfault.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -279,7 +261,7 @@ TCPPSRC =
 # List ASM source files here
 ASMXSRC = $(ALLXASMSRC) \
   $(RUSEFIASM) \
-  main_hardfault_asm.S
+  $(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
 
 #
 # WARNING! order of variables is important here - for instance cypress own folders should go before default folders
@@ -289,7 +271,6 @@ INCDIR = \
   $(BOARDINC) \
   $(ALLINC) \
   $(TESTINC) \
-  $(BOOTLOADERINC) \
   $(CHIBIOS)/os/various \
   $(RUSEFI_LIB_INC) \
   $(CONFDIR) \
@@ -314,8 +295,8 @@ ifeq ($(CROSS_COMPILE),)
 else
   TRGT = $(CROSS_COMPILE)
 endif
-CC   = $(CCPREFIX) $(TRGT)gcc
-CPPC = $(CCPREFIX) $(TRGT)g++
+CC   = $(TRGT)gcc
+CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
 # NOTE: You can use C++ even without C++ support if you are careful. C++
 #       runtime support makes code size explode.
@@ -371,12 +352,6 @@ ULIBS = -lm --specs=nano.specs -Wl,--sort-section=alignment
 ##############################################################################
 
 include $(RULESFILE)
-
-openblt:
-	make -f $(PROJECT_DIR)/hw_layer/openblt/openblt.mk BOARD_DIR=$(BOARD_DIR) PROJECT_BOARD=$(PROJECT_BOARD) PROJECT_CPU=$(PROJECT_CPU)
-
-openblt_clean:
-	make -f $(PROJECT_DIR)/hw_layer/openblt/openblt.mk clean BOARD_DIR=$(BOARD_DIR) PROJECT_BOARD=$(PROJECT_BOARD) PROJECT_CPU=$(PROJECT_CPU)
 
 # Enable precompiled header
 include $(PROJECT_DIR)/rusefi_pch.mk

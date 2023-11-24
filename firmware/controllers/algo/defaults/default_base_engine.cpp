@@ -4,8 +4,6 @@
 #include "vr_pwm.h"
 
 static void setDefaultAlternatorParameters() {
-	engineConfiguration->alternatorOffAboveTps = 120;
-
 	engineConfiguration->targetVBatt = 14;
 
 	engineConfiguration->alternatorControl.offset = 0;
@@ -41,7 +39,11 @@ void setDefaultBaseEngine() {
 	engineConfiguration->rpmHardLimit = 7000;
 	engineConfiguration->rpmHardLimitHyst = 50;
 	engineConfiguration->cutFuelOnHardLimit = true;
-	engineConfiguration->cutSparkOnHardLimit = true;
+	engineConfiguration->cutSparkOnHardLimit = false;
+	engineConfiguration->etbRevLimitRange = 250;
+
+	// CLT RPM limit table - just the X axis
+	copyArray(engineConfiguration->cltRevLimitRpmBins, { -20, 0, 40, 80 });
 
 	engineConfiguration->ALSMinRPM = 400;
 	engineConfiguration->ALSMaxRPM = 3200;
@@ -75,6 +77,10 @@ void setDefaultBaseEngine() {
 	engineConfiguration->benchTestOnTime = 4;
 	engineConfiguration->benchTestOffTime = 500;
 	engineConfiguration->benchTestCount = 3;
+
+	engineConfiguration->ignTestOnTime = 3;
+	engineConfiguration->ignTestOffTime = 500;
+	engineConfiguration->ignTestCount = 3;
 
 	// Fans
 	engineConfiguration->fanOnTemperature = 95;

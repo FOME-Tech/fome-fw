@@ -183,11 +183,6 @@ void runRusEfi() {
 	checkLastBootError();
 #endif
 
-#ifdef STM32F7
-	void sys_dual_bank(void);
-	addConsoleAction("dual_bank", sys_dual_bank);
-#endif
-
 #if defined(STM32F4) || defined(STM32F7)
 //	addConsoleAction("stm32_stop", stm32_stop);
 	addConsoleAction("stm32_standby", stm32_standby);
@@ -195,6 +190,10 @@ void runRusEfi() {
 
 	addConsoleAction(CMD_REBOOT, scheduleReboot);
 	addConsoleAction(CMD_REBOOT_DFU, jump_to_bootloader);
+
+#if EFI_USE_OPENBLT
+	addConsoleAction(CMD_REBOOT_OPENBLT, jump_to_openblt);
+#endif
 
 	/**
 	 * we need to initialize table objects before default configuration can set values
@@ -273,7 +272,6 @@ void runRusEfiWithConfig() {
 
 	// Config could be completely bogus - don't start anything else!
 	if (validateConfig()) {
-		initStatusLoop();
 		/**
 		 * Now let's initialize actual engine control logic
 		 * todo: should we initialize some? most? controllers before hardware?

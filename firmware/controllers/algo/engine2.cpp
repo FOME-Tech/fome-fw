@@ -77,27 +77,6 @@ bool WarningCodeState::isWarningNow(ObdCode code) const {
 	return !warn->LastTriggered.hasElapsedSec(maxI(3, engineConfiguration->warningPeriod));
 }
 
-void FuelConsumptionState::consumeFuel(float grams, efitick_t nowNt) {
-	m_consumedGrams += grams;
-
-	float elapsedSecond = m_timer.getElapsedSecondsAndReset(nowNt);
-
-	// If it's been a long time since last injection, ignore this pulse
-	if (elapsedSecond > 0.2f) {
-		m_rate = 0;
-	} else {
-		m_rate = grams / elapsedSecond;
-	}
-}
-
-float FuelConsumptionState::getConsumedGrams() const {
-	return m_consumedGrams;
-}
-
-float FuelConsumptionState::getConsumptionGramPerSecond() const {
-	return m_rate;
-}
-
 EngineState::EngineState() {
 	timeSinceLastTChargeK = getTimeNowNt();
 }
@@ -148,17 +127,16 @@ void EngineState::periodicFastCallback() {
 	auto tps = Sensor::get(SensorType::Tps1);
 	updateTChargeK(rpm, tps.value_or(0));
 
-	float injectionMass = getInjectionMass(rpm) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
+	float untrimmedInjectionMass = getInjectionMass(rpm) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
 	auto clResult = fuelClosedLoopCorrection();
 
 	// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
-	engine->engineState.injectionDuration = engine->module<InjectorModel>()->getInjectionDuration(injectionMass);
+	engine->engineState.injectionDuration = engine->module<InjectorModel>()->getInjectionDuration(untrimmedInjectionMass);
 
 	float fuelLoad = getFuelingLoad();
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);
 	engine->lambdaMonitor.update(rpm, fuelLoad);
 
-	float ignitionLoad = getIgnitionLoad();
 	float advance = getAdvance(rpm, ignitionLoad) * engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
 
 	// that's weird logic. also seems broken for two stroke?
@@ -177,10 +155,12 @@ void EngineState::periodicFastCallback() {
 		auto cylinderTrim = getCylinderFuelTrim(i, rpm, fuelLoad);
 
 		// Apply both per-bank and per-cylinder trims
-		engine->engineState.injectionMass[i] = injectionMass * bankTrim * cylinderTrim;
+		engine->engineState.injectionMass[i] = untrimmedInjectionMass * bankTrim * cylinderTrim;
 
 		timingAdvance[i] = advance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
 	}
+
+	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
 
 	// TODO: calculate me from a table!
 	trailingSparkAngle = engineConfiguration->trailingSparkAngle;
@@ -227,7 +207,7 @@ bool PrimaryTriggerConfiguration::isVerboseTriggerSynchDetails() const {
 
 trigger_config_s VvtTriggerConfiguration::getType() const {
 	// Convert from VVT type to trigger_config_s
-	return { getVvtTriggerType(engineConfiguration->vvtMode[index]), 0, 0 };
+	return { getVvtTriggerType(engineConfiguration->vvtMode[m_index]), 0, 0 };
 }
 
 bool VvtTriggerConfiguration::isVerboseTriggerSynchDetails() const {

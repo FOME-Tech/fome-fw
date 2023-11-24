@@ -3,9 +3,6 @@ package com.rusefi.core.io;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.InvalidPathException;
@@ -41,11 +38,15 @@ public class BundleUtil {
     }
 
     public static String getBundleTarget(String s) {
-        if (s == null)
+        if (s == null) {
             return null;
+        }
+
         int lastDot = s.lastIndexOf('.');
-        if (lastDot == -1)
-            throw new IllegalStateException("Dot expected somewhere in [" + s + "]");
+        if (lastDot == -1) {
+            return null;
+        }
+
         return s.substring(lastDot + 1);
     }
 }
