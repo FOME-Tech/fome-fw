@@ -22,6 +22,10 @@ public class SdLogWriter {
         ps.println("\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},");
     }
 
+    public void endFile() {
+        ps.println("};");
+    }
+
     public void writeSdLogs(ParseState parser, String sourceName) {
         // Assume the last struct is the one we want...
         Struct s = parser.getStructs().get(parser.getStructs().size() - 1);

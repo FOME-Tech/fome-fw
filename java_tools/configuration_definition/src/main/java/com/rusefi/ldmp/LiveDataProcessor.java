@@ -247,6 +247,7 @@ public class LiveDataProcessor {
         lazyFile.close();
 
         outputValueConsumer.endFile();
+        // sdLogWriter.endFile();
 
         // return outputChannelWriter.getSize();
         return outputsSections.sensorTsPosition;
