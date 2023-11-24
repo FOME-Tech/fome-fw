@@ -250,8 +250,9 @@ public class StructLayout extends Layout {
             throw new IllegalStateException("Output channels don't support multi dimension arrays");
         }
 
-        for (int i = 0; i < arrayLength[0]; i++) {
-            writeSdLogLayout(ps, prefixer, sourceName, this.name + (i + 1));
-        }
+        // TODO: This doesn't quite work, as it's unclear how to make automatic naming work properly
+        // for (int i = 0; i < arrayLength[0]; i++) {
+        //     writeSdLogLayout(ps, prefixer, sourceName, this.name + "[" + i + "]");
+        // }
     }
 }
