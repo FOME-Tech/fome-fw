@@ -228,12 +228,12 @@ public class StructLayout extends Layout {
     }
 
     @Override
-    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer) {
+    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer, String sourceName) {
         if (!this.noPrefix) {
             prefixer.push(name);
         }
 
-        this.children.forEach(c -> c.writeSdLogLayout(ps, prefixer));
+        this.children.forEach(c -> c.writeSdLogLayout(ps, prefixer, sourceName));
 
         if (!this.noPrefix) {
             prefixer.pop();
