@@ -242,9 +242,9 @@ public class LiveDataProcessor {
         }
         enumContent.append("} live_data_e;\n");
 
-        // LazyFile lazyFile = new LazyFile("console/binary_log/log_fields_generated.h");
-        // SdCardFieldsConsumer.wrapContent(lazyFile, sdCardFieldsConsumer.getBody());
-        // lazyFile.close();
+        LazyFile lazyFile = new LazyFile("console/binary_log/log_fields_generated.h");
+        SdCardFieldsConsumer.wrapContent(lazyFile, sdCardFieldsConsumer.getBody());
+        lazyFile.close();
 
         outputValueConsumer.endFile();
 
