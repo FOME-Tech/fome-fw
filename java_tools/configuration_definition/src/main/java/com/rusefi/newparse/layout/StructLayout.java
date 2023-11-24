@@ -246,12 +246,12 @@ public class StructLayout extends Layout {
 
     @Override
     protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer, String sourceName, int[] arrayLength) {
-        //if (arrayLength.length != 1) {
+        if (arrayLength.length != 1) {
             throw new IllegalStateException("Output channels don't support multi dimension arrays");
-        // }
+        }
 
-        // for (int i = 0; i < arrayLength[0]; i++) {
-        //     writeSdLogLayout(ps, prefixer, sourceName, this.name + (i + 1));
-        // }
+        for (int i = 0; i < arrayLength[0]; i++) {
+            writeSdLogLayout(ps, prefixer, sourceName, this.name + (i + 1));
+        }
     }
 }
