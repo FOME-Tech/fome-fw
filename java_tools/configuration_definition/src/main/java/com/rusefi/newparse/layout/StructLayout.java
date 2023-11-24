@@ -226,4 +226,17 @@ public class StructLayout extends Layout {
             elementOffset += this.size;
         }
     }
+
+    @Override
+    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer) {
+        if (!this.noPrefix) {
+            prefixer.push(name);
+        }
+
+        this.children.forEach(c -> c.writeSdLogLayout(ps, prefixer));
+
+        if (!this.noPrefix) {
+            prefixer.pop();
+        }
+    }
 }

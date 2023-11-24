@@ -91,4 +91,19 @@ public abstract class Layout {
 
         ps.print(text);
     }
+
+    public void writeSdLogLayout(PrintStream ps) {
+        // TODO
+        final String prefix = null;
+
+        StructNamePrefixer prefixer = new StructNamePrefixer();
+
+        if (prefix != null) {
+            prefixer.push(prefix);
+        }
+
+        writeSdLogLayout(ps, prefixer);
+    }
+
+    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer) { }
 }

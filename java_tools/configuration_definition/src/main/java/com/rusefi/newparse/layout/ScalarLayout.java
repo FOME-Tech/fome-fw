@@ -217,4 +217,21 @@ public class ScalarLayout extends Layout {
             elementOffset += type.size;
         }
     }
+
+    @Override
+    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer) {
+        // {engine->outputChannels.mafMeasured, "MAF", "kg/h", 1},
+
+        final String prefixedName = prefixer.get(this.name);
+
+        ps.print("\t{");
+        ps.print(prefixedName);
+        ps.print(", \"");
+        ps.print(this.options.comment != null ? this.options.comment : "ERROR");
+        ps.print("\", \"");
+        ps.print(this.options.units);
+        ps.print("\", ");
+        ps.print(this.options.digits);
+        ps.println("},");
+    }
 }

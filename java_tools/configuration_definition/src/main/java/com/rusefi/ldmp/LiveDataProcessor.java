@@ -6,6 +6,7 @@ import com.rusefi.InvokeReader;
 import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.outputs.SdLogWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.util.LazyFile;
@@ -88,7 +89,7 @@ public class LiveDataProcessor {
 
         ConfigurationConsumer dataLogConsumer = new DataLogConsumer(tsOutputsDestination + File.separator + "data_logs.ini");
 
-        SdCardFieldsContent sdCardFieldsConsumer = new SdCardFieldsContent();
+        // SdCardFieldsContent sdCardFieldsConsumer = new SdCardFieldsContent();
 
         GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("controllers/lua/generated/output_lookup_generated.cpp");
 
@@ -96,6 +97,8 @@ public class LiveDataProcessor {
         //     tsOutputsDestination + File.separator + "/output_channels.ini",
         //     tsOutputsDestination + File.separator + "/data_logs.ini"
         // );
+
+        SdLogWriter sdLogWriter = new SdLogWriter("\"console/binary_log/log_fields_generated.h\"");
 
         EntryHandler handler = new EntryHandler() {
             @Override
@@ -131,9 +134,9 @@ public class LiveDataProcessor {
                 }
 
                 if (constexpr != null) {
-                    sdCardFieldsConsumer.home = constexpr;
-                    sdCardFieldsConsumer.isPtr = isPtr;
-                    state.addDestination(sdCardFieldsConsumer::handleEndStruct);
+                    // sdCardFieldsConsumer.home = constexpr;
+                    // sdCardFieldsConsumer.isPtr = isPtr;
+                    // state.addDestination(sdCardFieldsConsumer::handleEndStruct);
 
                     outputValueConsumer.currentSectionPrefix = constexpr;
                     outputValueConsumer.conditional = conditional;
@@ -163,6 +166,8 @@ public class LiveDataProcessor {
                     //         outputChannelWriter.writeOutputChannels(parseState, outputNames[i]);
                     //     }
                     // }
+
+                    sdLogWriter.writeSdLogs(parseState);
                 }
 
                 state.doJob();
@@ -236,9 +241,9 @@ public class LiveDataProcessor {
         }
         enumContent.append("} live_data_e;\n");
 
-        LazyFile lazyFile = new LazyFile("console/binary_log/log_fields_generated.h");
-        SdCardFieldsConsumer.wrapContent(lazyFile, sdCardFieldsConsumer.getBody());
-        lazyFile.close();
+        // LazyFile lazyFile = new LazyFile("console/binary_log/log_fields_generated.h");
+        // SdCardFieldsConsumer.wrapContent(lazyFile, sdCardFieldsConsumer.getBody());
+        // lazyFile.close();
 
         outputValueConsumer.endFile();
 
