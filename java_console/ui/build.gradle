@@ -22,8 +22,10 @@ dependencies {
 
 shadowJar {
     archivesBaseName = 'fome_console'
-    destinationDir = file("$rootDir/../java_console_binary")
-    archiveClassifier = ''
+    base {
+        archivesBaseName = "${rootDir}/../java_console_binary/rusefi_console"
+        archiveClassifier = ''
+    }
 
     manifest {
         attributes(
