@@ -130,6 +130,10 @@ public enum SerialPortScanner {
     }
 
     private static List<PortResult> inspectPorts(final List<String> ports) {
+        if (ports.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         final Object resultsLock = new Object();
         final Map<String, PortResult> results = new HashMap<>();
 

@@ -268,10 +268,10 @@ public class ProgramSelector {
     }
 
     private void selectedPortChanged(ItemEvent e) {
+        mode.removeAllItems();
+
         if (e != null) {
             SerialPortScanner.PortResult pr = (SerialPortScanner.PortResult) e.getItem();
-
-            mode.removeAllItems();
 
             // Prefer OpenBLT so put that option first
             if (pr.type == SerialPortScanner.SerialPortType.FomeEcuWithOpenblt) {
