@@ -280,6 +280,12 @@ percent_t getInjectorDutyCycle(int rpm) {
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }
 
+percent_t getInjectorDutyCycleStage2(int rpm) {
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(engineConfiguration->injectionMode);
+	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
+	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
+}
+
 static float getCycleFuelMass(bool isCranking, float baseFuelMass) {
 	if (isCranking) {
 		return getCrankingFuel(baseFuelMass);
@@ -439,6 +445,18 @@ float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
 	// Convert from percent +- to multiplier
 	// 5% -> 1.05
 	return (100 + trimPercent) / 100;
+}
+
+float getStage2InjectionFraction(int rpm, float fuelLoad) {
+	// TODO: compute
+	float frac = 0;
+
+	// don't allow very small fraction
+	if (frac < 0.1) {
+		return 0;
+	}
+
+	return frac;
 }
 
 #endif
