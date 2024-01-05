@@ -149,6 +149,7 @@
 #define GAUGE_NAME_FUEL_FLOW "Fuel: Flow rate"
 
 #define GAUGE_NAME_FUEL_INJ_DUTY "Fuel: injector duty cycle"
+#define GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2 "Fuel: injector duty cycle stage 2"
 #define GAUGE_NAME_TCHARGE "Air: SD tCharge"
 #define GAUGE_NAME_TARGET_AFR "Fuel: target AFR"
 #define GAUGE_NAME_TARGET_LAMBDA "Fuel: target lambda"
