@@ -447,17 +447,27 @@ float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
 	return (100 + trimPercent) / 100;
 }
 
-float getStage2InjectionFraction(int rpm, float fuelLoad) {
+static Hysteresis stage2Hysteresis;
+
+float getStage2InjectionFraction(int rpm, float load) {
 	if (!engineConfiguration->enableStagedInjection) {
 		return 0;
 	}
 
-	// TODO: compute
-	float frac = 0;
+	float frac = 0.01f * interpolate3d(
+		config->injectorStagingTable,
+		config->injectorStagingLoadBins, load,
+		config->injectorStagingRpmBins, rpm
+	);
 
-	// don't allow very small fraction
-	if (frac < 0.1) {
+	// don't allow very small fraction, with some hysteresis
+	if (!stage2Hysteresis.test(frac, 0.1, 0.03)) {
 		return 0;
+	}
+
+	// Clamp to 90%
+	if (frac > 0.9) {
+		frac = 0.9;
 	}
 
 	return frac;
