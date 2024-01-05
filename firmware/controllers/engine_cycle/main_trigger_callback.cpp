@@ -54,13 +54,24 @@ void endSimultaneousInjection(InjectionEvent *event) {
 void turnInjectionPinLow(InjectionEvent *event) {
 	efitick_t nowNt = getTimeNowNt();
 
-	for (int i = 0;i<MAX_WIRES_COUNT;i++) {
+	for (int i = 0; i < efi::size(event->outputs); i++) {
 		InjectorOutputPin *output = event->outputs[i];
 		if (output) {
 			output->close(nowNt);
 		}
 	}
 	event->update();
+}
+
+void turnInjectionPinLowStage2(InjectionEvent* event) {
+	efitick_t nowNt = getTimeNowNt();
+
+	for (int i = 0; i < efi::size(event->outputsStage2); i++) {
+		InjectorOutputPin *output = event->outputsStage2[i];
+		if (output) {
+			output->close(nowNt);
+		}
+	}
 }
 
 void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase, float nextPhase) {
@@ -74,16 +85,21 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	// Select fuel mass from the correct cylinder
 	auto injectionMassGrams = getEngineState()->injectionMass[this->cylinderNumber];
 
+	const float injectionMassStage2 = getEngineState()->injectionStage2Fraction * injectionMassGrams;
+	float injectionMassStage1 = injectionMassGrams - injectionMassStage2;
+
 	// Perform wall wetting adjustment on fuel mass, not duration, so that
 	// it's correct during fuel pressure (injector flow) or battery voltage (deadtime) transients
-	injectionMassGrams = wallFuel.adjust(injectionMassGrams);
-	const floatms_t injectionDuration = engine->module<InjectorModel>()->getInjectionDuration(injectionMassGrams);
+	injectionMassStage1 = wallFuel.adjust(injectionMassStage1);
+
+	const floatms_t injectionDurationStage1 = engine->module<InjectorModel>()->getInjectionDuration(injectionMassStage1);
+	const floatms_t injectionDurationStage2 = injectionMassStage2 > 0 ? engine->module<InjectorModel>()->getInjectionDuration(injectionMassStage2) : 0;
 
 #if EFI_PRINTF_FUEL_DETAILS
 	if (printFuelDebug) {
 		printf("fuel injectionDuration=%.2fms adjusted=%.2fms\n",
 				getEngineState()->injectionDuration,
-		  injectionDuration);
+		  injectionDurationStage1);
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
@@ -97,15 +113,15 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	engine->module<TripOdometer>()->consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
 
 	if (this->cylinderNumber == 0) {
-		engine->outputChannels.actualLastInjection = injectionDuration;
+		engine->outputChannels.actualLastInjection = injectionDurationStage1;
 	}
 
-	if (cisnan(injectionDuration)) {
+	if (cisnan(injectionDurationStage1)) {
 		warning(ObdCode::CUSTOM_OBD_NAN_INJECTION, "NaN injection pulse");
 		return;
 	}
-	if (injectionDuration < 0) {
-		warning(ObdCode::CUSTOM_OBD_NEG_INJECTION, "Negative injection pulse %.2f", injectionDuration);
+	if (injectionDurationStage1 < 0) {
+		warning(ObdCode::CUSTOM_OBD_NEG_INJECTION, "Negative injection pulse %.2f", injectionDurationStage1);
 		return;
 	}
 
@@ -113,30 +129,42 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	// Durations under 50us-ish aren't safe for the scheduler
 	// as their order may be swapped, resulting in a stuck open injector
 	// see https://github.com/rusefi/rusefi/pull/596 for more details
-	if (injectionDuration < 0.050f)
+	if (injectionDurationStage1 < 0.050f)
 	{
 		return;
 	}
 
-	floatus_t durationUs = MS2US(injectionDuration);
+	floatus_t durationUsStage1 = MS2US(injectionDurationStage1);
+	floatus_t durationUsStage2 = MS2US(injectionDurationStage2);
+
+	// Only bother with the second stage if it's long enough to be relevant
+	bool hasStage2Injection = durationUsStage2 > 50;
 
 #if EFI_PRINTF_FUEL_DETAILS
 	if (printFuelDebug) {
 		InjectorOutputPin *output = outputs[0];
-		printf("handleFuelInjectionEvent fuelout %s injection_duration %dus engineCycleDuration=%.1fms\t\n", output->getName(), (int)durationUs,
+		printf("handleFuelInjectionEvent fuelout %s injection_duration %dus engineCycleDuration=%.1fms\t\n", output->getName(), (int)durationUsStage1,
 				(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
-	action_s startAction, endAction;
+	action_s startAction, endAction, endActionStage2;
 	// We use different callbacks based on whether we're running sequential mode or not - everything else is the same
 	if (isSimultaneous) {
 		startAction = startSimultaneousInjection;
 		endAction = { &endSimultaneousInjection, this };
 	} else {
+		uintptr_t startActionPtr = reinterpret_cast<uintptr_t>(this);
+
+		if (hasStage2Injection) {
+			// Set the low bit in the arg if there's a secondary injection to start too
+			startActionPtr |= 1;
+		}
+
 		// sequential or batch
-		startAction = { &turnInjectionPinHigh, this };
+		startAction = { &turnInjectionPinHigh, startActionPtr };
 		endAction = { &turnInjectionPinLow, this };
+		endActionStage2 = { &turnInjectionPinLowStage2, this };
 	}
 
 	float angleFromNow = eventAngle - currentPhase;
@@ -145,16 +173,21 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	}
 
 	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, startAction);
-	efitick_t turnOffTime = startTime + US2NT((int)durationUs);
-	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, turnOffTime, endAction);
+	efitick_t turnOffTimeStage1 = startTime + US2NT((int)durationUsStage1);
+	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, turnOffTimeStage1, endAction);
+
+	if (hasStage2Injection && endActionStage2) {
+		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
+		getExecutorInterface()->scheduleByTimestampNt("inj stage 2", nullptr, turnOffTimeStage2, endActionStage2);
+	}
 
 #if EFI_UNIT_TEST
-		printf("scheduling injection angle=%.2f/delay=%.2f injectionDuration=%.2f\r\n", angleFromNow, NT2US(startTime - nowNt), injectionDuration);
+		printf("scheduling injection angle=%.2f/delay=%.2f injectionDuration=%.2f\r\n", angleFromNow, NT2US(startTime - nowNt), injectionDurationStage1);
 #endif
 #if EFI_DEFAILED_LOGGING
 	efiPrintf("handleFuel pin=%s eventIndex %d duration=%.2fms %d", outputs[0]->name,
 			injEventIndex,
-			injectionDuration,
+			injectionDurationStage1,
 			getRevolutionCounter());
 	efiPrintf("handleFuel pin=%s delay=%.2f %d", outputs[0]->name, NT2US(startTime - nowNt),
 			getRevolutionCounter());

@@ -8,13 +8,30 @@
 
 #if EFI_ENGINE_CONTROL
 
-void turnInjectionPinHigh(InjectionEvent *event) {
+void turnInjectionPinHigh(uintptr_t arg) {
 	efitick_t nowNt = getTimeNowNt();
-	for (int i = 0;i < MAX_WIRES_COUNT;i++) {
+
+	// clear last bit to recover the pointer
+	InjectionEvent *event = reinterpret_cast<InjectionEvent*>(arg & ~(1UL));
+
+	// extract last bit
+	bool stage2Active = arg & 1;
+
+	for (int i = 0; i < efi::size(event->outputs); i++) {
 		InjectorOutputPin *output = event->outputs[i];
 
 		if (output) {
 			output->open(nowNt);
+		}
+	}
+
+	if (stage2Active) {
+		for (int i = 0; i < efi::size(event->outputsStage2); i++) {
+			InjectorOutputPin *output = event->outputsStage2[i];
+
+			if (output) {
+				output->open(nowNt);
+			}
 		}
 	}
 }
@@ -159,6 +176,9 @@ bool InjectionEvent::update() {
 	isSimultaneous = mode == IM_SIMULTANEOUS;
 	// Stash the cylinder number so we can select the correct fueling bank later
 	cylinderNumber = injectorIndex;
+
+	// TODO: look up stage 2 injector output
+	// outputStage2 = &enginePins.injectorsStage2[injectorIndex];
 
 	return true;
 }

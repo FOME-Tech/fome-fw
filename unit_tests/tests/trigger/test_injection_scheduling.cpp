@@ -38,7 +38,49 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), _));
 	}
 
-	
+	// Event scheduled at 125 degrees
+	event.injectionStartAngle = 125;
+
+	// We are at 120 degrees now, next tooth 130
+	event.onTriggerTooth(1000, nowNt, 120, 130);
+}
+
+TEST(injectionScheduling, InjectionIsScheduledDualStage) {
+	StrictMock<MockExecutor> mockExec;
+
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->executor.setMockExecutor(&mockExec);
+
+	efitick_t nowNt = 1000000;
+
+	InjectionEvent event;
+	InjectorOutputPin pin;
+	pin.injectorIndex = 0;
+	event.outputs[0] = &pin;
+
+	// Primary injection duration of 20ms, secondary 10ms
+	MockInjectorModel2 im;
+	EXPECT_CALL(im, getInjectionDuration(_))
+		.WillOnce(Return(20.0f))
+		.WillOnce(Return(10.0f));
+	engine->module<InjectorModel>().set(&im);
+
+	engine->rpmCalculator.oneDegreeUs = 100;
+
+	{
+		InSequence is;
+
+		// Should schedule one normal injection:
+		// rising edge 5 degrees from now
+		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+		efitick_t startTime = nowNt + nt5deg;
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, _));
+		// falling edge (secondary) 10ms later
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(10), _));
+		// falling edge (primary) 20ms later
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), _));
+	}
+
 	// Event scheduled at 125 degrees
 	event.injectionStartAngle = 125;
 
