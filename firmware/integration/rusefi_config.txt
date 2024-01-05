@@ -620,6 +620,7 @@ engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other ca
 	output_pin_e o2heaterPin;On-off O2 sensor heater control. 'ON' if engine is running, 'OFF' if stopped or cranking.
 
 	output_pin_e[MAX_CYLINDER_COUNT iterate] injectionPins;
+	output_pin_e[MAX_CYLINDER_COUNT iterate] injectionPinsStage2;
 	output_pin_e[MAX_CYLINDER_COUNT iterate] ignitionPins;
 
 	pin_output_mode_e injectionPinMode;
@@ -1915,6 +1916,7 @@ end_struct
 
 #define PROTOCOL_COIL1_SHORT_NAME "c1"
 #define PROTOCOL_INJ1_SHORT_NAME "i1"
+#define PROTOCOL_INJ1_STAGE2_SHORT_NAME "j1"
 
 ! some board files override this value using prepend file
 #define ts_show_vr_threshold_all true

@@ -49,7 +49,7 @@ private:
 public:
 	// TODO: this should be private
 	InjectorOutputPin *outputs[MAX_WIRES_COUNT];
-	InjectorOutputPin *outputStage2 = nullptr;
+	InjectorOutputPin *outputsStage2[MAX_WIRES_COUNT];
 	float injectionStartAngle = 0;
 };
 

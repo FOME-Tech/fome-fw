@@ -157,7 +157,8 @@ bool InjectionEvent::update() {
 	// Single point only uses injector 1 (index 0)
 	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : ID2INDEX(getCylinderId(ownIndex));
 
-	InjectorOutputPin *secondOutput = nullptr;
+	InjectorOutputPin* secondOutput = nullptr;
+	InjectorOutputPin* secondOutputStage2 = nullptr;
 
 	if (mode == IM_BATCH) {
 		/**
@@ -168,7 +169,8 @@ bool InjectionEvent::update() {
 		// fires the injector 360 degrees later in the firing order.
 		int secondOrder = (ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
 		int secondIndex = ID2INDEX(getCylinderId(secondOrder));
-		secondOutput = &enginePins.injectors[secondIndex];
+		secondOutput = &enginePins.injectorsStage2[secondIndex];
+		secondOutputStage2 = &enginePins.injectors[secondIndex];
 	}
 
 	outputs[0] = &enginePins.injectors[injectorIndex];
@@ -177,8 +179,8 @@ bool InjectionEvent::update() {
 	// Stash the cylinder number so we can select the correct fueling bank later
 	cylinderNumber = injectorIndex;
 
-	// TODO: look up stage 2 injector output
-	// outputStage2 = &enginePins.injectorsStage2[injectorIndex];
+	outputsStage2[0] = &enginePins.injectorsStage2[injectorIndex];
+	outputsStage2[1] = secondOutputStage2;
 
 	return true;
 }
