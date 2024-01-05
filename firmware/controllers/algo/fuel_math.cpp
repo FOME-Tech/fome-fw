@@ -448,6 +448,10 @@ float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
 }
 
 float getStage2InjectionFraction(int rpm, float fuelLoad) {
+	if (!engineConfiguration->enableStagedInjection) {
+		return 0;
+	}
+
 	// TODO: compute
 	float frac = 0;
 

@@ -1650,6 +1650,7 @@ menuDialog = main
 		subMenu = injTest,					"Injector test", 0, {isInjectionEnabled}
 		subMenu = cylinderBankSelect,		"Cylinder bank selection", 0, {isInjectionEnabled == 1}
 		subMenu = injectorNonlinear,		"Injector small-pulse correction", 0, {isInjectionEnabled == 1}
+		subMenu = stagedInjection,			"Staged injection", 0, {isInjectionEnabled}
 
 		groupMenu = "Cylinder fuel trims"
 		groupChildMenu = fuelTrimTbl1,		"Fuel trim cyl 1"
@@ -2439,6 +2440,9 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Offset cyl 10",							timing_offset_cylinder10, {cylindersCount > 9}
 		field = "Offset cyl 11",							timing_offset_cylinder11, {cylindersCount > 10}
 		field = "Offset cyl 12",							timing_offset_cylinder12, {cylindersCount > 11}
+
+	dialog = stagedInjection, "Staged injection"
+		field = "Enable", enableStagedInjection
 
 	dialog = multisparkDwellParams, "Delay & Dwell"
 		field = "Spark duration",						multisparkSparkDuration, {multisparkEnable}
