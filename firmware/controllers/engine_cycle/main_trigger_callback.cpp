@@ -85,12 +85,27 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	// Select fuel mass from the correct cylinder
 	auto injectionMassGrams = getEngineState()->injectionMass[this->cylinderNumber];
 
-	const float injectionMassStage2 = getEngineState()->injectionStage2Fraction * injectionMassGrams;
+	// Disable staging in simultaneous mode
+	float stage2Fraction = isSimultaneous ? 0 : getEngineState()->injectionStage2Fraction;
+
+	// Compute fraction of fuel on stage 2, remainder goes on stage 1
+	const float injectionMassStage2 = stage2Fraction * injectionMassGrams;
 	float injectionMassStage1 = injectionMassGrams - injectionMassStage2;
 
 	// Perform wall wetting adjustment on fuel mass, not duration, so that
 	// it's correct during fuel pressure (injector flow) or battery voltage (deadtime) transients
 	injectionMassStage1 = wallFuel.adjust(injectionMassStage1);
+
+	{
+		// Log this fuel as consumed
+
+		bool isCranking = getEngineRotationState()->isCranking();
+		int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
+
+		float actualInjectedMass = numberOfInjections * (injectionMassStage1 + injectionMassStage2);
+
+		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, nowNt);
+	}
 
 	const floatms_t injectionDurationStage1 = engine->module<InjectorModel>()->getInjectionDuration(injectionMassStage1);
 	const floatms_t injectionDurationStage2 = injectionMassStage2 > 0 ? engine->module<InjectorModel>()->getInjectionDuration(injectionMassStage2) : 0;
@@ -103,20 +118,12 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
-	bool isCranking = getEngineRotationState()->isCranking();
-	/**
-	 * todo: pre-calculate 'numberOfInjections'
-	 * see also injectorDutyCycle
-	 */
-	int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
-
-	engine->module<TripOdometer>()->consumeFuel(injectionMassGrams * numberOfInjections, nowNt);
-
 	if (this->cylinderNumber == 0) {
 		engine->outputChannels.actualLastInjection = injectionDurationStage1;
+		engine->outputChannels.actualLastInjectionStage2 = injectionDurationStage2;
 	}
 
-	if (cisnan(injectionDurationStage1)) {
+	if (cisnan(injectionDurationStage1) || cisnan(injectionDurationStage2)) {
 		warning(ObdCode::CUSTOM_OBD_NAN_INJECTION, "NaN injection pulse");
 		return;
 	}
@@ -148,11 +155,11 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
-	action_s startAction, endAction, endActionStage2;
+	action_s startAction, endActionStage1, endActionStage2;
 	// We use different callbacks based on whether we're running sequential mode or not - everything else is the same
 	if (isSimultaneous) {
 		startAction = startSimultaneousInjection;
-		endAction = { &endSimultaneousInjection, this };
+		endActionStage1 = { &endSimultaneousInjection, this };
 	} else {
 		uintptr_t startActionPtr = reinterpret_cast<uintptr_t>(this);
 
@@ -163,19 +170,24 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 
 		// sequential or batch
 		startAction = { &turnInjectionPinHigh, startActionPtr };
-		endAction = { &turnInjectionPinLow, this };
+		endActionStage1 = { &turnInjectionPinLow, this };
 		endActionStage2 = { &turnInjectionPinLowStage2, this };
 	}
 
+	// Correctly wrap injection start angle
 	float angleFromNow = eventAngle - currentPhase;
 	if (angleFromNow < 0) {
 		angleFromNow += getEngineState()->engineCycle;
 	}
 
+	// Schedule opening (stage 1 + stage 2 open together)
 	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, startAction);
-	efitick_t turnOffTimeStage1 = startTime + US2NT((int)durationUsStage1);
-	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, turnOffTimeStage1, endAction);
 
+	// Schedule closing stage 1
+	efitick_t turnOffTimeStage1 = startTime + US2NT((int)durationUsStage1);
+	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, turnOffTimeStage1, endActionStage1);
+
+	// Schedule closing stage 2 (if applicable)
 	if (hasStage2Injection && endActionStage2) {
 		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
 		getExecutorInterface()->scheduleByTimestampNt("inj stage 2", nullptr, turnOffTimeStage2, endActionStage2);
