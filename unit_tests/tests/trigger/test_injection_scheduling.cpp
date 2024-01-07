@@ -6,6 +6,15 @@ using ::testing::_;
 using ::testing::StrictMock;
 using ::testing::InSequence;
 
+using ::testing::Eq;
+using ::testing::Not;
+using ::testing::Property;
+using ::testing::Truly;
+
+static bool ActionArgumentHasLowBitSet(const action_s& a) {
+	return (reinterpret_cast<uintptr_t>(a.getArgument()) & 1) != 0;
+}
+
 TEST(injectionScheduling, InjectionIsScheduled) {
 	StrictMock<MockExecutor> mockExec;
 
@@ -33,9 +42,9 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
 		// falling edge 20ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
 	}
 
 	// Event scheduled at 125 degrees
@@ -47,9 +56,11 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 
 TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	StrictMock<MockExecutor> mockExec;
+	StrictMock<MockInjectorModel2> im;
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->executor.setMockExecutor(&mockExec);
+	engine->module<InjectorModel>().set(&im);
 
 	efitick_t nowNt = 1000000;
 
@@ -58,14 +69,19 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	pin.injectorIndex = 0;
 	event.outputs[0] = &pin;
 
-	// Primary injection duration of 20ms, secondary 10ms
-	MockInjectorModel2 im;
-	EXPECT_CALL(im, getInjectionDuration(_))
-		.WillOnce(Return(20.0f))
-		.WillOnce(Return(10.0f));
-	engine->module<InjectorModel>().set(&im);
-
 	engine->rpmCalculator.oneDegreeUs = 100;
+
+	// Some nonzero fuel quantity on both stages
+	engine->engineState.injectionMass[0] = 50;
+	engine->engineState.injectionStage2Fraction = 0.2;
+
+	{
+		InSequence is;
+
+		// Primary injection duration of 20ms, secondary 10ms
+		EXPECT_CALL(im, getInjectionDuration(40)).WillOnce(Return(20.0f));
+		EXPECT_CALL(im, getInjectionDuration(10)).WillOnce(Return(10.0f));
+	}
 
 	{
 		InSequence is;
@@ -74,11 +90,11 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, _));
-		// falling edge (secondary) 10ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(10), _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Truly(ActionArgumentHasLowBitSet)));
 		// falling edge (primary) 20ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
+		// falling edge (secondary) 10ms later
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(10), Property(&action_s::getArgument, Eq(&event))));
 	}
 
 	// Event scheduled at 125 degrees
@@ -115,9 +131,9 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
 		// falling edge 20ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
 	}
 
 	// Event scheduled at 715 degrees
@@ -154,9 +170,9 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 		// rising edge 15 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 15);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
 		// falling edge 20ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), _));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
 	}
 
 	// Event scheduled at 5 degrees
