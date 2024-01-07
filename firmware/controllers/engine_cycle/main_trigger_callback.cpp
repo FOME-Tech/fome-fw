@@ -54,7 +54,7 @@ void endSimultaneousInjection(InjectionEvent *event) {
 void turnInjectionPinLow(InjectionEvent *event) {
 	efitick_t nowNt = getTimeNowNt();
 
-	for (int i = 0; i < efi::size(event->outputs); i++) {
+	for (size_t i = 0; i < efi::size(event->outputs); i++) {
 		InjectorOutputPin *output = event->outputs[i];
 		if (output) {
 			output->close(nowNt);
@@ -66,7 +66,7 @@ void turnInjectionPinLow(InjectionEvent *event) {
 void turnInjectionPinLowStage2(InjectionEvent* event) {
 	efitick_t nowNt = getTimeNowNt();
 
-	for (int i = 0; i < efi::size(event->outputsStage2); i++) {
+	for (size_t i = 0; i < efi::size(event->outputsStage2); i++) {
 		InjectorOutputPin *output = event->outputsStage2[i];
 		if (output) {
 			output->close(nowNt);
@@ -85,16 +85,17 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	// Select fuel mass from the correct cylinder
 	auto injectionMassGrams = getEngineState()->injectionMass[this->cylinderNumber];
 
+	// Perform wall wetting adjustment on fuel mass, not duration, so that
+	// it's correct during fuel pressure (injector flow) or battery voltage (deadtime) transients
+	// TODO: is it correct to wall wet on both pulses?
+	injectionMassGrams = wallFuel.adjust(injectionMassGrams);
+
 	// Disable staging in simultaneous mode
 	float stage2Fraction = isSimultaneous ? 0 : getEngineState()->injectionStage2Fraction;
 
 	// Compute fraction of fuel on stage 2, remainder goes on stage 1
 	const float injectionMassStage2 = stage2Fraction * injectionMassGrams;
 	float injectionMassStage1 = injectionMassGrams - injectionMassStage2;
-
-	// Perform wall wetting adjustment on fuel mass, not duration, so that
-	// it's correct during fuel pressure (injector flow) or battery voltage (deadtime) transients
-	injectionMassStage1 = wallFuel.adjust(injectionMassStage1);
 
 	{
 		// Log this fuel as consumed
@@ -194,7 +195,7 @@ void InjectionEvent::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase
 	}
 
 #if EFI_UNIT_TEST
-		printf("scheduling injection angle=%.2f/delay=%.2f injectionDuration=%.2f\r\n", angleFromNow, NT2US(startTime - nowNt), injectionDurationStage1);
+	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n", angleFromNow, (int)NT2US(startTime - nowNt), (int)durationUsStage1, (int)durationUsStage2);
 #endif
 #if EFI_DEFAILED_LOGGING
 	efiPrintf("handleFuel pin=%s eventIndex %d duration=%.2fms %d", outputs[0]->name,

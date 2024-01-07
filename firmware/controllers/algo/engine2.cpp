@@ -132,9 +132,7 @@ void EngineState::periodicFastCallback() {
 
 	float fuelLoad = getFuelingLoad();
 
-	// TODO: compute stage 2 mass fraction
 	injectionStage2Fraction = getStage2InjectionFraction(rpm, fuelLoad);
-
 	float stage2InjectionMass = untrimmedInjectionMass * injectionStage2Fraction;
 	float stage1InjectionMass = untrimmedInjectionMass - stage2InjectionMass;
 
