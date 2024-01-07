@@ -1416,7 +1416,9 @@ gaugeCategory = Fueling
 	iatCorrectionGauge = running_intakeTemperatureCoefficient, @@GAUGE_NAME_FUEL_IAT_CORR@@, "mult",	0,	3,	0,	0,	3,  3,	2,	2
 	cltCorrectionGauge = running_coolantTemperatureCoefficient, @@GAUGE_NAME_FUEL_CLT_CORR@@, "mult",	0,	3,	0,	0,	3,  3,	2,	2
 	injectorDutyCycleGauge=injectorDutyCycle, @@GAUGE_NAME_FUEL_INJ_DUTY@@,"%",		0,	120,		10,	10,	100,	100,	1,	1
+	injectorDutyCycleStg2Gauge=injectorDutyCycleStage2, @@GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2@@,"%",		0,	120,		10,	10,	100,	100,	1,	1
 	actualLastInjectionGauge	= actualLastInjection,	@@GAUGE_NAME_FUEL_LAST_INJECTION@@, "mSec",		0,	25.5,	1.0,	1.2,		20,	25,	3, 1
+	actualLastInjectionStg2Gauge	= actualLastInjectionStage2,	@@GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2@@, "mSec",		0,	25.5,	1.0,	1.2,		20,	25,	3, 1
 	veValueGauge		= veValue,					"fuel: VE",				"",		0,	120,		10,	10,	100,	100,	1,	1
 
 	injectorLagMsGauge = m_deadtime,		@@GAUGE_NAME_INJECTOR_LAG@@,		"mSec",		0,	10,	0,	0,		10,	10,	3, 1
