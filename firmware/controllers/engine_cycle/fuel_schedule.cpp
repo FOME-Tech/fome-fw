@@ -169,8 +169,8 @@ bool InjectionEvent::update() {
 		// fires the injector 360 degrees later in the firing order.
 		int secondOrder = (ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
 		int secondIndex = ID2INDEX(getCylinderId(secondOrder));
-		secondOutput = &enginePins.injectorsStage2[secondIndex];
-		secondOutputStage2 = &enginePins.injectors[secondIndex];
+		secondOutput = &enginePins.injectors[secondIndex];
+		secondOutputStage2 = &enginePins.injectorsStage2[secondIndex];
 	}
 
 	outputs[0] = &enginePins.injectors[injectorIndex];
