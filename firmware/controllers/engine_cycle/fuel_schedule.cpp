@@ -17,7 +17,7 @@ void turnInjectionPinHigh(uintptr_t arg) {
 	// extract last bit
 	bool stage2Active = arg & 1;
 
-	for (int i = 0; i < efi::size(event->outputs); i++) {
+	for (size_t i = 0; i < efi::size(event->outputs); i++) {
 		InjectorOutputPin *output = event->outputs[i];
 
 		if (output) {
@@ -26,7 +26,7 @@ void turnInjectionPinHigh(uintptr_t arg) {
 	}
 
 	if (stage2Active) {
-		for (int i = 0; i < efi::size(event->outputsStage2); i++) {
+		for (size_t i = 0; i < efi::size(event->outputsStage2); i++) {
 			InjectorOutputPin *output = event->outputsStage2[i];
 
 			if (output) {
