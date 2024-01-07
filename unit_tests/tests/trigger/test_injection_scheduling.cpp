@@ -51,7 +51,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	event.injectionStartAngle = 125;
 
 	// We are at 120 degrees now, next tooth 130
-	event.onTriggerTooth(1000, nowNt, 120, 130);
+	event.onTriggerTooth(nowNt, 120, 130);
 }
 
 TEST(injectionScheduling, InjectionIsScheduledDualStage) {
