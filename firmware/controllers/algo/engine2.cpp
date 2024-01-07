@@ -137,8 +137,11 @@ void EngineState::periodicFastCallback() {
 	float stage1InjectionMass = untrimmedInjectionMass - stage2InjectionMass;
 
 	// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
-	engine->engineState.injectionDuration = engine->module<InjectorModel>()->getInjectionDuration(stage1InjectionMass);
-	engine->engineState.injectionDurationStage2 = engine->module<InjectorModel>()->getInjectionDuration(stage2InjectionMass);
+	engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
+	engine->engineState.injectionDurationStage2 =
+		engineConfiguration->enableStagedInjection
+		? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
+		: 0;
 
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);
 	engine->lambdaMonitor.update(rpm, fuelLoad);

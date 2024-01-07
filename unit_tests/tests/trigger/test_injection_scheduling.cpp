@@ -31,7 +31,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	// Injection duration of 20ms
 	MockInjectorModel2 im;
 	EXPECT_CALL(im, getInjectionDuration(_)).WillOnce(Return(20.0f));
-	engine->module<InjectorModel>().set(&im);
+	engine->module<InjectorModelPrimary>().set(&im);
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
@@ -60,7 +60,8 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->executor.setMockExecutor(&mockExec);
-	engine->module<InjectorModel>().set(&im);
+	engine->module<InjectorModelPrimary>().set(&im);
+	engine->module<InjectorModelSecondary>().set(&im);
 
 	efitick_t nowNt = 1000000;
 
@@ -120,7 +121,7 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 	// Injection duration of 20ms
 	MockInjectorModel2 im;
 	EXPECT_CALL(im, getInjectionDuration(_)).WillOnce(Return(20.0f));
-	engine->module<InjectorModel>().set(&im);
+	engine->module<InjectorModelPrimary>().set(&im);
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
@@ -159,7 +160,7 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 	// Injection duration of 20ms
 	MockInjectorModel2 im;
 	EXPECT_CALL(im, getInjectionDuration(_)).WillOnce(Return(20.0f));
-	engine->module<InjectorModel>().set(&im);
+	engine->module<InjectorModelPrimary>().set(&im);
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
@@ -198,7 +199,7 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 
 	// Expect no calls to injector model
 	StrictMock<MockInjectorModel2> im;
-	engine->module<InjectorModel>().set(&im);
+	engine->module<InjectorModelPrimary>().set(&im);
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 

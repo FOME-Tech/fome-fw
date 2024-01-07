@@ -108,8 +108,8 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, nowNt);
 	}
 
-	const floatms_t injectionDurationStage1 = engine->module<InjectorModel>()->getInjectionDuration(injectionMassStage1);
-	const floatms_t injectionDurationStage2 = injectionMassStage2 > 0 ? engine->module<InjectorModel>()->getInjectionDuration(injectionMassStage2) : 0;
+	const floatms_t injectionDurationStage1 = engine->module<InjectorModelPrimary>()->getInjectionDuration(injectionMassStage1);
+	const floatms_t injectionDurationStage2 = injectionMassStage2 > 0 ? engine->module<InjectorModelSecondary>()->getInjectionDuration(injectionMassStage2) : 0;
 
 #if EFI_PRINTF_FUEL_DETAILS
 	if (printFuelDebug) {
