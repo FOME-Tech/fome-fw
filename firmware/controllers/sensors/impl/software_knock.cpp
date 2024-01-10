@@ -154,7 +154,7 @@ void initSoftwareKnock() {
 	}
 }
 
-void processLastKnockEvent() {
+static void processLastKnockEvent() {
 	if (!knockNeedsProcess) {
 		return;
 	}
