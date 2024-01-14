@@ -78,7 +78,7 @@ static const ADCConversionGroup adcConvGroupCh1 = {
 // Not all boards have a second channel - configure it if it exists
 #if KNOCK_HAS_CH2
 static const ADCConversionGroup adcConvGroupCh2 = {
-    .circular = FALSE,
+	.circular = FALSE,
    	.num_channels = 1,
    	.end_cb = &completionCallback,
    	.error_cb = &errorCallback,
