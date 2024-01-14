@@ -1,6 +1,6 @@
 @XmlSchema(
         namespace = "http://www.msefi.com/:msq",
-        elementFormDefault = XmlNsForm.QUALIFIED
+        // elementFormDefault = XmlNsForm.QUALIFIED
 )
 package com.rusefi.tune.xml;
 
