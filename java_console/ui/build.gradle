@@ -3,6 +3,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
 }
 
+apply from: '../../java_tools/dependencies.gradle'
+
 configurations {
     // icu4j is huge: https://en.wikipedia.org/wiki/International_Components_for_Unicode
     all*.exclude group: 'com.ibm.icu', module: 'icu4j'
