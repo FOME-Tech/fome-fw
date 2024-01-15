@@ -1,7 +1,11 @@
 package com.rusefi.tune.xml;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlValue;
+// import javax.xml.bind.annotation.XmlAttribute;
+// import javax.xml.bind.annotation.XmlValue;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElementRef;
 
 public class Constant {
     private String name;
