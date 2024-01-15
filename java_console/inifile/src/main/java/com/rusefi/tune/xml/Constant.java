@@ -2,6 +2,7 @@ package com.rusefi.tune.xml;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
+// todo: remove unsupported java_tools/jaxb1-impl-2.2.5-1.jar and migrate to jakarta implementation
 // import jakarta.xml.bind.JAXBElement;
 // import jakarta.xml.bind.annotation.XmlAccessType;
 // import jakarta.xml.bind.annotation.XmlAccessorType;
