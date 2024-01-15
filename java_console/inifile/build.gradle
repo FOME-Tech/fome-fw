@@ -5,5 +5,5 @@ plugins {
 dependencies {
     api project(':logging-api')
     implementation project(':core_io')
-    implementation ('jakarta.xml.bind:jakarta.xml.bind-api:2.4.0')
+    implementation ('jakarta.xml.bind:jakarta.xml.bind-api:2.3.3')
 }
