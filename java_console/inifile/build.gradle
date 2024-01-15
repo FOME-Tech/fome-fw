@@ -5,4 +5,5 @@ plugins {
 dependencies {
     api project(':logging-api')
     implementation project(':core_io')
+    implementation(group = "jakarta.xml.bind", name = "jakarta.xml.bind-api", version = jaxwsToolsVersion)
 }
