@@ -5,5 +5,5 @@ plugins {
 dependencies {
     api project(':logging-api')
     implementation project(':core_io')
-    implementation group: "jakarta.xml.bind", name: "jakarta.xml.bind-api", version:= "2.3.1"
+    implementation group('jakarta.xml.bind:jakarta.xml.bind-api:2.3.1')
 }
