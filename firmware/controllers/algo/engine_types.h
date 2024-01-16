@@ -50,7 +50,7 @@ enum class engine_type_e : uint32_t {
 	// Frankenso board
 	FRANKENSO_MIATA_NA6_MAP = 41,
 	ET_UNUSED_20 = 20,
-	MIATA_1996 = 21,
+	ET_UNUSED_21 = 21,
 
 	FORD_ESCORT_GT = 14,
 

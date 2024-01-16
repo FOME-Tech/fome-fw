@@ -14,8 +14,6 @@
  */
 void setMiataNA6_MAP_Frankenso();
 
-void setMiataNA6_MAP_MRE();
-
 void miataNAcommonEngineSettings();
 
 /**
