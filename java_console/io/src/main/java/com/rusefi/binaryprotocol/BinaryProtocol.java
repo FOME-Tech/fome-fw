@@ -2,9 +2,7 @@ package com.rusefi.binaryprotocol;
 
 import com.devexperts.logging.Logging;
 import com.opensr5.ConfigurationImage;
-import com.opensr5.io.ConfigurationImageFile;
 import com.opensr5.io.DataListener;
-import com.rusefi.ConfigurationImageDiff;
 import com.rusefi.NamedThreadFactory;
 import com.rusefi.core.SignatureHelper;
 import com.rusefi.Timeouts;
@@ -20,9 +18,6 @@ import com.rusefi.core.FileUtil;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.concurrent.*;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -48,7 +43,7 @@ public class BinaryProtocol {
      * This properly allows to switch to non-CRC32 mode
      * todo: finish this feature, assuming we even need it.
      */
-    public static boolean PLAIN_PROTOCOL = Boolean.getBoolean(USE_PLAIN_PROTOCOL_PROPERTY);
+    public static final boolean PLAIN_PROTOCOL = Boolean.getBoolean(USE_PLAIN_PROTOCOL_PROPERTY);
 
     private final LinkManager linkManager;
     private final IoStream stream;
@@ -61,8 +56,6 @@ public class BinaryProtocol {
 
     // todo: this ioLock needs better documentation!
     private final Object ioLock = new Object();
-
-    public static boolean DISABLE_LOCAL_CONFIGURATION_CACHE;
 
     public static String findCommand(byte command) {
         switch (command) {
@@ -93,13 +86,9 @@ public class BinaryProtocol {
         }
     }
 
-    public IoStream getStream() {
-        return stream;
-    }
-
     public boolean isClosed;
 
-    public CommunicationLoggingListener communicationLoggingListener;
+    public final CommunicationLoggingListener communicationLoggingListener;
 
     public BinaryProtocol(LinkManager linkManager, IoStream stream) {
         this.linkManager = linkManager;
@@ -211,7 +200,7 @@ public class BinaryProtocol {
             public void run() {
                 while (!isClosed) {
 //                    FileLog.rlog("queue: " + LinkManager.COMMUNICATION_QUEUE.toString());
-                    if (linkManager.COMMUNICATION_QUEUE.isEmpty() && linkManager.getNeedPullData()) {
+                    if (linkManager.COMMUNICATION_QUEUE.isEmpty()) {
                         linkManager.submit(new Runnable() {
                             @Override
                             public void run() {
@@ -248,31 +237,6 @@ public class BinaryProtocol {
                 return;
             incomingData.dropPending();
         }
-    }
-
-    public void uploadChanges(ConfigurationImage newVersion) {
-        ConfigurationImage current = getControllerConfiguration();
-        // let's have our own copy which no one would be able to change
-        newVersion = newVersion.clone();
-        int offset = 0;
-        while (offset < current.getSize()) {
-            Pair<Integer, Integer> range = ConfigurationImageDiff.findDifferences(current, newVersion, offset);
-            if (range == null)
-                break;
-            int size = range.second - range.first;
-            log.info("Need to patch: " + range + ", size=" + size);
-            byte[] oldBytes = current.getRange(range.first, size);
-            log.info("old " + Arrays.toString(oldBytes));
-
-            byte[] newBytes = newVersion.getRange(range.first, size);
-            log.info("new " + Arrays.toString(newBytes));
-
-            writeData(newVersion.getContent(), 0, range.first, size);
-
-            offset = range.second;
-        }
-        burn();
-        setController(newVersion);
     }
 
     private byte[] receivePacket(String msg) throws IOException {
@@ -358,31 +322,6 @@ public class BinaryProtocol {
         if (response == null || response.length < 1)
             return -1;
         return response[0] & 0xff;
-    }
-
-    public int getCrcFromController(int configSize) {
-        byte[] packet = createCrcCommand(configSize);
-        byte[] response = executeCommand(Fields.TS_CRC_CHECK_COMMAND, packet, "get CRC32");
-
-        if (checkResponseCode(response, (byte) Fields.TS_RESPONSE_OK) && response.length == 5) {
-            ByteBuffer bb = ByteBuffer.wrap(response, 1, 4);
-            // that's unusual - most of the protocol is LITTLE_ENDIAN
-            bb.order(ByteOrder.BIG_ENDIAN);
-            int crc32FromController = bb.getInt();
-            short crc16FromController = (short) crc32FromController;
-
-            log.info(String.format("rusEFI says tune CRC32 0x%x %d\n", crc32FromController, crc32FromController));
-            log.info(String.format("rusEFI says tune CRC16 0x%x %d\n", crc16FromController, crc16FromController));
-            return crc32FromController;
-        } else {
-            return  -1;
-        }
-    }
-
-    public static byte[] createCrcCommand(int size) {
-        byte[] packet = new byte[4];
-        ByteRange.packOffsetAndSize(0, size, packet);
-        return packet;
     }
 
     public byte[] executeCommand(char opcode, String msg) {

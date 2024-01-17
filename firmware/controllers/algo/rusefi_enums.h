@@ -296,7 +296,7 @@ typedef enum __attribute__ ((__packed__)) {
 typedef enum __attribute__ ((__packed__)) {
 	BMW_e46 = 0,
 	W202 = 1,
-
+	BMW_e90 = 2,
 } can_vss_nbc_e;
 
 /**
@@ -525,6 +525,7 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_LuaGauge2 = 23,
 	GPPWM_Rpm = 24,
 	GPPWM_DetectedGear = 25,
+	GPPWM_BaroPressure = 26,
 } gppwm_channel_e;
 
 typedef enum __attribute__ ((__packed__)) {

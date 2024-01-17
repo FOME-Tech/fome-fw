@@ -1,13 +1,10 @@
 package com.rusefi;
 
 import com.devexperts.logging.Logging;
-import com.rusefi.autodetect.PortDetector;
-import com.rusefi.autodetect.SerialAutoChecker;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.serial.BaudRateHolder;
 import com.rusefi.maintenance.ProgramSelector;
 import com.rusefi.ui.util.HorizontalLine;
-import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
 import com.rusefi.util.IoUtils;
 import net.miginfocom.swing.MigLayout;
@@ -24,7 +21,6 @@ import java.util.List;
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.core.preferences.storage.PersistentConfiguration.getConfig;
 import static com.rusefi.ui.util.UiUtils.*;
-import static javax.swing.JOptionPane.YES_NO_OPTION;
 
 /**
  * This frame is used on startup to select the port we would be using
@@ -151,21 +147,6 @@ public class StartupFrame {
 
         JPanel rightPanel = new JPanel(new VerticalFlowLayout());
 
-        if (BundleUtil.readBundleFullNameNotNull().contains("proteus_f7")) {
-            String text = "WARNING: Proteus F7";
-            URLLabel urlLabel = new URLLabel(text, "https://github.com/rusefi/rusefi/wiki/F7-requires-full-erase");
-            Color originalColor = urlLabel.getForeground();
-            new Timer(500, new ActionListener() {
-                int counter;
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    // URL color is hard-coded, let's blink isUnderlined attribute as second best option
-                    urlLabel.setText(text, counter++ % 2 == 0);
-                }
-            }).start();
-            rightPanel.add(urlLabel);
-        }
-
         JLabel logo = createLogoLabel();
         if (logo != null)
             rightPanel.add(logo);
@@ -181,22 +162,16 @@ public class StartupFrame {
         setFrameIcon(frame);
         frame.setVisible(true);
         UiUtils.centerWindow(frame);
-
-        KeyListener hwTestEasterEgg = functionalTestEasterEgg();
-
-        for (Component component : getAllComponents(frame)) {
-            component.addKeyListener(hwTestEasterEgg);
-        }
     }
 
     private void applyKnownPorts(SerialPortScanner.AvailableHardware currentHardware) {
         List<SerialPortScanner.PortResult> ports = currentHardware.getKnownPorts();
-            log.info("Rendering available ports: " + ports);
-            connectPanel.setVisible(!ports.isEmpty());
-            noPortsMessage.setVisible(ports.isEmpty());
+        log.info("Rendering available ports: " + ports);
+        connectPanel.setVisible(!ports.isEmpty());
+        noPortsMessage.setVisible(ports.isEmpty());
 
-            applyPortSelectionToUIcontrol(ports);
-            UiUtils.trueLayout(connectPanel);
+        applyPortSelectionToUIcontrol(ports);
+        UiUtils.trueLayout(connectPanel);
     }
 
     public static void setFrameIcon(Frame frame) {
@@ -231,40 +206,23 @@ public class StartupFrame {
 
     private void connectButtonAction(JComboBox<String> comboSpeeds) {
         BaudRateHolder.INSTANCE.baudRate = Integer.parseInt((String) comboSpeeds.getSelectedItem());
-        String selectedPort = ((SerialPortScanner.PortResult)comboPorts.getSelectedItem()).port;
+        SerialPortScanner.PortResult selectedPort = ((SerialPortScanner.PortResult)comboPorts.getSelectedItem());
+
+        if (selectedPort == null) {
+            return;
+        }
+
+        // Ensure that the bundle matches between the controller and console
+        if (selectedPort.signature != null && !selectedPort.signature.matchesBundle()) {
+            int result = JOptionPane.showConfirmDialog(this.frame, "Looks like you're using the wrong console bundle for your controller.\nYou can attempt to proceed, but unexpected behavior may result.\nContinue at your own risk.", "WARNING", JOptionPane.OK_CANCEL_OPTION);
+
+            if (result != JOptionPane.OK_OPTION) {
+                return;
+            }
+        }
 
         disposeFrameAndProceed();
-        new ConsoleUI(selectedPort);
-    }
-
-    /**
-     * Here we listen to keystrokes while console start-up frame is being displayed and if magic "test" word is typed
-     * we launch a functional test on real hardware, same as Jenkins runs within continuous integration
-     */
-    @NotNull
-    private KeyListener functionalTestEasterEgg() {
-        return new KeyAdapter() {
-            private final static String TEST = "test";
-            private String recentKeyStrokes = "";
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-                recentKeyStrokes = recentKeyStrokes + e.getKeyChar();
-                if (recentKeyStrokes.toLowerCase().endsWith(TEST) && showTestConfirmation()) {
-                    runFunctionalHardwareTest();
-                }
-            }
-
-            private boolean showTestConfirmation() {
-                return JOptionPane.showConfirmDialog(StartupFrame.this.frame, "Want to run functional test? This would freeze UI for the duration of the test",
-                        "Better do not run while connected to vehicle!!!", YES_NO_OPTION) == JOptionPane.YES_OPTION;
-            }
-
-            private void runFunctionalHardwareTest() {
-                boolean isSuccess = HwCiF4Discovery.runHardwareTest();
-                JOptionPane.showMessageDialog(null, "Function test passed: " + isSuccess + "\nSee log folder for details.");
-            }
-        };
+        new ConsoleUI(selectedPort.port);
     }
 
     public void disposeFrameAndProceed() {

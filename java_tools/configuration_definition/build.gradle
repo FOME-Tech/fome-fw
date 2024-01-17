@@ -1,6 +1,6 @@
 plugins {
     id 'java-library'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
     id 'antlr'
 }
 
@@ -12,9 +12,11 @@ dependencies {
     api project(':config_definition_base')
     implementation project(':models')
     antlr global_libs.antlr
+    implementation global_libs.snakeyaml
 }
 
 shadowJar {
+    dependsOn(':enum_to_string:shadowJar')
     /*
      to exclude suffix '-all'
      in resulting archive file name

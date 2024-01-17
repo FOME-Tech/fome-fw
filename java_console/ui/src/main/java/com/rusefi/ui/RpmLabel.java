@@ -20,15 +20,15 @@ public class RpmLabel {
     private final JLabel rpmValue = new JLabel();
     private final JLabel rpmCaption = new JLabel("RPM:");
 
-    public RpmLabel(UIContext uiContext) {
-        this(uiContext, 1);
+    public RpmLabel() {
+        this(1);
     }
 
-    public RpmLabel(UIContext uiContext, int size) {
-        this(uiContext, size, true);
+    public RpmLabel(int size) {
+        this(size, true);
     }
 
-    public RpmLabel(UIContext uiContext, int size, boolean withCaption) {
+    public RpmLabel(int size, boolean withCaption) {
         rpmValue.setText(NO_CONNECTION);
         rpmValue.setForeground(Color.red);
 
@@ -66,12 +66,11 @@ public class RpmLabel {
         return content;
     }
 
-    public RpmLabel setSize(int size) {
+    public void setSize(int size) {
         Font f = rpmCaption.getFont();
         int fontSize = size * f.getSize();
         Font font = new Font(f.getName(), f.getStyle(), fontSize);
         setFont(font);
-        return this;
     }
 
     private void setFont(Font font) {

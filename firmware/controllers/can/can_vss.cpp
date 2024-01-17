@@ -21,6 +21,8 @@ static expected<uint16_t> look_up_can_id(can_vss_nbc_e type) {
 	switch (type) {
 		case BMW_e46:
 			return 0x01F0; /* BMW e46 ABS Message */
+		case BMW_e90:
+			return 0x1A0;	// BMW E90 ABS speed frame (not wheel speeds, vehicle speed)
 		case W202:
 			return 0x0200; /* W202 C180 ABS signal */
 		default:
@@ -29,14 +31,24 @@ static expected<uint16_t> look_up_can_id(can_vss_nbc_e type) {
 	}
 }
 
-/* Module specitifc processing functions */
+static int getTwoBytesLsb(const CANRxFrame& frame, int index) {
+	uint8_t low = frame.data8[index];
+	uint8_t high = frame.data8[index + 1] & 0x0F;
+	return low | (high << 8);
+}
+
+/* Module specific processing functions */
 /* source: http://z4evconversion.blogspot.com/2016/07/completely-forgot-but-it-does-live-on.html */
 float processBMW_e46(const CANRxFrame& frame) {
 	// average the rear wheels since those are the driven ones (more accurate gear detection!)
-	uint16_t left =  (((frame.data8[5] & 0x0f) << 8) | frame.data8[4]);
-	uint16_t right = (((frame.data8[7] & 0x0f) << 8) | frame.data8[6]);
+	uint16_t left =  getTwoBytesLsb(frame, 4);
+	uint16_t right = getTwoBytesLsb(frame, 6);
 
 	return (left + right) / (16 * 2);
+}
+
+float processBMW_e90(const CANRxFrame& frame) {
+	return 0.1f * getTwoBytesLsb(frame, 0);
 }
 
 float processW202(const CANRxFrame& frame) {
@@ -51,6 +63,8 @@ expected<float> processCanRxVssImpl(const CANRxFrame& frame) {
 	switch (engineConfiguration->canVssNbcType){
 		case BMW_e46:
 			return processBMW_e46(frame);
+		case BMW_e90:
+			return processBMW_e90(frame);
 		case W202:
 			return processW202(frame);
 		default:

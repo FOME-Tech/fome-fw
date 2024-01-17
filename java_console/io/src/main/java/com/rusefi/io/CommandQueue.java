@@ -1,7 +1,6 @@
 package com.rusefi.io;
 
 import com.devexperts.logging.Logging;
-import com.rusefi.Listener;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.util.IoUtils;
 import org.jetbrains.annotations.NotNull;
@@ -100,7 +99,7 @@ public class CommandQueue {
         }
     }
 
-    public static Listener<Throwable> ERROR_HANDLER = parameter -> IoUtils.exit("CommandQueue error: " + parameter, -2);
+    public static Consumer<Throwable> ERROR_HANDLER = parameter -> IoUtils.exit("CommandQueue error: " + parameter, -2);
 
     public CommandQueue(LinkManager linkManager) {
         this.linkManager = linkManager;
@@ -114,7 +113,7 @@ public class CommandQueue {
                         sendPendingCommand();
                     } catch (Throwable e) {
                         log.error("Major connectivity error", e);
-                        ERROR_HANDLER.onResult(e);
+                        ERROR_HANDLER.accept(e);
                     }
                 }
             }
@@ -152,10 +151,6 @@ public class CommandQueue {
         write(command, timeout, InvocationConfirmationListener.VOID);
     }
 
-    public void write(String command, InvocationConfirmationListener listener) {
-        write(command, DEFAULT_TIMEOUT, listener, true);
-    }
-
     public void write(String command, int timeoutMs, InvocationConfirmationListener listener) {
         write(command, timeoutMs, listener, true);
     }
@@ -174,12 +169,6 @@ public class CommandQueue {
 		}
 
         pendingCommands.add(new MethodInvocation(command, timeoutMs, listener, fireEvent));
-    }
-
-    public void addIfNotPresent(IMethodInvocation commandSender) {
-        // technically this should be a critical locked section but for our use-case we do not care
-        if (!pendingCommands.contains(commandSender))
-            pendingCommands.add(commandSender);
     }
 
     static class MethodInvocation implements IMethodInvocation {

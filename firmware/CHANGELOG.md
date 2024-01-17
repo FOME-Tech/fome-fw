@@ -9,6 +9,8 @@ How to use this file:
 Release template (copy/paste this for new release):
 
 ## Month 202x Release - "Release Name"
+or
+## Unreleased
 
 ### Breaking Changes
  - 
@@ -28,6 +30,12 @@ Release template (copy/paste this for new release):
 
 ## Unreleased
 
+### Added
+ - Staged injection: a second set of fuel injectors that inject part of the fuel load when you run out of primary injector
+ - VE/Ign/Boost blend tables can select a Y axis override for even more flexibility
+
+## December 2023 Release
+
 ### Breaking Changes
  - Simplified VVT single tooth cam modes. "Single tooth second half" and "single tooth first half" have been replaced by simply "single tooth". This may require re-setting your trigger and VVT timing offsets if you used "single tooth first half" prior to this change. #178
 
@@ -44,6 +52,8 @@ Release template (copy/paste this for new release):
  - Allow brief operation over 100% injector duty cycle and add configurable duty cycle limits #215
  - Buttons to bump VVT targets for testing/PID tuning
  - Improved serial port selection for FOME console and firmware update
+ - Better default configuration values for some advanced features
+ - Support BMW E8x/E9x CAN speed sensor input (works for standalone MK60e5 too)
 
 ### Fixed
  - Improved bench test resolution (more usable for testing injectors, dwell, etc)

@@ -196,12 +196,12 @@ public class StructLayout extends Layout {
         ps.println();
     }
 
-    private void writeOutputChannelLayout(PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, String name) {
+    private void writeOutputChannelLayout(PrintStream ps, PrintStream psDatalog, StructNamePrefixer prefixer, int offsetAdd, String name) {
         if (!this.noPrefix) {
             prefixer.push(name);
         }
 
-        this.children.forEach(c -> c.writeOutputChannelLayout(ps, prefixer, offsetAdd));
+        this.children.forEach(c -> c.writeOutputChannelLayout(ps, psDatalog, prefixer, offsetAdd));
 
         if (!this.noPrefix) {
             prefixer.pop();
@@ -209,12 +209,12 @@ public class StructLayout extends Layout {
     }
 
     @Override
-    protected void writeOutputChannelLayout(PrintStream ps, StructNamePrefixer prefixer, int offsetAdd) {
-        writeOutputChannelLayout(ps, prefixer, offsetAdd, this.name);
+    protected void writeOutputChannelLayout(PrintStream ps, PrintStream psDatalog, StructNamePrefixer prefixer, int offsetAdd) {
+        writeOutputChannelLayout(ps, psDatalog, prefixer, offsetAdd, this.name);
     }
 
     @Override
-    protected void writeOutputChannelLayout(PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayLength) {
+    protected void writeOutputChannelLayout(PrintStream ps, PrintStream psDatalog, StructNamePrefixer prefixer, int offsetAdd, int[] arrayLength) {
         if (arrayLength.length != 1) {
             throw new IllegalStateException("Output channels don't support multi dimension arrays");
         }
@@ -222,8 +222,37 @@ public class StructLayout extends Layout {
         int elementOffset = offsetAdd;
 
         for (int i = 0; i < arrayLength[0]; i++) {
-            writeOutputChannelLayout(ps, prefixer, elementOffset, this.name + (i + 1));
+            writeOutputChannelLayout(ps, psDatalog, prefixer, elementOffset, this.name + (i + 1));
             elementOffset += this.size;
         }
+    }
+
+    private void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer, String sourceName, String name) {
+        if (!this.noPrefix) {
+            prefixer.push(name);
+        }
+
+        this.children.forEach(c -> c.writeSdLogLayout(ps, prefixer, sourceName));
+
+        if (!this.noPrefix) {
+            prefixer.pop();
+        }
+    }
+
+    @Override
+    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer, String sourceName) {
+        writeSdLogLayout(ps, prefixer, sourceName, this.name);
+    }
+
+    @Override
+    protected void writeSdLogLayout(PrintStream ps, StructNamePrefixer prefixer, String sourceName, int[] arrayLength) {
+        if (arrayLength.length != 1) {
+            throw new IllegalStateException("Output channels don't support multi dimension arrays");
+        }
+
+        // TODO: This doesn't quite work, as it's unclear how to make automatic naming work properly
+        // for (int i = 0; i < arrayLength[0]; i++) {
+        //     writeSdLogLayout(ps, prefixer, sourceName, this.name + "[" + i + "]");
+        // }
     }
 }

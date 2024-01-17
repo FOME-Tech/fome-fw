@@ -359,6 +359,7 @@ jobs:
     - name: Upload INI to tunes.fome.tech
       if: ${{ env.full == 'true' && env.upload == 'true' }}
       uses: hyper-tuner/ini-upload-action@v1
+      continue-on-error: true
       with:
         api-url: "${{ secrets.HYPER_TUNER_INI_UPLOAD_URL }}"
         username: "${{ secrets.HYPER_TUNER_INI_UPLOAD_USERNAME }}"

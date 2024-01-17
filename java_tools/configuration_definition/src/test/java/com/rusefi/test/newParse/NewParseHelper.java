@@ -11,13 +11,12 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class NewParseHelper {
-    public static ParseState parse(String input) throws IOException {
+    public static ParseState parse(String input) {
         ParseState parseState = new ParseState();
         RusefiParseErrorStrategy.parseDefinitionString(parseState.getListener(), input);
         return parseState;
     }
 
-    // TODO: We have to move either forward or backwards with newparse #4441
     public static String parseToTs(String input) throws IOException {
         ParseState state = parse(input);
 
@@ -36,18 +35,20 @@ public class NewParseHelper {
     public static String parseToOutputChannels(String input) throws IOException {
         ParseState state = parse(input);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final String utf8 = StandardCharsets.UTF_8.name();
 
-        PrintStream ps = new PrintStreamAlwaysUnix(baos, true, utf8);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayOutputStream baos2 = new ByteArrayOutputStream();
 
-        OutputChannelWriter writer = new OutputChannelWriter(ps);
+        PrintStream ps = new PrintStreamAlwaysUnix(baos, true, utf8);
+        PrintStream ps2 = new PrintStreamAlwaysUnix(baos2, true, utf8);
+
+        OutputChannelWriter writer = new OutputChannelWriter(ps, ps2);
         writer.writeOutputChannels(state, null);
 
         return baos.toString(utf8);
     }
 
-    // TODO: We have to move either forward or backwards with newparse #4441
     public static String parseToC(String input) throws IOException {
         ParseState state = parse(input);
 

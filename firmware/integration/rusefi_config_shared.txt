@@ -90,15 +90,15 @@
 #define GAUGE_NAME_FUEL_PRESSURE_HIGH_UNITS "bar"
 #define GAUGE_NAME_FLEX "Flex Ethanol %"
 
-#define GAUGE_NAME_ACCEL_X "Acceleration: X"
-#define GAUGE_NAME_ACCEL_Y "Acceleration: Y"
-#define GAUGE_NAME_ACCEL_Z "Acceleration: Z"
-#define GAUGE_NAME_ACCEL_ROLL "Acceleration: Roll"
-#define GAUGE_NAME_ACCEL_YAW "Acceleration: Yaw"
+#define GAUGE_NAME_ACCEL_LAT "Accel: Lateral"
+#define GAUGE_NAME_ACCEL_LON "Accel: Longitudinal"
+#define GAUGE_NAME_ACCEL_VERT "Accel: Vertical"
+#define GAUGE_NAME_GYRO_YAW "Gyro: Yaw rate"
 
 #define GAUGE_NAME_BARO_PRESSURE "Barometric pressure"
 
 #define GAUGE_NAME_OIL_PRESSURE "Oil Pressure"
+#define GAUGE_NAME_OIL_TEMPERATURE "Oil Temperature"
 
 #define GAUGE_NAME_ECU_TEMPERATURE "ECU temperature"
 
@@ -140,6 +140,7 @@
 #define GAUGE_NAME_FUEL_CRANKING "Fuel: cranking"
 #define GAUGE_NAME_FUEL_RUNNING "Fuel: running"
 #define GAUGE_NAME_FUEL_LAST_INJECTION "Fuel: Last inj pulse width"
+#define GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2 "Fuel: Last inj pulse width stg 2"
 #define GAUGE_NAME_FUEL_BASE "Fuel: base cycle mass"
 #define GAUGE_NAME_FUEL_TRIM "Fuel: fuel trim"
 #define GAUGE_NAME_FUEL_TRIM_2 "Fuel: fuel trim 2"
@@ -150,6 +151,7 @@
 #define GAUGE_NAME_FUEL_FLOW "Fuel: Flow rate"
 
 #define GAUGE_NAME_FUEL_INJ_DUTY "Fuel: injector duty cycle"
+#define GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2 "Fuel: injector duty cycle stage 2"
 #define GAUGE_NAME_TCHARGE "Air: SD tCharge"
 #define GAUGE_NAME_TARGET_AFR "Fuel: target AFR"
 #define GAUGE_NAME_TARGET_LAMBDA "Fuel: target lambda"

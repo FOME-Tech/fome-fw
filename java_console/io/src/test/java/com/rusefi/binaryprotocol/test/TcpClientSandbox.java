@@ -15,8 +15,6 @@ import static com.rusefi.io.tcp.TcpConnector.LOCALHOST;
  */
 public class TcpClientSandbox {
     public static void main(String[] args) throws IOException {
-        BinaryProtocol.DISABLE_LOCAL_CONFIGURATION_CACHE = true;
-
         Socket s = new Socket(LOCALHOST, DEFAULT_PORT);
         TcpIoStream tsStream = new TcpIoStream("sandbox", s);
 
@@ -25,7 +23,7 @@ public class TcpClientSandbox {
 
         for (int i = 0; i < 3; i++) {
             // warm-up cycles just for fun
-            String signature = BinaryProtocol.getSignature(tsStream);
+            BinaryProtocol.getSignature(tsStream);
         }
 
 
@@ -34,7 +32,7 @@ public class TcpClientSandbox {
             long startMs = System.currentTimeMillis();
             for (int i = 0; i < count; i++) {
                 // warm-up cycles just for fun
-                String signature = BinaryProtocol.getSignature(tsStream);
+                BinaryProtocol.getSignature(tsStream);
             }
             long time = System.currentTimeMillis() - startMs;
             double timePerCommand = 1.0 * time / count;

@@ -423,7 +423,7 @@ angle_t getCylinderAngle(uint8_t cylinderIndex, uint8_t cylinderNumber) {
 
 	auto result = base + adjustment;
 
-	assertAngleRange(result, "getCylinderAngle", ObdCode::CUSTOM_ERR_6566);
+	assertAngleRange(result, "getCylinderAngle", ObdCode::CUSTOM_ERR_CYL_ANGLE);
 
 	return result;
 }
@@ -457,6 +457,12 @@ BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load) {
 
 	if (!value) {
 		return { 0, 0, 0 };
+	}
+
+	// Override Y axis value (if necessary)
+	if (cfg.yAxisOverride != GPPWM_Zero) {
+		// TODO: is this value_or(0) correct or even reasonable?
+		load = readGppwmChannel(cfg.yAxisOverride).value_or(0);
 	}
 
 	float tableValue = interpolate3d(

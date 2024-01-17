@@ -19,7 +19,6 @@ import com.rusefi.waves.EngineReport;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
@@ -68,7 +67,6 @@ public class EngineSnifferPanel {
     private final ZoomControl zoomControl = new ZoomControl();
     private final EngineSnifferStatusPanel statusPanel = new EngineSnifferStatusPanel();
     private final UpDownImage crank = createImage(Fields.PROTOCOL_CRANK1);
-    private final ChartScrollControl scrollControl;
     private final AnyCommand command;
 
     private boolean isPaused;
@@ -94,15 +92,12 @@ public class EngineSnifferPanel {
         upperPanel.add(clearButton);
         upperPanel.add(saveImageButton);
         upperPanel.add(pauseButton);
-        upperPanel.add(new RpmLabel(uiContext,2).getContent());
+        upperPanel.add(new RpmLabel(2).getContent());
 
         command = AnyCommand.createField(uiContext, config, "chartsize " + EFI_DEFAULT_CHART_SIZE, true, true);
         upperPanel.add(command.getContent());
 
         upperPanel.add(zoomControl);
-
-        scrollControl = ChartRepository.getInstance().createControls(this::displayChart);
-        upperPanel.add(scrollControl.getContent());
 
         upperPanel.add(new URLLabel(HELP_TEXT, HELP_URL));
 
@@ -142,7 +137,7 @@ public class EngineSnifferPanel {
         });
 
         mainPanel.add(chartPanel, BorderLayout.CENTER);
-        mainPanel.add(new WarningPanel(config).getPanel(config), BorderLayout.SOUTH);
+        mainPanel.add(new WarningPanel(config).getPanel(), BorderLayout.SOUTH);
     }
 
     private void setPaused(JButton pauseButton, boolean isPaused) {
@@ -264,7 +259,7 @@ public class EngineSnifferPanel {
             signalBody = Color.darkGray;
         } else if (name.startsWith("HIP")) {
             signalBody = Color.white;
-        } else if (name.startsWith("i")) {
+        } else if (name.startsWith("i") || name.startsWith("j")) {
             // injection
             signalBody = Color.green;
         } else if (name.startsWith("map")) {
@@ -286,11 +281,6 @@ public class EngineSnifferPanel {
         image.setSignalBorder(signalBorder);
         image.addMouseMotionListener(statusPanel.motionAdapter);
         return image;
-    }
-
-    public void reloadFile() {
-        displayChart(ChartRepository.getInstance().getChart(0));
-        scrollControl.reset();
     }
 
     public ActionListener getTabSelectedListener() {

@@ -17,7 +17,7 @@ import java.io.IOException;
 import static com.devexperts.logging.Logging.getLogging;
 
 public class SerialIoStream extends AbstractIoStream {
-    static Logging log = getLogging(SerialIoStream.class);
+    static final Logging log = getLogging(SerialIoStream.class);
 
     @Nullable // null in case of port open error, for instance lack of permissions on Unix
     protected final SerialPort sp;
@@ -33,13 +33,6 @@ public class SerialIoStream extends AbstractIoStream {
     public SerialIoStream(@Nullable SerialPort sp, String port) {
         this.sp = sp;
         this.port = port;
-    }
-
-    public static IoStream openPort(String port) {
-        log.info("[SerialIoStream] openPort " + port);
-        SerialPort serialPort = openSerial(port);
-//        FileLog.LOGGER.info("[SerialIoStreamJSerialComm] opened " + port);
-        return new SerialIoStream(serialPort, port);
     }
 
     @Nullable

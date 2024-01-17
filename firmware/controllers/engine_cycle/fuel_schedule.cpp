@@ -8,13 +8,30 @@
 
 #if EFI_ENGINE_CONTROL
 
-void turnInjectionPinHigh(InjectionEvent *event) {
+void turnInjectionPinHigh(uintptr_t arg) {
 	efitick_t nowNt = getTimeNowNt();
-	for (int i = 0;i < MAX_WIRES_COUNT;i++) {
+
+	// clear last bit to recover the pointer
+	InjectionEvent *event = reinterpret_cast<InjectionEvent*>(arg & ~(1UL));
+
+	// extract last bit
+	bool stage2Active = arg & 1;
+
+	for (size_t i = 0; i < efi::size(event->outputs); i++) {
 		InjectorOutputPin *output = event->outputs[i];
 
 		if (output) {
 			output->open(nowNt);
+		}
+	}
+
+	if (stage2Active) {
+		for (size_t i = 0; i < efi::size(event->outputsStage2); i++) {
+			InjectorOutputPin *output = event->outputsStage2[i];
+
+			if (output) {
+				output->open(nowNt);
+			}
 		}
 	}
 }
@@ -140,7 +157,8 @@ bool InjectionEvent::update() {
 	// Single point only uses injector 1 (index 0)
 	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : ID2INDEX(getCylinderId(ownIndex));
 
-	InjectorOutputPin *secondOutput = nullptr;
+	InjectorOutputPin* secondOutput = nullptr;
+	InjectorOutputPin* secondOutputStage2 = nullptr;
 
 	if (mode == IM_BATCH) {
 		/**
@@ -152,6 +170,7 @@ bool InjectionEvent::update() {
 		int secondOrder = (ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
 		int secondIndex = ID2INDEX(getCylinderId(secondOrder));
 		secondOutput = &enginePins.injectors[secondIndex];
+		secondOutputStage2 = &enginePins.injectorsStage2[secondIndex];
 	}
 
 	outputs[0] = &enginePins.injectors[injectorIndex];
@@ -159,6 +178,9 @@ bool InjectionEvent::update() {
 	isSimultaneous = mode == IM_SIMULTANEOUS;
 	// Stash the cylinder number so we can select the correct fueling bank later
 	cylinderNumber = injectorIndex;
+
+	outputsStage2[0] = &enginePins.injectorsStage2[injectorIndex];
+	outputsStage2[1] = secondOutputStage2;
 
 	return true;
 }
@@ -177,14 +199,14 @@ void FuelSchedule::addFuelEvents() {
 	isReady = true;
 }
 
-void FuelSchedule::onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase, float nextPhase) {
+void FuelSchedule::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
 	// Wait for schedule to be built - this happens the first time we get RPM
 	if (!isReady) {
 		return;
 	}
 
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		elements[i].onTriggerTooth(rpm, nowNt, currentPhase, nextPhase);
+		elements[i].onTriggerTooth(nowNt, currentPhase, nextPhase);
 	}
 }
 

@@ -2,7 +2,6 @@ package com.rusefi.binaryprotocol.test;
 
 import com.macfaq.io.LittleEndianOutputStream;
 import com.rusefi.CompatibleFunction;
-import com.rusefi.Listener;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.config.generated.Fields;
@@ -72,7 +71,7 @@ public class TcpServerSandbox {
     static class EcuState {
         private final byte[] outputs = new byte[Fields.TS_TOTAL_OUTPUT_SIZE];
 
-        long startUpTime = System.currentTimeMillis();
+        final long startUpTime = System.currentTimeMillis();
 
         public void onCommand() {
             int seconds = (int) ((System.currentTimeMillis() - startUpTime) / 1000);

@@ -5,7 +5,6 @@ import com.rusefi.IoUtil;
 import com.rusefi.TestingUtils;
 import com.rusefi.autodetect.PortDetector;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.EngineState;
 import com.rusefi.io.LinkManager;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,11 +21,8 @@ public class ControllerConnectorState {
             return linkManager;
 
         LinkManager linkManager = new LinkManager();
-        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, new EngineState.ValueCallback<String>() {
-            @Override
-            public void onUpdate(String firmwareVersion1) {
+        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, (String firmwareVersion1) -> {
                 firmwareVersion = firmwareVersion1;
-            }
         });
 
         /**
@@ -40,7 +36,7 @@ public class ControllerConnectorState {
         if (port == null) {
             port = System.getProperty("ecu.port");
             if (port == null) {
-                port = PortDetector.autoDetectSerial(null).getSerialPort();
+                port = PortDetector.autoDetectSerial().getSerialPort();
                 if (port == null)
                     throw new IllegalStateException("ECU serial not detected");
                 System.out.println("Auto-connected to " + port);

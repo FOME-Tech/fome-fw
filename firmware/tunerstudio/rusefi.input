@@ -416,6 +416,14 @@ enable2ndByteCanID = false
 		yBins		= injector_battLagCorr
 		gauge		= VBattGauge
 
+	curve = injectorsSecondaryDeadTime, "Secondary injector dead time"
+		columnLabel = "Battery", "Dead Time"
+		xAxis		= 6, 16, 11
+		yAxis		= 0, 8, 9
+		xBins		= injectorSecondary_battLagCorrBins, VBatt
+		yBins		= injectorSecondary_battLagCorr
+		gauge		= VBattGauge
+
 	curve = vrThresholdCurve1, "VR 1 Threshold"
 		columnLabel = "RPM", "Voltage"
 		xAxis		= 0, 8000, 9
@@ -1180,6 +1188,12 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		yBins = gppwm4_loadBins, gppwmYAxis4
 		zBins = gppwm4_table
 
+	table = stagedInjectionTbl, stagedInjectionMap, "Staged Injection %", 1
+		xyLabels = "RPM", ""
+		xBins = injectorStagingRpmBins, RPMValue
+		yBins = injectorStagingLoadBins, fuelingLoad
+		zBins = injectorStagingTable
+
 	table = tcuSolenoidTableTbl,  tcuSolenoidTableMap,  "Solenoids Active By Gear",	1
 		xBins		= solenoidCountArray, tcuCurrentGear
 		yBins		= gearCountArray, tcuCurrentGear
@@ -1212,6 +1226,7 @@ gaugeCategory = "Boost Control"
 	luaOpenLoopAddGauge = luaOpenLoopAdd,"Boost: Lua open loop add", "v", -100.0,100.0, -100.0,100.0, -100.0,100.0, 1,1
 	boostControllerClosedLoopPartGauge = boostControllerClosedLoopPart,"Boost: Closed loop", "%", -50.0,50.0, -50.0,50.0, -50.0,50.0, 1,1
 	boostControlTargetGauge = boostControlTarget,"Boost: Target", "kPa", 0.0,300.0, 0.0,300.0, 0.0,300.0, 1,1
+	boostStatus_pTermGauge = boostStatus_pTerm,"Boost PID pTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	boostStatus_iTermGauge = boostStatus_iTerm,"Boost PID iTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	boostStatus_dTermGauge = boostStatus_dTerm,"Boost PID dTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	boostStatus_outputGauge = boostStatus_output,"Boost PID output", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
@@ -1257,6 +1272,7 @@ gaugeCategory = LUA
 	luaGauges2gauge = luaGauges2, "Lua Gauge 2", "lua", 0, 30000, 0, 0, 30000, 30000, 0, 3
 
 gaugeCategory = Alternator Control
+	alternatorStatus_pTermGauge = alternatorStatus_pTerm,"Alternator PID pTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	alternatorStatus_iTermGauge = alternatorStatus_iTerm,"Alternator PID iTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	alternatorStatus_dTermGauge = alternatorStatus_dTerm,"Alternator PID dTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	alternatorStatus_outputGauge = alternatorStatus_output,"Alternator PID output", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
@@ -1265,6 +1281,7 @@ gaugeCategory = Alternator Control
 
 gaugeCategory = Idle
 	idleAirValvePositionGauge = currentIdlePosition, "Idle position", "%",	0,	100,	0,	0,	100,  100,	1,	1
+	idleStatus_pTermGauge = idleStatus_pTerm,"Idle PID pTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	idleStatus_iTermGauge = idleStatus_iTerm,"Idle PID iTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	idleStatus_dTermGauge = idleStatus_dTerm,"Idle PID dTerm", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
 	idleStatus_outputGauge = idleStatus_output,"Idle PID output", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 3,3
@@ -1272,12 +1289,14 @@ gaugeCategory = Idle
 	idleStatus_resetCounterGauge = idleStatus_resetCounter,"Idle PID resetCounter", "", -10000.0,10000.0, -10000.0,10000.0, -10000.0,10000.0, 0,0
 
 gaugeCategory = ETB PID
+	etbStatus_pTermGauge = etbStatus_pTerm,"ETB 1 PID pTerm", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	etbStatus_iTermGauge = etbStatus_iTerm,"ETB 1 PID iTerm", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	etbStatus_dTermGauge = etbStatus_dTerm,"ETB 1 PID dTerm", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	etbStatus_outputGauge = etbStatus_output,"ETB 1 PID output", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	etbStatus_errorGauge = etbStatus_error,"ETB 1 PID error", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	etbStatus_resetCounterGauge = etbStatus_resetCounter,"ETB 1 PID resetCounter", "", 0,100.0, 0,100.0, 0,100.0, 0,0
 
+	wgStatus_pTermGauge = wastegateDcStatus_pTerm,"WG PID pTerm", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	wgStatus_iTermGauge = wastegateDcStatus_iTerm,"WG PID iTerm", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	wgStatus_dTermGauge = wastegateDcStatus_dTerm,"WG PID dTerm", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
 	wgStatus_outputGauge = wastegateDcStatus_output,"WG PID output", "", -100.0,100.0, -100.0,100.0, -100.0,100.0, 3,3
@@ -1348,6 +1367,7 @@ gaugeCategory = Sensors - Extra 1
 	baroPressureGauge	= baroPressure,			@@GAUGE_NAME_BARO_PRESSURE@@,		"kPa",		0,	1024,		0,		0,		0,	0,	0,	0
 	internalMcuTemperatureGauge = internalMcuTemperature, @@GAUGE_NAME_ECU_TEMPERATURE@@, "C",	0,	100,	0,	0,	75,  100,	0,	0
 	OilPressGauge		= oilPressure,	@@GAUGE_NAME_OIL_PRESSURE@@,		"kPa",		0,	750,		35,	75,	550,	700,	0,	0
+	OilTempGauge		= oilTemp,	@@GAUGE_NAME_OIL_TEMPERATURE@@,		"C",		-40,	140,	-15,		1,		95,	110,	1,	1
 	AuxT1Gauge		= auxTemp1,	@@GAUGE_NAME_AUX_TEMP1@@,		"C",		-40,	140,	-15,		1,		95,	110,	1,	1
 	AuxT2Gauge		= auxTemp2,	@@GAUGE_NAME_AUX_TEMP2@@,		"C",		-40,	140,	-15,		1,		95,	110,	1,	1
 	lowFuelPressureGauge = lowFuelPressure, @@GAUGE_NAME_FUEL_PRESSURE_LOW@@, @@GAUGE_NAME_FUEL_PRESSURE_LOW_UNITS@@, 0, 700, 0, 0, 700, 700, 1, 0
@@ -1357,11 +1377,10 @@ gaugeCategory = Sensors - Extra 1
 	AuxL2Gauge		= auxLinear2,	@@GAUGE_NAME_AUX_LINEAR_2@@, "", -100, 100, -100, -100, 100, 100, 2, 2
 
 gaugeCategory = Sensors - Extra 2
-	accelerationXGauge = accelerationX,		@@GAUGE_NAME_ACCEL_X@@,		"acc",		-11,	11,	1.0,	1.2,		100,	100,	3, 1
-	accelerationYGauge = accelerationY,		@@GAUGE_NAME_ACCEL_Y@@,		"acc",		-11,	11,	1.0,	1.2,		100,	100,	3, 1
-	accelerationZGauge = accelerationZ,		@@GAUGE_NAME_ACCEL_Z@@,		"acc",		-11,	11,	1.0,	1.2,		100,	100,	3, 1
-	accelerationRollGauge=accelerationRoll,	@@GAUGE_NAME_ACCEL_ROLL@@,	"acc",		-11,	11,	1.0,	1.2,		100,	100,	3, 1
-	accelerationYawGauge=accelerationYaw,	@@GAUGE_NAME_ACCEL_YAW@@,	"acc",		-11,	11,	1.0,	1.2,		100,	100,	3, 1
+	accelerationLatGauge = accelerationLat,		@@GAUGE_NAME_ACCEL_LAT@@,		"acc",		-2,	2,	-2,	-1,		1,	2,	3, 1
+	accelerationLonGauge = accelerationLon,		@@GAUGE_NAME_ACCEL_LON@@,		"acc",		-2,	2,	-2,	-1,		1,	2,	3, 1
+	accelerationVertGauge = accelerationVert,	@@GAUGE_NAME_ACCEL_VERT@@,		"acc",		0,	1.5,	0.5,	0.6,		1.4,	1.5,	3, 1
+	gyroYawGauge 		  = gyroYaw,			@@GAUGE_NAME_GYRO_YAW@@,		"acc",		-100,	100, -100, -100, 100, 100, 3, 1
 	egt1Gauge			= egt1, "EGT#1", "C", 0, 2000
 	egt2Gauge			= egt2, "EGT#2", "C", 0, 2000
 	rpmAccelerationGa = rpmAcceleration,	"rpm delta",		"RPM/s",		-2000,		2000,		-2000,		2000,		-2000,	2000,	0,	0
@@ -1411,7 +1430,9 @@ gaugeCategory = Fueling
 	iatCorrectionGauge = running_intakeTemperatureCoefficient, @@GAUGE_NAME_FUEL_IAT_CORR@@, "mult",	0,	3,	0,	0,	3,  3,	2,	2
 	cltCorrectionGauge = running_coolantTemperatureCoefficient, @@GAUGE_NAME_FUEL_CLT_CORR@@, "mult",	0,	3,	0,	0,	3,  3,	2,	2
 	injectorDutyCycleGauge=injectorDutyCycle, @@GAUGE_NAME_FUEL_INJ_DUTY@@,"%",		0,	120,		10,	10,	100,	100,	1,	1
+	injectorDutyCycleStg2Gauge=injectorDutyCycleStage2, @@GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2@@,"%",		0,	120,		10,	10,	100,	100,	1,	1
 	actualLastInjectionGauge	= actualLastInjection,	@@GAUGE_NAME_FUEL_LAST_INJECTION@@, "mSec",		0,	25.5,	1.0,	1.2,		20,	25,	3, 1
+	actualLastInjectionStg2Gauge	= actualLastInjectionStage2,	@@GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2@@, "mSec",		0,	25.5,	1.0,	1.2,		20,	25,	3, 1
 	veValueGauge		= veValue,					"fuel: VE",				"",		0,	120,		10,	10,	100,	100,	1,	1
 
 	injectorLagMsGauge = m_deadtime,		@@GAUGE_NAME_INJECTOR_LAG@@,		"mSec",		0,	10,	0,	0,		10,	10,	3, 1
@@ -1651,6 +1672,10 @@ menuDialog = main
 		subMenu = injTest,					"Injector test", 0, {isInjectionEnabled}
 		subMenu = cylinderBankSelect,		"Cylinder bank selection", 0, {isInjectionEnabled == 1}
 		subMenu = injectorNonlinear,		"Injector small-pulse correction", 0, {isInjectionEnabled == 1}
+
+		subMenu = stagedInjection,			"Staged injection", 0, {isInjectionEnabled}
+		subMenu = stagedInjectionOutputs,	"Staged injection outputs", 0, {isInjectionEnabled && enableStagedInjection}
+		subMenu = stagedInjectionTbl,		"Staged injection % table", 0, {isInjectionEnabled && enableStagedInjection}
 
 		groupMenu = "Cylinder fuel trims"
 		groupChildMenu = fuelTrimTbl1,		"Fuel trim cyl 1"
@@ -1934,12 +1959,8 @@ menuDialog = main
 		; TODO: move lambdaProtection to the fuel menu once ready
 		; https://github.com/FOME-Tech/fome-fw/issues/75
 		subMenu = lambdaProtection,			"Lambda Protection", 0, { isInjectionEnabled }
-
 		subMenu = std_separator
 
-		subMenu = std_separator
-
-		subMenu = std_separator
 		subMenu = parkingLot,				"Experimental/Broken"
 		subMenu = antiLagDialog,                "Anti-Lag ALS"
 		subMenu = rotaryDialog,			"Rotary"
@@ -2426,7 +2447,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		panel = baseInjection
 		panel = injChars
 		panel = fuelParams
-		panel = injectorsDeadTime
+		panel = injectorsDeadTime, {isInjectionEnabled}
 
 	dialog = ignitionCylExtra, "Cylinder offsets"
 		field = "Offset angle for each cylinder if you have an odd fire"
@@ -2444,6 +2465,27 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Offset cyl 10",							timing_offset_cylinder10, {cylindersCount > 9}
 		field = "Offset cyl 11",							timing_offset_cylinder11, {cylindersCount > 10}
 		field = "Offset cyl 12",							timing_offset_cylinder12, {cylindersCount > 11}
+
+	dialog = stagedInjectionOutputs, "", yAxis
+		field = "Injection Stage 2 Output 1",					injectionPinsStage21, {isInjectionEnabled && enableStagedInjection}
+		field = "Injection Stage 2 Output 2",					injectionPinsStage22, {isInjectionEnabled && enableStagedInjection && injectionMode != 3 && cylindersCount > 1}
+		field = "Injection Stage 2 Output 3",					injectionPinsStage23, {isInjectionEnabled && enableStagedInjection && injectionMode != @@injection_mode_e_IM_SINGLE_POINT@@ && cylindersCount > 2}
+		field = "Injection Stage 2 Output 4",					injectionPinsStage24, {isInjectionEnabled && enableStagedInjection && injectionMode != 3 && cylindersCount > 3}
+		field = "Injection Stage 2 Output 5 ",					injectionPinsStage25, {isInjectionEnabled && enableStagedInjection && injectionMode != @@injection_mode_e_IM_SINGLE_POINT@@ && cylindersCount > 4}
+		field = "Injection Stage 2 Output 6 ",					injectionPinsStage26, {isInjectionEnabled && enableStagedInjection && injectionMode != @@injection_mode_e_IM_SINGLE_POINT@@ && cylindersCount > 5}
+		field = "Injection Stage 2 Output 7 ",					injectionPinsStage27, {isInjectionEnabled && enableStagedInjection && injectionMode != 3 && cylindersCount > 6}
+		field = "Injection Stage 2 Output 8 ",					injectionPinsStage28, {isInjectionEnabled && enableStagedInjection && injectionMode != 3 && cylindersCount > 7}
+		field = "Injection Stage 2 Output 9 ",					injectionPinsStage29, {isInjectionEnabled && enableStagedInjection && cylindersCount > 8}
+		field = "Injection Stage 2 Output 10 ",					injectionPinsStage210, {isInjectionEnabled && enableStagedInjection && cylindersCount > 9}
+		field = "Injection Stage 2 Output 11 ",					injectionPinsStage211, {isInjectionEnabled && enableStagedInjection && cylindersCount > 10}
+		field = "Injection Stage 2 Output 12 ",					injectionPinsStage212, {isInjectionEnabled && enableStagedInjection && cylindersCount > 11}
+
+	dialog = stagedInjection, "",	yAxis
+		field = "Enable", enableStagedInjection, {isInjectionEnabled}
+		field = ""
+		field = "Secondary injector flow", injectorSecondary_flow {isInjectionEnabled && enableStagedInjection}
+		field = ""
+		panel = injectorsSecondaryDeadTime, {isInjectionEnabled && enableStagedInjection}
 
 	dialog = multisparkDwellParams, "Delay & Dwell"
 		field = "Spark duration",						multisparkSparkDuration, {multisparkEnable}
@@ -2470,7 +2512,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", ignBlends1_blendParameter
-		panel = ignAdder1Bias
+		field = "Y axis override (set Zero for no override)", ignBlends1_yAxisOverride, {ignBlends1_blendParameter}
+		panel = ignAdder1Bias, {ignBlends1_blendParameter}
 
 	dialog = ignAdder2Cfg, "Ignition adder 2 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2480,7 +2523,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", ignBlends2_blendParameter
-		panel = ignAdder2Bias
+		field = "Y axis override (set Zero for no override)", ignBlends2_yAxisOverride, {ignBlends2_blendParameter}
+		panel = ignAdder2Bias, {ignBlends2_blendParameter}
 
 	dialog = ignAdder3Cfg, "Ignition adder 3 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2490,7 +2534,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", ignBlends3_blendParameter
-		panel = ignAdder3Bias
+		field = "Y axis override (set Zero for no override)", ignBlends3_yAxisOverride, {ignBlends3_blendParameter}
+		panel = ignAdder3Bias, {ignBlends3_blendParameter}
 
 	dialog = ignAdder4Cfg, "Ignition adder 4 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2500,7 +2545,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", ignBlends4_blendParameter
-		panel = ignAdder4Bias
+		field = "Y axis override (set Zero for no override)", ignBlends4_yAxisOverride, {ignBlends4_blendParameter}
+		panel = ignAdder4Bias, {ignBlends4_blendParameter}
 
 	dialog = veBlend1Cfg, "VE blend 1 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2511,7 +2557,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", veBlends1_blendParameter
-		panel = veBlend1Bias
+		field = "Y axis override (set Zero for no override)", veBlends1_yAxisOverride, {veBlends1_blendParameter}
+		panel = veBlend1Bias, {veBlends1_blendParameter}
 
 	dialog = veBlend2Cfg, "VE blend 2 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2522,7 +2569,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", veBlends2_blendParameter
-		panel = veBlend2Bias
+		field = "Y axis override (set Zero for no override)", veBlends2_yAxisOverride, {veBlends2_blendParameter}
+		panel = veBlend2Bias, {veBlends2_blendParameter}
 
 	dialog = veBlend3Cfg, "VE blend 3 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2533,7 +2581,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", veBlends3_blendParameter
-		panel = veBlend3Bias
+		field = "Y axis override (set Zero for no override)", veBlends3_yAxisOverride, {veBlends3_blendParameter}
+		panel = veBlend3Bias, {veBlends3_blendParameter}
 
 	dialog = veBlend4Cfg, "VE blend 4 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2544,7 +2593,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", veBlends4_blendParameter
-		panel = veBlend4Bias
+		field = "Y axis override (set Zero for no override)", veBlends4_yAxisOverride, {veBlends4_blendParameter}
+		panel = veBlend4Bias, {veBlends4_blendParameter}
 
 	dialog = boostOpenBlend1Cfg, "Boost open loop blend 1 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2554,7 +2604,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", boostOpenLoopBlends1_blendParameter
-		panel = boostOpenLoopBlend1Bias
+		field = "Y axis override (set Zero for no override)", boostOpenLoopBlends1_yAxisOverride, {boostOpenLoopBlends1_blendParameter}
+		panel = boostOpenLoopBlend1Bias, {boostOpenLoopBlends1_blendParameter}
 
 	dialog = boostOpenBlend2Cfg, "Boost open loop blend 2 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2564,7 +2615,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", boostOpenLoopBlends2_blendParameter
-		panel = boostOpenLoopBlend2Bias
+		field = "Y axis override (set Zero for no override)", boostOpenLoopBlends2_yAxisOverride, {boostOpenLoopBlends2_blendParameter}
+		panel = boostOpenLoopBlend2Bias, {boostOpenLoopBlends2_blendParameter}
 
 	dialog = boostClosedBlend1Cfg, "Boost closed loop blend 1 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2574,7 +2626,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", boostClosedLoopBlends1_blendParameter
-		panel = boostClosedLoopBlend1Bias
+		field = "Y axis override (set Zero for no override)", boostClosedLoopBlends1_yAxisOverride, {boostClosedLoopBlends1_blendParameter}
+		panel = boostClosedLoopBlend1Bias, {boostClosedLoopBlends1_blendParameter}
 
 	dialog = boostClosedBlend2Cfg, "Boost closed loop blend 2 config"
 		field = "#The bias table controls how much of the blend table"
@@ -2584,7 +2637,8 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "#The X axis of the bias table is controlled by the selected blend"
 		field = "#parameter below."
 		field = "Blend parameter", boostClosedLoopBlends2_blendParameter
-		panel = boostClosedLoopBlend2Bias
+		field = "Y axis override (set Zero for no override)", boostClosedLoopBlends2_yAxisOverride, {boostClosedLoopBlends2_blendParameter}
+		panel = boostClosedLoopBlend2Bias, {boostClosedLoopBlends2_blendParameter}
 
 	dialog = dwellSettings, "", yAxis
 		panel = dwellCorrection
@@ -3584,9 +3638,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Control output",						alternatorControlPin, {isAlternatorControlEnabled == 1}
 		field = "Control outpur mode",				alternatorControlPinMode, {isAlternatorControlEnabled == 1}
 		field = "PWM frequency",						alternatorPwmFrequency, {isAlternatorControlEnabled == 1}
-		field = "Off Above TPS",						alternatorOffAboveTps, {isAlternatorControlEnabled == 1}
 		field = "A/C duty adder",                       acRelayAlternatorDutyAdder, {isAlternatorControlEnabled == 1}
-		field = "Detailed status in console",			isVerboseAlternator, {isAlternatorControlEnabled == 1}
 		field = "#PID control"
 		field = "offset",								alternatorControl_offset, {isAlternatorControlEnabled == 1}
 		field = "P factor",								alternatorControl_pFactor, {isAlternatorControlEnabled == 1}

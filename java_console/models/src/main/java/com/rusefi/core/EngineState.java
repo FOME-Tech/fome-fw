@@ -7,6 +7,7 @@ import com.rusefi.io.LinkDecoder;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.devexperts.logging.Logging.getLogging;
 
@@ -23,7 +24,7 @@ public class EngineState {
     public static final Class<EngineState> ENGINE_STATE_CLASS = EngineState.class;
     private final Object lock = new Object();
 
-    public void replaceStringValueAction(String key, ValueCallback<String> callback) {
+    public void replaceStringValueAction(String key, Consumer<String> callback) {
         removeAction(key);
         registerStringValueAction(key, callback);
     }
@@ -31,10 +32,10 @@ public class EngineState {
     /**
      * text protocol key and callback associated with this key
      */
-    public static class StringActionPair extends Pair<String, ValueCallback<String>> {
+    public static class StringActionPair extends Pair<String, Consumer<String>> {
         public final String prefix;
 
-        public StringActionPair(String key, ValueCallback<String> second) {
+        public StringActionPair(String key, Consumer<String> second) {
             super(key, second);
             prefix = key.toLowerCase() + Fields.LOG_DELIMITER;
         }
@@ -67,60 +68,6 @@ public class EngineState {
         registerStringValueAction(Fields.PROTOCOL_MSG, value -> MessagesCentral.getInstance().postMessage(ENGINE_STATE_CLASS, value));
     }
 
-    /**
-     * @see #unpackString(String)
-     */
-    public static String packString(String a) {
-        return "line" + PACKING_DELIMITER + a.length() + PACKING_DELIMITER + a;
-    }
-
-    /**
-     * This method extract the content of a 'line with known length' packet
-     * <p/>
-     * serial protocol is not error-prone, so our simple approach is to validate the length of incoming strings
-     *
-     * @return null in case of error, line message if valid packed ine
-     * @see #packString(String)
-     */
-/*
-    public static String unpackString(String message) {
-        String prefix = "line" + PACKING_DELIMITER;
-        /**
-         * If we get this tag we have probably connected to the wrong port
-         * todo: as of 2019 this logic maybe makes no sense any more since pure text protocol was reduce/removed?
-         */
-/*
-        if (message.contains(Fields.PROTOCOL_TEST_RESPONSE_TAG)) {
-            JOptionPane.showMessageDialog(null, "Are you sure you are not connected to TS port?");
-            return null;
-        }
-        if (!message.startsWith(prefix)) {
-            log.info("EngineState: unexpected header: " + message + " while looking for " + prefix);
-            return null;
-        }
-        message = message.substring(prefix.length());
-        int delimiterIndex = message.indexOf(PACKING_DELIMITER);
-        if (delimiterIndex == -1) {
-            log.info("Delimiter not found in: " + message);
-            return null;
-        }
-        String lengthToken = message.substring(0, delimiterIndex);
-        int expectedLen;
-        try {
-            expectedLen = Integer.parseInt(lengthToken);
-        } catch (NumberFormatException e) {
-            log.info("invalid len: " + lengthToken);
-            return null;
-        }
-
-        String response = message.substring(delimiterIndex + 1);
-        if (response.length() != expectedLen) {
-            log.info("message len does not match header: " + message);
-            response = null;
-        }
-        return response;
-    }
-*/
     /**
      * @param response input string
      * @param listener obviously
@@ -171,7 +118,7 @@ public class EngineState {
                 endIndex = response.length();
 
             String strValue = response.substring(beginIndex, endIndex);
-            pair.second.onUpdate(strValue);
+            pair.second.accept(strValue);
             if (listener != null)
                 listener.onKeyValue(key, strValue);
 
@@ -216,7 +163,7 @@ public class EngineState {
 //        return Character.toLowerCase(c) - 'a' + 10;
 //    }
 
-    public void registerStringValueAction(String key, ValueCallback<String> callback) {
+    public void registerStringValueAction(String key, Consumer<String> callback) {
         synchronized (lock) {
             if (keys.contains(key))
                 throw new IllegalStateException("Already registered: " + key);
@@ -239,12 +186,6 @@ public class EngineState {
 
     public void processNewData(String append, LinkDecoder decoder) {
         buffer.append(append, decoder);
-    }
-
-    public interface ValueCallback<V> {
-        ValueCallback<?> VOID = (ValueCallback) value -> { };
-
-        void onUpdate(V value);
     }
 
     public interface EngineStateListener {

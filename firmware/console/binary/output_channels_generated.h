@@ -271,14 +271,14 @@ struct output_channels_s {
 	// V
 	// offset 92
 	scaled_channel<int16_t, 1000, 1> rawWastegatePosition = (int16_t)0;
-	// @@GAUGE_NAME_ACCEL_X@@
+	// @@GAUGE_NAME_ACCEL_LAT@@
 	// G
 	// offset 94
-	scaled_channel<int16_t, 100, 1> accelerationX = (int16_t)0;
-	// @@GAUGE_NAME_ACCEL_Y@@
+	scaled_channel<int16_t, 1000, 1> accelerationLat = (int16_t)0;
+	// @@GAUGE_NAME_ACCEL_LON@@
 	// G
 	// offset 96
-	scaled_channel<int16_t, 100, 1> accelerationY = (int16_t)0;
+	scaled_channel<int16_t, 1000, 1> accelerationLon = (int16_t)0;
 	// @@GAUGE_NAME_DETECTED_GEAR@@
 	// offset 98
 	uint8_t detectedGear = (uint8_t)0;
@@ -444,95 +444,89 @@ struct output_channels_s {
 	// V
 	// offset 250
 	scaled_channel<int16_t, 1000, 1> rawTps2Secondary = (int16_t)0;
-	// @@GAUGE_NAME_ACCEL_Z@@
+	// @@GAUGE_NAME_ACCEL_VERT@@
 	// G
 	// offset 252
-	scaled_channel<int16_t, 100, 1> accelerationZ = (int16_t)0;
-	// @@GAUGE_NAME_ACCEL_ROLL@@
-	// G
+	scaled_channel<int16_t, 1000, 1> accelerationVert = (int16_t)0;
+	// @@GAUGE_NAME_GYRO_YAW@@
+	// deg/sec
 	// offset 254
-	scaled_channel<int16_t, 100, 1> accelerationRoll = (int16_t)0;
-	// @@GAUGE_NAME_ACCEL_YAW@@
-	// G
-	// offset 256
-	scaled_channel<int16_t, 100, 1> accelerationYaw = (int16_t)0;
+	scaled_channel<int16_t, 1000, 1> gyroYaw = (int16_t)0;
 	// deg
-	// offset 258
+	// offset 256
 	int8_t vvtTargets[4];
 	// @@GAUGE_NAME_TURBO_SPEED@@
 	// hz
-	// offset 262
+	// offset 260
 	uint16_t turboSpeed = (uint16_t)0;
 	// Ign: Timing Cyl
 	// deg
-	// offset 264
+	// offset 262
 	scaled_channel<int16_t, 50, 1> ignitionAdvanceCyl[12];
 	// %
-	// offset 288
+	// offset 286
 	scaled_channel<int16_t, 100, 1> tps1Split = (int16_t)0;
 	// %
-	// offset 290
+	// offset 288
 	scaled_channel<int16_t, 100, 1> tps2Split = (int16_t)0;
 	// %
-	// offset 292
+	// offset 290
 	scaled_channel<int16_t, 100, 1> tps12Split = (int16_t)0;
 	// %
-	// offset 294
+	// offset 292
 	scaled_channel<int16_t, 100, 1> accPedalSplit = (int16_t)0;
 	// Ign: Cut Code
 	// code
-	// offset 296
+	// offset 294
 	int8_t sparkCutReason = (int8_t)0;
 	// Fuel: Cut Code
 	// code
-	// offset 297
+	// offset 295
 	int8_t fuelCutReason = (int8_t)0;
 	// @@GAUGE_NAME_AIR_FLOW_ESTIMATE@@
 	// kg/h
-	// offset 298
+	// offset 296
 	scaled_channel<uint16_t, 10, 1> mafEstimate = (uint16_t)0;
 	// rpm
-	// offset 300
+	// offset 298
 	uint16_t instantRpm = (uint16_t)0;
 	// V
-	// offset 302
+	// offset 300
 	scaled_channel<uint16_t, 1000, 1> rawMap = (uint16_t)0;
 	// V
-	// offset 304
+	// offset 302
 	scaled_channel<uint16_t, 1000, 1> rawAfr = (uint16_t)0;
-	// offset 306
-	uint8_t alignmentFill_at_306[2];
-	// offset 308
+	// offset 304
 	float calibrationValue2 = (float)0;
 	// Lua: Tick counter
 	// count
-	// offset 312
+	// offset 308
 	uint32_t luaInvocationCounter = (uint32_t)0;
 	// Lua: Last tick duration
 	// nt
-	// offset 316
+	// offset 312
 	uint32_t luaLastCycleDuration = (uint32_t)0;
 	// "TCU: Current Range"
-	// offset 320
+	// offset 316
 	uint8_t tcu_currentRange = (uint8_t)0;
-	// offset 321
-	uint8_t alignmentFill_at_321[1];
+	// offset 317
+	uint8_t alignmentFill_at_317[1];
 	// @@GAUGE_NAME_TC_RATIO@@
 	// value
-	// offset 322
+	// offset 318
 	scaled_channel<uint16_t, 100, 1> tcRatio = (uint16_t)0;
-	// offset 324
+	// offset 320
 	float lastShiftTime = (float)0;
-	// offset 328
+	// offset 324
 	uint32_t vssEdgeCounter = (uint32_t)0;
-	// offset 332
+	// offset 328
 	uint32_t issEdgeCounter = (uint32_t)0;
 	// @@GAUGE_NAME_AUX_LINEAR_1@@
-	// offset 336
-	scaled_channel<int16_t, 100, 1> auxLinear1 = (int16_t)0;
+	// offset 332
+	float auxLinear1 = (float)0;
 	// @@GAUGE_NAME_AUX_LINEAR_2@@
-	// offset 338
-	scaled_channel<int16_t, 100, 1> auxLinear2 = (int16_t)0;
+	// offset 336
+	float auxLinear2 = (float)0;
 	// kPa
 	// offset 340
 	scaled_channel<uint16_t, 10, 1> fallbackMap = (uint16_t)0;
@@ -693,21 +687,21 @@ struct output_channels_s {
 	// offset 628 bit 23
 	bool injectorState12 : 1 {};
 	// offset 628 bit 24
-	bool unusedBit_226_24 : 1 {};
+	bool unusedBit_224_24 : 1 {};
 	// offset 628 bit 25
-	bool unusedBit_226_25 : 1 {};
+	bool unusedBit_224_25 : 1 {};
 	// offset 628 bit 26
-	bool unusedBit_226_26 : 1 {};
+	bool unusedBit_224_26 : 1 {};
 	// offset 628 bit 27
-	bool unusedBit_226_27 : 1 {};
+	bool unusedBit_224_27 : 1 {};
 	// offset 628 bit 28
-	bool unusedBit_226_28 : 1 {};
+	bool unusedBit_224_28 : 1 {};
 	// offset 628 bit 29
-	bool unusedBit_226_29 : 1 {};
+	bool unusedBit_224_29 : 1 {};
 	// offset 628 bit 30
-	bool unusedBit_226_30 : 1 {};
+	bool unusedBit_224_30 : 1 {};
 	// offset 628 bit 31
-	bool unusedBit_226_31 : 1 {};
+	bool unusedBit_224_31 : 1 {};
 	// offset 632
 	uint32_t outputRequestPeriod = (uint32_t)0;
 	// offset 636
@@ -766,8 +760,16 @@ struct output_channels_s {
 	// AFR
 	// offset 678
 	scaled_channel<uint16_t, 1000, 1> afr2GasolineScale = (uint16_t)0;
+	// @@GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2@@
+	// ms
 	// offset 680
-	uint8_t unusedAtTheEnd[120];
+	scaled_channel<uint16_t, 300, 1> actualLastInjectionStage2 = (uint16_t)0;
+	// @@GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2@@
+	// %
+	// offset 682
+	scaled_channel<uint8_t, 2, 1> injectorDutyCycleStage2 = (uint8_t)0;
+	// offset 683
+	uint8_t unusedAtTheEnd[117];
 };
 static_assert(sizeof(output_channels_s) == 800);
 

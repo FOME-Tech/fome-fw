@@ -1,8 +1,6 @@
 package com.rusefi.tools;
 
-import com.devexperts.logging.Logging;
 import com.opensr5.ConfigurationImage;
-import com.opensr5.ini.IniFileModel;
 import com.opensr5.io.ConfigurationImageFile;
 import com.rusefi.*;
 import com.rusefi.autodetect.PortDetector;
@@ -20,7 +18,6 @@ import com.rusefi.io.IoStream;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.maintenance.ExecHelper;
-import com.rusefi.ui.StatusConsumer;
 import org.jetbrains.annotations.Nullable;
 
 import javax.xml.bind.JAXBException;
@@ -29,9 +26,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.binaryprotocol.BinaryProtocol.sleep;
 import static com.rusefi.binaryprotocol.IoHelper.getCrc32;
 
@@ -41,20 +38,11 @@ public class ConsoleTools {
 
     private static final Map<String, String> toolsHelp = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    private static final StatusConsumer statusListener = new StatusConsumer() {
-        final Logging log = getLogging(ConsoleTools.class);
-        @Override
-        public void append(String message) {
-            log.info(message);
-        }
-    };
-
     static {
         registerTool("help", args -> printTools(), "Print this help.");
         registerTool("headless", ConsoleTools::runHeadless, "Connect to rusEFI controller and start saving logs.");
 
         registerTool("ptrace_enums", ConsoleTools::runPerfTraceTool, "NOT A USER TOOL. Development tool to process performance trace enums");
-        registerTool("functional_test", ConsoleTools::runFunctionalTest, "NOT A USER TOOL. Development tool related to functional testing");
         registerTool("convert_binary_configuration_to_xml", ConsoleTools::convertBinaryToXml, "NOT A USER TOOL. Development tool to convert binary configuration into XML form.");
 
         registerTool("get_image_tune_crc", ConsoleTools::calcBinaryImageTuneCrc, "Calculate tune CRC for given binary tune");
@@ -62,8 +50,6 @@ public class ConsoleTools {
         registerTool("get_performance_trace", args -> PerformanceTraceHelper.getPerformanceTune(), "DEV TOOL: Get performance trace from ECU");
 
         registerTool("version", ConsoleTools::version, "Only print version");
-
-        registerTool("dfu", DfuTool::run, "Program specified file into ECU via DFU");
 
         registerTool("detect", ConsoleTools::detect, "Find attached rusEFI");
         registerTool("send_command", args -> {
@@ -137,12 +123,6 @@ public class ConsoleTools {
         PerfTraceTool.readPerfTrace(args[1], args[2], args[3], args[4]);
     }
 
-    private static void runFunctionalTest(String[] args) throws InterruptedException {
-        // passing port argument if it was specified
-        String[] toolArgs = args.length == 1 ? new String[0] : new String[]{args[1]};
-        HwCiF4Discovery.main(toolArgs);
-    }
-
     private static void runHeadless(String[] args) {
         String onConnectedCallback = args.length > 1 ? args[1] : null;
         String onDisconnectedCallback = args.length > 2 ? args[2] : null;
@@ -166,7 +146,7 @@ public class ConsoleTools {
 
     public static void startAndConnect(final Function<LinkManager, Void> onConnectionEstablished) {
 
-        String autoDetectedPort = PortDetector.autoDetectSerial(null).getSerialPort();
+        String autoDetectedPort = PortDetector.autoDetectSerial().getSerialPort();
         if (autoDetectedPort == null) {
             System.err.println(RUS_EFI_NOT_DETECTED);
             return;
@@ -215,7 +195,7 @@ public class ConsoleTools {
 
     @Nullable
     private static String autoDetectPort() {
-        String autoDetectedPort = PortDetector.autoDetectSerial(null).getSerialPort();
+        String autoDetectedPort = PortDetector.autoDetectSerial().getSerialPort();
         if (autoDetectedPort == null) {
             System.err.println(RUS_EFI_NOT_DETECTED);
             return null;
@@ -234,7 +214,7 @@ public class ConsoleTools {
     }
 
     static void detect(String[] strings) throws IOException {
-        SerialAutoChecker.AutoDetectResult detectResult = PortDetector.autoDetectSerial(null);
+        SerialAutoChecker.AutoDetectResult detectResult = PortDetector.autoDetectSerial();
         String autoDetectedPort = detectResult.getSerialPort();
         if (autoDetectedPort == null) {
             System.out.println(RUS_EFI_NOT_DETECTED);
@@ -261,13 +241,10 @@ public class ConsoleTools {
         StringBuilder messages = new StringBuilder();
 
         ResponseBuffer responseBuffer = new ResponseBuffer(unpack -> {
-            EngineState.ValueCallback<String> callback = new EngineState.ValueCallback<String>() {
-                @Override
-                public void onUpdate(String value) {
-                    if (value.startsWith(Fields.PROTOCOL_HELLO_PREFIX)) {
-                        messages.append(value);
-                        messages.append("\n");
-                    }
+            Consumer<String> callback = (String value) -> {
+                if (value.startsWith(Fields.PROTOCOL_HELLO_PREFIX)) {
+                    messages.append(value);
+                    messages.append("\n");
                 }
             };
             while (!unpack.isEmpty()) {

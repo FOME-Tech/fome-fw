@@ -3,7 +3,7 @@ package com.rusefi.trigger;
 import com.rusefi.StartupFrame;
 import com.rusefi.enums.trigger_type_e;
 import com.rusefi.ui.engine.UpDownImage;
-import com.rusefi.core.ui.FrameHelper;
+import com.rusefi.ui.FrameHelper;
 import com.rusefi.ui.util.UiUtils;
 import com.rusefi.waves.EngineReport;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +35,7 @@ public class TriggerImage {
     /**
      * number of extra frames
      */
-    public static int EXTRA_COUNT = 1;
+    public static final int EXTRA_COUNT = 1;
     private static int sleepAtEnd;
     private static trigger_type_e onlyOneTrigger = null;
 
@@ -323,7 +323,6 @@ public class TriggerImage {
 
     private static class TriggerPanel extends JPanel {
         public String name = "";
-        public String id;
         // angle
         public double tdcPosition;
         public UpDownImage image;
@@ -350,8 +349,6 @@ public class TriggerImage {
             int h = getHeight();
 
             g.drawString(name, 50, (int) (h * 0.75));
-            if (id != null)
-                g.drawString(id, 0, (int) (h * 0.9));
 
             g.setColor(UpDownImage.ENGINE_CYCLE_COLOR);
             int tdcFontSize = (int) (f.getSize() * 1.5);

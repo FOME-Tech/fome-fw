@@ -13,7 +13,6 @@
 
 #define MAX_WIRES_COUNT 2
 
-
 class InjectionEvent {
 public:
 	InjectionEvent();
@@ -21,7 +20,7 @@ public:
 	bool update();
 
 	// Call this every decoded trigger tooth.  It will schedule any relevant events for this injector.
-	void onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase, float nextPhase);
+	void onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase);
 
 	WallFuel& getWallFuel();
 
@@ -49,10 +48,11 @@ private:
 public:
 	// TODO: this should be private
 	InjectorOutputPin *outputs[MAX_WIRES_COUNT];
+	InjectorOutputPin *outputsStage2[MAX_WIRES_COUNT];
 	float injectionStartAngle = 0;
 };
 
-void turnInjectionPinHigh(InjectionEvent *event);
+void turnInjectionPinHigh(uintptr_t arg);
 
 
 /**
@@ -66,7 +66,7 @@ public:
 	void invalidate();
 
 	// Call this every trigger tooth.  It will schedule all required injector events.
-	void onTriggerTooth(int rpm, efitick_t nowNt, float currentPhase, float nextPhase);
+	void onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase);
 
 	// Calculate injector opening angle, pins, and mode for all injectors
 	void addFuelEvents();
