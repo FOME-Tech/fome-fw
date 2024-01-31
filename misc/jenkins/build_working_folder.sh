@@ -66,21 +66,11 @@ RUSEFI_CONSOLE_SETTINGS=""
 cp -r misc/install/STM32_Programmer_CLI $CONSOLE_FOLDER
 
 cp firmware/deliver/fome.bin $FOLDER
-# probably not needed cp firmware/build/rusefi.elf $FOLDER
-cp firmware/deliver/fome.dfu $FOLDER
-# just for now - DFU work in progress
-cp firmware/deliver/fome.hex $FOLDER
 
 # bootloader
 [ -e firmware/deliver/fome_bl.bin ] && { cp firmware/deliver/fome_bl.bin $FOLDER ; }
-[ -e firmware/deliver/fome_bl.dfu ] && { cp firmware/deliver/fome_bl.dfu $FOLDER ; }
 # update srec
 [ -e firmware/deliver/fome_update.srec ] && { cp firmware/deliver/fome_update.srec $FOLDER ; }
-
-if [ -n "$BUNDLE_NAME" ]; then
-    mv $FOLDER/fome.dfu $FOLDER/fome_$BUNDLE_NAME.dfu
-fi
-
 
 [ -e firmware/deliver/fome.bin ] || { echo "$SCRIPT_NAME: fome.bin not found"; exit 1; }
 
@@ -119,11 +109,6 @@ cd ..
 
 mkdir -p artifacts
 mv temp/$FULL_BUNDLE_FILE artifacts
-
-echo "Removing static content from ${CONSOLE_FOLDER} and $DRIVERS_FOLDER"
-rm -rf $CONSOLE_FOLDER/fome_console.exe
-rm -rf $CONSOLE_FOLDER/DfuSe
-rm -rf $DRIVERS_FOLDER
 
 echo "$SCRIPT_NAME: We are back in root directory"
 
