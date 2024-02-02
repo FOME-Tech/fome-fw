@@ -4287,12 +4287,12 @@ dialog = tcuControls, "Transmission Settings"
 		commandButton = "microRusEFI BCM",				cmd_set_engine_type_microRusEFI_MRE_BODY_CONTROL@@if_show_microRusEFI_presets
 		commandButton = "microRusEFI Subaru EJ18",		cmd_set_engine_type_MRE_SUBARU_EJ18@@if_show_microRusEFI_presets
 
-		commandButton = "FOME PnP Miata NA6",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
+		commandButton = "FOME PnP Miata NA6 90-93",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
 		; commandButton = "FOME PnP Miata NA6 VVT Swap",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
-		; commandButton = "FOME PnP Miata 94 ???",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
-		; commandButton = "FOME PnP Miata NA8 96",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
-		commandButton = "FOME PnP Miata NB1",		cmd_set_engine_type_POLYGONUS_MIATA_NB1@@if_show_Proteus_presets
-		commandButton = "FOME PnP Miata NB2 VVT",		cmd_set_engine_type_POLYGONUS_MIATA_NB2@@if_show_Proteus_presets
+		; commandButton = "FOME PnP Miata NA8 94-95",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
+		; commandButton = "FOME PnP Miata NA8 96-97",		cmd_set_engine_type_POLYGONUS_MIATA_NA6@@if_show_Proteus_presets
+		commandButton = "FOME PnP Miata NB1 99-00",		cmd_set_engine_type_POLYGONUS_MIATA_NB1@@if_show_Proteus_presets
+		commandButton = "FOME PnP Miata NB2 VVT 01-05",		cmd_set_engine_type_POLYGONUS_MIATA_NB2@@if_show_Proteus_presets
 		commandButton = "FOME PnP Miata MSM",		cmd_set_engine_type_POLYGONUS_MIATA_MSM@@if_show_Proteus_presets
 
 		commandButton = "Proteus M73 v12",			cmd_set_engine_type_Proteus_M73@@if_show_Proteus_presets
