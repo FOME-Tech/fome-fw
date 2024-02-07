@@ -45,9 +45,10 @@
 ! and fix the fields you created to make sure that they total the same size.
 !
 !
-! each field is declared as
-! type name;comment;scale,offset,min,max,number_of_digits
-! hello;I like rusEFI;"ms",1,0,-10,10,2
+! each field is declared as below
+! type name							;comment(TS Tip)								;scale,offset,min,max,number_of_digits
+! hello								;I like rusEFI									;"ms",1,0,-10,10,2
+! uint8_t autoscale multisparkMaxRpm;Disable multispark above this engine speed.	;"rpm", 50, 0, 0, 3000, 0
 !
 !
 !

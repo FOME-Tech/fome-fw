@@ -44,7 +44,7 @@ enable2ndByteCanID = false
 	useLegacyFTempUnits = false
 	ignoreMissingBitOptions = true
 
-	; Optimize comms for fast rusEFI ECUs
+	; Optimize comms for fast FOME ECUs
 	noCommReadDelay = true;
 	defaultRuntimeRecordPerSec = 100;
 	maxUnusedRuntimeRange = 1000;
@@ -1901,7 +1901,7 @@ menuDialog = main
 
 		# O2 sensor(s)
 		subMenu = egoSettings,				"EGO sensor"
-		subMenu = widebandConfig,			"rusEFI Wideband Controller", 0, { canReadEnabled && canWriteEnabled }
+		subMenu = widebandConfig,			"FOME Wideband Controller", 0, { canReadEnabled && canWriteEnabled }
 		subMenu = std_separator
 
 		# Misc sensors
