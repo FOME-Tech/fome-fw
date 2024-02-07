@@ -47,7 +47,7 @@
 !
 ! each field is declared as below
 ! type name							;comment(TS Tip)								;scale,offset,min,max,number_of_digits
-! hello								;I like rusEFI									;"ms",1,0,-10,10,2
+! hello								;I like FOME									;"ms",1,0,-10,10,2
 ! uint8_t autoscale multisparkMaxRpm;Disable multispark above this engine speed.	;"rpm", 50, 0, 0, 3000, 0
 !
 !
@@ -328,7 +328,7 @@ end_struct
 custom air_pressure_sensor_type_e 1 bits, U08, @OFFSET@, [0:4], "Custom", "DENSO183", "MPX4250", "HONDA3BAR", "NEON_2003", "22012AA090", "GM 3 Bar", "MPX4100", "Toyota 89420-02010", "MPX4250A", "Bosch 2.5", "Mazda1Bar", "GM 2 Bar", "GM 1 Bar", "MPXH6400"
 
 !
-! lower 16 values are used on stm32 rusEFI, values above 16 are related to Kinetis work in progress
+! lower 16 values are used on stm32 FOME, values above 16 are related to Kinetis work in progress
 !
 #define adc_channel_e_enum "Disabled", "PA0", "PA1", "PA2", "PA3", "PA4", "PA5", "PA6", "PA7", "PB0", "PB1", "PC0", "PC1", "PC2", "PC3", "PC4", "PC5"
 custom adc_channel_e 1 bits, U08, @OFFSET@, [0:5], @@adc_channel_e_enum@@
@@ -718,7 +718,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_4
 	bit pauseEtbControl;Disable the electronic throttle motor and DC idle motor for testing.\nThis mode is for testing ETB/DC idle position sensors, etc without actually driving the throttle.
 	bit alignEngineSnifferAtTDC
-	bit enableAemXSeries;AEM X-Series or rusEFI Wideband
+	bit enableAemXSeries;AEM X-Series or FOME Wideband
 ! 'enableAemXSeries' is the 32nd bit here, you would need another bit region if more bits are desired
 
 	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
