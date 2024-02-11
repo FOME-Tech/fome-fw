@@ -4053,7 +4053,6 @@ dialog = tcuControls, "Transmission Settings"
 			dialog = boostTargetDialog, "", card
 					panel = boostTable2Tbl
 
-; used for 
 	dialog = boostEtbPid, ""
 		field = "This PID is controlling how DC motor reaches desired position"
 		field = ""
