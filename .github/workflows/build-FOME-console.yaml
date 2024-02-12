@@ -10,7 +10,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-          lfs: true
 
       - uses: actions/setup-java@v4
         with:
