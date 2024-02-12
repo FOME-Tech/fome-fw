@@ -999,13 +999,13 @@ bit useIacPidMultTable;This enables a special 'PID Multiplier' table (0.0-1.0) t
 bit isBoostControlEnabled;This enables boost control.
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range to provide a more smooth control.
 bit isPhaseSyncRequiredForIgnition;This forces the ECU to wait for trigger syncronisation before comencing ignition events, it is recommended for sequential ignition systems. 
-bit useCltBasedRpmLimit,"yes","no";If enabled, use a curve for RPM limit (based on coolant temperature) instead of a constant value.
-bit forceO2Heating,"yes","no";If enabled, don't wait for engine start to heat O2 sensors. WARNING: this will reduce the life of your sensor, as condensation in the exhaust from a cold start can crack the sensing element.
+bit useCltBasedRpmLimit,"yes","no";This enables a table that allows you to define a variable RPM limit based on coolant temperature.\n This is useful for cars with fragile engines or track cars where you want to prevent excess rpm while cold. 
+bit forceO2Heating,"yes","no";This forces the Wideband Lambda Sensor to warm up before engine start. WARNING: This can reduce the life of your sensor as condensation in the exhaust can crack the hot ceramic sensing element.
 bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
 bit invertVvtControlExhaust,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
 bit useBiQuadOnAuxSpeedSensors
-bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
-bit ALSActivateInverted
+bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of storage space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
+bit ALSActivateInverted;This inverts the logic of the ASL on button, flipping the result of a high and low state. It makes off into on and on into off.
 
 	uint32_t engineChartSize;;"count", 1, 0, 0, 300, 0
 
@@ -1018,16 +1018,16 @@ bit ALSActivateInverted
 
 	int16_t warningPeriod;;"seconds", 1, 0, 0, 60, 0
 
-	float knockDetectionWindowStart;;"angle", 1, 0, -1000, 1000, 2
-	float knockDetectionWindowEnd;;"angle", 1, 0, -1000, 1000, 2
+	float knockDetectionWindowStart;This is an offset applied to the spark angle to delay the knock detection window, this should remain set to 0 unless there is a good reason.;"angle", 1, 0, -1000, 1000, 2
+	float knockDetectionWindowEnd;This is the number of degrees the knock detection will listen for after the ignition event. 40 to 70 degrees is normal;"angle", 1, 0, -1000, 1000, 2
 
 
-float idleStepperReactionTime;;"ms", 1, 0, 1, 300, 0
+float idleStepperReactionTime;This is the time in ms for your stepper motor to react to a controll pulse.;"ms", 1, 0, 1, 300, 0
 
 
-	int idleStepperTotalSteps;;"count", 1, 0, 5, 3000, 0
+	int idleStepperTotalSteps;This is the number of steps your stepper motor is able to do from fully open to fully closed.;"count", 1, 0, 5, 3000, 0
 
-float noAccelAfterHardLimitPeriodSecs;TODO: finish this #413;"sec", 1, 0, 0, 60, 0
+float noAccelAfterHardLimitPeriodSecs;This setting prevents the activation of acceleration enrichment after the RPM limit has been activated for the specified number of seconds.;"sec", 1, 0, 0, 60, 0
 
 int mapAveragingSchedulingAtIndex;At what trigger index should some MAP-related math be executed? This is a performance trick to reduce load on synchronization trigger callback.;"index", 1, 0, 0, 7000, 0
 
@@ -1036,8 +1036,8 @@ int mapAveragingSchedulingAtIndex;At what trigger index should some MAP-related 
 custom pin_mode_e 1 bits, U08, @OFFSET@, [0:6], @@pin_mode_e_enum@@
 	
 
-! todo: rename field remove 'ms', also fix typo in name should be 'tachPulseDuration' and that would be an incompatible breaking change for users :(
-	float tachPulseDuractionMs;Duration in ms or duty cycle depending on selected mode;"", 1, 0, 0, 100, 2
+! todo: rename field remove 'ms', also fix typo in name should be 'tachPulseDuration' and that would be an incompatible breaking change for users 
+	float tachPulseDuractionMs;Duration of the tacho pulse in ms or duty cycle depending on selected mode;"", 1, 0, 0, 100, 2
 
 	
 	float wwaeTau;Length of time the deposited wall fuel takes to dissipate after the start of acceleration. ;"Seconds", 1, 0, 0, 3, 2
