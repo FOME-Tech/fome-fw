@@ -12,4 +12,4 @@ else
 	TRGT = arm-none-eabi-
 endif
 
-$(info TRGT is $(TRGT))
+$(info TRGT:          $(TRGT))
