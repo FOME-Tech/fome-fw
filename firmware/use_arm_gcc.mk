@@ -19,7 +19,7 @@ else
 # If the compiler doesn't exist, fault now
 ifeq ("$(wildcard $(TRGT)g++)","")
 $(error Compiler not found at $(TRGT)g++!)
-
+endif
 endif
 
 $(info COMPILER_PLATFORM: $(COMPILER_PLATFORM))
