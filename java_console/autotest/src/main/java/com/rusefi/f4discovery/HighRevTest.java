@@ -29,4 +29,15 @@ public class HighRevTest extends RusefiTestBase {
         // tests bug 1873
         EcuTestHelper.assertRpmDoesNotJump(60, 5, 110, FAIL, ecu.commandQueue);
     }
+    @Test
+    public void testBenelliR3() {
+        ecu.setEngineType(engine_type_e.FRANKENSO_BMW_M73_F);
+        // set idle RPM
+        ecu.changeRpm(1500);
+        // first let's get to RPM near limit
+        EcuTestHelper.assertRpmDoesNotJump(11000, 5, 40, FAIL, ecu.commandQueue);
+
+        // tests RpmLimit
+        EcuTestHelper.assertRpmDoesNotJump(12000, 5, 110, FAIL, ecu.commandQueue);
+    }
 }
