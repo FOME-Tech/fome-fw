@@ -83,6 +83,8 @@ enum class engine_type_e : uint32_t {
 
 	VW_ABA = 32,
 
+	MRE_BENELLI_3_CYL = 33,
+
 	HELLEN_NA6 = 34,
 
 	CAMARO_4 = 35,
@@ -207,7 +209,6 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_17 = 17,
 	ET_UNUSED_13 = 13,
 	ET_UNUSED_15 = 15,
-	ET_UNUSED_33 = 33,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_61 = 61,
