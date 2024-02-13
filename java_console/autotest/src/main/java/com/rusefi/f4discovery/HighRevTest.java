@@ -31,7 +31,7 @@ public class HighRevTest extends RusefiTestBase {
     }
     @Test
     public void testBenelliR3() {
-        ecu.setEngineType(engine_type_e.FRANKENSO_BMW_M73_F);
+        ecu.setEngineType(engine_type_e.MRE_BENELLI_3_CYL);
         // set idle RPM
         ecu.changeRpm(1500);
         // first let's get to RPM near limit
