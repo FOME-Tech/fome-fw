@@ -35,14 +35,14 @@ void StepperMotorBase::initialize(StepperHw *hardware, int totalSteps) {
 void StepperMotorBase::saveStepperPos(int pos) {
 	// use backup-power RTC registers to store the data
 #if EFI_PROD_CODE
-	backupRamSave(BACKUP_STEPPER_POS, pos + 1);
+	getBackupSram()->StepperPosition = pos + 1;
 #endif
 	postCurrentPosition();
 }
 
 int StepperMotorBase::loadStepperPos() {
 #if EFI_PROD_CODE
-	return (int)backupRamLoad(BACKUP_STEPPER_POS) - 1;
+	return getBackupSram()->StepperPosition - 1;
 #else
 	return 0;
 #endif
@@ -90,7 +90,7 @@ void StepperMotorBase::setInitialPosition(void) {
 		efiPrintf("Stepper: starting parking...");
 		// reset saved value
 		saveStepperPos(-1);
-		
+
 		/**
 		 * let's park the motor in a known position to begin with
 		 *
