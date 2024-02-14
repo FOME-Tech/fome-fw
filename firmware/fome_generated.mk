@@ -13,5 +13,5 @@ $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
 	./gen_live_documentation.sh
 	./gen_config_board.sh $(BOARD_DIR) $(SHORT_BOARD_NAME)
 
-# PCH depends on generated files
-$(PCHOBJ) : $(GENERATED)
+# All c/c++ objects depend on generated
+$(OBJS) : $(GENERATED)
