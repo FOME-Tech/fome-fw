@@ -15,3 +15,4 @@ $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
 
 # All c/c++ objects depend on generated
 $(OBJS) : $(GENERATED)
+$(PCHOBJ) : $(GENERATED)
