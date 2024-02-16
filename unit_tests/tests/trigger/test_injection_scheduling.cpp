@@ -93,7 +93,7 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 		efitick_t startTime = nowNt + nt5deg;
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Truly(ActionArgumentHasLowBitSet)));
 		// falling edge (primary) 20ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Truly(ActionArgumentHasLowBitSet)));
 		// falling edge (secondary) 10ms later
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(10), Property(&action_s::getArgument, Eq(&event))));
 	}
@@ -209,7 +209,7 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 		// Expect no scheduler calls!
 	}
 
-	
+
 	// Event scheduled at 125 degrees
 	event.injectionStartAngle = 125;
 
