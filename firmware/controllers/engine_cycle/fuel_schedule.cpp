@@ -32,18 +32,18 @@ void turnInjectionPinLow(uintptr_t arg) {
 		}
 	}
 
-	// efitick_t nextSplitDuration = event->splitInjectionDuration;
-	// event->splitInjectionDuration = 0;
+	efitick_t nextSplitDuration = event->splitInjectionDuration;
+	if (nextSplitDuration > 0) {
+		event->splitInjectionDuration = 0;
 
-	// if (nextSplitDuration > 0) {
-	// 	efitick_t openTime = getTimeNowNt() + MS2NT(2);
-	// 	efitick_t closeTime = openTime + nextSplitDuration;
+		efitick_t openTime = getTimeNowNt() + MS2NT(2);
+		efitick_t closeTime = openTime + nextSplitDuration;
 
-	// 	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, openTime, { &turnInjectionPinHigh, arg });
-	// 	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, closeTime, { turnInjectionPinLow, arg });
-	// } else {
+		getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, openTime, { &turnInjectionPinHigh, arg });
+		getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, closeTime, { turnInjectionPinLow, arg });
+	} else {
 		event->update();
-	// }
+	}
 }
 
 static void turnInjectionPinLowStage2(InjectionEvent* event) {
@@ -122,10 +122,10 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, nowNt);
 	}
 
-	// if (doSplitInjection) {
-	// 	// If in split mode, do the injection in two halves
-	// 	injectionMassStage1 = injectionMassStage1 / 2;
-	// }
+	if (doSplitInjection) {
+		// If in split mode, do the injection in two halves
+		injectionMassStage1 = injectionMassStage1 / 2;
+	}
 
 	const floatms_t injectionDurationStage1 = engine->module<InjectorModelPrimary>()->getInjectionDuration(injectionMassStage1);
 	const floatms_t injectionDurationStage2 = injectionMassStage2 > 0 ? engine->module<InjectorModelSecondary>()->getInjectionDuration(injectionMassStage2) : 0;
@@ -207,11 +207,11 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	efitick_t durationStage1Nt = US2NT((int)durationUsStage1);
 	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
 
-	// if (doSplitInjection) {
-	// 	this->splitInjectionDuration = durationStage1Nt;
-	// } else {
-	// 	this->splitInjectionDuration = 0;
-	// }
+	if (doSplitInjection) {
+		this->splitInjectionDuration = durationStage1Nt;
+	} else {
+		this->splitInjectionDuration = 0;
+	}
 
 	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, turnOffTimeStage1, endActionStage1);
 
