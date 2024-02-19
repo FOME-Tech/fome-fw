@@ -223,8 +223,6 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->executor.setMockExecutor(&mockExec);
 
-	efitick_t nowNt = 1000000;
-
 	InjectionEvent event;
 	uintptr_t arg = reinterpret_cast<uintptr_t>(&event);
 	InjectorOutputPin pin;
@@ -238,14 +236,14 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 		// Should schedule second half of split injection:
 		// - starts 2ms from now
 		// - duration 10ms (ends 12ms from now)
+		efitick_t nowNt = getTimeNowNt();
 		efitick_t startTime = nowNt + MS2NT(2);
-		efitick_t endTime = nowNt + MS2NT(10);
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
-		// falling edge 20ms later
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(&event))));
+		efitick_t endTime = startTime + MS2NT(10);
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(&event))));
 	}
 
-	// Event scheduled at 125 degrees
+	// Split injection duration of 10ms
 	event.splitInjectionDuration = MS2NT(10);
 
 	// Close injector, should cause second half of split injection to be scheduled!
