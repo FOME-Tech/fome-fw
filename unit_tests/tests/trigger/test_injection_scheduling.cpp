@@ -216,3 +216,41 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 	// We are at 130 degrees now, next tooth 140
 	event.onTriggerTooth(nowNt, 130, 140);
 }
+
+TEST(injectionScheduling, SplitInjectionScheduled) {
+	StrictMock<MockExecutor> mockExec;
+
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->executor.setMockExecutor(&mockExec);
+
+	efitick_t nowNt = 1000000;
+
+	InjectionEvent event;
+	uintptr_t arg = reinterpret_cast<uintptr_t>(&event);
+	InjectorOutputPin pin;
+	pin.shortName = "test";
+	pin.injectorIndex = 0;
+	event.outputs[0] = &pin;
+
+	{
+		InSequence is;
+
+		// Should schedule second half of split injection:
+		// - starts 2ms from now
+		// - duration 10ms (ends 12ms from now)
+		efitick_t startTime = nowNt + MS2NT(2);
+		efitick_t endTime = nowNt + MS2NT(10);
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
+		// falling edge 20ms later
+		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime + MS2NT(20), Property(&action_s::getArgument, Eq(&event))));
+	}
+
+	// Event scheduled at 125 degrees
+	event.splitInjectionDuration = MS2NT(10);
+
+	// Close injector, should cause second half of split injection to be scheduled!
+	turnInjectionPinLow(arg);
+
+	// Expect it to get zeroed so we don't repeat ad infinitum
+	EXPECT_EQ(event.splitInjectionDuration, 0);
+}
