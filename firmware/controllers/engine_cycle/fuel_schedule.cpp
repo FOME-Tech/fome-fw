@@ -94,6 +94,7 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	}
 
 	// don't allow split inj in simultaneous mode
+	// TODO: #364 implement logic to actually enable split injections
 	bool doSplitInjection = false && !isSimultaneous;
 
 	// Select fuel mass from the correct cylinder
