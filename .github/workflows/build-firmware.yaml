@@ -147,9 +147,9 @@ jobs:
             folder: config/boards/hellen/hellen64_miataNA6_94
             ini-file: fome_hellenNA6.ini
 
-          # - build-target: hellen128
-          #   folder: config/boards/hellen/hellen128
-          #   ini-file: fome_hellen128mercedes.ini
+          - build-target: hellen128
+            folder: config/boards/hellen/hellen128
+            ini-file: fome_hellen128mercedes.ini
 
           # - build-target: hellen121vag
           #   folder: config/boards/hellen/hellen121vag
@@ -303,18 +303,6 @@ jobs:
         else
           bash gen_config_board.sh ${{matrix.folder}} ${{matrix.build-target}} ${{matrix.ini-file}}
         fi
-
-    # Build machines don't have arm-none-eabi gcc, so let's download it and put it on the path
-    # - name: Download & Install GCC
-    #   env:
-    #     ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-    #   run: |
-    #     ./firmware/provide_gcc.sh
-    #     echo "::add-path::`pwd`/gcc-arm-none-eabi/bin"
-
-    # Make sure the compiler we just downloaded works - just print out the version
-    - name: Test Compiler
-      run: arm-none-eabi-gcc -v
 
     # - name: Configs Set SSH variables
     #   if: ${{ env.full == 'true' && env.upload == 'true' }}
