@@ -1971,9 +1971,6 @@ menuDialog = main
 		subMenu = lambdaProtection,			"Lambda Protection", 0, { isInjectionEnabled }
 		subMenu = std_separator
 
-		subMenu = std_separator
-
-		subMenu = std_separator
 		subMenu = parkingLot,				"Experimental/Broken"
 		subMenu = antiLagDialog,                "Anti-Lag ALS"
 		subMenu = rotaryDialog,			"Rotary"
