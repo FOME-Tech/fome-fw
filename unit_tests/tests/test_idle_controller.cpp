@@ -308,7 +308,7 @@ TEST(idle_v2, getCrankingTaperFractionWithMultiplier) {
     float expectedClt = 40;
 
     engineConfiguration->afterCrankingIACtaperDuration = 200;
-    engineConfiguration->overrideCrankingTaperDurationSetting = true;
+    engineConfiguration->useCrankingIdleTaperTableSetting = true;
 	
 	float curve[CLT_CRANKING_CURVE_SIZE] = {
 		1.0, // 0C
