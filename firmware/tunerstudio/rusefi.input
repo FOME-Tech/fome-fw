@@ -1798,7 +1798,7 @@ menuDialog = main
 		subMenu = std_separator
 
 		subMenu = cltCrankingCurve,			"Cranking IAC CLT multiplier", 0, {overrideCrankingIacSetting == 1}
-		subMenu = cltCrankingTaperDurationCurve,			"Cranking taper duration multiplier", 0, {overrideCrankingTaperDurationSetting == 1}
+		subMenu = cltCrankingTaperDurationCurve,			"Cranking taper duration multiplier", 0, {useCrankingIdleTaperTableSetting == 1}
 
 	menu = "&Idle"
 		subMenu = idleSettings,				"Idle settings"
@@ -3832,7 +3832,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Cranking base IAC position",			crankingIACposition
 		field = "After cranking IAC taper duration",afterCrankingIACtaperDuration
 		field = "Override cranking IAC CLT multiplier",		overrideCrankingIacSetting
-		field = "Override cranking taper duration multiplier",		overrideCrankingTaperDurationSetting
+		field = "Use cranking taper duration multiplier",		useCrankingIdleTaperTableSetting
 
 	dialog = crankingIgnition, "Ignition"
 		field = "Timing Advance mode",	useSeparateAdvanceForCranking
