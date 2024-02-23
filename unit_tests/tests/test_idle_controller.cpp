@@ -277,7 +277,7 @@ TEST(idle_v2, getCrankingTaperFraction) {
 
     float expectedClt = 37;
 	engineConfiguration->afterCrankingIACtaperDuration = 500;
-    engineConfiguration->overrideCrankingTaperDurationSetting = false;
+    engineConfiguration->useCrankingIdleTaperTableSetting = false;
 
 	// 0 cycles - no taper yet, pure cranking value
 	EXPECT_FLOAT_EQ(0, dut.getCrankingTaperFraction(expectedClt));
