@@ -80,12 +80,13 @@ IIdleController::Phase IdleController::determinePhase(int rpm, int targetRpm, Se
 }
 
 float IdleController::getCrankingTaperFraction(float clt) const {
-    if (engineConfiguration->overrideCrankingTaperDurationSetting) {
-        return (float) engine->rpmCalculator.getRevolutionCounterSinceStart() /
-               (engineConfiguration->afterCrankingIACtaperDuration *
-                interpolate2d(clt, config->cltCrankingTaperCorrBins, config->cltCrankingTaperCorr));
+    float taperDuration = engineConfiguration->afterCrankingIACtaperDuration;
+
+    if (engineConfiguration->useCrankingIdleTaperTableSetting) {
+        taperDuration *= interpolate2d(clt, config->cltCrankingTaperCorrBins, config->cltCrankingTaperCorr);
     }
-    return (float)engine->rpmCalculator.getRevolutionCounterSinceStart() / engineConfiguration->afterCrankingIACtaperDuration;
+
+    return (float)engine->rpmCalculator.getRevolutionCounterSinceStart() / taperDuration;
 }
 
 float IdleController::getCrankingOpenLoop(float clt) const {
