@@ -611,7 +611,7 @@ sint8 nmi_get_otp_mac_address(uint8 *pu8MacAddr,  uint8 * pu8IsValid)
 	sint8 ret;
 	uint32	u32RegValue;
 	uint8	mac[6];
-	tstrGpRegs strgp = {0};
+	tstrGpRegs strgp = {};
 
 	ret = nm_read_reg_with_ret(rNMI_GP_REG_2, &u32RegValue);
 	if(ret != M2M_SUCCESS) goto _EXIT_ERR;
@@ -643,7 +643,7 @@ sint8 nmi_get_mac_address(uint8 *pu8MacAddr)
 	sint8 ret;
 	uint32	u32RegValue;
 	uint8	mac[6];
-	tstrGpRegs strgp = {0};
+	tstrGpRegs strgp = {};
 
 	ret = nm_read_reg_with_ret(rNMI_GP_REG_2, &u32RegValue);
 	if(ret != M2M_SUCCESS) goto _EXIT_ERR;

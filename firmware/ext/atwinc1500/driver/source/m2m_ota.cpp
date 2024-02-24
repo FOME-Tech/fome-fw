@@ -62,7 +62,6 @@ typedef struct {
 
 static FileBlockDescriptor FileBlock;
 
-static bool   gbFileValid           = 0;
 static uint8  gu8CurrFileHandlerID  = HFD_INVALID_HANDLER;
 static uint8    gu8OTASSLOpts      = 0;
 static uint8     gu8SNIServerName[64] = {0};
@@ -113,7 +112,7 @@ static void m2m_ota_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
     }
     else if(u8OpCode == M2M_OTA_RESP_HOST_FILE_STATUS)
     {
-        tstrOtaHostFileGetStatusResp strOtaHostFileGetStatusResp = {0};
+        tstrOtaHostFileGetStatusResp strOtaHostFileGetStatusResp;
         s8Ret = hif_receive(u32Addr, (uint8 *)&strOtaHostFileGetStatusResp, sizeof(tstrOtaHostFileGetStatusResp), 1);
         if(M2M_SUCCESS == s8Ret)
         {
@@ -124,7 +123,7 @@ static void m2m_ota_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
     }
     else if(u8OpCode == M2M_OTA_RESP_HOST_FILE_DOWNLOAD)
     {
-        tstrOtaHostFileGetStatusResp strOtaHostFileGetStatusResp = {0};
+        tstrOtaHostFileGetStatusResp strOtaHostFileGetStatusResp;
         s8Ret = hif_receive(u32Addr, (uint8 *)&strOtaHostFileGetStatusResp, sizeof(tstrOtaHostFileGetStatusResp), 1);
         if(M2M_SUCCESS == s8Ret)
         {
@@ -150,7 +149,7 @@ static void m2m_ota_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
     }
     else if(u8OpCode == M2M_OTA_RESP_HOST_FILE_ERASE)
     {
-        tstrOtaHostFileEraseStatusResp strOtaHostFileEraseStatusResp = {0};
+        tstrOtaHostFileEraseStatusResp strOtaHostFileEraseStatusResp;
         s8Ret = hif_receive(u32Addr, (uint8 *)&strOtaHostFileEraseStatusResp, sizeof(tstrOtaHostFileEraseStatusResp), 1);
         if(M2M_SUCCESS == s8Ret)
         {
@@ -445,7 +444,9 @@ NMI_API sint8 m2m_ota_host_file_read_spi(uint8 u8Handler, uint8 *pu8Buff, uint32
     s8Ret = spi_flash_read(pu8Buff, u32FlashHFDStart + FLASH_SECTOR_SZ + u32Offset, u32Size);
 
     if(M2M_SUCCESS != s8Ret)
+	{
         M2M_ERR("Unable to read SPI Flash\n");
+	}
 
 EXIT:
     return s8Ret;

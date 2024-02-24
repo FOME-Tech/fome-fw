@@ -255,7 +255,7 @@ static void m2m_ip_cb(uint8 u8OpCode, uint16 u16BufferSize, uint32 u32Address)
     else if((u8OpCode == SOCKET_CMD_CONNECT) || (u8OpCode == SOCKET_CMD_SSL_CONNECT) || (u8OpCode == SOCKET_CMD_SSL_CONNECT_ALPN))
     {
         /* Note that for successful connections the fw always sends SOCKET_CMD_CONNECT, even for SSL connections. */
-        tstrConnectAlpnReply    strConnectAlpnReply = {{0}};
+        tstrConnectAlpnReply    strConnectAlpnReply;
         tstrSocketConnectMsg    strConnMsg;
         uint16                  u16HifSz = sizeof(tstrConnectAlpnReply);
         if(u8OpCode != SOCKET_CMD_SSL_CONNECT_ALPN)
@@ -364,8 +364,12 @@ static void m2m_ip_cb(uint8 u8OpCode, uint16 u16BufferSize, uint32 u32Address)
                 {
                     M2M_DBG("Discard recv callback %d %d \r\n", u16SessionID, gastrSockets[sock].u16SessionID);
                     if(u16ReadSize < u16BufferSize)
+					{
                         if(hif_receive(0, NULL, 0, 1) != M2M_SUCCESS)
+						{
                             M2M_ERR("hif rx done failed\n");
+						}
+					}
                 }
             }
         }
@@ -773,7 +777,7 @@ sint8 secure(SOCKET sock)
             &&  (gastrSockets[sock].u16DataOffset != 0)
         )
         {
-            tstrConnectCmd  strConnect = {0};
+            tstrConnectCmd strConnect;
 
             gastrSockets[sock].u8SSLFlags &= ~SSL_FLAGS_DELAY;
             strConnect.u8SslFlags = gastrSockets[sock].u8SSLFlags;
@@ -836,7 +840,7 @@ sint16 send(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 flags)
             u16DataOffset   = gastrSockets[sock].u16DataOffset;
         }
 
-        s16Ret =  SOCKET_REQUEST(u8Cmd|M2M_REQ_DATA_PKT, (uint8 *)&strSend, sizeof(tstrSendCmd), pvSendBuffer, u16SendLength, u16DataOffset);
+        s16Ret = SOCKET_REQUEST(u8Cmd | M2M_REQ_DATA_PKT, (uint8*)&strSend, sizeof(tstrSendCmd), (uint8*)pvSendBuffer, u16SendLength, u16DataOffset);
         if(s16Ret != SOCK_ERR_NO_ERROR)
         {
             s16Ret = SOCK_ERR_BUFFER_FULL;
@@ -879,15 +883,14 @@ sint16 sendto(SOCKET sock, void *pvSendBuffer, uint16 u16SendLength, uint16 flag
 
             if(pstrDestAddr != NULL)
             {
-                struct sockaddr_in  *pstrAddr;
-                pstrAddr = (void *)pstrDestAddr;
+                sockaddr_in *pstrAddr = reinterpret_cast<sockaddr_in*>(pstrDestAddr);
 
                 strSendTo.strAddr.u16Family = pstrAddr->sin_family;
                 strSendTo.strAddr.u16Port   = pstrAddr->sin_port;
                 strSendTo.strAddr.u32IPAddr = pstrAddr->sin_addr.s_addr;
             }
             s16Ret = SOCKET_REQUEST(SOCKET_CMD_SENDTO|M2M_REQ_DATA_PKT, (uint8 *)&strSendTo,  sizeof(tstrSendCmd),
-                                    pvSendBuffer, u16SendLength, UDP_TX_PACKET_OFFSET);
+                                    reinterpret_cast<uint8*>(pvSendBuffer), u16SendLength, UDP_TX_PACKET_OFFSET);
 
             if(s16Ret != SOCK_ERR_NO_ERROR)
             {
@@ -1205,7 +1208,7 @@ static sint8 sslSetSockOpt(SOCKET sock, uint8  u8Opt, const void *pvOptVal, uint
                 || ((u8Opt == SO_SSL_ALPN) && (u16OptLen <= ALPN_LIST_MAX_SIZE))
             )
             {
-                tstrSSLSetSockOptCmd    strCmd = {0};
+                tstrSSLSetSockOptCmd strCmd;
 
                 strCmd.sock         = sock;
                 strCmd.u16SessionID = gastrSockets[sock].u16SessionID;
@@ -1490,7 +1493,7 @@ sint8 get_error_detail(SOCKET sock, tstrSockErr *pstrErr)
         return SOCK_ERR_INVALID_ARG;
     if(!gastrSockets[sock].bIsUsed)
         return SOCK_ERR_INVALID_ARG;
-    pstrErr->enuErrSource = gastrSockets[sock].u8ErrSource;
+    pstrErr->enuErrSource = static_cast<tenuSockErrSource>(gastrSockets[sock].u8ErrSource);
     pstrErr->u8ErrCode = gastrSockets[sock].u8ErrCode;
     return SOCK_ERR_NO_ERROR;
 }

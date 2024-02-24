@@ -78,6 +78,8 @@ INCLUDES
 #include "driver/include/m2m_types.h"
 #include "driver/source/nmdrv.h"
 
+#include <stddef.h>
+
 /**@addtogroup  OTATYPEDEF
  * @{
  */
