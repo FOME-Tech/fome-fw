@@ -99,11 +99,13 @@ sint8 nm_bus_reset(void)
 *	@date	22 Oct 2014
 *	@version	1.0
 */
-sint8 nm_bus_iface_reconfigure(void *ptr)
+sint8 nm_bus_iface_reconfigure(void* ptr)
 {
 	sint8 ret = M2M_SUCCESS;
 #ifdef CONF_WINC_USE_UART
 	ret = nm_uart_reconfigure(ptr);
+#else
+	(void)ptr;
 #endif
 	return ret;
 }

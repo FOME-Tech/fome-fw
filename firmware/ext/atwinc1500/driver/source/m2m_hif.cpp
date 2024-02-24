@@ -128,10 +128,8 @@ ERR1:
 *	@date
 *	@version	1.0
 */
-static void m2m_hif_cb(uint8 u8OpCode, uint16 u16DataSize, uint32 u32Addr)
+static void m2m_hif_cb(uint8 /*u8OpCode*/, uint16 /*u16DataSize*/, uint32 /*u32Addr*/)
 {
-
-
 }
 /**
 *	@fn		NMI_API sint8 hif_chip_wake(void);
