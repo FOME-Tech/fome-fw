@@ -209,6 +209,10 @@ void runRusEfi() {
 	startEthernetConsole();
 #endif
 
+#if EFI_WIFI
+	startWifiConsole();
+#endif
+
 #if EFI_USB_SERIAL
 	startUsbConsole();
 #endif
