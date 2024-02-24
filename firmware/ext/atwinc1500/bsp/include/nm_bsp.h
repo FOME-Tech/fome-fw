@@ -61,7 +61,7 @@
  */
 
 #ifndef NULL
-#define NULL ((void*)0)
+#define NULL (nullptr)
 #endif
 /*!<
 *   Void Pointer to '0' in case NULL is not defined.
