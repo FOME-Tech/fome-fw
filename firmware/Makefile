@@ -194,6 +194,8 @@ ifeq ($(USE_FATFS),yes)
   include $(PROJECT_DIR)/ext/FatFS/fatfs.mk
 endif
 
+include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
+
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
 include $(PROJECT_DIR)/common.mk
 
