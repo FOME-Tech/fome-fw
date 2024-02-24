@@ -99,7 +99,7 @@ sint8 nm_get_firmware_full_info(tstrM2mRev* pstrRev)
 	uint16  curr_drv_ver, min_req_drv_ver,curr_firm_ver;
 	uint32	reg = 0;
 	sint8	ret = M2M_SUCCESS;
-	tstrGpRegs strgp = {0};
+	tstrGpRegs strgp = {};
 	if (pstrRev != NULL)
 	{
 		m2m_memset((uint8*)pstrRev,0,sizeof(tstrM2mRev));
@@ -162,7 +162,7 @@ sint8 nm_get_ota_firmware_info(tstrM2mRev* pstrRev)
 	uint16  curr_drv_ver, min_req_drv_ver,curr_firm_ver;
 	uint32	reg = 0;
 	sint8	ret;
-	tstrGpRegs strgp = {0};
+	tstrGpRegs strgp = {};
 
 	if (pstrRev != NULL)
 	{
@@ -295,8 +295,10 @@ sint8 nm_drv_init_hold(void)
 #endif
 
 	return ret;
+#ifdef NO_HW_CHIP_EN
 ERR2:
 	nm_bus_iface_deinit();
+#endif
 ERR1:
 	return ret;
 }
@@ -374,7 +376,7 @@ sint8 nm_drv_init(void * arg)
 *	@date	17 July 2012
 *	@version	1.0
 */
-sint8 nm_drv_deinit(void * arg)
+sint8 nm_drv_deinit(void*)
 {
 	sint8 ret;
 

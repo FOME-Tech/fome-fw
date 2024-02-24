@@ -33,15 +33,11 @@
  */
 #include "common/include/nm_common.h"
 
+#include <cstring>
+
 void m2m_memcpy(uint8 *pDst, const uint8 *pSrc, uint32 sz)
 {
-    if(sz == 0) return;
-    do
-    {
-        *pDst = *pSrc;
-        pDst++;
-        pSrc++;
-    } while(--sz);
+	memcpy(pDst, pSrc, sz);
 }
 
 uint8 m2m_checksum(uint8 *buf, int sz)

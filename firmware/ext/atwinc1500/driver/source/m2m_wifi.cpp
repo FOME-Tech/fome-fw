@@ -945,7 +945,7 @@ sint8 m2m_wifi_connect_1x_tls(
                 tstrM2mWifi1xHdr    *pstr1xHdr = (tstrM2mWifi1xHdr *)malloc(u16Payload1Size);
                 if(pstr1xHdr != NULL)
                 {
-                    tstrM2mWifiAuthInfoHdr strInfoHdr = {0};
+                    tstrM2mWifiAuthInfoHdr strInfoHdr = {};
 
                     uint8   *pu8AuthPtr = pstr1xHdr->au81xAuthDetails;
                     m2m_memset((uint8 *)pstr1xHdr, 0, u16Payload1Size);
@@ -1054,7 +1054,7 @@ sint8 m2m_wifi_connect_sc(char *pcSsid, uint8 u8SsidLen, uint8 u8SecType, void *
         if(pvAuthInfo != NULL)
         {
             tstrM2mWifiWepParams    *pstrWepParams = (tstrM2mWifiWepParams *)pvAuthInfo;
-            tstrAuthWep             strAuthWep     = {pstrWepParams->au8WepKey, pstrWepParams->u8KeySz-1, pstrWepParams->u8KeyIndx};
+            tstrAuthWep             strAuthWep     = {pstrWepParams->au8WepKey, (uint8)(pstrWepParams->u8KeySz - 1), pstrWepParams->u8KeyIndx};
 
             s8Ret = m2m_wifi_connect_wep(enuCredStoreOption, &strNetworkId, &strAuthWep);
         }
@@ -1168,7 +1168,7 @@ sint8 m2m_wifi_set_stop_scan_on_first(uint8 u8StopScanOption)
 {
     sint8   s8Ret = M2M_ERR_FAIL;
 
-    tstrM2MStopScanOption StopScanOption = { 0 };
+    tstrM2MStopScanOption StopScanOption = {};
 
     if(1 >= u8StopScanOption)
     {
@@ -1843,7 +1843,7 @@ sint8 m2m_wifi_enable_firmware_logs(uint8 u8Enable)
 sint8 m2m_wifi_set_battery_voltage(uint16 u16BattVoltx100)
 {
     sint8 ret = M2M_SUCCESS;
-    tstrM2mBatteryVoltage strM2mBattVol = {0};
+    tstrM2mBatteryVoltage strM2mBattVol = {};
     strM2mBattVol.u16BattVolt = u16BattVoltx100;
     ret = hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_SET_BATTERY_VOLTAGE, (uint8 *)&strM2mBattVol, sizeof(tstrM2mBatteryVoltage), NULL, 0, 0);
     return ret;
@@ -1861,7 +1861,7 @@ sint8 m2m_wifi_set_battery_voltage(uint16 u16BattVoltx100)
 sint8 m2m_wifi_prng_get_random_bytes(uint8 *pu8PrngBuff, uint16 u16PrngSize)
 {
     sint8 ret = M2M_ERR_FAIL;
-    tstrPrng   strRng = {0};
+    tstrPrng   strRng = {};
     if(
             (u16PrngSize <= (M2M_HIF_MAX_PACKET_SIZE - (M2M_HIF_HDR_OFFSET + sizeof(tstrPrng))))
         &&  (pu8PrngBuff != NULL)

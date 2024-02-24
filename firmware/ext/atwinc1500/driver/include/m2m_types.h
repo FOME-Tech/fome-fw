@@ -2133,7 +2133,7 @@ typedef struct {
     /*!<
         Configuration parameters for the WiFi AP.
     */
-    uint8   au8SSID[M2M_MAX_SSID_LEN];
+    char   au8SSID[M2M_MAX_SSID_LEN];
     /*!< AP SSID
     */
     uint8   u8ListenChannel;
