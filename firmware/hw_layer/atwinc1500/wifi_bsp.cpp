@@ -7,9 +7,12 @@
 
 #include "bus_wrapper/include/nm_bus_wrapper.h"
 
-static void isrAdapter(void* arg, efitick_t)
-{
-	reinterpret_cast<tpfNmBspIsr>(arg)();
+static tpfNmBspIsr gpfIsr = nullptr;
+
+static void isrAdapter(void*, efitick_t) {
+	if (gpfIsr) {
+		gpfIsr();
+	}
 }
 
 void nm_bsp_sleep(uint32 u32TimeMsec) {
@@ -17,12 +20,18 @@ void nm_bsp_sleep(uint32 u32TimeMsec) {
 }
 
 void nm_bsp_interrupt_ctrl(uint8 u8Enable) {
-	// TODO!
+	if (u8Enable) {
+		efiExtiEnablePin("WiFi ISR", Gpio::A0, PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, nullptr);
+	} else {
+		efiExtiDisablePin(Gpio::A0);
+	}
 }
 
 void nm_bsp_register_isr(tpfNmBspIsr pfIsr)
 {
-	efiExtiEnablePin("WiFi ISR", Gpio::A0, PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, (void*)pfIsr);
+	gpfIsr = pfIsr;
+
+	nm_bsp_interrupt_ctrl(1);
 }
 
 static SPIDriver* wifiSpi = &SPID1;
