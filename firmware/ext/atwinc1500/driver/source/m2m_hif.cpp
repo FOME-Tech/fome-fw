@@ -484,44 +484,68 @@ static sint8 hif_isr(void)
 				if(M2M_REQ_GROUP_WIFI == strHif.u8Gid)
 				{
 					if(gstrHifCxt.pfWifiCb)
+					{
 						gstrHifCxt.pfWifiCb(strHif.u8Opcode,strHif.u16Length - M2M_HIF_HDR_OFFSET, address + M2M_HIF_HDR_OFFSET);
+					}
 					else
+					{
 						M2M_ERR("WIFI callback is not registered\n");
+					}
 				}
 				else if(M2M_REQ_GROUP_IP == strHif.u8Gid)
 				{
 					if(gstrHifCxt.pfIpCb)
+					{
 						gstrHifCxt.pfIpCb(strHif.u8Opcode,strHif.u16Length - M2M_HIF_HDR_OFFSET, address + M2M_HIF_HDR_OFFSET);
+					}
 					else
+					{
 						M2M_ERR("Socket callback is not registered\n");
+					}
 				}
 				else if(M2M_REQ_GROUP_OTA == strHif.u8Gid)
 				{
 					if(gstrHifCxt.pfOtaCb)
+					{
 						gstrHifCxt.pfOtaCb(strHif.u8Opcode,strHif.u16Length - M2M_HIF_HDR_OFFSET, address + M2M_HIF_HDR_OFFSET);
+					}
 					else
+					{
 						M2M_ERR("Ota callback is not registered\n");
+					}
 				}
 				else if(M2M_REQ_GROUP_CRYPTO == strHif.u8Gid)
 				{
 					if(gstrHifCxt.pfCryptoCb)
+					{
 						gstrHifCxt.pfCryptoCb(strHif.u8Opcode,strHif.u16Length - M2M_HIF_HDR_OFFSET, address + M2M_HIF_HDR_OFFSET);
+					}
 					else
+					{
 						M2M_ERR("Crypto callback is not registered\n");
+					}
 				}
 				else if(M2M_REQ_GROUP_SIGMA == strHif.u8Gid)
 				{
 					if(gstrHifCxt.pfSigmaCb)
+					{
 						gstrHifCxt.pfSigmaCb(strHif.u8Opcode,strHif.u16Length - M2M_HIF_HDR_OFFSET, address + M2M_HIF_HDR_OFFSET);
+					}
 					else
+					{
 						M2M_ERR("Sigma callback is not registered\n");
+					}
 				}
 				else if(M2M_REQ_GROUP_SSL == strHif.u8Gid)
 				{
 				    if(gstrHifCxt.pfSslCb)
+					{
 						gstrHifCxt.pfSslCb(strHif.u8Opcode,strHif.u16Length - M2M_HIF_HDR_OFFSET, address + M2M_HIF_HDR_OFFSET);
-                    else
+                    }
+					else
+					{
                         M2M_ERR("SSL callback is not registered\n");
+					}
 				}
 				else
 				{
@@ -616,7 +640,9 @@ sint8 hif_handle_isr(void)
 					break;
 				}
 				else
+				{
 					M2M_ERR("(HIF) Failed to handle interrupt %d try again... (%u)\n", ret, retries);
+				}
 			}
 		}
 	}
