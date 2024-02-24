@@ -15,16 +15,12 @@ ALLCPPSRC += \
 	$(ATWINC_DIR)/driver/source/m2m_ate_mode.cpp \
 	$(ATWINC_DIR)/driver/source/m2m_crypto.cpp \
 	$(ATWINC_DIR)/driver/source/m2m_hif.cpp \
-	$(ATWINC_DIR)/driver/source/m2m_hif_crt.cpp \
 	$(ATWINC_DIR)/driver/source/m2m_ota.cpp \
 	$(ATWINC_DIR)/driver/source/m2m_periph.cpp \
 	$(ATWINC_DIR)/driver/source/m2m_wifi.cpp \
 	$(ATWINC_DIR)/driver/source/nmasic.cpp \
-	$(ATWINC_DIR)/driver/source/nmasic_crt.cpp \
 	$(ATWINC_DIR)/driver/source/nmbus.cpp \
-	$(ATWINC_DIR)/driver/source/nmbus_crt.cpp \
 	$(ATWINC_DIR)/driver/source/nmdrv.cpp \
-	$(ATWINC_DIR)/driver/source/nmdrv_crt.cpp \
 	$(ATWINC_DIR)/driver/source/nmi2c.cpp \
 	$(ATWINC_DIR)/driver/source/nmspi.cpp \
 	$(ATWINC_DIR)/driver/source/nmuart.cpp \
