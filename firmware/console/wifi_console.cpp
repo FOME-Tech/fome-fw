@@ -13,17 +13,23 @@
 static int listenerSocket = -1;
 static int connectionSocket = -1;
 
-static void do_connection() {
-	if (connectionSocket != -1) {
-		auto localCopy = connectionSocket;
-		connectionSocket = -1;
+chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
 
-		close(localCopy);
-	}
-
-	connectionSocket = accept(listenerSocket, nullptr, 0);
+void os_hook_isr() {
+	isrSemaphore.signalI();
 }
 
+// TX Helper data
+static const uint8_t* sendBuffer;
+static size_t sendSize;
+bool sendRequest = false;
+chibios_rt::BinarySemaphore sendDoneSemaphore(/* taken =*/ true);
+
+// RX Helper data
+static uint8_t recvBuffer[2500];
+static input_queue_t wifiIqueue;
+
+static bool socketReady = false;
 
 class WifiChannel : public TsChannelBase {
 public:
@@ -33,25 +39,21 @@ public:
 	}
 
 	bool isReady() const override {
-		return false;
+		return true;
 	}
 
 	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) override {
-		// If not the end of a packet, set the MSG_MORE flag to indicate to the transport
-		// that we have more to add to the buffer before queuing a flush.
-		// auto flags = isEndOfPacket ? 0 : MSG_MORE;
-		send(connectionSocket, const_cast<uint8_t*>(buffer), size, 0);
+		sendBuffer = buffer;
+		sendSize = size;
+
+		sendRequest = true;
+		isrSemaphore.signal();
+
+		sendDoneSemaphore.wait();
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
-		auto result = recv(connectionSocket, buffer, size, timeout);
-
-		if (result != 0) {
-			do_connection();
-			return 0;
-		}
-
-		return size;
+		return iqReadTimeout(&wifiIqueue, buffer, size, timeout);
 	}
 };
 
@@ -64,7 +66,13 @@ public:
 		while (true)
 		{
 			m2m_wifi_handle_events(nullptr);
-			chThdSleepMilliseconds(1);
+
+			if (socketReady && sendRequest) {
+				send(connectionSocket, (void*)sendBuffer, sendSize, 0);
+				sendRequest = false;
+			} else {
+				isrSemaphore.wait(TIME_MS2I(1));
+			}
 		}
 	}
 };
@@ -88,7 +96,7 @@ void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	}
 }
 
-uint8_t buuf[32];
+uint8_t rxBuf;
 
 static void socketCb(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	switch (u8Msg) {
@@ -112,14 +120,30 @@ static void socketCb(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			if (acceptMsg && (acceptMsg->sock >= 0)) {
 				connectionSocket = acceptMsg->sock;
 
-				recv(connectionSocket, buuf, 1, 0);
+				recv(connectionSocket, &rxBuf, 1, 0);
+
+				socketReady = true;
 			}
 		} break;
 		case SOCKET_MSG_RECV: {
 			auto recvMsg = reinterpret_cast<tstrSocketRecvMsg*>(pvMsg);
-			if (recvMsg) {
-				efiPrintf("recv");
+			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
+				{
+					chibios_rt::CriticalSectionLocker csl;
+					iqPutI(&wifiIqueue, rxBuf);
+				}
+
+				// start the next recv
+				recv(sock, &rxBuf, 1, 0);
+			} else {
+				close(sock);
+				socketReady = false;
 			}
+		} break;
+		case SOCKET_MSG_SEND: {
+			// Send completed, notify caller!
+			chibios_rt::CriticalSectionLocker csl;
+			sendDoneSemaphore.signalI();
 		} break;
 	}
 }
@@ -164,16 +188,15 @@ struct WifiConsoleThread : public TunerstudioThread {
 		listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
 		bind(listenerSocket, (sockaddr*)&address, sizeof(address));
 
-		// do_connection();
-
-		// return &wifiChannel;
-		return nullptr;
+		return &wifiChannel;
 	}
 };
 
 static WifiConsoleThread wifiThread;
 
 void startWifiConsole() {
+	iqObjectInit(&wifiIqueue, recvBuffer, sizeof(recvBuffer), nullptr, nullptr);
+
 	wifiThread.start();
 }
 
