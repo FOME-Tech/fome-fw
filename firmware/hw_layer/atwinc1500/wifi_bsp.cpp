@@ -48,7 +48,7 @@ static SPIConfig wifi_spicfg = {
 		.end_cb = NULL,
 		.ssport = NULL,
 		.sspad = 0,
-		.cr1 = SPI_BaudRatePrescaler_16, // SPI_BaudRatePrescaler_2,
+		.cr1 = SPI_BaudRatePrescaler_2,
 		.cr2 = 0
 };
 
