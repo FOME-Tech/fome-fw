@@ -137,7 +137,7 @@ sint8 nm_get_firmware_full_info(tstrM2mRev* pstrRev)
 								goto EXIT;
 							}
 						}
-					}else {
+					} else {
 						ret = M2M_ERR_FAIL;
 					}
 				}
@@ -239,11 +239,11 @@ sint8 nm_drv_init_download_mode(void)
 	/**
 		TODO:reset the chip and halt the cpu in case of no wait efuse is set (add the no wait effuse check)
 	*/
-	if(!ISNMC3000(GET_CHIPID()))
-	{
-		/*Execute that function only for 1500A/B, no room in 3000, but it may be needed in 3400 no wait*/
-		chip_reset_and_cpu_halt();
-	}
+	// if(!ISNMC3000(GET_CHIPID()))
+	// {
+	// 	/*Execute that function only for 1500A/B, no room in 3000, but it may be needed in 3400 no wait*/
+	// 	chip_reset_and_cpu_halt();
+	// }
 
 #ifdef CONF_WINC_USE_SPI
 	/* Must do this after global reset to set SPI data packet size. */
@@ -291,7 +291,7 @@ sint8 nm_drv_init_hold(void)
 	M2M_INFO("Chip ID %lx\n", nmi_get_chipid());
 #ifdef CONF_WINC_USE_SPI
 	/* Must do this after global reset to set SPI data packet size. */
-	nm_spi_init();
+	ret = nm_spi_init();
 #endif
 
 	return ret;
