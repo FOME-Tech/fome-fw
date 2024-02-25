@@ -38,6 +38,8 @@
 #ifndef _NM_BSP_INTERNAL_H_
 #define _NM_BSP_INTERNAL_H_
 
+#include "loggingcentral.h"
+
 
 
 #ifdef WIN32
@@ -124,6 +126,11 @@
 #define CONF_WINC_USE_SPI (1)
 
 
+#define CONF_WINC_DEBUG (1)
+#define NM_DEBUG (1)
+
+
+#define CONF_WINC_PRINTF(...) efiPrintf(__VA_ARGS__)
 
 
 #endif //_NM_BSP_INTERNAL_H_
