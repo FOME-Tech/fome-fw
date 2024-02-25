@@ -19,11 +19,15 @@ static void isrAdapter(void*, efitick_t) {
 	}
 }
 
+static bool isrEnabled = false;
+
 void nm_bsp_interrupt_ctrl(uint8 u8Enable) {
-	if (u8Enable) {
+	if (u8Enable && !isrEnabled) {
 		efiExtiEnablePin("WiFi ISR", Gpio::G2, PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, nullptr);
-	} else {
+		isrEnabled = true;
+	} else if (!u8Enable && isrEnabled) {
 		efiExtiDisablePin(Gpio::G2);
+		isrEnabled = false;
 	}
 }
 
