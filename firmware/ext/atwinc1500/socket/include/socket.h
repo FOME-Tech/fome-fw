@@ -35,10 +35,6 @@
 #ifndef __SOCKET_H__
 #define __SOCKET_H__
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /** @defgroup SocketHeader Socket
  *          BSD compatible socket interface between the host layer and the network
  *          protocol stacks in the firmware.
@@ -2323,9 +2319,5 @@ sint8 get_alpn_index(SOCKET sock);
 */
 sint8 get_error_detail(SOCKET sock, tstrSockErr *pstrErr);
 /**@}*/     //PingFn
-
-#ifdef  __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* __SOCKET_H__ */

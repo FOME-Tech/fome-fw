@@ -34,11 +34,6 @@
 #ifndef __SOCKET_INTERNAL_H__
 #define __SOCKET_INTERNAL_H__
 
-
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 INCLUDES
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
@@ -53,9 +48,5 @@ FUNCTION PROTOTYPES
 
 NMI_API void Socket_ReadSocketData(SOCKET sock, tstrSocketRecvMsg *pstrRecv,uint8 u8SocketMsg,
 								uint32 u32StartAddress,uint16 u16ReadCount);
-
-#ifdef  __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* __SOCKET_H__ */

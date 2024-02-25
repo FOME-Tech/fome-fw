@@ -35,10 +35,6 @@
 #define __M2M_SOCKET_HOST_IF_H__
 
 
-#ifdef  __cplusplus
-extern "C" {
-#endif
-
 /*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 INCLUDES
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*/
@@ -504,10 +500,5 @@ typedef struct{
 		See @tenuSslCertExpSettings for possible values.
 	*/
 }tstrSslCertExpSettings;
-
-
-#ifdef  __cplusplus
-}
-#endif /* __cplusplus */
 
 #endif /* __M2M_SOCKET_HOST_IF_H__ */
