@@ -32,6 +32,8 @@
  *
  */
 
+#include "ch.hpp"
+
 #include "common/include/nm_common.h"
 #include "driver/source/nmbus.h"
 #include "bsp/include/nm_bsp.h"
@@ -78,19 +80,19 @@ typedef struct {
 
 static volatile tstrHifContext gstrHifCxt;
 
-#ifdef ETH_MODE
+// #ifdef ETH_MODE
 extern void os_hook_isr(void);
-#endif
+// #endif
 
 static void isr(void)
 {
+	chibios_rt::CriticalSectionLocker csl;
 	gstrHifCxt.u8Interrupt++;
 #ifdef NM_LEVEL_INTERRUPT
 	nm_bsp_interrupt_ctrl(0);
 #endif
-#ifdef ETH_MODE
+
 	os_hook_isr();
-#endif
 }
 static sint8 hif_set_rx_done(void)
 {
@@ -612,15 +614,10 @@ sint8 hif_handle_isr(void)
          * If LEVEL interrupt is used instead of EDGE then the atomicity isn't needed since the interrupt
          * is turned off in the ISR and back on again only after the interrupt has been serviced in hif_isr(). */
 
-#ifndef NM_LEVEL_INTERRUPT
-		nm_bsp_interrupt_ctrl(0);
-#endif
-
-		gstrHifCxt.u8Interrupt--;
-
-#ifndef NM_LEVEL_INTERRUPT
-		nm_bsp_interrupt_ctrl(1);
-#endif
+		{
+			chibios_rt::CriticalSectionLocker csl;
+			gstrHifCxt.u8Interrupt--;
+		}
 
 		uint8 retries = 5;
 		while(1)
