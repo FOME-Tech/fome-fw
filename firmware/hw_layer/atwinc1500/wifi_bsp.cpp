@@ -21,9 +21,9 @@ static void isrAdapter(void*, efitick_t) {
 
 void nm_bsp_interrupt_ctrl(uint8 u8Enable) {
 	if (u8Enable) {
-		efiExtiEnablePin("WiFi ISR", Gpio::A0, PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, nullptr);
+		efiExtiEnablePin("WiFi ISR", Gpio::G2, PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, nullptr);
 	} else {
-		efiExtiDisablePin(Gpio::A0);
+		efiExtiDisablePin(Gpio::G2);
 	}
 }
 
@@ -33,7 +33,7 @@ void nm_bsp_register_isr(tpfNmBspIsr pfIsr) {
 	nm_bsp_interrupt_ctrl(1);
 }
 
-static SPIDriver* wifiSpi = &SPID1;
+static SPIDriver* wifiSpi = nullptr;
 
 #define NM_BUS_MAX_TRX_SZ	512
 
@@ -44,39 +44,66 @@ static SPIConfig wifi_spicfg = {
 		.end_cb = NULL,
 		.ssport = NULL,
 		.sspad = 0,
-		.cr1 = SPI_BaudRatePrescaler_2,
+		.cr1 = SPI_BaudRatePrescaler_16, // SPI_BaudRatePrescaler_2,
 		.cr2 = 0
 };
 
+OutputPin wifiReset;
+
 sint8 nm_bus_init(void*) {
+	auto pin = Gpio::D2;
+
+	enginePins.wifiCsPin.initPin("WiFi CS", pin);
+	wifiReset.initPin("wifi rst", Gpio::G3);
+
+	// Reset the chip
+	wifiReset.setValue(0);
+	chThdSleepMilliseconds(10);
+	wifiReset.setValue(1);
+	chThdSleepMilliseconds(10);
+
+	wifiSpi = getSpiDevice(SPI_DEVICE_3);
+	wifi_spicfg.ssport = getHwPort("wifi_cs", pin);
+	wifi_spicfg.sspad = getHwPin("wifi_cs", pin);
+
 	spiStart(wifiSpi, &wifi_spicfg);
+
+	// Take exclusive access of the bus for WiFi use, don't release it until the bus is de-init.
+	spiAcquireBus(wifiSpi);
 
 	return M2M_SUCCESS;
 }
 
 sint8 nm_bus_deinit(void) {
+	spiReleaseBus(wifiSpi);
 	spiStop(wifiSpi);
 
 	return M2M_SUCCESS;
 }
 
-sint8 nm_bus_speed(uint8 level) {
+sint8 nm_bus_speed(uint8 /*level*/) {
 	// Do we even need to do anything here?
 	return M2M_SUCCESS;
 }
 
 sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
-	spiAcquireBus(wifiSpi);
+	spiSelect(wifiSpi);
 
 	if (u16Sz < 16) {
 		for (size_t i = 0; i < u16Sz; i++) {
-			pu8Miso[i] = spiPolledExchange(wifiSpi, pu8Mosi[i]);
+			uint8 tx = pu8Mosi ? pu8Mosi[i] : 0;
+
+			uint8 rx = spiPolledExchange(wifiSpi, tx);
+
+			if (pu8Miso) {
+				pu8Miso[i] = rx;
+			}
 		}
 	} else {
 		spiExchange(wifiSpi, u16Sz, pu8Mosi, pu8Miso);
 	}
 
-	spiReleaseBus(wifiSpi);
+	spiUnselect(wifiSpi);
 
 	return M2M_SUCCESS;
 }
