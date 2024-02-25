@@ -48,12 +48,14 @@ static SPIConfig wifi_spicfg = {
 		.cr2 = 0
 };
 
-OutputPin wifiReset;
+static OutputPin wifiCs;
+static OutputPin wifiReset;
 
 sint8 nm_bus_init(void*) {
 	auto pin = Gpio::D2;
 
-	enginePins.wifiCsPin.initPin("WiFi CS", pin);
+	wifiCs.initPin("WiFi CS", pin);
+	wifiCs.setValue(1);
 	wifiReset.initPin("wifi rst", Gpio::G3);
 
 	// Reset the chip
@@ -63,8 +65,8 @@ sint8 nm_bus_init(void*) {
 	chThdSleepMilliseconds(10);
 
 	wifiSpi = getSpiDevice(SPI_DEVICE_3);
-	wifi_spicfg.ssport = getHwPort("wifi_cs", pin);
-	wifi_spicfg.sspad = getHwPin("wifi_cs", pin);
+	wifi_spicfg.ssport = wifiCs.m_port;
+	wifi_spicfg.sspad = wifiCs.m_pin;
 
 	spiStart(wifiSpi, &wifi_spicfg);
 
@@ -100,7 +102,16 @@ sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
 			}
 		}
 	} else {
-		spiExchange(wifiSpi, u16Sz, pu8Mosi, pu8Miso);
+		if (pu8Mosi && pu8Miso) {
+			spiExchange(wifiSpi, u16Sz, pu8Mosi, pu8Miso);
+		} else if (pu8Mosi) {
+			spiSend(wifiSpi, u16Sz, pu8Mosi);
+		} else if (pu8Miso) {
+			spiReceive(wifiSpi, u16Sz, pu8Miso);
+		} else {
+			// Neither MISO nor MOSI???
+			osalSysHalt("wifi neither mosi nor miso");
+		}
 	}
 
 	spiUnselect(wifiSpi);
