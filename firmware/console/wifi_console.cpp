@@ -26,7 +26,7 @@ bool sendRequest = false;
 chibios_rt::BinarySemaphore sendDoneSemaphore(/* taken =*/ true);
 
 // RX Helper data
-static uint8_t recvBuffer[2500];
+static uint8_t recvBuffer[512];
 static input_queue_t wifiIqueue;
 
 static bool socketReady = false;
@@ -96,7 +96,7 @@ void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	}
 }
 
-uint8_t rxBuf;
+uint8_t rxBuf[512];
 
 static void socketCb(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	switch (u8Msg) {
@@ -130,11 +130,26 @@ static void socketCb(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
 				{
 					chibios_rt::CriticalSectionLocker csl;
-					iqPutI(&wifiIqueue, rxBuf);
+
+					for (size_t i = 0; i < recvMsg->s16BufferSize; i++) {
+						iqPutI(&wifiIqueue, rxBuf[i]);
+					}
+				}
+
+				size_t nextRecv;
+				if (recvMsg->u16RemainingSize < 1) {
+					// Always try to read at least 1 byte
+					nextRecv = 1;
+				} else if (recvMsg->u16RemainingSize > sizeof(rxBuf)) {
+					// Remaining is too big for the buffer, so just read one buffer worth
+					nextRecv = sizeof(rxBuf);
+				} else {
+					// The full thing will fit, try to read it
+					nextRecv = recvMsg->u16RemainingSize;
 				}
 
 				// start the next recv
-				recv(sock, &rxBuf, 1, 0);
+				recv(sock, &rxBuf, nextRecv, 0);
 			} else {
 				close(sock);
 				socketReady = false;
@@ -182,7 +197,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		// Start listening on the socket
 		sockaddr_in address;
 		address.sin_family = AF_INET;
-		address.sin_port = _htons(29000);
+		address.sin_port = _htons(17999);
 		address.sin_addr.s_addr = 0;
 
 		listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
