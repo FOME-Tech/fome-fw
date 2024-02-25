@@ -93,7 +93,7 @@ sint8 nm_bus_speed(uint8 /*level*/) {
 }
 
 sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
-	spiSelect(wifiSpi);
+	spiSelectI(wifiSpi);
 
 	if (u16Sz < 16) {
 		for (size_t i = 0; i < u16Sz; i++) {
@@ -118,7 +118,7 @@ sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
 		}
 	}
 
-	spiUnselect(wifiSpi);
+	spiUnselectI(wifiSpi);
 
 	return M2M_SUCCESS;
 }
