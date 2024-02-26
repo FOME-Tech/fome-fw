@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#if EFI_WIFI
+
 #include "ch.h"
 #include "hal.h"
 
@@ -130,3 +132,5 @@ sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
 
 	return M2M_SUCCESS;
 }
+
+#endif // EFI_WIFI
