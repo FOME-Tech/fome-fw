@@ -61,7 +61,7 @@ static WifiChannel wifiChannel;
 
 class WifiHelperThread : public ThreadController<4096> {
 public:
-	WifiHelperThread() : ThreadController("WifiPump", LWIP_THREAD_PRIORITY) {}
+	WifiHelperThread() : ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
 	void ThreadTask() override {
 		while (true)
 		{
@@ -98,7 +98,7 @@ void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 
 uint8_t rxBuf[512];
 
-static void socketCb(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
+static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	switch (u8Msg) {
 		case SOCKET_MSG_BIND: {
 			auto bindMsg = reinterpret_cast<tstrSocketBindMsg*>(pvMsg);
@@ -192,7 +192,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		wifiHelper.start();
 
 		socketInit();
-		registerSocketCallback(socketCb, nullptr);
+		registerSocketCallback(socketCallback, nullptr);
 
 		// Start listening on the socket
 		sockaddr_in address;
