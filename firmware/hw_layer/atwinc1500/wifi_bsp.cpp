@@ -39,9 +39,7 @@ void nm_bsp_register_isr(tpfNmBspIsr pfIsr) {
 
 static SPIDriver* wifiSpi = nullptr;
 
-#define NM_BUS_MAX_TRX_SZ	512
-
-tstrNmBusCapabilities egstrNmBusCapabilities = { .u16MaxTrxSz = 512 };
+tstrNmBusCapabilities egstrNmBusCapabilities = { .u16MaxTrxSz = 4096 };
 
 static SPIConfig wifi_spicfg = {
 		.circular = false,
