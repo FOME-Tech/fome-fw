@@ -167,13 +167,14 @@ struct WifiConsoleThread : public TunerstudioThread {
 	WifiConsoleThread() : TunerstudioThread("WiFi Console") { }
 
 	TsChannelBase* setupChannel() override {
+		// Initialize the WiFi module
 		param.pfAppWifiCb = wifiCallback;
 		if (M2M_SUCCESS != m2m_wifi_init(&param)) {
 			return nullptr;
 		}
 
 		strcpy(apConfig.au8SSID, "FOME EFI");
-		apConfig.u8ListenChannel 	= 1;
+		apConfig.u8ListenChannel	= 1;
 		apConfig.u8SecType			= M2M_WIFI_SEC_OPEN;
 		apConfig.u8SsidHide			= 0;
 
@@ -191,6 +192,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		// Start the helper thread
 		wifiHelper.start();
 
+		// Set up the socket APIs
 		socketInit();
 		registerSocketCallback(socketCallback, nullptr);
 

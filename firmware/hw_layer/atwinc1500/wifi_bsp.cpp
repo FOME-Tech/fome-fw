@@ -7,6 +7,12 @@
 
 #include "bus_wrapper/include/nm_bus_wrapper.h"
 
+// Implement these functions for your board for WiFi to work!
+spi_device_e getWifiSpiDevice();
+Gpio getWifiCsPin();
+Gpio getWifiResetPin();
+Gpio getWifiIsrPin();
+
 void nm_bsp_sleep(uint32 u32TimeMsec) {
 	chThdSleepMilliseconds(u32TimeMsec);
 }
@@ -23,10 +29,10 @@ static bool isrEnabled = false;
 
 void nm_bsp_interrupt_ctrl(uint8 u8Enable) {
 	if (u8Enable && !isrEnabled) {
-		efiExtiEnablePin("WiFi ISR", Gpio::G2, PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, nullptr);
+		efiExtiEnablePin("WiFi ISR", getWifiIsrPin(), PAL_EVENT_MODE_FALLING_EDGE, isrAdapter, nullptr);
 		isrEnabled = true;
 	} else if (!u8Enable && isrEnabled) {
-		efiExtiDisablePin(Gpio::G2);
+		efiExtiDisablePin(getWifiIsrPin());
 		isrEnabled = false;
 	}
 }
@@ -54,11 +60,15 @@ static OutputPin wifiCs;
 static OutputPin wifiReset;
 
 sint8 nm_bus_init(void*) {
-	auto pin = Gpio::D2;
+	auto spi = getWifiSpiDevice();
+	if (spi == SPI_NONE) {
+		return M2M_ERR_BUS_FAIL;
+	}
 
-	wifiCs.initPin("WiFi CS", pin);
+	// Set up chip select, reset
+	wifiCs.initPin("WiFi CS", getWifiCsPin());
 	wifiCs.setValue(1);
-	wifiReset.initPin("wifi rst", Gpio::G3);
+	wifiReset.initPin("WiFi RST", getWifiResetPin());
 
 	// Reset the chip
 	wifiReset.setValue(0);
@@ -66,10 +76,10 @@ sint8 nm_bus_init(void*) {
 	wifiReset.setValue(1);
 	chThdSleepMilliseconds(10);
 
-	wifiSpi = getSpiDevice(SPI_DEVICE_3);
+	// Set up SPI
+	wifiSpi = getSpiDevice(getWifiSpiDevice());
 	wifi_spicfg.ssport = wifiCs.m_port;
 	wifi_spicfg.sspad = wifiCs.m_pin;
-
 	spiStart(wifiSpi, &wifi_spicfg);
 
 	// Take exclusive access of the bus for WiFi use, don't release it until the bus is de-init.
