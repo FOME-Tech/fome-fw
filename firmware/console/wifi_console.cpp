@@ -1,7 +1,5 @@
 #include "pch.h"
 
-#define EFI_WIFI 1
-
 #if EFI_WIFI
 
 #include "driver/include/m2m_wifi.h"
