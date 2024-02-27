@@ -231,8 +231,8 @@ struct_no_prefix engine_configuration_s
 
 
 struct stft_cell_cfg_s
-	int8_t maxAdd;Maximum VE % that the short term fuel trim can add;"%", 1, 0, 0, 25, 0
-	int8_t maxRemove;Maximum VE % that the short term fuel trim can remove;"%", 1, 0, -25, 0, 0
+	int8_t maxAdd;This is the percentage of the final injected fuel mass that the short term fuel trim can add;"%", 1, 0, 0, 25, 0
+	int8_t maxRemove;This is the percentage of the final injected fuel mass that the short term fuel trim can remove;"%", 1, 0, -25, 0, 0
 	uint16_t autoscale timeConstant;Time constant for correction while in a given cell: this sets responsiveness of the closed loop correction. A value of 5.0 means it will try to make most of the correction within 5 seconds, and a value of 1.0 will try to correct within 1 second.;"sec", 0.1, 0, 0.1, 100, 2
 end_struct
 
@@ -408,7 +408,7 @@ injector_s injectorSecondary
 
 bit isForcedInduction;Does the vehicle have a turbo or supercharger?
 bit useFordRedundantTps;On some Ford and Toyota vehicles one of the throttle sensors is not linear on the full range, i.e. in the specific range of the positions we effectively have only one sensor.
-bit lambdaProtectionEnable;This enables the beta lambda protection. At present this feature is still in development.
+bit lambdaProtectionEnable;This enables the lambda based fuel mixture protection. When enabled an overly rich or lean condition will trigger an error. 
 bit overrideTriggerGaps
 bit enableFan1WithAc;Turn on this fan when AC is on.
 bit enableFan2WithAc;Turn on this fan when AC is on.
