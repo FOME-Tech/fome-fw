@@ -986,6 +986,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary trigge
 	bit isMapAveragingEnabled;This setting enables averaging of the map sensor values over one engine cycle.
 	bit overrideCrankingIacSetting;If enables a separate temperature multiplier table for cranking idle position.\n If disabled the normal running multiplier table is used for the cranking base position.
 	bit useSeparateAdvanceForIdle;This activates a separate ignition timing table for idle conditions, this can help idle stability by using ignition retard and advance either side of the desired idle speed. A couple of extra degrees advance at low idle speeds will prevent stalling and a few degrees retard at high idle speeds can help reduce engine power and slow the idle speed.
+	bit useCrankingIdleTaperTableSetting; If enabled, use separate temperature multiplier table for cranking taper duration.
 	bit isWaveAnalyzerEnabled
 	bit useSeparateVeForIdle;This activates a separate fuel VE table for Idle, this allows fine tuning of the idle fuelling and prevents low load issues on large or high torque engines.
 	bit verboseTriggerSynchDetails;Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
@@ -1213,19 +1214,8 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 	
 	float idlePidActivationTime;;"seconds", 1, 0, 0, 60, 1
 
+	uint8_t[9] unused1800
 
-	pin_mode_e spi1SckMode;
-	pin_mode_e spi1MosiMode;Modes count be used for 3v<>5v integration using pull-ups/pull-downs etc.;
-	pin_mode_e spi1MisoMode;
-
-	pin_mode_e spi2SckMode;
-	pin_mode_e spi2MosiMode;
-	pin_mode_e spi2MisoMode;
-
-	pin_mode_e spi3SckMode;
-	pin_mode_e spi3MosiMode;
-	pin_mode_e spi3MisoMode;
-	
 	pin_output_mode_e stepperEnablePinMode;
 	Gpio mc33816_rstb;ResetB
 	Gpio mc33816_driven
@@ -1491,7 +1481,19 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	output_pin_e speedometerOutputPin
 	uint16_t speedometerPulsePerKm;Number of speedometer pulses per kilometer travelled.;"", 1, 0, 0, 65000, 0
 
-uint8_t[246] mainUnusedEnd;;"units", 1, 0, 0, 1, 0
+	Gpio spi4mosiPin;
+	Gpio spi4misoPin;
+	Gpio spi4sckPin;
+
+	Gpio spi5mosiPin;
+	Gpio spi5misoPin;
+	Gpio spi5sckPin;
+
+	Gpio spi6mosiPin;
+	Gpio spi6misoPin;
+	Gpio spi6sckPin;
+
+uint8_t[237] mainUnusedEnd;;"units", 1, 0, 0, 1, 0
 
 ! end of engine_configuration_s
 end_struct
@@ -1558,6 +1560,9 @@ uint8_t[PEDAL_TO_TPS_SIZE] autoscale pedalToTpsRpmBins;;"RPM", 100, 0, 0, 25000,
 
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2
+
+int8_t[CLT_CRANKING_CURVE_SIZE] cltCrankingTaperCorrBins;CLT-based taper duration multiplier for simple manual idle controller;"C", 1, 0, -100, 120, 2
+uint8_t[CLT_CRANKING_CURVE_SIZE] autoscale cltCrankingTaperCorr    ;CLT-based taper duration multiplier for simple manual idle controller;"%", 0.02, 0, 0, 5, 2
 
 uint8_t[IDLE_ADVANCE_CURVE_SIZE] autoscale idleAdvanceBins;Optional timing advance table for Idle (see useSeparateAdvanceForIdle);"RPM", 50, 0, 0, 12000, 0
 float[IDLE_ADVANCE_CURVE_SIZE] idleAdvance    ;Optional timing advance table for Idle (see useSeparateAdvanceForIdle);"deg", 1, 0, -20, 90, 1

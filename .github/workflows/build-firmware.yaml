@@ -243,9 +243,9 @@ jobs:
             folder: config/boards/core48
             ini-file: fome_core48.ini
 
-          # - build-target: atlas
-          #   folder: config/boards/atlas
-          #   ini-file: fome_atlas.ini
+          - build-target: atlas
+            folder: config/boards/atlas
+            ini-file: fome_atlas.ini
 
           # - build-target: tdg-pdm8
           #   folder: config/boards/tdg-pdm8
@@ -289,20 +289,6 @@ jobs:
     - name: Generate Live Documentation
       working-directory: ./firmware/
       run: ./gen_live_documentation.sh
-
-    - name: Generate Configs for build-target
-      working-directory: ./firmware/
-      # todo: we have code duplication with gen_config.sh here :(
-      run: |
-        if [ "${{ matrix.build-target }}" = "subaru_eg33_f7" ]; then
-          bash config/boards/subaru_eg33/config/gen_subaru_config.sh
-          [ $? -eq 0 ] || { echo "ERROR generating board subaru_eg33 subaru_eg33_f7"; exit 1; }
-        elif [ "${{ matrix.ini-file }}" = "" ]; then
-          echo "ERROR: ${{ matrix.build-target }} is missing ini-file attribute"
-          exit -1
-        else
-          bash gen_config_board.sh ${{matrix.folder}} ${{matrix.build-target}} ${{matrix.ini-file}}
-        fi
 
     # - name: Configs Set SSH variables
     #   if: ${{ env.full == 'true' && env.upload == 'true' }}

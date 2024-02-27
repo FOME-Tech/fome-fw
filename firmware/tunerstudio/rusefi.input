@@ -543,6 +543,14 @@ enable2ndByteCanID = false
 		yBins		= cltCrankingCorr
 		gauge		= CLTGauge
 
+    curve = cltCrankingTaperDurationCurve, "Cranking taper duration multiplier"
+        columnLabel = "Coolant", "Multiplier"
+        xAxis		= -40, 120, 9
+        yAxis		=  0,  3, 10
+        xBins		= cltCrankingTaperCorrBins, coolant
+        yBins		= cltCrankingTaperCorr
+        gauge		= CLTGauge
+
 	curve = cltIdleRPMCurve, "Idle Target RPM"
 		columnLabel = "Coolant", "RPM"
 		xAxis		= -40, 120, 9
@@ -1791,6 +1799,7 @@ menuDialog = main
 		subMenu = std_separator
 
 		subMenu = cltCrankingCurve,			"Cranking IAC CLT multiplier", 0, {overrideCrankingIacSetting == 1}
+		subMenu = cltCrankingTaperDurationCurve,			"Cranking taper duration multiplier", 0, {useCrankingIdleTaperTableSetting == 1}
 
 	menu = "&Idle"
 		subMenu = idleSettings,				"Idle settings"
@@ -3503,29 +3512,35 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 
 	dialog = spiFunction, "SPI settings"
 		field = "!ECU reboot needed to apply these settings"
-		field = "SPI1 enable",							is_enabled_spi_1
+		field = "SPI1 Enable",							is_enabled_spi_1
 		field = "SPI1 MOSI",							spi1mosiPin, {is_enabled_spi_1 == 1}
-		field = "SPI1mosi mode",						spi1MosiMode, {is_enabled_spi_1 == 1}
 		field = "SPI1 MISO",							spi1misoPin, {is_enabled_spi_1 == 1}
-		field = "SPI1miso mode",						spi1MisoMode, {is_enabled_spi_1 == 1}
 		field = "SPI1 SCK",								spi1sckPin, {is_enabled_spi_1 == 1}
-		field = "SPI1sck mode",							spi1SckMode, {is_enabled_spi_1 == 1}
 
-		field = "SPI2 enable",							is_enabled_spi_2
+		field = "SPI2 Enable",							is_enabled_spi_2
 		field = "SPI2 MOSI",							spi2mosiPin, {is_enabled_spi_2 == 1}
-		field = "SPI2mosi mode",						spi2MosiMode, {is_enabled_spi_2 == 1}
 		field = "SPI2 MISO",							spi2misoPin, {is_enabled_spi_2 == 1}
-		field = "SPI2miso mode",						spi2MisoMode, {is_enabled_spi_2 == 1}
 		field = "SPI2 SCK",								spi2sckPin, {is_enabled_spi_2 == 1}
-		field = "SPI2sck mode",							spi2SckMode, {is_enabled_spi_2 == 1}
 
-		field = "SPI3 enable",							is_enabled_spi_3
+		field = "SPI3 Enable",							is_enabled_spi_3
 		field = "SPI3 MOSI",							spi3mosiPin, {is_enabled_spi_3 == 1}
-		field = "SPI3mosi mode",						spi3MosiMode, {is_enabled_spi_3 == 1}
 		field = "SPI3 MISO",							spi3misoPin, {is_enabled_spi_3 == 1}
-		field = "SPI3miso mode",						spi3MisoMode, {is_enabled_spi_3 == 1}
 		field = "SPI3 SCK",								spi3sckPin, {is_enabled_spi_3 == 1}
-		field = "SPI3sck mode",							spi3SckMode, {is_enabled_spi_3 == 1}
+
+		field = "SPI4 Enable",							is_enabled_spi_4
+		field = "SPI4 MOSI",							spi4mosiPin, {is_enabled_spi_4 == 1}
+		field = "SPI4 MISO",							spi4misoPin, {is_enabled_spi_4 == 1}
+		field = "SPI4 SCK",								spi4sckPin, {is_enabled_spi_4 == 1}
+
+		field = "SPI5 Enable",							is_enabled_spi_5
+		field = "SPI5 MOSI",							spi5mosiPin, {is_enabled_spi_5 == 1}
+		field = "SPI5 MISO",							spi5misoPin, {is_enabled_spi_5 == 1}
+		field = "SPI5 SCK",								spi5sckPin, {is_enabled_spi_5 == 1}
+
+		field = "SPI6 Enable",							is_enabled_spi_6
+		field = "SPI6 MOSI",							spi6mosiPin, {is_enabled_spi_6 == 1}
+		field = "SPI6 MISO",							spi6misoPin, {is_enabled_spi_6 == 1}
+		field = "SPI6 SCK",								spi6sckPin, {is_enabled_spi_6 == 1}
 		field = "LIS302DLCsPin",						LIS302DLCsPin
 
 	dialog = stftPartitioning, "Region Configuration"
@@ -3824,6 +3839,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "Cranking base IAC position",			crankingIACposition
 		field = "After cranking IAC taper duration",afterCrankingIACtaperDuration
 		field = "Override cranking IAC CLT multiplier",		overrideCrankingIacSetting
+		field = "Use cranking taper duration multiplier",		useCrankingIdleTaperTableSetting
 
 	dialog = crankingIgnition, "Ignition"
 		field = "Timing Advance mode",	useSeparateAdvanceForCranking

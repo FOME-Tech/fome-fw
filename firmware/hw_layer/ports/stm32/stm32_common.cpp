@@ -463,7 +463,7 @@ EXTERNC int getRemainingStack(thread_t *otp) {
 }
 
 #if HAL_USE_SPI
-bool isSpiInitialized[5] = { false, false, false, false, false };
+bool isSpiInitialized[6] = { false, false, false, false, false, false};
 
 static int getSpiAf(SPIDriver *driver) {
 #if STM32_SPI_USE_SPI1
@@ -481,6 +481,21 @@ static int getSpiAf(SPIDriver *driver) {
 		return EFI_SPI3_AF;
 	}
 #endif
+#if STM32_SPI_USE_SPI4
+	if (driver == &SPID4) {
+		return EFI_SPI4_AF;
+	}
+#endif
+#if STM32_SPI_USE_SPI5
+	if (driver == &SPID5) {
+		return EFI_SPI5_AF;
+	}
+#endif
+#if STM32_SPI_USE_SPI6
+	if (driver == &SPID6) {
+		return EFI_SPI6_AF;
+	}
+#endif
 	return -1;
 }
 
@@ -492,6 +507,12 @@ brain_pin_e getMisoPin(spi_device_e device) {
 		return engineConfiguration->spi2misoPin;
 	case SPI_DEVICE_3:
 		return engineConfiguration->spi3misoPin;
+	case SPI_DEVICE_4:
+		return engineConfiguration->spi4misoPin;
+	case SPI_DEVICE_5:
+		return engineConfiguration->spi5misoPin;
+	case SPI_DEVICE_6:
+		return engineConfiguration->spi6misoPin;
 	default:
 		break;
 	}
@@ -506,6 +527,12 @@ brain_pin_e getMosiPin(spi_device_e device) {
 		return engineConfiguration->spi2mosiPin;
 	case SPI_DEVICE_3:
 		return engineConfiguration->spi3mosiPin;
+	case SPI_DEVICE_4:
+		return engineConfiguration->spi4mosiPin;
+	case SPI_DEVICE_5:
+		return engineConfiguration->spi5mosiPin;
+	case SPI_DEVICE_6:
+		return engineConfiguration->spi6mosiPin;
 	default:
 		break;
 	}
@@ -520,6 +547,12 @@ brain_pin_e getSckPin(spi_device_e device) {
 		return engineConfiguration->spi2sckPin;
 	case SPI_DEVICE_3:
 		return engineConfiguration->spi3sckPin;
+	case SPI_DEVICE_4:
+		return engineConfiguration->spi4sckPin;
+	case SPI_DEVICE_5:
+		return engineConfiguration->spi5sckPin;
+	case SPI_DEVICE_6:
+		return engineConfiguration->spi6sckPin;
 	default:
 		break;
 	}
@@ -531,53 +564,50 @@ void turnOnSpi(spi_device_e device) {
 		return; // already initialized
 	isSpiInitialized[device] = true;
 	if (device == SPI_DEVICE_1) {
-// todo: introduce a nice structure with all fields for same SPI
 #if STM32_SPI_USE_SPI1
-//	scheduleMsg(&logging, "Turning on SPI1 pins");
 		initSpiModule(&SPID1, getSckPin(device),
 				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi1SckMode,
-				engineConfiguration->spi1MosiMode,
-				engineConfiguration->spi1MisoMode);
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI1 */
 	}
 	if (device == SPI_DEVICE_2) {
 #if STM32_SPI_USE_SPI2
-//	scheduleMsg(&logging, "Turning on SPI2 pins");
 		initSpiModule(&SPID2, getSckPin(device),
 				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi2SckMode,
-				engineConfiguration->spi2MosiMode,
-				engineConfiguration->spi2MisoMode);
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI2 */
 	}
 	if (device == SPI_DEVICE_3) {
 #if STM32_SPI_USE_SPI3
-//	scheduleMsg(&logging, "Turning on SPI3 pins");
 		initSpiModule(&SPID3, getSckPin(device),
 				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi3SckMode,
-				engineConfiguration->spi3MosiMode,
-				engineConfiguration->spi3MisoMode);
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI3 */
 	}
 	if (device == SPI_DEVICE_4) {
 #if STM32_SPI_USE_SPI4
-//		scheduleMsg(&logging, "Turning on SPI4 pins");
-		/* there are no configuration fields for SPI4 in engineConfiguration, rely on board init code
-		 * it should set proper functions for SPI4 pins */
+		initSpiModule(&SPID4, getSckPin(device),
+				getMisoPin(device),
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI4 */
+	}
+	if (device == SPI_DEVICE_5) {
+#if STM32_SPI_USE_SPI5
+		initSpiModule(&SPID5, getSckPin(device),
+				getMisoPin(device),
+				getMosiPin(device));
+#endif /* STM32_SPI_USE_SPI5 */
+	}
+	if (device == SPI_DEVICE_6) {
+#if STM32_SPI_USE_SPI6
+		initSpiModule(&SPID6, getSckPin(device),
+				getMisoPin(device),
+				getMosiPin(device));
+#endif /* STM32_SPI_USE_SPI6 */
 	}
 }
 
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
-		brain_pin_e mosi,
-		int sckMode,
-		int mosiMode,
-		int misoMode) {
+void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi) {
 
 	/**
 	 * See https://github.com/rusefi/rusefi/pull/664/
@@ -585,15 +615,15 @@ void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
 	 * Info on the silicon defect can be found in this document, section 2.5.2:
 	 * https://www.st.com/content/ccc/resource/technical/document/errata_sheet/0a/98/58/84/86/b6/47/a2/DM00037591.pdf/files/DM00037591.pdf/jcr:content/translations/en.DM00037591.pdf
 	 */
-	efiSetPadMode("SPI clock", sck,	PAL_MODE_ALTERNATE(getSpiAf(driver)) | sckMode | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SPI clock", sck,	PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
 
-	efiSetPadMode("SPI master out", mosi, PAL_MODE_ALTERNATE(getSpiAf(driver)) | mosiMode | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SPI master out", mosi, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
 
 	// Activate the internal pullup on MISO: SD cards indicate "busy" by holding MOSI low,
 	// so in case there is no SD card installed, the line could float low and indicate that
 	// the (non existent) card is busy.  We pull the line high to indicate "not busy" in case
 	// of a missing card.
-	efiSetPadMode("SPI master in ", miso, PAL_MODE_ALTERNATE(getSpiAf(driver)) | misoMode | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SPI master in ", miso, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 }
 
 void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin) {
