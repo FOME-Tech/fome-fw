@@ -433,6 +433,8 @@ bit useFordRedundantPps;On some Ford and Toyota vehicles one of the pedal sensor
 bit cltSensorPulldown;Inverts the expected voltage from the coolant sensor for when they are connected to an AV channel instead of an AT channel.
 bit iatSensorPulldown;Inverts the expected voltage from the coolant sensor for when they are connected to an AV channel instead of an AT channel.
 bit allowIdenticalPps;Only for use with the BRZ/GT86 accelerator pedal, do not use unless using this type of pedal sensor.
+bit is_enabled_spi_5
+bit is_enabled_spi_6
 
 int16_t tpsMin;Closed throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
 int16_t tpsMax;Full throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
