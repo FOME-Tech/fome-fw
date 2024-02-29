@@ -34,6 +34,11 @@ DDEFS += -DEFI_SENT_SUPPORT=TRUE
 # We are running on microRusEFI hardware!
 DDEFS += -DHW_MICRO_RUSEFI=1
 
+# Default to F4 if not specified
+ifeq ($(PROJECT_CPU),)
+	PROJECT_CPU = ARCH_STM32F4
+endif
+
 ifeq ($(PROJECT_CPU),ARCH_STM32F7)
 SHORT_BOARD_NAME = mre_f7
 else ifeq ($(PROJECT_CPU),ARCH_STM32F4)
