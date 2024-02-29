@@ -8,5 +8,5 @@ export EXTRA_PARAMS="-DDUMMY -DEFI_ENABLE_ASSERTS=FALSE \
 # Do not forget to comment out following line if looking to debug!
 export DEBUG_LEVEL_OPT="-O2"
 
-bash ../common_make.sh nucleo_f767 ARCH_STM32F7
+bash ../common_make.sh ARCH_STM32F7
 

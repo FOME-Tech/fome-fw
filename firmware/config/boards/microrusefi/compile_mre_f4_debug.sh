@@ -5,4 +5,4 @@ export DEBUG_LEVEL_OPT="-O0 -ggdb -g"
 
 # export USE_OPENBLT=yes
 
-bash ../common_make.sh microrusefi ARCH_STM32F4
+bash ../common_make.sh ARCH_STM32F4

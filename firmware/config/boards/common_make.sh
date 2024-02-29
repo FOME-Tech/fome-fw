@@ -1,7 +1,6 @@
 #!/bin/bash
 
-PROJECT_BOARD=$1
-PROJECT_CPU=$2
+PROJECT_CPU=$1
 
 # fail on error
 set -e
@@ -20,14 +19,14 @@ cd $FW_DIR
 
 mkdir -p .dep
 echo "Calling make for the main firmware..."
-make -j6 -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
-[ -e build/fome.hex ] || { echo "FAILED to compile by $SCRIPT_NAME with $PROJECT_BOARD $DEBUG_LEVEL_OPT and $EXTRA_PARAMS"; exit 1; }
+make -j6 -r PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
+[ -e build/fome.hex ] || { echo "FAILED to compile by $SCRIPT_NAME with $DEBUG_LEVEL_OPT and $EXTRA_PARAMS"; exit 1; }
 if [ "$USE_OPENBLT" = "yes" ]; then
   # TODO: why is this rm necessary?
   rm -f pch/pch.h.gch/*
   echo "Calling make for the bootloader..."
-  cd bootloader; make -j6 PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
-  [ -e bootloader/blbuild/fome_bl.hex ] || { echo "FAILED to compile OpenBLT by $SCRIPT_NAME with $PROJECT_BOARD"; exit 1; }
+  cd bootloader; make -j6 PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
+  [ -e bootloader/blbuild/fome_bl.hex ] || { echo "FAILED to compile OpenBLT by $SCRIPT_NAME"; exit 1; }
 fi
 
 if uname | grep "NT"; then

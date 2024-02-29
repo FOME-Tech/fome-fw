@@ -9,4 +9,4 @@
 
 export USE_OPENBLT=yes
 
-bash ../common_make.sh subaru_eg33 ARCH_STM32F7
+bash ../common_make.sh ARCH_STM32F7

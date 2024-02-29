@@ -4,4 +4,4 @@
 
 export PROTEUS_LEGACY=TRUE
 
-bash ../common_make.sh proteus ARCH_STM32F7
+bash ../common_make.sh ARCH_STM32F7

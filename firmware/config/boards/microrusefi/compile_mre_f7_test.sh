@@ -2,4 +2,4 @@
 
 export VAR_DEF_ENGINE_TYPE="-DDEFAULT_ENGINE_TYPE=MRE_BOARD_TEST"
 
-bash ../common_make.sh microrusefi ARCH_STM32F7
+bash ../common_make.sh ARCH_STM32F7

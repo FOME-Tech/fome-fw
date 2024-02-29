@@ -1,3 +1,3 @@
 #!/bin/bash
 
-bash ../common_make.sh tdg-pdm8 ARCH_STM32F4
+bash ../common_make.sh ARCH_STM32F4
