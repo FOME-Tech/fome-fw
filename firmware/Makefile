@@ -31,8 +31,6 @@ RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 
-include rusefi.mk
-
 # by default EXTRA_PARAMS is empty and we create 'debug' version of the firmware with additional assertions and statistics
 # for 'release' options see 'clean_compile_two_versions.bat' file
 
@@ -152,12 +150,7 @@ MAKEFLAGS += ${NUMJOBS}
 # Project, sources and paths
 #
 
-BOARDINC = $(BOARD_DIR)
-include $(BOARD_DIR)/board.mk
-ifeq ($(SHORT_BOARD_NAME),)
-$(error SHORT_BOARD_NAME not set, something wrong with your board.mk file)
-endif
-DDEFS += -DSHORT_BOARD_NAME=$(SHORT_BOARD_NAME)
+include rusefi.mk
 
 # Include various ChibiOS mk files
 # Licensing files.
@@ -203,7 +196,6 @@ ifeq ($(USE_OPENBLT),yes)
   DDEFS += -DEFI_USE_OPENBLT=TRUE
 endif
 
-$(info PROJECT_BOARD: $(PROJECT_BOARD))
 $(info BOARD_DIR:     $(BOARD_DIR))
 $(info PROJECT_CPU:   $(PROJECT_CPU))
 $(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))

@@ -17,16 +17,21 @@ $(error Please run 'make' again. Please make sure you have 'git' command in PATH
 endif
 endif
 
-ifeq ($(PROJECT_BOARD),)
-  PROJECT_BOARD = f407-discovery
-endif
-
 BOARDS_DIR = $(PROJECT_DIR)/config/boards
 
-# allow passing a custom board dir, otherwise generate it based on the board name
+# Default to F407-discovery
 ifeq ($(BOARD_DIR),)
-	BOARD_DIR = $(BOARDS_DIR)/$(PROJECT_BOARD)
+	BOARD_DIR =$(PROJECT_DIR)/config/boards/f407-discovery
 endif
+
+include $(BOARD_DIR)/board.mk
+
+ifeq ($(SHORT_BOARD_NAME),)
+$(error SHORT_BOARD_NAME not set, something wrong with your board.mk file)
+endif
+
+BOARDINC = $(BOARD_DIR)
+DDEFS += -DSHORT_BOARD_NAME=$(SHORT_BOARD_NAME)
 
 ifeq ($(PROJECT_CPU),)
 # many boards all the way to Proteus use this F4 default

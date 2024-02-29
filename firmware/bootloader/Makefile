@@ -158,14 +158,19 @@ include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 # EX files (optional).
 include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 
-BOARDINC = $(BOARD_DIR)
-include $(BOARD_DIR)/board.mk
 include $(PROJECT_DIR)/init/init.mk
 include $(PROJECT_DIR)/util/util.mk
 
 include $(PROJECT_DIR)/controllers/controllers.mk
 include $(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER)/hw_ports.mk
 include $(PROJECT_DIR)/hw_layer/drivers/drivers.mk
+
+$(info BOARD_DIR:     $(BOARD_DIR))
+$(info PROJECT_CPU:   $(PROJECT_CPU))
+$(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
+$(info CPU_HWLAYER:   $(CPU_HWLAYER))
+$(info CONFDIR:       $(CONFDIR))
+$(info LDSCRIPT:      $(LDSCRIPT))
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

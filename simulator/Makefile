@@ -17,6 +17,7 @@ CHIBIOS = ../firmware/ChibiOS
 CHIBIOS_CONTRIB= ../firmware/ChibiOS-Contrib
 RULESPATH = $(CHIBIOS)/os/common/startup/SIMIA32/compilers/GCC
 RULESFILE = $(RULESPATH)/rules.mk
+PROJECT_DIR = ../firmware
 
 PROJECT_CPU=simulator
 GENERATED_DIR = $(PROJECT_DIR)/generated
@@ -57,7 +58,7 @@ endif
 USE_OPT += $(RUSEFI_OPT) -DEFI_UNIT_TEST=0 -DEFI_PROD_CODE=0 -DEFI_SIMULATOR=1
 
 # define hardwares, but we aren't any of them
-USE_OPT += -DHW_MICRO_RUSEFI=0 -DHW_PROTEUS=0 -DHW_FRANKENSO=0 -DHW_HELLEN=0
+USE_OPT += -DHW_MICRO_RUSEFI=0 -DHW_PROTEUS=0 -DHW_HELLEN=0
 
 # Enable address sanitizer, but not on Windows since x86_64-w64-mingw32-g++ doesn't support it.
 ifeq ($(SANITIZE),yes)
@@ -124,7 +125,6 @@ ifeq ($(OS),Windows_NT)
 else
   PROJECT = fome_simulator
 endif
-PROJECT_DIR = ../firmware
 
 DDEFS += -DSHORT_BOARD_NAME=$(SHORT_BOARD_NAME)
 
@@ -257,7 +257,6 @@ CPPWARN = -Wall -Wextra -Wundef
 
 # List all user C define here, like -D_DEBUG=1
 UDEFS = -DSIMULATOR
-DDEFS += -DFIRMWARE_ID=\"simulator\"
 
 
 # Define ASM defines here

@@ -11,7 +11,7 @@ configurations, and specialized enhancements.
 
 TL;DR
 
-``make PROJECT_BOARD=microrusefi PROJECT_CPU=ARCH_STM32F4``
+`make BOARD_DIR=config/boards/microrusefi PROJECT_CPU=ARCH_STM32F4`
 
 # Environment
 
