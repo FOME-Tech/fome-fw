@@ -14,24 +14,24 @@ Gpio getWarningLedPin() {
 }
 
 spi_device_e getWifiSpiDevice() {
-	return SPI_DEVICE_3;
+	return SPI_DEVICE_4;
 }
 
 Gpio getWifiCsPin() {
-	return Gpio::D2;
+	return Gpio::E4;
 }
 
 Gpio getWifiResetPin() {
-	return Gpio::G3;
+	return Gpio::E1;
 }
 
 Gpio getWifiIsrPin() {
-	return Gpio::G2;
+	return Gpio::E3;
 }
 
 void setBoardConfigOverrides() {
-	engineConfiguration->is_enabled_spi_3 = true;
-	engineConfiguration->spi3sckPin = Gpio::C10;
-	engineConfiguration->spi3misoPin = Gpio::C11;
-	engineConfiguration->spi3mosiPin = Gpio::C12;
+	engineConfiguration->is_enabled_spi_4 = true;
+	engineConfiguration->spi4sckPin = Gpio::E2;
+	engineConfiguration->spi4misoPin = Gpio::E5;
+	engineConfiguration->spi4mosiPin = Gpio::E6;
 }

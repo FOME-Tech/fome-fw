@@ -280,17 +280,14 @@ typedef enum __attribute__ ((__packed__)) {
 	_150KHz
 } spi_speed_e;
 
-
-/**
- * See spi3mosiPin
- * See spi2MisoMode
- */
 typedef enum __attribute__ ((__packed__)) {
 	SPI_NONE = 0,
 	SPI_DEVICE_1 = 1,
 	SPI_DEVICE_2 = 2,
 	SPI_DEVICE_3 = 3,
 	SPI_DEVICE_4 = 4,
+	SPI_DEVICE_5 = 5,
+	SPI_DEVICE_6 = 6,
 } spi_device_e;
 
 typedef enum __attribute__ ((__packed__)) {

@@ -1,6 +1,5 @@
 # Atlas is STM32H743
-# PROJECT_CPU = ARCH_STM32H7
-PROJECT_CPU = ARCH_STM32F4
+PROJECT_CPU = ARCH_STM32H7
 
 # List of all the board related files.
 BOARDCPPSRC =  $(BOARD_DIR)/board_configuration.cpp
