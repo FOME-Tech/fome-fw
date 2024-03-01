@@ -49,6 +49,24 @@ static SPIDriver* wifiSpi = nullptr;
 
 tstrNmBusCapabilities egstrNmBusCapabilities = { .u16MaxTrxSz = 4096 };
 
+#ifdef STM32H7XX
+// H7 SPI clock is set to 80MHz
+// fast mode is 80mhz/2 = 40MHz
+SPIConfig mmc_hs_spicfg = {
+		.circular = false,
+		.end_cb = NULL,
+		.ssport = NULL,
+		.sspad = 0,
+		.cfg1 = 7 // 8 bits per byte
+			| 0 /* MBR = 0, divider = 2 */,
+		.cfg2 = 0
+};
+
+#else // Not H7, ie F4/F7
+
+// 168mhz F4: 42 or 21 MHz depending on which SPI device
+// 216mhz F7: 54 or 27 MHz depending on whcih SPI device
+
 static SPIConfig wifi_spicfg = {
 		.circular = false,
 		.end_cb = NULL,
@@ -57,6 +75,8 @@ static SPIConfig wifi_spicfg = {
 		.cr1 = SPI_BaudRatePrescaler_2,
 		.cr2 = 0
 };
+
+#endif
 
 static OutputPin wifiCs;
 static OutputPin wifiReset;
