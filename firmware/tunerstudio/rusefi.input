@@ -44,7 +44,7 @@ enable2ndByteCanID = false
 	useLegacyFTempUnits = false
 	ignoreMissingBitOptions = true
 
-	; Optimize comms for fast rusEFI ECUs
+	; Optimize comms for fast FOME ECUs
 	noCommReadDelay = true;
 	defaultRuntimeRecordPerSec = 100;
 	maxUnusedRuntimeRange = 1000;
@@ -463,7 +463,7 @@ enable2ndByteCanID = false
 		yBins		= cltTimingExtra
 		gauge		= CLTGauge
 
-	curve = cltFuelCorrCurve, "Warmup fuel manual Multiplier"
+	curve = cltFuelCorrCurve, "CLT based warmup fuel Multiplier"
 		columnLabel = "Coolant", "Multiplier"
 		xAxis		=  -40, 120, 9
 		yAxis		=  0,  3, 10
@@ -519,7 +519,7 @@ enable2ndByteCanID = false
 		yBins		= crankingCycleCoef
 
 
-	curve = cltIdleCurve, "Warmup Idle multiplier"
+	curve = cltIdleCurve, "Coolant based Idle air multiplier"
 		columnLabel = "Coolant", "Multiplier"
 		xAxis		= -40, 120, 10
 		yAxis		=  0,  3, 10
@@ -956,6 +956,7 @@ curve = 32Curve, "3-2 Shift Solenoid Percent by Speed"
 		gridOrient  = 250, 0, 340
 
 	table = ignitionIatCorrTableTbl,  ignitionIatCorrTableMap,  "Ignition Intake Air Temp correction",	1
+		xyLabels = "IntakeAirTempDegC", "IgnitionLoad"
 		xBins		= ignitionIatCorrTempBins,  intake
 		yBins		= ignitionIatCorrLoadBins,  ignitionLoad
 		zBins		= ignitionIatCorrTable
@@ -1910,7 +1911,7 @@ menuDialog = main
 
 		# O2 sensor(s)
 		subMenu = egoSettings,				"EGO sensor"
-		subMenu = widebandConfig,			"rusEFI Wideband Controller", 0, { canReadEnabled && canWriteEnabled }
+		subMenu = widebandConfig,			"FOME Wideband Controller", 0, { canReadEnabled && canWriteEnabled }
 		subMenu = std_separator
 
 		# Misc sensors
@@ -4080,6 +4081,7 @@ dialog = tcuControls, "Transmission Settings"
 		field = "PID min",							etbWastegatePid_minValue, { isBoostControlEnabled }
 		field = "PID max",							etbWastegatePid_maxValue, { isBoostControlEnabled }
 
+; used for boostPidDialog
     help = boostPidHelp, "Boost Control PID"
         text = "P = % per kPa error"
         text = "I = % per kPa-seconds"
@@ -4092,43 +4094,54 @@ dialog = tcuControls, "Transmission Settings"
         text = ""
         text = "That is then added to the value from the open loop table, and sent to PWM the valve."
 
+; used for veTableDialog, VE Table
 	help = veTableDialogHelp, "Volumetric Efficiency"
 		text = "Volumetric Efficiency is used to calculate fuel in Speed Density mode. VE incorporates pressure ratio as measured by MAP sensor in boost (no VE ever above 105%ish)"
 		webHelp = "https://wiki.fome.tech/r/fuel"
 
+; used for Stepper H-Bridge Hardware
 	help = stepperHbridgeHardwareHelp, "Stepper driven by Dual H-bridge"
 		text = "In case you are using two H-bridges driving 4-wire stepper. H-brigde control signals connected to MCU pins configured here."
 
+; used for Stepper Controller Hardware
 	help = idleStepperHwHelp, "Stepper drivern by step motor driver IC"
 		text = "In case you have some special IC that drives your stepper. MCU to IC control signals (DIR/STEP/EN) configured here"
 
+; used for Stepper Direct-Drive Hardware
 	help = stepperDirectDriveHardwareHelp, "Stepper driven by 4 Push-Pull/Pull outputs"
 		text = "In case you have 4/6-wire stepper driven by 4 ECU outputs in Push-Pull or Pull mode. Set ECU outputs used for each phase here."
 
+; used for Intake air temperature fuel Multiplier
     help = iatFuelCorrCurveHelp, "IAT Fuel Correction"
         text = "Charge temperature estimation coefficient is the more proper way to handle IAT for fuel purposes"
         text = "Open question who if anyone needs IAT Fuel Correction when"
 
+; used for Injection Phase, injectorConfig
 	help = fuelHelp, "Fuel Control"
 		text = "More about fuel control on the web"
 		webHelp = "https://wiki.fome.tech/r/fuel"
 
+; used for Primary Trigger
 	help = triggerHelp, "Trigger Settings"
 		text = "More about Trigger Settings on the web"
 		webHelp = "https://wiki.fome.tech/r/trigger"
 
+; used for Electronic Throttle Body
 	help = etbHelp, "ETB Control"
 		text = "More about electronic throttle body on the web"
 		webHelp = "https://wiki.fome.tech/r/etb"
 
+; used for vrThreshold
 	help = vrThresholdHelp, "VR Sensor Threshold"
 		text = "This is about FOME VR Discrete decoder"
 		webHelp = "https://wiki.fome.tech/r/vr"
 
+; used for TPS/TPS Acceleration Extra Fuel(ms)
 	help = tpsTpsHelp, "Acceleration Enrichment"
 		text = "More about Tps To Tps acceleration on the web"
 		webHelp = "https://wiki.fome.tech/r/tpstps"
 
+; used for Base Engine Settings
 	help = baseHelp, "Base Settings Control"
 		text = "More about FOME on the web"
 		webHelp = "https://wiki.fome.tech"
@@ -4488,6 +4501,7 @@ dialog = tcuControls, "Transmission Settings"
 		panel = allTriggerDebug
 		panel = harleyAcr
 
+
 		help = helpGeneral, "FOME General Help"
 		webHelp = @@MAIN_HELP_URL@@
 		text = "<img src='https://wiki.fome.tech/img/logo-transparent.png'>"
@@ -4496,6 +4510,7 @@ dialog = tcuControls, "Transmission Settings"
 		field = "Pin", vrThreshold1_pin
 		panel = vrThresholdCurve1
 
+; used for FOME Info
 	dialog = vrThreshold2, "VR 2 Threshold"
 		field = "Pin", vrThreshold2_pin
 		panel = vrThresholdCurve2
