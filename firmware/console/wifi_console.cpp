@@ -29,10 +29,47 @@ static input_queue_t wifiIqueue;
 
 static bool socketReady = false;
 
-class WifiChannel : public TsChannelBase {
+struct BatchedChannelWriter : public TsChannelBase {
+	BatchedChannelWriter(const char* name)
+		: TsChannelBase(name)
+	{
+	}
+
+	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
+		if (size > (efi::size(m_buffer) - m_size)) {
+			// This write will overflow the buffer, flush then see if it fits
+			flush();
+		}
+
+		if (size > (efi::size(m_buffer) - m_size)) {
+			// It's still too big, just write it directly and skip the buffer
+			writePacket(buffer, size);
+		} else {
+			// The data fits, copy to the write buffer
+			memcpy(m_buffer + m_size, buffer, size);
+			m_size += size;
+		}
+	}
+
+	void flush() final override {
+		if (m_size) {
+			writePacket(m_buffer, m_size);
+			m_size = 0;
+		}
+	}
+
+	// Write some data to the underlying stream, with an implied flush() at the end
+	virtual void writePacket(const uint8_t* buffer, size_t size) = 0;
+
+private:
+	uint8_t m_buffer[2000];
+	size_t m_size = 0;
+};
+
+class WifiChannel final : public BatchedChannelWriter {
 public:
 	WifiChannel()
-		: TsChannelBase("WiFi")
+		: BatchedChannelWriter("WiFi")
 	{
 	}
 
@@ -40,7 +77,7 @@ public:
 		return true;
 	}
 
-	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) override {
+	void writePacket(const uint8_t* buffer, size_t size) override {
 		sendBuffer = buffer;
 		sendSize = size;
 
