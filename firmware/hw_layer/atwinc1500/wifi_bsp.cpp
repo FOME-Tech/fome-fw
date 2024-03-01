@@ -52,7 +52,7 @@ tstrNmBusCapabilities egstrNmBusCapabilities = { .u16MaxTrxSz = 4096 };
 #ifdef STM32H7XX
 // H7 SPI clock is set to 80MHz
 // fast mode is 80mhz/2 = 40MHz
-SPIConfig mmc_hs_spicfg = {
+SPIConfig wifi_spicfg = {
 		.circular = false,
 		.end_cb = NULL,
 		.ssport = NULL,
