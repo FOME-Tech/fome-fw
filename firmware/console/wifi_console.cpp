@@ -29,47 +29,10 @@ static input_queue_t wifiIqueue;
 
 static bool socketReady = false;
 
-struct BatchedChannelWriter : public TsChannelBase {
-	BatchedChannelWriter(const char* name)
-		: TsChannelBase(name)
-	{
-	}
-
-	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
-		if (size > (efi::size(m_buffer) - m_size)) {
-			// This write will overflow the buffer, flush then see if it fits
-			flush();
-		}
-
-		if (size > (efi::size(m_buffer) - m_size)) {
-			// It's still too big, just write it directly and skip the buffer
-			writePacket(buffer, size);
-		} else {
-			// The data fits, copy to the write buffer
-			memcpy(m_buffer + m_size, buffer, size);
-			m_size += size;
-		}
-	}
-
-	void flush() final override {
-		if (m_size) {
-			writePacket(m_buffer, m_size);
-			m_size = 0;
-		}
-	}
-
-	// Write some data to the underlying stream, with an implied flush() at the end
-	virtual void writePacket(const uint8_t* buffer, size_t size) = 0;
-
-private:
-	uint8_t m_buffer[2000];
-	size_t m_size = 0;
-};
-
-class WifiChannel final : public BatchedChannelWriter {
+class WifiChannel final : public TsChannelBase {
 public:
 	WifiChannel()
-		: BatchedChannelWriter("WiFi")
+		: TsChannelBase("WiFi")
 	{
 	}
 
@@ -77,14 +40,24 @@ public:
 		return true;
 	}
 
-	void writePacket(const uint8_t* buffer, size_t size) override {
-		sendBuffer = buffer;
-		sendSize = size;
+	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
+		while (size > 0) {
+			// Write at most SOCKET_BUFFER_MAX_LENGTH bytes at a time
+			size_t chunkSize = size > SOCKET_BUFFER_MAX_LENGTH ? SOCKET_BUFFER_MAX_LENGTH : size;
 
-		sendRequest = true;
-		isrSemaphore.signal();
+			// Write this chunk
+			sendBuffer = buffer;
+			sendSize = chunkSize;
+			sendRequest = true;
+			isrSemaphore.signal();
 
-		sendDoneSemaphore.wait();
+			// Step buffer/size for the next chunk
+			buffer += chunkSize;
+			size -= chunkSize;
+
+			// Wait for this chunk to complete
+			sendDoneSemaphore.wait();
+		}
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
@@ -187,7 +160,13 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				recv(sock, &rxBuf, nextRecv, 0);
 			} else {
 				close(sock);
+
 				socketReady = false;
+
+				{
+					chibios_rt::CriticalSectionLocker csl;
+					iqResetI(&wifiIqueue);
+				}
 			}
 		} break;
 		case SOCKET_MSG_SEND: {
