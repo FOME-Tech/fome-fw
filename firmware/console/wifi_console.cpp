@@ -37,7 +37,7 @@ public:
 	}
 
 	bool isReady() const override {
-		return true;
+		return socketReady;
 	}
 
 	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
@@ -65,7 +65,7 @@ public:
 	}
 };
 
-static WifiChannel wifiChannel;
+static NO_CACHE WifiChannel wifiChannel;
 
 class WifiHelperThread : public ThreadController<4096> {
 public:
@@ -85,7 +85,7 @@ public:
 	}
 };
 
-static WifiHelperThread wifiHelper;
+static NO_CACHE WifiHelperThread wifiHelper;
 
 static tstrWifiInitParam param;
 
@@ -104,7 +104,7 @@ void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	}
 }
 
-uint8_t rxBuf[512];
+static NO_CACHE uint8_t rxBuf[512];
 
 static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	switch (u8Msg) {
@@ -223,7 +223,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 	}
 };
 
-static WifiConsoleThread wifiThread;
+static NO_CACHE WifiConsoleThread wifiThread;
 
 void startWifiConsole() {
 	iqObjectInit(&wifiIqueue, recvBuffer, sizeof(recvBuffer), nullptr, nullptr);
