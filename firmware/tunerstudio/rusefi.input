@@ -70,13 +70,12 @@ enable2ndByteCanID = false
 	retrieveConfigError = "e"
 
 ;communication settings
-	pageActivationDelay = 500 ; Milliseconds delay after burn command. See https://sourceforge.net/p/rusefi/tickets/77/
+	pageActivationDelay = 0 ; Milliseconds delay after burn command. See https://sourceforge.net/p/rusefi/tickets/77/
 ;e.g. put writeblocks off and add an interwrite delay
 	writeBlocks = on
-	interWriteDelay = 10
+	interWriteDelay = 0
 	blockReadTimeout	= @@TS_BLOCK_READ_TIMEOUT@@; Milliseconds general timeout
 
- ; delayAfterPortOpen = 500
 
 	blockingFactor = @@BLOCKING_FACTOR@@ ; max chunk size
 ;end communication settings
@@ -1362,8 +1361,8 @@ gaugeCategory = Sensors - Basic
 	IATGauge			= intake,	"Intake air temp",		"C",		-40,	140,	-15,		1,		95,	110,	1,	1
 	afr1Gauge			= AFRValue, @@GAUGE_NAME_AFR@@,			"",		10,	19.4,		12,	13,		15,	16,	2,	2
 	afr2Gauge			= AFRValue2, @@GAUGE_NAME_AFR2@@,		"",		10,	19.4,		12,	13,		15,	16,	2,	2
-	afrGasScale1Gauge	= AFRValue, @@GAUGE_NAME_AFR_GAS_SCALE@@,	"",		10,	19.4,		12,	13,		15,	16,	2,	2
-	afrGasScale2Gauge	= AFRValue2, @@GAUGE_NAME_AFR2_GAS_SCALE@@,	"",		10,	19.4,		12,	13,		15,	16,	2,	2
+	afrGasScale1Gauge	= afrGasolineScale, @@GAUGE_NAME_AFR_GAS_SCALE@@,	"",		10,	19.4,		12,	13,		15,	16,	2,	2
+	afrGasScale2Gauge	= afr2GasolineScale, @@GAUGE_NAME_AFR2_GAS_SCALE@@,	"",		10,	19.4,		12,	13,		15,	16,	2,	2
 	lambda1Gauge		= lambdaValue, @@GAUGE_NAME_LAMBDA@@,	"",		0.65,	1.2,		0.7,	0.75,		1.1,	1.15,	3,	2
 	lambda2Gauge		= lambdaValue2, @@GAUGE_NAME_LAMBDA2@@,  "",		0.65,	1.2,		0.7,	0.75,		1.1,	1.15,	3,	2
 	VBattGauge		= VBatt,		"Battery",			"V",		8,	21,		9,	10,		17,	19,	1,	1
@@ -1677,7 +1676,7 @@ menuDialog = main
 	menu = "Fuel"
 		# basic
 		subMenu = injectorConfig,			"Injection configuration"
-		subMenu = injectorPins,				"Injection hardware", 0, {isInjectionEnabled == 1}
+		subMenu = injectorPins,				"Injection hardware", 0, {isInjectionEnabled == 1} @@if_ts_show_injector_pins
 		subMenu = injTest,					"Injector test", 0, {isInjectionEnabled}
 		subMenu = cylinderBankSelect,		"Cylinder bank selection", 0, {isInjectionEnabled == 1}
 		subMenu = injectorNonlinear,		"Injector small-pulse correction", 0, {isInjectionEnabled == 1}
@@ -2223,7 +2222,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 
 	dialog = baseInjection, "Injection"
 		field = "Enabled",						isInjectionEnabled
-		field = "Mode",							injectionMode, {isInjectionEnabled == 1}
+		field = "Mode",							injectionMode, {isInjectionEnabled == 1} @@if_ts_show_injection_mode
 		field = "#Batch injection with individual wiring"
 		field = "Alpha-N uses IAT density correction",	alphaNUseIat, { fuelAlgorithm == @@engine_load_mode_e_LM_ALPHA_N@@ }
 		field = "Override VE table load axis",			veOverrideMode, { isInjectionEnabled }
@@ -2247,7 +2246,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 
 	dialog = ignitionBasic, ""
 		field = "Enabled",						isIgnitionEnabled
-		field = "Mode",							ignitionMode, {isIgnitionEnabled}
+		field = "Mode",							ignitionMode, {isIgnitionEnabled} @@if_ts_show_ignition_mode
 		field = "Maximum timing advance",		maximumIgnitionTiming, {isIgnitionEnabled}
 		field = "Minimum timing advance",		minimumIgnitionTiming, {isIgnitionEnabled}
 		field = "Override ignition table load axis",	ignOverrideMode, {isIgnitionEnabled}
@@ -2257,7 +2256,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 
 	dialog = ignitionSettings, "", xAxis
 		panel = ignitionBasic
-		panel = ignitionOutputs
+		panel = ignitionOutputs @@if_ts_show_ignition_pins
 
 	dialog = baseEngineConfig, "Engine Configuration"
 ;		field = "Engine preset",						engineType
@@ -2288,19 +2287,19 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 		field = "!For well-known trigger types use '0' trigger angle offset"
 		field = "Trigger Angle Advance",					globalTriggerAngleOffset
 
-		field = ""
-		field = ""
+		field = "" @@if_ts_show_trigger_pins
+		field = "" @@if_ts_show_trigger_pins
 
-		field = "#Cam is primary if you have cam sensor as part of trigger shape"
+		field = "#Cam is primary if you have cam sensor as part of trigger shape" @@if_ts_show_trigger_pins
 		; cam if
 		; two-stroke, or
 		; not crank trigger and ((vague trigger and cam choice) or not vague trigger)
-		field = "Cam Sensor (Primary channel)",		triggerInputPins1, 1, {twoStroke == 1 || ( !(@@TRIGGER_CRANK_BASED@@) && ( ( (@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@) && skippedWheelOnCam) || !(@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@)  ) )  }
-		field = "Crank Sensor (Primary channel)",		triggerInputPins1, 1, { !(twoStroke == 1 || ( !(@@TRIGGER_CRANK_BASED@@) && ( ( (@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@) && skippedWheelOnCam) || !(@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@)  ) )) }
-		field = "Invert Primary",						invertPrimaryTriggerSignal
-		field = "Secondary channel",					triggerInputPins2, { triggerInputPins2 != 0 || (triggerInputPins1 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) ) }, { triggerInputPins2 == 0 ||  (triggerInputPins1 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) ) }
-		field = "!!! PLEASE UNSELECT !!!"				triggerInputPins2, 1,                                                                                               { triggerInputPins2 != 0 && !(triggerInputPins1 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) ) }
-		field = "Invert Secondary",						invertSecondaryTriggerSignal, {triggerInputPins2 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) }
+		field = "Cam Sensor (Primary channel)",		triggerInputPins1, 1, {twoStroke == 1 || ( !(@@TRIGGER_CRANK_BASED@@) && ( ( (@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@) && skippedWheelOnCam) || !(@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@)  ) )  } @@if_ts_show_trigger_pins
+		field = "Crank Sensor (Primary channel)",		triggerInputPins1, 1, { !(twoStroke == 1 || ( !(@@TRIGGER_CRANK_BASED@@) && ( ( (@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@) && skippedWheelOnCam) || !(@@TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION@@)  ) )) } @@if_ts_show_trigger_pins
+		field = "Invert Primary",						invertPrimaryTriggerSignal @@if_ts_show_trigger_pins
+		field = "Secondary channel",					triggerInputPins2, { triggerInputPins2 != 0 || (triggerInputPins1 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) ) }, { triggerInputPins2 == 0 ||  (triggerInputPins1 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) ) } @@if_ts_show_trigger_pins
+		field = "!!! PLEASE UNSELECT !!!"				triggerInputPins2, 1,                                                                                               { triggerInputPins2 != 0 && !(triggerInputPins1 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) ) } @@if_ts_show_trigger_pins
+		field = "Invert Secondary",						invertSecondaryTriggerSignal, {triggerInputPins2 != 0 && (@@TRIGGER_TYPE_WITH_SECOND_WHEEL@@) } @@if_ts_show_trigger_pins
 
 	dialog = trigger_cams, "Cam Inputs"
 		field = "!https://wiki.fome.tech/r/vvt"
@@ -2359,7 +2358,7 @@ cmd_set_engine_type_default					= "@@TS_IO_TEST_COMMAND_char@@@@ts_command_e_TS_
 
 	dialog = triggerConfiguration, "", xAxis
 		panel = trigger_primary
-		panel = trigger_cams
+		panel = trigger_cams @@if_ts_show_cam_inputs
 
 ;			Engine->Injection Settings
 	dialog = injChars, "Injector Settings",	yAxis

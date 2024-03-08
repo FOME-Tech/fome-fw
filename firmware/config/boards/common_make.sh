@@ -21,7 +21,7 @@ mkdir -p .dep
 echo "Calling make for the main firmware..."
 make -j6 -r PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
 [ -e build/fome.hex ] || { echo "FAILED to compile by $SCRIPT_NAME with $DEBUG_LEVEL_OPT and $EXTRA_PARAMS"; exit 1; }
-if [ "$USE_OPENBLT" = "yes" ]; then
+if [ "${USE_OPENBLT-no}" = "yes" ]; then
   # TODO: why is this rm necessary?
   rm -f pch/pch.h.gch/*
   echo "Calling make for the bootloader..."
