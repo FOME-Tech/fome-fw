@@ -74,7 +74,7 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float db
 			// Adjust knock retard under lock
 			chibios_rt::CriticalSectionLocker csl;
 			auto newRetard = m_knockRetard + retardAmount;
-			m_knockRetard = clampF(0, newRetard, m_maximumRetard);
+			m_knockRetard = clampF(0, newRetard, getMaximumRetard());
 		}
 	}
 
