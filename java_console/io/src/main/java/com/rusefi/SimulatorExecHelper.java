@@ -13,8 +13,8 @@ import java.util.function.Consumer;
 public class SimulatorExecHelper {
     private final static NamedThreadFactory THREAD_FACTORY = new NamedThreadFactory("SimulatorExecHelper", true);
 
-    // see also SimulatorHelper
-    private static final String SIMULATOR_BINARY = "../simulator/build/fome_simulator.exe";
+    public static final String SIMULATOR_BINARY_NAME = "fome_simulator";
+    private static final String SIMULATOR_BINARY_PATH = "../simulator/build";
     static Process simulatorProcess;
 
     /**
@@ -25,10 +25,11 @@ public class SimulatorExecHelper {
         FileLog.MAIN.logLine("runSimulator...");
 
         try {
-            FileLog.MAIN.logLine("Binary size: " + new File(SIMULATOR_BINARY).length());
+            File binary = getSimulatorBinary();
+            FileLog.MAIN.logLine("Binary size: " + binary.length());
 
-            FileLog.MAIN.logLine("Executing " + SIMULATOR_BINARY);
-            SimulatorExecHelper.simulatorProcess = Runtime.getRuntime().exec(SIMULATOR_BINARY);
+            FileLog.MAIN.logLine("Executing " + binary.getPath());
+            SimulatorExecHelper.simulatorProcess = Runtime.getRuntime().exec(binary.getPath());
             FileLog.MAIN.logLine("simulatorProcess: " + SimulatorExecHelper.simulatorProcess);
 
             dumpProcessOutput(SimulatorExecHelper.simulatorProcess);
@@ -93,9 +94,25 @@ public class SimulatorExecHelper {
     }
 
     public static void startSimulator() {
-        if (!new File(SIMULATOR_BINARY).exists())
-            throw new IllegalStateException(SIMULATOR_BINARY + " not found");
+        getSimulatorBinary();
+
         FileLog.MAIN.logLine("startSimulator...");
         new Thread(SimulatorExecHelper::runSimulator, "simulator process").start();
+    }
+
+    private static File getSimulatorBinary() {
+        return getSimulatorBinary(SIMULATOR_BINARY_PATH + SIMULATOR_BINARY_NAME);
+    }
+
+    public static File getSimulatorBinary(String binaryPath) {
+        File binary = new File(binaryPath);
+
+        if (!binary.exists()) // try also for Windows/PE executable
+            binary = new File(binaryPath + ".exe");
+
+        if (!binary.exists() || binary.isDirectory() || !binary.canExecute())
+            throw new IllegalStateException("FOME Simulator program not found");
+
+        return binary;
     }
 }
