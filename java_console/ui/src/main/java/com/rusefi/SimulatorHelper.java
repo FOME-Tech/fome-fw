@@ -21,10 +21,8 @@ public class SimulatorHelper {
      * this code start sumulator for UI console
      * todo: unify with the code which starts simulator for auto tests?
      */
-    private static void startSimulator() {
+    private static void startSimulator(File binary) {
         LinkManager.isSimulationMode = true;
-
-        File binary = SimulatorExecHelper.getSimulatorBinary(SIMULATOR_BINARY_PATH);
 
         FileLog.MAIN.logLine("Executing " + binary.getPath());
         THREAD_FACTORY.newThread(new Runnable() {
@@ -60,8 +58,9 @@ public class SimulatorHelper {
     }
 
     public static JComponent createSimulatorComponent(final StartupFrame portSelector) {
+        File simulatorBinary;
         try {
-            SimulatorExecHelper.getSimulatorBinary(SIMULATOR_BINARY_PATH);
+            simulatorBinary = SimulatorExecHelper.getSimulatorBinary(SIMULATOR_BINARY_PATH);
         } catch (IllegalStateException e) {
             return new JLabel(e.getMessage());
         }
@@ -74,7 +73,7 @@ public class SimulatorHelper {
             @Override
             public void actionPerformed(ActionEvent event) {
                 portSelector.disposeFrameAndProceed();
-                startSimulator();
+                startSimulator(simulatorBinary);
             }
         });
         setToolTip(simulatorButton, "Connect to totally virtual simulator",

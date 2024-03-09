@@ -20,12 +20,11 @@ public class SimulatorExecHelper {
     /**
      * This is currently used by auto-tests only. Todo: reuse same code for UI-launched simulator?
      */
-    private static void runSimulator() {
+    private static void runSimulator(File binary) {
         Thread.currentThread().setName("Main simulation");
         FileLog.MAIN.logLine("runSimulator...");
 
         try {
-            File binary = getSimulatorBinary(SIMULATOR_BINARY_PATH);
             FileLog.MAIN.logLine("Binary size: " + binary.length());
 
             FileLog.MAIN.logLine("Executing " + binary.getPath());
@@ -94,10 +93,9 @@ public class SimulatorExecHelper {
     }
 
     public static void startSimulator() {
-        getSimulatorBinary(SIMULATOR_BINARY_PATH);
-
         FileLog.MAIN.logLine("startSimulator...");
-        new Thread(SimulatorExecHelper::runSimulator, "simulator process").start();
+        File simulatorBinary = getSimulatorBinary(SIMULATOR_BINARY_PATH);
+        new Thread(() -> SimulatorExecHelper.runSimulator(simulatorBinary), "simulator process").start();
     }
 
     public static File getSimulatorBinary(String binaryPath) {
