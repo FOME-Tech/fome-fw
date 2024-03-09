@@ -14,6 +14,7 @@ import static com.rusefi.ui.util.UiUtils.setToolTip;
 
 public class SimulatorHelper {
     private final static ThreadFactory THREAD_FACTORY = new NamedThreadFactory("SimulatorHelper");
+    private static final String SIMULATOR_BINARY_PATH = "./";
     private static Process process;
 
     /**
@@ -23,7 +24,7 @@ public class SimulatorHelper {
     private static void startSimulator() {
         LinkManager.isSimulationMode = true;
 
-        File binary = SimulatorExecHelper.getSimulatorBinary("./" + SimulatorExecHelper.SIMULATOR_BINARY_NAME);
+        File binary = SimulatorExecHelper.getSimulatorBinary(SIMULATOR_BINARY_PATH);
 
         FileLog.MAIN.logLine("Executing " + binary.getPath());
         THREAD_FACTORY.newThread(new Runnable() {
@@ -60,7 +61,7 @@ public class SimulatorHelper {
 
     public static JComponent createSimulatorComponent(final StartupFrame portSelector) {
         try {
-            SimulatorExecHelper.getSimulatorBinary(SimulatorExecHelper.SIMULATOR_BINARY_NAME);
+            SimulatorExecHelper.getSimulatorBinary(SIMULATOR_BINARY_PATH);
         } catch (IllegalStateException e) {
             return new JLabel(e.getMessage());
         }

@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 public class SimulatorExecHelper {
     private final static NamedThreadFactory THREAD_FACTORY = new NamedThreadFactory("SimulatorExecHelper", true);
 
-    public static final String SIMULATOR_BINARY_NAME = "fome_simulator";
+    private static final String SIMULATOR_BINARY_NAME = "fome_simulator";
     private static final String SIMULATOR_BINARY_PATH = "../simulator/build";
     static Process simulatorProcess;
 
@@ -25,7 +25,7 @@ public class SimulatorExecHelper {
         FileLog.MAIN.logLine("runSimulator...");
 
         try {
-            File binary = getSimulatorBinary();
+            File binary = getSimulatorBinary(SIMULATOR_BINARY_PATH);
             FileLog.MAIN.logLine("Binary size: " + binary.length());
 
             FileLog.MAIN.logLine("Executing " + binary.getPath());
@@ -94,18 +94,14 @@ public class SimulatorExecHelper {
     }
 
     public static void startSimulator() {
-        getSimulatorBinary();
+        getSimulatorBinary(SIMULATOR_BINARY_PATH);
 
         FileLog.MAIN.logLine("startSimulator...");
         new Thread(SimulatorExecHelper::runSimulator, "simulator process").start();
     }
 
-    private static File getSimulatorBinary() {
-        return getSimulatorBinary(SIMULATOR_BINARY_PATH + SIMULATOR_BINARY_NAME);
-    }
-
     public static File getSimulatorBinary(String binaryPath) {
-        File binary = new File(binaryPath);
+        File binary = new File(binaryPath + SIMULATOR_BINARY_NAME);
 
         if (!binary.exists()) // try also for Windows/PE executable
             binary = new File(binaryPath + ".exe");
