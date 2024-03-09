@@ -101,11 +101,13 @@ public class SimulatorExecHelper {
     public static File getSimulatorBinary(String binaryPath) {
         File binary = new File(binaryPath + SIMULATOR_BINARY_NAME);
 
-        if (!binary.exists()) // try also for Windows/PE executable
+        if (!binary.exists()) { // try also for Windows/PE executable
             binary = new File(binaryPath + ".exe");
+        }
 
-        if (!binary.exists() || binary.isDirectory() || !binary.canExecute())
+        if (!binary.exists() || binary.isDirectory() || !binary.canExecute()) {
             throw new IllegalStateException("FOME Simulator program not found");
+        }
 
         return binary;
     }

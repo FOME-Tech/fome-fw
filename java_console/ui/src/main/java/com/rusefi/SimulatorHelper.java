@@ -65,8 +65,9 @@ public class SimulatorHelper {
             return new JLabel(e.getMessage());
         }
 
-        if (TcpConnector.isTcpPortOpened())
+        if (TcpConnector.isTcpPortOpened()) {
             return new JLabel("Port " + TcpConnector.DEFAULT_PORT + " already busy. Simulator running?");
+        }
 
         JButton simulatorButton = new JButton("Start Virtual Simulator");
         simulatorButton.addActionListener(new ActionListener() {
