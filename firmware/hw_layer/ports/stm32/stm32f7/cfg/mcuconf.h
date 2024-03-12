@@ -1,5 +1,5 @@
 /*
-    ChibiOS - Copyright (C) 2006..2018 Giovanni Di Sirio
+    ChibiOS - Copyright (C) 2006..2020 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -87,7 +87,9 @@
 #define STM32_PPRE2                         STM32_PPRE2_DIV2
 // see RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL
 #define STM32_RTCSEL                        STM32_RTCSEL_LSE
+#ifndef STM32_RTCPRE_VALUE
 #define STM32_RTCPRE_VALUE                  8
+#endif
 #define STM32_MCO1SEL                       STM32_MCO1SEL_HSI
 #define STM32_MCO1PRE                       STM32_MCO1PRE_DIV1
 #define STM32_MCO2SEL                       STM32_MCO2SEL_SYSCLK
@@ -129,38 +131,23 @@
 #endif
 
 /*
- * GPT driver system settings.
+ * RTC driver system settings.
  */
-#define STM32_IRQ_TIM1_BRK_TIM9_PRIORITY    7
-#define STM32_IRQ_TIM1_UP_TIM10_PRIORITY    7
-#define STM32_IRQ_TIM1_TRGCO_TIM11_PRIORITY 7
-#define STM32_IRQ_TIM1_CC_PRIORITY          7
-#define STM32_IRQ_TIM2_PRIORITY             7
-#define STM32_IRQ_TIM3_PRIORITY             7
-#define STM32_IRQ_TIM4_PRIORITY             7
-#define STM32_IRQ_TIM5_PRIORITY             7
-#define STM32_IRQ_TIM6_PRIORITY             7
-#define STM32_IRQ_TIM7_PRIORITY             7
-#define STM32_IRQ_TIM8_BRK_TIM12_PRIORITY   7
-#define STM32_IRQ_TIM8_UP_TIM13_PRIORITY    7
-#define STM32_IRQ_TIM8_TRGCO_TIM14_PRIORITY 7
-#define STM32_IRQ_TIM8_CC_PRIORITY          7
+#define STM32_RTC_PRESA_VALUE               32
+#define STM32_RTC_PRESS_VALUE               1024
+#define STM32_RTC_CR_INIT                   0
+#define STM32_RTC_TAMPCR_INIT               0
 
 /*
  * SDC driver system settings.
  */
-#define STM32_SDC_USE_SDMMC1                FALSE
-#define STM32_SDC_USE_SDMMC2                TRUE
-#define STM32_SDC_SDMMC_UNALIGNED_SUPPORT   TRUE
-#define STM32_SDC_SDMMC_WRITE_TIMEOUT       1000
-#define STM32_SDC_SDMMC_READ_TIMEOUT        1000
-#define STM32_SDC_SDMMC_CLOCK_DELAY         10
-#define STM32_SDC_SDMMC1_DMA_STREAM         STM32_DMA_STREAM_ID(2, 3)
-#define STM32_SDC_SDMMC2_DMA_STREAM         STM32_DMA_STREAM_ID(2, 0)
-#define STM32_SDC_SDMMC1_DMA_PRIORITY       3
-#define STM32_SDC_SDMMC2_DMA_PRIORITY       3
-#define STM32_SDC_SDMMC1_IRQ_PRIORITY       9
-#define STM32_SDC_SDMMC2_IRQ_PRIORITY       9
+#define STM32_SDC_SDIO_DMA_PRIORITY         3
+#define STM32_SDC_SDIO_IRQ_PRIORITY         9
+#define STM32_SDC_WRITE_TIMEOUT_MS          250
+#define STM32_SDC_READ_TIMEOUT_MS           25
+#define STM32_SDC_CLOCK_ACTIVATION_DELAY    10
+#define STM32_SDC_SDIO_UNALIGNED_SUPPORT    TRUE
+#define STM32_SDC_SDIO_DMA_STREAM           STM32_DMA_STREAM_ID(2, 3)
 
 #include "mcuconf_common_f4_f7.h"
 
