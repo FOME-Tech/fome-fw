@@ -49,9 +49,9 @@ static void timerCallback(virtual_timer_t*, CallbackContext* ctx) {
 	ctx->scheduling->action = {};
 
 	// Clean up any memory we allocated
-	if (ctx->shouldFree) {
-		delete ctx->scheduling;
-	}
+	// if (ctx->shouldFree) {
+	// 	delete ctx->scheduling;
+	// }
 	delete ctx;
 
 	// Lastly, actually execute the action
