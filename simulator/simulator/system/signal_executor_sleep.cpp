@@ -43,7 +43,7 @@ void SleepExecutor::scheduleByTimestampNt(const char *msg, scheduling_s* schedul
 	scheduleByTimestamp(msg, scheduling, NT2US(timeNt), action);
 }
 
-static void timerCallback(CallbackContext* ctx) {
+static void timerCallback(virtual_timer_t*, CallbackContext* ctx) {
 	// Grab the action but clear it in the event so we can reschedule from the action's execution
 	action_s action = ctx->scheduling->action;
 	ctx->scheduling->action = {};
