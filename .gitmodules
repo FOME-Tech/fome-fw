@@ -1,7 +1,7 @@
 [submodule "firmware/ChibiOS"]
 	path = firmware/ChibiOS
-	url = https://github.com/rusefi/ChibiOS.git
-	branch = stable_20.3.x.rusefi
+	url = https://github.com/FOME-Tech/ChibiOS.git
+	branch = stable_21.11.x.FOME
 [submodule "firmware/ChibiOS-Contrib"]
 	path = firmware/ChibiOS-Contrib
 	url = https://github.com/rusefi/ChibiOS-Contrib.git
@@ -43,3 +43,5 @@
 	path = firmware/ext/build-tools
 	url = https://github.com/FOME-Tech/build-tools.git
 	branch = main
+[submodule "ChibiOS"]
+	url = https://github.com/FOME-Tech/ChibiOS.git
