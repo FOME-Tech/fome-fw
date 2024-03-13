@@ -51,6 +51,10 @@ jobs:
     - name: Build Firmware
       run: .github/workflows/hw-ci/build_for_hw_ci.sh ${{matrix.folder}} ${{matrix.build-target}}
 
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./firmware/deliver/fome.bin
+
     - name: Check for STLINK
       run: lsusb | grep 'ST-LINK\|STLINK'
 
