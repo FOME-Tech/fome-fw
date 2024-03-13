@@ -56,7 +56,8 @@ SPIConfig wifi_spicfg = {
 		.circular = false,
 		.slave = false,
 		.data_cb = NULL,
-		.error_cb = NULL,		.ssport = NULL,
+		.error_cb = NULL,
+		.ssport = NULL,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
 			| 2 << 28 /* MBR = 2, divider = 8 */,
