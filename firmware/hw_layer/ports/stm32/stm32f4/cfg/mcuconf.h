@@ -65,7 +65,7 @@
 #define STM32_PPRE1                         STM32_PPRE1_DIV4
 #define STM32_PPRE2                         STM32_PPRE2_DIV2
 // see RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL
-#define STM32_RTCSEL                        STM32_RTCSEL_LSE
+#define STM32_RTCSEL                        STM32_RTCSEL_LSI
 #ifndef STM32_RTCPRE_VALUE
 #define STM32_RTCPRE_VALUE                  8
 #endif
