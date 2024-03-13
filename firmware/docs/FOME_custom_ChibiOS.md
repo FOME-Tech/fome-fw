@@ -1,12 +1,12 @@
-rusEFI is trying to use latest stable ChibiOS with minimal changes
+FOME is trying to use latest stable ChibiOS with minimal changes
 
-At the moment rusEFI uses https://github.com/rusefi/ChibiOS/tree/stable_20.3.x.rusefi
+At the moment FOME uses https://github.com/FOME-Tech/ChibiOS/tree/stable_21.11.x.FOME
 
-rusEFI custom version of ChibiOS has the following changes:
+FOME custom version of ChibiOS has the following changes:
 
-*) LSE auto-detection/fallback, RUSEFI_STM32_LSE_WAIT_MAX/RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL
+*) LSE auto-detection/fallback, FOME_STM32_LSE_WAIT_MAX/FOME_STM32_LSE_WAIT_MAX_RTCSEL
 
-# TODO items below this line need to be reviewed, seems to NOT be up to date with 20.3 patch
+# TODO items below this line need to be reviewed, seems to NOT be up to date with 21.11 patch
 
 *) minor OS monitoring and maintainability fixes:
    chDbgStackOverflowPanic allows to know which thread has stack overflow
@@ -26,7 +26,6 @@ Weird changes without an explanation:
 
 15) Use QueryPerformanceCounter() instead of POSIX gettimeofday() in os/rt/ports/SIMIA32/chcore.c
 
-New files: 
+New files:
 	os/common/startup/SIMIA32/compilers/GCC/rules.mk
 	os/hal/ports/simulator/posix/*
-	
