@@ -133,7 +133,7 @@
  */
 #define STM32_SW                            STM32_SW_PLL1_P_CK
 // see RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL
-#define STM32_RTCSEL                        STM32_RTCSEL_LSE_CK
+#define STM32_RTCSEL                        STM32_RTCSEL_LSI_CK
 #define STM32_D1CPRE                        STM32_D1CPRE_DIV1
 #define STM32_D1HPRE                        STM32_D1HPRE_DIV2
 #define STM32_D1PPRE3                       STM32_D1PPRE3_DIV2
