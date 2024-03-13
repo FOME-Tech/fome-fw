@@ -36,7 +36,7 @@
 #define STM32F415_MCUCONF
 #define STM32F407_MCUCONF
 #define STM32F417_MCUCONF
-#define STM32F429_MCUCONF
+// #define STM32F429_MCUCONF
 
 // Allows LSE init to timeout and configure fallback RTC clock source in case
 #define RUSEFI_STM32_LSE_WAIT_MAX           1000000
@@ -53,7 +53,7 @@
     #define STM32_HSE_ENABLED               TRUE
 #endif
 // see RUSEFI_STM32_LSE_WAIT_MAX
-#define STM32_LSE_ENABLED                   TRUE
+#define STM32_LSE_ENABLED                   FALSE
 #define STM32_CLOCK48_REQUIRED              TRUE
 #define STM32_SW                            STM32_SW_PLL
 #define STM32_PLLSRC                        STM32_PLLSRC_HSI

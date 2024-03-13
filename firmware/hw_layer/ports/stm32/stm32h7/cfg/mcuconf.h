@@ -83,7 +83,7 @@
 #define STM32_HSI48_ENABLED                 TRUE
 #define STM32_HSE_ENABLED                   TRUE
 // see RUSEFI_STM32_LSE_WAIT_MAX
-#define STM32_LSE_ENABLED                   TRUE
+#define STM32_LSE_ENABLED                   FALSE
 #define STM32_HSIDIV                        STM32_HSIDIV_DIV1
 
 /*
