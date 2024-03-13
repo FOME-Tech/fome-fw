@@ -60,8 +60,8 @@
 #define STM32F7xx_MCUCONF
 
 // Allows LSE init to timeout and configure fallback RTC clock source in case
-#define RUSEFI_STM32_LSE_WAIT_MAX           1000000
-#define RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL    STM32_RTCSEL_LSI
+#define FOME_STM32_LSE_WAIT_MAX             1000000
+#define FOME_STM32_LSE_WAIT_MAX_RTCSEL      STM32_RTCSEL_LSI
 
 /*
  * HAL driver system settings.
