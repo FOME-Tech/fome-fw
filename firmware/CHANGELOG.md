@@ -35,9 +35,12 @@ or
  - VE/Ign/Boost blend tables can select a Y axis override for even more flexibility
  - Added Lua function `getAuxDigital` for parity with rusEFI #351
  - Optional table to change after start idle taper time #369 (thank you, Krakert!)
+ - Increased precision available for Lua tables
 
 ### Fixed
  - Improve performance with Lua CAN reception of a high volume of frames
+ - Displayed units in TunerStudio change when switching between volume vs. mass injector flow modes #42
+ - Make Toyota "3 Tooth Cam" decoder more robust #382
 
 ## December 2023 Release
 
