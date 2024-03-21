@@ -15,5 +15,5 @@
 bool initMax31855(spi_device_e device, egt_cs_array_t max31855_cs);
 #endif /* HAL_USE_SPI */
 
-uint16_t getMax31855EgtValue(int egtChannel);
+void updateMax31855();
 

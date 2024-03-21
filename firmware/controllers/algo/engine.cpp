@@ -34,6 +34,8 @@
  #include "mc33816.h"
 #endif // EFI_MC33816
 
+#include "max31855.h"
+
 #if EFI_PROD_CODE
 #include "trigger_emulator_algo.h"
 #include "bench_test.h"
@@ -161,6 +163,10 @@ void Engine::periodicSlowCallback() {
 	void baroLps25Update();
 	baroLps25Update();
 #endif // EFI_PROD_CODE
+
+#if EFI_MAX_31855
+	updateMax31855();
+#endif // EFI_MAX_31855
 }
 
 /**

@@ -16,6 +16,7 @@
 #include "max31855.h"
 
 #include "hardware.h"
+#include "egt.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
@@ -105,19 +106,8 @@ static uint32_t readEgtPacket(int egtChannel) {
 
 #define GET_TEMPERATURE_C(x) (((x) >> 18) / 4)
 
-uint16_t getMax31855EgtValue(int egtChannel) {
-	uint32_t packet = readEgtPacket(egtChannel);
-	max_32855_code code = getResultCode(packet);
-	if (code != MC_OK) {
-		return EGT_ERROR_VALUE + code;
-	} else {
-		return GET_TEMPERATURE_C(packet);
-	}
-}
-
 static void egtRead() {
-
-	if (driver == NULL) {
+	if (!driver) {
 		efiPrintf("No SPI selected for EGT");
 		return;
 	}
@@ -141,15 +131,11 @@ static void egtRead() {
 
 bool initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 	driver = getSpiDevice(device);
-	if (driver == NULL) {
-		// error already reported
+	if (!driver) {
 		return false;
 	}
 
-	// todo:spi device is now enabled separately - should probably be enabled here
-
 	addConsoleAction("egtinfo", (Void) showEgtInfo);
-
 	addConsoleAction("egtread", (Void) egtRead);
 
 	bool hadAnyCsPin = false;
@@ -163,7 +149,41 @@ bool initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 		}
 	}
 
+	if (!hadAnyCsPin) {
+		driver = nullptr;
+	}
+
 	return hadAnyCsPin;
+}
+
+uint16_t getMax31855EgtValue(int egtChannel) {
+	uint32_t packet = readEgtPacket(egtChannel);
+	max_32855_code code = getResultCode(packet);
+	if (code != MC_OK) {
+		return EGT_ERROR_VALUE + code;
+	} else {
+		return GET_TEMPERATURE_C(packet);
+	}
+}
+
+void updateMax31855() {
+	if (!driver) {
+		// Not initialized, skip
+		return;
+	}
+
+	for (size_t i = 0; i < efi::size(spiConfig); i++) {
+		if (!spiConfig[i].ssport) {
+			// this channel not configured, skip it
+			continue;
+		}
+
+		uint32_t packet = readEgtPacket(i);
+
+		if (MC_OK == getResultCode(packet)) {
+			setEgt(i, GET_TEMPERATURE_C(packet));
+		}
+	}
 }
 
 #endif /* EFI_MAX_31855 */

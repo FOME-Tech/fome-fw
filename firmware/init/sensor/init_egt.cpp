@@ -24,3 +24,11 @@ void initEgt() {
 	}
 #endif /* EFI_MAX_31855 */
 }
+
+void setEgt(size_t index, int tempC) {
+	if (index >= efi::size(egts)) {
+		return;
+	}
+
+	egts[index].setValidValue(tempC, getTimeNowNt());
+}
