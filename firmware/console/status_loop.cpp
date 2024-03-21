@@ -645,10 +645,9 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->checkEngine = hasErrorCodes();
 
-#if EFI_MAX_31855
-	for (int i = 0; i < EGT_CHANNEL_COUNT; i++)
-		tsOutputChannels->egt[i] = getMax31855EgtValue(i);
-#endif /* EFI_MAX_31855 */
+	for (struct { int i = 0; SensorType s = SensorType::Egt1; } s; s.s <= SensorType::Egt8; s.i++, s.s++) {
+		tsOutputChannels->egt[s.i] = Sensor::getOrZero(s.s);
+	}
 
 	tsOutputChannels->warningCounter = engine->engineState.warnings.warningCounter;
 	tsOutputChannels->lastErrorCode = static_cast<uint16_t>(engine->engineState.warnings.lastErrorCode);

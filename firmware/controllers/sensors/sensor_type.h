@@ -85,8 +85,14 @@ enum class SensorType : unsigned char {
 
 	InputShaftSpeed,
 
-	EGT1,
-	EGT2,
+	Egt1,
+	Egt2,
+	Egt3,
+	Egt4,
+	Egt5,
+	Egt6,
+	Egt7,
+	Egt8,
 
 	Maf2,	// Second bank MAF sensor
 
@@ -128,3 +134,8 @@ enum class SensorType : unsigned char {
 	// Leave me at the end!
 	PlaceholderLast,
 };
+
+inline SensorType& operator++(SensorType& in, int) {
+	in = static_cast<SensorType>(static_cast<int>(in) + 1);
+	return in;
+}
