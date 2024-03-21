@@ -47,8 +47,8 @@ public class TriggerWheelTSLogic {
         });
 
         /*
-         * these are templated into tunerstudio.ini-template file
-         * note that TT_TOOTHED_WHEEL is not mentioned in the meta file, we handle it manually right in tunerstudio.ini-template file
+         * these are templated into tunerstudio.template.ini file
+         * note that TT_TOOTHED_WHEEL is not mentioned in the meta file, we handle it manually right in tunerstudio.template.ini file
          */
         variableRegistry.register(TRIGGER_TYPE_WITHOUT_KNOWN_LOCATION, triggerTypesWithoutKnownLocation.toString());
         variableRegistry.register(TRIGGER_TYPE_WITH_SECOND_WHEEL, triggerTypesWithSecondWheel.toString());
