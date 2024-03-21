@@ -100,6 +100,14 @@ extern "C" {
 }
 
 /**
+ * @brief   Runtime Faults Collection Unit hook.
+ * @details This hook is invoked each time new faults are collected and stored.
+ */
+#define CH_CFG_RUNTIME_FAULTS_HOOK(mask) {                                  \
+  /* Faults handling code here.*/                                           \
+}
+
+/**
  * declared as a macro so that this code does not use stack
  * so that it would not crash the error handler in case of stack issues
  */
