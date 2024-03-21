@@ -15,7 +15,6 @@
 #include "rtc_helper.h"
 #include "bench_test.h"
 #include "pin_repository.h"
-#include "max31855.h"
 #include "logic_analyzer.h"
 #include "smart_gpio.h"
 #include "accelerometer.h"
@@ -492,10 +491,6 @@ void initHardware() {
 #if EFI_MC33816
 	initMc33816();
 #endif /* EFI_MC33816 */
-
-#if EFI_MAX_31855
-	initMax31855(engineConfiguration->max31855spiDevice, engineConfiguration->max31855_cs);
-#endif /* EFI_MAX_31855 */
 
 #if EFI_CAN_SUPPORT
 	initCan();

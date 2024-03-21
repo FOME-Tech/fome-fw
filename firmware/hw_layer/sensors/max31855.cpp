@@ -139,11 +139,11 @@ static void egtRead() {
 	}
 }
 
-void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
+bool initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 	driver = getSpiDevice(device);
 	if (driver == NULL) {
 		// error already reported
-		return;
+		return false;
 	}
 
 	// todo:spi device is now enabled separately - should probably be enabled here
@@ -152,14 +152,18 @@ void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 
 	addConsoleAction("egtread", (Void) egtRead);
 
+	bool hadAnyCsPin = false;
+
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
 		if (isBrainPinValid(max31855_cs[i])) {
-
 			initSpiCs(&spiConfig[i], max31855_cs[i]);
-
 			spiConfig[i].cr1 = getSpiPrescaler(_5MHz, device);
+
+			hadAnyCsPin |= true;
 		}
 	}
+
+	return hadAnyCsPin;
 }
 
 #endif /* EFI_MAX_31855 */

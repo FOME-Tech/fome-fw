@@ -76,6 +76,7 @@ void initNewSensors() {
 	initTurbochargerSpeedSensor();
 	initAuxSpeedSensors();
 	initInputShaftSpeedSensor();
+	initEgt();
 
 	#if !EFI_UNIT_TEST
 		initFuelLevel();

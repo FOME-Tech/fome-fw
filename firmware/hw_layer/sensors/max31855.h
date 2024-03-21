@@ -11,7 +11,8 @@
 #include "engine_configuration.h"
 
 #if HAL_USE_SPI
-void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs);
+// Returns true if any MAX31855 was configured
+bool initMax31855(spi_device_e device, egt_cs_array_t max31855_cs);
 #endif /* HAL_USE_SPI */
 
 uint16_t getMax31855EgtValue(int egtChannel);
