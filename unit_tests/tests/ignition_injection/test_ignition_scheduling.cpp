@@ -148,3 +148,43 @@ TEST(ignition, CylinderTimingTrim) {
 	EXPECT_NEAR(engine->engineState.timingAdvance[2], unadjusted + 2, EPS4D);
 	EXPECT_NEAR(engine->engineState.timingAdvance[3], unadjusted + 4, EPS4D);
 }
+
+TEST(ignition, negativeAdvance4stroke) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	int rpm = 0;
+	float load = 50;
+
+	engineConfiguration->fixedTiming = -13;
+	engineConfiguration->timingMode = TM_FIXED;
+	// run the ignition math
+	engine->periodicFastCallback();
+
+	eth.assertRpm(0);
+
+	ASSERT_EQ(-13, getRunningAdvance(rpm, load));
+	ASSERT_EQ(0, getAdvanceCorrections(load));
+	ASSERT_EQ(707, getAdvance(rpm, load));
+
+	ASSERT_NEAR(-13, engine->outputChannels.ignitionAdvance, EPS4D);
+}
+
+TEST(ignition, negativeAdvance2stroke) {
+	EngineTestHelper eth(engine_type_e::SACHS);
+
+	int rpm = 0;
+	float load = 50;
+
+	ASSERT_EQ(360, getEngineState()->engineCycle);
+
+	engineConfiguration->fixedTiming = -13;
+	engineConfiguration->timingMode = TM_FIXED;
+	// run the ignition math
+	engine->periodicFastCallback();
+
+	eth.assertRpm(0);
+	ASSERT_EQ(347, getAdvance(rpm, load));
+
+    // todo: ooops! negative advance not displayed right for 2 stroke engines!
+	ASSERT_NEAR(347, engine->outputChannels.ignitionAdvance, EPS4D);
+}
