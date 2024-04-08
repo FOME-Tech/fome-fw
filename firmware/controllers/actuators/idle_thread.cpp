@@ -34,6 +34,7 @@ int IdleController::getTargetRpm(float clt) {
 
 	auto target = targetRpmByClt + targetRpmAcBump;
 	idleTarget = target;
+	target += luaAddRpm;
 	return target;
 }
 
