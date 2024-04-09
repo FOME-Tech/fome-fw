@@ -119,7 +119,7 @@ struct idle_state_s {
 	// offset 48
 	float luaAddRpm = (float)0;
 };
-static_assert(sizeof(idle_state_s) == 52);
+static_assert(sizeof(idle_state_s) == 48);
 static_assert(offsetof(idle_state_s, currentIdlePosition) == 4);
 static_assert(offsetof(idle_state_s, baseIdlePosition) == 8);
 static_assert(offsetof(idle_state_s, idleClosedLoop) == 12);
