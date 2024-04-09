@@ -36,6 +36,16 @@ public:
 	EngineTestHelper(engine_type_e engineType, configuration_callback_t boardCallback, const std::unordered_map<SensorType, float>& sensorValues);
 	~EngineTestHelper();
 
+    // convert ms time to angle at current RPM
+    angle_t timeToAngle(float timeMs);
+    float angleToTimeUs(angle_t angle) {
+        return angle * engine.rpmCalculator.oneDegreeUs;
+    }
+
+    float angleToTimeMs(angle_t angle) {
+        return US2MS(angleToTimeUs(angle));
+    }
+
 	warningBuffer_t *recentWarnings();
 	int getWarningCounter();
 
