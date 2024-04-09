@@ -32,9 +32,8 @@ int IdleController::getTargetRpm(float clt) {
 	// alternator duty cycle has a similar logic
 	targetRpmAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleRpmBump : 0;
 
-	auto target = targetRpmByClt + targetRpmAcBump;
+	auto target = targetRpmByClt + targetRpmAcBump + luaAddRpm;
 	idleTarget = target;
-	target += luaAddRpm;
 	return target;
 }
 
