@@ -260,6 +260,9 @@ bool PrimaryTriggerDecoder::hasSynchronizedPhase() const {
 void PrimaryTriggerDecoder::onTriggerError() {
 	// On trigger error, we've lost full sync
 	resetHasFullSync();
+
+	// Instant RPM data is now also probably trash
+	getTriggerCentral()->instantRpm.resetInstantRpm();
 }
 
 void PrimaryTriggerDecoder::onNotEnoughTeeth(int /*actual*/, int /*expected*/) {
