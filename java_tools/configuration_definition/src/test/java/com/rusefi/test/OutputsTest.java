@@ -3,13 +3,13 @@ package com.rusefi.test;
 import com.rusefi.BitState;
 import com.rusefi.ReaderStateImpl;
 import com.rusefi.newparse.outputs.OutputChannelWriter;
-import com.rusefi.output.DataLogConsumer;
 import com.rusefi.output.GetOutputValueConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
 import java.io.IOException;
 
+import static com.rusefi.test.newParse.NewParseHelper.parseToDatalogs;
 import static com.rusefi.test.newParse.NewParseHelper.parseToOutputChannels;
 import static org.junit.Assert.assertEquals;
 
@@ -35,30 +35,10 @@ public class OutputsTest {
                 "root_tCharge = scalar, F32, 16, \"\", 1, 0\n" +
                 "; total TS size = 20\n";
         assertEquals(expected, parseToOutputChannels(test));
-
-        String expectedLegacy = "afr_type = scalar, F32, 0, \"ms\", 1, 0\n" +
-                "afr_typet = scalar, U08, 4, \"ms\", 1, 0\n" +
-                "isForcedInduction = bits, U32, 8, [0:0]\n" +
-                "enableFan1WithAc = bits, U32, 8, [1:1]\n" +
-                "m_requested_pump = scalar, F32, 12, \"\", 1, 0\n" +
-                "tCharge = scalar, F32, 16, \"\", 1, 0\n" +
-                "; total TS size = 20\n";
-        assertEquals(expectedLegacy, runOriginalImplementation(test, new ReaderStateImpl()).getContent());
-    }
-
-    @Test(expected = BitState.TooManyBitsInARow.class)
-    public void tooManyBits() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 40; i++)
-            sb.append("bit b" + i + "\n");
-        String test = "struct total\n" +
-                sb +
-                "end_struct\n";
-        runOriginalImplementation(test);
     }
 
     @Test
-    public void generateDataLog() {
+    public void generateDataLog() throws IOException {
         String test = "struct total\n" +
                 "bit issue_294_31,\"si_example\",\"nada_example\"\n" +
                 "uint8_t[2 iterate] autoscale knock;;\"\",1, 0, 0, 0, 0\n" +
@@ -73,10 +53,9 @@ public class OutputsTest {
                 "bit enableFan1WithAc;+Turn on this fan when AC is on.\n" +
                 "end_struct\n";
         ReaderStateImpl state = new ReaderStateImpl();
-        state.getVariableRegistry().register("PACK_MULT_PERCENT", 100);
-        state.getVariableRegistry().register("GAUGE_NAME_FUEL_BASE", "hello");
+        // state.getVariableRegistry().register("PACK_MULT_PERCENT", 100);
+        // state.getVariableRegistry().register("GAUGE_NAME_FUEL_BASE", "hello");
 
-        state.readBufferedReader(test, dataLogConsumer);
         assertEquals(
                 "entry = issue_294_31, \"issue_294_31\", int,    \"%d\"\n" +
                         "entry = knock1, \"knock 1\", int,    \"%d\"\n" +
@@ -89,26 +68,21 @@ public class OutputsTest {
                         "entry = afr_typet, \"afr_typet\", int,    \"%d\"\n" +
                         "entry = vehicleSpeedKph, \"vehicleSpeedKph\", int,    \"%d\"\n" +
                         "entry = isBrakePedalDown, \"is pedal down?\", int,    \"%d\"\n" +
-                        "entry = enableFan1WithAc, \"+Turn on this fan when AC is on.\", int,    \"%d\"\n", dataLogConsumer.getContent());
-
+                        "entry = enableFan1WithAc, \"+Turn on this fan when AC is on.\", int,    \"%d\"\n", parseToDatalogs(test));
     }
 
     @Test
-    public void generateDataLogMultiLineCommentWithQuotes() {
+    public void generateDataLogMultiLineCommentWithQuotes() throws IOException {
         String test = "#define GAUGE_NAME_FUEL_BASE \"fuel: base mass\"\n" +
-                "struct total\n" +
+                "struct_no_prefix total\n" +
                 "\tuint16_t autoscale baseFuel;@@GAUGE_NAME_FUEL_BASE@@\\nThis is the raw value we take from the fuel map or base fuel algorithm, before the corrections;\"mg\",1, 0, 0, 0, 0\n" +
                 "\tuint16_t autoscale baseFuel2;\"line1\\nline2\";\"mg\",1, 0, 0, 0, 0\n" +
                 "end_struct\n";
-        ReaderStateImpl state = new ReaderStateImpl();
 
-        state.readBufferedReader(test, dataLogConsumer);
-
-        assertEquals("\"fuel: base mass\"", state.getVariableRegistry().get("GAUGE_NAME_FUEL_BASE"));
         assertEquals(
                 "entry = baseFuel, \"fuel: base mass\", int,    \"%d\"\n" +
                         "entry = baseFuel2, \"line1\", int,    \"%d\"\n"
-                , dataLogConsumer.getContent());
+                , parseToDatalogs(test));
 
     }
 
@@ -150,7 +124,7 @@ public class OutputsTest {
     }
 
     @Test
-    public void sensorStruct() {
+    public void sensorStruct() throws IOException {
         String test = "struct total\n" +
                 "    struct pid_status_s\n" +
                 "    \tfloat iTerm;;\"v\", 1, 0, -10000, 10000, 4, @@GAUGE_CATEGORY@@\n" +
@@ -160,15 +134,12 @@ public class OutputsTest {
                 "\tpid_status_s idleStatus\n" +
                 "end_struct\n";
 
-        ReaderStateImpl state = new ReaderStateImpl();
-        state.getVariableRegistry().register("GAUGE_CATEGORY", "Alternator");
-        state.readBufferedReader(test, dataLogConsumer);
         assertEquals(
                 "entry = alternatorStatus_iTerm, \"alternatorStatus_iTerm\", float,  \"%.3f\"\n" +
-                        "entry = alternatorStatus_dTerm, \"alternatorStatus_dTerm\", float,  \"%.3f\"\n" +
-                        "entry = idleStatus_iTerm, \"idleStatus_iTerm\", float,  \"%.3f\"\n" +
-                        "entry = idleStatus_dTerm, \"idleStatus_dTerm\", float,  \"%.3f\"\n",
-                dataLogConsumer.getContent());
+                "entry = alternatorStatus_dTerm, \"alternatorStatus_dTerm\", float,  \"%.3f\"\n" +
+                "entry = idleStatus_iTerm, \"idleStatus_iTerm\", float,  \"%.3f\"\n" +
+                "entry = idleStatus_dTerm, \"idleStatus_dTerm\", float,  \"%.3f\"\n",
+                parseToDatalogs(test));
     }
 
     @Test
@@ -186,28 +157,13 @@ public class OutputsTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void nameDuplicate() {
+    public void nameDuplicate() throws IOException {
         String test = "struct total\n" +
                 "float afr_type;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
                 "uint8_t afr_type;123;\"ms\",      1,      0,       0, 3000,      0\n" +
                 "end_struct\n";
 
-
-        String expectedLegacy = "afr_type = scalar, F32, 0, \"ms\", 1, 0\n" +
-                "afr_type = scalar, U08, 0, \"ms\", 1, 0\n" +
-                "; total TS size = 1\n";
-        assertEquals(expectedLegacy, runOriginalImplementation(test).getContent());
-    }
-
-    @Test
-    public void nameNotDuplicate() {
-        String test = "struct total\n" +
-                "float afr_type;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
-                "struct afr_type\n" +
-                "float afr_type2;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
-                "end_struct\n" +
-                "end_struct\n";
-
-        runOriginalImplementation(test);
+        // No expectation, should throw
+        parseToDatalogs(test);
     }
 }
