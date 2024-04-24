@@ -5,7 +5,6 @@ import com.rusefi.ReaderStateImpl;
 import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.output.DataLogConsumer;
 import com.rusefi.output.GetOutputValueConsumer;
-import com.rusefi.output.OutputsSectionConsumer;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -58,22 +57,6 @@ public class OutputsTest {
         runOriginalImplementation(test);
     }
 
-    /**
-     * while we have {@link OutputChannelWriter} here we use the current 'legacy' implementation
-     */
-    private static OutputsSectionConsumer runOriginalImplementation(String test) {
-        ReaderStateImpl state = new ReaderStateImpl();
-
-        return runOriginalImplementation(test, state);
-    }
-
-    @NotNull
-    private static OutputsSectionConsumer runOriginalImplementation(String test, ReaderStateImpl state) {
-        OutputsSectionConsumer tsProjectConsumer = new OutputsSectionConsumer(null);
-        state.readBufferedReader(test, tsProjectConsumer);
-        return tsProjectConsumer;
-    }
-
     @Test
     public void generateDataLog() {
         String test = "struct total\n" +
@@ -93,7 +76,6 @@ public class OutputsTest {
         state.getVariableRegistry().register("PACK_MULT_PERCENT", 100);
         state.getVariableRegistry().register("GAUGE_NAME_FUEL_BASE", "hello");
 
-        DataLogConsumer dataLogConsumer = new DataLogConsumer(null);
         state.readBufferedReader(test, dataLogConsumer);
         assertEquals(
                 "entry = issue_294_31, \"issue_294_31\", int,    \"%d\"\n" +
@@ -120,7 +102,6 @@ public class OutputsTest {
                 "end_struct\n";
         ReaderStateImpl state = new ReaderStateImpl();
 
-        DataLogConsumer dataLogConsumer = new DataLogConsumer(null);
         state.readBufferedReader(test, dataLogConsumer);
 
         assertEquals("\"fuel: base mass\"", state.getVariableRegistry().get("GAUGE_NAME_FUEL_BASE"));
@@ -181,7 +162,6 @@ public class OutputsTest {
 
         ReaderStateImpl state = new ReaderStateImpl();
         state.getVariableRegistry().register("GAUGE_CATEGORY", "Alternator");
-        DataLogConsumer dataLogConsumer = new DataLogConsumer(null);
         state.readBufferedReader(test, dataLogConsumer);
         assertEquals(
                 "entry = alternatorStatus_iTerm, \"alternatorStatus_iTerm\", float,  \"%.3f\"\n" +
