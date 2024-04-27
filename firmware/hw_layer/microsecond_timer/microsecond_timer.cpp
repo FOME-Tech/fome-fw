@@ -59,7 +59,7 @@ void setHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 	 * #259 BUG error: not positive deltaTimeNt
 	 * Once in a while we night get an interrupt where we do not expect it
 	 */
-	if (timeDeltaNt <= 0) {
+	if (timeDeltaNt <= efidur_t::zero()) {
 		timerFreezeCounter++;
 		warning(ObdCode::CUSTOM_OBD_LOCAL_FREEZE, "local freeze cnt=%d", timerFreezeCounter);
 	}
