@@ -667,7 +667,7 @@ void updateTunerStudioState() {
 #endif /* EFI_CAN_SUPPORT */
 
 #if EFI_CLOCK_LOCKS
-	tsOutputChannels->maxLockedDuration = NT2US(maxLockedDuration);
+	tsOutputChannels->maxLockedDuration = maxLockedDuration / US_TO_NT_MULTIPLIER;
 #endif /* EFI_CLOCK_LOCKS */
 
 #if EFI_SHAFT_POSITION_INPUT
