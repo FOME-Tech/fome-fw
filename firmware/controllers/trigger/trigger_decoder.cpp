@@ -423,7 +423,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			printf("%s isLessImportant %s now=%d index=%d\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
 					getTrigger_event_e(signal),
-					(int)nowNt,
+					(int)nowNt.count(),
 					currentCycle.current_index);
 		}
 #endif /* EFI_UNIT_TEST */

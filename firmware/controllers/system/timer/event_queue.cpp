@@ -84,8 +84,8 @@ bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s 
 	if (scheduling->action) {
 #if EFI_UNIT_TEST
 		if (verboseMode) {
-			printf("Already scheduled was %d\r\n", (int)scheduling->momentX);
-			printf("Already scheduled now %d\r\n", (int)timeX);
+			printf("Already scheduled was %d\r\n", (int)scheduling->momentX.count());
+			printf("Already scheduled now %d\r\n", (int)timeX.count());
 		}
 #endif /* EFI_UNIT_TEST */
 		return false;

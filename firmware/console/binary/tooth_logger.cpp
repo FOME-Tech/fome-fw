@@ -39,7 +39,7 @@ const std::vector<CompositeEvent>& getCompositeEvents() {
 void SetNextCompositeEntry(efitick_t timestamp) {
 	CompositeEvent event;
 
-	event.timestamp = timestamp;
+	event.timestamp = timestamp.count();
 	event.primaryTrigger = currentTrigger1;
 	event.secondaryTrigger = currentTrigger2;
 	event.isTDC = currentTdc;

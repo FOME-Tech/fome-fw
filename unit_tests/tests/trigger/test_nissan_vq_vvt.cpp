@@ -127,7 +127,7 @@ TEST(nissan, vq_vvt) {
 
 	int queueIndex = 0;
 	while ((head = engine->executor.getHead()) != nullptr) {
-		eth.setTimeAndInvokeEventsUs(head->momentX);
+		eth.setTimeAndInvokeEventsUs(head->momentX.count());
 
 		ASSERT_TRUE(tc->vvtState[0][0].getShaftSynchronized());
 		// let's celebrate that vvtPosition stays the same
