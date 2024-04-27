@@ -105,14 +105,14 @@ void portMicrosecondTimerCallback() {
 class MicrosecondTimerWatchdogController : public PeriodicTimerController {
 	void PeriodicTask() override {
 		efitick_t nowNt = getTimeNowNt();
-		if (nowNt >= lastSetTimerTimeNt + 2 * CORE_CLOCK) {
+		if (nowNt.count() >= lastSetTimerTimeNt.count() + 2 * CORE_CLOCK) {
 			firmwareError(ObdCode::CUSTOM_ERR_SCHEDULING_ERROR, "watchdog: no events since %d", lastSetTimerTimeNt);
 			return;
 		}
 
 		const char* msg = isTimerPending ? "No_cb too long" : "Timer not awhile";
 		// 2 seconds of inactivity would not look right
-		efiAssertVoid(ObdCode::CUSTOM_TIMER_WATCHDOG, nowNt < lastSetTimerTimeNt + 2 * CORE_CLOCK, msg);
+		efiAssertVoid(ObdCode::CUSTOM_TIMER_WATCHDOG, nowNt.count() < lastSetTimerTimeNt.count() + 2 * CORE_CLOCK, msg);
 	}
 
 	int getPeriodMs() override {

@@ -95,6 +95,14 @@ constexpr bool operator>=(const efidur_t& l, const efidur_t& r) {
 	return l.count() >= r.count();
 }
 
+constexpr efidur_t operator*(const efidur_t& l, const int r) {
+	return efidur_t{l.count() * r};
+}
+
+constexpr efidur_t operator*(const int l, const efidur_t& r) {
+	return r * l;
+}
+
 struct efitick_t {
 	using rep = efidur_t::rep;
 

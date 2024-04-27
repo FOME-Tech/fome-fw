@@ -181,7 +181,7 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 		auto& entry = result.Value;
 		auto& timestamp = entry.Timestamp;
 
-		if (timestamp != 0) {
+		if (timestamp != efitick_t{}) {
 			auto& channel = channels[entry.Channel];
 
 			if (channel.Callback) {
