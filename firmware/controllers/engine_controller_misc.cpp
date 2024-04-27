@@ -63,9 +63,9 @@ void slowStartStopButtonCallback() {
 	}
 	engine->engineState.startStopState = startStopState;
 
-	if (engine->startStopStateLastPushTime == {}) {
-   		// nothing is going on with startStop button
-   		return;
+	if (engine->startStopStateLastPushTime == efitick_t{}) {
+		// nothing is going on with startStop button
+		return;
    	}
 
 	// TODO: split starter (/disable relay) control in to its own controller
@@ -74,7 +74,7 @@ void slowStartStopButtonCallback() {
 		bool wasStarterEngaged = enginePins.starterControl.getAndSet(0);
 		if (wasStarterEngaged) {
 			efiPrintf("Engine runs we can disengage the starter");
-			engine->startStopStateLastPushTime = {};
+			engine->startStopStateLastPushTime = 0;
 		}
 	}
 
@@ -82,7 +82,7 @@ void slowStartStopButtonCallback() {
 		bool wasStarterEngaged = enginePins.starterControl.getAndSet(0);
 		if (wasStarterEngaged) {
 			efiPrintf("Cranking timeout %d seconds", engineConfiguration->startCrankingDuration);
-			engine->startStopStateLastPushTime = {};
+			engine->startStopStateLastPushTime = 0;
 		}
 	}
 }

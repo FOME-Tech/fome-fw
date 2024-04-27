@@ -257,7 +257,7 @@ static void timerCallback(PwmConfig *state) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6581, state->dbgNestingLevel < 25, "PWM nesting issue");
 
 	efitick_t switchTimeNt = state->togglePwmState();
-	if (switchTimeNt == 0) {
+	if (switchTimeNt == efitick_t{}) {
 		// we are here when PWM gets stopped
 		return;
 	}
