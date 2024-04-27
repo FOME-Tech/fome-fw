@@ -174,7 +174,7 @@ void PwmConfig::handleCycleStart() {
  */
 efitick_t PwmConfig::togglePwmState() {
 	if (isStopRequested) {
-		return 0;
+		return {};
 	}
 
 #if DEBUG_PWM
