@@ -107,7 +107,7 @@ struct efitick_t {
 	using rep = efidur_t::rep;
 
 	constexpr efitick_t() = default;
-	/*todo: explicit*/ constexpr efitick_t(rep c) : m_count(c) { }
+	explicit constexpr efitick_t(rep c) : m_count(c) { }
 
 	constexpr operator rep() const {
 		return count();

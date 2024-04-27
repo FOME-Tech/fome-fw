@@ -63,7 +63,7 @@ void slowStartStopButtonCallback() {
 	}
 	engine->engineState.startStopState = startStopState;
 
-	if (engine->startStopStateLastPushTime == 0) {
+	if (engine->startStopStateLastPushTime == {}) {
    		// nothing is going on with startStop button
    		return;
    	}
@@ -74,7 +74,7 @@ void slowStartStopButtonCallback() {
 		bool wasStarterEngaged = enginePins.starterControl.getAndSet(0);
 		if (wasStarterEngaged) {
 			efiPrintf("Engine runs we can disengage the starter");
-			engine->startStopStateLastPushTime = 0;
+			engine->startStopStateLastPushTime = {};
 		}
 	}
 
@@ -82,7 +82,7 @@ void slowStartStopButtonCallback() {
 		bool wasStarterEngaged = enginePins.starterControl.getAndSet(0);
 		if (wasStarterEngaged) {
 			efiPrintf("Cranking timeout %d seconds", engineConfiguration->startCrankingDuration);
-			engine->startStopStateLastPushTime = 0;
+			engine->startStopStateLastPushTime = {};
 		}
 	}
 }

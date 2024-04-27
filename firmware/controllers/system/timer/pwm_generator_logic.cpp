@@ -93,7 +93,7 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
  * returns absolute timestamp of state change
  */
 static efitick_t getNextSwitchTimeNt(PwmConfig *state) {
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, state->safe.phaseIndex < PWM_PHASE_MAX_COUNT, "phaseIndex range", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, state->safe.phaseIndex < PWM_PHASE_MAX_COUNT, "phaseIndex range", {});
 	int iteration = state->safe.iteration;
 	// we handle PM_ZERO and PM_FULL separately
 	float switchTime = state->mode == PM_NORMAL ? state->multiChannelStateSequence->getSwitchTime(state->safe.phaseIndex) : 1;
