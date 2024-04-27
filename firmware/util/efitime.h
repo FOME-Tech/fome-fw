@@ -30,7 +30,7 @@
 // microseconds to ticks
 // since only about 20 seconds of ticks fit in 32 bits this macro is casting parameter into 64 bits 'efitick_t' type
 // please note that int64 <-> float is a heavy operation thus we have 'USF2NT' below
-#define US2NT(us) (efidur_t{(((int64_t)(us)) * US_TO_NT_MULTIPLIER)})
+#define US2NT(us) (efidur_t{(((efidur_t::rep)(us)) * US_TO_NT_MULTIPLIER)})
 
 // microseconds to ticks, but floating point
 // If converting a floating point time period, use this macro to avoid
@@ -39,7 +39,7 @@
 #define USF2MS(us_float) (0.001f * (us_float))
 
 // And back
-#define NT2US(x) ((x) / US_TO_NT_MULTIPLIER)
+#define NT2US(x) ((x).count() / US_TO_NT_MULTIPLIER)
 #define NT2USF(x) (((float)(x)) / US_TO_NT_MULTIPLIER)
 
 // milliseconds to ticks
@@ -71,7 +71,7 @@ struct WrapAround62 {
 		// the 64-bit result.  Doing it this way means we only operate on one half at a
 		// time.  Source will supply those bits anyways, so we don't need them from
 		// upper...
-		return (efitick_t(upper >> (32 - shift)) << 32) | source;
+		return (int64_t(upper >> (32 - shift)) << 32) | source;
 	}
 
 private:
