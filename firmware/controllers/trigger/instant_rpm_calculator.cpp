@@ -50,7 +50,7 @@ float InstantRpmCalculator::calculateInstantRpm(
 	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
 	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
 	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t nowNt32 = nowNt;
+	uint32_t nowNt32 = nowNt.count();
 
 	assertIsInBoundsWithResult(current_index, timeOfLastEvent, "calc timeOfLastEvent", 0);
 
@@ -111,7 +111,7 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 		return;
 	}
 
-	uint32_t nowNt32 = nowNt;
+	uint32_t nowNt32 = nowNt.count();
 	spinningEvents[spinningEventIndex] = nowNt32;
 
 	// If we are using only rising edges, we never write in to the odd-index slots that
