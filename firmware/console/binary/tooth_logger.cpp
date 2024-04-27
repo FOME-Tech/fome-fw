@@ -290,7 +290,7 @@ void LogTriggerTopDeadCenter(efitick_t timestamp) {
 	currentTdc = true;
 	SetNextCompositeEntry(timestamp);
 	currentTdc = false;
-	SetNextCompositeEntry(timestamp + 10);
+	SetNextCompositeEntry(timestamp + efidur_t{10});
 }
 
 void LogTriggerCoilState(efitick_t timestamp, bool state) {
