@@ -39,7 +39,10 @@ public class OutputsTest {
 
     @Test
     public void generateDataLog() throws IOException {
-        String test = "struct total\n" +
+        String test =
+                "#define PACK_MULT_PERCENT 100\n" +
+                "#define GAUGE_NAME_FUEL_BASE \"hello\"\n" +
+                "struct_no_prefix total\n" +
                 "bit issue_294_31,\"si_example\",\"nada_example\"\n" +
                 "uint8_t[2 iterate] autoscale knock;;\"\",1, 0, 0, 0, 0\n" +
                 "uint8_t[2 iterate] autoscale withName;\"MyNameIsEarl\";\"\",1, 0, 0, 0, 0\n" +
@@ -125,10 +128,10 @@ public class OutputsTest {
 
     @Test
     public void sensorStruct() throws IOException {
-        String test = "struct total\n" +
+        String test = "struct_no_prefix total\n" +
                 "    struct pid_status_s\n" +
-                "    \tfloat iTerm;;\"v\", 1, 0, -10000, 10000, 4, @@GAUGE_CATEGORY@@\n" +
-                "    \tfloat dTerm;;\"v\", 1, 0, -10000, 10000, 4, @@GAUGE_CATEGORY@@\n" +
+                "    \tfloat iTerm;;\"v\", 1, 0, -10000, 10000, 4\n" +
+                "    \tfloat dTerm;;\"v\", 1, 0, -10000, 10000, 4\n" +
                 "    end_struct\n" +
                 "\tpid_status_s alternatorStatus\n" +
                 "\tpid_status_s idleStatus\n" +
