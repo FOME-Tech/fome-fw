@@ -38,12 +38,9 @@ extern "C"
 #define CH_FREQUENCY 1000
 #define NO_CACHE
 
-typedef int bool_t;
 typedef uint32_t systime_t;
 
 void chDbgAssert(int c, char *msg, void *arg);
-
-#define TICKS_IN_MS 100
 
 #define chDbgCheck(x, y) chDbgAssert(x, y, NULL)
 
@@ -54,8 +51,6 @@ void chDbgAssert(int c, char *msg, void *arg);
 
 #define US_TO_NT_MULTIPLIER 100
 #define RUS_EFI_VERSION_TAG "rusEfiVersion"
-
-#define INLINE inline
 
 #define EFI_ERROR_CODE 0xffffffff
 
@@ -74,7 +69,7 @@ namespace chibios_rt {
 
 struct virtual_timer_t;
 
-#define UNIT_TEST_BUSY_WAIT_CALLBACK() { 	timeNowUs++; }
+#define UNIT_TEST_BUSY_WAIT_CALLBACK() { advanceTimeUs(1); }
 
 #define chsnprintf snprintf
 #define chvsnprintf vsnprintf

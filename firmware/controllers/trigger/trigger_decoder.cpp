@@ -52,14 +52,14 @@ void TriggerDecoderBase::setShaftSynchronized(bool value) {
 		}
 	} else {
 		// sync loss
-		mostRecentSyncTime = 0;
+		mostRecentSyncTime = {};
 	}
 	shaft_is_synchronized = value;
 }
 
 void TriggerDecoderBase::resetState() {
 	setShaftSynchronized(false);
-	toothed_previous_time = 0;
+	toothed_previous_time = {};
 
 	memset(toothDurations, 0, sizeof(toothDurations));
 
@@ -69,7 +69,7 @@ void TriggerDecoderBase::resetState() {
 	m_timeSinceDecodeError.init();
 
 	prevSignal = SHAFT_PRIMARY_FALLING;
-	startOfCycleNt = 0;
+	startOfCycleNt = {};
 
 	resetCurrentCycleState();
 
@@ -408,14 +408,14 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%d now=%d", msg, toothed_previous_time, nowNt);
 	}
 
-	efitick_t currentDurationLong = isFirstEvent ? 0 : nowNt - toothed_previous_time;
+	efidur_t currentDurationLong = isFirstEvent ? 0 : (nowNt - toothed_previous_time);
 
 	/**
 	 * For performance reasons, we want to work with 32 bit values. If there has been more then
 	 * 10 seconds since previous trigger event we do not really care.
 	 */
 	toothDurations[0] =
-			currentDurationLong > 10 * NT_PER_SECOND ? 10 * NT_PER_SECOND : currentDurationLong;
+			currentDurationLong > 10 * NT_PER_SECOND ? efidur_t{10 * NT_PER_SECOND} : currentDurationLong;
 
 	if (!shouldConsiderEdge(triggerShape, triggerWheel, isRising)) {
 #if EFI_UNIT_TEST
@@ -436,7 +436,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			printf("%s event %s %lld\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
 					getTrigger_event_e(signal),
-					nowNt);
+					nowNt.count);
 			printf("decodeTriggerEvent ratio %.2f: current=%d previous=%d\r\n", 1.0 * toothDurations[0] / toothDurations[1],
 					toothDurations[0], toothDurations[1]);
 		}

@@ -60,14 +60,14 @@ void SingleTimerExecutor::scheduleForLater(const char *msg, scheduling_s *schedu
  * @param [in] dwell the number of ticks of output duration.
  */
 void SingleTimerExecutor::scheduleByTimestamp(const char *msg, scheduling_s *scheduling, efitimeus_t timeUs, action_s action) {
-	scheduleByTimestampNt(msg, scheduling, US2NT(timeUs), action);
+	scheduleByTimestampNt(msg, scheduling, efitick_t{US2NT(timeUs)}, action);
 }
 
 void SingleTimerExecutor::scheduleByTimestampNt(const char *msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
 	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
 
 #if EFI_ENABLE_ASSERTS
-	efitick_t deltaTimeNt = nt - getTimeNowNt();
+	efidur_t deltaTimeNt = nt - getTimeNowNt();
 
 	if (deltaTimeNt >= TOO_FAR_INTO_FUTURE_NT) {
 		// we are trying to set callback for too far into the future. This does not look right at all

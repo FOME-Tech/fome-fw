@@ -17,11 +17,10 @@
 #include "efitime.h"
 
 #if EFI_UNIT_TEST
-extern int timeNowUs;
 extern bool verboseMode;
 #endif /* EFI_UNIT_TEST */
 
-EventQueue::EventQueue(efitick_t lateDelay)
+EventQueue::EventQueue(efidur_t lateDelay)
 	: m_lateDelay(lateDelay)
 {
 	for (size_t i = 0; i < efi::size(m_pool); i++) {
@@ -178,7 +177,7 @@ expected<efitick_t> EventQueue::getNextEventTime(efitick_t nowX) const {
 			 * looks like we end up here after 'writeconfig' (which freezes the firmware) - we are late
 			 * for the next scheduled event
 			 */
-			return nowX + m_lateDelay;
+			return efitick_t{nowX + m_lateDelay};
 		} else {
 			return m_head->momentX;
 		}
@@ -307,7 +306,7 @@ void EventQueue::clear(void) {
 		m_head = x->nextScheduling_s;
 
 		// Reset this element
-		x->momentX = 0;
+		x->momentX = {};
 		x->nextScheduling_s = nullptr;
 		x->action = {};
 	}
