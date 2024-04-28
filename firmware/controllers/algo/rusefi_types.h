@@ -38,10 +38,6 @@ using time_t = uint32_t;
 #define STOICH_RATIO 14.7f
 #define CONST_PI 3.14159265358979323846
 
-
-// time in seconds
-using efitimesec_t = time_t;
-
 /**
  * We use a signed type here so that subtraction result is a proper negative value.
  * A typical use-case negative result is when we do 'timeNow() - timeOfEvent' where timeOfEvent
@@ -56,25 +52,47 @@ using efitimesec_t = time_t;
  * platform-dependent tick since boot
  * in case of stm32f4 that's 32-bit timer ticks (SCHEDULER_TIMER_DEVICE == TIM5) extended to 64 bits
  */
-using efitick_t = int64_t;
+
+struct efidur_t {
+	constexpr efidur_t() = default;
+	constexpr efidur_t(int64_t c) : m_count(c) { }
+
+	constexpr operator int64_t() const {
+		return m_count;
+	}
+
+	constexpr int64_t count() const {
+		return m_count;
+	}
+
+	static constexpr efidur_t zero() {
+		return {};
+	}
+
+private:
+	int64_t m_count = 0;
+};
+
+struct efitick_t {
+	constexpr efitick_t() = default;
+	constexpr efitick_t(int64_t c) : count(c) { }
+
+	constexpr operator int64_t() const {
+		return count;
+	}
+
+	efitick_t& operator+=(const efidur_t &s) {
+		count += s.count();
+		return *this;
+	}
+
+	int64_t count = 0;
+};
 
 /**
  * 64 bit time in microseconds (1/1_000_000 of a second), since boot
  */
 using efitimeus_t = int64_t;
-
-/**
- * 64 bit time in milliseconds (1/1_000 of a second), since boot
- */
-using efitimems64_t = int64_t;
-
-/**
- * integer time in milliseconds (1/1_000 of a second)
- * 32 bit 4B / 1000 = 4M seconds = 1111.11 hours = 23(or46?) days.
- * Please restart your ECU every 23(or46?) days? :) See issue https://github.com/rusefi/rusefi/issues/4554 tag#4554
- * See getTimeNowUs()
- */
-using efitimems_t = uint32_t;
 
 // date-time struct a la ctime struct tm
 typedef struct {
