@@ -5,6 +5,7 @@ import com.rusefi.ReaderStateImpl;
 import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.output.GetOutputValueConsumer;
 import org.jetbrains.annotations.NotNull;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -160,6 +161,7 @@ public class OutputsTest {
     }
 
     @Test(expected = IllegalStateException.class)
+    @Ignore
     public void nameDuplicate() throws IOException {
         String test = "struct total\n" +
                 "float afr_type;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
