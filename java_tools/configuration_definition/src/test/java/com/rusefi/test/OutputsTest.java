@@ -57,8 +57,6 @@ public class OutputsTest {
                 "bit enableFan1WithAc;+Turn on this fan when AC is on.\n" +
                 "end_struct\n";
         ReaderStateImpl state = new ReaderStateImpl();
-        // state.getVariableRegistry().register("PACK_MULT_PERCENT", 100);
-        // state.getVariableRegistry().register("GAUGE_NAME_FUEL_BASE", "hello");
 
         assertEquals(
                 "entry = issue_294_31, \"issue_294_31\", int,    \"%d\"\n" +
@@ -161,7 +159,7 @@ public class OutputsTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    @Ignore
+    @Ignore // TODO: re-enable this test
     public void nameDuplicate() throws IOException {
         String test = "struct total\n" +
                 "float afr_type;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
