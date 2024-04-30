@@ -52,6 +52,7 @@
 #include "lambda_monitor.h"
 #include "vvt.h"
 #include "trip_odometer.h"
+#include "traction_control.h"
 
 #include <functional>
 
@@ -168,6 +169,7 @@ public:
 #if EFI_BOOST_CONTROL
 		BoostController,
 #endif // EFI_BOOST_CONTROL
+		TractionController,
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
 

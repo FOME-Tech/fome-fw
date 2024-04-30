@@ -216,6 +216,8 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame &frame, efitick_
 		printPacket(busIndex, frame);
 	}
 
+	engine->module<TractionController>()->onTractionControlCanRx(frame, nowNt);
+
 	serviceCanSubscribers(frame, nowNt);
 
 	// todo: convert to CanListener or not?

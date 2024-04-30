@@ -188,6 +188,11 @@ const lambda_monitor_s* getLiveData(size_t) {
 	return &engine->lambdaMonitor;
 }
 
+template<>
+const traction_control_s* getLiveData(size_t) {
+	return &engine->module<TractionController>().unmock();
+}
+
 static const FragmentEntry fragments[] = {
 // This header is generated - do not edit by hand!
 #include "live_data_fragments.h"

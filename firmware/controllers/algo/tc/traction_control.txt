@@ -1,0 +1,22 @@
+struct_no_prefix traction_control_s
+	float engineTorqueActual;TC: Eng actual tq
+	float driverReqTorque;TC: Driver req tq
+	float engineTorqueMin;TC: Eng min tq
+	float engineTorqueMax;TC: Eng max tq
+	uint8_t currentGear;TC: Current gear
+
+	float wssFront;TC: WSS Front
+	float wssRear;TC: WSS Rear
+
+	bit engineTorqueActualValid;
+	bit driverReqTorqueValid;
+	bit engineTorqueMinValid;
+	bit engineTorqueMaxValid;
+	bit currentGearValid;
+	bit tcActive;TC: Active
+
+	float slipRate;TC: Slip
+	float m_slipError;TC: Slip error
+
+	float torqueRequest;TC: requested torque
+end_struct

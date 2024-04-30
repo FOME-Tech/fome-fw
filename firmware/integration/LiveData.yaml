@@ -150,3 +150,6 @@ Usages:
   - name: lambda_monitor
     folder: controllers/math
     constexpr: "___engine.lambdaMonitor"
+
+  # - name: traction_control
+  #   folder: controllers/algo/tc
