@@ -1,15 +1,11 @@
 ifeq ($(TRGT),)
 	UNAME_SM := $(shell uname -sm)
 $(info UNAME_SM:          $(UNAME_SM))
-	KERNEL := $(firstword $(UNAME_SM))
-	MACHINE := $(lastword $(UNAME_SM))
 
-	ifeq ($(KERNEL),Darwin)
+	ifeq ($(firstword $(UNAME_SM)),Darwin)
 		COMPILER_PLATFORM = arm-gnu-toolchain-11.3.rel1-darwin-x86_64-arm-none-eabi
-	else ifeq ($(KERNEL),Linux)
-		ifeq ($(MACHINE),x86_64)
-			COMPILER_PLATFORM = arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi
-		endif
+	else ifeq ($(UNAME_SM),Linux x86_64)
+		COMPILER_PLATFORM = arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi
 	else
 $(error Looks like your platform, $(UNAME_SM), doesn't have a supported compiler!)
 	endif
