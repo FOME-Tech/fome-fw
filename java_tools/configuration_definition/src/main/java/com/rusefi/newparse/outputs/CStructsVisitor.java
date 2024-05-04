@@ -135,8 +135,8 @@ public class CStructsVisitor extends ILayoutVisitor {
     @Override
     public void visit(ArrayLayout arr, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         // Skip zero length arrays, they may be used for padding
-        if (arrayDims[0] > 0) {
+        // if (arrayDims[0] > 0) {
             super.visit(arr, ps, prefixer, offsetAdd, arrayDims);
-        }
+        // }
     }
 }
