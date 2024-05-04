@@ -41,7 +41,7 @@ public:
 	KnockController()
 	{
 	}
-	void init(engine_configuration_s const * const previousConfig);
+	void init();
 
 	void onConfigurationChange(engine_configuration_s const * /*previousConfig*/) override;
 

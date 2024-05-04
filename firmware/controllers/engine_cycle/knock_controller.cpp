@@ -8,14 +8,14 @@
 #include "pch.h"
 #include "knock_logic.h"
 
-void KnockController::init(engine_configuration_s const * const previousConfig) {
+void KnockController::init() {
 	m_maxRetardTable.init(config->maxKnockRetardTable, config->maxKnockRetardLoadBins, config->maxKnockRetardRpmBins);
 }
 
 void KnockController::onConfigurationChange(engine_configuration_s const * previousConfig) {
 	KnockControllerBase::onConfigurationChange(previousConfig);
 
-	init(previousConfig);
+	init();
 }
 
 int getCylinderKnockBank(uint8_t cylinderNumber) {
@@ -167,5 +167,5 @@ void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
 }
 
 void initKnockCtrl() {
-	engine->module<KnockController>().unmock().init(engineConfiguration);
+	engine->module<KnockController>().unmock().init();
 }
