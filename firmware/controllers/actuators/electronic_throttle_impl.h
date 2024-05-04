@@ -97,7 +97,7 @@ private:
 	 * @return true if OK, false if should be disabled
 	 */
 	bool checkStatus();
-	bool isEtbMode() {
+	bool isEtbMode() const override {
 		return m_function == DC_Throttle1 || m_function == DC_Throttle2;
 	}
 
@@ -137,13 +137,5 @@ class EtbController1 : public EtbController { };
 
 class EtbController2 : public EtbController {
 public:
-	EtbController2(const ValueProvider3D& throttle2TrimTable)
-		: m_throttle2Trim(throttle2TrimTable)
-	{
-	}
-
-	percent_t getThrottleTrim(float rpm, percent_t /*targetPosition*/) const override;
-
-private:
-	const ValueProvider3D& m_throttle2Trim;
+	percent_t getThrottleTrim(float rpm, percent_t targetPosition) const override;
 };
