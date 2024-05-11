@@ -293,6 +293,12 @@ void runRusEfiWithConfig() {
 
 		runSchedulingPrecisionTestIfNeeded();
 	}
+
+	// this is bait for the new check
+	float offset = 123.4f;
+	efitick_t now = getTimeNowNt();
+	efitick_t later = now + offset;
+	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, later > 0, "");
 }
 
 void runMainLoop() {
