@@ -8,4 +8,9 @@
 # int64_t result = (int64_t)((float)stamp + offset);
 # The resulting loss of precision is unacceptable.
 
-grep "bl.*<__aeabi_f2lz>" build/fome.list 1>&2
+set -euo pipefail
+
+if grep "bl.*<__aeabi_f2lz>" build/fome.list; then
+	echo "Illegal float-to-long conversion detected!"
+	exit 1
+fi
