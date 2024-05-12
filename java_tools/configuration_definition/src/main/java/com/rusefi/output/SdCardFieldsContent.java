@@ -6,6 +6,7 @@ import com.rusefi.ReaderState;
 import java.io.IOException;
 
 import static com.rusefi.output.JavaSensorsConsumer.quote;
+import static com.rusefi.VariableRegistry.unquote;
 
 public class SdCardFieldsContent {
     private final StringBuilder body = new StringBuilder();
@@ -50,7 +51,7 @@ public class SdCardFieldsContent {
 
         return "\t{" + home + (isPtr ? "->" : ".") + name +
                 ", "
-                + DataLogConsumer.getHumanGaugeName(prefix, configField) +
+                + getHumanGaugeName(prefix, configField) +
                 ", " +
                 quote(configField.getUnits()) +
                 ", " +
@@ -61,5 +62,32 @@ public class SdCardFieldsContent {
 
     public String getBody() {
         return body.toString();
+    }
+
+    // https://github.com/rusefi/web_backend/issues/166
+    private static final int MSQ_LENGTH_LIMIT = 34;
+
+    private static String getFirstLine(String comment) {
+        String[] comments = comment == null ? new String[0] : unquote(comment).split("\\\\n");
+        comment = (comments.length > 0) ? comments[0] : "";
+        return comment;
+    }
+
+    private static String getHumanGaugeName(String prefix, ConfigField configField) {
+        String comment = configField.getCommentTemplated();
+        comment = getFirstLine(comment);
+
+        if (comment.isEmpty()) {
+            /**
+             * @see ConfigFieldImpl#getCommentOrName()
+             */
+            comment = prefix + unquote(configField.getName());
+        }
+        if (comment.length() > MSQ_LENGTH_LIMIT)
+            throw new IllegalStateException("[" + comment + "] is too long for log files at " + comment.length());
+
+        if (comment.charAt(0) != '"')
+            comment = quote(comment);
+        return comment;
     }
 }

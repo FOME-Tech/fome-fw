@@ -27,7 +27,7 @@ public class ScalarLayout extends Layout {
 
     @Override
     public String toString() {
-        return "Scalar " + type.cType + " " + super.toString();
+        return "Scalar " + type.cType + " " + name + " " + super.toString();
     }
 
     public String makeScaleString() {

@@ -7,6 +7,8 @@ import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.CStructWriter;
+import com.rusefi.newparse.outputs.OutputChannelWriter;
+import com.rusefi.newparse.outputs.SdLogWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.util.LazyFile;
@@ -85,23 +87,17 @@ public class LiveDataProcessor {
     }
 
     private int handleYaml(Map<String, Object> data) throws IOException {
-        OutputsSectionConsumer outputsSections = new OutputsSectionConsumer(tsOutputsDestination + File.separator + "output_channels.ini");
-
-        ConfigurationConsumer dataLogConsumer = new DataLogConsumer(tsOutputsDestination + File.separator + "data_logs.ini");
-
-        SdCardFieldsContent sdCardFieldsConsumer = new SdCardFieldsContent();
-
         GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("generated/output_lookup_generated.cpp");
 
-        // OutputChannelWriter outputChannelWriter = new OutputChannelWriter(
-        //     tsOutputsDestination + File.separator + "/output_channels.ini",
-        //     tsOutputsDestination + File.separator + "/data_logs.ini"
-        // );
+        OutputChannelWriter outputChannelWriter = new OutputChannelWriter(
+            tsOutputsDestination + File.separator + "/output_channels.ini",
+            tsOutputsDestination + File.separator + "/data_logs.ini"
+        );
 
-        // SdLogWriter sdLogWriter = new SdLogWriter("console/binary_log/log_fields_generated.h");
+        SdLogWriter sdLogWriter = new SdLogWriter("generated/log_fields_generated.h");
 
         EntryHandler handler = (name, javaName, folder, prepend, withCDefines, outputNames, constexpr, conditional, isPtr) -> {
-            int startingPosition = outputsSections.sensorTsPosition;
+            int startingPosition = outputChannelWriter.getSize();
             log.info("Starting " + name + " at " + startingPosition + " with [" + conditional + "]");
 
             baseAddressCHeader.append("#define " + name.toUpperCase() + "_BASE_ADDRESS " + startingPosition + "\n");
@@ -110,10 +106,6 @@ public class LiveDataProcessor {
             state.setDefinitionInputFile(folder + File.separator + name + ".txt");
             state.setWithC_Defines(withCDefines);
 
-            state.addDestination(
-                    outputsSections,
-                    dataLogConsumer
-            );
             FragmentDialogConsumer fragmentDialogConsumer = new FragmentDialogConsumer(name);
             state.addDestination(fragmentDialogConsumer);
 
@@ -122,22 +114,17 @@ public class LiveDataProcessor {
             state.addPrepend(prepend);
             String cHeaderDestination = folder + File.separator + name + "_generated.h";
 
-            int baseOffset = outputsSections.getBaseOffset();
+            int baseOffset = outputChannelWriter.getSize();
 
            if (javaName != null) {
                state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
            }
 
             if (constexpr != null) {
-                sdCardFieldsConsumer.home = constexpr;
-                sdCardFieldsConsumer.isPtr = isPtr;
-                state.addDestination(sdCardFieldsConsumer::handleEndStruct);
-
                 outputValueConsumer.currentSectionPrefix = constexpr;
                 outputValueConsumer.conditional = conditional;
                 outputValueConsumer.isPtr = isPtr;
                 state.addDestination(outputValueConsumer::handleEndStruct);
-
             }
 
             {
@@ -155,16 +142,16 @@ public class LiveDataProcessor {
                 cStructs.writeCStructs(parseState, cHeaderDestination);
 
                 // if (outputNames.length == 0) {
-                //     outputChannelWriter.writeOutputChannels(parseState, null);
+                    outputChannelWriter.writeOutputChannels(parseState, null);
                 // } else {
                 //     for (int i = 0; i < outputNames.length; i++) {
                 //         outputChannelWriter.writeOutputChannels(parseState, outputNames[i]);
                 //     }
                 // }
 
-                // if (constexpr != null) {
-                //     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-                // }
+                 if (constexpr != null) {
+                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
+                 }
             }
 
             state.doJob();
@@ -173,7 +160,7 @@ public class LiveDataProcessor {
 
             fancyNewMenu.append(fragmentDialogConsumer.menuLine());
 
-            log.info("Done with " + name + " at " + outputsSections.sensorTsPosition);
+            log.info("Done with " + name + " at " + outputChannelWriter.getSize());
         };
 
 
@@ -237,15 +224,10 @@ public class LiveDataProcessor {
         }
         enumContent.append("} live_data_e;\n");
 
-        LazyFile lazyFile = new LazyFile("generated/log_fields_generated.h");
-        SdCardFieldsConsumer.wrapContent(lazyFile, sdCardFieldsConsumer.getBody());
-        lazyFile.close();
-
         outputValueConsumer.endFile();
-        // sdLogWriter.endFile();
+        sdLogWriter.endFile();
 
-        // return outputChannelWriter.getSize();
-        return outputsSections.sensorTsPosition;
+        return outputChannelWriter.getSize();
     }
 
     private void writeFiles() throws IOException {
