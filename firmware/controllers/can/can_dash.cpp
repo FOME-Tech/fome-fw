@@ -28,15 +28,15 @@
 #define CAN_MAZDA_RX_STATUS_2         0x420
 
 //w202 DASH
-#define W202_STAT_1	     0x308 /* _20ms cycle */
+#define W202_STAT_1      0x308 /* _20ms cycle */
 #define W202_STAT_2      0x608 /* _100ms cycle */
-#define W202_ALIVE	     0x210 /* _200ms cycle */
+#define W202_ALIVE       0x210 /* _200ms cycle */
 #define W202_STAT_3      0x310 /* _200ms cycle */
 
 //BMW E90 DASH
 #define E90_ABS_COUNTER      0x0C0
 #define E90_SEATBELT_COUNTER 0x0D7
-#define E90_T15	             0x130
+#define E90_T15              0x130
 #define E90_RPM              0x175
 #define E90_BRAKE_COUNTER    0x19E
 #define E90_SPEED            0x1A6
