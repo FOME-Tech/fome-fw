@@ -185,7 +185,7 @@ int main(int argc, char** argv) {
 	cputs("  - Listening for connections on SD2");
 	chEvtRegister(chnGetEventSource(&SD2), &sd2fel, 2);
 
-	rusEfiFunctionalTest();
+	rusEfiFunctionalTest(arguments.socketcanDevice);
 
 	/*
 	 * Events servicing loop.
