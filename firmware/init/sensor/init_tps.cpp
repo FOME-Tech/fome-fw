@@ -102,7 +102,7 @@ public:
 	{
 	}
 
-	void init(const TpsConfig& primary, const TpsConfig& secondary, float secondaryMaximum, bool allowIdenticalSensors = false) {
+	void init(const TpsConfig& primary, const TpsConfig& secondary, bool averageSensors, float secondaryMaximum, bool allowIdenticalSensors = false) {
 		bool hasFirst = m_pri.init(primary);
 		if (!hasFirst) {
 			// no input if we have no first channel
@@ -132,7 +132,7 @@ public:
 			secondaryMaximum = 20;
 		}
 
-		m_redund.configure(MAX_TPS_PPS_DISCREPANCY, !hasSecond, secondaryMaximum);
+		m_redund.configure(MAX_TPS_PPS_DISCREPANCY, !hasSecond, averageSensors, secondaryMaximum);
 #if EFI_UNIT_TEST
 		printf("init m_redund.Register() %s\n", getSensorType(m_redund.type()));
 #endif // EFI_UNIT_TEST
@@ -179,24 +179,29 @@ void initTps() {
 	percent_t max = engineConfiguration->tpsErrorDetectionTooHigh;
 
 	// Throttle sensors
+	bool averageThrottleSensors = !engineConfiguration->tpsSecondaryMonitors;
 	float throttleSecondaryMaximum = engineConfiguration->tpsSecondaryMaximum;
 	tps1.init(
 		{ engineConfiguration->tps1_1AdcChannel, (float)engineConfiguration->tpsMin, (float)engineConfiguration->tpsMax, min, max },
 		{ engineConfiguration->tps1_2AdcChannel, (float)engineConfiguration->tps1SecondaryMin, (float)engineConfiguration->tps1SecondaryMax, min, max },
+		averageThrottleSensors,
 		throttleSecondaryMaximum
 	);
 
 	tps2.init(
 		{ engineConfiguration->tps2_1AdcChannel, (float)engineConfiguration->tps2Min, (float)engineConfiguration->tps2Max, min, max },
 		{ engineConfiguration->tps2_2AdcChannel, (float)engineConfiguration->tps2SecondaryMin, (float)engineConfiguration->tps2SecondaryMax, min, max },
+		averageThrottleSensors,
 		throttleSecondaryMaximum
 	);
 
 	// Pedal sensors
+	bool averagePedalSensors = !engineConfiguration->ppsSecondaryMonitors;
 	float pedalSecondaryMaximum = engineConfiguration->ppsSecondaryMaximum;
 	pedal.init(
 		{ engineConfiguration->throttlePedalPositionAdcChannel, engineConfiguration->throttlePedalUpVoltage, engineConfiguration->throttlePedalWOTVoltage, min, max },
 		{ engineConfiguration->throttlePedalPositionSecondAdcChannel, engineConfiguration->throttlePedalSecondaryUpVoltage, engineConfiguration->throttlePedalSecondaryWOTVoltage, min, max },
+		averagePedalSensors,
 		pedalSecondaryMaximum,
 		engineConfiguration->allowIdenticalPps
 	);
