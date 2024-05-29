@@ -343,14 +343,6 @@ static void handleBenchCategory(uint16_t index) {
 
 static void handleCommandX14(uint16_t index) {
 	switch (index) {
-	case COMMAND_X14_GRAB_TPS_CLOSED:
-		grabTPSIsClosed();
-		return;
-	case COMMAND_X14_GRAB_TPS_WOT:
-		grabTPSIsWideOpen();
-		return;
-	// case COMMAND_X14_GRAB_TPS2_CLOSED:
-	// case COMMAND_X14_GRAB_TPS2_WOT:
 	case COMMAND_X14_GRAB_PEDAL_UP:
 		grabPedalIsUp();
 		return;
