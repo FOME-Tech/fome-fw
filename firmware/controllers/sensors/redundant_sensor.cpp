@@ -19,14 +19,14 @@ SensorResult RedundantSensor::get() const {
 	// Sensor 1 is always full range, i.e. 0% -> 100%
 	auto sensor1 = Sensor::get(m_first);
 
-	// If sensor 1 result is invalid, return inconsistency error
-	if (!sensor1.Valid) {
-		return UnexpectedCode::Inconsistent;
-	}
-
 	// If we're set to disable redundancy, just pass thru the first sensor
 	if (m_ignoreSecond) {
 		return sensor1;
+	}
+
+	// If sensor 1 result is invalid, return inconsistency error
+	if (!sensor1.Valid) {
+		return UnexpectedCode::Inconsistent;
 	}
 
 	// Sensor 2 may be partial, i.e. 0% -> m_secondMaximum%
