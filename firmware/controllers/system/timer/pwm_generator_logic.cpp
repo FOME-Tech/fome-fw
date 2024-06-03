@@ -93,7 +93,7 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
  * returns absolute timestamp of state change
  */
 static efitick_t getNextSwitchTimeNt(PwmConfig *state) {
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, state->safe.phaseIndex < PWM_PHASE_MAX_COUNT, "phaseIndex range", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, state->safe.phaseIndex < PWM_PHASE_MAX_COUNT, "phaseIndex range", {});
 	int iteration = state->safe.iteration;
 	// we handle PM_ZERO and PM_FULL separately
 	float switchTime = state->mode == PM_NORMAL ? state->multiChannelStateSequence->getSwitchTime(state->safe.phaseIndex) : 1;
@@ -106,7 +106,7 @@ static efitick_t getNextSwitchTimeNt(PwmConfig *state) {
 	 * Once 'iteration' gets relatively high, we might lose calculation precision here.
 	 * This is addressed by iterationLimit below, using any many cycles as possible without overflowing timeToSwitchNt
 	 */
-	uint32_t timeToSwitchNt = (uint32_t)((iteration + switchTime) * periodNt);
+	efidur_t timeToSwitchNt = efidur_t{(uint32_t)((iteration + switchTime) * periodNt)};
 
 #if DEBUG_PWM
 	efiPrintf("start=%d timeToSwitch=%d", state->safe.start, timeToSwitch);
@@ -174,7 +174,7 @@ void PwmConfig::handleCycleStart() {
  */
 efitick_t PwmConfig::togglePwmState() {
 	if (isStopRequested) {
-		return 0;
+		return {};
 	}
 
 #if DEBUG_PWM
@@ -257,7 +257,7 @@ static void timerCallback(PwmConfig *state) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6581, state->dbgNestingLevel < 25, "PWM nesting issue");
 
 	efitick_t switchTimeNt = state->togglePwmState();
-	if (switchTimeNt == 0) {
+	if (switchTimeNt == efitick_t{}) {
 		// we are here when PWM gets stopped
 		return;
 	}

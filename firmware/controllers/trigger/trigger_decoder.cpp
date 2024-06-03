@@ -408,7 +408,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%d now=%d", msg, toothed_previous_time, nowNt);
 	}
 
-	efidur_t currentDurationLong = isFirstEvent ? 0 : (nowNt - toothed_previous_time);
+	efidur_t currentDurationLong = isFirstEvent ? efidur_t::zero() : (nowNt - toothed_previous_time);
 
 	/**
 	 * For performance reasons, we want to work with 32 bit values. If there has been more then
@@ -423,7 +423,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			printf("%s isLessImportant %s now=%d index=%d\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
 					getTrigger_event_e(signal),
-					(int)nowNt,
+					(int)nowNt.count(),
 					currentCycle.current_index);
 		}
 #endif /* EFI_UNIT_TEST */
@@ -436,7 +436,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			printf("%s event %s %lld\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
 					getTrigger_event_e(signal),
-					nowNt.count);
+					nowNt.count());
 			printf("decodeTriggerEvent ratio %.2f: current=%d previous=%d\r\n", 1.0 * toothDurations[0] / toothDurations[1],
 					toothDurations[0], toothDurations[1]);
 		}

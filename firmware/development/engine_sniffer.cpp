@@ -104,7 +104,7 @@ bool WaveChart::isStartedTooLongAgo() const {
 	 *
 	 */
 	efidur_t chartDurationNt = getTimeNowNt() - startTimeNt;
-	return startTimeNt != 0 && NT2US(chartDurationNt) > engineConfiguration->engineChartSize * 1000000 / 20;
+	return startTimeNt.count() != 0 && NT2US(chartDurationNt) > engineConfiguration->engineChartSize * 1000000 / 20;
 }
 
 bool WaveChart::isFull() const {
@@ -205,8 +205,8 @@ void WaveChart::addEvent3(const char *name, const char * msg) {
 	 *
 	 * at least that's 32 bit division now
 	 */
-	uint32_t diffNt = nowNt - startTimeNt;
-	uint32_t time100 = NT2US(diffNt / ENGINE_SNIFFER_UNIT_US);
+	uint32_t diffUs = NT2US(nowNt - startTimeNt);
+	uint32_t time100 = diffUs / ENGINE_SNIFFER_UNIT_US;
 
 	if (logging.remainingSize() > 35) {
 		/**

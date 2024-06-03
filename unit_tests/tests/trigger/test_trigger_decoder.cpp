@@ -250,12 +250,12 @@ TEST(misc, testRpmCalculator) {
 	scheduling_s *ev0 = engine->executor.getForUnitTest(0);
 
 	assertREqualsM("Call@0", (void*)ev0->action.getCallback(), (void*)turnSparkPinHigh);
-	assertEqualsM("ev 0", start + 944, ev0->momentX);
+	assertEqualsM("ev 0", start + 944, ev0->momentX.count());
 	assertEqualsLM("coil 0", (uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev0->action.getArgument())->outputs[0]);
 
 	scheduling_s *ev1 = engine->executor.getForUnitTest(1);
 	assertREqualsM("Call@1", (void*)ev1->action.getCallback(), (void*)fireSparkAndPrepareNextSchedule);
-	assertEqualsM("ev 1", start + 1444, ev1->momentX);
+	assertEqualsM("ev 1", start + 1444, ev1->momentX.count());
 	assertEqualsLM("coil 1", (uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev1->action.getArgument())->outputs[0]);
 
 	}
@@ -267,9 +267,9 @@ TEST(misc, testRpmCalculator) {
 	eth.fireFall(5);
 	ASSERT_EQ( 2,  eth.engine.triggerCentral.triggerState.getCurrentIndex()) << "index #3";
 	ASSERT_EQ( 4,  engine->executor.size()) << "queue size 3";
-	assertEqualsM("ev 3", start + 13333 - 1515 + 2459, engine->executor.getForUnitTest(0)->momentX);
-	assertEqualsM2("ev 5", start + 14277 + 500, engine->executor.getForUnitTest(1)->momentX, 2);
-	assertEqualsM("3/3", start + 14777 + 677, engine->executor.getForUnitTest(2)->momentX);
+	assertEqualsM("ev 3", start + 13333 - 1515 + 2459, engine->executor.getForUnitTest(0)->momentX.count());
+	assertEqualsM2("ev 5", start + 14277 + 500, engine->executor.getForUnitTest(1)->momentX.count(), 2);
+	assertEqualsM("3/3", start + 14777 + 677, engine->executor.getForUnitTest(2)->momentX.count());
 	engine->executor.clear();
 
 	ASSERT_EQ(4, engine->triggerCentral.triggerShape.findAngleIndex(&engine->triggerCentral.triggerFormDetails, 240));
@@ -304,8 +304,8 @@ TEST(misc, testRpmCalculator) {
 
 	eth.fireRise(5);
 	ASSERT_EQ( 4,  engine->executor.size()) << "queue size 6";
-	assertEqualsM("6/0", start + 40944, engine->executor.getForUnitTest(0)->momentX);
-	assertEqualsM("6/1", start + 41444, engine->executor.getForUnitTest(1)->momentX);
+	assertEqualsM("6/0", start + 40944, engine->executor.getForUnitTest(0)->momentX.count());
+	assertEqualsM("6/1", start + 41444, engine->executor.getForUnitTest(1)->momentX.count());
 	engine->executor.clear();
 
 	eth.fireFall(5);
@@ -316,8 +316,8 @@ TEST(misc, testRpmCalculator) {
 	eth.fireFall(5);
 
 	ASSERT_EQ( 4,  engine->executor.size()) << "queue size 8";
-	assertEqualsM("8/0", start + 53333 - 1515 + 2459, engine->executor.getForUnitTest(0)->momentX);
-	assertEqualsM2("8/1", start + 54277 + 2459 - 1959, engine->executor.getForUnitTest(1)->momentX, 0);
+	assertEqualsM("8/0", start + 53333 - 1515 + 2459, engine->executor.getForUnitTest(0)->momentX.count());
+	assertEqualsM2("8/1", start + 54277 + 2459 - 1959, engine->executor.getForUnitTest(1)->momentX.count(), 0);
 	engine->executor.clear();
 }
 

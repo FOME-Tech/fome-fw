@@ -23,7 +23,7 @@ void portSetHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 	// This implementation doesn't need the current time, only the target time
 	UNUSED(nowNt);
 
-	pwm_lld_enable_channel(&SCHEDULER_PWM_DEVICE, 0, setTimeNt);
+	pwm_lld_enable_channel(&SCHEDULER_PWM_DEVICE, 0, setTimeNt.count());
 	pwmEnableChannelNotificationI(&SCHEDULER_PWM_DEVICE, 0);
 }
 

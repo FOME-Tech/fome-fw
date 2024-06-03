@@ -26,7 +26,7 @@ TEST(real4b11, running) {
 
 		// Expect that all teeth are in the correct spot
 		float angleError = getTriggerCentral()->triggerToothAngleError;
-		EXPECT_TRUE(angleError < 3 && angleError > -3) << "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
+		EXPECT_TRUE(angleError < 3 && angleError > -3) << "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt().count() / 1e8);
 
 		auto rpm = Sensor::getOrZero(SensorType::Rpm);
 		if (!gotRpm && rpm) {

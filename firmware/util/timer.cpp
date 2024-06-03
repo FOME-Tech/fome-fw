@@ -12,7 +12,7 @@ void Timer::reset() {
 
 void Timer::init() {
 	// Use not-quite-minimum value to avoid overflow
-	m_lastReset = INT64_MIN / 8;
+	m_lastReset = efitick_t{INT64_MIN / 8};
 }
 
 void Timer::reset(efitick_t nowNt) {
@@ -60,7 +60,7 @@ float Timer::getElapsedUs(efitick_t nowNt) const {
 	// Yes, things can happen slightly in the future if we get a lucky interrupt between
 	// the timestamp and this subtraction, that updates m_lastReset to what's now "the future",
 	// resulting in a negative delta.
-	if (deltaNt < 0) {
+	if (deltaNt < efidur_t::zero()) {
 		return 0;
 	}
 
@@ -68,9 +68,9 @@ float Timer::getElapsedUs(efitick_t nowNt) const {
 		deltaNt = clock32max;
 	}
 
-	auto delta32 = (uint32_t)deltaNt;
+	auto delta32 = (uint32_t)deltaNt.count();
 
-	return NT2US(delta32);
+	return NT2USF(delta32);
 }
 
 float Timer::getElapsedSecondsAndReset(efitick_t nowNt) {

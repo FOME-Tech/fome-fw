@@ -39,7 +39,7 @@ const std::vector<CompositeEvent>& getCompositeEvents() {
 void SetNextCompositeEntry(efitick_t timestamp) {
 	CompositeEvent event;
 
-	event.timestamp = timestamp;
+	event.timestamp = timestamp.count();
 	event.primaryTrigger = currentTrigger1;
 	event.secondaryTrigger = currentTrigger2;
 	event.isTDC = currentTdc;
@@ -290,7 +290,7 @@ void LogTriggerTopDeadCenter(efitick_t timestamp) {
 	currentTdc = true;
 	SetNextCompositeEntry(timestamp);
 	currentTdc = false;
-	SetNextCompositeEntry(timestamp + 10);
+	SetNextCompositeEntry(timestamp + efidur_t{10});
 }
 
 void LogTriggerCoilState(efitick_t timestamp, bool state) {

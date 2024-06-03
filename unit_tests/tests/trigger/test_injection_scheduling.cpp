@@ -40,7 +40,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 
 		// Should schedule one normal injection:
 		// rising edge 5 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+		efidur_t nt5deg = US2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
 		// falling edge 20ms later
@@ -90,7 +90,7 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 
 		// Should schedule one normal injection:
 		// rising edge 5 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+		efidur_t nt5deg = US2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Truly(ActionArgumentHasLowBitSet)));
 		// falling edge (primary) 20ms later
@@ -133,7 +133,7 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 
 		// Should schedule one normal injection:
 		// rising edge 5 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+		efidur_t nt5deg = US2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
 		// falling edge 20ms later
@@ -173,8 +173,8 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 
 		// Should schedule one normal injection:
 		// rising edge 15 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 15);
-		efitick_t startTime = nowNt + nt5deg;
+		efidur_t nt15deg = US2NT(engine->rpmCalculator.oneDegreeUs * 15);
+		efitick_t startTime = nowNt + nt15deg;
 		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
@@ -255,5 +255,5 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 	turnInjectionPinLow(arg);
 
 	// Expect it to get zeroed so we don't repeat ad infinitum
-	EXPECT_EQ(event.splitInjectionDuration, 0);
+	EXPECT_EQ(event.splitInjectionDuration, efidur_t::zero());
 }

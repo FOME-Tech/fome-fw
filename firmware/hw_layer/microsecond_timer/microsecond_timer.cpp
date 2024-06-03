@@ -59,7 +59,7 @@ void setHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 	 * #259 BUG error: not positive deltaTimeNt
 	 * Once in a while we night get an interrupt where we do not expect it
 	 */
-	if (timeDeltaNt <= 0) {
+	if (timeDeltaNt <= efidur_t::zero()) {
 		timerFreezeCounter++;
 		warning(ObdCode::CUSTOM_OBD_LOCAL_FREEZE, "local freeze cnt=%d", timerFreezeCounter);
 	}
@@ -105,14 +105,14 @@ void portMicrosecondTimerCallback() {
 class MicrosecondTimerWatchdogController : public PeriodicTimerController {
 	void PeriodicTask() override {
 		efitick_t nowNt = getTimeNowNt();
-		if (nowNt >= lastSetTimerTimeNt + 2 * CORE_CLOCK) {
+		if (nowNt.count() >= lastSetTimerTimeNt.count() + 2 * CORE_CLOCK) {
 			firmwareError(ObdCode::CUSTOM_ERR_SCHEDULING_ERROR, "watchdog: no events since %d", lastSetTimerTimeNt);
 			return;
 		}
 
 		const char* msg = isTimerPending ? "No_cb too long" : "Timer not awhile";
 		// 2 seconds of inactivity would not look right
-		efiAssertVoid(ObdCode::CUSTOM_TIMER_WATCHDOG, nowNt < lastSetTimerTimeNt + 2 * CORE_CLOCK, msg);
+		efiAssertVoid(ObdCode::CUSTOM_TIMER_WATCHDOG, nowNt.count() < lastSetTimerTimeNt.count() + 2 * CORE_CLOCK, msg);
 	}
 
 	int getPeriodMs() override {

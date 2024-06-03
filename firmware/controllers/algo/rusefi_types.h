@@ -54,14 +54,16 @@ using time_t = uint32_t;
  */
 
 struct efidur_t {
-	constexpr efidur_t() = default;
-	constexpr efidur_t(int64_t c) : m_count(c) { }
+	using rep = int64_t;
 
-	constexpr operator int64_t() const {
-		return m_count;
+	constexpr efidur_t() = default;
+	/*todo: explicit*/ constexpr efidur_t(rep c) : m_count(c) { }
+
+	constexpr operator rep() const {
+		return count();
 	}
 
-	constexpr int64_t count() const {
+	constexpr rep count() const {
 		return m_count;
 	}
 
@@ -70,24 +72,94 @@ struct efidur_t {
 	}
 
 private:
-	int64_t m_count = 0;
+	rep m_count = 0;
 };
 
-struct efitick_t {
-	constexpr efitick_t() = default;
-	constexpr efitick_t(int64_t c) : count(c) { }
+constexpr bool operator==(const efidur_t& l, const efidur_t& r) {
+	return l.count() == r.count();
+}
 
-	constexpr operator int64_t() const {
-		return count;
+constexpr bool operator<(const efidur_t& l, const efidur_t& r) {
+	return l.count() < r.count();
+}
+
+constexpr bool operator<=(const efidur_t& l, const efidur_t& r) {
+	return l.count() <= r.count();
+}
+
+constexpr bool operator>(const efidur_t& l, const efidur_t& r) {
+	return l.count() > r.count();
+}
+
+constexpr bool operator>=(const efidur_t& l, const efidur_t& r) {
+	return l.count() >= r.count();
+}
+
+constexpr efidur_t operator*(const efidur_t& l, const int r) {
+	return efidur_t{l.count() * r};
+}
+
+constexpr efidur_t operator*(const int l, const efidur_t& r) {
+	return r * l;
+}
+
+struct efitick_t {
+	using rep = efidur_t::rep;
+
+	constexpr efitick_t() = default;
+	/*todo: explicit*/ constexpr efitick_t(rep c) : m_count(c) { }
+
+	constexpr rep count() const {
+		return m_count;
 	}
 
-	efitick_t& operator+=(const efidur_t &s) {
-		count += s.count();
+	constexpr efitick_t& operator+=(const efidur_t &s) {
+		m_count += s.count();
 		return *this;
 	}
 
-	int64_t count = 0;
+	constexpr efitick_t& operator-=(const efidur_t &s) {
+		m_count -= s.count();
+		return *this;
+	}
+
+	constexpr efitick_t operator+(const efidur_t& rhs) const {
+		return efitick_t{m_count + rhs.count()};
+	}
+
+	constexpr efitick_t operator-(const efidur_t& rhs) const {
+		return efitick_t{m_count - rhs.count()};
+	}
+
+	constexpr efidur_t operator-(const efitick_t& rhs) const {
+		return efidur_t{m_count - rhs.count()};
+	}
+
+private:
+	rep m_count = 0;
 };
+
+
+
+constexpr bool operator==(const efitick_t& l, const efitick_t& r) {
+	return l.count() == r.count();
+}
+
+constexpr bool operator<(const efitick_t& l, const efitick_t& r) {
+	return l.count() < r.count();
+}
+
+constexpr bool operator<=(const efitick_t& l, const efitick_t& r) {
+	return l.count() <= r.count();
+}
+
+constexpr bool operator>(const efitick_t& l, const efitick_t& r) {
+	return l.count() > r.count();
+}
+
+constexpr bool operator>=(const efitick_t& l, const efitick_t& r) {
+	return l.count() >= r.count();
+}
 
 /**
  * 64 bit time in microseconds (1/1_000_000 of a second), since boot

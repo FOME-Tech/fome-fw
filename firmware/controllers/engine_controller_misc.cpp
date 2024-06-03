@@ -63,9 +63,9 @@ void slowStartStopButtonCallback() {
 	}
 	engine->engineState.startStopState = startStopState;
 
-	if (engine->startStopStateLastPushTime == 0) {
-   		// nothing is going on with startStop button
-   		return;
+	if (engine->startStopStateLastPushTime == efitick_t{}) {
+		// nothing is going on with startStop button
+		return;
    	}
 
 	// TODO: split starter (/disable relay) control in to its own controller

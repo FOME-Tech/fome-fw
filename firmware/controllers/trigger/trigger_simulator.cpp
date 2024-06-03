@@ -45,7 +45,9 @@ void TriggerStimulatorHelper::feedSimulatedEvent(
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6593, shape.getSize() > 0, "size not zero");
 	int stateIndex = i % shape.getSize();
 
-	int time = getSimulatedEventTime(shape, i);
+	// TODO: why is this an int?
+	int timeint = getSimulatedEventTime(shape, i);
+	efitick_t time(timeint);
 
 	const auto & multiChannelStateSequence = shape.wave;
 
