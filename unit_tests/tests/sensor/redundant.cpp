@@ -47,6 +47,7 @@ TEST_F(SensorRedundant, SetOnlyOneSensor)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Inconsistent);
 	}
 
 	// Set one sensor
@@ -65,6 +66,7 @@ TEST_F(SensorRedundant, SetTwoSensors)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Inconsistent);
 	}
 
 	// Set one sensor
@@ -179,6 +181,7 @@ TEST_F(SensorRedundantIgnoreSecond, OnlyFirst)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Unknown);
 	}
 
 	// Set one sensor
@@ -198,6 +201,7 @@ TEST_F(SensorRedundantIgnoreSecond, OnlySecond)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Unknown);
 	}
 
 	// Set second sensor only
@@ -216,6 +220,7 @@ TEST_F(SensorRedundantIgnoreSecond, SetBothIgnoreSecond)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Unknown);
 	}
 
 	// Set both sensors
@@ -274,6 +279,7 @@ TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Inconsistent);
 	}
 
 	// Set first sensor
@@ -292,6 +298,7 @@ TEST_F(SensorRedundantPartialSecond, SetTwoSensors)
 	{
 		auto result = dut.get();
 		EXPECT_FALSE(result.Valid);
+		EXPECT_EQ(result.Code, UnexpectedCode::Inconsistent);
 	}
 
 	// Set first sensor
