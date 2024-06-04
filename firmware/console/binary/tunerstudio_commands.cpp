@@ -62,9 +62,9 @@ void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, u
 	/**
 	 * collect data from all models
 	 */
-	copyRange(scratchBuffer + 3, getLiveDataFragments(), offset, count);
+	copyRange(scratchBuffer, getLiveDataFragments(), offset, count);
 
-	tsChannel->crcAndWriteBuffer(TS_RESPONSE_OK, count);
+	tsChannel->writeCrcPacketLocked(TS_RESPONSE_OK, scratchBuffer, count);
 }
 
 #endif // EFI_TUNER_STUDIO

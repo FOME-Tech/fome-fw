@@ -569,7 +569,7 @@ static void handleGetText(TsChannelBase* tsChannel) {
 			logMsg("get test sending [%d]\r\n", outputSize);
 #endif
 
-	tsChannel->writeCrcPacket(reinterpret_cast<const uint8_t*>(output), outputSize, true);
+	tsChannel->writeCrcPacketLocked(reinterpret_cast<const uint8_t*>(output), outputSize);
 #if EFI_SIMULATOR
 			logMsg("sent [%d]\r\n", outputSize);
 #endif
@@ -669,7 +669,7 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 				auto toothBuffer = GetToothLoggerBufferNonblocking();
 
 				if (toothBuffer) {
-					tsChannel->writeCrcPacket(reinterpret_cast<const uint8_t*>(toothBuffer->buffer), toothBuffer->nextIdx * sizeof(composite_logger_s), true);
+					tsChannel->writeCrcPacketLocked(reinterpret_cast<const uint8_t*>(toothBuffer->buffer), toothBuffer->nextIdx * sizeof(composite_logger_s));
 
 					ReturnToothLoggerBuffer(toothBuffer);
 				} else {
@@ -690,7 +690,7 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 				const auto& buffer = triggerScopeGetBuffer();
 
 				if (buffer) {
-					tsChannel->writeCrcPacket(buffer.get<uint8_t>(), buffer.size(), true);
+					tsChannel->writeCrcPacketLocked(buffer.get<uint8_t>(), buffer.size());
 				} else {
 					// TS asked for a tooth logger buffer, but we don't have one to give it.
 					sendErrorCode(tsChannel, TS_RESPONSE_OUT_OF_RANGE);
@@ -715,14 +715,14 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 	case TS_PERF_TRACE_GET_BUFFER:
 		{
 			auto trace = perfTraceGetBuffer();
-			tsChannel->writeCrcPacket(trace.get<uint8_t>(), trace.size(), true);
+			tsChannel->writeCrcPacketLocked(trace.get<uint8_t>(), trace.size());
 		}
 
 		break;
 #endif /* ENABLE_PERF_TRACE */
 	case TS_GET_CONFIG_ERROR: {
 		const char* configError = getCriticalErrorMessage();
-		tsChannel->writeCrcPacket(reinterpret_cast<const uint8_t*>(configError), strlen(configError), true);
+		tsChannel->writeCrcPacketLocked(reinterpret_cast<const uint8_t*>(configError), strlen(configError));
 		break;
 	}
 	case TS_QUERY_BOOTLOADER: {
