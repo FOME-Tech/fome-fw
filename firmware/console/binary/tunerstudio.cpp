@@ -239,9 +239,6 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 		addr = getWorkingPageAddr() + offset;
 	}
 	tsChannel->writeCrcPacketLocked(addr, count);
-#if EFI_TUNER_STUDIO_VERBOSE
-//	efiPrintf("Sending %d done", count);
-#endif
 }
 
 #endif // EFI_TUNER_STUDIO
