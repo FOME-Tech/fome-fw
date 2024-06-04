@@ -10,7 +10,7 @@ static char args_doc[] = "[TIMEOUT]";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    {"verbose", 'v', 0,         0, "Produce verbose output (default)", 0 },
+    {"quiet", 'q', 0,         0, "Don't produce verbose output", 0 },
     {"socketcan-device",
                 'd', "DEVICE",  0, "SocketCAN DEVICE (default: can0) to use", 0 },
     { 0, 0, 0, 0, 0, 0 }
@@ -20,7 +20,7 @@ static struct argp_option options[] = {
 struct arguments
 {
     int timeout;
-    int verbose;
+    int quiet;
     char * socketcanDevice;
 };
 
@@ -33,11 +33,11 @@ parse_opt(int key, char * arg, struct argp_state * state)
     struct arguments * arguments = (struct arguments *)state->input;
 
     switch (key) {
-        case 'v':
-            arguments->verbose = 1;
-            break;
         case 'd':
             arguments->socketcanDevice = arg;
+            break;
+        case 'q':
+            arguments->quiet = 1;
             break;
 
         case ARGP_KEY_ARG:

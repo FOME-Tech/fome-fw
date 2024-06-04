@@ -146,11 +146,11 @@ int main(int argc, char** argv) {
 
 	struct arguments arguments;
 	arguments.timeout = -1;
-	arguments.verbose = 1;
+	arguments.quiet = 0;
 	arguments.socketcanDevice = (char *)"can0";
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-	verboseMode = arguments.verbose != 0;
+	verboseMode = arguments.quiet == 0;
 
 	/*
 	 * System initializations.
