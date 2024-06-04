@@ -80,8 +80,6 @@ void TsChannelBase::writeFragments(const FragmentList& src) {
 
 	uint32_t crc = writePacketHeader(TS_RESPONSE_OK, size);
 
-	size_t fragmentIndex = 0;
-
 	for (size_t i = 0; i < src.count; i++) {
 		const uint8_t* from = src.fragments[i].get();
 		size_t fragmentSize = src.fragments[i].size;
