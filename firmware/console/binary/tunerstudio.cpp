@@ -233,12 +233,12 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 	uint8_t* addr;
 	if (isLockedFromUser()) {
 		// to have rusEFI console happy just send all zeros within a valid packet
-		addr = (uint8_t*)&tsChannel->scratchBuffer + SCRATCH_BUFFER_PREFIX_SIZE;
+		addr = (uint8_t*)&tsChannel->scratchBuffer;
 		memset(addr, 0, count);
 	} else {
 		addr = getWorkingPageAddr() + offset;
 	}
-	tsChannel->writeCrcPacket(addr, count);
+	tsChannel->writeCrcPacketLocked(addr, count);
 #if EFI_TUNER_STUDIO_VERBOSE
 //	efiPrintf("Sending %d done", count);
 #endif
