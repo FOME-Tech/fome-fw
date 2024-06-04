@@ -184,7 +184,7 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
 	const uint8_t* start = getWorkingPageAddr() + offset;
 
 	uint32_t crc = SWAP_UINT32(crc32(start, count));
-	tsChannel->writeCrcPacket((const uint8_t *) &crc, 4);
+	tsChannel->copyAndWriteSmallCrcPacket((const uint8_t *) &crc, 4);
 }
 
 /**
@@ -338,7 +338,7 @@ void TunerStudio::handleQueryCommand(TsChannelBase* tsChannel, ts_response_forma
 	size_t size = strlen(signature) + 1;
 
 	if (mode == TS_CRC) {
-		tsChannel->writeCrcPacket(buffer, size);
+		tsChannel->copyAndWriteSmallCrcPacket(buffer, size);
 	} else {
 		tsChannel->write(buffer, size, true);
 		tsChannel->flush();
@@ -551,7 +551,7 @@ extern CommandHandler console_line_callback;
 static void handleGetVersion(TsChannelBase* tsChannel) {
 	char versionBuffer[32];
 	chsnprintf(versionBuffer, sizeof(versionBuffer), "FOME " QUOTE(SHORT_BOARD_NAME) " %d@" GIT_HASH_SHORT, getRusEfiVersion());
-	tsChannel->writeCrcPacket((const uint8_t *) versionBuffer, strlen(versionBuffer) + 1);
+	tsChannel->copyAndWriteSmallCrcPacket((const uint8_t *) versionBuffer, strlen(versionBuffer) + 1);
 }
 
 #if EFI_TEXT_LOGGING
@@ -728,7 +728,7 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 		bldata = TS_QUERY_BOOTLOADER_OPENBLT;
 #endif
 
-		tsChannel->writeCrcPacket(&bldata, 1, false);
+		tsChannel->copyAndWriteSmallCrcPacket(&bldata, 1);
 		break;
 	}
 	default:

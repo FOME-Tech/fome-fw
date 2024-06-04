@@ -36,11 +36,6 @@ public:
 	// Base functions that use the above virtual implementation
 	size_t read(uint8_t* buffer, size_t size);
 
-#ifdef EFI_CAN_SERIAL
-	virtual	// CAN device needs this function to be virtual for small-packet optimization
-#endif
-	void writeCrcPacket(const uint8_t* buf, size_t size, bool allowLongPackets = false);
-
 	/**
 	 * See 'blockingFactor' in rusefi.ini
 	 */
@@ -50,8 +45,9 @@ public:
 		return m_name;
 	}
 
-	void assertPacketSize(size_t size, bool allowLongPackets);
-
+#ifdef EFI_CAN_SERIAL
+	virtual	// CAN device needs this function to be virtual for small-packet optimization
+#endif
 	// Use when buf could change during execution. Makes a copy before computing checksum.
 	void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size);
 
@@ -80,9 +76,6 @@ public:
 
 protected:
 	const char * const m_name;
-
-private:
-	uint32_t writePacketHeader(const uint8_t responseCode, const size_t size);
 };
 
 // This class represents a channel for a physical async serial poart

@@ -36,30 +36,26 @@ void TsChannelBase::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) 
 	writeCrcPacketLocked(TS_RESPONSE_OK, &scratchBuffer[0], size);
 }
 
-uint32_t TsChannelBase::writePacketHeader(const uint8_t responseCode, const size_t size) {
+void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8_t* buf, const size_t size) {
 	uint8_t headerBuffer[3];
 	*(uint16_t*)headerBuffer = SWAP_UINT16(size + 1);
 	*(uint8_t*)(headerBuffer + 2) = responseCode;
 	// Write header
 	write(headerBuffer, sizeof(headerBuffer), /*isEndOfPacket*/false);
 
-	 // Command part of CRC
-	return crc32((void*)(headerBuffer + 2), 1);
-}
-
-void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8_t* buf, const size_t size) {
-	uint8_t crcBuffer[4];
-
-	// Command part of CRC
-	uint32_t crc = writePacketHeader(responseCode, size);
-	// Data part of CRC
-	crc = crc32inc((void*)buf, crc, size);
-	*(uint32_t*)crcBuffer = SWAP_UINT32(crc);
-
 	// If data, write that
 	if (size) {
 		write(buf, size, /*isEndOfPacket*/false);
 	}
+
+	// Command part of CRC
+	uint32_t crc = crc32((void*)(headerBuffer + 2), 1);
+
+	// Data part of CRC
+	crc = crc32inc((void*)buf, crc, size);
+
+	uint8_t crcBuffer[4];
+	*(uint32_t*)crcBuffer = SWAP_UINT32(crc);
 
 	// Lastly the CRC footer
 	write(crcBuffer, sizeof(crcBuffer), /*isEndOfPacket*/true);
@@ -69,30 +65,4 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 TsChannelBase::TsChannelBase(const char *name)
 	: m_name(name)
 {
-}
-
-void TsChannelBase::assertPacketSize(size_t size, bool allowLongPackets) {
-	if (isBigPacket(size) && !allowLongPackets) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "[USE PROPER CONSOLE VERSION ] disallowed long packet of size %d", size);
-	}
-}
-
-/**
- * Adds size to the beginning of a packet and a crc32 at the end. Then send the packet.
- */
-void TsChannelBase::writeCrcPacket(const uint8_t* buf, size_t size, bool allowLongPackets) {
-	// don't transmit a null buffer...
-	if (!buf) {
-		size = 0;
-	}
-
-	assertPacketSize(size, allowLongPackets);
-
-	if (isBigPacket(size)) {
-		// for larger packets we do not use a buffer for CRC calculation meaning data is now allowed to modify while pending
-		writeCrcPacketLocked(TS_RESPONSE_OK, buf, size);
-	} else {
-		// for small packets we use a buffer for CRC calculation
-		copyAndWriteSmallCrcPacket(buf, size);
-	}
 }
