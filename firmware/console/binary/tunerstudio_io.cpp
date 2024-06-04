@@ -36,25 +36,30 @@ void TsChannelBase::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) 
 	writeCrcPacketLocked(TS_RESPONSE_OK, &scratchBuffer[0], size);
 }
 
-void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8_t* buf, const size_t size) {
+uint32_t TsChannelBase::writePacketHeader(const uint8_t responseCode, const size_t size) {
 	uint8_t headerBuffer[3];
 	*(uint16_t*)headerBuffer = SWAP_UINT16(size + 1);
 	*(uint8_t*)(headerBuffer + 2) = responseCode;
 	// Write header
 	write(headerBuffer, sizeof(headerBuffer), /*isEndOfPacket*/false);
 
+	 // Command part of CRC
+	return crc32((void*)(headerBuffer + 2), 1);
+}
+
+void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8_t* buf, const size_t size) {
+	uint8_t crcBuffer[4];
+
+	// Command part of CRC
+	uint32_t crc = writePacketHeader(responseCode, size);
+
 	// If data, write that
 	if (size) {
 		write(buf, size, /*isEndOfPacket*/false);
 	}
 
-	// Command part of CRC
-	uint32_t crc = crc32((void*)(headerBuffer + 2), 1);
-
 	// Data part of CRC
 	crc = crc32inc((void*)buf, crc, size);
-
-	uint8_t crcBuffer[4];
 	*(uint32_t*)crcBuffer = SWAP_UINT32(crc);
 
 	// Lastly the CRC footer
@@ -65,4 +70,40 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 TsChannelBase::TsChannelBase(const char *name)
 	: m_name(name)
 {
+}
+
+void TsChannelBase::writeFragments(const FragmentList& src) {
+	size_t size = 0;
+	for (size_t i = 0; i < src.count; i++) {
+		size += src.fragments[i].size;
+	}
+
+	uint32_t crc = writePacketHeader(TS_RESPONSE_OK, size);
+
+	size_t fragmentIndex = 0;
+
+	for (size_t i = 0; i < src.count; i++) {
+		const uint8_t* from = src.fragments[i].get();
+		size_t fragmentSize = src.fragments[i].size;
+
+		if (fragmentSize > sizeof(scratchBuffer)) {
+			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "tried to write fragment too large: %d", fragmentSize);
+			continue;
+		}
+
+		if (from) {
+			memcpy(scratchBuffer, from, fragmentSize);
+		} else {
+			memset(scratchBuffer, 0, fragmentSize);
+		}
+
+		write(scratchBuffer, fragmentSize, false);
+		crc = crc32inc(scratchBuffer, crc, fragmentSize);
+	}
+
+	// Write CRC & flush
+	uint8_t crcBuffer[4];
+	*(uint32_t*)crcBuffer = SWAP_UINT32(crc);
+	write(crcBuffer, sizeof(crcBuffer), /*isEndOfPacket*/true);
+	flush();
 }

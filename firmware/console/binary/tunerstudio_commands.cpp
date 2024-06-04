@@ -41,30 +41,14 @@ static Timer requestPeriodTimer;
  * @brief 'Output' command sends out a snapshot of current values
  * Gauges refresh
  */
-void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) {
-	if (offset + count > TS_TOTAL_OUTPUT_SIZE) {
-		efiPrintf("TS: Version Mismatch? Too much outputs requested %d/%d/%d", offset, count,
-				sizeof(TunerStudioOutputChannels));
-		sendErrorCode(tsChannel, TS_RESPONSE_OUT_OF_RANGE);
-		return;
-	}
-
-	if (offset < BLOCKING_FACTOR) {
-		engine->outputChannels.outputRequestPeriod
-			= 1e6 * requestPeriodTimer.getElapsedSecondsAndReset(getTimeNowNt());
-	}
+void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel) {
+	engine->outputChannels.outputRequestPeriod
+		= 1e6 * requestPeriodTimer.getElapsedSecondsAndReset(getTimeNowNt());
 
 	tsState.outputChannelsCommandCounter++;
 	updateTunerStudioState();
 
-	// this method is invoked too often to print any debug information
-	uint8_t * scratchBuffer = (uint8_t *)tsChannel->scratchBuffer;
-	/**
-	 * collect data from all models
-	 */
-	copyRange(scratchBuffer, getLiveDataFragments(), offset, count);
-
-	tsChannel->writeCrcPacketLocked(TS_RESPONSE_OK, scratchBuffer, count);
+	tsChannel->writeFragments(getLiveDataFragments());
 }
 
 #endif // EFI_TUNER_STUDIO

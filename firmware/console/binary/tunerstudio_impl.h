@@ -17,7 +17,7 @@ class TunerStudioBase {
 public:
 
 protected:
-	virtual void cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) = 0;
+	virtual void cmdOutputChannels(TsChannelBase* tsChannel) = 0;
 };
 
 class TunerStudio : public TunerStudioBase {
@@ -25,7 +25,7 @@ public:
 	int handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int incomingPacketSize);
 	bool handlePlainCommand(TsChannelBase* tsChannel, uint8_t command);
 
-	void cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) override;
+	void cmdOutputChannels(TsChannelBase* tsChannel) override;
 	/**
 	 * this command is part of protocol initialization
 	 */

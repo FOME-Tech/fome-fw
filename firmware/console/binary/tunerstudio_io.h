@@ -9,6 +9,7 @@
 #pragma once
 #include "global.h"
 #include "tunerstudio_impl.h"
+#include <rusefi/fragments.h>
 
 #if EFI_USB_SERIAL
 #include "usbconsole.h"
@@ -62,6 +63,8 @@ public:
 		writeCrcPacketLocked(responseCode, nullptr, 0);
 	}
 
+	void writeFragments(const FragmentList& fragments);
+
 	/* When TsChannel is in "not in sync" state tsProcessOne will silently try to find
 	 * begining of packet.
 	 * As soon as tsProcessOne was able to receive valid packet with valid size and crc
@@ -76,6 +79,9 @@ public:
 
 protected:
 	const char * const m_name;
+
+private:
+	uint32_t writePacketHeader(const uint8_t responseCode, const size_t size);
 };
 
 // This class represents a channel for a physical async serial poart

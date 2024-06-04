@@ -598,7 +598,7 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 	switch(command)
 	{
 	case TS_OUTPUT_COMMAND:
-		cmdOutputChannels(tsChannel, offset, count);
+		cmdOutputChannels(tsChannel);
 		break;
 	case TS_HELLO_COMMAND:
 		tunerStudioDebug(tsChannel, "got Query command");
