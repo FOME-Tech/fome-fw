@@ -6,22 +6,23 @@ static char doc[] =
     "FOME Simulator -- https://wiki.fome.tech/";
 
 /* A description of the arguments we accept. */
-static char args_doc[] = "[TIMEOUT]";
+static char args_doc[] = "";
 
 /* The options we understand. */
 static struct argp_option options[] = {
     {"quiet", 'q', 0,         0, "Don't produce verbose output", 0 },
     {"socketcan-device",
                 'd', "DEVICE",  0, "SocketCAN DEVICE (default: can0) to use", 0 },
+    {"timeout", 't', "SECONDS", 0, "Run for SECONDS and then exit (negative values ignored)", 0 },
     { 0, 0, 0, 0, 0, 0 }
 };
 
 /* Used by main to communicate with parse_opt. */
 struct arguments
 {
-    int timeout;
     int quiet;
     char * socketcanDevice;
+    int timeout;
 };
 
 /* Parse a single option. */
@@ -39,13 +40,15 @@ parse_opt(int key, char * arg, struct argp_state * state)
         case 'q':
             arguments->quiet = 1;
             break;
+        case 't':
+            arguments->timeout = atoi(arg);
+            break;
 
         case ARGP_KEY_ARG:
-            if (state->arg_num >= 1) {
+            /* if (state->arg_num >= 0) */ {
                 /* Too many arguments. */
                 argp_usage(state);
             }
-            arguments->timeout = atoi(arg);
             break;
 
         case ARGP_KEY_END:

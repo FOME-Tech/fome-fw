@@ -145,9 +145,9 @@ int main(int argc, char** argv) {
 	setbuf(stdout, NULL);
 
 	struct arguments arguments;
-	arguments.timeout = -1;
 	arguments.quiet = 0;
 	arguments.socketcanDevice = (char *)"can0";
+	arguments.timeout = -1;
 	argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
 	verboseMode = arguments.quiet == 0;
