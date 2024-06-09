@@ -125,6 +125,8 @@ static void sendOkResponse(TsChannelBase *tsChannel) {
 }
 
 void sendErrorCode(TsChannelBase *tsChannel, uint8_t code) {
+	efiPrintf("TS <- Err: %d", code);
+
 	tsChannel->writeCrcResponse(code);
 }
 
@@ -134,6 +136,8 @@ void TunerStudio::sendErrorCode(TsChannelBase* tsChannel, uint8_t code) {
 
 void TunerStudio::handlePageSelectCommand(TsChannelBase *tsChannel) {
 	tsState.pageCommandCounter++;
+
+	efiPrintf("TS -> Set page (no-op)");
 
 	sendOkResponse(tsChannel);
 }
@@ -154,7 +158,7 @@ void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t off
 		return;
 	}
 
-	efiPrintf("WRITE CHUNK o=%d s=%d", offset, count);
+	efiPrintf("TS -> Write chunk offset %d count %d", offset, count);
 
 	if (validateOffsetCount(offset, count, tsChannel)) {
 		return;
@@ -183,7 +187,10 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
 
 	const uint8_t* start = getWorkingPageAddr() + offset;
 
-	uint32_t crc = SWAP_UINT32(crc32(start, count));
+	uint32_t crc = crc32(start, count);
+	efiPrintf("TS <- Get CRC offset %d count %d result %08x", offset, count, crc);
+
+	crc = SWAP_UINT32(crc);
 	tsChannel->copyAndWriteSmallCrcPacket((const uint8_t *) &crc, sizeof(crc));
 }
 
@@ -198,7 +205,7 @@ void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, uint16_t off
 		return;
 	}
 
-	tunerStudioDebug(tsChannel, "got W (Write)"); // we can get a lot of these
+	efiPrintf("TS -> Write value offset %d value %d", offset, value);
 
 	if (validateOffsetCount(offset, 1, tsChannel)) {
 		return;
@@ -220,9 +227,7 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 		return;
 	}
 
-#if EFI_TUNER_STUDIO_VERBOSE
-	efiPrintf("READ offset=%d size=%d", offset, count);
-#endif
+	efiPrintf("TS <- Read chunk offset %d count %d", offset, count);
 
 	if (validateOffsetCount(offset, count, tsChannel)) {
 		return;
@@ -260,7 +265,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel) {
 
 	tsState.burnCommandCounter++;
 
-	efiPrintf("got B (Burn)");
+	efiPrintf("TS -> Burn");
 
 	// Skip the burn if a preset was just loaded - we don't want to overwrite it
 	if (!rebootForPresetPending) {
@@ -268,7 +273,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel) {
 	}
 
 	tsChannel->writeCrcResponse(TS_RESPONSE_BURN_OK);
-	efiPrintf("BURN in %dms", (int)(t.getElapsedSeconds() * 1e3));
+	efiPrintf("Burned in %.1fms", t.getElapsedSeconds() * 1e3);
 }
 
 #if EFI_TUNER_STUDIO && (EFI_PROD_CODE || EFI_SIMULATOR)
@@ -289,36 +294,6 @@ static bool isKnownCommand(char command) {
 }
 
 /**
- * rusEfi own test command
- */
-static void handleTestCommand(TsChannelBase* tsChannel) {
-	tsState.testCommandCounter++;
-	char testOutputBuffer[64];
-	/**
-	 * this is NOT a standard TunerStudio command, this is my own
-	 * extension of the protocol to simplify troubleshooting
-	 */
-	tunerStudioDebug(tsChannel, "got T (Test)");
-	tsChannel->write((const uint8_t*)GIT_HASH_SHORT, sizeof(GIT_HASH_SHORT));
-
-	chsnprintf(testOutputBuffer, sizeof(testOutputBuffer), " %d %d", engine->engineState.warnings.lastErrorCode, tsState.testCommandCounter);
-	tsChannel->write((const uint8_t*)testOutputBuffer, strlen(testOutputBuffer));
-
-	chsnprintf(testOutputBuffer, sizeof(testOutputBuffer), " uptime=%ds ", (int)getTimeNowS());
-	tsChannel->write((const uint8_t*)testOutputBuffer, strlen(testOutputBuffer));
-
-	chsnprintf(testOutputBuffer, sizeof(testOutputBuffer),  __DATE__ " %s\r\n", PROTOCOL_TEST_RESPONSE_TAG);
-	tsChannel->write((const uint8_t*)testOutputBuffer, strlen(testOutputBuffer));
-
-	if (hasFirmwareError()) {
-		const char* error = getCriticalErrorMessage();
-		chsnprintf(testOutputBuffer, sizeof(testOutputBuffer), "error=%s\r\n", error);
-		tsChannel->write((const uint8_t*)testOutputBuffer, strlen(testOutputBuffer));
-	}
-	tsChannel->flush();
-}
-
-/**
  * this command is part of protocol initialization
  *
  * Query with CRC takes place while re-establishing connection
@@ -326,11 +301,11 @@ static void handleTestCommand(TsChannelBase* tsChannel) {
  */
 void TunerStudio::handleQueryCommand(TsChannelBase* tsChannel, ts_response_format_e mode) {
 	tsState.queryCommandCounter++;
-#if EFI_TUNER_STUDIO_VERBOSE
-	efiPrintf("got S/H (queryCommand) mode=%d", mode);
-	printErrorCounters();
-#endif
+
 	const char *signature = getTsSignature();
+
+	efiPrintf("TS <- Query signature: %s", signature);
+	printErrorCounters();
 
 	auto buffer = (const uint8_t *)signature;
 	size_t size = strlen(signature) + 1;
@@ -354,11 +329,7 @@ bool TunerStudio::handlePlainCommand(TsChannelBase* tsChannel, uint8_t command) 
 		return false;
 	} else if (command == TS_HELLO_COMMAND || command == TS_QUERY_COMMAND) {
 		// We interpret 'Q' as TS_HELLO_COMMAND, since TS uses hardcoded 'Q' during ECU detection (scan all serial ports)
-		efiPrintf("Got naked Query command");
 		handleQueryCommand(tsChannel, TS_PLAIN);
-		return true;
-	} else if (command == TS_TEST_COMMAND || command == 'T') {
-		handleTestCommand(tsChannel);
 		return true;
 	} else if (command == TS_COMMAND_F) {
 		/**
@@ -599,7 +570,6 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 		cmdOutputChannels(tsChannel, offset, count);
 		break;
 	case TS_HELLO_COMMAND:
-		tunerStudioDebug(tsChannel, "got Query command");
 		handleQueryCommand(tsChannel, TS_CRC);
 		break;
 	case TS_GET_FIRMWARE_VERSION:
@@ -633,11 +603,6 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 		break;
 	case TS_READ_COMMAND:
 		handlePageReadCommand(tsChannel, offset, count);
-		break;
-	case TS_TEST_COMMAND:
-		[[fallthrough]];
-	case 'T':
-		handleTestCommand(tsChannel);
 		break;
 	case TS_IO_TEST_COMMAND:
 		{
