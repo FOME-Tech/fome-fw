@@ -380,6 +380,7 @@ bool TunerStudio::handlePlainCommand(TsChannelBase* tsChannel, uint8_t command) 
 		return true;
 	} else {
 		// This wasn't a valid command
+		efiPrintf("TS: didn't understand single byte comamnd %d (char '%c')", command, command);
 		return false;
 	}
 }
