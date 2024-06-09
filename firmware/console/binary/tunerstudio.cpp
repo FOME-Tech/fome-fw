@@ -192,8 +192,6 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
  * @note Writing values one by one is pretty slow
  */
 void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, uint16_t offset, uint8_t value) {
-	UNUSED(tsChannel);
-
 	tsState.writeValueCommandCounter++;
 	if (isLockedFromUser()) {
 		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
