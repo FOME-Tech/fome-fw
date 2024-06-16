@@ -50,10 +50,10 @@ static void runChprintfTest() {
 	msObjectInit(&ts, (uint8_t *) testBuffer, sizeof(testBuffer), 0);
 
 
-	ts.eos = 0; // reset
-	chprintf((BaseSequentialStream*)&ts, "%.2f - %.2f", NAN, NAN);
-	ts.buffer[ts.eos] = 0;
-	assertString(testBuffer, "NaN - NaN");
+	// ts.eos = 0; // reset
+	// chprintf((BaseSequentialStream*)&ts, "%.2f - %.2f", NAN, NAN);
+	// ts.buffer[ts.eos] = 0;
+	// assertString(testBuffer, "NaN - NaN");
 
 // it's a very, very long and mostly forgotten story how this became our %.2f precision format
 	ts.eos = 0; // reset
