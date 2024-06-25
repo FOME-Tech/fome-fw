@@ -147,6 +147,7 @@ void EngineState::periodicFastCallback() {
 
 	float advance = getAdvance(rpm, ignitionLoad) * engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
 
+	// here we are un-wrapping angle making value negative for negative advance
 	// that's weird logic. also seems broken for two stroke?
 	engine->outputChannels.ignitionAdvance = (float)(advance > FOUR_STROKE_CYCLE_DURATION / 2 ? advance - FOUR_STROKE_CYCLE_DURATION : advance);
 
