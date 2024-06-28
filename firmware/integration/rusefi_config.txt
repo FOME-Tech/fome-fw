@@ -983,6 +983,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 bit useFixedBaroCorrFromMap
 bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In Constant mode, timing is automatically tapered to running as RPM increases.\nIn Table mode, the "Cranking ignition advance" table is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
+bit useSeparateAdvanceForCrankingClt, "Table", "Fixed (auto taper)";In Constant mode, timing is automatically tapered to running as CLT increases.\nIn Table mode, the "Cranking ignition advance clt temp" table is used directly.
 bit flexCranking;Enable a second cranking table to use for E100 flex fuel, interpolating between the two based on flex fuel sensor.
 bit useIacPidMultTable;This flag allows to use a special 'PID Multiplier' table (0.0-1.0) to compensate for nonlinear nature of IAC-RPM controller
 bit isBoostControlEnabled
@@ -1498,6 +1499,8 @@ engine_configuration_s engineConfiguration;
 
 uint16_t[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvanceBins;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"RPM", 1, 0, 0, 25000, 0
 int16_t[CRANKING_ADVANCE_CURVE_SIZE] autoscale crankingAdvance;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"deg", 0.01, 0, -20, 90, 2
+uint16_t[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvanceCltBins;Optional timing advance table for Cranking (see useSeparateAdvanceForCrankingClt);"C", 1, 0, -40, 120, 0
+int16_t[CRANKING_ADVANCE_CURVE_SIZE] autoscale crankingAdvanceClt;Optional timing advance table for Cranking (see useSeparateAdvanceForCrankingClt);"deg", 0.01, 0, -20, 90, 2
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoastingRpmBins;RPM-based idle position for coasting;"RPM", 100, 0, 0, 25000, 0
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoasting;    RPM-based idle position for coasting;"%", 0.5, 0, 0, 100, 1
 
