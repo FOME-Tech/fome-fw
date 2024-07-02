@@ -71,7 +71,7 @@
  *
  */
 /** \brief Enable/disable CAN transport layer. */
-#define BOOT_COM_CAN_ENABLE             (0)
+#define BOOT_COM_CAN_ENABLE             (1)
 /** \brief Configure the desired CAN baudrate. */
 #define BOOT_COM_CAN_BAUDRATE           (500000)
 /** \brief Configure CAN message ID target->host. */
@@ -82,6 +82,8 @@
 #define BOOT_COM_CAN_RX_MSG_ID          (0x667 /*| 0x80000000*/)
 /** \brief Configure number of bytes in the host->target CAN message. */
 #define BOOT_COM_CAN_RX_MAX_DATA        (8)
+
+#define BOOT_COM_CAN_CHANNEL_INDEX (1)
 
 /* The RS232 communication interface is selected by setting the BOOT_COM_RS232_ENABLE
  * configurable to 1. Configurable BOOT_COM_RS232_BAUDRATE selects the communication speed
