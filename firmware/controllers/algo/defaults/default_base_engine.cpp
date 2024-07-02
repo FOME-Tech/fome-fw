@@ -128,6 +128,7 @@ void setTPS1Calibration(uint16_t tpsMin, uint16_t tpsMax, uint16_t tps1Secondary
 	engineConfiguration->tps1SecondaryMin = tps1SecondaryMin;
 	engineConfiguration->tps1SecondaryMax = tps1SecondaryMax;
 	engineConfiguration->tpsSecondaryMaximum = 100; // fully redundant
+	engineConfiguration->tpsSecondaryMonitors = false; // doesn't only monitor; averages sensors values
 }
 
 void setPPSCalibration(float primaryUp, float primaryDown, float secondaryUp, float secondaryDown) {
@@ -136,6 +137,7 @@ void setPPSCalibration(float primaryUp, float primaryDown, float secondaryUp, fl
 	engineConfiguration->throttlePedalSecondaryUpVoltage = secondaryUp;
 	engineConfiguration->throttlePedalSecondaryWOTVoltage = secondaryDown;
 	engineConfiguration->ppsSecondaryMaximum = 100; // fully redundant
+	engineConfiguration->ppsSecondaryMonitors = false; // doesn't only monitor; averages sensors values
 }
 
 void setEtbPID(float p, float i, float d) {
