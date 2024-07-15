@@ -136,136 +136,6 @@ TEST_F(SensorRedundant, DifferenceOverLimitSwapped)
 	}
 }
 
-
-class SensorRedundantMonitoring : public ::testing::Test
-{
-protected:
-	RedundantSensor dut;
-	MockSensor m1, m2;
-
-	SensorRedundantMonitoring()
-		: dut(SensorType::Tps1, SensorType::Tps1Primary, SensorType::Tps1Secondary)
-		, m1(SensorType::Tps1Primary)
-		, m2(SensorType::Tps1Secondary)
-	{
-	}
-
-	void SetUp() override
-	{
-		Sensor::resetRegistry();
-
-		// Other tests verify registry function - don't re-test it here
-		ASSERT_TRUE(dut.Register());
-		ASSERT_TRUE(m1.Register());
-		ASSERT_TRUE(m2.Register());
-
-		dut.configure(5.0f, false, false);
-	}
-
-	void TearDown() override
-	{
-		Sensor::resetRegistry();
-	}
-};
-
-TEST_F(SensorRedundantMonitoring, CheckIsRedundant)
-{
-	EXPECT_TRUE(dut.isRedundant());
-}
-
-TEST_F(SensorRedundantMonitoring, CheckSensorsInvalid)
-{
-	// Don't set any sensors - expect invalid
-	{
-		auto result = dut.get();
-		EXPECT_FALSE(result.Valid);
-	}
-
-	// Set one sensor
-	m1.set(24.0f);
-
-	// Should still be invalid - only one is set!
-	{
-		auto result = dut.get();
-		EXPECT_FALSE(result.Valid);
-	}
-
-	// Set the other sensor
-	m2.set(26.0f);
-
-	// Should now be valid - and directly track the first sensor
-	{
-		auto result = dut.get();
-		EXPECT_TRUE(result.Valid);
-		EXPECT_FLOAT_EQ(result.Value, 24.0f);
-	}
-}
-
-TEST_F(SensorRedundantMonitoring, CheckOnlySecondInvalid)
-{
-	// Set second sensor only
-	m2.set(66.0f);
-	// Should be invalid - only one is set!
-	{
-		auto result = dut.get();
-		EXPECT_FALSE(result.Valid);
-	}
-}
-
-TEST_F(SensorRedundantMonitoring, Differencenone)
-{
-	// Set both sensors to the same value
-	m1.set(10.0f);
-	m2.set(10.0f);
-
-	// Expect valid, and 10 output
-	{
-		auto result = dut.get();
-		EXPECT_TRUE(result.Valid);
-		EXPECT_FLOAT_EQ(result.Value, 10.0f);
-	}
-}
-
-TEST_F(SensorRedundantMonitoring, DifferenceNearLimit)
-{
-	// Set both sensors to nearly the limit (4.998 apart)
-	m1.set(7.501f);
-	m2.set(12.499f);
-
-	// Expect valid, and 10 output
-	{
-		auto result = dut.get();
-		EXPECT_TRUE(result.Valid);
-		EXPECT_FLOAT_EQ(result.Value, 7.501f);
-	}
-}
-
-TEST_F(SensorRedundantMonitoring, DifferenceOverLimit)
-{
-	// Set both sensors barely over the limit (5.002 apart)
-	m1.set(7.499f);
-	m2.set(12.501f);
-
-	// Expect invalid
-	{
-		auto result = dut.get();
-		EXPECT_FALSE(result.Valid);
-	}
-}
-
-TEST_F(SensorRedundantMonitoring, DifferenceOverLimitSwapped)
-{
-	// Now try it the other way (m1 > m2)
-	m1.set(12.501f);
-	m2.set(7.499f);
-
-	// Expect invalid
-	{
-		auto result = dut.get();
-		EXPECT_FALSE(result.Valid);
-	}
-}
-
 class SensorRedundantIgnoreSecond : public ::testing::Test
 {
 protected:
@@ -369,7 +239,7 @@ protected:
 		ASSERT_TRUE(m1.Register());
 		ASSERT_TRUE(m2.Register());
 
-		dut.configure(5.0f, false, true, 50);
+		dut.configure(5.0f, false, 50);
 	}
 
 	void TearDown() override
@@ -385,7 +255,7 @@ TEST_F(SensorRedundantPartialSecond, CheckIsRedundant)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
+TEST_F(SensorRedundantPartialSecond, SetNone)
 {
 	// Don't set any sensors - expect invalid
 	{
@@ -393,7 +263,10 @@ TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
 		EXPECT_FALSE(result.Valid);
 		EXPECT_EQ(result.Code, UnexpectedCode::Inconsistent);
 	}
+}
 
+TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
+{
 	// Set first sensor
 	m1.set(24.0f);
 
@@ -406,23 +279,28 @@ TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
 
 TEST_F(SensorRedundantPartialSecond, SetTwoSensors)
 {
-	// Don't set any sensors - expect invalid
-	{
-		auto result = dut.get();
-		EXPECT_FALSE(result.Valid);
-		EXPECT_EQ(result.Code, UnexpectedCode::Inconsistent);
-	}
-
 	// Set first sensor
 	m1.set(0.0f);
 	// Set second sensor
 	m2.set(0.0f);
 
-	// Should now be valid - and the average of the two input
+	// Should now be valid, and output the primary
 	{
 		auto result = dut.get();
 		EXPECT_TRUE(result.Valid);
 		EXPECT_FLOAT_EQ(result.Value, 0.0f);
+	}
+}
+
+TEST_F(SensorRedundantPartialSecond, CheckOnlySecondInvalid)
+{
+	// Set second sensor only
+	m2.set(66.0f);
+
+	// Should be invalid - only one is set!
+	{
+		auto result = dut.get();
+		EXPECT_FALSE(result.Valid);
 	}
 }
 
@@ -432,7 +310,7 @@ TEST_F(SensorRedundantPartialSecond, DifferenceNone)
 	m1.set(10);
 	m2.set(20);
 
-	// Expect valid, and 10 output
+	// Expect valid, and output the primary
 	{
 		auto result = dut.get();
 		EXPECT_TRUE(result.Valid);
@@ -446,11 +324,11 @@ TEST_F(SensorRedundantPartialSecond, DifferenceNearLimit)
 	m1.set(7.501f);
 	m2.set(2 * 12.499f);
 
-	// Expect valid, and 10 output
+	// Expect valid, and output the primary
 	{
 		auto result = dut.get();
 		EXPECT_TRUE(result.Valid);
-		EXPECT_FLOAT_EQ(result.Value, 10.0f);
+		EXPECT_FLOAT_EQ(result.Value, 7.501f);
 	}
 }
 
@@ -486,7 +364,7 @@ TEST_F(SensorRedundantPartialSecond, PartialRedundancyRange)
 	m1.set(75);
 	m2.set(100);
 
-	// expect valid, at 75%
+	// Expect valid, and output the first
 	{
 		auto result = dut.get();
 		EXPECT_TRUE(result.Valid);
