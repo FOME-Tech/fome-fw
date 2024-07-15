@@ -70,6 +70,6 @@ SensorResult RedundantSensor::get() const {
 		}
 	}
 
-	// Any other condition indacates an unexpected discrepancy, return inconsistency error
+	// Any other condition indicates an unexpected discrepancy, return inconsistency error
 	return UnexpectedCode::Inconsistent;
 }
