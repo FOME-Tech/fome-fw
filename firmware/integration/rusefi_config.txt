@@ -401,7 +401,7 @@ injector_s injector
 injector_s injectorSecondary
 
 bit isForcedInduction;Does the vehicle have a turbo or supercharger?
-bit tpsSecondaryMonitors;Use primary throttle sensor value directly and secondary to monitor, rather than the average of the two values.
+bit unusedFordTps
 bit lambdaProtectionEnable
 bit overrideTriggerGaps
 bit enableFan1WithAc;Turn on this fan when AC is on.
@@ -423,7 +423,7 @@ bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
 bit artificialTestMisfire,"Danger Mode","No thank you";Experimental setting that will cause a misfire\nDO NOT ENABLE.
-bit ppsSecondaryMonitors;Use primary pedal sensor value directly and secondary to monitor, rather than the average of the two values.
+bit unusedFordPps
 bit cltSensorPulldown
 bit iatSensorPulldown
 bit allowIdenticalPps

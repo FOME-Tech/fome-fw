@@ -9,10 +9,9 @@ RedundantSensor::RedundantSensor(SensorType outputType, SensorType first, Sensor
 {
 }
 
-void RedundantSensor::configure(float maxDifference, bool ignoreSecondSensor, bool averageSensors, float secondMaximum) {
+void RedundantSensor::configure(float maxDifference, bool ignoreSecondSensor, float secondMaximum) {
 	m_maxDifference = maxDifference;
 	m_ignoreSecond = ignoreSecondSensor;
-	m_averageSensors = averageSensors;
 	m_secondMaximum = secondMaximum;
 }
 
@@ -62,7 +61,7 @@ SensorResult RedundantSensor::get() const {
 	float delta = absF(sensor1.Value - sensor2Value);
 	if (delta <= m_maxDifference) {
 		// All is well: sensors are valid and values check out
-		return m_averageSensors ? (sensor1.Value + sensor2Value) / 2 : sensor1.Value;
+		return (sensor1.Value + sensor2Value) / 2;
 	}
 
 	// Any other condition indacates an unexpected discrepancy, return inconsistency error
