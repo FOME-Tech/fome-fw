@@ -12,8 +12,6 @@
 #define MAX_TPS_PPS_DISCREPANCY 5.0f
 #endif
 
-#define TPS_ADC_UNITS_PER_VOLT 200
-
 struct TpsConfig {
 	adc_channel_e channel;
 	float closed;
@@ -37,7 +35,7 @@ public:
 			return false;
 		}
 
-		AdcSubscription::SubscribeSensor(m_sens, cfg.channel, TPS_ADC_UNITS_PER_VOLT);
+		AdcSubscription::SubscribeSensor(m_sens, cfg.channel, 200);
 
 		return m_sens.Register();
 	}
