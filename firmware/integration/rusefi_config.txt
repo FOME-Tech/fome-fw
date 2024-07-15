@@ -1413,8 +1413,8 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t ALSMaxDriverThrottleIntent;;"%", 1, 0, 0, 10, 0
 	pin_input_mode_e ALSActivatePinMode;
 
-	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%;"%", 0.5, 0, 0, 100, 1
-	uint8_t autoscale ppsSecondaryMaximum;For Toyota ETCS-i, use ~69%;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale ppsSecondaryMaximum;For Toyota ETCS-i, use ~69%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
 pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	uint8_t autoscale rpmHardLimitHyst;If the hard limit is 7200rpm and hysteresis is 200rpm, then when the ECU sees 7200rpm, fuel/ign will cut, and stay cut until 7000rpm (7200-200) is reached;"RPM", 10, 0, 0, 2500, 0
