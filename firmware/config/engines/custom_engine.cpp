@@ -28,39 +28,6 @@
 #include "scheduler.h"
 #endif /* EFI_PROD_CODE */
 
-#if EFI_PROD_CODE
-static int periodIndex = 0;
-
-static OutputPin testPin;
-static scheduling_s testScheduling;
-
-static int test557[] = {5, 5, 10, 10, 20, 20, 50, 50, 100, 100, 200, 200, 500, 500, 500, 500};
-#define TEST_LEN 16
-
-efitimeus_t testTime;
-
-static void toggleTestAndScheduleNext(void *) {
-	testPin.toggle();
-	periodIndex = (periodIndex + 1) % TEST_LEN;
-	testTime += test557[periodIndex];
-	engine->executor.scheduleByTimestamp("test", &testScheduling, testTime, &toggleTestAndScheduleNext);
-}
-
-/**
- * https://github.com/rusefi/rusefi/issues/557 common rail / direct injection scheduling control test
- */
-void runSchedulingPrecisionTestIfNeeded(void) {
-	if (!isBrainPinValid(engineConfiguration->test557pin)) {
-		return;
-	}
-
-	testPin.initPin("test", engineConfiguration->test557pin);
-	testPin.setValue(0);
-	testTime = getTimeNowUs();
-	toggleTestAndScheduleNext(/*unused*/ nullptr);
-}
-#endif /* EFI_PROD_CODE */
-
 void setDiscoveryPdm() {
 }
 
@@ -129,21 +96,6 @@ void setFrankensoConfiguration() {
 
 	setAlgorithm(LM_SPEED_DENSITY);
 
-#if EFI_PWM_TESTER
-	engineConfiguration->injectionPins[4] = Gpio::C8; // #5
-	engineConfiguration->injectionPins[5] = Gpio::D10; // #6
-	engineConfiguration->injectionPins[6] = Gpio::D9;
-	engineConfiguration->injectionPins[7] = Gpio::D11;
-	engineConfiguration->injectionPins[8] = Gpio::D0;
-	engineConfiguration->injectionPins[9] = Gpio::B11;
-	engineConfiguration->injectionPins[10] = Gpio::C7;
-	engineConfiguration->injectionPins[11] = Gpio::E4;
-
-	/**
-	 * We want to initialize all outputs for test
-	 */
-	engineConfiguration->cylindersCount = 12;
-#else /* EFI_PWM_TESTER */
 	engineConfiguration->injectionPins[4] = Gpio::Unassigned;
 	engineConfiguration->injectionPins[5] = Gpio::Unassigned;
 	engineConfiguration->injectionPins[6] = Gpio::Unassigned;
@@ -158,7 +110,6 @@ void setFrankensoConfiguration() {
 	engineConfiguration->ignitionPins[2] = Gpio::C9;
 	// set_ignition_pin 4 PE10
 	engineConfiguration->ignitionPins[3] = Gpio::E10;
-#endif /* EFI_PWM_TESTER */
 
 	// todo: 8.2 or 10k?
 	engineConfiguration->vbattDividerCoeff = ((float) (10 + 33)) / 10 * 2;
@@ -218,10 +169,8 @@ void setFrankensoBoardTestConfiguration() {
 // set engine_type 58
 void setEtbTestConfiguration() {
 	// VAG test ETB
-	// set tps_min 54
 	engineConfiguration->tpsMin = 54;
 	// by the way this ETB has default position of ADC=74 which is about 4%
-	// set tps_max 540
 	engineConfiguration->tpsMax = 540;
 
 	// yes, 30K - that's a test configuration
@@ -359,10 +308,8 @@ void setTle8888TestConfiguration() {
 	engineConfiguration->etb_iTermMax = 300;
 
 	// VAG test ETB, no divider on red board - direct 3v TPS sensor
-	// set tps_min 332
 	engineConfiguration->tpsMin = 332;
 	// by the way this ETB has default position of ADC=74 which is about 4%
-	// set tps_max 540
 	engineConfiguration->tpsMax = 799;
 }
 
@@ -587,7 +534,7 @@ void proteusBoardTest() {
 #endif // HW_PROTEUS
 
 void mreBCM() {
-	for (int i = 0; i < MAX_CYLINDER_COUNT;i++) {
+	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		engineConfiguration->ignitionPins[i] = Gpio::Unassigned;
 		engineConfiguration->injectionPins[i] = Gpio::Unassigned;
 	}

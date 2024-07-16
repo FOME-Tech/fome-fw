@@ -65,29 +65,37 @@ struct scheduling_s {
 	virtual_timer_t timer;
 #endif /* EFI_SIGNAL_EXECUTOR_SLEEP */
 
-	/**
-	 * timestamp represented as 64-bit value of ticks since MCU start
-	 */
+	// timestamp represented as 64-bit value of ticks since MCU start
 	efitick_t momentX;
 
-	/**
-	 * Scheduler implementation uses a sorted linked list of these scheduling records.
-	 */
+	// Scheduler implementation uses a sorted linked list of these scheduling records.
 	scheduling_s *nextScheduling_s = nullptr;
 
 	action_s action;
 };
 #pragma pack(pop)
 
-struct ExecutorInterface {
+struct Scheduler {
 	/**
-	 * see also scheduleByAngle
+	 * @brief Schedule an action to be executed in the future.
+	 * 
+	 * scheduleByAngle is useful if you want to schedule something in terms of crank angle instead of time.
+	 *
+	 * @param msg Name of this event to use for logging in case of an error.
+	 * @param scheduling Storage to use for the scheduled event. If null, one will be used from the pool.
+	 * @param targetTime When to execute the specified action. If this time is in the past or
+	 *                   very near future, it may execute immediately.
+	 * @param action An action to execute at the specified time.
 	 */
-	virtual void scheduleByTimestamp(const char *msg, scheduling_s *scheduling, efitimeus_t timeUs, action_s action) = 0;
-	virtual void scheduleByTimestampNt(const char *msg, scheduling_s *scheduling, efitick_t timeNt, action_s action) = 0;
-	virtual void scheduleForLater(const char *msg, scheduling_s *scheduling, int delayUs, action_s action) = 0;
+	virtual void schedule(const char *msg, scheduling_s *scheduling, efitick_t targetTime, action_s action) = 0;
+
+	/**
+	 * @brief Cancel the specified scheduling_s so that, if currently scheduled, it does not execute.
+	 * 
+	 * @param scheduling The scheduling_s to cancel.
+	 */
 	virtual void cancel(scheduling_s* scheduling) = 0;
 };
 
-ExecutorInterface *getExecutorInterface();
+Scheduler *getScheduler();
 

@@ -801,24 +801,6 @@ void setThrottleDutyCycle(percent_t level) {
 	}
 	efiPrintf("duty ETB duty=%f", dc);
 }
-
-static void setEtbFrequency(int frequency) {
-	engineConfiguration->etbFreq = frequency;
-
-	for (int i = 0 ; i < ETB_COUNT; i++) {
-		setDcMotorFrequency(i, frequency);
-	}
-}
-
-static void etbReset() {
-	efiPrintf("etbReset");
-	
-	for (int i = 0 ; i < ETB_COUNT; i++) {
-		setDcMotorDuty(i, 0);
-	}
-
-	etbPidReset();
-}
 #endif /* EFI_PROD_CODE */
 
 void etbAutocal(size_t throttleIndex) {
@@ -842,9 +824,7 @@ static const float boschBiasValues[] = {
 };
 
 void setBoschVAGETB() {
-	// set tps_min 890
 	engineConfiguration->tpsMin = 890; // convert 12to10 bit (ADC/4)
-	// set tps_max 70
 	engineConfiguration->tpsMax = 70; // convert 12to10 bit (ADC/4)
 
 	engineConfiguration->tps1SecondaryMin = 102;
@@ -870,8 +850,8 @@ void setDefaultEtbParameters() {
 	setLinearCurve(config->pedalToTpsPedalBins, /*from*/0, /*to*/100, 1);
 	setLinearCurve(config->pedalToTpsRpmBins, /*from*/0, /*to*/8000, 1);
 
-	for (int pedalIndex = 0;pedalIndex<PEDAL_TO_TPS_SIZE;pedalIndex++) {
-		for (int rpmIndex = 0;rpmIndex<PEDAL_TO_TPS_SIZE;rpmIndex++) {
+	for (int pedalIndex = 0; pedalIndex < PEDAL_TO_TPS_SIZE; pedalIndex++) {
+		for (int rpmIndex = 0; rpmIndex < PEDAL_TO_TPS_SIZE; rpmIndex++) {
 			config->pedalToTpsTable[pedalIndex][rpmIndex] = config->pedalToTpsPedalBins[pedalIndex];
 		}
 	}
@@ -1002,17 +982,6 @@ void initElectronicThrottle() {
 		engine->etbControllers[i] = etbControllers[i];
 	}
 
-#if EFI_PROD_CODE
-	addConsoleAction("etbreset", etbReset);
-	addConsoleActionI("etb_freq", setEtbFrequency);
-
-	// this command is useful for real hardware test with known cheap hardware
-	addConsoleAction("etb_test_hw", [](){
-		set18919_AM810_pedal_position_sensor();
-	});
-
-#endif /* EFI_PROD_CODE */
-
 	pedal2tpsMap.init(config->pedalToTpsTable, config->pedalToTpsPedalBins, config->pedalToTpsRpmBins);
 
 	doInitElectronicThrottle();
@@ -1040,11 +1009,6 @@ void setEtbLuaAdjustment(percent_t pos) {
 			etb->setLuaAdjustment(pos);
 		}
 	}
-}
-
-void set18919_AM810_pedal_position_sensor() {
-    // todo use setPPSCalibration(0.1, 4.3, 0.1, 1.96); once we have https://github.com/rusefi/rusefi/issues/5056
-    setPPSCalibration(0.1, 4.5, 0.1, 2.2);
 }
 
 void setToyota89281_33010_pedal_position_sensor() {

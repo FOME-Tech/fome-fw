@@ -134,12 +134,12 @@ angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 static void turnOffAllDebugFields(void *arg) {
 	(void)arg;
 #if EFI_PROD_CODE
-	for (int index = 0;index<TRIGGER_INPUT_PIN_COUNT;index++) {
+	for (int index = 0; index < TRIGGER_INPUT_PIN_COUNT; index++) {
 		if (isBrainPinValid(engineConfiguration->triggerInputDebugPins[index])) {
 			writePad("trigger debug", engineConfiguration->triggerInputDebugPins[index], 0);
 		}
 	}
-	for (int index = 0;index<CAM_INPUTS_COUNT;index++) {
+	for (int index = 0; index < CAM_INPUTS_COUNT; index++) {
 		if (isBrainPinValid(engineConfiguration->camInputsDebug[index])) {
 			writePad("cam debug", engineConfiguration->camInputsDebug[index], 0);
 		}
@@ -214,7 +214,7 @@ static void logVvtFront(bool isImportantFront, bool isRising, efitick_t nowNt, i
 #if EFI_PROD_CODE
 		writePad("cam debug", engineConfiguration->camInputsDebug[index], 1);
 #endif /* EFI_PROD_CODE */
-		getExecutorInterface()->scheduleByTimestampNt("dbg_on", &debugToggleScheduling, nowNt + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
+		getScheduler()->schedule("dbg_on", &debugToggleScheduling, nowNt + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
 	}
 
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
@@ -434,7 +434,7 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 #if EFI_PROD_CODE
 		writePad("trigger debug", engineConfiguration->triggerInputDebugPins[signalIndex], 1);
 #endif /* EFI_PROD_CODE */
-		getExecutorInterface()->scheduleByTimestampNt("dbg_off", &debugToggleScheduling, timestamp + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
+		getScheduler()->schedule("dbg_off", &debugToggleScheduling, timestamp + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
 	}
 
 	uint32_t triggerHandlerEntryTime = getTimeNowLowerNt();
@@ -773,7 +773,7 @@ void triggerInfo(void) {
 	}
 
 
-	for (int camInputIndex = 0; camInputIndex<CAM_INPUTS_COUNT;camInputIndex++) {
+	for (int camInputIndex = 0; camInputIndex < CAM_INPUTS_COUNT; camInputIndex++) {
 		if (isBrainPinValid(engineConfiguration->camInputs[camInputIndex])) {
 			int camLogicalIndex = camInputIndex % CAMS_PER_BANK;
 			efiPrintf("VVT input: %s mode %s", hwPortname(engineConfiguration->camInputs[camInputIndex]),
@@ -895,7 +895,7 @@ TriggerDecoderBase initState("init");
 void TriggerCentral::updateWaveform() {
 	// Re-read config in case it's changed
 	primaryTriggerConfiguration.update();
-	for (int camIndex = 0;camIndex < CAMS_PER_BANK;camIndex++) {
+	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		vvtTriggerConfiguration[camIndex].update();
 	}
 

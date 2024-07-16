@@ -78,10 +78,6 @@
 #include "init.h"
 #endif /* EFI_UNIT_TEST */
 
-#if EFI_PROD_CODE
-#include "pwm_tester.h"
-#endif /* EFI_PROD_CODE */
-
 #if !EFI_UNIT_TEST
 
 /**
@@ -455,8 +451,6 @@ void LedBlinkingTask::updateErrorLed() {
 
 // this method is used by real firmware and simulator and unit test
 void commonInitEngineController() {
-	initInterpolation();
-
 #if EFI_SIMULATOR || EFI_UNIT_TEST
 	printf("commonInitEngineController\n");
 #endif
@@ -561,7 +555,7 @@ bool validateConfig() {
 		return false;
 	}
 
-	ensureArrayIsAscending("Batt Lag", engineConfiguration->injector.battLagCorrBins);
+	ensureArrayIsAscending("Injector deadtime", engineConfiguration->injector.battLagCorrBins);
 
 	// Fueling
 	{
@@ -611,7 +605,7 @@ bool validateConfig() {
 
 // todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
 
-	ensureArrayIsAscending("MAF decoding", config->mafDecodingBins);
+	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
 
 	// Cranking tables
 	ensureArrayIsAscending("Cranking fuel mult", config->crankingFuelBins);
@@ -632,7 +626,7 @@ bool validateConfig() {
 		if (cfg.pin == Gpio::Unassigned) {
 			continue;
 		}
-		ensureArrayIsAscending("VR Bins", cfg.rpmBins);
+		ensureArrayIsAscending("VR threshold", cfg.rpmBins);
 	}
 
 #if EFI_BOOST_CONTROL
@@ -695,10 +689,6 @@ void initEngineController() {
 	}
 
 	initVrPwm();
-
-#if EFI_PWM_TESTER
-	initPwmTester();
-#endif /* EFI_PWM_TESTER */
 }
 
 /**

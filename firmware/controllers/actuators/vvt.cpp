@@ -165,20 +165,20 @@ static void turnVvtPidOn(int index) {
 	}
 
 	startSimplePwmExt(&vvtPwms[index], vvtOutputNames[index],
-			&engine->executor,
+			&engine->scheduler,
 			engineConfiguration->vvtPins[index],
 			&vvtPins[index],
 			engineConfiguration->vvtOutputFrequency, 0);
 }
 
 void startVvtControlPins() {
-	for (int i = 0;i <CAM_INPUTS_COUNT;i++) {
+	for (int i = 0; i <CAM_INPUTS_COUNT; i++) {
 		turnVvtPidOn(i);
 	}
 }
 
 void stopVvtControlPins() {
-	for (int i = 0;i < CAM_INPUTS_COUNT;i++) {
+	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
 		vvtPins[i].deInit();
 	}
 }
