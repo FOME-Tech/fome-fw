@@ -14,7 +14,6 @@ CONTROLLERS_ALGO_SRC_CPP = $(PROJECT_DIR)/controllers/algo/advance_map.cpp \
 	$(PROJECT_DIR)/controllers/algo/engine_configuration.cpp \
 	$(PROJECT_DIR)/controllers/algo/engine.cpp \
 	$(PROJECT_DIR)/controllers/algo/engine2.cpp \
-	$(PROJECT_DIR)/controllers/algo/gear_detector.cpp \
 	$(PROJECT_DIR)/controllers/algo/event_registry.cpp \
 	$(PROJECT_DIR)/controllers/algo/airmass/airmass.cpp \
 	$(PROJECT_DIR)/controllers/algo/airmass/alphan_airmass.cpp \

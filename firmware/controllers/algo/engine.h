@@ -41,7 +41,6 @@
 #include "harley_acr.h"
 #include "dfco.h"
 #include "fuel_computer.h"
-#include "gear_detector.h"
 #include "advance_map.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
@@ -164,7 +163,6 @@ public:
 		HarleyAcr,
 		Mockable<WallFuelController>,
 #if EFI_VEHICLE_SPEED
-		GearDetector,
 		TripOdometer,
 #endif // EFI_VEHICLE_SPEED
 		KnockController,
