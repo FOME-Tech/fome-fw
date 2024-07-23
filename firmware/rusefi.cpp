@@ -282,7 +282,7 @@ void runRusEfiWithConfig() {
 		 */
 		initEngineController();
 
-		#if MODULE_GEAR_DETECT
+		#ifdef MODULE_GEAR_DETECT
 		engine->module<GearDetector>()->onConfigurationChange(nullptr);
 		#endif
 

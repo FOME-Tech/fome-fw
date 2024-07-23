@@ -346,7 +346,7 @@ static void updateVehicleSpeed() {
 	engine->outputChannels.vehicleSpeedKph = Sensor::getOrZero(SensorType::VehicleSpeed);
 #endif // EFI_VEHICLE_SPEED
 
-#if MODULE_GEAR_DETECT
+#ifdef MODULE_GEAR_DETECT
 	engine->outputChannels.speedToRpmRatio = engine->module<GearDetector>()->getGearboxRatio();
 	engine->outputChannels.detectedGear = Sensor::getOrZero(SensorType::DetectedGear);
 #endif // MODULE_GEAR_DETECT
@@ -427,6 +427,7 @@ static void updateFuelCorrections() {
 }
 
 static void updateFuelResults() {
+	#ifdef MODULE_TRIP_ODO
 	engine->outputChannels.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
 	engine->outputChannels.totalFuelConsumption = engine->module<TripOdometer>()->getConsumedGrams();
 	engine->outputChannels.ignitionOnTime = engine->module<TripOdometer>()->getIgnitionOnTime();
@@ -434,6 +435,7 @@ static void updateFuelResults() {
 
 	// output channel in km
 	engine->outputChannels.distanceTraveled = 0.001f * engine->module<TripOdometer>()->getDistanceMeters();
+	#endif // MODULE_TRIP_ODO
 }
 
 static void updateFuelInfo() {

@@ -48,7 +48,6 @@
 #include "throttle_model.h"
 #include "lambda_monitor.h"
 #include "vvt.h"
-#include "trip_odometer.h"
 
 #include "engine_modules_generated.h"
 
@@ -162,9 +161,6 @@ public:
 		DfcoController,
 		HarleyAcr,
 		Mockable<WallFuelController>,
-#if EFI_VEHICLE_SPEED
-		TripOdometer,
-#endif // EFI_VEHICLE_SPEED
 		KnockController,
 		SensorChecker,
 		LimpManager,
