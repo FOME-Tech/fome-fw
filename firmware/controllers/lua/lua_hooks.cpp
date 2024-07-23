@@ -893,7 +893,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
-#if EFI_VEHICLE_SPEED
+#if MODULE_GEAR_DETECT
 	lua_register(l, "getCurrentGear", [](lua_State* l2) {
 		lua_pushinteger(l2, Sensor::getOrZero(SensorType::DetectedGear));
 		return 1;
@@ -904,7 +904,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		lua_pushinteger(l2, engine->module<GearDetector>()->getRpmInGear(idx));
 		return 1;
 	});
-#endif // EFI_VEHICLE_SPEED
+#endif // MODULE_GEAR_DETECT
 
 #if !EFI_UNIT_TEST
 	lua_register(l, "startPwm", lua_startPwm);

@@ -344,9 +344,12 @@ static void updateVvtSensors() {
 static void updateVehicleSpeed() {
 #if EFI_VEHICLE_SPEED
 	engine->outputChannels.vehicleSpeedKph = Sensor::getOrZero(SensorType::VehicleSpeed);
+#endif // EFI_VEHICLE_SPEED
+
+#if MODULE_GEAR_DETECT
 	engine->outputChannels.speedToRpmRatio = engine->module<GearDetector>()->getGearboxRatio();
 	engine->outputChannels.detectedGear = Sensor::getOrZero(SensorType::DetectedGear);
-#endif /* EFI_VEHICLE_SPEED */
+#endif // MODULE_GEAR_DETECT
 }
 
 static void updateRawSensors() {
