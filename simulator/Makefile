@@ -181,6 +181,7 @@ CPPSRC = $(ALLCPPSRC) \
   simulator/system/signal_executor_sleep.cpp \
   simulator/boards.cpp \
   $(TEST_SRC_CPP) \
+  $(MODULES_CPPSRC) \
   $(RUSEFI_LIB_CPP) \
   main.cpp
 
@@ -191,6 +192,7 @@ ASMSRC = $(PORTASM)
 INCDIR = . \
   $(PCH_DIR) \
   $(ALLINC) \
+  $(MODULES_INC) \
   $(CHIBIOS)/os/various/cpp_wrappers \
   $(PROJECT_DIR)/hw_layer/drivers/can \
   ${CHIBIOS}/os/various \
@@ -290,6 +292,7 @@ include $(RULESPATH)/rules.mk
 include $(PROJECT_DIR)/rusefi_pch.mk
 include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
+include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
 
 .PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
 

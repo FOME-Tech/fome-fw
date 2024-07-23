@@ -5,6 +5,8 @@ include $(PROJECT_DIR)/controllers/trigger/trigger.mk
 include $(PROJECT_DIR)/controllers/sensors/sensors.mk
 include $(PROJECT_DIR)/controllers/system/system.mk
 
+include $(PROJECT_DIR)/controllers/modules/modules.mk
+
 CONTROLLERS_DIR=$(PROJECT_DIR)/controllers
 
 CONTROLLERS_SRC_CPP = \
@@ -14,7 +16,6 @@ CONTROLLERS_SRC_CPP = \
 	$(CONTROLLERS_DIR)/actuators/boost_control.cpp \
 	$(CONTROLLERS_DIR)/actuators/dc_motors.cpp \
 	$(CONTROLLERS_DIR)/actuators/fan_control.cpp \
-	$(CONTROLLERS_DIR)/actuators/fuel_pump.cpp \
 	$(CONTROLLERS_DIR)/actuators/harley_acr.cpp \
 	$(CONTROLLERS_DIR)/actuators/idle_thread_io.cpp \
 	$(CONTROLLERS_DIR)/actuators/idle_hardware.cpp \

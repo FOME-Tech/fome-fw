@@ -47,11 +47,13 @@ CPPSRC += $(ALLCPPSRC) \
 	$(PROJECT_DIR)/../unit_tests/mocks.cpp \
 	$(RUSEFI_LIB_CPP) \
 	$(RUSEFI_LIB_CPP_TEST) \
+	$(MODULES_CPPSRC) \
 
 INCDIR += \
 	$(PCH_DIR) \
 	$(UNIT_TESTS_DIR) \
 	$(ALLINC) \
+	$(MODULES_INC) \
 	$(GENERATED_DIR) \
 	$(PROJECT_DIR)/config/boards/hellen \
 	$(UNIT_TESTS_DIR)/test_data_structures \

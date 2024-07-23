@@ -25,6 +25,8 @@ log.txt
 *.msq
 gitversion.h
 gitversion.h.gen
+engine_modules_generated.h
+engine_modules_generated.h.gen
 
 # Eclipse
 .metadata/

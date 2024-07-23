@@ -32,7 +32,6 @@
 #include "launch_control.h"
 #include "antilag_system.h"
 #include "trigger_scheduler.h"
-#include "fuel_pump.h"
 #include "main_relay.h"
 #include "ac_control.h"
 #include "type_list.h"
@@ -52,6 +51,8 @@
 #include "lambda_monitor.h"
 #include "vvt.h"
 #include "trip_odometer.h"
+
+#include "engine_modules_generated.h"
 
 #include <functional>
 
@@ -156,7 +157,6 @@ public:
 #if EFI_ALTERNATOR_CONTROL
 		AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */
-		FuelPumpController,
 		MainRelayController,
 		IgnitionController,
 		Mockable<AcController>,
@@ -183,6 +183,9 @@ public:
 		BoostController,
 #endif // EFI_BOOST_CONTROL
 		LedBlinkingTask,
+
+		MODULES_LIST
+
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
 
