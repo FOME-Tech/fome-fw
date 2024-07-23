@@ -43,7 +43,6 @@
 #include "fuel_computer.h"
 #include "gear_detector.h"
 #include "advance_map.h"
-#include "fan_control.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
@@ -160,8 +159,6 @@ public:
 		MainRelayController,
 		IgnitionController,
 		Mockable<AcController>,
-		FanControl1,
-		FanControl2,
 		PrimeController,
 		DfcoController,
 		HarleyAcr,
@@ -184,7 +181,7 @@ public:
 #endif // EFI_BOOST_CONTROL
 		LedBlinkingTask,
 
-		MODULES_LIST
+		#include "modules_list_generated.h"
 
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
