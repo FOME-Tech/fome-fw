@@ -158,6 +158,7 @@ endif
 include $(PROJECT_DIR)/console/binary/tunerstudio.mk
 include $(PROJECT_DIR)/console/console.mk
 include $(PROJECT_DIR)/common.mk
+include $(PROJECT_DIR)/controllers/modules/modules.mk
 
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
