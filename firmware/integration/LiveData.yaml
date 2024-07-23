@@ -75,7 +75,7 @@ Usages:
     isPtr: true
 
   - name: fuel_pump_control
-    folder: controllers/actuators
+    folder: controllers/modules/fuel_pump
     output_name: fuelPump
 
   - name: main_relay
