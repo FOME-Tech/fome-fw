@@ -8,7 +8,7 @@
 
 class EngineModule {
 public:
-	// Called exactly once, before configuration is loaded
+	// Called exactly once during boot, before configuration is loaded
 	virtual void initNoConfiguration() { }
 
 	// Called when 'Burn' is invoked
