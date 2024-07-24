@@ -15,6 +15,6 @@ void startUsbConsole();
 void startEthernetConsole();
 void startWifiConsole();
 
-struct EthernetConsoleModule : public EngineModule {
+struct EthernetConsoleModule final : public EngineModule {
 	void initNoConfiguration() override;
 };
