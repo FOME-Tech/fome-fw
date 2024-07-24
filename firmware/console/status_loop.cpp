@@ -427,7 +427,7 @@ static void updateFuelCorrections() {
 }
 
 static void updateFuelResults() {
-	#ifdef MODULE_TRIP_ODO
+#ifdef MODULE_TRIP_ODO
 	engine->outputChannels.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
 	engine->outputChannels.totalFuelConsumption = engine->module<TripOdometer>()->getConsumedGrams();
 	engine->outputChannels.ignitionOnTime = engine->module<TripOdometer>()->getIgnitionOnTime();
@@ -435,7 +435,7 @@ static void updateFuelResults() {
 
 	// output channel in km
 	engine->outputChannels.distanceTraveled = 0.001f * engine->module<TripOdometer>()->getDistanceMeters();
-	#endif // MODULE_TRIP_ODO
+#endif // MODULE_TRIP_ODO
 }
 
 static void updateFuelInfo() {
