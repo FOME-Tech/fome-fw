@@ -12,7 +12,6 @@
 
 void initializeConsole();
 void startUsbConsole();
-void startEthernetConsole();
 void startWifiConsole();
 
 struct EthernetConsoleModule final : public EngineModule {
