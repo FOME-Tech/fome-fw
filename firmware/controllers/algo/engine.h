@@ -32,7 +32,6 @@
 #include "launch_control.h"
 #include "antilag_system.h"
 #include "trigger_scheduler.h"
-#include "fuel_pump.h"
 #include "main_relay.h"
 #include "ac_control.h"
 #include "type_list.h"
@@ -42,16 +41,15 @@
 #include "harley_acr.h"
 #include "dfco.h"
 #include "fuel_computer.h"
-#include "gear_detector.h"
 #include "advance_map.h"
-#include "fan_control.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
 #include "vvt.h"
-#include "trip_odometer.h"
+
+#include "engine_modules_generated.h"
 
 #include <functional>
 
@@ -98,6 +96,20 @@ struct AirmassModelBase;
 
 class IEtbController;
 
+class LedBlinkingTask : public EngineModule {
+public:
+	void onSlowCallback() override;
+
+private:
+	void updateRunningLed();
+	void updateWarningLed();
+	void updateCommsLed();
+	void updateErrorLed();
+
+	size_t m_commBlinkCounter = 0;
+	size_t m_errorBlinkCounter = 0;
+};
+
 class Engine final : public TriggerStateListener {
 public:
 	Engine();
@@ -142,20 +154,13 @@ public:
 #if EFI_ALTERNATOR_CONTROL
 		AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */
-		FuelPumpController,
 		MainRelayController,
 		IgnitionController,
 		Mockable<AcController>,
-		FanControl1,
-		FanControl2,
 		PrimeController,
 		DfcoController,
 		HarleyAcr,
 		Mockable<WallFuelController>,
-#if EFI_VEHICLE_SPEED
-		GearDetector,
-		TripOdometer,
-#endif // EFI_VEHICLE_SPEED
 		KnockController,
 		SensorChecker,
 		LimpManager,
@@ -168,6 +173,11 @@ public:
 #if EFI_BOOST_CONTROL
 		BoostController,
 #endif // EFI_BOOST_CONTROL
+		LedBlinkingTask,
+		TpsAccelEnrichment,
+
+		#include "modules_list_generated.h"
+
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
 
@@ -211,8 +221,6 @@ public:
 
 	void setConfig();
 
-	LocalVersionHolder versionForConfigurationListeners;
-
 	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
 
 #if EFI_UNIT_TEST
@@ -226,13 +234,13 @@ public:
 	// a pointer with interface type would make this code nicer but would carry extra runtime
 	// cost to resolve pointer, we use instances as a micro optimization
 #if EFI_SIGNAL_EXECUTOR_ONE_TIMER
-	SingleTimerExecutor executor;
+	SingleTimerExecutor scheduler;
 #endif
 #if EFI_SIGNAL_EXECUTOR_SLEEP
-	SleepExecutor executor;
+	SleepExecutor scheduler;
 #endif
 #if EFI_UNIT_TEST
-	TestExecutor executor;
+	TestExecutor scheduler;
 
 	std::function<void(IgnitionEvent*, bool)> onIgnitionEvent;
 #endif // EFI_UNIT_TEST
@@ -262,8 +270,6 @@ public:
 	 * tuning software)
 	 */
 	int globalConfigurationVersion = 0;
-
-	TpsAccelEnrichment tpsAccelEnrichment;
 
 #if EFI_SHAFT_POSITION_INPUT
 	TriggerCentral triggerCentral;

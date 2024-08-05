@@ -205,9 +205,9 @@ void runRusEfi() {
 
 	detectBoardType();
 
-#if EFI_ETHERNET
-	startEthernetConsole();
-#endif
+	engine->engineModules.apply_all([](auto & m) {
+		m.initNoConfiguration();
+	});
 
 #if EFI_USB_SERIAL
 	startUsbConsole();
@@ -282,7 +282,9 @@ void runRusEfiWithConfig() {
 		 */
 		initEngineController();
 
+		#ifdef MODULE_GEAR_DETECT
 		engine->module<GearDetector>()->onConfigurationChange(nullptr);
+		#endif
 
 	#if EFI_ENGINE_EMULATOR
 		initEngineEmulator();
@@ -290,8 +292,6 @@ void runRusEfiWithConfig() {
 
 		// This has to happen after RegisteredOutputPins are init'd: otherwise no change will be detected, and no init will happen
 		rememberCurrentConfiguration();
-
-		runSchedulingPrecisionTestIfNeeded();
 	}
 }
 

@@ -101,7 +101,7 @@ void EngineState::periodicFastCallback() {
 
 	int rpm = Sensor::getOrZero(SensorType::Rpm);
 	engine->ignitionState.sparkDwell = engine->ignitionState.getSparkDwell(rpm);
-	engine->ignitionState.dwellAngle = cisnan(rpm) ? NAN :  engine->ignitionState.sparkDwell / getOneDegreeTimeMs(rpm);
+	engine->ignitionState.dwellAngle = std::isnan(rpm) ? NAN :  engine->ignitionState.sparkDwell / getOneDegreeTimeMs(rpm);
 
 	// todo: move this into slow callback, no reason for IAT corr to be here
 	engine->fuelComputer.running.intakeTemperatureCoefficient = getIatFuelCorrection();
@@ -188,7 +188,7 @@ void EngineState::periodicFastCallback() {
 void EngineState::updateTChargeK(int rpm, float tps) {
 #if EFI_ENGINE_CONTROL
 	float newTCharge = engine->fuelComputer.getTCharge(rpm, tps);
-	if (!cisnan(newTCharge)) {
+	if (!std::isnan(newTCharge)) {
 		// control the rate of change or just fill with the initial value
 		efitick_t nowNt = getTimeNowNt();
 		float secsPassed = timeSinceLastTChargeK.getElapsedSeconds(nowNt);

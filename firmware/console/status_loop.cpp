@@ -106,11 +106,11 @@ static Timer printVersionTimer;
 
 static void printRusefiVersion(const char *engineTypeName, const char *firmwareBuildId) {
 	// VersionChecker in rusEFI console is parsing these version string, please follow the expected format
-	efiPrintfProto(PROTOCOL_VERSION_TAG, "%d@%s %s %s %d",
+	efiPrintfProto(PROTOCOL_VERSION_TAG, "%d@%s %s %s %lu",
 			getRusEfiVersion(), GIT_HASH_SHORT,
 			firmwareBuildId,
 			engineTypeName,
-			getTimeNowS());
+			(uint32_t)getTimeNowS());
 }
 
 // Inform the console about the mapping between a pin's logical name (for example, injector 3)
@@ -136,7 +136,7 @@ static void printEngineSnifferPinMappings() {
 #if EFI_PROD_CODE
 	printOutPin(PROTOCOL_CRANK1, engineConfiguration->triggerInputPins[0]);
 	printOutPin(PROTOCOL_CRANK2, engineConfiguration->triggerInputPins[1]);
-	for (int i = 0;i<CAM_INPUTS_COUNT;i++) {
+	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
 		extern const char *vvtNames[];
 		printOutPin(vvtNames[i], engineConfiguration->camInputs[i]);
 	}
@@ -152,7 +152,7 @@ static void printEngineSnifferPinMappings() {
 		printOutPin(enginePins.injectors[i].getShortName(), engineConfiguration->injectionPins[i]);
 		printOutPin(enginePins.injectorsStage2[i].getShortName(), engineConfiguration->injectionPinsStage2[i]);
 	}
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT;i++) {
+	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
 		printOutPin(enginePins.auxValve[i].getShortName(), engineConfiguration->auxValves[i]);
 	}
 #endif /* EFI_PROD_CODE */
@@ -208,10 +208,6 @@ void updateDevConsoleState() {
 	}
 #endif /* EFI_PROD_CODE */
 
-#if HAL_USE_ADC
-	printFullAdcReportIfNeeded();
-#endif /* HAL_USE_ADC */
-
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	systime_t nowSeconds = getTimeNowS();
 
@@ -237,16 +233,13 @@ void updateDevConsoleState() {
 
 static void initStatusLeds() {
 	enginePins.communicationLedPin.initPin("led: comm status", getCommsLedPin(), LED_PIN_MODE, true);
-	// checkEnginePin is already initialized by the time we get here
+	// errorLedPin is already initialized by the time we get here
 
 	enginePins.warningLedPin.initPin("led: warning status", getWarningLedPin(), LED_PIN_MODE, true);
 	enginePins.runningLedPin.initPin("led: running status", getRunningLedPin(), LED_PIN_MODE, true);
 }
 
 #if EFI_PROD_CODE
-
-static OutputPin* leds[] = { &enginePins.warningLedPin, &enginePins.runningLedPin,
-		&enginePins.errorLedPin, &enginePins.communicationLedPin, &enginePins.checkEnginePin };
 
 static bool isTriggerErrorNow() {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
@@ -256,83 +249,6 @@ static bool isTriggerErrorNow() {
 	return false;
 #endif /* EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
 }
-
-extern bool consoleByteArrived;
-
-class CommunicationBlinkingTask : public PeriodicTimerController {
-
-	int getPeriodMs() override {
-		return counter % 2 == 0 ? onTimeMs : offTimeMs;
-	}
-
-	void setAllLeds(int value) {
-		// make sure we do not turn the critical LED off if already have
-		// critical error by now
-		for (uint32_t i = 0; !hasFirmwareError() && i < sizeof(leds) / sizeof(leds[0]); i++) {
-			leds[i]->setValue(value);
-		}
-	}
-
-	void PeriodicTask() override {
-		counter++;
-
-		bool lowVBatt = Sensor::getOrZero(SensorType::BatteryVoltage) < LOW_VBATT;
-
-		if (counter == 1) {
-			// first invocation of BlinkingTask
-			setAllLeds(1);
-		} else if (counter == 2) {
-			// second invocation of BlinkingTask
-			setAllLeds(0);
-		} else if (counter % 2 == 0) {
-			enginePins.communicationLedPin.setValue(0);
-
-			if (!lowVBatt) {
-				enginePins.warningLedPin.setValue(0);
-			}
-		} else {
-#define BLINKING_PERIOD_MS 33
-
-			if (hasFirmwareError()) {
-				// special behavior in case of critical error - not equal on/off time
-				// this special behavior helps to notice that something is not right, also
-				// differentiates software firmware error from critical interrupt error with CPU halt.
-				offTimeMs = 50;
-				onTimeMs = 450;
-			} else if (consoleByteArrived) {
-				offTimeMs = 100;
-				onTimeMs = 33;
-#if EFI_INTERNAL_FLASH
-			} else if (getNeedToWriteConfiguration()) {
-				offTimeMs = onTimeMs = 500;
-#endif // EFI_INTERNAL_FLASH
-			} else {
-				onTimeMs =
-#if EFI_USB_SERIAL
-				is_usb_serial_ready() ? 3 * BLINKING_PERIOD_MS :
-#endif // EFI_USB_SERIAL
-				BLINKING_PERIOD_MS;
-				offTimeMs = 0.6 * onTimeMs;
-			}
-
-			enginePins.communicationLedPin.setValue(1);
-
-	#if EFI_ENGINE_CONTROL
-			if (lowVBatt || isTriggerErrorNow()) {
-				// todo: at the moment warning codes do not affect warning LED?!
-				enginePins.warningLedPin.setValue(1);
-			}
-	#endif /* EFI_ENGINE_CONTROL */
-		}
-	}
-
-private:
-	int counter = 0;
-	int onTimeMs = 100;
-	int offTimeMs = 100;
-};
-
-static CommunicationBlinkingTask communicationsBlinkingTask;
 
 #endif /* EFI_PROD_CODE */
 
@@ -428,9 +344,12 @@ static void updateVvtSensors() {
 static void updateVehicleSpeed() {
 #if EFI_VEHICLE_SPEED
 	engine->outputChannels.vehicleSpeedKph = Sensor::getOrZero(SensorType::VehicleSpeed);
+#endif // EFI_VEHICLE_SPEED
+
+#ifdef MODULE_GEAR_DETECT
 	engine->outputChannels.speedToRpmRatio = engine->module<GearDetector>()->getGearboxRatio();
 	engine->outputChannels.detectedGear = Sensor::getOrZero(SensorType::DetectedGear);
-#endif /* EFI_VEHICLE_SPEED */
+#endif // MODULE_GEAR_DETECT
 }
 
 static void updateRawSensors() {
@@ -508,6 +427,7 @@ static void updateFuelCorrections() {
 }
 
 static void updateFuelResults() {
+#ifdef MODULE_TRIP_ODO
 	engine->outputChannels.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
 	engine->outputChannels.totalFuelConsumption = engine->module<TripOdometer>()->getConsumedGrams();
 	engine->outputChannels.ignitionOnTime = engine->module<TripOdometer>()->getIgnitionOnTime();
@@ -515,6 +435,7 @@ static void updateFuelResults() {
 
 	// output channel in km
 	engine->outputChannels.distanceTraveled = 0.001f * engine->module<TripOdometer>()->getDistanceMeters();
+#endif // MODULE_TRIP_ODO
 }
 
 static void updateFuelInfo() {
@@ -651,7 +572,7 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->warningCounter = engine->engineState.warnings.warningCounter;
 	tsOutputChannels->lastErrorCode = static_cast<uint16_t>(engine->engineState.warnings.lastErrorCode);
-	for (int i = 0; i < 8;i++) {
+	for (int i = 0; i < 8; i++) {
 		tsOutputChannels->recentErrorCode[i] = static_cast<uint16_t>(engine->engineState.warnings.recentWarnings.get(i).Code);
 	}
 
@@ -687,9 +608,6 @@ void updateTunerStudioState() {
 #endif
 
 	switch (engineConfiguration->debugMode)	{
-	case DBG_TPS_ACCEL:
-		tsOutputChannels->debugIntField1 = engine->tpsAccelEnrichment.cb.getSize();
-		break;
 	case DBG_SR5_PROTOCOL: {
 		const int _10_6 = 100000;
 		tsOutputChannels->debugIntField1 = tsState.textCommandCounter * _10_6 +  tsState.totalCounter;
@@ -739,6 +657,5 @@ void startStatusThreads() {
 	// todo: refactoring needed, this file should probably be split into pieces
 #if EFI_PROD_CODE
 	initStatusLeds();
-	communicationsBlinkingTask.start();
 #endif /* EFI_PROD_CODE */
 }

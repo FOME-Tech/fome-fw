@@ -141,7 +141,7 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 			// Compute the relative angle of this tooth to the sync point's tooth
 			float angle = shape->getAngle(wrappedIndex) - firstAngle;
 
-			efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, !cisnan(angle), "trgSyncNaN");
+			efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, !std::isnan(angle), "trgSyncNaN");
 			// Wrap the angle back in to [0, 720)
 			wrapAngle(angle, "trgSync", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE_RANGE);
 
@@ -300,14 +300,14 @@ void VvtTriggerDecoder::onTooManyTeeth(int actual, int expected) {
 bool TriggerDecoderBase::validateEventCounters(const TriggerWaveform& triggerShape) const {
 	// We can check if things are fine by comparing the number of events in a cycle with the expected number of event.
 	bool isDecodingError = false;
-	for (int i = 0;i < PWM_PHASE_MAX_WAVE_PER_PWM;i++) {
+	for (int i = 0; i < PWM_PHASE_MAX_WAVE_PER_PWM; i++) {
 		isDecodingError |= (currentCycle.eventCount[i] != triggerShape.getExpectedEventCount((TriggerWheel)i));
 	}
 
 #if EFI_UNIT_TEST
 	printf("validateEventCounters: isDecodingError=%d\n", isDecodingError);
 	if (isDecodingError) {
-		for (int i = 0;i < PWM_PHASE_MAX_WAVE_PER_PWM;i++) {
+		for (int i = 0; i < PWM_PHASE_MAX_WAVE_PER_PWM; i++) {
 			printf("count: cur=%d exp=%d\n", currentCycle.eventCount[i],  triggerShape.getExpectedEventCount((TriggerWheel)i));
 		}
 	}
@@ -405,7 +405,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	currentCycle.eventCount[(int)triggerWheel]++;
 
 	if (toothed_previous_time > nowNt) {
-		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%d now=%d", msg, toothed_previous_time, nowNt);
+		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%lu now=%lu", msg, (uint32_t)toothed_previous_time, (uint32_t)nowNt);
 	}
 
 	efidur_t currentDurationLong = isFirstEvent ? 0 : (nowNt - toothed_previous_time);
@@ -467,25 +467,22 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			if (verbose || (someSortOfTriggerError() && !silentTriggerError)) {
 			    const char * prefix = verbose ? "[vrb]" : "[err]";
 
-				for (int i = 0;i<triggerShape.gapTrackingLength;i++) {
+				for (int i = 0; i < triggerShape.gapTrackingLength; i++) {
 					float ratioFrom = triggerShape.syncronizationRatioFrom[i];
-					if (cisnan(ratioFrom)) {
+					if (std::isnan(ratioFrom)) {
 						// we do not track gap at this depth
 						continue;
 					}
 
 					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
-					if (cisnan(gap)) {
-						efiPrintf("%s index=%d NaN gap, you have noise issues?",
-								i,
-							    prefix
-                        );
+					if (std::isnan(gap)) {
+						efiPrintf("%s index=%d NaN gap, you have noise issues?", prefix, i);
 					} else {
 						float ratioTo = triggerShape.syncronizationRatioTo[i];
 
 						bool gapOk = isInRange(ratioFrom, gap, ratioTo);
 
-						efiPrintf("%s %srpm=%d time=%d eventIndex=%d gapIndex=%d: %s gap=%.3f expected from %.3f to %.3f error=%s",
+						efiPrintf("%s %srpm=%d time=%d eventIndex=%lu gapIndex=%d: %s gap=%.3f expected from %.3f to %.3f error=%s",
 								prefix,
 								triggerConfiguration.PrintPrefix,
 								(int)Sensor::getOrZero(SensorType::Rpm),
@@ -502,7 +499,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			}
 #else
 			if (printTriggerTrace) {
-				for (int i = 0;i<triggerShape.gapTrackingLength;i++) {
+				for (int i = 0; i < triggerShape.gapTrackingLength; i++) {
 					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
 					printf("%sindex=%d: gap=%.2f expected from %.2f to %.2f error=%s\r\n",
 							triggerConfiguration.PrintPrefix,
@@ -656,7 +653,7 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 		auto from = triggerShape.syncronizationRatioFrom[i];
 		auto to = triggerShape.syncronizationRatioTo[i];
 
-		if (cisnan(from)) {
+		if (std::isnan(from)) {
 			// don't check this gap, skip it
 			continue;
 		}

@@ -33,8 +33,6 @@
 
 #define EFI_TEXT_LOGGING TRUE
 
-#define EFI_PWM_TESTER FALSE
-
 #define EFI_ACTIVE_CONFIGURATION_IN_FLASH FALSE
 
 #ifndef EFI_MC33816
@@ -268,10 +266,10 @@
 	#define EFI_USE_COMPRESSED_INI_MSD
 	#define ENABLE_PERF_TRACE TRUE
 
-	#if EFI_ETHERNET
+	#if MODULE_ETHERNET_CONSOLE
 		// F4 ethernet needs some extra space
 		#define LUA_USER_HEAP 40000
-	#else // EFI_ETHERNET
+	#else // MODULE_ETHERNET_CONSOLE
 		#define LUA_USER_HEAP 50000
 	#endif
 #else

@@ -50,10 +50,10 @@ static bool hwStarted = false;
 void setHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, hwStarted, "HW.started");
 
-	// How many ticks in the future is this event?
-	auto timeDeltaNt = setTimeNt - nowNt;
-
 	setHwTimerCounter++;
+
+	// How many ticks in the future is this event?
+	const auto timeDeltaNt = setTimeNt - nowNt;
 
 	/**
 	 * #259 BUG error: not positive deltaTimeNt
@@ -64,14 +64,19 @@ void setHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 		warning(ObdCode::CUSTOM_OBD_LOCAL_FREEZE, "local freeze cnt=%d", timerFreezeCounter);
 	}
 
-	// We need the timer to fire after we return - 1 doesn't work as it may actually schedule in the past
+	// We need the timer to fire after we return - too close to now may actually schedule in the past
 	if (timeDeltaNt < US2NT(2)) {
-		timeDeltaNt = US2NT(2);
-	}
+		setTimeNt = nowNt + US2NT(2);
+	} else if (timeDeltaNt >= TOO_FAR_INTO_FUTURE_NT) {
+		uint32_t delta32;
+		if (timeDeltaNt > UINT32_MAX) {
+			delta32 = UINT32_MAX;
+		} else {
+			delta32 = timeDeltaNt;
+		}
 
-	if (timeDeltaNt >= TOO_FAR_INTO_FUTURE_NT) {
 		// we are trying to set callback for too far into the future. This does not look right at all
-		firmwareError(ObdCode::CUSTOM_ERR_TIMER_OVERFLOW, "setHardwareSchedulerTimer() too far: %d", timeDeltaNt);
+		firmwareError(ObdCode::CUSTOM_ERR_TIMER_OVERFLOW, "setHardwareSchedulerTimer() too far: %lu", delta32);
 		return;
 	}
 
@@ -105,14 +110,9 @@ void portMicrosecondTimerCallback() {
 class MicrosecondTimerWatchdogController : public PeriodicTimerController {
 	void PeriodicTask() override {
 		efitick_t nowNt = getTimeNowNt();
-		if (nowNt >= lastSetTimerTimeNt + 2 * CORE_CLOCK) {
-			firmwareError(ObdCode::CUSTOM_ERR_SCHEDULING_ERROR, "watchdog: no events since %d", lastSetTimerTimeNt);
-			return;
-		}
 
-		const char* msg = isTimerPending ? "No_cb too long" : "Timer not awhile";
 		// 2 seconds of inactivity would not look right
-		efiAssertVoid(ObdCode::CUSTOM_TIMER_WATCHDOG, nowNt < lastSetTimerTimeNt + 2 * CORE_CLOCK, msg);
+		efiAssertVoid(ObdCode::CUSTOM_TIMER_WATCHDOG, nowNt < lastSetTimerTimeNt + 2 * CORE_CLOCK, "Watchdog: no events for 2 seconds!");
 	}
 
 	int getPeriodMs() override {
@@ -130,7 +130,7 @@ static void watchDogBuddyCallback(void*) {
 	 * watchdog happy by ensuring that we have scheduler activity even in case of very broken configuration
 	 * without any PWM or input pins
 	 */
-	engine->executor.scheduleForLater("watch", &watchDogBuddy, MS2US(1000), watchDogBuddyCallback);
+	engine->scheduler.schedule("watch", &watchDogBuddy, getTimeNowNt() + MS2NT(1000), watchDogBuddyCallback);
 }
 
 static volatile bool testSchedulingHappened = false;
@@ -141,7 +141,7 @@ static void timerValidationCallback(void*) {
 	float actualTimeSinceScheduling = 1e3 * testScheduling.getElapsedSeconds();
 	
 	if (absI(actualTimeSinceScheduling - TEST_CALLBACK_DELAY) > TEST_CALLBACK_DELAY * TIMER_PRECISION_THRESHOLD) {
-		firmwareError(ObdCode::CUSTOM_ERR_TIMER_TEST_CALLBACK_WRONG_TIME, "hwTimer broken precision: %ld ms", actualTimeSinceScheduling);
+		firmwareError(ObdCode::CUSTOM_ERR_TIMER_TEST_CALLBACK_WRONG_TIME, "hwTimer broken precision: %.3f ms", actualTimeSinceScheduling);
 	}
 }
 
@@ -156,7 +156,11 @@ static void validateHardwareTimer() {
 	testScheduling.reset();
 
 	// to save RAM let's use 'watchDogBuddy' here once before we enable watchdog
-	engine->executor.scheduleForLater("hw-validate", &watchDogBuddy, MS2US(TEST_CALLBACK_DELAY), timerValidationCallback);
+	engine->scheduler.schedule(
+			"hw-validate",
+			&watchDogBuddy,
+			getTimeNowNt() + MS2NT(TEST_CALLBACK_DELAY),
+			timerValidationCallback);
 
 	chThdSleepMilliseconds(TEST_CALLBACK_DELAY + 2);
 	if (!testSchedulingHappened) {

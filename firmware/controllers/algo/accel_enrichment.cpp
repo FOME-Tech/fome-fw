@@ -70,19 +70,6 @@ floatms_t TpsAccelEnrichment::getTpsEnrichment() {
 		resetFractionValues();
 	}
 
-#if EFI_TUNER_STUDIO
-	if (engineConfiguration->debugMode == DBG_TPS_ACCEL) {
-		engine->outputChannels.debugFloatField1 = tpsFrom;
-		engine->outputChannels.debugFloatField2 = tpsTo;
-		engine->outputChannels.debugFloatField3 = valueFromTable;
-		engine->outputChannels.debugFloatField4 = extraFuel;
-		engine->outputChannels.debugFloatField5 = accumulatedValue;
-		engine->outputChannels.debugFloatField6 = maxExtraPerPeriod;
-		engine->outputChannels.debugFloatField7 = maxInjectedPerPeriod;
-		engine->outputChannels.debugIntField1 = cycleCnt;
-	}
-#endif /* EFI_TUNER_STUDIO */
-
 	float mult = interpolate2d(rpm, config->tpsTspCorrValuesBins,
 						config->tpsTspCorrValues);
 	if (mult != 0 && (mult < 0.01 || mult > 100)) {
@@ -137,7 +124,7 @@ int TpsAccelEnrichment::getMaxDeltaIndex() {
 	// todo: 'get' method is maybe a bit heavy because of the branching
 	// todo: this could be optimized with some careful magic
 
-	for (int i = 1; i<len - 1;i++) {
+	for (int i = 1; i < len - 1; i++) {
 		float v = cb.get(ci - i) - cb.get(ci - i - 1);
 		if (v > maxValue) {
 			maxValue = v;
@@ -193,42 +180,20 @@ TpsAccelEnrichment::TpsAccelEnrichment() {
 	cb.setSize(4);
 }
 
-#if ! EFI_UNIT_TEST
-
-void setTpsAccelThr(float value) {
-	engineConfiguration->tpsAccelEnrichmentThreshold = value;
-}
-
-void setTpsDecelThr(float value) {
-	engineConfiguration->tpsDecelEnleanmentThreshold = value;
-}
-
-void setTpsDecelMult(float value) {
-	engineConfiguration->tpsDecelEnleanmentMultiplier = value;
-}
-
-void setTpsAccelLen(int length) {
-	if (length < 1) {
-		efiPrintf("Length should be positive");
-		return;
-	}
-	engine->tpsAccelEnrichment.setLength(length);
-}
-
-void updateAccelParameters() {
+void TpsAccelEnrichment::onConfigurationChange(engine_configuration_s const* /*previousConfig*/) {
 	constexpr float slowCallbackPeriodSecond = SLOW_CALLBACK_PERIOD_MS / 1000.0f;
-	setTpsAccelLen(engineConfiguration->tpsAccelLookback / slowCallbackPeriodSecond);
+	int length = engineConfiguration->tpsAccelLookback / slowCallbackPeriodSecond;
+
+	if (length < 1) {
+		length = 1;
+	}
+
+	setLength(length);
 }
-
-#endif /* ! EFI_UNIT_TEST */
-
 
 void initAccelEnrichment() {
 	tpsTpsMap.init(config->tpsTpsAccelTable, config->tpsTpsAccelFromRpmBins, config->tpsTpsAccelToRpmBins);
 
-#if ! EFI_UNIT_TEST
-
-	updateAccelParameters();
-#endif /* ! EFI_UNIT_TEST */
+	engine->module<TpsAccelEnrichment>()->onConfigurationChange(nullptr);
 }
 

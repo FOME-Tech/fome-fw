@@ -86,13 +86,13 @@
 ! so not forget to change fileVersion in rusefi.ini
 ! todo: this not needed in light of TS_SIGNATURE but rusEFI console still uses it. Need to migrate
 ! rusEFI console from TS_FILE_VERSION to TS_SIGNATURE :(
-#define TS_FILE_VERSION 20210312
+#define TS_FILE_VERSION 20240610
 
 ! This is the version of the data stored in flash configuration
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20015
+#define FLASH_DATA_VERSION 20016
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -218,7 +218,7 @@ struct_no_prefix engine_configuration_s
 
 #define BARO_CORR_SIZE 4
 
-#define MAF_DECODING_COUNT 256
+#define MAF_DECODING_COUNT 64
 
 #define GPPWM_LOAD_COUNT 8
 #define GPPWM_RPM_COUNT 8
@@ -359,9 +359,9 @@ end_struct
 struct linear_sensor_s
 	adc_channel_e hwChannel;
 	float v1;;"volts", 1, 0, 0, 10, 2
-	float value1;;"kPa", 1, 0, 0, 1000000, 2
+	float value1;;"kPa", 1, 0, -100000, 100000, 2
 	float v2;;"volts", 1, 0, 0, 10, 2
-	float value2;;"kPa", 1, 0, 0, 1000000, 2
+	float value2;;"kPa", 1, 0, -100000, 100000, 2
 end_struct
 
 struct ThermistorConf
@@ -401,7 +401,7 @@ injector_s injector
 injector_s injectorSecondary
 
 bit isForcedInduction;Does the vehicle have a turbo or supercharger?
-bit useFordRedundantTps;On some Ford and Toyota vehicles one of the throttle sensors is not linear on the full range, i.e. in the specific range of the positions we effectively have only one sensor.
+bit unusedFordTps
 bit lambdaProtectionEnable
 bit overrideTriggerGaps
 bit enableFan1WithAc;Turn on this fan when AC is on.
@@ -423,7 +423,7 @@ bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
 bit artificialTestMisfire,"Danger Mode","No thank you";Experimental setting that will cause a misfire\nDO NOT ENABLE.
-bit useFordRedundantPps;On some Ford and Toyota vehicles one of the pedal sensors is not linear on the full range, i.e. in the specific range of the positions we effectively have only one sensor.
+bit unusedFordPps
 bit cltSensorPulldown
 bit iatSensorPulldown
 bit allowIdenticalPps
@@ -596,7 +596,7 @@ end_struct
 
 	float manIdlePosition;Value between 0 and 100 used in Manual mode;"%", 1, 0, 0, 100, 0
 
-uint8_t autoscale knockRetardAggression;Ignition timing to remove when a knock event occurs.;"%", 0.1, 0, 0, 20, 1
+uint8_t autoscale knockRetardAggression;Ignition timing to remove when a knock event occurs. Advice: 5% (mild), 10% (turbo/high comp.), 15% (high knock, e.g. GDI), 20% (spicy lump),;"%", 0.1, 0, 0, 20, 1
 uint8_t autoscale knockRetardReapplyRate;After a knock event, reapply timing at this rate.;"deg/s", 0.1, 0, 0, 10, 1
 
 #define engineSyncCam_enum "Intake First Bank", "Exhaust First Bank", "Intake Second Bank", "Exhaust Second Bank"
@@ -700,8 +700,8 @@ bit is_enabled_spi_2
 	bit enabledStep1Limiter
 	bit verboseTLE8888
 	bit enableVerboseCanTx;CAN broadcast using custom FOME protocol\nenable can_broadcast/disable can_broadcast
-	bit etb1configured
-	bit etb2configured
+	bit unused644b10
+	bit unused644b11
 	bit measureMapOnlyInOneCylinder;Useful for individual intakes
 	bit stepperForceParkingEveryRestart
 	bit isFasterEngineSpinUpEnabled;If enabled, try to fire the engine before a full engine cycle has been completed using RPM estimated from the last 90 degrees of engine rotation. As soon as the trigger syncs plus 90 degrees rotation, fuel and ignition events will occur. If disabled, worst case may require up to 4 full crank rotations before any events are scheduled.
@@ -744,7 +744,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 
 	Gpio[EGT_CHANNEL_COUNT iterate] max31855_cs;
 	brain_input_pin_e flexSensorPin;Continental/GM flex fuel sensor, 50-150hz type;
-	Gpio test557pin
+	uint16_t unused720
 	pin_output_mode_e stepperDirectionPinMode;
 
 	spi_device_e mc33972spiDevice;
@@ -1413,8 +1413,8 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t ALSMaxDriverThrottleIntent;;"%", 1, 0, 0, 10, 0
 	pin_input_mode_e ALSActivatePinMode;
 
-	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%;"%", 0.5, 0, 0, 100, 1
-	uint8_t autoscale ppsSecondaryMaximum;For Toyota ETCS-i, use ~69%;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale ppsSecondaryMaximum;For Toyota ETCS-i, use ~69%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
 pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	uint8_t autoscale rpmHardLimitHyst;If the hard limit is 7200rpm and hysteresis is 200rpm, then when the ECU sees 7200rpm, fuel/ign will cut, and stay cut until 7000rpm (7200-200) is reached;"RPM", 10, 0, 0, 2500, 0
@@ -1542,8 +1542,8 @@ float[IAT_CURVE_SIZE] iatFuelCorr;;"ratio", 1, 0, 0, 5, 2
 float[CLT_CURVE_SIZE] cltIdleCorrBins;CLT-based idle position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CURVE_SIZE] cltIdleCorr;    CLT-based idle position multiplier for simple manual idle controller;"ratio", 1, 0, 0, 10, 2
 
-float[MAF_DECODING_COUNT] mafDecoding;Also known as MAF transfer function.\nkg/hour value.\nBy the way 2.081989116 kg/h = 1 ft3/m;"kg/hour", 1, 0, -500, 4000, 2
-float[MAF_DECODING_COUNT] mafDecodingBins;;"V", 1, 0, -5, 150, 2
+uint32_t[MAF_DECODING_COUNT] autoscale mafDecoding;;"kg/hour", 0.001, 0, 0, 4000, 3
+uint16_t[MAF_DECODING_COUNT] autoscale mafDecodingBins;;"V", 0.01, 0, 0, 20, 2
 
 int8_t[8 x 8] autoscale ignitionIatCorrTable;;"deg", 0.1, 0, -25, 25, 1
 int8_t[8] ignitionIatCorrTempBins;;"C", 1, 0, -40, 120, 0
@@ -1775,7 +1775,6 @@ end_struct
 #define CMD_BOOST_PIN "set_boost_pin"
 #define CMD_TRIGGER_SIMULATOR_PIN "set_trigger_simulator_pin"
 #define CMD_IGNITION_PIN "set_ignition_pin"
-#define CMD_INJECTION_PIN "set_injection_pin"
 
 #define CMD_RESET_ENGINE_SNIFFER "reset_engine_chart"
 #define CMD_FUNCTIONAL_TEST_MODE "test_mode"
@@ -1889,14 +1888,9 @@ end_struct
 
 #define TS_RESPONSE_OK 0
 #define TS_RESPONSE_BURN_OK 4
-#define TS_RESPONSE_COMMAND_OK 7
 
 ! Engine Sniffer time stamp unit, in microseconds
 #define ENGINE_SNIFFER_UNIT_US 10
-
-! These commands are used exclusively by the FOME console
-! 0x74
-#define TS_TEST_COMMAND 't'
 
 ! High speed logger commands
 #define TS_SET_LOGGER_SWITCH  'l'

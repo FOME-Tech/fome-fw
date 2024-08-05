@@ -27,7 +27,6 @@
 #include "speedometer.h"
 #include "dynoview.h"
 #include "boost_control.h"
-#include "fan_control.h"
 #include "ac_control.h"
 #include "vr_pwm.h"
 #if EFI_MC33816
@@ -129,7 +128,7 @@ void Engine::periodicSlowCallback() {
 #if EFI_SHAFT_POSITION_INPUT
 	// Re-read config in case it's changed
 	triggerCentral.primaryTriggerConfiguration.update();
-	for (int camIndex = 0;camIndex < CAMS_PER_BANK;camIndex++) {
+	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -138,7 +137,7 @@ void Engine::periodicSlowCallback() {
 	updateSlowSensors();
 	checkShutdown();
 
-	tpsAccelEnrichment.onNewValue(Sensor::getOrZero(SensorType::Tps1));
+	module<TpsAccelEnrichment>()->onNewValue(Sensor::getOrZero(SensorType::Tps1));
 
 	updateVrPwm();
 
@@ -306,7 +305,7 @@ void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError)
 		if (isDecodingError) {
 #if EFI_PROD_CODE
 			if (engineConfiguration->verboseTriggerSynchDetails || (triggerCentral.triggerState.someSortOfTriggerError() && !engineConfiguration->silentTriggerError)) {
-				efiPrintf("error: synchronizationPoint @ index %d expected %d/%d got %d/%d",
+				efiPrintf("error: synchronizationPoint @ index %lu expected %d/%d got %d/%d",
 						triggerCentral.triggerState.currentCycle.current_index,
 						triggerCentral.triggerShape.getExpectedEventCount(TriggerWheel::T_PRIMARY),
 						triggerCentral.triggerShape.getExpectedEventCount(TriggerWheel::T_SECONDARY),
@@ -325,7 +324,7 @@ void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError)
 void Engine::injectEngineReferences() {
 #if EFI_SHAFT_POSITION_INPUT
 	triggerCentral.primaryTriggerConfiguration.update();
-	for (int camIndex = 0;camIndex < CAMS_PER_BANK;camIndex++) {
+	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -492,8 +491,8 @@ TunerStudioOutputChannels *getTunerStudioOutputChannels() {
 	return &engine->outputChannels;
 }
 
-ExecutorInterface *getExecutorInterface() {
-	return &engine->executor;
+Scheduler *getScheduler() {
+	return &engine->scheduler;
 }
 
 #if EFI_SHAFT_POSITION_INPUT

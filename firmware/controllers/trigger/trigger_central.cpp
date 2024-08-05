@@ -67,7 +67,7 @@ angle_t TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camIndex) {
 expected<float> TriggerCentral::getCurrentEnginePhase(efitick_t nowNt) const {
 	floatus_t oneDegreeUs = engine->rpmCalculator.oneDegreeUs;
 
-	if (cisnan(oneDegreeUs)) {
+	if (std::isnan(oneDegreeUs)) {
 		return unexpected;
 	}
 
@@ -134,12 +134,12 @@ angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 static void turnOffAllDebugFields(void *arg) {
 	(void)arg;
 #if EFI_PROD_CODE
-	for (int index = 0;index<TRIGGER_INPUT_PIN_COUNT;index++) {
+	for (int index = 0; index < TRIGGER_INPUT_PIN_COUNT; index++) {
 		if (isBrainPinValid(engineConfiguration->triggerInputDebugPins[index])) {
 			writePad("trigger debug", engineConfiguration->triggerInputDebugPins[index], 0);
 		}
 	}
-	for (int index = 0;index<CAM_INPUTS_COUNT;index++) {
+	for (int index = 0; index < CAM_INPUTS_COUNT; index++) {
 		if (isBrainPinValid(engineConfiguration->camInputsDebug[index])) {
 			writePad("cam debug", engineConfiguration->camInputsDebug[index], 0);
 		}
@@ -214,7 +214,7 @@ static void logVvtFront(bool isImportantFront, bool isRising, efitick_t nowNt, i
 #if EFI_PROD_CODE
 		writePad("cam debug", engineConfiguration->camInputsDebug[index], 1);
 #endif /* EFI_PROD_CODE */
-		getExecutorInterface()->scheduleByTimestampNt("dbg_on", &debugToggleScheduling, nowNt + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
+		getScheduler()->schedule("dbg_on", &debugToggleScheduling, nowNt + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
 	}
 
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
@@ -434,7 +434,7 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 #if EFI_PROD_CODE
 		writePad("trigger debug", engineConfiguration->triggerInputDebugPins[signalIndex], 1);
 #endif /* EFI_PROD_CODE */
-		getExecutorInterface()->scheduleByTimestampNt("dbg_off", &debugToggleScheduling, timestamp + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
+		getScheduler()->schedule("dbg_off", &debugToggleScheduling, timestamp + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
 	}
 
 	uint32_t triggerHandlerEntryTime = getTimeNowLowerNt();
@@ -547,7 +547,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 				//     #2 will be ignored
 				// We're not sure which edge was the "real" one, but they were close enough
 				// together that it doesn't really matter.
-				warning(ObdCode::CUSTOM_PRIMARY_DOUBLED_EDGE, "doubled trigger edge after %.2f deg at #%d", angleSinceLastTooth, triggerState.currentCycle.current_index);
+				warning(ObdCode::CUSTOM_PRIMARY_DOUBLED_EDGE, "doubled trigger edge after %.2f deg at #%lu", angleSinceLastTooth, triggerState.currentCycle.current_index);
 
 				return false;
 			}
@@ -558,7 +558,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 			// TODO: configurable threshold
 			if (isRpmEnough && absError > 10 && absError < 180) {
 				// This tooth came at a very unexpected time, ignore it
-				warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING, "tooth #%d error of %.1f", triggerState.currentCycle.current_index, angleError);
+				warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING, "tooth #%lu error of %.1f", triggerState.currentCycle.current_index, angleError);
 
 				// TODO: this causes issues with some real engine logs, should it?
 				// return false;
@@ -671,7 +671,7 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 		expectedNextPhase = expectNextPhase;
 
 		if (engine->rpmCalculator.getCachedRpm() > 0 && triggerIndexForListeners == 0) {
-			engine->tpsAccelEnrichment.onEngineCycleTps();
+			engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
 		}
 
 		// Handle ignition and injection
@@ -718,8 +718,8 @@ void triggerInfo(void) {
 #endif /* HAL_TRIGGER_USE_PAL */
 
 	efiPrintf("Template %s (%d) trigger %s (%d) syncEdge=%s tdcOffset=%.2f",
-			getEngine_type_e(engineConfiguration->engineType), engineConfiguration->engineType,
-			getTrigger_type_e(engineConfiguration->trigger.type), engineConfiguration->trigger.type,
+			getEngine_type_e(engineConfiguration->engineType), (int)engineConfiguration->engineType,
+			getTrigger_type_e(engineConfiguration->trigger.type), (int)engineConfiguration->trigger.type,
 			getSyncEdge(TRIGGER_WAVEFORM(m_syncEdge)), TRIGGER_WAVEFORM(tdcPosition));
 
 	if (engineConfiguration->trigger.type == trigger_type_e::TT_TOOTHED_WHEEL) {
@@ -739,11 +739,11 @@ void triggerInfo(void) {
 			TRIGGER_WAVEFORM(getExpectedEventCount(TriggerWheel::T_PRIMARY)),
 			TRIGGER_WAVEFORM(getExpectedEventCount(TriggerWheel::T_SECONDARY)));
 
-	efiPrintf("trigger type=%d/need2ndChannel=%s", engineConfiguration->trigger.type,
+	efiPrintf("trigger type=%d/need2ndChannel=%s", (int)engineConfiguration->trigger.type,
 			boolToString(TRIGGER_WAVEFORM(needSecondTriggerInput)));
 
 
-	efiPrintf("synchronizationNeeded=%s/isError=%s/total errors=%d ord_err=%d/total revolutions=%d/self=%s",
+	efiPrintf("synchronizationNeeded=%s/isError=%s/total errors=%lu ord_err=%lu/total revolutions=%d/self=%s",
 			boolToString(ts->isSynchronizationNeeded),
 			boolToString(tc->isTriggerDecoderError()),
 			tc->triggerState.totalTriggerErrorCounter,
@@ -773,7 +773,7 @@ void triggerInfo(void) {
 	}
 
 
-	for (int camInputIndex = 0; camInputIndex<CAM_INPUTS_COUNT;camInputIndex++) {
+	for (int camInputIndex = 0; camInputIndex < CAM_INPUTS_COUNT; camInputIndex++) {
 		if (isBrainPinValid(engineConfiguration->camInputs[camInputIndex])) {
 			int camLogicalIndex = camInputIndex % CAMS_PER_BANK;
 			efiPrintf("VVT input: %s mode %s", hwPortname(engineConfiguration->camInputs[camInputIndex]),
@@ -788,7 +788,7 @@ void triggerInfo(void) {
 	efiPrintf("secondary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[1]));
 
 
-	efiPrintf("totalTriggerHandlerMaxTime=%d", triggerMaxDuration);
+	efiPrintf("totalTriggerHandlerMaxTime=%lu", triggerMaxDuration);
 
 #endif /* EFI_PROD_CODE */
 
@@ -895,7 +895,7 @@ TriggerDecoderBase initState("init");
 void TriggerCentral::updateWaveform() {
 	// Re-read config in case it's changed
 	primaryTriggerConfiguration.update();
-	for (int camIndex = 0;camIndex < CAMS_PER_BANK;camIndex++) {
+	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		vvtTriggerConfiguration[camIndex].update();
 	}
 

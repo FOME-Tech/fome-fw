@@ -39,8 +39,8 @@ void turnInjectionPinLow(uintptr_t arg) {
 		efitick_t openTime = getTimeNowNt() + MS2NT(2);
 		efitick_t closeTime = openTime + nextSplitDuration;
 
-		getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, openTime, { &turnInjectionPinHigh, arg });
-		getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, closeTime, { turnInjectionPinLow, arg });
+		getScheduler()->schedule("inj", nullptr, openTime, { &turnInjectionPinHigh, arg });
+		getScheduler()->schedule("inj", nullptr, closeTime, { turnInjectionPinLow, arg });
 	} else {
 		event->update();
 	}
@@ -115,12 +115,14 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	{
 		// Log this fuel as consumed
 
+		#ifdef MODULE_TRIP_ODO
 		bool isCranking = getEngineRotationState()->isCranking();
 		int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
 
 		float actualInjectedMass = numberOfInjections * (injectionMassStage1 + injectionMassStage2);
 
 		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, nowNt);
+		#endif // MODULE_TRIP_ODO
 	}
 
 	if (doSplitInjection) {
@@ -144,7 +146,7 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 		engine->outputChannels.actualLastInjectionStage2 = injectionDurationStage2;
 	}
 
-	if (cisnan(injectionDurationStage1) || cisnan(injectionDurationStage2)) {
+	if (std::isnan(injectionDurationStage1) || std::isnan(injectionDurationStage2)) {
 		warning(ObdCode::CUSTOM_OBD_NAN_INJECTION, "NaN injection pulse");
 		return;
 	}
@@ -214,12 +216,12 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 		this->splitInjectionDuration = {};
 	}
 
-	getExecutorInterface()->scheduleByTimestampNt("inj", nullptr, turnOffTimeStage1, endActionStage1);
+	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, endActionStage1);
 
 	// Schedule closing stage 2 (if applicable)
 	if (hasStage2Injection && endActionStage2) {
 		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getExecutorInterface()->scheduleByTimestampNt("inj stage 2", nullptr, turnOffTimeStage2, endActionStage2);
+		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, endActionStage2);
 	}
 
 #if EFI_UNIT_TEST
@@ -263,10 +265,10 @@ static float getInjectionAngleCorrection(float fuelMs, float oneDegreeUs) {
 		return 0;
 	}
 
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(fuelMs), "NaN fuelMs", false);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(fuelMs), "NaN fuelMs", false);
 
 	angle_t injectionDurationAngle = MS2US(fuelMs) / oneDegreeUs;
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(injectionDurationAngle), "NaN injectionDurationAngle", false);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(injectionDurationAngle), "NaN injectionDurationAngle", false);
 	assertAngleRange(injectionDurationAngle, "injectionDuration_r", ObdCode::CUSTOM_INJ_DURATION);
 
 	if (mode == InjectionTimingMode::Center) {
@@ -286,7 +288,7 @@ InjectionEvent::InjectionEvent() {
 // or unexpected if unable to calculate the start angle due to missing information.
 expected<float> InjectionEvent::computeInjectionAngle() const {
 	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
-	if (cisnan(oneDegreeUs)) {
+	if (std::isnan(oneDegreeUs)) {
 		// in order to have fuel schedule we need to have current RPM
 		return unexpected;
 	}
@@ -297,7 +299,7 @@ expected<float> InjectionEvent::computeInjectionAngle() const {
 
 	// User configured offset - degrees after TDC combustion
 	floatus_t injectionOffset = getEngineState()->injectionOffset;
-	if (cisnan(injectionOffset)) {
+	if (std::isnan(injectionOffset)) {
 		// injection offset map not ready - we are not ready to schedule fuel events
 		return unexpected;
 	}
@@ -311,7 +313,7 @@ expected<float> InjectionEvent::computeInjectionAngle() const {
 	// Convert from cylinder-relative to cylinder-1-relative
 	openingAngle += getCylinderAngle(ownIndex, cylinderNumber);
 
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(openingAngle), "findAngle#3", false);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(openingAngle), "findAngle#3", false);
 	assertAngleRange(openingAngle, "findAngle#a33", ObdCode::CUSTOM_ERR_6544);
 
 	wrapAngle(openingAngle, "addFuel#2", ObdCode::CUSTOM_ERR_6555);

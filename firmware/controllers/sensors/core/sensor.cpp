@@ -211,15 +211,6 @@ void Sensor::setInvalidMockValue(SensorType type) {
 	}
 }
 
-/*static*/ void Sensor::setMockValue(int type, float value) {
-	// bounds check
-	if (type <= 0 || type >= static_cast<int>(SensorType::PlaceholderLast)) {
-		return;
-	}
-
-	setMockValue(static_cast<SensorType>(type), value);
-}
-
 /*static*/ void Sensor::resetMockValue(SensorType type) {
 	auto entry = getEntryForType(type);
 
@@ -269,7 +260,7 @@ void Sensor::setInvalidMockValue(SensorType type) {
  * todo: some sort of hashmap in the future?
  */
 SensorType findSensorTypeByName(const char *name) {
-	for (int i = 0;i<(int)SensorType::PlaceholderLast;i++) {
+	for (int i = 0; i < (int)SensorType::PlaceholderLast; i++) {
 		SensorType type = (SensorType)i;
 		const char *sensorName = getSensorType(type);
 		if (strEqualCaseInsensitive(sensorName, name)) {

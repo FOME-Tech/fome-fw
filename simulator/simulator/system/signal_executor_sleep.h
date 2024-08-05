@@ -9,10 +9,8 @@
 
 #include "scheduler.h"
 
-class SleepExecutor : public ExecutorInterface {
+class SleepExecutor : public Scheduler {
 public:
-	void scheduleByTimestamp(const char *msg, scheduling_s *scheduling, efitimeus_t timeUs, action_s action) override;
-	void scheduleByTimestampNt(const char *msg, scheduling_s *scheduling, efitick_t timeNt, action_s action) override;
-	void scheduleForLater(const char *msg, scheduling_s *scheduling, int delayUs, action_s action) override;
+	void schedule(const char *msg, scheduling_s *scheduling, efitick_t timeNt, action_s action) override;
 	void cancel(scheduling_s* s) override;
 };

@@ -723,17 +723,17 @@ struct EtbImpl final : public TBase {
 
 		// Write out the learned values to TS, waiting briefly after setting each to let TS grab it
 		engine->outputChannels.calibrationMode = (uint8_t)functionToCalModePriMax(myFunction);
-		engine->outputChannels.calibrationValue = primaryMax * TPS_TS_CONVERSION;
+		engine->outputChannels.calibrationValue = convertVoltageTo10bitADC(primaryMax);
 		chThdSleepMilliseconds(500);
 		engine->outputChannels.calibrationMode = (uint8_t)functionToCalModePriMin(myFunction);
-		engine->outputChannels.calibrationValue = primaryMin * TPS_TS_CONVERSION;
+		engine->outputChannels.calibrationValue = convertVoltageTo10bitADC(primaryMin);
 		chThdSleepMilliseconds(500);
 
 		engine->outputChannels.calibrationMode = (uint8_t)functionToCalModeSecMax(myFunction);
-		engine->outputChannels.calibrationValue = secondaryMax * TPS_TS_CONVERSION;
+		engine->outputChannels.calibrationValue = convertVoltageTo10bitADC(secondaryMax);
 		chThdSleepMilliseconds(500);
 		engine->outputChannels.calibrationMode = (uint8_t)functionToCalModeSecMin(myFunction);
-		engine->outputChannels.calibrationValue = secondaryMin * TPS_TS_CONVERSION;
+		engine->outputChannels.calibrationValue = convertVoltageTo10bitADC(secondaryMin);
 		chThdSleepMilliseconds(500);
 
 		engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
@@ -789,7 +789,7 @@ void etbPidReset() {
  */
 void setThrottleDutyCycle(percent_t level) {
 	efiPrintf("setting ETB duty=%f%%", level);
-	if (cisnan(level)) {
+	if (std::isnan(level)) {
 		directPwmValue = NAN;
 		return;
 	}
@@ -800,24 +800,6 @@ void setThrottleDutyCycle(percent_t level) {
 		setDcMotorDuty(i, dc);
 	}
 	efiPrintf("duty ETB duty=%f", dc);
-}
-
-static void setEtbFrequency(int frequency) {
-	engineConfiguration->etbFreq = frequency;
-
-	for (int i = 0 ; i < ETB_COUNT; i++) {
-		setDcMotorFrequency(i, frequency);
-	}
-}
-
-static void etbReset() {
-	efiPrintf("etbReset");
-	
-	for (int i = 0 ; i < ETB_COUNT; i++) {
-		setDcMotorDuty(i, 0);
-	}
-
-	etbPidReset();
 }
 #endif /* EFI_PROD_CODE */
 
@@ -842,9 +824,7 @@ static const float boschBiasValues[] = {
 };
 
 void setBoschVAGETB() {
-	// set tps_min 890
 	engineConfiguration->tpsMin = 890; // convert 12to10 bit (ADC/4)
-	// set tps_max 70
 	engineConfiguration->tpsMax = 70; // convert 12to10 bit (ADC/4)
 
 	engineConfiguration->tps1SecondaryMin = 102;
@@ -870,8 +850,8 @@ void setDefaultEtbParameters() {
 	setLinearCurve(config->pedalToTpsPedalBins, /*from*/0, /*to*/100, 1);
 	setLinearCurve(config->pedalToTpsRpmBins, /*from*/0, /*to*/8000, 1);
 
-	for (int pedalIndex = 0;pedalIndex<PEDAL_TO_TPS_SIZE;pedalIndex++) {
-		for (int rpmIndex = 0;rpmIndex<PEDAL_TO_TPS_SIZE;rpmIndex++) {
+	for (int pedalIndex = 0; pedalIndex < PEDAL_TO_TPS_SIZE; pedalIndex++) {
+		for (int rpmIndex = 0; rpmIndex < PEDAL_TO_TPS_SIZE; rpmIndex++) {
 			config->pedalToTpsTable[pedalIndex][rpmIndex] = config->pedalToTpsPedalBins[pedalIndex];
 		}
 	}
@@ -934,8 +914,7 @@ void doInitElectronicThrottle() {
 	printf("doInitElectronicThrottle %s\n", boolToString(hasPedal));
 #endif // EFI_UNIT_TEST
 
-	// these status flags are consumed by TS see tunerstudio.template.ini TODO should those be outputs/live data not configuration?!
-	engineConfiguration->etb1configured = engineConfiguration->etb2configured = false;
+	bool anyEtbConfigured = false;
 
 	// todo: technical debt: we still have DC motor code initialization in ETB-specific file while DC motors are used not just as ETB
 	// like DC motor wastegate code flow should probably NOT go through electronic_throttle.cpp right?
@@ -956,15 +935,10 @@ void doInitElectronicThrottle() {
 		auto pid = getPidForDcFunction(func);
 
 		bool dcConfigured = controller->init(func, motor, pid, &pedal2tpsMap, hasPedal);
-		bool etbConfigured = dcConfigured && controller->isEtbMode();
-		if (i == 0) {
-		    engineConfiguration->etb1configured = etbConfigured;
-		} else if (i == 1) {
-		    engineConfiguration->etb2configured = etbConfigured;
-		}
+		anyEtbConfigured |= dcConfigured && controller->isEtbMode();
 	}
 
-	if (!engineConfiguration->etb1configured && !engineConfiguration->etb2configured) {
+	if (!anyEtbConfigured) {
 		// It's not valid to have a PPS without any ETBs - check that at least one ETB was enabled along with the pedal
 		if (hasPedal) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "A pedal position sensor was configured, but no electronic throttles are configured.");
@@ -1002,17 +976,6 @@ void initElectronicThrottle() {
 		engine->etbControllers[i] = etbControllers[i];
 	}
 
-#if EFI_PROD_CODE
-	addConsoleAction("etbreset", etbReset);
-	addConsoleActionI("etb_freq", setEtbFrequency);
-
-	// this command is useful for real hardware test with known cheap hardware
-	addConsoleAction("etb_test_hw", [](){
-		set18919_AM810_pedal_position_sensor();
-	});
-
-#endif /* EFI_PROD_CODE */
-
 	pedal2tpsMap.init(config->pedalToTpsTable, config->pedalToTpsPedalBins, config->pedalToTpsRpmBins);
 
 	doInitElectronicThrottle();
@@ -1040,11 +1003,6 @@ void setEtbLuaAdjustment(percent_t pos) {
 			etb->setLuaAdjustment(pos);
 		}
 	}
-}
-
-void set18919_AM810_pedal_position_sensor() {
-    // todo use setPPSCalibration(0.1, 4.3, 0.1, 1.96); once we have https://github.com/rusefi/rusefi/issues/5056
-    setPPSCalibration(0.1, 4.5, 0.1, 2.2);
 }
 
 void setToyota89281_33010_pedal_position_sensor() {

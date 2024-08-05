@@ -45,7 +45,7 @@ void initVrPwm() {
 		}
 
 		startSimplePwmHard(&pwms[i], "VR PWM",
-			&engine->executor,
+			&engine->scheduler,
 			cfg.pin,
 			&pins[i],
 			10000,	// it's guaranteed to be hardware PWM, the faster the PWM, the less noise makes it through
@@ -55,7 +55,7 @@ void initVrPwm() {
 }
 
 void setDefaultVrThresholds() {
-	for (int i = 0;i<VR_THRESHOLD_COUNT;i++) {
+	for (int i = 0; i < VR_THRESHOLD_COUNT; i++) {
 		setLinearCurve(engineConfiguration->vrThreshold[i].rpmBins, 600, 7000, 100);
 		setLinearCurve(engineConfiguration->vrThreshold[i].values, 0.6, 1.2, 0.1);
 	}

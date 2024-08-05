@@ -51,14 +51,18 @@ static int averagedMapBufIdx = 0;
 /**
  * here we have averaging start and averaging end points for each cylinder
  */
-static CCM_OPTIONAL scheduling_s startTimers[MAX_CYLINDER_COUNT][2];
-static CCM_OPTIONAL scheduling_s endTimers[MAX_CYLINDER_COUNT][2];
+struct sampler {
+	scheduling_s startTimer;
+	scheduling_s endTimer;
+};
+
+static CCM_OPTIONAL sampler samplers[MAX_CYLINDER_COUNT][2];
 
 static void endAveraging(MapAverager* arg);
 
 static size_t currentMapAverager = 0;
 
-static void startAveraging(scheduling_s *endAveragingScheduling) {
+static void startAveraging(sampler* s) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6649, getCurrentRemainingStack() > 128, "lowstck#9");
 
 	// TODO: set currentMapAverager based on cylinder bank
@@ -67,7 +71,7 @@ static void startAveraging(scheduling_s *endAveragingScheduling) {
 
 	mapAveragingPin.setHigh();
 
-	scheduleByAngle(endAveragingScheduling, getTimeNowNt(), engine->engineState.mapAveragingDuration,
+	scheduleByAngle(&s->endTimer, getTimeNowNt(), engine->engineState.mapAveragingDuration,
 		{ endAveraging, &averager });
 }
 
@@ -132,11 +136,6 @@ void mapAveragingAdcCallback(float instantVoltage) {
 
 	SensorResult mapResult = getMapAvg(currentMapAverager).submit(instantVoltage);
 
-	if (!mapResult) {
-		// hopefully this warning is not too much CPU consumption for fast ADC callback
-		warning(ObdCode::CUSTOM_INSTANT_MAP_DECODING, "Invalid MAP at %f", instantVoltage);
-	}
-
 	float instantMap = mapResult.value_or(0);
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.instantMAPValue = instantMap;
@@ -172,14 +171,14 @@ void refreshMapAveragingPreCalc() {
 	if (isValidRpm(rpm)) {
 		MAP_sensor_config_s * c = &engineConfiguration->map;
 		angle_t start = interpolate2d(rpm, c->samplingAngleBins, c->samplingAngle);
-		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !cisnan(start), "start");
+		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
 
 		angle_t offsetAngle = engine->triggerCentral.triggerFormDetails.eventAngles[engineConfiguration->mapAveragingSchedulingAtIndex];
-		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_AVG_OFFSET, !cisnan(offsetAngle), "offsetAngle");
+		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_AVG_OFFSET, !std::isnan(offsetAngle), "offsetAngle");
 
 		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
 			angle_t cylinderOffset = getEngineCycle(getEngineRotationState()->getOperationMode()) * i / engineConfiguration->cylindersCount;
-			efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_CYL_OFFSET, !cisnan(cylinderOffset), "cylinderOffset");
+			efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_CYL_OFFSET, !std::isnan(cylinderOffset), "cylinderOffset");
 			// part of this formula related to specific cylinder offset is never changing - we can
 			// move the loop into start-up calculation and not have this loop as part of periodic calculation
 			// todo: change the logic as described above in order to reduce periodic CPU usage?
@@ -234,7 +233,7 @@ void mapAveragingTriggerCallback(
 
 		angle_t samplingEnd = samplingStart + samplingDuration;
 
-		if (cisnan(samplingEnd)) {
+		if (std::isnan(samplingEnd)) {
 			// todo: when would this happen?
 			warning(ObdCode::CUSTOM_ERR_6549, "no map angles");
 			return;
@@ -245,14 +244,13 @@ void mapAveragingTriggerCallback(
 		// only if value is already prepared
 		int structIndex = getRevolutionCounter() % 2;
 
-		scheduling_s *startTimer = &startTimers[i][structIndex];
-		scheduling_s *endTimer = &endTimers[i][structIndex];
+		sampler* s = &samplers[i][structIndex];
 
 		// at the moment we schedule based on time prediction based on current RPM and angle
 		// we are loosing precision in case of changing RPM - the further away is the event the worse is precision
 		// todo: schedule this based on closest trigger event, same as ignition works
-		scheduleByAngle(startTimer, edgeTimestamp, samplingStart,
-				{ startAveraging, endTimer });
+		scheduleByAngle(&s->startTimer, edgeTimestamp, samplingStart,
+				{ startAveraging, s });
 	}
 #endif
 }
