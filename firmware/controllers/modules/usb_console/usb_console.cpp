@@ -1,7 +1,5 @@
 #include "pch.h"
 
-#if EFI_USB_SERIAL
-
 #include "usbconsole.h"
 #include "thread_controller.h"
 #include "tunerstudio.h"
@@ -50,8 +48,6 @@ struct UsbThread : public TunerstudioThread {
 
 static CCM_OPTIONAL UsbThread usbConsole;
 
-void startUsbConsole() {
+void UsbConsoleModule::initNoConfiguration() {
 	usbConsole.start();
 }
-
-#endif // EFI_USB_SERIAL
