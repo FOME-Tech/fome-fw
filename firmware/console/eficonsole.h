@@ -11,8 +11,11 @@
 #include "engine_module.h"
 
 void initializeConsole();
-void startUsbConsole();
 void startWifiConsole();
+
+struct UsbConsoleModule final : public EngineModule {
+	void initNoConfiguration() override;
+};
 
 struct EthernetConsoleModule final : public EngineModule {
 	void initNoConfiguration() override;
