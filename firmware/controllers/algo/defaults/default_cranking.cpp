@@ -79,5 +79,8 @@ void setDefaultCranking() {
 	static const float advanceBins[] = { 0, 200, 400, 1000 };
 	copyArray(config->crankingAdvanceBins, advanceBins);
 
+	static const float advanceCltBins[] = { -40, 0, 40, 80 };
+	copyArray(config->crankingAdvanceCltBins, advanceCltBins);
+
 	engineConfiguration->useTLE8888_cranking_hack = true;
 }
