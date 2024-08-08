@@ -47,6 +47,7 @@ for BOARD in \
    "config/boards/f429-discovery f429-discovery" \
    "config/boards/atlas atlas"\
    "config/boards/tdg-pdm8 tdg-pdm8"\
+   "config/boards/shoefi shoefi"\
    ; do
  BOARD_NAME=$(echo "$BOARD" | cut -d " " -f 1)
  BOARD_SHORT_NAME=$(echo "$BOARD" | cut -d " " -f 2)
