@@ -14,6 +14,7 @@
 #include "can_msg_tx.h"
 #include "can_bmw.h"
 #include "can_vag.h"
+#include "can_mini.h"
 
 #include "rusefi_types.h"
 #include "rtc_helper.h"
@@ -27,15 +28,15 @@
 #define CAN_MAZDA_RX_STATUS_2         0x420
 
 //w202 DASH
-#define W202_STAT_1	     0x308 /* _20ms cycle */
+#define W202_STAT_1      0x308 /* _20ms cycle */
 #define W202_STAT_2      0x608 /* _100ms cycle */
-#define W202_ALIVE	     0x210 /* _200ms cycle */
+#define W202_ALIVE       0x210 /* _200ms cycle */
 #define W202_STAT_3      0x310 /* _200ms cycle */
 
 //BMW E90 DASH
 #define E90_ABS_COUNTER      0x0C0
 #define E90_SEATBELT_COUNTER 0x0D7
-#define E90_T15	             0x130
+#define E90_T15              0x130
 #define E90_RPM              0x175
 #define E90_BRAKE_COUNTER    0x19E
 #define E90_SPEED            0x1A6
@@ -129,6 +130,7 @@ void canDashboardNissanVQ(CanCycle cycle);
 void canDashboardGenesisCoupe(CanCycle cycle);
 void canDashboardAim(CanCycle cycle);
 void canDashboardHaltech(CanCycle cycle);
+void canDashboardMini(CanCycle cycle);
 
 void updateDash(CanCycle cycle) {
 
@@ -168,6 +170,9 @@ void updateDash(CanCycle cycle) {
 		break;
 	case CAN_AIM_DASH:
 		canDashboardAim(cycle);
+		break;
+	case CAN_BUS_MINI_R52:
+		canDashboardMini(cycle);
 		break;
 	default:
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Nothing for canNbcType %s", getCan_nbc_e(engineConfiguration->canNbcType));
@@ -1314,6 +1319,46 @@ void canDashboardAim(CanCycle cycle) {
 	// transmitStruct<Aim5fb>(0x5fb, false);
 	// transmitStruct<Aim5fc>(0x5fc, false);
 	// transmitStruct<Aim5fd>(0x5fd, false);
+}
+
+void canDashboardMini(CanCycle cycle) {
+    if (cycle.isInterval(CI::_50ms)) {
+        int rpm = Sensor::getOrZero(SensorType::Rpm);
+
+        {   // block scope to invoke CanTxMessage deconstructor (send)
+            CanTxMessage msg1(CAN_MINI_DME1_ID, 8);
+            uint16_t scaledRpm = rpm * 6.4f;
+            msg1[3] = scaledRpm >> 8;
+            msg1[4] = scaledRpm && 0xff;
+        }
+
+        {   // block scope to invoke CanTxMessage deconstructor (send)
+            CanTxMessage msg2(CAN_MINI_IC_4_ID, 8);
+            // 25% LCD brightness
+            msg2[1] = 0x3f;
+            // enable LCD backlight, needle, lights (byte 2, bit 4)
+            msg2.setBit(2, 1);
+            // enable orange 6k LED bar
+            msg2.setBit(4, 4);
+
+            if (rpm >= 5500) {
+                // enable red "5.5-6k" LED bars
+                msg2.setBit(4, 2);
+
+                if (rpm >= 6000) {
+                    // enable red "6k" LED
+                    msg2.setBit(4, 3);
+                    // enable red "6-7k" LED bars
+                    msg2.setBit(4, 5);
+                }
+
+                if (rpm >= 7000) {
+                    // enable red "7-8k" LED bars
+                    msg2.setBit(4, 6);
+                }
+            }
+        }
+    }
 }
 
 #endif // EFI_CAN_SUPPORT
