@@ -117,7 +117,7 @@ void rusEfiFunctionalTest(void) {
 
 	runChprintfTest();
 
-	initPeriodicEvents();
+	initMainLoop();
 
 	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
 	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
