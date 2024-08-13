@@ -268,7 +268,6 @@ int getSlowAdcCounter() {
 	return slowAdcCounter;
 }
 
-
 void updateSlowAdc(efitick_t nowNt) {
 	{
 		ScopePerf perf(PE::AdcConversionSlow);
