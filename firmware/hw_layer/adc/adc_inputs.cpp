@@ -269,36 +269,28 @@ int getSlowAdcCounter() {
 }
 
 
-class SlowAdcController : public PeriodicController<256> {
-public:
-	SlowAdcController() 
-		: PeriodicController("ADC", PRIO_ADC, SLOW_ADC_RATE)
+void updateSlowAdc(efitick_t nowNt) {
 	{
-	}
+		ScopePerf perf(PE::AdcConversionSlow);
 
-	void PeriodicTask(efitick_t nowNt) override {
-		{
-			ScopePerf perf(PE::AdcConversionSlow);
-
-			if (!readSlowAnalogInputs(slowAdcSamples)) {
-				return;
-			}
-
-			// Ask the port to sample the MCU temperature
-			mcuTemperature = getMcuTemperature();
+		if (!readSlowAnalogInputs(slowAdcSamples)) {
+			return;
 		}
 
-		{
-			ScopePerf perf(PE::AdcProcessSlow);
-
-			slowAdcCounter++;
-
-			AdcSubscription::UpdateSubscribers(nowNt);
-
-			protectedGpio_check(nowNt);
-		}
+		// Ask the port to sample the MCU temperature
+		mcuTemperature = getMcuTemperature();
 	}
-};
+
+	{
+		ScopePerf perf(PE::AdcProcessSlow);
+
+		slowAdcCounter++;
+
+		AdcSubscription::UpdateSubscribers(nowNt);
+
+		protectedGpio_check(nowNt);
+	}
+}
 
 void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
 	if (!isAdcChannelValid(setting)) {
@@ -324,8 +316,6 @@ void removeFastAdcChannel(const char *name, adc_channel_e setting) {
 // Weak link a stub so that every board doesn't have to implement this function
 __attribute__((weak)) void setAdcChannelOverrides() { }
 
-static CCM_OPTIONAL SlowAdcController slowAdcController;
-
 void initAdcInputs() {
 	efiPrintf("initAdcInputs()");
 
@@ -338,9 +328,6 @@ void initAdcInputs() {
 
 #if EFI_INTERNAL_ADC
 	portInitAdc();
-
-	// Start the slow ADC thread
-	slowAdcController.start();
 
 #if EFI_USE_FAST_ADC
 	fastAdc.init();

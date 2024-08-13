@@ -101,35 +101,6 @@ void initDataStructures() {
 
 #if !EFI_UNIT_TEST
 
-static void doPeriodicSlowCallback();
-
-class PeriodicFastController : public PeriodicTimerController {
-protected:
-	void PeriodicTask() override {
-		engine->periodicFastCallback();
-
-		if (m_slowCallbackCounter == 0) {
-			doPeriodicSlowCallback();
-
-			// Check that an integer number of fast callbacks fit in a slow callback
-			static_assert((SLOW_CALLBACK_PERIOD_MS % FAST_CALLBACK_PERIOD_MS) == 0);
-
-			m_slowCallbackCounter = SLOW_CALLBACK_PERIOD_MS / FAST_CALLBACK_PERIOD_MS;
-		}
-
-		m_slowCallbackCounter--;
-	}
-
-	int getPeriodMs() override {
-		return FAST_CALLBACK_PERIOD_MS;
-	}
-
-private:
-	size_t m_slowCallbackCounter = 0;
-};
-
-static PeriodicFastController fastController;
-
 static void resetAccel() {
 	engine->module<TpsAccelEnrichment>()->resetAE();
 
@@ -139,7 +110,7 @@ static void resetAccel() {
 	}
 }
 
-static void doPeriodicSlowCallback() {
+void doPeriodicSlowCallback() {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6661, getCurrentRemainingStack() > 64, "lowStckOnEv");
 
@@ -181,10 +152,6 @@ static void doPeriodicSlowCallback() {
 	}
 #endif
 
-}
-
-void initPeriodicEvents() {
-	fastController.start();
 }
 
 char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer) {

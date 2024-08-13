@@ -1,0 +1,37 @@
+#pragma once
+
+void initMainLoop();
+
+enum class LoopPeriod : uint8_t {
+	None = 0,
+	Period1000hz = 1 << 0,
+	Period500hz = 1 << 1,
+	Period250hz = 1 << 2,
+	Period20hz = 1 << 3,
+};
+
+inline LoopPeriod operator|=(LoopPeriod a, LoopPeriod b) {
+	return static_cast<LoopPeriod>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
+}
+
+inline bool operator&(LoopPeriod a, LoopPeriod b) {
+	return 0 != (static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
+}
+
+constexpr int hzForPeriod(LoopPeriod p) {
+	switch (p) {
+		case LoopPeriod::None: return 0;
+		case LoopPeriod::Period1000hz: return 1000;
+		case LoopPeriod::Period500hz: return 500;
+		case LoopPeriod::Period250hz: return 200;
+		case LoopPeriod::Period20hz: return 20;
+	}
+}
+
+constexpr float loopPeriodMs(LoopPeriod p) {
+	return 1000.0f / hzForPeriod(p);
+}
+
+#define ADC_UPDATE_RATE LoopPeriod::Period500hz
+#define FAST_CALLBACK_RATE LoopPeriod::Period250hz
+#define SLOW_CALLBACK_RATE LoopPeriod::Period20hz
