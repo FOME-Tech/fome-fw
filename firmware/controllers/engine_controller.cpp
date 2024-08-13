@@ -71,9 +71,6 @@
 #include "AdcConfiguration.h"
 #endif /* HAL_USE_ADC */
 
-#include "periodic_task.h"
-
-
 #if ! EFI_UNIT_TEST
 #include "init.h"
 #endif /* EFI_UNIT_TEST */
