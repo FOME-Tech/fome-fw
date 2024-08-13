@@ -49,12 +49,12 @@ void MainLoop::PeriodicTask(efitick_t nowNt) {
 	}
 #endif // EFI_ELECTRONIC_THROTTLE_BODY
 
-	if (p & FAST_CALLBACK_RATE) {
-		engine->periodicFastCallback();
-	}
-
 	if (p & SLOW_CALLBACK_RATE) {
 		doPeriodicSlowCallback();
+	}
+
+	if (p & FAST_CALLBACK_RATE) {
+		engine->periodicFastCallback();
 	}
 }
 
