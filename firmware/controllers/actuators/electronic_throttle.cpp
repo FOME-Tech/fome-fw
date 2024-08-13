@@ -659,14 +659,7 @@ void EtbController::autoCalibrateTps() {
 	}
 }
 
-#if !EFI_UNIT_TEST
-/**
- * Things running on a timer (instead of a thread) don't participate it the RTOS's thread priority system,
- * and operate essentially "first come first serve", which risks starvation.
- * Since ETB is a safety critical device, we need the hard RTOS guarantee that it will be scheduled over other less important tasks.
- */
-#include "periodic_thread_controller.h"
-#else
+#if EFI_UNIT_TEST
 #define chThdSleepMilliseconds(x) {}
 #endif // EFI_UNIT_TEST
 
@@ -753,23 +746,6 @@ static EtbImpl<EtbController2> etb2;
 
 static_assert(ETB_COUNT == 2);
 static EtbController* etbControllers[] = { &etb1, &etb2 };
-
-#if !EFI_UNIT_TEST
-
-struct DcThread final : public PeriodicController<512> {
-	DcThread() : PeriodicController("DC", PRIO_ETB, ETB_LOOP_FREQUENCY) {}
-
-	void PeriodicTask(efitick_t) override {
-		// Simply update all controllers
-		for (int i = 0 ; i < ETB_COUNT; i++) {
-			etbControllers[i]->update();
-		}
-	}
-};
-
-static DcThread dcThread CCM_OPTIONAL;
-
-#endif // EFI_UNIT_TEST
 
 void etbPidReset() {
 	for (int i = 0 ; i < ETB_COUNT; i++) {
@@ -957,14 +933,6 @@ void doInitElectronicThrottle() {
 		startupPositionError = true;
 	}
 #endif /* EFI_UNIT_TEST */
-
-#if !EFI_UNIT_TEST
-	static bool started = false;
-	if (started == false) {
-		dcThread.start();
-		started = true;
-	}
-#endif
 }
 
 void initElectronicThrottle() {

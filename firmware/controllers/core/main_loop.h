@@ -36,6 +36,7 @@ constexpr float loopPeriodMs(LoopPeriod p) {
 #define ADC_UPDATE_RATE LoopPeriod::Period500hz
 #endif
 
+#define ETB_UPDATE_RATE LoopPeriod::Period500hz
 #define FAST_CALLBACK_RATE LoopPeriod::Period250hz
 #define SLOW_CALLBACK_RATE LoopPeriod::Period20hz
 

@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "periodic_thread_controller.h"
+#include "electronic_throttle.h"
 
 #define MAIN_LOOP_RATE 1000
 
@@ -30,13 +31,23 @@ MainLoop::MainLoop()
 }
 
 void MainLoop::PeriodicTask(efitick_t nowNt) {
+	ScopePerf perf(PE::MainLoop);
+
 	LoopPeriod p = makePeriodFlags();
 
 #if HAL_USE_ADC
 	if (p & ADC_UPDATE_RATE) {
 		updateSlowAdc(nowNt);
 	}
-#endif
+#endif // HAL_USE_ADC
+
+#if EFI_ELECTRONIC_THROTTLE_BODY
+	if (p & ETB_UPDATE_RATE) {
+		for (int i = 0 ; i < ETB_COUNT; i++) {
+			engine->etbControllers[i]->update();
+		}
+	}
+#endif // EFI_ELECTRONIC_THROTTLE_BODY
 
 	if (p & FAST_CALLBACK_RATE) {
 		engine->periodicFastCallback();

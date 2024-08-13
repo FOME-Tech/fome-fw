@@ -32,7 +32,7 @@ enum class PE : uint8_t {
 	SingleTimerExecutorDoExecute,
 	SingleTimerExecutorScheduleTimerCallback,
 	PeriodicControllerPeriodicTask,
-	INVALID2,
+	MainLoop,
 	AdcCallbackFast,
 	AdcProcessSlow,
 	AdcConversionSlow,
