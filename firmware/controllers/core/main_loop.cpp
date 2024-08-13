@@ -32,9 +32,11 @@ MainLoop::MainLoop()
 void MainLoop::PeriodicTask(efitick_t nowNt) {
 	LoopPeriod p = makePeriodFlags();
 
+#if HAL_USE_ADC
 	if (p & ADC_UPDATE_RATE) {
 		updateSlowAdc(nowNt);
 	}
+#endif
 
 	if (p & FAST_CALLBACK_RATE) {
 		engine->periodicFastCallback();
