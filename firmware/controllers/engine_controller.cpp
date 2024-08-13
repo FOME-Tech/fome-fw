@@ -96,8 +96,6 @@ void initDataStructures() {
 #endif // EFI_ENGINE_CONTROL
 }
 
-#if !EFI_UNIT_TEST
-
 static void resetAccel() {
 	engine->module<TpsAccelEnrichment>()->resetAE();
 
@@ -323,7 +321,6 @@ static void initConfigActions() {
 	addConsoleActionI("get_byte", getByte);
 	addConsoleActionII("get_bit", getBit);
 }
-#endif /* EFI_UNIT_TEST */
 
 void LedBlinkingTask::onSlowCallback() {
 	updateRunningLed();
