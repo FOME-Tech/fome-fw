@@ -10,11 +10,11 @@ enum class LoopPeriod : uint8_t {
 	Period20hz = 1 << 3,
 };
 
-inline LoopPeriod operator|=(LoopPeriod a, LoopPeriod b) {
+inline constexpr LoopPeriod operator|=(LoopPeriod a, LoopPeriod b) {
 	return static_cast<LoopPeriod>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
 }
 
-inline bool operator&(LoopPeriod a, LoopPeriod b) {
+inline constexpr bool operator&(LoopPeriod a, LoopPeriod b) {
 	return 0 != (static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
 }
 
@@ -26,6 +26,8 @@ constexpr int hzForPeriod(LoopPeriod p) {
 		case LoopPeriod::Period250hz: return 200;
 		case LoopPeriod::Period20hz: return 20;
 	}
+
+	throw "invalid LoopPeriod";
 }
 
 constexpr float loopPeriodMs(LoopPeriod p) {
