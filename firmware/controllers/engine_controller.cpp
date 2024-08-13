@@ -106,6 +106,8 @@ static void resetAccel() {
 }
 
 void doPeriodicSlowCallback() {
+	ScopePerf perf(PE::EnginePeriodicSlowCallback);
+
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6661, getCurrentRemainingStack() > 64, "lowStckOnEv");
 
