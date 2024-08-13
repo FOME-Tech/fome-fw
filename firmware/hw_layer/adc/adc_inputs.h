@@ -11,10 +11,6 @@
 #include "global.h"
 #include "adc_math.h"
 
-#ifndef SLOW_ADC_RATE
-#define SLOW_ADC_RATE 500
-#endif
-
 float getAnalogInputDividerCoefficient(adc_channel_e);
 
 inline bool isAdcChannelValid(adc_channel_e hwChannel) {

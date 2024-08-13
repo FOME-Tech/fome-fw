@@ -32,6 +32,12 @@ constexpr float loopPeriodMs(LoopPeriod p) {
 	return 1000.0f / hzForPeriod(p);
 }
 
+#ifndef ADC_UPDATE_RATE
 #define ADC_UPDATE_RATE LoopPeriod::Period500hz
+#endif
+
 #define FAST_CALLBACK_RATE LoopPeriod::Period250hz
 #define SLOW_CALLBACK_RATE LoopPeriod::Period20hz
+
+#define FAST_CALLBACK_PERIOD_MS loopPeriodMs(FAST_CALLBACK_RATE)
+#define SLOW_CALLBACK_PERIOD_MS loopPeriodMs(SLOW_CALLBACK_RATE)

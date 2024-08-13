@@ -10,9 +10,9 @@ public:
 	void PeriodicTask(efitick_t nowNt) override;
 
 private:
-	LoopPeriod calculateLoopPeriod();
-
 	template <LoopPeriod TFlag>
+	LoopPeriod makePeriodFlag() const;
+
 	LoopPeriod makePeriodFlags();
 
 	int m_cycleCounter = 0;
@@ -30,7 +30,7 @@ MainLoop::MainLoop()
 }
 
 void MainLoop::PeriodicTask(efitick_t nowNt) {
-	LoopPeriod p = calculateLoopPeriod();
+	LoopPeriod p = makePeriodFlags();
 
 	if (p & ADC_UPDATE_RATE) {
 		updateSlowAdc(nowNt);
@@ -46,7 +46,7 @@ void MainLoop::PeriodicTask(efitick_t nowNt) {
 }
 
 template <LoopPeriod flag>
-static constexpr int loopPeriod() {
+static constexpr int loopCounts() {
 	constexpr auto hz = hzForPeriod(flag);
 
 	// check that this cleanly divides
@@ -56,25 +56,24 @@ static constexpr int loopPeriod() {
 }
 
 template <LoopPeriod TFlag>
-LoopPeriod MainLoop::makePeriodFlags() {
-	if (m_cycleCounter % loopPeriod<TFlag>() == 0) {
+LoopPeriod MainLoop::makePeriodFlag() const {
+	if (m_cycleCounter % loopCounts<TFlag>() == 0) {
 		return TFlag;
 	} else {
 		return LoopPeriod::None;
 	}
 }
 
-LoopPeriod MainLoop::calculateLoopPeriod() {
+LoopPeriod MainLoop::makePeriodFlags() {
 	if (m_cycleCounter >= MAIN_LOOP_RATE) {
 		m_cycleCounter = 0;
 	}
 
 	LoopPeriod lp = LoopPeriod::None;
-
-	lp |= makePeriodFlags<LoopPeriod::Period1000hz>();
-	lp |= makePeriodFlags<LoopPeriod::Period500hz>();
-	lp |= makePeriodFlags<LoopPeriod::Period250hz>();
-	lp |= makePeriodFlags<LoopPeriod::Period20hz>();
+	lp |= makePeriodFlag<LoopPeriod::Period1000hz>();
+	lp |= makePeriodFlag<LoopPeriod::Period500hz>();
+	lp |= makePeriodFlag<LoopPeriod::Period250hz>();
+	lp |= makePeriodFlag<LoopPeriod::Period20hz>();
 
 	m_cycleCounter++;
 
