@@ -19,7 +19,7 @@ private:
 	int m_cycleCounter = 0;
 };
 
-static MainLoop mainLoop;
+static MainLoop mainLoop CCM_OPTIONAL;
 
 void initMainLoop() {
 	mainLoop.start();
