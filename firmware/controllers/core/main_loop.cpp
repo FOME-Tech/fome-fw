@@ -5,7 +5,7 @@
 
 #define MAIN_LOOP_RATE 1000
 
-class MainLoop : public PeriodicController<512> {
+class MainLoop : public PeriodicController<1024> {
 public:
 	MainLoop();
 	void PeriodicTask(efitick_t nowNt) override;

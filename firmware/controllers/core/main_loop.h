@@ -26,8 +26,6 @@ constexpr int hzForPeriod(LoopPeriod p) {
 		case LoopPeriod::Period250hz: return 200;
 		case LoopPeriod::Period20hz: return 20;
 	}
-
-	throw "invalid LoopPeriod";
 }
 
 constexpr float loopPeriodMs(LoopPeriod p) {
