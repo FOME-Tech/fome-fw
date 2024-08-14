@@ -54,6 +54,7 @@ static int averagedMapBufIdx = 0;
 struct sampler {
 	scheduling_s startTimer;
 	scheduling_s endTimer;
+	uint8_t cylinderIndex;
 };
 
 static CCM_OPTIONAL sampler samplers[MAX_CYLINDER_COUNT][2];
@@ -65,22 +66,29 @@ static size_t currentMapAverager = 0;
 static void startAveraging(sampler* s) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6649, getCurrentRemainingStack() > 128, "lowstck#9");
 
+	float duration = engine->engineState.mapAveragingDuration;
+	if (duration == 0) {
+		// Zero duration means the engine wasn't spinning or something, abort
+		return;
+	}
+
 	// TODO: set currentMapAverager based on cylinder bank
 	auto& averager = getMapAvg(currentMapAverager);
-	averager.start();
+	averager.start(s->cylinderIndex);
 
 	mapAveragingPin.setHigh();
 
-	scheduleByAngle(&s->endTimer, getTimeNowNt(), engine->engineState.mapAveragingDuration,
+	scheduleByAngle(&s->endTimer, getTimeNowNt(), duration,
 		{ endAveraging, &averager });
 }
 
-void MapAverager::start() {
+void MapAverager::start(uint8_t cylinderIndex) {
 	chibios_rt::CriticalSectionLocker csl;
 
 	m_counter = 0;
 	m_sum = 0;
 	m_isAveraging = true;
+	m_cylinderIndex = cylinderIndex;
 }
 
 SensorResult MapAverager::submit(float volts) {
@@ -101,6 +109,8 @@ void MapAverager::stop() {
 
 	m_isAveraging = false;
 
+	engine->outputChannels.mapAveragingSamples = m_counter;
+
 	if (m_counter > 0) {
 		float averageMap = m_sum / m_counter;
 		m_lastCounter = m_counter;
@@ -116,6 +126,9 @@ void MapAverager::stop() {
 				minPressure = averagedMapRunningBuffer[i];
 		}
 
+		if (m_cylinderIndex < efi::size(engine->outputChannels.mapPerCylinder)) {
+			engine->outputChannels.mapPerCylinder[m_cylinderIndex] = minPressure;
+		}
 		setValidValue(minPressure, getTimeNowNt());
 	} else {
 #if EFI_PROD_CODE
@@ -171,7 +184,9 @@ void refreshMapAveragingPreCalc() {
 	if (isValidRpm(rpm)) {
 		MAP_sensor_config_s * c = &engineConfiguration->map;
 		angle_t start = interpolate2d(rpm, c->samplingAngleBins, c->samplingAngle);
+		angle_t duration = interpolate2d(rpm, c->samplingWindowBins, c->samplingWindow);
 		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
+		assertAngleRange(duration, "samplingDuration", ObdCode::CUSTOM_ERR_6563);
 
 		angle_t offsetAngle = engine->triggerCentral.triggerFormDetails.eventAngles[engineConfiguration->mapAveragingSchedulingAtIndex];
 		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_AVG_OFFSET, !std::isnan(offsetAngle), "offsetAngle");
@@ -186,12 +201,14 @@ void refreshMapAveragingPreCalc() {
 			wrapAngle(cylinderStart, "cylinderStart", ObdCode::CUSTOM_ERR_6562);
 			engine->engineState.mapAveragingStart[i] = cylinderStart;
 		}
-		engine->engineState.mapAveragingDuration = interpolate2d(rpm, c->samplingWindowBins, c->samplingWindow);
+
+		engine->engineState.mapAveragingDuration = duration;
 	} else {
 		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-			engine->engineState.mapAveragingStart[i] = NAN;
+			engine->engineState.mapAveragingStart[i] = 0;
 		}
-		engine->engineState.mapAveragingDuration = NAN;
+
+		engine->engineState.mapAveragingDuration = 0;
 	}
 
 }
@@ -217,15 +234,12 @@ void mapAveragingTriggerCallback(
 		applyMapMinBufferLength();
 	}
 
-	// todo: this could be pre-calculated
 	int samplingCount = engineConfiguration->measureMapOnlyInOneCylinder ? 1 : engineConfiguration->cylindersCount;
 
 	for (int i = 0; i < samplingCount; i++) {
 		angle_t samplingStart = engine->engineState.mapAveragingStart[i];
-
 		angle_t samplingDuration = engine->engineState.mapAveragingDuration;
-		// todo: this assertion could be moved out of trigger handler
-		assertAngleRange(samplingDuration, "samplingDuration", ObdCode::CUSTOM_ERR_6563);
+
 		if (samplingDuration <= 0) {
 			warning(ObdCode::CUSTOM_MAP_ANGLE_PARAM, "map sampling angle should be positive");
 			return;
@@ -245,6 +259,7 @@ void mapAveragingTriggerCallback(
 		int structIndex = getRevolutionCounter() % 2;
 
 		sampler* s = &samplers[i][structIndex];
+		s->cylinderIndex = i;
 
 		// at the moment we schedule based on time prediction based on current RPM and angle
 		// we are loosing precision in case of changing RPM - the further away is the event the worse is precision

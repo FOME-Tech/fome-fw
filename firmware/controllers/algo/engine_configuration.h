@@ -76,25 +76,10 @@ extern engine_configuration_s *engineConfiguration;
 extern persistent_config_s *config;
 #endif // EFI_UNIT_TEST
 
-/**
- * & is reference in C++ (not C)
- * Ref is a pointer that:
- *   you access with dot instead of arrow
- *   Cannot be null
- * This is about EFI_ACTIVE_CONFIGURATION_IN_FLASH
- */
-extern engine_configuration_s & activeConfiguration;
+extern engine_configuration_s activeConfiguration;
 
-#if ! EFI_ACTIVE_CONFIGURATION_IN_FLASH
 // We store a special changeable copy of configuration is RAM, so we can just compare them
 #define isConfigurationChanged(x) (engineConfiguration->x != activeConfiguration.x)
-#else
-// We cannot call prepareVoidConfiguration() for activeConfiguration if it's stored in flash,
-// so we need to tell the firmware that it's "void" (i.e. zeroed, invalid) by setting a special flag variable,
-// and then we consider 'x' as changed if it's just non-zero.
-extern bool isActiveConfigurationVoid;
-#define isConfigurationChanged(x) ((engineConfiguration->x != activeConfiguration.x) || (isActiveConfigurationVoid && (int)(engineConfiguration->x) != 0))
-#endif /* EFI_ACTIVE_CONFIGURATION_IN_FLASH */
 
 #define isPinOrModeChanged(pin, mode) (isConfigurationChanged(pin) || isConfigurationChanged(mode))
 

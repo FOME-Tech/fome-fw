@@ -33,8 +33,6 @@
 
 #define EFI_TEXT_LOGGING TRUE
 
-#define EFI_ACTIVE_CONFIGURATION_IN_FLASH FALSE
-
 #ifndef EFI_MC33816
 #define EFI_MC33816 TRUE
 #endif
@@ -78,10 +76,6 @@
 #ifndef HAL_TRIGGER_USE_PAL
 #define HAL_TRIGGER_USE_PAL TRUE
 #endif /* HAL_TRIGGER_USE_PAL */
-
-#ifndef HAL_TRIGGER_USE_ADC
-#define HAL_TRIGGER_USE_ADC FALSE
-#endif /* HAL_TRIGGER_USE_ADC */
 
 /**
  * TunerStudio support.
