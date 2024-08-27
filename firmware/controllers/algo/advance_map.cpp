@@ -143,6 +143,11 @@ static angle_t getCrankingAdvance(int rpm, float engineLoad) {
 		return interpolate2d(rpm, config->crankingAdvanceBins, config->crankingAdvance);
 	}
 
+	if (engineConfiguration->useSeparateAdvanceForCrankingClt) {
+		auto coolant = Sensor::get(SensorType::Clt);
+		return interpolate2d(coolant.Value, config->crankingAdvanceCltBins, config->crankingAdvanceClt);
+	}
+
 	// Interpolate the cranking timing angle to the earlier running angle for faster engine start
 	angle_t crankingToRunningTransitionAngle = getRunningAdvance(engineConfiguration->cranking.rpm, engineLoad);
 	// interpolate not from zero, but starting from min. possible rpm detected
