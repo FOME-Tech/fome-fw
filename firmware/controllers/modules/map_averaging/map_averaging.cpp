@@ -214,10 +214,6 @@ void MapAveragingModule::onEnginePhase(float rpm,
 
 	ScopePerf perf(PE::MapAveragingTriggerCallback);
 
-	if (engineConfiguration->mapMinBufferLength != mapMinBufferLength) {
-		applyMapMinBufferLength();
-	}
-
 	int samplingCount = engineConfiguration->measureMapOnlyInOneCylinder ? 1 : engineConfiguration->cylindersCount;
 
 	for (int i = 0; i < samplingCount; i++) {
@@ -238,6 +234,12 @@ void MapAveragingModule::onEnginePhase(float rpm,
 		scheduleByAngle(&s.timer, edgeTimestamp, angleOffset, { startAveraging, &s });
 	}
 #endif
+}
+
+void MapAveragingModule::onConfigurationChange(engine_configuration_s const * previousConfig) {
+	if (!previousConfig || engineConfiguration->mapMinBufferLength != previousConfig->mapMinBufferLength) {
+		applyMapMinBufferLength();
+	}
 }
 
 void initMapAveraging() {

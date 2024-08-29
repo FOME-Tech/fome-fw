@@ -51,6 +51,8 @@ MapAverager& getMapAvg(size_t idx);
 class MapAveragingModule : public EngineModule {
 public:
 #if EFI_MAP_AVERAGING
+	void onConfigurationChange(engine_configuration_s const * previousConfig);
+
 	void onFastCallback() override;
 	void onEnginePhase(float rpm,
 						efitick_t edgeTimestamp,
