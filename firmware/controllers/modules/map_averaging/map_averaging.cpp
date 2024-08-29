@@ -140,10 +140,10 @@ void MapAverager::stop() {
  * @note This method is invoked OFTEN, this method is a potential bottleneck - the implementation should be
  * as fast as possible
  */
-void mapAveragingAdcCallback(float instantVoltage) {
+void MapAveragingModule::submitSample(float volts) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6650, getCurrentRemainingStack() > 128, "lowstck#9a");
 
-	SensorResult mapResult = getMapAvg(currentMapAverager).submit(instantVoltage);
+	SensorResult mapResult = getMapAvg(currentMapAverager).submit(volts);
 
 	float instantMap = mapResult.value_or(0);
 #if EFI_TUNER_STUDIO

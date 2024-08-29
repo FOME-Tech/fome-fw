@@ -60,5 +60,7 @@ public:
 						efitick_t edgeTimestamp,
 						float currentPhase,
 						float nextPhase) override;
+
+	void submitSample(float volts);
 #endif // EFI_MAP_AVERAGING
 };
