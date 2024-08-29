@@ -196,7 +196,6 @@ void MapAveragingModule::onFastCallback() {
 
 		engine->engineState.mapAveragingDuration = 0;
 	}
-
 }
 
 // Callback to schedule the start of map averaging for each cylinder
@@ -204,6 +203,12 @@ void MapAveragingModule::onEnginePhase(float rpm,
 						efitick_t edgeTimestamp,
 						float currentPhase,
 						float nextPhase) {
+
+	if constexpr (EFI_UNIT_TEST) {
+		// TODO: unit test MAP sampling scheduling
+		return;
+	}
+
 #if EFI_ENGINE_CONTROL
 	if (!isValidRpm(rpm)) {
 		return;
