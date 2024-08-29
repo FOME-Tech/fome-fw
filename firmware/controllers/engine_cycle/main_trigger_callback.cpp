@@ -113,12 +113,6 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 	 * For spark we schedule both start of coil charge and actual spark based on trigger angle
 	 */
 	onTriggerEventSparkLogic(rpm, edgeTimestamp, currentPhase, nextPhase);
-
-#if !EFI_UNIT_TEST
-#if EFI_MAP_AVERAGING
-	mapAveragingTriggerCallback(edgeTimestamp, currentPhase, nextPhase);
-#endif /* EFI_MAP_AVERAGING */
-#endif /* EFI_UNIT_TEST */
 }
 
 #endif /* EFI_ENGINE_CONTROL */

@@ -16,9 +16,6 @@ void mapAveragingAdcCallback(float instantVoltage);
 #endif
 
 void initMapAveraging();
-void refreshMapAveragingPreCalc();
-
-void mapAveragingTriggerCallback(efitick_t edgeTimestamp, angle_t currentPhase, angle_t nextPhase);
 
 // allow smoothing up to number of cylinders
 #define MAX_MAP_BUFFER_LENGTH (MAX_CYLINDER_COUNT)
@@ -54,3 +51,12 @@ private:
 };
 
 MapAverager& getMapAvg(size_t idx);
+
+class MapAveragingModule : public EngineModule {
+public:
+	void onFastCallback() override;
+	void onEnginePhase(float rpm,
+						efitick_t edgeTimestamp,
+						float currentPhase,
+						float nextPhase) override;
+};

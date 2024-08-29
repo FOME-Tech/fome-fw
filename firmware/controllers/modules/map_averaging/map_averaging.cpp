@@ -169,7 +169,7 @@ static void applyMapMinBufferLength() {
 	}
 }
 
-void refreshMapAveragingPreCalc() {
+void MapAveragingModule::onFastCallback() {
 	int rpm = Sensor::getOrZero(SensorType::Rpm);
 	if (isValidRpm(rpm)) {
 		MAP_sensor_config_s * c = &engineConfiguration->map;
@@ -200,9 +200,11 @@ void refreshMapAveragingPreCalc() {
 }
 
 // Callback to schedule the start of map averaging for each cylinder
-void mapAveragingTriggerCallback(efitick_t edgeTimestamp, angle_t currentPhase, angle_t nextPhase) {
+void MapAveragingModule::onEnginePhase(float rpm,
+						efitick_t edgeTimestamp,
+						float currentPhase,
+						float nextPhase) {
 #if EFI_ENGINE_CONTROL
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
 	if (!isValidRpm(rpm)) {
 		return;
 	}
