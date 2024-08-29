@@ -54,9 +54,11 @@ MapAverager& getMapAvg(size_t idx);
 
 class MapAveragingModule : public EngineModule {
 public:
+#if EFI_MAP_AVERAGING
 	void onFastCallback() override;
 	void onEnginePhase(float rpm,
 						efitick_t edgeTimestamp,
 						float currentPhase,
 						float nextPhase) override;
+#endif // EFI_MAP_AVERAGING
 };
