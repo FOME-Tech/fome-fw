@@ -203,9 +203,7 @@ void MapAveragingModule::onEnginePhase(float rpm,
 						efitick_t edgeTimestamp,
 						float currentPhase,
 						float nextPhase) {
-
-	if constexpr (EFI_UNIT_TEST) {
-		// TODO: unit test MAP sampling scheduling
+	if (!engineConfiguration->isMapAveragingEnabled) {
 		return;
 	}
 

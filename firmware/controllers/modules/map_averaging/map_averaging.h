@@ -11,10 +11,6 @@
 
 #if EFI_MAP_AVERAGING
 
-#if HAL_USE_ADC
-void mapAveragingAdcCallback(float instantVoltage);
-#endif
-
 void initMapAveraging();
 
 // allow smoothing up to number of cylinders

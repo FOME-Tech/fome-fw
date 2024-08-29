@@ -514,9 +514,7 @@ void commonInitEngineController() {
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
 #if EFI_MAP_AVERAGING
-	if (engineConfiguration->isMapAveragingEnabled) {
-		initMapAveraging();
-	}
+	initMapAveraging();
 #endif /* EFI_MAP_AVERAGING */
 
 #if EFI_BOOST_CONTROL
