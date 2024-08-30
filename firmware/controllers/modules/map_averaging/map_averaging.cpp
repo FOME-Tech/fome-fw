@@ -210,7 +210,6 @@ void MapAveragingModule::onEnginePhase(float rpm,
 		return;
 	}
 
-#if EFI_ENGINE_CONTROL
 	if (!isValidRpm(rpm)) {
 		return;
 	}
@@ -236,7 +235,6 @@ void MapAveragingModule::onEnginePhase(float rpm,
 
 		scheduleByAngle(&s.timer, edgeTimestamp, angleOffset, { startAveraging, &s });
 	}
-#endif
 }
 
 void MapAveragingModule::onConfigurationChange(engine_configuration_s const * previousConfig) {
