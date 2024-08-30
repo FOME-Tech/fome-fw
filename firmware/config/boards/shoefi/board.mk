@@ -1,15 +1,15 @@
-# List of all the board related files.
+# Combine the related files for a specific platform and MCU.
+
+# Target ECU board design
 BOARDCPPSRC = $(BOARD_DIR)/board_configuration.cpp
-DDEFS += -DLED_CRITICAL_ERROR_BRAIN_PIN=Gpio::B14
 
-# Enable ethernet
-LWIP = yes
-include $(PROJECT_DIR)/controllers/modules/ethernet_console/ethernet_console.mk
+DDEFS += -DEFI_MAIN_RELAY_CONTROL=FALSE
 
-# This is an F429!
-IS_STM32F429 = yes
+# Add them all together
+DDEFS += -DFIRMWARE_ID=\"hellenNB1\" $(VAR_DEF_ENGINE_TYPE)
+DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE -DSTM32_ADC_USE_ADC3=TRUE
+
+include $(BOARDS_DIR)/hellen/hellen-common144.mk
+
 
 SHORT_BOARD_NAME = shoefi
-
-DDEFS += -DFIRMWARE_ID=\"shoefi\"
-DDEFS += -DDEFAULT_ENGINE_TYPE=MINIMAL_PINS
