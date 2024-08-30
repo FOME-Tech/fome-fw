@@ -17,7 +17,6 @@
 #include "speed_density.h"
 #include "advance_map.h"
 
-#include "map_averaging.h"
 #include "perf_trace.h"
 #include "backup_ram.h"
 #include "idle_thread.h"
@@ -466,10 +465,6 @@ injection_mode_e getCurrentInjectionMode() {
  */
 void Engine::periodicFastCallback() {
 	ScopePerf pc(PE::EnginePeriodicFastCallback);
-
-#if EFI_MAP_AVERAGING
-	refreshMapAveragingPreCalc();
-#endif
 
 	engineState.periodicFastCallback();
 

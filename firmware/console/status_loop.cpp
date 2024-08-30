@@ -69,10 +69,6 @@ extern bool main_loop_started;
 #include "flash_main.h"
 #endif
 
-#if EFI_MAP_AVERAGING
-#include "map_averaging.h"
-#endif
-
 #if (BOARD_TLE8888_COUNT > 0)
 #include "tle8888.h"
 #endif /* BOARD_TLE8888_COUNT */
@@ -391,6 +387,8 @@ static void updatePressures() {
 
 	engine->outputChannels.auxLinear1 = Sensor::getOrZero(SensorType::AuxLinear1);
 	engine->outputChannels.auxLinear2 = Sensor::getOrZero(SensorType::AuxLinear2);
+	engine->outputChannels.auxLinear3 = Sensor::getOrZero(SensorType::AuxLinear3);
+	engine->outputChannels.auxLinear4 = Sensor::getOrZero(SensorType::AuxLinear4);
 }
 
 static void updateMiscSensors() {

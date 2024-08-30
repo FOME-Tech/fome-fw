@@ -47,10 +47,6 @@
 #include "mc33816.h"
 #endif /* EFI_MC33816 */
 
-#if EFI_MAP_AVERAGING
-#include "map_averaging.h"
-#endif
-
 #if EFI_INTERNAL_FLASH
 #include "flash_main.h"
 #endif
@@ -152,9 +148,11 @@ void onFastAdcComplete(adcsample_t*) {
 	// this callback is executed 10 000 times a second, it needs to be as fast as possible!
 	ScopePerf perf(PE::AdcCallbackFast);
 
-#if EFI_MAP_AVERAGING
-	mapAveragingAdcCallback(adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel));
-#endif /* EFI_MAP_AVERAGING */
+#ifdef MODULE_MAP_AVERAGING
+	engine->module<MapAveragingModule>()->submitSample(
+			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel)
+		);
+#endif // MODULE_MAP_AVERAGING
 
 #if EFI_SENSOR_CHART && EFI_SHAFT_POSITION_INPUT
 	if (getEngineState()->sensorChartMode == SC_AUX_FAST1) {

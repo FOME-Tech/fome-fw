@@ -32,7 +32,6 @@
 #include "flash_main.h"
 #include "bench_test.h"
 #include "electronic_throttle.h"
-#include "map_averaging.h"
 #include "high_pressure_fuel_pump.h"
 #include "malfunction_central.h"
 #include "malfunction_indicator.h"
@@ -514,11 +513,9 @@ void commonInitEngineController() {
 	initElectronicThrottle();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
-#if EFI_MAP_AVERAGING
-	if (engineConfiguration->isMapAveragingEnabled) {
-		initMapAveraging();
-	}
-#endif /* EFI_MAP_AVERAGING */
+#ifdef MODULE_MAP_AVERAGING
+	initMapAveraging();
+#endif /* MODULE_MAP_AVERAGING */
 
 #if EFI_BOOST_CONTROL
 	initBoostCtrl();
