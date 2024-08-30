@@ -170,32 +170,28 @@ static void applyMapMinBufferLength() {
 }
 
 void MapAveragingModule::onFastCallback() {
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
-	if (isValidRpm(rpm)) {
-		MAP_sensor_config_s * c = &engineConfiguration->map;
-		angle_t start = interpolate2d(rpm, c->samplingAngleBins, c->samplingAngle);
-		angle_t duration = interpolate2d(rpm, c->samplingWindowBins, c->samplingWindow);
-		efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
-		assertAngleRange(duration, "samplingDuration", ObdCode::CUSTOM_ERR_6563);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
-		// Clamp the duration to slightly less than one cylinder period
-		float cylinderPeriod = engine->engineState.engineCycle / engineConfiguration->cylindersCount;
-		duration = clampF(10, duration, cylinderPeriod - 10);
+	MAP_sensor_config_s * c = &engineConfiguration->map;
 
-		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-			float cylinderStart = start + getCylinderAngle(i, ID2INDEX(getCylinderId(i)));;
-			wrapAngle(cylinderStart, "cylinderStart", ObdCode::CUSTOM_ERR_6562);
-			engine->engineState.mapAveragingStart[i] = cylinderStart;
-		}
+	angle_t start = interpolate2d(rpm, c->samplingAngleBins, c->samplingAngle);
+	efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
 
-		engine->engineState.mapAveragingDuration = duration;
-	} else {
-		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-			engine->engineState.mapAveragingStart[i] = 0;
-		}
-
-		engine->engineState.mapAveragingDuration = 0;
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		float cylinderStart = start + getCylinderAngle(i, ID2INDEX(getCylinderId(i)));;
+		wrapAngle(cylinderStart, "cylinderStart", ObdCode::CUSTOM_ERR_6562);
+		engine->engineState.mapAveragingStart[i] = cylinderStart;
 	}
+
+	engine->engineState.mapAveragingDuration = duration;
+
+	angle_t duration = interpolate2d(rpm, c->samplingWindowBins, c->samplingWindow);
+	assertAngleRange(duration, "samplingDuration", ObdCode::CUSTOM_ERR_6563);
+
+	// Clamp the duration to slightly less than one cylinder period
+	float cylinderPeriod = engine->engineState.engineCycle / engineConfiguration->cylindersCount;
+	duration = clampF(10, duration, cylinderPeriod - 10);
+
 }
 
 // Callback to schedule the start of map averaging for each cylinder
