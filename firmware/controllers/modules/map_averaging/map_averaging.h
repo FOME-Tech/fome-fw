@@ -9,14 +9,10 @@
 
 #include "sensor_converter_func.h"
 
-#if EFI_MAP_AVERAGING
-
 void initMapAveraging();
 
 // allow smoothing up to number of cylinders
 #define MAX_MAP_BUFFER_LENGTH (MAX_CYLINDER_COUNT)
-
-#endif /* EFI_MAP_AVERAGING */
 
 class MapAverager : public StoredValueSensor {
 public:
@@ -50,7 +46,6 @@ MapAverager& getMapAvg(size_t idx);
 
 class MapAveragingModule : public EngineModule {
 public:
-#if EFI_MAP_AVERAGING
 	void onConfigurationChange(engine_configuration_s const * previousConfig);
 
 	void onFastCallback() override;
@@ -60,5 +55,4 @@ public:
 						float nextPhase) override;
 
 	void submitSample(float volts);
-#endif // EFI_MAP_AVERAGING
 };

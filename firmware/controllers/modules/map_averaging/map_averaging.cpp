@@ -23,8 +23,6 @@
 
 #include "pch.h"
 
-#if EFI_MAP_AVERAGING
-
 #include "trigger_central.h"
 
 #if EFI_SENSOR_CHART
@@ -76,6 +74,11 @@ static void startAveraging(sampler* s) {
 
 	scheduleByAngle(&s->timer, getTimeNowNt(), duration,
 		{ endAveraging, &averager });
+}
+
+void MapAverager::showInfo(const char* sensorName) const {
+	const auto value = get();
+	efiPrintf("Sensor \"%s\" is MAP averager: valid: %s value: %.2f averaged sample count: %d", sensorName, boolToString(value.Valid), value.Value, m_lastCounter);
 }
 
 void MapAverager::start(uint8_t cylinderIndex) {
@@ -245,5 +248,3 @@ void MapAveragingModule::onConfigurationChange(engine_configuration_s const * pr
 void initMapAveraging() {
 	applyMapMinBufferLength();
 }
-
-#endif /* EFI_MAP_AVERAGING */
