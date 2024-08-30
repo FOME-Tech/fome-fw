@@ -136,8 +136,6 @@ void MapAverager::stop() {
 	}
 }
 
-#if HAL_USE_ADC
-
 /**
  * This method is invoked from ADC callback.
  * @note This method is invoked OFTEN, this method is a potential bottleneck - the implementation should be
@@ -153,7 +151,6 @@ void MapAveragingModule::submitSample(float volts) {
 	engine->outputChannels.instantMAPValue = instantMap;
 #endif // EFI_TUNER_STUDIO
 }
-#endif
 
 static void endAveraging(MapAverager* arg) {
 	arg->stop();
@@ -210,10 +207,6 @@ void MapAveragingModule::onEnginePhase(float rpm,
 		return;
 	}
 
-	if (!isValidRpm(rpm)) {
-		return;
-	}
-
 	ScopePerf perf(PE::MapAveragingTriggerCallback);
 
 	int samplingCount = engineConfiguration->measureMapOnlyInOneCylinder ? 1 : engineConfiguration->cylindersCount;
@@ -231,8 +224,6 @@ void MapAveragingModule::onEnginePhase(float rpm,
 		}
 
 		auto& s = samplers[i];
-		s.cylinderIndex = i;
-
 		scheduleByAngle(&s.timer, edgeTimestamp, angleOffset, { startAveraging, &s });
 	}
 }
@@ -244,5 +235,9 @@ void MapAveragingModule::onConfigurationChange(engine_configuration_s const * pr
 }
 
 void initMapAveraging() {
+	for (size_t i = 0; i < efi::size(samplers); i++) {
+		samplers[i].cylinderIndex = i;
+	}
+
 	applyMapMinBufferLength();
 }
