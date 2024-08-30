@@ -32,7 +32,6 @@
 #include "flash_main.h"
 #include "bench_test.h"
 #include "electronic_throttle.h"
-#include "map_averaging.h"
 #include "high_pressure_fuel_pump.h"
 #include "malfunction_central.h"
 #include "malfunction_indicator.h"
@@ -66,10 +65,6 @@
 #if EFI_LOGIC_ANALYZER
 #include "logic_analyzer.h"
 #endif /* EFI_LOGIC_ANALYZER */
-
-#if HAL_USE_ADC
-#include "AdcConfiguration.h"
-#endif /* HAL_USE_ADC */
 
 #include "periodic_task.h"
 
@@ -200,10 +195,6 @@ char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *bu
 #endif /* HAL_USE_ADC */
 	return buffer;
 }
-
-#if HAL_USE_ADC
-extern AdcDevice fastAdc;
-#endif /* HAL_USE_ADC */
 
 static void printSensorInfo() {
 #if HAL_USE_ADC

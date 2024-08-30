@@ -63,15 +63,10 @@ extern bool main_loop_started;
 #include "pin_repository.h"
 #include "max31855.h"
 #include "single_timer_executor.h"
-#include "periodic_task.h"
 #endif /* EFI_PROD_CODE */
 
 #if EFI_INTERNAL_FLASH
 #include "flash_main.h"
-#endif
-
-#if EFI_MAP_AVERAGING
-#include "map_averaging.h"
 #endif
 
 #if (BOARD_TLE8888_COUNT > 0)
@@ -622,19 +617,6 @@ void updateTunerStudioState() {
 		tsOutputChannels->debugIntField5 = engine->triggerCentral.triggerState.currentCycle.eventCount[1];
 #endif // EFI_SHAFT_POSITION_INPUT
 
-		break;
-#if EFI_MAP_AVERAGING
-	case DBG_MAP:
-		postMapState(tsOutputChannels);
-		break;
-#endif /* EFI_MAP_AVERAGING */
-	case DBG_INSTANT_RPM:
-		{
-#if EFI_SHAFT_POSITION_INPUT
-			tsOutputChannels->debugFloatField2 = instantRpm / Sensor::getOrZero(SensorType::Rpm);
-#endif // EFI_SHAFT_POSITION_INPUT
-
-		}
 		break;
 	case DBG_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
