@@ -183,15 +183,12 @@ void MapAveragingModule::onFastCallback() {
 		engine->engineState.mapAveragingStart[i] = cylinderStart;
 	}
 
-	engine->engineState.mapAveragingDuration = duration;
-
 	angle_t duration = interpolate2d(rpm, c->samplingWindowBins, c->samplingWindow);
 	assertAngleRange(duration, "samplingDuration", ObdCode::CUSTOM_ERR_6563);
 
 	// Clamp the duration to slightly less than one cylinder period
 	float cylinderPeriod = engine->engineState.engineCycle / engineConfiguration->cylindersCount;
-	duration = clampF(10, duration, cylinderPeriod - 10);
-
+	engine->engineState.mapAveragingDuration = clampF(10, duration, cylinderPeriod - 10);
 }
 
 // Callback to schedule the start of map averaging for each cylinder
