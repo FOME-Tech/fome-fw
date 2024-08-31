@@ -404,7 +404,20 @@ ignition_mode_e getCurrentIgnitionMode() {
  * This heavy method is only invoked in case of a configuration change or initialization.
  */
 void prepareOutputSignals() {
-	getEngineState()->engineCycle = getEngineCycle(getEngineRotationState()->getOperationMode());
+	auto operationMode = getEngineRotationState()->getOperationMode();
+	getEngineState()->engineCycle = getEngineCycle(operationMode);
+
+	bool isOddFire = false;
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		if (engineConfiguration->timing_offset_cylinder[i] != 0) {
+			isOddFire = true;
+			break;
+		}
+	}
+
+	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
+	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE
+								&& (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
 
 #if EFI_UNIT_TEST
 	if (verboseMode) {

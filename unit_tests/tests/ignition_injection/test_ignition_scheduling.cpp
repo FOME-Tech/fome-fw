@@ -193,6 +193,7 @@ TEST(ignition, oddCylinderWastedSpark) {
 	// dwell should start at 15 degrees ATDC and firing at 25 deg ATDC
 	engine->ignitionState.dwellAngle = 10;
 	engine->engineState.timingAdvance[0] = -25;
+	engine->engineState.useOddFireWastedSpark = true;
 	engineConfiguration->minimumIgnitionTiming = -25;
 
 	// expect to schedule the on-phase dwell and spark (not the wasted spark copy)

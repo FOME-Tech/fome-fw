@@ -105,10 +105,10 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 
 	auto ignitionMode = getCurrentIgnitionMode();
 
-	// On an odd cylinder wasted spark engine, map outputs as if in sequential.
+	// On an odd cylinder (or odd fire) wasted spark engine, map outputs as if in sequential.
 	// During actual scheduling, the events just get scheduled every 360 deg instead
 	// of every 720 deg.
-	if (ignitionMode == IM_WASTED_SPARK && (engineConfiguration->cylindersCount % 2 == 1)) {
+	if (ignitionMode == IM_WASTED_SPARK && engine->engineState.useOddFireWastedSpark) {
 		ignitionMode = IM_INDIVIDUAL_COILS;
 	}
 
@@ -475,9 +475,8 @@ void onTriggerEventSparkLogic(int rpm, efitick_t edgeTimestamp, float currentPha
 	// - current mode is wasted spark
 	// - four stroke
 	bool enableOddCylinderWastedSpark =
-		(engineConfiguration->cylindersCount % 2 == 1) 
-		&& getCurrentIgnitionMode() == IM_WASTED_SPARK
-		&& engine->engineState.engineCycle == 720;
+		engine->engineState.useOddFireWastedSpark
+		&& getCurrentIgnitionMode() == IM_WASTED_SPARK;
 
 	if (engine->ignitionEvents.isReady) {
 		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
