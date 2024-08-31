@@ -479,7 +479,6 @@ void onTriggerEventSparkLogic(int rpm, efitick_t edgeTimestamp, float currentPha
 		&& getCurrentIgnitionMode() == IM_WASTED_SPARK
 		&& engine->engineState.engineCycle == 720;
 
-//	scheduleSimpleMsg(&logger, "eventId spark ", eventIndex);
 	if (engine->ignitionEvents.isReady) {
 		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
 			IgnitionEvent *event = &engine->ignitionEvents.elements[i];
