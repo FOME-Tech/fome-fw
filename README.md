@@ -32,7 +32,6 @@ Online and offline (PDF) versions of the user manual available here: https://wik
  * [Unit Tests](/unit_tests) - Unit tests of firmware
  * [Misc tools](/java_tools) - Misc development utilities
  * [misc/Jenkins](/misc/jenkins) - Continuous integration scripts
- * [Releases](https://github.com/FOME-Tech/fome-fw/releases) - Pre-built firmware releases
 
 # External Links
 
