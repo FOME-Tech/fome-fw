@@ -32,6 +32,7 @@ Online and offline (PDF) versions of the user manual available here: https://wik
  * [Unit Tests](/unit_tests) - Unit tests of firmware
  * [Misc tools](/java_tools) - Misc development utilities
  * [misc/Jenkins](/misc/jenkins) - Continuous integration scripts
+ * [Releases](https://github.com/FOME-Tech/fome-fw/releases) - Pre-built firmware releases
 
 # External Links
 
@@ -61,7 +62,7 @@ Initialize the checkout:
 
 See [firmware/gcc_version_check.c](firmware/gcc_version_check.c) for the recommended version of GCC.
 
-Check out https://rusefi.com/forum/viewtopic.php?f=5&t=9
+Refer to [firmware/DEVELOPER.md](firmware/DEVELOPER.md) for details on building FOME firmware.
 
 # Release Notes
 
