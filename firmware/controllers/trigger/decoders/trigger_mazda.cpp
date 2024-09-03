@@ -188,12 +188,10 @@ void initializeMazdaMiataVVtCamShape(TriggerWaveform *s) {
 }
 
 void initializeMazdaMiataNaCamShape(TriggerWaveform *s) {
-	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
+	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Both);
 
-	// nominal gap is 0.325
-	s->setTriggerSynchronizationGap2(0.1, 0.5);
-	// nominal gap is ~1.52
-	s->setSecondTriggerSynchronizationGap2(0.5, 2.3);
+	s->setTriggerSynchronizationGap3(0, 0.1, 0.5);
+	s->setTriggerSynchronizationGap3(1, 0.5, 2.3);
 
 	/**
 	 * http://rusefi.com/forum/viewtopic.php?f=3&t=729&p=12983#p12983
