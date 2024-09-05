@@ -1251,7 +1251,7 @@ tChargeMode_e tChargeMode;
 	int16_t pidExtraForLowRpm;Increases PID reaction for RPM<target by adding extra percent to PID-error;"%", 1, 0, 0, 100, 0
 	bit useTableForDfcoMap,"Table","Fixed";Use a fixed MAP value as DFCO threshold, or vary the threshold with RPM.  This allows a softer cut at high RPMs where greater vaccuum is generated.
 	uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValuesBins;;"RPM", 100, 0, 0, 17500, 0
-	uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValues;;"MAP", 1, 0, 0, 50, 0
+	uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValues;DFCO will activate when operating below this curve. Used to allow a higher threshold at low RPM where less vaccuum is generated;"MAP", 1, 0, 0, 50, 0
 	int16_t coastingFuelCutMap;MAP value above which fuel injection is re-enabled.;"kPa", 1, 0, 0, 250, 0
 	
 
