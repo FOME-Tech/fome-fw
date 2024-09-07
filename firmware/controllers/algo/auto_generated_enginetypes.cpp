@@ -122,16 +122,22 @@ case DBG_20:
   return "DBG_20";
 case DBG_21:
   return "DBG_21";
+case DBG_22:
+  return "DBG_22";
 case DBG_24:
   return "DBG_24";
 case DBG_25:
   return "DBG_25";
 case DBG_26:
   return "DBG_26";
+case DBG_27:
+  return "DBG_27";
 case DBG_29:
   return "DBG_29";
 case DBG_32:
   return "DBG_32";
+case DBG_33:
+  return "DBG_33";
 case DBG_34:
   return "DBG_34";
 case DBG_35:
@@ -156,8 +162,6 @@ case DBG_9:
   return "DBG_9";
 case DBG_COMPOSITE_LOG:
   return "DBG_COMPOSITE_LOG";
-case DBG_DWELL_METRIC:
-  return "DBG_DWELL_METRIC";
 case DBG_DYNO_VIEW:
   return "DBG_DYNO_VIEW";
 case DBG_ELECTRONIC_THROTTLE_PID:
@@ -168,16 +172,12 @@ case DBG_ETB_AUTOTUNE:
   return "DBG_ETB_AUTOTUNE";
 case DBG_EXECUTOR:
   return "DBG_EXECUTOR";
-case DBG_INSTANT_RPM:
-  return "DBG_INSTANT_RPM";
 case DBG_ION:
   return "DBG_ION";
 case DBG_LOGIC_ANALYZER:
   return "DBG_LOGIC_ANALYZER";
 case DBG_LUA:
   return "DBG_LUA";
-case DBG_MAP:
-  return "DBG_MAP";
 case DBG_METRICS:
   return "DBG_METRICS";
 case DBG_SR5_PROTOCOL:

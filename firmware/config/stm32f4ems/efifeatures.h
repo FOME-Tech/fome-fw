@@ -262,7 +262,7 @@
 
 	#if MODULE_ETHERNET_CONSOLE
 		// F4 ethernet needs some extra space
-		#define LUA_USER_HEAP 40000
+		#define LUA_USER_HEAP 25000
 	#else // MODULE_ETHERNET_CONSOLE
 		#define LUA_USER_HEAP 50000
 	#endif
@@ -300,10 +300,6 @@
 #ifndef EFI_MALFUNCTION_INDICATOR
 #define EFI_MALFUNCTION_INDICATOR TRUE
 //#define EFI_MALFUNCTION_INDICATOR FALSE
-#endif
-
-#ifndef EFI_MAP_AVERAGING
-#define EFI_MAP_AVERAGING TRUE
 #endif
 
 // todo: most of this should become configurable
