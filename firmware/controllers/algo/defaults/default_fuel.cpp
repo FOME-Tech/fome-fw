@@ -109,6 +109,7 @@ static void setDefaultFuelCutParameters() {
 	engineConfiguration->coastingFuelCutTps = 2;
 	engineConfiguration->coastingFuelCutMap = 30;
 	engineConfiguration->coastingFuelCutClt = 60;
+	engineConfiguration->disableFuelCutOnClutch = 0;
 }
 
 static void setDefaultStftSettings() {

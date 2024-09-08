@@ -12,6 +12,7 @@ bool DfcoController::getState() const {
 	const auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 	const auto clt = Sensor::get(SensorType::Clt);
 	const auto map = Sensor::get(SensorType::Map);
+	const auto clutchUp = Sensor::get(SensorType::ClutchUp);
 
 	// If some sensor is broken, inhibit DFCO
 	if (!tps || !clt) {
@@ -26,11 +27,15 @@ bool DfcoController::getState() const {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	float vss = Sensor::getOrZero(SensorType::VehicleSpeed);
 
+	// Setting to allow clutch to inhibit DFCO activation
+	bool disableFuelCutOnClutch = engineConfiguration->disableFuelCutOnClutch;
+	bool clutchActivate = !disableFuelCutOnClutch || (disableFuelCutOnClutch && clutchUp);
+
 	bool mapActivate = map.value_or(0) < engineConfiguration->coastingFuelCutMap;
 	bool tpsActivate = tps.Value < engineConfiguration->coastingFuelCutTps;
 	bool cltActivate = clt.Value > engineConfiguration->coastingFuelCutClt;
-	// True if throttle, MAP, and CLT are all acceptable for DFCO to occur
-	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate;
+	// True if throttle, MAP, CLT, and Clutch are all acceptable for DFCO to occur
+	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate && clutchActivate;
 
 	bool rpmActivate = (rpm > engineConfiguration->coastingFuelCutRpmHigh);
 	bool rpmDeactivate = (rpm < engineConfiguration->coastingFuelCutRpmLow);
