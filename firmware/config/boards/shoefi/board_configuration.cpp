@@ -145,7 +145,7 @@ void setBoardDefaultConfiguration() {
 	setIgnitionPins();
 	setupDefaultSensorInputs();
 
-	engineConfiguration->displayLogicLevelsInEngineSniffer = true;
+	//engineConfiguration->displayLogicLevelsInEngineSniffer = true;
 	engineConfiguration->globalTriggerAngleOffset = 9;
 	engineConfiguration->enableSoftwareKnock = true;
 	engineConfiguration->cylindersCount = 6;
