@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
+    - name: install libusb
+      run: apt-get install libusb-1.0
+      
     - uses: actions/checkout@v4
       with:
         submodules: true
