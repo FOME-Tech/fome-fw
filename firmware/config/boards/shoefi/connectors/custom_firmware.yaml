@@ -138,11 +138,11 @@ pins:
   - pin: EECIV-27
     function: Pressure Feedback EGR Sensor (NC) 
 
-  - pin: EECIV-28
-    id: EFI_ADC_32
-    class: analog_inputs
-    ts_name: EECIV 28 Speed Control Command Switch
-    function: Speed Control Command Switch
+  #- pin: EECIV-28
+  #  id: EFI_ADC_32
+  #  class: analog_inputs
+  #  ts_name: EECIV 28 Speed Control Command Switch
+  #  function: Speed Control Command Switch
 
   - pin: EECIV-29
     id: EFI_ADC_0
