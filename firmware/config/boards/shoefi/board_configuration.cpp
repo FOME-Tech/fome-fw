@@ -21,7 +21,7 @@ static void setIgnitionPins() {
 	engineConfiguration->ignitionPins[5] = Gpio::Unassigned;
 }
 
-static void setEtbConfig() {
+//static void setEtbConfig() {
 	// TLE9201 driver
 	// This chip has three control pins:
 	// DIR - sets direction of the motor
@@ -46,7 +46,7 @@ static void setEtbConfig() {
 
 	// we only have pwm/dir, no dira/dirb
 	//engineConfiguration->etb_use_two_wires = false;
-}
+//}
 
 static void setupVbatt() {
 	// 5.6k high side/10k low side = 1.56 ratio divider
@@ -83,22 +83,6 @@ void AccelerometerPreInitCS2Pin() {
 	}
 #endif // EFI_ONBOARD_MEMS
 }
-	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->accelerometerCsPin = Gpio::H_SPI1_CS2;
-
-
-	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
-	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
-
-  	engineConfiguration->sdCardCsPin = Gpio::H_SPI1_CS1;
-  	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->spi1mosiPin = Gpio::H_SPI1_MOSI;
-	engineConfiguration->spi1misoPin = Gpio::H_SPI1_MISO;
-	engineConfiguration->spi1sckPin = Gpio::H_SPI1_SCK;
-	engineConfiguration->is_enabled_spi_1 = true;
- 	engineConfiguration->isSdCardEnabled = true;
-
-
 
 static void setupDefaultSensorInputs() {
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_4;
@@ -145,7 +129,7 @@ void setBoardDefaultConfiguration() {
 	setIgnitionPins();
 	setupDefaultSensorInputs();
 
-	engineConfiguration->displayLogicLevelsInEngineSniffer = true;
+	//engineConfiguration->displayLogicLevelsInEngineSniffer = true;
 	engineConfiguration->globalTriggerAngleOffset = 9;
 	engineConfiguration->enableSoftwareKnock = true;
 	engineConfiguration->cylindersCount = 6;
@@ -158,13 +142,26 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->idle.solenoidPin = Gpio::G3;
 	engineConfiguration->tachOutputPin = Gpio::F13;
 	engineConfiguration->enableVerboseCanTx = true;
-	engineConfiguration->isSdCardEnabled = true;
+
+	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
+	//engineConfiguration->accelerometerCsPin = Gpio::B7;
+
+	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
+	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
+
+  	engineConfiguration->sdCardCsPin = Gpio::B6;
+  	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
+	engineConfiguration->spi1mosiPin = Gpio::B5;
+	engineConfiguration->spi1misoPin = Gpio::B4;
+	engineConfiguration->spi1sckPin = Gpio::B3;
+	engineConfiguration->is_enabled_spi_1 = true;
+ 	engineConfiguration->isSdCardEnabled = true;
 
 	setCrankOperationMode();
 	
 	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
 	setCommonNTCSensor(&engineConfiguration->clt, 4700);
 	setCommonNTCSensor(&engineConfiguration->iat, 4700);
-    	setTPS1Calibration(75, 900);
+    	//setTPS1Calibration(75, 900);
 	engineConfiguration->enableAemXSeries = true;
 }
