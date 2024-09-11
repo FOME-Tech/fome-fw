@@ -144,7 +144,7 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->enableVerboseCanTx = true;
 
 	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->accelerometerCsPin = Gpio::B7;
+	//engineConfiguration->accelerometerCsPin = Gpio::B7;
 
 	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
 	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
