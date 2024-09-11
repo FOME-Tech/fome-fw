@@ -263,7 +263,7 @@ jobs:
     steps:
 
     - name: install libusb
-      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev mtools
+      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev mtools gcc-mingw-w64
       
     - name: Check branch name
       if: ${{ contains(github.ref_name, '.') }}
