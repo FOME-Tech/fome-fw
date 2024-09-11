@@ -83,22 +83,6 @@ void AccelerometerPreInitCS2Pin() {
 	}
 #endif // EFI_ONBOARD_MEMS
 }
-	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->accelerometerCsPin = Gpio::H_SPI1_CS2;
-
-
-	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
-	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
-
-  	engineConfiguration->sdCardCsPin = Gpio::H_SPI1_CS1;
-  	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->spi1mosiPin = Gpio::H_SPI1_MOSI;
-	engineConfiguration->spi1misoPin = Gpio::H_SPI1_MISO;
-	engineConfiguration->spi1sckPin = Gpio::H_SPI1_SCK;
-	engineConfiguration->is_enabled_spi_1 = true;
- 	engineConfiguration->isSdCardEnabled = true;
-
-
 
 static void setupDefaultSensorInputs() {
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_4;
@@ -158,7 +142,20 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->idle.solenoidPin = Gpio::G3;
 	engineConfiguration->tachOutputPin = Gpio::F13;
 	engineConfiguration->enableVerboseCanTx = true;
-	engineConfiguration->isSdCardEnabled = true;
+
+	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
+	engineConfiguration->accelerometerCsPin = Gpio::H_SPI1_CS2;
+
+	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
+	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
+
+  	engineConfiguration->sdCardCsPin = Gpio::H_SPI1_CS1;
+  	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
+	engineConfiguration->spi1mosiPin = Gpio::H_SPI1_MOSI;
+	engineConfiguration->spi1misoPin = Gpio::H_SPI1_MISO;
+	engineConfiguration->spi1sckPin = Gpio::H_SPI1_SCK;
+	engineConfiguration->is_enabled_spi_1 = true;
+ 	engineConfiguration->isSdCardEnabled = true;
 
 	setCrankOperationMode();
 	
