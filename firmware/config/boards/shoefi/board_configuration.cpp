@@ -21,7 +21,7 @@ static void setIgnitionPins() {
 	engineConfiguration->ignitionPins[5] = Gpio::Unassigned;
 }
 
-static void setEtbConfig() {
+//static void setEtbConfig() {
 	// TLE9201 driver
 	// This chip has three control pins:
 	// DIR - sets direction of the motor
@@ -46,7 +46,7 @@ static void setEtbConfig() {
 
 	// we only have pwm/dir, no dira/dirb
 	//engineConfiguration->etb_use_two_wires = false;
-}
+//}
 
 static void setupVbatt() {
 	// 5.6k high side/10k low side = 1.56 ratio divider
