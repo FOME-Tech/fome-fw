@@ -1,367 +1,304 @@
 pins:
-  - pin: A1
+  - pin: EECIV-1
     function: 12V all times
-    type: 12V
 
-  - pin: A2
+  - pin: EECIV-2
     id: F3
     class: switch_inputs
-    ts_name: A2 Power Steering Switch
+    ts_name: EECIV 1 Power Steering Switch
     function: Power Steering Switch
-    type: din
 
-  - pin: A3
+  - pin: EECIV-3
     id: F11
     class: event_inputs
-    ts_name: A3 Vehicle Speed Sensor
+    ts_name: EECIV 3 Vehicle Speed Sensor
     function: Vehicle Speed Sensor
 
 
-  - pin: A4
-    id: MCU
+  - pin: EECIV-4
+    id: F13
     class: outputs
-    ts_name: A4 Tacho (IDM)
+    ts_name: EECIV 4 Tacho (IDM)
     function: Tacho (IDM)
 
 
-  - pin: A5
-    id: MCU
+  - pin: EECIV-5
+    id: F4
     class: switch_inputs
-    ts_name: A5 Brake Switch Input
+    ts_name: EECIV 5 Brake Switch Input
     function: Brake Switch Input
 
 
-  - pin: A6
+  - pin: EECIV-6
     function: VSS-
-    type: gnd
 
-  - pin: A7
+  - pin: EECIV-7
     id: EFI_ADC_12
     class: analog_inputs
-    ts_name: A7 Engine Coolant Temperature (CLT)
+    ts_name: EECIV 7 Engine Coolant Temperature (CLT)
     function: Engine Coolant Temperature (CLT)
-    type: temp input
 
-  - pin: A8
-    id: MCU
+  - pin: EECIV-8
+    id: EFI_ADC_20
     class: analog_inputs
-    ts_name: A8 TPS2
+    ts_name: EECIV 8 TPS2
     function: TPS2
 
 
-  - pin: A9
+  - pin: EECIV-9
     function: MAF Ground
-    type: gnd
 
-  - pin: A10
-    id: MCU
+  - pin: EECIV-10
+    id: C7
     class: outputs
-    ts_name: A10 AC Clutch
+    ts_name: EECIV 10 AC Clutch
     function: AC Clutch
 
-
-  - pin: A11
+  - pin: EECIV-11
     function: Speed Control Solenoid
-    type: 12V
 
-  - pin: A12
-    id: MCU
+  - pin: EECIV-12
+    id: D11
     class: outputs
-    ts_name: A12 Injector 3
+    ts_name: EECIV 12 Injector 3
     function: Injector 3
-    type: inj
 
-  - pin: A13
-    id: MCU
+  - pin: EECIV-13
+    id: D10
     class: outputs
-    ts_name: A13 Injector 4
+    ts_name: EECIV 13 Injector 4
     function: Injector 4
-    type: inj
 
-  - pin: A14
-    id: MCU
+  - pin: EECIV-14
+    id: D9
     class: outputs
-    ts_name: A14 Injector 5
+    ts_name: EECIV 14 Injector 5
     function: Injector 5
-    type: inj
 
-  - pin: A15
-    id: MCU
+  - pin: EECIV-15
+    id: F12
     class: outputs
-    ts_name: A15 Injector 6
+    ts_name: EECIV 15 Injector 6
     function: Injector 6
-    type: inj
 
-  - pin: A16
+  - pin: EECIV-16
     function: Ignition Ground
-    type: gnd
 
-  - pin: A17
-    id: MCU
-    class: outputs
-    ts_name: A17 VIP Test (MIL)
+  - pin: EECIV-17
     function: VIP Test (MIL)
 
-
-  - pin: A18
-    id: MCU
+  - pin: EECIV-18
+    id: EFI_ADC_8
     class: analog_inputs
-    ts_name: A18 Octane Adjust (Flex)
+    ts_name: EECIV 18 Octane Adjust (Flex)
     function: Octane Adjust (Flex)
-    type: octane sensor
 
-  - pin: A19
-    id: MCU
-    class:  analog_inputs
-    ts_name: A19 Fuel Pump Monitor
+  - pin: EECIV-19
+    id: C9
+    class:  outputs
+    ts_name: EECIV 19 Fuel Pump Monitor
     function: Fuel Pump Monitor
-    type: fuel pump sensor
 
-  - pin: A20
+  - pin: EECIV-20
     function: Case Ground
-    type: gnd
 
-  - pin: A21
-    id: MCU
+  - pin: EECIV-21
+    id: G3
     class: outputs
-    ts_name: A21 Idle (IAC)
+    ts_name: EECIV 21 Idle (IAC)
     function: IAC
-    type: ls
 
-  - pin: A22
-    id: MCU
+  - pin: EECIV-22
+    id: G5
     class: outputs
-    ts_name: A22 Low Speed Fuel Pump
+    ts_name: EECIV 22 Low Speed Fuel Pump
     function: Low Speed Fuel Pump
-    type: ls
 
-  - pin: A23
-    id: MCU
-    class:  
-    ts_name: A23 Knock Sensor
-    function: Knock Sensor
-    type: 
+  #- pin: EECIV-23
+  #  id: EFI_ADC_33
+  #  class: analog_inputs
+  #  ts_name: EECIV 23 Knock Sensor
+  #  function: Knock Sensor
+    
+  - pin: EECIV-24
+    id: A6
+    class: event_inputs
+    ts_name: EECIV 24 Cam Sensor (CID)
+    function: Cam Sensor (CID) 
 
-  - pin: A24
-    id: MCU
-    class:  
-    ts_name: A24 Cam Sensor (CID)
-    function: Cam Sensor (CID)
-    type: 
-
-  - pin: A25
-    id: MCU
+  - pin: EECIV-25
+    id: EFI_ADC_13
     class: analog_inputs
-    ts_name: A25 Intake Air Temp (IAT)
+    ts_name: EECIV 25 Intake Air Temp (IAT)
     function: Intake Air Temp (IAT)
-    type: temp input
 
-  - pin: A26
+  - pin: EECIV-26
     function: VREF
-    type: 5V
 
-  - pin: A27
-    function: Pressure Feedback EGR Sensor (NC)
-    type: NC
+  - pin: EECIV-27
+    function: Pressure Feedback EGR Sensor (NC) 
 
-  - pin: A28
-    id: MCU
+  - pin: EECIV-28
+    id: EFI_ADC_32
     class: analog_inputs
-    ts_name: A28 Speed Control Command Switch
+    ts_name: EECIV 28 Speed Control Command Switch
     function: Speed Control Command Switch
-    type: cruise inputs
 
-  - pin: A29
-    id: MCU
+  - pin: EECIV-29
+    id: EFI_ADC_0
     class: analog_inputs
-    ts_name: A29 HEGO 1 (Rear)
+    ts_name: EECIV 29 HEGO 1 (Rear)
     function: HEGO 1 (Rear)
-    type: narrowbands
 
-  - pin: A30
-    id: MCU
-    class:  
-    ts_name: A30 Tunerstudio Name
+  - pin: EECIV-30
+    id: F5
+    class: switch_inputs
+    ts_name: EECIV 30 Clutch Switch
     function: Clutch Switch Input
-    type: din
 
-  - pin: A31
-    function: Canister Purge Solenoid (NC)
-    type: NC
+  - pin: EECIV-31
+    function: Canister Purge Solenoid (NC) 
 
-  - pin: A32
-    id: MCU
+  - pin: EECIV-32
+    id: G14
     class: outputs
-    ts_name: A32 Tunerstudio Name
+    ts_name: EECIV 32 Secondaries (IMRC)
     function: IMRC
-    type: ls
 
-  - pin: A33
+  - pin: EECIV-33
     function: EGR Valve Regulator Solenoid (NC)
-    type: NC
 
-  - pin: A34
-    id: MCU
-    class: outputs
-    ts_name: A34 DC1-
+  - pin: EECIV-34
     function: DC1-
-    type: etb
 
-  - pin: A35
-    id: MCU
-    class:  
-    ts_name: A35 Tunerstudio Name
+  - pin: EECIV-35
+    id: C6
+    class: outputs
+    ts_name: EECIV 35 Speed Control Vent Solenoid
     function: Speed Control Vent Solenoid
-    type: cruise outputs
 
-  - pin: A36
-    id: MCU
+  - pin: EECIV-36
+    id: B9
     class: outputs
-    ts_name: A36 SPOUT
+    ts_name: EECIV 36 Spark Out (SPOUT)
     function: SPOUT
-    type: ign
 
-  - pin: A37
-    function: 12V in Start and Run
-    type: 12V
-
-  - pin: A38
-    id: MCU
-    class: outputs
-    ts_name: A38 DC1+
-    function: DC1+
-    type: etb
-
-  - pin: A39
-    id: MCU
-    class:  
-    ts_name: A39 Tunerstudio Name
-    function: Speed Control Command Switch Ground
-    type: gnd
-
-  - pin: A40
-    function: Power Ground
-    type: gnd
-
-  - pin: A41
-    id: MCU
-    class: outputs
-    ts_name: A41 HFP
-    function: HFP
-    type: ls
-
-  - pin: A42
-    id: MCU
+  - pin: EECIV-37
+    id: EFI_ADC_5
     class: analog_inputs
-    ts_name: A42 PPS2
+    ts_name: EECIV 37 VBATT
+    function: 12V in Start and Run
+
+  - pin: EECIV-38
+    function: DC1+
+
+  - pin: EECIV-39
+    function: Speed Control Command Switch Ground
+
+  - pin: EECIV-40
+    function: Power Ground
+
+  - pin: EECIV-41
+    id: G4
+    class: outputs
+    ts_name: EECIV 41 High Speed Fuel Pump
+    function: HFP
+
+  - pin: EECIV-42
+    id: EFI_ADC_19
+    class: analog_inputs
+    ts_name: EECIV 42 PPS2
     function: PPS2
 
-  - pin: A43
-    id: MCU
+  - pin: EECIV-43
+    id: EFI_ADC_1
     class: analog_inputs
-    ts_name: A43 HEGO 2 (Front)
+    ts_name: EECIV 43 HEGO 2 (Front)
     function: HEGO 2 (Front)
-    type: narrowband
 
-  - pin: A44
-    id: MCU
+  - pin: EECIV-44
+    id: EFI_ADC_3
     class: analog_inputs
-    ts_name: A44 PPS
+    ts_name: EECIV 44 PPS
     function: PPS
 
-  - pin: A45
-    id: MCU
+  - pin: EECIV-45
+    id: EFI_ADC_10
     class: analog_inputs
-    ts_name: A45 BAP
+    ts_name: EECIV 45 Barometric Sensor (BAP)
     function: BAP
-    type: pressure sensor
 
-  - pin: A46
+  - pin: EECIV-46
     function: Signal Return
-    type: gnd
 
-  - pin: A47
-    id: MCU
+  - pin: EECIV-47
+    id: EFI_ADC_4
     class: analog_inputs
-    ts_name: A47 Throttle Position Sensor
+    ts_name: EECIV 47 Throttle Position Sensor
     function: Throttle Position Sensor
 
-  - pin: A48
-    id: MCU
-    class:  
-    ts_name: A48 Self-Test Input Connector
+  - pin: EECIV-48
     function: Self-Test Input Connector
 
-  - pin: A49
+  - pin: EECIV-49
     function: HEGO Sensor Ground
-    type: gnd
 
-  - pin: A50
-    id: MCU
+  - pin: EECIV-50
+    id: EFI_ADC_14
     class: analog_inputs
-    ts_name: A50 Mass Air Sensor (MAF)
-    function: Mass Air Sensor (MAF)
-    type: flow sensor
+    ts_name: EECIV 50 Mass Air Sensor (MAF)
+    function: Mass Air Sensor (MAF) 
 
-  - pin: A51
-    id: MCU
-    class:  
-    ts_name: A51 Speed Control Vacuum Solenoid
+  - pin: EECIV-51
+    id: C8
+    class: outputs
+    ts_name: EECIV 51 Speed Control Vacuum Solenoid
     function: Speed Control Vacuum Solenoid
-    type: cruise outputs
 
-  - pin: A52
-    id: MCU
-    class: outputs
-    ts_name: A52 DC2-
+  - pin: EECIV-52
     function: DC2-
-    type: etb
 
-  - pin: A53
-    id: MCU
-    class: outputs
-    ts_name: A53 DC2+
+  - pin: EECIV-53
     function: DC2+
-    type: etb
 
-  - pin: A54
-    id: MCU
+  - pin: EECIV-54
+    id: A8
     class: outputs
-    ts_name: A54 WOT Cutout Relay
+    ts_name: EECIV 54 WOT Cutout Relay
     function: WOT Cutout Relay
 
-  - pin: A55
-    id: MCU
+  - pin: EECIV-55
+    id: G6
     class: outputs
-    ts_name: A55 FAN
+    ts_name: EECIV 55 Fan
     function: FAN
-    type: ls
 
-  - pin: A56
-    id: MCU
-    class: 
-    ts_name: A56 PIP
+  - pin: EECIV-56
+    id: B1
+    class: event_inputs
+    ts_name: EECIV 56 (PIP)
     function: PIP
-    type: ign
 
-  - pin: A57
+  - pin: EECIV-57
     function: 12V in Start and Run
-    type: 12V
 
-  - pin: A58
-    id: MCU
+  - pin: EECIV-58
+    id: G7
     class:  outputs
-    ts_name: A58 Injector 1
+    ts_name: EECIV 58 Injector 1
     function: Injector 1
-    type: inj
 
-  - pin: A59
-    id: MCU
+  - pin: EECIV-59
+    id: G8
     class:  outputs
-    ts_name: A59 Injector 2
+    ts_name: EECIV 59 Injector 2
     function: Injector 2
-    type: inj
 
-  - pin: A60
+  - pin: EECIV-60
     function: Power Ground
-    type: gnd
+
+  - pin: PE10
+    id: E10
+    class:  outputs
+    ts_name: 5V Ref Enable
+    function: 5V Ref Enable
