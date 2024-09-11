@@ -144,16 +144,16 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->enableVerboseCanTx = true;
 
 	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->accelerometerCsPin = Gpio::H_SPI1_CS2;
+	engineConfiguration->accelerometerCsPin = Gpio::B7;
 
 	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
 	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
 
-  	engineConfiguration->sdCardCsPin = Gpio::H_SPI1_CS1;
+  	engineConfiguration->sdCardCsPin = Gpio::B6;
   	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->spi1mosiPin = Gpio::H_SPI1_MOSI;
-	engineConfiguration->spi1misoPin = Gpio::H_SPI1_MISO;
-	engineConfiguration->spi1sckPin = Gpio::H_SPI1_SCK;
+	engineConfiguration->spi1mosiPin = Gpio::B5;
+	engineConfiguration->spi1misoPin = Gpio::B4;
+	engineConfiguration->spi1sckPin = Gpio::B3;
 	engineConfiguration->is_enabled_spi_1 = true;
  	engineConfiguration->isSdCardEnabled = true;
 
