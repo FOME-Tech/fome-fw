@@ -114,11 +114,11 @@ pins:
     ts_name: EECIV 22 Low Speed Fuel Pump
     function: Low Speed Fuel Pump
 
-  #- pin: EECIV-23
-  #  id: EFI_ADC_33
-  #  class: analog_inputs
-  #  ts_name: EECIV 23 Knock Sensor
-  #  function: Knock Sensor
+  - pin: EECIV-23
+    id: EFI_ADC_33
+    class: analog_inputs
+    ts_name: EECIV 23 Knock Sensor
+    function: Knock Sensor
     
   - pin: EECIV-24
     id: A6
@@ -138,11 +138,11 @@ pins:
   - pin: EECIV-27
     function: Pressure Feedback EGR Sensor (NC) 
 
-  #- pin: EECIV-28
-  #  id: EFI_ADC_32
-  #  class: analog_inputs
-  #  ts_name: EECIV 28 Speed Control Command Switch
-  #  function: Speed Control Command Switch
+  - pin: EECIV-28
+    id: EFI_ADC_32
+    class: analog_inputs
+    ts_name: EECIV 28 Speed Control Command Switch
+    function: Speed Control Command Switch
 
   - pin: EECIV-29
     id: EFI_ADC_0
