@@ -115,7 +115,8 @@ pins:
     function: Low Speed Fuel Pump
 
   - pin: EECIV-23
-    id: EFI_ADC_33
+    # id: EFI_ADC_33
+    id: F7
     class: analog_inputs
     ts_name: EECIV 23 Knock Sensor
     function: Knock Sensor
