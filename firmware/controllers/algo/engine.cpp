@@ -22,7 +22,6 @@
 #include "idle_thread.h"
 #include "idle_hardware.h"
 #include "gppwm.h"
-#include "tachometer.h"
 #include "speedometer.h"
 #include "dynoview.h"
 #include "boost_control.h"
@@ -466,13 +465,8 @@ injection_mode_e getCurrentInjectionMode() {
 void Engine::periodicFastCallback() {
 	ScopePerf pc(PE::EnginePeriodicFastCallback);
 
-#if EFI_MAP_AVERAGING
-	refreshMapAveragingPreCalc();
-#endif
-
 	engineState.periodicFastCallback();
 
-	tachUpdate();
 	speedoUpdate();
 
 	engineModules.apply_all([](auto & m) { m.onFastCallback(); });

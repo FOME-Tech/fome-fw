@@ -10,11 +10,9 @@
 
 #include "pch.h"
 
-#include "tachometer.h"
-
 static SimplePwm tachControl("tach"); 
-static float tachFreq;  
-static float duty;   
+static float tachFreq;
+static float duty;
 
 #if EFI_UNIT_TEST
 float getTachFreq() {
@@ -28,7 +26,7 @@ float getTachDuty() {
 
 static bool tachHasInit = false;
 
-void tachUpdate() {
+void TachometerModule::onFastCallback() {
 	// Only do anything if tach enabled
 	if (!tachHasInit) {
 		return;
@@ -43,7 +41,7 @@ void tachUpdate() {
 	}
 
 	// What is the angle per tach output period?
-	float cycleTimeMs = 60000.0f / Sensor::getOrZero(SensorType::Rpm);
+	float cycleTimeMs = 60000.0f / getRpm();
 	float periodTimeMs = cycleTimeMs / periods;
 	tachFreq = 1000.0f / periodTimeMs;
 	
@@ -62,6 +60,37 @@ void tachUpdate() {
 	
 	tachControl.setSimplePwmDutyCycle(duty);
 	tachControl.setFrequency(tachFreq);
+}
+
+float TachometerModule::getRpm() {
+	float trueRpm = Sensor::getOrZero(SensorType::Rpm);
+
+	if (!m_doTachSweep) {
+		return trueRpm;
+	}
+
+	float elapsed = m_stateChangeTimer.getElapsedSeconds();
+	float sweepPosition = elapsed / engineConfiguration->tachSweepTime;
+
+	if (sweepPosition > 1) {
+		// We've done a full sweep time, we're done!
+		m_doTachSweep = false;
+		return trueRpm;
+	} else if (sweepPosition < 0.5f) {
+		// First half of the ramp, ramp up from 0 -> max
+		return interpolateClamped(0, 0, 0.5f, engineConfiguration->tachSweepMax, sweepPosition);
+	} else {
+		// Use y2 = trueRpm instead of 0 so that it ramps back down smoothly
+		// to the current RPM if the engine started during ther ramp
+		return interpolateClamped(0.5f, engineConfiguration->tachSweepMax, 1, trueRpm, sweepPosition);
+	}
+}
+
+void TachometerModule::onIgnitionStateChanged(bool ignitionOn) {
+	if (ignitionOn && engineConfiguration->tachSweepTime != 0) {
+		m_stateChangeTimer.reset();
+		m_doTachSweep = true;
+	}
 }
 
 void initTachometer() {

@@ -44,7 +44,6 @@
 #include "vvt.h"
 #include "boost_control.h"
 #include "launch_control.h"
-#include "tachometer.h"
 #include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
@@ -513,11 +512,9 @@ void commonInitEngineController() {
 	initElectronicThrottle();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
-#if EFI_MAP_AVERAGING
-	if (engineConfiguration->isMapAveragingEnabled) {
-		initMapAveraging();
-	}
-#endif /* EFI_MAP_AVERAGING */
+#ifdef MODULE_MAP_AVERAGING
+	initMapAveraging();
+#endif /* MODULE_MAP_AVERAGING */
 
 #if EFI_BOOST_CONTROL
 	initBoostCtrl();
