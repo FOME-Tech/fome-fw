@@ -165,6 +165,6 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
 	setCommonNTCSensor(&engineConfiguration->clt, 4700);
 	setCommonNTCSensor(&engineConfiguration->iat, 4700);
-    	setTPS1Calibration(75, 900);
+    	//setTPS1Calibration(75, 900);
 	engineConfiguration->enableAemXSeries = true;
 }
