@@ -21,7 +21,7 @@ jobs:
     steps:
 
     - name: install libusb
-      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
+      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev mtools
       
     - uses: actions/checkout@v4
       with:
