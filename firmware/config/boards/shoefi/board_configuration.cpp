@@ -1,6 +1,3 @@
-//#include "hellen_meta.h"
-//#include "defaults.h"
-
 #include "pch.h"
 
 static void setInjectorPins() {
@@ -61,7 +58,7 @@ static void setupVbatt() {
 	engineConfiguration->adcVcc = 3.3f;
 }
 
-// PE3 is error LED, configured in board.mk
+// PG0 is error LED, configured in board.mk
 Gpio getCommsLedPin() {
 	return Gpio::G1;
 }
@@ -78,7 +75,7 @@ Gpio getWarningLedPin() {
 void AccelerometerPreInitCS2Pin() {
 #if EFI_ONBOARD_MEMS
     if (!accelerometerChipSelect.isInitialized()) {
-	    accelerometerChipSelect.initPin("mm-CS2", Gpio::H_SPI1_CS2);
+	    accelerometerChipSelect.initPin("mm-CS2", Gpio::B7);
 	    accelerometerChipSelect.setValue(1);
 	}
 #endif // EFI_ONBOARD_MEMS
@@ -89,11 +86,11 @@ static void setupDefaultSensorInputs() {
  	engineConfiguration->clt.adcChannel = EFI_ADC_12;
 	engineConfiguration->iat.adcChannel = EFI_ADC_13;
 	engineConfiguration->mafAdcChannel = EFI_ADC_14;
-	engineConfiguration->vehicleSpeedSensorInputPin = Gpio::F11;
+	//engineConfiguration->vehicleSpeedSensorInputPin = Gpio::F11;
 	engineConfiguration->triggerInputPins[0] = Gpio::B1;
 	engineConfiguration->camInputs[0] = Gpio::A6;
 	engineConfiguration->clutchDownPin = Gpio::F5;
-	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
+	engineConfiguration->clutchDownPinMode = PI_PULLUP;
 	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
 	engineConfiguration->vbattDividerCoeff = (33 + 6.8) / 6.8; // 5.835
 	engineConfiguration->adcVcc = 3.29f;
@@ -120,8 +117,8 @@ void setBoardConfigOverrides() {
 	engineConfiguration->canTxPin = Gpio::D1;
 
 	//CAN 2 bus overwrites
-	engineConfiguration->can2RxPin = Gpio::B5;
-	engineConfiguration->can2TxPin = Gpio::B6;
+	engineConfiguration->can2RxPin = Gpio::B12;
+	engineConfiguration->can2TxPin = Gpio::B13;
 }
 
 void setBoardDefaultConfiguration() {
@@ -160,8 +157,6 @@ void setBoardDefaultConfiguration() {
 	setCrankOperationMode();
 	
 	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
-	setCommonNTCSensor(&engineConfiguration->clt, 4700);
-	setCommonNTCSensor(&engineConfiguration->iat, 4700);
     	//setTPS1Calibration(75, 900);
 	engineConfiguration->enableAemXSeries = true;
 }
