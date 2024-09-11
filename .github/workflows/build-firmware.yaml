@@ -21,7 +21,7 @@ jobs:
     steps:
 
     - name: install libusb
-      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev mtools
+      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
       
     - uses: actions/checkout@v4
       with:
@@ -261,6 +261,10 @@ jobs:
             ini-file: fome_shoefi.ini
 
     steps:
+
+    - name: install libusb
+      run: sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev mtools
+      
     - name: Check branch name
       if: ${{ contains(github.ref_name, '.') }}
       run: echo '::error::Branch names must not contain ".", this breaks firmware autoupdates.' && exit 1
