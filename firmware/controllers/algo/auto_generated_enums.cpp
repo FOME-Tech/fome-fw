@@ -567,6 +567,22 @@ case EFI_ADC_30:
   return "EFI_ADC_30";
 case EFI_ADC_31:
   return "EFI_ADC_31";
+case EFI_ADC_32:
+  return "EFI_ADC_32";
+case EFI_ADC_33:
+  return "EFI_ADC_33";
+case EFI_ADC_34:
+  return "EFI_ADC_34";
+case EFI_ADC_35:
+  return "EFI_ADC_35";
+case EFI_ADC_36:
+  return "EFI_ADC_36";
+case EFI_ADC_37:
+  return "EFI_ADC_37";
+case EFI_ADC_38:
+  return "EFI_ADC_38";
+case EFI_ADC_39:
+  return "EFI_ADC_39";
 case EFI_ADC_4:
   return "EFI_ADC_4";
 case EFI_ADC_5:
