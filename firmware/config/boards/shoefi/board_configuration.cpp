@@ -21,7 +21,7 @@ static void setIgnitionPins() {
 static void setupVbatt() {
 	engineConfiguration->analogInputDividerCoefficient = 2.0f;
 	engineConfiguration->vbattDividerCoeff = (33 + 6.8) / 6.8; 
-	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
+	engineConfiguration->vbattAdcChannel = EFI_ADC_5
 	engineConfiguration->adcVcc = 3.29f;
 }
 
