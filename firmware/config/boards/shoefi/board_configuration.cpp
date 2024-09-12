@@ -32,21 +32,21 @@ static void enableSpi1() {
 	engineConfiguration->is_enabled_spi_1 = true;
 }
 
-#static void AccelerometerPreInitCS2Pin() {
-#if EFI_ONBOARD_MEMS
-#    if (!accelerometerChipSelect.isInitialized()) {
-#	    accelerometerChipSelect.initPin("mm-CS2", Gpio::B7);
-#	    accelerometerChipSelect.setValue(1);
-#	}
-#endif // EFI_ONBOARD_MEMS
-#}
+//static void AccelerometerPreInitCS2Pin() {
+//if EFI_ONBOARD_MEMS
+//    if (!accelerometerChipSelect.isInitialized()) {
+//	    accelerometerChipSelect.initPin("mm-CS2", Gpio::B7);
+//	    accelerometerChipSelect.setValue(1);
+//	}
+//endif // EFI_ONBOARD_MEMS
+//}
 
 
-#static void setAccelerometerSpi() {
-	/* accelerometer SPI is shared with SD card SPI on mm144 */
-#	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
+//static void setAccelerometerSpi() {
+	// accelerometer SPI is shared with SD card SPI on mm144
+//	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
 	//engineConfiguration->accelerometerCsPin = Gpio::B7;
-#}
+//}
 
 static void setSdCardSpi1Hardware() {
   engineConfiguration->sdCardCsPin = Gpio::B6;
@@ -135,8 +135,8 @@ void setBoardConfigOverrides() {
 	setupVbatt();
 	
 	enableSpi1();
-#	setAccelerometerSpi();
-#	AccelerometerPreInitCS2Pin();
+//	setAccelerometerSpi();
+//	AccelerometerPreInitCS2Pin();
 	setSdCardSpi1Hardware();
 	setSdCardSpi1();
 
