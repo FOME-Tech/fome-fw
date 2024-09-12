@@ -18,7 +18,66 @@ static void setIgnitionPins() {
 	engineConfiguration->ignitionPins[5] = Gpio::Unassigned;
 }
 
-//static void setEtbConfig() {
+static void setupVbatt() {
+	engineConfiguration->analogInputDividerCoefficient = 2.0f;
+	engineConfiguration->vbattDividerCoeff = (33 + 6.8) / 6.8; 
+	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
+	engineConfiguration->adcVcc = 3.29f;
+}
+
+static void enableSpi1() {
+	engineConfiguration->spi1mosiPin = Gpio::B5;
+	engineConfiguration->spi1misoPin = Gpio::B4;
+	engineConfiguration->spi1sckPin = Gpio::B3;
+	engineConfiguration->is_enabled_spi_1 = true;
+}
+
+void AccelerometerPreInitCS2Pin() {
+#if EFI_ONBOARD_MEMS
+    if (!accelerometerChipSelect.isInitialized()) {
+	    accelerometerChipSelect.initPin("mm-CS2", Gpio::B7);
+	    accelerometerChipSelect.setValue(1);
+	}
+#endif // EFI_ONBOARD_MEMS
+}
+
+
+static void setAccelerometerSpi() {
+	/* accelerometer SPI is shared with SD card SPI on mm144 */
+	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
+	engineConfiguration->accelerometerCsPin = Gpio::B7;
+}
+
+static void setSdCardSpi1Hardware() {
+  engineConfiguration->sdCardCsPin = Gpio::B6;
+  engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
+}
+
+static void setSdCardSpi1() {
+  engineConfiguration->isSdCardEnabled = true;
+}
+
+static void setDefaultAtPullUps(){
+	engineConfiguration->clt.config.bias_resistor = 4700;
+	engineConfiguration->iat.config.bias_resistor = 4700;
+	engineConfiguration->auxTempSensor1.config.bias_resistor = 4700;
+	engineConfiguration->auxTempSensor2.config.bias_resistor = 4700;
+}
+
+static void setBaro() {
+	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
+	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
+}
+
+static void setCAN() {
+	engineConfiguration->canRxPin = Gpio::D0;
+	engineConfiguration->canTxPin = Gpio::D1;
+	engineConfiguration->can2RxPin = Gpio::B12;
+	engineConfiguration->can2TxPin = Gpio::B13;
+	engineConfiguration->enableVerboseCanTx = true;
+}
+
+static void setEtbConfig() {
 	// TLE9201 driver
 	// This chip has three control pins:
 	// DIR - sets direction of the motor
@@ -27,35 +86,22 @@ static void setIgnitionPins() {
 
 	// Throttle #1
 	// PWM pin
-	//engineConfiguration->etbIo[0].controlPin = Gpio::B8;
+	engineConfiguration->etbIo[0].controlPin = Gpio::D3;
 	// DIR pin
-	//engineConfiguration->etbIo[0].directionPin1 = Gpio::B9;
+	engineConfiguration->etbIo[0].directionPin1 = Gpio::G11;
 	// Disable pin
-	//engineConfiguration->etbIo[0].disablePin = Gpio::B7;
+	engineConfiguration->etbIo[0].disablePin = Gpio::D2;
 
 	// Throttle #2
 	// PWM pin
-	//engineConfiguration->etbIo[1].controlPin = Gpio::Unassigned;
+	engineConfiguration->etbIo[1].controlPin = Gpio::G13;
 	// DIR pin
-	//engineConfiguration->etbIo[1].directionPin1 = Gpio::Unassigned;
+	engineConfiguration->etbIo[1].directionPin1 = Gpio::A9;
 	// Disable pin
-	//engineConfiguration->etbIo[1].disablePin = Gpio::Unassigned;
+	engineConfiguration->etbIo[1].disablePin = Gpio::G12;
 
 	// we only have pwm/dir, no dira/dirb
-	//engineConfiguration->etb_use_two_wires = false;
-//}
-
-static void setupVbatt() {
-	// 5.6k high side/10k low side = 1.56 ratio divider
-	engineConfiguration->analogInputDividerCoefficient = 1.56f;
-	
-	// 6.34k high side/ 1k low side
-	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1; 
-
-	// Battery sense on PA7
-	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
-
-	engineConfiguration->adcVcc = 3.3f;
+	engineConfiguration->etb_use_two_wires = false;
 }
 
 // PG0 is error LED, configured in board.mk
@@ -72,61 +118,39 @@ Gpio getWarningLedPin() {
 }
 
 
-void AccelerometerPreInitCS2Pin() {
-#if EFI_ONBOARD_MEMS
-    if (!accelerometerChipSelect.isInitialized()) {
-	    accelerometerChipSelect.initPin("mm-CS2", Gpio::B7);
-	    accelerometerChipSelect.setValue(1);
-	}
-#endif // EFI_ONBOARD_MEMS
-}
-
 static void setupDefaultSensorInputs() {
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_4;
  	engineConfiguration->clt.adcChannel = EFI_ADC_12;
 	engineConfiguration->iat.adcChannel = EFI_ADC_13;
 	engineConfiguration->mafAdcChannel = EFI_ADC_14;
-	//engineConfiguration->vehicleSpeedSensorInputPin = Gpio::F11;
 	engineConfiguration->triggerInputPins[0] = Gpio::B1;
 	engineConfiguration->camInputs[0] = Gpio::A6;
 	engineConfiguration->clutchDownPin = Gpio::F5;
 	engineConfiguration->clutchDownPinMode = PI_PULLUP;
-	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
-	engineConfiguration->vbattDividerCoeff = (33 + 6.8) / 6.8; // 5.835
-	engineConfiguration->adcVcc = 3.29f;
-	engineConfiguration->analogInputDividerCoefficient = 2.0f;
-		
+  //engineConfiguration->vehicleSpeedSensorInputPin = Gpio::F11;
 }
-
-
-  //init5vpDiag(); // piggy back on popular 'setHellenVbatt' method
-
 
 
 void setBoardConfigOverrides() {
 	setupVbatt();
-	//setEtbConfig();
+	
+	enableSpi1();
+	setAccelerometerSpi();
+	AccelerometerPreInitCS2Pin();
+	setSdCardSpi1Hardware();
+	setSdCardSpi1();
 
-	engineConfiguration->clt.config.bias_resistor = 4700;
-	engineConfiguration->iat.config.bias_resistor = 4700;
-	engineConfiguration->auxTempSensor1.config.bias_resistor = 4700;
-	engineConfiguration->auxTempSensor2.config.bias_resistor = 4700;
-
-	//CAN 1 bus overwrites
-	engineConfiguration->canRxPin = Gpio::D0;
-	engineConfiguration->canTxPin = Gpio::D1;
-
-	//CAN 2 bus overwrites
-	engineConfiguration->can2RxPin = Gpio::B12;
-	engineConfiguration->can2TxPin = Gpio::B13;
+	setDefaultAtPullUps();
+	setBaro();
+	setEtbConfig();
+	setCAN();
 }
 
 void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 	setupDefaultSensorInputs();
-
-	//engineConfiguration->displayLogicLevelsInEngineSniffer = true;
+	setCrankOperationMode();
 	engineConfiguration->globalTriggerAngleOffset = 9;
 	engineConfiguration->enableSoftwareKnock = true;
 	engineConfiguration->cylindersCount = 6;
@@ -138,25 +162,7 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->fuelPumpPin = Gpio::G4;
 	engineConfiguration->idle.solenoidPin = Gpio::G3;
 	engineConfiguration->tachOutputPin = Gpio::F13;
-	engineConfiguration->enableVerboseCanTx = true;
-
-	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
-	//engineConfiguration->accelerometerCsPin = Gpio::B7;
-
-	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
-	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
-
-  	engineConfiguration->sdCardCsPin = Gpio::B6;
-  	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->spi1mosiPin = Gpio::B5;
-	engineConfiguration->spi1misoPin = Gpio::B4;
-	engineConfiguration->spi1sckPin = Gpio::B3;
-	engineConfiguration->is_enabled_spi_1 = true;
- 	engineConfiguration->isSdCardEnabled = true;
-
-	setCrankOperationMode();
-	
 	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
-    	//setTPS1Calibration(75, 900);
 	engineConfiguration->enableAemXSeries = true;
+
 }
