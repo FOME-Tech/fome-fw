@@ -45,7 +45,7 @@ void AccelerometerPreInitCS2Pin() {
 static void setAccelerometerSpi() {
 	/* accelerometer SPI is shared with SD card SPI on mm144 */
 	engineConfiguration->accelerometerSpiDevice = SPI_DEVICE_1;
-	engineConfiguration->accelerometerCsPin = Gpio::B7;
+	//engineConfiguration->accelerometerCsPin = Gpio::B7;
 }
 
 static void setSdCardSpi1Hardware() {
