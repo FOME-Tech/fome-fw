@@ -302,3 +302,39 @@ pins:
     class:  outputs
     ts_name: 5V Ref Enable
     function: 5V Ref Enable
+
+  - pin: IGN1
+    id: C13
+    class:  outputs
+    ts_name: COP #1
+    function: COP #1
+
+  - pin: IGN2
+    id: E5
+    class:  outputs
+    ts_name: COP #2
+    function: COP #2
+
+  - pin: IGN3
+    id: E4
+    class:  outputs
+    ts_name: COP #3
+    function: COP #3
+
+  - pin: IGN4
+    id: E3
+    class:  outputs
+    ts_name: COP #4
+    function: COP #4
+
+  - pin: IGN5
+    id: E2
+    class:  outputs
+    ts_name: COP #5
+    function: COP #5
+
+  - pin: IGN6
+    id: B8
+    class:  outputs
+    ts_name: COP #6
+    function: COP #6
