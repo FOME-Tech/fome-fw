@@ -19,11 +19,11 @@ DDEFS += $(LED_CRITICAL_ERROR_BRAIN_PIN)
 DDEFS += -DHELLEN_BOARD_ID_PIN_1=Gpio::F0 -DHELLEN_BOARD_ID_PIN_2=Gpio::F1
 
 # Target ECU board design
-BOARDCPPSRC += $(BOARDS_DIR)/hellen/hellen_common.cpp
+#BOARDCPPSRC += $(BOARDS_DIR)/hellen/hellen_common.cpp
 
-ifeq (,$(findstring EFI_BOOTLOADER,$(DDEFS)))
-BOARDCPPSRC += $(BOARDS_DIR)/hellen/hellen_board_id.cpp
-endif
+#ifeq (,$(findstring EFI_BOOTLOADER,$(DDEFS)))
+#BOARDCPPSRC += $(BOARDS_DIR)/hellen/hellen_board_id.cpp
+#endif
 
 BOARDINC += $(BOARDS_DIR)/hellen
 
