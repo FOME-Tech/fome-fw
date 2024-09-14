@@ -48,8 +48,7 @@ endif
 # DDEFS += -DLSM303AGR_USE_SPI=TRUE -DLSM303AGR_USE_I2C=FALSE -DLSM303AGR_SHARED_SPI=TRUE
 #endif
 
-# this includes knock and mux control settings
-include $(BOARDS_DIR)/hellen/hellen-common-mega144.mk
+include $(BOARDS_DIR)/hellen/hellen-common144.mk
 
 
 SHORT_BOARD_NAME = shoefi
