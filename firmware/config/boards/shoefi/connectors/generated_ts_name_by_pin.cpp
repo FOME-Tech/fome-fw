@@ -9,7 +9,9 @@ const char * getBoardSpecificPinName(brain_pin_e brainPin) {
 		case Gpio::A6: return "EECIV 24 Cam Sensor (CID)";
 		case Gpio::A8: return "EECIV 54 WOT Cutout Relay";
 		case Gpio::B1: return "EECIV 56 (PIP)";
+		case Gpio::B8: return "COP";
 		case Gpio::B9: return "EECIV 36 Spark Out (SPOUT)";
+		case Gpio::C13: return "COP";
 		case Gpio::C6: return "EECIV 35 Speed Control Vent Solenoid";
 		case Gpio::C7: return "EECIV 10 AC Clutch";
 		case Gpio::C8: return "EECIV 51 Speed Control Vacuum Solenoid";
@@ -18,6 +20,10 @@ const char * getBoardSpecificPinName(brain_pin_e brainPin) {
 		case Gpio::D11: return "EECIV 12 Injector 3";
 		case Gpio::D9: return "EECIV 14 Injector 5";
 		case Gpio::E10: return "5V Ref Enable";
+		case Gpio::E2: return "COP";
+		case Gpio::E3: return "COP";
+		case Gpio::E4: return "COP";
+		case Gpio::E5: return "COP";
 		case Gpio::F11: return "EECIV 3 Vehicle Speed Sensor";
 		case Gpio::F12: return "EECIV 15 Injector 6";
 		case Gpio::F13: return "EECIV 4 Tacho (IDM)";
