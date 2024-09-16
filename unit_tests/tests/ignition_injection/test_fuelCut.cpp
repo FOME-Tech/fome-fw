@@ -199,3 +199,44 @@ TEST(fuelCut, delay) {
 	eth.engine.periodicFastCallback();
 	EXPECT_NORMAL();
 }
+
+TEST(fuelCut, clutch) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
+		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+
+	// configure coastingFuelCut
+	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->coastingFuelCutRpmLow = 1300;
+	engineConfiguration->coastingFuelCutRpmHigh = 1500;
+	engineConfiguration->coastingFuelCutTps = 2;
+	engineConfiguration->coastingFuelCutClt = 30;
+	engineConfiguration->coastingFuelCutMap = 100;
+	engineConfiguration->disableFuelCutOnClutch = false;
+	// set cranking threshold
+	engineConfiguration->cranking.rpm = 999;
+
+	// basic engine setup
+	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
+
+	engineConfiguration->clutchDownPin = Gpio::G2;
+	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
+	setMockState(engineConfiguration->clutchUpPin, true);
+	engine->updateSwitchInputs();
+
+	Sensor::setMockValue(SensorType::Map, 0);
+
+	float hotClt = engineConfiguration->coastingFuelCutClt + 1;
+	Sensor::setMockValue(SensorType::Clt, hotClt);
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
+	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	eth.moveTimeForwardUs(1000);
+
+	const float normalInjDuration = 1.5f;
+	eth.engine.periodicFastCallback();
+
+	// why doesn't this propegate
+	setMockState(engineConfiguration->clutchUpPin, true);
+	engine->updateSwitchInputs();
+	EXPECT_TRUE(engine->engineState.clutchUpState);
+}
