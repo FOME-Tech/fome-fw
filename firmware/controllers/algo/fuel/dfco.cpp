@@ -28,7 +28,9 @@ bool DfcoController::getState() const {
 	float vss = Sensor::getOrZero(SensorType::VehicleSpeed);
 
 	// Setting to allow clutch to block DFCO activation
-	bool clutchBlock = engineConfiguration->disableFuelCutOnClutch && !engine->engineState.clutchUpState ;
+	bool clutchBlock = engineConfiguration->disableFuelCutOnClutch 
+		&& !engine->engineState.clutchUpState
+		&& isBrainPinValid(engineConfiguration->clutchUpPin);
 
 	bool mapActivate = map.value_or(0) < engineConfiguration->coastingFuelCutMap;
 	bool tpsActivate = tps.Value < engineConfiguration->coastingFuelCutTps;
