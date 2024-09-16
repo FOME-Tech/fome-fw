@@ -4,7 +4,6 @@ import com.devexperts.logging.Logging;
 import com.opensr5.ini.field.EnumIniField;
 import com.rusefi.core.Pair;
 import com.rusefi.output.ConfigStructure;
-import com.rusefi.output.DataLogConsumer;
 import com.rusefi.output.JavaFieldsConsumer;
 
 import java.util.Arrays;
