@@ -137,7 +137,7 @@ public:
 	int vvtEventRiseCounter[CAM_INPUTS_COUNT];
 	int vvtEventFallCounter[CAM_INPUTS_COUNT];
 
-	angle_t getVVTPosition(uint8_t bankIndex, uint8_t camIndex);
+	expected<angle_t> getVVTPosition(uint8_t bankIndex, uint8_t camIndex);
 
 #if EFI_UNIT_TEST
 	// latest VVT event position (could be not synchronization event)
@@ -145,7 +145,11 @@ public:
 #endif // EFI_UNIT_TEST
 
 	// synchronization event position
-	angle_t vvtPosition[BANKS_COUNT][CAMS_PER_BANK];
+	struct VvtPos {
+		angle_t angle;
+		Timer t;
+	};
+	VvtPos vvtPosition[BANKS_COUNT][CAMS_PER_BANK];
 
 #if EFI_SHAFT_POSITION_INPUT
 	PrimaryTriggerDecoder triggerState;

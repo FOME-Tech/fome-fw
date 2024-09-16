@@ -216,6 +216,8 @@ struct_no_prefix engine_configuration_s
 #define ADC_CHANNEL_NONE 0
 #define TPS_TPS_ACCEL_CLT_CORR_TABLE 4
 
+#define DFCO_RPM_MAP_TABLE 4
+
 #define BARO_CORR_SIZE 4
 
 #define MAF_DECODING_COUNT 64
@@ -714,7 +716,8 @@ bit is_enabled_spi_2
 	bit pauseEtbControl;Disable the electronic throttle motor and DC idle motor for testing.\nThis mode is for testing ETB/DC idle position sensors, etc without actually driving the throttle.
 	bit alignEngineSnifferAtTDC
 	bit enableAemXSeries;AEM X-Series or rusEFI Wideband
-! 'enableAemXSeries' is the 32nd bit here, you would need another bit region if more bits are desired
+	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
+	bit postCrankingFuelUseTable,"Table","Basic"
 
 	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
 
@@ -1248,7 +1251,6 @@ tChargeMode_e tChargeMode;
 	
 	int16_t pidExtraForLowRpm;Increases PID reaction for RPM<target by adding extra percent to PID-error;"%", 1, 0, 0, 100, 0
 	int16_t coastingFuelCutMap;MAP value above which fuel injection is re-enabled.;"kPa", 1, 0, 0, 250, 0
-	
 
 	linear_sensor_s highPressureFuel;
 	linear_sensor_s lowPressureFuel;
@@ -1727,6 +1729,13 @@ uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrValues;;"multiplier", 0.02, 
 
 uint8_t[8] autoscale minimumOilPressureBins;;"RPM", 100, 0, 0, 25000, 0
 uint8_t[8] autoscale minimumOilPressureValues;;"kPa", 10, 0, 0, 1000, 0
+
+uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValuesBins;;"RPM", 100, 0, 0, 17500, 0
+uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValues;DFCO will activate when operating below this curve. Used to allow a higher threshold at low RPM where less vaccuum is generated;"MAP", 1, 0, 0, 50, 0
+
+uint8_t[8 x 8] autoscale postCrankingEnrichTable;;"ratio", 0.02, 0, 1, 5, 2
+int8_t[8] autoscale postCrankingEnrichTempBins;;"deg C", 1, 0, -40, 120, 0
+uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0 
 
 end_struct
 

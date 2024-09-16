@@ -50,11 +50,20 @@ int TriggerCentral::getHwEventCounter(int index) const {
 }
 
 
-angle_t TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camIndex) {
+expected<angle_t> TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camIndex) {
 	if (bankIndex >= BANKS_COUNT || camIndex >= CAMS_PER_BANK) {
-		return NAN;
+		return unexpected;
 	}
-	return vvtPosition[bankIndex][camIndex];
+
+	// TODO: return unexpected if timed out
+	auto& vvt = vvtPosition[bankIndex][camIndex];
+
+	if (vvt.t.hasElapsedSec(1)) {
+		// 1s timeout on VVT angle
+		return unexpected;
+	} else {
+		return vvt.angle;
+	}
 }
 
 /**
@@ -189,7 +198,7 @@ static angle_t wrapVvt(angle_t vvtPosition, int period) {
 	return vvtPosition;
 }
 
-static void logVvtFront(bool isImportantFront, bool isRising, efitick_t nowNt, int index) {
+static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
 	addEngineSnifferVvtEvent(index, isRising);
 
@@ -208,6 +217,8 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	// Invert if so configured
 	isRising ^= engineConfiguration->invertCamVVTSignal;
 
+	logVvtFront(isRising, nowNt, index);
+
 	int bankIndex = index / CAMS_PER_BANK;
 	int camIndex = index % CAMS_PER_BANK;
 	if (isRising) {
@@ -225,11 +236,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	// Non real decoders only use the rising edge
 	bool vvtUseOnlyRise = !isVvtWithRealDecoder || vvtShape.useOnlyRisingEdges;
-	bool isImportantFront = !vvtUseOnlyRise || isRising;
-
-	logVvtFront(isImportantFront, isRising, nowNt, index);
-
-	if (!isImportantFront) {
+	if (vvtUseOnlyRise && !isRising) {
 		// This edge is unimportant, ignore it.
 		return;
 	}
@@ -338,11 +345,13 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	}
 
 	// Only record VVT position if we have full engine sync - may be bogus before that point
+	auto& vvtPos = tc->vvtPosition[bankIndex][camIndex];
 	if (tc->triggerState.hasSynchronizedPhase()) {
-		tc->vvtPosition[bankIndex][camIndex] = vvtPosition;
+		vvtPos.angle = vvtPosition;
 	} else {
-		tc->vvtPosition[bankIndex][camIndex] = 0;
+		vvtPos.angle = 0;
 	}
+	vvtPos.t.reset(nowNt);
 }
 
 int triggerReentrant = 0;

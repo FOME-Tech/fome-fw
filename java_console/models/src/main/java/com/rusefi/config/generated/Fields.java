@@ -259,6 +259,7 @@ public class Fields {
 	public static final int debug_mode_e_DBG_UNUSED41 = 41;
 	public static final int debug_mode_e_DBG_UNUSED_42 = 42;
 	public static final int debug_mode_e_UNUSED23 = 23;
+	public static final int DFCO_RPM_MAP_TABLE = 4;
 	public static final int DWELL_CURVE_SIZE = 8;
 	public static final int ego_sensor_e_ES_14Point7_Free = 2;
 	public static final int ego_sensor_e_ES_AEM = 6;
@@ -936,7 +937,7 @@ public class Fields {
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int PEDAL_TO_TPS_SIZE = 8;
-	public static final int persistent_config_s_size = 20800;
+	public static final int persistent_config_s_size = 20888;
 	public static final int pid_s_size = 20;
 	public static final int pin_input_mode_e_PI_DEFAULT = 0;
 	public static final int pin_input_mode_e_PI_PULLDOWN = 2;
@@ -1000,7 +1001,6 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 1404855700;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1039,7 +1039,7 @@ public class Fields {
 	public static final int TOOTH_PACKET_SIZE = 2;
 	public static final String TOP_DEAD_CENTER_MESSAGE = "r";
 	public static final int TORQUE_CURVE_SIZE = 6;
-	public static final int TOTAL_CONFIG_SIZE = 20800;
+	public static final int TOTAL_CONFIG_SIZE = 20888;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int TPS_TPS_ACCEL_CLT_CORR_TABLE = 4;
 	public static final int TPS_TPS_ACCEL_TABLE = 8;
@@ -1207,9 +1207,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.05.f407-discovery.1404855700";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.15.f407-discovery.3152929424";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1288;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1284;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
@@ -1546,6 +1546,8 @@ public class Fields {
 	public static final Field PAUSEETBCONTROL = Field.create("PAUSEETBCONTROL", 664, FieldType.BIT, 20).setBaseOffset(0);
 	public static final Field ALIGNENGINESNIFFERATTDC = Field.create("ALIGNENGINESNIFFERATTDC", 664, FieldType.BIT, 21).setBaseOffset(0);
 	public static final Field ENABLEAEMXSERIES = Field.create("ENABLEAEMXSERIES", 664, FieldType.BIT, 22).setBaseOffset(0);
+	public static final Field USETABLEFORDFCOMAP = Field.create("USETABLEFORDFCOMAP", 664, FieldType.BIT, 23).setBaseOffset(0);
+	public static final Field POSTCRANKINGFUELUSETABLE = Field.create("POSTCRANKINGFUELUSETABLE", 664, FieldType.BIT, 24).setBaseOffset(0);
 	public static final Field LOGICANALYZERPINS1 = Field.create("LOGICANALYZERPINS1", 668, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
 	public static final Field LOGICANALYZERPINS2 = Field.create("LOGICANALYZERPINS2", 670, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
 	public static final Field LOGICANALYZERPINS3 = Field.create("LOGICANALYZERPINS3", 672, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
@@ -2708,4 +2710,9 @@ public class Fields {
 	public static final Field DWELLVOLTAGECORRVALUES = Field.create("DWELLVOLTAGECORRVALUES", 20776, FieldType.INT8).setScale(0.02).setBaseOffset(0);
 	public static final Field MINIMUMOILPRESSUREBINS = Field.create("MINIMUMOILPRESSUREBINS", 20784, FieldType.INT8).setScale(100.0).setBaseOffset(0);
 	public static final Field MINIMUMOILPRESSUREVALUES = Field.create("MINIMUMOILPRESSUREVALUES", 20792, FieldType.INT8).setScale(10.0).setBaseOffset(0);
+	public static final Field DFCOMAPRPMVALUESBINS = Field.create("DFCOMAPRPMVALUESBINS", 20800, FieldType.INT8).setScale(100.0).setBaseOffset(0);
+	public static final Field DFCOMAPRPMVALUES = Field.create("DFCOMAPRPMVALUES", 20804, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field POSTCRANKINGENRICHTABLE = Field.create("POSTCRANKINGENRICHTABLE", 20808, FieldType.INT8).setScale(0.02).setBaseOffset(0);
+	public static final Field POSTCRANKINGENRICHTEMPBINS = Field.create("POSTCRANKINGENRICHTEMPBINS", 20872, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field POSTCRANKINGENRICHRUNTIMEBINS = Field.create("POSTCRANKINGENRICHRUNTIMEBINS", 20880, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 }

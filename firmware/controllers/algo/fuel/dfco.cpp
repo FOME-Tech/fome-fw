@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "engine_configuration.h"
 #include "sensor.h"
+#include "rusefi/interpolation.h"
 
 #include "dfco.h"
 
@@ -20,7 +21,8 @@ bool DfcoController::getState() const {
 	}
 
 	// MAP sensor is optional, only inhibit if the sensor is present but broken
-	if (Sensor::hasSensor(SensorType::Map) && !map) {
+	bool hasMap = Sensor::hasSensor(SensorType::Map);
+	if (hasMap && !map) {
 		return false;
 	}
 
@@ -32,7 +34,11 @@ bool DfcoController::getState() const {
 		&& !engine->engineState.clutchUpState
 		&& isBrainPinValid(engineConfiguration->clutchUpPin);
 
-	bool mapActivate = map.value_or(0) < engineConfiguration->coastingFuelCutMap;
+	float mapThreshold = engineConfiguration->useTableForDfcoMap ?
+		interpolate2d(rpm, config->dfcoMapRpmValuesBins, config->dfcoMapRpmValues) :
+		engineConfiguration->coastingFuelCutMap;
+
+	bool mapActivate = !hasMap || !m_mapHysteresis.test(map.value_or(0), mapThreshold + 1, mapThreshold - 1);
 	bool tpsActivate = tps.Value < engineConfiguration->coastingFuelCutTps;
 	bool cltActivate = clt.Value > engineConfiguration->coastingFuelCutClt;
 	// True if throttle, MAP, CLT, and Clutch are all acceptable for DFCO to occur
