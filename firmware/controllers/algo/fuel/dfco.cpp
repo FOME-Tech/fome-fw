@@ -30,9 +30,9 @@ bool DfcoController::getState() const {
 	float vss = Sensor::getOrZero(SensorType::VehicleSpeed);
 
 	// Setting to allow clutch to block DFCO activation
-	bool clutchBlock = engineConfiguration->disableFuelCutOnClutch 
-		&& !engine->engineState.clutchUpState
-		&& isBrainPinValid(engineConfiguration->clutchUpPin);
+	bool clutchActivate = !engineConfiguration->disableFuelCutOnClutch 
+		|| !isBrainPinValid(engineConfiguration->clutchUpPin)
+		|| engine->engineState.clutchUpState;
 
 	float mapThreshold = engineConfiguration->useTableForDfcoMap ?
 		interpolate2d(rpm, config->dfcoMapRpmValuesBins, config->dfcoMapRpmValues) :
@@ -42,7 +42,7 @@ bool DfcoController::getState() const {
 	bool tpsActivate = tps.Value < engineConfiguration->coastingFuelCutTps;
 	bool cltActivate = clt.Value > engineConfiguration->coastingFuelCutClt;
 	// True if throttle, MAP, CLT, and Clutch are all acceptable for DFCO to occur
-	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate && !clutchBlock;
+	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate && clutchActivate;
 
 	bool rpmActivate = (rpm > engineConfiguration->coastingFuelCutRpmHigh);
 	bool rpmDeactivate = (rpm < engineConfiguration->coastingFuelCutRpmLow);
