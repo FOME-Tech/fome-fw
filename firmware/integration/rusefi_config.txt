@@ -716,7 +716,7 @@ bit is_enabled_spi_2
 	bit alignEngineSnifferAtTDC
 	bit enableAemXSeries;AEM X-Series or rusEFI Wideband
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
-	bit postCrankingFuelUseTable,"Table","Basic"
+	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
 
 	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
 
