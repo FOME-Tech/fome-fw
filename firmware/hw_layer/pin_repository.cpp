@@ -23,26 +23,28 @@ const char* & getBrainUsedPin(unsigned int idx) {
 
 /* Common for firmware and unit tests */
 bool isBrainPinValid(brain_pin_e brainPin) {
-	if ((brainPin == Gpio::Unassigned) || (brainPin == Gpio::Invalid))
+	if ((brainPin == Gpio::Unassigned) || (brainPin == Gpio::Invalid)) {
 		return false;
+	}
 
-	if (brainPin > BRAIN_PIN_LAST)
+	if (brainPin > BRAIN_PIN_LAST) {
 		/* something terribly wrong */
 		return false;
+	}
 
 	return true;
 }
 
 int brainPin_to_index(brain_pin_e brainPin) {
-	unsigned int i;
-
-	if (brainPin < Gpio::A0)
+	if (brainPin < Gpio::A0) {
 		return -1;
+	}
 
-	i = brainPin - Gpio::A0;
+	uint32_t i = brainPin - Gpio::A0;
 
-	if (i >= getBrainPinTotalNum())
+	if (i >= getBrainPinTotalNum()) {
 		return -1;
+	}
 
 	return i;
 }
@@ -71,8 +73,9 @@ bool brain_pin_markUsed(brain_pin_e brainPin, const char *msg) {
 
 void brain_pin_markUnused(brain_pin_e brainPin) {
 	int index = brainPin_to_index(brainPin);
-	if (index < 0)
+	if (index < 0) {
 		return;
+	}
 
 	getBrainUsedPin(index) = nullptr;
 }
