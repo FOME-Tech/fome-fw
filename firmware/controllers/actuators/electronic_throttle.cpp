@@ -199,9 +199,6 @@ bool EtbController::init(dc_function_e function, DcMotor *motor, pid_s *pidParam
 	m_pid.initPidClass(pidParameters);
 	m_pedalMap = pedalMap;
 
-	// Ignore 3% position error before complaining
-	m_errorAccumulator.init(3.0f, etbPeriodSeconds);
-
 	reset();
 
 	return true;
@@ -209,7 +206,6 @@ bool EtbController::init(dc_function_e function, DcMotor *motor, pid_s *pidParam
 
 void EtbController::reset() {
 	m_shouldResetPid = true;
-	etbDutyRateOfChange = etbDutyAverage = 0;
 	m_dutyRocAverage.reset();
 	m_dutyAverage.reset();
 	etbTpsErrorCounter = 0;
@@ -482,15 +478,7 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 	if (m_isAutotune) {
 		return getClosedLoopAutotune(target, observation);
 	} else {
-		// Check that we're not over the error limit
-		etbIntegralError = m_errorAccumulator.accumulate(target - observation);
-
-		// Allow up to 10 percent-seconds of error
-		if (etbIntegralError > 10.0f) {
-			// TODO: figure out how to handle uncalibrated ETB 
-			//getLimpManager()->reportEtbProblem();
-		}
-
+		checkJam(target, observation);
 		// Normal case - use PID to compute closed loop part
 		return m_pid.getOutput(target, observation, etbPeriodSeconds);
 	}
@@ -615,33 +603,24 @@ void EtbController::update() {
 		return;
 	}
 
-	auto output = ClosedLoopController::update();
-
-	if (!output) {
-		return;
-	}
-
-	checkOutput(output.Value);
+	ClosedLoopController::update();
 }
 
-void EtbController::checkOutput(percent_t output) {
-	etbDutyAverage = m_dutyAverage.average(absF(output));
+void EtbController::checkJam(percent_t setpoint, percent_t observation) {
+	float absError = std::abs(setpoint - observation);
 
-	etbDutyRateOfChange = m_dutyRocAverage.average(absF(output - prevOutput));
-	prevOutput = output;
+	auto jamDetectThreshold = engineConfiguration->jamDetectThreshold;
 
-	float integrator = absF(m_pid.getIntegration());
-	auto integratorLimit = engineConfiguration->etbJamIntegratorLimit;
-
-	if (integratorLimit != 0) {
+	if (jamDetectThreshold != 0) {
 		auto nowNt = getTimeNowNt();
 
-		if (integrator > integratorLimit) {
+		if (absError > jamDetectThreshold) {
 			if (m_jamDetectTimer.hasElapsedSec(engineConfiguration->etbJamTimeout)) {
 				// ETB is jammed!
 				jamDetected = true;
 
 				// TODO: do something about it!
+				// getLimpManager()->reportEtbProblem();
 			}
 		} else {
 			m_jamDetectTimer.reset(getTimeNowNt());

@@ -8,7 +8,6 @@ UTILSRC_CPP = \
 	$(UTIL_DIR)/containers/listener_array.cpp \
 	$(UTIL_DIR)/containers/local_version_holder.cpp \
 	$(UTIL_DIR)/math/biquad.cpp \
-	$(UTIL_DIR)/math/error_accumulator.cpp \
 	$(UTIL_DIR)/math/efi_pid.cpp \
 	$(UTIL_DIR)/math/interpolation.cpp \
 	$(PROJECT_DIR)/util/datalogging.cpp \
