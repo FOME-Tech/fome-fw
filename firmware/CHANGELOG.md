@@ -28,7 +28,7 @@ or
 
 # Changelog
 
-## Unreleased
+## September 2024 Release
 
 ### Added
  - Staged injection: a second set of fuel injectors that inject part of the fuel load when you run out of primary injector
@@ -45,6 +45,7 @@ or
  - Add two more aux linear sensors #476
  - Support wasted spark on odd cylinder count and odd-fire engines. Improves startup and allows running without a cam sensor!
  - Add an option for the DFCO MAP threshold to use a table dependent upon RPM #485 (thank you @alrijleh!)
+ - Option to disable DFCO on gear shift #487
  - Ability to use an 8x8 table for after-start fuel multiplier that depends on CLT and engine run time
 
 ### Fixed
