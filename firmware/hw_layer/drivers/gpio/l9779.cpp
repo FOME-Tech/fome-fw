@@ -545,7 +545,7 @@ static THD_FUNCTION(l9779_driver_thread, p) {
 
 			chip->diag_ts = chTimeAddX(chVTGetSystemTimeX(), TIME_MS2I(DIAG_PERIOD_MS));
 		}
-		poll_interval = chip->calc_sleep_interval();	
+		poll_interval = chip->calc_sleep_interval();
 #endif
 		/* default poll_interval */
 	}

@@ -229,7 +229,7 @@ void printWave(Logging *logging) {
 	reportWave(logging, 1);
 }
 
-void showWaveInfo(void) {
+void showWaveInfo() {
 	efiPrintf("logic input #1: %d/%d", readers[0].fallEventCounter, readers[0].riseEventCounter);
 }
 

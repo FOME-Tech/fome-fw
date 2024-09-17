@@ -46,7 +46,7 @@ bool RpmCalculator::isSpinningUp() const {
 	return state == SPINNING_UP;
 }
 
-uint32_t RpmCalculator::getRevolutionCounterSinceStart(void) const {
+uint32_t RpmCalculator::getRevolutionCounterSinceStart() const {
 	return revolutionCounterSinceStart;
 }
 
@@ -203,7 +203,7 @@ void RpmCalculator::onNewEngineCycle() {
 	revolutionCounterSinceStart++;
 }
 
-uint32_t RpmCalculator::getRevolutionCounterM(void) const {
+uint32_t RpmCalculator::getRevolutionCounterM() const {
 	return revolutionCounterSinceBoot;
 }
 

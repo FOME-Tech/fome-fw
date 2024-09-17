@@ -673,7 +673,7 @@ static void triggerShapeInfo() {
 extern PwmConfig triggerSignal;
 #endif /* #if EFI_PROD_CODE */
 
-void triggerInfo(void) {
+void triggerInfo() {
 #if EFI_PROD_CODE || EFI_SIMULATOR
 
 	TriggerCentral *tc = getTriggerCentral();

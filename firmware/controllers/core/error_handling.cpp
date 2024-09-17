@@ -17,7 +17,7 @@ bool hasFirmwareErrorFlag = false;
 const char *dbg_panic_file;
 int dbg_panic_line;
 
-const char* getCriticalErrorMessage(void) {
+const char* getCriticalErrorMessage() {
 	return criticalErrorMessageBuffer;
 }
 
@@ -157,7 +157,7 @@ bool warning(ObdCode code, const char *fmt, ...) {
 	return false;
 }
 
-const char* getWarningMessage(void) {
+const char* getWarningMessage() {
 	return warningBuffer;
 }
 
@@ -180,7 +180,7 @@ uint32_t maxLockedDuration = 0;
  */
 #endif /* EFI_CLOCK_LOCKS */
 
-void onLockHook(void) {
+void onLockHook() {
 #if ENABLE_PERF_TRACE
 	perfEventInstantGlobal(PE::GlobalLock);
 #endif /* ENABLE_PERF_TRACE */
@@ -190,7 +190,7 @@ void onLockHook(void) {
 #endif /* EFI_CLOCK_LOCKS */
 }
 
-void onUnlockHook(void) {
+void onUnlockHook() {
 #if EFI_CLOCK_LOCKS
 	uint32_t lockedDuration = getTimeNowLowerNt() - lastLockTime;
 	if (lockedDuration > maxLockedDuration) {

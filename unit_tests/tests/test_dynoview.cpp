@@ -5,7 +5,7 @@
 void printResults(DynoView *dut) {
 #ifdef DBG_TESTS    
     std::cerr.precision(32);
-    std::cerr << "Acceleration m/s " << dut->getAcceleration() << std::endl; 
+    std::cerr << "Acceleration m/s " << dut->getAcceleration() << std::endl;
     std::cerr << "Car force in N " << dut->getEngineForce() << std::endl;
     std::cerr << "Car power in KW "<< dut->getEnginePower() << std::endl;
     std::cerr << "Car HP " << dut->getEngineHP() << std::endl;
@@ -22,7 +22,7 @@ TEST(DynoView, VSS_T1) {
     DynoView dut;
 
     // Test Speed threshold
-    engineConfiguration->vehicleWeight = 900; 
+    engineConfiguration->vehicleWeight = 900;
     eth.moveTimeForwardMs(50);
 	
 	Sensor::setMockValue(SensorType::VehicleSpeed, 18.0);
@@ -32,7 +32,7 @@ TEST(DynoView, VSS_T1) {
 	Sensor::setMockValue(SensorType::VehicleSpeed, 126.0);
     dut.update(ICU);
 
-    ASSERT_EQ(1.5, dut.getAcceleration()); 
+    ASSERT_EQ(1.5, dut.getAcceleration());
 }
 
 TEST(DynoView, algo) {
@@ -41,7 +41,7 @@ TEST(DynoView, algo) {
     DynoView dut;
 
     // Test Speed threshold
-    engineConfiguration->vehicleWeight = 900; 
+    engineConfiguration->vehicleWeight = 900;
 
     //to capture vss
 	Sensor::setMockValue(SensorType::VehicleSpeed, 35*3.6);

@@ -534,7 +534,7 @@ void canDashboardBMWE90(CanCycle cycle)
 		}
 
 		{ //E90_SPEED
-			auto vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed); 
+			auto vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
 			float mph = vehicleSpeed * 0.6213712;
 			mph_ctr = ((TIME_I2MS(chVTGetSystemTime()) - mph_timer) / 50);
 			mph_a = (mph_ctr * mph / 2);
@@ -593,7 +593,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* MAP */
-			tmp = (((uint16_t)(Sensor::getOrZero(SensorType::Map))) * 10); 
+			tmp = (((uint16_t)(Sensor::getOrZero(SensorType::Map))) * 10);
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* TPS  y = x/10 */
@@ -622,7 +622,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[5] = (tmp & 0x00ff);
 			/* Wastegate Pressure */
 			msg[6] = 0;
-			msg[7] = 0;			
+			msg[7] = 0;
 		}
 
 		/* 0x362 - 50Hz rate */
@@ -639,14 +639,14 @@ void canDashboardHaltech(CanCycle cycle) {
 			/* Ignition Angle (Leading) - y = x/10 */
 			float timing = engine->engineState.timingAdvance[0];
 			int16_t ignAngle = ((timing > 360 ? timing - 720 : timing) * 10);
-			msg[4] = (ignAngle >> 8);			
+			msg[4] = (ignAngle >> 8);
 			msg[5] = (ignAngle & 0x00ff);
 		}
 
 		/* todo: 0x3E5 = 50Hz rate */
 		{ 
 			CanTxMessage msg(0x3E5, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -659,7 +659,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3EA = 50Hz rate */
 		{ 
 			CanTxMessage msg(0x3EA, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -672,7 +672,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3EB = 50Hz rate */
 		{ 
 			CanTxMessage msg(0x3EB, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -685,7 +685,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3EC = 50Hz rate */
 		{ 
 			CanTxMessage msg(0x3EC, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -698,14 +698,14 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3ED = 50Hz rate */
 		{ 
 			CanTxMessage msg(0x3ED, 2);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 		}
 
 		/* todo: 0x471 = 50Hz rate */
 		{ 
 			CanTxMessage msg(0x471, 2);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -760,7 +760,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[4] = 0x00;
 			msg[5] = 0x00;
 			/* Trigger Sync Level ?? */
-			msg[6] = 0x00;			
+			msg[6] = 0x00;
 			msg[7] = 0x00;
 		}
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -880,7 +880,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3E6 = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x3E6, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -893,7 +893,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3E7 = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x3E7, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -906,7 +906,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3E8 = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x3E8, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -919,7 +919,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3E9 = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x3E9, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -932,7 +932,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3EE = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x3EE, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -945,7 +945,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x3EF = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x3EF, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -958,7 +958,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x470 = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x470, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -971,7 +971,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* todo: 0x472 = 20Hz rate */
 		{ 
 			CanTxMessage msg(0x472, 8);
-			msg[0] = 0x00; 
+			msg[0] = 0x00;
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;

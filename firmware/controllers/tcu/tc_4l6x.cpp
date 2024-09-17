@@ -4,9 +4,9 @@
 
 #if EFI_TCU
 Gm4l6xTransmissionController gm4l6xTransmissionController;
-static SimplePwm tccPwm("TCC Control"); 
-static SimplePwm pcPwm("Pressure Control"); 
-static SimplePwm shift32Pwm("3-2 Shift Control"); 
+static SimplePwm tccPwm("TCC Control");
+static SimplePwm pcPwm("Pressure Control");
+static SimplePwm shift32Pwm("3-2 Shift Control");
 
 void Gm4l6xTransmissionController::init() {
     for (size_t i = 0; i < efi::size(engineConfiguration->tcu_solenoid); i++) {

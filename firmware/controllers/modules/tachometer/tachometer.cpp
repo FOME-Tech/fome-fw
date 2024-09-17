@@ -10,7 +10,7 @@
 
 #include "pch.h"
 
-static SimplePwm tachControl("tach"); 
+static SimplePwm tachControl("tach");
 static float tachFreq;
 static float duty;
 

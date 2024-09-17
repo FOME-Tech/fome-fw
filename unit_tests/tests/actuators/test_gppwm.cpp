@@ -99,5 +99,5 @@ TEST(GpPwm, TestGetOutput) {
 	// Set TPS, should return tps value
 	Sensor::setMockValue(SensorType::Tps1, 35.0f);
 	Sensor::setMockValue(SensorType::Rpm, 1200);
-	EXPECT_FLOAT_EQ(35.0f, ch.getOutput().Result);	
+	EXPECT_FLOAT_EQ(35.0f, ch.getOutput().Result);
 }

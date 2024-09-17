@@ -201,7 +201,7 @@ private:
 	expected<float> expectedNextPhase = unexpected;
 };
 
-void triggerInfo(void);
+void triggerInfo();
 void hwHandleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp);
 void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp);
 void hwHandleVvtCamSignal(bool isRising, efitick_t timestamp, int index);
@@ -210,7 +210,7 @@ void validateTriggerInputs();
 
 void initTriggerCentral();
 
-int isSignalDecoderError(void);
+int isSignalDecoderError();
 
 void onConfigurationChangeTriggerCallback();
 

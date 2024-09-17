@@ -17,8 +17,8 @@ void initWaveAnalyzer();
 void startLogicAnalyzerPins();
 void stopLogicAnalyzerPins();
 void printWave(Logging *logging);
-void showWaveInfo(void);
-void reportLogicAnalyzerToTS(void); 
+void showWaveInfo();
+void reportLogicAnalyzerToTS();
 
 void waTriggerEventListener(trigger_event_e ckpSignalType, uint32_t index, efitick_t edgeTimestamp);
 

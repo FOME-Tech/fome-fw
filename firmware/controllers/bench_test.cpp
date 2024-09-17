@@ -218,22 +218,22 @@ static void fanBenchExt(float onTime) {
 	pinbench(onTime, 100.0, 1.0, enginePins.fanRelay);
 }
 
-void fanBench(void) {
+void fanBench() {
 	fanBenchExt(3000.0);
 }
 
-void fan2Bench(void) {
+void fan2Bench() {
 	pinbench(3000.0, 100.0, 1.0, enginePins.fanRelay2);
 }
 
 /**
  * we are blinking for 16 seconds so that one can click the button and walk around to see the light blinking
  */
-void milBench(void) {
+void milBench() {
 	pinbench(500.0, 500.0, 16, enginePins.checkEnginePin);
 }
 
-void starterRelayBench(void) {
+void starterRelayBench() {
 	pinbench(6000.0, 100.0, 1, enginePins.starterControl);
 }
 
@@ -241,7 +241,7 @@ static void fuelPumpBenchExt(float durationMs) {
 	pinbench(durationMs, 100.0, 1.0, enginePins.fuelPumpRelay);
 }
 
-void acRelayBench(void) {
+void acRelayBench() {
 	pinbench(1000.0, 100.0, 1, enginePins.acRelay);
 }
 
@@ -250,11 +250,11 @@ static void mainRelayBench() {
 	engine->mainRelayBenchTimer.reset();
 }
 
-static void hpfpValveBench(void) {
+static void hpfpValveBench() {
 	pinbench(20.0, engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount, enginePins.hpfpValve);
 }
 
-void fuelPumpBench(void) {
+void fuelPumpBench() {
 	fuelPumpBenchExt(3000.0);
 }
 
@@ -509,7 +509,7 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 void onConfigurationChangeBenchTest() {
 	// default values if configuration was not specified
 	if (engineConfiguration->benchTestOnTime == 0) {
-		engineConfiguration->benchTestOnTime = 4; 
+		engineConfiguration->benchTestOnTime = 4;
 	}
 
 	if (engineConfiguration->benchTestOffTime < 5) {

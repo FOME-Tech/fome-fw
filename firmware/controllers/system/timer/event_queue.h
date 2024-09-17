@@ -48,7 +48,7 @@ private:
 	scheduling_s *m_head = nullptr;
 	const efidur_t m_lateDelay;
 
-	scheduling_s* m_freelist = nullptr; 
+	scheduling_s* m_freelist = nullptr;
 	scheduling_s m_pool[64];
 };
 
