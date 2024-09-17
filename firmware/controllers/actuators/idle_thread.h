@@ -96,7 +96,7 @@ void setManualIdleValvePosition(int positionPercent);
 
 void startIdleThread();
 void setDefaultIdleParameters();
-void startIdleBench(void);
+void startIdleBench();
 void setIdleMode(idle_mode_e value);
 void setTargetIdleRpm(int value);
 void startPedalPins();

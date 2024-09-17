@@ -397,7 +397,7 @@ can_msg_t CanStreamer::receive(canmbx_t /*mailbox*/, CANRxFrame *crfp, can_sysin
 	return CAN_MSG_TIMEOUT;
 }
 
-void canStreamInit(void) {
+void canStreamInit() {
 	streamer.init();
 }
 

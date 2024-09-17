@@ -134,7 +134,7 @@ public:
 	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame *crfp, can_sysinterval_t timeout) override;
 };
 
-void canStreamInit(void);
+void canStreamInit();
 
 // we don't have canStreamSendTimeout() because we need to "bufferize" the stream and send it in fixed-length packets
 msg_t canStreamAddToTxTimeout(size_t *np, const uint8_t *txbuf, sysinterval_t timeout);

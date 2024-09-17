@@ -242,7 +242,7 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 
 #endif // EFI_TUNER_STUDIO
 
-void requestBurn(void) {
+void requestBurn() {
 #if !EFI_UNIT_TEST
 	onBurnRequest();
 
@@ -709,7 +709,7 @@ static char tsErrorBuff[80];
 
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
 
-void startTunerStudioConnectivity(void) {
+void startTunerStudioConnectivity() {
 	// Assert tune & output channel struct sizes
 	static_assert(sizeof(persistent_config_s) == TOTAL_CONFIG_SIZE, "TS datapage size mismatch");
 // useful trick if you need to know how far off is the static_assert

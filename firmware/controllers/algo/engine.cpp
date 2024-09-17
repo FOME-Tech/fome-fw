@@ -228,7 +228,7 @@ Engine::Engine() {
 	reset();
 }
 
-int Engine::getGlobalConfigurationVersion(void) const {
+int Engine::getGlobalConfigurationVersion() const {
 	return globalConfigurationVersion;
 }
 

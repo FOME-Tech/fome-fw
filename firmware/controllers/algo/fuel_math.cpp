@@ -409,7 +409,7 @@ percent_t getFuelALSCorrection(int rpm) {
 			config->alsFuelAdjustmentLoadBins, throttleIntent,
 			config->alsFuelAdjustmentrpmBins, rpm
 		);
-		return AlsFuelAdd;	
+		return AlsFuelAdd;
 	} else
 #endif /* EFI_ANTILAG_SYSTEM */
 	{

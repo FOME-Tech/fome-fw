@@ -85,7 +85,7 @@ setupVbatt() {
 	engineConfiguration->analogInputDividerCoefficient = 1.56f;
 	
 	// 6.34k high side/ 1k low side
-	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1; 
+	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1;
 
 	// Battery sense on PA7
 	engineConfiguration->vbattAdcChannel = EFI_ADC_9;
@@ -102,7 +102,7 @@ static void setStepperConfig() {
 static void setupSdCard() {
 	
 	//SD CARD overwrites
-	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_3;		
+	engineConfiguration->sdCardSpiDevice = SPI_DEVICE_3;
 
 	engineConfiguration->is_enabled_spi_3 = true;
 	engineConfiguration->spi3sckPin = Gpio::C10;
@@ -170,7 +170,7 @@ static void setupDefaultSensorInputs() {
 }
 
 
-void setBoardDefaultConfiguration(void) {
+void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 	setupDefaultSensorInputs();

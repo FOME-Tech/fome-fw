@@ -117,7 +117,7 @@ bool isMilEnabled() {
 	return isBrainPinValid(engineConfiguration->malfunctionIndicatorPin);
 }
 
-void initMalfunctionIndicator(void) {
+void initMalfunctionIndicator() {
 	if (!isMilEnabled()) {
 		return;
 	}

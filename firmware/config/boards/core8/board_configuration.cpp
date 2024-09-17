@@ -66,7 +66,7 @@ static void setupVbatt() {
 	engineConfiguration->analogInputDividerCoefficient = 1.56f;
 	
 	// 6.34k high side/ 1k low side
-	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1; 
+	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1;
 
 	// Battery sense on PA7
 	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
@@ -122,7 +122,7 @@ static void setupDefaultSensorInputs() {
 
 }
 
-void setBoardDefaultConfiguration(void) {
+void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 

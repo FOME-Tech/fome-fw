@@ -39,7 +39,7 @@ void resetMaxValues() {
 #endif // EFI_PROD_CODE
 }
 
-void printRuntimeStats(void) {
+void printRuntimeStats() {
 	efiPrintf("maxSchedulingPrecisionLoss=%lu", maxSchedulingPrecisionLoss);
 
 #if EFI_CLOCK_LOCKS

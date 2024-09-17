@@ -123,7 +123,7 @@ private:
 	// These are set to correct order of magnitude starting points
 	// so we converge more quickly on the correct values
 	float m_a = 8;
-	float m_tu = 0.1f; 
+	float m_tu = 0.1f;
 
 	uint8_t m_autotuneCounter = 0;
 	uint8_t m_autotuneCurrentParam = 0;

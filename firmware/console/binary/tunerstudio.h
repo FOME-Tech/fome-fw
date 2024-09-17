@@ -37,9 +37,9 @@ uint8_t* getWorkingPageAddr();
 
 void updateTunerStudioState();
 
-void requestBurn(void);
+void requestBurn();
 
-void startTunerStudioConnectivity(void);
+void startTunerStudioConnectivity();
 
 typedef struct {
 	short int offset;

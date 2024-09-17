@@ -59,8 +59,8 @@ void resetConfigurationExt(engine_type_e engineType);
 void rememberCurrentConfiguration();
 #endif /* __cplusplus */
 
-void setBoardDefaultConfiguration(void);
-void setBoardConfigOverrides(void);
+void setBoardDefaultConfiguration();
+void setBoardConfigOverrides();
 void boardOnConfigurationChange(engine_configuration_s *previousConfiguration);
 Gpio getCommsLedPin();
 Gpio getWarningLedPin();

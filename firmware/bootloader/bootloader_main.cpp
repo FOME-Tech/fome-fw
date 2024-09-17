@@ -10,7 +10,7 @@ extern "C" {
 
 class BlinkyThread : public chibios_rt::BaseStaticThread<256> {
 protected:
-	void main(void) override {
+	void main() override {
 		Gpio yellow = getWarningLedPin();
 		Gpio blue = getCommsLedPin();
 		Gpio green = getRunningLedPin();
@@ -53,7 +53,7 @@ protected:
 
 static BlinkyThread blinky;
 
-int main(void) {
+int main() {
 	halInit();
 	chSysInit();
 
