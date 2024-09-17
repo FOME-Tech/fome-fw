@@ -11,10 +11,6 @@
 #include "global.h"
 #include "adc_math.h"
 
-#ifndef SLOW_ADC_RATE
-#define SLOW_ADC_RATE 500
-#endif
-
 float getAnalogInputDividerCoefficient(adc_channel_e);
 
 inline bool isAdcChannelValid(adc_channel_e hwChannel) {
@@ -41,6 +37,7 @@ enum class AdcChannelMode : char {
 };
 
 void initAdcInputs();
+void updateSlowAdc(efitick_t nowNt);
 
 // deprecated - migrate to 'getAdcChannelBrainPin'
 int getAdcChannelPin(adc_channel_e hwChannel);
