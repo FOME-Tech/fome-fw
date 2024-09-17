@@ -18,7 +18,6 @@
 #include "trigger_simulator.h"
 #include "trigger_emulator_algo.h"
 
-#include "map_averaging.h"
 #include "main_trigger_callback.h"
 #include "status_loop.h"
 #include "engine_sniffer.h"
@@ -31,9 +30,6 @@
 #if EFI_ENGINE_SNIFFER
 WaveChart waveChart;
 #endif /* EFI_ENGINE_SNIFFER */
-
-static scheduling_s debugToggleScheduling;
-#define DEBUG_PIN_DELAY US2NT(60)
 
 #define TRIGGER_WAVEFORM(x) getTriggerCentral()->triggerShape.x
 
@@ -54,11 +50,20 @@ int TriggerCentral::getHwEventCounter(int index) const {
 }
 
 
-angle_t TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camIndex) {
+expected<angle_t> TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camIndex) {
 	if (bankIndex >= BANKS_COUNT || camIndex >= CAMS_PER_BANK) {
-		return NAN;
+		return unexpected;
 	}
-	return vvtPosition[bankIndex][camIndex];
+
+	// TODO: return unexpected if timed out
+	auto& vvt = vvtPosition[bankIndex][camIndex];
+
+	if (vvt.t.hasElapsedSec(1)) {
+		// 1s timeout on VVT angle
+		return unexpected;
+	} else {
+		return vvt.angle;
+	}
 }
 
 /**
@@ -131,22 +136,6 @@ angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 	return totalShift;
 }
 
-static void turnOffAllDebugFields(void *arg) {
-	(void)arg;
-#if EFI_PROD_CODE
-	for (int index = 0; index < TRIGGER_INPUT_PIN_COUNT; index++) {
-		if (isBrainPinValid(engineConfiguration->triggerInputDebugPins[index])) {
-			writePad("trigger debug", engineConfiguration->triggerInputDebugPins[index], 0);
-		}
-	}
-	for (int index = 0; index < CAM_INPUTS_COUNT; index++) {
-		if (isBrainPinValid(engineConfiguration->camInputsDebug[index])) {
-			writePad("cam debug", engineConfiguration->camInputsDebug[index], 0);
-		}
-	}
-#endif /* EFI_PROD_CODE */
-}
-
 static angle_t adjustCrankPhase(int camIndex) {
 	float maxSyncThreshold = engineConfiguration->maxCamPhaseResolveRpm;
 	if (maxSyncThreshold != 0 && Sensor::getOrZero(SensorType::Rpm) > maxSyncThreshold) {
@@ -209,14 +198,7 @@ static angle_t wrapVvt(angle_t vvtPosition, int period) {
 	return vvtPosition;
 }
 
-static void logVvtFront(bool isImportantFront, bool isRising, efitick_t nowNt, int index) {
-	if (isImportantFront && isBrainPinValid(engineConfiguration->camInputsDebug[index])) {
-#if EFI_PROD_CODE
-		writePad("cam debug", engineConfiguration->camInputsDebug[index], 1);
-#endif /* EFI_PROD_CODE */
-		getScheduler()->schedule("dbg_on", &debugToggleScheduling, nowNt + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
-	}
-
+static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
 	addEngineSnifferVvtEvent(index, isRising);
 
@@ -235,6 +217,8 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	// Invert if so configured
 	isRising ^= engineConfiguration->invertCamVVTSignal;
 
+	logVvtFront(isRising, nowNt, index);
+
 	int bankIndex = index / CAMS_PER_BANK;
 	int camIndex = index % CAMS_PER_BANK;
 	if (isRising) {
@@ -252,11 +236,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	// Non real decoders only use the rising edge
 	bool vvtUseOnlyRise = !isVvtWithRealDecoder || vvtShape.useOnlyRisingEdges;
-	bool isImportantFront = !vvtUseOnlyRise || isRising;
-
-	logVvtFront(isImportantFront, isRising, nowNt, index);
-
-	if (!isImportantFront) {
+	if (vvtUseOnlyRise && !isRising) {
 		// This edge is unimportant, ignore it.
 		return;
 	}
@@ -365,11 +345,13 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	}
 
 	// Only record VVT position if we have full engine sync - may be bogus before that point
+	auto& vvtPos = tc->vvtPosition[bankIndex][camIndex];
 	if (tc->triggerState.hasSynchronizedPhase()) {
-		tc->vvtPosition[bankIndex][camIndex] = vvtPosition;
+		vvtPos.angle = vvtPosition;
 	} else {
-		tc->vvtPosition[bankIndex][camIndex] = 0;
+		vvtPos.angle = 0;
 	}
+	vvtPos.t.reset(nowNt);
 }
 
 int triggerReentrant = 0;
@@ -428,13 +410,6 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 	if (!isUsefulSignal(signal, getTriggerCentral()->triggerShape)) {
 		// This is a falling edge in rise-only mode (etc), drop it
 		return;
-	}
-
-	if (engineConfiguration->triggerInputDebugPins[signalIndex] != Gpio::Unassigned) {
-#if EFI_PROD_CODE
-		writePad("trigger debug", engineConfiguration->triggerInputDebugPins[signalIndex], 1);
-#endif /* EFI_PROD_CODE */
-		getScheduler()->schedule("dbg_off", &debugToggleScheduling, timestamp + DEBUG_PIN_DELAY, &turnOffAllDebugFields);
 	}
 
 	uint32_t triggerHandlerEntryTime = getTimeNowLowerNt();
@@ -644,12 +619,6 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 
 		// Schedule the TDC mark
 		tdcMarkCallback(triggerIndexForListeners, timestamp);
-
-#if !EFI_UNIT_TEST
-#if EFI_MAP_AVERAGING
-		mapAveragingTriggerCallback(triggerIndexForListeners, timestamp);
-#endif /* EFI_MAP_AVERAGING */
-#endif /* EFI_UNIT_TEST */
 
 #if EFI_LOGIC_ANALYZER
 		waTriggerEventListener(signal, triggerIndexForListeners, timestamp);

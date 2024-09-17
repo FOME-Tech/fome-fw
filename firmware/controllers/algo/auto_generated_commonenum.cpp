@@ -333,6 +333,10 @@ case GPPWM_AuxLinear1:
   return "GPPWM_AuxLinear1";
 case GPPWM_AuxLinear2:
   return "GPPWM_AuxLinear2";
+case GPPWM_AuxLinear3:
+  return "GPPWM_AuxLinear3";
+case GPPWM_AuxLinear4:
+  return "GPPWM_AuxLinear4";
 case GPPWM_AuxTemp1:
   return "GPPWM_AuxTemp1";
 case GPPWM_AuxTemp2:
@@ -383,6 +387,8 @@ case GPPWM_VVT_2I:
   return "GPPWM_VVT_2I";
 case GPPWM_Vbatt:
   return "GPPWM_Vbatt";
+case GPPWM_VehicleSpeed:
+  return "GPPWM_VehicleSpeed";
 case GPPWM_Zero:
   return "GPPWM_Zero";
   }

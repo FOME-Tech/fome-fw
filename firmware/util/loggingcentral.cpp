@@ -96,9 +96,7 @@ const char* swapOutputBuffers(size_t* actualOutputBufferSize) {
 		chibios_rt::MutexLocker lock(logBufferMutex);
 
 		// Swap buffers under lock
-		auto temp = writeBuffer;
-		writeBuffer = readBuffer;
-		readBuffer = temp;
+		std::swap(writeBuffer, readBuffer);
 
 		// Reset the front buffer - it's now empty
 		writeBuffer->reset();
@@ -208,19 +206,21 @@ void efiPrintfInternal(const char *format, ...) {
 	// Ensure that the string is comma-terminated in case it overflowed
 	lineBuffer->buffer[sizeof(lineBuffer->buffer) - 1] = LOG_DELIMITER[0];
 
-	if (len > sizeof(lineBuffer->buffer) - 1)
+	if (len > sizeof(lineBuffer->buffer) - 1) {
 		len = sizeof(lineBuffer->buffer) - 1;
+	}
+
 	for (size_t i = 0; i < len; i++) {
 		/* just replace all non-printable chars with space
 		 * TODO: is there any other "prohibited" chars? */
-		if (isprint(lineBuffer->buffer[i]) == 0)
+		if (isprint(lineBuffer->buffer[i]) == 0) {
 			lineBuffer->buffer[i] = ' ';
+		}
 	}
 
 	{
 		// Push the buffer in to the written list so it can be written back
 		chibios_rt::CriticalSectionLocker csl;
-
 		filledBuffers.postI(lineBuffer);
 	}
 #endif

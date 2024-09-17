@@ -32,7 +32,6 @@
 #include "flash_main.h"
 #include "bench_test.h"
 #include "electronic_throttle.h"
-#include "map_averaging.h"
 #include "high_pressure_fuel_pump.h"
 #include "malfunction_central.h"
 #include "malfunction_indicator.h"
@@ -45,7 +44,6 @@
 #include "vvt.h"
 #include "boost_control.h"
 #include "launch_control.h"
-#include "tachometer.h"
 #include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
@@ -66,10 +64,6 @@
 #if EFI_LOGIC_ANALYZER
 #include "logic_analyzer.h"
 #endif /* EFI_LOGIC_ANALYZER */
-
-#if HAL_USE_ADC
-#include "AdcConfiguration.h"
-#endif /* HAL_USE_ADC */
 
 #if ! EFI_UNIT_TEST
 #include "init.h"
@@ -164,10 +158,6 @@ char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *bu
 #endif /* HAL_USE_ADC */
 	return buffer;
 }
-
-#if HAL_USE_ADC
-extern AdcDevice fastAdc;
-#endif /* HAL_USE_ADC */
 
 static void printSensorInfo() {
 #if HAL_USE_ADC
@@ -485,11 +475,9 @@ void commonInitEngineController() {
 	initElectronicThrottle();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
-#if EFI_MAP_AVERAGING
-	if (engineConfiguration->isMapAveragingEnabled) {
-		initMapAveraging();
-	}
-#endif /* EFI_MAP_AVERAGING */
+#ifdef MODULE_MAP_AVERAGING
+	initMapAveraging();
+#endif /* MODULE_MAP_AVERAGING */
 
 #if EFI_BOOST_CONTROL
 	initBoostCtrl();

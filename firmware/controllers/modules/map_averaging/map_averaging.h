@@ -9,26 +9,10 @@
 
 #include "sensor_converter_func.h"
 
-#if EFI_MAP_AVERAGING
-
-#if HAL_USE_ADC
-void mapAveragingAdcCallback(float instantVoltage);
-#endif
-
 void initMapAveraging();
-void refreshMapAveragingPreCalc();
-
-void mapAveragingTriggerCallback(
-		uint32_t index, efitick_t edgeTimestamp);
-
-#if EFI_TUNER_STUDIO
-void postMapState(TunerStudioOutputChannels *tsOutputChannels);
-#endif
 
 // allow smoothing up to number of cylinders
 #define MAX_MAP_BUFFER_LENGTH (MAX_CYLINDER_COUNT)
-
-#endif /* EFI_MAP_AVERAGING */
 
 class MapAverager : public StoredValueSensor {
 public:
@@ -59,3 +43,16 @@ private:
 };
 
 MapAverager& getMapAvg(size_t idx);
+
+class MapAveragingModule : public EngineModule {
+public:
+	void onConfigurationChange(engine_configuration_s const * previousConfig);
+
+	void onFastCallback() override;
+	void onEnginePhase(float rpm,
+						efitick_t edgeTimestamp,
+						float currentPhase,
+						float nextPhase) override;
+
+	void submitSample(float volts);
+};

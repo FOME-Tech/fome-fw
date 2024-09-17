@@ -13,10 +13,14 @@ TEST(HPFP, Lobe) {
 	engineConfiguration->hpfpPeakPos = 123;
 	engineConfiguration->hpfpCamLobes = 3;
 
-	engine->triggerCentral.vvtPosition[0][0] = 20; // Bank 0
-	engine->triggerCentral.vvtPosition[0][1] = 40;
-	engine->triggerCentral.vvtPosition[1][0] = 60; // Bank 1
-	engine->triggerCentral.vvtPosition[1][1] = 80;
+	engine->triggerCentral.vvtPosition[0][0].angle = 20; // Bank 0
+	engine->triggerCentral.vvtPosition[0][0].t.reset();
+	engine->triggerCentral.vvtPosition[0][1].angle = 40;
+	engine->triggerCentral.vvtPosition[0][1].t.reset();
+	engine->triggerCentral.vvtPosition[1][0].angle = 60; // Bank 1
+	engine->triggerCentral.vvtPosition[1][0].t.reset();
+	engine->triggerCentral.vvtPosition[1][1].angle = 80;
+	engine->triggerCentral.vvtPosition[1][1].t.reset();
 
 	HpfpLobe lobe;
 
@@ -276,7 +280,7 @@ TEST(HPFP, Schedule) {
 	eth.assertTriggerEvent("h0", 0, &hpfp.m_event, (void*)&HpfpController::pinTurnOff, 270);
 
 	// Make the previous event happen, schedule the next.
-	engine->module<TriggerScheduler>()->scheduleEventsUntilNextTriggerTooth(
+	engine->module<TriggerScheduler>()->onEnginePhase(
 		1000, tick_per_deg * 0, 180, 360);
 	// Mock executor doesn't run events, so we run it manually
 	HpfpController::pinTurnOff(&hpfp);
@@ -285,7 +289,7 @@ TEST(HPFP, Schedule) {
 	eth.assertTriggerEvent("h1", 0, &hpfp.m_event, (void*)&HpfpController::pinTurnOn, 450 - 37.6923065f);
 
 	// Make it happen
-	engine->module<TriggerScheduler>()->scheduleEventsUntilNextTriggerTooth(
+	engine->module<TriggerScheduler>()->onEnginePhase(
 		1000, tick_per_deg * 180, 360, 540);
 
 	// Since we have a mock scheduler, lets insert the correct timestamp in the scheduling

@@ -69,10 +69,6 @@ extern bool main_loop_started;
 #include "flash_main.h"
 #endif
 
-#if EFI_MAP_AVERAGING
-#include "map_averaging.h"
-#endif
-
 #if (BOARD_TLE8888_COUNT > 0)
 #include "tle8888.h"
 #endif /* BOARD_TLE8888_COUNT */
@@ -333,10 +329,10 @@ static void updateFuelSensors() {
 static void updateVvtSensors() {
 #if EFI_SHAFT_POSITION_INPUT
 	// 248
-	engine->outputChannels.vvtPositionB1I = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
-	engine->outputChannels.vvtPositionB1E = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/1);
-	engine->outputChannels.vvtPositionB2I = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0);
-	engine->outputChannels.vvtPositionB2E = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/1);
+	engine->outputChannels.vvtPositionB1I = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0);
+	engine->outputChannels.vvtPositionB1E = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/1).value_or(0);
+	engine->outputChannels.vvtPositionB2I = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0).value_or(0);
+	engine->outputChannels.vvtPositionB2E = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/1).value_or(0);
 #endif
 }
 
@@ -391,6 +387,8 @@ static void updatePressures() {
 
 	engine->outputChannels.auxLinear1 = Sensor::getOrZero(SensorType::AuxLinear1);
 	engine->outputChannels.auxLinear2 = Sensor::getOrZero(SensorType::AuxLinear2);
+	engine->outputChannels.auxLinear3 = Sensor::getOrZero(SensorType::AuxLinear3);
+	engine->outputChannels.auxLinear4 = Sensor::getOrZero(SensorType::AuxLinear4);
 }
 
 static void updateMiscSensors() {
@@ -621,19 +619,6 @@ void updateTunerStudioState() {
 		tsOutputChannels->debugIntField5 = engine->triggerCentral.triggerState.currentCycle.eventCount[1];
 #endif // EFI_SHAFT_POSITION_INPUT
 
-		break;
-#if EFI_MAP_AVERAGING
-	case DBG_MAP:
-		postMapState(tsOutputChannels);
-		break;
-#endif /* EFI_MAP_AVERAGING */
-	case DBG_INSTANT_RPM:
-		{
-#if EFI_SHAFT_POSITION_INPUT
-			tsOutputChannels->debugFloatField2 = instantRpm / Sensor::getOrZero(SensorType::Rpm);
-#endif // EFI_SHAFT_POSITION_INPUT
-
-		}
 		break;
 	case DBG_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
