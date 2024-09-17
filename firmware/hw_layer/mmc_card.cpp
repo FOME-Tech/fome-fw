@@ -511,7 +511,7 @@ static void sdTriggerLogger() {
 #endif /* EFI_TOOTH_LOGGER */
 }
 
-bool isSdCardAlive(void) {
+bool isSdCardAlive() {
 	return fs_ready;
 }
 

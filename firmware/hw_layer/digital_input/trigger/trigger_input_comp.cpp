@@ -95,7 +95,7 @@ static int getDacValue(uint8_t voltage) {
 	return (int)efiRound(maxDacValue * (float)voltage * VOLTAGE_1_BYTE_PACKING_DIV / engineConfiguration->adcVcc, 1.0f);
 }
 
-void startTriggerInputPins(void) {
+void startTriggerInputPins() {
 	//efiAssertVoid(ObdCode::CUSTOM_ERR_, !isCompEnabled, "isCompEnabled");
 	if (isCompEnabled) {
 		efiPrintf("startTIPins(): already enabled!");
@@ -135,7 +135,7 @@ void startTriggerInputPins(void) {
 	isCompEnabled = true;
 }
 
-void stopTriggerInputPins(void) {
+void stopTriggerInputPins() {
 	if (!isCompEnabled) {
 		efiPrintf("stopTIPins(): already disabled!");
 		return;

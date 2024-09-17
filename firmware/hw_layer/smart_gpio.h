@@ -29,8 +29,8 @@ BOARD_L9779_COUNT + \
 0)
 #endif
 
-void initSmartGpio(void);
-void startSmartCsPins(void);
-void stopSmartCsPins(void);
+void initSmartGpio();
+void startSmartCsPins();
+void stopSmartCsPins();
 
-void tle8888startup(void);
+void tle8888startup();

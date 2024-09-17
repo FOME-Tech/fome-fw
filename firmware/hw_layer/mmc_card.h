@@ -15,9 +15,9 @@
 
 void initEarlyMmcCard();
 void initMmcCard();
-bool isSdCardAlive(void);
+bool isSdCardAlive();
 
-void onUsbConnectedNotifyMmcI(void);
+void onUsbConnectedNotifyMmcI();
 
 struct USBDriver;
 bool msd_request_hook_new(USBDriver *usbp);

@@ -13,7 +13,7 @@
 #if EFI_MALFUNCTION_INDICATOR
 
 bool isMilEnabled();
-void initMalfunctionIndicator(void);
+void initMalfunctionIndicator();
 
 #endif /* EFI_MALFUNCTION_INDICATOR */
 

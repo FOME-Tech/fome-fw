@@ -57,7 +57,7 @@ void StepperMotorBase::changeCurrentPosition(bool positive) {
 	postCurrentPosition();
 }
 
-void StepperMotorBase::postCurrentPosition(void) {
+void StepperMotorBase::postCurrentPosition() {
 	if (engineConfiguration->debugMode == DBG_STEPPER_IDLE_CONTROL) {
 #if EFI_TUNER_STUDIO
 		engine->outputChannels.debugIntField5 = m_currentPosition;
@@ -65,7 +65,7 @@ void StepperMotorBase::postCurrentPosition(void) {
 	}
 }
 
-void StepperMotorBase::setInitialPosition(void) {
+void StepperMotorBase::setInitialPosition() {
 	// try to get saved stepper position (-1 for no data)
 	m_currentPosition = loadStepperPos();
 

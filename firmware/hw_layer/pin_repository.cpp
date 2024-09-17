@@ -11,7 +11,7 @@
 
 #include "pch.h"
 
-unsigned int getBrainPinTotalNum(void) {
+unsigned int getBrainPinTotalNum() {
 	return BRAIN_PIN_TOTAL_PINS;
 }
 

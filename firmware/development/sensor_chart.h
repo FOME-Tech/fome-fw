@@ -10,5 +10,5 @@
 #include "global.h"
 
 void scAddData(float angle, float value);
-void initSensorChart(void);
+void initSensorChart();
 void publishSensorChartIfFull();

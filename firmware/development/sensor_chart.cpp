@@ -73,7 +73,7 @@ void scAddData(float angle, float value) {
 #endif /* EFI_TEXT_LOGGING */
 }
 
-void initSensorChart(void) {
+void initSensorChart() {
 #if EFI_SIMULATOR
 	printf("initSensorChart\n");
 #endif

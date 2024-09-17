@@ -1421,7 +1421,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void boardInit(void);
+  void boardInit();
 #ifdef __cplusplus
 }
 #endif

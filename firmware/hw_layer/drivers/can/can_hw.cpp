@@ -199,7 +199,7 @@ void initCan() {
 	isCanEnabled = true;
 }
 
-bool getIsCanEnabled(void) {
+bool getIsCanEnabled() {
 	return isCanEnabled;
 }
 
