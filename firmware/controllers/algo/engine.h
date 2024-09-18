@@ -152,7 +152,7 @@ public:
 		AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */
 		MainRelayController,
-		IgnitionController,
+		Mockable<IgnitionController>,
 		Mockable<AcController>,
 		PrimeController,
 		DfcoController,
