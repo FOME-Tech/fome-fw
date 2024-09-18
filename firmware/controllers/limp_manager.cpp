@@ -248,7 +248,7 @@ void LimpManager::setFaultRevLimit(int limit) {
 }
 
 bool LimpManager::allowElectronicThrottle() const {
-	return m_allowEtb || engine->etbIgnoreJamProtection;
+	return m_allowEtb;
 }
 
 bool LimpManager::allowTriggerInput() const {

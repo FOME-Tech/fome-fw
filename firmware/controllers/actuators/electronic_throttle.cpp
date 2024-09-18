@@ -494,9 +494,11 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 		return;
 	}
 
+	bool limpAllowThrottle = getLimpManager()->allowElectronicThrottle() || engine->etbIgnoreJamProtection;
+
 	// If not ETB, or ETB is allowed, output is valid, and we aren't paused, output to motor.
 	if (!isEtbMode() ||
-	   (getLimpManager()->allowElectronicThrottle()
+	   (limpAllowThrottle
 		&& outputValue
 		&& !engineConfiguration->pauseEtbControl)) {
 		m_motor->enable();
