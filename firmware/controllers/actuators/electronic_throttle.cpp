@@ -206,8 +206,6 @@ bool EtbController::init(dc_function_e function, DcMotor *motor, pid_s *pidParam
 
 void EtbController::reset() {
 	m_shouldResetPid = true;
-	m_dutyRocAverage.reset();
-	m_dutyAverage.reset();
 	etbTpsErrorCounter = 0;
 	etbPpsErrorCounter = 0;
 }
@@ -216,8 +214,7 @@ void EtbController::onConfigurationChange(pid_s* previousConfiguration) {
 	if (m_motor && !m_pid.isSame(previousConfiguration)) {
 		m_shouldResetPid = true;
 	}
-	m_dutyRocAverage.init(engineConfiguration->etbRocExpAverageLength);
-	m_dutyAverage.init(engineConfiguration->etbExpAverageLength);
+
 	doInitElectronicThrottle();
 }
 
@@ -798,9 +795,6 @@ void setBoschVNH2SP30Curve() {
 
 void setDefaultEtbParameters() {
 	engineConfiguration->etbIdleThrottleRange = 5;
-
-	engineConfiguration->etbExpAverageLength = 50;
-	engineConfiguration->etbRocExpAverageLength = 50;
 
 	setLinearCurve(config->pedalToTpsPedalBins, /*from*/0, /*to*/100, 1);
 	setLinearCurve(config->pedalToTpsRpmBins, /*from*/0, /*to*/8000, 1);

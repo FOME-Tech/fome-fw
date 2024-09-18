@@ -1242,7 +1242,6 @@ tChargeMode_e tChargeMode;
 
 	int8_t launchFuelAdderPercent;;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale etbJamTimeout;Time required to detect a stuck throttle.;"sec", 0.02, 0, 0, 5, 2
-	uint16_t etbExpAverageLength;By the way ETB PID runs at 500hz, length in 1/500 of second here.
 
 	int16_t coastingFuelCutRpmHigh;This sets the RPM above which fuel cut is active.;"rpm", 1, 0, 0, 5000, 0
 	int16_t coastingFuelCutRpmLow;This sets the RPM below which fuel cut is deactivated, this prevents jerking or issues transitioning to idle;"rpm", 1, 0, 0, 5000, 0
@@ -1270,8 +1269,6 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	int16_t etb_iTermMax;iTerm max value;"", 1, 0, -30000, 30000, 0
 
 	pid_s idleTimingPid
-
-	int16_t etbRocExpAverageLength;By the way ETB PID runs at 500hz, length in 1/500 of second here.
 
 	int16_t tpsAccelFractionPeriod;A delay in cycles between fuel-enrich. portions;"cycles", 1, 0, 0, 500, 0
 	float tpsAccelFractionDivisor;A fraction divisor: 1 or less = entire portion at once, or split into diminishing fractions;"coef", 1, 0, 0, 100, 2
