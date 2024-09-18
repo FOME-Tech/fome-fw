@@ -250,6 +250,7 @@ public:
 
     // todo: move to electronic_throttle something?
 	bool etbAutoTune = false;
+	bool etbIgnoreJamProtection = false;
 
 #if EFI_UNIT_TEST
 	bool tdcMarkEnabled = true;
