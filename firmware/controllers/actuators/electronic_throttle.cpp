@@ -623,7 +623,7 @@ void EtbController::checkJam(percent_t setpoint, percent_t observation) {
 				// getLimpManager()->reportEtbProblem();
 			}
 		} else {
-			m_jamDetectTimer.reset(getTimeNowNt());
+			m_jamDetectTimer.reset(nowNt);
 			jamDetected = false;
 		}
 
