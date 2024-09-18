@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20016
+#define FLASH_DATA_VERSION 20017
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -1382,7 +1382,7 @@ pwm_freq_t tcu_32_solenoid_freq
 
 output_pin_e acrPin2;
 
-float etbMinimumPosition;;"%", 1, 0, 0.01, 100, 2
+uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.05, 0, 0, 10, 2
 
 uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
 
