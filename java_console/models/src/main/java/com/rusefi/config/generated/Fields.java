@@ -1001,6 +1001,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
+	public static final int SIGNATURE_HASH = 2135853469;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1207,9 +1208,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.17.f407-discovery.4262340121";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.18.f407-discovery.2135853469";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1284;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1276;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
@@ -2257,7 +2258,7 @@ public class Fields {
 	public static final Field ACDELAY = Field.create("ACDELAY", 2814, FieldType.INT8).setScale(0.1).setBaseOffset(0);
 	public static final Field ACSWITCHMODE = Field.create("ACSWITCHMODE", 2815, FieldType.INT8, pin_input_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field FORDINJECTORSMALLPULSEBREAKPOINT = Field.create("FORDINJECTORSMALLPULSEBREAKPOINT", 2816, FieldType.INT16).setScale(0.001).setBaseOffset(0);
-	public static final Field ETBJAMINTEGRATORLIMIT = Field.create("ETBJAMINTEGRATORLIMIT", 2818, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field JAMDETECTTHRESHOLD = Field.create("JAMDETECTTHRESHOLD", 2818, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field HPFPCAMLOBES = Field.create("HPFPCAMLOBES", 2819, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final String[] hpfp_cam_e = {"NONE", "Intake 1", "Exhaust 1", "Intake 2", "Exhaust 2"};
 	public static final Field HPFPCAM = Field.create("HPFPCAM", 2820, FieldType.INT8, hpfp_cam_e).setScale(1.0).setBaseOffset(0);

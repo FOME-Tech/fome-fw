@@ -90,32 +90,24 @@ struct electronic_throttle_s {
 	bool unusedBit_32_30 : 1 {};
 	// offset 32 bit 31
 	bool unusedBit_32_31 : 1 {};
-	// ETB duty rate of change
-	// per
-	// offset 36
-	float etbDutyRateOfChange = (float)0;
-	// ETB average duty
-	// per
-	// offset 40
-	float etbDutyAverage = (float)0;
 	// ETB TPS error counter
 	// count
-	// offset 44
+	// offset 36
 	uint16_t etbTpsErrorCounter = (uint16_t)0;
 	// ETB pedal error counter
 	// count
-	// offset 46
+	// offset 38
 	uint16_t etbPpsErrorCounter = (uint16_t)0;
-	// offset 48
+	// offset 40
 	int8_t etbErrorCode = (int8_t)0;
-	// offset 49
-	uint8_t alignmentFill_at_49[1];
+	// offset 41
+	uint8_t alignmentFill_at_41[1];
 	// ETB jam timer
 	// sec
-	// offset 50
+	// offset 42
 	scaled_channel<uint16_t, 100, 1> jamTimer = (uint16_t)0;
 };
-static_assert(sizeof(electronic_throttle_s) == 52);
+static_assert(sizeof(electronic_throttle_s) == 44);
 static_assert(offsetof(electronic_throttle_s, idlePosition) == 0);
 static_assert(offsetof(electronic_throttle_s, trim) == 4);
 static_assert(offsetof(electronic_throttle_s, luaAdjustment) == 8);
@@ -124,10 +116,8 @@ static_assert(offsetof(electronic_throttle_s, etbFeedForward) == 16);
 static_assert(offsetof(electronic_throttle_s, etbIntegralError) == 20);
 static_assert(offsetof(electronic_throttle_s, etbCurrentTarget) == 24);
 static_assert(offsetof(electronic_throttle_s, etbCurrentAdjustedTarget) == 28);
-static_assert(offsetof(electronic_throttle_s, etbDutyRateOfChange) == 36);
-static_assert(offsetof(electronic_throttle_s, etbDutyAverage) == 40);
-static_assert(offsetof(electronic_throttle_s, etbTpsErrorCounter) == 44);
-static_assert(offsetof(electronic_throttle_s, etbPpsErrorCounter) == 46);
-static_assert(offsetof(electronic_throttle_s, etbErrorCode) == 48);
-static_assert(offsetof(electronic_throttle_s, jamTimer) == 50);
+static_assert(offsetof(electronic_throttle_s, etbTpsErrorCounter) == 36);
+static_assert(offsetof(electronic_throttle_s, etbPpsErrorCounter) == 38);
+static_assert(offsetof(electronic_throttle_s, etbErrorCode) == 40);
+static_assert(offsetof(electronic_throttle_s, jamTimer) == 42);
 
