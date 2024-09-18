@@ -182,6 +182,7 @@ public class Fields {
 	public static final int command_x14_e_COMMAND_X14_ETB_AUTO_CALIBRATE = 0x0E;
 	public static final int command_x14_e_COMMAND_X14_ETB_AUTOTUNE = 0x0C;
 	public static final int command_x14_e_COMMAND_X14_ETB_AUTOTUNE_STOP = 0x10;
+	public static final int command_x14_e_COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14;
 	public static final int command_x14_e_COMMAND_X14_GRAB_PEDAL_DOWN = 0x07;
 	public static final int command_x14_e_COMMAND_X14_GRAB_PEDAL_UP = 0x06;
 	public static final int command_x14_e_COMMAND_X14_RESET_TLE8888 = 0x08;
@@ -189,7 +190,6 @@ public class Fields {
 	public static final int command_x14_e_COMMAND_X14_UNUSED_1 = 0x01;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_11 = 0x0B;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_2 = 0x02;
-	public static final int command_x14_e_COMMAND_X14_UNUSED_20 = 0x14;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_3 = 0x03;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_4 = 0x04;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_5 = 0x05;
@@ -1001,7 +1001,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 2135853469;
+	public static final int SIGNATURE_HASH = 571563730;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1208,7 +1208,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.18.f407-discovery.2135853469";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.18.f407-discovery.571563730";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1276;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
