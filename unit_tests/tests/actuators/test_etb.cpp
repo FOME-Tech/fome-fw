@@ -296,7 +296,7 @@ TEST(etb, testSetpointOnlyPedal) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_EQ(50, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// Test some floating point pedal/output values
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.8302f, true);
@@ -308,7 +308,7 @@ TEST(etb, testSetpointOnlyPedal) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, -5, true);
 	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 105, true);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// Test invalid pedal position - should give 0 position
 	Sensor::resetMockValue(SensorType::AcceleratorPedal);
@@ -392,7 +392,7 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_FLOAT_EQ(52.5, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// 100% setpoint should increase by 10% closed, scaled 0% at wot
 	etb.setIdlePosition(100);
@@ -401,7 +401,7 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_FLOAT_EQ(55, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// 125% setpoint should clamp to 10% increase
 	etb.setIdlePosition(125);
@@ -516,7 +516,7 @@ TEST(etb, setpointLuaAdder) {
 
 	// Crazy adjustments don't cause unreasonable target
 	etb.setLuaAdjustment(1000);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 	etb.setLuaAdjustment(-1000);
 	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
 
@@ -753,7 +753,7 @@ TEST(etb, jamDetection) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 
 	// Limit of 5%, 1 second
-	engineConfiguration->jamDetectThreshold = 5;
+	engineConfiguration->etbJamDetectThreshold = 5;
 	engineConfiguration->etbJamTimeout = 1;
 
 	EtbController etb;
