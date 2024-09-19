@@ -7,8 +7,6 @@
  */
 #include "pch.h"
 
-#if EFI_ANALOG_SENSORS
-
 /**
  * This function checks if Baro/MAP sensor value is inside of expected range
  * @return unchanged mapKPa parameter or NaN
@@ -28,7 +26,6 @@ static float validateBaroMap(float mapKPa) {
 extern int mapMinBufferLength;
 
 static void printMAPInfo() {
-#if EFI_ANALOG_SENSORS
 	efiPrintf("instant value=%.2fkPa", Sensor::getOrZero(SensorType::Map));
 
 #ifdef MODULE_MAP_AVERAGING
@@ -61,7 +58,6 @@ static void printMAPInfo() {
 					engineConfiguration->mapHighValueVoltage);
 		}
 	}
-#endif /* EFI_ANALOG_SENSORS */
 }
 #endif /* EFI_PROD_CODE */
 
@@ -86,10 +82,3 @@ void initMapDecoder() {
 	addConsoleAction("mapinfo", printMAPInfo);
 #endif
 }
-
-#else /* EFI_ANALOG_SENSORS */
-
-void initMapDecoder() {
-}
-
-#endif /* EFI_ANALOG_SENSORS */

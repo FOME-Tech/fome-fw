@@ -167,8 +167,6 @@
 #define BOARD_TLE9104_COUNT 0
 #endif
 
-#define EFI_ANALOG_SENSORS TRUE
-
 #ifndef EFI_MAX_31855
 #define EFI_MAX_31855 TRUE
 #endif
