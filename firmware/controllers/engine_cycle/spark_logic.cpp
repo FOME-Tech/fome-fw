@@ -16,10 +16,6 @@
 
 #if EFI_ENGINE_CONTROL
 
-#if EFI_UNIT_TEST
-extern bool verboseMode;
-#endif /* EFI_UNIT_TEST */
-
 static const char *prevSparkName = nullptr;
 
 static void fireSparkBySettingPinLow(IgnitionEvent *event, IgnitionOutputPin *output) {
@@ -315,14 +311,6 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event,
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
 		engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { fireSparkAndPrepareNextSchedule, event });
 	}
-
-#if EFI_UNIT_TEST
-	if (verboseMode) {
-		printf("spark dwell@ %.1f spark@ %.2f id=%d\r\n", event->dwellAngle,
-			event->sparkEvent.enginePhase,
-			event->sparkId);
-	}
-#endif
 }
 
 void initializeIgnitionActions() {

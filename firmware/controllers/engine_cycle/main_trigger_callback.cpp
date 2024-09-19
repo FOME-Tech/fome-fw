@@ -52,12 +52,6 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 		fs->addFuelEvents();
 	}
 
-#if FUEL_MATH_EXTREME_LOGGING
-	if (printFuelDebug) {
-		efiPrintf("handleFuel [%.1f, %.1f) %d", currentPhase, nextPhase, getRevolutionCounter());
-	}
-#endif /* FUEL_MATH_EXTREME_LOGGING */
-
 	fs->onTriggerTooth(nowNt, currentPhase, nextPhase);
 }
 

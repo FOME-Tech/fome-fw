@@ -26,10 +26,6 @@
 #include "advance_map.h"
 #include "gppwm_channel.h"
 
-#if EFI_UNIT_TEST
-extern bool verboseMode;
-#endif /* EFI_UNIT_TEST */
-
 floatms_t getEngineCycleDuration(int rpm) {
 	return getCrankshaftRevolutionTimeMs(rpm) * (getEngineRotationState()->getOperationMode() == TWO_STROKE ? 1 : 2);
 }
@@ -418,12 +414,6 @@ void prepareOutputSignals() {
 	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
 	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE
 								&& (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
-
-#if EFI_UNIT_TEST
-	if (verboseMode) {
-		printf("prepareOutputSignals %d %s\r\n", engineConfiguration->trigger.type, getIgnition_mode_e(engineConfiguration->ignitionMode));
-	}
-#endif /* EFI_UNIT_TEST */
 
 #if EFI_SHAFT_POSITION_INPUT
 	engine->triggerCentral.prepareTriggerShape();
