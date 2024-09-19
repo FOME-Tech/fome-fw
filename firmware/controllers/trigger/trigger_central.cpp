@@ -610,10 +610,6 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 			m_lastToothPhaseFromSyncPoint = currentPhaseFromSyncPoint;
 		}
 
-#if TRIGGER_EXTREME_LOGGING
-	efiPrintf("trigger %d %d %d", triggerIndexForListeners, getRevolutionCounter(), (int)getTimeNowUs());
-#endif /* TRIGGER_EXTREME_LOGGING */
-
 		// Update engine RPM
 		rpmShaftPositionCallback(signal, triggerIndexForListeners, timestamp);
 
