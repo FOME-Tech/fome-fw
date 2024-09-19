@@ -29,6 +29,14 @@ public class Fields {
 	public static final int adc_channel_e_EFI_ADC_3 = 4;
 	public static final int adc_channel_e_EFI_ADC_30 = 31;
 	public static final int adc_channel_e_EFI_ADC_31 = 32;
+	public static final int adc_channel_e_EFI_ADC_32 = 33;
+	public static final int adc_channel_e_EFI_ADC_33 = 34;
+	public static final int adc_channel_e_EFI_ADC_34 = 35;
+	public static final int adc_channel_e_EFI_ADC_35 = 36;
+	public static final int adc_channel_e_EFI_ADC_36 = 37;
+	public static final int adc_channel_e_EFI_ADC_37 = 38;
+	public static final int adc_channel_e_EFI_ADC_38 = 39;
+	public static final int adc_channel_e_EFI_ADC_39 = 40;
 	public static final int adc_channel_e_EFI_ADC_4 = 5;
 	public static final int adc_channel_e_EFI_ADC_5 = 6;
 	public static final int adc_channel_e_EFI_ADC_6 = 7;
@@ -36,7 +44,7 @@ public class Fields {
 	public static final int adc_channel_e_EFI_ADC_8 = 9;
 	public static final int adc_channel_e_EFI_ADC_9 = 10;
 	public static final int adc_channel_e_EFI_ADC_ERROR = 50;
-	public static final int adc_channel_e_EFI_ADC_LAST_CHANNEL = 33;
+	public static final int adc_channel_e_EFI_ADC_LAST_CHANNEL = 41;
 	public static final int adc_channel_e_EFI_ADC_NONE = 0;
 	public static final int ADC_CHANNEL_NONE = 0;
 	public static final int afr_sensor_s_size = 12;
@@ -1208,7 +1216,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.18.f407-discovery.1685669046";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.09.19.f407-discovery.1685669046";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1276;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
