@@ -23,11 +23,6 @@ extern bool verboseMode;
 static const char *prevSparkName = nullptr;
 
 static void fireSparkBySettingPinLow(IgnitionEvent *event, IgnitionOutputPin *output) {
-#if SPARK_EXTREME_LOGGING
-	efiPrintf("spark goes low  %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->getName(), (int)getTimeNowUs(),
-			output->m_currentLogicValue, output->outOfOrder, event->sparkId);
-#endif /* SPARK_EXTREME_LOGGING */
-
 	/**
 	 * there are two kinds of 'out-of-order'
 	 * 1) low goes before high, everything is fine after words
@@ -142,24 +137,11 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 }
 
 static void chargeTrailingSpark(IgnitionOutputPin* pin) {
-#if SPARK_EXTREME_LOGGING
-	efiPrintf("chargeTrailingSpark %s", pin->getName());
-#endif /* SPARK_EXTREME_LOGGING */
 	pin->setHigh();
 }
 
 static void fireTrailingSpark(IgnitionOutputPin* pin) {
-#if SPARK_EXTREME_LOGGING
-	efiPrintf("fireTrailingSpark %s", pin->getName());
-#endif /* SPARK_EXTREME_LOGGING */
 	pin->setLow();
-}
-
-static void overFireSparkAndPrepareNextSchedule(IgnitionEvent *event) {
-#if SPARK_EXTREME_LOGGING
-	efiPrintf("overFireSparkAndPrepareNextSchedule %s", event->outputs[0]->getName());
-#endif /* SPARK_EXTREME_LOGGING */
-	fireSparkAndPrepareNextSchedule(event);
 }
 
 void fireSparkAndPrepareNextSchedule(IgnitionEvent *event) {
@@ -239,12 +221,6 @@ static void startDwellByTurningSparkPinHigh(IgnitionEvent *event, IgnitionOutput
 	}
 #endif /* EFI_UNIT_TEST */
 
-
-#if SPARK_EXTREME_LOGGING
-	efiPrintf("spark goes high %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->getName(), (int)getTimeNowUs(),
-			output->m_currentLogicValue, output->outOfOrder, event->sparkId);
-#endif /* SPARK_EXTREME_LOGGING */
-
 	if (output->outOfOrder) {
 		output->outOfOrder = false;
 		if (output->signalFallSparkId == event->sparkId) {
@@ -308,13 +284,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event,
 	 * The start of charge is always within the current trigger event range, so just plain time-based scheduling
 	 */
 	if (!limitedSpark) {
-#if SPARK_EXTREME_LOGGING
-		efiPrintf("scheduling sparkUp %d %s now=%d %d later id=%d", getRevolutionCounter(), event->getOutputForLoggins()->getName(), (int)getTimeNowUs(), (int)angleOffset,
-				event->sparkId);
-#endif /* SPARK_EXTREME_LOGGING */
-
-
-	/**
+		/**
 		 * Note how we do not check if spark is limited or not while scheduling 'spark down'
 		 * This way we make sure that coil dwell started while spark was enabled would fire and not burn
 		 * the coil.
@@ -339,20 +309,11 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event,
 		{ fireSparkAndPrepareNextSchedule, event },
 		currentPhase, nextPhase);
 
-	if (scheduled) {
-#if SPARK_EXTREME_LOGGING
-		efiPrintf("scheduling sparkDown %d %s now=%d later id=%d", getRevolutionCounter(), event->getOutputForLoggins()->getName(), (int)getTimeNowUs(), event->sparkId);
-#endif /* FUEL_MATH_EXTREME_LOGGING */
-	} else {
-#if SPARK_EXTREME_LOGGING
-		efiPrintf("to queue sparkDown %d %s now=%d for id=%d angle=%.1f", getRevolutionCounter(), event->getOutputForLoggins()->getName(), (int)getTimeNowUs(), event->sparkId, sparkAngle);
-#endif /* SPARK_EXTREME_LOGGING */
-
-		if (!limitedSpark && engine->enableOverdwellProtection) {
-			// auto fire spark at 1.5x nominal dwell
-			efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
-			engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { overFireSparkAndPrepareNextSchedule, event });
-		}
+	if (!scheduled && !limitedSpark && engine->enableOverdwellProtection) {
+		// If spark firing wasn't already scheduled, schedule the overdwell event at
+		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
+		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
+		engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { fireSparkAndPrepareNextSchedule, event });
 	}
 
 #if EFI_UNIT_TEST
