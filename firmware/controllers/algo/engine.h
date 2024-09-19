@@ -76,9 +76,6 @@
 #include "global_execution_queue.h"
 #endif /* EFI_UNIT_TEST */
 
-#define FAST_CALLBACK_PERIOD_MS 5
-#define SLOW_CALLBACK_PERIOD_MS 50
-
 struct AirmassModelBase;
 
 #define MAF_DECODING_CACHE_SIZE 256
@@ -155,7 +152,7 @@ public:
 		AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */
 		MainRelayController,
-		IgnitionController,
+		Mockable<IgnitionController>,
 		Mockable<AcController>,
 		PrimeController,
 		DfcoController,
@@ -253,6 +250,7 @@ public:
 
     // todo: move to electronic_throttle something?
 	bool etbAutoTune = false;
+	bool etbIgnoreJamProtection = false;
 
 #if EFI_UNIT_TEST
 	bool tdcMarkEnabled = true;

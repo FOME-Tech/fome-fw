@@ -296,7 +296,7 @@ TEST(etb, testSetpointOnlyPedal) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_EQ(50, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// Test some floating point pedal/output values
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.8302f, true);
@@ -308,7 +308,7 @@ TEST(etb, testSetpointOnlyPedal) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, -5, true);
 	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 105, true);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// Test invalid pedal position - should give 0 position
 	Sensor::resetMockValue(SensorType::AcceleratorPedal);
@@ -392,7 +392,7 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_FLOAT_EQ(52.5, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// 100% setpoint should increase by 10% closed, scaled 0% at wot
 	etb.setIdlePosition(100);
@@ -401,7 +401,7 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_FLOAT_EQ(55, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// 125% setpoint should clamp to 10% increase
 	etb.setIdlePosition(125);
@@ -516,7 +516,7 @@ TEST(etb, setpointLuaAdder) {
 
 	// Crazy adjustments don't cause unreasonable target
 	etb.setLuaAdjustment(1000);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 	etb.setLuaAdjustment(-1000);
 	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
 
@@ -709,6 +709,8 @@ TEST(etb, setOutputLimpHome) {
 }
 
 TEST(etb, closedLoopPid) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	pid_s pid = {};
 	pid.pFactor = 5;
 	pid.maxValue = 75;
@@ -723,9 +725,7 @@ TEST(etb, closedLoopPid) {
 	etb.init(DC_Throttle1, nullptr, &pid, nullptr, true);
 
 	// Disable autotune for now
-	Engine e;
-	EngineTestHelperBase base(&e, nullptr, nullptr);
-	e.etbAutoTune = false;
+	engine->etbAutoTune = false;
 
 	// Setpoint greater than actual, should be positive output
 	EXPECT_FLOAT_EQ(etb.getClosedLoop(50, 40).value_or(-1), 50);
@@ -740,14 +740,12 @@ TEST(etb, closedLoopPid) {
 TEST(etb, jamDetection) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	pid_s pid = {};
+	MockIgnitionController ignController;
 
-	// I-only since we're testing out the integrator
-	pid.pFactor = 0;
-	pid.iFactor = 1;
-	pid.dFactor = 0;
-	pid.maxValue = 50;
-	pid.minValue = -50;
+	EXPECT_CALL(ignController, getIgnState).WillRepeatedly(Return(true));
+
+	// This only works when the ignition is on!
+	engine->module<IgnitionController>().set(&ignController);
 
 	// Must have TPS & PPS initialized for ETB setup
 	Sensor::setMockValue(SensorType::Tps1Primary, 0);
@@ -755,36 +753,31 @@ TEST(etb, jamDetection) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 
 	// Limit of 5%, 1 second
-	engineConfiguration->etbJamIntegratorLimit = 5;
+	engineConfiguration->etbJamDetectThreshold = 5;
 	engineConfiguration->etbJamTimeout = 1;
 
 	EtbController etb;
-	etb.init(DC_Throttle1, nullptr, &pid, nullptr, true);
+	etb.init(DC_Throttle1, nullptr, nullptr, nullptr, true);
 
 	setTimeNowUs(0);
 
-	// Reset timer while under integrator limit
-	EXPECT_EQ(etb.getPidState().iTerm, 0);
-	etb.checkOutput(0);
+	// Reset timer while under error limit
+	etb.checkJam(10, 14);
 	EXPECT_EQ(etb.jamTimer, 0);
 	EXPECT_FALSE(etb.jamDetected);
 
-	for (size_t i = 0; i < ETB_LOOP_FREQUENCY; i++) {
-		// Error of 10, should accumulate 10 integrator per second
-		etb.getClosedLoop(50, 40);
-	}
-
-	EXPECT_NEAR(etb.getPidState().iTerm, 10.0f, 1e-3);
+	// Start a jam
+	etb.checkJam(10, 16);
 
 	// Just under time limit, no jam yet
 	setTimeNowUs(0.9e6);
-	etb.checkOutput(0);
+	etb.checkJam(10, 16);
 	EXPECT_NEAR(etb.jamTimer, 0.9f, 1e-3);
 	EXPECT_FALSE(etb.jamDetected);
 
 	// Above the time limit, jam detected!
 	setTimeNowUs(1.1e6);
-	etb.checkOutput(0);
+	etb.checkJam(10, 16);
 	EXPECT_TRUE(etb.jamDetected);
 }
 

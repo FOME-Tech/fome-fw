@@ -121,8 +121,6 @@ void Engine::updateTriggerWaveform() {
 }
 
 void Engine::periodicSlowCallback() {
-	ScopePerf perf(PE::EnginePeriodicSlowCallback);
-
 #if EFI_SHAFT_POSITION_INPUT
 	// Re-read config in case it's changed
 	triggerCentral.primaryTriggerConfiguration.update();
@@ -210,7 +208,7 @@ void Engine::updateSwitchInputs() {
 		AcController & acController = engine->module<AcController>().unmock();
 		if (acController.acButtonState != currentState) {
 			acController.acButtonState = currentState;
-			acController.acSwitchLastChangeTimeMs = US2MS(getTimeNowUs());
+			acController.timeSinceStateChange.reset();
 		}
 	}
 	engine->engineState.clutchUpState = getClutchUpState();

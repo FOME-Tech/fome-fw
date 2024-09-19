@@ -12,9 +12,7 @@
 
 #include "sensor.h"
 #include "efi_pid.h"
-#include "error_accumulator.h"
 #include "electronic_throttle_generated.h"
-#include "exp_average.h"
 
 /**
  * Hard code ETB update speed.
@@ -53,9 +51,9 @@ public:
 	expected<percent_t> getClosedLoop(percent_t setpoint, percent_t observation) override;
 	expected<percent_t> getClosedLoopAutotune(percent_t setpoint, percent_t actualThrottlePosition);
 
-	void setOutput(expected<percent_t> outputValue) override;
+	void checkJam(percent_t setpoint, percent_t observation);
 
-	void checkOutput(percent_t output);
+	void setOutput(expected<percent_t> outputValue) override;
 
 	// Used to inspect the internal PID controller's state
 	const pid_state_s& getPidState() const override { return m_pid; };
@@ -90,8 +88,6 @@ private:
 	DcMotor *m_motor = nullptr;
 	Pid m_pid;
 	bool m_shouldResetPid = false;
-	// todo: rename to m_targetErrorAccumulator
-	ErrorAccumulator m_errorAccumulator;
 
 	/**
 	 * @return true if OK, false if should be disabled
@@ -100,9 +96,6 @@ private:
 	bool isEtbMode() const override {
 		return m_function == DC_Throttle1 || m_function == DC_Throttle2;
 	}
-
-	ExpAverage m_dutyRocAverage;
-	ExpAverage m_dutyAverage;
 
 	Timer m_jamDetectTimer;
 

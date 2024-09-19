@@ -28,7 +28,7 @@ or
 
 # Changelog
 
-## Unreleased
+## September 2024 Release
 
 ### Added
  - Staged injection: a second set of fuel injectors that inject part of the fuel load when you run out of primary injector
@@ -43,7 +43,10 @@ or
  - TunerStudio UI improvements (#436, etc)
  - Dropdown selector for popular gearbox ratios (#358, thank you @alrijleh and @nmschulte!)
  - Add two more aux linear sensors #476
- - Support wasted spark on odd cylinder count 4-stroke engines. Improves startup and allows running without a cam sensor!
+ - Support wasted spark on odd cylinder count and odd-fire engines. Improves startup and allows running without a cam sensor!
+ - Add an option for the DFCO MAP threshold to use a table dependent upon RPM #485 (thank you @alrijleh!)
+ - Option to disable DFCO on gear shift #487
+ - Ability to use an 8x8 table for after-start fuel multiplier that depends on CLT and engine run time
 
 ### Fixed
  - Improve performance with Lua CAN reception of a high volume of frames
@@ -55,6 +58,8 @@ or
  - Automatic calculation of knock sense frequency based on cylinder bore #379
  - Removed MAP sampling option that can result in inaccurate MAP sensor readings
  - Improve TunerStudio performance on STM32F4-based ECUs #474
+ - Inhibit VVT control if the cam position sensor dies
+ - Fix "Alpha-N IAT density correction" option
 
 ## December 2023 Release
 

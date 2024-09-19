@@ -387,6 +387,9 @@ static void handleCommandX14(uint16_t index) {
 		engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
 #endif // EFI_TUNER_STUDIO
 		return;
+	case COMMAND_X14_ETB_DISABLE_JAM_DETECT:
+		engine->etbIgnoreJamProtection = true;
+		return;
 #endif // EFI_ELECTRONIC_THROTTLE_BODY
 	case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:
 		widebandUpdatePending = true;

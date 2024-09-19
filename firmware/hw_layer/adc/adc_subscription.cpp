@@ -94,7 +94,7 @@ TODO: this code is similar to initIfValid, what is the plan? shall we extract he
 	// Populate the entry
 	entry->VoltsPerAdcVolt = voltsPerAdcVolt;
 	entry->Channel = channel;
-	entry->Filter.configureLowpass(SLOW_ADC_RATE, lowpassCutoff);
+	entry->Filter.configureLowpass(hzForPeriod(ADC_UPDATE_RATE), lowpassCutoff);
 	entry->HasUpdated = false;
 
 	// Set the sensor last - it's the field we use to determine whether this entry is in use
