@@ -112,16 +112,17 @@ void writeSdBlock(Writer& outBuffer) {
 	// Offset 1 = rolling counter sequence number
 	buffer[1] = blockRollCounter++;
 
+	auto nowNt = getTimeNowNt();
+
 	// Offset 2, size 2 = Timestamp at 10us resolution
-	efitimeus_t nowUs = getTimeNowUs();
-	uint16_t timestamp = nowUs / 10;
+	uint16_t timestamp = (nowNt / (US_TO_NT_MULTIPLIER * 10));
 	buffer[2] = timestamp >> 8;
 	buffer[3] = timestamp & 0xFF;
 
 	outBuffer.write(buffer, 4);
 
 	// Sigh.
-	*reinterpret_cast<uint32_t*>(&packedTime) = getTimeNowNt() / TicksPerCount;
+	*reinterpret_cast<uint32_t*>(&packedTime) = nowNt / TicksPerCount;
 
 	uint8_t sum = 0;
 	for (size_t fieldIndex = 0; fieldIndex < efi::size(fields); fieldIndex++) {
