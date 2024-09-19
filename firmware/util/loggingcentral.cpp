@@ -169,12 +169,14 @@ namespace priv
 {
 void efiPrintfInternal(const char *format, ...) {
 #if EFI_UNIT_TEST || EFI_SIMULATOR
-	printf("efiPrintfInternal:");
-	va_list ap;
-	va_start(ap, format);
-	vprintf(format, ap);
-	va_end(ap);
-	printf("\r\n");
+	{
+		printf("efiPrintfInternal:");
+		va_list ap;
+		va_start(ap, format);
+		vprintf(format, ap);
+		va_end(ap);
+		printf("\r\n");
+	}
 #endif
 #if (EFI_PROD_CODE || EFI_SIMULATOR) && EFI_TEXT_LOGGING
 	LogLineBuffer* lineBuffer;
