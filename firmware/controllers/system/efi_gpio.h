@@ -57,12 +57,6 @@ private:
 	const uint16_t m_pinModeOffset;
 	bool isPinConfigurationChanged();
 };
-
-class RegisteredNamedOutputPin : public RegisteredOutputPin, public NamedOutputPin {
-public:
-	RegisteredNamedOutputPin(const char* name, size_t pinOffset, size_t pinModeOffset);
-};
-
 class EnginePins {
 public:
 	EnginePins();
@@ -75,7 +69,7 @@ public:
 	/**
 	 * High Pressure Fuel Pump valve control
 	 */
-	RegisteredNamedOutputPin hpfpValve;
+	RegisteredOutputPin hpfpValve;
 	// this one cranks engine
 	RegisteredOutputPin starterControl;
 	// this one prevents driver from cranking engine
