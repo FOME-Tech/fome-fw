@@ -22,7 +22,6 @@
 #include "eficonsole.h"
 #include "console_io.h"
 #include "sensor_chart.h"
-#include "serial_hw.h"
 #include "idle_thread.h"
 #include "kline.h"
 
@@ -213,10 +212,6 @@ void applyNewHardwareSettings() {
 	stopCanPins();
 #endif /* EFI_CAN_SUPPORT */
 
-#if EFI_AUX_SERIAL
-	stopAuxSerialPins();
-#endif /* EFI_AUX_SERIAL */
-
 	stopHardware();
 
 	if (isConfigurationChanged(is_enabled_spi_1)) {
@@ -282,10 +277,6 @@ void applyNewHardwareSettings() {
 #endif /* (BOARD_EXT_GPIOCHIPS > 0) */
 
 	enginePins.startPins();
-
-#if EFI_AUX_SERIAL
-	startAuxSerialPins();
-#endif /* EFI_AUX_SERIAL */
 
     initKLine();
 
@@ -461,10 +452,6 @@ void initHardware() {
 #if EFI_MEMS
 	initAccelerometer();
 #endif
-
-#if EFI_AUX_SERIAL
-	initAuxSerial();
-#endif /* EFI_AUX_SERIAL */
 
 #if EFI_CAN_SUPPORT
 	initCanVssSupport();

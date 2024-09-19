@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20017
+#define FLASH_DATA_VERSION 20018
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -829,7 +829,6 @@ sensor_chart_e sensorChartMode;FOME console sensor sniffer mode;
 	bit multisparkEnable
 	bit enableLaunchRetard
 	bit enableCanVss;Read VSS from OEM CAN bus according to selected CAN vehicle configuration.
-	bit enableInnovateLC2
 	bit enableOilPressureProtect
 	bit stftIgnoreErrorMagnitude;If enabled, adjust at a constant rate instead of a rate proportional to the current lambda error. This mode may be easier to tune, and more tolerant of sensor noise.
 	bit enableSoftwareKnock
@@ -1063,8 +1062,6 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	
 	int16_t iacByTpsTaper;Extra IAC, in percent between 0 and 100, tapered between zero and idle deactivation TPS value;"percent", 1, 0, 0, 500, 0
 
-	Gpio auxSerialTxPin;Auxiliary sensor serial, not to be confused with secondary calibration serial;
-	Gpio auxSerialRxPin;Auxiliary sensor serial, not to be confused with secondary calibration serial;
 	Gpio LIS302DLCsPin;
 
 
@@ -1087,8 +1084,6 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint32_t uartConsoleSerialSpeed;Band rate for primary TTL;"BPs", 1, 0, 0, 1000000, 0
 	float tpsDecelEnleanmentThreshold;For decel we simply multiply delta of TPS and tFor decel we do not use table?!;"roc", 1, 0, 0, 200, 1
 	float tpsDecelEnleanmentMultiplier;Magic multiplier, we multiply delta of TPS and get fuel squirt duration;"coeff", 1, 0, 0, 200, 2
-
-	uint32_t auxSerialSpeed;;"BPs", 1, 0, 0, 1000000, 0
 
 	float throttlePedalSecondaryUpVoltage;;"voltage", 1, 0, -6, 6, 2
 	float throttlePedalSecondaryWOTVoltage;Pedal in the floor;"voltage", 1, 0, -6, 6, 2
