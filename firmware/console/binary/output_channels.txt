@@ -350,4 +350,6 @@ float mapFast
 	uint8_t[12 iterate] mapPerCylinder;;"kPa", 1, 0, 0, 0, 0
 
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
+
+	uint16_t autoscale rawFuelTankLevel;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 end_struct
