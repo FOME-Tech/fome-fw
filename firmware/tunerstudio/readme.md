@@ -31,4 +31,4 @@ On Linux this may be run with `gen_config.sh`.
 
 Q: how do I offer my changes to TS project?
 
-A: please PR only source files (tunerstudio.template.ini & rusefi_config.txt). Once merged, gen_config.bat would be executed automatically and results would be pushed by automation.
+A: please PR only source files (tunerstudio.template.ini & rusefi_config.txt). Once merged, gen_config.sh would be executed automatically and results would be pushed by automation.
