@@ -47,6 +47,7 @@ or
  - Add an option for the DFCO MAP threshold to use a table dependent upon RPM #485 (thank you @alrijleh!)
  - Option to disable DFCO on gear shift #487
  - Ability to use an 8x8 table for after-start fuel multiplier that depends on CLT and engine run time
+ - Start-up tachometer sweep!
 
 ### Fixed
  - Improve performance with Lua CAN reception of a high volume of frames
