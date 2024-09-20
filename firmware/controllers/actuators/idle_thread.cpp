@@ -68,6 +68,15 @@ IIdleController::Phase IdleController::determinePhase(int rpm, int targetRpm, Se
 		return Phase::Running;
 	}
 
+	// if car is gear, disable closed loop idle
+	// this applies to cars like NA/NB miatas where the clutch up switch only return true if in gear
+	bool clutchUp = !engineConfiguration->disableIdleClutchUp 
+		|| !isBrainPinValid(engineConfiguration->clutchUpPin)
+		|| engine->engineState.clutchUpState;
+	if (looksLikeCoasting && clutchUp) {
+		return Phase::Coasting;
+	}
+
 	// If still in the cranking taper, disable closed loop idle
 	if (looksLikeCrankToIdle) {
 		return Phase::CrankToIdleTaper;
