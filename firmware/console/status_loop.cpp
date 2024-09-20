@@ -364,6 +364,7 @@ static void updateRawSensors() {
 	engine->outputChannels.rawMaf2 = Sensor::getRaw(SensorType::Maf2);
 	engine->outputChannels.rawMap = Sensor::getRaw(SensorType::MapSlow);
 	engine->outputChannels.rawWastegatePosition = Sensor::getRaw(SensorType::WastegatePosition);
+	engine->outputChannels.rawFuelTankLevel = Sensor::getRaw(SensorType::FuelLevel);
 
 	engine->outputChannels.luaGauges[0] = Sensor::getOrZero(SensorType::LuaGauge1);
 	engine->outputChannels.luaGauges[1] = Sensor::getOrZero(SensorType::LuaGauge2);
