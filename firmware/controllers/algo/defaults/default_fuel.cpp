@@ -81,6 +81,10 @@ static void setDefaultVETable() {
 	setRpmTableBin(config->veRpmBins);
 	setRpmTableBin(config->mafVeRpmBins);
 	setRpmTableBin(config->alphanVeRpmBins);
+
+	setLinearCurve(config->mafVeLoadBins, 0, 120);
+	setLinearCurve(config->alphanVeLoadBins, 0, 100);
+
 	setTable(config->veTable, 80);
 	setTable(config->mafVeTable, 100);
 
