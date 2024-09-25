@@ -66,7 +66,7 @@ float ClosedLoopFuelCellImpl::getMaxAdjustment() const {
 
 	float raw = m_config->maxAdd * 0.01f;
 	// Don't allow maximum less than 0, or more than maximum adjustment
-	return minF(MAX_ADJ, maxF(raw, 0));
+	return clampF(0, raw, MAX_ADJ);
 }
 
 float ClosedLoopFuelCellImpl::getMinAdjustment() const {
@@ -77,7 +77,7 @@ float ClosedLoopFuelCellImpl::getMinAdjustment() const {
 
 	float raw = m_config->maxRemove * 0.01f;
 	// Don't allow minimum more than 0, or more than maximum adjustment
-	return maxF(-MAX_ADJ, minF(raw, 0));
+	return clampF(-MAX_ADJ, raw, 0);
 }
 
 float ClosedLoopFuelCellImpl::getIntegratorGain() const {
@@ -87,7 +87,7 @@ float ClosedLoopFuelCellImpl::getIntegratorGain() const {
 	}
 
 	// Clamp to reasonable limits - 100ms to 100s
-	float timeConstant = maxF(0.1f, minF(m_config->timeConstant, 100));
+	float timeConstant = clampF(0.1f, m_config->timeConstant, 100);
 
 	return 1 / timeConstant;
 }
