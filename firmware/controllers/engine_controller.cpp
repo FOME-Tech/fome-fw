@@ -505,8 +505,14 @@ bool validateConfig() {
 
 	// Fueling
 	{
-		ensureArrayIsAscending("VE load", config->veLoadBins);
-		ensureArrayIsAscending("VE RPM", config->veRpmBins);
+		ensureArrayIsAscending("VE (SD) load", config->veLoadBins);
+		ensureArrayIsAscending("VE (SD) RPM", config->veRpmBins);
+
+		ensureArrayIsAscending("VE (MAF) load", config->mafVeLoadBins);
+		ensureArrayIsAscending("VE (MAF) RPM", config->mafVeRpmBins);
+
+		ensureArrayIsAscending("VE (AN) load", config->alphanVeLoadBins);
+		ensureArrayIsAscending("VE (AN) RPM", config->alphanVeRpmBins);
 
 		ensureArrayIsAscending("Lambda/AFR load", config->lambdaLoadBins);
 		ensureArrayIsAscending("Lambda/AFR RPM", config->lambdaRpmBins);
