@@ -28,12 +28,12 @@
 #if EFI_ENGINE_CONTROL
 
 // todo: reset this between cranking attempts?! #2735
-int minCrankingRpm = 0;
+float minCrankingRpm = 0;
 
 /**
  * @return ignition timing angle advance before TDC
  */
-static angle_t getRunningAdvance(int rpm, float engineLoad) {
+static angle_t getRunningAdvance(float rpm, float engineLoad) {
 	if (engineConfiguration->timingMode == TM_FIXED) {
 		return engineConfiguration->fixedTiming;
 	}
@@ -137,7 +137,7 @@ static angle_t getAdvanceCorrections(float engineLoad) {
 /**
  * @return ignition timing angle advance before TDC for Cranking
  */
-static angle_t getCrankingAdvance(int rpm, float engineLoad) {
+static angle_t getCrankingAdvance(float rpm, float engineLoad) {
 	// get advance from the separate table for Cranking
 	if (engineConfiguration->useSeparateAdvanceForCranking) {
 		return interpolate2d(rpm, config->crankingAdvanceBins, config->crankingAdvance);
@@ -151,8 +151,7 @@ static angle_t getCrankingAdvance(int rpm, float engineLoad) {
 	return interpolateClamped(minCrankingRpm, engineConfiguration->crankingTimingAngle, engineConfiguration->cranking.rpm, crankingToRunningTransitionAngle, rpm);
 }
 
-
-angle_t getAdvance(int rpm, float engineLoad) {
+angle_t getAdvance(float rpm, float engineLoad) {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	if (std::isnan(engineLoad)) {
 		return 0; // any error should already be reported
@@ -194,7 +193,7 @@ angle_t getAdvance(int rpm, float engineLoad) {
 #endif
 }
 
-angle_t getCylinderIgnitionTrim(size_t cylinderNumber, int rpm, float ignitionLoad) {
+angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad) {
 	return interpolate3d(
 		config->ignTrims[cylinderNumber].table,
 		config->ignTrimLoadBins, ignitionLoad,
@@ -202,7 +201,7 @@ angle_t getCylinderIgnitionTrim(size_t cylinderNumber, int rpm, float ignitionLo
 	);
 }
 
-size_t getMultiSparkCount(int rpm) {
+size_t getMultiSparkCount(float rpm) {
 	// Compute multispark (if enabled)
 	if (engineConfiguration->multisparkEnable
 		&& rpm <= engineConfiguration->multisparkMaxRpm
