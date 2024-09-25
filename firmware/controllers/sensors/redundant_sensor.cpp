@@ -40,7 +40,7 @@ SensorResult RedundantSensor::get() const {
 	if (m_secondMaximum >= 100) {
 		// Sensor is fully redundant
 
-		float delta = absF(sensor1.Value - sensor2.Value);
+		float delta = std::abs(sensor1.Value - sensor2.Value);
 		if (delta <= m_maxDifference) {
 			// All is well: sensors are valid and values check out, return the average value
 			return (sensor1.Value + sensor2.Value) / 2;
@@ -56,7 +56,7 @@ SensorResult RedundantSensor::get() const {
 
 		// Check second sensor is below partial redundancy switch-over threshold
 		if (scaledSecond <= threshold) {
-			float delta = absF(sensor1.Value - scaledSecond);
+			float delta = std::abs(sensor1.Value - scaledSecond);
 			if (delta <= m_maxDifference) {
 				// All is well: sensors are valid and values check out, return the primary value
 				return sensor1.Value;
