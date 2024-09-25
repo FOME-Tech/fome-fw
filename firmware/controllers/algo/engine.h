@@ -248,7 +248,7 @@ public:
 	scheduling_s tdcScheduler[2];
 #endif /* EFI_ENGINE_CONTROL */
 
-    // todo: move to electronic_throttle something?
+	// todo: move to electronic_throttle something?
 	bool etbAutoTune = false;
 	bool etbIgnoreJamProtection = false;
 
