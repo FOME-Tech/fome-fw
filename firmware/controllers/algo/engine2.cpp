@@ -195,7 +195,7 @@ void EngineState::periodicFastCallback() {
 #endif // EFI_ENGINE_CONTROL
 }
 
-void EngineState::updateTChargeK(int rpm, float tps) {
+void EngineState::updateTChargeK(float rpm, float tps) {
 #if EFI_ENGINE_CONTROL
 	float newTCharge = engine->fuelComputer.getTCharge(rpm, tps);
 	if (!std::isnan(newTCharge)) {
