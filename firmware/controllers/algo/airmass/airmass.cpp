@@ -3,7 +3,7 @@
 #include "airmass.h"
 #include "idle_thread.h"
 
-AirmassVeModelBase::AirmassVeModelBase(const ValueProvider3D& veTable) : m_veTable(&veTable) {}
+AirmassVeModelBase::AirmassVeModelBase(const ValueProvider3D* veTable) : m_veTable(veTable) {}
 
 static float getVeLoadAxis(ve_override_e mode, float passedLoad) {
 	switch(mode) {
@@ -20,7 +20,7 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 	// Override the load value if necessary
 	load = getVeLoadAxis(engineConfiguration->veOverrideMode, load);
 
-	percent_t ve = m_veTable->getValue(rpm, load);
+	percent_t ve = m_veTable ? m_veTable->getValue(rpm, load) : getVeImpl(rpm, load);
 
 #if EFI_IDLE_CONTROL
 	auto tps = Sensor::get(SensorType::Tps1);

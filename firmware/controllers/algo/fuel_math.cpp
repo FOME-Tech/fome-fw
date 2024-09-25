@@ -141,9 +141,9 @@ float getRunningFuel(float baseFuel) {
 	return runningFuel;
 }
 
-static SpeedDensityAirmass sdAirmass(veMap, mapEstimationTable);
-static MafAirmass mafAirmass(veMap);
-static AlphaNAirmass alphaNAirmass(veMap);
+static SpeedDensityAirmass sdAirmass(&veMap, mapEstimationTable);
+static MafAirmass mafAirmass(&veMap);
+static AlphaNAirmass alphaNAirmass(&veMap);
 
 AirmassModelBase* getAirmassModel(engine_load_mode_e mode) {
 	switch (mode) {

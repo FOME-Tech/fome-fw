@@ -4,7 +4,7 @@
 
 class SpeedDensityAirmass : public SpeedDensityBase {
 public:
-	explicit SpeedDensityAirmass(const ValueProvider3D& veTable, const ValueProvider3D& mapEstimationTable)
+	explicit SpeedDensityAirmass(const ValueProvider3D* veTable, const ValueProvider3D& mapEstimationTable)
 		: SpeedDensityBase(veTable)
 		, m_mapEstimationTable(&mapEstimationTable)
 	{}

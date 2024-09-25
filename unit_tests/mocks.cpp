@@ -24,7 +24,7 @@ MockOutputPin::~MockOutputPin() { }
 MockExecutor::MockExecutor() { }
 MockExecutor::~MockExecutor() { }
 
-MockAirmass::MockAirmass() : AirmassVeModelBase(veTable) { }
+MockAirmass::MockAirmass() : AirmassVeModelBase(&veTable) { }
 MockAirmass::~MockAirmass() { }
 
 MockInjectorModel2::MockInjectorModel2() { }
