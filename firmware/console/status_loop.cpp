@@ -447,10 +447,6 @@ static void updateFuelInfo() {
 	engine->outputChannels.veValue = engine->engineState.currentVe;
 }
 
-static void updateIgnition(float rpm) {
-	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
-}
-
 static void updateFlags() {
 #if EFI_USB_SERIAL
 	engine->outputChannels.isUsbConnected =	is_usb_serial_ready();
@@ -508,7 +504,7 @@ void updateTunerStudioState() {
 
 	updateSensors();
 	updateFuelInfo();
-	updateIgnition(rpm);
+	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
 	updateFlags();
 
 	// 104

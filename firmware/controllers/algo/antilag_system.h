@@ -16,12 +16,12 @@ class AntilagSystemBase : public antilag_system_state_s {
 public:
 	void update();
 
-    bool isALSMinRPMCondition(int rpm) const;
-	bool isALSMaxRPMCondition(int rpm) const;
+	bool isALSMinRPMCondition(float rpm) const;
+	bool isALSMaxRPMCondition(float rpm) const;
 	bool isALSMinCLTCondition() const;
 	bool isALSMaxCLTCondition() const;
 	bool isALSMaxThrottleIntentCondition() const;
 	bool isInsideALSSwitchCondition();
-    /* enabled and all conditions above */
-	bool isAntilagConditionMet(int rpm);
+	/* enabled and all conditions above */
+	bool isAntilagConditionMet(float rpm);
 };
