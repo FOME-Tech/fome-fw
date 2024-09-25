@@ -31,8 +31,6 @@ floatms_t getEngineCycleDuration(int rpm);
 float getFuelingLoad();
 float getIgnitionLoad();
 
-floatms_t getSparkDwell(int rpm);
-
 ignition_mode_e getCurrentIgnitionMode();
 
 size_t getCylinderId(size_t index);

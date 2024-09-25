@@ -99,7 +99,7 @@ void EngineState::periodicFastCallback() {
 
 	engine->fuelComputer.running.timeSinceCrankingInSecs = crankingTimer.getElapsedSeconds(nowNt);
 
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	engine->ignitionState.sparkDwell = engine->ignitionState.getSparkDwell(rpm);
 	engine->ignitionState.dwellAngle = std::isnan(rpm) ? NAN :  engine->ignitionState.sparkDwell / getOneDegreeTimeMs(rpm);
 
