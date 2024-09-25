@@ -8,7 +8,6 @@
 #include "pch.h"
 
 #include "speed_density.h"
-#include "maf.h"
 #include "advance_map.h"
 
 TEST(misc, testIgnitionPlanning) {

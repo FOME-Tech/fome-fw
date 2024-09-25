@@ -15,6 +15,8 @@ public:
 
 	float getMap(float rpm, bool postState) const;
 
+	float getVeImpl(float rpm, percent_t load) const override;
+
 private:
 	const ValueProvider3D* const m_mapEstimationTable;
 };

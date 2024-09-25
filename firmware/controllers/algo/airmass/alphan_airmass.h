@@ -7,4 +7,6 @@ public:
 	explicit AlphaNAirmass(const ValueProvider3D* veTable = nullptr) : SpeedDensityBase(veTable) {}
 
 	AirmassResult getAirmass(float rpm, bool postState) override;
+
+	float getVeImpl(float rpm, percent_t load) const override;
 };

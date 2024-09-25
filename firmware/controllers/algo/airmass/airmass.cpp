@@ -69,11 +69,3 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 
 	return ve * PERCENT_DIV;
 }
-
-float AirmassVeModelBase::getVeImpl(float rpm, percent_t load) const {
-	return interpolate3d(
-		config->veTable,
-		config->veLoadBins, load,
-		config->veRpmBins, rpm
-	);
-}

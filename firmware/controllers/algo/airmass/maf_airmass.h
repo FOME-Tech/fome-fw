@@ -11,6 +11,8 @@ public:
 	// Compute airmass based on flow & engine speed
 	AirmassResult getAirmassImpl(float massAirFlow, float rpm, bool postState) const;
 
+	float getVeImpl(float rpm, percent_t load) const override;
+
 private:
 	float getMaf() const;
 };

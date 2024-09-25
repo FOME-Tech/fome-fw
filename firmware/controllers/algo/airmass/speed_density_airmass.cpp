@@ -58,3 +58,11 @@ float SpeedDensityAirmass::getMap(float rpm, bool postState) const {
 
 	return Sensor::get(SensorType::Map).value_or(fallbackMap);
 }
+
+float SpeedDensityAirmass::getVeImpl(float rpm, percent_t load) const {
+	return interpolate3d(
+		config->veTable,
+		config->veLoadBins, load,
+		config->veRpmBins, rpm
+	);
+}

@@ -1,11 +1,7 @@
+#include "pch.h"
 
-#include "engine_configuration.h"
-#include "sensor.h"
-#include "error_handling.h"
-
-#include "maf_airmass.h"
-#include "maf.h"
 #include "fuel_math.h"
+#include "maf_airmass.h"
 
 float MafAirmass::getMaf() const {
 	auto maf = Sensor::get(SensorType::Maf);
@@ -70,4 +66,12 @@ AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool post
 		correctedAirmass,
 		airChargeLoad, // AFR/VE/ignition table Y axis
 	};
+}
+
+float MafAirmass::getVeImpl(float rpm, percent_t load) const {
+	return interpolate3d(
+		config->mafVeTable,
+		config->mafVeLoadBins, load,
+		config->mafVeRpmBins, rpm
+	);
 }

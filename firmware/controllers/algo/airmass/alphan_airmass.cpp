@@ -33,3 +33,11 @@ AirmassResult AlphaNAirmass::getAirmass(float rpm, bool postState) {
 		tps.Value
 	};
 }
+
+float AlphaNAirmass::getVeImpl(float rpm, percent_t load) const {
+	return interpolate3d(
+		config->alphanVeTable,
+		config->alphanVeLoadBins, load,
+		config->alphanVeRpmBins, rpm
+	);
+}
