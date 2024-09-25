@@ -68,7 +68,7 @@ angle_t HpfpLobe::findNextLobe() {
 }
 
 // As a percent of the full pump stroke
-float HpfpQuantity::calcFuelPercent(int rpm) {
+float HpfpQuantity::calcFuelPercent(float rpm) {
 	float fuel_requested_cc_per_cycle =
 		engine->engineState.injectionMass[0] * (1.f / fuelDensity) * engineConfiguration->cylindersCount;
 	float fuel_requested_cc_per_lobe = fuel_requested_cc_per_cycle / engineConfiguration->hpfpCamLobes;
@@ -79,7 +79,7 @@ float HpfpQuantity::calcFuelPercent(int rpm) {
 						config->hpfpCompensationRpmBins, rpm);
 }
 
-float HpfpQuantity::calcPI(int rpm, float calc_fuel_percent) {
+float HpfpQuantity::calcPI(float rpm, float calc_fuel_percent) {
 	m_pressureTarget_kPa = std::max<float>(
 		m_pressureTarget_kPa - (engineConfiguration->hpfpTargetDecay *
 					(FAST_CALLBACK_PERIOD_MS / 1000.)),
@@ -117,7 +117,7 @@ float HpfpQuantity::calcPI(int rpm, float calc_fuel_percent) {
 	return p_control_percent + i_control_percent;
 }
 
-angle_t HpfpQuantity::pumpAngleFuel(int rpm, HpfpController *model) {
+angle_t HpfpQuantity::pumpAngleFuel(float rpm, HpfpController *model) {
 	// Math based on fuel requested
 	model->fuel_requested_percent = calcFuelPercent(rpm);
 
@@ -133,7 +133,7 @@ angle_t HpfpQuantity::pumpAngleFuel(int rpm, HpfpController *model) {
 
 void HpfpController::onFastCallback() {
 	// Pressure current/target calculation
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	isHpfpInactive = rpm < rpm_spinning_cutoff ||
 		    engineConfiguration->hpfpCamLobes == 0 ||
