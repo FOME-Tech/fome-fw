@@ -447,7 +447,7 @@ static void updateFuelInfo() {
 	engine->outputChannels.veValue = engine->engineState.currentVe;
 }
 
-static void updateIgnition(int rpm) {
+static void updateIgnition(float rpm) {
 	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
 }
 
@@ -482,9 +482,9 @@ static void updateFlags() {
 void updateTunerStudioState() {
 	TunerStudioOutputChannels *tsOutputChannels = &engine->outputChannels;
 #if EFI_SHAFT_POSITION_INPUT
-	int rpm = Sensor::get(SensorType::Rpm).value_or(0);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 #else /* EFI_SHAFT_POSITION_INPUT */
-	int rpm = 0;
+	float rpm = 0;
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
 #if EFI_PROD_CODE
