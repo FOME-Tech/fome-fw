@@ -34,7 +34,6 @@
 #include "speed_density_base.h"
 #include "lua_hooks.h"
 
-extern fuel_Map3D_t veMap;
 static mapEstimate_Map3D_t mapEstimationTable;
 
 #if EFI_ENGINE_CONTROL
@@ -141,9 +140,9 @@ float getRunningFuel(float baseFuel) {
 	return runningFuel;
 }
 
-static SpeedDensityAirmass sdAirmass(&veMap, mapEstimationTable);
-static MafAirmass mafAirmass(&veMap);
-static AlphaNAirmass alphaNAirmass(&veMap);
+static SpeedDensityAirmass sdAirmass(nullptr, mapEstimationTable);
+static MafAirmass mafAirmass;
+static AlphaNAirmass alphaNAirmass;
 
 AirmassModelBase* getAirmassModel(engine_load_mode_e mode) {
 	switch (mode) {

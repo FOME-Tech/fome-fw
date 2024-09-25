@@ -86,7 +86,6 @@ Engine * engine;
 void initDataStructures() {
 #if EFI_ENGINE_CONTROL
 	initFuelMap();
-	initSpeedDensity();
 #endif // EFI_ENGINE_CONTROL
 }
 

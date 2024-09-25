@@ -19,7 +19,7 @@ public:
 	// Retrieve the user-calibrated volumetric efficiency from the table
 	float getVe(float rpm, percent_t load, bool postState) const;
 
-	virtual float getVeImpl(float /*rpm*/, percent_t /*load*/) const { return 0.0f; }
+	virtual float getVeImpl(float /*rpm*/, percent_t /*load*/) const;
 
 private:
 	const ValueProvider3D* const m_veTable;

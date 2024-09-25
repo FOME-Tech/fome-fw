@@ -25,8 +25,6 @@
 #define rpmMin 500
 #define rpmMax 8000
 
-fuel_Map3D_t veMap;
-
 #define tpMin 0
 #define tpMax 100
 
@@ -112,8 +110,4 @@ temperature_t IFuelComputer::getTCharge(float rpm, float tps) {
 	}
 
 	return Tcharge;
-}
-
-void initSpeedDensity() {
-	veMap.init(config->veTable, config->veLoadBins, config->veRpmBins);
 }
