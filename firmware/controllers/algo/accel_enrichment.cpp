@@ -33,7 +33,7 @@ floatms_t TpsAccelEnrichment::getTpsEnrichment() {
 		// If disabled, return 0.
 		return 0;
 	}
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	if (rpm == 0) {
 		return 0;
 	}

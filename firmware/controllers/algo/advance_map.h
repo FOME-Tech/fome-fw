@@ -14,7 +14,7 @@ angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignition
 /**
  * this method is used to build default advance map
  */
-float getInitialAdvance(int rpm, float map, float advanceMax);
+float getInitialAdvance(float rpm, float map, float advanceMax);
 
 size_t getMultiSparkCount(float rpm);
 
