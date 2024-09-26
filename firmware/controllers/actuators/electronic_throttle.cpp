@@ -61,10 +61,6 @@
 #include "dc_motors.h"
 #include "defaults.h"
 
-#if defined(HAS_OS_ACCESS)
-#error "Unexpected OS ACCESS HERE"
-#endif
-
 #if HW_PROTEUS
 #include "proteus_meta.h"
 #endif // HW_PROTEUS

@@ -9,10 +9,6 @@
 
 #include "pch.h"
 
-#if defined(HAS_OS_ACCESS)
-#error "Unexpected OS ACCESS HERE"
-#endif
-
 #define rpmMin 500
 #define rpmMax 8000
 
