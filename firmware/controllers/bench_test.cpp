@@ -80,8 +80,8 @@ struct BenchParams {
 };
 
 static void runBench(BenchParams& params) {
-	int onTimeUs = MS2US(std::max(0.1, params.OnTimeMs));
-	int offTimeUs = MS2US(std::max(0.1, params.OffTimeMs));
+	int onTimeUs = MS2US(std::max(0.1f, params.OnTimeMs));
+	int offTimeUs = MS2US(std::max(0.1f, params.OffTimeMs));
 
 	if (onTimeUs > TOO_FAR_INTO_FUTURE_US) {
 		firmwareError(ObdCode::CUSTOM_ERR_BENCH_PARAM, "onTime above limit %dus", TOO_FAR_INTO_FUTURE_US);
