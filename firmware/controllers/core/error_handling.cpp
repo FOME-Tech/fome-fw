@@ -17,7 +17,7 @@ bool hasFirmwareErrorFlag = false;
 const char *dbg_panic_file;
 int dbg_panic_line;
 
-const char* getCriticalErrorMessage(void) {
+const char* getCriticalErrorMessage() {
 	return criticalErrorMessageBuffer;
 }
 
@@ -79,8 +79,10 @@ void chDbgPanic3(const char *msg, const char * file, int line) {
 	__asm volatile("BKPT #0\n");
 #endif
 
-	if (hasOsPanicError())
+	if (hasOsPanicError()) {
 		return;
+	}
+
 	dbg_panic_file = file;
 	dbg_panic_line = line;
 #if CH_DBG_SYSTEM_STATE_CHECK
@@ -126,8 +128,9 @@ WarningCodeState unitTestWarningCodeState;
  * @returns TRUE in case there were warnings recently
  */
 bool warning(ObdCode code, const char *fmt, ...) {
-	if (hasFirmwareErrorFlag)
+	if (hasFirmwareErrorFlag) {
 		return true;
+	}
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
 	// we just had this same warning, let's not spam
@@ -156,11 +159,6 @@ bool warning(ObdCode code, const char *fmt, ...) {
 #endif /* EFI_SIMULATOR || EFI_PROD_CODE */
 	return false;
 }
-
-const char* getWarningMessage(void) {
-	return warningBuffer;
-}
-
 
 #if EFI_CLOCK_LOCKS
 uint32_t lastLockTime;
@@ -213,8 +211,10 @@ void onUnlockHook(void) {
 
 void firmwareError(ObdCode code, const char *fmt, ...) {
 #if EFI_PROD_CODE
-	if (hasFirmwareErrorFlag)
+	if (hasFirmwareErrorFlag) {
 		return;
+	}
+
 	hasFirmwareErrorFlag = true;
 
 	getLimpManager()->fatalError();

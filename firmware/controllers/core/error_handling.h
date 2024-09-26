@@ -47,11 +47,10 @@ extern bool hasFirmwareErrorFlag;
 
 #define hasFirmwareError() hasFirmwareErrorFlag
 
-const char* getCriticalErrorMessage(void);
-const char* getWarningMessage(void);
+const char* getCriticalErrorMessage();
 
 // todo: better place for this shared declaration?
-int getRusEfiVersion(void);
+int getRusEfiVersion();
 
 #if EFI_ENABLE_ASSERTS
   #define efiAssert(code, condition, message, result) { if (!(condition)) { firmwareError(code, message); return result; } }
