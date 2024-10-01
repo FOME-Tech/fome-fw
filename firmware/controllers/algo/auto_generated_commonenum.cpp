@@ -715,6 +715,8 @@ case VVT_MAZDA_L:
   return "VVT_MAZDA_L";
 case VVT_MAZDA_SKYACTIV:
   return "VVT_MAZDA_SKYACTIV";
+case VVT_MIATA_NA:
+  return "VVT_MIATA_NA";
 case VVT_MIATA_NB:
   return "VVT_MIATA_NB";
 case VVT_MITSUBISHI_3A92:
