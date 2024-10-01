@@ -187,6 +187,22 @@ void initializeMazdaMiataVVtCamShape(TriggerWaveform *s) {
 	s->addEvent720(720, true, TriggerWheel::T_PRIMARY);
 }
 
+void initializeMazdaMiataNaCamShape(TriggerWaveform *s) {
+	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Both);
+
+	s->setTriggerSynchronizationGap3(0, 0.1, 0.5);
+	s->setTriggerSynchronizationGap3(1, 0.5, 2.3);
+
+	/**
+	 * http://rusefi.com/forum/viewtopic.php?f=3&t=729&p=12983#p12983
+	 */
+	s->addEvent720(216.897031, true, TriggerWheel::T_PRIMARY);
+	s->addEvent720(288.819688, false, TriggerWheel::T_PRIMARY);		// <-- This edge is the sync point
+
+	s->addEvent720(577.035495, true, TriggerWheel::T_PRIMARY);
+	s->addEvent720(720.0f, false, TriggerWheel::T_PRIMARY);
+}
+
 // https://rusefi.com/forum/viewtopic.php?f=17&t=2417
 // Cam pattern for intake/exhaust on all Skyactiv-G (and maybe -D/-X)
 void initializeMazdaSkyactivCam(TriggerWaveform *s) {
