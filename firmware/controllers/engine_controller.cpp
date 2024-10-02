@@ -553,6 +553,10 @@ bool validateConfig() {
 
 	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
 
+	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {
+		ensureArrayIsAscending("Fuel level curve", config->fuelLevelBins);
+	}
+
 	// Cranking tables
 	ensureArrayIsAscending("Cranking fuel mult", config->crankingFuelBins);
 	ensureArrayIsAscending("Cranking duration", config->crankingCycleBins);
