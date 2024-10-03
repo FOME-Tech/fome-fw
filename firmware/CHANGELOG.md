@@ -28,6 +28,14 @@ or
 
 # Changelog
 
+## Unreleased
+
+### Added
+ - Support Miata NA CAS "CMP" signal as a cam input (if you've installed a 36-1 crank trigger on an NA, for example) #495
+
+### Fixed
+ - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
+
 ## September 2024 Release
 
 ### Added
