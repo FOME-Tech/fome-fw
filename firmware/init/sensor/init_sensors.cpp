@@ -68,10 +68,8 @@ void initNewSensors() {
 	initBaro();
 	initAuxSpeedSensors();
 
-	#if !EFI_UNIT_TEST
-		initFuelLevel();
-		initMaf();
-	#endif
+	initFuelLevel();
+	initMaf();
 
 	initAuxDigital();
 

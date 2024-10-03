@@ -364,6 +364,7 @@ static void updateRawSensors() {
 	engine->outputChannels.rawMaf2 = Sensor::getRaw(SensorType::Maf2);
 	engine->outputChannels.rawMap = Sensor::getRaw(SensorType::MapSlow);
 	engine->outputChannels.rawWastegatePosition = Sensor::getRaw(SensorType::WastegatePosition);
+	engine->outputChannels.rawFuelTankLevel = Sensor::getRaw(SensorType::FuelLevel);
 
 	engine->outputChannels.luaGauges[0] = Sensor::getOrZero(SensorType::LuaGauge1);
 	engine->outputChannels.luaGauges[1] = Sensor::getOrZero(SensorType::LuaGauge2);
@@ -446,10 +447,6 @@ static void updateFuelInfo() {
 	engine->outputChannels.veValue = engine->engineState.currentVe;
 }
 
-static void updateIgnition(int rpm) {
-	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
-}
-
 static void updateFlags() {
 #if EFI_USB_SERIAL
 	engine->outputChannels.isUsbConnected =	is_usb_serial_ready();
@@ -481,9 +478,9 @@ static void updateFlags() {
 void updateTunerStudioState() {
 	TunerStudioOutputChannels *tsOutputChannels = &engine->outputChannels;
 #if EFI_SHAFT_POSITION_INPUT
-	int rpm = Sensor::get(SensorType::Rpm).value_or(0);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 #else /* EFI_SHAFT_POSITION_INPUT */
-	int rpm = 0;
+	float rpm = 0;
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
 #if EFI_PROD_CODE
@@ -507,7 +504,7 @@ void updateTunerStudioState() {
 
 	updateSensors();
 	updateFuelInfo();
-	updateIgnition(rpm);
+	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
 	updateFlags();
 
 	// 104

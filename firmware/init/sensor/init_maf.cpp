@@ -8,8 +8,6 @@
 static FunctionalSensor maf (SensorType::Maf , /* timeout = */ MS2NT(50));
 static FunctionalSensor maf2(SensorType::Maf2, /* timeout = */ MS2NT(50));
 
-#if !EFI_UNIT_TEST
-
 // This function converts volts -> kg/h
 static TableFunc mafCurve(config->mafDecodingBins, config->mafDecoding);
 
@@ -28,4 +26,3 @@ void initMaf() {
 	initMaf(engineConfiguration->mafAdcChannel, maf);
 	initMaf(engineConfiguration->maf2AdcChannel, maf2);
 }
-#endif // ! EFI_UNIT_TEST

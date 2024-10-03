@@ -44,7 +44,11 @@ void MainLoop::PeriodicTask(efitick_t nowNt) {
 #if EFI_ELECTRONIC_THROTTLE_BODY
 	if (p & ETB_UPDATE_RATE) {
 		for (int i = 0 ; i < ETB_COUNT; i++) {
-			engine->etbControllers[i]->update();
+			auto etb = engine->etbControllers[i];
+
+			if (etb) {
+				etb->update();
+			}
 		}
 	}
 #endif // EFI_ELECTRONIC_THROTTLE_BODY

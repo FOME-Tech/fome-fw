@@ -725,8 +725,13 @@ struct output_channels_s {
 	// ratio
 	// offset 702
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
+	// V
+	// offset 704
+	scaled_channel<uint16_t, 1000, 1> rawFuelTankLevel = (uint16_t)0;
+	// offset 706
+	uint8_t alignmentFill_at_706[2];
 };
-static_assert(sizeof(output_channels_s) == 704);
+static_assert(sizeof(output_channels_s) == 708);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, speedToRpmRatio) == 8);
@@ -911,4 +916,5 @@ static_assert(offsetof(output_channels_s, pad) == 687);
 static_assert(offsetof(output_channels_s, mapAveragingSamples) == 688);
 static_assert(offsetof(output_channels_s, mapPerCylinder) == 690);
 static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 702);
+static_assert(offsetof(output_channels_s, rawFuelTankLevel) == 704);
 

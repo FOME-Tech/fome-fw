@@ -33,7 +33,7 @@ floatms_t TpsAccelEnrichment::getTpsEnrichment() {
 		// If disabled, return 0.
 		return 0;
 	}
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	if (rpm == 0) {
 		return 0;
 	}
@@ -52,17 +52,17 @@ floatms_t TpsAccelEnrichment::getTpsEnrichment() {
 	isFractionalEnrichment = engineConfiguration->tpsAccelFractionPeriod > 1 || engineConfiguration->tpsAccelFractionDivisor > 1.0f;
 	if (isFractionalEnrichment) {
 		// make sure both values are non-zero
-		float periodF = (float)maxI(engineConfiguration->tpsAccelFractionPeriod, 1);
-		float divisor = maxF(engineConfiguration->tpsAccelFractionDivisor, 1.0f);
+		float periodF = std::max<int>(engineConfiguration->tpsAccelFractionPeriod, 1);
+		float divisor = std::max(engineConfiguration->tpsAccelFractionDivisor, 1.0f);
 
 		// if current extra fuel portion is not "strong" enough, then we keep up the "pump pressure" with the accumulated portion
-		floatms_t maxExtraFuel = maxF(extraFuel, accumulatedValue);
+		floatms_t maxExtraFuel = std::max(extraFuel, accumulatedValue);
 		// use only a fixed fraction of the accumulated portion
 		fractionalInjFuel = maxExtraFuel / divisor;
 
 		// update max counters
-		maxExtraPerCycle = maxF(extraFuel, maxExtraPerCycle);
-		maxInjectedPerPeriod = maxF(fractionalInjFuel, maxInjectedPerPeriod);
+		maxExtraPerCycle = std::max(extraFuel, maxExtraPerCycle);
+		maxInjectedPerPeriod = std::max(fractionalInjFuel, maxInjectedPerPeriod);
 
 		// evenly split it between several engine cycles
 		extraFuel = fractionalInjFuel / periodF;
@@ -86,7 +86,7 @@ void TpsAccelEnrichment::onEngineCycleTps() {
 
 	// we used some extra fuel during the current cycle, so we "charge" our "acceleration pump" with it
 	accumulatedValue -= maxExtraPerPeriod;
-	maxExtraPerPeriod = maxF(maxExtraPerCycle, maxExtraPerPeriod);
+	maxExtraPerPeriod = std::max(maxExtraPerCycle, maxExtraPerPeriod);
 	maxExtraPerCycle = 0;
 	accumulatedValue += maxExtraPerPeriod;
 

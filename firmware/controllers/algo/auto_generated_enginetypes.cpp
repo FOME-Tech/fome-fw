@@ -554,6 +554,8 @@ case trigger_type_e::TT_VVT_MAZDA_L:
   return "TT_VVT_MAZDA_L";
 case trigger_type_e::TT_VVT_MAZDA_SKYACTIV:
   return "TT_VVT_MAZDA_SKYACTIV";
+case trigger_type_e::TT_VVT_MIATA_NA:
+  return "TT_VVT_MIATA_NA";
 case trigger_type_e::TT_VVT_MIATA_NB:
   return "TT_VVT_MIATA_NB";
 case trigger_type_e::TT_VVT_MITSUBISHI_3A92:

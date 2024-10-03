@@ -29,18 +29,22 @@ static void setDefaultIatTimingCorrection() {
 	copyArray(config->ignitionIatCorrTable[2], {0, 0, 0, 0, 0, 0, -1, -2});
 }
 
-static float getAdvanceForRpm(int rpm, float advanceMax) {
-        if (rpm >= 3000)
-            return advanceMax;
-        if (rpm < 600)
-            return 10;
-       return interpolateMsg("advance", 600, 10, 3000, advanceMax, rpm);
+static float getAdvanceForRpm(float rpm, float advanceMax) {
+	if (rpm >= 3000) {
+		return advanceMax;
+	}
+
+	if (rpm < 600) {
+		return 10;
+	}
+
+	return interpolateMsg("advance", 600, 10, 3000, advanceMax, rpm);
 }
 
 #define round10(x) efiRound(x, 0.1)
 
-float getInitialAdvance(int rpm, float map, float advanceMax) {
-	map = minF(map, 100);
+float getInitialAdvance(float rpm, float map, float advanceMax) {
+	map = std::min(map, 100.0f);
 	float advance = getAdvanceForRpm(rpm, advanceMax);
 
 	if (rpm >= 3000)

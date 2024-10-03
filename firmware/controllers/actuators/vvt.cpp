@@ -56,7 +56,7 @@ expected<angle_t> VvtController::observePlant() const {
 }
 
 expected<angle_t> VvtController::getSetpoint() {
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	float load = getFuelingLoad();
 	float target = m_targetMap->getValue(rpm, load);
 

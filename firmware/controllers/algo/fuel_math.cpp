@@ -34,7 +34,6 @@
 #include "speed_density_base.h"
 #include "lua_hooks.h"
 
-extern fuel_Map3D_t veMap;
 static mapEstimate_Map3D_t mapEstimationTable;
 
 #if EFI_ENGINE_CONTROL
@@ -141,9 +140,9 @@ float getRunningFuel(float baseFuel) {
 	return runningFuel;
 }
 
-static SpeedDensityAirmass sdAirmass(veMap, mapEstimationTable);
-static MafAirmass mafAirmass(veMap);
-static AlphaNAirmass alphaNAirmass(veMap);
+static SpeedDensityAirmass sdAirmass(nullptr, mapEstimationTable);
+static MafAirmass mafAirmass;
+static AlphaNAirmass alphaNAirmass;
 
 AirmassModelBase* getAirmassModel(engine_load_mode_e mode) {
 	switch (mode) {
@@ -167,7 +166,7 @@ float getMaxAirflowAtMap(float map) {
 }
 
 // Per-cylinder base fuel mass
-static float getBaseFuelMass(int rpm) {
+static float getBaseFuelMass(float rpm) {
 	ScopePerf perf(PE::GetBaseFuel);
 
 	// airmass modes - get airmass first, then convert to fuel
@@ -274,13 +273,13 @@ float getInjectionModeDurationMultiplier() {
 	}
 }
 
-percent_t getInjectorDutyCycle(int rpm) {
+percent_t getInjectorDutyCycle(float rpm) {
 	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(engineConfiguration->injectionMode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }
 
-percent_t getInjectorDutyCycleStage2(int rpm) {
+percent_t getInjectorDutyCycleStage2(float rpm) {
 	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(engineConfiguration->injectionMode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
@@ -298,7 +297,7 @@ static float getCycleFuelMass(bool isCranking, float baseFuelMass) {
  * @returns	Mass of each individual fuel injection, in grams
  *     in case of single point injection mode the amount of fuel into all cylinders, otherwise the amount for one cylinder
  */
-float getInjectionMass(int rpm) {
+float getInjectionMass(float rpm) {
 	ScopePerf perf(PE::GetInjectionDuration);
 
 #if EFI_SHAFT_POSITION_INPUT
@@ -400,7 +399,7 @@ float getBaroCorrection() {
 	}
 }
 
-percent_t getFuelALSCorrection(int rpm) {
+percent_t getFuelALSCorrection(float rpm) {
 #if EFI_ANTILAG_SYSTEM
 		if (engine->antilagController.isAntilagCondition) {
 			float throttleIntent = Sensor::getOrZero(SensorType::DriverThrottleIntent);
@@ -409,7 +408,7 @@ percent_t getFuelALSCorrection(int rpm) {
 			config->alsFuelAdjustmentLoadBins, throttleIntent,
 			config->alsFuelAdjustmentrpmBins, rpm
 		);
-		return AlsFuelAdd;	
+		return AlsFuelAdd;
 	} else
 #endif /* EFI_ANTILAG_SYSTEM */
 	{
@@ -439,7 +438,7 @@ float getStandardAirCharge() {
 	return idealGasLaw(cylDisplacement, 101.325f, 273.15f + 20.0f);
 }
 
-float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
+float getCylinderFuelTrim(size_t cylinderNumber, float rpm, float fuelLoad) {
 	auto trimPercent = interpolate3d(
 		config->fuelTrims[cylinderNumber].table,
 		config->fuelTrimLoadBins, fuelLoad,
@@ -453,7 +452,7 @@ float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
 
 static Hysteresis stage2Hysteresis;
 
-float getStage2InjectionFraction(int rpm, float load) {
+float getStage2InjectionFraction(float rpm, float load) {
 	if (!engineConfiguration->enableStagedInjection) {
 		return 0;
 	}

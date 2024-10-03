@@ -69,14 +69,15 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 		return;
 	}
 
-	int rpm = engine->rpmCalculator.getCachedRpm();
+	float rpm = engine->rpmCalculator.getCachedRpm();
 	if (rpm == 0) {
 		// this happens while we just start cranking
 
 		// todo: check for 'trigger->is_synchnonized?'
 		return;
 	}
-	if (rpm == NOISY_RPM || rpm > UNREALISTIC_RPM) {
+
+	if (rpm == NOISY_RPM || !isValidRpm(rpm)) {
 		warning(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction, "noisy trigger");
 		return;
 	}
@@ -106,7 +107,7 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 	/**
 	 * For spark we schedule both start of coil charge and actual spark based on trigger angle
 	 */
-	onTriggerEventSparkLogic(rpm, edgeTimestamp, currentPhase, nextPhase);
+	onTriggerEventSparkLogic(edgeTimestamp, currentPhase, nextPhase);
 }
 
 #endif /* EFI_ENGINE_CONTROL */

@@ -9,15 +9,17 @@ struct AirmassResult {
 };
 
 struct AirmassModelBase {
-	virtual AirmassResult getAirmass(int rpm, bool postState) = 0;
+	virtual AirmassResult getAirmass(float rpm, bool postState) = 0;
 };
 
 class AirmassVeModelBase : public AirmassModelBase {
 public:
-	explicit AirmassVeModelBase(const ValueProvider3D& veTable);
+	explicit AirmassVeModelBase(const ValueProvider3D* veTable);
 
 	// Retrieve the user-calibrated volumetric efficiency from the table
-	float getVe(int rpm, percent_t load, bool postState) const;
+	float getVe(float rpm, percent_t load, bool postState) const;
+
+	virtual float getVeImpl(float /*rpm*/, percent_t /*load*/) const;
 
 private:
 	const ValueProvider3D* const m_veTable;

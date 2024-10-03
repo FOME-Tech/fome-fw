@@ -165,6 +165,7 @@ static angle_t adjustCrankPhase(int camIndex) {
 	case VVT_NISSAN_VQ:
 	case VVT_BOSCH_QUICK_START:
 	case VVT_MIATA_NB:
+	case VVT_MIATA_NA:
 	case VVT_TOYOTA_3_TOOTH:
 	case VVT_TOYOTA_4_1:
 	case VVT_FORD_ST170:
@@ -331,7 +332,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			break;
 		}
 
-		if (absF(angleFromPrimarySyncPoint) < 7) {
+		if (std::abs(angleFromPrimarySyncPoint) < 7) {
 			/**
 			 * we prefer not to have VVT sync right at trigger sync so that we do not have phase detection error if things happen a bit in
 			 * wrong order due to belt flex or else
@@ -528,7 +529,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 			}
 
 			// Absolute error from last tooth
-			float absError = absF(angleError);
+			float absError = std::abs(angleError);
 			float isRpmEnough = Sensor::getOrZero(SensorType::Rpm) > 1000;
 			// TODO: configurable threshold
 			if (isRpmEnough && absError > 10 && absError < 180) {

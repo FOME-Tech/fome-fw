@@ -26,14 +26,14 @@
 #include "advance_map.h"
 #include "gppwm_channel.h"
 
-floatms_t getEngineCycleDuration(int rpm) {
+floatms_t getEngineCycleDuration(float rpm) {
 	return getCrankshaftRevolutionTimeMs(rpm) * (getEngineRotationState()->getOperationMode() == TWO_STROKE ? 1 : 2);
 }
 
 /**
  * @return number of milliseconds in one crank shaft revolution
  */
-floatms_t getCrankshaftRevolutionTimeMs(int rpm) {
+floatms_t getCrankshaftRevolutionTimeMs(float rpm) {
 	if (rpm == 0) {
 		return NAN;
 	}
@@ -70,7 +70,7 @@ void setSingleCoilDwell() {
 /**
  * @return Spark dwell time, in milliseconds. 0 if tables are not ready.
  */
-floatms_t IgnitionState::getSparkDwell(int rpm) {
+floatms_t IgnitionState::getSparkDwell(float rpm) {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	float dwellMs;
 	if (engine->rpmCalculator.isCranking()) {
@@ -95,7 +95,7 @@ floatms_t IgnitionState::getSparkDwell(int rpm) {
 
 	if (std::isnan(dwellMs) || dwellMs <= 0) {
 		// this could happen during engine configuration reset
-		warning(ObdCode::CUSTOM_ERR_DWELL_DURATION, "invalid dwell: %.2f at rpm=%d", dwellMs, rpm);
+		warning(ObdCode::CUSTOM_ERR_DWELL_DURATION, "invalid dwell: %.2f at rpm=%.0f", dwellMs, rpm);
 		return 0;
 	}
 	return dwellMs;

@@ -225,11 +225,16 @@ struct engine_state_s {
 	// %
 	// offset 80
 	scaled_channel<uint16_t, 100, 1> veTableYAxis = (uint16_t)0;
-	// deg
+	// %
 	// offset 82
+	scaled_channel<uint16_t, 100, 1> idleVeTableYAxis = (uint16_t)0;
+	// deg
+	// offset 84
 	scaled_channel<uint16_t, 100, 1> mapAveragingDuration = (uint16_t)0;
+	// offset 86
+	uint8_t alignmentFill_at_86[2];
 };
-static_assert(sizeof(engine_state_s) == 84);
+static_assert(sizeof(engine_state_s) == 88);
 static_assert(offsetof(engine_state_s, baroCorrection) == 36);
 static_assert(offsetof(engine_state_s, hellenBoardId) == 40);
 static_assert(offsetof(engine_state_s, startStopStateToggleCounter) == 48);
@@ -241,5 +246,6 @@ static_assert(offsetof(engine_state_s, sparkCounter) == 68);
 static_assert(offsetof(engine_state_s, fuelingLoad) == 72);
 static_assert(offsetof(engine_state_s, ignitionLoad) == 76);
 static_assert(offsetof(engine_state_s, veTableYAxis) == 80);
-static_assert(offsetof(engine_state_s, mapAveragingDuration) == 82);
+static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 82);
+static_assert(offsetof(engine_state_s, mapAveragingDuration) == 84);
 

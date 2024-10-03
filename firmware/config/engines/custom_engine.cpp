@@ -355,11 +355,6 @@ static void mreBoardOldTest() {
 	// test harness: White/Red
 	engineConfiguration->map.sensor.hwChannel = EFI_ADC_7;
 
-
-	//engineConfiguration->baroSensor.hwChannel
-	//engineConfiguration->oilPressure.hwChannel
-	//engineConfiguration->fuelLevelSensor
-
 	// TPS tps1_1AdcChannel EFI_ADC_13
 
 	engineConfiguration->cylindersCount = 10;

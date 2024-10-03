@@ -86,7 +86,6 @@ Engine * engine;
 void initDataStructures() {
 #if EFI_ENGINE_CONTROL
 	initFuelMap();
-	initSpeedDensity();
 #endif // EFI_ENGINE_CONTROL
 }
 
@@ -554,6 +553,10 @@ bool validateConfig() {
 
 	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
 
+	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {
+		ensureArrayIsAscending("Fuel level curve", config->fuelLevelBins);
+	}
+
 	// Cranking tables
 	ensureArrayIsAscending("Cranking fuel mult", config->crankingFuelBins);
 	ensureArrayIsAscending("Cranking duration", config->crankingCycleBins);
@@ -662,7 +665,7 @@ static char UNUSED_CCM_SIZE[CCM_UNUSED_SIZE] CCM_OPTIONAL;
 /**
  * See also GIT_HASH
  */
-int getRusEfiVersion(void) {
+int getRusEfiVersion() {
 	if (UNUSED_RAM_SIZE[0] != 0)
 		return 123; // this is here to make the compiler happy about the unused array
 	if (UNUSED_CCM_SIZE[0] * 0 != 0)
