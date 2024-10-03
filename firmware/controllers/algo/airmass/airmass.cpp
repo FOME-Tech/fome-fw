@@ -20,12 +20,14 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 
 	percent_t ve = m_veTable ? m_veTable->getValue(rpm, load) : getVeImpl(rpm, load);
 
+	float idleVeLoad = load;
+
 #if EFI_IDLE_CONTROL
 	auto tps = Sensor::get(SensorType::Tps1);
 	// get VE from the separate table for Idle if idling
 	if (engine->module<IdleController>()->isIdlingOrTaper() &&
 		tps && engineConfiguration->useSeparateVeForIdle) {
-		float idleVeLoad = getVeLoadAxis(engineConfiguration->idleVeOverrideMode, load);
+		idleVeLoad = getVeLoadAxis(engineConfiguration->idleVeOverrideMode, load);
 
 		percent_t idleVe = interpolate3d(
 			config->idleVeTable,
@@ -65,6 +67,7 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 	if (postState) {
 		engine->engineState.currentVe = ve;
 		engine->engineState.veTableYAxis = load;
+		engine->engineState.idleVeTableYAxis = idleVeLoad;
 	}
 
 	return ve * PERCENT_DIV;
