@@ -69,11 +69,11 @@ IIdleController::Phase IdleController::determinePhase(float rpm, float targetRpm
 	}
 
 	// if car is gear, disable closed loop idle
-	// this applies to cars like NA/NB miatas where the clutch up switch only return true if in gear
-	bool clutchUp = !engineConfiguration->disableIdleClutchUp 
-		|| !isBrainPinValid(engineConfiguration->clutchUpPin)
-		|| engine->engineState.clutchUpState;
-	if (looksLikeCoasting && clutchUp) {
+	// this applies to cars like NA/NB miatas where the clutch up switch only returns true if in gear
+	bool transmissionInGear = engineConfiguration->disableIdleClutchUp 
+		&& isBrainPinValid(engineConfiguration->clutchUpPin)
+		&& engine->engineState.clutchUpState;
+	if (looksLikeCoasting || transmissionInGear) {
 		return Phase::Coasting;
 	}
 
