@@ -57,7 +57,14 @@ IIdleController::Phase IdleController::determinePhase(float rpm, float targetRpm
 	float maximumIdleRpm = targetRpm + engineConfiguration->idlePidRpmUpperLimit;
 	looksLikeCoasting = rpm > maximumIdleRpm;
 	looksLikeCrankToIdle = crankingTaperFraction < 1;
-	if (looksLikeCoasting && !looksLikeCrankToIdle) {
+
+	// if car is gear, disable closed loop idle
+	// this applies to cars like NA/NB miatas where the clutch up switch only returns true if also in gear
+	bool transmissionInGear = engineConfiguration->disableIdleClutchUp 
+		&& isBrainPinValid(engineConfiguration->clutchUpPin)
+		&& engine->engineState.clutchUpState;
+
+	if ( (looksLikeCoasting || transmissionInGear) && !looksLikeCrankToIdle) {
 		return Phase::Coasting;
 	}
 
@@ -66,15 +73,6 @@ IIdleController::Phase IdleController::determinePhase(float rpm, float targetRpm
 	looksLikeRunning = maxVss != 0 && vss > maxVss;
 	if (looksLikeRunning) {
 		return Phase::Running;
-	}
-
-	// if car is gear, disable closed loop idle
-	// this applies to cars like NA/NB miatas where the clutch up switch only returns true if in gear
-	bool transmissionInGear = engineConfiguration->disableIdleClutchUp 
-		&& isBrainPinValid(engineConfiguration->clutchUpPin)
-		&& engine->engineState.clutchUpState;
-	if (looksLikeCoasting || transmissionInGear) {
-		return Phase::Coasting;
 	}
 
 	// If still in the cranking taper, disable closed loop idle

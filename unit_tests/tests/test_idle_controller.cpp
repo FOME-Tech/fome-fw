@@ -106,22 +106,25 @@ TEST(idle_v2, testDeterminePhase) {
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(5000, 1000, 0, 0, 10));
 
-	//enable feature to prevent idle state when coasting in gear
+	// enable feature to prevent idle state when coasting in gear
 	engineConfiguration->disableIdleClutchUp = true;
 	setMockState(engineConfiguration->clutchUpPin, false);
 	engineConfiguration->clutchUpPin = Gpio::G2;
 	engineConfiguration->clutchUpPinMode = PI_PULLDOWN;
 	engine->updateSwitchInputs();
     
-	//should be same beaviour as before when clutch is pressed/car in neutral
+	// should be same behaviour as before when clutch is pressed/car in neutral
 	EXPECT_EQ(ICP::Idling, dut.determinePhase(1099, 1000, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
+	EXPECT_EQ(ICP::CrankToIdleTaper, dut.determinePhase(1000, 1000, 0, 0, 0.5f));
+	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, 1000, 10, 0, 10));
 
-	//clutchUp indicates car in gear with clutch not pressed, should recognize as coasting instead of idle now
+	// clutchUp indicates car in gear with clutch not pressed, should recognize as coasting instead of idle now
 	setMockState(engineConfiguration->clutchUpPin, true);
 	engine->updateSwitchInputs();
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1099, 1000, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
+
 }
 
 TEST(idle_v2, crankingOpenLoop) {
