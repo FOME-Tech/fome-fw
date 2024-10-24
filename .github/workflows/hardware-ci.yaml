@@ -40,9 +40,6 @@ jobs:
     - name: Identify Agent
       run: uname -a
 
-    - name: Add compiler to PATH
-      run: echo "$HOME/.rusefi-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
-
     - name: Set EXTRA env
       run: |
         echo "EXTRA_2_PARAMS=-DHARDWARE_CI" >> $GITHUB_ENV
