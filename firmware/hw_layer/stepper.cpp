@@ -126,7 +126,8 @@ void StepperMotorBase::doIteration() {
 	int currentPosition = m_currentPosition;
 
 	// the stepper does not work if the main relay is turned off (it requires +12V)
-	if (!engine->isMainRelayEnabled()) {
+	if (!engine->isMainRelayEnabled() ||
+		Sensor::getOrZero(SensorType::BatteryVoltage) < engineConfiguration->minStepperVoltage) {
 		m_hw->pause();
 		return;
 	}
