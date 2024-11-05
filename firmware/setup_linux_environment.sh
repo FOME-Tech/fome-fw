@@ -10,10 +10,10 @@
 #  - `gcc`, `gdb`, `gcc-multilib`, `g++-multilib`: Native compilers for your PC, used for unit tests and simulator.
 #  - `make`: GNU Make, build tool that orchestrates the correct build steps.
 #  - `openjdk-8-jdk-headless`: Java compiler for FOME console and code generation tools.
-#  - `mtools`, `zip`, `xxd`: Used to generate the on-ECU filesystem that stores the matching ini file.
+#  - `mtools`, `zip`, `xxd`, `dosfstools`: Used to generate the on-ECU filesystem that stores the matching ini file.
 #
 
-# This script will download and install all dependencies require to develop rusEFI on Linux.
+# This script will download and install all dependencies require to develop FOME on Linux.
 # After running this script, executing `make` in the firmware folder is expected to produce a functional firmware binary.
 
 # Ensure submodules got cloned
