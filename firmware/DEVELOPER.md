@@ -26,7 +26,7 @@ requires selecting and installing a Unix-compatible environment.
 
 ## Setup Instructions
 
-## Editor/IDE
+### Editor/IDE
 
 The supported IDE is [Visual Studio Code](https://code.visualstudio.com/).
 Others will work, but if you need help from the maintainers, you might not
@@ -62,7 +62,7 @@ If you're still having trouble, reach out on Discord in the #firmware channel.
 
 # Building
 
-Each ECU+target combination will have its own compilation scripts. In general, these scripts are located in `firmware/config/boards/<board>/compile_<board>_<chip>.sh`. For example, `firmware/config/boards/proteus/compile_proteus_f7.sh` compiles firmware images for a Proteus (or Polygonus) ECU fitted with an STM32F7 microcontroller.
+Each ECU+MCU combination has its own compilation scripts. In general, these scripts are located in `firmware/config/boards/<board>/compile_<board>_<chip>.sh`. For example, `firmware/config/boards/proteus/compile_proteus_f7.sh` compiles a firmware image for a Proteus (or Polygonus) ECU fitted with an STM32F7 microcontroller.
 
 ## Outputs
 
