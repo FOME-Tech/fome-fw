@@ -101,10 +101,28 @@ expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 	};
 }
 
+expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
+	// NC ABS wheel speed frame
+	// TODO: set ID
+	if (CAN_SID(frame) != 0x000) {
+		return unexpected;
+	}
+	
+	// TODO: decode wheel speeds from frame
+	return WssResult{
+		0,
+		0,
+		0,
+		0
+	};
+}
+
 expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
 	switch (type) {
 		case BMW_e90:
 			return processBMW_e90Wss(frame);
+		case Mx5_NC:
+			return processMx5NcWss(frame);
 		default:
 			return unexpected;
 	}
