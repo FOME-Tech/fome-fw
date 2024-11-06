@@ -117,6 +117,19 @@ case TsCalMode::Tps2SecondaryMin:
   }
  return NULL;
 }
+const char *getWssToVssMode(WssToVssMode value){
+switch(value) {
+case WssToVssMode::AverageAll:
+  return "AverageAll";
+case WssToVssMode::AverageFront:
+  return "AverageFront";
+case WssToVssMode::AverageRear:
+  return "AverageRear";
+case WssToVssMode::None:
+  return "None";
+  }
+ return NULL;
+}
 const char *getAir_pressure_sensor_type_e(air_pressure_sensor_type_e value){
 switch(value) {
 case MT_BOSCH_2_5:

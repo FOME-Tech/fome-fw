@@ -1266,6 +1266,10 @@ public class Fields {
 	public static final int vvt_mode_e_VVT_SINGLE_TOOTH = 1;
 	public static final int vvt_mode_e_VVT_TOYOTA_3_TOOTH = 2;
 	public static final int vvt_mode_e_VVT_TOYOTA_4_1 = 6;
+	public static final int WssToVssMode_AverageAll = 3;
+	public static final int WssToVssMode_AverageFront = 1;
+	public static final int WssToVssMode_AverageRear = 2;
+	public static final int WssToVssMode_None = 0;
 	public static final int WWAE_TABLE_SIZE = 8;
 	public static final Field ENGINETYPE = Field.create("ENGINETYPE", 0, FieldType.INT).setScale(1.0).setBaseOffset(0);
 	public static final Field SENSORSNIFFERRPMTHRESHOLD = Field.create("SENSORSNIFFERRPMTHRESHOLD", 4, FieldType.INT16).setScale(1.0).setBaseOffset(0);
