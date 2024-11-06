@@ -1002,7 +1002,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 2131294534;
+	public static final int SIGNATURE_HASH = 1230820634;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1210,7 +1210,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.11.06.f407-discovery.2131294534";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.11.06.f407-discovery.1230820634";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1284;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1882,7 +1882,7 @@ public class Fields {
 	public static final Field COASTINGFUELCUTVSSHIGH = Field.create("COASTINGFUELCUTVSSHIGH", 1352, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field NOFUELTRIMAFTERDFCOTIME = Field.create("NOFUELTRIMAFTERDFCOTIME", 1353, FieldType.INT8).setScale(0.1).setBaseOffset(0);
 	public static final Field IGNTESTONTIME = Field.create("IGNTESTONTIME", 1354, FieldType.INT8).setScale(0.1).setBaseOffset(0);
-	public static final Field ALIGNMENTFILL_AT_1355 = Field.create("ALIGNMENTFILL_AT_1355", 1355, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field WSSTOVSSMODE = Field.create("WSSTOVSSMODE", 1355, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field TPSACCELENRICHMENTTHRESHOLD = Field.create("TPSACCELENRICHMENTTHRESHOLD", 1356, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field AUXSPEEDSENSORINPUTPIN1 = Field.create("AUXSPEEDSENSORINPUTPIN1", 1360, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
 	public static final Field AUXSPEEDSENSORINPUTPIN2 = Field.create("AUXSPEEDSENSORINPUTPIN2", 1362, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);
