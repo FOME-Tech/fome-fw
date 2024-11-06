@@ -140,8 +140,9 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 	}
 
 	auto type = engineConfiguration->canVssNbcType;
+	auto wssToVss = engineConfiguration->wssToVssMode;
 
-	if (auto speed = tryDecodeVss(type, frame)) {
+	if (auto speed = tryDecodeVss(type, frame); speed && (wssToVss == WssToVssMode::None)) {
 		canSpeed.setValidValue(speed.Value * engineConfiguration->canVssScaling, nowNt);
 
 #if EFI_DYNO_VIEW
@@ -150,10 +151,30 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 	}
 
 	if (auto wss = tryDecodeWss(type, frame)) {
-		wssLf.setValidValue(wss.Value.lf * engineConfiguration->canVssScaling, nowNt);
-		wssRf.setValidValue(wss.Value.rf * engineConfiguration->canVssScaling, nowNt);
-		wssLr.setValidValue(wss.Value.lr * engineConfiguration->canVssScaling, nowNt);
-		wssRr.setValidValue(wss.Value.rr * engineConfiguration->canVssScaling, nowNt);
+		float lf = wss.Value.lf * engineConfiguration->canVssScaling;
+		float rf = wss.Value.rf * engineConfiguration->canVssScaling;
+		float lr = wss.Value.lr * engineConfiguration->canVssScaling;
+		float rr = wss.Value.rr * engineConfiguration->canVssScaling;
+		wssLf.setValidValue(lf, nowNt);
+		wssRf.setValidValue(rf, nowNt);
+		wssLr.setValidValue(lr, nowNt);
+		wssRr.setValidValue(rr, nowNt);
+
+		float frontAvg = (lf + rf) / 2;
+		float rearAvg = (lr + rr) / 2;
+
+		switch (wssToVss) {
+			case WssToVssMode::AverageFront:
+				canSpeed.setValidValue(frontAvg, nowNt);
+				break;
+			case WssToVssMode::AverageRear:
+				canSpeed.setValidValue(rearAvg, nowNt);
+				break;
+			case WssToVssMode::AverageAll:
+				canSpeed.setValidValue((frontAvg + rearAvg) / 2, nowNt);
+				break;
+			default: break;
+		}
 	}
 }
 
