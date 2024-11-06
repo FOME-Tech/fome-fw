@@ -71,7 +71,6 @@ expected<float> tryDecodeVss(can_vss_nbc_e type, const CANRxFrame& frame) {
 		case W202:
 			return processW202(frame);
 		default:
-			firmwareError(ObdCode::OBD_Vehicle_Speed_SensorB, "Wrong Can DBC selected: %d", type);
 			return unexpected;
 	}
 }
@@ -141,12 +140,19 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 }
 
 void initCanVssSupport() {
+	isInit = false;
+
 	if (engineConfiguration->enableCanVss) {
-		if (engineConfiguration->canVssNbcType < CanVssLast) {
+		auto type = engineConfiguration->canVssNbcType;
+		if (type < CanVssLast) {
 			canSpeed.Register();
+			wssLf.Register();
+			wssRf.Register();
+			wssLr.Register();
+			wssRr.Register();
 			isInit = true;
 		} else {
-			isInit = false;
+			firmwareError(ObdCode::OBD_Vehicle_Speed_SensorB, "Wrong Can DBC selected: %d", type);
 		}
 	}
 }
