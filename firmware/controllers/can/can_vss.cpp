@@ -15,21 +15,6 @@
 #include "stored_value_sensor.h"
 
 static bool isInit = false;
-static uint16_t filterCanID = 0;
-
-static expected<uint16_t> look_up_can_id(can_vss_nbc_e type) {
-	switch (type) {
-		case BMW_e46:
-			return 0x01F0; /* BMW e46 ABS Message */
-		case BMW_e90:
-			return 0x1A0;	// BMW E90 ABS speed frame (not wheel speeds, vehicle speed)
-		case W202:
-			return 0x0200; /* W202 C180 ABS signal */
-		default:
-			firmwareError(ObdCode::OBD_Vehicle_Speed_SensorB, "Wrong Can DBC selected: %d", type);
-			return unexpected;
-	}
-}
 
 static int getTwoBytesLsb(const CANRxFrame& frame, int index) {
 	uint8_t low = frame.data8[index];
@@ -39,7 +24,12 @@ static int getTwoBytesLsb(const CANRxFrame& frame, int index) {
 
 /* Module specific processing functions */
 /* source: http://z4evconversion.blogspot.com/2016/07/completely-forgot-but-it-does-live-on.html */
-float processBMW_e46(const CANRxFrame& frame) {
+expected<float> processBMW_e46(const CANRxFrame& frame) {
+	// BMW e46 ABS Message
+	if (CAN_SID(frame) != 0x1F0) {
+		return unexpected;
+	}
+
 	// average the rear wheels since those are the driven ones (more accurate gear detection!)
 	uint16_t left =  getTwoBytesLsb(frame, 4);
 	uint16_t right = getTwoBytesLsb(frame, 6);
@@ -47,11 +37,24 @@ float processBMW_e46(const CANRxFrame& frame) {
 	return (left + right) / (16 * 2);
 }
 
-float processBMW_e90(const CANRxFrame& frame) {
-	return 0.1f * getTwoBytesLsb(frame, 0);
+expected<float> processBMW_e90Vss(const CANRxFrame& frame) {
+	// BMW E90 ABS speed frame (not wheel speeds, vehicle speed)
+	if (CAN_SID(frame) != 0x1A0) {
+		return unexpected;
+	}
+
+	uint8_t low = frame.data8[0];
+	uint8_t high = frame.data8[1] * 0x0F;
+
+	return 0.1f * (low | (high << 8));
 }
 
-float processW202(const CANRxFrame& frame) {
+expected<float> processW202(const CANRxFrame& frame) {
+	// W202 C180 ABS signal
+	if (CAN_SID(frame) != 0x0200) {
+		return unexpected;
+	}
+
 	uint16_t tmp = (frame.data8[2] << 8);
 	tmp |= frame.data8[3];
 	return tmp * 0.0625;
@@ -59,46 +62,87 @@ float processW202(const CANRxFrame& frame) {
 
 /* End of specific processing functions */
 
-expected<float> processCanRxVssImpl(const CANRxFrame& frame) {
-	switch (engineConfiguration->canVssNbcType){
+expected<float> tryDecodeVss(can_vss_nbc_e type, const CANRxFrame& frame) {
+	switch (type) {
 		case BMW_e46:
 			return processBMW_e46(frame);
 		case BMW_e90:
-			return processBMW_e90(frame);
+			return processBMW_e90Vss(frame);
 		case W202:
 			return processW202(frame);
 		default:
-			efiPrintf("vss unsupported can option selected %x", engineConfiguration->canVssNbcType );
+			firmwareError(ObdCode::OBD_Vehicle_Speed_SensorB, "Wrong Can DBC selected: %d", type);
+			return unexpected;
+	}
+}
+
+struct WssResult {
+	float lf;
+	float rf;
+	float lr;
+	float rr;
+};
+
+static constexpr float E90Wss(const uint8_t& data)
+{
+	return (*reinterpret_cast<const int16_t*>(&data)) * 0.0625f;
+}
+
+expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
+	// E90 Wheel speed frame
+	if (CAN_SID(frame) != 0x0ce) {
+		return unexpected;
 	}
 
-	return unexpected;
+	return WssResult{
+		E90Wss(frame.data8[0]),
+		E90Wss(frame.data8[2]),
+		E90Wss(frame.data8[4]),
+		E90Wss(frame.data8[6])
+	};
+}
+
+expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
+	switch (type) {
+		case BMW_e90:
+			return processBMW_e90Wss(frame);
+		default:
+			return unexpected;
+	}
 }
 
 static StoredValueSensor canSpeed(SensorType::VehicleSpeed, MS2NT(500));
+static StoredValueSensor wssLf(SensorType::WheelSpeedLF, MS2NT(500));
+static StoredValueSensor wssRf(SensorType::WheelSpeedLF, MS2NT(500));
+static StoredValueSensor wssLr(SensorType::WheelSpeedLF, MS2NT(500));
+static StoredValueSensor wssRr(SensorType::WheelSpeedLF, MS2NT(500));
 
 void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
-	if ((!engineConfiguration->enableCanVss) || (!isInit)) {
+	if (!engineConfiguration->enableCanVss || !isInit) {
 		return;
 	}
 
-	//filter it we need to process the can message or not
-	if (CAN_SID(frame) != filterCanID ) {
-		return;
-	}
+	auto type = engineConfiguration->canVssNbcType;
 
-	if (auto speed = processCanRxVssImpl(frame)) {
+	if (auto speed = tryDecodeVss(type, frame)) {
 		canSpeed.setValidValue(speed.Value * engineConfiguration->canVssScaling, nowNt);
 
 #if EFI_DYNO_VIEW
 		updateDynoViewCan();
 #endif
 	}
+
+	if (auto wss = tryDecodeWss(type, frame)) {
+		wssLf.setValidValue(wss.Value.lf * engineConfiguration->canVssScaling, nowNt);
+		wssRf.setValidValue(wss.Value.rf * engineConfiguration->canVssScaling, nowNt);
+		wssLr.setValidValue(wss.Value.lr * engineConfiguration->canVssScaling, nowNt);
+		wssRr.setValidValue(wss.Value.rr * engineConfiguration->canVssScaling, nowNt);
+	}
 }
 
 void initCanVssSupport() {
 	if (engineConfiguration->enableCanVss) {
-		if (auto canId = look_up_can_id(engineConfiguration->canVssNbcType)) {
-			filterCanID = canId.Value;
+		if (engineConfiguration->canVssNbcType < CanVssLast) {
 			canSpeed.Register();
 			isInit = true;
 		} else {
