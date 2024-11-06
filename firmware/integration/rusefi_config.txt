@@ -1869,8 +1869,6 @@ end_struct
 #define TS_PERF_TRACE_BEGIN '_'
 #define TS_PERF_TRACE_GET_BUFFER 'b'
 
-! 0x50 80
-#define TS_PAGE_COMMAND 'P'
 ! 0x46
 #define TS_COMMAND_F 'F'
 #define TS_GET_PROTOCOL_VERSION_COMMAND_F 'F'
