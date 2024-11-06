@@ -130,6 +130,14 @@ case SensorType::VehicleSpeed:
   return "VehicleSpeed";
 case SensorType::WastegatePosition:
   return "WastegatePosition";
+case SensorType::WheelSpeedLF:
+  return "WheelSpeedLF";
+case SensorType::WheelSpeedLR:
+  return "WheelSpeedLR";
+case SensorType::WheelSpeedRF:
+  return "WheelSpeedRF";
+case SensorType::WheelSpeedRR:
+  return "WheelSpeedRR";
   }
  return NULL;
 }

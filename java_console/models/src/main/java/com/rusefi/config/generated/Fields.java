@@ -126,6 +126,7 @@ public class Fields {
 	public static final String CAN_RX_PREFIX = "CAN_rx";
 	public static final int can_vss_nbc_e_BMW_e46 = 0;
 	public static final int can_vss_nbc_e_BMW_e90 = 2;
+	public static final int can_vss_nbc_e_CanVssLast = 3;
 	public static final int can_vss_nbc_e_W202 = 1;
 	public static final int CLT_CRANKING_CURVE_SIZE = 8;
 	public static final int CLT_CURVE_SIZE = 16;
