@@ -249,6 +249,8 @@ case BMW_e90:
   return "BMW_e90";
 case CanVssLast:
   return "CanVssLast";
+case Mx5_NC:
+  return "Mx5_NC";
 case W202:
   return "W202";
   }
