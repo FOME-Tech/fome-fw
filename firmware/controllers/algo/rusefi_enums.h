@@ -302,6 +302,13 @@ typedef enum __attribute__ ((__packed__)) {
 	CanVssLast = 4,
 } can_vss_nbc_e;
 
+enum class WssToVssMode : uint8_t {
+	None = 0,
+	AverageFront = 1,
+	AverageRear = 2,
+	AverageAll = 3,
+};
+
 /**
  * inertia measurement unit, yawn accelerometer
  * By the way both kinds of BOSCH use Housing : TE 1-967640-1, pins 144969-1 seal 967056-1 plug 967067-2
