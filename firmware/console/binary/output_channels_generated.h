@@ -318,8 +318,12 @@ struct output_channels_s {
 	// %
 	// offset 112
 	scaled_channel<int16_t, 100, 1> wastegatePositionSensor = (int16_t)0;
+	// Wheel speed: LF
 	// offset 114
-	uint8_t alignmentFill_at_114[2];
+	uint8_t wheelSpeedLf = (uint8_t)0;
+	// Wheel speed: RF
+	// offset 115
+	uint8_t wheelSpeedRf = (uint8_t)0;
 	// offset 116
 	float calibrationValue = (float)0;
 	// offset 120
@@ -327,8 +331,12 @@ struct output_channels_s {
 	// Idle: Stepper target position
 	// offset 121
 	uint8_t idleStepperTargetPosition = (uint8_t)0;
+	// Wheel speed: LR
 	// offset 122
-	uint8_t alignmentFill_at_122[2];
+	uint8_t wheelSpeedLr = (uint8_t)0;
+	// Wheel speed: RR
+	// offset 123
+	uint8_t wheelSpeedRr = (uint8_t)0;
 	// offset 124
 	uint32_t tsConfigVersion = (uint32_t)0;
 	// Trigger Error Counter
@@ -789,9 +797,13 @@ static_assert(offsetof(output_channels_s, rawPpsSecondary) == 108);
 static_assert(offsetof(output_channels_s, tcuDesiredGear) == 110);
 static_assert(offsetof(output_channels_s, flexPercent) == 111);
 static_assert(offsetof(output_channels_s, wastegatePositionSensor) == 112);
+static_assert(offsetof(output_channels_s, wheelSpeedLf) == 114);
+static_assert(offsetof(output_channels_s, wheelSpeedRf) == 115);
 static_assert(offsetof(output_channels_s, calibrationValue) == 116);
 static_assert(offsetof(output_channels_s, calibrationMode) == 120);
 static_assert(offsetof(output_channels_s, idleStepperTargetPosition) == 121);
+static_assert(offsetof(output_channels_s, wheelSpeedLr) == 122);
+static_assert(offsetof(output_channels_s, wheelSpeedRr) == 123);
 static_assert(offsetof(output_channels_s, tsConfigVersion) == 124);
 static_assert(offsetof(output_channels_s, totalTriggerErrorCounter) == 128);
 static_assert(offsetof(output_channels_s, orderingErrorCounter) == 132);
