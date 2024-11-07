@@ -102,7 +102,7 @@ expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 }
 
 static constexpr float NcWss(uint16_t data) {
-	return (SWAP_UINT16(data) - 10000);
+	return 0.01f * SWAP_UINT16(data) - 100;
 }
 
 expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
