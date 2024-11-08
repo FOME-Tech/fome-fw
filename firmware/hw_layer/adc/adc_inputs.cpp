@@ -287,7 +287,7 @@ void updateSlowAdc(efitick_t nowNt) {
 	}
 }
 
-void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
+static void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
 	if (!isAdcChannelValid(setting)) {
 		return;
 	}
@@ -299,7 +299,7 @@ void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
 #endif
 }
 
-void removeFastAdcChannel(const char *name, adc_channel_e setting) {
+static void removeFastAdcChannel(const char *name, adc_channel_e setting) {
 	(void)name;
 	if (!isAdcChannelValid(setting)) {
 		return;

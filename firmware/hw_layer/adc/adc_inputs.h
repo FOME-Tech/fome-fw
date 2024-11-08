@@ -56,9 +56,6 @@ int getAdcHardwareIndexByInternalIndex(int index);
 int getInternalAdcValue(const char *msg, adc_channel_e index);
 float getMCUInternalTemperature(void);
 
-void addFastAdcChannel(const char *name, adc_channel_e setting);
-void removeFastAdcChannel(const char *name, adc_channel_e setting);
-
 #define getAdcValue(msg, hwChannel) getInternalAdcValue(msg, hwChannel)
 
 #define adcToVoltsDivided(adc, hwChannel) (adcToVolts(adc) * getAnalogInputDividerCoefficient(hwChannel))
