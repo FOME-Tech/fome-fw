@@ -308,17 +308,12 @@ void removeFastAdcChannel(const char *name, adc_channel_e setting) {
 	adcHwChannelEnabled[setting] = AdcChannelMode::Off;
 }
 
-// Weak link a stub so that every board doesn't have to implement this function
-__attribute__((weak)) void setAdcChannelOverrides() { }
-
 void initAdcInputs() {
 	efiPrintf("initAdcInputs()");
 
 	memset(adcHwChannelEnabled, 0, sizeof(adcHwChannelEnabled));
 
 	addFastAdcChannel("MAP", engineConfiguration->map.sensor.hwChannel);
-
-	setAdcChannelOverrides();
 
 #if EFI_INTERNAL_ADC
 	portInitAdc();
