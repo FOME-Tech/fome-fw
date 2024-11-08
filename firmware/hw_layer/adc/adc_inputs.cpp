@@ -317,7 +317,6 @@ void initAdcInputs() {
 	memset(adcHwChannelEnabled, 0, sizeof(adcHwChannelEnabled));
 
 	addFastAdcChannel("MAP", engineConfiguration->map.sensor.hwChannel);
-	addFastAdcChannel("AUXF#1", engineConfiguration->auxFastSensor1_adcChannel);
 
 	setAdcChannelOverrides();
 
