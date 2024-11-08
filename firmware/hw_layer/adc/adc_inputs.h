@@ -71,6 +71,11 @@ float getMCUInternalTemperature(void);
 #define GPT_PERIOD_FAST 10  /* PWM period (in PWM ticks).    */
 #endif /* GPT_FREQ_FAST GPT_PERIOD_FAST */
 
+/* Depth of the conversion buffer, channels are sampled X times each.*/
+#ifndef ADC_BUF_DEPTH_FAST
+#define ADC_BUF_DEPTH_FAST      4
+#endif
+
 // This callback is called by the ADC driver when a new fast ADC sample is ready
 void onFastAdcComplete(adcsample_t* samples);
 
