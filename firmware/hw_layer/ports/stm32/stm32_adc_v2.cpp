@@ -18,7 +18,7 @@ static OutputPin muxControl;
 #endif // ADC_MUX_PIN
 
 static void fast_adc_timer_callback(GPTDriver*);
-static const GPTConfig fast_adc_config = {
+static const GPTConfig fast_adc_timer_config = {
 	GPT_FREQ_FAST,
 	fast_adc_timer_callback,
 	0, 0
@@ -36,7 +36,7 @@ void portInitAdc() {
 	// Init fast ADC (MAP sensor)
 	adcStart(&ADCD2, NULL);
 
-	gptStart(EFI_INTERNAL_FAST_ADC_GPT, &fast_adc_config);
+	gptStart(EFI_INTERNAL_FAST_ADC_GPT, &fast_adc_timer_config);
 	gptStartContinuous(EFI_INTERNAL_FAST_ADC_GPT, GPT_PERIOD_FAST);
 #endif
 
