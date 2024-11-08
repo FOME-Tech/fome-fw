@@ -426,7 +426,6 @@ typedef enum __attribute__ ((__packed__)) {
 	// unused 2
 	SC_RPM_ACCEL = 3,
 	SC_DETAILED_RPM = 4,
-	SC_AUX_FAST1 = 5,
 
 } sensor_chart_e;
 
