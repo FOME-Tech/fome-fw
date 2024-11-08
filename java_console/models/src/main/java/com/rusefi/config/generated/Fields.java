@@ -997,7 +997,6 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
-	public static final int sensor_chart_e_SC_AUX_FAST1 = 5;
 	public static final int sensor_chart_e_SC_DETAILED_RPM = 4;
 	public static final int sensor_chart_e_SC_OFF = 0;
 	public static final int sensor_chart_e_SC_RPM_ACCEL = 3;
@@ -1006,6 +1005,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
+	public static final int SIGNATURE_HASH = 2006904345;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1213,7 +1213,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.11.07.f407-discovery.3751994954";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.11.08.f407-discovery.2006904345";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1284;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1507,7 +1507,7 @@ public class Fields {
 	public static final Field DEBUGTRIGGERSYNC = Field.create("DEBUGTRIGGERSYNC", 604, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field MC33972_CS = Field.create("MC33972_CS", 606, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field MC33972_CSPINMODE = Field.create("MC33972_CSPINMODE", 608, FieldType.INT8, pin_output_mode_e).setScale(1.0).setBaseOffset(0);
-	public static final Field AUXFASTSENSOR1_ADCCHANNEL = Field.create("AUXFASTSENSOR1_ADCCHANNEL", 609, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
+	public static final Field UNUSED581 = Field.create("UNUSED581", 609, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field TPS1_2ADCCHANNEL = Field.create("TPS1_2ADCCHANNEL", 610, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field TPS2_2ADCCHANNEL = Field.create("TPS2_2ADCCHANNEL", 611, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field IDLE_ANTIWINDUPFREQ = Field.create("IDLE_ANTIWINDUPFREQ", 612, FieldType.FLOAT).setBaseOffset(0);
@@ -1632,7 +1632,7 @@ public class Fields {
 	public static final Field SPI3MISOPIN = Field.create("SPI3MISOPIN", 806, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field SPI3SCKPIN = Field.create("SPI3SCKPIN", 808, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field CONSOLEUARTDEVICE = Field.create("CONSOLEUARTDEVICE", 810, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final String[] sensor_chart_e = {"none", "trigger", "INVALID", "RPM ACCEL", "DETAILED RPM", "Fast Aux1"};
+	public static final String[] sensor_chart_e = {"none", "trigger", "INVALID", "RPM ACCEL", "DETAILED RPM", "INVALID"};
 	public static final Field SENSORCHARTMODE = Field.create("SENSORCHARTMODE", 811, FieldType.INT8, sensor_chart_e).setScale(1.0).setBaseOffset(0);
 	public static final Field CLUTCHUPPININVERTED = Field.create("CLUTCHUPPININVERTED", 812, FieldType.BIT, 0).setBaseOffset(0);
 	public static final Field CLUTCHDOWNPININVERTED = Field.create("CLUTCHDOWNPININVERTED", 812, FieldType.BIT, 1).setBaseOffset(0);
