@@ -152,13 +152,6 @@ void onFastAdcComplete(adcsample_t*) {
 			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel)
 		);
 #endif // MODULE_MAP_AVERAGING
-
-#if EFI_SENSOR_CHART && EFI_SHAFT_POSITION_INPUT
-	if (getEngineState()->sensorChartMode == SC_AUX_FAST1) {
-		float voltage = getAdcValue("fAux1", engineConfiguration->auxFastSensor1_adcChannel);
-		scAddData(engine->triggerCentral.getCurrentEnginePhase(getTimeNowNt()).value_or(0), voltage);
-	}
-#endif /* EFI_SENSOR_CHART */
 }
 #endif /* HAL_USE_ADC */
 

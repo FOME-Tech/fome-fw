@@ -101,19 +101,21 @@ expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 	};
 }
 
+static constexpr float NcWss(uint16_t data) {
+	return 0.01f * SWAP_UINT16(data) - 100;
+}
+
 expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
 	// NC ABS wheel speed frame
-	// TODO: set ID
-	if (CAN_SID(frame) != 0x000) {
+	if (CAN_SID(frame) != 0x4b0) {
 		return unexpected;
 	}
-	
-	// TODO: decode wheel speeds from frame
+
 	return WssResult{
-		0,
-		0,
-		0,
-		0
+		NcWss(frame.data16[0]),
+		NcWss(frame.data16[1]),
+		NcWss(frame.data16[2]),
+		NcWss(frame.data16[3])
 	};
 }
 
@@ -130,9 +132,9 @@ expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
 
 static StoredValueSensor canSpeed(SensorType::VehicleSpeed, MS2NT(500));
 static StoredValueSensor wssLf(SensorType::WheelSpeedLF, MS2NT(500));
-static StoredValueSensor wssRf(SensorType::WheelSpeedLF, MS2NT(500));
-static StoredValueSensor wssLr(SensorType::WheelSpeedLF, MS2NT(500));
-static StoredValueSensor wssRr(SensorType::WheelSpeedLF, MS2NT(500));
+static StoredValueSensor wssRf(SensorType::WheelSpeedRF, MS2NT(500));
+static StoredValueSensor wssLr(SensorType::WheelSpeedLR, MS2NT(500));
+static StoredValueSensor wssRr(SensorType::WheelSpeedRR, MS2NT(500));
 
 void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 	if (!engineConfiguration->enableCanVss || !isInit) {

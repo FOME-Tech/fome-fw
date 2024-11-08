@@ -56,9 +56,6 @@ int getAdcHardwareIndexByInternalIndex(int index);
 int getInternalAdcValue(const char *msg, adc_channel_e index);
 float getMCUInternalTemperature(void);
 
-void addFastAdcChannel(const char *name, adc_channel_e setting);
-void removeFastAdcChannel(const char *name, adc_channel_e setting);
-
 #define getAdcValue(msg, hwChannel) getInternalAdcValue(msg, hwChannel)
 
 #define adcToVoltsDivided(adc, hwChannel) (adcToVolts(adc) * getAnalogInputDividerCoefficient(hwChannel))
@@ -73,6 +70,11 @@ void removeFastAdcChannel(const char *name, adc_channel_e setting);
 #define GPT_FREQ_FAST 100000   /* PWM clock frequency. I wonder what does this setting mean?  */
 #define GPT_PERIOD_FAST 10  /* PWM period (in PWM ticks).    */
 #endif /* GPT_FREQ_FAST GPT_PERIOD_FAST */
+
+/* Depth of the conversion buffer, channels are sampled X times each.*/
+#ifndef ADC_BUF_DEPTH_FAST
+#define ADC_BUF_DEPTH_FAST      4
+#endif
 
 // This callback is called by the ADC driver when a new fast ADC sample is ready
 void onFastAdcComplete(adcsample_t* samples);

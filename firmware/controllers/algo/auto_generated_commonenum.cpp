@@ -595,8 +595,6 @@ case OM_OPENDRAIN_INVERTED:
 }
 const char *getSensor_chart_e(sensor_chart_e value){
 switch(value) {
-case SC_AUX_FAST1:
-  return "SC_AUX_FAST1";
 case SC_DETAILED_RPM:
   return "SC_DETAILED_RPM";
 case SC_OFF:

@@ -17,6 +17,13 @@
 static OutputPin muxControl;
 #endif // ADC_MUX_PIN
 
+static void fast_adc_timer_callback(GPTDriver*);
+static const GPTConfig fast_adc_timer_config = {
+	GPT_FREQ_FAST,
+	fast_adc_timer_callback,
+	0, 0
+};
+
 void portInitAdc() {
 	// Init slow ADC
 	adcStart(&ADCD1, NULL);
@@ -28,6 +35,9 @@ void portInitAdc() {
 #if EFI_USE_FAST_ADC
 	// Init fast ADC (MAP sensor)
 	adcStart(&ADCD2, NULL);
+
+	gptStart(EFI_INTERNAL_FAST_ADC_GPT, &fast_adc_timer_config);
+	gptStartContinuous(EFI_INTERNAL_FAST_ADC_GPT, GPT_PERIOD_FAST);
 #endif
 
 	// Enable internal temperature reference
@@ -221,6 +231,68 @@ adcsample_t getFastAdc(FastAdcToken token) {
 	return fastAdc.m_samples[token];
 }
 
-#endif
+static void adc_callback_fast(ADCDriver *adcp) {
+	// State may not be complete if we get a callback for "half done"
+	if (adcp->state == ADC_COMPLETE) {
+		onFastAdcComplete(adcp->samples);
+	}
+}
+
+ADCConversionGroup adcgrpcfgFast = {
+	.circular			= FALSE,
+	.num_channels		= 0,
+	.end_cb				= adc_callback_fast,
+	.error_cb			= nullptr,
+	/* HW dependent part.*/
+	.cr1				= 0,
+	.cr2				= ADC_CR2_SWSTART,
+	// Configure sample time for all channels. We'll only actually use
+	// one or two (MAP sensors, etc), but setting sample time for unused
+	// channels doesn't do anything.
+	.smpr1 =
+		ADC_SMPR1_SMP_AN10(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN11(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN12(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN13(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN14(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN15(ADC_SAMPLING_FAST),
+	.smpr2 =
+		ADC_SMPR2_SMP_AN0(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN1(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN2(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN3(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN4(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN5(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN6(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN7(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN8(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN9(ADC_SAMPLING_FAST),
+	.htr				= 0,
+	.ltr				= 0,
+	.sqr1				= 0, // Conversion group sequence 13...16 + sequence length
+	.sqr2				= 0, // Conversion group sequence 7...12
+	.sqr3				= 0, // Conversion group sequence 1...6
+};
+
+static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
+AdcDevice fastAdc(&adcgrpcfgFast, fastAdcSampleBuf, efi::size(fastAdcSampleBuf));
+
+auto& ADC_FAST_DEVICE = ADCD2;
+
+static void fast_adc_timer_callback(GPTDriver*) {
+	chibios_rt::CriticalSectionLocker csl;
+
+	if (ADC_FAST_DEVICE.state != ADC_READY &&
+		ADC_FAST_DEVICE.state != ADC_COMPLETE &&
+		ADC_FAST_DEVICE.state != ADC_ERROR) {
+		fastAdc.errorsCount++;
+		return;
+	}
+
+	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdc.m_samples, ADC_BUF_DEPTH_FAST);
+	fastAdc.conversionCount++;
+}
+
+#endif // EFI_USE_FAST_ADC
 
 #endif // HAL_USE_ADC

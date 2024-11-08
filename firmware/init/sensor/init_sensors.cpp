@@ -10,44 +10,6 @@
 
 static void initSensorCli();
 
-void initIfValid(const char* msg, adc_channel_e channel) {
-	if (!isAdcChannelValid(channel)) {
-		return;
-	}
-
-#if EFI_PROD_CODE
-/**
-TODO: this code is similar to AdcSubscription::SubscribeSensor, what is the plan? shall we extract helper method or else?
- */
-
-	brain_pin_e pin = getAdcChannelBrainPin(msg, channel);
-	if (pin == Gpio::Invalid) {
-	// todo: external muxes for internal ADC #3350
-		return;
-	}
-	efiSetPadMode(msg, pin, PAL_MODE_INPUT_ANALOG);
-#endif
-}
-
-void deInitIfValid(const char* msg, adc_channel_e channel) {
-	if (!isAdcChannelValid(channel)) {
-		return;
-	}
-
-#if EFI_PROD_CODE
-	brain_pin_e pin = getAdcChannelBrainPin(msg, channel);
-	efiSetPadUnused(pin);
-#endif
-}
-
-static void initOldAnalogInputs() {
-	initIfValid("AUXF#1", engineConfiguration->auxFastSensor1_adcChannel);
-}
-
-static void deInitOldAnalogInputs() {
-	deInitIfValid("AUXF#1", activeConfiguration.auxFastSensor1_adcChannel);
-}
-
 static void initAuxDigital() {
 #if EFI_PROD_CODE
 	for (size_t i = 0; i < efi::size(engineConfiguration->luaDigitalInputPins); i++) {
@@ -93,7 +55,6 @@ void initNewSensors() {
 
 void stopSensors() {
 	deInitAuxDigital();
-	deInitOldAnalogInputs();
 
 	deinitTps();
 	deinitFluidPressure();
@@ -121,8 +82,6 @@ void reconfigureSensors() {
 	initVehicleSpeedSensor();
 	initTurbochargerSpeedSensor();
 	initInputShaftSpeedSensor();
-
-	initOldAnalogInputs();
 }
 
 // Mocking/testing helpers
