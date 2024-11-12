@@ -532,7 +532,8 @@ bool EtbController::checkStatus() {
 
 	bool shouldCheckSensorFunction = engine->module<SensorChecker>()->analogSensorsShouldWork();
 
-	if (!m_isAutotune && shouldCheckSensorFunction) {
+	if (!m_isAutotune && shouldCheckSensorFunction && !m_isAutocal) {
+		// Added check to remove TPS errors during autocalibration https://github.com/FOME-Tech/fome-fw/issues/504
 		bool isTpsError = !Sensor::get(m_positionSensor).Valid;
 
 		// If we have an error that's new, increment the counter
