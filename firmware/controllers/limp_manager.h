@@ -35,7 +35,7 @@ enum class TpsState : uint8_t {
 	TpsError,
 	PpsError, // 3
 	IntermittentTps,
-	PidJitter,
+	UnusedCode5,
 	Lua, // 6
 	Manual,
 	NotConfigured,
