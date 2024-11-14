@@ -393,10 +393,6 @@ const command_f_s commandsF[] = {
 		{"cranking_timing_angle", setCrankingTimingAngle},
 #endif // EFI_ENGINE_CONTROL
 
-#if EFI_ELECTRONIC_THROTTLE_BODY
-		{"etb", setThrottleDutyCycle},
-#endif // EFI_ELECTRONIC_THROTTLE_BODY
-
 };
 
 const command_i_s commandsI[] = {{"ignition_mode", setIgnitionMode},
