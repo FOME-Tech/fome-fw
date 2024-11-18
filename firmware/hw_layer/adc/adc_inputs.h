@@ -84,4 +84,6 @@ using FastAdcToken = size_t;
 
 FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel);
 adcsample_t getFastAdc(FastAdcToken token);
+const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx);
+void onKnockSamplingComplete();
 #endif // HAL_USE_ADC
