@@ -7,7 +7,6 @@
  */
 
 #include "pch.h"
-#include "knock_config.h"
 
 #if HAL_USE_ADC
 
@@ -300,7 +299,9 @@ static void fast_adc_timer_callback(GPTDriver*) {
 
 #endif // EFI_USE_FAST_ADC
 
-#ifdef KNOCK_ADC
+#ifdef EFI_SOFTWARE_KNOCK
+#include "knock_config.h"
+
 static void knockCompletionCallback(ADCDriver* adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onKnockSamplingComplete();
@@ -385,6 +386,6 @@ const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx) {
 	return &adcConvGroupCh1;
 }
 
-#endif // KNOCK_ADC
+#endif // EFI_SOFTWARE_KNOCK
 
 #endif // HAL_USE_ADC
