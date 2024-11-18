@@ -639,7 +639,7 @@ private:
 		// Drive the motor closed
 		Close,
 
-		// 
+		// Write learned values to TS
 		TransmitPrimaryMax,
 		TransmitPrimaryMin,
 		TransmitSecondaryMax,
