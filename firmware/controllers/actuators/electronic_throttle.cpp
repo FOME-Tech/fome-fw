@@ -653,7 +653,13 @@ public:
 	void update() override {
 #if EFI_TUNER_STUDIO
 		if (m_autocalPhase != ACPhase::Stopped) {
-			m_autocalPhase = doAutocal(m_autocalPhase);
+			ACPhase nextPhase = doAutocal(m_autocalPhase);
+
+			// if we changed phase, reset the phase timer
+			if (m_autocalPhase != nextPhase) {
+				m_autocalTimer.reset();
+				m_autocalPhase = nextPhase;
+			}
 		} else
 #endif /* EFI_TUNER_STUDIO */
 
@@ -687,7 +693,6 @@ public:
 			// Open the throttle
 			motor->set(0.5f);
 			motor->enable();
-			m_autocalTimer.reset();
 			return ACPhase::Open;
 		case ACPhase::Open:
 			if (m_autocalTimer.hasElapsedMs(1000)) {
