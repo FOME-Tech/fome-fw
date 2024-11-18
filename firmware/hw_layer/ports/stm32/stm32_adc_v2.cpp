@@ -355,8 +355,8 @@ static const ADCConversionGroup adcConvGroupCh1 = {
 static const ADCConversionGroup adcConvGroupCh2 = {
 	.circular = FALSE,
 	.num_channels = 1,
-	.end_cb = &completionCallback,
-	.error_cb = &errorCallback,
+	.end_cb = &knockCompletionCallback,
+	.error_cb = &knockErrorCallback,
 	.cr1 = 0,
 	.cr2 = ADC_CR2_SWSTART,
 	// sample times for channels 10...18
