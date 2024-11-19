@@ -17,10 +17,11 @@ DDEFS += -DEFI_MAX_31855=FALSE -DBOARD_L9779_COUNT=0 -DBOARD_TLE8888_COUNT=0
 # Any Proteus-based adapter boards with discrete-VR decoder are controlled via a 5v ignition output
 DDEFS += -DVR_SUPPLY_VOLTAGE=5
 
+DDEFS += -DSTM32_ADC_USE_ADC3=TRUE
+DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE
+
 # This stuff doesn't work on H7 yet
 ifneq ($(PROJECT_CPU),ARCH_STM32H7)
-	DDEFS += -DSTM32_ADC_USE_ADC3=TRUE
-	DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE
 	DDEFS += -DTRIGGER_SCOPE
 endif
 
