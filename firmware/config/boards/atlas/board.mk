@@ -10,7 +10,7 @@ DDEFS += -DFIRMWARE_ID=\"atlas\"
 # This stuff doesn't work on H7 yet
 # This board has trigger scope hardware!
 # DDEFS += -DTRIGGER_SCOPE
-# DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE -DSTM32_ADC_USE_ADC3=TRUE
+DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE -DSTM32_ADC_USE_ADC3=TRUE
 
 DDEFS += -DEFI_SDC_DEVICE=SDCD1
 
