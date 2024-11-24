@@ -77,7 +77,7 @@ void TriggerWaveform::initialize(operation_mode_e operationMode, SyncEdge syncEd
 	previousAngle = 0;
 	setArrayValues(isRiseEvent, 0);
 #if EFI_UNIT_TEST
-	setArrayValues(triggerSignalIndeces, 0);
+	memset(triggerSignalIndeces, 0, sizeof(triggerSignalIndeces));
 	setArrayValues(triggerSignalStates, 0);
 	knownOperationMode = true;
 #endif // EFI_UNIT_TEST
