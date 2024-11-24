@@ -41,7 +41,7 @@ TriggerCentral::TriggerCentral() :
 		vvtPosition(),
 		triggerState("TRG")
 {
-	memset(&hwEventCounters, 0, sizeof(hwEventCounters));
+	setArrayValues(hwEventCounters, 0);
 	triggerState.resetState();
 }
 
