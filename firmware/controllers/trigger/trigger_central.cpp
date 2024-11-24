@@ -429,7 +429,6 @@ void TriggerCentral::resetCounters() {
 	memset(hwEventCounters, 0, sizeof(hwEventCounters));
 }
 
-static const bool isUpEvent[4] = { false, true, false, true };
 static const int wheelIndeces[4] = { 0, 0, 1, 1};
 
 static void reportEventToWaveChart(trigger_event_e ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
@@ -439,7 +438,7 @@ static void reportEventToWaveChart(trigger_event_e ckpSignalType, int triggerEve
 
 	int wheelIndex = wheelIndeces[(int )ckpSignalType];
 
-	bool isUp = isUpEvent[(int) ckpSignalType];
+	bool isUp = isTriggerUpEvent(ckpSignalType);
 
 	addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp);
 	if (addOppositeEvent) {
@@ -555,8 +554,6 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 	if (triggerShape.shapeDefinitionError) {
 		// trigger is broken, we cannot do anything here
 		warning(ObdCode::CUSTOM_ERR_UNEXPECTED_SHAFT_EVENT, "Shaft event while trigger is mis-configured");
-		// magic value to indicate a problem
-		hwEventCounters[0] = 155;
 		return;
 	}
 
