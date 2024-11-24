@@ -13,10 +13,14 @@ TEST(HPFP, Lobe) {
 	engineConfiguration->hpfpPeakPos = 123;
 	engineConfiguration->hpfpCamLobes = 3;
 
-	engine->triggerCentral.vvtPosition[0][0] = 20; // Bank 0
-	engine->triggerCentral.vvtPosition[0][1] = 40;
-	engine->triggerCentral.vvtPosition[1][0] = 60; // Bank 1
-	engine->triggerCentral.vvtPosition[1][1] = 80;
+	engine->triggerCentral.vvtPosition[0][0].angle = 20; // Bank 0
+	engine->triggerCentral.vvtPosition[0][0].t.reset();
+	engine->triggerCentral.vvtPosition[0][1].angle = 40;
+	engine->triggerCentral.vvtPosition[0][1].t.reset();
+	engine->triggerCentral.vvtPosition[1][0].angle = 60; // Bank 1
+	engine->triggerCentral.vvtPosition[1][0].t.reset();
+	engine->triggerCentral.vvtPosition[1][1].angle = 80;
+	engine->triggerCentral.vvtPosition[1][1].t.reset();
 
 	HpfpLobe lobe;
 
@@ -236,7 +240,7 @@ TEST(HPFP, Schedule) {
 	auto & hpfp = *engine->module<HpfpController>();
 
 	StrictMock<MockExecutor> mockExec;
-	engine->executor.setMockExecutor(&mockExec);
+	engine->scheduler.setMockExecutor(&mockExec);
 	engineConfiguration->hpfpActivationAngle = 30;
 
 	constexpr angle_t angle0 = 90;
@@ -254,13 +258,13 @@ TEST(HPFP, Schedule) {
 
 		// First call to setRpmValue will cause a dummy call to fast periodic timer.
 		// Injection Mass will be 0 so expect a no-op.
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), &hpfp.m_event.scheduling, nt0, action_s(HpfpController::pinTurnOff, &hpfp)));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), &hpfp.m_event.scheduling, nt0, action_s(HpfpController::pinTurnOff, &hpfp)));
 
 		// Second call will be the start of a real pump event.
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), &hpfp.m_event.scheduling, nt1, action_s(HpfpController::pinTurnOn, &hpfp)));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), &hpfp.m_event.scheduling, nt1, action_s(HpfpController::pinTurnOn, &hpfp)));
 
 		// Third call will be off event
-		EXPECT_CALL(mockExec, scheduleByTimestampNt(testing::NotNull(), &hpfp.m_event.scheduling, nt2, action_s(HpfpController::pinTurnOff, &hpfp)));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), &hpfp.m_event.scheduling, nt2, action_s(HpfpController::pinTurnOff, &hpfp)));
 	}
 	EXPECT_CALL(mockExec, cancel(_)).Times(2);
 
@@ -276,7 +280,7 @@ TEST(HPFP, Schedule) {
 	eth.assertTriggerEvent("h0", 0, &hpfp.m_event, (void*)&HpfpController::pinTurnOff, 270);
 
 	// Make the previous event happen, schedule the next.
-	engine->module<TriggerScheduler>()->scheduleEventsUntilNextTriggerTooth(
+	engine->module<TriggerScheduler>()->onEnginePhase(
 		1000, tick_per_deg * 0, 180, 360);
 	// Mock executor doesn't run events, so we run it manually
 	HpfpController::pinTurnOff(&hpfp);
@@ -285,7 +289,7 @@ TEST(HPFP, Schedule) {
 	eth.assertTriggerEvent("h1", 0, &hpfp.m_event, (void*)&HpfpController::pinTurnOn, 450 - 37.6923065f);
 
 	// Make it happen
-	engine->module<TriggerScheduler>()->scheduleEventsUntilNextTriggerTooth(
+	engine->module<TriggerScheduler>()->onEnginePhase(
 		1000, tick_per_deg * 180, 360, 540);
 
 	// Since we have a mock scheduler, lets insert the correct timestamp in the scheduling

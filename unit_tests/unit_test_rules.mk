@@ -17,11 +17,9 @@ include $(PROJECT_DIR)/rusefi_rules.mk
 BOARDS_DIR = $(PROJECT_DIR)/config/boards
 
 # User may want to pass in a forced value for SANITIZE
-# ifeq ($(SANITIZE),)
-#	SANITIZE = yes
-# endif
-
-SANITIZE = no
+ifeq ($(SANITIZE),)
+	SANITIZE = yes
+endif
 
 IS_MAC = no
 UNAME_S := $(shell uname -s)
@@ -197,6 +195,7 @@ include $(UNIT_TESTS_DIR)/rules.mk
 include $(PROJECT_DIR)/rusefi_pch.mk
 include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
+include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
 
 .PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
 

@@ -127,15 +127,20 @@ static void reportPins() {
 	int totalPinsUsed = 0;
 
 	for (unsigned int i = 0; i < getBrainPinOnchipNum(); i++) {
-		const char *pin_user = getBrainUsedPin(i);
+		const char* pinUser = getBrainUsedPin(i);
 
 		/* show used pins */
-		if (pin_user != NULL) {
+		if (pinUser) {
 			brain_pin_e brainPin = index_to_brainPin(i);
-			int pin = getBrainPinIndex(brainPin);
-			ioportid_t port = getBrainPinPort(brainPin);
 
-			efiPrintf("pin %s%d: %s", portname(port), pin, pin_user);
+			if (const char* friendlyName = getBoardSpecificPinName(brainPin)) {
+				efiPrintf("pin %s: %s", friendlyName, pinUser);
+			} else {
+				int pin = getBrainPinIndex(brainPin);
+				ioportid_t port = getBrainPinPort(brainPin);
+				efiPrintf("pin %s%d: %s", portname(port), pin, pinUser);
+			}
+
 			totalPinsUsed++;
 		}
 	}
@@ -226,11 +231,7 @@ const char *hwPortname(brain_pin_e brainPin) {
 	return portNameBuffer;
 }
 
-void initPinRepository(void) {
-	/**
-	 * this method cannot use console because this method is invoked before console is initialized
-	 */
-
+void initPinRepository() {
 	addConsoleAction(CMD_PINS, reportPins);
 
 #if (BOARD_TLE8888_COUNT > 0)
@@ -269,7 +270,7 @@ bool gpio_pin_markUsed(ioportid_t port, ioportmask_t pin, const char *msg) {
 		 * connected, so the warning is never displayed on the console and that's quite a problem!
 		 */
 //		warning(ObdCode::OBD_PCM_Processor_Fault, "%s%d req by %s used by %s", portname(port), pin, msg, getBrainUsedPin(index));
-		firmwareError(ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_1, "%s%d req by %s used by %s", portname(port), pin, msg, getBrainUsedPin(index));
+		firmwareError(ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_1, "%s%d req by %s used by %s", portname(port), (int)pin, msg, getBrainUsedPin(index));
 		return true;
 	}
 	getBrainUsedPin(index) = msg;

@@ -42,6 +42,9 @@ static Timer requestPeriodTimer;
  * Gauges refresh
  */
 void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) {
+	// Assert that the entire output channels block will fit in a single TS transaction
+	static_assert(BLOCKING_FACTOR >= TS_TOTAL_OUTPUT_SIZE + 10);
+
 	if (offset + count > TS_TOTAL_OUTPUT_SIZE) {
 		efiPrintf("TS: Version Mismatch? Too much outputs requested %d/%d/%d", offset, count,
 				sizeof(TunerStudioOutputChannels));
@@ -49,22 +52,20 @@ void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, u
 		return;
 	}
 
-	if (offset < BLOCKING_FACTOR) {
-		engine->outputChannels.outputRequestPeriod
-			= 1e6 * requestPeriodTimer.getElapsedSecondsAndReset(getTimeNowNt());
-	}
+	engine->outputChannels.outputRequestPeriod
+		= 1e6 * requestPeriodTimer.getElapsedSecondsAndReset(getTimeNowNt());
 
 	tsState.outputChannelsCommandCounter++;
 	updateTunerStudioState();
-	tsChannel->assertPacketSize(count, false);
+
 	// this method is invoked too often to print any debug information
 	uint8_t * scratchBuffer = (uint8_t *)tsChannel->scratchBuffer;
 	/**
 	 * collect data from all models
 	 */
-	copyRange(scratchBuffer + 3, getLiveDataFragments(), offset, count);
+	copyRange(scratchBuffer, getLiveDataFragments(), offset, count);
 
-	tsChannel->crcAndWriteBuffer(TS_RESPONSE_OK, count);
+	tsChannel->writeCrcPacketLocked(TS_RESPONSE_OK, scratchBuffer, count);
 }
 
 #endif // EFI_TUNER_STUDIO

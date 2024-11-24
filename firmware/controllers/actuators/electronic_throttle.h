@@ -19,16 +19,12 @@ void setEtbWastegatePosition(percent_t pos);
 void setEtbLuaAdjustment(percent_t adjustment);
 void setHitachiEtbCalibration();
 
-// these two sensors use same plug but have different calibrations and even rotate in different directions
-void set18919_AM810_pedal_position_sensor();
 void setToyota89281_33010_pedal_position_sensor();
-
 void setBoschVAGETB();
 
 void setDefaultEtbBiasCurve();
 void setDefaultEtbParameters();
 void setBoschVNH2SP30Curve();
-void setThrottleDutyCycle(percent_t level);
 void onConfigurationChangeElectronicThrottleCallback(engine_configuration_s *previousConfiguration);
 void unregisterEtbPins();
 void setProteusHitachiEtbDefaults();
@@ -49,8 +45,8 @@ public:
 	virtual void setIdlePosition(percent_t pos) = 0;
 	virtual void setWastegatePosition(percent_t pos) = 0;
 	virtual void update() = 0;
-	virtual void autoCalibrateTps() = 0;
-	virtual bool isEtbMode() = 0;
+	virtual void autoCalibrateTps() { }
+	virtual bool isEtbMode() const = 0;
 
 	virtual const pid_state_s& getPidState() const = 0;
 

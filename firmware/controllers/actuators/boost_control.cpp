@@ -13,12 +13,8 @@
 
 #define NO_PIN_PERIOD 500
 
-#if defined(HAS_OS_ACCESS)
-#error "Unexpected OS ACCESS HERE"
-#endif
-
-static boostOpenLoop_Map3D_t boostMapOpen;
-static boostOpenLoop_Map3D_t boostMapClosed;
+static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, uint8_t, uint8_t> boostMapOpen;
+static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, uint8_t, uint8_t> boostMapClosed;
 static SimplePwm boostPwmControl("boost");
 
 void BoostController::init(IPwm* pwm, const ValueProvider3D* openLoopMap, const ValueProvider3D* closedLoopTargetMap, pid_s* pidParams) {
@@ -39,7 +35,7 @@ void BoostController::resetLua() {
 }
 
 void BoostController::onConfigurationChange(engine_configuration_s const * previousConfig) {
-	if (!m_pid.isSame(&previousConfig->boostPid)) {
+	if (!previousConfig || !m_pid.isSame(&previousConfig->boostPid)) {
 		m_shouldResetPid = true;
 	}
 }
@@ -229,7 +225,7 @@ void startBoostPin() {
 	startSimplePwm(
 		&boostPwmControl,
 		"Boost",
-		&engine->executor,
+		&engine->scheduler,
 		&enginePins.boostPin,
 		engineConfiguration->boostPwmFrequency,
 		0

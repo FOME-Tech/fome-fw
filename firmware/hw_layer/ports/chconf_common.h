@@ -8,12 +8,6 @@
 #ifndef CONFIG_CHCONF_COMMON_H_
 #define CONFIG_CHCONF_COMMON_H_
 
-#define PORT_IDLE_THREAD_STACK_SIZE     32
-
-// See global_shared.h notes about stack requirements
-// see also http://www.chibios.org/dokuwiki/doku.php?id=chibios:kb:stacks
-#define PORT_INT_REQUIRED_STACK 	128
-
 #define CHPRINTF_USE_FLOAT          	TRUE
 
 #ifdef __cplusplus
@@ -41,7 +35,6 @@ extern "C" {
 #endif
   void boardInit(void);
   void setPinConfigurationOverrides(void);
-  void setAdcChannelOverrides(void);
 #ifdef __cplusplus
 }
 #endif

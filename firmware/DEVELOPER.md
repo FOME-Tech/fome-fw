@@ -1,6 +1,4 @@
-See also [../unit_tests](../unit_tests)
-
-This directory contains the source code for the RusEFI firmware.
+This directory contains the source code for the FOME firmware.
 
 The ideal is that typical end users should be able to use pre-built
 firmware.  They should not need to modify or even rebuild from the
@@ -11,7 +9,10 @@ configurations, and specialized enhancements.
 
 TL;DR
 
-``make PROJECT_BOARD=microrusefi PROJECT_CPU=ARCH_STM32F4``
+```
+cd config/boards/proteus
+./compile_proteus_f7.sh
+```
 
 # Environment
 
@@ -25,7 +26,7 @@ requires selecting and installing a Unix-compatible environment.
 
 ## Setup Instructions
 
-## Editor/IDE
+### Editor/IDE
 
 The supported IDE is [Visual Studio Code](https://code.visualstudio.com/).
 Others will work, but if you need help from the maintainers, you might not
@@ -58,3 +59,30 @@ These motivations often include using leading-edge language and build
 system concepts, requiring recent versions of tools.  Should you
 encounter build problems, review the latest version of this document.
 If you're still having trouble, reach out on Discord in the #firmware channel.
+
+# Building
+
+Each ECU+MCU combination has its own compilation scripts. In general, these scripts are located in `firmware/config/boards/<board>/compile_<board>_<chip>.sh`. For example, `firmware/config/boards/proteus/compile_proteus_f7.sh` compiles a firmware image for a Proteus (or Polygonus) ECU fitted with an STM32F7 microcontroller.
+
+## Outputs
+
+When a compile script is run, it will generate any generated files (TunerStudio ini, generated structs, etc), compile the firmware, compile the bootloader if configured for that board, then assemble any firmware images. These outputs are placed in `firmware/deliver/`.
+
+For example, running `compile_proteus_f7.sh` will yield:
+
+```
+$ ls -lh deliver
+657K	fome.bin
+ 18K	fome_bl.bin
+1.9M	fome_update.srec
+```
+
+|File|Purpose|
+|--|--|
+|`fome.bin`|Combined firmware image, both bootloader and main image pre-assembled. Flash this one if you have a blank ECU (or one you want to wipe fully).|
+|`fome_bl.bin`|Just the bootloader.|
+|`fome_update.srec`|Update image that only contains the firmware, to be flashed via the bootloader.|
+
+# Unit Tests
+
+[See unit tests readme](../unit_tests/readme.md).

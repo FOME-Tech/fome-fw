@@ -324,18 +324,18 @@ TEST(misc, testMisc) {
 	}
 	{
 		float v = atoff("nan");
-		ASSERT_TRUE(cisnan(v)) << "NaN atoff";
+		ASSERT_TRUE(std::isnan(v)) << "NaN atoff";
 	}
 	{
 		float v = atoff("N");
-		ASSERT_TRUE(cisnan(v)) << "NaN atoff";
+		ASSERT_TRUE(std::isnan(v)) << "NaN atoff";
 	}
 
 //	ASSERT_EQ(true, strEqual("spa3", getPinName(SPARKOUT_3_OUTPUT)));
 //	ASSERT_EQ(SPARKOUT_12_OUTPUT, getPinByName("spa12"));
 }
 
-int getRusEfiVersion(void) {
+int getRusEfiVersion() {
 	return TS_FILE_VERSION;
 }
 

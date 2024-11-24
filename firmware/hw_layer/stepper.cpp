@@ -18,7 +18,7 @@ float StepperMotorBase::getTargetPosition() const {
 void StepperMotorBase::setTargetPosition(float targetPositionSteps) {
 	// When the IAC position value change is insignificant (lower than this threshold), leave the poor valve alone
 	// When we get a larger change, actually update the target stepper position
-	if (absF(m_targetPosition - targetPositionSteps) >= 1) {
+	if (std::abs(m_targetPosition - targetPositionSteps) >= 1) {
 		m_targetPosition = targetPositionSteps;
 	}
 }
@@ -126,7 +126,8 @@ void StepperMotorBase::doIteration() {
 	int currentPosition = m_currentPosition;
 
 	// the stepper does not work if the main relay is turned off (it requires +12V)
-	if (!engine->isMainRelayEnabled()) {
+	if (!engine->isMainRelayEnabled() ||
+		Sensor::getOrZero(SensorType::BatteryVoltage) < engineConfiguration->minStepperVoltage) {
 		m_hw->pause();
 		return;
 	}
@@ -198,7 +199,7 @@ void StepperHw::pause(int divisor) const {
 }
 
 void StepperHw::setReactionTime(float ms) {
-	m_reactionTime = maxF(1, ms);
+	m_reactionTime = std::max(1.0f, ms);
 }
 
 bool StepDirectionStepper::step(bool positive) {

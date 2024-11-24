@@ -52,8 +52,10 @@ static void populateFrame(Status& msg) {
 
 	msg.gear = Sensor::getOrZero(SensorType::DetectedGear);
 
+	#ifdef MODULE_TRIP_ODO
 	// scale to units of 0.1km
 	msg.distanceTraveled = engine->module<TripOdometer>()->getDistanceMeters() / 100;
+	#endif
 }
 
 struct Speeds {
@@ -158,8 +160,10 @@ struct Fueling2 {
 };
 
 static void populateFrame(Fueling2& msg) {
-	msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
-	msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+	#ifdef MODULE_TRIP_ODO
+		msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
+		msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+	#endif // MODULE_TRIP_ODO
 
 	for (size_t i = 0; i < 2; i++) {
 		msg.fuelTrim[i] = 100.0f * (engine->stftCorrection[i] - 1.0f);
@@ -193,10 +197,10 @@ struct Cams {
 
 static void populateFrame(Cams& msg) {
 #if EFI_SHAFT_POSITION_INPUT
-	msg.Bank1IntakeActual  = engine->triggerCentral.getVVTPosition(0, 0);
-	msg.Bank1ExhaustActual = engine->triggerCentral.getVVTPosition(0, 1);
-	msg.Bank2IntakeActual  = engine->triggerCentral.getVVTPosition(1, 0);
-	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1);
+	msg.Bank1IntakeActual  = engine->triggerCentral.getVVTPosition(0, 0).value_or(0);
+	msg.Bank1ExhaustActual = engine->triggerCentral.getVVTPosition(0, 1).value_or(0);
+	msg.Bank2IntakeActual  = engine->triggerCentral.getVVTPosition(1, 0).value_or(0);
+	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1).value_or(0);
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	// TODO: maybe don't rely on outputChannels here
@@ -210,8 +214,9 @@ struct Egts {
 	uint8_t egt[8];
 };
 
-static void populateFrame(Egts&) {
-	// TODO: https://github.com/FOME-Tech/fome-fw/issues/398
+static void populateFrame(Egts& msg) {
+	msg.egt[0] = Sensor::getOrZero(SensorType::EGT1) / 5;
+	msg.egt[1] = Sensor::getOrZero(SensorType::EGT2) / 5;
 }
 
 void sendCanVerbose() {

@@ -261,10 +261,10 @@ bool strEqual(const char *str1, const char *str2) {
 
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed) {
 	if (newValue >= oldValue) {
-		return (incrLimitPerSec <= 0.0f) ? newValue : oldValue + minF(newValue - oldValue, incrLimitPerSec * secsPassed);
+		return (incrLimitPerSec <= 0.0f) ? newValue : oldValue + std::min(newValue - oldValue, incrLimitPerSec * secsPassed);
 	}
 
-	return (decrLimitPerSec <= 0.0f) ? newValue : oldValue - minF(oldValue - newValue, decrLimitPerSec * secsPassed);
+	return (decrLimitPerSec <= 0.0f) ? newValue : oldValue - std::min(oldValue - newValue, decrLimitPerSec * secsPassed);
 }
 
 bool isPhaseInRange(float test, float current, float next) {

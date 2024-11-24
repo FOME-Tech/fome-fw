@@ -28,22 +28,22 @@
 #if EFI_ENGINE_CONTROL
 
 // todo: reset this between cranking attempts?! #2735
-int minCrankingRpm = 0;
+float minCrankingRpm = 0;
 
 /**
  * @return ignition timing angle advance before TDC
  */
-static angle_t getRunningAdvance(int rpm, float engineLoad) {
+static angle_t getRunningAdvance(float rpm, float engineLoad) {
 	if (engineConfiguration->timingMode == TM_FIXED) {
 		return engineConfiguration->fixedTiming;
 	}
 
-	if (cisnan(engineLoad)) {
+	if (std::isnan(engineLoad)) {
 		warning(ObdCode::CUSTOM_NAN_ENGINE_LOAD, "NaN engine load");
 		return NAN;
 	}
 
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(engineLoad), "invalid el", NAN);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(engineLoad), "invalid el", NAN);
 
 	// compute base ignition angle from main table
 	float advanceAngle = interpolate3d(
@@ -84,7 +84,11 @@ static angle_t getRunningAdvance(int rpm, float engineLoad) {
 		auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 		if (tps) {
 			// interpolate between idle table and normal (running) table using TPS threshold
-			advanceAngle = interpolateClamped(0.0f, idleAdvance, engineConfiguration->idlePidDeactivationTpsThreshold, advanceAngle, tps.Value);
+			// 0 TPS -> idle table
+			// 1/2 threshold -> idle table
+			// idle threshold -> normal table
+			float idleThreshold = engineConfiguration->idlePidDeactivationTpsThreshold;
+			advanceAngle = interpolateClamped(idleThreshold / 2, idleAdvance, idleThreshold, advanceAngle, tps.Value);
 		}
 	}
 #endif
@@ -137,7 +141,7 @@ static angle_t getAdvanceCorrections(float engineLoad) {
 /**
  * @return ignition timing angle advance before TDC for Cranking
  */
-static angle_t getCrankingAdvance(int rpm, float engineLoad) {
+static angle_t getCrankingAdvance(float rpm, float engineLoad) {
 	// get advance from the separate table for Cranking
 	if (engineConfiguration->useSeparateAdvanceForCranking) {
 		return interpolate2d(rpm, config->crankingAdvanceBins, config->crankingAdvance);
@@ -151,10 +155,9 @@ static angle_t getCrankingAdvance(int rpm, float engineLoad) {
 	return interpolateClamped(minCrankingRpm, engineConfiguration->crankingTimingAngle, engineConfiguration->cranking.rpm, crankingToRunningTransitionAngle, rpm);
 }
 
-
-angle_t getAdvance(int rpm, float engineLoad) {
+angle_t getAdvance(float rpm, float engineLoad) {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
-	if (cisnan(engineLoad)) {
+	if (std::isnan(engineLoad)) {
 		return 0; // any error should already be reported
 	}
 
@@ -164,11 +167,11 @@ angle_t getAdvance(int rpm, float engineLoad) {
 	if (isCranking) {
 		angle = getCrankingAdvance(rpm, engineLoad);
 		assertAngleRange(angle, "crAngle", ObdCode::CUSTOM_ERR_ANGLE_CR);
-		efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(angle), "cr_AngleN", 0);
+		efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(angle), "cr_AngleN", 0);
 	} else {
 		angle = getRunningAdvance(rpm, engineLoad);
 
-		if (cisnan(angle)) {
+		if (std::isnan(angle)) {
 			warning(ObdCode::CUSTOM_ERR_6610, "NaN angle from table");
 			return 0;
 		}
@@ -181,12 +184,12 @@ angle_t getAdvance(int rpm, float engineLoad) {
 
 	if (allowCorrections) {
 		angle_t correction = getAdvanceCorrections(engineLoad);
-		if (!cisnan(correction)) { // correction could be NaN during settings update
+		if (!std::isnan(correction)) { // correction could be NaN during settings update
 			angle += correction;
 		}
 	}
 
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(angle), "_AngleN5", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(angle), "_AngleN5", 0);
 	wrapAngle(angle, "getAdvance", ObdCode::CUSTOM_ERR_ADCANCE_CALC_ANGLE);
 	return angle;
 #else
@@ -194,7 +197,7 @@ angle_t getAdvance(int rpm, float engineLoad) {
 #endif
 }
 
-angle_t getCylinderIgnitionTrim(size_t cylinderNumber, int rpm, float ignitionLoad) {
+angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad) {
 	return interpolate3d(
 		config->ignTrims[cylinderNumber].table,
 		config->ignTrimLoadBins, ignitionLoad,
@@ -202,7 +205,7 @@ angle_t getCylinderIgnitionTrim(size_t cylinderNumber, int rpm, float ignitionLo
 	);
 }
 
-size_t getMultiSparkCount(int rpm) {
+size_t getMultiSparkCount(float rpm) {
 	// Compute multispark (if enabled)
 	if (engineConfiguration->multisparkEnable
 		&& rpm <= engineConfiguration->multisparkMaxRpm

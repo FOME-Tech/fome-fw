@@ -32,7 +32,6 @@
 #include "flash_main.h"
 #include "bench_test.h"
 #include "electronic_throttle.h"
-#include "map_averaging.h"
 #include "high_pressure_fuel_pump.h"
 #include "malfunction_central.h"
 #include "malfunction_indicator.h"
@@ -45,7 +44,6 @@
 #include "vvt.h"
 #include "boost_control.h"
 #include "launch_control.h"
-#include "tachometer.h"
 #include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
@@ -67,20 +65,9 @@
 #include "logic_analyzer.h"
 #endif /* EFI_LOGIC_ANALYZER */
 
-#if HAL_USE_ADC
-#include "AdcConfiguration.h"
-#endif /* HAL_USE_ADC */
-
-#include "periodic_task.h"
-
-
 #if ! EFI_UNIT_TEST
 #include "init.h"
 #endif /* EFI_UNIT_TEST */
-
-#if EFI_PROD_CODE
-#include "pwm_tester.h"
-#endif /* EFI_PROD_CODE */
 
 #if !EFI_UNIT_TEST
 
@@ -99,64 +86,11 @@ Engine * engine;
 void initDataStructures() {
 #if EFI_ENGINE_CONTROL
 	initFuelMap();
-	initSpeedDensity();
 #endif // EFI_ENGINE_CONTROL
 }
 
-#if !EFI_UNIT_TEST
-
-static void doPeriodicSlowCallback();
-
-class PeriodicFastController : public PeriodicTimerController {
-	void PeriodicTask() override {
-		engine->periodicFastCallback();
-	}
-
-	int getPeriodMs() override {
-		return FAST_CALLBACK_PERIOD_MS;
-	}
-};
-
-class PeriodicSlowController : public PeriodicTimerController {
-	void PeriodicTask() override {
-		doPeriodicSlowCallback();
-	}
-
-	int getPeriodMs() override {
-		// no reason to have this configurable, looks like everyone is happy with 20Hz
-		return SLOW_CALLBACK_PERIOD_MS;
-	}
-};
-
-static PeriodicFastController fastController;
-static PeriodicSlowController slowController;
-
-class EngineStateBlinkingTask : public PeriodicTimerController {
-	int getPeriodMs() override {
-		return 50;
-	}
-
-	void PeriodicTask() override {
-#if EFI_SHAFT_POSITION_INPUT
-		bool is_running = engine->rpmCalculator.isRunning();
-#else
-		bool is_running = false;
-#endif /* EFI_SHAFT_POSITION_INPUT */
-
-		if (is_running) {
-			// blink in running mode
-			enginePins.runningLedPin.toggle();
-		} else {
-			int is_cranking = engine->rpmCalculator.isCranking();
-			enginePins.runningLedPin.setValue(is_cranking);
-		}
-	}
-};
-
-static EngineStateBlinkingTask engineStateBlinkingTask;
-
 static void resetAccel() {
-	engine->tpsAccelEnrichment.resetAE();
+	engine->module<TpsAccelEnrichment>()->resetAE();
 
 	for (size_t i = 0; i < efi::size(engine->injectionEvents.elements); i++)
 	{
@@ -164,7 +98,9 @@ static void resetAccel() {
 	}
 }
 
-static void doPeriodicSlowCallback() {
+void doPeriodicSlowCallback() {
+	ScopePerf perf(PE::EnginePeriodicSlowCallback);
+
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6661, getCurrentRemainingStack() > 64, "lowStckOnEv");
 
@@ -188,10 +124,6 @@ static void doPeriodicSlowCallback() {
 		resetAccel();
 	}
 
-	if (engine->versionForConfigurationListeners.isOld(engine->getGlobalConfigurationVersion())) {
-		updateAccelParameters();
-	}
-
 	engine->periodicSlowCallback();
 #else /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
 	#if EFI_INTERNAL_FLASH
@@ -212,11 +144,6 @@ static void doPeriodicSlowCallback() {
 
 }
 
-void initPeriodicEvents() {
-	slowController.start();
-	fastController.start();
-}
-
 char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer) {
 #if HAL_USE_ADC
 	if (!isAdcChannelValid(hwChannel)) {
@@ -230,10 +157,6 @@ char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *bu
 #endif /* HAL_USE_ADC */
 	return buffer;
 }
-
-#if HAL_USE_ADC
-extern AdcDevice fastAdc;
-#endif /* HAL_USE_ADC */
 
 static void printSensorInfo() {
 #if HAL_USE_ADC
@@ -366,7 +289,7 @@ static void setFloat(const char *offsetStr, const char *valueStr) {
 	if (isOutOfBounds(offset))
 		return;
 	float value = atoff(valueStr);
-	if (cisnan(value)) {
+	if (std::isnan(value)) {
 		efiPrintf("invalid value [%s]", valueStr);
 		return;
 	}
@@ -389,12 +312,93 @@ static void initConfigActions() {
 	addConsoleActionI("get_byte", getByte);
 	addConsoleActionII("get_bit", getBit);
 }
-#endif /* EFI_UNIT_TEST */
+
+void LedBlinkingTask::onSlowCallback() {
+	updateRunningLed();
+	updateWarningLed();
+	updateCommsLed();
+	updateErrorLed();
+}
+
+void LedBlinkingTask::updateRunningLed() {
+#if EFI_SHAFT_POSITION_INPUT
+	bool is_running = engine->rpmCalculator.isRunning();
+#else
+	bool is_running = false;
+#endif /* EFI_SHAFT_POSITION_INPUT */
+
+	// Running -> flashing
+	// Stopped -> off
+	// Cranking -> on
+
+	if (is_running) {
+		// blink in running mode
+		enginePins.runningLedPin.toggle();
+	} else {
+		bool is_cranking = engine->rpmCalculator.isCranking();
+		enginePins.runningLedPin.setValue(is_cranking);
+	}
+}
+
+void LedBlinkingTask::updateWarningLed() {
+	bool warnLedState = Sensor::getOrZero(SensorType::BatteryVoltage) < LOW_VBATT;
+
+#if EFI_ENGINE_CONTROL
+	// TODO: should this do something more intelligent?
+	// warnLedState |= isTriggerErrorNow();
+#endif
+
+	// todo: at the moment warning codes do not affect warning LED?!
+	enginePins.warningLedPin.setValue(warnLedState);
+}
+
+static std::atomic<bool> consoleByteArrived = false;
+
+void onDataArrived() {
+	consoleByteArrived.store(true);
+}
+
+void LedBlinkingTask::updateCommsLed() {
+	// USB unplugged (or no USB) -> off, blink on
+	// USB plugged in -> on, blink off
+	// Data transferring -> flashing
+
+	if (consoleByteArrived.exchange(false)) {
+		enginePins.communicationLedPin.toggle();
+	} else {
+		bool usbReady = 
+			#if EFI_USB_SERIAL
+				is_usb_serial_ready()
+			#else 
+				true
+			#endif
+			;
+
+		// toggle the state 1/20 of the time so it blinks at you a little
+		bool ledState = usbReady ^ (m_commBlinkCounter >= 19);
+		enginePins.communicationLedPin.setValue(ledState);
+
+		if (m_commBlinkCounter == 0) {
+			m_commBlinkCounter = 20;
+		}
+
+		m_commBlinkCounter--;
+	}
+}
+
+void LedBlinkingTask::updateErrorLed() {
+	if (hasFirmwareError()) {
+		if (m_errorBlinkCounter == 0) {
+			enginePins.errorLedPin.toggle();
+			m_errorBlinkCounter = 5;
+		}
+
+		m_errorBlinkCounter--;
+	}
+}
 
 // this method is used by real firmware and simulator and unit test
 void commonInitEngineController() {
-	initInterpolation();
-
 #if EFI_SIMULATOR || EFI_UNIT_TEST
 	printf("commonInitEngineController\n");
 #endif
@@ -470,11 +474,9 @@ void commonInitEngineController() {
 	initElectronicThrottle();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
-#if EFI_MAP_AVERAGING
-	if (engineConfiguration->isMapAveragingEnabled) {
-		initMapAveraging();
-	}
-#endif /* EFI_MAP_AVERAGING */
+#ifdef MODULE_MAP_AVERAGING
+	initMapAveraging();
+#endif /* MODULE_MAP_AVERAGING */
 
 #if EFI_BOOST_CONTROL
 	initBoostCtrl();
@@ -495,11 +497,11 @@ void commonInitEngineController() {
 // Returns false if there's an obvious problem with the loaded configuration
 bool validateConfig() {
 	if (engineConfiguration->cylindersCount > MAX_CYLINDER_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %d", engineConfiguration->cylindersCount);
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %lu", engineConfiguration->cylindersCount);
 		return false;
 	}
 
-	ensureArrayIsAscending("Batt Lag", engineConfiguration->injector.battLagCorrBins);
+	ensureArrayIsAscending("Injector deadtime", engineConfiguration->injector.battLagCorrBins);
 
 	// Fueling
 	{
@@ -549,7 +551,11 @@ bool validateConfig() {
 
 // todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
 
-	ensureArrayIsAscending("MAF decoding", config->mafDecodingBins);
+	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+
+	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {
+		ensureArrayIsAscending("Fuel level curve", config->fuelLevelBins);
+	}
 
 	// Cranking tables
 	ensureArrayIsAscending("Cranking fuel mult", config->crankingFuelBins);
@@ -570,7 +576,7 @@ bool validateConfig() {
 		if (cfg.pin == Gpio::Unassigned) {
 			continue;
 		}
-		ensureArrayIsAscending("VR Bins", cfg.rpmBins);
+		ensureArrayIsAscending("VR threshold", cfg.rpmBins);
 	}
 
 #if EFI_BOOST_CONTROL
@@ -612,6 +618,10 @@ bool validateConfig() {
 	}
 #endif
 
+	if (engineConfiguration->enableOilPressureProtect) {
+		ensureArrayIsAscending("Oil pressure protection", config->minimumOilPressureBins);
+	}
+
 	return true;
 }
 
@@ -632,13 +642,7 @@ void initEngineController() {
 		return;
 	}
 
-	engineStateBlinkingTask.start();
-
 	initVrPwm();
-
-#if EFI_PWM_TESTER
-	initPwmTester();
-#endif /* EFI_PWM_TESTER */
 }
 
 /**
@@ -661,7 +665,7 @@ static char UNUSED_CCM_SIZE[CCM_UNUSED_SIZE] CCM_OPTIONAL;
 /**
  * See also GIT_HASH
  */
-int getRusEfiVersion(void) {
+int getRusEfiVersion() {
 	if (UNUSED_RAM_SIZE[0] != 0)
 		return 123; // this is here to make the compiler happy about the unused array
 	if (UNUSED_CCM_SIZE[0] * 0 != 0)

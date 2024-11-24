@@ -16,12 +16,12 @@ int djb2lowerCase(const char *str);
 
 // http://en.wikipedia.org/wiki/Endianness
 
-inline uint16_t SWAP_UINT16(uint16_t x)
+constexpr inline uint16_t SWAP_UINT16(uint16_t x)
 {
 	return ((x << 8) | (x >> 8));
 }
 
-inline uint32_t SWAP_UINT32(uint32_t x)
+constexpr inline uint32_t SWAP_UINT32(uint32_t x)
 {
 	return (((x >> 24) & 0x000000ff) | ((x <<  8) & 0x00ff0000) |
 			((x >>  8) & 0x0000ff00) | ((x << 24) & 0xff000000));
@@ -80,7 +80,6 @@ char* itoa10(char *p, int num);
 bool strEqualCaseInsensitive(const char *str1, const char *str2);
 bool strEqual(const char *str1, const char *str2);
 
-// Currently used by air-interp. tCharge mode (see EngineState::updateTChargeK()).
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed);
 
 bool isPhaseInRange(float test, float current, float next);

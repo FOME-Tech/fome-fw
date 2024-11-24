@@ -201,11 +201,19 @@ static const float mafTransferKgH[MAF_TRANSFER_SIZE] = {
 		350.00
 };
 
+template <typename TSrc, typename TDst, size_t NSrc, size_t NDest>
+constexpr void copyArrayPartial(TDst (&dest)[NDest], const TSrc (&src)[NSrc]) {
+	static_assert(NDest >= NSrc, "Source array must be larger than destination.");
+
+	for (size_t i = 0; i < NSrc; i++) {
+		dest[i] = src[i];
+	}
+}
 
 static void setMAFTransferFunction() {
-	memcpy(config->mafDecoding, mafTransferKgH, sizeof(mafTransferKgH));
-	memcpy(config->mafDecodingBins, mafTransferVolts, sizeof(mafTransferVolts));
-	for (int i = MAF_TRANSFER_SIZE;i<MAF_DECODING_COUNT;i++) {
+	copyArrayPartial(config->mafDecoding, mafTransferKgH);
+	copyArrayPartial(config->mafDecodingBins, mafTransferVolts);
+	for (int i = MAF_TRANSFER_SIZE; i < MAF_DECODING_COUNT; i++) {
 		config->mafDecodingBins[i] = config->mafDecodingBins[MAF_TRANSFER_SIZE - 1] + i * 0.01;
 		config->mafDecoding[i] = config->mafDecoding[MAF_TRANSFER_SIZE - 1];
 	}
@@ -342,9 +350,7 @@ static void setCommonMazdaNB() {
 	// Sensors
 
 	// TPS
-	// set tps_min 90
 	engineConfiguration->tpsMin = 100; // convert 12to10 bit (ADC/4)
-	// set tps_max 540
 	engineConfiguration->tpsMax = 650; // convert 12to10 bit (ADC/4)
 
 	// CLT/IAT
@@ -383,11 +389,11 @@ static void setMazdaMiataEngineNB1Defaults() {
 
 	// Vehicle speed/gears
 	engineConfiguration->totalGearsCount = 5;
-	engineConfiguration->gearRatio[0] = 3.136;
-	engineConfiguration->gearRatio[1] = 1.888;
-	engineConfiguration->gearRatio[2] = 1.330;
-	engineConfiguration->gearRatio[3] = 1.000;
-	engineConfiguration->gearRatio[4] = 0.814;
+	engineConfiguration->gearRatio[0] = 3.14;
+	engineConfiguration->gearRatio[1] = 1.89;
+	engineConfiguration->gearRatio[2] = 1.33;
+	engineConfiguration->gearRatio[3] = 1.00;
+	engineConfiguration->gearRatio[4] = 0.81;
 
 	// These may need to change based on your real car
 	engineConfiguration->driveWheelRevPerKm = 551;
@@ -417,12 +423,12 @@ static void setMazdaMiataEngineNB2Defaults() {
 
 	// Vehicle speed/gears
 	engineConfiguration->totalGearsCount = 6;
-	engineConfiguration->gearRatio[0] = 3.760;
-	engineConfiguration->gearRatio[1] = 2.269;
-	engineConfiguration->gearRatio[2] = 1.646;
-	engineConfiguration->gearRatio[3] = 1.257;
-	engineConfiguration->gearRatio[4] = 1.000;
-	engineConfiguration->gearRatio[5] = 0.843;
+	engineConfiguration->gearRatio[0] = 3.76;
+	engineConfiguration->gearRatio[1] = 2.27;
+	engineConfiguration->gearRatio[2] = 1.65;
+	engineConfiguration->gearRatio[3] = 1.26;
+	engineConfiguration->gearRatio[4] = 1.00;
+	engineConfiguration->gearRatio[5] = 0.84;
 
 	// These may need to change based on your real car
 	engineConfiguration->driveWheelRevPerKm = 538;
@@ -621,10 +627,7 @@ static void setMiataNB2_MRE_common() {
 // disabled for now since only allowed with ETB
 //	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_7;
 
-	// set tps_min 90
 	engineConfiguration->tpsMin = 90;
-
-	// set tps_max 540
 	engineConfiguration->tpsMax = 870;
 
 	// 0.3#4 has wrong R139? TODO: fix that custom board to match proper value!!!
@@ -849,10 +852,7 @@ void setMiataNB2_Hellen72() {
     setMazdaMiataEngineNB2Defaults();
 	strcpy(engineConfiguration->vehicleName, "H72 test");
 
-
-	// set tps_min 90
 	engineConfiguration->tpsMin = 110; // convert 12to10 bit (ADC/4)
-
 }
 
 void setMiataNB2_Hellen72_36() {

@@ -58,6 +58,10 @@
 #define GAUGE_NAME_TC_RATIO "TCU: Torque Converter Ratio"
 
 #define GAUGE_NAME_VVS "Vehicle Speed"
+#define GAUGE_NAME_WHEEL_SPEED_LF "Wheel speed: LF"
+#define GAUGE_NAME_WHEEL_SPEED_RF "Wheel speed: RF"
+#define GAUGE_NAME_WHEEL_SPEED_LR "Wheel speed: LR"
+#define GAUGE_NAME_WHEEL_SPEED_RR "Wheel speed: RR"
 #define GAUGE_NAME_GEAR_RATIO "Gearbox Ratio"
 #define GAUGE_NAME_DETECTED_GEAR "Detected Gear"
 #define GAUGE_NAME_TURBO_SPEED "Turbocharger Speed"
@@ -106,6 +110,8 @@
 
 #define GAUGE_NAME_AUX_LINEAR_1 "Aux linear #1"
 #define GAUGE_NAME_AUX_LINEAR_2 "Aux linear #2"
+#define GAUGE_NAME_AUX_LINEAR_3 "Aux linear #3"
+#define GAUGE_NAME_AUX_LINEAR_4 "Aux linear #4"
 
 #define GAUGE_NAME_BOOST_OUTPUT "Boost: Output"
 #define GAUGE_NAME_BOOST_CLOSED_LOOP "Boost: Closed loop"

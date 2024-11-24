@@ -20,7 +20,6 @@
 #include "sensor_chart.h"
 #include "bench_test.h"
 #include "tunerstudio.h"
-#include "map_averaging.h"
 #include "mmc_card.h"
 #include "memstreams.h"
 #include <chprintf.h>
@@ -117,7 +116,7 @@ void rusEfiFunctionalTest(void) {
 
 	runChprintfTest();
 
-	initPeriodicEvents();
+	initMainLoop();
 
 	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
 	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;

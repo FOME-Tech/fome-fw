@@ -17,17 +17,14 @@
 #include "speed_density.h"
 #include "advance_map.h"
 
-#include "map_averaging.h"
 #include "perf_trace.h"
 #include "backup_ram.h"
 #include "idle_thread.h"
 #include "idle_hardware.h"
 #include "gppwm.h"
-#include "tachometer.h"
 #include "speedometer.h"
 #include "dynoview.h"
 #include "boost_control.h"
-#include "fan_control.h"
 #include "ac_control.h"
 #include "vr_pwm.h"
 #if EFI_MC33816
@@ -72,6 +69,8 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 		return trigger_type_e::TT_VVT_TOYOTA_3_TOOTH;
 	case VVT_MIATA_NB:
 		return trigger_type_e::TT_VVT_MIATA_NB;
+	case VVT_MIATA_NA:
+		return trigger_type_e::TT_VVT_MIATA_NA;
 	case VVT_BOSCH_QUICK_START:
 		return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
 	case VVT_HONDA_K_EXHAUST:
@@ -86,6 +85,8 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 		return trigger_type_e::TT_VVT_BARRA_3_PLUS_1;
 	case VVT_MAZDA_SKYACTIV:
 		return trigger_type_e::TT_VVT_MAZDA_SKYACTIV;
+	case VVT_MAZDA_L:
+		return trigger_type_e::TT_VVT_MAZDA_L;
 	case VVT_NISSAN_VQ:
 		return trigger_type_e::TT_VVT_NISSAN_VQ35;
 	case VVT_TOYOTA_4_1:
@@ -122,12 +123,10 @@ void Engine::updateTriggerWaveform() {
 }
 
 void Engine::periodicSlowCallback() {
-	ScopePerf perf(PE::EnginePeriodicSlowCallback);
-
 #if EFI_SHAFT_POSITION_INPUT
 	// Re-read config in case it's changed
 	triggerCentral.primaryTriggerConfiguration.update();
-	for (int camIndex = 0;camIndex < CAMS_PER_BANK;camIndex++) {
+	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -136,7 +135,7 @@ void Engine::periodicSlowCallback() {
 	updateSlowSensors();
 	checkShutdown();
 
-	tpsAccelEnrichment.onNewValue(Sensor::getOrZero(SensorType::Tps1));
+	module<TpsAccelEnrichment>()->onNewValue(Sensor::getOrZero(SensorType::Tps1));
 
 	updateVrPwm();
 
@@ -171,7 +170,7 @@ void Engine::updateSlowSensors() {
 	updateSwitchInputs();
 
 #if EFI_SHAFT_POSITION_INPUT
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	triggerCentral.isEngineSnifferEnabled = rpm < engineConfiguration->engineSnifferRpmThreshold;
 	getEngineState()->sensorChartMode = rpm < engineConfiguration->sensorSnifferRpmThreshold ? engineConfiguration->sensorChartMode : SC_OFF;
 
@@ -211,7 +210,7 @@ void Engine::updateSwitchInputs() {
 		AcController & acController = engine->module<AcController>().unmock();
 		if (acController.acButtonState != currentState) {
 			acController.acButtonState = currentState;
-			acController.acSwitchLastChangeTimeMs = US2MS(getTimeNowUs());
+			acController.timeSinceStateChange.reset();
 		}
 	}
 	engine->engineState.clutchUpState = getClutchUpState();
@@ -304,7 +303,7 @@ void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError)
 		if (isDecodingError) {
 #if EFI_PROD_CODE
 			if (engineConfiguration->verboseTriggerSynchDetails || (triggerCentral.triggerState.someSortOfTriggerError() && !engineConfiguration->silentTriggerError)) {
-				efiPrintf("error: synchronizationPoint @ index %d expected %d/%d got %d/%d",
+				efiPrintf("error: synchronizationPoint @ index %lu expected %d/%d got %d/%d",
 						triggerCentral.triggerState.currentCycle.current_index,
 						triggerCentral.triggerShape.getExpectedEventCount(TriggerWheel::T_PRIMARY),
 						triggerCentral.triggerShape.getExpectedEventCount(TriggerWheel::T_SECONDARY),
@@ -323,7 +322,7 @@ void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError)
 void Engine::injectEngineReferences() {
 #if EFI_SHAFT_POSITION_INPUT
 	triggerCentral.primaryTriggerConfiguration.update();
-	for (int camIndex = 0;camIndex < CAMS_PER_BANK;camIndex++) {
+	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -466,16 +465,11 @@ injection_mode_e getCurrentInjectionMode() {
 void Engine::periodicFastCallback() {
 	ScopePerf pc(PE::EnginePeriodicFastCallback);
 
-#if EFI_MAP_AVERAGING
-	refreshMapAveragingPreCalc();
-#endif
-
 	engineState.periodicFastCallback();
 
-	tachUpdate();
 	speedoUpdate();
 
-	engine->engineModules.apply_all([](auto & m) { m.onFastCallback(); });
+	engineModules.apply_all([](auto & m) { m.onFastCallback(); });
 }
 
 EngineRotationState * getEngineRotationState() {
@@ -490,8 +484,8 @@ TunerStudioOutputChannels *getTunerStudioOutputChannels() {
 	return &engine->outputChannels;
 }
 
-ExecutorInterface *getExecutorInterface() {
-	return &engine->executor;
+Scheduler *getScheduler() {
+	return &engine->scheduler;
 }
 
 #if EFI_SHAFT_POSITION_INPUT

@@ -101,8 +101,7 @@
 #include "tunerstudio.h"
 #endif
 
-//#define TS_DEFAULT_SPEED 115200
-#define TS_DEFAULT_SPEED 38400
+#define TS_DEFAULT_SPEED 115200
 
 /**
  * Current engine configuration. On firmware start we assign empty configuration, then
@@ -111,22 +110,10 @@
  *
  * todo: place this field next to 'engineConfiguration'?
  */
-#if EFI_ACTIVE_CONFIGURATION_IN_FLASH
-#include "flash_int.h"
-engine_configuration_s & activeConfiguration = reinterpret_cast<persistent_config_container_s*>(getFlashAddrFirstCopy())->persistentConfiguration.engineConfiguration;
-// we cannot use this activeConfiguration until we call rememberCurrentConfiguration()
-bool isActiveConfigurationVoid = true;
-#else
-static engine_configuration_s activeConfigurationLocalStorage;
-engine_configuration_s & activeConfiguration = activeConfigurationLocalStorage;
-#endif /* EFI_ACTIVE_CONFIGURATION_IN_FLASH */
+engine_configuration_s activeConfiguration;
 
 void rememberCurrentConfiguration() {
-#if ! EFI_ACTIVE_CONFIGURATION_IN_FLASH
 	memcpy(&activeConfiguration, engineConfiguration, sizeof(engine_configuration_s));
-#else
-	isActiveConfigurationVoid = false;
-#endif /* EFI_ACTIVE_CONFIGURATION_IN_FLASH */
 }
 
 static void wipeString(char *string, int size) {
@@ -200,10 +187,6 @@ void setConstantDwell(floatms_t dwellMs) {
 		config->sparkDwellRpmBins[i] = 1000 * i;
 	}
 	setArrayValues(config->sparkDwellValues, dwellMs);
-}
-
-void setWholeIgnitionIatCorr(float value) {
-	setTable(config->ignitionIatCorrTable, value);
 }
 
 void setFuelTablesLoadBin(float minValue, float maxValue) {
@@ -482,8 +465,6 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->engineSnifferRpmThreshold = 2500;
 	engineConfiguration->sensorSnifferRpmThreshold = 2500;
 
-	engineConfiguration->noAccelAfterHardLimitPeriodSecs = 3;
-
 	/**
 	 * Idle control defaults
 	 */
@@ -603,10 +584,8 @@ static void setDefaultEngineConfiguration() {
 #endif
 
 void loadConfiguration() {
-#if ! EFI_ACTIVE_CONFIGURATION_IN_FLASH
 	// Clear the active configuration so that registered output pins (etc) detect the change on startup and init properly
 	prepareVoidConfiguration(&activeConfiguration);
-#endif /* EFI_ACTIVE_CONFIGURATION_IN_FLASH */
 
 #if EFI_INTERNAL_FLASH
 	if (IGNORE_FLASH_CONFIGURATION) {
@@ -912,7 +891,7 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 #endif //HW_SUBARU_EG33
 	default:
-		firmwareError(ObdCode::CUSTOM_UNEXPECTED_ENGINE_TYPE, "Unexpected engine type: %d", engineType);
+		firmwareError(ObdCode::CUSTOM_UNEXPECTED_ENGINE_TYPE, "Unexpected engine type: %d", (int)engineType);
 	}
 	applyNonPersistentConfiguration();
 }

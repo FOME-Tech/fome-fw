@@ -52,7 +52,10 @@ static const int16_t supportedPids2140[] = {
 };
 
 static const int16_t supportedPids4160[] = { 
+	PID_CONTROL_UNIT_VOLTAGE,
+	PID_ETHANOL,
 	PID_FUEL_RATE,
+	PID_OIL_TEMPERATURE,
 	-1
 };
 
@@ -160,11 +163,23 @@ static void handleGetDataRequest(const CANRxFrame& rx, CanBusIndex busIndex) {
 
 		obdSendPacket(1, pid, 4, scaled << 16, busIndex);
 		break;
+
+	#ifdef MODULE_TRIP_ODO
 	} case PID_FUEL_RATE: {
 		float gPerSecond = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
 		float gPerHour = gPerSecond * 3600;
 		float literPerHour = gPerHour * 0.00139f;
 		obdSendValue(_1_MODE, pid, 2, literPerHour * 20.0f, busIndex);	//	L/h.	(A*256+B)/20
+		break;
+	#endif // MODULE_TRIP_ODO
+	} case PID_CONTROL_UNIT_VOLTAGE: {
+		obdSendValue(_1_MODE, pid, 2, 1000 * Sensor::getOrZero(SensorType::BatteryVoltage), busIndex);
+		break;
+	} case PID_ETHANOL: {
+		obdSendValue(_1_MODE, pid, 1, (255.0f / 100) * Sensor::getOrZero(SensorType::FuelEthanolPercent), busIndex);
+		break;
+	} case PID_OIL_TEMPERATURE: {
+		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::OilTemperature) + ODB_TEMP_EXTRA, busIndex);
 		break;
 	} default:
 		// ignore unhandled PIDs

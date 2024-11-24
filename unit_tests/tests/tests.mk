@@ -4,7 +4,6 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_trigger_decoder.cpp \
 	tests/trigger/test_trigger_decoder_2.cpp \
 	tests/trigger/test_trigger_multi_sync.cpp \
-	tests/trigger/test_trigger_input_adc.cpp \
 	tests/trigger/test_miata_na_tdc.cpp \
 	tests/trigger/test_cam_vvt_input.cpp \
 	tests/trigger/test_2jz_vvt.cpp \
@@ -49,7 +48,6 @@ TESTS_SRC_CPP = \
 	tests/lua/test_lua_Leiderman_Khlystov.cpp \
 	tests/lua/test_can_filter.cpp \
 	tests/lua/test_lua_vin.cpp \
-	tests/test_change_engine_type.cpp \
 	tests/util/test_scaled_channel.cpp \
 	tests/util/test_timer.cpp \
 	tests/system/test_periodic_thread_controller.cpp \
@@ -79,7 +77,6 @@ TESTS_SRC_CPP = \
 	tests/test_lambda_monitor.cpp \
 	tests/sensor/basic_sensor.cpp \
 	tests/sensor/func_sensor.cpp \
-	tests/sensor/function_pointer_sensor.cpp \
 	tests/sensor/mock_sensor.cpp \
 	tests/sensor/sensor_reader.cpp \
 	tests/sensor/lin_func.cpp \

@@ -52,12 +52,6 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 		fs->addFuelEvents();
 	}
 
-#if FUEL_MATH_EXTREME_LOGGING
-	if (printFuelDebug) {
-		efiPrintf("handleFuel [%.1f, %.1f) %d", currentPhase, nextPhase, getRevolutionCounter());
-	}
-#endif /* FUEL_MATH_EXTREME_LOGGING */
-
 	fs->onTriggerTooth(nowNt, currentPhase, nextPhase);
 }
 
@@ -75,20 +69,20 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 		return;
 	}
 
-	int rpm = engine->rpmCalculator.getCachedRpm();
+	float rpm = engine->rpmCalculator.getCachedRpm();
 	if (rpm == 0) {
 		// this happens while we just start cranking
 
 		// todo: check for 'trigger->is_synchnonized?'
 		return;
 	}
-	if (rpm == NOISY_RPM) {
+
+	if (rpm == NOISY_RPM || !isValidRpm(rpm)) {
 		warning(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction, "noisy trigger");
 		return;
 	}
 
 	if (trgEventIndex == 0) {
-
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
 			getFuelSchedule()->isReady = false;
@@ -100,19 +94,20 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 		}
 	}
 
+	engine->engineModules.apply_all([=](auto & m) {
+		m.onEnginePhase(rpm, edgeTimestamp, currentPhase, nextPhase);
+	});
+
 	/**
 	 * For fuel we schedule start of injection based on trigger angle, and then inject for
 	 * specified duration of time
 	 */
 	handleFuel(edgeTimestamp, currentPhase, nextPhase);
 
-	engine->module<TriggerScheduler>()->scheduleEventsUntilNextTriggerTooth(
-		rpm, edgeTimestamp, currentPhase, nextPhase);
-
 	/**
 	 * For spark we schedule both start of coil charge and actual spark based on trigger angle
 	 */
-	onTriggerEventSparkLogic(rpm, edgeTimestamp, currentPhase, nextPhase);
+	onTriggerEventSparkLogic(edgeTimestamp, currentPhase, nextPhase);
 }
 
 #endif /* EFI_ENGINE_CONTROL */

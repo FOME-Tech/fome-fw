@@ -249,7 +249,7 @@ void TriggerWaveform::addEvent(angle_t angle, bool state, TriggerWheel const cha
 	}
 
 	if (angle <= 0 || angle > 1) {
-		firmwareError(ObdCode::CUSTOM_ERR_6599, "angle should be positive not above 1: index=%d angle %f", channelIndex, angle);
+		firmwareError(ObdCode::CUSTOM_ERR_6599, "angle should be positive not above 1: index=%d angle %f", (int)channelIndex, angle);
 		return;
 	}
 	if (wave.phaseCount > 0) {
@@ -434,6 +434,10 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 		initializeMazdaMiataVVtCamShape(this);
 		break;
 
+	case trigger_type_e::TT_VVT_MIATA_NA:
+		initializeMazdaMiataNaCamShape(this);
+		break;
+
 	case trigger_type_e::TT_RENIX_66_2_2_2:
 		initializeRenix66_2_2(this);
 		break;
@@ -609,6 +613,10 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 		initializeMazdaSkyactivCam(this);
 		break;
 
+	case trigger_type_e::TT_VVT_MAZDA_L:
+		initializeMazdaLCam(this);
+		break;
+
 	case trigger_type_e::TT_BENELLI_TRE:
 		configureBenelli(this);
 		break;
@@ -705,7 +713,7 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 
 	default:
 		setShapeDefinitionError(true);
-		warning(ObdCode::CUSTOM_ERR_NO_SHAPE, "initializeTriggerWaveform() not implemented: %d", triggerConfig.TriggerType.type);
+		warning(ObdCode::CUSTOM_ERR_NO_SHAPE, "initializeTriggerWaveform() not implemented: %d", (int)triggerConfig.TriggerType.type);
 	}
 
 	/**

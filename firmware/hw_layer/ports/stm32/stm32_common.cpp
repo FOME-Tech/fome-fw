@@ -135,7 +135,7 @@ adc_channel_e getAdcChannel(brain_pin_e pin) {
 	case Gpio::Unassigned:
 		return EFI_ADC_NONE;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getAdcChannel %d", pin);
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getAdcChannel %d", (int)pin);
 		return EFI_ADC_ERROR;
 	}
 }
@@ -181,14 +181,14 @@ public:
 
 		// These timers are only 16 bit - don't risk overflow
 		if (m_period > 0xFFF0) {
-			firmwareError(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "PWM Frequency too low %f hz on pin \"%s\"", frequency, msg);
+			firmwareError(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "PWM Frequency too low %.1f hz on pin \"%s\"", frequency, msg);
 			return;
 		}
 
 		// If we have too few usable bits, we run out of resolution, so don't allow that either.
 		// 200 counts = 0.5% resolution
 		if (m_period < 200) {
-			firmwareError(ObdCode::CUSTOM_OBD_HIGH_FREQUENCY, "PWM Frequency too high %d hz on pin \"%s\"", frequency, msg);
+			firmwareError(ObdCode::CUSTOM_OBD_HIGH_FREQUENCY, "PWM Frequency too high %.1f hz on pin \"%s\"", frequency, msg);
 			return;
 		}
 
@@ -370,26 +370,6 @@ void jump_to_openblt() {
 #endif
 }
 #endif /* EFI_PROD_CODE */
-
-#if EFI_AUX_SERIAL
-
-static bool isValidUART6TxPin(brain_pin_e pin) {
-	return pin == Gpio::C6 || pin == Gpio::G14;
-}
-
-static bool isValidUART6RxPin(brain_pin_e pin) {
-	return pin == Gpio::C7 || pin == Gpio::G9;
-}
-
-bool isValidSerialTxPin(brain_pin_e pin) {
-   return isValidUART6TxPin(pin);
-}
-
-bool isValidSerialRxPin(brain_pin_e pin) {
-   return isValidUART6RxPin(pin);
-}
-
-#endif /*EFI_AUX_SERIAL*/
 
 #if EFI_PROD_CODE
 

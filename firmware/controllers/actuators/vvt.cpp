@@ -42,7 +42,7 @@ void VvtController::onFastCallback() {
 }
 
 void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
-	if (!m_pid.isSame(&previousConfig->auxPid[m_cam])) {
+	if (!previousConfig || !m_pid.isSame(&previousConfig->auxPid[m_cam])) {
 		m_pid.reset();
 	}
 }
@@ -56,7 +56,7 @@ expected<angle_t> VvtController::observePlant() const {
 }
 
 expected<angle_t> VvtController::getSetpoint() {
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	float load = getFuelingLoad();
 	float target = m_targetMap->getValue(rpm, load);
 
@@ -124,7 +124,7 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 
 		// Compensate for battery voltage so that the % output is actually % solenoid current normalized
 		// to a 14v supply (boost duty when battery is low, etc)
-		float voltageRatio = 14 / Sensor::get(SensorType::BatteryVoltage).value_or(14);
+		float voltageRatio = 14 / clampF(10, Sensor::get(SensorType::BatteryVoltage).value_or(14), 24);
 		vvtPct *= voltageRatio;
 
 		vvtOutput = vvtPct;
@@ -157,7 +157,7 @@ static const char *vvtOutputNames[CAM_INPUTS_COUNT] = {
  };
 
 static OutputPin vvtPins[CAM_INPUTS_COUNT];
-static SimplePwm vvtPwms[CAM_INPUTS_COUNT];
+static SimplePwm vvtPwms[CAM_INPUTS_COUNT] = { "VVT1", "VVT2", "VVT3", "VVT4" };
 
 static void turnVvtPidOn(int index) {
 	if (!isBrainPinValid(engineConfiguration->vvtPins[index])) {
@@ -165,20 +165,20 @@ static void turnVvtPidOn(int index) {
 	}
 
 	startSimplePwmExt(&vvtPwms[index], vvtOutputNames[index],
-			&engine->executor,
+			&engine->scheduler,
 			engineConfiguration->vvtPins[index],
 			&vvtPins[index],
 			engineConfiguration->vvtOutputFrequency, 0);
 }
 
 void startVvtControlPins() {
-	for (int i = 0;i <CAM_INPUTS_COUNT;i++) {
+	for (int i = 0; i <CAM_INPUTS_COUNT; i++) {
 		turnVvtPidOn(i);
 	}
 }
 
 void stopVvtControlPins() {
-	for (int i = 0;i < CAM_INPUTS_COUNT;i++) {
+	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
 		vvtPins[i].deInit();
 	}
 }

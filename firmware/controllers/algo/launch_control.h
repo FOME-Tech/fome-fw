@@ -18,12 +18,12 @@ public:
 	// Update the state of the launch control system
 	void update();
 
-    bool getFuelCoefficient() const;
+	bool getFuelCoefficient() const;
 	bool isInsideSpeedCondition() const;
 	bool isInsideTpsCondition() const;
 	bool isInsideSwitchCondition();
-	bool isInsideRPMCondition(int rpm) const;
-	bool isLaunchConditionMet(int rpm);
+	bool isInsideRPMCondition(float rpm) const;
+	bool isLaunchConditionMet(float rpm);
 
 	bool isLaunchSparkRpmRetardCondition() const;
 	bool isLaunchFuelRpmRetardCondition() const;

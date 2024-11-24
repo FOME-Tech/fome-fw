@@ -10,7 +10,6 @@
 #if EFI_LAUNCH_CONTROL
 #include "boost_control.h"
 #include "launch_control.h"
-#include "periodic_task.h"
 #include "advance_map.h"
 #include "engine_state.h"
 #include "advance_map.h"
@@ -74,12 +73,12 @@ bool LaunchControlBase::isInsideTpsCondition() const {
 /**
  * Condition is true as soon as we are above LaunchRpm
  */
-bool LaunchControlBase::isInsideRPMCondition(int rpm) const {
+bool LaunchControlBase::isInsideRPMCondition(float rpm) const {
 	int launchRpm = engineConfiguration->launchRpm;
 	return (launchRpm < rpm);
 }
 
-bool LaunchControlBase::isLaunchConditionMet(int rpm) {
+bool LaunchControlBase::isLaunchConditionMet(float rpm) {
 
 	activateSwitchCondition = isInsideSwitchCondition();
 	rpmCondition = isInsideRPMCondition(rpm);
@@ -103,7 +102,7 @@ void LaunchControlBase::update() {
 		return;
 	}
 
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	combinedConditions = isLaunchConditionMet(rpm);
 
 	//and still recalculate in case user changed the values

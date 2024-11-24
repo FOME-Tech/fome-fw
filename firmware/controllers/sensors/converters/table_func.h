@@ -11,7 +11,7 @@
 
 #include <rusefi/interpolation.h>
 
-template <class TBin, class TValue, int TSize, typename TOutputScale = efi::ratio<1>>
+template <class TBin, class TValue, size_t TSize>
 class TableFunc final : public SensorConverter {
 public:
 	TableFunc(TBin (&bins)[TSize], TValue (&values)[TSize])
@@ -21,7 +21,7 @@ public:
 	}
 
 	SensorResult convert(float inputValue) const override {
-		return interpolate2d(inputValue, m_bins, m_values) * TOutputScale::asFloat();
+		return interpolate2d(inputValue, m_bins, m_values);
 	}
 
 	void showInfo(float /*testInputValue*/) const override { }

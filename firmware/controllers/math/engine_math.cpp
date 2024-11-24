@@ -26,18 +26,14 @@
 #include "advance_map.h"
 #include "gppwm_channel.h"
 
-#if EFI_UNIT_TEST
-extern bool verboseMode;
-#endif /* EFI_UNIT_TEST */
-
-floatms_t getEngineCycleDuration(int rpm) {
+floatms_t getEngineCycleDuration(float rpm) {
 	return getCrankshaftRevolutionTimeMs(rpm) * (getEngineRotationState()->getOperationMode() == TWO_STROKE ? 1 : 2);
 }
 
 /**
  * @return number of milliseconds in one crank shaft revolution
  */
-floatms_t getCrankshaftRevolutionTimeMs(int rpm) {
+floatms_t getCrankshaftRevolutionTimeMs(float rpm) {
 	if (rpm == 0) {
 		return NAN;
 	}
@@ -74,13 +70,13 @@ void setSingleCoilDwell() {
 /**
  * @return Spark dwell time, in milliseconds. 0 if tables are not ready.
  */
-floatms_t IgnitionState::getSparkDwell(int rpm) {
+floatms_t IgnitionState::getSparkDwell(float rpm) {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	float dwellMs;
 	if (engine->rpmCalculator.isCranking()) {
 		dwellMs = engineConfiguration->ignitionDwellForCrankingMs;
 	} else {
-		efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(rpm), "invalid rpm", NAN);
+		efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(rpm), "invalid rpm", NAN);
 
 		baseDwell = interpolate2d(rpm, config->sparkDwellRpmBins, config->sparkDwellValues);
 		dwellVoltageCorrection = interpolate2d(
@@ -97,9 +93,9 @@ floatms_t IgnitionState::getSparkDwell(int rpm) {
 		dwellMs = baseDwell * dwellVoltageCorrection;
 	}
 
-	if (cisnan(dwellMs) || dwellMs <= 0) {
+	if (std::isnan(dwellMs) || dwellMs <= 0) {
 		// this could happen during engine configuration reset
-		warning(ObdCode::CUSTOM_ERR_DWELL_DURATION, "invalid dwell: %.2f at rpm=%d", dwellMs, rpm);
+		warning(ObdCode::CUSTOM_ERR_DWELL_DURATION, "invalid dwell: %.2f at rpm=%.0f", dwellMs, rpm);
 		return 0;
 	}
 	return dwellMs;
@@ -386,8 +382,7 @@ ignition_mode_e getCurrentIgnitionMode() {
 	ignition_mode_e ignitionMode = engineConfiguration->ignitionMode;
 #if EFI_SHAFT_POSITION_INPUT
 	// In spin-up cranking mode we don't have full phase sync info yet, so wasted spark mode is better
-	// However, only do this on even cylinder count engines: odd cyl count doesn't fire at all
-	if (ignitionMode == IM_INDIVIDUAL_COILS && (engineConfiguration->cylindersCount % 2 == 0)) {
+	if (ignitionMode == IM_INDIVIDUAL_COILS) {
 		bool missingPhaseInfoForSequential = 
 			!engine->triggerCentral.triggerState.hasSynchronizedPhase();
 
@@ -405,13 +400,20 @@ ignition_mode_e getCurrentIgnitionMode() {
  * This heavy method is only invoked in case of a configuration change or initialization.
  */
 void prepareOutputSignals() {
-	getEngineState()->engineCycle = getEngineCycle(getEngineRotationState()->getOperationMode());
+	auto operationMode = getEngineRotationState()->getOperationMode();
+	getEngineState()->engineCycle = getEngineCycle(operationMode);
 
-#if EFI_UNIT_TEST
-	if (verboseMode) {
-		printf("prepareOutputSignals %d %s\r\n", engineConfiguration->trigger.type, getIgnition_mode_e(engineConfiguration->ignitionMode));
+	bool isOddFire = false;
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		if (engineConfiguration->timing_offset_cylinder[i] != 0) {
+			isOddFire = true;
+			break;
+		}
 	}
-#endif /* EFI_UNIT_TEST */
+
+	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
+	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE
+								&& (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
 
 #if EFI_SHAFT_POSITION_INPUT
 	engine->triggerCentral.prepareTriggerShape();

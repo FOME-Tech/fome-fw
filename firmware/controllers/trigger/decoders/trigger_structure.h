@@ -22,14 +22,14 @@
 #define TRIGGER_GAP_DEVIATION_HIGH (1.0f + TRIGGER_GAP_DEVIATION)
 
 #if EFI_ENABLE_ASSERTS
-#define assertAngleRange(angle, msg, code) if (angle > 10000000 || angle < -10000000) { firmwareError(code, "angle range %s %.2f", msg, angle);angle = 0;}
+#define assertAngleRange(angle, msg, code) if (angle > 10000000 || angle < -10000000) { firmwareError(code, "angle range %s %d", msg, (int)angle);angle = 0;}
 #else
 #define assertAngleRange(angle, msg, code) {}
 #endif
 
 // Shifts angle into the [0..720) range for four stroke and [0..360) for two stroke
 inline void wrapAngle(angle_t& angle, const char* msg, ObdCode code) {
-	if (cisnan(angle)) {
+	if (std::isnan(angle)) {
 		firmwareError(ObdCode::CUSTOM_ERR_ANGLE, "a NaN %s", msg);
 		angle = 0;
 	}
