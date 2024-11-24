@@ -140,7 +140,7 @@ public class TsOutputs {
 	public static final String GAUGE_NAME_WHEEL_SPEED_RF = "Wheel speed: RF";
 	public static final String GAUGE_NAME_WHEEL_SPEED_RR = "Wheel speed: RR";
 	public static final int GEARS_COUNT = 8;
-	public static final int HW_EVENT_TYPES = 6;
+	public static final int HW_EVENT_TYPES = 4;
 	public static final int IGN_BLEND_COUNT = 4;
 	public static final String INDICATOR_NAME_AC_SWITCH = "AC switch";
 	public static final String INDICATOR_NAME_BRAKE_DOWN = "Brake switch";

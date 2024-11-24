@@ -61,7 +61,7 @@ void TriggerDecoderBase::resetState() {
 	setShaftSynchronized(false);
 	toothed_previous_time = {};
 
-	memset(toothDurations, 0, sizeof(toothDurations));
+	setArrayValues(toothDurations, 0);
 
 	crankSynchronizationCounter = 0;
 	totalTriggerErrorCounter = 0;
