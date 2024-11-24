@@ -88,6 +88,7 @@ public class TsOutputs {
 	public static final String GAUGE_NAME_IAT = "IAT";
 	public static final String GAUGE_NAME_IDLE_POSITION = "Idle: Position sensor";
 	public static final String GAUGE_NAME_IDLE_RPM_TARGET = "Idle: Target RPM";
+	public static final String GAUGE_NAME_IGNITION_DWELL_ANGLE = "Ign: Dwell angle";
 	public static final String GAUGE_NAME_IGNITION_LOAD = "Ign: Load";
 	public static final String GAUGE_NAME_IGNITION_MODE = "Ign: Mode";
 	public static final String GAUGE_NAME_INJECTION_MODE = "Fuel: Injection mode";
@@ -134,8 +135,12 @@ public class TsOutputs {
 	public static final String GAUGE_NAME_WARNING_COUNTER = "Warning: counter";
 	public static final String GAUGE_NAME_WARNING_LAST = "Warning: last";
 	public static final String GAUGE_NAME_WG_POSITION = "Wastegate position sensor";
+	public static final String GAUGE_NAME_WHEEL_SPEED_LF = "Wheel speed: LF";
+	public static final String GAUGE_NAME_WHEEL_SPEED_LR = "Wheel speed: LR";
+	public static final String GAUGE_NAME_WHEEL_SPEED_RF = "Wheel speed: RF";
+	public static final String GAUGE_NAME_WHEEL_SPEED_RR = "Wheel speed: RR";
 	public static final int GEARS_COUNT = 8;
-	public static final int HW_EVENT_TYPES = 6;
+	public static final int HW_EVENT_TYPES = 4;
 	public static final int IGN_BLEND_COUNT = 4;
 	public static final String INDICATOR_NAME_AC_SWITCH = "AC switch";
 	public static final String INDICATOR_NAME_BRAKE_DOWN = "Brake switch";
@@ -244,11 +249,13 @@ public class TsOutputs {
 	public static final Field TCUDESIREDGEAR = Field.create("TCUDESIREDGEAR", 110, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field FLEXPERCENT = Field.create("FLEXPERCENT", 111, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 	public static final Field WASTEGATEPOSITIONSENSOR = Field.create("WASTEGATEPOSITIONSENSOR", 112, FieldType.INT16).setScale(0.01).setBaseOffset(0);
-	public static final Field ALIGNMENTFILL_AT_114 = Field.create("ALIGNMENTFILL_AT_114", 114, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field WHEELSPEEDLF = Field.create("WHEELSPEEDLF", 114, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field WHEELSPEEDRF = Field.create("WHEELSPEEDRF", 115, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field CALIBRATIONVALUE = Field.create("CALIBRATIONVALUE", 116, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field CALIBRATIONMODE = Field.create("CALIBRATIONMODE", 120, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field IDLESTEPPERTARGETPOSITION = Field.create("IDLESTEPPERTARGETPOSITION", 121, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field ALIGNMENTFILL_AT_122 = Field.create("ALIGNMENTFILL_AT_122", 122, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field WHEELSPEEDLR = Field.create("WHEELSPEEDLR", 122, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field WHEELSPEEDRR = Field.create("WHEELSPEEDRR", 123, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field TSCONFIGVERSION = Field.create("TSCONFIGVERSION", 124, FieldType.INT).setScale(1.0).setBaseOffset(0);
 	public static final Field TOTALTRIGGERERRORCOUNTER = Field.create("TOTALTRIGGERERRORCOUNTER", 128, FieldType.INT).setScale(1.0).setBaseOffset(0);
 	public static final Field ORDERINGERRORCOUNTER = Field.create("ORDERINGERRORCOUNTER", 132, FieldType.INT).setScale(1.0).setBaseOffset(0);
@@ -511,4 +518,6 @@ public class TsOutputs {
 	public static final Field MAPPERCYLINDER11 = Field.create("MAPPERCYLINDER11", 700, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAPPERCYLINDER12 = Field.create("MAPPERCYLINDER12", 701, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field DWELLACCURACYRATIO = Field.create("DWELLACCURACYRATIO", 702, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field RAWFUELTANKLEVEL = Field.create("RAWFUELTANKLEVEL", 704, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field ALIGNMENTFILL_AT_706 = Field.create("ALIGNMENTFILL_AT_706", 706, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 }

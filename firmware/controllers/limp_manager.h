@@ -35,9 +35,9 @@ enum class TpsState : uint8_t {
 	TpsError,
 	PpsError, // 3
 	IntermittentTps,
-	PidJitter,
+	UnusedCode5,
 	Lua, // 6
-	Manual,
+	UnusedCode7,
 	NotConfigured,
 	Redundancy, // 9
 	IntermittentPps,
@@ -110,7 +110,7 @@ public:
 	ShutdownController shutdownController;
 
 	// This is called from periodicFastCallback to update internal state
-	void updateState(int rpm, efitick_t nowNt);
+	void updateState(float rpm, efitick_t nowNt);
 
 	void onFastCallback() override;
 	void onIgnitionStateChanged(bool ignitionOn) override;

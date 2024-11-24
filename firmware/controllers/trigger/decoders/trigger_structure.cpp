@@ -70,15 +70,15 @@ void TriggerWaveform::initialize(operation_mode_e operationMode, SyncEdge syncEd
 	m_operationMode = operationMode;
 	m_syncEdge = syncEdge;
 	triggerShapeSynchPointIndex = 0;
-	memset(expectedEventCount, 0, sizeof(expectedEventCount));
+	setArrayValues(expectedEventCount, 0);
 	wave.reset();
 	wave.waveCount = TRIGGER_INPUT_PIN_COUNT;
 	wave.phaseCount = 0;
 	previousAngle = 0;
-	memset(isRiseEvent, 0, sizeof(isRiseEvent));
+	setArrayValues(isRiseEvent, 0);
 #if EFI_UNIT_TEST
-	memset(&triggerSignalIndeces, 0, sizeof(triggerSignalIndeces));
-	memset(&triggerSignalStates, 0, sizeof(triggerSignalStates));
+	memset(triggerSignalIndeces, 0, sizeof(triggerSignalIndeces));
+	setArrayValues(triggerSignalStates, 0);
 	knownOperationMode = true;
 #endif // EFI_UNIT_TEST
 }
@@ -432,6 +432,10 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 
 	case trigger_type_e::TT_VVT_MIATA_NB:
 		initializeMazdaMiataVVtCamShape(this);
+		break;
+
+	case trigger_type_e::TT_VVT_MIATA_NA:
+		initializeMazdaMiataNaCamShape(this);
 		break;
 
 	case trigger_type_e::TT_RENIX_66_2_2_2:

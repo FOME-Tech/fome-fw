@@ -165,15 +165,11 @@ void startLoggingProcessor() {
 
 #endif // EFI_PROD_CODE
 
-#if EFI_UNIT_TEST || EFI_SIMULATOR
-extern bool verboseMode;
-#endif
-
 namespace priv
 {
 void efiPrintfInternal(const char *format, ...) {
 #if EFI_UNIT_TEST || EFI_SIMULATOR
-	if (verboseMode) {
+	{
 		printf("efiPrintfInternal:");
 		va_list ap;
 		va_start(ap, format);

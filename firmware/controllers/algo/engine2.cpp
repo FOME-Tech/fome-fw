@@ -99,7 +99,7 @@ void EngineState::periodicFastCallback() {
 
 	engine->fuelComputer.running.timeSinceCrankingInSecs = crankingTimer.getElapsedSeconds(nowNt);
 
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	engine->ignitionState.sparkDwell = engine->ignitionState.getSparkDwell(rpm);
 	engine->ignitionState.dwellAngle = std::isnan(rpm) ? NAN :  engine->ignitionState.sparkDwell / getOneDegreeTimeMs(rpm);
 
@@ -195,7 +195,7 @@ void EngineState::periodicFastCallback() {
 #endif // EFI_ENGINE_CONTROL
 }
 
-void EngineState::updateTChargeK(int rpm, float tps) {
+void EngineState::updateTChargeK(float rpm, float tps) {
 #if EFI_ENGINE_CONTROL
 	float newTCharge = engine->fuelComputer.getTCharge(rpm, tps);
 	if (!std::isnan(newTCharge)) {

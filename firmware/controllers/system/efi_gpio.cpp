@@ -62,10 +62,6 @@ static const char* const auxValveShortNames[] = { "a1", "a2"};
 
 static RegisteredOutputPin * registeredOutputHead = nullptr;
 
-RegisteredNamedOutputPin::RegisteredNamedOutputPin(const char *name, size_t pinOffset,
-		size_t pinModeOffset) : RegisteredOutputPin(name, pinOffset, pinModeOffset) {
-}
-
 RegisteredOutputPin::RegisteredOutputPin(const char *registrationName, size_t pinOffset,
 		size_t pinModeOffset)
 	: next(registeredOutputHead)
@@ -140,7 +136,7 @@ void RegisteredOutputPin::unregister() {
 
 EnginePins::EnginePins() :
 		mainRelay("Main Relay", CONFIG_PIN_OFFSETS(mainRelay)),
-		hpfpValve("HPFP Valve", CONFIG_PIN_OFFSETS(hpfpValve)),
+		hpfpValve("HPFP", CONFIG_PIN_OFFSETS(hpfpValve)),
 		starterControl("Starter Relay", CONFIG_PIN_OFFSETS(starterControl)),
 		starterRelayDisable("Starter Disable Relay", CONFIG_PIN_OFFSETS(starterRelayDisable)),
 		fanRelay("Fan Relay", CONFIG_PIN_OFFSETS(fan)),
@@ -157,8 +153,6 @@ EnginePins::EnginePins() :
 		tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput)),
 		speedoOut("speedoOut", CONFIG_OFFSET(speedometerOutputPin))
 {
-	hpfpValve.setName(PROTOCOL_HPFP_NAME);
-
 	static_assert(efi::size(sparkNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");

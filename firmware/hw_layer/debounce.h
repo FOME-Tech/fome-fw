@@ -15,27 +15,27 @@
 class ButtonDebounce {
 public:
 	explicit ButtonDebounce(const char* name);
-    void init(efidur_t threshold, brain_pin_e &pin, pin_input_mode_e &mode);
-    void stopConfiguration();
-    void startConfiguration();
-    bool readPinEvent();
-    bool readPinState();
-    static void stopConfigurationList();
-    static void startConfigurationList();
-    static void debug();
+	void init(efidur_t threshold, brain_pin_e &pin, pin_input_mode_e &mode);
+	void stopConfiguration();
+	void startConfiguration();
+	bool readPinEvent();
+	bool readPinState();
+	static void stopConfigurationList();
+	static void startConfigurationList();
+	static void debug();
 private:
-    const char* const m_name;
-    efidur_t m_threshold;
-    efitick_t timeLast;
-    brain_pin_e *m_pin;
-    brain_pin_e active_pin = Gpio::Unassigned;
-    pin_input_mode_e *m_mode;
-    pin_input_mode_e active_mode = PI_DEFAULT;
-    bool storedValue = false;
-    bool isInstanceRegisteredInGlobalList = false;
-    bool needsPinInitialization = true;
-    ButtonDebounce *nextDebounce = nullptr;
-    static ButtonDebounce* s_firstDebounce;
+	const char* const m_name;
+	efidur_t m_threshold;
+	efitick_t timeLast;
+	brain_pin_e *m_pin;
+	brain_pin_e active_pin = Gpio::Unassigned;
+	pin_input_mode_e *m_mode;
+	pin_input_mode_e active_mode = PI_DEFAULT;
+	bool storedValue = false;
+	bool isInstanceRegisteredInGlobalList = false;
+	bool needsPinInitialization = true;
+	ButtonDebounce *nextDebounce = nullptr;
+	static ButtonDebounce* s_firstDebounce;
 };
 
 void initButtonDebounce();

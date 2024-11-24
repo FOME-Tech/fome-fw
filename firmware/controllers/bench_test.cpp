@@ -80,8 +80,8 @@ struct BenchParams {
 };
 
 static void runBench(BenchParams& params) {
-	int onTimeUs = MS2US(maxF(0.1, params.OnTimeMs));
-	int offTimeUs = MS2US(maxF(0.1, params.OffTimeMs));
+	int onTimeUs = MS2US(std::max(0.1f, params.OnTimeMs));
+	int offTimeUs = MS2US(std::max(0.1f, params.OffTimeMs));
 
 	if (onTimeUs > TOO_FAR_INTO_FUTURE_US) {
 		firmwareError(ObdCode::CUSTOM_ERR_BENCH_PARAM, "onTime above limit %dus", TOO_FAR_INTO_FUTURE_US);
@@ -386,6 +386,9 @@ static void handleCommandX14(uint16_t index) {
 #if EFI_TUNER_STUDIO
 		engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
 #endif // EFI_TUNER_STUDIO
+		return;
+	case COMMAND_X14_ETB_DISABLE_JAM_DETECT:
+		engine->etbIgnoreJamProtection = true;
 		return;
 #endif // EFI_ELECTRONIC_THROTTLE_BODY
 	case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:

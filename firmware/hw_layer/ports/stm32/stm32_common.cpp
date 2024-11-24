@@ -371,26 +371,6 @@ void jump_to_openblt() {
 }
 #endif /* EFI_PROD_CODE */
 
-#if EFI_AUX_SERIAL
-
-static bool isValidUART6TxPin(brain_pin_e pin) {
-	return pin == Gpio::C6 || pin == Gpio::G14;
-}
-
-static bool isValidUART6RxPin(brain_pin_e pin) {
-	return pin == Gpio::C7 || pin == Gpio::G9;
-}
-
-bool isValidSerialTxPin(brain_pin_e pin) {
-   return isValidUART6TxPin(pin);
-}
-
-bool isValidSerialRxPin(brain_pin_e pin) {
-   return isValidUART6RxPin(pin);
-}
-
-#endif /*EFI_AUX_SERIAL*/
-
 #if EFI_PROD_CODE
 
 BOR_Level_t BOR_Get(void) {

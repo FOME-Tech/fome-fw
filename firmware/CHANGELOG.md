@@ -31,6 +31,14 @@ or
 ## Unreleased
 
 ### Added
+ - Support Miata NA CAS "CMP" signal as a cam input (if you've installed a 36-1 crank trigger on an NA, for example) #495
+
+### Fixed
+ - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
+
+## September 2024 Release
+
+### Added
  - Staged injection: a second set of fuel injectors that inject part of the fuel load when you run out of primary injector
  - VE/Ign/Boost blend tables can select a Y axis override for even more flexibility
  - Added Lua function `getAuxDigital` for parity with rusEFI #351
@@ -45,7 +53,9 @@ or
  - Add two more aux linear sensors #476
  - Support wasted spark on odd cylinder count and odd-fire engines. Improves startup and allows running without a cam sensor!
  - Add an option for the DFCO MAP threshold to use a table dependent upon RPM #485 (thank you @alrijleh!)
+ - Option to disable DFCO on gear shift #487
  - Ability to use an 8x8 table for after-start fuel multiplier that depends on CLT and engine run time
+ - Start-up tachometer sweep!
 
 ### Fixed
  - Improve performance with Lua CAN reception of a high volume of frames

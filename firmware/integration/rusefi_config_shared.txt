@@ -33,7 +33,7 @@
 #define BOOST_BLEND_COUNT 2
 #define LUA_GAUGE_COUNT 2
 
-#define HW_EVENT_TYPES 6
+#define HW_EVENT_TYPES 4
 
 #define GAUGE_NAME_VERSION "firmware"
 #define GAUGE_NAME_UPTIME "Uptime"
@@ -58,6 +58,10 @@
 #define GAUGE_NAME_TC_RATIO "TCU: Torque Converter Ratio"
 
 #define GAUGE_NAME_VVS "Vehicle Speed"
+#define GAUGE_NAME_WHEEL_SPEED_LF "Wheel speed: LF"
+#define GAUGE_NAME_WHEEL_SPEED_RF "Wheel speed: RF"
+#define GAUGE_NAME_WHEEL_SPEED_LR "Wheel speed: LR"
+#define GAUGE_NAME_WHEEL_SPEED_RR "Wheel speed: RR"
 #define GAUGE_NAME_GEAR_RATIO "Gearbox Ratio"
 #define GAUGE_NAME_DETECTED_GEAR "Detected Gear"
 #define GAUGE_NAME_TURBO_SPEED "Turbocharger Speed"
@@ -171,6 +175,7 @@
 #define GAUGE_NAME_TIMING_ADVANCE "Ign: Timing Base"
 #define GAUGE_NAME_DWELL_DUTY "Ign: Coil duty cycle"
 #define GAUGE_COIL_DWELL_TIME "Ign: Dwell"
+#define GAUGE_NAME_IGNITION_DWELL_ANGLE "Ign: Dwell angle"
 #define GAUGE_NAME_IGNITION_LOAD "Ign: Load"
 #define GAUGE_NAME_IGNITION_MODE "Ign: Mode"
 

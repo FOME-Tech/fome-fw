@@ -114,11 +114,6 @@ void TriggerScheduler::onEnginePhase(float rpm,
 
 			scheduling_s * sDown = &current->scheduling;
 
-#if SPARK_EXTREME_LOGGING
-			efiPrintf("time to invoke [%.1f, %.1f) %d %d",
-				  currentPhase, nextPhase, getRevolutionCounter(), (int)getTimeNowUs());
-#endif /* SPARK_EXTREME_LOGGING */
-
 			// In case this event was scheduled by overdwell protection, cancel it so
 			// we can re-schedule at the correct time
 			engine->scheduler.cancel(sDown);

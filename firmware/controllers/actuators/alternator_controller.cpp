@@ -14,10 +14,6 @@
 #include "efi_pid.h"
 #include "local_version_holder.h"
 
-#if defined(HAS_OS_ACCESS)
-#error "Unexpected OS ACCESS HERE"
-#endif /* HAS_OS_ACCESS */
-
 static SimplePwm alternatorControl("alt");
 static Pid alternatorPid(&persistentState.persistentConfiguration.engineConfiguration.alternatorControl);
 

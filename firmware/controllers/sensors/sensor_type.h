@@ -74,6 +74,10 @@ enum class SensorType : unsigned char {
 	FuelLevel,
 
 	VehicleSpeed,
+	WheelSpeedLF,
+	WheelSpeedRF,
+	WheelSpeedLR,
+	WheelSpeedRR,
 
 	TurbochargerSpeed,
 

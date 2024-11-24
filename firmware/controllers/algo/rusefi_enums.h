@@ -59,6 +59,7 @@ typedef enum  __attribute__ ((__packed__)) {
 	 */
 	VVT_MIATA_NB = 3,
 
+	VVT_MIATA_NA = 4,
 	/**
 	 * @see TT_VVT_BOSCH_QUICK_START
 	 */
@@ -296,7 +297,17 @@ typedef enum __attribute__ ((__packed__)) {
 	BMW_e46 = 0,
 	W202 = 1,
 	BMW_e90 = 2,
+	Mx5_NC = 3,
+
+	CanVssLast = 4,
 } can_vss_nbc_e;
+
+enum class WssToVssMode : uint8_t {
+	None = 0,
+	AverageFront = 1,
+	AverageRear = 2,
+	AverageAll = 3,
+};
 
 /**
  * inertia measurement unit, yawn accelerometer
@@ -415,7 +426,6 @@ typedef enum __attribute__ ((__packed__)) {
 	// unused 2
 	SC_RPM_ACCEL = 3,
 	SC_DETAILED_RPM = 4,
-	SC_AUX_FAST1 = 5,
 
 } sensor_chart_e;
 

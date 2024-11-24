@@ -117,6 +117,19 @@ case TsCalMode::Tps2SecondaryMin:
   }
  return NULL;
 }
+const char *getWssToVssMode(WssToVssMode value){
+switch(value) {
+case WssToVssMode::AverageAll:
+  return "AverageAll";
+case WssToVssMode::AverageFront:
+  return "AverageFront";
+case WssToVssMode::AverageRear:
+  return "AverageRear";
+case WssToVssMode::None:
+  return "None";
+  }
+ return NULL;
+}
 const char *getAir_pressure_sensor_type_e(air_pressure_sensor_type_e value){
 switch(value) {
 case MT_BOSCH_2_5:
@@ -247,6 +260,10 @@ case BMW_e46:
   return "BMW_e46";
 case BMW_e90:
   return "BMW_e90";
+case CanVssLast:
+  return "CanVssLast";
+case Mx5_NC:
+  return "Mx5_NC";
 case W202:
   return "W202";
   }
@@ -578,8 +595,6 @@ case OM_OPENDRAIN_INVERTED:
 }
 const char *getSensor_chart_e(sensor_chart_e value){
 switch(value) {
-case SC_AUX_FAST1:
-  return "SC_AUX_FAST1";
 case SC_DETAILED_RPM:
   return "SC_DETAILED_RPM";
 case SC_OFF:
@@ -715,6 +730,8 @@ case VVT_MAZDA_L:
   return "VVT_MAZDA_L";
 case VVT_MAZDA_SKYACTIV:
   return "VVT_MAZDA_SKYACTIV";
+case VVT_MIATA_NA:
+  return "VVT_MIATA_NA";
 case VVT_MIATA_NB:
   return "VVT_MIATA_NB";
 case VVT_MITSUBISHI_3A92:

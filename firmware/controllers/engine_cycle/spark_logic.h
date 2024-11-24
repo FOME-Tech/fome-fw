@@ -7,9 +7,9 @@
 
 #pragma once
 
-void onTriggerEventSparkLogic(int rpm, efitick_t edgeTimestamp, float currentPhase, float nextPhase);
+void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float nextPhase);
 void turnSparkPinHigh(IgnitionEvent *event);
 void fireSparkAndPrepareNextSchedule(IgnitionEvent *event);
 int getNumberOfSparks(ignition_mode_e mode);
-percent_t getCoilDutyCycle(int rpm);
+percent_t getCoilDutyCycle(float rpm);
 void initializeIgnitionActions();

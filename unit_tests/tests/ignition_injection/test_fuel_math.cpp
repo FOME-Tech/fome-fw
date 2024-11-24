@@ -47,7 +47,7 @@ TEST(AirmassModes, AlphaNNormal) {
 	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D)))
 		.WillOnce(Return(35.0f));
 
-	AlphaNAirmass dut(veTable);
+	AlphaNAirmass dut(&veTable);
 
 	// that's 0.71% not 71%
 	Sensor::setMockValue(SensorType::Tps1, 0.71f);
@@ -71,7 +71,7 @@ TEST(AirmassModes, AlphaNUseIat) {
 	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D)))
 		.WillRepeatedly(Return(35.0f));
 
-	AlphaNAirmass dut(veTable);
+	AlphaNAirmass dut(&veTable);
 
 	// that's 0.71% not 71%
 	Sensor::setMockValue(SensorType::Tps1, 0.71f);
@@ -100,7 +100,7 @@ TEST(AirmassModes, AlphaNFailedTps) {
 	// Shouldn't get called
 	StrictMock<MockVp3d> veTable;
 
-	AlphaNAirmass dut(veTable);
+	AlphaNAirmass dut(&veTable);
 
 	// explicitly reset the sensor
 	Sensor::resetMockValue(SensorType::Tps1);
@@ -121,7 +121,7 @@ TEST(AirmassModes, MafNormal) {
 	EXPECT_CALL(veTable, getValue(6000, FloatNear(70.9814f, EPS4D)))
 		.WillOnce(Return(75.0f));
 
-	MafAirmass dut(veTable);
+	MafAirmass dut(&veTable);
 
 	auto airmass = dut.getAirmassImpl(200, 6000, false);
 
@@ -143,9 +143,9 @@ TEST(AirmassModes, VeOverride) {
 	}
 
 	struct DummyAirmassModel : public AirmassVeModelBase {
-		DummyAirmassModel(const ValueProvider3D& veTable) : AirmassVeModelBase(veTable) {}
+		DummyAirmassModel(const ValueProvider3D* veTable) : AirmassVeModelBase(veTable) {}
 
-		AirmassResult getAirmass(int rpm, bool postState) override {
+		AirmassResult getAirmass(float rpm, bool postState) override {
 			// Default load value 10, will be overriden
 			getVe(rpm, 10.0f, postState);
 
@@ -154,7 +154,7 @@ TEST(AirmassModes, VeOverride) {
 	};
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	DummyAirmassModel dut(veTable);
+	DummyAirmassModel dut(&veTable);
 
 	// Use default mode - will call with 10
 	dut.getAirmass(0, true);
@@ -184,7 +184,7 @@ TEST(AirmassModes, FallbackMap) {
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	SpeedDensityAirmass dut(veTable, mapFallback);
+	SpeedDensityAirmass dut(&veTable, mapFallback);
 
 	// TPS at 20%
 	Sensor::setMockValue(SensorType::Tps1, 20);

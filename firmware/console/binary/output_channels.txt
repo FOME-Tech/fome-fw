@@ -132,6 +132,9 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	int16_t autoscale wastegatePositionSensor;@@GAUGE_NAME_WG_POSITION@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 
+	uint8_t wheelSpeedLf;@@GAUGE_NAME_WHEEL_SPEED_LF@@
+	uint8_t wheelSpeedRf;@@GAUGE_NAME_WHEEL_SPEED_RF@@
+
 	! These two fields indicate to TS that we'd like to set a particular field to a particular value
 	! We use a maintainConstantValue in TS for each field we'd like to set, like this:
 	!		maintainConstantValue = tpsMax, { (calibrationMode == 1 ) ? calibrationValue : tpsMax }
@@ -145,6 +148,9 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	float calibrationValue;;"", 1, 0, 0, 0, 0
 	uint8_t calibrationMode;;"", 1, 0, 0, 0, 0
 	uint8_t idleStepperTargetPosition;Idle: Stepper target position;"", 1, 0, 0, 0, 0
+
+	uint8_t wheelSpeedLr;@@GAUGE_NAME_WHEEL_SPEED_LR@@
+	uint8_t wheelSpeedRr;@@GAUGE_NAME_WHEEL_SPEED_RR@@
 
 ! todo: this not needed in light of TS_SIGNATURE but rusEFI console still uses it. Need to migrate
 ! rusEFI console from TS_FILE_VERSION to TS_SIGNATURE :(
@@ -350,4 +356,6 @@ float mapFast
 	uint8_t[12 iterate] mapPerCylinder;;"kPa", 1, 0, 0, 0, 0
 
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
+
+	uint16_t autoscale rawFuelTankLevel;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 end_struct

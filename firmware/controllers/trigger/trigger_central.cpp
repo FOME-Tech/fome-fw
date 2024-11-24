@@ -41,12 +41,12 @@ TriggerCentral::TriggerCentral() :
 		vvtPosition(),
 		triggerState("TRG")
 {
-	memset(&hwEventCounters, 0, sizeof(hwEventCounters));
+	resetCounters();
 	triggerState.resetState();
 }
 
 int TriggerCentral::getHwEventCounter(int index) const {
-	return hwEventCounters[index];
+	return triggerEventCounter[index];
 }
 
 
@@ -165,6 +165,7 @@ static angle_t adjustCrankPhase(int camIndex) {
 	case VVT_NISSAN_VQ:
 	case VVT_BOSCH_QUICK_START:
 	case VVT_MIATA_NB:
+	case VVT_MIATA_NA:
 	case VVT_TOYOTA_3_TOOTH:
 	case VVT_TOYOTA_4_1:
 	case VVT_FORD_ST170:
@@ -260,7 +261,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		tc->triggerState.vvtStateIndex = vvtDecoder.currentCycle.current_index;
 	}
 
-	tc->vvtCamCounter++;
+	tc->vvtCamCounter[bankIndex * CAMS_PER_BANK + camIndex]++;
 
 	auto currentPhase = tc->getCurrentEnginePhase(nowNt);
 	if (!currentPhase) {
@@ -331,7 +332,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			break;
 		}
 
-		if (absF(angleFromPrimarySyncPoint) < 7) {
+		if (std::abs(angleFromPrimarySyncPoint) < 7) {
 			/**
 			 * we prefer not to have VVT sync right at trigger sync so that we do not have phase detection error if things happen a bit in
 			 * wrong order due to belt flex or else
@@ -425,10 +426,9 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 }
 
 void TriggerCentral::resetCounters() {
-	memset(hwEventCounters, 0, sizeof(hwEventCounters));
+	setArrayValues(triggerEventCounter, 0);
 }
 
-static const bool isUpEvent[4] = { false, true, false, true };
 static const int wheelIndeces[4] = { 0, 0, 1, 1};
 
 static void reportEventToWaveChart(trigger_event_e ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
@@ -438,7 +438,7 @@ static void reportEventToWaveChart(trigger_event_e ckpSignalType, int triggerEve
 
 	int wheelIndex = wheelIndeces[(int )ckpSignalType];
 
-	bool isUp = isUpEvent[(int) ckpSignalType];
+	bool isUp = isTriggerUpEvent(ckpSignalType);
 
 	addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp);
 	if (addOppositeEvent) {
@@ -528,7 +528,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 			}
 
 			// Absolute error from last tooth
-			float absError = absF(angleError);
+			float absError = std::abs(angleError);
 			float isRpmEnough = Sensor::getOrZero(SensorType::Rpm) > 1000;
 			// TODO: configurable threshold
 			if (isRpmEnough && absError > 10 && absError < 180) {
@@ -554,8 +554,6 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 	if (triggerShape.shapeDefinitionError) {
 		// trigger is broken, we cannot do anything here
 		warning(ObdCode::CUSTOM_ERR_UNEXPECTED_SHAFT_EVENT, "Shaft event while trigger is mis-configured");
-		// magic value to indicate a problem
-		hwEventCounters[0] = 155;
 		return;
 	}
 
@@ -570,7 +568,7 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 
 	int eventIndex = (int) signal;
 	efiAssertVoid(ObdCode::CUSTOM_TRIGGER_EVENT_TYPE, eventIndex >= 0 && eventIndex < HW_EVENT_TYPES, "signal type");
-	hwEventCounters[eventIndex]++;
+	triggerEventCounter[eventIndex]++;
 
 	// Decode the trigger!
 	auto decodeResult = triggerState.decodeTriggerEvent(
@@ -609,10 +607,6 @@ void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timesta
 			m_lastToothTimer.reset(timestamp);
 			m_lastToothPhaseFromSyncPoint = currentPhaseFromSyncPoint;
 		}
-
-#if TRIGGER_EXTREME_LOGGING
-	efiPrintf("trigger %d %d %d", triggerIndexForListeners, getRevolutionCounter(), (int)getTimeNowUs());
-#endif /* TRIGGER_EXTREME_LOGGING */
 
 		// Update engine RPM
 		rpmShaftPositionCallback(signal, triggerIndexForListeners, timestamp);
@@ -824,11 +818,10 @@ static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& tri
 }
 
 void TriggerCentral::validateCamVvtCounters() {
-	// micro-optimized 'crankSynchronizationCounter % 256'
-	int camVvtValidationIndex = triggerState.getCrankSynchronizationCounter() & 0xFF;
+	int camVvtValidationIndex = triggerState.getCrankSynchronizationCounter() % 255;
 	if (camVvtValidationIndex == 0) {
-		vvtCamCounter = 0;
-	} else if (camVvtValidationIndex == 0xFE && vvtCamCounter < 60) {
+		vvtCamCounter[0] = 0;
+	} else if (camVvtValidationIndex == 0xFE && vvtCamCounter[0] < 60) {
 		// magic logic: we expect at least 60 CAM/VVT events for each 256 trigger cycles, otherwise throw a code
 		warning(ObdCode::OBD_Camshaft_Position_Sensor_Circuit_Range_Performance, "No Camshaft Position Sensor signals");
 	}

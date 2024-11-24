@@ -318,8 +318,12 @@ struct output_channels_s {
 	// %
 	// offset 112
 	scaled_channel<int16_t, 100, 1> wastegatePositionSensor = (int16_t)0;
+	// Wheel speed: LF
 	// offset 114
-	uint8_t alignmentFill_at_114[2];
+	uint8_t wheelSpeedLf = (uint8_t)0;
+	// Wheel speed: RF
+	// offset 115
+	uint8_t wheelSpeedRf = (uint8_t)0;
 	// offset 116
 	float calibrationValue = (float)0;
 	// offset 120
@@ -327,8 +331,12 @@ struct output_channels_s {
 	// Idle: Stepper target position
 	// offset 121
 	uint8_t idleStepperTargetPosition = (uint8_t)0;
+	// Wheel speed: LR
 	// offset 122
-	uint8_t alignmentFill_at_122[2];
+	uint8_t wheelSpeedLr = (uint8_t)0;
+	// Wheel speed: RR
+	// offset 123
+	uint8_t wheelSpeedRr = (uint8_t)0;
 	// offset 124
 	uint32_t tsConfigVersion = (uint32_t)0;
 	// Trigger Error Counter
@@ -725,8 +733,13 @@ struct output_channels_s {
 	// ratio
 	// offset 702
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
+	// V
+	// offset 704
+	scaled_channel<uint16_t, 1000, 1> rawFuelTankLevel = (uint16_t)0;
+	// offset 706
+	uint8_t alignmentFill_at_706[2];
 };
-static_assert(sizeof(output_channels_s) == 704);
+static_assert(sizeof(output_channels_s) == 708);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, speedToRpmRatio) == 8);
@@ -784,9 +797,13 @@ static_assert(offsetof(output_channels_s, rawPpsSecondary) == 108);
 static_assert(offsetof(output_channels_s, tcuDesiredGear) == 110);
 static_assert(offsetof(output_channels_s, flexPercent) == 111);
 static_assert(offsetof(output_channels_s, wastegatePositionSensor) == 112);
+static_assert(offsetof(output_channels_s, wheelSpeedLf) == 114);
+static_assert(offsetof(output_channels_s, wheelSpeedRf) == 115);
 static_assert(offsetof(output_channels_s, calibrationValue) == 116);
 static_assert(offsetof(output_channels_s, calibrationMode) == 120);
 static_assert(offsetof(output_channels_s, idleStepperTargetPosition) == 121);
+static_assert(offsetof(output_channels_s, wheelSpeedLr) == 122);
+static_assert(offsetof(output_channels_s, wheelSpeedRr) == 123);
 static_assert(offsetof(output_channels_s, tsConfigVersion) == 124);
 static_assert(offsetof(output_channels_s, totalTriggerErrorCounter) == 128);
 static_assert(offsetof(output_channels_s, orderingErrorCounter) == 132);
@@ -911,4 +928,5 @@ static_assert(offsetof(output_channels_s, pad) == 687);
 static_assert(offsetof(output_channels_s, mapAveragingSamples) == 688);
 static_assert(offsetof(output_channels_s, mapPerCylinder) == 690);
 static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 702);
+static_assert(offsetof(output_channels_s, rawFuelTankLevel) == 704);
 

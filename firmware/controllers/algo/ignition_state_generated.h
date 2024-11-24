@@ -8,10 +8,7 @@ struct ignition_state_s {
 	// ms
 	// offset 4
 	float sparkDwell = (float)0;
-	// ignition dwell duration
-	// as crankshaft angle
-	// NAN if engine is stopped
-	// See also sparkDwell
+	// Ign: Dwell angle
 	// deg
 	// offset 8
 	angle_t dwellAngle = (angle_t)0;

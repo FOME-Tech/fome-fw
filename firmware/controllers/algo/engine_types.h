@@ -491,13 +491,16 @@ enum class trigger_type_e : uint32_t {
 
 	TT_VVT_MAZDA_L = 75,
 
+	TT_VVT_MIATA_NA = 76,
+
+
 	// do not forget to edit "#define trigger_type_e_enum" line in integration/rusefi_config.txt file to propogate new value to rusefi.ini TS project
 	// do not forget to invoke "gen_config.bat" once you make changes to integration/rusefi_config.txt
 	// todo: one day a hero would integrate some of these things into Makefile in order to reduce manual magic
 	//
 	// Another point: once you add a new trigger, run get_trigger_images.bat which would run fome_test.exe from unit_tests
 	//
-	TT_UNUSED = 76, // this is used if we want to iterate over all trigger types
+	TT_UNUSED = 77, // this is used if we want to iterate over all trigger types
 };
 
 typedef enum {
@@ -581,6 +584,6 @@ typedef enum {
 	COMMAND_X14_ETB2_AUTO_CALIBRATE = 0x11,
 	COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE = 0x12,
 	COMMAND_X14_ENABLE_EXTERNAL_STIM = 0x13,
-	COMMAND_X14_UNUSED_20 = 0x14,
+	COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14,
 	COMMAND_X14_BURN_WITHOUT_FLASH = 0x15,
 } command_x14_e;

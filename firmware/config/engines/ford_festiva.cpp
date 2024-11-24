@@ -180,8 +180,6 @@ void setFordEscortGt() {
 
 	engineConfiguration->malfunctionIndicatorPin = Gpio::E5;
 
-	engineConfiguration->tunerStudioSerialSpeed = 19200;
-
 	commonFrankensoAnalogInputs();
 	setCommonNTCSensor(&engineConfiguration->clt, 2700);
 	setCommonNTCSensor(&engineConfiguration->iat, 2700);

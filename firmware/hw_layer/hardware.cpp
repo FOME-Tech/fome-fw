@@ -22,7 +22,6 @@
 #include "eficonsole.h"
 #include "console_io.h"
 #include "sensor_chart.h"
-#include "serial_hw.h"
 #include "idle_thread.h"
 #include "kline.h"
 
@@ -153,13 +152,6 @@ void onFastAdcComplete(adcsample_t*) {
 			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel)
 		);
 #endif // MODULE_MAP_AVERAGING
-
-#if EFI_SENSOR_CHART && EFI_SHAFT_POSITION_INPUT
-	if (getEngineState()->sensorChartMode == SC_AUX_FAST1) {
-		float voltage = getAdcValue("fAux1", engineConfiguration->auxFastSensor1_adcChannel);
-		scAddData(engine->triggerCentral.getCurrentEnginePhase(getTimeNowNt()).value_or(0), voltage);
-	}
-#endif /* EFI_SENSOR_CHART */
 }
 #endif /* HAL_USE_ADC */
 
@@ -212,10 +204,6 @@ void applyNewHardwareSettings() {
 #if EFI_CAN_SUPPORT
 	stopCanPins();
 #endif /* EFI_CAN_SUPPORT */
-
-#if EFI_AUX_SERIAL
-	stopAuxSerialPins();
-#endif /* EFI_AUX_SERIAL */
 
 	stopHardware();
 
@@ -282,10 +270,6 @@ void applyNewHardwareSettings() {
 #endif /* (BOARD_EXT_GPIOCHIPS > 0) */
 
 	enginePins.startPins();
-
-#if EFI_AUX_SERIAL
-	startAuxSerialPins();
-#endif /* EFI_AUX_SERIAL */
 
     initKLine();
 
@@ -416,9 +400,6 @@ void initHardware() {
 
 #if HAL_USE_ADC
 	initAdcInputs();
-
-	// wait for first set of ADC values so that we do not produce invalid sensor data
-	waitForSlowAdc(1);
 #endif /* HAL_USE_ADC */
 
 #if EFI_SOFTWARE_KNOCK
@@ -464,10 +445,6 @@ void initHardware() {
 #if EFI_MEMS
 	initAccelerometer();
 #endif
-
-#if EFI_AUX_SERIAL
-	initAuxSerial();
-#endif /* EFI_AUX_SERIAL */
 
 #if EFI_CAN_SUPPORT
 	initCanVssSupport();

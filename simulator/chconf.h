@@ -31,7 +31,18 @@
 #define _CHIBIOS_RT_CONF_
 #define _CHIBIOS_RT_CONF_VER_6_1_
 
-#define CHPRINTF_USE_FLOAT          	TRUE
+/*
+ * __process_stack_size__ and __process_stack_size__ defaults are each hard-coded as 0x400 in ChibiOS rules.mk files
+ * rusEfi do not override these defaults.
+ *
+ * http://www.chibios.com/forum/viewtopic.php?t=309
+ * "__main_stack_size__ is the size of INTERRUPTS stack"
+ * "__process_stack_size__ is the stack of the C-runtime, in ChibiOS the "main" thread uses the C-runtime stack."
+ *
+ */
+
+
+#include "../firmware/hw_layer/ports/chconf_common.h"
 
 /*===========================================================================*/
 /**
@@ -314,6 +325,28 @@
 #endif
 
 /**
+ * @brief   Dynamic Threads APIs.
+ * @details If enabled then the dynamic threads creation APIs are included
+ *          in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ * @note    Requires @p CH_CFG_USE_WAITEXIT.
+ * @note    Requires @p CH_CFG_USE_HEAP and/or @p CH_CFG_USE_MEMPOOLS.
+ */
+#if !defined(CH_CFG_USE_DYNAMIC)
+#define CH_CFG_USE_DYNAMIC                  TRUE
+#endif
+
+/** @} */
+
+/*===========================================================================*/
+/**
+ * @name OSLIB options
+ * @{
+ */
+/*===========================================================================*/
+
+/**
  * @brief   Mailboxes APIs.
  * @details If enabled then the asynchronous messages (mailboxes) APIs are
  *          included in the kernel.
@@ -326,6 +359,14 @@
 #endif
 
 /**
+ * @brief   I/O Queues APIs.
+ * @details If enabled then the I/O queues APIs are included in the kernel.
+ *
+ * @note    The default is @p TRUE.
+ */
+#define CH_CFG_USE_QUEUES                   FALSE
+
+/**
  * @brief   Core Memory Manager APIs.
  * @details If enabled then the core memory manager APIs are included
  *          in the kernel.
@@ -334,6 +375,21 @@
  */
 #if !defined(CH_CFG_USE_MEMCORE)
 #define CH_CFG_USE_MEMCORE                  TRUE
+#endif
+
+/**
+ * @brief   Managed RAM size.
+ * @details Size of the RAM area to be managed by the OS. If set to zero
+ *          then the whole available RAM is used. The core memory is made
+ *          available to the heap allocator and/or can be used directly through
+ *          the simplified core memory allocator.
+ *
+ * @note    In order to let the OS manage the whole RAM the linker script must
+ *          provide the @p __heap_base__ and @p __heap_end__ symbols.
+ * @note    Requires @p CH_CFG_USE_MEMCORE.
+ */
+#if !defined(CH_CFG_MEMCORE_SIZE)
+#define CH_CFG_MEMCORE_SIZE                 0
 #endif
 
 /**
@@ -358,11 +414,11 @@
  * @note    The default is @p TRUE.
  */
 #if !defined(CH_CFG_USE_MEMPOOLS)
-#define CH_CFG_USE_MEMPOOLS                 TRUE
+#define CH_CFG_USE_MEMPOOLS                 FALSE
 #endif
 
 /**
- * @brief  Objects FIFOs APIs.
+ * @brief   Objects FIFOs APIs.
  * @details If enabled then the objects FIFOs APIs are included
  *          in the kernel.
  *
@@ -414,19 +470,6 @@
  */
 #if !defined(CH_CFG_USE_JOBS)
 #define CH_CFG_USE_JOBS                     FALSE
-#endif
-
-/**
- * @brief   Dynamic Threads APIs.
- * @details If enabled then the dynamic threads creation APIs are included
- *          in the kernel.
- *
- * @note    The default is @p TRUE.
- * @note    Requires @p CH_CFG_USE_WAITEXIT.
- * @note    Requires @p CH_CFG_USE_HEAP and/or @p CH_CFG_USE_MEMPOOLS.
- */
-#if !defined(CH_CFG_USE_DYNAMIC)
-#define CH_CFG_USE_DYNAMIC                  TRUE
 #endif
 
 /** @} */
@@ -493,6 +536,13 @@
 #define CH_CFG_FACTORY_OBJ_FIFOS            FALSE
 #endif
 
+/**
+ * @brief   Enables factory for Pipes.
+ */
+#if !defined(CH_CFG_FACTORY_PIPES) || defined(__DOXYGEN__)
+#define CH_CFG_FACTORY_PIPES                FALSE
+#endif
+
 /** @} */
 
 /*===========================================================================*/
@@ -521,9 +571,6 @@
 #if !defined(CH_DBG_SYSTEM_STATE_CHECK)
 #define CH_DBG_SYSTEM_STATE_CHECK           TRUE
 #endif
-
-  #define ON_LOCK_HOOK
-  #define ON_UNLOCK_HOOK
 
 /**
  * @brief   Debug option, parameters checks.
@@ -632,52 +679,11 @@
 }
 
 /**
- * @brief   Threads descriptor structure extension.
- * @details User fields added to the end of the @p thread_t structure.
- */
-#define CH_CFG_THREAD_EXTRA_FIELDS                                          \
-  unsigned char threadId;                                                   \
-  /* Add threads custom fields here.*/
-
-/**
- * @brief   Threads initialization hook.
- * @details User initialization code added to the @p _thread_init() function.
- *
- * @note    It is invoked from within @p _thread_init() and implicitly from all
- *          the threads creation APIs.
- */
-#define CH_CFG_THREAD_INIT_HOOK(tp) {                                       \
-  /* Add threads initialization code here.*/                                \
-}
-
-/**
  * @brief   Threads finalization hook.
  * @details User finalization code added to the @p chThdExit() API.
  */
 #define CH_CFG_THREAD_EXIT_HOOK(tp) {                                       \
   /* Add threads finalization code here.*/                                  \
-}
-
-/**
- * @brief   Context switch hook.
- * @details This hook is invoked just before switching between threads.
- */
-#define CH_CFG_CONTEXT_SWITCH_HOOK(ntp, otp) {                              \
-  /* Context switch code here.*/                                            \
-}
-
-/**
- * @brief   ISR enter hook.
- */
-#define CH_CFG_IRQ_PROLOGUE_HOOK() {                                        \
-  /* IRQ prologue code here.*/                                              \
-}
-
-/**
- * @brief   ISR exit hook.
- */
-#define CH_CFG_IRQ_EPILOGUE_HOOK() {                                        \
-  /* IRQ epilogue code here.*/                                              \
 }
 
 /**
@@ -745,6 +751,12 @@
 /*===========================================================================*/
 /* Port-specific settings (override port settings defaulted in chcore.h).    */
 /*===========================================================================*/
+
+/**
+ * @brief   Sleep at idle.
+ * @details This option enables call to __WFI() from idle thread to save power.
+ */
+#define CORTEX_ENABLE_WFI_IDLE TRUE
 
 #endif  /* CHCONF_H */
 

@@ -101,8 +101,7 @@
 #include "tunerstudio.h"
 #endif
 
-//#define TS_DEFAULT_SPEED 115200
-#define TS_DEFAULT_SPEED 38400
+#define TS_DEFAULT_SPEED 115200
 
 /**
  * Current engine configuration. On firmware start we assign empty configuration, then
