@@ -40,15 +40,31 @@ void writeSdLogLine(Writer& bufferedWriter) {
 	binaryLogCount++;
 }
 
+static const char bufferOfZeroes[64] = {0};
+
 void writeFileHeader(Writer& outBuffer) {
 	outBuffer.write(binaryLogHeader, sizeof(binaryLogHeader));
 
-	// TODO: pad out to 64k
+	// Pad out to 4k as that's where we said the data starts
+	int remain = 4096 - sizeof(binaryLogHeader);
+
+	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, remain > 0, "Invalid SD header");
+
+	while (remain > sizeof(bufferOfZeroes)) {
+		outBuffer.write(bufferOfZeroes, sizeof(bufferOfZeroes));
+		remain = remain - sizeof(bufferOfZeroes);
+	}
+
+	if (remain) {
+		outBuffer.write(bufferOfZeroes, remain);
+	}
 }
 
 static uint8_t blockRollCounter = 0;
 
 void writeSdBlock(Writer& outBuffer) {
+	return;
+
 	static char buffer[16];
 
 	// Offset 0 = Block type, standard data block in this case
