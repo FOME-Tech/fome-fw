@@ -5,7 +5,7 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 
 import java.io.PrintStream;
 
-public class DatalogVisitorBase extends ILayoutVisitor {
+public class OutputChannelVisitorBase extends ILayoutVisitor {
     public static String buildDatalogName(String name, String comment) {
         String text = (comment == null || comment.isEmpty()) ? name : comment;
 
@@ -18,8 +18,7 @@ public class DatalogVisitorBase extends ILayoutVisitor {
         if (arrayDims.length == 0) {
             visit(struct, ps, prefixer, offsetAdd, struct.name);
         } else if (arrayDims.length == 1) {
-            int elementOffset = offsetAdd;
-
+            int elementOffset = offsetAdd + struct.offset;
             for (int i = 0; i < arrayDims[0]; i++) {
                 visit(struct, ps, prefixer, elementOffset, struct.name + (i + 1));
                 elementOffset += struct.size;
