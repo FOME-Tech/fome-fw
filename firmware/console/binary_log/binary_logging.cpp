@@ -6,7 +6,6 @@
 #include "pch.h"
 
 #include "binary_logging.h"
-#include "log_field.h"
 #include "buffered_writer.h"
 #include "tunerstudio.h"
 
@@ -21,17 +20,7 @@ static_assert(US_TO_NT_MULTIPLIER * 1000000 == TimestampCountsPerSec * TicksPerC
 
 static scaled_channel<uint32_t, TimestampCountsPerSec> packedTime;
 
-// The list of logged fields lives in a separate file so it can eventually be tool-generated
-#include "log_fields_generated.h"
-
-static constexpr uint16_t computeFieldsRecordLength() {
-	uint16_t recLength = 0;
-	for (size_t i = 0; i < efi::size(fields); i++) {
-		recLength += fields[i].getSize();
-	}
-
-	return recLength;
-}
+#include "sd_log_header.h"
 
 static uint64_t binaryLogCount = 0;
 
@@ -51,57 +40,13 @@ void writeSdLogLine(Writer& bufferedWriter) {
 	binaryLogCount++;
 }
 
-static constexpr uint16_t recordLength = computeFieldsRecordLength();
-
 void writeFileHeader(Writer& outBuffer) {
-	char buffer[MLQ_HEADER_SIZE];
-	// File format: MLVLG\0
-	strncpy(buffer, "MLVLG", 6);
+	outBuffer.write(binaryLogHeader, sizeof(binaryLogHeader));
 
-	// Format version = 02
-	buffer[6] = 0;
-	buffer[7] = 2;
-
-	// Timestamp
-	buffer[8] = 0;
-	buffer[9] = 0;
-	buffer[10] = 0;
-	buffer[11] = 0;
-
-	// Info data start
-	buffer[12] = 0;
-	buffer[13] = 0;
-	buffer[14] = 0;
-	buffer[15] = 0;
-
-	size_t headerSize = MLQ_HEADER_SIZE + efi::size(fields) * MLQ_FIELD_HEADER_SIZE;
-
-	// Data begin index: begins immediately after the header
-	buffer[16] = 0;
-	buffer[17] = 0;
-	buffer[18] = (headerSize >> 8) & 0xFF;
-	buffer[19] = headerSize & 0xFF;
-
-	// Record length - length of a single data record: sum size of all fields
-	buffer[20] = recordLength >> 8;
-	buffer[21] = recordLength & 0xFF;
-
-	// Number of logger fields
-	int fieldsCount = efi::size(fields);
-	buffer[22] = fieldsCount >> 8;
-	buffer[23] = fieldsCount;
-
-	outBuffer.write(buffer, MLQ_HEADER_SIZE);
-
-	// Write the actual logger fields, offset 22
-	for (size_t i = 0; i < efi::size(fields); i++) {
-		fields[i].writeHeader(outBuffer);
-	}
+	// TODO: pad out to 64k
 }
 
 static uint8_t blockRollCounter = 0;
-
-//static efitimeus_t prevSdCardLineTime = 0;
 
 void writeSdBlock(Writer& outBuffer) {
 	static char buffer[16];
@@ -121,19 +66,19 @@ void writeSdBlock(Writer& outBuffer) {
 
 	outBuffer.write(buffer, 4);
 
-	// Sigh.
-	*reinterpret_cast<uint32_t*>(&packedTime) = nowNt / TicksPerCount;
+	// // Sigh.
+	// *reinterpret_cast<uint32_t*>(&packedTime) = nowNt / TicksPerCount;
 
 	uint8_t sum = 0;
-	for (size_t fieldIndex = 0; fieldIndex < efi::size(fields); fieldIndex++) {
-		size_t entrySize = fields[fieldIndex].writeData(buffer);
+	// for (size_t fieldIndex = 0; fieldIndex < efi::size(fields); fieldIndex++) {
+	// 	size_t entrySize = fields[fieldIndex].writeData(buffer);
 
-		for (size_t byteIndex = 0; byteIndex < entrySize; byteIndex++) {
-			// "CRC" at the end is just the sum of all bytes
-			sum += buffer[byteIndex];
-		}
-		outBuffer.write(buffer, entrySize);
-	}
+	// 	for (size_t byteIndex = 0; byteIndex < entrySize; byteIndex++) {
+	// 		// "CRC" at the end is just the sum of all bytes
+	// 		sum += buffer[byteIndex];
+	// 	}
+	// 	outBuffer.write(buffer, entrySize);
+	// }
 
 	buffer[0] = sum;
 	// 1 byte checksum footer

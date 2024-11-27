@@ -94,7 +94,7 @@ public class LiveDataProcessor {
             tsOutputsDestination + File.separator + "/data_logs.ini"
         );
 
-        SdLogWriter sdLogWriter = new SdLogWriter("generated/log_fields_generated.h");
+        SdLogWriter sdLogWriter = new SdLogWriter("generated/sd_log_header.h");
 
         EntryHandler handler = (name, javaName, folder, prepend, withCDefines, outputNames, constexpr, conditional, isPtr) -> {
             int startingPosition = outputChannelWriter.getSize();
@@ -143,15 +143,12 @@ public class LiveDataProcessor {
 
                 // if (outputNames.length == 0) {
                     outputChannelWriter.writeOutputChannels(parseState, null);
+                    sdLogWriter.writeSdLogs(parseState);
                 // } else {
                 //     for (int i = 0; i < outputNames.length; i++) {
                 //         outputChannelWriter.writeOutputChannels(parseState, outputNames[i]);
                 //     }
                 // }
-
-                 if (constexpr != null) {
-                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-                 }
             }
 
             state.doJob();
