@@ -39,7 +39,6 @@ public class OutputChannelVisitor extends ILayoutVisitor {
 
     private void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int idx) {
         String nameWithoutSpace = prefixer.get(idx > 0 ? (scalar.name + idx) : scalar.name);
-        String nameWithSpace = prefixer.get(idx > 0 ? (scalar.name + " " + idx) : scalar.name);
 
         ps.print(nameWithoutSpace);
         //ps.print(" = " + fieldType + ", ");
