@@ -18,8 +18,7 @@ public class DatalogVisitorBase extends ILayoutVisitor {
         if (arrayDims.length == 0) {
             visit(struct, ps, prefixer, offsetAdd, struct.name);
         } else if (arrayDims.length == 1) {
-            int elementOffset = offsetAdd;
-
+            int elementOffset = offsetAdd + struct.offset;
             for (int i = 0; i < arrayDims[0]; i++) {
                 visit(struct, ps, prefixer, elementOffset, struct.name + (i + 1));
                 elementOffset += struct.size;
