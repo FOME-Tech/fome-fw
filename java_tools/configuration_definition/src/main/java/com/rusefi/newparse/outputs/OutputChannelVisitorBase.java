@@ -5,7 +5,7 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 
 import java.io.PrintStream;
 
-public class DatalogVisitorBase extends ILayoutVisitor {
+public class OutputChannelVisitorBase extends ILayoutVisitor {
     public static String buildDatalogName(String name, String comment) {
         String text = (comment == null || comment.isEmpty()) ? name : comment;
 

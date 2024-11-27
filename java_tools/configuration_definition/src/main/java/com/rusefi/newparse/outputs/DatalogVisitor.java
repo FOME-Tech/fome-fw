@@ -4,7 +4,7 @@ import com.rusefi.newparse.layout.*;
 
 import java.io.PrintStream;
 
-public class DatalogVisitor extends DatalogVisitorBase {
+public class DatalogVisitor extends OutputChannelVisitorBase {
     private static void writeDatalogName(PrintStream ps, String name, String comment) {
         ps.print(buildDatalogName(name, comment));
     }
