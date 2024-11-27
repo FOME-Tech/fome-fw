@@ -10,22 +10,6 @@ public class DatalogVisitor extends DatalogVisitorBase {
     }
 
     @Override
-    public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-        if (arrayDims.length == 0) {
-            visit(struct, ps, prefixer, offsetAdd, struct.name);
-        } else if (arrayDims.length == 1) {
-            int elementOffset = offsetAdd;
-
-            for (int i = 0; i < arrayDims[0]; i++) {
-                visit(struct, ps, prefixer, elementOffset, struct.name + (i + 1));
-                elementOffset += struct.size;
-            }
-        } else {
-            throw new IllegalStateException("Output channels don't support multi dimension arrays");
-        }
-    }
-
-    @Override
     public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         // Output an enum as a scalar, since there's no TS support for enum output channels
         // Write the datalog entry as an integer, since there's no support for enums.
