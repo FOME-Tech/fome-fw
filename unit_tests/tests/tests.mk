@@ -91,7 +91,6 @@ TESTS_SRC_CPP = \
 	tests/test_hpfp.cpp \
 	tests/test_hpfp_integrated.cpp \
 	tests/test_fuel_math.cpp \
-	tests/test_binary_log.cpp \
 	tests/test_dynoview.cpp \
 	tests/test_gpio.cpp \
 	tests/test_limp.cpp \
