@@ -4,14 +4,7 @@ import com.rusefi.newparse.layout.*;
 
 import java.io.PrintStream;
 
-public class DatalogVisitor extends ILayoutVisitor {
-    public static String buildDatalogName(String name, String comment) {
-        String text = (comment == null || comment.isEmpty()) ? name : comment;
-
-        // Delete anything after a newline
-        return text.split("\\\\n")[0];
-    }
-
+public class DatalogVisitor extends DatalogVisitorBase {
     private static void writeDatalogName(PrintStream ps, String name, String comment) {
         ps.print(buildDatalogName(name, comment));
     }
