@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SdLogVisitor extends DatalogVisitorBase {
+public class SdLogVisitor extends OutputChannelVisitorBase {
     private int totalRecordLength = 0;
 
     public int getTotalRecordLength() {
