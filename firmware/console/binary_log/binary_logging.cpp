@@ -43,10 +43,10 @@ void writeSdLogLine(Writer& bufferedWriter) {
 static const char bufferOfZeroes[64] = {0};
 
 void writeFileHeader(Writer& outBuffer) {
-	outBuffer.write(binaryLogHeader, sizeof(binaryLogHeader));
+	outBuffer.write(reinterpret_cast<const char*>(binaryLogHeader), sizeof(binaryLogHeader));
 
-	// Pad out to 4k as that's where we said the data starts
-	int remain = 4096 - sizeof(binaryLogHeader);
+	// Pad out to 64k as that's where we said the data starts
+	int remain = 65536 - sizeof(binaryLogHeader);
 
 	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, remain > 0, "Invalid SD header");
 
