@@ -101,9 +101,9 @@ public class SdLogVisitor extends OutputChannelVisitorBase {
 
         int type;
         switch (bytes) {
-            case 1: type = 10; break;
-            case 2: type = 11; break;
-            case 4: type = 12; break;
+            case 1: type = 0x10; break;
+            case 2: type = 0x11; break;
+            case 4: type = 0x12; break;
             default: throw new UnsupportedOperationException("Invalid bit group size: " + bytes);
         }
 
@@ -120,7 +120,7 @@ public class SdLogVisitor extends OutputChannelVisitorBase {
         // Offset 46, length 1 = bit field style (?)
         buffer.put(45, (byte)2);
 
-        // Offset 47, length 4 = Index in file of bit field names start (?)
+        // Offset 47, length 4 = Index in file of bit field names start
         // This field is written later by BitGroupPatchup
 
         // Offset 51, length 1 = number of bits in this bit field
