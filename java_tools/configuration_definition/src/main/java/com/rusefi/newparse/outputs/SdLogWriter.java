@@ -26,10 +26,10 @@ public class SdLogWriter {
     }
 
     public void endFile() {
-        ps.println("static const char binaryLogHeader[] = {");
+        ps.println("static const unsigned char binaryLogHeader[] = {");
 
         // magic number file identifier
-        ps.println("'M', 'L', 'V', 'L', 'G', '\\0',");
+        ps.println("'M', 'L', 'V', 'L', 'G', 0,");
 
         // File format version
         ps.println("0, 2, // File format version");
