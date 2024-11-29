@@ -8,6 +8,7 @@
 #include "binary_logging.h"
 #include "buffered_writer.h"
 #include "tunerstudio.h"
+#include "live_data.h"
 
 #if EFI_FILE_LOGGING
 
@@ -63,9 +64,7 @@ void writeFileHeader(Writer& outBuffer) {
 static uint8_t blockRollCounter = 0;
 
 void writeSdBlock(Writer& outBuffer) {
-	return;
-
-	static char buffer[16];
+	static char buffer[2048];
 
 	// Offset 0 = Block type, standard data block in this case
 	buffer[0] = 0;
@@ -82,19 +81,25 @@ void writeSdBlock(Writer& outBuffer) {
 
 	outBuffer.write(buffer, 4);
 
+	memcpy(buffer, getLiveData<wall_fuel_state_s>({}), sizeof(wall_fuel_state_s));
+
 	// // Sigh.
 	// *reinterpret_cast<uint32_t*>(&packedTime) = nowNt / TicksPerCount;
 
 	uint8_t sum = 0;
-	// for (size_t fieldIndex = 0; fieldIndex < efi::size(fields); fieldIndex++) {
-	// 	size_t entrySize = fields[fieldIndex].writeData(buffer);
+	const auto fragments = getLiveDataFragments();
 
-	// 	for (size_t byteIndex = 0; byteIndex < entrySize; byteIndex++) {
-	// 		// "CRC" at the end is just the sum of all bytes
-	// 		sum += buffer[byteIndex];
-	// 	}
-	// 	outBuffer.write(buffer, entrySize);
-	// }
+	for (size_t i = 0; i < fragments.count; i++) {
+		const auto& fragment = fragments.fragments[i];
+
+		memcpy(buffer, fragment.get(), fragment.size);
+
+		for (size_t j = 0; j < fragment.size; j++) {
+			sum += buffer[j];
+		}
+
+		outBuffer.write(buffer, fragment.size);
+	}
 
 	buffer[0] = sum;
 	// 1 byte checksum footer
