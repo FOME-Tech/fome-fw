@@ -29,11 +29,7 @@
 #include "sensor_chart.h"
 #endif /* EFI_SENSOR_CHART */
 
-/**
- * this instance does not have a real physical pin - it's only used for engine sniffer
- *
- * todo: we can kind of add real physical pin just for a very narrow case of troubleshooting but only if we ever need it :)
- */
+// not have a real physical pin - it's only used for engine sniffer
 static NamedOutputPin mapAveragingPin("map");
 
 // allow smoothing up to number of cylinders
