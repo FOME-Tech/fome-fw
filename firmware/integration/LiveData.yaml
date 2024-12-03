@@ -105,7 +105,7 @@ Usages:
   - name: trigger_state
     folder: controllers/trigger
     prepend: integration/rusefi_config_shared.txt
-    output_name: [ "trg", "vvt1i", "vvt1e", "vvt2i", "vvt2e" ]
+    # output_name: [ "trg", "vvt1i", "vvt1e", "vvt2i", "vvt2e" ]
 
   - name: trigger_state_primary
     folder: controllers/trigger
@@ -122,11 +122,11 @@ Usages:
   - name: electronic_throttle
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: [ "etb1", "etb2" ]
+    # output_name: [ "etb1", "etb2" ]
 
   - name: wideband_state
     folder: controllers/sensors/
-    output_name: [ "wb1", "wb2" ]
+    # output_name: [ "wb1", "wb2" ]
 
   - name: dc_motors
     folder: controllers/actuators

@@ -141,13 +141,13 @@ public class LiveDataProcessor {
                 CStructWriter cStructs = new CStructWriter();
                 cStructs.writeCStructs(parseState, cHeaderDestination);
 
-                // if (outputNames.length == 0) {
+                 if (outputNames.length <= 1) {
                     outputChannelWriter.writeOutputChannels(parseState, null);
-                // } else {
-                //     for (int i = 0; i < outputNames.length; i++) {
-                //         outputChannelWriter.writeOutputChannels(parseState, outputNames[i]);
-                //     }
-                // }
+                 } else {
+                     for (String outputName : outputNames) {
+                         outputChannelWriter.writeOutputChannels(parseState, outputName);
+                     }
+                 }
 
                  if (constexpr != null) {
                      sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
@@ -199,18 +199,13 @@ public class LiveDataProcessor {
             String type = name + "_s"; // convention
             enumContent.append(enumName + ",\n");
 
-            if (outputNamesArr.length < 2) {
+            if (outputNamesArr.length <= 1) {
                 fragmentsContent
                         .append("decl_frag<")
                         .append(type)
                         .append(">{},\n");
             } else {
                 for (int i = 0; i < outputNamesArr.length; i++) {
-                    if (i != 0) {
-                        // TODO: remove once the rest of the handling for multiple copies of one struct is in place.
-                        fragmentsContent.append("// ");
-                    }
-
                     fragmentsContent
                             .append("decl_frag<")
                             .append(type)
