@@ -1006,6 +1006,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
+	public static final int SIGNATURE_HASH = 204382472;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1212,7 +1213,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.03.f407-discovery.2211585006";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.03.f407-discovery.204382472";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1272;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1879,7 +1880,9 @@ public class Fields {
 	public static final Field STARTUPFUELPUMPDURATION = Field.create("STARTUPFUELPUMPDURATION", 1332, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field IDLEPIDRPMDEADZONE = Field.create("IDLEPIDRPMDEADZONE", 1334, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field TARGETVBATT = Field.create("TARGETVBATT", 1336, FieldType.FLOAT).setBaseOffset(0);
-	public static final Field UNUSED1372 = Field.create("UNUSED1372", 1340, FieldType.INT).setScale(1.0).setBaseOffset(0);
+	public static final Field DFCORETARDDEG = Field.create("DFCORETARDDEG", 1340, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field DFCORETARDRAMPINTIME = Field.create("DFCORETARDRAMPINTIME", 1341, FieldType.INT8).setScale(0.1).setBaseOffset(0);
+	public static final Field UNUSED1342 = Field.create("UNUSED1342", 1342, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field AFTERCRANKINGIACTAPERDURATION = Field.create("AFTERCRANKINGIACTAPERDURATION", 1344, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field IACBYTPSTAPER = Field.create("IACBYTPSTAPER", 1346, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field LIS302DLCSPIN = Field.create("LIS302DLCSPIN", 1348, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
