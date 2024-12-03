@@ -24,8 +24,10 @@ struct ignition_state_s {
 	// deg
 	// offset 16
 	scaled_channel<int16_t, 100, 1> timingPidCorrection = (int16_t)0;
+	// DFCO: Timing retard
+	// deg
 	// offset 18
-	uint8_t alignmentFill_at_18[2];
+	scaled_channel<int16_t, 100, 1> dfcoTimingRetard = (int16_t)0;
 	// Ign: Dwell voltage correction
 	// offset 20
 	float dwellVoltageCorrection = (float)0;
@@ -45,6 +47,7 @@ static_assert(offsetof(ignition_state_s, dwellAngle) == 8);
 static_assert(offsetof(ignition_state_s, cltTimingCorrection) == 12);
 static_assert(offsetof(ignition_state_s, timingIatCorrection) == 14);
 static_assert(offsetof(ignition_state_s, timingPidCorrection) == 16);
+static_assert(offsetof(ignition_state_s, dfcoTimingRetard) == 18);
 static_assert(offsetof(ignition_state_s, dwellVoltageCorrection) == 20);
 static_assert(offsetof(ignition_state_s, luaTimingAdd) == 24);
 static_assert(offsetof(ignition_state_s, luaTimingMult) == 28);
