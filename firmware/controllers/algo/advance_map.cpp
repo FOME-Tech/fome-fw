@@ -129,13 +129,16 @@ static angle_t getAdvanceCorrections(float engineLoad) {
 	engine->ignitionState.timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm);
 #endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 
+	engine->ignitionState.dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();
+
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.multiSparkCounter = engine->engineState.multispark.count;
 #endif /* EFI_TUNER_STUDIO */
 
 	return engine->ignitionState.timingIatCorrection
 		+ engine->ignitionState.cltTimingCorrection
-		+ engine->ignitionState.timingPidCorrection;
+		+ engine->ignitionState.timingPidCorrection
+		- engine->ignitionState.dfcoTimingRetard;
 }
 
 /**
