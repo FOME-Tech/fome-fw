@@ -540,7 +540,7 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_AuxLinear3 = 29,
 	GPPWM_AuxLinear4 = 30,
 	GPPWM_VehicleSpeed = 31,
-} gppwm_channel_e;
+} gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this enum
 
 typedef enum __attribute__ ((__packed__)) {
 	B50KBPS = 0, // 50kbps
