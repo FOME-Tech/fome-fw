@@ -94,6 +94,9 @@ $ ls -lh deliver
 |`fome_bl.bin`|Just the bootloader.|
 |`fome_update.srec`|Update image that only contains the firmware, to be flashed via the bootloader.|
 
+If using a GitHub Codespace, these files can be downloaded do your local PC by
+navigating to them in the file browser at the left, right click, and pick "Download".
+
 # Unit Tests
 
 [See unit tests readme](../unit_tests/readme.md).
