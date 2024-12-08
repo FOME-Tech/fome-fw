@@ -41,10 +41,6 @@ public class LiveDataProcessor {
 
     private final StringBuilder baseAddressCHeader = new StringBuilder();
 
-    private final StringBuilder fancyNewStuff = new StringBuilder();
-
-    private final StringBuilder fancyNewMenu = new StringBuilder();
-
     private final StringBuilder fragmentsContent = new StringBuilder(header);
 
     private final String extraPrepend = System.getProperty("LiveDataProcessor.extra_prepend");
@@ -72,14 +68,6 @@ public class LiveDataProcessor {
             fw.write(header);
             fw.write("#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition);
         }
-
-        try (FileWriter fw = new FileWriter(tsOutputsDestination + "fancy_content.ini")) {
-            fw.write(liveDataProcessor.fancyNewStuff.toString());
-        }
-
-        try (FileWriter fw = new FileWriter(tsOutputsDestination + "fancy_menu.ini")) {
-            fw.write(liveDataProcessor.fancyNewMenu.toString());
-        }
     }
 
     interface EntryHandler {
@@ -105,9 +93,6 @@ public class LiveDataProcessor {
             ReaderStateImpl state = new ReaderStateImpl();
             state.setDefinitionInputFile(folder + File.separator + name + ".txt");
             state.setWithC_Defines(withCDefines);
-
-            FragmentDialogConsumer fragmentDialogConsumer = new FragmentDialogConsumer(name);
-            state.addDestination(fragmentDialogConsumer);
 
             if (extraPrepend != null)
                 state.addPrepend(extraPrepend);
@@ -155,10 +140,6 @@ public class LiveDataProcessor {
             }
 
             state.doJob();
-
-            fancyNewStuff.append(fragmentDialogConsumer.getContent());
-
-            fancyNewMenu.append(fragmentDialogConsumer.menuLine());
 
             log.info("Done with " + name + " at " + outputChannelWriter.getSize());
         };
