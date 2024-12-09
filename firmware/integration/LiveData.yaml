@@ -70,7 +70,7 @@ Usages:
 
   - name: fan_control
     folder: controllers/modules/fan
-    output_name: [ "fan1", "fan2" ]
+    output_name: [ "Fan 1", "Fan 2" ]
     constexpr: "___engine.module<FanControl1>()"
     isPtr: true
 
