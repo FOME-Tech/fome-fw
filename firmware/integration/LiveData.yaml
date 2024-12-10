@@ -146,6 +146,7 @@ Usages:
     constexpr: "___engine.module<VvtController1>()"
     isPtr: true
     conditional_compilation: "EFI_VVT_PID"
+    output_name: [ "VVT B1I", "VVT B1E", "VVT B2I", "VVT B2E" ]
 
   - name: lambda_monitor
     folder: controllers/math
