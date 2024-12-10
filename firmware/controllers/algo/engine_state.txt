@@ -39,9 +39,6 @@ struct_no_prefix engine_state_s
 	bit startStopState
 	uint32_t startStopStateToggleCounter
 
-	float egtValue1
-	float egtValue2
-
 	int16_t desiredRpmLimit;User-defined RPM hard limit;"rpm", 1, 0, 0, 30000, 0
 
 	uint32_t fuelInjectionCounter;Fuel: Injection counter
