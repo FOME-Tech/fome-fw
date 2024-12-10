@@ -83,7 +83,7 @@ public class Fields {
 	public static final int bench_mode_e_BENCH_VVT_3_TARGET_BUMP = 19;
 	public static final int bench_mode_e_BENCH_VVT_4_TARGET_BUMP = 20;
 	public static final int blend_table_s_size = 188;
-	public static final int BLOCKING_FACTOR = 1320;
+	public static final int BLOCKING_FACTOR = 1350;
 	public static final int BOOST_BLEND_COUNT = 2;
 	public static final int BOOST_LOAD_COUNT = 8;
 	public static final int BOOST_RPM_COUNT = 8;
@@ -1006,7 +1006,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 1061057867;
+	public static final int SIGNATURE_HASH = 180800695;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1213,9 +1213,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.10.f407-discovery.1061057867";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.10.f407-discovery.180800695";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1288;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1308;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;

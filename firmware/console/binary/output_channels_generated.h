@@ -233,14 +233,10 @@ struct output_channels_s {
 	// %
 	// offset 64
 	scaled_channel<uint16_t, 100, 1> coilDutyCycle = (uint16_t)0;
-	// ETB Target
-	// %
 	// offset 66
-	scaled_channel<int16_t, 100, 1> etbTarget = (int16_t)0;
-	// ETB: Duty
-	// %
+	uint16_t unused66 = (uint16_t)0;
 	// offset 68
-	scaled_channel<int16_t, 100, 1> etb1DutyCycle = (int16_t)0;
+	uint16_t unused68 = (uint16_t)0;
 	// Fuel level
 	// %
 	// offset 70
@@ -774,8 +770,8 @@ static_assert(offsetof(output_channels_s, ignitionAdvance) == 60);
 static_assert(offsetof(output_channels_s, currentIgnitionMode) == 62);
 static_assert(offsetof(output_channels_s, currentInjectionMode) == 63);
 static_assert(offsetof(output_channels_s, coilDutyCycle) == 64);
-static_assert(offsetof(output_channels_s, etbTarget) == 66);
-static_assert(offsetof(output_channels_s, etb1DutyCycle) == 68);
+static_assert(offsetof(output_channels_s, unused66) == 66);
+static_assert(offsetof(output_channels_s, unused68) == 68);
 static_assert(offsetof(output_channels_s, fuelTankLevel) == 70);
 static_assert(offsetof(output_channels_s, totalFuelConsumption) == 72);
 static_assert(offsetof(output_channels_s, fuelFlowRate) == 74);

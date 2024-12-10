@@ -226,8 +226,8 @@ public class TsOutputs {
 	public static final Field CURRENTIGNITIONMODE = Field.create("CURRENTIGNITIONMODE", 62, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field CURRENTINJECTIONMODE = Field.create("CURRENTINJECTIONMODE", 63, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field COILDUTYCYCLE = Field.create("COILDUTYCYCLE", 64, FieldType.INT16).setScale(0.01).setBaseOffset(0);
-	public static final Field ETBTARGET = Field.create("ETBTARGET", 66, FieldType.INT16).setScale(0.01).setBaseOffset(0);
-	public static final Field ETB1DUTYCYCLE = Field.create("ETB1DUTYCYCLE", 68, FieldType.INT16).setScale(0.01).setBaseOffset(0);
+	public static final Field UNUSED66 = Field.create("UNUSED66", 66, FieldType.INT16).setScale(1.0).setBaseOffset(0);
+	public static final Field UNUSED68 = Field.create("UNUSED68", 68, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field FUELTANKLEVEL = Field.create("FUELTANKLEVEL", 70, FieldType.INT16).setScale(0.01).setBaseOffset(0);
 	public static final Field TOTALFUELCONSUMPTION = Field.create("TOTALFUELCONSUMPTION", 72, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field FUELFLOWRATE = Field.create("FUELFLOWRATE", 74, FieldType.INT16).setScale(0.005).setBaseOffset(0);
