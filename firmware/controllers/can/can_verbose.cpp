@@ -203,11 +203,10 @@ static void populateFrame(Cams& msg) {
 	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1).value_or(0);
 #endif // EFI_SHAFT_POSITION_INPUT
 
-	// TODO: maybe don't rely on outputChannels here
-	msg.Bank1IntakeTarget = engine->outputChannels.vvtTargets[0];
-	msg.Bank1ExhaustTarget = engine->outputChannels.vvtTargets[1];
-	msg.Bank2IntakeTarget = engine->outputChannels.vvtTargets[2];
-	msg.Bank2ExhaustTarget = engine->outputChannels.vvtTargets[3];
+	msg.Bank1IntakeTarget = getLiveData<vvt_s>(0)->vvtTarget;
+	msg.Bank1ExhaustTarget = getLiveData<vvt_s>(1)->vvtTarget;
+	msg.Bank2IntakeTarget = getLiveData<vvt_s>(2)->vvtTarget;
+	msg.Bank2ExhaustTarget = getLiveData<vvt_s>(3)->vvtTarget;
 }
 
 struct Egts {

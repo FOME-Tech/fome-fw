@@ -64,10 +64,6 @@ expected<angle_t> VvtController::getSetpoint() {
 		target += m_targetOffset;
 	}
 
-#if EFI_TUNER_STUDIO
-	engine->outputChannels.vvtTargets[m_index] = target;
-#endif
-
 	vvtTarget = target;
 
 	return target;

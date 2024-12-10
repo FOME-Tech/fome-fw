@@ -52,6 +52,11 @@
 #define GAUGE_NAME_VVT_TARGET_B2I "VVT: bank 2 intake target"
 #define GAUGE_NAME_VVT_TARGET_B2E "VVT: bank 2 exhaust target"
 
+#define GAUGE_NAME_VVT_OUTPUT_B1I "VVT: bank 1 intake output"
+#define GAUGE_NAME_VVT_OUTPUT_B1E "VVT: bank 1 exhaust output"
+#define GAUGE_NAME_VVT_OUTPUT_B2I "VVT: bank 2 intake output"
+#define GAUGE_NAME_VVT_OUTPUT_B2E "VVT: bank 2 exhaust output"
+
 #define GAUGE_NAME_DESIRED_GEAR "TCU: Desired Gear"
 #define GAUGE_NAME_CURRENT_GEAR "Current Gear"
 #define GAUGE_NAME_ISS "TCU: Input Shaft Speed"
