@@ -6,8 +6,14 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 import java.io.PrintStream;
 
 public class OutputChannelVisitorBase extends ILayoutVisitor {
-    public static String buildDatalogName(String name, String comment) {
-        String text = (comment == null || comment.isEmpty()) ? name : comment;
+    protected final NameReplacer nameReplacer;
+
+    public OutputChannelVisitorBase(String nameReplace) {
+        this.nameReplacer = new NameReplacer(nameReplace);
+    }
+
+    public String buildDatalogName(String name, String comment) {
+        String text = (comment == null || comment.isEmpty()) ? name : nameReplacer.replace(comment);
 
         // Delete anything after a newline
         return text.split("\\\\n")[0];
@@ -25,6 +31,22 @@ public class OutputChannelVisitorBase extends ILayoutVisitor {
             }
         } else {
             throw new IllegalStateException("Output channels don't support multi dimension arrays");
+        }
+    }
+
+    protected class NameReplacer {
+        public final String name;
+
+        public NameReplacer(String name) {
+            this.name = name;
+        }
+
+        public String replace(String input) {
+            if (name == null || name.isEmpty()) {
+                return input;
+            }
+
+            return name + ": " + input;
         }
     }
 }
