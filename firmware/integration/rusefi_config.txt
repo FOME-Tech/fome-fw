@@ -988,6 +988,7 @@ bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In Constant mode,
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
 bit flexCranking;Enable a second cranking table to use for E100 flex fuel, interpolating between the two based on flex fuel sensor.
 bit useIacPidMultTable;This flag allows to use a special 'PID Multiplier' table (0.0-1.0) to compensate for nonlinear nature of IAC-RPM controller
+bit disableIdleClutchUp;Disable closed loop idle if ClutchUp is true.  Only works for vehicles where the signal is only present when in gear, like NA/NB miatas.  This helps prevent integral saturation while coasting at low RPM
 bit isBoostControlEnabled
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range
 bit isPhaseSyncRequiredForIgnition;Some engines are OK running semi-random sequential while other engine require phase synchronization
