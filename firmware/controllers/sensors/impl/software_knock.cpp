@@ -95,7 +95,7 @@ void initSoftwareKnock() {
 
 		efiPrintf("Knock sense configuring filter with frequency %.2f khz", freqKhz);
 
-		knockFilter.configureBandpass(KNOCK_SAMPLE_RATE, 1000 * freqKhz, 3);
+		knockFilter.configureBandpass((int)KNOCK_SAMPLE_RATE, 1000 * freqKhz, 3);
 
 		efiSetPadMode("knock ch1", KNOCK_PIN_CH1, PAL_MODE_INPUT_ANALOG);
 #if KNOCK_HAS_CH2	
