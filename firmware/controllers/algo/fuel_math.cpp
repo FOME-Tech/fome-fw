@@ -30,7 +30,6 @@
 #include "fuel_math.h"
 #include "fuel_computer.h"
 #include "injector_model.h"
-#include "speed_density.h"
 #include "speed_density_base.h"
 #include "lua_hooks.h"
 
