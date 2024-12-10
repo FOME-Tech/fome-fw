@@ -21,8 +21,6 @@
 
 #include "pch.h"
 
-#include "event_registry.h"
-#include "fuel_math.h"
 #include "advance_map.h"
 #include "gppwm_channel.h"
 
