@@ -524,6 +524,10 @@ public class Fields {
 	public static final String GAUGE_NAME_VVT_B1I = "VVT: bank 1 intake";
 	public static final String GAUGE_NAME_VVT_B2E = "VVT: bank 2 exhaust";
 	public static final String GAUGE_NAME_VVT_B2I = "VVT: bank 2 intake";
+	public static final String GAUGE_NAME_VVT_OUTPUT_B1E = "VVT: bank 1 exhaust output";
+	public static final String GAUGE_NAME_VVT_OUTPUT_B1I = "VVT: bank 1 intake output";
+	public static final String GAUGE_NAME_VVT_OUTPUT_B2E = "VVT: bank 2 exhaust output";
+	public static final String GAUGE_NAME_VVT_OUTPUT_B2I = "VVT: bank 2 intake output";
 	public static final String GAUGE_NAME_VVT_TARGET_B1E = "VVT: bank 1 exhaust target";
 	public static final String GAUGE_NAME_VVT_TARGET_B1I = "VVT: bank 1 intake target";
 	public static final String GAUGE_NAME_VVT_TARGET_B2E = "VVT: bank 2 exhaust target";
@@ -1006,7 +1010,7 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 180800695;
+	public static final int SIGNATURE_HASH = 1028302437;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1213,7 +1217,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.10.f407-discovery.180800695";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.10.f407-discovery.1028302437";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1308;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";

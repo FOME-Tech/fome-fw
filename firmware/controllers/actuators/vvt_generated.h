@@ -1,9 +1,11 @@
 #pragma once
 #include "rusefi_types.h"
 struct vvt_s {
+	// Target
 	// deg
 	// offset 0
 	scaled_channel<uint16_t, 10, 1> vvtTarget = (uint16_t)0;
+	// Output duty
 	// %
 	// offset 2
 	scaled_channel<uint8_t, 2, 1> vvtOutput = (uint8_t)0;
