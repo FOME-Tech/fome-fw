@@ -318,12 +318,6 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	targetPosition = clampF(minPosition, targetPosition, maxPosition);
 	etbCurrentAdjustedTarget = targetPosition;
 
-#if EFI_TUNER_STUDIO
-	if (m_function == DC_Throttle1) {
-		engine->outputChannels.etbTarget = targetPosition;
-	}
-#endif // EFI_TUNER_STUDIO
-
 	return targetPosition;
 }
 
@@ -477,13 +471,6 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 }
 
 void EtbController::setOutput(expected<percent_t> outputValue) {
-#if EFI_TUNER_STUDIO
-	// Only report first-throttle stats
-	if (m_function == DC_Throttle1) {
-		engine->outputChannels.etb1DutyCycle = outputValue.value_or(0);
-	}
-#endif
-
 	if (!m_motor) {
 		return;
 	}
