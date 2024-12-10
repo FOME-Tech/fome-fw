@@ -1,28 +1,31 @@
 ! units,scale,offset,min,max,digits
 
 struct_no_prefix electronic_throttle_s
-	float idlePosition;"ETB: idlePosition";"per", 1, 0, 0, 10, 2
-	float trim;"ETB: trim"
-	float luaAdjustment;"ETB: luaAdjustment";"per", 1, 0, 0, 3, 2
+	float m_wastegatePosition;"DC: wastegatePosition";"%", 1, 0, 0, 3, 2
 
-	float m_wastegatePosition;"DC: wastegatePosition";"per", 1, 0, 0, 3, 2
+	! Targeting
+	int16_t autoscale m_baseTarget;Base target;"%", 0.01, 0, -100, 100, 2
+	int16_t autoscale m_trim;"Trim";"%", 0.01, 0, -100, 100, 2
+	float luaAdjustment;"Lua adjustment";"%", 1, 0, -20, 20, 1
+	int16_t autoscale m_adjustedTarget;Adjusted target;"%", 0.01, 0, -100, 100, 2
 
+	! Open loop
+	int16_t autoscale m_feedForward;Feed forward;"%", 0.01, 0, -100, 100, 2
 
-	custom percent_t 4 scalar, F32, @OFFSET@, "", 1, 0, 0, 100, 2
+	! Closed loop
+	int16_t autoscale m_error;Error;"%", 0.01, 0, -100, 100, 2
 
-	percent_t etbFeedForward
-	float etbIntegralError;;"", 1, 0, -10000, 10000, 3
-	float etbCurrentTarget;;"%", 1, 0, -10000, 10000, 3
-	float etbCurrentAdjustedTarget;;"%", 1, 0, -10000, 10000, 3
+	! Output
+	uint8_t autoscale m_outputDuty;Duty cycle;"%", 0.5, 0, 0, 100, 1
 
-	bit etbRevLimitActive
-	bit jamDetected
+	! Error detection and status
+	bit revLimitActive;Rev limit active
+	bit jamDetected;Jam detected
 
-	uint16_t etbTpsErrorCounter;"ETB TPS error counter";"count", 1, 0, 0,3, 0
-	uint16_t etbPpsErrorCounter;"ETB pedal error counter";"count", 1, 0, 0,3, 0
+	uint16_t etbTpsErrorCounter;"TPS error counter";"count", 1, 0, 0,3, 0
+	uint16_t etbPpsErrorCounter;"Pedal error counter";"count", 1, 0, 0,3, 0
 
-	int8_t etbErrorCode
+	uint16_t autoscale jamTimer;Jam timer;"sec", 0.01, 0, 0, 100, 2
 
-	uint16_t autoscale jamTimer;ETB jam timer;"sec", 0.01, 0, 0, 100, 2
-
+	int8_t etbErrorCode;Error code
 end_struct

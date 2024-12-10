@@ -268,7 +268,8 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	float sanitizedPedal = clampF(0, pedalPosition.value_or(0), 100);
 	
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	etbCurrentTarget = m_pedalMap->getValue(rpm, sanitizedPedal);
+	float baseTarget = m_pedalMap->getValue(rpm, sanitizedPedal);
+	m_baseTarget = baseTarget;
 
 	percent_t etbIdlePosition = clampF(0, m_idlePosition, 100);
 	percent_t etbIdleAddition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * etbIdlePosition;
@@ -277,9 +278,10 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	// [0, 100] -> [idle, 100]
 	// 0% target from table -> idle position as target
 	// 100% target from table -> 100% target position
-	idlePosition = interpolateClamped(0, etbIdleAddition, 100, 100, etbCurrentTarget);
+	percent_t targetPosition = interpolateClamped(0, etbIdleAddition, 100, 100, baseTarget);
 
-	percent_t targetPosition = idlePosition + getLuaAdjustment();
+	// Adjust up/down by Lua adjustment
+	targetPosition += getLuaAdjustment();
 
 #if EFI_ANTILAG_SYSTEM 
 	if (engine->antilagController.isAntilagCondition) {
@@ -289,7 +291,8 @@ expected<percent_t> EtbController::getSetpointEtb() {
 
 	// Apply any adjustment that this throttle alone needs
 	// Clamped to +-10 to prevent anything too wild
-	trim = clampF(-10, getThrottleTrim(rpm, targetPosition), 10);
+	float trim = clampF(-10, getThrottleTrim(rpm, targetPosition), 10);
+	m_trim = trim;
 	targetPosition += trim;
 
 	// Clamp before rev limiter to avoid ineffective rev limit due to crazy out of range position target
@@ -305,7 +308,9 @@ expected<percent_t> EtbController::getSetpointEtb() {
 		targetPosition = interpolateClamped(etbRpmLimit, targetPosition, fullyLimitedRpm, 0, rpm);
 
 		// rev limit active if the position was changed by rev limiter
-		etbRevLimitActive = std::abs(targetPosition - targetPositionBefore) > 0.1f;
+		revLimitActive = std::abs(targetPosition - targetPositionBefore) > 0.1f;
+	} else {
+		revLimitActive = false;
 	}
 
 	float minPosition = engineConfiguration->etbMinimumPosition;
@@ -316,13 +321,7 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	maxPosition = std::min(maxPosition, 100.0f);
 
 	targetPosition = clampF(minPosition, targetPosition, maxPosition);
-	etbCurrentAdjustedTarget = targetPosition;
-
-#if EFI_TUNER_STUDIO
-	if (m_function == DC_Throttle1) {
-		engine->outputChannels.etbTarget = targetPosition;
-	}
-#endif // EFI_TUNER_STUDIO
+	m_adjustedTarget = targetPosition;
 
 	return targetPosition;
 }
@@ -352,13 +351,15 @@ percent_t EtbController2::getThrottleTrim(float rpm, percent_t targetPosition) c
 
 expected<percent_t> EtbController::getOpenLoop(percent_t target) {
 	// Don't apply open loop for wastegate/idle valve, only real ETB
+	float feedForward = 0;
+
 	if (m_function != DC_Wastegate) {
-		etbFeedForward = interpolate2d(target, config->etbBiasBins, config->etbBiasValues);
-	} else {
-		etbFeedForward = 0;
+		feedForward = interpolate2d(target, config->etbBiasBins, config->etbBiasValues);
 	}
 
-	return etbFeedForward;
+	m_feedForward = feedForward;
+
+	return feedForward;
 }
 
 expected<percent_t> EtbController::getClosedLoopAutotune(percent_t target, percent_t actualThrottlePosition) {
@@ -472,18 +473,12 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 		checkJam(target, observation);
 
 		// Normal case - use PID to compute closed loop part
+		m_error = target - observation;
 		return m_pid.getOutput(target, observation, etbPeriodSeconds);
 	}
 }
 
 void EtbController::setOutput(expected<percent_t> outputValue) {
-#if EFI_TUNER_STUDIO
-	// Only report first-throttle stats
-	if (m_function == DC_Throttle1) {
-		engine->outputChannels.etb1DutyCycle = outputValue.value_or(0);
-	}
-#endif
-
 	if (!m_motor) {
 		return;
 	}
@@ -497,9 +492,11 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 		&& !engineConfiguration->pauseEtbControl)) {
 		m_motor->enable();
 		m_motor->set(ETB_PERCENT_TO_DUTY(outputValue.Value));
+		m_outputDuty = outputValue.Value;
 	} else {
 		// Otherwise disable the motor.
 		m_motor->disable("setOutput");
+		m_outputDuty = 0;
 	}
 }
 

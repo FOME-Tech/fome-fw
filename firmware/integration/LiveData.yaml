@@ -122,7 +122,7 @@ Usages:
   - name: electronic_throttle
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    # output_name: [ "etb1", "etb2" ]
+    output_name: [ "ETB 1", "ETB 2" ]
 
   - name: wideband_state
     folder: controllers/sensors/
