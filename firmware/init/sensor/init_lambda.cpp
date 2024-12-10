@@ -3,7 +3,6 @@
 #include "init.h"
 #include "adc_subscription.h"
 #include "linear_func.h"
-#include "live_data.h"
 
 static LinearFunc func;
 

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "efitime.h"
+#include "engine_module.h"
 #include "peak_detect.h"
 #include "knock_controller_generated.h"
 
