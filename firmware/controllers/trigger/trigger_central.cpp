@@ -561,9 +561,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 	m_lastEventTimer.reset(timestamp);
 
-	int eventIndex = (int) signal;
-	efiAssertVoid(ObdCode::CUSTOM_TRIGGER_EVENT_TYPE, eventIndex >= 0 && eventIndex < HW_EVENT_TYPES, "signal type");
-	triggerEventCounter[eventIndex]++;
+	triggerEventCounter[(int)signal]++;
 
 	// Decode the trigger!
 	auto decodeResult = triggerState.decodeTriggerEvent(
