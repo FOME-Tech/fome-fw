@@ -20,9 +20,11 @@ struct trigger_central_s {
 	// deg
 	// offset 28
 	float currentEngineDecodedPhase = (float)0;
+	// Trg: Tooth angle error
 	// deg
 	// offset 32
 	float triggerToothAngleError = (float)0;
+	// Trg: Ignored tooth count
 	// offset 36
 	uint8_t triggerIgnoredToothCount = (uint8_t)0;
 	// offset 37
