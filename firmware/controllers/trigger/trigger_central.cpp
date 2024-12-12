@@ -256,8 +256,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			nullptr,
 			tc->vvtTriggerConfiguration[camIndex],
 			isRising ? SHAFT_PRIMARY_RISING : SHAFT_PRIMARY_FALLING, nowNt);
-		// yes we log data from all VVT channels into same fields for now
-		tc->triggerState.vvtStateIndex = vvtDecoder.currentCycle.current_index;
 	}
 
 	tc->vvtCamCounter[bankIndex * CAMS_PER_BANK + camIndex]++;
