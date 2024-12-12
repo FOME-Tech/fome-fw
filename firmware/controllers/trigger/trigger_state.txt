@@ -1,7 +1,6 @@
 struct_no_prefix trigger_state_s
-	uint32_t crankSynchronizationCounter;Crank sync counter\nUsually matches crank revolutions
-	float triggerSyncGapRatio;@@GAUGE_NAME_TRG_GAP@@;"", 1, 0, -10000, 10000, 3
+	uint32_t crankSynchronizationCounter;Sync counter
+	float triggerSyncGapRatio;Sync gap ratio;"", 1, 0, -10000, 10000, 3
 
-	uint8_t triggerStateIndex
-	uint8_t vvtCounter
+	uint8_t triggerStateIndex;Trigger state index
 end_struct

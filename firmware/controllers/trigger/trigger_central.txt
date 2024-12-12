@@ -10,7 +10,7 @@ struct_no_prefix trigger_central_s
 
 	float currentEngineDecodedPhase;Engine Phase;"deg",1, 0, 0, 0, 0
 
-	float triggerToothAngleError;;"deg", 1, 0, -30, 30, 2
+	float triggerToothAngleError;Trg: Tooth angle error;"deg", 1, 0, -30, 30, 2
 
-	uint8_t triggerIgnoredToothCount
+	uint8_t triggerIgnoredToothCount;Trg: Ignored tooth count
 end_struct
