@@ -753,7 +753,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* Trigger Counter ?? */
-			tmp =  engine->triggerCentral.getHwEventCounter((int)SHAFT_PRIMARY_FALLING);
+			tmp =  engine->triggerCentral.getHwEventCounter(TriggerEvent::PrimaryRising);
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* unused */

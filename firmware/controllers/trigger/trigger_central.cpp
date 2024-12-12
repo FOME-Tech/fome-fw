@@ -45,8 +45,8 @@ TriggerCentral::TriggerCentral() :
 	triggerState.resetState();
 }
 
-int TriggerCentral::getHwEventCounter(int index) const {
-	return triggerEventCounter[index];
+int TriggerCentral::getHwEventCounter(TriggerEvent event) const {
+	return triggerEventCounter[(size_t)event];
 }
 
 
@@ -204,7 +204,7 @@ static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	addEngineSnifferVvtEvent(index, isRising);
 
 #if EFI_TOOTH_LOGGER
-	LogTriggerTooth(isRising ? SHAFT_SECONDARY_RISING : SHAFT_SECONDARY_FALLING, nowNt);
+	LogTriggerTooth(isRising ? TriggerEvent::SecondaryRising : TriggerEvent::SecondaryFalling, nowNt);
 #endif /* EFI_TOOTH_LOGGER */
 }
 
@@ -255,7 +255,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			vvtShape,
 			nullptr,
 			tc->vvtTriggerConfiguration[camIndex],
-			isRising ? SHAFT_PRIMARY_RISING : SHAFT_PRIMARY_FALLING, nowNt);
+			isRising ? TriggerEvent::PrimaryRising : TriggerEvent::PrimaryFalling, nowNt);
 	}
 
 	tc->vvtCamCounter[bankIndex * CAMS_PER_BANK + camIndex]++;
@@ -305,8 +305,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		// else, do nothing
 		break;
 	}
-
-	tc->triggerState.vvtCounter++;
 
 	// Only do engine sync using one cam, other cams just provide VVT position.
 	if (index == engineConfiguration->engineSyncCam) {
@@ -381,15 +379,15 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 		return;
 	}
 
-	trigger_event_e signal;
+	TriggerEvent signal;
 	if (isRising) {
 		signal = isPrimary ?
-					(engineConfiguration->invertPrimaryTriggerSignal ? SHAFT_PRIMARY_FALLING : SHAFT_PRIMARY_RISING) :
-					(engineConfiguration->invertSecondaryTriggerSignal ? SHAFT_SECONDARY_FALLING : SHAFT_SECONDARY_RISING);
+					(engineConfiguration->invertPrimaryTriggerSignal ? TriggerEvent::PrimaryFalling : TriggerEvent::PrimaryRising) :
+					(engineConfiguration->invertSecondaryTriggerSignal ? TriggerEvent::SecondaryFalling : TriggerEvent::SecondaryRising);
 	} else {
 		signal = isPrimary ?
-					(engineConfiguration->invertPrimaryTriggerSignal ? SHAFT_PRIMARY_RISING : SHAFT_PRIMARY_FALLING) :
-					(engineConfiguration->invertSecondaryTriggerSignal ? SHAFT_SECONDARY_RISING : SHAFT_SECONDARY_FALLING);
+					(engineConfiguration->invertPrimaryTriggerSignal ? TriggerEvent::PrimaryRising : TriggerEvent::PrimaryFalling) :
+					(engineConfiguration->invertSecondaryTriggerSignal ? TriggerEvent::SecondaryRising : TriggerEvent::SecondaryFalling);
 	}
 
 	// Don't accept trigger input in case of some problems
@@ -428,7 +426,7 @@ void TriggerCentral::resetCounters() {
 
 static const int wheelIndeces[4] = { 0, 0, 1, 1};
 
-static void reportEventToWaveChart(trigger_event_e ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
+static void reportEventToWaveChart(TriggerEvent ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
 	if (!getTriggerCentral()->isEngineSnifferEnabled) { // this is here just as a shortcut so that we avoid engine sniffer as soon as possible
 		return; // engineSnifferRpmThreshold is accounted for inside getTriggerCentral()->isEngineSnifferEnabled
 	}
@@ -547,7 +545,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 /**
  * This method is NOT invoked for VR falls.
  */
-void TriggerCentral::handleShaftSignal(trigger_event_e signal, efitick_t timestamp) {
+void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp) {
 	if (triggerShape.shapeDefinitionError) {
 		// trigger is broken, we cannot do anything here
 		warning(ObdCode::CUSTOM_ERR_UNEXPECTED_SHAFT_EVENT, "Shaft event while trigger is mis-configured");
@@ -688,12 +686,12 @@ void triggerInfo(void) {
 	}
 
 
-	efiPrintf("trigger#1 event counters up=%d/down=%d", tc->getHwEventCounter(0),
-			tc->getHwEventCounter(1));
+	efiPrintf("trigger#1 event counters up=%d/down=%d", tc->getHwEventCounter(TriggerEvent::PrimaryRising),
+			tc->getHwEventCounter(TriggerEvent::PrimaryFalling));
 
 	if (ts->needSecondTriggerInput) {
-		efiPrintf("trigger#2 event counters up=%d/down=%d", tc->getHwEventCounter(2),
-				tc->getHwEventCounter(3));
+		efiPrintf("trigger#2 event counters up=%d/down=%d", tc->getHwEventCounter(TriggerEvent::SecondaryRising),
+				tc->getHwEventCounter(TriggerEvent::SecondaryFalling));
 	}
 	efiPrintf("expected cycle events %d/%d",
 			TRIGGER_WAVEFORM(getExpectedEventCount(TriggerWheel::T_PRIMARY)),

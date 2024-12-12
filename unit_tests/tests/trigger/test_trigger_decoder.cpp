@@ -63,19 +63,19 @@ TEST(trigger, testSomethingWeird) {
 
 	ASSERT_FALSE(sta->shaft_is_synchronized) << "shaft_is_synchronized";
 	int r = 10;
-	sta->decodeTriggerEvent("t", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, SHAFT_PRIMARY_RISING, ++r);
+	sta->decodeTriggerEvent("t", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, TriggerEvent::PrimaryRising, ++r);
 	ASSERT_TRUE(sta->shaft_is_synchronized); // first signal rise synchronize
 	ASSERT_EQ(0, sta->getCurrentIndex());
 
 	for (int i = 2; i < 10; i += 2) {
-		sta->decodeTriggerEvent("t", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, SHAFT_PRIMARY_RISING, r++);
+		sta->decodeTriggerEvent("t", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, TriggerEvent::PrimaryRising, r++);
 		assertEqualsM("even", i, sta->getCurrentIndex());
 	}
 
-	sta->decodeTriggerEvent("test", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, SHAFT_PRIMARY_RISING, r++);
+	sta->decodeTriggerEvent("test", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, TriggerEvent::PrimaryRising, r++);
 	ASSERT_EQ(10, sta->getCurrentIndex());
 
-	sta->decodeTriggerEvent("test", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, SHAFT_PRIMARY_RISING, r++);
+	sta->decodeTriggerEvent("test", engine->triggerCentral.triggerShape, /* override */ nullptr, triggerConfiguration, TriggerEvent::PrimaryRising, r++);
 	ASSERT_EQ(0, sta->getCurrentIndex()); // new revolution
 }
 

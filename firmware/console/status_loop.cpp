@@ -591,11 +591,11 @@ void updateTunerStudioState() {
 
 #if EFI_SHAFT_POSITION_INPUT
 	tsOutputChannels->maxTriggerReentrant = maxTriggerReentrant;
-	tsOutputChannels->triggerPrimaryFall = engine->triggerCentral.getHwEventCounter((int)SHAFT_PRIMARY_FALLING);
-	tsOutputChannels->triggerPrimaryRise = engine->triggerCentral.getHwEventCounter((int)SHAFT_PRIMARY_RISING);
+	tsOutputChannels->triggerPrimaryFall = engine->triggerCentral.getHwEventCounter(TriggerEvent::PrimaryFalling);
+	tsOutputChannels->triggerPrimaryRise = engine->triggerCentral.getHwEventCounter(TriggerEvent::PrimaryRising);
 
-	tsOutputChannels->triggerSecondaryFall = engine->triggerCentral.getHwEventCounter((int)SHAFT_SECONDARY_FALLING);
-	tsOutputChannels->triggerSecondaryRise = engine->triggerCentral.getHwEventCounter((int)SHAFT_SECONDARY_RISING);
+	tsOutputChannels->triggerSecondaryFall = engine->triggerCentral.getHwEventCounter(TriggerEvent::SecondaryFalling);
+	tsOutputChannels->triggerSecondaryRise = engine->triggerCentral.getHwEventCounter(TriggerEvent::SecondaryRising);
 
 	tsOutputChannels->triggerVvtRise = engine->triggerCentral.vvtEventRiseCounter[0];
 	tsOutputChannels->triggerVvtFall = engine->triggerCentral.vvtEventFallCounter[0];

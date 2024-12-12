@@ -169,7 +169,7 @@ private:
 
 #define isValidRpm(rpm) ((rpm) > 0 && (rpm) < UNREALISTIC_RPM)
 
-void rpmShaftPositionCallback(trigger_event_e ckpSignalType, uint32_t trgEventIndex, efitick_t edgeTimestamp);
+void rpmShaftPositionCallback(TriggerEvent ckpSignalType, uint32_t trgEventIndex, efitick_t edgeTimestamp);
 
 void tdcMarkCallback(
 		uint32_t trgEventIndex, efitick_t edgeTimestamp);

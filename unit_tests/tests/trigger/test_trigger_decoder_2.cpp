@@ -38,7 +38,7 @@ static auto makeTriggerShape(operation_mode_e mode, const TriggerConfiguration& 
 	return shape;
 }
 
-#define doTooth(dut, shape, cfg, t) dut.decodeTriggerEvent("", shape, nullptr, cfg, SHAFT_PRIMARY_RISING, t)
+#define doTooth(dut, shape, cfg, t) dut.decodeTriggerEvent("", shape, nullptr, cfg, TriggerEvent::PrimaryRising, t)
 
 TEST(TriggerDecoder, FindsFirstSyncPoint) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});

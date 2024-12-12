@@ -18,7 +18,7 @@
  * todo: should this method be invoked somewhere deeper? at the moment we have too many usages too high
  * @return true if front should be decoded further, false if we are not interested
  */
-bool isUsefulSignal(trigger_event_e signal, const TriggerWaveform& shape) {
+bool isUsefulSignal(TriggerEvent signal, const TriggerWaveform& shape) {
 	if (shape.useOnlyRisingEdges) {
 		return isTriggerUpEvent(signal);
 	}
@@ -69,13 +69,13 @@ void TriggerStimulatorHelper::feedSimulatedEvent(
 
 	// todo: code duplication with TriggerEmulatorHelper::handleEmulatorCallback?
 
-	constexpr trigger_event_e riseEvents[] = { SHAFT_PRIMARY_RISING, SHAFT_SECONDARY_RISING };
-	constexpr trigger_event_e fallEvents[] = { SHAFT_PRIMARY_FALLING, SHAFT_SECONDARY_FALLING };
+	constexpr TriggerEvent riseEvents[] = { TriggerEvent::PrimaryRising, TriggerEvent::SecondaryRising };
+	constexpr TriggerEvent fallEvents[] = { TriggerEvent::PrimaryFalling, TriggerEvent::SecondaryFalling };
 
 	for (size_t j = 0; j < PWM_PHASE_MAX_WAVE_PER_PWM; j++) {
 		if (needEvent(stateIndex, multiChannelStateSequence, j)) {
 			bool currentValue = multiChannelStateSequence.getChannelState(/*phaseIndex*/j, stateIndex);
-			trigger_event_e event = (currentValue ? riseEvents : fallEvents)[j];
+			TriggerEvent event = (currentValue ? riseEvents : fallEvents)[j];
 			if (isUsefulSignal(event, shape)) {
 				state.decodeTriggerEvent(
 					"sim",

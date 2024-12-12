@@ -12,18 +12,18 @@
 extern WarningCodeState unitTestWarningCodeState;
 
 static void fireTriggerEvent(EngineTestHelper*eth, double timestampS, TriggerWheel channel, bool isFall) {
-	trigger_event_e event;
+	TriggerEvent event;
 	// in this trigger data file second channel is the primary
 	// interesting how logic analyzer and trigger are flipped - logical '1' from logicdata file seems to be 'falling'
 	// for trigger definition?!
 	if (channel == TriggerWheel::T_PRIMARY && isFall == false) {
-		event = SHAFT_PRIMARY_RISING;
+		event = TriggerEvent::PrimaryRising;
 	} else if (channel == TriggerWheel::T_PRIMARY && isFall == true) {
-		event = SHAFT_PRIMARY_FALLING;
+		event = TriggerEvent::PrimaryFalling;
 	} else 	if (channel == TriggerWheel:: T_SECONDARY && isFall == false) {
-		event = SHAFT_SECONDARY_RISING;
+		event = TriggerEvent::SecondaryRising;
 	} else {
-		event = SHAFT_SECONDARY_FALLING;
+		event = TriggerEvent::SecondaryFalling;
 	}
 
 	setTimeNowUs(1'000'000 * timestampS);

@@ -36,14 +36,14 @@ TEST(Actuators, FuelPump) {
 	// Long time since ecu start, just saw a trigger!
 	dut.onIgnitionStateChanged(true);
 	advanceTimeUs(10e6);
-	engine->triggerCentral.handleShaftSignal(SHAFT_PRIMARY_FALLING, getTimeNowNt());
+	engine->triggerCentral.handleShaftSignal(TriggerEvent::PrimaryFalling, getTimeNowNt());
 	dut.onSlowCallback();
 	// Pump should be on!
 	EXPECT_TRUE(efiReadPin(Gpio::A0));
 
 	// ECU just started, and we just saw a trigger!
 	dut.onIgnitionStateChanged(true);
-	engine->triggerCentral.handleShaftSignal(SHAFT_PRIMARY_FALLING, getTimeNowNt());
+	engine->triggerCentral.handleShaftSignal(TriggerEvent::PrimaryFalling, getTimeNowNt());
 	dut.onSlowCallback();
 	// Pump should be on!
 	EXPECT_TRUE(efiReadPin(Gpio::A0));

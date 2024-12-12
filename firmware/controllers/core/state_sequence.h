@@ -12,12 +12,12 @@
 #include <rusefi/expected.h>
 
 // see also 'HW_EVENT_TYPES'
-typedef enum {
-	SHAFT_PRIMARY_FALLING = 0,
-	SHAFT_PRIMARY_RISING = 1,
-	SHAFT_SECONDARY_FALLING = 2,
-	SHAFT_SECONDARY_RISING = 3,
-} trigger_event_e;
+enum class TriggerEvent {
+	PrimaryFalling = 0,
+	PrimaryRising = 1,
+	SecondaryFalling = 2,
+	SecondaryRising = 3,
+};
 
 /**
  * This layer has two primary usages:
