@@ -35,7 +35,6 @@
 
 #define GAUGE_NAME_VERSION "firmware"
 #define GAUGE_NAME_UPTIME "Uptime"
-#define GAUGE_NAME_TRG_ERR "Trigger Error Counter"
 
 #define GAUGE_CATEGORY_ETB "ETB more"
 

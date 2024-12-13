@@ -143,7 +143,6 @@ public:
 	/**
 	 * how many times since ECU reboot we had unexpected number of teeth in trigger cycle
 	 */
-	uint32_t totalTriggerErrorCounter;
 	uint32_t orderingErrorCounter;
 
 	virtual void resetState();

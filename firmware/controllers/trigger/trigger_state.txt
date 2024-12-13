@@ -2,6 +2,7 @@ struct_no_prefix trigger_state_s
 	float triggerSyncGapRatio;Sync gap ratio;"", 1, 0, -10000, 10000, 3
 
 	uint16_t crankSynchronizationCounter;Sync counter
+	uint16_t triggerErrorCounter;Sync error counter
 
 	uint8_t triggerStateIndex;Trigger state index
 

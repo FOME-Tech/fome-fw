@@ -64,7 +64,7 @@ void TriggerDecoderBase::resetState() {
 	setArrayValues(toothDurations, 0);
 
 	crankSynchronizationCounter = 0;
-	totalTriggerErrorCounter = 0;
+	triggerErrorCounter = 0;
 	orderingErrorCounter = 0;
 	m_timeSinceDecodeError.init();
 
@@ -79,7 +79,7 @@ void TriggerDecoderBase::resetState() {
 
 void TriggerDecoderBase::setTriggerErrorState() {
 	m_timeSinceDecodeError.reset();
-	totalTriggerErrorCounter++;
+	triggerErrorCounter++;
 }
 
 void TriggerDecoderBase::resetCurrentCycleState() {

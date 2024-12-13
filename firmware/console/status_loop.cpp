@@ -519,8 +519,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->mafMeasured2 = Sensor::getOrZero(SensorType::Maf2);
 	tsOutputChannels->mafEstimate = engine->engineState.airflowEstimate;
 
-	tsOutputChannels->totalTriggerErrorCounter = engine->triggerCentral.triggerState.totalTriggerErrorCounter;
-
 	tsOutputChannels->orderingErrorCounter = engine->triggerCentral.triggerState.orderingErrorCounter;
 #endif // EFI_SHAFT_POSITION_INPUT
 

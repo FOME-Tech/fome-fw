@@ -692,10 +692,10 @@ void triggerInfo(void) {
 			boolToString(TRIGGER_WAVEFORM(needSecondTriggerInput)));
 
 
-	efiPrintf("synchronizationNeeded=%s/isError=%s/total errors=%lu ord_err=%lu/total revolutions=%d/self=%s",
+	efiPrintf("synchronizationNeeded=%s/isError=%s/total errors=%d ord_err=%lu/total revolutions=%d/self=%s",
 			boolToString(ts->isSynchronizationNeeded),
 			boolToString(tc->isTriggerDecoderError()),
-			tc->triggerState.totalTriggerErrorCounter,
+			tc->triggerState.triggerErrorCounter,
 			tc->triggerState.orderingErrorCounter,
 			tc->triggerState.getCrankSynchronizationCounter(),
 			boolToString(tc->directSelfStimulation));
