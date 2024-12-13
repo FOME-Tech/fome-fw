@@ -1,6 +1,10 @@
 struct_no_prefix trigger_state_s
-	uint32_t crankSynchronizationCounter;Sync counter
 	float triggerSyncGapRatio;Sync gap ratio;"", 1, 0, -10000, 10000, 3
 
+	uint16_t crankSynchronizationCounter;Sync counter
+
 	uint8_t triggerStateIndex;Trigger state index
+
+	uint16_t edgeCountRise;Edge count rise
+	uint16_t edgeCountFall;Edge count fall
 end_struct

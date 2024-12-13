@@ -112,6 +112,8 @@ public:
 			const TriggerEvent signal,
 			const efitick_t nowNt);
 
+	void logEdgeCounters(bool isRising);
+
 	void onShaftSynchronization(
 			bool wasSynchronized,
 			const efitick_t nowNt,

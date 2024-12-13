@@ -45,11 +45,6 @@ TriggerCentral::TriggerCentral() :
 	triggerState.resetState();
 }
 
-int TriggerCentral::getHwEventCounter(TriggerEvent event) const {
-	return triggerEventCounter[(size_t)event];
-}
-
-
 expected<angle_t> TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camIndex) {
 	if (bankIndex >= BANKS_COUNT || camIndex >= CAMS_PER_BANK) {
 		return unexpected;
@@ -256,9 +251,9 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			nullptr,
 			tc->vvtTriggerConfiguration[camIndex],
 			isRising ? TriggerEvent::PrimaryRising : TriggerEvent::PrimaryFalling, nowNt);
+	} else {
+		vvtDecoder.logEdgeCounters(isRising);
 	}
-
-	tc->vvtCamCounter[bankIndex * CAMS_PER_BANK + camIndex]++;
 
 	auto currentPhase = tc->getCurrentEnginePhase(nowNt);
 	if (!currentPhase) {
@@ -421,7 +416,15 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 }
 
 void TriggerCentral::resetCounters() {
-	setArrayValues(triggerEventCounter, 0);
+	triggerState.edgeCountRise = 0;
+	triggerState.edgeCountFall = 0;
+
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 2; j++) {
+			vvtState[i][j].edgeCountRise = 0;
+			vvtState[i][j].edgeCountFall = 0;
+		}
+	}
 }
 
 static const int wheelIndeces[4] = { 0, 0, 1, 1};
@@ -561,8 +564,6 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 	m_lastEventTimer.reset(timestamp);
 
-	triggerEventCounter[(int)signal]++;
-
 	// Decode the trigger!
 	auto decodeResult = triggerState.decodeTriggerEvent(
 			"trigger",
@@ -683,14 +684,6 @@ void triggerInfo(void) {
 				engineConfiguration->trigger.customSkippedToothCount);
 	}
 
-
-	efiPrintf("trigger#1 event counters up=%d/down=%d", tc->getHwEventCounter(TriggerEvent::PrimaryRising),
-			tc->getHwEventCounter(TriggerEvent::PrimaryFalling));
-
-	if (ts->needSecondTriggerInput) {
-		efiPrintf("trigger#2 event counters up=%d/down=%d", tc->getHwEventCounter(TriggerEvent::SecondaryRising),
-				tc->getHwEventCounter(TriggerEvent::SecondaryFalling));
-	}
 	efiPrintf("expected cycle events %d/%d",
 			TRIGGER_WAVEFORM(getExpectedEventCount(TriggerWheel::T_PRIMARY)),
 			TRIGGER_WAVEFORM(getExpectedEventCount(TriggerWheel::T_SECONDARY)));
@@ -813,8 +806,8 @@ static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& tri
 void TriggerCentral::validateCamVvtCounters() {
 	int camVvtValidationIndex = triggerState.getCrankSynchronizationCounter() % 255;
 	if (camVvtValidationIndex == 0) {
-		vvtCamCounter[0] = 0;
-	} else if (camVvtValidationIndex == 0xFE && vvtCamCounter[0] < 60) {
+		vvtState[0][0].edgeCountRise = 0;
+	} else if (camVvtValidationIndex == 0xFE && vvtState[0][0].edgeCountRise < 60) {
 		// magic logic: we expect at least 60 CAM/VVT events for each 256 trigger cycles, otherwise throw a code
 		warning(ObdCode::OBD_Camshaft_Position_Sensor_Circuit_Range_Performance, "No Camshaft Position Sensor signals");
 	}

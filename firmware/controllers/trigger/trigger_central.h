@@ -39,7 +39,6 @@ public:
 	TriggerCentral();
 	angle_t syncAndReport(int divider, int remainder);
 	void handleShaftSignal(TriggerEvent signal, efitick_t timestamp);
-	int getHwEventCounter(TriggerEvent event) const;
 	void resetCounters();
 	void validateCamVvtCounters();
 	void updateWaveform();

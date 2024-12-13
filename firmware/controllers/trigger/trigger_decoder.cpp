@@ -360,6 +360,14 @@ static bool shouldConsiderEdge(const TriggerWaveform& triggerShape, TriggerWheel
 	return false;
 }
 
+void TriggerDecoderBase::logEdgeCounters(bool isRising) {
+	if (isRising) {
+		edgeCountRise++;
+	} else {
+		edgeCountFall++;
+	}
+}
+
 /**
  * @brief Trigger decoding happens here
  * VR falls are filtered out and some VR noise detection happens prior to invoking this method, for
@@ -401,6 +409,8 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	prevSignal = signal;
 
 	currentCycle.eventCount[(int)triggerWheel]++;
+
+	logEdgeCounters(isRising);
 
 	if (toothed_previous_time > nowNt) {
 		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%lu now=%lu", msg, (uint32_t)toothed_previous_time, (uint32_t)nowNt);

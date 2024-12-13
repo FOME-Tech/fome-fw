@@ -268,14 +268,6 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint16_t canWriteOk;CAN: Tx OK;"", 1, 0, -10000, 10000, 3
 	uint16_t canWriteNotOk;CAN: Tx err;"", 1, 0, -10000, 10000, 3
 
-	uint32_t triggerPrimaryFall;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerPrimaryRise;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerSecondaryFall;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerSecondaryRise;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerVvtFall;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerVvtRise;;"", 1, 0, -10000, 10000, 3
-
-
 	uint8_t starterState;;"", 1, 0, -10000, 10000, 3
 	uint8_t starterRelayDisable;;"", 1, 0, -10000, 10000, 3
 	uint8_t multiSparkCounter;Ign: Multispark count;"", 1, 0, -10000, 10000, 3

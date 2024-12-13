@@ -591,14 +591,6 @@ void updateTunerStudioState() {
 
 #if EFI_SHAFT_POSITION_INPUT
 	tsOutputChannels->maxTriggerReentrant = maxTriggerReentrant;
-	tsOutputChannels->triggerPrimaryFall = engine->triggerCentral.getHwEventCounter(TriggerEvent::PrimaryFalling);
-	tsOutputChannels->triggerPrimaryRise = engine->triggerCentral.getHwEventCounter(TriggerEvent::PrimaryRising);
-
-	tsOutputChannels->triggerSecondaryFall = engine->triggerCentral.getHwEventCounter(TriggerEvent::SecondaryFalling);
-	tsOutputChannels->triggerSecondaryRise = engine->triggerCentral.getHwEventCounter(TriggerEvent::SecondaryRising);
-
-	tsOutputChannels->triggerVvtRise = engine->triggerCentral.vvtEventRiseCounter[0];
-	tsOutputChannels->triggerVvtFall = engine->triggerCentral.vvtEventFallCounter[0];
 #endif // EFI_SHAFT_POSITION_INPUT
 
 #if HAL_USE_PAL && EFI_PROD_CODE
