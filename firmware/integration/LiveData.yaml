@@ -105,6 +105,7 @@ Usages:
   - name: trigger_state
     folder: controllers/trigger
     prepend: integration/rusefi_config_shared.txt
+    java: TriggerState.java
     output_name: [ "Trg", "VVT B1I", "VVT B1E", "VVT B2I", "VVT B2E" ]
 
   - name: trigger_state_primary

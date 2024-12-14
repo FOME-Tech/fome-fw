@@ -2,6 +2,7 @@ package com.rusefi.core;
 
 import com.rusefi.config.Field;
 import com.rusefi.config.FieldType;
+import com.rusefi.config.generated.TriggerState;
 import com.rusefi.config.generated.TsOutputs;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,7 +31,7 @@ public enum Sensor {
     TIME_SECONDS(GAUGE_NAME_TIME, FieldType.INT, TsOutputs.SECONDS, 1, ""),
 
     // Errors
-    totalTriggerErrorCounter(GAUGE_NAME_TRG_ERR, FieldType.INT, TsOutputs.TOTALTRIGGERERRORCOUNTER),
+    totalTriggerErrorCounter("TriggerErrorCount", FieldType.UINT16, TriggerState.TRIGGERERRORCOUNTER),
 
     // Debug
     debugIntField1(GAUGE_NAME_DEBUG_I1, FieldType.INT, TsOutputs.DEBUGINTFIELD1),
