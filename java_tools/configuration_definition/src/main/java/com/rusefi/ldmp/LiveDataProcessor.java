@@ -126,7 +126,7 @@ public class LiveDataProcessor {
                 CStructWriter cStructs = new CStructWriter();
                 cStructs.writeCStructs(parseState, cHeaderDestination);
 
-                 if (outputNames.length <= 1) {
+                 if (outputNames.length == 0) {
                     outputChannelWriter.writeOutputChannels(parseState, null);
                  } else {
                      for (String outputName : outputNames) {

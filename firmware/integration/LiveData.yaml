@@ -33,13 +33,11 @@ Usages:
   - name: knock_controller
     folder: controllers/engine_cycle
     prepend: integration/rusefi_config_shared.txt
-    output_name: knock
     constexpr: "___engine.module<KnockController>()"
     isPtr: true
 
   - name: high_pressure_fuel_pump
     folder: controllers/engine_cycle
-    output_name: hpfp
 
   - name: injector_model
     folder: controllers/algo/fuel
@@ -53,12 +51,10 @@ Usages:
   - name: antilag_system_state
     folder: controllers/algo
     prepend: integration/rusefi_config_shared.txt
-    output_name: als
 
   - name: boost_control
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: boost
     constexpr: "___engine.module<BoostController>()"
     isPtr: true
     conditional_compilation: "EFI_BOOST_CONTROL"
@@ -66,7 +62,6 @@ Usages:
   - name: ac_control
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: ac
 
   - name: fan_control
     folder: controllers/modules/fan
@@ -76,11 +71,9 @@ Usages:
 
   - name: fuel_pump_control
     folder: controllers/modules/fuel_pump
-    output_name: fuelPump
 
   - name: main_relay
     folder: controllers/actuators
-    output_name: mainRelay
 
   #todo: handle ETB pid and Idle pid which point at same pid_state.txt
   # - name: pid_state
@@ -118,7 +111,6 @@ Usages:
   - name: idle_state
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: idle
 
   - name: electronic_throttle
     folder: controllers/actuators
