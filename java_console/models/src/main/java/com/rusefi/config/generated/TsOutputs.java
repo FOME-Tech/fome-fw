@@ -28,10 +28,6 @@ public class TsOutputs {
 	public static final String GAUGE_NAME_AUX_TEMP1 = "Aux temp 1";
 	public static final String GAUGE_NAME_AUX_TEMP2 = "Aux temp 2";
 	public static final String GAUGE_NAME_BARO_PRESSURE = "Barometric pressure";
-	public static final String GAUGE_NAME_BOOST_CLOSED_LOOP = "Boost: Closed loop";
-	public static final String GAUGE_NAME_BOOST_OPEN_LOOP = "Boost: Open loop";
-	public static final String GAUGE_NAME_BOOST_OUTPUT = "Boost: Output";
-	public static final String GAUGE_NAME_BOOST_TARGET = "Boost: Target";
 	public static final String GAUGE_NAME_CLT = "CLT";
 	public static final String GAUGE_NAME_CURRENT_GEAR = "Current Gear";
 	public static final String GAUGE_NAME_DEBUG_F1 = "debug f1";

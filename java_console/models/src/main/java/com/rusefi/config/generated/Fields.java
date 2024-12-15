@@ -424,10 +424,6 @@ public class Fields {
 	public static final String GAUGE_NAME_AUX_TEMP1 = "Aux temp 1";
 	public static final String GAUGE_NAME_AUX_TEMP2 = "Aux temp 2";
 	public static final String GAUGE_NAME_BARO_PRESSURE = "Barometric pressure";
-	public static final String GAUGE_NAME_BOOST_CLOSED_LOOP = "Boost: Closed loop";
-	public static final String GAUGE_NAME_BOOST_OPEN_LOOP = "Boost: Open loop";
-	public static final String GAUGE_NAME_BOOST_OUTPUT = "Boost: Output";
-	public static final String GAUGE_NAME_BOOST_TARGET = "Boost: Target";
 	public static final String GAUGE_NAME_CLT = "CLT";
 	public static final String GAUGE_NAME_CURRENT_GEAR = "Current Gear";
 	public static final String GAUGE_NAME_DEBUG_F1 = "debug f1";
@@ -1213,7 +1209,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.14.f407-discovery.2148694165";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.15.f407-discovery.2198909665";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1324;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
