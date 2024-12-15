@@ -4,6 +4,7 @@ struct boost_control_s {
 	// Below CL thresh
 	// offset 0 bit 0
 	bool isBelowClosedLoopThreshold : 1 {};
+	// Zero RPM
 	// offset 0 bit 1
 	bool isZeroRpm : 1 {};
 	// RPM too low
