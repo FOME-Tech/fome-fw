@@ -30,6 +30,9 @@ or
 
 ## Unreleased
 
+### Breaking Changes
+ - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
+
 ### Added
  - Support Miata NA CAS "CMP" signal as a cam input (if you've installed a 36-1 crank trigger on an NA, for example) #495
 
