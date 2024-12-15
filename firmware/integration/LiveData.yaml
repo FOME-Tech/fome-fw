@@ -136,7 +136,7 @@ Usages:
 
   - name: throttle_model
     folder: controllers/math
-    output_name: throttle_model
+    output_name: Throttle model
 
   - name: vvt
     folder: controllers/actuators
