@@ -106,6 +106,7 @@ Usages:
   - name: trigger_state_primary
     folder: controllers/trigger
     prepend: integration/rusefi_config_shared.txt
+    output_name: Trg
 
   - name: wall_fuel_state
     folder: controllers/algo
