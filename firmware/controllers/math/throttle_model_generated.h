@@ -1,9 +1,9 @@
 #pragma once
 #include "rusefi_types.h"
 struct throttle_model_s {
-	// Air: Throttle model WOT
+	// Use WOT model
 	// offset 0 bit 0
-	bool throttleUseWotModel : 1 {};
+	bool m_useWotModel : 1 {};
 	// offset 0 bit 1
 	bool unusedBit_0_1 : 1 {};
 	// offset 0 bit 2
@@ -66,18 +66,18 @@ struct throttle_model_s {
 	bool unusedBit_0_30 : 1 {};
 	// offset 0 bit 31
 	bool unusedBit_0_31 : 1 {};
-	// Air: Throttle crossover pos
+	// Crossover TPS
 	// %
 	// offset 4
-	scaled_channel<int16_t, 100, 1> throttleModelCrossoverAngle = (int16_t)0;
+	scaled_channel<int16_t, 100, 1> m_crossoverAngle = (int16_t)0;
 	// offset 6
 	uint8_t alignmentFill_at_6[2];
-	// Air: Throttle flow estimate
+	// Flow estimate
 	// g/s
 	// offset 8
-	float throttleEstimatedFlow = (float)0;
+	float m_flowEstimate = (float)0;
 };
 static_assert(sizeof(throttle_model_s) == 12);
-static_assert(offsetof(throttle_model_s, throttleModelCrossoverAngle) == 4);
-static_assert(offsetof(throttle_model_s, throttleEstimatedFlow) == 8);
+static_assert(offsetof(throttle_model_s, m_crossoverAngle) == 4);
+static_assert(offsetof(throttle_model_s, m_flowEstimate) == 8);
 
