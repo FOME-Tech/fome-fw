@@ -80,10 +80,7 @@ public class TriggerState {
 	public static final String GAUGE_NAME_FW_VERSION = "ECU Software Version";
 	public static final String GAUGE_NAME_GEAR_RATIO = "Gearbox Ratio";
 	public static final String GAUGE_NAME_GYRO_YAW = "Gyro: Yaw rate";
-	public static final String GAUGE_NAME_IAC = "Idle: Position";
 	public static final String GAUGE_NAME_IAT = "IAT";
-	public static final String GAUGE_NAME_IDLE_POSITION = "Idle: Position sensor";
-	public static final String GAUGE_NAME_IDLE_RPM_TARGET = "Idle: Target RPM";
 	public static final String GAUGE_NAME_IGNITION_DWELL_ANGLE = "Ign: Dwell angle";
 	public static final String GAUGE_NAME_IGNITION_LOAD = "Ign: Load";
 	public static final String GAUGE_NAME_IGNITION_MODE = "Ign: Mode";
