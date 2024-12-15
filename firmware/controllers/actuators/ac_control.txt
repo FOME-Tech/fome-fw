@@ -1,16 +1,11 @@
 struct_no_prefix ac_control_s
-
-! main input and output to be displayed on top of View dialog
-bit acButtonState;@@INDICATOR_NAME_AC_SWITCH@@
-bit m_acEnabled;AC enabled
-
-
-bit engineTooSlow;AC engine too slow
-bit engineTooFast;AC engine too fast
-bit noClt;AC no CLT
-bit engineTooHot;AC engine too hot
-bit tpsTooHigh;AC tps too high
-bit isDisabledByLua;AC disabled by Lua
-bit acCompressorState;AC compressor on
-
+	bit acButtonState;Switch state
+	bit m_acEnabled;Enabled
+	bit engineTooSlow;Engine too slow
+	bit engineTooFast;Engine too fast
+	bit noClt;No CLT
+	bit engineTooHot;Engine too hot
+	bit tpsTooHigh;TPS too high
+	bit isDisabledByLua;Disabled by Lua
+	bit acCompressorState;Compressor on
 end_struct

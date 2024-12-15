@@ -63,6 +63,7 @@ Usages:
   - name: ac_control
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
+    output_name: AC
 
   - name: fan_control
     folder: controllers/modules/fan
