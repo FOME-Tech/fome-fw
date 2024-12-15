@@ -23,6 +23,7 @@
 #endif
 
 int IdleController::getTargetRpm(float clt) {
+	// Base target RPM from CLT table
 	targetRpmByClt = interpolate2d(clt, config->cltIdleRpmBins, config->cltIdleRpm);
 
 	// idle air Bump for AC
@@ -79,13 +80,13 @@ IIdleController::Phase IdleController::determinePhase(float rpm, float targetRpm
 }
 
 float IdleController::getCrankingTaperFraction(float clt) const {
-    float taperDuration = engineConfiguration->afterCrankingIACtaperDuration;
+	float taperDuration = engineConfiguration->afterCrankingIACtaperDuration;
 
-    if (engineConfiguration->useCrankingIdleTaperTableSetting) {
-        taperDuration *= interpolate2d(clt, config->cltCrankingTaperCorrBins, config->cltCrankingTaperCorr);
-    }
+	if (engineConfiguration->useCrankingIdleTaperTableSetting) {
+		taperDuration *= interpolate2d(clt, config->cltCrankingTaperCorrBins, config->cltCrankingTaperCorr);
+	}
 
-    return (float)engine->rpmCalculator.getRevolutionCounterSinceStart() / taperDuration;
+	return (float)engine->rpmCalculator.getRevolutionCounterSinceStart() / taperDuration;
 }
 
 float IdleController::getCrankingOpenLoop(float clt) const {
@@ -103,12 +104,16 @@ percent_t IdleController::getRunningOpenLoop(float rpm, float clt, SensorResult 
 	float running =
 		engineConfiguration->manIdlePosition		// Base idle position (slider)
 		* interpolate2d(clt, config->cltIdleCorrBins, config->cltIdleCorr);
+	openLoopBase = running;
 
 	// Now we bump it by the AC/fan amount if necessary
-	running += engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleExtraOffset : 0;
-	running += enginePins.fanRelay.getLogicValue() ? engineConfiguration->fan1ExtraIdle : 0;
-	running += enginePins.fanRelay2.getLogicValue() ? engineConfiguration->fan2ExtraIdle : 0;
+	openLoopAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleExtraOffset : 0;
+	openLoopFanBump =
+		  (enginePins.fanRelay.getLogicValue()  ? engineConfiguration->fan1ExtraIdle : 0)
+		+ (enginePins.fanRelay2.getLogicValue() ? engineConfiguration->fan2ExtraIdle : 0);
 
+	running += openLoopAcBump;
+	running += openLoopFanBump;
 	running += luaAdd;
 
 #if EFI_ANTILAG_SYSTEM 
@@ -129,7 +134,7 @@ if (engine->antilagController.isAntilagCondition) {
 	float airTaperRpmUpperLimit = engineConfiguration->idlePidRpmUpperLimit + engineConfiguration->airTaperRpmRange;
 	iacByRpmTaper = interpolateClamped(
 		engineConfiguration->idlePidRpmUpperLimit, 0,
-		airTaperRpmUpperLimit, engineConfiguration->airByRpmTaper, 
+		airTaperRpmUpperLimit, engineConfiguration->airByRpmTaper,
 		rpm);
 
 	running += iacByRpmTaper;
@@ -224,8 +229,6 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 			shouldResetPid = true;
 		}
 
-		idleState = TPS_THRESHOLD;
-
 		// We aren't idling, so don't apply any correction.  A positive correction could inhibit a return to idle.
 		m_lastAutomaticPosition = 0;
 		return 0;
@@ -236,7 +239,6 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 	// check if within the dead zone
 	isInDeadZone = !acToggleJustTouched && std::abs(rpm - targetRpm) <= engineConfiguration->idlePidRpmDeadZone;
 	if (isInDeadZone) {
-		idleState = RPM_DEAD_ZONE;
 		// current RPM is close enough, no need to change anything
 		return m_lastAutomaticPosition;
 	}
@@ -262,7 +264,6 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 	idlePid->setErrorAmplification(errorAmpCoef);
 
 	percent_t newValue = idlePid->getOutput(targetRpm, rpm, SLOW_CALLBACK_PERIOD_MS / 1000.0f);
-	idleState = PID_VALUE;
 
 	// the state of PID has been changed, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
 	mightResetPid = true;
@@ -329,11 +330,10 @@ float IdleController::getIdlePosition(float rpm) {
 		isBlipping = engine->timeToStopBlip != 0;
 		if (isBlipping) {
 			iacPosition = engine->blipIdlePosition;
-			idleState = BLIP;
 		} else {
 			// Always apply open loop correction
 			iacPosition = getOpenLoop(phase, rpm, clt, tps, crankingTaper);
-			baseIdlePosition = iacPosition;
+			openLoop = iacPosition;
 
 			// If TPS is working and automatic mode enabled, add any closed loop correction
 			if (tps.Valid && engineConfiguration->idleMode == IM_AUTO) {

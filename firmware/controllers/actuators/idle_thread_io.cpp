@@ -153,8 +153,7 @@ void startIdleThread() {
 	initIdleHardware();
 #endif /* EFI_UNIT_TEST */
 
-	controller->idleState = INIT;
-	controller->baseIdlePosition = -100.0f;
+	controller->openLoop = -100.0f;
 	controller->currentIdlePosition = -100.0f;
 
 #if ! EFI_UNIT_TEST
