@@ -4,10 +4,10 @@ struct_no_prefix electronic_throttle_s
 	float m_wastegatePosition;"DC: wastegatePosition";"%", 1, 0, 0, 3, 2
 
 	! Targeting
-	int16_t autoscale m_baseTarget;Base target;"%", 0.01, 0, -100, 100, 2
-	int16_t autoscale m_trim;"Trim";"%", 0.01, 0, -100, 100, 2
-	float luaAdjustment;"Lua adjustment";"%", 1, 0, -20, 20, 1
-	int16_t autoscale m_adjustedTarget;Adjusted target;"%", 0.01, 0, -100, 100, 2
+	int16_t autoscale m_baseTarget;Target: Base;"%", 0.01, 0, -100, 100, 2
+	int16_t autoscale m_trim;Target: Trim;"%", 0.01, 0, -100, 100, 2
+	float luaAdjustment;Target: Lua adjustment;"%", 1, 0, -20, 20, 1
+	int16_t autoscale m_adjustedTarget;Target;"%", 0.01, 0, -100, 100, 2
 
 	! Open loop
 	int16_t autoscale m_feedForward;Feed forward;"%", 0.01, 0, -100, 100, 2
