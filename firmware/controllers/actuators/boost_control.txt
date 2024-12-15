@@ -1,6 +1,6 @@
 struct_no_prefix boost_control_s
 	bit isBelowClosedLoopThreshold;Below CL thresh
-	bit isZeroRpm
+	bit isZeroRpm;Zero RPM
 	bit rpmTooLow;RPM too low
 	bit tpsTooLow;TPS too low
 	bit mapTooLow;MAP too low
