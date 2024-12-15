@@ -5,19 +5,19 @@ struct electronic_throttle_s {
 	// %
 	// offset 0
 	float m_wastegatePosition = (float)0;
-	// Base target
+	// Target: Base
 	// %
 	// offset 4
 	scaled_channel<int16_t, 100, 1> m_baseTarget = (int16_t)0;
-	// Trim
+	// Target: Trim
 	// %
 	// offset 6
 	scaled_channel<int16_t, 100, 1> m_trim = (int16_t)0;
-	// Lua adjustment
+	// Target: Lua adjustment
 	// %
 	// offset 8
 	float luaAdjustment = (float)0;
-	// Adjusted target
+	// Target
 	// %
 	// offset 12
 	scaled_channel<int16_t, 100, 1> m_adjustedTarget = (int16_t)0;
