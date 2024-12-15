@@ -58,6 +58,7 @@ Usages:
     constexpr: "___engine.module<BoostController>()"
     isPtr: true
     conditional_compilation: "EFI_BOOST_CONTROL"
+    output_name: Boost
 
   - name: ac_control
     folder: controllers/actuators

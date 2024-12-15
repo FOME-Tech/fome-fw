@@ -114,11 +114,6 @@
 #define GAUGE_NAME_AUX_LINEAR_3 "Aux linear #3"
 #define GAUGE_NAME_AUX_LINEAR_4 "Aux linear #4"
 
-#define GAUGE_NAME_BOOST_OUTPUT "Boost: Output"
-#define GAUGE_NAME_BOOST_CLOSED_LOOP "Boost: Closed loop"
-#define GAUGE_NAME_BOOST_OPEN_LOOP "Boost: Open loop"
-#define GAUGE_NAME_BOOST_TARGET "Boost: Target"
-
 #define INDICATOR_NAME_CLUTCH_UP "Clutch: up"
 #define INDICATOR_NAME_CLUTCH_DOWN "Clutch: down"
 #define INDICATOR_NAME_BRAKE_DOWN "Brake switch"
