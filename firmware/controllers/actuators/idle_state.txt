@@ -5,37 +5,37 @@ custom idle_state_e 4 bits, S32, @OFFSET@, [0:2], "not important"
 
 	custom percent_t 4 scalar, F32, @OFFSET@, "", 1, 0, 0, 100, 2
 
-	percent_t currentIdlePosition;@@GAUGE_NAME_IAC@@;"%", 1, 0, 0, 0, 1
-	percent_t baseIdlePosition;Idle: Open loop
-	percent_t idleClosedLoop;Idle: Closed loop
-	percent_t iacByTpsTaper;Idle: iacByTpsTaper portion
-	int throttlePedalUpState;Idle: throttlePedalUpState\ntrue in IDLE throttle pedal state, false if driver is touching the pedal\ntodo: better name for this field?
+	percent_t currentIdlePosition;Position;"%", 1, 0, 0, 0, 1
+	percent_t baseIdlePosition;Open loop
+	percent_t idleClosedLoop;Closed loop
+	percent_t iacByTpsTaper;iacByTpsTaper portion
+	int throttlePedalUpState;throttlePedalUpState\ntrue in IDLE throttle pedal state, false if driver is touching the pedal\ntodo: better name for this field?
 
-	bit mightResetPid;Idle: mightResetPid\nThe idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.\nThe throttle pedal can be pressed for a long time, making the PID data obsolete (thus the reset is required).\nWe set 'mightResetPid' to true only if PID was actually used (i.e. idlePid.getOutput() was called) to save some CPU resources.\nSee automaticIdleController().
+	bit mightResetPid;mightResetPid\nThe idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.\nThe throttle pedal can be pressed for a long time, making the PID data obsolete (thus the reset is required).\nWe set 'mightResetPid' to true only if PID was actually used (i.e. idlePid.getOutput() was called) to save some CPU resources.\nSee automaticIdleController().
 
-	bit shouldResetPid;Idle: shouldResetPid
-	bit wasResetPid;Idle: wasResetPid\nThis is needed to slowly turn on the PID back after it was reset.
-	bit mustResetPid;Idle: mustResetPid\nThis is used when the PID configuration is changed, to guarantee the reset
-	bit isCranking;Idle: cranking
+	bit shouldResetPid;shouldResetPid
+	bit wasResetPid;wasResetPid\nThis is needed to slowly turn on the PID back after it was reset.
+	bit mustResetPid;mustResetPid\nThis is used when the PID configuration is changed, to guarantee the reset
+	bit isCranking;cranking
 	bit isIacTableForCoasting
 	bit notIdling
-	bit needReset;Idle: reset
-	bit isInDeadZone;Idle: dead zone
+	bit needReset;reset
+	bit isInDeadZone;dead zone
 	bit isBlipping
 	bit looksLikeRunning
 	bit looksLikeCoasting
 	bit looksLikeCrankToIdle
-	bit isIdleCoasting;Idle: coasting
-	bit isIdleClosedLoop;Idle: Closed loop active
+	bit isIdleCoasting;coasting
+	bit isIdleClosedLoop;Closed loop active
 
-	int idleTarget;@@GAUGE_NAME_IDLE_RPM_TARGET@@
-	int targetRpmByClt;Idle: Target RPM base
-	int targetRpmAcBump;Idle: Target A/C bump
+	int idleTarget;Target RPM
+	int targetRpmByClt;Target RPM base
+	int targetRpmAcBump;Target A/C bump
 
-	percent_t iacByRpmTaper;Idle: iacByRpmTaper portion
+	percent_t iacByRpmTaper;iacByRpmTaper portion
 
-	percent_t luaAdd;Idle: Lua Adder
-	percent_t luaAddRpm;IdleRpm: Lua Adder
+	percent_t luaAdd;Lua Adder
+	percent_t luaAddRpm;Target: Lua adder
 
 ! end of idle_state_s structure definition
 end_struct
