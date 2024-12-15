@@ -1,9 +1,8 @@
 struct_no_prefix fan_control_s
-	bit cranking
-	bit notRunning
-	bit disabledWhileEngineStopped
-	bit brokenClt
-	bit enabledForAc
-	bit hot
-	bit cold
+	bit disabledWhileEngineStopped;Engine stopped
+	bit brokenClt;Broken CLT
+	bit enabledForAc;Enable for AC
+	bit hot;Above hot threshold
+	bit cold;Below cold threshold
+	bit m_state;On
 end_struct

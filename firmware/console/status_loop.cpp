@@ -457,8 +457,6 @@ static void updateFlags() {
 #endif // EFI_USB_SERIAL
 
 	engine->outputChannels.isMainRelayOn = enginePins.mainRelay.getLogicValue();
-	engine->outputChannels.isFanOn = enginePins.fanRelay.getLogicValue();
-	engine->outputChannels.isFan2On = enginePins.fanRelay2.getLogicValue();
 	engine->outputChannels.isO2HeaterOn = enginePins.o2heater.getLogicValue();
 	// todo: eliminate state copy logic by giving DfcoController it's owm xxx.txt and leveraging LiveData
 	engine->outputChannels.dfcoActive = engine->module<DfcoController>()->cutFuel();
