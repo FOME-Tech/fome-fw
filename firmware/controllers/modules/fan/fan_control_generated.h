@@ -1,20 +1,26 @@
 #pragma once
 #include "rusefi_types.h"
 struct fan_control_s {
+	// Engine stopped
 	// offset 0 bit 0
-	bool cranking : 1 {};
-	// offset 0 bit 1
-	bool notRunning : 1 {};
-	// offset 0 bit 2
 	bool disabledWhileEngineStopped : 1 {};
-	// offset 0 bit 3
+	// Broken CLT
+	// offset 0 bit 1
 	bool brokenClt : 1 {};
-	// offset 0 bit 4
+	// Enable for AC
+	// offset 0 bit 2
 	bool enabledForAc : 1 {};
-	// offset 0 bit 5
+	// Above hot threshold
+	// offset 0 bit 3
 	bool hot : 1 {};
-	// offset 0 bit 6
+	// Below cold threshold
+	// offset 0 bit 4
 	bool cold : 1 {};
+	// On
+	// offset 0 bit 5
+	bool m_state : 1 {};
+	// offset 0 bit 6
+	bool unusedBit_0_6 : 1 {};
 	// offset 0 bit 7
 	bool unusedBit_0_7 : 1 {};
 	// offset 0 bit 8
