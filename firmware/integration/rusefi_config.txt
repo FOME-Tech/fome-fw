@@ -573,9 +573,6 @@ afr_sensor_s afr
 
 	Gpio tle6240_cs;
 
-switch_input_pin_e throttlePedalUpPin;Throttle Pedal not pressed switch - used on some older vehicles like early Mazda Miata
-
-
 air_pressure_sensor_config_s baroSensor
 
 struct idle_hardware_s
@@ -665,7 +662,6 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 	Gpio canTxPin;set_can_tx_pin X
 	Gpio canRxPin;set_can_rx_pin X
 
-pin_input_mode_e throttlePedalUpPinMode;
 	uint8_t acIdleExtraOffset;Additional idle % while A/C is active;"%", 1, 0, 0, 100, 0
 
     uint16_t autoscale finalGearRatio;Ratio between the wheels and your transmission output. ;"ratio", 0.01, 0, 0, 10, 2

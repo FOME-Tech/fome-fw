@@ -249,10 +249,6 @@ void setMiataNA6_MAP_Frankenso() {
 	engineConfiguration->clutchDownPin = Gpio::A3;
 	engineConfiguration->clutchDownPinMode = PI_PULLUP;
 
-
-	// 110mm red wire from 1N/W14 to bottom of W45
-	engineConfiguration->throttlePedalUpPin = Gpio::A7;
-
 	// green wire from 1Q/W17 to bottom of W46
 	engineConfiguration->acSwitch = Gpio::A6;
 
