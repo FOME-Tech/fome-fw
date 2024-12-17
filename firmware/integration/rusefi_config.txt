@@ -183,7 +183,6 @@ struct_no_prefix engine_configuration_s
 #define FUEL_LEVEL_TABLE_COUNT 8
 
 #define STFT_CELL_COUNT 4
-#define STFT_BANK_COUNT 2
 
 #define CAN_DEFAULT_BASE 0x200
 
@@ -1285,7 +1284,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 15, 0
 
-	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 2, 0
+	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 4, 0
 
 	uint8_t[8] autoscale primeValues;;"mg", 5, 0, 0, 1250, 0
 

@@ -422,8 +422,11 @@ static void updateSensors() {
 }
 
 static void updateFuelCorrections() {
-	engine->outputChannels.fuelPidCorrection[0] = 100.0f * (engine->stftCorrection[0] - 1.0f);
-	engine->outputChannels.fuelPidCorrection[1] = 100.0f * (engine->stftCorrection[1] - 1.0f);
+	static_assert(efi::size(engine->outputChannels.fuelPidCorrection) == efi::size(engine->stftCorrection));
+	for (size_t i = 0; i < efi::size(engine->stftCorrection); i++) {
+		engine->outputChannels.fuelPidCorrection[i] = 100.0f * (engine->stftCorrection[i] - 1.0f);
+	}
+
 	engine->outputChannels.Gego = 100.0f * engine->stftCorrection[0];
 }
 

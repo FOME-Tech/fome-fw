@@ -62,6 +62,8 @@ enum class SensorType : unsigned char {
 
 	Lambda1,
 	Lambda2,
+	Lambda3,
+	Lambda4,
 
 	WastegatePosition,
 
