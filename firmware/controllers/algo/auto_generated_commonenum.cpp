@@ -444,23 +444,6 @@ case IM_MANUAL:
   }
  return NULL;
 }
-const char *getIdle_state_e(idle_state_e value){
-switch(value) {
-case BLIP:
-  return "BLIP";
-case INIT:
-  return "INIT";
-case PID_UPPER:
-  return "PID_UPPER";
-case PID_VALUE:
-  return "PID_VALUE";
-case RPM_DEAD_ZONE:
-  return "RPM_DEAD_ZONE";
-case TPS_THRESHOLD:
-  return "TPS_THRESHOLD";
-  }
- return NULL;
-}
 const char *getIgnition_mode_e(ignition_mode_e value){
 switch(value) {
 case IM_INDIVIDUAL_COILS:

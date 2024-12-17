@@ -849,12 +849,6 @@ public class Fields {
 	public static final int idle_hardware_s_size = 12;
 	public static final int idle_mode_e_IM_AUTO = 0;
 	public static final int idle_mode_e_IM_MANUAL = 1;
-	public static final int idle_state_e_BLIP = 64;
-	public static final int idle_state_e_INIT = 0;
-	public static final int idle_state_e_PID_UPPER = 16;
-	public static final int idle_state_e_PID_VALUE = 4;
-	public static final int idle_state_e_RPM_DEAD_ZONE = 2;
-	public static final int idle_state_e_TPS_THRESHOLD = 1;
 	public static final int IDLE_VE_SIZE = 4;
 	public static final int IGN_BLEND_COUNT = 4;
 	public static final int IGN_LOAD_COUNT = 16;

@@ -38,7 +38,6 @@ const char *getGppwm_channel_e(gppwm_channel_e value);
 const char *getGppwm_compare_mode_e(gppwm_compare_mode_e value);
 const char *getHpfp_cam_e(hpfp_cam_e value);
 const char *getIdle_mode_e(idle_mode_e value);
-const char *getIdle_state_e(idle_state_e value);
 const char *getIgnition_mode_e(ignition_mode_e value);
 const char *getImu_type_e(imu_type_e value);
 const char *getInjection_mode_e(injection_mode_e value);
