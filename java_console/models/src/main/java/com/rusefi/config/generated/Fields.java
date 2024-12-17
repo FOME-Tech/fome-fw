@@ -993,7 +993,6 @@ public class Fields {
 	public static final int SentEtbType_FORD_TYPE_1 = 2;
 	public static final int SentEtbType_GM_TYPE_1 = 1;
 	public static final int SentEtbType_NONE = 0;
-	public static final int SIGNATURE_HASH = 473849960;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1009,7 +1008,7 @@ public class Fields {
 	public static final int stepper_num_micro_steps_e_STEPPER_FOURTH = 4;
 	public static final int stepper_num_micro_steps_e_STEPPER_FULL = 0;
 	public static final int stepper_num_micro_steps_e_STEPPER_HALF = 2;
-	public static final int STFT_BANK_COUNT = 2;
+	public static final int STFT_BANK_COUNT = 4;
 	public static final int stft_cell_cfg_s_size = 4;
 	public static final int STFT_CELL_COUNT = 4;
 	public static final int stft_s_size = 24;
@@ -1200,9 +1199,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.17.f407-discovery.473849960";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.17.f407-discovery.3756836575";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1316;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1320;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
