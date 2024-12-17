@@ -479,16 +479,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } tChargeMode_e;
 
-typedef enum __attribute__ ((__packed__)) {
-	INIT = 0,
-	TPS_THRESHOLD = 1,
-	RPM_DEAD_ZONE = 2,
-	PID_VALUE = 4,
-	PID_UPPER = 16,
-	BLIP = 64,
-
-} idle_state_e;
-
 // todo: should this be just a boolean?
 typedef enum __attribute__ ((__packed__)) {
 	OPEN_LOOP = 0,
