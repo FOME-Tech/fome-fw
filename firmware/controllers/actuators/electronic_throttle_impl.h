@@ -10,9 +10,10 @@
 // include the "public" ETB interface
 #include "electronic_throttle.h"
 
-#include "sensor.h"
 #include "efi_pid.h"
 #include "electronic_throttle_generated.h"
+#include "sensor_type.h"
+#include "timer.h"
 
 /**
  * Hard code ETB update speed.

@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include <rusefi/arrays.h>
+#include "rusefi_hw_enums.h"
 
 int djb2lowerCase(const char *str);
 
