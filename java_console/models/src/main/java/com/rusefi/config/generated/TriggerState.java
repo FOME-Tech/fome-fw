@@ -90,8 +90,6 @@ public class TriggerState {
 	public static final String GAUGE_NAME_KNOCK_COUNTER = "Knock: Count";
 	public static final String GAUGE_NAME_KNOCK_LEVEL = "Knock: Current level";
 	public static final String GAUGE_NAME_KNOCK_RETARD = "Knock: Retard";
-	public static final String GAUGE_NAME_LAMBDA = "Lambda";
-	public static final String GAUGE_NAME_LAMBDA2 = "Lambda 2";
 	public static final String GAUGE_NAME_LAST_ERROR = "Last error";
 	public static final String GAUGE_NAME_MAF = "MAF";
 	public static final String GAUGE_NAME_MAP = "MAP";
@@ -159,12 +157,12 @@ public class TriggerState {
 	public static final int STFT_BANK_COUNT = 4;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int VE_BLEND_COUNT = 4;
-	public static final Field TRIGGERSYNCGAPRATIO = Field.create("TRIGGERSYNCGAPRATIO", 0, FieldType.FLOAT).setBaseOffset(1036);
-	public static final Field CRANKSYNCHRONIZATIONCOUNTER = Field.create("CRANKSYNCHRONIZATIONCOUNTER", 4, FieldType.INT16).setScale(1.0).setBaseOffset(1036);
-	public static final Field TRIGGERERRORCOUNTER = Field.create("TRIGGERERRORCOUNTER", 6, FieldType.INT16).setScale(1.0).setBaseOffset(1036);
-	public static final Field TRIGGERSTATEINDEX = Field.create("TRIGGERSTATEINDEX", 8, FieldType.INT8).setScale(1.0).setBaseOffset(1036);
-	public static final Field ALIGNMENTFILL_AT_9 = Field.create("ALIGNMENTFILL_AT_9", 9, FieldType.INT8).setScale(1.0).setBaseOffset(1036);
-	public static final Field EDGECOUNTRISE = Field.create("EDGECOUNTRISE", 10, FieldType.INT16).setScale(1.0).setBaseOffset(1036);
-	public static final Field EDGECOUNTFALL = Field.create("EDGECOUNTFALL", 12, FieldType.INT16).setScale(1.0).setBaseOffset(1036);
-	public static final Field ALIGNMENTFILL_AT_14 = Field.create("ALIGNMENTFILL_AT_14", 14, FieldType.INT8).setScale(1.0).setBaseOffset(1036);
+	public static final Field TRIGGERSYNCGAPRATIO = Field.create("TRIGGERSYNCGAPRATIO", 0, FieldType.FLOAT).setBaseOffset(1044);
+	public static final Field CRANKSYNCHRONIZATIONCOUNTER = Field.create("CRANKSYNCHRONIZATIONCOUNTER", 4, FieldType.INT16).setScale(1.0).setBaseOffset(1044);
+	public static final Field TRIGGERERRORCOUNTER = Field.create("TRIGGERERRORCOUNTER", 6, FieldType.INT16).setScale(1.0).setBaseOffset(1044);
+	public static final Field TRIGGERSTATEINDEX = Field.create("TRIGGERSTATEINDEX", 8, FieldType.INT8).setScale(1.0).setBaseOffset(1044);
+	public static final Field ALIGNMENTFILL_AT_9 = Field.create("ALIGNMENTFILL_AT_9", 9, FieldType.INT8).setScale(1.0).setBaseOffset(1044);
+	public static final Field EDGECOUNTRISE = Field.create("EDGECOUNTRISE", 10, FieldType.INT16).setScale(1.0).setBaseOffset(1044);
+	public static final Field EDGECOUNTFALL = Field.create("EDGECOUNTFALL", 12, FieldType.INT16).setScale(1.0).setBaseOffset(1044);
+	public static final Field ALIGNMENTFILL_AT_14 = Field.create("ALIGNMENTFILL_AT_14", 14, FieldType.INT8).setScale(1.0).setBaseOffset(1044);
 }
