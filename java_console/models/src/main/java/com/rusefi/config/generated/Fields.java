@@ -486,8 +486,6 @@ public class Fields {
 	public static final String GAUGE_NAME_KNOCK_COUNTER = "Knock: Count";
 	public static final String GAUGE_NAME_KNOCK_LEVEL = "Knock: Current level";
 	public static final String GAUGE_NAME_KNOCK_RETARD = "Knock: Retard";
-	public static final String GAUGE_NAME_LAMBDA = "Lambda";
-	public static final String GAUGE_NAME_LAMBDA2 = "Lambda 2";
 	public static final String GAUGE_NAME_LAST_ERROR = "Last error";
 	public static final String GAUGE_NAME_MAF = "MAF";
 	public static final String GAUGE_NAME_MAP = "MAP";
@@ -1199,9 +1197,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.17.f407-discovery.3756836575";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.18.f407-discovery.2772787761";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1320;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1328;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
