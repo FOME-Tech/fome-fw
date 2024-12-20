@@ -5,7 +5,7 @@
  * 
  * Uses a queue of buffers so that the expensive printf operation doesn't require exclusive access
  * (ie, global system lock) to log.  In the past there have been serious performance problems caused
- * by heavy logging on a low prioriy thread that blocks the rest of the system running (trigger errors, etc).
+ * by heavy logging on a low priority thread that blocks the rest of the system running (trigger errors, etc).
  * 
  * Uses ChibiOS message queues to maintain one queue of free buffers, and one queue of used buffers.
  * When a thread wants to write, it acquires a free buffer, prints to it, and pushes it in to the
@@ -137,11 +137,13 @@ public:
 			if (msg == MSG_RESET) {
 				// FIXME what happens if MSG_RESET?
 			} else {
-				// Lock the buffer mutex - inhibit buffer swaps while writing
-				chibios_rt::MutexLocker lock(logBufferMutex);
+				{
+					// Lock the buffer mutex - inhibit buffer swaps while writing
+					chibios_rt::MutexLocker lock(logBufferMutex);
 
-				// Write the line out to the output buffer
-				writeBuffer->writeLine(line);
+					// Write the line out to the output buffer
+					writeBuffer->writeLine(line);
+				}
 
 				// Return this line buffer to the free list
 				freeBuffers.post(line, TIME_INFINITE);
