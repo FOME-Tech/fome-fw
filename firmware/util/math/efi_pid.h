@@ -26,17 +26,11 @@ public:
 	bool isSame(const pid_s *parameters) const;
 
 	float getOutput(float target, float input, float dTime);
-	// doesn't limit the result
-	float getUnclampedOutput(float target, float input, float dTime);
+
 	void updateFactors(float pFactor, float iFactor, float dFactor);
 	void reset();
-	float getP() const;
-	float getI() const;
-	float getD() const;
-	float getOffset() const;
-	float getMinValue() const;
-	float getIntegration(void) const;
-	float getPrevError(void) const;
+
+	float getIntegration() const;
 	void setErrorAmplification(float coef);
 #if EFI_TUNER_STUDIO
 	void postState(pid_status_s& pidStatus) const;
@@ -48,4 +42,8 @@ public:
 protected:
 	pid_s *m_parameters = nullptr;
 	void updateITerm(float value);
+
+private:
+	// doesn't limit the result
+	float getUnclampedOutput(float target, float input, float dTime);
 };

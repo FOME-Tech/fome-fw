@@ -53,10 +53,10 @@ float Pid::getUnclampedOutput(float target, float input, float dTime) {
 
 	if (dTime <=0) {
 		warning(ObdCode::CUSTOM_PID_DTERM, "PID: unexpected dTime");
-		return pTerm + getOffset();
+		return pTerm + m_parameters->offset;
 	}
 
-	return pTerm + iTerm + dTerm + getOffset();
+	return pTerm + iTerm + dTerm + m_parameters->offset;
 }
 
 float Pid::getOutput(float target, float input, float dTime) {
@@ -64,8 +64,8 @@ float Pid::getOutput(float target, float input, float dTime) {
 
 	if (output > m_parameters->maxValue) {
 		output = m_parameters->maxValue;
-	} else if (output < getMinValue()) {
-		output = getMinValue();
+	} else if (output < m_parameters->minValue) {
+		output = m_parameters->minValue;
 	}
 
 	lastOutput = output;
@@ -87,32 +87,8 @@ void Pid::reset() {
 	resetCounter++;
 }
 
-float Pid::getP() const {
-	return m_parameters->pFactor;
-}
-
-float Pid::getI() const {
-	return m_parameters->iFactor;
-}
-
-float Pid::getPrevError() const {
-	return previousError;
-}
-
 float Pid::getIntegration() const {
 	return iTerm;
-}
-
-float Pid::getD() const {
-	return m_parameters->dFactor;
-}
-
-float Pid::getOffset(void) const {
-	return m_parameters->offset;
-}
-
-float Pid::getMinValue(void) const {
-	return m_parameters->minValue;
 }
 
 void Pid::setErrorAmplification(float coef) {
@@ -120,7 +96,6 @@ void Pid::setErrorAmplification(float coef) {
 }
 
 #if EFI_TUNER_STUDIO
-
 void Pid::postState(pid_status_s& pidStatus) const {
 	pidStatus.output = lastOutput;
 	pidStatus.error = previousError;
