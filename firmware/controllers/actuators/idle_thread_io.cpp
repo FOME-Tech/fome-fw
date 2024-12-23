@@ -79,12 +79,6 @@ void stopPedalPins() {
 
 #if ! EFI_UNIT_TEST
 
-static void applyPidSettings() {
-#if EFI_IDLE_CONTROL
-	engine->module<IdleController>().unmock().getIdlePid().updateFactors(engineConfiguration->idleRpmPid.pFactor, engineConfiguration->idleRpmPid.iFactor, engineConfiguration->idleRpmPid.dFactor);
-#endif // EFI_IDLE_CONTROL
-}
-
 void setTargetIdleRpm(int value) {
 	setTargetRpmCurve(value);
 	efiPrintf("target idle RPM %d", value);
@@ -164,7 +158,6 @@ void startIdleThread() {
 	// which would be dedicated to just auto-controller?
 
 	addConsoleAction("idlebench", startIdleBench);
-	applyPidSettings();
 #endif /* EFI_UNIT_TEST */
 }
 

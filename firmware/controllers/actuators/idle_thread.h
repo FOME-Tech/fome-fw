@@ -69,10 +69,6 @@ public:
 		return m_lastPhase == Phase::Idling || (engineConfiguration->useSeparateIdleTablesForCrankingTaper && m_lastPhase == Phase::CrankToIdleTaper);
 	}
 
-	Pid& getIdlePid() {
-		return m_pid;
-	}
-
 private:
 	Pid m_pid;
 

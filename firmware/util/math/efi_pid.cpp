@@ -73,13 +73,6 @@ float Pid::getOutput(float target, float input, float dTime) {
 	return output;
 }
 
-void Pid::updateFactors(float pFactor, float iFactor, float dFactor) {
-	m_parameters->pFactor = pFactor;
-	m_parameters->iFactor = iFactor;
-	m_parameters->dFactor = dFactor;
-	reset();
-}
-
 void Pid::reset() {
 	dTerm = iTerm = 0;
 	lastOutput = lastInput = lastTarget = previousError = 0;

@@ -27,7 +27,6 @@ public:
 
 	float getOutput(float target, float input, float dTime);
 
-	void updateFactors(float pFactor, float iFactor, float dFactor);
 	void reset();
 
 	float getIntegration() const;
