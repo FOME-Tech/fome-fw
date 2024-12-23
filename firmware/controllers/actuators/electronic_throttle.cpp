@@ -925,6 +925,11 @@ void doInitElectronicThrottle() {
 		}
 	}
 
+	if (anyEtbConfigured) {
+		validateParam(engineConfiguration->etb.minValue < 0, "ETB PID min must be negative");
+		validateParam(engineConfiguration->etb.maxValue > 0, "ETB PID max must be positive");
+	}
+
 #if 0 && ! EFI_UNIT_TEST
 	percent_t startupThrottlePosition = getTPS();
 	if (std::abs(startupThrottlePosition - engineConfiguration->etbNeutralPosition) > STARTUP_NEUTRAL_POSITION_ERROR_THRESHOLD) {
