@@ -37,17 +37,7 @@ bool Pid::isSame(const pid_s *parameters) const {
 	return m_parameters->pFactor == parameters->pFactor
 			&& m_parameters->iFactor == parameters->iFactor
 			&& m_parameters->dFactor == parameters->dFactor
-			&& m_parameters->offset == parameters->offset
-			&& m_parameters->periodMs == parameters->periodMs;
-}
-
-/**
- * @param Controller input / process output
- * @returns Output from the PID controller / the input to the process
- */
-float Pid::getOutput(float target, float input) {
-	float dTime = MS2SEC(GET_PERIOD_LIMITED(m_parameters));
-	return getOutput(target, input, dTime);
+			&& m_parameters->offset == parameters->offset;
 }
 
 float Pid::getUnclampedOutput(float target, float input, float dTime) {
@@ -69,9 +59,6 @@ float Pid::getUnclampedOutput(float target, float input, float dTime) {
 	return pTerm + iTerm + dTerm + getOffset();
 }
 
-/**
- * @param dTime seconds probably? :)
- */
 float Pid::getOutput(float target, float input, float dTime) {
 	float output = getUnclampedOutput(target, input, dTime);
 

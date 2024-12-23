@@ -321,7 +321,6 @@ static void setCommonMazdaNB() {
 	engineConfiguration->alternatorControl.pFactor = 20;
 	engineConfiguration->alternatorControl.iFactor = 8;
 	engineConfiguration->alternatorControl.dFactor = 0.1;
-	engineConfiguration->alternatorControl.periodMs = 10;
 
 	// AC
 	engineConfiguration->acDelay = 0.5;

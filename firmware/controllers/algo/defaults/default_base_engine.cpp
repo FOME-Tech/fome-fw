@@ -8,7 +8,6 @@ static void setDefaultAlternatorParameters() {
 
 	engineConfiguration->alternatorControl.offset = 0;
 	engineConfiguration->alternatorControl.pFactor = 30;
-	engineConfiguration->alternatorControl.periodMs = 100;
 }
 
 /* Cylinder to bank mapping */

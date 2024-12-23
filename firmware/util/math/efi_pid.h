@@ -13,39 +13,19 @@
 #include "pid_state_generated.h"
 #include "output_channels_generated.h"
 
-// See PidCic below
-#define PID_AVG_BUF_SIZE_SHIFT 5
-#define PID_AVG_BUF_SIZE (1<<PID_AVG_BUF_SIZE_SHIFT) // 32*sizeof(float)
-
-#define NOT_TIME_BASED_PID 1
-
-// minimal period 5m meaning maximum control frequency 200Hz
-#define PID_MINIMAL_PERIOD_MS 5
-
-#define GET_PERIOD_LIMITED(pid_s_ptr) maxI(PID_MINIMAL_PERIOD_MS, ((pid_s_ptr)->periodMs))
-
-#define MS2SEC(x) (x * 0.001)
-
 struct pid_s;
 
 /**
  * default basic implementation also known as PidParallelController
  */
-class Pid : public pid_state_s {
+class Pid final : public pid_state_s {
 public:
 	Pid();
 	explicit Pid(pid_s *parameters);
 	void initPidClass(pid_s *parameters);
 	bool isSame(const pid_s *parameters) const;
 
-	/**
-	 * This version of the method takes dTime from pid_s
-	 *
-	 * @param Controller input / process output
-	 * @returns Output from the PID controller / the input to the process
-	 */
-	float getOutput(float target, float input);
-	virtual float getOutput(float target, float input, float dTime);
+	float getOutput(float target, float input, float dTime);
 	// doesn't limit the result
 	float getUnclampedOutput(float target, float input, float dTime);
 	void updateFactors(float pFactor, float iFactor, float dFactor);

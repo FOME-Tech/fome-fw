@@ -129,7 +129,6 @@ void miataNAcommonEngineSettings() {
 	engineConfiguration->idleRpmPid.pFactor = 0.01;
 	engineConfiguration->idleRpmPid.iFactor = 0.00001;
 	engineConfiguration->idleRpmPid.dFactor = 0.0001;
-	engineConfiguration->idleRpmPid.periodMs = 100;
 
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->idleTimingPid.pFactor = 0.1;

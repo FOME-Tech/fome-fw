@@ -485,7 +485,6 @@ struct LuaPid final {
 		m_params.dFactor = kd;
 
 		m_params.offset = 0;
-		m_params.periodMs = 0;
 		m_params.minValue = min;
 		m_params.maxValue = max;
 
