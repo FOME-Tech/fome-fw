@@ -19,7 +19,6 @@ TEST(util, pid) {
 	pidS.offset = 0;
 	pidS.minValue = 10;
 	pidS.maxValue = 90;
-	pidS.periodMs = 1;
 
 	Pid pid(&pidS);
 
@@ -29,7 +28,9 @@ TEST(util, pid) {
 	ASSERT_FLOAT_EQ( 10,  pid.getOutput(14, 16, 0.1)) << "getValue#10";
 	ASSERT_FLOAT_EQ(10, pid.getOutput(14, 16, 1));
 
-	pid.updateFactors(29, 0, 0);
+	pidS.pFactor = 29;
+	pidS.iFactor = 0;
+	pidS.dFactor = 0;
 	ASSERT_FLOAT_EQ(10, pid.getOutput(14, 16, 1));
 //	ASSERT_FLOAT_EQ(68, pid.getIntegration());
 
@@ -47,20 +48,19 @@ TEST(util, pid) {
 	pidS.offset = 0;
 	pidS.minValue = 0;
 	pidS.maxValue = 100;
-	pidS.periodMs = 1;
 
 	pid.reset();
 
-	ASSERT_FLOAT_EQ( 50,  pid.getOutput(/*target*/50, /*input*/0)) << "target=50, input=0";
+	ASSERT_FLOAT_EQ( 50,  pid.getOutput(/*target*/50, /*input*/0, 0.005)) << "target=50, input=0";
 	ASSERT_FLOAT_EQ( 0,  pid.iTerm) << "target=50, input=0 iTerm";
 
-	ASSERT_FLOAT_EQ( 0,  pid.getOutput(/*target*/50, /*input*/70)) << "target=50, input=70";
+	ASSERT_FLOAT_EQ( 0,  pid.getOutput(/*target*/50, /*input*/70, 0.005)) << "target=50, input=70";
 	ASSERT_FLOAT_EQ( 0,  pid.iTerm) << "target=50, input=70 iTerm";
 
-	ASSERT_FLOAT_EQ( 0,  pid.getOutput(/*target*/50, /*input*/70)) << "target=50, input=70 #2";
+	ASSERT_FLOAT_EQ( 0,  pid.getOutput(/*target*/50, /*input*/70, 0.005)) << "target=50, input=70 #2";
 	ASSERT_FLOAT_EQ( 0,  pid.iTerm) << "target=50, input=70 iTerm #2";
 
-	ASSERT_FLOAT_EQ( 0,  pid.getOutput(/*target*/50, /*input*/50)) << "target=50, input=50";
+	ASSERT_FLOAT_EQ( 0,  pid.getOutput(/*target*/50, /*input*/50, 0.005)) << "target=50, input=50";
 	ASSERT_FLOAT_EQ( 0,  pid.iTerm) << "target=50, input=50 iTerm";
 }
 
@@ -71,20 +71,19 @@ static void commonPidTestParameters(pid_s * pidS) {
 	pidS->offset = 0;
 	pidS->minValue = 10;
 	pidS->maxValue = 40;
-	pidS->periodMs = 1;
 }
 
 static void commonPidTest(Pid *pid) {
 	pid->iTermMax = 45;
 
-	ASSERT_FLOAT_EQ( 12.5,  pid->getOutput(/*target*/50, /*input*/0)) << "target=50, input=0 #0";
+	ASSERT_FLOAT_EQ( 12.5,  pid->getOutput(/*target*/50, /*input*/0, 0.005f)) << "target=50, input=0 #0";
 	ASSERT_FLOAT_EQ( 12.5,  pid->getIntegration());
-	ASSERT_FLOAT_EQ( 25  ,  pid->getOutput(/*target*/50, /*input*/0)) << "target=50, input=0 #1";
+	ASSERT_FLOAT_EQ( 25  ,  pid->getOutput(/*target*/50, /*input*/0, 0.005f)) << "target=50, input=0 #1";
 
-	ASSERT_FLOAT_EQ( 37.5,  pid->getOutput(/*target*/50, /*input*/0)) << "target=50, input=0 #2";
+	ASSERT_FLOAT_EQ( 37.5,  pid->getOutput(/*target*/50, /*input*/0, 0.005f)) << "target=50, input=0 #2";
 	ASSERT_FLOAT_EQ( 37.5,  pid->getIntegration());
 
-	ASSERT_FLOAT_EQ( 40.0,  pid->getOutput(/*target*/50, /*input*/0)) << "target=50, input=0 #3";
+	ASSERT_FLOAT_EQ( 40.0,  pid->getOutput(/*target*/50, /*input*/0, 0.005f)) << "target=50, input=0 #3";
 	ASSERT_FLOAT_EQ( 45,    pid->getIntegration());
 }
 

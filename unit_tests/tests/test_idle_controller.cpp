@@ -374,7 +374,6 @@ TEST(idle_v2, closedLoopBasic) {
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.periodMs = 0;
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
@@ -402,7 +401,6 @@ TEST(idle_v2, closedLoopDeadzone) {
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.periodMs = 0;
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 

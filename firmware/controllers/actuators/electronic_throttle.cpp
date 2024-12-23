@@ -843,8 +843,8 @@ void setDefaultEtbParameters() {
 		10,		// Ki
 		0.05,	// Kd
 		0,		// offset
-		0,		// Update rate, unused
-		-100, 100 // min/max
+		-100, 100, // min/max
+		0	// alignment fill
 	};
 
 	engineConfiguration->etb_iTermMin = -30;
