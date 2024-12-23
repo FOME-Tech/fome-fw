@@ -29,7 +29,7 @@ public:
 	// doesn't limit the result
 	float getUnclampedOutput(float target, float input, float dTime);
 	void updateFactors(float pFactor, float iFactor, float dFactor);
-	virtual void reset();
+	void reset();
 	float getP() const;
 	float getI() const;
 	float getD() const;
@@ -47,5 +47,5 @@ public:
 	float iTermMax =  1000000.0;
 protected:
 	pid_s *m_parameters = nullptr;
-	virtual void updateITerm(float value);
+	void updateITerm(float value);
 };
