@@ -38,7 +38,7 @@ void ensureArrayIsAscending(const char* msg, const TValue (&values)[TSize]) {
 	}
 }
 
-static void validateParam(bool condition, const char* name) {
+static inline void validateParam(bool condition, const char* name) {
 	if (!condition) {
 		firmwareError(ObdCode::CUSTOM_ERR_AXIS_ORDER, "Invalid config value: %s", name);
 	}
