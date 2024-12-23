@@ -13,9 +13,7 @@
 #include "efi_pid.h"
 #include "math.h"
 
-Pid::Pid() {
-	initPidClass(nullptr);
-}
+Pid::Pid() : Pid(nullptr) { }
 
 Pid::Pid(pid_s *parameters) {
 	initPidClass(parameters);
@@ -33,6 +31,7 @@ bool Pid::isSame(const pid_s *parameters) const {
 		// this 'null' could happen on first execution during initialization
 		return false;
 	}
+
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, parameters != NULL, "PID::isSame NULL", false);
 	return m_parameters->pFactor == parameters->pFactor
 			&& m_parameters->iFactor == parameters->iFactor

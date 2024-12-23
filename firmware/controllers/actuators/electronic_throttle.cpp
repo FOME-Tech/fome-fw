@@ -468,6 +468,9 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 	} else {
 		checkJam(target, observation);
 
+		m_pid.iTermMin = engineConfiguration->etb_iTermMin;
+		m_pid.iTermMax = engineConfiguration->etb_iTermMax;
+
 		// Normal case - use PID to compute closed loop part
 		m_error = target - observation;
 		return m_pid.getOutput(target, observation, etbPeriodSeconds);
@@ -510,10 +513,7 @@ bool EtbController::checkStatus() {
 		// no validation for h-bridge or idle mode
 		return true;
 	}
-	// ETB-specific code belo. The whole mix-up between DC and ETB is shameful :(
-
-	m_pid.iTermMin = engineConfiguration->etb_iTermMin;
-	m_pid.iTermMax = engineConfiguration->etb_iTermMax;
+	// ETB-specific code below. The whole mix-up between DC and ETB is shameful :(
 
 	// Only allow autotune with stopped engine, and on the first throttle
 	// Update local state about autotune
