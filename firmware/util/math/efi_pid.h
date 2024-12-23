@@ -61,8 +61,6 @@ public:
 #if EFI_TUNER_STUDIO
 	void postState(pid_status_s& pidStatus) const;
 #endif /* EFI_TUNER_STUDIO */
-	void showPidStatus(const char* msg) const;
-	void sleep();
 	int resetCounter;
 	// todo: move this to pid_s one day
 	float iTermMin = -1000000.0;

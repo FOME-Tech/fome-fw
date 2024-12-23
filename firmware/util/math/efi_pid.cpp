@@ -143,31 +143,6 @@ void Pid::postState(pid_status_s& pidStatus) const {
 }
 #endif /* EFI_TUNER_STUDIO */
 
-void Pid::sleep() {
-#if !EFI_UNIT_TEST
-	int periodMs = maxI(10, m_parameters->periodMs);
-	chThdSleepMilliseconds(periodMs);
-#endif /* EFI_UNIT_TEST */
-}
-
-void Pid::showPidStatus(const char*msg) const {
-	efiPrintf("%s settings: offset=%f P=%.5f I=%.5f D=%.5f period=%dms",
-			msg,
-			getOffset(),
-			m_parameters->pFactor,
-			m_parameters->iFactor,
-			m_parameters->dFactor,
-			m_parameters->periodMs);
-
-	efiPrintf("%s status: value=%.2f input=%.2f/target=%.2f iTerm=%.5f dTerm=%.5f",
-			msg,
-			lastOutput,
-			lastInput,
-			lastTarget,
-			iTerm, dTerm);
-
-}
-
 void Pid::updateITerm(float value) {
 	iTerm += value;
 	/**

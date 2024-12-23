@@ -212,10 +212,6 @@ void EtbController::onConfigurationChange(pid_s* previousConfiguration) {
 	doInitElectronicThrottle();
 }
 
-void EtbController::showStatus() {
-	m_pid.showPidStatus("ETB");
-}
-
 expected<percent_t> EtbController::observePlant() const {
 	return Sensor::get(m_positionSensor);
 }
@@ -995,7 +991,6 @@ void setHitachiEtbCalibration() {
 	engineConfiguration->etb.iFactor = 25.5;
 	engineConfiguration->etb.dFactor = 0.053;
 	engineConfiguration->etb.offset = 0.0;
-	engineConfiguration->etb.periodMs = 5.0;
 	engineConfiguration->etb.minValue = -100.0;
 	engineConfiguration->etb.maxValue = 100.0;
 
