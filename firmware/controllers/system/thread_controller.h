@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "global.h"
+
 /**
  * @brief A base class for a controller that requires its own thread.
  * 

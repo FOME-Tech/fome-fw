@@ -6,7 +6,9 @@
 #include "proxy_sensor.h"
 #include "linear_func.h"
 #include "tps.h"
+#if EFI_UNIT_TEST
 #include "auto_generated_sensor.h"
+#endif
 
 #ifndef MAX_TPS_PPS_DISCREPANCY
 #define MAX_TPS_PPS_DISCREPANCY 5.0f
