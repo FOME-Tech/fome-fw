@@ -81,7 +81,7 @@ void stopPedalPins() {
 
 static void applyPidSettings() {
 #if EFI_IDLE_CONTROL
-	engine->module<IdleController>().unmock().getIdlePid()->updateFactors(engineConfiguration->idleRpmPid.pFactor, engineConfiguration->idleRpmPid.iFactor, engineConfiguration->idleRpmPid.dFactor);
+	engine->module<IdleController>().unmock().getIdlePid().updateFactors(engineConfiguration->idleRpmPid.pFactor, engineConfiguration->idleRpmPid.iFactor, engineConfiguration->idleRpmPid.dFactor);
 #endif // EFI_IDLE_CONTROL
 }
 
