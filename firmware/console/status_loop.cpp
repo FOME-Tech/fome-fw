@@ -595,21 +595,6 @@ void updateTunerStudioState() {
 #endif
 
 	switch (engineConfiguration->debugMode)	{
-	case DBG_SR5_PROTOCOL: {
-		const int _10_6 = 100000;
-		tsOutputChannels->debugIntField1 = tsState.textCommandCounter * _10_6 +  tsState.totalCounter;
-		tsOutputChannels->debugIntField2 = tsState.outputChannelsCommandCounter * _10_6 + tsState.writeValueCommandCounter;
-		tsOutputChannels->debugIntField3 = tsState.readPageCommandsCounter * _10_6 + tsState.burnCommandCounter;
-		break;
-		}
-	case DBG_TRIGGER_COUNTERS:
-
-#if EFI_SHAFT_POSITION_INPUT
-		tsOutputChannels->debugIntField4 = engine->triggerCentral.triggerState.currentCycle.eventCount[0];
-		tsOutputChannels->debugIntField5 = engine->triggerCentral.triggerState.currentCycle.eventCount[1];
-#endif // EFI_SHAFT_POSITION_INPUT
-
-		break;
 	case DBG_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
 		tle8888PostState();

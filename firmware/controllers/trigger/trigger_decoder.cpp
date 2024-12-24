@@ -4,12 +4,6 @@
  * @date Dec 24, 2013
  * @author Andrey Belomutskiy, (c) 2012-2020
  *
- *
- *
- * enable trigger_details
- * DBG_TRIGGER_COUNTERS = 5
- * set debug_mode 5
- *
  * This file is part of rusEfi - see http://rusefi.com
  *
  * rusEfi is free software; you can redistribute it and/or modify it under the terms of
