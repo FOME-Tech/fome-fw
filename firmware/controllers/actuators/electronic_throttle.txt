@@ -1,5 +1,3 @@
-! units,scale,offset,min,max,digits
-
 struct_no_prefix electronic_throttle_s
 	float m_wastegatePosition;"DC: wastegatePosition";"%", 1, 0, 0, 3, 2
 
