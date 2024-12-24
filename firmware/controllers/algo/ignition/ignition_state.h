@@ -4,5 +4,8 @@
 
 class IgnitionState : public ignition_state_s {
 public:
-	floatms_t getSparkDwell(float rpm);
+	void updateDwell(float rpm, bool isCranking);
+
+private:
+	floatms_t getSparkDwell(float rpm, bool isCranking);
 };

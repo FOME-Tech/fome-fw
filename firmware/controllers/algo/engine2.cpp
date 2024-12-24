@@ -86,17 +86,18 @@ void EngineState::periodicFastCallback() {
 	if (!engine->slowCallBackWasInvoked) {
 		warning(ObdCode::CUSTOM_SLOW_NOT_INVOKED, "Slow not invoked yet");
 	}
+
 	efitick_t nowNt = getTimeNowNt();
-	
-	if (engine->rpmCalculator.isCranking()) {
+	bool isCranking = engine->rpmCalculator.isCranking();
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	if (isCranking) {
 		crankingTimer.reset(nowNt);
 	}
 
 	engine->fuelComputer.running.timeSinceCrankingInSecs = crankingTimer.getElapsedSeconds(nowNt);
 
-	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	engine->ignitionState.sparkDwell = engine->ignitionState.getSparkDwell(rpm);
-	engine->ignitionState.dwellAngle = std::isnan(rpm) ? NAN :  engine->ignitionState.sparkDwell / getOneDegreeTimeMs(rpm);
+	engine->ignitionState.updateDwell(rpm, isCranking);
 
 	// todo: move this into slow callback, no reason for IAT corr to be here
 	engine->fuelComputer.running.intakeTemperatureCoefficient = getIatFuelCorrection();
