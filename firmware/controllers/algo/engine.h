@@ -273,9 +273,7 @@ public:
 	TriggerCentral triggerCentral;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-
 	float stftCorrection[STFT_BANK_COUNT] = {0};
-
 
 	void periodicFastCallback();
 	void periodicSlowCallback();

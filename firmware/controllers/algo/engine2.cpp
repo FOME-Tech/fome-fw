@@ -158,8 +158,7 @@ void EngineState::periodicFastCallback() {
 
 	// compute per-bank fueling
 	for (size_t i = 0; i < STFT_BANK_COUNT; i++) {
-		float corr = clResult.banks[i];
-		engine->stftCorrection[i] = corr;
+		engine->stftCorrection[i] = clResult.banks[i];
 	}
 
 	// Now apply that to per-cylinder fueling and timing
