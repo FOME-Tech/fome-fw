@@ -130,10 +130,6 @@ Usages:
     prepend: integration/rusefi_config_shared.txt
     constexpr: "engine->dc_motors"
 
-  - name: sent_state
-    folder: controllers/sensors
-    prepend: integration/rusefi_config_shared.txt
-
   - name: throttle_model
     folder: controllers/math
     output_name: Throttle model

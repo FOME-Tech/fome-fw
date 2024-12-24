@@ -108,8 +108,6 @@ struct_no_prefix engine_configuration_s
 
 #define BLOCKING_FACTOR 1350
 
-#define SENT_INPUT_COUNT 1
-
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
 
@@ -1231,8 +1229,6 @@ tChargeMode_e tChargeMode;
 
 	float auxFrequencyFilter;;"hz", 1, 0, 0, 100, 1
 	int16_t vvtControlMinRpm;;"RPM", 1, 0, 0, 3000, 0
-
-	brain_input_pin_e[SENT_INPUT_COUNT iterate] sentInputPins;
 
 	int8_t launchFuelAdderPercent;;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale etbJamTimeout;Time after which the throttle is considered jammed.;"sec", 0.02, 0, 0, 5, 2

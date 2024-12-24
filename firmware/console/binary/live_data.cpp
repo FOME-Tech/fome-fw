@@ -174,11 +174,6 @@ const ignition_state_s* getLiveData(size_t) {
 }
 
 template<>
-const sent_state_s* getLiveData(size_t) {
-	return &engine->sent_state;
-}
-
-template<>
 const throttle_model_s* getLiveData(size_t) {
 	return &engine->module<ThrottleModel>().unmock();
 }

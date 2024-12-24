@@ -27,10 +27,6 @@ using namespace luaaa;
 #include "electronic_throttle.h"
 #endif // EFI_PROD_CODE
 
-#if EFI_SENT_SUPPORT
-#include "sent.h"
-#endif // EFI_SENT_SUPPORT
-
 static int lua_vin(lua_State* l) {
 	auto zeroBasedCharIndex = luaL_checkinteger(l, 1);
 	if (zeroBasedCharIndex < 0 || zeroBasedCharIndex > VIN_NUMBER_SIZE) {
@@ -677,27 +673,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 		lua_pushnumber(l2, result);
 		return 1;
 	});
-
-#if EFI_SENT_SUPPORT
-	lua_register(l, "getSentValue",
-			[](lua_State* l2) {
-			auto humanIndex = luaL_checkinteger(l2, 1);
-			auto value = getSentValue(humanIndex - 1);
-			lua_pushnumber(l2, value);
-			return 1;
-	});
-
-	lua_register(l, "getSentValues",
-			[](lua_State* l2) {
-			uint16_t sig0;
-			uint16_t sig1;
-			auto humanIndex = luaL_checkinteger(l2, 1);
-			getSentValues(humanIndex - 1, &sig0, &sig1);
-			lua_pushnumber(l2, sig0);
-			lua_pushnumber(l2, sig1);
-			return 2;
-	});
-#endif // EFI_SENT_SUPPORT
 
 #if EFI_LAUNCH_CONTROL
 	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
