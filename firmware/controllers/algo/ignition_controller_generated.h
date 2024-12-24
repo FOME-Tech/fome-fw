@@ -1,6 +1,6 @@
 #pragma once
 #include "rusefi_types.h"
-struct ignition_state_s {
+struct ignition_controller_s {
 	// ms
 	// offset 0
 	float baseDwell = (float)0;
@@ -40,15 +40,15 @@ struct ignition_state_s {
 	// offset 28
 	float luaTimingMult = (float)0;
 };
-static_assert(sizeof(ignition_state_s) == 32);
-static_assert(offsetof(ignition_state_s, baseDwell) == 0);
-static_assert(offsetof(ignition_state_s, sparkDwell) == 4);
-static_assert(offsetof(ignition_state_s, dwellAngle) == 8);
-static_assert(offsetof(ignition_state_s, cltTimingCorrection) == 12);
-static_assert(offsetof(ignition_state_s, timingIatCorrection) == 14);
-static_assert(offsetof(ignition_state_s, timingPidCorrection) == 16);
-static_assert(offsetof(ignition_state_s, dfcoTimingRetard) == 18);
-static_assert(offsetof(ignition_state_s, dwellVoltageCorrection) == 20);
-static_assert(offsetof(ignition_state_s, luaTimingAdd) == 24);
-static_assert(offsetof(ignition_state_s, luaTimingMult) == 28);
+static_assert(sizeof(ignition_controller_s) == 32);
+static_assert(offsetof(ignition_controller_s, baseDwell) == 0);
+static_assert(offsetof(ignition_controller_s, sparkDwell) == 4);
+static_assert(offsetof(ignition_controller_s, dwellAngle) == 8);
+static_assert(offsetof(ignition_controller_s, cltTimingCorrection) == 12);
+static_assert(offsetof(ignition_controller_s, timingIatCorrection) == 14);
+static_assert(offsetof(ignition_controller_s, timingPidCorrection) == 16);
+static_assert(offsetof(ignition_controller_s, dfcoTimingRetard) == 18);
+static_assert(offsetof(ignition_controller_s, dwellVoltageCorrection) == 20);
+static_assert(offsetof(ignition_controller_s, luaTimingAdd) == 24);
+static_assert(offsetof(ignition_controller_s, luaTimingMult) == 28);
 
