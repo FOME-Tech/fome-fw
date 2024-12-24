@@ -25,8 +25,8 @@ Usages:
     prepend: integration/rusefi_config_shared.txt
     constexpr: "engine->fuelComputer"
 
-  - name: ignition_controller
-    folder: controllers/algo
+  - name: ignition_state
+    folder: controllers/algo/ignition
     prepend: integration/rusefi_config_shared.txt
     constexpr: "engine->ignitionState"
 

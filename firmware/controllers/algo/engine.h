@@ -41,6 +41,7 @@
 #include "dfco.h"
 #include "fuel_computer.h"
 #include "advance_map.h"
+#include "ignition_state.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
