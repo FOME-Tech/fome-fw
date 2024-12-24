@@ -200,46 +200,39 @@ struct engine_state_s {
 	bool unusedBit_44_31 : 1 {};
 	// offset 48
 	uint32_t startStopStateToggleCounter = (uint32_t)0;
-	// User-defined RPM hard limit
-	// rpm
-	// offset 52
-	int16_t desiredRpmLimit = (int16_t)0;
-	// offset 54
-	uint8_t alignmentFill_at_54[2];
 	// Fuel: Injection counter
-	// offset 56
+	// offset 52
 	uint32_t fuelInjectionCounter = (uint32_t)0;
 	// Ign: Spark counter
-	// offset 60
+	// offset 56
 	uint32_t sparkCounter = (uint32_t)0;
 	// Fuel: Load
-	// offset 64
+	// offset 60
 	float fuelingLoad = (float)0;
 	// Ign: Load
-	// offset 68
+	// offset 64
 	float ignitionLoad = (float)0;
 	// %
-	// offset 72
+	// offset 68
 	scaled_channel<uint16_t, 100, 1> veTableYAxis = (uint16_t)0;
 	// %
-	// offset 74
+	// offset 70
 	scaled_channel<uint16_t, 100, 1> idleVeTableYAxis = (uint16_t)0;
 	// deg
-	// offset 76
+	// offset 72
 	scaled_channel<uint16_t, 100, 1> mapAveragingDuration = (uint16_t)0;
-	// offset 78
-	uint8_t alignmentFill_at_78[2];
+	// offset 74
+	uint8_t alignmentFill_at_74[2];
 };
-static_assert(sizeof(engine_state_s) == 80);
+static_assert(sizeof(engine_state_s) == 76);
 static_assert(offsetof(engine_state_s, baroCorrection) == 36);
 static_assert(offsetof(engine_state_s, hellenBoardId) == 40);
 static_assert(offsetof(engine_state_s, startStopStateToggleCounter) == 48);
-static_assert(offsetof(engine_state_s, desiredRpmLimit) == 52);
-static_assert(offsetof(engine_state_s, fuelInjectionCounter) == 56);
-static_assert(offsetof(engine_state_s, sparkCounter) == 60);
-static_assert(offsetof(engine_state_s, fuelingLoad) == 64);
-static_assert(offsetof(engine_state_s, ignitionLoad) == 68);
-static_assert(offsetof(engine_state_s, veTableYAxis) == 72);
-static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 74);
-static_assert(offsetof(engine_state_s, mapAveragingDuration) == 76);
+static_assert(offsetof(engine_state_s, fuelInjectionCounter) == 52);
+static_assert(offsetof(engine_state_s, sparkCounter) == 56);
+static_assert(offsetof(engine_state_s, fuelingLoad) == 60);
+static_assert(offsetof(engine_state_s, ignitionLoad) == 64);
+static_assert(offsetof(engine_state_s, veTableYAxis) == 68);
+static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 70);
+static_assert(offsetof(engine_state_s, mapAveragingDuration) == 72);
 
