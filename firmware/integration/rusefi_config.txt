@@ -566,8 +566,9 @@ end_struct
 afr_sensor_s afr
 
 	Gpio tle6240_cs;
+	Gpio mc33816_cs;
 
-air_pressure_sensor_config_s baroSensor
+	air_pressure_sensor_config_s baroSensor
 
 struct idle_hardware_s
 	int solenoidFrequency;;"Hz", 1, 0, 0, 3000, 0
@@ -1222,10 +1223,10 @@ tChargeMode_e tChargeMode;
 	Gpio tle8888_cs;
 	pin_output_mode_e tle8888_csPinMode;
 
+	uint8_t autoscale maxInjectorDutySustainedTimeout;Timeout period for duty cycle over the sustained limit to trigger duty cycle protection.;"sec", 0.1, 0, 0, 5, 1
+
 	custom can_vss_nbc_e 2 bits, U08, @OFFSET@, [0:1], "BMW_e46", "W202", "BMW E8x/E9x MK60e5", "MX-5 NC"
 	can_vss_nbc_e canVssNbcType
-
-	Gpio mc33816_cs;
 
 	float auxFrequencyFilter;;"hz", 1, 0, 0, 100, 1
 	int16_t vvtControlMinRpm;;"RPM", 1, 0, 0, 3000, 0
@@ -1261,6 +1262,10 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	pid_s idleTimingPid
 
 	int16_t tpsAccelFractionPeriod;A delay in cycles between fuel-enrich. portions;"cycles", 1, 0, 0, 500, 0
+
+	uint8_t autoscale rpmHardLimitHyst;If the hard limit is 7200rpm and hysteresis is 200rpm, then when the ECU sees 7200rpm, fuel/ign will cut, and stay cut until 7000rpm (7200-200) is reached;"RPM", 10, 0, 0, 2500, 0
+	uint8_t ignTestCount;How many test bench pulses do you want;"", 1, 0, 0, 50, 0
+
 	float tpsAccelFractionDivisor;A fraction divisor: 1 or less = entire portion at once, or split into diminishing fractions;"coef", 1, 0, 0, 100, 2
 
 	spi_device_e tle8888spiDevice;
@@ -1372,7 +1377,8 @@ pwm_freq_t tcu_32_solenoid_freq
 
 output_pin_e acrPin2;
 
-uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.1, 0, 0, 10, 1
+	uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.1, 0, 0, 10, 1
+	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
 
 uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
 
@@ -1392,6 +1398,9 @@ uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t acRelayAlternatorDutyAdder;Add alternator duty while AC is turned on to compensate for the radiator/blower fans.;"%", 1, 0, 0, 100, 0
 	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
+
+	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
+
 	int ALSIdleAdd;;"%", 1, 0, 0, 100, 2
 	int ALSEtbAdd;;"%", 1, 0, 0, 100, 2
 	int ALSSkipRatio;;"", 1, 0, 0.1, 2, 1
@@ -1401,13 +1410,6 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
 	uint8_t autoscale ppsSecondaryMaximum;For Toyota ETCS-i, use ~69%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
 pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
-
-	uint8_t autoscale rpmHardLimitHyst;If the hard limit is 7200rpm and hysteresis is 200rpm, then when the ECU sees 7200rpm, fuel/ign will cut, and stay cut until 7000rpm (7200-200) is reached;"RPM", 10, 0, 0, 2500, 0
-
-	uint8_t ignTestCount;How many test bench pulses do you want;"", 1, 0, 0, 50, 0
-	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
-
-	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
 
 	ThermistorConf oilTempSensor
 	ThermistorConf fuelTempSensor
@@ -1419,7 +1421,6 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	uint8_t maxInjectorDutyInstant;If injector duty cycle hits this value, instantly cut fuel.;"%", 1, 0, 50, 200, 0
 	uint8_t maxInjectorDutySustained;If injector duty cycle hits this value for the specified delay time, cut fuel.;"%", 1, 0, 50, 120, 0
-	uint8_t autoscale maxInjectorDutySustainedTimeout;Timeout period for duty cycle over the sustained limit to trigger duty cycle protection.;"sec", 0.1, 0, 0, 5, 1
 
 	output_pin_e speedometerOutputPin
 	uint16_t speedometerPulsePerKm;Number of speedometer pulses per kilometer travelled.;"", 1, 0, 0, 65000, 0
