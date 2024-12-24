@@ -39,8 +39,6 @@ struct_no_prefix engine_state_s
 	bit startStopState
 	uint32_t startStopStateToggleCounter
 
-	int16_t desiredRpmLimit;User-defined RPM hard limit;"rpm", 1, 0, 0, 30000, 0
-
 	uint32_t fuelInjectionCounter;Fuel: Injection counter
 	uint32_t sparkCounter;Ign: Spark counter
 
