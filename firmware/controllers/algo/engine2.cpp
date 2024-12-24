@@ -150,11 +150,11 @@ void EngineState::periodicFastCallback() {
 	engine->lambdaMonitor.update(rpm, fuelLoad);
 
 	engine->ignitionState.updateAdvanceCorrections(ignitionLoad);
-	float advance = engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking)
+	float untrimmedAdvance = engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking)
 					* engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
 
 	// that's weird logic. also seems broken for two stroke?
-	engine->outputChannels.ignitionAdvance = (float)(advance > FOUR_STROKE_CYCLE_DURATION / 2 ? advance - FOUR_STROKE_CYCLE_DURATION : advance);
+	engine->outputChannels.ignitionAdvance = (float)(untrimmedAdvance > FOUR_STROKE_CYCLE_DURATION / 2 ? untrimmedAdvance - FOUR_STROKE_CYCLE_DURATION : untrimmedAdvance);
 
 	// compute per-bank fueling
 	for (size_t i = 0; i < STFT_BANK_COUNT; i++) {
@@ -170,7 +170,7 @@ void EngineState::periodicFastCallback() {
 		// Apply both per-bank and per-cylinder trims
 		engine->engineState.injectionMass[i] = untrimmedInjectionMass * bankTrim * cylinderTrim;
 
-		timingAdvance[i] = advance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
+		timingAdvance[i] = untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
