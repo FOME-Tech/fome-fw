@@ -109,35 +109,55 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 	return advanceAngle;
 }
 
-static angle_t getAdvanceCorrections(float engineLoad) {
-	auto iat = Sensor::get(SensorType::Iat);
-
-	if (!iat) {
-		engine->ignitionState.timingIatCorrection = 0;
-	} else {
-		engine->ignitionState.timingIatCorrection = interpolate3d(
+void IgnitionState::updateAdvanceCorrections(float engineLoad) {
+	if (auto iat = Sensor::get(SensorType::Iat)) {
+		timingIatCorrection = interpolate3d(
 			config->ignitionIatCorrTable,
 			config->ignitionIatCorrLoadBins, engineLoad,
 			config->ignitionIatCorrTempBins, iat.Value
 		);
+	} else {
+		timingIatCorrection = 0;
 	}
 
-#if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
+	if (auto clt = Sensor::get(SensorType::Clt)) {
+		cltTimingCorrection = interpolate2d(
+				clt.Value, config->cltTimingBins, config->cltTimingExtra
+			);
+	} else {
+		cltTimingCorrection = 0;
+	}
+
+	#if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
+	timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm);
+	#endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 
-	engine->ignitionState.timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm);
-#endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
+	dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();
 
-	engine->ignitionState.dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();
-
+	// TODO: multispark doesn't belong in corrections?
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.multiSparkCounter = engine->engineState.multispark.count;
 #endif /* EFI_TUNER_STUDIO */
+}
 
-	return engine->ignitionState.timingIatCorrection
-		+ engine->ignitionState.cltTimingCorrection
-		+ engine->ignitionState.timingPidCorrection
-		- engine->ignitionState.dfcoTimingRetard;
+angle_t IgnitionState::getAdvanceCorrections(bool isCranking) const {
+	// Allow correction only if set to dynamic
+	// AND we're either not cranking OR allowed to correct in cranking
+	bool allowCorrections = engineConfiguration->timingMode == TM_DYNAMIC
+		&& (!isCranking || engineConfiguration->useAdvanceCorrectionsForCranking);
+
+	if (!allowCorrections) {
+		return 0;
+	}
+
+	float result =
+		  timingIatCorrection
+		+ cltTimingCorrection
+		+ timingPidCorrection
+		- dfcoTimingRetard;
+
+	return std::isnan(result) ? 0 : result;
 }
 
 /**
@@ -152,13 +172,14 @@ static angle_t getCrankingAdvance(float rpm, float engineLoad) {
 	// Interpolate the cranking timing angle to the earlier running angle for faster engine start
 	angle_t crankingToRunningTransitionAngle = getRunningAdvance(engineConfiguration->cranking.rpm, engineLoad);
 	// interpolate not from zero, but starting from min. possible rpm detected
-	if (rpm < minCrankingRpm || minCrankingRpm == 0)
+	if (rpm < minCrankingRpm || minCrankingRpm == 0) {
 		minCrankingRpm = rpm;
+	}
+
 	return interpolateClamped(minCrankingRpm, engineConfiguration->crankingTimingAngle, engineConfiguration->cranking.rpm, crankingToRunningTransitionAngle, rpm);
 }
 
-angle_t getAdvance(float rpm, float engineLoad, bool isCranking) {
-#if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
+angle_t IgnitionState::getAdvance(float rpm, float engineLoad, bool isCranking) {
 	if (std::isnan(engineLoad)) {
 		return 0; // any error should already be reported
 	}
@@ -178,24 +199,11 @@ angle_t getAdvance(float rpm, float engineLoad, bool isCranking) {
 		}
 	}
 
-	// Allow correction only if set to dynamic
-	// AND we're either not cranking OR allowed to correct in cranking
-	bool allowCorrections = engineConfiguration->timingMode == TM_DYNAMIC
-		&& (!isCranking || engineConfiguration->useAdvanceCorrectionsForCranking);
-
-	if (allowCorrections) {
-		angle_t correction = getAdvanceCorrections(engineLoad);
-		if (!std::isnan(correction)) { // correction could be NaN during settings update
-			angle += correction;
-		}
-	}
+	angle += getAdvanceCorrections(isCranking);
 
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(angle), "_AngleN5", 0);
 	wrapAngle(angle, "getAdvance", ObdCode::CUSTOM_ERR_ADCANCE_CALC_ANGLE);
 	return angle;
-#else
-	return 0;
-#endif
 }
 
 angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad) {

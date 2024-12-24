@@ -126,8 +126,6 @@ void EngineState::periodicFastCallback() {
 		}
 	}
 
-	engine->ignitionState.cltTimingCorrection = getCltTimingCorrection();
-
 	baroCorrection = getBaroCorrection();
 
 	auto tps = Sensor::get(SensorType::Tps1);
@@ -151,7 +149,9 @@ void EngineState::periodicFastCallback() {
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);
 	engine->lambdaMonitor.update(rpm, fuelLoad);
 
-	float advance = getAdvance(rpm, ignitionLoad, isCranking) * engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
+	engine->ignitionState.updateAdvanceCorrections(ignitionLoad);
+	float advance = engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking)
+					* engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
 
 	// that's weird logic. also seems broken for two stroke?
 	engine->outputChannels.ignitionAdvance = (float)(advance > FOUR_STROKE_CYCLE_DURATION / 2 ? advance - FOUR_STROKE_CYCLE_DURATION : advance);
