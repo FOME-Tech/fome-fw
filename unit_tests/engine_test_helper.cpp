@@ -11,7 +11,6 @@
 #include "speed_density.h"
 #include "fuel_math.h"
 #include "accel_enrichment.h"
-#include "advance_map.h"
 #include "logicdata.h"
 #include "hardware.h"
 

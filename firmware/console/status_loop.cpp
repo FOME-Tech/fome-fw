@@ -38,7 +38,6 @@
 #include "malfunction_central.h"
 #include "speed_density.h"
 
-#include "advance_map.h"
 #include "tunerstudio.h"
 #include "fuel_math.h"
 #include "main_trigger_callback.h"

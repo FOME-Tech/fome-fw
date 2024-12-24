@@ -9,10 +9,8 @@
 
 #include "pch.h"
 
-
 #include "speed_density.h"
 #include "fuel_math.h"
-#include "advance_map.h"
 #include "closed_loop_fuel.h"
 #include "launch_control.h"
 #include "injector_model.h"

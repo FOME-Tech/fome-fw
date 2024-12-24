@@ -13,9 +13,7 @@
 
 #include "trigger_central.h"
 #include "fuel_math.h"
-#include "advance_map.h"
 #include "speed_density.h"
-#include "advance_map.h"
 
 #include "perf_trace.h"
 #include "backup_ram.h"

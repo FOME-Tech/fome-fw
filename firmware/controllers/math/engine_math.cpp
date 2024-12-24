@@ -23,7 +23,6 @@
 
 #include "event_registry.h"
 #include "fuel_math.h"
-#include "advance_map.h"
 #include "gppwm_channel.h"
 
 floatms_t getEngineCycleDuration(float rpm) {
