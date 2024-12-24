@@ -81,9 +81,6 @@ EngineState::EngineState() {
 	timeSinceLastTChargeK.reset(getTimeNowNt());
 }
 
-void EngineState::updateSlowSensors() {
-}
-
 void EngineState::periodicFastCallback() {
 	ScopePerf perf(PE::EngineStatePeriodicFastCallback);
 
