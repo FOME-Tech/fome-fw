@@ -7,7 +7,7 @@
 
 #pragma once
 
-angle_t getAdvance(float rpm, float engineLoad);
+angle_t getAdvance(float rpm, float engineLoad, bool isCranking);
 angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad);
 /**
  * this method is used to build default advance map

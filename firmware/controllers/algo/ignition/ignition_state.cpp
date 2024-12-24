@@ -157,7 +157,7 @@ static angle_t getCrankingAdvance(float rpm, float engineLoad) {
 	return interpolateClamped(minCrankingRpm, engineConfiguration->crankingTimingAngle, engineConfiguration->cranking.rpm, crankingToRunningTransitionAngle, rpm);
 }
 
-angle_t getAdvance(float rpm, float engineLoad) {
+angle_t getAdvance(float rpm, float engineLoad, bool isCranking) {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	if (std::isnan(engineLoad)) {
 		return 0; // any error should already be reported
@@ -165,7 +165,6 @@ angle_t getAdvance(float rpm, float engineLoad) {
 
 	angle_t angle;
 
-	bool isCranking = engine->rpmCalculator.isCranking();
 	if (isCranking) {
 		angle = getCrankingAdvance(rpm, engineLoad);
 		assertAngleRange(angle, "crAngle", ObdCode::CUSTOM_ERR_ANGLE_CR);
