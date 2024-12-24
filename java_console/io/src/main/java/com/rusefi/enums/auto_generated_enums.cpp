@@ -24,8 +24,8 @@ case LDS_high_pressure_fuel_pump:
   return "LDS_high_pressure_fuel_pump";
 case LDS_idle_state:
   return "LDS_idle_state";
-case LDS_ignition_controller:
-  return "LDS_ignition_controller";
+case LDS_ignition_state:
+  return "LDS_ignition_state";
 case LDS_injector_model:
   return "LDS_injector_model";
 case LDS_knock_controller:

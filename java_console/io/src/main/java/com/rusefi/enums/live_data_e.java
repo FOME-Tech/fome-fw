@@ -7,7 +7,7 @@ package com.rusefi.enums;
 public enum live_data_e {
 	LDS_output_channels,
 	LDS_fuel_computer,
-	LDS_ignition_controller,
+	LDS_ignition_state,
 	LDS_knock_controller,
 	LDS_high_pressure_fuel_pump,
 	LDS_injector_model,
