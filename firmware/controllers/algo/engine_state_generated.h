@@ -129,8 +129,9 @@ struct engine_state_s {
 	// id
 	// offset 40
 	int16_t hellenBoardId = (int16_t)0;
+	// deg
 	// offset 42
-	uint8_t alignmentFill_at_42[2];
+	scaled_channel<uint16_t, 100, 1> mapAveragingDuration = (uint16_t)0;
 	// Clutch: up
 	// offset 44 bit 0
 	bool clutchUpState : 1 {};
@@ -218,15 +219,11 @@ struct engine_state_s {
 	// %
 	// offset 70
 	scaled_channel<uint16_t, 100, 1> idleVeTableYAxis = (uint16_t)0;
-	// deg
-	// offset 72
-	scaled_channel<uint16_t, 100, 1> mapAveragingDuration = (uint16_t)0;
-	// offset 74
-	uint8_t alignmentFill_at_74[2];
 };
-static_assert(sizeof(engine_state_s) == 76);
+static_assert(sizeof(engine_state_s) == 72);
 static_assert(offsetof(engine_state_s, baroCorrection) == 36);
 static_assert(offsetof(engine_state_s, hellenBoardId) == 40);
+static_assert(offsetof(engine_state_s, mapAveragingDuration) == 42);
 static_assert(offsetof(engine_state_s, startStopStateToggleCounter) == 48);
 static_assert(offsetof(engine_state_s, fuelInjectionCounter) == 52);
 static_assert(offsetof(engine_state_s, sparkCounter) == 56);
@@ -234,5 +231,4 @@ static_assert(offsetof(engine_state_s, fuelingLoad) == 60);
 static_assert(offsetof(engine_state_s, ignitionLoad) == 64);
 static_assert(offsetof(engine_state_s, veTableYAxis) == 68);
 static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 70);
-static_assert(offsetof(engine_state_s, mapAveragingDuration) == 72);
 
