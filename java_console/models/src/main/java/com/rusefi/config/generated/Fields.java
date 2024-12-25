@@ -185,6 +185,7 @@ public class Fields {
 	public static final int command_x14_e_COMMAND_X14_ETB_AUTOTUNE = 0x0C;
 	public static final int command_x14_e_COMMAND_X14_ETB_AUTOTUNE_STOP = 0x10;
 	public static final int command_x14_e_COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14;
+	public static final int command_x14_e_COMMAND_X14_FORCE_RESYNC = 0x16;
 	public static final int command_x14_e_COMMAND_X14_GRAB_PEDAL_DOWN = 0x07;
 	public static final int command_x14_e_COMMAND_X14_GRAB_PEDAL_UP = 0x06;
 	public static final int command_x14_e_COMMAND_X14_RESET_TLE8888 = 0x08;
@@ -1196,7 +1197,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.25.f407-discovery.3273892717";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2024.12.25.f407-discovery.2553221499";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1304;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
