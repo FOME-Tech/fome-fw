@@ -401,6 +401,9 @@ static void handleCommandX14(uint16_t index) {
 		burnWithoutFlash = true;
 #endif // EFI_PROD_CODE
 		return;
+	case COMMAND_X14_FORCE_RESYNC:
+		engine->triggerCentral.syncAndReport(2, 1);
+		return;
 	default:
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench x14 %d", index);
 	}
