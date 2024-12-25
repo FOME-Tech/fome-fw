@@ -207,10 +207,15 @@ public:
 
 	bool hasSynchronizedPhase() const;
 
-	void setNeedsDisambiguation(bool needsDisambiguation) {
+	void setNeedsDisambiguation(bool needsDisambiguation, bool expectDisambiguation) {
 		m_needsDisambiguation = needsDisambiguation;
+		m_expectDisambiguation = expectDisambiguation;
 
 		resetHasFullSync();
+	}
+
+	bool expectDisambiguation() const {
+		return m_expectDisambiguation;
 	}
 
 	void onTriggerError() override;
@@ -219,8 +224,8 @@ public:
 	void onTooManyTeeth(int actual, int expected) override;
 
 private:
-
 	bool m_needsDisambiguation = false;
+	bool m_expectDisambiguation = false;
 };
 
 class VvtTriggerDecoder : public TriggerDecoderBase {

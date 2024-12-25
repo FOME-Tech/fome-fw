@@ -887,6 +887,11 @@ void TriggerCentral::updateWaveform() {
 				initState);
 	}
 
+	bool primaryNeedsDisambiguation = engine->triggerCentral.triggerShape.needsDisambiguation();
+
+	// If we already don't need disambiguation, we can expect it (immediately)
+	bool expectDisambiguation = !primaryNeedsDisambiguation;
+
 	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		// todo: should 'vvtWithRealDecoder' be used here?
 		if (engineConfiguration->vvtMode[camIndex] != VVT_INACTIVE) {
@@ -896,11 +901,16 @@ void TriggerCentral::updateWaveform() {
 				initState
 			);
 		}
+
+		// If we have cam inputs, we can expect trigger disambiguation later.
+		// If no cam inputs are set, we can run in crank-only mode
+		if (isBrainPinValid(engineConfiguration->camInputs[camIndex])) {
+			expectDisambiguation = true;
+		}
 	}
 
 	// This is not the right place for this, but further refactoring has to happen before it can get moved.
-	triggerState.setNeedsDisambiguation(engine->triggerCentral.triggerShape.needsDisambiguation());
-
+	triggerState.setNeedsDisambiguation(primaryNeedsDisambiguation, expectDisambiguation);
 }
 
 /**

@@ -445,7 +445,27 @@ bool Engine::isMainRelayEnabled() const {
 }
 
 injection_mode_e getCurrentInjectionMode() {
-	return getEngineRotationState()->isCranking() ? engineConfiguration->crankingInjectionMode : engineConfiguration->injectionMode;
+	if (getEngineRotationState()->isCranking()) {
+		return engineConfiguration->crankingInjectionMode;
+	}
+
+	auto runningMode = engineConfiguration->injectionMode;
+	if (runningMode == IM_SEQUENTIAL) {
+		bool missingPhaseInfoForSequential = 
+			!engine->triggerCentral.triggerState.hasSynchronizedPhase();
+
+		bool willGetSequentialInfoLater = engine->triggerCentral.triggerState.expectDisambiguation();
+
+		// IF
+		// - We do not currently have full sync
+		// - AND we expect to get it later (ie, once the cam syncs)
+		// THEN hold off on sequential, and stay in batch fueling for now
+		if (missingPhaseInfoForSequential && willGetSequentialInfoLater) {
+			return IM_BATCH;
+		}
+	}
+
+	return runningMode;
 }
 
 /**
