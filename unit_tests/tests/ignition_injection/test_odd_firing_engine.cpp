@@ -37,7 +37,7 @@ TEST(OddFireRunningMode, hd) {
 	ASSERT_TRUE(limitedSparkState.value);
 	ASSERT_EQ(limitedSparkState.reason, ClearReason::None);
 	ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode()); // still spinning up
-	ASSERT_NEAR(0.0135, getInjectionMass(200, false), EPS3D);
+	ASSERT_NEAR(0.0135, getInjectionMass(200, true), EPS3D);
 
 	angle_t expectedAngle3 = -360 + cylinderOne - timing;
 
