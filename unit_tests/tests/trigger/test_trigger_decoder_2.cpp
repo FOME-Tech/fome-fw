@@ -299,7 +299,7 @@ TEST(TriggerDecoder, PrimaryDecoderNoDisambiguation) {
 	PrimaryTriggerDecoder dut("test");
 
 	// This is not the right place for this, but further refactoring has to happen before it can get moved.
-	dut.setNeedsDisambiguation(shape.needsDisambiguation());
+	dut.setNeedsDisambiguation(shape.needsDisambiguation(), true);
 
 	// Fire a few boring evenly spaced teeth
 	t += MS2NT(1);
@@ -330,7 +330,7 @@ TEST(TriggerDecoder, PrimaryDecoderNeedsDisambiguation) {
 	PrimaryTriggerDecoder dut("test");
 
 	// This is not the right place for this, but further refactoring has to happen before it can get moved.
-	dut.setNeedsDisambiguation(shape.needsDisambiguation());
+	dut.setNeedsDisambiguation(shape.needsDisambiguation(), true);
 
 	// Fire a few boring evenly spaced teeth
 	t += MS2NT(1);
