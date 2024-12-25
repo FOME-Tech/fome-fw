@@ -284,9 +284,7 @@ InjectionEvent::InjectionEvent() {
 	memset(outputs, 0, sizeof(outputs));
 }
 
-// Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
-// or unexpected if unable to calculate the start angle due to missing information.
-expected<float> InjectionEvent::computeInjectionAngle() const {
+static expected<float> getRunningInjectionAngle() {
 	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
 	if (std::isnan(oneDegreeUs)) {
 		// in order to have fuel schedule we need to have current RPM
@@ -307,6 +305,30 @@ expected<float> InjectionEvent::computeInjectionAngle() const {
 	angle_t openingAngle = injectionOffset - injectionDurationAngle;
 	assertAngleRange(openingAngle, "openingAngle_r", ObdCode::CUSTOM_ERR_6554);
 	wrapAngle(openingAngle, "addFuel#1", ObdCode::CUSTOM_ERR_6555);
+	return openingAngle;
+}
+
+// Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
+// or unexpected if unable to calculate the start angle due to missing information.
+expected<float> InjectionEvent::computeInjectionAngle() const {
+	auto runningAngle = getRunningInjectionAngle();
+
+	// Cranking is always SOI-scheduled at a fixed angle to avoid crank-to-run missed injections
+	float crankingSoi = -320;
+	float timeSinceCranking = engine->fuelComputer.running.timeSinceCrankingInSecs;
+
+	float openingAngle;
+	if (!runningAngle || engine->rpmCalculator.isCranking()) {
+		openingAngle = crankingSoi;
+	} else if (timeSinceCranking < 5) {
+		openingAngle = interpolateClamped(
+			1, crankingSoi,
+			5, runningAngle.Value,
+			timeSinceCranking);
+	} else {
+		openingAngle = runningAngle.Value;
+	}
+
 	// TODO: should we log per-cylinder injection timing? #76
 	getTunerStudioOutputChannels()->injectionOffset = openingAngle;
 
