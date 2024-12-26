@@ -62,17 +62,6 @@ case SelectedGear::Reverse:
   }
  return NULL;
 }
-const char *getSentEtbType(SentEtbType value){
-switch(value) {
-case SentEtbType::FORD_TYPE_1:
-  return "FORD_TYPE_1";
-case SentEtbType::GM_TYPE_1:
-  return "GM_TYPE_1";
-case SentEtbType::NONE:
-  return "NONE";
-  }
- return NULL;
-}
 const char *getTransmissionControllerMode(TransmissionControllerMode value){
 switch(value) {
 case TransmissionControllerMode::Gm4l6x:

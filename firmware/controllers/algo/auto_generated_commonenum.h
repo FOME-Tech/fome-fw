@@ -11,9 +11,6 @@ const char *getInjectorNonlinearMode(InjectorNonlinearMode value);
 const char *getSelectedGear(SelectedGear value);
 #endif //__cplusplus
 #if __cplusplus
-const char *getSentEtbType(SentEtbType value);
-#endif //__cplusplus
-#if __cplusplus
 const char *getTransmissionControllerMode(TransmissionControllerMode value);
 #endif //__cplusplus
 #if __cplusplus
