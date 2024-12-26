@@ -46,7 +46,6 @@ enum class engine_type_e : uint32_t {
 	HELLEN_NA8_96 = 10,
 	ET_UNUSED_66 = 66,
 
-	TEST_ROTARY = 19,
 	// Frankenso board
 	FRANKENSO_MIATA_NA6_MAP = 41,
 	ET_UNUSED_20 = 20,
@@ -202,6 +201,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
 	ET_UNUSED_17 = 17,
@@ -216,10 +216,6 @@ enum class engine_type_e : uint32_t {
 	 * this configuration has as few pins configured as possible
 	 */
 	MINIMAL_PINS = 99,
-
-	TEST_100 = 100,
-	TEST_101 = 101,
-	TEST_102 = 102,
 };
 
 /**
