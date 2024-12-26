@@ -326,9 +326,7 @@ expected<float> InjectionEvent::computeInjectionAngle() const {
 }
 
 bool InjectionEvent::updateInjectionAngle() {
-	auto result = computeInjectionAngle();
-
-	if (result) {
+	if (auto result = computeInjectionAngle()) {
 		// If injector duty cycle is high, lock injection SOI so that we
 		// don't miss injections at or above 100% duty
 		if (getEngineState()->shouldUpdateInjectionTiming) {
