@@ -25,8 +25,7 @@ CanWrite::CanWrite()
 {
 }
 
-void CanWrite::PeriodicTask(efitick_t nowNt) {
-	UNUSED(nowNt);
+void CanWrite::PeriodicTask(efitick_t) {
 	static uint16_t cycleCount = 0;
 	CanCycle cycle(cycleCount);
 
@@ -64,6 +63,9 @@ void CanWrite::PeriodicTask(efitick_t nowNt) {
 }
 
 CanInterval CanCycle::computeFlags(uint32_t cycleCount) {
+	// These numbers only work at 200hz!
+	static_assert(CAN_CYCLE_FREQ == 200);
+
 	CanInterval cycleMask = CanInterval::_5ms;
 
 	if ((cycleCount % 2) == 0) {

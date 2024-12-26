@@ -229,15 +229,7 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame &frame, efitick_
 
 	processLuaCan(busIndex, frame);
 
-#if EFI_CANBUS_SLAVE
-	if (CAN_EID(frame) == engineConfiguration->verboseCanBaseAddress + CAN_SENSOR_1_OFFSET) {
-		int16_t mapScaled = *reinterpret_cast<const int16_t*>(&frame.data8[0]);
-		canMap = mapScaled / (1.0 * PACK_MULT_PRESSURE);
-	} else
-#endif
-	{
-		obdOnCanPacketRx(frame, busIndex);
-	}
+	obdOnCanPacketRx(frame, busIndex);
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE
 	// Bootloader acks with address 0x727573 aka ascii "rus"

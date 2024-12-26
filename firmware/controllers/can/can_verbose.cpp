@@ -228,8 +228,8 @@ void sendCanVerbose() {
 
 	transmitStruct<Status>		(base + 0, isExt, canChannel);
 	transmitStruct<Speeds>		(base + 1, isExt, canChannel);
-	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt, canChannel);
-	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt, canChannel);
+	transmitStruct<PedalAndTps>	(base + 2, isExt, canChannel);
+	transmitStruct<Sensors1>	(base + 3, isExt, canChannel);
 	transmitStruct<Sensors2>	(base + 4, isExt, canChannel);
 	transmitStruct<Fueling>		(base + 5, isExt, canChannel);
 	transmitStruct<Fueling2>	(base + 6, isExt, canChannel);
