@@ -254,9 +254,6 @@ struct pid_s
 	int16_t maxValue;Output Max Duty Cycle;"", 1, 0, -30000, 30000, 0
 end_struct
 
-#define SentEtbType_enum "None", "GM type 1", "Ford type 1"
-custom SentEtbType 1 bits, S08, @OFFSET@, [0:1], @@SentEtbType_enum@@
-
 struct cranking_parameters_s
 float baseFuel;Base mass of the per-cylinder fuel injected during cranking. This is then modified by the multipliers for CLT, IAT, TPS ect, to give the final cranking pulse width.\nA reasonable starting point is 60mg per liter per cylinder.\nex: 2 liter 4 cyl = 500cc/cyl, so 30mg cranking fuel.;"mg", 1, 0, 0, 500, 1
 int16_t rpm;This sets the RPM limit below which the ECU will use cranking fuel and ignition logic, typically this is around 350-450rpm.;"RPM", 1, 0, 0, 3000, 0
@@ -452,8 +449,6 @@ uint16_t autoscale displacement;Engine displacement in litres;"L", 0.001, 0, 0, 
 
 uint16_t triggerSimulatorRpm;;"RPM", 1, 0, 0, 30000, 0
 
-uint32_t cylindersCount;Number of cylinder the engine has.;"", 1, 0, 1, @@MAX_CYLINDER_COUNT@@, 0
-
 custom firing_order_e 1 bits, U08, @OFFSET@, [0:5], "One Cylinder", "1-3-4-2", "1-2-4-3", "1-3-2-4", "1-5-3-6-2-4", "1-8-4-3-6-5-7-2", "1-2-4-5-3", "1-4-2-5-3-6", "1-2", "1-2-3-4-5-6", "1-2-3", "1-8-7-2-6-5-4-3", "1-5-4-2-6-3-7-8", "1-6-3-2-5-4", "1-10-9-4-3-6-5-8-7_2", "1-7-5-11-3-9-6-12-2-8-4-10", "1-7-4-10-2-8-6-12-3-9-5-11", "1-4-3-2", "1-12-5-8-3-10-6-7-2-11-4-9", "1-2-7-8-4-5-6-3", "1-3-7-2-6-5-4-8", "1-2-3-4-5-6-7-8-9", "INVALID", "1-2-3-4-5-6-7-8-9-10-11-12", "1-3-2", "1-2-3-4-5-6-7-8", "1-5-4-8-6-3-7-2", "1-4-3-6-2-5", "1-8-7-3-6-5-4-2", "1-6-2-4-3-5", "1-6-5-4-3-2", "1-4-5-2-3-6", "1-5-4-8-3-7-2-6", "1-6-5-10-2-7-3-8-4-9"
 firing_order_e firingOrder;
 
@@ -510,7 +505,6 @@ output_pin_e acrPin;
 
 float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your vehicle speed sensor is connected to. Use an online calculator to determine this based on your tire size.;"revs/km", 1, 0, 100, 1000, 1
 
-int canSleepPeriodMs;CANbus thread period in ms;"ms", 1, 0, 0, 1000, 2
 	int byFirmwareVersion;;"index", 1, 0, 0, 300, 0
 
 	adc_channel_e tps1_1AdcChannel;First throttle body, first sensor
@@ -518,21 +512,24 @@ adc_channel_e vbattAdcChannel;This is the processor input pin that the battery v
 adc_channel_e fuelLevelSensor;This is the processor pin that your fuel level sensor in connected to. This is a non standard input so will need to be user defined.
 	adc_channel_e tps2_1AdcChannel;Second throttle body, first sensor
 
-	int trailingSparkAngle;just a temporary solution;"angle", 1, 0, 0, 720, 0
+	uint8_t autoscale trailingSparkAngle;;"angle", 0.1, 0, 0, 20, 1
 
-struct trigger_config_s
+	uint8_t acIdleExtraOffset;Additional idle % while A/C is active;"%", 1, 0, 0, 100, 0
 
-#define trigger_type_e_enum "custom toothed wheel", "Ford Aspire", "Dodge Neon 1995", "Miata NA", "Mitsubishi Mess 4", "GM_7X", "Cooper R50", "Mazda SOHC 4", "60/2", "36/1", "Mercedes Two Segment", "Mitsubishi 4G93 11", "EZ30", "INVALID", "Dodge Neon 2003", "Mazda DOHC 1+4", "1+1", "INVALID", "Single Tooth", "Dodge Ram 1+16", "60/2 VW", "Benelli Tre", "Dodge Stratus", "36_2_2_2", "Nissan Primera", "dev 2JZ 3/34 simulator", "Rover K", "GM 24x 5 degree", "Honda CBR 600", "Mitsubishi 4G92/93/94 Cam 29", "Honda CBR 600 custom", "3/1 skipped", "Dodge Neon 2003 crank", "Miata NB", "Mitsubishi 4G63 Cam 34", "INVALID", "Subaru 7+6", "Jeep 18-2-2-2", "12 tooth crank", "Dodge Neon 1995 crank only", "Jeep XJ 4 cyl", "FiatIAQ_P8", "Mazda Z5", "INVALID", "Renix 44-2-2", "Renix 66-2-2-2", "Honda K 12+1", "INVALID", "36/2", "Subaru SVX", "1+16", "Subaru 7 without 6", "INVALID", "TriTach", "GM 60/2/2/2", "Skoda Favorit", "Barra 3+1 Cam", "Kawa KX450F", "Nissan VQ35", "INVALID", "Nissan VQ30", "Nissan QR25", "Mitsubishi 3A92", "Subaru SVX Crank 1", "Subaru SVX Cam VVT", "Ford PIP", "Suzuki G13B", "Honda K 4+1", "Nissan MR18 Crank", "32/2", "36-2-1", "36-2-1-1", "INVALID", "INVALID", "GM 24x 3 degree", "INVALID", "trg76"
+	uint16_t autoscale finalGearRatio;Ratio between the wheels and your transmission output. ;"ratio", 0.01, 0, 0, 10, 2
 
-custom trigger_type_e 4 bits, U32, @OFFSET@, [0:6], @@trigger_type_e_enum@@
-	trigger_type_e type;https://github.com/rusefi/rusefi/wiki/All-Supported-Triggers
-	int customTotalToothCount;;"number", 1, 0, 1, 300, 0
-	int customSkippedToothCount;;"number", 1, 0, 0, 300, 0
-end_struct
+	struct trigger_config_s
+		#define trigger_type_e_enum "custom toothed wheel", "Ford Aspire", "Dodge Neon 1995", "Miata NA", "Mitsubishi Mess 4", "GM_7X", "Cooper R50", "Mazda SOHC 4", "60/2", "36/1", "Mercedes Two Segment", "Mitsubishi 4G93 11", "EZ30", "INVALID", "Dodge Neon 2003", "Mazda DOHC 1+4", "1+1", "INVALID", "Single Tooth", "Dodge Ram 1+16", "60/2 VW", "Benelli Tre", "Dodge Stratus", "36_2_2_2", "Nissan Primera", "dev 2JZ 3/34 simulator", "Rover K", "GM 24x 5 degree", "Honda CBR 600", "Mitsubishi 4G92/93/94 Cam 29", "Honda CBR 600 custom", "3/1 skipped", "Dodge Neon 2003 crank", "Miata NB", "Mitsubishi 4G63 Cam 34", "INVALID", "Subaru 7+6", "Jeep 18-2-2-2", "12 tooth crank", "Dodge Neon 1995 crank only", "Jeep XJ 4 cyl", "FiatIAQ_P8", "Mazda Z5", "INVALID", "Renix 44-2-2", "Renix 66-2-2-2", "Honda K 12+1", "INVALID", "36/2", "Subaru SVX", "1+16", "Subaru 7 without 6", "INVALID", "TriTach", "GM 60/2/2/2", "Skoda Favorit", "Barra 3+1 Cam", "Kawa KX450F", "Nissan VQ35", "INVALID", "Nissan VQ30", "Nissan QR25", "Mitsubishi 3A92", "Subaru SVX Crank 1", "Subaru SVX Cam VVT", "Ford PIP", "Suzuki G13B", "Honda K 4+1", "Nissan MR18 Crank", "32/2", "36-2-1", "36-2-1-1", "INVALID", "INVALID", "GM 24x 3 degree", "INVALID", "trg76"
 
-trigger_config_s trigger;
+		custom trigger_type_e 4 bits, U32, @OFFSET@, [0:6], @@trigger_type_e_enum@@
+		trigger_type_e type;https://github.com/rusefi/rusefi/wiki/All-Supported-Triggers
+		uint16_t customTotalToothCount;;"number", 1, 0, 1, 60, 0
+		uint16_t customSkippedToothCount;;"number", 1, 0, 0, 10, 0
+	end_struct
 
-    float airByRpmTaper;Extra air taper amount;"%", 1, 0, 0, 50, 1
+	trigger_config_s trigger;
+
+	float airByRpmTaper;Extra air taper amount;"%", 1, 0, 0, 50, 1
 
 custom spi_device_e 1 bits, U08, @OFFSET@, [0:2], "Off", "SPI1", "SPI2", "SPI3", "SPI4", "SPI5", "SPI6"
 	uint8_t boostControlSafeDutyCycle;Duty cycle to use in case of a sensor failure. This duty cycle should produce the minimum possible amount of boost. This duty is also used in case any of the minimum RPM/TPS/MAP conditions are not met.;"%", 1, 0, 0, 100, 0
@@ -565,7 +562,7 @@ afr_sensor_s afr
 	air_pressure_sensor_config_s baroSensor
 
 struct idle_hardware_s
-	int solenoidFrequency;;"Hz", 1, 0, 0, 3000, 0
+	uint16_t solenoidFrequency;;"Hz", 1, 0, 0, 3000, 0
 
 	output_pin_e solenoidPin
 	Gpio stepperDirectionPin
@@ -648,10 +645,6 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 	Gpio sdCardCsPin;
 	Gpio canTxPin;set_can_tx_pin X
 	Gpio canRxPin;set_can_rx_pin X
-
-	uint8_t acIdleExtraOffset;Additional idle % while A/C is active;"%", 1, 0, 0, 100, 0
-
-    uint16_t autoscale finalGearRatio;Ratio between the wheels and your transmission output. ;"ratio", 0.01, 0, 0, 10, 2
 
 	brain_input_pin_e tcuInputSpeedSensorPin
 	uint8_t tcuInputSpeedSensorTeeth
@@ -751,7 +744,8 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 
 	switch_input_pin_e startStopButtonPin
 	
-	int mapMinBufferLength;This many MAP samples are used to estimate the current MAP. This many samples are considered, and the minimum taken. Recommended value is 1 for single-throttle engines, and your number of cylinders for individual throttle bodies.;"count", 1, 0, 1, 24, 0
+	uint8_t mapMinBufferLength;This many MAP samples are used to estimate the current MAP. This many samples are considered, and the minimum taken. Recommended value is 1 for single-throttle engines, and your number of cylinders for individual throttle bodies.;"count", 1, 0, 1, 24, 0
+	uint8_t cylindersCount;Number of cylinder the engine has.;"", 1, 0, 1, @@MAX_CYLINDER_COUNT@@, 0
 	int16_t idlePidDeactivationTpsThreshold;Below this throttle position, the engine is considered idling. If you have an electronic throttle, this checks accelerator pedal position instead of throttle position, and should be set to 1-2%.;"%", 1, 0, 0, 50, 0
 	int16_t stepperParkingExtraSteps;;"%", 1, 0, 0, 3000, 0
 	uint16_t tps1SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
@@ -771,9 +765,9 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 
 	spi_device_e drv8860spiDevice;
 
+	Gpio mc33816_flag0;
 
-
-custom script_setting_t 4 scalar, F32, @OFFSET@, 		"",	   1,	   0, 0, 18000,	  2
+	custom script_setting_t 4 scalar, F32, @OFFSET@, 		"",	   1,	   0, 0, 18000,	  2
 	script_setting_t[SCRIPT_SETTING_COUNT iterate] scriptSetting;
 
 	Gpio spi1mosiPin;
@@ -845,11 +839,11 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 	custom boostType_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop", "Open + Closed Loop"
 	boostType_e boostType;
 
-    switch_input_pin_e ALSActivatePin;
-    switch_input_pin_e launchActivatePin;
+	switch_input_pin_e ALSActivatePin;
+	switch_input_pin_e launchActivatePin;
 
-    pid_s boostPid;
-    int boostPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
+	pid_s boostPid;
+	uint16_t boostPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
 	#define launchActivationMode_e_enum "Launch Button", "Clutch Down Switch", "Always Active(Disabled By Speed)"
     custom launchActivationMode_e  1 bits, S08, @OFFSET@, [0:1], @@launchActivationMode_e_enum@@
@@ -858,8 +852,6 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
     #define antiLagActivationMode_e_enum "Switch Input", "Always Active"
     custom antiLagActivationMode_e  1 bits, S08, @OFFSET@, [0:0], @@antiLagActivationMode_e_enum@@
     antiLagActivationMode_e antiLagActivationMode;
-
-	Gpio mc33816_flag0;
 
     int launchSpeedThreshold;Disabled above this speed;"Kph", 1, 0, 0, 300, 0
     int launchTimingRpmRange;Range from Launch RPM for Timing Retard to activate;"RPM", 1, 0, 0, 8000, 0
@@ -982,7 +974,7 @@ bit useBiQuadOnAuxSpeedSensors
 bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
 bit ALSActivateInverted
 
-	uint32_t engineChartSize;;"count", 1, 0, 0, 300, 0
+	uint16_t engineChartSize;;"count", 1, 0, 0, 300, 0
 
 
 
@@ -999,7 +991,12 @@ bit ALSActivateInverted
 float idleStepperReactionTime;;"ms", 1, 0, 1, 300, 0
 
 
-	int idleStepperTotalSteps;;"count", 1, 0, 5, 3000, 0
+	uint16_t idleStepperTotalSteps;;"count", 1, 0, 5, 3000, 0
+
+	custom injector_compensation_mode_e 1 bits, U08, @OFFSET@, [0:1], "None", "Fixed rail pressure", "Sensed Rail Pressure"
+	injector_compensation_mode_e injectorCompensationMode;None = I have a MAP-referenced fuel pressure regulator\nFixed rail pressure = I have an atmosphere-referenced fuel pressure regulator (returnless, typically)\nSensed rail pressure = I have a fuel pressure sensor;
+
+	pin_output_mode_e fan2PinMode;
 
 	#define pin_mode_e_enum "default", "INVALID", "INVALID", "INVALID", "opendrain", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PULLUP", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PULLDOWN"
 custom pin_mode_e 1 bits, U08, @OFFSET@, [0:6], @@pin_mode_e_enum@@
@@ -1132,7 +1129,6 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 
 	output_pin_e[CAM_INPUTS_COUNT iterate] vvtPins;VVT output solenoid pin for this cam
 
-	int crankingIACposition;This is the IAC position during cranking, some engines start better if given more air during cranking to improve cylinder filling.;"percent", 1, 0, -100, 100, 0
 	float tChargeMinRpmMinTps;;"", 1, 0, 0, 3, 4
 	float tChargeMinRpmMaxTps;;"", 1, 0, 0, 3, 4
 	float tChargeMaxRpmMinTps;;"", 1, 0, 0, 3, 4
@@ -1142,7 +1138,7 @@ custom pwm_freq_t 2 scalar, U16, @OFFSET@, "Hz", 1, 0, 0, 3000, 0
 	pwm_freq_t vvtOutputFrequency
 	int8_t minimumIgnitionTiming;Minimim timing advance allowed. No spark on any cylinder will ever fire after this angle BTDC. For example, setting -10 here means no spark ever fires later than 10 deg ATDC. Note that this only concerns the primary spark: any trailing sparks or multispark may violate this constraint.;"deg BTDC", 1, 0, -90, 90, 0
 	int8_t maximumIgnitionTiming;Maximum timing advance allowed. No spark on any cylinder will ever fire before this angle BTDC. For example, setting 45 here means no spark ever fires earlier than 45 deg BTDC;"deg BTDC", 1, 0, -90, 90, 0
-	int alternatorPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
+	uint16_t alternatorPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
 
 	vvt_mode_e[CAMS_PER_BANK iterate] vvtMode
@@ -1157,10 +1153,6 @@ tle8888_mode_e tle8888mode;
 
 	pin_output_mode_e LIS302DLCsPinMode;
 
-	custom injector_compensation_mode_e 1 bits, U08, @OFFSET@, [0:1], "None", "Fixed rail pressure", "Sensed Rail Pressure"
-	injector_compensation_mode_e injectorCompensationMode;None = I have a MAP-referenced fuel pressure regulator\nFixed rail pressure = I have an atmosphere-referenced fuel pressure regulator (returnless, typically)\nSensed rail pressure = I have a fuel pressure sensor;
-
-	pin_output_mode_e fan2PinMode;
 	float fuelReferencePressure;This is the pressure at which your injector flow is known.\nFor example if your injectors flow 400cc/min at 3.5 bar, enter 350kpa here.;"kPa", 1, 0, 50, 700000, 0
 	float postCrankingFactor;Fuel multiplier (enrichment) immediately after engine start;"mult", 1, 0, 1, 3, 2
 	float postCrankingDurationSec;Time over which to taper out after start enrichment;"seconds", 1, 0, 0, 30, 0
@@ -1374,13 +1366,13 @@ output_pin_e acrPin2;
 	uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.1, 0, 0, 10, 1
 	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
 
-uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
+	uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
 
-SentEtbType sentEtbType
+	#define fuel_pressure_sensor_mode_e_enum "Absolute", "Gauge", "Differential", "INVALID"
+	custom fuel_pressure_sensor_mode_e 1 bits, U08, @OFFSET@, [0:1], @@fuel_pressure_sensor_mode_e_enum@@
+	fuel_pressure_sensor_mode_e fuelPressureSensorMode
+	uint8_t crankingIACposition;This is the IAC position during cranking, some engines start better if given more air during cranking to improve cylinder filling.;"percent", 1, 0, 0, 100, 0
 
-#define fuel_pressure_sensor_mode_e_enum "Absolute", "Gauge", "Differential", "INVALID"
-custom fuel_pressure_sensor_mode_e 1 bits, U08, @OFFSET@, [0:1], @@fuel_pressure_sensor_mode_e_enum@@
-fuel_pressure_sensor_mode_e fuelPressureSensorMode
 
 switch_input_pin_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPins;
 	int16_t ALSMinRPM;;"rpm", 1, 0, 0, 20000, 0
@@ -1395,9 +1387,9 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 
 	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
 
-	int ALSIdleAdd;;"%", 1, 0, 0, 100, 2
-	int ALSEtbAdd;;"%", 1, 0, 0, 100, 2
-	int ALSSkipRatio;;"", 1, 0, 0.1, 2, 1
+	uint8_t ALSIdleAdd;;"%", 1, 0, 0, 100, 0
+	uint8_t ALSEtbAdd;;"%", 1, 0, 0, 100, 0
+	uint8_t autoscale ALSSkipRatio;;"", 0.1, 0, 0.1, 2, 1
 	uint8_t ALSMaxDriverThrottleIntent;;"%", 1, 0, 0, 10, 0
 	pin_input_mode_e ALSActivatePinMode;
 
@@ -1430,6 +1422,8 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	Gpio spi6mosiPin;
 	Gpio spi6misoPin;
 	Gpio spi6sckPin;
+
+	uint16_t canSleepPeriodMs;FOME verbose data transmit period (approximate);"ms", 1, 0, 0, 1000, 0
 
 ! end of engine_configuration_s
 end_struct
