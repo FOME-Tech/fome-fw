@@ -231,6 +231,8 @@ case engine_type_e::ET_UNUSED_15:
   return "ET_UNUSED_15";
 case engine_type_e::ET_UNUSED_17:
   return "ET_UNUSED_17";
+case engine_type_e::ET_UNUSED_19:
+  return "ET_UNUSED_19";
 case engine_type_e::ET_UNUSED_20:
   return "ET_UNUSED_20";
 case engine_type_e::ET_UNUSED_21:
@@ -379,12 +381,6 @@ case engine_type_e::SUBARUEG33_DEFAULTS:
   return "SUBARUEG33_DEFAULTS";
 case engine_type_e::SUBARU_2003_WRX:
   return "SUBARU_2003_WRX";
-case engine_type_e::TEST_100:
-  return "TEST_100";
-case engine_type_e::TEST_101:
-  return "TEST_101";
-case engine_type_e::TEST_102:
-  return "TEST_102";
 case engine_type_e::TEST_33816:
   return "TEST_33816";
 case engine_type_e::TEST_CRANK_ENGINE:
@@ -399,8 +395,6 @@ case engine_type_e::TEST_ISSUE_366_BOTH:
   return "TEST_ISSUE_366_BOTH";
 case engine_type_e::TEST_ISSUE_366_RISE:
   return "TEST_ISSUE_366_RISE";
-case engine_type_e::TEST_ROTARY:
-  return "TEST_ROTARY";
 case engine_type_e::TLE8888_BENCH_ENGINE:
   return "TLE8888_BENCH_ENGINE";
 case engine_type_e::TOYOTA_2JZ_GTE_VVTi:
