@@ -312,22 +312,19 @@ static expected<float> getRunningInjectionAngle() {
 // or unexpected if unable to calculate the start angle due to missing information.
 expected<float> InjectionEvent::computeInjectionAngle() const {
 	auto runningAngle = getRunningInjectionAngle();
+	if (!runningAngle) {
+		return unexpected;
+	}
 
 	// Cranking is always SOI-scheduled at a fixed angle to avoid crank-to-run missed injections
-	float crankingSoi = -320;
+	float crankingSoi = 400;
 	float timeSinceCranking = engine->fuelComputer.running.timeSinceCrankingInSecs;
 
-	float openingAngle;
-	if (!runningAngle || engine->rpmCalculator.isCranking()) {
-		openingAngle = crankingSoi;
-	} else if (timeSinceCranking < 5) {
-		openingAngle = interpolateClamped(
+	float openingAngle = interpolateClamped(
 			1, crankingSoi,
 			5, runningAngle.Value,
 			timeSinceCranking);
-	} else {
-		openingAngle = runningAngle.Value;
-	}
+	wrapAngle(openingAngle, "soi", ObdCode::CUSTOM_ERR_6555);
 
 	// TODO: should we log per-cylinder injection timing? #76
 	getTunerStudioOutputChannels()->injectionOffset = openingAngle;
