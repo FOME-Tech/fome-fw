@@ -171,9 +171,7 @@ static void prepareLogFileName() {
 	strcpy(logName, FOME_LOG_PREFIX);
 	char *ptr;
 
-	bool result = dateToStringShort(&logName[PREFIX_LEN]);
-
-	if (result) {
+	if (dateToStringShort(&logName[PREFIX_LEN])) {
 		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
 	} else {
 		ptr = itoa10(&logName[PREFIX_LEN], logFileIndex);

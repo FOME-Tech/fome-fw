@@ -53,9 +53,7 @@ static int lua_readpin(lua_State* l) {
 }
 
 static int getSensor(lua_State* l, SensorType type) {
-	auto result = Sensor::get(type);
-
-	if (result) {
+	if (auto result = Sensor::get(type)) {
 		// return value if valid
 		lua_pushnumber(l, result.Value);
 	} else {
