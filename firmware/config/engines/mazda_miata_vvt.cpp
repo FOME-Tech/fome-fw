@@ -571,9 +571,9 @@ void setMazdaMiata2003EngineConfigurationBoardTest() {
 	engineConfiguration->mafAdcChannel = EFI_ADC_4; // PA4 - W47 top <>W47
 }
 
+#if HW_MICRO_RUSEFI
 static void setMiataNB2_MRE_common() {
 	setMazdaMiataEngineNB2Defaults();
-#if (BOARD_TLE8888_COUNT > 0)
 
 	// MRE has a special main relay control low side pin - rusEfi firmware is totally not involved with main relay control
 	//
@@ -631,8 +631,8 @@ static void setMiataNB2_MRE_common() {
 	// set vbatt_divider 10.956
 	// 56k high side/10k low side multiplied by analogInputDividerCoefficient
 	// vbattDividerCoeff = 10.956 (66.0f / 10.0f) * engineConfiguration->analogInputDividerCoefficient;
-#endif /* BOARD_TLE8888_COUNT */
 }
+#endif // HW_MICRO_RUSEFI
 
 /**
  * https://github.com/rusefi/rusefi/wiki/HOWTO-TCU-A42DE-on-Proteus
