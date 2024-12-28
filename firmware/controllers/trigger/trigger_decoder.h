@@ -155,7 +155,7 @@ public:
 	 */
 	efitick_t startOfCycleNt;
 
-	uint32_t findTriggerZeroEventIndex(
+	expected<uint32_t> findTriggerZeroEventIndex(
 			TriggerWaveform& shape,
 			const TriggerConfiguration& triggerConfiguration
 			);

@@ -95,7 +95,7 @@ bool printTriggerTrace = false;
 
 void TriggerWaveform::initializeSyncPoint(TriggerDecoderBase& state,
 			const TriggerConfiguration& triggerConfiguration) {
-	triggerShapeSynchPointIndex = state.findTriggerZeroEventIndex(*this, triggerConfiguration);
+	triggerShapeSynchPointIndex = state.findTriggerZeroEventIndex(*this, triggerConfiguration).value_or(EFI_ERROR_CODE);
 }
 
 void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
@@ -682,13 +682,12 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
  *
  * This function finds the index of synchronization event within TriggerWaveform
  */
-uint32_t TriggerDecoderBase::findTriggerZeroEventIndex(
+expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 		TriggerWaveform& shape,
 		const TriggerConfiguration& triggerConfiguration) {
 #if EFI_PROD_CODE
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCurrentRemainingStack() > 128, "findPos", -1);
 #endif
-
 
 	resetState();
 
@@ -700,11 +699,11 @@ uint32_t TriggerDecoderBase::findTriggerZeroEventIndex(
 			triggerConfiguration,
 			*this);
 	if (!syncIndex) {
-		return EFI_ERROR_CODE;
+		return unexpected;
 	}
 
 	// Assert that we found the sync point on the very first revolution
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCrankSynchronizationCounter() == 0, "findZero_revCounter", EFI_ERROR_CODE);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCrankSynchronizationCounter() == 0, "findZero_revCounter", unexpected);
 
 #if EFI_UNIT_TEST
 	if (printTriggerDebug) {
