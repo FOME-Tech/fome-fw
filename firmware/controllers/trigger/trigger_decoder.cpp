@@ -694,7 +694,7 @@ expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 	resetState();
 
 	if (shape.shapeDefinitionError) {
-		return 0;
+		return unexpected;
 	}
 
 	expected<uint32_t> syncIndex = TriggerStimulatorHelper::findTriggerSyncPoint(shape,
