@@ -113,7 +113,7 @@ int WaveChart::getSize() {
 #if ! EFI_UNIT_TEST
 static void printStatus() {
 	efiPrintf("engine sniffer: %s", boolToString(getTriggerCentral()->isEngineSnifferEnabled));
-	efiPrintf("engine sniffer size=%lu", engineConfiguration->engineChartSize);
+	efiPrintf("engine sniffer size=%d", engineConfiguration->engineChartSize);
 }
 
 void setChartSize(int newSize) {
