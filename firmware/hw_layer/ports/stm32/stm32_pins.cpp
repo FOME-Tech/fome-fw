@@ -154,8 +154,8 @@ int getPortPinIndex(ioportid_t port, ioportmask_t pin) {
 }
 
 ioportid_t getHwPort(const char *msg, brain_pin_e brainPin) {
-	if (!isBrainPinValid(brainPin)) {
-		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid Gpio: %d", msg, brainPin);
+	if (!isBrainPinValid(brainPin) || !brain_pin_is_onchip(brainPin)) {
+		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid GPIO: %d", msg, (int)brainPin);
 		return nullptr;
 	}
 
