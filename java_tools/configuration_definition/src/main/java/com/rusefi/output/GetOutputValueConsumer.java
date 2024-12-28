@@ -77,7 +77,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
         return  "#if !EFI_UNIT_TEST\n" +
                 FILE_HEADER +
-                "float getOutputValueByName(const char *name) {\n" +
+                "expected<float> getOutputValueByName(const char *name) {\n" +
                 fullSwitch +
                 getterBody + GetConfigValueConsumer.GET_METHOD_FOOTER +
                 "#endif\n";
@@ -97,7 +97,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
         StringBuilder getterBody = new StringBuilder();
         for (VariableRecord pair : getterPairs) {
-            String returnLine = "\t\treturn " + pair.getFullName() + ";\n";
+            String returnLine = "\t\treturn (float)" + pair.getFullName() + ";\n";
             String conditional = pair.getConditional();
 
             String before = conditional == null ? "" : "#if " + conditional + "\n";

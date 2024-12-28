@@ -52,8 +52,6 @@ typedef unsigned int time_t;
 
 #define getCurrentRemainingStack() getRemainingStack(chThdGetSelfX())
 
-#define EFI_ERROR_CODE 0xffffffff
-
 /**
  * rusEfi is placing some of data structures into CCM memory simply
  * in order to use that memory - no magic about which RAM is faster etc.

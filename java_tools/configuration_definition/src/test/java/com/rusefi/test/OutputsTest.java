@@ -104,23 +104,23 @@ public class OutputsTest {
                 "#if !EFI_UNIT_TEST\n" +
                 "#include \"pch.h\"\n" +
                         "#include \"value_lookup.h\"\n" +
-                        "float getOutputValueByName(const char *name) {\n" +
+                        "expected<float> getOutputValueByName(const char *name) {\n" +
                         "\tint hash = djb2lowerCase(name);\n" +
                         "\tswitch(hash) {\n" +
                         "#if EFI_BOOST_CONTROL\n" +
                         "\t\tcase -1571463185:\n" +
-                        "\t\t\treturn engine->outputChannels.issue_294_31;\n" +
+                        "\t\t\treturn (float)engine->outputChannels.issue_294_31;\n" +
                         "#endif\n" +
                         "#if EFI_BOOST_CONTROL\n" +
                         "\t\tcase -298185774:\n" +
-                        "\t\t\treturn engine->outputChannels.enableFan1WithAc;\n" +
+                        "\t\t\treturn (float)engine->outputChannels.enableFan1WithAc;\n" +
                         "#endif\n" +
                         "#if EFI_BOOST_CONTROL\n" +
                         "\t\tcase -709106787:\n" +
-                        "\t\t\treturn engine->outputChannels.hwChannel;\n" +
+                        "\t\t\treturn (float)engine->outputChannels.hwChannel;\n" +
                         "#endif\n" +
                         "\t}\n" +
-                        "\treturn EFI_ERROR_CODE;\n" +
+                        "\treturn unexpected;\n" +
                         "}\n" +
                         "#endif\n", outputValueConsumer.getContent());
     }

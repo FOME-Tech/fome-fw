@@ -808,7 +808,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getCalibration", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getConfigValueByName(propertyName);
-		lua_pushnumber(l2, result);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getCalibration: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 
@@ -816,7 +821,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getOutput", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getOutputValueByName(propertyName);
-		lua_pushnumber(l2, result);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getOutput: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR

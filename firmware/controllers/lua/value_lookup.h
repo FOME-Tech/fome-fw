@@ -38,8 +38,8 @@ T* findPair(const char *name, T array[TCount], size_t count) {
 	return nullptr;
 }
 
-float getConfigValueByName(const char *name);
+expected<float> getConfigValueByName(const char *name);
 void setConfigValueByName(const char *name, float value);
-float getOutputValueByName(const char *name);
+expected<float> getOutputValueByName(const char *name);
 
 void * hackEngineConfigurationPointer(void *ptr);

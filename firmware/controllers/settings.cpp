@@ -362,9 +362,9 @@ void scheduleStopEngine() {
 
 static void getValue(const char *paramStr) {
 	{
-		float value = getConfigValueByName(paramStr);
-		if (value != EFI_ERROR_CODE) {
-			efiPrintf("%s value: %.2f", paramStr, value);
+		expected<float> value = getConfigValueByName(paramStr);
+		if (value) {
+			efiPrintf("%s value: %.2f", paramStr, value.Value);
 			return;
 		}
 	}

@@ -23,8 +23,8 @@ public class GetConfigValueConsumerTest {
         state.readBufferedReader(test, getConfigValueConsumer);
 
         assertEquals(
-                "float getConfigValueByName(const char *name) {\n" +
-                        "\treturn EFI_ERROR_CODE;\n" +
+                "expected<float> getConfigValueByName(const char *name) {\n" +
+                        "\treturn unexpected;\n" +
                         "}\n", getConfigValueConsumer.getCompleteGetterBody());
     }
 
@@ -61,15 +61,15 @@ public class GetConfigValueConsumerTest {
 
         assertEquals("#include \"pch.h\"\n" +
                 "#include \"value_lookup.h\"\n" +
-                "float getConfigValueByName(const char *name) {\n" +
+                "expected<float> getConfigValueByName(const char *name) {\n" +
                 "\tint hash = djb2lowerCase(name);\n" +
                 "\tswitch(hash) {\n" +
                 "\t\tcase -672272162:\n" +
-                "\t\t\treturn config->iat.config.tempC_1;\n" +
+                "\t\t\treturn (float)config->iat.config.tempC_1;\n" +
                 "\t\tcase -1237776078:\n" +
-                "\t\t\treturn config->iat.adcChannel;\n" +
+                "\t\t\treturn (float)config->iat.adcChannel;\n" +
                 "\t}\n" +
-                "\treturn EFI_ERROR_CODE;\n" +
+                "\treturn unexpected;\n" +
                 "}\n" +
                 "void setConfigValueByName(const char *name, float value) {\n" +
                 "\tint hash = djb2lowerCase(name);\n" +
@@ -88,15 +88,15 @@ public class GetConfigValueConsumerTest {
                 "}\n", getConfigValueConsumer.getContent());
 
 
-        assertEquals("float getConfigValueByName(const char *name) {\n" +
+        assertEquals("expected<float> getConfigValueByName(const char *name) {\n" +
                 "\tint hash = djb2lowerCase(name);\n" +
                 "\tswitch(hash) {\n" +
                 "\t\tcase -672272162:\n" +
-                "\t\t\treturn config->iat.config.tempC_1;\n" +
+                "\t\t\treturn (float)config->iat.config.tempC_1;\n" +
                 "\t\tcase -1237776078:\n" +
-                "\t\t\treturn config->iat.adcChannel;\n" +
+                "\t\t\treturn (float)config->iat.adcChannel;\n" +
                 "\t}\n" +
-                "\treturn EFI_ERROR_CODE;\n" +
+                "\treturn unexpected;\n" +
                 "}\n", getConfigValueConsumer.getCompleteGetterBody());
     }
 
@@ -157,39 +157,39 @@ public class GetConfigValueConsumerTest {
 
         assertEquals("#include \"pch.h\"\n" +
                 "#include \"value_lookup.h\"\n" +
-                "float getConfigValueByName(const char *name) {\n" +
+                "expected<float> getConfigValueByName(const char *name) {\n" +
                 "\tint hash = djb2lowerCase(name);\n" +
                 "\tswitch(hash) {\n" +
                 "\t\tcase -1832527325:\n" +
-                "\t\t\treturn config->clt.config.tempC_1;\n" +
+                "\t\t\treturn (float)config->clt.config.tempC_1;\n" +
                 "\t\tcase 1819278123:\n" +
-                "\t\t\treturn config->clt.config.map.sensor.highValue;\n" +
+                "\t\t\treturn (float)config->clt.config.map.sensor.highValue;\n" +
                 "\t\tcase 581685574:\n" +
-                "\t\t\treturn config->clt.config.map.sensor.hwChannel;\n" +
+                "\t\t\treturn (float)config->clt.config.map.sensor.hwChannel;\n" +
                 "\t\tcase 382574846:\n" +
-                "\t\t\treturn config->clt.config.injector.flow;\n" +
+                "\t\t\treturn (float)config->clt.config.injector.flow;\n" +
                 "\t\tcase -653172717:\n" +
-                "\t\t\treturn config->clt.config.bias_resistor;\n" +
+                "\t\t\treturn (float)config->clt.config.bias_resistor;\n" +
                 "\t\tcase -1144186889:\n" +
-                "\t\t\treturn config->clt.adcChannel;\n" +
+                "\t\t\treturn (float)config->clt.adcChannel;\n" +
                 "\t\tcase -1571463185:\n" +
-                "\t\t\treturn config->issue_294_31;\n" +
+                "\t\t\treturn (float)config->issue_294_31;\n" +
                 "\t\tcase 727098956:\n" +
-                "\t\t\treturn config->baseFuel;\n" +
+                "\t\t\treturn (float)config->baseFuel;\n" +
                 "\t\tcase -1120008897:\n" +
-                "\t\t\treturn config->afr_type;\n" +
+                "\t\t\treturn (float)config->afr_type;\n" +
                 "\t\tcase -685727673:\n" +
-                "\t\t\treturn config->speedToRpmRatio;\n" +
+                "\t\t\treturn (float)config->speedToRpmRatio;\n" +
                 "\t\tcase 1694412179:\n" +
-                "\t\t\treturn config->afr_typet;\n" +
+                "\t\t\treturn (float)config->afr_typet;\n" +
                 "\t\tcase -1925174695:\n" +
-                "\t\t\treturn config->vehicleSpeedKph;\n" +
+                "\t\t\treturn (float)config->vehicleSpeedKph;\n" +
                 "\t\tcase -617915487:\n" +
-                "\t\t\treturn config->isForcedInduction;\n" +
+                "\t\t\treturn (float)config->isForcedInduction;\n" +
                 "\t\tcase -298185774:\n" +
-                "\t\t\treturn config->enableFan1WithAc;\n" +
+                "\t\t\treturn (float)config->enableFan1WithAc;\n" +
                 "\t}\n" +
-                "\treturn EFI_ERROR_CODE;\n" +
+                "\treturn unexpected;\n" +
                 "}\n", getConfigValueConsumer.getHeaderAndGetter());
 
 
