@@ -69,7 +69,7 @@ void TriggerWaveform::initialize(operation_mode_e operationMode, SyncEdge syncEd
 
 	m_operationMode = operationMode;
 	m_syncEdge = syncEdge;
-	triggerShapeSynchPointIndex = 0;
+	triggerShapeSynchPointIndex = unexpected;
 	setArrayValues(expectedEventCount, 0);
 	wave.reset();
 	wave.waveCount = TRIGGER_INPUT_PIN_COUNT;
@@ -88,7 +88,7 @@ size_t TriggerWaveform::getSize() const {
 }
 
 int TriggerWaveform::getTriggerWaveformSynchPointIndex() const {
-	return triggerShapeSynchPointIndex;
+	return triggerShapeSynchPointIndex.value_or(-1);
 }
 
 /**

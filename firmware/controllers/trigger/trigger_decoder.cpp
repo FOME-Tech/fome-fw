@@ -95,14 +95,16 @@ bool printTriggerTrace = false;
 
 void TriggerWaveform::initializeSyncPoint(TriggerDecoderBase& state,
 			const TriggerConfiguration& triggerConfiguration) {
-	triggerShapeSynchPointIndex = state.findTriggerZeroEventIndex(*this, triggerConfiguration).value_or(EFI_ERROR_CODE);
+	triggerShapeSynchPointIndex = state.findTriggerZeroEventIndex(*this, triggerConfiguration);
 }
 
 void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
-	int triggerShapeSynchPointIndex = shape->triggerShapeSynchPointIndex;
-	if (triggerShapeSynchPointIndex == EFI_ERROR_CODE) {
+	if (!shape->triggerShapeSynchPointIndex) {
 		return;
 	}
+
+	auto triggerShapeSynchPointIndex = shape->triggerShapeSynchPointIndex.Value;
+
 	angle_t firstAngle = shape->getAngle(triggerShapeSynchPointIndex);
 	assertAngleRange(firstAngle, "firstAngle", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE);
 
@@ -115,7 +117,7 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 	// this may be <length for some triggers like symmetrical crank Miata NB
 	size_t triggerShapeLength = shape->getSize();
 
-	assertAngleRange(shape->triggerShapeSynchPointIndex, "triggerShapeSynchPointIndex", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE2);
+	assertAngleRange(triggerShapeSynchPointIndex, "triggerShapeSynchPointIndex", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE2);
 	efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, getTriggerCentral()->engineCycleEventCount != 0, "zero engineCycleEventCount");
 
 	for (size_t eventIndex = 0; eventIndex < length; eventIndex++) {
@@ -126,7 +128,7 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 			eventAngles[1] = 0;
 		} else {
 			// Rotate the trigger around so that the sync point is at position 0
-			auto wrappedIndex = (shape->triggerShapeSynchPointIndex + eventIndex) % length;
+			auto wrappedIndex = (triggerShapeSynchPointIndex + eventIndex) % length;
 
 			// Compute this tooth's position within the trigger definition
 			// (wrap, as the trigger def may be smaller than total trigger length)
