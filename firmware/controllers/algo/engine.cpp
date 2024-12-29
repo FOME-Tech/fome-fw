@@ -450,6 +450,8 @@ injection_mode_e getCurrentInjectionMode() {
 	}
 
 	auto runningMode = engineConfiguration->injectionMode;
+
+#if EFI_SHAFT_POSITION_INPUT
 	if (runningMode == IM_SEQUENTIAL) {
 		bool missingPhaseInfoForSequential = 
 			!engine->triggerCentral.triggerState.hasSynchronizedPhase();
@@ -464,6 +466,7 @@ injection_mode_e getCurrentInjectionMode() {
 			return IM_BATCH;
 		}
 	}
+#endif /* EFI_SHAFT_POSITION_INPUT */
 
 	return runningMode;
 }
