@@ -136,10 +136,10 @@ TEST(misc, testAngleResolver) {
 	TriggerFormDetails *triggerFormDetails = &engine->triggerCentral.triggerFormDetails;
 	engine->updateTriggerWaveform();
 
-	assertEqualsM("index 2", 52.76, triggerFormDetails->eventAngles[3]); // this angle is relation to synch point
-	assertEqualsM("time 2", 0.3233, ts->wave.getSwitchTime(2));
-	assertEqualsM("index 5", 412.76, triggerFormDetails->eventAngles[6]);
-	assertEqualsM("time 5", 0.5733, ts->wave.getSwitchTime(5));
+	EXPECT_NEAR_M4(52.76, triggerFormDetails->eventAngles[3]) << "index 2"; // this angle is relation to synch point
+	EXPECT_NEAR_M4(0.3233, ts->wave.getSwitchTime(2)) << "time 2";
+	EXPECT_NEAR_M4(412.76, triggerFormDetails->eventAngles[6]) << "index 5";
+	EXPECT_NEAR_M4(0.5733, ts->wave.getSwitchTime(5)) << "time 5";
 
 	ASSERT_EQ(4, ts->getTriggerWaveformSynchPointIndex());
 

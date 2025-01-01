@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 void assertEqualsM(const char *msg, float expected, float actual) {
-	EXPECT_NEAR(expected, actual, 0.0001) << msg;
+	EXPECT_NEAR_M4(expected, actual) << msg;
 }
 
 void chDbgAssert(int c, char *msg, void *arg) {

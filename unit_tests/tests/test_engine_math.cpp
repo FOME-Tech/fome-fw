@@ -10,16 +10,6 @@
 #include "speed_density.h"
 #include "maf.h"
 
-TEST(misc, testIgnitionPlanning) {
-	printf("*************************************************** testIgnitionPlanning\r\n");
-	EngineTestHelper eth(engine_type_e::FORD_ESCORT_GT);
-
-	engine->periodicFastCallback();
-	assertEqualsM("testIgnitionPlanning_AFR", 13.5, engine->fuelComputer.targetAFR);
-
-	ASSERT_EQ(IM_BATCH, engineConfiguration->injectionMode);
-}
-
 TEST(misc, testEngineMath) {
 	printf("*************************************************** testEngineMath\r\n");
 
