@@ -1129,10 +1129,10 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 
 	output_pin_e[CAM_INPUTS_COUNT iterate] vvtPins;VVT output solenoid pin for this cam
 
-	float tChargeMinRpmMinTps;;"", 1, 0, 0, 3, 4
-	float tChargeMinRpmMaxTps;;"", 1, 0, 0, 3, 4
-	float tChargeMaxRpmMinTps;;"", 1, 0, 0, 3, 4
-	float tChargeMaxRpmMaxTps;;"", 1, 0, 0, 3, 4
+	uint8_t autoscale tChargeMinRpmMinTps;;"", 0.005, 0, 0, 1, 3
+	uint8_t autoscale tChargeMinRpmMaxTps;;"", 0.005, 0, 0, 1, 3
+	uint8_t autoscale tChargeMaxRpmMinTps;;"", 0.005, 0, 0, 1, 3
+	uint8_t autoscale tChargeMaxRpmMaxTps;;"", 0.005, 0, 0, 1, 3
 
 custom pwm_freq_t 2 scalar, U16, @OFFSET@, "Hz", 1, 0, 0, 3000, 0
 	pwm_freq_t vvtOutputFrequency
