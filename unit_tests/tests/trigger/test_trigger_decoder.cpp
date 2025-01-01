@@ -161,7 +161,7 @@ static void testTriggerDecoder2(const char *msg, engine_type_e type, int synchPo
 
 	ASSERT_EQ(synchPointIndex, t->getTriggerWaveformSynchPointIndex()) << "synchPointIndex";
 	if (!std::isnan(expectedGapRatio)) {
-		assertEqualsM2("actual gap ratio", expectedGapRatio, initState.triggerSyncGapRatio, 0.001);
+		EXPECT_NEAR(expectedGapRatio, initState.triggerSyncGapRatio, 0.001) << "actual gap ratio";
 	}
 }
 
@@ -271,7 +271,7 @@ TEST(misc, testRpmCalculator) {
 	ASSERT_EQ( 2,  eth.engine.triggerCentral.triggerState.getCurrentIndex()) << "index #3";
 	ASSERT_EQ( 4,  engine->scheduler.size()) << "queue size 3";
 	assertEqualsM("ev 3", start + 13333 - 1515 + 2459, engine->scheduler.getForUnitTest(0)->momentX);
-	assertEqualsM2("ev 5", start + 14277 + 500, engine->scheduler.getForUnitTest(1)->momentX, 2);
+	EXPECT_NEAR(start + 14277 + 500, engine->scheduler.getForUnitTest(1)->momentX, 2);
 	assertEqualsM("3/3", start + 14777 + 677, engine->scheduler.getForUnitTest(2)->momentX);
 	engine->scheduler.clear();
 
@@ -320,7 +320,7 @@ TEST(misc, testRpmCalculator) {
 
 	ASSERT_EQ( 4,  engine->scheduler.size()) << "queue size 8";
 	assertEqualsM("8/0", start + 53333 - 1515 + 2459, engine->scheduler.getForUnitTest(0)->momentX);
-	assertEqualsM2("8/1", start + 54277 + 2459 - 1959, engine->scheduler.getForUnitTest(1)->momentX, 0);
+	EXPECT_EQ(start + 54277 + 2459 - 1959, engine->scheduler.getForUnitTest(1)->momentX);
 	engine->scheduler.clear();
 }
 
