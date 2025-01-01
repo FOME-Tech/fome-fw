@@ -569,8 +569,8 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
 	ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
 
-	for (size_t index = 0; index < efi::size(engineConfiguration->vrThreshold); index++) {
-		auto& cfg = engineConfiguration->vrThreshold[index];
+	for (size_t index = 0; index < efi::size(config->vrThreshold); index++) {
+		auto& cfg = config->vrThreshold[index];
 
 		if (cfg.pin == Gpio::Unassigned) {
 			continue;

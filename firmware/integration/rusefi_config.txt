@@ -889,16 +889,6 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
     int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Angle between cam sensor and VVT zero position;"value", 0.1, 0, -720, 1000, 1
 
-struct vr_threshold_s
-	uint8_t[6] autoscale rpmBins;;"rpm", 50, 0, 0, 12000, 0
-	uint8_t[6] autoscale values;;"volts", {1/@@PACK_PERCENT_BYTE_MULT@@}, 0, 0, 2.5, 2
-	Gpio pin;
-end_struct
-
-! todo: should be '3' since we are dreaming of Honda triple-channel distributor
-#define VR_THRESHOLD_COUNT 2
-	vr_threshold_s[VR_THRESHOLD_COUNT iterate] vrThreshold;
-
     gppwm_note_t[GPPWM_CHANNELS iterate] gpPwmNote;
 
 	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
@@ -1712,6 +1702,15 @@ uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValues;DFCO will activate when o
 uint8_t[8 x 8] autoscale postCrankingEnrichTable;;"ratio", 0.02, 0, 1, 5, 2
 int8_t[8] autoscale postCrankingEnrichTempBins;;"deg C", 1, 0, -40, 120, 0
 uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0 
+
+	struct vr_threshold_s
+		uint8_t[6] autoscale rpmBins;;"rpm", 50, 0, 0, 12000, 0
+		uint8_t[6] autoscale values;;"volts", {1/@@PACK_PERCENT_BYTE_MULT@@}, 0, 0, 2.5, 2
+		Gpio pin;
+	end_struct
+
+	#define VR_THRESHOLD_COUNT 2
+	vr_threshold_s[VR_THRESHOLD_COUNT iterate] vrThreshold;
 
 end_struct
 
