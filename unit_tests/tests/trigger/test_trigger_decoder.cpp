@@ -250,17 +250,16 @@ TEST(misc, testRpmCalculator) {
 	ASSERT_EQ( 0,  eth.engine.triggerCentral.triggerState.getCurrentIndex()) << "index #2";
 	ASSERT_EQ( 4,  engine->scheduler.size()) << "queue size/2";
 	{
-	scheduling_s *ev0 = engine->scheduler.getForUnitTest(0);
+		scheduling_s *ev0 = engine->scheduler.getForUnitTest(0);
 
-	assertREqualsM("Call@0", (void*)ev0->action.getCallback(), (void*)turnSparkPinHigh);
-	assertEqualsM("ev 0", start + 944, ev0->momentX);
-	assertEqualsLM("coil 0", (uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev0->action.getArgument())->outputs[0]);
+		assertREqualsM("Call@0", (void*)ev0->action.getCallback(), (void*)turnSparkPinHigh);
+		assertEqualsM("ev 0", start + 944, ev0->momentX);
+		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev0->action.getArgument())->outputs[0]) << "coil 0";
 
-	scheduling_s *ev1 = engine->scheduler.getForUnitTest(1);
-	assertREqualsM("Call@1", (void*)ev1->action.getCallback(), (void*)fireSparkAndPrepareNextSchedule);
-	assertEqualsM("ev 1", start + 1444, ev1->momentX);
-	assertEqualsLM("coil 1", (uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev1->action.getArgument())->outputs[0]);
-
+		scheduling_s *ev1 = engine->scheduler.getForUnitTest(1);
+		assertREqualsM("Call@1", (void*)ev1->action.getCallback(), (void*)fireSparkAndPrepareNextSchedule);
+		assertEqualsM("ev 1", start + 1444, ev1->momentX);
+		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev1->action.getArgument())->outputs[0]) << "coil 1";
 	}
 
 	engine->scheduler.clear();

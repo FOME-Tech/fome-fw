@@ -9,14 +9,6 @@
 
 #include <stdlib.h>
 
-void assertEqualsM4(const char *prefix, const char *msg, float expected, float actual) {
-	ASSERT_NEAR(expected, actual, 0.0001f) << prefix << msg;
-}
-
-void assertEqualsLM(const char *msg, long expected, long actual) {
-	ASSERT_EQ(expected, actual) << msg;
-}
-
 void assertEqualsM(const char *msg, float expected, float actual) {
 	EXPECT_NEAR(expected, actual, 0.0001) << msg;
 }
