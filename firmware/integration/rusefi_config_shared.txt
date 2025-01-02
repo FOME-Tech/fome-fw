@@ -33,12 +33,10 @@
 #define BOOST_BLEND_COUNT 2
 #define LUA_GAUGE_COUNT 2
 
-#define HW_EVENT_TYPES 4
+#define STFT_BANK_COUNT 4
 
 #define GAUGE_NAME_VERSION "firmware"
 #define GAUGE_NAME_UPTIME "Uptime"
-#define GAUGE_NAME_TRG_ERR "Trigger Error Counter"
-#define GAUGE_NAME_TRG_GAP "Trigger Sync Latest Ratio"
 
 #define GAUGE_CATEGORY_ETB "ETB more"
 
@@ -51,6 +49,11 @@
 #define GAUGE_NAME_VVT_TARGET_B1E "VVT: bank 1 exhaust target"
 #define GAUGE_NAME_VVT_TARGET_B2I "VVT: bank 2 intake target"
 #define GAUGE_NAME_VVT_TARGET_B2E "VVT: bank 2 exhaust target"
+
+#define GAUGE_NAME_VVT_OUTPUT_B1I "VVT: bank 1 intake output"
+#define GAUGE_NAME_VVT_OUTPUT_B1E "VVT: bank 1 exhaust output"
+#define GAUGE_NAME_VVT_OUTPUT_B2I "VVT: bank 2 intake output"
+#define GAUGE_NAME_VVT_OUTPUT_B2E "VVT: bank 2 exhaust output"
 
 #define GAUGE_NAME_DESIRED_GEAR "TCU: Desired Gear"
 #define GAUGE_NAME_CURRENT_GEAR "Current Gear"
@@ -80,8 +83,6 @@
 #define GAUGE_NAME_WG_POSITION "Wastegate position sensor"
 #define GAUGE_NAME_ETB_ERROR "ETB: position error"
 #define GAUGE_NAME_ETB_DUTY "ETB: Duty"
-#define GAUGE_NAME_IDLE_POSITION "Idle: Position sensor"
-#define GAUGE_NAME_IDLE_RPM_TARGET "Idle: Target RPM"
 #define GAUGE_NAME_LAST_ERROR "Last error"
 #define GAUGE_NAME_TUNE_CRC16 "Tune CRC16"
 #define GAUGE_NAME_ENGINE_CRC16 "Engine CRC16"
@@ -113,15 +114,9 @@
 #define GAUGE_NAME_AUX_LINEAR_3 "Aux linear #3"
 #define GAUGE_NAME_AUX_LINEAR_4 "Aux linear #4"
 
-#define GAUGE_NAME_BOOST_OUTPUT "Boost: Output"
-#define GAUGE_NAME_BOOST_CLOSED_LOOP "Boost: Closed loop"
-#define GAUGE_NAME_BOOST_OPEN_LOOP "Boost: Open loop"
-#define GAUGE_NAME_BOOST_TARGET "Boost: Target"
-
 #define INDICATOR_NAME_CLUTCH_UP "Clutch: up"
 #define INDICATOR_NAME_CLUTCH_DOWN "Clutch: down"
 #define INDICATOR_NAME_BRAKE_DOWN "Brake switch"
-#define INDICATOR_NAME_AC_SWITCH "AC switch"
 
 #define GAUGE_NAME_AIR_FLOW_MEASURED "MAF"
 #define GAUGE_NAME_AIR_FLOW_MEASURED_2 "MAF #2"
@@ -168,9 +163,6 @@
 #define GAUGE_NAME_AFR2 "Air/Fuel Ratio 2"
 #define GAUGE_NAME_AFR_GAS_SCALE "Air/Fuel Ratio (Gas Scale)"
 #define GAUGE_NAME_AFR2_GAS_SCALE "Air/Fuel Ratio 2 (Gas Scale)"
-#define GAUGE_NAME_LAMBDA "Lambda"
-#define GAUGE_NAME_LAMBDA2 "Lambda 2"
-#define GAUGE_NAME_IAC "Idle: Position"
 
 #define GAUGE_NAME_TIMING_ADVANCE "Ign: Timing Base"
 #define GAUGE_NAME_DWELL_DUTY "Ign: Coil duty cycle"

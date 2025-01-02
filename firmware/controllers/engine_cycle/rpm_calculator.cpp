@@ -253,7 +253,7 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
  * updated here.
  * This callback is invoked on interrupt thread.
  */
-void rpmShaftPositionCallback(trigger_event_e ckpSignalType,
+void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 		uint32_t trgEventIndex, efitick_t nowNt) {
 
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
@@ -305,7 +305,7 @@ void rpmShaftPositionCallback(trigger_event_e ckpSignalType,
 	// it goes into sniffer report into the first position
 	if (getEngineState()->sensorChartMode == SC_TRIGGER) {
 		angle_t crankAngle = engine->triggerCentral.getCurrentEnginePhase(nowNt).value_or(0);
-		int signal = 1000 * ckpSignalType + trgEventIndex;
+		int signal = 1000 * (int)ckpSignalType + trgEventIndex;
 		scAddData(crankAngle, signal);
 	}
 #endif /* EFI_SENSOR_CHART */

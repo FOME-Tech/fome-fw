@@ -151,12 +151,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } idle_mode_e;
 
-enum class SentEtbType : uint8_t {
-	NONE = 0,
-	GM_TYPE_1 = 1,
-	FORD_TYPE_1 = 2,
-};
-
 typedef enum __attribute__ ((__packed__)) {
 	/**
 	 * GND for logical OFF, VCC for logical ON
@@ -479,16 +473,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } tChargeMode_e;
 
-typedef enum __attribute__ ((__packed__)) {
-	INIT = 0,
-	TPS_THRESHOLD = 1,
-	RPM_DEAD_ZONE = 2,
-	PID_VALUE = 4,
-	PID_UPPER = 16,
-	BLIP = 64,
-
-} idle_state_e;
-
 // todo: should this be just a boolean?
 typedef enum __attribute__ ((__packed__)) {
 	OPEN_LOOP = 0,
@@ -540,7 +524,7 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_AuxLinear3 = 29,
 	GPPWM_AuxLinear4 = 30,
 	GPPWM_VehicleSpeed = 31,
-} gppwm_channel_e;
+} gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this enum
 
 typedef enum __attribute__ ((__packed__)) {
 	B50KBPS = 0, // 50kbps

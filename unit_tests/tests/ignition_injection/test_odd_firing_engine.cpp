@@ -9,7 +9,7 @@ using ::testing::_;
 #define PORT_INJECTION_OFFSET -400.0f
 
 TEST(OddFireRunningMode, hd) {
-  // basic engine setup
+	// basic engine setup
 	EngineTestHelper eth(engine_type_e::PROTEUS_HARLEY);
 	engineConfiguration->cranking.rpm = 100;
 	engineConfiguration->vvtMode[0] = VVT_SINGLE_TOOTH; // need to avoid engine phase sync requirement
@@ -21,7 +21,7 @@ TEST(OddFireRunningMode, hd) {
 	angle_t timing = 1;
 	setTable(config->ignitionTable, timing); // run mode timing
 
-  // we need some fuel duration so let's mock airmass just to have legit fuel, we do not care for amount here at all
+	// we need some fuel duration so let's mock airmass just to have legit fuel, we do not care for amount here at all
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(/*any rpm*/_, _))
 		.WillRepeatedly(Return(AirmassResult{0.2008f, 50.0f}));
 
@@ -31,13 +31,13 @@ TEST(OddFireRunningMode, hd) {
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 	// end of configuration
 
-  // send fake crank signal events so that trigger handler schedules actuators
+	// send fake crank signal events so that trigger handler schedules actuators
 	eth.fireTriggerEvents2(2 /* count */ , 60 /* ms */);
 	LimpState limitedSparkState = getLimpManager()->allowIgnition();
 	ASSERT_TRUE(limitedSparkState.value);
 	ASSERT_EQ(limitedSparkState.reason, ClearReason::None);
 	ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode()); // still spinning up
-	ASSERT_NEAR(0.0135, getInjectionMass(200), EPS3D);
+	ASSERT_NEAR(0.0135, getInjectionMass(200, true), EPS3D);
 
 	angle_t expectedAngle3 = -360 + cylinderOne - timing;
 

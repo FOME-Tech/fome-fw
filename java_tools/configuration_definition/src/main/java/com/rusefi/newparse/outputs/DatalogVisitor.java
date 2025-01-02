@@ -5,7 +5,11 @@ import com.rusefi.newparse.layout.*;
 import java.io.PrintStream;
 
 public class DatalogVisitor extends OutputChannelVisitorBase {
-    private static void writeDatalogName(PrintStream ps, String name, String comment) {
+    public DatalogVisitor(String nameReplace) {
+        super(nameReplace);
+    }
+
+    private void writeDatalogName(PrintStream ps, String name, String comment) {
         ps.print(buildDatalogName(name, comment));
     }
 
@@ -38,8 +42,8 @@ public class DatalogVisitor extends OutputChannelVisitorBase {
         writeDatalogName(ps, nameWithSpace, commentWithIndex);
         ps.print("\", ");
 
-        if (scalar.type.tsType.equals("F32") || scalar.options.scale != 1) {
-            ps.print("float,  \"%.3f\"");
+        if (scalar.type.tsType.equals("F32") || scalar.options.scale != 1 || scalar.options.digits != 0) {
+            ps.print("float,  \"%." + scalar.options.digits + "f\"");
         } else {
             ps.print("int,    \"%d\"");
         }

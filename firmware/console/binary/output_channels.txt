@@ -1,5 +1,3 @@
-! units,scale,offset,min,max,digits
-
 !
 ! this https://en.wikipedia.org/wiki/God_object is DEPRECATED
 ! the dream is to move many or most of the state out into smaller structures/classes like electronic_throttle.txt
@@ -9,39 +7,36 @@
 
 struct_no_prefix output_channels_s
 
-bit sd_present;SD: Present
-bit sd_logging_internal;SD: Logging
-bit triggerScopeReady
-bit antilagTriggered
-bit isFanOn;Radiator Fan
-bit isO2HeaterOn;
-bit checkEngine;
-bit needBurn;
-
-bit sd_msd;SD: MSD
-bit isFan2On;Radiator Fan 2
-bit acrActive;Harley ACR: Active
-bit toothLogReady;Tooth Logger Ready
-bit isTpsError;Error: TPS
-bit isCltError;Error: CLT
-bit isMapError;Error: MAP
-bit isIatError;Error: IAT
-bit isTriggerError;Error: Trigger
-bit hasCriticalError;Error: Active
-bit isWarnNow;Warning: Active
-bit isPedalError;Error: Pedal
-bit launchTriggered;Launch Control Triggered
-bit isTps2Error;Error: TPS2
-bit injectorFault;Injector Fault
-bit ignitionFault;Ignition Fault
-bit isMainRelayOn;
-bit isUsbConnected;isUsbConnected\nOriginal reason for this is to check if USB is connected from Lua
-bit dfcoActive
+	bit sd_present;SD: Present
+	bit sd_logging_internal;SD: Logging
+	bit triggerScopeReady
+	bit antilagTriggered
+	bit isO2HeaterOn;
+	bit checkEngine;
+	bit needBurn;
+	bit sd_msd;SD: MSD
+	bit acrActive;Harley ACR: Active
+	bit toothLogReady;Tooth Logger Ready
+	bit isTpsError;Error: TPS
+	bit isCltError;Error: CLT
+	bit isMapError;Error: MAP
+	bit isIatError;Error: IAT
+	bit isTriggerError;Error: Trigger
+	bit hasCriticalError;Error: Active
+	bit isWarnNow;Warning: Active
+	bit isPedalError;Error: Pedal
+	bit launchTriggered;Launch Control Triggered
+	bit isTps2Error;Error: TPS2
+	bit injectorFault;Injector Fault
+	bit ignitionFault;Ignition Fault
+	bit isMainRelayOn;
+	bit isUsbConnected;isUsbConnected\nOriginal reason for this is to check if USB is connected from Lua
+	bit dfcoActive
 
 
-uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0
+	uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0
 
-int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
+	int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	uint16_t autoscale speedToRpmRatio;@@GAUGE_NAME_GEAR_RATIO@@;"value",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 	uint8_t vehicleSpeedKph;@@GAUGE_NAME_VVS@@;"kph",1, 0, 0, 0, 1
@@ -63,7 +58,7 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint16_t autoscale MAPValue;@@GAUGE_NAME_MAP@@;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 1
 	uint16_t autoscale baroPressure;;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 1
 
-	uint16_t autoscale lambdaValue;@@GAUGE_NAME_LAMBDA@@;"",{1/@@PACK_MULT_LAMBDA@@}, 0, 0, 0, 3
+	uint16_t unused34
 
 	uint16_t autoscale VBatt;@@GAUGE_NAME_VBAT@@;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
 
@@ -73,8 +68,8 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint16_t autoscale actualLastInjection;@@GAUGE_NAME_FUEL_LAST_INJECTION@@\nActual last injection time - including all compensation and injection mode;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
 
 
-	uint8_t autoscale injectorDutyCycle;@@GAUGE_NAME_FUEL_INJ_DUTY@@;"%",{1/2}, 0, 0, 0, 0
-	uint8_t autoscale veValue;@@GAUGE_NAME_FUEL_VE@@;"ratio",{1/2}, 0, 0, 0, 1
+	uint8_t autoscale injectorDutyCycle;@@GAUGE_NAME_FUEL_INJ_DUTY@@;"%",{1/2}, 0, 0, 100, 1
+	uint8_t autoscale veValue;@@GAUGE_NAME_FUEL_VE@@;"ratio",{1/2}, 0, 0, 100, 2
 	int16_t injectionOffset;@@GAUGE_NAME_FUEL_INJECTION_TIMING@@;"deg", 1, 0, 0, 0, 0
 
 !  Corrections
@@ -93,10 +88,11 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint8_t currentIgnitionMode;@@GAUGE_NAME_IGNITION_MODE@@
 	uint8_t currentInjectionMode;@@GAUGE_NAME_INJECTION_MODE@@
 
-	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 0
-! ETB
-	int16_t autoscale etbTarget;ETB Target;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
-	int16_t autoscale etb1DutyCycle;@@GAUGE_NAME_ETB_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 1
+	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 100, 1
+
+	uint16_t unused66
+	uint16_t unused68
+
 ! Fuel system
 	int16_t autoscale fuelTankLevel;Fuel level;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 0
 
@@ -157,7 +153,6 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint32_t tsConfigVersion;;"", 1, 0, 0, 0, 0
 
 ! Errors
-	uint32_t totalTriggerErrorCounter;@@GAUGE_NAME_TRG_ERR@@;"counter",1, 0, 0, 0, 0
 	uint32_t orderingErrorCounter;;"",1, 0, 0, 0, 0
 
 	uint16_t warningCounter;@@GAUGE_NAME_WARNING_COUNTER@@;"count",1, 0, 0, 0, 0
@@ -194,14 +189,14 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint16_t autoscale AFRValue;@@GAUGE_NAME_AFR@@;"AFR",{1/@@PACK_MULT_AFR@@}, 0, 0, 0, 2
 
 	uint16_t autoscale VssAcceleration;Vss Accel;"m/s2",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 2
-	uint16_t autoscale lambdaValue2;@@GAUGE_NAME_LAMBDA2@@;"",{1/@@PACK_MULT_LAMBDA@@}, 0, 0, 0, 3
+	uint16_t[4 iterate] autoscale lambdaValues;Lambda;"",{1/@@PACK_MULT_LAMBDA@@}, 0, 0, 0, 3
 
 	uint16_t autoscale AFRValue2;@@GAUGE_NAME_AFR2@@;"AFR",{1/@@PACK_MULT_AFR@@}, 0, 0, 0, 2
 	int16_t autoscale vvtPositionB1E;@@GAUGE_NAME_VVT_B1E@@;"deg",{1/@@PACK_MULT_ANGLE@@}, 0, 0, 0, 1
 	int16_t autoscale vvtPositionB2I;@@GAUGE_NAME_VVT_B2I@@;"deg",{1/@@PACK_MULT_ANGLE@@}, 0, 0, 0, 1
 	int16_t autoscale vvtPositionB2E;@@GAUGE_NAME_VVT_B2E@@;"deg",{1/@@PACK_MULT_ANGLE@@}, 0, 0, 0, 1
 
-	int16_t[2 iterate] autoscale fuelPidCorrection;Fuel: Trim bank;"%",{1/@@PACK_MULT_PERCENT@@}, 0, -20, 20, 2
+	int16_t[STFT_BANK_COUNT iterate] autoscale fuelPidCorrection;Fuel: Trim bank;"%",{1/@@PACK_MULT_PERCENT@@}, 0, -20, 20, 2
 
 	int16_t autoscale rawTps1Secondary;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 	int16_t autoscale rawTps2Primary;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
@@ -211,7 +206,6 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	int16_t autoscale accelerationVert;@@GAUGE_NAME_ACCEL_VERT@@;"G",{1/1000}, 0, 0, 0, 0
 	int16_t autoscale gyroYaw;@@GAUGE_NAME_GYRO_YAW@@;"deg/sec",{1/1000}, 0, 0, 0, 0
 
-	int8_t[4 iterate] vvtTargets;;"deg",1, 0, 0, 0, 0
 	uint16_t turboSpeed;@@GAUGE_NAME_TURBO_SPEED@@;"hz",1, 0, 0, 0, 0
 
 	int16_t[12 iterate] autoscale ignitionAdvanceCyl;Ign: Timing Cyl;"deg",{1/@@PACK_MULT_ANGLE@@}, 0, 0, 0, 1
@@ -239,6 +233,7 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	uint16_t autoscale rawMap;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 	uint16_t autoscale rawAfr;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint16_t autoscale rawFuelTankLevel;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 
 	float calibrationValue2;;"", 1, 0, 0, 0, 0
 
@@ -267,14 +262,6 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 	uint16_t canWriteOk;CAN: Tx OK;"", 1, 0, -10000, 10000, 3
 	uint16_t canWriteNotOk;CAN: Tx err;"", 1, 0, -10000, 10000, 3
-
-	uint32_t triggerPrimaryFall;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerPrimaryRise;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerSecondaryFall;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerSecondaryRise;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerVvtFall;;"", 1, 0, -10000, 10000, 3
-	uint32_t triggerVvtRise;;"", 1, 0, -10000, 10000, 3
-
 
 	uint8_t starterState;;"", 1, 0, -10000, 10000, 3
 	uint8_t starterRelayDisable;;"", 1, 0, -10000, 10000, 3
@@ -318,8 +305,10 @@ int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 	uint8_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendBias;;"%", 0.5, 0, 0, 100, 1
 	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendOutput;;"%", 0.1, 0, -1000, 1000, 1
 
-uint32_t outputRequestPeriod
-float mapFast
+	uint16_t autoscale mapFast;;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 1
+
+	uint32_t outputRequestPeriod
+
 	float[LUA_GAUGE_COUNT iterate] luaGauges;Lua: Gauge;"value",1, 0, 0, 50000, 3
 
 	uint16_t autoscale rawMaf2;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
@@ -347,7 +336,7 @@ float mapFast
 	uint16_t autoscale afr2GasolineScale;@@GAUGE_NAME_AFR2_GAS_SCALE@@;"AFR",{1/@@PACK_MULT_AFR@@}, 0, 0, 0, 2
 
 	uint16_t autoscale actualLastInjectionStage2;@@GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2@@;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
-	uint8_t autoscale injectorDutyCycleStage2;@@GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2@@;"%",{1/2}, 0, 0, 0, 0
+	uint8_t autoscale injectorDutyCycleStage2;@@GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2@@;"%",{1/2}, 0, 0, 100, 1
 
 	uint8_t pad
 
@@ -356,6 +345,4 @@ float mapFast
 	uint8_t[12 iterate] mapPerCylinder;;"kPa", 1, 0, 0, 0, 0
 
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
-
-	uint16_t autoscale rawFuelTankLevel;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 end_struct

@@ -570,7 +570,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		int pin = getHwPin(msg, brainPin);
 
 		// Validate port
-		if (port == GPIO_NULL) {
+		if (!port) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "OutputPin::initPin got invalid port for pin idx %d", static_cast<int>(brainPin));
 			return;
 		}

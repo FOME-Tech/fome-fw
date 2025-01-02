@@ -27,10 +27,6 @@ using namespace luaaa;
 #include "electronic_throttle.h"
 #endif // EFI_PROD_CODE
 
-#if EFI_SENT_SUPPORT
-#include "sent.h"
-#endif // EFI_SENT_SUPPORT
-
 static int lua_vin(lua_State* l) {
 	auto zeroBasedCharIndex = luaL_checkinteger(l, 1);
 	if (zeroBasedCharIndex < 0 || zeroBasedCharIndex > VIN_NUMBER_SIZE) {
@@ -57,9 +53,7 @@ static int lua_readpin(lua_State* l) {
 }
 
 static int getSensor(lua_State* l, SensorType type) {
-	auto result = Sensor::get(type);
-
-	if (result) {
+	if (auto result = Sensor::get(type)) {
 		// return value if valid
 		lua_pushnumber(l, result.Value);
 	} else {
@@ -485,7 +479,6 @@ struct LuaPid final {
 		m_params.dFactor = kd;
 
 		m_params.offset = 0;
-		m_params.periodMs = 0;
 		m_params.minValue = min;
 		m_params.maxValue = max;
 
@@ -679,27 +672,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
-#if EFI_SENT_SUPPORT
-	lua_register(l, "getSentValue",
-			[](lua_State* l2) {
-			auto humanIndex = luaL_checkinteger(l2, 1);
-			auto value = getSentValue(humanIndex - 1);
-			lua_pushnumber(l2, value);
-			return 1;
-	});
-
-	lua_register(l, "getSentValues",
-			[](lua_State* l2) {
-			uint16_t sig0;
-			uint16_t sig1;
-			auto humanIndex = luaL_checkinteger(l2, 1);
-			getSentValues(humanIndex - 1, &sig0, &sig1);
-			lua_pushnumber(l2, sig0);
-			lua_pushnumber(l2, sig1);
-			return 2;
-	});
-#endif // EFI_SENT_SUPPORT
-
 #if EFI_LAUNCH_CONTROL
 	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
 		auto targetSkipRatio = luaL_checknumber(l2, 1);
@@ -836,7 +808,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getCalibration", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getConfigValueByName(propertyName);
-		lua_pushnumber(l2, result);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getCalibration: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 
@@ -844,7 +821,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getOutput", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getOutputValueByName(propertyName);
-		lua_pushnumber(l2, result);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getOutput: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR

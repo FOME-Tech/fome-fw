@@ -63,9 +63,9 @@ void portInitAdc() {
 	}
 #endif
 
-	#ifdef KNOCK_ADC
-	adcStart(&KNOCK_ADC, nullptr);
-	#endif // KNOCK_ADC
+	#ifdef EFI_SOFTWARE_KNOCK
+	adcStart(&ADCD3, nullptr);
+	#endif // EFI_SOFTWARE_KNOCK
 }
 
 /*

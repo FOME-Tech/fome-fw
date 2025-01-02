@@ -62,17 +62,6 @@ case SelectedGear::Reverse:
   }
  return NULL;
 }
-const char *getSentEtbType(SentEtbType value){
-switch(value) {
-case SentEtbType::FORD_TYPE_1:
-  return "FORD_TYPE_1";
-case SentEtbType::GM_TYPE_1:
-  return "GM_TYPE_1";
-case SentEtbType::NONE:
-  return "NONE";
-  }
- return NULL;
-}
 const char *getTransmissionControllerMode(TransmissionControllerMode value){
 switch(value) {
 case TransmissionControllerMode::Gm4l6x:
@@ -441,23 +430,6 @@ case IM_AUTO:
   return "IM_AUTO";
 case IM_MANUAL:
   return "IM_MANUAL";
-  }
- return NULL;
-}
-const char *getIdle_state_e(idle_state_e value){
-switch(value) {
-case BLIP:
-  return "BLIP";
-case INIT:
-  return "INIT";
-case PID_UPPER:
-  return "PID_UPPER";
-case PID_VALUE:
-  return "PID_VALUE";
-case RPM_DEAD_ZONE:
-  return "RPM_DEAD_ZONE";
-case TPS_THRESHOLD:
-  return "TPS_THRESHOLD";
   }
  return NULL;
 }

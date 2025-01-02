@@ -25,7 +25,7 @@
 #endif
 
 class Engine;
-typedef void (*ShaftPositionListener)(trigger_event_e signal, uint32_t index, efitick_t edgeTimestamp);
+typedef void (*ShaftPositionListener)(TriggerEvent signal, uint32_t index, efitick_t edgeTimestamp);
 
 #define HAVE_CAM_INPUT() (isBrainPinValid(engineConfiguration->camInputs[0]))
 
@@ -38,8 +38,7 @@ class TriggerCentral final : public trigger_central_s {
 public:
 	TriggerCentral();
 	angle_t syncAndReport(int divider, int remainder);
-	void handleShaftSignal(trigger_event_e signal, efitick_t timestamp);
-	int getHwEventCounter(int index) const;
+	void handleShaftSignal(TriggerEvent signal, efitick_t timestamp);
 	void resetCounters();
 	void validateCamVvtCounters();
 	void updateWaveform();
@@ -221,13 +220,13 @@ void onConfigurationChangeTriggerCallback();
 TriggerCentral * getTriggerCentral();
 int getCrankDivider(operation_mode_e operationMode);
 
-constexpr bool isTriggerUpEvent(trigger_event_e event) {
+constexpr bool isTriggerUpEvent(TriggerEvent event) {
 	switch (event) {
-		case SHAFT_PRIMARY_FALLING:
-		case SHAFT_SECONDARY_FALLING:
+		case TriggerEvent::PrimaryFalling:
+		case TriggerEvent::SecondaryFalling:
 			return false;
-		case SHAFT_PRIMARY_RISING:
-		case SHAFT_SECONDARY_RISING:
+		case TriggerEvent::PrimaryRising:
+		case TriggerEvent::SecondaryRising:
 			return true;
 	}
 

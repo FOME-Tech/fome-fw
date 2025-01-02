@@ -8,11 +8,11 @@ bool FanController::getState(bool acActive, bool lastState) {
 	auto clt = Sensor::get(SensorType::Clt);
 
 #if EFI_SHAFT_POSITION_INPUT
-	cranking = engine->rpmCalculator.isCranking();
-	notRunning = !engine->rpmCalculator.isRunning();
+	bool cranking = engine->rpmCalculator.isCranking();
+	bool notRunning = !engine->rpmCalculator.isRunning();
 #else
-	cranking = false;
-	notRunning = true;
+	bool cranking = false;
+	bool notRunning = true;
 #endif
 
 	disabledWhileEngineStopped = notRunning && disableWhenStopped();
@@ -56,6 +56,8 @@ void FanController::onSlowCallback() {
 	auto& pin = getPin();
 
 	bool result = getState(acActive, pin.getLogicValue());
+
+	m_state = result;
 
 	pin.setValue(result);
 }

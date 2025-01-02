@@ -13,9 +13,7 @@
 
 #include "trigger_central.h"
 #include "fuel_math.h"
-#include "advance_map.h"
 #include "speed_density.h"
-#include "advance_map.h"
 
 #include "perf_trace.h"
 #include "backup_ram.h"
@@ -173,8 +171,6 @@ void Engine::updateSlowSensors() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	triggerCentral.isEngineSnifferEnabled = rpm < engineConfiguration->engineSnifferRpmThreshold;
 	getEngineState()->sensorChartMode = rpm < engineConfiguration->sensorSnifferRpmThreshold ? engineConfiguration->sensorChartMode : SC_OFF;
-
-	engineState.updateSlowSensors();
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
@@ -213,14 +209,8 @@ void Engine::updateSwitchInputs() {
 			acController.timeSinceStateChange.reset();
 		}
 	}
+
 	engine->engineState.clutchUpState = getClutchUpState();
-
-#if EFI_IDLE_CONTROL
-	if (isBrainPinValid(engineConfiguration->throttlePedalUpPin)) {
-		engine->module<IdleController>().unmock().throttlePedalUpState = efiReadPin(engineConfiguration->throttlePedalUpPin);
-	}
-#endif // EFI_IDLE_CONTROL
-
 	engine->engineState.brakePedalState = getBrakePedalState();
 
 #endif // EFI_GPIO_HARDWARE
@@ -455,7 +445,30 @@ bool Engine::isMainRelayEnabled() const {
 }
 
 injection_mode_e getCurrentInjectionMode() {
-	return getEngineRotationState()->isCranking() ? engineConfiguration->crankingInjectionMode : engineConfiguration->injectionMode;
+	if (getEngineRotationState()->isCranking()) {
+		return engineConfiguration->crankingInjectionMode;
+	}
+
+	auto runningMode = engineConfiguration->injectionMode;
+
+#if EFI_SHAFT_POSITION_INPUT
+	if (runningMode == IM_SEQUENTIAL) {
+		bool missingPhaseInfoForSequential = 
+			!engine->triggerCentral.triggerState.hasSynchronizedPhase();
+
+		bool willGetSequentialInfoLater = engine->triggerCentral.triggerState.expectDisambiguation();
+
+		// IF
+		// - We do not currently have full sync
+		// - AND we expect to get it later (ie, once the cam syncs)
+		// THEN hold off on sequential, and stay in batch fueling for now
+		if (missingPhaseInfoForSequential && willGetSequentialInfoLater) {
+			return IM_BATCH;
+		}
+	}
+#endif /* EFI_SHAFT_POSITION_INPUT */
+
+	return runningMode;
 }
 
 /**

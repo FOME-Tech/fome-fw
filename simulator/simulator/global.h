@@ -33,8 +33,6 @@
 
 #define MY_US2ST(x) ((x) / 10)
 
-#define EFI_ERROR_CODE 0xffffffff
-
 #define DL_OUTPUT_BUFFER 9000
 
 #define CCM_OPTIONAL

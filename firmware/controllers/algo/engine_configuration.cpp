@@ -22,9 +22,7 @@
 
 #include "pch.h"
 
-
 #include "speed_density.h"
-#include "advance_map.h"
 #include "flash_main.h"
 
 #include "bench_test.h"
@@ -878,12 +876,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::TEST_33816:
 		setTest33816EngineConfiguration();
 		break;
-	case engine_type_e::TEST_100:
-	case engine_type_e::TEST_101:
-	case engine_type_e::TEST_102:
-	case engine_type_e::TEST_ROTARY:
-		setRotary();
-		break;
 #endif // HW_FRANKENSO
 #ifdef HW_SUBARU_EG33
 	case engine_type_e::SUBARUEG33_DEFAULTS:
@@ -922,10 +914,6 @@ void applyNonPersistentConfiguration() {
 #if EFI_ENGINE_CONTROL
 	engine->updateTriggerWaveform();
 #endif // EFI_ENGINE_CONTROL
-}
-
-void setTwoStrokeOperationMode() {
-	engineConfiguration->twoStroke = true;
 }
 
 void setCamOperationMode() {

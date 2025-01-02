@@ -297,14 +297,13 @@ static float getCycleFuelMass(bool isCranking, float baseFuelMass) {
  * @returns	Mass of each individual fuel injection, in grams
  *     in case of single point injection mode the amount of fuel into all cylinders, otherwise the amount for one cylinder
  */
-float getInjectionMass(float rpm) {
+float getInjectionMass(float rpm, bool isCranking) {
 	ScopePerf perf(PE::GetInjectionDuration);
 
 #if EFI_SHAFT_POSITION_INPUT
 	// Always update base fuel - some cranking modes use it
 	float baseFuelMass = getBaseFuelMass(rpm);
 
-	bool isCranking = engine->rpmCalculator.isCranking();
 	float cycleFuelMass = getCycleFuelMass(isCranking, baseFuelMass);
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(cycleFuelMass), "NaN cycleFuelMass", 0);
 
@@ -357,15 +356,6 @@ float getCltFuelCorrection() {
 		return 1; // this error should be already reported somewhere else, let's just handle it
 
 	return interpolate2d(clt.Value, config->cltFuelCorrBins, config->cltFuelCorr);
-}
-
-angle_t getCltTimingCorrection() {
-	const auto clt = Sensor::get(SensorType::Clt);
-
-	if (!clt)
-		return 0; // this error should be already reported somewhere else, let's just handle it
-
-	return interpolate2d(clt.Value, config->cltTimingBins, config->cltTimingExtra);
 }
 
 float getIatFuelCorrection() {

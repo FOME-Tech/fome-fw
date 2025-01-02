@@ -75,8 +75,8 @@ TEST(BoostControl, TestClosedLoop) {
 	pid_s pidCfg = {
 		1, 0, 0,	 // P controller, easier to test
 		0,	// no offset
-		5,	// 5ms period
-		-100, 100 // min/max output
+		-100, 100, // min/max output
+		0	// alignment pad
 	};
 
 	bc.init(nullptr, nullptr, nullptr, &pidCfg);

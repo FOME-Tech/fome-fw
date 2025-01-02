@@ -6,6 +6,10 @@ import com.rusefi.newparse.parsing.FieldOptions;
 import java.io.PrintStream;
 
 public class OutputChannelVisitor extends OutputChannelVisitorBase {
+    public OutputChannelVisitor(String nameReplace) {
+        super(nameReplace);
+    }
+
     @Override
     public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         // Output an enum as a scalar, since there's no TS support for enum output channels

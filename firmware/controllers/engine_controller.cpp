@@ -27,7 +27,6 @@
 #include "trigger_central.h"
 #include "script_impl.h"
 #include "idle_thread.h"
-#include "advance_map.h"
 #include "main_trigger_callback.h"
 #include "flash_main.h"
 #include "bench_test.h"
@@ -497,7 +496,7 @@ void commonInitEngineController() {
 // Returns false if there's an obvious problem with the loaded configuration
 bool validateConfig() {
 	if (engineConfiguration->cylindersCount > MAX_CYLINDER_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %lu", engineConfiguration->cylindersCount);
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %d", engineConfiguration->cylindersCount);
 		return false;
 	}
 
@@ -570,8 +569,8 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
 	ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
 
-	for (size_t index = 0; index < efi::size(engineConfiguration->vrThreshold); index++) {
-		auto& cfg = engineConfiguration->vrThreshold[index];
+	for (size_t index = 0; index < efi::size(config->vrThreshold); index++) {
+		auto& cfg = config->vrThreshold[index];
 
 		if (cfg.pin == Gpio::Unassigned) {
 			continue;

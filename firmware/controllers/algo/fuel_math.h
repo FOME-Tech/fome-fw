@@ -23,10 +23,9 @@ angle_t getInjectionOffset(float rpm, float load);
 float getIatFuelCorrection();
 
 float getCltFuelCorrection();
-angle_t getCltTimingCorrection();
 float getCrankingFuel(float baseFuel);
 float getCrankingFuel3(float baseFuel, uint32_t revolutionCounterSinceStart);
-float getInjectionMass(float rpm);
+float getInjectionMass(float rpm, bool isCranking);
 percent_t getInjectorDutyCycle(float rpm);
 percent_t getInjectorDutyCycleStage2(float rpm);
 float getStage2InjectionFraction(float rpm, float fuelLoad);

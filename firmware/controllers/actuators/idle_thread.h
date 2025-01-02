@@ -69,14 +69,8 @@ public:
 		return m_lastPhase == Phase::Idling || (engineConfiguration->useSeparateIdleTablesForCrankingTaper && m_lastPhase == Phase::CrankToIdleTaper);
 	}
 
-	PidIndustrial industrialWithOverrideIdlePid;
-
-	Pid * getIdlePid() {
-		return &industrialWithOverrideIdlePid;
-	}
-
-
 private:
+	Pid m_pid;
 
 	// These are stored by getIdlePosition() and used by getIdleTimingAdjustment()
 	Phase m_lastPhase = Phase::Cranking;

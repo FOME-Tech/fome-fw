@@ -46,7 +46,6 @@ enum class engine_type_e : uint32_t {
 	HELLEN_NA8_96 = 10,
 	ET_UNUSED_66 = 66,
 
-	TEST_ROTARY = 19,
 	// Frankenso board
 	FRANKENSO_MIATA_NA6_MAP = 41,
 	ET_UNUSED_20 = 20,
@@ -202,6 +201,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
 	ET_UNUSED_17 = 17,
@@ -216,10 +216,6 @@ enum class engine_type_e : uint32_t {
 	 * this configuration has as few pins configured as possible
 	 */
 	MINIMAL_PINS = 99,
-
-	TEST_100 = 100,
-	TEST_101 = 101,
-	TEST_102 = 102,
 };
 
 /**
@@ -230,8 +226,8 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_1 = 1,
 	DBG_2 = 2,
 	DBG_STEPPER_IDLE_CONTROL = 3,
-	DBG_EL_ACCEL = 4,
-	DBG_TRIGGER_COUNTERS = 5,
+	DBG_4 = 4,
+	DBG_5 = 5,
 	DBG_6 = 6,
 	DBG_7 = 7,
 	DBG_8 = 8,
@@ -240,7 +236,7 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_11 = 11,
 	DBG_12 = 12,
 	DBG_13 = 13,
-	DBG_SR5_PROTOCOL = 14,
+	DBG_14 = 14,
 	DBG_15 = 15,
 	DBG_16 = 16,
 	/**
@@ -254,14 +250,14 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_21 = 21,
 
 	DBG_22 = 22,
-	UNUSED23 = 23,
+	DBG_23 = 23,
 	DBG_24 = 24,
 	DBG_25 = 25,
 	DBG_26 = 26,
 	DBG_27 = 27,
 	DBG_METRICS = 28,
 	DBG_29 = 29,
-	DBG_ION = 30,
+	DBG_30 = 30,
 	DBG_TLE8888 = 31,
 	DBG_32 = 32,
 	DBG_33 = 33,
@@ -271,11 +267,11 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_37 = 37,
 	DBG_38 = 38,
 	DBG_ETB_AUTOTUNE = 39,
-	DBG_COMPOSITE_LOG = 40,
-	DBG_UNUSED41 = 41,
-	DBG_UNUSED_42 = 42,
+	DBG_40 = 40,
+	DBG_41 = 41,
+	DBG_42 = 42,
 	DBG_43 = 43,
-	DBG_DYNO_VIEW = 44,
+	DBG_44 = 44,
 	DBG_LOGIC_ANALYZER = 45,
 	DBG_46 = 46,
 	DBG_TCU = 47,
@@ -586,4 +582,5 @@ typedef enum {
 	COMMAND_X14_ENABLE_EXTERNAL_STIM = 0x13,
 	COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14,
 	COMMAND_X14_BURN_WITHOUT_FLASH = 0x15,
+	COMMAND_X14_FORCE_RESYNC = 0x16,
 } command_x14_e;

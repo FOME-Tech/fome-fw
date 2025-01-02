@@ -1,15 +1,13 @@
 /*
  * @file firing_order.h
  *
- * See also FiringOrderTSLogic.java
- *
  * @date Jul 20, 2016
  * @author Andrey Belomutskiy, (c) 2012-2020
  */
 
-#include "rusefi_enums.h"
-
 #pragma once
+
+#include "rusefi_enums.h"
 
 /**
  * thank you https://www.ingenieriaymecanicaautomotriz.com/firing-order-its-purpose-and-order-in-different-numbers-of-cylinders/
@@ -80,5 +78,7 @@ typedef enum __attribute__ ((__packed__)) {
 	FO_1_14_9_4_7_12_15_6_13_8_3_16_11_2_5_10 = 22, // WR16
 
 	// next value to use: 34
-
 } firing_order_e;
+
+size_t getCylinderId(size_t index);
+size_t getNextFiringCylinderId(size_t prevCylinderId);

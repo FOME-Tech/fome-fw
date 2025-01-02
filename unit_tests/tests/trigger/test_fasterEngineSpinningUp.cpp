@@ -21,14 +21,14 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// set sequential injection mode to test auto-change to simultaneous when spinning-up
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth, IM_SEQUENTIAL);
 	// Lie that this trigger requires disambiguation
-	engine->triggerCentral.triggerState.setNeedsDisambiguation(true);
+	engine->triggerCentral.triggerState.setNeedsDisambiguation(true, true);
 
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 
 	eth.fireRise(1000 /*ms*/);
 
-	// check if it's true
-	ASSERT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
+	// Until we get cam sync, we should be in batch fuel/wasted spark
+	ASSERT_EQ(IM_BATCH, getCurrentInjectionMode());
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 	// check if the engine has the right state
 	ASSERT_EQ(SPINNING_UP, engine->rpmCalculator.getState());

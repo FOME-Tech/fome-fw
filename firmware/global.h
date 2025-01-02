@@ -39,10 +39,6 @@ typedef unsigned int time_t;
 #define VALUE(x) VALUE_TO_STRING(x)
 #define VAR_NAME_VALUE(var) #var "="  VALUE(var)
 
-#define CORE_CLOCK STM32_SYSCLK
-//#pragma message(VAR_NAME_VALUE(CORE_CLOCK))
-
-
 /**
  * project-wide default thread stack size
  * See also PORT_INT_REQUIRED_STACK
@@ -55,8 +51,6 @@ typedef unsigned int time_t;
 #endif /* UTILITY_THREAD_STACK_SIZE */
 
 #define getCurrentRemainingStack() getRemainingStack(chThdGetSelfX())
-
-#define EFI_ERROR_CODE 0xffffffff
 
 /**
  * rusEfi is placing some of data structures into CCM memory simply

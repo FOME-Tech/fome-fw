@@ -25,7 +25,6 @@
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "sent_state_generated.h"
 #include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
@@ -42,6 +41,7 @@
 #include "dfco.h"
 #include "fuel_computer.h"
 #include "advance_map.h"
+#include "ignition_state.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
@@ -273,9 +273,7 @@ public:
 	TriggerCentral triggerCentral;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-
 	float stftCorrection[STFT_BANK_COUNT] = {0};
-
 
 	void periodicFastCallback();
 	void periodicSlowCallback();
@@ -296,7 +294,6 @@ public:
 	EngineState engineState;
 
 	dc_motors_s dc_motors;
-	sent_state_s sent_state;
 
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM

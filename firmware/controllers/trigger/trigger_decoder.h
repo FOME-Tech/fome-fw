@@ -12,7 +12,7 @@
 #include "trigger_state_primary_generated.h"
 #include "timer.h"
 
-const char *getTrigger_event_e(trigger_event_e value);
+const char *getTriggerEvent(TriggerEvent value);
 
 struct TriggerStateListener {
 #if EFI_SHAFT_POSITION_INPUT
@@ -109,8 +109,10 @@ public:
 			const TriggerWaveform& triggerShape,
 			TriggerStateListener* triggerStateListener,
 			const TriggerConfiguration& triggerConfiguration,
-			const trigger_event_e signal,
+			const TriggerEvent signal,
 			const efitick_t nowNt);
+
+	void logEdgeCounters(bool isRising);
 
 	void onShaftSynchronization(
 			bool wasSynchronized,
@@ -141,7 +143,6 @@ public:
 	/**
 	 * how many times since ECU reboot we had unexpected number of teeth in trigger cycle
 	 */
-	uint32_t totalTriggerErrorCounter;
 	uint32_t orderingErrorCounter;
 
 	virtual void resetState();
@@ -154,7 +155,7 @@ public:
 	 */
 	efitick_t startOfCycleNt;
 
-	uint32_t findTriggerZeroEventIndex(
+	expected<uint32_t> findTriggerZeroEventIndex(
 			TriggerWaveform& shape,
 			const TriggerConfiguration& triggerConfiguration
 			);
@@ -181,7 +182,7 @@ private:
 
 	bool validateEventCounters(const TriggerWaveform& triggerShape) const;
 
-	trigger_event_e prevSignal;
+	TriggerEvent prevSignal;
 	int64_t totalEventCountBase;
 
 	bool isFirstEvent;
@@ -206,10 +207,15 @@ public:
 
 	bool hasSynchronizedPhase() const;
 
-	void setNeedsDisambiguation(bool needsDisambiguation) {
+	void setNeedsDisambiguation(bool needsDisambiguation, bool expectDisambiguation) {
 		m_needsDisambiguation = needsDisambiguation;
+		m_expectDisambiguation = expectDisambiguation;
 
 		resetHasFullSync();
+	}
+
+	bool expectDisambiguation() const {
+		return m_expectDisambiguation;
 	}
 
 	void onTriggerError() override;
@@ -218,8 +224,8 @@ public:
 	void onTooManyTeeth(int actual, int expected) override;
 
 private:
-
 	bool m_needsDisambiguation = false;
+	bool m_expectDisambiguation = false;
 };
 
 class VvtTriggerDecoder : public TriggerDecoderBase {

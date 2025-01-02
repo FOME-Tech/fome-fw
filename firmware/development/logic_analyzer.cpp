@@ -150,7 +150,7 @@ static void initWave(size_t index) {
 	efiPrintf("wave%d input on %s", index, hwPortname(brainPin));
 }
 
-void waTriggerEventListener(trigger_event_e ckpSignalType, uint32_t index, efitick_t edgeTimestamp) {
+void waTriggerEventListener(TriggerEvent ckpSignalType, uint32_t index, efitick_t edgeTimestamp) {
 	(void)ckpSignalType;
 	if (index != 0) {
 		return;

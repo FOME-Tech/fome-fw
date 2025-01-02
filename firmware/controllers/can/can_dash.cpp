@@ -749,11 +749,11 @@ void canDashboardHaltech(CanCycle cycle) {
 		{ 
 			CanTxMessage msg(0x369, 8);
 			/* Trigger System Error Count */
-			tmp = engine->triggerCentral.triggerState.totalTriggerErrorCounter;
+			tmp = engine->triggerCentral.triggerState.triggerErrorCounter;
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* Trigger Counter ?? */
-			tmp =  engine->triggerCentral.getHwEventCounter((int)SHAFT_PRIMARY_FALLING);
+			tmp =  engine->triggerCentral.triggerState.edgeCountRise;
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* unused */

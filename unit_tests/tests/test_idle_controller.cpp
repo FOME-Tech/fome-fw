@@ -7,7 +7,6 @@
 
 #include "pch.h"
 
-#include "advance_map.h"
 #include "efi_pid.h"
 #include "idle_thread.h"
 #include "electronic_throttle.h"
@@ -374,7 +373,6 @@ TEST(idle_v2, closedLoopBasic) {
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.periodMs = 0;
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
@@ -402,7 +400,6 @@ TEST(idle_v2, closedLoopDeadzone) {
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.periodMs = 0;
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 

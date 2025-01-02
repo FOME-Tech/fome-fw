@@ -1,24 +1,29 @@
 #pragma once
 #include "rusefi_types.h"
 struct boost_control_s {
+	// Below CL thresh
 	// offset 0 bit 0
-	bool isTpsInvalid : 1 {};
-	// offset 0 bit 1
-	bool m_shouldResetPid : 1 {};
-	// offset 0 bit 2
 	bool isBelowClosedLoopThreshold : 1 {};
-	// offset 0 bit 3
-	bool isNotClosedLoop : 1 {};
-	// offset 0 bit 4
+	// Zero RPM
+	// offset 0 bit 1
 	bool isZeroRpm : 1 {};
-	// offset 0 bit 5
-	bool hasInitBoost : 1 {};
-	// offset 0 bit 6
+	// RPM too low
+	// offset 0 bit 2
 	bool rpmTooLow : 1 {};
-	// offset 0 bit 7
+	// TPS too low
+	// offset 0 bit 3
 	bool tpsTooLow : 1 {};
-	// offset 0 bit 8
+	// MAP too low
+	// offset 0 bit 4
 	bool mapTooLow : 1 {};
+	// offset 0 bit 5
+	bool unusedBit_0_5 : 1 {};
+	// offset 0 bit 6
+	bool unusedBit_0_6 : 1 {};
+	// offset 0 bit 7
+	bool unusedBit_0_7 : 1 {};
+	// offset 0 bit 8
+	bool unusedBit_0_8 : 1 {};
 	// offset 0 bit 9
 	bool unusedBit_0_9 : 1 {};
 	// offset 0 bit 10
@@ -65,43 +70,43 @@ struct boost_control_s {
 	bool unusedBit_0_30 : 1 {};
 	// offset 0 bit 31
 	bool unusedBit_0_31 : 1 {};
-	// Boost: Lua target add
+	// Lua target mult
 	// v
 	// offset 4
-	scaled_channel<int16_t, 2, 1> luaTargetAdd = (int16_t)0;
-	// Boost: Output
-	// percent
-	// offset 6
-	scaled_channel<int16_t, 100, 1> boostOutput = (int16_t)0;
-	// Boost: Lua target mult
+	float luaTargetMult = (float)0;
+	// Lua target add
 	// v
 	// offset 8
-	float luaTargetMult = (float)0;
-	// Boost: Open loop
+	scaled_channel<int16_t, 2, 1> luaTargetAdd = (int16_t)0;
+	// Target
+	// kPa
+	// offset 10
+	scaled_channel<int16_t, 30, 1> boostControlTarget = (int16_t)0;
+	// Open loop
 	// v
 	// offset 12
 	float openLoopPart = (float)0;
-	// Boost: Lua open loop add
+	// Lua open loop add
 	// v
 	// offset 16
 	float luaOpenLoopAdd = (float)0;
-	// Boost: Closed loop
+	// Closed loop
 	// %
 	// offset 20
 	scaled_channel<int8_t, 2, 1> boostControllerClosedLoopPart = (int8_t)0;
 	// offset 21
 	uint8_t alignmentFill_at_21[1];
-	// Boost: Target
-	// kPa
+	// Output
+	// percent
 	// offset 22
-	scaled_channel<int16_t, 30, 1> boostControlTarget = (int16_t)0;
+	scaled_channel<int16_t, 100, 1> boostOutput = (int16_t)0;
 };
 static_assert(sizeof(boost_control_s) == 24);
-static_assert(offsetof(boost_control_s, luaTargetAdd) == 4);
-static_assert(offsetof(boost_control_s, boostOutput) == 6);
-static_assert(offsetof(boost_control_s, luaTargetMult) == 8);
+static_assert(offsetof(boost_control_s, luaTargetMult) == 4);
+static_assert(offsetof(boost_control_s, luaTargetAdd) == 8);
+static_assert(offsetof(boost_control_s, boostControlTarget) == 10);
 static_assert(offsetof(boost_control_s, openLoopPart) == 12);
 static_assert(offsetof(boost_control_s, luaOpenLoopAdd) == 16);
 static_assert(offsetof(boost_control_s, boostControllerClosedLoopPart) == 20);
-static_assert(offsetof(boost_control_s, boostControlTarget) == 22);
+static_assert(offsetof(boost_control_s, boostOutput) == 22);
 

@@ -75,7 +75,7 @@ int gpiochips_getPinOffset(brain_pin_e pin)
 	if (chip)
 		return pin - chip->base;
 
-	return EFI_ERROR_CODE;
+	return -1;
 }
 
 

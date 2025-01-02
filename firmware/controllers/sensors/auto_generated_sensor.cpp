@@ -82,6 +82,10 @@ case SensorType::Lambda1:
   return "Lambda1";
 case SensorType::Lambda2:
   return "Lambda2";
+case SensorType::Lambda3:
+  return "Lambda3";
+case SensorType::Lambda4:
+  return "Lambda4";
 case SensorType::LuaGauge1:
   return "LuaGauge1";
 case SensorType::LuaGauge2:

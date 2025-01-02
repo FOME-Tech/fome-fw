@@ -38,12 +38,10 @@
 #include "malfunction_central.h"
 #include "speed_density.h"
 
-#include "advance_map.h"
 #include "tunerstudio.h"
 #include "fuel_math.h"
 #include "main_trigger_callback.h"
 #include "spark_logic.h"
-#include "idle_thread.h"
 #include "gitversion.h"
 #include "can_hw.h"
 #include "periodic_thread_controller.h"
@@ -305,14 +303,17 @@ static void updateThrottles() {
 
 static void updateLambda() {
 	float lambdaValue = Sensor::getOrZero(SensorType::Lambda1);
-	engine->outputChannels.lambdaValue = lambdaValue;
+	engine->outputChannels.lambdaValues[0] = lambdaValue;
 	engine->outputChannels.AFRValue = lambdaValue * engine->fuelComputer.stoichiometricRatio;
 	engine->outputChannels.afrGasolineScale = lambdaValue * STOICH_RATIO;
 
 	float lambda2Value = Sensor::getOrZero(SensorType::Lambda2);
-	engine->outputChannels.lambdaValue2 = lambda2Value;
+	engine->outputChannels.lambdaValues[1] = lambda2Value;
 	engine->outputChannels.AFRValue2 = lambda2Value * engine->fuelComputer.stoichiometricRatio;
 	engine->outputChannels.afr2GasolineScale = lambda2Value * STOICH_RATIO;
+
+	engine->outputChannels.lambdaValues[2] = Sensor::getOrZero(SensorType::Lambda3);
+	engine->outputChannels.lambdaValues[3] = Sensor::getOrZero(SensorType::Lambda4);
 }
 
 static void updateFuelSensors() {
@@ -423,8 +424,10 @@ static void updateSensors() {
 }
 
 static void updateFuelCorrections() {
-	engine->outputChannels.fuelPidCorrection[0] = 100.0f * (engine->stftCorrection[0] - 1.0f);
-	engine->outputChannels.fuelPidCorrection[1] = 100.0f * (engine->stftCorrection[1] - 1.0f);
+	for (size_t i = 0; i < efi::size(engine->stftCorrection); i++) {
+		engine->outputChannels.fuelPidCorrection[i] = 100.0f * (engine->stftCorrection[i] - 1.0f);
+	}
+
 	engine->outputChannels.Gego = 100.0f * engine->stftCorrection[0];
 }
 
@@ -457,8 +460,6 @@ static void updateFlags() {
 #endif // EFI_USB_SERIAL
 
 	engine->outputChannels.isMainRelayOn = enginePins.mainRelay.getLogicValue();
-	engine->outputChannels.isFanOn = enginePins.fanRelay.getLogicValue();
-	engine->outputChannels.isFan2On = enginePins.fanRelay2.getLogicValue();
 	engine->outputChannels.isO2HeaterOn = enginePins.o2heater.getLogicValue();
 	// todo: eliminate state copy logic by giving DfcoController it's owm xxx.txt and leveraging LiveData
 	engine->outputChannels.dfcoActive = engine->module<DfcoController>()->cutFuel();
@@ -518,8 +519,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->mafMeasured = Sensor::getOrZero(SensorType::Maf);
 	tsOutputChannels->mafMeasured2 = Sensor::getOrZero(SensorType::Maf2);
 	tsOutputChannels->mafEstimate = engine->engineState.airflowEstimate;
-
-	tsOutputChannels->totalTriggerErrorCounter = engine->triggerCentral.triggerState.totalTriggerErrorCounter;
 
 	tsOutputChannels->orderingErrorCounter = engine->triggerCentral.triggerState.orderingErrorCounter;
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -581,9 +580,6 @@ void updateTunerStudioState() {
 
 
 	tsOutputChannels->revolutionCounterSinceStart = engine->rpmCalculator.getRevolutionCounterSinceStart();
-#if EFI_CAN_SUPPORT
-	postCanState();
-#endif /* EFI_CAN_SUPPORT */
 
 #if EFI_CLOCK_LOCKS
 	tsOutputChannels->maxLockedDuration = NT2US(maxLockedDuration);
@@ -591,14 +587,6 @@ void updateTunerStudioState() {
 
 #if EFI_SHAFT_POSITION_INPUT
 	tsOutputChannels->maxTriggerReentrant = maxTriggerReentrant;
-	tsOutputChannels->triggerPrimaryFall = engine->triggerCentral.getHwEventCounter((int)SHAFT_PRIMARY_FALLING);
-	tsOutputChannels->triggerPrimaryRise = engine->triggerCentral.getHwEventCounter((int)SHAFT_PRIMARY_RISING);
-
-	tsOutputChannels->triggerSecondaryFall = engine->triggerCentral.getHwEventCounter((int)SHAFT_SECONDARY_FALLING);
-	tsOutputChannels->triggerSecondaryRise = engine->triggerCentral.getHwEventCounter((int)SHAFT_SECONDARY_RISING);
-
-	tsOutputChannels->triggerVvtRise = engine->triggerCentral.vvtEventRiseCounter[0];
-	tsOutputChannels->triggerVvtFall = engine->triggerCentral.vvtEventFallCounter[0];
 #endif // EFI_SHAFT_POSITION_INPUT
 
 #if HAL_USE_PAL && EFI_PROD_CODE
@@ -606,21 +594,6 @@ void updateTunerStudioState() {
 #endif
 
 	switch (engineConfiguration->debugMode)	{
-	case DBG_SR5_PROTOCOL: {
-		const int _10_6 = 100000;
-		tsOutputChannels->debugIntField1 = tsState.textCommandCounter * _10_6 +  tsState.totalCounter;
-		tsOutputChannels->debugIntField2 = tsState.outputChannelsCommandCounter * _10_6 + tsState.writeValueCommandCounter;
-		tsOutputChannels->debugIntField3 = tsState.readPageCommandsCounter * _10_6 + tsState.burnCommandCounter;
-		break;
-		}
-	case DBG_TRIGGER_COUNTERS:
-
-#if EFI_SHAFT_POSITION_INPUT
-		tsOutputChannels->debugIntField4 = engine->triggerCentral.triggerState.currentCycle.eventCount[0];
-		tsOutputChannels->debugIntField5 = engine->triggerCentral.triggerState.currentCycle.eventCount[1];
-#endif // EFI_SHAFT_POSITION_INPUT
-
-		break;
 	case DBG_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
 		tle8888PostState();

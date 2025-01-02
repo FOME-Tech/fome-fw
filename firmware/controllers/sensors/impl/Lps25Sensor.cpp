@@ -13,9 +13,7 @@ Lps25Sensor::Lps25Sensor(Lps25& sensor)
 }
 
 void Lps25Sensor::update() {
-	auto result = m_sensor->readPressureKpa();
-
-	if (result) {
+	if (auto result = m_sensor->readPressureKpa()) {
 		setValidValue(result.Value, getTimeNowNt());
 	} else {
 		invalidate();

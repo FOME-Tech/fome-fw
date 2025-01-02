@@ -33,7 +33,6 @@
 
 #include "AdcConfiguration.h"
 #include "idle_hardware.h"
-#include "sent.h"
 #include "trigger_central.h"
 #include "gitversion.h"
 #include "vvt.h"
@@ -197,10 +196,6 @@ void applyNewHardwareSettings() {
 	stopTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
-#if EFI_SENT_SUPPORT
-	stopSent();
-#endif // EFI_SENT_SUPPORT
-
 #if EFI_CAN_SUPPORT
 	stopCanPins();
 #endif /* EFI_CAN_SUPPORT */
@@ -291,10 +286,6 @@ void applyNewHardwareSettings() {
 #if EFI_VVT_PID
 	startVvtControlPins();
 #endif /* EFI_VVT_PID */
-
-#if EFI_SENT_SUPPORT
-	startSent();
-#endif
 
 	calcFastAdcIndexes();
 }
@@ -449,10 +440,6 @@ void initHardware() {
 #if EFI_CAN_SUPPORT
 	initCanVssSupport();
 #endif // EFI_CAN_SUPPORT
-
-#if EFI_SENT_SUPPORT
-	initSent();
-#endif
 
 	calcFastAdcIndexes();
 

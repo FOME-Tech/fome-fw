@@ -46,7 +46,7 @@ MapAverager& getMapAvg(size_t idx);
 
 class MapAveragingModule : public EngineModule {
 public:
-	void onConfigurationChange(engine_configuration_s const * previousConfig);
+	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
 
 	void onFastCallback() override;
 	void onEnginePhase(float rpm,
