@@ -99,7 +99,7 @@ sint8 nm_bus_init(void*) {
 	chThdSleepMilliseconds(10);
 
 	// Set up SPI
-	wifiSpi = getSpiDevice(getWifiSpiDevice());
+	wifiSpi = getSpiDevice(spi);
 	wifi_spicfg.ssport = wifiCs.m_port;
 	wifi_spicfg.sspad = wifiCs.m_pin;
 	spiStart(wifiSpi, &wifi_spicfg);
