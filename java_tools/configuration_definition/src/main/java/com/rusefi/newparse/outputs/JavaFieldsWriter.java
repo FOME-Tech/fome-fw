@@ -150,11 +150,7 @@ public class JavaFieldsWriter {
         }
 
         public void visit(BitGroupLayout bitGroup, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-        }
-
-        @Override
-        public void visit(UnusedLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-            // Do nothing
+            // TODO?
         }
     }
 }
