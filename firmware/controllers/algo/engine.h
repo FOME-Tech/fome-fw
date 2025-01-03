@@ -121,8 +121,6 @@ public:
 	// used by HW CI
 	bool isPwmEnabled = true;
 
-	const char *prevOutputName = nullptr;
-
 	PinRepository pinRepository;
 
 	IEtbController *etbControllers[ETB_COUNT] = {nullptr};
@@ -247,9 +245,6 @@ public:
 #if EFI_UNIT_TEST
 	bool tdcMarkEnabled = true;
 #endif // EFI_UNIT_TEST
-
-
-	bool slowCallBackWasInvoked = false;
 
 	RpmCalculator rpmCalculator;
 

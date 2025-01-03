@@ -152,8 +152,6 @@ void Engine::periodicSlowCallback() {
 	updateDynoView();
 #endif
 
-	slowCallBackWasInvoked = true;
-
 #if EFI_PROD_CODE
 	void baroLps25Update();
 	baroLps25Update();

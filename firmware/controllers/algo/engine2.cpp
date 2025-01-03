@@ -83,10 +83,6 @@ void EngineState::periodicFastCallback() {
 	ScopePerf perf(PE::EngineStatePeriodicFastCallback);
 
 #if EFI_ENGINE_CONTROL
-	if (!engine->slowCallBackWasInvoked) {
-		warning(ObdCode::CUSTOM_SLOW_NOT_INVOKED, "Slow not invoked yet");
-	}
-
 	efitick_t nowNt = getTimeNowNt();
 	bool isCranking = engine->rpmCalculator.isCranking();
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
