@@ -65,8 +65,10 @@ public class GetConfigValueConsumerTest {
                 "\tint hash = djb2lowerCase(name);\n" +
                 "\tswitch(hash) {\n" +
                 "\t\tcase -672272162:\n" +
+                "\t\t\t// iat.config.tempC_1\n" +
                 "\t\t\treturn (float)config->iat.config.tempC_1;\n" +
                 "\t\tcase -1237776078:\n" +
+                "\t\t\t// iat.adcChannel\n" +
                 "\t\t\treturn (float)config->iat.adcChannel;\n" +
                 "\t}\n" +
                 "\treturn unexpected;\n" +
@@ -92,8 +94,10 @@ public class GetConfigValueConsumerTest {
                 "\tint hash = djb2lowerCase(name);\n" +
                 "\tswitch(hash) {\n" +
                 "\t\tcase -672272162:\n" +
+                "\t\t\t// iat.config.tempC_1\n" +
                 "\t\t\treturn (float)config->iat.config.tempC_1;\n" +
                 "\t\tcase -1237776078:\n" +
+                "\t\t\t// iat.adcChannel\n" +
                 "\t\t\treturn (float)config->iat.adcChannel;\n" +
                 "\t}\n" +
                 "\treturn unexpected;\n" +
@@ -161,32 +165,46 @@ public class GetConfigValueConsumerTest {
                 "\tint hash = djb2lowerCase(name);\n" +
                 "\tswitch(hash) {\n" +
                 "\t\tcase -1832527325:\n" +
+                "\t\t\t// clt.config.tempC_1\n" +
                 "\t\t\treturn (float)config->clt.config.tempC_1;\n" +
                 "\t\tcase 1819278123:\n" +
+                "\t\t\t// clt.config.map.sensor.highValue\n" +
                 "\t\t\treturn (float)config->clt.config.map.sensor.highValue;\n" +
                 "\t\tcase 581685574:\n" +
+                "\t\t\t// clt.config.map.sensor.hwChannel\n" +
                 "\t\t\treturn (float)config->clt.config.map.sensor.hwChannel;\n" +
                 "\t\tcase 382574846:\n" +
+                "\t\t\t// clt.config.injector.flow\n" +
                 "\t\t\treturn (float)config->clt.config.injector.flow;\n" +
                 "\t\tcase -653172717:\n" +
+                "\t\t\t// clt.config.bias_resistor\n" +
                 "\t\t\treturn (float)config->clt.config.bias_resistor;\n" +
                 "\t\tcase -1144186889:\n" +
+                "\t\t\t// clt.adcChannel\n" +
                 "\t\t\treturn (float)config->clt.adcChannel;\n" +
                 "\t\tcase -1571463185:\n" +
+                "\t\t\t// issue_294_31\n" +
                 "\t\t\treturn (float)config->issue_294_31;\n" +
                 "\t\tcase 727098956:\n" +
+                "\t\t\t// baseFuel\n" +
                 "\t\t\treturn (float)config->baseFuel;\n" +
                 "\t\tcase -1120008897:\n" +
+                "\t\t\t// afr_type\n" +
                 "\t\t\treturn (float)config->afr_type;\n" +
                 "\t\tcase -685727673:\n" +
+                "\t\t\t// speedToRpmRatio\n" +
                 "\t\t\treturn (float)config->speedToRpmRatio;\n" +
                 "\t\tcase 1694412179:\n" +
+                "\t\t\t// afr_typet\n" +
                 "\t\t\treturn (float)config->afr_typet;\n" +
                 "\t\tcase -1925174695:\n" +
+                "\t\t\t// vehicleSpeedKph\n" +
                 "\t\t\treturn (float)config->vehicleSpeedKph;\n" +
                 "\t\tcase -617915487:\n" +
+                "\t\t\t// isForcedInduction\n" +
                 "\t\t\treturn (float)config->isForcedInduction;\n" +
                 "\t\tcase -298185774:\n" +
+                "\t\t\t// enableFan1WithAc\n" +
                 "\t\t\treturn (float)config->enableFan1WithAc;\n" +
                 "\t}\n" +
                 "\treturn unexpected;\n" +
