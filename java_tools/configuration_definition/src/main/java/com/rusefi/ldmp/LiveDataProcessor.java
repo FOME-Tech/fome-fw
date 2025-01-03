@@ -3,12 +3,10 @@ package com.rusefi.ldmp;
 import com.devexperts.logging.Logging;
 import com.rusefi.EnumToString;
 import com.rusefi.InvokeReader;
-import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.*;
 import com.rusefi.newparse.parsing.Definition;
-import com.rusefi.output.*;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -87,16 +85,10 @@ public class LiveDataProcessor {
 
             baseAddressCHeader.append("#define ").append(name.toUpperCase()).append("_BASE_ADDRESS ").append(startingPosition).append("\n");
 
-            ReaderStateImpl state = new ReaderStateImpl();
-            state.setDefinitionInputFile(folder + File.separator + name + ".txt");
-
-            if (extraPrepend != null)
-                state.addPrepend(extraPrepend);
-            state.addPrepend(prepend);
             String cHeaderDestination = folder + File.separator + name + "_generated.h";
 
             {
-                ParseState parseState = new ParseState(state.getEnumsReader());
+                ParseState parseState = new ParseState();
 
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
 
@@ -104,7 +96,7 @@ public class LiveDataProcessor {
                     RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prepend);
                 }
 
-                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
+                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), folder + File.separator + name + ".txt");
 
                 CStructWriter cStructs = new CStructWriter();
                 cStructs.writeCStructs(parseState, cHeaderDestination);
@@ -130,8 +122,6 @@ public class LiveDataProcessor {
                     outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
                 }
             }
-
-            state.doJob();
 
             log.info("Done with " + name + " at " + outputChannelWriter.getSize());
         };
