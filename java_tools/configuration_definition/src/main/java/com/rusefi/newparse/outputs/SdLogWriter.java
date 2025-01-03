@@ -101,7 +101,7 @@ public class SdLogWriter {
         ps.println("static_assert(TS_TOTAL_OUTPUT_SIZE == " + recordLength + ");");
     }
 
-    public void writeSdLogs(ParseState parser) {
+    public void writeSdLogs(ParseState parser, String namePrefix) {
         // Assume the last struct is the one we want...
         Struct s = parser.getStructs().get(parser.getStructs().size() - 1);
 
@@ -109,6 +109,11 @@ public class SdLogWriter {
 
         StructNamePrefixer prefixer = new StructNamePrefixer('_');
 
+        if (namePrefix != null) {
+            prefixer.push(namePrefix.replace(" ", "_"));
+        }
+
+        visitor.setNameReplacer(namePrefix);
         visitor.visit(sl, ps, prefixer, 0, new int[0]);
     }
 }

@@ -6,14 +6,22 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 import java.io.PrintStream;
 
 public class OutputChannelVisitorBase extends ILayoutVisitor {
-    protected final NameReplacer nameReplacer;
+    private NameReplacer nameReplacer = null;
+
+    public OutputChannelVisitorBase() { }
 
     public OutputChannelVisitorBase(String nameReplace) {
+        setNameReplacer(nameReplace);
+    }
+
+    public void setNameReplacer(String nameReplace) {
         this.nameReplacer = new NameReplacer(nameReplace);
     }
 
     public String buildDatalogName(String name, String comment) {
-        String text = (comment == null || comment.isEmpty()) ? name : nameReplacer.replace(comment);
+        String text = (comment == null || comment.isEmpty() || nameReplacer == null)
+                        ? name
+                        : nameReplacer.replace(comment);
 
         // Delete anything after a newline
         return text.split("\\\\n")[0];
@@ -34,7 +42,7 @@ public class OutputChannelVisitorBase extends ILayoutVisitor {
         }
     }
 
-    protected class NameReplacer {
+    private class NameReplacer {
         public final String name;
 
         public NameReplacer(String name) {

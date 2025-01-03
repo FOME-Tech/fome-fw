@@ -110,10 +110,11 @@ public class LiveDataProcessor {
 
                 if (outputNames.length == 0) {
                     outputChannelWriter.writeOutputChannels(parseState, null);
-                    sdLogWriter.writeSdLogs(parseState);
+                    sdLogWriter.writeSdLogs(parseState, null);
                 } else {
                     for (String outputName : outputNames) {
                         outputChannelWriter.writeOutputChannels(parseState, outputName);
+                        sdLogWriter.writeSdLogs(parseState, outputName);
                     }
                 }
 
