@@ -9,9 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 
-/**
- * As of Nov 2022 this implementation is not used in prod :(
- */
 public class OutputChannelWriter {
     private final PrintStream ps;
     private final PrintStream psDatalog;
