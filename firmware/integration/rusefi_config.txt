@@ -646,7 +646,7 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 	Gpio canRxPin;set_can_rx_pin X
 
 	brain_input_pin_e tcuInputSpeedSensorPin
-	uint8_t tcuInputSpeedSensorTeeth
+	uint8_t tcuInputSpeedSensorTeeth;;"", 1, 0, 0, 100, 0
 
 	pin_output_mode_e mainRelayPinMode;
 
@@ -857,7 +857,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
     int launchFuelAdded;Extra Fuel Added;"%", 1, 0, 0, 100, 0
     int launchBoostDuty;Duty Cycle for the Boost Solenoid;"%", 1, 0, 0, 100, 0
 	int hardCutRpmRange;Range from Launch RPM to activate Hard Cut;"RPM", 1, 0, 0, 3000, 0
-	float turbochargerFilter
+	float turbochargerFilter;;"", 1, 0, 0, 50, 0
 	int launchTpsThreshold;;"", 1, 0, 0, 20000, 0
 	float launchActivateDelay;;"", 1, 0, 0, 20000, 0
 
