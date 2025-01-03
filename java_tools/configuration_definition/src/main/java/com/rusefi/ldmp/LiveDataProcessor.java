@@ -7,6 +7,7 @@ import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.CStructWriter;
+import com.rusefi.newparse.outputs.JavaFieldsWriter;
 import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.newparse.outputs.SdLogWriter;
 import com.rusefi.newparse.parsing.Definition;
@@ -99,12 +100,6 @@ public class LiveDataProcessor {
             state.addPrepend(prepend);
             String cHeaderDestination = folder + File.separator + name + "_generated.h";
 
-            int baseOffset = outputChannelWriter.getSize();
-
-           if (javaName != null) {
-               state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
-           }
-
             if (constexpr != null) {
                 outputValueConsumer.currentSectionPrefix = constexpr;
                 outputValueConsumer.conditional = conditional;
@@ -126,17 +121,24 @@ public class LiveDataProcessor {
                 CStructWriter cStructs = new CStructWriter();
                 cStructs.writeCStructs(parseState, cHeaderDestination);
 
-                 if (outputNames.length == 0) {
-                    outputChannelWriter.writeOutputChannels(parseState, null);
-                 } else {
-                     for (String outputName : outputNames) {
-                         outputChannelWriter.writeOutputChannels(parseState, outputName);
-                     }
-                 }
+                if (javaName != null) {
+                    JavaFieldsWriter javaWriter = new JavaFieldsWriter("../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, outputChannelWriter.getSize());
+                    javaWriter.writeDefinitions(parseState.getDefinitions());
+                    javaWriter.writeFields(parseState);
+                    javaWriter.finish();
+                }
 
-                 if (constexpr != null) {
-                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-                 }
+                if (outputNames.length == 0) {
+                    outputChannelWriter.writeOutputChannels(parseState, null);
+                } else {
+                    for (String outputName : outputNames) {
+                        outputChannelWriter.writeOutputChannels(parseState, outputName);
+                    }
+                }
+
+                if (constexpr != null) {
+                    sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
+                }
             }
 
             state.doJob();
