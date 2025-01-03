@@ -575,6 +575,45 @@ public class ParseState implements DefinitionsState {
     }
 
     @Override
+    public void exitTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
+        boolean isResizable = ctx.Resizable() != null;
+
+        ScalarField valuesPrototype = (ScalarField)scope.removeLastField();
+        ScalarField colPrototype = (ScalarField)scope.removeLastField();
+        ScalarField rowPrototype = (ScalarField)scope.removeLastField();
+
+        int maxRows;
+        int maxCols;
+
+        if (isResizable) {
+            int minRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
+            maxRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(1).getText());
+            int minCols = Integer.parseInt(ctx.tableAxisSpec(1).integer(0).getText());
+            maxCols = Integer.parseInt(ctx.tableAxisSpec(1).integer(1).getText());
+
+            int maxValues = Integer.parseInt(ctx.integer().getText());
+
+            // Check that we can at least fit a minimum size table
+            assert(maxValues >= minRows * minCols);
+
+            throw new IllegalStateException("resizable table not supported yet");
+        } else {
+            int rowCount = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
+            int colCount = Integer.parseInt(ctx.tableAxisSpec(1).integer(0).getText());
+
+            maxRows = rowCount;
+            maxCols = colCount;
+        }
+
+        // Generate bins
+        scope.addField(new ArrayField<>(rowPrototype, new int[] {maxRows}, false));
+        scope.addField(new ArrayField<>(colPrototype, new int[] {maxCols}, false));
+
+        // Generate table
+        scope.addField(new ArrayField<>(valuesPrototype, new int[] {maxCols, maxRows}, false));
+    }
+
+    @Override
     public void enterUnusedField(RusefiConfigGrammarParser.UnusedFieldContext ctx) {
         scope.addField(new UnusedField(Integer.parseInt(ctx.integer().getText())));
     }
@@ -690,6 +729,10 @@ public class ParseState implements DefinitionsState {
             // TODO: check for duplicate fields
 
             structFields.add(f);
+        }
+
+        public Field removeLastField() {
+            return structFields.remove(structFields.size() - 1);
         }
     }
 }

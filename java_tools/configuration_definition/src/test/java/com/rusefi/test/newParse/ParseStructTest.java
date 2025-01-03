@@ -308,7 +308,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void bitFieldsAdvanced() throws IOException {
+    public void bitFieldsAdvanced() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
                         "bit myBit,\"a\",\"b\";comment\n" +
@@ -325,7 +325,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void bitFieldsThirtyThreeBits() throws IOException {
+    public void bitFieldsThirtyThreeBits() {
         StringBuilder input = new StringBuilder("struct myStruct\n");
         for (int i = 0; i < 33; i++) {
             input.append("bit myBit").append(i).append("\n");
@@ -338,5 +338,35 @@ public class ParseStructTest {
 
         Assert.assertEquals(32, ((BitGroup)state.getLastStruct().fields.get(0)).bitFields.size());
         Assert.assertEquals(1, ((BitGroup)state.getLastStruct().fields.get(1)).bitFields.size());
+    }
+
+    @Test
+    public void tableFixedSize() {
+        ParseState state = parse(
+                "struct_no_prefix myStruct\n" +
+                        "table\n" +
+                        "rows num 4 uint8_t rowVals\n" +
+                        "cols num 8 uint16_t colVals\n" +
+                        "values float tableVals\n" +
+                        "end_table\n" +
+                        "end_struct\n"
+        );
+
+        List<Field> fields = state.getLastStruct().fields;
+        Assert.assertEquals(3, fields.size());
+
+        ArrayField<ScalarField> fieldRows = (ArrayField<ScalarField>)fields.get(0);
+        ArrayField<ScalarField> fieldCols = (ArrayField<ScalarField>)fields.get(1);
+        ArrayField<ScalarField> fieldValues = (ArrayField<ScalarField>)fields.get(2);
+
+        Assert.assertEquals(1, fieldRows.length.length);
+        Assert.assertEquals(4, fieldRows.length[0]);
+
+        Assert.assertEquals(1, fieldCols.length.length);
+        Assert.assertEquals(8, fieldCols.length[0]);
+
+        Assert.assertEquals(2, fieldValues.length.length);
+        Assert.assertEquals(8, fieldValues.length[0]);
+        Assert.assertEquals(4, fieldValues.length[1]);
     }
 }
