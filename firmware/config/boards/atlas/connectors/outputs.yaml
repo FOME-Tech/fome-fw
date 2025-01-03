@@ -1,0 +1,129 @@
+pins:
+
+  - id: B3
+    class: outputs
+    ts_name: Ignition 1
+
+  - id: G15
+    class: outputs
+    ts_name: Ignition 2
+
+  - id: G14
+    class: outputs
+    ts_name: Ignition 3
+
+  - id: G13
+    class: outputs
+    ts_name: Ignition 4
+
+  - id: G12
+    class: outputs
+    ts_name: Ignition 5
+
+  - id: G11
+    class: outputs
+    ts_name: Ignition 6
+
+  - id: G10
+    class: outputs
+    ts_name: Ignition 7
+
+  - id: G9
+    class: outputs
+    ts_name: Ignition 8
+
+  - id: D7
+    class: outputs
+    ts_name: Ignition 9
+
+  - id: D6
+    class: outputs
+    ts_name: Ignition 10
+
+  - id: D5
+    class: outputs
+    ts_name: Ignition 11
+
+  - id: D4
+    class: outputs
+    ts_name: Ignition 12
+
+  - id: G5
+    class: outputs
+    ts_name: Lowside 1
+
+  - id: G6
+    class: outputs
+    ts_name: Lowside 2
+
+  - id: G7
+    class: outputs
+    ts_name: Lowside 3
+
+  - id: G8
+    class: outputs
+    ts_name: Lowside 4
+
+  - id: C6
+    class: outputs
+    ts_name: Lowside 5
+
+  - id: C7
+    class: outputs
+    ts_name: Lowside 6
+
+  - id: A15
+    class: outputs
+    ts_name: Lowside 7
+
+  - id: D3
+    class: outputs
+    ts_name: Lowside 8
+
+  - id: B4
+    class: outputs
+    ts_name: Lowside 9
+
+  - id: B5
+    class: outputs
+    ts_name: Lowside 10
+
+  - id: B6
+    class: outputs
+    ts_name: Lowside 11
+
+  - id: B7
+    class: outputs
+    ts_name: Lowside 12
+
+  - id: B8
+    class: outputs
+    ts_name: Lowside 13
+
+  - id: B9
+    class: outputs
+    ts_name: Lowside 14
+
+  - id: E0
+    class: outputs
+    ts_name: Lowside 15
+
+  - id: E1
+    class: outputs
+    ts_name: Lowside 16
+
+  - id: G4
+    class: outputs
+    ts_name: Highside 1
+
+  - id: G3
+    class: outputs
+    ts_name: Highside 2
+
+  - id: G2
+    class: outputs
+    ts_name: Highside 3
+
+  - id: D15
+    class: outputs
+    ts_name: Highside 4

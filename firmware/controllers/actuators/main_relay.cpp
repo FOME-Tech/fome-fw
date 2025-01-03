@@ -23,6 +23,23 @@ void MainRelayController::onSlowCallback() {
 #endif
 
 	enginePins.mainRelay.setValue(mainRelayState);
+
+	if (!mainRelayState) {
+		// Reset the on timer while off
+		m_relayOnTimer.reset();
+	}
+
+	// If we have a main relay (input) voltage sensor, check that the main relay works
+	if (Sensor::hasSensor(SensorType::MainRelayVoltage)) {
+		if (m_relayOnTimer.hasElapsedSec(0.5f)) {
+			float mainRelayVolts = Sensor::getOrZero(SensorType::MainRelayVoltage);
+			float batteryVolts = Sensor::getOrZero(SensorType::BatteryVoltage);
+
+			if (batteryVolts - mainRelayVolts > 3) {
+				warning(ObdCode::OBD_PCM_MainRelayFault, "Main relay fault! VBatt: %.1fv, MR: %.1fv", batteryVolts, mainRelayVolts);
+			}
+		}
+	}
 }
 
 bool MainRelayController::needsDelayedShutoff() {

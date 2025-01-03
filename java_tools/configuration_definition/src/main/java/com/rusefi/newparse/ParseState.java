@@ -54,6 +54,10 @@ public class ParseState implements DefinitionsState {
         }
     }
 
+    public Map<String, Definition> getDefinitions() {
+        return definitions;
+    }
+
     private void handleIntDefinition(String name, int value) {
         addDefinition(name, value);
 

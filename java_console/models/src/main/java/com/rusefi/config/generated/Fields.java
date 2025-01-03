@@ -461,9 +461,7 @@ public class Fields {
 	public static final String GAUGE_NAME_FUEL_LEVEL = "Fuel level";
 	public static final String GAUGE_NAME_FUEL_LOAD = "Fuel: Load";
 	public static final String GAUGE_NAME_FUEL_PRESSURE_HIGH = "Fuel pressure (high)";
-	public static final String GAUGE_NAME_FUEL_PRESSURE_HIGH_UNITS = "bar";
 	public static final String GAUGE_NAME_FUEL_PRESSURE_LOW = "Fuel pressure (low)";
-	public static final String GAUGE_NAME_FUEL_PRESSURE_LOW_UNITS = "kPa";
 	public static final String GAUGE_NAME_FUEL_RUNNING = "Fuel: running";
 	public static final String GAUGE_NAME_FUEL_TPS_EXTRA = "Fuel: TPS AE add fuel ms";
 	public static final String GAUGE_NAME_FUEL_TRIM = "Fuel: fuel trim";
@@ -985,7 +983,6 @@ public class Fields {
 	public static final int sensor_chart_e_SC_OFF = 0;
 	public static final int sensor_chart_e_SC_RPM_ACCEL = 3;
 	public static final int sensor_chart_e_SC_TRIGGER = 1;
-	public static final int SIGNATURE_HASH = 239338186;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1192,7 +1189,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.01.01.f407-discovery.239338186";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.01.03.f407-discovery.3290397567";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1304;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";

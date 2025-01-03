@@ -5,8 +5,8 @@ import com.rusefi.config.*;
 public class TriggerState {
 	public static final int BANKS_COUNT = 2;
 	public static final int BOOST_BLEND_COUNT = 2;
-	public static final int CAM_INPUTS_COUNT = 4;
 	public static final int CAMS_PER_BANK = 2;
+	public static final int CAM_INPUTS_COUNT = 4;
 	public static final int EGT_CHANNEL_COUNT = 8;
 	public static final String GAUGE_CATEGORY_ETB = "ETB more";
 	public static final String GAUGE_COIL_DWELL_TIME = "Ign: Dwell";
@@ -59,17 +59,15 @@ public class TriggerState {
 	public static final String GAUGE_NAME_FUEL_CRANKING = "Fuel: cranking";
 	public static final String GAUGE_NAME_FUEL_FLOW = "Fuel: Flow rate";
 	public static final String GAUGE_NAME_FUEL_IAT_CORR = "Fuel: IAT correction";
+	public static final String GAUGE_NAME_FUEL_INJECTION_TIMING = "Fuel: Injection timing SOI";
 	public static final String GAUGE_NAME_FUEL_INJ_DUTY = "Fuel: injector duty cycle";
 	public static final String GAUGE_NAME_FUEL_INJ_DUTY_STAGE_2 = "Fuel: injector duty cycle stage 2";
-	public static final String GAUGE_NAME_FUEL_INJECTION_TIMING = "Fuel: Injection timing SOI";
 	public static final String GAUGE_NAME_FUEL_LAST_INJECTION = "Fuel: Last inj pulse width";
 	public static final String GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2 = "Fuel: Last inj pulse width stg 2";
 	public static final String GAUGE_NAME_FUEL_LEVEL = "Fuel level";
 	public static final String GAUGE_NAME_FUEL_LOAD = "Fuel: Load";
 	public static final String GAUGE_NAME_FUEL_PRESSURE_HIGH = "Fuel pressure (high)";
-	public static final String GAUGE_NAME_FUEL_PRESSURE_HIGH_UNITS = "bar";
 	public static final String GAUGE_NAME_FUEL_PRESSURE_LOW = "Fuel pressure (low)";
-	public static final String GAUGE_NAME_FUEL_PRESSURE_LOW_UNITS = "kPa";
 	public static final String GAUGE_NAME_FUEL_RUNNING = "Fuel: running";
 	public static final String GAUGE_NAME_FUEL_TPS_EXTRA = "Fuel: TPS AE add fuel ms";
 	public static final String GAUGE_NAME_FUEL_TRIM = "Fuel: fuel trim";
@@ -100,8 +98,8 @@ public class TriggerState {
 	public static final String GAUGE_NAME_RPM = "RPM";
 	public static final String GAUGE_NAME_TARGET_AFR = "Fuel: target AFR";
 	public static final String GAUGE_NAME_TARGET_LAMBDA = "Fuel: target lambda";
-	public static final String GAUGE_NAME_TC_RATIO = "TCU: Torque Converter Ratio";
 	public static final String GAUGE_NAME_TCHARGE = "Air: SD tCharge";
+	public static final String GAUGE_NAME_TC_RATIO = "TCU: Torque Converter Ratio";
 	public static final String GAUGE_NAME_THROTTLE_PEDAL = "Throttle pedal position";
 	public static final String GAUGE_NAME_TIME = "Time";
 	public static final String GAUGE_NAME_TIMING_ADVANCE = "Ign: Timing Base";
@@ -154,6 +152,7 @@ public class TriggerState {
 	public static final int PACK_MULT_PRESSURE = 30;
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
+	public static final double PACK_PERCENT_BYTE_MULT = 100.0;
 	public static final int STFT_BANK_COUNT = 4;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int VE_BLEND_COUNT = 4;
@@ -161,8 +160,6 @@ public class TriggerState {
 	public static final Field CRANKSYNCHRONIZATIONCOUNTER = Field.create("CRANKSYNCHRONIZATIONCOUNTER", 4, FieldType.INT16).setScale(1.0).setBaseOffset(1028);
 	public static final Field TRIGGERERRORCOUNTER = Field.create("TRIGGERERRORCOUNTER", 6, FieldType.INT16).setScale(1.0).setBaseOffset(1028);
 	public static final Field TRIGGERSTATEINDEX = Field.create("TRIGGERSTATEINDEX", 8, FieldType.INT8).setScale(1.0).setBaseOffset(1028);
-	public static final Field ALIGNMENTFILL_AT_9 = Field.create("ALIGNMENTFILL_AT_9", 9, FieldType.INT8).setScale(1.0).setBaseOffset(1028);
 	public static final Field EDGECOUNTRISE = Field.create("EDGECOUNTRISE", 10, FieldType.INT16).setScale(1.0).setBaseOffset(1028);
 	public static final Field EDGECOUNTFALL = Field.create("EDGECOUNTFALL", 12, FieldType.INT16).setScale(1.0).setBaseOffset(1028);
-	public static final Field ALIGNMENTFILL_AT_14 = Field.create("ALIGNMENTFILL_AT_14", 14, FieldType.INT8).setScale(1.0).setBaseOffset(1028);
 }
