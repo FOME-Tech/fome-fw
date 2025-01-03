@@ -94,6 +94,8 @@ case SensorType::Maf:
   return "Maf";
 case SensorType::Maf2:
   return "Maf2";
+case SensorType::MainRelayVoltage:
+  return "MainRelayVoltage";
 case SensorType::Map:
   return "Map";
 case SensorType::Map2:
