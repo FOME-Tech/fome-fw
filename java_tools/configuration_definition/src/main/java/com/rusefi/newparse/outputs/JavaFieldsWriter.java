@@ -68,7 +68,7 @@ public class JavaFieldsWriter {
         StructLayout sl = new StructLayout(0, "root", s);
 
         JavaFieldVisitor visitor = new JavaFieldVisitor();
-        StructNamePrefixer prefixer = new StructNamePrefixer('.');
+        StructNamePrefixer prefixer = new StructNamePrefixer('_');
 
         visitor.visitRoot(sl, ps, prefixer);
     }
@@ -78,9 +78,9 @@ public class JavaFieldsWriter {
             sl.children.forEach(c -> c.visit(this, ps, prefixer, 0, new int[0]));
         }
 
-        public void visit(StructLayout sl, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+        public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
             if (arrayDims.length == 0) {
-
+                visit(struct, ps, prefixer, offsetAdd, struct.name.toUpperCase());
             }
 //            } else if (arrayDims.length == 1) {
 //                ps.println("\t" + sl.typeName + " " + sl.name + "[" + arrayDims[0] + "];");
