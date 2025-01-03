@@ -6,10 +6,7 @@ import com.rusefi.InvokeReader;
 import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
-import com.rusefi.newparse.outputs.CStructWriter;
-import com.rusefi.newparse.outputs.JavaFieldsWriter;
-import com.rusefi.newparse.outputs.OutputChannelWriter;
-import com.rusefi.newparse.outputs.SdLogWriter;
+import com.rusefi.newparse.outputs.*;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import org.yaml.snakeyaml.Yaml;
@@ -75,14 +72,14 @@ public class LiveDataProcessor {
     }
 
     private int handleYaml(Map<String, Object> data) throws IOException {
-        GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("generated/output_lookup_generated.cpp");
-
         OutputChannelWriter outputChannelWriter = new OutputChannelWriter(
             tsOutputsDestination + File.separator + "/output_channels.ini",
             tsOutputsDestination + File.separator + "/data_logs.ini"
         );
 
         SdLogWriter sdLogWriter = new SdLogWriter("generated/log_fields_generated.h");
+
+        OutputLookupWriter outputLookupWriter = new OutputLookupWriter("generated/output_lookup_generated.cpp", "getOutputValueByName");
 
         EntryHandler handler = (name, javaName, folder, prepend, withCDefines, outputNames, constexpr, conditional, isPtr) -> {
             int startingPosition = outputChannelWriter.getSize();
@@ -98,13 +95,6 @@ public class LiveDataProcessor {
                 state.addPrepend(extraPrepend);
             state.addPrepend(prepend);
             String cHeaderDestination = folder + File.separator + name + "_generated.h";
-
-            if (constexpr != null) {
-                outputValueConsumer.currentSectionPrefix = constexpr;
-                outputValueConsumer.conditional = conditional;
-                outputValueConsumer.isPtr = isPtr;
-                state.addDestination(outputValueConsumer);
-            }
 
             {
                 ParseState parseState = new ParseState(state.getEnumsReader());
@@ -137,6 +127,8 @@ public class LiveDataProcessor {
 
                 if (constexpr != null) {
                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
+
+                    outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
                 }
             }
 
@@ -201,8 +193,8 @@ public class LiveDataProcessor {
         }
         enumContent.append("} live_data_e;\n");
 
-        outputValueConsumer.endFile();
         sdLogWriter.endFile();
+        outputLookupWriter.endFile();
 
         return outputChannelWriter.getSize();
     }
