@@ -25,6 +25,9 @@ void portInitAdc();
 float getMcuTemperature();
 // Convert all slow ADC inputs.  Returns true if the conversion succeeded, false if a failure occured.
 bool readSlowAnalogInputs(adcsample_t* convertedSamples);
+
+// Get the position of samples for this channel in the sample buffer
+size_t indexForSlowAdcChannel(adc_channel_e channel);
 #endif
 
 // CAN bus

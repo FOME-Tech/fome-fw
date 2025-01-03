@@ -211,6 +211,10 @@ bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
 	return result;
 }
 
+size_t indexForSlowAdcChannel(adc_channel_e channel) {
+	return channel - EFI_ADC_0;
+}
+
 #if EFI_USE_FAST_ADC
 
 #include "AdcConfiguration.h"

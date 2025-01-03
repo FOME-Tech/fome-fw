@@ -22,7 +22,7 @@
 #include "pch.h"
 
 float __attribute__((weak)) getAnalogInputDividerCoefficient(adc_channel_e) {
-    return engineConfiguration->analogInputDividerCoefficient;
+	return engineConfiguration->analogInputDividerCoefficient;
 }
 
 #if HAL_USE_ADC
@@ -109,7 +109,7 @@ int getInternalAdcValue(const char *msg, adc_channel_e hwChannel) {
 	}
 #endif // EFI_USE_FAST_ADC
 
-	return slowAdcSamples[hwChannel - EFI_ADC_0];
+	return slowAdcSamples[indexForSlowAdcChannel(hwChannel)];
 }
 
 #if EFI_USE_FAST_ADC

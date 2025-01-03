@@ -179,6 +179,10 @@ static const uint8_t adcChannelScramble[20] = {
 	18, 19					// ADC2: PF13/14
 };
 
+size_t indexForSlowAdcChannel(adc_channel_e channel) {
+	return adcChannelScramble[channel - EFI_ADC_0];
+}
+
 static bool didStart = false;
 
 bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
