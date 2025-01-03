@@ -575,16 +575,24 @@ public class ParseState implements DefinitionsState {
     }
 
     @Override
-    public void exitTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
-        boolean isResizable = ctx.Resizable() != null;
+    public void enterTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
+        // Make a new scope as if we're a struct, we'll chop it apart later
+        enterStruct(null);
+    }
 
-        ScalarField valuesPrototype = (ScalarField)scope.removeLastField();
-        ScalarField colPrototype = (ScalarField)scope.removeLastField();
-        ScalarField rowPrototype = (ScalarField)scope.removeLastField();
+    @Override
+    public void exitTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
+        assert(scope != null);
+
+        ScalarField rowPrototype = (ScalarField)scope.structFields.get(0);
+        ScalarField colPrototype = (ScalarField)scope.structFields.get(1);
+        ScalarField valuesPrototype = (ScalarField)scope.structFields.get(2);
+        scope = scopes.pop();
 
         int maxRows;
         int maxCols;
 
+        boolean isResizable = ctx.Resizable() != null;
         if (isResizable) {
             int minRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
             maxRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(1).getText());
@@ -729,10 +737,6 @@ public class ParseState implements DefinitionsState {
             // TODO: check for duplicate fields
 
             structFields.add(f);
-        }
-
-        public Field removeLastField() {
-            return structFields.remove(structFields.size() - 1);
         }
     }
 }
