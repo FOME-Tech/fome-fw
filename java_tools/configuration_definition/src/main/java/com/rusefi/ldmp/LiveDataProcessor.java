@@ -68,7 +68,7 @@ public class LiveDataProcessor {
     }
 
     interface EntryHandler {
-        void onEntry(String name, String javaName, String folder, String prepend, boolean withCDefines, String[] outputNames, String constexpr, String conditional, Boolean isPtr) throws IOException;
+        void onEntry(String name, String javaName, String folder, String prepend, String[] outputNames, String constexpr, String conditional, Boolean isPtr) throws IOException;
     }
 
     private int handleYaml(Map<String, Object> data) throws IOException {
@@ -81,7 +81,7 @@ public class LiveDataProcessor {
 
         OutputLookupWriter outputLookupWriter = new OutputLookupWriter("generated/output_lookup_generated.cpp", "getOutputValueByName");
 
-        EntryHandler handler = (name, javaName, folder, prepend, withCDefines, outputNames, constexpr, conditional, isPtr) -> {
+        EntryHandler handler = (name, javaName, folder, prepend, outputNames, constexpr, conditional, isPtr) -> {
             int startingPosition = outputChannelWriter.getSize();
             log.info("Starting " + name + " at " + startingPosition + " with [" + conditional + "]");
 
@@ -89,7 +89,6 @@ public class LiveDataProcessor {
 
             ReaderStateImpl state = new ReaderStateImpl();
             state.setDefinitionInputFile(folder + File.separator + name + ".txt");
-            state.setWithC_Defines(withCDefines);
 
             if (extraPrepend != null)
                 state.addPrepend(extraPrepend);
@@ -147,10 +146,8 @@ public class LiveDataProcessor {
             String prepend = (String) entry.get("prepend");
             String constexpr = (String) entry.get("constexpr");
             String conditional = (String) entry.get("conditional_compilation");
-            Boolean withCDefines = (Boolean) entry.get("withCDefines");
             Boolean isPtr = (Boolean) entry.get("isPtr");
             // Defaults to false if not specified
-            withCDefines = withCDefines != null && withCDefines;
             isPtr = isPtr != null && isPtr;
 
             Object outputNames = entry.get("output_name");
@@ -167,7 +164,7 @@ public class LiveDataProcessor {
                 nameList.toArray(outputNamesArr);
             }
 
-            handler.onEntry(name, java, folder, prepend, withCDefines, outputNamesArr, constexpr, conditional, isPtr);
+            handler.onEntry(name, java, folder, prepend, outputNamesArr, constexpr, conditional, isPtr);
 
             String enumName = "LDS_" + name;
             String type = name + "_s"; // convention
