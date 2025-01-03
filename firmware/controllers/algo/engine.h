@@ -111,9 +111,6 @@ class Engine final : public TriggerStateListener {
 public:
 	Engine();
 
-	// todo: technical debt: enableOverdwellProtection #3553
-	bool enableOverdwellProtection = true;
-
 	TunerStudioOutputChannels outputChannels;
 
 	/**

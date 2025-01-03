@@ -304,7 +304,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		{ fireSparkAndPrepareNextSchedule, event },
 		currentPhase, nextPhase);
 
-	if (!scheduled && !limitedSpark && engine->enableOverdwellProtection) {
+	if (!scheduled && !limitedSpark) {
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
 		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
