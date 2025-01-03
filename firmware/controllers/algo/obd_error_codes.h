@@ -646,7 +646,7 @@ enum class ObdCode : uint16_t {
 	//P0609 Control Module VSS Output "B" Malfunction
 	//P0610 Control Module Vehicle Options Error
 	//P0611 Fuel Injector Control Module Performance
-	//P0612 Fuel Injector Control Module Relay Control
+	OBD_PCM_MainRelayFault = 612,
 	//P0613 TCM Processor
 	//P0614 ECM / TCM Incompatible
 	//P0615 Starter Relay Circuit
