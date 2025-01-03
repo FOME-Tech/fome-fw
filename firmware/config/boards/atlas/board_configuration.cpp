@@ -1,5 +1,9 @@
 #include "pch.h"
 
+#include "adc_subscription.h"
+#include "functional_sensor.h"
+#include "linear_func.h"
+
 static const brain_pin_e injPins[] = {
 	Gpio::G5,
 	Gpio::G6,
@@ -148,4 +152,17 @@ void preHalInit() {
 	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_ALTERNATE(0xc));
 	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(0xc));
 	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(0xc));
+}
+
+void initBoardSensors() {
+	static LinearFunc mrSenseFunc;
+	static FunctionalSensor mrSenseSensor(SensorType::MainRelayVoltage, MS2NT(100));
+
+	// 82k high side/10k low side = 9.2
+	const float mrSenseRatio = (92.0f / 10.0f);
+
+	mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
+	mrSenseSensor.setFunction(mrSenseFunc);
+	AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
+	mrSenseSensor.Register();
 }

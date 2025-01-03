@@ -25,6 +25,9 @@ static void deInitAuxDigital() {
 }
 
 void initNewSensors() {
+	// First (optionally) init any sensors built in to the board that don't need config
+	initBoardSensors();
+
 	reconfigureSensors();
 
 	initBaro();
