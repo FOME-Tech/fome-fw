@@ -81,12 +81,15 @@ public class JavaFieldsWriter {
         public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
             if (arrayDims.length == 0) {
                 visit(struct, ps, prefixer, offsetAdd, struct.name.toUpperCase());
+            } else if (arrayDims.length == 1) {
+                int elementOffset = offsetAdd + struct.offset;
+                for (int i = 0; i < arrayDims[0]; i++) {
+                    visit(struct, ps, prefixer, elementOffset, struct.name.toUpperCase() + (i + 1));
+                    elementOffset += struct.size;
+                }
+            } else {
+                throw new IllegalStateException("Java fields don't support multi dimension arrays of structs");
             }
-//            } else if (arrayDims.length == 1) {
-//                ps.println("\t" + sl.typeName + " " + sl.name + "[" + arrayDims[0] + "];");
-//            } else {
-//                throw new IllegalStateException("Multi dim array of structs not supported");
-//            }
         }
 
         private String toJavaType(String tsType) {
