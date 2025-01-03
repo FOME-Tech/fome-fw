@@ -136,8 +136,6 @@ using brain_pin_e = Gpio;
 
 using egt_cs_array_t = brain_pin_e[EGT_CHANNEL_COUNT];
 
-using pwm_freq_t = int16_t;
-
 using script_setting_t = float;
 
 using brain_input_pin_e = brain_pin_e;
