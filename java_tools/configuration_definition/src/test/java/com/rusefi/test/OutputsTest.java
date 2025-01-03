@@ -109,14 +109,17 @@ public class OutputsTest {
                         "\tswitch(hash) {\n" +
                         "#if EFI_BOOST_CONTROL\n" +
                         "\t\tcase -1571463185:\n" +
+                        "\t\t\t// issue_294_31\n" +
                         "\t\t\treturn (float)engine->outputChannels.issue_294_31;\n" +
                         "#endif\n" +
                         "#if EFI_BOOST_CONTROL\n" +
                         "\t\tcase -298185774:\n" +
+                        "\t\t\t// enableFan1WithAc\n" +
                         "\t\t\treturn (float)engine->outputChannels.enableFan1WithAc;\n" +
                         "#endif\n" +
                         "#if EFI_BOOST_CONTROL\n" +
                         "\t\tcase -709106787:\n" +
+                        "\t\t\t// hwChannel\n" +
                         "\t\t\treturn (float)engine->outputChannels.hwChannel;\n" +
                         "#endif\n" +
                         "\t}\n" +
