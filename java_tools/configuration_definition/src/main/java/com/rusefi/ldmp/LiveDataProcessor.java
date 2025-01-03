@@ -12,7 +12,6 @@ import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.newparse.outputs.SdLogWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
-import com.rusefi.util.LazyFile;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -89,7 +88,7 @@ public class LiveDataProcessor {
             int startingPosition = outputChannelWriter.getSize();
             log.info("Starting " + name + " at " + startingPosition + " with [" + conditional + "]");
 
-            baseAddressCHeader.append("#define " + name.toUpperCase() + "_BASE_ADDRESS " + startingPosition + "\n");
+            baseAddressCHeader.append("#define ").append(name.toUpperCase()).append("_BASE_ADDRESS ").append(startingPosition).append("\n");
 
             ReaderStateImpl state = new ReaderStateImpl();
             state.setDefinitionInputFile(folder + File.separator + name + ".txt");
@@ -104,7 +103,7 @@ public class LiveDataProcessor {
                 outputValueConsumer.currentSectionPrefix = constexpr;
                 outputValueConsumer.conditional = conditional;
                 outputValueConsumer.isPtr = isPtr;
-                state.addDestination(outputValueConsumer::handleEndStruct);
+                state.addDestination(outputValueConsumer);
             }
 
             {

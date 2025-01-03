@@ -6,10 +6,10 @@ import com.rusefi.newparse.layout.*;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.newparse.parsing.Struct;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,8 +19,8 @@ public class JavaFieldsWriter {
 
     private final int baseOffset;
 
-    public JavaFieldsWriter(final String outputFile, int baseOffset) throws FileNotFoundException {
-        ps = new PrintStreamAlwaysUnix(new FileOutputStream(outputFile));
+    public JavaFieldsWriter(final String outputFile, int baseOffset) throws IOException {
+        ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
         this.baseOffset = baseOffset;
 
         String className = new File(outputFile).getName();
@@ -37,8 +37,7 @@ public class JavaFieldsWriter {
     }
 
     public void writeDefinitions(final Map<String, Definition> defs) {
-        Stream<Map.Entry<String, Definition>> sortedDefs = defs.entrySet().stream().sorted((o1, o2)->o1.getKey().
-                compareTo(o2.getKey()));
+        Stream<Map.Entry<String, Definition>> sortedDefs = defs.entrySet().stream().sorted(Map.Entry.comparingByKey());
 
         for (final Map.Entry<String, Definition> d : sortedDefs.collect(Collectors.toList())) {
             String name = d.getKey();
@@ -81,21 +80,24 @@ public class JavaFieldsWriter {
         public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
             if (arrayDims.length == 0) {
                 visit(struct, ps, prefixer, offsetAdd, struct.name.toUpperCase());
+            } else if (arrayDims.length == 1) {
+                int elementOffset = offsetAdd + struct.offset;
+                for (int i = 0; i < arrayDims[0]; i++) {
+                    visit(struct, ps, prefixer, elementOffset, struct.name.toUpperCase() + (i + 1));
+                    elementOffset += struct.size;
+                }
+            } else {
+                throw new IllegalStateException("Java fields don't support multi dimension arrays of structs");
             }
-//            } else if (arrayDims.length == 1) {
-//                ps.println("\t" + sl.typeName + " " + sl.name + "[" + arrayDims[0] + "];");
-//            } else {
-//                throw new IllegalStateException("Multi dim array of structs not supported");
-//            }
         }
 
         private String toJavaType(String tsType) {
             switch (tsType) {
-                case "S08": return "INT8";
+                case "S08":
                 case "U08": return "INT8";
-                case "S16": return "INT16";
+                case "S16":
                 case "U16": return "INT16";
-                case "S32": return "INT";
+                case "S32":
                 case "U32": return "INT";
                 case "F32": return "FLOAT";
             }
