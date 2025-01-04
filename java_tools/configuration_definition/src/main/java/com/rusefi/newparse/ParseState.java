@@ -9,8 +9,10 @@ import com.rusefi.newparse.parsing.*;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.rusefi.VariableRegistry.AUTO_ENUM_SUFFIX;
 
@@ -586,13 +588,20 @@ public class ParseState implements DefinitionsState {
 
         ScalarField rowPrototype = (ScalarField)scope.structFields.get(0);
         ScalarField colPrototype = (ScalarField)scope.structFields.get(1);
-        ScalarField valuesPrototype = (ScalarField)scope.structFields.get(2);
+        List<ScalarField> valuesPrototypes =
+                scope.structFields.stream()
+                        .skip(2)
+                        .map(f -> (ScalarField)f)
+                        .collect(Collectors.toList());
         scope = scopes.pop();
+
+        int expectedValuesSize = valuesPrototypes.get(0).type.size;
+        assert(valuesPrototypes.stream().allMatch(v -> v.type.size == expectedValuesSize));
 
         int maxRows;
         int maxCols;
 
-        boolean isResizable = ctx.Resizable() != null;
+        boolean isResizable = ctx.integer() != null;
         if (isResizable) {
             int minRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
             maxRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(1).getText());
@@ -618,7 +627,17 @@ public class ParseState implements DefinitionsState {
         scope.addField(new ArrayField<>(colPrototype, new int[] {maxCols}, false));
 
         // Generate table
-        scope.addField(new ArrayField<>(valuesPrototype, new int[] {maxCols, maxRows}, false));
+        Function<ScalarField, ArrayField<ScalarField>> converter =
+                prototype -> new ArrayField<>(prototype, new int[]{maxCols, maxRows}, false);
+        if (valuesPrototypes.size() > 1) {
+            scope.addField(new Union(
+                    valuesPrototypes.stream()
+                            .map(converter)
+                            .collect(Collectors.toList())
+            ));
+        } else {
+            scope.addField(converter.apply(valuesPrototypes.get(0)));
+        }
     }
 
     @Override

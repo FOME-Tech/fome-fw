@@ -369,4 +369,42 @@ public class ParseStructTest {
         Assert.assertEquals(8, fieldValues.length[0]);
         Assert.assertEquals(4, fieldValues.length[1]);
     }
+
+    @Test
+    public void tableMultiValues() {
+        ParseState state = parse(
+                "struct_no_prefix myStruct\n" +
+                        "table\n" +
+                        "rows num 4 uint8_t rowVals\n" +
+                        "cols num 8 uint16_t colVals\n" +
+                        "values float tableValsF\n" +
+                        "values int tableValsI\n" +
+                        "end_table\n" +
+                        "end_struct\n"
+        );
+
+        List<Field> fields = state.getLastStruct().fields;
+        Assert.assertEquals(3, fields.size());
+
+        ArrayField<ScalarField> fieldRows = (ArrayField<ScalarField>)fields.get(0);
+        Assert.assertEquals(1, fieldRows.length.length);
+        Assert.assertEquals(4, fieldRows.length[0]);
+
+        ArrayField<ScalarField> fieldCols = (ArrayField<ScalarField>)fields.get(1);
+        Assert.assertEquals(1, fieldCols.length.length);
+        Assert.assertEquals(8, fieldCols.length[0]);
+
+        Union fieldValuesUnion = (Union)fields.get(2);
+        Assert.assertEquals(2, fieldValuesUnion.fields.size());
+
+        ArrayField<ScalarField> fieldValues1 = (ArrayField<ScalarField>)fieldValuesUnion.fields.get(0);
+        Assert.assertEquals(2, fieldValues1.length.length);
+        Assert.assertEquals(8, fieldValues1.length[0]);
+        Assert.assertEquals(4, fieldValues1.length[1]);
+
+        ArrayField<ScalarField> fieldValues2 = (ArrayField<ScalarField>)fieldValuesUnion.fields.get(1);
+        Assert.assertEquals(2, fieldValues2.length.length);
+        Assert.assertEquals(8, fieldValues2.length[0]);
+        Assert.assertEquals(4, fieldValues2.length[1]);
+    }
 }
