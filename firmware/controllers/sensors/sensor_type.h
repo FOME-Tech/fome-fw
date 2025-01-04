@@ -71,6 +71,7 @@ enum class SensorType : unsigned char {
 
 	BatteryVoltage,
 	MainRelayVoltage,
+	Sensor5vVoltage,
 
 	BarometricPressure,
 

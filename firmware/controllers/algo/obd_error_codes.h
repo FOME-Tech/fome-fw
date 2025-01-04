@@ -676,8 +676,8 @@ enum class ObdCode : uint16_t {
 	//P0639 Throttle Actuator Control Range/Performance (Bank 2)
 	//P0640 Intake Air Heater Control Circuit
 	//P0641 Sensor Reference Voltage &ldquo;A&rdquo; Circuit/Open
-	//P0642 Sensor Reference Voltage &ldquo;A&rdquo; Circuit Low
-	//P0643 Sensor Reference Voltage &ldquo;A&rdquo; Circuit High
+	Sensor5vSupplyLow = 642,
+	Sensor5vSupplyHigh = 643,
 	//P0644 Driver Display Serial Communication Circuit
 	//P0645 A/C Clutch Relay Control Circuit
 	//P0646 A/C Clutch Relay Control Circuit Low

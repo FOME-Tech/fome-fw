@@ -147,17 +147,30 @@ static ObdCode getCodeForIgnition(int idx, brain_pin_diag_e diag) {
 #endif // BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
 
 void SensorChecker::onSlowCallback() {
-	bool batteryVoltageSufficient = Sensor::getOrZero(SensorType::BatteryVoltage) > 7.0f;
+	if (Sensor::hasSensor(SensorType::Sensor5vVoltage)) {
+		float sensorSupply = Sensor::getOrZero(SensorType::Sensor5vVoltage);
 
-	// Don't check when:
-	// - battery voltage is too low for sensors to work
-	// - the ignition is off
-	// - ignition was just turned on (let things stabilize first)
-	// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
-	bool shouldCheck = batteryVoltageSufficient && m_ignitionIsOn && m_timeSinceIgnOff.hasElapsedSec(5);
-	m_analogSensorsShouldWork = shouldCheck;
-	if (!shouldCheck) {
-		return;
+		// Inhibit checking if the sensor supply isn't OK, but register a warning for that instead
+		if (sensorSupply > 5.25f) {
+			warning(ObdCode::Sensor5vSupplyHigh, "5V sensor supply high: %.2f", sensorSupply);
+			return;
+		} else if (sensorSupply < 4.75f) {
+			warning(ObdCode::Sensor5vSupplyLow, "5V sensor supply low: %.2f", sensorSupply);
+			return;
+		}
+	} else {
+		bool batteryVoltageSufficient = Sensor::getOrZero(SensorType::BatteryVoltage) > 7.0f;
+
+		// Don't check when:
+		// - battery voltage is too low for sensors to work
+		// - the ignition is off
+		// - ignition was just turned on (let things stabilize first)
+		// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
+		bool shouldCheck = batteryVoltageSufficient && m_ignitionIsOn && m_timeSinceIgnOff.hasElapsedSec(5);
+		m_analogSensorsShouldWork = shouldCheck;
+		if (!shouldCheck) {
+			return;
+		}
 	}
 
 	// Check sensors
