@@ -95,11 +95,16 @@ private:
 		static error_codes_set_s localErrorCopy;
 		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
 		getErrorCodes(&localErrorCopy);
+		/*
 		for (int p = 0; p < localErrorCopy.count; p++) {
 			// Calculate how many digits in this integer and display error code from start to end
 			int code = (int)localErrorCopy.error_codes[p];
 			DisplayErrorCode(DigitLength(code), code);
 		}
+		*/
+		if (localErrorCopy.count > 0) enginePins.checkEnginePin.setValue(1);
+		
+		else enginePins.checkEnginePin.setValue(0);
 #endif // EFI_SHAFT_POSITION_INPUT
 	}
 };
