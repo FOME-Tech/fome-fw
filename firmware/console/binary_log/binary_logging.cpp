@@ -21,7 +21,26 @@ static_assert(US_TO_NT_MULTIPLIER * 1000000 == TimestampCountsPerSec * TicksPerC
 
 static scaled_channel<uint32_t, TimestampCountsPerSec> packedTime;
 
-#include "sd_log_header.h"
+template <typename T>
+inline void sdWrite1(Writer& writer, const T& obj) {
+	static_assert(sizeof(T) == 1);
+	uint8_t x = *(reinterpret_cast<const uint8_t*>(&obj));
+	writer.write((const char*)&x, 1);
+}
+
+template <typename T>
+inline void sdWrite2(Writer& writer, const T& obj) {
+	static_assert(sizeof(T) == 2);
+	uint16_t x = SWAP_UINT16(*(reinterpret_cast<const uint16_t*>(&obj)));
+	writer.write((const char*)&x, 2);
+}
+
+template <typename T>
+inline void sdWrite4(Writer& writer, const T& obj) {
+	static_assert(sizeof(T) == 4);
+	uint8_t x = SWAP_UINT32(*(reinterpret_cast<const uint32_t*>(&obj)));
+	writer.write((const char*)&x, 4);
+}
 
 static uint64_t binaryLogCount = 0;
 
