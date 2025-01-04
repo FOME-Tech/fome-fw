@@ -155,14 +155,29 @@ void preHalInit() {
 }
 
 void initBoardSensors() {
-	static LinearFunc mrSenseFunc;
-	static FunctionalSensor mrSenseSensor(SensorType::MainRelayVoltage, MS2NT(100));
+	{
+		static LinearFunc mrSenseFunc;
+		static FunctionalSensor mrSenseSensor(SensorType::MainRelayVoltage, MS2NT(100));
 
-	// 82k high side/10k low side = 9.2
-	const float mrSenseRatio = (92.0f / 10.0f);
+		// 82k high side/10k low side = 9.2
+		const float mrSenseRatio = (92.0f / 10.0f);
 
-	mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
-	mrSenseSensor.setFunction(mrSenseFunc);
-	AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
-	mrSenseSensor.Register();
+		mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
+		mrSenseSensor.setFunction(mrSenseFunc);
+		AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
+		mrSenseSensor.Register();
+	}
+
+	{
+		static LinearFunc sensor5vFunc;
+		static FunctionalSensor sensor5vSensor(SensorType::Sensor5vVoltage, MS2NT(100));
+
+		const float sensor5vRatio = 2;;
+
+		sensor5vFunc.configure(0, 0, 1, sensor5vRatio, 0, 50);
+		sensor5vSensor.setFunction(sensor5vFunc);
+		AdcSubscription::SubscribeSensor(sensor5vSensor, EFI_ADC_17, /*bandwidth*/ 20, /*ratio*/ 1);
+		sensor5vSensor.Register();
+	}
+
 }
