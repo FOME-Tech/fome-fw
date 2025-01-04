@@ -23,9 +23,11 @@ public class SdLogWriter {
 
     public SdLogWriter(PrintStream ps) {
         this.ps = ps;
+        ps.println("static void writeLogEntry(Writer& outBuffer) {");
     }
 
     public void endFile() {
+        ps.println("}");
         ps.println("static const unsigned char binaryLogHeader[] = {");
 
         // magic number file identifier

@@ -165,6 +165,17 @@ public class SdLogVisitor extends OutputChannelVisitorBase {
                 scalar.options.offset,
                 scalar.options.digits
         );
+
+        ps.print("\tsdWrite" + scalar.type.size + "(outBuffer, ");
+        ps.print(prefixer.get(scalar.name));
+
+        if (idx != -1) {
+            ps.print('[');
+            ps.print(idx - 1);
+            ps.print(']');
+        }
+
+        ps.println(");");
     }
 
     @Override
