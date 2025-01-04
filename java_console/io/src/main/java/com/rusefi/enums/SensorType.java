@@ -38,6 +38,7 @@ public enum SensorType {
 	FuelEthanolPercent,
 	BatteryVoltage,
 	MainRelayVoltage,
+	Sensor5vVoltage,
 	BarometricPressure,
 	FuelLevel,
 	VehicleSpeed,
