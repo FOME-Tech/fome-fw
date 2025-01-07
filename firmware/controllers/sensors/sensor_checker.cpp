@@ -82,6 +82,13 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 				case UnexpectedCode::High:         return ObdCode::OBD_FlexSensor_High;
 				default: break;
 			} break;
+		case SensorType::OilPressure:
+			switch (code) {
+				case UnexpectedCode::Timeout:      return ObdCode::OBD_OilP_Timeout;
+				case UnexpectedCode::Low:          return ObdCode::OBD_OilP_Low;
+				case UnexpectedCode::High:         return ObdCode::OBD_OilP_High;
+				default: break;
+			} break;
 		default:
 			break;
 	}

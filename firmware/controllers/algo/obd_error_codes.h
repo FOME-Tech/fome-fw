@@ -554,10 +554,9 @@ enum class ObdCode : uint16_t {
 	//P0518 Idle Air Control Circuit Intermittent
 	//P0519 Idle Air Control System Performance
 	//P0520 Engine Oil Pressure Sensor/Switch Circuit Malfunction
-	OBD_Oil_Pressure_Sensor_Malfunction = 520,
-	//P0521 Engine Oil Pressure Sensor/Switch Circuit Range/Performance
-	//P0522 Engine Oil Pressure Sensor/Switch Circuit Low Voltage
-	//P0523 Engine Oil Pressure Sensor/Switch Circuit High Voltage
+	OBD_OilP_Timeout = 521,
+	OBD_OilP_Low = 522,
+	OBD_OilP_High = 523,
 	//P0524 Engine Oil Pressure Too Low
 	//P0525 Cruise Control Servo Control Circuit Range/Performance
 	//P0526 Fan Speed Sensor Circuit
