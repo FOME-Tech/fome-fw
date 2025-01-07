@@ -102,17 +102,19 @@ inline const char* describeUnexpected(UnexpectedCode code) {
 	}
 }
 
-static void check(SensorType type) {
+// Returns true checks on dependent sensors should happen
+// (returns false if broken or not configured)
+static bool check(SensorType type) {
 	// Don't check sensors we don't have
 	if (!Sensor::hasSensor(type)) {
-		return;
+		return false;
 	}
 
 	auto result = Sensor::get(type);
 
 	// If the sensor is OK, nothing to check.
 	if (result) {
-		return;
+		return true;
 	}
 
 	ObdCode code = getCode(type, result.Code);
@@ -120,6 +122,8 @@ static void check(SensorType type) {
 	if (code != ObdCode::None) {
 		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
 	}
+
+	return false;
 }
 
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
@@ -174,16 +178,30 @@ void SensorChecker::onSlowCallback() {
 	}
 
 	// Check sensors
-	check(SensorType::Tps1Primary);
-	check(SensorType::Tps1Secondary);
-	check(SensorType::Tps1);
-	check(SensorType::Tps2Primary);
-	check(SensorType::Tps2Secondary);
-	check(SensorType::Tps2);
+	bool tps1DependenciesOk = check(SensorType::Tps1Primary);
 
-	check(SensorType::AcceleratorPedalPrimary);
-	check(SensorType::AcceleratorPedalSecondary);
-	check(SensorType::AcceleratorPedal);
+	if (Sensor::isRedundant(SensorType::Tps1)) {
+		tps1DependenciesOk &= check(SensorType::Tps1Secondary);
+
+		if (tps1DependenciesOk) {
+			// Both pri/sec sensors are OK, check the combined sensor
+			check(SensorType::Tps1);
+		}
+	}
+
+	bool tps2DependenciesOk = check(SensorType::Tps2Primary);
+	if (Sensor::isRedundant(SensorType::Tps2)) {
+		tps2DependenciesOk &= check(SensorType::Tps2Secondary);
+
+		if (tps2DependenciesOk) {
+			// Both pri/sec sensors are OK, check the combined sensor
+			check(SensorType::Tps2);
+		}
+	}
+
+	if (check(SensorType::AcceleratorPedalPrimary) && check(SensorType::AcceleratorPedalSecondary)) {
+		check(SensorType::AcceleratorPedal);
+	}
 
 	check(SensorType::MapSlow);
 	check(SensorType::MapSlow2);
