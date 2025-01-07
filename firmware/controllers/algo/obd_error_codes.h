@@ -221,9 +221,9 @@ enum class ObdCode : uint16_t {
 	//P0193 Fuel Rail Pressure Sensor Circuit High Input
 	//P0194 Fuel Rail Pressure Sensor Circuit Intermittent
 	//P0195 Engine Oil Temperature Sensor Malfunction
-	//P0196 Engine Oil Temperature Sensor Range/Performance
-	//P0197 Engine Oil Temperature Sensor Low
-	//P0198 Engine Oil Temperature Sensor High
+	OBD_OilT_Timeout = 196,
+	OBD_OilT_Low = 197,
+	OBD_OilT_High = 198,
 	//P0199 Engine Oil Temperature Sensor Intermittent
 	//DTC Codes - P0200-P0299 - Fuel and Air Metering (Injector Circuit)
 	//P0200 Injector Circuit Malfunction

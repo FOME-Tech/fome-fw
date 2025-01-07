@@ -89,6 +89,13 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 				case UnexpectedCode::High:         return ObdCode::OBD_OilP_High;
 				default: break;
 			} break;
+		case SensorType::OilTemperature:
+			switch (code) {
+				case UnexpectedCode::Timeout:      return ObdCode::OBD_OilT_Timeout;
+				case UnexpectedCode::Low:          return ObdCode::OBD_OilT_Low;
+				case UnexpectedCode::High:         return ObdCode::OBD_OilT_High;
+				default: break;
+			} break;
 		default:
 			break;
 	}
@@ -217,6 +224,9 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::Iat);
 
 	check(SensorType::FuelEthanolPercent);
+
+	check(SensorType::OilPressure);
+	check(SensorType::OilTemperature);
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
