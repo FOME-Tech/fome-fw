@@ -9,6 +9,8 @@
 
 #include "backup_ram.h"
 
+#include "malfunction_central.h"
+
 static critical_msg_t warningBuffer;
 static critical_msg_t criticalErrorMessageBuffer;
 
@@ -228,6 +230,7 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 	palWritePad(criticalErrorLedPort, criticalErrorLedPin, criticalErrorLedState);
 	turnAllPinsOff();
 	enginePins.communicationLedPin.setValue(1);
+	setError(true, code);
 
 	if (indexOf(fmt, '%') == -1) {
 		/**
