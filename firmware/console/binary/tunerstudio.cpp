@@ -69,7 +69,6 @@
 #include "flash_main.h"
 
 #include "tunerstudio_io.h"
-#include "malfunction_central.h"
 #include "console_io.h"
 #include "bluetooth.h"
 #include "tunerstudio_io.h"

@@ -33,8 +33,6 @@
 
 #include "periodic_thread_controller.h"
 
-#define TEST_MIL_CODE FALSE
-
 #define MFI_LONG_BLINK	1500
 #define MFI_SHORT_BLINK	400
 #define MFI_BLINK_SEPARATOR 400
@@ -106,13 +104,6 @@ private:
 
 static MILController instance;
 
-#if TEST_MIL_CODE
-static void testMil() {
-	addError(ObdCode::OBD_Engine_Coolant_Temperature_Circuit_Malfunction);
-	addError(ObdCode::OBD_Intake_Air_Temperature_Circuit_Malfunction);
-}
-#endif /* TEST_MIL_CODE */
-
 bool isMilEnabled() {
 	return isBrainPinValid(engineConfiguration->malfunctionIndicatorPin);
 }
@@ -123,10 +114,6 @@ void initMalfunctionIndicator(void) {
 	}
 	instance.setPeriod(10 /*ms*/);
 	instance.start();
-
-#if	TEST_MIL_CODE
-	addConsoleAction("testmil", testMil);
-#endif /* TEST_MIL_CODE */
 }
 
 #endif /* EFI_MALFUNCTION_INDICATOR */
