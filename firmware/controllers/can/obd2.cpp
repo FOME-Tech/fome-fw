@@ -209,10 +209,8 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 
 	if (rx.data8[0] == _OBD_2 && rx.data8[1] == OBD_CURRENT_DATA) {
 		handleGetDataRequest(rx, busIndex);
-	} else if (rx.data8[0] == 1 && rx.data8[1] == OBD_STORED_DIAGNOSTIC_TROUBLE_CODES) {
-		// todo: implement stored/pending difference?
-		handleDtcRequest(1, &engine->engineState.warnings.lastErrorCode);
-	} else if (rx.data8[0] == 1 && rx.data8[1] == OBD_PENDING_DIAGNOSTIC_TROUBLE_CODES) {
+	} else if (rx.data8[0] == 1 && (rx.data8[1] == OBD_STORED_DIAGNOSTIC_TROUBLE_CODES
+				|| rx.data8[1] == OBD_PENDING_DIAGNOSTIC_TROUBLE_CODES)) {
 		// todo: implement stored/pending difference?
 		handleDtcRequest(1, &engine->engineState.warnings.lastErrorCode);
 	}
