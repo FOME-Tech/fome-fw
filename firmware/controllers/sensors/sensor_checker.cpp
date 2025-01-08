@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "malfunction_central.h"
+
 // Decode what OBD code we should use for a particular [sensor, code] problem
 static ObdCode getCode(SensorType type, UnexpectedCode code) {
 	switch (type) {
@@ -135,6 +137,9 @@ static bool check(SensorType type) {
 
 	if (code != ObdCode::None) {
 		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
+		setError(true, code);
+	} else {
+		setError(false, code);
 	}
 
 	return false;
@@ -171,11 +176,17 @@ void SensorChecker::onSlowCallback() {
 		// Inhibit checking if the sensor supply isn't OK, but register a warning for that instead
 		if (sensorSupply > 5.25f) {
 			warning(ObdCode::Sensor5vSupplyHigh, "5V sensor supply high: %.2f", sensorSupply);
+			setError(true, ObdCode::Sensor5vSupplyHigh);
 			return;
 		} else if (sensorSupply < 4.75f) {
 			warning(ObdCode::Sensor5vSupplyLow, "5V sensor supply low: %.2f", sensorSupply);
+			setError(true, ObdCode::Sensor5vSupplyLow);
 			return;
+		} else {
+			setError(false, ObdCode::Sensor5vSupplyHigh);
+			setError(false, ObdCode::Sensor5vSupplyLow);
 		}
+
 	} else {
 		bool batteryVoltageSufficient = Sensor::getOrZero(SensorType::BatteryVoltage) > 7.0f;
 
@@ -248,6 +259,7 @@ void SensorChecker::onSlowCallback() {
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
 			warning(code, "Injector %d fault: %s", i, description);
+			setError(true, code);
 
 			anyInjectorHasProblem |= true;
 		}
@@ -270,6 +282,7 @@ void SensorChecker::onSlowCallback() {
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
 			warning(code, "Ignition %d fault: %s", i, description);
+			setError(true, code);
 
 			anyIgnHasProblem |= true;
 		}
