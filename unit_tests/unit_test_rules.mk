@@ -163,7 +163,11 @@ UINCDIR =
 ULIBDIR =
 
 # List all user libraries here
-ULIBS = -lm -lgcov --coverage
+ULIBS = -lm
+
+ifneq ($(IS_MAC),yes)
+	ULIBS += -lgcov --coverage
+endif
 
 ifeq ($(COVERAGE),yes)
 	ULIBS += --coverage
