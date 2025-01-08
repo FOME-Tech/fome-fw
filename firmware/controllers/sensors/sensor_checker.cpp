@@ -122,8 +122,9 @@ static void check(SensorType type) {
 	if (code != ObdCode::None) {
 		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
 		setError(true, code);
+	} else {
+		setError(false, code);
 	}
-	else setError(false, code);
 }
 
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
@@ -163,8 +164,7 @@ void SensorChecker::onSlowCallback() {
 			warning(ObdCode::Sensor5vSupplyLow, "5V sensor supply low: %.2f", sensorSupply);
 			setError(true, ObdCode::Sensor5vSupplyLow);
 			return;
-		}
-		else {
+		} else {
 			setError(false, ObdCode::Sensor5vSupplyHigh);
 			setError(false, ObdCode::Sensor5vSupplyLow);
 		}
