@@ -125,7 +125,6 @@ public:
 	 * TRUE if we know where we are
 	 */
 	bool shaft_is_synchronized;
-	efitick_t mostRecentSyncTime;
 
 	Timer previousEventTimer;
 

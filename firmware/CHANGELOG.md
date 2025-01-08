@@ -36,6 +36,7 @@ or
 ### Added
  - Support Miata NA CAS "CMP" signal as a cam input (if you've installed a 36-1 crank trigger on an NA, for example) #495
  - Support 4 independent wideband O2 channels, and 4 fuel trim banks
+ - Flash error codes for some sensors using the check engine light #526
 
 ### Fixed
  - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override

@@ -84,20 +84,19 @@ private:
 
 		validateStack("MIL", ObdCode::STACK_USAGE_MIL, 128);
 #if EFI_SHAFT_POSITION_INPUT
-		if (nowNt - engine->triggerCentral.triggerState.mostRecentSyncTime < MS2NT(500)) {
-			enginePins.checkEnginePin.setValue(1);
-			chThdSleepMilliseconds(500);
-			enginePins.checkEnginePin.setValue(0);
-		}
-
 		static error_codes_set_s localErrorCopy;
 		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
 		getErrorCodes(&localErrorCopy);
 
-		for (int p = 0; p < localErrorCopy.count; p++) {
-			// Calculate how many digits in this integer and display error code from start to end
-			int code = (int)localErrorCopy.error_codes[p];
-			DisplayErrorCode(DigitLength(code), code);
+		if (localErrorCopy.count) {
+			for (int p = 0; p < localErrorCopy.count; p++) {
+				// Calculate how many digits in this integer and display error code from start to end
+				int code = (int)localErrorCopy.error_codes[p];
+				DisplayErrorCode(DigitLength(code), code);
+			}
+		} else {
+			// Turn on the CEL while the engine is stopped
+			enginePins.checkEnginePin.setValue(!engine->rpmCalculator.isRunning());
 		}
 #endif // EFI_SHAFT_POSITION_INPUT
 	}
