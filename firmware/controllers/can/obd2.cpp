@@ -208,7 +208,7 @@ static void handleDtcRequest(int numCodes, ObdCode* dtcCode, CanBusIndex busInde
 	if (numCodes == 0) {
         // No DTCs: Respond with no trouble codes
         CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
-		tx[0] = 0x2
+		tx[0] = 0x2;
         tx[1] = 0x43;        // Service $03 response
         tx[2] = 0x0;           // No DTCs
         return;
