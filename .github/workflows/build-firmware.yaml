@@ -346,38 +346,20 @@ jobs:
         path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
         ecosystem: fome
 
-    # - name: Upload .ini files
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   working-directory: ./firmware/tunerstudio/generated
-    #   run: ../upload_ini.sh ${{matrix.ini-file}} ${{ secrets.RUSEFI_ONLINE_FTP_USER }} ${{ secrets.RUSEFI_ONLINE_FTP_PASS }} ${{ secrets.RUSEFI_FTP_SERVER }}
+    # If not uploading the full bundle, at least upload the bin+ini so you can test off a PR
+    - name: Upload build bin
+      if: ${{ env.upload == 'false' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: fome_${{matrix.build-target}}.bin
+        path: ./firmware/deliver/rusefi*.bin
 
-    # - name: Upload build elf
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.elf
-    #     path: ./firmware/build/rusefi.elf
-
-    # - name: Upload build bin
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.bin
-    #     path: ./firmware/deliver/rusefi*.bin
-
-    # - name: Upload build hex
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.hex
-    #     path: ./firmware/deliver/rusefi*.hex
-
-    # - name: Upload build dfu
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.dfu
-    #     path: ./firmware/deliver/rusefi*.dfu
+    - name: Upload ini
+      if: ${{ env.upload == 'false' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{matrix.ini-file}}.ini
+        path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}.ini
 
     - name: Upload bundle
       if: ${{ env.full == 'true' && env.upload == 'true' }}
