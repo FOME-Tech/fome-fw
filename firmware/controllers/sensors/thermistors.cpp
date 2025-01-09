@@ -26,8 +26,3 @@ void setCommonNTCSensor(ThermistorConf *thermistorConf, float pullup) {
 	 */
 	thermistorConf->config = {-20, 23.8889, 120, 18000, 2100, 100, pullup};
 }
-
-void set10K_4050K(ThermistorConf *thermistorConf, float pullup) {
-	// see https://www.taydaelectronics.com/datasheets/A-409.pdf
-	thermistorConf->config = {-30, 25, 130, 108000, 10000, 225, pullup};
-}
