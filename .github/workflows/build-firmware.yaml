@@ -348,14 +348,12 @@ jobs:
 
     # If not uploading the full bundle, at least upload the bin+ini so you can test off a PR
     - name: Upload build bin
-      if: ${{ env.upload == 'false' }}
       uses: actions/upload-artifact@v3
       with:
         name: fome_${{matrix.build-target}}.bin
         path: ./firmware/deliver/rusefi*.bin
 
     - name: Upload ini
-      if: ${{ env.upload == 'false' }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{matrix.ini-file}}.ini
