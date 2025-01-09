@@ -351,13 +351,13 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: fome_${{matrix.build-target}}.bin
-        path: ./firmware/deliver/rusefi*.bin
+        path: ./firmware/deliver/fome.bin
 
     - name: Upload ini
       uses: actions/upload-artifact@v3
       with:
-        name: ${{matrix.ini-file}}.ini
-        path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}.ini
+        name: ${{matrix.ini-file}}
+        path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
 
     - name: Upload bundle
       if: ${{ env.full == 'true' && env.upload == 'true' }}
