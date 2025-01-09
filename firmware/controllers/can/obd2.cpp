@@ -208,19 +208,21 @@ static void handleDtcRequest(int numCodes, ObdCode* dtcCode, CanBusIndex busInde
 	if (numCodes == 0) {
         // No DTCs: Respond with no trouble codes
         CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
-        tx[0] = 0x43;        // Service $03 response
-        tx[1] = 0;           // No DTCs
+		tx[0] = 0x2
+        tx[1] = 0x43;        // Service $03 response
+        tx[2] = 0x0;           // No DTCs
         return;
     }
 
 	CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
 	int dtcIndex = 0;
     int frameIndex = 0;
+	tx[1] = 0x43;
 
 	while (dtcIndex < numCodes) {
         if (frameIndex == 0) {
             // First frame setup
-            tx[1] = (numCodes * 2) & 0xFF; // Total DTC data length
+            tx[0] = (numCodes * 2) & 0xFF; // Total DTC data length
             int bytesAdded = 0;
 
             for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
