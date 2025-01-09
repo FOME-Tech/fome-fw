@@ -29,6 +29,7 @@
 #include "can.h"
 #include "can_msg_tx.h"
 #include "fuel_math.h"
+#include "malfunction_central.h"
 
 static const int16_t supportedPids0120[] = { 
 	PID_MONITOR_STATUS,
@@ -187,18 +188,51 @@ static void handleGetDataRequest(const CANRxFrame& rx, CanBusIndex busIndex) {
 	}
 }
 
-static void handleDtcRequest(int numCodes, ObdCode* dtcCode) {
-	// TODO: this appears to be unfinished?
-	UNUSED(numCodes);
-	UNUSED(dtcCode);
+static void handleDtcRequest(int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
 
-	// int numBytes = numCodes * 2;
-	// // write CAN-TP Single Frame header?
-	// txmsg.data8[0] = (uint8_t)((0 << 4) | numBytes);
-	// for (int i = 0, j = 1; i < numCodes; i++) {
-	// 	txmsg.data8[j++] = (uint8_t)((dtcCode[i] >> 8) & 0xff);
-	// 	txmsg.data8[j++] = (uint8_t)(dtcCode[i] & 0xff);
-	// }
+	if (numCodes == 0) {
+        // No DTCs: Respond with no trouble codes
+        CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
+        tx[0] = 0x43;        // Service $03 response
+        tx[1] = 0;           // No DTCs
+        return;
+    }
+
+	CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
+	int dtcIndex = 0;
+    int frameIndex = 0;
+
+	while (dtcIndex < numCodes) {
+        if (frameIndex == 0) {
+            // First frame setup
+            tx[1] = (numCodes * 2) & 0xFF; // Total DTC data length
+            int bytesAdded = 0;
+
+            for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
+                int dtc = (int)dtcCode[dtcIndex++];
+                tx[2 + bytesAdded] = (dtc >> 8) & 0xFF;
+                tx[3 + bytesAdded] = dtc & 0xFF;
+                bytesAdded += 2;
+            }
+
+            tx.setDlc(2 + bytesAdded);
+        } else {
+            // Consecutive frames
+            tx[0] = 0x21 + (frameIndex - 1);
+            int bytesAdded = 0;
+
+            for (int i = 0; i < 7 && dtcIndex < numCodes; i++) {
+                int dtc = (int)dtcCode[dtcIndex++];
+                tx[1 + bytesAdded] = (dtc >> 8) & 0xFF;
+                tx[2 + bytesAdded] = dtc & 0xFF;
+                bytesAdded += 2;
+            }
+
+            tx.setDlc(1 + bytesAdded);
+        }
+
+        frameIndex++;
+    }
 }
 
 #if HAL_USE_CAN
@@ -212,7 +246,11 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 	} else if (rx.data8[0] == 1 && (rx.data8[1] == OBD_STORED_DIAGNOSTIC_TROUBLE_CODES
 				|| rx.data8[1] == OBD_PENDING_DIAGNOSTIC_TROUBLE_CODES)) {
 		// todo: implement stored/pending difference?
-		handleDtcRequest(1, &engine->engineState.warnings.lastErrorCode);
+		static error_codes_set_s localErrorCopy;
+		getErrorCodes(&localErrorCopy);
+
+		handleDtcRequest(localErrorCopy.count, localErrorCopy.error_codes, busIndex);
+		
 	}
 }
 #endif /* HAL_USE_CAN */
