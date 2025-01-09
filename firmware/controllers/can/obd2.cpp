@@ -102,6 +102,21 @@ static void obdWriteSupportedPids(int PID, int bitOffset, const int16_t *support
 	obdSendPacket(1, PID, 4, value, busIndex);
 }
 
+static void obdStatusQuery(int PID, CanBusIndex busIndex) {
+	static error_codes_set_s localErrorCopy;
+	getErrorCodes(&localErrorCopy);
+
+	CanTxMessage tx(OBD_TEST_RESPONSE, 7, busIndex, false);
+
+	tx[0] = 0x6;
+	tx[1] = 0x41;
+	tx[2] = PID;
+	tx[3] = localErrorCopy.count ? 0x80 : 0x0 + localErrorCopy.count;
+	tx[4] = 0x0;
+	tx[5] = 0x0;
+	tx[6] = 0x0;
+}
+
 static void handleGetDataRequest(const CANRxFrame& rx, CanBusIndex busIndex) {
 	int pid = rx.data8[2];
 	switch (pid) {
@@ -115,7 +130,7 @@ static void handleGetDataRequest(const CANRxFrame& rx, CanBusIndex busIndex) {
 		obdWriteSupportedPids(pid, 41, supportedPids4160, busIndex);
 		break;
 	case PID_MONITOR_STATUS:
-		obdSendPacket(1, pid, 4, 0, busIndex);	// todo: add statuses
+		obdStatusQuery(pid, busIndex);
 		break;
 	case PID_FUEL_SYSTEM_STATUS:
 		// todo: add statuses
