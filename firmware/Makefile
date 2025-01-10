@@ -215,6 +215,7 @@ $(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
 $(info CPU_HWLAYER:   $(CPU_HWLAYER))
 $(info CONFDIR:       $(CONFDIR))
 $(info LDSCRIPT:      $(LDSCRIPT))
+$(info MODULES_INC:   $(MODULES_INC))
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
