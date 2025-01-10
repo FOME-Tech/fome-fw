@@ -191,14 +191,6 @@ jobs:
             folder: config/boards/microrusefi
             ini-file: fome_mre_f7.ini
 
-          # - build-target: prometheus_405
-          #   folder: config/boards/prometheus
-          #   ini-file: fome_prometheus_405.ini
-
-          # - build-target: prometheus_469
-          #   folder: config/boards/prometheus
-          #   ini-file: fome_prometheus_469.ini
-
           - build-target: proteus_f4
             folder: config/boards/proteus
             ini-file: fome_proteus_f4.ini
