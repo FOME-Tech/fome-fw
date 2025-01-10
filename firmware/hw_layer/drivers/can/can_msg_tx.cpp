@@ -64,9 +64,9 @@ CanTxMessage::~CanTxMessage() {
 
 	if (engineConfiguration->verboseCan) {
 		#ifndef STM32H7XX
-			int id = (unsigned int)((m_frame.IDE == CAN_IDE_EXT) ? CAN_EID(m_frame) : CAN_SID(m_frame)),
+			int id = (unsigned int)((m_frame.IDE == CAN_IDE_EXT) ? CAN_EID(m_frame) : CAN_SID(m_frame));
 		#else
-			int id = (unsigned int)(m_frame.common.XTD ? CAN_EID(m_frame) : CAN_SID(m_frame)),
+			int id = (unsigned int)(m_frame.common.XTD ? CAN_EID(m_frame) : CAN_SID(m_frame));
 		#endif
 
 		efiPrintf("CAN TX bus %d ID %x(%d) DLC %x: %x %x %x %x %x %x %x %x",
