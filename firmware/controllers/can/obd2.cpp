@@ -117,8 +117,14 @@ static void obdStatusQuery(int PID, CanBusIndex busIndex) {
 	tx[6] = 0x0;
 }
 
-static void handleGetDataRequest(const CANRxFrame& rx, CanBusIndex busIndex) {
-	int pid = rx.data8[2];
+static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusIndex busIndex) {
+	if (length != 2) {
+		// expect length 2: service + PID
+		return;
+	}
+	
+	auto pid = rx.data8[2];
+
 	switch (pid) {
 	case PID_SUPPORTED_PIDS_REQUEST_01_20:
 		obdWriteSupportedPids(pid, 1, supportedPids0120, busIndex);
@@ -258,16 +264,21 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 		return;
 	}
 
-	if (rx.data8[0] == _OBD_2 && rx.data8[1] == OBD_CURRENT_DATA) {
-		handleGetDataRequest(rx, busIndex);
-	} else if (rx.data8[0] == 1 && (rx.data8[1] == OBD_STORED_DIAGNOSTIC_TROUBLE_CODES
-				|| rx.data8[1] == OBD_PENDING_DIAGNOSTIC_TROUBLE_CODES)) {
-		// todo: implement stored/pending difference?
+	auto length = rx.data8[0];
+	auto service = rx.data8[1];
+
+	switch (service) {
+	case OBD_CURRENT_DATA:
+		handleGetDataRequest(length, rx, busIndex);
+		break;
+	case OBD_STORED_DTC:
+	case OBD_PENDING_DTC:
+	case OBD_PERMANENT_DTC:
 		static error_codes_set_s localErrorCopy;
 		getErrorCodes(&localErrorCopy);
 
 		handleDtcRequest(localErrorCopy.count, localErrorCopy.error_codes, busIndex);
-		
+		break;
 	}
 }
 #endif /* HAL_USE_CAN */
