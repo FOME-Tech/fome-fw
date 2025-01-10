@@ -209,21 +209,20 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 	}
 }
 
-static void handleDtcRequest(int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
-
+static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
 	if (numCodes == 0) {
         // No DTCs: Respond with no trouble codes
         CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
 		tx[0] = 0x2;
-        tx[1] = 0x43;        // Service $03 response
-        tx[2] = 0x0;           // No DTCs
+        tx[1] = 0x40 + service;		// Service $03 response
+        tx[2] = 0x0;           		// No DTCs
         return;
     }
 
 	CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
 	int dtcIndex = 0;
     int frameIndex = 0;
-	tx[1] = 0x43;
+	tx[1] = 0x40 + service;
 
 	while (dtcIndex < numCodes) {
         if (frameIndex == 0) {
@@ -277,7 +276,7 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 		static error_codes_set_s localErrorCopy;
 		getErrorCodes(&localErrorCopy);
 
-		handleDtcRequest(localErrorCopy.count, localErrorCopy.error_codes, busIndex);
+		handleDtcRequest(service, localErrorCopy.count, localErrorCopy.error_codes, busIndex);
 		break;
 	}
 }
