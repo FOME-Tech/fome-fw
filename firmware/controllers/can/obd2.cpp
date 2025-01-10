@@ -271,12 +271,15 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 		handleGetDataRequest(length, rx, busIndex);
 		break;
 	case OBD_STORED_DTC:
-	case OBD_PENDING_DTC:
-	case OBD_PERMANENT_DTC:
 		static error_codes_set_s localErrorCopy;
 		getErrorCodes(&localErrorCopy);
 
 		handleDtcRequest(service, localErrorCopy.count, localErrorCopy.error_codes, busIndex);
+		break;
+	case OBD_PENDING_DTC:
+	case OBD_PERMANENT_DTC:
+		// We don't support pending or permanent DTCs.
+		handleDtcRequest(service, 0, nullptr, busIndex);
 		break;
 	}
 }
