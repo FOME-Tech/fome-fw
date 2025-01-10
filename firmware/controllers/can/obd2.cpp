@@ -211,50 +211,50 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 
 static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
 	if (numCodes == 0) {
-        // No DTCs: Respond with no trouble codes
-        CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
+		// No DTCs: Respond with no trouble codes
+		CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
 		tx[0] = 0x2;
-        tx[1] = 0x40 + service;		// Service $03 response
-        tx[2] = 0x0;           		// No DTCs
-        return;
-    }
+		tx[1] = 0x40 + service;		// Service $03 response
+		tx[2] = 0x0;           		// No DTCs
+		return;
+	}
 
 	CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
 	int dtcIndex = 0;
-    int frameIndex = 0;
+	int frameIndex = 0;
 	tx[1] = 0x40 + service;
 
 	while (dtcIndex < numCodes) {
-        if (frameIndex == 0) {
-            // First frame setup
-            tx[0] = (numCodes * 2) & 0xFF; // Total DTC data length
-            int bytesAdded = 0;
+		if (frameIndex == 0) {
+			// First frame setup
+			tx[0] = (numCodes * 2) & 0xFF; // Total DTC data length
+			int bytesAdded = 0;
 
-            for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
-                int dtc = (int)dtcCode[dtcIndex++];
-                tx[2 + bytesAdded] = (dtc >> 8) & 0xFF;
-                tx[3 + bytesAdded] = dtc & 0xFF;
-                bytesAdded += 2;
-            }
+			for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
+				int dtc = (int)dtcCode[dtcIndex++];
+				tx[2 + bytesAdded] = (dtc >> 8) & 0xFF;
+				tx[3 + bytesAdded] = dtc & 0xFF;
+				bytesAdded += 2;
+			}
 
-            tx.setDlc(2 + bytesAdded);
-        } else {
-            // Consecutive frames
-            tx[0] = 0x21 + (frameIndex - 1);
-            int bytesAdded = 0;
+			tx.setDlc(2 + bytesAdded);
+		} else {
+			// Consecutive frames
+			tx[0] = 0x21 + (frameIndex - 1);
+			int bytesAdded = 0;
 
-            for (int i = 0; i < 7 && dtcIndex < numCodes; i++) {
-                int dtc = (int)dtcCode[dtcIndex++];
-                tx[1 + bytesAdded] = (dtc >> 8) & 0xFF;
-                tx[2 + bytesAdded] = dtc & 0xFF;
-                bytesAdded += 2;
-            }
+			for (int i = 0; i < 7 && dtcIndex < numCodes; i++) {
+				int dtc = (int)dtcCode[dtcIndex++];
+				tx[1 + bytesAdded] = (dtc >> 8) & 0xFF;
+				tx[2 + bytesAdded] = dtc & 0xFF;
+				bytesAdded += 2;
+			}
 
-            tx.setDlc(1 + bytesAdded);
-        }
+			tx.setDlc(1 + bytesAdded);
+		}
 
-        frameIndex++;
-    }
+		frameIndex++;
+	}
 }
 
 #if HAL_USE_CAN
