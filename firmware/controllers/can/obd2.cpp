@@ -229,7 +229,7 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 	} else if (numCodes <= 2) {
 		// Response will fit in a single frame
 		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
-		tx[0] = 1 + 2 * numCodes;	// 1 (service) + 2*N (codes) data bytes
+		tx[0] = 1 + 1 + 2 * numCodes;	// 1 (service) + 1 (num bytes) + 2*N (codes) data bytes
 		tx[1] = 0x40 + service;		// Service $03 response
 		tx[2] = numCodes;			// N stored codes
 
