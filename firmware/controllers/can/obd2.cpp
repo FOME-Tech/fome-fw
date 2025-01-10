@@ -209,12 +209,17 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 	}
 }
 
+static void writeDtc(CanTxMessage& msg, size_t offset, ObdCode code) {
+	msg[offset + 0] = (static_cast<uint16_t>(code) >> 8) & 0xFF;
+	msg[offset + 1] = (static_cast<uint16_t>(code) >> 0) & 0xFF;
+}
+
 static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
-	// Hack: only report first two codes as multi-frame response isn't ready
+// Hack: only report first two codes as multi-frame response isn't ready
 	if (numCodes > 2) {
 		numCodes = 2;
 	}
-	
+
 	if (numCodes == 0) {
 		// No DTCs: Respond with no trouble codes
 		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
@@ -230,7 +235,7 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 
 		for (int i = 0; i < numCodes; i++) {
 			int dest = 3 + 2 * i;
-			tx.setShortValue(static_cast<uint16_t>(dtcCode[i]), dest);
+			writeDtc(tx, dest, dtcCode[i]);
 		}
 	} else {
 		// Too many codes for a single frame, respond in multiple
