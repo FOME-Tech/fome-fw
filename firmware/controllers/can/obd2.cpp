@@ -210,50 +210,69 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 }
 
 static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
+	// Hack: only report first two codes as multi-frame response isn't ready
+	if (numCodes > 2) {
+		numCodes = 2;
+	}
+	
 	if (numCodes == 0) {
 		// No DTCs: Respond with no trouble codes
-		CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
-		tx[0] = 0x2;
+		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
+		tx[0] = 0x2;				// 2 data bytes
 		tx[1] = 0x40 + service;		// Service $03 response
-		tx[2] = 0x0;           		// No DTCs
-		return;
-	}
+		tx[2] = 0x0;				// No DTCs
+	} else if (numCodes <= 2) {
+		// Response will fit in a single frame
+		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
+		tx[0] = 1 + 2 * numCodes;	// 1 (service) + 2*N (codes) data bytes
+		tx[1] = 0x40 + service;		// Service $03 response
+		tx[2] = numCodes;			// N stored codes
 
-	CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
-	int dtcIndex = 0;
-	int frameIndex = 0;
-	tx[1] = 0x40 + service;
-
-	while (dtcIndex < numCodes) {
-		if (frameIndex == 0) {
-			// First frame setup
-			tx[0] = (numCodes * 2) & 0xFF; // Total DTC data length
-			int bytesAdded = 0;
-
-			for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
-				int dtc = (int)dtcCode[dtcIndex++];
-				tx[2 + bytesAdded] = (dtc >> 8) & 0xFF;
-				tx[3 + bytesAdded] = dtc & 0xFF;
-				bytesAdded += 2;
-			}
-
-			tx.setDlc(2 + bytesAdded);
-		} else {
-			// Consecutive frames
-			tx[0] = 0x21 + (frameIndex - 1);
-			int bytesAdded = 0;
-
-			for (int i = 0; i < 7 && dtcIndex < numCodes; i++) {
-				int dtc = (int)dtcCode[dtcIndex++];
-				tx[1 + bytesAdded] = (dtc >> 8) & 0xFF;
-				tx[2 + bytesAdded] = dtc & 0xFF;
-				bytesAdded += 2;
-			}
-
-			tx.setDlc(1 + bytesAdded);
+		for (int i = 0; i < numCodes; i++) {
+			int dest = 3 + 2 * i;
+			tx.setShortValue(static_cast<uint16_t>(dtcCode[i]), dest);
 		}
+	} else {
+		// Too many codes for a single frame, respond in multiple
 
-		frameIndex++;
+		// TODO: implement ISO-TP multi frame response
+
+		// CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
+		// int dtcIndex = 0;
+		// int frameIndex = 0;
+		// tx[1] = 0x40 + service;
+
+		// while (dtcIndex < numCodes) {
+		// 	if (frameIndex == 0) {
+		// 		// First frame setup
+		// 		tx[0] = (numCodes * 2) & 0xFF; // Total DTC data length
+		// 		int bytesAdded = 0;
+
+		// 		for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
+		// 			int dtc = (int)dtcCode[dtcIndex++];
+		// 			tx[2 + bytesAdded] = (dtc >> 8) & 0xFF;
+		// 			tx[3 + bytesAdded] = dtc & 0xFF;
+		// 			bytesAdded += 2;
+		// 		}
+
+		// 		tx.setDlc(2 + bytesAdded);
+		// 	} else {
+		// 		// Consecutive frames
+		// 		tx[0] = 0x21 + (frameIndex - 1);
+		// 		int bytesAdded = 0;
+
+		// 		for (int i = 0; i < 7 && dtcIndex < numCodes; i++) {
+		// 			int dtc = (int)dtcCode[dtcIndex++];
+		// 			tx[1 + bytesAdded] = (dtc >> 8) & 0xFF;
+		// 			tx[2 + bytesAdded] = dtc & 0xFF;
+		// 			bytesAdded += 2;
+		// 		}
+
+		// 		tx.setDlc(1 + bytesAdded);
+		// 	}
+
+		// 	frameIndex++;
+		// }
 	}
 }
 
