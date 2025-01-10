@@ -269,6 +269,11 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
+    - name: Pre-build Cleanup Test
+      run: |
+        ls -l firmware
+        cat firmware/engine_modules_generated.h
+
     - uses: actions/checkout@v4
       with:
         submodules: true
