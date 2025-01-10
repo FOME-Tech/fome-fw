@@ -60,7 +60,7 @@ static const int16_t supportedPids4160[] = {
 	-1
 };
 
-static void obdSendPacket(int mode, int PID, int numBytes, uint32_t iValue, CanBusIndex busIndex) {
+static void obdSendPacket(int mode, uint8_t pid, int numBytes, uint32_t iValue, CanBusIndex busIndex) {
 	// Respond on the same bus we got the request from
 	CanTxMessage resp(OBD_TEST_RESPONSE, 8, busIndex, false);
 
@@ -68,7 +68,7 @@ static void obdSendPacket(int mode, int PID, int numBytes, uint32_t iValue, CanB
 	resp[0] = (uint8_t)(2 + numBytes);
 	// write 2 bytes of header
 	resp[1] = (uint8_t)(0x40 + mode);
-	resp[2] = (uint8_t)PID;
+	resp[2] = pid;
 	// write N data bytes
 	for (int i = 8 * (numBytes - 1), j = 3; i >= 0; i -= 8, j++) {
 		resp[j] = (uint8_t)((iValue >> i) & 0xff);
@@ -88,7 +88,7 @@ static void obdSendValue(int mode, int PID, int numBytes, float value, CanBusInd
 
 //#define MOCK_SUPPORTED_PIDS 0xffffffff
 
-static void obdWriteSupportedPids(int PID, int bitOffset, const int16_t *supportedPids, CanBusIndex busIndex) {
+static void obdWriteSupportedPids(uint8_t pid, int bitOffset, const int16_t *supportedPids, CanBusIndex busIndex) {
 	uint32_t value = 0;
 	// gather all 32 bit fields
 	for (int i = 0; i < 32 && supportedPids[i] > 0; i++)
@@ -99,19 +99,26 @@ static void obdWriteSupportedPids(int PID, int bitOffset, const int16_t *support
 	value = MOCK_SUPPORTED_PIDS;
 #endif
 
-	obdSendPacket(1, PID, 4, value, busIndex);
+	obdSendPacket(1, pid, 4, value, busIndex);
 }
 
-static void obdStatusQuery(int PID, CanBusIndex busIndex) {
+static void obdStatusQuery(uint8_t pid, CanBusIndex busIndex) {
 	static error_codes_set_s localErrorCopy;
 	getErrorCodes(&localErrorCopy);
 
 	CanTxMessage tx(OBD_TEST_RESPONSE, 7, busIndex, false);
 
+	// set bit 7 if MIL on
+	uint8_t byteA = (localErrorCopy.count > 0) ? (1 << 7) : 0x0;
+	// bottom 7 bits contain code count
+	byteA |= 0x7F & localErrorCopy.count;
+
 	tx[0] = 0x6;
 	tx[1] = 0x41;
-	tx[2] = PID;
-	tx[3] = localErrorCopy.count ? 0x80 : 0x0 + localErrorCopy.count;
+	tx[2] = pid;
+	tx[3] = byteA;
+
+	// bytes B-D are all zeroes since we don't support readiness monitors
 	tx[4] = 0x0;
 	tx[5] = 0x0;
 	tx[6] = 0x0;
