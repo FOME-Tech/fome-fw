@@ -175,18 +175,6 @@ jobs:
             folder: config/boards/microrusefi
             ini-file: fome_mre_f4.ini
 
-          # - build-target: mre_f4_no_openblt
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
-          # - build-target: mre_f4_debug
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
-          # - build-target: mre_f4_recovery
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
           - build-target: mre_f7
             folder: config/boards/microrusefi
             ini-file: fome_mre_f7.ini
