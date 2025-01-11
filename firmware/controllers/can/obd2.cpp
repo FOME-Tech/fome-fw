@@ -216,10 +216,13 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 	}
 }
 
-static void writeDtc(CanTxMessage& msg, size_t offset, ObdCode code) {
+template<typename T>
+static void writeDtc(T& msg, size_t offset, ObdCode code) {
 	msg[offset + 0] = (static_cast<uint16_t>(code) >> 8) & 0xFF;
 	msg[offset + 1] = (static_cast<uint16_t>(code) >> 0) & 0xFF;
 }
+
+uint8_t responseBytes[MAX_ERROR_CODES_COUNT * 2];
 
 static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
 	if (numCodes == 0) {
@@ -240,6 +243,11 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 			writeDtc(tx, dest, dtcCode[i]);
 		}
 	} else {
+		// Assemble all codes in to the buffer
+		for (size_t i = 0; i < numCodes; i++) {
+			writeDtc(responseBytes, 2 * i, dtcCode[i]);
+		}
+
 		{
 			// ISO-TP first frame
 			CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
@@ -251,49 +259,29 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 			tx[2] = 0x40 + service;			// Service $03 response
 			tx[3] = numCodes;				// N stored codes
 
-			// First frame gets two codes + half of one code
-			for (int i = 0; i < 2; i++) {
-				int dest = 4 + 2 * i;
-				writeDtc(tx, dest, dtcCode[i]);
+			for (size_t i = 0; i < 4; i++) {
+				tx[4 + i] = responseBytes[i];
 			}
 		}
 
-		// CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
-		// int dtcIndex = 0;
-		// int frameIndex = 0;
-		// tx[1] = 0x40 + service;
+		uint8_t sequence = 1;
+		auto readPtr = responseBytes + 4;
+		size_t bytesRemain = 2 * numCodes - 4;
 
-		// while (dtcIndex < numCodes) {
-		// 	if (frameIndex == 0) {
-		// 		// First frame setup
-		// 		tx[0] = (numCodes * 2) & 0xFF; // Total DTC data length
-		// 		int bytesAdded = 0;
+		while (bytesRemain) {
+			CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
+			tx[0] = 0x20 + sequence;
 
-		// 		for (int i = 0; i < 3 && dtcIndex < numCodes; i++) {
-		// 			int dtc = (int)dtcCode[dtcIndex++];
-		// 			tx[2 + bytesAdded] = (dtc >> 8) & 0xFF;
-		// 			tx[3 + bytesAdded] = dtc & 0xFF;
-		// 			bytesAdded += 2;
-		// 		}
+			size_t chunkSize = bytesRemain > 7 ? 7 : bytesRemain;
 
-		// 		tx.setDlc(2 + bytesAdded);
-		// 	} else {
-		// 		// Consecutive frames
-		// 		tx[0] = 0x21 + (frameIndex - 1);
-		// 		int bytesAdded = 0;
+			for (size_t i = 0; i < chunkSize; i++) {
+				tx[i + 1] = readPtr[i];
+			}
 
-		// 		for (int i = 0; i < 7 && dtcIndex < numCodes; i++) {
-		// 			int dtc = (int)dtcCode[dtcIndex++];
-		// 			tx[1 + bytesAdded] = (dtc >> 8) & 0xFF;
-		// 			tx[2 + bytesAdded] = dtc & 0xFF;
-		// 			bytesAdded += 2;
-		// 		}
-
-		// 		tx.setDlc(1 + bytesAdded);
-		// 	}
-
-		// 	frameIndex++;
-		// }
+			sequence++;
+			bytesRemain = bytesRemain - chunkSize;
+			readPtr += chunkSize;
+		}
 	}
 }
 

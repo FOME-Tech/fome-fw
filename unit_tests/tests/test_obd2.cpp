@@ -174,12 +174,11 @@ TEST_F(Obd2, ReadDtcsThree) {
 			0x06, 0x12		// Second code: P0612
 		));
 
-		// TODO
-		// EXPECT_CALL(handler, onTx(0x7E8, 8,
-		// 	0x21,			// Header, sequence number 1
-		// 	0x01, 0x76,		// Third code: P0176
-		// 	0, 0, 0, 0, 0	// padding
-		// ));
+		EXPECT_CALL(handler, onTx(0x7E8, 8,
+			0x21,			// Header, sequence number 1
+			0x01, 0x76,		// Third code: P0176
+			0, 0, 0, 0, 0	// padding
+		));
 	}
 
 	requestDtcs();
