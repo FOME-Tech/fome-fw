@@ -101,3 +101,58 @@ TEST_F(Obd2, MonitorStatusStatusWithDtc) {
 	// PID 0x01 = Monitor status
 	reqPid(0x01);
 }
+
+static void requestDtcs() {
+	CANRxFrame frame;
+	frame.SID = 0x7DF;
+	frame.DLC = 8;
+	frame.IDE = CAN_IDE_STD;
+	setArrayValues(frame.data8, 0);
+	frame.data8[0] = 0x01;	// data bytes to follow
+	frame.data8[1] = 0x03;	// service 03: stored codes
+
+	obdOnCanPacketRx(frame, CanBusIndex::Bus0);
+}
+
+TEST_F(Obd2, ReadDtcsZero) {
+	// No codes are set
+	clearWarnings();
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		2, 0x43, 0,		// len, service, code count (0)
+		0, 0,			// First code
+		0, 0,			// Second code
+		0				// Padding
+	));
+
+	requestDtcs();
+}
+
+TEST_F(Obd2, ReadDtcsOne) {
+	// Set a code, P0123
+	addError(ObdCode::OBD_TPS1_Primary_High);
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		4, 0x43, 1,		// len, service, code count (1)
+		0x01, 0x23,		// First code: P0123
+		0, 0,			// Second code: none
+		0				// Padding
+	));
+
+	requestDtcs();
+}
+
+TEST_F(Obd2, ReadDtcsTwo) {
+	// Set some codes
+	addError(ObdCode::OBD_TPS1_Primary_High);
+	addError(ObdCode::OBD_PCM_MainRelayFault);
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		6, 0x43, 2,		// len, service, code count (1)
+		0x01, 0x23,		// First code: P0123
+		0x06, 0x12,		// Second code: P0612
+		0				// Padding
+	));
+
+	requestDtcs();
+}
