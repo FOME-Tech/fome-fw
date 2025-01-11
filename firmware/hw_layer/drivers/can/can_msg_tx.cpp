@@ -91,7 +91,7 @@ CanTxMessage::~CanTxMessage() {
 }
 #endif /* EFI_CAN_SUPPORT */
 
-#if HAL_USE_CAN || EFI_UNIT_TEST
+#if HAL_USE_CAN
 void CanTxMessage::setDlc(uint8_t dlc) {
 	m_frame.DLC = dlc;
 }
@@ -109,6 +109,10 @@ uint8_t& CanTxMessage::operator[](size_t index) {
 	return m_frame.data8[index];
 }
 
+#endif // HAL_USE_CAN
+
+#if EFI_UNIT_TEST
+
 static ICanTransmitMock* mockCan;
 
 CanTxMessage::~CanTxMessage() {
@@ -125,4 +129,4 @@ void setCanTxMockHandler(ICanTransmitMock* mock) {
 	mockCan = mock;
 }
 
-#endif // HAL_USE_CAN || EFI_UNIT_TEST
+#endif // EFI_UNIT_TEST
