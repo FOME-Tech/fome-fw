@@ -48,8 +48,8 @@ CanTxMessage::CanTxMessage(uint32_t eid, uint8_t dlc, CanBusIndex bus, bool isEx
 #endif // HAL_USE_CAN || EFI_UNIT_TEST
 }
 
-CanTxMessage::~CanTxMessage() {
 #if EFI_CAN_SUPPORT
+CanTxMessage::~CanTxMessage() {
 	size_t busIndex = static_cast<size_t>(m_busIndex);
 	auto device = s_devices[busIndex];
 
@@ -88,8 +88,8 @@ CanTxMessage::~CanTxMessage() {
 		engine->outputChannels.canWriteNotOk++;
 	}
 #endif // EFI_TUNER_STUDIO
-#endif /* EFI_CAN_SUPPORT */
 }
+#endif /* EFI_CAN_SUPPORT */
 
 #if HAL_USE_CAN || EFI_UNIT_TEST
 void CanTxMessage::setDlc(uint8_t dlc) {
@@ -108,5 +108,21 @@ void CanTxMessage::setBit(size_t byteIdx, size_t bitIdx) {
 uint8_t& CanTxMessage::operator[](size_t index) {
 	return m_frame.data8[index];
 }
-#endif // HAL_USE_CAN || EFI_UNIT_TEST
 
+static ICanTransmitMock* mockCan;
+
+CanTxMessage::~CanTxMessage() {
+	if (mockCan) {
+		mockCan->onTx(
+			m_frame.SID, m_frame.DLC,
+			m_frame.data8[0], m_frame.data8[1], m_frame.data8[2], m_frame.data8[3],
+			m_frame.data8[4], m_frame.data8[5], m_frame.data8[6], m_frame.data8[7]
+		);
+	}
+}
+
+void setCanTxMockHandler(ICanTransmitMock* mock) {
+	mockCan = mock;
+}
+
+#endif // HAL_USE_CAN || EFI_UNIT_TEST

@@ -44,9 +44,8 @@
 #define PID_ETHANOL 0x52
 #define PID_OIL_TEMPERATURE 0x5C
 #define PID_FUEL_RATE 0x5E
-//todo#define PID_TURBO_RPM 0x74
 
-#if HAL_USE_CAN
+#if HAL_USE_CAN || EFI_UNIT_TEST
 void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex);
 #endif /* HAL_USE_CAN */
 

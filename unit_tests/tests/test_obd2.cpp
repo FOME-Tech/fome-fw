@@ -1,7 +1,66 @@
 #include "pch.h"
 
-TEST(OBD, Dtc) {
+#include "can.h"
+#include "obd2.h"
+#include "can_msg_tx.h"
+
+using ::testing::ElementsAre;
+using ::testing::StrictMock;
+
+struct MockCanTxHandler : public ICanTransmitMock {
+	MOCK_METHOD(void, onTx, (uint32_t id, uint8_t dlc, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7), (override));
+};
+
+class Obd2 : public ::testing::Test {
+protected:
+	StrictMock<MockCanTxHandler> handler;
+
+	void SetUp() override {
+		setCanTxMockHandler(&handler);
+	}
+
+	void TearDown() override {
+		setCanTxMockHandler(nullptr);
+	}
+};
+
+void reqPid(uint8_t pid) {
+	CANRxFrame frame;
+	frame.SID = 0x7DF;
+	frame.DLC = 8;
+	frame.IDE = CAN_IDE_STD;
+	setArrayValues(frame.data8, 0);
+	frame.data8[0] = 2;		// data bytes to follow
+	frame.data8[1] = 0x01;	// service 01
+	frame.data8[2] = pid;
+
+	obdOnCanPacketRx(frame, CanBusIndex::Bus0);
 }
 
-TEST(OBD, Pid) {
+TEST_F(Obd2, PidOneByte) {
+	// Coolant temp is single byte, CLT = A - 40
+	Sensor::setMockValue(SensorType::Clt, 75);
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		3, 0x41, 0x05,	// len, service, pid
+		75 + 40,		// temp
+		0, 0, 0, 0		// unused
+	));
+
+	// PID 0x05 = coolant temperature
+	reqPid(5);
+}
+
+TEST_F(Obd2, PidTwoBytes) {
+	// Coolant temp is single byte, [A,B] = RPM * 4
+	Sensor::setMockValue(SensorType::Rpm, 1000.25);
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		4, 0x41, 0x0C,	// len, service, pid
+		0x0F, 0xA1,		// RPM
+		0, 0, 0			// unused
+	));
+
+	// PID 0xC = RPM
+	reqPid(0x0C);
 }
