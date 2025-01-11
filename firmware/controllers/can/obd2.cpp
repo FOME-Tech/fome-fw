@@ -106,7 +106,7 @@ static void obdStatusQuery(uint8_t pid, CanBusIndex busIndex) {
 	static error_codes_set_s localErrorCopy;
 	getErrorCodes(&localErrorCopy);
 
-	CanTxMessage tx(OBD_TEST_RESPONSE, 7, busIndex, false);
+	CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
 
 	// set bit 7 if MIL on
 	uint8_t byteA = (localErrorCopy.count > 0) ? (1 << 7) : 0x0;

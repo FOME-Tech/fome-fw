@@ -3,6 +3,7 @@
 #include "can.h"
 #include "obd2.h"
 #include "can_msg_tx.h"
+#include "malfunction_central.h"
 
 using ::testing::ElementsAre;
 using ::testing::StrictMock;
@@ -17,10 +18,14 @@ protected:
 
 	void SetUp() override {
 		setCanTxMockHandler(&handler);
+
+		clearWarnings();
 	}
 
 	void TearDown() override {
 		setCanTxMockHandler(nullptr);
+
+		clearWarnings();
 	}
 };
 
@@ -63,4 +68,36 @@ TEST_F(Obd2, PidTwoBytes) {
 
 	// PID 0xC = RPM
 	reqPid(0x0C);
+}
+
+TEST_F(Obd2, MonitorStatusStatusNoDtc) {
+	uint8_t expected = 0;
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		6, 0x41, 0x01,	// len, service, pid
+		expected,		// DTC status
+		0, 0, 0, 0		// unused
+	));
+
+	// PID 0x01 = Monitor status
+	reqPid(0x01);
+}
+
+TEST_F(Obd2, MonitorStatusStatusWithDtc) {
+	// MIL on, 3 codes set
+	uint8_t expected = (1 << 7) | 3;
+
+	EXPECT_CALL(handler, onTx(0x7E8, 8,
+		6, 0x41, 0x01,	// len, service, pid
+		expected,		// DTC status
+		0, 0, 0, 0		// unused
+	));
+
+	// Set 3 codes
+	addError(ObdCode::OBD_TPS1_Primary_High);
+	addError(ObdCode::OBD_Clt_Low);
+	addError(ObdCode::OBD_FlexSensor_Timeout);
+
+	// PID 0x01 = Monitor status
+	reqPid(0x01);
 }
