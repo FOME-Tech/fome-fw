@@ -222,11 +222,6 @@ static void writeDtc(CanTxMessage& msg, size_t offset, ObdCode code) {
 }
 
 static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
-// Hack: only report first two codes as multi-frame response isn't ready
-	if (numCodes > 2) {
-		numCodes = 2;
-	}
-
 	if (numCodes == 0) {
 		// No DTCs: Respond with no trouble codes
 		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
@@ -245,9 +240,23 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 			writeDtc(tx, dest, dtcCode[i]);
 		}
 	} else {
-		// Too many codes for a single frame, respond in multiple
+		{
+			// ISO-TP first frame
+			CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
+			// Header
+			tx[0] = 0x10;					// First frame
+			tx[1] =	1 + 1 + 2 * numCodes;	// Total bytes (service + num codes + codes)
 
-		// TODO: implement ISO-TP multi frame response
+			// Start data
+			tx[2] = 0x40 + service;			// Service $03 response
+			tx[3] = numCodes;				// N stored codes
+
+			// First frame gets two codes + half of one code
+			for (int i = 0; i < 2; i++) {
+				int dest = 4 + 2 * i;
+				writeDtc(tx, dest, dtcCode[i]);
+			}
+		}
 
 		// CanTxMessage tx(OBD_TEST_RESPONSE, 2, busIndex, false);
 		// int dtcIndex = 0;

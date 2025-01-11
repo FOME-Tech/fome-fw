@@ -120,7 +120,7 @@ TEST_F(Obd2, ReadDtcsZero) {
 	clearWarnings();
 
 	EXPECT_CALL(handler, onTx(0x7E8, 8,
-		2, 0x43, 0,		// len, service, code count (0)
+		2, 0x43, 0,		// len, service, DTC count (0)
 		0, 0,			// First code
 		0, 0,			// Second code
 		0				// Padding
@@ -134,7 +134,7 @@ TEST_F(Obd2, ReadDtcsOne) {
 	addError(ObdCode::OBD_TPS1_Primary_High);
 
 	EXPECT_CALL(handler, onTx(0x7E8, 8,
-		4, 0x43, 1,		// len, service, code count (1)
+		4, 0x43, 1,		// len, service, DTC count (1)
 		0x01, 0x23,		// First code: P0123
 		0, 0,			// Second code: none
 		0				// Padding
@@ -149,7 +149,7 @@ TEST_F(Obd2, ReadDtcsTwo) {
 	addError(ObdCode::OBD_PCM_MainRelayFault);
 
 	EXPECT_CALL(handler, onTx(0x7E8, 8,
-		6, 0x43, 2,		// len, service, code count (1)
+		6, 0x43, 2,		// len, service, DTC count (1)
 		0x01, 0x23,		// First code: P0123
 		0x06, 0x12,		// Second code: P0612
 		0				// Padding
@@ -158,29 +158,29 @@ TEST_F(Obd2, ReadDtcsTwo) {
 	requestDtcs();
 }
 
-// TODO: implement multi-frame
-// TEST_F(Obd2, ReadDtcsThree) {
-// 	// Set some codes
-// 	addError(ObdCode::OBD_TPS1_Primary_High);
-// 	addError(ObdCode::OBD_PCM_MainRelayFault);
-// 	addError(ObdCode::OBD_FlexSensor_Timeout);
+TEST_F(Obd2, ReadDtcsThree) {
+	// Set some codes
+	addError(ObdCode::OBD_TPS1_Primary_High);
+	addError(ObdCode::OBD_PCM_MainRelayFault);
+	addError(ObdCode::OBD_FlexSensor_Timeout);
 
-// 	{
-// 		InSequence is;
+	{
+		InSequence is;
 
-// 		// TODO
-// 		EXPECT_CALL(handler, onTx(0x7E8, 8,
-// 			6, 0x43, 2,		// len, service, code count (1)
-// 			0x01, 0x23,		// First code: P0123
-// 			0x06, 0x12,		// Second code: P0612
-// 			0				// Padding
-// 		));
+		EXPECT_CALL(handler, onTx(0x7E8, 8,
+			0x10, 0x08,		// First frame, total length 8
+			0x43, 0x03,		// service code, DTC count
+			0x01, 0x23,		// First code P0123
+			0x06, 0x12		// Second code: P0612
+		));
 
-// 		// TODO
-// 		EXPECT_CALL(handler, onTx(0x7E8, 8,
-// 			0, 0, 0, 0, 0, 0, 0, 0
-// 		));
-// 	}
+		// TODO
+		// EXPECT_CALL(handler, onTx(0x7E8, 8,
+		// 	0x21,			// Header, sequence number 1
+		// 	0x01, 0x76,		// Third code: P0176
+		// 	0, 0, 0, 0, 0	// padding
+		// ));
+	}
 
-// 	requestDtcs();
-// }
+	requestDtcs();
+}
