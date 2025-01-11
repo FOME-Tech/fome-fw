@@ -183,3 +183,44 @@ TEST_F(Obd2, ReadDtcsThree) {
 
 	requestDtcs();
 }
+
+TEST_F(Obd2, ReadDtcsEight) {
+	// Set 8 codes
+	addError(ObdCode::OBD_TPS1_Primary_High);
+	addError(ObdCode::OBD_PCM_MainRelayFault);
+	addError(ObdCode::OBD_FlexSensor_Timeout);
+	addError(ObdCode::OBD_PCM_Processor_Fault);
+	addError(ObdCode::Sensor5vSupplyLow);
+	addError(ObdCode::Sensor5vSupplyHigh);
+	addError(ObdCode::OBD_Throttle_Actuator_Control_Range_Performance_Bank_1);
+	addError(ObdCode::OBD_PPS_Primary_Low);
+
+	{
+		InSequence is;
+
+		EXPECT_CALL(handler, onTx(0x7E8, 8,
+			0x10, 0x12,		// First frame, total length 18
+			0x43, 0x08,		// service code, DTC count
+			0x01, 0x23,		// First code P0123
+			0x06, 0x12		// Second code: P0612
+		));
+
+		EXPECT_CALL(handler, onTx(0x7E8, 8,
+			0x21,			// Consecutive frame, sequence number 1
+			0x01, 0x76,		// Third code: P0176
+			0x06, 0x06,		// Fourth: P0606
+			0x06, 0x42,		// Fifth: P0642
+			0x06			// First half of the 6th code: P0643
+		));
+
+		EXPECT_CALL(handler, onTx(0x7E8, 8,
+			0x22,			// Consecutive frame, sequence number 2
+			0x43,			// Second half of the 6th code: P0643
+			0x06, 0x38,		// 7th code: P0638
+			0x21, 0x27,		// 8th code: P2127
+			0x00, 0x00		// padding
+		));
+	}
+
+	requestDtcs();
+}
