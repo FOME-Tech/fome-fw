@@ -91,7 +91,7 @@ CanTxMessage::~CanTxMessage() {
 }
 #endif /* EFI_CAN_SUPPORT */
 
-#if HAL_USE_CAN
+#if HAL_USE_CAN || EFI_UNIT_TEST
 void CanTxMessage::setDlc(uint8_t dlc) {
 	m_frame.DLC = dlc;
 }
