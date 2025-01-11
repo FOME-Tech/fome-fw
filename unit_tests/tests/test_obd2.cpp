@@ -156,3 +156,30 @@ TEST_F(Obd2, ReadDtcsTwo) {
 
 	requestDtcs();
 }
+
+// TODO: implement multi-frame
+// TEST_F(Obd2, ReadDtcsThree) {
+// 	// Set some codes
+// 	addError(ObdCode::OBD_TPS1_Primary_High);
+// 	addError(ObdCode::OBD_PCM_MainRelayFault);
+// 	addError(ObdCode::OBD_FlexSensor_Timeout);
+
+// 	{
+// 		InSequence is;
+
+// 		// TODO
+// 		EXPECT_CALL(handler, onTx(0x7E8, 8,
+// 			6, 0x43, 2,		// len, service, code count (1)
+// 			0x01, 0x23,		// First code: P0123
+// 			0x06, 0x12,		// Second code: P0612
+// 			0				// Padding
+// 		));
+
+// 		// TODO
+// 		EXPECT_CALL(handler, onTx(0x7E8, 8,
+// 			0, 0, 0, 0, 0, 0, 0, 0
+// 		));
+// 	}
+
+// 	requestDtcs();
+// }
