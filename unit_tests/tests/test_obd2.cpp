@@ -6,6 +6,7 @@
 #include "malfunction_central.h"
 
 using ::testing::ElementsAre;
+using ::testing::InSequence;
 using ::testing::StrictMock;
 
 struct MockCanTxHandler : public ICanTransmitMock {
