@@ -23,7 +23,7 @@
 
 #include "pch.h"
 
-#if EFI_CAN_SUPPORT
+#if EFI_CAN_SUPPORT || EFI_UNIT_TEST
 
 #include "obd2.h"
 #include "can.h"
@@ -288,7 +288,7 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 	}
 }
 
-#if HAL_USE_CAN
+// #if HAL_USE_CAN || EFI_UNIT_TEST
 void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 	if (CAN_SID(rx) != OBD_TEST_REQUEST) {
 		return;
@@ -314,6 +314,6 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 		break;
 	}
 }
-#endif /* HAL_USE_CAN */
+// #endif /* HAL_USE_CAN */
 
-#endif /* EFI_CAN_SUPPORT */
+#endif /* EFI_CAN_SUPPORT || EFI_UNIT_TEST */

@@ -53,7 +53,6 @@ void testLuaExecString(const char* script);
 #endif
 
 #if EFI_CAN_SUPPORT
-
 #include "can.h"
 
 // Lua CAN rx feature
