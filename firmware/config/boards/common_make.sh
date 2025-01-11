@@ -25,8 +25,12 @@ make -j6 -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOA
 if [ "${USE_OPENBLT-no}" = "yes" ]; then
   # TODO: why is this rm necessary?
   rm -f pch/pch.h.gch/*
+  ls -l
+  cat engine_modules_generated.h
   echo "Calling make for the bootloader..."
   cd bootloader; make -j6 PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
+  ls -l
+  cat engine_modules_generated.h
   [ -e bootloader/blbuild/fome_bl.hex ] || { echo "FAILED to compile OpenBLT by $SCRIPT_NAME with $PROJECT_BOARD"; exit 1; }
 fi
 
