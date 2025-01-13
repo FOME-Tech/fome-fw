@@ -25,11 +25,10 @@ struct_no_prefix output_channels_s
 	bit hasCriticalError;Error: Active
 	bit isWarnNow;Warning: Active
 	bit isPedalError;Error: Pedal
-	bit launchTriggered;Launch Control Triggered
+	bit launchTriggered;Launch control: Triggered
 	bit isTps2Error;Error: TPS2
 	bit injectorFault;Injector Fault
 	bit ignitionFault;Ignition Fault
-	bit isMainRelayOn;
 	bit isUsbConnected;isUsbConnected\nOriginal reason for this is to check if USB is connected from Lua
 	bit dfcoActive
 
