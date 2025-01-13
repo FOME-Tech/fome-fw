@@ -78,7 +78,7 @@ struct_no_prefix output_channels_s
 	uint16_t autoscale wallFuelAmount;Fuel: Wall amount;"mg",{1/@@PACK_MULT_FUEL_MASS@@}, 0, 0, 0, 3
 	int16_t autoscale wallFuelCorrectionValue;Fuel: Wall correction;"mg",{1/@@PACK_MULT_FUEL_MASS@@}, 0, 0, 0, 3
 
-	uint16_t revolutionCounterSinceStart;;"",1, 0, 0, 0, 0
+	uint16_t revolutionCounterSinceStart;Trg: Revolution counter;"",1, 0, 0, 0, 0
 
 	uint16_t canReadCounter;CAN: Rx;"",1, 0, 0, 0, 0
 	int16_t autoscale tpsAccelFuel;@@GAUGE_NAME_FUEL_TPS_EXTRA@@;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
@@ -106,7 +106,7 @@ struct_no_prefix output_channels_s
 	uint32_t engineMode;Engine Mode;"em", 1, 0, 0, 0, 0
 	uint32_t firmwareVersion;@@GAUGE_NAME_VERSION@@;"version_f", 1, 0, 0, 0, 0
 
-	int16_t autoscale rawWastegatePosition;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	int16_t autoscale rawWastegatePosition;Raw: Wastegate position;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 
 	int16_t autoscale accelerationLat;@@GAUGE_NAME_ACCEL_LAT@@;"G",{1/1000}, 0, 0, 0, 0
 	int16_t autoscale accelerationLon;@@GAUGE_NAME_ACCEL_LON@@;"G",{1/1000}, 0, 0, 0, 0
@@ -114,13 +114,13 @@ struct_no_prefix output_channels_s
 	uint8_t detectedGear;@@GAUGE_NAME_DETECTED_GEAR@@;"", 1, 0, 0, @@GEARS_COUNT@@, 0
 	uint8_t maxTriggerReentrant;;"", 1, 0, 0, 100, 0
 
-	int16_t autoscale rawLowFuelPressure;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
-	int16_t autoscale rawHighFuelPressure;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	int16_t autoscale rawLowFuelPressure;Raw: Fuel press low;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	int16_t autoscale rawHighFuelPressure;Raw: Fuel press high;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 
 	int16_t autoscale lowFuelPressure;@@GAUGE_NAME_FUEL_PRESSURE_LOW@@;"kpa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 0, 0
 	int16_t autoscale highFuelPressure;@@GAUGE_NAME_FUEL_PRESSURE_HIGH@@;"bar",{1/@@PACK_MULT_HIGH_PRESSURE@@}, 0, 0, 0, 0
 
-	int16_t autoscale rawPpsSecondary;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	int16_t autoscale rawPpsSecondary;Raw: Pedal secondary;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
 
 	int8_t tcuDesiredGear;@@GAUGE_NAME_DESIRED_GEAR@@;"gear",1, 0, -1, 10, 0
 	uint8_t autoscale flexPercent;@@GAUGE_NAME_FLEX@@;"%",{1/2}, 0, 0, 0, 1
