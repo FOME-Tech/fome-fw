@@ -100,9 +100,7 @@ expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observa
 	
 	float retVal = m_pid.getOutput(target, observation, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 
-#if EFI_TUNER_STUDIO
-	m_pid.postState(engine->outputChannels.vvtStatus[m_index]);
-#endif /* EFI_TUNER_STUDIO */
+	m_pid.postState(*reinterpret_cast<pid_status_s*>(&pidState));
 
 	return retVal;
 }

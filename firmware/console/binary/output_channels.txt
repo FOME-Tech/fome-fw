@@ -211,12 +211,12 @@ struct_no_prefix output_channels_s
 
 ! fun fact: we have a separate pid_state.txt file for a bit of a different structure huh?
 	struct pid_status_s
-		float pTerm;;"", 1, 0, -50000, 50000, 2
+		int16_t pTerm;;"", 0.01, 0, -327, 327, 2
 		int16_t autoscale iTerm;;"", 0.01, 0, -327, 327, 2
 		int16_t autoscale dTerm;;"", 0.01, 0, -327, 327, 2
 		int16_t autoscale output;;"", 0.01, 0, -327, 327, 2
 		int16_t autoscale error;;"", 0.01, 0, -327, 327, 2
-		uint32_t resetCounter;;"", 1, 0, 0, 10000, 0
+		uint16_t resetCounter;;"", 1, 0, 0, 10000, 0
 	end_struct
 
 	int16_t autoscale tps1Split;;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
@@ -273,8 +273,6 @@ struct_no_prefix output_channels_s
 	pid_status_s etbStatus
 	pid_status_s boostStatus
 	pid_status_s wastegateDcStatus
-
-	pid_status_s[CAM_INPUTS_COUNT iterate] vvtStatus
 
 	uint16_t auxSpeed1;Aux speed 1;"s",1, 0, 0, 0, 0
 	uint16_t auxSpeed2;Aux speed 2;"s",1, 0, 0, 0, 0
