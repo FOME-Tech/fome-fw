@@ -48,7 +48,7 @@ struct output_channels_s {
 	// Tooth Logger Ready
 	// offset 0 bit 9
 	bool toothLogReady : 1 {};
-	// Error: TPS
+	// Error: TPS1
 	// offset 0 bit 10
 	bool isTpsError : 1 {};
 	// Error: CLT
@@ -72,26 +72,27 @@ struct output_channels_s {
 	// Error: Pedal
 	// offset 0 bit 17
 	bool isPedalError : 1 {};
-	// Launch Control Triggered
+	// Launch control: Triggered
 	// offset 0 bit 18
 	bool launchTriggered : 1 {};
 	// Error: TPS2
 	// offset 0 bit 19
 	bool isTps2Error : 1 {};
-	// Injector Fault
+	// Error: Injector Fault
 	// offset 0 bit 20
 	bool injectorFault : 1 {};
-	// Ignition Fault
+	// Error: Ignition Fault
 	// offset 0 bit 21
 	bool ignitionFault : 1 {};
-	// offset 0 bit 22
-	bool isMainRelayOn : 1 {};
 	// isUsbConnected
 	// Original reason for this is to check if USB is connected from Lua
-	// offset 0 bit 23
+	// offset 0 bit 22
 	bool isUsbConnected : 1 {};
-	// offset 0 bit 24
+	// DFCO: Active
+	// offset 0 bit 23
 	bool dfcoActive : 1 {};
+	// offset 0 bit 24
+	bool unusedBit_0_24 : 1 {};
 	// offset 0 bit 25
 	bool unusedBit_0_25 : 1 {};
 	// offset 0 bit 26
@@ -134,9 +135,11 @@ struct output_channels_s {
 	// deg C
 	// offset 14
 	scaled_channel<int16_t, 100, 1> intake = (int16_t)0;
+	// Aux temp 1
 	// deg C
 	// offset 16
 	scaled_channel<int16_t, 100, 1> auxTemp1 = (int16_t)0;
+	// Aux temp 2
 	// deg C
 	// offset 18
 	scaled_channel<int16_t, 100, 1> auxTemp2 = (int16_t)0;
@@ -151,6 +154,7 @@ struct output_channels_s {
 	// ADC
 	// offset 24
 	uint16_t tpsADC = (uint16_t)0;
+	// Raw: MAF
 	// V
 	// offset 26
 	scaled_channel<uint16_t, 1000, 1> rawMaf = (uint16_t)0;
@@ -199,14 +203,15 @@ struct output_channels_s {
 	// crc16
 	// offset 48
 	uint16_t engineMakeCodeNameCrc16 = (uint16_t)0;
-	// Fuel: wall amount
+	// Fuel: Wall amount
 	// mg
 	// offset 50
 	scaled_channel<uint16_t, 100, 1> wallFuelAmount = (uint16_t)0;
-	// Fuel: wall correction
+	// Fuel: Wall correction
 	// mg
 	// offset 52
 	scaled_channel<int16_t, 100, 1> wallFuelCorrectionValue = (int16_t)0;
+	// Trg: Revolution counter
 	// offset 54
 	uint16_t revolutionCounterSinceStart = (uint16_t)0;
 	// CAN: Rx
@@ -266,6 +271,7 @@ struct output_channels_s {
 	// version_f
 	// offset 88
 	uint32_t firmwareVersion = (uint32_t)0;
+	// Raw: Wastegate position
 	// V
 	// offset 92
 	scaled_channel<int16_t, 1000, 1> rawWastegatePosition = (int16_t)0;
@@ -282,9 +288,11 @@ struct output_channels_s {
 	uint8_t detectedGear = (uint8_t)0;
 	// offset 99
 	uint8_t maxTriggerReentrant = (uint8_t)0;
+	// Raw: Fuel press low
 	// V
 	// offset 100
 	scaled_channel<int16_t, 1000, 1> rawLowFuelPressure = (int16_t)0;
+	// Raw: Fuel press high
 	// V
 	// offset 102
 	scaled_channel<int16_t, 1000, 1> rawHighFuelPressure = (int16_t)0;
@@ -296,6 +304,7 @@ struct output_channels_s {
 	// bar
 	// offset 106
 	scaled_channel<int16_t, 10, 1> highFuelPressure = (int16_t)0;
+	// Raw: Pedal secondary
 	// V
 	// offset 108
 	scaled_channel<int16_t, 1000, 1> rawPpsSecondary = (int16_t)0;
@@ -385,18 +394,23 @@ struct output_channels_s {
 	// deg C
 	// offset 196
 	uint16_t egt[8];
+	// Raw: TPS 1 primary
 	// V
 	// offset 212
 	scaled_channel<int16_t, 1000, 1> rawTps1Primary = (int16_t)0;
+	// Raw: Pedal primary
 	// V
 	// offset 214
 	scaled_channel<int16_t, 1000, 1> rawPpsPrimary = (int16_t)0;
+	// Raw: CLT
 	// V
 	// offset 216
 	scaled_channel<int16_t, 1000, 1> rawClt = (int16_t)0;
+	// Raw: IAT
 	// V
 	// offset 218
 	scaled_channel<int16_t, 1000, 1> rawIat = (int16_t)0;
+	// Raw: OilP
 	// V
 	// offset 220
 	scaled_channel<int16_t, 1000, 1> rawOilPressure = (int16_t)0;
@@ -437,12 +451,15 @@ struct output_channels_s {
 	// %
 	// offset 244
 	scaled_channel<int16_t, 100, 1> fuelPidCorrection[4];
+	// Raw: TPS 1 secondary
 	// V
 	// offset 252
 	scaled_channel<int16_t, 1000, 1> rawTps1Secondary = (int16_t)0;
+	// Raw: TPS 2 primary
 	// V
 	// offset 254
 	scaled_channel<int16_t, 1000, 1> rawTps2Primary = (int16_t)0;
+	// Raw: TPS 2 secondary
 	// V
 	// offset 256
 	scaled_channel<int16_t, 1000, 1> rawTps2Secondary = (int16_t)0;
@@ -489,12 +506,15 @@ struct output_channels_s {
 	// rpm
 	// offset 300
 	uint16_t instantRpm = (uint16_t)0;
+	// Raw: MAP
 	// V
 	// offset 302
 	scaled_channel<uint16_t, 1000, 1> rawMap = (uint16_t)0;
+	// Raw: AFR
 	// V
 	// offset 304
 	scaled_channel<uint16_t, 1000, 1> rawAfr = (uint16_t)0;
+	// Raw: Fuel level
 	// V
 	// offset 306
 	scaled_channel<uint16_t, 1000, 1> rawFuelTankLevel = (uint16_t)0;
@@ -523,16 +543,16 @@ struct output_channels_s {
 	uint32_t vssEdgeCounter = (uint32_t)0;
 	// offset 332
 	uint32_t issEdgeCounter = (uint32_t)0;
-	// Aux linear #1
+	// Aux linear 1
 	// offset 336
 	float auxLinear1 = (float)0;
-	// Aux linear #2
+	// Aux linear 2
 	// offset 340
 	float auxLinear2 = (float)0;
-	// Aux linear #3
+	// Aux linear 3
 	// offset 344
 	float auxLinear3 = (float)0;
-	// Aux linear #4
+	// Aux linear 4
 	// offset 348
 	float auxLinear4 = (float)0;
 	// kPa
@@ -597,6 +617,7 @@ struct output_channels_s {
 	int16_t gppwmXAxis[4];
 	// offset 546
 	scaled_channel<int16_t, 10, 1> gppwmYAxis[4];
+	// Raw: Vbatt
 	// V
 	// offset 554
 	scaled_channel<int16_t, 1000, 1> rawBattery = (int16_t)0;
@@ -641,6 +662,7 @@ struct output_channels_s {
 	// value
 	// offset 620
 	float luaGauges[2];
+	// Raw: MAF 2
 	// V
 	// offset 628
 	scaled_channel<uint16_t, 1000, 1> rawMaf2 = (uint16_t)0;
