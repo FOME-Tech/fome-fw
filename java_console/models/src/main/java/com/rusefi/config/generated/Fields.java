@@ -415,10 +415,10 @@ public class Fields {
 	public static final String GAUGE_NAME_AIR_FLOW_MEASURED = "MAF";
 	public static final String GAUGE_NAME_AIR_FLOW_MEASURED_2 = "MAF #2";
 	public static final String GAUGE_NAME_AIR_MASS = "Air: Cylinder airmass";
-	public static final String GAUGE_NAME_AUX_LINEAR_1 = "Aux linear #1";
-	public static final String GAUGE_NAME_AUX_LINEAR_2 = "Aux linear #2";
-	public static final String GAUGE_NAME_AUX_LINEAR_3 = "Aux linear #3";
-	public static final String GAUGE_NAME_AUX_LINEAR_4 = "Aux linear #4";
+	public static final String GAUGE_NAME_AUX_LINEAR_1 = "Aux linear 1";
+	public static final String GAUGE_NAME_AUX_LINEAR_2 = "Aux linear 2";
+	public static final String GAUGE_NAME_AUX_LINEAR_3 = "Aux linear 3";
+	public static final String GAUGE_NAME_AUX_LINEAR_4 = "Aux linear 4";
 	public static final String GAUGE_NAME_AUX_TEMP1 = "Aux temp 1";
 	public static final String GAUGE_NAME_AUX_TEMP2 = "Aux temp 2";
 	public static final String GAUGE_NAME_BARO_PRESSURE = "Barometric pressure";
@@ -467,8 +467,6 @@ public class Fields {
 	public static final String GAUGE_NAME_FUEL_TRIM = "Fuel: fuel trim";
 	public static final String GAUGE_NAME_FUEL_TRIM_2 = "Fuel: fuel trim 2";
 	public static final String GAUGE_NAME_FUEL_VE = "Fuel: VE";
-	public static final String GAUGE_NAME_FUEL_WALL_AMOUNT = "Fuel: wall amount";
-	public static final String GAUGE_NAME_FUEL_WALL_CORRECTION = "Fuel: wall correction";
 	public static final String GAUGE_NAME_FW_VERSION = "ECU Software Version";
 	public static final String GAUGE_NAME_GEAR_RATIO = "Gearbox Ratio";
 	public static final String GAUGE_NAME_GYRO_YAW = "Gyro: Yaw rate";
@@ -1189,7 +1187,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.01.11.f407-discovery.3290397567";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.01.14.f407-discovery.3903028065";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1304;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
