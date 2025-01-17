@@ -95,7 +95,9 @@ void setFordEscortGt() {
 	copyArray(config->veRpmBins, veRpmBins);
 
 
-	copyTable(config->veTable, racingFestivaVeTable);
+	copyTable(config->veTableSd, racingFestivaVeTable);
+	copyTable(config->veTableMaf, racingFestivaVeTable);
+	copyTable(config->veTableAlphaN, racingFestivaVeTable);
 
 //	engineConfiguration->triggerInputPins[0] = Gpio::C6; // 2G YEL/BLU
 //	engineConfiguration->triggerInputPins[1] = Gpio::A5; // 2E White CKP
