@@ -47,7 +47,9 @@ static const uint8_t hardCodedveTable[16][16] = {
 static void setMapVeTable() {
 	copyArray(config->veLoadBins, hardCodedveLoadBins);
 	copyArray(config->veRpmBins, hardCodedveRpmBins);
-	copyTable(config->veTable, hardCodedveTable);
+	copyTable(config->veTableSd, hardCodedveTable);
+	copyTable(config->veTableMaf, hardCodedveTable);
+	copyTable(config->veTableAlphaN, hardCodedveTable);
 }
 
 #if IGN_LOAD_COUNT == DEFAULT_IGN_LOAD_COUNT

@@ -74,8 +74,27 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 }
 
 float AirmassVeModelBase::getVeImpl(float rpm, percent_t load) const {
+	const ValueProvider3D * veTable = nullptr;
+
+	switch (engineConfiguration->fuelAlgorithm) {
+		case LM_SPEED_DENSITY:
+			veTable = config->veTableSd;
+			break;
+		case LM_REAL_MAF:
+			veTable = config->veTableMaf;
+			break;
+		case LM_ALPHA_N:
+			veTable = config->veTableAlphaN;
+			break;
+		// case LM_LUA: // #if EFI_LUA
+		// case LM_MOCK: // #if EFI_UNIT_TEST
+		default:
+			firmwareError(ObdCode::CUSTOM_ERR_ASSERT, "Invalid airmass mode %d", engineConfiguration->fuelAlgorithm);
+			return 0;
+	}
+
 	return interpolate3d(
-		config->veTable,
+		veTable,
 		config->veLoadBins, load,
 		config->veRpmBins, rpm
 	);

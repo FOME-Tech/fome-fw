@@ -106,7 +106,7 @@ void setDodgeNeonNGCEngineConfiguration() {
 	 */
 	//setWholeTimingTable_d(12);
 
-	//setMap(config->veTable, 50);
+	//setMap(config->veTableAlphaN, 50);
 
 	// set cranking_timing_angle 710
 	engineConfiguration->crankingTimingAngle = -710;
