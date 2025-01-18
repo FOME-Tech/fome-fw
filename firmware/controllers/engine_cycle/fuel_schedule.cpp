@@ -311,7 +311,7 @@ expected<float> InjectionEvent::computeInjectionAngle() const {
 	getTunerStudioOutputChannels()->injectionOffset = openingAngle;
 
 	// Convert from cylinder-relative to cylinder-1-relative
-	openingAngle += getCylinderAngle(ownIndex, cylinderNumber);
+	openingAngle += engine->cylinders[cylinderNumber].getAngleOffset();
 
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(openingAngle), "findAngle#3", false);
 	assertAngleRange(openingAngle, "findAngle#a33", ObdCode::CUSTOM_ERR_6544);
@@ -343,6 +343,8 @@ bool InjectionEvent::updateInjectionAngle() {
  * @returns false in case of error, true if success
  */
 bool InjectionEvent::update() {
+	cylinderNumber = getCylinderNumberAtIndex(ownIndex);
+
 	bool updatedAngle = updateInjectionAngle();
 
 	if (!updatedAngle) {
@@ -374,12 +376,11 @@ bool InjectionEvent::update() {
 
 	outputs[0] = &enginePins.injectors[injectorIndex];
 	outputs[1] = secondOutput;
-	isSimultaneous = mode == IM_SIMULTANEOUS;
-	// Stash the cylinder number so we can select the correct fueling bank later
-	cylinderNumber = injectorIndex;
 
 	outputsStage2[0] = &enginePins.injectorsStage2[injectorIndex];
 	outputsStage2[1] = secondOutputStage2;
+
+	isSimultaneous = mode == IM_SIMULTANEOUS;
 
 	return true;
 }
