@@ -49,7 +49,9 @@
 #include "lambda_monitor.h"
 #include "vvt.h"
 
+#ifndef EFI_BOOTLOADER
 #include "engine_modules_generated.h"
+#endif
 
 #include <functional>
 
