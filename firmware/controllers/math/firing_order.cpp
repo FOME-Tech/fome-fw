@@ -220,52 +220,29 @@ static const uint8_t* getFiringOrderTable()
 	return nullptr;
 }
 
-/**
- * @param index from zero to cylindersCount - 1
- * @return cylinderId from one to cylindersCount
- */
-size_t getCylinderId(size_t index) {
+size_t getCylinderNumberAtIndex(size_t index) {
 	const size_t firingOrderLength = getFiringOrderLength();
 
 	if (firingOrderLength < 1 || firingOrderLength > MAX_CYLINDER_COUNT) {
 		firmwareError(ObdCode::CUSTOM_FIRING_LENGTH, "fol %d", firingOrderLength);
-		return 1;
+		return 0;
 	}
 	if (engineConfiguration->cylindersCount != firingOrderLength) {
 		// May 2020 this somehow still happens with functional tests, maybe race condition?
 		firmwareError(ObdCode::CUSTOM_OBD_WRONG_FIRING_ORDER, "Wrong cyl count for firing order, expected %d cylinders", firingOrderLength);
-		return 1;
+		return 0;
 	}
 
 	if (index >= firingOrderLength) {
 		// May 2020 this somehow still happens with functional tests, maybe race condition?
 		warning(ObdCode::CUSTOM_ERR_6686, "firing order index %d", index);
-		return 1;
+		return 0;
 	}
 
 	if (auto firingOrderTable = getFiringOrderTable()) {
-		return firingOrderTable[index];
+		return firingOrderTable[index] - 1;
 	} else {
 		// error already reported
-		return 1;
+		return 0;
 	}
-}
-
-/**
- * @param prevCylinderId from one to cylindersCount
- * @return cylinderId from one to cylindersCount
- */
-size_t getNextFiringCylinderId(size_t prevCylinderId) {
-	const size_t firingOrderLength = getFiringOrderLength();
-	auto firingOrderTable = getFiringOrderTable();
-
-	if (firingOrderTable) {
-		for (size_t i = 0; i < firingOrderLength; i++) {
-			if (firingOrderTable[i] == prevCylinderId) {
-				return firingOrderTable[(i + 1) % firingOrderLength];
-			}
-		}
-	}
-
-	return 1;
 }

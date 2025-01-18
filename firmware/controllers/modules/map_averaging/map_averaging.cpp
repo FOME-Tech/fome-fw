@@ -174,7 +174,7 @@ void MapAveragingModule::onFastCallback() {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
 
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		float cylinderStart = start + getCylinderAngle(i, ID2INDEX(getCylinderId(i)));;
+		float cylinderStart = start + getCylinderAngle(i, getCylinderNumberAtIndex(i));;
 		wrapAngle(cylinderStart, "cylinderStart", ObdCode::CUSTOM_ERR_6562);
 		engine->engineState.mapAveragingStart[i] = cylinderStart;
 	}

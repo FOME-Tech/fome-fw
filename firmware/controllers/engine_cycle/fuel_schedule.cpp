@@ -354,7 +354,7 @@ bool InjectionEvent::update() {
 
 	// Map order index -> cylinder index (firing order)
 	// Single point only uses injector 1 (index 0)
-	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : ID2INDEX(getCylinderId(ownIndex));
+	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : getCylinderNumberAtIndex(ownIndex);
 
 	InjectorOutputPin* secondOutput = nullptr;
 	InjectorOutputPin* secondOutputStage2 = nullptr;
@@ -367,7 +367,7 @@ bool InjectionEvent::update() {
 		// Each injector gets fired as a primary (the same as sequential), but also
 		// fires the injector 360 degrees later in the firing order.
 		int secondOrder = (ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
-		int secondIndex = ID2INDEX(getCylinderId(secondOrder));
+		int secondIndex = getCylinderNumberAtIndex(secondOrder);
 		secondOutput = &enginePins.injectors[secondIndex];
 		secondOutputStage2 = &enginePins.injectorsStage2[secondIndex];
 	}

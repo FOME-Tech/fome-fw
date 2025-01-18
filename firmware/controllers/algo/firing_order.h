@@ -80,5 +80,4 @@ typedef enum __attribute__ ((__packed__)) {
 	// next value to use: 34
 } firing_order_e;
 
-size_t getCylinderId(size_t index);
-size_t getNextFiringCylinderId(size_t prevCylinderId);
+size_t getCylinderNumberAtIndex(size_t cylinderIndex);
