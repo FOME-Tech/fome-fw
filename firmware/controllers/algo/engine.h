@@ -116,6 +116,13 @@ public:
 	angle_t getAngleOffset() const;
 
 	// **************************
+	//           Fuel
+	// **************************
+
+	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
+	expected<angle_t> computeInjectionAngle() const;
+
+	// **************************
 	//         Ignition
 	// **************************
 	void setIgnitionTimingBtdc(angle_t deg) {
