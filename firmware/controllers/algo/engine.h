@@ -141,6 +141,10 @@ public:
 	angle_t getIgnitionTimingBtdc() const {
 		return m_timingAdvance;
 	}
+
+	// Get angle of the spark firing in engine cycle coordinates, relative to #1 TDC
+	angle_t getSparkAngle(angle_t lateAdjustment) const;
+
 private:
 	bool m_valid = false;
 
