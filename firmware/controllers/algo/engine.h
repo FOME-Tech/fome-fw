@@ -122,6 +122,15 @@ public:
 	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
 	expected<angle_t> computeInjectionAngle() const;
 
+	// Get this cylinder's injection mass
+	mass_t getInjectionMass() const {
+		return m_injectionMass;
+	}
+
+	void setInjectionMass(mass_t m) {
+		m_injectionMass = m;
+	}
+
 	// **************************
 	//         Ignition
 	// **************************
@@ -142,6 +151,8 @@ private:
 
 	// This cylinder's mechanical TDC offset in degrees after #1
 	angle_t m_baseAngleOffset;
+
+	mass_t m_injectionMass = 0;
 
 	// 10 means 10 degrees BTDC
 	angle_t m_timingAdvance = 0;

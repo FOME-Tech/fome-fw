@@ -59,7 +59,7 @@ TEST(HPFP, InjectionReplacementFuel) {
 
 	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->hpfpCamLobes = 4;
-	engine->engineState.injectionMass[0] = 0.05 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
 
 	HpfpQuantity math;
@@ -71,7 +71,7 @@ TEST(HPFP, InjectionReplacementFuel) {
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 25 * 1.333333333f);
 
 	// More fuel!
-	engine->engineState.injectionMass[0] = 0.1 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.1 /* cc/cyl */ * fuelDensity);
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 50 * 1.333333333f);
 
 	// More cylinders!
@@ -101,7 +101,7 @@ TEST(HPFP, InjectionReplacementFuel) {
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(2000), 50); // +0, in next cell
 
 	// 25% more fuel (1.25*50=62.5 base), but half way between comp of 20 and 0 (so comp of 10)
-	engine->engineState.injectionMass[0] = 0.125 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.125 /* cc/cyl */ * fuelDensity);
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 72.5); // +10 comp
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1500), 67.5); // +5, half way
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(2000), 62.5); // +0 base
@@ -112,7 +112,7 @@ TEST(HPFP, PI) {
 
 	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->hpfpCamLobes = 4;
-	engine->engineState.injectionMass[0] = 0.05 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
 
 	HpfpQuantity math;
@@ -169,7 +169,7 @@ TEST(HPFP, Angle) {
 
 	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->hpfpCamLobes = 4;
-	engine->engineState.injectionMass[0] = 0.05 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
 
 	HpfpQuantity math;
@@ -198,7 +198,7 @@ TEST(HPFP, Angle) {
 	EXPECT_FLOAT_EQ(math.calcPI(1000, 10), 0); // Validate no PI
 	EXPECT_NEAR(math.pumpAngleFuel(1000, &model), 37.5, 0.4); // Given the profile, should be 50% higher
 
-	engine->engineState.injectionMass[0] = 0.08 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.08 /* cc/cyl */ * fuelDensity);
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 40); // Double check baseline
 	EXPECT_FLOAT_EQ(math.calcPI(1000, 10), 0); // Validate no PI
 	EXPECT_NEAR(math.pumpAngleFuel(1000, &model), 60, 0.4); // Given the profile, should be 50% higher
@@ -273,7 +273,7 @@ TEST(HPFP, Schedule) {
 	engineConfiguration->hpfpPeakPos = 90;
 	// This will call the fast callback routine
 	engine->rpmCalculator.setRpmValue(1000);
-	engine->engineState.injectionMass[0] = 0.05 /* cc/cyl */ * fuelDensity;
+	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 
 	hpfp.onFastCallback();
 	// First event was scheduled by setRpmValue with 0 injection mass.  So, it's off.
