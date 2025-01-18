@@ -63,11 +63,13 @@ static int getIgnitionPinForIndex(int cylinderIndex, ignition_mode_e ignitionMod
 static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent *event) {
 	// todo: clean up this implementation? does not look too nice as is.
 
+	const int realCylinderNumber = getCylinderNumberAtIndex(event->cylinderIndex);
+
 	// let's save planned duration so that we can later compare it with reality
 	event->sparkDwell = sparkDwell;
 
 	// Compute the final ignition timing including all "late" adjustments
-	angle_t finalIgnitionTiming =	engine->cylinders[event->cylinderNumber].getIgnitionTimingBtdc()
+	angle_t finalIgnitionTiming =	engine->cylinders[realCylinderNumber].getIgnitionTimingBtdc()
 									// Pull any extra timing for knock retard
 									- engine->module<KnockController>()->getKnockRetard();
 
@@ -82,7 +84,7 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	// maximumIgnitionTiming limits maximum advance
 	finalIgnitionTiming = clampF(engineConfiguration->minimumIgnitionTiming, finalIgnitionTiming, engineConfiguration->maximumIgnitionTiming);
 
-	engine->outputChannels.ignitionAdvanceCyl[event->cylinderNumber] = finalIgnitionTiming;
+	engine->outputChannels.ignitionAdvanceCyl[realCylinderNumber] = finalIgnitionTiming;
 
 	angle_t sparkAngle =
 		// Negate because timing *before* TDC, and we schedule *after* TDC
