@@ -80,4 +80,9 @@ typedef enum __attribute__ ((__packed__)) {
 	// next value to use: 34
 } firing_order_e;
 
+/**
+ * @param cylinderIndex Queried position in the firing order. 0 means the first cylinder to fire, 1 means second, etc. Maximum cylinderCount - 1.
+ * @return The cylinder number in the requested position, from 0 to cylindersCount - 1.
+ *         For example, getCylinderNumberAtIndex(2) means the 3rd cylinder to fire, and on a 1342 4-cyl will return 3, indicating cylinder 4.
+ */
 size_t getCylinderNumberAtIndex(size_t cylinderIndex);
