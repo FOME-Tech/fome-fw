@@ -122,7 +122,7 @@ public:
 	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
 	expected<angle_t> computeInjectionAngle() const;
 
-	// Get this cylinder's injection mass
+	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
 	mass_t getInjectionMass() const {
 		return m_injectionMass;
 	}
