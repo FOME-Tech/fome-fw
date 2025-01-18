@@ -34,10 +34,8 @@ TEST(OddFireRunningMode, hd) {
 	// send fake crank signal events so that ignition events are updated
 	eth.fireTriggerEvents2(2 /* count */ , 60 /* ms */);
 
-	// TODO: these numbers are wrong, they're both using the offset for cyl 1! (+19 deg)
+	// Cyl 1 fires 19 degrees late
 	EXPECT_EQ(engine->ignitionEvents.elements[0].sparkAngle, 18);
-	EXPECT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 378);
-
-	// should be 
-	// EXPECT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 346);
+	// Cyl 2 fires 13 degrees early
+	EXPECT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 346);
 }
