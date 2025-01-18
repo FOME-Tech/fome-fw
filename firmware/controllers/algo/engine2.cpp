@@ -166,7 +166,7 @@ void EngineState::periodicFastCallback() {
 		// Apply both per-bank and per-cylinder trims
 		engine->engineState.injectionMass[i] = untrimmedInjectionMass * bankTrim * cylinderTrim;
 
-		timingAdvance[i] = untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
+		engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad));
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;

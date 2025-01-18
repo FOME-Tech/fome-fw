@@ -71,7 +71,7 @@ static void populateFrame(Speeds& msg) {
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
 	msg.rpm = rpm;
 
-	auto timing = engine->engineState.timingAdvance[0];
+	auto timing = engine->cylinders[0].getIgnitionTimingBtdc();
 	msg.timing = timing > 360 ? timing - 720 : timing;
 
 	msg.injDuty = getInjectorDutyCycle(rpm);

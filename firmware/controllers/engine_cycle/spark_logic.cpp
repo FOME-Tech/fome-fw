@@ -67,7 +67,7 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	event->sparkDwell = sparkDwell;
 
 	// Compute the final ignition timing including all "late" adjustments
-	angle_t finalIgnitionTiming =	getEngineState()->timingAdvance[event->cylinderNumber]
+	angle_t finalIgnitionTiming =	engine->cylinders[event->cylinderNumber].getIgnitionTimingBtdc()
 									// Pull any extra timing for knock retard
 									- engine->module<KnockController>()->getKnockRetard();
 
@@ -316,7 +316,7 @@ void initializeIgnitionActions() {
 	IgnitionEventList *list = &engine->ignitionEvents;
 	angle_t dwellAngle = engine->ignitionState.dwellAngle;
 	floatms_t sparkDwell = engine->ignitionState.getDwell();
-	if (std::isnan(engine->engineState.timingAdvance[0]) || std::isnan(dwellAngle)) {
+	if (std::isnan(engine->cylinders[0].getIgnitionTimingBtdc()) || std::isnan(dwellAngle)) {
 		// error should already be reported
 		// need to invalidate previous ignition schedule
 		list->isReady = false;

@@ -214,7 +214,7 @@ TEST(misc, testRpmCalculator) {
 
 	eth.engine.periodicFastCallback();
 
-	ASSERT_NEAR(engine->engineState.timingAdvance[0], 707, 0.1f);
+	ASSERT_NEAR(engine->cylinders[0].getIgnitionTimingBtdc(), 707, 0.1f);
 
 	EXPECT_NEAR_M3(4.5450, engine->engineState.injectionDuration) << "fuel #1";
 	InjectionEvent *ie0 = &engine->injectionEvents.elements[0];

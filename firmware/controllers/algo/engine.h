@@ -107,6 +107,28 @@ private:
 	size_t m_errorBlinkCounter = 0;
 };
 
+class OneCylinder final {
+public:
+	void updateCylinderNumber(uint8_t index);
+
+
+	// **************************
+	//         Ignition
+	// **************************
+	void setIgnitionTimingBtdc(angle_t deg) {
+		m_timingAdvance = deg;
+	}
+
+	angle_t getIgnitionTimingBtdc() const {
+		return m_timingAdvance;
+	}
+private:
+	int m_index = 0;
+
+	// 10 means 10 degrees BTDC
+	angle_t m_timingAdvance = 0;
+};
+
 class Engine final : public TriggerStateListener {
 public:
 	Engine();
@@ -236,6 +258,7 @@ public:
 	FuelSchedule injectionEvents;
 	IgnitionEventList ignitionEvents;
 	scheduling_s tdcScheduler[2];
+	OneCylinder cylinders[MAX_CYLINDER_COUNT];
 #endif /* EFI_ENGINE_CONTROL */
 
 	// todo: move to electronic_throttle something?

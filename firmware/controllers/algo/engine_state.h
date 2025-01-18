@@ -50,9 +50,6 @@ public:
 	 */
 	angle_t mapAveragingStart[MAX_CYLINDER_COUNT];
 
-	// degrees timing advance - 10 means fire spark 10 degrees BTDC
-	angle_t timingAdvance[MAX_CYLINDER_COUNT] = {0};
-
 	// Angle between firing the main (primary) spark and the secondary (trailing) spark
 	angle_t trailingSparkAngle = 0;
 

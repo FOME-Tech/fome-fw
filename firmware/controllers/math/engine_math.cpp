@@ -103,6 +103,10 @@ void prepareOutputSignals() {
 		}
 	}
 
+	for (size_t i = 0; i < efi::size(engine->cylinders); i++) {
+		engine->cylinders[i].updateCylinderNumber(i);
+	}
+
 	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
 	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE
 								&& (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
@@ -128,6 +132,10 @@ angle_t getCylinderAngle(uint8_t cylinderIndex, uint8_t cylinderNumber) {
 	assertAngleRange(result, "getCylinderAngle", ObdCode::CUSTOM_ERR_CYL_ANGLE);
 
 	return result;
+}
+
+void OneCylinder::updateCylinderNumber(uint8_t index) {
+	m_index = index;
 }
 
 void setTimingRpmBin(float from, float to) {

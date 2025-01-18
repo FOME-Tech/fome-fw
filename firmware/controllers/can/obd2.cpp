@@ -171,7 +171,7 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::VehicleSpeed), busIndex);
 		break;
 	case PID_TIMING_ADVANCE: {
-		float timing = engine->engineState.timingAdvance[0];
+		float timing = engine->cylinders[0].getIgnitionTimingBtdc();
 		timing = (timing > 360.0f) ? (timing - 720.0f) : timing;
 		obdSendValue(_1_MODE, pid, 1, (timing + 64.0f) * 2.0f, busIndex);		// angle before TDC.	(A/2)-64
 		break;
