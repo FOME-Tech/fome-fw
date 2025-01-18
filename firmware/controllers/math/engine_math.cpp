@@ -24,6 +24,7 @@
 #include "event_registry.h"
 #include "fuel_math.h"
 #include "gppwm_channel.h"
+#include "firing_order.h"
 
 floatms_t getEngineCycleDuration(float rpm) {
 	return getCrankshaftRevolutionTimeMs(rpm) * (getEngineRotationState()->getOperationMode() == TWO_STROKE ? 1 : 2);
@@ -88,6 +89,30 @@ ignition_mode_e getCurrentIgnitionMode() {
 
 #if EFI_ENGINE_CONTROL
 
+static void updateCylinders() {
+	// Update valid cylinders with their position in the firing order
+	uint16_t cylinderUpdateMask = 0;
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		auto cylinderNumber = getCylinderNumberAtIndex(i);
+
+		engine->cylinders[cylinderNumber].updateCylinderNumber(i, cylinderNumber);
+
+		auto mask = 1 << cylinderNumber;
+		// Assert that this cylinder was not configured yet
+		efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, (cylinderUpdateMask & mask) == 0, "cylinder update err");
+		cylinderUpdateMask |= mask;
+	}
+
+	// Assert that all cylinders were configured
+	uint16_t expectedMask = (1 << (engineConfiguration->cylindersCount)) - 1;
+	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, cylinderUpdateMask == expectedMask, "cylinder update err");
+
+	// Invalidate the remaining cylinders
+	for (size_t i = engineConfiguration->cylindersCount; i < efi::size(engine->cylinders); i++) {
+		engine->cylinders[i].invalidCylinder();
+	}
+}
+
 /**
  * This heavy method is only invoked in case of a configuration change or initialization.
  */
@@ -103,9 +128,7 @@ void prepareOutputSignals() {
 		}
 	}
 
-	for (size_t i = 0; i < efi::size(engine->cylinders); i++) {
-		engine->cylinders[i].updateCylinderNumber(i);
-	}
+	updateCylinders();
 
 	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
 	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE
@@ -134,8 +157,14 @@ angle_t getCylinderAngle(uint8_t cylinderIndex, uint8_t cylinderNumber) {
 	return result;
 }
 
-void OneCylinder::updateCylinderNumber(uint8_t index) {
-	m_index = index;
+void OneCylinder::updateCylinderNumber(uint8_t index, uint8_t cylinderNumber) {
+	m_cylinderIndex = index;
+	m_cylinderNumber = cylinderNumber;
+	m_valid = true;
+}
+
+void OneCylinder::invalidCylinder() {
+	m_valid = false;
 }
 
 void setTimingRpmBin(float from, float to) {

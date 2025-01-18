@@ -109,7 +109,8 @@ private:
 
 class OneCylinder final {
 public:
-	void updateCylinderNumber(uint8_t index);
+	void updateCylinderNumber(uint8_t index, uint8_t cylinderNumber);
+	void invalidCylinder();
 
 
 	// **************************
@@ -123,7 +124,12 @@ public:
 		return m_timingAdvance;
 	}
 private:
-	int m_index = 0;
+	bool m_valid = false;
+
+	// This cylinder's position in the firing order (0-based)
+	uint8_t m_cylinderIndex = 0;
+	// This cylinder's physical cylinder number (0-based)
+	uint8_t m_cylinderNumber = 0;
 
 	// 10 means 10 degrees BTDC
 	angle_t m_timingAdvance = 0;
