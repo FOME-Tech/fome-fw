@@ -220,7 +220,9 @@ public:
 		LedBlinkingTask,
 		TpsAccelEnrichment,
 
+		#ifndef EFI_BOOTLOADER
 		#include "modules_list_generated.h"
+		#endif
 
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
