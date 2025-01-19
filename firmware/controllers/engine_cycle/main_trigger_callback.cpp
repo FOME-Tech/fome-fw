@@ -36,12 +36,7 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 
 	efiAssertVoid(ObdCode::CUSTOM_STACK_6627, getCurrentRemainingStack() > 128, "lowstck#3");
 
-	LimpState limitedFuelState = getLimpManager()->allowInjection();
-
-	// todo: eliminate state copy logic by giving limpManager it's owm limp_manager.txt and leveraging LiveData
-	engine->outputChannels.fuelCutReason = (int8_t)limitedFuelState.reason;
-	bool limitedFuel = !limitedFuelState.value;
-	if (limitedFuel) {
+	if (!getLimpManager()->allowInjection().value) {
 		return;
 	}
 

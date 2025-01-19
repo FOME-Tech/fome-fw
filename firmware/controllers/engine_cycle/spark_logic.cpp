@@ -374,11 +374,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 		return;
 	}
 
-	LimpState limitedSparkState = getLimpManager()->allowIgnition();
-
-	// todo: eliminate state copy logic by giving limpManager it's owm limp_manager.txt and leveraging LiveData
-	engine->outputChannels.sparkCutReason = (int8_t)limitedSparkState.reason;
-	bool limitedSpark = !limitedSparkState.value;
+	bool limitedSpark = !getLimpManager()->allowIgnition().value;
 
 	const floatms_t dwellMs = engine->ignitionState.getDwell();
 	if (std::isnan(dwellMs) || dwellMs <= 0) {
