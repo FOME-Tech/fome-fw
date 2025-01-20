@@ -356,7 +356,7 @@ bool InjectionEvent::update() {
 
 	// Map order index -> cylinder index (firing order)
 	// Single point only uses injector 1 (index 0)
-	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : getCylinderNumberAtIndex(ownIndex);
+	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : cylinderNumber;
 
 	InjectorOutputPin* secondOutput = nullptr;
 	InjectorOutputPin* secondOutputStage2 = nullptr;
