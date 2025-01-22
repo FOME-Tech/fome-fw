@@ -39,8 +39,8 @@
 #endif
 
 // One block buffer per LUN
-static NO_CACHE uint8_t blkbuf0[MMCSD_BLOCK_SIZE];
-static NO_CACHE uint8_t blkbuf1[MMCSD_BLOCK_SIZE];
+static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
+static SDMMC_MEMORY uint8_t blkbufSdmmc[MMCSD_BLOCK_SIZE];
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -110,6 +110,29 @@ static BaseBlockDevice* getRamdiskDevice() {
 }
 
 void initUsbMsd() {
+	// STM32H7 SDMMC1 needs the filesystem object to be in AXI
+	// SRAM, but excluded from the cache
+	#ifdef STM32H7XX
+	{
+		void* base = &blkbufSdmmc;
+		static_assert(sizeof(blkbufSdmmc) == 512);
+		uint32_t size = MPU_RASR_SIZE_512;
+
+		mpuConfigureRegion(MPU_REGION_4,
+						base,
+						MPU_RASR_ATTR_AP_RW_RW |
+						MPU_RASR_ATTR_NON_CACHEABLE |
+						MPU_RASR_ATTR_S |
+						size |
+						MPU_RASR_ENABLE);
+		mpuEnable(MPU_CTRL_PRIVDEFENA);
+
+		/* Invalidating data cache to make sure that the MPU settings are taken
+		immediately.*/
+		SCB_CleanInvalidateDCache();
+	}
+	#endif
+
 	// Attach the ini ramdisk
 	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
 
