@@ -139,7 +139,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				{
 					chibios_rt::CriticalSectionLocker csl;
 
-					for (size_t i = 0; i < recvMsg->s16BufferSize; i++) {
+					for (sint16 i = 0; i < recvMsg->s16BufferSize; i++) {
 						iqPutI(&wifiIqueue, rxBuf[i]);
 					}
 				}
@@ -183,7 +183,8 @@ struct WifiConsoleThread : public TunerstudioThread {
 	TsChannelBase* setupChannel() override {
 		// Initialize the WiFi module
 		param.pfAppWifiCb = wifiCallback;
-		if (M2M_SUCCESS != m2m_wifi_init(&param)) {
+		if (auto ret = m2m_wifi_init(&param); M2M_SUCCESS != ret) {
+			efiPrintf("Wifi init failed with: %d", ret);
 			return nullptr;
 		}
 
