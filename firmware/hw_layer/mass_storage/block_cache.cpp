@@ -130,7 +130,7 @@ void BlockCache::readThread() {
 		}
 
 		// Copy from the cache to the output buffer
-		memcpy(h->buffer, m_cachedBlockData, 512);
+		memcpy(h->buffer, m_cachedBlockData, MMCSD_BLOCK_SIZE);
 
 		// return the completed request
 		m_completed.post(h, TIME_INFINITE);
