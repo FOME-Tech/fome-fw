@@ -146,12 +146,12 @@ void setBoardDefaultConfiguration() {
 }
 
 void preHalInit() {
-	efiSetPadMode("SDMMC",  Gpio::C8, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC",  Gpio::C9, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(0xc));
+	efiSetPadMode("SDMMC",  Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SDMMC",  Gpio::C9, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST);
 }
 
 void initBoardSensors() {
@@ -179,5 +179,4 @@ void initBoardSensors() {
 		AdcSubscription::SubscribeSensor(sensor5vSensor, EFI_ADC_17, /*bandwidth*/ 20, /*ratio*/ 1);
 		sensor5vSensor.Register();
 	}
-
 }
