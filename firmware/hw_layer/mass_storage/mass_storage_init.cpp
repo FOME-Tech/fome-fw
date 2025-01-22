@@ -73,7 +73,7 @@ static const scsi_inquiry_response_t sdCardInquiry = {
 };
 
 void attachMsdSdCard(BaseBlockDevice* blkdev) {
-	msd.attachLun(1, blkdev, blkbuf1, &sdCardInquiry, nullptr);
+	msd.attachLun(1, blkdev, blkbufSdmmc, &sdCardInquiry, nullptr);
 
 #if EFI_TUNER_STUDIO
 	// SD MSD attached, enable indicator in TS
@@ -111,10 +111,10 @@ static BaseBlockDevice* getRamdiskDevice() {
 
 void initUsbMsd() {
 	// Attach the ini ramdisk
-	msd.attachLun(0, getRamdiskDevice(), blkbuf0, &iniDriveInquiry, nullptr);
+	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
 
 	// attach a null device in place of the SD card for now - the SD thread may replace it later
-	msd.attachLun(1, (BaseBlockDevice*)&ND1, blkbuf1, &sdCardInquiry, nullptr);
+	msd.attachLun(1, (BaseBlockDevice*)&ND1, blkbufSdmmc, &sdCardInquiry, nullptr);
 
 	// start the mass storage thread
 	msd.start();
