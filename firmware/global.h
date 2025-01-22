@@ -81,8 +81,8 @@ typedef unsigned int time_t;
 #define SDRAM_OPTIONAL __attribute__((section(".ram8")))
 // SRAM3 is 32k and set to disable dcache
 #define NO_CACHE __attribute__((section(".ram3")))
-// On H7, SDMMC1 can only talk to AXI
-#define SDMMC_MEMORY __attribute__((section(".ram0")))
+// On H7, SDMMC1 can only talk to AXI, and aligned to a cache line (32 bytes)
+#define SDMMC_MEMORY __attribute__((section(".ram0"))) __attribute__ ((aligned (32)))
 #else /* this MCU doesn't need these */
 #define CCM_OPTIONAL
 #define NO_CACHE
