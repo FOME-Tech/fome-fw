@@ -3,6 +3,7 @@
 #include "mass_storage_init.h"
 #include "mass_storage_device.h"
 #include "null_device.h"
+#include "block_cache.h"
 
 #if HAL_USE_USB_MSD
 
@@ -40,7 +41,10 @@
 
 // One block buffer per LUN
 static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
-static SDMMC_MEMORY uint8_t blkbufSdmmc[MMCSD_BLOCK_SIZE];
+static struct {
+	uint8_t sdmmc[MMCSD_BLOCK_SIZE];
+	uint8_t prefetch[MMCSD_BLOCK_SIZE];
+} sdBuffers SDMMC_MEMORY;
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -72,8 +76,12 @@ static const scsi_inquiry_response_t sdCardInquiry = {
     {'v',CH_KERNEL_MAJOR+'0','.',CH_KERNEL_MINOR+'0'}
 };
 
+static BlockCache sdReadPrefetch(sdBuffers.prefetch);
+
 void attachMsdSdCard(BaseBlockDevice* blkdev) {
-	msd.attachLun(1, blkdev, blkbufSdmmc, &sdCardInquiry, nullptr);
+	// Start the prefetcher
+	sdReadPrefetch.start(blkdev);
+	msd.attachLun(1, reinterpret_cast<BaseBlockDevice*>(&sdReadPrefetch), sdBuffers.sdmmc, &sdCardInquiry, nullptr);
 
 #if EFI_TUNER_STUDIO
 	// SD MSD attached, enable indicator in TS
@@ -114,9 +122,9 @@ void initUsbMsd() {
 	// SRAM, but excluded from the cache
 	#ifdef STM32H7XX
 	{
-		void* base = &blkbufSdmmc;
-		static_assert(sizeof(blkbufSdmmc) == 512);
-		uint32_t size = MPU_RASR_SIZE_512;
+		void* base = &sdBuffers;
+		static_assert(sizeof(sdBuffers) == 1024);
+		uint32_t size = MPU_RASR_SIZE_1K;
 
 		mpuConfigureRegion(MPU_REGION_4,
 						base,
@@ -137,7 +145,7 @@ void initUsbMsd() {
 	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
 
 	// attach a null device in place of the SD card for now - the SD thread may replace it later
-	msd.attachLun(1, (BaseBlockDevice*)&ND1, blkbufSdmmc, &sdCardInquiry, nullptr);
+	msd.attachLun(1, (BaseBlockDevice*)&ND1, sdBuffers.sdmmc, &sdCardInquiry, nullptr);
 
 	// start the mass storage thread
 	msd.start();
