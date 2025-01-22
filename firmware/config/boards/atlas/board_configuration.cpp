@@ -43,15 +43,15 @@ static void setIgnitionPins() {
 }
 
 Gpio getCommsLedPin() {
-	return Gpio::F1;
-}
-
-Gpio getRunningLedPin() {
 	return Gpio::F2;
 }
 
+Gpio getRunningLedPin() {
+	return Gpio::C15;
+}
+
 Gpio getWarningLedPin() {
-	return Gpio::F3;
+	return Gpio::F1;
 }
 
 spi_device_e getWifiSpiDevice() {
