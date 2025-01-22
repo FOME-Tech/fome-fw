@@ -115,7 +115,7 @@
 #define STM32_PLL2_FRACN_VALUE              0
 #define STM32_PLL2_DIVP_VALUE               10
 #define STM32_PLL2_DIVQ_VALUE               12
-#define STM32_PLL2_DIVR_VALUE               20
+#define STM32_PLL2_DIVR_VALUE               40
 #define STM32_PLL3_ENABLED                  TRUE
 #define STM32_PLL3_P_ENABLED                TRUE
 #define STM32_PLL3_Q_ENABLED                TRUE
@@ -389,8 +389,9 @@
 #define STM32_SDC_USE_SDMMC1                TRUE
 #define STM32_SDC_USE_SDMMC2                FALSE
 #define STM32_SDC_SDMMC_UNALIGNED_SUPPORT   TRUE
-#define STM32_SDC_SDMMC_WRITE_TIMEOUT       1000000
-#define STM32_SDC_SDMMC_READ_TIMEOUT        1000000
+// Timeout of ~100ms at 24MHz
+#define STM32_SDC_SDMMC_WRITE_TIMEOUT       2400000
+#define STM32_SDC_SDMMC_READ_TIMEOUT        2400000
 #define STM32_SDC_SDMMC_CLOCK_DELAY         10
 #define STM32_SDC_SDMMC_PWRSAV              TRUE
 

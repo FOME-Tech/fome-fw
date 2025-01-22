@@ -64,7 +64,8 @@ typedef unsigned int time_t;
 // CCM memory is 64k
 #define CCM_OPTIONAL __attribute__((section(".ram4")))
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
-#define NO_CACHE	// F4 has no cache, do nothing
+#define NO_CACHE		// F4 has no cache, do nothing
+#define SDMMC_MEMORY	// F4 has no cache, do nothing
 #elif defined(STM32F7XX)
 // DTCM memory is 128k
 #define CCM_OPTIONAL __attribute__((section(".ram3")))
@@ -72,6 +73,7 @@ typedef unsigned int time_t;
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
 // SRAM2 is 16k and set to disable dcache
 #define NO_CACHE __attribute__((section(".ram2")))
+#define SDMMC_MEMORY NO_CACHE
 #elif defined(STM32H7XX)
 // DTCM memory is 128k
 #define CCM_OPTIONAL __attribute__((section(".ram5")))
@@ -79,9 +81,12 @@ typedef unsigned int time_t;
 #define SDRAM_OPTIONAL __attribute__((section(".ram8")))
 // SRAM3 is 32k and set to disable dcache
 #define NO_CACHE __attribute__((section(".ram3")))
+// On H7, SDMMC1 can only talk to AXI
+#define SDMMC_MEMORY __attribute__((section(".ram0")))
 #else /* this MCU doesn't need these */
 #define CCM_OPTIONAL
 #define NO_CACHE
+#define SDMMC_MEMORY
 #endif
 
 #define UNIT_TEST_BUSY_WAIT_CALLBACK() {}
