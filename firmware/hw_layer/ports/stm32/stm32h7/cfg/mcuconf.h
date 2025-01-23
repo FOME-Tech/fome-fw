@@ -53,7 +53,7 @@
 /*
  * Memory attributes settings.
  */
-#define STM32_NOCACHE_MPU_REGION            MPU_REGION_6
+#define STM32_NOCACHE_MPU_REGION            MPU_REGION_7
 #ifndef STM32_NOCACHE_SRAM1_SRAM2
 #define STM32_NOCACHE_SRAM1_SRAM2           FALSE
 #endif // STM32_NOCACHE_SRAM1_SRAM2
@@ -388,7 +388,7 @@
  */
 #define STM32_SDC_USE_SDMMC1                TRUE
 #define STM32_SDC_USE_SDMMC2                FALSE
-#define STM32_SDC_SDMMC_UNALIGNED_SUPPORT   FALSE
+#define STM32_SDC_SDMMC_UNALIGNED_SUPPORT   TRUE
 // Timeout of ~100ms at 24MHz
 #define STM32_SDC_SDMMC_WRITE_TIMEOUT       2400000
 #define STM32_SDC_SDMMC_READ_TIMEOUT        2400000

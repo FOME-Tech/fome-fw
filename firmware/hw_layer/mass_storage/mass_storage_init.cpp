@@ -44,7 +44,7 @@ static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
 static struct {
 	uint8_t sdmmc[MMCSD_BLOCK_SIZE];
 	uint8_t prefetch[MMCSD_BLOCK_SIZE];
-} sdBuffers SDMMC_MEMORY;
+} sdBuffers SDMMC_MEMORY(2 * MMCSD_BLOCK_SIZE);
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -126,7 +126,7 @@ void initUsbMsd() {
 		static_assert(sizeof(sdBuffers) == 1024);
 		uint32_t size = MPU_RASR_SIZE_1K;
 
-		mpuConfigureRegion(MPU_REGION_4,
+		mpuConfigureRegion(MPU_REGION_5,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |
