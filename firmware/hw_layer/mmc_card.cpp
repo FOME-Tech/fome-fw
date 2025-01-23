@@ -96,7 +96,7 @@ struct {
 
 	// Fill the struct out to a full MPU region
 	uint8_t padding[2048 - sizeof(usedPart)];
-} mmcCardCacheControlledStorage SDMMC_MEMORY;
+} mmcCardCacheControlledStorage SDMMC_MEMORY(2048);
 
 static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
 static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
@@ -330,7 +330,7 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
 		uint32_t size = MPU_RASR_SIZE_2K;
 
-		mpuConfigureRegion(MPU_REGION_5,
+		mpuConfigureRegion(MPU_REGION_6,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |

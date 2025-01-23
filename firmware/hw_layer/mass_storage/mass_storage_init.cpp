@@ -40,7 +40,7 @@
 
 // One block buffer per LUN
 static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
-static SDMMC_MEMORY uint8_t blkbufSdmmc[MMCSD_BLOCK_SIZE];
+static SDMMC_MEMORY(MMCSD_BLOCK_SIZE) uint8_t blkbufSdmmc[MMCSD_BLOCK_SIZE];
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -118,7 +118,7 @@ void initUsbMsd() {
 		static_assert(sizeof(blkbufSdmmc) == 512);
 		uint32_t size = MPU_RASR_SIZE_512;
 
-		mpuConfigureRegion(MPU_REGION_4,
+		mpuConfigureRegion(MPU_REGION_5,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |
