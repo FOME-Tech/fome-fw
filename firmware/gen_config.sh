@@ -8,9 +8,6 @@ echo "The storage section of fome.ini is updated as well"
 rm -f gen_config.log
 rm -f gen_config_board.log
 
-# todo: who is the consumer of this folder? shall we move that 'mkdir' command closer to usage?
-mkdir build
-
 #
 # see also build-firmware where we compile all versions of firmware
 #
