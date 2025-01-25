@@ -21,9 +21,7 @@ cd firmware
 rm -rf .dep # ChibiOS build's DEPDIR
 rm -rf build # ChibiOS build's BUILDDIR
 rm -rf pch/pch.h.gch.sh # what is this?
-cd ..
-
-cd firmware/$BOARD_DIR
+cd $BOARD_DIR
 
 echo "Invoking $COMPILE_SCRIPT"
 bash $COMPILE_SCRIPT
