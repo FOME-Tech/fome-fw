@@ -8,10 +8,7 @@ echo "The storage section of fome.ini is updated as well"
 rm -f gen_config.log
 rm -f gen_config_board.log
 
-#
-# see also build-firmware where we compile all versions of firmware
-#
-#
+# see also .github/workflows/build-firmware.yaml where we compile all versions of firmware
 for BOARD in \
    "config/boards/hellen/alphax-2chan alphax-2chan" \
    "config/boards/hellen/alphax-4chan alphax-4chan" \
