@@ -36,7 +36,9 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 
 	efiAssertVoid(ObdCode::CUSTOM_STACK_6627, getCurrentRemainingStack() > 128, "lowstck#3");
 
-	if (!getLimpManager()->allowInjection().value) {
+	// For any reason other than hard RPM limit, skip scheduling entirely
+	auto allowInjection = getLimpManager()->allowInjection();
+	if (!allowInjection.value && allowInjection.reason != ClearReason::HardLimit) {
 		return;
 	}
 

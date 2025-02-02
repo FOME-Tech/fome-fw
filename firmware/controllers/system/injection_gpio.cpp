@@ -52,7 +52,10 @@ void InjectorOutputPin::open(efitick_t nowNt) {
 #if EFI_TOOTH_LOGGER
 		LogTriggerInjectorState(nowNt, true);
 #endif // EFI_TOOTH_LOGGER
-		setHigh();
+
+		if (getLimpManager()->allowInjection().value) {
+			setHigh();
+		}
 	}
 }
 
