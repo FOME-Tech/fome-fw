@@ -257,7 +257,8 @@ public class EngineSnifferPanel {
         } else if (name.startsWith("c")) {
             // coil
             signalBody = Color.darkGray;
-        } else if (name.startsWith("HIP")) {
+        } else if (name.startsWith("k")) {
+            // knock window
             signalBody = Color.white;
         } else if (name.startsWith("i") || name.startsWith("j")) {
             // injection

@@ -12,6 +12,10 @@
 
 #include "mpu_util.h"
 
+// Both ADCs should be running at 25MHz
+static_assert(STM32_ADC12_CLOCK == 25000000);
+static_assert(STM32_ADC3_CLOCK == 40000000);
+
 #ifdef ADC_MUX_PIN
 #error "ADC mux not yet supported on STM32H7"
 #endif
@@ -39,7 +43,30 @@ static_assert(log2_int(16) == 4);
 // Shift the result by log2(N) bits to divide by N
 static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
+// ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
+// BDMA can only access AHB4, which means we have to put the buffers in SRAM4
+__attribute__((section(".ram4"))) __attribute__ ((aligned (2048))) adcsample_t knockSampleBuffer[2048];
+
 void portInitAdc() {
+	{
+		void* base = &knockSampleBuffer;
+		static_assert(sizeof(knockSampleBuffer) == 4096);
+		uint32_t size = MPU_RASR_SIZE_4K;
+
+		mpuConfigureRegion(MPU_REGION_4,
+						base,
+						MPU_RASR_ATTR_AP_RW_RW |
+						MPU_RASR_ATTR_NON_CACHEABLE |
+						MPU_RASR_ATTR_S |
+						size |
+						MPU_RASR_ENABLE);
+		mpuEnable(MPU_CTRL_PRIVDEFENA);
+
+		/* Invalidating data cache to make sure that the MPU settings are taken
+		immediately.*/
+		SCB_CleanInvalidateDCache();
+	}
+
 	// Init slow ADC
 	adcStart(&ADCD1, NULL);
 
@@ -66,9 +93,10 @@ static void adc_callback(ADCDriver *adcp) {
 }
 
 // ADC Clock is 25MHz
-// 16.5 sampling + 8.5 conversion = 25 cycles per sample total
+// 16.5 sampling + 7.5 conversion = 24 cycles per sample total
 // 16 channels * 4x oversample = 64 samples per batch
-// (25 * 64) / 25MHz -> 64 microseconds to sample all channels
+// (24 * 64) / 25MHz -> 61.4 microseconds to sample all channels
+// We sample at 10khz, or a period of 100us
 #define ADC_SAMPLING_SLOW ADC_SMPR_SMP_16P5
 
 // Sample the 16 channels that line up with the STM32F4/F7
@@ -194,7 +222,7 @@ adcsample_t getFastAdc(FastAdcToken token) {
 #ifdef EFI_SOFTWARE_KNOCK
 #include "knock_config.h"
 
-static_assert((H7_KNOCK_OVERSAMPLE & (H7_KNOCK_OVERSAMPLE - 1)) == 0, "H7_ADC_OVERSAMPLE must be a power of 2");
+static_assert((H7_KNOCK_OVERSAMPLE & (H7_KNOCK_OVERSAMPLE - 1)) == 0, "H7_KNOCK_OVERSAMPLE must be a power of 2");
 static constexpr int H7_KNOCK_ADC_SHIFT_BITS = log2_int(H7_KNOCK_OVERSAMPLE);
 
 static void knockCompletionCallback(ADCDriver* adcp) {
@@ -231,11 +259,11 @@ static const uint32_t smpr2 =
 	ADC_SMPR2_SMP_AN19(KNOCK_SAMPLE_TIME);
 
 static const ADCConversionGroup adcConvGroupCh1 = {
-	.circular = FALSE,
+	.circular = false,
 	.num_channels = 1,
 	.end_cb = &knockCompletionCallback,
 	.error_cb = &knockErrorCallback,
-	.cfgr				= 0,
+	.cfgr				= ADC_CFGR_CONT,
 	.cfgr2				= 	(H7_KNOCK_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos |	// Oversample by Nx (register contains N-1)
 							H7_KNOCK_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		// shift the result right log2(N) bits to make a 16 bit result out of the internal oversample sum
 							ADC_CFGR2_ROVSE,			// Enable oversampling
@@ -256,13 +284,13 @@ static const ADCConversionGroup adcConvGroupCh1 = {
 // Not all boards have a second channel - configure it if it exists
 #if KNOCK_HAS_CH2
 static const ADCConversionGroup adcConvGroupCh2 = {
-	.circular = FALSE,
+	.circular = false,
 	.num_channels = 1,
 	.end_cb = &knockCompletionCallback,
 	.error_cb = &knockErrorCallback,
-	.cfgr				= 0,
-	.cfgr2				= 	(H7_ADC_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos |	// Oversample by Nx (register contains N-1)
-							H7_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		// shift the result right log2(N) bits to make a 16 bit result out of the internal oversample sum
+	.cfgr				= ADC_CFGR_CONT,
+	.cfgr2				= 	(H7_KNOCK_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos |	// Oversample by Nx (register contains N-1)
+							H7_KNOCK_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		// shift the result right log2(N) bits to make a 16 bit result out of the internal oversample sum
 							ADC_CFGR2_ROVSE,			// Enable oversampling
 	.ccr				= 0,
 	.pcsel				= 0xFFFFFFFF, // enable analog switches on all channels
