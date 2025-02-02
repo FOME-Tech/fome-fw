@@ -396,7 +396,7 @@ injector_s injector
 injector_s injectorSecondary
 
 bit isForcedInduction;Does the vehicle have a turbo or supercharger?
-bit unusedFordTps
+bit useMapEstimateDuringTransient;During the TPS AE period, use the MAP estimate table value instead of true MAP (if greater than real MAP). This basically briefly runs in alpha-n during a transient, then returns to normal speed-density mode.
 bit lambdaProtectionEnable
 bit overrideTriggerGaps
 bit enableFan1WithAc;Turn on this fan when AC is on.
@@ -973,8 +973,8 @@ bit ALSActivateInverted
 
 	int16_t warningPeriod;;"seconds", 1, 0, 0, 60, 0
 
-	float knockDetectionWindowStart;Delay after spark firing to start the knock detection window. This should remain at 0 unless there's a good reason.;"deg", 1, 0, 0, 90, 0
-	float knockDetectionWindowEnd;Duration, in crank degrees, of the knock detection window. 40 to 70 degrees is a normal range.;"deg", 1, 0, 30, 100, 0
+	uint8_t knockDetectionWindowStart;Delay after spark firing to start the knock detection window. This should remain at 0 unless there's a good reason.;"deg", 1, 0, 0, 90, 0
+	uint8_t knockDetectionWindowEnd;Duration, in crank degrees, of the knock detection window. 40 to 70 degrees is a normal range.;"deg", 1, 0, 30, 100, 0
 
 
 float idleStepperReactionTime;;"ms", 1, 0, 1, 300, 0
@@ -1021,7 +1021,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	float throttlePedalUpVoltage;;"voltage", 1, 0, -6, 6, 2
 	float throttlePedalWOTVoltage;Pedal in the floor;"voltage", 1, 0, -6, 6, 2
 	
-	int16_t startUpFuelPumpDuration;on IGN voltage detection turn fuel pump on to build fuel pressure;"seconds", 1, 0, 0, 6000, 0
+	int16_t startUpFuelPumpDuration;When ignition is turned on, turn fuel pump on to build fuel pressure;"seconds", 1, 0, 0, 6000, 0
 	int16_t idlePidRpmDeadZone;If the RPM closer to target than this value, disable closed loop idle correction to prevent oscillation;"RPM", 1, 0, 0, 800, 0
 	
 
@@ -1924,6 +1924,7 @@ end_struct
 #define ts_show_vvt true
 #define ts_show_pedal true
 #define ts_show_maf true
+#define ts_show_tle8888 false
 
 ! we need to improve this further - at the moment we need too many boards to prepend 'false'
 #define show_test_presets true

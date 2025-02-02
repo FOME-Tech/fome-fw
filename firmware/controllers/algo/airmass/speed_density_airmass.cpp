@@ -56,5 +56,15 @@ float SpeedDensityAirmass::getMap(float rpm, bool postState) const {
 	}
 #endif // EFI_TUNER_STUDIO
 
-	return Sensor::get(SensorType::Map).value_or(fallbackMap);
+	auto map = Sensor::get(SensorType::Map);
+	if (!map) {
+		// MAP sensor is dead, nothing we can do
+		return fallbackMap;
+	} else if (engineConfiguration->useMapEstimateDuringTransient && engine->module<TpsAccelEnrichment>()->isAboveAccelThreshold) {
+		// Take the greater of real or estimated map so we don't under-fuel on a transient
+		return std::max(map.Value, fallbackMap);
+	} else {
+		// Normal operation, 
+		return map.Value;
+	}
 }
