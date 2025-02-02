@@ -281,7 +281,7 @@ static const ADCConversionGroup adcConvGroupCh2 = {
 
 // ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
 // BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) adcsample_t sampleBuffer[2000];
+__attribute__((section(".ram4"))) adcsample_t knockSampleBuffer[2048];
 
 const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx) {
 #if KNOCK_HAS_CH2

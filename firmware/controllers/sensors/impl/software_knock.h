@@ -6,4 +6,4 @@
 void initSoftwareKnock();
 void knockSamplingCallback(uint8_t cylinderIndex, efitick_t nowNt);
 
-extern adcsample_t sampleBuffer[2000];
+extern adcsample_t knockSampleBuffer[2048];

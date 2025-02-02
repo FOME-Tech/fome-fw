@@ -374,7 +374,7 @@ static const ADCConversionGroup adcConvGroupCh2 = {
 };
 #endif // KNOCK_HAS_CH2
 
-NO_CACHE adcsample_t sampleBuffer[2000];
+NO_CACHE adcsample_t knockSampleBuffer[2048];
 
 const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx) {
 #if KNOCK_HAS_CH2

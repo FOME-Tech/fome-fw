@@ -49,7 +49,7 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 
 	// Convert sampling time to number of samples
 	constexpr int sampleRate = KNOCK_SAMPLE_RATE;
-	sampleCount = 0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(sampleBuffer)));
+	sampleCount = 0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(knockSampleBuffer)));
 
 	// Select the appropriate conversion group - it will differ depending on which sensor this cylinder should listen on
 	auto conversionGroup = getKnockConversionGroup(channelIdx);
@@ -57,7 +57,7 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 	// Stash the current cylinder's number so we can store the result appropriately
 	currentCylinderNumber = cylinderNumber;
 
-	adcStartConversionI(&KNOCK_ADC, conversionGroup, sampleBuffer, sampleCount);
+	adcStartConversionI(&KNOCK_ADC, conversionGroup, knockSampleBuffer, sampleCount);
 	lastKnockSampleTime = getTimeNowNt();
 }
 
@@ -124,7 +124,7 @@ static void processLastKnockEvent() {
 
 	// Compute the sum of squares
 	for (size_t i = 0; i < localCount; i++) {
-		float volts = ratio * sampleBuffer[i];
+		float volts = ratio * knockSampleBuffer[i];
 
 		float filtered = knockFilter.filter(volts);
 
