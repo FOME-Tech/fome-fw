@@ -50,16 +50,11 @@
 #define STM32_NO_INIT                       FALSE
 #define STM32_TARGET_CORE                   1
 
-/*
- * Memory attributes settings.
- */
+// Disable caching for the whole of SRAM1/2/3/4, Backup SRAM
+#define STM32_NOCACHE_ENABLE                TRUE
 #define STM32_NOCACHE_MPU_REGION            MPU_REGION_7
-#ifndef STM32_NOCACHE_SRAM1_SRAM2
-#define STM32_NOCACHE_SRAM1_SRAM2           FALSE
-#endif // STM32_NOCACHE_SRAM1_SRAM2
-#ifndef STM32_NOCACHE_SRAM3
-#define STM32_NOCACHE_SRAM3                 TRUE
-#endif // STM32_NOCACHE_SRAM3
+#define STM32_NOCACHE_RBAR                  0x30000000U
+#define STM32_NOCACHE_RASR                  MPU_RASR_SIZE_256M
 
 /*
  * PWR system settings.
