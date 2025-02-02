@@ -396,7 +396,7 @@ injector_s injector
 injector_s injectorSecondary
 
 bit isForcedInduction;Does the vehicle have a turbo or supercharger?
-bit unusedFordTps
+bit useMapEstimateDuringTransient;During the TPS AE period, use the MAP estimate table value instead of true MAP (if greater than real MAP). This basically briefly runs in alpha-n during a transient, then returns to normal speed-density mode.
 bit lambdaProtectionEnable
 bit overrideTriggerGaps
 bit enableFan1WithAc;Turn on this fan when AC is on.
