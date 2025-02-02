@@ -43,7 +43,30 @@ static_assert(log2_int(16) == 4);
 // Shift the result by log2(N) bits to divide by N
 static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
+// ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
+// BDMA can only access AHB4, which means we have to put the buffers in SRAM4
+__attribute__((section(".ram4"))) __attribute__ ((aligned (2048))) adcsample_t knockSampleBuffer[2048];
+
 void portInitAdc() {
+	{
+		void* base = &knockSampleBuffer;
+		static_assert(sizeof(knockSampleBuffer) == 4096);
+		uint32_t size = MPU_RASR_SIZE_4K;
+
+		mpuConfigureRegion(MPU_REGION_4,
+						base,
+						MPU_RASR_ATTR_AP_RW_RW |
+						MPU_RASR_ATTR_NON_CACHEABLE |
+						MPU_RASR_ATTR_S |
+						size |
+						MPU_RASR_ENABLE);
+		mpuEnable(MPU_CTRL_PRIVDEFENA);
+
+		/* Invalidating data cache to make sure that the MPU settings are taken
+		immediately.*/
+		SCB_CleanInvalidateDCache();
+	}
+
 	// Init slow ADC
 	adcStart(&ADCD1, NULL);
 
@@ -283,10 +306,6 @@ static const ADCConversionGroup adcConvGroupCh2 = {
 	},
 };
 #endif // KNOCK_HAS_CH2
-
-// ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
-// BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) adcsample_t knockSampleBuffer[2048];
 
 const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx) {
 #if KNOCK_HAS_CH2
