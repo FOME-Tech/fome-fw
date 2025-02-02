@@ -104,7 +104,7 @@ extern "C" {
  * declared as a macro so that this code does not use stack
  * so that it would not crash the error handler in case of stack issues
  */
-#define hasOsPanicError() (ch.dbg.panic_msg != NULL)
+#define hasOsPanicError() (ch0.dbg.panic_msg != NULL)
 
 #ifndef __ASSEMBLER__
  #ifdef __cplusplus
