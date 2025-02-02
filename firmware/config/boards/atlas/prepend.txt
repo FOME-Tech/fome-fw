@@ -1,4 +1,20 @@
+#define ts_show_full_pinout false
+#define ts_show_egt false
+#define ts_show_analog_divider false
+#define ts_show_spi false
+#define ts_show_can_pins false
+#define ts_show_tunerstudio_port false
+#define ts_show_can2 true
+#define ts_show_software_knock true
+#define ts_show_hardware_simulator false
+#define ts_show_sd_pins false
+#define ts_show_vbatt false
+#define ts_show_clt_iat_pullup false
 #define ts_show_etb_pins false
+
+#define show_test_presets false
+#define show_Frankenso_presets false
+#define show_microRusEFI_presets false
 
 ! Atlas is guaranteed dual bank flash, so there's no delay when sending the burn command.
 ! All commands should complete effectively instantly.
