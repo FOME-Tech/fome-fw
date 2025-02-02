@@ -112,10 +112,10 @@ static void processLastKnockEvent() {
 
 	float sumSq = 0;
 
-	constexpr float vcc = 3.3f;
+	float vcc = engineConfiguration->adcVcc;
 
 	// Ratio in units of volts per ADC count
-	constexpr float ratio = vcc / 4095.0f;
+	float ratio = vcc / ADC_MAX_VALUE;
 
 	size_t localCount = sampleCount;
 
