@@ -10,7 +10,6 @@
 #include "knock_config.h"
 #include "ch.hpp"
 
-static NO_CACHE adcsample_t sampleBuffer[2000];
 static int8_t currentCylinderNumber = 0;
 static efitick_t lastKnockSampleTime;
 static Biquad knockFilter;
