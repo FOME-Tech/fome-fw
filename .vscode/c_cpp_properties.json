@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+				"EFI_PROD_CODE",
+				"EFI_SIMULATOR",
+				"EFI_FILE_LOGGING",
+				"EFI_CAN_SUPPORT",
+			],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "intelliSenseMode": "linux-clang-x64"
+        }
+    ],
+    "version": 4
+}

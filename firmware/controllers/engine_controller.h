@@ -11,7 +11,6 @@
 // todo: huh we also have validateConfiguration()?!
 bool validateConfig();
 char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer);
-void initPeriodicEvents();
 void initEngineController();
 void commonInitEngineController();
 void initStartStopButton();
@@ -19,3 +18,5 @@ void initStartStopButton();
 void initDataStructures();
 
 void slowStartStopButtonCallback();
+
+void doPeriodicSlowCallback();

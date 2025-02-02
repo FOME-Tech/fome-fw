@@ -64,8 +64,8 @@ static spi_device_e mmcSpiDevice = SPI_NONE;
 
 #define LOG_INDEX_FILENAME "index.txt"
 
-#define RUSEFI_LOG_PREFIX "re_"
-#define PREFIX_LEN 3
+#define FOME_LOG_PREFIX "fome_"
+#define PREFIX_LEN 5
 #define SHORT_TIME_LEN 13
 
 #define LS_RESPONSE "ls_result"
@@ -85,10 +85,21 @@ static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
 
 #endif /* HAL_USE_MMC_SPI */
 
-/**
- * fatfs MMC/SPI
- */
-static NO_CACHE FATFS MMC_FS;
+// On STM32H7, these objects need their own MPU region if using SDMMC1
+struct {
+	struct {
+		FATFS fs;
+		FIL file;
+	} usedPart;
+
+	static_assert(sizeof(usedPart) <= 2048);
+
+	// Fill the struct out to a full MPU region
+	uint8_t padding[2048 - sizeof(usedPart)];
+} mmcCardCacheControlledStorage SDMMC_MEMORY(2048);
+
+static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
+static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
 
 static int fatFsErrors = 0;
 
@@ -107,8 +118,6 @@ static void printError(const char *str, FRESULT f_error) {
 
 	efiPrintf("FATfs Error \"%s\" %d", str, f_error);
 }
-
-static FIL FDLogFile NO_CACHE;
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
@@ -168,17 +177,10 @@ static void incLogFileName() {
 }
 
 static void prepareLogFileName() {
-	strcpy(logName, RUSEFI_LOG_PREFIX);
+	strcpy(logName, FOME_LOG_PREFIX);
 	char *ptr;
 
-#if HAL_USE_USB_MSD
-	bool result = dateToStringShort(&logName[PREFIX_LEN]);
-#else 
-	// TS SD protocol supports only short 8 symbol file names :(
-	bool result = false;
-#endif
-
-	if (result) {
+	if (dateToStringShort(&logName[PREFIX_LEN])) {
 		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
 	} else {
 		ptr = itoa10(&logName[PREFIX_LEN], logFileIndex);
@@ -218,72 +220,6 @@ static void createLogFile() {
 	}
 	f_sync(&FDLogFile);
 	setSdCardReady(true);						// everything Ok
-}
-
-static void removeFile(const char *pathx) {
-	if (!isSdCardAlive()) {
-		efiPrintf("Error: No File system is mounted");
-		return;
-	}
-
-	f_unlink(pathx);
-}
-
-int mystrncasecmp(const char *s1, const char *s2, size_t n) {
-           if (n != 0) {
-                    const char *us1 = (const char *)s1;
-                    const char *us2 = (const char *)s2;
-
-                   do {
-                            if (mytolower(*us1) != mytolower(*us2))
-                                    return (mytolower(*us1) - mytolower(*us2));
-                           if (*us1++ == '\0')
-                                   break;
-                            us2++;
-                    } while (--n != 0);
-            }
-            return (0);
-    }
-
-static void listDirectory(const char *path) {
-
-	if (!isSdCardAlive()) {
-		efiPrintf("Error: No File system is mounted");
-		return;
-	}
-
-	DIR dir;
-	FRESULT res = f_opendir(&dir, path);
-
-	if (res != FR_OK) {
-		efiPrintf("Error opening directory %s", path);
-		return;
-	}
-
-	efiPrintf(LS_RESPONSE);
-
-	for (int count = 0;count < FILE_LIST_MAX_COUNT;) {
-		FILINFO fno;
-
-		res = f_readdir(&dir, &fno);
-		if (res != FR_OK || fno.fname[0] == 0) {
-			break;
-		}
-		if (fno.fname[0] == '.') {
-			continue;
-		}
-		if ((fno.fattrib & AM_DIR) || mystrncasecmp(RUSEFI_LOG_PREFIX, fno.fname, sizeof(RUSEFI_LOG_PREFIX) - 1)) {
-			continue;
-		}
-		efiPrintf("logfile%lu:%s", fno.fsize, fno.fname);
-		count++;
-
-//			efiPrintf("%c%c%c%c%c %u/%02u/%02u %02u:%02u %9lu  %-12s", (fno.fattrib & AM_DIR) ? 'D' : '-',
-//					(fno.fattrib & AM_RDO) ? 'R' : '-', (fno.fattrib & AM_HID) ? 'H' : '-',
-//					(fno.fattrib & AM_SYS) ? 'S' : '-', (fno.fattrib & AM_ARC) ? 'A' : '-', (fno.fdate >> 9) + 1980,
-//					(fno.fdate >> 5) & 15, fno.fdate & 31, (fno.ftime >> 11), (fno.ftime >> 5) & 63, fno.fsize,
-//					fno.fname);
-	}
 }
 
 /*
@@ -371,14 +307,10 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 }
 #endif /* HAL_USE_MMC_SPI */
 
-#ifndef RE_SDC_MODE
-#define RE_SDC_MODE SDC_MODE_4BIT
-#endif // RE_SDC_MODE
-
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
 static const SDCConfig sdcConfig = {
-	RE_SDC_MODE
+	SDC_MODE_4BIT
 };
 
 static BaseBlockDevice* initializeMmcBlockDevice() {
@@ -392,6 +324,29 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 		sdStatus = SD_STATE_NOT_CONNECTED;
 		return nullptr;
 	}
+
+	// STM32H7 SDMMC1 needs the filesystem object to be in AXI
+	// SRAM, but excluded from the cache
+	#ifdef STM32H7XX
+	{
+		void* base = &mmcCardCacheControlledStorage;
+		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
+		uint32_t size = MPU_RASR_SIZE_2K;
+
+		mpuConfigureRegion(MPU_REGION_6,
+						base,
+						MPU_RASR_ATTR_AP_RW_RW |
+						MPU_RASR_ATTR_NON_CACHEABLE |
+						MPU_RASR_ATTR_S |
+						size |
+						MPU_RASR_ENABLE);
+		mpuEnable(MPU_CTRL_PRIVDEFENA);
+
+		/* Invalidating data cache to make sure that the MPU settings are taken
+		immediately.*/
+		SCB_CleanInvalidateDCache();
+	}
+	#endif
 
 	return reinterpret_cast<BaseBlockDevice*>(&EFI_SDC_DEVICE);
 }
@@ -550,6 +505,8 @@ void mlgLogger() {
 		}
 #endif
 
+		systime_t before = chVTGetSystemTime();
+
 		writeSdLogLine(logBuffer);
 
 		// Something went wrong (already handled), so cancel further writes
@@ -564,8 +521,8 @@ void mlgLogger() {
 			freq = 1;
 		}
 
-		auto period = 1e6 / freq;
-		chThdSleepMicroseconds((int)period);
+		systime_t period = CH_CFG_ST_FREQUENCY / freq;
+		chThdSleepUntilWindowed(before, before + period);
 	}
 }
 
@@ -595,8 +552,6 @@ void initEarlyMmcCard() {
 	logName[0] = 0;
 
 	addConsoleAction("sdinfo", sdStatistics);
-	addConsoleActionS("ls", listDirectory);
-	addConsoleActionS("del", removeFile);
 	addConsoleAction("incfilename", incLogFileName);
 #endif // EFI_PROD_CODE
 }

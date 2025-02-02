@@ -25,6 +25,7 @@ Bit: 'bit';
 Array: 'array';
 Scalar: 'scalar';
 Autoscale: 'autoscale';
+Resizable: 'resizable';
 
 ArrayDimensionSeparator: 'x';
 
@@ -100,11 +101,19 @@ bitField: Bit identifier (',' QuotedString ',' QuotedString)? ('(' 'comment' ':'
 
 unionField: 'union' ENDL+ fields 'end_union';
 
+tableAxisSpec: ('min' integer 'max' integer|'num' integer);
+tableField: 'table' ('maxsize' integer)? ENDL+
+	'rows' tableAxisSpec scalarField ENDL+
+	'cols' tableAxisSpec scalarField  ENDL+
+	('values' scalarField ENDL+)+
+	'end_table';
+
 field
     : scalarField
     | arrayField
     | bitField
     | unionField
+    | tableField
     ;
 
 fields

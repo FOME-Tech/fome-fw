@@ -235,8 +235,6 @@ void setDodgeNeonNGCEngineConfiguration() {
 //	engineConfiguration->fanOnTemperature = 115; // knock testing - value is a bit high
 //	engineConfiguration->fanOffTemperature = 100;
 
-//	engineConfiguration->tunerStudioSerialSpeed = 9600;
-	engineConfiguration->tunerStudioSerialSpeed = 19200;
 	setAlgorithm(LM_SPEED_DENSITY);
 
 //temp	engineConfiguration->alternatorControlPin = Gpio::D5;
@@ -245,7 +243,6 @@ void setDodgeNeonNGCEngineConfiguration() {
 	engineConfiguration->alternatorControl.pFactor = 20;
 	engineConfiguration->alternatorControl.iFactor = 0.2;
 	engineConfiguration->alternatorControl.dFactor = 0.1;
-	engineConfiguration->alternatorControl.periodMs = 10;
 
 	engineConfiguration->canWriteEnabled = true;
 	engineConfiguration->canNbcType = CAN_BUS_NBC_BMW;

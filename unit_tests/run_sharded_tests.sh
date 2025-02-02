@@ -5,8 +5,8 @@
 
 set -euo pipefail
 
-export GTEST_TOTAL_SHARDS=600
-for IDX in {0..599}
+export GTEST_TOTAL_SHARDS=800
+for IDX in {0..799}
 do
 	export GTEST_SHARD_INDEX=$IDX
 	build/fome_test

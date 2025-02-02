@@ -11,6 +11,8 @@ efitick_t getTimeNowNt() {
 	return timeNt.update(getTimeNowLowerNt());
 }
 
+#endif /* !EFI_UNIT_TEST */
+
 /**
  * 64-bit result would not overflow, but that's complex stuff for our 32-bit MCU
  */
@@ -23,8 +25,6 @@ efitimeus_t getTimeNowUs() {
  * Integer number of seconds since ECU boot.
  * 31,710 years - would not overflow during our life span.
  */
-efitimesec_t getTimeNowS(void) {
+int64_t getTimeNowS() {
 	return getTimeNowUs() / US_PER_SECOND;
 }
-
-#endif /* !EFI_UNIT_TEST */

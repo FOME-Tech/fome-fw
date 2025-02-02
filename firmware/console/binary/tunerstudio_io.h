@@ -36,25 +36,31 @@ public:
 	// Base functions that use the above virtual implementation
 	size_t read(uint8_t* buffer, size_t size);
 
-#ifdef EFI_CAN_SERIAL
-	virtual	// CAN device needs this function to be virtual for small-packet optimization
-#endif
-	void writeCrcPacket(uint8_t responseCode, const uint8_t* buf, size_t size, bool allowLongPackets = false);
-	void sendResponse(ts_response_format_e mode, const uint8_t * buffer, int size, bool allowLongPackets = false);
-
 	/**
 	 * See 'blockingFactor' in rusefi.ini
 	 */
-	char scratchBuffer[BLOCKING_FACTOR + 30];
+	uint8_t scratchBuffer[BLOCKING_FACTOR + 30];
 
 	const char* getName() const {
 		return m_name;
 	}
 
-	void assertPacketSize(size_t size, bool allowLongPackets);
-	uint32_t writePacketHeader(const uint8_t responseCode, const size_t size);
-	void crcAndWriteBuffer(const uint8_t responseCode, const size_t size);
-	void copyAndWriteSmallCrcPacket(uint8_t responseCode, const uint8_t* buf, size_t size);
+#ifdef EFI_CAN_SERIAL
+	virtual	// CAN device needs this function to be virtual for small-packet optimization
+#endif
+	// Use when buf could change during execution. Makes a copy before computing checksum.
+	void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size);
+
+	// Use when buf cannot change during execution. Computes checksum without an extra copy.
+	void writeCrcPacketLocked(uint8_t responseCode, const uint8_t* buf, size_t size);
+	inline void writeCrcPacketLocked(const uint8_t* buf, size_t size) {
+		writeCrcPacketLocked(TS_RESPONSE_OK, buf, size);
+	}
+
+	// Write a response code with no data
+	inline void writeCrcResponse(uint8_t responseCode) {
+		writeCrcPacketLocked(responseCode, nullptr, 0);
+	}
 
 	/* When TsChannel is in "not in sync" state tsProcessOne will silently try to find
 	 * begining of packet.
@@ -70,9 +76,6 @@ public:
 
 protected:
 	const char * const m_name;
-
-private:
-	void writeCrcPacketLarge(uint8_t responseCode, const uint8_t* buf, size_t size);
 };
 
 // This class represents a channel for a physical async serial poart
@@ -130,5 +133,3 @@ void startSerialChannels();
 SerialTsChannelBase* getBluetoothChannel();
 
 void startCanConsole();
-
-void sendOkResponse(TsChannelBase *tsChannel, ts_response_format_e mode);

@@ -31,7 +31,7 @@ public:
 	virtual float getMaximumRetard() const = 0;
 
 private:
-	using PD = PeakDetect<float, MS2NT(50)>;
+	using PD = PeakDetect<float, MS2NT(50).count()>;
 	PD peakDetectors[12];
 	PD allCylinderPeakDetector;
 };
@@ -42,11 +42,6 @@ public:
 	{
 	}
 
-	void onConfigurationChange(engine_configuration_s const * /*previousConfig*/) override;
-
 	float getKnockThreshold() const override;
 	float getMaximumRetard() const override;
-
-private:
-	Map3D<6, 6, uint8_t, uint8_t, uint8_t> m_maxRetardTable;
 };

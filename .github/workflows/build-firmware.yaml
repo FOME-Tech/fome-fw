@@ -175,29 +175,9 @@ jobs:
             folder: config/boards/microrusefi
             ini-file: fome_mre_f4.ini
 
-          # - build-target: mre_f4_no_openblt
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
-          # - build-target: mre_f4_debug
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
-          # - build-target: mre_f4_recovery
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
           - build-target: mre_f7
             folder: config/boards/microrusefi
             ini-file: fome_mre_f7.ini
-
-          # - build-target: prometheus_405
-          #   folder: config/boards/prometheus
-          #   ini-file: fome_prometheus_405.ini
-
-          # - build-target: prometheus_469
-          #   folder: config/boards/prometheus
-          #   ini-file: fome_prometheus_469.ini
 
           - build-target: proteus_f4
             folder: config/boards/proteus
@@ -269,9 +249,17 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
+    - name: Pre-build Cleanup Test
+      run: |
+        ls -l firmware
+
     - uses: actions/checkout@v4
       with:
         submodules: true
+
+    - name: Pre-build Cleanup Test 2
+      run: |
+        ls -l firmware
 
     # - uses: actions/setup-java@v3
     #   with:
@@ -290,18 +278,13 @@ jobs:
       working-directory: ./firmware/
       run: ./gen_live_documentation.sh
 
-    # - name: Configs Set SSH variables
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   env:
-    #     ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-    #   run: |
-    #     echo "::set-env name=RUSEFI_SSH_SERVER::${{secrets.RUSEFI_SSH_SERVER}}";
-    #     echo "::set-env name=RUSEFI_SSH_USER::${{secrets.RUSEFI_SSH_USER}}";
-    #     echo "::set-env name=RUSEFI_SSH_PASS::${{secrets.RUSEFI_SSH_PASS}}";
-
     # Build the firmware!
     - name: Build Firmware
       run: bash misc/jenkins/compile_other_versions/compile.sh ${{matrix.folder}} ${{matrix.build-target}}
+
+    - name: Check for illegal time conversions
+      working-directory: ./firmware/
+      run: bash check_illegal_conversion.sh
 
     # Build rusEFI console
     - name: Build console
@@ -342,38 +325,18 @@ jobs:
         path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
         ecosystem: fome
 
-    # - name: Upload .ini files
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   working-directory: ./firmware/tunerstudio/generated
-    #   run: ../upload_ini.sh ${{matrix.ini-file}} ${{ secrets.RUSEFI_ONLINE_FTP_USER }} ${{ secrets.RUSEFI_ONLINE_FTP_PASS }} ${{ secrets.RUSEFI_FTP_SERVER }}
+    # If not uploading the full bundle, at least upload the bin+ini so you can test off a PR
+    - name: Upload build bin
+      uses: actions/upload-artifact@v4
+      with:
+        name: fome_${{matrix.build-target}}.bin
+        path: ./firmware/deliver/fome.bin
 
-    # - name: Upload build elf
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.elf
-    #     path: ./firmware/build/rusefi.elf
-
-    # - name: Upload build bin
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.bin
-    #     path: ./firmware/deliver/rusefi*.bin
-
-    # - name: Upload build hex
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.hex
-    #     path: ./firmware/deliver/rusefi*.hex
-
-    # - name: Upload build dfu
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.dfu
-    #     path: ./firmware/deliver/rusefi*.dfu
+    - name: Upload ini
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.ini-file}}
+        path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
 
     - name: Upload bundle
       if: ${{ env.full == 'true' && env.upload == 'true' }}

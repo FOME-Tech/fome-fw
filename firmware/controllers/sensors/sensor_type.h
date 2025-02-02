@@ -62,18 +62,26 @@ enum class SensorType : unsigned char {
 
 	Lambda1,
 	Lambda2,
+	Lambda3,
+	Lambda4,
 
 	WastegatePosition,
 
 	FuelEthanolPercent,
 
 	BatteryVoltage,
+	MainRelayVoltage,
+	Sensor5vVoltage,
 
 	BarometricPressure,
 
 	FuelLevel,
 
 	VehicleSpeed,
+	WheelSpeedLF,
+	WheelSpeedRF,
+	WheelSpeedLR,
+	WheelSpeedRR,
 
 	TurbochargerSpeed,
 
@@ -118,6 +126,8 @@ enum class SensorType : unsigned char {
 
 	AuxLinear1,
 	AuxLinear2,
+	AuxLinear3,
+	AuxLinear4,
 
 	// frequency sensors
 	AuxSpeed1,

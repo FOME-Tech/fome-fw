@@ -80,8 +80,8 @@ struct BenchParams {
 };
 
 static void runBench(BenchParams& params) {
-	int onTimeUs = MS2US(maxF(0.1, params.OnTimeMs));
-	int offTimeUs = MS2US(maxF(0.1, params.OffTimeMs));
+	int onTimeUs = MS2US(std::max(0.1f, params.OnTimeMs));
+	int offTimeUs = MS2US(std::max(0.1f, params.OffTimeMs));
 
 	if (onTimeUs > TOO_FAR_INTO_FUTURE_US) {
 		firmwareError(ObdCode::CUSTOM_ERR_BENCH_PARAM, "onTime above limit %dus", TOO_FAR_INTO_FUTURE_US);
@@ -101,8 +101,8 @@ static void runBench(BenchParams& params) {
 		efitick_t endTime = startTime + US2NT(onTimeUs);
 
 		// Schedule both events
-		engine->executor.scheduleByTimestampNt("bstart", nullptr, startTime, {benchOn, params.Pin});
-		engine->executor.scheduleByTimestampNt("bend", nullptr, endTime, {benchOff, params.Pin});
+		engine->scheduler.schedule("bstart", nullptr, startTime, {benchOn, params.Pin});
+		engine->scheduler.schedule("bend", nullptr, endTime, {benchOff, params.Pin});
 
 		// Wait one full cycle time for the event + delay to happen
 		chThdSleepMicroseconds(onTimeUs + offTimeUs);
@@ -245,9 +245,9 @@ void acRelayBench(void) {
 	pinbench(1000.0, 100.0, 1, enginePins.acRelay);
 }
 
-static void mainRelayBench(void) {
+static void mainRelayBench() {
 	// main relay is usually "ON" via FSIO thus bench testing that one is pretty unusual
-	engine->mainRelayBenchStartNt = getTimeNowNt();
+	engine->mainRelayBenchTimer.reset();
 }
 
 static void hpfpValveBench(void) {
@@ -343,69 +343,69 @@ static void handleBenchCategory(uint16_t index) {
 
 static void handleCommandX14(uint16_t index) {
 	switch (index) {
-	case TS_GRAB_TPS_CLOSED:
-		grabTPSIsClosed();
-		return;
-	case TS_GRAB_TPS_WOT:
-		grabTPSIsWideOpen();
-		return;
-	// case 4: tps2_closed
-	// case 5: tps2_wot
-	case TS_GRAB_PEDAL_UP:
+	case COMMAND_X14_GRAB_PEDAL_UP:
 		grabPedalIsUp();
 		return;
-	case TS_GRAB_PEDAL_WOT:
+	case COMMAND_X14_GRAB_PEDAL_DOWN:
 		grabPedalIsWideOpen();
 		return;
-	case TS_RESET_TLE8888:
+	case COMMAND_X14_RESET_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
 		tle8888_req_init();
 #endif
 		return;
-	case 0xA:
+	case COMMAND_X14_WRITE_CONFIG:
 		// cmd_write_config
 #if EFI_INTERNAL_FLASH
 		writeToFlashNow();
 #endif /* EFI_INTERNAL_FLASH */
 		return;
 #if EFI_EMULATE_POSITION_SENSORS
-	case 0xD:
+	case COMMAND_X14_ENABLE_SELF_STIM:
 		enableTriggerStimulator();
 		return;
-	case 0xF:
+	case COMMAND_X14_DISABLE_SELF_STIM:
 		disableTriggerStimulator();
 		return;
-	case 0x13:
+	case COMMAND_X14_ENABLE_EXTERNAL_STIM:
 		enableExternalTriggerStimulator();
 		return;
 #endif // EFI_EMULATE_POSITION_SENSORS
 #if EFI_ELECTRONIC_THROTTLE_BODY
-	case 0xE:
+	case COMMAND_X14_ETB_AUTO_CALIBRATE:
 		etbAutocal(0);
 		return;
-	case 0x11:
+	case COMMAND_X14_ETB2_AUTO_CALIBRATE:
 		etbAutocal(1);
 		return;
-	case 0xC:
+	case COMMAND_X14_ETB_AUTOTUNE:
 		engine->etbAutoTune = true;
 		return;
-	case 0x10:
+	case COMMAND_X14_ETB_AUTOTUNE_STOP:
 		engine->etbAutoTune = false;
 #if EFI_TUNER_STUDIO
 		engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
 #endif // EFI_TUNER_STUDIO
 		return;
-#endif
-	case 0x12:
+	case COMMAND_X14_ETB_DISABLE_JAM_DETECT:
+		engine->etbIgnoreJamProtection = true;
+		return;
+#endif // EFI_ELECTRONIC_THROTTLE_BODY
+	case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:
 		widebandUpdatePending = true;
 		benchSemaphore.signal();
 		return;
-	case 0x15:
+	case COMMAND_X14_BURN_WITHOUT_FLASH:
 #if EFI_PROD_CODE
 		extern bool burnWithoutFlash;
 		burnWithoutFlash = true;
 #endif // EFI_PROD_CODE
 		return;
+#if EFI_SHAFT_POSITION_INPUT
+	case COMMAND_X14_FORCE_RESYNC:
+		engine->triggerCentral.syncAndReport(2, 1);
+		return;
+#endif // EFI_SHAFT_POSITION_INPUT
 	default:
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench x14 %d", index);
 	}

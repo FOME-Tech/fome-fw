@@ -25,14 +25,12 @@
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "sent_state_generated.h"
 #include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
 #include "launch_control.h"
 #include "antilag_system.h"
 #include "trigger_scheduler.h"
-#include "fuel_pump.h"
 #include "main_relay.h"
 #include "ac_control.h"
 #include "type_list.h"
@@ -42,16 +40,20 @@
 #include "harley_acr.h"
 #include "dfco.h"
 #include "fuel_computer.h"
-#include "gear_detector.h"
 #include "advance_map.h"
-#include "fan_control.h"
+#include "ignition_state.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
 #include "vvt.h"
-#include "trip_odometer.h"
+
+#ifndef EFI_BOOTLOADER
+#include "engine_modules_generated.h"
+#endif
+
+#include <functional>
 
 #ifndef EFI_UNIT_TEST
 #error EFI_UNIT_TEST must be defined!
@@ -76,9 +78,6 @@
 #include "global_execution_queue.h"
 #endif /* EFI_UNIT_TEST */
 
-#define FAST_CALLBACK_PERIOD_MS 5
-#define SLOW_CALLBACK_PERIOD_MS 50
-
 struct AirmassModelBase;
 
 #define MAF_DECODING_CACHE_SIZE 256
@@ -96,12 +95,78 @@ struct AirmassModelBase;
 
 class IEtbController;
 
+class LedBlinkingTask : public EngineModule {
+public:
+	void onSlowCallback() override;
+
+private:
+	void updateRunningLed();
+	void updateWarningLed();
+	void updateCommsLed();
+	void updateErrorLed();
+
+	size_t m_commBlinkCounter = 0;
+	size_t m_errorBlinkCounter = 0;
+};
+
+class OneCylinder final {
+public:
+	void updateCylinderNumber(uint8_t index, uint8_t cylinderNumber);
+	void invalidCylinder();
+
+	// Get this cylinder's offset, in positive degrees, from cylinder 1
+	angle_t getAngleOffset() const;
+
+	// **************************
+	//           Fuel
+	// **************************
+
+	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
+	expected<angle_t> computeInjectionAngle() const;
+
+	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
+	mass_t getInjectionMass() const {
+		return m_injectionMass;
+	}
+
+	void setInjectionMass(mass_t m) {
+		m_injectionMass = m;
+	}
+
+	// **************************
+	//         Ignition
+	// **************************
+	void setIgnitionTimingBtdc(angle_t deg) {
+		m_timingAdvance = deg;
+	}
+
+	angle_t getIgnitionTimingBtdc() const {
+		return m_timingAdvance;
+	}
+
+	// Get angle of the spark firing in engine cycle coordinates, relative to #1 TDC
+	angle_t getSparkAngle(angle_t lateAdjustment) const;
+
+private:
+	bool m_valid = false;
+
+	// This cylinder's position in the firing order (0-based)
+	uint8_t m_cylinderIndex = 0;
+	// This cylinder's physical cylinder number (0-based)
+	uint8_t m_cylinderNumber = 0;
+
+	// This cylinder's mechanical TDC offset in degrees after #1
+	angle_t m_baseAngleOffset;
+
+	mass_t m_injectionMass = 0;
+
+	// 10 means 10 degrees BTDC
+	angle_t m_timingAdvance = 0;
+};
+
 class Engine final : public TriggerStateListener {
 public:
 	Engine();
-
-	// todo: technical debt: enableOverdwellProtection #3553
-	bool enableOverdwellProtection = true;
 
 	TunerStudioOutputChannels outputChannels;
 
@@ -112,13 +177,6 @@ public:
 
 	// used by HW CI
 	bool isPwmEnabled = true;
-
-	const char *prevOutputName = nullptr;
-	/**
-	 * ELM327 cannot handle both RX and TX at the same time, we have to stay quite once first ISO/TP packet was detected
-	 * this is a pretty temporary hack only while we are trying ELM327, long term ISO/TP and rusEFI broadcast should find a way to coexists
-	 */
-	bool pauseCANdueToSerial = false;
 
 	PinRepository pinRepository;
 
@@ -140,20 +198,13 @@ public:
 #if EFI_ALTERNATOR_CONTROL
 		AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */
-		FuelPumpController,
 		MainRelayController,
-		IgnitionController,
+		Mockable<IgnitionController>,
 		Mockable<AcController>,
-		FanControl1,
-		FanControl2,
 		PrimeController,
 		DfcoController,
 		HarleyAcr,
 		Mockable<WallFuelController>,
-#if EFI_VEHICLE_SPEED
-		GearDetector,
-		TripOdometer,
-#endif // EFI_VEHICLE_SPEED
 		KnockController,
 		SensorChecker,
 		LimpManager,
@@ -166,6 +217,13 @@ public:
 #if EFI_BOOST_CONTROL
 		BoostController,
 #endif // EFI_BOOST_CONTROL
+		LedBlinkingTask,
+		TpsAccelEnrichment,
+
+		#ifndef EFI_BOOTLOADER
+		#include "modules_list_generated.h"
+		#endif
+
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
 
@@ -199,7 +257,7 @@ public:
 	IgnitionState ignitionState;
 	void resetLua();
 
-	efitick_t startStopStateLastPushTime = 0;
+	efitick_t startStopStateLastPushTime;
 
 #if EFI_SHAFT_POSITION_INPUT
 	void OnTriggerStateProperState(efitick_t nowNt) override;
@@ -208,8 +266,6 @@ public:
 #endif
 
 	void setConfig();
-
-	LocalVersionHolder versionForConfigurationListeners;
 
 	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
 
@@ -224,30 +280,31 @@ public:
 	// a pointer with interface type would make this code nicer but would carry extra runtime
 	// cost to resolve pointer, we use instances as a micro optimization
 #if EFI_SIGNAL_EXECUTOR_ONE_TIMER
-	SingleTimerExecutor executor;
+	SingleTimerExecutor scheduler;
 #endif
 #if EFI_SIGNAL_EXECUTOR_SLEEP
-	SleepExecutor executor;
+	SleepExecutor scheduler;
 #endif
 #if EFI_UNIT_TEST
-	TestExecutor executor;
+	TestExecutor scheduler;
+
+	std::function<void(IgnitionEvent*, bool)> onIgnitionEvent;
 #endif // EFI_UNIT_TEST
 
 #if EFI_ENGINE_CONTROL
 	FuelSchedule injectionEvents;
 	IgnitionEventList ignitionEvents;
 	scheduling_s tdcScheduler[2];
+	OneCylinder cylinders[MAX_CYLINDER_COUNT];
 #endif /* EFI_ENGINE_CONTROL */
 
-    // todo: move to electronic_throttle something?
+	// todo: move to electronic_throttle something?
 	bool etbAutoTune = false;
+	bool etbIgnoreJamProtection = false;
 
 #if EFI_UNIT_TEST
 	bool tdcMarkEnabled = true;
 #endif // EFI_UNIT_TEST
-
-
-	bool slowCallBackWasInvoked = false;
 
 	RpmCalculator rpmCalculator;
 
@@ -259,15 +316,11 @@ public:
 	 */
 	int globalConfigurationVersion = 0;
 
-	TpsAccelEnrichment tpsAccelEnrichment;
-
 #if EFI_SHAFT_POSITION_INPUT
 	TriggerCentral triggerCentral;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-
 	float stftCorrection[STFT_BANK_COUNT] = {0};
-
 
 	void periodicFastCallback();
 	void periodicSlowCallback();
@@ -288,7 +341,6 @@ public:
 	EngineState engineState;
 
 	dc_motors_s dc_motors;
-	sent_state_s sent_state;
 
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM
@@ -299,7 +351,7 @@ public:
 
 
 	SensorsState sensors;
-	efitick_t mainRelayBenchStartNt = 0;
+	Timer mainRelayBenchTimer;
 
 
 	void preCalculate();

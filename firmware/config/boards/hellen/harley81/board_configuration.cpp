@@ -153,7 +153,7 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
 	engineConfiguration->launchActivationMode = CLUTCH_INPUT_LAUNCH;
 // ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
-	engineConfiguration->vrThreshold[0].pin = H144_OUT_PWM4;
+	config->vrThreshold[0].pin = H144_OUT_PWM4;
 }
 
 void boardPrepareForStop() {

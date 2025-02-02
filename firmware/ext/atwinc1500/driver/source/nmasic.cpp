@@ -81,6 +81,8 @@ sint8 chip_apply_conf(uint32 u32Conf)
 	val32 |= rHAVE_XO_XTALGM2_DIS_BIT;
 #endif
 
+	int timeoutCounter = 50;
+
 	val32 |= rHAVE_RESERVED1_BIT;
 	do  {
 		nm_write_reg(rNMI_GP_REG_1, val32);
@@ -91,6 +93,14 @@ sint8 chip_apply_conf(uint32 u32Conf)
 				if(reg == val32)
 					break;
 			}
+
+			timeoutCounter--;
+			if (timeoutCounter == 0) {
+				return M2M_ERR_TIME_OUT;
+			}
+
+			// Not timed out yet, try again, but let other thread have a chance
+			nm_bsp_sleep(10);
 		} else {
 			break;
 		}

@@ -5,22 +5,21 @@
 #include "pch.h"
 
 #include "trigger_central.h"
-#include "map_resize.h"
 
 bool verboseMode = false;
 
-int timeNowUs = 0;
-
-efitimeus_t getTimeNowUs() {
-	return timeNowUs;
-}
-
-efitimesec_t getTimeNowS() {
-	return getTimeNowUs() / 1000 / 1000;
-}
+static efitick_t timeNowNt;
 
 efitick_t getTimeNowNt() {
-	return getTimeNowUs() * US_TO_NT_MULTIPLIER;
+	return timeNowNt;
+}
+
+void setTimeNowUs(int us) {
+	timeNowNt = US2NT(us).count();
+}
+
+void advanceTimeUs(int us) {
+	timeNowNt += US2NT(us);
 }
 
 void initLogging(LoggingWithStorage *logging, const char *name) {

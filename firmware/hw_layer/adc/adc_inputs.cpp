@@ -33,14 +33,9 @@ float __attribute__((weak)) getAnalogInputDividerCoefficient(adc_channel_e) {
 #include "periodic_thread_controller.h"
 #include "protected_gpio.h"
 
-/* Depth of the conversion buffer, channels are sampled X times each.*/
-#ifndef ADC_BUF_DEPTH_FAST
-#define ADC_BUF_DEPTH_FAST      4
-#endif
-
 static NO_CACHE adcsample_t slowAdcSamples[SLOW_ADC_CHANNEL_COUNT];
 
-static adc_channel_mode_e adcHwChannelEnabled[HW_MAX_ADC_INDEX];
+static AdcChannelMode adcHwChannelEnabled[HW_MAX_ADC_INDEX];
 
 // Board voltage, with divider coefficient accounted for
 float getVoltageDivided(const char *msg, adc_channel_e hwChannel) {
@@ -71,15 +66,7 @@ AdcDevice::AdcDevice(ADCConversionGroup* hwConfig, adcsample_t *buf, size_t buf_
 
 #endif // EFI_USE_FAST_ADC
 
-// is there a reason to have this configurable at runtime?
-#ifndef ADC_FAST_DEVICE
-#define ADC_FAST_DEVICE ADCD2
-#endif /* ADC_FAST_DEVICE */
-
 static uint32_t slowAdcCounter = 0;
-
-// todo: move this flag to Engine god object
-static int adcDebugReporting = false;
 
 static adcsample_t getAvgAdcValue(int index, adcsample_t *samples, int bufDepth, int numChannels) {
 	uint32_t result = 0;
@@ -97,85 +84,7 @@ static adcsample_t getAvgAdcValue(int index, adcsample_t *samples, int bufDepth,
 #define ADC_SAMPLING_FAST ADC_SAMPLE_28
 
 #if EFI_USE_FAST_ADC
-static void adc_callback_fast(ADCDriver *adcp) {
-	// State may not be complete if we get a callback for "half done"
-	if (adcp->state == ADC_COMPLETE) {
-		onFastAdcComplete(adcp->samples);
-	}
-}
-
-static ADCConversionGroup adcgrpcfgFast = {
-	.circular			= FALSE,
-	.num_channels		= 0,
-	.end_cb				= adc_callback_fast,
-	.error_cb			= nullptr,
-	/* HW dependent part.*/
-	.cr1				= 0,
-	.cr2				= ADC_CR2_SWSTART,
-		/**
-		 * here we configure all possible channels for fast mode. Some channels would not actually
-         * be used hopefully that's fine to configure all possible channels.
-		 *
-		 */
-	// sample times for channels 10...18
-	.smpr1 =
-		ADC_SMPR1_SMP_AN10(ADC_SAMPLING_FAST) |
-		ADC_SMPR1_SMP_AN11(ADC_SAMPLING_FAST) |
-		ADC_SMPR1_SMP_AN12(ADC_SAMPLING_FAST) |
-		ADC_SMPR1_SMP_AN13(ADC_SAMPLING_FAST) |
-		ADC_SMPR1_SMP_AN14(ADC_SAMPLING_FAST) |
-		ADC_SMPR1_SMP_AN15(ADC_SAMPLING_FAST),
-	// In this field must be specified the sample times for channels 0...9
-	.smpr2 =
-		ADC_SMPR2_SMP_AN0(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN1(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN2(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN3(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN4(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN5(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN6(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN7(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN8(ADC_SAMPLING_FAST) |
-		ADC_SMPR2_SMP_AN9(ADC_SAMPLING_FAST),
-	.htr				= 0,
-	.ltr				= 0,
-	.sqr1				= 0, // Conversion group sequence 13...16 + sequence length
-	.sqr2				= 0, // Conversion group sequence 7...12
-	.sqr3				= 0, // Conversion group sequence 1...6
-#if ADC_MAX_CHANNELS_COUNT > 16
-	.sqr4				= 0, // Conversion group sequence 19...24
-	.sqr5				= 0  // Conversion group sequence 25...30
-#endif /* ADC_MAX_CHANNELS_COUNT */
-};
-
-static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
-AdcDevice fastAdc(&adcgrpcfgFast, fastAdcSampleBuf, efi::size(fastAdcSampleBuf));
-
-static void fast_adc_callback(GPTDriver*) {
-#if EFI_INTERNAL_ADC
-	/*
-	 * Starts an asynchronous ADC conversion operation, the conversion
-	 * will be executed in parallel to the current PWM cycle and will
-	 * terminate before the next PWM cycle.
-	 */
-	chSysLockFromISR()
-	;
-	if (ADC_FAST_DEVICE.state != ADC_READY &&
-	ADC_FAST_DEVICE.state != ADC_COMPLETE &&
-	ADC_FAST_DEVICE.state != ADC_ERROR) {
-		fastAdc.errorsCount++;
-		// todo: when? why? firmwareError(ObdCode::OBD_PCM_Processor_Fault, "ADC fast not ready?");
-		chSysUnlockFromISR()
-		;
-		return;
-	}
-
-	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdc.m_samples, ADC_BUF_DEPTH_FAST);
-	chSysUnlockFromISR()
-	;
-	fastAdc.conversionCount++;
-#endif /* EFI_INTERNAL_ADC */
-}
+extern AdcDevice fastAdc;
 #endif // EFI_USE_FAST_ADC
 
 static float mcuTemperature;
@@ -191,7 +100,7 @@ int getInternalAdcValue(const char *msg, adc_channel_e hwChannel) {
 	}
 
 #if EFI_USE_FAST_ADC
-	if (adcHwChannelEnabled[hwChannel] == ADC_FAST) {
+	if (adcHwChannelEnabled[hwChannel] == AdcChannelMode::Fast) {
 		int internalIndex = fastAdc.internalAdcIndexByHardwareIndex[hwChannel];
 // todo if ADC_BUF_DEPTH_FAST EQ 1
 //		return fastAdc.samples[internalIndex];
@@ -201,24 +110,6 @@ int getInternalAdcValue(const char *msg, adc_channel_e hwChannel) {
 #endif // EFI_USE_FAST_ADC
 
 	return slowAdcSamples[hwChannel - EFI_ADC_0];
-}
-
-#if EFI_USE_FAST_ADC
-static GPTConfig fast_adc_config = {
-	GPT_FREQ_FAST,
-	fast_adc_callback,
-	0, 0
-};
-#endif /* EFI_USE_FAST_ADC */
-
-adc_channel_mode_e getAdcMode(adc_channel_e hwChannel) {
-#if EFI_USE_FAST_ADC
-	if (fastAdc.isHwUsed(hwChannel)) {
-		return ADC_FAST;
-	}
-#endif // EFI_USE_FAST_ADC
-
-	return ADC_SLOW;
 }
 
 #if EFI_USE_FAST_ADC
@@ -257,30 +148,22 @@ void AdcDevice::enableChannel(adc_channel_e hwChannel) {
 		return;
 	}
 
-	int logicChannel = channelCount++;
+	// hwChannel = which external pin are we using
+	// adcChannelIndex = which ADC channel are we using
+	// adcIndex = which index does that get in sampling order
+	size_t adcChannelIndex = hwChannel - EFI_ADC_0;
+	size_t adcIndex = channelCount++;
 
-	/* TODO: following is correct for STM32 ADC1/2.
-	 * ADC3 has another input to gpio mapping
-	 * and should be handled separately */
-	size_t channelAdcIndex = hwChannel - EFI_ADC_0;
+	internalAdcIndexByHardwareIndex[hwChannel] = adcIndex;
+	hardwareIndexByIndernalAdcIndex[adcIndex] = hwChannel;
 
-	internalAdcIndexByHardwareIndex[hwChannel] = logicChannel;
-	hardwareIndexByIndernalAdcIndex[logicChannel] = hwChannel;
-	if (logicChannel < 6) {
-		m_hwConfig->sqr3 |= channelAdcIndex << (5 * logicChannel);
-	} else if (logicChannel < 12) {
-		m_hwConfig->sqr2 |= channelAdcIndex << (5 * (logicChannel - 6));
-	} else if (logicChannel < 18) {
-		m_hwConfig->sqr1 |= channelAdcIndex << (5 * (logicChannel - 12));
+	if (adcIndex < 6) {
+		m_hwConfig->sqr3 |= adcChannelIndex << (5 * adcIndex);
+	} else if (adcIndex < 12) {
+		m_hwConfig->sqr2 |= adcChannelIndex << (5 * (adcIndex - 6));
+	} else if (adcIndex < 18) {
+		m_hwConfig->sqr1 |= adcChannelIndex << (5 * (adcIndex - 12));
 	}
-#if ADC_MAX_CHANNELS_COUNT > 16
-	else if (logicChannel < 24) {
-		m_hwConfig->sqr4 |= channelAdcIndex << (5 * (logicChannel - 18));
-	}
-	else if (logicChannel < 30) {
-		m_hwConfig->sqr5 |= channelAdcIndex << (5 * (logicChannel - 24));
-	}
-#endif /* ADC_MAX_CHANNELS_COUNT */
 }
 
 adc_channel_e AdcDevice::getAdcHardwareIndexByInternalIndex(int index) const {
@@ -295,50 +178,6 @@ static void printAdcValue(int channel) {
 	efiPrintf("adc voltage : %.2f", volts);
 }
 
-static uint32_t slowAdcConversionCount = 0;
-static uint32_t slowAdcErrorsCount = 0;
-
-void printFullAdcReport(void) {
-#if EFI_USE_FAST_ADC
-	efiPrintf("fast %d samples", fastAdc.conversionCount);
-
-	for (int internalIndex = 0; internalIndex < fastAdc.size(); internalIndex++) {
-		adc_channel_e hwIndex = fastAdc.getAdcHardwareIndexByInternalIndex(internalIndex);
-
-		if (isAdcChannelValid(hwIndex)) {
-			ioportid_t port = getAdcChannelPort("print", hwIndex);
-			int pin = getAdcChannelPin(hwIndex);
-			int adcValue = getAvgAdcValue(internalIndex, fastAdc.m_samples, ADC_BUF_DEPTH_FAST, fastAdc.size());
-			float volts = adcToVolts(adcValue);
-			/* Human index starts from 1 */
-			efiPrintf(" F ch[%2d] @ %s%d ADC%d 12bit=%4d %.2fV",
-				internalIndex, portname(port), pin, hwIndex - EFI_ADC_0 + 1, adcValue, volts);
-		}
-	}
-#endif // EFI_USE_FAST_ADC
-	efiPrintf("slow %d samples", slowAdcConversionCount);
-
-	/* we assume that all slow ADC channels are enabled */
-	for (int internalIndex = 0; internalIndex < ADC_MAX_CHANNELS_COUNT; internalIndex++) {
-		adc_channel_e hwIndex = static_cast<adc_channel_e>(internalIndex + EFI_ADC_0);
-
-		if (isAdcChannelValid(hwIndex)) {
-			ioportid_t port = getAdcChannelPort("print", hwIndex);
-			int pin = getAdcChannelPin(hwIndex);
-			int adcValue = slowAdcSamples[internalIndex];
-			float volts = adcToVolts(adcValue);
-			/* Human index starts from 1 */
-			efiPrintf(" S ch[%2d] @ %s%d ADC%d 12bit=%4d %.2fV",
-				internalIndex, portname(port), pin, hwIndex - EFI_ADC_0 + 1, adcValue, volts);
-		}
-	}
-}
-
-static void setAdcDebugReporting(int value) {
-	adcDebugReporting = value;
-	efiPrintf("adcDebug=%d", adcDebugReporting);
-}
-
 void waitForSlowAdc(uint32_t lastAdcCounter) {
 	// we use slowAdcCounter instead of slowAdc.conversionCount because we need ADC_COMPLETE state
 	// todo: use sync.objects?
@@ -347,123 +186,66 @@ void waitForSlowAdc(uint32_t lastAdcCounter) {
 	}
 }
 
-int getSlowAdcCounter() {
-	return slowAdcCounter;
+void updateSlowAdc(efitick_t nowNt) {
+	{
+		ScopePerf perf(PE::AdcConversionSlow);
+
+		if (!readSlowAnalogInputs(slowAdcSamples)) {
+			return;
+		}
+
+		// Ask the port to sample the MCU temperature
+		mcuTemperature = getMcuTemperature();
+	}
+
+	{
+		ScopePerf perf(PE::AdcProcessSlow);
+
+		slowAdcCounter++;
+
+		AdcSubscription::UpdateSubscribers(nowNt);
+
+		protectedGpio_check(nowNt);
+	}
 }
 
-
-class SlowAdcController : public PeriodicController<256> {
-public:
-	SlowAdcController() 
-		: PeriodicController("ADC", PRIO_ADC, SLOW_ADC_RATE)
-	{
-	}
-
-	void PeriodicTask(efitick_t nowNt) override {
-		{
-			ScopePerf perf(PE::AdcConversionSlow);
-
-			slowAdcConversionCount++;
-			if (!readSlowAnalogInputs(slowAdcSamples)) {
-				slowAdcErrorsCount++;
-				return;
-			}
-
-			// Ask the port to sample the MCU temperature
-			mcuTemperature = getMcuTemperature();
-		}
-
-		{
-			ScopePerf perf(PE::AdcProcessSlow);
-
-			slowAdcCounter++;
-
-			AdcSubscription::UpdateSubscribers(nowNt);
-
-			protectedGpio_check(nowNt);
-		}
-	}
-};
-
-void addChannel(const char* /*name*/, adc_channel_e setting, adc_channel_mode_e mode) {
+static void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
 	if (!isAdcChannelValid(setting)) {
 		return;
 	}
 
-	adcHwChannelEnabled[setting] = mode;
+	adcHwChannelEnabled[setting] = AdcChannelMode::Fast;
 
 #if EFI_USE_FAST_ADC
-	if (mode == ADC_FAST) {
-		fastAdc.enableChannel(setting);
-		return;
-	}
+	fastAdc.enableChannel(setting);
 #endif
-
-	// Nothing to do for slow channels, input is mapped to analog in init_sensors.cpp
 }
 
-void removeChannel(const char *name, adc_channel_e setting) {
+static void removeFastAdcChannel(const char *name, adc_channel_e setting) {
 	(void)name;
 	if (!isAdcChannelValid(setting)) {
 		return;
 	}
-	adcHwChannelEnabled[setting] = ADC_OFF;
+
+	adcHwChannelEnabled[setting] = AdcChannelMode::Off;
 }
-
-// Weak link a stub so that every board doesn't have to implement this function
-__attribute__((weak)) void setAdcChannelOverrides() { }
-
-static void configureInputs() {
-	memset(adcHwChannelEnabled, 0, sizeof(adcHwChannelEnabled));
-
-	/**
-	 * order of analog channels here is totally random and has no meaning
-	 * we also have some weird implementation with internal indices - that all has no meaning, it's just a random implementation
-	 * which does not mean anything.
-	 */
-
-	addChannel("MAP", engineConfiguration->map.sensor.hwChannel, ADC_FAST);
-
-	// not currently used	addChannel("Vref", engineConfiguration->vRefAdcChannel, ADC_SLOW);
-
-	addChannel("AUXF#1", engineConfiguration->auxFastSensor1_adcChannel, ADC_FAST);
-
-	setAdcChannelOverrides();
-}
-
-static CCM_OPTIONAL SlowAdcController slowAdcController;
 
 void initAdcInputs() {
 	efiPrintf("initAdcInputs()");
 
-	configureInputs();
+	memset(adcHwChannelEnabled, 0, sizeof(adcHwChannelEnabled));
 
-	// migrate to 'enable adcdebug'
-	addConsoleActionI("adcdebug", &setAdcDebugReporting);
+	addFastAdcChannel("MAP", engineConfiguration->map.sensor.hwChannel);
 
 #if EFI_INTERNAL_ADC
 	portInitAdc();
 
-	// Start the slow ADC thread
-	slowAdcController.start();
-
 #if EFI_USE_FAST_ADC
 	fastAdc.init();
-
-	gptStart(EFI_INTERNAL_FAST_ADC_GPT, &fast_adc_config);
-	gptStartContinuous(EFI_INTERNAL_FAST_ADC_GPT, GPT_PERIOD_FAST);
 #endif // EFI_USE_FAST_ADC
 
 	addConsoleActionI("adc", (VoidInt) printAdcValue);
-#else
-	efiPrintf("ADC disabled");
 #endif
-}
-
-void printFullAdcReportIfNeeded(void) {
-	if (!adcDebugReporting)
-		return;
-	printFullAdcReport();
 }
 
 #else /* not HAL_USE_ADC */

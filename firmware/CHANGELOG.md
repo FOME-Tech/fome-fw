@@ -30,17 +30,50 @@ or
 
 ## Unreleased
 
+### Breaking Changes
+ - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
+
+### Added
+ - Support Miata NA CAS "CMP" signal as a cam input (if you've installed a 36-1 crank trigger on an NA, for example) #495
+ - Support 4 independent wideband O2 channels, and 4 fuel trim banks
+ - Flash error codes for some sensors using the check engine light #526
+
+### Fixed
+ - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
+
+## September 2024 Release
+
 ### Added
  - Staged injection: a second set of fuel injectors that inject part of the fuel load when you run out of primary injector
  - VE/Ign/Boost blend tables can select a Y axis override for even more flexibility
  - Added Lua function `getAuxDigital` for parity with rusEFI #351
- - Optional table to change after start idle taper time #369 (thank you, Krakert!)
+ - Optional table to change after start idle taper time #369 (thank you, @Krakert!)
  - Increased precision available for Lua tables
+ - Add EGT values to CAN broadcast format #398
+ - Add options to enable/disable optional CAN frames (cams, EGT so far)
+ - Add 1-5-4-8-3-7-2-6 and 1-6-5-10-2-7-3-8-4-9 firing orders
+ - Console command `set_sensor_mock` now accepts a sensor by name, instead of index. Example: `set_sensor_mock CLT 85.5`
+ - TunerStudio UI improvements (#436, etc)
+ - Dropdown selector for popular gearbox ratios (#358, thank you @alrijleh and @nmschulte!)
+ - Add two more aux linear sensors #476
+ - Support wasted spark on odd cylinder count and odd-fire engines. Improves startup and allows running without a cam sensor!
+ - Add an option for the DFCO MAP threshold to use a table dependent upon RPM #485 (thank you @alrijleh!)
+ - Option to disable DFCO on gear shift #487
+ - Ability to use an 8x8 table for after-start fuel multiplier that depends on CLT and engine run time
+ - Start-up tachometer sweep!
 
 ### Fixed
  - Improve performance with Lua CAN reception of a high volume of frames
  - Displayed units in TunerStudio change when switching between volume vs. mass injector flow modes #42
  - Make Toyota "3 Tooth Cam" decoder more robust #382
+ - Flex sensor-derived fuel temperature indication works properly
+ - Fix a scenario where noisy trigger can cause overdwell [rusefi/rusefi#6349](https://github.com/rusefi/rusefi/issues/6349)
+ - Fix decel fuel cutoff (DFCO) on engines without a MAP sensor #457
+ - Automatic calculation of knock sense frequency based on cylinder bore #379
+ - Removed MAP sampling option that can result in inaccurate MAP sensor readings
+ - Improve TunerStudio performance on STM32F4-based ECUs #474
+ - Inhibit VVT control if the cam position sensor dies
+ - Fix "Alpha-N IAT density correction" option
 
 ## December 2023 Release
 

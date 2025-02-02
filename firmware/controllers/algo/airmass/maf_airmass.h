@@ -4,12 +4,12 @@
 
 class MafAirmass final : public AirmassVeModelBase {
 public:
-	explicit MafAirmass(const ValueProvider3D& veTable) : AirmassVeModelBase(veTable) {}
+	explicit MafAirmass(const ValueProvider3D* veTable = nullptr) : AirmassVeModelBase(veTable) {}
 
-	AirmassResult getAirmass(int rpm, bool postState) override;
+	AirmassResult getAirmass(float rpm, bool postState) override;
 
 	// Compute airmass based on flow & engine speed
-	AirmassResult getAirmassImpl(float massAirFlow, int rpm, bool postState) const;
+	AirmassResult getAirmassImpl(float massAirFlow, float rpm, bool postState) const;
 
 private:
 	float getMaf() const;

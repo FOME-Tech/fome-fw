@@ -129,7 +129,6 @@ void miataNAcommonEngineSettings() {
 	engineConfiguration->idleRpmPid.pFactor = 0.01;
 	engineConfiguration->idleRpmPid.iFactor = 0.00001;
 	engineConfiguration->idleRpmPid.dFactor = 0.0001;
-	engineConfiguration->idleRpmPid.periodMs = 100;
 
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->idleTimingPid.pFactor = 0.1;
@@ -189,11 +188,11 @@ void miataNAcommonEngineSettings() {
 
 	// Vehicle speed/gears
 	engineConfiguration->totalGearsCount = 5;
-	engineConfiguration->gearRatio[0] = 3.136;
-	engineConfiguration->gearRatio[1] = 1.888;
-	engineConfiguration->gearRatio[2] = 1.330;
-	engineConfiguration->gearRatio[3] = 1.000;
-	engineConfiguration->gearRatio[4] = 0.814;
+	engineConfiguration->gearRatio[0] = 3.14;
+	engineConfiguration->gearRatio[1] = 1.89;
+	engineConfiguration->gearRatio[2] = 1.33;
+	engineConfiguration->gearRatio[3] = 1.00;
+	engineConfiguration->gearRatio[4] = 0.81;
 
 	// These may need to change based on your real car
 	engineConfiguration->driveWheelRevPerKm = 551;
@@ -248,10 +247,6 @@ void setMiataNA6_MAP_Frankenso() {
 	// yellow wire from 1V/W22 to bottom of W48
 	engineConfiguration->clutchDownPin = Gpio::A3;
 	engineConfiguration->clutchDownPinMode = PI_PULLUP;
-
-
-	// 110mm red wire from 1N/W14 to bottom of W45
-	engineConfiguration->throttlePedalUpPin = Gpio::A7;
 
 	// green wire from 1Q/W17 to bottom of W46
 	engineConfiguration->acSwitch = Gpio::A6;

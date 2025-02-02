@@ -1,18 +1,15 @@
 struct_no_prefix launch_control_state_s
+	int retardThresholdRpm;Launch control: Retard threshold RPM
 
-int retardThresholdRpm
+	bit combinedConditions;Launch control: combinedConditions
+	bit launchActivatePinState;Launch control: launchActivatePinState
+	bit isLaunchCondition;Launch control: isLaunchCondition
+	bit isSwitchActivated;Launch control: isSwitchActivated
+	bit isClutchActivated;Launch control: isClutchActivated
+	bit isValidInputPin;Launch control: isValidInputPin
 
-bit combinedConditions
-bit launchActivatePinState
-bit isLaunchCondition
-bit isSwitchActivated
-bit isClutchActivated
-bit isValidInputPin
-
-bit     activateSwitchCondition;
-bit     rpmCondition;
-bit     speedCondition;
-bit     tpsCondition;
-
-
+	bit activateSwitchCondition;Launch control: activateSwitchCondition
+	bit rpmCondition;Launch control: rpmCondition
+	bit speedCondition;Launch control: speedCondition
+	bit tpsCondition;Launch control: tpsCondition
 end_struct

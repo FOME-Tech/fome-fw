@@ -26,7 +26,7 @@ static int find_position(ObdCode e_code)							// Search if code is present
 	return -1;														// -1 if code not found
 }
 
-void clearWarnings(void) {
+void clearWarnings() {
 	error_codes_set.count = 0;
 }
 

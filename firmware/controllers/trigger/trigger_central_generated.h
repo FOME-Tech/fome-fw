@@ -1,41 +1,34 @@
 #pragma once
 #include "rusefi_types.h"
 struct trigger_central_s {
-	// Hardware events since boot
 	// offset 0
-	uint32_t hwEventCounters[6];
-	// offset 24
-	uint32_t vvtCamCounter = (uint32_t)0;
-	// offset 28
 	float mapVvt_MAP_AT_SPECIAL_POINT = (float)0;
-	// offset 32
+	// offset 4
 	float mapVvt_MAP_AT_DIFF = (float)0;
-	// offset 36
+	// offset 8
 	uint8_t mapVvt_MAP_AT_CYCLE_COUNT = (uint8_t)0;
-	// offset 37
+	// offset 9
 	uint8_t mapVvt_map_peak = (uint8_t)0;
-	// offset 38
-	uint8_t alignmentFill_at_38[2];
+	// Trg: Ignored tooth count
+	// offset 10
+	uint8_t triggerIgnoredToothCount = (uint8_t)0;
+	// offset 11
+	uint8_t alignmentFill_at_11[1];
 	// Engine Phase
 	// deg
-	// offset 40
+	// offset 12
 	float currentEngineDecodedPhase = (float)0;
+	// Trg: Tooth angle error
 	// deg
-	// offset 44
+	// offset 16
 	float triggerToothAngleError = (float)0;
-	// offset 48
-	uint8_t triggerIgnoredToothCount = (uint8_t)0;
-	// offset 49
-	uint8_t alignmentFill_at_49[3];
 };
-static_assert(sizeof(trigger_central_s) == 52);
-static_assert(offsetof(trigger_central_s, hwEventCounters) == 0);
-static_assert(offsetof(trigger_central_s, vvtCamCounter) == 24);
-static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_SPECIAL_POINT) == 28);
-static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_DIFF) == 32);
-static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_CYCLE_COUNT) == 36);
-static_assert(offsetof(trigger_central_s, mapVvt_map_peak) == 37);
-static_assert(offsetof(trigger_central_s, currentEngineDecodedPhase) == 40);
-static_assert(offsetof(trigger_central_s, triggerToothAngleError) == 44);
-static_assert(offsetof(trigger_central_s, triggerIgnoredToothCount) == 48);
+static_assert(sizeof(trigger_central_s) == 20);
+static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_SPECIAL_POINT) == 0);
+static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_DIFF) == 4);
+static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_CYCLE_COUNT) == 8);
+static_assert(offsetof(trigger_central_s, mapVvt_map_peak) == 9);
+static_assert(offsetof(trigger_central_s, triggerIgnoredToothCount) == 10);
+static_assert(offsetof(trigger_central_s, currentEngineDecodedPhase) == 12);
+static_assert(offsetof(trigger_central_s, triggerToothAngleError) == 16);
 

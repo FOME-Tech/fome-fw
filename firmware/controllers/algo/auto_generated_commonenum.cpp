@@ -62,17 +62,6 @@ case SelectedGear::Reverse:
   }
  return NULL;
 }
-const char *getSentEtbType(SentEtbType value){
-switch(value) {
-case SentEtbType::FORD_TYPE_1:
-  return "FORD_TYPE_1";
-case SentEtbType::GM_TYPE_1:
-  return "GM_TYPE_1";
-case SentEtbType::NONE:
-  return "NONE";
-  }
- return NULL;
-}
 const char *getTransmissionControllerMode(TransmissionControllerMode value){
 switch(value) {
 case TransmissionControllerMode::Gm4l6x:
@@ -114,6 +103,19 @@ case TsCalMode::Tps2SecondaryMax:
   return "Tps2SecondaryMax";
 case TsCalMode::Tps2SecondaryMin:
   return "Tps2SecondaryMin";
+  }
+ return NULL;
+}
+const char *getWssToVssMode(WssToVssMode value){
+switch(value) {
+case WssToVssMode::AverageAll:
+  return "AverageAll";
+case WssToVssMode::AverageFront:
+  return "AverageFront";
+case WssToVssMode::AverageRear:
+  return "AverageRear";
+case WssToVssMode::None:
+  return "None";
   }
  return NULL;
 }
@@ -247,6 +249,10 @@ case BMW_e46:
   return "BMW_e46";
 case BMW_e90:
   return "BMW_e90";
+case CanVssLast:
+  return "CanVssLast";
+case Mx5_NC:
+  return "Mx5_NC";
 case W202:
   return "W202";
   }
@@ -333,6 +339,10 @@ case GPPWM_AuxLinear1:
   return "GPPWM_AuxLinear1";
 case GPPWM_AuxLinear2:
   return "GPPWM_AuxLinear2";
+case GPPWM_AuxLinear3:
+  return "GPPWM_AuxLinear3";
+case GPPWM_AuxLinear4:
+  return "GPPWM_AuxLinear4";
 case GPPWM_AuxTemp1:
   return "GPPWM_AuxTemp1";
 case GPPWM_AuxTemp2:
@@ -343,6 +353,10 @@ case GPPWM_Clt:
   return "GPPWM_Clt";
 case GPPWM_DetectedGear:
   return "GPPWM_DetectedGear";
+case GPPWM_Egt1:
+  return "GPPWM_Egt1";
+case GPPWM_Egt2:
+  return "GPPWM_Egt2";
 case GPPWM_EthanolPercent:
   return "GPPWM_EthanolPercent";
 case GPPWM_FuelLoad:
@@ -379,6 +393,8 @@ case GPPWM_VVT_2I:
   return "GPPWM_VVT_2I";
 case GPPWM_Vbatt:
   return "GPPWM_Vbatt";
+case GPPWM_VehicleSpeed:
+  return "GPPWM_VehicleSpeed";
 case GPPWM_Zero:
   return "GPPWM_Zero";
   }
@@ -414,23 +430,6 @@ case IM_AUTO:
   return "IM_AUTO";
 case IM_MANUAL:
   return "IM_MANUAL";
-  }
- return NULL;
-}
-const char *getIdle_state_e(idle_state_e value){
-switch(value) {
-case BLIP:
-  return "BLIP";
-case INIT:
-  return "INIT";
-case PID_UPPER:
-  return "PID_UPPER";
-case PID_VALUE:
-  return "PID_VALUE";
-case RPM_DEAD_ZONE:
-  return "RPM_DEAD_ZONE";
-case TPS_THRESHOLD:
-  return "TPS_THRESHOLD";
   }
  return NULL;
 }
@@ -568,8 +567,6 @@ case OM_OPENDRAIN_INVERTED:
 }
 const char *getSensor_chart_e(sensor_chart_e value){
 switch(value) {
-case SC_AUX_FAST1:
-  return "SC_AUX_FAST1";
 case SC_DETAILED_RPM:
   return "SC_DETAILED_RPM";
 case SC_OFF:
@@ -701,8 +698,12 @@ case VVT_INACTIVE:
   return "VVT_INACTIVE";
 case VVT_MAP_V_TWIN:
   return "VVT_MAP_V_TWIN";
+case VVT_MAZDA_L:
+  return "VVT_MAZDA_L";
 case VVT_MAZDA_SKYACTIV:
   return "VVT_MAZDA_SKYACTIV";
+case VVT_MIATA_NA:
+  return "VVT_MIATA_NA";
 case VVT_MIATA_NB:
   return "VVT_MIATA_NB";
 case VVT_MITSUBISHI_3A92:

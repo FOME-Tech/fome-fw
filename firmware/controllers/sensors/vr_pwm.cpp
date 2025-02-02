@@ -10,8 +10,8 @@ static SimplePwm pwms[VR_THRESHOLD_COUNT];
 #define VR_SUPPLY_VOLTAGE 3.3f
 #endif
 
-static void updateVrPwm(int rpm, size_t index) {
-	auto& cfg = engineConfiguration->vrThreshold[index];
+static void updateVrPwm(float rpm, size_t index) {
+	auto& cfg = config->vrThreshold[index];
 
 	if (!isBrainPinValid(cfg.pin)) {
 		return;
@@ -31,21 +31,21 @@ static void updateVrPwm(int rpm, size_t index) {
 void updateVrPwm() {
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
 
-	for (size_t i = 0; i < efi::size(engineConfiguration->vrThreshold); i++) {
+	for (size_t i = 0; i < efi::size(config->vrThreshold); i++) {
 		updateVrPwm(rpm, i);
 	}
 }
 
 void initVrPwm() {
-	for (size_t i = 0; i < efi::size(engineConfiguration->vrThreshold); i++) {
-		auto& cfg = engineConfiguration->vrThreshold[i];
+	for (size_t i = 0; i < efi::size(config->vrThreshold); i++) {
+		auto& cfg = config->vrThreshold[i];
 
 		if (!isBrainPinValid(cfg.pin)) {
 			continue;
 		}
 
 		startSimplePwmHard(&pwms[i], "VR PWM",
-			&engine->executor,
+			&engine->scheduler,
 			cfg.pin,
 			&pins[i],
 			10000,	// it's guaranteed to be hardware PWM, the faster the PWM, the less noise makes it through
@@ -55,8 +55,8 @@ void initVrPwm() {
 }
 
 void setDefaultVrThresholds() {
-	for (int i = 0;i<VR_THRESHOLD_COUNT;i++) {
-		setLinearCurve(engineConfiguration->vrThreshold[i].rpmBins, 600, 7000, 100);
-		setLinearCurve(engineConfiguration->vrThreshold[i].values, 0.6, 1.2, 0.1);
+	for (int i = 0; i < VR_THRESHOLD_COUNT; i++) {
+		setLinearCurve(config->vrThreshold[i].rpmBins, 600, 7000, 100);
+		setLinearCurve(config->vrThreshold[i].values, 0.6, 1.2, 0.1);
 	}
 }

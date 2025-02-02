@@ -11,7 +11,6 @@
 #include "global.h"
 
 #define INITIAL_PIN_STATE -1
-#define GPIO_NULL NULL
 
 // mode >= 0  is always true since that's an unsigned
 #define assertOMode(mode) { \
@@ -38,8 +37,6 @@ EXTERNC bool efiReadPin(brain_pin_e pin);
 EXTERNC iomode_t getInputMode(pin_input_mode_e mode);
 
 #endif /* EFI_GPIO_HARDWARE */
-
-void writePad(const char *msg, brain_pin_e pin, int bit);
 
 #if ! EFI_PROD_CODE
 #define BRAIN_PIN_COUNT (1 << 8 * sizeof(brain_pin_e))

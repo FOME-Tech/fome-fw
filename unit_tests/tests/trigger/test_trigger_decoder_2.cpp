@@ -38,7 +38,7 @@ static auto makeTriggerShape(operation_mode_e mode, const TriggerConfiguration& 
 	return shape;
 }
 
-#define doTooth(dut, shape, cfg, t) dut.decodeTriggerEvent("", shape, nullptr, cfg, SHAFT_PRIMARY_RISING, t)
+#define doTooth(dut, shape, cfg, t) dut.decodeTriggerEvent("", shape, nullptr, cfg, TriggerEvent::PrimaryRising, t)
 
 TEST(TriggerDecoder, FindsFirstSyncPoint) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
@@ -177,14 +177,14 @@ TEST(TriggerDecoder, TooManyTeeth_CausesError) {
 	doTooth(dut, shape, cfg, t);
 	EXPECT_TRUE(dut.getShaftSynchronized());
 	EXPECT_EQ(4, dut.currentCycle.current_index);
-	EXPECT_EQ(0, dut.totalTriggerErrorCounter);
+	EXPECT_EQ(0, dut.triggerErrorCounter);
 
 	// This tooth is extra - expect a call to onTriggerError() and loss of sync!
 	t += MS2NT(1);
 	doTooth(dut, shape, cfg, t);
 	EXPECT_FALSE(dut.getShaftSynchronized());
 	EXPECT_EQ(6, dut.currentCycle.current_index);
-	EXPECT_EQ(1, dut.totalTriggerErrorCounter);
+	EXPECT_EQ(1, dut.triggerErrorCounter);
 
 	// Fire some normal revolutions to ensure we recover without additional error types.
 	for (size_t i = 0; i < 10; i++) {
@@ -251,7 +251,7 @@ TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
 	EXPECT_TRUE(dut.getShaftSynchronized());
 	EXPECT_EQ(2, dut.currentCycle.current_index);
 	EXPECT_FALSE(dut.someSortOfTriggerError());
-	EXPECT_EQ(0, dut.totalTriggerErrorCounter);
+	EXPECT_EQ(0, dut.triggerErrorCounter);
 
 	// Missing tooth, but it comes early - not enough teeth have happened yet!
 	t += MS2NT(2);
@@ -260,7 +260,7 @@ TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
 	// Sync is lost until we get to another sync point
 	EXPECT_FALSE(dut.getShaftSynchronized());
 	EXPECT_EQ(0, dut.currentCycle.current_index);
-	EXPECT_EQ(1, dut.totalTriggerErrorCounter);
+	EXPECT_EQ(1, dut.triggerErrorCounter);
 	EXPECT_TRUE(dut.someSortOfTriggerError());
 
 	// Fire some normal revolutions to ensure we recover without additional error types.
@@ -299,7 +299,7 @@ TEST(TriggerDecoder, PrimaryDecoderNoDisambiguation) {
 	PrimaryTriggerDecoder dut("test");
 
 	// This is not the right place for this, but further refactoring has to happen before it can get moved.
-	dut.setNeedsDisambiguation(shape.needsDisambiguation());
+	dut.setNeedsDisambiguation(shape.needsDisambiguation(), true);
 
 	// Fire a few boring evenly spaced teeth
 	t += MS2NT(1);
@@ -330,7 +330,7 @@ TEST(TriggerDecoder, PrimaryDecoderNeedsDisambiguation) {
 	PrimaryTriggerDecoder dut("test");
 
 	// This is not the right place for this, but further refactoring has to happen before it can get moved.
-	dut.setNeedsDisambiguation(shape.needsDisambiguation());
+	dut.setNeedsDisambiguation(shape.needsDisambiguation(), true);
 
 	// Fire a few boring evenly spaced teeth
 	t += MS2NT(1);

@@ -7,30 +7,15 @@
  * @author Andrey Belomutskiy, (c) 2012-2020
  */
 
-#include <rusefi/interpolation.h>
-#include "engine_configuration.h"
-#include "error_handling.h"
-#include "fuel_computer.h"
-#include "speed_density.h"
-#include "fuel_math.h"
-#include "sensor.h"
-#include "efi_interpolation.h"
-#include "table_helper.h"
-#include "engine_math.h"
-
-#if defined(HAS_OS_ACCESS)
-#error "Unexpected OS ACCESS HERE"
-#endif
+#include "pch.h"
 
 #define rpmMin 500
 #define rpmMax 8000
 
-fuel_Map3D_t veMap;
-
 #define tpMin 0
 #define tpMax 100
 
-float IFuelComputer::getTChargeCoefficient(int rpm, float tps) {
+float IFuelComputer::getTChargeCoefficient(float rpm, float tps) {
 	// First, do TPS mode since it doesn't need any of the airflow math.
 	if (engineConfiguration->tChargeMode == TCHARGE_MODE_RPM_TPS) {
 		float minRpmKcurrentTPS = interpolateMsg("minRpm", tpMin,
@@ -71,7 +56,7 @@ float IFuelComputer::getTChargeCoefficient(int rpm, float tps) {
 
 //  http://rusefi.com/math/t_charge.html
 /***panel:Charge Temperature*/
-temperature_t IFuelComputer::getTCharge(int rpm, float tps) {
+temperature_t IFuelComputer::getTCharge(float rpm, float tps) {
 	const auto clt = Sensor::get(SensorType::Clt);
 	const auto iat = Sensor::get(SensorType::Iat);
 
@@ -95,7 +80,7 @@ temperature_t IFuelComputer::getTCharge(int rpm, float tps) {
 
 	sdTcharge_coff = getTChargeCoefficient(rpm, tps);
 
-	if (cisnan(sdTcharge_coff)) {
+	if (std::isnan(sdTcharge_coff)) {
 		warning(ObdCode::CUSTOM_ERR_T2_CHARGE, "t2-getTCharge NaN");
 		return coolantTemp;
 	}
@@ -105,15 +90,11 @@ temperature_t IFuelComputer::getTCharge(int rpm, float tps) {
 	// 1.0 coefficient -> use IAT (no heat transfer)
 	float Tcharge = interpolateClamped(0.0f, coolantTemp, 1.0f, airTemp, sdTcharge_coff);
 
-	if (cisnan(Tcharge)) {
+	if (std::isnan(Tcharge)) {
 		// we can probably end up here while resetting engine state - interpolation would fail
 		warning(ObdCode::CUSTOM_ERR_TCHARGE_NOT_READY, "getTCharge NaN");
 		return coolantTemp;
 	}
 
 	return Tcharge;
-}
-
-void initSpeedDensity() {
-	veMap.init(config->veTable, config->veLoadBins, config->veRpmBins);
 }

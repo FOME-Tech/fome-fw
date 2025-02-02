@@ -161,8 +161,6 @@ public class BinaryProtocolServer {
                 stream.sendPacket((TS_OK + "rusEFI proxy").getBytes());
             } else if (command == Fields.TS_CRC_CHECK_COMMAND) {
                 handleCrc(linkManager, stream);
-            } else if (command == Fields.TS_PAGE_COMMAND) {
-                stream.sendPacket(TS_OK.getBytes());
             } else if (command == Fields.TS_READ_COMMAND) {
                 ByteRange byteRange = ByteRange.valueOf(payload);
                 handleRead(linkManager, byteRange, stream);

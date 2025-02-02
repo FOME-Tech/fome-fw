@@ -1,7 +1,5 @@
 #include "pch.h"
 
-#include "fan_control.h"
-
 static void updateFans() {
 	engine->module<FanControl1>()->onSlowCallback();
 }
@@ -44,6 +42,16 @@ TEST(Actuators, Fan) {
 	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
 
 	// Below threshold, should turn off
+	Sensor::setMockValue(SensorType::Clt, 75);
+	updateFans();
+	EXPECT_EQ(false, enginePins.fanRelay.getLogicValue());
+
+	// Break the CLT sensor - fan turns on
+	Sensor::setInvalidMockValue(SensorType::Clt);
+	updateFans();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+
+	// CLT sensor back to normal, fan turns off
 	Sensor::setMockValue(SensorType::Clt, 75);
 	updateFans();
 	EXPECT_EQ(false, enginePins.fanRelay.getLogicValue());

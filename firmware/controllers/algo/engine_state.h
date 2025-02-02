@@ -16,21 +16,19 @@ class EngineState : public engine_state_s {
 public:
 	EngineState();
 	void periodicFastCallback();
-	void updateSlowSensors();
-	void updateTChargeK(int rpm, float tps);
+	void updateTChargeK(float rpm, float tps);
 
 	/**
 	 * always 360 or 720, never zero
 	 */
 	angle_t engineCycle;
 
+	bool useOddFireWastedSpark = false;
+
 	/**
 	 * this is based on sensorChartMode and sensorSnifferRpmThreshold settings
 	 */
 	sensor_chart_e sensorChartMode = SC_OFF;
-
-	// Per-injection fuel mass, including TPS accel enrich
-	float injectionMass[MAX_CYLINDER_COUNT] = {0};
 
 	float injectionStage2Fraction = 0;
 
@@ -48,17 +46,11 @@ public:
 	 * MAP averaging angle start, in relation to 'mapAveragingSchedulingAtIndex' trigger index index
 	 */
 	angle_t mapAveragingStart[MAX_CYLINDER_COUNT];
-	angle_t mapAveragingDuration = 0;
-
-	/**
-	 * timing advance is angle distance before Top Dead Center (TDP), i.e. "10 degree timing advance" means "happens 10 degrees before TDC"
-	 */
-	angle_t timingAdvance[MAX_CYLINDER_COUNT] = {0};
 
 	// Angle between firing the main (primary) spark and the secondary (trailing) spark
 	angle_t trailingSparkAngle = 0;
 
-	efitick_t timeSinceLastTChargeK;
+	Timer timeSinceLastTChargeK;
 
 	float currentVe = 0;
 

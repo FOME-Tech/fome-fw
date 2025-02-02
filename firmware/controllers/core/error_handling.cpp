@@ -9,6 +9,8 @@
 
 #include "backup_ram.h"
 
+#include "malfunction_central.h"
+
 static critical_msg_t warningBuffer;
 static critical_msg_t criticalErrorMessageBuffer;
 
@@ -17,7 +19,7 @@ bool hasFirmwareErrorFlag = false;
 const char *dbg_panic_file;
 int dbg_panic_line;
 
-const char* getCriticalErrorMessage(void) {
+const char* getCriticalErrorMessage() {
 	return criticalErrorMessageBuffer;
 }
 
@@ -30,7 +32,7 @@ void checkLastBootError() {
 		efiPrintf("Last boot had firmware error: %s", sramState->Err.ErrorString);
 		break;
 	case ErrorCookie::HardFault: {
-		efiPrintf("Last boot had hard fault type: %x addr: %x CSFR: %x", sramState->Err.FaultType, sramState->Err.FaultAddress, sramState->Err.Csfr);
+		efiPrintf("Last boot had hard fault type: %x addr: %x CSFR: %x", (unsigned int)sramState->Err.FaultType, (unsigned int)sramState->Err.FaultAddress, (unsigned int)sramState->Err.Csfr);
 
 		// Print out the context as a sequence of uintptr
 		uintptr_t* data = reinterpret_cast<uintptr_t*>(&sramState->Err.FaultCtx);
@@ -53,7 +55,7 @@ void checkLastBootError() {
 		sramState->Err.BootCount = 0;
 	}
 
-	efiPrintf("Power cycle count: %d", sramState->Err.BootCount);
+	efiPrintf("Power cycle count: %lu", sramState->Err.BootCount);
 	sramState->Err.BootCount++;
 }
 
@@ -79,8 +81,10 @@ void chDbgPanic3(const char *msg, const char * file, int line) {
 	__asm volatile("BKPT #0\n");
 #endif
 
-	if (hasOsPanicError())
+	if (hasOsPanicError()) {
 		return;
+	}
+
 	dbg_panic_file = file;
 	dbg_panic_line = line;
 #if CH_DBG_SYSTEM_STATE_CHECK
@@ -126,8 +130,9 @@ WarningCodeState unitTestWarningCodeState;
  * @returns TRUE in case there were warnings recently
  */
 bool warning(ObdCode code, const char *fmt, ...) {
-	if (hasFirmwareErrorFlag)
+	if (hasFirmwareErrorFlag) {
 		return true;
+	}
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
 	// we just had this same warning, let's not spam
@@ -156,11 +161,6 @@ bool warning(ObdCode code, const char *fmt, ...) {
 #endif /* EFI_SIMULATOR || EFI_PROD_CODE */
 	return false;
 }
-
-const char* getWarningMessage(void) {
-	return warningBuffer;
-}
-
 
 #if EFI_CLOCK_LOCKS
 uint32_t lastLockTime;
@@ -213,8 +213,10 @@ void onUnlockHook(void) {
 
 void firmwareError(ObdCode code, const char *fmt, ...) {
 #if EFI_PROD_CODE
-	if (hasFirmwareErrorFlag)
+	if (hasFirmwareErrorFlag) {
 		return;
+	}
+
 	hasFirmwareErrorFlag = true;
 
 	getLimpManager()->fatalError();
@@ -228,6 +230,7 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 	palWritePad(criticalErrorLedPort, criticalErrorLedPin, criticalErrorLedState);
 	turnAllPinsOff();
 	enginePins.communicationLedPin.setValue(1);
+	setError(true, code);
 
 	if (indexOf(fmt, '%') == -1) {
 		/**

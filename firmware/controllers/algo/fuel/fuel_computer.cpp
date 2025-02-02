@@ -8,7 +8,7 @@
 #include "fuel_math.h"
 #include "fuel_computer.h"
 
-mass_t FuelComputerBase::getCycleFuel(mass_t airmass, int rpm, float load) {
+mass_t FuelComputerBase::getCycleFuel(mass_t airmass, float rpm, float load) {
 	load = getTargetLambdaLoadAxis(load);
 	
 	float stoich = getStoichiometricRatio();
@@ -56,7 +56,7 @@ float FuelComputer::getStoichiometricRatio() const {
 }
 
 
-float FuelComputer::getTargetLambda(int rpm, float load) const {
+float FuelComputer::getTargetLambda(float rpm, float load) const {
 	return interpolate3d(
 		config->lambdaTable,
 		config->lambdaLoadBins, load,

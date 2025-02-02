@@ -25,15 +25,11 @@
 #include <ch.hpp>
 #endif /* __cplusplus */
 
-#define hasOsPanicError() (FALSE)
-
 #define US_TO_NT_MULTIPLIER 100
 
 // need to fight 32bit int overflow
 
 #define MY_US2ST(x) ((x) / 10)
-
-#define EFI_ERROR_CODE 0xffffffff
 
 #define DL_OUTPUT_BUFFER 9000
 

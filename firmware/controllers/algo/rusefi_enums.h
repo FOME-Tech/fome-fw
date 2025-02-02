@@ -59,6 +59,7 @@ typedef enum  __attribute__ ((__packed__)) {
 	 */
 	VVT_MIATA_NB = 3,
 
+	VVT_MIATA_NA = 4,
 	/**
 	 * @see TT_VVT_BOSCH_QUICK_START
 	 */
@@ -98,6 +99,8 @@ typedef enum  __attribute__ ((__packed__)) {
 
 	VVT_MITSUBISHI_4G9x = 17,
 	VVT_MITSUBISHI_4G63 = 18,
+
+	VVT_MAZDA_L = 19,
 
 } vvt_mode_e;
 
@@ -147,12 +150,6 @@ typedef enum __attribute__ ((__packed__)) {
 	IM_MANUAL = 1,
 
 } idle_mode_e;
-
-enum class SentEtbType : uint8_t {
-	NONE = 0,
-	GM_TYPE_1 = 1,
-	FORD_TYPE_1 = 2,
-};
 
 typedef enum __attribute__ ((__packed__)) {
 	/**
@@ -294,7 +291,17 @@ typedef enum __attribute__ ((__packed__)) {
 	BMW_e46 = 0,
 	W202 = 1,
 	BMW_e90 = 2,
+	Mx5_NC = 3,
+
+	CanVssLast = 4,
 } can_vss_nbc_e;
+
+enum class WssToVssMode : uint8_t {
+	None = 0,
+	AverageFront = 1,
+	AverageRear = 2,
+	AverageAll = 3,
+};
 
 /**
  * inertia measurement unit, yawn accelerometer
@@ -413,7 +420,6 @@ typedef enum __attribute__ ((__packed__)) {
 	// unused 2
 	SC_RPM_ACCEL = 3,
 	SC_DETAILED_RPM = 4,
-	SC_AUX_FAST1 = 5,
 
 } sensor_chart_e;
 
@@ -467,16 +473,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } tChargeMode_e;
 
-typedef enum __attribute__ ((__packed__)) {
-	INIT = 0,
-	TPS_THRESHOLD = 1,
-	RPM_DEAD_ZONE = 2,
-	PID_VALUE = 4,
-	PID_UPPER = 16,
-	BLIP = 64,
-
-} idle_state_e;
-
 // todo: should this be just a boolean?
 typedef enum __attribute__ ((__packed__)) {
 	OPEN_LOOP = 0,
@@ -523,7 +519,12 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_Rpm = 24,
 	GPPWM_DetectedGear = 25,
 	GPPWM_BaroPressure = 26,
-} gppwm_channel_e;
+	GPPWM_Egt1 = 27,
+	GPPWM_Egt2 = 28,
+	GPPWM_AuxLinear3 = 29,
+	GPPWM_AuxLinear4 = 30,
+	GPPWM_VehicleSpeed = 31,
+} gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this enum
 
 typedef enum __attribute__ ((__packed__)) {
 	B50KBPS = 0, // 50kbps

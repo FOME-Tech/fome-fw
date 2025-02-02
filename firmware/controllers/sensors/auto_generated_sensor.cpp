@@ -30,6 +30,10 @@ case SensorType::AuxLinear1:
   return "AuxLinear1";
 case SensorType::AuxLinear2:
   return "AuxLinear2";
+case SensorType::AuxLinear3:
+  return "AuxLinear3";
+case SensorType::AuxLinear4:
+  return "AuxLinear4";
 case SensorType::AuxSpeed1:
   return "AuxSpeed1";
 case SensorType::AuxSpeed2:
@@ -78,6 +82,10 @@ case SensorType::Lambda1:
   return "Lambda1";
 case SensorType::Lambda2:
   return "Lambda2";
+case SensorType::Lambda3:
+  return "Lambda3";
+case SensorType::Lambda4:
+  return "Lambda4";
 case SensorType::LuaGauge1:
   return "LuaGauge1";
 case SensorType::LuaGauge2:
@@ -86,6 +94,8 @@ case SensorType::Maf:
   return "Maf";
 case SensorType::Maf2:
   return "Maf2";
+case SensorType::MainRelayVoltage:
+  return "MainRelayVoltage";
 case SensorType::Map:
   return "Map";
 case SensorType::Map2:
@@ -106,6 +116,8 @@ case SensorType::PlaceholderLast:
   return "PlaceholderLast";
 case SensorType::Rpm:
   return "Rpm";
+case SensorType::Sensor5vVoltage:
+  return "Sensor5vVoltage";
 case SensorType::ThrottleInletPressure:
   return "ThrottleInletPressure";
 case SensorType::Tps1:
@@ -126,6 +138,14 @@ case SensorType::VehicleSpeed:
   return "VehicleSpeed";
 case SensorType::WastegatePosition:
   return "WastegatePosition";
+case SensorType::WheelSpeedLF:
+  return "WheelSpeedLF";
+case SensorType::WheelSpeedLR:
+  return "WheelSpeedLR";
+case SensorType::WheelSpeedRF:
+  return "WheelSpeedRF";
+case SensorType::WheelSpeedRR:
+  return "WheelSpeedRR";
   }
  return NULL;
 }

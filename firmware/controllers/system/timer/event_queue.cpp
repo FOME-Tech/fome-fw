@@ -17,11 +17,10 @@
 #include "efitime.h"
 
 #if EFI_UNIT_TEST
-extern int timeNowUs;
 extern bool verboseMode;
 #endif /* EFI_UNIT_TEST */
 
-EventQueue::EventQueue(efitick_t lateDelay)
+EventQueue::EventQueue(efidur_t lateDelay)
 	: m_lateDelay(lateDelay)
 {
 	for (size_t i = 0; i < efi::size(m_pool); i++) {
@@ -79,8 +78,6 @@ bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s 
 
 	assertListIsSorted();
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, action.getCallback() != NULL, "NULL callback", false);
-
-// please note that simulator does not use this code at all - simulator uses signal_executor_sleep
 
 	if (scheduling->action) {
 #if EFI_UNIT_TEST
@@ -178,7 +175,7 @@ expected<efitick_t> EventQueue::getNextEventTime(efitick_t nowX) const {
 			 * looks like we end up here after 'writeconfig' (which freezes the firmware) - we are late
 			 * for the next scheduled event
 			 */
-			return nowX + m_lateDelay;
+			return efitick_t{nowX + m_lateDelay};
 		} else {
 			return m_head->momentX;
 		}
@@ -264,7 +261,7 @@ bool EventQueue::executeOne(efitick_t now) {
 	return true;
 }
 
-int EventQueue::size(void) const {
+int EventQueue::size() const {
 	scheduling_s *tmp;
 	int result;
 	LL_COUNT2(m_head, tmp, result, nextScheduling_s);
@@ -299,7 +296,7 @@ scheduling_s *EventQueue::getElementAtIndexForUnitText(int index) {
 	return NULL;
 }
 
-void EventQueue::clear(void) {
+void EventQueue::clear() {
 	// Flush the queue, resetting all scheduling_s as though we'd executed them
 	while(m_head) {
 		auto x = m_head;
@@ -307,7 +304,7 @@ void EventQueue::clear(void) {
 		m_head = x->nextScheduling_s;
 
 		// Reset this element
-		x->momentX = 0;
+		x->momentX = {};
 		x->nextScheduling_s = nullptr;
 		x->action = {};
 	}

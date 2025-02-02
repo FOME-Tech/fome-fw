@@ -44,12 +44,12 @@ CanTxMessage::CanTxMessage(uint32_t eid, uint8_t dlc, CanBusIndex bus, bool isEx
 
 	setDlc(dlc);
 
-	memset(m_frame.data8, 0, sizeof(m_frame.data8));
+	setArrayValues(m_frame.data8, 0);
 #endif // HAL_USE_CAN || EFI_UNIT_TEST
 }
 
-CanTxMessage::~CanTxMessage() {
 #if EFI_CAN_SUPPORT
+CanTxMessage::~CanTxMessage() {
 	size_t busIndex = static_cast<size_t>(m_busIndex);
 	auto device = s_devices[busIndex];
 
@@ -63,13 +63,15 @@ CanTxMessage::~CanTxMessage() {
 	}
 
 	if (engineConfiguration->verboseCan) {
-		efiPrintf("Sending CAN bus%d message: ID=%x/l=%x %x %x %x %x %x %x %x %x",
+		#ifndef STM32H7XX
+			int id = (unsigned int)((m_frame.IDE == CAN_IDE_EXT) ? CAN_EID(m_frame) : CAN_SID(m_frame));
+		#else
+			int id = (unsigned int)(m_frame.common.XTD ? CAN_EID(m_frame) : CAN_SID(m_frame));
+		#endif
+
+		efiPrintf("CAN TX bus %d ID %x(%d) DLC %x: %x %x %x %x %x %x %x %x",
 				busIndex,
-#ifndef STM32H7XX
-				(m_frame.IDE == CAN_IDE_EXT) ? CAN_EID(m_frame) : CAN_SID(m_frame),
-#else
-						  m_frame.common.XTD ? CAN_EID(m_frame) : CAN_SID(m_frame),
-#endif
+				id, id,
 				m_frame.DLC,
 				m_frame.data8[0], m_frame.data8[1],
 				m_frame.data8[2], m_frame.data8[3],
@@ -86,8 +88,8 @@ CanTxMessage::~CanTxMessage() {
 		engine->outputChannels.canWriteNotOk++;
 	}
 #endif // EFI_TUNER_STUDIO
-#endif /* EFI_CAN_SUPPORT */
 }
+#endif /* EFI_CAN_SUPPORT */
 
 #if HAL_USE_CAN || EFI_UNIT_TEST
 void CanTxMessage::setDlc(uint8_t dlc) {
@@ -106,5 +108,25 @@ void CanTxMessage::setBit(size_t byteIdx, size_t bitIdx) {
 uint8_t& CanTxMessage::operator[](size_t index) {
 	return m_frame.data8[index];
 }
-#endif // HAL_USE_CAN || EFI_UNIT_TEST
 
+#endif // HAL_USE_CAN
+
+#if EFI_UNIT_TEST
+
+static ICanTransmitMock* mockCan;
+
+CanTxMessage::~CanTxMessage() {
+	if (mockCan) {
+		mockCan->onTx(
+			m_frame.SID, m_frame.DLC,
+			m_frame.data8[0], m_frame.data8[1], m_frame.data8[2], m_frame.data8[3],
+			m_frame.data8[4], m_frame.data8[5], m_frame.data8[6], m_frame.data8[7]
+		);
+	}
+}
+
+void setCanTxMockHandler(ICanTransmitMock* mock) {
+	mockCan = mock;
+}
+
+#endif // EFI_UNIT_TEST

@@ -20,6 +20,8 @@ floatms_t PrimeController::getPrimeDuration() const {
 		0.001f *	// convert milligram to gram
 		interpolate2d(clt.Value, engineConfiguration->primeBins, engineConfiguration->primeValues);
 
+	efiPrintf("Priming pulse mass: %.4f g", primeMass);
+
 	return engine->module<InjectorModelPrimary>()->getInjectionDuration(primeMass);
 }
 
@@ -57,12 +59,14 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 
 	// start prime injection if this is a 'fresh start'
 	if (ignSwitchCounter == 0) {
-		auto primeDelayMs = engineConfiguration->primingDelay * 1000;
+		// Give sensors long enough to wake up before priming
+		constexpr float minimumPrimeDelayMs = 100;
+		uint32_t primeDelayNt = MSF2NT(engineConfiguration->primingDelay * 1000 + minimumPrimeDelayMs);
 
-		auto startTime = getTimeNowNt() + MS2NT(primeDelayMs);
-		getExecutorInterface()->scheduleByTimestampNt("prime", nullptr, startTime, { PrimeController::onPrimeStartAdapter, this });
+		auto startTime = getTimeNowNt() + primeDelayNt;
+		getScheduler()->schedule("prime start", nullptr, startTime, { PrimeController::onPrimeStartAdapter, this });
 	} else {
-		efiPrintf("Skipped priming pulse since ignSwitchCounter = %d", ignSwitchCounter);
+		efiPrintf("Skipped priming pulse since ignSwitchCounter = %lu", ignSwitchCounter);
 	}
 
 	// we'll reset it later when the engine starts
@@ -96,12 +100,12 @@ void PrimeController::onPrimeStart() {
 
 	efiPrintf("Firing priming pulse of %.2f ms", durationMs);
 
-	auto endTime = getTimeNowNt() + MS2NT(durationMs);
+	auto endTime = getTimeNowNt() + (uint32_t)MSF2NT(durationMs);
 
 	// Open all injectors, schedule closing later
 	m_isPriming = true;
 	startSimultaneousInjection();
-	getExecutorInterface()->scheduleByTimestampNt("prime", nullptr, endTime, { onPrimeEndAdapter, this });
+	getScheduler()->schedule("prime end", nullptr, endTime, { onPrimeEndAdapter, this });
 }
 
 void PrimeController::onPrimeEnd() {

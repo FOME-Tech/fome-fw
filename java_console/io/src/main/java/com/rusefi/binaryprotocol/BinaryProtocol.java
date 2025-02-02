@@ -59,8 +59,6 @@ public class BinaryProtocol {
 
     public static String findCommand(byte command) {
         switch (command) {
-            case Fields.TS_PAGE_COMMAND:
-                return "PAGE";
             case Fields.TS_COMMAND_F:
                 return "PROTOCOL";
             case Fields.TS_CRC_CHECK_COMMAND:
@@ -432,7 +430,7 @@ public class BinaryProtocol {
         long start = System.currentTimeMillis();
         while (!isClosed && (System.currentTimeMillis() - start < Timeouts.BINARY_IO_TIMEOUT)) {
             byte[] response = executeCommand(Fields.TS_EXECUTE, command, "execute");
-            if (!checkResponseCode(response, (byte) Fields.TS_RESPONSE_COMMAND_OK) || response.length != 1) {
+            if (!checkResponseCode(response, (byte) Fields.TS_RESPONSE_OK) || response.length != 1) {
                 continue;
             }
             return false;

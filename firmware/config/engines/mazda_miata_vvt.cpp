@@ -201,11 +201,19 @@ static const float mafTransferKgH[MAF_TRANSFER_SIZE] = {
 		350.00
 };
 
+template <typename TSrc, typename TDst, size_t NSrc, size_t NDest>
+constexpr void copyArrayPartial(TDst (&dest)[NDest], const TSrc (&src)[NSrc]) {
+	static_assert(NDest >= NSrc, "Source array must be larger than destination.");
+
+	for (size_t i = 0; i < NSrc; i++) {
+		dest[i] = src[i];
+	}
+}
 
 static void setMAFTransferFunction() {
-	memcpy(config->mafDecoding, mafTransferKgH, sizeof(mafTransferKgH));
-	memcpy(config->mafDecodingBins, mafTransferVolts, sizeof(mafTransferVolts));
-	for (int i = MAF_TRANSFER_SIZE;i<MAF_DECODING_COUNT;i++) {
+	copyArrayPartial(config->mafDecoding, mafTransferKgH);
+	copyArrayPartial(config->mafDecodingBins, mafTransferVolts);
+	for (int i = MAF_TRANSFER_SIZE; i < MAF_DECODING_COUNT; i++) {
 		config->mafDecodingBins[i] = config->mafDecodingBins[MAF_TRANSFER_SIZE - 1] + i * 0.01;
 		config->mafDecoding[i] = config->mafDecoding[MAF_TRANSFER_SIZE - 1];
 	}
@@ -292,8 +300,6 @@ static void setCommonMazdaNB() {
 
 	engineConfiguration->idleRpmPid.pFactor = 0.0065;
 	engineConfiguration->idleRpmPid.iFactor = 0.3;
-	engineConfiguration->idle_derivativeFilterLoss = 0.08;
-	engineConfiguration->idle_antiwindupFreq = 0.03;
 	engineConfiguration->idleRpmPid.dFactor = 0.002;
 	engineConfiguration->idleRpmPid.minValue = -8;
 	engineConfiguration->idleRpmPid.maxValue = 10;
@@ -315,7 +321,6 @@ static void setCommonMazdaNB() {
 	engineConfiguration->alternatorControl.pFactor = 20;
 	engineConfiguration->alternatorControl.iFactor = 8;
 	engineConfiguration->alternatorControl.dFactor = 0.1;
-	engineConfiguration->alternatorControl.periodMs = 10;
 
 	// AC
 	engineConfiguration->acDelay = 0.5;
@@ -342,9 +347,7 @@ static void setCommonMazdaNB() {
 	// Sensors
 
 	// TPS
-	// set tps_min 90
 	engineConfiguration->tpsMin = 100; // convert 12to10 bit (ADC/4)
-	// set tps_max 540
 	engineConfiguration->tpsMax = 650; // convert 12to10 bit (ADC/4)
 
 	// CLT/IAT
@@ -383,11 +386,11 @@ static void setMazdaMiataEngineNB1Defaults() {
 
 	// Vehicle speed/gears
 	engineConfiguration->totalGearsCount = 5;
-	engineConfiguration->gearRatio[0] = 3.136;
-	engineConfiguration->gearRatio[1] = 1.888;
-	engineConfiguration->gearRatio[2] = 1.330;
-	engineConfiguration->gearRatio[3] = 1.000;
-	engineConfiguration->gearRatio[4] = 0.814;
+	engineConfiguration->gearRatio[0] = 3.14;
+	engineConfiguration->gearRatio[1] = 1.89;
+	engineConfiguration->gearRatio[2] = 1.33;
+	engineConfiguration->gearRatio[3] = 1.00;
+	engineConfiguration->gearRatio[4] = 0.81;
 
 	// These may need to change based on your real car
 	engineConfiguration->driveWheelRevPerKm = 551;
@@ -417,12 +420,12 @@ static void setMazdaMiataEngineNB2Defaults() {
 
 	// Vehicle speed/gears
 	engineConfiguration->totalGearsCount = 6;
-	engineConfiguration->gearRatio[0] = 3.760;
-	engineConfiguration->gearRatio[1] = 2.269;
-	engineConfiguration->gearRatio[2] = 1.646;
-	engineConfiguration->gearRatio[3] = 1.257;
-	engineConfiguration->gearRatio[4] = 1.000;
-	engineConfiguration->gearRatio[5] = 0.843;
+	engineConfiguration->gearRatio[0] = 3.76;
+	engineConfiguration->gearRatio[1] = 2.27;
+	engineConfiguration->gearRatio[2] = 1.65;
+	engineConfiguration->gearRatio[3] = 1.26;
+	engineConfiguration->gearRatio[4] = 1.00;
+	engineConfiguration->gearRatio[5] = 0.84;
 
 	// These may need to change based on your real car
 	engineConfiguration->driveWheelRevPerKm = 538;
@@ -568,9 +571,9 @@ void setMazdaMiata2003EngineConfigurationBoardTest() {
 	engineConfiguration->mafAdcChannel = EFI_ADC_4; // PA4 - W47 top <>W47
 }
 
+#if HW_MICRO_RUSEFI
 static void setMiataNB2_MRE_common() {
 	setMazdaMiataEngineNB2Defaults();
-#if (BOARD_TLE8888_COUNT > 0)
 
 	// MRE has a special main relay control low side pin - rusEfi firmware is totally not involved with main relay control
 	//
@@ -621,18 +624,15 @@ static void setMiataNB2_MRE_common() {
 // disabled for now since only allowed with ETB
 //	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_7;
 
-	// set tps_min 90
 	engineConfiguration->tpsMin = 90;
-
-	// set tps_max 540
 	engineConfiguration->tpsMax = 870;
 
 	// 0.3#4 has wrong R139? TODO: fix that custom board to match proper value!!!
 	// set vbatt_divider 10.956
 	// 56k high side/10k low side multiplied by analogInputDividerCoefficient
 	// vbattDividerCoeff = 10.956 (66.0f / 10.0f) * engineConfiguration->analogInputDividerCoefficient;
-#endif /* BOARD_TLE8888_COUNT */
 }
+#endif // HW_MICRO_RUSEFI
 
 /**
  * https://github.com/rusefi/rusefi/wiki/HOWTO-TCU-A42DE-on-Proteus
@@ -849,10 +849,7 @@ void setMiataNB2_Hellen72() {
     setMazdaMiataEngineNB2Defaults();
 	strcpy(engineConfiguration->vehicleName, "H72 test");
 
-
-	// set tps_min 90
 	engineConfiguration->tpsMin = 110; // convert 12to10 bit (ADC/4)
-
 }
 
 void setMiataNB2_Hellen72_36() {

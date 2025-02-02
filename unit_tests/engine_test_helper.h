@@ -36,6 +36,10 @@ public:
 	EngineTestHelper(engine_type_e engineType, configuration_callback_t boardCallback, const std::unordered_map<SensorType, float>& sensorValues);
 	~EngineTestHelper();
 
+    float angleToTimeUs(angle_t angle) {
+        return angle * engine.rpmCalculator.oneDegreeUs;
+    }
+
 	warningBuffer_t *recentWarnings();
 	int getWarningCounter();
 
@@ -57,7 +61,6 @@ public:
 	void smartFireFall(float delayMs);
 	void moveTimeForwardAndInvokeEventsUs(int deltaTimeUs);
 	void setTimeAndInvokeEventsUs(int timeNowUs);
-	void executeUntil(int timeUs);
 	void moveTimeForwardAndInvokeEventsSec(int deltaTimeSeconds);
 	/**
 	 * both Rise and Fall
@@ -90,12 +93,11 @@ public:
 	void assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, long injectorIndex);
 	void assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, long injectorIndex);
 	// todo: open question if this is worth a helper method or should be inlined?
-	void assertRpm(int expectedRpm, const char *msg);
+	void assertRpm(int expectedRpm, const char *msg = "RPM");
 
 	int executeActions();
 	void moveTimeForwardMs(float deltaTimeMs);
 	void moveTimeForwardSec(float deltaTimeSec);
-	efitimeus_t getTimeNowUs();
 
 	Engine engine;
 	persistent_config_s persistentConfig;

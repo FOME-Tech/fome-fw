@@ -21,12 +21,20 @@ public class Definition {
         return this.value instanceof Double || this.value instanceof Integer;
     }
 
+    public boolean isInteger() {
+        return this.value instanceof Integer;
+    }
+
     public double asDouble() {
         if (this.value instanceof Double) {
             return ((Double)this.value);
         } else {
             return ((Integer)this.value).doubleValue();
         }
+    }
+
+    public int asInt() {
+        return (Integer)this.value;
     }
 
     @Override

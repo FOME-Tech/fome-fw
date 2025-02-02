@@ -9,7 +9,6 @@
 
 #include "engine_configuration.h"
 void setFrankensoConfiguration();
-void runSchedulingPrecisionTestIfNeeded(void);
 void setDiscoveryPdm();
 void setFrankensoBoardTestConfiguration();
 void setEtbTestConfiguration();
@@ -31,7 +30,6 @@ void proteusDcWastegateTest();
 void setTest33816EngineConfiguration();
 void setBoschHDEV_5_injectors();
 
-void setRotary();
 void setVrThresholdTest();
 
 void detectBoardType();

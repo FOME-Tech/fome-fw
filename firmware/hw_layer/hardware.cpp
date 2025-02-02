@@ -22,7 +22,6 @@
 #include "eficonsole.h"
 #include "console_io.h"
 #include "sensor_chart.h"
-#include "serial_hw.h"
 #include "idle_thread.h"
 #include "kline.h"
 
@@ -34,7 +33,6 @@
 
 #include "AdcConfiguration.h"
 #include "idle_hardware.h"
-#include "sent.h"
 #include "trigger_central.h"
 #include "gitversion.h"
 #include "vvt.h"
@@ -46,10 +44,6 @@
 #if EFI_MC33816
 #include "mc33816.h"
 #endif /* EFI_MC33816 */
-
-#if EFI_MAP_AVERAGING
-#include "map_averaging.h"
-#endif
 
 #if EFI_INTERNAL_FLASH
 #include "flash_main.h"
@@ -145,64 +139,24 @@ SPIDriver * getSpiDevice(spi_device_e spiDevice) {
 
 static FastAdcToken fastMapSampleIndex;
 
-#if HAL_TRIGGER_USE_ADC
-static FastAdcToken triggerSampleIndex;
-#endif
-
-extern AdcDevice fastAdc;
-
-#ifdef FAST_ADC_SKIP
-// No reason to enable if N = 1
-static_assert(FAST_ADC_SKIP > 1);
-static size_t fastAdcSkipCount = 0;
-#endif // FAST_ADC_SKIP
-
 /**
  * This method is not in the adc* lower-level file because it is more business logic then hardware.
  */
 void onFastAdcComplete(adcsample_t*) {
+	// this callback is executed 10 000 times a second, it needs to be as fast as possible!
 	ScopePerf perf(PE::AdcCallbackFast);
 
-#if HAL_TRIGGER_USE_ADC
-	// we need to call this ASAP, because trigger processing is time-critical
-	triggerAdcCallback(getFastAdc(triggerSampleIndex));
-#endif /* HAL_TRIGGER_USE_ADC */
-
-#ifdef FAST_ADC_SKIP
-	// If we run the fast ADC _very_ fast for triggerAdcCallback's benefit, we may want to
-	// skip most of the samples for the rest of the callback.
-	if (fastAdcSkipCount++ == FAST_ADC_SKIP) {
-		fastAdcSkipCount = 0;
-	} else {
-		return;
-	}
-#endif
-
-	/**
-	 * this callback is executed 10 000 times a second, it needs to be as fast as possible
-	 */
-	efiAssertVoid(ObdCode::CUSTOM_STACK_ADC, getCurrentRemainingStack() > 128, "lowstck#9b");
-
-#if EFI_SENSOR_CHART && EFI_SHAFT_POSITION_INPUT
-	if (getEngineState()->sensorChartMode == SC_AUX_FAST1) {
-		float voltage = getAdcValue("fAux1", engineConfiguration->auxFastSensor1_adcChannel);
-		scAddData(engine->triggerCentral.getCurrentEnginePhase(getTimeNowNt()).value_or(0), voltage);
-	}
-#endif /* EFI_SENSOR_CHART */
-
-#if EFI_MAP_AVERAGING
-	mapAveragingAdcCallback(adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel));
-#endif /* EFI_MAP_AVERAGING */
+#ifdef MODULE_MAP_AVERAGING
+	engine->module<MapAveragingModule>()->submitSample(
+			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel)
+		);
+#endif // MODULE_MAP_AVERAGING
 }
 #endif /* HAL_USE_ADC */
 
 static void calcFastAdcIndexes() {
 #if HAL_USE_ADC
 	fastMapSampleIndex = enableFastAdcChannel("Fast MAP", engineConfiguration->map.sensor.hwChannel);
-#if HAL_TRIGGER_USE_ADC
-	triggerSampleIndex = enableFastAdcChannel("Trigger ADC", getAdcChannelForTrigger());
-#endif /* HAL_TRIGGER_USE_ADC */
-
 #endif/* HAL_USE_ADC */
 }
 
@@ -242,17 +196,9 @@ void applyNewHardwareSettings() {
 	stopTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
-#if EFI_SENT_SUPPORT
-	stopSent();
-#endif // EFI_SENT_SUPPORT
-
 #if EFI_CAN_SUPPORT
 	stopCanPins();
 #endif /* EFI_CAN_SUPPORT */
-
-#if EFI_AUX_SERIAL
-	stopAuxSerialPins();
-#endif /* EFI_AUX_SERIAL */
 
 	stopHardware();
 
@@ -284,10 +230,6 @@ void applyNewHardwareSettings() {
 		// bug? duplication with stopPedalPins?
 		efiSetPadUnused(activeConfiguration.clutchUpPin);
 	}
-
-#if EFI_SHAFT_POSITION_INPUT
-	stopTriggerDebugPins();
-#endif // EFI_SHAFT_POSITION_INPUT
 
 	enginePins.unregisterPins();
 
@@ -324,10 +266,6 @@ void applyNewHardwareSettings() {
 
 	enginePins.startPins();
 
-#if EFI_AUX_SERIAL
-	startAuxSerialPins();
-#endif /* EFI_AUX_SERIAL */
-
     initKLine();
 
 #if EFI_PROD_CODE && EFI_IDLE_CONTROL
@@ -348,10 +286,6 @@ void applyNewHardwareSettings() {
 #if EFI_VVT_PID
 	startVvtControlPins();
 #endif /* EFI_VVT_PID */
-
-#if EFI_SENT_SUPPORT
-	startSent();
-#endif
 
 	calcFastAdcIndexes();
 }
@@ -426,9 +360,6 @@ void stopHardware() {
 void startHardware() {
 #if EFI_SHAFT_POSITION_INPUT
 	validateTriggerInputs();
-
-	startTriggerDebugPins();
-
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	startPedalPins();
@@ -460,9 +391,6 @@ void initHardware() {
 
 #if HAL_USE_ADC
 	initAdcInputs();
-
-	// wait for first set of ADC values so that we do not produce invalid sensor data
-	waitForSlowAdc(1);
 #endif /* HAL_USE_ADC */
 
 #if EFI_SOFTWARE_KNOCK
@@ -509,17 +437,9 @@ void initHardware() {
 	initAccelerometer();
 #endif
 
-#if EFI_AUX_SERIAL
-	initAuxSerial();
-#endif /* EFI_AUX_SERIAL */
-
 #if EFI_CAN_SUPPORT
 	initCanVssSupport();
 #endif // EFI_CAN_SUPPORT
-
-#if EFI_SENT_SUPPORT
-	initSent();
-#endif
 
 	calcFastAdcIndexes();
 

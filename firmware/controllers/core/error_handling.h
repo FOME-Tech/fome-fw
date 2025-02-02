@@ -22,7 +22,11 @@ extern "C"
  *
  * see also firmwareError()
  */
-bool warning(ObdCode code, const char *fmt, ...);
+bool warning(ObdCode code, const char *fmt, ...)
+#if EFI_PROD_CODE
+__attribute__ ((format (printf, 2, 3)))
+#endif
+;
 
 using critical_msg_t = char[ERROR_BUFFER_SIZE];
 
@@ -33,17 +37,20 @@ using critical_msg_t = char[ERROR_BUFFER_SIZE];
  *
  * see also warning()
  */
-void firmwareError(ObdCode code, const char *fmt, ...);
+void firmwareError(ObdCode code, const char *fmt, ...)
+#if EFI_PROD_CODE
+__attribute__ ((format (printf, 2, 3)))
+#endif
+;
 
 extern bool hasFirmwareErrorFlag;
 
 #define hasFirmwareError() hasFirmwareErrorFlag
 
-const char* getCriticalErrorMessage(void);
-const char* getWarningMessage(void);
+const char* getCriticalErrorMessage();
 
 // todo: better place for this shared declaration?
-int getRusEfiVersion(void);
+int getRusEfiVersion();
 
 #if EFI_ENABLE_ASSERTS
   #define efiAssert(code, condition, message, result) { if (!(condition)) { firmwareError(code, message); return result; } }

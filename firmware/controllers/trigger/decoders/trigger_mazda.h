@@ -23,5 +23,8 @@ void configureMazdaProtegeLx(TriggerWaveform *s);
  * same decoder is used for VVT processing
  */
 void initializeMazdaMiataVVtCamShape(TriggerWaveform *s);
+void initializeMazdaMiataNaCamShape(TriggerWaveform *s);
 
 void initializeMazdaSkyactivCam(TriggerWaveform *s);
+
+void initializeMazdaLCam(TriggerWaveform* s);

@@ -97,7 +97,7 @@ const engine_state_s* getLiveData(size_t) {
 
 template<>
 const tps_accel_state_s* getLiveData(size_t) {
-	return &engine->tpsAccelEnrichment;
+	return &engine->module<TpsAccelEnrichment>().unmock();
 }
 
 template<>
@@ -171,11 +171,6 @@ const idle_state_s* getLiveData(size_t) {
 template<>
 const ignition_state_s* getLiveData(size_t) {
 	return &engine->ignitionState;
-}
-
-template<>
-const sent_state_s* getLiveData(size_t) {
-	return &engine->sent_state;
 }
 
 template<>

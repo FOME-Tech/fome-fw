@@ -62,10 +62,6 @@ static const char* const auxValveShortNames[] = { "a1", "a2"};
 
 static RegisteredOutputPin * registeredOutputHead = nullptr;
 
-RegisteredNamedOutputPin::RegisteredNamedOutputPin(const char *name, size_t pinOffset,
-		size_t pinModeOffset) : RegisteredOutputPin(name, pinOffset, pinModeOffset) {
-}
-
 RegisteredOutputPin::RegisteredOutputPin(const char *registrationName, size_t pinOffset,
 		size_t pinModeOffset)
 	: next(registeredOutputHead)
@@ -140,7 +136,7 @@ void RegisteredOutputPin::unregister() {
 
 EnginePins::EnginePins() :
 		mainRelay("Main Relay", CONFIG_PIN_OFFSETS(mainRelay)),
-		hpfpValve("HPFP Valve", CONFIG_PIN_OFFSETS(hpfpValve)),
+		hpfpValve("HPFP", CONFIG_PIN_OFFSETS(hpfpValve)),
 		starterControl("Starter Relay", CONFIG_PIN_OFFSETS(starterControl)),
 		starterRelayDisable("Starter Disable Relay", CONFIG_PIN_OFFSETS(starterRelayDisable)),
 		fanRelay("Fan Relay", CONFIG_PIN_OFFSETS(fan)),
@@ -157,12 +153,10 @@ EnginePins::EnginePins() :
 		tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput)),
 		speedoOut("speedoOut", CONFIG_OFFSET(speedometerOutputPin))
 {
-	hpfpValve.setName(PROTOCOL_HPFP_NAME);
-
 	static_assert(efi::size(sparkNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");
-	for (int i = 0; i < MAX_CYLINDER_COUNT;i++) {
+	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		enginePins.coils[i].coilIndex = i;
 		enginePins.coils[i].setName(sparkNames[i]);
 		enginePins.coils[i].shortName = sparkShortNames[i];
@@ -180,7 +174,7 @@ EnginePins::EnginePins() :
 	}
 
 	static_assert(efi::size(auxValveShortNames) >= AUX_DIGITAL_VALVE_COUNT, "Too many aux valve pins");
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT;i++) {
+	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
 		enginePins.auxValve[i].setName(auxValveShortNames[i]);
 	}
 }
@@ -258,7 +252,7 @@ void EnginePins::startPins() {
 }
 
 void EnginePins::reset() {
-	for (int i = 0; i < MAX_CYLINDER_COUNT;i++) {
+	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		injectors[i].reset();
 		coils[i].reset();
 		trailingCoils[i].reset();
@@ -419,44 +413,6 @@ IgnitionOutputPin::IgnitionOutputPin() {
 	reset();
 }
 
-void IgnitionOutputPin::setHigh() {
-	NamedOutputPin::setHigh();
-	// this is NASTY but what's the better option? bytes? At cost of 22 extra bytes in output status packet?
-	switch (coilIndex) {
-	case 0:
-		engine->outputChannels.coilState1 = true;
-		break;
-	case 1:
-		engine->outputChannels.coilState2 = true;
-		break;
-	case 2:
-		engine->outputChannels.coilState3 = true;
-		break;
-	case 3:
-		engine->outputChannels.coilState4 = true;
-		break;
-	}
-}
-
-void IgnitionOutputPin::setLow() {
-	NamedOutputPin::setLow();
-	// this is NASTY but what's the better option? bytes? At cost of 22 extra bytes in output status packet?
-	switch (coilIndex) {
-	case 0:
-		engine->outputChannels.coilState1 = false;
-		break;
-	case 1:
-		engine->outputChannels.coilState2 = false;
-		break;
-	case 2:
-		engine->outputChannels.coilState3 = false;
-		break;
-	case 3:
-		engine->outputChannels.coilState4 = false;
-		break;
-	}
-}
-
 void IgnitionOutputPin::reset() {
 	outOfOrder = false;
 	signalFallSparkId = 0;
@@ -614,7 +570,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		int pin = getHwPin(msg, brainPin);
 
 		// Validate port
-		if (port == GPIO_NULL) {
+		if (!port) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "OutputPin::initPin got invalid port for pin idx %d", static_cast<int>(brainPin));
 			return;
 		}

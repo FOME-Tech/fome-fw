@@ -1,0 +1,16 @@
+struct_no_prefix ignition_state_s
+	float baseDwell;;"ms", 1, 0, 0, 30, 1
+	floatms_t sparkDwell;@@GAUGE_COIL_DWELL_TIME@@;"ms", 1, 0, 0, 30, 1
+
+	angle_t dwellAngle;@@GAUGE_NAME_IGNITION_DWELL_ANGLE@@;"deg", 1, 0, 0, 120, 1
+
+	int16_t autoscale cltTimingCorrection;Ign: CLT correction;"deg",{1/@@PACK_MULT_PERCENT@@}, 0, -20, 20, 2
+	int16_t autoscale timingIatCorrection;Ign: IAT correction;"deg",{1/@@PACK_MULT_PERCENT@@}, 0, -20, 20, 2
+	int16_t autoscale timingPidCorrection;Idle: Timing adjustment;"deg",{1/@@PACK_MULT_PERCENT@@}, 0, -20, 20, 2
+	int16_t autoscale dfcoTimingRetard;DFCO: Timing retard;"deg",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 50, 2
+
+	float dwellVoltageCorrection;Ign: Dwell voltage correction
+
+	float luaTimingAdd;Ign: Lua timing add;"deg",1, 0, -20, 20, 2
+	float luaTimingMult;Ign: Lua timing mult;"deg",1, 0, -20, 20, 2
+end_struct

@@ -102,7 +102,7 @@ operation_mode_e RpmCalculator::getOperationMode() const {
 #if EFI_SHAFT_POSITION_INPUT
 
 RpmCalculator::RpmCalculator() :
-		StoredValueSensor(SensorType::Rpm, 0)
+		StoredValueSensor(SensorType::Rpm, efidur_t::zero())
 	{
 	assignRpmValue(0);
 }
@@ -142,7 +142,7 @@ void RpmCalculator::assignRpmValue(float floatRpmValue) {
 
 	cachedRpmValue = floatRpmValue;
 
-	setValidValue(floatRpmValue, 0);	// 0 for current time since RPM sensor never times out
+	setValidValue(floatRpmValue, {});	// 0 for current time since RPM sensor never times out
 	if (cachedRpmValue <= 0) {
 		oneDegreeUs = NAN;
 	} else {
@@ -253,7 +253,7 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
  * updated here.
  * This callback is invoked on interrupt thread.
  */
-void rpmShaftPositionCallback(trigger_event_e ckpSignalType,
+void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 		uint32_t trgEventIndex, efitick_t nowNt) {
 
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
@@ -264,7 +264,6 @@ void rpmShaftPositionCallback(trigger_event_e ckpSignalType,
 		if (HAVE_CAM_INPUT()) {
 			engine->triggerCentral.validateCamVvtCounters();
 		}
-
 
 		bool hadRpmRecently = rpmState->checkIfSpinning(nowNt);
 
@@ -306,7 +305,7 @@ void rpmShaftPositionCallback(trigger_event_e ckpSignalType,
 	// it goes into sniffer report into the first position
 	if (getEngineState()->sensorChartMode == SC_TRIGGER) {
 		angle_t crankAngle = engine->triggerCentral.getCurrentEnginePhase(nowNt).value_or(0);
-		int signal = 1000 * ckpSignalType + trgEventIndex;
+		int signal = 1000 * (int)ckpSignalType + trgEventIndex;
 		scAddData(crankAngle, signal);
 	}
 #endif /* EFI_SENSOR_CHART */
@@ -345,7 +344,7 @@ static void onTdcCallback(void *) {
 	}
 #endif /* EFI_UNIT_TEST */
 
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	addEngineSnifferTdcEvent(rpm);
 #if EFI_TOOTH_LOGGER
 	LogTriggerTopDeadCenter(getTimeNowNt());
@@ -369,7 +368,7 @@ void tdcMarkCallback(
 
 		// two instances of scheduling_s are needed to properly handle event overlap
 		int revIndex2 = getRevolutionCounter() % 2;
-		int rpm = Sensor::getOrZero(SensorType::Rpm);
+		float rpm = Sensor::getOrZero(SensorType::Rpm);
 		// todo: use tooth event-based scheduling, not just time-based scheduling
 		if (isValidRpm(rpm)) {
 			angle_t tdcPosition = tdcPosition();
@@ -391,9 +390,9 @@ efitick_t scheduleByAngle(scheduling_s *timer, efitick_t edgeTimestamp, angle_t 
 
     // 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
 	int32_t delayNt = USF2NT(delayUs);
-	efitick_t delayedTime = edgeTimestamp + delayNt;
+	efitick_t delayedTime = edgeTimestamp + efidur_t{delayNt};
 
-	engine->executor.scheduleByTimestampNt("angle", timer, delayedTime, action);
+	engine->scheduler.schedule("angle", timer, delayedTime, action);
 
 	return delayedTime;
 }

@@ -42,8 +42,6 @@ java \
 	-jar ../java_tools/ConfigDefinition.jar \
 	-readfile OUTPUTS_SECTION_FROM_FILE generated/output_channels.ini \
 	-readfile DATALOG_SECTION_FROM_FILE generated/data_logs.ini \
-	-readfile LIVE_DATA_MENU_FROM_FILE generated/fancy_menu.ini \
-	-readfile LIVE_DATA_PANELS_FROM_FILE generated/fancy_content.ini \
 	-triggerInputFolder ../unit_tests \
 	-with_c_defines false \
 	-field_lookup_file generated/value_lookup_generated.cpp generated/value_lookup_generated.md \
@@ -51,7 +49,7 @@ java \
 	-initialize_to_zero false \
 	-signature tunerstudio/generated/signature_${SHORT_BOARDNAME}.txt \
 	-signature_destination generated/signature_${SHORT_BOARDNAME}.h \
-	-ts_template ./tunerstudio/rusefi.input \
+	-ts_template ./tunerstudio/tunerstudio.template.ini \
 	-ts_output_name ./tunerstudio/generated/${INI} \
 	-board ${BOARD_DIR} \
 	-prepend generated/total_live_data_generated.h \

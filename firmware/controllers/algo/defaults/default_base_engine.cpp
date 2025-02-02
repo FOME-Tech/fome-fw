@@ -8,14 +8,13 @@ static void setDefaultAlternatorParameters() {
 
 	engineConfiguration->alternatorControl.offset = 0;
 	engineConfiguration->alternatorControl.pFactor = 30;
-	engineConfiguration->alternatorControl.periodMs = 100;
 }
 
 /* Cylinder to bank mapping */
 void setLeftRightBanksNeedBetterName() {
-    for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-	    engineConfiguration->cylinderBankSelect[i] = i % 2;
-    }
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		engineConfiguration->cylinderBankSelect[i] = i % 2;
+	}
 }
 
 void setDefaultBaseEngine() {
@@ -32,8 +31,6 @@ void setDefaultBaseEngine() {
 	engineConfiguration->turbochargerFilter = 0.01f;
 
 	engineConfiguration->fuelAlgorithm = LM_SPEED_DENSITY;
-	// let's have valid default while we still have the field
-	engineConfiguration->debugMode = DBG_INSTANT_RPM;
 
 	// Limits and Fallbacks
 	engineConfiguration->rpmHardLimit = 7000;
@@ -95,7 +92,7 @@ void setDefaultBaseEngine() {
 	engineConfiguration->tachPulsePerRev = 1;
 
 	engineConfiguration->etbMinimumPosition = 1;
-	engineConfiguration->etbMaximumPosition = 100;
+	engineConfiguration->etbMaximumPosition = 99;
 
 	engineConfiguration->tcuInputSpeedSensorTeeth = 1;
 	engineConfiguration->issFilterReciprocal = 2;
@@ -109,6 +106,9 @@ void setDefaultBaseEngine() {
 
 	setDefaultVrThresholds();
 
+	// Oil pressure protection
+	engineConfiguration->minimumOilPressureTimeout = 0.5f;
+	setLinearCurve(config->minimumOilPressureBins, 0, 7000);
 }
 
 void setPPSInputs(adc_channel_e pps1, adc_channel_e pps2) {
@@ -127,6 +127,7 @@ void setTPS1Calibration(uint16_t tpsMin, uint16_t tpsMax, uint16_t tps1Secondary
 
 	engineConfiguration->tps1SecondaryMin = tps1SecondaryMin;
 	engineConfiguration->tps1SecondaryMax = tps1SecondaryMax;
+	engineConfiguration->tpsSecondaryMaximum = 100; // fully redundant
 }
 
 void setPPSCalibration(float primaryUp, float primaryDown, float secondaryUp, float secondaryDown) {
@@ -134,6 +135,7 @@ void setPPSCalibration(float primaryUp, float primaryDown, float secondaryUp, fl
 	engineConfiguration->throttlePedalWOTVoltage = primaryDown;
 	engineConfiguration->throttlePedalSecondaryUpVoltage = secondaryUp;
 	engineConfiguration->throttlePedalSecondaryWOTVoltage = secondaryDown;
+	engineConfiguration->ppsSecondaryMaximum = 100; // fully redundant
 }
 
 void setEtbPID(float p, float i, float d) {

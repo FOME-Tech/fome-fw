@@ -29,15 +29,3 @@ void grabPedalIsWideOpen() {
 	engine->outputChannels.calibrationValue = Sensor::getRaw(SensorType::AcceleratorPedalPrimary);
 	engine->outputChannels.calibrationValue2 = Sensor::getRaw(SensorType::AcceleratorPedalSecondary);
 }
-
-bool isTps1Error() {
-	return !Sensor::get(SensorType::Tps1).Valid;
-}
-
-bool isTps2Error() {
-    return !Sensor::get(SensorType::Tps2).Valid && Sensor::hasSensor(SensorType::Tps2Primary);
-}
-
-bool isPedalError() {
-    return !Sensor::get(SensorType::AcceleratorPedal).Valid && Sensor::hasSensor(SensorType::AcceleratorPedalPrimary);
-}

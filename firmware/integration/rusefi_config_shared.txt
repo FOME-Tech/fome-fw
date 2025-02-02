@@ -33,12 +33,10 @@
 #define BOOST_BLEND_COUNT 2
 #define LUA_GAUGE_COUNT 2
 
-#define HW_EVENT_TYPES 6
+#define STFT_BANK_COUNT 4
 
 #define GAUGE_NAME_VERSION "firmware"
 #define GAUGE_NAME_UPTIME "Uptime"
-#define GAUGE_NAME_TRG_ERR "Trigger Error Counter"
-#define GAUGE_NAME_TRG_GAP "Trigger Sync Latest Ratio"
 
 #define GAUGE_CATEGORY_ETB "ETB more"
 
@@ -52,12 +50,21 @@
 #define GAUGE_NAME_VVT_TARGET_B2I "VVT: bank 2 intake target"
 #define GAUGE_NAME_VVT_TARGET_B2E "VVT: bank 2 exhaust target"
 
+#define GAUGE_NAME_VVT_OUTPUT_B1I "VVT: bank 1 intake output"
+#define GAUGE_NAME_VVT_OUTPUT_B1E "VVT: bank 1 exhaust output"
+#define GAUGE_NAME_VVT_OUTPUT_B2I "VVT: bank 2 intake output"
+#define GAUGE_NAME_VVT_OUTPUT_B2E "VVT: bank 2 exhaust output"
+
 #define GAUGE_NAME_DESIRED_GEAR "TCU: Desired Gear"
 #define GAUGE_NAME_CURRENT_GEAR "Current Gear"
 #define GAUGE_NAME_ISS "TCU: Input Shaft Speed"
 #define GAUGE_NAME_TC_RATIO "TCU: Torque Converter Ratio"
 
 #define GAUGE_NAME_VVS "Vehicle Speed"
+#define GAUGE_NAME_WHEEL_SPEED_LF "Wheel speed: LF"
+#define GAUGE_NAME_WHEEL_SPEED_RF "Wheel speed: RF"
+#define GAUGE_NAME_WHEEL_SPEED_LR "Wheel speed: LR"
+#define GAUGE_NAME_WHEEL_SPEED_RR "Wheel speed: RR"
 #define GAUGE_NAME_GEAR_RATIO "Gearbox Ratio"
 #define GAUGE_NAME_DETECTED_GEAR "Detected Gear"
 #define GAUGE_NAME_TURBO_SPEED "Turbocharger Speed"
@@ -76,8 +83,6 @@
 #define GAUGE_NAME_WG_POSITION "Wastegate position sensor"
 #define GAUGE_NAME_ETB_ERROR "ETB: position error"
 #define GAUGE_NAME_ETB_DUTY "ETB: Duty"
-#define GAUGE_NAME_IDLE_POSITION "Idle: Position sensor"
-#define GAUGE_NAME_IDLE_RPM_TARGET "Idle: Target RPM"
 #define GAUGE_NAME_LAST_ERROR "Last error"
 #define GAUGE_NAME_TUNE_CRC16 "Tune CRC16"
 #define GAUGE_NAME_ENGINE_CRC16 "Engine CRC16"
@@ -85,11 +90,9 @@
 
 #define GAUGE_NAME_RAW_FUEL_PRESSURE_LOW "Fuel pressure raw (low)"
 #define GAUGE_NAME_FUEL_PRESSURE_LOW "Fuel pressure (low)"
-#define GAUGE_NAME_FUEL_PRESSURE_LOW_UNITS "kPa"
 
 #define GAUGE_NAME_RAW_FUEL_PRESSURE_HIGH "Fuel pressure raw (high)"
 #define GAUGE_NAME_FUEL_PRESSURE_HIGH "Fuel pressure (high)"
-#define GAUGE_NAME_FUEL_PRESSURE_HIGH_UNITS "bar"
 #define GAUGE_NAME_FLEX "Flex Ethanol %"
 
 #define GAUGE_NAME_ACCEL_LAT "Accel: Lateral"
@@ -104,18 +107,14 @@
 
 #define GAUGE_NAME_ECU_TEMPERATURE "ECU temperature"
 
-#define GAUGE_NAME_AUX_LINEAR_1 "Aux linear #1"
-#define GAUGE_NAME_AUX_LINEAR_2 "Aux linear #2"
-
-#define GAUGE_NAME_BOOST_OUTPUT "Boost: Output"
-#define GAUGE_NAME_BOOST_CLOSED_LOOP "Boost: Closed loop"
-#define GAUGE_NAME_BOOST_OPEN_LOOP "Boost: Open loop"
-#define GAUGE_NAME_BOOST_TARGET "Boost: Target"
+#define GAUGE_NAME_AUX_LINEAR_1 "Aux linear 1"
+#define GAUGE_NAME_AUX_LINEAR_2 "Aux linear 2"
+#define GAUGE_NAME_AUX_LINEAR_3 "Aux linear 3"
+#define GAUGE_NAME_AUX_LINEAR_4 "Aux linear 4"
 
 #define INDICATOR_NAME_CLUTCH_UP "Clutch: up"
 #define INDICATOR_NAME_CLUTCH_DOWN "Clutch: down"
 #define INDICATOR_NAME_BRAKE_DOWN "Brake switch"
-#define INDICATOR_NAME_AC_SWITCH "AC switch"
 
 #define GAUGE_NAME_AIR_FLOW_MEASURED "MAF"
 #define GAUGE_NAME_AIR_FLOW_MEASURED_2 "MAF #2"
@@ -146,8 +145,6 @@
 #define GAUGE_NAME_FUEL_BASE "Fuel: base cycle mass"
 #define GAUGE_NAME_FUEL_TRIM "Fuel: fuel trim"
 #define GAUGE_NAME_FUEL_TRIM_2 "Fuel: fuel trim 2"
-#define GAUGE_NAME_FUEL_WALL_AMOUNT "Fuel: wall amount"
-#define GAUGE_NAME_FUEL_WALL_CORRECTION "Fuel: wall correction"
 #define GAUGE_NAME_FUEL_LOAD "Fuel: Load"
 #define GAUGE_NAME_FUEL_CONSUMPTION "Fuel: Total consumed"
 #define GAUGE_NAME_FUEL_FLOW "Fuel: Flow rate"
@@ -162,13 +159,11 @@
 #define GAUGE_NAME_AFR2 "Air/Fuel Ratio 2"
 #define GAUGE_NAME_AFR_GAS_SCALE "Air/Fuel Ratio (Gas Scale)"
 #define GAUGE_NAME_AFR2_GAS_SCALE "Air/Fuel Ratio 2 (Gas Scale)"
-#define GAUGE_NAME_LAMBDA "Lambda"
-#define GAUGE_NAME_LAMBDA2 "Lambda 2"
-#define GAUGE_NAME_IAC "Idle: Position"
 
 #define GAUGE_NAME_TIMING_ADVANCE "Ign: Timing Base"
 #define GAUGE_NAME_DWELL_DUTY "Ign: Coil duty cycle"
 #define GAUGE_COIL_DWELL_TIME "Ign: Dwell"
+#define GAUGE_NAME_IGNITION_DWELL_ANGLE "Ign: Dwell angle"
 #define GAUGE_NAME_IGNITION_LOAD "Ign: Load"
 #define GAUGE_NAME_IGNITION_MODE "Ign: Mode"
 

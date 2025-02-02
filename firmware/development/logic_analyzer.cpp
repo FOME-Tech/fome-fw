@@ -70,7 +70,7 @@ public:
 static WaveReader readers[LOGIC_ANALYZER_CHANNEL_COUNT];
 
 static void riseCallback(WaveReader *reader) {
-	efitick_t nowUs = getTimeNowUs();
+	efitimeus_t nowUs = getTimeNowUs();
 	reader->riseEventCounter++;
 	reader->lastActivityTimeUs = nowUs;
 	assertIsrContext(ObdCode::CUSTOM_ERR_6670);
@@ -84,13 +84,13 @@ static void riseCallback(WaveReader *reader) {
 }
 
 void WaveReader::onFallEvent() {
-	efitick_t nowUs = getTimeNowUs();
+	efitimeus_t nowUs = getTimeNowUs();
 	fallEventCounter++;
 	lastActivityTimeUs = nowUs;
 	assertIsrContext(ObdCode::CUSTOM_ERR_6670);
 	addEngineSnifferLogicAnalyzerEvent(laIndex, false);
 
-	efitick_t width = nowUs - widthEventTimeUs;
+	efitimeus_t width = nowUs - widthEventTimeUs;
 	last_wave_high_widthUs = width;
 
 #if EFI_SHAFT_POSITION_INPUT
@@ -150,7 +150,7 @@ static void initWave(size_t index) {
 	efiPrintf("wave%d input on %s", index, hwPortname(brainPin));
 }
 
-void waTriggerEventListener(trigger_event_e ckpSignalType, uint32_t index, efitick_t edgeTimestamp) {
+void waTriggerEventListener(TriggerEvent ckpSignalType, uint32_t index, efitick_t edgeTimestamp) {
 	(void)ckpSignalType;
 	if (index != 0) {
 		return;
@@ -212,7 +212,7 @@ static void reportWave(Logging *logging, int index) {
 	logging->appendPrintf("%s", LOG_DELIMITER);
 
 	efitimeus_t offsetUs = getWaveOffset(index);
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	if (rpm != 0) {
 		float oneDegreeUs = getOneDegreeTimeUs(rpm);
 

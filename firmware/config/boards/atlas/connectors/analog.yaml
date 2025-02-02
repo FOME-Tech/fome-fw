@@ -1,0 +1,76 @@
+pins:
+  - id: [A0, EFI_ADC_0]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 1
+
+  - id: [A1, EFI_ADC_1]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 2
+
+  - id: [A2, EFI_ADC_2]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 3
+
+  - id: [A3, EFI_ADC_3]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 4
+
+  - id: [A4, EFI_ADC_4]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 5
+
+  - id: [A5, EFI_ADC_5]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 6
+
+  - id: [A6, EFI_ADC_6]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 7
+
+  - id: [A7, EFI_ADC_7]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 8
+
+  - id: [B0, EFI_ADC_8]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 9
+
+  - id: [B1, EFI_ADC_9]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 10
+
+  - id: [C0, EFI_ADC_10]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Volt 11
+
+  - id: [C1, EFI_ADC_11]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Temp 1
+
+  - id: [C2, EFI_ADC_12]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Temp 2
+
+  - id: [C3, EFI_ADC_13]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Temp 3
+
+  - id: [C4, EFI_ADC_14]
+    class: [switch_inputs, analog_inputs]
+    ts_name: Analog Temp 4
+
+  - id: EFI_ADC_15
+    class: analog_inputs
+    ts_name: Battery Sense
+
+  - id: EFI_ADC_16
+    class: analog_inputs
+    ts_name: Main Relay Sense
+
+  - id: EFI_ADC_17
+    class: analog_inputs
+    ts_name: Sensor 5V Sense
+
+  - id: EFI_ADC_18
+    class: analog_inputs
+    ts_name: VBoost Sense

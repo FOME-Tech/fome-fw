@@ -43,7 +43,7 @@ public class TcpCommunicationIntegrationTest {
     @Test
     public void testConnectAndTransmitImageOverTcpIp() throws InterruptedException {
         ScalarIniField iniField = TestHelper.createIniField(Fields.CYLINDERSCOUNT);
-        int value = 239;
+        int value = 123;
         ConfigurationImage serverImage = TestHelper.prepareImage(value, iniField);
         int port = 6100;
 

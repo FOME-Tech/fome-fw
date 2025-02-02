@@ -195,7 +195,7 @@
  * @note    The default is @p TRUE.
  */
 #if !defined(CH_CFG_USE_TM)
-#define CH_CFG_USE_TM                       TRUE
+#define CH_CFG_USE_TM                       FALSE
 #endif
 
 /**
@@ -354,7 +354,7 @@
  * @note    Requires @p CH_CFG_USE_HEAP and/or @p CH_CFG_USE_MEMPOOLS.
  */
 #if !defined(CH_CFG_USE_DYNAMIC)
-#define CH_CFG_USE_DYNAMIC                  TRUE
+#define CH_CFG_USE_DYNAMIC                  FALSE
 #endif
 
 /** @} */

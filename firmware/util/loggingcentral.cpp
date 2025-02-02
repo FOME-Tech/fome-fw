@@ -5,7 +5,7 @@
  * 
  * Uses a queue of buffers so that the expensive printf operation doesn't require exclusive access
  * (ie, global system lock) to log.  In the past there have been serious performance problems caused
- * by heavy logging on a low prioriy thread that blocks the rest of the system running (trigger errors, etc).
+ * by heavy logging on a low priority thread that blocks the rest of the system running (trigger errors, etc).
  * 
  * Uses ChibiOS message queues to maintain one queue of free buffers, and one queue of used buffers.
  * When a thread wants to write, it acquires a free buffer, prints to it, and pushes it in to the
@@ -47,7 +47,7 @@ size_t LogBuffer<TBufferSize>::length() const {
 template <size_t TBufferSize>
 void LogBuffer<TBufferSize>::reset() {
 	m_writePtr = m_buffer;
-	memset(m_buffer, 0, TBufferSize);
+	*m_writePtr = '\0';
 }
 
 template <size_t TBufferSize>
@@ -63,11 +63,10 @@ void LogBuffer<TBufferSize>::writeInternal(const char* buffer) {
 
 	// If we can't fit the whole thing, write as much as we can
 	len = minI(available, len);
+	// Ensure the output buffer is always null terminated (in case we did a partial write)
+	*(m_writePtr + len) = '\0';
 	memcpy(m_writePtr, buffer, len);
 	m_writePtr += len;
-
-	// Ensure the output buffer is always null terminated (in case we did a partial write)
-	*m_writePtr = '\0';
 }
 
 // for unit tests
@@ -96,9 +95,7 @@ const char* swapOutputBuffers(size_t* actualOutputBufferSize) {
 		chibios_rt::MutexLocker lock(logBufferMutex);
 
 		// Swap buffers under lock
-		auto temp = writeBuffer;
-		writeBuffer = readBuffer;
-		readBuffer = temp;
+		std::swap(writeBuffer, readBuffer);
 
 		// Reset the front buffer - it's now empty
 		writeBuffer->reset();
@@ -137,14 +134,16 @@ public:
 			LogLineBuffer* line;
 			msg_t msg = filledBuffers.fetch(&line, TIME_INFINITE);
 
-			if (msg == MSG_RESET) {
-				// FIXME what happens if MSG_RESET?
+			if (msg != MSG_OK) {
+				// This should be impossible - neither timeout or reset should happen
 			} else {
-				// Lock the buffer mutex - inhibit buffer swaps while writing
-				chibios_rt::MutexLocker lock(logBufferMutex);
+				{
+					// Lock the buffer mutex - inhibit buffer swaps while writing
+					chibios_rt::MutexLocker lock(logBufferMutex);
 
-				// Write the line out to the output buffer
-				writeBuffer->writeLine(line);
+					// Write the line out to the output buffer
+					writeBuffer->writeLine(line);
+				}
 
 				// Return this line buffer to the free list
 				freeBuffers.post(line, TIME_INFINITE);
@@ -167,15 +166,11 @@ void startLoggingProcessor() {
 
 #endif // EFI_PROD_CODE
 
-#if EFI_UNIT_TEST || EFI_SIMULATOR
-extern bool verboseMode;
-#endif
-
 namespace priv
 {
 void efiPrintfInternal(const char *format, ...) {
 #if EFI_UNIT_TEST || EFI_SIMULATOR
-	if (verboseMode) {
+	{
 		printf("efiPrintfInternal:");
 		va_list ap;
 		va_start(ap, format);
@@ -208,19 +203,21 @@ void efiPrintfInternal(const char *format, ...) {
 	// Ensure that the string is comma-terminated in case it overflowed
 	lineBuffer->buffer[sizeof(lineBuffer->buffer) - 1] = LOG_DELIMITER[0];
 
-	if (len > sizeof(lineBuffer->buffer) - 1)
+	if (len > sizeof(lineBuffer->buffer) - 1) {
 		len = sizeof(lineBuffer->buffer) - 1;
+	}
+
 	for (size_t i = 0; i < len; i++) {
 		/* just replace all non-printable chars with space
 		 * TODO: is there any other "prohibited" chars? */
-		if (isprint(lineBuffer->buffer[i]) == 0)
+		if (isprint(lineBuffer->buffer[i]) == 0) {
 			lineBuffer->buffer[i] = ' ';
+		}
 	}
 
 	{
 		// Push the buffer in to the written list so it can be written back
 		chibios_rt::CriticalSectionLocker csl;
-
 		filledBuffers.postI(lineBuffer);
 	}
 #endif

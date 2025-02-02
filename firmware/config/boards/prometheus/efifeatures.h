@@ -17,9 +17,6 @@
 #undef EFI_MAX_31855
 #define EFI_MAX_31855 FALSE
 
-#undef EFI_AUX_SERIAL
-#define EFI_AUX_SERIAL FALSE
-
 #undef EFI_USB_SERIAL
 #define EFI_USB_SERIAL FALSE
 
@@ -66,10 +63,6 @@
 #define LED_CRITICAL_ERROR_BRAIN_PIN Gpio::A13
 
 #undef CONSOLE_MODE_SWITCH_PORT
-
-//!!!!!!!!!!!!!!!
-//#undef EFI_INTERNAL_ADC
-//#define EFI_INTERNAL_ADC FALSE
 
 #undef ADC_VCC
 #define ADC_VCC 3.275f

@@ -17,11 +17,9 @@ include $(PROJECT_DIR)/rusefi_rules.mk
 BOARDS_DIR = $(PROJECT_DIR)/config/boards
 
 # User may want to pass in a forced value for SANITIZE
-# ifeq ($(SANITIZE),)
-#	SANITIZE = yes
-# endif
-
-SANITIZE = no
+ifeq ($(SANITIZE),)
+	SANITIZE = yes
+endif
 
 IS_MAC = no
 UNAME_S := $(shell uname -s)
@@ -62,7 +60,7 @@ ifeq ($(USE_CPPOPT),)
   USE_CPPOPT = -std=gnu++2a -fno-rtti -fno-use-cxa-atexit
 endif
 
-USE_CPPOPT += $(RUSEFI_CPPOPT)
+USE_CPPOPT += $(RUSEFI_CPPOPT) -fPIC -fprofile-arcs -ftest-coverage
 
 # Enable address sanitizer for C++ files, but not on Windows since x86_64-w64-mingw32-g++ doesn't support it.
 # only c++ because lua does some things asan doesn't like, but don't actually cause overruns.
@@ -167,6 +165,10 @@ ULIBDIR =
 # List all user libraries here
 ULIBS = -lm
 
+ifneq ($(IS_MAC),yes)
+	ULIBS += -lgcov --coverage
+endif
+
 ifeq ($(COVERAGE),yes)
 	ULIBS += --coverage
 endif
@@ -197,6 +199,7 @@ include $(UNIT_TESTS_DIR)/rules.mk
 include $(PROJECT_DIR)/rusefi_pch.mk
 include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
+include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
 
 .PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
 

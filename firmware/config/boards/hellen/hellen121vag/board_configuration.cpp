@@ -135,6 +135,6 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 
-	engineConfiguration->vrThreshold[0].pin = H144_OUT_PWM6;
+	config->vrThreshold[0].pin = H144_OUT_PWM6;
 	hellenWbo();
 }

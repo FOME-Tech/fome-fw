@@ -7,7 +7,6 @@
 
 #include "pch.h"
 
-#include "advance_map.h"
 #include "efi_pid.h"
 #include "idle_thread.h"
 #include "electronic_throttle.h"
@@ -364,8 +363,6 @@ TEST(idle_v2, openLoopCoastingTable) {
 	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::Coasting, 1500, 0, 0, 2));
 }
 
-extern int timeNowUs;
-
 TEST(idle_v2, closedLoopBasic) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	IdleController dut;
@@ -376,7 +373,6 @@ TEST(idle_v2, closedLoopBasic) {
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.periodMs = 0;
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
@@ -384,7 +380,7 @@ TEST(idle_v2, closedLoopBasic) {
 
 	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
 	dut.getClosedLoop(ICP::Idling, 0, 900, 900);
-	timeNowUs += 5'000'000;
+	advanceTimeUs(5'000'000);
 
 	// Test above target, should return negative
 	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 950, /*tgt*/ 900));
@@ -404,7 +400,6 @@ TEST(idle_v2, closedLoopDeadzone) {
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.periodMs = 0;
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
@@ -412,7 +407,7 @@ TEST(idle_v2, closedLoopDeadzone) {
 
 	// burn one then advance time 5 seconds to avoid difficulty from wasResetPid
 	dut.getClosedLoop(ICP::Idling, 0, 900, 900);
-	timeNowUs += 5'000'000;
+	advanceTimeUs(5'000'000);
 
 	// Test above target, should return negative
 	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 950, /*tgt*/ 900));
@@ -423,9 +418,9 @@ TEST(idle_v2, closedLoopDeadzone) {
 
 struct IntegrationIdleMock : public IdleController {
 	MOCK_METHOD(int, getTargetRpm, (float clt), (override));
-	MOCK_METHOD(ICP, determinePhase, (int rpm, int targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));
+	MOCK_METHOD(ICP, determinePhase, (float rpm, float targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));
 	MOCK_METHOD(float, getOpenLoop, (ICP phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction), (override));
-	MOCK_METHOD(float, getClosedLoop, (ICP phase, float tps, int rpm, int target), (override));
+	MOCK_METHOD(float, getClosedLoop, (ICP phase, float tps, float rpm, float target), (override));
 	MOCK_METHOD(float, getCrankingTaperFraction, (float clt), (const, override));
 };
 

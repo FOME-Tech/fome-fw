@@ -39,8 +39,8 @@
 #endif
 
 // One block buffer per LUN
-static NO_CACHE uint8_t blkbuf0[MMCSD_BLOCK_SIZE];
-static NO_CACHE uint8_t blkbuf1[MMCSD_BLOCK_SIZE];
+static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
+static SDMMC_MEMORY(MMCSD_BLOCK_SIZE) uint8_t blkbufSdmmc[MMCSD_BLOCK_SIZE];
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -49,7 +49,7 @@ static const scsi_inquiry_response_t iniDriveInquiry = {
     0x80,           /* removable                      */
     0x04,           /* SPC-2                          */
     0x02,           /* response data format           */
-    0x20,           /* response has 0x20 + 4 bytes    */
+    sizeof(scsi_inquiry_response_t) - 5,	// size of this struct, minus bytes up to and including this one
     0x00,
     0x00,
     0x00,
@@ -63,7 +63,7 @@ static const scsi_inquiry_response_t sdCardInquiry = {
     0x80,           /* removable                      */
     0x04,           /* SPC-2                          */
     0x02,           /* response data format           */
-    0x20,           /* response has 0x20 + 4 bytes    */
+    sizeof(scsi_inquiry_response_t) - 5,	// size of this struct, minus bytes up to and including this one
     0x00,
     0x00,
     0x00,
@@ -73,7 +73,7 @@ static const scsi_inquiry_response_t sdCardInquiry = {
 };
 
 void attachMsdSdCard(BaseBlockDevice* blkdev) {
-	msd.attachLun(1, blkdev, blkbuf1, &sdCardInquiry, nullptr);
+	msd.attachLun(1, blkdev, blkbufSdmmc, &sdCardInquiry, nullptr);
 
 #if EFI_TUNER_STUDIO
 	// SD MSD attached, enable indicator in TS
@@ -110,11 +110,34 @@ static BaseBlockDevice* getRamdiskDevice() {
 }
 
 void initUsbMsd() {
+	// STM32H7 SDMMC1 needs the filesystem object to be in AXI
+	// SRAM, but excluded from the cache
+	#ifdef STM32H7XX
+	{
+		void* base = &blkbufSdmmc;
+		static_assert(sizeof(blkbufSdmmc) == 512);
+		uint32_t size = MPU_RASR_SIZE_512;
+
+		mpuConfigureRegion(MPU_REGION_5,
+						base,
+						MPU_RASR_ATTR_AP_RW_RW |
+						MPU_RASR_ATTR_NON_CACHEABLE |
+						MPU_RASR_ATTR_S |
+						size |
+						MPU_RASR_ENABLE);
+		mpuEnable(MPU_CTRL_PRIVDEFENA);
+
+		/* Invalidating data cache to make sure that the MPU settings are taken
+		immediately.*/
+		SCB_CleanInvalidateDCache();
+	}
+	#endif
+
 	// Attach the ini ramdisk
-	msd.attachLun(0, getRamdiskDevice(), blkbuf0, &iniDriveInquiry, nullptr);
+	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
 
 	// attach a null device in place of the SD card for now - the SD thread may replace it later
-	msd.attachLun(1, (BaseBlockDevice*)&ND1, blkbuf1, &sdCardInquiry, nullptr);
+	msd.attachLun(1, (BaseBlockDevice*)&ND1, blkbufSdmmc, &sdCardInquiry, nullptr);
 
 	// start the mass storage thread
 	msd.start();

@@ -14,16 +14,7 @@
  *    configure it if necessary, and call its Register() function if it should be enabled.
  *    See init_oil_pressure.cpp for a minimal example.
  *
- * 3. Consume the new sensor with instance(s) of SensorConsumer<SensorType::MyNewSensor>
- *
- * Consumers:
- *
- *   tl;dr: Use a SensorConsumer.  See sensor_consumer.h
- *
- *   All a consumer does is look up whether a particular sensor is present in the table,
- *   and if so, asks it for the current reading.  This could synchronously perform sensor
- *   acquisition and conversion (not recommended), or use a previously stored value (recommended!).
- *   This functionality is implemented in sensor_consumer.h, and sensor.cpp.
+ * 3. Consume the new sensor with Sensor::get(SensorType::MyNewSensor)
  *
  * Providers:
  *   Instantiate a subclass of Sensor, and implement the Get() function.
@@ -115,11 +106,6 @@ public:
 
 
 	static void setInvalidMockValue(SensorType type);
-
-	/*
-	 * Mock a value for a particular sensor.
-	 */
-	static void setMockValue(int type, float value);
 
 	/*
 	 * Reset mock for a particular sensor.

@@ -66,7 +66,7 @@ void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brain
 		ioportid_t port = getHwPort(msg, brainPin);
 		ioportmask_t pin = getHwPin(msg, brainPin);
 		/* paranoid */
-		if (port == GPIO_NULL)
+		if (!port)
 			return;
 
 		palSetPadMode(port, pin, mode);
@@ -110,10 +110,6 @@ iomode_t getInputMode(pin_input_mode_e mode) {
 	default:
 		return PAL_MODE_INPUT;
 	}
-}
-
-void writePad(const char *msg, brain_pin_e pin, int bit) {
-	palWritePad(getHwPort(msg, pin), getHwPin(msg, pin), bit);
 }
 
 #else /* EFI_PROD_CODE */
