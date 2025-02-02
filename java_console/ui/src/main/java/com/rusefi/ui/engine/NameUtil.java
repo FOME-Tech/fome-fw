@@ -24,6 +24,8 @@ public class NameUtil {
             return "Injector Second Stage #" + name.substring(1);
         if (name.charAt(0) == 'k')
             return "Knock sense window";
+        if (name.equals("map"))
+            return "MAP sampling window";
         return name;
     }
 }
