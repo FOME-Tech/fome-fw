@@ -1924,6 +1924,7 @@ end_struct
 #define ts_show_vvt true
 #define ts_show_pedal true
 #define ts_show_maf true
+#define ts_show_tle8888 false
 
 ! we need to improve this further - at the moment we need too many boards to prepend 'false'
 #define show_test_presets true
