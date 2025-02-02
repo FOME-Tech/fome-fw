@@ -20,7 +20,12 @@ static volatile size_t sampleCount = 0;
 
 chibios_rt::BinarySemaphore knockSem(/* taken =*/ true);
 
+static NamedOutputPin knockSnifferPin("knock window", "kn");
+
+
 void onKnockSamplingComplete() {
+	knockSnifferPin.setLow();
+
 	knockNeedsProcess = true;
 
 	// Notify the processing thread that it's time to process this sample
@@ -59,6 +64,7 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 
 	adcStartConversionI(&KNOCK_ADC, conversionGroup, knockSampleBuffer, sampleCount);
 	lastKnockSampleTime = getTimeNowNt();
+	knockSnifferPin.setHigh();
 }
 
 class KnockThread : public ThreadController<256> {
