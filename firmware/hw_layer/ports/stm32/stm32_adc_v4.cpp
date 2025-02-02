@@ -231,14 +231,12 @@ static const uint32_t smpr2 =
 	ADC_SMPR2_SMP_AN19(KNOCK_SAMPLE_TIME);
 
 static const ADCConversionGroup adcConvGroupCh1 = {
-	.circular = FALSE,
+	.circular = false,
 	.num_channels = 1,
 	.end_cb = &knockCompletionCallback,
 	.error_cb = &knockErrorCallback,
-	.cfgr				= 0,
-	.cfgr2				= 	(H7_KNOCK_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos |	// Oversample by Nx (register contains N-1)
-							H7_KNOCK_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		// shift the result right log2(N) bits to make a 16 bit result out of the internal oversample sum
-							ADC_CFGR2_ROVSE,			// Enable oversampling
+	.cfgr				= ADC_CFGR_CONT,
+	.cfgr2				= 0,
 	.ccr				= 0,
 	.pcsel				= 0xFFFFFFFF, // enable analog switches on all channels
 	// Thresholds aren't used
@@ -256,14 +254,12 @@ static const ADCConversionGroup adcConvGroupCh1 = {
 // Not all boards have a second channel - configure it if it exists
 #if KNOCK_HAS_CH2
 static const ADCConversionGroup adcConvGroupCh2 = {
-	.circular = FALSE,
+	.circular = false,
 	.num_channels = 1,
 	.end_cb = &knockCompletionCallback,
 	.error_cb = &knockErrorCallback,
-	.cfgr				= 0,
-	.cfgr2				= 	(H7_ADC_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos |	// Oversample by Nx (register contains N-1)
-							H7_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		// shift the result right log2(N) bits to make a 16 bit result out of the internal oversample sum
-							ADC_CFGR2_ROVSE,			// Enable oversampling
+	.cfgr				= ADC_CFGR_CONT,
+	.cfgr2				= 0,
 	.ccr				= 0,
 	.pcsel				= 0xFFFFFFFF, // enable analog switches on all channels
 	// Thresholds aren't used
