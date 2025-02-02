@@ -1187,7 +1187,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.02.f407-discovery.2956121838";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.02.f407-discovery.3757604080";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1268;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1268,6 +1268,7 @@ public class Fields {
 	public static final Field INJECTORSECONDARY_BATTLAGCORRBINS = Field.create("INJECTORSECONDARY_BATTLAGCORRBINS", 60, FieldType.INT16).setScale(0.01).setBaseOffset(0);
 	public static final Field INJECTORSECONDARY_BATTLAGCORR = Field.create("INJECTORSECONDARY_BATTLAGCORR", 76, FieldType.INT16).setScale(0.01).setBaseOffset(0);
 	public static final Field ISFORCEDINDUCTION = Field.create("ISFORCEDINDUCTION", 92, FieldType.BIT, 0).setBaseOffset(0);
+	public static final Field USEMAPESTIMATEDURINGTRANSIENT = Field.create("USEMAPESTIMATEDURINGTRANSIENT", 92, FieldType.BIT, 1).setBaseOffset(0);
 	public static final Field LAMBDAPROTECTIONENABLE = Field.create("LAMBDAPROTECTIONENABLE", 92, FieldType.BIT, 2).setBaseOffset(0);
 	public static final Field OVERRIDETRIGGERGAPS = Field.create("OVERRIDETRIGGERGAPS", 92, FieldType.BIT, 3).setBaseOffset(0);
 	public static final Field ENABLEFAN1WITHAC = Field.create("ENABLEFAN1WITHAC", 92, FieldType.BIT, 4).setBaseOffset(0);
