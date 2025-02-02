@@ -12,6 +12,10 @@
 
 #include "mpu_util.h"
 
+// Both ADCs should be running at 12.5MHz
+static_assert(STM32_ADC12_CLOCK == 25000000);
+static_assert(STM32_ADC3_CLOCK == 25000000);
+
 #ifdef ADC_MUX_PIN
 #error "ADC mux not yet supported on STM32H7"
 #endif
@@ -66,9 +70,10 @@ static void adc_callback(ADCDriver *adcp) {
 }
 
 // ADC Clock is 25MHz
-// 16.5 sampling + 8.5 conversion = 25 cycles per sample total
+// 16.5 sampling + 7.5 conversion = 24 cycles per sample total
 // 16 channels * 4x oversample = 64 samples per batch
-// (25 * 64) / 25MHz -> 64 microseconds to sample all channels
+// (24 * 64) / 25MHz -> 61.4 microseconds to sample all channels
+// We sample at 10khz, or a period of 100us
 #define ADC_SAMPLING_SLOW ADC_SMPR_SMP_16P5
 
 // Sample the 16 channels that line up with the STM32F4/F7
