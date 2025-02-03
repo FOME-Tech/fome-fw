@@ -35,6 +35,25 @@
 #define STM32_ST_IRQ_PRIORITY               8
 #define STM32_ST_USE_TIMER                  2
 
+// Precision scheduling timer
+#define STM32_IRQ_TIM5_PRIORITY         PRECISE_SCHEDULING_TIMER_PRIORITY
+// Fast ADC callback timer
+#define STM32_IRQ_TIM6_PRIORITY             7
+
+#define STM32_IRQ_TIM1_BRK_TIM9_PRIORITY    7
+#define STM32_IRQ_TIM1_UP_TIM10_PRIORITY    7
+#define STM32_IRQ_TIM1_TRGCO_TIM11_PRIORITY 7
+#define STM32_IRQ_TIM1_CC_PRIORITY          7
+#define STM32_IRQ_TIM2_PRIORITY         7
+#define STM32_IRQ_TIM3_PRIORITY         7
+#define STM32_IRQ_TIM4_PRIORITY         7
+// see TIM5/TIM6 above
+#define STM32_IRQ_TIM7_PRIORITY             7
+#define STM32_IRQ_TIM8_BRK_TIM12_PRIORITY   7
+#define STM32_IRQ_TIM8_UP_TIM13_PRIORITY    7
+#define STM32_IRQ_TIM8_TRGCO_TIM14_PRIORITY 7
+#define STM32_IRQ_TIM8_CC_PRIORITY          7
+
 /*
  * ADC driver system settings.
  */
@@ -130,8 +149,10 @@
 #define STM32_GPT_USE_TIM7                  FALSE
 #define STM32_GPT_USE_TIM8                  FALSE
 #define STM32_GPT_USE_TIM9                  FALSE
+#define STM32_GPT_USE_TIM10                 FALSE
 #define STM32_GPT_USE_TIM11                 FALSE
 #define STM32_GPT_USE_TIM12                 FALSE
+#define STM32_GPT_USE_TIM13                 FALSE
 #define STM32_GPT_USE_TIM14                 FALSE
 
 /*
@@ -184,13 +205,11 @@
 #define STM32_ICU_USE_TIM5                  FALSE
 #define STM32_ICU_USE_TIM8                  FALSE
 #define STM32_ICU_USE_TIM9                  FALSE
-#define STM32_ICU_TIM1_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM2_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM3_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM4_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM5_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM8_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM9_IRQ_PRIORITY         ICU_PRIORITY
+#define STM32_ICU_USE_TIM10                 FALSE
+#define STM32_ICU_USE_TIM11                 FALSE
+#define STM32_ICU_USE_TIM12                 FALSE
+#define STM32_ICU_USE_TIM13                 FALSE
+#define STM32_ICU_USE_TIM14                 FALSE
 
 /*
  * MAC driver system settings.
@@ -201,7 +220,7 @@
 #define STM32_MAC_PHY_TIMEOUT               100
 #define STM32_MAC_ETH1_CHANGE_PHY_STATE     TRUE
 #define STM32_MAC_ETH1_IRQ_PRIORITY         13
-#define STM32_MAC_IP_CHECKSUM_OFFLOAD       3
+#define STM32_MAC_IP_CHECKSUM_OFFLOAD       0
 
 /*
  * PWM driver system settings.
@@ -214,13 +233,11 @@
 #define STM32_PWM_USE_TIM5                  TRUE
 #define STM32_PWM_USE_TIM8                  TRUE
 #define STM32_PWM_USE_TIM9                  FALSE
-#define STM32_PWM_TIM1_IRQ_PRIORITY         7
-#define STM32_PWM_TIM2_IRQ_PRIORITY         7
-#define STM32_PWM_TIM3_IRQ_PRIORITY         7
-#define STM32_PWM_TIM4_IRQ_PRIORITY         7
-#define STM32_PWM_TIM5_IRQ_PRIORITY         PRECISE_SCHEDULING_TIMER_PRIORITY
-#define STM32_PWM_TIM8_IRQ_PRIORITY         7
-#define STM32_PWM_TIM9_IRQ_PRIORITY         7
+#define STM32_PWM_USE_TIM10                 FALSE
+#define STM32_PWM_USE_TIM11                 FALSE
+#define STM32_PWM_USE_TIM12                 FALSE
+#define STM32_PWM_USE_TIM13                 FALSE
+#define STM32_PWM_USE_TIM14                 FALSE
 
 /*
  * SERIAL driver system settings.
@@ -375,8 +392,8 @@
 #define STM32_USB_OTG2_IRQ_PRIORITY         14
 #define STM32_USB_OTG1_RX_FIFO_SIZE         512
 #define STM32_USB_OTG2_RX_FIFO_SIZE         1024
-#define STM32_USB_OTG_THREAD_STACK_SIZE     1024
-#define STM32_USB_OTGFIFO_FILL_BASEPRI      0
+#define STM32_USB_HOST_WAKEUP_DURATION      2
+
 
 /*
  * WDG driver system settings.

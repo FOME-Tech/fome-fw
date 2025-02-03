@@ -1,5 +1,5 @@
 /*
-    ChibiOS - Copyright (C) 2006..2018 Giovanni Di Sirio
+    ChibiOS - Copyright (C) 2006..2020 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 #define HALCONF_H
 
 #define _CHIBIOS_HAL_CONF_
-#define _CHIBIOS_HAL_CONF_VER_7_1_
+#define _CHIBIOS_HAL_CONF_VER_8_4_
 
 #include "mcuconf.h"
 
@@ -62,6 +62,13 @@
 #if !defined(HAL_USE_I2C) || defined(__DOXYGEN__)
 #define HAL_USE_I2C                         FALSE
 #endif
+
+// /**
+//  * @brief   Enables the I2S subsystem.
+//  */
+// #if !defined(HAL_USE_I2S) || defined(__DOXYGEN__)
+// #define HAL_USE_I2S                         FALSE
+// #endif
 
 /**
  * @brief   Enables the ICU subsystem.
@@ -164,25 +171,14 @@
 #endif
 
 /*===========================================================================*/
-/* CRY driver related settings.                                              */
+/* I2C driver related settings.                                              */
 /*===========================================================================*/
 
 /**
- * @brief   Enables the SW fall-back of the cryptographic driver.
- * @details When enabled, this option, activates a fall-back software
- *          implementation for algorithms not supported by the underlying
- *          hardware.
- * @note    Fall-back implementations may not be present for all algorithms.
+ * @brief   Enables the mutual exclusion APIs on the I2C bus.
  */
-#if !defined(HAL_CRY_USE_FALLBACK) || defined(__DOXYGEN__)
-#define HAL_CRY_USE_FALLBACK                FALSE
-#endif
-
-/**
- * @brief   Makes the driver forcibly use the fall-back implementations.
- */
-#if !defined(HAL_CRY_ENFORCE_FALLBACK) || defined(__DOXYGEN__)
-#define HAL_CRY_ENFORCE_FALLBACK            FALSE
+#if !defined(I2C_USE_MUTUAL_EXCLUSION) || defined(__DOXYGEN__)
+#define I2C_USE_MUTUAL_EXCLUSION            TRUE
 #endif
 
 /*===========================================================================*/
@@ -259,11 +255,10 @@
 /*===========================================================================*/
 
 /**
- * @brief   Enables circular transfers APIs.
- * @note    Disabling this option saves both code and data space.
+ * @brief   Inserts an assertion on function errors before returning.
  */
-#if !defined(SPI_USE_CIRCULAR) || defined(__DOXYGEN__)
-#define SPI_USE_CIRCULAR                    FALSE
+#if !defined(SPI_USE_ASSERT_ON_ERROR) || defined(__DOXYGEN__)
+#define SPI_USE_ASSERT_ON_ERROR                     TRUE
 #endif
 
 /**
