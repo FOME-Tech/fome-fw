@@ -42,27 +42,56 @@ public:
 
 	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
 		while (size) {
-			// Write at most SOCKET_BUFFER_MAX_LENGTH bytes at a time
-			size_t chunkSize = std::min(size, (size_t)SOCKET_BUFFER_MAX_LENGTH);
+			size_t chunkSize = writeChunk(buffer, size);
 
-			// Write this chunk
-			sendBuffer = buffer;
-			sendSize = chunkSize;
-			sendRequest = true;
-			isrSemaphore.signal();
-
-			// Step buffer/size for the next chunk
 			buffer += chunkSize;
 			size -= chunkSize;
-
-			// Wait for this chunk to complete
-			sendDoneSemaphore.wait();
 		}
+	}
+
+	void flush() final override {
+		if (m_writeSize == 0) {
+			// spurious flush, ignore
+			return;
+		}
+
+		sendBuffer = m_writeBuffer;
+		sendSize = m_writeSize;
+		sendRequest = true;
+		isrSemaphore.signal();
+
+		// Wait for this chunk to complete
+		sendDoneSemaphore.wait();
+
+		m_writeSize = 0;
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
 		return iqReadTimeout(&wifiIqueue, buffer, size, timeout);
 	}
+
+private:
+	size_t writeChunk(const uint8_t* buffer, size_t size) {
+		// Maximum we can fit in the buffer before a flush
+		size_t available = SOCKET_BUFFER_MAX_LENGTH - m_writeSize;
+
+		// Size we will write to the buffer in this chunk
+		size_t chunkSize = std::min(size, available);
+
+		// Perform the write!
+		memcpy(&m_writeBuffer[m_writeSize], buffer, chunkSize);
+		m_writeSize += chunkSize;
+
+		// This write filled the buffer, flush it
+		if (m_writeSize == SOCKET_BUFFER_MAX_LENGTH) {
+			flush();
+		}
+
+		return chunkSize;
+	}
+
+	uint8_t m_writeBuffer[SOCKET_BUFFER_MAX_LENGTH];
+	size_t m_writeSize = 0;
 };
 
 static NO_CACHE WifiChannel wifiChannel;
