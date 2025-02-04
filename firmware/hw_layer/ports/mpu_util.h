@@ -24,10 +24,9 @@ bool isStm32F42x();
 void portInitAdc();
 float getMcuTemperature();
 // Convert all slow ADC inputs.  Returns true if the conversion succeeded, false if a failure occured.
-bool readSlowAnalogInputs(adcsample_t* convertedSamples);
-
-// Get the position of samples for this channel in the sample buffer
-size_t indexForSlowAdcChannel(adc_channel_e channel);
+bool readSlowAnalogInputs();
+// Read the sampled value of a slow channel
+adcsample_t getSlowAdcSample(adc_channel_e channel);
 #endif
 
 // CAN bus

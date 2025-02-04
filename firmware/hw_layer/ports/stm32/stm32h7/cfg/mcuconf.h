@@ -252,7 +252,7 @@
  * ADC driver system settings.
  */
 #define STM32_ADC_DUAL_MODE                 TRUE
-#define STM32_ADC_COMPACT_SAMPLES           FALSE
+#define STM32_ADC_SAMPLES_SIZE              32
 #define STM32_ADC_USE_ADC12                 TRUE
 
 #ifndef STM32_ADC_USE_ADC3
@@ -265,7 +265,7 @@
 #define STM32_ADC_ADC3_DMA_PRIORITY         2
 #define STM32_ADC_ADC12_IRQ_PRIORITY        5
 #define STM32_ADC_ADC3_IRQ_PRIORITY         5
-#define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_AHB_DIV2
+#define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_ADCCK
 #define STM32_ADC_ADC3_CLOCK_MODE           ADC_CCR_CKMODE_ADCCK
 
 /*
