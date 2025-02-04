@@ -16,7 +16,7 @@ TEST(ignition, twoCoils) {
 	EngineTestHelper eth(engine_type_e::FRANKENSO_BMW_M73_F);
 
 	// let's recalculate with zero timing so that we can focus on relation advance between cylinders
-	setArrayValues(engine->engineState.timingAdvance, 0.0f);
+	for (auto& c : engine->cylinders) c.setIgnitionTimingBtdc(0);
 	initializeIgnitionActions();
 
 	// first one to fire uses first coil
@@ -48,12 +48,6 @@ TEST(ignition, trailingSpark) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
 
-	/**
-	// TODO #3220: this feature makes this test sad, eventually remove this line (and the ability to disable it altogether)
-	 * I am pretty sure that it's about usage of improper method clearQueue() below see it's comment
-	 */
-	engine->enableOverdwellProtection = false;
-
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
 		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
 
@@ -74,12 +68,11 @@ TEST(ignition, trailingSpark) {
 	// still no RPM since need to cycles measure cycle duration
 	eth.fireTriggerEventsWithDuration(20);
 	ASSERT_EQ( 3000,  Sensor::getOrZero(SensorType::Rpm)) << "RPM#0";
-	eth.clearQueue();
 
 	/**
 	 * Trigger up - scheduling fuel for full engine cycle
 	 */
-	eth.fireRise(20);
+	eth.smartFireRise(20);
 
 	// Primary coil should be high
 	EXPECT_EQ(enginePins.coils[0].getLogicValue(), true);
@@ -145,10 +138,10 @@ TEST(ignition, CylinderTimingTrim) {
 
 	// Check that each cylinder gets the expected timing
 	float unadjusted = 15;
-	EXPECT_NEAR(engine->engineState.timingAdvance[0], unadjusted - 4, EPS4D);
-	EXPECT_NEAR(engine->engineState.timingAdvance[1], unadjusted - 2, EPS4D);
-	EXPECT_NEAR(engine->engineState.timingAdvance[2], unadjusted + 2, EPS4D);
-	EXPECT_NEAR(engine->engineState.timingAdvance[3], unadjusted + 4, EPS4D);
+	EXPECT_NEAR(engine->cylinders[0].getIgnitionTimingBtdc(), unadjusted - 4, EPS4D);
+	EXPECT_NEAR(engine->cylinders[1].getIgnitionTimingBtdc(), unadjusted - 2, EPS4D);
+	EXPECT_NEAR(engine->cylinders[2].getIgnitionTimingBtdc(), unadjusted + 2, EPS4D);
+	EXPECT_NEAR(engine->cylinders[3].getIgnitionTimingBtdc(), unadjusted + 4, EPS4D);
 }
 
 TEST(ignition, oddCylinderWastedSpark) {
@@ -192,7 +185,7 @@ TEST(ignition, oddCylinderWastedSpark) {
 
 	// dwell should start at 15 degrees ATDC and firing at 25 deg ATDC
 	engine->ignitionState.dwellAngle = 10;
-	engine->engineState.timingAdvance[0] = -25;
+	engine->cylinders[0].setIgnitionTimingBtdc(-25);
 	engine->engineState.useOddFireWastedSpark = true;
 	engineConfiguration->minimumIgnitionTiming = -25;
 

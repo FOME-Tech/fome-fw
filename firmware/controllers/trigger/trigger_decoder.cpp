@@ -39,15 +39,6 @@ bool TriggerDecoderBase::getShaftSynchronized() {
 }
 
 void TriggerDecoderBase::setShaftSynchronized(bool value) {
-	if (value) {
-		if (!shaft_is_synchronized) {
-			// just got synchronized
-			mostRecentSyncTime = getTimeNowNt();
-		}
-	} else {
-		// sync loss
-		mostRecentSyncTime = {};
-	}
 	shaft_is_synchronized = value;
 }
 

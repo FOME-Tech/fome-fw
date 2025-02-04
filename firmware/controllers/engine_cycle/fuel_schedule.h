@@ -32,9 +32,6 @@ private:
 	// Update the injection start angle
 	bool updateInjectionAngle();
 
-	// Compute the injection start angle, compensating for injection duration and injection phase settings.
-	expected<float> computeInjectionAngle() const;
-
 	/**
 	 * This is a performance optimization for IM_SIMULTANEOUS fuel strategy.
 	 * It's more efficient to handle all injectors together if that's the case

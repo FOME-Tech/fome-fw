@@ -83,10 +83,6 @@ void EngineState::periodicFastCallback() {
 	ScopePerf perf(PE::EngineStatePeriodicFastCallback);
 
 #if EFI_ENGINE_CONTROL
-	if (!engine->slowCallBackWasInvoked) {
-		warning(ObdCode::CUSTOM_SLOW_NOT_INVOKED, "Slow not invoked yet");
-	}
-
 	efitick_t nowNt = getTimeNowNt();
 	bool isCranking = engine->rpmCalculator.isCranking();
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
@@ -168,9 +164,9 @@ void EngineState::periodicFastCallback() {
 		auto cylinderTrim = getCylinderFuelTrim(i, rpm, fuelLoad);
 
 		// Apply both per-bank and per-cylinder trims
-		engine->engineState.injectionMass[i] = untrimmedInjectionMass * bankTrim * cylinderTrim;
+		engine->cylinders[i].setInjectionMass(untrimmedInjectionMass * bankTrim * cylinderTrim);
 
-		timingAdvance[i] = untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
+		engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad));
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;

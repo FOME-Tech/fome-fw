@@ -141,7 +141,7 @@ void can_lld_stop(CANDriver *canp) {
 	(void)canp;
 
 	// Remove from the "interrupt handler" list
-	std::remove(instances.begin(), instances.end(), canp);
+	(void)std::remove(instances.begin(), instances.end(), canp);
 
 	// Close the socket.
 	close(canp->sock);

@@ -46,7 +46,7 @@ public class ScalarLayout extends Layout {
         double actualScale = (double)mul / div;
 
         if (mul < 1 || div < 1 || (Math.abs(scale - actualScale) < 0.0001)) {
-            throw new RuntimeException("assertion failure: scale string generation failure for " + this.name + " mul " + mul + " div " + div);
+            throw new RuntimeException("assertion failure: scale string generation failure for " + this.name + " mul " + mul + " div " + div + " (unnecessary autoscale?)");
         }
 
         return mul + ", " + div;

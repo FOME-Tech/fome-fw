@@ -10,7 +10,6 @@
 #include "knock_config.h"
 #include "ch.hpp"
 
-static NO_CACHE adcsample_t sampleBuffer[2000];
 static int8_t currentCylinderNumber = 0;
 static efitick_t lastKnockSampleTime;
 static Biquad knockFilter;
@@ -21,7 +20,12 @@ static volatile size_t sampleCount = 0;
 
 chibios_rt::BinarySemaphore knockSem(/* taken =*/ true);
 
+static NamedOutputPin knockSnifferPin("knock window", "kn");
+
+
 void onKnockSamplingComplete() {
+	knockSnifferPin.setLow();
+
 	knockNeedsProcess = true;
 
 	// Notify the processing thread that it's time to process this sample
@@ -50,7 +54,7 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 
 	// Convert sampling time to number of samples
 	constexpr int sampleRate = KNOCK_SAMPLE_RATE;
-	sampleCount = 0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(sampleBuffer)));
+	sampleCount = 0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(knockSampleBuffer)));
 
 	// Select the appropriate conversion group - it will differ depending on which sensor this cylinder should listen on
 	auto conversionGroup = getKnockConversionGroup(channelIdx);
@@ -58,8 +62,9 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 	// Stash the current cylinder's number so we can store the result appropriately
 	currentCylinderNumber = cylinderNumber;
 
-	adcStartConversionI(&KNOCK_ADC, conversionGroup, sampleBuffer, sampleCount);
+	adcStartConversionI(&KNOCK_ADC, conversionGroup, knockSampleBuffer, sampleCount);
 	lastKnockSampleTime = getTimeNowNt();
+	knockSnifferPin.setHigh();
 }
 
 class KnockThread : public ThreadController<256> {
@@ -112,10 +117,10 @@ static void processLastKnockEvent() {
 
 	float sumSq = 0;
 
-	constexpr float vcc = 3.3f;
+	float vcc = engineConfiguration->adcVcc;
 
 	// Ratio in units of volts per ADC count
-	constexpr float ratio = vcc / 4095.0f;
+	float ratio = vcc / ADC_MAX_VALUE;
 
 	size_t localCount = sampleCount;
 
@@ -125,7 +130,7 @@ static void processLastKnockEvent() {
 
 	// Compute the sum of squares
 	for (size_t i = 0; i < localCount; i++) {
-		float volts = ratio * sampleBuffer[i];
+		float volts = ratio * knockSampleBuffer[i];
 
 		float filtered = knockFilter.filter(volts);
 

@@ -637,7 +637,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[2] = 0x00;
 			msg[3] = 0x00;
 			/* Ignition Angle (Leading) - y = x/10 */
-			float timing = engine->engineState.timingAdvance[0];
+			float timing = engine->cylinders[0].getIgnitionTimingBtdc();
 			int16_t ignAngle = ((timing > 360 ? timing - 720 : timing) * 10);
 			msg[4] = (ignAngle >> 8);			
 			msg[5] = (ignAngle & 0x00ff);

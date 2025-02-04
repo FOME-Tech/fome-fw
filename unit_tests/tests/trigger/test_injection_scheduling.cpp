@@ -74,7 +74,7 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	engine->rpmCalculator.oneDegreeUs = 100;
 
 	// Some nonzero fuel quantity on both stages
-	engine->engineState.injectionMass[0] = 50;
+	engine->cylinders[0].setInjectionMass(50);
 	engine->engineState.injectionStage2Fraction = 0.2;
 
 	{

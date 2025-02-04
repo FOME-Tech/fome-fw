@@ -25,6 +25,9 @@ static void deInitAuxDigital() {
 }
 
 void initNewSensors() {
+	// First (optionally) init any sensors built in to the board that don't need config
+	initBoardSensors();
+
 	reconfigureSensors();
 
 	initBaro();
@@ -46,11 +49,6 @@ void initNewSensors() {
 		Sensor::setMockValue(SensorType::BatteryVoltage, 10);
 	}
 #endif
-
-#if EFI_SIMULATOR
-	// Simulator gets battery voltage so it detects ignition-on
-	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
-#endif // EFI_SIMULATOR
 }
 
 void stopSensors() {

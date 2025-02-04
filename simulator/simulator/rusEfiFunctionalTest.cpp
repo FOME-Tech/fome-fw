@@ -17,7 +17,6 @@
 #include "status_loop.h"
 #include "trigger_emulator_algo.h"
 #include "main_trigger_callback.h"
-#include "sensor_chart.h"
 #include "bench_test.h"
 #include "tunerstudio.h"
 #include "mmc_card.h"
@@ -181,4 +180,9 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 #endif // HAL_USE_CAN
 
 void setBoardConfigOverrides() {
+}
+
+void initBoardSensors() {
+	// Simulator gets battery voltage so it detects ignition-on
+	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
 }

@@ -333,8 +333,14 @@ void EnginePins::startInjectionPins() {
 NamedOutputPin::NamedOutputPin() : OutputPin() {
 }
 
-NamedOutputPin::NamedOutputPin(const char *name) 
+NamedOutputPin::NamedOutputPin(const char* name)
 	: m_name(name)
+{
+}
+
+NamedOutputPin::NamedOutputPin(const char* name, const char* shortname)
+	: shortName(shortname)
+	, m_name(name)
 {
 }
 

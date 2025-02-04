@@ -48,9 +48,6 @@
 #undef EFI_USE_OSC
 #define EFI_USE_OSC TRUE
 
-#undef EFI_CAN_SUPPORT
-#define EFI_CAN_SUPPORT TRUE
-
 #undef EFI_FILE_LOGGING
 #define EFI_FILE_LOGGING TRUE
 

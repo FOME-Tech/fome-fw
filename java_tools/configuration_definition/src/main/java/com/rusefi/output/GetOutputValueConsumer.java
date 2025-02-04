@@ -92,7 +92,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
     }
 
     @NotNull
-    static StringBuilder getGetters(StringBuilder switchBody, List<VariableRecord> getterPairs) {
+    public static StringBuilder getGetters(StringBuilder switchBody, List<VariableRecord> getterPairs) {
         HashMap<Integer, AtomicInteger> hashConflicts = getHashConflicts(getterPairs);
 
         StringBuilder getterBody = new StringBuilder();
@@ -107,6 +107,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
             if (hashConflicts.get(hash).get() == 1) {
                 switchBody.append(before);
                 switchBody.append("\t\tcase " + hash + ":\n");
+                switchBody.append("\t\t\t// " + pair.getUserName() + "\n");
                 switchBody.append("\t" + returnLine);
                 switchBody.append(after);
             } else {

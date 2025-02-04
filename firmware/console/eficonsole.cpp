@@ -104,7 +104,7 @@ void validateStack(const char*msg, ObdCode code, int desiredStackUnusedSize) {
 
 #if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 int CountFreeStackSpace(const void* wabase) {
-	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase);
+	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase) + PORT_GUARD_PAGE_SIZE;
 	const uint8_t* stackUsage = stackBase;
 
 	// thread stacks are filled with CH_DBG_STACK_FILL_VALUE

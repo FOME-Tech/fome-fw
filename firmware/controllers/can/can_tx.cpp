@@ -42,7 +42,7 @@ void CanWrite::PeriodicTask(efitick_t) {
 	CanCycle cycle(cycleCount);
 
 	//in case we have Verbose Can enabled, we should keep user configured period
-	if (engineConfiguration->enableVerboseCanTx && !engine->pauseCANdueToSerial) {
+	if (engineConfiguration->enableVerboseCanTx) {
 		auto roundedInterval = roundTxPeriodToCycle(engineConfiguration->canSleepPeriodMs);
 		if (cycle.isInterval(roundedInterval)) {
 			void sendCanVerbose();

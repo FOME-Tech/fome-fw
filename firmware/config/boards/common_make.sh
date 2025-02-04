@@ -18,13 +18,16 @@ FW_DIR=$(readlink -f $FW_DIR)
 echo "FW dir is $FW_DIR"
 cd $FW_DIR
 
-mkdir -p .dep
+mkdir -p .dep # ChibiOS build's DEPDIR
+mkdir -p build # ChibiOS build's BUILDDIR
 echo "Calling make for the main firmware..."
 make -j6 -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
 [ -e build/fome.hex ] || { echo "FAILED to compile by $SCRIPT_NAME with $PROJECT_BOARD $DEBUG_LEVEL_OPT and $EXTRA_PARAMS"; exit 1; }
 if [ "${USE_OPENBLT-no}" = "yes" ]; then
   # TODO: why is this rm necessary?
   rm -f pch/pch.h.gch/*
+  rm engine_modules_generated*
+  rm modules_list_generated*
   echo "Calling make for the bootloader..."
   cd bootloader; make -j6 PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
   [ -e bootloader/blbuild/fome_bl.hex ] || { echo "FAILED to compile OpenBLT by $SCRIPT_NAME with $PROJECT_BOARD"; exit 1; }

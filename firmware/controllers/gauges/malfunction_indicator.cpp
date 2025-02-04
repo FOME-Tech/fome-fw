@@ -33,8 +33,6 @@
 
 #include "periodic_thread_controller.h"
 
-#define TEST_MIL_CODE FALSE
-
 #define MFI_LONG_BLINK	1500
 #define MFI_SHORT_BLINK	400
 #define MFI_BLINK_SEPARATOR 400
@@ -86,32 +84,25 @@ private:
 
 		validateStack("MIL", ObdCode::STACK_USAGE_MIL, 128);
 #if EFI_SHAFT_POSITION_INPUT
-		if (nowNt - engine->triggerCentral.triggerState.mostRecentSyncTime < MS2NT(500)) {
-			enginePins.checkEnginePin.setValue(1);
-			chThdSleepMilliseconds(500);
-			enginePins.checkEnginePin.setValue(0);
-		}
-
 		static error_codes_set_s localErrorCopy;
 		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
 		getErrorCodes(&localErrorCopy);
-		for (int p = 0; p < localErrorCopy.count; p++) {
-			// Calculate how many digits in this integer and display error code from start to end
-			int code = (int)localErrorCopy.error_codes[p];
-			DisplayErrorCode(DigitLength(code), code);
+
+		if (localErrorCopy.count) {
+			for (int p = 0; p < localErrorCopy.count; p++) {
+				// Calculate how many digits in this integer and display error code from start to end
+				int code = (int)localErrorCopy.error_codes[p];
+				DisplayErrorCode(DigitLength(code), code);
+			}
+		} else {
+			// Turn on the CEL while the engine is stopped
+			enginePins.checkEnginePin.setValue(!engine->rpmCalculator.isRunning());
 		}
 #endif // EFI_SHAFT_POSITION_INPUT
 	}
 };
 
 static MILController instance;
-
-#if TEST_MIL_CODE
-static void testMil() {
-	addError(ObdCode::OBD_Engine_Coolant_Temperature_Circuit_Malfunction);
-	addError(ObdCode::OBD_Intake_Air_Temperature_Circuit_Malfunction);
-}
-#endif /* TEST_MIL_CODE */
 
 bool isMilEnabled() {
 	return isBrainPinValid(engineConfiguration->malfunctionIndicatorPin);
@@ -123,10 +114,6 @@ void initMalfunctionIndicator(void) {
 	}
 	instance.setPeriod(10 /*ms*/);
 	instance.start();
-
-#if	TEST_MIL_CODE
-	addConsoleAction("testmil", testMil);
-#endif /* TEST_MIL_CODE */
 }
 
 #endif /* EFI_MALFUNCTION_INDICATOR */

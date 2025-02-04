@@ -343,6 +343,8 @@ include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
 include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
 
+$(info MODULES_INC:   $(MODULES_INC))
+
 .PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
 
 CLEAN_RULE_HOOK: CLEAN_PCH_HOOK CLEAN_GENERATED_HOOK

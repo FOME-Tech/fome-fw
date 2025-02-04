@@ -3,15 +3,10 @@ package com.rusefi.ldmp;
 import com.devexperts.logging.Logging;
 import com.rusefi.EnumToString;
 import com.rusefi.InvokeReader;
-import com.rusefi.ReaderStateImpl;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
-import com.rusefi.newparse.outputs.CStructWriter;
-import com.rusefi.newparse.outputs.OutputChannelWriter;
-import com.rusefi.newparse.outputs.SdLogWriter;
+import com.rusefi.newparse.outputs.*;
 import com.rusefi.newparse.parsing.Definition;
-import com.rusefi.output.*;
-import com.rusefi.util.LazyFile;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -71,12 +66,10 @@ public class LiveDataProcessor {
     }
 
     interface EntryHandler {
-        void onEntry(String name, String javaName, String folder, String prepend, boolean withCDefines, String[] outputNames, String constexpr, String conditional, Boolean isPtr) throws IOException;
+        void onEntry(String name, String javaName, String folder, String prepend, String[] outputNames, String constexpr, String conditional, Boolean isPtr) throws IOException;
     }
 
     private int handleYaml(Map<String, Object> data) throws IOException {
-        GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer("generated/output_lookup_generated.cpp");
-
         OutputChannelWriter outputChannelWriter = new OutputChannelWriter(
             tsOutputsDestination + File.separator + "/output_channels.ini",
             tsOutputsDestination + File.separator + "/data_logs.ini"
@@ -84,36 +77,18 @@ public class LiveDataProcessor {
 
         SdLogWriter sdLogWriter = new SdLogWriter("generated/log_fields_generated.h");
 
-        EntryHandler handler = (name, javaName, folder, prepend, withCDefines, outputNames, constexpr, conditional, isPtr) -> {
+        OutputLookupWriter outputLookupWriter = new OutputLookupWriter("generated/output_lookup_generated.cpp", "getOutputValueByName");
+
+        EntryHandler handler = (name, javaName, folder, prepend, outputNames, constexpr, conditional, isPtr) -> {
             int startingPosition = outputChannelWriter.getSize();
             log.info("Starting " + name + " at " + startingPosition + " with [" + conditional + "]");
 
-            baseAddressCHeader.append("#define " + name.toUpperCase() + "_BASE_ADDRESS " + startingPosition + "\n");
+            baseAddressCHeader.append("#define ").append(name.toUpperCase()).append("_BASE_ADDRESS ").append(startingPosition).append("\n");
 
-            ReaderStateImpl state = new ReaderStateImpl();
-            state.setDefinitionInputFile(folder + File.separator + name + ".txt");
-            state.setWithC_Defines(withCDefines);
-
-            if (extraPrepend != null)
-                state.addPrepend(extraPrepend);
-            state.addPrepend(prepend);
             String cHeaderDestination = folder + File.separator + name + "_generated.h";
 
-            int baseOffset = outputChannelWriter.getSize();
-
-           if (javaName != null) {
-               state.addDestination(new FileJavaFieldsConsumer(state, "../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, baseOffset));
-           }
-
-            if (constexpr != null) {
-                outputValueConsumer.currentSectionPrefix = constexpr;
-                outputValueConsumer.conditional = conditional;
-                outputValueConsumer.isPtr = isPtr;
-                state.addDestination(outputValueConsumer::handleEndStruct);
-            }
-
             {
-                ParseState parseState = new ParseState(state.getEnumsReader());
+                ParseState parseState = new ParseState();
 
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
 
@@ -121,25 +96,32 @@ public class LiveDataProcessor {
                     RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prepend);
                 }
 
-                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
+                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), folder + File.separator + name + ".txt");
 
                 CStructWriter cStructs = new CStructWriter();
                 cStructs.writeCStructs(parseState, cHeaderDestination);
 
-                 if (outputNames.length == 0) {
+                if (javaName != null) {
+                    JavaFieldsWriter javaWriter = new JavaFieldsWriter("../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, outputChannelWriter.getSize());
+                    javaWriter.writeDefinitions(parseState.getDefinitions());
+                    javaWriter.writeFields(parseState);
+                    javaWriter.finish();
+                }
+
+                if (outputNames.length == 0) {
                     outputChannelWriter.writeOutputChannels(parseState, null);
-                 } else {
-                     for (String outputName : outputNames) {
-                         outputChannelWriter.writeOutputChannels(parseState, outputName);
-                     }
-                 }
+                } else {
+                    for (String outputName : outputNames) {
+                        outputChannelWriter.writeOutputChannels(parseState, outputName);
+                    }
+                }
 
-                 if (constexpr != null) {
-                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-                 }
+                if (constexpr != null) {
+                    sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
+
+                    outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
+                }
             }
-
-            state.doJob();
 
             log.info("Done with " + name + " at " + outputChannelWriter.getSize());
         };
@@ -154,10 +136,8 @@ public class LiveDataProcessor {
             String prepend = (String) entry.get("prepend");
             String constexpr = (String) entry.get("constexpr");
             String conditional = (String) entry.get("conditional_compilation");
-            Boolean withCDefines = (Boolean) entry.get("withCDefines");
             Boolean isPtr = (Boolean) entry.get("isPtr");
             // Defaults to false if not specified
-            withCDefines = withCDefines != null && withCDefines;
             isPtr = isPtr != null && isPtr;
 
             Object outputNames = entry.get("output_name");
@@ -174,7 +154,7 @@ public class LiveDataProcessor {
                 nameList.toArray(outputNamesArr);
             }
 
-            handler.onEntry(name, java, folder, prepend, withCDefines, outputNamesArr, constexpr, conditional, isPtr);
+            handler.onEntry(name, java, folder, prepend, outputNamesArr, constexpr, conditional, isPtr);
 
             String enumName = "LDS_" + name;
             String type = name + "_s"; // convention
@@ -200,8 +180,8 @@ public class LiveDataProcessor {
         }
         enumContent.append("} live_data_e;\n");
 
-        outputValueConsumer.endFile();
         sdLogWriter.endFile();
+        outputLookupWriter.endFile();
 
         return outputChannelWriter.getSize();
     }

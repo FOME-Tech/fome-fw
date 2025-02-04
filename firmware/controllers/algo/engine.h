@@ -49,7 +49,9 @@
 #include "lambda_monitor.h"
 #include "vvt.h"
 
+#ifndef EFI_BOOTLOADER
 #include "engine_modules_generated.h"
+#endif
 
 #include <functional>
 
@@ -107,12 +109,64 @@ private:
 	size_t m_errorBlinkCounter = 0;
 };
 
+class OneCylinder final {
+public:
+	void updateCylinderNumber(uint8_t index, uint8_t cylinderNumber);
+	void invalidCylinder();
+
+	// Get this cylinder's offset, in positive degrees, from cylinder 1
+	angle_t getAngleOffset() const;
+
+	// **************************
+	//           Fuel
+	// **************************
+
+	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
+	expected<angle_t> computeInjectionAngle() const;
+
+	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
+	mass_t getInjectionMass() const {
+		return m_injectionMass;
+	}
+
+	void setInjectionMass(mass_t m) {
+		m_injectionMass = m;
+	}
+
+	// **************************
+	//         Ignition
+	// **************************
+	void setIgnitionTimingBtdc(angle_t deg) {
+		m_timingAdvance = deg;
+	}
+
+	angle_t getIgnitionTimingBtdc() const {
+		return m_timingAdvance;
+	}
+
+	// Get angle of the spark firing in engine cycle coordinates, relative to #1 TDC
+	angle_t getSparkAngle(angle_t lateAdjustment) const;
+
+private:
+	bool m_valid = false;
+
+	// This cylinder's position in the firing order (0-based)
+	uint8_t m_cylinderIndex = 0;
+	// This cylinder's physical cylinder number (0-based)
+	uint8_t m_cylinderNumber = 0;
+
+	// This cylinder's mechanical TDC offset in degrees after #1
+	angle_t m_baseAngleOffset;
+
+	mass_t m_injectionMass = 0;
+
+	// 10 means 10 degrees BTDC
+	angle_t m_timingAdvance = 0;
+};
+
 class Engine final : public TriggerStateListener {
 public:
 	Engine();
-
-	// todo: technical debt: enableOverdwellProtection #3553
-	bool enableOverdwellProtection = true;
 
 	TunerStudioOutputChannels outputChannels;
 
@@ -123,13 +177,6 @@ public:
 
 	// used by HW CI
 	bool isPwmEnabled = true;
-
-	const char *prevOutputName = nullptr;
-	/**
-	 * ELM327 cannot handle both RX and TX at the same time, we have to stay quite once first ISO/TP packet was detected
-	 * this is a pretty temporary hack only while we are trying ELM327, long term ISO/TP and rusEFI broadcast should find a way to coexists
-	 */
-	bool pauseCANdueToSerial = false;
 
 	PinRepository pinRepository;
 
@@ -173,7 +220,9 @@ public:
 		LedBlinkingTask,
 		TpsAccelEnrichment,
 
+		#ifndef EFI_BOOTLOADER
 		#include "modules_list_generated.h"
+		#endif
 
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
@@ -246,6 +295,7 @@ public:
 	FuelSchedule injectionEvents;
 	IgnitionEventList ignitionEvents;
 	scheduling_s tdcScheduler[2];
+	OneCylinder cylinders[MAX_CYLINDER_COUNT];
 #endif /* EFI_ENGINE_CONTROL */
 
 	// todo: move to electronic_throttle something?
@@ -255,9 +305,6 @@ public:
 #if EFI_UNIT_TEST
 	bool tdcMarkEnabled = true;
 #endif // EFI_UNIT_TEST
-
-
-	bool slowCallBackWasInvoked = false;
 
 	RpmCalculator rpmCalculator;
 

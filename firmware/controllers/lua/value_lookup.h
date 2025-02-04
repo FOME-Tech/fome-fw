@@ -27,17 +27,6 @@ struct plain_get_float_s {
 	float *value;
 };
 
-template<typename T, size_t TCount>
-T* findPair(const char *name, T array[TCount], size_t count) {
-	for (size_t i = 0; i < TCount; i++) {
-		T *current = &array[i];
-		if (strEqualCaseInsensitive(name, current->token)) {
-			return current;
-		}
-	}
-	return nullptr;
-}
-
 expected<float> getConfigValueByName(const char *name);
 void setConfigValueByName(const char *name, float value);
 expected<float> getOutputValueByName(const char *name);

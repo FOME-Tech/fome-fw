@@ -99,7 +99,7 @@ sint8 nm_bus_init(void*) {
 	chThdSleepMilliseconds(10);
 
 	// Set up SPI
-	wifiSpi = getSpiDevice(getWifiSpiDevice());
+	wifiSpi = getSpiDevice(spi);
 	wifi_spicfg.ssport = wifiCs.m_port;
 	wifi_spicfg.sspad = wifiCs.m_pin;
 	spiStart(wifiSpi, &wifi_spicfg);
@@ -127,7 +127,7 @@ extern "C" void resetSpiDevice(SPIDriver* spi);
 sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
 	spiSelectI(wifiSpi);
 
-	if (u16Sz < 16) {
+	// if (u16Sz < 16) {
 		for (size_t i = 0; i < u16Sz; i++) {
 			uint8 tx = pu8Mosi ? pu8Mosi[i] : 0;
 
@@ -137,37 +137,37 @@ sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
 				pu8Miso[i] = rx;
 			}
 		}
-	} else {
-		// #if CORTEX_MODEL == 7
-		// if (pu8Mosi) {
-		// 	SCB_CleanDCache_by_Addr((uint32_t*)pu8Mosi, u16Sz);
-		// }
-		// #endif
+	// } else {
+	// 	// #if CORTEX_MODEL == 7
+	// 	// if (pu8Mosi) {
+	// 	// 	SCB_CleanDCache_by_Addr((uint32_t*)pu8Mosi, u16Sz);
+	// 	// }
+	// 	// #endif
 
-		// #ifdef STM32H7XX
-		// /* workaround for silicon errata */
-		// /* see https://github.com/rusefi/rusefi/issues/2395 */
-		// resetSpiDevice(wifiSpi);
-		// spiStart(wifiSpi, &wifi_spicfg);
-		// #endif
+	// 	// #ifdef STM32H7XX
+	// 	// /* workaround for silicon errata */
+	// 	// /* see https://github.com/rusefi/rusefi/issues/2395 */
+	// 	// resetSpiDevice(wifiSpi);
+	// 	// spiStart(wifiSpi, &wifi_spicfg);
+	// 	// #endif
 
-		if (pu8Mosi && pu8Miso) {
-			spiExchange(wifiSpi, u16Sz, pu8Mosi, pu8Miso);
-		} else if (pu8Mosi) {
-			spiSend(wifiSpi, u16Sz, pu8Mosi);
-		} else if (pu8Miso) {
-			spiReceive(wifiSpi, u16Sz, pu8Miso);
-		} else {
-			// Neither MISO nor MOSI???
-			osalSysHalt("wifi neither mosi nor miso");
-		}
+	// 	if (pu8Mosi && pu8Miso) {
+	// 		spiExchange(wifiSpi, u16Sz, pu8Mosi, pu8Miso);
+	// 	} else if (pu8Mosi) {
+	// 		spiSend(wifiSpi, u16Sz, pu8Mosi);
+	// 	} else if (pu8Miso) {
+	// 		spiReceive(wifiSpi, u16Sz, pu8Miso);
+	// 	} else {
+	// 		// Neither MISO nor MOSI???
+	// 		osalSysHalt("wifi neither mosi nor miso");
+	// 	}
 
-		// #if CORTEX_MODEL == 7
-		// if (pu8Miso) {
-		// 	SCB_InvalidateDCache_by_Addr((uint32_t*)pu8Miso, u16Sz);
-		// }
-		// #endif
-	}
+	// 	// #if CORTEX_MODEL == 7
+	// 	// if (pu8Miso) {
+	// 	// 	SCB_InvalidateDCache_by_Addr((uint32_t*)pu8Miso, u16Sz);
+	// 	// }
+	// 	// #endif
+	// }
 
 	spiUnselectI(wifiSpi);
 

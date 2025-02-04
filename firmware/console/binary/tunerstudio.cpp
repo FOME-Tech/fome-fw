@@ -69,7 +69,6 @@
 #include "flash_main.h"
 
 #include "tunerstudio_io.h"
-#include "malfunction_central.h"
 #include "console_io.h"
 #include "bluetooth.h"
 #include "tunerstudio_io.h"
@@ -90,11 +89,11 @@
 #endif /* EFI_SIMULATOR */
 
 static void printErrorCounters() {
-	efiPrintf("TunerStudio size=%d / total=%d / errors=%d / H=%d / O=%d / P=%d / B=%d",
-			sizeof(engine->outputChannels), tsState.totalCounter, tsState.errorCounter, tsState.queryCommandCounter,
+	efiPrintf("TunerStudio total=%d / errors=%d / H=%d / O=%d / P=%d / B=%d",
+			tsState.totalCounter, tsState.errorCounter, tsState.queryCommandCounter,
 			tsState.outputChannelsCommandCounter, tsState.readPageCommandsCounter, tsState.burnCommandCounter);
-	efiPrintf("TunerStudio W=%d / C=%d / P=%d", tsState.writeValueCommandCounter,
-			tsState.writeChunkCommandCounter, tsState.pageCommandCounter);
+	efiPrintf("TunerStudio W=%d / C=%d", tsState.writeValueCommandCounter,
+			tsState.writeChunkCommandCounter);
 }
 
 #if EFI_TUNER_STUDIO

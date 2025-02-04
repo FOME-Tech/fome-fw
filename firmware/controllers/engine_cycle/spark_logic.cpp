@@ -60,16 +60,9 @@ static int getIgnitionPinForIndex(int cylinderIndex, ignition_mode_e ignitionMod
 	}
 }
 
-static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent *event) {
-	// todo: clean up this implementation? does not look too nice as is.
-
-	// let's save planned duration so that we can later compare it with reality
-	event->sparkDwell = sparkDwell;
-
+angle_t OneCylinder::getSparkAngle(angle_t lateAdjustment) const {
 	// Compute the final ignition timing including all "late" adjustments
-	angle_t finalIgnitionTiming =	getEngineState()->timingAdvance[event->cylinderNumber]
-									// Pull any extra timing for knock retard
-									- engine->module<KnockController>()->getKnockRetard();
+	angle_t finalIgnitionTiming = m_timingAdvance + lateAdjustment;
 
 	// 10 ATDC ends up as 710, convert it to -10 so we can log and clamp correctly
 	if (finalIgnitionTiming > 360) {
@@ -82,13 +75,27 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	// maximumIgnitionTiming limits maximum advance
 	finalIgnitionTiming = clampF(engineConfiguration->minimumIgnitionTiming, finalIgnitionTiming, engineConfiguration->maximumIgnitionTiming);
 
-	engine->outputChannels.ignitionAdvanceCyl[event->cylinderNumber] = finalIgnitionTiming;
+	engine->outputChannels.ignitionAdvanceCyl[m_cylinderNumber] = finalIgnitionTiming;
 
-	angle_t sparkAngle =
+	return
 		// Negate because timing *before* TDC, and we schedule *after* TDC
 		- finalIgnitionTiming
 		// Offset by this cylinder's position in the cycle
-		+ getCylinderAngle(event->cylinderIndex, event->cylinderNumber);
+		+ getAngleOffset();
+}
+
+static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent *event) {
+	// todo: clean up this implementation? does not look too nice as is.
+
+	const int realCylinderNumber = getCylinderNumberAtIndex(event->cylinderIndex);
+
+	// let's save planned duration so that we can later compare it with reality
+	event->sparkDwell = sparkDwell;
+
+	angle_t sparkAngle = engine->cylinders[realCylinderNumber].getSparkAngle(
+			// Pull any extra timing for knock retard
+			- engine->module<KnockController>()->getKnockRetard()
+		);
 
 	efiAssertVoid(ObdCode::CUSTOM_SPARK_ANGLE_1, !std::isnan(sparkAngle), "sparkAngle#1");
 	wrapAngle(sparkAngle, "findAngle#2", ObdCode::CUSTOM_ERR_6550);
@@ -106,14 +113,14 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
 
 	const int index = getIgnitionPinForIndex(event->cylinderIndex, ignitionMode);
-	const int coilIndex = ID2INDEX(getCylinderId(index));
+	const int coilIndex = getCylinderNumberAtIndex(index);
 
 	IgnitionOutputPin *secondOutput = nullptr;
 
 	// If wasted spark, find the paired coil in addition to "main" output for this cylinder
 	if (ignitionMode == IM_WASTED_SPARK) {
 		int secondIndex = index + engineConfiguration->cylindersCount / 2;
-		int secondCoilIndex = ID2INDEX(getCylinderId(secondIndex));
+		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
 		secondOutput = &enginePins.coils[secondCoilIndex];
 	}
 
@@ -304,7 +311,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		{ fireSparkAndPrepareNextSchedule, event },
 		currentPhase, nextPhase);
 
-	if (!scheduled && !limitedSpark && engine->enableOverdwellProtection) {
+	if (!scheduled && !limitedSpark) {
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
 		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
@@ -316,7 +323,7 @@ void initializeIgnitionActions() {
 	IgnitionEventList *list = &engine->ignitionEvents;
 	angle_t dwellAngle = engine->ignitionState.dwellAngle;
 	floatms_t sparkDwell = engine->ignitionState.getDwell();
-	if (std::isnan(engine->engineState.timingAdvance[0]) || std::isnan(dwellAngle)) {
+	if (std::isnan(engine->cylinders[0].getIgnitionTimingBtdc()) || std::isnan(dwellAngle)) {
 		// error should already be reported
 		// need to invalidate previous ignition schedule
 		list->isReady = false;
@@ -367,11 +374,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 		return;
 	}
 
-	LimpState limitedSparkState = getLimpManager()->allowIgnition();
-
-	// todo: eliminate state copy logic by giving limpManager it's owm limp_manager.txt and leveraging LiveData
-	engine->outputChannels.sparkCutReason = (int8_t)limitedSparkState.reason;
-	bool limitedSpark = !limitedSparkState.value;
+	bool limitedSpark = !getLimpManager()->allowIgnition().value;
 
 	const floatms_t dwellMs = engine->ignitionState.getDwell();
 	if (std::isnan(dwellMs) || dwellMs <= 0) {

@@ -42,27 +42,56 @@ public:
 
 	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
 		while (size) {
-			// Write at most SOCKET_BUFFER_MAX_LENGTH bytes at a time
-			size_t chunkSize = std::max(size, (size_t)SOCKET_BUFFER_MAX_LENGTH);
+			size_t chunkSize = writeChunk(buffer, size);
 
-			// Write this chunk
-			sendBuffer = buffer;
-			sendSize = chunkSize;
-			sendRequest = true;
-			isrSemaphore.signal();
-
-			// Step buffer/size for the next chunk
 			buffer += chunkSize;
 			size -= chunkSize;
-
-			// Wait for this chunk to complete
-			sendDoneSemaphore.wait();
 		}
+	}
+
+	void flush() final override {
+		if (m_writeSize == 0) {
+			// spurious flush, ignore
+			return;
+		}
+
+		sendBuffer = m_writeBuffer;
+		sendSize = m_writeSize;
+		sendRequest = true;
+		isrSemaphore.signal();
+
+		// Wait for this chunk to complete
+		sendDoneSemaphore.wait();
+
+		m_writeSize = 0;
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
 		return iqReadTimeout(&wifiIqueue, buffer, size, timeout);
 	}
+
+private:
+	size_t writeChunk(const uint8_t* buffer, size_t size) {
+		// Maximum we can fit in the buffer before a flush
+		size_t available = SOCKET_BUFFER_MAX_LENGTH - m_writeSize;
+
+		// Size we will write to the buffer in this chunk
+		size_t chunkSize = std::min(size, available);
+
+		// Perform the write!
+		memcpy(&m_writeBuffer[m_writeSize], buffer, chunkSize);
+		m_writeSize += chunkSize;
+
+		// This write filled the buffer, flush it
+		if (m_writeSize == SOCKET_BUFFER_MAX_LENGTH) {
+			flush();
+		}
+
+		return chunkSize;
+	}
+
+	uint8_t m_writeBuffer[SOCKET_BUFFER_MAX_LENGTH];
+	size_t m_writeSize = 0;
 };
 
 static NO_CACHE WifiChannel wifiChannel;
@@ -139,7 +168,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				{
 					chibios_rt::CriticalSectionLocker csl;
 
-					for (size_t i = 0; i < recvMsg->s16BufferSize; i++) {
+					for (sint16 i = 0; i < recvMsg->s16BufferSize; i++) {
 						iqPutI(&wifiIqueue, rxBuf[i]);
 					}
 				}
@@ -183,19 +212,28 @@ struct WifiConsoleThread : public TunerstudioThread {
 	TsChannelBase* setupChannel() override {
 		// Initialize the WiFi module
 		param.pfAppWifiCb = wifiCallback;
-		if (M2M_SUCCESS != m2m_wifi_init(&param)) {
+		if (auto ret = m2m_wifi_init(&param); M2M_SUCCESS != ret) {
+			efiPrintf("Wifi init failed with: %d", ret);
 			return nullptr;
 		}
 
-		strcpy(apConfig.au8SSID, "FOME EFI");
-		apConfig.u8ListenChannel	= 1;
-		apConfig.u8SecType			= M2M_WIFI_SEC_OPEN;
-		apConfig.u8SsidHide			= 0;
+		strncpy(apConfig.au8SSID, config->wifiAccessPointSsid, std::min(sizeof(apConfig.au8SSID), sizeof(config->wifiAccessPointSsid)));
+		apConfig.u8ListenChannel = 1;
+		apConfig.u8SsidHide = 0;
+
+		size_t keyLength = strlen(config->wifiAccessPointPassword);
+		if (keyLength > 0) {
+			apConfig.u8SecType = M2M_WIFI_SEC_WPA_PSK;
+			apConfig.u8KeySz = keyLength;
+			strncpy((char*)apConfig.au8Key, config->wifiAccessPointPassword, std::min(sizeof(apConfig.au8Key), sizeof(config->wifiAccessPointPassword)));
+		} else {
+			apConfig.u8SecType = M2M_WIFI_SEC_OPEN;
+		}
 
 		// IP Address
 		apConfig.au8DHCPServerIP[0]	= 192;
 		apConfig.au8DHCPServerIP[1]	= 168;
-		apConfig.au8DHCPServerIP[2]	= 1;
+		apConfig.au8DHCPServerIP[2]	= 10;
 		apConfig.au8DHCPServerIP[3]	= 1;
 
 		// Trigger AP
@@ -213,7 +251,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		// Start listening on the socket
 		sockaddr_in address;
 		address.sin_family = AF_INET;
-		address.sin_port = _htons(17999);
+		address.sin_port = _htons(29000);
 		address.sin_addr.s_addr = 0;
 
 		listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);

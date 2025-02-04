@@ -32,7 +32,6 @@
 #include "bench_test.h"
 #include "electronic_throttle.h"
 #include "high_pressure_fuel_pump.h"
-#include "malfunction_central.h"
 #include "malfunction_indicator.h"
 #include "speed_density.h"
 #include "local_version_holder.h"

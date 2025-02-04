@@ -98,7 +98,7 @@ enum class ObdCode : uint16_t {
 	//P0087 Fuel Rail/System Pressure - Too Low
 	//P0088 Fuel Rail/System Pressure - Too High
 	//P0089 Fuel Pressure Regulator 1 Performance
-	OBD_Fuel_Pressure_Sensor_Missing = 90,
+	OBD_Fuel_Pressure_Sensor_Missing = 0x0090,
 	//P0091 Fuel Pressure Regulator 1 Control Circuit Low
 	//P0092 Fuel Pressure Regulator 1 Control Circuit High
 	//P0093 Fuel System Leak Detected - Large Leak
@@ -108,45 +108,45 @@ enum class ObdCode : uint16_t {
 	//P0097 Intake Air Temperature Sensor 2 Circuit Low
 	//P0098 Intake Air Temperature Sensor 2 Circuit High
 	//P0099 Intake Air Temperature Sensor 2 Circuit Intermittent/Erratic
-	OBD_Mass_or_Volume_Air_Flow_Circuit_Malfunction = 100,
+	OBD_Mass_or_Volume_Air_Flow_Circuit_Malfunction = 0x0100,
 	//P0101 Mass or Volume Air Flow Circuit Range/Performance Problem
 	//P0102 Mass or Volume Air Flow Circuit Low Input
 	//P0103 Mass or Volume Air Flow Circuit High Input
 	//P0104 Mass or Volume Air Flow Circuit Intermittent
-	OBD_Manifold_Absolute_Pressure_Circuit_Malfunction = 105,
+	OBD_Manifold_Absolute_Pressure_Circuit_Malfunction = 0x0105,
 	//P0106 Manifold Absolute Pressure/Barometric Pressure Circuit Range/Performance Problem
 
-	OBD_Map_Timeout = 106,
-	OBD_Map_Low = 107,
-	OBD_Map_High = 108,
+	OBD_Map_Timeout = 0x0106,
+	OBD_Map_Low = 0x0107,
+	OBD_Map_High = 0x0108,
 
 	//P0107 Manifold Absolute Pressure/Barometric Pressure Circuit Low Input
 	//P0108 Manifold Absolute Pressure/Barometric Pressure Circuit High Input
 	//P0109 Manifold Absolute Pressure/Barometric Pressure Circuit Intermittent
 
-	OBD_ThermistorConfig = 111,
+	OBD_ThermistorConfig = 0x0111,
 
-	OBD_Iat_Timeout = 110,
-	OBD_Iat_Low = 112,
-	OBD_Iat_High = 113,
+	OBD_Iat_Timeout = 0x0110,
+	OBD_Iat_Low = 0x0112,
+	OBD_Iat_High = 0x0113,
 
 	//P0111 Intake Air Temperature Circuit Range/Performance Problem
 	//P0112 Intake Air Temperature Circuit Low Input
 	//P0113 Intake Air Temperature Circuit High Input
 	//P0114 Intake Air Temperature Circuit Intermittent
-	OBD_Clt_Timeout = 115,
-	OBD_Clt_Low = 117,
-	OBD_Clt_High = 118,
+	OBD_Clt_Timeout = 0x0115,
+	OBD_Clt_Low = 0x0117,
+	OBD_Clt_High = 0x0118,
 	//P0116 Engine Coolant Temperature Circuit Range/Performance Problem
 	//P0117 Engine Coolant Temperature Circuit Low Input
 	//P0118 Engine Coolant Temperature Circuit High Input
 	//P0119 Engine Coolant Temperature Circuit Intermittent
 
-	OBD_TPS_Configuration = 121,
+	OBD_TPS_Configuration = 0x0121,
 
-	OBD_TPS1_Primary_Timeout = 120,
-	OBD_TPS1_Primary_Low = 122,
-	OBD_TPS1_Primary_High = 123,
+	OBD_TPS1_Primary_Timeout = 0x0120,
+	OBD_TPS1_Primary_Low = 0x0122,
+	OBD_TPS1_Primary_High = 0x0123,
 
 	//P0122 Throttle Position Sensor/Switch A Circuit Low Input
 	//P0123 Throttle Position Sensor/Switch A Circuit High Input
@@ -197,9 +197,9 @@ enum class ObdCode : uint16_t {
 	//P0174 System too Lean (Bank 2)
 	//P0175 System too Rich (Bank 2)
 
-	OBD_FlexSensor_Timeout = 176,
-	OBD_FlexSensor_Low = 178,
-	OBD_FlexSensor_High = 179,
+	OBD_FlexSensor_Timeout = 0x0176,
+	OBD_FlexSensor_Low = 0x0178,
+	OBD_FlexSensor_High = 0x0179,
 
 	//P0176 Fuel Composition Sensor Circuit Malfunction
 	//P0177 Fuel Composition Sensor Circuit Range/Performance
@@ -221,24 +221,24 @@ enum class ObdCode : uint16_t {
 	//P0193 Fuel Rail Pressure Sensor Circuit High Input
 	//P0194 Fuel Rail Pressure Sensor Circuit Intermittent
 	//P0195 Engine Oil Temperature Sensor Malfunction
-	//P0196 Engine Oil Temperature Sensor Range/Performance
-	//P0197 Engine Oil Temperature Sensor Low
-	//P0198 Engine Oil Temperature Sensor High
+	OBD_OilT_Timeout = 0x0196,
+	OBD_OilT_Low = 0x0197,
+	OBD_OilT_High = 0x0198,
 	//P0199 Engine Oil Temperature Sensor Intermittent
 	//DTC Codes - P0200-P0299 - Fuel and Air Metering (Injector Circuit)
 	//P0200 Injector Circuit Malfunction
-	OBD_Injector_Circuit_1 = 201,
-	OBD_Injector_Circuit_2 = 202,
-	OBD_Injector_Circuit_3 = 203,
-	OBD_Injector_Circuit_4 = 204,
-	OBD_Injector_Circuit_5 = 205,
-	OBD_Injector_Circuit_6 = 206,
-	OBD_Injector_Circuit_7 = 207,
-	OBD_Injector_Circuit_8 = 208,
-	OBD_Injector_Circuit_9 = 209,
-	OBD_Injector_Circuit_10 = 210,
-	OBD_Injector_Circuit_11 = 211,
-	OBD_Injector_Circuit_12 = 212,
+	OBD_Injector_Circuit_1 = 0x0201,
+	OBD_Injector_Circuit_2 = 0x0202,
+	OBD_Injector_Circuit_3 = 0x0203,
+	OBD_Injector_Circuit_4 = 0x0204,
+	OBD_Injector_Circuit_5 = 0x0205,
+	OBD_Injector_Circuit_6 = 0x0206,
+	OBD_Injector_Circuit_7 = 0x0207,
+	OBD_Injector_Circuit_8 = 0x0208,
+	OBD_Injector_Circuit_9 = 0x0209,
+	OBD_Injector_Circuit_10 = 0x0210,
+	OBD_Injector_Circuit_11 = 0x0211,
+	OBD_Injector_Circuit_12 = 0x0212,
 	//P0213 Cold Start Injector 1 Malfunction
 	//P0214 Cold Start Injector 2 Malfunction
 	//P0215 Engine Shutoff Solenoid Malfunction
@@ -249,13 +249,13 @@ enum class ObdCode : uint16_t {
 	//P0220 Throttle/Petal Position Sensor/Switch B Circuit Malfunction
 	//P0221 Throttle/Petal Position Sensor/Switch B Circuit Range/Performance Problem
 
-	OBD_TPS1_Secondary_Timeout = 220,
-	OBD_TPS1_Secondary_Low = 222,
-	OBD_TPS1_Secondary_High = 223,
+	OBD_TPS1_Secondary_Timeout = 0x0220,
+	OBD_TPS1_Secondary_Low = 0x0222,
+	OBD_TPS1_Secondary_High = 0x0223,
 
-	OBD_TPS2_Primary_Timeout = 225,
-	OBD_TPS2_Primary_Low = 227,
-	OBD_TPS2_Primary_High = 228,
+	OBD_TPS2_Primary_Timeout = 0x0225,
+	OBD_TPS2_Primary_Low = 0x0227,
+	OBD_TPS2_Primary_High = 0x0228,
 
 	//P0222 Throttle/Petal Position Sensor/Switch B Circuit Low Input
 	//P0223 Throttle/Petal Position Sensor/Switch B Circuit High Input
@@ -370,13 +370,13 @@ enum class ObdCode : uint16_t {
 	//P0332 Knock Sensor 2 Circuit Low Input (Bank 2)
 	//P0333 Knock Sensor 2 Circuit High Input (Bank 2)
 	//P0334 Knock Sensor 2 Circuit Intermittent (Bank 2)
-	OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction = 335,
+	OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction = 0x0335,
 	//P0336 Crankshaft Position Sensor A Circuit Range/Performance
 	//P0337 Crankshaft Position Sensor A Circuit Low Input
 	//P0338 Crankshaft Position Sensor A Circuit High Input
 	//P0339 Crankshaft Position Sensor A Circuit Intermittent
 	//P0340 Camshaft Position Sensor Circuit Malfunction
-	OBD_Camshaft_Position_Sensor_Circuit_Range_Performance = 341,
+	OBD_Camshaft_Position_Sensor_Circuit_Range_Performance = 0x0341,
 	//P0342 Camshaft Position Sensor Circuit Low Input
 	//P0343 Camshaft Position Sensor Circuit High Input
 	//P0344 Camshaft Position Sensor Circuit Intermittent
@@ -386,18 +386,18 @@ enum class ObdCode : uint16_t {
 	//P0348 Camshaft Position Sensor A Circuit High Input (Bank 2)
 	//P0349 Camshaft Position Sensor A Circuit Intermittent (Bank 2)
 	//P0350 Ignition Coil Primary/Secondary Circuit Malfunction
-	OBD_Ignition_Circuit_1 = 351,
-	OBD_Ignition_Circuit_2 = 352,
-	OBD_Ignition_Circuit_3 = 353,
-	OBD_Ignition_Circuit_4 = 354,
-	OBD_Ignition_Circuit_5 = 355,
-	OBD_Ignition_Circuit_6 = 356,
-	OBD_Ignition_Circuit_7 = 357,
-	OBD_Ignition_Circuit_8 = 358,
-	OBD_Ignition_Circuit_9 = 359,
-	OBD_Ignition_Circuit_10 = 360,
-	OBD_Ignition_Circuit_11 = 361,
-	OBD_Ignition_Circuit_12 = 362,
+	OBD_Ignition_Circuit_1 = 0x0351,
+	OBD_Ignition_Circuit_2 = 0x0352,
+	OBD_Ignition_Circuit_3 = 0x0353,
+	OBD_Ignition_Circuit_4 = 0x0354,
+	OBD_Ignition_Circuit_5 = 0x0355,
+	OBD_Ignition_Circuit_6 = 0x0356,
+	OBD_Ignition_Circuit_7 = 0x0357,
+	OBD_Ignition_Circuit_8 = 0x0358,
+	OBD_Ignition_Circuit_9 = 0x0359,
+	OBD_Ignition_Circuit_10 = 0x0360,
+	OBD_Ignition_Circuit_11 = 0x0361,
+	OBD_Ignition_Circuit_12 = 0x0362,
 	//P0363 Misfire Detected - Fueling Disabled
 	//P0364 Reserved
 	//P0365 Camshaft Position Sensor "B" Circuit (Bank 1)
@@ -554,10 +554,9 @@ enum class ObdCode : uint16_t {
 	//P0518 Idle Air Control Circuit Intermittent
 	//P0519 Idle Air Control System Performance
 	//P0520 Engine Oil Pressure Sensor/Switch Circuit Malfunction
-	OBD_Oil_Pressure_Sensor_Malfunction = 520,
-	//P0521 Engine Oil Pressure Sensor/Switch Circuit Range/Performance
-	//P0522 Engine Oil Pressure Sensor/Switch Circuit Low Voltage
-	//P0523 Engine Oil Pressure Sensor/Switch Circuit High Voltage
+	OBD_OilP_Timeout = 0x0521,
+	OBD_OilP_Low = 0x0522,
+	OBD_OilP_High = 0x0523,
 	//P0524 Engine Oil Pressure Too Low
 	//P0525 Cruise Control Servo Control Circuit Range/Performance
 	//P0526 Fan Speed Sensor Circuit
@@ -594,7 +593,7 @@ enum class ObdCode : uint16_t {
 	//P0557 Brake Booster Pressure Sensor Circuit Low
 	//P0558 Brake Booster Pressure Sensor Circuit High
 	//P0559 Brake Booster Pressure Sensor Circuit Intermittent
-	OBD_System_Voltage_Malfunction = 560,
+	OBD_System_Voltage_Malfunction = 0x0560,
 	//P0561 System Voltage Unstable
 	//P0562 System Voltage Low
 	//P0563 System Voltage High
@@ -640,13 +639,13 @@ enum class ObdCode : uint16_t {
 	//P0603 Internal Control Module Keep Alive Memory (KAM) Error
 	//P0604 Internal Control Module Random Access Memory (RAM) Error
 	//P0605 Internal Control Module Read Only Memory (ROM) Error
-	OBD_PCM_Processor_Fault = 606,
+	OBD_PCM_Processor_Fault = 0x0606,
 	//P0607 Control Module Performance
 	//P0608 Control Module VSS Output "A" Malfunction
 	//P0609 Control Module VSS Output "B" Malfunction
 	//P0610 Control Module Vehicle Options Error
 	//P0611 Fuel Injector Control Module Performance
-	//P0612 Fuel Injector Control Module Relay Control
+	OBD_PCM_MainRelayFault = 0x0612,
 	//P0613 TCM Processor
 	//P0614 ECM / TCM Incompatible
 	//P0615 Starter Relay Circuit
@@ -672,12 +671,12 @@ enum class ObdCode : uint16_t {
 	//P0635 Power Steering Control Circuit
 	//P0636 Power Steering Control Circuit Low
 	//P0637 Power Steering Control Circuit High
-	OBD_Throttle_Actuator_Control_Range_Performance_Bank_1 = 638,
+	OBD_Throttle_Actuator_Control_Range_Performance_Bank_1 = 0x0638,
 	//P0639 Throttle Actuator Control Range/Performance (Bank 2)
 	//P0640 Intake Air Heater Control Circuit
 	//P0641 Sensor Reference Voltage &ldquo;A&rdquo; Circuit/Open
-	//P0642 Sensor Reference Voltage &ldquo;A&rdquo; Circuit Low
-	//P0643 Sensor Reference Voltage &ldquo;A&rdquo; Circuit High
+	Sensor5vSupplyLow = 0x0642,
+	Sensor5vSupplyHigh = 0x0643,
 	//P0644 Driver Display Serial Communication Circuit
 	//P0645 A/C Clutch Relay Control Circuit
 	//P0646 A/C Clutch Relay Control Circuit Low
@@ -1054,17 +1053,17 @@ enum class ObdCode : uint16_t {
 	//P2118 Throttle Actuator Ctrl Motor Current Range/Perf
 	//P2119 Throttle Actuator Ctrl Throttle Body Range/Perf
 
-	OBD_TPS2_Secondary_Timeout = 2120,
-	OBD_TPS2_Secondary_Low = 2122,
-	OBD_TPS2_Secondary_High = 2123,
+	OBD_TPS2_Secondary_Timeout = 0x2120,
+	OBD_TPS2_Secondary_Low = 0x2122,
+	OBD_TPS2_Secondary_High = 0x2123,
 
-	OBD_PPS_Primary_Timeout = 2125,
-	OBD_PPS_Primary_Low = 2127,
-	OBD_PPS_Primary_High = 2128,
+	OBD_PPS_Primary_Timeout = 0x2125,
+	OBD_PPS_Primary_Low = 0x2127,
+	OBD_PPS_Primary_High = 0x2128,
 
-	OBD_PPS_Secondary_Timeout = 2130,
-	OBD_PPS_Secondary_Low = 2132,
-	OBD_PPS_Secondary_High = 2133,
+	OBD_PPS_Secondary_Timeout = 0x2130,
+	OBD_PPS_Secondary_Low = 0x2132,
+	OBD_PPS_Secondary_High = 0x2133,
 
 	//P2120 Throttle/Pedal Pos Sensor/Switch D Circ
 	//P2121 Throttle/Pedal Pos Sensor/Switch D Circ Range/Perf
@@ -1081,9 +1080,9 @@ enum class ObdCode : uint16_t {
 	//P2132 Throttle/Pedal Pos Sensor/Switch F Circ Low Input
 	//P2133 Throttle/Pedal Pos Sensor/Switch F Circ High Input
 	//P2134 Throttle/Pedal Pos Sensor/Switch F Circ Interm
-	OBD_TPS1_Correlation = 2135,
-	OBD_TPS2_Correlation = 2136,
-	OBD_PPS_Correlation = 2137,
+	OBD_TPS1_Correlation = 0x2135,
+	OBD_TPS2_Correlation = 0x2136,
+	OBD_PPS_Correlation = 0x2137,
 	//P2135 Throttle/Pedal Pos Sensor/Switch A / B Voltage Correlation
 	//P2136 Throttle/Pedal Pos Sensor/Switch A / C Voltage Correlation
 	//P2137 Throttle/Pedal Pos Sensor/Switch B / C Voltage Correlation
@@ -1107,7 +1106,7 @@ enum class ObdCode : uint16_t {
 	//P2155 Fuel Injector Group D Supply Voltage Circ/Open
 	//P2156 Fuel Injector Group D Supply Voltage Circ Low
 	//P2157 Fuel Injector Group D Supply Voltage Circ High
-	OBD_Vehicle_Speed_SensorB = 2158,
+	OBD_Vehicle_Speed_SensorB = 0x2158,
 	//P2158 Vehicle Speed SensorB
 	//P2159 Vehicle Speed SensorB Range/Perf
 	//P2160 Vehicle Speed SensorB Circ Low
@@ -1176,12 +1175,12 @@ enum class ObdCode : uint16_t {
 	//P2223 NOx Sensor Heater Sense Circ Low Bank2
 	//P2224 NOx Sensor Heater Sense Circ High Bank2
 	//P2225 NOx Sensor Heater Sense Circ Interm Bank2
-	OBD_Barometric_Press_Circ = 2226,
-	OBD_Barometric_Press_Circ_Range_Perf = 2227,
+	OBD_Barometric_Press_Circ = 0x2226,
+	OBD_Barometric_Press_Circ_Range_Perf = 0x2227,
 	//P2228 Barometric Press Circ Low
 	//P2229 Barometric Press Circ High
 	//P2230 Barometric Press Circ Interm
-	OBD_WB_FW_Mismatch = 2133, // actually: P2231 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 1
+	OBD_WB_FW_Mismatch = 0x2133, // actually: P2231 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 1
 	//P2232 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 2
 	//P2233 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 3
 	//P2234 O2 Sensor Signal Circ Shorted to Heater Circ Bank2 Sensor 1
@@ -1597,8 +1596,8 @@ enum class ObdCode : uint16_t {
 	//P2793 Gear Shift Direction Circ
 	//P2794 Gear Shift Direction Circ Low
 	//P2795 Gear Shift Direction Circ High
-	Wideband_1_Fault = 2900,
-	Wideband_2_Fault = 2901,
+	Wideband_1_Fault = 0x2900,
+	Wideband_2_Fault = 0x2901,
 	//P2A00 O2 Sensor Circ Range/Perf Bank1 Sensor 1
 	//P2A01 O2 Sensor Circ Range/Perf Bank1 Sensor 2
 	//P2A02 O2 Sensor Circ Range/Perf Bank1 Sensor 3
@@ -2073,7 +2072,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_PWM_DUTY_ASSERT = 6693,
 	CUSTOM_ERR_ZERO_CRANKING_FUEL = 6694,
 	CUSTOM_NULL_EXECUTOR = 6695,
-	CUSTOM_SLOW_NOT_INVOKED = 6696,
+	CUSTOM_ERR_6696 = 6696,
 	CUSTOM_PWM_CYCLE_START = 6697,
 	CUSTOM_ERR_ARRAY_IS_FULL = 6698,
 	CUSTOM_ERR_ARRAY_REMOVE_ERROR = 6699,

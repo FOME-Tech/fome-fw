@@ -30,9 +30,6 @@ public:
 	 */
 	sensor_chart_e sensorChartMode = SC_OFF;
 
-	// Per-injection fuel mass, including TPS accel enrich
-	float injectionMass[MAX_CYLINDER_COUNT] = {0};
-
 	float injectionStage2Fraction = 0;
 
 	Timer crankingTimer;
@@ -49,9 +46,6 @@ public:
 	 * MAP averaging angle start, in relation to 'mapAveragingSchedulingAtIndex' trigger index index
 	 */
 	angle_t mapAveragingStart[MAX_CYLINDER_COUNT];
-
-	// degrees timing advance - 10 means fire spark 10 degrees BTDC
-	angle_t timingAdvance[MAX_CYLINDER_COUNT] = {0};
 
 	// Angle between firing the main (primary) spark and the secondary (trailing) spark
 	angle_t trailingSparkAngle = 0;

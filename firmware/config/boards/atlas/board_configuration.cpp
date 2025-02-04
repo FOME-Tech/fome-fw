@@ -1,5 +1,9 @@
 #include "pch.h"
 
+#include "adc_subscription.h"
+#include "functional_sensor.h"
+#include "linear_func.h"
+
 static const brain_pin_e injPins[] = {
 	Gpio::G5,
 	Gpio::G6,
@@ -39,15 +43,15 @@ static void setIgnitionPins() {
 }
 
 Gpio getCommsLedPin() {
-	return Gpio::F1;
-}
-
-Gpio getRunningLedPin() {
 	return Gpio::F2;
 }
 
+Gpio getRunningLedPin() {
+	return Gpio::C15;
+}
+
 Gpio getWarningLedPin() {
-	return Gpio::F3;
+	return Gpio::F1;
 }
 
 spi_device_e getWifiSpiDevice() {
@@ -142,10 +146,37 @@ void setBoardDefaultConfiguration() {
 }
 
 void preHalInit() {
-	efiSetPadMode("SDMMC",  Gpio::C8, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC",  Gpio::C9, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(0xc));
-	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(0xc));
+	efiSetPadMode("SDMMC",  Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC",  Gpio::C9, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+}
+
+void initBoardSensors() {
+	{
+		static LinearFunc mrSenseFunc;
+		static FunctionalSensor mrSenseSensor(SensorType::MainRelayVoltage, MS2NT(100));
+
+		// 82k high side/10k low side = 9.2
+		const float mrSenseRatio = (92.0f / 10.0f);
+
+		mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
+		mrSenseSensor.setFunction(mrSenseFunc);
+		AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
+		mrSenseSensor.Register();
+	}
+
+	{
+		static LinearFunc sensor5vFunc;
+		static FunctionalSensor sensor5vSensor(SensorType::Sensor5vVoltage, MS2NT(100));
+
+		const float sensor5vRatio = 2;;
+
+		sensor5vFunc.configure(0, 0, 1, sensor5vRatio, 0, 50);
+		sensor5vSensor.setFunction(sensor5vFunc);
+		AdcSubscription::SubscribeSensor(sensor5vSensor, EFI_ADC_17, /*bandwidth*/ 20, /*ratio*/ 1);
+		sensor5vSensor.Register();
+	}
 }

@@ -85,10 +85,21 @@ static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
 
 #endif /* HAL_USE_MMC_SPI */
 
-/**
- * fatfs MMC/SPI
- */
-static NO_CACHE FATFS MMC_FS;
+// On STM32H7, these objects need their own MPU region if using SDMMC1
+struct {
+	struct {
+		FATFS fs;
+		FIL file;
+	} usedPart;
+
+	static_assert(sizeof(usedPart) <= 2048);
+
+	// Fill the struct out to a full MPU region
+	uint8_t padding[2048 - sizeof(usedPart)];
+} mmcCardCacheControlledStorage SDMMC_MEMORY(2048);
+
+static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
+static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
 
 static int fatFsErrors = 0;
 
@@ -107,8 +118,6 @@ static void printError(const char *str, FRESULT f_error) {
 
 	efiPrintf("FATfs Error \"%s\" %d", str, f_error);
 }
-
-static FIL FDLogFile NO_CACHE;
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
@@ -312,6 +321,29 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 		sdStatus = SD_STATE_NOT_CONNECTED;
 		return nullptr;
 	}
+
+	// STM32H7 SDMMC1 needs the filesystem object to be in AXI
+	// SRAM, but excluded from the cache
+	#ifdef STM32H7XX
+	{
+		void* base = &mmcCardCacheControlledStorage;
+		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
+		uint32_t size = MPU_RASR_SIZE_2K;
+
+		mpuConfigureRegion(MPU_REGION_5,
+						base,
+						MPU_RASR_ATTR_AP_RW_RW |
+						MPU_RASR_ATTR_NON_CACHEABLE |
+						MPU_RASR_ATTR_S |
+						size |
+						MPU_RASR_ENABLE);
+		mpuEnable(MPU_CTRL_PRIVDEFENA);
+
+		/* Invalidating data cache to make sure that the MPU settings are taken
+		immediately.*/
+		SCB_CleanInvalidateDCache();
+	}
+	#endif
 
 	return reinterpret_cast<BaseBlockDevice*>(&EFI_SDC_DEVICE);
 }

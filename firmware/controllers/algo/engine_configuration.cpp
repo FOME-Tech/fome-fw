@@ -390,6 +390,9 @@ static void setDefaultEngineConfiguration() {
 	// Don't enable, but set default address
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
 
+	strcpy(config->wifiAccessPointSsid, "FOME EFI");
+	setArrayValues(config->wifiAccessPointPassword, 0);
+
 	engineConfiguration->sdCardLogFrequency = 50;
 
 	engineConfiguration->mapMinBufferLength = 1;
@@ -937,3 +940,5 @@ __attribute__((weak)) void setBoardConfigOverrides() { }
 
 __attribute__((weak)) int getBoardMetaOutputsCount() { return 0; }
 __attribute__((weak)) Gpio* getBoardMetaOutputs() { return nullptr; }
+
+__attribute__((weak)) void initBoardSensors() { }

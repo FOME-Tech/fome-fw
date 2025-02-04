@@ -90,11 +90,9 @@
 
 #define GAUGE_NAME_RAW_FUEL_PRESSURE_LOW "Fuel pressure raw (low)"
 #define GAUGE_NAME_FUEL_PRESSURE_LOW "Fuel pressure (low)"
-#define GAUGE_NAME_FUEL_PRESSURE_LOW_UNITS "kPa"
 
 #define GAUGE_NAME_RAW_FUEL_PRESSURE_HIGH "Fuel pressure raw (high)"
 #define GAUGE_NAME_FUEL_PRESSURE_HIGH "Fuel pressure (high)"
-#define GAUGE_NAME_FUEL_PRESSURE_HIGH_UNITS "bar"
 #define GAUGE_NAME_FLEX "Flex Ethanol %"
 
 #define GAUGE_NAME_ACCEL_LAT "Accel: Lateral"
@@ -109,10 +107,10 @@
 
 #define GAUGE_NAME_ECU_TEMPERATURE "ECU temperature"
 
-#define GAUGE_NAME_AUX_LINEAR_1 "Aux linear #1"
-#define GAUGE_NAME_AUX_LINEAR_2 "Aux linear #2"
-#define GAUGE_NAME_AUX_LINEAR_3 "Aux linear #3"
-#define GAUGE_NAME_AUX_LINEAR_4 "Aux linear #4"
+#define GAUGE_NAME_AUX_LINEAR_1 "Aux linear 1"
+#define GAUGE_NAME_AUX_LINEAR_2 "Aux linear 2"
+#define GAUGE_NAME_AUX_LINEAR_3 "Aux linear 3"
+#define GAUGE_NAME_AUX_LINEAR_4 "Aux linear 4"
 
 #define INDICATOR_NAME_CLUTCH_UP "Clutch: up"
 #define INDICATOR_NAME_CLUTCH_DOWN "Clutch: down"
@@ -147,8 +145,6 @@
 #define GAUGE_NAME_FUEL_BASE "Fuel: base cycle mass"
 #define GAUGE_NAME_FUEL_TRIM "Fuel: fuel trim"
 #define GAUGE_NAME_FUEL_TRIM_2 "Fuel: fuel trim 2"
-#define GAUGE_NAME_FUEL_WALL_AMOUNT "Fuel: wall amount"
-#define GAUGE_NAME_FUEL_WALL_CORRECTION "Fuel: wall correction"
 #define GAUGE_NAME_FUEL_LOAD "Fuel: Load"
 #define GAUGE_NAME_FUEL_CONSUMPTION "Fuel: Total consumed"
 #define GAUGE_NAME_FUEL_FLOW "Fuel: Flow rate"

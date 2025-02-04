@@ -90,9 +90,10 @@ int CanStreamerState::sendFrame(const IsoTpFrameHeader & header, const uint8_t *
 
 // returns the number of copied bytes
 int CanStreamerState::receiveFrame(CANRxFrame *rxmsg, uint8_t *buf, int num, can_sysinterval_t timeout) {
-	if (rxmsg == nullptr || rxmsg->DLC < 1)
+	if (rxmsg == nullptr || rxmsg->DLC < 1) {
 		return 0;
-	engine->pauseCANdueToSerial = true;
+	}
+
 	int frameType = (rxmsg->data8[0] >> 4) & 0xf;
 	int numBytesAvailable, frameIdx;
 	uint8_t *srcBuf = rxmsg->data8;

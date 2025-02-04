@@ -31,19 +31,11 @@ TEST(OddFireRunningMode, hd) {
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 	// end of configuration
 
-	// send fake crank signal events so that trigger handler schedules actuators
+	// send fake crank signal events so that ignition events are updated
 	eth.fireTriggerEvents2(2 /* count */ , 60 /* ms */);
-	LimpState limitedSparkState = getLimpManager()->allowIgnition();
-	ASSERT_TRUE(limitedSparkState.value);
-	ASSERT_EQ(limitedSparkState.reason, ClearReason::None);
-	ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode()); // still spinning up
-	ASSERT_NEAR(0.0135, getInjectionMass(200, true), EPS3D);
 
-	angle_t expectedAngle3 = -360 + cylinderOne - timing;
-
-	ASSERT_EQ( 12,  engine->scheduler.size());
-	eth.assertEvent5("spark down#1", 1, (void*)fireSparkAndPrepareNextSchedule, eth.angleToTimeUs(expectedAngle3));
-
-	angle_t expectedAngle7 = -180 + cylinderOne - timing;
-	eth.assertEvent5("spark down#5", 5, (void*)fireSparkAndPrepareNextSchedule, eth.angleToTimeUs(expectedAngle7));
+	// Cyl 1 fires 19 degrees late
+	EXPECT_EQ(engine->ignitionEvents.elements[0].sparkAngle, 18);
+	// Cyl 2 fires 13 degrees early
+	EXPECT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 346);
 }

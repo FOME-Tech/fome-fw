@@ -132,11 +132,11 @@ using vin_number_t = char[VIN_NUMBER_SIZE];
 
 using gppwm_note_t = char[GPPWM_NOTE_SIZE];
 
+using wifi_string_t = char[24];
+
 using brain_pin_e = Gpio;
 
 using egt_cs_array_t = brain_pin_e[EGT_CHANNEL_COUNT];
-
-using pwm_freq_t = int16_t;
 
 using script_setting_t = float;
 
