@@ -13,7 +13,7 @@
 #include "mpu_util.h"
 
 // Both ADCs should be running at 25MHz
-static_assert(STM32_ADC12_CLOCK == 25000000);
+static_assert(STM32_ADC12_CLOCK == 40000000);
 static_assert(STM32_ADC3_CLOCK == 40000000);
 
 #ifdef ADC_MUX_PIN
@@ -45,13 +45,13 @@ static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
 // ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
 // BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) __attribute__ ((aligned (2048))) adcsample_t knockSampleBuffer[2048];
+__attribute__((section(".ram4"))) __attribute__ ((aligned (8192))) adcsample_t knockSampleBuffer[2048];
 
 void portInitAdc() {
 	{
 		void* base = &knockSampleBuffer;
-		static_assert(sizeof(knockSampleBuffer) == 4096);
-		uint32_t size = MPU_RASR_SIZE_4K;
+		static_assert(sizeof(knockSampleBuffer) == 8192);
+		uint32_t size = MPU_RASR_SIZE_8K;
 
 		mpuConfigureRegion(MPU_REGION_3,
 						base,
