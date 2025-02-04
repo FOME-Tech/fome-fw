@@ -1708,6 +1708,10 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	#define VR_THRESHOLD_COUNT 2
 	vr_threshold_s[VR_THRESHOLD_COUNT iterate] vrThreshold;
 
+	custom wifi_string_t 24 string, ASCII, @OFFSET@, 24
+	wifi_string_t wifiAccessPointSsid
+	wifi_string_t wifiAccessPointPassword
+
 end_struct
 
 ! Pedal Position Sensor
@@ -1925,6 +1929,7 @@ end_struct
 #define ts_show_pedal true
 #define ts_show_maf true
 #define ts_show_tle8888 false
+#define ts_show_wifi false
 
 ! we need to improve this further - at the moment we need too many boards to prepend 'false'
 #define show_test_presets true

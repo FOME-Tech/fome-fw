@@ -217,10 +217,18 @@ struct WifiConsoleThread : public TunerstudioThread {
 			return nullptr;
 		}
 
-		strcpy(apConfig.au8SSID, "FOME EFI 2");
-		apConfig.u8ListenChannel	= 1;
-		apConfig.u8SecType			= M2M_WIFI_SEC_OPEN;
-		apConfig.u8SsidHide			= 0;
+		strncpy(apConfig.au8SSID, config->wifiAccessPointSsid, std::min(sizeof(apConfig.au8SSID), sizeof(config->wifiAccessPointSsid)));
+		apConfig.u8ListenChannel = 1;
+		apConfig.u8SsidHide = 0;
+
+		size_t keyLength = strlen(config->wifiAccessPointPassword);
+		if (keyLength > 0) {
+			apConfig.u8SecType = M2M_WIFI_SEC_WPA_PSK;
+			apConfig.u8KeySz = keyLength;
+			strncpy((char*)apConfig.au8Key, config->wifiAccessPointPassword, std::min(sizeof(apConfig.au8Key), sizeof(config->wifiAccessPointPassword)));
+		} else {
+			apConfig.u8SecType = M2M_WIFI_SEC_OPEN;
+		}
 
 		// IP Address
 		apConfig.au8DHCPServerIP[0]	= 192;
