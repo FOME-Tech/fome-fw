@@ -105,4 +105,7 @@ extern "C" {
  void chDbgPanic3(const char *msg, const char * file, int line);
 #endif // __ASSEMBLER__
 
+// The default is not quite large enough for some scenarios to guarantee no-overflow
+#define PORT_INT_REQUIRED_STACK		128
+
 #endif /* CONFIG_CHCONF_COMMON_H_ */
