@@ -330,7 +330,7 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
 		uint32_t size = MPU_RASR_SIZE_2K;
 
-		mpuConfigureRegion(MPU_REGION_6,
+		mpuConfigureRegion(MPU_REGION_5,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |

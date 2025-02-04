@@ -53,7 +53,7 @@ void portInitAdc() {
 		static_assert(sizeof(knockSampleBuffer) == 4096);
 		uint32_t size = MPU_RASR_SIZE_4K;
 
-		mpuConfigureRegion(MPU_REGION_4,
+		mpuConfigureRegion(MPU_REGION_3,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |

@@ -118,7 +118,7 @@ void initUsbMsd() {
 		static_assert(sizeof(blkbufSdmmc) == 512);
 		uint32_t size = MPU_RASR_SIZE_512;
 
-		mpuConfigureRegion(MPU_REGION_5,
+		mpuConfigureRegion(MPU_REGION_4,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |
