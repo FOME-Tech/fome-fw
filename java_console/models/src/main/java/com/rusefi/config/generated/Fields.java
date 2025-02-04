@@ -923,7 +923,7 @@ public class Fields {
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int PEDAL_TO_TPS_SIZE = 8;
-	public static final int persistent_config_s_size = 21956;
+	public static final int persistent_config_s_size = 22004;
 	public static final int pid_s_size = 20;
 	public static final int pin_input_mode_e_PI_DEFAULT = 0;
 	public static final int pin_input_mode_e_PI_PULLDOWN = 2;
@@ -981,6 +981,7 @@ public class Fields {
 	public static final int sensor_chart_e_SC_OFF = 0;
 	public static final int sensor_chart_e_SC_RPM_ACCEL = 3;
 	public static final int sensor_chart_e_SC_TRIGGER = 1;
+	public static final int SIGNATURE_HASH = 1777342574;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1019,7 +1020,7 @@ public class Fields {
 	public static final int TOOTH_PACKET_SIZE = 2;
 	public static final String TOP_DEAD_CENTER_MESSAGE = "r";
 	public static final int TORQUE_CURVE_SIZE = 6;
-	public static final int TOTAL_CONFIG_SIZE = 21956;
+	public static final int TOTAL_CONFIG_SIZE = 22004;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int TPS_TPS_ACCEL_CLT_CORR_TABLE = 4;
 	public static final int TPS_TPS_ACCEL_TABLE = 8;
@@ -1187,7 +1188,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.04.f407-discovery.4190170732";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.04.f407-discovery.1777342574";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1268;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -2690,4 +2691,6 @@ public class Fields {
 	public static final Field VRTHRESHOLD2_VALUES = Field.create("VRTHRESHOLD2_VALUES", 21946, FieldType.INT8).setScale(0.01).setBaseOffset(0);
 	public static final Field VRTHRESHOLD2_PIN = Field.create("VRTHRESHOLD2_PIN", 21952, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field VRTHRESHOLD2_ALIGNMENTFILL_AT_14 = Field.create("VRTHRESHOLD2_ALIGNMENTFILL_AT_14", 21954, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field WIFIACCESSPOINTSSID = Field.create("WIFIACCESSPOINTSSID", 21956, 24, FieldType.STRING).setScale(1.0).setBaseOffset(0);
+	public static final Field WIFIACCESSPOINTPASSWORD = Field.create("WIFIACCESSPOINTPASSWORD", 21980, 24, FieldType.STRING).setScale(1.0).setBaseOffset(0);
 }
