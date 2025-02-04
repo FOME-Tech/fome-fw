@@ -217,7 +217,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 			return nullptr;
 		}
 
-		strcpy(apConfig.au8SSID, "FOME EFI");
+		strcpy(apConfig.au8SSID, "FOME EFI 2");
 		apConfig.u8ListenChannel	= 1;
 		apConfig.u8SecType			= M2M_WIFI_SEC_OPEN;
 		apConfig.u8SsidHide			= 0;
@@ -225,7 +225,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		// IP Address
 		apConfig.au8DHCPServerIP[0]	= 192;
 		apConfig.au8DHCPServerIP[1]	= 168;
-		apConfig.au8DHCPServerIP[2]	= 1;
+		apConfig.au8DHCPServerIP[2]	= 10;
 		apConfig.au8DHCPServerIP[3]	= 1;
 
 		// Trigger AP
@@ -243,7 +243,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		// Start listening on the socket
 		sockaddr_in address;
 		address.sin_family = AF_INET;
-		address.sin_port = _htons(17999);
+		address.sin_port = _htons(29000);
 		address.sin_addr.s_addr = 0;
 
 		listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
