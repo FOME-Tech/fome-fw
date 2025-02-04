@@ -34,6 +34,8 @@ private:
 	using PD = PeakDetect<float, MS2NT(50).count()>;
 	PD peakDetectors[12];
 	PD allCylinderPeakDetector;
+
+	Timer m_lastKnockTimer;
 };
 
 class KnockController : public KnockControllerBase {
