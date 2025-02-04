@@ -207,13 +207,13 @@ static const uint8_t adcChannelScramble[20] = {
 	18, 19					// ADC2: PF13/14
 };
 
-size_t indexForSlowAdcChannel(adc_channel_e channel) {
+static size_t indexForSlowAdcChannel(adc_channel_e channel) {
 	return adcChannelScramble[channel - EFI_ADC_0];
 }
 
 static bool didStart = false;
 
-static NO_CACHE adcsample_t adcSampleBuffer[SLOW_ADC_CHANNEL_COUNT];
+static NO_CACHE adcsample_t adcSampleBuffer[slowChannelCount];
 
 bool readSlowAnalogInputs() {
 	// This only needs to happen once, as the timer will continue firing the ADC and writing to the buffer without our help
@@ -248,7 +248,14 @@ bool readSlowAnalogInputs() {
 }
 
 adcsample_t getSlowAdcSample(adc_channel_e channel) {
-	return adcSampleBuffer[channel - EFI_ADC_0];
+	auto index = indexForSlowAdcChannel(channel);
+
+	if (index >= 10) {
+		// Top half of channels were sampled by the slave ADC, therefore are in the upper half of the 32-bit word
+		return (adcSampleBuffer[index - 10] >> 16) & 0xFFFF;
+	} else {
+		return adcSampleBuffer[index] & 0xFFFF;
+	}
 }
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
