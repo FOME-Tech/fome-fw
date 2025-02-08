@@ -24,7 +24,7 @@
 /*
  * Board identifier.
  */
-#define BOARD_NAME                  "F4 for rusEFI"
+#define BOARD_NAME                  "F4 for FOME"
 
 #define EFI_USB_AF 10U
 #define EFI_USB_SERIAL_DM Gpio::A11
