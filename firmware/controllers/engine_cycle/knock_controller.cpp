@@ -52,6 +52,7 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float db
 
 	if (isKnock) {
 		m_knockCount++;
+		m_lastKnockTimer.reset(lastKnockTime);
 
 		auto baseTiming = engine->cylinders[cylinderNumber].getIgnitionTimingBtdc();
 
@@ -103,6 +104,9 @@ void KnockControllerBase::onFastCallback() {
 			m_knockRetard = newRetard;
 		}
 	}
+
+	hasKnockRecently = !m_lastKnockTimer.hasElapsedSec(0.5f);
+	hasKnockRetardNow = m_knockRetard > 0;
 }
 
 float KnockController::getKnockThreshold() const {
@@ -133,7 +137,7 @@ static uint8_t cylinderNumberCopy;
 
 // Called when its time to start listening for knock
 // Does some math, then hands off to the driver to start any sampling hardware
-static void startKnockSampling(void*) {
+static void startKnockSampling(void* = nullptr) {
 	if (!engine->rpmCalculator.isRunning()) {
 		return;
 	}
@@ -152,8 +156,14 @@ void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
 	cylinderNumberCopy = cylinderNumber;
 
 #if EFI_SOFTWARE_KNOCK
-	scheduleByAngle(nullptr, nowNt,
-			/*angle*/engineConfiguration->knockDetectionWindowStart, startKnockSampling);
+	auto window = engineConfiguration->knockDetectionWindowStart;
+	
+	if (window == 0) {
+		startKnockSampling();
+	} else {
+		scheduleByAngle(nullptr, nowNt,
+				/*angle*/engineConfiguration->knockDetectionWindowStart, startKnockSampling);
+	}
 #else
 	UNUSED(nowNt);
 #endif

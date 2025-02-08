@@ -17,6 +17,7 @@
 typedef uint32_t iomode_t;
 typedef uint32_t ioportid_t;
 typedef uint32_t ioportmask_t;
+typedef uint16_t adcsample_t;
 
 #define DL_OUTPUT_BUFFER 200
 #define FIRMWARE_ID "UNIT_TEST"

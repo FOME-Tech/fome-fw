@@ -34,12 +34,16 @@ or
  - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
 
 ### Added
+ - Read (some) OBD2 error codes using a normal scan tool! Currently limited to some common sensor errors. (#529 thank you @dynfer for implementation, @paleppp for testing, and others!)
  - Support Miata NA CAS "CMP" signal as a cam input (if you've installed a 36-1 crank trigger on an NA, for example) #495
  - Support 4 independent wideband O2 channels, and 4 fuel trim banks
  - Flash error codes for some sensors using the check engine light #526
+ - Implement knock sensing support for STM32H7 chips
+ - Show knock sensing window on FOME console engine sniffer
 
 ### Fixed
  - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
+ - Minor performance improvements to injection/ignition scheduling
 
 ## September 2024 Release
 

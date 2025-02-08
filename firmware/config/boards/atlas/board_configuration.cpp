@@ -77,8 +77,8 @@ static void setupVbatt() {
 	// 82k high side/10k low side = 9.2
 	engineConfiguration->vbattDividerCoeff = (92.0f / 10.0f);
 
-	// Battery sense on PA7
-	engineConfiguration->vbattAdcChannel = EFI_ADC_7;
+	// Battery sense on PC5
+	engineConfiguration->vbattAdcChannel = EFI_ADC_15;
 
 	engineConfiguration->adcVcc = 3.3f;
 }
