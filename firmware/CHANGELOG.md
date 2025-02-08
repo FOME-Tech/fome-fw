@@ -39,6 +39,7 @@ or
  - Support 4 independent wideband O2 channels, and 4 fuel trim banks
  - Flash error codes for some sensors using the check engine light #526
  - Implement knock sensing support for STM32H7 chips
+ - Show knock sensing window on FOME console engine sniffer
 
 ### Fixed
  - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
