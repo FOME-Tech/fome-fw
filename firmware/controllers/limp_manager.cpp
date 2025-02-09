@@ -281,6 +281,14 @@ LimpState LimpManager::allowIgnition() const {
 	return {true, ClearReason::None};
 }
 
+bool LimpManager::asyncCutInjection() {
+	if (!engineConfiguration->cutFuelOnHardLimit) {
+		return false;
+	}
+
+	return isHardRevLimit(Sensor::getOrZero(SensorType::Rpm));
+}
+
 float LimpManager::getTimeSinceAnyCut() const {
 	return m_lastCutTime.getElapsedSeconds();
 }

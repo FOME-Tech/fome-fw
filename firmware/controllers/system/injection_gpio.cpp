@@ -53,7 +53,7 @@ void InjectorOutputPin::open(efitick_t nowNt) {
 		LogTriggerInjectorState(nowNt, true);
 #endif // EFI_TOOTH_LOGGER
 
-		if (!engineConfiguration->asyncRevLimit || getLimpManager()->allowInjection().value) {
+		if (!engineConfiguration->asyncRevLimit || !getLimpManager()->asyncCutInjection()) {
 			setHigh();
 		}
 	}
