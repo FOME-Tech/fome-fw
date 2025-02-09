@@ -38,7 +38,7 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 
 	// For any reason other than hard RPM limit, skip scheduling entirely
 	auto allowInjection = getLimpManager()->allowInjection();
-	if (!allowInjection.value && (engineConfiguration->asyncRevLimit && allowInjection.reason != ClearReason::HardLimit)) {
+	if (!allowInjection.value && !(engineConfiguration->asyncRevLimit && allowInjection.reason != ClearReason::HardLimit)) {
 		return;
 	}
 
