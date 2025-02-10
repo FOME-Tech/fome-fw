@@ -32,7 +32,7 @@ typedef enum  {
 
 void logHardFault(uint32_t type, uintptr_t faultAddress, struct port_extctx* ctx, uint32_t csfr);
 
-static volatile uint32_t faultAddress = nullptr;
+static volatile uint32_t faultAddress = 0;
 
 void HardFault_Handler_C(void* sp) {
 	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
