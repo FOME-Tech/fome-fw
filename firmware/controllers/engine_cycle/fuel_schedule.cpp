@@ -285,7 +285,7 @@ InjectionEvent::InjectionEvent() {
 
 // Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
 // or unexpected if unable to calculate the start angle due to missing information.
-expected<angle_t> OneCylinder::computeInjectionAngle() const {
+expected<angle_t> OneCylinder::computeInjectionAngle(injection_mode_e mode) const {
 	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
 	if (std::isnan(oneDegreeUs)) {
 		// in order to have fuel schedule we need to have current RPM
@@ -324,8 +324,8 @@ expected<angle_t> OneCylinder::computeInjectionAngle() const {
 	return openingAngle;
 }
 
-bool InjectionEvent::updateInjectionAngle() {
-	if (auto result = engine->cylinders[cylinderNumber].computeInjectionAngle()) {
+bool InjectionEvent::updateInjectionAngle(injection_mode_e mode) {
+	if (auto result = engine->cylinders[cylinderNumber].computeInjectionAngle(mode)) {
 		// If injector duty cycle is high, lock injection SOI so that we
 		// don't miss injections at or above 100% duty
 		if (getEngineState()->shouldUpdateInjectionTiming) {
@@ -344,15 +344,14 @@ bool InjectionEvent::updateInjectionAngle() {
 bool InjectionEvent::update() {
 	cylinderNumber = getCylinderNumberAtIndex(ownIndex);
 
-	bool updatedAngle = updateInjectionAngle();
-
-	if (!updatedAngle) {
-		return false;
-	}
-
 	injection_mode_e mode = getCurrentInjectionMode();
 	m_injectionMode = mode;
 	engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
+
+	bool updatedAngle = updateInjectionAngle(mode);
+	if (!updatedAngle) {
+		return false;
+	}
 
 	// Map order index -> cylinder index (firing order)
 	// Single point only uses injector 1 (index 0)

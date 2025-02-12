@@ -30,7 +30,7 @@ public:
 
 private:
 	// Update the injection start angle
-	bool updateInjectionAngle();
+	bool updateInjectionAngle(injection_mode_e mode);
 
 	/**
 	 * This is a performance optimization for IM_SIMULTANEOUS fuel strategy.
