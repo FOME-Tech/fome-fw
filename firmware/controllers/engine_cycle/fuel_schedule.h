@@ -39,6 +39,7 @@ private:
 	bool isSimultaneous = false;
 	uint8_t ownIndex = 0;
 	uint8_t cylinderNumber = 0;
+	injection_mode_e m_injectionMode = IM_SEQUENTIAL;
 
 	WallFuel wallFuel;
 

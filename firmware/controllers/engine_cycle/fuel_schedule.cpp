@@ -116,8 +116,7 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 		// Log this fuel as consumed
 
 		#ifdef MODULE_TRIP_ODO
-		bool isCranking = getEngineRotationState()->isCranking();
-		int numberOfInjections = isCranking ? getNumberOfInjections(engineConfiguration->crankingInjectionMode) : getNumberOfInjections(engineConfiguration->injectionMode);
+		int numberOfInjections = getNumberOfInjections(m_injectionMode);
 
 		float actualInjectedMass = numberOfInjections * (injectionMassStage1 + injectionMassStage2);
 
@@ -352,6 +351,7 @@ bool InjectionEvent::update() {
 	}
 
 	injection_mode_e mode = getCurrentInjectionMode();
+	m_injectionMode = mode;
 	engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
 
 	// Map order index -> cylinder index (firing order)
