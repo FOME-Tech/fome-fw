@@ -82,11 +82,16 @@ TEST(fuelControl, transitionIssue1592) {
 		doRevolution(eth, 150);
 	}
 
+	// Check that no injectors are stuck open
+	// Injectors 1/3 should be open
+	EXPECT_EQ(enginePins.injectors[0].getOverlappingCounter(), 1);
+	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[2].getOverlappingCounter(), 1);
+	EXPECT_EQ(enginePins.injectors[3].getOverlappingCounter(), 0);
+
 	// Trigger signal disappears but time progresses, all injectors should close
 	eth.moveTimeForwardAndInvokeEventsUs(1e6);
 
-	// Check that no injectors are stuck open
-	// Injectors 1/3 should be open
 	EXPECT_EQ(enginePins.injectors[0].getOverlappingCounter(), 0);
 	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 0);
 	EXPECT_EQ(enginePins.injectors[2].getOverlappingCounter(), 0);
