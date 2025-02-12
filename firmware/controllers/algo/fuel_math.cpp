@@ -272,13 +272,15 @@ float getInjectionModeDurationMultiplier(injection_mode_e mode) {
 }
 
 percent_t getInjectorDutyCycle(float rpm) {
-	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(engineConfiguration->injectionMode);
+	auto mode = getCurrentInjectionMode();
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(mode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }
 
 percent_t getInjectorDutyCycleStage2(float rpm) {
-	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(engineConfiguration->injectionMode);
+	auto mode = getCurrentInjectionMode();
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(mode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }

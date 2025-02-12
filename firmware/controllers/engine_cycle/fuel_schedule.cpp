@@ -98,7 +98,9 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	bool doSplitInjection = false && !isSimultaneous;
 
 	// Select fuel mass from the correct cylinder
-	auto injectionMassGrams = engine->cylinders[this->cylinderNumber].getInjectionMass();
+	auto cycleMassGrams = engine->cylinders[this->cylinderNumber].getInjectionMass();
+
+	float injectionMassGrams = cycleMassGrams * getInjectionModeDurationMultiplier(m_injectionMode);
 
 	// Perform wall wetting adjustment on fuel mass, not duration, so that
 	// it's correct during fuel pressure (injector flow) or battery voltage (deadtime) transients
