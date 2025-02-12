@@ -45,13 +45,25 @@ private:
 
 public:
 	// TODO: this should be private
-	InjectorOutputPin *outputs[MAX_WIRES_COUNT];
-	InjectorOutputPin *outputsStage2[MAX_WIRES_COUNT];
+	uint16_t outputsMask = 0;
 	float injectionStartAngle = 0;
 	efidur_t splitInjectionDuration;
 };
 
-void turnInjectionPinHigh(uintptr_t arg);
+union InjectorContext {
+	struct {
+		uint16_t outputsMask = 0;
+		uint8_t eventIndex = 0xFF;
+		uint8_t stage2Active = false;
+	};
+	void* _pad;
+};
+
+static_assert(sizeof(InjectorContext) <= sizeof(void*));
+
+void startInjection(InjectorContext ctx);
+void endInjection(InjectorContext ctx);
+void endInjectionStage2(InjectorContext ctx);
 
 
 /**
@@ -69,8 +81,6 @@ public:
 
 	// Calculate injector opening angle, pins, and mode for all injectors
 	void addFuelEvents();
-
-	void resetOverlapping();
 
 	/**
 	 * injection events, per cylinder
