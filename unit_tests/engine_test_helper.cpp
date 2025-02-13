@@ -323,7 +323,6 @@ void EngineTestHelper::assertEvent(const char *msg, int index, void *callback, e
 	ASSERT_EQ(ctx.eventIndex, injectorIndex);
 }
 
-
 void EngineTestHelper::applyTriggerWaveform() {
 	engine.updateTriggerWaveform();
 
