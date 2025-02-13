@@ -381,24 +381,19 @@ TEST(trigger, testTriggerDecoder) {
 	testTriggerDecoder2("vw ABA", engine_type_e::VW_ABA, 0, 0.51666, 0.0);
 }
 
-static void assertInjectionEventBase(const char *msg, InjectionEvent *ev, int injectorIndex, int eventIndex, angle_t angleOffset) {
-	EXPECT_EQ(injectorIndex, ev->outputs[0]->injectorIndex) << msg << "inj index";
+static void assertInjectionEventBase(const char *msg, InjectionEvent *ev, uint16_t injectorOutputMask, angle_t angleOffset) {
+	EXPECT_EQ(ev->outputsMask, injectorOutputMask) << msg << "inj output mask";
 	EXPECT_NEAR_M4(angleOffset, ev->injectionStartAngle) << msg << "inj index";
 }
 
 static void assertInjectionEvent(const char *msg, InjectionEvent *ev, int injectorIndex, int eventIndex, angle_t angleOffset) {
-	assertInjectionEventBase(msg, ev, injectorIndex, eventIndex, angleOffset);
-
-	// There should NOT be a second injector configured
-	EXPECT_EQ(nullptr, ev->outputs[1]);
+	assertInjectionEventBase(msg, ev, (1 << injectorIndex), angleOffset);
 }
 
 static void assertInjectionEventBatch(const char *msg, InjectionEvent *ev, int injectorIndex, int secondInjectorIndex, int eventIndex, angle_t angleOffset) {
-	assertInjectionEventBase(msg, ev, injectorIndex, eventIndex, angleOffset);
-
-	// There should be a second injector - confirm it's the correct one
-	ASSERT_NE(nullptr, ev->outputs[1]);
-	EXPECT_EQ(secondInjectorIndex, ev->outputs[1]->injectorIndex);
+	uint16_t mask = (1 << injectorIndex) | (1 << secondInjectorIndex);
+	
+	assertInjectionEventBase(msg, ev, mask, angleOffset);
 }
 
 static void setTestBug299(EngineTestHelper *eth) {
