@@ -15,8 +15,6 @@
 
 class InjectionEvent {
 public:
-	InjectionEvent();
-
 	bool update();
 
 	// Call this every decoded trigger tooth.  It will schedule any relevant events for this injector.
@@ -27,6 +25,8 @@ public:
 	void setIndex(uint8_t index) {
 		ownIndex = index;
 	}
+
+	uint16_t calculateInjectorOutputMask() const;
 
 private:
 	// Update the injection start angle
@@ -45,7 +45,6 @@ private:
 
 public:
 	// TODO: this should be private
-	uint16_t outputsMask = 0;
 	float injectionStartAngle = 0;
 };
 

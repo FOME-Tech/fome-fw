@@ -382,7 +382,7 @@ TEST(trigger, testTriggerDecoder) {
 }
 
 static void assertInjectionEventBase(const char *msg, InjectionEvent *ev, uint16_t injectorOutputMask, angle_t angleOffset) {
-	EXPECT_EQ(ev->outputsMask, injectorOutputMask) << msg << "inj output mask";
+	EXPECT_EQ(ev->calculateInjectorOutputMask(), injectorOutputMask) << msg << "inj output mask";
 	EXPECT_NEAR_M4(angleOffset, ev->injectionStartAngle) << msg << "inj index";
 }
 

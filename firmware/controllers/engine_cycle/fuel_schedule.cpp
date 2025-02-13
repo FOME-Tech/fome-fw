@@ -79,6 +79,36 @@ void endInjectionStage2(InjectorContext ctx) {
 	}
 }
 
+uint16_t InjectionEvent::calculateInjectorOutputMask() const {
+	uint16_t mask = 0;
+
+	switch (m_injectionMode) {
+		case IM_SIMULTANEOUS:
+			// Simultaneous mode fires all injectors
+			mask = (1 << engineConfiguration->cylindersCount) - 1;
+			break;
+		case IM_SINGLE_POINT:
+			// Single point only fires injector 1
+			mask = 1;
+			break;
+		case IM_BATCH:
+			// In batch mode, also fire the cylinder 360 degrees out to support "two-wire batch" mode
+
+			// Compute the position of this cylinder's twin in the firing order
+			// Each injector gets fired as a primary (the same as sequential), but also
+			// fires the injector 360 degrees later in the firing order.
+			mask |= (1 << getCylinderNumberAtIndex((ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount));
+
+			// falls through
+		case IM_SEQUENTIAL:
+			// In batch+sequential, fire this cylinder's injector
+			mask |= 1 << cylinderNumber;
+			break;
+	}
+
+	return mask;
+}
+
 void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
 	auto eventAngle = injectionStartAngle;
 
@@ -86,6 +116,8 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	if (!isPhaseInRange(eventAngle, currentPhase, nextPhase)) {
 		return;
 	}
+
+	auto mode = m_injectionMode;
 
 	// don't allow split inj in simultaneous mode
 	// TODO: #364 implement logic to actually enable split injections
@@ -163,17 +195,17 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	// Only bother with the second stage if it's long enough to be relevant
 	bool hasStage2Injection = durationUsStage2 > 50;
 
-#if EFI_PRINTF_FUEL_DETAILS
-	if (printFuelDebug) {
-		printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n", outputsMask, (int)durationUsStage1,
-				(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
-	}
-#endif /*EFI_PRINTF_FUEL_DETAILS */
-
 	InjectorContext ctx;
 	ctx.eventIndex = ownIndex;
 	ctx.stage2Active = hasStage2Injection;
-	ctx.outputsMask = outputsMask;
+	ctx.outputsMask = calculateInjectorOutputMask();
+
+#if EFI_PRINTF_FUEL_DETAILS
+if (printFuelDebug) {
+	printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n", ctx.outputsMask, (int)durationUsStage1,
+			(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
+}
+#endif /*EFI_PRINTF_FUEL_DETAILS */
 
 	if (doSplitInjection) {
 		ctx.splitDurationUs = durationUsStage1;
@@ -255,10 +287,6 @@ static float getInjectionAngleCorrection(float fuelMs, float oneDegreeUs) {
 	}
 }
 
-InjectionEvent::InjectionEvent() {
-	outputsMask = 0;
-}
-
 // Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
 // or unexpected if unable to calculate the start angle due to missing information.
 expected<angle_t> OneCylinder::computeInjectionAngle(injection_mode_e mode) const {
@@ -314,36 +342,6 @@ bool InjectionEvent::updateInjectionAngle(injection_mode_e mode) {
 	}
 }
 
-static uint16_t calculateInjectorOutputMask(injection_mode_e mode, int ownIndex, int cylinderNumber) {
-	uint16_t mask = 0;
-
-	switch (mode) {
-		case IM_SIMULTANEOUS:
-			// Simultaneous mode fires all injectors
-			mask = (1 << engineConfiguration->cylindersCount) - 1;
-			break;
-		case IM_SINGLE_POINT:
-			// Single point only fires injector 1
-			mask = 1;
-			break;
-		case IM_BATCH:
-			// In batch mode, also fire the cylinder 360 degrees out to support "two-wire batch" mode
-
-			// Compute the position of this cylinder's twin in the firing order
-			// Each injector gets fired as a primary (the same as sequential), but also
-			// fires the injector 360 degrees later in the firing order.
-			mask |= (1 << getCylinderNumberAtIndex((ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount));
-
-			// falls through
-		case IM_SEQUENTIAL:
-			// In batch+sequential, fire this cylinder's injector
-			mask |= 1 << cylinderNumber;
-			break;
-	}
-
-	return mask;
-}
-
 /**
  * @returns false in case of error, true if success
  */
@@ -352,11 +350,8 @@ bool InjectionEvent::update() {
 
 	injection_mode_e mode = getCurrentInjectionMode();
 
-	uint16_t injectorMask = calculateInjectorOutputMask(mode, ownIndex, cylinderNumber);
-
 	if (updateInjectionAngle(mode)) {
 		m_injectionMode = mode;
-		outputsMask = injectorMask;
 
 		engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
 

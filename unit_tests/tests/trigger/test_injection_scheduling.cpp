@@ -29,7 +29,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	engine->rpmCalculator.oneDegreeUs = 100;
 
 	InjectorContext ctx;
-	ctx.outputsMask = 0;
+	ctx.outputsMask = (1 << 0);
 	ctx.eventIndex = 0;
 	ctx.stage2Active = false;
 
@@ -69,7 +69,7 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	InjectionEvent event;
 
 	InjectorContext ctx;
-	ctx.outputsMask = 0;
+	ctx.outputsMask = (1 << 0);
 	ctx.eventIndex = 0;
 	ctx.stage2Active = true;
 
@@ -123,7 +123,7 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 	InjectionEvent event;
 
 	InjectorContext ctx;
-	ctx.outputsMask = 0;
+	ctx.outputsMask = (1 << 0);
 	ctx.eventIndex = 0;
 	ctx.stage2Active = false;
 
@@ -167,7 +167,7 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 	InjectionEvent event;
 
 	InjectorContext ctx;
-	ctx.outputsMask = 0;
+	ctx.outputsMask = (1 << 0);
 	ctx.eventIndex = 0;
 	ctx.stage2Active = false;
 
@@ -210,13 +210,6 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 	efitick_t nowNt = 1000000;
 
 	InjectionEvent event;
-
-	InjectorContext ctx;
-	ctx.outputsMask = 0;
-	ctx.eventIndex = 0;
-	ctx.stage2Active = false;
-
-	void* ctxAsPtr = bit_cast<void*>(ctx);
 
 	// Expect no calls to injector model
 	StrictMock<MockInjectorModel2> im;
