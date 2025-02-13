@@ -50,7 +50,12 @@ typedef unsigned int time_t;
 #define UTILITY_THREAD_STACK_SIZE 400
 #endif /* UTILITY_THREAD_STACK_SIZE */
 
+#if CORTEX_MODEL == 7
+// F7/H7 use MPU guard pages, so we don't need to check for stack overflow
+#define getCurrentRemainingStack() 100000
+#else
 #define getCurrentRemainingStack() getRemainingStack(chThdGetSelfX())
+#endif
 
 /**
  * rusEfi is placing some of data structures into CCM memory simply
