@@ -117,8 +117,6 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 		return;
 	}
 
-	auto mode = m_injectionMode;
-
 	// don't allow split inj in simultaneous mode
 	// TODO: #364 implement logic to actually enable split injections
 	bool doSplitInjection = false && !isSimultaneous;
@@ -211,11 +209,6 @@ if (printFuelDebug) {
 		ctx.splitDurationUs = durationUsStage1;
 	}
 
-	// sequential or batch
-	action_s startAction = { &startInjection, ctx };
-	action_s endActionStage1 = { &endInjection, ctx };
-	action_s endActionStage2 = { &endInjectionStage2, ctx };
-
 	// Correctly wrap injection start angle
 	float angleFromNow = eventAngle - currentPhase;
 	if (angleFromNow < 0) {
@@ -223,18 +216,18 @@ if (printFuelDebug) {
 	}
 
 	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, startAction);
+	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, { &startInjection, ctx });
 
 	// Schedule closing stage 1
 	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
 	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
 
-	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, endActionStage1);
+	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, { &endInjection, ctx });
 
 	// Schedule closing stage 2 (if applicable)
-	if (hasStage2Injection && endActionStage2) {
+	if (hasStage2Injection) {
 		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, endActionStage2);
+		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, { &endInjectionStage2, ctx });
 	}
 
 #if EFI_UNIT_TEST
