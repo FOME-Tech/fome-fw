@@ -8,6 +8,8 @@
 
 #include "pch.h"
 
+#include "AdcConfiguration.h"
+
 #if HAL_USE_ADC
 
 /* Depth of the conversion buffer, channels are sampled X times each.*/
@@ -196,19 +198,25 @@ static bool readBatch(adcsample_t* convertedSamples) {
 	return true;
 }
 
-bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
+static adcsample_t convertedAdcSamples[SLOW_ADC_CHANNEL_COUNT];
+
+bool readSlowAnalogInputs() {
 	bool result = true;
 
-	result &= readBatch(convertedSamples);
+	result &= readBatch(convertedAdcSamples);
 
 #ifdef ADC_MUX_PIN
 	muxControl.setValue(1);
 	// read the second batch, starting where we left off
-	result &= readBatch(convertedSamples + adcChannelCount);
+	result &= readBatch(convertedAdcSamples + adcChannelCount);
 	muxControl.setValue(0);
 #endif
 
 	return result;
+}
+
+adcsample_t getSlowAdcSample(adc_channel_e channel) {
+	return convertedAdcSamples[channel - EFI_ADC_0];
 }
 
 #if EFI_USE_FAST_ADC

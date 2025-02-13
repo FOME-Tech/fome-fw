@@ -127,19 +127,22 @@ void EngineState::periodicFastCallback() {
 	auto tps = Sensor::get(SensorType::Tps1);
 	updateTChargeK(rpm, tps.value_or(0));
 
-	float untrimmedInjectionMass = getInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
+	float untrimmedInjectionMass = getCycleInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
+	untrimmedInjectionMass *= getInjectionModeDurationMultiplier(getCurrentInjectionMode());
 	auto clResult = fuelClosedLoopCorrection();
 
-	injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
-	float stage2InjectionMass = untrimmedInjectionMass * injectionStage2Fraction;
-	float stage1InjectionMass = untrimmedInjectionMass - stage2InjectionMass;
+	{
+		injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
+		float stage2InjectionMass = untrimmedInjectionMass * injectionStage2Fraction;
+		float stage1InjectionMass = untrimmedInjectionMass - stage2InjectionMass;
 
-	// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
-	engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
-	engine->engineState.injectionDurationStage2 =
-		engineConfiguration->enableStagedInjection
-		? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
-		: 0;
+		// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
+		engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
+		engine->engineState.injectionDurationStage2 =
+			engineConfiguration->enableStagedInjection
+			? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
+			: 0;
+	}
 
 	float fuelLoad = getFuelingLoad();
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);

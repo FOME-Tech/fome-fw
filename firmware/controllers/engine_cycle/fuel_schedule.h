@@ -30,7 +30,7 @@ public:
 
 private:
 	// Update the injection start angle
-	bool updateInjectionAngle();
+	bool updateInjectionAngle(injection_mode_e mode);
 
 	/**
 	 * This is a performance optimization for IM_SIMULTANEOUS fuel strategy.
@@ -39,6 +39,7 @@ private:
 	bool isSimultaneous = false;
 	uint8_t ownIndex = 0;
 	uint8_t cylinderNumber = 0;
+	injection_mode_e m_injectionMode = IM_SEQUENTIAL;
 
 	WallFuel wallFuel;
 

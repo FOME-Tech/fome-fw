@@ -573,75 +573,77 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 			signal, timestamp);
 
 	// Don't propagate state if we don't know where we are
-	if (decodeResult) {
-		ScopePerf perf(PE::ShaftPositionListeners);
-
-		/**
-		 * If we only have a crank position sensor with four stroke, here we are extending crank revolutions with a 360 degree
-		 * cycle into a four stroke, 720 degrees cycle.
-		 */
-		int crankDivider = getCrankDivider(triggerShape.getWheelOperationMode());
-		int crankInternalIndex = triggerState.getCrankSynchronizationCounter() % crankDivider;
-		int triggerIndexForListeners = decodeResult.Value.CurrentIndex + (crankInternalIndex * triggerShape.getSize());
-
-		reportEventToWaveChart(signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
-
-		// Look up this tooth's angle from the sync point. If this tooth is the sync point, we'll get 0 here.
-		auto currentPhaseFromSyncPoint = getTriggerCentral()->triggerFormDetails.eventAngles[triggerIndexForListeners];
-
-		// Adjust so currentPhase is in engine-space angle, not trigger-space angle
-		currentEngineDecodedPhase = wrapAngleMethod(currentPhaseFromSyncPoint - tdcPosition(), "currentEnginePhase", ObdCode::CUSTOM_ERR_6555);
-
-		// Record precise time and phase of the engine. This is used for VVT decode, and to check that the
-		// trigger pattern selected matches reality (ie, we check the next tooth is where we think it should be)
-		{
-			// under lock to avoid mismatched tooth phase and time
-			chibios_rt::CriticalSectionLocker csl;
-
-			m_lastToothTimer.reset(timestamp);
-			m_lastToothPhaseFromSyncPoint = currentPhaseFromSyncPoint;
-		}
-
-		// Update engine RPM
-		rpmShaftPositionCallback(signal, triggerIndexForListeners, timestamp);
-
-		// Schedule the TDC mark
-		tdcMarkCallback(triggerIndexForListeners, timestamp);
-
-#if EFI_LOGIC_ANALYZER
-		waTriggerEventListener(signal, triggerIndexForListeners, timestamp);
-#endif
-
-		// TODO: is this logic to compute next trigger tooth angle correct?
-		auto nextToothIndex = triggerIndexForListeners;
-		angle_t nextPhase = 0;
-
-		do {
-			// I don't love this.
-			nextToothIndex = (nextToothIndex + 1) % engineCycleEventCount;
-			nextPhase = getTriggerCentral()->triggerFormDetails.eventAngles[nextToothIndex] - tdcPosition();
-			wrapAngle(nextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
-		} while (nextPhase == currentEngineDecodedPhase);
-
-		float expectNextPhase = nextPhase + tdcPosition();
-		wrapAngle(expectNextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
-		expectedNextPhase = expectNextPhase;
-
-		if (engine->rpmCalculator.getCachedRpm() > 0 && triggerIndexForListeners == 0) {
-			engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
-		}
-
-		// Handle ignition and injection
-		mainTriggerCallback(triggerIndexForListeners, timestamp, currentEngineDecodedPhase, nextPhase);
-
-		// Decode the MAP based "cam" sensor
-		decodeMapCam(timestamp, currentEngineDecodedPhase);
-	} else {
+	if (!decodeResult) {
 		// We don't have sync, but report to the wave chart anyway as index 0.
 		reportEventToWaveChart(signal, 0, triggerShape.useOnlyRisingEdges);
 
 		expectedNextPhase = unexpected;
+
+		return;
 	}
+
+	ScopePerf perf(PE::ShaftPositionListeners);
+
+	/**
+	 * If we only have a crank position sensor with four stroke, here we are extending crank revolutions with a 360 degree
+	 * cycle into a four stroke, 720 degrees cycle.
+	 */
+	int crankDivider = getCrankDivider(triggerShape.getWheelOperationMode());
+	int crankInternalIndex = triggerState.getCrankSynchronizationCounter() % crankDivider;
+	int triggerIndexForListeners = decodeResult.Value.CurrentIndex + (crankInternalIndex * triggerShape.getSize());
+
+	reportEventToWaveChart(signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
+
+	// Look up this tooth's angle from the sync point. If this tooth is the sync point, we'll get 0 here.
+	auto currentPhaseFromSyncPoint = getTriggerCentral()->triggerFormDetails.eventAngles[triggerIndexForListeners];
+
+	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
+	currentEngineDecodedPhase = wrapAngleMethod(currentPhaseFromSyncPoint - tdcPosition(), "currentEnginePhase", ObdCode::CUSTOM_ERR_6555);
+
+	// Record precise time and phase of the engine. This is used for VVT decode, and to check that the
+	// trigger pattern selected matches reality (ie, we check the next tooth is where we think it should be)
+	{
+		// under lock to avoid mismatched tooth phase and time
+		chibios_rt::CriticalSectionLocker csl;
+
+		m_lastToothTimer.reset(timestamp);
+		m_lastToothPhaseFromSyncPoint = currentPhaseFromSyncPoint;
+	}
+
+	// Update engine RPM
+	rpmShaftPositionCallback(signal, triggerIndexForListeners, timestamp);
+
+	// Schedule the TDC mark
+	tdcMarkCallback(triggerIndexForListeners, timestamp);
+
+#if EFI_LOGIC_ANALYZER
+	waTriggerEventListener(signal, triggerIndexForListeners, timestamp);
+#endif
+
+	// TODO: is this logic to compute next trigger tooth angle correct?
+	auto nextToothIndex = triggerIndexForListeners;
+	angle_t nextPhase = 0;
+
+	do {
+		// I don't love this.
+		nextToothIndex = (nextToothIndex + 1) % engineCycleEventCount;
+		nextPhase = getTriggerCentral()->triggerFormDetails.eventAngles[nextToothIndex] - tdcPosition();
+		wrapAngle(nextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
+	} while (nextPhase == currentEngineDecodedPhase);
+
+	float expectNextPhase = nextPhase + tdcPosition();
+	wrapAngle(expectNextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
+	expectedNextPhase = expectNextPhase;
+
+	if (engine->rpmCalculator.getCachedRpm() > 0 && triggerIndexForListeners == 0) {
+		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
+	}
+
+	// Handle ignition and injection
+	mainTriggerCallback(triggerIndexForListeners, timestamp, currentEngineDecodedPhase, nextPhase);
+
+	// Decode the MAP based "cam" sensor
+	decodeMapCam(timestamp, currentEngineDecodedPhase);
 }
 
 static void triggerShapeInfo() {

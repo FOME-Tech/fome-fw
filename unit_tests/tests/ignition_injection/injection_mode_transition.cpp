@@ -88,4 +88,12 @@ TEST(fuelControl, transitionIssue1592) {
 	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 0);
 	EXPECT_EQ(enginePins.injectors[2].getOverlappingCounter(), 1);
 	EXPECT_EQ(enginePins.injectors[3].getOverlappingCounter(), 0);
+
+	// Trigger signal disappears but time progresses, all injectors should close
+	eth.moveTimeForwardAndInvokeEventsUs(1e6);
+
+	EXPECT_EQ(enginePins.injectors[0].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[2].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[3].getOverlappingCounter(), 0);
 }

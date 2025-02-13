@@ -809,6 +809,8 @@ public class Fields {
 	public static final int gppwm_channel_e_GPPWM_LuaGauge1 = 22;
 	public static final int gppwm_channel_e_GPPWM_LuaGauge2 = 23;
 	public static final int gppwm_channel_e_GPPWM_Map = 2;
+	public static final int gppwm_channel_e_GPPWM_OilPressure = 32;
+	public static final int gppwm_channel_e_GPPWM_OilTemp = 33;
 	public static final int gppwm_channel_e_GPPWM_Rpm = 24;
 	public static final int gppwm_channel_e_GPPWM_Tps = 1;
 	public static final int gppwm_channel_e_GPPWM_Vbatt = 10;
@@ -981,6 +983,7 @@ public class Fields {
 	public static final int sensor_chart_e_SC_OFF = 0;
 	public static final int sensor_chart_e_SC_RPM_ACCEL = 3;
 	public static final int sensor_chart_e_SC_TRIGGER = 1;
+	public static final int SIGNATURE_HASH = 46937013;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1187,7 +1190,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.04.f407-discovery.2531184329";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.13.f407-discovery.46937013";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1272;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1290,6 +1293,7 @@ public class Fields {
 	public static final Field USESCRIPTTABLEFORCANSNIFFINGFILTERING = Field.create("USESCRIPTTABLEFORCANSNIFFINGFILTERING", 92, FieldType.BIT, 20).setBaseOffset(0);
 	public static final Field VERBOSECAN = Field.create("VERBOSECAN", 92, FieldType.BIT, 21).setBaseOffset(0);
 	public static final Field ARTIFICIALTESTMISFIRE = Field.create("ARTIFICIALTESTMISFIRE", 92, FieldType.BIT, 22).setBaseOffset(0);
+	public static final Field FAKEFULLSYNCFORSTIMULATION = Field.create("FAKEFULLSYNCFORSTIMULATION", 92, FieldType.BIT, 23).setBaseOffset(0);
 	public static final Field CLTSENSORPULLDOWN = Field.create("CLTSENSORPULLDOWN", 92, FieldType.BIT, 24).setBaseOffset(0);
 	public static final Field IATSENSORPULLDOWN = Field.create("IATSENSORPULLDOWN", 92, FieldType.BIT, 25).setBaseOffset(0);
 	public static final Field ALLOWIDENTICALPPS = Field.create("ALLOWIDENTICALPPS", 92, FieldType.BIT, 26).setBaseOffset(0);
@@ -2129,7 +2133,7 @@ public class Fields {
 	public static final Field GPPWM1_PWMFREQUENCY = Field.create("GPPWM1_PWMFREQUENCY", 2188, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_ONABOVEDUTY = Field.create("GPPWM1_ONABOVEDUTY", 2190, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_OFFBELOWDUTY = Field.create("GPPWM1_OFFBELOWDUTY", 2191, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final String[] gppwm_channel_e = {"Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed"};
+	public static final String[] gppwm_channel_e = {"Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp"};
 	public static final Field GPPWM1_LOADAXIS = Field.create("GPPWM1_LOADAXIS", 2192, FieldType.INT8, gppwm_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_RPMAXIS = Field.create("GPPWM1_RPMAXIS", 2193, FieldType.INT8, gppwm_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_LOADBINS = Field.create("GPPWM1_LOADBINS", 2194, FieldType.INT16).setScale(0.1).setBaseOffset(0);

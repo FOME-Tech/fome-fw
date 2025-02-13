@@ -248,9 +248,7 @@ int getNumberOfInjections(injection_mode_e mode) {
 	}
 }
 
-float getInjectionModeDurationMultiplier() {
-	injection_mode_e mode = getCurrentInjectionMode();
-
+float getInjectionModeDurationMultiplier(injection_mode_e mode) {
 	switch (mode) {
 	case IM_SIMULTANEOUS: {
 		auto cylCount = engineConfiguration->cylindersCount;
@@ -297,7 +295,7 @@ static float getCycleFuelMass(bool isCranking, float baseFuelMass) {
  * @returns	Mass of each individual fuel injection, in grams
  *     in case of single point injection mode the amount of fuel into all cylinders, otherwise the amount for one cylinder
  */
-float getInjectionMass(float rpm, bool isCranking) {
+float getCycleInjectionMass(float rpm, bool isCranking) {
 	ScopePerf perf(PE::GetInjectionDuration);
 
 #if EFI_SHAFT_POSITION_INPUT
@@ -312,9 +310,6 @@ float getInjectionMass(float rpm, bool isCranking) {
 		cycleFuelMass = 0;
 	}
 
-	float durationMultiplier = getInjectionModeDurationMultiplier();
-	float injectionFuelMass = cycleFuelMass * durationMultiplier;
-
 	// Prepare injector flow rate & deadtime
 	engine->module<InjectorModelPrimary>()->prepare();
 
@@ -327,11 +322,9 @@ float getInjectionMass(float rpm, bool isCranking) {
 	engine->engineState.tpsAccelEnrich = tpsAccelEnrich;
 
 	// For legacy reasons, the TPS accel table is in units of milliseconds, so we have to convert BACK to mass
-	float tpsAccelPerInjection = durationMultiplier * tpsAccelEnrich;
+	float tpsFuelMass = engine->module<InjectorModelPrimary>()->getFuelMassForDuration(tpsAccelEnrich);
 
-	float tpsFuelMass = engine->module<InjectorModelPrimary>()->getFuelMassForDuration(tpsAccelPerInjection);
-
-	return injectionFuelMass + tpsFuelMass;
+	return cycleFuelMass + tpsFuelMass;
 #else
 	return 0;
 #endif

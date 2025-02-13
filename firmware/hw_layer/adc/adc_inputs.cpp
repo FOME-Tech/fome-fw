@@ -33,8 +33,6 @@ float __attribute__((weak)) getAnalogInputDividerCoefficient(adc_channel_e) {
 #include "periodic_thread_controller.h"
 #include "protected_gpio.h"
 
-static NO_CACHE adcsample_t slowAdcSamples[SLOW_ADC_CHANNEL_COUNT];
-
 static AdcChannelMode adcHwChannelEnabled[HW_MAX_ADC_INDEX];
 
 // Board voltage, with divider coefficient accounted for
@@ -109,7 +107,7 @@ int getInternalAdcValue(const char *msg, adc_channel_e hwChannel) {
 	}
 #endif // EFI_USE_FAST_ADC
 
-	return slowAdcSamples[hwChannel - EFI_ADC_0];
+	return getSlowAdcSample(hwChannel);
 }
 
 #if EFI_USE_FAST_ADC
@@ -190,7 +188,7 @@ void updateSlowAdc(efitick_t nowNt) {
 	{
 		ScopePerf perf(PE::AdcConversionSlow);
 
-		if (!readSlowAnalogInputs(slowAdcSamples)) {
+		if (!readSlowAnalogInputs()) {
 			return;
 		}
 

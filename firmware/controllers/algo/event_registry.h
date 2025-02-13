@@ -33,7 +33,6 @@ struct AngleBasedEvent {
 
 class IgnitionEvent {
 public:
-	IgnitionEvent();
 	IgnitionOutputPin *outputs[MAX_OUTPUTS_FOR_IGNITION];
 	scheduling_s dwellStartTimer;
 	AngleBasedEvent sparkEvent;
@@ -70,7 +69,6 @@ public:
 	int cylinderIndex = 0;
 	int8_t cylinderNumber = 0;
 	char *name = nullptr;
-	IgnitionOutputPin *getOutputForLoggins();
 };
 
 class IgnitionEventList {

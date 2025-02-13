@@ -255,7 +255,7 @@ float getMcuTemperature() {
 	return 0;
 }
 
-bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
+bool readSlowAnalogInputs() {
 	// TODO: implement me!
 	return true;
 }
