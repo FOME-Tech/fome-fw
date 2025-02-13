@@ -312,22 +312,29 @@ bool InjectionEvent::update() {
 
 	injection_mode_e mode = getCurrentInjectionMode();
 
-	uint16_t injectorMask = 1 << cylinderNumber;
+	uint16_t injectorMask = 0;
+	switch (mode) {
+		case IM_SIMULTANEOUS:
+			// Simultaneous mode fires all injectors
+			injectorMask = (1 << engineConfiguration->cylindersCount) - 1;
+			break;
+		case IM_SINGLE_POINT:
+			// Single point only fires injector 1
+			injectorMask = 1;
+			break;
+		case IM_BATCH:
+			// In batch mode, also fire the cylinder 360 degrees out to support "two-wire batch" mode
 
-	if (mode == IM_BATCH) {
-		/**
-		 * also fire the 2nd half of the injectors so that we can implement a batch mode on individual wires
-		 */
-		// Compute the position of this cylinder's twin in the firing order
-		// Each injector gets fired as a primary (the same as sequential), but also
-		// fires the injector 360 degrees later in the firing order.
-		int secondOrder = (ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
-		injectorMask |= (1 << getCylinderNumberAtIndex(secondOrder));
-	}
+			// Compute the position of this cylinder's twin in the firing order
+			// Each injector gets fired as a primary (the same as sequential), but also
+			// fires the injector 360 degrees later in the firing order.
+			injectorMask |= (1 << getCylinderNumberAtIndex((ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount));
 
-	if (mode == IM_SIMULTANEOUS) {
-		// Set the mask for every injector for simultaneous events
-		injectorMask = (1 << engineConfiguration->cylindersCount) - 1;
+			// falls through
+		case IM_SEQUENTIAL:
+			// In batch+sequential, fire this cylinder's injector
+			injectorMask |= 1 << cylinderNumber;
+			break;
 	}
 
 	if (updateInjectionAngle(mode)) {
