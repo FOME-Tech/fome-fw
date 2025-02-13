@@ -47,14 +47,14 @@ public:
 	// TODO: this should be private
 	uint16_t outputsMask = 0;
 	float injectionStartAngle = 0;
-	efidur_t splitInjectionDuration;
 };
 
 union InjectorContext {
 	struct {
-		uint16_t outputsMask = 0;
-		uint8_t eventIndex = 0xFF;
-		uint8_t stage2Active = false;
+		uint16_t outputsMask:12 = 0;
+		uint8_t eventIndex:4 = 0xF;
+		uint16_t splitDurationUs:15 = 0;
+		bool stage2Active:1 = false;
 	};
 	void* _pad;
 };

@@ -14,7 +14,7 @@ extern bool printFuelDebug;
 void startInjection(InjectorContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	uint16_t mask = 0x0FFF & ctx.outputsMask;
+	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
 	while(mask) {
@@ -34,7 +34,7 @@ void startInjection(InjectorContext ctx) {
 void endInjection(InjectorContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	uint16_t mask = 0x0FFF & ctx.outputsMask;
+	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
 	while(mask) {
@@ -46,15 +46,27 @@ void endInjection(InjectorContext ctx) {
 		idx++;
 	}
 
-	if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
-		getFuelSchedule()->elements[ctx.eventIndex].update();
+	if (ctx.splitDurationUs > 0) {
+		efitick_t openTime = getTimeNowNt() + MS2NT(2);
+		efitick_t closeTime = openTime + US2NT(ctx.splitDurationUs);
+
+		// Zero out the split duration so it doesn't repeat
+		ctx.splitDurationUs = 0;
+
+		getScheduler()->schedule("split inj", nullptr, openTime, { &startInjection, ctx });
+		getScheduler()->schedule("split inj", nullptr, closeTime, { endInjection, ctx });
+	} else {
+		// No splits remaining, prepare for next cycle
+		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
+			getFuelSchedule()->elements[ctx.eventIndex].update();
+		}
 	}
 }
 
 void endInjectionStage2(InjectorContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	uint16_t mask = 0x0FFF & ctx.outputsMask;
+	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
 	while(mask) {
@@ -161,7 +173,11 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	InjectorContext ctx;
 	ctx.eventIndex = ownIndex;
 	ctx.stage2Active = hasStage2Injection;
-	ctx.outputsMask = 0x0FFF & outputsMask;
+	ctx.outputsMask = outputsMask;
+
+	if (doSplitInjection) {
+		ctx.splitDurationUs = durationUsStage1;
+	}
 
 	// sequential or batch
 	action_s startAction = { &startInjection, ctx };
@@ -180,12 +196,6 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	// Schedule closing stage 1
 	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
 	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
-
-	if (doSplitInjection) {
-		this->splitInjectionDuration = durationStage1Nt;
-	} else {
-		this->splitInjectionDuration = {};
-	}
 
 	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, endActionStage1);
 

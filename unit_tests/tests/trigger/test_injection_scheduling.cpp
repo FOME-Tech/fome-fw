@@ -246,6 +246,16 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 
 	InjectionEvent event;
 
+	InjectorContext ctx;
+	ctx.outputsMask = 0;
+	ctx.eventIndex = 0;
+	ctx.stage2Active = false;
+
+	void* ctxAsPtr = bit_cast<void*>(ctx);
+
+	// Split injection events should be called with no remaining split duration
+	ctx.splitDurationUs = 0;
+
 	{
 		InSequence is;
 
@@ -260,11 +270,8 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 	}
 
 	// Split injection duration of 10ms
-	event.splitInjectionDuration = MS2NT(10);
+	ctx.splitDurationUs = 10000;
 
 	// Close injector, should cause second half of split injection to be scheduled!
-	turnInjectionPinLow(arg);
-
-	// Expect it to get zeroed so we don't repeat ad infinitum
-	EXPECT_EQ(event.splitInjectionDuration, 0);
+	endInjection(ctx);
 }
