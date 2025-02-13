@@ -59,11 +59,6 @@ public:
 	float dwellAngle = 0;
 
 	/**
-	 * Sequential number of currently processed spark event
-	 * @see engineState.sparkCounter
-	 */
-	int sparkId = 0;
-	/**
 	 * [0, cylindersCount)
 	 */
 	int cylinderIndex = 0;
