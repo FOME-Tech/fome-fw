@@ -238,33 +238,33 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 	event.onTriggerTooth(nowNt, 130, 140);
 }
 
-// TEST(injectionScheduling, SplitInjectionScheduled) {
-// 	StrictMock<MockExecutor> mockExec;
+TEST(injectionScheduling, SplitInjectionScheduled) {
+	StrictMock<MockExecutor> mockExec;
 
-// 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-// 	engine->scheduler.setMockExecutor(&mockExec);
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&mockExec);
 
-// 	InjectionEvent event;
+	InjectionEvent event;
 
-// 	{
-// 		InSequence is;
+	{
+		InSequence is;
 
-// 		// Should schedule second half of split injection:
-// 		// - starts 2ms from now
-// 		// - duration 10ms (ends 12ms from now)
-// 		efitick_t nowNt = getTimeNowNt();
-// 		efitick_t startTime = nowNt + MS2NT(2);
-// 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(&event))));
-// 		efitick_t endTime = startTime + MS2NT(10);
-// 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(&event))));
-// 	}
+		// Should schedule second half of split injection:
+		// - starts 2ms from now
+		// - duration 10ms (ends 12ms from now)
+		efitick_t nowNt = getTimeNowNt();
+		efitick_t startTime = nowNt + MS2NT(2);
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		efitick_t endTime = startTime + MS2NT(10);
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+	}
 
-// 	// Split injection duration of 10ms
-// 	event.splitInjectionDuration = MS2NT(10);
+	// Split injection duration of 10ms
+	event.splitInjectionDuration = MS2NT(10);
 
-// 	// Close injector, should cause second half of split injection to be scheduled!
-// 	turnInjectionPinLow(arg);
+	// Close injector, should cause second half of split injection to be scheduled!
+	turnInjectionPinLow(arg);
 
-// 	// Expect it to get zeroed so we don't repeat ad infinitum
-// 	EXPECT_EQ(event.splitInjectionDuration, 0);
-// }
+	// Expect it to get zeroed so we don't repeat ad infinitum
+	EXPECT_EQ(event.splitInjectionDuration, 0);
+}
