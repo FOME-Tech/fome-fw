@@ -279,14 +279,12 @@ void EngineTestHelper::fireTriggerEvents(int count) {
 	fireTriggerEvents2(count, 5); // 5ms
 }
 
-void EngineTestHelper::assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, long injectorIndex) {
-	InjectionEvent *event = &engine.injectionEvents.elements[injectorIndex];
-	assertEvent(msg, eventIndex, (void*)turnInjectionPinHigh, momentX, event);
+void EngineTestHelper::assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
+	assertEvent(msg, eventIndex, (void*)startInjection, momentX, injectorIndex);
 }
 
-void EngineTestHelper::assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, long injectorIndex) {
-	InjectionEvent *event = &engine.injectionEvents.elements[injectorIndex];
-	assertEvent(msg, eventIndex, (void*)turnInjectionPinLow, momentX, event);
+void EngineTestHelper::assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
+	assertEvent(msg, eventIndex, (void*)endInjection, momentX, injectorIndex);
 }
 
 scheduling_s * EngineTestHelper::assertEvent5(const char *msg, int index, void *callback, efitimeus_t expectedTimestamp) {
@@ -318,12 +316,11 @@ scheduling_s * EngineTestHelper::assertScheduling(const char *msg, int index, sc
 	return actual;
 }
 
-void EngineTestHelper::assertEvent(const char *msg, int index, void *callback, efitimeus_t momentX, InjectionEvent *expectedEvent) {
+void EngineTestHelper::assertEvent(const char *msg, int index, void *callback, efitimeus_t momentX, int injectorIndex) {
 	scheduling_s *event = assertEvent5(msg, index, callback, momentX);
 
-	InjectionEvent *actualEvent = (InjectionEvent *)event->action.getArgument();
-
-	ASSERT_EQ(expectedEvent->outputs[0], actualEvent->outputs[0]) << msg;
+	InjectorContext ctx = bit_cast<InjectorContext>(event->action.getArgument());
+	ASSERT_EQ(ctx.eventIndex, injectorIndex);
 }
 
 
