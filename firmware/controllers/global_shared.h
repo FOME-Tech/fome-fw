@@ -32,6 +32,6 @@
 /*
  * Stack debugging
  */
-EXTERNC int getRemainingStack(thread_t *otp);
+int getRemainingStack(thread_t *otp);
 int CountFreeStackSpace(const void* wabase);
 void validateStack(const char*msg, ObdCode code, int stackUnusedSize);

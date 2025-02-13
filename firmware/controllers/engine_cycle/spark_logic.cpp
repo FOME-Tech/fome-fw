@@ -238,6 +238,13 @@ static void startDwellByTurningSparkPinHigh(IgnitionEvent *event, IgnitionOutput
 void turnSparkPinHigh(IgnitionEvent *event) {
 	efitick_t nowNt = getTimeNowNt();
 
+	for (int i = 0; i < MAX_OUTPUTS_FOR_IGNITION; i++) {
+		IgnitionOutputPin *output = event->outputs[i];
+		if (output != NULL) {
+			startDwellByTurningSparkPinHigh(event, output);
+		}
+	}
+
 	event->actualDwellTimer.reset(nowNt);
 
 #if EFI_UNIT_TEST
@@ -249,13 +256,6 @@ void turnSparkPinHigh(IgnitionEvent *event) {
 #if EFI_TOOTH_LOGGER
 	LogTriggerCoilState(nowNt, true);
 #endif // EFI_TOOTH_LOGGER
-
-	for (int i = 0; i < MAX_OUTPUTS_FOR_IGNITION; i++) {
-		IgnitionOutputPin *output = event->outputs[i];
-		if (output != NULL) {
-			startDwellByTurningSparkPinHigh(event, output);
-		}
-	}
 
 	if (engineConfiguration->enableTrailingSparks) {
 		IgnitionOutputPin *output = &enginePins.trailingCoils[event->cylinderNumber];
