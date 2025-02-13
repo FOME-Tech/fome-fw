@@ -50,6 +50,8 @@ public:
 };
 
 union InjectorContext {
+	constexpr InjectorContext() { }
+
 	struct {
 		uint16_t outputsMask:12 = 0;
 		uint8_t eventIndex:4 = 0xF;
