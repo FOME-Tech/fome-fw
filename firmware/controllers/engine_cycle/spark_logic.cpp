@@ -16,25 +16,6 @@
 
 #if EFI_ENGINE_CONTROL
 
-static const char *prevSparkName = nullptr;
-
-static void fireSparkBySettingPinLow(IgnitionEvent *event, IgnitionOutputPin *output) {
-	/**
-	 * there are two kinds of 'out-of-order'
-	 * 1) low goes before high, everything is fine after words
-	 *
-	 * 2) we have an un-matched low followed by legit pairs
-	 */
-
-	output->signalFallSparkId = event->sparkId;
-
-	if (!output->m_currentLogicValue && !event->wasSparkLimited) {
-		warning(ObdCode::CUSTOM_OUT_OF_ORDER_COIL, "out-of-order coil off %s", output->getName());
-		output->outOfOrder = true;
-	}
-	output->setLow();
-}
-
 /**
  * @param cylinderIndex from 0 to cylinderCount, not cylinder number
  */
@@ -164,7 +145,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 
 	while(mask) {
 		if (mask & 0x1) {
-			fireSparkBySettingPinLow(event, &enginePins.coils[idx]);
+			enginePins.coils[idx].setLow();
 		}
 
 		mask = mask >> 1;
@@ -220,30 +201,6 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	engine->onSparkFireKnockSense(event->cylinderNumber, nowNt);
 }
 
-static void startDwellByTurningSparkPinHigh(IgnitionEvent *event, IgnitionOutputPin *output) {
-	// todo: no reason for this to be disabled in unit_test mode?!
-#if ! EFI_UNIT_TEST
-
-	if (Sensor::getOrZero(SensorType::Rpm) > 2 * engineConfiguration->cranking.rpm) {
-		const char *outputName = output->getName();
-		if (prevSparkName == outputName && getCurrentIgnitionMode() != IM_ONE_COIL) {
-			warning(ObdCode::CUSTOM_OBD_SKIPPED_SPARK, "looks like skipped spark event %lu %s", getRevolutionCounter(), outputName);
-		}
-		prevSparkName = outputName;
-	}
-#endif /* EFI_UNIT_TEST */
-
-	if (output->outOfOrder) {
-		output->outOfOrder = false;
-		if (output->signalFallSparkId == event->sparkId) {
-			// let's save this coil if things do not look right
-			return;
-		}
-	}
-
-	output->setHigh();
-}
-
 void turnSparkPinHigh(IgnitionContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
@@ -254,7 +211,7 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 
 	while(mask) {
 		if (mask & 0x1) {
-			startDwellByTurningSparkPinHigh(event, &enginePins.coils[idx]);
+			enginePins.coils[idx].setHigh();
 		}
 
 		mask = mask >> 1;
@@ -289,10 +246,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		angleOffset += engine->engineState.engineCycle;
 	}
 
-	/**
-	 * By the way 32-bit value should hold at least 400 hours of events at 6K RPM x 12 events per revolution
-	 */
-	event->sparkId = engine->engineState.sparkCounter++;
+	engine->engineState.sparkCounter++;
 	event->wasSparkLimited = limitedSpark;
 
 	IgnitionContext ctx;
