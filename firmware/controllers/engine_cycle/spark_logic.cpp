@@ -84,14 +84,14 @@ angle_t OneCylinder::getSparkAngle(angle_t lateAdjustment) const {
 		+ getAngleOffset();
 }
 
-static uint16_t calculateIgnitionOutputMask(ignition_mode_e mode, int cylinderIndex) {
-	const int index = getIgnitionPinForIndex(cylinderIndex, mode);
+uint16_t IgnitionEvent::calculateIgnitionOutputMask() const {
+	const int index = getIgnitionPinForIndex(cylinderIndex, m_ignitionMode);
 	const int coilIndex = getCylinderNumberAtIndex(index);
 
 	uint16_t outputsMask = 1 << coilIndex;
 
 	// If wasted spark, find the paired coil in addition to "main" output for this cylinder
-	if (mode == IM_WASTED_SPARK) {
+	if (m_ignitionMode == IM_WASTED_SPARK) {
 		int secondIndex = index + engineConfiguration->cylindersCount / 2;
 		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
 		outputsMask |= 1 << secondCoilIndex;
@@ -115,7 +115,6 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 
 	efiAssertVoid(ObdCode::CUSTOM_SPARK_ANGLE_1, !std::isnan(sparkAngle), "sparkAngle#1");
 	wrapAngle(sparkAngle, "findAngle#2", ObdCode::CUSTOM_ERR_6550);
-	event->sparkAngle = sparkAngle;
 
 	auto ignitionMode = getCurrentIgnitionMode();
 
@@ -126,20 +125,21 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 		ignitionMode = IM_INDIVIDUAL_COILS;
 	}
 
-	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
-
-
-	// Stash which cylinder we're scheduling so that knock sensing knows which
-	// cylinder just fired
-	event->cylinderNumber = realCylinderNumber;
-	event->outputsMask = calculateIgnitionOutputMask(ignitionMode, event->cylinderIndex);
-
 	angle_t dwellStartAngle = sparkAngle - dwellAngleDuration;
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6590, !std::isnan(dwellStartAngle), "findAngle#5");
 
 	assertAngleRange(dwellStartAngle, "findAngle dwellStartAngle", ObdCode::CUSTOM_ERR_6550);
 	wrapAngle(dwellStartAngle, "findAngle#7", ObdCode::CUSTOM_ERR_6550);
+	
+
+	// Stash which cylinder we're scheduling so that knock sensing knows which
+	// cylinder just fired
+	event->cylinderNumber = realCylinderNumber;
+	event->m_ignitionMode = ignitionMode;
 	event->dwellAngle = dwellStartAngle;
+	event->sparkAngle = sparkAngle;
+
+	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
 }
 
 static void chargeTrailingSpark(IgnitionOutputPin* pin) {
@@ -296,7 +296,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 	event->wasSparkLimited = limitedSpark;
 
 	IgnitionContext ctx;
-	ctx.outputsMask = event->outputsMask;
+	ctx.outputsMask = event->calculateIgnitionOutputMask();
 	ctx.eventIndex = event->cylinderIndex;
 	ctx.sparksRemaining = limitedSpark ? 0 : engine->engineState.multispark.count;
 
