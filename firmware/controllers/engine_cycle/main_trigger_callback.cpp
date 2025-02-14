@@ -80,7 +80,7 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 	if (trgEventIndex == 0) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
-			getFuelSchedule()->isReady = false;
+			getFuelSchedule()->invalidate();
 			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about trigger shape & optimization?)
 			// see updateTriggerWaveform() -> prepareOutputSignals()
 

@@ -21,6 +21,7 @@ union IgnitionContext {
 		outputsMask = 0;
 		eventIndex = 0xF;
 		sparksRemaining = 0;
+		isOverdwellProtect = false;
 	}
 
 	struct {
@@ -30,6 +31,8 @@ union IgnitionContext {
 		// How many additional sparks should we fire after the first one?
 		// For single sparks, this should be zero.
 		uint8_t sparksRemaining;
+
+		bool isOverdwellProtect:1;
 	};
 	void* _pad;
 };

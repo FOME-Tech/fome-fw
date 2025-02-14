@@ -132,13 +132,13 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 }
 
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
-
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
-		engine->onIgnitionEvent(event, false);
+		engine->onIgnitionEvent(ctx, false);
 	}
 #endif
+
+	efitick_t nowNt = getTimeNowNt();
 
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
@@ -152,11 +152,11 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		idx++;
 	}
 
-	efitick_t nowNt = getTimeNowNt();
-
 #if EFI_TOOTH_LOGGER
 	LogTriggerCoilState(nowNt, false);
 #endif // EFI_TOOTH_LOGGER
+
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
 
 #if EFI_TUNER_STUDIO
 	{
@@ -176,7 +176,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	}
 
 	// If there are more sparks to fire, schedule them
-	if (ctx.sparksRemaining > 0) {
+	if (ctx.sparksRemaining > 0 && !ctx.isOverdwellProtect) {
 		ctx.sparksRemaining--;
 
 		efitick_t nextDwellStart = nowNt + engine->engineState.multispark.delay;
@@ -186,7 +186,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		engine->scheduler.schedule("dwell", &event->dwellStartTimer, nextDwellStart, { &turnSparkPinHigh, ctx });
 		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, nextFiring, { fireSparkAndPrepareNextSchedule, ctx });
 	} else {
-		if (engineConfiguration->enableTrailingSparks) {
+		if (engineConfiguration->enableTrailingSparks && !ctx.isOverdwellProtect) {
 			// Trailing sparks are enabled - schedule an event for the corresponding trailing coil
 			scheduleByAngle(
 				&event->trailingSparkFire, nowNt, engine->engineState.trailingSparkAngle,
@@ -204,8 +204,6 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 void turnSparkPinHigh(IgnitionContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
-
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
@@ -218,11 +216,13 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 		idx++;
 	}
 
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+
 	event->actualDwellTimer.reset(nowNt);
 
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
-		engine->onIgnitionEvent(event, true);
+		engine->onIgnitionEvent(ctx, true);
 	}
 #endif
 
@@ -284,6 +284,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
 		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
+		ctx.isOverdwellProtect = true;
 		engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { fireSparkAndPrepareNextSchedule, ctx });
 	}
 }
@@ -354,7 +355,6 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 	if (!engine->ignitionEvents.isReady) {
 		prepareIgnitionSchedule();
 	}
-
 
 	/**
 	 * Ignition schedule is defined once per revolution
