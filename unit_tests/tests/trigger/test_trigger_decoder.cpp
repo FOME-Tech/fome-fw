@@ -237,12 +237,12 @@ TEST(misc, testRpmCalculator) {
 
 		EXPECT_EQ(ev0->action.getCallback(), (void*)turnSparkPinHigh) << "Call@0";
 		EXPECT_EQ(start + 944, ev0->momentX) << "ev 0";
-		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev0->action.getArgument())->outputs[0]) << "coil 0";
+		EXPECT_EQ(1, (uintptr_t)ev0->action.getArgument()) << "coil 0";
 
 		scheduling_s *ev1 = engine->scheduler.getForUnitTest(1);
 		EXPECT_EQ(ev1->action.getCallback(), (void*)fireSparkAndPrepareNextSchedule) << "Call@1";
 		EXPECT_EQ(start + 1444, ev1->momentX) << "ev 1";
-		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev1->action.getArgument())->outputs[0]) << "coil 1";
+		EXPECT_EQ(1, (uintptr_t)ev1->action.getArgument()) << "coil 1";
 	}
 
 	engine->scheduler.clear();

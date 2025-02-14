@@ -20,28 +20,28 @@ TEST(ignition, twoCoils) {
 	initializeIgnitionActions();
 
 	// first one to fire uses first coil
-	EXPECT_EQ(engine->ignitionEvents.elements[0].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[1].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[2].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[3].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[4].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[5].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[6].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[7].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[8].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[9].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[10].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[11].cylinderNumber, 6);
+	EXPECT_EQ(engine->ignitionEvents.elements[0].outputsMask, (1 << 0));
+	// each subsequent event fires coil 1/6 alternating
+	EXPECT_EQ(engine->ignitionEvents.elements[1].outputsMask, (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[2].outputsMask, (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[3].outputsMask, (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[4].outputsMask, (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[5].outputsMask, (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[6].outputsMask, (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[7].outputsMask, (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[8].outputsMask, (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[9].outputsMask, (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[10].outputsMask, (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[11].outputsMask, (1 << 6));
 
 	ASSERT_EQ(engine->ignitionEvents.elements[0].sparkAngle, 0);
-	ASSERT_EQ((void*)engine->ignitionEvents.elements[0].outputs[0], (void*)&enginePins.coils[0]);
-
+	ASSERT_EQ(engine->ignitionEvents.elements[0].outputsMask, (1 << 0));
 
 	ASSERT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 720 / 12);
-	ASSERT_EQ((void*)engine->ignitionEvents.elements[1].outputs[0], (void*)&enginePins.coils[6]);
+	ASSERT_EQ(engine->ignitionEvents.elements[1].outputsMask, (1 << 6));
 
 	ASSERT_EQ(engine->ignitionEvents.elements[3].sparkAngle, 3 * 720 / 12);
-	ASSERT_EQ((void*)engine->ignitionEvents.elements[3].outputs[0], (void*)&enginePins.coils[6]);
+	ASSERT_EQ(engine->ignitionEvents.elements[3].outputsMask, (1 << 6));
 }
 
 TEST(ignition, trailingSpark) {
