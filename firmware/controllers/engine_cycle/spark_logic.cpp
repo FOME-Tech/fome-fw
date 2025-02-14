@@ -115,21 +115,19 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	const int index = getIgnitionPinForIndex(event->cylinderIndex, ignitionMode);
 	const int coilIndex = getCylinderNumberAtIndex(index);
 
-	IgnitionOutputPin *secondOutput = nullptr;
+	uint16_t outputsMask = 1 << coilIndex;
 
 	// If wasted spark, find the paired coil in addition to "main" output for this cylinder
 	if (ignitionMode == IM_WASTED_SPARK) {
 		int secondIndex = index + engineConfiguration->cylindersCount / 2;
 		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
-		secondOutput = &enginePins.coils[secondCoilIndex];
+		outputsMask |= 1 << secondCoilIndex;
 	}
-
-	event->outputs[0] = &enginePins.coils[coilIndex];
-	event->outputs[1] = secondOutput;
 
 	// Stash which cylinder we're scheduling so that knock sensing knows which
 	// cylinder just fired
 	event->cylinderNumber = coilIndex;
+	event->outputsMask = outputsMask;
 
 	angle_t dwellStartAngle = sparkAngle - dwellAngleDuration;
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6590, !std::isnan(dwellStartAngle), "findAngle#5");
@@ -147,19 +145,25 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 	pin->setLow();
 }
 
-void fireSparkAndPrepareNextSchedule(IgnitionEvent *event) {
+void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
 		engine->onIgnitionEvent(event, false);
 	}
 #endif
 
-	for (int i = 0; i< MAX_OUTPUTS_FOR_IGNITION; i++) {
-		IgnitionOutputPin *output = event->outputs[i];
+	uint16_t mask = ctx.outputsMask;
+	size_t idx = 0;
 
-		if (output) {
-			fireSparkBySettingPinLow(event, output);
+	while(mask) {
+		if (mask & 0x1) {
+			fireSparkBySettingPinLow(event, &enginePins.coils[idx]);
 		}
+
+		mask = mask >> 1;
+		idx++;
 	}
 
 	efitick_t nowNt = getTimeNowNt();
@@ -186,15 +190,15 @@ void fireSparkAndPrepareNextSchedule(IgnitionEvent *event) {
 	}
 
 	// If there are more sparks to fire, schedule them
-	if (event->sparksRemaining > 0) {
-		event->sparksRemaining--;
+	if (ctx.sparksRemaining > 0) {
+		ctx.sparksRemaining--;
 
 		efitick_t nextDwellStart = nowNt + engine->engineState.multispark.delay;
 		efitick_t nextFiring = nextDwellStart + engine->engineState.multispark.dwell;
 
 		// We can schedule both of these right away, since we're going for "asap" not "particular angle"
-		engine->scheduler.schedule("dwell", &event->dwellStartTimer, nextDwellStart, { &turnSparkPinHigh, event });
-		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, nextFiring, { fireSparkAndPrepareNextSchedule, event });
+		engine->scheduler.schedule("dwell", &event->dwellStartTimer, nextDwellStart, { &turnSparkPinHigh, ctx });
+		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, nextFiring, { fireSparkAndPrepareNextSchedule, ctx });
 	} else {
 		if (engineConfiguration->enableTrailingSparks) {
 			// Trailing sparks are enabled - schedule an event for the corresponding trailing coil
@@ -235,14 +239,21 @@ static void startDwellByTurningSparkPinHigh(IgnitionEvent *event, IgnitionOutput
 	output->setHigh();
 }
 
-void turnSparkPinHigh(IgnitionEvent *event) {
+void turnSparkPinHigh(IgnitionContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	for (int i = 0; i < MAX_OUTPUTS_FOR_IGNITION; i++) {
-		IgnitionOutputPin *output = event->outputs[i];
-		if (output != NULL) {
-			startDwellByTurningSparkPinHigh(event, output);
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+
+	uint16_t mask = ctx.outputsMask;
+	size_t idx = 0;
+
+	while(mask) {
+		if (mask & 0x1) {
+			startDwellByTurningSparkPinHigh(event, &enginePins.coils[idx]);
 		}
+
+		mask = mask >> 1;
+		idx++;
 	}
 
 	event->actualDwellTimer.reset(nowNt);
@@ -268,7 +279,6 @@ void turnSparkPinHigh(IgnitionEvent *event) {
 }
 
 static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dwellMs, float dwellAngle, float sparkAngle, efitick_t edgeTimestamp, float currentPhase, float nextPhase) {
-
 	float angleOffset = dwellAngle - currentPhase;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
@@ -279,6 +289,11 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 	 */
 	event->sparkId = engine->engineState.sparkCounter++;
 	event->wasSparkLimited = limitedSpark;
+
+	IgnitionContext ctx;
+	ctx.outputsMask = event->outputsMask;
+	ctx.eventIndex = event->cylinderIndex;
+	ctx.sparksRemaining = limitedSpark ? 0 : engine->engineState.multispark.count;
 
 	efitick_t chargeTime;
 
@@ -291,12 +306,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		 * This way we make sure that coil dwell started while spark was enabled would fire and not burn
 		 * the coil.
 		 */
-		chargeTime = scheduleByAngle(&event->dwellStartTimer, edgeTimestamp, angleOffset, { &turnSparkPinHigh, event });
-
-		event->sparksRemaining = engine->engineState.multispark.count;
-	} else {
-		// don't fire multispark if spark is cut completely!
-		event->sparksRemaining = 0;
+		chargeTime = scheduleByAngle(&event->dwellStartTimer, edgeTimestamp, angleOffset, { &turnSparkPinHigh, ctx });
 	}
 
 	/**
@@ -308,14 +318,14 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 
 	bool scheduled = engine->module<TriggerScheduler>()->scheduleOrQueue(
 		&event->sparkEvent, edgeTimestamp, sparkAngle,
-		{ fireSparkAndPrepareNextSchedule, event },
+		{ fireSparkAndPrepareNextSchedule, ctx },
 		currentPhase, nextPhase);
 
 	if (!scheduled && !limitedSpark) {
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
 		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
-		engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { fireSparkAndPrepareNextSchedule, event });
+		engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { fireSparkAndPrepareNextSchedule, ctx });
 	}
 }
 
