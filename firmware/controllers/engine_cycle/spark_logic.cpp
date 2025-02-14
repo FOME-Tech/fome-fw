@@ -84,6 +84,22 @@ angle_t OneCylinder::getSparkAngle(angle_t lateAdjustment) const {
 		+ getAngleOffset();
 }
 
+static uint16_t calculateIgnitionOutputMask(ignition_mode_e mode, int cylinderIndex) {
+	const int index = getIgnitionPinForIndex(cylinderIndex, mode);
+	const int coilIndex = getCylinderNumberAtIndex(index);
+
+	uint16_t outputsMask = 1 << coilIndex;
+
+	// If wasted spark, find the paired coil in addition to "main" output for this cylinder
+	if (mode == IM_WASTED_SPARK) {
+		int secondIndex = index + engineConfiguration->cylindersCount / 2;
+		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
+		outputsMask |= 1 << secondCoilIndex;
+	}
+
+	return outputsMask;
+}
+
 static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent *event) {
 	// todo: clean up this implementation? does not look too nice as is.
 
@@ -112,22 +128,11 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 
 	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
 
-	const int index = getIgnitionPinForIndex(event->cylinderIndex, ignitionMode);
-	const int coilIndex = getCylinderNumberAtIndex(index);
-
-	uint16_t outputsMask = 1 << coilIndex;
-
-	// If wasted spark, find the paired coil in addition to "main" output for this cylinder
-	if (ignitionMode == IM_WASTED_SPARK) {
-		int secondIndex = index + engineConfiguration->cylindersCount / 2;
-		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
-		outputsMask |= 1 << secondCoilIndex;
-	}
 
 	// Stash which cylinder we're scheduling so that knock sensing knows which
 	// cylinder just fired
-	event->cylinderNumber = coilIndex;
-	event->outputsMask = outputsMask;
+	event->cylinderNumber = realCylinderNumber;
+	event->outputsMask = calculateIgnitionOutputMask(ignitionMode, event->cylinderIndex);
 
 	angle_t dwellStartAngle = sparkAngle - dwellAngleDuration;
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6590, !std::isnan(dwellStartAngle), "findAngle#5");
