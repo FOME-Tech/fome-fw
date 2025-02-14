@@ -27,15 +27,7 @@ void turnAllPinsOff(void);
 #ifdef __cplusplus
 
 
-class IgnitionOutputPin : public NamedOutputPin {
-public:
-	IgnitionOutputPin();
-
-	void reset();
-	int signalFallSparkId;
-	bool outOfOrder; // https://sourceforge.net/p/rusefi/tickets/319/
-	int8_t coilIndex;
-};
+class IgnitionOutputPin : public NamedOutputPin { };
 
 /**
  * OutputPin with semi-automated init/deinit on configuration change

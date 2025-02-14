@@ -160,7 +160,7 @@ void RpmCalculator::assignRpmValue(float floatRpmValue) {
 
 void RpmCalculator::setRpmValue(float value) {
 	assignRpmValue(value);
-	spinning_state_e oldState = state;
+
 	// Change state
 	if (cachedRpmValue == 0) {
 		state = STOPPED;
@@ -178,20 +178,6 @@ void RpmCalculator::setRpmValue(float value) {
 		 */
 		state = CRANKING;
 	}
-#if EFI_ENGINE_CONTROL
-	// This presumably fixes injection mode change for cranking-to-running transition.
-	// 'isSimultaneous' flag should be updated for events if injection modes differ for cranking and running.
-	if (state != oldState && engineConfiguration->crankingInjectionMode != engineConfiguration->injectionMode) {
-		// Reset the state of all injectors: when we change fueling modes, we could
-		// immediately reschedule an injection that's currently underway.  That will cause
-		// the injector's overlappingCounter to get out of sync with reality.  As the fix,
-		// every injector's state is forcibly reset just before we could cause that to happen.
-		engine->injectionEvents.resetOverlapping();
-
-		// reschedule all injection events now that we've reset them
-		engine->injectionEvents.addFuelEvents();
-	}
-#endif
 }
 
 spinning_state_e RpmCalculator::getState() const {

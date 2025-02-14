@@ -17,10 +17,6 @@ std::enable_if_t<
 // constexpr support needs compiler magic
 bit_cast(const From& src) noexcept
 {
-	static_assert(std::is_trivially_constructible_v<To>,
-		"This implementation additionally requires "
-		"destination type to be trivially constructible");
- 
 	To dst;
 	std::memcpy(&dst, &src, sizeof(To));
 	return dst;
@@ -38,9 +34,12 @@ public:
 	// Allow any function that takes a single pointer parameter, so long as param is also of the same pointer type.
 	// This constructor means you shouldn't ever have to cast to schfunc_t on your own.
 	template <typename TArg>
-	action_s(void (*callback)(TArg*), TArg* param) : m_callback((schfunc_t)callback), m_param(param) { }
+	action_s(void (*callback)(TArg*), TArg* param) : m_callback(bit_cast<schfunc_t>(callback)), m_param(param) { }
 	template <typename TArg>
-	action_s(void (*callback)(TArg), TArg param) : m_callback(bit_cast<schfunc_t>(callback)), m_param(reinterpret_cast<void*>(param)) { }
+	action_s(void (*callback)(TArg), TArg param) : m_callback(bit_cast<schfunc_t>(callback)), m_param(bit_cast<void*>(param)) {
+		// The object must be exactly the size of a pointer
+		static_assert(sizeof(TArg) <= sizeof(void*));
+	}
 
 	void execute();
 	schfunc_t getCallback() const;

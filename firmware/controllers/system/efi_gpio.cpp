@@ -157,7 +157,6 @@ EnginePins::EnginePins() :
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
-		enginePins.coils[i].coilIndex = i;
 		enginePins.coils[i].setName(sparkNames[i]);
 		enginePins.coils[i].shortName = sparkShortNames[i];
 
@@ -254,8 +253,6 @@ void EnginePins::startPins() {
 void EnginePins::reset() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		injectors[i].reset();
-		coils[i].reset();
-		trailingCoils[i].reset();
 	}
 }
 
@@ -413,15 +410,6 @@ void InjectorOutputPin::reset() {
 
 	// todo: this could be refactored by calling some super-reset method
 	m_currentLogicValue = 0;
-}
-
-IgnitionOutputPin::IgnitionOutputPin() {
-	reset();
-}
-
-void IgnitionOutputPin::reset() {
-	outOfOrder = false;
-	signalFallSparkId = 0;
 }
 
 bool OutputPin::isInitialized() const {

@@ -2138,18 +2138,9 @@ enum class ObdCode : uint16_t {
 	// A trigger tooth arrived at an unexpected time
 	CUSTOM_PRIMARY_BAD_TOOTH_TIMING = 9007,
 
-	/**
-	 * This is not engine miss detection - this is only internal scheduler state validation
-	 * Should not happen
-	 */
-	CUSTOM_OBD_SKIPPED_SPARK = 9009,
-
 	// not used CUSTOM_9010 = 9010,
 	CUSTOM_RE_ADDING_INTO_EXECUTION_QUEUE = 9011,
-	/**
-	 * This indicates an issue with coil control - pin was not high when we were trying to set it low.
-	 */
-	CUSTOM_OUT_OF_ORDER_COIL = 9012,
+
 	/**
 	 * Commanded fuel exceeds your fuel injector flow
 	 */

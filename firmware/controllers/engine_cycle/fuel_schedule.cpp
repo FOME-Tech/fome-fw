@@ -11,78 +11,102 @@
 
 extern bool printFuelDebug;
 
-void endSimultaneousInjection(InjectionEvent *event) {
-	endSimultaneousInjectionOnlyTogglePins();
-	event->update();
-}
-
-static InjectionEvent* argToEvent(uintptr_t arg) {
-	return reinterpret_cast<InjectionEvent*>(arg & ~(1UL));
-}
-
-void turnInjectionPinLow(uintptr_t arg) {
-	auto event = argToEvent(arg);
-
+void startInjection(InjectorContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	for (size_t i = 0; i < efi::size(event->outputs); i++) {
-		InjectorOutputPin *output = event->outputs[i];
-		if (output) {
-			output->close(nowNt);
-		}
-	}
+	uint16_t mask = ctx.outputsMask;
+	size_t idx = 0;
 
-	efidur_t nextSplitDuration = event->splitInjectionDuration;
-	if (nextSplitDuration > efidur_t::zero()) {
-		event->splitInjectionDuration = {};
+	while(mask) {
+		if (mask & 0x1) {
+			enginePins.injectors[idx].open(nowNt);
 
-		efitick_t openTime = getTimeNowNt() + MS2NT(2);
-		efitick_t closeTime = openTime + nextSplitDuration;
-
-		getScheduler()->schedule("inj", nullptr, openTime, { &turnInjectionPinHigh, arg });
-		getScheduler()->schedule("inj", nullptr, closeTime, { turnInjectionPinLow, arg });
-	} else {
-		event->update();
-	}
-}
-
-static void turnInjectionPinLowStage2(InjectionEvent* event) {
-	efitick_t nowNt = getTimeNowNt();
-
-	for (size_t i = 0; i < efi::size(event->outputsStage2); i++) {
-		InjectorOutputPin *output = event->outputsStage2[i];
-		if (output) {
-			output->close(nowNt);
-		}
-	}
-}
-
-void turnInjectionPinHigh(uintptr_t arg) {
-	efitick_t nowNt = getTimeNowNt();
-
-	// clear last bit to recover the pointer
-	InjectionEvent* event = argToEvent(arg);
-
-	// extract last bit
-	bool stage2Active = arg & 1;
-
-	for (size_t i = 0; i < efi::size(event->outputs); i++) {
-		InjectorOutputPin *output = event->outputs[i];
-
-		if (output) {
-			output->open(nowNt);
-		}
-	}
-
-	if (stage2Active) {
-		for (size_t i = 0; i < efi::size(event->outputsStage2); i++) {
-			InjectorOutputPin *output = event->outputsStage2[i];
-
-			if (output) {
-				output->open(nowNt);
+			if (ctx.stage2Active) {
+				enginePins.injectorsStage2[idx].open(nowNt);
 			}
 		}
+
+		mask = mask >> 1;
+		idx++;
 	}
+}
+
+void endInjection(InjectorContext ctx) {
+	efitick_t nowNt = getTimeNowNt();
+
+	uint16_t mask = ctx.outputsMask;
+	size_t idx = 0;
+
+	while(mask) {
+		if (mask & 0x1) {
+			enginePins.injectors[idx].close(nowNt);
+		}
+
+		mask = mask >> 1;
+		idx++;
+	}
+
+	if (ctx.splitDurationUs > 0) {
+		efitick_t openTime = getTimeNowNt() + MS2NT(2);
+		efitick_t closeTime = openTime + US2NT(ctx.splitDurationUs);
+
+		// Zero out the split duration so it doesn't repeat
+		ctx.splitDurationUs = 0;
+
+		getScheduler()->schedule("split inj", nullptr, openTime, { &startInjection, ctx });
+		getScheduler()->schedule("split inj", nullptr, closeTime, { endInjection, ctx });
+	} else {
+		// No splits remaining, prepare for next cycle
+		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
+			getFuelSchedule()->elements[ctx.eventIndex].update();
+		}
+	}
+}
+
+void endInjectionStage2(InjectorContext ctx) {
+	efitick_t nowNt = getTimeNowNt();
+
+	uint16_t mask = ctx.outputsMask;
+	size_t idx = 0;
+
+	while(mask) {
+		if (mask & 0x1) {
+			enginePins.injectorsStage2[idx].close(nowNt);
+		}
+
+		mask = mask >> 1;
+		idx++;
+	}
+}
+
+uint16_t InjectionEvent::calculateInjectorOutputMask() const {
+	uint16_t mask = 0;
+
+	switch (m_injectionMode) {
+		case IM_SIMULTANEOUS:
+			// Simultaneous mode fires all injectors
+			mask = (1 << engineConfiguration->cylindersCount) - 1;
+			break;
+		case IM_SINGLE_POINT:
+			// Single point only fires injector 1
+			mask = 1;
+			break;
+		case IM_BATCH:
+			// In batch mode, also fire the cylinder 360 degrees out to support "two-wire batch" mode
+
+			// Compute the position of this cylinder's twin in the firing order
+			// Each injector gets fired as a primary (the same as sequential), but also
+			// fires the injector 360 degrees later in the firing order.
+			mask |= (1 << getCylinderNumberAtIndex((ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount));
+
+			// falls through
+		case IM_SEQUENTIAL:
+			// In batch+sequential, fire this cylinder's injector
+			mask |= 1 << cylinderNumber;
+			break;
+	}
+
+	return mask;
 }
 
 void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
@@ -171,31 +195,20 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	// Only bother with the second stage if it's long enough to be relevant
 	bool hasStage2Injection = durationUsStage2 > 50;
 
+	InjectorContext ctx;
+	ctx.eventIndex = ownIndex;
+	ctx.stage2Active = hasStage2Injection;
+	ctx.outputsMask = calculateInjectorOutputMask();
+
 #if EFI_PRINTF_FUEL_DETAILS
-	if (printFuelDebug) {
-		InjectorOutputPin *output = outputs[0];
-		printf("handleFuelInjectionEvent fuelout %s injection_duration %dus engineCycleDuration=%.1fms\t\n", output->getName(), (int)durationUsStage1,
-				(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
-	}
+if (printFuelDebug) {
+	printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n", ctx.outputsMask, (int)durationUsStage1,
+			(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
+}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
-	action_s startAction, endActionStage1, endActionStage2;
-	// We use different callbacks based on whether we're running sequential mode or not - everything else is the same
-	if (isSimultaneous) {
-		startAction = startSimultaneousInjection;
-		endActionStage1 = { &endSimultaneousInjection, this };
-	} else {
-		uintptr_t startActionPtr = reinterpret_cast<uintptr_t>(this);
-
-		if (hasStage2Injection) {
-			// Set the low bit in the arg if there's a secondary injection to start too
-			startActionPtr |= 1;
-		}
-
-		// sequential or batch
-		startAction = { &turnInjectionPinHigh, startActionPtr };
-		endActionStage1 = { &turnInjectionPinLow, startActionPtr };
-		endActionStage2 = { &turnInjectionPinLowStage2, this };
+	if (doSplitInjection) {
+		ctx.splitDurationUs = durationUsStage1;
 	}
 
 	// Correctly wrap injection start angle
@@ -205,24 +218,18 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	}
 
 	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, startAction);
+	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, { &startInjection, ctx });
 
 	// Schedule closing stage 1
 	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
 	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
 
-	if (doSplitInjection) {
-		this->splitInjectionDuration = durationStage1Nt;
-	} else {
-		this->splitInjectionDuration = {};
-	}
-
-	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, endActionStage1);
+	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, { &endInjection, ctx });
 
 	// Schedule closing stage 2 (if applicable)
-	if (hasStage2Injection && endActionStage2) {
+	if (hasStage2Injection) {
 		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, endActionStage2);
+		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, { &endInjectionStage2, ctx });
 	}
 
 #if EFI_UNIT_TEST
@@ -252,12 +259,6 @@ void FuelSchedule::invalidate() {
 	isReady = false;
 }
 
-void FuelSchedule::resetOverlapping() {
-	for (size_t i = 0; i < efi::size(enginePins.injectors); i++) {
-		enginePins.injectors[i].reset();
-	}
-}
-
 // Determines how much to adjust injection opening angle based on the injection's duration and the current phasing mode
 static float getInjectionAngleCorrection(float fuelMs, float oneDegreeUs) {
 	auto mode = engineConfiguration->injectionTimingMode;
@@ -279,10 +280,6 @@ static float getInjectionAngleCorrection(float fuelMs, float oneDegreeUs) {
 		// End of injection gets "full correction" so we advance opening by the full duration
 		return injectionDurationAngle;
 	}
-}
-
-InjectionEvent::InjectionEvent() {
-	memset(outputs, 0, sizeof(outputs));
 }
 
 // Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
@@ -347,43 +344,16 @@ bool InjectionEvent::update() {
 	cylinderNumber = getCylinderNumberAtIndex(ownIndex);
 
 	injection_mode_e mode = getCurrentInjectionMode();
-	m_injectionMode = mode;
-	engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
 
-	bool updatedAngle = updateInjectionAngle(mode);
-	if (!updatedAngle) {
+	if (updateInjectionAngle(mode)) {
+		m_injectionMode = mode;
+
+		engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
+
+		return true;
+	} else {
 		return false;
 	}
-
-	// Map order index -> cylinder index (firing order)
-	// Single point only uses injector 1 (index 0)
-	int injectorIndex = mode == IM_SINGLE_POINT ? 0 : cylinderNumber;
-
-	InjectorOutputPin* secondOutput = nullptr;
-	InjectorOutputPin* secondOutputStage2 = nullptr;
-
-	if (mode == IM_BATCH) {
-		/**
-		 * also fire the 2nd half of the injectors so that we can implement a batch mode on individual wires
-		 */
-		// Compute the position of this cylinder's twin in the firing order
-		// Each injector gets fired as a primary (the same as sequential), but also
-		// fires the injector 360 degrees later in the firing order.
-		int secondOrder = (ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount;
-		int secondIndex = getCylinderNumberAtIndex(secondOrder);
-		secondOutput = &enginePins.injectors[secondIndex];
-		secondOutputStage2 = &enginePins.injectorsStage2[secondIndex];
-	}
-
-	outputs[0] = &enginePins.injectors[injectorIndex];
-	outputs[1] = secondOutput;
-
-	outputsStage2[0] = &enginePins.injectorsStage2[injectorIndex];
-	outputsStage2[1] = secondOutputStage2;
-
-	isSimultaneous = mode == IM_SIMULTANEOUS;
-
-	return true;
 }
 
 void FuelSchedule::addFuelEvents() {

@@ -15,8 +15,6 @@
 
 class InjectionEvent {
 public:
-	InjectionEvent();
-
 	bool update();
 
 	// Call this every decoded trigger tooth.  It will schedule any relevant events for this injector.
@@ -27,6 +25,8 @@ public:
 	void setIndex(uint8_t index) {
 		ownIndex = index;
 	}
+
+	uint16_t calculateInjectorOutputMask() const;
 
 private:
 	// Update the injection start angle
@@ -45,13 +45,35 @@ private:
 
 public:
 	// TODO: this should be private
-	InjectorOutputPin *outputs[MAX_WIRES_COUNT];
-	InjectorOutputPin *outputsStage2[MAX_WIRES_COUNT];
 	float injectionStartAngle = 0;
-	efidur_t splitInjectionDuration;
 };
 
-void turnInjectionPinHigh(uintptr_t arg);
+union InjectorContext {
+	constexpr InjectorContext() {
+		// First, initialize all bits to a preditable state
+		_pad = nullptr;
+
+		// Then initialize real values
+		outputsMask = 0;
+		eventIndex = 0xF;
+		splitDurationUs = 0;
+		stage2Active = false;
+	}
+
+	struct {
+		uint16_t outputsMask:12;
+		uint8_t eventIndex:4;
+		uint16_t splitDurationUs:15;
+		bool stage2Active:1;
+	};
+	void* _pad;
+};
+
+static_assert(sizeof(InjectorContext) <= sizeof(void*));
+
+void startInjection(InjectorContext ctx);
+void endInjection(InjectorContext ctx);
+void endInjectionStage2(InjectorContext ctx);
 
 
 /**
@@ -69,8 +91,6 @@ public:
 
 	// Calculate injector opening angle, pins, and mode for all injectors
 	void addFuelEvents();
-
-	void resetOverlapping();
 
 	/**
 	 * injection events, per cylinder

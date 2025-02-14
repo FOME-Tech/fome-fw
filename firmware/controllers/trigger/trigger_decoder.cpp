@@ -222,7 +222,7 @@ void TriggerDecoderBase::incrementShaftSynchronizationCounter() {
 // If we're self stimulating, assume we have full sync so that outputs work during self stim
 bool PrimaryTriggerDecoder::hasSynchronizedPhase() const {
 #if EFI_PROD_CODE
-	if (getTriggerCentral()->directSelfStimulation) {
+	if (getTriggerCentral()->directSelfStimulation && engineConfiguration->fakeFullSyncForStimulation) {
 		return true;
 	}
 #endif
