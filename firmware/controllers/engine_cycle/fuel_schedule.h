@@ -49,13 +49,22 @@ public:
 };
 
 union InjectorContext {
-	constexpr InjectorContext() { }
+	constexpr InjectorContext() {
+		// First, initialize all bits to a preditable state
+		_pad = nullptr;
+
+		// Then initialize real values
+		outputsMask = 0;
+		eventIndex = 0xF;
+		splitDurationUs = 0;
+		stage2Active = false;
+	}
 
 	struct {
-		uint16_t outputsMask:12 = 0;
-		uint8_t eventIndex:4 = 0xF;
-		uint16_t splitDurationUs:15 = 0;
-		bool stage2Active:1 = false;
+		uint16_t outputsMask:12;
+		uint8_t eventIndex:4;
+		uint16_t splitDurationUs:15;
+		bool stage2Active:1;
 	};
 	void* _pad;
 };
