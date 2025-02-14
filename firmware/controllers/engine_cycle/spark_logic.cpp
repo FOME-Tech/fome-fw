@@ -81,6 +81,18 @@ uint16_t IgnitionEvent::calculateIgnitionOutputMask() const {
 	return outputsMask;
 }
 
+static angle_t calculateSparkAngle(int realCylinderNumber) {
+	angle_t sparkAngle = engine->cylinders[realCylinderNumber].getSparkAngle(
+		// Pull any extra timing for knock retard
+		- engine->module<KnockController>()->getKnockRetard()
+	);
+
+	efiAssert(ObdCode::CUSTOM_SPARK_ANGLE_1, !std::isnan(sparkAngle), "sparkAngle#1", 0);
+	wrapAngle(sparkAngle, "findAngle#2", ObdCode::CUSTOM_ERR_6550);
+
+	return sparkAngle;
+}
+
 static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent *event) {
 	// todo: clean up this implementation? does not look too nice as is.
 
@@ -89,13 +101,7 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	// let's save planned duration so that we can later compare it with reality
 	event->sparkDwell = sparkDwell;
 
-	angle_t sparkAngle = engine->cylinders[realCylinderNumber].getSparkAngle(
-			// Pull any extra timing for knock retard
-			- engine->module<KnockController>()->getKnockRetard()
-		);
-
-	efiAssertVoid(ObdCode::CUSTOM_SPARK_ANGLE_1, !std::isnan(sparkAngle), "sparkAngle#1");
-	wrapAngle(sparkAngle, "findAngle#2", ObdCode::CUSTOM_ERR_6550);
+	auto sparkAngle = calculateSparkAngle(realCylinderNumber);
 
 	auto ignitionMode = getCurrentIgnitionMode();
 
