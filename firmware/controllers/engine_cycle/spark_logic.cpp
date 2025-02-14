@@ -132,11 +132,9 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 }
 
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
-
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
-		engine->onIgnitionEvent(event, false);
+		engine->onIgnitionEvent(ctx, false);
 	}
 #endif
 
@@ -158,7 +156,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	LogTriggerCoilState(nowNt, false);
 #endif // EFI_TOOTH_LOGGER
 
-IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
 
 #if EFI_TUNER_STUDIO
 	{
@@ -224,7 +222,7 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
-		engine->onIgnitionEvent(event, true);
+		engine->onIgnitionEvent(ctx, true);
 	}
 #endif
 
@@ -357,7 +355,6 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 	if (!engine->ignitionEvents.isReady) {
 		prepareIgnitionSchedule();
 	}
-
 
 	/**
 	 * Ignition schedule is defined once per revolution
