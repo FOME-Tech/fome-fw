@@ -104,12 +104,18 @@ void PrimeController::onPrimeStart() {
 
 	// Open all injectors, schedule closing later
 	m_isPriming = true;
-	startSimultaneousInjection();
+
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << engineConfiguration->cylindersCount) - 1;
+
+	startInjection(ctx);
 	getScheduler()->schedule("prime end", nullptr, endTime, { onPrimeEndAdapter, this });
 }
 
 void PrimeController::onPrimeEnd() {
-	endSimultaneousInjectionOnlyTogglePins();
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << engineConfiguration->cylindersCount) - 1;
+	endInjection(ctx);
 
 	m_isPriming = false;
 }

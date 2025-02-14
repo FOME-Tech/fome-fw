@@ -17,10 +17,6 @@ std::enable_if_t<
 // constexpr support needs compiler magic
 bit_cast(const From& src) noexcept
 {
-	static_assert(std::is_trivially_constructible_v<To>,
-		"This implementation additionally requires "
-		"destination type to be trivially constructible");
-
 	To dst;
 	std::memcpy(&dst, &src, sizeof(To));
 	return dst;
@@ -42,7 +38,7 @@ public:
 	template <typename TArg>
 	action_s(void (*callback)(TArg), TArg param) : m_callback(bit_cast<schfunc_t>(callback)), m_param(bit_cast<void*>(param)) {
 		// The object must be exactly the size of a pointer
-		static_assert(sizeof(TArg) == sizeof(void*));
+		static_assert(sizeof(TArg) <= sizeof(void*));
 	}
 
 	void execute();

@@ -62,19 +62,24 @@ TEST(fuelControl, transitionIssue1592) {
 
 	{
 		// Injector 2 should be scheduled to open then close
-		void* inj2 = reinterpret_cast<void*>(&engine->injectionEvents.elements[1]);
+		InjectorContext ctx;
+		ctx.eventIndex = 1;
+		// fire cyl 2+3 (batch)
+		ctx.outputsMask = 1 << 1 | 1 << 2;
+
+		void* ctxAsPtr = bit_cast<void*>(ctx);
 
 		ASSERT_EQ(engine->scheduler.size(), 2);
 
 		// Check that the action is correct - we don't care about the timing necessarily
 		auto sched_open = engine->scheduler.getForUnitTest(0);
-		ASSERT_EQ(sched_open->action.getArgument(), inj2);
-		ASSERT_EQ(sched_open->action.getCallback(), (void(*)(void*))turnInjectionPinHigh);
+		ASSERT_EQ(sched_open->action.getArgument(), ctxAsPtr);
+		ASSERT_EQ(sched_open->action.getCallback(), (void(*)(void*))startInjection);
 
 		auto sched_close = engine->scheduler.getForUnitTest(1);
 		// Next action should be closing the same injector
-		ASSERT_EQ(sched_close->action.getArgument(), inj2);
-		ASSERT_EQ(sched_close->action.getCallback(), (void(*)(void*))turnInjectionPinLow);
+		ASSERT_EQ(sched_close->action.getArgument(), ctxAsPtr);
+		ASSERT_EQ(sched_close->action.getCallback(), (void(*)(void*))endInjection);
 	}
 
 	// Run the engine for some revs
