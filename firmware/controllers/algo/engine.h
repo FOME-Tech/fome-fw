@@ -122,7 +122,7 @@ public:
 	// **************************
 
 	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
-	expected<angle_t> computeInjectionAngle() const;
+	expected<angle_t> computeInjectionAngle(injection_mode_e mode) const;
 
 	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
 	mass_t getInjectionMass() const {
@@ -163,6 +163,8 @@ private:
 	// 10 means 10 degrees BTDC
 	angle_t m_timingAdvance = 0;
 };
+
+union IgnitionContext;
 
 class Engine final : public TriggerStateListener {
 public:
@@ -288,7 +290,7 @@ public:
 #if EFI_UNIT_TEST
 	TestExecutor scheduler;
 
-	std::function<void(IgnitionEvent*, bool)> onIgnitionEvent;
+	std::function<void(const IgnitionContext&, bool)> onIgnitionEvent;
 #endif // EFI_UNIT_TEST
 
 #if EFI_ENGINE_CONTROL

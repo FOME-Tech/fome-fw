@@ -559,6 +559,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->knockDetectionWindowEnd = 15.0 + 45.0;
 
 	engineConfiguration->triggerSimulatorRpm = 1200;
+	engineConfiguration->fakeFullSyncForStimulation = true;
 
 	engineConfiguration->alternatorPwmFrequency = 300;
 

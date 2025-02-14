@@ -32,6 +32,8 @@ typedef enum  {
 
 void logHardFault(uint32_t type, uintptr_t faultAddress, struct port_extctx* ctx, uint32_t csfr);
 
+static volatile uint32_t faultAddress = 0;
+
 void HardFault_Handler_C(void* sp) {
 	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
 	//Get thread context. Contains main registers including PC and LR
@@ -42,7 +44,7 @@ void HardFault_Handler_C(void* sp) {
 	volatile FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
 	//For HardFault/BusFault this is the address that was accessed causing the error
-	volatile uint32_t faultAddress = SCB->BFAR;
+	faultAddress = SCB->BFAR;
 
 	//Flags about hardfault / busfault
 	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
@@ -95,6 +97,11 @@ void UsageFault_Handler_C(void* sp) {
 }
 
 void MemManage_Handler_C(void* sp) {
+	//For HardFault/BusFault this is the address that was accessed causing the error
+	faultAddress = SCB->MMFAR;
+
+	bkpt();
+
 	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
 	//Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
@@ -103,8 +110,6 @@ void MemManage_Handler_C(void* sp) {
 	//Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
 	FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
-	//For HardFault/BusFault this is the address that was accessed causing the error
-	volatile uint32_t faultAddress = SCB->MMFAR;
 
 	//Flags about hardfault / busfault
 	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference

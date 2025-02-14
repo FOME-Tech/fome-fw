@@ -44,14 +44,11 @@ static void test(int engineSyncCam, float camOffsetAdd) {
 		}
 	}
 
-	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0), 1.351, 1e-2);
-	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0).value_or(0), 1.548, 1e-2);
-	ASSERT_EQ(102, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0), 1.352, 1e-2);
+	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0).value_or(0), 1.657, 1e-2);
+	ASSERT_EQ(243, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
 
-	// TODO: why warnings?
-	ASSERT_EQ(2, eth.recentWarnings()->getCount());
-	ASSERT_EQ(ObdCode::CUSTOM_OUT_OF_ORDER_COIL, eth.recentWarnings()->get(0).Code);	// this is from a coil being protected by overdwell protection
-	ASSERT_EQ(ObdCode::CUSTOM_PRIMARY_TOO_MANY_TEETH, eth.recentWarnings()->get(1).Code);
+	ASSERT_EQ(0, eth.recentWarnings()->getCount());
 }
 
 // On Nissan VQ, all cams have the same pattern, so all should be equally good for engine sync. Check them all!

@@ -983,6 +983,7 @@ public class Fields {
 	public static final int sensor_chart_e_SC_OFF = 0;
 	public static final int sensor_chart_e_SC_RPM_ACCEL = 3;
 	public static final int sensor_chart_e_SC_TRIGGER = 1;
+	public static final int SIGNATURE_HASH = 509198935;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1189,7 +1190,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.08.f407-discovery.2197216522";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.14.f407-discovery.509198935";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1272;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1292,6 +1293,7 @@ public class Fields {
 	public static final Field USESCRIPTTABLEFORCANSNIFFINGFILTERING = Field.create("USESCRIPTTABLEFORCANSNIFFINGFILTERING", 92, FieldType.BIT, 20).setBaseOffset(0);
 	public static final Field VERBOSECAN = Field.create("VERBOSECAN", 92, FieldType.BIT, 21).setBaseOffset(0);
 	public static final Field ARTIFICIALTESTMISFIRE = Field.create("ARTIFICIALTESTMISFIRE", 92, FieldType.BIT, 22).setBaseOffset(0);
+	public static final Field FAKEFULLSYNCFORSTIMULATION = Field.create("FAKEFULLSYNCFORSTIMULATION", 92, FieldType.BIT, 23).setBaseOffset(0);
 	public static final Field CLTSENSORPULLDOWN = Field.create("CLTSENSORPULLDOWN", 92, FieldType.BIT, 24).setBaseOffset(0);
 	public static final Field IATSENSORPULLDOWN = Field.create("IATSENSORPULLDOWN", 92, FieldType.BIT, 25).setBaseOffset(0);
 	public static final Field ALLOWIDENTICALPPS = Field.create("ALLOWIDENTICALPPS", 92, FieldType.BIT, 26).setBaseOffset(0);
@@ -1483,7 +1485,7 @@ public class Fields {
 	public static final Field DEBUGTRIGGERSYNC = Field.create("DEBUGTRIGGERSYNC", 588, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field MC33972_CS = Field.create("MC33972_CS", 590, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
 	public static final Field MC33972_CSPINMODE = Field.create("MC33972_CSPINMODE", 592, FieldType.INT8, pin_output_mode_e).setScale(1.0).setBaseOffset(0);
-	public static final Field UNUSED581 = Field.create("UNUSED581", 593, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field MINCAMPHASERESOLVERPM = Field.create("MINCAMPHASERESOLVERPM", 593, FieldType.INT8).setScale(50.0).setBaseOffset(0);
 	public static final Field TPS1_2ADCCHANNEL = Field.create("TPS1_2ADCCHANNEL", 594, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field TPS2_2ADCCHANNEL = Field.create("TPS2_2ADCCHANNEL", 595, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field TRIGGERINPUTPINS1 = Field.create("TRIGGERINPUTPINS1", 596, FieldType.INT16, brain_input_pin_e).setScale(1.0).setBaseOffset(0);

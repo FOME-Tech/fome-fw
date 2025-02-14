@@ -105,7 +105,7 @@ extern "C" {
  void chDbgPanic3(const char *msg, const char * file, int line);
 #endif // __ASSEMBLER__
 
-#ifndef EFI_SIMULATOR
+#if !EFI_SIMULATOR
 // The default is not quite large enough for some scenarios to guarantee no-overflow
 #define PORT_INT_REQUIRED_STACK		128
 #endif

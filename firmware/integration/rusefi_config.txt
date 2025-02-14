@@ -418,7 +418,7 @@ bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
 bit artificialTestMisfire,"Danger Mode","No thank you";Experimental setting that will cause a misfire\nDO NOT ENABLE.
-bit asyncRevLimit
+bit fakeFullSyncForStimulation;In internal trigger stimulation mode, control whether we pretend a cam is present to resolve full sync. When set to true, sequential fuel/spark will work as if a cam signal was detected.
 bit cltSensorPulldown
 bit iatSensorPulldown
 bit allowIdenticalPps
@@ -629,7 +629,7 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 	Gpio mc33972_cs;
 	pin_output_mode_e mc33972_csPinMode;
 
-	uint8_t unused581
+	uint8_t autoscale minCamPhaseResolveRpm;Above this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at low RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
 	adc_channel_e tps1_2AdcChannel;First throttle body, second sensor.
 	adc_channel_e tps2_2AdcChannel;Second throttle body, second sensor.
 
@@ -671,7 +671,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_3
 	bit isSdCardEnabled;enable sd/disable sd
 	bit rusefiVerbose29b,"29 bit","11 bit";Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
-	bit unused644b5
+	bit asyncRevLimit
 	bit useStepperIdle;This setting should only be used if you have a stepper motor idle valve and a stepper motor driver installed.
 	
 	bit enabledStep1Limiter
