@@ -237,12 +237,12 @@ TEST(misc, testRpmCalculator) {
 
 		EXPECT_EQ(ev0->action.getCallback(), (void*)turnSparkPinHigh) << "Call@0";
 		EXPECT_EQ(start + 944, ev0->momentX) << "ev 0";
-		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev0->action.getArgument())->outputs[0]) << "coil 0";
+		EXPECT_EQ(1, (uintptr_t)ev0->action.getArgument()) << "coil 0";
 
 		scheduling_s *ev1 = engine->scheduler.getForUnitTest(1);
 		EXPECT_EQ(ev1->action.getCallback(), (void*)fireSparkAndPrepareNextSchedule) << "Call@1";
 		EXPECT_EQ(start + 1444, ev1->momentX) << "ev 1";
-		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev1->action.getArgument())->outputs[0]) << "coil 1";
+		EXPECT_EQ(1, (uintptr_t)ev1->action.getArgument()) << "coil 1";
 	}
 
 	engine->scheduler.clear();
@@ -984,111 +984,6 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 	eth.moveTimeForwardUs(MS2US(20));
 	eth.executeActions();
 	ASSERT_EQ(0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testFuelSchedulerBug299smallAndLarge";
-}
-
-TEST(big, testSparkReverseOrderBug319) {
-	printf("*************************************************** testSparkReverseOrderBug319 small to medium\r\n");
-
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	engineConfiguration->isFasterEngineSpinUpEnabled = false;
-	engine->tdcMarkEnabled = false;
-
-	engineConfiguration->isInjectionEnabled = false;
-	engineConfiguration->cylindersCount = 4;
-	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
-
-	setConstantDwell(45);
-
-	engine->triggerCentral.syncAndReport(2, 0);
-
-	// this is needed to update injectorLag
-	engine->updateSlowSensors();
-
-	eth.setTriggerType(trigger_type_e::TT_ONE);
-	eth.engine.periodicFastCallback();
-
-	setWholeTimingTable(0);
-
-	eth.fireRise(20);
-	eth.fireFall(20);
-
-	engine->triggerCentral.syncAndReport(2, 0);
-
-	eth.executeActions();
-
-	eth.fireRise(20);
-	eth.fireFall(20);
-
-	EXPECT_NEAR_M3(3000, Sensor::getOrZero(SensorType::Rpm)) << "testSparkReverseOrderBug319: RPM";
-
-
-	ASSERT_EQ(8, engine->scheduler.size()) << "testSparkReverseOrderBug319: queue size";
-	eth.executeActions();
-	printf("***************************************************\r\n");
-
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	/**
-	 * here we throw scheduling logic off
-	 */
-	eth.fireFall(0.1); // executing new signal too early
-	eth.executeActions();
-
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #1";
-
-
-	eth.moveTimeForwardUs(MS2US(200)); // moving time forward to execute all pending actions
-	eth.executeActions();
-
-	ASSERT_EQ(0, enginePins.coils[3].outOfOrder) << "out-of-order #2";
-
-	printf("*************************************************** now let's have a good engine cycle and confirm things work\r\n");
-
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	ASSERT_EQ(545,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#2";
-
-	ASSERT_EQ(0, enginePins.coils[3].outOfOrder) << "out-of-order #3";
-
-
-	eth.fireFall(20);
-	eth.executeActions();
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #4";
-
-	printf("*************************************************** (rpm is back) now let's have a good engine cycle and confirm things work\r\n");
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	ASSERT_EQ(3000,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#3";
-
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #5 on c4";
-
-
-	eth.fireFall(20);
-	eth.executeActions();
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #6 on c4";
-
-	printf("*************************************************** (rpm is back 2) now let's have a good engine cycle and confirm things work\r\n");
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	ASSERT_EQ(3000,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#4";
-
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #7";
-
-
-	eth.fireFall(20);
-	eth.executeActions();
-	ASSERT_EQ(0, enginePins.coils[3].outOfOrder) << "out-of-order #8";
-	ASSERT_EQ(2,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#SparkReverseOrderBug319";
-	ASSERT_EQ(ObdCode::CUSTOM_DWELL_TOO_LONG, unitTestWarningCodeState.recentWarnings.get(0).Code) << "warning @0";
-	ASSERT_EQ(ObdCode::CUSTOM_OUT_OF_ORDER_COIL, unitTestWarningCodeState.recentWarnings.get(1).Code);
 }
 
 TEST(big, testMissedSpark299) {

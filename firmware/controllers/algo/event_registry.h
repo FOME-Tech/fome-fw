@@ -33,16 +33,13 @@ struct AngleBasedEvent {
 
 class IgnitionEvent {
 public:
-	IgnitionOutputPin *outputs[MAX_OUTPUTS_FOR_IGNITION];
+	uint16_t calculateIgnitionOutputMask() const;
+
 	scheduling_s dwellStartTimer;
 	AngleBasedEvent sparkEvent;
 
 	scheduling_s trailingSparkCharge;
 	scheduling_s trailingSparkFire;
-
-	// How many additional sparks should we fire after the first one?
-	// For single sparks, this should be zero.
-	uint8_t sparksRemaining = 0;
 
 	// Track whether coil charge was intentionally skipped (spark limiter)
 	bool wasSparkLimited = false;
@@ -59,16 +56,13 @@ public:
 	float dwellAngle = 0;
 
 	/**
-	 * Sequential number of currently processed spark event
-	 * @see engineState.sparkCounter
-	 */
-	int sparkId = 0;
-	/**
 	 * [0, cylindersCount)
 	 */
 	int cylinderIndex = 0;
 	int8_t cylinderNumber = 0;
 	char *name = nullptr;
+
+	ignition_mode_e m_ignitionMode = IM_INDIVIDUAL_COILS;
 };
 
 class IgnitionEventList {
