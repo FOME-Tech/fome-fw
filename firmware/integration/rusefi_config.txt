@@ -629,7 +629,7 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 	Gpio mc33972_cs;
 	pin_output_mode_e mc33972_csPinMode;
 
-	uint8_t unused581
+	uint8_t autoscale minCamPhaseResolveRpm;Above this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at low RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
 	adc_channel_e tps1_2AdcChannel;First throttle body, second sensor.
 	adc_channel_e tps2_2AdcChannel;Second throttle body, second sensor.
 

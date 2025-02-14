@@ -132,12 +132,21 @@ angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 }
 
 static angle_t adjustCrankPhase(int camIndex) {
-	float maxSyncThreshold = engineConfiguration->maxCamPhaseResolveRpm;
-	if (maxSyncThreshold != 0 && Sensor::getOrZero(SensorType::Rpm) > maxSyncThreshold) {
-		// The user has elected to stop trying to resolve crank phase after some RPM.
-		// Maybe their cam sensor only works at low RPM or something.
-		// Anyway, don't try to change crank phase at all, and return that we made no change.
-		return 0;
+	{
+		float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+		float minSyncThreshold = engineConfiguration->minCamPhaseResolveRpm;
+		bool isBelowMinSync = minSyncThreshold != 0 && rpm < minSyncThreshold;
+
+		float maxSyncThreshold = engineConfiguration->maxCamPhaseResolveRpm;
+		bool isAboveMaxSync = maxSyncThreshold != 0 && rpm > maxSyncThreshold;
+
+		if (isBelowMinSync || isAboveMaxSync) {
+			// The user has elected to stop trying to resolve crank phase above/below some RPM.
+			// Maybe their cam sensor only works at low RPM, high RPM, or something.
+			// Anyway, don't try to change crank phase at all, and return that we made no change.
+			return 0;
+		}
 	}
 
 	operation_mode_e operationMode = getEngineRotationState()->getOperationMode();
