@@ -22,7 +22,7 @@
 #include "pch.h"
 
 float __attribute__((weak)) getAnalogInputDividerCoefficient(adc_channel_e) {
-    return engineConfiguration->analogInputDividerCoefficient;
+	return engineConfiguration->analogInputDividerCoefficient;
 }
 
 #if HAL_USE_ADC
