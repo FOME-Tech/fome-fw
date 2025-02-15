@@ -124,7 +124,6 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	event->cylinderNumber = realCylinderNumber;
 	event->m_ignitionMode = ignitionMode;
 	event->dwellAngle = dwellStartAngle;
-	event->sparkAngle = sparkAngle;
 
 	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
 }
@@ -381,11 +380,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 
 			angle_t dwellAngle = event->dwellAngle;
 
-			angle_t sparkAngle = event->sparkAngle;
-			if (std::isnan(sparkAngle)) {
-				warning(ObdCode::CUSTOM_ADVANCE_SPARK, "NaN advance");
-				continue;
-			}
+			angle_t sparkAngleAdjust = 0;
 
 			bool isOddCylWastedEvent = false;
 			if (enableOddCylinderWastedSpark) {
@@ -401,14 +396,20 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 				if (isOddCylWastedEvent) {
 					dwellAngle = dwellAngleWastedEvent;
 
-					sparkAngle += 360;
-					if (sparkAngle > 720) {
-						sparkAngle -= 720;
-					}
+					sparkAngleAdjust = 360;
 				}
 			}
 
 			if (!isOddCylWastedEvent && !isPhaseInRange(dwellAngle, currentPhase, nextPhase)) {
+				continue;
+			}
+
+			angle_t sparkAngle = sparkAngleAdjust + calculateSparkAngle(event->cylinderNumber);
+			if (sparkAngle > 720) {
+				sparkAngle -= 720;
+			}
+			if (std::isnan(sparkAngle)) {
+				warning(ObdCode::CUSTOM_ADVANCE_SPARK, "NaN advance");
 				continue;
 			}
 
