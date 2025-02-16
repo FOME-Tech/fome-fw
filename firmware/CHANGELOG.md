@@ -44,6 +44,8 @@ or
 ### Fixed
  - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
  - Minor performance improvements to injection/ignition scheduling
+ - Per-cylinder knock sensing while in wasted spark mode (fixed by #553)
+ - Improved transitions between fuel/spark modes, improves cranking and startup (#551, #553. #554)
 
 ## September 2024 Release
 
