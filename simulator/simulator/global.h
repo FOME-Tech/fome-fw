@@ -50,10 +50,6 @@ extern "C"
 
 void printToConsole(const char *p);
 
-#define getCurrentRemainingStack() getRemainingStack(chThdGetSelfX())
-
-int getRemainingStack(thread_t *otp);
-
 void applyNewConfiguration(void);
 
 #ifdef __cplusplus

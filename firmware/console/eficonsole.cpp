@@ -91,17 +91,6 @@ static void sayHello() {
 	chThdSleepMilliseconds(5);
 }
 
-void validateStack(const char*msg, ObdCode code, int desiredStackUnusedSize) {
-#if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
-	int unusedStack = CountFreeStackSpace(chThdGetSelfX()->wabase);
-	if (unusedStack < desiredStackUnusedSize) {
-		warning(code, "Stack low on %s: %d", msg, unusedStack);
-	}
-#else
-	(void)msg; (void)code; (void)desiredStackUnusedSize;
-#endif
-}
-
 #if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 int CountFreeStackSpace(const void* wabase) {
 	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase) + PORT_GUARD_PAGE_SIZE;

@@ -54,8 +54,6 @@ static void endAveraging(MapAverager* arg);
 static size_t currentMapAverager = 0;
 
 static void startAveraging(sampler* s) {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6649, getCurrentRemainingStack() > 128, "lowstck#9");
-
 	float duration = engine->engineState.mapAveragingDuration;
 	if (duration == 0) {
 		// Zero duration means the engine wasn't spinning or something, abort
@@ -138,8 +136,6 @@ void MapAverager::stop() {
  * as fast as possible
  */
 void MapAveragingModule::submitSample(float volts) {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6650, getCurrentRemainingStack() > 128, "lowstck#9a");
-
 	SensorResult mapResult = getMapAvg(currentMapAverager).submit(volts);
 
 	float instantMap = mapResult.value_or(0);
