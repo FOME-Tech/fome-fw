@@ -148,6 +148,10 @@ static void cmd_threads() {
 #endif
 }
 
+static int fib(int x) {
+	return fib(x - 1) + fib(x - 2);
+}
+
 void initializeConsole() {
 	initConsoleLogic();
 
@@ -160,4 +164,5 @@ void initializeConsole() {
 	addConsoleAction("critical", testCritical);
 	addConsoleAction("error", myerror);
 	addConsoleAction("threadsinfo", cmd_threads);
+	addConsoleAction("stackoverflow", [](){ fib(10000); });
 }
