@@ -75,6 +75,15 @@ void CpuStartUserProgram(void)
 #endif
   /* reset the HAL */
   chSysDisable();
+
+  // Clear all MPU settings, as they may immediately cause a fault after the jump to firmware
+  mpuDisable();
+  for (int i = 0; i < 8; i++) {
+    mpuConfigureRegion(i, 0, 0);
+  }
+  __DSB();
+  __ISB();
+
   /* reset the timer */
   TimerReset();
   /* remap user program's vector table */
