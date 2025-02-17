@@ -144,6 +144,23 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 #endif
 
 	efitick_t nowNt = getTimeNowNt();
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+
+	float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
+	float minDwell = 0.8f * event->sparkDwell;
+	if (actualDwellMs < minDwell) {
+		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
+		efitick_t delayedFireTime = nowNt + US2NT(extraTimeUs);
+
+		// cancel multispark in case of underdwell
+		ctx.sparksRemaining = 0;
+
+		// re-schedule ourselves at a later time once enough dwell has elapsed
+		// This is fine to do because it will retard the effective ignition timing, but 
+		// ensure the coil has enough energy to actually fire (we would rather retard timing than misfire)
+		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, delayedFireTime, { fireSparkAndPrepareNextSchedule, ctx });
+		return;
+	}
 
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
@@ -161,12 +178,9 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	LogTriggerCoilState(nowNt, false);
 #endif // EFI_TOOTH_LOGGER
 
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
-
 #if EFI_TUNER_STUDIO
 	{
 		// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
-		float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
 		engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
 	}
 #endif
