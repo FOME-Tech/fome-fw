@@ -97,6 +97,9 @@ void UsageFault_Handler_C(void* sp) {
 }
 
 void MemManage_Handler_C(void* sp) {
+	// Disable the MPU so we don't get smacked with a double fault while trying to save state
+	mpuDisable();
+
 	//For HardFault/BusFault this is the address that was accessed causing the error
 	faultAddress = SCB->MMFAR;
 
