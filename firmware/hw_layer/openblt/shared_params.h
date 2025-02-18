@@ -42,6 +42,8 @@
  *         buffer. This is the length in bytes of the actual parameter data, so
  *         excluding the bufferId and checksum.
  */
+// This size cannot be increased, as some previous ECUs used a 16 byte shared region
+// (despite it being 32 bytes now for memory alignment reasons)
 #define SHARED_PARAMS_CFG_BUFFER_DATA_LEN        (16 - 4 - 2)
 
 
