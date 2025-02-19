@@ -27,11 +27,8 @@
 
 #include "global.h"
 
-#define EXPECTED_REMAINING_STACK 128
-
 /*
  * Stack debugging
  */
 int getRemainingStack(thread_t *otp);
 int CountFreeStackSpace(const void* wabase);
-void validateStack(const char*msg, ObdCode code, int stackUnusedSize);

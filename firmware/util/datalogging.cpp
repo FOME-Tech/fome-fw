@@ -78,8 +78,6 @@ void Logging::appendFast(const char *text) {
 }
 
 void Logging::appendPrintf(const char *fmt, ...) {
-	efiAssertVoid(ObdCode::CUSTOM_APPEND_STACK, getCurrentRemainingStack() > 128, "lowstck#4");
-
 	size_t available = remainingSize();
 
 	va_list ap;

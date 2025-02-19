@@ -31,10 +31,6 @@
 
 extern WaveChart waveChart;
 
-int getRemainingStack(thread_t*) {
-	return 99999;
-}
-
 static void assertString(const char*actual, const char *expected) {
 	if (strcmp(actual, expected) != 0) {
 		printf("assertString FAILED\n");

@@ -831,10 +831,6 @@ static void calculateTriggerSynchPoint(
 		TriggerWaveform& shape,
 		TriggerDecoderBase& initState) {
 
-#if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_TRIGGER_STACK, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "calc s");
-#endif
-
 	shape.initializeSyncPoint(initState, primaryTriggerConfiguration);
 
 	if (shape.getSize() >= PWM_PHASE_MAX_COUNT) {
