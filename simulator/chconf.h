@@ -733,15 +733,6 @@
   /* Add OS instance initialization code here.*/                            \
 }
 
-
-/**
- * @brief   Threads descriptor structure extension.
- * @details User fields added to the end of the @p thread_t structure.
- */
-#define CH_CFG_THREAD_EXTRA_FIELDS                                          \
-  unsigned char threadId;                                                   \
-  /* Add threads custom fields here.*/
-
 /**
  * @brief   Threads finalization hook.
  * @details User finalization code added to the @p chThdExit() API.
