@@ -43,5 +43,3 @@
 	path = firmware/ext/build-tools
 	url = https://github.com/FOME-Tech/build-tools.git
 	branch = main
-[submodule "ChibiOS"]
-	url = https://github.com/FOME-Tech/ChibiOS.git
