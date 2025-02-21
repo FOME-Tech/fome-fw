@@ -390,6 +390,9 @@ static void setDefaultEngineConfiguration() {
 	// Don't enable, but set default address
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
 
+	strcpy(config->wifiAccessPointSsid, "FOME EFI");
+	setArrayValues(config->wifiAccessPointPassword, 0);
+
 	engineConfiguration->sdCardLogFrequency = 50;
 
 	engineConfiguration->mapMinBufferLength = 1;
@@ -556,6 +559,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->knockDetectionWindowEnd = 15.0 + 45.0;
 
 	engineConfiguration->triggerSimulatorRpm = 1200;
+	engineConfiguration->fakeFullSyncForStimulation = true;
 
 	engineConfiguration->alternatorPwmFrequency = 300;
 
@@ -907,7 +911,6 @@ void validateConfiguration() {
 
 void applyNonPersistentConfiguration() {
 #if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_APPLY_STACK, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "apply c");
 	efiPrintf("applyNonPersistentConfiguration()");
 #endif
 

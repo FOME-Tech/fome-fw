@@ -64,7 +64,6 @@ extern bool isSpiInitialized[6];
  * Only one consumer can use SPI bus at a given time
  */
 void lockSpi(spi_device_e device) {
-	efiAssertVoid(ObdCode::CUSTOM_STACK_SPI, getCurrentRemainingStack() > 128, "lockSpi");
 	spiAcquireBus(getSpiDevice(device));
 }
 
@@ -292,8 +291,6 @@ void applyNewHardwareSettings() {
 
 // This function initializes hardware that can do so before configuration is loaded
 void initHardwareNoConfig() {
-	efiAssertVoid(ObdCode::CUSTOM_IH_STACK, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "init h");
-
 	efiPrintf("initHardware()");
 
 #if EFI_PROD_CODE

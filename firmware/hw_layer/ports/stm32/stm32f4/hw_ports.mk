@@ -8,6 +8,7 @@ HW_LAYER_EMS_CPP += $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/mpu_util.cpp \
 					$(HW_STM32_PORT_DIR)/flash_int_f4_f7.cpp \
 
 MCU = cortex-m4
+USE_FPU = hard
 LDSCRIPT = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/STM32F4.ld
 ALLCSRC += $(CHIBIOS)/os/hal/boards/ST_STM32F4_DISCOVERY/board.c
 CONFDIR = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/cfg

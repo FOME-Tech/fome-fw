@@ -278,6 +278,10 @@ void Engine::OnTriggerSynchronizationLost() {
 			triggerCentral.vvtState[i][j].resetState();
 		}
 	}
+
+	// Reset injector & ignition scheduling to avoid wrong mode or dwell during restart
+	injectionEvents.invalidate();
+	engine->ignitionEvents.isReady = false;
 }
 
 void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError) {

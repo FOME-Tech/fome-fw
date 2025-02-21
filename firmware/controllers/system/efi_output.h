@@ -73,7 +73,8 @@ private:
 class NamedOutputPin : public virtual OutputPin {
 public:
 	NamedOutputPin();
-	explicit NamedOutputPin(const char *name);
+	explicit NamedOutputPin(const char* name);
+	explicit NamedOutputPin(const char* name, const char* shortName);
 	virtual void setHigh();
 	virtual void setLow();
 	const char *getName() const;

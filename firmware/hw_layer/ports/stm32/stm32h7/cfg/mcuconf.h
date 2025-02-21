@@ -52,7 +52,7 @@
 
 // Disable caching for the whole of SRAM1/2/3/4, Backup SRAM
 #define STM32_NOCACHE_ENABLE                TRUE
-#define STM32_NOCACHE_MPU_REGION            MPU_REGION_7
+#define STM32_NOCACHE_MPU_REGION            MPU_REGION_6
 #define STM32_NOCACHE_RBAR                  0x30000000U
 #define STM32_NOCACHE_RASR                  MPU_RASR_SIZE_256M
 
@@ -247,7 +247,7 @@
  * ADC driver system settings.
  */
 #define STM32_ADC_DUAL_MODE                 FALSE
-#define STM32_ADC_COMPACT_SAMPLES           FALSE
+#define STM32_ADC_SAMPLES_SIZE              32
 #define STM32_ADC_USE_ADC12                 TRUE
 
 #ifndef STM32_ADC_USE_ADC3
@@ -260,8 +260,8 @@
 #define STM32_ADC_ADC3_DMA_PRIORITY         2
 #define STM32_ADC_ADC12_IRQ_PRIORITY        5
 #define STM32_ADC_ADC3_IRQ_PRIORITY         5
-#define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_AHB_DIV4
-#define STM32_ADC_ADC3_CLOCK_MODE           ADC_CCR_CKMODE_AHB_DIV4
+#define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_ADCCK
+#define STM32_ADC_ADC3_CLOCK_MODE           ADC_CCR_CKMODE_ADCCK
 
 /*
  * CAN driver system settings.

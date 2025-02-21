@@ -17,12 +17,10 @@
 typedef uint32_t iomode_t;
 typedef uint32_t ioportid_t;
 typedef uint32_t ioportmask_t;
+typedef uint16_t adcsample_t;
 
 #define DL_OUTPUT_BUFFER 200
 #define FIRMWARE_ID "UNIT_TEST"
-
-// just a stub implementation for unit tests
-#define getCurrentRemainingStack() (999999)
 
 #define EXPECT_NEAR_M3(x, y) EXPECT_NEAR((x), (y), 1e-3)
 #define EXPECT_NEAR_M4(a, b) EXPECT_NEAR(a, b, 1e-4)

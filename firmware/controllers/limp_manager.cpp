@@ -54,23 +54,18 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 		allowFuel.clear(ClearReason::ACR);
 	}
 
-	{
-		// User-configured hard RPM limit, either constant or CLT-lookup
-		// todo: migrate to engineState->desiredRpmLimit to get this variable logged
-		float revLimit = engineConfiguration->useCltBasedRpmLimit
-			? interpolate2d(Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
-			: (float)engineConfiguration->rpmHardLimit;
+	// User-configured hard RPM limit, either constant or CLT-lookup
+	m_hardRevLimit = engineConfiguration->useCltBasedRpmLimit
+		? interpolate2d(Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
+		: (float)engineConfiguration->rpmHardLimit;
 
-		// Configurable hysteresis for how far to drop before resuming
-		float resumeRpm = revLimit - engineConfiguration->rpmHardLimitHyst;
-		if (m_revLimitHysteresis.test(rpm, revLimit, resumeRpm)) {
-			if (engineConfiguration->cutFuelOnHardLimit) {
-				allowFuel.clear(ClearReason::HardLimit);
-			}
+	if (isHardRevLimit(rpm)) {
+		if (engineConfiguration->cutFuelOnHardLimit) {
+			allowFuel.clear(ClearReason::HardLimit);
+		}
 
-			if (engineConfiguration->cutSparkOnHardLimit) {
-				allowSpark.clear(ClearReason::HardLimit);
-			}
+		if (engineConfiguration->cutSparkOnHardLimit) {
+			allowSpark.clear(ClearReason::HardLimit);
 		}
 	}
 
@@ -225,6 +220,13 @@ todo AndreiKA this change breaks 22 unit tests?
 	// Update output channels
 	engine->outputChannels.fuelCutReason = static_cast<uint8_t>(allowInjection().reason);
 	engine->outputChannels.sparkCutReason = static_cast<uint8_t>(allowIgnition().reason);
+}
+
+bool LimpManager::isHardRevLimit(float rpm) {
+	// Configurable hysteresis for how far to drop before resuming
+	float resumeRpm = m_hardRevLimit - engineConfiguration->rpmHardLimitHyst;
+
+	return m_revLimitHysteresis.test(rpm, m_hardRevLimit, resumeRpm);
 }
 
 void LimpManager::onIgnitionStateChanged(bool ignitionOn) {

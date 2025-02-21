@@ -63,6 +63,8 @@ Usages:
   - name: ac_control
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
+    constexpr: "___engine.module<AcController>()"
+    isPtr: true
     output_name: AC
 
   - name: fan_control

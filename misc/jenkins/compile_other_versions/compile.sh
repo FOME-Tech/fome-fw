@@ -18,13 +18,10 @@ echo "Entering $SCRIPT_NAME with folder $BOARD_DIR and bundle name $BUNDLE_NAME"
 COMPILE_SCRIPT="compile_$BUNDLE_NAME.sh"
 
 cd firmware
-rm -rf .dep
-rm -rf build
-rm -rf pch/pch.h.gch.sh
-cd ..
-
-cd firmware/$BOARD_DIR
+rm -rf .dep # ChibiOS build's DEPDIR
+rm -rf build # ChibiOS build's BUILDDIR
+rm -rf pch/pch.h.gch.sh # what is this?
+cd $BOARD_DIR
 
 echo "Invoking $COMPILE_SCRIPT"
-
 bash $COMPILE_SCRIPT

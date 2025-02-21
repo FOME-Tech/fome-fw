@@ -222,7 +222,7 @@ void TriggerDecoderBase::incrementShaftSynchronizationCounter() {
 // If we're self stimulating, assume we have full sync so that outputs work during self stim
 bool PrimaryTriggerDecoder::hasSynchronizedPhase() const {
 #if EFI_PROD_CODE
-	if (getTriggerCentral()->directSelfStimulation) {
+	if (getTriggerCentral()->directSelfStimulation && engineConfiguration->fakeFullSyncForStimulation) {
 		return true;
 	}
 #endif
@@ -370,8 +370,10 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		const TriggerEvent signal,
 		const efitick_t nowNt) {
 	ScopePerf perf(PE::DecodeTriggerEvent);
-	
-	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > 1) {
+
+	// Timeout below approximately 12 rpm, but a maximum of 1 second timeout
+	float triggerTimeoutPeriod = std::min(5.0f / triggerShape.getLength(), 1.0f);
+	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > triggerTimeoutPeriod) {
 		/**
 		 * We are here if there is a time gap between now and previous shaft event - that means the engine is not running.
 		 * That means we have lost synchronization since the engine is not running :)
@@ -677,10 +679,6 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 		TriggerWaveform& shape,
 		const TriggerConfiguration& triggerConfiguration) {
-#if EFI_PROD_CODE
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCurrentRemainingStack() > 128, "findPos", -1);
-#endif
-
 	resetState();
 
 	if (shape.shapeDefinitionError) {
