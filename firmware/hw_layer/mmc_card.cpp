@@ -259,6 +259,9 @@ void onUsbConnectedNotifyMmcI() {
 #endif /* HAL_USE_USB_MSD */
 
 #if HAL_USE_MMC_SPI
+
+static uint8_t mmcOperationBuffer[32];
+
 /*
  * Attempts to initialize the MMC card.
  * Returns a BaseBlockDevice* corresponding to the SD card if successful, otherwise nullptr.
@@ -287,7 +290,7 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 	}
 
 	// We think we have everything for the card, let's try to mount it!
-	mmcObjectInit(&MMCD1);
+	mmcObjectInit(&MMCD1, mmcOperationBuffer);
 	mmcStart(&MMCD1, &mmccfg);
 
 	// Performs the initialization procedure on the inserted card.
@@ -307,7 +310,8 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
 static const SDCConfig sdcConfig = {
-	SDC_MODE_4BIT
+	.bus_width = SDC_MODE_4BIT,
+	.slowdown = 0,
 };
 
 static BaseBlockDevice* initializeMmcBlockDevice() {

@@ -41,8 +41,8 @@
 #define STM32H757_MCUCONF
 
 // Allows LSE init to timeout and configure fallback RTC clock source in case
-#define RUSEFI_STM32_LSE_WAIT_MAX           1000000
-#define RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL    STM32_RTCSEL_LSI_CK
+#define FOME_STM32_LSE_WAIT_MAX             1000000
+#define FOME_STM32_LSE_WAIT_MAX_RTCSEL      STM32_RTCSEL_LSI_CK
 
 /*
  * General settings.
@@ -50,16 +50,11 @@
 #define STM32_NO_INIT                       FALSE
 #define STM32_TARGET_CORE                   1
 
-/*
- * Memory attributes settings.
- */
+// Disable caching for the whole of SRAM1/2/3/4, Backup SRAM
+#define STM32_NOCACHE_ENABLE                TRUE
 #define STM32_NOCACHE_MPU_REGION            MPU_REGION_6
-#ifndef STM32_NOCACHE_SRAM1_SRAM2
-#define STM32_NOCACHE_SRAM1_SRAM2           FALSE
-#endif // STM32_NOCACHE_SRAM1_SRAM2
-#ifndef STM32_NOCACHE_SRAM3
-#define STM32_NOCACHE_SRAM3                 TRUE
-#endif // STM32_NOCACHE_SRAM3
+#define STM32_NOCACHE_RBAR                  0x30000000U
+#define STM32_NOCACHE_RASR                  MPU_RASR_SIZE_256M
 
 /*
  * PWR system settings.
