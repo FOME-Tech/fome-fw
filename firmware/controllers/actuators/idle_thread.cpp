@@ -286,76 +286,75 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 
 float IdleController::getIdlePosition(float rpm) {
 #if EFI_SHAFT_POSITION_INPUT
+	// Simplify hardware CI: we borrow the idle valve controller as a PWM source for various stimulation tasks
+	// The logic in this function is solidly unit tested, so it's not necessary to re-test the particulars on real hardware.
+	#ifdef HARDWARE_CI
+		return engineConfiguration->manIdlePosition;
+	#endif
 
-		// Simplify hardware CI: we borrow the idle valve controller as a PWM source for various stimulation tasks
-		// The logic in this function is solidly unit tested, so it's not necessary to re-test the particulars on real hardware.
-		#ifdef HARDWARE_CI
-			return engineConfiguration->manIdlePosition;
-		#endif
+	/*
+	* Here we have idle logic thread - actual stepper movement is implemented in a separate
+	* working thread see stepper.cpp
+	*/
+	m_pid.iTermMin = engineConfiguration->idlerpmpid_iTermMin;
+	m_pid.iTermMax = engineConfiguration->idlerpmpid_iTermMax;
 
-		/*
-		* Here we have idle logic thread - actual stepper movement is implemented in a separate
-		* working thread see stepper.cpp
-		*/
-		m_pid.iTermMin = engineConfiguration->idlerpmpid_iTermMin;
-		m_pid.iTermMax = engineConfiguration->idlerpmpid_iTermMax;
+	// On failed sensor, use 0 deg C - should give a safe highish idle
+	float clt = Sensor::getOrZero(SensorType::Clt);
+	auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 
-		// On failed sensor, use 0 deg C - should give a safe highish idle
-		float clt = Sensor::getOrZero(SensorType::Clt);
-		auto tps = Sensor::get(SensorType::DriverThrottleIntent);
+	// Compute the target we're shooting for
+	auto targetRpm = getTargetRpm(clt);
+	m_lastTargetRpm = targetRpm;
 
-		// Compute the target we're shooting for
-		auto targetRpm = getTargetRpm(clt);
-		m_lastTargetRpm = targetRpm;
+	// Determine cranking taper
+	float crankingTaper = getCrankingTaperFraction(clt);
 
-		// Determine cranking taper
-		float crankingTaper = getCrankingTaperFraction(clt);
+	// Determine what operation phase we're in - idling or not
+	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
+	auto phase = determinePhase(rpm, targetRpm, tps, vehicleSpeed, crankingTaper);
+	m_lastPhase = phase;
 
-		// Determine what operation phase we're in - idling or not
-		float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
-		auto phase = determinePhase(rpm, targetRpm, tps, vehicleSpeed, crankingTaper);
-		m_lastPhase = phase;
+	finishIdleTestIfNeeded();
+	undoIdleBlipIfNeeded();
 
-		finishIdleTestIfNeeded();
-		undoIdleBlipIfNeeded();
+	percent_t iacPosition;
 
-		percent_t iacPosition;
+	isBlipping = engine->timeToStopBlip != 0;
+	if (isBlipping) {
+		iacPosition = engine->blipIdlePosition;
+	} else {
+		// Always apply open loop correction
+		iacPosition = getOpenLoop(phase, rpm, clt, tps, crankingTaper);
+		openLoop = iacPosition;
 
-		isBlipping = engine->timeToStopBlip != 0;
-		if (isBlipping) {
-			iacPosition = engine->blipIdlePosition;
+		// If TPS is working and automatic mode enabled, add any closed loop correction
+		if (tps.Valid && engineConfiguration->idleMode == IM_AUTO) {
+			auto closedLoop = getClosedLoop(phase, tps.Value, rpm, targetRpm);
+			idleClosedLoop = closedLoop;
+			iacPosition += closedLoop;
 		} else {
-			// Always apply open loop correction
-			iacPosition = getOpenLoop(phase, rpm, clt, tps, crankingTaper);
-			openLoop = iacPosition;
-
-			// If TPS is working and automatic mode enabled, add any closed loop correction
-			if (tps.Valid && engineConfiguration->idleMode == IM_AUTO) {
-				auto closedLoop = getClosedLoop(phase, tps.Value, rpm, targetRpm);
-				idleClosedLoop = closedLoop;
-				iacPosition += closedLoop;
-			} else {
-				idleClosedLoop = 0;
-			}
-
-			iacPosition = clampPercentValue(iacPosition);
+			idleClosedLoop = 0;
 		}
+
+		iacPosition = clampPercentValue(iacPosition);
+	}
 
 #if EFI_TUNER_STUDIO && (EFI_PROD_CODE || EFI_SIMULATOR)
-		if (engineConfiguration->idleMode == IM_AUTO) {
-			// see also tsOutputChannels->idlePosition
-			m_pid.postState(engine->outputChannels.idleStatus);
-		}
+	if (engineConfiguration->idleMode == IM_AUTO) {
+		// see also tsOutputChannels->idlePosition
+		m_pid.postState(engine->outputChannels.idleStatus);
+	}
 
-		extern StepperMotor iacMotor;
-		engine->outputChannels.idleStepperTargetPosition = iacMotor.getTargetPosition();
+	extern StepperMotor iacMotor;
+	engine->outputChannels.idleStepperTargetPosition = iacMotor.getTargetPosition();
 #endif /* EFI_TUNER_STUDIO */
 
-		currentIdlePosition = iacPosition;
-		isIdleClosedLoop = phase == Phase::Idling;
-		return iacPosition;
+	currentIdlePosition = iacPosition;
+	isIdleClosedLoop = phase == Phase::Idling;
+	return iacPosition;
 #else
-		return 0;
+	return 0;
 #endif // EFI_SHAFT_POSITION_INPUT
 
 }
