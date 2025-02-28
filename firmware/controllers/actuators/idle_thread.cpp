@@ -203,10 +203,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 			mustResetPid = false;
 		}
 		shouldResetPid = false;
-		wasResetPid = true;
 	}
-
-	efitimeus_t nowUs = getTimeNowUs();
 
 	notIdling = phase != IIdleController::Phase::Idling;
 	if (notIdling) {
@@ -231,43 +228,11 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 		return m_lastAutomaticPosition;
 	}
 
-	// When rpm < targetRpm, there's a risk of dropping RPM too low - and the engine dies out.
-	// So PID reaction should be increased by adding extra percent to PID-error:
-	percent_t errorAmpCoef = 1.0f;
-	if (rpm < targetRpm) {
-		errorAmpCoef += (float)engineConfiguration->pidExtraForLowRpm / PERCENT_MULT;
-	}
-
-	// if PID was previously reset, we store the time when it turned on back (see errorAmpCoef correction below)
-	if (wasResetPid) {
-		restoreAfterPidResetTimeUs = nowUs;
-		wasResetPid = false;
-	}
-	// increase the errorAmpCoef slowly to restore the process correctly after the PID reset
-	// todo: move restoreAfterPidResetTimeUs to idle?
-	int32_t timeSincePidResetUs = nowUs - restoreAfterPidResetTimeUs;
-	// todo: add 'pidAfterResetDampingPeriodMs' setting
-	errorAmpCoef = interpolateClamped(0, 0, MS2US(/*engineConfiguration->pidAfterResetDampingPeriodMs*/1000), errorAmpCoef, timeSincePidResetUs);
-	// If errorAmpCoef > 1.0, then PID thinks that RPM is lower than it is, and controls IAC more aggressively
-	m_pid.setErrorAmplification(errorAmpCoef);
-
 	percent_t newValue = m_pid.getOutput(targetRpm, rpm, SLOW_CALLBACK_PERIOD_MS / 1000.0f);
 
 	// the state of PID has been changed, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
 	mightResetPid = true;
 
-	// Apply PID Multiplier if used
-	if (engineConfiguration->useIacPidMultTable) {
-		float engineLoad = getFuelingLoad();
-		float multCoef = interpolate3d(
-			config->iacPidMultTable,
-			config->iacPidMultLoadBins, engineLoad,
-			config->iacPidMultRpmBins, rpm
-		);
-		// PID can be completely disabled of multCoef==0, or it just works as usual if multCoef==1
-		newValue = interpolateClamped(0, 0, 1, newValue, multCoef);
-	}
-	
 	// Apply PID Deactivation Threshold as a smooth taper for TPS transients.
 	// if tps==0 then PID just works as usual, or we completely disable it if tps>=threshold
 	// TODO: should we just remove this? It reduces the gain if your zero throttle stop isn't perfect,
@@ -362,7 +327,6 @@ void IdleController::onConfigurationChange(engine_configuration_s const * previo
 void IdleController::init() {
 	shouldResetPid = false;
 	mightResetPid = false;
-	wasResetPid = false;
 	m_pid.initPidClass(&engineConfiguration->idleRpmPid);
 	m_timingPid.initPidClass(&engineConfiguration->idleTimingPid);
 }
