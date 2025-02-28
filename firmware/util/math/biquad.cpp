@@ -61,8 +61,6 @@ void Biquad::configureHighpass(float samplingFrequency, float cutoffFrequency, f
 	float K = getK(samplingFrequency, cutoffFrequency);
 	float norm = getNorm(K, Q);
 
-	float norm = 1 / (1 + K / Q + K * K);
-
 	a0 = 1 * norm;
 	a1 = -2 * a0;
 	a2 = a0;
