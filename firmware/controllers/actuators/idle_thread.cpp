@@ -182,8 +182,12 @@ float IdleController::getIdleTimingAdjustment(float rpm, float targetRpm, Phase 
 		return 0;
 	}
 
-	// We're now in the idle mode, and RPM is inside the Timing-PID regulator work zone!
-	return m_timingPid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
+	if (engineConfiguration->modeledFlowIdle) {
+		return m_modeledFlowIdleTiming;
+	} else {
+		// We're now in the idle mode, and RPM is inside the Timing-PID regulator work zone!
+		return m_timingPid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
+	}
 }
 
 static void finishIdleTestIfNeeded() {
@@ -307,7 +311,18 @@ float IdleController::getIdlePosition(float rpm) {
 #endif /* EFI_TUNER_STUDIO */
 
 	if (useModeledFlow && phase != Phase::Cranking) {
-		float idleAirmass = 0.01 * iacPosition * engineConfiguration->idleMaximumAirmass;
+		float totalAirmass = 0.01 * iacPosition * engineConfiguration->idleMaximumAirmass;
+
+		bool shouldAdjustTiming = engineConfiguration->useIdleTimingPidControl && phase == Phase::Idling;
+
+		// extract hiqh frequency content to be handled by timing
+		float timingAirmass = shouldAdjustTiming ? m_timingHpf.filter(totalAirmass) : 0;
+
+		// Convert from airmass delta -> timing
+		m_modeledFlowIdleTiming = interpolate2d(timingAirmass, config->airmassToTimingBins, config->airmassToTimingValues);
+
+		// Handle the residual low frequency content with airflow
+		float idleAirmass = totalAirmass - timingAirmass;
 		float airflowKgPerH = 3.6 * idleAirmass * rpm / 60 * engineConfiguration->cylindersCount / 2;
 
 		// Convert from desired flow -> idle valve position
@@ -326,7 +341,6 @@ float IdleController::getIdlePosition(float rpm) {
 #else
 	return 0;
 #endif // EFI_SHAFT_POSITION_INPUT
-
 }
 
 void IdleController::onSlowCallback() {
@@ -348,6 +362,8 @@ void IdleController::init() {
 	mightResetPid = false;
 	m_pid.initPidClass(&engineConfiguration->idleRpmPid);
 	m_timingPid.initPidClass(&engineConfiguration->idleTimingPid);
+
+	m_timingHpf.configureHighpass(20, 1);
 }
 
 #endif /* EFI_IDLE_CONTROL */
