@@ -251,6 +251,8 @@ float IdleController::getIdlePosition(float rpm) {
 		return engineConfiguration->manIdlePosition;
 	#endif
 
+	bool useModeledFlow = engineConfiguration->modeledFlowIdle;
+
 	/*
 	* Here we have idle logic thread - actual stepper movement is implemented in a separate
 	* working thread see stepper.cpp
@@ -266,8 +268,8 @@ float IdleController::getIdlePosition(float rpm) {
 	auto targetRpm = getTargetRpm(clt);
 	m_lastTargetRpm = targetRpm;
 
-	// Determine cranking taper
-	float crankingTaper = getCrankingTaperFraction(clt);
+	// Determine cranking taper (modeled flow does no taper of open loop)
+	float crankingTaper = useModeledFlow ? 1 : getCrankingTaperFraction(clt);
 
 	// Determine what operation phase we're in - idling or not
 	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
@@ -280,8 +282,11 @@ float IdleController::getIdlePosition(float rpm) {
 	percent_t iacPosition = getOpenLoop(phase, rpm, clt, tps, crankingTaper);
 	openLoop = iacPosition;
 
+	// Force closed loop operation for modeled flow
+	auto idleMode = useModeledFlow ? IM_AUTO : engineConfiguration->idleMode;
+
 	// If TPS is working and automatic mode enabled, add any closed loop correction
-	if (tps.Valid && engineConfiguration->idleMode == IM_AUTO) {
+	if (tps.Valid && idleMode == IM_AUTO) {
 		auto closedLoop = getClosedLoop(phase, tps.Value, rpm, targetRpm);
 		idleClosedLoop = closedLoop;
 		iacPosition += closedLoop;
@@ -292,7 +297,7 @@ float IdleController::getIdlePosition(float rpm) {
 	iacPosition = clampPercentValue(iacPosition);
 
 #if EFI_TUNER_STUDIO && (EFI_PROD_CODE || EFI_SIMULATOR)
-	if (engineConfiguration->idleMode == IM_AUTO) {
+	if (useModeledFlow || idleMode == IM_AUTO) {
 		// see also tsOutputChannels->idlePosition
 		m_pid.postState(engine->outputChannels.idleStatus);
 	}
@@ -300,6 +305,20 @@ float IdleController::getIdlePosition(float rpm) {
 	extern StepperMotor iacMotor;
 	engine->outputChannels.idleStepperTargetPosition = iacMotor.getTargetPosition();
 #endif /* EFI_TUNER_STUDIO */
+
+	if (useModeledFlow && phase != Phase::Cranking) {
+		float idleAirmass = iacPosition * engineConfiguration->idleMaximumAirmass;
+		float airflowKgPerH = 3.6 * idleAirmass * rpm / 60 * engineConfiguration->cylindersCount / 2;
+
+		// Convert from desired flow -> idle valve position
+		float idlePos = interpolate2d(
+			airflowKgPerH,
+			config->idleFlowEstimateFlow,
+			config->idleFlowEstimatePosition
+		);
+
+		iacPosition = idlePos;
+	}
 
 	currentIdlePosition = iacPosition;
 	isIdleClosedLoop = phase == Phase::Idling;
