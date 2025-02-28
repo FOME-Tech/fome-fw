@@ -307,7 +307,7 @@ float IdleController::getIdlePosition(float rpm) {
 #endif /* EFI_TUNER_STUDIO */
 
 	if (useModeledFlow && phase != Phase::Cranking) {
-		float idleAirmass = iacPosition * engineConfiguration->idleMaximumAirmass;
+		float idleAirmass = 0.01 * iacPosition * engineConfiguration->idleMaximumAirmass;
 		float airflowKgPerH = 3.6 * idleAirmass * rpm / 60 * engineConfiguration->cylindersCount / 2;
 
 		// Convert from desired flow -> idle valve position
