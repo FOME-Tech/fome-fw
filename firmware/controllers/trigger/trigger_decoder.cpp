@@ -679,10 +679,6 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 		TriggerWaveform& shape,
 		const TriggerConfiguration& triggerConfiguration) {
-#if EFI_PROD_CODE
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCurrentRemainingStack() > 128, "findPos", -1);
-#endif
-
 	resetState();
 
 	if (shape.shapeDefinitionError) {

@@ -344,10 +344,10 @@ public class ParseStructTest {
     public void tableFixedSize() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
-                        "table\n" +
-                        "rows num 4 uint8_t rowVals\n" +
-                        "cols num 8 uint16_t colVals\n" +
-                        "values float tableVals\n" +
+                        "begin_table\n" +
+                        "table_rows num 4 uint8_t rowVals\n" +
+                        "table_cols num 8 uint16_t colVals\n" +
+                        "table_values float tableVals\n" +
                         "end_table\n" +
                         "end_struct\n"
         );
@@ -374,11 +374,11 @@ public class ParseStructTest {
     public void tableMultiValues() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
-                        "table\n" +
-                        "rows num 4 uint8_t rowVals\n" +
-                        "cols num 8 uint16_t colVals\n" +
-                        "values float tableValsF\n" +
-                        "values int tableValsI\n" +
+                        "begin_table\n" +
+                        "table_rows num 4 uint8_t rowVals\n" +
+                        "table_cols num 8 uint16_t colVals\n" +
+                        "table_values float tableValsF\n" +
+                        "table_values int tableValsI\n" +
                         "end_table\n" +
                         "end_struct\n"
         );

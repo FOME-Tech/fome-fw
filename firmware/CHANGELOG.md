@@ -46,6 +46,7 @@ or
  - Minor performance improvements to injection/ignition scheduling
  - Per-cylinder knock sensing while in wasted spark mode (fixed by #553)
  - Improved transitions between fuel/spark modes, improves cranking and startup (#551, #553. #554)
+ - Disable radiator fans while ignition switch is off
 
 ## September 2024 Release
 

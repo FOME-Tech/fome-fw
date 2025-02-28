@@ -392,11 +392,7 @@ void TriggerWaveform::setThirdTriggerSynchronizationGap(float syncRatio) {
  * External logger is needed because at this point our logger is not yet initialized
  */
 void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperationMode, const TriggerConfiguration& triggerConfig) {
-
-#if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6641, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "init t");
 	efiPrintf("initializeTriggerWaveform(%s/%d)", getTrigger_type_e(triggerConfig.TriggerType.type), (int)triggerConfig.TriggerType.type);
-#endif
 
 	shapeDefinitionError = false;
 
