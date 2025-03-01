@@ -35,6 +35,8 @@ class IgnitionEvent {
 public:
 	uint16_t calculateIgnitionOutputMask() const;
 
+	angle_t calculateSparkAngle() const;
+
 	scheduling_s dwellStartTimer;
 	AngleBasedEvent sparkEvent;
 

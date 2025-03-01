@@ -81,8 +81,8 @@ uint16_t IgnitionEvent::calculateIgnitionOutputMask() const {
 	return outputsMask;
 }
 
-static angle_t calculateSparkAngle(int realCylinderNumber) {
-	angle_t sparkAngle = engine->cylinders[realCylinderNumber].getSparkAngle(
+angle_t IgnitionEvent::calculateSparkAngle() const {
+	angle_t sparkAngle = engine->cylinders[cylinderNumber].getSparkAngle(
 		// Pull any extra timing for knock retard
 		- engine->module<KnockController>()->getKnockRetard()
 	);
@@ -101,7 +101,11 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	// let's save planned duration so that we can later compare it with reality
 	event->sparkDwell = sparkDwell;
 
-	auto sparkAngle = calculateSparkAngle(realCylinderNumber);
+	// Stash which cylinder we're scheduling so that knock sensing knows which
+	// cylinder just fired
+	event->cylinderNumber = realCylinderNumber;
+
+	auto sparkAngle = event->calculateSparkAngle();
 
 	auto ignitionMode = getCurrentIgnitionMode();
 
@@ -117,11 +121,7 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 
 	assertAngleRange(dwellStartAngle, "findAngle dwellStartAngle", ObdCode::CUSTOM_ERR_6550);
 	wrapAngle(dwellStartAngle, "findAngle#7", ObdCode::CUSTOM_ERR_6550);
-	
 
-	// Stash which cylinder we're scheduling so that knock sensing knows which
-	// cylinder just fired
-	event->cylinderNumber = realCylinderNumber;
 	event->m_ignitionMode = ignitionMode;
 	event->dwellAngle = dwellStartAngle;
 
@@ -150,6 +150,11 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	float minDwell = 0.8f * event->sparkDwell;
 	if (actualDwellMs < minDwell) {
 		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
+
+		if (extraTimeUs < 10) {
+			extraTimeUs = 10;
+		}
+
 		efitick_t delayedFireTime = nowNt + efidur_t{(uint32_t)USF2NT(extraTimeUs)};
 
 		// cancel multispark in case of underdwell
@@ -418,7 +423,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 				continue;
 			}
 
-			angle_t sparkAngle = sparkAngleAdjust + calculateSparkAngle(event->cylinderNumber);
+			angle_t sparkAngle = sparkAngleAdjust + event->calculateSparkAngle();
 			if (sparkAngle > 720) {
 				sparkAngle -= 720;
 			}

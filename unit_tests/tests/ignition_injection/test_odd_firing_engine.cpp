@@ -35,7 +35,7 @@ TEST(OddFireRunningMode, hd) {
 	eth.fireTriggerEvents2(2 /* count */ , 60 /* ms */);
 
 	// Cyl 1 fires 19 degrees late
-	EXPECT_EQ(engine->ignitionEvents.elements[0].sparkAngle, 18);
+	EXPECT_EQ(engine->ignitionEvents.elements[0].calculateSparkAngle(), 18);
 	// Cyl 2 fires 13 degrees early
-	EXPECT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 346);
+	EXPECT_EQ(engine->ignitionEvents.elements[1].calculateSparkAngle(), 346);
 }
