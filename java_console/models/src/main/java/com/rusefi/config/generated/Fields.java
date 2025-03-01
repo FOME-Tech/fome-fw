@@ -924,7 +924,7 @@ public class Fields {
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int PEDAL_TO_TPS_SIZE = 8;
-	public static final int persistent_config_s_size = 21924;
+	public static final int persistent_config_s_size = 21964;
 	public static final int pid_s_size = 20;
 	public static final int pin_input_mode_e_PI_DEFAULT = 0;
 	public static final int pin_input_mode_e_PI_PULLDOWN = 2;
@@ -982,6 +982,7 @@ public class Fields {
 	public static final int sensor_chart_e_SC_OFF = 0;
 	public static final int sensor_chart_e_SC_RPM_ACCEL = 3;
 	public static final int sensor_chart_e_SC_TRIGGER = 1;
+	public static final int SIGNATURE_HASH = 1541960236;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1020,7 +1021,7 @@ public class Fields {
 	public static final int TOOTH_PACKET_SIZE = 2;
 	public static final String TOP_DEAD_CENTER_MESSAGE = "r";
 	public static final int TORQUE_CURVE_SIZE = 6;
-	public static final int TOTAL_CONFIG_SIZE = 21924;
+	public static final int TOTAL_CONFIG_SIZE = 21964;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int TPS_TPS_ACCEL_CLT_CORR_TABLE = 4;
 	public static final int TPS_TPS_ACCEL_TABLE = 8;
@@ -1188,9 +1189,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.02.28.f407-discovery.3304509771";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.03.01.f407-discovery.1541960236";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1272;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1276;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
@@ -1514,6 +1515,7 @@ public class Fields {
 	public static final Field IS_ENABLED_SPI_3 = Field.create("IS_ENABLED_SPI_3", 640, FieldType.BIT, 2).setBaseOffset(0);
 	public static final Field ISSDCARDENABLED = Field.create("ISSDCARDENABLED", 640, FieldType.BIT, 3).setBaseOffset(0);
 	public static final Field RUSEFIVERBOSE29B = Field.create("RUSEFIVERBOSE29B", 640, FieldType.BIT, 4).setBaseOffset(0);
+	public static final Field MODELEDFLOWIDLE = Field.create("MODELEDFLOWIDLE", 640, FieldType.BIT, 5).setBaseOffset(0);
 	public static final Field USESTEPPERIDLE = Field.create("USESTEPPERIDLE", 640, FieldType.BIT, 6).setBaseOffset(0);
 	public static final Field ENABLEDSTEP1LIMITER = Field.create("ENABLEDSTEP1LIMITER", 640, FieldType.BIT, 7).setBaseOffset(0);
 	public static final Field VERBOSETLE8888 = Field.create("VERBOSETLE8888", 640, FieldType.BIT, 8).setBaseOffset(0);
@@ -1850,7 +1852,8 @@ public class Fields {
 	public static final Field TARGETVBATT = Field.create("TARGETVBATT", 1272, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field DFCORETARDDEG = Field.create("DFCORETARDDEG", 1276, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field DFCORETARDRAMPINTIME = Field.create("DFCORETARDRAMPINTIME", 1277, FieldType.INT8).setScale(0.1).setBaseOffset(0);
-	public static final Field UNUSED1342 = Field.create("UNUSED1342", 1278, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field IDLEMAXIMUMAIRMASS = Field.create("IDLEMAXIMUMAIRMASS", 1278, FieldType.INT8).setScale(2.0).setBaseOffset(0);
+	public static final Field UNUSED1343 = Field.create("UNUSED1343", 1279, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field AFTERCRANKINGIACTAPERDURATION = Field.create("AFTERCRANKINGIACTAPERDURATION", 1280, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field IACBYTPSTAPER = Field.create("IACBYTPSTAPER", 1282, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field LIS302DLCSPIN = Field.create("LIS302DLCSPIN", 1284, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
@@ -2690,4 +2693,8 @@ public class Fields {
 	public static final Field VRTHRESHOLD2_ALIGNMENTFILL_AT_14 = Field.create("VRTHRESHOLD2_ALIGNMENTFILL_AT_14", 21874, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field WIFIACCESSPOINTSSID = Field.create("WIFIACCESSPOINTSSID", 21876, 24, FieldType.STRING).setScale(1.0).setBaseOffset(0);
 	public static final Field WIFIACCESSPOINTPASSWORD = Field.create("WIFIACCESSPOINTPASSWORD", 21900, 24, FieldType.STRING).setScale(1.0).setBaseOffset(0);
+	public static final Field IDLEFLOWESTIMATEFLOW = Field.create("IDLEFLOWESTIMATEFLOW", 21924, FieldType.INT16).setScale(0.01).setBaseOffset(0);
+	public static final Field IDLEFLOWESTIMATEPOSITION = Field.create("IDLEFLOWESTIMATEPOSITION", 21940, FieldType.INT8).setScale(0.5).setBaseOffset(0);
+	public static final Field AIRMASSTOTIMINGBINS = Field.create("AIRMASSTOTIMINGBINS", 21948, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field AIRMASSTOTIMINGVALUES = Field.create("AIRMASSTOTIMINGVALUES", 21956, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 }
