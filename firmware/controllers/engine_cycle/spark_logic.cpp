@@ -137,18 +137,12 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 }
 
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
-#if EFI_UNIT_TEST
-	if (engine->onIgnitionEvent) {
-		engine->onIgnitionEvent(ctx, false);
-	}
-#endif
-
 	efitick_t nowNt = getTimeNowNt();
 	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
 
 	float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
 	float minDwell = 0.8f * event->sparkDwell;
-	if (actualDwellMs < minDwell) {
+	if (!ctx.isOverdwellProtect && actualDwellMs < minDwell) {
 		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
 
 		if (extraTimeUs < 10) {
@@ -166,6 +160,12 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, delayedFireTime, { fireSparkAndPrepareNextSchedule, ctx });
 		return;
 	}
+
+#if EFI_UNIT_TEST
+	if (engine->onIgnitionEvent) {
+		engine->onIgnitionEvent(ctx, false);
+	}
+#endif
 
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
