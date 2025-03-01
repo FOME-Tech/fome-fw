@@ -150,7 +150,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	float minDwell = 0.8f * event->sparkDwell;
 	if (actualDwellMs < minDwell) {
 		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
-		efitick_t delayedFireTime = nowNt + US2NT(extraTimeUs);
+		efitick_t delayedFireTime = nowNt + efidur_t{(uint32_t)USF2NT(extraTimeUs)};
 
 		// cancel multispark in case of underdwell
 		ctx.sparksRemaining = 0;
