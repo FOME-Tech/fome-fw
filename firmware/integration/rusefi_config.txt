@@ -669,7 +669,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_3
 	bit isSdCardEnabled;enable sd/disable sd
 	bit rusefiVerbose29b,"29 bit","11 bit";Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
-	bit unused644b5
+	bit modeledFlowIdle
 	bit useStepperIdle;This setting should only be used if you have a stepper motor idle valve and a stepper motor driver installed.
 	
 	bit enabledStep1Limiter
@@ -1027,7 +1027,9 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint8_t dfcoRetardDeg;Retard timing by this amount during DFCO. Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"deg", 1, 0, 0, 30, 0
 	uint8_t autoscale dfcoRetardRampInTime;Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"s", 0.1, 0, 0, 1, 1
 
-	uint8_t[2] unused1342
+	uint8_t autoscale idleMaximumAirmass;Maximum commanded airmass for the idle controller.;"mg", 2, 0, 0, 500, 1
+
+	uint8_t unused1343
 	int16_t afterCrankingIACtaperDuration;This is the duration in cycles that the IAC will take to reach its normal idle position, it can be used to hold the idle higher for a few seconds after cranking to improve startup.;"cycles", 1, 0, 0, 5000, 0
 	
 	int16_t iacByTpsTaper;Extra IAC, in percent between 0 and 100, tapered between zero and idle deactivation TPS value;"percent", 1, 0, 0, 500, 0
@@ -1706,6 +1708,11 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	wifi_string_t wifiAccessPointSsid
 	wifi_string_t wifiAccessPointPassword
 
+	uint16_t[8] autoscale idleFlowEstimateFlow;;"kg/h", 0.01, 0, 0, 200, 2
+	uint8_t[8] autoscale idleFlowEstimatePosition;;"%", 0.5, 0, 0, 100, 1
+
+	int8_t[8] airmassToTimingBins;;"mg", 1, 0, -100, 100, 0
+	int8_t[8] airmassToTimingValues;;"deg", 1, 0, -30, 30, 0
 end_struct
 
 ! Pedal Position Sensor
