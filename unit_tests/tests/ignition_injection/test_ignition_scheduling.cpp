@@ -34,13 +34,13 @@ TEST(ignition, twoCoils) {
 	EXPECT_EQ(engine->ignitionEvents.elements[10].calculateIgnitionOutputMask(), (1 << 0));
 	EXPECT_EQ(engine->ignitionEvents.elements[11].calculateIgnitionOutputMask(), (1 << 6));
 
-	ASSERT_EQ(engine->ignitionEvents.elements[0].sparkAngle, 0);
+	ASSERT_EQ(engine->ignitionEvents.elements[0].calculateSparkAngle(), 0);
 	ASSERT_EQ(engine->ignitionEvents.elements[0].calculateIgnitionOutputMask(), (1 << 0));
 
-	ASSERT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 720 / 12);
+	ASSERT_EQ(engine->ignitionEvents.elements[1].calculateSparkAngle(), 720 / 12);
 	ASSERT_EQ(engine->ignitionEvents.elements[1].calculateIgnitionOutputMask(), (1 << 6));
 
-	ASSERT_EQ(engine->ignitionEvents.elements[3].sparkAngle, 3 * 720 / 12);
+	ASSERT_EQ(engine->ignitionEvents.elements[3].calculateSparkAngle(), 3 * 720 / 12);
 	ASSERT_EQ(engine->ignitionEvents.elements[3].calculateIgnitionOutputMask(), (1 << 6));
 }
 
