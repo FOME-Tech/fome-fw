@@ -138,13 +138,35 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 }
 
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
+	efitick_t nowNt = getTimeNowNt();
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+
+	float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
+	float minDwell = 0.8f * event->sparkDwell;
+	if (actualDwellMs < minDwell) {
+		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
+
+		if (extraTimeUs < 10) {
+			extraTimeUs = 10;
+		}
+
+		efitick_t delayedFireTime = nowNt + efidur_t{(uint32_t)USF2NT(extraTimeUs)};
+
+		// cancel multispark in case of underdwell
+		ctx.sparksRemaining = 0;
+
+		// re-schedule ourselves at a later time once enough dwell has elapsed
+		// This is fine to do because it will retard the effective ignition timing, but 
+		// ensure the coil has enough energy to actually fire (we would rather retard timing than misfire)
+		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, delayedFireTime, { fireSparkAndPrepareNextSchedule, ctx });
+		return;
+	}
+
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
 		engine->onIgnitionEvent(ctx, false);
 	}
 #endif
-
-	efitick_t nowNt = getTimeNowNt();
 
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
@@ -162,14 +184,9 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	LogTriggerCoilState(nowNt, false);
 #endif // EFI_TOOTH_LOGGER
 
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
-
 #if EFI_TUNER_STUDIO
-	{
-		// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
-		float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
-		engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
-	}
+	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
+	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
 #endif
 
 	// now that we've just fired a coil let's prepare the new schedule for the next engine revolution

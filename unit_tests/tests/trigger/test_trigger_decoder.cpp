@@ -195,13 +195,10 @@ TEST(misc, testRpmCalculator) {
 	ASSERT_EQ(4, engine->triggerCentral.triggerShape.findAngleIndex(&engine->triggerCentral.triggerFormDetails, 240));
 	ASSERT_EQ(4, engine->triggerCentral.triggerShape.findAngleIndex(&engine->triggerCentral.triggerFormDetails, 241));
 
-	eth.fireTriggerEvents(/* count */ 48);
+	eth.smartFireTriggerEvents2(/* count */ 48, 5);
 
 	ASSERT_EQ(1500,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM";
 	ASSERT_EQ(14, engine->triggerCentral.triggerState.getCurrentIndex()) << "index #1";
-
-
-	eth.executeActions();
 
 //	debugSignalExecutor = true;
 
