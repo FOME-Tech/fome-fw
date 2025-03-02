@@ -184,10 +184,8 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 #endif // EFI_TOOTH_LOGGER
 
 #if EFI_TUNER_STUDIO
-	{
-		// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
-		engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
-	}
+	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
+	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
 #endif
 
 	// now that we've just fired a coil let's prepare the new schedule for the next engine revolution
