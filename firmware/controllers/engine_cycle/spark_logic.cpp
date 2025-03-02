@@ -143,7 +143,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 
 	float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
 	float minDwell = 0.8f * event->sparkDwell;
-	if (actualDwellMs < minDwell) {
+	if (!ctx.isOverdwellProtect && actualDwellMs < minDwell) {
 		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
 
 		if (extraTimeUs < 10) {
