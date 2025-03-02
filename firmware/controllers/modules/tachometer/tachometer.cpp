@@ -102,7 +102,6 @@ void initTachometer() {
 
 	startSimplePwm(&tachControl,
 				"Tachometer",
-				&engine->scheduler,
 				&enginePins.tachOut,
 				NAN, 0.1f);
 

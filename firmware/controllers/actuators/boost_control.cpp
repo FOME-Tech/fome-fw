@@ -217,7 +217,6 @@ void startBoostPin() {
 	startSimplePwm(
 		&boostPwmControl,
 		"Boost",
-		&engine->scheduler,
 		&enginePins.boostPin,
 		engineConfiguration->boostPwmFrequency,
 		0
