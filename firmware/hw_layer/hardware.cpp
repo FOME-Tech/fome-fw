@@ -376,14 +376,6 @@ void startHardware() {
 #endif /* EFI_CAN_SUPPORT */
 }
 
-#if HAL_USE_I2C
-const I2CConfig i2cfg = {
-    OPMODE_I2C,
-    400000,
-    FAST_DUTY_CYCLE_2,
-};
-#endif
-
 void initHardware() {
 	if (hasFirmwareError()) {
 		return;
