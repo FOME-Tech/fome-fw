@@ -73,7 +73,7 @@ void unlockSpi(spi_device_e device) {
 
 static void initSpiModules() {
 	if (engineConfiguration->is_enabled_spi_1) {
-		 turnOnSpi(SPI_DEVICE_1);
+		turnOnSpi(SPI_DEVICE_1);
 	}
 	if (engineConfiguration->is_enabled_spi_2) {
 		turnOnSpi(SPI_DEVICE_2);
@@ -289,6 +289,10 @@ void applyNewHardwareSettings() {
 	calcFastAdcIndexes();
 }
 
+// Weak link a stub so that every board doesn't have to implement this function
+__attribute__((weak)) void boardInitHardware() { }
+__attribute__((weak)) void setPinConfigurationOverrides() { }
+
 // This function initializes hardware that can do so before configuration is loaded
 void initHardwareNoConfig() {
 	efiPrintf("initHardware()");
@@ -329,6 +333,12 @@ void initHardwareNoConfig() {
 	// this should be initialized before detectBoardType()
 	efiExtiInit();
 #endif // HAL_USE_PAL
+
+	boardInitHardware();
+
+#if EFI_INTERNAL_ADC
+	portInitAdc();
+#endif
 }
 
 void stopHardware() {
@@ -366,11 +376,6 @@ void startHardware() {
 #endif /* EFI_CAN_SUPPORT */
 }
 
-// Weak link a stub so that every board doesn't have to implement this function
-__attribute__((weak)) void boardInitHardware() { }
-
-__attribute__((weak)) void setPinConfigurationOverrides() { }
-
 #if HAL_USE_I2C
 const I2CConfig i2cfg = {
     OPMODE_I2C,
@@ -383,8 +388,6 @@ void initHardware() {
 	if (hasFirmwareError()) {
 		return;
 	}
-
-	boardInitHardware();
 
 #if HAL_USE_ADC
 	initAdcInputs();

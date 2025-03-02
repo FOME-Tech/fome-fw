@@ -236,8 +236,6 @@ void initAdcInputs() {
 	addFastAdcChannel("MAP", engineConfiguration->map.sensor.hwChannel);
 
 #if EFI_INTERNAL_ADC
-	portInitAdc();
-
 #if EFI_USE_FAST_ADC
 	fastAdc.init();
 #endif // EFI_USE_FAST_ADC
