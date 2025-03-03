@@ -651,6 +651,8 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 
 	output_pin_e secondSolenoidPin;Some Subaru and some Mazda use double-solenoid idle air valve
 
+	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 0
+
 	uint32_t tunerStudioSerialSpeed;Secondary TTL channel baud rate;"BPs", 1, 0, 0, 1000000, 0
 
 	float compressionRatio;For reference, not used by the ECU.;"CR", 1, 0, 0, 300, 1
@@ -997,7 +999,6 @@ int16_t tps2Min;;"ADC", 1, 0, 0, 1023, 0
 int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	output_pin_e starterControlPin
 	pin_input_mode_e startStopButtonMode;
-	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 0
 
 ! todo: mapErrorDetectionIdleTooLow? 30kPa is usually lowest on idle	
 	float mapErrorDetectionTooLow;kPa value which is too low to be true;"kPa", 1, 0, -100, 100, 2
