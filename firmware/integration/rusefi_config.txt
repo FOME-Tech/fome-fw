@@ -651,7 +651,7 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 
 	output_pin_e secondSolenoidPin;Some Subaru and some Mazda use double-solenoid idle air valve
 
-	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 0
+	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 3
 
 	uint32_t tunerStudioSerialSpeed;Secondary TTL channel baud rate;"BPs", 1, 0, 0, 1000000, 0
 
