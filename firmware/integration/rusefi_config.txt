@@ -595,8 +595,6 @@ engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other ca
 
 	ve_override_e idleVeOverrideMode;Override the Y axis (load) value used for only the Idle VE table.\nAdvanced users only: If you aren't sure you need this, you probably don't need this.
 
-	Gpio l9779_cs;
-
 	output_pin_e o2heaterPin;On-off O2 sensor heater control. 'ON' if engine is running, 'OFF' if stopped or cranking.
 
 	output_pin_e[MAX_CYLINDER_COUNT iterate] injectionPins;
@@ -702,9 +700,6 @@ bit is_enabled_spi_2
 
 output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	pin_output_mode_e acFanPinMode;
-
-
-	spi_device_e l9779spiDevice;
 
 	uint16_t vehicleWeight;For reference, not used by the ECU.;"kg", 1, 0, 0, 10000, 0
 	int16_t idlePidRpmUpperLimit;How far above idle speed do we consider idling?\nFor example, if target = 800, this param = 200, then anything below 1000 RPM is considered idle.;"RPM", 1, 0, 0, 500, 0
