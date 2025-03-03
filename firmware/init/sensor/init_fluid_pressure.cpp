@@ -32,7 +32,8 @@ static FunctionalSensor auxLinear4Sensor(SensorType::AuxLinear4, /* timeout = */
 /**
  * @param bandwidth Hertz, used by low pass filter in to analog subscribers
  */
-static void initFluidPressure(LinearFunc& func, FunctionalSensor& sensor, const linear_sensor_s& cfg, float bandwidth) {
+template <typename TConfig>
+static void initFluidPressure(LinearFunc& func, FunctionalSensor& sensor, const TConfig& cfg, float bandwidth) {
 	auto channel = cfg.hwChannel;
 
 	// Only register if we have a sensor
