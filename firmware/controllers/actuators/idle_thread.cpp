@@ -146,7 +146,7 @@ percent_t IdleController::getOpenLoop(Phase phase, float rpm, float clt, SensorR
 	percent_t crankingValvePosition = getCrankingOpenLoop(clt);
 
 	isCranking = phase == Phase::Cranking;
-	isIdleCoasting = phase == Phase::Coasting;
+	isIdleCoasting = phase == Phase::Coasting || (phase == Phase::Running && engineConfiguration->modeledFlowIdle);
 
 	// if we're cranking, nothing more to do.
 	if (isCranking) {
@@ -232,7 +232,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 		return m_lastAutomaticPosition;
 	}
 
-	percent_t newValue = m_pid.getOutput(targetRpm, rpm, SLOW_CALLBACK_PERIOD_MS / 1000.0f);
+	percent_t newValue = m_pid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 
 	// the state of PID has been changed, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
 	mightResetPid = true;
@@ -349,7 +349,7 @@ float IdleController::getIdlePosition(float rpm) {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
-void IdleController::onSlowCallback() {
+void IdleController::onFastCallback() {
 #if EFI_SHAFT_POSITION_INPUT
 	float position = getIdlePosition(engine->triggerCentral.instantRpm.getInstantRpm());
 	applyIACposition(position);
@@ -369,7 +369,7 @@ void IdleController::init() {
 	m_pid.initPidClass(&engineConfiguration->idleRpmPid);
 	m_timingPid.initPidClass(&engineConfiguration->idleTimingPid);
 
-	m_timingHpf.configureHighpass(20, 1);
+	m_timingHpf.configureHighpass(1000.0f / FAST_CALLBACK_PERIOD_MS, 1);
 }
 
 #endif /* EFI_IDLE_CONTROL */
