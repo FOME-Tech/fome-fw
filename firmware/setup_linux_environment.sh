@@ -16,6 +16,9 @@
 # This script will download and install all dependencies require to develop FOME on Linux.
 # After running this script, executing `make` in the firmware folder is expected to produce a functional firmware binary.
 
+# fail on error
+set -euo pipefail
+
 # Ensure submodules got cloned
 git submodule update --init
 
