@@ -14,7 +14,7 @@ struct_no_prefix electronic_throttle_s
 	int16_t autoscale m_error;Error;"%", 0.01, 0, -100, 100, 2
 
 	! Output
-	uint8_t autoscale m_outputDuty;Duty cycle;"%", 0.5, 0, 0, 100, 1
+	int16_t autoscale m_outputDuty;Duty cycle;"%", 0.01, 0, -100, 100, 2
 
 	! Error detection and status
 	bit revLimitActive;Rev limit active
