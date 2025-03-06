@@ -127,7 +127,7 @@ typedef Map3D<FUEL_RPM_COUNT, FUEL_LOAD_COUNT, uint16_t, uint16_t, uint16_t> map
 template<typename TValue, int TSize>
 void setLinearCurve(TValue (&array)[TSize], float from, float to, float precision = 0.01f) {
 	for (int i = 0; i < TSize; i++) {
-		float value = interpolateMsg("setLinearCurve", 0, from, TSize - 1, to, i);
+		float value = interpolateClamped(0, from, TSize - 1, to, i);
 
 		/**
 		 * rounded values look nicer, also we want to avoid precision mismatch with Tuner Studio
