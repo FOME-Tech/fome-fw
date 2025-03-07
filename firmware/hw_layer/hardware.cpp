@@ -21,7 +21,6 @@
 #include "accelerometer.h"
 #include "eficonsole.h"
 #include "console_io.h"
-#include "sensor_chart.h"
 #include "idle_thread.h"
 #include "kline.h"
 

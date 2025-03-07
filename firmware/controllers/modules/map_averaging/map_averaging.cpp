@@ -25,10 +25,6 @@
 
 #include "trigger_central.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 // not have a real physical pin - it's only used for engine sniffer
 static NamedOutputPin mapAveragingPin("map");
 

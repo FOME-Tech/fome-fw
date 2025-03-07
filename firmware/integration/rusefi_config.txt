@@ -365,7 +365,6 @@ end_struct
 custom engine_type_e 4 bits, S32, @OFFSET@, [0:6], @@engine_type_e_auto_enum@@
 engine_type_e engineType;http://rusefi.com/wiki/index.php?title=Manual:Engine_Type
 
-uint16_t sensorSnifferRpmThreshold;Disable sensor sniffer above this rpm;"RPM", 1, 0, 0, 10000, 0
 uint16_t launchRpm;A secondary Rev limit engaged by the driver to help launch the vehicle faster;"rpm", 1, 0, 0, 20000, 0
 uint16_t rpmHardLimit;Hard cut above this RPM. Set slightly lower than absolute maximum RPM - may overshoot slightly.;"rpm", 1, 0, 0, 20000, 0
 uint16_t engineSnifferRpmThreshold;Engine sniffer would be disabled above this rpm;"RPM", 1, 0, 0, 30000, 0
@@ -776,11 +775,6 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 
 	Gpio spi3sckPin;
 	uart_device_e consoleUartDevice;
-
-
-#define sensor_chart_e_enum "none", "trigger", "INVALID", "RPM ACCEL", "DETAILED RPM", "INVALID"
-custom sensor_chart_e 1 bits, S08, @OFFSET@, [0:2], @@sensor_chart_e_enum@@
-sensor_chart_e sensorChartMode;FOME console sensor sniffer mode;
 
 #define CAN_RX_PREFIX "CAN_rx"
 
@@ -1798,7 +1792,6 @@ end_struct
 #define MLQ_FIELD_HEADER_SIZE 89
 
 #define PROTOCOL_OUTPIN "outpin"
-#define PROTOCOL_ANALOG_CHART "analog_chart"
 #define PROTOCOL_ENGINE_SNIFFER "wave_chart"
 #define PROTOCOL_VERSION_TAG "fomeVersion"
 #define PROTOCOL_TEST_RESPONSE_TAG "ts_p_alive"
