@@ -301,6 +301,12 @@ static void fast_adc_timer_callback(GPTDriver*) {
 		return;
 	}
 
+	if (adcgrpcfgFast.num_channels == 0) {
+		// No channels configured (yet), don't attempt to sample
+		// with an invalid configuration
+		return;
+	}
+
 	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdc.m_samples, ADC_BUF_DEPTH_FAST);
 	fastAdc.conversionCount++;
 }
