@@ -135,8 +135,8 @@ void MapAverager::stop() {
  * @note This method is invoked OFTEN, this method is a potential bottleneck - the implementation should be
  * as fast as possible
  */
-void MapAveragingModule::submitSample(float volts) {
-	SensorResult mapResult = getMapAvg(currentMapAverager).submit(volts);
+void MapAveragingModule::submitSample(float voltsMap1, float /*voltsMap2*/) {
+	SensorResult mapResult = getMapAvg(currentMapAverager).submit(voltsMap1);
 
 	float instantMap = mapResult.value_or(0);
 #if EFI_TUNER_STUDIO
