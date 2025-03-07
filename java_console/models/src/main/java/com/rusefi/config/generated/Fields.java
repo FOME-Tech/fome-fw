@@ -1155,7 +1155,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.03.07.f407-discovery.3477388055";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.03.07.f407-discovery.3192973301";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1276;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1819,7 +1819,7 @@ public class Fields {
 	public static final Field DFCORETARDDEG = Field.create("DFCORETARDDEG", 1276, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field DFCORETARDRAMPINTIME = Field.create("DFCORETARDRAMPINTIME", 1277, FieldType.INT8).setScale(0.1).setBaseOffset(0);
 	public static final Field IDLEMAXIMUMAIRMASS = Field.create("IDLEMAXIMUMAIRMASS", 1278, FieldType.INT8).setScale(2.0).setBaseOffset(0);
-	public static final Field UNUSED1343 = Field.create("UNUSED1343", 1279, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field MAP2HWCHANNEL = Field.create("MAP2HWCHANNEL", 1279, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field AFTERCRANKINGIACTAPERDURATION = Field.create("AFTERCRANKINGIACTAPERDURATION", 1280, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field IACBYTPSTAPER = Field.create("IACBYTPSTAPER", 1282, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field LIS302DLCSPIN = Field.create("LIS302DLCSPIN", 1284, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
