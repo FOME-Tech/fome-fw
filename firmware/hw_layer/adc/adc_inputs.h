@@ -36,7 +36,6 @@ enum class AdcChannelMode : char {
 	Fast
 };
 
-void initAdcInputs();
 void updateSlowAdc(efitick_t nowNt);
 
 // deprecated - migrate to 'getAdcChannelBrainPin'

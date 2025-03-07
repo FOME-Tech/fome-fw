@@ -381,10 +381,6 @@ void initHardware() {
 		return;
 	}
 
-#if HAL_USE_ADC
-	initAdcInputs();
-#endif /* HAL_USE_ADC */
-
 #if EFI_SOFTWARE_KNOCK
 	initSoftwareKnock();
 #endif /* EFI_SOFTWARE_KNOCK */

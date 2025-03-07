@@ -266,8 +266,7 @@ ADCConversionGroup adcgrpcfgFast = {
 	.sqr3				= 0, // Conversion group sequence 1...6
 };
 
-static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
-AdcDevice fastAdc(&adcgrpcfgFast);
+static size_t fastAdcChannelCount = 0;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
@@ -276,8 +275,26 @@ FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
 		return invalidToken;
 	}
 
-	return fastAdc.internalAdcIndexByHardwareIndex[static_cast<size_t>(channel)];
+	// hwChannel = which external pin are we using
+	// adcChannelIndex = 0-based index of the ADC channel (ch0 == 0, ch5 == 5, etc)
+	// adcIndex = position of this channel in the sample buffer
+	size_t adcChannelIndex = channel - EFI_ADC_0;
+	size_t adcIndex = fastAdcChannelCount++;
+
+	if (adcIndex < 6) {
+		adcgrpcfgFast.sqr3 |= adcChannelIndex << (5 * adcIndex);
+	} else if (adcIndex < 12) {
+		adcgrpcfgFast.sqr2 |= adcChannelIndex << (5 * (adcIndex - 6));
+	} else if (adcIndex < 18) {
+		adcgrpcfgFast.sqr1 |= adcChannelIndex << (5 * (adcIndex - 12));
+	}
+
+	adcgrpcfgFast.num_channels++;
+
+	return adcIndex;
 }
+
+static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
 
 adcsample_t getFastAdc(FastAdcToken token) {
 	if (token == invalidToken) {

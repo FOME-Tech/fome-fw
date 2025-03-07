@@ -21,22 +21,5 @@
 #endif // def ADC_MUX_PIN
 #endif // SLOW_ADC_CHANNEL_COUNT
 
-class AdcDevice {
-public:
-	explicit AdcDevice(ADCConversionGroup* hwConfig);
-	void enableChannel(adc_channel_e hwChannelIndex);
-	uint8_t internalAdcIndexByHardwareIndex[EFI_ADC_LAST_CHANNEL];
-	int size() const;
-	void init();
-
-private:
-	ADCConversionGroup* const m_hwConfig;
-
-	/**
-	 * Number of ADC channels in use
-	 */
-	size_t channelCount = 0;
-};
-
 #endif /* HAL_USE_ADC */
 
