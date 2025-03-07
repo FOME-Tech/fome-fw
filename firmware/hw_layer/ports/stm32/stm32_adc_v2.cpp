@@ -223,26 +223,6 @@ adcsample_t getSlowAdcSample(adc_channel_e channel) {
 
 #include "AdcConfiguration.h"
 
-extern AdcDevice fastAdc;
-
-static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
-
-FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
-	if (!isAdcChannelValid(channel)) {
-		return invalidToken;
-	}
-
-	return fastAdc.internalAdcIndexByHardwareIndex[static_cast<size_t>(channel)];
-}
-
-adcsample_t getFastAdc(FastAdcToken token) {
-	if (token == invalidToken) {
-		return 0;
-	}
-
-	return fastAdc.m_samples[token];
-}
-
 static void adc_callback_fast(ADCDriver *adcp) {
 	// State may not be complete if we get a callback for "half done"
 	if (adcp->state == ADC_COMPLETE) {
@@ -287,7 +267,25 @@ ADCConversionGroup adcgrpcfgFast = {
 };
 
 static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
-AdcDevice fastAdc(&adcgrpcfgFast, fastAdcSampleBuf, efi::size(fastAdcSampleBuf));
+AdcDevice fastAdc(&adcgrpcfgFast);
+
+static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
+
+FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
+	if (!isAdcChannelValid(channel)) {
+		return invalidToken;
+	}
+
+	return fastAdc.internalAdcIndexByHardwareIndex[static_cast<size_t>(channel)];
+}
+
+adcsample_t getFastAdc(FastAdcToken token) {
+	if (token == invalidToken) {
+		return 0;
+	}
+
+	return fastAdcSampleBuf[token];
+}
 
 auto& ADC_FAST_DEVICE = ADCD2;
 
@@ -297,7 +295,6 @@ static void fast_adc_timer_callback(GPTDriver*) {
 	if (ADC_FAST_DEVICE.state != ADC_READY &&
 		ADC_FAST_DEVICE.state != ADC_COMPLETE &&
 		ADC_FAST_DEVICE.state != ADC_ERROR) {
-		fastAdc.errorsCount++;
 		return;
 	}
 
@@ -307,8 +304,7 @@ static void fast_adc_timer_callback(GPTDriver*) {
 		return;
 	}
 
-	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdc.m_samples, ADC_BUF_DEPTH_FAST);
-	fastAdc.conversionCount++;
+	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdcSampleBuf, ADC_BUF_DEPTH_FAST);
 }
 
 #endif // EFI_USE_FAST_ADC

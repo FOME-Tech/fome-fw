@@ -46,10 +46,8 @@ float getVoltage(const char *msg, adc_channel_e hwChannel) {
 }
 
 #if EFI_USE_FAST_ADC
-AdcDevice::AdcDevice(ADCConversionGroup* hwConfig, adcsample_t *buf, size_t buf_len)
-	: m_samples(buf)
-	, m_hwConfig(hwConfig)
-	, m_buf_len(buf_len)
+AdcDevice::AdcDevice(ADCConversionGroup* hwConfig)
+	: m_hwConfig(hwConfig)
 {
 	m_hwConfig->sqr1 = 0;
 	m_hwConfig->sqr2 = 0;
@@ -58,7 +56,6 @@ AdcDevice::AdcDevice(ADCConversionGroup* hwConfig, adcsample_t *buf, size_t buf_
 	m_hwConfig->sqr4 = 0;
 	m_hwConfig->sqr5 = 0;
 #endif /* ADC_MAX_CHANNELS_COUNT */
-	memset(hardwareIndexByIndernalAdcIndex, EFI_ADC_NONE, sizeof(hardwareIndexByIndernalAdcIndex));
 	memset(internalAdcIndexByHardwareIndex, 0xFF, sizeof(internalAdcIndexByHardwareIndex));
 }
 
@@ -89,17 +86,6 @@ int AdcDevice::size() const {
 
 void AdcDevice::init() {
 	m_hwConfig->num_channels = size();
-	/* driver does this internally */
-	//hwConfig->sqr1 += ADC_SQR1_NUM_CH(size());
-}
-
-bool AdcDevice::isHwUsed(adc_channel_e hwChannelIndex) const {
-	for (size_t i = 0; i < channelCount; i++) {
-		if (hardwareIndexByIndernalAdcIndex[i] == hwChannelIndex) {
-			return true;
-		}
-	}
-	return false;
 }
 
 void AdcDevice::enableChannel(adc_channel_e hwChannel) {
@@ -115,7 +101,6 @@ void AdcDevice::enableChannel(adc_channel_e hwChannel) {
 	size_t adcIndex = channelCount++;
 
 	internalAdcIndexByHardwareIndex[hwChannel] = adcIndex;
-	hardwareIndexByIndernalAdcIndex[adcIndex] = hwChannel;
 
 	if (adcIndex < 6) {
 		m_hwConfig->sqr3 |= adcChannelIndex << (5 * adcIndex);
