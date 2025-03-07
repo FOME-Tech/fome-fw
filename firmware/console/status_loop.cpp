@@ -76,8 +76,6 @@ extern bool main_loop_started;
 extern WaveChart waveChart;
 #endif /* EFI_ENGINE_SNIFFER */
 
-#include "sensor_chart.h"
-
 extern int maxTriggerReentrant;
 extern uint32_t maxLockedDuration;
 
@@ -155,10 +153,6 @@ void printOverallStatus() {
 #if EFI_ENGINE_SNIFFER
 	waveChart.publishIfFull();
 #endif /* EFI_ENGINE_SNIFFER */
-
-#if EFI_SENSOR_CHART
-	publishSensorChartIfFull();
-#endif // EFI_SENSOR_CHART
 
 	/**
 	 * we report the version every second - this way the console does not need to

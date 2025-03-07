@@ -136,8 +136,6 @@ enum class engine_type_e : uint32_t {
 
 	TLE8888_BENCH_ENGINE = 59,
 
-	L9779_BENCH_ENGINE = 60,
-
 	MRE_VW_B6 = 62,
 
 	PROTEUS_BMW_M73 = 63,
@@ -210,6 +208,7 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_33 = 33,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
+	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
 
 	/**

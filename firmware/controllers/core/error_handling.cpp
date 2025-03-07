@@ -67,10 +67,6 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 	sramState->Err.Csfr = csfr;
 	memcpy(&sramState->Err.FaultCtx, ctx, sizeof(port_extctx));
 }
-
-extern ioportid_t criticalErrorLedPort;
-extern ioportmask_t criticalErrorLedPin;
-extern uint8_t criticalErrorLedState;
 #endif /* EFI_PROD_CODE */
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
@@ -227,7 +223,7 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 	chvsnprintf(warningBuffer, sizeof(warningBuffer), fmt, ap);
 	va_end(ap);
 #endif
-	palWritePad(criticalErrorLedPort, criticalErrorLedPin, criticalErrorLedState);
+	enginePins.errorLedPin.setValue(1);
 	turnAllPinsOff();
 	enginePins.communicationLedPin.setValue(1);
 	setError(true, code);

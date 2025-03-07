@@ -21,7 +21,6 @@
 #include "accelerometer.h"
 #include "eficonsole.h"
 #include "console_io.h"
-#include "sensor_chart.h"
 #include "idle_thread.h"
 #include "kline.h"
 
@@ -73,7 +72,7 @@ void unlockSpi(spi_device_e device) {
 
 static void initSpiModules() {
 	if (engineConfiguration->is_enabled_spi_1) {
-		 turnOnSpi(SPI_DEVICE_1);
+		turnOnSpi(SPI_DEVICE_1);
 	}
 	if (engineConfiguration->is_enabled_spi_2) {
 		turnOnSpi(SPI_DEVICE_2);
@@ -137,6 +136,7 @@ SPIDriver * getSpiDevice(spi_device_e spiDevice) {
 #if HAL_USE_ADC
 
 static FastAdcToken fastMapSampleIndex;
+static FastAdcToken fastMapSampleIndex2;
 
 /**
  * This method is not in the adc* lower-level file because it is more business logic then hardware.
@@ -147,7 +147,8 @@ void onFastAdcComplete(adcsample_t*) {
 
 #ifdef MODULE_MAP_AVERAGING
 	engine->module<MapAveragingModule>()->submitSample(
-			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel)
+			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel),
+			adcToVoltsDivided(getFastAdc(fastMapSampleIndex2), engineConfiguration->map2HwChannel)
 		);
 #endif // MODULE_MAP_AVERAGING
 }
@@ -156,6 +157,7 @@ void onFastAdcComplete(adcsample_t*) {
 static void calcFastAdcIndexes() {
 #if HAL_USE_ADC
 	fastMapSampleIndex = enableFastAdcChannel("Fast MAP", engineConfiguration->map.sensor.hwChannel);
+	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP", engineConfiguration->map2HwChannel);
 #endif/* HAL_USE_ADC */
 }
 
@@ -289,6 +291,10 @@ void applyNewHardwareSettings() {
 	calcFastAdcIndexes();
 }
 
+// Weak link a stub so that every board doesn't have to implement this function
+__attribute__((weak)) void boardInitHardware() { }
+__attribute__((weak)) void setPinConfigurationOverrides() { }
+
 // This function initializes hardware that can do so before configuration is loaded
 void initHardwareNoConfig() {
 	efiPrintf("initHardware()");
@@ -329,6 +335,12 @@ void initHardwareNoConfig() {
 	// this should be initialized before detectBoardType()
 	efiExtiInit();
 #endif // HAL_USE_PAL
+
+	boardInitHardware();
+
+#if EFI_INTERNAL_ADC
+	portInitAdc();
+#endif
 }
 
 void stopHardware() {
@@ -366,29 +378,10 @@ void startHardware() {
 #endif /* EFI_CAN_SUPPORT */
 }
 
-// Weak link a stub so that every board doesn't have to implement this function
-__attribute__((weak)) void boardInitHardware() { }
-
-__attribute__((weak)) void setPinConfigurationOverrides() { }
-
-#if HAL_USE_I2C
-const I2CConfig i2cfg = {
-    OPMODE_I2C,
-    400000,
-    FAST_DUTY_CYCLE_2,
-};
-#endif
-
 void initHardware() {
 	if (hasFirmwareError()) {
 		return;
 	}
-
-	boardInitHardware();
-
-#if HAL_USE_ADC
-	initAdcInputs();
-#endif /* HAL_USE_ADC */
 
 #if EFI_SOFTWARE_KNOCK
 	initSoftwareKnock();

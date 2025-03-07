@@ -243,6 +243,8 @@ case engine_type_e::ET_UNUSED_43:
   return "ET_UNUSED_43";
 case engine_type_e::ET_UNUSED_57:
   return "ET_UNUSED_57";
+case engine_type_e::ET_UNUSED_60:
+  return "ET_UNUSED_60";
 case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
 case engine_type_e::ET_UNUSED_66:
@@ -323,8 +325,6 @@ case engine_type_e::HELLEN_NB2:
   return "HELLEN_NB2";
 case engine_type_e::HELLEN_NB2_36:
   return "HELLEN_NB2_36";
-case engine_type_e::L9779_BENCH_ENGINE:
-  return "L9779_BENCH_ENGINE";
 case engine_type_e::MAZDA_MIATA_2003_BOARD_TEST:
   return "MAZDA_MIATA_2003_BOARD_TEST";
 case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:

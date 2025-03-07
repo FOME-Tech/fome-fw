@@ -45,8 +45,6 @@ public class ConsoleUI {
 
     public final UIContext uiContext = new UIContext();
 
-    public boolean showTriggerShapePane = false;
-
     /**
      * We can listen to tab activation event if we so desire
      */
@@ -85,18 +83,11 @@ public class ConsoleUI {
 
         tabbedPaneAdd("Engine Sniffer", engineSnifferPanel.getPanel(), engineSnifferPanel.getTabSelectedListener());
 
-        SensorSnifferPane sensorSniffer = new SensorSnifferPane(uiContext, getConfig().getRoot().getChild("sensor_sniffer"));
-        tabbedPaneAdd("Sensor Sniffer", sensorSniffer.getPanel(), sensorSniffer.getTabSelectedListener());
-
 //        if (tabbedPane.paneSettings.showStimulatorPane && !LinkManager.isSimulationMode && !LinkManager.isLogViewerMode(port)) {
 //            // todo: rethink this UI? special command line key to enable it?
 //            EcuStimulator stimulator = EcuStimulator.getInstance();
 //            tabbedPane.addTab("ECU stimulation", stimulator.getPanel());
 //        }
-
-        // TODO: always false?
-        if (showTriggerShapePane)
-            tabbedPane.addTab("Trigger Shape", new AverageAnglePanel(uiContext).getPanel());
 
         int selectedIndex = getConfig().getRoot().getIntProperty(TAB_INDEX, DEFAULT_TAB_INDEX);
         if (selectedIndex < tabbedPane.tabbedPane.getTabCount())

@@ -211,23 +211,6 @@ void setEtbTestConfiguration() {
 	// see also setDefaultEtbBiasCurve
 }
 
-// F407 discovery
-void setL9779TestConfiguration() {
-	// enable_spi 3
-	engineConfiguration->is_enabled_spi_3 = true;
-	// Wire up spi3
-	// green
-	engineConfiguration->spi3mosiPin = Gpio::B5;
-	// blue
-	engineConfiguration->spi3misoPin = Gpio::B4;
-	// white
-	engineConfiguration->spi3sckPin = Gpio::B3;
-
-	engineConfiguration->l9779spiDevice = SPI_DEVICE_3;
-	// orange
-	engineConfiguration->l9779_cs = Gpio::D5;
-}
-
 // TLE8888_BENCH_ENGINE
 // todo: remove this? this was used to play with "secret" red boards prior to MRE reality
 // set engine_type 59

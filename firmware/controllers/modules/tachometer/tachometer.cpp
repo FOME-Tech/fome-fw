@@ -33,10 +33,10 @@ void TachometerModule::onFastCallback() {
 	}
 
 	// How many tach pulse periods do we have?
-	int periods = engineConfiguration->tachPulsePerRev;
+	float periods = engineConfiguration->tachPulsePerRev;
 
 	if (periods == 0 || periods > 10) {
-		firmwareError(ObdCode::CUSTOM_ERR_6709, "Invalid tachometer pulse per rev: %d", periods);
+		firmwareError(ObdCode::CUSTOM_ERR_6709, "Invalid tachometer pulse per rev: %.2f", periods);
 		return;
 	}
 

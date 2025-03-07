@@ -464,7 +464,6 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->hardCutRpmRange = 500;
 
 	engineConfiguration->engineSnifferRpmThreshold = 2500;
-	engineConfiguration->sensorSnifferRpmThreshold = 2500;
 
 	/**
 	 * Idle control defaults
@@ -498,9 +497,6 @@ static void setDefaultEngineConfiguration() {
 #if !EFI_UNIT_TEST
 	engineConfiguration->analogInputDividerCoefficient = 2;
 #endif
-
-	// performance optimization
-	engineConfiguration->sensorChartMode = SC_OFF;
 
 	setTPS1Calibration(convertVoltageTo10bitADC(0),
 			convertVoltageTo10bitADC(5),
@@ -818,9 +814,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 	case engine_type_e::ETB_BENCH_ENGINE:
 		setEtbTestConfiguration();
-		break;
-	case engine_type_e::L9779_BENCH_ENGINE:
-		setL9779TestConfiguration();
 		break;
 	case engine_type_e::TLE8888_BENCH_ENGINE:
 		setTle8888TestConfiguration();
