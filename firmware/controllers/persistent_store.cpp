@@ -24,7 +24,6 @@
 #include "pch.h"
 
 #if !EFI_UNIT_TEST
-#include "sensor_chart.h"
 #include "trigger_central.h"
 
 persistent_config_container_s persistentState CCM_OPTIONAL;

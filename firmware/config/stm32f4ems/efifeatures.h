@@ -42,10 +42,6 @@
 #define EFI_ENABLE_CRITICAL_ENGINE_STOP TRUE
 #define EFI_ENABLE_ENGINE_WARNING TRUE
 
-#ifndef SC_BUFFER_SIZE
-#define SC_BUFFER_SIZE 4000
-#endif
-
 /**
  * if you have a 60-2 trigger, or if you just want better performance, you
  * probably want EFI_ENABLE_ASSERTS to be FALSE. Also you would probably want to FALSE
@@ -265,10 +261,6 @@
 
 #ifndef EFI_ENGINE_SNIFFER
 #define EFI_ENGINE_SNIFFER TRUE
-#endif
-
-#ifndef EFI_SENSOR_CHART
-#define EFI_SENSOR_CHART TRUE
 #endif
 
 #ifndef DL_OUTPUT_BUFFER

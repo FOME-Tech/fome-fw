@@ -464,7 +464,6 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->hardCutRpmRange = 500;
 
 	engineConfiguration->engineSnifferRpmThreshold = 2500;
-	engineConfiguration->sensorSnifferRpmThreshold = 2500;
 
 	/**
 	 * Idle control defaults
@@ -498,9 +497,6 @@ static void setDefaultEngineConfiguration() {
 #if !EFI_UNIT_TEST
 	engineConfiguration->analogInputDividerCoefficient = 2;
 #endif
-
-	// performance optimization
-	engineConfiguration->sensorChartMode = SC_OFF;
 
 	setTPS1Calibration(convertVoltageTo10bitADC(0),
 			convertVoltageTo10bitADC(5),
