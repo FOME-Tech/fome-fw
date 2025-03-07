@@ -1,8 +1,11 @@
 #include "pch.h"
 
 #include "adc_subscription.h"
+
+#ifndef EFI_BOOTLOADER
 #include "functional_sensor.h"
 #include "linear_func.h"
+#endif
 
 static const brain_pin_e injPins[] = {
 	Gpio::G5,
@@ -154,6 +157,7 @@ void preHalInit() {
 	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 }
 
+#ifndef EFI_BOOTLOADER
 void initBoardSensors() {
 	{
 		static LinearFunc mrSenseFunc;
@@ -180,3 +184,4 @@ void initBoardSensors() {
 		sensor5vSensor.Register();
 	}
 }
+#endif
