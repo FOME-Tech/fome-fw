@@ -30,18 +30,14 @@ class AdcDevice {
 public:
 	explicit AdcDevice(ADCConversionGroup* hwConfig, adcsample_t *buf, size_t buf_len);
 	void enableChannel(adc_channel_e hwChannelIndex);
-	adc_channel_e getAdcHardwareIndexByInternalIndex(int index) const;
 	uint8_t internalAdcIndexByHardwareIndex[EFI_ADC_LAST_CHANNEL];
 	bool isHwUsed(adc_channel_e hwChannel) const;
 	int size() const;
 	void init();
 	uint32_t conversionCount = 0;
 	uint32_t errorsCount = 0;
-	int getAdcValueByIndex(int internalIndex) const;
 
 	adcsample_t* const m_samples;
-
-	int getAdcValueByHwChannel(adc_channel_e hwChannel) const;
 
 	adc_state values;
 private:

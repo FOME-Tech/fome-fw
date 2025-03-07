@@ -42,7 +42,7 @@ float getVoltageDivided(const char *msg, adc_channel_e hwChannel) {
 
 // voltage in MCU universe, from zero to VDD
 float getVoltage(const char *msg, adc_channel_e hwChannel) {
-	return adcToVolts(getAdcValue(msg, hwChannel));
+	return adcToVolts(getSlowAdcValue(msg, hwChannel));
 }
 
 #if EFI_USE_FAST_ADC
@@ -66,46 +66,17 @@ AdcDevice::AdcDevice(ADCConversionGroup* hwConfig, adcsample_t *buf, size_t buf_
 
 static uint32_t slowAdcCounter = 0;
 
-static adcsample_t getAvgAdcValue(int index, adcsample_t *samples, int bufDepth, int numChannels) {
-	uint32_t result = 0;
-	for (int i = 0; i < bufDepth; i++) {
-		result += samples[index];
-		index += numChannels;
-	}
-
-	// this truncation is guaranteed to not be lossy - the average can't be larger than adcsample_t
-	return static_cast<adcsample_t>(result / bufDepth);
-}
-
-
-// See https://github.com/rusefi/rusefi/issues/976 for discussion on this value
-#define ADC_SAMPLING_FAST ADC_SAMPLE_28
-
-#if EFI_USE_FAST_ADC
-extern AdcDevice fastAdc;
-#endif // EFI_USE_FAST_ADC
-
 static float mcuTemperature;
 
 float getMCUInternalTemperature() {
 	return mcuTemperature;
 }
 
-int getInternalAdcValue(const char *msg, adc_channel_e hwChannel) {
+int getSlowAdcValue(const char *msg, adc_channel_e hwChannel) {
 	if (!isAdcChannelValid(hwChannel)) {
 		warning(ObdCode::CUSTOM_OBD_ANALOG_INPUT_NOT_CONFIGURED, "ADC: %s input is not configured", msg);
 		return -1;
 	}
-
-#if EFI_USE_FAST_ADC
-	if (adcHwChannelEnabled[hwChannel] == AdcChannelMode::Fast) {
-		int internalIndex = fastAdc.internalAdcIndexByHardwareIndex[hwChannel];
-// todo if ADC_BUF_DEPTH_FAST EQ 1
-//		return fastAdc.samples[internalIndex];
-		int value = getAvgAdcValue(internalIndex, fastAdc.m_samples, ADC_BUF_DEPTH_FAST, fastAdc.size());
-		return value;
-	}
-#endif // EFI_USE_FAST_ADC
 
 	return getSlowAdcSample(hwChannel);
 }
@@ -114,15 +85,6 @@ int getInternalAdcValue(const char *msg, adc_channel_e hwChannel) {
 
 int AdcDevice::size() const {
 	return channelCount;
-}
-
-int AdcDevice::getAdcValueByHwChannel(adc_channel_e hwChannel) const {
-	int internalIndex = internalAdcIndexByHardwareIndex[hwChannel];
-	return values.adc_data[internalIndex];
-}
-
-int AdcDevice::getAdcValueByIndex(int internalIndex) const {
-	return values.adc_data[internalIndex];
 }
 
 void AdcDevice::init() {
@@ -164,21 +126,10 @@ void AdcDevice::enableChannel(adc_channel_e hwChannel) {
 	}
 }
 
-adc_channel_e AdcDevice::getAdcHardwareIndexByInternalIndex(int index) const {
-	return hardwareIndexByIndernalAdcIndex[index];
-}
-
 #endif // EFI_USE_FAST_ADC
-
-static void printAdcValue(int channel) {
-	int value = getAdcValue("print", (adc_channel_e)channel);
-	float volts = adcToVoltsDivided(value, (adc_channel_e)channel);
-	efiPrintf("adc voltage : %.2f", volts);
-}
 
 void waitForSlowAdc(uint32_t lastAdcCounter) {
 	// we use slowAdcCounter instead of slowAdc.conversionCount because we need ADC_COMPLETE state
-	// todo: use sync.objects?
 	while (slowAdcCounter <= lastAdcCounter) {
 		chThdSleepMilliseconds(1);
 	}
@@ -207,6 +158,10 @@ void updateSlowAdc(efitick_t nowNt) {
 	}
 }
 
+#if EFI_USE_FAST_ADC
+extern AdcDevice fastAdc;
+#endif // EFI_USE_FAST_ADC
+
 static void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
 	if (!isAdcChannelValid(setting)) {
 		return;
@@ -217,15 +172,6 @@ static void addFastAdcChannel(const char* /*name*/, adc_channel_e setting) {
 #if EFI_USE_FAST_ADC
 	fastAdc.enableChannel(setting);
 #endif
-}
-
-static void removeFastAdcChannel(const char *name, adc_channel_e setting) {
-	(void)name;
-	if (!isAdcChannelValid(setting)) {
-		return;
-	}
-
-	adcHwChannelEnabled[setting] = AdcChannelMode::Off;
 }
 
 void initAdcInputs() {
@@ -239,8 +185,6 @@ void initAdcInputs() {
 #if EFI_USE_FAST_ADC
 	fastAdc.init();
 #endif // EFI_USE_FAST_ADC
-
-	addConsoleActionI("adc", (VoidInt) printAdcValue);
 #endif
 }
 

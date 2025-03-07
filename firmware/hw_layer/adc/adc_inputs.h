@@ -53,10 +53,8 @@ void waitForSlowAdc(uint32_t lastAdcCounter = 0);
 
 int getAdcHardwareIndexByInternalIndex(int index);
 
-int getInternalAdcValue(const char *msg, adc_channel_e index);
+int getSlowAdcValue(const char *msg, adc_channel_e index);
 float getMCUInternalTemperature(void);
-
-#define getAdcValue(msg, hwChannel) getInternalAdcValue(msg, hwChannel)
 
 #define adcToVoltsDivided(adc, hwChannel) (adcToVolts(adc) * getAnalogInputDividerCoefficient(hwChannel))
 
