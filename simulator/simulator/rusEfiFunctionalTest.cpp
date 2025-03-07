@@ -17,10 +17,8 @@
 #include "status_loop.h"
 #include "trigger_emulator_algo.h"
 #include "main_trigger_callback.h"
-#include "sensor_chart.h"
 #include "bench_test.h"
 #include "tunerstudio.h"
-#include "map_averaging.h"
 #include "mmc_card.h"
 #include "memstreams.h"
 #include <chprintf.h>
@@ -32,10 +30,6 @@
 #define DEFAULT_SNIFFER_THR 2500
 
 extern WaveChart waveChart;
-
-int getRemainingStack(thread_t*) {
-	return 99999;
-}
 
 static void assertString(const char*actual, const char *expected) {
 	if (strcmp(actual, expected) != 0) {
@@ -117,7 +111,7 @@ void rusEfiFunctionalTest(void) {
 
 	runChprintfTest();
 
-	initPeriodicEvents();
+	initMainLoop();
 
 	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
 	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
@@ -182,4 +176,9 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 #endif // HAL_USE_CAN
 
 void setBoardConfigOverrides() {
+}
+
+void initBoardSensors() {
+	// Simulator gets battery voltage so it detects ignition-on
+	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
 }

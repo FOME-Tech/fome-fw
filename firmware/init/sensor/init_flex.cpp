@@ -16,13 +16,7 @@ static Timer flexFreq, flexPulse;
 
 static void flexCallback(efitick_t nowNt, bool value) {
 	if (value) {
-		float frequency = 1 / flexFreq.getElapsedSecondsAndReset(nowNt);
-		flexSensor.postRawValue(frequency, nowNt);
-
-		// Start timing pulse width on rising edge
-		flexPulse.reset(nowNt);
-	} else {
-		// End pulse timing on falling edge
+		// End pulse timing on rising edge
 		float pulseWidthUs = flexPulse.getElapsedUs(nowNt);
 
 		if (pulseWidthUs < 900) {
@@ -36,6 +30,12 @@ static void flexCallback(efitick_t nowNt, bool value) {
 			tempC = flexTempFilter.filter(tempC);
 			flexFuelTemp.setValidValue(tempC, nowNt);
 		}
+	} else {
+		float frequency = 1 / flexFreq.getElapsedSecondsAndReset(nowNt);
+		flexSensor.postRawValue(frequency, nowNt);
+
+		// Start timing pulse width on falling edge
+		flexPulse.reset(nowNt);
 	}
 }
 

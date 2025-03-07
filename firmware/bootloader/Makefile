@@ -8,7 +8,7 @@
 ifeq ($(DEBUG_LEVEL_OPT),)
   # this value would be used by default. For 'debug' configuration override with '-O0 -ggdb -g' or something along these lines
   DEBUG_LEVEL_OPT = -Os -ggdb -g
-  DDEFS += -DEFI_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_STACK_CHECK=FALSE -DCH_DBG_FILL_THREADS=FALSE -DCH_DBG_THREADS_PROFILING=FALSE
+  DDEFS += -DEFI_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_ASSERTS=FALSE -DCH_DBG_FILL_THREADS=FALSE -DCH_DBG_THREADS_PROFILING=FALSE
 endif
 
 DDEFS += -DENABLE_AUTO_DETECT_HSE=TRUE -DSTM32_HSECLK=25000000
@@ -102,11 +102,6 @@ ifeq ($(USE_EXCEPTIONS_STACKSIZE),)
   USE_EXCEPTIONS_STACKSIZE = 0x1000
 endif
 
-# Enables the use of FPU on Cortex-M4 (no, softfp, hard).
-ifeq ($(USE_FPU),)
-  USE_FPU = hard
-endif
-
 #
 # Architecture or project specific options
 ##############################################################################
@@ -118,6 +113,7 @@ endif
 # Define project name here
 PROJECT = fome_bl
 PROJECT_DIR = ..
+GENERATED_DIR = $(PROJECT_DIR)/generated
 
 # Configure precompiled header
 PCH_DIR = $(PROJECT_DIR)/pch
@@ -218,7 +214,9 @@ TCPPSRC =
 
 # List ASM source files here
 # List ASM source files here
-ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM) $(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
+ASMXSRC = $(STARTUPASM) $(PORTASM) $(OSALASM) \
+	$(RUSEFIASM) \
+	$(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
 
 INCDIR = $(ALLINC) \
 	$(PCH_DIR) \
@@ -232,6 +230,7 @@ INCDIR = $(ALLINC) \
 	$(CONFDIR) \
 	$(PROJECT_DIR)/ext \
 	$(PROJECT_DIR)/ext_algo \
+	$(GENERATED_DIR) \
 	$(UTIL_INC) \
 	$(PROJECT_DIR)/console_util \
 	$(PROJECT_DIR)/console \
@@ -249,7 +248,6 @@ INCDIR = $(ALLINC) \
 	$(PROJECT_DIR)/controllers/sensors/core \
 	$(PROJECT_DIR)/hw_layer/mass_storage \
 	$(PROJECT_DIR)/hw_layer/ports \
-	$(PROJECT_DIR)/console/binary/generated \
 	$(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER) \
 	$(HW_INC) \
 	$(HW_LAYER_DRIVERS_INC) \
@@ -278,12 +276,8 @@ BUILDDIR=blbuild
 
 MCU  = cortex-m4
 
-ifeq ($(CROSS_COMPILE),)
-  #TRGT = arm-elf-
-  TRGT = arm-none-eabi-
-else
-  TRGT = $(CROSS_COMPILE)
-endif
+include $(PROJECT_DIR)/use_arm_gcc.mk
+
 CC   = $(TRGT)gcc
 CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
@@ -340,4 +334,12 @@ ULIBS = -lm --specs=nano.specs
 
 include $(RULESFILE)
 include $(PROJECT_DIR)/rusefi_pch.mk
+include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
+include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
+
+$(info MODULES_INC:   $(MODULES_INC))
+
+.PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
+
+CLEAN_RULE_HOOK: CLEAN_PCH_HOOK CLEAN_GENERATED_HOOK

@@ -10,79 +10,32 @@
 
 static void initSensorCli();
 
-void initIfValid(const char* msg, adc_channel_e channel) {
-	if (!isAdcChannelValid(channel)) {
-		return;
-	}
-
-#if EFI_PROD_CODE
-/**
-TODO: this code is similar to AdcSubscription::SubscribeSensor, what is the plan? shall we extract helper method or else?
- */
-
-	brain_pin_e pin = getAdcChannelBrainPin(msg, channel);
-	if (pin == Gpio::Invalid) {
-	// todo: external muxes for internal ADC #3350
-		return;
-	}
-	efiSetPadMode(msg, pin, PAL_MODE_INPUT_ANALOG);
-#endif
-}
-
-void deInitIfValid(const char* msg, adc_channel_e channel) {
-	if (!isAdcChannelValid(channel)) {
-		return;
-	}
-
-#if EFI_PROD_CODE
-	brain_pin_e pin = getAdcChannelBrainPin(msg, channel);
-	efiSetPadUnused(pin);
-#endif
-}
-
-static void initOldAnalogInputs() {
-	initIfValid("AUXF#1", engineConfiguration->auxFastSensor1_adcChannel);
-}
-
-static void deInitOldAnalogInputs() {
-	deInitIfValid("AUXF#1", activeConfiguration.auxFastSensor1_adcChannel);
-}
-
 static void initAuxDigital() {
 #if EFI_PROD_CODE
-	for (size_t i = 0;i<efi::size(engineConfiguration->luaDigitalInputPins);i++) {
-		efiSetPadMode("Lua Digital", engineConfiguration->luaDigitalInputPins[i], getInputMode(PI_DEFAULT));
+	for (size_t i = 0; i < efi::size(engineConfiguration->luaDigitalInputPins); i++) {
+		efiSetPadMode("Lua Digital", engineConfiguration->luaDigitalInputPins[i], engineConfiguration->luaDigitalInputPinModes[i]);
 	}
 #endif // EFI_PROD_CODE
 }
 
 static void deInitAuxDigital() {
-	for (size_t i = 0;i<efi::size(activeConfiguration.luaDigitalInputPins);i++) {
+	for (size_t i = 0; i < efi::size(activeConfiguration.luaDigitalInputPins); i++) {
 		brain_pin_markUnused(activeConfiguration.luaDigitalInputPins[i]);
 	}
 }
 
 void initNewSensors() {
-	initVbatt();
-	initMap();
-	initTps();
-	initFluidPressure();
-	initThermistors();
-	initLambda();
-	initFlexSensor();
+	// First (optionally) init any sensors built in to the board that don't need config
+	initBoardSensors();
+
+	reconfigureSensors();
+
 	initBaro();
-	initAuxSensors();
-	initVehicleSpeedSensor();
-	initTurbochargerSpeedSensor();
 	initAuxSpeedSensors();
-	initInputShaftSpeedSensor();
 
-	#if !EFI_UNIT_TEST
-		initFuelLevel();
-		initMaf();
-	#endif
+	initFuelLevel();
+	initMaf();
 
-	initOldAnalogInputs();
 	initAuxDigital();
 
 	// Init CLI functionality for sensors (mocking)
@@ -96,16 +49,10 @@ void initNewSensors() {
 		Sensor::setMockValue(SensorType::BatteryVoltage, 10);
 	}
 #endif
-
-#if EFI_SIMULATOR
-	// Simulator gets battery voltage so it detects ignition-on
-	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
-#endif // EFI_SIMULATOR
 }
 
 void stopSensors() {
 	deInitAuxDigital();
-	deInitOldAnalogInputs();
 
 	deinitTps();
 	deinitFluidPressure();
@@ -113,6 +60,7 @@ void stopSensors() {
 	deinitThermistors();
 	deinitLambda();
 	deInitFlexSensor();
+	deinitAuxSensors();
 	deInitVehicleSpeedSensor();
 	deinitTurbochargerSpeedSensor();
 	deinitAuxSpeedSensors();
@@ -121,22 +69,34 @@ void stopSensors() {
 }
 
 void reconfigureSensors() {
+	initVbatt();
 	initMap();
 	initTps();
 	initFluidPressure();
-	initVbatt();
 	initThermistors();
+	initLambda();
 	initFlexSensor();
+	initAuxSensors();
 	initVehicleSpeedSensor();
 	initTurbochargerSpeedSensor();
 	initInputShaftSpeedSensor();
-
-	initOldAnalogInputs();
 }
 
 // Mocking/testing helpers
 static void initSensorCli() {
-	addConsoleActionIF("set_sensor_mock", Sensor::setMockValue);
+	addConsoleActionSS("set_sensor_mock", [](const char* typeName, const char* valueStr) {
+		SensorType type = findSensorTypeByName(typeName);
+
+		if (type == SensorType::Invalid) {
+			efiPrintf("Invalid sensor type specified: %s", typeName);
+			return;
+		}
+
+		float value = atoff(valueStr);
+
+		Sensor::setMockValue(type, value);
+	});
+
 	addConsoleAction("reset_sensor_mocks", Sensor::resetAllMocks);
 	addConsoleAction("show_sensors", Sensor::showAllSensorInfo);
 	addConsoleActionI("show_sensor",

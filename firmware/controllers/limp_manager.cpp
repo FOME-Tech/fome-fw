@@ -19,12 +19,6 @@ static bool noFiringUntilVvtSync(vvt_mode_e vvtMode) {
 		return true;
 	}
 
-	// Odd cylinder count engines don't work properly with wasted spark, so wait for full sync (so that sequential works)
-	// See https://github.com/rusefi/rusefi/issues/4195 for the issue to properly support this case
-	if (engineConfiguration->cylindersCount > 1 && engineConfiguration->cylindersCount % 2 == 1) {
-		return true;
-	}
-
 	// Symmetrical crank modes require cam sync before firing
 	// non-symmetrical cranks can use faster spin-up mode (firing in wasted/batch before VVT sync)
 	// Examples include Nissan MR/VQ, Miata NB, etc
@@ -38,7 +32,7 @@ void LimpManager::onFastCallback() {
 	updateState(Sensor::getOrZero(SensorType::Rpm), getTimeNowNt());
 }
 
-void LimpManager::updateState(int rpm, efitick_t nowNt) {
+void LimpManager::updateState(float rpm, efitick_t nowNt) {
 	Clearable allowFuel = engineConfiguration->isInjectionEnabled;
 	Clearable allowSpark = engineConfiguration->isIgnitionEnabled;
 
@@ -60,23 +54,18 @@ void LimpManager::updateState(int rpm, efitick_t nowNt) {
 		allowFuel.clear(ClearReason::ACR);
 	}
 
-	{
-		// User-configured hard RPM limit, either constant or CLT-lookup
-		// todo: migrate to engineState->desiredRpmLimit to get this variable logged
-		float revLimit = engineConfiguration->useCltBasedRpmLimit
-			? interpolate2d(Sensor::getOrZero(SensorType::Clt), engineConfiguration->cltRevLimitRpmBins, engineConfiguration->cltRevLimitRpm)
-			: (float)engineConfiguration->rpmHardLimit;
+	// User-configured hard RPM limit, either constant or CLT-lookup
+	m_hardRevLimit = engineConfiguration->useCltBasedRpmLimit
+		? interpolate2d(Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
+		: (float)engineConfiguration->rpmHardLimit;
 
-		// Configurable hysteresis for how far to drop before resuming
-		float resumeRpm = revLimit - engineConfiguration->rpmHardLimitHyst;
-		if (m_revLimitHysteresis.test(rpm, revLimit, resumeRpm)) {
-			if (engineConfiguration->cutFuelOnHardLimit) {
-				allowFuel.clear(ClearReason::HardLimit);
-			}
+	if (isHardRevLimit(rpm)) {
+		if (engineConfiguration->cutFuelOnHardLimit) {
+			allowFuel.clear(ClearReason::HardLimit);
+		}
 
-			if (engineConfiguration->cutSparkOnHardLimit) {
-				allowSpark.clear(ClearReason::HardLimit);
-			}
+		if (engineConfiguration->cutSparkOnHardLimit) {
+			allowSpark.clear(ClearReason::HardLimit);
 		}
 	}
 
@@ -111,17 +100,17 @@ void LimpManager::updateState(int rpm, efitick_t nowNt) {
 	}
 #if EFI_SHAFT_POSITION_INPUT
 	if (engine->rpmCalculator.isRunning()) {
+		bool hasOilpSensor = Sensor::hasSensor(SensorType::OilPressure);
+		auto oilp = Sensor::get(SensorType::OilPressure);
 		uint16_t minOilPressure = engineConfiguration->minOilPressureAfterStart;
 
 		// Only check if the setting is enabled and you have an oil pressure sensor
-		if (minOilPressure > 0 && Sensor::hasSensor(SensorType::OilPressure)) {
+		if (minOilPressure > 0 && hasOilpSensor) {
 			// Has it been long enough we should have pressure?
 			bool isTimedOut = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) > 5.0f;
 
 			// Only check before timed out
 			if (!isTimedOut) {
-				auto oilp = Sensor::get(SensorType::OilPressure);
-
 				if (oilp) {
 					// We had oil pressure! Set the flag.
 					if (oilp.Value > minOilPressure) {
@@ -135,9 +124,23 @@ void LimpManager::updateState(int rpm, efitick_t nowNt) {
 				allowFuel.clear(ClearReason::OilPressure);
 			}
 		}
+
+		if (oilp && engineConfiguration->enableOilPressureProtect) {
+			float minPressure = interpolate2d(rpm, config->minimumOilPressureBins, config->minimumOilPressureValues);
+			bool isPressureSufficient = oilp.Value > minPressure;
+
+			if (isPressureSufficient) {
+				m_lowOilPressureTimer.reset(nowNt);
+			}
+
+			if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
+				allowFuel.clear(ClearReason::OilPressure);
+			}
+		}
 	} else {
 		// reset state in case of stalled engine
 		m_hadOilPressureAfterStart = false;
+		m_lowOilPressureTimer.reset(nowNt);
 	}
 
 	// If we're in engine stop mode, inhibit fuel
@@ -213,6 +216,17 @@ todo AndreiKA this change breaks 22 unit tests?
 		// Tracks the last time any cut happened
 		m_lastCutTime.reset(nowNt);
 	}
+
+	// Update output channels
+	engine->outputChannels.fuelCutReason = static_cast<uint8_t>(allowInjection().reason);
+	engine->outputChannels.sparkCutReason = static_cast<uint8_t>(allowIgnition().reason);
+}
+
+bool LimpManager::isHardRevLimit(float rpm) {
+	// Configurable hysteresis for how far to drop before resuming
+	float resumeRpm = m_hardRevLimit - engineConfiguration->rpmHardLimitHyst;
+
+	return m_revLimitHysteresis.test(rpm, m_hardRevLimit, resumeRpm);
 }
 
 void LimpManager::onIgnitionStateChanged(bool ignitionOn) {

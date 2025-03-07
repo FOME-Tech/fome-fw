@@ -190,6 +190,6 @@ void setBoardDefaultConfiguration() {
 	setPPSInputs(H144_IN_PPS, EFI_ADC_14);
 	setPPSCalibration(1.49, 4.72, 1.34, 4.24);
 
-	engineConfiguration->vrThreshold[0].pin = Gpio::D14;
+	config->vrThreshold[0].pin = Gpio::D14;
 	hellenWbo();
 }

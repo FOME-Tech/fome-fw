@@ -2,6 +2,7 @@ package com.rusefi.newparse.outputs;
 
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
+import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Definition;
 
 import java.io.*;
@@ -17,7 +18,6 @@ public class TsWriter {
 
     private static final Pattern OPTIONAL_LINE = Pattern.compile("@@if_([a-zA-Z0-9_]+)");
 
-    // TODO: We have to move either forward or backwards with newparse #4441
     public void writeTunerstudio(ParseState parser, String inputFile, String outputFile) throws IOException {
         PrintStream ps = new PrintStreamAlwaysUnix(new FileOutputStream(outputFile));
         writeTunerstudio(parser, inputFile, ps);
@@ -96,7 +96,12 @@ public class TsWriter {
         int size = root.getSize();
         ps.println("pageSize            = " + size);
         ps.println("page = 1");
-        root.writeTunerstudioLayout(ps, meta);
+
+        StructNamePrefixer prefixer = new StructNamePrefixer('_');
+
+        TsLayoutVisitor v = new TsLayoutVisitor(meta);
+        root.visit(v, ps, prefixer, 0, new int[0]);
+
         ps.println("; total TS size = " + size);
 
         // Print context help

@@ -25,7 +25,11 @@ struct AdcSubscriptionEntry {
 	bool HasUpdated = false;
 };
 
-static AdcSubscriptionEntry s_entries[16];
+#ifndef ADC_SUBSCRIPTION_SLOTS
+#define ADC_SUBSCRIPTION_SLOTS 16
+#endif
+
+static AdcSubscriptionEntry s_entries[ADC_SUBSCRIPTION_SLOTS];
 
 static AdcSubscriptionEntry* findEntry(FunctionalSensor* sensor) {
 	for (size_t i = 0; i < efi::size(s_entries); i++) {
@@ -94,7 +98,7 @@ TODO: this code is similar to initIfValid, what is the plan? shall we extract he
 	// Populate the entry
 	entry->VoltsPerAdcVolt = voltsPerAdcVolt;
 	entry->Channel = channel;
-	entry->Filter.configureLowpass(SLOW_ADC_RATE, lowpassCutoff);
+	entry->Filter.configureLowpass(hzForPeriod(ADC_UPDATE_RATE), lowpassCutoff);
 	entry->HasUpdated = false;
 
 	// Set the sensor last - it's the field we use to determine whether this entry is in use
@@ -179,10 +183,9 @@ void AdcSubscription::PrintInfo() {
 		char pinNameBuffer[16];
 
 		efiPrintf(
-			"%s ADC%d m=%d %s adc=%.2f/input=%.2fv/divider=%.2f",
+			"%s ADC%d %s adc=%.2f/input=%.2fv/divider=%.2f",
 			name,
 			channel,
-			getAdcMode(channel),
 			getPinNameByAdcChannel(name, channel, pinNameBuffer),
 			mcuVolts, sensorVolts, entry.VoltsPerAdcVolt
 		);

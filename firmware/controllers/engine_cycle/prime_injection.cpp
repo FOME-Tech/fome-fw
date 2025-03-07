@@ -20,7 +20,9 @@ floatms_t PrimeController::getPrimeDuration() const {
 		0.001f *	// convert milligram to gram
 		interpolate2d(clt.Value, engineConfiguration->primeBins, engineConfiguration->primeValues);
 
-	return engine->module<InjectorModel>()->getInjectionDuration(primeMass);
+	efiPrintf("Priming pulse mass: %.4f g", primeMass);
+
+	return engine->module<InjectorModelPrimary>()->getInjectionDuration(primeMass);
 }
 
 // Check if the engine is not stopped or cylinder cleanup is activated
@@ -57,12 +59,14 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 
 	// start prime injection if this is a 'fresh start'
 	if (ignSwitchCounter == 0) {
-		auto primeDelayMs = engineConfiguration->primingDelay * 1000;
+		// Give sensors long enough to wake up before priming
+		constexpr float minimumPrimeDelayMs = 100;
+		uint32_t primeDelayNt = MSF2NT(engineConfiguration->primingDelay * 1000 + minimumPrimeDelayMs);
 
-		auto startTime = getTimeNowNt() + MS2NT(primeDelayMs);
-		getExecutorInterface()->scheduleByTimestampNt("prime", nullptr, startTime, { PrimeController::onPrimeStartAdapter, this });
+		auto startTime = getTimeNowNt() + primeDelayNt;
+		getScheduler()->schedule("prime start", nullptr, startTime, { PrimeController::onPrimeStartAdapter, this });
 	} else {
-		efiPrintf("Skipped priming pulse since ignSwitchCounter = %d", ignSwitchCounter);
+		efiPrintf("Skipped priming pulse since ignSwitchCounter = %lu", ignSwitchCounter);
 	}
 
 	// we'll reset it later when the engine starts
@@ -71,11 +75,11 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 
 #if EFI_PROD_CODE
 uint32_t PrimeController::getKeyCycleCounter() const {
-	return backupRamLoad(BACKUP_IGNITION_SWITCH_COUNTER);
+	return getBackupSram()->IgnCounter;
 }
 
 void PrimeController::setKeyCycleCounter(uint32_t count) {
-	backupRamSave(BACKUP_IGNITION_SWITCH_COUNTER, count);
+	getBackupSram()->IgnCounter = count;
 }
 #else // not EFI_PROD_CODE
 uint32_t PrimeController::getKeyCycleCounter() const {
@@ -96,16 +100,22 @@ void PrimeController::onPrimeStart() {
 
 	efiPrintf("Firing priming pulse of %.2f ms", durationMs);
 
-	auto endTime = getTimeNowNt() + MS2NT(durationMs);
+	auto endTime = getTimeNowNt() + (uint32_t)MSF2NT(durationMs);
 
 	// Open all injectors, schedule closing later
 	m_isPriming = true;
-	startSimultaneousInjection();
-	getExecutorInterface()->scheduleByTimestampNt("prime", nullptr, endTime, { onPrimeEndAdapter, this });
+
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << engineConfiguration->cylindersCount) - 1;
+
+	startInjection(ctx);
+	getScheduler()->schedule("prime end", nullptr, endTime, { onPrimeEndAdapter, this });
 }
 
 void PrimeController::onPrimeEnd() {
-	endSimultaneousInjectionOnlyTogglePins();
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << engineConfiguration->cylindersCount) - 1;
+	endInjection(ctx);
 
 	m_isPriming = false;
 }
@@ -113,7 +123,7 @@ void PrimeController::onPrimeEnd() {
 void PrimeController::onSlowCallback() {
 	if (!getEngineRotationState()->isStopped()) {
 #if EFI_PROD_CODE
-		backupRamSave(BACKUP_IGNITION_SWITCH_COUNTER, 0);
+		getBackupSram()->IgnCounter = 0;
 #endif /* EFI_PROD_CODE */
 	}
 }

@@ -49,19 +49,9 @@ This project exists thanks to all the people who contribute their time, expertis
 
 If you'd like to get involved, see [contributing](CONTRIBUTING.md).
 
-## Getting Started
+## Development
 
-Clone the repository:  
-`git clone https://github.com/FOME-Tech/fome-fw.git`
-
-Initialize the checkout:  
-`git submodule update --init`
-
-## Building
-
-See [firmware/gcc_version_check.c](firmware/gcc_version_check.c) for the recommended version of GCC.
-
-Check out https://rusefi.com/forum/viewtopic.php?f=5&t=9
+Refer to [firmware/DEVELOPER.md](firmware/DEVELOPER.md) for details on building FOME firmware.
 
 # Release Notes
 

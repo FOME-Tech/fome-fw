@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.rusefi.output.ConfigStructureImpl.ALIGNMENT_FILL_AT;
-import static com.rusefi.output.DataLogConsumer.UNUSED;
+import static com.rusefi.output.ConfigurationConsumer.UNUSED;
 import static com.rusefi.output.GetConfigValueConsumer.FILE_HEADER;
 import static com.rusefi.output.GetConfigValueConsumer.getCompareName;
 
@@ -77,7 +77,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
         return  "#if !EFI_UNIT_TEST\n" +
                 FILE_HEADER +
-                "float getOutputValueByName(const char *name) {\n" +
+                "expected<float> getOutputValueByName(const char *name) {\n" +
                 fullSwitch +
                 getterBody + GetConfigValueConsumer.GET_METHOD_FOOTER +
                 "#endif\n";
@@ -85,20 +85,19 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
     @NotNull
     static String wrapSwitchStatement(StringBuilder switchBody) {
-        String fullSwitch = switchBody.length() == 0 ? "" :
+        return switchBody.length() == 0 ? "" :
                 ("\tint hash = djb2lowerCase(name);\n" +
 
                         "\tswitch(hash) {\n" + switchBody + "\t}\n");
-        return fullSwitch;
     }
 
     @NotNull
-    static StringBuilder getGetters(StringBuilder switchBody, List<VariableRecord> getterPairs) {
+    public static StringBuilder getGetters(StringBuilder switchBody, List<VariableRecord> getterPairs) {
         HashMap<Integer, AtomicInteger> hashConflicts = getHashConflicts(getterPairs);
 
         StringBuilder getterBody = new StringBuilder();
         for (VariableRecord pair : getterPairs) {
-            String returnLine = "\t\treturn " + pair.getFullName() + ";\n";
+            String returnLine = "\t\treturn (float)" + pair.getFullName() + ";\n";
             String conditional = pair.getConditional();
 
             String before = conditional == null ? "" : "#if " + conditional + "\n";
@@ -108,6 +107,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
             if (hashConflicts.get(hash).get() == 1) {
                 switchBody.append(before);
                 switchBody.append("\t\tcase " + hash + ":\n");
+                switchBody.append("\t\t\t// " + pair.getUserName() + "\n");
                 switchBody.append("\t" + returnLine);
                 switchBody.append(after);
             } else {

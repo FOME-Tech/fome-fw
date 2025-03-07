@@ -42,7 +42,7 @@ public:
 			return result;
 		}
 
-		if (m_timeoutPeriod != 0) { // zero m_timeoutPeriod means value lasts forever
+		if (m_timeoutPeriod.count() != 0) { // zero m_timeoutPeriod means value lasts forever
 			if (getTimeNowNt() - m_timeoutPeriod > m_lastUpdate) {
 				return UnexpectedCode::Timeout;
 			}
@@ -51,7 +51,7 @@ public:
 		return result;
 	}
 
-	StoredValueSensor(SensorType type, efitick_t timeoutNt)
+	StoredValueSensor(SensorType type, efidur_t timeoutNt)
 		: Sensor(type)
 		, m_result(unexpected)
 		, m_timeoutPeriod(timeoutNt)
@@ -84,6 +84,6 @@ public:
 private:
 	SensorResult m_result;
 
-	efitick_t m_timeoutPeriod;
-	efitick_t m_lastUpdate = 0;
+	efidur_t m_timeoutPeriod;
+	efitick_t m_lastUpdate;
 };

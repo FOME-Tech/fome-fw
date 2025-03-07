@@ -24,7 +24,9 @@ bool isStm32F42x();
 void portInitAdc();
 float getMcuTemperature();
 // Convert all slow ADC inputs.  Returns true if the conversion succeeded, false if a failure occured.
-bool readSlowAnalogInputs(adcsample_t* convertedSamples);
+bool readSlowAnalogInputs();
+// Read the sampled value of a slow channel
+adcsample_t getSlowAdcSample(adc_channel_e channel);
 #endif
 
 // CAN bus
@@ -39,11 +41,7 @@ bool isValidSerialRxPin(brain_pin_e pin);
 
 // SPI
 #if HAL_USE_SPI
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
-		brain_pin_e mosi,
-		int sckMode,
-		int mosiMode,
-		int misoMode);
+void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi);
 
 void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin);
 void turnOnSpi(spi_device_e device);

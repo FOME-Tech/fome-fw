@@ -1,3 +1,4 @@
 struct_no_prefix trigger_state_primary_s
-	bit m_hasSynchronizedPhase
+	uint8_t camResyncCounter;Resync counter
+	bit m_hasSynchronizedPhase;Fully synchronized
 end_struct

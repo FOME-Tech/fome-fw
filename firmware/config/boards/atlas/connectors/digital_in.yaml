@@ -1,0 +1,32 @@
+pins:
+  - id: [E14, E14]
+    class: [event_inputs, switch_inputs]
+    ts_name: VR 1
+
+  - id: [E15, E15]
+    class: [event_inputs, switch_inputs]
+    ts_name: VR 2
+
+  - id: [G0, G0]
+    class: [event_inputs, switch_inputs]
+    ts_name: Digital 1
+
+  - id: [G1, G1]
+    class: [event_inputs, switch_inputs]
+    ts_name: Digital 2
+
+  - id: [E10, E10]
+    class: [event_inputs, switch_inputs]
+    ts_name: Digital 3
+
+  - id: [E11, E11]
+    class: [event_inputs, switch_inputs]
+    ts_name: Digital 4
+
+  - id: [E12, E12]
+    class: [event_inputs, switch_inputs]
+    ts_name: Digital 5
+
+  - id: [E13, E13]
+    class: [event_inputs, switch_inputs]
+    ts_name: Digital 6

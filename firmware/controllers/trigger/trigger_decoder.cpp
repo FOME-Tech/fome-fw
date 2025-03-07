@@ -4,12 +4,6 @@
  * @date Dec 24, 2013
  * @author Andrey Belomutskiy, (c) 2012-2020
  *
- *
- *
- * enable trigger_details
- * DBG_TRIGGER_COUNTERS = 5
- * set debug_mode 5
- *
  * This file is part of rusEfi - see http://rusefi.com
  *
  * rusEfi is free software; you can redistribute it and/or modify it under the terms of
@@ -24,24 +18,11 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rusefi/isnan.h>
-#include <rusefi/math.h>
+#include "pch.h"
 
 #include "global_shared.h"
-#include "loggingcentral.h"
-#include "error_handling.h"
-#include "perf_trace.h"
-
 #include "engine_configuration.h"
 
-#include "trigger_central.h"
-#include "trigger_decoder.h"
-/**
- * decoder depends on current RPM for error condition logic
- */
-#include "sensor.h"
-#include "engine_state.h"
-#include "engine_math.h"
 /**
  * decoder uses TriggerStimulatorHelper in findTriggerZeroEventIndex
  */
@@ -58,31 +39,22 @@ bool TriggerDecoderBase::getShaftSynchronized() {
 }
 
 void TriggerDecoderBase::setShaftSynchronized(bool value) {
-	if (value) {
-		if (!shaft_is_synchronized) {
-			// just got synchronized
-			mostRecentSyncTime = getTimeNowNt();
-		}
-	} else {
-		// sync loss
-		mostRecentSyncTime = 0;
-	}
 	shaft_is_synchronized = value;
 }
 
 void TriggerDecoderBase::resetState() {
 	setShaftSynchronized(false);
-	toothed_previous_time = 0;
+	toothed_previous_time = {};
 
-	memset(toothDurations, 0, sizeof(toothDurations));
+	setArrayValues(toothDurations, 0);
 
 	crankSynchronizationCounter = 0;
-	totalTriggerErrorCounter = 0;
+	triggerErrorCounter = 0;
 	orderingErrorCounter = 0;
 	m_timeSinceDecodeError.init();
 
-	prevSignal = SHAFT_PRIMARY_FALLING;
-	startOfCycleNt = 0;
+	prevSignal = TriggerEvent::PrimaryFalling;
+	startOfCycleNt = {};
 
 	resetCurrentCycleState();
 
@@ -92,7 +64,7 @@ void TriggerDecoderBase::resetState() {
 
 void TriggerDecoderBase::setTriggerErrorState() {
 	m_timeSinceDecodeError.reset();
-	totalTriggerErrorCounter++;
+	triggerErrorCounter++;
 }
 
 void TriggerDecoderBase::resetCurrentCycleState() {
@@ -118,10 +90,12 @@ void TriggerWaveform::initializeSyncPoint(TriggerDecoderBase& state,
 }
 
 void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
-	int triggerShapeSynchPointIndex = shape->triggerShapeSynchPointIndex;
-	if (triggerShapeSynchPointIndex == EFI_ERROR_CODE) {
+	if (!shape->triggerShapeSynchPointIndex) {
 		return;
 	}
+
+	auto triggerShapeSynchPointIndex = shape->triggerShapeSynchPointIndex.Value;
+
 	angle_t firstAngle = shape->getAngle(triggerShapeSynchPointIndex);
 	assertAngleRange(firstAngle, "firstAngle", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE);
 
@@ -129,12 +103,11 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 
 	size_t length = shape->getLength();
 
-	memset(eventAngles, 0, sizeof(eventAngles));
+	setArrayValues(eventAngles, 0);
 
 	// this may be <length for some triggers like symmetrical crank Miata NB
 	size_t triggerShapeLength = shape->getSize();
 
-	assertAngleRange(shape->triggerShapeSynchPointIndex, "triggerShapeSynchPointIndex", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE2);
 	efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, getTriggerCentral()->engineCycleEventCount != 0, "zero engineCycleEventCount");
 
 	for (size_t eventIndex = 0; eventIndex < length; eventIndex++) {
@@ -145,7 +118,7 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 			eventAngles[1] = 0;
 		} else {
 			// Rotate the trigger around so that the sync point is at position 0
-			auto wrappedIndex = (shape->triggerShapeSynchPointIndex + eventIndex) % length;
+			auto wrappedIndex = (triggerShapeSynchPointIndex + eventIndex) % length;
 
 			// Compute this tooth's position within the trigger definition
 			// (wrap, as the trigger def may be smaller than total trigger length)
@@ -154,7 +127,7 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform *shape) {
 			// Compute the relative angle of this tooth to the sync point's tooth
 			float angle = shape->getAngle(wrappedIndex) - firstAngle;
 
-			efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, !cisnan(angle), "trgSyncNaN");
+			efiAssertVoid(ObdCode::CUSTOM_TRIGGER_CYCLE, !std::isnan(angle), "trgSyncNaN");
 			// Wrap the angle back in to [0, 720)
 			wrapAngle(angle, "trgSync", ObdCode::CUSTOM_TRIGGER_SYNC_ANGLE_RANGE);
 
@@ -249,7 +222,7 @@ void TriggerDecoderBase::incrementShaftSynchronizationCounter() {
 // If we're self stimulating, assume we have full sync so that outputs work during self stim
 bool PrimaryTriggerDecoder::hasSynchronizedPhase() const {
 #if EFI_PROD_CODE
-	if (getTriggerCentral()->directSelfStimulation) {
+	if (getTriggerCentral()->directSelfStimulation && engineConfiguration->fakeFullSyncForStimulation) {
 		return true;
 	}
 #endif
@@ -260,6 +233,16 @@ bool PrimaryTriggerDecoder::hasSynchronizedPhase() const {
 void PrimaryTriggerDecoder::onTriggerError() {
 	// On trigger error, we've lost full sync
 	resetHasFullSync();
+
+	// Ignore the warning that engine is never null - it might be in unit tests
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Waddress"
+		if (engine) {
+			// Instant RPM data is now also probably trash, discard it
+			engine->triggerCentral.instantRpm.resetInstantRpm();
+			engine->rpmCalculator.lastTdcTimer.init();
+		}
+	#pragma GCC diagnostic pop
 }
 
 void PrimaryTriggerDecoder::onNotEnoughTeeth(int /*actual*/, int /*expected*/) {
@@ -278,15 +261,15 @@ void PrimaryTriggerDecoder::onTooManyTeeth(int /*actual*/, int /*expected*/) {
 		currentCycle.eventCount[1]);
 }
 
-const char *getTrigger_event_e(trigger_event_e value){
+const char *getTriggerEvent(TriggerEvent value){
 switch(value) {
-case SHAFT_PRIMARY_FALLING:
+case TriggerEvent::PrimaryFalling:
   return "SHAFT_PRIMARY_FALLING";
-case SHAFT_PRIMARY_RISING:
+case TriggerEvent::PrimaryRising:
   return "SHAFT_PRIMARY_RISING";
-case SHAFT_SECONDARY_FALLING:
+case TriggerEvent::SecondaryFalling:
   return "SHAFT_SECONDARY_FALLING";
-case SHAFT_SECONDARY_RISING:
+case TriggerEvent::SecondaryRising:
   return "SHAFT_SECONDARY_RISING";
   }
  return NULL;
@@ -303,14 +286,14 @@ void VvtTriggerDecoder::onTooManyTeeth(int actual, int expected) {
 bool TriggerDecoderBase::validateEventCounters(const TriggerWaveform& triggerShape) const {
 	// We can check if things are fine by comparing the number of events in a cycle with the expected number of event.
 	bool isDecodingError = false;
-	for (int i = 0;i < PWM_PHASE_MAX_WAVE_PER_PWM;i++) {
+	for (int i = 0; i < PWM_PHASE_MAX_WAVE_PER_PWM; i++) {
 		isDecodingError |= (currentCycle.eventCount[i] != triggerShape.getExpectedEventCount((TriggerWheel)i));
 	}
 
 #if EFI_UNIT_TEST
 	printf("validateEventCounters: isDecodingError=%d\n", isDecodingError);
 	if (isDecodingError) {
-		for (int i = 0;i < PWM_PHASE_MAX_WAVE_PER_PWM;i++) {
+		for (int i = 0; i < PWM_PHASE_MAX_WAVE_PER_PWM; i++) {
 			printf("count: cur=%d exp=%d\n", currentCycle.eventCount[i],  triggerShape.getExpectedEventCount((TriggerWheel)i));
 		}
 	}
@@ -363,6 +346,14 @@ static bool shouldConsiderEdge(const TriggerWaveform& triggerShape, TriggerWheel
 	return false;
 }
 
+void TriggerDecoderBase::logEdgeCounters(bool isRising) {
+	if (isRising) {
+		edgeCountRise++;
+	} else {
+		edgeCountFall++;
+	}
+}
+
 /**
  * @brief Trigger decoding happens here
  * VR falls are filtered out and some VR noise detection happens prior to invoking this method, for
@@ -376,11 +367,13 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		const TriggerWaveform& triggerShape,
 		TriggerStateListener* triggerStateListener,
 		const TriggerConfiguration& triggerConfiguration,
-		const trigger_event_e signal,
+		const TriggerEvent signal,
 		const efitick_t nowNt) {
 	ScopePerf perf(PE::DecodeTriggerEvent);
-	
-	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > 1) {
+
+	// Timeout below approximately 12 rpm, but a maximum of 1 second timeout
+	float triggerTimeoutPeriod = std::min(5.0f / triggerShape.getLength(), 1.0f);
+	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > triggerTimeoutPeriod) {
 		/**
 		 * We are here if there is a time gap between now and previous shaft event - that means the engine is not running.
 		 * That means we have lost synchronization since the engine is not running :)
@@ -393,10 +386,8 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 
 	bool useOnlyRisingEdgeForTrigger = triggerShape.useOnlyRisingEdges;
 
-	efiAssert(ObdCode::CUSTOM_TRIGGER_UNEXPECTED, signal <= SHAFT_SECONDARY_RISING, "unexpected signal", unexpected);
-
-	TriggerWheel triggerWheel = eventIndex[signal];
-	bool isRising = eventType[signal];
+	TriggerWheel triggerWheel = eventIndex[(int)signal];
+	bool isRising = eventType[(int)signal];
 
 	// Check that we didn't get the same edge twice in a row - that should be impossible
 	if (!useOnlyRisingEdgeForTrigger && prevSignal == signal) {
@@ -407,25 +398,27 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 
 	currentCycle.eventCount[(int)triggerWheel]++;
 
+	logEdgeCounters(isRising);
+
 	if (toothed_previous_time > nowNt) {
-		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%d now=%d", msg, toothed_previous_time, nowNt);
+		firmwareError(ObdCode::CUSTOM_OBD_93, "[%s] toothed_previous_time after nowNt prev=%lu now=%lu", msg, (uint32_t)toothed_previous_time, (uint32_t)nowNt);
 	}
 
-	efitick_t currentDurationLong = isFirstEvent ? 0 : nowNt - toothed_previous_time;
+	efidur_t currentDurationLong = isFirstEvent ? 0 : (nowNt - toothed_previous_time);
 
 	/**
 	 * For performance reasons, we want to work with 32 bit values. If there has been more then
 	 * 10 seconds since previous trigger event we do not really care.
 	 */
 	toothDurations[0] =
-			currentDurationLong > 10 * NT_PER_SECOND ? 10 * NT_PER_SECOND : currentDurationLong;
+			currentDurationLong > 10 * NT_PER_SECOND ? efidur_t{10 * NT_PER_SECOND} : currentDurationLong;
 
 	if (!shouldConsiderEdge(triggerShape, triggerWheel, isRising)) {
 #if EFI_UNIT_TEST
 		if (printTriggerTrace) {
 			printf("%s isLessImportant %s now=%d index=%d\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
-					getTrigger_event_e(signal),
+					getTriggerEvent(signal),
 					(int)nowNt,
 					currentCycle.current_index);
 		}
@@ -438,8 +431,8 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		if (printTriggerTrace) {
 			printf("%s event %s %lld\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
-					getTrigger_event_e(signal),
-					nowNt);
+					getTriggerEvent(signal),
+					nowNt.count);
 			printf("decodeTriggerEvent ratio %.2f: current=%d previous=%d\r\n", 1.0 * toothDurations[0] / toothDurations[1],
 					toothDurations[0], toothDurations[1]);
 		}
@@ -470,25 +463,22 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			if (verbose || (someSortOfTriggerError() && !silentTriggerError)) {
 			    const char * prefix = verbose ? "[vrb]" : "[err]";
 
-				for (int i = 0;i<triggerShape.gapTrackingLength;i++) {
+				for (int i = 0; i < triggerShape.gapTrackingLength; i++) {
 					float ratioFrom = triggerShape.syncronizationRatioFrom[i];
-					if (cisnan(ratioFrom)) {
+					if (std::isnan(ratioFrom)) {
 						// we do not track gap at this depth
 						continue;
 					}
 
 					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
-					if (cisnan(gap)) {
-						efiPrintf("%s index=%d NaN gap, you have noise issues?",
-								i,
-							    prefix
-                        );
+					if (std::isnan(gap)) {
+						efiPrintf("%s index=%d NaN gap, you have noise issues?", prefix, i);
 					} else {
 						float ratioTo = triggerShape.syncronizationRatioTo[i];
 
 						bool gapOk = isInRange(ratioFrom, gap, ratioTo);
 
-						efiPrintf("%s %srpm=%d time=%d eventIndex=%d gapIndex=%d: %s gap=%.3f expected from %.3f to %.3f error=%s",
+						efiPrintf("%s %srpm=%d time=%d eventIndex=%lu gapIndex=%d: %s gap=%.3f expected from %.3f to %.3f error=%s",
 								prefix,
 								triggerConfiguration.PrintPrefix,
 								(int)Sensor::getOrZero(SensorType::Rpm),
@@ -505,7 +495,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			}
 #else
 			if (printTriggerTrace) {
-				for (int i = 0;i<triggerShape.gapTrackingLength;i++) {
+				for (int i = 0; i < triggerShape.gapTrackingLength; i++) {
 					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
 					printf("%sindex=%d: gap=%.2f expected from %.2f to %.2f error=%s\r\n",
 							triggerConfiguration.PrintPrefix,
@@ -544,7 +534,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			printf("decodeTriggerEvent %s isSynchronizationPoint=%d index=%d %s\r\n",
 					getTrigger_type_e(triggerConfiguration.TriggerType.type),
 					isSynchronizationPoint, currentCycle.current_index,
-					getTrigger_event_e(signal));
+					getTriggerEvent(signal));
 		}
 #endif /* EFI_UNIT_TEST */
 
@@ -659,7 +649,7 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 		auto from = triggerShape.syncronizationRatioFrom[i];
 		auto to = triggerShape.syncronizationRatioTo[i];
 
-		if (cisnan(from)) {
+		if (std::isnan(from)) {
 			// don't check this gap, skip it
 			continue;
 		}
@@ -686,29 +676,24 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
  *
  * This function finds the index of synchronization event within TriggerWaveform
  */
-uint32_t TriggerDecoderBase::findTriggerZeroEventIndex(
+expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 		TriggerWaveform& shape,
 		const TriggerConfiguration& triggerConfiguration) {
-#if EFI_PROD_CODE
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCurrentRemainingStack() > 128, "findPos", -1);
-#endif
-
-
 	resetState();
 
 	if (shape.shapeDefinitionError) {
-		return 0;
+		return unexpected;
 	}
 
 	expected<uint32_t> syncIndex = TriggerStimulatorHelper::findTriggerSyncPoint(shape,
 			triggerConfiguration,
 			*this);
 	if (!syncIndex) {
-		return EFI_ERROR_CODE;
+		return unexpected;
 	}
 
 	// Assert that we found the sync point on the very first revolution
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCrankSynchronizationCounter() == 0, "findZero_revCounter", EFI_ERROR_CODE);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCrankSynchronizationCounter() == 0, "findZero_revCounter", unexpected);
 
 #if EFI_UNIT_TEST
 	if (printTriggerDebug) {

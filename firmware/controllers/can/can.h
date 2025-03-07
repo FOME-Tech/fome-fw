@@ -17,15 +17,10 @@
 
 #include "periodic_thread_controller.h"
 
-#define CAN_PEDAL_TPS_OFFSET 2
-#define CAN_SENSOR_1_OFFSET 3
-
-#define CAN_TIMEOUT MS2NT(100)
-
 //can tx periodic task cycle time in frequency, 200hz -> 5ms period
-#define CAN_CYCLE_FREQ		(200.0f)
+#define CAN_CYCLE_FREQ (200.0f)
 //can tx periodic task cycle time in ms
-#define CAN_CYCLE_PERIOD    (CH_CFG_ST_FREQUENCY / CAN_CYCLE_FREQ)
+#define CAN_CYCLE_PERIOD (1000.0f / CAN_CYCLE_FREQ)
 
 enum class CanInterval : uint16_t {
 	None    = 0,
@@ -69,18 +64,18 @@ using CI = CanInterval;
 
 // logical and/or operators so we can use our enum like an int
 constexpr CI operator |(CI lhs, CI rhs) {
-    using T = std::underlying_type_t<CI>;
-    return static_cast<CI>(static_cast<T>(lhs) | static_cast<T>(rhs));
+	using T = std::underlying_type_t<CI>;
+	return static_cast<CI>(static_cast<T>(lhs) | static_cast<T>(rhs));
 }
 
 constexpr CI operator &(CI lhs, CI rhs) {
-    using T = std::underlying_type_t<CI>;
-    return static_cast<CI>(static_cast<T>(lhs) & static_cast<T>(rhs));
+	using T = std::underlying_type_t<CI>;
+	return static_cast<CI>(static_cast<T>(lhs) & static_cast<T>(rhs));
 }
 
 constexpr CI& operator |=(CI& lhs, CI rhs) {
-    lhs = lhs | rhs;
-    return lhs;
+	lhs = lhs | rhs;
+	return lhs;
 }
 
 class CanCycle {

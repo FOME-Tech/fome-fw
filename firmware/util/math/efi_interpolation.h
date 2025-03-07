@@ -22,8 +22,6 @@
 
 #define INTERPOLATION_A(x1, y1, x2, y2) ((y1 - y2) / (x1 - x2))
 
-int findIndex(const float array[], int size, float value);
-int findIndex2(const float array[], unsigned size, float value);
 float interpolateClamped(float x1, float y1, float x2, float y2, float x);
 float interpolateMsg(const char *msg, float x1, float y1, float x2, float y2, float x);
 
@@ -37,6 +35,12 @@ void ensureArrayIsAscending(const char* msg, const TValue (&values)[TSize]) {
 		if (next <= cur) {
 			firmwareError(ObdCode::CUSTOM_ERR_AXIS_ORDER, "Invalid table axis (must be ascending!): %s %f %f at %d", msg, cur, next, i);
 		}
+	}
+}
+
+static inline void validateParam(bool condition, const char* name) {
+	if (!condition) {
+		firmwareError(ObdCode::CUSTOM_ERR_AXIS_ORDER, "Invalid config value: %s", name);
 	}
 }
 
@@ -57,7 +61,7 @@ void ensureArrayIsAscendingOrDefault(const char* msg, const TValue (&values)[TSi
 template<typename kType>
 int findIndexMsg(const char *msg, const kType array[], int size, kType value) {
 	float fvalue = (float)value;
-	if (cisnan(fvalue)) {
+	if (std::isnan(fvalue)) {
 		firmwareError(ObdCode::ERROR_NAN_FIND_INDEX, "NaN in findIndex%s", msg);
 		return 0;
 	}
@@ -119,5 +123,3 @@ void setCurveValue(const kType bins[], VType values[], int size, float key, floa
 		index = 0;
 	values[index] = value;
 }
-
-void initInterpolation();

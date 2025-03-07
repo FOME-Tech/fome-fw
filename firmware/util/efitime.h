@@ -25,12 +25,11 @@
 #define NT_PER_SECOND (US2NT(US_PER_SECOND_LL))
 
 #define MS2US(MS_TIME) ((MS_TIME) * 1000)
-#define US2MS(US_TIME) ((US_TIME) / 1000)
 
 // microseconds to ticks
 // since only about 20 seconds of ticks fit in 32 bits this macro is casting parameter into 64 bits 'efitick_t' type
 // please note that int64 <-> float is a heavy operation thus we have 'USF2NT' below
-#define US2NT(us) (((efitick_t)(us)) * US_TO_NT_MULTIPLIER)
+#define US2NT(us) (efidur_t{(((int64_t)(us)) * US_TO_NT_MULTIPLIER)})
 
 // microseconds to ticks, but floating point
 // If converting a floating point time period, use this macro to avoid
@@ -108,6 +107,12 @@ efitimeus_t getTimeNowUs();
 /**
  * @brief   Current system time in seconds.
  */
-efitimesec_t getTimeNowS();
+int64_t getTimeNowS();
+
+#if EFI_UNIT_TEST
+// In unit tests, we can time travel...
+void setTimeNowUs(int us);
+void advanceTimeUs(int us);
+#endif
 
 #endif /* __cplusplus */

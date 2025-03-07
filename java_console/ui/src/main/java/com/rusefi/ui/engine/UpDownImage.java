@@ -42,7 +42,7 @@ public class UpDownImage extends JPanel {
     /**
      * firmware is sending {@link Fields#PROTOCOL_OUTPIN}
      */
-    private String pin = "NO PIN";
+    private String pin = null;
 
     /**
      * we have variable color depending on signal name
@@ -60,8 +60,9 @@ public class UpDownImage extends JPanel {
         this(EngineReport.MOCK, name);
         setToolTip();
         String pin = ChannelNaming.INSTANCE.channelName2PhysicalPin.get(name);
-        if (pin != null)
+        if (pin != null) {
             setPhysicalPin(pin);
+        }
     }
 
     public void setSignalBody(Color signalBody) {
@@ -73,9 +74,15 @@ public class UpDownImage extends JPanel {
     }
 
     public void setToolTip() {
+        String firstLine = "Channel " + NameUtil.getUiName(name);
+
         // no physical pin information in simulator
-        String secondLine = LinkManager.isSimulationMode ? "" : "Physical pin: " + pin;
-        UiUtils.setToolTip(this, "Channel " + NameUtil.getUiName(name), secondLine);
+        if (this.pin != null || LinkManager.isSimulationMode) {
+            UiUtils.setToolTip(this, firstLine);
+        } else {
+            String secondLine = LinkManager.isSimulationMode ? "" : "Physical pin: " + pin;
+            UiUtils.setToolTip(this, firstLine, secondLine);
+        }
     }
 
     public UpDownImage(EngineReport wr, String name) {
@@ -85,9 +92,8 @@ public class UpDownImage extends JPanel {
         translator = createTranslator();
     }
 
-    public UpDownImage setTranslator(TimeAxisTranslator translator) {
+    public void setTranslator(TimeAxisTranslator translator) {
         this.translator = translator;
-        return this;
     }
 
     private final TimeAxisTranslator _translator = new TimeAxisTranslator() {

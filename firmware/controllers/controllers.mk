@@ -13,28 +13,22 @@ CONTROLLERS_SRC_CPP = \
 	$(CONTROLLERS_DIR)/actuators/alternator_controller.cpp \
 	$(CONTROLLERS_DIR)/actuators/boost_control.cpp \
 	$(CONTROLLERS_DIR)/actuators/dc_motors.cpp \
-	$(CONTROLLERS_DIR)/actuators/fan_control.cpp \
-	$(CONTROLLERS_DIR)/actuators/fuel_pump.cpp \
 	$(CONTROLLERS_DIR)/actuators/harley_acr.cpp \
 	$(CONTROLLERS_DIR)/actuators/idle_thread_io.cpp \
 	$(CONTROLLERS_DIR)/actuators/idle_hardware.cpp \
 	$(CONTROLLERS_DIR)/actuators/idle_thread.cpp \
 	$(CONTROLLERS_DIR)/actuators/ignition_controller.cpp \
 	$(CONTROLLERS_DIR)/actuators/main_relay.cpp \
-	$(CONTROLLERS_DIR)/actuators/pwm_tester.cpp \
 	$(CONTROLLERS_DIR)/actuators/vvt.cpp \
 	$(CONTROLLERS_DIR)/actuators/gppwm/gppwm_channel.cpp \
 	$(CONTROLLERS_DIR)/actuators/gppwm/gppwm.cpp \
-	$(CONTROLLERS_DIR)/gauges/tachometer.cpp \
 	$(CONTROLLERS_DIR)/gauges/speedometer.cpp \
 	$(CONTROLLERS_DIR)/gauges/malfunction_indicator.cpp \
-	$(CONTROLLERS_DIR)/system/timer/signal_executor_sleep.cpp \
 	$(CONTROLLERS_DIR)/system/timer/single_timer_executor.cpp \
 	$(CONTROLLERS_DIR)/system/timer/pwm_generator_logic.cpp \
 	$(CONTROLLERS_DIR)/system/timer/event_queue.cpp \
 	$(CONTROLLERS_DIR)/settings.cpp \
 	$(CONTROLLERS_DIR)/core/error_handling.cpp \
-	$(CONTROLLERS_DIR)/engine_cycle/map_averaging.cpp \
 	$(CONTROLLERS_DIR)/engine_cycle/high_pressure_fuel_pump.cpp \
 	$(CONTROLLERS_DIR)/engine_cycle/rpm_calculator.cpp \
 	$(CONTROLLERS_DIR)/engine_cycle/spark_logic.cpp \
@@ -55,8 +49,6 @@ CONTROLLERS_SRC_CPP = \
  	$(CONTROLLERS_DIR)/engine_controller.cpp \
  	$(CONTROLLERS_DIR)/engine_controller_misc.cpp \
 	$(CONTROLLERS_DIR)/persistent_store.cpp \
-	$(CONTROLLERS_DIR)/serial/serial_rx.cpp \
-	$(CONTROLLERS_DIR)/serial/serial_sensor.cpp \
 	$(CONTROLLERS_DIR)/start_stop.cpp \
 	$(CONTROLLERS_DIR)/tcu/buttonshift.cpp \
 	$(CONTROLLERS_DIR)/tcu/tcu.cpp \
@@ -74,6 +66,7 @@ CONTROLLERS_INC=\
 	$(CONTROLLERS_DIR)/algo/airmass \
 	$(CONTROLLERS_DIR)/algo/defaults \
 	$(CONTROLLERS_DIR)/algo/fuel \
+	$(CONTROLLERS_DIR)/algo/ignition \
 	$(CONTROLLERS_DIR)/engine_cycle \
 	$(CONTROLLERS_DIR)/trigger/decoders \
 	$(CONTROLLERS_DIR)/tcu \
@@ -82,7 +75,6 @@ CONTROLLERS_INC=\
 	$(CONTROLLERS_DIR)/core \
 	$(CONTROLLERS_DIR)/gauges \
 	$(CONTROLLERS_DIR)/math \
-	$(CONTROLLERS_DIR)/generated \
 	$(CONTROLLERS_DIR)/actuators \
 	$(CONTROLLERS_DIR)/actuators/gppwm \
 	$(CONTROLLERS_DIR)/serial \

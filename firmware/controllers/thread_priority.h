@@ -8,9 +8,9 @@
 
 #pragma once
 
-// ADC and ETB get highest priority - not much else actually runs the engine
-#define PRIO_ADC (NORMALPRIO + 10)
-#define PRIO_ETB (NORMALPRIO + 9)
+// Main loop gets highest priority - it does all the critical
+// non-interrupt work to actually run the engine
+#define PRIO_MAIN_LOOP (NORMALPRIO + 10)
 
 // GPIO chips should be fast and go right back to sleep, plus can be timing sensitive
 #define PRIO_GPIOCHIP (NORMALPRIO + 8)
@@ -31,6 +31,8 @@
 
 // Console thread 
 #define PRIO_CONSOLE (NORMALPRIO + 1)
+
+#define WIFI_THREAD_PRIORITY (NORMALPRIO)
 
 // Less important things
 #define PRIO_MMC (NORMALPRIO - 1)

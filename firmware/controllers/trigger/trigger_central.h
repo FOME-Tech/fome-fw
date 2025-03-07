@@ -25,7 +25,7 @@
 #endif
 
 class Engine;
-typedef void (*ShaftPositionListener)(trigger_event_e signal, uint32_t index, efitick_t edgeTimestamp);
+typedef void (*ShaftPositionListener)(TriggerEvent signal, uint32_t index, efitick_t edgeTimestamp);
 
 #define HAVE_CAM_INPUT() (isBrainPinValid(engineConfiguration->camInputs[0]))
 
@@ -38,8 +38,7 @@ class TriggerCentral final : public trigger_central_s {
 public:
 	TriggerCentral();
 	angle_t syncAndReport(int divider, int remainder);
-	void handleShaftSignal(trigger_event_e signal, efitick_t timestamp);
-	int getHwEventCounter(int index) const;
+	void handleShaftSignal(TriggerEvent signal, efitick_t timestamp);
 	void resetCounters();
 	void validateCamVvtCounters();
 	void updateWaveform();
@@ -137,7 +136,7 @@ public:
 	int vvtEventRiseCounter[CAM_INPUTS_COUNT];
 	int vvtEventFallCounter[CAM_INPUTS_COUNT];
 
-	angle_t getVVTPosition(uint8_t bankIndex, uint8_t camIndex);
+	expected<angle_t> getVVTPosition(uint8_t bankIndex, uint8_t camIndex);
 
 #if EFI_UNIT_TEST
 	// latest VVT event position (could be not synchronization event)
@@ -145,7 +144,11 @@ public:
 #endif // EFI_UNIT_TEST
 
 	// synchronization event position
-	angle_t vvtPosition[BANKS_COUNT][CAMS_PER_BANK];
+	struct VvtPos {
+		angle_t angle;
+		Timer t;
+	};
+	VvtPos vvtPosition[BANKS_COUNT][CAMS_PER_BANK];
 
 #if EFI_SHAFT_POSITION_INPUT
 	PrimaryTriggerDecoder triggerState;
@@ -215,3 +218,17 @@ void onConfigurationChangeTriggerCallback();
 #define SYMMETRICAL_TWELVE_TIMES_CRANK_SENSOR_DIVIDER 24
 
 TriggerCentral * getTriggerCentral();
+int getCrankDivider(operation_mode_e operationMode);
+
+constexpr bool isTriggerUpEvent(TriggerEvent event) {
+	switch (event) {
+		case TriggerEvent::PrimaryFalling:
+		case TriggerEvent::SecondaryFalling:
+			return false;
+		case TriggerEvent::PrimaryRising:
+		case TriggerEvent::SecondaryRising:
+			return true;
+	}
+
+	return false;
+}

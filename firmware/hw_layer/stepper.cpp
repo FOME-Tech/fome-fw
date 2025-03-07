@@ -18,7 +18,7 @@ float StepperMotorBase::getTargetPosition() const {
 void StepperMotorBase::setTargetPosition(float targetPositionSteps) {
 	// When the IAC position value change is insignificant (lower than this threshold), leave the poor valve alone
 	// When we get a larger change, actually update the target stepper position
-	if (absF(m_targetPosition - targetPositionSteps) >= 1) {
+	if (std::abs(m_targetPosition - targetPositionSteps) >= 1) {
 		m_targetPosition = targetPositionSteps;
 	}
 }
@@ -35,14 +35,14 @@ void StepperMotorBase::initialize(StepperHw *hardware, int totalSteps) {
 void StepperMotorBase::saveStepperPos(int pos) {
 	// use backup-power RTC registers to store the data
 #if EFI_PROD_CODE
-	backupRamSave(BACKUP_STEPPER_POS, pos + 1);
+	getBackupSram()->StepperPosition = pos + 1;
 #endif
 	postCurrentPosition();
 }
 
 int StepperMotorBase::loadStepperPos() {
 #if EFI_PROD_CODE
-	return (int)backupRamLoad(BACKUP_STEPPER_POS) - 1;
+	return getBackupSram()->StepperPosition - 1;
 #else
 	return 0;
 #endif
@@ -90,7 +90,7 @@ void StepperMotorBase::setInitialPosition(void) {
 		efiPrintf("Stepper: starting parking...");
 		// reset saved value
 		saveStepperPos(-1);
-		
+
 		/**
 		 * let's park the motor in a known position to begin with
 		 *
@@ -126,7 +126,8 @@ void StepperMotorBase::doIteration() {
 	int currentPosition = m_currentPosition;
 
 	// the stepper does not work if the main relay is turned off (it requires +12V)
-	if (!engine->isMainRelayEnabled()) {
+	if (!engine->isMainRelayEnabled() ||
+		Sensor::getOrZero(SensorType::BatteryVoltage) < engineConfiguration->minStepperVoltage) {
 		m_hw->pause();
 		return;
 	}
@@ -198,7 +199,7 @@ void StepperHw::pause(int divisor) const {
 }
 
 void StepperHw::setReactionTime(float ms) {
-	m_reactionTime = maxF(1, ms);
+	m_reactionTime = std::max(1.0f, ms);
 }
 
 bool StepDirectionStepper::step(bool positive) {

@@ -6,13 +6,12 @@
 #include "thread_controller.h"
 #include "tunerstudio.h"
 
-
 // Assert that the USB tx/rx buffers are large enough to fit one full packet
 static_assert(SERIAL_USB_BUFFERS_SIZE >= BLOCKING_FACTOR + 10);
 
 extern SerialUSBDriver EFI_CONSOLE_USB_DEVICE;
 
-class UsbChannel : public TsChannelBase {
+class UsbChannel final : public TsChannelBase {
 public:
 	UsbChannel(SerialUSBDriver& driver)
 		: TsChannelBase("USB"), m_channel(reinterpret_cast<BaseChannel*>(&driver))
@@ -48,7 +47,7 @@ struct UsbThread : public TunerstudioThread {
 	}
 };
 
-static UsbThread usbConsole;
+static CCM_OPTIONAL UsbThread usbConsole;
 
 void startUsbConsole() {
 	usbConsole.start();

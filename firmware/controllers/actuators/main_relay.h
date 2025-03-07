@@ -10,4 +10,5 @@ public:
 
 private:
 	Timer m_lastIgnitionTime;
+	Timer m_relayOnTimer;
 };

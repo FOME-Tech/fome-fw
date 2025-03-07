@@ -26,20 +26,18 @@ Usages:
     constexpr: "engine->fuelComputer"
 
   - name: ignition_state
-    folder: controllers/algo
+    folder: controllers/algo/ignition
     prepend: integration/rusefi_config_shared.txt
     constexpr: "engine->ignitionState"
 
   - name: knock_controller
     folder: controllers/engine_cycle
     prepend: integration/rusefi_config_shared.txt
-    output_name: knock
     constexpr: "___engine.module<KnockController>()"
     isPtr: true
 
   - name: high_pressure_fuel_pump
     folder: controllers/engine_cycle
-    output_name: hpfp
 
   - name: injector_model
     folder: controllers/algo/fuel
@@ -53,34 +51,33 @@ Usages:
   - name: antilag_system_state
     folder: controllers/algo
     prepend: integration/rusefi_config_shared.txt
-    output_name: als
 
   - name: boost_control
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: boost
     constexpr: "___engine.module<BoostController>()"
     isPtr: true
     conditional_compilation: "EFI_BOOST_CONTROL"
+    output_name: Boost
 
   - name: ac_control
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: ac
+    constexpr: "___engine.module<AcController>()"
+    isPtr: true
+    output_name: AC
 
   - name: fan_control
-    folder: controllers/actuators
-    output_name: [ "fan1", "fan2" ]
+    folder: controllers/modules/fan
+    output_name: [ "Fan 1", "Fan 2" ]
     constexpr: "___engine.module<FanControl1>()"
     isPtr: true
 
   - name: fuel_pump_control
-    folder: controllers/actuators
-    output_name: fuelPump
+    folder: controllers/modules/fuel_pump
 
   - name: main_relay
     folder: controllers/actuators
-    output_name: mainRelay
 
   #todo: handle ETB pid and Idle pid which point at same pid_state.txt
   # - name: pid_state
@@ -97,18 +94,20 @@ Usages:
 
   - name: trigger_central
     folder: controllers/trigger
-    withCDefines: true
     constexpr: "engine->triggerCentral"
+    prepend: integration/rusefi_config_shared.txt
     conditional_compilation: "EFI_SHAFT_POSITION_INPUT"
 
   - name: trigger_state
     folder: controllers/trigger
     prepend: integration/rusefi_config_shared.txt
-    output_name: [ "trg", "vvt1i", "vvt1e", "vvt2i", "vvt2e" ]
+    java: TriggerState.java
+    output_name: [ "Trg", "VVT B1I", "VVT B1E", "VVT B2I", "VVT B2E" ]
 
   - name: trigger_state_primary
     folder: controllers/trigger
     prepend: integration/rusefi_config_shared.txt
+    output_name: Trg
 
   - name: wall_fuel_state
     folder: controllers/algo
@@ -116,35 +115,32 @@ Usages:
   - name: idle_state
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: idle
+    output_name: Idle
 
   - name: electronic_throttle
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
-    output_name: [ "etb1", "etb2" ]
+    output_name: [ "ETB 1", "ETB 2" ]
 
   - name: wideband_state
     folder: controllers/sensors/
-    output_name: [ "wb1", "wb2" ]
+    output_name: [ "WBO 1", "WBO 2" ]
 
   - name: dc_motors
     folder: controllers/actuators
     prepend: integration/rusefi_config_shared.txt
     constexpr: "engine->dc_motors"
 
-  - name: sent_state
-    folder: controllers/sensors
-    prepend: integration/rusefi_config_shared.txt
-
   - name: throttle_model
     folder: controllers/math
-    output_name: throttle_model
+    output_name: Throttle model
 
   - name: vvt
     folder: controllers/actuators
     constexpr: "___engine.module<VvtController1>()"
     isPtr: true
     conditional_compilation: "EFI_VVT_PID"
+    output_name: [ "VVT B1I", "VVT B1E", "VVT B2I", "VVT B2E" ]
 
   - name: lambda_monitor
     folder: controllers/math

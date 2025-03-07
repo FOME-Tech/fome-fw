@@ -24,7 +24,7 @@ MockOutputPin::~MockOutputPin() { }
 MockExecutor::MockExecutor() { }
 MockExecutor::~MockExecutor() { }
 
-MockAirmass::MockAirmass() : AirmassVeModelBase(veTable) { }
+MockAirmass::MockAirmass() : AirmassVeModelBase(&veTable) { }
 MockAirmass::~MockAirmass() { }
 
 MockInjectorModel2::MockInjectorModel2() { }
@@ -35,3 +35,9 @@ MockStepperHardware::~MockStepperHardware() { }
 
 MockTsChannel::MockTsChannel() : TsChannelBase("mock") { }
 MockTsChannel::~MockTsChannel() { }
+
+MockIdleController::MockIdleController() { }
+MockIdleController::~MockIdleController() { }
+
+MockIgnitionController::MockIgnitionController() { }
+MockIgnitionController::~MockIgnitionController() { }

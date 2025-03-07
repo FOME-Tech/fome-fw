@@ -8,6 +8,20 @@
 
 typedef void (*schfunc_t)(void *);
 
+template<class To, class From>
+std::enable_if_t<
+	sizeof(To) == sizeof(From) &&
+	std::is_trivially_copyable_v<From> &&
+	std::is_trivially_copyable_v<To>,
+	To>
+// constexpr support needs compiler magic
+bit_cast(const From& src) noexcept
+{
+	To dst;
+	std::memcpy(&dst, &src, sizeof(To));
+	return dst;
+}
+
 class action_s {
 public:
 	// Default constructor constructs null action (ie, implicit bool conversion returns false)
@@ -16,13 +30,16 @@ public:
 	// Allow implicit conversion from schfunc_t to action_s
 	action_s(schfunc_t callback) : action_s(callback, nullptr) { }
 	action_s(schfunc_t callback, void *param) : m_callback(callback), m_param(param) { }
-	template <typename TParam>
-	action_s(schfunc_t callback, TParam& param) : m_callback(callback), m_param(&param) { }
 
 	// Allow any function that takes a single pointer parameter, so long as param is also of the same pointer type.
 	// This constructor means you shouldn't ever have to cast to schfunc_t on your own.
 	template <typename TArg>
-	action_s(void (*callback)(TArg*), TArg* param) : m_callback((schfunc_t)callback), m_param(param) { }
+	action_s(void (*callback)(TArg*), TArg* param) : m_callback(bit_cast<schfunc_t>(callback)), m_param(param) { }
+	template <typename TArg>
+	action_s(void (*callback)(TArg), TArg param) : m_callback(bit_cast<schfunc_t>(callback)), m_param(bit_cast<void*>(param)) {
+		// The object must be exactly the size of a pointer
+		static_assert(sizeof(TArg) <= sizeof(void*));
+	}
 
 	void execute();
 	schfunc_t getCallback() const;
@@ -47,29 +64,37 @@ struct scheduling_s {
 	virtual_timer_t timer;
 #endif /* EFI_SIGNAL_EXECUTOR_SLEEP */
 
-	/**
-	 * timestamp represented as 64-bit value of ticks since MCU start
-	 */
-	volatile efitick_t momentX = 0;
+	// timestamp represented as 64-bit value of ticks since MCU start
+	efitick_t momentX;
 
-	/**
-	 * Scheduler implementation uses a sorted linked list of these scheduling records.
-	 */
+	// Scheduler implementation uses a sorted linked list of these scheduling records.
 	scheduling_s *nextScheduling_s = nullptr;
 
 	action_s action;
 };
 #pragma pack(pop)
 
-struct ExecutorInterface {
+struct Scheduler {
 	/**
-	 * see also scheduleByAngle
+	 * @brief Schedule an action to be executed in the future.
+	 * 
+	 * scheduleByAngle is useful if you want to schedule something in terms of crank angle instead of time.
+	 *
+	 * @param msg Name of this event to use for logging in case of an error.
+	 * @param scheduling Storage to use for the scheduled event. If null, one will be used from the pool.
+	 * @param targetTime When to execute the specified action. If this time is in the past or
+	 *                   very near future, it may execute immediately.
+	 * @param action An action to execute at the specified time.
 	 */
-	virtual void scheduleByTimestamp(const char *msg, scheduling_s *scheduling, efitimeus_t timeUs, action_s action) = 0;
-	virtual void scheduleByTimestampNt(const char *msg, scheduling_s *scheduling, efitick_t timeNt, action_s action) = 0;
-	virtual void scheduleForLater(const char *msg, scheduling_s *scheduling, int delayUs, action_s action) = 0;
+	virtual void schedule(const char *msg, scheduling_s *scheduling, efitick_t targetTime, action_s action) = 0;
+
+	/**
+	 * @brief Cancel the specified scheduling_s so that, if currently scheduled, it does not execute.
+	 * 
+	 * @param scheduling The scheduling_s to cancel.
+	 */
 	virtual void cancel(scheduling_s* scheduling) = 0;
 };
 
-ExecutorInterface *getExecutorInterface();
+Scheduler *getScheduler();
 

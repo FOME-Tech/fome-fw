@@ -9,48 +9,44 @@
 #include "spark_logic.h"
 
 using ::testing::_;
+using ::testing::InSequence;
+using ::testing::StrictMock;
 
 TEST(ignition, twoCoils) {
 	EngineTestHelper eth(engine_type_e::FRANKENSO_BMW_M73_F);
 
 	// let's recalculate with zero timing so that we can focus on relation advance between cylinders
-	setArrayValues(engine->engineState.timingAdvance, 0.0f);
+	for (auto& c : engine->cylinders) c.setIgnitionTimingBtdc(0);
 	initializeIgnitionActions();
 
 	// first one to fire uses first coil
-	EXPECT_EQ(engine->ignitionEvents.elements[0].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[1].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[2].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[3].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[4].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[5].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[6].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[7].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[8].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[9].cylinderNumber, 6);
-	EXPECT_EQ(engine->ignitionEvents.elements[10].cylinderNumber, 0);
-	EXPECT_EQ(engine->ignitionEvents.elements[11].cylinderNumber, 6);
+	EXPECT_EQ(engine->ignitionEvents.elements[0].calculateIgnitionOutputMask(), (1 << 0));
+	// each subsequent event fires coil 1/6 alternating
+	EXPECT_EQ(engine->ignitionEvents.elements[1].calculateIgnitionOutputMask(), (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[2].calculateIgnitionOutputMask(), (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[3].calculateIgnitionOutputMask(), (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[4].calculateIgnitionOutputMask(), (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[5].calculateIgnitionOutputMask(), (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[6].calculateIgnitionOutputMask(), (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[7].calculateIgnitionOutputMask(), (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[8].calculateIgnitionOutputMask(), (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[9].calculateIgnitionOutputMask(), (1 << 6));
+	EXPECT_EQ(engine->ignitionEvents.elements[10].calculateIgnitionOutputMask(), (1 << 0));
+	EXPECT_EQ(engine->ignitionEvents.elements[11].calculateIgnitionOutputMask(), (1 << 6));
 
 	ASSERT_EQ(engine->ignitionEvents.elements[0].sparkAngle, 0);
-	ASSERT_EQ((void*)engine->ignitionEvents.elements[0].outputs[0], (void*)&enginePins.coils[0]);
-
+	ASSERT_EQ(engine->ignitionEvents.elements[0].calculateIgnitionOutputMask(), (1 << 0));
 
 	ASSERT_EQ(engine->ignitionEvents.elements[1].sparkAngle, 720 / 12);
-	ASSERT_EQ((void*)engine->ignitionEvents.elements[1].outputs[0], (void*)&enginePins.coils[6]);
+	ASSERT_EQ(engine->ignitionEvents.elements[1].calculateIgnitionOutputMask(), (1 << 6));
 
 	ASSERT_EQ(engine->ignitionEvents.elements[3].sparkAngle, 3 * 720 / 12);
-	ASSERT_EQ((void*)engine->ignitionEvents.elements[3].outputs[0], (void*)&enginePins.coils[6]);
+	ASSERT_EQ(engine->ignitionEvents.elements[3].calculateIgnitionOutputMask(), (1 << 6));
 }
 
 TEST(ignition, trailingSpark) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
-
-	/**
-	// TODO #3220: this feature makes this test sad, eventually remove this line (and the ability to disable it altogether)
-	 * I am pretty sure that it's about usage of improper method clearQueue() below see it's comment
-	 */
-	engine->enableOverdwellProtection = false;
 
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
 		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
@@ -72,19 +68,18 @@ TEST(ignition, trailingSpark) {
 	// still no RPM since need to cycles measure cycle duration
 	eth.fireTriggerEventsWithDuration(20);
 	ASSERT_EQ( 3000,  Sensor::getOrZero(SensorType::Rpm)) << "RPM#0";
-	eth.clearQueue();
 
 	/**
 	 * Trigger up - scheduling fuel for full engine cycle
 	 */
-	eth.fireRise(20);
+	eth.smartFireRise(20);
 
 	// Primary coil should be high
 	EXPECT_EQ(enginePins.coils[0].getLogicValue(), true);
 	EXPECT_EQ(enginePins.trailingCoils[0].getLogicValue(), false);
 
 	// Should be a TDC callback + spark firing
-	EXPECT_EQ(engine->executor.size(), 2);
+	EXPECT_EQ(engine->scheduler.size(), 2);
 
 	// execute all actions
 	eth.executeActions();
@@ -143,8 +138,60 @@ TEST(ignition, CylinderTimingTrim) {
 
 	// Check that each cylinder gets the expected timing
 	float unadjusted = 15;
-	EXPECT_NEAR(engine->engineState.timingAdvance[0], unadjusted - 4, EPS4D);
-	EXPECT_NEAR(engine->engineState.timingAdvance[1], unadjusted - 2, EPS4D);
-	EXPECT_NEAR(engine->engineState.timingAdvance[2], unadjusted + 2, EPS4D);
-	EXPECT_NEAR(engine->engineState.timingAdvance[3], unadjusted + 4, EPS4D);
+	EXPECT_NEAR(engine->cylinders[0].getIgnitionTimingBtdc(), unadjusted - 4, EPS4D);
+	EXPECT_NEAR(engine->cylinders[1].getIgnitionTimingBtdc(), unadjusted - 2, EPS4D);
+	EXPECT_NEAR(engine->cylinders[2].getIgnitionTimingBtdc(), unadjusted + 2, EPS4D);
+	EXPECT_NEAR(engine->cylinders[3].getIgnitionTimingBtdc(), unadjusted + 4, EPS4D);
+}
+
+TEST(ignition, oddCylinderWastedSpark) {
+	StrictMock<MockExecutor> mockExec;
+
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&mockExec);
+	engineConfiguration->cylindersCount = 1;
+	engineConfiguration->firingOrder = FO_1;
+	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
+
+	efitick_t nowNt1 = 1000000;
+	efitick_t nowNt2 = 2222222;
+
+
+	engine->rpmCalculator.oneDegreeUs = 100;
+
+	{
+		InSequence is;
+
+		// Should schedule one dwell+fire pair:
+		// Dwell 5 deg from now
+		float nt1deg = USF2NT(engine->rpmCalculator.oneDegreeUs);
+		efitick_t startTime = nowNt1 + nt1deg * 5;
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, _));
+		// Spark 15 deg from now
+		efitick_t endTime = startTime + nt1deg * 10;
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, _));
+
+
+		// Should schedule second dwell+fire pair, the out of phase copy
+		// Dwell 5 deg from now
+		startTime = nowNt2 + nt1deg * 5;
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, _));
+		// Spark 15 deg from now
+		endTime = startTime + nt1deg * 10;
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, _));
+	}
+
+	engine->ignitionState.sparkDwell = 1;
+
+	// dwell should start at 15 degrees ATDC and firing at 25 deg ATDC
+	engine->ignitionState.dwellAngle = 10;
+	engine->cylinders[0].setIgnitionTimingBtdc(-25);
+	engine->engineState.useOddFireWastedSpark = true;
+	engineConfiguration->minimumIgnitionTiming = -25;
+
+	// expect to schedule the on-phase dwell and spark (not the wasted spark copy)
+	onTriggerEventSparkLogic(nowNt1, 10, 30);
+
+	// expect to schedule second events, the out-of-phase dwell and spark (the wasted spark copy)
+	onTriggerEventSparkLogic(nowNt2, 360 + 10, 360 + 30);
 }

@@ -29,18 +29,14 @@ static void setDefaultIatTimingCorrection() {
 	copyArray(config->ignitionIatCorrTable[2], {0, 0, 0, 0, 0, 0, -1, -2});
 }
 
-static float getAdvanceForRpm(int rpm, float advanceMax) {
-        if (rpm >= 3000)
-            return advanceMax;
-        if (rpm < 600)
-            return 10;
-       return interpolateMsg("advance", 600, 10, 3000, advanceMax, rpm);
+static float getAdvanceForRpm(float rpm, float advanceMax) {
+	return interpolateClamped(600, 10, 3000, advanceMax, rpm);
 }
 
 #define round10(x) efiRound(x, 0.1)
 
-float getInitialAdvance(int rpm, float map, float advanceMax) {
-	map = minF(map, 100);
+float getInitialAdvance(float rpm, float map, float advanceMax) {
+	map = std::min(map, 100.0f);
 	float advance = getAdvanceForRpm(rpm, advanceMax);
 
 	if (rpm >= 3000)
@@ -61,7 +57,7 @@ static void buildTimingMap(float advanceMax) {
 	 */
 	for (int loadIndex = 0; loadIndex < IGN_LOAD_COUNT; loadIndex++) {
 		float load = config->ignitionLoadBins[loadIndex];
-		for (int rpmIndex = 0;rpmIndex<IGN_RPM_COUNT;rpmIndex++) {
+		for (int rpmIndex = 0; rpmIndex < IGN_RPM_COUNT; rpmIndex++) {
 			float rpm = config->ignitionRpmBins[rpmIndex];
 			config->ignitionTable[loadIndex][rpmIndex] = getInitialAdvance(rpm, load, advanceMax);
 		}
@@ -81,8 +77,8 @@ void setDefaultIgnition() {
 	// Dwell table
 	setConstantDwell(4);
 
-	setLinearCurve(engineConfiguration->dwellVoltageCorrVoltBins, 8, 15, 0.1);
-	setLinearCurve(engineConfiguration->dwellVoltageCorrValues, 1, 1, 1);
+	setLinearCurve(config->dwellVoltageCorrVoltBins, 8, 15, 0.1);
+	setLinearCurve(config->dwellVoltageCorrValues, 1, 1, 1);
 
 	// Multispark
 	setDefaultMultisparkParameters();
@@ -100,4 +96,18 @@ void setDefaultIgnition() {
 
 	// IAT correction
 	setDefaultIatTimingCorrection();
+
+	// Give default axes for cylinder trim tables
+	copyArray(config->ignTrimRpmBins, { 1000, 3000, 5000, 7000 });
+	copyArray(config->ignTrimLoadBins, { 20, 50, 80, 100 });
+
+	// Default axes for VE blends
+	for (size_t i = 0; i < efi::size(config->ignBlends); i++) {
+		auto& blend = config->ignBlends[i];
+		setLinearCurve(blend.loadBins, 0, 100, 10);
+		setLinearCurve(blend.rpmBins, 0, 7000);
+
+		setLinearCurve(blend.blendBins, 0, 100);
+		setLinearCurve(blend.blendValues, 0, 100);
+	}
 }

@@ -81,19 +81,25 @@ static max_32855_code getResultCode(uint32_t egtPacket) {
 }
 
 static uint32_t readEgtPacket(int egtChannel) {
-	uint32_t egtPacket;
-	if (driver == NULL) {
+	union {
+		uint32_t egtPacket;
+		uint8_t egtBytes[4];
+	};
+
+	if (!driver) {
 		return 0xFFFFFFFF;
 	}
 
 	spiStart(driver, &spiConfig[egtChannel]);
 	spiSelect(driver);
 
-	spiReceive(driver, sizeof(egtPacket), &egtPacket);
+	for (int i = sizeof(egtBytes) - 1; i >= 0; i--) {
+		egtBytes[i] = spiPolledExchange(driver, 0);
+	}
 
 	spiUnselect(driver);
 	spiStop(driver);
-	egtPacket = SWAP_UINT32(egtPacket);
+
 	return egtPacket;
 }
 
@@ -122,14 +128,14 @@ static void egtRead() {
 
 	max_32855_code code = getResultCode(egtPacket);
 
-	efiPrintf("egt %x code=%d %s", egtPacket, code, getMcCode(code));
+	efiPrintf("egt %x code=%d %s", (unsigned int)egtPacket, (unsigned int)code, getMcCode(code));
 
 	if (code != MC_INVALID) {
 		int refBits = ((egtPacket & 0xFFFF) / 16); // bits 15:4
 		float refTemp = refBits / 16.0;
 		efiPrintf("reference temperature %.2f", refTemp);
 
-		efiPrintf("EGT temperature %d", GET_TEMPERATURE_C(egtPacket));
+		efiPrintf("EGT temperature %lu", GET_TEMPERATURE_C(egtPacket));
 	}
 }
 

@@ -1,7 +1,7 @@
 grammar RusefiConfigGrammar;
 
 @header {
-	package com.rusefi.generated;
+    package com.rusefi.generated;
 }
 
 // ...be generous in line endings...
@@ -25,6 +25,7 @@ Bit: 'bit';
 Array: 'array';
 Scalar: 'scalar';
 Autoscale: 'autoscale';
+Resizable: 'resizable';
 
 ArrayDimensionSeparator: 'x';
 
@@ -54,13 +55,13 @@ integer: IntegerChars;
 floatNum: FloatChars | IntegerChars;
 
 expr
-    : floatNum			# EvalNumber
-    | '{' expr '}'		# EvalParens
-    | expr MUL expr		# EvalMul
-	| expr DIV expr		# EvalDiv
-	| expr ADD expr		# EvalAdd
-	| expr SUB expr		# EvalSub
-    | replacementIdent	# EvalReplacement
+    : floatNum          # EvalNumber
+    | '{' expr '}'      # EvalParens
+    | expr MUL expr     # EvalMul
+    | expr DIV expr     # EvalDiv
+    | expr ADD expr     # EvalAdd
+    | expr SUB expr     # EvalSub
+    | replacementIdent  # EvalReplacement
     ;
 
 numexpr: expr;
@@ -100,11 +101,19 @@ bitField: Bit identifier (',' QuotedString ',' QuotedString)? ('(' 'comment' ':'
 
 unionField: 'union' ENDL+ fields 'end_union';
 
+tableAxisSpec: ('min' integer 'max' integer|'num' integer);
+tableField: 'begin_table' ('maxsize' integer)? ENDL+
+    'table_rows' tableAxisSpec scalarField ENDL+
+    'table_cols' tableAxisSpec scalarField  ENDL+
+    ('table_values' scalarField ENDL+)+
+    'end_table';
+
 field
     : scalarField
     | arrayField
     | bitField
     | unionField
+    | tableField
     ;
 
 fields
@@ -121,8 +130,8 @@ enumRhs
     | enumVal (',' enumVal)*
     ;
 
-enumTypedefSuffix: /*ignored*/replacementIdent Bits ',' Datatype ',' '@OFFSET@' ',' '[' integer ':' integer ']' ',' enumRhs ;
-scalarTypedefSuffix: /*ignored*/integer Scalar ',' Datatype ',' '@OFFSET@' fieldOptionsList ;
+enumTypedefSuffix: /*ignored*/replacementIdent Bits ',' Datatype ',' '@OFFSET@' ',' '[' integer ':' integer ']' ',' enumRhs;
+scalarTypedefSuffix: /*ignored*/integer Scalar ',' Datatype ',' '@OFFSET@' fieldOptionsList;
 stringTypedefSuffix: /*ignored*/replacementIdent 'string' ',' 'ASCII' ',' '@OFFSET@' ',' numexpr;
 
 typedef: Custom identifier (enumTypedefSuffix | scalarTypedefSuffix | stringTypedefSuffix);

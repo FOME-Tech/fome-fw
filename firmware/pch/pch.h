@@ -37,6 +37,7 @@
 #include "hardware.h"
 #include "thread_priority.h"
 #include "tooth_logger.h"
+#include "main_loop.h"
 
 #if EFI_UNIT_TEST
 #include <gtest/gtest.h>
@@ -47,3 +48,5 @@
 #else
 #include "chprintf.h"
 #endif
+
+#include <atomic>

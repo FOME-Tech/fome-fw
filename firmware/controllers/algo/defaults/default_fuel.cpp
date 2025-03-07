@@ -4,31 +4,31 @@
 #include "table_helper.h"
 #include "mazda_miata_vvt.h"
 
-static void setBosch02880155868() {
+static void setBosch02880155868(injector_s& cfg) {
 	// http://www.boschdealer.com/specsheets/0280155868cs.jpg
-	engineConfiguration->injector.battLagCorrBins[0] = 6;
-	engineConfiguration->injector.battLagCorr[0] = 3.371;
+	cfg.battLagCorrBins[0] = 6;
+	cfg.battLagCorr[0] = 3.371;
 
-	engineConfiguration->injector.battLagCorrBins[1] = 8;
-	engineConfiguration->injector.battLagCorr[1] = 1.974;
+	cfg.battLagCorrBins[1] = 8;
+	cfg.battLagCorr[1] = 1.974;
 
-	engineConfiguration->injector.battLagCorrBins[2] = 10;
-	engineConfiguration->injector.battLagCorr[2] = 1.383;
+	cfg.battLagCorrBins[2] = 10;
+	cfg.battLagCorr[2] = 1.383;
 
-	engineConfiguration->injector.battLagCorrBins[3] = 11;
-	engineConfiguration->injector.battLagCorr[3] = 1.194;
+	cfg.battLagCorrBins[3] = 11;
+	cfg.battLagCorr[3] = 1.194;
 
-	engineConfiguration->injector.battLagCorrBins[4] = 12;
-	engineConfiguration->injector.battLagCorr[4] = 1.04;
+	cfg.battLagCorrBins[4] = 12;
+	cfg.battLagCorr[4] = 1.04;
 
-	engineConfiguration->injector.battLagCorrBins[5] = 13;
-	engineConfiguration->injector.battLagCorr[5] = 0.914;
+	cfg.battLagCorrBins[5] = 13;
+	cfg.battLagCorr[5] = 0.914;
 
-	engineConfiguration->injector.battLagCorrBins[6] = 14;
-	engineConfiguration->injector.battLagCorr[6] = 0.797;
+	cfg.battLagCorrBins[6] = 14;
+	cfg.battLagCorr[6] = 0.797;
 
-	engineConfiguration->injector.battLagCorrBins[7] = 15;
-	engineConfiguration->injector.battLagCorr[7] = 0.726;
+	cfg.battLagCorrBins[7] = 15;
+	cfg.battLagCorr[7] = 0.726;
 }
 
 static void setDefaultWarmupFuelEnrichment() {
@@ -86,6 +86,20 @@ static void setDefaultVETable() {
 
 	// Default baro table is all 1.0, we can't recommend a reasonable default here
 	setTable(config->baroCorrTable, 1);
+
+	// Give default axes for cylinder trim tables
+	copyArray(config->fuelTrimRpmBins, { 1000, 3000, 5000, 7000 });
+	copyArray(config->fuelTrimLoadBins, { 20, 50, 80, 100 });
+
+	// Default axes for VE blends
+	for (size_t i = 0; i < efi::size(config->veBlends); i++) {
+		auto& blend = config->veBlends[i];
+		setLinearCurve(blend.loadBins, 0, 100, 10);
+		setLinearCurve(blend.rpmBins, 0, 7000);
+
+		setLinearCurve(blend.blendBins, 0, 100);
+		setLinearCurve(blend.blendValues, 0, 100);
+	}
 }
 
 static void setDefaultFuelCutParameters() {
@@ -95,6 +109,9 @@ static void setDefaultFuelCutParameters() {
 	engineConfiguration->coastingFuelCutTps = 2;
 	engineConfiguration->coastingFuelCutMap = 30;
 	engineConfiguration->coastingFuelCutClt = 60;
+
+	copyArray(config->dfcoMapRpmValuesBins, { 1500, 2000, 3500, 5000 });
+	copyArray(config->dfcoMapRpmValues, { 30, 25, 20, 18 });
 }
 
 static void setDefaultStftSettings() {
@@ -183,30 +200,30 @@ void setDefaultWallWetting() {
 #endif // EFI_UNIT_TEST
 
 	// linear reasonable bins
-	setLinearCurve(engineConfiguration->wwCltBins, -40, 100, 1);
-	setLinearCurve(engineConfiguration->wwMapBins, 10, 80, 1);
+	setLinearCurve(config->wwCltBins, -40, 100, 1);
+	setLinearCurve(config->wwMapBins, 10, 80, 1);
 
 	// These values are derived from the GM factory tune for a gen3 LS engine
 	// Who knows if they're good for anything else, but at least they look nice?
 	static constexpr float tauClt[] = {
 		1.45, 1.30, 1.17, 1.05, 0.90, 0.82, 0.75, 0.70
 	};
-	copyArray(engineConfiguration->wwTauCltValues, tauClt);
+	copyArray(config->wwTauCltValues, tauClt);
 
 	static constexpr float tauMap[] = {
 		0.38, 0.55, 0.69, 0.86, 0.90, 0.95, 0.97, 1.00
 	};
-	copyArray(engineConfiguration->wwTauMapValues, tauMap);
+	copyArray(config->wwTauMapValues, tauMap);
 
 	static constexpr float betaClt[] = {
 		0.73, 0.66, 0.57, 0.46, 0.38, 0.31, 0.24, 0.19
 	};
-	copyArray(engineConfiguration->wwBetaCltValues, betaClt);
+	copyArray(config->wwBetaCltValues, betaClt);
 
 	static constexpr float betaMap[] = {
 		0.21, 0.40, 0.60, 0.79, 0.85, 0.90, 0.95, 1.00
 	};
-	copyArray(engineConfiguration->wwBetaMapValues, betaMap);
+	copyArray(config->wwBetaMapValues, betaMap);
 }
 
 static void setDefaultLambdaProtection() {
@@ -240,23 +257,28 @@ void setDefaultFuel() {
 	 * By the way http://users.erols.com/srweiss/tableifc.htm has a LOT of data
 	 */
 	engineConfiguration->injector.flow = 200;
+	engineConfiguration->injectorSecondary.flow = 200;
 	engineConfiguration->stoichRatioPrimary = STOICH_RATIO;
 
 	// 9.0 = E100 pure ethanol
 	engineConfiguration->stoichRatioSecondary = 9.0f;
 
 	// Injector deadtime
-	setBosch02880155868();
+	setBosch02880155868(engineConfiguration->injector);
+	setBosch02880155868(engineConfiguration->injectorSecondary);
 
 	// Tables
 	setFuelTablesLoadBin(10, 160);
 	setRpmTableBin(config->injPhaseRpmBins);
 
-	setRpmTableBin(engineConfiguration->tpsTspCorrValuesBins);
-	setLinearCurve(engineConfiguration->tpsTspCorrValues, 1, 1);
+	setRpmTableBin(config->tpsTspCorrValuesBins);
+	setLinearCurve(config->tpsTspCorrValues, 1, 1);
 
 	setDefaultVETable();
 	setDefaultLambdaTable();
+
+	setLinearCurve(config->injectorStagingLoadBins, 0, 100, 10);
+	setRpmTableBin(config->injectorStagingRpmBins);
 
 	setRpmTableBin(config->mapEstimateRpmBins);
 	setLinearCurve(config->mapEstimateTpsBins, 0, 100);

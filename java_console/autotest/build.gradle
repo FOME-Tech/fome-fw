@@ -1,11 +1,12 @@
 plugins {
     id 'java-library'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
 }
 
 apply from: '../../java_tools/dependencies.gradle'
 
 dependencies {
-    api project(':ecu_io')
+    implementation project(':ecu_io')
+    implementation project(':logging')
     implementation global_libs.junit
 }

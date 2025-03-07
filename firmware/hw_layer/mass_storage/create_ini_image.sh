@@ -4,7 +4,12 @@
 # hw_layer/mass_storage/create_ini_image.sh tunerstudio/generated/rusefi.ini hw_layer/mass_storage/ramdisk_image.h  112 test https://rusefi.com/s/test
 
 # fail on error
-set -e
+set -euo pipefail
+
+if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ] || [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
+  echo No image on $(uname -s)
+  exit 0
+fi
 
 FULL_INI=$1
 H_OUTPUT=$2

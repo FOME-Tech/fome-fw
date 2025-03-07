@@ -9,8 +9,10 @@ import com.rusefi.newparse.parsing.*;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.rusefi.VariableRegistry.AUTO_ENUM_SUFFIX;
 
@@ -52,6 +54,10 @@ public class ParseState implements DefinitionsState {
                 }
             }
         }
+    }
+
+    public Map<String, Definition> getDefinitions() {
+        return definitions;
     }
 
     private void handleIntDefinition(String name, int value) {
@@ -365,7 +371,7 @@ public class ParseState implements DefinitionsState {
 
         // First check if this is an instance of a struct
         if (structs.containsKey(type)) {
-            scope.structFields.add(new StructField(structs.get(type), name));
+            scope.addField(new StructField(structs.get(type), name));
             return;
         }
 
@@ -388,14 +394,14 @@ public class ParseState implements DefinitionsState {
                 // Merge the read-in options list with the default from the typedef (if exists)
                 handleFieldOptionsList(options, ctx.fieldOptionsList());
 
-                scope.structFields.add(new EnumField(bTypedef.type, type, name, bTypedef.endBit, bTypedef.values, options));
+                scope.addField(new EnumField(bTypedef.type, type, name, bTypedef.endBit, bTypedef.values, options));
                 return;
             } else if (typedef instanceof StringTypedef) {
                 options = new FieldOptions();
                 handleFieldOptionsList(options, ctx.fieldOptionsList());
 
                 StringTypedef sTypedef = (StringTypedef) typedef;
-                scope.structFields.add(new StringField(name, sTypedef.size, options.comment));
+                scope.addField(new StringField(name, sTypedef.size, options.comment));
                 return;
             } else {
                 // TODO: throw
@@ -413,7 +419,7 @@ public class ParseState implements DefinitionsState {
         // Merge the read-in options list with the default from the typedef (if exists)
         handleFieldOptionsList(options, ctx.fieldOptionsList());
 
-        scope.structFields.add(new ScalarField(Type.findByCtype(type).get(), name, options, autoscale));
+        scope.addField(new ScalarField(Type.findByCtype(type).get(), name, options, autoscale));
     }
 
     @Override
@@ -438,7 +444,7 @@ public class ParseState implements DefinitionsState {
         // there was no group, create and add it
         if (group == null) {
             group = new BitGroup();
-            scope.structFields.add(group);
+            scope.addField(group);
         }
 
         String comment = ctx.SemicolonedSuffix() == null ? null : ctx.SemicolonedSuffix().getText().substring(1).trim();
@@ -499,7 +505,7 @@ public class ParseState implements DefinitionsState {
             // iterate required for structs
             assert(iterate);
 
-            scope.structFields.add(new ArrayField<>(new StructField(structs.get(type), name), length, iterate));
+            scope.addField(new ArrayField<>(new StructField(structs.get(type), name), length, iterate));
             return;
         }
 
@@ -522,7 +528,7 @@ public class ParseState implements DefinitionsState {
 
                 EnumField prototype = new EnumField(bTypedef.type, type, name, bTypedef.endBit, bTypedef.values, options);
 
-                scope.structFields.add(new ArrayField<>(prototype, length, iterate));
+                scope.addField(new ArrayField<>(prototype, length, iterate));
                 return;
             } else if (typedef instanceof StringTypedef) {
                 StringTypedef sTypedef = (StringTypedef) typedef;
@@ -534,7 +540,7 @@ public class ParseState implements DefinitionsState {
                 handleFieldOptionsList(options, ctx.fieldOptionsList());
 
                 StringField prototype = new StringField(name, sTypedef.size, options.comment);
-                scope.structFields.add(new ArrayField<>(prototype, length, iterate));
+                scope.addField(new ArrayField<>(prototype, length, iterate));
                 return;
             } else {
                 throw new RuntimeException("didn't understand type " + type + " for element " + name);
@@ -554,7 +560,7 @@ public class ParseState implements DefinitionsState {
 
         ScalarField prototype = new ScalarField(Type.findByCtype(type).get(), name, options, autoscale);
 
-        scope.structFields.add(new ArrayField<>(prototype, length, iterate));
+        scope.addField(new ArrayField<>(prototype, length, iterate));
     }
 
     private int[] arrayDim = null;
@@ -571,8 +577,72 @@ public class ParseState implements DefinitionsState {
     }
 
     @Override
+    public void enterTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
+        // Make a new scope as if we're a struct, we'll chop it apart later
+        enterStruct(null);
+    }
+
+    @Override
+    public void exitTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
+        assert(scope != null);
+
+        ScalarField rowPrototype = (ScalarField)scope.structFields.get(0);
+        ScalarField colPrototype = (ScalarField)scope.structFields.get(1);
+        List<ScalarField> valuesPrototypes =
+                scope.structFields.stream()
+                        .skip(2)
+                        .map(f -> (ScalarField)f)
+                        .collect(Collectors.toList());
+        scope = scopes.pop();
+
+        int expectedValuesSize = valuesPrototypes.get(0).type.size;
+        assert(valuesPrototypes.stream().allMatch(v -> v.type.size == expectedValuesSize));
+
+        int maxRows;
+        int maxCols;
+
+        boolean isResizable = ctx.integer() != null;
+        if (isResizable) {
+            int minRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
+            maxRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(1).getText());
+            int minCols = Integer.parseInt(ctx.tableAxisSpec(1).integer(0).getText());
+            maxCols = Integer.parseInt(ctx.tableAxisSpec(1).integer(1).getText());
+
+            int maxValues = Integer.parseInt(ctx.integer().getText());
+
+            // Check that we can at least fit a minimum size table
+            assert(maxValues >= minRows * minCols);
+
+            throw new IllegalStateException("resizable table not supported yet");
+        } else {
+            int rowCount = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
+            int colCount = Integer.parseInt(ctx.tableAxisSpec(1).integer(0).getText());
+
+            maxRows = rowCount;
+            maxCols = colCount;
+        }
+
+        // Generate bins
+        scope.addField(new ArrayField<>(rowPrototype, new int[] {maxRows}, false));
+        scope.addField(new ArrayField<>(colPrototype, new int[] {maxCols}, false));
+
+        // Generate table
+        Function<ScalarField, ArrayField<ScalarField>> converter =
+                prototype -> new ArrayField<>(prototype, new int[]{maxCols, maxRows}, false);
+        if (valuesPrototypes.size() > 1) {
+            scope.addField(new Union(
+                    valuesPrototypes.stream()
+                            .map(converter)
+                            .collect(Collectors.toList())
+            ));
+        } else {
+            scope.addField(converter.apply(valuesPrototypes.get(0)));
+        }
+    }
+
+    @Override
     public void enterUnusedField(RusefiConfigGrammarParser.UnusedFieldContext ctx) {
-        scope.structFields.add(new UnusedField(Integer.parseInt(ctx.integer().getText())));
+        scope.addField(new UnusedField(Integer.parseInt(ctx.integer().getText())));
     }
 
     @Override
@@ -609,7 +679,7 @@ public class ParseState implements DefinitionsState {
         scope = scopes.pop();
 
         // Lastly, add the union to the scope
-        scope.structFields.add(u);
+        scope.addField(u);
     }
 
     private final Stack<Double> evalStack = new Stack<>();
@@ -681,5 +751,11 @@ public class ParseState implements DefinitionsState {
 
     static class Scope {
         public final List<Field> structFields = new ArrayList<>();
+
+        public void addField(Field f) {
+            // TODO: check for duplicate fields
+
+            structFields.add(f);
+        }
     }
 }

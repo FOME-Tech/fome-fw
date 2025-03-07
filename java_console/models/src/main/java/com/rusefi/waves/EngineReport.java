@@ -16,8 +16,6 @@ import static com.rusefi.config.generated.Fields.PROTOCOL_ES_UP;
  *
  * Date: 6/23/13
  * Andrey Belomutskiy, (c) 2013-2020
- *
- * @see SensorSnifferPane
  */
 public class EngineReport {
     public static final String ENGINE_CHART = Fields.PROTOCOL_ENGINE_SNIFFER;
@@ -125,8 +123,8 @@ public class EngineReport {
                 continue;
             }
 
-            String upString[] = array[index].split("_");
-            String downString[] = array[index + 2].split("_");
+            String[] upString = array[index].split("_");
+            String[] downString = array[index + 2].split("_");
             try {
                 int upTime = Integer.parseInt(array[index + 1]);
                 int downTime = Integer.parseInt(array[index + 3]);

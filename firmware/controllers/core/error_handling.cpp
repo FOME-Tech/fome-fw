@@ -9,6 +9,8 @@
 
 #include "backup_ram.h"
 
+#include "malfunction_central.h"
+
 static critical_msg_t warningBuffer;
 static critical_msg_t criticalErrorMessageBuffer;
 
@@ -17,23 +19,23 @@ bool hasFirmwareErrorFlag = false;
 const char *dbg_panic_file;
 int dbg_panic_line;
 
-const char* getCriticalErrorMessage(void) {
+const char* getCriticalErrorMessage() {
 	return criticalErrorMessageBuffer;
 }
 
 #if EFI_PROD_CODE
 void checkLastBootError() {
 	auto sramState = getBackupSram();
-	
-	switch (sramState->Cookie) {
+
+	switch (sramState->Err.Cookie) {
 	case ErrorCookie::FirmwareError:
-		efiPrintf("Last boot had firmware error: %s", sramState->ErrorString);
+		efiPrintf("Last boot had firmware error: %s", sramState->Err.ErrorString);
 		break;
 	case ErrorCookie::HardFault: {
-		efiPrintf("Last boot had hard fault type: %x addr: %x CSFR: %x", sramState->FaultType, sramState->FaultAddress, sramState->Csfr);
+		efiPrintf("Last boot had hard fault type: %x addr: %x CSFR: %x", (unsigned int)sramState->Err.FaultType, (unsigned int)sramState->Err.FaultAddress, (unsigned int)sramState->Err.Csfr);
 
 		// Print out the context as a sequence of uintptr
-		uintptr_t* data = reinterpret_cast<uintptr_t*>(&sramState->FaultCtx);
+		uintptr_t* data = reinterpret_cast<uintptr_t*>(&sramState->Err.FaultCtx);
 		for (size_t i = 0; i < sizeof(port_extctx) / sizeof(uintptr_t); i++) {
 			efiPrintf("Fault ctx %d: %x", i, data[i]);
 		}
@@ -46,29 +48,25 @@ void checkLastBootError() {
 	}
 
 	// Reset cookie so we don't print it again.
-	sramState->Cookie = ErrorCookie::None;
+	sramState->Err.Cookie = ErrorCookie::None;
 
-	if (sramState->BootCountCookie != 0xdeadbeef) {
-		sramState->BootCountCookie = 0xdeadbeef;
-		sramState->BootCount = 0;
+	if (sramState->Err.BootCountCookie != 0xdeadbeef) {
+		sramState->Err.BootCountCookie = 0xdeadbeef;
+		sramState->Err.BootCount = 0;
 	}
 
-	efiPrintf("Power cycle count: %d", sramState->BootCount);
-	sramState->BootCount++;
+	efiPrintf("Power cycle count: %lu", sramState->Err.BootCount);
+	sramState->Err.BootCount++;
 }
 
 void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint32_t csfr) {
 	auto sramState = getBackupSram();
-	sramState->Cookie = ErrorCookie::HardFault;
-	sramState->FaultType = type;
-	sramState->FaultAddress = faultAddress;
-	sramState->Csfr = csfr;
-	memcpy(&sramState->FaultCtx, ctx, sizeof(port_extctx));
+	sramState->Err.Cookie = ErrorCookie::HardFault;
+	sramState->Err.FaultType = type;
+	sramState->Err.FaultAddress = faultAddress;
+	sramState->Err.Csfr = csfr;
+	memcpy(&sramState->Err.FaultCtx, ctx, sizeof(port_extctx));
 }
-
-extern ioportid_t criticalErrorLedPort;
-extern ioportmask_t criticalErrorLedPin;
-extern uint8_t criticalErrorLedState;
 #endif /* EFI_PROD_CODE */
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
@@ -79,8 +77,10 @@ void chDbgPanic3(const char *msg, const char * file, int line) {
 	__asm volatile("BKPT #0\n");
 #endif
 
-	if (hasOsPanicError())
+	if (hasOsPanicError()) {
 		return;
+	}
+
 	dbg_panic_file = file;
 	dbg_panic_line = line;
 #if CH_DBG_SYSTEM_STATE_CHECK
@@ -126,8 +126,9 @@ WarningCodeState unitTestWarningCodeState;
  * @returns TRUE in case there were warnings recently
  */
 bool warning(ObdCode code, const char *fmt, ...) {
-	if (hasFirmwareErrorFlag)
+	if (hasFirmwareErrorFlag) {
 		return true;
+	}
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
 	// we just had this same warning, let's not spam
@@ -156,11 +157,6 @@ bool warning(ObdCode code, const char *fmt, ...) {
 #endif /* EFI_SIMULATOR || EFI_PROD_CODE */
 	return false;
 }
-
-const char* getWarningMessage(void) {
-	return warningBuffer;
-}
-
 
 #if EFI_CLOCK_LOCKS
 uint32_t lastLockTime;
@@ -213,8 +209,12 @@ void onUnlockHook(void) {
 
 void firmwareError(ObdCode code, const char *fmt, ...) {
 #if EFI_PROD_CODE
-	if (hasFirmwareErrorFlag)
+	if (hasFirmwareErrorFlag) {
 		return;
+	}
+
+	hasFirmwareErrorFlag = true;
+
 	getLimpManager()->fatalError();
 	engine->engineState.warnings.addWarningCode(code);
 #ifdef EFI_PRINT_ERRORS_AS_WARNINGS
@@ -223,11 +223,11 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 	chvsnprintf(warningBuffer, sizeof(warningBuffer), fmt, ap);
 	va_end(ap);
 #endif
-	palWritePad(criticalErrorLedPort, criticalErrorLedPin, criticalErrorLedState);
+	enginePins.errorLedPin.setValue(1);
 	turnAllPinsOff();
 	enginePins.communicationLedPin.setValue(1);
+	setError(true, code);
 
-	hasFirmwareErrorFlag = true;
 	if (indexOf(fmt, '%') == -1) {
 		/**
 		 * in case of simple error message let's reduce stack usage
@@ -252,8 +252,8 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 
 	auto sramState = getBackupSram();
 	if (sramState != nullptr) {
-		strncpy(sramState->ErrorString, criticalErrorMessageBuffer, efi::size(sramState->ErrorString));
-		sramState->Cookie = ErrorCookie::FirmwareError;
+		strncpy(sramState->Err.ErrorString, criticalErrorMessageBuffer, efi::size(sramState->Err.ErrorString));
+		sramState->Err.Cookie = ErrorCookie::FirmwareError;
 	}
 #else
 

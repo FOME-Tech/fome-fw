@@ -1,6 +1,8 @@
 
+#include "pch.h"
 #include "engine_configuration.h"
 #include "sensor.h"
+#include "rusefi/interpolation.h"
 
 #include "dfco.h"
 
@@ -14,18 +16,33 @@ bool DfcoController::getState() const {
 	const auto map = Sensor::get(SensorType::Map);
 
 	// If some sensor is broken, inhibit DFCO
-	if (!tps || !clt || !map) {
+	if (!tps || !clt) {
+		return false;
+	}
+
+	// MAP sensor is optional, only inhibit if the sensor is present but broken
+	bool hasMap = Sensor::hasSensor(SensorType::Map);
+	if (hasMap && !map) {
 		return false;
 	}
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	float vss = Sensor::getOrZero(SensorType::VehicleSpeed);
 
-	bool mapActivate = map.Value < engineConfiguration->coastingFuelCutMap;
+	// Setting to allow clutch to block DFCO activation
+	bool clutchActivate = !engineConfiguration->disableFuelCutOnClutch 
+		|| !isBrainPinValid(engineConfiguration->clutchUpPin)
+		|| engine->engineState.clutchUpState;
+
+	float mapThreshold = engineConfiguration->useTableForDfcoMap ?
+		interpolate2d(rpm, config->dfcoMapRpmValuesBins, config->dfcoMapRpmValues) :
+		engineConfiguration->coastingFuelCutMap;
+
+	bool mapActivate = !hasMap || !m_mapHysteresis.test(map.value_or(0), mapThreshold + 1, mapThreshold - 1);
 	bool tpsActivate = tps.Value < engineConfiguration->coastingFuelCutTps;
 	bool cltActivate = clt.Value > engineConfiguration->coastingFuelCutClt;
-	// True if throttle, MAP, and CLT are all acceptable for DFCO to occur
-	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate;
+	// True if throttle, MAP, CLT, and Clutch are all acceptable for DFCO to occur
+	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate && clutchActivate;
 
 	bool rpmActivate = (rpm > engineConfiguration->coastingFuelCutRpmHigh);
 	bool rpmDeactivate = (rpm < engineConfiguration->coastingFuelCutRpmLow);
@@ -74,4 +91,23 @@ bool DfcoController::cutFuel() const {
 
 float DfcoController::getTimeSinceCut() const {
 	return m_timeSinceCut.getElapsedSeconds();
+}
+
+float DfcoController::getTimingRetard() const {
+	float cutTiming = clampF(0, engineConfiguration->dfcoRetardDeg, 30);
+
+	if (m_isDfco) {
+		// While cut, always retard timing
+		return cutTiming;
+	} else {
+		float timeSinceCut = m_timeSinceCut.getElapsedSeconds();
+		float rampInTime = engineConfiguration->dfcoRetardRampInTime;
+
+		if (timeSinceCut > rampInTime) {
+			// Normal operation, no retard
+			return 0;
+		} else {
+			return interpolateClamped(0, cutTiming, 0.5, 0, timeSinceCut);
+		}
+	}
 }

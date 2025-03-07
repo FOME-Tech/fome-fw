@@ -28,7 +28,7 @@ TEST(LuaVag, Checksum) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0x60);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0x60);
 }
 
 // LSB (Least Significant Byte comes first) "Intel"
@@ -59,7 +59,7 @@ TEST(LuaVag, packMotor1) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0);
 }
 
 #define realMotor1Packet "\ndata = { 0x00, 0x27, 0x8A, 0x1A, 0x36, 0x4F, 0x19, 0x38}\n "
@@ -72,7 +72,7 @@ TEST(LuaVag, unpackMotor1_engine_torq) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 15.21);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 15.21);
 }
 
 TEST(LuaVag, unpackMotor1_rpm) {
@@ -83,7 +83,7 @@ TEST(LuaVag, unpackMotor1_rpm) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 1698.5);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 1698.5);
 }
 
 TEST(LuaVag, unpackMotor1_inner_torq) {
@@ -94,7 +94,7 @@ TEST(LuaVag, unpackMotor1_inner_torq) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 21.6);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 21.6);
 }
 
 TEST(LuaVag, unpackMotor1_tps) {
@@ -105,7 +105,7 @@ TEST(LuaVag, unpackMotor1_tps) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 31.6);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 31.6);
 }
 
 TEST(LuaVag, unpackMotor1_torq_loss) {
@@ -116,7 +116,7 @@ TEST(LuaVag, unpackMotor1_torq_loss) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 9.75);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 9.75);
 }
 
 
@@ -128,7 +128,7 @@ TEST(LuaVag, unpackMotor1_torq_req) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 21.84);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 21.84);
 }
 
 #define realMotor3Packet "\ndata = { 0x00, 0x62, 0xFA, 0xDA, 0x22, 0x00, 0x00, 0xFA}\n "
@@ -156,7 +156,7 @@ TEST(LuaVag, packMotor3) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 }
 
 
@@ -168,7 +168,7 @@ TEST(LuaVag, unpackMotor3_tps) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 100);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 100);
 }
 
 TEST(LuaVag, unpackMotor3_pps) {
@@ -179,7 +179,7 @@ TEST(LuaVag, unpackMotor3_pps) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 100);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 100);
 }
 
 TEST(LuaVag, setBitRange) {
@@ -197,7 +197,7 @@ TEST(LuaVag, setBitRange) {
 		end
 		)";
 
-	    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
+		EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 	}
 
 	{
@@ -214,7 +214,7 @@ TEST(LuaVag, setBitRange) {
 		end
 		)";
 
-	    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
+		EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 	}
 
 
@@ -232,7 +232,7 @@ TEST(LuaVag, setBitRange) {
 		end
 		)";
 
-	    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
+		EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 	}
 
 }
@@ -245,7 +245,7 @@ TEST(LuaVag, unpackMotor3_iat) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 25.5);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 25.5);
 }
 
 TEST(LuaVag, unpackMotor3_desired_wheel_torque) {
@@ -256,7 +256,7 @@ TEST(LuaVag, unpackMotor3_desired_wheel_torque) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 284.7);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 284.7);
 }
 
 #define realMotor6Packet "\ndata = { 0x3D, 0x54, 0x69, 0x7E, 0xFE, 0xFF, 0xFF, 0x80}\n "
@@ -269,7 +269,7 @@ TEST(LuaVag, unpackMotor6_actual_torq) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 40.95);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 40.95);
 }
 
 TEST(LuaVag, unpackMotor6_target_torq) {
@@ -280,7 +280,7 @@ TEST(LuaVag, unpackMotor6_target_torq) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 32.76);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 32.76);
 }
 
 TEST(LuaVag, unpackMotor6_feedback) {
@@ -291,7 +291,7 @@ TEST(LuaVag, unpackMotor6_feedback) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 99.45);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 99.45);
 }
 
 TEST(LuaVag, packMotor6) {
@@ -316,7 +316,7 @@ TEST(LuaVag, packMotor6) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 }
 
 TEST(LuaVag, ChecksumMotor6) {
@@ -327,7 +327,7 @@ TEST(LuaVag, ChecksumMotor6) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0x3D);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0x3D);
 }
 
 #define realMotor5Packet "\ndata = { 0x1C, 0x08, 0xF3, 0x55, 0x19, 0x00, 0x06, 0xAD}\n "
@@ -340,7 +340,7 @@ TEST(LuaVag, ChecksumMotor5) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0xAD);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0xAD);
 }
 
 TEST(LuaVag, unpackMotor5_fuel) {
@@ -351,5 +351,5 @@ TEST(LuaVag, unpackMotor5_fuel) {
 	end
 	)";
 
-    EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 22003);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 22003);
 }

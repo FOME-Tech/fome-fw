@@ -18,7 +18,7 @@ mass_t idealGasLaw(float volume, float pressure, float temperature);
 
 class SpeedDensityBase : public AirmassVeModelBase {
 protected:
-	explicit SpeedDensityBase(const ValueProvider3D& veTable) : AirmassVeModelBase(veTable) {}
+	explicit SpeedDensityBase(const ValueProvider3D* veTable) : AirmassVeModelBase(veTable) {}
 
 public:
 	static mass_t getAirmassImpl(float ve, float manifoldPressure, float temperature);

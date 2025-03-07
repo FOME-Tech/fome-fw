@@ -34,7 +34,6 @@
 #include "speed_density_base.h"
 #include "lua_hooks.h"
 
-extern fuel_Map3D_t veMap;
 static mapEstimate_Map3D_t mapEstimationTable;
 
 #if EFI_ENGINE_CONTROL
@@ -115,9 +114,9 @@ float getRunningFuel(float baseFuel) {
 	float postCrankingFuelCorrection = engine->fuelComputer.running.postCrankingFuelCorrection;
 	float baroCorrection = engine->engineState.baroCorrection;
 
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(iatCorrection), "NaN iatCorrection", 0);
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(cltCorrection), "NaN cltCorrection", 0);
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(postCrankingFuelCorrection), "NaN postCrankingFuelCorrection", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(iatCorrection), "NaN iatCorrection", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(cltCorrection), "NaN cltCorrection", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(postCrankingFuelCorrection), "NaN postCrankingFuelCorrection", 0);
 
 	float correction = baroCorrection * iatCorrection * cltCorrection * postCrankingFuelCorrection;
 
@@ -131,7 +130,7 @@ float getRunningFuel(float baseFuel) {
 
 	float runningFuel = baseFuel * correction;
 
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(runningFuel), "NaN runningFuel", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(runningFuel), "NaN runningFuel", 0);
 
 	// Publish output state
 	engine->fuelComputer.running.baseFuel = baseFuel * 1000;
@@ -141,9 +140,9 @@ float getRunningFuel(float baseFuel) {
 	return runningFuel;
 }
 
-static SpeedDensityAirmass sdAirmass(veMap, mapEstimationTable);
-static MafAirmass mafAirmass(veMap);
-static AlphaNAirmass alphaNAirmass(veMap);
+static SpeedDensityAirmass sdAirmass(nullptr, mapEstimationTable);
+static MafAirmass mafAirmass;
+static AlphaNAirmass alphaNAirmass;
 
 AirmassModelBase* getAirmassModel(engine_load_mode_e mode) {
 	switch (mode) {
@@ -167,7 +166,7 @@ float getMaxAirflowAtMap(float map) {
 }
 
 // Per-cylinder base fuel mass
-static float getBaseFuelMass(int rpm) {
+static float getBaseFuelMass(float rpm) {
 	ScopePerf perf(PE::GetBaseFuel);
 
 	// airmass modes - get airmass first, then convert to fuel
@@ -195,7 +194,7 @@ static float getBaseFuelMass(int rpm) {
 	baseFuelMass *= engineConfiguration->globalFuelCorrection;
 	engine->engineState.baseFuel = baseFuelMass;
 
-	if (cisnan(baseFuelMass)) {
+	if (std::isnan(baseFuelMass)) {
 		// todo: we should not have this here but https://github.com/rusefi/rusefi/issues/1690 
 		return 0;
 	}
@@ -204,11 +203,11 @@ static float getBaseFuelMass(int rpm) {
 }
 
 angle_t getInjectionOffset(float rpm, float load) {
-	if (cisnan(rpm)) {
+	if (std::isnan(rpm)) {
 		return 0; // error already reported
 	}
 
-	if (cisnan(load)) {
+	if (std::isnan(load)) {
 		return 0; // error already reported
 	}
 
@@ -218,7 +217,7 @@ angle_t getInjectionOffset(float rpm, float load) {
 		config->injPhaseRpmBins, rpm
 	);
 
-	if (cisnan(value)) {
+	if (std::isnan(value)) {
 		// we could be here while resetting configuration for example
 		// huh? what? when do we have RPM while resetting configuration? is that CI edge case? shall we fix CI?
 		warning(ObdCode::CUSTOM_ERR_6569, "phase map not ready");
@@ -249,9 +248,7 @@ int getNumberOfInjections(injection_mode_e mode) {
 	}
 }
 
-float getInjectionModeDurationMultiplier() {
-	injection_mode_e mode = getCurrentInjectionMode();
-
+float getInjectionModeDurationMultiplier(injection_mode_e mode) {
 	switch (mode) {
 	case IM_SIMULTANEOUS: {
 		auto cylCount = engineConfiguration->cylindersCount;
@@ -274,8 +271,16 @@ float getInjectionModeDurationMultiplier() {
 	}
 }
 
-percent_t getInjectorDutyCycle(int rpm) {
-	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(engineConfiguration->injectionMode);
+percent_t getInjectorDutyCycle(float rpm) {
+	auto mode = getCurrentInjectionMode();
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(mode);
+	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
+	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
+}
+
+percent_t getInjectorDutyCycleStage2(float rpm) {
+	auto mode = getCurrentInjectionMode();
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(mode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }
@@ -292,38 +297,36 @@ static float getCycleFuelMass(bool isCranking, float baseFuelMass) {
  * @returns	Mass of each individual fuel injection, in grams
  *     in case of single point injection mode the amount of fuel into all cylinders, otherwise the amount for one cylinder
  */
-float getInjectionMass(int rpm) {
+float getCycleInjectionMass(float rpm, bool isCranking) {
 	ScopePerf perf(PE::GetInjectionDuration);
 
 #if EFI_SHAFT_POSITION_INPUT
 	// Always update base fuel - some cranking modes use it
 	float baseFuelMass = getBaseFuelMass(rpm);
 
-	bool isCranking = engine->rpmCalculator.isCranking();
 	float cycleFuelMass = getCycleFuelMass(isCranking, baseFuelMass);
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(cycleFuelMass), "NaN cycleFuelMass", 0);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(cycleFuelMass), "NaN cycleFuelMass", 0);
 
 	if (engine->module<DfcoController>()->cutFuel()) {
 		// If decel fuel cut, zero out fuel
 		cycleFuelMass = 0;
 	}
 
-	float durationMultiplier = getInjectionModeDurationMultiplier();
-	float injectionFuelMass = cycleFuelMass * durationMultiplier;
-
 	// Prepare injector flow rate & deadtime
-	engine->module<InjectorModel>()->prepare();
+	engine->module<InjectorModelPrimary>()->prepare();
 
-	floatms_t tpsAccelEnrich = engine->tpsAccelEnrichment.getTpsEnrichment();
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !cisnan(tpsAccelEnrich), "NaN tpsAccelEnrich", 0);
+	if (engineConfiguration->enableStagedInjection) {
+		engine->module<InjectorModelSecondary>()->prepare();
+	}
+
+	floatms_t tpsAccelEnrich = engine->module<TpsAccelEnrichment>()->getTpsEnrichment();
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(tpsAccelEnrich), "NaN tpsAccelEnrich", 0);
 	engine->engineState.tpsAccelEnrich = tpsAccelEnrich;
 
 	// For legacy reasons, the TPS accel table is in units of milliseconds, so we have to convert BACK to mass
-	float tpsAccelPerInjection = durationMultiplier * tpsAccelEnrich;
+	float tpsFuelMass = engine->module<InjectorModelPrimary>()->getFuelMassForDuration(tpsAccelEnrich);
 
-	float tpsFuelMass = engine->module<InjectorModel>()->getFuelMassForDuration(tpsAccelPerInjection);
-
-	return injectionFuelMass + tpsFuelMass;
+	return cycleFuelMass + tpsFuelMass;
 #else
 	return 0;
 #endif
@@ -350,15 +353,6 @@ float getCltFuelCorrection() {
 	return interpolate2d(clt.Value, config->cltFuelCorrBins, config->cltFuelCorr);
 }
 
-angle_t getCltTimingCorrection() {
-	const auto clt = Sensor::get(SensorType::Clt);
-
-	if (!clt)
-		return 0; // this error should be already reported somewhere else, let's just handle it
-
-	return interpolate2d(clt.Value, config->cltTimingBins, config->cltTimingExtra);
-}
-
 float getIatFuelCorrection() {
 	const auto iat = Sensor::get(SensorType::Iat);
 
@@ -379,7 +373,7 @@ float getBaroCorrection() {
 			config->baroCorrRpmBins, Sensor::getOrZero(SensorType::Rpm)
 		);
 
-		if (cisnan(correction) || correction < 0.01) {
+		if (std::isnan(correction) || correction < 0.01) {
 			warning(ObdCode::OBD_Barometric_Press_Circ_Range_Perf, "Invalid baro correction %f", correction);
 			return 1;
 		}
@@ -390,7 +384,7 @@ float getBaroCorrection() {
 	}
 }
 
-percent_t getFuelALSCorrection(int rpm) {
+percent_t getFuelALSCorrection(float rpm) {
 #if EFI_ANTILAG_SYSTEM
 		if (engine->antilagController.isAntilagCondition) {
 			float throttleIntent = Sensor::getOrZero(SensorType::DriverThrottleIntent);
@@ -399,7 +393,7 @@ percent_t getFuelALSCorrection(int rpm) {
 			config->alsFuelAdjustmentLoadBins, throttleIntent,
 			config->alsFuelAdjustmentrpmBins, rpm
 		);
-		return AlsFuelAdd;	
+		return AlsFuelAdd;
 	} else
 #endif /* EFI_ANTILAG_SYSTEM */
 	{
@@ -429,7 +423,7 @@ float getStandardAirCharge() {
 	return idealGasLaw(cylDisplacement, 101.325f, 273.15f + 20.0f);
 }
 
-float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
+float getCylinderFuelTrim(size_t cylinderNumber, float rpm, float fuelLoad) {
 	auto trimPercent = interpolate3d(
 		config->fuelTrims[cylinderNumber].table,
 		config->fuelTrimLoadBins, fuelLoad,
@@ -439,6 +433,32 @@ float getCylinderFuelTrim(size_t cylinderNumber, int rpm, float fuelLoad) {
 	// Convert from percent +- to multiplier
 	// 5% -> 1.05
 	return (100 + trimPercent) / 100;
+}
+
+static Hysteresis stage2Hysteresis;
+
+float getStage2InjectionFraction(float rpm, float load) {
+	if (!engineConfiguration->enableStagedInjection) {
+		return 0;
+	}
+
+	float frac = 0.01f * interpolate3d(
+		config->injectorStagingTable,
+		config->injectorStagingLoadBins, load,
+		config->injectorStagingRpmBins, rpm
+	);
+
+	// don't allow very small fraction, with some hysteresis
+	if (!stage2Hysteresis.test(frac, 0.1, 0.03)) {
+		return 0;
+	}
+
+	// Clamp to 90%
+	if (frac > 0.9) {
+		frac = 0.9;
+	}
+
+	return frac;
 }
 
 #endif

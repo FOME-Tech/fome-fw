@@ -10,10 +10,10 @@
 
 #include "engine_module.h"
 #include "rusefi_types.h"
-#include "periodic_task.h"
 #include "efi_pid.h"
 #include "sensor.h"
 #include "idle_state_generated.h"
+#include "biquad.h"
 
 struct IIdleController {
 	enum class Phase : uint8_t {
@@ -24,15 +24,15 @@ struct IIdleController {
 		Running,	// On throttle
 	};
 
-	virtual Phase determinePhase(int rpm, int targetRpm, SensorResult tps, float vss, float crankingTaperFraction) = 0;
+	virtual Phase determinePhase(float rpm, float targetRpm, SensorResult tps, float vss, float crankingTaperFraction) = 0;
 	virtual int getTargetRpm(float clt) = 0;
 	virtual float getCrankingOpenLoop(float clt) const = 0;
 	virtual float getRunningOpenLoop(float rpm, float clt, SensorResult tps) = 0;
 	virtual float getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) = 0;
-	virtual float getClosedLoop(Phase phase, float tps, int rpm, int target) = 0;
-	virtual float getCrankingTaperFraction() const = 0;
+	virtual float getClosedLoop(Phase phase, float tps, float rpm, float target) = 0;
+	virtual float getCrankingTaperFraction(float clt) const = 0;
 	virtual bool isIdlingOrTaper() const = 0;
-	virtual float getIdleTimingAdjustment(int rpm) = 0;
+	virtual float getIdleTimingAdjustment(float rpm) = 0;
 };
 
 class IdleController : public IIdleController, public EngineModule, public idle_state_s {
@@ -48,36 +48,30 @@ public:
 	int getTargetRpm(float clt) override;
 
 	// PHASE DETERMINATION: what is the driver trying to do right now?
-	Phase determinePhase(int rpm, int targetRpm, SensorResult tps, float vss, float crankingTaperFraction) override;
-	float getCrankingTaperFraction() const override;
+	Phase determinePhase(float rpm, float targetRpm, SensorResult tps, float vss, float crankingTaperFraction) override;
+	float getCrankingTaperFraction(float clt) const override;
 
 	// OPEN LOOP CORRECTIONS
 	percent_t getCrankingOpenLoop(float clt) const override;
 	percent_t getRunningOpenLoop(float rpm, float clt, SensorResult tps) override;
 	percent_t getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) override;
 
-	float getIdleTimingAdjustment(int rpm) override;
-	float getIdleTimingAdjustment(int rpm, int targetRpm, Phase phase);
+	float getIdleTimingAdjustment(float rpm) override;
+	float getIdleTimingAdjustment(float rpm, float targetRpm, Phase phase);
 
 	// CLOSED LOOP CORRECTION
-	float getClosedLoop(IIdleController::Phase phase, float tpsPos, int rpm, int targetRpm) override;
+	float getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float targetRpm) override;
 
 	void onConfigurationChange(engine_configuration_s const * previousConfig) final;
-	void onSlowCallback() final;
+	void onFastCallback() final;
 
 	// Allow querying state from outside
 	bool isIdlingOrTaper() const override {
 		return m_lastPhase == Phase::Idling || (engineConfiguration->useSeparateIdleTablesForCrankingTaper && m_lastPhase == Phase::CrankToIdleTaper);
 	}
 
-	PidIndustrial industrialWithOverrideIdlePid;
-
-	Pid * getIdlePid() {
-		return &industrialWithOverrideIdlePid;
-	}
-
-
 private:
+	Pid m_pid;
 
 	// These are stored by getIdlePosition() and used by getIdleTimingAdjustment()
 	Phase m_lastPhase = Phase::Cranking;
@@ -88,6 +82,9 @@ private:
 	float m_lastAutomaticPosition = 0;
 
 	Pid m_timingPid;
+
+	float m_modeledFlowIdleTiming = 0;
+	Biquad m_timingHpf;
 };
 
 percent_t getIdlePosition();

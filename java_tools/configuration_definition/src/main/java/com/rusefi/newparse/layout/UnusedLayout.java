@@ -1,12 +1,12 @@
 package com.rusefi.newparse.layout;
 
-import com.rusefi.newparse.outputs.TsMetadata;
+import com.rusefi.newparse.outputs.ILayoutVisitor;
 import com.rusefi.newparse.parsing.UnusedField;
 
 import java.io.PrintStream;
 
 public class UnusedLayout extends Layout {
-    private final int size;
+    public final int size;
 
     public UnusedLayout(int size) {
         this.size = size;
@@ -32,13 +32,7 @@ public class UnusedLayout extends Layout {
     }
 
     @Override
-    protected void writeTunerstudioLayout(PrintStream ps, TsMetadata meta, StructNamePrefixer prefixer, int offsetAdd) {
-        ps.println("; unused " + this.size + " bytes at offset " + (this.offset + offsetAdd));
-    }
-
-    @Override
-    public void writeCLayout(PrintStream ps) {
-        this.writeCOffsetHeader(ps, null, null);
-        ps.println("\tuint8_t alignmentFill_at_" + this.offsetWithinStruct + "[" + this.size + "];");
+    protected void doVisit(ILayoutVisitor v, PrintStream ps, StructNamePrefixer pfx, int offsetAdd, int[] arrayDims) {
+        v.visit(this, ps, pfx, offsetAdd, arrayDims);
     }
 }

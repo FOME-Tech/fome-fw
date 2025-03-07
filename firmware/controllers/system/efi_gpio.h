@@ -27,16 +27,7 @@ void turnAllPinsOff(void);
 #ifdef __cplusplus
 
 
-class IgnitionOutputPin : public NamedOutputPin {
-public:
-	IgnitionOutputPin();
-	void setHigh() override;
-	void setLow() override;
-	void reset();
-	int signalFallSparkId;
-	bool outOfOrder; // https://sourceforge.net/p/rusefi/tickets/319/
-	int8_t coilIndex;
-};
+class IgnitionOutputPin : public NamedOutputPin { };
 
 /**
  * OutputPin with semi-automated init/deinit on configuration change
@@ -58,12 +49,6 @@ private:
 	const uint16_t m_pinModeOffset;
 	bool isPinConfigurationChanged();
 };
-
-class RegisteredNamedOutputPin : public RegisteredOutputPin, public NamedOutputPin {
-public:
-	RegisteredNamedOutputPin(const char* name, size_t pinOffset, size_t pinModeOffset);
-};
-
 class EnginePins {
 public:
 	EnginePins();
@@ -76,7 +61,7 @@ public:
 	/**
 	 * High Pressure Fuel Pump valve control
 	 */
-	RegisteredNamedOutputPin hpfpValve;
+	RegisteredOutputPin hpfpValve;
 	// this one cranks engine
 	RegisteredOutputPin starterControl;
 	// this one prevents driver from cranking engine
@@ -118,6 +103,7 @@ public:
 	OutputPin accelerometerCs;
 
 	InjectorOutputPin injectors[MAX_CYLINDER_COUNT];
+	InjectorOutputPin injectorsStage2[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin coils[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin trailingCoils[MAX_CYLINDER_COUNT];
 	NamedOutputPin auxValve[AUX_DIGITAL_VALVE_COUNT];

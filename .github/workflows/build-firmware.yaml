@@ -15,7 +15,7 @@ on:
         type: string
 
 jobs:
-  build-openblt-tools-linux:
+  build-libopenblt-linux:
     runs-on: ubuntu-latest-selfhost
 
     steps:
@@ -25,27 +25,35 @@ jobs:
 
     - name: cmake configure libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED=OFF ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
     - name: make libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
       run: make -j8
 
-    - name: cmake configure BootCommander
-      working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
+    - name: cmake configure libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
       run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
-    - name: make BootCommander
-      working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
+    - name: make libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
       run: make -j8
 
-    - uses: actions/upload-artifact@v3
-      with:
-        name: bootcommander-linux
-        path: ./firmware/ext/openblt/Host/BootCommander
+    - name: coalesce
+      run: |
+        mkdir deliver
+        cp ./firmware/ext/openblt/Host/libopenblt.so deliver/
+        cp ./misc/libopenblt_jni/build/libopenblt_jni.so deliver/
 
-  build-openblt-tools-macos:
-    runs-on: macos-latest
+    - uses: actions/upload-artifact@v4
+      with:
+        name: libopenblt-linux
+        path: |
+          ./deliver/libopenblt.so
+          ./deliver/libopenblt_jni.so
+
+  build-libopenblt-macos:
+    runs-on: macos-13
 
     steps:
     - uses: actions/checkout@v4
@@ -54,27 +62,35 @@ jobs:
 
     - name: cmake configure libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC=ON -DBUILD_SHARED=OFF ..
+      run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
     - name: make libopenblt
       working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
       run: make -j8
 
-    - name: cmake configure BootCommander
-      working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
+    - name: cmake configure libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
       run: cmake -DCMAKE_BUILD_TYPE=Release ..
 
-    - name: make BootCommander
-      working-directory: ./firmware/ext/openblt/Host/Source/BootCommander/build
+    - name: make libopenblt_jni
+      working-directory: ./misc/libopenblt_jni/build
       run: make -j8
 
-    - uses: actions/upload-artifact@v3
+    - name: coalesce
+      run: |
+        mkdir deliver
+        cp ./firmware/ext/openblt/Host/libopenblt.dylib deliver/
+        cp ./misc/libopenblt_jni/build/libopenblt_jni.dylib deliver/
+
+    - uses: actions/upload-artifact@v4
       with:
-        name: bootcommander-macos
-        path: ./firmware/ext/openblt/Host/BootCommander
+        name: libopenblt-macos
+        path: |
+          ./deliver/libopenblt.dylib
+          ./deliver/libopenblt_jni.dylib
 
   build-firmware:
-    needs: [build-openblt-tools-linux, build-openblt-tools-macos]
+    needs: [build-libopenblt-linux, build-libopenblt-macos]
     runs-on: ubuntu-latest-selfhost
 
     strategy:
@@ -109,7 +125,7 @@ jobs:
 
           - build-target: small-can-board
             folder: config/boards/hellen/small-can-board
-            ini-file: rusefi_small-can-board.ini
+            ini-file: fome_small-can-board.ini
 
           # - build-target: hellen88bmw
           #   folder: config/boards/hellen/hellen88bmw
@@ -131,9 +147,9 @@ jobs:
             folder: config/boards/hellen/hellen64_miataNA6_94
             ini-file: fome_hellenNA6.ini
 
-          # - build-target: hellen128
-          #   folder: config/boards/hellen/hellen128
-          #   ini-file: fome_hellen128mercedes.ini
+          - build-target: hellen128
+            folder: config/boards/hellen/hellen128
+            ini-file: fome_hellen128.ini
 
           # - build-target: hellen121vag
           #   folder: config/boards/hellen/hellen121vag
@@ -159,29 +175,9 @@ jobs:
             folder: config/boards/microrusefi
             ini-file: fome_mre_f4.ini
 
-          # - build-target: mre_f4_no_openblt
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
-          # - build-target: mre_f4_debug
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
-          # - build-target: mre_f4_recovery
-          #   folder: config/boards/microrusefi
-          #   ini-file: fome_mre_f4.ini
-
           - build-target: mre_f7
             folder: config/boards/microrusefi
             ini-file: fome_mre_f7.ini
-
-          # - build-target: prometheus_405
-          #   folder: config/boards/prometheus
-          #   ini-file: fome_prometheus_405.ini
-
-          # - build-target: prometheus_469
-          #   folder: config/boards/prometheus
-          #   ini-file: fome_prometheus_469.ini
 
           - build-target: proteus_f4
             folder: config/boards/proteus
@@ -227,9 +223,9 @@ jobs:
             folder: config/boards/core48
             ini-file: fome_core48.ini
 
-          # - build-target: atlas
-          #   folder: config/boards/atlas
-          #   ini-file: fome_atlas.ini
+          - build-target: atlas
+            folder: config/boards/atlas
+            ini-file: fome_atlas.ini
 
           # - build-target: tdg-pdm8
           #   folder: config/boards/tdg-pdm8
@@ -253,9 +249,17 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
+    - name: Pre-build Cleanup Test
+      run: |
+        ls -l firmware
+
     - uses: actions/checkout@v4
       with:
         submodules: true
+
+    - name: Pre-build Cleanup Test 2
+      run: |
+        ls -l firmware
 
     # - uses: actions/setup-java@v3
     #   with:
@@ -274,44 +278,13 @@ jobs:
       working-directory: ./firmware/
       run: ./gen_live_documentation.sh
 
-    - name: Generate Configs for build-target
-      working-directory: ./firmware/
-      # todo: we have code duplication with gen_config.sh here :(
-      run: |
-        if [ "${{ matrix.build-target }}" = "subaru_eg33_f7" ]; then
-          bash config/boards/subaru_eg33/config/gen_subaru_config.sh
-          [ $? -eq 0 ] || { echo "ERROR generating board subaru_eg33 subaru_eg33_f7"; exit 1; }
-        elif [ "${{ matrix.ini-file }}" = "" ]; then
-          echo "ERROR: ${{ matrix.build-target }} is missing ini-file attribute"
-          exit -1
-        else
-          bash gen_config_board.sh ${{matrix.folder}} ${{matrix.build-target}} ${{matrix.ini-file}}
-        fi
-
-    # Build machines don't have arm-none-eabi gcc, so let's download it and put it on the path
-    # - name: Download & Install GCC
-    #   env:
-    #     ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-    #   run: |
-    #     ./firmware/provide_gcc.sh
-    #     echo "::add-path::`pwd`/gcc-arm-none-eabi/bin"
-
-    # Make sure the compiler we just downloaded works - just print out the version
-    - name: Test Compiler
-      run: arm-none-eabi-gcc -v
-
-    # - name: Configs Set SSH variables
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   env:
-    #     ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-    #   run: |
-    #     echo "::set-env name=RUSEFI_SSH_SERVER::${{secrets.RUSEFI_SSH_SERVER}}";
-    #     echo "::set-env name=RUSEFI_SSH_USER::${{secrets.RUSEFI_SSH_USER}}";
-    #     echo "::set-env name=RUSEFI_SSH_PASS::${{secrets.RUSEFI_SSH_PASS}}";
-
     # Build the firmware!
     - name: Build Firmware
       run: bash misc/jenkins/compile_other_versions/compile.sh ${{matrix.folder}} ${{matrix.build-target}}
+
+    - name: Check for illegal time conversions
+      working-directory: ./firmware/
+      run: bash check_illegal_conversion.sh
 
     # Build rusEFI console
     - name: Build console
@@ -321,20 +294,21 @@ jobs:
     # Build the simulator
     - name: Build simulator
       if: ${{ env.full == 'true' }}
+      working-directory: ./simulator/
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
-      run: OS="Windows_NT" bash misc/jenkins/build_simulator.sh
+      run: OS="Windows_NT" SHORT_BOARD_NAME=${{matrix.build-target}} ./compile.sh
 
-    - name: Download OpenBLT BootCommander Tool (Linux)
-      uses: actions/download-artifact@v3
+    - name: Download LibOpenBLT Tool (Linux)
+      uses: actions/download-artifact@v4
       with:
-        name: bootcommander-linux
-        path: ./firmware/ext/openblt/Host/linux/
+        name: libopenblt-linux
+        path: ./firmware/ext/openblt/Host/
 
-    - name: Download OpenBLT BootCommander Tool (MacOS)
-      uses: actions/download-artifact@v3
+    - name: Download LibOpenBLT Tool (MacOS)
+      uses: actions/download-artifact@v4
       with:
-        name: bootcommander-macos
-        path: ./firmware/ext/openblt/Host/macos/
+        name: libopenblt-macos
+        path: ./firmware/ext/openblt/Host/
 
     - name: Package Bundle
       if: ${{ env.full == 'true' }}
@@ -343,6 +317,7 @@ jobs:
     - name: Upload INI to tunes.fome.tech
       if: ${{ env.full == 'true' && env.upload == 'true' }}
       uses: hyper-tuner/ini-upload-action@v1
+      continue-on-error: true
       with:
         api-url: "${{ secrets.HYPER_TUNER_INI_UPLOAD_URL }}"
         username: "${{ secrets.HYPER_TUNER_INI_UPLOAD_USERNAME }}"
@@ -350,42 +325,22 @@ jobs:
         path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
         ecosystem: fome
 
-    # - name: Upload .ini files
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   working-directory: ./firmware/tunerstudio/generated
-    #   run: ../upload_ini.sh ${{matrix.ini-file}} ${{ secrets.RUSEFI_ONLINE_FTP_USER }} ${{ secrets.RUSEFI_ONLINE_FTP_PASS }} ${{ secrets.RUSEFI_FTP_SERVER }}
+    # If not uploading the full bundle, at least upload the bin+ini so you can test off a PR
+    - name: Upload build bin
+      uses: actions/upload-artifact@v4
+      with:
+        name: fome_${{matrix.build-target}}.bin
+        path: ./firmware/deliver/fome.bin
 
-    # - name: Upload build elf
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.elf
-    #     path: ./firmware/build/rusefi.elf
-
-    # - name: Upload build bin
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.bin
-    #     path: ./firmware/deliver/rusefi*.bin
-
-    # - name: Upload build hex
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.hex
-    #     path: ./firmware/deliver/rusefi*.hex
-
-    # - name: Upload build dfu
-    #   if: ${{ env.full == 'true' && env.upload == 'true' }}
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: fome_${{matrix.build-target}}.dfu
-    #     path: ./firmware/deliver/rusefi*.dfu
+    - name: Upload ini
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{matrix.ini-file}}
+        path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
 
     - name: Upload bundle
       if: ${{ env.full == 'true' && env.upload == 'true' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fome_bundle_${{matrix.build-target}}.zip
         path: ./artifacts/fome_bundle_${{matrix.build-target}}.zip

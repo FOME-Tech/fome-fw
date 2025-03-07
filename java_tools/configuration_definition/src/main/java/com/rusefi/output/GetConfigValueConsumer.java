@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.rusefi.output.ConfigStructureImpl.ALIGNMENT_FILL_AT;
-import static com.rusefi.output.DataLogConsumer.UNUSED;
+import static com.rusefi.output.ConfigurationConsumer.UNUSED;
 import static com.rusefi.output.GetOutputValueConsumer.getHashConflicts;
 import static com.rusefi.output.GetOutputValueConsumer.wrapSwitchStatement;
 
@@ -31,9 +31,9 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
             "#include \"value_lookup.h\"\n";
 
     private static final String GET_METHOD_HEADER =
-            "float getConfigValueByName(const char *name) {\n";
+            "expected<float> getConfigValueByName(const char *name) {\n";
 
-    static final String GET_METHOD_FOOTER = "\treturn EFI_ERROR_CODE;\n" + "}\n";
+    static final String GET_METHOD_FOOTER = "\treturn unexpected;\n" + "}\n";
     private static final String SET_METHOD_HEADER = "void setConfigValueByName(const char *name, float value) {\n";
     private static final String SET_METHOD_FOOTER = "}\n";
     private final List<VariableRecord> variables = new ArrayList<>();

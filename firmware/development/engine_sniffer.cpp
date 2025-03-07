@@ -28,9 +28,6 @@
 
 #include "engine_sniffer.h"
 
-// a bit weird because of conditional compilation
-static char shaft_signal_msg_index[15];
-
 #if EFI_ENGINE_SNIFFER
 #define addEngineSnifferEvent(name, msg) { if (getTriggerCentral()->isEngineSnifferEnabled) { waveChart.addEvent3((name), (msg)); } }
  #else
@@ -45,6 +42,8 @@ static char shaft_signal_msg_index[15];
 #define CHART_DELIMETER	'!'
 extern WaveChart waveChart;
 
+static char shaft_signal_msg_index[15];
+
 /**
  * This is the number of events in the digital chart which would be displayed
  * on the 'digital sniffer' pane
@@ -55,11 +54,9 @@ extern WaveChart waveChart;
 #define WAVE_LOGGING_SIZE 35000
 #endif
 
-static char WAVE_LOGGING_BUFFER[WAVE_LOGGING_SIZE] CCM_OPTIONAL;
+static char WAVE_LOGGING_BUFFER[WAVE_LOGGING_SIZE];
 
 int waveChartUsedSize;
-
-//#define DEBUG_WAVE 1
 
 /**
  * We want to skip some engine cycles to skip what was scheduled before parameters were changed
@@ -83,9 +80,6 @@ void WaveChart::init() {
 }
 
 void WaveChart::reset() {
-#if DEBUG_WAVE
-	efiPrintf("reset while at ", counter);
-#endif /* DEBUG_WAVE */
 	logging.reset();
 	counter = 0;
 	startTimeNt = 0;
@@ -104,7 +98,7 @@ bool WaveChart::isStartedTooLongAgo() const {
 	 * engineChartSize/20 is the longest meaningful chart.
 	 *
 	 */
-	efitick_t chartDurationNt = getTimeNowNt() - startTimeNt;
+	efidur_t chartDurationNt = getTimeNowNt() - startTimeNt;
 	return startTimeNt != 0 && NT2US(chartDurationNt) > engineConfiguration->engineChartSize * 1000000 / 20;
 }
 
@@ -142,10 +136,7 @@ void WaveChart::publish() {
 #if EFI_ENGINE_SNIFFER
 	logging.appendPrintf( LOG_DELIMITER);
 	waveChartUsedSize = logging.loggingSize();
-#if DEBUG_WAVE
-	Logging *l = &chart->logging;
-	efiPrintf("IT'S TIME", strlen(l->buffer));
-#endif // DEBUG_WAVE
+
 	if (getTriggerCentral()->isEngineSnifferEnabled) {
 		scheduleLogging(&logging);
 	}
@@ -175,16 +166,10 @@ void WaveChart::addEvent3(const char *name, const char * msg) {
 		return;
 	}
 #endif
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6651, name!=NULL, "WC: NULL name");
-
-#if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6652, getCurrentRemainingStack() > 32, "lowstck#2c");
-#endif /* EFI_PROD_CODE */
+	efiAssertVoid(ObdCode::CUSTOM_ERR_6651, name != NULL, "WC: NULL name");
 
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6653, isInitialized, "chart not initialized");
-#if DEBUG_WAVE
-	efiPrintf("current", chart->counter);
-#endif /* DEBUG_WAVE */
+
 	if (isFull()) {
 		return;
 	}
@@ -242,8 +227,6 @@ void initWaveChart(WaveChart *chart) {
 #endif // EFI_UNIT_TEST
 }
 
-#endif /* EFI_ENGINE_SNIFFER */
-
 void addEngineSnifferOutputPinEvent(NamedOutputPin *pin, bool isRise) {
 	if (!engineConfiguration->engineSnifferFocusOnInputs) {
 		addEngineSnifferEvent(pin->getShortName(), isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
@@ -253,9 +236,9 @@ void addEngineSnifferOutputPinEvent(NamedOutputPin *pin, bool isRise) {
 void addEngineSnifferTdcEvent(int rpm) {
 	static char rpmBuffer[_MAX_FILLER];
 	itoa10(rpmBuffer, rpm);
-#if EFI_ENGINE_SNIFFER
+
 	waveChart.startDataCollection();
-#endif
+
 	addEngineSnifferEvent(TOP_DEAD_CENTER_MESSAGE, (char* ) rpmBuffer);
 }
 
@@ -282,3 +265,6 @@ void addEngineSnifferVvtEvent(int vvtIndex, bool isRise) {
 
 	addEngineSnifferEvent(vvtName, isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
 }
+
+#endif /* EFI_ENGINE_SNIFFER */
+

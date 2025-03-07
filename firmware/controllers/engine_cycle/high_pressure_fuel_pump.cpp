@@ -61,31 +61,31 @@ angle_t HpfpLobe::findNextLobe() {
 		// TODO: Is the sign correct here?  + means ATDC?
 		vvt = engine->triggerCentral.getVVTPosition(
 			(engineConfiguration->hpfpCam - 1) / 2 & 1, // Bank
-			(engineConfiguration->hpfpCam - 1) & 1);    // Cam
+			(engineConfiguration->hpfpCam - 1) & 1).value_or(0);    // Cam
 	}
 
 	return engineConfiguration->hpfpPeakPos + vvt + next_index * 720 / lobes;
 }
 
 // As a percent of the full pump stroke
-float HpfpQuantity::calcFuelPercent(int rpm) {
+float HpfpQuantity::calcFuelPercent(float rpm) {
 	float fuel_requested_cc_per_cycle =
-		engine->engineState.injectionMass[0] * (1.f / fuelDensity) * engineConfiguration->cylindersCount;
+		engine->cylinders[0].getInjectionMass() * (1.f / fuelDensity) * engineConfiguration->cylindersCount;
 	float fuel_requested_cc_per_lobe = fuel_requested_cc_per_cycle / engineConfiguration->hpfpCamLobes;
 	return 100.f *
 		fuel_requested_cc_per_lobe / engineConfiguration->hpfpPumpVolume +
-		interpolate3d(engineConfiguration->hpfpCompensation,
-			      engineConfiguration->hpfpCompensationLoadBins, fuel_requested_cc_per_lobe,
-			      engineConfiguration->hpfpCompensationRpmBins, rpm);
+		interpolate3d(config->hpfpCompensation,
+						config->hpfpCompensationLoadBins, fuel_requested_cc_per_lobe,
+						config->hpfpCompensationRpmBins, rpm);
 }
 
-float HpfpQuantity::calcPI(int rpm, float calc_fuel_percent) {
+float HpfpQuantity::calcPI(float rpm, float calc_fuel_percent) {
 	m_pressureTarget_kPa = std::max<float>(
 		m_pressureTarget_kPa - (engineConfiguration->hpfpTargetDecay *
 					(FAST_CALLBACK_PERIOD_MS / 1000.)),
-		interpolate3d(engineConfiguration->hpfpTarget,
-			      engineConfiguration->hpfpTargetLoadBins, Sensor::getOrZero(SensorType::Map), // TODO: allow other load axis, like we claim to
-			      engineConfiguration->hpfpTargetRpmBins, rpm));
+		interpolate3d(config->hpfpTarget,
+			      config->hpfpTargetLoadBins, Sensor::getOrZero(SensorType::Map), // TODO: allow other load axis, like we claim to
+			      config->hpfpTargetRpmBins, rpm));
 
 	auto fuelPressure = Sensor::get(SensorType::FuelPressureHigh);
 	if (!fuelPressure) {
@@ -117,7 +117,7 @@ float HpfpQuantity::calcPI(int rpm, float calc_fuel_percent) {
 	return p_control_percent + i_control_percent;
 }
 
-angle_t HpfpQuantity::pumpAngleFuel(int rpm, HpfpController *model) {
+angle_t HpfpQuantity::pumpAngleFuel(float rpm, HpfpController *model) {
 	// Math based on fuel requested
 	model->fuel_requested_percent = calcFuelPercent(rpm);
 
@@ -125,16 +125,15 @@ angle_t HpfpQuantity::pumpAngleFuel(int rpm, HpfpController *model) {
 	// Apply PI control
 	float fuel_requested_percentTotal = model->fuel_requested_percent + model->fuel_requested_percent_pi;
 
-
 	// Convert to degrees
 	return interpolate2d(fuel_requested_percentTotal,
-			     engineConfiguration->hpfpLobeProfileQuantityBins,
-			     engineConfiguration->hpfpLobeProfileAngle);
+							config->hpfpLobeProfileQuantityBins,
+							config->hpfpLobeProfileAngle);
 }
 
 void HpfpController::onFastCallback() {
 	// Pressure current/target calculation
-	int rpm = Sensor::getOrZero(SensorType::Rpm);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	isHpfpInactive = rpm < rpm_spinning_cutoff ||
 		    engineConfiguration->hpfpCamLobes == 0 ||
@@ -152,8 +151,8 @@ void HpfpController::onFastCallback() {
 		// Convert deadtime from ms to degrees based on current RPM
 		float deadtime_ms = interpolate2d(
 			Sensor::get(SensorType::BatteryVoltage).value_or(VBAT_FALLBACK_VALUE),
-			engineConfiguration->hpfpDeadtimeVoltsBins,
-			engineConfiguration->hpfpDeadtimeMS);
+			config->hpfpDeadtimeVoltsBins,
+			config->hpfpDeadtimeMS);
 		m_deadtime = deadtime_ms * rpm * (360.f / 60.f / 1000.f);
 
 		// We set deadtime first, then pump, in case pump used to be 0.  Pump is what
@@ -168,7 +167,7 @@ void HpfpController::onFastCallback() {
 }
 
 void HpfpController::pinTurnOn(HpfpController *self) {
-	enginePins.hpfpValve.setHigh();
+	enginePins.hpfpValve.setValue(true);
 
 	// By scheduling the close after we already open, we don't have to worry if the engine
 	// stops, the valve will be turned off in a certain amount of time regardless.
@@ -179,7 +178,7 @@ void HpfpController::pinTurnOn(HpfpController *self) {
 }
 
 void HpfpController::pinTurnOff(HpfpController *self) {
-	enginePins.hpfpValve.setLow();
+	enginePins.hpfpValve.setValue(false);
 
 	self->scheduleNextCycle();
 }

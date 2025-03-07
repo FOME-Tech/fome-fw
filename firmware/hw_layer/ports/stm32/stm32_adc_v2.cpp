@@ -8,6 +8,8 @@
 
 #include "pch.h"
 
+#include "AdcConfiguration.h"
+
 #if HAL_USE_ADC
 
 /* Depth of the conversion buffer, channels are sampled X times each.*/
@@ -16,6 +18,13 @@
 #ifdef ADC_MUX_PIN
 static OutputPin muxControl;
 #endif // ADC_MUX_PIN
+
+static void fast_adc_timer_callback(GPTDriver*);
+static const GPTConfig fast_adc_timer_config = {
+	GPT_FREQ_FAST,
+	fast_adc_timer_callback,
+	0, 0
+};
 
 void portInitAdc() {
 	// Init slow ADC
@@ -28,6 +37,9 @@ void portInitAdc() {
 #if EFI_USE_FAST_ADC
 	// Init fast ADC (MAP sensor)
 	adcStart(&ADCD2, NULL);
+
+	gptStart(EFI_INTERNAL_FAST_ADC_GPT, &fast_adc_timer_config);
+	gptStartContinuous(EFI_INTERNAL_FAST_ADC_GPT, GPT_PERIOD_FAST);
 #endif
 
 	// Enable internal temperature reference
@@ -52,6 +64,10 @@ void portInitAdc() {
 		nvicDisableVector(STM32_ADC_NUMBER);
 	}
 #endif
+
+	#ifdef EFI_SOFTWARE_KNOCK
+	adcStart(&ADCD3, nullptr);
+	#endif // EFI_SOFTWARE_KNOCK
 }
 
 /*
@@ -158,7 +174,7 @@ static constexpr ADCConversionGroup convGroupSlow = {
 
 static NO_CACHE adcsample_t slowSampleBuffer[SLOW_ADC_OVERSAMPLE * adcChannelCount];
 
-static bool readBatch(adcsample_t* convertedSamples, size_t start) {
+static bool readBatch(adcsample_t* convertedSamples) {
 	msg_t result = adcConvert(&ADCD1, &convGroupSlow, slowSampleBuffer, SLOW_ADC_OVERSAMPLE);
 
 	// If something went wrong - try again later
@@ -176,32 +192,81 @@ static bool readBatch(adcsample_t* convertedSamples, size_t start) {
 		}
 
 		adcsample_t value = static_cast<adcsample_t>(sum / SLOW_ADC_OVERSAMPLE);
-		convertedSamples[start + i] = value;
+		convertedSamples[i] = value;
 	}
 
 	return true;
 }
 
-bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
+static adcsample_t convertedAdcSamples[SLOW_ADC_CHANNEL_COUNT];
+
+bool readSlowAnalogInputs() {
 	bool result = true;
 
-	result &= readBatch(convertedSamples, 0);
+	result &= readBatch(convertedAdcSamples);
 
 #ifdef ADC_MUX_PIN
 	muxControl.setValue(1);
 	// read the second batch, starting where we left off
-	result &= readBatch(convertedSamples, adcChannelCount);
+	result &= readBatch(convertedAdcSamples + adcChannelCount);
 	muxControl.setValue(0);
 #endif
 
 	return result;
 }
 
+adcsample_t getSlowAdcSample(adc_channel_e channel) {
+	return convertedAdcSamples[channel - EFI_ADC_0];
+}
+
 #if EFI_USE_FAST_ADC
 
 #include "AdcConfiguration.h"
 
-extern AdcDevice fastAdc;
+static void adc_callback_fast(ADCDriver *adcp) {
+	// State may not be complete if we get a callback for "half done"
+	if (adcp->state == ADC_COMPLETE) {
+		onFastAdcComplete(adcp->samples);
+	}
+}
+
+ADCConversionGroup adcgrpcfgFast = {
+	.circular			= FALSE,
+	.num_channels		= 0,
+	.end_cb				= adc_callback_fast,
+	.error_cb			= nullptr,
+	/* HW dependent part.*/
+	.cr1				= 0,
+	.cr2				= ADC_CR2_SWSTART,
+	// Configure sample time for all channels. We'll only actually use
+	// one or two (MAP sensors, etc), but setting sample time for unused
+	// channels doesn't do anything.
+	.smpr1 =
+		ADC_SMPR1_SMP_AN10(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN11(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN12(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN13(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN14(ADC_SAMPLING_FAST) |
+		ADC_SMPR1_SMP_AN15(ADC_SAMPLING_FAST),
+	.smpr2 =
+		ADC_SMPR2_SMP_AN0(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN1(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN2(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN3(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN4(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN5(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN6(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN7(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN8(ADC_SAMPLING_FAST) |
+		ADC_SMPR2_SMP_AN9(ADC_SAMPLING_FAST),
+	.htr				= 0,
+	.ltr				= 0,
+	.sqr1				= 0, // Conversion group sequence 13...16 + sequence length
+	.sqr2				= 0, // Conversion group sequence 7...12
+	.sqr3				= 0, // Conversion group sequence 1...6
+};
+
+static size_t fastAdcChannelCount = 0;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
@@ -210,17 +275,146 @@ FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
 		return invalidToken;
 	}
 
-	return fastAdc.internalAdcIndexByHardwareIndex[static_cast<size_t>(channel)];
+	// hwChannel = which external pin are we using
+	// adcChannelIndex = 0-based index of the ADC channel (ch0 == 0, ch5 == 5, etc)
+	// adcIndex = position of this channel in the sample buffer
+	size_t adcChannelIndex = channel - EFI_ADC_0;
+	size_t adcIndex = fastAdcChannelCount++;
+
+	if (adcIndex < 6) {
+		adcgrpcfgFast.sqr3 |= adcChannelIndex << (5 * adcIndex);
+	} else if (adcIndex < 12) {
+		adcgrpcfgFast.sqr2 |= adcChannelIndex << (5 * (adcIndex - 6));
+	} else if (adcIndex < 18) {
+		adcgrpcfgFast.sqr1 |= adcChannelIndex << (5 * (adcIndex - 12));
+	}
+
+	adcgrpcfgFast.num_channels++;
+
+	return adcIndex;
 }
+
+static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
 
 adcsample_t getFastAdc(FastAdcToken token) {
 	if (token == invalidToken) {
 		return 0;
 	}
 
-	return fastAdc.m_samples[token];
+	return fastAdcSampleBuf[token];
 }
 
-#endif
+auto& ADC_FAST_DEVICE = ADCD2;
+
+static void fast_adc_timer_callback(GPTDriver*) {
+	chibios_rt::CriticalSectionLocker csl;
+
+	if (ADC_FAST_DEVICE.state != ADC_READY &&
+		ADC_FAST_DEVICE.state != ADC_COMPLETE &&
+		ADC_FAST_DEVICE.state != ADC_ERROR) {
+		return;
+	}
+
+	if (adcgrpcfgFast.num_channels == 0) {
+		// No channels configured (yet), don't attempt to sample
+		// with an invalid configuration
+		return;
+	}
+
+	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdcSampleBuf, ADC_BUF_DEPTH_FAST);
+}
+
+#endif // EFI_USE_FAST_ADC
+
+#ifdef EFI_SOFTWARE_KNOCK
+#include "knock_config.h"
+
+static void knockCompletionCallback(ADCDriver* adcp) {
+	if (adcp->state == ADC_COMPLETE) {
+		onKnockSamplingComplete();
+	}
+}
+
+static void knockErrorCallback(ADCDriver*, adcerror_t) {
+}
+
+static const uint32_t smpr1 = 
+	ADC_SMPR1_SMP_AN10(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR1_SMP_AN11(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR1_SMP_AN12(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR1_SMP_AN13(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR1_SMP_AN14(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR1_SMP_AN15(KNOCK_SAMPLE_TIME);
+
+static const uint32_t smpr2 =
+	ADC_SMPR2_SMP_AN0(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN1(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN2(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN3(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN4(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN5(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN6(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN7(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN8(KNOCK_SAMPLE_TIME) |
+	ADC_SMPR2_SMP_AN9(KNOCK_SAMPLE_TIME);
+
+static const ADCConversionGroup adcConvGroupCh1 = {
+	.circular = FALSE,
+	.num_channels = 1,
+	.end_cb = &knockCompletionCallback,
+	.error_cb = &knockErrorCallback,
+	.cr1 = 0,
+	.cr2 = ADC_CR2_SWSTART,
+	// sample times for channels 10...18
+	.smpr1 = smpr1,
+	// sample times for channels 0...9
+	.smpr2 = smpr2,
+
+	.htr = 0,
+	.ltr = 0,
+
+	.sqr1 = 0,
+	.sqr2 = 0,
+	.sqr3 = ADC_SQR3_SQ1_N(KNOCK_ADC_CH1)
+};
+
+// Not all boards have a second channel - configure it if it exists
+#if KNOCK_HAS_CH2
+static const ADCConversionGroup adcConvGroupCh2 = {
+	.circular = FALSE,
+	.num_channels = 1,
+	.end_cb = &knockCompletionCallback,
+	.error_cb = &knockErrorCallback,
+	.cr1 = 0,
+	.cr2 = ADC_CR2_SWSTART,
+	// sample times for channels 10...18
+	.smpr1 = smpr1,
+	// sample times for channels 0...9
+	.smpr2 = smpr2,
+
+	.htr = 0,
+	.ltr = 0,
+
+	.sqr1 = 0,
+	.sqr2 = 0,
+	.sqr3 = ADC_SQR3_SQ1_N(KNOCK_ADC_CH2)
+};
+#endif // KNOCK_HAS_CH2
+
+NO_CACHE adcsample_t knockSampleBuffer[2048];
+
+const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx) {
+#if KNOCK_HAS_CH2
+	if (channelIdx == 1) {
+		return &adcConvGroupCh2;
+	}
+#else
+	(void)channelIdx;
+#endif // KNOCK_HAS_CH2
+
+	return &adcConvGroupCh1;
+}
+
+#endif // EFI_SOFTWARE_KNOCK
 
 #endif // HAL_USE_ADC

@@ -44,13 +44,12 @@ enum class engine_type_e : uint32_t {
 
 	PROTEUS_E65_6H_MAN_IN_THE_MIDDLE = 9,
 	HELLEN_NA8_96 = 10,
-	MRE_MIATA_NA6_MAP = 66,
+	ET_UNUSED_66 = 66,
 
-	TEST_ROTARY = 19,
 	// Frankenso board
 	FRANKENSO_MIATA_NA6_MAP = 41,
-	MRE_MIATA_94_MAP = 20,
-	MIATA_1996 = 21,
+	ET_UNUSED_20 = 20,
+	ET_UNUSED_21 = 21,
 
 	FORD_ESCORT_GT = 14,
 
@@ -110,7 +109,7 @@ enum class engine_type_e : uint32_t {
 	 */
 	FRANKENSO_MAZDA_MIATA_2003 = 47,
 
-    // todo: add wastegate case into HW CI
+	// todo: add wastegate case into HW CI
 	TEST_DC_WASTEGATE_DISCOVERY = 48,
 
 	FRANKENSO_QA_ENGINE = 49,
@@ -136,8 +135,6 @@ enum class engine_type_e : uint32_t {
 	ETB_BENCH_ENGINE = 58,
 
 	TLE8888_BENCH_ENGINE = 59,
-
-	L9779_BENCH_ENGINE = 60,
 
 	MRE_VW_B6 = 62,
 
@@ -166,7 +163,7 @@ enum class engine_type_e : uint32_t {
 
 	HELLEN_NA94 = 80,
 
-    // 82
+	// 82
 	HELLEN_154_HYUNDAI_COUPE_BK1 = 82,
 	HELLEN_NB1 = 83,
 	// 84
@@ -202,6 +199,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
 	ET_UNUSED_17 = 17,
@@ -210,16 +208,13 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_33 = 33,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
+	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
 
 	/**
 	 * this configuration has as few pins configured as possible
 	 */
 	MINIMAL_PINS = 99,
-
-	TEST_100 = 100,
-	TEST_101 = 101,
-	TEST_102 = 102,
 };
 
 /**
@@ -227,11 +222,11 @@ enum class engine_type_e : uint32_t {
  */
 typedef enum __attribute__ ((__packed__)) {
 	DBG_0 = 0,
-	DBG_TPS_ACCEL = 1,
+	DBG_1 = 1,
 	DBG_2 = 2,
 	DBG_STEPPER_IDLE_CONTROL = 3,
-	DBG_EL_ACCEL = 4,
-	DBG_TRIGGER_COUNTERS = 5,
+	DBG_4 = 4,
+	DBG_5 = 5,
 	DBG_6 = 6,
 	DBG_7 = 7,
 	DBG_8 = 8,
@@ -240,7 +235,7 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_11 = 11,
 	DBG_12 = 12,
 	DBG_13 = 13,
-	DBG_SR5_PROTOCOL = 14,
+	DBG_14 = 14,
 	DBG_15 = 15,
 	DBG_16 = 16,
 	/**
@@ -253,29 +248,29 @@ typedef enum __attribute__ ((__packed__)) {
 	DBG_20 = 20,
 	DBG_21 = 21,
 
-	DBG_INSTANT_RPM = 22,
-	UNUSED23 = 23,
+	DBG_22 = 22,
+	DBG_23 = 23,
 	DBG_24 = 24,
 	DBG_25 = 25,
 	DBG_26 = 26,
-	DBG_MAP = 27,
+	DBG_27 = 27,
 	DBG_METRICS = 28,
 	DBG_29 = 29,
-	DBG_ION = 30,
+	DBG_30 = 30,
 	DBG_TLE8888 = 31,
 	DBG_32 = 32,
-	DBG_DWELL_METRIC = 33,
+	DBG_33 = 33,
 	DBG_34 = 34,
 	DBG_35 = 35,
 	DBG_36 = 36,
 	DBG_37 = 37,
 	DBG_38 = 38,
 	DBG_ETB_AUTOTUNE = 39,
-	DBG_COMPOSITE_LOG = 40,
-	DBG_UNUSED41 = 41,
-	DBG_UNUSED_42 = 42,
+	DBG_40 = 40,
+	DBG_41 = 41,
+	DBG_42 = 42,
 	DBG_43 = 43,
-	DBG_DYNO_VIEW = 44,
+	DBG_44 = 44,
 	DBG_LOGIC_ANALYZER = 45,
 	DBG_46 = 46,
 	DBG_TCU = 47,
@@ -339,10 +334,10 @@ enum class trigger_type_e : uint32_t {
 
 	TT_DODGE_STRATUS = 22,
 
-    /**
-     * Subaru but also Mazda RX-8
-     * We suspect that it's VR
-     */
+	/**
+	 * Subaru but also Mazda RX-8
+	 * We suspect that it's VR
+	 */
 	TT_36_2_2_2 = 23,
 
 	/**
@@ -474,7 +469,7 @@ enum class trigger_type_e : uint32_t {
 	TT_36_2_1_1 = 71,
 
 
-    TT_VVT_MITSUBISHI_6G75 = 72,
+	TT_VVT_MITSUBISHI_6G75 = 72,
 
 	TT_VVT_TOYOTA_4_1 = 73,
 
@@ -489,38 +484,42 @@ enum class trigger_type_e : uint32_t {
 	TT_MITSU_4G9x_CAM = 29,
 	TT_MITSU_4G63_CAM = 34,
 
+	TT_VVT_MAZDA_L = 75,
+
+	TT_VVT_MIATA_NA = 76,
+
+
 	// do not forget to edit "#define trigger_type_e_enum" line in integration/rusefi_config.txt file to propogate new value to rusefi.ini TS project
 	// do not forget to invoke "gen_config.bat" once you make changes to integration/rusefi_config.txt
 	// todo: one day a hero would integrate some of these things into Makefile in order to reduce manual magic
 	//
 	// Another point: once you add a new trigger, run get_trigger_images.bat which would run fome_test.exe from unit_tests
 	//
-	TT_UNUSED = 75, // this is used if we want to iterate over all trigger types
+	TT_UNUSED = 77, // this is used if we want to iterate over all trigger types
 };
 
 typedef enum {
 	TS_DEBUG_MODE = 0,
-	TS_COMMAND_1 = 1,
-	TS_GRAB_TPS_CLOSED = 2,
-	TS_GRAB_TPS_WOT = 3,
-	TS_COMMAND_4 = 4,
-	TS_COMMAND_5 = 5,
-	TS_GRAB_PEDAL_UP = 6,
-	TS_GRAB_PEDAL_WOT = 7,
-	TS_RESET_TLE8888 = 8,
-	TS_COMMAND_9 = 9,
-	TS_WRITE_FLASH = 10,
-	TS_COMMAND_11 = 11,
-	TS_COMMAND_12 = 12,
-	TS_COMMAND_13 = 13,
-	TS_COMMAND_14 = 14,
-	TS_COMMAND_15 = 15,
-	TS_COMMAND_16 = 16,
+	TS_UNUSED_1 = 1,
+	TS_UNUSED_2 = 2,
+	TS_UNUSED_3 = 3,
+	TS_UNUSED_4 = 4,
+	TS_UNUSED_5 = 5,
+	TS_UNUSED_6 = 6,
+	TS_UNUSED_7 = 7,
+	TS_UNUSED_8 = 8,
+	TS_UNUSED_9 = 9,
+	TS_UNUSED_10 = 10,
+	TS_UNUSED_11 = 11,
+	TS_UNUSED_12 = 12,
+	TS_UNUSED_13 = 13,
+	TS_UNUSED_14 = 14,
+	TS_UNUSED_15 = 15,
+	TS_UNUSED_16 = 16,
 	TS_CLEAR_WARNINGS = 17,
 	TS_IGNITION_CATEGORY = 18,
 	TS_INJECTOR_CATEGORY = 19,
 	TS_X14 = 20,
-	// 0x15
 	TS_WIDEBAND = 21,
 	TS_BENCH_CATEGORY = 22,
 	TS_UNUSED_23 = 23,
@@ -558,3 +557,29 @@ typedef enum {
 	BENCH_VVT_3_TARGET_BUMP,
 	BENCH_VVT_4_TARGET_BUMP,
 } bench_mode_e;
+
+typedef enum {
+	COMMAND_X14_UNUSED_0 = 0x00,
+	COMMAND_X14_UNUSED_1 = 0x01,
+	COMMAND_X14_UNUSED_2 = 0x02,
+	COMMAND_X14_UNUSED_3 = 0x03,
+	COMMAND_X14_UNUSED_4 = 0x04,
+	COMMAND_X14_UNUSED_5 = 0x05,
+	COMMAND_X14_GRAB_PEDAL_UP = 0x06,
+	COMMAND_X14_GRAB_PEDAL_DOWN = 0x07,
+	COMMAND_X14_RESET_TLE8888 = 0x08,
+	COMMAND_X14_UNUSED_9 = 0x09,
+	COMMAND_X14_WRITE_CONFIG = 0x0A,
+	COMMAND_X14_UNUSED_11 = 0x0B,
+	COMMAND_X14_ETB_AUTOTUNE = 0x0C,
+	COMMAND_X14_ENABLE_SELF_STIM = 0x0D,
+	COMMAND_X14_ETB_AUTO_CALIBRATE = 0x0E,
+	COMMAND_X14_DISABLE_SELF_STIM = 0x0F,
+	COMMAND_X14_ETB_AUTOTUNE_STOP = 0x10,
+	COMMAND_X14_ETB2_AUTO_CALIBRATE = 0x11,
+	COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE = 0x12,
+	COMMAND_X14_ENABLE_EXTERNAL_STIM = 0x13,
+	COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14,
+	COMMAND_X14_BURN_WITHOUT_FLASH = 0x15,
+	COMMAND_X14_FORCE_RESYNC = 0x16,
+} command_x14_e;

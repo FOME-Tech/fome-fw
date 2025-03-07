@@ -10,19 +10,18 @@
 #include <stdint.h>
 #include <rusefi/arrays.h>
 
-#define TO_LOWER(x) (((x)>='A' && (x)<='Z') ? (x) - 'A' + 'a' : (x))
 int djb2lowerCase(const char *str);
 
 #define _MAX_FILLER 11
 
 // http://en.wikipedia.org/wiki/Endianness
 
-static inline uint16_t SWAP_UINT16(uint16_t x)
+constexpr inline uint16_t SWAP_UINT16(uint16_t x)
 {
 	return ((x << 8) | (x >> 8));
 }
 
-static inline uint32_t SWAP_UINT32(uint32_t x)
+constexpr inline uint32_t SWAP_UINT32(uint32_t x)
 {
 	return (((x >> 24) & 0x000000ff) | ((x <<  8) & 0x00ff0000) |
 			((x >>  8) & 0x0000ff00) | ((x << 24) & 0xff000000));
@@ -81,7 +80,6 @@ char* itoa10(char *p, int num);
 bool strEqualCaseInsensitive(const char *str1, const char *str2);
 bool strEqual(const char *str1, const char *str2);
 
-// Currently used by air-interp. tCharge mode (see EngineState::updateTChargeK()).
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed);
 
 bool isPhaseInRange(float test, float current, float next);
@@ -104,19 +102,19 @@ bool isInRange(T min, T val, T max) {
 	return val >= min && val <= max;
 }
 
-static constexpr size_t operator-(Gpio a, Gpio b) {
+inline constexpr size_t operator-(Gpio a, Gpio b) {
 	return (size_t)a - (size_t)b;
 }
 
-static constexpr Gpio operator-(Gpio a, size_t b) {
+inline constexpr Gpio operator-(Gpio a, size_t b) {
 	return (Gpio)((size_t)a - b);
 }
 
-static constexpr Gpio operator+(Gpio a, size_t b) {
+inline constexpr Gpio operator+(Gpio a, size_t b) {
 	return (Gpio)((size_t)a + b);
 }
 
-static constexpr Gpio operator+(size_t a, Gpio b) {
+inline constexpr Gpio operator+(size_t a, Gpio b) {
 	// addition is commutative, just use the other operator
 	return b + a;
 }
@@ -125,17 +123,17 @@ namespace efi
 {
 template <class _Ty>
 struct remove_reference {
-    using type = _Ty;
+	using type = _Ty;
 };
 
 template <class _Ty>
 struct remove_reference<_Ty&> {
-    using type = _Ty;
+	using type = _Ty;
 };
 
 template <class _Ty>
 struct remove_reference<_Ty&&> {
-    using type = _Ty;
+	using type = _Ty;
 };
 
 template <class _Ty>
@@ -144,7 +142,7 @@ using remove_reference_t = typename remove_reference<_Ty>::type;
 // FUNCTION TEMPLATE move
 template <class _Ty>
 constexpr remove_reference_t<_Ty>&& move(_Ty&& _Arg) noexcept {
-    return static_cast<remove_reference_t<_Ty>&&>(_Arg);
+	return static_cast<remove_reference_t<_Ty>&&>(_Arg);
 }
 }
 

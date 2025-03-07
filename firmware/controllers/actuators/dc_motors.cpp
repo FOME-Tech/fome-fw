@@ -7,8 +7,6 @@
 
 #include "pch.h"
 
-#include "periodic_task.h"
-
 #include "dc_motors.h"
 
 	void DcHardware::start(bool useTwoWires,
@@ -17,7 +15,6 @@
 			brain_pin_e pinDir2,
 			brain_pin_e pinDisable,
 			bool isInverted,
-			ExecutorInterface* executor,
 			int frequency) {
 
 		if (isStarted) {
@@ -46,7 +43,6 @@
 // no need to complicate event queue with ETB PWM in unit tests
 #if ! EFI_UNIT_TEST
 			startSimplePwmHard(&m_pwm1, "ETB Dir 1",
-				executor,
 				pinDir1,
 				&m_pinDir1,
 				clampedFrequency,
@@ -54,7 +50,6 @@
 			);
 
 			startSimplePwmHard(&m_pwm2, "ETB Dir 2",
-				executor,
 				pinDir2,
 				&m_pinDir2,
 				clampedFrequency,
@@ -70,7 +65,6 @@
 // no need to complicate event queue with ETB PWM in unit tests
 #if ! EFI_UNIT_TEST
 			startSimplePwmHard(&m_pwm1, "ETB Enable",
-				executor,
 				pinEnable,
 				&m_pinEnable,
 				clampedFrequency,
@@ -99,7 +93,6 @@ DcMotor* initDcMotor(const dc_io& io, size_t index, bool useTwoWires) {
 		io.disablePin,
 		// todo You would not believe how you invert TLE9201 #4579
 		engineConfiguration->stepperDcInvertedPins,
-		&engine->executor,
 		engineConfiguration->etbFreq
 	);
 
@@ -116,7 +109,6 @@ DcMotor* initDcMotor(brain_pin_e coil_p, brain_pin_e coil_m, size_t index) {
 		coil_m,
 		Gpio::Unassigned, /* pinDisable */
 		engineConfiguration->stepperDcInvertedPins,
-		&engine->executor,
 		engineConfiguration->etbFreq /* same in case of stepper? */
 	);
 

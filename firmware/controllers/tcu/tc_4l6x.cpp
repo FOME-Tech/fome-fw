@@ -16,21 +16,18 @@ void Gm4l6xTransmissionController::init() {
 		enginePins.tcuTccPwmSolenoid.initPin("TCC PWM Solenoid", engineConfiguration->tcu_tcc_pwm_solenoid, engineConfiguration->tcu_tcc_pwm_solenoid_mode);
 		startSimplePwm(&tccPwm,
 									 "TCC",
-									 &engine->executor,
 									 &enginePins.tcuTccPwmSolenoid,
 									 engineConfiguration->tcu_tcc_pwm_solenoid_freq,
 									 0);
 		enginePins.tcuPcSolenoid.initPin("Pressure Control Solenoid", engineConfiguration->tcu_pc_solenoid_pin, engineConfiguration->tcu_pc_solenoid_pin_mode);
 		startSimplePwm(&pcPwm,
 									 "Line Pressure",
-									 &engine->executor,
 									 &enginePins.tcuPcSolenoid,
 									 engineConfiguration->tcu_pc_solenoid_freq,
 									 0);
 		enginePins.tcu32Solenoid.initPin("3-2 Shift Solenoid", engineConfiguration->tcu_32_solenoid_pin, engineConfiguration->tcu_32_solenoid_pin_mode);
 		startSimplePwm(&shift32Pwm,
 									 "3-2 Solenoid",
-									 &engine->executor,
 									 &enginePins.tcu32Solenoid,
 									 engineConfiguration->tcu_32_solenoid_freq,
 									 0);
@@ -153,11 +150,12 @@ void Gm4l6xTransmissionController::set32State(gear_e gear) {
 		if (!vss.Valid) {
 			return;
 		}
-		uint8_t (*pcts)[sizeof(config->tcu_32SpeedBins)/sizeof(config->tcu_32SpeedBins[0])];
+		// TODO: looks unfinished?
+		// uint8_t (*pcts)[sizeof(config->tcu_32SpeedBins)/sizeof(config->tcu_32SpeedBins[0])];
 		int pct = interpolate2d(vss.Value, config->tcu_32SpeedBins, config->tcu_32Vals);
 		shift32Pwm.setSimplePwmDutyCycle(pct*0.01);
 	} else {
-		shift32Pwm.setSimplePwmDutyCycle(0);		
+		shift32Pwm.setSimplePwmDutyCycle(0);
 	}
 }
 

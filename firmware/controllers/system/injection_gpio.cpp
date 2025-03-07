@@ -6,20 +6,6 @@
 
 extern bool printFuelDebug;
 
-void startSimultaneousInjection(void*) {
-	efitick_t nowNt = getTimeNowNt();
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		enginePins.injectors[i].open(nowNt);
-	}
-}
-
-void endSimultaneousInjectionOnlyTogglePins() {
-	efitick_t nowNt = getTimeNowNt();
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		enginePins.injectors[i].close(nowNt);
-	}
-}
-
 InjectorOutputPin::InjectorOutputPin() : NamedOutputPin() {
 	m_overlappingCounter = 1; // Force update in reset
 	reset();
@@ -82,44 +68,3 @@ void InjectorOutputPin::close(efitick_t nowNt) {
 		m_overlappingCounter = 0;
 	}
 }
-
-void InjectorOutputPin::setHigh() {
-    NamedOutputPin::setHigh();
-    TunerStudioOutputChannels *state = getTunerStudioOutputChannels();
-	// this is NASTY but what's the better option? bytes? At cost of 22 extra bytes in output status packet?
-	switch (injectorIndex) {
-	case 0:
-		state->injectorState1 = true;
-		break;
-	case 1:
-		state->injectorState2 = true;
-		break;
-	case 2:
-		state->injectorState3 = true;
-		break;
-	case 3:
-		state->injectorState4 = true;
-		break;
-	}
-}
-
-void InjectorOutputPin::setLow() {
-    NamedOutputPin::setLow();
-    TunerStudioOutputChannels *state = getTunerStudioOutputChannels();
-	// this is NASTY but what's the better option? bytes? At cost of 22 extra bytes in output status packet?
-	switch (injectorIndex) {
-	case 0:
-		state->injectorState1 = false;
-		break;
-	case 1:
-		state->injectorState2 = false;
-		break;
-	case 2:
-		state->injectorState3 = false;
-		break;
-	case 3:
-		state->injectorState4 = false;
-		break;
-	}
-}
-

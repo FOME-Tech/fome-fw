@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "speed_density_airmass.h"
 
-AirmassResult SpeedDensityAirmass::getAirmass(int rpm, bool postState) {
+AirmassResult SpeedDensityAirmass::getAirmass(float rpm, bool postState) {
 	ScopePerf perf(PE::GetSpeedDensityFuel);
 
 	auto map = getMap(rpm, postState);
@@ -14,7 +14,7 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 	 * most of the values are pre-calculated for performance reasons
 	 */
 	float tChargeK = engine->engineState.sd.tChargeK;
-	if (cisnan(tChargeK)) {
+	if (std::isnan(tChargeK)) {
 		warning(ObdCode::CUSTOM_ERR_TCHARGE_NOT_READY2, "tChargeK not ready"); // this would happen before we have CLT reading for example
 		return {};
 	}
@@ -22,7 +22,7 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 	float ve = getVe(rpm, map, postState);
 
 	float airMass = getAirmassImpl(ve, map, tChargeK);
-	if (cisnan(airMass)) {
+	if (std::isnan(airMass)) {
 		warning(ObdCode::CUSTOM_ERR_6685, "NaN airMass");
 		return {};
 	}
@@ -47,7 +47,7 @@ float SpeedDensityAirmass::getAirflow(float rpm, float map, bool postState) {
 	return massPerCycle * rpm / 60;
 }
 
-float SpeedDensityAirmass::getMap(int rpm, bool postState) const {
+float SpeedDensityAirmass::getMap(float rpm, bool postState) const {
 	float fallbackMap = m_mapEstimationTable->getValue(rpm, Sensor::getOrZero(SensorType::Tps1));
 
 #if EFI_TUNER_STUDIO
@@ -56,5 +56,15 @@ float SpeedDensityAirmass::getMap(int rpm, bool postState) const {
 	}
 #endif // EFI_TUNER_STUDIO
 
-	return Sensor::get(SensorType::Map).value_or(fallbackMap);
+	auto map = Sensor::get(SensorType::Map);
+	if (!map) {
+		// MAP sensor is dead, nothing we can do
+		return fallbackMap;
+	} else if (engineConfiguration->useMapEstimateDuringTransient && engine->module<TpsAccelEnrichment>()->isAboveAccelThreshold) {
+		// Take the greater of real or estimated map so we don't under-fuel on a transient
+		return std::max(map.Value, fallbackMap);
+	} else {
+		// Normal operation, 
+		return map.Value;
+	}
 }

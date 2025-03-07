@@ -11,6 +11,7 @@ void Timer::reset() {
 }
 
 void Timer::init() {
+	// Use not-quite-minimum value to avoid overflow
 	m_lastReset = INT64_MIN / 8;
 }
 
@@ -26,11 +27,13 @@ bool Timer::hasElapsedMs(float milliseconds) const {
 	return hasElapsedUs(milliseconds * 1000);
 }
 
+static const efidur_t clock32max = efidur_t{UINT32_MAX - 1};
+
 bool Timer::hasElapsedUs(float microseconds) const {
 	auto delta = getTimeNowNt() - m_lastReset;
 
 	// If larger than 32 bits, timer has certainly expired
-	if (delta >= UINT32_MAX) {
+	if (delta >= clock32max) {
 		return true;
 	}
 
@@ -61,8 +64,8 @@ float Timer::getElapsedUs(efitick_t nowNt) const {
 		return 0;
 	}
 
-	if (deltaNt > UINT32_MAX - 1) {
-		deltaNt = UINT32_MAX - 1;
+	if (deltaNt > clock32max) {
+		deltaNt = clock32max;
 	}
 
 	auto delta32 = (uint32_t)deltaNt;

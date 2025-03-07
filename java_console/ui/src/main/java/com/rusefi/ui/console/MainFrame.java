@@ -4,11 +4,10 @@ import com.devexperts.logging.Logging;
 import com.rusefi.*;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.EngineState;
 import com.rusefi.io.*;
 import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.core.preferences.storage.Node;
-import com.rusefi.core.ui.FrameHelper;
+import com.rusefi.ui.FrameHelper;
 import com.rusefi.ui.util.UiUtils;
 import com.rusefi.util.IoUtils;
 import org.jetbrains.annotations.NotNull;
@@ -53,7 +52,7 @@ public class MainFrame {
         }
     };
 
-    public ConnectionFailedListener listener;
+    public final ConnectionFailedListener listener;
 
     public MainFrame(ConsoleUI consoleUI, TabbedPanel tabbedPane) {
         this.consoleUI = Objects.requireNonNull(consoleUI);
@@ -101,12 +100,9 @@ public class MainFrame {
             }
         });
 
-        consoleUI.uiContext.getLinkManager().getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, new EngineState.ValueCallback<String>() {
-            @Override
-            public void onUpdate(String firmwareVersion) {
+        consoleUI.uiContext.getLinkManager().getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, (String firmwareVersion) -> {
                 Launcher.firmwareVersion.set(firmwareVersion);
                 setTitle();
-            }
         });
     }
 

@@ -20,7 +20,7 @@
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
 // todo: clean this mess, this should become 'static'/private
-EnginePins enginePins;
+CCM_OPTIONAL EnginePins enginePins;
 
 static const char* const sparkNames[] = { "Coil 1", "Coil 2", "Coil 3", "Coil 4", "Coil 5", "Coil 6", "Coil 7", "Coil 8",
 		"Coil 9", "Coil 10", "Coil 11", "Coil 12"};
@@ -50,15 +50,17 @@ static const char* const injectorNames[] = { "Injector 1", "Injector 2", "Inject
 		"Injector 7", "Injector 8", "Injector 9", "Injector 10", "Injector 11", "Injector 12"};
 
 static const char* const injectorShortNames[] = { PROTOCOL_INJ1_SHORT_NAME, "i2", "i3", "i4", "i5", "i6", "i7", "i8",
-		"j9", "iA", "iB", "iC"};
+		"i9", "iA", "iB", "iC"};
+
+static const char* const injectorStage2Names[] = { "Injector Second Stage 1", "Injector Second Stage 2", "Injector Second Stage 3", "Injector Second Stage 4", "Injector Second Stage 5", "Injector Second Stage 6",
+		"Injector Second Stage 7", "Injector Second Stage 8", "Injector Second Stage 9", "Injector Second Stage 10", "Injector Second Stage 11", "Injector Second Stage 12"};
+
+static const char* const injectorStage2ShortNames[] = { PROTOCOL_INJ1_STAGE2_SHORT_NAME, "j2", "j3", "j4", "j5", "j6", "j7", "j8",
+		"j9", "jA", "jB", "jC"};
 
 static const char* const auxValveShortNames[] = { "a1", "a2"};
 
 static RegisteredOutputPin * registeredOutputHead = nullptr;
-
-RegisteredNamedOutputPin::RegisteredNamedOutputPin(const char *name, size_t pinOffset,
-		size_t pinModeOffset) : RegisteredOutputPin(name, pinOffset, pinModeOffset) {
-}
 
 RegisteredOutputPin::RegisteredOutputPin(const char *registrationName, size_t pinOffset,
 		size_t pinModeOffset)
@@ -97,7 +99,7 @@ bool RegisteredOutputPin::isPinConfigurationChanged() {
 	pin_output_mode_e newMode = *(pin_output_mode_e *) ((void *) (&((char*) engineConfiguration)[m_pinModeOffset]));
 	return pinChanged || curMode != newMode;
 #else
-    return true;
+	return true;
 #endif // EFI_PROD_CODE
 }
 
@@ -111,9 +113,9 @@ void RegisteredOutputPin::init() {
 		newMode = OM_DEFAULT;
 	}
 
-    if (isPinConfigurationChanged()) {
+	if (isPinConfigurationChanged()) {
 		initPin(m_registrationName, newPin, newMode);
-    }
+	}
 }
 
 void RegisteredOutputPin::unregister() {
@@ -134,7 +136,7 @@ void RegisteredOutputPin::unregister() {
 
 EnginePins::EnginePins() :
 		mainRelay("Main Relay", CONFIG_PIN_OFFSETS(mainRelay)),
-		hpfpValve("HPFP Valve", CONFIG_PIN_OFFSETS(hpfpValve)),
+		hpfpValve("HPFP", CONFIG_PIN_OFFSETS(hpfpValve)),
 		starterControl("Starter Relay", CONFIG_PIN_OFFSETS(starterControl)),
 		starterRelayDisable("Starter Disable Relay", CONFIG_PIN_OFFSETS(starterRelayDisable)),
 		fanRelay("Fan Relay", CONFIG_PIN_OFFSETS(fan)),
@@ -151,13 +153,10 @@ EnginePins::EnginePins() :
 		tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput)),
 		speedoOut("speedoOut", CONFIG_OFFSET(speedometerOutputPin))
 {
-	hpfpValve.setName(PROTOCOL_HPFP_NAME);
-
 	static_assert(efi::size(sparkNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");
-	for (int i = 0; i < MAX_CYLINDER_COUNT;i++) {
-		enginePins.coils[i].coilIndex = i;
+	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		enginePins.coils[i].setName(sparkNames[i]);
 		enginePins.coils[i].shortName = sparkShortNames[i];
 
@@ -167,10 +166,14 @@ EnginePins::EnginePins() :
 		enginePins.injectors[i].injectorIndex = i;
 		enginePins.injectors[i].setName(injectorNames[i]);
 		enginePins.injectors[i].shortName = injectorShortNames[i];
+
+		enginePins.injectorsStage2[i].injectorIndex = i;
+		enginePins.injectorsStage2[i].setName(injectorStage2Names[i]);
+		enginePins.injectorsStage2[i].shortName = injectorStage2ShortNames[i];
 	}
 
 	static_assert(efi::size(auxValveShortNames) >= AUX_DIGITAL_VALVE_COUNT, "Too many aux valve pins");
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT;i++) {
+	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
 		enginePins.auxValve[i].setName(auxValveShortNames[i]);
 	}
 }
@@ -196,6 +199,7 @@ bool EnginePins::stopPins() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		result |= coils[i].stop();
 		result |= injectors[i].stop();
+		result |= injectorsStage2[i].stop();
 		result |= trailingCoils[i].stop();
 	}
 	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
@@ -247,10 +251,8 @@ void EnginePins::startPins() {
 }
 
 void EnginePins::reset() {
-	for (int i = 0; i < MAX_CYLINDER_COUNT;i++) {
+	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		injectors[i].reset();
-		coils[i].reset();
-		trailingCoils[i].reset();
 	}
 }
 
@@ -264,6 +266,7 @@ void EnginePins::stopIgnitionPins() {
 void EnginePins::stopInjectionPins() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		unregisterOutputIfPinOrModeChanged(enginePins.injectors[i], injectionPins[i], injectionPinMode);
+		unregisterOutputIfPinOrModeChanged(enginePins.injectorsStage2[i], injectionPinsStage2[i], injectionPinMode);
 	}
 }
 
@@ -314,6 +317,12 @@ void EnginePins::startInjectionPins() {
 			output->initPin(output->getName(), engineConfiguration->injectionPins[i],
 					engineConfiguration->injectionPinMode);
 		}
+
+		output = &enginePins.injectorsStage2[i];
+		if (isPinOrModeChanged(injectionPinsStage2[i], injectionPinMode)) {
+			output->initPin(output->getName(), engineConfiguration->injectionPinsStage2[i],
+					engineConfiguration->injectionPinMode);
+		}
 	}
 #endif /* EFI_PROD_CODE */
 }
@@ -321,8 +330,14 @@ void EnginePins::startInjectionPins() {
 NamedOutputPin::NamedOutputPin() : OutputPin() {
 }
 
-NamedOutputPin::NamedOutputPin(const char *name) 
+NamedOutputPin::NamedOutputPin(const char* name)
 	: m_name(name)
+{
+}
+
+NamedOutputPin::NamedOutputPin(const char* name, const char* shortname)
+	: shortName(shortname)
+	, m_name(name)
 {
 }
 
@@ -356,7 +371,7 @@ void NamedOutputPin::setHigh() {
 	setValue(true);
 
 #if EFI_ENGINE_SNIFFER
-    addEngineSnifferOutputPinEvent(this, true);
+	addEngineSnifferOutputPinEvent(this, true);
 #endif /* EFI_ENGINE_SNIFFER */
 }
 
@@ -395,53 +410,6 @@ void InjectorOutputPin::reset() {
 
 	// todo: this could be refactored by calling some super-reset method
 	m_currentLogicValue = 0;
-}
-
-IgnitionOutputPin::IgnitionOutputPin() {
-	reset();
-}
-
-void IgnitionOutputPin::setHigh() {
-	NamedOutputPin::setHigh();
-	// this is NASTY but what's the better option? bytes? At cost of 22 extra bytes in output status packet?
-	switch (coilIndex) {
-	case 0:
-		engine->outputChannels.coilState1 = true;
-		break;
-	case 1:
-		engine->outputChannels.coilState2 = true;
-		break;
-	case 2:
-		engine->outputChannels.coilState3 = true;
-		break;
-	case 3:
-		engine->outputChannels.coilState4 = true;
-		break;
-	}
-}
-
-void IgnitionOutputPin::setLow() {
-	NamedOutputPin::setLow();
-	// this is NASTY but what's the better option? bytes? At cost of 22 extra bytes in output status packet?
-	switch (coilIndex) {
-	case 0:
-		engine->outputChannels.coilState1 = false;
-		break;
-	case 1:
-		engine->outputChannels.coilState2 = false;
-		break;
-	case 2:
-		engine->outputChannels.coilState3 = false;
-		break;
-	case 3:
-		engine->outputChannels.coilState4 = false;
-		break;
-	}
-}
-
-void IgnitionOutputPin::reset() {
-	outOfOrder = false;
-	signalFallSparkId = 0;
 }
 
 bool OutputPin::isInitialized() const {
@@ -596,7 +564,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		int pin = getHwPin(msg, brainPin);
 
 		// Validate port
-		if (port == GPIO_NULL) {
+		if (!port) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "OutputPin::initPin got invalid port for pin idx %d", static_cast<int>(brainPin));
 			return;
 		}
@@ -624,6 +592,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		PAL_MODE_OUTPUT_PUSHPULL : PAL_MODE_OUTPUT_OPENDRAIN;
 
 	efiSetPadMode(msg, m_brainPin, ioMode);
+#ifndef DISABLE_PIN_STATE_VALIDATION
 	if (brain_pin_is_onchip(m_brainPin)) {
 		int actualValue = palReadPad(m_port, m_pin);
 		// we had enough drama with pin configuration in board.h and else that we shall self-check
@@ -635,15 +604,14 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 				? !actualValue 
 				: actualValue;
 
-#ifndef DISABLE_PIN_STATE_VALIDATION
 			// if the pin was set to logical 1, then set an error and disable the pin so that things don't catch fire
 			if (logicalValue) {
 				firmwareError(ObdCode::OBD_PCM_Processor_Fault, "HARDWARE VALIDATION FAILED %s: unexpected startup pin state %s actual value=%d logical value=%d mode=%s", msg, hwPortname(m_brainPin), actualValue, logicalValue, getPin_output_mode_e(outputMode));
 				OutputPin::deInit();
 			}
-#endif
 		}
 	}
+#endif // DISABLE_PIN_STATE_VALIDATION
 #endif /* EFI_GPIO_HARDWARE */
 }
 
@@ -672,24 +640,15 @@ void OutputPin::deInit() {
 
 #if EFI_GPIO_HARDWARE
 
-// questionable trick: we avoid using 'getHwPort' and 'getHwPin' in case of errors in order to increase the changes of turning the LED
-// by reducing stack requirement
-ioportid_t criticalErrorLedPort;
-ioportmask_t criticalErrorLedPin;
-uint8_t criticalErrorLedState;
-
 #if EFI_PROD_CODE
 static void initErrorLed(Gpio led) {
-	enginePins.errorLedPin.initPin("led: CRITICAL status", led, (LED_PIN_MODE));
-	criticalErrorLedPort = getHwPort("CRITICAL", led);
-	criticalErrorLedPin = getHwPin("CRITICAL", led);
-	criticalErrorLedState = (LED_PIN_MODE == OM_INVERTED) ? 0 : 1;
+	enginePins.errorLedPin.initPin("Error LED", led, (LED_PIN_MODE));
 }
 #endif /* EFI_PROD_CODE */
 
 void initPrimaryPins() {
 #if EFI_PROD_CODE
-    initErrorLed(LED_CRITICAL_ERROR_BRAIN_PIN);
+	initErrorLed(LED_CRITICAL_ERROR_BRAIN_PIN);
 
 	addConsoleAction("gpio_pins", EnginePins::debug);
 #endif /* EFI_PROD_CODE */

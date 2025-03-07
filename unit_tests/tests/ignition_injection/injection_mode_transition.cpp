@@ -62,19 +62,24 @@ TEST(fuelControl, transitionIssue1592) {
 
 	{
 		// Injector 2 should be scheduled to open then close
-		void* inj2 = reinterpret_cast<void*>(&engine->injectionEvents.elements[1]);
+		InjectorContext ctx;
+		ctx.eventIndex = 1;
+		// fire cyl 2+3 (batch)
+		ctx.outputsMask = 1 << 1 | 1 << 2;
 
-		ASSERT_EQ(engine->executor.size(), 2);
+		void* ctxAsPtr = bit_cast<void*>(ctx);
+
+		ASSERT_EQ(engine->scheduler.size(), 2);
 
 		// Check that the action is correct - we don't care about the timing necessarily
-		auto sched_open = engine->executor.getForUnitTest(0);
-		ASSERT_EQ(sched_open->action.getArgument(), inj2);
-		ASSERT_EQ(sched_open->action.getCallback(), (void(*)(void*))turnInjectionPinHigh);
+		auto sched_open = engine->scheduler.getForUnitTest(0);
+		ASSERT_EQ(sched_open->action.getArgument(), ctxAsPtr);
+		ASSERT_EQ(sched_open->action.getCallback(), (void(*)(void*))startInjection);
 
-		auto sched_close = engine->executor.getForUnitTest(1);
+		auto sched_close = engine->scheduler.getForUnitTest(1);
 		// Next action should be closing the same injector
-		ASSERT_EQ(sched_close->action.getArgument(), inj2);
-		ASSERT_EQ(sched_close->action.getCallback(), (void(*)(void*))turnInjectionPinLow);
+		ASSERT_EQ(sched_close->action.getArgument(), ctxAsPtr);
+		ASSERT_EQ(sched_close->action.getCallback(), (void(*)(void*))endInjection);
 	}
 
 	// Run the engine for some revs
@@ -85,7 +90,15 @@ TEST(fuelControl, transitionIssue1592) {
 	// Check that no injectors are stuck open
 	// Injectors 1/3 should be open
 	EXPECT_EQ(enginePins.injectors[0].getOverlappingCounter(), 1);
-	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 1);
 	EXPECT_EQ(enginePins.injectors[2].getOverlappingCounter(), 1);
+	EXPECT_EQ(enginePins.injectors[3].getOverlappingCounter(), 0);
+
+	// Trigger signal disappears but time progresses, all injectors should close
+	eth.moveTimeForwardAndInvokeEventsUs(1e6);
+
+	EXPECT_EQ(enginePins.injectors[0].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[1].getOverlappingCounter(), 0);
+	EXPECT_EQ(enginePins.injectors[2].getOverlappingCounter(), 0);
 	EXPECT_EQ(enginePins.injectors[3].getOverlappingCounter(), 0);
 }

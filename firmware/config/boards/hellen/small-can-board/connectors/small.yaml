@@ -93,7 +93,7 @@ pins:
     # H144_IN_D_1
     id: [E12, E12]
     class: [event_inputs, switch_inputs]
-    function: Digital Input 2 / SENT
+    function: Digital Input 2
     type: hall
     ts_name: C3 - Digital Input 2
 

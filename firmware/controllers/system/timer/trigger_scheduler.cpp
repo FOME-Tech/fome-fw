@@ -3,7 +3,27 @@
 #include "event_queue.h"
 
 bool TriggerScheduler::assertNotInList(AngleBasedEvent *head, AngleBasedEvent *element) {
-       assertNotInListMethodBody(head, element, nextToothEvent)
+	/* this code is just to validate state, no functional load*/
+	decltype(head) current;
+	int counter = 0;
+	LL_FOREACH2(head, current, nextToothEvent) {
+		if (++counter > QUEUE_LENGTH_LIMIT) {
+			firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Looped queue?");
+			return false;
+		}
+
+		if (current == element) {
+			/**
+			 * for example, this might happen in case of sudden RPM change if event
+			 * was not scheduled by angle but was scheduled by time. In case of scheduling
+			 * by time with slow RPM the whole next fast revolution might be within the wait 
+			 */
+			warning(ObdCode::CUSTOM_RE_ADDING_INTO_EXECUTION_QUEUE, "re-adding element into event_queue");
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s action) {
@@ -60,10 +80,10 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 	}
 }
 
-void TriggerScheduler::scheduleEventsUntilNextTriggerTooth(int rpm,
+void TriggerScheduler::onEnginePhase(float rpm,
 							   efitick_t edgeTimestamp, float currentPhase, float nextPhase) {
 
-	if (!isValidRpm(rpm)) {
+	if (!isValidRpm(rpm) || !EFI_SHAFT_POSITION_INPUT) {
 		 // this might happen for instance in case of a single trigger event after a pause
 		return;
 	}
@@ -94,14 +114,9 @@ void TriggerScheduler::scheduleEventsUntilNextTriggerTooth(int rpm,
 
 			scheduling_s * sDown = &current->scheduling;
 
-#if SPARK_EXTREME_LOGGING
-			efiPrintf("time to invoke [%.1f, %.1f) %d %d",
-				  currentPhase, nextPhase, getRevolutionCounter(), (int)getTimeNowUs());
-#endif /* SPARK_EXTREME_LOGGING */
-
 			// In case this event was scheduled by overdwell protection, cancel it so
 			// we can re-schedule at the correct time
-			engine->executor.cancel(sDown);
+			engine->scheduler.cancel(sDown);
 
 			scheduleByAngle(
 				sDown,

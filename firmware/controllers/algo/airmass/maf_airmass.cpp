@@ -1,7 +1,4 @@
-
-#include "engine_configuration.h"
-#include "sensor.h"
-#include "error_handling.h"
+#include "pch.h"
 
 #include "maf_airmass.h"
 #include "maf.h"
@@ -31,7 +28,7 @@ float MafAirmass::getMaf() const {
 	}
 }
 
-AirmassResult MafAirmass::getAirmass(int rpm, bool postState) {
+AirmassResult MafAirmass::getAirmass(float rpm, bool postState) {
 	float maf = getMaf();
 
 	return getAirmassImpl(maf, rpm, postState);
@@ -41,7 +38,7 @@ AirmassResult MafAirmass::getAirmass(int rpm, bool postState) {
  * Function block now works to create a standardised load from the cylinder filling as well as tune fuel via VE table. 
  * @return total duration of fuel injection per engine cycle, in milliseconds
  */
-AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, int rpm, bool postState) const {
+AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool postState) const {
 	// If the engine is stopped, MAF is meaningless
 	if (rpm == 0) {
 		return {};

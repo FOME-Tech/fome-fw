@@ -13,11 +13,10 @@
 #define MOCK_ADC_SIZE 26
 
 struct Accelerometer {
-	float x = 0; // G value
-	float y = 0;
-	float z = 0;
-	float yaw = 0;
-	float roll = 0;
+	float lat = 0; // G value
+	float lon = 0;
+	float vert = 0;
+	float yawRate = 0;
 };
 
 struct SensorsState {
@@ -71,7 +70,7 @@ public:
 
 struct multispark_state
 {
-	efitick_t delay = 0;
-	efitick_t dwell = 0;
+	efidur_t delay;
+	efidur_t dwell;
 	uint8_t count = 0;
 };

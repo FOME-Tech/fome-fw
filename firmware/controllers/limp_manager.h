@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-// Keep this list in sync with fuelIgnCutCodeList in rusefi.input!
+// Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 enum class ClearReason : uint8_t {
 	None, // 0
 	Fatal,
@@ -25,8 +25,8 @@ enum class ClearReason : uint8_t {
 	ACR, // 16 - Harley Automatic Compression Release
 	LambdaProtection, // 17
 
-	// Keep this list in sync with fuelIgnCutCodeList in rusefi.input!
-	// todo: add a code generator between ClearReason and fuelIgnCutCodeList in rusefi.input
+	// Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
+	// todo: add a code generator between ClearReason and fuelIgnCutCodeList in tunerstudio.template.ini
 };
 
 enum class TpsState : uint8_t {
@@ -35,13 +35,13 @@ enum class TpsState : uint8_t {
 	TpsError,
 	PpsError, // 3
 	IntermittentTps,
-	PidJitter,
+	UnusedCode5,
 	Lua, // 6
-	Manual,
+	UnusedCode7,
 	NotConfigured,
 	Redundancy, // 9
 	IntermittentPps,
-	// keep this list in sync with etbCutCodeList in rusefi.input!
+	// keep this list in sync with etbCutCodeList in tunerstudio.template.ini!
 };
 
 // Only allows clearing the value, but never resetting it.
@@ -110,7 +110,7 @@ public:
 	ShutdownController shutdownController;
 
 	// This is called from periodicFastCallback to update internal state
-	void updateState(int rpm, efitick_t nowNt);
+	void updateState(float rpm, efitick_t nowNt);
 
 	void onFastCallback() override;
 	void onIgnitionStateChanged(bool ignitionOn) override;
@@ -130,11 +130,15 @@ public:
 	void fatalError();
 
 private:
+	bool isHardRevLimit(float rpm);
+
 	void setFaultRevLimit(int limit);
 
 	Hysteresis m_revLimitHysteresis;
 	Hysteresis m_boostCutHysteresis;
 	Hysteresis m_injectorDutyCutHysteresis;
+
+	float m_hardRevLimit = 0;
 
 	// Start with no fault rev limit
 	int32_t m_faultRevLimit = INT32_MAX;
@@ -157,6 +161,9 @@ private:
 
 	// Tracks how long injector duty has been over the sustained limit
 	Timer m_injectorDutySustainedTimer;
+
+	// Tracks how long oil pressure has been below threshold
+	Timer m_lowOilPressureTimer;
 };
 
 LimpManager * getLimpManager();

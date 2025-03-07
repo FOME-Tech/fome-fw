@@ -19,8 +19,8 @@
 #include "stepper.h"
 /* Storing two following structs in CCM memory cause HardFault (at least on F4)
  * This need deep debuging. Until it is moved out of CMM. */
-static StepDirectionStepper iacStepperHw /*CCM_OPTIONAL*/;
-static DualHBridgeStepper iacHbridgeHw /*CCM_OPTIONAL*/;
+static StepDirectionStepper iacStepperHw;
+static DualHBridgeStepper iacHbridgeHw;
 StepperMotor iacMotor CCM_OPTIONAL;
 #endif /* EFI_UNIT_TEST */
 
@@ -148,7 +148,6 @@ void initIdleHardware() {
 		 */
 		// todo: even for double-solenoid mode we can probably use same single SimplePWM
 		startSimplePwm(&idleSolenoidOpen, "Idle Valve Open",
-			&engine->executor,
 			&enginePins.idleSolenoidPin,
 			engineConfiguration->idle.solenoidFrequency, PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
 
@@ -159,7 +158,6 @@ void initIdleHardware() {
 			}
 
 			startSimplePwm(&idleSolenoidClose, "Idle Valve Close",
-				&engine->executor,
 				&enginePins.secondIdleSolenoidPin,
 				engineConfiguration->idle.solenoidFrequency, PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
 		}

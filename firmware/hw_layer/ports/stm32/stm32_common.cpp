@@ -52,7 +52,7 @@ extern "C" {
 // ADC_CHANNEL_IN14 // PC4
 // ADC_CHANNEL_IN15 // PC5
 
-brain_pin_e getAdcChannelBrainPin(const char *msg, adc_channel_e hwChannel) {
+brain_pin_e getAdcChannelBrainPin(const char*, adc_channel_e hwChannel) {
 	static_assert(EFI_ADC_NONE == ADC_CHANNEL_NONE);
 
 	// todo: replace this with an array :)
@@ -135,7 +135,7 @@ adc_channel_e getAdcChannel(brain_pin_e pin) {
 	case Gpio::Unassigned:
 		return EFI_ADC_NONE;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getAdcChannel %d", pin);
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getAdcChannel %d", (int)pin);
 		return EFI_ADC_ERROR;
 	}
 }
@@ -181,14 +181,14 @@ public:
 
 		// These timers are only 16 bit - don't risk overflow
 		if (m_period > 0xFFF0) {
-			firmwareError(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "PWM Frequency too low %f hz on pin \"%s\"", frequency, msg);
+			firmwareError(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "PWM Frequency too low %.1f hz on pin \"%s\"", frequency, msg);
 			return;
 		}
 
 		// If we have too few usable bits, we run out of resolution, so don't allow that either.
 		// 200 counts = 0.5% resolution
 		if (m_period < 200) {
-			firmwareError(ObdCode::CUSTOM_OBD_HIGH_FREQUENCY, "PWM Frequency too high %d hz on pin \"%s\"", frequency, msg);
+			firmwareError(ObdCode::CUSTOM_OBD_HIGH_FREQUENCY, "PWM Frequency too high %.1f hz on pin \"%s\"", frequency, msg);
 			return;
 		}
 
@@ -371,26 +371,6 @@ void jump_to_openblt() {
 }
 #endif /* EFI_PROD_CODE */
 
-#if EFI_AUX_SERIAL
-
-static bool isValidUART6TxPin(brain_pin_e pin) {
-	return pin == Gpio::C6 || pin == Gpio::G14;
-}
-
-static bool isValidUART6RxPin(brain_pin_e pin) {
-	return pin == Gpio::C7 || pin == Gpio::G9;
-}
-
-bool isValidSerialTxPin(brain_pin_e pin) {
-   return isValidUART6TxPin(pin);
-}
-
-bool isValidSerialRxPin(brain_pin_e pin) {
-   return isValidUART6RxPin(pin);
-}
-
-#endif /*EFI_AUX_SERIAL*/
-
 #if EFI_PROD_CODE
 
 BOR_Level_t BOR_Get(void) {
@@ -440,10 +420,8 @@ extern uint32_t __main_stack_base__;
 
 typedef struct port_intctx intctx_t;
 
-EXTERNC int getRemainingStack(thread_t *otp) {
+int getRemainingStack(thread_t *otp) {
 #if CH_DBG_ENABLE_STACK_CHECK
-	// this would dismiss coverity warning - see http://rusefi.com/forum/viewtopic.php?f=5&t=655
-	// coverity[uninit_use]
 	register intctx_t *r13 asm ("r13");
 	otp->activeStack = r13;
 
@@ -463,7 +441,7 @@ EXTERNC int getRemainingStack(thread_t *otp) {
 }
 
 #if HAL_USE_SPI
-bool isSpiInitialized[5] = { false, false, false, false, false };
+bool isSpiInitialized[6] = { false, false, false, false, false, false};
 
 static int getSpiAf(SPIDriver *driver) {
 #if STM32_SPI_USE_SPI1
@@ -481,6 +459,21 @@ static int getSpiAf(SPIDriver *driver) {
 		return EFI_SPI3_AF;
 	}
 #endif
+#if STM32_SPI_USE_SPI4
+	if (driver == &SPID4) {
+		return EFI_SPI4_AF;
+	}
+#endif
+#if STM32_SPI_USE_SPI5
+	if (driver == &SPID5) {
+		return EFI_SPI5_AF;
+	}
+#endif
+#if STM32_SPI_USE_SPI6
+	if (driver == &SPID6) {
+		return EFI_SPI6_AF;
+	}
+#endif
 	return -1;
 }
 
@@ -492,6 +485,12 @@ brain_pin_e getMisoPin(spi_device_e device) {
 		return engineConfiguration->spi2misoPin;
 	case SPI_DEVICE_3:
 		return engineConfiguration->spi3misoPin;
+	case SPI_DEVICE_4:
+		return engineConfiguration->spi4misoPin;
+	case SPI_DEVICE_5:
+		return engineConfiguration->spi5misoPin;
+	case SPI_DEVICE_6:
+		return engineConfiguration->spi6misoPin;
 	default:
 		break;
 	}
@@ -506,6 +505,12 @@ brain_pin_e getMosiPin(spi_device_e device) {
 		return engineConfiguration->spi2mosiPin;
 	case SPI_DEVICE_3:
 		return engineConfiguration->spi3mosiPin;
+	case SPI_DEVICE_4:
+		return engineConfiguration->spi4mosiPin;
+	case SPI_DEVICE_5:
+		return engineConfiguration->spi5mosiPin;
+	case SPI_DEVICE_6:
+		return engineConfiguration->spi6mosiPin;
 	default:
 		break;
 	}
@@ -520,6 +525,12 @@ brain_pin_e getSckPin(spi_device_e device) {
 		return engineConfiguration->spi2sckPin;
 	case SPI_DEVICE_3:
 		return engineConfiguration->spi3sckPin;
+	case SPI_DEVICE_4:
+		return engineConfiguration->spi4sckPin;
+	case SPI_DEVICE_5:
+		return engineConfiguration->spi5sckPin;
+	case SPI_DEVICE_6:
+		return engineConfiguration->spi6sckPin;
 	default:
 		break;
 	}
@@ -531,53 +542,50 @@ void turnOnSpi(spi_device_e device) {
 		return; // already initialized
 	isSpiInitialized[device] = true;
 	if (device == SPI_DEVICE_1) {
-// todo: introduce a nice structure with all fields for same SPI
 #if STM32_SPI_USE_SPI1
-//	scheduleMsg(&logging, "Turning on SPI1 pins");
 		initSpiModule(&SPID1, getSckPin(device),
 				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi1SckMode,
-				engineConfiguration->spi1MosiMode,
-				engineConfiguration->spi1MisoMode);
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI1 */
 	}
 	if (device == SPI_DEVICE_2) {
 #if STM32_SPI_USE_SPI2
-//	scheduleMsg(&logging, "Turning on SPI2 pins");
 		initSpiModule(&SPID2, getSckPin(device),
 				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi2SckMode,
-				engineConfiguration->spi2MosiMode,
-				engineConfiguration->spi2MisoMode);
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI2 */
 	}
 	if (device == SPI_DEVICE_3) {
 #if STM32_SPI_USE_SPI3
-//	scheduleMsg(&logging, "Turning on SPI3 pins");
 		initSpiModule(&SPID3, getSckPin(device),
 				getMisoPin(device),
-				getMosiPin(device),
-				engineConfiguration->spi3SckMode,
-				engineConfiguration->spi3MosiMode,
-				engineConfiguration->spi3MisoMode);
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI3 */
 	}
 	if (device == SPI_DEVICE_4) {
 #if STM32_SPI_USE_SPI4
-//		scheduleMsg(&logging, "Turning on SPI4 pins");
-		/* there are no configuration fields for SPI4 in engineConfiguration, rely on board init code
-		 * it should set proper functions for SPI4 pins */
+		initSpiModule(&SPID4, getSckPin(device),
+				getMisoPin(device),
+				getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI4 */
+	}
+	if (device == SPI_DEVICE_5) {
+#if STM32_SPI_USE_SPI5
+		initSpiModule(&SPID5, getSckPin(device),
+				getMisoPin(device),
+				getMosiPin(device));
+#endif /* STM32_SPI_USE_SPI5 */
+	}
+	if (device == SPI_DEVICE_6) {
+#if STM32_SPI_USE_SPI6
+		initSpiModule(&SPID6, getSckPin(device),
+				getMisoPin(device),
+				getMosiPin(device));
+#endif /* STM32_SPI_USE_SPI6 */
 	}
 }
 
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
-		brain_pin_e mosi,
-		int sckMode,
-		int mosiMode,
-		int misoMode) {
+void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi) {
 
 	/**
 	 * See https://github.com/rusefi/rusefi/pull/664/
@@ -585,15 +593,15 @@ void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso,
 	 * Info on the silicon defect can be found in this document, section 2.5.2:
 	 * https://www.st.com/content/ccc/resource/technical/document/errata_sheet/0a/98/58/84/86/b6/47/a2/DM00037591.pdf/files/DM00037591.pdf/jcr:content/translations/en.DM00037591.pdf
 	 */
-	efiSetPadMode("SPI clock", sck,	PAL_MODE_ALTERNATE(getSpiAf(driver)) | sckMode | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SPI clock", sck,	PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
 
-	efiSetPadMode("SPI master out", mosi, PAL_MODE_ALTERNATE(getSpiAf(driver)) | mosiMode | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SPI master out", mosi, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
 
 	// Activate the internal pullup on MISO: SD cards indicate "busy" by holding MOSI low,
 	// so in case there is no SD card installed, the line could float low and indicate that
 	// the (non existent) card is busy.  We pull the line high to indicate "not busy" in case
 	// of a missing card.
-	efiSetPadMode("SPI master in ", miso, PAL_MODE_ALTERNATE(getSpiAf(driver)) | misoMode | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SPI master in ", miso, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 }
 
 void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin) {

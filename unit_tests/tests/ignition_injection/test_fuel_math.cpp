@@ -47,7 +47,7 @@ TEST(AirmassModes, AlphaNNormal) {
 	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D)))
 		.WillOnce(Return(35.0f));
 
-	AlphaNAirmass dut(veTable);
+	AlphaNAirmass dut(&veTable);
 
 	// that's 0.71% not 71%
 	Sensor::setMockValue(SensorType::Tps1, 0.71f);
@@ -60,13 +60,47 @@ TEST(AirmassModes, AlphaNNormal) {
 	EXPECT_NEAR(result.EngineLoadPercent, 0.71f, EPS4D);
 }
 
+TEST(AirmassModes, AlphaNUseIat) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	// 4 cylinder 4 liter = easy math
+	engineConfiguration->displacement = 4.0f;
+	engineConfiguration->cylindersCount = 4;
+
+	StrictMock<MockVp3d> veTable;
+
+	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D)))
+		.WillRepeatedly(Return(35.0f));
+
+	AlphaNAirmass dut(&veTable);
+
+	// that's 0.71% not 71%
+	Sensor::setMockValue(SensorType::Tps1, 0.71f);
+
+	// Mass of 1 liter of air * VE
+	mass_t expectedAirmass = 1.2047f * 0.35f;
+
+	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmass, EPS4D);
+
+	engineConfiguration->alphaNUseIat = true;
+
+	// Cold we get more airmass
+	float expectedAirmassCold = expectedAirmass * (273.0f + 20) / (273.0f + 0);
+	Sensor::setMockValue(SensorType::Iat, 0);
+	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassCold, EPS4D);
+
+	// Hot we get less airmass
+	float expectedAirmassHot = expectedAirmass * (273.0f + 20) / (273.0f + 40);
+	Sensor::setMockValue(SensorType::Iat, 40);
+	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassHot, EPS4D);
+}
+
 TEST(AirmassModes, AlphaNFailedTps) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	// Shouldn't get called
 	StrictMock<MockVp3d> veTable;
 
-	AlphaNAirmass dut(veTable);
+	AlphaNAirmass dut(&veTable);
 
 	// explicitly reset the sensor
 	Sensor::resetMockValue(SensorType::Tps1);
@@ -87,7 +121,7 @@ TEST(AirmassModes, MafNormal) {
 	EXPECT_CALL(veTable, getValue(6000, FloatNear(70.9814f, EPS4D)))
 		.WillOnce(Return(75.0f));
 
-	MafAirmass dut(veTable);
+	MafAirmass dut(&veTable);
 
 	auto airmass = dut.getAirmassImpl(200, 6000, false);
 
@@ -109,9 +143,9 @@ TEST(AirmassModes, VeOverride) {
 	}
 
 	struct DummyAirmassModel : public AirmassVeModelBase {
-		DummyAirmassModel(const ValueProvider3D& veTable) : AirmassVeModelBase(veTable) {}
+		DummyAirmassModel(const ValueProvider3D* veTable) : AirmassVeModelBase(veTable) {}
 
-		AirmassResult getAirmass(int rpm, bool postState) override {
+		AirmassResult getAirmass(float rpm, bool postState) override {
 			// Default load value 10, will be overriden
 			getVe(rpm, 10.0f, postState);
 
@@ -120,7 +154,7 @@ TEST(AirmassModes, VeOverride) {
 	};
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	DummyAirmassModel dut(veTable);
+	DummyAirmassModel dut(&veTable);
 
 	// Use default mode - will call with 10
 	dut.getAirmass(0, true);
@@ -150,7 +184,7 @@ TEST(AirmassModes, FallbackMap) {
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	SpeedDensityAirmass dut(veTable, mapFallback);
+	SpeedDensityAirmass dut(&veTable, mapFallback);
 
 	// TPS at 20%
 	Sensor::setMockValue(SensorType::Tps1, 20);
@@ -227,10 +261,10 @@ TEST(FuelMath, CylinderFuelTrim) {
 
 	// Check that each cylinder gets the expected amount of fuel
 	float unadjusted = 0.072142f;
-	EXPECT_NEAR(engine->engineState.injectionMass[0], unadjusted * 0.96, EPS4D);
-	EXPECT_NEAR(engine->engineState.injectionMass[1], unadjusted * 0.98, EPS4D);
-	EXPECT_NEAR(engine->engineState.injectionMass[2], unadjusted * 1.02, EPS4D);
-	EXPECT_NEAR(engine->engineState.injectionMass[3], unadjusted * 1.04, EPS4D);
+	EXPECT_NEAR(engine->cylinders[0].getInjectionMass(), unadjusted * 0.96, EPS4D);
+	EXPECT_NEAR(engine->cylinders[1].getInjectionMass(), unadjusted * 0.98, EPS4D);
+	EXPECT_NEAR(engine->cylinders[2].getInjectionMass(), unadjusted * 1.02, EPS4D);
+	EXPECT_NEAR(engine->cylinders[3].getInjectionMass(), unadjusted * 1.04, EPS4D);
 }
 
 struct MockIdle : public MockIdleController {

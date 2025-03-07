@@ -3,7 +3,7 @@
 #include "airmass.h"
 #include "idle_thread.h"
 
-AirmassVeModelBase::AirmassVeModelBase(const ValueProvider3D& veTable) : m_veTable(&veTable) {}
+AirmassVeModelBase::AirmassVeModelBase(const ValueProvider3D* veTable) : m_veTable(veTable) {}
 
 static float getVeLoadAxis(ve_override_e mode, float passedLoad) {
 	switch(mode) {
@@ -14,20 +14,20 @@ static float getVeLoadAxis(ve_override_e mode, float passedLoad) {
 	}
 }
 
-float AirmassVeModelBase::getVe(int rpm, float load, bool postState) const {
-	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_veTable != nullptr, "VE table null", 0);
-
+float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 	// Override the load value if necessary
 	load = getVeLoadAxis(engineConfiguration->veOverrideMode, load);
 
-	percent_t ve = m_veTable->getValue(rpm, load);
+	percent_t ve = m_veTable ? m_veTable->getValue(rpm, load) : getVeImpl(rpm, load);
+
+	float idleVeLoad = load;
 
 #if EFI_IDLE_CONTROL
 	auto tps = Sensor::get(SensorType::Tps1);
 	// get VE from the separate table for Idle if idling
 	if (engine->module<IdleController>()->isIdlingOrTaper() &&
 		tps && engineConfiguration->useSeparateVeForIdle) {
-		float idleVeLoad = getVeLoadAxis(engineConfiguration->idleVeOverrideMode, load);
+		idleVeLoad = getVeLoadAxis(engineConfiguration->idleVeOverrideMode, load);
 
 		percent_t idleVe = interpolate3d(
 			config->idleVeTable,
@@ -54,6 +54,7 @@ float AirmassVeModelBase::getVe(int rpm, float load, bool postState) const {
 			engine->outputChannels.veBlendOutput[i] = result.Value;
 		}
 
+		// Skip extra floating point math if we can...
 		if (result.Value == 0) {
 			continue;
 		}
@@ -66,7 +67,16 @@ float AirmassVeModelBase::getVe(int rpm, float load, bool postState) const {
 	if (postState) {
 		engine->engineState.currentVe = ve;
 		engine->engineState.veTableYAxis = load;
+		engine->engineState.idleVeTableYAxis = idleVeLoad;
 	}
 
 	return ve * PERCENT_DIV;
+}
+
+float AirmassVeModelBase::getVeImpl(float rpm, percent_t load) const {
+	return interpolate3d(
+		config->veTable,
+		config->veLoadBins, load,
+		config->veRpmBins, rpm
+	);
 }

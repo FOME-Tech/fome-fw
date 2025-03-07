@@ -1,7 +1,6 @@
 package com.rusefi;
 
 import com.devexperts.logging.Logging;
-import com.rusefi.autodetect.PortDetector;
 import com.rusefi.core.MessagesCentral;
 import com.rusefi.io.CommandQueue;
 import com.rusefi.io.LinkManager;
@@ -57,7 +56,7 @@ public class ConsoleUI {
         });
 
         log.info("init...");
-        tabbedPane = new TabbedPanel(uiContext);
+        tabbedPane = new TabbedPanel();
         this.port = port;
         MainFrame mainFrame = new MainFrame(this, tabbedPane);
         setFrameIcon(mainFrame.getFrame().getFrame());
@@ -84,17 +83,11 @@ public class ConsoleUI {
 
         tabbedPaneAdd("Engine Sniffer", engineSnifferPanel.getPanel(), engineSnifferPanel.getTabSelectedListener());
 
-        SensorSnifferPane sensorSniffer = new SensorSnifferPane(uiContext, getConfig().getRoot().getChild("sensor_sniffer"));
-        tabbedPaneAdd("Sensor Sniffer", sensorSniffer.getPanel(), sensorSniffer.getTabSelectedListener());
-
 //        if (tabbedPane.paneSettings.showStimulatorPane && !LinkManager.isSimulationMode && !LinkManager.isLogViewerMode(port)) {
 //            // todo: rethink this UI? special command line key to enable it?
 //            EcuStimulator stimulator = EcuStimulator.getInstance();
 //            tabbedPane.addTab("ECU stimulation", stimulator.getPanel());
 //        }
-
-        if (tabbedPane.paneSettings.showTriggerShapePane)
-            tabbedPane.addTab("Trigger Shape", new AverageAnglePanel(uiContext).getPanel());
 
         int selectedIndex = getConfig().getRoot().getIntProperty(TAB_INDEX, DEFAULT_TAB_INDEX);
         if (selectedIndex < tabbedPane.tabbedPane.getTabCount())
@@ -160,7 +153,6 @@ public class ConsoleUI {
                 port = args[0];
 
             if (isPortDefined) {
-                port = PortDetector.autoDetectSerialIfNeeded(port);
                 if (port == null) {
                     isPortDefined = false;
                 }

@@ -58,6 +58,10 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 		return Sensor::get(SensorType::AuxLinear1);
 	case GPPWM_AuxLinear2:
 		return Sensor::get(SensorType::AuxLinear2);
+	case GPPWM_AuxLinear3:
+		return Sensor::get(SensorType::AuxLinear3);
+	case GPPWM_AuxLinear4:
+		return Sensor::get(SensorType::AuxLinear4);
 	case GPPWM_GppwmOutput1:
 		return (float)engine->outputChannels.gppwmOutput[0];
 	case GPPWM_GppwmOutput2:
@@ -68,6 +72,18 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 		return (float)engine->outputChannels.gppwmOutput[3];
 	case GPPWM_DetectedGear:
 		return Sensor::get(SensorType::DetectedGear);
+	case GPPWM_BaroPressure:
+		return Sensor::get(SensorType::BarometricPressure);
+	case GPPWM_Egt1:
+		return Sensor::get(SensorType::EGT1);
+	case GPPWM_Egt2:
+		return Sensor::get(SensorType::EGT2);
+	case GPPWM_VehicleSpeed:
+		return Sensor::get(SensorType::VehicleSpeed);
+	case GPPWM_OilPressure:
+		return Sensor::get(SensorType::OilPressure);
+	case GPPWM_OilTemp:
+		return Sensor::get(SensorType::OilTemperature);
 	}
 
 	return unexpected;
@@ -126,7 +142,7 @@ GppwmResult GppwmChannel::getOutput() const {
 
 	float resultVal = m_table->getValue(xAxisValue.Value, yAxisValue.Value);
 
-	if (cisnan(result.Result)) {
+	if (std::isnan(result.Result)) {
 		return result;
 	}
 

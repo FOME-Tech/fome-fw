@@ -14,7 +14,7 @@
 #include "defaults.h"
 #include "proteus_meta.h"
 
-static void commonPassatB6() {
+static inline void commonPassatB6() {
 	setCrankOperationMode();
 	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL_60_2;
 	engineConfiguration->vvtMode[0] = VVT_BOSCH_QUICK_START;
@@ -33,7 +33,7 @@ static void commonPassatB6() {
 	engineConfiguration->disableEtbWhenEngineStopped = true;
 
 
-	for (int i = 4; i < MAX_CYLINDER_COUNT;i++) {
+	for (int i = 4; i < MAX_CYLINDER_COUNT; i++) {
 		engineConfiguration->injectionPins[i] = Gpio::Unassigned;
 		engineConfiguration->ignitionPins[i] = Gpio::Unassigned;
 	}

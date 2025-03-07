@@ -11,8 +11,6 @@
 
 #define EFI_GPIO_HARDWARE TRUE
 
-#define SENT_CHANNELS_NUM 1
-
 #ifndef EFI_BOOST_CONTROL
 #define EFI_BOOST_CONTROL TRUE
 #endif
@@ -33,10 +31,6 @@
 
 #define EFI_TEXT_LOGGING TRUE
 
-#define EFI_PWM_TESTER FALSE
-
-#define EFI_ACTIVE_CONFIGURATION_IN_FLASH FALSE
-
 #ifndef EFI_MC33816
 #define EFI_MC33816 TRUE
 #endif
@@ -47,10 +41,6 @@
 
 #define EFI_ENABLE_CRITICAL_ENGINE_STOP TRUE
 #define EFI_ENABLE_ENGINE_WARNING TRUE
-
-#ifndef SC_BUFFER_SIZE
-#define SC_BUFFER_SIZE 4000
-#endif
 
 /**
  * if you have a 60-2 trigger, or if you just want better performance, you
@@ -80,10 +70,6 @@
 #ifndef HAL_TRIGGER_USE_PAL
 #define HAL_TRIGGER_USE_PAL TRUE
 #endif /* HAL_TRIGGER_USE_PAL */
-
-#ifndef HAL_TRIGGER_USE_ADC
-#define HAL_TRIGGER_USE_ADC FALSE
-#endif /* HAL_TRIGGER_USE_ADC */
 
 /**
  * TunerStudio support.
@@ -131,10 +117,6 @@
 
 #define FUEL_MATH_EXTREME_LOGGING FALSE
 
-#define SPARK_EXTREME_LOGGING FALSE
-
-#define TRIGGER_EXTREME_LOGGING FALSE
-
 #ifndef EFI_INTERNAL_FLASH
 #define EFI_INTERNAL_FLASH TRUE
 #endif
@@ -163,10 +145,6 @@
 #define BOARD_TLE8888_COUNT 	1
 #endif
 
-#ifndef BOARD_L9779_COUNT
-#define BOARD_L9779_COUNT 	1
-#endif
-
 #ifndef BOARD_DRV8860_COUNT
 #define BOARD_DRV8860_COUNT         0
 #endif
@@ -178,8 +156,6 @@
 #ifndef BOARD_TLE9104_COUNT
 #define BOARD_TLE9104_COUNT 0
 #endif
-
-#define EFI_ANALOG_SENSORS TRUE
 
 #ifndef EFI_MAX_31855
 #define EFI_MAX_31855 TRUE
@@ -204,10 +180,6 @@
 #endif
 
 #define EFI_WIDEBAND_FIRMWARE_UPDATE TRUE
-
-#ifndef EFI_AUX_SERIAL
-#define EFI_AUX_SERIAL TRUE
-#endif
 
 #ifndef EFI_IDLE_CONTROL
 #define EFI_IDLE_CONTROL TRUE
@@ -259,19 +231,19 @@
 #define EFI_CONSOLE_USB_DEVICE SDU1
 
 #if defined(EFI_HAS_EXT_SDRAM)
-    #define ENABLE_PERF_TRACE TRUE
-    #define LUA_USER_HEAP (1 * 1024 * 1024)
+	#define ENABLE_PERF_TRACE TRUE
+	#define LUA_USER_HEAP (1 * 1024 * 1024)
 #elif defined(EFI_IS_F42x)
-    // F42x has more memory, so we can:
-    //  - use compressed USB MSD image (requires 32k of memory)
-    //  - use perf trace (requires ~16k of memory)
+	// F42x has more memory, so we can:
+	//  - use compressed USB MSD image (requires 32k of memory)
+	//  - use perf trace (requires ~16k of memory)
 	#define EFI_USE_COMPRESSED_INI_MSD
 	#define ENABLE_PERF_TRACE TRUE
 
-	#if EFI_ETHERNET
+	#if MODULE_ETHERNET_CONSOLE
 		// F4 ethernet needs some extra space
-		#define LUA_USER_HEAP 40000
-	#else // EFI_ETHERNET
+		#define LUA_USER_HEAP 25000
+	#else // MODULE_ETHERNET_CONSOLE
 		#define LUA_USER_HEAP 50000
 	#endif
 #else
@@ -291,10 +263,6 @@
 #define EFI_ENGINE_SNIFFER TRUE
 #endif
 
-#ifndef EFI_SENSOR_CHART
-#define EFI_SENSOR_CHART TRUE
-#endif
-
 #ifndef DL_OUTPUT_BUFFER
 #define DL_OUTPUT_BUFFER 6500
 #endif
@@ -310,24 +278,17 @@
 //#define EFI_MALFUNCTION_INDICATOR FALSE
 #endif
 
-#ifndef EFI_MAP_AVERAGING
-#define EFI_MAP_AVERAGING TRUE
-#endif
-
 // todo: most of this should become configurable
 
 // todo: switch to continuous ADC conversion for fast ADC?
 #define EFI_INTERNAL_FAST_ADC_GPT	&GPTD6
 
 #define EFI_SPI1_AF 5
-
 #define EFI_SPI2_AF 5
-
-/**
- * This section is for right-side center SPI
- */
-
 #define EFI_SPI3_AF 6
+#define EFI_SPI4_AF 5
+#define EFI_SPI5_AF 5
+#define EFI_SPI6_AF 6
 
 /**
  * Patched version of ChibiOS/RT support extra details in the system error messages
@@ -388,8 +349,4 @@
 
 #ifndef EFI_STORAGE_EXT_SNOR
 #define EFI_STORAGE_EXT_SNOR    FALSE
-#endif
-
-#ifndef EFI_SENT_SUPPORT
-#define EFI_SENT_SUPPORT        FALSE
 #endif

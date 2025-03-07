@@ -31,7 +31,7 @@ TEST(trigger, testNoStartUpWarnings) {
 	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
 	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
 
-	for (int i = 0;i < 10;i++) {
+	for (int i = 0; i < 10; i++) {
 		eth.fireRise(50);
 		eth.fireFall(50);
 		eth.fireRise(50);
@@ -47,7 +47,7 @@ TEST(trigger, testNoStartUpWarnings) {
 	eth.fireFall(50); // this is noise
 	eth.fireRise(50);
 	eth.fireFall(150);
-	for (int i = 0;i < 1;i++) {
+	for (int i = 0; i < 1; i++) {
 		eth.fireRise(50);
 		eth.fireFall(50);
 		eth.fireRise(50);
@@ -60,7 +60,7 @@ TEST(trigger, testNoStartUpWarnings) {
 TEST(trigger, testNoisyInput) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "testNoisyInput RPM";
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm));
 
 	eth.firePrimaryTriggerRise();
 	eth.firePrimaryTriggerFall();
@@ -70,12 +70,10 @@ TEST(trigger, testNoisyInput) {
 	eth.firePrimaryTriggerFall();
 	eth.firePrimaryTriggerRise();
 	eth.firePrimaryTriggerFall();
-	// error condition since events happened too quick while time does not move
-	ASSERT_EQ(NOISY_RPM,  Sensor::getOrZero(SensorType::Rpm)) << "testNoisyInput RPM should be noisy";
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm));
 
-	ASSERT_EQ( 2,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testNoisyInput";
-	ASSERT_EQ(ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH, unitTestWarningCodeState.recentWarnings.get(0).Code) << "@0";
-	ASSERT_EQ(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction, unitTestWarningCodeState.recentWarnings.get(1).Code) << "@0";
+	EXPECT_EQ(1, unitTestWarningCodeState.recentWarnings.getCount());
+	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH, unitTestWarningCodeState.recentWarnings.get(0).Code);
 }
 
 TEST(trigger, testCamInput) {
@@ -91,7 +89,7 @@ TEST(trigger, testCamInput) {
 
 	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "testCamInput RPM";
 
-	for (int i = 0; i < 5;i++) {
+	for (int i = 0; i < 5; i++) {
 		eth.fireRise(25);
 		eth.fireFall(25);
 	}
@@ -99,7 +97,7 @@ TEST(trigger, testCamInput) {
 	ASSERT_EQ(1200,  round(Sensor::getOrZero(SensorType::Rpm)));
 	ASSERT_EQ(0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testCamInput";
 
-	for (int i = 0; i < 600;i++) {
+	for (int i = 0; i < 600; i++) {
 		eth.fireRise(25);
 		eth.fireFall(25);
 	}
@@ -109,7 +107,7 @@ TEST(trigger, testCamInput) {
 	ASSERT_EQ(ObdCode::OBD_Camshaft_Position_Sensor_Circuit_Range_Performance, unitTestWarningCodeState.recentWarnings.get(0).Code) << "@0";
 	unitTestWarningCodeState.recentWarnings.clear();
 
-	for (int i = 0; i < 600;i++) {
+	for (int i = 0; i < 600; i++) {
 		eth.moveTimeForwardUs(MS2US(10));
 
 		// cam comes every other crank rev
@@ -128,7 +126,7 @@ TEST(trigger, testCamInput) {
 
 	// asserting that error code has cleared
 	ASSERT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testCamInput #3";
-	EXPECT_NEAR_M3(71, engine->triggerCentral.getVVTPosition(0, 0));
+	EXPECT_NEAR_M3(71, engine->triggerCentral.getVVTPosition(0, 0).value_or(0));
 }
 
 TEST(trigger, testNB2CamInput) {
@@ -137,7 +135,7 @@ TEST(trigger, testNB2CamInput) {
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
 
 	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm)));
-	for (int i = 0; i < 6;i++) {
+	for (int i = 0; i < 6; i++) {
 		eth.fireRise(25 * 70 / 180);
 		eth.fireRise(25 * 110 / 180);
 		ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm)));
@@ -172,7 +170,7 @@ TEST(trigger, testNB2CamInput) {
 	eth.moveTimeForwardUs(MS2US(10));
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
-	ASSERT_FLOAT_EQ(0, engine->triggerCentral.getVVTPosition(0, 0));
+	ASSERT_FALSE(engine->triggerCentral.getVVTPosition(0, 0));
 	ASSERT_EQ(totalRevolutionCountBeforeVvtSync, engine->triggerCentral.triggerState.getCrankSynchronizationCounter());
 
 	// Third gap - long
@@ -182,7 +180,7 @@ TEST(trigger, testNB2CamInput) {
 	eth.moveTimeForwardUs(MS2US( 30));
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
-	EXPECT_NEAR(297.5f, engine->triggerCentral.getVVTPosition(0, 0), EPS2D);
+	EXPECT_NEAR(297.5f, engine->triggerCentral.getVVTPosition(0, 0).value_or(0), EPS2D);
 	// actually position based on VVT!
 	ASSERT_EQ(totalRevolutionCountBeforeVvtSync + 3, engine->triggerCentral.triggerState.getCrankSynchronizationCounter());
 

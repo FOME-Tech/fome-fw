@@ -44,21 +44,37 @@ private:
 	float m_smallPulseOffset = 0;
 };
 
-class InjectorModel : public InjectorModelBase {
+class InjectorModelWithConfig : public InjectorModelBase {
 public:
+	InjectorModelWithConfig(const injector_s* const cfg);
 
 	floatms_t getDeadtime() const override;
 	float getBaseFlowRate() const override;
 	float getInjectorFlowRatio() override;
 	expected<float> getFuelDifferentialPressure() const override;
 
+	using interface_t = IInjectorModel; // Mock interface
+
+private:
+	const injector_s* const m_cfg;
+};
+
+struct InjectorModelPrimary : public InjectorModelWithConfig {
+	InjectorModelPrimary();
+
 	InjectorNonlinearMode getNonlinearMode() const override;
 
 	// Ford small pulse model
 	float getSmallPulseFlowRate() const override;
 	float getSmallPulseBreakPoint() const override;
+};
 
-	// Small pulse correction logic
+struct InjectorModelSecondary : public InjectorModelWithConfig {
+	InjectorModelSecondary();
 
-	using interface_t = IInjectorModel; // Mock interface
+	InjectorNonlinearMode getNonlinearMode() const override;
+
+	// Ford small pulse model
+	float getSmallPulseFlowRate() const override;
+	float getSmallPulseBreakPoint() const override;
 };

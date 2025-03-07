@@ -19,7 +19,7 @@ jobs:
         git submodule update --init --depth=1 firmware/controllers/lua/luaaa
         git submodule update --init --depth=1 firmware/controllers/can/wideband_firmware
 
-    - uses: actions/setup-java@v3
+    - uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '8'
@@ -34,20 +34,16 @@ jobs:
         sudo ./add-ubuntu-latest-apt-mirrors.sh
         sudo apt-get install gcc-multilib g++-multilib mtools dosfstools zip
 
-    - name: Generate Configs, Enums & Live Documentation
-      working-directory: ./firmware/
-      run: ./gen_default_everything.sh
-
     - name: Compile Linux Simulator
       working-directory: ./simulator/
-      run: ./compile.sh
+      run: SHORT_BOARD_NAME=f407-discovery ./compile.sh
 
     - name: Run Linux Simulator for 10 seconds
       working-directory: ./simulator/
       run: ./build/fome_simulator 10
 
     - name: Upload Linux built simulator
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: fome_simulator_linux
         path: ./simulator/build/fome_simulator

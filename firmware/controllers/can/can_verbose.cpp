@@ -3,9 +3,9 @@
  *
  * TODO: change 'verbose' into 'broadcast'?
  *
- * If you edit this file, please update rusEFI_CAN_verbose.dbc!
+ * If you edit this file, please update FOME_CAN_verbose.dbc!
  * Kvaser Database Editor works well for this task, and is free.
- * 
+ *
  * @author Matthew Kennedy, (c) 2020
  */
 
@@ -41,7 +41,7 @@ static void populateFrame(Status& msg) {
 	msg.warningCounter = engine->engineState.warnings.warningCounter;
 	msg.lastErrorCode = static_cast<uint16_t>(engine->engineState.warnings.lastErrorCode);
 
-	msg.revLimit = Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->rpmHardLimit;
+	msg.revLimit = !engine->module<LimpManager>()->allowInjection() || !engine->module<LimpManager>()->allowIgnition();
 	msg.mainRelay = enginePins.mainRelay.getLogicValue();
 	msg.fuelPump = enginePins.fuelPumpRelay.getLogicValue();
 	msg.checkEngine = enginePins.checkEnginePin.getLogicValue();
@@ -52,8 +52,10 @@ static void populateFrame(Status& msg) {
 
 	msg.gear = Sensor::getOrZero(SensorType::DetectedGear);
 
+	#ifdef MODULE_TRIP_ODO
 	// scale to units of 0.1km
 	msg.distanceTraveled = engine->module<TripOdometer>()->getDistanceMeters() / 100;
+	#endif
 }
 
 struct Speeds {
@@ -69,7 +71,7 @@ static void populateFrame(Speeds& msg) {
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
 	msg.rpm = rpm;
 
-	auto timing = engine->engineState.timingAdvance[0];
+	auto timing = engine->cylinders[0].getIgnitionTimingBtdc();
 	msg.timing = timing > 360 ? timing - 720 : timing;
 
 	msg.injDuty = getInjectorDutyCycle(rpm);
@@ -158,8 +160,10 @@ struct Fueling2 {
 };
 
 static void populateFrame(Fueling2& msg) {
-	msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
-	msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+	#ifdef MODULE_TRIP_ODO
+		msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
+		msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+	#endif // MODULE_TRIP_ODO
 
 	for (size_t i = 0; i < 2; i++) {
 		msg.fuelTrim[i] = 100.0f * (engine->stftCorrection[i] - 1.0f);
@@ -193,17 +197,25 @@ struct Cams {
 
 static void populateFrame(Cams& msg) {
 #if EFI_SHAFT_POSITION_INPUT
-	msg.Bank1IntakeActual  = engine->triggerCentral.getVVTPosition(0, 0);
-	msg.Bank1ExhaustActual = engine->triggerCentral.getVVTPosition(0, 1);
-	msg.Bank2IntakeActual  = engine->triggerCentral.getVVTPosition(1, 0);
-	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1);
+	msg.Bank1IntakeActual  = engine->triggerCentral.getVVTPosition(0, 0).value_or(0);
+	msg.Bank1ExhaustActual = engine->triggerCentral.getVVTPosition(0, 1).value_or(0);
+	msg.Bank2IntakeActual  = engine->triggerCentral.getVVTPosition(1, 0).value_or(0);
+	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1).value_or(0);
 #endif // EFI_SHAFT_POSITION_INPUT
 
-	// TODO: maybe don't rely on outputChannels here
-	msg.Bank1IntakeTarget = engine->outputChannels.vvtTargets[0];
-	msg.Bank1ExhaustTarget = engine->outputChannels.vvtTargets[1];
-	msg.Bank2IntakeTarget = engine->outputChannels.vvtTargets[2];
-	msg.Bank2ExhaustTarget = engine->outputChannels.vvtTargets[3];
+	msg.Bank1IntakeTarget = getLiveData<vvt_s>(0)->vvtTarget;
+	msg.Bank1ExhaustTarget = getLiveData<vvt_s>(1)->vvtTarget;
+	msg.Bank2IntakeTarget = getLiveData<vvt_s>(2)->vvtTarget;
+	msg.Bank2ExhaustTarget = getLiveData<vvt_s>(3)->vvtTarget;
+}
+
+struct Egts {
+	uint8_t egt[8];
+};
+
+static void populateFrame(Egts& msg) {
+	msg.egt[0] = Sensor::getOrZero(SensorType::EGT1) / 5;
+	msg.egt[1] = Sensor::getOrZero(SensorType::EGT2) / 5;
 }
 
 void sendCanVerbose() {
@@ -216,13 +228,20 @@ void sendCanVerbose() {
 
 	transmitStruct<Status>		(base + 0, isExt, canChannel);
 	transmitStruct<Speeds>		(base + 1, isExt, canChannel);
-	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt, canChannel);
-	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt, canChannel);
+	transmitStruct<PedalAndTps>	(base + 2, isExt, canChannel);
+	transmitStruct<Sensors1>	(base + 3, isExt, canChannel);
 	transmitStruct<Sensors2>	(base + 4, isExt, canChannel);
 	transmitStruct<Fueling>		(base + 5, isExt, canChannel);
 	transmitStruct<Fueling2>	(base + 6, isExt, canChannel);
 	transmitStruct<Fueling3>	(base + 7, isExt, canChannel);
-	transmitStruct<Cams>		(base + 8, isExt, canChannel);
+
+	if (engineConfiguration->canBroadcastCams) {
+		transmitStruct<Cams>	(base + 8, isExt, canChannel);
+	}
+
+	if (engineConfiguration->canBroadcastEgt) {
+		transmitStruct<Egts>	(base + 9, isExt, canChannel);
+	}
 }
 
 #endif // EFI_CAN_SUPPORT

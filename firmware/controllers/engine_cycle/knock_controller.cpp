@@ -8,16 +8,9 @@
 #include "pch.h"
 #include "knock_logic.h"
 
-void KnockController::onConfigurationChange(engine_configuration_s const * previousConfig) {
-	KnockControllerBase::onConfigurationChange(previousConfig);
-
-	m_maxRetardTable.init(config->maxKnockRetardTable, config->maxKnockRetardRpmBins, config->maxKnockRetardLoadBins);
-}
-
 int getCylinderKnockBank(uint8_t cylinderNumber) {
 	// C/C++ can't index in to bit fields, we have to provide lookup ourselves
 	switch (cylinderNumber) {
-#if EFI_PROD_CODE
 		case 0:
 			return engineConfiguration->knockBankCyl1;
 		case 1:
@@ -42,7 +35,6 @@ int getCylinderKnockBank(uint8_t cylinderNumber) {
 			return engineConfiguration->knockBankCyl11;
 		case 11:
 			return engineConfiguration->knockBankCyl12;
-#endif
 		default:
 			return 0;
 	}
@@ -60,8 +52,9 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float db
 
 	if (isKnock) {
 		m_knockCount++;
+		m_lastKnockTimer.reset(lastKnockTime);
 
-		auto baseTiming = engine->engineState.timingAdvance[cylinderNumber];
+		auto baseTiming = engine->cylinders[cylinderNumber].getIgnitionTimingBtdc();
 
 		// TODO: 20 configurable? Better explanation why 20?
 		auto distToMinimum = baseTiming - (-20);
@@ -111,18 +104,26 @@ void KnockControllerBase::onFastCallback() {
 			m_knockRetard = newRetard;
 		}
 	}
+
+	hasKnockRecently = !m_lastKnockTimer.hasElapsedSec(0.5f);
+	hasKnockRetardNow = m_knockRetard > 0;
 }
 
 float KnockController::getKnockThreshold() const {
 	return interpolate2d(
 		Sensor::getOrZero(SensorType::Rpm),
-		engineConfiguration->knockNoiseRpmBins,
-		engineConfiguration->knockBaseNoise
+		config->knockNoiseRpmBins,
+		config->knockBaseNoise
 	);
 }
 
 float KnockController::getMaximumRetard() const {
-	return m_maxRetardTable.getValue(Sensor::getOrZero(SensorType::Rpm), getIgnitionLoad());
+	return
+		interpolate3d(
+			config->maxKnockRetardTable,
+			config->maxKnockRetardLoadBins, getIgnitionLoad(),
+			config->maxKnockRetardRpmBins, Sensor::getOrZero(SensorType::Rpm)
+		);
 }
 
 // This callback is to be implemented by the knock sense driver
@@ -136,7 +137,7 @@ static uint8_t cylinderNumberCopy;
 
 // Called when its time to start listening for knock
 // Does some math, then hands off to the driver to start any sampling hardware
-static void startKnockSampling(void*) {
+static void startKnockSampling(void* = nullptr) {
 	if (!engine->rpmCalculator.isRunning()) {
 		return;
 	}
@@ -155,8 +156,14 @@ void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
 	cylinderNumberCopy = cylinderNumber;
 
 #if EFI_SOFTWARE_KNOCK
-	scheduleByAngle(nullptr, nowNt,
-			/*angle*/engineConfiguration->knockDetectionWindowStart, startKnockSampling);
+	auto window = engineConfiguration->knockDetectionWindowStart;
+	
+	if (window == 0) {
+		startKnockSampling();
+	} else {
+		scheduleByAngle(nullptr, nowNt,
+				/*angle*/engineConfiguration->knockDetectionWindowStart, startKnockSampling);
+	}
 #else
 	UNUSED(nowNt);
 #endif

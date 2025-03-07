@@ -52,12 +52,9 @@ public:
 	PwmConfig();
 
 	void weComplexInit(
-			ExecutorInterface *executor,
 			MultiChannelStateSequence const * seq,
 			pwm_cycle_callback *pwmCycleCallback,
 			pwm_gen_callback *callback);
-
-	ExecutorInterface *m_executor = nullptr;
 
 	/**
 	 * We need to handle zero duty cycle and 100% duty cycle in a special way
@@ -114,7 +111,7 @@ struct IPwm {
 class SimplePwm : public PwmConfig, public IPwm {
 public:
 	SimplePwm();
-	explicit SimplePwm(const char *name);
+	SimplePwm(const char *name);
 	void setSimplePwmDutyCycle(float dutyCycle) override;
 	MultiChannelStateSequenceWithData<2> seq;
 	hardware_pwm* hardPwm = nullptr;
@@ -128,27 +125,20 @@ void applyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */;
 
 /**
  * Start a one-channel software PWM driver.
- *
- * This method should be called after scheduling layer is started by initSignalExecutor()
  */
 void startSimplePwm(SimplePwm *state, const char *msg,
-		ExecutorInterface *executor,
 		OutputPin *output,
 		float frequency, float dutyCycle);
 
 /**
  * initialize GPIO pin and start a one-channel software PWM driver.
- *
- * This method should be called after scheduling layer is started by initSignalExecutor()
  */
 void startSimplePwmExt(SimplePwm *state,
 		const char *msg,
-		ExecutorInterface *executor,
 		brain_pin_e brainPin, OutputPin *output,
 		float frequency, float dutyCycle);
 
 void startSimplePwmHard(SimplePwm *state, const char *msg,
-		ExecutorInterface *executor,
 		brain_pin_e brainPin, OutputPin *output, float frequency,
 		float dutyCycle);
 

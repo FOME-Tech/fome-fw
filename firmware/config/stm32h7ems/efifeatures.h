@@ -12,11 +12,9 @@
 #undef BOARD_TLE6240_COUNT
 #undef BOARD_MC33972_COUNT
 #undef BOARD_TLE8888_COUNT
-#undef BOARD_L9779_COUNT
 #define BOARD_TLE6240_COUNT	0
 #define BOARD_MC33972_COUNT	0
 #define BOARD_TLE8888_COUNT 	0
-#define BOARD_L9779_COUNT 0
 
 #undef EFI_MAX_31855
 #define EFI_MAX_31855 FALSE
@@ -33,7 +31,9 @@
 #define ENABLE_PERF_TRACE TRUE
 
 // H7 runs faster "slow" ADC to make up for reduced oversampling
-#define SLOW_ADC_RATE 1000
+#define ADC_UPDATE_RATE LoopPeriod::Period1000hz
 
 #undef LUA_USER_HEAP
 #define LUA_USER_HEAP 100000
+
+#define ADC_SUBSCRIPTION_SLOTS 20

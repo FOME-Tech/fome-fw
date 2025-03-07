@@ -12,7 +12,6 @@ import com.rusefi.io.LinkManager;
 import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.io.tcp.TcpIoStream;
 import com.rusefi.core.FileUtil;
-import com.rusefi.tune.xml.Constant;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -28,7 +27,7 @@ import static com.rusefi.config.generated.Fields.TS_FILE_VERSION_OFFSET;
 import static com.rusefi.io.tcp.TcpConnector.LOCALHOST;
 import org.junit.Assert;
 
-public class TestHelper extends MockitoTestHelper {
+public class TestHelper {
     private static final Logging log = getLogging(TestHelper.class);
     public static final String TEST_SIGNATURE_1 = "rusEFI master.2020.07.06.frankenso_na6.2468827536";
     public static final String TEST_SIGNATURE_2 = "rusEFI master.2020.07.11.proteus_f4.1986715563";
@@ -44,7 +43,7 @@ public class TestHelper extends MockitoTestHelper {
     public static ConfigurationImage prepareImage(int input, ScalarIniField scalarIniField) {
         ConfigurationImage ci = new ConfigurationImage(Fields.TOTAL_CONFIG_SIZE);
 
-        scalarIniField.setValue(ci, new Constant(scalarIniField.getName(), "", Integer.toString(input), scalarIniField.getDigits()));
+        scalarIniField.setValue(ci, Integer.toString(input));
         return ci;
     }
 
@@ -76,7 +75,6 @@ public class TestHelper extends MockitoTestHelper {
     }
 
     public static BinaryProtocolServer createVirtualController(int controllerPort, ConfigurationImage controllerImage, BinaryProtocolServer.Context context) throws InterruptedException {
-        CountDownLatch controllerCreated = new CountDownLatch(1);
         try {
             return createVirtualController(controllerImage, controllerPort, context);
         } catch (IOException e) {

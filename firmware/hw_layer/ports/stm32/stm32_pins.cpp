@@ -154,31 +154,24 @@ int getPortPinIndex(ioportid_t port, ioportmask_t pin) {
 }
 
 ioportid_t getHwPort(const char *msg, brain_pin_e brainPin) {
-	(void)msg;
-
-	if (!isBrainPinValid(brainPin)) {
-/*
- *  https://github.com/dron0gus please help
-		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid Gpio: %d", msg, brainPin);
- */
-		return GPIO_NULL;
+	if (!isBrainPinValid(brainPin) || !brain_pin_is_onchip(brainPin)) {
+		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid GPIO: %d", msg, (int)brainPin);
+		return nullptr;
 	}
+
 	return ports[(brainPin - Gpio::A0) / PORT_SIZE];
 }
 
 /**
  * this method returns the numeric part of pin name. For instance, for PC13 this would return '13'
  */
-ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin)
-{
-	if (!isBrainPinValid(brainPin))
-			return EFI_ERROR_CODE;
+ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin) {
+	if (!isBrainPinValid(brainPin) || !brain_pin_is_onchip(brainPin)) {
+		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid on-chip Gpio: %d", msg, (int)brainPin);
+		return 0;
+	}
 
-	if (brain_pin_is_onchip(brainPin))
-		return getBrainPinIndex(brainPin);
-
-	firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid on-chip Gpio: %d", msg, brainPin);
-	return EFI_ERROR_CODE;
+	return getBrainPinIndex(brainPin);
 }
 
 /**

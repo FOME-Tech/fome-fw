@@ -23,16 +23,6 @@ void setDodgeNeon1995EngineConfiguration() {
 
 	engineConfiguration->fuelAlgorithm = LM_ALPHA_N;
 
-//	engineConfiguration->spi2SckMode = PAL_STM32_OTYPE_OPENDRAIN; // 4
-//	engineConfiguration->spi2MosiMode = PAL_STM32_OTYPE_OPENDRAIN; // 4
-//	engineConfiguration->spi2MisoMode = PAL_STM32_PUDR_PULLUP; // 32
-
-	//	engineConfiguration->spi2mosiPin = Gpio::B15;
-	//	engineConfiguration->spi2misoPin = Gpio::B14;
-	//	engineConfiguration->spi2sckPin = Gpio::B13;
-	engineConfiguration->is_enabled_spi_2 = true;
-
-
 	// set_rpm_hard_limit 4000
 	engineConfiguration->rpmHardLimit = 4000; // yes, 4k. let's play it safe for now
 
@@ -245,8 +235,6 @@ void setDodgeNeonNGCEngineConfiguration() {
 //	engineConfiguration->fanOnTemperature = 115; // knock testing - value is a bit high
 //	engineConfiguration->fanOffTemperature = 100;
 
-//	engineConfiguration->tunerStudioSerialSpeed = 9600;
-	engineConfiguration->tunerStudioSerialSpeed = 19200;
 	setAlgorithm(LM_SPEED_DENSITY);
 
 //temp	engineConfiguration->alternatorControlPin = Gpio::D5;
@@ -255,7 +243,6 @@ void setDodgeNeonNGCEngineConfiguration() {
 	engineConfiguration->alternatorControl.pFactor = 20;
 	engineConfiguration->alternatorControl.iFactor = 0.2;
 	engineConfiguration->alternatorControl.dFactor = 0.1;
-	engineConfiguration->alternatorControl.periodMs = 10;
 
 	engineConfiguration->canWriteEnabled = true;
 	engineConfiguration->canNbcType = CAN_BUS_NBC_BMW;

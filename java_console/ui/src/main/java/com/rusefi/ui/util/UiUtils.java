@@ -15,13 +15,9 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLStreamHandlerFactory;
 
 import static com.rusefi.ui.util.LocalizedMessages.CLEAR;
 import static com.rusefi.ui.util.LocalizedMessages.PAUSE;
@@ -138,17 +134,6 @@ public class UiUtils {
         return null;
     }
 
-    public static java.util.List<Component> getAllComponents(final Container c) {
-        Component[] comps = c.getComponents();
-        java.util.List<Component> compList = new ArrayList<>();
-        for (Component comp : comps) {
-            compList.add(comp);
-            if (comp instanceof Container)
-                compList.addAll(getAllComponents((Container) comp));
-        }
-        return compList;
-    }
-
     /**
      * Utility method for multi-line tooltips
      */
@@ -173,18 +158,6 @@ public class UiUtils {
         JButton imageButton = new JButton(SAVE_IMAGE);
         imageButton.setMnemonic('s');
         return imageButton;
-    }
-
-    public static void invokeAndWait(Runnable runnable) throws InterruptedException, InvocationTargetException {
-        if (SwingUtilities.isEventDispatchThread()) {
-            runnable.run();
-        } else {
-            SwingUtilities.invokeAndWait(runnable);
-        }
-    }
-
-    public static void showLoadingMessage(JPanel panel) {
-        panel.add(new JLabel("Loading..."), BorderLayout.CENTER);
     }
 
     @NotNull
@@ -239,8 +212,6 @@ public class UiUtils {
 
     private static class DynamicForResourcesURLClassLoader extends URLClassLoader {
         public DynamicForResourcesURLClassLoader( URL[] urls, ClassLoader parent ) { super( urls, parent ); }
-        public DynamicForResourcesURLClassLoader( URL[] urls ) { super( urls ); }
-        public DynamicForResourcesURLClassLoader( URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory ) { super( urls, parent, factory ); }
 
         @Override
         public void addURL( URL url ) {
@@ -262,16 +233,6 @@ public class UiUtils {
     }
 
     private static final DynamicForResourcesURLClassLoader dynamicResourcesLoader = new DynamicForResourcesURLClassLoader( new URL[ 0 ], UiUtils.class.getClassLoader() );
-
-    @NotNull
-    public static URLClassLoader getClassLoaderByJar(String jar) throws MalformedURLException {
-        final URL jarURL = new File( jar ).toURI().toURL();
-        dynamicResourcesLoader.addURL( jarURL );
-        return new URLClassLoader(
-                new URL[]{ new File( jar ).toURI().toURL() },
-                dynamicResourcesLoader
-        );
-    }
 
     public static void setAppIcon(JFrame frame) {
         ImageIcon icon = loadIcon(APPICON);

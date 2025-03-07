@@ -43,7 +43,7 @@ static void sayHello() {
 	efiPrintf(PROTOCOL_HELLO_PREFIX " Chibios Kernel:       %s", CH_KERNEL_VERSION);
 	efiPrintf(PROTOCOL_HELLO_PREFIX " Compiled:     " __DATE__ " - " __TIME__ "");
 	efiPrintf(PROTOCOL_HELLO_PREFIX " COMPILER=%s", __VERSION__);
-#if USE_OPENBLT
+#if EFI_USE_OPENBLT
 	efiPrintf(PROTOCOL_HELLO_PREFIX " with OPENBLT");
 #endif
 
@@ -57,7 +57,7 @@ static void sayHello() {
 
 #if defined(STM32F4) || defined(STM32F7) || defined(STM32H7)
 	uint32_t *uid = ((uint32_t *)UID_BASE);
-	efiPrintf("UID=%x %x %x", uid[0], uid[1], uid[2]);
+	efiPrintf("UID=%x %x %x", (unsigned int)uid[0], (unsigned int)uid[1], (unsigned int)uid[2]);
 
 	efiPrintf("can read 0x20000010 %d", ramReadProbe((const char *)0x20000010));
 	efiPrintf("can read 0x20020010 %d", ramReadProbe((const char *)0x20020010));
@@ -91,20 +91,9 @@ static void sayHello() {
 	chThdSleepMilliseconds(5);
 }
 
-void validateStack(const char*msg, ObdCode code, int desiredStackUnusedSize) {
-#if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
-	int unusedStack = CountFreeStackSpace(chThdGetSelfX()->wabase);
-	if (unusedStack < desiredStackUnusedSize) {
-		warning(code, "Stack low on %s: %d", msg, unusedStack);
-	}
-#else
-	(void)msg; (void)code; (void)desiredStackUnusedSize;
-#endif
-}
-
 #if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 int CountFreeStackSpace(const void* wabase) {
-	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase);
+	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase) + PORT_GUARD_PAGE_SIZE;
 	const uint8_t* stackUsage = stackBase;
 
 	// thread stacks are filled with CH_DBG_STACK_FILL_VALUE
@@ -129,9 +118,9 @@ static void cmd_threads() {
 
 	while (tp) {
 		int freeBytes = CountFreeStackSpace(tp->wabase);
-		efiPrintf("%s\t%08x\t%lu\t%d", tp->name, tp->wabase, tp->time, freeBytes);
+		efiPrintf("%s\t%08x\t%lu\t%d", tp->name, (unsigned int)tp->wabase, tp->time, freeBytes);
 
-		if (freeBytes < 100) {
+		if (freeBytes < 64) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
 		}
 
@@ -148,6 +137,16 @@ static void cmd_threads() {
 #endif
 }
 
+static int fib(int x) {
+	if (x == 0) {
+		return 0;
+	} else if (x == 1) {
+		return 1;
+	} else {
+		return fib(x - 1) + fib(x - 2);
+	}
+}
+
 void initializeConsole() {
 	initConsoleLogic();
 
@@ -156,11 +155,9 @@ void initializeConsole() {
 	sayHello();
 	addConsoleAction("test", [](){ /* do nothing */});
 	addConsoleAction("hello", sayHello);
-#if EFI_HAS_RESET
-	addConsoleAction("reset", scheduleReset);
-#endif
 
 	addConsoleAction("critical", testCritical);
 	addConsoleAction("error", myerror);
 	addConsoleAction("threadsinfo", cmd_threads);
+	addConsoleAction("stackoverflow", [](){ fib(10000); });
 }

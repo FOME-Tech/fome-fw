@@ -6,7 +6,6 @@
  */
 #pragma once
 
-#include "periodic_task.h"
 #include "closed_loop_controller.h"
 #include "efi_pid.h"
 #include "boost_control_generated.h"
@@ -34,6 +33,9 @@ public:
 	void setOutput(expected<percent_t> outputValue) override;
 
 private:
+	bool m_hasInitBoost = false;
+	bool m_shouldResetPid = false;
+
 	percent_t getClosedLoopImpl(float target, float manifoldPressure);
 
 	Pid m_pid;

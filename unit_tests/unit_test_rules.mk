@@ -18,19 +18,13 @@ BOARDS_DIR = $(PROJECT_DIR)/config/boards
 
 # User may want to pass in a forced value for SANITIZE
 ifeq ($(SANITIZE),)
-	ifneq ($(OS),Windows_NT)
-		SANITIZE = yes
-	else
-		SANITIZE = no
-	endif
+	SANITIZE = yes
 endif
 
 IS_MAC = no
-ifneq ($(OS),Windows_NT)
-	UNAME_S := $(shell uname -s)
-    ifeq ($(UNAME_S),Darwin)
-        IS_MAC = yes
-    endif
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    IS_MAC = yes
 endif
 
 # Compiler options here.
@@ -66,7 +60,7 @@ ifeq ($(USE_CPPOPT),)
   USE_CPPOPT = -std=gnu++2a -fno-rtti -fno-use-cxa-atexit
 endif
 
-USE_CPPOPT += $(RUSEFI_CPPOPT)
+USE_CPPOPT += $(RUSEFI_CPPOPT) -fPIC -fprofile-arcs -ftest-coverage
 
 # Enable address sanitizer for C++ files, but not on Windows since x86_64-w64-mingw32-g++ doesn't support it.
 # only c++ because lua does some things asan doesn't like, but don't actually cause overruns.
@@ -101,23 +95,7 @@ ASMSRC =
 # Compiler settings
 #
 
-# It looks like cygwin build of mingwg-w64 has issues with gcov runtime :(
-# mingw-w64 is a project which forked from mingw in 2007 - be careful not to confuse these two.
-# In order to have coverage generated please download from https://mingw-w64.org/doku.php/download/mingw-builds
-# Install using mingw-w64-install.exe instead of similar thing packaged with cygwin
-# Both 32 bit and 64 bit versions of mingw-w64 are generating coverage data.
-
-ifeq ($(OS),Windows_NT)
-ifeq ($(USE_MINGW32_I686),)
-#this one is 64 bit
-  TRGT = x86_64-w64-mingw32-
-else
-#this one was 32 bit
-  TRGT = i686-w64-mingw32-
-endif
-else
-  TRGT = 
-endif
+TRGT =
 
 CC   = $(TRGT)gcc
 CPPC = $(TRGT)g++
@@ -158,7 +136,7 @@ DLIBDIR =
 # List all default libraries here
 ifeq ($(OS),Windows_NT)
   # Windows
-  DLIBS = -static-libgcc -static -static-libstdc++
+  $(error Builds on windows are not supported by FOME")
 else
   # Linux
   DLIBS = -pthread
@@ -187,6 +165,10 @@ ULIBDIR =
 # List all user libraries here
 ULIBS = -lm
 
+ifneq ($(IS_MAC),yes)
+	ULIBS += -lgcov --coverage
+endif
+
 ifeq ($(COVERAGE),yes)
 	ULIBS += --coverage
 endif
@@ -202,6 +184,9 @@ endif
 # Define project name here
 PROJECT = fome_test
 
+# TODO: remove me when unit tests include board.mk
+SHORT_BOARD_NAME = f407-discovery
+
 ifeq ("$(wildcard $(UNIT_TESTS_DIR)/googletest/LICENSE)","")
 $(info Invoking "git submodule update --init")
 $(shell git submodule update --init)
@@ -212,4 +197,10 @@ endif
 
 include $(UNIT_TESTS_DIR)/rules.mk
 include $(PROJECT_DIR)/rusefi_pch.mk
+include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
+include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
+
+.PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
+
+CLEAN_RULE_HOOK: CLEAN_PCH_HOOK CLEAN_GENERATED_HOOK

@@ -10,6 +10,10 @@ Gpio getRunningLedPin() {
 	return Gpio::B0;
 }
 
+Gpio getWarningLedPin() {
+	return Gpio::Invalid;
+}
+
 void preHalInit() {
 	efiSetPadMode("Ethernet",  Gpio::A1, PAL_MODE_ALTERNATE(0xb));
 	efiSetPadMode("Ethernet",  Gpio::A2, PAL_MODE_ALTERNATE(0xb));

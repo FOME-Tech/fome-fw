@@ -32,7 +32,7 @@ public:
 	{
 	}
 
-	void start(CANDriver* device) {
+	void tryStart(CANDriver *device) {
 		m_device = device;
 
 		if (device) {
@@ -92,16 +92,6 @@ void setCanType(int type) {
 	engineConfiguration->canNbcType = (can_nbc_e)type;
 	canInfo();
 }
-
-#if EFI_TUNER_STUDIO
-void postCanState() {
-	if (!isCanEnabled) {
-		engine->outputChannels.canReadCounter = -1;
-		engine->outputChannels.canWriteOk = -1;
-		engine->outputChannels.canWriteNotOk = -1;
-	}
-}
-#endif /* EFI_TUNER_STUDIO */
 
 void stopCanPins() {
 	efiSetPadUnusedIfConfigurationChanged(canTxPin);
@@ -192,8 +182,8 @@ void initCan() {
 	}
 
 	if (engineConfiguration->canReadEnabled) {
-		canRead1.start(device1);
-		canRead2.start(device2);
+		canRead1.tryStart(device1);
+		canRead2.tryStart(device2);
 	}
 
 	isCanEnabled = true;

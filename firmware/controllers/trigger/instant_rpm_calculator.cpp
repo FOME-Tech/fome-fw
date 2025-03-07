@@ -2,15 +2,6 @@
 #include "pch.h"
 #include "instant_rpm_calculator.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif
-
-/**
- * sensorChartMode
- */
-#include "engine_state.h"
-
 #if EFI_SHAFT_POSITION_INPUT
 
 InstantRpmCalculator::InstantRpmCalculator() :
@@ -47,14 +38,19 @@ float InstantRpmCalculator::calculateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 	uint32_t current_index, efitick_t nowNt) {
 
+	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
+	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
+	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
+	uint32_t nowNt32 = nowNt;
+
 	assertIsInBoundsWithResult(current_index, timeOfLastEvent, "calc timeOfLastEvent", 0);
 
 	// Record the time of this event so we can calculate RPM from it later
-	timeOfLastEvent[current_index] = nowNt;
+	timeOfLastEvent[current_index] = nowNt32;
 
 	// Determine where we currently are in the revolution
 	angle_t currentAngle = triggerFormDetails->eventAngles[current_index];
-	efiAssert(ObdCode::OBD_PCM_Processor_Fault, !cisnan(currentAngle), "eventAngles", 0);
+	efiAssert(ObdCode::OBD_PCM_Processor_Fault, !std::isnan(currentAngle), "eventAngles", 0);
 
 	// Hunt for a tooth ~90 degrees ago to compare to the current time
 	angle_t previousAngle = currentAngle - engineConfiguration->instantRpmRange;
@@ -63,17 +59,14 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// now let's get precise angle for that event
 	angle_t prevIndexAngle = triggerFormDetails->eventAngles[prevIndex];
-	efitick_t time90ago = timeOfLastEvent[prevIndex];
+	auto time90ago = timeOfLastEvent[prevIndex];
 
 	// No previous timestamp, instant RPM isn't ready yet
 	if (time90ago == 0) {
 		return prevInstantRpmValue;
 	}
 
-	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
-	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
-	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t time = nowNt - time90ago;
+	uint32_t time = nowNt32 - time90ago;
 	angle_t angleDiff = currentAngle - prevIndexAngle;
 
 	// Wrap the angle in to the correct range (ie, could be -630 when we want +90)
@@ -109,7 +102,8 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 		return;
 	}
 
-	spinningEvents[spinningEventIndex] = nowNt;
+	uint32_t nowNt32 = nowNt;
+	spinningEvents[spinningEventIndex] = nowNt32;
 
 	// If we are using only rising edges, we never write in to the odd-index slots that
 	// would be used by falling edges
@@ -124,17 +118,6 @@ void InstantRpmCalculator::updateInstantRpm(
 
 	m_instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index,
 					   nowNt);
-
-#if EFI_SENSOR_CHART
-	if (getEngineState()->sensorChartMode == SC_RPM_ACCEL || getEngineState()->sensorChartMode == SC_DETAILED_RPM) {
-		angle_t currentAngle = triggerFormDetails->eventAngles[current_index];
-		if (engineConfiguration->sensorChartMode == SC_DETAILED_RPM) {
-			scAddData(currentAngle, m_instantRpm);
-		} else {
-			scAddData(currentAngle, m_instantRpmRatio);
-		}
-	}
-#endif /* EFI_SENSOR_CHART */
 }
 
 #endif // EFI_SHAFT_POSITION_INPUT

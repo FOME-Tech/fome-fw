@@ -26,14 +26,26 @@ protected:
 		auto greenPort = getBrainPinPort(green);
 		auto greenPin = getBrainPinIndex(green);
 
-		palSetPad(yellowPort, yellowPin);
-		palSetPad(bluePort, bluePin);
-		palSetPad(greenPort, greenPin);
+		if (yellowPort) {
+			palSetPad(yellowPort, yellowPin);
+		}
+		if (bluePort) {
+			palSetPad(bluePort, bluePin);
+		}
+		if (greenPort) {
+			palSetPad(greenPort, greenPin);
+		}
 
 		while (true) {
-			palTogglePad(yellowPort, yellowPin);
-			palTogglePad(bluePort, bluePin);
-			palTogglePad(greenPort, greenPin);
+			if (yellowPort) {
+				palTogglePad(yellowPort, yellowPin);
+			}
+			if (bluePort) {
+				palTogglePad(bluePort, bluePin);
+			}
+			if (greenPort) {
+				palTogglePad(greenPort, greenPin);
+			}
 			chThdSleepMilliseconds(250);
 		}
 	}
@@ -66,7 +78,7 @@ void efiSetPadMode(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 	ioportid_t port = getHwPort(msg, brainPin);
 	ioportmask_t pin = getHwPin(msg, brainPin);
 	/* paranoid */
-	if (port == GPIO_NULL) {
+	if (!port) {
 		return;
 	}
 

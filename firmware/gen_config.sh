@@ -1,29 +1,20 @@
 #!/bin/bash
 
+set -euo pipefail
+
 echo "This script reads rusefi_config.txt and produces firmware persistent configuration headers"
 echo "The storage section of fome.ini is updated as well"
 
 rm -f gen_config.log
 rm -f gen_config_board.log
 
-# todo: who is the consumer of this folder? shall we move that 'mkdir' command closer to usage?
-mkdir build
-
-
-# todo: we have a bit of code duplication with build-firmware.yaml here :(
-config/boards/subaru_eg33/config/gen_subaru_config.sh
-[ $? -eq 0 ] || { echo "ERROR generating board subaru_eg33 subaru_eg33_f7"; exit 1; }
-
-#
-# see also build-firmware where we compile all versions of firmware
-#
-#
+# see also .github/workflows/build-firmware.yaml where we compile all versions of firmware
 for BOARD in \
    "config/boards/hellen/alphax-2chan alphax-2chan" \
    "config/boards/hellen/alphax-4chan alphax-4chan" \
    "config/boards/hellen/alphax-8chan alphax-8chan" \
    "config/boards/hellen/harley81 harley81" \
-   "config/boards/hellen/hellen128 hellen128 fome_hellen128mercedes.ini" \
+   "config/boards/hellen/hellen128 hellen128" \
    "config/boards/hellen/hellen121vag hellen121vag" \
    "config/boards/hellen/hellen121nissan hellen121nissan" \
    "config/boards/hellen/hellen-honda-k hellen-honda-k" \
@@ -57,19 +48,5 @@ for BOARD in \
  ./gen_config_board.sh $BOARD_NAME $BOARD_SHORT_NAME $INI
  [ $? -eq 0 ] || { echo "ERROR generating board $BOARD_NAME $BOARD_SHORT_NAME $INI"; exit 1; }
 done
-
-#
-# TODO: it's time to kill the 'default' bundle concept and just live happily with explicit f407-discovery
-#
-# problem statement: it's desired that plain 'make' invocation compiles discovery binary
-# reality: while we have per-target signature*.h and rusefi*.ini we do not have matching per-target 'engine_configuration_generated_structures.h'
-# so for plain 'make' to produce f4 discovery we rely of file system engine_configuration_generated_structures.h being f4 discovery version
-#
-#
-# default config should be generated after normal custom boards so that it would be default
-# firmware/controllers/generated/rusefi_generated.h file which would be pushed into VCS
-./gen_config_default.sh
-[ $? -eq 0 ] || { echo "ERROR generating default"; exit 1; }
-
 
 exit 0

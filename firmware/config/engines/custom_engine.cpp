@@ -28,39 +28,6 @@
 #include "scheduler.h"
 #endif /* EFI_PROD_CODE */
 
-#if EFI_PROD_CODE
-static int periodIndex = 0;
-
-static OutputPin testPin;
-static scheduling_s testScheduling;
-
-static int test557[] = {5, 5, 10, 10, 20, 20, 50, 50, 100, 100, 200, 200, 500, 500, 500, 500};
-#define TEST_LEN 16
-
-efitimeus_t testTime;
-
-static void toggleTestAndScheduleNext(void *) {
-	testPin.toggle();
-	periodIndex = (periodIndex + 1) % TEST_LEN;
-	testTime += test557[periodIndex];
-	engine->executor.scheduleByTimestamp("test", &testScheduling, testTime, &toggleTestAndScheduleNext);
-}
-
-/**
- * https://github.com/rusefi/rusefi/issues/557 common rail / direct injection scheduling control test
- */
-void runSchedulingPrecisionTestIfNeeded(void) {
-	if (!isBrainPinValid(engineConfiguration->test557pin)) {
-		return;
-	}
-
-	testPin.initPin("test", engineConfiguration->test557pin);
-	testPin.setValue(0);
-	testTime = getTimeNowUs();
-	toggleTestAndScheduleNext(/*unused*/ nullptr);
-}
-#endif /* EFI_PROD_CODE */
-
 void setDiscoveryPdm() {
 }
 
@@ -129,21 +96,6 @@ void setFrankensoConfiguration() {
 
 	setAlgorithm(LM_SPEED_DENSITY);
 
-#if EFI_PWM_TESTER
-	engineConfiguration->injectionPins[4] = Gpio::C8; // #5
-	engineConfiguration->injectionPins[5] = Gpio::D10; // #6
-	engineConfiguration->injectionPins[6] = Gpio::D9;
-	engineConfiguration->injectionPins[7] = Gpio::D11;
-	engineConfiguration->injectionPins[8] = Gpio::D0;
-	engineConfiguration->injectionPins[9] = Gpio::B11;
-	engineConfiguration->injectionPins[10] = Gpio::C7;
-	engineConfiguration->injectionPins[11] = Gpio::E4;
-
-	/**
-	 * We want to initialize all outputs for test
-	 */
-	engineConfiguration->cylindersCount = 12;
-#else /* EFI_PWM_TESTER */
 	engineConfiguration->injectionPins[4] = Gpio::Unassigned;
 	engineConfiguration->injectionPins[5] = Gpio::Unassigned;
 	engineConfiguration->injectionPins[6] = Gpio::Unassigned;
@@ -158,7 +110,6 @@ void setFrankensoConfiguration() {
 	engineConfiguration->ignitionPins[2] = Gpio::C9;
 	// set_ignition_pin 4 PE10
 	engineConfiguration->ignitionPins[3] = Gpio::E10;
-#endif /* EFI_PWM_TESTER */
 
 	// todo: 8.2 or 10k?
 	engineConfiguration->vbattDividerCoeff = ((float) (10 + 33)) / 10 * 2;
@@ -218,10 +169,8 @@ void setFrankensoBoardTestConfiguration() {
 // set engine_type 58
 void setEtbTestConfiguration() {
 	// VAG test ETB
-	// set tps_min 54
 	engineConfiguration->tpsMin = 54;
 	// by the way this ETB has default position of ADC=74 which is about 4%
-	// set tps_max 540
 	engineConfiguration->tpsMax = 540;
 
 	// yes, 30K - that's a test configuration
@@ -259,28 +208,7 @@ void setEtbTestConfiguration() {
 	// no analog dividers - all sensors with 3v supply, naked discovery bench setup
 	engineConfiguration->analogInputDividerCoefficient = 1;
 
-	// EFI_ADC_15 = PC5
-	engineConfiguration->clt.adcChannel = EFI_ADC_15;
-	set10K_4050K(&engineConfiguration->clt, 10000);
-
 	// see also setDefaultEtbBiasCurve
-}
-
-// F407 discovery
-void setL9779TestConfiguration() {
-	// enable_spi 3
-	engineConfiguration->is_enabled_spi_3 = true;
-	// Wire up spi3
-	// green
-	engineConfiguration->spi3mosiPin = Gpio::B5;
-	// blue
-	engineConfiguration->spi3misoPin = Gpio::B4;
-	// white
-	engineConfiguration->spi3sckPin = Gpio::B3;
-
-	engineConfiguration->l9779spiDevice = SPI_DEVICE_3;
-	// orange
-	engineConfiguration->l9779_cs = Gpio::D5;
 }
 
 // TLE8888_BENCH_ENGINE
@@ -359,10 +287,8 @@ void setTle8888TestConfiguration() {
 	engineConfiguration->etb_iTermMax = 300;
 
 	// VAG test ETB, no divider on red board - direct 3v TPS sensor
-	// set tps_min 332
 	engineConfiguration->tpsMin = 332;
 	// by the way this ETB has default position of ADC=74 which is about 4%
-	// set tps_max 540
 	engineConfiguration->tpsMax = 799;
 }
 
@@ -407,11 +333,6 @@ static void mreBoardOldTest() {
 	// EFI_ADC_7: "31 - AN volt 3"
 	// test harness: White/Red
 	engineConfiguration->map.sensor.hwChannel = EFI_ADC_7;
-
-
-	//engineConfiguration->baroSensor.hwChannel
-	//engineConfiguration->oilPressure.hwChannel
-	//engineConfiguration->fuelLevelSensor
 
 	// TPS tps1_1AdcChannel EFI_ADC_13
 
@@ -587,7 +508,7 @@ void proteusBoardTest() {
 #endif // HW_PROTEUS
 
 void mreBCM() {
-	for (int i = 0; i < MAX_CYLINDER_COUNT;i++) {
+	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		engineConfiguration->ignitionPins[i] = Gpio::Unassigned;
 		engineConfiguration->injectionPins[i] = Gpio::Unassigned;
 	}
@@ -679,16 +600,16 @@ static const float hardCodedHpfpLobeProfileAngle[16] = {0.0, 7.5, 16.5, 24.0,
 };
 
 void setBoschHDEV_5_injectors() {
-	copyArray(engineConfiguration->hpfpLobeProfileQuantityBins, hardCodedHpfpLobeProfileQuantityBins);
-	copyArray(engineConfiguration->hpfpLobeProfileAngle, hardCodedHpfpLobeProfileAngle);
-	setLinearCurve(engineConfiguration->hpfpDeadtimeVoltsBins, 8, 16, 0.5);
+	copyArray(config->hpfpLobeProfileQuantityBins, hardCodedHpfpLobeProfileQuantityBins);
+	copyArray(config->hpfpLobeProfileAngle, hardCodedHpfpLobeProfileAngle);
+	setLinearCurve(config->hpfpDeadtimeVoltsBins, 8, 16, 0.5);
 
-	setLinearCurve(engineConfiguration->hpfpTargetRpmBins, 0, 8000, 1);
-	setLinearCurve(engineConfiguration->hpfpTargetLoadBins, 0, 180, 1);
-	setTable(engineConfiguration->hpfpTarget, 5000);
+	setLinearCurve(config->hpfpTargetRpmBins, 0, 8000, 1);
+	setLinearCurve(config->hpfpTargetLoadBins, 0, 180, 1);
+	setTable(config->hpfpTarget, 5000);
 
-	setLinearCurve(engineConfiguration->hpfpCompensationRpmBins, 0, 8000, 1);
-	setLinearCurve(engineConfiguration->hpfpCompensationLoadBins, 0.005, 0.120, 0.001);
+	setLinearCurve(config->hpfpCompensationRpmBins, 0, 8000, 1);
+	setLinearCurve(config->hpfpCompensationLoadBins, 0.005, 0.120, 0.001);
 
 	// This is the configuration for bosch HDEV 5 injectors
 	// all times in microseconds/us
@@ -708,30 +629,6 @@ void setBoschHDEV_5_injectors() {
 	engineConfiguration->mc33_hpfp_i_hold = 3;
 	engineConfiguration->mc33_hpfp_i_hold_off = 10; // us
 	engineConfiguration->mc33_hpfp_max_hold = 10; // this value in ms not us
-}
-
-/**
- * set engine_type 107
- */
-void setRotary() {
-	engineConfiguration->cylindersCount = 2;
-	engineConfiguration->firingOrder = FO_1_2;
-
-	engineConfiguration->trigger.type = trigger_type_e::TT_36_2_2_2;
-	// todo: fix UI to make this possible via TS
-	setTwoStrokeOperationMode();
-
-	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_MAZDA);
-	strcpy(engineConfiguration->engineCode, "13B");
-	strcpy(engineConfiguration->vehicleName, "test");
-
-	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
-	engineConfiguration->injectionPins[2] = Gpio::Unassigned; // injector in default pinout
-	engineConfiguration->injectionPins[3] = Gpio::Unassigned;
-
-	engineConfiguration->enableTrailingSparks = true;
-	engineConfiguration->trailingCoilPins[0] = Gpio::C9;
-	engineConfiguration->trailingCoilPins[1] = Gpio::E10;
 }
 
 /**

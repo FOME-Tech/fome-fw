@@ -4,7 +4,6 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_trigger_decoder.cpp \
 	tests/trigger/test_trigger_decoder_2.cpp \
 	tests/trigger/test_trigger_multi_sync.cpp \
-	tests/trigger/test_trigger_input_adc.cpp \
 	tests/trigger/test_miata_na_tdc.cpp \
 	tests/trigger/test_cam_vvt_input.cpp \
 	tests/trigger/test_2jz_vvt.cpp \
@@ -20,14 +19,14 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_real_gm_24x.cpp \
 	tests/trigger/test_real_k24a2.cpp \
 	tests/trigger/test_real_k20.cpp \
-	tests/trigger/test_real_toyota_3_tooth_cam.cpp \
+	tests/trigger/test_toyota_3_tooth_cam.cpp \
+	tests/trigger/test_real_noisy_trigger.cpp \
 	tests/trigger/test_map_cam.cpp \
 	tests/trigger/test_rpm_multiplier.cpp \
 	tests/trigger/test_quad_cam.cpp \
 	tests/trigger/test_nissan_vq_vvt.cpp \
 	tests/trigger/test_override_gaps.cpp \
 	tests/trigger/test_injection_scheduling.cpp \
-	tests/sent/test_sent.cpp \
 	tests/ignition_injection/injection_mode_transition.cpp \
 	tests/ignition_injection/test_startOfCrankingPrimingPulse.cpp \
 	tests/ignition_injection/test_multispark.cpp \
@@ -35,6 +34,7 @@ TESTS_SRC_CPP = \
 	tests/ignition_injection/test_fuelCut.cpp \
 	tests/ignition_injection/test_fuel_computer.cpp \
 	tests/ignition_injection/test_injector_model.cpp \
+	tests/ignition_injection/test_odd_firing_engine.cpp \
 	tests/lua/test_lua_basic.cpp \
 	tests/lua/test_lookup.cpp \
 	tests/lua/test_lua_e38.cpp \
@@ -47,7 +47,6 @@ TESTS_SRC_CPP = \
 	tests/lua/test_lua_Leiderman_Khlystov.cpp \
 	tests/lua/test_can_filter.cpp \
 	tests/lua/test_lua_vin.cpp \
-	tests/test_change_engine_type.cpp \
 	tests/util/test_scaled_channel.cpp \
 	tests/util/test_timer.cpp \
 	tests/system/test_periodic_thread_controller.cpp \
@@ -77,7 +76,6 @@ TESTS_SRC_CPP = \
 	tests/test_lambda_monitor.cpp \
 	tests/sensor/basic_sensor.cpp \
 	tests/sensor/func_sensor.cpp \
-	tests/sensor/function_pointer_sensor.cpp \
 	tests/sensor/mock_sensor.cpp \
 	tests/sensor/sensor_reader.cpp \
 	tests/sensor/lin_func.cpp \
@@ -115,3 +113,4 @@ TESTS_SRC_CPP = \
 	tests/actuators/test_stepper.cpp \
 	tests/actuators/test_tacho.cpp \
 	tests/actuators/test_vvt.cpp \
+	tests/test_obd2.cpp \

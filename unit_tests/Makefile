@@ -5,6 +5,7 @@
 
 PROJECT_DIR = ../firmware
 UNIT_TESTS_DIR=$(PROJECT_DIR)/../unit_tests
+GENERATED_DIR = $(PROJECT_DIR)/generated
 
 # Imported source files and paths
 include $(PROJECT_DIR)/console/console.mk
@@ -13,10 +14,15 @@ include $(UNIT_TESTS_DIR)/test.mk
 include $(UNIT_TESTS_DIR)/tests/tests.mk
 include $(PROJECT_DIR)/../unit_tests/tests/util/test_util.mk
 include $(PROJECT_DIR)/common.mk
+include $(PROJECT_DIR)/controllers/modules/modules.mk
 
 RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
+
+# make rusefi.mk happy...
+SKIP_GIT_CHECK = yes
+include $(PROJECT_DIR)/rusefi.mk
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -32,7 +38,6 @@ CPPSRC += $(ALLCPPSRC) \
 	$(FRAMEWORK_SRC_CPP) \
 	$(TESTS_SRC_CPP) \
 	$(DEVELOPMENT_DIR)/engine_sniffer.cpp \
-	$(DEVELOPMENT_DIR)/sensor_chart.cpp \
 	$(CONSOLE_COMMON_SRC_CPP) \
 	$(PROJECT_DIR)/config/boards/hellen/hellen_board_id.cpp \
 	$(PROJECT_DIR)/hw_layer/drivers/can/can_hw.cpp \
@@ -42,11 +47,14 @@ CPPSRC += $(ALLCPPSRC) \
 	$(PROJECT_DIR)/../unit_tests/mocks.cpp \
 	$(RUSEFI_LIB_CPP) \
 	$(RUSEFI_LIB_CPP_TEST) \
+	$(MODULES_CPPSRC) \
 
 INCDIR += \
 	$(PCH_DIR) \
 	$(UNIT_TESTS_DIR) \
 	$(ALLINC) \
+	$(MODULES_INC) \
+	$(GENERATED_DIR) \
 	$(PROJECT_DIR)/config/boards/hellen \
 	$(UNIT_TESTS_DIR)/test_data_structures \
 	$(UNIT_TESTS_DIR)/chibios-mock \

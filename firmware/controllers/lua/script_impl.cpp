@@ -12,10 +12,12 @@
 
 #include "script_impl.h"
 
-static fsio8_Map3D_f32t scriptTable1;
-static fsio8_Map3D_u8t scriptTable2;
-static fsio8_Map3D_u8t scriptTable3;
-static fsio8_Map3D_u8t scriptTable4;
+using ScriptTable = Map3D<SCRIPT_TABLE_8, SCRIPT_TABLE_8, int16_t, int16_t, int16_t>;
+
+static ScriptTable scriptTable1;
+static ScriptTable scriptTable2;
+static ScriptTable scriptTable3;
+static ScriptTable scriptTable4;
 
 ValueProvider3D *getscriptTable(int index) {
 	switch (index) {
@@ -35,7 +37,7 @@ ValueProvider3D *getscriptTable(int index) {
  * @return zero-based index of curve with given name
  */
 expected<int> getCurveIndexByName(const char *name) {
-	for (int i = 0;i<SCRIPT_CURVE_COUNT;i++) {
+	for (int i = 0; i < SCRIPT_CURVE_COUNT; i++) {
 		if (strEqualCaseInsensitive(name, engineConfiguration->scriptCurveName[i])) {
 			return i;
 		}
@@ -45,7 +47,7 @@ expected<int> getCurveIndexByName(const char *name) {
 }
 
 expected<int> getTableIndexByName(const char *name) {
-	for (int i = 0;i<SCRIPT_TABLE_COUNT;i++) {
+	for (int i = 0; i < SCRIPT_TABLE_COUNT; i++) {
 		if (strEqualCaseInsensitive(name, engineConfiguration->scriptTableName[i])) {
 			return i;
 		}
@@ -55,7 +57,7 @@ expected<int> getTableIndexByName(const char *name) {
 }
 
 expected<int> getSettingIndexByName(const char *name) {
-	for (int i = 0;i<SCRIPT_SETTING_COUNT;i++) {
+	for (int i = 0; i < SCRIPT_SETTING_COUNT; i++) {
 		if (strEqualCaseInsensitive(name, engineConfiguration->scriptSettingName[i])) {
 			return i;
 		}

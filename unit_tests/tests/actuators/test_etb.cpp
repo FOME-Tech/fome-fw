@@ -61,7 +61,7 @@ TEST(etb, initializationSingleThrottle) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
 	EXPECT_CALL(mocks[0], isEtbMode())
-	      .WillOnce(Return(TRUE));
+	      .WillOnce(Return(true));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_Throttle1;
@@ -89,7 +89,7 @@ TEST(etb, initializationSingleThrottleInSecondSlot) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
 	EXPECT_CALL(mocks[1], isEtbMode())
-	      .WillOnce(Return(TRUE));
+	      .WillOnce(Return(true));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_None;
@@ -117,9 +117,9 @@ TEST(etb, initializationDualThrottle) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
 	EXPECT_CALL(mocks[0], isEtbMode())
-	      .WillOnce(Return(TRUE));
+	      .WillOnce(Return(true));
 	EXPECT_CALL(mocks[1], isEtbMode())
-	      .WillOnce(Return(TRUE));
+	      .WillOnce(Return(true));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -168,8 +168,6 @@ TEST(etb, initializationWastegate) {
 	EXPECT_CALL(mocks[1], init(DC_None, _, _, _, false)).Times(0);
 
 	doInitElectronicThrottle();
-
-	ASSERT_FALSE(engineConfiguration->etb1configured);
 }
 
 TEST(etb, initializationNoFunction) {
@@ -298,7 +296,7 @@ TEST(etb, testSetpointOnlyPedal) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_EQ(50, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// Test some floating point pedal/output values
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.8302f, true);
@@ -310,7 +308,7 @@ TEST(etb, testSetpointOnlyPedal) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, -5, true);
 	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 105, true);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// Test invalid pedal position - should give 0 position
 	Sensor::resetMockValue(SensorType::AcceleratorPedal);
@@ -339,18 +337,19 @@ TEST(etb, setpointSecondThrottleTrim) {
 			return y;
 		});
 
-	// Should get called with the un-adjusted setpoint
-	StrictMock<MockVp3d> throttleTrimTable;
-	EXPECT_CALL(throttleTrimTable, getValue(0, 47))
-		.WillOnce(Return(4));
+	struct MockEtb2 : EtbController2 {
+		MOCK_METHOD(percent_t, getThrottleTrim, (float rpm, percent_t targetPosition), (const, override));
+	};
 
 	// Must have TPS & PPS initialized for ETB setup
 	Sensor::setMockValue(SensorType::Tps1Primary, 0);
 	Sensor::setMockValue(SensorType::Tps1, 0.0f, true);
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 
-	EtbController2 etb(throttleTrimTable);
+	StrictMock<MockEtb2> etb;
 	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
+	// Should get called with the un-adjusted setpoint
+	EXPECT_CALL(etb, getThrottleTrim(0, 47)).WillOnce(Return(4));
 
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 47, true);
 	EXPECT_EQ(51, etb.getSetpoint().value_or(-1));
@@ -393,7 +392,7 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_FLOAT_EQ(52.5, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// 100% setpoint should increase by 10% closed, scaled 0% at wot
 	etb.setIdlePosition(100);
@@ -402,7 +401,7 @@ TEST(etb, setpointIdle) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 50.0f, true);
 	EXPECT_FLOAT_EQ(55, etb.getSetpoint().value_or(-1));
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
-	EXPECT_FLOAT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
 
 	// 125% setpoint should clamp to 10% increase
 	etb.setIdlePosition(125);
@@ -517,24 +516,23 @@ TEST(etb, setpointLuaAdder) {
 
 	// Crazy adjustments don't cause unreasonable target
 	etb.setLuaAdjustment(1000);
-	EXPECT_EQ(100, etb.getSetpoint().value_or(-1));
+	EXPECT_EQ(99, etb.getSetpoint().value_or(-1));
 	etb.setLuaAdjustment(-1000);
 	EXPECT_EQ(1, etb.getSetpoint().value_or(-1));
 
-	extern int timeNowUs;
 	int startTime = 1e6;
-	timeNowUs = startTime;
+	setTimeNowUs(startTime);
 
 	// Adjustment works immediately after setting
 	etb.setLuaAdjustment(10);
 	EXPECT_EQ(60, etb.getSetpoint().value_or(-1));
 
 	// Adjustment works 0.19 second after setting
-	timeNowUs = startTime + 0.19 * 1e6;
+	setTimeNowUs(startTime + 0.19 * 1e6);
 	EXPECT_EQ(60, etb.getSetpoint().value_or(-1));
 
 	// Adjustment resets to 0 after 0.21 second
-	timeNowUs = startTime + 0.21 * 1e6;
+	setTimeNowUs(startTime + 0.21 * 1e6);
 	EXPECT_EQ(50, etb.getSetpoint().value_or(-1));
 }
 
@@ -711,6 +709,8 @@ TEST(etb, setOutputLimpHome) {
 }
 
 TEST(etb, closedLoopPid) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	pid_s pid = {};
 	pid.pFactor = 5;
 	pid.maxValue = 75;
@@ -725,9 +725,7 @@ TEST(etb, closedLoopPid) {
 	etb.init(DC_Throttle1, nullptr, &pid, nullptr, true);
 
 	// Disable autotune for now
-	Engine e;
-	EngineTestHelperBase base(&e, nullptr, nullptr);
-	e.etbAutoTune = false;
+	engine->etbAutoTune = false;
 
 	// Setpoint greater than actual, should be positive output
 	EXPECT_FLOAT_EQ(etb.getClosedLoop(50, 40).value_or(-1), 50);
@@ -739,19 +737,15 @@ TEST(etb, closedLoopPid) {
 	EXPECT_FLOAT_EQ(etb.getClosedLoop(50, 30).value_or(-1), 75);
 }
 
-extern int timeNowUs;
-
 TEST(etb, jamDetection) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	pid_s pid = {};
+	MockIgnitionController ignController;
 
-	// I-only since we're testing out the integrator
-	pid.pFactor = 0;
-	pid.iFactor = 1;
-	pid.dFactor = 0;
-	pid.maxValue = 50;
-	pid.minValue = -50;
+	EXPECT_CALL(ignController, getIgnState).WillRepeatedly(Return(true));
+
+	// This only works when the ignition is on!
+	engine->module<IgnitionController>().set(&ignController);
 
 	// Must have TPS & PPS initialized for ETB setup
 	Sensor::setMockValue(SensorType::Tps1Primary, 0);
@@ -759,36 +753,31 @@ TEST(etb, jamDetection) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
 
 	// Limit of 5%, 1 second
-	engineConfiguration->etbJamIntegratorLimit = 5;
+	engineConfiguration->etbJamDetectThreshold = 5;
 	engineConfiguration->etbJamTimeout = 1;
 
 	EtbController etb;
-	etb.init(DC_Throttle1, nullptr, &pid, nullptr, true);
+	etb.init(DC_Throttle1, nullptr, nullptr, nullptr, true);
 
-	timeNowUs = 0;
+	setTimeNowUs(0);
 
-	// Reset timer while under integrator limit
-	EXPECT_EQ(etb.getPidState().iTerm, 0);
-	etb.checkOutput(0);
+	// Reset timer while under error limit
+	etb.checkJam(10, 14);
 	EXPECT_EQ(etb.jamTimer, 0);
 	EXPECT_FALSE(etb.jamDetected);
 
-	for (size_t i = 0; i < ETB_LOOP_FREQUENCY; i++) {
-		// Error of 10, should accumulate 10 integrator per second
-		etb.getClosedLoop(50, 40);
-	}
-
-	EXPECT_NEAR(etb.getPidState().iTerm, 10.0f, 1e-3);
+	// Start a jam
+	etb.checkJam(10, 16);
 
 	// Just under time limit, no jam yet
-	timeNowUs = 0.9e6;
-	etb.checkOutput(0);
+	setTimeNowUs(0.9e6);
+	etb.checkJam(10, 16);
 	EXPECT_NEAR(etb.jamTimer, 0.9f, 1e-3);
 	EXPECT_FALSE(etb.jamDetected);
 
 	// Above the time limit, jam detected!
-	timeNowUs = 1.1e6;
-	etb.checkOutput(0);
+	setTimeNowUs(1.1e6);
+	etb.checkJam(10, 16);
 	EXPECT_TRUE(etb.jamDetected);
 }
 
@@ -807,10 +796,11 @@ TEST(etb, openLoopThrottle) {
 	setLinearCurve(config->etbBiasBins, 0, 100);
 	setLinearCurve(config->etbBiasValues, -50, 50);
 
+	// due to rounding (scaled integer table storage) some of these values are funny
 	EXPECT_NEAR(-50, etb.getOpenLoop(0).value_or(-1), EPS4D);
-	EXPECT_NEAR(-25, etb.getOpenLoop(25).value_or(-1), EPS4D);
+	EXPECT_NEAR(-24.975, etb.getOpenLoop(25).value_or(-1), EPS4D);
 	EXPECT_NEAR(0, etb.getOpenLoop(50).value_or(-1), EPS4D);
-	EXPECT_NEAR(25, etb.getOpenLoop(75).value_or(-1), EPS4D);
+	EXPECT_NEAR(24.975, etb.getOpenLoop(75).value_or(-1), EPS4D);
 	EXPECT_NEAR(50, etb.getOpenLoop(100).value_or(-1), EPS4D);
 }
 

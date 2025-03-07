@@ -1,11 +1,6 @@
 package com.rusefi.ui.widgets;
 
-import com.rusefi.FileLog;
-import com.rusefi.NamedThreadFactory;
-import com.rusefi.core.MessagesCentral;
-import com.rusefi.functional_tests.EcuTestHelper;
 import com.rusefi.io.CommandQueue;
-import com.rusefi.io.LinkManager;
 import com.rusefi.ui.RecentCommands;
 import com.rusefi.ui.UIContext;
 import com.rusefi.core.preferences.storage.Node;
@@ -20,9 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 /**
  * Date: 3/20/13
@@ -30,12 +23,11 @@ import java.util.function.Function;
  * @see com.rusefi.CommandControl for hard-coded commands
  */
 public class AnyCommand {
-    private final static ThreadFactory THREAD_FACTORY = new NamedThreadFactory("AnyCommand");
     public static final String KEY = "last_value";
 
     private final UIContext uiContext;
     private final JTextComponent text;
-    private JPanel content = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    private final JPanel content = new JPanel(new FlowLayout(FlowLayout.LEFT));
     private boolean reentrant;
     private Listener listener;
 
@@ -108,10 +100,10 @@ public class AnyCommand {
         }
     }
 
-    private void sendCommand(String rawCommand) {
-        if (!isValidInput(rawCommand))
+    private void sendCommand(String cmd) {
+        if (!isValidInput(cmd))
             return;
-        String cmd = prepareCommand(rawCommand, uiContext.getLinkManager());
+
         if (cmd == null) {
             /**
              * {@link #DECODE_RPN} for example does not send out anything
@@ -124,53 +116,6 @@ public class AnyCommand {
         reentrant = true;
         uiContext.getCommandQueue().write(cmd, timeout);
         reentrant = false;
-    }
-
-    public static String prepareCommand(String rawCommand, LinkManager linkManager) {
-        try {
-            if (rawCommand.toLowerCase().startsWith("stim_check" + " ")) {
-                handleStimulationSelfCheck(rawCommand, linkManager);
-                return null;
-            } else {
-                return rawCommand;
-            }
-        } catch (Throwable e) {
-            FileLog.MAIN.log(e);
-            return rawCommand;
-        }
-    }
-
-    /**
-     * stim_check 3000 5 30
-     * would set RPM to 3000, give it 5 seconds to settle, and test for 30 seconds
-     */
-    private static void handleStimulationSelfCheck(String rawCommand, LinkManager linkManager) {
-        String[] parts = rawCommand.split(" ", 4);
-        if (parts.length != 4) {
-            MessagesCentral.getInstance().postMessage(AnyCommand.class, "Invalid command length " + parts.length);
-            return; // let's ignore invalid command
-        }
-        int rpm = Integer.parseInt(parts[1]);
-        int settleTime = Integer.parseInt(parts[2]);
-        int durationTime = Integer.parseInt(parts[3]);
-        THREAD_FACTORY.newThread(new Runnable() {
-            @Override
-            public void run() {
-                MessagesCentral.getInstance().postMessage(AnyCommand.class, "Will test with RPM " + rpm + ", settle time" + settleTime + "s and duration" + durationTime + "s");
-                Function<String, Object> callback = new Function<String, Object>() {
-                    @Override
-                    public Object apply(String status) {
-                        if (status == null) {
-                            MessagesCentral.getInstance().postMessage(AnyCommand.class, rpm + " worked!");
-                        } else {
-                            MessagesCentral.getInstance().postMessage(AnyCommand.class, rpm + " failed " + status);
-                        }
-                        return null;
-                    }
-                };
-                EcuTestHelper.assertRpmDoesNotJump(rpm, settleTime, durationTime, callback, linkManager.getCommandQueue());
-            }
-        }).start();
     }
 
     private static boolean isValidInput(String text) {
@@ -190,10 +135,6 @@ public class AnyCommand {
 
     public JComponent getContent() {
         return content;
-    }
-
-    public void setContent(JPanel content) {
-        this.content = content;
     }
 
     public void requestFocus() {

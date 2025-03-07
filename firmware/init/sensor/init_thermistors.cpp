@@ -16,15 +16,15 @@ struct FuncPair {
 	FuncChain<resist, therm> thermistor;
 };
 
-static CCM_OPTIONAL FunctionalSensor clt(SensorType::Clt, MS2NT(10));
-static CCM_OPTIONAL FunctionalSensor iat(SensorType::Iat, MS2NT(10));
-static CCM_OPTIONAL FunctionalSensor aux1(SensorType::AuxTemp1, MS2NT(10));
-static CCM_OPTIONAL FunctionalSensor aux2(SensorType::AuxTemp2, MS2NT(10));
+static FunctionalSensor clt(SensorType::Clt, MS2NT(10));
+static FunctionalSensor iat(SensorType::Iat, MS2NT(10));
+static FunctionalSensor aux1(SensorType::AuxTemp1, MS2NT(10));
+static FunctionalSensor aux2(SensorType::AuxTemp2, MS2NT(10));
 
-static CCM_OPTIONAL FunctionalSensor oilTempSensor(SensorType::OilTemperature, MS2NT(10));
-static CCM_OPTIONAL FunctionalSensor fuelTempSensor(SensorType::FuelTemperature, MS2NT(10));
-static CCM_OPTIONAL FunctionalSensor ambientTempSensor(SensorType::AmbientTemperature, MS2NT(10));
-static CCM_OPTIONAL FunctionalSensor compressorDischargeTemp(SensorType::CompressorDischargeTemperature, MS2NT(10));
+static FunctionalSensor oilTempSensor(SensorType::OilTemperature, MS2NT(10));
+static FunctionalSensor fuelTempSensor(SensorType::FuelTemperature, MS2NT(10));
+static FunctionalSensor ambientTempSensor(SensorType::AmbientTemperature, MS2NT(10));
+static FunctionalSensor compressorDischargeTemp(SensorType::CompressorDischargeTemperature, MS2NT(10));
 
 static FuncPair fclt, fiat, faux1, faux2, foil, ffuel, fambient, fcdt;
 
@@ -33,9 +33,9 @@ static void validateThermistorConfig(const char *msg, thermistor_conf_s& cfg) {
 		cfg.tempC_2 >= cfg.tempC_3) {
 		firmwareError(ObdCode::OBD_ThermistorConfig, "Invalid thermistor %s configuration: please check that temperatures are in the ascending order %f %f %f",
 				msg,
-				cfg.tempC_1,
-				cfg.tempC_2,
-				cfg.tempC_3);
+				(float)cfg.tempC_1,
+				(float)cfg.tempC_2,
+				(float)cfg.tempC_3);
 	}
 }
 
