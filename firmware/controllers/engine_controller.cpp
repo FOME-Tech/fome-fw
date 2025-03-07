@@ -51,10 +51,6 @@
 #include "vr_pwm.h"
 #include "adc_subscription.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
@@ -412,10 +408,6 @@ void commonInitEngineController() {
 
 	engine->injectionEvents.addFuelEvents();
 #endif // EFI_ENGINE_CONTROL
-
-#if EFI_SENSOR_CHART
-	initSensorChart();
-#endif /* EFI_SENSOR_CHART */
 
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	initSettings();

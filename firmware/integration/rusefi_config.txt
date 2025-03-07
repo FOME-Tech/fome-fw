@@ -365,7 +365,6 @@ end_struct
 custom engine_type_e 4 bits, S32, @OFFSET@, [0:6], @@engine_type_e_auto_enum@@
 engine_type_e engineType;http://rusefi.com/wiki/index.php?title=Manual:Engine_Type
 
-uint16_t sensorSnifferRpmThreshold;Disable sensor sniffer above this rpm;"RPM", 1, 0, 0, 10000, 0
 uint16_t launchRpm;A secondary Rev limit engaged by the driver to help launch the vehicle faster;"rpm", 1, 0, 0, 20000, 0
 uint16_t rpmHardLimit;Hard cut above this RPM. Set slightly lower than absolute maximum RPM - may overshoot slightly.;"rpm", 1, 0, 0, 20000, 0
 uint16_t engineSnifferRpmThreshold;Engine sniffer would be disabled above this rpm;"RPM", 1, 0, 0, 30000, 0
@@ -595,8 +594,6 @@ engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other ca
 
 	ve_override_e idleVeOverrideMode;Override the Y axis (load) value used for only the Idle VE table.\nAdvanced users only: If you aren't sure you need this, you probably don't need this.
 
-	Gpio l9779_cs;
-
 	output_pin_e o2heaterPin;On-off O2 sensor heater control. 'ON' if engine is running, 'OFF' if stopped or cranking.
 
 	output_pin_e[MAX_CYLINDER_COUNT iterate] injectionPins;
@@ -653,6 +650,8 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 
 	output_pin_e secondSolenoidPin;Some Subaru and some Mazda use double-solenoid idle air valve
 
+	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 3
+
 	uint32_t tunerStudioSerialSpeed;Secondary TTL channel baud rate;"BPs", 1, 0, 0, 1000000, 0
 
 	float compressionRatio;For reference, not used by the ECU.;"CR", 1, 0, 0, 300, 1
@@ -702,9 +701,6 @@ bit is_enabled_spi_2
 
 output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	pin_output_mode_e acFanPinMode;
-
-
-	spi_device_e l9779spiDevice;
 
 	uint16_t vehicleWeight;For reference, not used by the ECU.;"kg", 1, 0, 0, 10000, 0
 	int16_t idlePidRpmUpperLimit;How far above idle speed do we consider idling?\nFor example, if target = 800, this param = 200, then anything below 1000 RPM is considered idle.;"RPM", 1, 0, 0, 500, 0
@@ -779,11 +775,6 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 
 	Gpio spi3sckPin;
 	uart_device_e consoleUartDevice;
-
-
-#define sensor_chart_e_enum "none", "trigger", "INVALID", "RPM ACCEL", "DETAILED RPM", "INVALID"
-custom sensor_chart_e 1 bits, S08, @OFFSET@, [0:2], @@sensor_chart_e_enum@@
-sensor_chart_e sensorChartMode;FOME console sensor sniffer mode;
 
 #define CAN_RX_PREFIX "CAN_rx"
 
@@ -1002,7 +993,6 @@ int16_t tps2Min;;"ADC", 1, 0, 0, 1023, 0
 int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	output_pin_e starterControlPin
 	pin_input_mode_e startStopButtonMode;
-	uint8_t tachPulsePerRev;;"Pulse", 1, 0, 1, 255, 0
 
 ! todo: mapErrorDetectionIdleTooLow? 30kPa is usually lowest on idle	
 	float mapErrorDetectionTooLow;kPa value which is too low to be true;"kPa", 1, 0, -100, 100, 2
@@ -1029,7 +1019,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 
 	uint8_t autoscale idleMaximumAirmass;Maximum commanded airmass for the idle controller.;"mg", 2, 0, 0, 500, 1
 
-	uint8_t unused1343
+	adc_channel_e map2HwChannel
 	int16_t afterCrankingIACtaperDuration;This is the duration in cycles that the IAC will take to reach its normal idle position, it can be used to hold the idle higher for a few seconds after cranking to improve startup.;"cycles", 1, 0, 0, 5000, 0
 	
 	int16_t iacByTpsTaper;Extra IAC, in percent between 0 and 100, tapered between zero and idle deactivation TPS value;"percent", 1, 0, 0, 500, 0
@@ -1333,10 +1323,18 @@ uint16_t vvtActivationDelayMs;We need to give engine time to build oil pressure 
 
 	uint16_t acrDisablePhase;;"deg", 1, 0, 0, 720, 0
 
-linear_sensor_s auxLinear1
-linear_sensor_s auxLinear2
-linear_sensor_s auxLinear3
-linear_sensor_s auxLinear4
+	struct aux_linear_sensor_s
+		adc_channel_e hwChannel;
+		float v1;;"volts", 1, 0, 0, 10, 2
+		float value1;;"", 1, 0, -100000, 100000, 2
+		float v2;;"volts", 1, 0, 0, 10, 2
+		float value2;;"", 1, 0, -100000, 100000, 2
+	end_struct
+
+	aux_linear_sensor_s auxLinear1
+	aux_linear_sensor_s auxLinear2
+	aux_linear_sensor_s auxLinear3
+	aux_linear_sensor_s auxLinear4
 
 output_pin_e tcu_tcc_onoff_solenoid
 pin_output_mode_e tcu_tcc_onoff_solenoid_mode
@@ -1794,7 +1792,6 @@ end_struct
 #define MLQ_FIELD_HEADER_SIZE 89
 
 #define PROTOCOL_OUTPIN "outpin"
-#define PROTOCOL_ANALOG_CHART "analog_chart"
 #define PROTOCOL_ENGINE_SNIFFER "wave_chart"
 #define PROTOCOL_VERSION_TAG "fomeVersion"
 #define PROTOCOL_TEST_RESPONSE_TAG "ts_p_alive"

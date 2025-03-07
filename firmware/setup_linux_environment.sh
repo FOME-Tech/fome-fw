@@ -16,6 +16,9 @@
 # This script will download and install all dependencies require to develop FOME on Linux.
 # After running this script, executing `make` in the firmware folder is expected to produce a functional firmware binary.
 
+# fail on error
+set -euo pipefail
+
 # Ensure submodules got cloned
 git submodule update --init
 
@@ -23,7 +26,7 @@ git submodule update --init
 sudo apt-get update
 
 # install dependencies
-sudo apt-get install -y build-essential gcc gdb gcc-multilib g++-multilib make openjdk-8-jdk-headless mtools zip xxd libncurses5 libncursesw5 dosfstools lcov
+sudo apt-get install -y build-essential gcc gdb gcc-multilib g++-multilib make openjdk-8-jdk-headless mtools zip xxd dosfstools lcov
 
 # Allow the current user to use serial ports
 sudo usermod -a -G dialout $USER

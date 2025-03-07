@@ -54,5 +54,5 @@ public:
 						float currentPhase,
 						float nextPhase) override;
 
-	void submitSample(float volts);
+	void submitSample(float voltsMap1, float voltsMap2);
 };

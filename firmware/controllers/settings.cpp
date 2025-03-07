@@ -49,10 +49,6 @@ static void setIdleSolenoidFrequency(int value) {
 	incrementGlobalConfigurationVersion();
 }
 
-static void setSensorChartMode(int value) {
-	engineConfiguration->sensorChartMode = (sensor_chart_e) value;
-}
-
 static void setCrankingRpm(int value) {
 	engineConfiguration->cranking.rpm = value;
 }
@@ -399,7 +395,6 @@ const command_i_s commandsI[] = {{"ignition_mode", setIgnitionMode},
 #if EFI_ENGINE_CONTROL
 		{"cranking_rpm", setCrankingRpm},
 		{"injection_mode", setInjectionMode},
-		{"sensor_chart_mode", setSensorChartMode},
 		{"timing_mode", setTimingMode},
 		{CMD_ENGINE_TYPE, setEngineType},
 		{"rpm_hard_limit", setRpmHardLimit},

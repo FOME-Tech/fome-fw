@@ -30,6 +30,11 @@ or
 
 ## Unreleased
 
+### Added
+ - Allow fractional tachometer pulse ratio for fine tachometer calibration
+
+## February 2025 Release
+
 ### Breaking Changes
  - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
 

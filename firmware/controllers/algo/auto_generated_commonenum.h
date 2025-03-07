@@ -45,7 +45,6 @@ const char *getLoad_override_e(load_override_e value);
 const char *getOperation_mode_e(operation_mode_e value);
 const char *getPin_input_mode_e(pin_input_mode_e value);
 const char *getPin_output_mode_e(pin_output_mode_e value);
-const char *getSensor_chart_e(sensor_chart_e value);
 const char *getSpi_device_e(spi_device_e value);
 const char *getSpi_speed_e(spi_speed_e value);
 const char *getStepper_num_micro_steps_e(stepper_num_micro_steps_e value);

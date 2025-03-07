@@ -569,19 +569,6 @@ case OM_OPENDRAIN_INVERTED:
   }
  return NULL;
 }
-const char *getSensor_chart_e(sensor_chart_e value){
-switch(value) {
-case SC_DETAILED_RPM:
-  return "SC_DETAILED_RPM";
-case SC_OFF:
-  return "SC_OFF";
-case SC_RPM_ACCEL:
-  return "SC_RPM_ACCEL";
-case SC_TRIGGER:
-  return "SC_TRIGGER";
-  }
- return NULL;
-}
 const char *getSpi_device_e(spi_device_e value){
 switch(value) {
 case SPI_DEVICE_1:
