@@ -22,7 +22,7 @@
 #include "stepper.h"
 #endif
 
-int IdleController::getTargetRpm(float clt) {
+IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
 	// Base target RPM from CLT table
 	targetRpmByClt = interpolate2d(clt, config->cltIdleRpmBins, config->cltIdleRpm);
 
@@ -33,11 +33,13 @@ int IdleController::getTargetRpm(float clt) {
 	targetRpmAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleRpmBump : 0;
 
 	auto target = targetRpmByClt + targetRpmAcBump + luaAddRpm;
+	float entryRpm = target + engineConfiguration->idlePidRpmUpperLimit;
+
 	idleTarget = target;
-	return target;
+	return { target, entryRpm };
 }
 
-IIdleController::Phase IdleController::determinePhase(float rpm, float targetRpm, SensorResult tps, float vss, float crankingTaperFraction) {
+IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController::TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) {
 #if EFI_SHAFT_POSITION_INPUT
 	if (!engine->rpmCalculator.isRunning()) {
 		return Phase::Cranking;
@@ -55,8 +57,7 @@ IIdleController::Phase IdleController::determinePhase(float rpm, float targetRpm
 
 	// If rpm too high (but throttle not pressed), we're coasting
 	// ALSO, if still in the cranking taper, disable coasting
-	float maximumIdleRpm = targetRpm + engineConfiguration->idlePidRpmUpperLimit;
-	looksLikeCoasting = rpm > maximumIdleRpm;
+	looksLikeCoasting = rpm > targetRpm.IdleEntryRpm;
 	looksLikeCrankToIdle = crankingTaperFraction < 1;
 	if (looksLikeCoasting && !looksLikeCrankToIdle) {
 		return Phase::Coasting;
@@ -270,7 +271,7 @@ float IdleController::getIdlePosition(float rpm) {
 
 	// Compute the target we're shooting for
 	auto targetRpm = getTargetRpm(clt);
-	m_lastTargetRpm = targetRpm;
+	m_lastTargetRpm = targetRpm.ClosedLoopTarget;
 
 	// Determine cranking taper (modeled flow does no taper of open loop)
 	float crankingTaper = useModeledFlow ? 1 : getCrankingTaperFraction(clt);
@@ -295,7 +296,7 @@ float IdleController::getIdlePosition(float rpm) {
 			m_pid.reset();
 		}
 
-		auto closedLoop = getClosedLoop(phase, tps.Value, rpm, targetRpm);
+		auto closedLoop = getClosedLoop(phase, tps.Value, rpm, targetRpm.ClosedLoopTarget);
 		idleClosedLoop = closedLoop;
 		iacPosition += closedLoop;
 	} else {
