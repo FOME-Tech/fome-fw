@@ -32,8 +32,11 @@ struct IIdleController {
 		// If below this speed, enter idle
 		float IdleEntryRpm;
 
+		// If above this speed, exit idle
+		float IdleExitRpm;
+
 		bool operator==(const TargetInfo& other) const {
-			return ClosedLoopTarget == other.ClosedLoopTarget && IdleEntryRpm == other.IdleEntryRpm;
+			return ClosedLoopTarget == other.ClosedLoopTarget && IdleEntryRpm == other.IdleEntryRpm && IdleExitRpm == other.IdleExitRpm;
 		}
 	};
 
