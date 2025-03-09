@@ -33,7 +33,17 @@ IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
 	targetRpmAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleRpmBump : 0;
 
 	auto target = targetRpmByClt + targetRpmAcBump + luaAddRpm;
-	float entryRpm = target + engineConfiguration->idlePidRpmUpperLimit;
+
+	float rpmUpperLimit = engineConfiguration->idlePidRpmUpperLimit;
+	float entryRpm = target + rpmUpperLimit;
+
+	// Ramp the target down from the transition RPM to normal over a few seconds
+	float timeSinceIdleEntry = m_timeInIdlePhase.getElapsedSeconds();
+	target += interpolateClamped(
+		0, rpmUpperLimit,
+		3, 0,
+		timeSinceIdleEntry
+	);
 
 	idleTarget = target;
 	return { target, entryRpm };
@@ -279,6 +289,12 @@ float IdleController::getIdlePosition(float rpm) {
 	// Determine what operation phase we're in - idling or not
 	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
 	auto phase = determinePhase(rpm, targetRpm, tps, vehicleSpeed, crankingTaper);
+
+	if (phase != m_lastPhase && phase == Phase::Idling) {
+		// Just entered idle, reset timer
+		m_timeInIdlePhase.reset();
+	}
+
 	m_lastPhase = phase;
 
 	finishIdleTestIfNeeded();

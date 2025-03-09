@@ -91,6 +91,8 @@ private:
 	int m_lastTargetRpm = 0;
 	efitimeus_t restoreAfterPidResetTimeUs = 0;
 
+	Timer m_timeInIdlePhase;
+
 	// This is stored by getClosedLoop and used in case we want to "do nothing"
 	float m_lastAutomaticPosition = 0;
 
