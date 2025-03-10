@@ -168,7 +168,6 @@ void Engine::updateSlowSensors() {
 #if EFI_SHAFT_POSITION_INPUT
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	triggerCentral.isEngineSnifferEnabled = rpm < engineConfiguration->engineSnifferRpmThreshold;
-	getEngineState()->sensorChartMode = rpm < engineConfiguration->sensorSnifferRpmThreshold ? engineConfiguration->sensorChartMode : SC_OFF;
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
@@ -278,6 +277,10 @@ void Engine::OnTriggerSynchronizationLost() {
 			triggerCentral.vvtState[i][j].resetState();
 		}
 	}
+
+	// Reset injector & ignition scheduling to avoid wrong mode or dwell during restart
+	injectionEvents.invalidate();
+	engine->ignitionEvents.isReady = false;
 }
 
 void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError) {

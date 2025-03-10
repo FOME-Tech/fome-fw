@@ -128,8 +128,16 @@ struct idle_state_s {
 	// %
 	// offset 40
 	float currentIdlePosition = (float)0;
+	// Target airmass
+	// mg
+	// offset 44
+	uint16_t idleTargetAirmass = (uint16_t)0;
+	// Target airflow
+	// kg/h
+	// offset 46
+	scaled_channel<uint16_t, 100, 1> idleTargetFlow = (uint16_t)0;
 };
-static_assert(sizeof(idle_state_s) == 44);
+static_assert(sizeof(idle_state_s) == 48);
 static_assert(offsetof(idle_state_s, targetRpmByClt) == 4);
 static_assert(offsetof(idle_state_s, targetRpmAcBump) == 6);
 static_assert(offsetof(idle_state_s, luaAddRpm) == 8);
@@ -143,4 +151,6 @@ static_assert(offsetof(idle_state_s, iacByRpmTaper) == 28);
 static_assert(offsetof(idle_state_s, openLoop) == 32);
 static_assert(offsetof(idle_state_s, idleClosedLoop) == 36);
 static_assert(offsetof(idle_state_s, currentIdlePosition) == 40);
+static_assert(offsetof(idle_state_s, idleTargetAirmass) == 44);
+static_assert(offsetof(idle_state_s, idleTargetFlow) == 46);
 

@@ -1,4 +1,7 @@
 struct_no_prefix knock_controller_s
+	bit hasKnockRecently;Knock: Detected recently
+	bit hasKnockRetardNow;Knock: Retard active
+
 	float m_knockLevel;@@GAUGE_NAME_KNOCK_LEVEL@@;"Volts", 1, 0, 0, 0, 2
 	int8_t[12 iterate] m_knockCyl;Knock: Cyl;"dBv",1, 0, 0, 0, 0
 

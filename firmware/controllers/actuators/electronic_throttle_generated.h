@@ -32,9 +32,7 @@ struct electronic_throttle_s {
 	// Duty cycle
 	// %
 	// offset 18
-	scaled_channel<uint8_t, 2, 1> m_outputDuty = (uint8_t)0;
-	// offset 19
-	uint8_t alignmentFill_at_19[1];
+	scaled_channel<int16_t, 100, 1> m_outputDuty = (int16_t)0;
 	// Rev limit active
 	// offset 20 bit 0
 	bool revLimitActive : 1 {};

@@ -758,6 +758,8 @@
  */
 #define CORTEX_ENABLE_WFI_IDLE TRUE
 
+#define PORT_GUARD_PAGE_SIZE 0
+
 #endif  /* CHCONF_H */
 
 /** @} */

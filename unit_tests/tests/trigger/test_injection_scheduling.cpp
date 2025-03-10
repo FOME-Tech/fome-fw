@@ -11,10 +11,6 @@ using ::testing::Not;
 using ::testing::Property;
 using ::testing::Truly;
 
-static bool ActionArgumentHasLowBitSet(const action_s& a) {
-	return (reinterpret_cast<uintptr_t>(a.getArgument()) & 1) != 0;
-}
-
 TEST(injectionScheduling, InjectionIsScheduled) {
 	StrictMock<MockExecutor> mockExec;
 
@@ -24,9 +20,6 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	efitick_t nowNt = 1000000;
 
 	InjectionEvent event;
-	InjectorOutputPin pin;
-	pin.injectorIndex = 0;
-	event.outputs[0] = &pin;
 
 	// Injection duration of 20ms
 	MockInjectorModel2 im;
@@ -35,6 +28,13 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << 0);
+	ctx.eventIndex = 0;
+	ctx.stage2Active = false;
+
+	void* ctxAsPtr = bit_cast<void*>(ctx);
+
 	{
 		InSequence is;
 
@@ -42,10 +42,10 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}
 
 	// Event scheduled at 125 degrees
@@ -67,9 +67,13 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	efitick_t nowNt = 1000000;
 
 	InjectionEvent event;
-	InjectorOutputPin pin;
-	pin.injectorIndex = 0;
-	event.outputs[0] = &pin;
+
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << 0);
+	ctx.eventIndex = 0;
+	ctx.stage2Active = true;
+
+	void* ctxAsPtr = bit_cast<void*>(ctx);
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
@@ -92,13 +96,13 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Truly(ActionArgumentHasLowBitSet)));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge (primary) 20ms later
 		efitick_t endTime1 = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime1, Truly(ActionArgumentHasLowBitSet)));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime1, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge (secondary) 10ms later
 		efitick_t endTime2 = startTime + MS2NT(10);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime2, Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime2, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}
 
 	// Event scheduled at 125 degrees
@@ -117,9 +121,13 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 	efitick_t nowNt = 1000000;
 
 	InjectionEvent event;
-	InjectorOutputPin pin;
-	pin.injectorIndex = 0;
-	event.outputs[0] = &pin;
+
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << 0);
+	ctx.eventIndex = 0;
+	ctx.stage2Active = false;
+
+	void* ctxAsPtr = bit_cast<void*>(ctx);
 
 	// Injection duration of 20ms
 	MockInjectorModel2 im;
@@ -135,10 +143,10 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}
 
 	// Event scheduled at 715 degrees
@@ -157,9 +165,13 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 	efitick_t nowNt = 1000000;
 
 	InjectionEvent event;
-	InjectorOutputPin pin;
-	pin.injectorIndex = 0;
-	event.outputs[0] = &pin;
+
+	InjectorContext ctx;
+	ctx.outputsMask = (1 << 0);
+	ctx.eventIndex = 0;
+	ctx.stage2Active = false;
+
+	void* ctxAsPtr = bit_cast<void*>(ctx);
 
 	// Injection duration of 20ms
 	MockInjectorModel2 im;
@@ -175,10 +187,10 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 		// rising edge 15 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 15);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Not(Truly(ActionArgumentHasLowBitSet))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}
 
 	// Event scheduled at 5 degrees
@@ -198,9 +210,6 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 	efitick_t nowNt = 1000000;
 
 	InjectionEvent event;
-	InjectorOutputPin pin;
-	pin.injectorIndex = 0;
-	event.outputs[0] = &pin;
 
 	// Expect no calls to injector model
 	StrictMock<MockInjectorModel2> im;
@@ -229,11 +238,16 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 	engine->scheduler.setMockExecutor(&mockExec);
 
 	InjectionEvent event;
-	uintptr_t arg = reinterpret_cast<uintptr_t>(&event);
-	InjectorOutputPin pin;
-	pin.shortName = "test";
-	pin.injectorIndex = 0;
-	event.outputs[0] = &pin;
+
+	InjectorContext ctx;
+	ctx.outputsMask = 0;
+	ctx.eventIndex = 0;
+	ctx.stage2Active = false;
+
+	void* ctxAsPtr = bit_cast<void*>(ctx);
+
+	// Split injection events should be called with no remaining split duration
+	ctx.splitDurationUs = 0;
 
 	{
 		InSequence is;
@@ -243,17 +257,14 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 		// - duration 10ms (ends 12ms from now)
 		efitick_t nowNt = getTimeNowNt();
 		efitick_t startTime = nowNt + MS2NT(2);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		efitick_t endTime = startTime + MS2NT(10);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(&event))));
+		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}
 
 	// Split injection duration of 10ms
-	event.splitInjectionDuration = MS2NT(10);
+	ctx.splitDurationUs = 10000;
 
 	// Close injector, should cause second half of split injection to be scheduled!
-	turnInjectionPinLow(arg);
-
-	// Expect it to get zeroed so we don't repeat ad infinitum
-	EXPECT_EQ(event.splitInjectionDuration, 0);
+	endInjection(ctx);
 }

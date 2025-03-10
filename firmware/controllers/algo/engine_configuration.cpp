@@ -390,6 +390,9 @@ static void setDefaultEngineConfiguration() {
 	// Don't enable, but set default address
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
 
+	strcpy(config->wifiAccessPointSsid, "FOME EFI");
+	setArrayValues(config->wifiAccessPointPassword, 0);
+
 	engineConfiguration->sdCardLogFrequency = 50;
 
 	engineConfiguration->mapMinBufferLength = 1;
@@ -461,7 +464,6 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->hardCutRpmRange = 500;
 
 	engineConfiguration->engineSnifferRpmThreshold = 2500;
-	engineConfiguration->sensorSnifferRpmThreshold = 2500;
 
 	/**
 	 * Idle control defaults
@@ -495,9 +497,6 @@ static void setDefaultEngineConfiguration() {
 #if !EFI_UNIT_TEST
 	engineConfiguration->analogInputDividerCoefficient = 2;
 #endif
-
-	// performance optimization
-	engineConfiguration->sensorChartMode = SC_OFF;
 
 	setTPS1Calibration(convertVoltageTo10bitADC(0),
 			convertVoltageTo10bitADC(5),
@@ -556,6 +555,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->knockDetectionWindowEnd = 15.0 + 45.0;
 
 	engineConfiguration->triggerSimulatorRpm = 1200;
+	engineConfiguration->fakeFullSyncForStimulation = true;
 
 	engineConfiguration->alternatorPwmFrequency = 300;
 
@@ -815,9 +815,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::ETB_BENCH_ENGINE:
 		setEtbTestConfiguration();
 		break;
-	case engine_type_e::L9779_BENCH_ENGINE:
-		setL9779TestConfiguration();
-		break;
 	case engine_type_e::TLE8888_BENCH_ENGINE:
 		setTle8888TestConfiguration();
 		break;
@@ -907,7 +904,6 @@ void validateConfiguration() {
 
 void applyNonPersistentConfiguration() {
 #if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_APPLY_STACK, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "apply c");
 	efiPrintf("applyNonPersistentConfiguration()");
 #endif
 

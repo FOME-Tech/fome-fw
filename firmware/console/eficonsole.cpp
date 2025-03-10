@@ -91,20 +91,9 @@ static void sayHello() {
 	chThdSleepMilliseconds(5);
 }
 
-void validateStack(const char*msg, ObdCode code, int desiredStackUnusedSize) {
-#if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
-	int unusedStack = CountFreeStackSpace(chThdGetSelfX()->wabase);
-	if (unusedStack < desiredStackUnusedSize) {
-		warning(code, "Stack low on %s: %d", msg, unusedStack);
-	}
-#else
-	(void)msg; (void)code; (void)desiredStackUnusedSize;
-#endif
-}
-
 #if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 int CountFreeStackSpace(const void* wabase) {
-	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase);
+	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase) + PORT_GUARD_PAGE_SIZE;
 	const uint8_t* stackUsage = stackBase;
 
 	// thread stacks are filled with CH_DBG_STACK_FILL_VALUE
@@ -148,6 +137,16 @@ static void cmd_threads() {
 #endif
 }
 
+static int fib(int x) {
+	if (x == 0) {
+		return 0;
+	} else if (x == 1) {
+		return 1;
+	} else {
+		return fib(x - 1) + fib(x - 2);
+	}
+}
+
 void initializeConsole() {
 	initConsoleLogic();
 
@@ -160,4 +159,5 @@ void initializeConsole() {
 	addConsoleAction("critical", testCritical);
 	addConsoleAction("error", myerror);
 	addConsoleAction("threadsinfo", cmd_threads);
+	addConsoleAction("stackoverflow", [](){ fib(10000); });
 }

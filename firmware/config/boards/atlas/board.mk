@@ -3,6 +3,7 @@ PROJECT_CPU = ARCH_STM32H7
 
 # List of all the board related files.
 BOARDCPPSRC =  $(BOARD_DIR)/board_configuration.cpp
+DDEFS += -DEFI_MAIN_RELAY_CONTROL=TRUE
 
 DDEFS += -DLED_CRITICAL_ERROR_BRAIN_PIN=Gpio::F0
 DDEFS += -DFIRMWARE_ID=\"atlas\"

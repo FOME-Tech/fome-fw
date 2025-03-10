@@ -8,12 +8,14 @@
 
 #include "pch.h"
 
+#include "AdcConfiguration.h"
+
 #if HAL_USE_ADC
 
 #include "mpu_util.h"
 
 // Both ADCs should be running at 25MHz
-static_assert(STM32_ADC12_CLOCK == 25000000);
+static_assert(STM32_ADC12_CLOCK == 40000000);
 static_assert(STM32_ADC3_CLOCK == 40000000);
 
 #ifdef ADC_MUX_PIN
@@ -45,15 +47,15 @@ static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
 // ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
 // BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) __attribute__ ((aligned (2048))) adcsample_t knockSampleBuffer[2048];
+__attribute__((section(".ram4"))) __attribute__ ((aligned (8192))) adcsample_t knockSampleBuffer[2048];
 
 void portInitAdc() {
 	{
 		void* base = &knockSampleBuffer;
-		static_assert(sizeof(knockSampleBuffer) == 4096);
-		uint32_t size = MPU_RASR_SIZE_4K;
+		static_assert(sizeof(knockSampleBuffer) == 8192);
+		uint32_t size = MPU_RASR_SIZE_8K;
 
-		mpuConfigureRegion(MPU_REGION_4,
+		mpuConfigureRegion(MPU_REGION_3,
 						base,
 						MPU_RASR_ATTR_AP_RW_RW |
 						MPU_RASR_ATTR_NON_CACHEABLE |
@@ -82,8 +84,6 @@ float getMcuTemperature() {
 	// Ugh, internal temp sensor is wired to ADC3, which makes it nearly useless on the H7.
 	return 0;
 }
-
-adcsample_t* fastSampleBuffer;
 
 static void adc_callback(ADCDriver *adcp) {
 	// State may not be complete if we get a callback for "half done"
@@ -166,19 +166,19 @@ static constexpr ADCConversionGroup convGroupSlow = {
 
 static bool didStart = false;
 
-bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
+static NO_CACHE adcsample_t adcSampleBuffer[SLOW_ADC_CHANNEL_COUNT];
+
+bool readSlowAnalogInputs() {
 	// This only needs to happen once, as the timer will continue firing the ADC and writing to the buffer without our help
 	if (didStart) {
 		return true;
 	}
 	didStart = true;
 
-	fastSampleBuffer = convertedSamples;
-
 	{
 		chibios_rt::CriticalSectionLocker csl;
 		// Oversampling and right-shift happen in hardware, so we can sample directly to the output buffer
-		adcStartConversionI(&ADCD1, &convGroupSlow, convertedSamples, 1);
+		adcStartConversionI(&ADCD1, &convGroupSlow, adcSampleBuffer, 1);
 	}
 
 	constexpr uint32_t samplingRate = H7_ADC_SPEED;
@@ -200,6 +200,10 @@ bool readSlowAnalogInputs(adcsample_t* convertedSamples) {
 	return true;
 }
 
+adcsample_t getSlowAdcSample(adc_channel_e channel) {
+	return adcSampleBuffer[channel - EFI_ADC_0];
+}
+
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
 FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
@@ -207,8 +211,8 @@ FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
 		return invalidToken;
 	}
 
-	// H7 always samples all fast channels, nothing to do here but compute index
-	return channel - EFI_ADC_0;
+	// H7 always samples all fast channels, nothing to do here but return channel as token
+	return static_cast<FastAdcToken>(channel);
 }
 
 adcsample_t getFastAdc(FastAdcToken token) {
@@ -216,7 +220,7 @@ adcsample_t getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
-	return fastSampleBuffer[token];
+	return getSlowAdcSample(static_cast<adc_channel_e>(token));
 }
 
 #ifdef EFI_SOFTWARE_KNOCK

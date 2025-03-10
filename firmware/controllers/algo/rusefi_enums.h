@@ -411,18 +411,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } air_pressure_sensor_type_e;
 
-typedef enum __attribute__ ((__packed__)) {
-	SC_OFF = 0,
-	/**
-	 * You would use this value if you want to see a detailed graph of your trigger events
-	 */
-	SC_TRIGGER = 1,
-	// unused 2
-	SC_RPM_ACCEL = 3,
-	SC_DETAILED_RPM = 4,
-
-} sensor_chart_e;
-
 typedef enum {
 	REVERSE = -1,
 	NEUTRAL = 0,
@@ -524,6 +512,8 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_AuxLinear3 = 29,
 	GPPWM_AuxLinear4 = 30,
 	GPPWM_VehicleSpeed = 31,
+	GPPWM_OilPressure = 32,
+	GPPWM_OilTemp = 33,
 } gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this enum
 
 typedef enum __attribute__ ((__packed__)) {

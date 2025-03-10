@@ -25,10 +25,6 @@
 
 #include "trigger_central.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 // not have a real physical pin - it's only used for engine sniffer
 static NamedOutputPin mapAveragingPin("map");
 
@@ -54,8 +50,6 @@ static void endAveraging(MapAverager* arg);
 static size_t currentMapAverager = 0;
 
 static void startAveraging(sampler* s) {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6649, getCurrentRemainingStack() > 128, "lowstck#9");
-
 	float duration = engine->engineState.mapAveragingDuration;
 	if (duration == 0) {
 		// Zero duration means the engine wasn't spinning or something, abort
@@ -137,10 +131,8 @@ void MapAverager::stop() {
  * @note This method is invoked OFTEN, this method is a potential bottleneck - the implementation should be
  * as fast as possible
  */
-void MapAveragingModule::submitSample(float volts) {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6650, getCurrentRemainingStack() > 128, "lowstck#9a");
-
-	SensorResult mapResult = getMapAvg(currentMapAverager).submit(volts);
+void MapAveragingModule::submitSample(float voltsMap1, float /*voltsMap2*/) {
+	SensorResult mapResult = getMapAvg(currentMapAverager).submit(voltsMap1);
 
 	float instantMap = mapResult.value_or(0);
 #if EFI_TUNER_STUDIO

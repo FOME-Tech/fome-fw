@@ -14,9 +14,6 @@
 
 #pragma once
 
-#undef EFI_MAX_31855
-#define EFI_MAX_31855 FALSE
-
 #undef EFI_MC33816
 #define EFI_MC33816 FALSE
 

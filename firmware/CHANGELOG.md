@@ -30,6 +30,11 @@ or
 
 ## Unreleased
 
+### Added
+ - Allow fractional tachometer pulse ratio for fine tachometer calibration
+
+## February 2025 Release
+
 ### Breaking Changes
  - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
 
@@ -39,10 +44,14 @@ or
  - Support 4 independent wideband O2 channels, and 4 fuel trim banks
  - Flash error codes for some sensors using the check engine light #526
  - Implement knock sensing support for STM32H7 chips
+ - Show knock sensing window on FOME console engine sniffer
 
 ### Fixed
  - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
  - Minor performance improvements to injection/ignition scheduling
+ - Per-cylinder knock sensing while in wasted spark mode (fixed by #553)
+ - Improved transitions between fuel/spark modes, improves cranking and startup (#551, #553. #554)
+ - Disable radiator fans while ignition switch is off
 
 ## September 2024 Release
 

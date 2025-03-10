@@ -379,6 +379,10 @@ case GPPWM_LuaGauge2:
   return "GPPWM_LuaGauge2";
 case GPPWM_Map:
   return "GPPWM_Map";
+case GPPWM_OilPressure:
+  return "GPPWM_OilPressure";
+case GPPWM_OilTemp:
+  return "GPPWM_OilTemp";
 case GPPWM_Rpm:
   return "GPPWM_Rpm";
 case GPPWM_Tps:
@@ -562,19 +566,6 @@ case OM_OPENDRAIN:
   return "OM_OPENDRAIN";
 case OM_OPENDRAIN_INVERTED:
   return "OM_OPENDRAIN_INVERTED";
-  }
- return NULL;
-}
-const char *getSensor_chart_e(sensor_chart_e value){
-switch(value) {
-case SC_DETAILED_RPM:
-  return "SC_DETAILED_RPM";
-case SC_OFF:
-  return "SC_OFF";
-case SC_RPM_ACCEL:
-  return "SC_RPM_ACCEL";
-case SC_TRIGGER:
-  return "SC_TRIGGER";
   }
  return NULL;
 }

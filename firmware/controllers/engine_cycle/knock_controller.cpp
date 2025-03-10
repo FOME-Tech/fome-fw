@@ -52,6 +52,7 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float db
 
 	if (isKnock) {
 		m_knockCount++;
+		m_lastKnockTimer.reset(lastKnockTime);
 
 		auto baseTiming = engine->cylinders[cylinderNumber].getIgnitionTimingBtdc();
 
@@ -103,6 +104,9 @@ void KnockControllerBase::onFastCallback() {
 			m_knockRetard = newRetard;
 		}
 	}
+
+	hasKnockRecently = !m_lastKnockTimer.hasElapsedSec(0.5f);
+	hasKnockRetardNow = m_knockRetard > 0;
 }
 
 float KnockController::getKnockThreshold() const {

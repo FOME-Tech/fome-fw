@@ -25,11 +25,6 @@ public:
 
 	bool useOddFireWastedSpark = false;
 
-	/**
-	 * this is based on sensorChartMode and sensorSnifferRpmThreshold settings
-	 */
-	sensor_chart_e sensorChartMode = SC_OFF;
-
 	float injectionStage2Fraction = 0;
 
 	Timer crankingTimer;

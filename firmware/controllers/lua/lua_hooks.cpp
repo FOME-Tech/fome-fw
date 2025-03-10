@@ -244,7 +244,7 @@ static int lua_startPwm(lua_State* l) {
 	freq = clampF(1, freq, 1000);
 
 	startSimplePwmExt(
-		&p.pwm, "lua", &engine->scheduler,
+		&p.pwm, "lua",
 		engineConfiguration->luaOutputPins[p.idx], &enginePins.luaOutputPins[p.idx],
 		freq, duty
 	);
@@ -754,6 +754,10 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "setIdleAddRpm", [](lua_State* l2) {
 		engine->module<IdleController>().unmock().luaAddRpm = luaL_checknumber(l2, 1);
 		return 0;
+	});
+	lua_register(l, "getIdlePosition", [](lua_State* l2) {
+		lua_pushnumber(l2, engine->module<IdleController>().unmock().currentIdlePosition);
+		return 1;
 	});
 #endif
 	lua_register(l, "setTimingAdd", [](lua_State* l2) {
