@@ -15,6 +15,9 @@ DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE -DSTM32_ADC_USE_ADC3=TRUE
 
 DDEFS += -DEFI_SDC_DEVICE=SDCD1
 
+# Atlas's LSE runs in bypass mode (doesn't use OSC IN pin)
+DDEFS += -DSTM32_LSE_BYPASS
+
 # We are running on Atlas hardware!
 DDEFS += -DHW_ATLAS=1
 
