@@ -97,9 +97,9 @@ TEST(trigger, test1995FordInline6TriggerDecoder) {
 	ASSERT_EQ(true,  ecl->isReady) << "ford inline ignition events size";
 
 	EXPECT_NEAR(ecl->elements[0].dwellAngle, 8.960f, 1e-3);
-	EXPECT_NEAR(ecl->elements[0].sparkAngle, 14.96f, 1e-3);
+	EXPECT_NEAR(ecl->elements[0].calculateSparkAngle(), 14.96f, 1e-3);
 	EXPECT_NEAR(ecl->elements[5].dwellAngle, 608.960f, 1e-3);
-	EXPECT_NEAR(ecl->elements[5].sparkAngle, 614.960f, 1e-3);
+	EXPECT_NEAR(ecl->elements[5].calculateSparkAngle(), 614.960f, 1e-3);
 
 	engine->ignitionState.updateDwell(2000, false);
 	ASSERT_FLOAT_EQ(0.5, engine->ignitionState.getDwell()) << "running dwell";
@@ -225,7 +225,7 @@ TEST(misc, testRpmCalculator) {
 	EXPECT_NEAR_M3(111.1111, engine->rpmCalculator.oneDegreeUs) << "one degree";
 	ASSERT_EQ(1, ilist->isReady) << "size #2";
 	EXPECT_NEAR_M3(ilist->elements[0].dwellAngle, 8.5f);
-	EXPECT_NEAR_M3(ilist->elements[0].sparkAngle, 13.0f);
+	EXPECT_NEAR_M3(ilist->elements[0].calculateSparkAngle(), 13.0f);
 
 	ASSERT_EQ(0, eth.engine.triggerCentral.triggerState.getCurrentIndex()) << "index #2";
 	ASSERT_EQ(4, engine->scheduler.size());
