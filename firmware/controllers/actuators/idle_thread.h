@@ -32,8 +32,11 @@ struct IIdleController {
 		// If below this speed, enter idle
 		float IdleEntryRpm;
 
+		// If above this speed, exit idle
+		float IdleExitRpm;
+
 		bool operator==(const TargetInfo& other) const {
-			return ClosedLoopTarget == other.ClosedLoopTarget && IdleEntryRpm == other.IdleEntryRpm;
+			return ClosedLoopTarget == other.ClosedLoopTarget && IdleEntryRpm == other.IdleEntryRpm && IdleExitRpm == other.IdleExitRpm;
 		}
 	};
 
@@ -90,6 +93,8 @@ private:
 	Phase m_lastPhase = Phase::Cranking;
 	int m_lastTargetRpm = 0;
 	efitimeus_t restoreAfterPidResetTimeUs = 0;
+
+	Timer m_timeInIdlePhase;
 
 	// This is stored by getClosedLoop and used in case we want to "do nothing"
 	float m_lastAutomaticPosition = 0;

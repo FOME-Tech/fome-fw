@@ -59,12 +59,12 @@ TEST(idle_v2, testTargetRpm) {
 	}
 
 	engineConfiguration->idlePidRpmUpperLimit = 50;
-	EXPECT_EQ((TgtInfo{100, 150}), dut.getTargetRpm(10));
-	EXPECT_EQ((TgtInfo{500, 550}), dut.getTargetRpm(50));
+	EXPECT_EQ((TgtInfo{100, 150, 175}), dut.getTargetRpm(10));
+	EXPECT_EQ((TgtInfo{500, 550, 575}), dut.getTargetRpm(50));
 
 	engineConfiguration->idlePidRpmUpperLimit = 73;
-	EXPECT_EQ((TgtInfo{100, 173}), dut.getTargetRpm(10));
-	EXPECT_EQ((TgtInfo{500, 573}), dut.getTargetRpm(50));
+	EXPECT_EQ((TgtInfo{100, 173, 209.5}), dut.getTargetRpm(10));
+	EXPECT_EQ((TgtInfo{500, 573, 609.5}), dut.getTargetRpm(50));
 }
 
 TEST(idle_v2, testDeterminePhase) {
@@ -82,6 +82,7 @@ TEST(idle_v2, testDeterminePhase) {
 
 	// Idling threshold is 1000 + 100 rpm
 	targetInfo.IdleEntryRpm = 1000 + 100;
+	targetInfo.IdleExitRpm = 1000 + 100;
 
 	// First test stopped engine
 	engine->rpmCalculator.setRpmValue(0);
@@ -115,6 +116,25 @@ TEST(idle_v2, testDeterminePhase) {
 	// Below TPS but above RPM should be outside the zone
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, targetInfo, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(5000, targetInfo, 0, 0, 10));
+
+	// Check hysteresis behavior: entry RPM 1100, exit 1200
+	targetInfo.IdleEntryRpm = 1000 + 100;
+	targetInfo.IdleExitRpm = 1000 + 200;
+
+	// Below entry: idling
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 10));
+
+	// Between thresholds: still idling
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1150, targetInfo, 0, 0, 10));
+
+	// Above exit: coasting
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1250, targetInfo, 0, 0, 10));
+
+	// Between thresholds: still coasting
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1150, targetInfo, 0, 0, 10));
+
+	// Below entry: idling
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 10));
 }
 
 TEST(idle_v2, crankingOpenLoop) {
@@ -445,7 +465,7 @@ TEST(idle_v2, IntegrationManual) {
 	Sensor::setMockValue(SensorType::Clt, expectedClt);
 	Sensor::setMockValue(SensorType::VehicleSpeed, 15.0);
 
-	TgtInfo target{1000, 1100};
+	TgtInfo target{1000, 1100, 1100};
 
 	// Target of 1000 rpm
 	EXPECT_CALL(dut, getTargetRpm(expectedClt))
@@ -480,7 +500,7 @@ TEST(idle_v2, IntegrationAutomatic) {
 	Sensor::setMockValue(SensorType::Clt, expectedClt);
 	Sensor::setMockValue(SensorType::VehicleSpeed, 15.0);
 
-	TgtInfo target{1000, 1100};
+	TgtInfo target{1000, 1100, 1100};
 
 	// Target of 1000 rpm
 	EXPECT_CALL(dut, getTargetRpm(expectedClt))
@@ -518,7 +538,7 @@ TEST(idle_v2, IntegrationClamping) {
 	Sensor::setMockValue(SensorType::Clt, expectedClt);
 	Sensor::setMockValue(SensorType::VehicleSpeed, 15.0);
 
-	TgtInfo target{1000, 1100};
+	TgtInfo target{1000, 1100, 1100};
 
 	// Target of 1000 rpm
 	EXPECT_CALL(dut, getTargetRpm(expectedClt))

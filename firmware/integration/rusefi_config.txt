@@ -674,7 +674,7 @@ bit is_enabled_spi_2
 	bit enabledStep1Limiter
 	bit verboseTLE8888
 	bit enableVerboseCanTx;CAN broadcast using custom FOME protocol\nenable can_broadcast/disable can_broadcast
-	bit unused644b10
+	bit idleReturnTargetRamp;Ramp the idle target down from the entry threshold over 3 seconds when returning to idle. Helps prevent overshooting (below) the idle target while returning to idle from coasting.
 	bit unused644b11
 	bit measureMapOnlyInOneCylinder;Useful for individual intakes
 	bit stepperForceParkingEveryRestart
