@@ -85,11 +85,18 @@ static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
 
 #endif /* HAL_USE_MMC_SPI */
 
+struct SdLogBufferWriter final : public BufferedWriter<512> {
+	bool failed = false;
+
+	size_t writeInternal(const char* buffer, size_t count) override;
+};
+
 // On STM32H7, these objects need their own MPU region if using SDMMC1
 struct {
 	struct {
 		FATFS fs;
 		FIL file;
+		SdLogBufferWriter logBuffer;
 	} usedPart;
 
 	static_assert(sizeof(usedPart) <= 2048);
@@ -100,6 +107,7 @@ struct {
 
 static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
 static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
+static SdLogBufferWriter& logBuffer = mmcCardCacheControlledStorage.usedPart.logBuffer;
 
 static int fatFsErrors = 0;
 
@@ -157,7 +165,7 @@ static void incLogFileName() {
 		efiPrintf("Got content [%s] size %d", data, result);
 		f_close(&FDLogFile);
 		if (result < 5) {
-            data[result] = 0;
+			data[result] = 0;
 			logFileIndex = maxI(MIN_FILE_INDEX, atoi(data));
 			if (absI(logFileIndex) == ATOI_ERROR_CODE) {
 				logFileIndex = MIN_FILE_INDEX;
@@ -397,40 +405,36 @@ static bool mountMmc() {
 	}
 }
 
-struct SdLogBufferWriter final : public BufferedWriter<512> {
-	bool failed = false;
+size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
+	size_t bytesWritten;
 
-	size_t writeInternal(const char* buffer, size_t count) override {
-		size_t bytesWritten;
+	totalLoggedBytes += count;
 
-		totalLoggedBytes += count;
+	FRESULT err = f_write(&FDLogFile, buffer, count, &bytesWritten);
 
-		FRESULT err = f_write(&FDLogFile, buffer, count, &bytesWritten);
+	if (bytesWritten != count) {
+		printError("write error or disk full", err);
 
-		if (bytesWritten != count) {
-			printError("write error or disk full", err);
-
-			// Close file and unmount volume
-			mmcUnMount();
-			failed = true;
-			return 0;
-		} else {
-			writeCounter++;
-			totalWritesCounter++;
-			if (writeCounter >= F_SYNC_FREQUENCY) {
-				/**
-				 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
-				 * todo: one day someone should actually measure the relative cost of f_sync
-				 */
-				f_sync(&FDLogFile);
-				totalSyncCounter++;
-				writeCounter = 0;
-			}
+		// Close file and unmount volume
+		mmcUnMount();
+		failed = true;
+		return 0;
+	} else {
+		writeCounter++;
+		totalWritesCounter++;
+		if (writeCounter >= F_SYNC_FREQUENCY) {
+			/**
+			 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
+			 * todo: one day someone should actually measure the relative cost of f_sync
+			 */
+			f_sync(&FDLogFile);
+			totalSyncCounter++;
+			writeCounter = 0;
 		}
-
-		return bytesWritten;
 	}
-};
+
+	return bytesWritten;
+}
 
 #else // not EFI_PROD_CODE (simulator)
 
@@ -462,8 +466,6 @@ private:
 };
 
 #endif // EFI_PROD_CODE
-
-static NO_CACHE SdLogBufferWriter logBuffer;
 
 // Log 'regular' ECU log to MLG file
 static void mlgLogger();
