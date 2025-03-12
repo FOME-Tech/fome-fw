@@ -33,10 +33,25 @@ IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
 	targetRpmAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleRpmBump : 0;
 
 	auto target = targetRpmByClt + targetRpmAcBump + luaAddRpm;
-	float entryRpm = target + engineConfiguration->idlePidRpmUpperLimit;
+
+	float rpmUpperLimit = engineConfiguration->idlePidRpmUpperLimit;
+	float entryRpm = target + rpmUpperLimit;
+
+	// Higher exit than entry to add some hysteresis to avoid bouncing around upper threshold
+	float exitRpm = target + 1.5 * rpmUpperLimit;
+
+	if (engineConfiguration->idleReturnTargetRamp) {
+		// Ramp the target down from the transition RPM to normal over a few seconds
+		float timeSinceIdleEntry = m_timeInIdlePhase.getElapsedSeconds();
+		target += interpolateClamped(
+			0, rpmUpperLimit,
+			3, 0,
+			timeSinceIdleEntry
+		);
+	}
 
 	idleTarget = target;
-	return { target, entryRpm };
+	return { target, entryRpm, exitRpm };
 }
 
 IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController::TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) {
@@ -57,7 +72,12 @@ IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController
 
 	// If rpm too high (but throttle not pressed), we're coasting
 	// ALSO, if still in the cranking taper, disable coasting
-	looksLikeCoasting = rpm > targetRpm.IdleEntryRpm;
+	if (rpm > targetRpm.IdleExitRpm) {
+		looksLikeCoasting = true;
+	} else if (rpm < targetRpm.IdleEntryRpm) {
+		looksLikeCoasting = false;
+	}
+
 	looksLikeCrankToIdle = crankingTaperFraction < 1;
 	if (looksLikeCoasting && !looksLikeCrankToIdle) {
 		return Phase::Coasting;
@@ -279,6 +299,12 @@ float IdleController::getIdlePosition(float rpm) {
 	// Determine what operation phase we're in - idling or not
 	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
 	auto phase = determinePhase(rpm, targetRpm, tps, vehicleSpeed, crankingTaper);
+
+	if (phase != m_lastPhase && phase == Phase::Idling) {
+		// Just entered idle, reset timer
+		m_timeInIdlePhase.reset();
+	}
+
 	m_lastPhase = phase;
 
 	finishIdleTestIfNeeded();

@@ -372,7 +372,9 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	ScopePerf perf(PE::DecodeTriggerEvent);
 
 	// Timeout below approximately 12 rpm, but a maximum of 1 second timeout
-	float triggerTimeoutPeriod = std::min(5.0f / triggerShape.getLength(), 1.0f);
+	// Trigger shape length is ~4x tooth count (rise + fall / doubled for 4 stroke),
+	// so extra multiply by 4 then 5 second maximum revolution
+	float triggerTimeoutPeriod = clampF(0.1f, 20.0f / triggerShape.getLength(), 1.0f);
 	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > triggerTimeoutPeriod) {
 		/**
 		 * We are here if there is a time gap between now and previous shaft event - that means the engine is not running.

@@ -50,7 +50,7 @@ Gpio getCommsLedPin() {
 }
 
 Gpio getRunningLedPin() {
-	return Gpio::C15;
+	return Gpio::D14;
 }
 
 Gpio getWarningLedPin() {

@@ -35,6 +35,8 @@ class IgnitionEvent {
 public:
 	uint16_t calculateIgnitionOutputMask() const;
 
+	angle_t calculateSparkAngle() const;
+
 	scheduling_s dwellStartTimer;
 	AngleBasedEvent sparkEvent;
 
@@ -44,10 +46,6 @@ public:
 	// Track whether coil charge was intentionally skipped (spark limiter)
 	bool wasSparkLimited = false;
 
-	/**
-	 * Desired timing advance
-	 */
-	angle_t sparkAngle = NAN;
 	floatms_t sparkDwell = 0;
 
 	// this timer allows us to measure actual dwell time
