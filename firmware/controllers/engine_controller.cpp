@@ -51,10 +51,6 @@
 #include "vr_pwm.h"
 #include "adc_subscription.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
@@ -413,10 +409,6 @@ void commonInitEngineController() {
 	engine->injectionEvents.addFuelEvents();
 #endif // EFI_ENGINE_CONTROL
 
-#if EFI_SENSOR_CHART
-	initSensorChart();
-#endif /* EFI_SENSOR_CHART */
-
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	initSettings();
 
@@ -518,8 +510,10 @@ bool validateConfig() {
 
 		ensureArrayIsAscendingOrDefault("TPS TPS RPM correction", config->tpsTspCorrValuesBins);
 
-		ensureArrayIsAscendingOrDefault("Staging Load", config->injectorStagingLoadBins);
-		ensureArrayIsAscendingOrDefault("Staging RPM", config->injectorStagingRpmBins);
+		if (engineConfiguration->enableStagedInjection) {
+			ensureArrayIsAscendingOrDefault("Staging Load", config->injectorStagingLoadBins);
+			ensureArrayIsAscendingOrDefault("Staging RPM", config->injectorStagingRpmBins);
+		}
 	}
 
 	// Ignition
@@ -545,9 +539,11 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Script Curve 5", config->scriptCurve5Bins);
 	ensureArrayIsAscendingOrDefault("Script Curve 6", config->scriptCurve6Bins);
 
-// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
+	// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
 
-	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+	if (isAdcChannelValid(engineConfiguration->mafAdcChannel)) {
+		ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+	}
 
 	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {
 		ensureArrayIsAscending("Fuel level curve", config->fuelLevelBins);
@@ -577,16 +573,20 @@ bool validateConfig() {
 
 #if EFI_BOOST_CONTROL
 	// Boost
-	ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
-	ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+	if (engineConfiguration->isBoostControlEnabled) {
+		ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
+		ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+	}
 #endif // EFI_BOOST_CONTROL
 
 #if EFI_ANTILAG_SYSTEM
 	// ALS
-	ensureArrayIsAscendingOrDefault("ign ALS TPS", config->alsIgnRetardLoadBins);
-	ensureArrayIsAscendingOrDefault("ign ALS RPM", config->alsIgnRetardrpmBins);
-	ensureArrayIsAscendingOrDefault("fuel ALS TPS", config->alsFuelAdjustmentLoadBins);
-	ensureArrayIsAscendingOrDefault("fuel ALS RPM", config->alsFuelAdjustmentrpmBins);
+	if (engineConfiguration->antiLagEnabled) {
+		ensureArrayIsAscendingOrDefault("ign ALS TPS", config->alsIgnRetardLoadBins);
+		ensureArrayIsAscendingOrDefault("ign ALS RPM", config->alsIgnRetardrpmBins);
+		ensureArrayIsAscendingOrDefault("fuel ALS TPS", config->alsFuelAdjustmentLoadBins);
+		ensureArrayIsAscendingOrDefault("fuel ALS RPM", config->alsFuelAdjustmentrpmBins);
+	}
 #endif // EFI_ANTILAG_SYSTEM
 
 	// ETB

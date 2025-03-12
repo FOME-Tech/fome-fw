@@ -114,16 +114,24 @@ void initMap() {
 	auto mapChannel = engineConfiguration->map.sensor.hwChannel;
 	if (isAdcChannelValid(mapChannel)) {
 		slowMapSensor.Register();
-		slowMapSensor2.Register();
 #ifdef MODULE_MAP_AVERAGING
 		fastMapSensor.Register();
-		fastMapSensor2.Register();
 #endif // MODULE_MAP_AVERAGING
 		mapCombiner.Register();
-		mapCombiner2.Register();
 
 		// Configure slow MAP as a normal analog sensor
 		AdcSubscription::SubscribeSensor(slowMapSensor, mapChannel, 100);
+
+		auto map2Channel = engineConfiguration->map2HwChannel;
+		if (isAdcChannelValid(map2Channel)) {
+			slowMapSensor2.Register();
+			#ifdef MODULE_MAP_AVERAGING
+				fastMapSensor2.Register();
+			#endif // MODULE_MAP_AVERAGING
+			mapCombiner2.Register();
+
+			AdcSubscription::SubscribeSensor(slowMapSensor2, map2Channel, 100);
+		}
 	}
 
 	AdcSubscription::SubscribeSensor(throttleInletPress, engineConfiguration->throttleInletPressureChannel, 100);

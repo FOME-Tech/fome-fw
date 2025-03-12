@@ -15,6 +15,7 @@
 #include "idle_state_generated.h"
 #include "biquad.h"
 
+
 struct IIdleController {
 	enum class Phase : uint8_t {
 		Cranking,	// Below cranking threshold
@@ -24,8 +25,23 @@ struct IIdleController {
 		Running,	// On throttle
 	};
 
-	virtual Phase determinePhase(float rpm, float targetRpm, SensorResult tps, float vss, float crankingTaperFraction) = 0;
-	virtual int getTargetRpm(float clt) = 0;
+	struct TargetInfo {
+		// Target speed for closed loop control
+		float ClosedLoopTarget;
+
+		// If below this speed, enter idle
+		float IdleEntryRpm;
+
+		// If above this speed, exit idle
+		float IdleExitRpm;
+
+		bool operator==(const TargetInfo& other) const {
+			return ClosedLoopTarget == other.ClosedLoopTarget && IdleEntryRpm == other.IdleEntryRpm && IdleExitRpm == other.IdleExitRpm;
+		}
+	};
+
+	virtual Phase determinePhase(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) = 0;
+	virtual TargetInfo getTargetRpm(float clt) = 0;
 	virtual float getCrankingOpenLoop(float clt) const = 0;
 	virtual float getRunningOpenLoop(float rpm, float clt, SensorResult tps) = 0;
 	virtual float getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) = 0;
@@ -45,10 +61,10 @@ public:
 	float getIdlePosition(float rpm);
 
 	// TARGET DETERMINATION
-	int getTargetRpm(float clt) override;
+	TargetInfo getTargetRpm(float clt) override;
 
 	// PHASE DETERMINATION: what is the driver trying to do right now?
-	Phase determinePhase(float rpm, float targetRpm, SensorResult tps, float vss, float crankingTaperFraction) override;
+	Phase determinePhase(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) override;
 	float getCrankingTaperFraction(float clt) const override;
 
 	// OPEN LOOP CORRECTIONS
@@ -63,7 +79,7 @@ public:
 	float getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float targetRpm) override;
 
 	void onConfigurationChange(engine_configuration_s const * previousConfig) final;
-	void onSlowCallback() final;
+	void onFastCallback() final;
 
 	// Allow querying state from outside
 	bool isIdlingOrTaper() const override {
@@ -77,6 +93,8 @@ private:
 	Phase m_lastPhase = Phase::Cranking;
 	int m_lastTargetRpm = 0;
 	efitimeus_t restoreAfterPidResetTimeUs = 0;
+
+	Timer m_timeInIdlePhase;
 
 	// This is stored by getClosedLoop and used in case we want to "do nothing"
 	float m_lastAutomaticPosition = 0;

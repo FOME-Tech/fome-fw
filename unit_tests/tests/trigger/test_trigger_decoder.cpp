@@ -348,11 +348,10 @@ TEST(trigger, testTriggerDecoder) {
 	testTriggerDecoder2("testCitroen", engine_type_e::CITROEN_TU3JP, 0, 0.4833, 0);
 
 	testTriggerDecoder2("testMitsu", engine_type_e::MITSU_4G93, 9, 0.3553, 0.3752);
+
 	{
 		EngineTestHelper eth(engine_type_e::MITSU_4G93);
 
-
-		eth.persistentConfig.engineConfiguration.sensorChartMode = SC_DETAILED_RPM;
 		applyNonPersistentConfiguration();
 
 	}
