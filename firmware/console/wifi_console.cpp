@@ -186,7 +186,7 @@ public:
 		return m_server.hasConnectedSocket();
 	}
 
-	void write(const uint8_t* buffer, size_t size) final override {
+	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
 		while (size) {
 			size_t chunkSize = writeChunk(buffer, size);
 
