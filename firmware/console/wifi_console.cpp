@@ -61,7 +61,7 @@ public:
 		return tsConnectionSocket != -1;
 	}
 
-	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
+	void write(const uint8_t* buffer, size_t size) final override {
 		while (size) {
 			size_t chunkSize = writeChunk(buffer, size);
 
