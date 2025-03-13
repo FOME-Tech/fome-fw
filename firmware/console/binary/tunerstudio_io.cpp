@@ -41,11 +41,11 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 	*(uint16_t*)headerBuffer = SWAP_UINT16(size + 1);
 	*(uint8_t*)(headerBuffer + 2) = responseCode;
 	// Write header
-	write(headerBuffer, sizeof(headerBuffer));
+	write(headerBuffer, sizeof(headerBuffer), /*isEndOfPacket*/false);
 
 	// If data, write that
 	if (size) {
-		write(buf, size);
+		write(buf, size, /*isEndOfPacket*/false);
 	}
 
 	// Command part of CRC
@@ -58,7 +58,7 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 	*(uint32_t*)crcBuffer = SWAP_UINT32(crc);
 
 	// Lastly the CRC footer
-	write(crcBuffer, sizeof(crcBuffer));
+	write(crcBuffer, sizeof(crcBuffer), /*isEndOfPacket*/true);
 	flush();
 }
 

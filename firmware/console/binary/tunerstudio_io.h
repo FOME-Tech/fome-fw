@@ -24,7 +24,7 @@ class TsChannelBase {
 public:
 	TsChannelBase(const char *name);
 	// Virtual functions - implement these for your underlying transport
-	virtual void write(const uint8_t* buffer, size_t size) = 0;
+	virtual void write(const uint8_t* buffer, size_t size, bool isEndOfPacket = false) = 0;
 	virtual size_t readTimeout(uint8_t* buffer, size_t size, int timeout) = 0;
 
 	// These functions are optional to implement, not all channels need them
@@ -95,7 +95,7 @@ public:
 	void start(uint32_t baud) override;
 	void stop() override;
 
-	void write(const uint8_t* buffer, size_t size) override;
+	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) override;
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override;
 
 private:
@@ -112,7 +112,7 @@ public:
 	void start(uint32_t baud) override;
 	void stop() override;
 
-	void write(const uint8_t* buffer, size_t size) override;
+	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) override;
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override;
 
 protected:
