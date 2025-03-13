@@ -73,15 +73,17 @@ public:
 		return m_connectedSocket != -1;
 	}
 
-	bool trySend() {
-		if ((m_connectedSocket != -1) && m_sendRequest) {
-			::send(m_connectedSocket, (void*)m_sendBuffer, m_sendSize, 0);
-			m_sendRequest = false;
+	static bool checkSend() {
+		bool result = false;
 
-			return true;
+		auto current = s_serverList;
+
+		while (current) {
+			result |= current->trySendImpl();
+			current = current->m_nextServer;
 		}
 
-		return false;
+		return result;
 	}
 
 	void send(uint8_t* buffer, size_t size) {
@@ -89,7 +91,7 @@ public:
 		m_sendSize = size;
 		m_sendRequest = true;
 
-		// Wake the driver
+		// Wake the driver to perform the actual send
 		isrSemaphore.signal();
 
 		// Wait for this chunk to complete
@@ -135,6 +137,17 @@ public:
 	}
 
 private:
+	bool trySendImpl() {
+		if ((m_connectedSocket != -1) && m_sendRequest) {
+			::send(m_connectedSocket, (void*)m_sendBuffer, m_sendSize, 0);
+			m_sendRequest = false;
+
+			return true;
+		}
+
+		return false;
+	}
+
 	int m_listenerSocket = -1;
 	int m_connectedSocket = -1;
 
@@ -234,7 +247,7 @@ public:
 		{
 			m2m_wifi_handle_events(nullptr);
 
-			if (!tsServer.trySend()) {
+			if (!ServerSocket::checkSend()) {
 				isrSemaphore.wait(TIME_MS2I(1));
 			}
 		}
