@@ -137,10 +137,6 @@ public:
 
 static NO_CACHE WifiHelperThread wifiHelper;
 
-static tstrWifiInitParam param;
-
-static tstrM2MAPConfig apConfig;
-
 void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	switch (u8MsgType) {
 		case M2M_WIFI_REQ_DHCP_CONF: {
@@ -244,12 +240,14 @@ struct WifiConsoleThread : public TunerstudioThread {
 
 	TsChannelBase* setupChannel() override {
 		// Initialize the WiFi module
+		static tstrWifiInitParam param;
 		param.pfAppWifiCb = wifiCallback;
 		if (auto ret = m2m_wifi_init(&param); M2M_SUCCESS != ret) {
 			efiPrintf("Wifi init failed with: %d", ret);
 			return nullptr;
 		}
 
+		static tstrM2MAPConfig apConfig;
 		strncpy(apConfig.au8SSID, config->wifiAccessPointSsid, std::min(sizeof(apConfig.au8SSID), sizeof(config->wifiAccessPointSsid)));
 		apConfig.u8ListenChannel = 1;
 		apConfig.u8SsidHide = 0;
