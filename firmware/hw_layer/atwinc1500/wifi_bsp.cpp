@@ -58,7 +58,7 @@ SPIConfig wifi_spicfg = {
 		.ssport = NULL,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
-			| 2 << 28 /* MBR = 2, divider = 8 */,
+			| 2 << 28 /* MBR = 0, divider = 2 */,
 		.cfg2 = 0
 };
 
