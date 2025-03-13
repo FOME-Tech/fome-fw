@@ -41,7 +41,7 @@ public:
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
-		return iqReadTimeout(&m_server.recvQueue(), buffer, size, timeout);
+		return m_server.recvTimeout(buffer, size, timeout);
 	}
 
 private:

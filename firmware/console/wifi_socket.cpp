@@ -100,8 +100,8 @@ void ServerSocket::onSendDone() {
 	m_sendDoneSemaphore.signalI();
 }
 
-input_queue_t& ServerSocket::recvQueue() {
-	return m_recvQueue;
+size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
+	return iqReadTimeout(&m_recvQueue, buffer, size, timeout);
 }
 
 /*static*/ ServerSocket* ServerSocket::findListener(int sock) {

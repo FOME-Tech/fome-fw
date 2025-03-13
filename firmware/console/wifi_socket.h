@@ -9,23 +9,19 @@ class ServerSocket {
 public:
 	ServerSocket();
 
+	// User functions: listen, recv, send
 	void startListening(const sockaddr_in& addr);
-
-	void onAccept(int connectedSocket);
-
-	void onClose();
-
-	void onRecv(uint8_t* buffer, size_t recvSize, size_t remaining);
-
-	bool hasConnectedSocket() const;
-
-	static bool checkSend();
-
+	size_t recvTimeout(uint8_t* buffer, size_t size, int timeout);
 	void send(uint8_t* buffer, size_t size);
 
+	// Calls up from the driver to notify of a change
+	void onAccept(int connectedSocket);
+	void onClose();
+	void onRecv(uint8_t* buffer, size_t recvSize, size_t remaining);
 	void onSendDone();
+	static bool checkSend();
 
-	input_queue_t& recvQueue();
+	bool hasConnectedSocket() const;
 
 	static ServerSocket* findListener(int sock);
 	static ServerSocket* findConnected(int sock);
