@@ -13,6 +13,11 @@ static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
 class ServerSocket {
 public:
 	ServerSocket() {
+		// Add server to linked list
+		m_nextServer = s_serverList;
+		s_serverList = this;
+
+		// Set up queue
 		iqObjectInit(&m_recvQueue, m_recvQueueBuffer, sizeof(m_recvQueueBuffer), nullptr, nullptr);
 	}
 
@@ -29,6 +34,8 @@ public:
 	}
 
 	void onClose() {
+		close(m_connectedSocket);
+
 		m_connectedSocket = -1;
 
 		{
@@ -60,14 +67,6 @@ public:
 
 		// start the next recv
 		recv(m_connectedSocket, &m_recvBuf, nextRecv, 0);
-	}
-
-	bool isListenerSocket(int sock) const {
-		return m_listenerSocket == sock;
-	}
-
-	bool isConnectedSocket(int sock) const {
-		return m_connectedSocket == sock;
 	}
 
 	bool hasConnectedSocket() const {
@@ -107,6 +106,34 @@ public:
 		return m_recvQueue;
 	}
 
+	static ServerSocket* findListener(int sock) {
+		auto current = s_serverList;
+
+		while (current) {
+			if (current->m_listenerSocket == sock) {
+				break;
+			}
+
+			current = current->m_nextServer;
+		}
+
+		return current;
+	}
+
+	static ServerSocket* findConnected(int sock) {
+		auto current = s_serverList;
+
+		while (current) {
+			if (current->m_connectedSocket == sock) {
+				break;
+			}
+
+			current = current->m_nextServer;
+		}
+
+		return current;
+	}
+
 private:
 	int m_listenerSocket = -1;
 	int m_connectedSocket = -1;
@@ -122,7 +149,13 @@ private:
 
 	uint8_t m_recvQueueBuffer[512];
 	input_queue_t m_recvQueue;
+
+	// Linked list of all server sockets
+	static ServerSocket* s_serverList;
+	ServerSocket* m_nextServer = nullptr;
 };
+
+/*static*/ ServerSocket* ServerSocket::s_serverList = nullptr;
 
 void os_hook_isr() {
 	isrSemaphore.signalI();
@@ -242,28 +275,26 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 		case SOCKET_MSG_ACCEPT: {
 			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
 			if (acceptMsg && (acceptMsg->sock >= 0)) {
-				if (tsServer.isListenerSocket(sock)) {
-					tsServer.onAccept(acceptMsg->sock);
+				if (auto server = ServerSocket::findListener(sock)) {
+					server->onAccept(acceptMsg->sock);
 				}
 			}
 		} break;
 		case SOCKET_MSG_RECV: {
 			auto recvMsg = reinterpret_cast<tstrSocketRecvMsg*>(pvMsg);
 			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
-				if (tsServer.isConnectedSocket(sock)) {
-					tsServer.onRecv(recvMsg->pu8Buffer, recvMsg->s16BufferSize, recvMsg->u16RemainingSize);
+				if (auto server = ServerSocket::findConnected(sock)) {
+					server->onRecv(recvMsg->pu8Buffer, recvMsg->s16BufferSize, recvMsg->u16RemainingSize);
 				}
 			} else {
-				close(sock);
-
-				if (tsServer.isConnectedSocket(sock)) {
-					tsServer.onClose();
+				if (auto server = ServerSocket::findConnected(sock)) {
+					server->onClose();
 				}
 			}
 		} break;
 		case SOCKET_MSG_SEND: {
-			if (tsServer.isConnectedSocket(sock)) {
-				tsServer.onSendDone();
+			if (auto server = ServerSocket::findConnected(sock)) {
+				server->onSendDone();
 			}
 		} break;
 	}
