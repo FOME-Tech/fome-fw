@@ -313,7 +313,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	}
 }
 
-void startTsListening() {
+static void startTsListening() {
 	// Start listening on the socket
 	sockaddr_in address;
 	address.sin_family = AF_INET;
