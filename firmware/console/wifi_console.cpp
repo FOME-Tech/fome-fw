@@ -8,8 +8,9 @@
 #include "thread_controller.h"
 #include "tunerstudio.h"
 
-static int listenerSocket = -1;
-static int connectionSocket = -1;
+static int tsListenerSocket = -1;
+static bool tsSocketReady = false;
+static int tsConnectionSocket = -1;
 
 chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
 
@@ -27,7 +28,30 @@ chibios_rt::BinarySemaphore sendDoneSemaphore(/* taken =*/ true);
 static uint8_t recvBuffer[512];
 static input_queue_t wifiIqueue;
 
-static bool socketReady = false;
+static NO_CACHE uint8_t rxBuf[512];
+
+input_queue_t* findRxQueueForSocket(int sock) {
+	if (sock == tsConnectionSocket) {
+		return &wifiIqueue;
+	}
+
+	return nullptr;
+}
+
+void onAccept(int listenerSocket, int connectionSocket) {
+	if (listenerSocket == tsListenerSocket) {
+		tsConnectionSocket = connectionSocket;
+		tsSocketReady = true;
+		recv(tsConnectionSocket, &rxBuf, 1, 0);
+	}
+}
+
+void onSocketClose(int sock) {
+	if (sock == tsConnectionSocket) {
+		tsConnectionSocket = -1;
+		tsSocketReady = false;
+	}
+}
 
 class WifiChannel final : public TsChannelBase {
 public:
@@ -37,7 +61,7 @@ public:
 	}
 
 	bool isReady() const override {
-		return socketReady;
+		return tsSocketReady;
 	}
 
 	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
@@ -104,8 +128,8 @@ public:
 		{
 			m2m_wifi_handle_events(nullptr);
 
-			if (socketReady && sendRequest) {
-				send(connectionSocket, (void*)sendBuffer, sendSize, 0);
+			if (tsSocketReady && sendRequest) {
+				send(tsConnectionSocket, (void*)sendBuffer, sendSize, 0);
 				sendRequest = false;
 			} else {
 				isrSemaphore.wait(TIME_MS2I(1));
@@ -133,13 +157,10 @@ void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	}
 }
 
-static NO_CACHE uint8_t rxBuf[512];
-
 static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	switch (u8Msg) {
 		case SOCKET_MSG_BIND: {
 			auto bindMsg = reinterpret_cast<tstrSocketBindMsg*>(pvMsg);
-
 			if (bindMsg && bindMsg->status == 0) {
 				// Socket bind complete, now listen!
 				listen(sock, 1);
@@ -155,21 +176,24 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 		case SOCKET_MSG_ACCEPT: {
 			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
 			if (acceptMsg && (acceptMsg->sock >= 0)) {
-				connectionSocket = acceptMsg->sock;
-
-				recv(connectionSocket, &rxBuf, 1, 0);
-
-				socketReady = true;
+				onAccept(sock, acceptMsg->sock);
 			}
 		} break;
 		case SOCKET_MSG_RECV: {
 			auto recvMsg = reinterpret_cast<tstrSocketRecvMsg*>(pvMsg);
 			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
 				{
-					chibios_rt::CriticalSectionLocker csl;
+					auto queue = findRxQueueForSocket(sock);
+					if (queue) {
+						chibios_rt::CriticalSectionLocker csl;
 
-					for (sint16 i = 0; i < recvMsg->s16BufferSize; i++) {
-						iqPutI(&wifiIqueue, rxBuf[i]);
+						for (sint16 i = 0; i < recvMsg->s16BufferSize; i++) {
+							iqPutI(queue, rxBuf[i]);
+						}
+					} else {
+						// We couldn't find a listener for this socket, drop the data and close the socket
+						close(sock);
+						return;
 					}
 				}
 
@@ -190,11 +214,12 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			} else {
 				close(sock);
 
-				socketReady = false;
+				auto queue = findRxQueueForSocket(sock);
+				onSocketClose(sock);
 
 				{
 					chibios_rt::CriticalSectionLocker csl;
-					iqResetI(&wifiIqueue);
+					iqResetI(queue);
 				}
 			}
 		} break;
@@ -204,6 +229,17 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			sendDoneSemaphore.signalI();
 		} break;
 	}
+}
+
+void startTsListening() {
+	// Start listening on the socket
+	sockaddr_in address;
+	address.sin_family = AF_INET;
+	address.sin_port = _htons(29000);
+	address.sin_addr.s_addr = 0;
+
+	tsListenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
+	bind(tsListenerSocket, (sockaddr*)&address, sizeof(address));
 }
 
 struct WifiConsoleThread : public TunerstudioThread {
@@ -248,14 +284,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		socketInit();
 		registerSocketCallback(socketCallback, nullptr);
 
-		// Start listening on the socket
-		sockaddr_in address;
-		address.sin_family = AF_INET;
-		address.sin_port = _htons(29000);
-		address.sin_addr.s_addr = 0;
-
-		listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
-		bind(listenerSocket, (sockaddr*)&address, sizeof(address));
+		startTsListening();
 
 		return &wifiChannel;
 	}
