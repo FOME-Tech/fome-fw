@@ -465,6 +465,8 @@ private:
 	std::ofstream m_stream;
 };
 
+static SdLogBufferWriter logBuffer;
+
 #endif // EFI_PROD_CODE
 
 // Log 'regular' ECU log to MLG file
