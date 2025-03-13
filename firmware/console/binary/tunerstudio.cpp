@@ -300,7 +300,7 @@ void TunerStudio::handleQueryCommand(TsChannelBase* tsChannel, ts_response_forma
 	if (mode == TS_CRC) {
 		tsChannel->copyAndWriteSmallCrcPacket(buffer, size);
 	} else {
-		tsChannel->write(buffer, size, true);
+		tsChannel->write(buffer, size);
 		tsChannel->flush();
 	}
 }

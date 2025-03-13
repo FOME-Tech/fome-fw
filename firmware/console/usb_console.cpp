@@ -22,7 +22,7 @@ public:
 		return is_usb_serial_ready();
 	}
 
-	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) override {
+	void write(const uint8_t* buffer, size_t size) override {
 		chnWriteTimeout(m_channel, buffer, size, BINARY_IO_TIMEOUT);
 	}
 

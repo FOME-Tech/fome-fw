@@ -27,7 +27,7 @@ public:
 	void start();
 
 	// TsChannelBase implementation
-	void write(const uint8_t* buffer, size_t size, bool) override;
+	void write(const uint8_t* buffer, size_t size) override;
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override;
 	void flush() override;
 	bool isReady() const override;
@@ -71,7 +71,7 @@ void CanTsChannel::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) {
 	TsChannelBase::copyAndWriteSmallCrcPacket(buf, size);
 }
 
-void CanTsChannel::write(const uint8_t* buffer, size_t size, bool) {
+void CanTsChannel::write(const uint8_t* buffer, size_t size) {
 	canStreamAddToTxTimeout(&size, buffer, BINARY_IO_TIMEOUT);
 }
 
