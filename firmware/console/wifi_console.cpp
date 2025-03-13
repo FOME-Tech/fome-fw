@@ -9,7 +9,6 @@
 #include "tunerstudio.h"
 
 static int tsListenerSocket = -1;
-static bool tsSocketReady = false;
 static int tsConnectionSocket = -1;
 
 chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
@@ -41,7 +40,6 @@ input_queue_t* findRxQueueForSocket(int sock) {
 void onAccept(int listenerSocket, int connectionSocket) {
 	if (listenerSocket == tsListenerSocket) {
 		tsConnectionSocket = connectionSocket;
-		tsSocketReady = true;
 		recv(tsConnectionSocket, &rxBuf, 1, 0);
 	}
 }
@@ -49,7 +47,6 @@ void onAccept(int listenerSocket, int connectionSocket) {
 void onSocketClose(int sock) {
 	if (sock == tsConnectionSocket) {
 		tsConnectionSocket = -1;
-		tsSocketReady = false;
 	}
 }
 
@@ -61,7 +58,7 @@ public:
 	}
 
 	bool isReady() const override {
-		return tsSocketReady;
+		return tsConnectionSocket != -1;
 	}
 
 	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
@@ -128,7 +125,7 @@ public:
 		{
 			m2m_wifi_handle_events(nullptr);
 
-			if (tsSocketReady && sendRequest) {
+			if ((tsConnectionSocket != -1) && sendRequest) {
 				send(tsConnectionSocket, (void*)sendBuffer, sendSize, 0);
 				sendRequest = false;
 			} else {
