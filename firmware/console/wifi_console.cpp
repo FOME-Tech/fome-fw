@@ -8,57 +8,136 @@
 #include "thread_controller.h"
 #include "tunerstudio.h"
 
-static int tsListenerSocket = -1;
-static int tsConnectionSocket = -1;
+static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
 
-chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
+class ServerSocket {
+public:
+	ServerSocket() {
+		iqObjectInit(&m_recvQueue, m_recvQueueBuffer, sizeof(m_recvQueueBuffer), nullptr, nullptr);
+	}
+
+	template <typename TAddress>
+	void startListening(TAddress& addr) {
+		m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
+		bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
+	}
+
+	void onAccept(int connectedSocket) {
+		m_connectedSocket = connectedSocket;
+
+		recv(m_connectedSocket, &m_recvBuf, 1, 0);
+	}
+
+	void onClose() {
+		m_connectedSocket = -1;
+
+		{
+			chibios_rt::CriticalSectionLocker csl;
+			iqResetI(&m_recvQueue);
+		}
+	}
+
+	void onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
+		{
+			chibios_rt::CriticalSectionLocker csl;
+
+			for (size_t i = 0; i < recvSize; i++) {
+				iqPutI(&m_recvQueue, buffer[i]);
+			}
+		}
+
+		size_t nextRecv;
+		if (remaining < 1) {
+			// Always try to read at least 1 byte
+			nextRecv = 1;
+		} else if (remaining > sizeof(m_recvBuf)) {
+			// Remaining is too big for the buffer, so just read one buffer worth
+			nextRecv = sizeof(m_recvBuf);
+		} else {
+			// The full thing will fit, try to read it
+			nextRecv = remaining;
+		}
+
+		// start the next recv
+		recv(m_connectedSocket, &m_recvBuf, nextRecv, 0);
+	}
+
+	bool isListenerSocket(int sock) const {
+		return m_listenerSocket == sock;
+	}
+
+	bool isConnectedSocket(int sock) const {
+		return m_connectedSocket == sock;
+	}
+
+	bool hasConnectedSocket() const {
+		return m_connectedSocket != -1;
+	}
+
+	bool trySend() {
+		if ((m_connectedSocket != -1) && m_sendRequest) {
+			::send(m_connectedSocket, (void*)m_sendBuffer, m_sendSize, 0);
+			m_sendRequest = false;
+
+			return true;
+		}
+
+		return false;
+	}
+
+	void send(uint8_t* buffer, size_t size) {
+		m_sendBuffer = buffer;
+		m_sendSize = size;
+		m_sendRequest = true;
+
+		// Wake the driver
+		isrSemaphore.signal();
+
+		// Wait for this chunk to complete
+		m_sendDoneSemaphore.wait();
+	}
+
+	void onSendDone() {
+		// Send completed, notify caller!
+		chibios_rt::CriticalSectionLocker csl;
+		m_sendDoneSemaphore.signalI();
+	}
+
+	input_queue_t& recvQueue() {
+		return m_recvQueue;
+	}
+
+private:
+	int m_listenerSocket = -1;
+	int m_connectedSocket = -1;
+
+	// TX helper data
+	const uint8_t* m_sendBuffer;
+	size_t m_sendSize;
+	bool m_sendRequest = false;
+	chibios_rt::BinarySemaphore m_sendDoneSemaphore{/* taken =*/ true};
+
+	// RX data
+	uint8_t m_recvBuf[512];
+
+	uint8_t m_recvQueueBuffer[512];
+	input_queue_t m_recvQueue;
+};
 
 void os_hook_isr() {
 	isrSemaphore.signalI();
 }
 
-// TX Helper data
-static const uint8_t* sendBuffer;
-static size_t sendSize;
-bool sendRequest = false;
-chibios_rt::BinarySemaphore sendDoneSemaphore(/* taken =*/ true);
-
-// RX Helper data
-static uint8_t recvBuffer[512];
-static input_queue_t wifiIqueue;
-
-static NO_CACHE uint8_t rxBuf[512];
-
-input_queue_t* findRxQueueForSocket(int sock) {
-	if (sock == tsConnectionSocket) {
-		return &wifiIqueue;
-	}
-
-	return nullptr;
-}
-
-void onAccept(int listenerSocket, int connectionSocket) {
-	if (listenerSocket == tsListenerSocket) {
-		tsConnectionSocket = connectionSocket;
-		recv(tsConnectionSocket, &rxBuf, 1, 0);
-	}
-}
-
-void onSocketClose(int sock) {
-	if (sock == tsConnectionSocket) {
-		tsConnectionSocket = -1;
-	}
-}
-
 class WifiChannel final : public TsChannelBase {
 public:
-	WifiChannel()
+	WifiChannel(ServerSocket& server)
 		: TsChannelBase("WiFi")
+		, m_server(server)
 	{
 	}
 
 	bool isReady() const override {
-		return tsConnectionSocket != -1;
+		return m_server.hasConnectedSocket();
 	}
 
 	void write(const uint8_t* buffer, size_t size) final override {
@@ -76,22 +155,18 @@ public:
 			return;
 		}
 
-		sendBuffer = m_writeBuffer;
-		sendSize = m_writeSize;
-		sendRequest = true;
-		isrSemaphore.signal();
-
-		// Wait for this chunk to complete
-		sendDoneSemaphore.wait();
+		m_server.send(m_writeBuffer, m_writeSize);
 
 		m_writeSize = 0;
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
-		return iqReadTimeout(&wifiIqueue, buffer, size, timeout);
+		return iqReadTimeout(&m_server.recvQueue(), buffer, size, timeout);
 	}
 
 private:
+	ServerSocket& m_server;
+
 	size_t writeChunk(const uint8_t* buffer, size_t size) {
 		// Maximum we can fit in the buffer before a flush
 		size_t available = SOCKET_BUFFER_MAX_LENGTH - m_writeSize;
@@ -115,7 +190,8 @@ private:
 	size_t m_writeSize = 0;
 };
 
-static NO_CACHE WifiChannel wifiChannel;
+static NO_CACHE ServerSocket tsServer;
+static NO_CACHE WifiChannel wifiChannel(tsServer);
 
 class WifiHelperThread : public ThreadController<4096> {
 public:
@@ -125,10 +201,7 @@ public:
 		{
 			m2m_wifi_handle_events(nullptr);
 
-			if ((tsConnectionSocket != -1) && sendRequest) {
-				send(tsConnectionSocket, (void*)sendBuffer, sendSize, 0);
-				sendRequest = false;
-			} else {
+			if (!tsServer.trySend()) {
 				isrSemaphore.wait(TIME_MS2I(1));
 			}
 		}
@@ -169,57 +242,29 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 		case SOCKET_MSG_ACCEPT: {
 			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
 			if (acceptMsg && (acceptMsg->sock >= 0)) {
-				onAccept(sock, acceptMsg->sock);
+				if (tsServer.isListenerSocket(sock)) {
+					tsServer.onAccept(acceptMsg->sock);
+				}
 			}
 		} break;
 		case SOCKET_MSG_RECV: {
 			auto recvMsg = reinterpret_cast<tstrSocketRecvMsg*>(pvMsg);
 			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
-				{
-					auto queue = findRxQueueForSocket(sock);
-					if (queue) {
-						chibios_rt::CriticalSectionLocker csl;
-
-						for (sint16 i = 0; i < recvMsg->s16BufferSize; i++) {
-							iqPutI(queue, rxBuf[i]);
-						}
-					} else {
-						// We couldn't find a listener for this socket, drop the data and close the socket
-						close(sock);
-						return;
-					}
+				if (tsServer.isConnectedSocket(sock)) {
+					tsServer.onRecv(recvMsg->pu8Buffer, recvMsg->s16BufferSize, recvMsg->u16RemainingSize);
 				}
-
-				size_t nextRecv;
-				if (recvMsg->u16RemainingSize < 1) {
-					// Always try to read at least 1 byte
-					nextRecv = 1;
-				} else if (recvMsg->u16RemainingSize > sizeof(rxBuf)) {
-					// Remaining is too big for the buffer, so just read one buffer worth
-					nextRecv = sizeof(rxBuf);
-				} else {
-					// The full thing will fit, try to read it
-					nextRecv = recvMsg->u16RemainingSize;
-				}
-
-				// start the next recv
-				recv(sock, &rxBuf, nextRecv, 0);
 			} else {
 				close(sock);
 
-				auto queue = findRxQueueForSocket(sock);
-				onSocketClose(sock);
-
-				{
-					chibios_rt::CriticalSectionLocker csl;
-					iqResetI(queue);
+				if (tsServer.isConnectedSocket(sock)) {
+					tsServer.onClose();
 				}
 			}
 		} break;
 		case SOCKET_MSG_SEND: {
-			// Send completed, notify caller!
-			chibios_rt::CriticalSectionLocker csl;
-			sendDoneSemaphore.signalI();
+			if (tsServer.isConnectedSocket(sock)) {
+				tsServer.onSendDone();
+			}
 		} break;
 	}
 }
@@ -231,8 +276,7 @@ void startTsListening() {
 	address.sin_port = _htons(29000);
 	address.sin_addr.s_addr = 0;
 
-	tsListenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
-	bind(tsListenerSocket, (sockaddr*)&address, sizeof(address));
+	tsServer.startListening(address);
 }
 
 struct WifiConsoleThread : public TunerstudioThread {
@@ -288,8 +332,6 @@ struct WifiConsoleThread : public TunerstudioThread {
 static NO_CACHE WifiConsoleThread wifiThread;
 
 void startWifiConsole() {
-	iqObjectInit(&wifiIqueue, recvBuffer, sizeof(recvBuffer), nullptr, nullptr);
-
 	wifiThread.start();
 }
 
