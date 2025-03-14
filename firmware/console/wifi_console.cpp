@@ -101,6 +101,9 @@ void startWifiConsole() {
 	initWifi();
 
 	wifiThread.start();
+
+	void initHttp();
+	initHttp();
 }
 
 #endif // EFI_WIFI
