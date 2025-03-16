@@ -8,6 +8,7 @@ include $(PROJECT_DIR)/development/development.mk
 include $(PROJECT_DIR)/hw_layer/hw_layer.mk
 include $(PROJECT_DIR)/hw_layer/sensors/sensors.mk
 include $(PROJECT_DIR)/hw_layer/drivers/drivers.mk
+include $(PROJECT_DIR)/net/net.mk
 
 ALLCSRC += \
 	$(UTILSRC)
