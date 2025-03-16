@@ -18,7 +18,6 @@
 #include <lwip/netifapi.h>
 
 static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
-static chibios_rt::BinarySemaphore sendDoneSemaphore{/* taken =*/ true};
 
 void os_hook_isr() {
 	isrSemaphore.signalI();
@@ -87,29 +86,7 @@ void ethernetCallback(uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf) {
 	}
 }
 
-static pbuf* outgoing_pbuf = nullptr;
-
-void checkOutgoingPbuf() {
-	if (outgoing_pbuf) {
-		#if ETH_PAD_SIZE
-			// drop the padding word
-			pbuf_header(outgoing_pbuf, -ETH_PAD_SIZE);
-		#endif
-
-		static NO_CACHE uint8_t ethernetTxBuffer[1600];
-
-		// copy pbuf -> tx buffer
-		pbuf_copy_partial(outgoing_pbuf, ethernetTxBuffer, outgoing_pbuf->tot_len, 0);
-
-		// transmit the frame
-		m2m_wifi_send_ethernet_pkt(ethernetTxBuffer, outgoing_pbuf->tot_len);
-
-		outgoing_pbuf = nullptr;
-		sendDoneSemaphore.signal();
-	}
-}
-
-static thread_t* wifiThreadRef = nullptr;
+static chibios_rt::Mutex wifiAccessMutex;
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p) {
 	if (netif != &thisif) {
@@ -121,15 +98,21 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p) {
 		pbuf_header(p, -ETH_PAD_SIZE);
 	#endif
 
-	outgoing_pbuf = p;
+	#if ETH_PAD_SIZE
+		// drop the padding word
+		pbuf_header(p, -ETH_PAD_SIZE);
+	#endif
 
-	if (wifiThreadRef == chThdGetSelfX()) {
-		checkOutgoingPbuf();
-	} else {
-		isrSemaphore.signal();
+	static NO_CACHE uint8_t ethernetTxBuffer[1600];
+
+	// copy pbuf -> tx buffer
+	pbuf_copy_partial(p, ethernetTxBuffer, p->tot_len, 0);
+
+	{
+		// transmit the frame
+		chibios_rt::MutexLocker lock(wifiAccessMutex);
+		m2m_wifi_send_ethernet_pkt(ethernetTxBuffer, p->tot_len);
 	}
-
-	sendDoneSemaphore.wait();
 
 	#if ETH_PAD_SIZE
 		// reclaim the padding word
@@ -183,8 +166,6 @@ class WifiHelperThread : public ThreadController<4096> {
 public:
 	WifiHelperThread() : ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
 	void ThreadTask() override {
-		wifiThreadRef = chThdGetSelfX();
-
 		if (!initWifi()) {
 			return;
 		}
@@ -193,10 +174,10 @@ public:
 
 		while (true)
 		{
-			// check for outgoing frame
-			checkOutgoingPbuf();
-
-			m2m_wifi_handle_events(nullptr);
+			{
+				chibios_rt::MutexLocker lock(wifiAccessMutex);
+				m2m_wifi_handle_events(nullptr);
+			}
 
 			isrSemaphore.wait(TIME_MS2I(1));
 		}
