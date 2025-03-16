@@ -71,12 +71,9 @@
 #include "rusefi_generated.h"
 
 // Ensure that one TCP segment can always fit an entire response to TS - we never need to split a TS packet across multiple frames.
-#define TCP_MSS 8192
+#define TCP_MSS (BLOCKING_FACTOR + 10)
 
 #define MEM_SIZE 65536
-
-#define LWIP_TCP_SACK_OUT 1
-#define LWIP_TCP_MAX_SACK_NUM 8
 
 // Crank the TCP timer interval down to 10ms (down from 250ms default)
 // As this sets the lower limit on retransmissions
