@@ -86,8 +86,7 @@ void ethernetCallback(uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf) {
 	}
 }
 
-static NO_CACHE uint8_t ethernetTxBuffer[1600];
-static NO_CACHE uint8_t ethernetRxBuffer[1600];
+static NO_CACHE uint8_t ethernetBuffer[1600];
 static chibios_rt::Mutex wifiAccessMutex;
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p) {
@@ -105,13 +104,14 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p) {
 		pbuf_header(p, -ETH_PAD_SIZE);
 	#endif
 
-	// copy pbuf -> tx buffer
-	pbuf_copy_partial(p, ethernetTxBuffer, p->tot_len, 0);
-
 	{
-		// transmit the frame
 		chibios_rt::MutexLocker lock(wifiAccessMutex);
-		m2m_wifi_send_ethernet_pkt(ethernetTxBuffer, p->tot_len);
+
+		// copy pbuf -> tx buffer
+		pbuf_copy_partial(p, ethernetBuffer, p->tot_len, 0);
+
+		// transmit the frame
+		m2m_wifi_send_ethernet_pkt(ethernetBuffer, p->tot_len);
 	}
 
 	#if ETH_PAD_SIZE
@@ -195,8 +195,8 @@ private:
 
 		// Ethernet options
 		param.strEthInitParam.pfAppEthCb = ethernetCallback;
-		param.strEthInitParam.au8ethRcvBuf = ethernetRxBuffer;
-		param.strEthInitParam.u16ethRcvBufSize = sizeof(ethernetRxBuffer);
+		param.strEthInitParam.au8ethRcvBuf = ethernetBuffer;
+		param.strEthInitParam.u16ethRcvBufSize = sizeof(ethernetBuffer);
 		param.strEthInitParam.u8EthernetEnable = M2M_WIFI_MODE_ETHERNET;
 
 		if (auto ret = m2m_wifi_init(&param); M2M_SUCCESS != ret) {
