@@ -52,8 +52,8 @@
 
 #define LWIP_COMPAT_SOCKETS 0
 
-#define LWIP_RAW 4
-#define LWIP_TCP 4
+#define LWIP_RAW 0
+#define LWIP_TCP 1
 #define LWIP_UDP 0
 #define LWIP_STATS 0
 
