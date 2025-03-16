@@ -258,7 +258,7 @@ void runRusEfiWithConfig() {
 	initHardware();
 
 #if EFI_WIFI
-	startWifiConsole();
+	initWifi();
 #endif
 
 #if EFI_FILE_LOGGING

@@ -43,7 +43,7 @@
 #define TCPIP_MBOX_SIZE                 MEMP_NUM_PBUF
 #endif
 #if !defined(TCPIP_THREAD_STACKSIZE)
-#define TCPIP_THREAD_STACKSIZE          1024
+#define TCPIP_THREAD_STACKSIZE          4096
 #endif
 
 #define LWIP_LINK_POLL_INTERVAL   TIME_S2I(1)
@@ -52,26 +52,31 @@
 
 #define LWIP_COMPAT_SOCKETS 0
 
-#define LWIP_RAW 0
-#define LWIP_TCP 1
+#define LWIP_RAW 4
+#define LWIP_TCP 4
 #define LWIP_UDP 0
 #define LWIP_STATS 0
 
 // In theory we're only talking to a single PC, so we don't need a big ARP table
-#define ARP_TABLE_SIZE 4
+#define ARP_TABLE_SIZE 16
 
 // ascii `rus`
-#define LWIP_ETHADDR_0 0x72
-#define LWIP_ETHADDR_1 0x75
-#define LWIP_ETHADDR_2 0x73
-#define LWIP_ETHADDR_3 0x12
-#define LWIP_ETHADDR_4 0x34
-#define LWIP_ETHADDR_5 0x56
+#define LWIP_ETHADDR_0 0xf8
+#define LWIP_ETHADDR_1 0xf0
+#define LWIP_ETHADDR_2 0x05
+#define LWIP_ETHADDR_3 0xa3
+#define LWIP_ETHADDR_4 0x19
+#define LWIP_ETHADDR_5 0xc2
 
 #include "rusefi_generated.h"
 
 // Ensure that one TCP segment can always fit an entire response to TS - we never need to split a TS packet across multiple frames.
-#define TCP_MSS (BLOCKING_FACTOR + 10)
+#define TCP_MSS 8192
+
+#define MEM_SIZE 65536
+
+#define LWIP_TCP_SACK_OUT 1
+#define LWIP_TCP_MAX_SACK_NUM 8
 
 // Enable the socket recv timeout (and it uses a nonstandard option of int, rather than timeval)
 #define LWIP_SO_SNDRCVTIMEO_NONSTANDARD 1

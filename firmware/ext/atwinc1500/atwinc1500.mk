@@ -24,8 +24,8 @@ ALLCPPSRC += \
 	$(ATWINC_DIR)/driver/source/nmi2c.cpp \
 	$(ATWINC_DIR)/driver/source/nmspi.cpp \
 	$(ATWINC_DIR)/driver/source/nmuart.cpp \
-	$(ATWINC_DIR)/socket/source/socket.cpp \
 	$(ATWINC_DIR)/spi_flash/source/spi_flash.cpp \
+	#$(ATWINC_DIR)/socket/source/socket.cpp \
 
 
 #$(ATWINC_DIR)/driver/source/m2m_ssl.c
