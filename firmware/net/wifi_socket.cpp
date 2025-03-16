@@ -86,6 +86,8 @@ void ethernetCallback(uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf) {
 	}
 }
 
+static NO_CACHE uint8_t ethernetTxBuffer[1600];
+static NO_CACHE uint8_t ethernetRxBuffer[1600];
 static chibios_rt::Mutex wifiAccessMutex;
 
 static err_t low_level_output(struct netif *netif, struct pbuf *p) {
@@ -102,8 +104,6 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p) {
 		// drop the padding word
 		pbuf_header(p, -ETH_PAD_SIZE);
 	#endif
-
-	static NO_CACHE uint8_t ethernetTxBuffer[1600];
 
 	// copy pbuf -> tx buffer
 	pbuf_copy_partial(p, ethernetTxBuffer, p->tot_len, 0);
@@ -194,7 +194,6 @@ private:
 		param.pfAppWifiCb = wifiCallback;
 
 		// Ethernet options
-		static NO_CACHE uint8_t ethernetRxBuffer[1600];
 		param.strEthInitParam.pfAppEthCb = ethernetCallback;
 		param.strEthInitParam.au8ethRcvBuf = ethernetRxBuffer;
 		param.strEthInitParam.u16ethRcvBufSize = sizeof(ethernetRxBuffer);
