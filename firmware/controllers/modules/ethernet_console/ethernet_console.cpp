@@ -34,11 +34,31 @@ public:
 		return connectionSocket != -1;
 	}
 
-	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) override {
-		// If not the end of a packet, set the MSG_MORE flag to indicate to the transport
-		// that we have more to add to the buffer before queuing a flush.
-		auto flags = isEndOfPacket ? 0 : MSG_MORE;
-		lwip_send(connectionSocket, buffer, size, flags);
+	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) override {
+		while (size) {
+			size_t remain = TCP_MSS - m_size;
+			size_t chunkSize = std::min(size, remain);
+
+			memcpy(m_buffer + m_size, buffer, chunkSize);
+
+			m_size += chunkSize;
+			buffer += chunkSize;
+			size -= chunkSize;
+
+			if (m_size == TCP_MSS) {
+				flush();
+			}
+		}
+	}
+
+	void flush() {
+		if (!m_size) {
+			// spurious flush
+			return;
+		}
+
+		lwip_send(connectionSocket, m_buffer, m_size, 0);
+		m_size = 0;
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
@@ -65,6 +85,10 @@ public:
 			return 0;
 		}
 	}
+
+private:
+	uint8_t m_buffer[TCP_MSS];
+	size_t m_size = 0;
 };
 
 static EthernetChannel ethChannel;
