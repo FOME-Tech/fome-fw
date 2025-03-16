@@ -73,4 +73,8 @@
 // Ensure that one TCP segment can always fit an entire response to TS - we never need to split a TS packet across multiple frames.
 #define TCP_MSS (BLOCKING_FACTOR + 10)
 
+// Enable the socket recv timeout (and it uses a nonstandard option of int, rather than timeval)
+#define LWIP_SO_SNDRCVTIMEO_NONSTANDARD 1
+#define LWIP_SO_RCVTIMEO 1
+
 #endif /* LWIP_HDR_LWIPOPTS_H__ */

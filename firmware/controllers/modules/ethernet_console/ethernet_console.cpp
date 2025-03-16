@@ -41,15 +41,29 @@ public:
 		lwip_send(connectionSocket, buffer, size, flags);
 	}
 
-	size_t readTimeout(uint8_t* buffer, size_t size, int /*timeout*/) override {
-		auto result = lwip_recv(connectionSocket, buffer, size, /*flags =*/ 0);
-
-		if (result == -1) {
+	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
+		// Convert back to ms
+		timeout = TIME_I2MS(timeout);
+		int res = lwip_setsockopt(connectionSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+		if (res == -1) {
+			// something went wrong with the socket, close it and try again
+			lwip_close(connectionSocket);
 			do_connection();
 			return 0;
 		}
 
-		return result;
+		auto result = lwip_recv(connectionSocket, buffer, size, /*flags =*/ 0);
+		if (result > 0) {
+			// success, bytes were returned
+			return result;
+		} else if (result == 0) {
+			// 0 result means the socket is dead
+			do_connection();
+			return 0;
+		} else {
+			// negative result means timeout
+			return 0;
+		}
 	}
 };
 
