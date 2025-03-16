@@ -43,7 +43,7 @@
 #define TCPIP_MBOX_SIZE                 MEMP_NUM_PBUF
 #endif
 #if !defined(TCPIP_THREAD_STACKSIZE)
-#define TCPIP_THREAD_STACKSIZE          4096
+#define TCPIP_THREAD_STACKSIZE          1024
 #endif
 
 #define LWIP_LINK_POLL_INTERVAL   TIME_S2I(1)
