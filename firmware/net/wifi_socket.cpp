@@ -2,6 +2,8 @@
 #include "wifi_socket.h"
 #include "thread_controller.h"
 
+#if EFI_WIFI
+
 #include "driver/include/m2m_wifi.h"
 
 #include "lwipthread.h"
@@ -251,3 +253,5 @@ void waitForWifiInit() {
 		chThdSleepMilliseconds(10);
 	}
 }
+
+#endif
