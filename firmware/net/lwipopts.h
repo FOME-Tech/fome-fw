@@ -78,6 +78,12 @@
 #define LWIP_TCP_SACK_OUT 1
 #define LWIP_TCP_MAX_SACK_NUM 8
 
+// Crank the TCP timer interval down to 10ms (down from 250ms default)
+// As this sets the lower limit on retransmissions
+// We want retransmissions to be super snappy in case of a dropped frame
+#define TCP_TMR_INTERVAL 10
+#define LWIP_TCP_CLOSE_TIMEOUT_MS_DEFAULT 5000
+
 // Enable the socket recv timeout (and it uses a nonstandard option of int, rather than timeval)
 #define LWIP_SO_SNDRCVTIMEO_NONSTANDARD 1
 #define LWIP_SO_RCVTIMEO 1
