@@ -101,8 +101,6 @@ static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
 static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
 static SdLogBufferWriter& logBuffer = mmcCardCacheControlledStorage.usedPart.logBuffer;
 
-static void mmcUnMount();
-
 static void setSdCardReady(bool value) {
 	fs_ready = value;
 }
@@ -210,36 +208,6 @@ static void createLogFile(int logFileIndex) {
 	setSdCardReady(true);						// everything Ok
 }
 
-/*
- * MMC card un-mount.
- */
-static void mmcUnMount() {
-	if (!isSdCardAlive()) {
-		efiPrintf("Error: No File system is mounted. \"mountsd\" first");
-		return;
-	}
-
-	setSdCardReady(false);
-
-	// Close the log file (ignore errors, we're already in the shutdown path)
-	f_close(&FDLogFile);
-
-	// Unmount the volume
-	f_mount(nullptr, nullptr, 0);						// FatFs: Unregister work area prior to discard it
-
-#if HAL_USE_MMC_SPI
-	mmcDisconnect(&MMCD1);						// Brings the driver in a state safe for card removal.
-	mmcStop(&MMCD1);							// Disables the MMC peripheral.
-	UNLOCK_SD_SPI;
-#endif
-#ifdef EFI_SDC_DEVICE
-	sdcDisconnect(&EFI_SDC_DEVICE);
-	sdcStop(&EFI_SDC_DEVICE);
-#endif
-
-	efiPrintf("MMC/SD card removed");
-}
-
 #if HAL_USE_USB_MSD
 
 static chibios_rt::BinarySemaphore usbConnectedSemaphore(/* taken =*/ true);
@@ -341,9 +309,7 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 }
 #endif /* EFI_SDC_DEVICE */
 
-// Initialize and mount the SD card.
-// Returns true if the filesystem was successfully mounted for writing.
-static bool mountMmc() {
+bool mountSdFilesystem() {
 	auto cardBlockDevice = initializeMmcBlockDevice();
 
 #if EFI_TUNER_STUDIO
@@ -377,15 +343,39 @@ static bool mountMmc() {
 	// We were able to connect the SD card, mount the filesystem
 	if (f_mount(&MMC_FS, "/", 1) == FR_OK) {
 		sdStatus = SD_STATE_MOUNTED;
-		int logFileIndex = incLogFileName();
-		createLogFile(logFileIndex);
-		fileCreatedCounter++;
-		efiPrintf("MMC/SD mounted!");
+		efiPrintf("SD card mounted!");
 		return true;
 	} else {
 		sdStatus = SD_STATE_MOUNT_FAILED;
 		return false;
 	}
+}
+
+void unmountSdFilesystem() {
+	if (!isSdCardAlive()) {
+		efiPrintf("Error: No File system is mounted. \"mountsd\" first");
+		return;
+	}
+
+	setSdCardReady(false);
+
+	// Close the log file (ignore errors, we're already in the shutdown path)
+	f_close(&FDLogFile);
+
+	// Unmount the volume
+	f_mount(nullptr, nullptr, 0);						// FatFs: Unregister work area prior to discard it
+
+#if HAL_USE_MMC_SPI
+	mmcDisconnect(&MMCD1);						// Brings the driver in a state safe for card removal.
+	mmcStop(&MMCD1);							// Disables the MMC peripheral.
+	UNLOCK_SD_SPI;
+#endif
+#ifdef EFI_SDC_DEVICE
+	sdcDisconnect(&EFI_SDC_DEVICE);
+	sdcStop(&EFI_SDC_DEVICE);
+#endif
+
+	efiPrintf("MMC/SD card removed");
 }
 
 size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
@@ -399,7 +389,7 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 		printError("write error or disk full", err);
 
 		// Close file and unmount volume
-		mmcUnMount();
+		unmountSdFilesystem();
 		failed = true;
 		return 0;
 	} else {
@@ -423,7 +413,7 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 
 #include <fstream>
 
-bool mountMmc() {
+bool mountSdFilesystem() {
 	// Stub so the loop thinks the MMC mounted OK
 	return true;
 }
@@ -463,10 +453,14 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("MMC Card Logger");
 
-	if (!mountMmc()) {
+	if (!mountSdFilesystem()) {
 		// no card present (or mounted via USB), don't do internal logging
 		return;
 	}
+
+	int logFileIndex = incLogFileName();
+	createLogFile(logFileIndex);
+	fileCreatedCounter++;
 
 	#if EFI_TUNER_STUDIO
 		engine->outputChannels.sd_logging_internal = true;
