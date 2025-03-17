@@ -33,7 +33,7 @@ static const char *sdStatus = SD_STATE_INIT;
 #if HAL_USE_MMC_SPI
 // Don't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),
 // which will cause disaster (usually multiple-unlock of the same mutex in UNLOCK_SD_SPI)
-static spi_device_e mmcSpiDevice = SPI_NONE;
+static SPIDriver* mmcSpiDevice = nullptr;
 
 // MMC/SD driver instance.
 MMCDriver MMCD1;
@@ -41,8 +41,8 @@ MMCDriver MMCD1;
 // MMC/SD over SPI driver configuration
 static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
 
-#define LOCK_SD_SPI lockSpi(mmcSpiDevice)
-#define UNLOCK_SD_SPI unlockSpi(mmcSpiDevice)
+#define LOCK_SD_SPI spiAcquireBus(mmcSpiDevice)
+#define UNLOCK_SD_SPI spiReleaseBus(mmcSpiDevice)
 
 #endif /* HAL_USE_MMC_SPI */
 
@@ -87,23 +87,22 @@ void onUsbConnectedNotifyMmcI() {
  * Attempts to initialize the MMC card.
  * Returns a BaseBlockDevice* corresponding to the SD card if successful, otherwise nullptr.
  */
-static BaseBlockDevice* initializeMmcBlockDevice() {
+BaseBlockDevice* initializeMmcBlockDevice() {
 	// Don't try to mount SD card in case of fatal error - hardware may be in an unexpected state
 	if (hasFirmwareError()) {
 		return nullptr;
 	}
 	
-	if (!engineConfiguration->isSdCardEnabled || engineConfiguration->sdCardSpiDevice == SPI_NONE) {
+	mmcSpiDevice = getSdCardSpiDevice();
+
+	if (!isSdCardEnabled() || !mmcSpiDevice) {
 		return nullptr;
 	}
 
-	// Configures and activates the MMC peripheral.
-	mmcSpiDevice = engineConfiguration->sdCardSpiDevice;
-
 	// todo: reuse initSpiCs method?
-	mmc_hs_spicfg.ssport = mmc_ls_spicfg.ssport = getHwPort("mmc", engineConfiguration->sdCardCsPin);
-	mmc_hs_spicfg.sspad = mmc_ls_spicfg.sspad = getHwPin("mmc", engineConfiguration->sdCardCsPin);
-	mmccfg.spip = getSpiDevice(mmcSpiDevice);
+	mmc_hs_spicfg.ssport = mmc_ls_spicfg.ssport = getHwPort("mmc", getSdCardCsPin());
+	mmc_hs_spicfg.sspad = mmc_ls_spicfg.sspad = getHwPin("mmc", getSdCardCsPin());
+	mmccfg.spip = mmcSpiDevice;
 
 	// Invalid SPI device, abort.
 	if (!mmccfg.spip) {
@@ -134,8 +133,8 @@ static const SDCConfig sdcConfig = {
 	SDC_MODE_4BIT
 };
 
-static BaseBlockDevice* initializeMmcBlockDevice() {
-	if (!engineConfiguration->isSdCardEnabled) {
+BaseBlockDevice* initializeMmcBlockDevice() {
+	if (!isSdCardEnabled()) {
 		return nullptr;
 	}
 
@@ -148,7 +147,7 @@ static BaseBlockDevice* initializeMmcBlockDevice() {
 
 	// STM32H7 SDMMC1 needs the filesystem object to be in AXI
 	// SRAM, but excluded from the cache
-	#ifdef STM32H7XX
+	#if defined(STM32H7XX) && !EFI_BOOTLOADER
 	{
 		void* base = &mmcCardCacheControlledStorage;
 		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);

@@ -11,12 +11,20 @@
 
 #include "buffered_writer.h"
 
+BaseBlockDevice* initializeMmcBlockDevice();
+
 // Initialize the SD card and mount its filesystem
 // Returns true if the filesystem was successfully mounted for writing.
 bool mountSdFilesystem();
 void unmountSdFilesystem();
 
 void onUsbConnectedNotifyMmcI();
+
+// Implemented in firmware by reading from engineConfiguration
+// Implemented in bootloader with defines (bootloader has no config!)
+bool isSdCardEnabled();
+SPIDriver* getSdCardSpiDevice();
+Gpio getSdCardCsPin();
 
 #if EFI_PROD_CODE
 	struct SdLogBufferWriter final : public BufferedWriter<512> {

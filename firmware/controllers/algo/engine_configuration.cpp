@@ -927,6 +927,18 @@ void commonFrankensoAnalogInputs() {
 	engineConfiguration->vbattAdcChannel = EFI_ADC_14;
 }
 
+bool isSdCardEnabled() {
+	return engineConfiguration->isSdCardEnabled;
+}
+
+SPIDriver* getSdCardSpiDevice() {
+	return getSpiDevice(engineConfiguration->sdCardSpiDevice);
+}
+
+Gpio getSdCardCsPin() {
+	return engineConfiguration->sdCardCsPin;
+}
+
 // These symbols are weak so that a board_configuration.cpp file can override them
 __attribute__((weak)) void setBoardDefaultConfiguration() { }
 __attribute__((weak)) void setBoardConfigOverrides() { }
