@@ -38,119 +38,6 @@ static void printFatFsError(const char *str, FRESULT err) {
 	efiPrintf("FatFs Error \"%s\" %d", str, err);
 }
 
-size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
-	size_t bytesWritten;
-
-	totalLoggedBytes += count;
-
-	FRESULT err = f_write(sd_mem::getLogFileFd(), buffer, count, &bytesWritten);
-
-	if (bytesWritten != count) {
-		printFatFsError("write error or disk full", err);
-
-		// Close file and unmount volume
-		unmountSdFilesystem();
-		failed = true;
-		return 0;
-	} else {
-		writeCounter++;
-		totalWritesCounter++;
-		if (writeCounter >= F_SYNC_FREQUENCY) {
-			/**
-			 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
-			 * todo: one day someone should actually measure the relative cost of f_sync
-			 */
-			f_sync(sd_mem::getLogFileFd());
-			totalSyncCounter++;
-			writeCounter = 0;
-		}
-	}
-
-	return bytesWritten;
-}
-
-#else // not EFI_PROD_CODE (simulator)
-
-#include <fstream>
-
-bool mountSdFilesystem() {
-	// Stub so the loop thinks the MMC mounted OK
-	return true;
-}
-
-class SdLogBufferWriter final : public BufferedWriter<512> {
-public:
-	bool failed = false;
-
-	SdLogBufferWriter()
-		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc)
-	{
-		fs_ready = true;
-	}
-
-	size_t writeInternal(const char* buffer, size_t count) override {
-		m_stream.write(buffer, count);
-		m_stream.flush();
-		return count;
-	}
-
-private:
-	std::ofstream m_stream;
-};
-
-static SdLogBufferWriter logBuffer;
-
-#endif // EFI_PROD_CODE
-
-// Log 'regular' ECU log to MLG file
-void mlgLogger() {
-	while (true) {
-		// if the SPI device got un-picked somehow, cancel SD card
-		// Don't do this check at all if using SDMMC interface instead of SPI
-#if EFI_PROD_CODE && !defined(EFI_SDC_DEVICE)
-		if (engineConfiguration->sdCardSpiDevice == SPI_NONE) {
-			return;
-		}
-#endif
-
-		systime_t before = chVTGetSystemTime();
-
-		writeSdLogLine(sd_mem::getLogBuffer());
-
-		// Something went wrong (already handled), so cancel further writes
-		if (sd_mem::getLogBuffer().failed) {
-			return;
-		}
-
-		auto freq = engineConfiguration->sdCardLogFrequency;
-		if (freq > 250) {
-			freq = 250;
-		} else if (freq < 1) {
-			freq = 1;
-		}
-
-		systime_t period = CH_CFG_ST_FREQUENCY / freq;
-		chThdSleepUntilWindowed(before, before + period);
-	}
-}
-
-// Log binary trigger log
-static void sdTriggerLogger() {
-#if EFI_TOOTH_LOGGER
-	EnableToothLogger();
-
-	while (true) {
-		auto buffer = GetToothLoggerBufferBlocking();
-
-		if (buffer) {
-			sd_mem::getLogBuffer().write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
-			ReturnToothLoggerBuffer(buffer);
-		}
-
-	}
-#endif /* EFI_TOOTH_LOGGER */
-}
-
 static int incLogFileName() {
 	// tl;dr: figure out the name of the next log file
 	// 1. open the index file, read/parse the current counter
@@ -235,6 +122,123 @@ static bool createLogFile(int logFileIndex) {
 	return true;
 }
 
+size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
+	size_t bytesWritten;
+
+	totalLoggedBytes += count;
+
+	FRESULT err = f_write(sd_mem::getLogFileFd(), buffer, count, &bytesWritten);
+
+	if (bytesWritten != count) {
+		printFatFsError("write error or disk full", err);
+
+		// Close file and unmount volume
+		unmountSdFilesystem();
+		failed = true;
+		return 0;
+	} else {
+		writeCounter++;
+		totalWritesCounter++;
+		if (writeCounter >= F_SYNC_FREQUENCY) {
+			/**
+			 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
+			 * todo: one day someone should actually measure the relative cost of f_sync
+			 */
+			f_sync(sd_mem::getLogFileFd());
+			totalSyncCounter++;
+			writeCounter = 0;
+		}
+	}
+
+	return bytesWritten;
+}
+
+#else // not EFI_PROD_CODE (simulator)
+
+#include <fstream>
+
+bool mountSdFilesystem() {
+	// Stub so the loop thinks the MMC mounted OK
+	return true;
+}
+
+class SdLogBufferWriter final : public BufferedWriter<512> {
+public:
+	bool failed = false;
+
+	SdLogBufferWriter()
+		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc)
+	{
+	}
+
+	size_t writeInternal(const char* buffer, size_t count) override {
+		m_stream.write(buffer, count);
+		m_stream.flush();
+		return count;
+	}
+
+private:
+	std::ofstream m_stream;
+};
+
+namespace sd_mem {
+	SdLogBufferWriter& getLogBuffer() {
+		static SdLogBufferWriter logBuffer;
+		return logBuffer;
+	}
+}
+
+#endif // EFI_PROD_CODE
+
+// Log 'regular' ECU log to MLG file
+void mlgLogger() {
+	while (true) {
+		// if the SPI device got un-picked somehow, cancel SD card
+		// Don't do this check at all if using SDMMC interface instead of SPI
+#if EFI_PROD_CODE && !defined(EFI_SDC_DEVICE)
+		if (engineConfiguration->sdCardSpiDevice == SPI_NONE) {
+			return;
+		}
+#endif
+
+		systime_t before = chVTGetSystemTime();
+
+		writeSdLogLine(sd_mem::getLogBuffer());
+
+		// Something went wrong (already handled), so cancel further writes
+		if (sd_mem::getLogBuffer().failed) {
+			return;
+		}
+
+		auto freq = engineConfiguration->sdCardLogFrequency;
+		if (freq > 250) {
+			freq = 250;
+		} else if (freq < 1) {
+			freq = 1;
+		}
+
+		systime_t period = CH_CFG_ST_FREQUENCY / freq;
+		chThdSleepUntilWindowed(before, before + period);
+	}
+}
+
+// Log binary trigger log
+static void sdTriggerLogger() {
+#if EFI_TOOTH_LOGGER
+	EnableToothLogger();
+
+	while (true) {
+		auto buffer = GetToothLoggerBufferBlocking();
+
+		if (buffer) {
+			sd_mem::getLogBuffer().write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
+			ReturnToothLoggerBuffer(buffer);
+		}
+
+	}
+#endif /* EFI_TOOTH_LOGGER */
+}
+
 static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE);		// MMC monitor thread
 static THD_FUNCTION(sdCardLoggerThread, arg) {
 	(void)arg;
@@ -245,10 +249,12 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 		return;
 	}
 
-	int logFileIndex = incLogFileName();
-	if (!createLogFile(logFileIndex)) {
-		return;
-	}
+	#if EFI_PROD_CODE
+		int logFileIndex = incLogFileName();
+		if (!createLogFile(logFileIndex)) {
+			return;
+		}
+	#endif // EFI_PROD_CODE
 
 	#if EFI_TUNER_STUDIO
 		engine->outputChannels.sd_logging_internal = true;
@@ -271,8 +277,6 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 // }
 
 void initSdCardLogger() {
-	logName[0] = 0;
-
 	// addConsoleAction("sdinfo", sdStatistics);
 
 	chThdCreateStatic(sdCardLoggerStack, sizeof(sdCardLoggerStack), SD_CARD_LOGGER, sdCardLoggerThread, nullptr);

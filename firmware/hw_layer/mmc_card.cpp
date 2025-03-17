@@ -10,13 +10,10 @@
 #include "pch.h"
 #include "mmc_card.h"
 
-#if EFI_FILE_LOGGING
 
-#include "status_loop.h"
+#if EFI_FILE_LOGGING && EFI_PROD_CODE
 
 static bool fs_ready = false;
-
-#if EFI_PROD_CODE
 
 #include "ff.h"
 #include "mass_storage_init.h"
@@ -245,6 +242,5 @@ void unmountSdFilesystem() {
 
 	efiPrintf("MMC/SD card removed");
 }
-#endif
 
-#endif /* EFI_FILE_LOGGING */
+#endif // EFI_FILE_LOGGING && EFI_PROD_CODE
