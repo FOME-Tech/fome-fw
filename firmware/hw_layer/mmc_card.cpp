@@ -156,6 +156,11 @@ static int incLogFileName() {
 		goto err;
 	}
 
+	if (fileLength == 0) {
+		// File exists but no bytes read?
+		goto err;
+	}
+
 	if (std::errc{} == std::from_chars(data, data + fileLength, logFileIndex).ec) {
 		efiPrintf("SD log index (%s) size %d parsed index %d", data, fileLength, logFileIndex);
 		logFileIndex++;
