@@ -24,4 +24,7 @@ DDEFS += -DHW_ATLAS=1
 # Atlas has WiFi
 USE_WIFI = yes
 
+# Enable the SD card bootloader
+SD_BOOTLOADER = yes
+
 SHORT_BOARD_NAME = atlas

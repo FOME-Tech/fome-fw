@@ -162,6 +162,17 @@ include $(PROJECT_DIR)/controllers/controllers.mk
 include $(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER)/hw_ports.mk
 include $(PROJECT_DIR)/hw_layer/drivers/drivers.mk
 
+ifeq ($(SD_BOOTLOADER),yes)
+  DDEFS += -DSD_BOOTLOADER
+  include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
+  include $(PROJECT_DIR)/ext/FatFS/fatfs.mk
+  ALLCPPSRC += \
+				$(PROJECT_DIR)/hw_layer/mmc_card_attach.cpp \
+				$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_file.cpp \
+
+  ALLCSRC += $(PROJECT_DIR)/ext/openblt/Target/Source/file.c
+endif
+
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CSRC =  $(ALLCSRC) \
@@ -231,6 +242,7 @@ INCDIR = $(ALLINC) \
 	$(PROJECT_DIR)/ext \
 	$(PROJECT_DIR)/ext_algo \
 	$(GENERATED_DIR) \
+	$(PROJECT_DIR)/ext/FatFS \
 	$(UTIL_INC) \
 	$(PROJECT_DIR)/console_util \
 	$(PROJECT_DIR)/console \
