@@ -39,11 +39,12 @@ static int totalSyncCounter = 0;
 
 #include "rtc_helper.h"
 
+#include <charconv>
+
 #define SD_STATE_INIT "init"
 #define SD_STATE_MOUNTED "MOUNTED"
 #define SD_STATE_MOUNT_FAILED "MOUNT_FAILED"
 #define SD_STATE_OPEN_FAILED "OPEN_FAILED"
-#define SD_STATE_SEEK_FAILED "SEEK_FAILED"
 #define SD_STATE_NOT_INSERTED "NOT_INSERTED"
 #define SD_STATE_CONNECTING "CONNECTING"
 #define SD_STATE_MSD "MSD"
@@ -109,8 +110,6 @@ static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
 static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
 static SdLogBufferWriter& logBuffer = mmcCardCacheControlledStorage.usedPart.logBuffer;
 
-static int fatFsErrors = 0;
-
 static void mmcUnMount();
 
 static void setSdCardReady(bool value) {
@@ -119,29 +118,14 @@ static void setSdCardReady(bool value) {
 
 // print FAT error function
 static void printError(const char *str, FRESULT f_error) {
-	if (fatFsErrors++ > 16) {
-		// no reason to spam the console
-		return;
-	}
-
-	efiPrintf("FATfs Error \"%s\" %d", str, f_error);
+	efiPrintf("FatFs Error \"%s\" %d", str, f_error);
 }
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
-static int logFileIndex = MIN_FILE_INDEX;
 static char logName[_MAX_FILLER + 20];
 
-static void printMmcPinout() {
-	efiPrintf("MMC CS %s", hwPortname(engineConfiguration->sdCardCsPin));
-	// todo: we need to figure out the right SPI pinout, not just SPI2
-//	efiPrintf("MMC SCK %s:%d", portname(EFI_SPI2_SCK_PORT), EFI_SPI2_SCK_PIN);
-//	efiPrintf("MMC MISO %s:%d", portname(EFI_SPI2_MISO_PORT), EFI_SPI2_MISO_PIN);
-//	efiPrintf("MMC MOSI %s:%d", portname(EFI_SPI2_MOSI_PORT), EFI_SPI2_MOSI_PIN);
-}
-
 static void sdStatistics() {
-	printMmcPinout();
 	efiPrintf("SD enabled=%s status=%s", boolToString(engineConfiguration->isSdCardEnabled),
 			sdStatus);
 	printSpiConfig("SD", mmcSpiDevice);
@@ -150,48 +134,57 @@ static void sdStatistics() {
 	}
 }
 
-static void incLogFileName() {
-	memset(&FDLogFile, 0, sizeof(FIL));						// clear the memory
-	FRESULT err = f_open(&FDLogFile, LOG_INDEX_FILENAME, FA_READ);				// This file has the index for next log file name
+static int incLogFileName() {
+	// tl;dr: figure out the name of the next log file
+	// 1. open the index file, read/parse the current counter
+	// 2. increment it
+	// 3. write back to the index file
+	int logFileIndex = MIN_FILE_INDEX;
 
-	char data[_MAX_FILLER];
-	UINT result = 0;
+	FRESULT err = f_open(&FDLogFile, LOG_INDEX_FILENAME, FA_READ);
 	if (err != FR_OK && err != FR_EXIST) {
-			logFileIndex = MIN_FILE_INDEX;
-			efiPrintf("%s: not found or error: %d", LOG_INDEX_FILENAME, err);
-	} else {
-		f_read(&FDLogFile, (void*)data, sizeof(data), &result);
-
-		efiPrintf("Got content [%s] size %d", data, result);
-		f_close(&FDLogFile);
-		if (result < 5) {
-			data[result] = 0;
-			logFileIndex = maxI(MIN_FILE_INDEX, atoi(data));
-			if (absI(logFileIndex) == ATOI_ERROR_CODE) {
-				logFileIndex = MIN_FILE_INDEX;
-			} else {
-				logFileIndex++; // next file would use next file name
-			}
-		} else {
-			logFileIndex = MIN_FILE_INDEX;
-		}
+		efiPrintf("SD log index file (%s) not found or error: %d", LOG_INDEX_FILENAME, err);
+		goto err;
 	}
 
+	char data[20];
+	UINT fileLength;
+
+	err = f_read(&FDLogFile, (void*)data, sizeof(data), &fileLength);
+	if (err != FR_OK) {
+		efiPrintf("SD log index file (%s) failed to read: %d", LOG_INDEX_FILENAME, err);
+		goto err;
+	}
+
+	if (std::errc{} == std::from_chars(data, data + fileLength, logFileIndex).ec) {
+		efiPrintf("SD log index (%s) size %d parsed index %d", data, fileLength, logFileIndex);
+		logFileIndex++;
+	} else {
+		// Parse failure, reset to first file
+		logFileIndex = MIN_FILE_INDEX;
+	}
+
+err:
+	// Even in case of error, attempt to write the current index back to the
+	// file so we can read it out next time (and not fail)
+	f_close(&FDLogFile);
 	err = f_open(&FDLogFile, LOG_INDEX_FILENAME, FA_OPEN_ALWAYS | FA_WRITE);
 	itoa10(data, logFileIndex);
-	f_write(&FDLogFile, (void*)data, strlen(data), &result);
+	f_write(&FDLogFile, (void*)data, strlen(data), nullptr);
 	f_close(&FDLogFile);
 	efiPrintf("Done %d", logFileIndex);
+
+	return logFileIndex;
 }
 
-static void prepareLogFileName() {
+static void prepareLogFileName(int index) {
 	strcpy(logName, FOME_LOG_PREFIX);
 	char *ptr;
 
 	if (dateToStringShort(&logName[PREFIX_LEN])) {
 		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
 	} else {
-		ptr = itoa10(&logName[PREFIX_LEN], logFileIndex);
+		ptr = itoa10(&logName[PREFIX_LEN], index);
 	}
 
 	if (engineConfiguration->sdTriggerLog) {
@@ -207,11 +200,10 @@ static void prepareLogFileName() {
  * This function saves the name of the file in a global variable
  * so that we can later append to that file
  */
-static void createLogFile() {
-	memset(&FDLogFile, 0, sizeof(FIL));						// clear the memory
-	prepareLogFileName();
+static void createLogFile(int logFileIndex) {
+	prepareLogFileName(logFileIndex);
 
-	FRESULT err = f_open(&FDLogFile, logName, FA_OPEN_ALWAYS | FA_WRITE);				// Create new file
+	FRESULT err = f_open(&FDLogFile, logName, FA_CREATE_ALWAYS | FA_WRITE);				// Create new file
 	if (err != FR_OK && err != FR_EXIST) {
 		sdStatus = SD_STATE_OPEN_FAILED;
 		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: mount failed");
@@ -219,14 +211,6 @@ static void createLogFile() {
 		return;
 	}
 
-	err = f_lseek(&FDLogFile, f_size(&FDLogFile)); // Move to end of the file to append data
-	if (err) {
-		sdStatus = SD_STATE_SEEK_FAILED;
-		warning(ObdCode::CUSTOM_ERR_SD_SEEK_FAILED, "SD: seek failed");
-		printError("Seek error", err);
-		return;
-	}
-	f_sync(&FDLogFile);
 	setSdCardReady(true);						// everything Ok
 }
 
@@ -238,8 +222,14 @@ static void mmcUnMount() {
 		efiPrintf("Error: No File system is mounted. \"mountsd\" first");
 		return;
 	}
-	f_close(&FDLogFile);						// close file
-	f_sync(&FDLogFile);							// sync ALL
+
+	setSdCardReady(false);
+
+	// Close the log file (ignore errors, we're already in the shutdown path)
+	f_close(&FDLogFile);
+
+	// Unmount the volume
+	f_mount(nullptr, nullptr, 0);						// FatFs: Unregister work area prior to discard it
 
 #if HAL_USE_MMC_SPI
 	mmcDisconnect(&MMCD1);						// Brings the driver in a state safe for card removal.
@@ -250,9 +240,7 @@ static void mmcUnMount() {
 	sdcDisconnect(&EFI_SDC_DEVICE);
 	sdcStop(&EFI_SDC_DEVICE);
 #endif
-	f_mount(NULL, 0, 0);						// FATFS: Unregister work area prior to discard it
-	memset(&FDLogFile, 0, sizeof(FIL));			// clear FDLogFile
-	setSdCardReady(false);						// status = false
+
 	efiPrintf("MMC/SD card removed");
 }
 
@@ -367,6 +355,11 @@ static bool mountMmc() {
 	engine->outputChannels.sd_present = cardBlockDevice != nullptr;
 #endif
 
+	// if no card, don't try to mount FS
+	if (!cardBlockDevice) {
+		return false;
+	}
+
 #if HAL_USE_USB_MSD
 	// Wait for the USB stack to wake up, or a 5 second timeout, whichever occurs first
 	msg_t usbResult = usbConnectedSemaphore.wait(TIME_MS2I(5000));
@@ -385,17 +378,11 @@ static bool mountMmc() {
 	}
 #endif
 
-	// if no card, don't try to mount FS
-	if (!cardBlockDevice) {
-		return false;
-	}
-
 	// We were able to connect the SD card, mount the filesystem
-	memset(&MMC_FS, 0, sizeof(FATFS));
 	if (f_mount(&MMC_FS, "/", 1) == FR_OK) {
 		sdStatus = SD_STATE_MOUNTED;
-		incLogFileName();
-		createLogFile();
+		int logFileIndex = incLogFileName();
+		createLogFile(logFileIndex);
 		fileCreatedCounter++;
 		efiPrintf("MMC/SD mounted!");
 		return true;
@@ -553,7 +540,6 @@ void initEarlyMmcCard() {
 	logName[0] = 0;
 
 	addConsoleAction("sdinfo", sdStatistics);
-	addConsoleAction("incfilename", incLogFileName);
 #endif // EFI_PROD_CODE
 }
 
