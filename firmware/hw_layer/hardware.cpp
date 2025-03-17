@@ -28,8 +28,6 @@
 #include "mpu_util.h"
 #endif /* EFI_PROD_CODE */
 
-#include "mmc_card.h"
-
 #include "AdcConfiguration.h"
 #include "idle_hardware.h"
 #include "trigger_central.h"

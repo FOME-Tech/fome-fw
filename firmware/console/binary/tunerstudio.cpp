@@ -80,7 +80,6 @@
 #include "bench_test.h"
 #include "gitversion.h"
 #include "status_loop.h"
-#include "mmc_card.h"
 
 #include "signature.h"
 

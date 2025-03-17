@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "wifi_socket.h"
-#include "thread_controller.h"
 
 #if EFI_WIFI
 
+#include "wifi_socket.h"
+#include "thread_controller.h"
 #include "driver/include/m2m_wifi.h"
 #include "socket/include/socket.h"
 

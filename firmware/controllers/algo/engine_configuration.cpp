@@ -931,6 +931,7 @@ bool isSdCardEnabled() {
 	return engineConfiguration->isSdCardEnabled;
 }
 
+#if EFI_PROD_CODE
 SPIDriver* getSdCardSpiDevice() {
 	return getSpiDevice(engineConfiguration->sdCardSpiDevice);
 }
@@ -938,6 +939,7 @@ SPIDriver* getSdCardSpiDevice() {
 Gpio getSdCardCsPin() {
 	return engineConfiguration->sdCardCsPin;
 }
+#endif // EFI_PROD_CODE
 
 // These symbols are weak so that a board_configuration.cpp file can override them
 __attribute__((weak)) void setBoardDefaultConfiguration() { }

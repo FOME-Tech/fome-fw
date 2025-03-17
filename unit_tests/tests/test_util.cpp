@@ -14,7 +14,6 @@
 #include "malfunction_central.h"
 #include "cli_registry.h"
 
-#include "mmc_card.h"
 #include "fl_stack.h"
 
 #include "big_buffer.h"

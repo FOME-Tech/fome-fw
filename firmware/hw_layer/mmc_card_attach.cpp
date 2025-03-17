@@ -8,9 +8,10 @@
  */
 
 #include "pch.h"
-#include "mmc_card.h"
 
 #if EFI_FILE_LOGGING && EFI_PROD_CODE
+
+#include "mmc_card.h"
 
 #if HAL_USE_MMC_SPI
 // Don't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),

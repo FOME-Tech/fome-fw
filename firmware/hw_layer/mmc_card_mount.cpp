@@ -1,11 +1,11 @@
 #include "pch.h"
 
+#if EFI_FILE_LOGGING && EFI_PROD_CODE
+
 #include "mmc_card.h"
 
 #include "ff.h"
 #include "mass_storage_init.h"
-
-#if EFI_FILE_LOGGING && EFI_PROD_CODE
 
 static bool fs_ready = false;
 

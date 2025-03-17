@@ -33,7 +33,6 @@
 
 #include "trigger_central.h"
 #include "sensor_reader.h"
-#include "mmc_card.h"
 #include "console_io.h"
 #include "malfunction_central.h"
 #include "speed_density.h"
