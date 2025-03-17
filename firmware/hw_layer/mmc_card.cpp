@@ -539,16 +539,11 @@ bool isSdCardAlive(void) {
 	return fs_ready;
 }
 
-// Pre-config load init
-void initEarlyMmcCard() {
-#if EFI_PROD_CODE
+void initMmcCard() {
 	logName[0] = 0;
 
 	addConsoleAction("sdinfo", sdStatistics);
-#endif // EFI_PROD_CODE
-}
 
-void initMmcCard() {
 	chThdCreateStatic(mmcThreadStack, sizeof(mmcThreadStack), PRIO_MMC, (tfunc_t)(void*) MMCmonThread, NULL);
 }
 

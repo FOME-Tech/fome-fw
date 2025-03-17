@@ -327,10 +327,6 @@ void initHardwareNoConfig() {
 	initTriggerCentral();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
-#if EFI_FILE_LOGGING
-	initEarlyMmcCard();
-#endif // EFI_FILE_LOGGING
-
 #if HAL_USE_PAL && EFI_PROD_CODE
 	// this should be initialized before detectBoardType()
 	efiExtiInit();
