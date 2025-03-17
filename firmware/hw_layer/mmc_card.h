@@ -12,6 +12,7 @@
 #include "buffered_writer.h"
 
 BaseBlockDevice* initializeMmcBlockDevice();
+void stopMmcBlockDevice();
 
 // Initialize the SD card and mount its filesystem
 // Returns true if the filesystem was successfully mounted for writing.
@@ -38,6 +39,7 @@ Gpio getSdCardCsPin();
 	// These are to get objects that need to be in memory safe
 	// to access with the SD DMA controller
 	namespace sd_mem {
+		FATFS* getFs();
 		FIL* getLogFileFd();
 		SdLogBufferWriter& getLogBuffer();
 	}

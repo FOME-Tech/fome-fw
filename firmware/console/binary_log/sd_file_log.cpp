@@ -273,18 +273,7 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 	}
 }
 
-// static void sdStatistics() {
-// 	efiPrintf("SD enabled=%s status=%s", boolToString(engineConfiguration->isSdCardEnabled),
-// 			sdStatus);
-// 	printSpiConfig("SD", mmcSpiDevice);
-// 	if (fs_ready) {
-// 		efiPrintf("filename=%s size=%d", logName, totalLoggedBytes);
-// 	}
-// }
-
 void initSdCardLogger() {
-	// addConsoleAction("sdinfo", sdStatistics);
-
 	chThdCreateStatic(sdCardLoggerStack, sizeof(sdCardLoggerStack), SD_CARD_LOGGER, sdCardLoggerThread, nullptr);
 }
 
