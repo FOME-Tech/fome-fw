@@ -45,6 +45,7 @@ static int incLogFileName() {
 	// 3. write back to the index file
 	int logFileIndex = MIN_FILE_INDEX;
 
+	memset(sd_mem::getLogFileFd(), 0, sizeof(FIL));
 	FRESULT err = f_open(sd_mem::getLogFileFd(), LOG_INDEX_FILENAME, FA_READ);
 	if (err != FR_OK && err != FR_EXIST) {
 		efiPrintf("SD log index file (%s) not found or error: %d", LOG_INDEX_FILENAME, err);
@@ -77,6 +78,8 @@ err:
 	// Even in case of error, attempt to write the current index back to the
 	// file so we can read it out next time (and not fail)
 	f_close(sd_mem::getLogFileFd());
+
+	memset(sd_mem::getLogFileFd(), 0, sizeof(FIL));
 	err = f_open(sd_mem::getLogFileFd(), LOG_INDEX_FILENAME, FA_OPEN_ALWAYS | FA_WRITE);
 	itoa10(data, logFileIndex);
 	f_write(sd_mem::getLogFileFd(), (void*)data, strlen(data), nullptr);
@@ -112,7 +115,8 @@ static void prepareLogFileName(int index) {
 static bool createLogFile(int logFileIndex) {
 	prepareLogFileName(logFileIndex);
 
-	FRESULT err = f_open(sd_mem::getLogFileFd(), logName, FA_CREATE_ALWAYS | FA_WRITE);				// Create new file
+	memset(sd_mem::getLogFileFd(), 0, sizeof(FIL));
+	FRESULT err = f_open(sd_mem::getLogFileFd(), logName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (err != FR_OK && err != FR_EXIST) {
 		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: mount failed");
 		printFatFsError("FS mount failed", err);	// else - show error
