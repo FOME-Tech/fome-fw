@@ -21,6 +21,16 @@ extern "C" void __core_init() {
 	// to the main firmware (which will then enable them itself)
 }
 
+void AssertFailure(blt_char *file, blt_int32u line)
+{
+  /* hang the software so that it requires a hard reset */
+  for (;;)
+  {
+    /* keep servicing the watchdog so that this one does not cause a reset */
+    CopService();
+  }
+} /*** end of AssertFailure ***/
+
 blt_int32u TimerGet() {
 	return 0;
 }
