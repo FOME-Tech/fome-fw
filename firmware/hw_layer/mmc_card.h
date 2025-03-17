@@ -13,12 +13,12 @@
 
 #define DOT_MLG ".mlg"
 
-bool isSdCardAlive();
-
 // Initialize the SD card and mount its filesystem
 // Returns true if the filesystem was successfully mounted for writing.
 bool mountSdFilesystem();
 void unmountSdFilesystem();
+
+bool isSdCardAlive();
 
 void onUsbConnectedNotifyMmcI();
 
