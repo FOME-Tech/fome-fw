@@ -16,8 +16,11 @@
 */
 
 #include "pch.h"
+
+#if HAL_USE_USB_MSD
 #include "mmc_card.h"
 #include "mass_storage_device.h"
+#endif // HAL_USE_USB_MSD
 
 #if HAL_USE_SERIAL_USB
 
