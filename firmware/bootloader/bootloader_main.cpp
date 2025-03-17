@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "usbconsole.h"
 #include "hardware.h"
+#include "rusefi.h"
 
 extern "C" {
 	#include "boot.h"
@@ -54,6 +55,7 @@ protected:
 static BlinkyThread blinky;
 
 int main(void) {
+	preHalInit();
 	halInit();
 	chSysInit();
 
@@ -84,3 +86,6 @@ void efiSetPadMode(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 
 	palSetPadMode(port, pin, mode);
 }
+
+// Weak linked default implementation (not necessarily required for all boards)
+__attribute__((weak)) void preHalInit() { }
