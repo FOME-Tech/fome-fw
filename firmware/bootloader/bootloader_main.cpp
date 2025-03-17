@@ -9,7 +9,7 @@ extern "C" {
 	#include "shared_params.h"
 }
 
-class BlinkyThread : public chibios_rt::BaseStaticThread<256> {
+class : public chibios_rt::BaseStaticThread<256> {
 protected:
 	void main(void) override {
 		Gpio yellow = getWarningLedPin();
@@ -50,9 +50,26 @@ protected:
 			chThdSleepMilliseconds(250);
 		}
 	}
-};
+} blinky;
 
-static BlinkyThread blinky;
+class : public chibios_rt::BaseStaticThread<1024> {
+	void main() override {
+		// Init openblt shared params
+		SharedParamsInit();
+
+		// Init openblt itself
+		BootInit();
+
+		#if (BOOT_FILE_SYS_ENABLE > 0)
+			// Always attempt an SD firmware update (get you unstuck from corrupt firmware)
+			FileHandleFirmwareUpdateRequest();
+		#endif
+
+		while (true) {
+			BootTask();
+		}
+	}
+} openblt;
 
 int main(void) {
 	preHalInit();
@@ -64,19 +81,11 @@ int main(void) {
 	// start the blinky thread
 	blinky.start(NORMALPRIO + 10);
 
-	// Init openblt shared params
-	SharedParamsInit();
-
-	// Init openblt itself
-	BootInit();
-
-	#if (BOOT_FILE_SYS_ENABLE > 0)
-		// Always attempt an SD firmware update (get you unstuck from corrupt firmware)
-		FileHandleFirmwareUpdateRequest();
-	#endif
+	// Start openblt on its own thread
+	openblt.start(NORMALPRIO + 5);
 
 	while (true) {
-		BootTask();
+		chThdSleepMilliseconds(1);
 	}
 }
 
