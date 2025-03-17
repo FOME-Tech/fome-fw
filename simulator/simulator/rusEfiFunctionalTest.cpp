@@ -19,7 +19,7 @@
 #include "main_trigger_callback.h"
 #include "bench_test.h"
 #include "tunerstudio.h"
-#include "mmc_card.h"
+#include "sd_file_log.h"
 #include "memstreams.h"
 #include <chprintf.h>
 #include "rusefi_lua.h"
@@ -107,7 +107,7 @@ void rusEfiFunctionalTest(void) {
 
 	startLoggingProcessor();
 
-	initMmcCard();
+	initSdCardLogger();
 
 	runChprintfTest();
 

@@ -8,38 +8,22 @@
  */
 
 #include "pch.h"
+#include "mmc_card.h"
 
 #if EFI_FILE_LOGGING
 
-#include "buffered_writer.h"
 #include "status_loop.h"
-#include "binary_logging.h"
 
 static bool fs_ready = false;
 
-int totalLoggedBytes = 0;
-
 #if EFI_PROD_CODE
 
-static int fileCreatedCounter = 0;
-static int writeCounter = 0;
-static int totalWritesCounter = 0;
-static int totalSyncCounter = 0;
-
-#include <stdio.h>
-#include <string.h>
-#include "mmc_card.h"
 #include "ff.h"
 #include "mass_storage_init.h"
-
-#include "rtc_helper.h"
-
-#include <charconv>
 
 #define SD_STATE_INIT "init"
 #define SD_STATE_MOUNTED "MOUNTED"
 #define SD_STATE_MOUNT_FAILED "MOUNT_FAILED"
-#define SD_STATE_OPEN_FAILED "OPEN_FAILED"
 #define SD_STATE_NOT_INSERTED "NOT_INSERTED"
 #define SD_STATE_CONNECTING "CONNECTING"
 #define SD_STATE_MSD "MSD"
@@ -48,18 +32,6 @@ static int totalSyncCounter = 0;
 
 // todo: shall we migrate to enum with enum2string for consistency? maybe not until we start reading sdStatus?
 static const char *sdStatus = SD_STATE_INIT;
-
-// at about 20Hz we write about 2Kb per second, looks like we flush once every ~2 seconds
-#define F_SYNC_FREQUENCY 10
-
-#define LOG_INDEX_FILENAME "index.txt"
-
-#define FOME_LOG_PREFIX "fome_"
-#define PREFIX_LEN 5
-#define SHORT_TIME_LEN 13
-
-#define LS_RESPONSE "ls_result"
-#define FILE_LIST_MAX_COUNT 20
 
 #if HAL_USE_MMC_SPI
 // Don't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),
@@ -77,12 +49,6 @@ static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
 
 #endif /* HAL_USE_MMC_SPI */
 
-struct SdLogBufferWriter final : public BufferedWriter<512> {
-	bool failed = false;
-
-	size_t writeInternal(const char* buffer, size_t count) override;
-};
-
 // On STM32H7, these objects need their own MPU region if using SDMMC1
 struct {
 	struct {
@@ -98,115 +64,16 @@ struct {
 } mmcCardCacheControlledStorage SDMMC_MEMORY(2048);
 
 static FATFS& MMC_FS = mmcCardCacheControlledStorage.usedPart.fs;
-static FIL& FDLogFile = mmcCardCacheControlledStorage.usedPart.file;
-static SdLogBufferWriter& logBuffer = mmcCardCacheControlledStorage.usedPart.logBuffer;
 
-static void setSdCardReady(bool value) {
-	fs_ready = value;
+namespace sd_mem {
+FIL* getLogFileFd() {
+	return &mmcCardCacheControlledStorage.usedPart.file;
 }
 
-// print FAT error function
-static void printError(const char *str, FRESULT f_error) {
-	efiPrintf("FatFs Error \"%s\" %d", str, f_error);
+SdLogBufferWriter& getLogBuffer() {
+	return mmcCardCacheControlledStorage.usedPart.logBuffer;
 }
-
-// 10 because we want at least 4 character name
-#define MIN_FILE_INDEX 10
-static char logName[_MAX_FILLER + 20];
-
-static void sdStatistics() {
-	efiPrintf("SD enabled=%s status=%s", boolToString(engineConfiguration->isSdCardEnabled),
-			sdStatus);
-	printSpiConfig("SD", mmcSpiDevice);
-	if (isSdCardAlive()) {
-		efiPrintf("filename=%s size=%d", logName, totalLoggedBytes);
-	}
-}
-
-static int incLogFileName() {
-	// tl;dr: figure out the name of the next log file
-	// 1. open the index file, read/parse the current counter
-	// 2. increment it
-	// 3. write back to the index file
-	int logFileIndex = MIN_FILE_INDEX;
-
-	FRESULT err = f_open(&FDLogFile, LOG_INDEX_FILENAME, FA_READ);
-	if (err != FR_OK && err != FR_EXIST) {
-		efiPrintf("SD log index file (%s) not found or error: %d", LOG_INDEX_FILENAME, err);
-		goto err;
-	}
-
-	char data[20];
-	UINT fileLength;
-
-	err = f_read(&FDLogFile, (void*)data, sizeof(data), &fileLength);
-	if (err != FR_OK) {
-		efiPrintf("SD log index file (%s) failed to read: %d", LOG_INDEX_FILENAME, err);
-		goto err;
-	}
-
-	if (fileLength == 0) {
-		// File exists but no bytes read?
-		goto err;
-	}
-
-	if (std::errc{} == std::from_chars(data, data + fileLength, logFileIndex).ec) {
-		efiPrintf("SD log index (%s) size %d parsed index %d", data, fileLength, logFileIndex);
-		logFileIndex++;
-	} else {
-		// Parse failure, reset to first file
-		logFileIndex = MIN_FILE_INDEX;
-	}
-
-err:
-	// Even in case of error, attempt to write the current index back to the
-	// file so we can read it out next time (and not fail)
-	f_close(&FDLogFile);
-	err = f_open(&FDLogFile, LOG_INDEX_FILENAME, FA_OPEN_ALWAYS | FA_WRITE);
-	itoa10(data, logFileIndex);
-	f_write(&FDLogFile, (void*)data, strlen(data), nullptr);
-	f_close(&FDLogFile);
-	efiPrintf("Done %d", logFileIndex);
-
-	return logFileIndex;
-}
-
-static void prepareLogFileName(int index) {
-	strcpy(logName, FOME_LOG_PREFIX);
-	char *ptr;
-
-	if (dateToStringShort(&logName[PREFIX_LEN])) {
-		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
-	} else {
-		ptr = itoa10(&logName[PREFIX_LEN], index);
-	}
-
-	if (engineConfiguration->sdTriggerLog) {
-		strcat(ptr, ".teeth");
-	} else {
-		strcat(ptr, DOT_MLG);
-	}
-}
-
-/**
- * @brief Create a new file with the specified name
- *
- * This function saves the name of the file in a global variable
- * so that we can later append to that file
- */
-static void createLogFile(int logFileIndex) {
-	prepareLogFileName(logFileIndex);
-
-	FRESULT err = f_open(&FDLogFile, logName, FA_CREATE_ALWAYS | FA_WRITE);				// Create new file
-	if (err != FR_OK && err != FR_EXIST) {
-		sdStatus = SD_STATE_OPEN_FAILED;
-		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: mount failed");
-		printError("FS mount failed", err);	// else - show error
-		return;
-	}
-
-	setSdCardReady(true);						// everything Ok
-}
+} // namespace sd_mem
 
 #if HAL_USE_USB_MSD
 
@@ -344,6 +211,7 @@ bool mountSdFilesystem() {
 	if (f_mount(&MMC_FS, "/", 1) == FR_OK) {
 		sdStatus = SD_STATE_MOUNTED;
 		efiPrintf("SD card mounted!");
+		fs_ready = true;
 		return true;
 	} else {
 		sdStatus = SD_STATE_MOUNT_FAILED;
@@ -352,15 +220,15 @@ bool mountSdFilesystem() {
 }
 
 void unmountSdFilesystem() {
-	if (!isSdCardAlive()) {
+	if (!fs_ready) {
 		efiPrintf("Error: No File system is mounted. \"mountsd\" first");
 		return;
 	}
 
-	setSdCardReady(false);
+	fs_ready = false;
 
-	// Close the log file (ignore errors, we're already in the shutdown path)
-	f_close(&FDLogFile);
+	// // Close the log file (ignore errors, we're already in the shutdown path)
+	// f_close(&FDLogFile);
 
 	// Unmount the volume
 	f_mount(nullptr, nullptr, 0);						// FatFs: Unregister work area prior to discard it
@@ -377,159 +245,6 @@ void unmountSdFilesystem() {
 
 	efiPrintf("MMC/SD card removed");
 }
-
-size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
-	size_t bytesWritten;
-
-	totalLoggedBytes += count;
-
-	FRESULT err = f_write(&FDLogFile, buffer, count, &bytesWritten);
-
-	if (bytesWritten != count) {
-		printError("write error or disk full", err);
-
-		// Close file and unmount volume
-		unmountSdFilesystem();
-		failed = true;
-		return 0;
-	} else {
-		writeCounter++;
-		totalWritesCounter++;
-		if (writeCounter >= F_SYNC_FREQUENCY) {
-			/**
-			 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
-			 * todo: one day someone should actually measure the relative cost of f_sync
-			 */
-			f_sync(&FDLogFile);
-			totalSyncCounter++;
-			writeCounter = 0;
-		}
-	}
-
-	return bytesWritten;
-}
-
-#else // not EFI_PROD_CODE (simulator)
-
-#include <fstream>
-
-bool mountSdFilesystem() {
-	// Stub so the loop thinks the MMC mounted OK
-	return true;
-}
-
-class SdLogBufferWriter final : public BufferedWriter<512> {
-public:
-	bool failed = false;
-
-	SdLogBufferWriter()
-		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc)
-	{
-		fs_ready = true;
-	}
-
-	size_t writeInternal(const char* buffer, size_t count) override {
-		m_stream.write(buffer, count);
-		m_stream.flush();
-		return count;
-	}
-
-private:
-	std::ofstream m_stream;
-};
-
-static SdLogBufferWriter logBuffer;
-
-#endif // EFI_PROD_CODE
-
-// Log 'regular' ECU log to MLG file
-static void mlgLogger();
-
-// Log binary trigger log
-static void sdTriggerLogger();
-
-static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE);		// MMC monitor thread
-static THD_FUNCTION(sdCardLoggerThread, arg) {
-	(void)arg;
-	chRegSetThreadName("MMC Card Logger");
-
-	if (!mountSdFilesystem()) {
-		// no card present (or mounted via USB), don't do internal logging
-		return;
-	}
-
-	int logFileIndex = incLogFileName();
-	createLogFile(logFileIndex);
-	fileCreatedCounter++;
-
-	#if EFI_TUNER_STUDIO
-		engine->outputChannels.sd_logging_internal = true;
-	#endif
-
-	if (engineConfiguration->sdTriggerLog) {
-		sdTriggerLogger();
-	} else {
-		mlgLogger();
-	}
-}
-
-void mlgLogger() {
-	while (true) {
-		// if the SPI device got un-picked somehow, cancel SD card
-		// Don't do this check at all if using SDMMC interface instead of SPI
-#if EFI_PROD_CODE && !defined(EFI_SDC_DEVICE)
-		if (engineConfiguration->sdCardSpiDevice == SPI_NONE) {
-			return;
-		}
 #endif
-
-		systime_t before = chVTGetSystemTime();
-
-		writeSdLogLine(logBuffer);
-
-		// Something went wrong (already handled), so cancel further writes
-		if (logBuffer.failed) {
-			return;
-		}
-
-		auto freq = engineConfiguration->sdCardLogFrequency;
-		if (freq > 250) {
-			freq = 250;
-		} else if (freq < 1) {
-			freq = 1;
-		}
-
-		systime_t period = CH_CFG_ST_FREQUENCY / freq;
-		chThdSleepUntilWindowed(before, before + period);
-	}
-}
-
-static void sdTriggerLogger() {
-#if EFI_TOOTH_LOGGER
-	EnableToothLogger();
-
-	while (true) {
-		auto buffer = GetToothLoggerBufferBlocking();
-
-		if (buffer) {
-			logBuffer.write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
-			ReturnToothLoggerBuffer(buffer);
-		}
-
-	}
-#endif /* EFI_TOOTH_LOGGER */
-}
-
-bool isSdCardAlive(void) {
-	return fs_ready;
-}
-
-void initSdCardLogger() {
-	logName[0] = 0;
-
-	addConsoleAction("sdinfo", sdStatistics);
-
-	chThdCreateStatic(sdCardLoggerStack, sizeof(sdCardLoggerStack), SD_CARD_LOGGER, sdCardLoggerThread, nullptr);
-}
 
 #endif /* EFI_FILE_LOGGING */
