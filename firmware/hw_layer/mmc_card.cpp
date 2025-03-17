@@ -88,10 +88,12 @@ void onUsbConnectedNotifyMmcI() {
  * Returns a BaseBlockDevice* corresponding to the SD card if successful, otherwise nullptr.
  */
 BaseBlockDevice* initializeMmcBlockDevice() {
+	#if !EFI_BOOTLOADER
 	// Don't try to mount SD card in case of fatal error - hardware may be in an unexpected state
 	if (hasFirmwareError()) {
 		return nullptr;
 	}
+	#endif // EFI_BOOTLOADER
 	
 	mmcSpiDevice = getSdCardSpiDevice();
 
