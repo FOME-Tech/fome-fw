@@ -224,9 +224,6 @@ void unmountSdFilesystem() {
 
 	fs_ready = false;
 
-	// // Close the log file (ignore errors, we're already in the shutdown path)
-	// f_close(&FDLogFile);
-
 	// Unmount the volume
 	f_mount(nullptr, nullptr, 0);						// FatFs: Unregister work area prior to discard it
 

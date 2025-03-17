@@ -132,7 +132,9 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 	if (bytesWritten != count) {
 		printFatFsError("write error or disk full", err);
 
-		// Close file and unmount volume
+		// Close file and unmount volume (ignore errors, we're already in the shutdown path)
+		f_close(sd_mem::getLogFileFd());
+
 		unmountSdFilesystem();
 		failed = true;
 		return 0;
