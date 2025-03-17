@@ -5,145 +5,21 @@
 #if EFI_WIFI
 
 #include "driver/include/m2m_wifi.h"
-#include "socket/include/socket.h"
+
+#include "lwipthread.h"
+
+#include <lwip/opt.h>
+#include <lwip/def.h>
+#include <lwip/mem.h>
+#include <lwip/pbuf.h>
+#include <lwip/sys.h>
+#include <lwip/stats.h>
+#include <lwip/snmp.h>
+#include <lwip/tcpip.h>
+#include <netif/etharp.h>
+#include <lwip/netifapi.h>
 
 static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
-
-/*static*/ ServerSocket* ServerSocket::s_serverList = nullptr;
-
-ServerSocket::ServerSocket() {
-	// Add server to linked list
-	m_nextServer = s_serverList;
-	s_serverList = this;
-
-	// Set up queue
-	iqObjectInit(&m_recvQueue, m_recvQueueBuffer, sizeof(m_recvQueueBuffer), nullptr, nullptr);
-}
-
-void ServerSocket::startListening(const sockaddr_in& addr) {
-	m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
-	bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
-}
-
-void ServerSocket::onAccept(int connectedSocket) {
-	m_connectedSocket = connectedSocket;
-
-	recv(m_connectedSocket, &m_recvBuf, 1, 0);
-}
-
-void ServerSocket::onClose() {
-	close(m_connectedSocket);
-
-	m_connectedSocket = -1;
-
-	{
-		chibios_rt::CriticalSectionLocker csl;
-		iqResetI(&m_recvQueue);
-	}
-}
-
-void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
-	{
-		chibios_rt::CriticalSectionLocker csl;
-
-		for (size_t i = 0; i < recvSize; i++) {
-			iqPutI(&m_recvQueue, buffer[i]);
-		}
-	}
-
-	size_t nextRecv;
-	if (remaining < 1) {
-		// Always try to read at least 1 byte
-		nextRecv = 1;
-	} else if (remaining > sizeof(m_recvBuf)) {
-		// Remaining is too big for the buffer, so just read one buffer worth
-		nextRecv = sizeof(m_recvBuf);
-	} else {
-		// The full thing will fit, try to read it
-		nextRecv = remaining;
-	}
-
-	// start the next recv
-	recv(m_connectedSocket, &m_recvBuf, nextRecv, 0);
-}
-
-bool ServerSocket::hasConnectedSocket() const {
-	return m_connectedSocket != -1;
-}
-
-/*static*/ bool ServerSocket::checkSend() {
-	bool result = false;
-
-	auto current = s_serverList;
-
-	while (current) {
-		result |= current->trySendImpl();
-		current = current->m_nextServer;
-	}
-
-	return result;
-}
-
-void ServerSocket::send(uint8_t* buffer, size_t size) {
-	m_sendBuffer = buffer;
-	m_sendSize = size;
-	m_sendRequest = true;
-
-	// Wake the driver to perform the actual send
-	isrSemaphore.signal();
-
-	// Wait for this chunk to complete
-	m_sendDoneSemaphore.wait();
-}
-
-void ServerSocket::onSendDone() {
-	// Send completed, notify caller!
-	chibios_rt::CriticalSectionLocker csl;
-	m_sendDoneSemaphore.signalI();
-}
-
-size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
-	return iqReadTimeout(&m_recvQueue, buffer, size, timeout);
-}
-
-/*static*/ ServerSocket* ServerSocket::findListener(int sock) {
-	auto current = s_serverList;
-
-	while (current) {
-		if (current->m_listenerSocket == sock) {
-			break;
-		}
-
-		current = current->m_nextServer;
-	}
-
-	return current;
-}
-
-/*static*/ ServerSocket* ServerSocket::findConnected(int sock) {
-	auto current = s_serverList;
-
-	while (current) {
-		if (current->m_connectedSocket == sock) {
-			break;
-		}
-
-		current = current->m_nextServer;
-	}
-
-	return current;
-}
-
-bool ServerSocket::trySendImpl() {
-	if ((m_connectedSocket != -1) && m_sendRequest) {
-		::send(m_connectedSocket, (void*)m_sendBuffer, m_sendSize, 0);
-		m_sendRequest = false;
-
-		return true;
-	}
-
-	return false;
-}
 
 void os_hook_isr() {
 	isrSemaphore.signalI();
@@ -162,48 +38,130 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	}
 }
 
-static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
-	switch (u8Msg) {
-		case SOCKET_MSG_BIND: {
-			auto bindMsg = reinterpret_cast<tstrSocketBindMsg*>(pvMsg);
-			if (bindMsg && bindMsg->status == 0) {
-				// Socket bind complete, now listen!
-				listen(sock, 1);
-			}
-		} break;
-		case SOCKET_MSG_LISTEN: {
-			auto listenMsg = reinterpret_cast<tstrSocketListenMsg*>(pvMsg);
-			if (listenMsg && listenMsg->status == 0) {
-				// Listening, now accept a connection
-				accept(sock, nullptr, nullptr);
-			}
-		} break;
-		case SOCKET_MSG_ACCEPT: {
-			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
-			if (acceptMsg && (acceptMsg->sock >= 0)) {
-				if (auto server = ServerSocket::findListener(sock)) {
-					server->onAccept(acceptMsg->sock);
-				}
-			}
-		} break;
-		case SOCKET_MSG_RECV: {
-			auto recvMsg = reinterpret_cast<tstrSocketRecvMsg*>(pvMsg);
-			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
-				if (auto server = ServerSocket::findConnected(sock)) {
-					server->onRecv(recvMsg->pu8Buffer, recvMsg->s16BufferSize, recvMsg->u16RemainingSize);
-				}
-			} else {
-				if (auto server = ServerSocket::findConnected(sock)) {
-					server->onClose();
-				}
-			}
-		} break;
-		case SOCKET_MSG_SEND: {
-			if (auto server = ServerSocket::findConnected(sock)) {
-				server->onSendDone();
-			}
-		} break;
+static netif thisif;
+
+void ethernetCallback(uint8 u8MsgType, void * pvMsg,void * pvCtrlBuf) {
+	switch (u8MsgType) {
+	case M2M_WIFI_RESP_ETHERNET_RX_PACKET:
+		auto frame = reinterpret_cast<const uint8_t*>(pvMsg);
+		auto ctrlBuf = reinterpret_cast<const tstrM2mIpCtrlBuf*>(pvCtrlBuf);
+
+		size_t len = ctrlBuf->u16DataSize;
+
+		#if ETH_PAD_SIZE
+			len += ETH_PAD_SIZE;        /* allow room for Ethernet padding */
+		#endif
+
+		pbuf* p = pbuf_alloc(PBUF_RAW, len, PBUF_POOL);
+
+		if (!p) {
+			// couldn't allocate, drop the frame
+			return;
+		}
+
+		#if ETH_PAD_SIZE
+			pbuf_header(p, -ETH_PAD_SIZE); /* drop the padding word */
+		#endif
+
+		// copy the frame in to the pbuf
+		pbuf_take(p, frame, len);
+
+		#if ETH_PAD_SIZE
+			pbuf_header(*p, ETH_PAD_SIZE); /* reclaim the padding word */
+		#endif
+
+		auto ethhdr = reinterpret_cast<const eth_hdr*>(p->payload);
+		switch (htons(ethhdr->type)) {
+			/* IP or ARP packet? */
+			case ETHTYPE_IP:
+			case ETHTYPE_ARP:
+				/* full packet send to tcpip_thread to process */
+				if (thisif.input(p, &thisif) == ERR_OK)
+				break;
+				LWIP_DEBUGF(NETIF_DEBUG, ("ethernetif_input: IP input error\n"));
+			/* Falls through */
+			default:
+				pbuf_free(p);
+		}
+
+		break;
 	}
+}
+
+static NO_CACHE uint8_t ethernetBuffer[1600];
+static chibios_rt::Mutex wifiAccessMutex;
+
+static err_t low_level_output(struct netif *netif, struct pbuf *p) {
+	if (netif != &thisif) {
+		return ERR_IF;
+	}
+
+	#if ETH_PAD_SIZE
+		// drop the padding word
+		pbuf_header(p, -ETH_PAD_SIZE);
+	#endif
+
+	#if ETH_PAD_SIZE
+		// drop the padding word
+		pbuf_header(p, -ETH_PAD_SIZE);
+	#endif
+
+	{
+		chibios_rt::MutexLocker lock(wifiAccessMutex);
+
+		// copy pbuf -> tx buffer
+		pbuf_copy_partial(p, ethernetBuffer, p->tot_len, 0);
+
+		// transmit the frame
+		m2m_wifi_send_ethernet_pkt(ethernetBuffer, p->tot_len);
+	}
+
+	#if ETH_PAD_SIZE
+		// reclaim the padding word
+		pbuf_header(p, ETH_PAD_SIZE);
+	#endif
+
+	// isrSemaphore.signal();
+
+	return ERR_OK;
+}
+
+static err_t ethernetif_init(struct netif *netif) {
+	netif->linkoutput = low_level_output;
+	netif->output = etharp_output;
+	netif->mtu = LWIP_NETIF_MTU;
+	/* device capabilities */
+	/* don't set NETIF_FLAG_ETHARP if this device is not an Ethernet one */
+	netif->flags = NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
+
+	netif->name[0] = 'w';
+	netif->name[1] = '0';
+
+	netif->hwaddr_len = ETHARP_HWADDR_LEN;
+
+	netif->state = NULL;
+
+	return ERR_OK;
+}
+
+bool setupLwip() {
+	tcpip_init(NULL, NULL);
+
+	ip4_addr_t ip, gateway, netmask;
+	LWIP_IPADDR(&ip);
+	LWIP_GATEWAY(&gateway);
+	LWIP_NETMASK(&netmask);
+
+	auto result = netifapi_netif_add(&thisif, &ip, &netmask, &gateway, NULL, ethernetif_init, tcpip_input);
+	if (result != ERR_OK) {
+		return false;
+	}
+
+	netifapi_netif_set_default(&thisif);
+	netifapi_netif_set_up(&thisif);
+	netifapi_netif_set_link_up(&thisif);
+
+	return true;
 }
 
 class WifiHelperThread : public ThreadController<4096> {
@@ -218,11 +176,12 @@ public:
 
 		while (true)
 		{
-			m2m_wifi_handle_events(nullptr);
-
-			if (!ServerSocket::checkSend()) {
-				isrSemaphore.wait(TIME_MS2I(1));
+			{
+				chibios_rt::MutexLocker lock(wifiAccessMutex);
+				m2m_wifi_handle_events(nullptr);
 			}
+
+			isrSemaphore.wait(TIME_MS2I(1));
 		}
 	}
 
@@ -235,6 +194,13 @@ private:
 		// Initialize the WiFi module
 		static tstrWifiInitParam param;
 		param.pfAppWifiCb = wifiCallback;
+
+		// Ethernet options
+		param.strEthInitParam.pfAppEthCb = ethernetCallback;
+		param.strEthInitParam.au8ethRcvBuf = ethernetBuffer;
+		param.strEthInitParam.u16ethRcvBufSize = sizeof(ethernetBuffer);
+		param.strEthInitParam.u8EthernetEnable = M2M_WIFI_MODE_ETHERNET;
+
 		if (auto ret = m2m_wifi_init(&param); M2M_SUCCESS != ret) {
 			efiPrintf("Wifi init failed with: %d", ret);
 			return false;
@@ -265,11 +231,12 @@ private:
 			return false;
 		}
 
-		// Set up the socket APIs
-		socketInit();
-		registerSocketCallback(socketCallback, nullptr);
+		// Set the real WiFi chipset's MAC address on the lwip interface
+		if (M2M_SUCCESS != m2m_wifi_get_mac_address(thisif.hwaddr)) {
+			return false;
+		}
 
-		return true;
+		return setupLwip();
 	}
 
 	bool m_initDone = false;

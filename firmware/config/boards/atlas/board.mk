@@ -21,6 +21,8 @@ DDEFS += -DSTM32_LSE_BYPASS
 # We are running on Atlas hardware!
 DDEFS += -DHW_ATLAS=1
 
+include $(PROJECT_DIR)/controllers/modules/ethernet_console/ethernet_console.mk
+
 # Atlas has WiFi
 USE_WIFI = yes
 

@@ -58,20 +58,28 @@
 #define LWIP_STATS 0
 
 // In theory we're only talking to a single PC, so we don't need a big ARP table
-#define ARP_TABLE_SIZE 4
+#define ARP_TABLE_SIZE 16
 
 // ascii `rus`
-#define LWIP_ETHADDR_0 0x72
-#define LWIP_ETHADDR_1 0x75
-#define LWIP_ETHADDR_2 0x73
-#define LWIP_ETHADDR_3 0x12
-#define LWIP_ETHADDR_4 0x34
-#define LWIP_ETHADDR_5 0x56
+#define LWIP_ETHADDR_0 0xf8
+#define LWIP_ETHADDR_1 0xf0
+#define LWIP_ETHADDR_2 0x05
+#define LWIP_ETHADDR_3 0xa3
+#define LWIP_ETHADDR_4 0x19
+#define LWIP_ETHADDR_5 0xc2
 
 #include "rusefi_generated.h"
 
 // Ensure that one TCP segment can always fit an entire response to TS - we never need to split a TS packet across multiple frames.
 #define TCP_MSS (BLOCKING_FACTOR + 10)
+
+#define MEM_SIZE 65536
+
+// Crank the TCP timer interval down to 10ms (down from 250ms default)
+// As this sets the lower limit on retransmissions
+// We want retransmissions to be super snappy in case of a dropped frame
+#define TCP_TMR_INTERVAL 10
+#define LWIP_TCP_CLOSE_TIMEOUT_MS_DEFAULT 5000
 
 // Enable the socket recv timeout (and it uses a nonstandard option of int, rather than timeval)
 #define LWIP_SO_SNDRCVTIMEO_NONSTANDARD 1

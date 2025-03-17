@@ -2,6 +2,8 @@
 
 #include "lwipthread.h"
 
+#include "wifi_socket.h"
+
 #include "lwip/sockets.h"
 
 #include "thread_controller.h"
@@ -97,7 +99,7 @@ struct EthernetThread : public TunerstudioThread {
 	EthernetThread() : TunerstudioThread("Ethernet Console") { }
 
 	TsChannelBase* setupChannel() override {
-		lwipInit(nullptr);
+		waitForWifiInit();
 
 		sockaddr_in address;
 		address.sin_family = AF_INET;

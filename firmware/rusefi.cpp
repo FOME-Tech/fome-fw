@@ -133,6 +133,7 @@
 #include "mass_storage_init.h"
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
+#include "wifi_socket.h"
 
 #include <setjmp.h>
 
@@ -258,7 +259,7 @@ void runRusEfiWithConfig() {
 	initHardware();
 
 #if EFI_WIFI
-	startWifiConsole();
+	initWifi();
 #endif
 
 #if EFI_FILE_LOGGING
