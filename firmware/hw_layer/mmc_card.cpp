@@ -5,11 +5,6 @@
  * @author Kot_dnz
  * @author Andrey Belomutskiy, (c) 2012-2020
  *
- * default pinouts in case of SPI2 connected to MMC: PB13 - SCK, PB14 - MISO, PB15 - MOSI, PD4 - CS, 3.3v
- * default pinouts in case of SPI3 connected to MMC: PB3  - SCK, PB4  - MISO, PB5  - MOSI, PD4 - CS, 3.3v
- *
- *
- * todo: extract some logic into a controller file
  */
 
 #include "pch.h"
@@ -57,12 +52,6 @@ static const char *sdStatus = SD_STATE_INIT;
 // at about 20Hz we write about 2Kb per second, looks like we flush once every ~2 seconds
 #define F_SYNC_FREQUENCY 10
 
-/**
- * on't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),
- * which will cause disaster (usually multiple-unlock of the same mutex in UNLOCK_SD_SPI)
- */
-static spi_device_e mmcSpiDevice = SPI_NONE;
-
 #define LOG_INDEX_FILENAME "index.txt"
 
 #define FOME_LOG_PREFIX "fome_"
@@ -73,12 +62,14 @@ static spi_device_e mmcSpiDevice = SPI_NONE;
 #define FILE_LIST_MAX_COUNT 20
 
 #if HAL_USE_MMC_SPI
-/**
- * MMC driver instance.
- */
+// Don't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),
+// which will cause disaster (usually multiple-unlock of the same mutex in UNLOCK_SD_SPI)
+static spi_device_e mmcSpiDevice = SPI_NONE;
+
+// MMC/SD driver instance.
 MMCDriver MMCD1;
 
-/* MMC/SD over SPI driver configuration.*/
+// MMC/SD over SPI driver configuration
 static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
 
 #define LOCK_SD_SPI lockSpi(mmcSpiDevice)
@@ -467,8 +458,8 @@ static void mlgLogger();
 // Log binary trigger log
 static void sdTriggerLogger();
 
-static THD_WORKING_AREA(mmcThreadStack, 3 * UTILITY_THREAD_STACK_SIZE);		// MMC monitor thread
-static THD_FUNCTION(MMCmonThread, arg) {
+static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE);		// MMC monitor thread
+static THD_FUNCTION(sdCardLoggerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("MMC Card Logger");
 
@@ -539,12 +530,12 @@ bool isSdCardAlive(void) {
 	return fs_ready;
 }
 
-void initMmcCard() {
+void initSdCardLogger() {
 	logName[0] = 0;
 
 	addConsoleAction("sdinfo", sdStatistics);
 
-	chThdCreateStatic(mmcThreadStack, sizeof(mmcThreadStack), PRIO_MMC, (tfunc_t)(void*) MMCmonThread, NULL);
+	chThdCreateStatic(sdCardLoggerStack, sizeof(sdCardLoggerStack), SD_CARD_LOGGER, sdCardLoggerThread, nullptr);
 }
 
 #endif /* EFI_FILE_LOGGING */

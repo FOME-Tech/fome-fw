@@ -13,7 +13,7 @@
 
 #define DOT_MLG ".mlg"
 
-void initMmcCard();
+void initSdCardLogger();
 bool isSdCardAlive();
 
 void onUsbConnectedNotifyMmcI();

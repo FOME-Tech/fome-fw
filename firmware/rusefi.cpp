@@ -262,7 +262,7 @@ void runRusEfiWithConfig() {
 #endif
 
 #if EFI_FILE_LOGGING
-	initMmcCard();
+	initSdCardLogger();
 #endif /* EFI_FILE_LOGGING */
 
 #if EFI_CAN_SERIAL
