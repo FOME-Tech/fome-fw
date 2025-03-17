@@ -70,6 +70,11 @@ int main(void) {
 	// Init openblt itself
 	BootInit();
 
+	#if (BOOT_FILE_SYS_ENABLE > 0)
+		// Always attempt an SD firmware update (get you unstuck from corrupt firmware)
+		FileHandleFirmwareUpdateRequest();
+	#endif
+
 	while (true) {
 		BootTask();
 	}
