@@ -21,6 +21,3 @@ void unmountSdFilesystem();
 bool isSdCardAlive();
 
 void onUsbConnectedNotifyMmcI();
-
-struct USBDriver;
-bool msd_request_hook_new(USBDriver *usbp);

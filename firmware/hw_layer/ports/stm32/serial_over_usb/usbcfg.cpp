@@ -17,6 +17,7 @@
 
 #include "pch.h"
 #include "mmc_card.h"
+#include "mass_storage_device.h"
 
 #if HAL_USE_SERIAL_USB
 

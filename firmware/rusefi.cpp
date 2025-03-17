@@ -129,7 +129,7 @@
 #include "custom_engine.h"
 #include "mpu_util.h"
 #include "tunerstudio.h"
-#include "mmc_card.h"
+#include "sd_file_log.h"
 #include "mass_storage_init.h"
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
