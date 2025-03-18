@@ -24,8 +24,11 @@ void onUsbConnectedNotifyMmcI();
 // Implemented in firmware by reading from engineConfiguration
 // Implemented in bootloader with defines (bootloader has no config!)
 bool isSdCardEnabled();
+
+#if HAL_USE_SPI
 SPIDriver* getSdCardSpiDevice();
 Gpio getSdCardCsPin();
+#endif // HAL_USE_SPI
 
 #if EFI_PROD_CODE
 	struct SdLogBufferWriter final : public BufferedWriter<512> {
