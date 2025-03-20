@@ -20,7 +20,11 @@ static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
 #define LPS_CR1_BDU (1 << 2)
 
 // Status register flags
-#define LPS_SR_P_DA (1 << 1)	// Pressure data available
+// Potential bug shouldn't be P_DA 0x1 if new data is available?
+#define LPS_SR_P_DA 0x1	// Pressure data available
+#ifdef STM32H7XX
+#define LPS_SR_T_DA 0x2	// Temperature data available
+#endif
 
 #define REG_WhoAmI 0x0F
 
@@ -31,6 +35,10 @@ static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
 #define REG_PressureOutXl 0x28
 #define REG_PressureOutL 0x29
 #define REG_PressureOutH 0x2A
+#ifdef STM32H7XX
+#define REG_InternalTempL 0x2B
+#define REG_InternalTempH 0x2C
+#endif
 
 bool Lps25::init(brain_pin_e scl, brain_pin_e sda) {
 	if (!m_i2c.init(scl, sda)) {
@@ -135,3 +143,44 @@ uint8_t Lps25::regCr1() const {
 		return REG_Cr1_Lps25;
 	}
 }
+
+#ifdef STM32H7XX
+expected<float> Lps25::readLPSTemp() {
+	if (!m_hasInit) {
+		return unexpected;
+	}
+
+	float interalLpsTemp;
+
+	// First read the status reg to check if there are data available
+	uint8_t sr = m_i2c.readRegister(addr, REG_Status);
+
+	bool hasTemp = sr & LPS_SR_T_DA;
+
+	if (!hasTemp) {
+		return unexpected;
+	}
+
+	auto l = m_i2c.readRegister(addr, REG_InternalTempL);
+	auto h = m_i2c.readRegister(addr, REG_InternalTempH);
+
+	// Glue the 2 bytes back in to a 16 bit integer
+	int16_t raw_temp = static_cast<int16_t>(((h << 8) | l));
+
+	switch (m_type)
+	{
+	case Type::Lps22:
+		interalLpsTemp = raw_temp / 100.0f;
+		break;
+	case Type::Lps25:
+		interalLpsTemp = 42.5f + (raw_temp / 480.0f);
+		break;
+	default:
+		return unexpected;
+	}
+
+	interalLpsTemp = clampF(-40.0f, interalLpsTemp, 85.0f);
+
+	return interalLpsTemp;
+}
+#endif

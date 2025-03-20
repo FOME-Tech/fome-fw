@@ -13,3 +13,16 @@ public:
 private:
 	Lps25* m_sensor;
 };
+
+#ifdef STM32H7XX
+class Lps25TempSensor : public StoredValueSensor {
+	public:
+		explicit Lps25TempSensor(Lps25& sensor);
+		void update();
+	
+		void showInfo(const char* sensorName) const override;
+	
+	private:
+		Lps25* m_sensor;
+};
+#endif

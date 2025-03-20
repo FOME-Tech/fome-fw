@@ -31,6 +31,9 @@ void initNewSensors() {
 	reconfigureSensors();
 
 	initBaro();
+	#ifdef STM32H7XX
+	initInteralLpsTemp();
+	#endif
 	initAuxSpeedSensors();
 
 	initFuelLevel();

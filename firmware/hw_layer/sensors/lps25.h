@@ -16,6 +16,9 @@ public:
 	bool init(brain_pin_e scl, brain_pin_e sda);
 
 	expected<float> readPressureKpa();
+	#ifdef STM32H7XX
+	expected<float> readLPSTemp();
+	#endif
 	bool hasInit() const {
 		return m_hasInit;
 	}

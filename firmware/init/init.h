@@ -29,6 +29,9 @@ void initLambda();
 void initFlexSensor();
 void initFuelLevel();
 void initBaro();
+#ifdef STM32H7XX
+void initInteralLpsTemp();
+#endif
 void initAuxSensors();
 void initVehicleSpeedSensor();
 void initTurbochargerSpeedSensor();
