@@ -401,7 +401,7 @@ static void updateMiscSensors() {
 
 #if	defined(HAL_USE_ADC) && !defined(STM32H7XX)
 	engine->outputChannels.internalMcuTemperature = getMCUInternalTemperature();
-#elif defined(HAL_USE_ADC) && defined(STM32H7XX)
+#elif defined(STM32H7XX)
 	engine->outputChannels.internalMcuTemperature = Sensor::getOrZero(SensorType::LPSTemp);
 #endif /* HAL_USE_ADC */
 }
