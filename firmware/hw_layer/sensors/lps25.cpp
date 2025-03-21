@@ -21,9 +21,9 @@ static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
 
 // Status register flags
 // Potential bug shouldn't be P_DA 0x1 if new data is available?
-#define LPS_SR_P_DA 0x1	// Pressure data available
+#define LPS_SR_P_DA (1 << 0)	// Pressure data available
 #ifdef STM32H7XX
-#define LPS_SR_T_DA 0x2	// Temperature data available
+#define LPS_SR_T_DA (1 << 2)	// Temperature data available
 #endif
 
 #define REG_WhoAmI 0x0F
