@@ -155,6 +155,10 @@ void Engine::periodicSlowCallback() {
 #if EFI_PROD_CODE
 	void baroLps25Update();
 	baroLps25Update();
+	#ifdef STM32H7XX
+	void tempLps25Update();
+	tempLps25Update();
+	#endif // STM32H7XX
 #endif // EFI_PROD_CODE
 }
 

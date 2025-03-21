@@ -399,8 +399,10 @@ static void updateMiscSensors() {
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
-#if	HAL_USE_ADC
+#if HAL_USE_ADC && !defined(STM32H7XX)
 	engine->outputChannels.internalMcuTemperature = getMCUInternalTemperature();
+#elif defined(STM32H7XX)
+	engine->outputChannels.internalMcuTemperature = Sensor::getOrZero(SensorType::LPSTemp);
 #endif /* HAL_USE_ADC */
 }
 
