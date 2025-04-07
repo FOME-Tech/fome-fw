@@ -962,10 +962,6 @@ bit ALSActivateInverted
 
 	int16_t warningPeriod;;"seconds", 1, 0, 0, 60, 0
 
-	uint8_t knockDetectionWindowStart;Delay after spark firing to start the knock detection window. This should remain at 0 unless there's a good reason.;"deg", 1, 0, 0, 90, 0
-	uint8_t knockDetectionWindowEnd;Duration, in crank degrees, of the knock detection window. 40 to 70 degrees is a normal range.;"deg", 1, 0, 30, 100, 0
-
-
 float idleStepperReactionTime;;"ms", 1, 0, 1, 300, 0
 
 

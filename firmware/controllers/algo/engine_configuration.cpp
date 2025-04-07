@@ -549,11 +549,6 @@ static void setDefaultEngineConfiguration() {
 
 	engineConfiguration->acIdleRpmBump = 200;
 
-	// Currently this is offset from fire event, not TDC
-	// TODO: convert to offset from TDC
-	engineConfiguration->knockDetectionWindowStart = 15.0 + 5.0;
-	engineConfiguration->knockDetectionWindowEnd = 15.0 + 45.0;
-
 	engineConfiguration->triggerSimulatorRpm = 1200;
 	engineConfiguration->fakeFullSyncForStimulation = true;
 
