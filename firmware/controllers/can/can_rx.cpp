@@ -209,7 +209,27 @@ static void processCanRxImu(const CANRxFrame& frame) {
 	}
 }
 
-void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame &frame, efitick_t nowNt) {
+static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
+	if (!engineConfiguration->ecumasterEgtToCan) {
+		return;
+	}
+
+	size_t offset = 0;
+
+	if (CAN_SID(frame) == 0x660) {
+		offset = 0;
+	} else if (CAN_SID(frame) == 0x661) {
+		offset = 4;
+	} else {
+		return;
+	}
+
+	for (int i = 0; i < 4; i++) {
+		engine->outputChannels.egt[i + offset] = frame.data16[i];
+	}
+}
+
+void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
 	if (engineConfiguration->verboseCan && busIndex == CanBusIndex::Bus0) {
 		printPacket(busIndex, frame);
 	} else if (engineConfiguration->verboseCan2 && busIndex == CanBusIndex::Bus1) {
@@ -228,6 +248,8 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame &frame, efitick_
 	processCanBenchTest(frame);
 
 	processLuaCan(busIndex, frame);
+
+	processEgtCan(busIndex, frame);
 
 	obdOnCanPacketRx(frame, busIndex);
 
