@@ -944,7 +944,7 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
-	public static final int SIGNATURE_HASH = 1855257386;
+	public static final int SIGNATURE_HASH = 427760497;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1151,7 +1151,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.04.07.f407-discovery.1855257386";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.04.08.f407-discovery.427760497";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1276;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1483,6 +1483,7 @@ public class Fields {
 	public static final Field VERBOSETLE8888 = Field.create("VERBOSETLE8888", 640, FieldType.BIT, 8).setBaseOffset(0);
 	public static final Field ENABLEVERBOSECANTX = Field.create("ENABLEVERBOSECANTX", 640, FieldType.BIT, 9).setBaseOffset(0);
 	public static final Field IDLERETURNTARGETRAMP = Field.create("IDLERETURNTARGETRAMP", 640, FieldType.BIT, 10).setBaseOffset(0);
+	public static final Field ECUMASTEREGTTOCAN = Field.create("ECUMASTEREGTTOCAN", 640, FieldType.BIT, 11).setBaseOffset(0);
 	public static final Field MEASUREMAPONLYINONECYLINDER = Field.create("MEASUREMAPONLYINONECYLINDER", 640, FieldType.BIT, 12).setBaseOffset(0);
 	public static final Field STEPPERFORCEPARKINGEVERYRESTART = Field.create("STEPPERFORCEPARKINGEVERYRESTART", 640, FieldType.BIT, 13).setBaseOffset(0);
 	public static final Field ISFASTERENGINESPINUPENABLED = Field.create("ISFASTERENGINESPINUPENABLED", 640, FieldType.BIT, 14).setBaseOffset(0);
