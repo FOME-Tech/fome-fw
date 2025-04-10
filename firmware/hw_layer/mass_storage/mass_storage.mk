@@ -9,3 +9,4 @@ ALLCPPSRC += $(PROJECT_DIR)/hw_layer/mass_storage/null_device.cpp \
 			 $(PROJECT_DIR)/hw_layer/mass_storage/compressed_block_device.cpp \
 			 $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage_device.cpp \
 			 $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage_init.cpp \
+			 $(PROJECT_DIR)/hw_layer/mass_storage/block_cache.cpp \
