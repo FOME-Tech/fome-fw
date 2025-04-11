@@ -338,3 +338,46 @@ pins:
     class:  outputs
     ts_name: COP 6
     function: COP 6
+
+
+  - pin: P1
+    id: EFI_ADC_29
+    class: analog_inputs
+    ts_name: P1 (AT1)
+    function: Aux In 1
+
+  - pin: P2
+    id: EFI_ADC_28
+    class: analog_inputs
+    ts_name: P2 (AT2)
+    function: Aux In 2
+
+  - pin: P3
+    id: EFI_ADC_35
+    class: analog_inputs
+    ts_name: P3 (RES1)
+    function: Aux In 3
+
+  - pin: P4
+    id: EFI_ADC_36
+    class: analog_inputs
+    ts_name: P4 (RES2)
+    function: Aux In 4
+
+  - pin: P5
+    id: EFI_ADC_34
+    class: analog_inputs
+    ts_name: P5 (RES3)
+    function: Aux In 5
+
+  - pin: P6
+    id: EFI_ADC_27
+    class: analog_inputs
+    ts_name: P6 (MAP2)
+    function: Aux In 6
+
+  - pin: P7
+    id: EFI_ADC_18
+    class: analog_inputs
+    ts_name: P7 (MAP3)
+    function: Aux In 7
