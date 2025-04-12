@@ -216,9 +216,9 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 
 	size_t offset = 0;
 
-	if (CAN_SID(frame) == 0x660) {
+	if (CAN_SID(frame) == 0x610) {
 		offset = 0;
-	} else if (CAN_SID(frame) == 0x661) {
+	} else if (CAN_SID(frame) == 0x611) {
 		offset = 4;
 	} else {
 		return;
