@@ -43,6 +43,9 @@ void VvtController::onFastCallback() {
 
 	auto nowNt = getTimeNowNt();
 	m_engineRunningLongEnough = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) > engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
+	if (!m_engineRunningLongEnough) {
+		m_timeSinceEnabled.reset();
+	}
 
 	update();
 }
@@ -69,6 +72,13 @@ expected<angle_t> VvtController::getSetpoint() {
 	if (!m_targetOffsetTimer.hasElapsedSec(2)) {
 		target += m_targetOffset;
 	}
+
+	// Ramp the target in over 2 seconds once we're allowed to control VVT
+	target = interpolateClamped(
+				0, 0,
+				2, target,
+				m_timeSinceEnabled.getElapsedSeconds()
+			);
 
 	vvtTarget = target;
 
@@ -103,7 +113,7 @@ expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observa
 	// "retard" means that additional solenoid duty makes indicated VVT position more negative
 	bool isInverted = shouldInvertVvt(m_cam);
 	m_pid.setErrorAmplification(isInverted ? -1.0f : 1.0f);
-	
+
 	float retVal = m_pid.getOutput(target, observation, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 
 	m_pid.postState(*reinterpret_cast<pid_status_s*>(&pidState));
