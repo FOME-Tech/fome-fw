@@ -1148,7 +1148,9 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 	
 	float idlePidActivationTime;;"seconds", 1, 0, 0, 60, 1
 
-	uint8_t[8] unused1800
+	int8_t vvtControlMinClt;Minimum coolant temperature to activate VVT;"deg C", 1, 0, -40, 120, 0
+
+	uint8_t[7] unused1800
 
 	uint8_t autoscale minStepperVoltage;Minimum voltage to attempt to move the idle stepper. Maybe your motor doesn't work below this voltage and will lose its position.;"V", 0.1, 0, 0, 20, 1
 

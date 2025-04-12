@@ -38,6 +38,12 @@ void VvtController::onFastCallback() {
 		return;
 	}
 
+	m_isRpmHighEnough = Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->vvtControlMinRpm;
+	m_isCltWarmEnough = Sensor::getOrZero(SensorType::Clt) > engineConfiguration->vvtControlMinClt;
+
+	auto nowNt = getTimeNowNt();
+	m_engineRunningLongEnough = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) > engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
+
 	update();
 }
 
@@ -107,11 +113,10 @@ expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observa
 
 void VvtController::setOutput(expected<percent_t> outputValue) {
 #if EFI_SHAFT_POSITION_INPUT
-	float rpm = Sensor::getOrZero(SensorType::Rpm);
-
-	bool enabled = rpm > engineConfiguration->vvtControlMinRpm
-			&& engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) > engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND
-			 ;
+	bool enabled =
+		m_engineRunningLongEnough &&
+		m_isRpmHighEnough &&
+		m_isCltWarmEnough;
 
 	if (outputValue && enabled) {
 		float vvtPct = outputValue.Value;
