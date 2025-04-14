@@ -22,7 +22,7 @@ public enum FileLog {
 
     public static final String OS_VERSION = "os.version";
     public static final String DATE_PATTERN = "yyyy-MM-dd_HH_mm_ss_SSS";
-    private static final String WIKI_URL = "https://github.com/rusefi/rusefi/wiki/rusEFI-logs-folder";
+    private static final String WIKI_URL = "https://wiki.fome.tech/FOME-Console/";
     public static String currentLogName;
 
     @Nullable
@@ -49,7 +49,7 @@ public enum FileLog {
 
     private static void writeReadmeFile() {
         LazyFile file = new LazyFile(Logger.DIR + "README.html");
-        file.write("<center>" + "<a href='" + WIKI_URL + "'>More info online<br/><img src=https://raw.githubusercontent.com/wiki/rusefi/rusefi/logo.gif></a>");
+        file.write("<center>" + "<a href='" + WIKI_URL + "'>More info online<br/><img src='https://static.wixstatic.com/media/8500f4_95d3c7b44e614bac98e73dba90532c54~mv2.png/v1/fill/w_126,h_45,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/8500f4_95d3c7b44e614bac98e73dba90532c54~mv2.png'></a>");
         try {
             file.close();
         } catch (IOException e) {
