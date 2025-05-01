@@ -26,7 +26,10 @@ git submodule update --init
 sudo apt-get update
 
 # install dependencies
-sudo apt-get install -y build-essential gcc gdb gcc-multilib g++-multilib make openjdk-8-jdk-headless mtools zip xxd dosfstools lcov
+sudo apt-get install -y build-essential gcc gdb gcc-multilib g++-multilib make openjdk-8-jdk-headless mtools zip xxd dosfstools lcov gcc-arm-none-eabi gdb-multiarch openocd
+
+# link gdb-multiarch as the gdb binary for arm debugging
+sudo ln -s /usr/bin/gdb-multiarch /usr/bin/arm-none-eabi-gdb
 
 # Allow the current user to use serial ports
 sudo usermod -a -G dialout $USER
