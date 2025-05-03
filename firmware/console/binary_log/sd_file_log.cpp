@@ -18,7 +18,6 @@ static int totalSyncCounter = 0;
 #include "ff.h"
 #include "mass_storage_init.h"
 #include "rtc_helper.h"
-#include <charconv>
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
