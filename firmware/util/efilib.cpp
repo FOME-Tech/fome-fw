@@ -39,19 +39,6 @@ char * efiTrim(char *param) {
 	return param;
 }
 
-bool startsWith(const char *line, const char *prefix) {
-	uint32_t len = std::strlen(prefix);
-	if (std::strlen(line) < len) {
-		return false;
-	}
-	for (uint32_t i = 0; i < len; i++) {
-		if (line[i] != prefix[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
 int indexOf(const char *string, char c) {
 	// a standard function for this is strnchr?
 	// todo: on the other hand MISRA wants us not to use standard headers

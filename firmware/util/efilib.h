@@ -55,7 +55,6 @@ const char * boolToString(bool value);
 char * efiTrim(char *param);
 int mytolower(const char c);
 int efiPow10(int param);
-bool startsWith(const char *line, const char *prefix);
 int indexOf(const char *string, char ch);
 float atoff(const char *string);
 int atoi(const char *string);
