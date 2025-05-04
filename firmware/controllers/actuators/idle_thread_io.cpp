@@ -116,8 +116,6 @@ void setDefaultIdleParameters() {
 
 	// Idle region is target + 100 RPM
 	engineConfiguration->idlePidRpmUpperLimit = 100;
-
-	engineConfiguration->idlePidRpmDeadZone = 50;
 }
 
 void startIdleThread() {

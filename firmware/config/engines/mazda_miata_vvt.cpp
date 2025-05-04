@@ -296,7 +296,6 @@ static void setCommonMazdaNB() {
 
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->idlePidRpmUpperLimit = 350;
-	engineConfiguration->idlePidRpmDeadZone = 100;
 
 	engineConfiguration->idleRpmPid.pFactor = 0.0065;
 	engineConfiguration->idleRpmPid.iFactor = 0.3;

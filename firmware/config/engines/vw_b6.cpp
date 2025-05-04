@@ -23,7 +23,6 @@ static inline void commonPassatB6() {
     setTable(config->injectionPhase, -180.0f);
 
 	engineConfiguration->etbIdleThrottleRange = 10;
-	engineConfiguration->idlePidRpmDeadZone = 500;
 	engineConfiguration->idleMode = IM_AUTO;
 
 	engineConfiguration->cylindersCount = 4;
