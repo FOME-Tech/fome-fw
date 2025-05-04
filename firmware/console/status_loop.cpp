@@ -555,8 +555,11 @@ void updateTunerStudioState() {
 	tsOutputChannels->checkEngine = hasErrorCodes();
 
 #if EFI_MAX_31855
-	for (int i = 0; i < EGT_CHANNEL_COUNT; i++)
-		tsOutputChannels->egt[i] = getMax31855EgtValue(i);
+	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
+		if (isBrainPinValid(engineConfiguration->max31855_cs[0])) {
+			tsOutputChannels->egt[i] = getMax31855EgtValue(i);
+		}
+	}
 #endif /* EFI_MAX_31855 */
 
 	tsOutputChannels->warningCounter = engine->engineState.warnings.warningCounter;
