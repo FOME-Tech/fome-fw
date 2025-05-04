@@ -349,10 +349,7 @@ public:
 	 */
 	efitimeus_t timeToStopIdleTest = 0;
 
-
 	SensorsState sensors;
-	Timer mainRelayBenchTimer;
-
 
 	void preCalculate();
 
@@ -370,8 +367,6 @@ public:
 	   Returns true if some operations are in progress on background.
 	 */
 	bool isInShutdownMode() const;
-
-	bool isInMainRelayBench();
 
 	/**
 	 * The stepper does not work if the main relay is turned off (it requires +12V).

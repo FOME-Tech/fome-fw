@@ -215,11 +215,11 @@ static void luaOutBench2(float humanIndex, float onTime, float offTime, float co
 }
 
 void fanBench() {
-	pinbench(onTime, 100.0, 1.0, enginePins.fanRelay);
+	engine->module<FanControl1>()->benchTest();
 }
 
 void fan2Bench() {
-	pinbench(3000.0, 100.0, 1.0, enginePins.fanRelay2);
+	engine->module<FanControl2>()->benchTest();
 }
 
 /**
@@ -242,8 +242,7 @@ void acRelayBench() {
 }
 
 static void mainRelayBench() {
-	// main relay is usually "ON" via FSIO thus bench testing that one is pretty unusual
-	engine->mainRelayBenchTimer.reset();
+	engine->module<MainRelayController>()->benchTest();
 }
 
 static void hpfpValveBench() {

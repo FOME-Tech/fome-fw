@@ -3,7 +3,7 @@
 #include "main_relay.h"
 
 void MainRelayController::onSlowCallback() {
-	isBenchTest = engine->isInMainRelayBench();
+	isBenchTest = !m_benchTestTimer.hasElapsedSec(1);
 
 #if EFI_MAIN_RELAY_CONTROL
 	hasIgnitionVoltage = Sensor::getOrZero(SensorType::BatteryVoltage) > 5;
@@ -47,4 +47,8 @@ bool MainRelayController::needsDelayedShutoff() {
 	// This avoids accidentally killing the car during a transient, for example
 	// right when the starter is engaged.
 	return !m_lastIgnitionTime.hasElapsedSec(1);
+}
+
+void MainRelayController::benchTest() {
+	m_benchTestTimer.reset();
 }

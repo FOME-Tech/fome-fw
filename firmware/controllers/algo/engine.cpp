@@ -395,10 +395,6 @@ todo: move to shutdown_controller.cpp
 #endif /* EFI_MAIN_RELAY_CONTROL */
 }
 
-bool Engine::isInMainRelayBench() {
-	return !mainRelayBenchTimer.hasElapsedSec(1);
-}
-
 bool Engine::isInShutdownMode() const {
 	// TODO: this logic is currently broken
 #if 0 && EFI_MAIN_RELAY_CONTROL && EFI_PROD_CODE
