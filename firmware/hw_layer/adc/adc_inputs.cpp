@@ -60,9 +60,9 @@ int getSlowAdcValue(const char *msg, adc_channel_e hwChannel) {
 	return getSlowAdcSample(hwChannel);
 }
 
-void waitForSlowAdc(uint32_t lastAdcCounter) {
-	// we use slowAdcCounter instead of slowAdc.conversionCount because we need ADC_COMPLETE state
-	while (slowAdcCounter <= lastAdcCounter) {
+void waitForSlowAdc() {
+	// Wait for a few slow adc updates to happen
+	while (slowAdcCounter < 5) {
 		chThdSleepMilliseconds(1);
 	}
 }
@@ -82,9 +82,9 @@ void updateSlowAdc(efitick_t nowNt) {
 	{
 		ScopePerf perf(PE::AdcProcessSlow);
 
-		slowAdcCounter++;
-
 		AdcSubscription::UpdateSubscribers(nowNt);
+
+		slowAdcCounter++;
 
 		protectedGpio_check(nowNt);
 	}
