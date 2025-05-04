@@ -84,10 +84,10 @@ void updateSlowAdc(efitick_t nowNt) {
 
 		AdcSubscription::UpdateSubscribers(nowNt);
 
-		slowAdcCounter++;
-
 		protectedGpio_check(nowNt);
 	}
+
+	slowAdcCounter++;
 }
 
 #else /* not HAL_USE_ADC */
