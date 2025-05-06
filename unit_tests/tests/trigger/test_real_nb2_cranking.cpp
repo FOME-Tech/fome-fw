@@ -24,13 +24,11 @@ TEST(realCrankingNB2, normalCranking) {
 
 	// Check the number of times VVT information was used to adjust crank phase
 	// This should happen exactly once: once we sync, we shouldn't lose it.
-	EXPECT_EQ(engine->triggerCentral.triggerState.camResyncCounter, 2);
+	EXPECT_EQ(engine->triggerCentral.triggerState.camResyncCounter, 1);
 
 	ASSERT_EQ(876, round(Sensor::getOrZero(SensorType::Rpm)));
 
-	EXPECT_EQ(2, eth.recentWarnings()->getCount());
-	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH, eth.recentWarnings()->get(0).Code);
-	EXPECT_EQ(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH, eth.recentWarnings()->get(1).Code);
+	EXPECT_EQ(0, eth.recentWarnings()->getCount());
 }
 
 TEST(realCrankingNB2, crankingMissingInjector) {
@@ -51,8 +49,6 @@ TEST(realCrankingNB2, crankingMissingInjector) {
 
 	ASSERT_EQ(316, round(Sensor::getOrZero(SensorType::Rpm)));
 
-	EXPECT_EQ(3, eth.recentWarnings()->getCount());
-	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH, eth.recentWarnings()->get(0).Code);
-	EXPECT_EQ(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH, eth.recentWarnings()->get(1).Code);
-	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_TOO_MANY_TEETH, eth.recentWarnings()->get(2).Code);
+	EXPECT_EQ(1, eth.recentWarnings()->getCount());
+	EXPECT_EQ(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH, eth.recentWarnings()->get(0).Code);
 }

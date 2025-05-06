@@ -177,7 +177,7 @@ protected:
 
 private:
 	void resetCurrentCycleState();
-	bool isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) const;
+	bool isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType);
 
 	bool validateEventCounters(const TriggerWaveform& triggerShape) const;
 
