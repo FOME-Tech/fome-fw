@@ -87,7 +87,9 @@ void setMazdaMiata2003EngineConfigurationNaFuelRail() {
 
 	copyArray(config->veRpmBins, mazda_miata_nb2_RpmBins);
 	copyArray(config->veLoadBins, mazda_miata_nb2_LoadBins);
-	copyTable(config->veTable, mapBased18vvtVeTable_NA_fuel_rail);
+	copyTable(config->veTableSd, mapBased18vvtVeTable_NA_fuel_rail);
+	copyTable(config->veTableMaf, mapBased18vvtVeTable_NA_fuel_rail);
+	copyTable(config->veTableAlphaN, mapBased18vvtVeTable_NA_fuel_rail);
 
 	engineConfiguration->vvtOffsets[0] = 83; // 2002 green car value
 
