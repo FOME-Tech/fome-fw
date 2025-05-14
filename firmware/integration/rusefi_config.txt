@@ -675,7 +675,7 @@ bit is_enabled_spi_2
 	bit verboseTLE8888
 	bit enableVerboseCanTx;CAN broadcast using custom FOME protocol\nenable can_broadcast/disable can_broadcast
 	bit idleReturnTargetRamp;Ramp the idle target down from the entry threshold over 3 seconds when returning to idle. Helps prevent overshooting (below) the idle target while returning to idle from coasting.
-	bit ecumasterEgtToCan;Read EcuMaster EGT to CAN. Expects CAN IDs 0x660 and 0x661, little endian (Intel).
+	bit ecumasterEgtToCan;Read EcuMaster EGT to CAN. Expects little endian (Intel), and the CAN IDs specified below.
 	bit measureMapOnlyInOneCylinder;Useful for individual intakes
 	bit stepperForceParkingEveryRestart
 	bit isFasterEngineSpinUpEnabled;If enabled, try to fire the engine before a full engine cycle has been completed using RPM estimated from the last 90 degrees of engine rotation. As soon as the trigger syncs plus 90 degrees rotation, fuel and ignition events will occur. If disabled, worst case may require up to 4 full crank rotations before any events are scheduled.
@@ -1150,7 +1150,9 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 
 	int8_t vvtControlMinClt;Minimum coolant temperature to activate VVT;"deg C", 1, 0, -40, 120, 0
 
-	uint8_t[7] unused1800
+	uint8_t[5] unused1800
+
+	uint16_t ecumasterEgtToCanBaseId;Default 1552 for EMU Classic, 1632 for EMU Black.
 
 	uint8_t autoscale minStepperVoltage;Minimum voltage to attempt to move the idle stepper. Maybe your motor doesn't work below this voltage and will lose its position.;"V", 0.1, 0, 0, 20, 1
 

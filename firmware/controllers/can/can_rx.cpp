@@ -216,9 +216,11 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 
 	size_t offset = 0;
 
-	if (CAN_SID(frame) == 0x610) {
+	auto baseId = engineConfiguration->ecumasterEgtToCanBaseId;
+
+	if (CAN_SID(frame) == baseId + 0) {
 		offset = 0;
-	} else if (CAN_SID(frame) == 0x611) {
+	} else if (CAN_SID(frame) == baseId + 1) {
 		offset = 4;
 	} else {
 		return;

@@ -387,8 +387,9 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->canWriteEnabled = true;
 	engineConfiguration->canVssScaling = 1.0f;
 
-	// Don't enable, but set default address
+	// Don't enable, but set default addresses
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
+	engineConfiguration->ecumasterEgtToCanBaseId = 0x660;
 
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
