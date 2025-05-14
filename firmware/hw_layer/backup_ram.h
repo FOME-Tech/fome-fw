@@ -52,6 +52,9 @@ struct BackupSramData {
 	 * See startPrimeInjectionPulse() in controllers/trigger/main_trigger_callback.cpp
 	 */
 	uint16_t IgnCounter = 0;
+
+	// Persisent values stored/read by Lua scripts
+	float LuaPersistentData[64] = {0};
 };
 
 BackupSramData* getBackupSram();
