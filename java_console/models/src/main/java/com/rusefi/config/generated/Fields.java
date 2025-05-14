@@ -1150,7 +1150,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.05.06.f407-discovery.3006726334";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.05.14.f407-discovery.4284401665";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1300;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1958,6 +1958,7 @@ public class Fields {
 	public static final Field IDLEPIDACTIVATIONTIME = Field.create("IDLEPIDACTIVATIONTIME", 1608, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field VVTCONTROLMINCLT = Field.create("VVTCONTROLMINCLT", 1612, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field UNUSED1800 = Field.create("UNUSED1800", 1613, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field ECUMASTEREGTTOCANBASEID = Field.create("ECUMASTEREGTTOCANBASEID", 1618, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field MINSTEPPERVOLTAGE = Field.create("MINSTEPPERVOLTAGE", 1620, FieldType.INT8).setScale(0.1).setBaseOffset(0);
 	public static final Field STEPPERENABLEPINMODE = Field.create("STEPPERENABLEPINMODE", 1621, FieldType.INT8, pin_output_mode_e).setScale(1.0).setBaseOffset(0);
 	public static final Field MC33816_RSTB = Field.create("MC33816_RSTB", 1622, FieldType.INT16, Gpio).setScale(1.0).setBaseOffset(0);
