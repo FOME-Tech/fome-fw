@@ -712,6 +712,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
+	lua_register(l, "getPersistentValue", lua_getPersistentValue);
+	lua_register(l, "storePersistentValue", lua_storePersistentValue);
+
 #if EFI_LAUNCH_CONTROL
 	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
 		auto targetSkipRatio = luaL_checknumber(l2, 1);
@@ -948,9 +951,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 		doScheduleStopEngine();
 		return 0;
 	});
-
-	lua_register(l, "getPersistentValue", lua_getPersistentValue);
-	lua_register(l, "storePersistentValue", lua_storePersistentValue);
 
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
