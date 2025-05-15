@@ -33,6 +33,7 @@ or
 ### Added
  - Allow fractional tachometer pulse ratio for fine tachometer calibration
  - Add an option to ramp the idle target down as engine speed returns to idle. Makes the running -> idle transition much smoother while in closed loop mode #570
+ - Lua functions `storePersistentValue`/`getPersistentValue` to persist values in backup memory between reboots #592
 
 ## February 2025 Release
 
