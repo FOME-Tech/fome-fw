@@ -697,16 +697,19 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 	if (pinRx == Gpio::Unassigned && pinTx == Gpio::Unassigned) {
 		return nullptr;
 	}
-#if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
-   if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
-      return &CAND1;
+
+	#if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
+if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
+	return &CAND1;
 #endif
+
 #if STM32_CAN_USE_CAN2 || STM32_CAN_USE_FDCAN2
-   if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
-      return &CAND2;
+if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
+	return &CAND2;
 #endif
-   firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
-   return nullptr;
+
+	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
+	return nullptr;
 }
 
 #endif /* EFI_CAN_SUPPORT */
