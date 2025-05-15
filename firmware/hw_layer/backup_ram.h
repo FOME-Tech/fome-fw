@@ -18,6 +18,7 @@ enum class ErrorCookie : uint32_t {
 	HardFault = 0xdeadbeef,
 };
 
+#if !EFI_UNIT_TEST
 struct BackupSramData {
 	static const uint32_t ExpectedCookie = 0xDEADBEEF;
 	uint32_t Cookie = ExpectedCookie;
@@ -57,3 +58,4 @@ struct BackupSramData {
 };
 
 BackupSramData* getBackupSram();
+#endif // not EFI_UNIT_TEST

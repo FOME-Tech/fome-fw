@@ -948,6 +948,10 @@ void configureRusefiLuaHooks(lua_State* l) {
 		doScheduleStopEngine();
 		return 0;
 	});
+
+	lua_register(l, "getPersistentValue", lua_getPersistentValue);
+	lua_register(l, "storePersistentValue", lua_storePersistentValue);
+
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
 		int result = engine->triggerCentral.m_lastEventTimer.getElapsedUs() / 1000;
@@ -972,7 +976,4 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 0;
 	});
 #endif // MODULE_TRIP_ODO
-
-	lua_register(l, "getPersistentValue", lua_getPersistentValue);
-	lua_register(l, "storePersistentValue", lua_storePersistentValue);
 }
