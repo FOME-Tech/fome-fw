@@ -214,3 +214,32 @@ end
 TEST(LuaHooks, LuaPid) {
 	EXPECT_EQ(testLuaReturnsNumber(pidTest), 0);
 }
+
+TEST(LuaHooks, TestPersistentValues) {
+	//EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	EXPECT_ANY_THROW(testLuaExecString("getPersistentValue(0)"));
+	EXPECT_NO_THROW(testLuaExecString("getPersistentValue(1)"));
+	EXPECT_NO_THROW(testLuaExecString("getPersistentValue(64)"));
+	EXPECT_ANY_THROW(testLuaExecString("getPersistentValue(65)"));
+
+	const char* initialCode = R"(
+	function testFunc()
+		return getPersistentValue(1)
+	end
+	)";
+	EXPECT_EQ(testLuaReturnsNumber(initialCode), 0);
+
+	EXPECT_ANY_THROW(testLuaExecString("storePersistentValue(0, 1)"));
+	EXPECT_NO_THROW(testLuaExecString("storePersistentValue(1, 1)"));
+	EXPECT_NO_THROW(testLuaExecString("storePersistentValue(64, 1)"));
+	EXPECT_ANY_THROW(testLuaExecString("storePersistentValue(65, 1)"));
+
+	const char* storeRetrieveCode = R"(
+	function testFunc()
+		storePersistentValue(1, 1.5)
+		return getPersistentValue(1)
+	end
+	)";
+	EXPECT_EQ(testLuaReturnsNumber(storeRetrieveCode), 1.5);
+}
