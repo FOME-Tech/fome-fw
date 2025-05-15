@@ -10,6 +10,7 @@
 #include "boards.h"
 #include "engine_sniffer.h"
 #include "adc_math.h"
+#include "backup_ram.h"
 
 int getAdcValue(const char *msg, int hwChannel) {
 	return 0;
@@ -23,4 +24,9 @@ float getVoltage(const char *msg, adc_channel_e hwChannel) {
 // Board voltage, with divider coefficient accounted for
 float getVoltageDivided(const char *msg, adc_channel_e hwChannel) {
 	return getVoltage(msg, hwChannel) * engineConfiguration->analogInputDividerCoefficient;
+}
+
+BackupSramData* getBackupSram() {
+	static BackupSramData data;
+	return &data;
 }

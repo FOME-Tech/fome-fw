@@ -18,7 +18,7 @@ enum class ErrorCookie : uint32_t {
 	HardFault = 0xdeadbeef,
 };
 
-#if EFI_PROD_CODE
+#if !EFI_UNIT_TEST
 struct BackupSramData {
 	static const uint32_t ExpectedCookie = 0xDEADBEEF;
 	uint32_t Cookie = ExpectedCookie;
@@ -52,7 +52,10 @@ struct BackupSramData {
 	 * See startPrimeInjectionPulse() in controllers/trigger/main_trigger_callback.cpp
 	 */
 	uint16_t IgnCounter = 0;
+
+	// Persisent values stored/read by Lua scripts
+	float LuaPersistentData[64] = {0};
 };
 
 BackupSramData* getBackupSram();
-#endif // EFI_PROD_CODE
+#endif // not EFI_UNIT_TEST

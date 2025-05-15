@@ -3,6 +3,7 @@
 #include "rusefi_lua.h"
 #include "lua_hooks.h"
 
+#include "backup_ram.h"
 #include "fuel_math.h"
 #include "airmass.h"
 #include "lua_airmass.h"
@@ -390,6 +391,45 @@ static int lua_setAirmass(lua_State* l) {
 	engineLoadPercent = clampF(0, engineLoadPercent, 1000);
 
 	luaAirmass.setAirmass({airmass, engineLoadPercent});
+
+	return 0;
+}
+
+auto& checkBackupSram(lua_State* l) {
+	auto backupRam = getBackupSram();
+
+	if (!backupRam) {
+		luaL_error(l, "Backup RAM error or not supported!");
+	}
+
+	return *backupRam;
+}
+
+static int lua_getPersistentValue(lua_State* l) {
+	auto idx = luaL_checkinteger(l, 1);
+
+	auto backupRam = checkBackupSram(l);
+
+	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
+		luaL_error(l, "invalid backup ram index: %d", idx);
+	}
+
+	lua_pushnumber(l, backupRam.LuaPersistentData[idx - 1]);
+	return 1;
+}
+
+static int lua_storePersistentValue(lua_State* l) {
+	auto idx = luaL_checkinteger(l, 1);
+
+	auto backupRam = checkBackupSram(l);
+
+	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
+		luaL_error(l, "invalid backup ram index: %d", idx);
+	}
+
+	auto value = luaL_checknumber(l, 2);
+
+	backupRam.LuaPersistentData[idx - 1] = value;
 
 	return 0;
 }
@@ -908,6 +948,10 @@ void configureRusefiLuaHooks(lua_State* l) {
 		doScheduleStopEngine();
 		return 0;
 	});
+
+	lua_register(l, "getPersistentValue", lua_getPersistentValue);
+	lua_register(l, "storePersistentValue", lua_storePersistentValue);
+
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
 		int result = engine->triggerCentral.m_lastEventTimer.getElapsedUs() / 1000;
