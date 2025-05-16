@@ -21,6 +21,7 @@ static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
 
 // Status register flags
 #define LPS_SR_P_DA (1 << 1)	// Pressure data available
+#define LPS_SR_T_DA (1 << 2)	// Temperature data available
 
 #define REG_WhoAmI 0x0F
 
@@ -31,6 +32,8 @@ static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
 #define REG_PressureOutXl 0x28
 #define REG_PressureOutL 0x29
 #define REG_PressureOutH 0x2A
+#define REG_InternalTempL 0x2B
+#define REG_InternalTempH 0x2C
 
 bool Lps25::init(brain_pin_e scl, brain_pin_e sda) {
 	if (!m_i2c.init(scl, sda)) {
@@ -123,6 +126,45 @@ expected<float> Lps25::readPressureKpa() {
 	}
 
 	return kilopascal;
+}
+
+expected<float> Lps25::readTemperatureC() {
+	if (!m_hasInit) {
+		return unexpected;
+	}
+
+	// First read the status reg to check if there are data available
+	uint8_t sr = m_i2c.readRegister(addr, REG_Status);
+
+	bool hasTemp = sr & LPS_SR_T_DA;
+	if (!hasTemp) {
+		return unexpected;
+	}
+
+	auto l = m_i2c.readRegister(addr, REG_InternalTempL);
+	auto h = m_i2c.readRegister(addr, REG_InternalTempH);
+
+	// Glue the 2 bytes back in to a 16 bit integer
+	int16_t rawTemp = static_cast<int16_t>(((h << 8) | l));
+
+	float tempC;
+	switch (m_type)
+	{
+	case Type::Lps22:
+		tempC = rawTemp / 100.0f;
+		break;
+	case Type::Lps25:
+		tempC = 42.5f + (rawTemp / 480.0f);
+		break;
+	default:
+		return unexpected;
+	}
+
+	if (tempC < -30 || tempC > 105) {
+		return unexpected;
+	}
+
+	return tempC;
 }
 
 uint8_t Lps25::regCr1() const {
