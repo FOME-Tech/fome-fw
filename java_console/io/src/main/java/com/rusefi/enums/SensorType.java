@@ -12,6 +12,7 @@ public enum SensorType {
 	Map,
 	Maf,
 	AmbientTemperature,
+	EcuInternalTemperature,
 	OilPressure,
 	OilTemperature,
 	FuelPressureLow,
