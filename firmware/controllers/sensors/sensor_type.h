@@ -29,6 +29,8 @@ enum class SensorType : unsigned char {
 
 	AmbientTemperature,
 
+	EcuInternalTemperature,
+
 	OilPressure,
 	OilTemperature,
 

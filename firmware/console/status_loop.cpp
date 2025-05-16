@@ -400,7 +400,9 @@ static void updateMiscSensors() {
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
 #if	HAL_USE_ADC
-	engine->outputChannels.internalMcuTemperature = getMCUInternalTemperature();
+	engine->outputChannels.internalMcuTemperature =
+		Sensor::get(SensorType::EcuInternalTemperature)
+		.value_or(getMCUInternalTemperature());
 #endif /* HAL_USE_ADC */
 }
 
