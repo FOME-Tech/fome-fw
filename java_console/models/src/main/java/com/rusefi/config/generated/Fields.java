@@ -944,6 +944,7 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
+	public static final int SIGNATURE_HASH = 1104135983;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1150,7 +1151,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.05.16.f407-discovery.4284401665";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.05.19.f407-discovery.1104135983";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1300;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1807,7 +1808,7 @@ public class Fields {
 	public static final Field THROTTLEPEDALUPVOLTAGE = Field.create("THROTTLEPEDALUPVOLTAGE", 1256, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field THROTTLEPEDALWOTVOLTAGE = Field.create("THROTTLEPEDALWOTVOLTAGE", 1260, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field STARTUPFUELPUMPDURATION = Field.create("STARTUPFUELPUMPDURATION", 1264, FieldType.INT16).setScale(1.0).setBaseOffset(0);
-	public static final Field IDLEPIDRPMDEADZONE = Field.create("IDLEPIDRPMDEADZONE", 1266, FieldType.INT16).setScale(1.0).setBaseOffset(0);
+	public static final Field ALIGNMENTFILL_AT_1266 = Field.create("ALIGNMENTFILL_AT_1266", 1266, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field TARGETVBATT = Field.create("TARGETVBATT", 1268, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field DFCORETARDDEG = Field.create("DFCORETARDDEG", 1272, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field DFCORETARDRAMPINTIME = Field.create("DFCORETARDRAMPINTIME", 1273, FieldType.INT8).setScale(0.1).setBaseOffset(0);

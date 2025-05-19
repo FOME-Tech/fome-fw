@@ -29,23 +29,22 @@ struct idle_state_s {
 	// reset
 	// offset 0 bit 7
 	bool needReset : 1 {};
-	// dead zone
 	// offset 0 bit 8
-	bool isInDeadZone : 1 {};
-	// offset 0 bit 9
 	bool isBlipping : 1 {};
-	// offset 0 bit 10
+	// offset 0 bit 9
 	bool looksLikeRunning : 1 {};
-	// offset 0 bit 11
+	// offset 0 bit 10
 	bool looksLikeCoasting : 1 {};
-	// offset 0 bit 12
+	// offset 0 bit 11
 	bool looksLikeCrankToIdle : 1 {};
 	// coasting
-	// offset 0 bit 13
+	// offset 0 bit 12
 	bool isIdleCoasting : 1 {};
 	// Closed loop active
-	// offset 0 bit 14
+	// offset 0 bit 13
 	bool isIdleClosedLoop : 1 {};
+	// offset 0 bit 14
+	bool unusedBit_0_14 : 1 {};
 	// offset 0 bit 15
 	bool unusedBit_0_15 : 1 {};
 	// offset 0 bit 16
