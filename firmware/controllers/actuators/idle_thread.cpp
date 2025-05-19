@@ -240,17 +240,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 		}
 
 		// We aren't idling, so don't apply any correction.  A positive correction could inhibit a return to idle.
-		m_lastAutomaticPosition = 0;
 		return 0;
-	}
-
-	// #1553 we need to give FSIO variable offset or minValue a chance
-	bool acToggleJustTouched = engine->module<AcController>().unmock().timeSinceStateChange.getElapsedSeconds() < 0.5f /*second*/;
-	// check if within the dead zone
-	isInDeadZone = !acToggleJustTouched && std::abs(rpm - targetRpm) <= engineConfiguration->idlePidRpmDeadZone;
-	if (isInDeadZone) {
-		// current RPM is close enough, no need to change anything
-		return m_lastAutomaticPosition;
 	}
 
 	percent_t newValue = m_pid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
@@ -262,10 +252,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 	// if tps==0 then PID just works as usual, or we completely disable it if tps>=threshold
 	// TODO: should we just remove this? It reduces the gain if your zero throttle stop isn't perfect,
 	// which could give unstable results.
-	newValue = interpolateClamped(0, newValue, engineConfiguration->idlePidDeactivationTpsThreshold, 0, tpsPos);
-
-	m_lastAutomaticPosition = newValue;
-	return newValue;
+	return interpolateClamped(0, newValue, engineConfiguration->idlePidDeactivationTpsThreshold, 0, tpsPos);
 }
 
 float IdleController::getIdlePosition(float rpm) {

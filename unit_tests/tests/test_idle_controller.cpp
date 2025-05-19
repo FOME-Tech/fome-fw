@@ -407,8 +407,6 @@ TEST(idle_v2, closedLoopBasic) {
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
-	engineConfiguration->idlePidRpmDeadZone = 0;
-
 	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
 	dut.getClosedLoop(ICP::Idling, 0, 900, 900);
 	advanceTimeUs(5'000'000);
@@ -418,33 +416,6 @@ TEST(idle_v2, closedLoopBasic) {
 
 	// Below target, should return positive
 	EXPECT_FLOAT_EQ(25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 850, /*tgt*/ 900));
-}
-
-TEST(idle_v2, closedLoopDeadzone) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	IdleController dut;
-	dut.init();
-
-
-	// Not testing PID here, so we can set very simple PID gains
-	engineConfiguration->idleRpmPid.pFactor = 0.5;	// 0.5 output per 1 RPM error = 50% per 100 rpm
-	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.dFactor = 0;
-	engineConfiguration->idleRpmPid.iFactor = 0;
-	engineConfiguration->idleRpmPid.minValue = -50;
-	engineConfiguration->idleRpmPid.maxValue = 50;
-
-	engineConfiguration->idlePidRpmDeadZone = 25;
-
-	// burn one then advance time 5 seconds to avoid difficulty from wasResetPid
-	dut.getClosedLoop(ICP::Idling, 0, 900, 900);
-	advanceTimeUs(5'000'000);
-
-	// Test above target, should return negative
-	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 950, /*tgt*/ 900));
-
-	// Inside deadzone, should return same as last time
-	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*tgt*/ 900));
 }
 
 struct IntegrationIdleMock : public IdleController {

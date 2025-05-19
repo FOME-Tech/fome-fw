@@ -11,7 +11,6 @@ struct_no_prefix idle_state_s
 	bit isIacTableForCoasting
 	bit notIdling
 	bit needReset;reset
-	bit isInDeadZone;dead zone
 	bit isBlipping
 	bit looksLikeRunning
 	bit looksLikeCoasting

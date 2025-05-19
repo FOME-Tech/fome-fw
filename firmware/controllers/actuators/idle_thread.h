@@ -96,9 +96,6 @@ private:
 
 	Timer m_timeInIdlePhase;
 
-	// This is stored by getClosedLoop and used in case we want to "do nothing"
-	float m_lastAutomaticPosition = 0;
-
 	Pid m_timingPid;
 
 	float m_modeledFlowIdleTiming = 0;
