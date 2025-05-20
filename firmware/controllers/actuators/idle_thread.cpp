@@ -220,23 +220,17 @@ static void finishIdleTestIfNeeded() {
  * @return idle valve position percentage for automatic closed loop mode
  */
 float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float targetRpm) {
-	if (shouldResetPid) {
-		needReset = m_pid.getIntegration() <= 0 || mustResetPid;
-		// we reset only if I-term is negative, because the positive I-term is good - it keeps RPM from dropping too low
-		if (needReset) {
-			m_pid.reset();
-			mustResetPid = false;
-		}
-		shouldResetPid = false;
-	}
-
 	notIdling = phase != IIdleController::Phase::Idling;
 	if (notIdling) {
 		// Don't store old I and D terms if PID doesn't work anymore.
 		// Otherwise they will affect the idle position much later, when the throttle is closed.
 		if (mightResetPid) {
+			// we reset only if I-term is negative, because the positive I-term is good - it keeps RPM from dropping too low
+			if (m_pid.getIntegration() <= 0) {
+				m_pid.reset();
+			}
+
 			mightResetPid = false;
-			shouldResetPid = true;
 		}
 
 		// We aren't idling, so don't apply any correction.  A positive correction could inhibit a return to idle.
@@ -304,7 +298,7 @@ float IdleController::getIdlePosition(float rpm) {
 	auto idleMode = useModeledFlow ? IM_AUTO : engineConfiguration->idleMode;
 
 	// If TPS is working and automatic mode enabled, add any closed loop correction
-	if (tps.Valid && idleMode == IM_AUTO) {
+	if (useModeledFlow || (tps.Valid && idleMode == IM_AUTO)) {
 		if (useModeledFlow && phase != Phase::Idling) {
 			m_pid.reset();
 		}
@@ -372,13 +366,13 @@ void IdleController::onFastCallback() {
 
 void IdleController::onConfigurationChange(engine_configuration_s const * previousConfiguration) {
 #if ! EFI_UNIT_TEST
-	shouldResetPid = !previousConfiguration || !m_pid.isSame(&previousConfiguration->idleRpmPid);
-	mustResetPid = shouldResetPid;
+	if (!previousConfiguration || !m_pid.isSame(&previousConfiguration->idleRpmPid)) {
+		m_pid.reset();
+	}
 #endif
 }
 
 void IdleController::init() {
-	shouldResetPid = false;
 	mightResetPid = false;
 	m_pid.initPidClass(&engineConfiguration->idleRpmPid);
 	m_timingPid.initPidClass(&engineConfiguration->idleTimingPid);
