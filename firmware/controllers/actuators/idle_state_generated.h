@@ -8,41 +8,37 @@ struct idle_state_s {
 	// See automaticIdleController().
 	// offset 0 bit 0
 	bool mightResetPid : 1 {};
-	// shouldResetPid
-	// offset 0 bit 1
-	bool shouldResetPid : 1 {};
 	// wasResetPid
 	// This is needed to slowly turn on the PID back after it was reset.
-	// offset 0 bit 2
+	// offset 0 bit 1
 	bool wasResetPid : 1 {};
-	// mustResetPid
-	// This is used when the PID configuration is changed, to guarantee the reset
-	// offset 0 bit 3
-	bool mustResetPid : 1 {};
 	// cranking
-	// offset 0 bit 4
+	// offset 0 bit 2
 	bool isCranking : 1 {};
-	// offset 0 bit 5
+	// offset 0 bit 3
 	bool isIacTableForCoasting : 1 {};
-	// offset 0 bit 6
+	// offset 0 bit 4
 	bool notIdling : 1 {};
-	// reset
-	// offset 0 bit 7
-	bool needReset : 1 {};
-	// offset 0 bit 8
+	// offset 0 bit 5
 	bool isBlipping : 1 {};
-	// offset 0 bit 9
+	// offset 0 bit 6
 	bool looksLikeRunning : 1 {};
-	// offset 0 bit 10
+	// offset 0 bit 7
 	bool looksLikeCoasting : 1 {};
-	// offset 0 bit 11
+	// offset 0 bit 8
 	bool looksLikeCrankToIdle : 1 {};
 	// coasting
-	// offset 0 bit 12
+	// offset 0 bit 9
 	bool isIdleCoasting : 1 {};
 	// Closed loop active
-	// offset 0 bit 13
+	// offset 0 bit 10
 	bool isIdleClosedLoop : 1 {};
+	// offset 0 bit 11
+	bool unusedBit_0_11 : 1 {};
+	// offset 0 bit 12
+	bool unusedBit_0_12 : 1 {};
+	// offset 0 bit 13
+	bool unusedBit_0_13 : 1 {};
 	// offset 0 bit 14
 	bool unusedBit_0_14 : 1 {};
 	// offset 0 bit 15
