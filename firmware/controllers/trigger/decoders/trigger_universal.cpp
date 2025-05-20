@@ -153,6 +153,7 @@ void configureQuickStartSenderWheel(TriggerWaveform *s) {
 
 // Useful for:
 // - Honda 24+1 (set this on crank primary, single tooth cam)
+// - Honda/Toyota 12 tooth crank + various cam (set this on crank primary, single tooth cam or other)
 // - AEM 24+1 CAS wheel (same config as Honda)
 void configure12ToothCrank(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR, SyncEdge::RiseOnly);
