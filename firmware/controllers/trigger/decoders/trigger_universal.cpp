@@ -170,7 +170,7 @@ void configure12ToothCrank(TriggerWaveform* s) {
 		s->setTriggerSynchronizationGap3(i, 0.2f, 3.4f);
 	}
 
-    float width = 360 / 12;
+	float width = 360 / 12;
 
 	// Just a single tooth with 50% duty cycle
 	s->addEventAngle(width / 2, false, TriggerWheel::T_PRIMARY);
