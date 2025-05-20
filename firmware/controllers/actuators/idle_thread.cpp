@@ -298,7 +298,7 @@ float IdleController::getIdlePosition(float rpm) {
 	auto idleMode = useModeledFlow ? IM_AUTO : engineConfiguration->idleMode;
 
 	// If TPS is working and automatic mode enabled, add any closed loop correction
-	if (tps.Valid && idleMode == IM_AUTO) {
+	if (useModeledFlow || (tps.Valid && idleMode == IM_AUTO)) {
 		if (useModeledFlow && phase != Phase::Idling) {
 			m_pid.reset();
 		}
