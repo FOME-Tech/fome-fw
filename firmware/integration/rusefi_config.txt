@@ -1377,7 +1377,7 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t ALSMaxDriverThrottleIntent;;"%", 1, 0, 0, 10, 0
 	pin_input_mode_e ALSActivatePinMode;
 
-	custom WidebandMode 1 bits, S08, @OFFSET@, [0:1], @@WidebandMode_auto_enum@@
+	custom WidebandMode 1 bits, S08, @OFFSET@, [0:1], "Analog", "FOME Internal (CAN)", "AEM X-Series (CAN)"
 	WidebandMode widebandMode;Select which type of wideband O2 controller you're using.
 
 	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
