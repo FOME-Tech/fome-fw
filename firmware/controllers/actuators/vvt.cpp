@@ -56,6 +56,16 @@ void VvtController::onConfigurationChange(engine_configuration_s const * previou
 	}
 }
 
+static bool shouldInvertVvt(int camIndex) {
+	// grumble grumble, can't do an array of bits in c++
+	switch (camIndex) {
+		case 0: return engineConfiguration->invertVvtControlIntake;
+		case 1: return engineConfiguration->invertVvtControlExhaust;
+	}
+
+	return false;
+}
+
 expected<angle_t> VvtController::observePlant() const {
 #if EFI_SHAFT_POSITION_INPUT
 	return engine->triggerCentral.getVVTPosition(m_bank, m_cam);
@@ -95,16 +105,6 @@ expected<percent_t> VvtController::getOpenLoop(angle_t target) {
 	// TODO: could we do VVT open loop?
 	UNUSED(target);
 	return 0;
-}
-
-static bool shouldInvertVvt(int camIndex) {
-	// grumble grumble, can't do an array of bits in c++
-	switch (camIndex) {
-		case 0: return engineConfiguration->invertVvtControlIntake;
-		case 1: return engineConfiguration->invertVvtControlExhaust;
-	}
-
-	return false;
 }
 
 expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observation) {
