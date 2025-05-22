@@ -27,13 +27,12 @@ VvtController::VvtController(int index, int bankIndex, int camIndex)
 void VvtController::init(const ValueProvider3D* targetMap, IPwm* pwm) {
 	// Use the same settings for the Nth cam in every bank (ie, all exhaust cams use the same PID)
 	m_pid.initPidClass(&engineConfiguration->auxPid[m_cam]);
-	if(m_cam)
-	{
-		m_pid.iTermMin = engineConfiguration->vvt1ItermMin;
-		m_pid.iTermMax = engineConfiguration->vvt1ItermMax;
+	if (m_cam) {
+		m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
+		m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 	} else {
-		m_pid.iTermMin = engineConfiguration->vvt2ItermMin;
-		m_pid.iTermMax = engineConfiguration->vvt2ItermMax;
+		m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
+		m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 	}
 
 	m_targetMap = targetMap;
@@ -60,13 +59,12 @@ void VvtController::onFastCallback() {
 
 void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
 	if (!previousConfig || !m_pid.isSame(&previousConfig->auxPid[m_cam])) {
-		if(m_cam)
-		{
-			m_pid.iTermMin = engineConfiguration->vvt1ItermMin;
-			m_pid.iTermMax = engineConfiguration->vvt1ItermMax;
+		if (m_cam) {
+			m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
+			m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 		} else {
-			m_pid.iTermMin = engineConfiguration->vvt2ItermMin;
-			m_pid.iTermMax = engineConfiguration->vvt2ItermMax;
+			m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
+			m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 		}
 		m_pid.reset();
 	}
