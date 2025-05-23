@@ -90,6 +90,22 @@ expected<angle_t> VvtController::getSetpoint() {
 				m_timeSinceEnabled.getElapsedSeconds()
 			);
 
+	// If the target is very near the rest position, disable control entirely
+	// Couple reasons for this:
+	// - Avoid integrator windup from trying to jam the cam against the stop
+	// - Many VVT implementations don't like being controlled near the stop,
+	//       as this can cause problems with the lock pin jamming.
+	bool allowCamControl;
+	if (shouldInvertVvt(m_cam)) {
+		allowCamControl = m_targetHysteresis.test(target < -3, target > -1);
+	} else {
+		allowCamControl = m_targetHysteresis.test(target > 3, target < 1);
+	}
+
+	if (!allowCamControl) {
+		return unexpected;
+	}
+
 	vvtTarget = target;
 
 	return target;
