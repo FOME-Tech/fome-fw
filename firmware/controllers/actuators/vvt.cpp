@@ -102,13 +102,13 @@ expected<angle_t> VvtController::getSetpoint() {
 		allowCamControl = m_targetHysteresis.test(target > 3, target < 1);
 	}
 
-	if (!allowCamControl) {
+	if (allowCamControl) {
+		vvtTarget = target;
+		return target;
+	} else {
+		vvtTarget = 0;
 		return unexpected;
 	}
-
-	vvtTarget = target;
-
-	return target;
 }
 
 void VvtController::setTargetOffset(float targetOffset) {
