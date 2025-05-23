@@ -875,7 +875,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
 	output_pin_e[LUA_PWM_COUNT iterate] luaOutputPins
 
-    int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Angle between cam sensor and VVT zero position;"value", 0.1, 0, -720, 1000, 1
+	int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Angle between cam sensor and VVT zero position. Adjust this so that your VVT indication reads 0 while running with the control solenoid disabled.;"value", 0.1, 0, -720, 1000, 1
 
     gppwm_note_t[GPPWM_CHANNELS iterate] gpPwmNote;
 
