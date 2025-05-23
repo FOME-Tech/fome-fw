@@ -101,9 +101,8 @@ void VvtController::setTargetOffset(float targetOffset) {
 }
 
 
-expected<percent_t> VvtController::getOpenLoop(angle_t target) {
-	// TODO: could we do VVT open loop?
-	UNUSED(target);
+expected<percent_t> VvtController::getOpenLoop(angle_t /* target */) {
+	// TODO: could/should we do open loop?
 	return 0;
 }
 
