@@ -354,6 +354,8 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->auxPid[0].offset = 33;
 	engineConfiguration->auxPid[0].minValue = 10;
 	engineConfiguration->auxPid[0].maxValue = 90;
+	engineConfiguration->vvtItermMin[0] = -100;
+	engineConfiguration->vvtItermMax[0] = 100;
 
 	engineConfiguration->vvtOutputFrequency = 300; // VVT solenoid control
 
@@ -361,6 +363,8 @@ static void setDefaultEngineConfiguration() {
 
 	engineConfiguration->auxPid[1].minValue = 10;
 	engineConfiguration->auxPid[1].maxValue = 90;
+	engineConfiguration->vvtItermMin[1] = -100;
+	engineConfiguration->vvtItermMax[1] = 100;
 
 	engineConfiguration->turboSpeedSensorMultiplier = 1;
 
