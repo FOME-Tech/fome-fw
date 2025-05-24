@@ -21,28 +21,40 @@ bool AemXSeriesWideband::acceptFrame(const CANRxFrame& frame) const {
 	}
 	
 	uint32_t id = CAN_ID(frame);
+	auto mode = engineConfiguration->widebandMode;
 
-	// 0th sensor is 0x180, 1st sensor is 0x181, etc
-	uint32_t aemXSeriesId = aem_base + m_sensorIndex;
+	switch (mode) {
+		case WidebandMode::Analog: {
+			break;
+		} case WidebandMode::AemXSeries: {
+			// 0th sensor is 0x180, 1st sensor is 0x181, etc
+			uint32_t aemXSeriesId = aem_base + m_sensorIndex;
 
-	// 0th sensor is 0x190 and 0x191, 1st sensor is 0x192 and 0x193
-	uint32_t rusefiBaseId = rusefi_base + 2 * m_sensorIndex;
+			return id == aemXSeriesId;
+		} case WidebandMode::FOMEInternal: {
+			// 0th sensor is 0x190 and 0x191, 1st sensor is 0x192 and 0x193
+			uint32_t rusefiBaseId = rusefi_base + 2 * m_sensorIndex;
 
-	return 
-		id == aemXSeriesId ||
-		id == rusefiBaseId ||
-		id == rusefiBaseId + 1;
+			return id == rusefiBaseId || id == rusefiBaseId + 1;
+		}
+	}
+
+	return false;
 }
 
 void AemXSeriesWideband::decodeFrame(const CANRxFrame& frame, efitick_t nowNt) {
 	uint32_t id = CAN_ID(frame);
 
 	// accept frame has already guaranteed that this message belongs to us
-	// We just have to check if it's AEM or rusEFI
-	if (id < rusefi_base) {
+	// We just have to check if it's AEM or FOME
+	switch (engineConfiguration->widebandMode) {
+	case WidebandMode::Analog:
+		// disabled, ignore
+		break;
+	case WidebandMode::AemXSeries:
 		decodeAemXSeries(frame, nowNt);
-	} else {
-		// rusEFI custom format
+		break;
+	case WidebandMode::FOMEInternal:
 		if ((id & 0x1) != 0) {
 			// low bit is set, this is the "diag" frame
 			decodeRusefiDiag(frame);
@@ -50,6 +62,7 @@ void AemXSeriesWideband::decodeFrame(const CANRxFrame& frame, efitick_t nowNt) {
 			// low bit not set, this is standard frame
 			decodeRusefiStandard(frame, nowNt);
 		}
+		break;
 	}
 }
 

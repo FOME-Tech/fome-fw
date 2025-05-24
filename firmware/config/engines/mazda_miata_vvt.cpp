@@ -737,7 +737,7 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->idle.solenoidPin = PROTEUS_LS_10;
 
 	// Built in wideband controller on bus 2
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 	engineConfiguration->widebandOnSecondBus = true;
 	engineConfiguration->enableVerboseCanTx = true;
 

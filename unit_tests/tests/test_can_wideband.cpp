@@ -3,6 +3,8 @@
 #include "AemXSeriesLambda.h"
 
 TEST(CanWideband, AcceptFrameId0) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	AemXSeriesWideband dut(0, SensorType::Lambda1);
 
 	CANRxFrame frame;
@@ -10,20 +12,29 @@ TEST(CanWideband, AcceptFrameId0) {
 	frame.IDE = false;
 	frame.DLC = 8;
 
-	// Check that the AEM format frame is accepted
+	// Check that the AEM format frame is accepted, but not FOME
+	engineConfiguration->widebandMode = WidebandMode::AemXSeries;
 	frame.SID = 0x180;
 	EXPECT_TRUE(dut.acceptFrame(frame));
+	frame.SID = 0x190;
+	EXPECT_FALSE(dut.acceptFrame(frame));
+	frame.SID = 0x191;
+	EXPECT_FALSE(dut.acceptFrame(frame));
 
-	// Check that the rusEFI standard data is accepted
+	// Check that the FOME format frame is accepted, but not AEM
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
+	frame.SID = 0x180;
+	EXPECT_FALSE(dut.acceptFrame(frame));
 	frame.SID = 0x190;
 	EXPECT_TRUE(dut.acceptFrame(frame));
-
-	// Check that the rusEFI extended data is accepted
 	frame.SID = 0x191;
 	EXPECT_TRUE(dut.acceptFrame(frame));
+	
 }
 
 TEST(CanWideband, AcceptFrameId1) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	AemXSeriesWideband dut(1, SensorType::Lambda2);
 
 	CANRxFrame frame;
@@ -31,20 +42,29 @@ TEST(CanWideband, AcceptFrameId1) {
 	frame.IDE = false;
 	frame.DLC = 8;
 
-	// Check that the AEM format frame is accepted
+	// Check that the AEM format frame is accepted, but not FOME
+	engineConfiguration->widebandMode = WidebandMode::AemXSeries;
 	frame.SID = 0x181;
 	EXPECT_TRUE(dut.acceptFrame(frame));
+	frame.SID = 0x192;
+	EXPECT_FALSE(dut.acceptFrame(frame));
+	frame.SID = 0x193;
+	EXPECT_FALSE(dut.acceptFrame(frame));
 
-	// Check that the rusEFI standard data is accepted
+	// Check that the FOME format frame is accepted, but not AEM
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
+	frame.SID = 0x181;
+	EXPECT_FALSE(dut.acceptFrame(frame));
 	frame.SID = 0x192;
 	EXPECT_TRUE(dut.acceptFrame(frame));
-
-	// Check that the rusEFI extended data is accepted
 	frame.SID = 0x193;
 	EXPECT_TRUE(dut.acceptFrame(frame));
 }
 
 TEST(CanWideband, DecodeValidAemFormat) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->widebandMode = WidebandMode::AemXSeries;
+
 	AemXSeriesWideband dut(0, SensorType::Lambda1);
 	dut.Register();
 
@@ -97,9 +117,9 @@ TEST(CanWideband, DecodeValidAemFormat) {
 
 #include "wideband_firmware/for_rusefi/wideband_can.h"
 
-TEST(CanWideband, DecodeRusefiStandard)
-{
+TEST(CanWideband, DecodeRusefiStandard) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 
 	AemXSeriesWideband dut(0, SensorType::Lambda1);
 	dut.Register();
@@ -137,9 +157,9 @@ TEST(CanWideband, DecodeRusefiStandard)
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 }
 
-TEST(CanWideband, DecodeRusefiStandardWrongVersion)
-{
+TEST(CanWideband, DecodeRusefiStandardWrongVersion) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 
 	AemXSeriesWideband dut(0, SensorType::Lambda1);
 	dut.Register();
