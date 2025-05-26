@@ -944,7 +944,6 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
-	public static final int SIGNATURE_HASH = 862616194;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1151,7 +1150,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.05.24.f407-discovery.862616194";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.05.26.f407-discovery.2500983668";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1300;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1879,8 +1878,10 @@ public class Fields {
 	public static final Field TCHARGEMAXRPMMINTPS = Field.create("TCHARGEMAXRPMMINTPS", 1410, FieldType.INT8).setScale(0.005).setBaseOffset(0);
 	public static final Field TCHARGEMAXRPMMAXTPS = Field.create("TCHARGEMAXRPMMAXTPS", 1411, FieldType.INT8).setScale(0.005).setBaseOffset(0);
 	public static final Field VVTOUTPUTFREQUENCY = Field.create("VVTOUTPUTFREQUENCY", 1412, FieldType.INT16).setScale(1.0).setBaseOffset(0);
-	public static final Field VVTITERMMIN = Field.create("VVTITERMMIN", 1414, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field VVTITERMMAX = Field.create("VVTITERMMAX", 1416, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTITERMMIN1 = Field.create("VVTITERMMIN1", 1414, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTITERMMIN2 = Field.create("VVTITERMMIN2", 1415, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTITERMMAX1 = Field.create("VVTITERMMAX1", 1416, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTITERMMAX2 = Field.create("VVTITERMMAX2", 1417, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MINIMUMIGNITIONTIMING = Field.create("MINIMUMIGNITIONTIMING", 1418, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAXIMUMIGNITIONTIMING = Field.create("MAXIMUMIGNITIONTIMING", 1419, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field ALTERNATORPWMFREQUENCY = Field.create("ALTERNATORPWMFREQUENCY", 1420, FieldType.INT16).setScale(1.0).setBaseOffset(0);
