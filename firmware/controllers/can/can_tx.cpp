@@ -64,7 +64,7 @@ void CanWrite::PeriodicTask(efitick_t) {
 	updateDash(cycle);
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE
-	if (engineConfiguration->enableAemXSeries && cycle.isInterval(CI::_50ms)) {
+	if (engineConfiguration->widebandMode == WidebandMode::FOMEInternal && cycle.isInterval(CI::_50ms)) {
 		sendWidebandInfo();
 	}
 #endif

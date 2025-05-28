@@ -643,6 +643,12 @@ enum class SelectedGear : uint8_t {
 	Low = 11,
 };
 
+enum class WidebandMode : uint8_t {
+	Analog = 0,
+	FOMEInternal = 1,
+	AemXSeries = 2,
+};
+
 #define SC_Exhaust_First 1
 
 #endif // __cplusplus
