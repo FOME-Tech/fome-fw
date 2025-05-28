@@ -106,6 +106,17 @@ case TsCalMode::Tps2SecondaryMin:
   }
  return NULL;
 }
+const char *getWidebandMode(WidebandMode value){
+switch(value) {
+case WidebandMode::AemXSeries:
+  return "AemXSeries";
+case WidebandMode::Analog:
+  return "Analog";
+case WidebandMode::FOMEInternal:
+  return "FOMEInternal";
+  }
+ return NULL;
+}
 const char *getWssToVssMode(WssToVssMode value){
 switch(value) {
 case WssToVssMode::AverageAll:

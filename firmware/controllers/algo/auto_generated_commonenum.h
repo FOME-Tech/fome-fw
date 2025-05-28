@@ -17,6 +17,9 @@ const char *getTransmissionControllerMode(TransmissionControllerMode value);
 const char *getTsCalMode(TsCalMode value);
 #endif //__cplusplus
 #if __cplusplus
+const char *getWidebandMode(WidebandMode value);
+#endif //__cplusplus
+#if __cplusplus
 const char *getWssToVssMode(WssToVssMode value);
 #endif //__cplusplus
 const char *getAir_pressure_sensor_type_e(air_pressure_sensor_type_e value);
