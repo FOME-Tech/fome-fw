@@ -19,7 +19,7 @@ bool AemXSeriesWideband::acceptFrame(const CANRxFrame& frame) const {
 	if (frame.DLC != 8) {
 		return false;
 	}
-	
+
 	uint32_t id = CAN_ID(frame);
 	auto mode = engineConfiguration->widebandMode;
 
@@ -80,12 +80,11 @@ void AemXSeriesWideband::decodeAemXSeries(const CANRxFrame& frame, efitick_t now
 
 	// bit 7 indicates valid
 	bool valid = frame.data8[6] & 0x80;
-	if (!valid) {
+	if (valid) {
+		setValidValue(lambdaFloat, nowNt);
+	} else {
 		invalidate();
-		return;
 	}
-
-	setValidValue(lambdaFloat, nowNt);
 }
 
 #include "wideband_firmware/for_rusefi/wideband_can.h"
