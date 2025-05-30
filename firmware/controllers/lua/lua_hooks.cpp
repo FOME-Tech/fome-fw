@@ -484,7 +484,7 @@ struct LuaSensor final : public StoredValueSensor {
 
 	// do we need method defined exactly on LuaSensor for Luaa to be happy?
 	void setTimeout(int timeoutMs) override {
-	    StoredValueSensor::setTimeout(timeoutMs);
+		StoredValueSensor::setTimeout(timeoutMs);
 	}
 
 	void setRedundant(bool value) {
@@ -632,7 +632,7 @@ int lua_canRxAddMask(lua_State* l) {
 				callback = getLuaFunc(l);
 			} else {
 				// handle canRxAddMask(bus, id, mask)
-		    	bus = validateCanChannelAndConvertFromHumanIntoZeroIndex(l);
+				bus = validateCanChannelAndConvertFromHumanIntoZeroIndex(l);
 				eid = luaL_checkinteger(l, 2);
 				mask = luaL_checkinteger(l, 3);
 			}
@@ -728,9 +728,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 			return 0;
 		}
 		if (!engine->triggerCentral.directSelfStimulation) {
-		    enableTriggerStimulator();
+			enableTriggerStimulator();
 		}
-        setTriggerEmulatorRPM(rpm);
+		setTriggerEmulatorRPM(rpm);
 		return 0;
 	});
 #endif // EFI_UNIT_TEST
