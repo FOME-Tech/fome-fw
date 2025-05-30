@@ -20,8 +20,8 @@ static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
 #define LPS_CR1_BDU (1 << 2)
 
 // Status register flags
-#define LPS_SR_P_DA (1 << 1)	// Pressure data available
-#define LPS_SR_T_DA (1 << 2)	// Temperature data available
+#define LPS_SR_P_DA (1 << 0)	// Pressure data available
+#define LPS_SR_T_DA (1 << 1)	// Temperature data available
 
 #define REG_WhoAmI 0x0F
 
