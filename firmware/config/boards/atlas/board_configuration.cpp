@@ -136,6 +136,18 @@ void setBoardConfigOverrides() {
 	engineConfiguration->spi4sckPin = Gpio::E2;
 	engineConfiguration->spi4misoPin = Gpio::E5;
 	engineConfiguration->spi4mosiPin = Gpio::E6;
+
+	// Clear SPI SD card pins in case it's enabled from porting a Proteus tune
+	if (engineConfiguration->sdCardSpiDevice || isBrainPinValid(engineConfiguration->sdCardCsPin)) {
+		engineConfiguration->is_enabled_spi_3 = false;
+		engineConfiguration->spi3sckPin = Gpio::Unassigned;
+		engineConfiguration->spi3misoPin = Gpio::Unassigned;
+		engineConfiguration->spi3mosiPin = Gpio::Unassigned;
+	}
+
+	// Force disable SPI SD
+	engineConfiguration->sdCardCsPin = Gpio::Unassigned;
+	engineConfiguration->sdCardSpiDevice = SPI_NONE;
 }
 
 void setBoardDefaultConfiguration() {
