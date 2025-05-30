@@ -36,6 +36,9 @@ or
  - Lua functions `storePersistentValue`/`getPersistentValue` to persist values in backup memory between reboots #592
  - Fully disable VVT when the target is 0. This prevents trying to control VVT when near the stop, which can damage the locking pin on some engines.
 
+### Fixed
+ - CAN reception on STM32H7-based ECUs
+
 ## February 2025 Release
 
 ### Breaking Changes
