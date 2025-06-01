@@ -135,6 +135,9 @@ enum class SensorType : unsigned char {
 	AuxSpeed1,
 	AuxSpeed2,
 
+	// Mock sensor fuel flow rate
+	FuelFlow,
+
 	// Let's always have all auxiliary sensors at the end - please add specific sensors above auxiliary
 
 	// Leave me at the end!

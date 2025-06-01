@@ -34,6 +34,7 @@ void initNewSensors() {
 	initAuxSpeedSensors();
 
 	initFuelLevel();
+	initFuelFlowSensor();
 	initMaf();
 
 	initAuxDigital();

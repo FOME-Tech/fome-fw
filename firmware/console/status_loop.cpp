@@ -435,6 +435,8 @@ static void updateFuelResults() {
 
 	// output channel in km
 	engine->outputChannels.distanceTraveled = 0.001f * engine->module<TripOdometer>()->getDistanceMeters();
+
+	Sensor::setMockValue(SensorType::FuelFlow, engine->module<TripOdometer>()->getConsumptionGramPerSecond(), false);
 #endif // MODULE_TRIP_ODO
 }
 
