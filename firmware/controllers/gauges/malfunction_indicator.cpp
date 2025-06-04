@@ -103,14 +103,7 @@ private:
 
 static MILController instance;
 
-bool isMilEnabled() {
-	return isBrainPinValid(engineConfiguration->malfunctionIndicatorPin);
-}
-
-void initMalfunctionIndicator(void) {
-	if (!isMilEnabled()) {
-		return;
-	}
+void initMalfunctionIndicator() {
 	instance.setPeriod(10 /*ms*/);
 	instance.start();
 }
