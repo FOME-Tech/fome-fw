@@ -416,6 +416,9 @@ static void updateSensors() {
 	updateVehicleSpeed();
 	updatePressures();
 	updateMiscSensors();
+
+	engine->outputChannels.mafMeasured = Sensor::getOrZero(SensorType::Maf);
+	engine->outputChannels.mafMeasured2 = Sensor::getOrZero(SensorType::Maf2);
 }
 
 static void updateFuelCorrections() {
@@ -506,10 +509,6 @@ void updateTunerStudioState() {
 	updateFlags();
 
 	tsOutputChannels->rpmAcceleration = engine->rpmCalculator.getRpmAcceleration();
-
-	// Output both the estimated air flow, and measured air flow (if available)
-	tsOutputChannels->mafMeasured = Sensor::getOrZero(SensorType::Maf);
-	tsOutputChannels->mafMeasured2 = Sensor::getOrZero(SensorType::Maf2);
 
 	tsOutputChannels->orderingErrorCounter = engine->triggerCentral.triggerState.orderingErrorCounter;
 #endif // EFI_SHAFT_POSITION_INPUT
