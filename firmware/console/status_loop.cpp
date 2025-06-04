@@ -379,6 +379,7 @@ static void updateRawSensors() {
 static void updatePressures() {
 	engine->outputChannels.baroPressure = Sensor::getOrZero(SensorType::BarometricPressure);
 	engine->outputChannels.MAPValue = Sensor::getOrZero(SensorType::Map);
+	engine->outputChannels.mapFast = Sensor::getOrZero(SensorType::MapFast);
 	engine->outputChannels.oilPressure = Sensor::getOrZero(SensorType::OilPressure);
 
 	engine->outputChannels.compressorDischargePressure = Sensor::getOrZero(SensorType::CompressorDischargePressure);
@@ -572,9 +573,6 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->starterState = enginePins.starterControl.getLogicValue();
 	tsOutputChannels->starterRelayDisable = enginePins.starterRelayDisable.getLogicValue();
-
-	tsOutputChannels->mapFast = Sensor::getOrZero(SensorType::MapFast);
-
 
 	tsOutputChannels->revolutionCounterSinceStart = engine->rpmCalculator.getRevolutionCounterSinceStart();
 
