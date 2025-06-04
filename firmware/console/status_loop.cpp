@@ -549,13 +549,7 @@ void updateTunerStudioState() {
 	extern FrequencySensor vehicleSpeedSensor;
 	tsOutputChannels->vssEdgeCounter = vehicleSpeedSensor.eventCounter;
 
-	tsOutputChannels->hasCriticalError = hasFirmwareError();
-
-	tsOutputChannels->isWarnNow = engine->engineState.warnings.isWarningNow();
-
 	tsOutputChannels->tpsAccelFuel = engine->engineState.tpsAccelEnrich;
-
-	tsOutputChannels->checkEngine = hasErrorCodes();
 
 #if EFI_MAX_31855
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
@@ -564,6 +558,10 @@ void updateTunerStudioState() {
 		}
 	}
 #endif /* EFI_MAX_31855 */
+
+	tsOutputChannels->hasCriticalError = hasFirmwareError();
+	tsOutputChannels->isWarnNow = engine->engineState.warnings.isWarningNow();
+	tsOutputChannels->checkEngine = enginePins.checkEnginePin.getLogicValue();
 
 	tsOutputChannels->warningCounter = engine->engineState.warnings.warningCounter;
 	tsOutputChannels->lastErrorCode = static_cast<uint16_t>(engine->engineState.warnings.lastErrorCode);
