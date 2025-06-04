@@ -227,7 +227,6 @@ struct_no_prefix output_channels_s
 	int8_t sparkCutReason;Ign: Cut Code;"code",1, 0, 0, 0, 0
 	int8_t fuelCutReason;Fuel: Cut Code;"code",1, 0, 0, 0, 0
 
-	uint16_t autoscale mafEstimate;@@GAUGE_NAME_AIR_FLOW_ESTIMATE@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 0
 	uint16_t instantRpm;;"rpm", 1, 0, 0, 0, 0
 
 	uint16_t autoscale rawMap;Raw: MAP;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3

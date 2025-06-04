@@ -322,7 +322,6 @@ static void updateFuelSensors() {
 
 static void updateVvtSensors() {
 #if EFI_SHAFT_POSITION_INPUT
-	// 248
 	engine->outputChannels.vvtPositionB1I = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0);
 	engine->outputChannels.vvtPositionB1E = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/1).value_or(0);
 	engine->outputChannels.vvtPositionB2I = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0).value_or(0);
@@ -497,7 +496,6 @@ void updateTunerStudioState() {
 
 #if EFI_SHAFT_POSITION_INPUT
 
-	// offset 0
 	tsOutputChannels->RPMValue = rpm;
 	auto instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	tsOutputChannels->instantRpm = instantRpm;
@@ -507,31 +505,23 @@ void updateTunerStudioState() {
 	engine->outputChannels.coilDutyCycle = getCoilDutyCycle(rpm);
 	updateFlags();
 
-	// 104
 	tsOutputChannels->rpmAcceleration = engine->rpmCalculator.getRpmAcceleration();
 
 	// Output both the estimated air flow, and measured air flow (if available)
 	tsOutputChannels->mafMeasured = Sensor::getOrZero(SensorType::Maf);
 	tsOutputChannels->mafMeasured2 = Sensor::getOrZero(SensorType::Maf2);
-	tsOutputChannels->mafEstimate = engine->engineState.airflowEstimate;
 
 	tsOutputChannels->orderingErrorCounter = engine->triggerCentral.triggerState.orderingErrorCounter;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-
-	// 68
-	// 140
 #if EFI_ENGINE_CONTROL
 	tsOutputChannels->injectorDutyCycle = getInjectorDutyCycle(rpm);
 	tsOutputChannels->injectorDutyCycleStage2 = getInjectorDutyCycleStage2(rpm);
 #endif
 
-	// 224
 	tsOutputChannels->seconds = getTimeNowS();
 
-	// 252
 	tsOutputChannels->engineMode = packEngineMode();
-	// 120
 	tsOutputChannels->firmwareVersion = getRusEfiVersion();
 
 	tsOutputChannels->accelerationLat = engine->sensors.accelerometer.lat;
