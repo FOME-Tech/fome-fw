@@ -64,7 +64,3 @@ void getErrorCodes(error_codes_set_s * copy) {
 	copy->count = error_codes_set.count;
 	copyArray(copy->error_codes, error_codes_set.error_codes);
 }
-
-bool hasErrorCodes(void) {
-	return error_codes_set.count > 0;
-}
