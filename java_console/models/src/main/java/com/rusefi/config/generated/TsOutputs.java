@@ -295,11 +295,10 @@ public class TsOutputs {
 	public static final Field ACCPEDALSPLIT = Field.create("ACCPEDALSPLIT", 294, FieldType.INT16).setScale(0.01).setBaseOffset(0);
 	public static final Field SPARKCUTREASON = Field.create("SPARKCUTREASON", 296, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field FUELCUTREASON = Field.create("FUELCUTREASON", 297, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAFESTIMATE = Field.create("MAFESTIMATE", 298, FieldType.INT16).setScale(0.1).setBaseOffset(0);
-	public static final Field INSTANTRPM = Field.create("INSTANTRPM", 300, FieldType.INT16).setScale(1.0).setBaseOffset(0);
-	public static final Field RAWMAP = Field.create("RAWMAP", 302, FieldType.INT16).setScale(0.001).setBaseOffset(0);
-	public static final Field RAWAFR = Field.create("RAWAFR", 304, FieldType.INT16).setScale(0.001).setBaseOffset(0);
-	public static final Field RAWFUELTANKLEVEL = Field.create("RAWFUELTANKLEVEL", 306, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field INSTANTRPM = Field.create("INSTANTRPM", 298, FieldType.INT16).setScale(1.0).setBaseOffset(0);
+	public static final Field RAWMAP = Field.create("RAWMAP", 300, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field RAWAFR = Field.create("RAWAFR", 302, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field RAWFUELTANKLEVEL = Field.create("RAWFUELTANKLEVEL", 304, FieldType.INT16).setScale(0.001).setBaseOffset(0);
 	public static final Field CALIBRATIONVALUE2 = Field.create("CALIBRATIONVALUE2", 308, FieldType.FLOAT).setBaseOffset(0);
 	public static final Field LUAINVOCATIONCOUNTER = Field.create("LUAINVOCATIONCOUNTER", 312, FieldType.INT).setScale(1.0).setBaseOffset(0);
 	public static final Field LUALASTCYCLEDURATION = Field.create("LUALASTCYCLEDURATION", 316, FieldType.INT).setScale(1.0).setBaseOffset(0);

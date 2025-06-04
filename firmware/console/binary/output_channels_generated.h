@@ -499,25 +499,23 @@ struct output_channels_s {
 	// code
 	// offset 297
 	int8_t fuelCutReason = (int8_t)0;
-	// Air: Flow estimate
-	// kg/h
-	// offset 298
-	scaled_channel<uint16_t, 10, 1> mafEstimate = (uint16_t)0;
 	// rpm
-	// offset 300
+	// offset 298
 	uint16_t instantRpm = (uint16_t)0;
 	// Raw: MAP
 	// V
-	// offset 302
+	// offset 300
 	scaled_channel<uint16_t, 1000, 1> rawMap = (uint16_t)0;
 	// Raw: AFR
 	// V
-	// offset 304
+	// offset 302
 	scaled_channel<uint16_t, 1000, 1> rawAfr = (uint16_t)0;
 	// Raw: Fuel level
 	// V
-	// offset 306
+	// offset 304
 	scaled_channel<uint16_t, 1000, 1> rawFuelTankLevel = (uint16_t)0;
+	// offset 306
+	uint8_t alignmentFill_at_306[2];
 	// offset 308
 	float calibrationValue2 = (float)0;
 	// Lua: Tick counter
@@ -849,11 +847,10 @@ static_assert(offsetof(output_channels_s, tps12Split) == 292);
 static_assert(offsetof(output_channels_s, accPedalSplit) == 294);
 static_assert(offsetof(output_channels_s, sparkCutReason) == 296);
 static_assert(offsetof(output_channels_s, fuelCutReason) == 297);
-static_assert(offsetof(output_channels_s, mafEstimate) == 298);
-static_assert(offsetof(output_channels_s, instantRpm) == 300);
-static_assert(offsetof(output_channels_s, rawMap) == 302);
-static_assert(offsetof(output_channels_s, rawAfr) == 304);
-static_assert(offsetof(output_channels_s, rawFuelTankLevel) == 306);
+static_assert(offsetof(output_channels_s, instantRpm) == 298);
+static_assert(offsetof(output_channels_s, rawMap) == 300);
+static_assert(offsetof(output_channels_s, rawAfr) == 302);
+static_assert(offsetof(output_channels_s, rawFuelTankLevel) == 304);
 static_assert(offsetof(output_channels_s, calibrationValue2) == 308);
 static_assert(offsetof(output_channels_s, luaInvocationCounter) == 312);
 static_assert(offsetof(output_channels_s, luaLastCycleDuration) == 316);
