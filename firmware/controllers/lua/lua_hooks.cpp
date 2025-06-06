@@ -395,6 +395,8 @@ static int lua_setAirmass(lua_State* l) {
 	return 0;
 }
 
+#endif // EFI_UNIT_TEST
+
 auto& checkBackupSram(lua_State* l) {
 	auto backupRam = getBackupSram();
 
@@ -408,7 +410,7 @@ auto& checkBackupSram(lua_State* l) {
 static int lua_getPersistentValue(lua_State* l) {
 	auto idx = luaL_checkinteger(l, 1);
 
-	auto backupRam = checkBackupSram(l);
+	auto &backupRam = checkBackupSram(l);
 
 	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
 		luaL_error(l, "invalid backup ram index: %d", idx);
@@ -421,7 +423,7 @@ static int lua_getPersistentValue(lua_State* l) {
 static int lua_storePersistentValue(lua_State* l) {
 	auto idx = luaL_checkinteger(l, 1);
 
-	auto backupRam = checkBackupSram(l);
+	auto &backupRam = checkBackupSram(l);
 
 	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
 		luaL_error(l, "invalid backup ram index: %d", idx);
@@ -433,8 +435,6 @@ static int lua_storePersistentValue(lua_State* l) {
 
 	return 0;
 }
-
-#endif // EFI_UNIT_TEST
 
 // TODO: PR this back in to https://github.com/gengyong/luaaa
 namespace LUAAA_NS {
@@ -712,6 +712,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
+	lua_register(l, "getPersistentValue", lua_getPersistentValue);
+	lua_register(l, "storePersistentValue", lua_storePersistentValue);
+
 #if EFI_LAUNCH_CONTROL
 	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
 		auto targetSkipRatio = luaL_checknumber(l2, 1);
@@ -948,9 +951,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 		doScheduleStopEngine();
 		return 0;
 	});
-
-	lua_register(l, "getPersistentValue", lua_getPersistentValue);
-	lua_register(l, "storePersistentValue", lua_storePersistentValue);
 
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
