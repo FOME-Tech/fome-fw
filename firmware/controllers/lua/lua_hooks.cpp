@@ -410,7 +410,7 @@ auto& checkBackupSram(lua_State* l) {
 static int lua_getPersistentValue(lua_State* l) {
 	auto idx = luaL_checkinteger(l, 1);
 
-	auto backupRam = checkBackupSram(l);
+	auto &backupRam = checkBackupSram(l);
 
 	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
 		luaL_error(l, "invalid backup ram index: %d", idx);
@@ -423,7 +423,7 @@ static int lua_getPersistentValue(lua_State* l) {
 static int lua_storePersistentValue(lua_State* l) {
 	auto idx = luaL_checkinteger(l, 1);
 
-	auto backupRam = checkBackupSram(l);
+	auto &backupRam = checkBackupSram(l);
 
 	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
 		luaL_error(l, "invalid backup ram index: %d", idx);
