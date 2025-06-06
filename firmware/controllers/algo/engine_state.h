@@ -31,9 +31,6 @@ public:
 
 	WarningCodeState warnings;
 
-	// Estimated airflow based on whatever airmass model is active
-	float airflowEstimate = 0;
-
 	float auxValveStart = 0;
 	float auxValveEnd = 0;
 

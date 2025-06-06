@@ -51,4 +51,6 @@ struct_no_prefix engine_state_s
 
 	uint16_t autoscale veTableYAxis;;"%",{1/100}, 0, 0, 0, 0
 	uint16_t autoscale idleVeTableYAxis;;"%",{1/100}, 0, 0, 0, 0
+
+	uint16_t autoscale airflowEstimate;@@GAUGE_NAME_AIR_FLOW_ESTIMATE@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 end_struct
