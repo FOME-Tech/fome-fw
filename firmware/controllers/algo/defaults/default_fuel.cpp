@@ -79,7 +79,9 @@ static void setDefaultWarmupFuelEnrichment() {
 
 static void setDefaultVETable() {
 	setRpmTableBin(config->veRpmBins);
-	setTable(config->veTable, 80);
+	setTable(config->veTableSd, 80);
+	setTable(config->veTableMaf, 80);
+	setTable(config->veTableAlphaN, 80);
 
 	setRpmTableBin(config->baroCorrRpmBins);
 	setLinearCurve(config->baroCorrPressureBins, 75, 105, 1);

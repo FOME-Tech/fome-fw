@@ -333,7 +333,9 @@ static void setCommonMazdaNB() {
 	// Tables
 	copyArray(config->veRpmBins, mazda_miata_nb2_RpmBins);
 	copyArray(config->veLoadBins, mazda_miata_nb2_LoadBins);
-	copyTable(config->veTable, mapBased18vvtVeTable_NB_fuel_rail);
+	copyTable(config->veTableSd, mapBased18vvtVeTable_NB_fuel_rail);
+	copyTable(config->veTableMaf, mapBased18vvtVeTable_NB_fuel_rail);
+	copyTable(config->veTableAlphaN, mapBased18vvtVeTable_NB_fuel_rail);
 
 	copyArray(config->ignitionRpmBins, ignition18vvtRpmBins);
 	copyArray(config->ignitionLoadBins, ignition18vvtLoadBins);
