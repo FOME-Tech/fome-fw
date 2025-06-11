@@ -116,8 +116,6 @@ public class LiveDataProcessor {
 
                 if (constexpr != null) {
                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-
-                    outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
                 }
             }
 
@@ -179,7 +177,6 @@ public class LiveDataProcessor {
         enumContent.append("} live_data_e;\n");
 
         sdLogWriter.endFile();
-        outputLookupWriter.endFile();
 
         return outputChannelWriter.getSize();
     }
