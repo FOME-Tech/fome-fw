@@ -126,7 +126,7 @@ void MapAverager::onSample(float map, uint8_t cylinderNumber) {
 	}
 
 	if (cylinderNumber < efi::size(engine->outputChannels.mapPerCylinder)) {
-		engine->outputChannels.mapPerCylinder[cylinderNumber] = minPressure;
+		engine->outputChannels.mapPerCylinder[cylinderNumber] = map;
 	}
 	setValidValue(minPressure, getTimeNowNt());
 }
