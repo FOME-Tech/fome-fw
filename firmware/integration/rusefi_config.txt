@@ -1689,8 +1689,8 @@ uint8_t[FUEL_LEVEL_TABLE_COUNT] fuelLevelValues;;"%", 1, 0, 0, 100, 0
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrVoltBins;;"volts", 0.1, 0, 0, 20, 1
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrValues;;"multiplier", 0.02, 0, 0, 5, 2
 
-uint8_t[SMALL_PW_COUNT] autoscale smallPwadderBins;;"ms", 0.1, 0, 0.1, 15, 2
-uint8_t[SMALL_PW_COUNT] autoscale smallPwadderValues;;"ms", 0.1, 0, 0.1, 15, 2
+uint16_t[SMALL_PW_COUNT] autoscale smallPwadderBins;;"ms", 0.01, 0, 0, 15, 2
+int16_t[SMALL_PW_COUNT] autoscale smallPwadderValues;;"ms", 0.01, 0, -3, 3, 2
 
 uint8_t[8] autoscale minimumOilPressureBins;;"RPM", 100, 0, 0, 25000, 0
 uint8_t[8] autoscale minimumOilPressureValues;;"kPa", 10, 0, 0, 1000, 0

@@ -65,7 +65,6 @@ struct_no_prefix output_channels_s
 	int16_t autoscale vvtPositionB1I;@@GAUGE_NAME_VVT_B1I@@;"deg",{1/@@PACK_MULT_ANGLE@@}, 0, 0, 0, 1
 
 	uint16_t autoscale actualLastInjection;@@GAUGE_NAME_FUEL_LAST_INJECTION@@\nActual last injection time - including all compensation and injection mode;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
-	uint16_t autoscale SmallPwAdderValue;@@GAUGE_NAME_SMALL_PW_ADDER@@\nSmall pulsewidth adder value;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
 
 
 	uint8_t autoscale injectorDutyCycle;@@GAUGE_NAME_FUEL_INJ_DUTY@@;"%",{1/2}, 0, 0, 100, 1
