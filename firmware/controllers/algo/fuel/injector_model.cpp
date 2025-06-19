@@ -164,6 +164,11 @@ float InjectorModelBase::getInjectionDuration(float fuelMassGram) const {
 	// Get the no-offset duration
 	float baseDuration = getBaseDurationImpl(fuelMassGram);
 
+	if (engineConfiguration->smallPwAdderEnabled) {
+		float smallPwAdder = interpolate2d(baseDuration, config->smallPwadderBins ,config->smallPwadderValues);
+		return baseDuration + smallPwAdder + m_deadtime;
+	}
+
 	// Add deadtime offset
 	return baseDuration + m_deadtime;
 }

@@ -172,6 +172,7 @@ struct_no_prefix engine_configuration_s
 
 #define FUEL_RPM_COUNT 16
 #define FUEL_LOAD_COUNT 16
+#define SMALL_PW_COUNT 16
 
 #define BOOST_RPM_COUNT 8
 #define BOOST_LOAD_COUNT 8
@@ -689,6 +690,7 @@ bit is_enabled_spi_2
 	bit alignEngineSnifferAtTDC
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
+	bit smallPwAdderEnabled; This setting allows the adjustment of small pulse width nonlinearity.
 
 	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
 
@@ -1686,6 +1688,9 @@ uint8_t[FUEL_LEVEL_TABLE_COUNT] fuelLevelValues;;"%", 1, 0, 0, 100, 0
 
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrVoltBins;;"volts", 0.1, 0, 0, 20, 1
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrValues;;"multiplier", 0.02, 0, 0, 5, 2
+
+uint8_t[SMALL_PW_COUNT] autoscale smallPwadderBins;;"ms", 0.1, 0, 0.1, 15, 2
+uint8_t[SMALL_PW_COUNT] autoscale smallPwadderValues;;"ms", 0.1, 0, 0.1, 15, 2
 
 uint8_t[8] autoscale minimumOilPressureBins;;"RPM", 100, 0, 0, 25000, 0
 uint8_t[8] autoscale minimumOilPressureValues;;"kPa", 10, 0, 0, 1000, 0

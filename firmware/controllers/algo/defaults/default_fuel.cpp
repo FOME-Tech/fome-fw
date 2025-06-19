@@ -332,4 +332,8 @@ void setDefaultFuel() {
 	// Cut at 96% after 0.5 second
 	engineConfiguration->maxInjectorDutySustained = 96;
 	engineConfiguration->maxInjectorDutySustainedTimeout = 0.5f;
+
+	setLinearCurve(config->smallPwadderBins, 0.1, 3, 0.1);
+	setLinearCurve(config->smallPwadderValues, 0, 0, 1);
+	engineConfiguration->smallPwAdderEnabled = false;
 }

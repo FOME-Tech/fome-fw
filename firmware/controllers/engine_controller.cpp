@@ -618,6 +618,10 @@ bool validateConfig() {
 		ensureArrayIsAscending("Oil pressure protection", config->minimumOilPressureBins);
 	}
 
+	if (engineConfiguration->smallPwAdderEnabled) {
+		ensureArrayIsAscending("Small PW adder bins", config->smallPwadderBins);
+	}
+
 	return true;
 }
 
