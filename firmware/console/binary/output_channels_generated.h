@@ -729,14 +729,11 @@ struct output_channels_s {
 	uint8_t pad = (uint8_t)0;
 	// offset 604
 	uint16_t mapAveragingSamples = (uint16_t)0;
-	// kPa
-	// offset 606
-	uint8_t mapPerCylinder[12];
 	// ratio
-	// offset 618
+	// offset 606
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
 };
-static_assert(sizeof(output_channels_s) == 620);
+static_assert(sizeof(output_channels_s) == 608);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, speedToRpmRatio) == 8);
@@ -919,6 +916,5 @@ static_assert(offsetof(output_channels_s, actualLastInjectionStage2) == 600);
 static_assert(offsetof(output_channels_s, injectorDutyCycleStage2) == 602);
 static_assert(offsetof(output_channels_s, pad) == 603);
 static_assert(offsetof(output_channels_s, mapAveragingSamples) == 604);
-static_assert(offsetof(output_channels_s, mapPerCylinder) == 606);
-static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 618);
+static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 606);
 

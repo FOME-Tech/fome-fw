@@ -446,17 +446,5 @@ public class TsOutputs {
 	public static final Field INJECTORDUTYCYCLESTAGE2 = Field.create("INJECTORDUTYCYCLESTAGE2", 602, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 	public static final Field PAD = Field.create("PAD", 603, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAPAVERAGINGSAMPLES = Field.create("MAPAVERAGINGSAMPLES", 604, FieldType.INT16).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER1 = Field.create("MAPPERCYLINDER1", 606, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER2 = Field.create("MAPPERCYLINDER2", 607, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER3 = Field.create("MAPPERCYLINDER3", 608, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER4 = Field.create("MAPPERCYLINDER4", 609, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER5 = Field.create("MAPPERCYLINDER5", 610, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER6 = Field.create("MAPPERCYLINDER6", 611, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER7 = Field.create("MAPPERCYLINDER7", 612, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER8 = Field.create("MAPPERCYLINDER8", 613, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER9 = Field.create("MAPPERCYLINDER9", 614, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER10 = Field.create("MAPPERCYLINDER10", 615, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER11 = Field.create("MAPPERCYLINDER11", 616, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field MAPPERCYLINDER12 = Field.create("MAPPERCYLINDER12", 617, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field DWELLACCURACYRATIO = Field.create("DWELLACCURACYRATIO", 618, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field DWELLACCURACYRATIO = Field.create("DWELLACCURACYRATIO", 606, FieldType.INT16).setScale(0.001).setBaseOffset(0);
 }
