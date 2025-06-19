@@ -104,26 +104,31 @@ void MapAverager::stop() {
 		float averageMap = m_sum / m_counter;
 		m_lastCounter = m_counter;
 
-		// TODO: this should be per-sensor, not one for all MAP sensors
-		averagedMapRunningBuffer[averagedMapBufIdx] = averageMap;
-		// increment circular running buffer index
-		averagedMapBufIdx = (averagedMapBufIdx + 1) % mapMinBufferLength;
-		// find min. value (only works for pressure values, not raw voltages!)
-		float minPressure = averagedMapRunningBuffer[0];
-		for (int i = 1; i < mapMinBufferLength; i++) {
-			if (averagedMapRunningBuffer[i] < minPressure)
-				minPressure = averagedMapRunningBuffer[i];
-		}
-
-		if (m_cylinderNumber < efi::size(engine->outputChannels.mapPerCylinder)) {
-			engine->outputChannels.mapPerCylinder[m_cylinderNumber] = minPressure;
-		}
-		setValidValue(minPressure, getTimeNowNt());
+		onSample(averageMap, m_cylinderNumber);
 	} else {
 #if EFI_PROD_CODE
 		warning(ObdCode::CUSTOM_UNEXPECTED_MAP_VALUE, "No MAP values");
 #endif
 	}
+}
+
+void MapAverager::onSample(float map, uint8_t cylinderNumber) {
+	// TODO: this should be per-sensor, not one for all MAP sensors
+	averagedMapRunningBuffer[averagedMapBufIdx] = map;
+	// increment circular running buffer index
+	averagedMapBufIdx = (averagedMapBufIdx + 1) % mapMinBufferLength;
+	// find min. value (only works for pressure values, not raw voltages!)
+	float minPressure = averagedMapRunningBuffer[0];
+	for (int i = 1; i < mapMinBufferLength; i++) {
+		if (averagedMapRunningBuffer[i] < minPressure) {
+			minPressure = averagedMapRunningBuffer[i];
+		}
+	}
+
+	if (cylinderNumber < efi::size(engine->outputChannels.mapPerCylinder)) {
+		engine->outputChannels.mapPerCylinder[cylinderNumber] = minPressure;
+	}
+	setValidValue(minPressure, getTimeNowNt());
 }
 
 /**
