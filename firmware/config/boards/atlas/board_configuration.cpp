@@ -181,7 +181,7 @@ void initBoardSensors() {
 		mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
 		mrSenseSensor.setFunction(mrSenseFunc);
 		AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
-		mrSenseSensor.Register();
+		// mrSenseSensor.Register();
 	}
 
 	{
@@ -193,7 +193,7 @@ void initBoardSensors() {
 		sensor5vFunc.configure(0, 0, 1, sensor5vRatio, 0, 50);
 		sensor5vSensor.setFunction(sensor5vFunc);
 		AdcSubscription::SubscribeSensor(sensor5vSensor, EFI_ADC_17, /*bandwidth*/ 20, /*ratio*/ 1);
-		sensor5vSensor.Register();
+		// sensor5vSensor.Register();
 	}
 }
 #endif
