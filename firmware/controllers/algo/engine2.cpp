@@ -83,8 +83,6 @@ void EngineState::periodicFastCallback() {
 	ScopePerf perf(PE::EngineStatePeriodicFastCallback);
 
 #if EFI_ENGINE_CONTROL
-	updateMapCylinderOffsets();
-
 	efitick_t nowNt = getTimeNowNt();
 	bool isCranking = engine->rpmCalculator.isCranking();
 	float rpm = Sensor::getOrZero(SensorType::Rpm);

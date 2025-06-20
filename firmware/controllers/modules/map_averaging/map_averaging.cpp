@@ -184,6 +184,8 @@ static void applyMapMinBufferLength() {
 }
 
 void MapAveragingModule::onFastCallback() {
+	engine->engineState.updateMapCylinderOffsets();
+
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	MAP_sensor_config_s * c = &engineConfiguration->map;
