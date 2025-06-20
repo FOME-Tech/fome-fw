@@ -199,6 +199,14 @@ float InjectorModelBase::getBaseDurationImpl(float fuelMassGram) const {
 
 		// large pulse uses base duration
 		break;
+	case INJ_SmallPulseAdderMass:
+		if (baseDuration < engineConfiguration->applyNonlinearBelowPulse) {
+			return interpolate2d(
+					fuelMassGram,
+					config->smallPulseAdderMassBins,
+					config->smallPulseAdderMassValues
+				);
+		}
 	case INJ_None:
 	default:
 		// no correction, use base duration
