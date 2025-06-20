@@ -104,25 +104,51 @@ void MapAverager::stop() {
 		float averageMap = m_sum / m_counter;
 		m_lastCounter = m_counter;
 
-		// TODO: this should be per-sensor, not one for all MAP sensors
-		averagedMapRunningBuffer[averagedMapBufIdx] = averageMap;
-		// increment circular running buffer index
-		averagedMapBufIdx = (averagedMapBufIdx + 1) % mapMinBufferLength;
-		// find min. value (only works for pressure values, not raw voltages!)
-		float minPressure = averagedMapRunningBuffer[0];
-		for (int i = 1; i < mapMinBufferLength; i++) {
-			if (averagedMapRunningBuffer[i] < minPressure)
-				minPressure = averagedMapRunningBuffer[i];
-		}
-
-		if (m_cylinderNumber < efi::size(engine->outputChannels.mapPerCylinder)) {
-			engine->outputChannels.mapPerCylinder[m_cylinderNumber] = minPressure;
-		}
-		setValidValue(minPressure, getTimeNowNt());
+		onSample(averageMap, m_cylinderNumber);
 	} else {
 #if EFI_PROD_CODE
 		warning(ObdCode::CUSTOM_UNEXPECTED_MAP_VALUE, "No MAP values");
 #endif
+	}
+}
+
+void MapAverager::onSample(float map, uint8_t cylinderNumber) {
+	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinder)) {
+		engine->engineState.mapPerCylinder[cylinderNumber] = map;
+
+		// correct the reading by this cylinder's MAP offset
+		map -= engine->engineState.mapCylinderBalance[cylinderNumber];
+	}
+
+	// TODO: this should be per-sensor, not one for all MAP sensors
+	averagedMapRunningBuffer[averagedMapBufIdx] = map;
+	// increment circular running buffer index
+	averagedMapBufIdx = (averagedMapBufIdx + 1) % mapMinBufferLength;
+	// find min. value (only works for pressure values, not raw voltages!)
+	float minPressure = averagedMapRunningBuffer[0];
+	for (int i = 1; i < mapMinBufferLength; i++) {
+		if (averagedMapRunningBuffer[i] < minPressure) {
+			minPressure = averagedMapRunningBuffer[i];
+		}
+	}
+
+	setValidValue(minPressure, getTimeNowNt());
+}
+
+void EngineState::updateMapCylinderOffsets() {
+	// First pass: compute average MAP for all cylinders
+	auto cylCount = engineConfiguration->cylindersCount;
+
+	float avgMap = 0;
+	for (int i = 0; i < cylCount; i++) {
+		avgMap += mapPerCylinder[i];
+	}
+
+	avgMap /= cylCount;
+
+	// Second pass: calculate deviation of each cylinder from the average
+	for (int i = 0; i < cylCount; i++) {
+		mapCylinderBalance[i] = mapPerCylinder[i] - avgMap;
 	}
 }
 
@@ -158,6 +184,8 @@ static void applyMapMinBufferLength() {
 }
 
 void MapAveragingModule::onFastCallback() {
+	engine->engineState.updateMapCylinderOffsets();
+
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	MAP_sensor_config_s * c = &engineConfiguration->map;

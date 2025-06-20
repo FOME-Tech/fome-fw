@@ -26,6 +26,8 @@ public:
 
 	SensorResult submit(float sensorVolts);
 
+	void onSample(float map, uint8_t cylinderNumber);
+
 	void setFunction(SensorConverter& func) {
 		m_function = &func;
 	}

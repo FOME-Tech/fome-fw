@@ -342,7 +342,5 @@ struct_no_prefix output_channels_s
 
 	uint16_t mapAveragingSamples
 
-	uint8_t[12 iterate] mapPerCylinder;;"kPa", 1, 0, 0, 0, 0
-
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
 end_struct

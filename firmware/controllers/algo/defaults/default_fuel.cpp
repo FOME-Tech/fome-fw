@@ -297,8 +297,8 @@ void setDefaultFuel() {
 	engineConfiguration->tChargeAirCoefMin = 0.098f;
 	engineConfiguration->tChargeAirCoefMax = 0.902f;
 	engineConfiguration->tChargeAirFlowMax = 153.6f;
-	engineConfiguration->tChargeAirIncrLimit = 1.0f;
-	engineConfiguration->tChargeAirDecrLimit = 12.5f;
+	engineConfiguration->tChargeAirIncrLimit = 15;
+	engineConfiguration->tChargeAirDecrLimit = 15;
 
 	// CLT correction table
 	setDefaultWarmupFuelEnrichment();
@@ -332,4 +332,6 @@ void setDefaultFuel() {
 	// Cut at 96% after 0.5 second
 	engineConfiguration->maxInjectorDutySustained = 96;
 	engineConfiguration->maxInjectorDutySustainedTimeout = 0.5f;
+
+	setLinearCurve(config->smallPulseAdderBins, 0, 3, 0.1);
 }

@@ -181,16 +181,31 @@ float InjectorModelBase::getBaseDurationImpl(float fuelMassGram) const {
 		if (fuelMassGram < m_smallPulseBreakPoint) {
 			// Small pulse uses a different slope, and adds the "zero fuel pulse" offset
 			return (fuelMassGram / m_smallPulseFlowRate * 1000) + m_smallPulseOffset;
-		} else {
-			// Large pulse
-			return baseDuration;
 		}
+
+		// large pulse uses base duration
+		break;
 	case INJ_PolynomialAdder:
 		return correctInjectionPolynomial(baseDuration);
+	case INJ_SmallPulseAdder:
+		if (baseDuration < engineConfiguration->applyNonlinearBelowPulse) {
+			return baseDuration +
+				interpolate2d(
+					baseDuration,
+					config->smallPulseAdderBins,
+					config->smallPulseAdderValues
+				);
+		}
+
+		// large pulse uses base duration
+		break;
 	case INJ_None:
 	default:
-		return baseDuration;
+		// no correction, use base duration
+		break;
 	}
+
+	return baseDuration;
 }
 
 float InjectorModelBase::correctInjectionPolynomial(float baseDuration) const {

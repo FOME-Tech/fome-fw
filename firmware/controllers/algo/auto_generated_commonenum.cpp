@@ -30,6 +30,8 @@ case INJ_None:
   return "INJ_None";
 case INJ_PolynomialAdder:
   return "INJ_PolynomialAdder";
+case INJ_SmallPulseAdder:
+  return "INJ_SmallPulseAdder";
   }
  return NULL;
 }

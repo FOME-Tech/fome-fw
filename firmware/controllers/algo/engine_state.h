@@ -69,6 +69,9 @@ public:
 	multispark_state multispark;
 
 	bool shouldUpdateInjectionTiming = true;
+
+	void updateMapCylinderOffsets();
+	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
 
 EngineState * getEngineState();
