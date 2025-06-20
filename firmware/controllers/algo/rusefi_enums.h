@@ -581,6 +581,7 @@ typedef enum __attribute__ ((__packed__)) {
 	INJ_PolynomialAdder = 1,
 	INJ_FordModel = 2,
 	INJ_SmallPulseAdder = 3,
+	INJ_SmallPulseAdderMass = 4,
 } InjectorNonlinearMode;
 
 typedef enum __attribute__ ((__packed__)) {
