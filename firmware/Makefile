@@ -280,7 +280,7 @@ INCDIR = \
   $(RUSEFI_LIB_INC) \
   $(CONFDIR) \
   $(GENERATED_DIR) \
-  ext/FatFS \
+  $(PROJECT_DIR)/ext/FatFS \
   $(PROJECT_DIR)/hw_layer/mass_storage \
   $(HW_INC) \
   development/hw_layer \
