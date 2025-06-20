@@ -22,9 +22,6 @@ void setGmLs4() {
 
 	engineConfiguration->etbIdleThrottleRange = 15;
 
-	engineConfiguration->tChargeAirIncrLimit = 5;
-	engineConfiguration->tChargeAirDecrLimit = 15;
-
     strncpy(config->luaScript, R"(
 
 function getBitRange(data, bitIndex, bitWidth)
