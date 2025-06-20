@@ -70,7 +70,7 @@ public:
 
 	bool shouldUpdateInjectionTiming = true;
 
-	updateMapCylinderOffsets();
+	void updateMapCylinderOffsets();
 	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
 
