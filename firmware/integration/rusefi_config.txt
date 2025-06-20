@@ -1688,7 +1688,7 @@ uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrVoltBins;;"volts", 0.1, 0, 0
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrValues;;"multiplier", 0.02, 0, 0, 5, 2
 
 uint16_t[16] autoscale smallPulseAdderBins;;"ms", 0.001, 0, 0, 20, 3
-uint16_t[16] autoscale smallPulseAdderValues;;"ms", 0.001, 0, 0, 20, 3
+int16_t[16] autoscale smallPulseAdderValues;;"ms", 0.001, 0, -20, 20, 3
 
 uint8_t[8] autoscale minimumOilPressureBins;;"RPM", 100, 0, 0, 25000, 0
 uint8_t[8] autoscale minimumOilPressureValues;;"kPa", 10, 0, 0, 1000, 0
