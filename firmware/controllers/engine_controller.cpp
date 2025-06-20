@@ -618,6 +618,10 @@ bool validateConfig() {
 		ensureArrayIsAscending("Oil pressure protection", config->minimumOilPressureBins);
 	}
 
+	if (engineConfiguration->injectorNonlinearMode == INJ_SmallPulseAdder) {
+		ensureArrayIsAscending("Small PW adder", config->smallPulseAdderBins);
+	}
+
 	return true;
 }
 
