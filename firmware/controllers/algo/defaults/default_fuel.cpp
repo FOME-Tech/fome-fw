@@ -334,5 +334,6 @@ void setDefaultFuel() {
 	engineConfiguration->maxInjectorDutySustainedTimeout = 0.5f;
 
 	setLinearCurve(config->smallPulseAdderBins, 0, 3, 0.1);
-	setLinearCurve(config->smallPulseAdderMassBins, 0, 3, 0.1);
+	setLinearCurve(config->smallPulseAdderMassPWs, 0, 3, 0.1);
+	setLinearCurve(config->smallPulseAdderMassValues, 1, 16, 1);
 }

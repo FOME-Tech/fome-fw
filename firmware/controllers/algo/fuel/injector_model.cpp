@@ -204,7 +204,7 @@ float InjectorModelBase::getBaseDurationImpl(float fuelMassGram) const {
 			return interpolate2d(
 					fuelMassGram,
 					config->smallPulseAdderMassValues,
-					config->smallPulseAdderMassBins
+					config->smallPulseAdderMassPWs
 				);
 		}
 	case INJ_None:

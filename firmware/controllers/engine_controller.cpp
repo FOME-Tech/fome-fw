@@ -623,7 +623,7 @@ bool validateConfig() {
 	}
 
 	if (engineConfiguration->injectorNonlinearMode == INJ_SmallPulseAdderMass) {
-		ensureArrayIsAscending("Small PW adder", config->smallPulseAdderMassBins);
+		ensureArrayIsAscending("Small PW adder", config->smallPulseAdderMassPWs);
 	}
 
 	return true;
