@@ -203,8 +203,8 @@ float InjectorModelBase::getBaseDurationImpl(float fuelMassGram) const {
 		if (baseDuration < engineConfiguration->applyNonlinearBelowPulse) {
 			return interpolate2d(
 					fuelMassGram,
-					config->smallPulseAdderMassBins,
-					config->smallPulseAdderMassValues
+					config->smallPulseAdderMassValues,
+					config->smallPulseAdderMassBins
 				);
 		}
 	case INJ_None:
