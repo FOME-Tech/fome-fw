@@ -7,7 +7,7 @@ extern "C" {
 }
 
 blt_addr FlashGetUserProgBaseAddress() {
-	return FLASH_BASE + 32 * 1024
+	return FLASH_BASE + 32 * 1024;
 }
 
 blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
