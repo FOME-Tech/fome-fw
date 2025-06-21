@@ -63,26 +63,6 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
         return "";
     }
 
-    @Override
-    public void endFile() throws IOException {
-        GetConfigValueConsumer.writeStringToFile(fileName, getContent());
-    }
-
-    public String getContent() {
-        StringBuilder switchBody = new StringBuilder();
-
-        StringBuilder getterBody = getGetters(switchBody, getterPairs);
-
-        String fullSwitch = wrapSwitchStatement(switchBody);
-
-        return  "#if !EFI_UNIT_TEST\n" +
-                FILE_HEADER +
-                "expected<float> getOutputValueByName(const char *name) {\n" +
-                fullSwitch +
-                getterBody + GetConfigValueConsumer.GET_METHOD_FOOTER +
-                "#endif\n";
-    }
-
     @NotNull
     static String wrapSwitchStatement(StringBuilder switchBody) {
         return switchBody.length() == 0 ? "" :
