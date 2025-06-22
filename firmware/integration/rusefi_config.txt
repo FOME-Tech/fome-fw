@@ -1006,7 +1006,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	
 	int16_t startUpFuelPumpDuration;When ignition is turned on, turn fuel pump on to build fuel pressure;"seconds", 1, 0, 0, 6000, 0
 
-	uint16_t mafFilterParameter;;"larger value = larger intake manifold volume", 1, 0, 0, 10000, 0
+	uint16_t mafFilterParameter;larger value = larger intake manifold volume;"", 1, 0, 0, 10000, 0
 
 	float targetVBatt;This is the target battery voltage the alternator PID control will attempt to maintain;"Volts", 1, 0, 0, 30, 1
 	uint8_t dfcoRetardDeg;Retard timing by this amount during DFCO. Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"deg", 1, 0, 0, 30, 0
