@@ -28,13 +28,21 @@ struct MafFilter final : public SensorConverter {
 
 		float rpm = Sensor::getOrZero(SensorType::Rpm);
 
+		if (rpm == 0) {
+			m_lastValue = input;
+			return input;
+		}
+
 		float invTimeConstant = rpm / param;
+		volatile auto period = 1e-3 * FAST_CALLBACK_PERIOD_MS
 		float alpha = (1e-3 * FAST_CALLBACK_PERIOD_MS) * invTimeConstant;
 
-		// for alpha < 0.005 (stopped engine)
-		// or alpha > 0.98 (engine very fast and/or small manifold)
-		//     -> disable filtering entirely
-		if (alpha < 0.005f || alpha > 0.98f) {
+		if (alpha < 0.001f) {
+			// Limit to 0.001 to avoid numerical issues
+			alpha = 0.001f;
+		} else if (alpha > 0.98f) {
+			// alpha > 0.98 (engine very fast and/or small manifold)
+			//     -> disable filtering entirely
 			m_lastValue = input;
 			return input;
 		}
