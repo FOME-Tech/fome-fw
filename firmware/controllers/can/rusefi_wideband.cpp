@@ -15,6 +15,14 @@
 
 static thread_t* waitingBootloaderThread = nullptr;
 
+static inline void sendWidebandOnBothBuses(uint32_t id, uint8_t data[8] = {0}, size_t size = 0) {
+	CanBusIndex bus[2] = {CanBusIndex::Bus1, CanBusIndex::Bus0};
+	for(auto b : bus) {
+		CanTxMessage m(id, 0, b, true);
+		memcpy(&m[0], data, size);
+	}
+}
+
 void handleWidebandBootloaderAck() {
 	auto t = waitingBootloaderThread;
 	if (t) {
@@ -26,12 +34,7 @@ bool waitAck() {
 	return chEvtWaitAnyTimeout(EVT_BOOTLOADER_ACK, TIME_MS2I(1000)) != 0;
 }
 
-static CanBusIndex getWidebandBus() {
-	return engineConfiguration->widebandOnSecondBus ? CanBusIndex::Bus1 : CanBusIndex::Bus0;
-}
-
 void updateWidebandFirmware() {
-	CanBusIndex bus = getWidebandBus();
 
 	// Clear any pending acks for this thread
 	chEvtGetAndClearEvents(EVT_BOOTLOADER_ACK);
@@ -50,7 +53,7 @@ void updateWidebandFirmware() {
 	for (int i = 0; i < 2; i++) {
 		{
 			// Send bootloader entry command
-			CanTxMessage m(WB_BL_ENTER, 0, bus, true);
+			sendWidebandOnBothBuses(WB_BL_ENTER);
 		}
 
 		if (!waitAck()) {
@@ -66,7 +69,8 @@ void updateWidebandFirmware() {
 
 	{
 		// Erase flash - opcode 1, magic value 0x5A5A
-		CanTxMessage m(0xEF1'5A5A, 0, bus, true);
+		sendWidebandOnBothBuses(0xEF1'5A5A);
+		
 	}
 
 	if (!waitAck()) {
@@ -81,8 +85,7 @@ void updateWidebandFirmware() {
 	// Send flash data 8 bytes at a time
 	for (size_t i = 0; i < totalSize; i += 8) {
 		{
-			CanTxMessage m(0xEF2'0000 + i, 8, bus, true);
-			memcpy(&m[0], build_wideband_image_bin + i, 8);
+			sendWidebandOnBothBuses(0xEF2'0000 + i, const_cast<uint8_t *>(build_wideband_image_bin) + i, 8);
 		}
 
 		if (!waitAck()) {
@@ -95,7 +98,7 @@ void updateWidebandFirmware() {
 
 	{
 		// Reboot to firmware!
-		CanTxMessage m(0xEF3'0000, 0, bus, true);
+		sendWidebandOnBothBuses(0xEF3'0000);
 	}
 
 	waitAck();
@@ -116,8 +119,7 @@ void setWidebandOffset(uint8_t index) {
 	efiPrintf("Setting all connected widebands to index %d...", index);
 
 	{
-		CanTxMessage m(WB_MSG_SET_INDEX, 1, getWidebandBus(), true);
-		m[0] = index;
+		sendWidebandOnBothBuses(WB_MSG_SET_INDEX, &index, 1);
 	}
 
 	if (!waitAck()) {
@@ -128,14 +130,10 @@ void setWidebandOffset(uint8_t index) {
 }
 
 void sendWidebandInfo() {
-	CanTxMessage m(WB_MGS_ECU_STATUS, 2, getWidebandBus(), true);
 
 	float vbatt = Sensor::getOrZero(SensorType::BatteryVoltage) * 10;
-
-	m[0] = vbatt;
-
-	// Offset 1 bit 0 = heater enable
-	m[1] = enginePins.o2heater.getLogicValue() ? 0x01 : 0x00;
+	uint8_t data[2] = {static_cast<uint8_t>(vbatt), static_cast<uint8_t>(enginePins.o2heater.getLogicValue() ? 0x01 : 0x00)};
+	sendWidebandOnBothBuses(WB_MGS_ECU_STATUS, data, 2);
 }
 
 #endif // EFI_WIDEBAND_FIRMWARE_UPDATE && HAL_USE_CAN
