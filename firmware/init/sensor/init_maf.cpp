@@ -34,7 +34,6 @@ struct MafFilter final : public SensorConverter {
 		}
 
 		float invTimeConstant = rpm / param;
-		volatile auto period = 1e-3 * FAST_CALLBACK_PERIOD_MS
 		float alpha = (1e-3 * FAST_CALLBACK_PERIOD_MS) * invTimeConstant;
 
 		if (alpha < 0.001f) {
