@@ -121,6 +121,9 @@ public:
 	LimpState allowInjection() const;
 	LimpState allowIgnition() const;
 
+	// Last-minute check to determine whether to skip an injection due to hard rev limiter
+	bool asyncCutInjection();
+
 	float getTimeSinceAnyCut() const;
 
 	bool allowTriggerInput() const;

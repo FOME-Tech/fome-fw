@@ -883,7 +883,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
 	bit widebandOnSecondBus,"2","1";Select which bus the wideband controller is attached to.
 	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
-	bit unused1192b2
+	bit asyncRevLimit
 	bit boardUseTachPullUp,"12v","5v"
 	bit boardUseTempPullUp,"With Pull Ups","Piggyback Mode"
 	bit yesUnderstandLocking,"yes","no"
