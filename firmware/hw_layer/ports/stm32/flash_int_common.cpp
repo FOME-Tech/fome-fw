@@ -34,7 +34,7 @@ int intFlashErase(flashaddr_t address, size_t size) {
 }
 
 bool intFlashIsErased(flashaddr_t address, size_t size) {
-#if CORTEX_MODEL == 7
+#if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
 	// If we have a cache, invalidate the relevant cache lines.
 	// They may still contain old data, leading us to believe that the 
 	// flash erase failed.
@@ -82,7 +82,7 @@ bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
 }
 
 int intFlashRead(flashaddr_t source, char* destination, size_t size) {
-#if CORTEX_MODEL == 7
+#if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
 	// If we have a cache, invalidate the relevant cache lines.
 	// They may still contain old data, leading us to read invalid data.
 	SCB_InvalidateDCache_by_Addr((uint32_t*)source, size);
