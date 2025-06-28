@@ -11,7 +11,7 @@
 #define ADC_LOGIC_COOLANT 0
 
 int getAdcValue(const char *msg, int channel);
-#define waitForSlowAdc(x) {}
+#define waitForSlowAdc() {}
 
 
 // mock SPI

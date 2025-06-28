@@ -171,7 +171,6 @@ CSRC =  $(ALLCSRC) \
 # setting.
 CPPSRC = $(ALLCPPSRC) \
   $(CHIBIOS)/os/various/cpp_wrappers/ch.cpp \
-  $(PROJECT_DIR)/development/sensor_chart.cpp \
   $(HW_LAYER_DRIVERS_CPP) \
   $(HW_LAYER_DRIVERS_CORE_CPP) \
   $(CONSOLE_SRC_CPP) \

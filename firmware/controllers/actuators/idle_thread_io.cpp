@@ -116,21 +116,6 @@ void setDefaultIdleParameters() {
 
 	// Idle region is target + 100 RPM
 	engineConfiguration->idlePidRpmUpperLimit = 100;
-
-	engineConfiguration->idlePidRpmDeadZone = 50;
-}
-
-/**
- * I use this questionable feature to tune acceleration enrichment
- */
-static void blipIdle(int idlePosition, int durationMs) {
-#if ! EFI_UNIT_TEST
-	if (engine->timeToStopBlip != 0) {
-		return; // already in idle blip
-	}
-	engine->blipIdlePosition = idlePosition;
-	engine->timeToStopBlip = getTimeNowUs() + 1000 * durationMs;
-#endif // EFI_UNIT_TEST
 }
 
 void startIdleThread() {
@@ -151,9 +136,6 @@ void startIdleThread() {
 	controller->currentIdlePosition = -100.0f;
 
 #if ! EFI_UNIT_TEST
-
-	addConsoleActionII("blipidle", blipIdle);
-
 	// split this whole file into manual controller and auto controller? move these commands into the file
 	// which would be dedicated to just auto-controller?
 

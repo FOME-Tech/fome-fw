@@ -19,7 +19,7 @@
 #include "main_trigger_callback.h"
 #include "bench_test.h"
 #include "tunerstudio.h"
-#include "mmc_card.h"
+#include "sd_file_log.h"
 #include "memstreams.h"
 #include <chprintf.h>
 #include "rusefi_lua.h"
@@ -30,10 +30,6 @@
 #define DEFAULT_SNIFFER_THR 2500
 
 extern WaveChart waveChart;
-
-int getRemainingStack(thread_t*) {
-	return 99999;
-}
 
 static void assertString(const char*actual, const char *expected) {
 	if (strcmp(actual, expected) != 0) {
@@ -111,7 +107,7 @@ void rusEfiFunctionalTest(void) {
 
 	startLoggingProcessor();
 
-	initMmcCard();
+	initSdCardLogger();
 
 	runChprintfTest();
 

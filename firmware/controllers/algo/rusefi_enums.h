@@ -411,18 +411,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } air_pressure_sensor_type_e;
 
-typedef enum __attribute__ ((__packed__)) {
-	SC_OFF = 0,
-	/**
-	 * You would use this value if you want to see a detailed graph of your trigger events
-	 */
-	SC_TRIGGER = 1,
-	// unused 2
-	SC_RPM_ACCEL = 3,
-	SC_DETAILED_RPM = 4,
-
-} sensor_chart_e;
-
 typedef enum {
 	REVERSE = -1,
 	NEUTRAL = 0,
@@ -592,6 +580,7 @@ typedef enum __attribute__ ((__packed__)) {
 	INJ_None = 0,
 	INJ_PolynomialAdder = 1,
 	INJ_FordModel = 2,
+	INJ_SmallPulseAdder = 3,
 } InjectorNonlinearMode;
 
 typedef enum __attribute__ ((__packed__)) {
@@ -653,6 +642,12 @@ enum class SelectedGear : uint8_t {
 	Manual2 = 9,
 	Manual1 = 10,
 	Low = 11,
+};
+
+enum class WidebandMode : uint8_t {
+	Analog = 0,
+	FOMEInternal = 1,
+	AemXSeries = 2,
 };
 
 #define SC_Exhaust_First 1

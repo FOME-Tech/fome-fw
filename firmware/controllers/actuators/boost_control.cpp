@@ -69,6 +69,7 @@ expected<float> BoostController::getSetpoint() {
 		engine->outputChannels.boostClosedLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostClosedLoopBlendBias[i] = result.Bias;
 		engine->outputChannels.boostClosedLoopBlendOutput[i] = result.Value;
+		engine->outputChannels.boostClosedLoopBlendYAxis[i] = result.TableYAxis;
 
 		target += result.Value;
 	}
@@ -97,6 +98,7 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 		engine->outputChannels.boostOpenLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostOpenLoopBlendBias[i] = result.Bias;
 		engine->outputChannels.boostOpenLoopBlendOutput[i] = result.Value;
+		engine->outputChannels.boostOpenLoopBlendYAxis[i] = result.TableYAxis;
 
 		openLoop += result.Value;
 	}
@@ -217,7 +219,6 @@ void startBoostPin() {
 	startSimplePwm(
 		&boostPwmControl,
 		"Boost",
-		&engine->scheduler,
 		&enginePins.boostPin,
 		engineConfiguration->boostPwmFrequency,
 		0

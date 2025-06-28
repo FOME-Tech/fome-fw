@@ -45,8 +45,14 @@ private:
 	const uint8_t m_cam;
 
 	Pid m_pid;
+	Timer m_timeSinceEnabled;
+
+	bool m_engineRunningLongEnough = false;
+	bool m_isRpmHighEnough = false;
+	bool m_isCltWarmEnough = false;
 
 	const ValueProvider3D* m_targetMap = nullptr;
+	Hysteresis m_targetHysteresis;
 	IPwm* m_pwm = nullptr;
 
 	Timer m_targetOffsetTimer;

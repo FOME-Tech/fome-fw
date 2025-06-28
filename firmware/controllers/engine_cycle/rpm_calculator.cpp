@@ -17,10 +17,6 @@
 
 #include "trigger_central.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif // EFI_SENSOR_CHART
-
 #include "engine_sniffer.h"
 
 // See RpmCalculator::checkIfSpinning()
@@ -285,16 +281,6 @@ void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 
 		rpmState->onNewEngineCycle();
 	}
-
-#if EFI_SENSOR_CHART
-	// this 'index==0' case is here so that it happens after cycle callback so
-	// it goes into sniffer report into the first position
-	if (getEngineState()->sensorChartMode == SC_TRIGGER) {
-		angle_t crankAngle = engine->triggerCentral.getCurrentEnginePhase(nowNt).value_or(0);
-		int signal = 1000 * (int)ckpSignalType + trgEventIndex;
-		scAddData(crankAngle, signal);
-	}
-#endif /* EFI_SENSOR_CHART */
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(

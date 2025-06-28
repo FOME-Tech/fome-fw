@@ -114,3 +114,4 @@ TESTS_SRC_CPP = \
 	tests/actuators/test_tacho.cpp \
 	tests/actuators/test_vvt.cpp \
 	tests/test_obd2.cpp \
+	tests/test_trip_odometer.cpp \

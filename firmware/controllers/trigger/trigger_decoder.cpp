@@ -34,7 +34,7 @@ TriggerDecoderBase::TriggerDecoderBase(const char* name)
 	resetState();
 }
 
-bool TriggerDecoderBase::getShaftSynchronized() {
+bool TriggerDecoderBase::getShaftSynchronized() const {
 	return shaft_is_synchronized;
 }
 
@@ -372,7 +372,9 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	ScopePerf perf(PE::DecodeTriggerEvent);
 
 	// Timeout below approximately 12 rpm, but a maximum of 1 second timeout
-	float triggerTimeoutPeriod = std::min(5.0f / triggerShape.getLength(), 1.0f);
+	// Trigger shape length is ~4x tooth count (rise + fall / doubled for 4 stroke),
+	// so extra multiply by 4 then 5 second maximum revolution
+	float triggerTimeoutPeriod = clampF(0.1f, 20.0f / triggerShape.getLength(), 1.0f);
 	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > triggerTimeoutPeriod) {
 		/**
 		 * We are here if there is a time gap between now and previous shaft event - that means the engine is not running.
@@ -618,7 +620,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	}
 }
 
-bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) const {
+bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) {
 	// Miata NB needs a special decoder.
 	// The problem is that the crank wheel only has 4 teeth, also symmetrical, so the pattern
 	// is long-short-long-short for one crank rotation.
@@ -630,19 +632,35 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 	// Instead of detecting short/long, this logic first checks for "maybe short" and "maybe long",
 	// then simply tests longer vs. shorter instead of absolute value.
 	if (triggerType == trigger_type_e::TT_MIATA_VVT) {
-		auto secondGap = (float)toothDurations[1] / toothDurations[2];
+		bool useToothCounting = getShaftSynchronized() && (Sensor::getOrZero(SensorType::Rpm) < 1000);
 
-		bool currentGapOk = isInRange(triggerShape.syncronizationRatioFrom[0], (float)triggerSyncGapRatio, triggerShape.syncronizationRatioTo[0]);
-		bool secondGapOk  = isInRange(triggerShape.syncronizationRatioFrom[1], secondGap,  triggerShape.syncronizationRatioTo[1]);
+		// If we got reasonable sync and we're spinning slowly, just count teeth. This is necessary
+		// because a large jump in speed can cause the "long gap" to actually be shorter than the previous
+		// "short gap", but the engine sped up a bunch.
+		if (useToothCounting) {
+			// If we're an NB and have a reasonable gap, let's just say we're still synchronized
+			if (isInRange(0.4f, (float)triggerSyncGapRatio, 2.0f)) {
+				// If the last tooth wasn't a sync point, this one is
+				return getCurrentIndex() != 0;
+			} else {
+				setShaftSynchronized(false);
+				return false;
+			}
+		} else {
+			auto secondGap = (float)toothDurations[1] / toothDurations[2];
 
-		// One or both teeth was impossible range, this is not the sync point
-		if (!currentGapOk || !secondGapOk) {
-			return false;
+			bool currentGapOk = isInRange(triggerShape.syncronizationRatioFrom[0], (float)triggerSyncGapRatio, triggerShape.syncronizationRatioTo[0]);
+			bool secondGapOk  = isInRange(triggerShape.syncronizationRatioFrom[1], secondGap,  triggerShape.syncronizationRatioTo[1]);
+
+			// One or both teeth was impossible range, this is not the sync point
+			if (!currentGapOk || !secondGapOk) {
+				return false;
+			}
+
+			// If both teeth are in the range of possibility, return whether this gap is
+			// shorter than the last or not.  If it is, this is the sync point.
+			return triggerSyncGapRatio < secondGap;
 		}
-
-		// If both teeth are in the range of possibility, return whether this gap is
-		// shorter than the last or not.  If it is, this is the sync point.
-		return triggerSyncGapRatio < secondGap;
 	}
 
 	for (int i = 0; i < triggerShape.gapTrackingLength; i++) {
@@ -679,10 +697,6 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 		TriggerWaveform& shape,
 		const TriggerConfiguration& triggerConfiguration) {
-#if EFI_PROD_CODE
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCurrentRemainingStack() > 128, "findPos", -1);
-#endif
-
 	resetState();
 
 	if (shape.shapeDefinitionError) {

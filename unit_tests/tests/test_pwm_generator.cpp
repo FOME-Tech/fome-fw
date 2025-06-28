@@ -27,7 +27,7 @@ static void assertNextEvent(const char *msg, int expectedPinState, TestExecutor 
 	ASSERT_EQ(1,  executor->size()) << "PWM_test: queue.size";
 }
 
-static void test100dutyCycle() {
+TEST(PWM, test100dutyCycle) {
 	printf("*************************************** test100dutyCycle\r\n");
 
 	expectedTimeOfNextEvent = 0;
@@ -37,8 +37,10 @@ static void test100dutyCycle() {
 	SimplePwm pwm("test PWM1");
 	TestExecutor executor;
 
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&executor);
+
 	startSimplePwm(&pwm, "unit_test",
-			&executor,
 			&pin,
 			1000 /* frequency */,
 			1.0 /* duty cycle */);
@@ -55,9 +57,7 @@ static void test100dutyCycle() {
 	assertNextEvent("exec3@100", HIGH_VALUE, &executor, pin);
 }
 
-static void testSwitchToNanPeriod() {
-	printf("*************************************** testSwitchToNanPeriod\r\n");
-
+TEST(PWM, testSwitchToNanPeriod) {
 	expectedTimeOfNextEvent = 0;
 	setTimeNowUs(0);
 
@@ -65,8 +65,10 @@ static void testSwitchToNanPeriod() {
 	SimplePwm pwm("test PWM1");
 	TestExecutor executor;
 
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&executor);
+
 	startSimplePwm(&pwm, "unit_test",
-			&executor,
 			&pin,
 			1000 /* frequency */,
 			0.60 /* duty cycle */);
@@ -92,9 +94,6 @@ static void testSwitchToNanPeriod() {
 }
 
 TEST(PWM, testPwmGenerator) {
-	test100dutyCycle();
-	testSwitchToNanPeriod();
-
 	expectedTimeOfNextEvent = 0;
 	setTimeNowUs(0);
 
@@ -102,9 +101,11 @@ TEST(PWM, testPwmGenerator) {
 	SimplePwm pwm("test PWM3");
 	TestExecutor executor;
 
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&executor);
+
 	startSimplePwm(&pwm,
 			"unit_test",
-			&executor,
 			&pin,
 			1000 /* frequency */,
 			0.80 /* duty cycle */);

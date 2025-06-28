@@ -147,7 +147,6 @@ static void startSimulatedTriggerSignal() {
 	TriggerWaveform *s = &engine->triggerCentral.triggerShape;
 	setTriggerEmulatorRPM(engineConfiguration->triggerSimulatorRpm);
 	triggerSignal.weComplexInit(
-			&engine->scheduler,
 			&s->wave,
 			updateTriggerWaveformIfNeeded, (pwm_gen_callback*)emulatorApplyPinState);
 

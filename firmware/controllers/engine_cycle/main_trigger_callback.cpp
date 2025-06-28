@@ -34,8 +34,6 @@
 static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 	ScopePerf perf(PE::HandleFuel);
 
-	efiAssertVoid(ObdCode::CUSTOM_STACK_6627, getCurrentRemainingStack() > 128, "lowstck#3");
-
 	// For any reason other than hard RPM limit, skip scheduling entirely
 	auto allowInjection = getLimpManager()->allowInjection();
 	if (!allowInjection.value && !(engineConfiguration->asyncRevLimit && allowInjection.reason != ClearReason::HardLimit)) {

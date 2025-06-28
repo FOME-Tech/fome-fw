@@ -25,19 +25,11 @@ public:
 
 	bool useOddFireWastedSpark = false;
 
-	/**
-	 * this is based on sensorChartMode and sensorSnifferRpmThreshold settings
-	 */
-	sensor_chart_e sensorChartMode = SC_OFF;
-
 	float injectionStage2Fraction = 0;
 
 	Timer crankingTimer;
 
 	WarningCodeState warnings;
-
-	// Estimated airflow based on whatever airmass model is active
-	float airflowEstimate = 0;
 
 	float auxValveStart = 0;
 	float auxValveEnd = 0;
@@ -77,6 +69,9 @@ public:
 	multispark_state multispark;
 
 	bool shouldUpdateInjectionTiming = true;
+
+	void updateMapCylinderOffsets();
+	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
 
 EngineState * getEngineState();

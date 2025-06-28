@@ -30,6 +30,19 @@ or
 
 ## Unreleased
 
+### Added
+ - Allow fractional tachometer pulse ratio for fine tachometer calibration
+ - Add an option to ramp the idle target down as engine speed returns to idle. Makes the running -> idle transition much smoother while in closed loop mode #570
+ - Lua functions `storePersistentValue`/`getPersistentValue` to persist values in backup memory between reboots #592
+ - Fully disable VVT when the target is 0. This prevents trying to control VVT when near the stop, which can damage the locking pin on some engines.
+ - Automatic cylinder balancing of MAP sensor readings for smoother running at high load #610
+ - Table-based injector small pulse compensation #609
+
+### Fixed
+ - CAN reception on STM32H7-based ECUs
+
+## February 2025 Release
+
 ### Breaking Changes
  - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
 
@@ -46,6 +59,7 @@ or
  - Minor performance improvements to injection/ignition scheduling
  - Per-cylinder knock sensing while in wasted spark mode (fixed by #553)
  - Improved transitions between fuel/spark modes, improves cranking and startup (#551, #553. #554)
+ - Disable radiator fans while ignition switch is off
 
 ## September 2024 Release
 

@@ -45,7 +45,7 @@ static void initLambdaSensor(FunctionalSensor& sensor, adc_channel_e channel) {
 void initLambda() {
 
 #if EFI_CAN_SUPPORT
-	if (engineConfiguration->enableAemXSeries) {
+	if (engineConfiguration->widebandMode != WidebandMode::Analog) {
 		if (!engineConfiguration->canWriteEnabled || !engineConfiguration->canReadEnabled) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "CAN read and write are required to use CAN wideband.");
 			return;

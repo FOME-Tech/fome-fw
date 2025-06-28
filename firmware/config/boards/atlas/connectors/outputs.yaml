@@ -2,51 +2,51 @@ pins:
 
   - id: B3
     class: outputs
-    ts_name: Ignition 1
+    ts_name: Ign 1
 
   - id: G15
     class: outputs
-    ts_name: Ignition 2
+    ts_name: Ign 2
 
   - id: G14
     class: outputs
-    ts_name: Ignition 3
+    ts_name: Ign 3
 
   - id: G13
     class: outputs
-    ts_name: Ignition 4
+    ts_name: Ign 4
 
   - id: G12
     class: outputs
-    ts_name: Ignition 5
+    ts_name: Ign 5
 
   - id: G11
     class: outputs
-    ts_name: Ignition 6
+    ts_name: Ign 6
 
   - id: G10
     class: outputs
-    ts_name: Ignition 7
+    ts_name: Ign 7
 
   - id: G9
     class: outputs
-    ts_name: Ignition 8
+    ts_name: Ign 8
 
   - id: D7
     class: outputs
-    ts_name: Ignition 9
+    ts_name: Ign 9
 
   - id: D6
     class: outputs
-    ts_name: Ignition 10
+    ts_name: Ign 10
 
   - id: D5
     class: outputs
-    ts_name: Ignition 11
+    ts_name: Ign 11
 
   - id: D4
     class: outputs
-    ts_name: Ignition 12
+    ts_name: Ign 12
 
   - id: G5
     class: outputs

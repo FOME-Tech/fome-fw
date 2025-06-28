@@ -26,6 +26,8 @@ public:
 
 	SensorResult submit(float sensorVolts);
 
+	void onSample(float map, uint8_t cylinderNumber);
+
 	void setFunction(SensorConverter& func) {
 		m_function = &func;
 	}
@@ -54,5 +56,5 @@ public:
 						float currentPhase,
 						float nextPhase) override;
 
-	void submitSample(float volts);
+	void submitSample(float voltsMap1, float voltsMap2);
 };

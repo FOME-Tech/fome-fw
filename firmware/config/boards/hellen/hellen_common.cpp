@@ -5,7 +5,7 @@
 static OutputPin megaEn;
 
 void hellenWbo() {
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 }
 
 void setHellenCan() {

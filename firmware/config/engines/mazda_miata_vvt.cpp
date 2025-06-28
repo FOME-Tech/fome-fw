@@ -296,7 +296,6 @@ static void setCommonMazdaNB() {
 
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->idlePidRpmUpperLimit = 350;
-	engineConfiguration->idlePidRpmDeadZone = 100;
 
 	engineConfiguration->idleRpmPid.pFactor = 0.0065;
 	engineConfiguration->idleRpmPid.iFactor = 0.3;
@@ -738,7 +737,7 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->idle.solenoidPin = PROTEUS_LS_10;
 
 	// Built in wideband controller on bus 2
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 	engineConfiguration->widebandOnSecondBus = true;
 	engineConfiguration->enableVerboseCanTx = true;
 

@@ -2,13 +2,14 @@
 #include "pch.h"
 #include "usbconsole.h"
 #include "hardware.h"
+#include "rusefi.h"
 
 extern "C" {
 	#include "boot.h"
 	#include "shared_params.h"
 }
 
-class BlinkyThread : public chibios_rt::BaseStaticThread<256> {
+class : public chibios_rt::BaseStaticThread<256> {
 protected:
 	void main(void) override {
 		Gpio yellow = getWarningLedPin();
@@ -49,11 +50,41 @@ protected:
 			chThdSleepMilliseconds(250);
 		}
 	}
-};
+} blinky;
 
-static BlinkyThread blinky;
+extern "C" blt_bool FileIsFirmwareUpdateRequestedHook();
+
+class : public chibios_rt::BaseStaticThread<1024> {
+	void main() override {
+		// Init openblt shared params
+		SharedParamsInit();
+
+		#if (BOOT_FILE_SYS_ENABLE > 0)
+			// Force a mount of the SD card, and if the update
+			// file exists, set the backdoor so we'll do an update
+			FileInit();
+			if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
+				SharedParamsInit();
+				SharedParamsWriteByIndex(0, 0x01);
+			}
+		#endif
+
+		// Init openblt itself
+		BootInit();
+
+		#if (BOOT_FILE_SYS_ENABLE > 0)
+			// Always attempt an SD firmware update (get you unstuck from corrupt firmware)
+			FileHandleFirmwareUpdateRequest();
+		#endif
+
+		while (true) {
+			BootTask();
+		}
+	}
+} openblt;
 
 int main(void) {
+	preHalInit();
 	halInit();
 	chSysInit();
 
@@ -62,14 +93,11 @@ int main(void) {
 	// start the blinky thread
 	blinky.start(NORMALPRIO + 10);
 
-	// Init openblt shared params
-	SharedParamsInit();
-
-	// Init openblt itself
-	BootInit();
+	// Start openblt on its own thread
+	openblt.start(NORMALPRIO + 5);
 
 	while (true) {
-		BootTask();
+		chThdSleepMilliseconds(100);
 	}
 }
 
@@ -84,3 +112,6 @@ void efiSetPadMode(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 
 	palSetPadMode(port, pin, mode);
 }
+
+// Weak linked default implementation (not necessarily required for all boards)
+__attribute__((weak)) void preHalInit() { }

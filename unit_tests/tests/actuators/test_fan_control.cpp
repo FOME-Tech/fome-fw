@@ -17,6 +17,9 @@ TEST(Actuators, Fan) {
 	MockAc mockAc;
 	engine->module<AcController>().set(&mockAc);
 
+	// Turn on the ignition
+	engine->module<FanControl1>()->onIgnitionStateChanged(true);
+
 	engineConfiguration->fanOnTemperature = 90;
 	engineConfiguration->fanOffTemperature = 80;
 	engineConfiguration->enableFan1WithAc = false;

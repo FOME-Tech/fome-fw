@@ -154,10 +154,10 @@ public class TriggerState {
 	public static final int STFT_BANK_COUNT = 4;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int VE_BLEND_COUNT = 4;
-	public static final Field TRIGGERSYNCGAPRATIO = Field.create("TRIGGERSYNCGAPRATIO", 0, FieldType.FLOAT).setBaseOffset(948);
-	public static final Field CRANKSYNCHRONIZATIONCOUNTER = Field.create("CRANKSYNCHRONIZATIONCOUNTER", 4, FieldType.INT16).setScale(1.0).setBaseOffset(948);
-	public static final Field TRIGGERERRORCOUNTER = Field.create("TRIGGERERRORCOUNTER", 6, FieldType.INT16).setScale(1.0).setBaseOffset(948);
-	public static final Field TRIGGERSTATEINDEX = Field.create("TRIGGERSTATEINDEX", 8, FieldType.INT8).setScale(1.0).setBaseOffset(948);
-	public static final Field EDGECOUNTRISE = Field.create("EDGECOUNTRISE", 10, FieldType.INT16).setScale(1.0).setBaseOffset(948);
-	public static final Field EDGECOUNTFALL = Field.create("EDGECOUNTFALL", 12, FieldType.INT16).setScale(1.0).setBaseOffset(948);
+	public static final Field TRIGGERSYNCGAPRATIO = Field.create("TRIGGERSYNCGAPRATIO", 0, FieldType.FLOAT).setBaseOffset(976);
+	public static final Field CRANKSYNCHRONIZATIONCOUNTER = Field.create("CRANKSYNCHRONIZATIONCOUNTER", 4, FieldType.INT16).setScale(1.0).setBaseOffset(976);
+	public static final Field TRIGGERERRORCOUNTER = Field.create("TRIGGERERRORCOUNTER", 6, FieldType.INT16).setScale(1.0).setBaseOffset(976);
+	public static final Field TRIGGERSTATEINDEX = Field.create("TRIGGERSTATEINDEX", 8, FieldType.INT8).setScale(1.0).setBaseOffset(976);
+	public static final Field EDGECOUNTRISE = Field.create("EDGECOUNTRISE", 10, FieldType.INT16).setScale(1.0).setBaseOffset(976);
+	public static final Field EDGECOUNTFALL = Field.create("EDGECOUNTFALL", 12, FieldType.INT16).setScale(1.0).setBaseOffset(976);
 }

@@ -39,10 +39,6 @@
 #include "trigger_universal.h"
 #include "trigger_mercedes.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 TriggerWaveform::TriggerWaveform() {
 	initialize(OM_NONE, SyncEdge::Rise);
 }
@@ -392,11 +388,7 @@ void TriggerWaveform::setThirdTriggerSynchronizationGap(float syncRatio) {
  * External logger is needed because at this point our logger is not yet initialized
  */
 void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperationMode, const TriggerConfiguration& triggerConfig) {
-
-#if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6641, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "init t");
 	efiPrintf("initializeTriggerWaveform(%s/%d)", getTrigger_type_e(triggerConfig.TriggerType.type), (int)triggerConfig.TriggerType.type);
-#endif
 
 	shapeDefinitionError = false;
 
@@ -577,8 +569,11 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 
 	case trigger_type_e::TT_TOOTHED_WHEEL_36_2:
 		initializeSkippedToothTrigger(this, 36, 2, triggerOperationMode, SyncEdge::RiseOnly);
-		setTriggerSynchronizationGap3(/*gapIndex*/0, /*from*/1.6, 3.5);
-		setTriggerSynchronizationGap3(/*gapIndex*/1, /*from*/0.7, 1.3); // second gap is not required to synch on perfect signal but is needed to handle to reject cranking transition noise
+		setTriggerSynchronizationGap3(/*gapIndex*/0, /*from*/1.6, 4.5);
+
+		// second gap is not required to synch on perfect signal but is needed to handle to reject cranking transition noise
+		setTriggerSynchronizationGap3(/*gapIndex*/1, /*from*/0.6, 1.5);
+		setTriggerSynchronizationGap3(/*gapIndex*/2, /*from*/0.6, 1.5);
 		break;
 
 	case trigger_type_e::TT_60_2_VW:

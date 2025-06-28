@@ -219,8 +219,18 @@ struct engine_state_s {
 	// %
 	// offset 70
 	scaled_channel<uint16_t, 100, 1> idleVeTableYAxis = (uint16_t)0;
+	// Air: Flow estimate
+	// kg/h
+	// offset 72
+	scaled_channel<uint16_t, 10, 1> airflowEstimate = (uint16_t)0;
+	// MAP cyl
+	// kPa
+	// offset 74
+	uint8_t mapPerCylinder[12];
+	// offset 86
+	uint8_t alignmentFill_at_86[2];
 };
-static_assert(sizeof(engine_state_s) == 72);
+static_assert(sizeof(engine_state_s) == 88);
 static_assert(offsetof(engine_state_s, baroCorrection) == 36);
 static_assert(offsetof(engine_state_s, hellenBoardId) == 40);
 static_assert(offsetof(engine_state_s, mapAveragingDuration) == 42);
@@ -231,4 +241,6 @@ static_assert(offsetof(engine_state_s, fuelingLoad) == 60);
 static_assert(offsetof(engine_state_s, ignitionLoad) == 64);
 static_assert(offsetof(engine_state_s, veTableYAxis) == 68);
 static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 70);
+static_assert(offsetof(engine_state_s, airflowEstimate) == 72);
+static_assert(offsetof(engine_state_s, mapPerCylinder) == 74);
 

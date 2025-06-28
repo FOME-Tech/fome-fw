@@ -137,7 +137,10 @@ static uint8_t cylinderNumberCopy;
 
 // Called when its time to start listening for knock
 // Does some math, then hands off to the driver to start any sampling hardware
-static void startKnockSampling(void* = nullptr) {
+void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
+	cylinderNumberCopy = cylinderNumber;
+
+#if EFI_SOFTWARE_KNOCK
 	if (!engine->rpmCalculator.isRunning()) {
 		return;
 	}
@@ -150,20 +153,6 @@ static void startKnockSampling(void* = nullptr) {
 
 	// Call the driver to begin sampling
 	onStartKnockSampling(cylinderNumberCopy, samplingSeconds, channel);
-}
-
-void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
-	cylinderNumberCopy = cylinderNumber;
-
-#if EFI_SOFTWARE_KNOCK
-	auto window = engineConfiguration->knockDetectionWindowStart;
-	
-	if (window == 0) {
-		startKnockSampling();
-	} else {
-		scheduleByAngle(nullptr, nowNt,
-				/*angle*/engineConfiguration->knockDetectionWindowStart, startKnockSampling);
-	}
 #else
 	UNUSED(nowNt);
 #endif

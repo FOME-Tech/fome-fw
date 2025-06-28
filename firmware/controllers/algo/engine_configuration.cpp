@@ -354,6 +354,8 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->auxPid[0].offset = 33;
 	engineConfiguration->auxPid[0].minValue = 10;
 	engineConfiguration->auxPid[0].maxValue = 90;
+	engineConfiguration->vvtItermMin[0] = -100;
+	engineConfiguration->vvtItermMax[0] = 100;
 
 	engineConfiguration->vvtOutputFrequency = 300; // VVT solenoid control
 
@@ -361,6 +363,8 @@ static void setDefaultEngineConfiguration() {
 
 	engineConfiguration->auxPid[1].minValue = 10;
 	engineConfiguration->auxPid[1].maxValue = 90;
+	engineConfiguration->vvtItermMin[1] = -100;
+	engineConfiguration->vvtItermMax[1] = 100;
 
 	engineConfiguration->turboSpeedSensorMultiplier = 1;
 
@@ -387,8 +391,9 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->canWriteEnabled = true;
 	engineConfiguration->canVssScaling = 1.0f;
 
-	// Don't enable, but set default address
+	// Don't enable, but set default addresses
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
+	engineConfiguration->ecumasterEgtToCanBaseId = 0x660;
 
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
@@ -464,7 +469,6 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->hardCutRpmRange = 500;
 
 	engineConfiguration->engineSnifferRpmThreshold = 2500;
-	engineConfiguration->sensorSnifferRpmThreshold = 2500;
 
 	/**
 	 * Idle control defaults
@@ -498,9 +502,6 @@ static void setDefaultEngineConfiguration() {
 #if !EFI_UNIT_TEST
 	engineConfiguration->analogInputDividerCoefficient = 2;
 #endif
-
-	// performance optimization
-	engineConfiguration->sensorChartMode = SC_OFF;
 
 	setTPS1Calibration(convertVoltageTo10bitADC(0),
 			convertVoltageTo10bitADC(5),
@@ -552,11 +553,6 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->isWaveAnalyzerEnabled = true;
 
 	engineConfiguration->acIdleRpmBump = 200;
-
-	// Currently this is offset from fire event, not TDC
-	// TODO: convert to offset from TDC
-	engineConfiguration->knockDetectionWindowStart = 15.0 + 5.0;
-	engineConfiguration->knockDetectionWindowEnd = 15.0 + 45.0;
 
 	engineConfiguration->triggerSimulatorRpm = 1200;
 	engineConfiguration->fakeFullSyncForStimulation = true;
@@ -819,9 +815,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::ETB_BENCH_ENGINE:
 		setEtbTestConfiguration();
 		break;
-	case engine_type_e::L9779_BENCH_ENGINE:
-		setL9779TestConfiguration();
-		break;
 	case engine_type_e::TLE8888_BENCH_ENGINE:
 		setTle8888TestConfiguration();
 		break;
@@ -911,7 +904,6 @@ void validateConfiguration() {
 
 void applyNonPersistentConfiguration() {
 #if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_APPLY_STACK, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "apply c");
 	efiPrintf("applyNonPersistentConfiguration()");
 #endif
 
@@ -934,6 +926,20 @@ void commonFrankensoAnalogInputs() {
 	 */
 	engineConfiguration->vbattAdcChannel = EFI_ADC_14;
 }
+
+bool isSdCardEnabled() {
+	return engineConfiguration->isSdCardEnabled;
+}
+
+#if EFI_PROD_CODE
+SPIDriver* getSdCardSpiDevice() {
+	return getSpiDevice(engineConfiguration->sdCardSpiDevice);
+}
+
+Gpio getSdCardCsPin() {
+	return engineConfiguration->sdCardCsPin;
+}
+#endif // EFI_PROD_CODE
 
 // These symbols are weak so that a board_configuration.cpp file can override them
 __attribute__((weak)) void setBoardDefaultConfiguration() { }

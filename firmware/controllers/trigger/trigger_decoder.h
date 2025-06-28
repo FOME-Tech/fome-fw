@@ -146,7 +146,7 @@ public:
 
 	virtual void resetState();
 	void setShaftSynchronized(bool value);
-	bool getShaftSynchronized();
+	bool getShaftSynchronized() const;
 
 	/**
 	 * this is start of real trigger cycle
@@ -177,7 +177,7 @@ protected:
 
 private:
 	void resetCurrentCycleState();
-	bool isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) const;
+	bool isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType);
 
 	bool validateEventCounters(const TriggerWaveform& triggerShape) const;
 

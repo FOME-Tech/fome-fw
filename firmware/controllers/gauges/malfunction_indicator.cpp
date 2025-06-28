@@ -82,7 +82,6 @@ private:
 	void PeriodicTask(efitick_t nowNt) override	{
 		UNUSED(nowNt);
 
-		validateStack("MIL", ObdCode::STACK_USAGE_MIL, 128);
 #if EFI_SHAFT_POSITION_INPUT
 		static error_codes_set_s localErrorCopy;
 		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
@@ -104,14 +103,7 @@ private:
 
 static MILController instance;
 
-bool isMilEnabled() {
-	return isBrainPinValid(engineConfiguration->malfunctionIndicatorPin);
-}
-
-void initMalfunctionIndicator(void) {
-	if (!isMilEnabled()) {
-		return;
-	}
+void initMalfunctionIndicator() {
 	instance.setPeriod(10 /*ms*/);
 	instance.start();
 }
