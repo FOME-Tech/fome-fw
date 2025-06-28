@@ -693,7 +693,7 @@ bit is_enabled_spi_2
 	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
 
 	! 536870911 = 2^29-1, the maximum valid extended ID
-	uint32_t verboseCanBaseAddress;;"", 1, 0, 0, 536870911, 0
+	uint32_t verboseCanBaseAddress;The ECU base CAN address (ID).\n\nValue is specified as a decimal number e.g. 512 is 0x200 in HEX.;"dec", 1, 0, 0, 536870911, 0
 
 	uint8_t mc33_hvolt;Boost Voltage;"v", 1, 0, 40, 70, 0
 	uint8_t minimumBoostClosedLoopMap;Minimum MAP before closed loop boost is enabled. Use to prevent misbehavior upon entering boost.;"kPa", 1, 0, 0, 255, 0
