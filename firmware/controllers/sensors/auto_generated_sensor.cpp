@@ -56,10 +56,6 @@ case SensorType::DetectedGear:
   return "DetectedGear";
 case SensorType::DriverThrottleIntent:
   return "DriverThrottleIntent";
-case SensorType::EGT1:
-  return "EGT1";
-case SensorType::EGT2:
-  return "EGT2";
 case SensorType::EcuInternalTemperature:
   return "EcuInternalTemperature";
 case SensorType::FuelEthanolPercent:
