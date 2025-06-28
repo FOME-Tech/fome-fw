@@ -721,6 +721,15 @@ void configureRusefiLuaHooks(lua_State* l) {
 		engine->softSparkLimiter.setTargetSkipRatio(targetSkipRatio);
 		return 1;
 	});
+	
+	lua_register(l, "setLaunchControlButton", [](lua_State* l2) {
+		auto button = luaL_checkinteger(l2, 1);
+		if (button < 0 || button > 1) {
+			luaL_error(l2, "Invalid launch control button %d", button);
+		}
+		engine->launchController.launchActivatePinState = button;
+		return 0;
+	});
 #endif // EFI_LAUNCH_CONTROL
 
 #if EFI_SHAFT_POSITION_INPUT && !EFI_UNIT_TEST
