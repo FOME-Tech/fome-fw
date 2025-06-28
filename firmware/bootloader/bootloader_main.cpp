@@ -52,10 +52,20 @@ protected:
 	}
 } blinky;
 
+extern "C" blt_bool FileIsFirmwareUpdateRequestedHook();
+
 class : public chibios_rt::BaseStaticThread<1024> {
 	void main() override {
 		// Init openblt shared params
 		SharedParamsInit();
+
+		// Force a mount of the SD card, and if the update
+		// file exists, set everything up so it'll use it
+		FileInit();
+		if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
+			SharedParamsInit();
+			SharedParamsWriteByIndex(0, 0x01);
+		}
 
 		// Init openblt itself
 		BootInit();
