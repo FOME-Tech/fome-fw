@@ -95,7 +95,7 @@ int main(void) {
 	openblt.start(NORMALPRIO + 5);
 
 	while (true) {
-		chThdSleepMilliseconds(1);
+		chThdSleepMilliseconds(100);
 	}
 }
 
