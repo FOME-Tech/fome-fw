@@ -241,8 +241,11 @@
 /      can be opened simultaneously under file lock control. Note that the file
 /      lock control is independent of re-entrancy. */
 
-
+#ifdef EFI_BOOTLOADER
+#define FF_FS_REENTRANT   0
+#else
 #define FF_FS_REENTRANT   1
+#endif
 #define FF_FS_TIMEOUT     TIME_MS2I(1000)
 #define FF_SYNC_t         semaphore_t*
 /* The option FF_FS_REENTRANT switches the re-entrancy (thread safe) of the FatFs
