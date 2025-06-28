@@ -95,9 +95,6 @@ enum class SensorType : unsigned char {
 
 	InputShaftSpeed,
 
-	EGT1,
-	EGT2,
-
 	Maf2,	// Second bank MAF sensor
 
 	Map2,

@@ -214,8 +214,9 @@ struct Egts {
 };
 
 static void populateFrame(Egts& msg) {
-	msg.egt[0] = Sensor::getOrZero(SensorType::EGT1) / 5;
-	msg.egt[1] = Sensor::getOrZero(SensorType::EGT2) / 5;
+	for (size_t i = 0; i < std::min(efi::size(msg.egt), efi::size(engine->outputChannels.egt)); i++) {
+		msg.egt[i] = engine->outputChannels.egt[i] / 5;
+	}
 }
 
 void sendCanVerbose() {
