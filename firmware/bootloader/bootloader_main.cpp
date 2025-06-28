@@ -60,7 +60,7 @@ class : public chibios_rt::BaseStaticThread<1024> {
 		SharedParamsInit();
 
 		// Force a mount of the SD card, and if the update
-		// file exists, set everything up so it'll use it
+		// file exists, set the backdoor so we'll do an update
 		FileInit();
 		if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
 			SharedParamsInit();
