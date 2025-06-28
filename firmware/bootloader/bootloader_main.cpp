@@ -59,13 +59,15 @@ class : public chibios_rt::BaseStaticThread<1024> {
 		// Init openblt shared params
 		SharedParamsInit();
 
-		// Force a mount of the SD card, and if the update
-		// file exists, set the backdoor so we'll do an update
-		FileInit();
-		if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
-			SharedParamsInit();
-			SharedParamsWriteByIndex(0, 0x01);
-		}
+		#if (BOOT_FILE_SYS_ENABLE > 0)
+			// Force a mount of the SD card, and if the update
+			// file exists, set the backdoor so we'll do an update
+			FileInit();
+			if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
+				SharedParamsInit();
+				SharedParamsWriteByIndex(0, 0x01);
+			}
+		#endif
 
 		// Init openblt itself
 		BootInit();
