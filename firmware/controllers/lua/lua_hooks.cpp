@@ -723,7 +723,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 	});
 	
 	lua_register(l, "setLaunchControlButton", [](lua_State* l2) {
-		auto button = luaL_checkinteger(l2, 1);
+		auto button = lua_toboolean(l2, 1);
 		if (button < 0 || button > 1) {
 			luaL_error(l2, "Invalid launch control button %d", button);
 		}
