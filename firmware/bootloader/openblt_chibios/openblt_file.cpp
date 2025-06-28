@@ -131,8 +131,8 @@ extern "C" void FileFirmwareUpdateLogHook(blt_char *info_string)
 	{
 		if (f_puts(info_string, &logfile.handle) < 0)
 		{
-		logfile.canUse = BLT_FALSE;
-		f_close(&logfile.handle);
+			logfile.canUse = BLT_FALSE;
+			f_close(&logfile.handle);
 		}
 	}
 }
