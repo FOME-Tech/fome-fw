@@ -36,6 +36,8 @@ EXTERNC bool efiReadPin(brain_pin_e pin);
 
 EXTERNC iomode_t getInputMode(pin_input_mode_e mode);
 
+void setCanVirtualInput(size_t idx, bool value);
+
 #endif /* EFI_GPIO_HARDWARE */
 
 #if ! EFI_PROD_CODE

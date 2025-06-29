@@ -222,6 +222,7 @@ struct_no_prefix engine_configuration_s
 #define GPPWM_CHANNELS 4
 #define GPPWM_NOTE_SIZE 16
 
+#define CAN_VIRTUAL_INPUT_PINS_COUNT 8
 
 struct stft_cell_cfg_s
 	int8_t maxAdd;Maximum % of fuel possible for fuel trim to add while in this region.;"%", 1, 0, 0, 25, 0
@@ -1415,6 +1416,16 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	Gpio spi6sckPin;
 
 	uint16_t canSleepPeriodMs;FOME verbose data transmit period (approximate);"ms", 1, 0, 0, 1000, 0
+
+	struct CanVirtualInput
+		uint32_t id
+		uint8_t byte
+		uint8_t bitOffset
+		uint8_t autoscale timeout;If no frame is received in this time, revert to the configured default value;"sec", 0.1, 0, 0, 10, 1
+		uint8_t defaultValue;Default value in case the timeout expires;"", 1, 0, 0, 1, 0
+	end_struct
+
+	CanVirtualInput[CAN_VIRTUAL_INPUT_PINS_COUNT iterate] canVirtualInputs
 
 ! end of engine_configuration_s
 end_struct

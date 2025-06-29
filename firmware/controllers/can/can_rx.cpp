@@ -231,6 +231,21 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 	}
 }
 
+static void processCanInputPins(CanBusIndex busIndex, const CANRxFrame& frame) {
+	for (size_t i = 0; i < CAN_VIRTUAL_INPUT_PINS_COUNT; i++) {
+		const auto& inputConf = engineConfiguration->canVirtualInputs[i];
+
+		if (CAN_ID(frame) != inputConf.id) {
+			continue;
+		}
+
+		// extract the requested bit
+		bool value = (frame.data8[inputConf.byte] >> inputConf.bitOffset) & 0x01;
+
+		setCanVirtualInput(i, value);
+	}
+}
+
 void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
 	if (engineConfiguration->verboseCan && busIndex == CanBusIndex::Bus0) {
 		printPacket(busIndex, frame);
@@ -252,6 +267,8 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_
 	processLuaCan(busIndex, frame);
 
 	processEgtCan(busIndex, frame);
+
+	processCanInputPins(busIndex, frame);
 
 	obdOnCanPacketRx(frame, busIndex);
 

@@ -86,7 +86,53 @@ void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brain
 #include "main_trigger_callback.h"
 #endif /* EFI_ENGINE_CONTROL */
 
-bool efiReadPin(brain_pin_e pin) {
+class CanInputPin final {
+public:
+	bool get(float timeoutSec, bool defaultValue) const {
+		if (m_timeout.hasElapsedSec(timeoutSec)) {
+			return defaultValue;
+		}
+
+		return m_value;
+	}
+
+	void set(bool value) {
+		m_value = value;
+		m_timeout.reset();
+	}
+
+private:
+	// state
+	Timer m_timeout;
+	bool m_value;
+};
+
+static CanInputPin canVirtualInputs[CAN_VIRTUAL_INPUT_PINS_COUNT];
+
+void setCanVirtualInput(size_t idx, bool value) {
+	if (idx >= CAN_VIRTUAL_INPUT_PINS_COUNT) {
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid setCanVirtualInput index %u", idx);
+		return;
+	}
+
+	canVirtualInputs[idx].set(value);
+}
+
+static bool readCanVirtualInput(size_t idx) {
+	if (idx >= CAN_VIRTUAL_INPUT_PINS_COUNT) {
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid readCanVirtualInput index %u", idx);
+		return false;
+	}
+
+	const auto& inputConf = engineConfiguration->canVirtualInputs[idx];
+
+	return canVirtualInputs[idx].get(
+		inputConf.timeout,
+		inputConf.defaultValue != 0
+	);
+}
+
+bool efiReadPin(Gpio pin) {
 	if (!isBrainPinValid(pin)) {
 		return false;
 	}
@@ -100,6 +146,10 @@ bool efiReadPin(brain_pin_e pin) {
 			return (gpiochips_readPad(pin) > 0);
 		}
 	#endif
+
+	if (pin >= Gpio::CAN_INPUT_0 && pin <= Gpio::CAN_INPUT_7) {
+		return readCanVirtualInput(pin - Gpio::CAN_INPUT_0);
+	}
 
 	/* incorrect pin */
 	return false;
