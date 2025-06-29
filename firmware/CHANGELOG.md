@@ -40,6 +40,7 @@ or
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
+ - Speed up bootloader launch by 250ms
 
 ## February 2025 Release
 
