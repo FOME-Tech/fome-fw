@@ -87,13 +87,18 @@ void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brain
 #endif /* EFI_ENGINE_CONTROL */
 
 bool efiReadPin(brain_pin_e pin) {
-	if (!isBrainPinValid(pin))
+	if (!isBrainPinValid(pin)) {
 		return false;
-	if (brain_pin_is_onchip(pin))
+	}
+
+	if (brain_pin_is_onchip(pin)) {
 		return palReadPad(getHwPort("readPin", pin), getHwPin("readPin", pin));
+	}
+
 	#if (BOARD_EXT_GPIOCHIPS > 0)
-		else if (brain_pin_is_ext(pin))
+		if (brain_pin_is_ext(pin)) {
 			return (gpiochips_readPad(pin) > 0);
+		}
 	#endif
 
 	/* incorrect pin */
