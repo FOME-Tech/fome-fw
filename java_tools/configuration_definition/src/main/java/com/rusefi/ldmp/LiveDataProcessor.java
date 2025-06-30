@@ -77,8 +77,6 @@ public class LiveDataProcessor {
 
         SdLogWriter sdLogWriter = new SdLogWriter("generated/log_fields_generated.h");
 
-        OutputLookupWriter outputLookupWriter = new OutputLookupWriter("generated/output_lookup_generated.cpp", "getOutputValueByName");
-
         EntryHandler handler = (name, javaName, folder, prepend, outputNames, constexpr, conditional, isPtr) -> {
             int startingPosition = outputChannelWriter.getSize();
             log.info("Starting " + name + " at " + startingPosition + " with [" + conditional + "]");
@@ -118,8 +116,6 @@ public class LiveDataProcessor {
 
                 if (constexpr != null) {
                     sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-
-                    outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
                 }
             }
 
@@ -181,7 +177,6 @@ public class LiveDataProcessor {
         enumContent.append("} live_data_e;\n");
 
         sdLogWriter.endFile();
-        outputLookupWriter.endFile();
 
         return outputChannelWriter.getSize();
     }

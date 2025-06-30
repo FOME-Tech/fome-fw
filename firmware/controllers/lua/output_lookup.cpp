@@ -1,5 +1,137 @@
-// This stub just includes the generated file.
-// If we directly built the generated file, make
-// would be upset that it doesn't exist yet at
-// the start of the build.
-#include "output_lookup_generated.cpp"
+/*
+	Safe vars to use with Lua hook getOutput()
+*/
+#if !EFI_UNIT_TEST
+#include "pch.h"
+#include "value_lookup.h"
+expected<float> getOutputValueByName(const char *name) {
+	int hash = djb2lowerCase(name);
+	switch(hash) {
+		case -1790051911:
+			// checkEngine
+			return (float)engine->outputChannels.checkEngine;
+		case 1608791711:
+			// injectorFault
+			return (float)engine->outputChannels.injectorFault;
+		case -1158382750:
+			// ignitionFault
+			return (float)engine->outputChannels.ignitionFault;
+		case -622949795:
+			// dfcoActive
+			return (float)engine->outputChannels.dfcoActive;
+		case 1699696209:
+			// RPMValue
+			return (float)engine->outputChannels.RPMValue;
+		case -871891659:
+			// internalMcuTemperature
+			return (float)engine->outputChannels.internalMcuTemperature;
+		case -2032003569:
+			// mafMeasured
+			return (float)engine->outputChannels.mafMeasured;
+		case -354325031:
+			// injectorDutyCycle
+			return (float)engine->outputChannels.injectorDutyCycle;
+		case 1933507837:
+			// veValue
+			return (float)engine->outputChannels.veValue;
+		case -802608648:
+			// ignitionAdvance
+			return (float)engine->outputChannels.ignitionAdvance;
+		case 543832183:
+			// fuelTankLevel
+			return (float)engine->outputChannels.fuelTankLevel;
+		case 1417905588:
+			// totalFuelConsumption
+			return (float)engine->outputChannels.totalFuelConsumption;
+		case 822501973:
+			// fuelFlowRate
+			return (float)engine->outputChannels.fuelFlowRate;
+		case 283558758:
+			// detectedGear
+			return (float)engine->outputChannels.detectedGear;
+		case -1346040258:
+			// lastErrorCode
+			return (float)engine->outputChannels.lastErrorCode;
+		case -56739846:
+			// sparkCutReason
+			return (float)engine->outputChannels.sparkCutReason;
+		case -1225000603:
+			// fuelCutReason
+			return (float)engine->outputChannels.fuelCutReason;
+		case 803810399:
+			// auxLinear1
+			return (float)engine->outputChannels.auxLinear1;
+		case 803810400:
+			// auxLinear2
+			return (float)engine->outputChannels.auxLinear2;
+		case 803810401:
+			// auxLinear3
+			return (float)engine->outputChannels.auxLinear3;
+		case 803810402:
+			// auxLinear4
+			return (float)engine->outputChannels.auxLinear4;
+		case -1438648277:
+			// starterState
+			return (float)engine->outputChannels.starterState;
+		case 795671090:
+			// ignitionOnTime
+			return (float)engine->outputChannels.ignitionOnTime;
+		case -1165835361:
+			// engineRunTime
+			return (float)engine->outputChannels.engineRunTime;
+		case -734904659:
+			// targetLambda
+			return (float)engine->fuelComputer.targetLambda;
+		case 2122891301:
+			// targetAFR
+			return (float)engine->fuelComputer.targetAFR;
+		case -96478755:
+			// hasKnockRecently
+			return (float)___engine.module<KnockController>()->hasKnockRecently;
+		case -1571781441:
+			// m_knockLevel
+			return (float)___engine.module<KnockController>()->m_knockLevel;
+		case -94443575:
+			// m_knockRetard
+			return (float)___engine.module<KnockController>()->m_knockRetard;
+		case -1582096144:
+			// m_knockCount
+			return (float)___engine.module<KnockController>()->m_knockCount;
+		case -1015278697:
+			// acCompressorState
+			return (float)___engine.module<AcController>()->acCompressorState;
+		case -281693247:
+			// baroCorrection
+			return (float)engine->engineState.baroCorrection;
+		case -797965330:
+			// clutchUpState
+			return (float)engine->engineState.clutchUpState;
+		case 724244513:
+			// clutchDownState
+			return (float)engine->engineState.clutchDownState;
+		case -705383759:
+			// brakePedalState
+			return (float)engine->engineState.brakePedalState;
+		case 897099930:
+			// startStopState
+			return (float)engine->engineState.startStopState;
+		case 583799407:
+			// fuelingLoad
+			return (float)engine->engineState.fuelingLoad;
+		case 1136482406:
+			// ignitionLoad
+			return (float)engine->engineState.ignitionLoad;
+#if EFI_SHAFT_POSITION_INPUT
+		case -280624712:
+			// triggerToothAngleError
+			return (float)engine->triggerCentral.triggerToothAngleError;
+#endif
+#if EFI_VVT_PID
+		case -2132393748:
+			// vvtTarget
+			return (float)___engine.module<VvtController1>()->vvtTarget;
+#endif
+	}
+	return unexpected;
+}
+#endif
