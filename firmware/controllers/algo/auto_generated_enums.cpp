@@ -98,22 +98,22 @@ case Gpio::C8:
   return "C8";
 case Gpio::C9:
   return "C9";
-case Gpio::CAN_PIN_0:
-  return "CAN_PIN_0";
-case Gpio::CAN_PIN_1:
-  return "CAN_PIN_1";
-case Gpio::CAN_PIN_2:
-  return "CAN_PIN_2";
-case Gpio::CAN_PIN_3:
-  return "CAN_PIN_3";
-case Gpio::CAN_PIN_4:
-  return "CAN_PIN_4";
-case Gpio::CAN_PIN_5:
-  return "CAN_PIN_5";
-case Gpio::CAN_PIN_6:
-  return "CAN_PIN_6";
-case Gpio::CAN_PIN_7:
-  return "CAN_PIN_7";
+case Gpio::CAN_INPUT_0:
+  return "CAN_INPUT_0";
+case Gpio::CAN_INPUT_1:
+  return "CAN_INPUT_1";
+case Gpio::CAN_INPUT_2:
+  return "CAN_INPUT_2";
+case Gpio::CAN_INPUT_3:
+  return "CAN_INPUT_3";
+case Gpio::CAN_INPUT_4:
+  return "CAN_INPUT_4";
+case Gpio::CAN_INPUT_5:
+  return "CAN_INPUT_5";
+case Gpio::CAN_INPUT_6:
+  return "CAN_INPUT_6";
+case Gpio::CAN_INPUT_7:
+  return "CAN_INPUT_7";
 case Gpio::D0:
   return "D0";
 case Gpio::D1:
