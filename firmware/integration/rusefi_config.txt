@@ -880,8 +880,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
 	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
 	uint16_t tps2SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
-
-	bit widebandOnSecondBus,"2","1";Select which bus the wideband controller is attached to.
+	
 	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
 	bit unused1192b2
 	bit boardUseTachPullUp,"12v","5v"
