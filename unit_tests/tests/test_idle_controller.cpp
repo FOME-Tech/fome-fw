@@ -114,7 +114,7 @@ TEST(idle_v2, testDeterminePhase) {
 	EXPECT_EQ(ICP::Running, dut.determinePhase(1101, targetInfo, 10, 0, 10));
 
 
-  EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(5000, 1000, 0, 0, 10));
 
 	// enable feature to prevent idle state when coasting in gear
@@ -123,7 +123,7 @@ TEST(idle_v2, testDeterminePhase) {
 	engineConfiguration->clutchUpPin = Gpio::G2;
 	engineConfiguration->clutchUpPinMode = PI_PULLDOWN;
 	engine->updateSwitchInputs();
-    
+
 	// should be same behaviour as before when clutch is pressed/car in neutral
 	EXPECT_EQ(ICP::Idling, dut.determinePhase(1099, 1000, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
@@ -136,7 +136,7 @@ TEST(idle_v2, testDeterminePhase) {
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1099, 1000, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, 1000, 0, 0, 10));
 
-  // Below TPS but above RPM should be outside the zone
+	// Below TPS but above RPM should be outside the zone
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, targetInfo, 0, 0, 10));
 	EXPECT_EQ(ICP::Coasting, dut.determinePhase(5000, targetInfo, 0, 0, 10));
 
