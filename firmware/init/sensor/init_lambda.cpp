@@ -15,6 +15,8 @@ static FunctionalSensor lambdaSensor2(SensorType::Lambda2, MS2NT(50));
 #if EFI_CAN_SUPPORT
 static AemXSeriesWideband aem1(0, SensorType::Lambda1);
 static AemXSeriesWideband aem2(1, SensorType::Lambda2);
+static AemXSeriesWideband aem3(2, SensorType::Lambda3);
+static AemXSeriesWideband aem4(3, SensorType::Lambda4);
 #endif
 
 template <>
@@ -23,6 +25,8 @@ const wideband_state_s* getLiveData(size_t idx) {
 	switch (idx) {
 		case 0: return &aem1;
 		case 1: return &aem2;
+		case 2: return &aem3;
+		case 3: return &aem4;
 	}
 #endif
 
@@ -41,7 +45,7 @@ static void initLambdaSensor(FunctionalSensor& sensor, adc_channel_e channel) {
 void initLambda() {
 
 #if EFI_CAN_SUPPORT
-	if (engineConfiguration->enableAemXSeries) {
+	if (engineConfiguration->widebandMode != WidebandMode::Analog) {
 		if (!engineConfiguration->canWriteEnabled || !engineConfiguration->canReadEnabled) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "CAN read and write are required to use CAN wideband.");
 			return;
@@ -49,6 +53,8 @@ void initLambda() {
 
 		registerCanSensor(aem1);
 		registerCanSensor(aem2);
+		registerCanSensor(aem3);
+		registerCanSensor(aem4);
 
 		return;
 	}

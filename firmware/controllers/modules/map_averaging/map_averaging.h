@@ -21,10 +21,12 @@ public:
 	{
 	}
 
-	void start(uint8_t cylinderIndex);
+	void start(uint8_t cylinderNumber);
 	void stop();
 
 	SensorResult submit(float sensorVolts);
+
+	void onSample(float map, uint8_t cylinderNumber);
 
 	void setFunction(SensorConverter& func) {
 		m_function = &func;
@@ -39,14 +41,14 @@ private:
 	size_t m_counter = 0;
 	size_t m_lastCounter = 0;
 	float m_sum = 0;
-	uint8_t m_cylinderIndex = 0;
+	uint8_t m_cylinderNumber = 0;
 };
 
 MapAverager& getMapAvg(size_t idx);
 
 class MapAveragingModule : public EngineModule {
 public:
-	void onConfigurationChange(engine_configuration_s const * previousConfig);
+	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
 
 	void onFastCallback() override;
 	void onEnginePhase(float rpm,
@@ -54,5 +56,5 @@ public:
 						float currentPhase,
 						float nextPhase) override;
 
-	void submitSample(float volts);
+	void submitSample(float voltsMap1, float voltsMap2);
 };

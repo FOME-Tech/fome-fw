@@ -27,7 +27,7 @@ static void assertNextEvent(const char *msg, int expectedPinState, TestExecutor 
 	ASSERT_EQ(1,  executor->size()) << "PWM_test: queue.size";
 }
 
-static void test100dutyCycle() {
+TEST(PWM, test100dutyCycle) {
 	printf("*************************************** test100dutyCycle\r\n");
 
 	expectedTimeOfNextEvent = 0;
@@ -37,14 +37,16 @@ static void test100dutyCycle() {
 	SimplePwm pwm("test PWM1");
 	TestExecutor executor;
 
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&executor);
+
 	startSimplePwm(&pwm, "unit_test",
-			&executor,
 			&pin,
 			1000 /* frequency */,
 			1.0 /* duty cycle */);
 
 	expectedTimeOfNextEvent += 1000;
-	assertEqualsM2("1@1000/100", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@100", HIGH_VALUE, &executor, pin);
 
@@ -55,9 +57,7 @@ static void test100dutyCycle() {
 	assertNextEvent("exec3@100", HIGH_VALUE, &executor, pin);
 }
 
-static void testSwitchToNanPeriod() {
-	printf("*************************************** testSwitchToNanPeriod\r\n");
-
+TEST(PWM, testSwitchToNanPeriod) {
 	expectedTimeOfNextEvent = 0;
 	setTimeNowUs(0);
 
@@ -65,14 +65,16 @@ static void testSwitchToNanPeriod() {
 	SimplePwm pwm("test PWM1");
 	TestExecutor executor;
 
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&executor);
+
 	startSimplePwm(&pwm, "unit_test",
-			&executor,
 			&pin,
 			1000 /* frequency */,
 			0.60 /* duty cycle */);
 
 	expectedTimeOfNextEvent += 600;
-	assertEqualsM2("1@1000/70", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@70", LOW_VALUE, &executor, pin);
 	ASSERT_EQ(600, getTimeNowUs()) << "time1";
@@ -83,18 +85,15 @@ static void testSwitchToNanPeriod() {
 	pwm.setFrequency(NAN);
 
 	expectedTimeOfNextEvent += 600;
-	assertEqualsM2("1@1000/NAN", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 	assertNextEvent("exec2@NAN", LOW_VALUE, &executor, pin);
 
 	expectedTimeOfNextEvent += MS2US(NAN_FREQUENCY_SLEEP_PERIOD_MS);
-	assertEqualsM2("2@1000/NAN", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 	assertNextEvent("exec3@NAN", LOW_VALUE, &executor, pin);
 }
 
 TEST(PWM, testPwmGenerator) {
-	test100dutyCycle();
-	testSwitchToNanPeriod();
-
 	expectedTimeOfNextEvent = 0;
 	setTimeNowUs(0);
 
@@ -102,50 +101,52 @@ TEST(PWM, testPwmGenerator) {
 	SimplePwm pwm("test PWM3");
 	TestExecutor executor;
 
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->scheduler.setMockExecutor(&executor);
+
 	startSimplePwm(&pwm,
 			"unit_test",
-			&executor,
 			&pin,
 			1000 /* frequency */,
 			0.80 /* duty cycle */);
 
 	expectedTimeOfNextEvent += 800;
-	assertEqualsM2("1@1000/80", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@0", LOW_VALUE, &executor, pin);
 	ASSERT_EQ(800, getTimeNowUs()) << "time1";
 
 	expectedTimeOfNextEvent += 200;
-	assertEqualsM2("2@1000/80", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	// above we had vanilla duty cycle, now let's handle a special case
 	pwm.setSimplePwmDutyCycle(0);
-	assertEqualsM2("2@1000/0", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@1", LOW_VALUE, &executor, pin);
 	ASSERT_EQ(1000, getTimeNowUs()) << "time2";
 
 	expectedTimeOfNextEvent += 1000;
-	assertEqualsM2("3@1000/0", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@2", LOW_VALUE /* pin value */, &executor, pin);
 	ASSERT_EQ(2000, getTimeNowUs()) << "time3";
 	expectedTimeOfNextEvent += 1000;
-	assertEqualsM2("4@1000/0", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@3", LOW_VALUE /* pin value */, &executor, pin);
 	ASSERT_EQ(3000, getTimeNowUs()) << "time4";
 	expectedTimeOfNextEvent += 1000;
-	assertEqualsM2("5@1000/0", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@4", LOW_VALUE /* pin value */, &executor, pin);
 	expectedTimeOfNextEvent += 1000;
-	assertEqualsM2("6@1000/0", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@5", LOW_VALUE /* pin value */, &executor, pin);
 	expectedTimeOfNextEvent += 1000;
 	ASSERT_EQ(5000, getTimeNowUs()) << "time4";
-	assertEqualsM2("7@1000/0", expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX, 0);
+	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
 
 	assertNextEvent("exec@6", LOW_VALUE /* pin value */, &executor, pin);
 }

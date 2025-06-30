@@ -248,9 +248,7 @@ int getNumberOfInjections(injection_mode_e mode) {
 	}
 }
 
-float getInjectionModeDurationMultiplier() {
-	injection_mode_e mode = getCurrentInjectionMode();
-
+float getInjectionModeDurationMultiplier(injection_mode_e mode) {
 	switch (mode) {
 	case IM_SIMULTANEOUS: {
 		auto cylCount = engineConfiguration->cylindersCount;
@@ -274,13 +272,15 @@ float getInjectionModeDurationMultiplier() {
 }
 
 percent_t getInjectorDutyCycle(float rpm) {
-	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(engineConfiguration->injectionMode);
+	auto mode = getCurrentInjectionMode();
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDuration * getNumberOfInjections(mode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }
 
 percent_t getInjectorDutyCycleStage2(float rpm) {
-	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(engineConfiguration->injectionMode);
+	auto mode = getCurrentInjectionMode();
+	floatms_t totalInjectiorAmountPerCycle = engine->engineState.injectionDurationStage2 * getNumberOfInjections(mode);
 	floatms_t engineCycleDuration = getEngineCycleDuration(rpm);
 	return 100 * totalInjectiorAmountPerCycle / engineCycleDuration;
 }
@@ -297,14 +297,13 @@ static float getCycleFuelMass(bool isCranking, float baseFuelMass) {
  * @returns	Mass of each individual fuel injection, in grams
  *     in case of single point injection mode the amount of fuel into all cylinders, otherwise the amount for one cylinder
  */
-float getInjectionMass(float rpm) {
+float getCycleInjectionMass(float rpm, bool isCranking) {
 	ScopePerf perf(PE::GetInjectionDuration);
 
 #if EFI_SHAFT_POSITION_INPUT
 	// Always update base fuel - some cranking modes use it
 	float baseFuelMass = getBaseFuelMass(rpm);
 
-	bool isCranking = engine->rpmCalculator.isCranking();
 	float cycleFuelMass = getCycleFuelMass(isCranking, baseFuelMass);
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(cycleFuelMass), "NaN cycleFuelMass", 0);
 
@@ -312,9 +311,6 @@ float getInjectionMass(float rpm) {
 		// If decel fuel cut, zero out fuel
 		cycleFuelMass = 0;
 	}
-
-	float durationMultiplier = getInjectionModeDurationMultiplier();
-	float injectionFuelMass = cycleFuelMass * durationMultiplier;
 
 	// Prepare injector flow rate & deadtime
 	engine->module<InjectorModelPrimary>()->prepare();
@@ -328,11 +324,9 @@ float getInjectionMass(float rpm) {
 	engine->engineState.tpsAccelEnrich = tpsAccelEnrich;
 
 	// For legacy reasons, the TPS accel table is in units of milliseconds, so we have to convert BACK to mass
-	float tpsAccelPerInjection = durationMultiplier * tpsAccelEnrich;
+	float tpsFuelMass = engine->module<InjectorModelPrimary>()->getFuelMassForDuration(tpsAccelEnrich);
 
-	float tpsFuelMass = engine->module<InjectorModelPrimary>()->getFuelMassForDuration(tpsAccelPerInjection);
-
-	return injectionFuelMass + tpsFuelMass;
+	return cycleFuelMass + tpsFuelMass;
 #else
 	return 0;
 #endif
@@ -357,15 +351,6 @@ float getCltFuelCorrection() {
 		return 1; // this error should be already reported somewhere else, let's just handle it
 
 	return interpolate2d(clt.Value, config->cltFuelCorrBins, config->cltFuelCorr);
-}
-
-angle_t getCltTimingCorrection() {
-	const auto clt = Sensor::get(SensorType::Clt);
-
-	if (!clt)
-		return 0; // this error should be already reported somewhere else, let's just handle it
-
-	return interpolate2d(clt.Value, config->cltTimingBins, config->cltTimingExtra);
 }
 
 float getIatFuelCorrection() {

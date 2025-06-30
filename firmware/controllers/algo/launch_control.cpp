@@ -10,9 +10,7 @@
 #if EFI_LAUNCH_CONTROL
 #include "boost_control.h"
 #include "launch_control.h"
-#include "advance_map.h"
 #include "engine_state.h"
-#include "advance_map.h"
 #include "tinymt32.h"
 
 /**

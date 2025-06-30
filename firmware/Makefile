@@ -132,11 +132,6 @@ ifeq ($(USE_EXCEPTIONS_STACKSIZE),)
   USE_EXCEPTIONS_STACKSIZE = 0x1000
 endif
 
-# Enables the use of FPU on Cortex-M4 (no, softfp, hard).
-ifeq ($(USE_FPU),)
-  USE_FPU = hard
-endif
-
 # and this is not working for be :( See https://github.com/rusefi/rusefi/issues/638
 # use -j4 unless some value was specified
 NUMJOBS=${NUMJOBS:-" -j4 "}
@@ -177,10 +172,6 @@ endif
 include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
-ifeq ($(LWIP),yes)
-  include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
-endif
-
 include $(CHIBIOS)/os/hal/lib/complex/mfs/hal_mfs.mk
 
 ifeq ($(USE_FATFS),yes)
@@ -195,7 +186,12 @@ endif
 
 ifeq ($(USE_WIFI),yes)
   include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
-  DDEFS += -DEFI_WIFI=1
+  DDEFS += -DEFI_WIFI=1 # -DETH_MODE=1
+  # LWIP = yes
+endif
+
+ifeq ($(LWIP),yes)
+  include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
 endif
 
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
@@ -215,6 +211,7 @@ $(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
 $(info CPU_HWLAYER:   $(CPU_HWLAYER))
 $(info CONFDIR:       $(CONFDIR))
 $(info LDSCRIPT:      $(LDSCRIPT))
+$(info MODULES_INC:   $(MODULES_INC))
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -283,7 +280,7 @@ INCDIR = \
   $(RUSEFI_LIB_INC) \
   $(CONFDIR) \
   $(GENERATED_DIR) \
-  ext/FatFS \
+  $(PROJECT_DIR)/ext/FatFS \
   $(PROJECT_DIR)/hw_layer/mass_storage \
   $(HW_INC) \
   development/hw_layer \

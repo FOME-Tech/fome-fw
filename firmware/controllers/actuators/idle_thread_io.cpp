@@ -63,8 +63,6 @@ void startPedalPins() {
 	// this is neutral/no gear switch input. on Miata it's wired both to clutch pedal and neutral in gearbox
 	startInputPinIfValid("clutch up switch", engineConfiguration->clutchUpPin, engineConfiguration->clutchUpPinMode);
 
-	startInputPinIfValid("throttle pedal up switch", engineConfiguration->throttlePedalUpPin, engineConfiguration->throttlePedalUpPinMode);
-
 	startInputPinIfValid("brake pedal switch", engineConfiguration->brakePedalPin, engineConfiguration->brakePedalPinMode);
 	startInputPinIfValid("Launch Button", engineConfiguration->launchActivatePin, engineConfiguration->launchActivatePinMode);
 	startInputPinIfValid("Antilag Button", engineConfiguration->ALSActivatePin, engineConfiguration->ALSActivatePinMode);
@@ -74,18 +72,11 @@ void startPedalPins() {
 void stopPedalPins() {
 	brain_pin_markUnused(activeConfiguration.clutchUpPin);
 	brain_pin_markUnused(activeConfiguration.clutchDownPin);
-	brain_pin_markUnused(activeConfiguration.throttlePedalUpPin);
 	brain_pin_markUnused(activeConfiguration.brakePedalPin);
 	brain_pin_markUnused(activeConfiguration.launchActivatePin);
 }
 
 #if ! EFI_UNIT_TEST
-
-static void applyPidSettings() {
-#if EFI_IDLE_CONTROL
-	engine->module<IdleController>().unmock().getIdlePid()->updateFactors(engineConfiguration->idleRpmPid.pFactor, engineConfiguration->idleRpmPid.iFactor, engineConfiguration->idleRpmPid.dFactor);
-#endif // EFI_IDLE_CONTROL
-}
 
 void setTargetIdleRpm(int value) {
 	setTargetRpmCurve(value);
@@ -124,21 +115,6 @@ void setDefaultIdleParameters() {
 
 	// Idle region is target + 100 RPM
 	engineConfiguration->idlePidRpmUpperLimit = 100;
-
-	engineConfiguration->idlePidRpmDeadZone = 50;
-}
-
-/**
- * I use this questionable feature to tune acceleration enrichment
- */
-static void blipIdle(int idlePosition, int durationMs) {
-#if ! EFI_UNIT_TEST
-	if (engine->timeToStopBlip != 0) {
-		return; // already in idle blip
-	}
-	engine->blipIdlePosition = idlePosition;
-	engine->timeToStopBlip = getTimeNowUs() + 1000 * durationMs;
-#endif // EFI_UNIT_TEST
 }
 
 void startIdleThread() {
@@ -155,19 +131,14 @@ void startIdleThread() {
 	initIdleHardware();
 #endif /* EFI_UNIT_TEST */
 
-	controller->idleState = INIT;
-	controller->baseIdlePosition = -100.0f;
+	controller->openLoop = -100.0f;
 	controller->currentIdlePosition = -100.0f;
 
 #if ! EFI_UNIT_TEST
-
-	addConsoleActionII("blipidle", blipIdle);
-
 	// split this whole file into manual controller and auto controller? move these commands into the file
 	// which would be dedicated to just auto-controller?
 
 	addConsoleAction("idlebench", startIdleBench);
-	applyPidSettings();
 #endif /* EFI_UNIT_TEST */
 }
 

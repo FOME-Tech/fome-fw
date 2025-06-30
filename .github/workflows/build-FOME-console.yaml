@@ -25,9 +25,13 @@ jobs:
           sudo ./add-ubuntu-latest-apt-mirrors.sh
           sudo apt-get install sshpass mtools
 
-      - name: Generate Configs, Enums & Live Documentation
+      - name: Generate Live Documentation
         working-directory: ./firmware/
-        run: ./gen_default_everything.sh
+        run: ./gen_live_documentation.sh
+
+      - name: Generate Configs
+        working-directory: ./firmware/
+        run: ./gen_config_board.sh config/boards/f407-discovery f407-discovery
 
       - name: Generate Java (Antlr)
         working-directory: ./java_tools

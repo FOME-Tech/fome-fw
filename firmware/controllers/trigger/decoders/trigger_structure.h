@@ -241,7 +241,7 @@ public:
 	 * index of synchronization event within TriggerWaveform
 	 * See findTriggerZeroEventIndex()
 	 */
-	int triggerShapeSynchPointIndex;
+	expected<uint32_t> triggerShapeSynchPointIndex = unexpected;
 
 	void initializeSyncPoint(
 			TriggerDecoderBase& state,

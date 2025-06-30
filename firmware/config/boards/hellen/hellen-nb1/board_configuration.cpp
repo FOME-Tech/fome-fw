@@ -74,6 +74,11 @@ void setBoardConfigOverrides() {
     setDefaultHellenAtPullUps();
 
 	setHellenCan();
+
+	engineConfiguration->etb_use_two_wires = true;
+	engineConfiguration->etbIo[0].directionPin1 = Gpio::C7;	// PWM 3
+	engineConfiguration->etbIo[0].directionPin2 = Gpio::C8;	// PWM 4
+	engineConfiguration->etbIo[0].controlPin = Gpio::C6;		// PWM 2
 }
 
 /**

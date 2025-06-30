@@ -37,13 +37,13 @@ public class OutputChannelWriter {
         StructNamePrefixer prefixer = new StructNamePrefixer('_');
 
         if (namePrefix != null) {
-            prefixer.push(namePrefix);
+            prefixer.push(namePrefix.replace(" ", "_"));
         }
 
-        OutputChannelVisitor v = new OutputChannelVisitor();
+        OutputChannelVisitor v = new OutputChannelVisitor(namePrefix);
         sl.visit(v, ps, prefixer, cumulativeSize, new int[0]);
 
-        DatalogVisitor dlv = new DatalogVisitor();
+        DatalogVisitor dlv = new DatalogVisitor(namePrefix);
         sl.visit(dlv, psDatalog, prefixer, cumulativeSize, new int[0]);
 
         cumulativeSize += sl.getSize();

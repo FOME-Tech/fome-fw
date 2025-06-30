@@ -11,13 +11,16 @@ const char *getInjectorNonlinearMode(InjectorNonlinearMode value);
 const char *getSelectedGear(SelectedGear value);
 #endif //__cplusplus
 #if __cplusplus
-const char *getSentEtbType(SentEtbType value);
-#endif //__cplusplus
-#if __cplusplus
 const char *getTransmissionControllerMode(TransmissionControllerMode value);
 #endif //__cplusplus
 #if __cplusplus
 const char *getTsCalMode(TsCalMode value);
+#endif //__cplusplus
+#if __cplusplus
+const char *getWidebandMode(WidebandMode value);
+#endif //__cplusplus
+#if __cplusplus
+const char *getWssToVssMode(WssToVssMode value);
 #endif //__cplusplus
 const char *getAir_pressure_sensor_type_e(air_pressure_sensor_type_e value);
 const char *getAntiLagActivationMode_e(antiLagActivationMode_e value);
@@ -35,7 +38,6 @@ const char *getGppwm_channel_e(gppwm_channel_e value);
 const char *getGppwm_compare_mode_e(gppwm_compare_mode_e value);
 const char *getHpfp_cam_e(hpfp_cam_e value);
 const char *getIdle_mode_e(idle_mode_e value);
-const char *getIdle_state_e(idle_state_e value);
 const char *getIgnition_mode_e(ignition_mode_e value);
 const char *getImu_type_e(imu_type_e value);
 const char *getInjection_mode_e(injection_mode_e value);
@@ -46,7 +48,6 @@ const char *getLoad_override_e(load_override_e value);
 const char *getOperation_mode_e(operation_mode_e value);
 const char *getPin_input_mode_e(pin_input_mode_e value);
 const char *getPin_output_mode_e(pin_output_mode_e value);
-const char *getSensor_chart_e(sensor_chart_e value);
 const char *getSpi_device_e(spi_device_e value);
 const char *getSpi_speed_e(spi_speed_e value);
 const char *getStepper_num_micro_steps_e(stepper_num_micro_steps_e value);

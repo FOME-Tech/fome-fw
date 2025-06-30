@@ -23,7 +23,6 @@ static inline void commonPassatB6() {
     setTable(config->injectionPhase, -180.0f);
 
 	engineConfiguration->etbIdleThrottleRange = 10;
-	engineConfiguration->idlePidRpmDeadZone = 500;
 	engineConfiguration->idleMode = IM_AUTO;
 
 	engineConfiguration->cylindersCount = 4;
@@ -37,11 +36,6 @@ static inline void commonPassatB6() {
 		engineConfiguration->injectionPins[i] = Gpio::Unassigned;
 		engineConfiguration->ignitionPins[i] = Gpio::Unassigned;
 	}
-
-//	engineConfiguration->canNbcType = CAN_BUS_NBC_VAG;
-
-	engineConfiguration->enableAemXSeries = true;
-
 
 	// Injectors flow 1214 cc/min at 100 bar pressure
 	engineConfiguration->injector.flow = 1214;

@@ -25,7 +25,6 @@
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "sent_state_generated.h"
 #include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
@@ -42,6 +41,7 @@
 #include "dfco.h"
 #include "fuel_computer.h"
 #include "advance_map.h"
+#include "ignition_state.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
@@ -49,7 +49,9 @@
 #include "lambda_monitor.h"
 #include "vvt.h"
 
+#ifndef EFI_BOOTLOADER
 #include "engine_modules_generated.h"
+#endif
 
 #include <functional>
 
@@ -107,12 +109,66 @@ private:
 	size_t m_errorBlinkCounter = 0;
 };
 
+class OneCylinder final {
+public:
+	void updateCylinderNumber(uint8_t index, uint8_t cylinderNumber);
+	void invalidCylinder();
+
+	// Get this cylinder's offset, in positive degrees, from cylinder 1
+	angle_t getAngleOffset() const;
+
+	// **************************
+	//           Fuel
+	// **************************
+
+	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
+	expected<angle_t> computeInjectionAngle(injection_mode_e mode) const;
+
+	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
+	mass_t getInjectionMass() const {
+		return m_injectionMass;
+	}
+
+	void setInjectionMass(mass_t m) {
+		m_injectionMass = m;
+	}
+
+	// **************************
+	//         Ignition
+	// **************************
+	void setIgnitionTimingBtdc(angle_t deg) {
+		m_timingAdvance = deg;
+	}
+
+	angle_t getIgnitionTimingBtdc() const {
+		return m_timingAdvance;
+	}
+
+	// Get angle of the spark firing in engine cycle coordinates, relative to #1 TDC
+	angle_t getSparkAngle(angle_t lateAdjustment) const;
+
+private:
+	bool m_valid = false;
+
+	// This cylinder's position in the firing order (0-based)
+	uint8_t m_cylinderIndex = 0;
+	// This cylinder's physical cylinder number (0-based)
+	uint8_t m_cylinderNumber = 0;
+
+	// This cylinder's mechanical TDC offset in degrees after #1
+	angle_t m_baseAngleOffset;
+
+	mass_t m_injectionMass = 0;
+
+	// 10 means 10 degrees BTDC
+	angle_t m_timingAdvance = 0;
+};
+
+union IgnitionContext;
+
 class Engine final : public TriggerStateListener {
 public:
 	Engine();
-
-	// todo: technical debt: enableOverdwellProtection #3553
-	bool enableOverdwellProtection = true;
 
 	TunerStudioOutputChannels outputChannels;
 
@@ -123,13 +179,6 @@ public:
 
 	// used by HW CI
 	bool isPwmEnabled = true;
-
-	const char *prevOutputName = nullptr;
-	/**
-	 * ELM327 cannot handle both RX and TX at the same time, we have to stay quite once first ISO/TP packet was detected
-	 * this is a pretty temporary hack only while we are trying ELM327, long term ISO/TP and rusEFI broadcast should find a way to coexists
-	 */
-	bool pauseCANdueToSerial = false;
 
 	PinRepository pinRepository;
 
@@ -173,7 +222,9 @@ public:
 		LedBlinkingTask,
 		TpsAccelEnrichment,
 
+		#ifndef EFI_BOOTLOADER
 		#include "modules_list_generated.h"
+		#endif
 
 		EngineModule // dummy placeholder so the previous entries can all have commas
 		> engineModules;
@@ -239,13 +290,14 @@ public:
 #if EFI_UNIT_TEST
 	TestExecutor scheduler;
 
-	std::function<void(IgnitionEvent*, bool)> onIgnitionEvent;
+	std::function<void(const IgnitionContext&, bool)> onIgnitionEvent;
 #endif // EFI_UNIT_TEST
 
 #if EFI_ENGINE_CONTROL
 	FuelSchedule injectionEvents;
 	IgnitionEventList ignitionEvents;
 	scheduling_s tdcScheduler[2];
+	OneCylinder cylinders[MAX_CYLINDER_COUNT];
 #endif /* EFI_ENGINE_CONTROL */
 
 	// todo: move to electronic_throttle something?
@@ -255,9 +307,6 @@ public:
 #if EFI_UNIT_TEST
 	bool tdcMarkEnabled = true;
 #endif // EFI_UNIT_TEST
-
-
-	bool slowCallBackWasInvoked = false;
 
 	RpmCalculator rpmCalculator;
 
@@ -273,9 +322,7 @@ public:
 	TriggerCentral triggerCentral;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-
 	float stftCorrection[STFT_BANK_COUNT] = {0};
-
 
 	void periodicFastCallback();
 	void periodicSlowCallback();
@@ -296,19 +343,13 @@ public:
 	EngineState engineState;
 
 	dc_motors_s dc_motors;
-	sent_state_s sent_state;
 
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM
 	 */
-	percent_t blipIdlePosition;
-	efitimeus_t timeToStopBlip = 0;
 	efitimeus_t timeToStopIdleTest = 0;
 
-
 	SensorsState sensors;
-	Timer mainRelayBenchTimer;
-
 
 	void preCalculate();
 
@@ -326,8 +367,6 @@ public:
 	   Returns true if some operations are in progress on background.
 	 */
 	bool isInShutdownMode() const;
-
-	bool isInMainRelayBench();
 
 	/**
 	 * The stepper does not work if the main relay is turned off (it requires +12V).

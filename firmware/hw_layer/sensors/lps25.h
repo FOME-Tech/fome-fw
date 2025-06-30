@@ -16,6 +16,8 @@ public:
 	bool init(brain_pin_e scl, brain_pin_e sda);
 
 	expected<float> readPressureKpa();
+	expected<float> readTemperatureC();
+
 	bool hasInit() const {
 		return m_hasInit;
 	}

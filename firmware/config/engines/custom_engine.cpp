@@ -208,28 +208,7 @@ void setEtbTestConfiguration() {
 	// no analog dividers - all sensors with 3v supply, naked discovery bench setup
 	engineConfiguration->analogInputDividerCoefficient = 1;
 
-	// EFI_ADC_15 = PC5
-	engineConfiguration->clt.adcChannel = EFI_ADC_15;
-	set10K_4050K(&engineConfiguration->clt, 10000);
-
 	// see also setDefaultEtbBiasCurve
-}
-
-// F407 discovery
-void setL9779TestConfiguration() {
-	// enable_spi 3
-	engineConfiguration->is_enabled_spi_3 = true;
-	// Wire up spi3
-	// green
-	engineConfiguration->spi3mosiPin = Gpio::B5;
-	// blue
-	engineConfiguration->spi3misoPin = Gpio::B4;
-	// white
-	engineConfiguration->spi3sckPin = Gpio::B3;
-
-	engineConfiguration->l9779spiDevice = SPI_DEVICE_3;
-	// orange
-	engineConfiguration->l9779_cs = Gpio::D5;
 }
 
 // TLE8888_BENCH_ENGINE
@@ -650,30 +629,6 @@ void setBoschHDEV_5_injectors() {
 	engineConfiguration->mc33_hpfp_i_hold = 3;
 	engineConfiguration->mc33_hpfp_i_hold_off = 10; // us
 	engineConfiguration->mc33_hpfp_max_hold = 10; // this value in ms not us
-}
-
-/**
- * set engine_type 107
- */
-void setRotary() {
-	engineConfiguration->cylindersCount = 2;
-	engineConfiguration->firingOrder = FO_1_2;
-
-	engineConfiguration->trigger.type = trigger_type_e::TT_36_2_2_2;
-	// todo: fix UI to make this possible via TS
-	setTwoStrokeOperationMode();
-
-	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_MAZDA);
-	strcpy(engineConfiguration->engineCode, "13B");
-	strcpy(engineConfiguration->vehicleName, "test");
-
-	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
-	engineConfiguration->injectionPins[2] = Gpio::Unassigned; // injector in default pinout
-	engineConfiguration->injectionPins[3] = Gpio::Unassigned;
-
-	engineConfiguration->enableTrailingSparks = true;
-	engineConfiguration->trailingCoilPins[0] = Gpio::C9;
-	engineConfiguration->trailingCoilPins[1] = Gpio::E10;
 }
 
 /**

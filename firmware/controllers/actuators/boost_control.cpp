@@ -25,7 +25,7 @@ void BoostController::init(IPwm* pwm, const ValueProvider3D* openLoopMap, const 
 	m_pid.initPidClass(pidParams);
 	resetLua();
 
-	hasInitBoost = true;
+	m_hasInitBoost = true;
 }
 
 void BoostController::resetLua() {
@@ -47,18 +47,14 @@ expected<float> BoostController::observePlant() const {
 expected<float> BoostController::getSetpoint() {
 	// If we're in open loop only mode, disregard any target computation.
 	// Open loop needs to work even in case of invalid closed loop config
-	isNotClosedLoop = engineConfiguration->boostType != CLOSED_LOOP;
-	if (isNotClosedLoop) {
-		boostControllerClosedLoopPart = 0;
-		return (float)boostControllerClosedLoopPart;
+	if (engineConfiguration->boostType != CLOSED_LOOP) {
+		return 0;
 	}
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	auto driverIntent = Sensor::get(SensorType::DriverThrottleIntent);
-	isTpsInvalid = !driverIntent.Valid;
-
-	if (isTpsInvalid) {
+	if (!driverIntent) {
 		return unexpected;
 	}
 
@@ -73,6 +69,7 @@ expected<float> BoostController::getSetpoint() {
 		engine->outputChannels.boostClosedLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostClosedLoopBlendBias[i] = result.Bias;
 		engine->outputChannels.boostClosedLoopBlendOutput[i] = result.Value;
+		engine->outputChannels.boostClosedLoopBlendYAxis[i] = result.TableYAxis;
 
 		target += result.Value;
 	}
@@ -86,10 +83,7 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	auto driverIntent = Sensor::get(SensorType::DriverThrottleIntent);
-
-	isTpsInvalid = !driverIntent.Valid;
-
-	if (isTpsInvalid) {
+	if (!driverIntent) {
 		return unexpected;
 	}
 
@@ -104,6 +98,7 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 		engine->outputChannels.boostOpenLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostOpenLoopBlendBias[i] = result.Bias;
 		engine->outputChannels.boostOpenLoopBlendOutput[i] = result.Value;
+		engine->outputChannels.boostOpenLoopBlendYAxis[i] = result.TableYAxis;
 
 		openLoop += result.Value;
 	}
@@ -114,8 +109,7 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 
 percent_t BoostController::getClosedLoopImpl(float target, float manifoldPressure) {
 	// If we're in open loop only mode, make no closed loop correction.
-	isNotClosedLoop = engineConfiguration->boostType != CLOSED_LOOP;
-	if (isNotClosedLoop) {
+	if (engineConfiguration->boostType != CLOSED_LOOP) {
 		return 0;
 	}
 
@@ -172,14 +166,14 @@ void BoostController::setOutput(expected<float> output) {
 }
 
 void BoostController::onFastCallback() {
-	if (!hasInitBoost) {
+	if (!m_hasInitBoost) {
 		return;
 	}
 
 	m_pid.iTermMin = -20;
 	m_pid.iTermMax = 20;
 
-	rpmTooLow = Sensor::getOrZero(SensorType::Rpm) < engineConfiguration->boostControlMinRpm;
+	rpmTooLow = Sensor::getOrZero(SensorType::Rpm) <= engineConfiguration->boostControlMinRpm;
 	tpsTooLow = Sensor::getOrZero(SensorType::Tps1) < engineConfiguration->boostControlMinTps;
 	mapTooLow = Sensor::getOrZero(SensorType::Map) < engineConfiguration->boostControlMinMap;
 
@@ -225,7 +219,6 @@ void startBoostPin() {
 	startSimplePwm(
 		&boostPwmControl,
 		"Boost",
-		&engine->scheduler,
 		&enginePins.boostPin,
 		engineConfiguration->boostPwmFrequency,
 		0

@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "malfunction_central.h"
+
 // Decode what OBD code we should use for a particular [sensor, code] problem
 static ObdCode getCode(SensorType type, UnexpectedCode code) {
 	switch (type) {
@@ -82,6 +84,20 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 				case UnexpectedCode::High:         return ObdCode::OBD_FlexSensor_High;
 				default: break;
 			} break;
+		case SensorType::OilPressure:
+			switch (code) {
+				case UnexpectedCode::Timeout:      return ObdCode::OBD_OilP_Timeout;
+				case UnexpectedCode::Low:          return ObdCode::OBD_OilP_Low;
+				case UnexpectedCode::High:         return ObdCode::OBD_OilP_High;
+				default: break;
+			} break;
+		case SensorType::OilTemperature:
+			switch (code) {
+				case UnexpectedCode::Timeout:      return ObdCode::OBD_OilT_Timeout;
+				case UnexpectedCode::Low:          return ObdCode::OBD_OilT_Low;
+				case UnexpectedCode::High:         return ObdCode::OBD_OilT_High;
+				default: break;
+			} break;
 		default:
 			break;
 	}
@@ -102,24 +118,31 @@ inline const char* describeUnexpected(UnexpectedCode code) {
 	}
 }
 
-static void check(SensorType type) {
+// Returns true checks on dependent sensors should happen
+// (returns false if broken or not configured)
+static bool check(SensorType type) {
 	// Don't check sensors we don't have
 	if (!Sensor::hasSensor(type)) {
-		return;
+		return false;
 	}
 
 	auto result = Sensor::get(type);
 
 	// If the sensor is OK, nothing to check.
 	if (result) {
-		return;
+		return true;
 	}
 
 	ObdCode code = getCode(type, result.Code);
 
 	if (code != ObdCode::None) {
 		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
+		setError(true, code);
+	} else {
+		setError(false, code);
 	}
+
+	return false;
 }
 
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
@@ -147,30 +170,63 @@ static ObdCode getCodeForIgnition(int idx, brain_pin_diag_e diag) {
 #endif // BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
 
 void SensorChecker::onSlowCallback() {
-	bool batteryVoltageSufficient = Sensor::getOrZero(SensorType::BatteryVoltage) > 7.0f;
+	if (Sensor::hasSensor(SensorType::Sensor5vVoltage)) {
+		float sensorSupply = Sensor::getOrZero(SensorType::Sensor5vVoltage);
 
-	// Don't check when:
-	// - battery voltage is too low for sensors to work
-	// - the ignition is off
-	// - ignition was just turned on (let things stabilize first)
-	// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
-	bool shouldCheck = batteryVoltageSufficient && m_ignitionIsOn && m_timeSinceIgnOff.hasElapsedSec(5);
-	m_analogSensorsShouldWork = shouldCheck;
-	if (!shouldCheck) {
-		return;
+		// Inhibit checking if the sensor supply isn't OK, but register a warning for that instead
+		if (sensorSupply > 5.25f) {
+			warning(ObdCode::Sensor5vSupplyHigh, "5V sensor supply high: %.2f", sensorSupply);
+			setError(true, ObdCode::Sensor5vSupplyHigh);
+			return;
+		} else if (sensorSupply < 4.75f) {
+			warning(ObdCode::Sensor5vSupplyLow, "5V sensor supply low: %.2f", sensorSupply);
+			setError(true, ObdCode::Sensor5vSupplyLow);
+			return;
+		} else {
+			setError(false, ObdCode::Sensor5vSupplyHigh);
+			setError(false, ObdCode::Sensor5vSupplyLow);
+		}
+
+	} else {
+		bool batteryVoltageSufficient = Sensor::getOrZero(SensorType::BatteryVoltage) > 7.0f;
+
+		// Don't check when:
+		// - battery voltage is too low for sensors to work
+		// - the ignition is off
+		// - ignition was just turned on (let things stabilize first)
+		// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
+		bool shouldCheck = batteryVoltageSufficient && m_ignitionIsOn && m_timeSinceIgnOff.hasElapsedSec(5);
+		m_analogSensorsShouldWork = shouldCheck;
+		if (!shouldCheck) {
+			return;
+		}
 	}
 
 	// Check sensors
-	check(SensorType::Tps1Primary);
-	check(SensorType::Tps1Secondary);
-	check(SensorType::Tps1);
-	check(SensorType::Tps2Primary);
-	check(SensorType::Tps2Secondary);
-	check(SensorType::Tps2);
+	bool tps1DependenciesOk = check(SensorType::Tps1Primary);
 
-	check(SensorType::AcceleratorPedalPrimary);
-	check(SensorType::AcceleratorPedalSecondary);
-	check(SensorType::AcceleratorPedal);
+	if (Sensor::isRedundant(SensorType::Tps1)) {
+		tps1DependenciesOk &= check(SensorType::Tps1Secondary);
+
+		if (tps1DependenciesOk) {
+			// Both pri/sec sensors are OK, check the combined sensor
+			check(SensorType::Tps1);
+		}
+	}
+
+	bool tps2DependenciesOk = check(SensorType::Tps2Primary);
+	if (Sensor::isRedundant(SensorType::Tps2)) {
+		tps2DependenciesOk &= check(SensorType::Tps2Secondary);
+
+		if (tps2DependenciesOk) {
+			// Both pri/sec sensors are OK, check the combined sensor
+			check(SensorType::Tps2);
+		}
+	}
+
+	if (check(SensorType::AcceleratorPedalPrimary) && check(SensorType::AcceleratorPedalSecondary)) {
+		check(SensorType::AcceleratorPedal);
+	}
 
 	check(SensorType::MapSlow);
 	check(SensorType::MapSlow2);
@@ -179,6 +235,9 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::Iat);
 
 	check(SensorType::FuelEthanolPercent);
+
+	check(SensorType::OilPressure);
+	check(SensorType::OilTemperature);
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
@@ -200,6 +259,7 @@ void SensorChecker::onSlowCallback() {
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
 			warning(code, "Injector %d fault: %s", i, description);
+			setError(true, code);
 
 			anyInjectorHasProblem |= true;
 		}
@@ -222,6 +282,7 @@ void SensorChecker::onSlowCallback() {
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
 			warning(code, "Ignition %d fault: %s", i, description);
+			setError(true, code);
 
 			anyIgnHasProblem |= true;
 		}

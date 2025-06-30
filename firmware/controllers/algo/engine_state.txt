@@ -33,16 +33,13 @@ struct_no_prefix engine_state_s
 
 	int16_t hellenBoardId;Detected Board ID;"id", 1, 0, 0, 3000, 0
 
+	uint16_t autoscale mapAveragingDuration;;"deg", 0.01, 0, 0, 0, 0
+
 	bit clutchUpState;@@INDICATOR_NAME_CLUTCH_UP@@
 	bit clutchDownState;@@INDICATOR_NAME_CLUTCH_DOWN@@
 	bit brakePedalState;@@INDICATOR_NAME_BRAKE_DOWN@@
 	bit startStopState
 	uint32_t startStopStateToggleCounter
-
-	float egtValue1
-	float egtValue2
-
-	int16_t desiredRpmLimit;User-defined RPM hard limit;"rpm", 1, 0, 0, 30000, 0
 
 	uint32_t fuelInjectionCounter;Fuel: Injection counter
 	uint32_t sparkCounter;Ign: Spark counter
@@ -55,7 +52,7 @@ struct_no_prefix engine_state_s
 	uint16_t autoscale veTableYAxis;;"%",{1/100}, 0, 0, 0, 0
 	uint16_t autoscale idleVeTableYAxis;;"%",{1/100}, 0, 0, 0, 0
 
-	uint16_t autoscale mapAveragingDuration;;"deg", 0.01, 0, 0, 0, 0
+	uint16_t autoscale airflowEstimate;@@GAUGE_NAME_AIR_FLOW_ESTIMATE@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 
-! engine_state_s
+	uint8_t[12 iterate] mapPerCylinder;MAP cyl;"kPa", 1, 0, 0, 0, 0
 end_struct

@@ -261,10 +261,10 @@ TEST(FuelMath, CylinderFuelTrim) {
 
 	// Check that each cylinder gets the expected amount of fuel
 	float unadjusted = 0.072142f;
-	EXPECT_NEAR(engine->engineState.injectionMass[0], unadjusted * 0.96, EPS4D);
-	EXPECT_NEAR(engine->engineState.injectionMass[1], unadjusted * 0.98, EPS4D);
-	EXPECT_NEAR(engine->engineState.injectionMass[2], unadjusted * 1.02, EPS4D);
-	EXPECT_NEAR(engine->engineState.injectionMass[3], unadjusted * 1.04, EPS4D);
+	EXPECT_NEAR(engine->cylinders[0].getInjectionMass(), unadjusted * 0.96, EPS4D);
+	EXPECT_NEAR(engine->cylinders[1].getInjectionMass(), unadjusted * 0.98, EPS4D);
+	EXPECT_NEAR(engine->cylinders[2].getInjectionMass(), unadjusted * 1.02, EPS4D);
+	EXPECT_NEAR(engine->cylinders[3].getInjectionMass(), unadjusted * 1.04, EPS4D);
 }
 
 struct MockIdle : public MockIdleController {

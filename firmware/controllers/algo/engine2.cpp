@@ -9,10 +9,8 @@
 
 #include "pch.h"
 
-
 #include "speed_density.h"
 #include "fuel_math.h"
-#include "advance_map.h"
 #include "closed_loop_fuel.h"
 #include "launch_control.h"
 #include "injector_model.h"
@@ -81,27 +79,21 @@ EngineState::EngineState() {
 	timeSinceLastTChargeK.reset(getTimeNowNt());
 }
 
-void EngineState::updateSlowSensors() {
-}
-
 void EngineState::periodicFastCallback() {
 	ScopePerf perf(PE::EngineStatePeriodicFastCallback);
 
 #if EFI_ENGINE_CONTROL
-	if (!engine->slowCallBackWasInvoked) {
-		warning(ObdCode::CUSTOM_SLOW_NOT_INVOKED, "Slow not invoked yet");
-	}
 	efitick_t nowNt = getTimeNowNt();
-	
-	if (engine->rpmCalculator.isCranking()) {
+	bool isCranking = engine->rpmCalculator.isCranking();
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	if (isCranking) {
 		crankingTimer.reset(nowNt);
 	}
 
 	engine->fuelComputer.running.timeSinceCrankingInSecs = crankingTimer.getElapsedSeconds(nowNt);
 
-	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	engine->ignitionState.sparkDwell = engine->ignitionState.getSparkDwell(rpm);
-	engine->ignitionState.dwellAngle = std::isnan(rpm) ? NAN :  engine->ignitionState.sparkDwell / getOneDegreeTimeMs(rpm);
+	engine->ignitionState.updateDwell(rpm, isCranking);
 
 	// todo: move this into slow callback, no reason for IAT corr to be here
 	engine->fuelComputer.running.intakeTemperatureCoefficient = getIatFuelCorrection();
@@ -130,40 +122,43 @@ void EngineState::periodicFastCallback() {
 		}
 	}
 
-	engine->ignitionState.cltTimingCorrection = getCltTimingCorrection();
-
 	baroCorrection = getBaroCorrection();
 
 	auto tps = Sensor::get(SensorType::Tps1);
 	updateTChargeK(rpm, tps.value_or(0));
 
-	float untrimmedInjectionMass = getInjectionMass(rpm) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
+	float cycleFuelMass = getCycleInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
 	auto clResult = fuelClosedLoopCorrection();
 
-	injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
-	float stage2InjectionMass = untrimmedInjectionMass * injectionStage2Fraction;
-	float stage1InjectionMass = untrimmedInjectionMass - stage2InjectionMass;
+	{
+		float injectionFuelMass = cycleFuelMass * getInjectionModeDurationMultiplier(getCurrentInjectionMode());
+		
+		injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
+		float stage2InjectionMass = injectionFuelMass * injectionStage2Fraction;
+		float stage1InjectionMass = injectionFuelMass - stage2InjectionMass;
 
-	// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
-	engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
-	engine->engineState.injectionDurationStage2 =
-		engineConfiguration->enableStagedInjection
-		? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
-		: 0;
+		// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
+		engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
+		engine->engineState.injectionDurationStage2 =
+			engineConfiguration->enableStagedInjection
+			? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
+			: 0;
+	}
 
 	float fuelLoad = getFuelingLoad();
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);
 	engine->lambdaMonitor.update(rpm, fuelLoad);
 
-	float advance = getAdvance(rpm, ignitionLoad) * engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
+	engine->ignitionState.updateAdvanceCorrections(ignitionLoad);
+	float untrimmedAdvance = engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking)
+					* engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
 
 	// that's weird logic. also seems broken for two stroke?
-	engine->outputChannels.ignitionAdvance = (float)(advance > FOUR_STROKE_CYCLE_DURATION / 2 ? advance - FOUR_STROKE_CYCLE_DURATION : advance);
+	engine->outputChannels.ignitionAdvance = (float)(untrimmedAdvance > FOUR_STROKE_CYCLE_DURATION / 2 ? untrimmedAdvance - FOUR_STROKE_CYCLE_DURATION : untrimmedAdvance);
 
 	// compute per-bank fueling
 	for (size_t i = 0; i < STFT_BANK_COUNT; i++) {
-		float corr = clResult.banks[i];
-		engine->stftCorrection[i] = corr;
+		engine->stftCorrection[i] = clResult.banks[i];
 	}
 
 	// Now apply that to per-cylinder fueling and timing
@@ -173,9 +168,9 @@ void EngineState::periodicFastCallback() {
 		auto cylinderTrim = getCylinderFuelTrim(i, rpm, fuelLoad);
 
 		// Apply both per-bank and per-cylinder trims
-		engine->engineState.injectionMass[i] = untrimmedInjectionMass * bankTrim * cylinderTrim;
+		engine->cylinders[i].setInjectionMass(cycleFuelMass * bankTrim * cylinderTrim);
 
-		timingAdvance[i] = advance + getCylinderIgnitionTrim(i, rpm, ignitionLoad);
+		engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad));
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;

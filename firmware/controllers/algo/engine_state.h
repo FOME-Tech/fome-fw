@@ -16,7 +16,6 @@ class EngineState : public engine_state_s {
 public:
 	EngineState();
 	void periodicFastCallback();
-	void updateSlowSensors();
 	void updateTChargeK(float rpm, float tps);
 
 	/**
@@ -26,22 +25,11 @@ public:
 
 	bool useOddFireWastedSpark = false;
 
-	/**
-	 * this is based on sensorChartMode and sensorSnifferRpmThreshold settings
-	 */
-	sensor_chart_e sensorChartMode = SC_OFF;
-
-	// Per-injection fuel mass, including TPS accel enrich
-	float injectionMass[MAX_CYLINDER_COUNT] = {0};
-
 	float injectionStage2Fraction = 0;
 
 	Timer crankingTimer;
 
 	WarningCodeState warnings;
-
-	// Estimated airflow based on whatever airmass model is active
-	float airflowEstimate = 0;
 
 	float auxValveStart = 0;
 	float auxValveEnd = 0;
@@ -50,9 +38,6 @@ public:
 	 * MAP averaging angle start, in relation to 'mapAveragingSchedulingAtIndex' trigger index index
 	 */
 	angle_t mapAveragingStart[MAX_CYLINDER_COUNT];
-
-	// degrees timing advance - 10 means fire spark 10 degrees BTDC
-	angle_t timingAdvance[MAX_CYLINDER_COUNT] = {0};
 
 	// Angle between firing the main (primary) spark and the secondary (trailing) spark
 	angle_t trailingSparkAngle = 0;
@@ -84,6 +69,9 @@ public:
 	multispark_state multispark;
 
 	bool shouldUpdateInjectionTiming = true;
+
+	void updateMapCylinderOffsets();
+	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
 
 EngineState * getEngineState();

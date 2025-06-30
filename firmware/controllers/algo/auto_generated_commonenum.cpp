@@ -30,6 +30,8 @@ case INJ_None:
   return "INJ_None";
 case INJ_PolynomialAdder:
   return "INJ_PolynomialAdder";
+case INJ_SmallPulseAdder:
+  return "INJ_SmallPulseAdder";
   }
  return NULL;
 }
@@ -59,17 +61,6 @@ case SelectedGear::Park:
   return "Park";
 case SelectedGear::Reverse:
   return "Reverse";
-  }
- return NULL;
-}
-const char *getSentEtbType(SentEtbType value){
-switch(value) {
-case SentEtbType::FORD_TYPE_1:
-  return "FORD_TYPE_1";
-case SentEtbType::GM_TYPE_1:
-  return "GM_TYPE_1";
-case SentEtbType::NONE:
-  return "NONE";
   }
  return NULL;
 }
@@ -114,6 +105,30 @@ case TsCalMode::Tps2SecondaryMax:
   return "Tps2SecondaryMax";
 case TsCalMode::Tps2SecondaryMin:
   return "Tps2SecondaryMin";
+  }
+ return NULL;
+}
+const char *getWidebandMode(WidebandMode value){
+switch(value) {
+case WidebandMode::AemXSeries:
+  return "AemXSeries";
+case WidebandMode::Analog:
+  return "Analog";
+case WidebandMode::FOMEInternal:
+  return "FOMEInternal";
+  }
+ return NULL;
+}
+const char *getWssToVssMode(WssToVssMode value){
+switch(value) {
+case WssToVssMode::AverageAll:
+  return "AverageAll";
+case WssToVssMode::AverageFront:
+  return "AverageFront";
+case WssToVssMode::AverageRear:
+  return "AverageRear";
+case WssToVssMode::None:
+  return "None";
   }
  return NULL;
 }
@@ -247,6 +262,10 @@ case BMW_e46:
   return "BMW_e46";
 case BMW_e90:
   return "BMW_e90";
+case CanVssLast:
+  return "CanVssLast";
+case Mx5_NC:
+  return "Mx5_NC";
 case W202:
   return "W202";
   }
@@ -373,6 +392,10 @@ case GPPWM_LuaGauge2:
   return "GPPWM_LuaGauge2";
 case GPPWM_Map:
   return "GPPWM_Map";
+case GPPWM_OilPressure:
+  return "GPPWM_OilPressure";
+case GPPWM_OilTemp:
+  return "GPPWM_OilTemp";
 case GPPWM_Rpm:
   return "GPPWM_Rpm";
 case GPPWM_Tps:
@@ -424,23 +447,6 @@ case IM_AUTO:
   return "IM_AUTO";
 case IM_MANUAL:
   return "IM_MANUAL";
-  }
- return NULL;
-}
-const char *getIdle_state_e(idle_state_e value){
-switch(value) {
-case BLIP:
-  return "BLIP";
-case INIT:
-  return "INIT";
-case PID_UPPER:
-  return "PID_UPPER";
-case PID_VALUE:
-  return "PID_VALUE";
-case RPM_DEAD_ZONE:
-  return "RPM_DEAD_ZONE";
-case TPS_THRESHOLD:
-  return "TPS_THRESHOLD";
   }
  return NULL;
 }
@@ -573,21 +579,6 @@ case OM_OPENDRAIN:
   return "OM_OPENDRAIN";
 case OM_OPENDRAIN_INVERTED:
   return "OM_OPENDRAIN_INVERTED";
-  }
- return NULL;
-}
-const char *getSensor_chart_e(sensor_chart_e value){
-switch(value) {
-case SC_AUX_FAST1:
-  return "SC_AUX_FAST1";
-case SC_DETAILED_RPM:
-  return "SC_DETAILED_RPM";
-case SC_OFF:
-  return "SC_OFF";
-case SC_RPM_ACCEL:
-  return "SC_RPM_ACCEL";
-case SC_TRIGGER:
-  return "SC_TRIGGER";
   }
  return NULL;
 }

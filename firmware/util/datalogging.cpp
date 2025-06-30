@@ -55,7 +55,7 @@ bool Logging::validateBuffer(uint32_t extraLen) {
 
 void Logging::append(const char *text) {
 	efiAssertVoid(ObdCode::CUSTOM_APPEND_NULL, text != NULL, "append NULL");
-	uint32_t extraLen = efiStrlen(text);
+	size_t extraLen = std::strlen(text);
 	bool isCapacityProblem = validateBuffer(extraLen);
 	if (isCapacityProblem) {
 		return;
@@ -78,8 +78,6 @@ void Logging::appendFast(const char *text) {
 }
 
 void Logging::appendPrintf(const char *fmt, ...) {
-	efiAssertVoid(ObdCode::CUSTOM_APPEND_STACK, getCurrentRemainingStack() > 128, "lowstck#4");
-
 	size_t available = remainingSize();
 
 	va_list ap;

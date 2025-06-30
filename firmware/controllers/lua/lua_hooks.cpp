@@ -3,6 +3,7 @@
 #include "rusefi_lua.h"
 #include "lua_hooks.h"
 
+#include "backup_ram.h"
 #include "fuel_math.h"
 #include "airmass.h"
 #include "lua_airmass.h"
@@ -26,10 +27,6 @@ using namespace luaaa;
 #if EFI_PROD_CODE
 #include "electronic_throttle.h"
 #endif // EFI_PROD_CODE
-
-#if EFI_SENT_SUPPORT
-#include "sent.h"
-#endif // EFI_SENT_SUPPORT
 
 static int lua_vin(lua_State* l) {
 	auto zeroBasedCharIndex = luaL_checkinteger(l, 1);
@@ -57,9 +54,7 @@ static int lua_readpin(lua_State* l) {
 }
 
 static int getSensor(lua_State* l, SensorType type) {
-	auto result = Sensor::get(type);
-
-	if (result) {
+	if (auto result = Sensor::get(type)) {
 		// return value if valid
 		lua_pushnumber(l, result.Value);
 	} else {
@@ -250,7 +245,7 @@ static int lua_startPwm(lua_State* l) {
 	freq = clampF(1, freq, 1000);
 
 	startSimplePwmExt(
-		&p.pwm, "lua", &engine->scheduler,
+		&p.pwm, "lua",
 		engineConfiguration->luaOutputPins[p.idx], &enginePins.luaOutputPins[p.idx],
 		freq, duty
 	);
@@ -402,6 +397,45 @@ static int lua_setAirmass(lua_State* l) {
 
 #endif // EFI_UNIT_TEST
 
+auto& checkBackupSram(lua_State* l) {
+	auto backupRam = getBackupSram();
+
+	if (!backupRam) {
+		luaL_error(l, "Backup RAM error or not supported!");
+	}
+
+	return *backupRam;
+}
+
+static int lua_getPersistentValue(lua_State* l) {
+	auto idx = luaL_checkinteger(l, 1);
+
+	auto &backupRam = checkBackupSram(l);
+
+	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
+		luaL_error(l, "invalid backup ram index: %d", idx);
+	}
+
+	lua_pushnumber(l, backupRam.LuaPersistentData[idx - 1]);
+	return 1;
+}
+
+static int lua_storePersistentValue(lua_State* l) {
+	auto idx = luaL_checkinteger(l, 1);
+
+	auto &backupRam = checkBackupSram(l);
+
+	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
+		luaL_error(l, "invalid backup ram index: %d", idx);
+	}
+
+	auto value = luaL_checknumber(l, 2);
+
+	backupRam.LuaPersistentData[idx - 1] = value;
+
+	return 0;
+}
+
 // TODO: PR this back in to https://github.com/gengyong/luaaa
 namespace LUAAA_NS {
     template<typename TCLASS, typename ...ARGS>
@@ -450,7 +484,7 @@ struct LuaSensor final : public StoredValueSensor {
 
 	// do we need method defined exactly on LuaSensor for Luaa to be happy?
 	void setTimeout(int timeoutMs) override {
-	    StoredValueSensor::setTimeout(timeoutMs);
+		StoredValueSensor::setTimeout(timeoutMs);
 	}
 
 	void setRedundant(bool value) {
@@ -485,7 +519,6 @@ struct LuaPid final {
 		m_params.dFactor = kd;
 
 		m_params.offset = 0;
-		m_params.periodMs = 0;
 		m_params.minValue = min;
 		m_params.maxValue = max;
 
@@ -599,7 +632,7 @@ int lua_canRxAddMask(lua_State* l) {
 				callback = getLuaFunc(l);
 			} else {
 				// handle canRxAddMask(bus, id, mask)
-		    	bus = validateCanChannelAndConvertFromHumanIntoZeroIndex(l);
+				bus = validateCanChannelAndConvertFromHumanIntoZeroIndex(l);
 				eid = luaL_checkinteger(l, 2);
 				mask = luaL_checkinteger(l, 3);
 			}
@@ -679,26 +712,8 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
-#if EFI_SENT_SUPPORT
-	lua_register(l, "getSentValue",
-			[](lua_State* l2) {
-			auto humanIndex = luaL_checkinteger(l2, 1);
-			auto value = getSentValue(humanIndex - 1);
-			lua_pushnumber(l2, value);
-			return 1;
-	});
-
-	lua_register(l, "getSentValues",
-			[](lua_State* l2) {
-			uint16_t sig0;
-			uint16_t sig1;
-			auto humanIndex = luaL_checkinteger(l2, 1);
-			getSentValues(humanIndex - 1, &sig0, &sig1);
-			lua_pushnumber(l2, sig0);
-			lua_pushnumber(l2, sig1);
-			return 2;
-	});
-#endif // EFI_SENT_SUPPORT
+	lua_register(l, "getPersistentValue", lua_getPersistentValue);
+	lua_register(l, "storePersistentValue", lua_storePersistentValue);
 
 #if EFI_LAUNCH_CONTROL
 	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
@@ -716,9 +731,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 			return 0;
 		}
 		if (!engine->triggerCentral.directSelfStimulation) {
-		    enableTriggerStimulator();
+			enableTriggerStimulator();
 		}
-        setTriggerEmulatorRPM(rpm);
+		setTriggerEmulatorRPM(rpm);
 		return 0;
 	});
 #endif // EFI_UNIT_TEST
@@ -783,6 +798,10 @@ void configureRusefiLuaHooks(lua_State* l) {
 		engine->module<IdleController>().unmock().luaAddRpm = luaL_checknumber(l2, 1);
 		return 0;
 	});
+	lua_register(l, "getIdlePosition", [](lua_State* l2) {
+		lua_pushnumber(l2, engine->module<IdleController>().unmock().currentIdlePosition);
+		return 1;
+	});
 #endif
 	lua_register(l, "setTimingAdd", [](lua_State* l2) {
 		engine->ignitionState.luaTimingAdd = luaL_checknumber(l2, 1);
@@ -836,7 +855,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getCalibration", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getConfigValueByName(propertyName);
-		lua_pushnumber(l2, result);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getCalibration: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 
@@ -844,7 +868,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getOutput", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getOutputValueByName(propertyName);
-		lua_pushnumber(l2, result);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getOutput: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
@@ -922,6 +951,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		doScheduleStopEngine();
 		return 0;
 	});
+
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
 		int result = engine->triggerCentral.m_lastEventTimer.getElapsedUs() / 1000;

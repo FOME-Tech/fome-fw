@@ -37,4 +37,4 @@ private:
 			int i);
 };
 
-bool isUsefulSignal(trigger_event_e signal, const TriggerWaveform& shape);
+bool isUsefulSignal(TriggerEvent signal, const TriggerWaveform& shape);

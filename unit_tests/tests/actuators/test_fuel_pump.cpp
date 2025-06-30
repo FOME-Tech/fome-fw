@@ -33,17 +33,25 @@ TEST(Actuators, FuelPump) {
 	// Pump should be off!
 	EXPECT_FALSE(efiReadPin(Gpio::A0));
 
+	// Test "force pump" mode
+	dut.forcePumpState(true);
+	dut.onSlowCallback();
+	EXPECT_TRUE(efiReadPin(Gpio::A0));
+	dut.forcePumpState(false);
+	dut.onSlowCallback();
+	EXPECT_FALSE(efiReadPin(Gpio::A0));
+
 	// Long time since ecu start, just saw a trigger!
 	dut.onIgnitionStateChanged(true);
 	advanceTimeUs(10e6);
-	engine->triggerCentral.handleShaftSignal(SHAFT_PRIMARY_FALLING, getTimeNowNt());
+	engine->triggerCentral.handleShaftSignal(TriggerEvent::PrimaryFalling, getTimeNowNt());
 	dut.onSlowCallback();
 	// Pump should be on!
 	EXPECT_TRUE(efiReadPin(Gpio::A0));
 
 	// ECU just started, and we just saw a trigger!
 	dut.onIgnitionStateChanged(true);
-	engine->triggerCentral.handleShaftSignal(SHAFT_PRIMARY_FALLING, getTimeNowNt());
+	engine->triggerCentral.handleShaftSignal(TriggerEvent::PrimaryFalling, getTimeNowNt());
 	dut.onSlowCallback();
 	// Pump should be on!
 	EXPECT_TRUE(efiReadPin(Gpio::A0));

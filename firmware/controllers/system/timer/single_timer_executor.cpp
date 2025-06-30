@@ -34,8 +34,6 @@
 uint32_t hwSetTimerDuration;
 
 void globalTimerCallback() {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6624, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "lowstck#2y");
-
 	___engine.scheduler.onTimerCallback();
 }
 

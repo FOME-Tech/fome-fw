@@ -27,7 +27,6 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_nissan_vq_vvt.cpp \
 	tests/trigger/test_override_gaps.cpp \
 	tests/trigger/test_injection_scheduling.cpp \
-	tests/sent/test_sent.cpp \
 	tests/ignition_injection/injection_mode_transition.cpp \
 	tests/ignition_injection/test_startOfCrankingPrimingPulse.cpp \
 	tests/ignition_injection/test_multispark.cpp \
@@ -114,3 +113,5 @@ TESTS_SRC_CPP = \
 	tests/actuators/test_stepper.cpp \
 	tests/actuators/test_tacho.cpp \
 	tests/actuators/test_vvt.cpp \
+	tests/test_obd2.cpp \
+	tests/test_trip_odometer.cpp \

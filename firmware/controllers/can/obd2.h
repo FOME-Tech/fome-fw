@@ -13,10 +13,10 @@
 
 #define OBD_TEST_RESPONSE 0x7E8
 
-#define OBD_CURRENT_DATA 1
-#define _OBD_2 2
-#define OBD_STORED_DIAGNOSTIC_TROUBLE_CODES 3
-#define OBD_PENDING_DIAGNOSTIC_TROUBLE_CODES 7
+#define OBD_CURRENT_DATA 0x01
+#define OBD_STORED_DTC 0x03
+#define OBD_PENDING_DTC 0x07
+#define OBD_PERMANENT_DTC 0x0A
 
 // https://en.wikipedia.org/wiki/OBD-II_PIDs
 
@@ -40,14 +40,12 @@
 #define PID_FUEL_AIR_RATIO_1 0x24
 
 #define PID_SUPPORTED_PIDS_REQUEST_41_60 0x40
-//todo#define PID_CONTROL_UNIT_VOLTAGE 0x42
-//todo#define PID_ETHANOL 0x52
-//todo#define PID_OIL_TEMPERATURE 0x5C
-//todo#define PID_FUEL_TIMING 0x5D
+#define PID_CONTROL_UNIT_VOLTAGE 0x42
+#define PID_ETHANOL 0x52
+#define PID_OIL_TEMPERATURE 0x5C
 #define PID_FUEL_RATE 0x5E
-//todo#define PID_TURBO_RPM 0x74
 
-#if HAL_USE_CAN
+#if HAL_USE_CAN || EFI_UNIT_TEST
 void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex);
 #endif /* HAL_USE_CAN */
 

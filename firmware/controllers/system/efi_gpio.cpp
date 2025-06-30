@@ -157,7 +157,6 @@ EnginePins::EnginePins() :
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
-		enginePins.coils[i].coilIndex = i;
 		enginePins.coils[i].setName(sparkNames[i]);
 		enginePins.coils[i].shortName = sparkShortNames[i];
 
@@ -254,8 +253,6 @@ void EnginePins::startPins() {
 void EnginePins::reset() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		injectors[i].reset();
-		coils[i].reset();
-		trailingCoils[i].reset();
 	}
 }
 
@@ -333,8 +330,14 @@ void EnginePins::startInjectionPins() {
 NamedOutputPin::NamedOutputPin() : OutputPin() {
 }
 
-NamedOutputPin::NamedOutputPin(const char *name) 
+NamedOutputPin::NamedOutputPin(const char* name)
 	: m_name(name)
+{
+}
+
+NamedOutputPin::NamedOutputPin(const char* name, const char* shortname)
+	: shortName(shortname)
+	, m_name(name)
 {
 }
 
@@ -407,15 +410,6 @@ void InjectorOutputPin::reset() {
 
 	// todo: this could be refactored by calling some super-reset method
 	m_currentLogicValue = 0;
-}
-
-IgnitionOutputPin::IgnitionOutputPin() {
-	reset();
-}
-
-void IgnitionOutputPin::reset() {
-	outOfOrder = false;
-	signalFallSparkId = 0;
 }
 
 bool OutputPin::isInitialized() const {
@@ -570,7 +564,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		int pin = getHwPin(msg, brainPin);
 
 		// Validate port
-		if (port == GPIO_NULL) {
+		if (!port) {
 			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "OutputPin::initPin got invalid port for pin idx %d", static_cast<int>(brainPin));
 			return;
 		}
@@ -646,18 +640,9 @@ void OutputPin::deInit() {
 
 #if EFI_GPIO_HARDWARE
 
-// questionable trick: we avoid using 'getHwPort' and 'getHwPin' in case of errors in order to increase the changes of turning the LED
-// by reducing stack requirement
-ioportid_t criticalErrorLedPort;
-ioportmask_t criticalErrorLedPin;
-uint8_t criticalErrorLedState;
-
 #if EFI_PROD_CODE
 static void initErrorLed(Gpio led) {
-	enginePins.errorLedPin.initPin("led: CRITICAL status", led, (LED_PIN_MODE));
-	criticalErrorLedPort = getHwPort("CRITICAL", led);
-	criticalErrorLedPin = getHwPin("CRITICAL", led);
-	criticalErrorLedState = (LED_PIN_MODE == OM_INVERTED) ? 0 : 1;
+	enginePins.errorLedPin.initPin("Error LED", led, (LED_PIN_MODE));
 }
 #endif /* EFI_PROD_CODE */
 

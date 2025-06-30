@@ -38,6 +38,12 @@ void ensureArrayIsAscending(const char* msg, const TValue (&values)[TSize]) {
 	}
 }
 
+static inline void validateParam(bool condition, const char* name) {
+	if (!condition) {
+		firmwareError(ObdCode::CUSTOM_ERR_AXIS_ORDER, "Invalid config value: %s", name);
+	}
+}
+
 template<typename TValue, int TSize>
 void ensureArrayIsAscendingOrDefault(const char* msg, const TValue (&values)[TSize]) {
 	if (values[1] == 0) {

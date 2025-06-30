@@ -129,7 +129,7 @@
 #include "custom_engine.h"
 #include "mpu_util.h"
 #include "tunerstudio.h"
-#include "mmc_card.h"
+#include "sd_file_log.h"
 #include "mass_storage_init.h"
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
@@ -262,7 +262,7 @@ void runRusEfiWithConfig() {
 #endif
 
 #if EFI_FILE_LOGGING
-	initMmcCard();
+	initSdCardLogger();
 #endif /* EFI_FILE_LOGGING */
 
 #if EFI_CAN_SERIAL

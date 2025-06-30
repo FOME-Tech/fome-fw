@@ -16,12 +16,12 @@ int djb2lowerCase(const char *str);
 
 // http://en.wikipedia.org/wiki/Endianness
 
-inline uint16_t SWAP_UINT16(uint16_t x)
+constexpr inline uint16_t SWAP_UINT16(uint16_t x)
 {
 	return ((x << 8) | (x >> 8));
 }
 
-inline uint32_t SWAP_UINT32(uint32_t x)
+constexpr inline uint32_t SWAP_UINT32(uint32_t x)
 {
 	return (((x >> 24) & 0x000000ff) | ((x <<  8) & 0x00ff0000) |
 			((x >>  8) & 0x0000ff00) | ((x << 24) & 0xff000000));
@@ -54,9 +54,7 @@ const char * boolToString(bool value);
 
 char * efiTrim(char *param);
 int mytolower(const char c);
-uint32_t efiStrlen(const char *param);
 int efiPow10(int param);
-bool startsWith(const char *line, const char *prefix);
 int indexOf(const char *string, char ch);
 float atoff(const char *string);
 int atoi(const char *string);

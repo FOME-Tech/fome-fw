@@ -36,9 +36,6 @@ public:
 	// Called when the configuration may have changed.  Controller will
 	// reset if necessary.
 	void onConfigurationChange(pid_s* previousConfiguration);
-	
-	// Print this throttle's status.
-	void showStatus();
 
 	// Helpers for individual parts of throttle control
 	expected<percent_t> observePlant() const override;
@@ -58,9 +55,6 @@ public:
 	// Used to inspect the internal PID controller's state
 	const pid_state_s& getPidState() const override { return m_pid; };
 
-	// Use the throttle to automatically calibrate the relevant throttle position sensor(s).
-	void autoCalibrateTps() override;
-
 	// Override if this throttle needs special per-throttle adjustment (bank-to-bank trim, for example)
 	virtual percent_t getThrottleTrim(float /*rpm*/, percent_t /*targetPosition*/) const {
 		return 0;
@@ -73,9 +67,6 @@ public:
 	float prevOutput = 0;
 
 protected:
-	// This is set if an automatic TPS calibration should be run
-	bool m_isAutocal = false;
-
 	bool hadTpsError = false;
 	bool hadPpsError = false;
 

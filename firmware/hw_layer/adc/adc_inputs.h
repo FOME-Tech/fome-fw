@@ -36,7 +36,6 @@ enum class AdcChannelMode : char {
 	Fast
 };
 
-void initAdcInputs();
 void updateSlowAdc(efitick_t nowNt);
 
 // deprecated - migrate to 'getAdcChannelBrainPin'
@@ -48,18 +47,13 @@ ioportid_t getAdcChannelPort(const char *msg, adc_channel_e hwChannel);
 adc_channel_e getAdcChannel(brain_pin_e pin);
 brain_pin_e getAdcChannelBrainPin(const char *msg, adc_channel_e hwChannel);
 
-// wait until at least 1 slowADC sampling is complete
-void waitForSlowAdc(uint32_t lastAdcCounter = 0);
+// wait until slow ADC readings are valid
+void waitForSlowAdc();
 
 int getAdcHardwareIndexByInternalIndex(int index);
 
-int getInternalAdcValue(const char *msg, adc_channel_e index);
+int getSlowAdcValue(const char *msg, adc_channel_e index);
 float getMCUInternalTemperature(void);
-
-void addFastAdcChannel(const char *name, adc_channel_e setting);
-void removeFastAdcChannel(const char *name, adc_channel_e setting);
-
-#define getAdcValue(msg, hwChannel) getInternalAdcValue(msg, hwChannel)
 
 #define adcToVoltsDivided(adc, hwChannel) (adcToVolts(adc) * getAnalogInputDividerCoefficient(hwChannel))
 
@@ -74,6 +68,11 @@ void removeFastAdcChannel(const char *name, adc_channel_e setting);
 #define GPT_PERIOD_FAST 10  /* PWM period (in PWM ticks).    */
 #endif /* GPT_FREQ_FAST GPT_PERIOD_FAST */
 
+/* Depth of the conversion buffer, channels are sampled X times each.*/
+#ifndef ADC_BUF_DEPTH_FAST
+#define ADC_BUF_DEPTH_FAST      4
+#endif
+
 // This callback is called by the ADC driver when a new fast ADC sample is ready
 void onFastAdcComplete(adcsample_t* samples);
 
@@ -82,4 +81,6 @@ using FastAdcToken = size_t;
 
 FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel);
 adcsample_t getFastAdc(FastAdcToken token);
+const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx);
+void onKnockSamplingComplete();
 #endif // HAL_USE_ADC

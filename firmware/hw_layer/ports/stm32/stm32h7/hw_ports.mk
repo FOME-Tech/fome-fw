@@ -7,11 +7,15 @@ HW_LAYER_EMS_CPP += $(PROJECT_DIR)/hw_layer/ports/stm32/stm32h7/mpu_util.cpp \
 					$(PROJECT_DIR)/hw_layer/ports/stm32/stm32_adc_v4.cpp \
 					$(HW_STM32_PORT_DIR)/flash_int_h7.cpp \
 
+MCU_BOOTLOADER_FLASH = openblt_flash_h7.cpp
+
 # This MCU has a cache, align functions to a cache line for maximum cache efficiency
 USE_OPT += -falign-functions=16
 
 DDEFS += -DSTM32H743xx
 MCU = cortex-m7
+USE_FPU = hard
+USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv5-d16
 LDSCRIPT = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32h7/STM32H743xI.ld
 ALLCSRC += $(CHIBIOS)/os/hal/boards/ST_NUCLEO144_H743ZI/board.c
 CONFDIR = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32h7/cfg

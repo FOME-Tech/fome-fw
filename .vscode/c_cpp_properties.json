@@ -7,7 +7,10 @@
             ],
             "defines": [
 				"EFI_PROD_CODE",
-				"EFI_SIMULATOR"
+				"EFI_SIMULATOR",
+				"EFI_FILE_LOGGING",
+				"EFI_CAN_SUPPORT",
+				"EFI_WIFI",
 			],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",

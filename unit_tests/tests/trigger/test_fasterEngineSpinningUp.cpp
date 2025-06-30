@@ -21,14 +21,14 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// set sequential injection mode to test auto-change to simultaneous when spinning-up
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth, IM_SEQUENTIAL);
 	// Lie that this trigger requires disambiguation
-	engine->triggerCentral.triggerState.setNeedsDisambiguation(true);
+	engine->triggerCentral.triggerState.setNeedsDisambiguation(true, true);
 
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 
 	eth.fireRise(1000 /*ms*/);
 
-	// check if it's true
-	ASSERT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
+	// Until we get cam sync, we should be in batch fuel/wasted spark
+	ASSERT_EQ(IM_BATCH, getCurrentInjectionMode());
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 	// check if the engine has the right state
 	ASSERT_EQ(SPINNING_UP, engine->rpmCalculator.getState());
@@ -53,8 +53,8 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// test if ignition mode is temporary changed to wasted spark, if set to individual coils
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 	// check real events
-	eth.assertEvent5("inj start#1", 0, (void*)startSimultaneousInjection, 97500);
-	eth.assertEvent5("inj end#1", 1, (void*)endSimultaneousInjection, 100000);
+	eth.assertEvent5("inj start#1", 0, (void*)startInjection, 97500);
+	eth.assertEvent5("inj end#1", 1, (void*)endInjection, 100000);
 
 	// skip the rest of the cycle
 	eth.moveTimeForwardUs(MS2US(200));
@@ -75,8 +75,8 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// two simultaneous injections
 	ASSERT_EQ( 4,  engine->scheduler.size()) << "plain#2";
 	// check real events
-	eth.assertEvent5("inj start#2", 0, (void*)startSimultaneousInjection, 148375);
-	eth.assertEvent5("inj end#2", 1, (void*)endSimultaneousInjection, 149999);
+	eth.assertEvent5("inj start#2", 0, (void*)startInjection, 148375);
+	eth.assertEvent5("inj end#2", 1, (void*)endInjection, 149999);
 
 	// Now perform a fake VVT sync and check that ignition mode changes to sequential
 	engine->triggerCentral.syncAndReport(2, 0);
@@ -99,8 +99,8 @@ TEST(cranking, testFasterEngineSpinningUp) {
 
 	// check real events for sequential injection
 	// Note: See addFuelEvents() fix inside setRpmValue()!
-	eth.assertEvent5("inj start#3", 0, (void*)turnInjectionPinHigh, -31625);
-	eth.assertEvent5("inj end#3", 1, (void*)turnInjectionPinLow, -30001);
+	eth.assertEvent5("inj start#3", 0, (void*)startInjection, -30326);
+	eth.assertEvent5("inj end#3", 1, (void*)endInjection, -28702);
 }
 
 static void doTestFasterEngineSpinningUp60_2(int startUpDelayMs, int rpm1, int expectedRpm) {

@@ -27,13 +27,11 @@
 #include "trigger_central.h"
 #include "script_impl.h"
 #include "idle_thread.h"
-#include "advance_map.h"
 #include "main_trigger_callback.h"
 #include "flash_main.h"
 #include "bench_test.h"
 #include "electronic_throttle.h"
 #include "high_pressure_fuel_pump.h"
-#include "malfunction_central.h"
 #include "malfunction_indicator.h"
 #include "speed_density.h"
 #include "local_version_holder.h"
@@ -52,10 +50,6 @@
 #include "dynoview.h"
 #include "vr_pwm.h"
 #include "adc_subscription.h"
-
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
 
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
@@ -102,8 +96,6 @@ void doPeriodicSlowCallback() {
 	ScopePerf perf(PE::EnginePeriodicSlowCallback);
 
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6661, getCurrentRemainingStack() > 64, "lowStckOnEv");
-
 	slowStartStopButtonCallback();
 
 	engine->rpmCalculator.onSlowCallback();
@@ -417,10 +409,6 @@ void commonInitEngineController() {
 	engine->injectionEvents.addFuelEvents();
 #endif // EFI_ENGINE_CONTROL
 
-#if EFI_SENSOR_CHART
-	initSensorChart();
-#endif /* EFI_SENSOR_CHART */
-
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	initSettings();
 
@@ -497,7 +485,7 @@ void commonInitEngineController() {
 // Returns false if there's an obvious problem with the loaded configuration
 bool validateConfig() {
 	if (engineConfiguration->cylindersCount > MAX_CYLINDER_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %lu", engineConfiguration->cylindersCount);
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %d", engineConfiguration->cylindersCount);
 		return false;
 	}
 
@@ -522,8 +510,10 @@ bool validateConfig() {
 
 		ensureArrayIsAscendingOrDefault("TPS TPS RPM correction", config->tpsTspCorrValuesBins);
 
-		ensureArrayIsAscendingOrDefault("Staging Load", config->injectorStagingLoadBins);
-		ensureArrayIsAscendingOrDefault("Staging RPM", config->injectorStagingRpmBins);
+		if (engineConfiguration->enableStagedInjection) {
+			ensureArrayIsAscendingOrDefault("Staging Load", config->injectorStagingLoadBins);
+			ensureArrayIsAscendingOrDefault("Staging RPM", config->injectorStagingRpmBins);
+		}
 	}
 
 	// Ignition
@@ -549,9 +539,11 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Script Curve 5", config->scriptCurve5Bins);
 	ensureArrayIsAscendingOrDefault("Script Curve 6", config->scriptCurve6Bins);
 
-// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
+	// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
 
-	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+	if (isAdcChannelValid(engineConfiguration->mafAdcChannel)) {
+		ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+	}
 
 	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {
 		ensureArrayIsAscending("Fuel level curve", config->fuelLevelBins);
@@ -570,8 +562,8 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
 	ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
 
-	for (size_t index = 0; index < efi::size(engineConfiguration->vrThreshold); index++) {
-		auto& cfg = engineConfiguration->vrThreshold[index];
+	for (size_t index = 0; index < efi::size(config->vrThreshold); index++) {
+		auto& cfg = config->vrThreshold[index];
 
 		if (cfg.pin == Gpio::Unassigned) {
 			continue;
@@ -581,16 +573,20 @@ bool validateConfig() {
 
 #if EFI_BOOST_CONTROL
 	// Boost
-	ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
-	ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+	if (engineConfiguration->isBoostControlEnabled) {
+		ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
+		ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+	}
 #endif // EFI_BOOST_CONTROL
 
 #if EFI_ANTILAG_SYSTEM
 	// ALS
-	ensureArrayIsAscendingOrDefault("ign ALS TPS", config->alsIgnRetardLoadBins);
-	ensureArrayIsAscendingOrDefault("ign ALS RPM", config->alsIgnRetardrpmBins);
-	ensureArrayIsAscendingOrDefault("fuel ALS TPS", config->alsFuelAdjustmentLoadBins);
-	ensureArrayIsAscendingOrDefault("fuel ALS RPM", config->alsFuelAdjustmentrpmBins);
+	if (engineConfiguration->antiLagEnabled) {
+		ensureArrayIsAscendingOrDefault("ign ALS TPS", config->alsIgnRetardLoadBins);
+		ensureArrayIsAscendingOrDefault("ign ALS RPM", config->alsIgnRetardrpmBins);
+		ensureArrayIsAscendingOrDefault("fuel ALS TPS", config->alsFuelAdjustmentLoadBins);
+		ensureArrayIsAscendingOrDefault("fuel ALS RPM", config->alsFuelAdjustmentrpmBins);
+	}
 #endif // EFI_ANTILAG_SYSTEM
 
 	// ETB
@@ -620,6 +616,10 @@ bool validateConfig() {
 
 	if (engineConfiguration->enableOilPressureProtect) {
 		ensureArrayIsAscending("Oil pressure protection", config->minimumOilPressureBins);
+	}
+
+	if (engineConfiguration->injectorNonlinearMode == INJ_SmallPulseAdder) {
+		ensureArrayIsAscending("Small PW adder", config->smallPulseAdderBins);
 	}
 
 	return true;

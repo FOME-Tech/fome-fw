@@ -56,10 +56,8 @@ case SensorType::DetectedGear:
   return "DetectedGear";
 case SensorType::DriverThrottleIntent:
   return "DriverThrottleIntent";
-case SensorType::EGT1:
-  return "EGT1";
-case SensorType::EGT2:
-  return "EGT2";
+case SensorType::EcuInternalTemperature:
+  return "EcuInternalTemperature";
 case SensorType::FuelEthanolPercent:
   return "FuelEthanolPercent";
 case SensorType::FuelLevel:
@@ -82,6 +80,10 @@ case SensorType::Lambda1:
   return "Lambda1";
 case SensorType::Lambda2:
   return "Lambda2";
+case SensorType::Lambda3:
+  return "Lambda3";
+case SensorType::Lambda4:
+  return "Lambda4";
 case SensorType::LuaGauge1:
   return "LuaGauge1";
 case SensorType::LuaGauge2:
@@ -90,6 +92,8 @@ case SensorType::Maf:
   return "Maf";
 case SensorType::Maf2:
   return "Maf2";
+case SensorType::MainRelayVoltage:
+  return "MainRelayVoltage";
 case SensorType::Map:
   return "Map";
 case SensorType::Map2:
@@ -110,6 +114,8 @@ case SensorType::PlaceholderLast:
   return "PlaceholderLast";
 case SensorType::Rpm:
   return "Rpm";
+case SensorType::Sensor5vVoltage:
+  return "Sensor5vVoltage";
 case SensorType::ThrottleInletPressure:
   return "ThrottleInletPressure";
 case SensorType::Tps1:
@@ -130,6 +136,14 @@ case SensorType::VehicleSpeed:
   return "VehicleSpeed";
 case SensorType::WastegatePosition:
   return "WastegatePosition";
+case SensorType::WheelSpeedLF:
+  return "WheelSpeedLF";
+case SensorType::WheelSpeedLR:
+  return "WheelSpeedLR";
+case SensorType::WheelSpeedRF:
+  return "WheelSpeedRF";
+case SensorType::WheelSpeedRR:
+  return "WheelSpeedRR";
   }
  return NULL;
 }

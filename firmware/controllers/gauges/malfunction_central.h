@@ -32,10 +32,8 @@ void removeError(ObdCode errorCode);
 
 void setError(bool isError, ObdCode errorCode);
 
-void clearWarnings(void);
+void clearWarnings();
 /**
  * @brief Copies the current set of errors into the specified buffer
  */
 void getErrorCodes(error_codes_set_s * buffer);
-
-bool hasErrorCodes(void);

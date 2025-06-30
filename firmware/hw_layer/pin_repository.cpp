@@ -206,7 +206,7 @@ const char *hwPortname(brain_pin_e brainPin) {
 	if (brain_pin_is_onchip(brainPin)) {
 
 		ioportid_t hwPort = getHwPort("hostname", brainPin);
-		if (hwPort == GPIO_NULL) {
+		if (!hwPort) {
 			return "NONE";
 		}
 		int hwPin = getHwPin("hostname", brainPin);
@@ -214,7 +214,6 @@ const char *hwPortname(brain_pin_e brainPin) {
 	}
 	#if (BOARD_EXT_GPIOCHIPS > 0)
 		else {
-
 			const char *pin_name = gpiochips_getPinName(brainPin);
 
 			if (pin_name) {

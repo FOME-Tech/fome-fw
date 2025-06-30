@@ -19,8 +19,9 @@ static constexpr size_t getTunerStudioPageSize() {
 // Validate whether the specified offset and count would cause an overrun in the tune.
 // Returns true if an overrun would occur.
 bool validateOffsetCount(size_t offset, size_t count, TsChannelBase* tsChannel) {
-	if (offset + count > getTunerStudioPageSize()) {
-		efiPrintf("TS: Project mismatch? Too much configuration requested %d/%d", offset, count);
+	auto pageSize = getTunerStudioPageSize();
+	if (offset + count > pageSize) {
+		efiPrintf("TS: Project mismatch? Too much configuration requested offset %d count %d but total size is %d", offset, count, pageSize);
 		tunerStudioError(tsChannel, "ERROR: out of range");
 		sendErrorCode(tsChannel, TS_RESPONSE_OUT_OF_RANGE);
 		return true;

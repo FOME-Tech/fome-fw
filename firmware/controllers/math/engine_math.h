@@ -33,9 +33,6 @@ float getIgnitionLoad();
 
 ignition_mode_e getCurrentIgnitionMode();
 
-size_t getCylinderId(size_t index);
-size_t getNextFiringCylinderId(size_t prevCylinderId);
-
 void setTimingRpmBin(float from, float to);
 
 void setSingleCoilDwell();
@@ -45,14 +42,6 @@ void setSingleCoilDwell();
 // while for toothed wheels user would have to provide a value
 #define tdcPosition() \
 		(getTriggerCentral()->triggerShape.tdcPosition + engineConfiguration->globalTriggerAngleOffset)
-
-/** Gets phase offset for a particular cylinder's ID and number
- * For example on 4 cylinder engine with firing order 1-3-4-2, this
- * returns 0-180-360-540 for index 0-1-2-3
- * Cylinder number is used for per-cylinder adjustment, if you have
- * an odd-fire engine (v-twin, V10, some v6, etc)
- */
-angle_t getCylinderAngle(uint8_t cylinderIndex, uint8_t cylinderNumber);
 
 // Table blending helpers
 struct BlendResult {
@@ -64,6 +53,9 @@ struct BlendResult {
 
 	// Result value (bias * table value)
 	float Value;
+
+	// Y axis value used for lookup (to show the dot correctly in TunerStudio)
+	float TableYAxis;
 };
 
 BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load);

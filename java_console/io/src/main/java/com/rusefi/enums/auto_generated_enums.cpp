@@ -38,8 +38,6 @@ case LDS_main_relay:
   return "LDS_main_relay";
 case LDS_output_channels:
   return "LDS_output_channels";
-case LDS_sent_state:
-  return "LDS_sent_state";
 case LDS_throttle_model:
   return "LDS_throttle_model";
 case LDS_tps_accel_state:

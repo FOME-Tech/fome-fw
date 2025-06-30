@@ -14,7 +14,6 @@
 #include "malfunction_central.h"
 #include "cli_registry.h"
 
-#include "mmc_card.h"
 #include "fl_stack.h"
 
 #include "big_buffer.h"
@@ -48,16 +47,16 @@ TEST(util, crc) {
 
 	uint32_t c = crc32(A, 1);
 	printf("crc32(A)=%x\r\n", c);
-	assertEqualsM("crc32 1", 0xd3d99e8b, c);
+	EXPECT_EQ(0xd3d99e8b, c) << "crc32 1";
 
 	const char * line = "AbcDEFGF";
 	c = crc32(line, 8);
 	printf("crc32(line)=%x\r\n", c);
-	assertEqualsM("crc32 line", 0x4775a7b1, c);
+	EXPECT_EQ(0x4775a7b1, c) << "crc32 line";
 
 	c = crc32(line, 1);
 	c = crc32inc(line + 1, c, 8 - 1);
-	assertEqualsM("crc32 line inc", 0x4775a7b1, c);
+	EXPECT_EQ(0x4775a7b1, c) << "crc32 line inc";
 }
 
 TEST(util, cyclicBufferContains) {
@@ -320,15 +319,17 @@ TEST(misc, testMisc) {
 
 	{
 		float v = atoff("1.0");
-		assertEqualsM("atoff", 1.0, v);
+		EXPECT_EQ(1.0, v);
 	}
+
 	{
 		float v = atoff("nan");
-		ASSERT_TRUE(std::isnan(v)) << "NaN atoff";
+		EXPECT_TRUE(std::isnan(v));
 	}
+
 	{
 		float v = atoff("N");
-		ASSERT_TRUE(std::isnan(v)) << "NaN atoff";
+		EXPECT_TRUE(std::isnan(v));
 	}
 
 //	ASSERT_EQ(true, strEqual("spa3", getPinName(SPARKOUT_3_OUTPUT)));

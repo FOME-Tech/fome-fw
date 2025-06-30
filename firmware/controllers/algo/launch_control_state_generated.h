@@ -1,26 +1,37 @@
 #pragma once
 #include "rusefi_types.h"
 struct launch_control_state_s {
+	// Launch control: Retard threshold RPM
 	// offset 0
 	int retardThresholdRpm = (int)0;
+	// Launch control: combinedConditions
 	// offset 4 bit 0
 	bool combinedConditions : 1 {};
+	// Launch control: launchActivatePinState
 	// offset 4 bit 1
 	bool launchActivatePinState : 1 {};
+	// Launch control: isLaunchCondition
 	// offset 4 bit 2
 	bool isLaunchCondition : 1 {};
+	// Launch control: isSwitchActivated
 	// offset 4 bit 3
 	bool isSwitchActivated : 1 {};
+	// Launch control: isClutchActivated
 	// offset 4 bit 4
 	bool isClutchActivated : 1 {};
+	// Launch control: isValidInputPin
 	// offset 4 bit 5
 	bool isValidInputPin : 1 {};
+	// Launch control: activateSwitchCondition
 	// offset 4 bit 6
 	bool activateSwitchCondition : 1 {};
+	// Launch control: rpmCondition
 	// offset 4 bit 7
 	bool rpmCondition : 1 {};
+	// Launch control: speedCondition
 	// offset 4 bit 8
 	bool speedCondition : 1 {};
+	// Launch control: tpsCondition
 	// offset 4 bit 9
 	bool tpsCondition : 1 {};
 	// offset 4 bit 10

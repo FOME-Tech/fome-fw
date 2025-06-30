@@ -71,7 +71,7 @@ static void populateFrame(Speeds& msg) {
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
 	msg.rpm = rpm;
 
-	auto timing = engine->engineState.timingAdvance[0];
+	auto timing = engine->cylinders[0].getIgnitionTimingBtdc();
 	msg.timing = timing > 360 ? timing - 720 : timing;
 
 	msg.injDuty = getInjectorDutyCycle(rpm);
@@ -148,7 +148,7 @@ struct Fueling {
 
 static void populateFrame(Fueling& msg) {
 	msg.cylAirmass = engine->fuelComputer.sdAirMassInOneCylinder;
-	msg.estAirflow = engine->engineState.airflowEstimate;
+	msg.estAirflow = (float)engine->engineState.airflowEstimate;
 	msg.fuel_pulse = (float)engine->outputChannels.actualLastInjection;
 	msg.knockCount = engine->module<KnockController>()->getKnockCount();
 }
@@ -203,11 +203,10 @@ static void populateFrame(Cams& msg) {
 	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1).value_or(0);
 #endif // EFI_SHAFT_POSITION_INPUT
 
-	// TODO: maybe don't rely on outputChannels here
-	msg.Bank1IntakeTarget = engine->outputChannels.vvtTargets[0];
-	msg.Bank1ExhaustTarget = engine->outputChannels.vvtTargets[1];
-	msg.Bank2IntakeTarget = engine->outputChannels.vvtTargets[2];
-	msg.Bank2ExhaustTarget = engine->outputChannels.vvtTargets[3];
+	msg.Bank1IntakeTarget = getLiveData<vvt_s>(0)->vvtTarget;
+	msg.Bank1ExhaustTarget = getLiveData<vvt_s>(1)->vvtTarget;
+	msg.Bank2IntakeTarget = getLiveData<vvt_s>(2)->vvtTarget;
+	msg.Bank2ExhaustTarget = getLiveData<vvt_s>(3)->vvtTarget;
 }
 
 struct Egts {
@@ -215,8 +214,9 @@ struct Egts {
 };
 
 static void populateFrame(Egts& msg) {
-	msg.egt[0] = Sensor::getOrZero(SensorType::EGT1) / 5;
-	msg.egt[1] = Sensor::getOrZero(SensorType::EGT2) / 5;
+	for (size_t i = 0; i < std::min(efi::size(msg.egt), efi::size(engine->outputChannels.egt)); i++) {
+		msg.egt[i] = engine->outputChannels.egt[i] / 5;
+	}
 }
 
 void sendCanVerbose() {
@@ -229,8 +229,8 @@ void sendCanVerbose() {
 
 	transmitStruct<Status>		(base + 0, isExt, canChannel);
 	transmitStruct<Speeds>		(base + 1, isExt, canChannel);
-	transmitStruct<PedalAndTps>	(base + CAN_PEDAL_TPS_OFFSET, isExt, canChannel);
-	transmitStruct<Sensors1>	(base + CAN_SENSOR_1_OFFSET, isExt, canChannel);
+	transmitStruct<PedalAndTps>	(base + 2, isExt, canChannel);
+	transmitStruct<Sensors1>	(base + 3, isExt, canChannel);
 	transmitStruct<Sensors2>	(base + 4, isExt, canChannel);
 	transmitStruct<Fueling>		(base + 5, isExt, canChannel);
 	transmitStruct<Fueling2>	(base + 6, isExt, canChannel);

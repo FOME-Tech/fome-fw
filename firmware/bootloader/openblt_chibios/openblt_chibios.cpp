@@ -21,6 +21,16 @@ extern "C" void __core_init() {
 	// to the main firmware (which will then enable them itself)
 }
 
+void AssertFailure(blt_char *file, blt_int32u line)
+{
+  /* hang the software so that it requires a hard reset */
+  for (;;)
+  {
+    /* keep servicing the watchdog so that this one does not cause a reset */
+    CopService();
+  }
+} /*** end of AssertFailure ***/
+
 blt_int32u TimerGet() {
 	return 0;
 }
@@ -75,6 +85,15 @@ void CpuStartUserProgram(void)
 #endif
   /* reset the HAL */
   chSysDisable();
+
+  // Clear all MPU settings, as they may immediately cause a fault after the jump to firmware
+  mpuDisable();
+  for (int i = 0; i < 8; i++) {
+    mpuConfigureRegion(i, 0, 0);
+  }
+  __DSB();
+  __ISB();
+
   /* reset the timer */
   TimerReset();
   /* remap user program's vector table */

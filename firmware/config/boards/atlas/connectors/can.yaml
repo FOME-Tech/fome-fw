@@ -1,0 +1,32 @@
+pins:
+  - id: CAN_INPUT_0
+    class: switch_inputs
+    ts_name: CAN 1
+
+  - id: CAN_INPUT_1
+    class: switch_inputs
+    ts_name: CAN 2
+
+  - id: CAN_INPUT_2
+    class: switch_inputs
+    ts_name: CAN 3
+
+  - id: CAN_INPUT_3
+    class: switch_inputs
+    ts_name: CAN 4
+
+  - id: CAN_INPUT_4
+    class: switch_inputs
+    ts_name: CAN 5
+
+  - id: CAN_INPUT_5
+    class: switch_inputs
+    ts_name: CAN 6
+
+  - id: CAN_INPUT_6
+    class: switch_inputs
+    ts_name: CAN 7
+
+  - id: CAN_INPUT_7
+    class: switch_inputs
+    ts_name: CAN 8

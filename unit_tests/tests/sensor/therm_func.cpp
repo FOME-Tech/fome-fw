@@ -15,9 +15,9 @@ TEST(thermistor, Thermistor1) {
 	ASSERT_TRUE(t.Valid);
 	ASSERT_FLOAT_EQ(75, t.Value);
 
-	ASSERT_NEAR(-0.003, tf.m_a, EPS4D);
-	ASSERT_NEAR(0.001, tf.m_b, EPS4D);
-	ASSERT_NEAR(0.0, tf.m_c, EPS5D);
+	EXPECT_NEAR_M4(-0.003, tf.m_a);
+	EXPECT_NEAR_M4(0.001, tf.m_b);
+	EXPECT_NEAR_M4(0.0, tf.m_c);
 }
 
 TEST(thermistor, ThermistorNeon) {
@@ -28,11 +28,11 @@ TEST(thermistor, ThermistorNeon) {
 
 	SensorResult t = tf.convert(38000);
 	ASSERT_TRUE(t.Valid);
-	ASSERT_NEAR(-2.7983, t.Value, EPS4D);
+	EXPECT_NEAR_M4(-2.7983, t.Value);
 
-	assertEqualsM("A", 0.0009, tf.m_a);
-	assertEqualsM("B", 0.0003, tf.m_b);
-	ASSERT_NEAR(0.0, tf.m_c, EPS4D);
+	EXPECT_NEAR_M4(0.0009, tf.m_a);
+	EXPECT_NEAR_M4(0.0003, tf.m_b);
+	EXPECT_NEAR_M4(0.0, tf.m_c);
 }
 
 TEST(thermistor, PtcAirCooledMotorcycle) {

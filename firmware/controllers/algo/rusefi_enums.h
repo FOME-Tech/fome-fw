@@ -151,12 +151,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } idle_mode_e;
 
-enum class SentEtbType : uint8_t {
-	NONE = 0,
-	GM_TYPE_1 = 1,
-	FORD_TYPE_1 = 2,
-};
-
 typedef enum __attribute__ ((__packed__)) {
 	/**
 	 * GND for logical OFF, VCC for logical ON
@@ -297,7 +291,17 @@ typedef enum __attribute__ ((__packed__)) {
 	BMW_e46 = 0,
 	W202 = 1,
 	BMW_e90 = 2,
+	Mx5_NC = 3,
+
+	CanVssLast = 4,
 } can_vss_nbc_e;
+
+enum class WssToVssMode : uint8_t {
+	None = 0,
+	AverageFront = 1,
+	AverageRear = 2,
+	AverageAll = 3,
+};
 
 /**
  * inertia measurement unit, yawn accelerometer
@@ -407,19 +411,6 @@ typedef enum __attribute__ ((__packed__)) {
 
 } air_pressure_sensor_type_e;
 
-typedef enum __attribute__ ((__packed__)) {
-	SC_OFF = 0,
-	/**
-	 * You would use this value if you want to see a detailed graph of your trigger events
-	 */
-	SC_TRIGGER = 1,
-	// unused 2
-	SC_RPM_ACCEL = 3,
-	SC_DETAILED_RPM = 4,
-	SC_AUX_FAST1 = 5,
-
-} sensor_chart_e;
-
 typedef enum {
 	REVERSE = -1,
 	NEUTRAL = 0,
@@ -469,16 +460,6 @@ typedef enum __attribute__ ((__packed__)) {
 	TCHARGE_MODE_AIR_INTERP_TABLE = 2,
 
 } tChargeMode_e;
-
-typedef enum __attribute__ ((__packed__)) {
-	INIT = 0,
-	TPS_THRESHOLD = 1,
-	RPM_DEAD_ZONE = 2,
-	PID_VALUE = 4,
-	PID_UPPER = 16,
-	BLIP = 64,
-
-} idle_state_e;
 
 // todo: should this be just a boolean?
 typedef enum __attribute__ ((__packed__)) {
@@ -531,7 +512,9 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_AuxLinear3 = 29,
 	GPPWM_AuxLinear4 = 30,
 	GPPWM_VehicleSpeed = 31,
-} gppwm_channel_e;
+	GPPWM_OilPressure = 32,
+	GPPWM_OilTemp = 33,
+} gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this enum
 
 typedef enum __attribute__ ((__packed__)) {
 	B50KBPS = 0, // 50kbps
@@ -597,6 +580,7 @@ typedef enum __attribute__ ((__packed__)) {
 	INJ_None = 0,
 	INJ_PolynomialAdder = 1,
 	INJ_FordModel = 2,
+	INJ_SmallPulseAdder = 3,
 } InjectorNonlinearMode;
 
 typedef enum __attribute__ ((__packed__)) {
@@ -658,6 +642,12 @@ enum class SelectedGear : uint8_t {
 	Manual2 = 9,
 	Manual1 = 10,
 	Low = 11,
+};
+
+enum class WidebandMode : uint8_t {
+	Analog = 0,
+	FOMEInternal = 1,
+	AemXSeries = 2,
 };
 
 #define SC_Exhaust_First 1

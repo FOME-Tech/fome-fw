@@ -67,7 +67,11 @@ public:
 		}
 
 		void *new_mem = alloc(nsize);
-		m_memoryUsed += nsize;
+
+		// Don't count the memory use if not allocated
+		if (new_mem) {
+			m_memoryUsed += nsize;
+		}
 
 		if (!ptr) {
 			// No old pointer passed in, simply return allocated block
@@ -193,7 +197,7 @@ static LuaHandle setupLuaState(lua_Alloc alloc) {
 }
 
 static bool loadScript(LuaHandle& ls, const char* scriptStr) {
-	efiPrintf(TAG "loading script length: %lu...", efiStrlen(scriptStr));
+	efiPrintf(TAG "loading script length: %u...", std::strlen(scriptStr));
 
 	if (0 != luaL_dostring(ls, scriptStr)) {
 		efiPrintf(TAG "ERROR loading script: %s", lua_tostring(ls, -1));

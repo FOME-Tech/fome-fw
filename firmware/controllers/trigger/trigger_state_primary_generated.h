@@ -1,10 +1,12 @@
 #pragma once
 #include "rusefi_types.h"
 struct trigger_state_primary_s {
+	// Resync counter
 	// offset 0
 	uint8_t camResyncCounter = (uint8_t)0;
 	// offset 1
 	uint8_t alignmentFill_at_1[3];
+	// Fully synchronized
 	// offset 4 bit 0
 	bool m_hasSynchronizedPhase : 1 {};
 	// offset 4 bit 1

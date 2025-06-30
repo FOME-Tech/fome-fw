@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <string.h>
 
-#define frequency 1000000
+#define frequency 100000000
 #define frequencyDiv 10
 #define magic 0x7f
 

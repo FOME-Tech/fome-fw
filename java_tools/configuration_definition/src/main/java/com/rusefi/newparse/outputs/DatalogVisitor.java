@@ -4,30 +4,13 @@ import com.rusefi.newparse.layout.*;
 
 import java.io.PrintStream;
 
-public class DatalogVisitor extends ILayoutVisitor {
-    private static void writeDatalogName(PrintStream ps, String name, String comment) {
-        String text = (comment == null || comment.isEmpty()) ? name : comment;
-
-        // Delete anything after a newline
-        text = text.split("\\\\n")[0];
-
-        ps.print(text);
+public class DatalogVisitor extends OutputChannelVisitorBase {
+    public DatalogVisitor(String nameReplace) {
+        super(nameReplace);
     }
 
-    @Override
-    public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-        if (arrayDims.length == 0) {
-            visit(struct, ps, prefixer, offsetAdd, struct.name);
-        } else if (arrayDims.length == 1) {
-            int elementOffset = offsetAdd;
-
-            for (int i = 0; i < arrayDims[0]; i++) {
-                visit(struct, ps, prefixer, elementOffset, struct.name + (i + 1));
-                elementOffset += struct.size;
-            }
-        } else {
-            throw new IllegalStateException("Output channels don't support multi dimension arrays");
-        }
+    private void writeDatalogName(PrintStream ps, String name, String comment) {
+        ps.print(buildDatalogName(name, comment));
     }
 
     @Override
@@ -59,8 +42,8 @@ public class DatalogVisitor extends ILayoutVisitor {
         writeDatalogName(ps, nameWithSpace, commentWithIndex);
         ps.print("\", ");
 
-        if (scalar.type.tsType.equals("F32") || scalar.options.scale != 1) {
-            ps.print("float,  \"%.3f\"");
+        if (scalar.type.tsType.equals("F32") || scalar.options.scale != 1 || scalar.options.digits != 0) {
+            ps.print("float,  \"%." + scalar.options.digits + "f\"");
         } else {
             ps.print("int,    \"%d\"");
         }

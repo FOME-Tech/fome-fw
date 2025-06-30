@@ -233,7 +233,7 @@ static void SetNextCompositeEntry(efitick_t timestamp) {
 
 #endif // EFI_UNIT_TEST
 
-void LogTriggerTooth(trigger_event_e tooth, efitick_t timestamp) {
+void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp) {
 	// bail if we aren't enabled
 	if (!ToothLoggerEnabled) {
 		return;
@@ -263,16 +263,16 @@ void LogTriggerTooth(trigger_event_e tooth, efitick_t timestamp) {
 */
 
 	switch (tooth) {
-	case SHAFT_PRIMARY_FALLING:
+	case TriggerEvent::PrimaryFalling:
 		currentTrigger1 = false;
 		break;
-	case SHAFT_PRIMARY_RISING:
+	case TriggerEvent::PrimaryRising:
 		currentTrigger1 = true;
 		break;
-	case SHAFT_SECONDARY_FALLING:
+	case TriggerEvent::SecondaryFalling:
 		currentTrigger2 = false;
 		break;
-	case SHAFT_SECONDARY_RISING:
+	case TriggerEvent::SecondaryRising:
 		currentTrigger2 = true;
 		break;
 	default:

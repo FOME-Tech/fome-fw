@@ -34,14 +34,7 @@
 static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 	ScopePerf perf(PE::HandleFuel);
 
-	efiAssertVoid(ObdCode::CUSTOM_STACK_6627, getCurrentRemainingStack() > 128, "lowstck#3");
-
-	LimpState limitedFuelState = getLimpManager()->allowInjection();
-
-	// todo: eliminate state copy logic by giving limpManager it's owm limp_manager.txt and leveraging LiveData
-	engine->outputChannels.fuelCutReason = (int8_t)limitedFuelState.reason;
-	bool limitedFuel = !limitedFuelState.value;
-	if (limitedFuel) {
+	if (!getLimpManager()->allowInjection().value) {
 		return;
 	}
 
@@ -85,7 +78,7 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 	if (trgEventIndex == 0) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
-			getFuelSchedule()->isReady = false;
+			getFuelSchedule()->invalidate();
 			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about trigger shape & optimization?)
 			// see updateTriggerWaveform() -> prepareOutputSignals()
 

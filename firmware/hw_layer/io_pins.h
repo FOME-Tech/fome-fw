@@ -11,7 +11,6 @@
 #include "global.h"
 
 #define INITIAL_PIN_STATE -1
-#define GPIO_NULL NULL
 
 // mode >= 0  is always true since that's an unsigned
 #define assertOMode(mode) { \
@@ -36,6 +35,8 @@ EXTERNC void efiSetPadUnused(brain_pin_e brainPin);
 EXTERNC bool efiReadPin(brain_pin_e pin);
 
 EXTERNC iomode_t getInputMode(pin_input_mode_e mode);
+
+void setCanVirtualInput(size_t idx, bool value);
 
 #endif /* EFI_GPIO_HARDWARE */
 

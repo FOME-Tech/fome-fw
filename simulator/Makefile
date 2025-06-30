@@ -47,7 +47,7 @@ ifeq ($(USE_OPT),)
 #  USE_OPT += -O0 -g
 
   ifeq ($(OS),Windows_NT)
-    USE_OPT += -DEFI_SIM_IS_WINDOWS=1
+    USE_OPT += -DEFI_SIM_IS_WINDOWS=1 -mno-ms-bitfields
   else
     USE_OPT += -m32 -DEFI_SIM_IS_WINDOWS=0
   endif
@@ -171,7 +171,6 @@ CSRC =  $(ALLCSRC) \
 # setting.
 CPPSRC = $(ALLCPPSRC) \
   $(CHIBIOS)/os/various/cpp_wrappers/ch.cpp \
-  $(PROJECT_DIR)/development/sensor_chart.cpp \
   $(HW_LAYER_DRIVERS_CPP) \
   $(HW_LAYER_DRIVERS_CORE_CPP) \
   $(CONSOLE_SRC_CPP) \

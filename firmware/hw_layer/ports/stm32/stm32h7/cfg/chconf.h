@@ -159,7 +159,7 @@
  * @note    The default is @p TRUE.
  */
 #if !defined(CH_CFG_USE_TM)
-#define CH_CFG_USE_TM                       TRUE
+#define CH_CFG_USE_TM                       FALSE
 #endif
 
 /**
@@ -720,6 +720,9 @@
  * @details This option enables call to __WFI() from idle thread to save power.
  */
 #define CORTEX_ENABLE_WFI_IDLE FALSE
+
+#define PORT_ENABLE_GUARD_PAGES TRUE
+#define PORT_USE_GUARD_MPU_REGION       MPU_REGION_7
 
 #endif  /* CHCONF_H */
 

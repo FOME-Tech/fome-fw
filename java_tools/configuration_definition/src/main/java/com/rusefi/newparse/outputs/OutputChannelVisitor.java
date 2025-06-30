@@ -5,20 +5,9 @@ import com.rusefi.newparse.parsing.FieldOptions;
 
 import java.io.PrintStream;
 
-public class OutputChannelVisitor extends ILayoutVisitor {
-    @Override
-    public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-        if (arrayDims.length == 0) {
-            visit(struct, ps, prefixer, offsetAdd, struct.name);
-        } else if (arrayDims.length == 1) {
-            int elementOffset = offsetAdd + struct.offset;
-            for (int i = 0; i < arrayDims[0]; i++) {
-                visit(struct, ps, prefixer, elementOffset, struct.name + (i + 1));
-                elementOffset += struct.size;
-            }
-        } else {
-            throw new IllegalStateException("Output channels don't support multi dimension arrays");
-        }
+public class OutputChannelVisitor extends OutputChannelVisitorBase {
+    public OutputChannelVisitor(String nameReplace) {
+        super(nameReplace);
     }
 
     @Override
@@ -39,7 +28,6 @@ public class OutputChannelVisitor extends ILayoutVisitor {
 
     private void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int idx) {
         String nameWithoutSpace = prefixer.get(idx > 0 ? (scalar.name + idx) : scalar.name);
-        String nameWithSpace = prefixer.get(idx > 0 ? (scalar.name + " " + idx) : scalar.name);
 
         ps.print(nameWithoutSpace);
         //ps.print(" = " + fieldType + ", ");

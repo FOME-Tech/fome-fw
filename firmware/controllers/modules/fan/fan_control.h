@@ -5,8 +5,15 @@
 struct FanController : public EngineModule, public fan_control_s {
 	void onSlowCallback() override;
 
+	void onIgnitionStateChanged(bool ignitionOn) override;
+
+	void benchTest();
+
 private:
 	bool getState(bool acActive, bool lastState);
+
+	bool m_ignitionState = false;
+	Timer m_benchTestTimer;
 
 protected:
 	virtual OutputPin& getPin() = 0;

@@ -61,7 +61,8 @@
 			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32F405.svd",
 			"servertype": "openocd",
 			"configFiles": ["interface/stlink.cfg", "target/stm32f4x.cfg"],
-			"rtos": "auto"
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		},
 		{
 			"name": "Debug F42x",
@@ -74,7 +75,8 @@
 			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32F427.svd",
 			"servertype": "openocd",
 			"configFiles": ["interface/stlink.cfg", "target/stm32f4x.cfg"],
-			"rtos": "auto"
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		},
 		{
 			"name": "Debug Bootloader F42x",
@@ -87,7 +89,8 @@
 			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32F427.svd",
 			"servertype": "openocd",
 			"configFiles": ["interface/stlink.cfg", "target/stm32f4x.cfg"],
-			"rtos": "auto"
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		},
 		{
 			"name": "Debug F7x6",
@@ -100,7 +103,22 @@
 			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32F7x7.svd",
 			"servertype": "openocd",
 			"configFiles": ["interface/stlink.cfg", "target/stm32f7x.cfg"],
-			"rtos": "auto"
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
+		},
+		{
+			"name": "Debug F7x6 Bootloader",
+			"type": "cortex-debug",
+			"request": "launch",
+			"cwd": "${workspaceFolder}/firmware",
+			"executable": "${workspaceRoot}/firmware/bootloader/blbuild/fome_bl.elf",
+			"device": "STM32F767V",
+			"v1": false,
+			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32F7x7.svd",
+			"servertype": "openocd",
+			"configFiles": ["interface/stlink.cfg", "target/stm32f7x.cfg"],
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		},
 		{
 			"name": "Debug H743",
@@ -113,7 +131,8 @@
 			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32H743x.svd",
 			"servertype": "openocd",
 			"configFiles": ["interface/stlink.cfg", "target/stm32h7x.cfg"],
-			"rtos": "auto"
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		},
 		{
 			"name": "Debug Bootloader H743",
@@ -126,7 +145,8 @@
 			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32H743x.svd",
 			"servertype": "openocd",
 			"configFiles": ["interface/stlink.cfg", "target/stm32h7x.cfg"],
-			"rtos": "auto"
+			"rtos": "auto",
+			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		}
 	]
 }

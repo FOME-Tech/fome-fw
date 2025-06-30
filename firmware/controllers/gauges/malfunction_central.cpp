@@ -17,16 +17,19 @@ static error_codes_set_s error_codes_set;
 /**
  * @return -1 if code not found
  */
-static int find_position(ObdCode e_code)							// Search if code is present 
-{
+static int find_position(ObdCode e_code) {
 	// cycle for searching element equal seaching code
-	for (int t = 0; t < error_codes_set.count; t++)
-		if (error_codes_set.error_codes[t] == e_code)
-			return t;			// we found position where this code is present
-	return -1;														// -1 if code not found
+	for (int t = 0; t < error_codes_set.count; t++) {
+		if (error_codes_set.error_codes[t] == e_code) {
+			// we found position where this code is present
+			return t;
+		}
+	}
+
+	return -1;
 }
 
-void clearWarnings(void) {
+void clearWarnings() {
 	error_codes_set.count = 0;
 }
 
@@ -60,8 +63,4 @@ void setError(bool isError, ObdCode errorCode) {
 void getErrorCodes(error_codes_set_s * copy) {
 	copy->count = error_codes_set.count;
 	copyArray(copy->error_codes, error_codes_set.error_codes);
-}
-
-bool hasErrorCodes(void) {
-	return error_codes_set.count > 0;
 }

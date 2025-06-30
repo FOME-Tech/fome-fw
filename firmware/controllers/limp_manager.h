@@ -35,9 +35,9 @@ enum class TpsState : uint8_t {
 	TpsError,
 	PpsError, // 3
 	IntermittentTps,
-	PidJitter,
+	UnusedCode5,
 	Lua, // 6
-	Manual,
+	UnusedCode7,
 	NotConfigured,
 	Redundancy, // 9
 	IntermittentPps,
@@ -130,11 +130,15 @@ public:
 	void fatalError();
 
 private:
+	bool isHardRevLimit(float rpm);
+
 	void setFaultRevLimit(int limit);
 
 	Hysteresis m_revLimitHysteresis;
 	Hysteresis m_boostCutHysteresis;
 	Hysteresis m_injectorDutyCutHysteresis;
+
+	float m_hardRevLimit = 0;
 
 	// Start with no fault rev limit
 	int32_t m_faultRevLimit = INT32_MAX;

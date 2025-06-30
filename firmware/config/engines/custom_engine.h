@@ -13,7 +13,6 @@ void setDiscoveryPdm();
 void setFrankensoBoardTestConfiguration();
 void setEtbTestConfiguration();
 void setTle8888TestConfiguration();
-void setL9779TestConfiguration();
 
 void mreBoardNewTest();
 void mreBCM();
@@ -30,7 +29,6 @@ void proteusDcWastegateTest();
 void setTest33816EngineConfiguration();
 void setBoschHDEV_5_injectors();
 
-void setRotary();
 void setVrThresholdTest();
 
 void detectBoardType();

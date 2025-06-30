@@ -8,14 +8,13 @@ static void setDefaultAlternatorParameters() {
 
 	engineConfiguration->alternatorControl.offset = 0;
 	engineConfiguration->alternatorControl.pFactor = 30;
-	engineConfiguration->alternatorControl.periodMs = 100;
 }
 
 /* Cylinder to bank mapping */
 void setLeftRightBanksNeedBetterName() {
-    for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-	    engineConfiguration->cylinderBankSelect[i] = i % 2;
-    }
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		engineConfiguration->cylinderBankSelect[i] = i % 2;
+	}
 }
 
 void setDefaultBaseEngine() {

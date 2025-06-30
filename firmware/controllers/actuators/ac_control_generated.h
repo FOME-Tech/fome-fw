@@ -1,31 +1,31 @@
 #pragma once
 #include "rusefi_types.h"
 struct ac_control_s {
-	// AC switch
+	// Switch state
 	// offset 0 bit 0
 	bool acButtonState : 1 {};
-	// AC enabled
+	// Enabled
 	// offset 0 bit 1
 	bool m_acEnabled : 1 {};
-	// AC engine too slow
+	// Engine too slow
 	// offset 0 bit 2
 	bool engineTooSlow : 1 {};
-	// AC engine too fast
+	// Engine too fast
 	// offset 0 bit 3
 	bool engineTooFast : 1 {};
-	// AC no CLT
+	// No CLT
 	// offset 0 bit 4
 	bool noClt : 1 {};
-	// AC engine too hot
+	// Engine too hot
 	// offset 0 bit 5
 	bool engineTooHot : 1 {};
-	// AC tps too high
+	// TPS too high
 	// offset 0 bit 6
 	bool tpsTooHigh : 1 {};
-	// AC disabled by Lua
+	// Disabled by Lua
 	// offset 0 bit 7
 	bool isDisabledByLua : 1 {};
-	// AC compressor on
+	// Compressor on
 	// offset 0 bit 8
 	bool acCompressorState : 1 {};
 	// offset 0 bit 9

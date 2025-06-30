@@ -25,15 +25,7 @@
 
 #include "trigger_central.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
-/**
- * this instance does not have a real physical pin - it's only used for engine sniffer
- *
- * todo: we can kind of add real physical pin just for a very narrow case of troubleshooting but only if we ever need it :)
- */
+// not have a real physical pin - it's only used for engine sniffer
 static NamedOutputPin mapAveragingPin("map");
 
 // allow smoothing up to number of cylinders
@@ -48,7 +40,7 @@ static int averagedMapBufIdx = 0;
  */
 struct sampler {
 	scheduling_s timer;
-	uint8_t cylinderIndex;
+	uint8_t cylinderNumber;
 };
 
 static CCM_OPTIONAL sampler samplers[MAX_CYLINDER_COUNT];
@@ -58,8 +50,6 @@ static void endAveraging(MapAverager* arg);
 static size_t currentMapAverager = 0;
 
 static void startAveraging(sampler* s) {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6649, getCurrentRemainingStack() > 128, "lowstck#9");
-
 	float duration = engine->engineState.mapAveragingDuration;
 	if (duration == 0) {
 		// Zero duration means the engine wasn't spinning or something, abort
@@ -68,7 +58,7 @@ static void startAveraging(sampler* s) {
 
 	// TODO: set currentMapAverager based on cylinder bank
 	auto& averager = getMapAvg(currentMapAverager);
-	averager.start(s->cylinderIndex);
+	averager.start(s->cylinderNumber);
 
 	mapAveragingPin.setHigh();
 
@@ -81,13 +71,13 @@ void MapAverager::showInfo(const char* sensorName) const {
 	efiPrintf("Sensor \"%s\" is MAP averager: valid: %s value: %.2f averaged sample count: %d", sensorName, boolToString(value.Valid), value.Value, m_lastCounter);
 }
 
-void MapAverager::start(uint8_t cylinderIndex) {
+void MapAverager::start(uint8_t cylinderNumber) {
 	chibios_rt::CriticalSectionLocker csl;
 
 	m_counter = 0;
 	m_sum = 0;
 	m_isAveraging = true;
-	m_cylinderIndex = cylinderIndex;
+	m_cylinderNumber = cylinderNumber;
 }
 
 SensorResult MapAverager::submit(float volts) {
@@ -114,25 +104,51 @@ void MapAverager::stop() {
 		float averageMap = m_sum / m_counter;
 		m_lastCounter = m_counter;
 
-		// TODO: this should be per-sensor, not one for all MAP sensors
-		averagedMapRunningBuffer[averagedMapBufIdx] = averageMap;
-		// increment circular running buffer index
-		averagedMapBufIdx = (averagedMapBufIdx + 1) % mapMinBufferLength;
-		// find min. value (only works for pressure values, not raw voltages!)
-		float minPressure = averagedMapRunningBuffer[0];
-		for (int i = 1; i < mapMinBufferLength; i++) {
-			if (averagedMapRunningBuffer[i] < minPressure)
-				minPressure = averagedMapRunningBuffer[i];
-		}
-
-		if (m_cylinderIndex < efi::size(engine->outputChannels.mapPerCylinder)) {
-			engine->outputChannels.mapPerCylinder[m_cylinderIndex] = minPressure;
-		}
-		setValidValue(minPressure, getTimeNowNt());
+		onSample(averageMap, m_cylinderNumber);
 	} else {
 #if EFI_PROD_CODE
 		warning(ObdCode::CUSTOM_UNEXPECTED_MAP_VALUE, "No MAP values");
 #endif
+	}
+}
+
+void MapAverager::onSample(float map, uint8_t cylinderNumber) {
+	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinder)) {
+		engine->engineState.mapPerCylinder[cylinderNumber] = map;
+
+		// correct the reading by this cylinder's MAP offset
+		map -= engine->engineState.mapCylinderBalance[cylinderNumber];
+	}
+
+	// TODO: this should be per-sensor, not one for all MAP sensors
+	averagedMapRunningBuffer[averagedMapBufIdx] = map;
+	// increment circular running buffer index
+	averagedMapBufIdx = (averagedMapBufIdx + 1) % mapMinBufferLength;
+	// find min. value (only works for pressure values, not raw voltages!)
+	float minPressure = averagedMapRunningBuffer[0];
+	for (int i = 1; i < mapMinBufferLength; i++) {
+		if (averagedMapRunningBuffer[i] < minPressure) {
+			minPressure = averagedMapRunningBuffer[i];
+		}
+	}
+
+	setValidValue(minPressure, getTimeNowNt());
+}
+
+void EngineState::updateMapCylinderOffsets() {
+	// First pass: compute average MAP for all cylinders
+	auto cylCount = engineConfiguration->cylindersCount;
+
+	float avgMap = 0;
+	for (int i = 0; i < cylCount; i++) {
+		avgMap += mapPerCylinder[i];
+	}
+
+	avgMap /= cylCount;
+
+	// Second pass: calculate deviation of each cylinder from the average
+	for (int i = 0; i < cylCount; i++) {
+		mapCylinderBalance[i] = mapPerCylinder[i] - avgMap;
 	}
 }
 
@@ -141,10 +157,8 @@ void MapAverager::stop() {
  * @note This method is invoked OFTEN, this method is a potential bottleneck - the implementation should be
  * as fast as possible
  */
-void MapAveragingModule::submitSample(float volts) {
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6650, getCurrentRemainingStack() > 128, "lowstck#9a");
-
-	SensorResult mapResult = getMapAvg(currentMapAverager).submit(volts);
+void MapAveragingModule::submitSample(float voltsMap1, float /*voltsMap2*/) {
+	SensorResult mapResult = getMapAvg(currentMapAverager).submit(voltsMap1);
 
 	float instantMap = mapResult.value_or(0);
 #if EFI_TUNER_STUDIO
@@ -170,6 +184,8 @@ static void applyMapMinBufferLength() {
 }
 
 void MapAveragingModule::onFastCallback() {
+	engine->engineState.updateMapCylinderOffsets();
+
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	MAP_sensor_config_s * c = &engineConfiguration->map;
@@ -178,7 +194,7 @@ void MapAveragingModule::onFastCallback() {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
 
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		float cylinderStart = start + getCylinderAngle(i, ID2INDEX(getCylinderId(i)));;
+		float cylinderStart = start + engine->cylinders[i].getAngleOffset();
 		wrapAngle(cylinderStart, "cylinderStart", ObdCode::CUSTOM_ERR_6562);
 		engine->engineState.mapAveragingStart[i] = cylinderStart;
 	}
@@ -192,7 +208,7 @@ void MapAveragingModule::onFastCallback() {
 }
 
 // Callback to schedule the start of map averaging for each cylinder
-void MapAveragingModule::onEnginePhase(float rpm,
+void MapAveragingModule::onEnginePhase(float /*rpm*/,
 						efitick_t edgeTimestamp,
 						float currentPhase,
 						float nextPhase) {
@@ -229,7 +245,7 @@ void MapAveragingModule::onConfigurationChange(engine_configuration_s const * pr
 
 void initMapAveraging() {
 	for (size_t i = 0; i < efi::size(samplers); i++) {
-		samplers[i].cylinderIndex = i;
+		samplers[i].cylinderNumber = i;
 	}
 
 	applyMapMinBufferLength();

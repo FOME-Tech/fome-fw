@@ -29,6 +29,8 @@ enum class SensorType : unsigned char {
 
 	AmbientTemperature,
 
+	EcuInternalTemperature,
+
 	OilPressure,
 	OilTemperature,
 
@@ -62,18 +64,26 @@ enum class SensorType : unsigned char {
 
 	Lambda1,
 	Lambda2,
+	Lambda3,
+	Lambda4,
 
 	WastegatePosition,
 
 	FuelEthanolPercent,
 
 	BatteryVoltage,
+	MainRelayVoltage,
+	Sensor5vVoltage,
 
 	BarometricPressure,
 
 	FuelLevel,
 
 	VehicleSpeed,
+	WheelSpeedLF,
+	WheelSpeedRF,
+	WheelSpeedLR,
+	WheelSpeedRR,
 
 	TurbochargerSpeed,
 
@@ -84,9 +94,6 @@ enum class SensorType : unsigned char {
 	MapSlow,
 
 	InputShaftSpeed,
-
-	EGT1,
-	EGT2,
 
 	Maf2,	// Second bank MAF sensor
 

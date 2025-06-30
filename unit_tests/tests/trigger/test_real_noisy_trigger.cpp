@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "logicdata_csv_reader.h"
+#include "spark_logic.h"
 
 static void testNoOverdwell(const char* file, bool instantRpm) {
 	CsvReader reader(1, /* vvtCount */ 0);
@@ -30,13 +31,24 @@ static void testNoOverdwell(const char* file, bool instantRpm) {
 
 	std::vector<efitick_t> coilStartTimes(12);
 
-	engine->onIgnitionEvent = [&](IgnitionEvent* event, bool state) {
-		if (state) {
-			coilStartTimes[event->cylinderNumber] = getTimeNowNt();
-		} else {
-			auto actualDwell = 1e-3 * NT2USF(getTimeNowNt() - coilStartTimes[event->cylinderNumber]);
+	engine->onIgnitionEvent = [&](const IgnitionContext& ctx, bool state) {
+		auto nowNt = getTimeNowNt();
 
-			EXPECT_LT(actualDwell, 50) << "Overdwell on cylinder " << (int)event->cylinderNumber << " of " << actualDwell << " ms";
+		int cyl = 0;
+		uint16_t mask = ctx.outputsMask;
+		while (mask) {
+			if (mask & 0x1) {
+				if (state) {
+					coilStartTimes[cyl] = nowNt;
+				} else {
+					auto actualDwell = 1e-3 * NT2USF(nowNt - coilStartTimes[cyl]);
+
+					EXPECT_LT(actualDwell, 50) << "Overdwell on cylinder " << (int)cyl << " of " << actualDwell << " ms";
+				}
+			}
+
+			mask = mask >> 1;
+			cyl++;
 		}
 	};
 

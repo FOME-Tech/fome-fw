@@ -36,7 +36,7 @@ ifeq ($(USE_OPT),)
 endif
 
 ifeq ($(COVERAGE),yes)
-	USE_OPT += -fprofile-arcs -ftest-coverage
+	USE_OPT += -fPIC -fprofile-arcs -ftest-coverage
 endif
 
 
@@ -164,6 +164,10 @@ ULIBDIR =
 
 # List all user libraries here
 ULIBS = -lm
+
+ifneq ($(IS_MAC),yes)
+	ULIBS += -lgcov --coverage
+endif
 
 ifeq ($(COVERAGE),yes)
 	ULIBS += --coverage

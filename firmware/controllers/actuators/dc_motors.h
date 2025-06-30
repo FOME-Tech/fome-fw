@@ -56,7 +56,6 @@ public:
 				brain_pin_e pinDir2,
 				brain_pin_e pinDisable,
 				bool isInverted,
-				Scheduler* executor,
 				int frequency);
 
 	TwoPinDcMotor dcMotor;

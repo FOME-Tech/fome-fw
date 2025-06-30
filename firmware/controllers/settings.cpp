@@ -49,10 +49,6 @@ static void setIdleSolenoidFrequency(int value) {
 	incrementGlobalConfigurationVersion();
 }
 
-static void setSensorChartMode(int value) {
-	engineConfiguration->sensorChartMode = (sensor_chart_e) value;
-}
-
 static void setCrankingRpm(int value) {
 	engineConfiguration->cranking.rpm = value;
 }
@@ -362,9 +358,9 @@ void scheduleStopEngine() {
 
 static void getValue(const char *paramStr) {
 	{
-		float value = getConfigValueByName(paramStr);
-		if (value != EFI_ERROR_CODE) {
-			efiPrintf("%s value: %.2f", paramStr, value);
+		expected<float> value = getConfigValueByName(paramStr);
+		if (value) {
+			efiPrintf("%s value: %.2f", paramStr, value.Value);
 			return;
 		}
 	}
@@ -393,17 +389,12 @@ const command_f_s commandsF[] = {
 		{"cranking_timing_angle", setCrankingTimingAngle},
 #endif // EFI_ENGINE_CONTROL
 
-#if EFI_ELECTRONIC_THROTTLE_BODY
-		{"etb", setThrottleDutyCycle},
-#endif // EFI_ELECTRONIC_THROTTLE_BODY
-
 };
 
 const command_i_s commandsI[] = {{"ignition_mode", setIgnitionMode},
 #if EFI_ENGINE_CONTROL
 		{"cranking_rpm", setCrankingRpm},
 		{"injection_mode", setInjectionMode},
-		{"sensor_chart_mode", setSensorChartMode},
 		{"timing_mode", setTimingMode},
 		{CMD_ENGINE_TYPE, setEngineType},
 		{"rpm_hard_limit", setRpmHardLimit},

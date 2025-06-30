@@ -129,7 +129,6 @@ void miataNAcommonEngineSettings() {
 	engineConfiguration->idleRpmPid.pFactor = 0.01;
 	engineConfiguration->idleRpmPid.iFactor = 0.00001;
 	engineConfiguration->idleRpmPid.dFactor = 0.0001;
-	engineConfiguration->idleRpmPid.periodMs = 100;
 
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->idleTimingPid.pFactor = 0.1;
@@ -249,10 +248,6 @@ void setMiataNA6_MAP_Frankenso() {
 	engineConfiguration->clutchDownPin = Gpio::A3;
 	engineConfiguration->clutchDownPinMode = PI_PULLUP;
 
-
-	// 110mm red wire from 1N/W14 to bottom of W45
-	engineConfiguration->throttlePedalUpPin = Gpio::A7;
-
 	// green wire from 1Q/W17 to bottom of W46
 	engineConfiguration->acSwitch = Gpio::A6;
 
@@ -329,7 +324,7 @@ void setMiataNa6_Polygonus() {
 	engineConfiguration->lowPressureFuel.value2 = 689.5;
 
 	// Built in wideband controller on bus 2
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 	engineConfiguration->widebandOnSecondBus = true;
 	engineConfiguration->enableVerboseCanTx = true;
 

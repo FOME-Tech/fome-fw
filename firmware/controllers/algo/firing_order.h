@@ -1,15 +1,13 @@
 /*
  * @file firing_order.h
  *
- * See also FiringOrderTSLogic.java
- *
  * @date Jul 20, 2016
  * @author Andrey Belomutskiy, (c) 2012-2020
  */
 
-#include "rusefi_enums.h"
-
 #pragma once
+
+#include "rusefi_enums.h"
 
 /**
  * thank you https://www.ingenieriaymecanicaautomotriz.com/firing-order-its-purpose-and-order-in-different-numbers-of-cylinders/
@@ -80,5 +78,11 @@ typedef enum __attribute__ ((__packed__)) {
 	FO_1_14_9_4_7_12_15_6_13_8_3_16_11_2_5_10 = 22, // WR16
 
 	// next value to use: 34
-
 } firing_order_e;
+
+/**
+ * @param cylinderIndex Queried position in the firing order. 0 means the first cylinder to fire, 1 means second, etc. Maximum cylinderCount - 1.
+ * @return The cylinder number in the requested position, from 0 to cylindersCount - 1.
+ *         For example, getCylinderNumberAtIndex(2) means the 3rd cylinder to fire, and on a 1342 4-cyl will return 3, indicating cylinder 4.
+ */
+size_t getCylinderNumberAtIndex(size_t cylinderIndex);

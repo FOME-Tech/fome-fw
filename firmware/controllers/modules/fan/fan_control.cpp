@@ -8,11 +8,11 @@ bool FanController::getState(bool acActive, bool lastState) {
 	auto clt = Sensor::get(SensorType::Clt);
 
 #if EFI_SHAFT_POSITION_INPUT
-	cranking = engine->rpmCalculator.isCranking();
-	notRunning = !engine->rpmCalculator.isRunning();
+	bool cranking = engine->rpmCalculator.isCranking();
+	bool notRunning = !engine->rpmCalculator.isRunning();
 #else
-	cranking = false;
-	notRunning = true;
+	bool cranking = false;
+	bool notRunning = true;
 #endif
 
 	disabledWhileEngineStopped = notRunning && disableWhenStopped();
@@ -21,7 +21,13 @@ bool FanController::getState(bool acActive, bool lastState) {
 	hot = clt.value_or(0) > getFanOnTemp();
 	cold = clt.value_or(0) < getFanOffTemp();
 
-	if (cranking) {
+	if (!m_benchTestTimer.hasElapsedSec(3)) {
+		// Run the fan when bench test is active
+		return true;
+	} else if (!m_ignitionState) {
+		// Inhibit while ignition is off
+		return false;
+	} else if (cranking) {
 		// Inhibit while cranking
 		return false;
 	} else if (disabledWhileEngineStopped) {
@@ -57,5 +63,15 @@ void FanController::onSlowCallback() {
 
 	bool result = getState(acActive, pin.getLogicValue());
 
+	m_state = result;
+
 	pin.setValue(result);
+}
+
+void FanController::onIgnitionStateChanged(bool ignitionOn) {
+	m_ignitionState = ignitionOn;
+}
+
+void FanController::benchTest() {
+	m_benchTestTimer.reset();
 }

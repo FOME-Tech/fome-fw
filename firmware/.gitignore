@@ -1,6 +1,6 @@
 openocd
 benchmark.txt
-gen_*.log
+logs/
 deliver/
 rusefi_tool.log
 build*

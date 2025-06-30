@@ -69,7 +69,6 @@
 #include "flash_main.h"
 
 #include "tunerstudio_io.h"
-#include "malfunction_central.h"
 #include "console_io.h"
 #include "bluetooth.h"
 #include "tunerstudio_io.h"
@@ -81,7 +80,6 @@
 #include "bench_test.h"
 #include "gitversion.h"
 #include "status_loop.h"
-#include "mmc_card.h"
 
 #include "signature.h"
 
@@ -90,11 +88,11 @@
 #endif /* EFI_SIMULATOR */
 
 static void printErrorCounters() {
-	efiPrintf("TunerStudio size=%d / total=%d / errors=%d / H=%d / O=%d / P=%d / B=%d",
-			sizeof(engine->outputChannels), tsState.totalCounter, tsState.errorCounter, tsState.queryCommandCounter,
+	efiPrintf("TunerStudio total=%d / errors=%d / H=%d / O=%d / P=%d / B=%d",
+			tsState.totalCounter, tsState.errorCounter, tsState.queryCommandCounter,
 			tsState.outputChannelsCommandCounter, tsState.readPageCommandsCounter, tsState.burnCommandCounter);
-	efiPrintf("TunerStudio W=%d / C=%d / P=%d", tsState.writeValueCommandCounter,
-			tsState.writeChunkCommandCounter, tsState.pageCommandCounter);
+	efiPrintf("TunerStudio W=%d / C=%d", tsState.writeValueCommandCounter,
+			tsState.writeChunkCommandCounter);
 }
 
 #if EFI_TUNER_STUDIO
@@ -128,14 +126,6 @@ void sendErrorCode(TsChannelBase *tsChannel, uint8_t code) {
 
 void TunerStudio::sendErrorCode(TsChannelBase* tsChannel, uint8_t code) {
 	::sendErrorCode(tsChannel, code);
-}
-
-void TunerStudio::handlePageSelectCommand(TsChannelBase *tsChannel) {
-	tsState.pageCommandCounter++;
-
-	efiPrintf("TS -> Set page (no-op)");
-
-	sendOkResponse(tsChannel);
 }
 
 bool validateOffsetCount(size_t offset, size_t count, TsChannelBase* tsChannel);
@@ -276,7 +266,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel) {
 
 static bool isKnownCommand(char command) {
 	return command == TS_HELLO_COMMAND || command == TS_READ_COMMAND || command == TS_OUTPUT_COMMAND
-			|| command == TS_PAGE_COMMAND || command == TS_BURN_COMMAND || command == TS_SINGLE_WRITE_COMMAND
+			|| command == TS_BURN_COMMAND || command == TS_SINGLE_WRITE_COMMAND
 			|| command == TS_CHUNK_WRITE_COMMAND || command == TS_EXECUTE
 			|| command == TS_IO_TEST_COMMAND
 			|| command == TS_SET_LOGGER_SWITCH
@@ -350,8 +340,6 @@ bool TunerStudio::handlePlainCommand(TsChannelBase* tsChannel, uint8_t command) 
 TunerStudio tsInstance;
 
 static int tsProcessOne(TsChannelBase* tsChannel) {
-	validateStack("communication", ObdCode::STACK_USAGE_COMMUNICATION, 128);
-
 	if (!tsChannel->isReady()) {
 		chThdSleepMilliseconds(10);
 		return -1;
@@ -584,9 +572,6 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 #endif // EFI_TEXT_LOGGING
 	case TS_EXECUTE:
 		handleExecuteCommand(tsChannel, reinterpret_cast<char*>(data), incomingPacketSize - 1);
-		break;
-	case TS_PAGE_COMMAND:
-		handlePageSelectCommand(tsChannel);
 		break;
 	case TS_CHUNK_WRITE_COMMAND:
 		handleWriteChunkCommand(tsChannel, offset, count, data + sizeof(TunerStudioWriteChunkRequest));

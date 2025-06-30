@@ -11,8 +11,6 @@
 
 #define EFI_GPIO_HARDWARE TRUE
 
-#define SENT_CHANNELS_NUM 1
-
 #ifndef EFI_BOOST_CONTROL
 #define EFI_BOOST_CONTROL TRUE
 #endif
@@ -43,10 +41,6 @@
 
 #define EFI_ENABLE_CRITICAL_ENGINE_STOP TRUE
 #define EFI_ENABLE_ENGINE_WARNING TRUE
-
-#ifndef SC_BUFFER_SIZE
-#define SC_BUFFER_SIZE 4000
-#endif
 
 /**
  * if you have a 60-2 trigger, or if you just want better performance, you
@@ -149,10 +143,6 @@
 
 #ifndef BOARD_TLE8888_COUNT
 #define BOARD_TLE8888_COUNT 	1
-#endif
-
-#ifndef BOARD_L9779_COUNT
-#define BOARD_L9779_COUNT 	1
 #endif
 
 #ifndef BOARD_DRV8860_COUNT
@@ -273,10 +263,6 @@
 #define EFI_ENGINE_SNIFFER TRUE
 #endif
 
-#ifndef EFI_SENSOR_CHART
-#define EFI_SENSOR_CHART TRUE
-#endif
-
 #ifndef DL_OUTPUT_BUFFER
 #define DL_OUTPUT_BUFFER 6500
 #endif
@@ -363,8 +349,4 @@
 
 #ifndef EFI_STORAGE_EXT_SNOR
 #define EFI_STORAGE_EXT_SNOR    FALSE
-#endif
-
-#ifndef EFI_SENT_SUPPORT
-#define EFI_SENT_SUPPORT        FALSE
 #endif

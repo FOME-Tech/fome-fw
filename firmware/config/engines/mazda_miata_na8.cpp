@@ -26,15 +26,12 @@ static void commonNA8() {
 	// below 20% this valve seems to be opening for fail-safe idle air
 	engineConfiguration->idleRpmPid.pFactor = 0.0065;
 	engineConfiguration->idleRpmPid.iFactor = 0.3;
-	engineConfiguration->idle_derivativeFilterLoss = 0.08;
-	engineConfiguration->idle_antiwindupFreq = 0.03;
 	engineConfiguration->idleRpmPid.dFactor = 0.002;
 	engineConfiguration->idleRpmPid.minValue = -20;
 	engineConfiguration->idleRpmPid.maxValue = 20;
 	engineConfiguration->idlerpmpid_iTermMin = -15;
 	engineConfiguration->idlerpmpid_iTermMax = 30;
 	engineConfiguration->acIdleExtraOffset = 15;
-	engineConfiguration->idlePidRpmDeadZone = 100;
 	engineConfiguration->idlePidRpmUpperLimit = 350;
 
 	engineConfiguration->iacByTpsTaper = 6;
