@@ -17,4 +17,5 @@ private:
 	bool getAcState();
 
 	Timer m_timeSinceNoAc;
+	Timer m_firstStartAc;
 };

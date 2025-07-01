@@ -205,6 +205,9 @@ void Engine::updateSwitchInputs() {
 			acController.acButtonState = currentState;
 			acController.timeSinceStateChange.reset();
 		}
+		if (hasAcPressure()) {
+			acController.acPressureSwitchState = getAcPressure();
+		}
 	}
 
 	engine->engineState.clutchUpState = getClutchUpState();

@@ -10,10 +10,12 @@
 #include "pch.h"
 
 ButtonDebounce acDebounce("ac_switch");
+ButtonDebounce acPressureDebounce("ac_pressure_switch");
 
 void initSensors() {
 	initMapDecoder();
 	acDebounce.init(MS2NT(15), engineConfiguration->acSwitch, engineConfiguration->acSwitchMode);
+	acPressureDebounce.init(MS2NT(15), engineConfiguration->acPressureSwitch, engineConfiguration->acPressureSwitchMode);
 }
 
 bool getAcToggle() {
@@ -22,4 +24,12 @@ bool getAcToggle() {
 
 bool hasAcToggle() {
 	return isBrainPinValid(engineConfiguration->acSwitch);
+}
+
+bool hasAcPressure() {
+	return isBrainPinValid(engineConfiguration->acPressureSwitch);
+}
+
+bool getAcPressure() {
+	return acPressureDebounce.readPinState();
 }
