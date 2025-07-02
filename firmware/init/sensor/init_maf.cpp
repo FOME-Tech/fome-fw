@@ -21,6 +21,8 @@ struct MafTable : public SensorConverter {
 
 struct MafFilter final : public SensorConverter {
 	SensorResult convert(float input) const override {
+		engine->outputChannels.mafMeasured_preFilter = input;
+
 		float param = engineConfiguration->mafFilterParameter;
 		if (param == 0) {
 			return input;
