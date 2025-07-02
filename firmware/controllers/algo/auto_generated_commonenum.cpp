@@ -1,5 +1,18 @@
 #include "global.h"
 #include "rusefi_enums.h"
+const char *getDtcSeverity(DtcSeverity value){
+switch(value) {
+case DtcSeverity::Ignore:
+  return "Ignore";
+case DtcSeverity::LimpLevel1:
+  return "LimpLevel1";
+case DtcSeverity::LimpLevel2:
+  return "LimpLevel2";
+case DtcSeverity::WarningOnly:
+  return "WarningOnly";
+  }
+ return NULL;
+}
 const char *getGearControllerMode(GearControllerMode value){
 switch(value) {
 case GearControllerMode::ButtonShift:
