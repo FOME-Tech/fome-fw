@@ -1147,7 +1147,6 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 
 	angle_t[MAX_CYLINDER_COUNT iterate] timing_offset_cylinder;per-cylinder timing correction;"deg", 1, 0, -720, 720, 1
 
-	
 	float idlePidActivationTime;;"seconds", 1, 0, 0, 60, 1
 
 	int8_t vvtControlMinClt;Minimum coolant temperature to activate VVT;"deg C", 1, 0, -40, 120, 0
