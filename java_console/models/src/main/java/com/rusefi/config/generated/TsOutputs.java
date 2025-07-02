@@ -447,4 +447,5 @@ public class TsOutputs {
 	public static final Field PAD = Field.create("PAD", 603, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field MAPAVERAGINGSAMPLES = Field.create("MAPAVERAGINGSAMPLES", 604, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field DWELLACCURACYRATIO = Field.create("DWELLACCURACYRATIO", 606, FieldType.INT16).setScale(0.001).setBaseOffset(0);
+	public static final Field MAFMEASURED_PREFILTER = Field.create("MAFMEASURED_PREFILTER", 608, FieldType.INT16).setScale(0.1).setBaseOffset(0);
 }
