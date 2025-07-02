@@ -1153,7 +1153,10 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 
 	uint8_t autoscale minimumInjectionPulseWidth;Minimum allowed pulse width (before adding deadtime). Pulses less than this duration will be extended.;"ms", 0.01, 0, 0, 2, 2
 
-	uint8_t[4] unused1800
+	uint8_t autoscale mafMinVoltage;Minimum allowed MAF input voltage. Less than this triggers P0102.;"volts",0.02, 0, 0, 5, 2
+	uint8_t autoscale mafMaxVoltage;Maximum allowed MAF input voltage. More than this triggers P0103.;"volts",0.02, 0, 0, 5, 2
+
+	uint8_t[2] unused1800
 
 	uint16_t ecumasterEgtToCanBaseId;Default 1552 for EMU Classic, 1632 for EMU Black.
 
@@ -1433,6 +1436,10 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	  custom DtcSeverity 1 bits, S08, @OFFSET@, [0:0], "Warning only", "Ignore"
 
 	struct Dtcs
+		! MAF
+		DtcSeverity p0102;Behavior for P0107: MAF Sensor Circuit Low Input. Triggered when MAF input voltage is less than the configured minimum value.
+		DtcSeverity p0103;Behavior for P0108: MAF Sensor Circuit High Input. Triggered when MAF input voltage is greater than the configured maximum value.
+
 		! MAP
 		DtcSeverity p0107;Behavior for P0107: MAP Sensor Circuit Low Input. Triggered when MAP voltage is less than the range of pressures allowed above.
 		DtcSeverity p0108;Behavior for P0108: MAP Sensor Circuit High Input. Triggered when MAP voltage is greater than the range of pressures allowed above.

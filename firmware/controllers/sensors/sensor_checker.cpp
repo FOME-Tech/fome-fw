@@ -63,6 +63,13 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 				case UnexpectedCode::High:         return ObdCode::OBD_Map_High;
 				default: break;
 			} break;
+		case SensorType::Maf:
+			switch (code) {
+				case UnexpectedCode::Timeout:      return ObdCode::OBD_Maf_Timeout;
+				case UnexpectedCode::Low:          return ObdCode::OBD_Maf_Low;
+				case UnexpectedCode::High:         return ObdCode::OBD_Maf_High;
+				default: break;
+			} break;
 		case SensorType::Clt:
 			switch (code) {
 				case UnexpectedCode::Timeout:      return ObdCode::OBD_Clt_Timeout;
@@ -124,6 +131,8 @@ static DtcSeverity getSeverityForCode(ObdCode code) {
 	const auto& c = engineConfiguration->dtcControl;
 
 	switch (static_cast<uint16_t>(code)) {
+		case 0x102: return c.p0102;
+		case 0x103: return c.p0103;
 		case 0x107: return c.p0107;
 		case 0x108: return c.p0108;
 		case 0x112: return c.p0112;
