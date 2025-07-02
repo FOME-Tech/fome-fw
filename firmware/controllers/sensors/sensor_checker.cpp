@@ -118,6 +118,30 @@ inline const char* describeUnexpected(UnexpectedCode code) {
 	}
 }
 
+#define GET_SEVERITY(dtc) case static_cast<ObdCode>(dtc): return p##dtc;
+
+static DtcSeverity getSeverityForCode(ObdCode code) {
+	const auto& c = engineConfiguration->dtcControl;
+
+	switch (static_cast<uint16_t>(code)) {
+		case 0x107: return c.p0107;
+		case 0x108: return c.p0108;
+		case 0x112: return c.p0112;
+		case 0x113: return c.p0113;
+		case 0x117: return c.p0117;
+		case 0x118: return c.p0118;
+		case 0x176: return c.p0176;
+		case 0x178: return c.p0178;
+		case 0x179: return c.p0179;
+		case 0x197: return c.p0197;
+		case 0x198: return c.p0198;
+		case 0x522: return c.p0522;
+		case 0x523: return c.p0523;
+		default:
+			return DtcSeverity::WarningOnly;
+	}
+}
+
 // Returns true checks on dependent sensors should happen
 // (returns false if broken or not configured)
 static bool check(SensorType type) {
@@ -139,7 +163,11 @@ static bool check(SensorType type) {
 		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
 		setError(true, code);
 	} else {
-		setError(false, code);
+		// Determine what to do about this particular code
+		auto severity = getSeverityForCode(code);
+		if (severity != DtcSeverity::Ignore) {
+			setError(false, code);
+		}
 	}
 
 	return false;

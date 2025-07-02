@@ -39,6 +39,7 @@ or
  - Table-based injector small pulse compensation #609
  - MAF filtering for better transient response
  - Minimum injector pulse width setting
+ - Allow selection of DTC severity #625
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
