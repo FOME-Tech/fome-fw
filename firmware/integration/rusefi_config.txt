@@ -1418,7 +1418,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	uint16_t canSleepPeriodMs;FOME verbose data transmit period (approximate);"ms", 1, 0, 0, 1000, 0
 
 	struct CanVirtualInput
-		uint32_t id;CAN ID to match for this input
+		uint32_t id;CAN ID to match for this input;"", 1, 0, 0, 536870911, 0
 		uint8_t byte;Which byte to read the value from;"", 1, 0, 0, 7, 0
 		uint8_t bitOffset;Which bit within the specified byte to read;"", 1, 0, 0, 7, 0
 		uint8_t autoscale timeout;If no frame is received in this time, revert to the configured default value;"", 0.1, 0, 0, 10, 1
