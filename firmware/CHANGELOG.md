@@ -38,6 +38,7 @@ or
  - Automatic cylinder balancing of MAP sensor readings for smoother running at high load #610
  - Table-based injector small pulse compensation #609
  - MAF filtering for better transient response
+ - Minimum injector pulse width setting
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs

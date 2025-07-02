@@ -31,6 +31,10 @@ float InjectorModelWithConfig::getBaseFlowRate() const {
 	}
 }
 
+float InjectorModelWithConfig::getMinimumPulse() const {
+	return engineConfiguration->minimumInjectionPulseWidth;
+}
+
 float InjectorModelPrimary::getSmallPulseFlowRate() const {
 	return engineConfiguration->fordInjectorSmallPulseSlope;
 }
@@ -163,6 +167,9 @@ float InjectorModelBase::getInjectionDuration(float fuelMassGram) const {
 
 	// Get the no-offset duration
 	float baseDuration = getBaseDurationImpl(fuelMassGram);
+
+	// Clamp to minimum injection pulse
+	baseDuration = std::max(baseDuration, getMinimumPulse());
 
 	// Add deadtime offset
 	return baseDuration + m_deadtime;
