@@ -650,6 +650,13 @@ enum class WidebandMode : uint8_t {
 	AemXSeries = 2,
 };
 
+enum class DtcSeverity : uint8_t {
+	WarningOnly = 0,
+	Ignore = 1,
+	LimpLevel1 = 2,
+	LimpLevel2 = 3,
+};
+
 #define SC_Exhaust_First 1
 
 #endif // __cplusplus
