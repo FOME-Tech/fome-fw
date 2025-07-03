@@ -27,6 +27,8 @@ int main(void) {
 	 */
 	baseMCUInit();
 
+	crcStart(&CRCD1, &crc32_cfg);
+
 	runRusEfi();
 	return 0;
 }

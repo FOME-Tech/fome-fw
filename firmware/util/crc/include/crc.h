@@ -16,13 +16,3 @@ static const CRCConfig crc32_cfg = {
   .reflect_remainder= true,
   .end_cb			= nullptr,
 };
-
-static const CRCConfig crc8_cfg = {
-  .poly_size        = 8,
-  .poly             = 0x1D,
-  .initial_val      = 0xFF,
-  .final_val        = 0xFF,
-  .reflect_data     = false,
-  .reflect_remainder= false,
-  .end_cb		    = nullptr,
-};

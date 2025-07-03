@@ -16,12 +16,8 @@ uint32_t crc32(const void *buf, uint32_t size) {
 
 uint32_t crc32inc(const void *buf, uint32_t crc, uint32_t size) {
 
-	CRCConfig cfg = crc32_cfg;
-	cfg.initial_val = crc ^ 0xFFFFFFFF;
-
-	crcStart(&CRCD1, &cfg);
+	CRC->INIT = crc ^ 0xFFFFFFFF;
 	uint32_t crcCalculated = crcCalc(&CRCD1, size, buf);
-	crcStop(&CRCD1);
 	return crcCalculated;
 }
 
@@ -31,13 +27,17 @@ uint32_t crc32inc(const void *buf, uint32_t crc, uint32_t size) {
  * j1850 SAE crc8
  */
 uint8_t crc8(const uint8_t *data, uint8_t len) {
+	uint8_t crc = 0;
 
-	if (data == 0) {
+	if (data == 0)
 		return 0;
+	crc ^= 0xff;
+	while (len--) {
+		crc ^= *data++;
+		for (unsigned k = 0; k < 8; k++)
+			crc = crc & 0x80 ? (crc << 1) ^ 0x1d : crc << 1;
 	}
-
-	crcStart(&CRCD1, &crc8_cfg);
-	uint8_t crc = crcCalc(&CRCD1, len, data);
-	crcStop(&CRCD1);
+	crc &= 0xff;
+	crc ^= 0xff;
 	return crc;
 }

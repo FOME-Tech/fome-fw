@@ -16,6 +16,7 @@
 #include <rusefi/isnan.h>
 #include <rusefi/math.h>
 #include <rusefi/pt2001.h>
+#include "../util/crc/include/crc.h"
 
 #include "global.h"
 #include "efifeatures.h"

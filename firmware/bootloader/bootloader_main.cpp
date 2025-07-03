@@ -88,6 +88,8 @@ int main(void) {
 	halInit();
 	chSysInit();
 
+	crcStart(&CRCD1, &crc32_cfg);
+
 	baseMCUInit();
 
 	// start the blinky thread
