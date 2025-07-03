@@ -20,5 +20,8 @@ $(PCHOBJ) : $(GENERATED)
 
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*
+	git checkout -- $(PROJECT_DIR)/tunerstudio/generated/fome_*.ini
+	git checkout -- $(PROJECT_DIR)/../java_console/models/src/main/java/com/rusefi/config/generated/Fields.java
+	git checkout -- $(PIN_NAMES_FILE) || true
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image.h
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image_compressed.h
