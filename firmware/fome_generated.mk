@@ -5,7 +5,8 @@ GENERATED := \
 # $(GENERATED_DIR)/log_fields_generated.h \
 # $(GENERATED_DIR)/output_lookup_generated.cpp \
 # $(GENERATED_DIR)/rusefi_generated.h \
-# $(GENERATED_DIR)/value_lookup_generated.cpp
+# $(GENERATED_DIR)/value_lookup_generated.cpp \
+# $(PIN_NAMES_FILE)
 # TODO: how do we list multiple dependencies without the build happening multiple times?
 
 $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
