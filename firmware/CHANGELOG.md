@@ -44,6 +44,7 @@ or
 ### Fixed
  - CAN reception on STM32H7-based ECUs
  - Speed up bootloader launch by 250ms
+ - Move ETB sensor redundancy from Experimental/Broken/Parking Lot to sensor dialogs #165
 
 ## February 2025 Release
 
