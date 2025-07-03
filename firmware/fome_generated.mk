@@ -5,8 +5,13 @@ GENERATED := \
 # $(GENERATED_DIR)/log_fields_generated.h \
 # $(GENERATED_DIR)/output_lookup_generated.cpp \
 # $(GENERATED_DIR)/rusefi_generated.h \
-# $(GENERATED_DIR)/value_lookup_generated.cpp
+# $(GENERATED_DIR)/value_lookup_generated.cpp \
+# $(PIN_NAMES_FILE)
 # TODO: how do we list multiple dependencies without the build happening multiple times?
+
+POST_MAKE_ALL_RULE_HOOK: $(PROJECT_DIR)/tunerstudio/generated/fome_$(SHORT_BOARD_NAME).ini
+
+$(PROJECT_DIR)/tunerstudio/generated/fome_$(SHORT_BOARD_NAME).ini : $(GENERATED) $(PROJECT_DIR)/tunerstudio/tunerstudio.template.ini $(PROJECT_DIR)/integration/rusefi_config.txt
 
 $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
 	@echo Generating config files...
@@ -19,5 +24,8 @@ $(PCHOBJ) : $(GENERATED)
 
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*
+	git checkout -- $(PROJECT_DIR)/tunerstudio/generated/fome_*.ini
+	git checkout -- $(PROJECT_DIR)/../java_console/models/src/main/java/com/rusefi/config/generated/Fields.java
+	git checkout -- $(PIN_NAMES_FILE) || true
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image.h
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image_compressed.h
