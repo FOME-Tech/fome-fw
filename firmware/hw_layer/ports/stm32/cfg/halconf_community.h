@@ -17,6 +17,8 @@
 #ifndef _HALCONF_COMMUNITY_H_
 #define _HALCONF_COMMUNITY_H_
 
+#include "mcuconf_community.h"
+
 /**
  * @brief   Enables the community overlay.
  */
@@ -56,7 +58,7 @@
  * @brief   Enables the CRC subsystem.
  */
 #if !defined(HAL_USE_CRC) || defined(__DOXYGEN__)
-#define HAL_USE_CRC                 FALSE
+#define HAL_USE_CRC                 TRUE
 #endif
 
 /**
