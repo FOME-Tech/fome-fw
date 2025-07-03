@@ -25,9 +25,15 @@ PCHSUB = firmware
 # Imported source files and paths
 CHIBIOS_CONTRIB = ChibiOS-Contrib
 
+CRC_TYPE ?= SW
+
 # Configure libfirmware Paths/Includes
 RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
+ifeq ($(CRC_TYPE),SW)
 include $(RUSEFI_LIB)/util/util.mk
+else ifeq ($(CRC_TYPE),HW)
+include $(PROJECT_DIR)/util/crc.mk
+endif
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 
 include rusefi.mk
