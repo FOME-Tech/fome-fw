@@ -11,10 +11,7 @@ GENERATED := \
 
 POST_MAKE_ALL_RULE_HOOK: $(PROJECT_DIR)/tunerstudio/generated/fome_$(SHORT_BOARD_NAME).ini
 
-$(PROJECT_DIR)/tunerstudio/generated/fome_$(SHORT_BOARD_NAME).ini : $(PROJECT_DIR)/tunerstudio/tunerstudio.template.ini $(PROJECT_DIR)/integration/rusefi_config.txt
-	@echo Generating config files...
-	cd $(PROJECT_DIR) && $(PROJECT_DIR)/gen_live_documentation.sh
-	cd $(PROJECT_DIR) && $(PROJECT_DIR)/gen_config_board.sh $(BOARD_DIR) $(SHORT_BOARD_NAME)
+$(PROJECT_DIR)/tunerstudio/generated/fome_$(SHORT_BOARD_NAME).ini : $(GENERATED) $(PROJECT_DIR)/tunerstudio/tunerstudio.template.ini $(PROJECT_DIR)/integration/rusefi_config.txt
 
 $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
 	@echo Generating config files...
