@@ -952,7 +952,6 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
-	public static final int SIGNATURE_HASH = 1231309096;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1159,9 +1158,9 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.04.f407-discovery.1231309096";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.04.f407-discovery.2534915404";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
-	public static final int TS_TOTAL_OUTPUT_SIZE = 1308;
+	public static final int TS_TOTAL_OUTPUT_SIZE = 1324;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_2_NAME = "Channel 2";
 	public static final int TS_TRIGGER_SCOPE_DISABLE = 5;
@@ -1977,7 +1976,9 @@ public class Fields {
 	public static final Field MINIMUMINJECTIONPULSEWIDTH = Field.create("MINIMUMINJECTIONPULSEWIDTH", 1621, FieldType.INT8).setScale(0.01).setBaseOffset(0);
 	public static final Field MAFMINVOLTAGE = Field.create("MAFMINVOLTAGE", 1622, FieldType.INT8).setScale(0.02).setBaseOffset(0);
 	public static final Field MAFMAXVOLTAGE = Field.create("MAFMAXVOLTAGE", 1623, FieldType.INT8).setScale(0.02).setBaseOffset(0);
-	public static final Field UNUSED1800 = Field.create("UNUSED1800", 1624, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final String[] gppwm_channel_e = {"Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp"};
+	public static final Field VVTINTAKEYAXISOVERRIDE = Field.create("VVTINTAKEYAXISOVERRIDE", 1624, FieldType.INT8, gppwm_channel_e).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTEXHAUSTYAXISOVERRIDE = Field.create("VVTEXHAUSTYAXISOVERRIDE", 1625, FieldType.INT8, gppwm_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field ECUMASTEREGTTOCANBASEID = Field.create("ECUMASTEREGTTOCANBASEID", 1626, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field MINSTEPPERVOLTAGE = Field.create("MINSTEPPERVOLTAGE", 1628, FieldType.INT8).setScale(0.1).setBaseOffset(0);
 	public static final Field STEPPERENABLEPINMODE = Field.create("STEPPERENABLEPINMODE", 1629, FieldType.INT8, pin_output_mode_e).setScale(1.0).setBaseOffset(0);
@@ -2114,7 +2115,6 @@ public class Fields {
 	public static final Field GPPWM1_PWMFREQUENCY = Field.create("GPPWM1_PWMFREQUENCY", 2192, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_ONABOVEDUTY = Field.create("GPPWM1_ONABOVEDUTY", 2194, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_OFFBELOWDUTY = Field.create("GPPWM1_OFFBELOWDUTY", 2195, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final String[] gppwm_channel_e = {"Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp"};
 	public static final Field GPPWM1_LOADAXIS = Field.create("GPPWM1_LOADAXIS", 2196, FieldType.INT8, gppwm_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_RPMAXIS = Field.create("GPPWM1_RPMAXIS", 2197, FieldType.INT8, gppwm_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field GPPWM1_LOADBINS = Field.create("GPPWM1_LOADBINS", 2198, FieldType.INT16).setScale(0.1).setBaseOffset(0);
