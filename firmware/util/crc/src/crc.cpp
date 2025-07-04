@@ -16,8 +16,10 @@ uint32_t crc32(const void *buf, uint32_t size) {
 
 uint32_t crc32inc(const void *buf, uint32_t crc, uint32_t size) {
 
+	crcAcquireUnit(&CRCD1);
 	CRC->INIT = crc ^ 0xFFFFFFFF;
 	uint32_t crcCalculated = crcCalc(&CRCD1, size, buf);
+	crcReleaseUnit(&CRCD1);
 	return crcCalculated;
 }
 
