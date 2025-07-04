@@ -1,6 +1,9 @@
 #include "rusefi_enums.h"
 #pragma once
 #if __cplusplus
+const char *getDtcSeverity(DtcSeverity value);
+#endif //__cplusplus
+#if __cplusplus
 const char *getGearControllerMode(GearControllerMode value);
 #endif //__cplusplus
 #if __cplusplus

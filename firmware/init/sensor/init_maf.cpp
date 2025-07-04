@@ -9,6 +9,21 @@
 static FunctionalSensor maf (SensorType::Maf , /* timeout = */ MS2NT(50));
 static FunctionalSensor maf2(SensorType::Maf2, /* timeout = */ MS2NT(50));
 
+// Just check min/max allowed voltage
+struct MafVoltageCheck : public SensorConverter {
+	SensorResult convert(float input) const override {
+		if (input > engineConfiguration->mafMaxVoltage) {
+			return UnexpectedCode::High;
+		}
+
+		if (input < engineConfiguration->mafMinVoltage) {
+			return UnexpectedCode::Low;
+		}
+
+		return input;
+	}
+};
+
 // This function converts volts -> kg/h
 static TableFunc mafCurve(config->mafDecodingBins, config->mafDecoding);
 
@@ -21,6 +36,8 @@ struct MafTable : public SensorConverter {
 
 struct MafFilter final : public SensorConverter {
 	SensorResult convert(float input) const override {
+		engine->outputChannels.mafMeasured_preFilter = input;
+
 		float param = engineConfiguration->mafFilterParameter;
 		if (param == 0) {
 			return input;
@@ -54,7 +71,7 @@ struct MafFilter final : public SensorConverter {
 	mutable float m_lastValue = 0;
 };
 
-static FuncChain<MafTable, MafFilter> mafFunction;
+static FuncChain<MafVoltageCheck, MafTable, MafFilter> mafFunction;
 
 static void initMaf(adc_channel_e channel, FunctionalSensor& m) {
 	if (!isAdcChannelValid(channel)) {

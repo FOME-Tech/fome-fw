@@ -56,6 +56,8 @@ IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
 
 IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController::TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) {
 #if EFI_SHAFT_POSITION_INPUT
+	looksLikeCrankToIdle = crankingTaperFraction < 1;
+
 	if (!engine->rpmCalculator.isRunning()) {
 		return Phase::Cranking;
 	}
@@ -67,6 +69,7 @@ IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController
 
 	// if throttle pressed, we're out of the idle corner
 	if (tps.Value > engineConfiguration->idlePidDeactivationTpsThreshold) {
+		looksLikeCoasting = false;
 		return Phase::Running;
 	}
 
@@ -78,9 +81,13 @@ IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController
 		looksLikeCoasting = false;
 	}
 
-	looksLikeCrankToIdle = crankingTaperFraction < 1;
-	if (looksLikeCoasting && !looksLikeCrankToIdle) {
-		return Phase::Coasting;
+	if (looksLikeCoasting) {
+		if (looksLikeCrankToIdle) {
+			// If still in the cranking taper, don't jump to the coasting table yet
+			return Phase::CrankToIdleTaper;
+		} else {
+			return Phase::Coasting;
+		}
 	}
 
 	// If the vehicle is moving too quickly, disable CL idle
@@ -88,11 +95,6 @@ IIdleController::Phase IdleController::determinePhase(float rpm, IIdleController
 	looksLikeRunning = maxVss != 0 && vss > maxVss;
 	if (looksLikeRunning) {
 		return Phase::Running;
-	}
-
-	// If still in the cranking taper, disable closed loop idle
-	if (looksLikeCrankToIdle) {
-		return Phase::CrankToIdleTaper;
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
 

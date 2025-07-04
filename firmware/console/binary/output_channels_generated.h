@@ -732,8 +732,14 @@ struct output_channels_s {
 	// ratio
 	// offset 606
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
+	// MAF: Pre-filter
+	// kg/h
+	// offset 608
+	scaled_channel<uint16_t, 10, 1> mafMeasured_preFilter = (uint16_t)0;
+	// offset 610
+	uint8_t alignmentFill_at_610[2];
 };
-static_assert(sizeof(output_channels_s) == 608);
+static_assert(sizeof(output_channels_s) == 612);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, speedToRpmRatio) == 8);
@@ -917,4 +923,5 @@ static_assert(offsetof(output_channels_s, injectorDutyCycleStage2) == 602);
 static_assert(offsetof(output_channels_s, pad) == 603);
 static_assert(offsetof(output_channels_s, mapAveragingSamples) == 604);
 static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 606);
+static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 608);
 

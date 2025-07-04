@@ -249,17 +249,9 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
-    - name: Pre-build Cleanup Test
-      run: |
-        ls -l firmware
-
     - uses: actions/checkout@v4
       with:
         submodules: true
-
-    - name: Pre-build Cleanup Test 2
-      run: |
-        ls -l firmware
 
     # - uses: actions/setup-java@v3
     #   with:

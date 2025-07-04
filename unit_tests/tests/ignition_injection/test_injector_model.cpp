@@ -13,6 +13,7 @@ public:
 	MOCK_METHOD(float, getSmallPulseFlowRate, (), (const, override));
 	MOCK_METHOD(float, getSmallPulseBreakPoint, (), (const, override));
 	MOCK_METHOD(InjectorNonlinearMode, getNonlinearMode, (), (const, override));
+	MOCK_METHOD(float, getMinimumPulse, (), (const, override));
 };
 
 TEST(InjectorModel, Prepare) {
@@ -37,8 +38,16 @@ TEST(InjectorModel, getInjectionDuration) {
 		.WillOnce(Return(4.8f)); // 400cc/min
 	EXPECT_CALL(dut, getNonlinearMode())
 		.WillRepeatedly(Return(INJ_None));
+	EXPECT_CALL(dut, getMinimumPulse())
+		.WillRepeatedly(Return(1.0f));
 
 	dut.prepare();
+
+	// Zero mass -> zero pulse
+	EXPECT_EQ(dut.getInjectionDuration(0), 0);
+
+	// Less than threshold -> increased to minimum pulse + deadtime
+	EXPECT_NEAR(dut.getInjectionDuration(0.001f), 1.0f + 2.0f, EPS4D);
 
 	EXPECT_NEAR(dut.getInjectionDuration(0.01f), 10 / 4.8f + 2.0f, EPS4D);
 	EXPECT_NEAR(dut.getInjectionDuration(0.02f), 20 / 4.8f + 2.0f, EPS4D);
@@ -55,6 +64,8 @@ TEST(InjectorModel, getInjectionDurationWithFlowRatio) {
 		.WillOnce(Return(4.8f)); // 400cc/min
 	EXPECT_CALL(dut, getNonlinearMode())
 		.WillRepeatedly(Return(INJ_None));
+	EXPECT_CALL(dut, getMinimumPulse())
+		.WillRepeatedly(Return(0));
 
 	dut.prepare();
 

@@ -385,6 +385,8 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->can2BaudRate = B500KBPS;
 
 	setBosch0280218037();
+	engineConfiguration->mafMinVoltage = 0;
+	engineConfiguration->mafMaxVoltage = 5;
 
 	engineConfiguration->canSleepPeriodMs = 50;
 	engineConfiguration->canReadEnabled = true;

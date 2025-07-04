@@ -108,10 +108,10 @@ enum class ObdCode : uint16_t {
 	//P0097 Intake Air Temperature Sensor 2 Circuit Low
 	//P0098 Intake Air Temperature Sensor 2 Circuit High
 	//P0099 Intake Air Temperature Sensor 2 Circuit Intermittent/Erratic
-	OBD_Mass_or_Volume_Air_Flow_Circuit_Malfunction = 0x0100,
-	//P0101 Mass or Volume Air Flow Circuit Range/Performance Problem
-	//P0102 Mass or Volume Air Flow Circuit Low Input
-	//P0103 Mass or Volume Air Flow Circuit High Input
+	//P0100 Mass or Volume Air Flow Circuit Malfunction
+	OBD_Maf_Timeout = 0x0101,
+	OBD_Maf_Low = 0x0102,
+	OBD_Maf_High = 0x0103,
 	//P0104 Mass or Volume Air Flow Circuit Intermittent
 	OBD_Manifold_Absolute_Pressure_Circuit_Malfunction = 0x0105,
 	//P0106 Manifold Absolute Pressure/Barometric Pressure Circuit Range/Performance Problem

@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20020
+#define FLASH_DATA_VERSION 20021
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -1148,12 +1148,16 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 
 	angle_t[MAX_CYLINDER_COUNT iterate] timing_offset_cylinder;per-cylinder timing correction;"deg", 1, 0, -720, 720, 1
 
-	
 	float idlePidActivationTime;;"seconds", 1, 0, 0, 60, 1
 
 	int8_t vvtControlMinClt;Minimum coolant temperature to activate VVT;"deg C", 1, 0, -40, 120, 0
 
-	uint8_t[5] unused1800
+	uint8_t autoscale minimumInjectionPulseWidth;Minimum allowed pulse width (before adding deadtime). Pulses less than this duration will be extended.;"ms", 0.01, 0, 0, 2, 2
+
+	uint8_t autoscale mafMinVoltage;Minimum allowed MAF input voltage. Less than this triggers P0102.;"volts",0.02, 0, 0, 5, 2
+	uint8_t autoscale mafMaxVoltage;Maximum allowed MAF input voltage. More than this triggers P0103.;"volts",0.02, 0, 0, 5, 2
+
+	uint8_t[2] unused1800
 
 	uint16_t ecumasterEgtToCanBaseId;Default 1552 for EMU Classic, 1632 for EMU Black.
 
@@ -1421,7 +1425,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	uint16_t canSleepPeriodMs;FOME verbose data transmit period (approximate);"ms", 1, 0, 0, 1000, 0
 
 	struct CanVirtualInput
-		uint32_t id;CAN ID to match for this input
+		uint32_t id;CAN ID to match for this input;"", 1, 0, 0, 536870911, 0
 		uint8_t byte;Which byte to read the value from;"", 1, 0, 0, 7, 0
 		uint8_t bitOffset;Which bit within the specified byte to read;"", 1, 0, 0, 7, 0
 		uint8_t autoscale timeout;If no frame is received in this time, revert to the configured default value;"", 0.1, 0, 0, 10, 1
@@ -1429,6 +1433,43 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	end_struct
 
 	CanVirtualInput[CAN_VIRTUAL_INPUT_PINS_COUNT iterate] canVirtualInputs
+
+	! TODO: implement limp levels and uncomment this line
+	! custom DtcSeverity 1 bits, S08, @OFFSET@, [0:1], "Warning only", "Ignore", "Limp level 1", "Limp level 2"
+	  custom DtcSeverity 1 bits, S08, @OFFSET@, [0:0], "Warning only", "Ignore"
+
+	struct Dtcs
+		! MAF
+		DtcSeverity p0102;Behavior for P0107: MAF Sensor Circuit Low Input. Triggered when MAF input voltage is less than the configured minimum value.
+		DtcSeverity p0103;Behavior for P0108: MAF Sensor Circuit High Input. Triggered when MAF input voltage is greater than the configured maximum value.
+
+		! MAP
+		DtcSeverity p0107;Behavior for P0107: MAP Sensor Circuit Low Input. Triggered when MAP voltage is less than the range of pressures allowed above.
+		DtcSeverity p0108;Behavior for P0108: MAP Sensor Circuit High Input. Triggered when MAP voltage is greater than the range of pressures allowed above.
+
+		! IAT
+		DtcSeverity p0112;Behavior for P0112: Intake Air Temperature Sensor Circuit Low. Triggered when intake air temp sensor voltage is less than 0.05 volts.
+		DtcSeverity p0113;Behavior for P0113: Intake Air Temperature Sensor Circuit High. Triggered when intake air temp sensor voltage is greater than 4.9 volts.
+
+		! CLT
+		DtcSeverity p0117;Behavior for P0117: Coolant Temperature Sensor Circuit Low. Triggered when coolant temp sensor voltage is less than 0.05 volts.
+		DtcSeverity p0118;Behavior for P0118: Coolant Temperature Sensor Circuit Low. Triggered when coolant temp sensor voltage is greater than 4.9 volts.
+
+		! Flex
+		DtcSeverity p0176;Behavior for P0176: Fuel Composition Sensor Malfunction. Triggered when the signal from the flex sensor is lost (missing pull-up resistor? unplugged? broken wire?).
+		DtcSeverity p0178;Behavior for P0178: Fuel Composition Sensor Circuit Low Input. Triggered when flex sensor signal is present, but the frequency is too low (<45hz).
+		DtcSeverity p0179;Behavior for P0179: Fuel Composition Sensor Circuit High Input. Triggered when flex sensor signal is present, but the frequency is too high (>155hz). Possible methanol contamination.
+
+		! Oil Temp
+		DtcSeverity p0197;Behavior for P0197: Engine Oil Temperature Sensor Circuit Low. Triggered when oil temp sensor voltage is less than 0.05 volts.
+		DtcSeverity p0198;Behavior for P0198: Engine Oil Temperature Sensor Circuit High. Triggered when oil temp sensor voltage is greater than 4.9 volts.
+
+		! Oil pressure
+		DtcSeverity p0522;Behavior for P0522: Engine Oil Pressure Sensor Circuit Low. Triggered when oil pressure sensor voltage is less than allowed limits.
+		DtcSeverity p0523;Behavior for P0523: Engine Oil Pressure Sensor Circuit High. Triggered when oil pressure sensor voltage is greater than allowed limits.
+	end_struct
+
+	Dtcs dtcControl
 
 ! end of engine_configuration_s
 end_struct

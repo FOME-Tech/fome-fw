@@ -101,8 +101,10 @@ TEST(idle_v2, testDeterminePhase) {
 	// Inside the zone, but vehicle speed too fast
 	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, 0, 25, 10));
 
-	// Check that shortly after cranking, the cranking taper inhibits closed loop idle
-	EXPECT_EQ(ICP::CrankToIdleTaper, dut.determinePhase(1000, targetInfo, 0, 0, 0.5f));
+	// Check that shortly after cranking, the cranking taper inhibits coasting...
+	EXPECT_EQ(ICP::CrankToIdleTaper, dut.determinePhase(1500, targetInfo, 0, 0, 0.5f));
+	// ...but allows closed loop
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 0.5f));
 
 	// Above TPS threshold should be outside the zone
 	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, 10, 0, 10));
