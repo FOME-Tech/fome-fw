@@ -48,6 +48,16 @@ bool AcController::getAcState() {
 		return false;
 	}
 
+	if (hasAcPressure() && !getAcPressure()) {
+		return false;
+	}
+
+	#if EFI_SHAFT_POSITION_INPUT
+		if (engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) < engineConfiguration->acStartDelay) {
+			return false;
+		}
+	#endif // EFI_SHAFT_POSITION_INPUT
+
 	// All conditions allow AC, simply pass thru switch
 	return acButtonState;
 }

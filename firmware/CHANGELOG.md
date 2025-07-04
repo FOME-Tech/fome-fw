@@ -40,6 +40,7 @@ or
  - MAF filtering for better transient response
  - Minimum injector pulse width setting
  - Allow selection of DTC severity #625
+ - AC pressure switch & startup delay #623
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
