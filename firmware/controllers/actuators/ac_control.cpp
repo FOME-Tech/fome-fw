@@ -52,23 +52,16 @@ bool AcController::getAcState() {
 		return false;
 	}
 
+	if (engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) < engineConfiguration->acStartDelay) {
+		return false;
+	}
+
 	// All conditions allow AC, simply pass thru switch
 	return acButtonState;
 }
 
 void AcController::onSlowCallback() {
 	bool isEnabled = getAcState();
-
-	static bool firstStart = true;
-
-	if (firstStart) {
-		float firstStartDelay = engineConfiguration->acStartDelay;
-		if (m_firstStartAc.hasElapsedSec(firstStartDelay)) {
-			firstStart = false;
-		} else {
-			return;
-		}
-	}
 
 	m_acEnabled = isEnabled;
 
