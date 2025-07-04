@@ -37,6 +37,7 @@ or
  - Fully disable VVT when the target is 0. This prevents trying to control VVT when near the stop, which can damage the locking pin on some engines.
  - Automatic cylinder balancing of MAP sensor readings for smoother running at high load #610
  - Table-based injector small pulse compensation #609
+ - AC pressure switch & startup delay #623
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
