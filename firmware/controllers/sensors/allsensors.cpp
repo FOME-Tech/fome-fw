@@ -9,8 +9,8 @@
 
 #include "pch.h"
 
-ButtonDebounce acDebounce("ac_switch");
-ButtonDebounce acPressureDebounce("ac_pressure_switch");
+static ButtonDebounce acDebounce("ac_switch");
+static ButtonDebounce acPressureDebounce("ac_pressure_switch");
 
 void initSensors() {
 	initMapDecoder();
