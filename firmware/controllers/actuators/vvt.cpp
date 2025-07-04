@@ -9,6 +9,7 @@
 
 #include "local_version_holder.h"
 #include "vvt.h"
+#include "gppwm_channel.h"
 
 #define NO_PIN_PERIOD 500
 
@@ -82,6 +83,18 @@ expected<angle_t> VvtController::observePlant() const {
 expected<angle_t> VvtController::getSetpoint() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	float load = getFuelingLoad();
+
+	auto yAxisOverride =
+		(m_cam == 0)
+		? engineConfiguration->vvtIntakeYAxisOverride
+		: engineConfiguration->vvtExhaustYAxisOverride;
+
+	if (yAxisOverride != GPPWM_Zero) {
+		load = readGppwmChannel(yAxisOverride).value_or(0);
+	}
+
+	targetYAxis = load;
+
 	float target = m_targetMap->getValue(rpm, load);
 
 	if (!m_targetOffsetTimer.hasElapsedSec(2)) {

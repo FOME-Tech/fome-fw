@@ -1157,7 +1157,8 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 	uint8_t autoscale mafMinVoltage;Minimum allowed MAF input voltage. Less than this triggers P0102.;"volts",0.02, 0, 0, 5, 2
 	uint8_t autoscale mafMaxVoltage;Maximum allowed MAF input voltage. More than this triggers P0103.;"volts",0.02, 0, 0, 5, 2
 
-	uint8_t[2] unused1800
+	gppwm_channel_e vvtIntakeYAxisOverride;
+	gppwm_channel_e vvtExhaustYAxisOverride;
 
 	uint16_t ecumasterEgtToCanBaseId;Default 1552 for EMU Classic, 1632 for EMU Black.
 

@@ -41,6 +41,7 @@ or
  - Minimum injector pulse width setting
  - Allow selection of DTC severity #625
  - AC pressure switch & startup delay #623
+ - Y axis override for VVT target
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
