@@ -37,12 +37,12 @@ Crc::Crc()
 {
 	#if STM32_CRC_USE_CRC1
 		if (m_acquiredExclusive) {
-			if (!didInit) {
+			if (didInit) {
+				crcReset(&CRCD1);
+			} else {
 				didInit = true;
 
 				crcStart(&CRCD1, &crcCfg);
-			} else {
-				crcReset(&CRCD1);
 			}
 		}
 	#endif // STM32_CRC_USE_CRC1
