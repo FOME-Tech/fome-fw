@@ -520,4 +520,6 @@
 
 #define ENABLE_AUTO_DETECT_HSE              TRUE
 
+#include "mcuconf_community.h"
+
 #endif /* MCUCONF_H */

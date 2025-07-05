@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "mcuconf_community.h"
+
 #include "efifeatures.h"
 
 /**
