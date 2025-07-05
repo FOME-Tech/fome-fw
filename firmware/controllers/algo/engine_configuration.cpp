@@ -141,7 +141,6 @@ __attribute__((weak)) void boardOnConfigurationChange(engine_configuration_s* /*
  * online tuning of most values in the maps does not count as configuration change, but 'Burn' command does
  *
  * this method is NOT currently invoked on ECU start - actual user input has to happen!
- * See preCalculate which is invoked BOTH on start and configuration change
  */
 void incrementGlobalConfigurationVersion() {
 	engine->globalConfigurationVersion++;
@@ -152,8 +151,6 @@ void incrementGlobalConfigurationVersion() {
 	applyNewHardwareSettings();
 
 	boardOnConfigurationChange(&activeConfiguration);
-
-	engine->preCalculate();
 
 #if EFI_ELECTRONIC_THROTTLE_BODY
 	onConfigurationChangeElectronicThrottleCallback(&activeConfiguration);
@@ -901,7 +898,6 @@ void validateConfiguration() {
 		// todo: extract constant in instant_rpm_calculator.h?
 		engineConfiguration->instantRpmRange = 90;
 	}
-	engine->preCalculate();
 }
 
 void applyNonPersistentConfiguration() {

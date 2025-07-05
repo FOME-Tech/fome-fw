@@ -351,8 +351,6 @@ public:
 
 	SensorsState sensors;
 
-	void preCalculate();
-
 	void efiWatchdog();
 
 	/**

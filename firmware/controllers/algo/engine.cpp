@@ -250,19 +250,6 @@ void Engine::resetLua() {
 #endif // EFI_IDLE_CONTROL
 }
 
-/**
- * Here we have a bunch of stuff which should invoked after configuration change
- * so that we can prepare some helper structures
- */
-void Engine::preCalculate() {
-#if EFI_TUNER_STUDIO
-	// we take 2 bytes of crc32, no idea if it's right to call it crc16 or not
-	// we have a hack here - we rely on the fact that engineMake is the first of three relevant fields
-	engine->outputChannels.engineMakeCodeNameCrc16 = crc32(engineConfiguration->engineMake, 3 * VEHICLE_INFO_SIZE);
-	engine->outputChannels.tuneCrc16 = crc32(config, sizeof(persistent_config_s));
-#endif /* EFI_TUNER_STUDIO */
-}
-
 #if EFI_SHAFT_POSITION_INPUT
 void Engine::OnTriggerStateProperState(efitick_t nowNt) {
 	rpmCalculator.setSpinningUp(nowNt);
