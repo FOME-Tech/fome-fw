@@ -143,12 +143,12 @@ struct_no_prefix output_channels_s
 	uint8_t wheelSpeedLr;@@GAUGE_NAME_WHEEL_SPEED_LR@@
 	uint8_t wheelSpeedRr;@@GAUGE_NAME_WHEEL_SPEED_RR@@
 
+! Errors
+	uint32_t orderingErrorCounter;;"",1, 0, 0, 0, 0
+
 ! todo: this not needed in light of TS_SIGNATURE but rusEFI console still uses it. Need to migrate
 ! rusEFI console from TS_FILE_VERSION to TS_SIGNATURE :(
 	uint32_t tsConfigVersion;;"", 1, 0, 0, 0, 0
-
-! Errors
-	uint32_t orderingErrorCounter;;"",1, 0, 0, 0, 0
 
 	uint16_t warningCounter;@@GAUGE_NAME_WARNING_COUNTER@@;"count",1, 0, 0, 0, 0
 	uint16_t lastErrorCode;@@GAUGE_NAME_WARNING_LAST@@;"error",1, 0, 0, 0, 0
