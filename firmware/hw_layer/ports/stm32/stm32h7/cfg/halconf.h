@@ -37,6 +37,8 @@
 
 #include "../../cfg/halconf_community.h"
 
+#define HAL_USE_CRC                 TRUE
+
 /**
  * @brief   Enables the cryptographic subsystem.
  */

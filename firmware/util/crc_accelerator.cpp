@@ -18,7 +18,7 @@ static void releaseCrc() {
 	crcMutex.clear(std::memory_order_release);
 }
 
-#if STM32_CRC_USE_CRC1
+#if HAL_USE_CRC
 static const CRCConfig crcCfg = {
 	.poly_size			= 32,
 	.poly				= 0x04C11DB7,
@@ -31,12 +31,12 @@ static const CRCConfig crcCfg = {
 
 static bool didInit = false;
 
-#endif // STM32_CRC_USE_CRC1
+#endif // HAL_USE_CRC
 
 Crc::Crc()
 	: m_acquiredExclusive(tryAcquireCrc())
 {
-	#if STM32_CRC_USE_CRC1
+	#if HAL_USE_CRC
 		if (m_acquiredExclusive) {
 			if (didInit) {
 				crcReset(&CRCD1);
@@ -46,7 +46,7 @@ Crc::Crc()
 				crcStart(&CRCD1, &crcCfg);
 			}
 		}
-	#endif // STM32_CRC_USE_CRC1
+	#endif // HAL_USE_CRC
 }
 
 Crc::~Crc() {
@@ -56,12 +56,12 @@ Crc::~Crc() {
 }
 
 void Crc::addData(const void* buf, size_t size) {
-	#if STM32_CRC_USE_CRC1
+	#if HAL_USE_CRC
 		if (m_acquiredExclusive) {
 			m_crc = crcCalc(&CRCD1, size, buf);
 			return;
 		}
-	#endif // STM32_CRC_USE_CRC1
+	#endif // HAL_USE_CRC
 
 	// fall through to software CRC if hardware not available
 	m_crc = crc32inc(buf, m_crc, size);

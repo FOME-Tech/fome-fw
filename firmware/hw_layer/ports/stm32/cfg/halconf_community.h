@@ -53,13 +53,6 @@
 #endif
 
 /**
- * @brief   Enables the CRC subsystem.
- */
-#if !defined(HAL_USE_CRC) || defined(__DOXYGEN__)
-#define HAL_USE_CRC                 TRUE
-#endif
-
-/**
  * @brief   Enables the USBH subsystem.
  */
 #if !defined(HAL_USE_USBH) || defined(__DOXYGEN__)

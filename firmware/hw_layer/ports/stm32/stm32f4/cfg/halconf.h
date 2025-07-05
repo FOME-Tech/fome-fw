@@ -37,6 +37,9 @@
 
 #include "../../cfg/halconf_community.h"
 
+// F4 doesn't suppport per-byte hardware CRC, so disable it
+#define HAL_USE_CRC                 FALSE
+
 /**
  * @brief   Enables the FLASH subsystem.
  */
