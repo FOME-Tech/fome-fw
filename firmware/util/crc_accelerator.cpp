@@ -6,13 +6,13 @@
 
 static std::atomic_flag crcMutex;
 
-bool tryAcquireCrc() {
+static bool tryAcquireCrc() {
 	// equivalent to
 	// return crcMutex.tryLock();
 	return !crcMutex.test_and_set(std::memory_order_acquire);
 }
 
-void releaseCrc() {
+static void releaseCrc() {
 	// equivalent to
 	// crcMutex.unlock();
 	crcMutex.clear(std::memory_order_release);
