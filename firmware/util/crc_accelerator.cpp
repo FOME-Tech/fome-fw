@@ -39,7 +39,7 @@ Crc::Crc()
 	#if HAL_USE_CRC
 		if (m_acquiredExclusive) {
 			if (didInit) {
-				crcReset(&CRCD1);
+				crcResetI(&CRCD1);
 			} else {
 				didInit = true;
 
@@ -58,7 +58,7 @@ Crc::~Crc() {
 void Crc::addData(const void* buf, size_t size) {
 	#if HAL_USE_CRC
 		if (m_acquiredExclusive) {
-			m_crc = crcCalc(&CRCD1, size, buf);
+			m_crc = crcCalcI(&CRCD1, size, buf);
 			return;
 		}
 	#endif // HAL_USE_CRC
