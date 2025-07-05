@@ -22,8 +22,6 @@ DDEFS += -DHAL_USE_FLASH=FALSE
 DDEFS += -DEFI_USE_UART_DMA=FALSE
 
 DDEFS += -DEFI_USB_SERIAL=TRUE -DHAL_USE_USB_MSD=FALSE
-# disable CAN
-DDEFS += -DEFI_CAN_SUPPORT=FALSE
 
 # Cache is disabled on F7, H7
 DDEFS += -DSTM32_SRAM2_NOCACHE=FALSE -DSTM32_NOCACHE_SRAM1_SRAM2=FALSE -DSTM32_NOCACHE_SRAM3=FALSE
@@ -195,8 +193,10 @@ CPPSRC = $(ALLCPPSRC) \
 	$(HW_LAYER_EMS_CPP) \
 	$(BOARDCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
+	$(PROJECT_DIR)/hw_layer/drivers/can/can_config.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_can.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_flash.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/$(MCU_BOOTLOADER_FLASH) \
