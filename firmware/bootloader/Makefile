@@ -197,6 +197,7 @@ CPPSRC = $(ALLCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
 	$(RUSEFI_LIB_CPP) \
+	$(PROJECT_DIR)/util/crc_accelerator.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_flash.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/$(MCU_BOOTLOADER_FLASH) \

@@ -75,6 +75,7 @@
 #include "trigger_scope.h"
 #include "electronic_throttle.h"
 #include "live_data.h"
+#include "crc_accelerator.h"
 
 #include <string.h>
 #include "bench_test.h"
@@ -173,7 +174,7 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
 
 	const uint8_t* start = getWorkingPageAddr() + offset;
 
-	uint32_t crc = crc32(start, count);
+	uint32_t crc = singleCrc(start, count);
 	efiPrintf("TS <- Get CRC offset %d count %d result %08x", offset, count, (unsigned int)crc);
 
 	crc = SWAP_UINT32(crc);
@@ -443,7 +444,7 @@ static int tsProcessOne(TsChannelBase* tsChannel) {
 
 	expectedCrc = SWAP_UINT32(expectedCrc);
 
-	uint32_t actualCrc = crc32(tsChannel->scratchBuffer, incomingPacketSize);
+	uint32_t actualCrc = singleCrc(tsChannel->scratchBuffer, incomingPacketSize);
 	if (actualCrc != expectedCrc) {
 		/* send error only if previously we were in sync */
 		if (tsChannel->in_sync) {

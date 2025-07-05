@@ -2,6 +2,7 @@
 
 #include "rusefi_lua.h"
 #include "lua_hooks.h"
+#include <rusefi/crc.h>
 
 #include "backup_ram.h"
 #include "fuel_math.h"

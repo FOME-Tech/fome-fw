@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "flash_int.h"
-
-#include <rusefi/crc.h>
+#include "crc_accelerator.h"
 
 extern "C" {
 	#include "boot.h"
@@ -52,11 +51,13 @@ blt_bool FlashVerifyChecksum() {
 	}
 
 	// part before checksum+size
-	uint32_t calcChecksum = crc32(start, checksumOffset);
+	Crc crc;
+	crc.addData(start, checksumOffset);
+
 	// part after checksum+size
-	calcChecksum = crc32inc(start + checksumOffset + 4, calcChecksum, imageSize - (checksumOffset + 4));
+	crc.addData(start + checksumOffset + 4, imageSize - (checksumOffset + 4));
 
 	uint32_t storedChecksum = *reinterpret_cast<uint32_t*>(start + checksumOffset);
 
-	return (calcChecksum == storedChecksum) ? BLT_TRUE : BLT_FALSE;
+	return (crc.getCrc() == storedChecksum) ? BLT_TRUE : BLT_FALSE;
 }
