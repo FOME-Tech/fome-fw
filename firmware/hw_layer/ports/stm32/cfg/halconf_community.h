@@ -153,7 +153,7 @@
  * @note    Disabling this option saves both code and data space.
  */
 #if !defined(CRC_USE_MUTUAL_EXCLUSION) || defined(__DOXYGEN__)
-#define CRC_USE_MUTUAL_EXCLUSION    TRUE
+#define CRC_USE_MUTUAL_EXCLUSION    FALSE
 #endif
 
 
