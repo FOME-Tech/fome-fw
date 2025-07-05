@@ -332,9 +332,9 @@ struct output_channels_s {
 	// offset 119
 	uint8_t wheelSpeedRr = (uint8_t)0;
 	// offset 120
-	uint32_t tsConfigVersion = (uint32_t)0;
-	// offset 124
 	uint32_t orderingErrorCounter = (uint32_t)0;
+	// offset 124
+	uint32_t tsConfigVersion = (uint32_t)0;
 	// Warning: counter
 	// count
 	// offset 128
@@ -794,8 +794,8 @@ static_assert(offsetof(output_channels_s, calibrationMode) == 116);
 static_assert(offsetof(output_channels_s, idleStepperTargetPosition) == 117);
 static_assert(offsetof(output_channels_s, wheelSpeedLr) == 118);
 static_assert(offsetof(output_channels_s, wheelSpeedRr) == 119);
-static_assert(offsetof(output_channels_s, tsConfigVersion) == 120);
-static_assert(offsetof(output_channels_s, orderingErrorCounter) == 124);
+static_assert(offsetof(output_channels_s, orderingErrorCounter) == 120);
+static_assert(offsetof(output_channels_s, tsConfigVersion) == 124);
 static_assert(offsetof(output_channels_s, warningCounter) == 128);
 static_assert(offsetof(output_channels_s, lastErrorCode) == 130);
 static_assert(offsetof(output_channels_s, recentErrorCode) == 132);

@@ -216,8 +216,8 @@ public class TsOutputs {
 	public static final Field IDLESTEPPERTARGETPOSITION = Field.create("IDLESTEPPERTARGETPOSITION", 117, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field WHEELSPEEDLR = Field.create("WHEELSPEEDLR", 118, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field WHEELSPEEDRR = Field.create("WHEELSPEEDRR", 119, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field TSCONFIGVERSION = Field.create("TSCONFIGVERSION", 120, FieldType.INT).setScale(1.0).setBaseOffset(0);
-	public static final Field ORDERINGERRORCOUNTER = Field.create("ORDERINGERRORCOUNTER", 124, FieldType.INT).setScale(1.0).setBaseOffset(0);
+	public static final Field ORDERINGERRORCOUNTER = Field.create("ORDERINGERRORCOUNTER", 120, FieldType.INT).setScale(1.0).setBaseOffset(0);
+	public static final Field TSCONFIGVERSION = Field.create("TSCONFIGVERSION", 124, FieldType.INT).setScale(1.0).setBaseOffset(0);
 	public static final Field WARNINGCOUNTER = Field.create("WARNINGCOUNTER", 128, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field LASTERRORCODE = Field.create("LASTERRORCODE", 130, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field RECENTERRORCODE1 = Field.create("RECENTERRORCODE1", 132, FieldType.INT16).setScale(1.0).setBaseOffset(0);
