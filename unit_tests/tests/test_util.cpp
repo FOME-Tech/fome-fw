@@ -7,6 +7,7 @@
 
 #include "pch.h"
 
+#include <rusefi/crc.h>
 #include <string.h>
 
 #include "cyclic_buffer.h"
