@@ -16,6 +16,7 @@ static void releaseCrc() {
 	// equivalent to
 	// crcMutex.unlock();
 	crcMutex.clear(std::memory_order_release);
+}
 
 #if STM32_CRC_USE_CRC1
 static const CRCConfig crcCfg = {
