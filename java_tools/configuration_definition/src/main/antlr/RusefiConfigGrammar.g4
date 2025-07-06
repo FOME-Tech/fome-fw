@@ -16,6 +16,7 @@ Struct: 'struct';
 StructNoPrefix: 'struct_no_prefix';
 EndStruct: 'end_struct';
 Definition: '#define';
+IncludeFile: 'include_file';
 Unused: 'unused';
 Custom: 'custom';
 Datatype: (('S'|'U')('08'|'16'|'32')) | 'F32';
@@ -72,6 +73,9 @@ restOfLine
     : ~ENDL*
     | 'true'
     | 'false';
+
+includeFile
+    : IncludeFile ~('\n')*;
 
 definition
     : Definition identifier integer
@@ -139,6 +143,7 @@ typedef: Custom identifier (enumTypedefSuffix | scalarTypedefSuffix | stringType
 // Root statement is allowed to appear in the root of the file
 rootStatement
     : definition
+    | includeFile
     | struct
     | typedef
     // TODO: remove me, and build multi-lambda-table in to the language

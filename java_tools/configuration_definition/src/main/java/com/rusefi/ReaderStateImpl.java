@@ -10,6 +10,8 @@ import com.rusefi.util.SystemOut;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -31,6 +33,7 @@ public class ReaderStateImpl implements ReaderState {
     private static final String END_STRUCT = "end_struct";
     private static final String STRUCT_NO_PREFIX = "struct_no_prefix ";
     private static final String STRUCT = "struct ";
+    private static final String INCLUDE_FILE = "include_file";
     // used to update other files
     private final List<String> inputFiles = new ArrayList<>();
     private final Stack<ConfigStructureImpl> stack = new Stack<>();
@@ -215,11 +218,11 @@ public class ReaderStateImpl implements ReaderState {
         for (ConfigurationConsumer consumer : consumers)
             consumer.startFile();
 
+        List<String> lines = readConfig(definitionReader);
+
         int lineIndex = 0;
-        String line;
-        while ((line = definitionReader.readLine()) != null) {
+        for (final String line : lines) {
             lineIndex++;
-            line = ToolUtil.trimLine(line);
             /**
              * we should ignore empty lines and comments
              */
@@ -255,6 +258,21 @@ public class ReaderStateImpl implements ReaderState {
         for (ConfigurationConsumer consumer : consumers)
             consumer.endFile();
         ensureEmptyAfterProcessing();
+    }
+
+    private static @NotNull List<String> readConfig(BufferedReader definitionReader) throws IOException {
+        List<String> lines = new ArrayList<>();
+        String line;
+        while ((line = definitionReader.readLine()) != null) {
+            line = ToolUtil.trimLine(line);
+            if (line.startsWith(INCLUDE_FILE)) {
+                String fileName = line.substring(INCLUDE_FILE.length()).trim();
+                lines.addAll(Files.readAllLines(Paths.get(fileName)));
+            } else {
+                lines.add(line);
+            }
+        }
+        return lines;
     }
 
     private void addBitPadding() {
