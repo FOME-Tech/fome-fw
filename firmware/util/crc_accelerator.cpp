@@ -4,9 +4,16 @@
 
 #include <rusefi/crc.h>
 
+#define USE_HW_CRC_THRESHOLD 150
+
 static std::atomic_flag crcMutex;
 
-static bool tryAcquireCrc() {
+static bool tryAcquireCrc(size_t estimatedWorkSize) {
+	// For small jobs, don't use HW at all
+	if (estimatedWorkSize < USE_HW_CRC_THRESHOLD) {
+		return false;
+	}
+
 	// equivalent to
 	// return crcMutex.tryLock();
 	return !crcMutex.test_and_set(std::memory_order_acquire);
@@ -33,8 +40,8 @@ static bool didInit = false;
 
 #endif // HAL_USE_CRC
 
-Crc::Crc()
-	: m_acquiredExclusive(tryAcquireCrc())
+Crc::Crc(size_t estimatedWorkSize)
+	: m_acquiredExclusive(tryAcquireCrc(estimatedWorkSize))
 {
 	#if HAL_USE_CRC
 		if (m_acquiredExclusive) {

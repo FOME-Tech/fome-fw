@@ -2,7 +2,11 @@
 
 class Crc final {
 public:
-	Crc();
+	// Constructor passing an argument that gives the estimated number
+	// of bytes that will be checksummed. MAY be used to select an optimal
+	// implementation given that information.
+	Crc(size_t estimatedWorkSize = 10000);
+
 	~Crc();
 
 	void addData(const void* buf, size_t size);
@@ -14,7 +18,7 @@ private:
 };
 
 inline uint32_t singleCrc(const void* buf, size_t size) {
-	Crc crc;
+	Crc crc(size);
 	crc.addData(buf, size);
 	return crc.getCrc();
 }
