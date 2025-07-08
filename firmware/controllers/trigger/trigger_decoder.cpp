@@ -571,8 +571,11 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			nextTriggerEvent();
 
 			onShaftSynchronization(wasSynchronized, nowNt, triggerShape);
-		} else {	/* if (!isSynchronizationPoint) */
-			nextTriggerEvent();
+		} else {
+			// If not the sync point but we are synchronized, just increment tooth index.
+			if (getShaftSynchronized()) {
+				nextTriggerEvent();
+			}
 		}
 
 		for (int i = triggerShape.gapTrackingLength; i > 0; i--) {
