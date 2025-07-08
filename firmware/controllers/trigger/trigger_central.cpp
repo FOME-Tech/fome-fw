@@ -350,8 +350,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		vvtPos.angle = vvtPosition;
 		vvtPos.t.reset(nowNt);
 	} else {
-		vvtPos.angle = 0;
-
 		// Reset the timer to long ago to force-invalidate the VVT position
 		vvtPos.t.reset(INT64_MIN / 8);
 	}
