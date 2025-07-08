@@ -50,7 +50,6 @@ expected<angle_t> TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camI
 		return unexpected;
 	}
 
-	// TODO: return unexpected if timed out
 	auto& vvt = vvtPosition[bankIndex][camIndex];
 
 	if (vvt.t.hasElapsedSec(1)) {
