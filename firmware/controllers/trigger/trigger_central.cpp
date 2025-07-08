@@ -348,10 +348,13 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	auto& vvtPos = tc->vvtPosition[bankIndex][camIndex];
 	if (tc->triggerState.hasSynchronizedPhase()) {
 		vvtPos.angle = vvtPosition;
+		vvtPos.t.reset(nowNt);
 	} else {
 		vvtPos.angle = 0;
+
+		// Reset the timer to long ago to force-invalidate the VVT position
+		vvtPos.t.reset(INT64_MIN / 8);
 	}
-	vvtPos.t.reset(nowNt);
 }
 
 int triggerReentrant = 0;
