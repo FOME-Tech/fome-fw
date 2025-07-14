@@ -180,6 +180,9 @@ public:
 	// Keep track of the last time we got a valid trigger event
 	Timer m_lastEventTimer;
 
+	// Number of teeth skipped during startup (see triggerSkipPulses)
+	size_t m_skipTeethCount = 0;
+
 	/**
 	 * this is based on engineSnifferRpmThreshold settings and current RPM
 	 */

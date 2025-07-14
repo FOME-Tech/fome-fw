@@ -572,7 +572,18 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 	isSpinningJustForWatchdog = true;
 
+	// If we've gone a long time without a tooth, reset the tooth skip counter
+	if (m_lastEventTimer.hasElapsedSec(1)) {
+		m_skipTeethCount = 0;
+	}
+
 	m_lastEventTimer.reset(timestamp);
+
+	// If we haven't skipped enough teeth yet, skip this one
+	if (m_skipTeethCount < engineConfiguration->triggerSkipPulses) {
+		m_skipTeethCount++;
+		return;
+	}
 
 	// Decode the trigger!
 	auto decodeResult = triggerState.decodeTriggerEvent(

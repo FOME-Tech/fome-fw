@@ -1212,7 +1212,10 @@ tChargeMode_e tChargeMode;
 	int16_t coastingFuelCutTps;Throttle position below which fuel cut is active. With an electronic throttle enabled, this checks against pedal position.;"%", 1, 0, 0, 20, 0
 	int16_t coastingFuelCutClt;Fuel cutoff is disabled when the engine is cold.;"C", 1, 0, -100, 100, 0
 
-	int16_t unused1892
+	uint8_t triggerSkipPulses;Some trigger hardware may generate noise when the engine starts moving. Set this to ignore the first pulses when the engine starts moving.;"count", 1, 0, 0, 250, 0
+
+	uint8_t unused1769
+
 	int16_t coastingFuelCutMap;MAP value above which fuel injection is re-enabled.;"kPa", 1, 0, 0, 250, 0
 
 	linear_sensor_s highPressureFuel;

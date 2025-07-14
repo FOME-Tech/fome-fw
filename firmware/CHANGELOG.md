@@ -42,6 +42,7 @@ or
  - Allow selection of DTC severity #625
  - AC pressure switch & startup delay #623
  - Y axis override for VVT target
+ - Feature to skip initial trigger pulses for noisy triggers
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
