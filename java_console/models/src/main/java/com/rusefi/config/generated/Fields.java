@@ -1158,7 +1158,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.09.f407-discovery.2449626308";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.14.f407-discovery.3540423571";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1320;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -2035,7 +2035,8 @@ public class Fields {
 	public static final Field COASTINGFUELCUTRPMLOW = Field.create("COASTINGFUELCUTRPMLOW", 1762, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field COASTINGFUELCUTTPS = Field.create("COASTINGFUELCUTTPS", 1764, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field COASTINGFUELCUTCLT = Field.create("COASTINGFUELCUTCLT", 1766, FieldType.INT16).setScale(1.0).setBaseOffset(0);
-	public static final Field UNUSED1892 = Field.create("UNUSED1892", 1768, FieldType.INT16).setScale(1.0).setBaseOffset(0);
+	public static final Field TRIGGERSKIPPULSES = Field.create("TRIGGERSKIPPULSES", 1768, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field UNUSED1769 = Field.create("UNUSED1769", 1769, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field COASTINGFUELCUTMAP = Field.create("COASTINGFUELCUTMAP", 1770, FieldType.INT16).setScale(1.0).setBaseOffset(0);
 	public static final Field HIGHPRESSUREFUEL_HWCHANNEL = Field.create("HIGHPRESSUREFUEL_HWCHANNEL", 1772, FieldType.INT8, adc_channel_e).setScale(1.0).setBaseOffset(0);
 	public static final Field HIGHPRESSUREFUEL_ALIGNMENTFILL_AT_1 = Field.create("HIGHPRESSUREFUEL_ALIGNMENTFILL_AT_1", 1773, FieldType.INT8).setScale(1.0).setBaseOffset(0);
