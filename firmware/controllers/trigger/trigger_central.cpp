@@ -632,7 +632,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	}
 
 	// Update engine RPM
-	rpmShaftPositionCallback(signal, triggerIndexForListeners, timestamp);
+	rpmShaftPositionCallback(triggerIndexForListeners, timestamp);
 
 	// Schedule the TDC mark
 	tdcMarkCallback(triggerIndexForListeners, timestamp);
