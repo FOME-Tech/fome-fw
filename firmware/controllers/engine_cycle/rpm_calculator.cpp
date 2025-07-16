@@ -284,7 +284,6 @@ void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(
-		engine->triggerCentral.triggerState.currentCycle.current_index,
 		engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails,
 		trgEventIndex, nowNt);
 

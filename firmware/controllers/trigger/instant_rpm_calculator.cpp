@@ -112,10 +112,8 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 }
 
 void InstantRpmCalculator::updateInstantRpm(
-		uint32_t current_index,
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 	uint32_t index, efitick_t nowNt) {
-
 	m_instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index,
 					   nowNt);
 }
