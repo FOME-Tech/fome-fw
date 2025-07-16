@@ -220,7 +220,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		prepareCylinderIgnitionSchedule(dwellAngleDuration, sparkDwell, event);
 	}
 
-	engine->onSparkFireKnockSense(event->cylinderNumber, nowNt);
+	engine->onSparkFireKnockSense(event->cylinderNumber);
 }
 
 void turnSparkPinHigh(IgnitionContext ctx) {

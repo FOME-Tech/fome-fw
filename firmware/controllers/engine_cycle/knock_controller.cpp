@@ -137,7 +137,7 @@ static uint8_t cylinderNumberCopy;
 
 // Called when its time to start listening for knock
 // Does some math, then hands off to the driver to start any sampling hardware
-void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
+void Engine::onSparkFireKnockSense(uint8_t cylinderNumber) {
 	cylinderNumberCopy = cylinderNumber;
 
 #if EFI_SOFTWARE_KNOCK
@@ -153,7 +153,5 @@ void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
 
 	// Call the driver to begin sampling
 	onStartKnockSampling(cylinderNumberCopy, samplingSeconds, channel);
-#else
-	UNUSED(nowNt);
 #endif
 }

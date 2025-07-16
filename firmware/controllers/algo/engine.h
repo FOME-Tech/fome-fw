@@ -372,7 +372,7 @@ public:
 	 */
 	bool isMainRelayEnabled() const;
 
-	void onSparkFireKnockSense(uint8_t cylinderIndex, efitick_t nowNt);
+	void onSparkFireKnockSense(uint8_t cylinderIndex);
 
 #if EFI_UNIT_TEST
 	AirmassModelBase* mockAirmassModel = nullptr;
