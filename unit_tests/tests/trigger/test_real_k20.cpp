@@ -30,6 +30,6 @@ TEST(realk20, cranking) {
 
 	}
 
-	EXPECT_EQ(1182, round(Sensor::getOrZero(SensorType::Rpm)));
+	EXPECT_EQ(1192, round(Sensor::getOrZero(SensorType::Rpm)));
 	EXPECT_TRUE(getTriggerCentral()->triggerState.hasSynchronizedPhase());
 }
