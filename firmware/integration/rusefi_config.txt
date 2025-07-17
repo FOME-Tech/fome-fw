@@ -1777,6 +1777,13 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	int8_t[8] airmassToTimingBins;;"mg", 1, 0, -100, 100, 0
 	int8_t[8] airmassToTimingValues;;"deg", 1, 0, -30, 30, 0
+
+	struct VvtOpenLoop
+		int8_t[8] bins;;"deg C", 1, 0, -40, 120, 0
+		uint8_t[8] autoscale values;;"%", 0.5, 0, 0, 100, 0
+	end_struct
+
+	VvtOpenLoop[2 iterate] vvtOpenLoop
 end_struct
 
 ! Pedal Position Sensor

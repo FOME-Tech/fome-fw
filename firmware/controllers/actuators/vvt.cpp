@@ -135,8 +135,11 @@ void VvtController::setTargetOffset(float targetOffset) {
 }
 
 expected<percent_t> VvtController::getOpenLoop(angle_t /* target */) {
-	// TODO: could/should we do open loop?
-	return 0;
+	const auto& bins = config->vvtOpenLoop[m_cam].bins;
+	const auto& values = config->vvtOpenLoop[m_cam].values;
+	auto clt = Sensor::getOrZero(SensorType::Clt);
+
+	return interpolate2d(clt, bins, values);
 }
 
 expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observation) {
