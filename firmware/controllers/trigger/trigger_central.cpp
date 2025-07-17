@@ -314,10 +314,16 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	// Only do engine sync using one cam, other cams just provide VVT position.
 	if (index == engineConfiguration->engineSyncCam) {
+		bool hadFullSyncBefore = tc->triggerState.hasSynchronizedPhase();
 		angle_t crankOffset = adjustCrankPhase(camIndex);
+		bool hadFullSyncAfter = tc->triggerState.hasSynchronizedPhase();
+
+		if (!hadFullSyncBefore && hadFullSyncAfter) {
 		// vvtPosition was calculated against wrong crank zero position. Now that we have adjusted crank position we
 		// shall adjust vvt position as well
 		vvtPosition -= crankOffset;
+		}
+
 		vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
 
 		// this could be just an 'if' but let's have it expandable for future use :)
