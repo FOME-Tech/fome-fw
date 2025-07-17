@@ -190,7 +190,7 @@ public:
 	bool isEngineSnifferEnabled = false;
 
 private:
-	void decodeMapCam(efitick_t nowNt, float currentPhase);
+	void decodeMapCam(efitick_t nowNt, EngPhase currentPhase);
 
 	bool isToothExpectedNow(efitick_t timestamp);
 

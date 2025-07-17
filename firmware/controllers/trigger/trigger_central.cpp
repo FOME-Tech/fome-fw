@@ -459,11 +459,11 @@ static void reportEventToWaveChart(TriggerEvent ckpSignalType, int triggerEventI
 	}
 }
 
-void TriggerCentral::decodeMapCam(efitick_t timestamp, float currentPhase) {
+void TriggerCentral::decodeMapCam(efitick_t timestamp, EngPhase currentPhase) {
 	if (engineConfiguration->vvtMode[0] == VVT_MAP_V_TWIN &&
 			Sensor::getOrZero(SensorType::Rpm) < engineConfiguration->cranking.rpm) {
 		// we are trying to figure out which 360 half of the total 720 degree cycle is which, so we compare those in 360 degree sense.
-		auto toothAngle360 = currentPhase;
+		auto toothAngle360 = currentPhase.angle;
 		while (toothAngle360 >= 360) {
 			toothAngle360 -= 360;
 		}
@@ -668,7 +668,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	mainTriggerCallback(triggerIndexForListeners, timestamp, currentEngineDecodedPhase, nextEnginePhase.angle);
 
 	// Decode the MAP based "cam" sensor
-	decodeMapCam(timestamp, currentEngineDecodedPhase);
+	decodeMapCam(timestamp, currentEnginePhase);
 }
 
 static void triggerShapeInfo() {
