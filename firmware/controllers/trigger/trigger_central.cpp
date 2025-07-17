@@ -319,9 +319,9 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		bool hadFullSyncAfter = tc->triggerState.hasSynchronizedPhase();
 
 		if (!hadFullSyncBefore && hadFullSyncAfter) {
-		// vvtPosition was calculated against wrong crank zero position. Now that we have adjusted crank position we
-		// shall adjust vvt position as well
-		vvtPosition -= crankOffset;
+			// vvtPosition was calculated against wrong crank zero position. Now that we have adjusted crank position we
+			// shall adjust vvt position as well
+			vvtPosition -= crankOffset;
 		}
 
 		vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
