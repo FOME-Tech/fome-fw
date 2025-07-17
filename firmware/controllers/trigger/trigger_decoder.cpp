@@ -191,24 +191,25 @@ int TriggerDecoderBase::getCurrentIndex() const {
 angle_t PrimaryTriggerDecoder::syncEnginePhase(int divider, int remainder, angle_t engineCycle) {
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, divider > 1, "syncEnginePhase divider", false);
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, remainder < divider, "syncEnginePhase remainder", false);
-	angle_t totalShift = 0;
-	while (getCrankSynchronizationCounter() % divider != remainder) {
-		/**
-		 * we are here if we've detected the cam sensor within the wrong crank phase
-		 * let's increase the trigger event counter, that would adjust the state of
-		 * virtual crank-based trigger
-		 */
-		crankSynchronizationCounter++;
-		totalShift += engineCycle / divider;
+
+	auto currentRemainder = getCrankSynchronizationCounter() % divider;
+	auto stepsToAdd = remainder - currentRemainder;
+
+	if (stepsToAdd < 0) {
+		stepsToAdd += divider;
 	}
+
+	auto totalShift = stepsToAdd * engineCycle / divider;
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
 
 		// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
 		m_hasSynchronizedPhase = true;
-	
-		if (totalShift > 0) {
+
+		if (stepsToAdd != 0) {
+			crankSynchronizationCounter += stepsToAdd;
+
 			m_phaseAdjustment = totalShift;
 			m_camResyncCounter++;
 		}
