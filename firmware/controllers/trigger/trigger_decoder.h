@@ -90,10 +90,6 @@ public:
 	 */
 	int getCurrentIndex() const;
 	int getCrankSynchronizationCounter() const;
-	/**
-	 * this is important for crank-based virtual trigger and VVT magic
-	 */
-	void incrementShaftSynchronizationCounter();
 
 #if EFI_UNIT_TEST
 	/**
