@@ -185,9 +185,6 @@ private:
 	Timer m_timeSinceDecodeError;
 };
 
-/**
- * the reason for sub-class is simply to save RAM but not having statistics in the trigger initialization instance
- */
 class PrimaryTriggerDecoder : public TriggerDecoderBase, public trigger_state_primary_s {
 public:
 	PrimaryTriggerDecoder(const char* name);
@@ -196,6 +193,7 @@ public:
 	void resetHasFullSync() {
 		// If this trigger doesn't need disambiguation, we already have phase sync
 		m_hasSynchronizedPhase = !m_needsDisambiguation;
+		m_phaseAdjustment = 0;
 	}
 
 	angle_t syncEnginePhase(int divider, int remainder, angle_t engineCycle);
