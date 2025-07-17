@@ -202,11 +202,16 @@ angle_t PrimaryTriggerDecoder::syncEnginePhase(int divider, int remainder, angle
 		totalShift += engineCycle / divider;
 	}
 
-	// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
-	m_hasSynchronizedPhase = true;
+	{
+		chibios_rt::CriticalSectionLocker csl;
 
-	if (totalShift > 0) {
-		camResyncCounter++;
+		// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
+		m_hasSynchronizedPhase = true;
+	
+		if (totalShift > 0) {
+			m_phaseAdjustment = totalShift;
+			m_camResyncCounter++;
+		}
 	}
 
 	return totalShift;

@@ -33,7 +33,7 @@ TEST(Toyota3ToothCam, RealEngineRunning) {
 		}
 	}
 
-	EXPECT_EQ(getTriggerCentral()->triggerState.camResyncCounter, 0);
+	EXPECT_EQ(getTriggerCentral()->triggerState.m_camResyncCounter, 0);
 
 	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0), 0, 1);
 	ASSERT_EQ(3078, round(Sensor::getOrZero(SensorType::Rpm)));
@@ -99,7 +99,7 @@ static void test3tooth(size_t revsBeforeVvt, size_t teethBeforeVvt, bool expectS
 	// should set VVT position
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
-	EXPECT_EQ(expectCamResyncCounter, getTriggerCentral()->triggerState.camResyncCounter);
+	EXPECT_EQ(expectCamResyncCounter, getTriggerCentral()->triggerState.m_camResyncCounter);
 	EXPECT_EQ(expectSync, getTriggerCentral()->triggerState.hasSynchronizedPhase());
 
 	if (expectSync) {
