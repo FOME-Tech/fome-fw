@@ -12,13 +12,14 @@
 using ::testing::_;
 
 // Define some helpers for not-cut and cut
-#define EXPECT_NORMAL() EXPECT_FLOAT_EQ(normalInjDuration, engine->engineState.injectionDuration)
-#define EXPECT_CUT() EXPECT_FLOAT_EQ(0, engine->engineState.injectionDuration)
+#define EXPECT_NORMAL() EXPECT_FLOAT_EQ(normalInjMass, engine->cylinders[0].getInjectionMass())
+#define EXPECT_CUT() EXPECT_FLOAT_EQ(0, engine->cylinders[0].getInjectionMass())
 
 TEST(fuelCut, coasting) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
@@ -45,7 +46,7 @@ TEST(fuelCut, coasting) {
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
-	const float normalInjDuration = 1.5f;
+	const float normalInjMass = 0.1f;
 	/*
 	 * We need to pass through all rpm changes (high-mid-low-mid-high) because of state-machine
 	 */
@@ -133,7 +134,8 @@ TEST(fuelCut, coasting) {
 TEST(fuelCut, delay) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
@@ -163,7 +165,7 @@ TEST(fuelCut, delay) {
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
-	const float normalInjDuration = 1.5f;
+	const float normalInjMass = 0.1f;
 
 	setTimeNowUs(1e6);
 
@@ -203,7 +205,8 @@ TEST(fuelCut, delay) {
 TEST(fuelCut, mapTable) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
@@ -235,7 +238,7 @@ TEST(fuelCut, mapTable) {
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
-	const float normalInjDuration = 1.5f;
+	const float normalInjMass = 0.1f;
 
 	// MAP > threshold, expect fueling
 	eth.engine.periodicFastCallback();
@@ -260,7 +263,8 @@ TEST(fuelCut, mapTable) {
 TEST(fuelCut, clutch) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
@@ -283,7 +287,7 @@ TEST(fuelCut, clutch) {
 	Sensor::setMockValue(SensorType::Map, 0);
 	eth.moveTimeForwardUs(1000);
 
-	const float normalInjDuration = 1.5f;
+	const float normalInjMass = 0.1f;
 	eth.engine.periodicFastCallback();
 
 	// feature disabled, all fuel cut conditions met
