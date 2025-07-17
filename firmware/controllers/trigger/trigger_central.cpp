@@ -647,25 +647,25 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 	// TODO: is this logic to compute next trigger tooth angle correct?
 	auto nextToothIndex = triggerIndexForListeners;
-	angle_t nextPhase = 0;
+	TrgPhase nextPhase;
 
 	do {
 		// I don't love this.
 		nextToothIndex = (nextToothIndex + 1) % engineCycleEventCount;
-		nextPhase = getTriggerCentral()->triggerFormDetails.eventAngles[nextToothIndex] - tdcPosition();
-		wrapAngle(nextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
-	} while (nextPhase == currentEngineDecodedPhase);
+		nextPhase = { getTriggerCentral()->triggerFormDetails.eventAngles[nextToothIndex] };
+		wrapAngle(nextPhase.angle, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
+	} while (nextPhase == currentTrgPhase);
 
-	float expectNextPhase = nextPhase + tdcPosition();
-	wrapAngle(expectNextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
-	expectedNextPhase = TrgPhase{ expectNextPhase };
+	expectedNextPhase = nextPhase;
 
 	if (engine->rpmCalculator.getCachedRpm() > 0 && triggerIndexForListeners == 0) {
 		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
 	}
 
+	auto nextEnginePhase = toEngPhase(nextPhase);
+
 	// Handle ignition and injection
-	mainTriggerCallback(triggerIndexForListeners, timestamp, currentEngineDecodedPhase, nextPhase);
+	mainTriggerCallback(triggerIndexForListeners, timestamp, currentEngineDecodedPhase, nextEnginePhase.angle);
 
 	// Decode the MAP based "cam" sensor
 	decodeMapCam(timestamp, currentEngineDecodedPhase);
