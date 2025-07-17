@@ -35,6 +35,11 @@ WaveChart waveChart;
 
 #if EFI_SHAFT_POSITION_INPUT
 
+static EngPhase toEngPhase(const TrgPhase& trgPhase) {
+	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
+	return { wrapAngleMethod(trgPhase.angle - tdcPosition(), "currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
+}
+
 TriggerCentral::TriggerCentral() :
 		vvtEventRiseCounter(),
 		vvtEventFallCounter(),
@@ -63,7 +68,7 @@ expected<angle_t> TriggerCentral::getVVTPosition(uint8_t bankIndex, uint8_t camI
 /**
  * @return angle since trigger synchronization point, NOT angle since TDC.
  */
-expected<float> TriggerCentral::getCurrentEnginePhase(efitick_t nowNt) const {
+expected<TrgPhase> TriggerCentral::getCurrentEnginePhase(efitick_t nowNt) const {
 	floatus_t oneDegreeUs = engine->rpmCalculator.oneDegreeUs;
 
 	if (std::isnan(oneDegreeUs)) {
@@ -71,7 +76,7 @@ expected<float> TriggerCentral::getCurrentEnginePhase(efitick_t nowNt) const {
 	}
 
 	float elapsed;
-	float toothPhase;
+	TrgPhase toothPhase;
 
 	{
 		// under lock to avoid mismatched tooth phase and time
@@ -263,20 +268,19 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		vvtDecoder.logEdgeCounters(isRising);
 	}
 
-	auto currentPhase = tc->getCurrentEnginePhase(nowNt);
-	if (!currentPhase) {
+	auto currentTrgPhase = tc->getCurrentEnginePhase(nowNt);
+	if (!currentTrgPhase) {
 		// If we couldn't resolve engine speed (yet primary trigger is sync'd), this
 		// probably means that we have partial crank sync, but not RPM information yet
 		return;
 	}
 
-	angle_t angleFromPrimarySyncPoint = currentPhase.Value;
 	// convert trigger cycle angle into engine cycle angle
-	angle_t currentPosition = angleFromPrimarySyncPoint - tdcPosition();
+	auto currentEnginePhase = toEngPhase(currentTrgPhase.Value);
 	// https://github.com/rusefi/rusefi/issues/1713 currentPosition could be negative that's expected
 
 #if EFI_UNIT_TEST
-	tc->currentVVTEventPosition[bankIndex][camIndex] = currentPosition;
+	tc->currentVVTEventPosition[bankIndex][camIndex] = currentEnginePhase.angle;
 #endif // EFI_UNIT_TEST
 
 	if (isVvtWithRealDecoder
@@ -285,7 +289,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		return;
 	}
 
-	auto vvtPosition = engineConfiguration->vvtOffsets[bankIndex * CAMS_PER_BANK + camIndex] - currentPosition;
+	auto vvtPosition = engineConfiguration->vvtOffsets[bankIndex * CAMS_PER_BANK + camIndex] - currentEnginePhase.angle;
 
 	switch(engineConfiguration->vvtMode[camIndex]) {
 	case VVT_TOYOTA_3_TOOTH: {
@@ -331,7 +335,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			break;
 		}
 
-		if (std::abs(angleFromPrimarySyncPoint) < 7) {
+		if (std::abs(currentTrgPhase.Value.angle) < 7) {
 			/**
 			 * we prefer not to have VVT sync right at trigger sync so that we do not have phase detection error if things happen a bit in
 			 * wrong order due to belt flex or else
@@ -616,10 +620,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	reportEventToWaveChart(signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
 
 	// Look up this tooth's angle from the sync point. If this tooth is the sync point, we'll get 0 here.
-	auto currentPhaseFromSyncPoint = getTriggerCentral()->triggerFormDetails.eventAngles[triggerIndexForListeners];
-
-	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
-	currentEngineDecodedPhase = wrapAngleMethod(currentPhaseFromSyncPoint - tdcPosition(), "currentEnginePhase", ObdCode::CUSTOM_ERR_6555);
+	TrgPhase currentTrgPhase{ getTriggerCentral()->triggerFormDetails.eventAngles[triggerIndexForListeners] };
 
 	// Record precise time and phase of the engine. This is used for VVT decode, and to check that the
 	// trigger pattern selected matches reality (ie, we check the next tooth is where we think it should be)
@@ -628,7 +629,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		chibios_rt::CriticalSectionLocker csl;
 
 		m_lastToothTimer.reset(timestamp);
-		m_lastToothPhaseFromSyncPoint = currentPhaseFromSyncPoint;
+		m_lastToothPhaseFromSyncPoint = currentTrgPhase;
 	}
 
 	// Update engine RPM
@@ -640,6 +641,9 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 #if EFI_LOGIC_ANALYZER
 	waTriggerEventListener(signal, triggerIndexForListeners, timestamp);
 #endif
+
+	EngPhase currentEnginePhase = toEngPhase(currentTrgPhase);
+	currentEngineDecodedPhase = currentEnginePhase.angle;
 
 	// TODO: is this logic to compute next trigger tooth angle correct?
 	auto nextToothIndex = triggerIndexForListeners;
@@ -654,7 +658,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 	float expectNextPhase = nextPhase + tdcPosition();
 	wrapAngle(expectNextPhase, "nextEnginePhase", ObdCode::CUSTOM_ERR_6555);
-	expectedNextPhase = expectNextPhase;
+	expectedNextPhase = TrgPhase{ expectNextPhase };
 
 	if (engine->rpmCalculator.getCachedRpm() > 0 && triggerIndexForListeners == 0) {
 		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();

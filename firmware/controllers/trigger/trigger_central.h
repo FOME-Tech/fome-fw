@@ -16,6 +16,7 @@
 #include "pin_repository.h"
 #include "local_version_holder.h"
 #include "cyclic_buffer.h"
+#include "engine_phase_angle.h"
 
 #define MAP_CAM_BUFFER 64
 
@@ -110,7 +111,7 @@ public:
 
 	bool isTriggerDecoderError();
 
-	expected<float> getCurrentEnginePhase(efitick_t nowNt) const;
+	expected<TrgPhase> getCurrentEnginePhase(efitick_t nowNt) const;
 
 	float getSecondsSinceTriggerEvent(efitick_t nowNt) const {
 		return m_lastEventTimer.getElapsedSeconds(nowNt);
@@ -196,11 +197,11 @@ private:
 	// Time since the last tooth
 	Timer m_lastToothTimer;
 	// Phase of the last tooth relative to the sync point
-	float m_lastToothPhaseFromSyncPoint;
+	TrgPhase m_lastToothPhaseFromSyncPoint;
 
 	// At what engine phase do we expect the next tooth to arrive?
 	// Used for checking whether your trigger pattern is correct.
-	expected<float> expectedNextPhase = unexpected;
+	expected<TrgPhase> expectedNextPhase = unexpected;
 };
 
 void triggerInfo(void);

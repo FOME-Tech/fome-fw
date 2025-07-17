@@ -27,7 +27,7 @@ static bool getAcrState() {
 		// Enough revs have elapsed that we're done with ACR
 		return false;
 	} else if (revCount == engineConfiguration->acrRevolutions) {
-		float wrappedPhase = currentPhase.Value > 360 ? currentPhase.Value - 360 : currentPhase.Value;
+		float wrappedPhase = currentPhase.Value.angle > 360 ? currentPhase.Value.angle - 360 : currentPhase.Value.angle;
 
 		// We're on the rev where ACR should be disabled part way through
 		if (wrappedPhase > engineConfiguration->acrDisablePhase) {
