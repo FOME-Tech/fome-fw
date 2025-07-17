@@ -37,7 +37,11 @@ WaveChart waveChart;
 
 static EngPhase toEngPhase(const TrgPhase& trgPhase) {
 	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
-	return { wrapAngleMethod(trgPhase.angle - tdcPosition(), "currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
+	return { wrapAngleMethod(
+		trgPhase.angle
+			- tdcPosition()
+			+ getTriggerCentral()->triggerState.m_phaseAdjustment,
+		"currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
 }
 
 TriggerCentral::TriggerCentral() :
