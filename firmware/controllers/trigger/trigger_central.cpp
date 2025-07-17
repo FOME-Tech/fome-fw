@@ -36,11 +36,14 @@ WaveChart waveChart;
 #if EFI_SHAFT_POSITION_INPUT
 
 static EngPhase toEngPhase(const TrgPhase& trgPhase) {
+	auto tc = getTriggerCentral();
+
 	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
 	return { wrapAngleMethod(
 		trgPhase.angle
-			- tdcPosition()
-			+ getTriggerCentral()->triggerState.m_phaseAdjustment,
+			- tc->triggerShape.tdcPosition
+			- engineConfiguration->globalTriggerAngleOffset
+			+ tc->triggerState.m_phaseAdjustment,
 		"currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
 }
 
