@@ -141,7 +141,7 @@ void AngleBasedEvent::setAngle(EngPhase angle) {
 }
 
 bool AngleBasedEvent::shouldSchedule(const EnginePhaseInfo& phase) const {
-	return isPhaseInRange(eventPhase, phase.currentEngPhase, phase.nextEngPhase);
+	return isPhaseInRange(eventPhase, phase);
 }
 
 float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {

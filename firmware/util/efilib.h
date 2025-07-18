@@ -80,14 +80,7 @@ bool strEqual(const char *str1, const char *str2);
 
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed);
 
-bool isPhaseInRange(float test, float current, float next);
-
 #ifdef __cplusplus
-}
-
-template <typename TPhase>
-bool isPhaseInRange(const TPhase& test, const TPhase& current, const TPhase& next) {
-	return isPhaseInRange(test.angle, current.angle, next.angle);
 }
 
 #include <cstddef>

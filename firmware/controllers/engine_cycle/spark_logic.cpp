@@ -420,7 +420,7 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 
 				// Check whether this event hits 360 degrees out from now (ie, wasted spark),
 				// and if so, twiddle the dwell and spark angles so it happens now instead
-				isOddCylWastedEvent = isPhaseInRange(EngPhase{dwellAngleWastedEvent}, phase.currentEngPhase, phase.nextEngPhase);
+				isOddCylWastedEvent = isPhaseInRange(EngPhase{dwellAngleWastedEvent}, phase);
 
 				if (isOddCylWastedEvent) {
 					dwellAngle = dwellAngleWastedEvent;
@@ -429,7 +429,7 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 				}
 			}
 
-			if (!isOddCylWastedEvent && !isPhaseInRange(EngPhase{dwellAngle}, phase.currentEngPhase, phase.nextEngPhase)) {
+			if (!isOddCylWastedEvent && !isPhaseInRange(EngPhase{dwellAngle}, phase)) {
 				continue;
 			}
 

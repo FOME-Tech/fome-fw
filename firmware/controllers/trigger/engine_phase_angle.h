@@ -41,3 +41,13 @@ struct EnginePhaseInfo {
 	EngPhase currentEngPhase;
 	EngPhase nextEngPhase;
 };
+
+bool isPhaseInRange(float test, float current, float next);
+
+inline bool isPhaseInRange(EngPhase test, const EnginePhaseInfo& phaseInfo) {
+	return isPhaseInRange(test.angle, phaseInfo.currentEngPhase.angle, phaseInfo.nextEngPhase.angle);
+}
+
+inline bool isPhaseInRange(TrgPhase test, const EnginePhaseInfo& phaseInfo) {
+	return isPhaseInRange(test.angle, phaseInfo.currentTrgPhase.angle, phaseInfo.nextTrgPhase.angle);
+}
