@@ -189,6 +189,9 @@ public:
 	 */
 	bool isEngineSnifferEnabled = false;
 
+	// Convert from trigger phase space to engine phase space
+	EngPhase toEngPhase(const TrgPhase& trgPhase) const;
+
 private:
 	void decodeMapCam(efitick_t nowNt, EngPhase currentPhase);
 

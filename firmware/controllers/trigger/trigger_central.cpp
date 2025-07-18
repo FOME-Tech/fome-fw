@@ -35,15 +35,13 @@ WaveChart waveChart;
 
 #if EFI_SHAFT_POSITION_INPUT
 
-static EngPhase toEngPhase(const TrgPhase& trgPhase) {
-	auto tc = getTriggerCentral();
-
+EngPhase TriggerCentral::toEngPhase(const TrgPhase& trgPhase) const {
 	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
 	return { wrapAngleMethod(
 		trgPhase.angle
-			- tc->triggerShape.tdcPosition
+			- triggerShape.tdcPosition
 			- engineConfiguration->globalTriggerAngleOffset
-			+ tc->triggerState.m_phaseAdjustment,
+			+ triggerState.m_phaseAdjustment,
 		"currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
 }
 
@@ -277,7 +275,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	}
 
 	// convert trigger cycle angle into engine cycle angle
-	auto currentEnginePhase = toEngPhase(currentTrgPhase.Value);
+	auto currentEnginePhase = tc->toEngPhase(currentTrgPhase.Value);
 	// https://github.com/rusefi/rusefi/issues/1713 currentPosition could be negative that's expected
 
 #if EFI_UNIT_TEST
