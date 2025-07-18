@@ -262,8 +262,8 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 	}
 }
 
-static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dwellMs, float dwellAngle, float sparkAngle, const EnginePhaseInfo& phase) {
-	float angleOffset = dwellAngle - phase.currentEngPhase.angle;
+static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dwellMs, EngPhase dwellAngle, EngPhase sparkAngle, const EnginePhaseInfo& phase) {
+	float angleOffset = dwellAngle - phase.currentEngPhase;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
 	}
@@ -287,27 +287,39 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		 * This way we make sure that coil dwell started while spark was enabled would fire and not burn
 		 * the coil.
 		 */
-		chargeTime = scheduleByAngle(&event->dwellStartTimer, phase.timestamp, angleOffset, { &turnSparkPinHigh, ctx });
+		chargeTime = scheduleByAngle(
+						&event->dwellStartTimer,
+						phase.timestamp,
+						angleOffset,
+						{ &turnSparkPinHigh, ctx }
+					);
 	}
 
 	/**
 	 * Spark event is often happening during a later trigger event timeframe
 	 */
 
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6591, !std::isnan(sparkAngle), "findAngle#4");
-	assertAngleRange(sparkAngle, "findAngle#a5", ObdCode::CUSTOM_ERR_6549);
+	efiAssertVoid(ObdCode::CUSTOM_ERR_6591, !std::isnan(sparkAngle.angle), "findAngle#4");
+	assertAngleRange(sparkAngle.angle, "findAngle#a5", ObdCode::CUSTOM_ERR_6549);
 
 	bool scheduled = engine->module<TriggerScheduler>()->scheduleOrQueue(
-		&event->sparkEvent, sparkAngle,
+		&event->sparkEvent,
+		sparkAngle,
 		{ fireSparkAndPrepareNextSchedule, ctx },
-		phase);
+		phase
+	);
 
 	if (!scheduled && !limitedSpark) {
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
 		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
 		ctx.isOverdwellProtect = true;
-		engine->scheduler.schedule("overdwell", &event->sparkEvent.scheduling, fireTime, { fireSparkAndPrepareNextSchedule, ctx });
+		engine->scheduler.schedule(
+			"overdwell",
+			&event->sparkEvent.scheduling,
+			fireTime,
+			{ fireSparkAndPrepareNextSchedule, ctx }
+		);
 	}
 }
 
@@ -451,7 +463,7 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 			engine->ALSsoftSparkLimiter.setTargetSkipRatio(ALSSkipRatio);
 #endif // EFI_ANTILAG_SYSTEM
 
-			scheduleSparkEvent(limitedSpark, event, dwellMs, dwellAngle, sparkAngle, phase);
+			scheduleSparkEvent(limitedSpark, event, dwellMs, { dwellAngle }, { sparkAngle }, phase);
 		}
 	}
 }

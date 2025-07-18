@@ -202,7 +202,7 @@ void HpfpController::scheduleNextCycle() {
 		 */
 		engine->module<TriggerScheduler>()->schedule(
 			&m_event,
-			di_nextStart,
+			{ di_nextStart },
 			{ pinTurnOn, this });
 
 		// Off will be scheduled after turning the valve on
@@ -211,7 +211,7 @@ void HpfpController::scheduleNextCycle() {
 		// will schedule the next lobe.
 		// todo: would it have been cleaner to schedule 'scheduleNextCycle' directly?
 		engine->module<TriggerScheduler>()->schedule(
-			&m_event, lobe,
+			&m_event, { lobe },
 			{ pinTurnOff, this });
 	}
 }

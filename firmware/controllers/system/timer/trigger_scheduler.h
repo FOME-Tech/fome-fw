@@ -2,10 +2,10 @@
 
 class TriggerScheduler : public EngineModule {
 public:
-	void schedule(AngleBasedEvent* event, angle_t angle, action_s action);
+	void schedule(AngleBasedEvent* event, EngPhase angle, action_s action);
 
 	bool scheduleOrQueue(AngleBasedEvent *event,
-							angle_t angle,
+							EngPhase angle,
 							action_s action,
 							const EnginePhaseInfo& phase);
 
