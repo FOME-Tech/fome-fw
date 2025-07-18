@@ -193,13 +193,11 @@ angle_t PrimaryTriggerDecoder::syncEnginePhase(int divider, int remainder, angle
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, remainder < divider, "syncEnginePhase remainder", false);
 
 	auto currentRemainder = getCrankSynchronizationCounter() % divider;
-	auto stepsToAdd = remainder - currentRemainder;
+	auto totalShift = (remainder - currentRemainder) * engineCycle / divider;
 
-	if (stepsToAdd < 0) {
-		stepsToAdd += divider;
+	if (totalShift < 0) {
+		totalShift += engineCycle;
 	}
-
-	auto totalShift = stepsToAdd * engineCycle / divider;
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
@@ -207,9 +205,8 @@ angle_t PrimaryTriggerDecoder::syncEnginePhase(int divider, int remainder, angle
 		// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
 		m_hasSynchronizedPhase = true;
 
-		if (stepsToAdd != 0) {
-			crankSynchronizationCounter += stepsToAdd;
-
+		if (m_phaseAdjustment != totalShift) {
+			// Resync angle changed - count how many times this happens
 			m_phaseAdjustment = totalShift;
 			m_camResyncCounter++;
 		}

@@ -35,9 +35,14 @@ WaveChart waveChart;
 
 #if EFI_SHAFT_POSITION_INPUT
 
-static EngPhase toEngPhase(const TrgPhase& trgPhase) {
+EngPhase TriggerCentral::toEngPhase(const TrgPhase& trgPhase) const {
 	// Adjust so currentPhase is in engine-space angle, not trigger-space angle
-	return { wrapAngleMethod(trgPhase.angle - tdcPosition(), "currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
+	return { wrapAngleMethod(
+		trgPhase.angle
+			- triggerShape.tdcPosition
+			- engineConfiguration->globalTriggerAngleOffset
+			+ triggerState.m_phaseAdjustment,
+		"currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
 }
 
 TriggerCentral::TriggerCentral() :
@@ -126,13 +131,7 @@ static bool vvtWithRealDecoder(vvt_mode_e vvtMode) {
 angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 	angle_t engineCycle = getEngineCycle(getEngineRotationState()->getOperationMode());
 
-	angle_t totalShift = triggerState.syncEnginePhase(divider, remainder, engineCycle);
-	if (totalShift != 0) {
-		// Reset instant RPM, since the engine phase has now changed, invalidating the tooth history buffer
-		// maybe TODO: could/should we rotate the buffer around to re-align it instead? Is that worth it?
-		instantRpm.resetInstantRpm();
-	}
-	return totalShift;
+	return triggerState.syncEnginePhase(divider, remainder, engineCycle);
 }
 
 static angle_t adjustCrankPhase(int camIndex) {
@@ -276,7 +275,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 	}
 
 	// convert trigger cycle angle into engine cycle angle
-	auto currentEnginePhase = toEngPhase(currentTrgPhase.Value);
+	auto currentEnginePhase = tc->toEngPhase(currentTrgPhase.Value);
 	// https://github.com/rusefi/rusefi/issues/1713 currentPosition could be negative that's expected
 
 #if EFI_UNIT_TEST
@@ -316,10 +315,16 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	// Only do engine sync using one cam, other cams just provide VVT position.
 	if (index == engineConfiguration->engineSyncCam) {
+		bool hadFullSyncBefore = tc->triggerState.hasSynchronizedPhase();
 		angle_t crankOffset = adjustCrankPhase(camIndex);
-		// vvtPosition was calculated against wrong crank zero position. Now that we have adjusted crank position we
-		// shall adjust vvt position as well
-		vvtPosition -= crankOffset;
+		bool hadFullSyncAfter = tc->triggerState.hasSynchronizedPhase();
+
+		if (!hadFullSyncBefore && hadFullSyncAfter) {
+			// vvtPosition was calculated against wrong crank zero position. Now that we have adjusted crank position we
+			// shall adjust vvt position as well
+			vvtPosition -= crankOffset;
+		}
+
 		vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
 
 		// this could be just an 'if' but let's have it expandable for future use :)
