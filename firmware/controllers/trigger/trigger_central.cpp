@@ -45,6 +45,15 @@ EngPhase TriggerCentral::toEngPhase(const TrgPhase& trgPhase) const {
 		"currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
 }
 
+TrgPhase TriggerCentral::toTrgPhase(const EngPhase& engPhase) const {
+	return { wrapAngleMethod(
+		engPhase.angle
+			+ triggerShape.tdcPosition
+			+ engineConfiguration->globalTriggerAngleOffset
+			- triggerState.m_phaseAdjustment,
+		"currentEnginePhase", ObdCode::CUSTOM_ERR_6555) };
+}
+
 TriggerCentral::TriggerCentral() :
 		vvtEventRiseCounter(),
 		vvtEventFallCounter(),

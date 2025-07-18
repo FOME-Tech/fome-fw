@@ -191,6 +191,7 @@ public:
 
 	// Convert from trigger phase space to engine phase space
 	EngPhase toEngPhase(const TrgPhase& trgPhase) const;
+	TrgPhase toTrgPhase(const EngPhase& engPhase) const;
 
 private:
 	void decodeMapCam(efitick_t nowNt, EngPhase currentPhase);
