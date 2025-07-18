@@ -31,7 +31,7 @@
 
 #include "spark_logic.h"
 
-static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
+static void handleFuel(const EnginePhaseInfo& phase) {
 	ScopePerf perf(PE::HandleFuel);
 
 	if (!getLimpManager()->allowInjection().value) {
@@ -45,7 +45,7 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 		fs->addFuelEvents();
 	}
 
-	fs->onTriggerTooth(nowNt, currentPhase, nextPhase);
+	fs->onTriggerTooth(phase);
 }
 
 /**
@@ -93,7 +93,7 @@ void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 	 * For fuel we schedule start of injection based on trigger angle, and then inject for
 	 * specified duration of time
 	 */
-	handleFuel(phase.timestamp, phase.currentEngPhase.angle, phase.nextEngPhase.angle);
+	handleFuel(phase);
 
 	/**
 	 * For spark we schedule both start of coil charge and actual spark based on trigger angle

@@ -109,11 +109,11 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 	return mask;
 }
 
-void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
+void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	auto eventAngle = injectionStartAngle;
 
 	// Determine whether our angle is going to happen before (or near) the next tooth
-	if (!isPhaseInRange(eventAngle, currentPhase, nextPhase)) {
+	if (!isPhaseInRange(EngPhase{eventAngle}, phase)) {
 		return;
 	}
 
@@ -146,7 +146,7 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 
 		float actualInjectedMass = numberOfInjections * (injectionMassStage1 + injectionMassStage2);
 
-		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, nowNt);
+		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, phase.timestamp);
 		#endif // MODULE_TRIP_ODO
 	}
 
@@ -212,13 +212,13 @@ if (printFuelDebug) {
 	}
 
 	// Correctly wrap injection start angle
-	float angleFromNow = eventAngle - currentPhase;
+	float angleFromNow = eventAngle - phase.currentEngPhase.angle;
 	if (angleFromNow < 0) {
 		angleFromNow += getEngineState()->engineCycle;
 	}
 
 	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, { &startInjection, ctx });
+	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, { &startInjection, ctx });
 
 	// Schedule closing stage 1
 	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
@@ -370,14 +370,14 @@ void FuelSchedule::addFuelEvents() {
 	isReady = true;
 }
 
-void FuelSchedule::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
+void FuelSchedule::onTriggerTooth(const EnginePhaseInfo& phase) {
 	// Wait for schedule to be built - this happens the first time we get RPM
 	if (!isReady) {
 		return;
 	}
 
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		elements[i].onTriggerTooth(nowNt, currentPhase, nextPhase);
+		elements[i].onTriggerTooth(phase);
 	}
 }
 
