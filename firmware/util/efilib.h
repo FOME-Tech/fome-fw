@@ -85,6 +85,11 @@ bool isPhaseInRange(float test, float current, float next);
 #ifdef __cplusplus
 }
 
+template <typename TPhase>
+bool isPhaseInRange(const TPhase& test, const TPhase& current, const TPhase& next) {
+	return isPhaseInRange(test.angle, current.angle, next.angle);
+}
+
 #include <cstddef>
 #include <cstring>
 

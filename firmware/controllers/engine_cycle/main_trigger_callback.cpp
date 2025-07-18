@@ -52,7 +52,7 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
  * This is the main trigger event handler.
  * Both injection and ignition are controlled from this method.
  */
-void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_t currentPhase, angle_t nextPhase) {
+void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 	ScopePerf perf(PE::MainTriggerCallback);
 
 	if (hasFirmwareError()) {
@@ -88,19 +88,24 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 	}
 
 	engine->engineModules.apply_all([=](auto & m) {
-		m.onEnginePhase(rpm, edgeTimestamp, currentPhase, nextPhase);
+		m.onEnginePhase(
+			rpm,
+			phase.timestamp,
+			phase.currentEngPhase.angle,
+			phase.nextEngPhase.angle
+		);
 	});
 
 	/**
 	 * For fuel we schedule start of injection based on trigger angle, and then inject for
 	 * specified duration of time
 	 */
-	handleFuel(edgeTimestamp, currentPhase, nextPhase);
+	handleFuel(phase.timestamp, phase.currentEngPhase.angle, phase.nextEngPhase.angle);
 
 	/**
 	 * For spark we schedule both start of coil charge and actual spark based on trigger angle
 	 */
-	onTriggerEventSparkLogic(edgeTimestamp, currentPhase, nextPhase);
+	onTriggerEventSparkLogic(phase);
 }
 
 #endif /* EFI_ENGINE_CONTROL */

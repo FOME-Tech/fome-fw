@@ -7,7 +7,7 @@
 
 #pragma once
 
-void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float nextPhase);
+void onTriggerEventSparkLogic(const EnginePhaseInfo& phase);
 int getNumberOfSparks(ignition_mode_e mode);
 percent_t getCoilDutyCycle(float rpm);
 void initializeIgnitionActions();

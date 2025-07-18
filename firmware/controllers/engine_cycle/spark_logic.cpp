@@ -262,8 +262,8 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 	}
 }
 
-static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dwellMs, float dwellAngle, float sparkAngle, efitick_t edgeTimestamp, float currentPhase, float nextPhase) {
-	float angleOffset = dwellAngle - currentPhase;
+static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dwellMs, float dwellAngle, float sparkAngle, const EnginePhaseInfo& phase) {
+	float angleOffset = dwellAngle - phase.currentEngPhase.angle;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
 	}
@@ -287,7 +287,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		 * This way we make sure that coil dwell started while spark was enabled would fire and not burn
 		 * the coil.
 		 */
-		chargeTime = scheduleByAngle(&event->dwellStartTimer, edgeTimestamp, angleOffset, { &turnSparkPinHigh, ctx });
+		chargeTime = scheduleByAngle(&event->dwellStartTimer, phase.timestamp, angleOffset, { &turnSparkPinHigh, ctx });
 	}
 
 	/**
@@ -298,9 +298,9 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 	assertAngleRange(sparkAngle, "findAngle#a5", ObdCode::CUSTOM_ERR_6549);
 
 	bool scheduled = engine->module<TriggerScheduler>()->scheduleOrQueue(
-		&event->sparkEvent, edgeTimestamp, sparkAngle,
+		&event->sparkEvent, phase.timestamp, sparkAngle,
 		{ fireSparkAndPrepareNextSchedule, ctx },
-		currentPhase, nextPhase);
+		phase.currentEngPhase.angle, phase.nextEngPhase.angle);
 
 	if (!scheduled && !limitedSpark) {
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
@@ -359,7 +359,7 @@ static void prepareIgnitionSchedule() {
 	initializeIgnitionActions();
 }
 
-void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float nextPhase) {
+void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 	ScopePerf perf(PE::OnTriggerEventSparkLogic);
 
 	if (!engineConfiguration->isIgnitionEnabled) {
@@ -408,7 +408,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 
 				// Check whether this event hits 360 degrees out from now (ie, wasted spark),
 				// and if so, twiddle the dwell and spark angles so it happens now instead
-				isOddCylWastedEvent = isPhaseInRange(dwellAngleWastedEvent, currentPhase, nextPhase);
+				isOddCylWastedEvent = isPhaseInRange(EngPhase{dwellAngleWastedEvent}, phase.currentEngPhase, phase.nextEngPhase);
 
 				if (isOddCylWastedEvent) {
 					dwellAngle = dwellAngleWastedEvent;
@@ -417,7 +417,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 				}
 			}
 
-			if (!isOddCylWastedEvent && !isPhaseInRange(dwellAngle, currentPhase, nextPhase)) {
+			if (!isOddCylWastedEvent && !isPhaseInRange(EngPhase{dwellAngle}, phase.currentEngPhase, phase.nextEngPhase)) {
 				continue;
 			}
 
@@ -451,7 +451,7 @@ void onTriggerEventSparkLogic(efitick_t edgeTimestamp, float currentPhase, float
 			engine->ALSsoftSparkLimiter.setTargetSkipRatio(ALSSkipRatio);
 #endif // EFI_ANTILAG_SYSTEM
 
-			scheduleSparkEvent(limitedSpark, event, dwellMs, dwellAngle, sparkAngle, edgeTimestamp, currentPhase, nextPhase);
+			scheduleSparkEvent(limitedSpark, event, dwellMs, dwellAngle, sparkAngle, phase);
 		}
 	}
 }

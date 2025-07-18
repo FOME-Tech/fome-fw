@@ -28,3 +28,16 @@ template <typename T>
 inline bool operator==(const PhaseAngle<T>& lhs, const PhaseAngle<T>& rhs) {
 	return lhs.angle == rhs.angle;
 }
+
+struct EnginePhaseInfo {
+	// When was this information captured?
+	efitick_t timestamp;
+
+	// Where is the engine, in trigger space?
+	TrgPhase currentTrgPhase;
+	TrgPhase nextTrgPhase;
+
+	// Where is the engine, in engine space?
+	EngPhase currentEngPhase;
+	EngPhase nextEngPhase;
+};

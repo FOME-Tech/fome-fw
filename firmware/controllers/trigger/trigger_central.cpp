@@ -667,10 +667,18 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
 	}
 
-	auto nextEnginePhase = toEngPhase(nextPhase);
+	EnginePhaseInfo phaseInfo {
+		.timestamp = timestamp,
+
+		.currentTrgPhase = currentTrgPhase,
+		.nextTrgPhase = nextPhase,
+
+		.currentEngPhase = currentEnginePhase,
+		.nextEngPhase = toEngPhase(nextPhase),
+	};
 
 	// Handle ignition and injection
-	mainTriggerCallback(triggerIndexForListeners, timestamp, currentEngineDecodedPhase, nextEnginePhase.angle);
+	mainTriggerCallback(triggerIndexForListeners, phaseInfo);
 
 	// Decode the MAP based "cam" sensor
 	decodeMapCam(timestamp, currentEnginePhase);
