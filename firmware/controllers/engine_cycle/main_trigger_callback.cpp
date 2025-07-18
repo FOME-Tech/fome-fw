@@ -87,14 +87,7 @@ void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 		}
 	}
 
-	engine->engineModules.apply_all([=](auto & m) {
-		m.onEnginePhase(
-			rpm,
-			phase.timestamp,
-			phase.currentEngPhase.angle,
-			phase.nextEngPhase.angle
-		);
-	});
+	engine->engineModules.apply_all([=](auto & m) { m.onEnginePhase(rpm, phase); });
 
 	/**
 	 * For fuel we schedule start of injection based on trigger angle, and then inject for

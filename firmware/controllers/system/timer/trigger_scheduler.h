@@ -10,11 +10,7 @@ public:
 							action_s action,
 							float currentPhase, float nextPhase);
 
-	void onEnginePhase(float /*rpm*/,
-							efitick_t /*edgeTimestamp*/,
-							angle_t /*currentPhase*/,
-							angle_t /*nextPhase*/)
-							override;
+	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
 
 	// For unit tests
 	AngleBasedEvent * getElementAtIndexForUnitTest(int index);

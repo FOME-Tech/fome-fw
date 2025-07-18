@@ -208,10 +208,7 @@ void MapAveragingModule::onFastCallback() {
 }
 
 // Callback to schedule the start of map averaging for each cylinder
-void MapAveragingModule::onEnginePhase(float /*rpm*/,
-						efitick_t edgeTimestamp,
-						float currentPhase,
-						float nextPhase) {
+void MapAveragingModule::onEnginePhase(float /*rpm*/, const EnginePhaseInfo& phase) {
 	if (!engineConfiguration->isMapAveragingEnabled) {
 		return;
 	}
@@ -223,17 +220,17 @@ void MapAveragingModule::onEnginePhase(float /*rpm*/,
 	for (int i = 0; i < samplingCount; i++) {
 		angle_t samplingStart = engine->engineState.mapAveragingStart[i];
 
-		if (!isPhaseInRange(samplingStart, currentPhase, nextPhase)) {
+		if (!isPhaseInRange(EngPhase{samplingStart}, phase.currentEngPhase, phase.nextEngPhase)) {
 			continue;
 		}
 
-		float angleOffset = samplingStart - currentPhase;
+		float angleOffset = samplingStart - phase.currentEngPhase.angle;
 		if (angleOffset < 0) {
 			angleOffset += engine->engineState.engineCycle;
 		}
 
 		auto& s = samplers[i];
-		scheduleByAngle(&s.timer, edgeTimestamp, angleOffset, { startAveraging, &s });
+		scheduleByAngle(&s.timer, phase.timestamp, angleOffset, { startAveraging, &s });
 	}
 }
 

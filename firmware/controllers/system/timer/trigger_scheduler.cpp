@@ -80,8 +80,7 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 	}
 }
 
-void TriggerScheduler::onEnginePhase(float rpm,
-							   efitick_t edgeTimestamp, float currentPhase, float nextPhase) {
+void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 
 	if (!isValidRpm(rpm) || !EFI_SHAFT_POSITION_INPUT) {
 		 // this might happen for instance in case of a single trigger event after a pause
@@ -100,7 +99,7 @@ void TriggerScheduler::onEnginePhase(float rpm,
 
 	LL_FOREACH_SAFE2(keephead, current, tmp, nextToothEvent)
 	{
-		if (current->shouldSchedule(currentPhase, nextPhase)) {
+		if (current->shouldSchedule(phase.currentEngPhase.angle, phase.nextEngPhase.angle)) {
 			// time to fire a spark which was scheduled previously
 
 			// Yes this looks like O(n^2), but that's only over the entire engine
@@ -120,8 +119,8 @@ void TriggerScheduler::onEnginePhase(float rpm,
 
 			scheduleByAngle(
 				sDown,
-				edgeTimestamp,
-				current->getAngleFromNow(currentPhase),
+				phase.timestamp,
+				current->getAngleFromNow(phase.currentEngPhase.angle),
 				current->action
 			);
 		} else {
