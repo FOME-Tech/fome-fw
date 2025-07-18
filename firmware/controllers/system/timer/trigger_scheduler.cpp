@@ -26,8 +26,8 @@ bool TriggerScheduler::assertNotInList(AngleBasedEvent *head, AngleBasedEvent *e
 	return false;
 }
 
-void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s action) {
-	event->setAngle(EngPhase{angle});
+void TriggerScheduler::schedule(AngleBasedEvent* event, EngPhase angle, action_s action) {
+	event->setAngle(angle);
 
 	schedule(event, action);
 }
@@ -39,10 +39,10 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s 
  *         false if event was put into queue for scheduling at a later tooth
  */
 bool TriggerScheduler::scheduleOrQueue(AngleBasedEvent *event,
-		angle_t angle,
+		EngPhase angle,
 		action_s action,
 		const EnginePhaseInfo& phase) {
-	event->setAngle(EngPhase{angle});
+	event->setAngle(angle);
 
 	if (event->shouldSchedule(phase)) {
 		// if we're due now, just schedule the event
@@ -141,7 +141,7 @@ void AngleBasedEvent::setAngle(EngPhase angle) {
 }
 
 bool AngleBasedEvent::shouldSchedule(const EnginePhaseInfo& phase) const {
-	return isPhaseInRange(eventPhase, phase.currentTrgPhase, phase.nextTrgPhase);
+	return isPhaseInRange(eventPhase, phase);
 }
 
 float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {

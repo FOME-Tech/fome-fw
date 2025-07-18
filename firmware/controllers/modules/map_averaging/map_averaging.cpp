@@ -220,7 +220,7 @@ void MapAveragingModule::onEnginePhase(float /*rpm*/, const EnginePhaseInfo& pha
 	for (int i = 0; i < samplingCount; i++) {
 		angle_t samplingStart = engine->engineState.mapAveragingStart[i];
 
-		if (!isPhaseInRange(EngPhase{samplingStart}, phase.currentEngPhase, phase.nextEngPhase)) {
+		if (!isPhaseInRange(EngPhase{samplingStart}, phase)) {
 			continue;
 		}
 
