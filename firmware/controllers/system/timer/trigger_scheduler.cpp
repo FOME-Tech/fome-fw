@@ -137,15 +137,15 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 }
 
 void AngleBasedEvent::setAngle(EngPhase angle) {
-	this->enginePhase = angle;
+	eventPhase = angle;
 }
 
 bool AngleBasedEvent::shouldSchedule(const EnginePhaseInfo& phase) const {
-	return isPhaseInRange(this->enginePhase, phase.currentEngPhase, phase.nextEngPhase);
+	return isPhaseInRange(eventPhase, phase.currentEngPhase, phase.nextEngPhase);
 }
 
 float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {
-	float angleOffset = this->enginePhase - phase.currentEngPhase;
+	float angleOffset = eventPhase - phase.currentEngPhase;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
 	}

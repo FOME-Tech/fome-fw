@@ -21,7 +21,7 @@ struct AngleBasedEvent {
 	 */
 	AngleBasedEvent *nextToothEvent = nullptr;
 
-	EngPhase enginePhase;
+	EngPhase eventPhase;
 
 	void setAngle(EngPhase angle);
 
