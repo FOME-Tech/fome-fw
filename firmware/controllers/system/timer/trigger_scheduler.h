@@ -5,10 +5,9 @@ public:
 	void schedule(AngleBasedEvent* event, angle_t angle, action_s action);
 
 	bool scheduleOrQueue(AngleBasedEvent *event,
-							efitick_t edgeTimestamp,
 							angle_t angle,
 							action_s action,
-							float currentPhase, float nextPhase);
+							const EnginePhaseInfo& phase);
 
 	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
 

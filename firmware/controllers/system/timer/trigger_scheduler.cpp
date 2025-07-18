@@ -27,7 +27,7 @@ bool TriggerScheduler::assertNotInList(AngleBasedEvent *head, AngleBasedEvent *e
 }
 
 void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s action) {
-	event->setAngle(angle);
+	event->setAngle(EngPhase{angle});
 
 	schedule(event, action);
 }
@@ -39,18 +39,17 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s 
  *         false if event was put into queue for scheduling at a later tooth
  */
 bool TriggerScheduler::scheduleOrQueue(AngleBasedEvent *event,
-		efitick_t edgeTimestamp,
 		angle_t angle,
 		action_s action,
-		float currentPhase, float nextPhase) {
-	event->setAngle(angle);
+		const EnginePhaseInfo& phase) {
+	event->setAngle(EngPhase{angle});
 
-	if (event->shouldSchedule(currentPhase, nextPhase)) {
+	if (event->shouldSchedule(phase)) {
 		// if we're due now, just schedule the event
 		scheduleByAngle(
 			&event->scheduling,
-			edgeTimestamp,
-			event->getAngleFromNow(currentPhase),
+			phase.timestamp,
+			event->getAngleFromNow(phase),
 			action
 		);
 
@@ -99,7 +98,7 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 
 	LL_FOREACH_SAFE2(keephead, current, tmp, nextToothEvent)
 	{
-		if (current->shouldSchedule(phase.currentEngPhase.angle, phase.nextEngPhase.angle)) {
+		if (current->shouldSchedule(phase)) {
 			// time to fire a spark which was scheduled previously
 
 			// Yes this looks like O(n^2), but that's only over the entire engine
@@ -120,7 +119,7 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 			scheduleByAngle(
 				sDown,
 				phase.timestamp,
-				current->getAngleFromNow(phase.currentEngPhase.angle),
+				current->getAngleFromNow(phase),
 				current->action
 			);
 		} else {
@@ -137,16 +136,16 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 	}
 }
 
-void AngleBasedEvent::setAngle(angle_t angle) {
+void AngleBasedEvent::setAngle(EngPhase angle) {
 	this->enginePhase = angle;
 }
 
-bool AngleBasedEvent::shouldSchedule(float currentPhase, float nextPhase) const {
-	return isPhaseInRange(this->enginePhase, currentPhase, nextPhase);
+bool AngleBasedEvent::shouldSchedule(const EnginePhaseInfo& phase) const {
+	return isPhaseInRange(this->enginePhase, phase.currentEngPhase, phase.nextEngPhase);
 }
 
-float AngleBasedEvent::getAngleFromNow(float currentPhase) const {
-	float angleOffset = this->enginePhase - currentPhase;
+float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {
+	float angleOffset = this->enginePhase - phase.currentEngPhase;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
 	}

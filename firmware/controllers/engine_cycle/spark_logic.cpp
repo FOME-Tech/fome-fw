@@ -298,9 +298,9 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 	assertAngleRange(sparkAngle, "findAngle#a5", ObdCode::CUSTOM_ERR_6549);
 
 	bool scheduled = engine->module<TriggerScheduler>()->scheduleOrQueue(
-		&event->sparkEvent, phase.timestamp, sparkAngle,
+		&event->sparkEvent, sparkAngle,
 		{ fireSparkAndPrepareNextSchedule, ctx },
-		phase.currentEngPhase.angle, phase.nextEngPhase.angle);
+		phase);
 
 	if (!scheduled && !limitedSpark) {
 		// If spark firing wasn't already scheduled, schedule the overdwell event at
