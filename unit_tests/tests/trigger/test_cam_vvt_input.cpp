@@ -181,8 +181,9 @@ TEST(trigger, testNB2CamInput) {
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
 	EXPECT_NEAR(297.5f, engine->triggerCentral.getVVTPosition(0, 0).value_or(0), EPS2D);
-	// actually position based on VVT!
-	ASSERT_EQ(totalRevolutionCountBeforeVvtSync + 3, engine->triggerCentral.triggerState.getCrankSynchronizationCounter());
+	// actually position based on cam!
+	EXPECT_FLOAT_EQ(540, engine->triggerCentral.triggerState.m_phaseAdjustment);
+	EXPECT_TRUE(engine->triggerCentral.triggerState.hasSynchronizedPhase());
 
 	EXPECT_EQ(39, waveChart.getSize());
 }
