@@ -272,8 +272,6 @@ static void enableOrDisable(const char *param, bool isEnabled) {
 		engineConfiguration->verboseCan = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "verboseIsoTp")) {
 		engineConfiguration->verboseIsoTp = isEnabled;
-	} else if (strEqualCaseInsensitive(param, "artificialMisfire")) {
-		engineConfiguration->artificialTestMisfire = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "can_broadcast")) {
 		engineConfiguration->enableVerboseCanTx = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "etb_auto")) {

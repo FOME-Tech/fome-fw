@@ -415,7 +415,6 @@ bit useRunningMathForCranking,"Fuel Map","Fixed";For cranking either use the spe
 bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
-bit artificialTestMisfire,"Danger Mode","No thank you";Experimental setting that will cause a misfire\nDO NOT ENABLE.
 bit fakeFullSyncForStimulation;In internal trigger stimulation mode, control whether we pretend a cam is present to resolve full sync. When set to true, sequential fuel/spark will work as if a cam signal was detected.
 bit cltSensorPulldown
 bit iatSensorPulldown
