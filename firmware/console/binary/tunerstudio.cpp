@@ -140,10 +140,6 @@ extern bool rebootForPresetPending;
 void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count,
 		void *content) {
 	tsState.writeChunkCommandCounter++;
-	if (isLockedFromUser()) {
-		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
-		return;
-	}
 
 	efiPrintf("TS -> Write chunk offset %d count %d", offset, count);
 
@@ -187,10 +183,6 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
  */
 void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, uint16_t offset, uint8_t value) {
 	tsState.writeValueCommandCounter++;
-	if (isLockedFromUser()) {
-		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
-		return;
-	}
 
 	efiPrintf("TS -> Write value offset %d value %d", offset, value);
 
@@ -220,14 +212,7 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 		return;
 	}
 
-	uint8_t* addr;
-	if (isLockedFromUser()) {
-		// to have rusEFI console happy just send all zeros within a valid packet
-		addr = (uint8_t*)&tsChannel->scratchBuffer;
-		memset(addr, 0, count);
-	} else {
-		addr = getWorkingPageAddr() + offset;
-	}
+	uint8_t* addr = getWorkingPageAddr() + offset;
 	tsChannel->writeCrcPacketLocked(addr, count);
 }
 

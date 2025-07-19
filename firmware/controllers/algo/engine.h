@@ -392,8 +392,6 @@ void prepareOutputSignals();
 // todo: huh we also have validateConfig()?!
 void validateConfiguration();
 void scheduleReboot();
-bool isLockedFromUser();
-void unlockEcu(int password);
 
 // These externs aren't needed for unit tests - everything is injected instead
 #if !EFI_UNIT_TEST

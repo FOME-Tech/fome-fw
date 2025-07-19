@@ -442,13 +442,6 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 				continue;
 			}
 
-			if (i == 0 && engineConfiguration->artificialTestMisfire && (getRevolutionCounter() % ((int)engineConfiguration->scriptSetting[5]) == 0)) {
-				// artificial misfire on cylinder #1 for testing purposes
-				// enable artificialMisfire
-				// set_fsio_setting 6 20
-				warning(ObdCode::CUSTOM_ARTIFICIAL_MISFIRE, "artificial misfire on cylinder #1 for testing purposes %lu", engine->engineState.sparkCounter);
-				continue;
-			}
 #if EFI_LAUNCH_CONTROL
 			if (engine->softSparkLimiter.shouldSkip()) {
 				continue;
