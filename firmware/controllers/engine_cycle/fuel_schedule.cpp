@@ -118,8 +118,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 	// don't allow split inj in simultaneous mode
-	// TODO: #364 implement logic to actually enable split injections
-	bool doSplitInjection = false && !isSimultaneous;
+	bool doSplitInjection = engine->engineState.doSplitInjection && !isSimultaneous;
 
 	// Select fuel mass from the correct cylinder
 	auto cycleMassGrams = engine->cylinders[this->cylinderNumber].getInjectionMass();
