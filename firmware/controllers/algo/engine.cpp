@@ -156,6 +156,8 @@ void Engine::periodicSlowCallback() {
 	void baroLps25Update();
 	baroLps25Update();
 #endif // EFI_PROD_CODE
+
+	engineState.updateSplitInjection();
 }
 
 /**

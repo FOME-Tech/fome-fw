@@ -401,6 +401,9 @@ static void handleCommandX14(uint16_t index) {
 		engine->triggerCentral.syncAndReport(2, 1);
 		return;
 #endif // EFI_SHAFT_POSITION_INPUT
+	case COMMAND_X14_SPLIT_INJ:
+		engine->engineState.requestSplitInjection ^= true;
+		return;
 	default:
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench x14 %d", index);
 	}

@@ -204,6 +204,20 @@ void EngineState::updateTChargeK(float rpm, float tps) {
 #endif
 }
 
+void EngineState::updateSplitInjection() {
+	if (!requestSplitInjection) {
+		doSplitInjection = false;
+		return;
+	}
+
+	// toggle every 2 seconds
+	if (splitInjectionTimer.hasElapsedSec(2)) {
+		splitInjectionTimer.reset();
+
+		doSplitInjection ^= true;
+	}
+}
+
 void TriggerConfiguration::update() {
 	VerboseTriggerSynchDetails = isVerboseTriggerSynchDetails();
 	TriggerType = getType();

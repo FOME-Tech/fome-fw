@@ -70,6 +70,11 @@ public:
 
 	bool shouldUpdateInjectionTiming = true;
 
+	void updateSplitInjection();
+
+	Timer splitInjectionTimer;
+	bool requestSplitInjection = false;
+
 	void updateMapCylinderOffsets();
 	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
