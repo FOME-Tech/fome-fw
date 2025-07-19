@@ -191,6 +191,7 @@ public class Fields {
 	public static final int command_x14_e_COMMAND_X14_GRAB_PEDAL_DOWN = 0x07;
 	public static final int command_x14_e_COMMAND_X14_GRAB_PEDAL_UP = 0x06;
 	public static final int command_x14_e_COMMAND_X14_RESET_TLE8888 = 0x08;
+	public static final int command_x14_e_COMMAND_X14_SPLIT_INJ = 0x17;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_0 = 0x00;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_1 = 0x01;
 	public static final int command_x14_e_COMMAND_X14_UNUSED_11 = 0x0B;
@@ -951,7 +952,6 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
-	public static final int SIGNATURE_HASH = 1246965750;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1158,7 +1158,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.19.f407-discovery.1246965750";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.19.f407-discovery.3562628758";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1320;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
