@@ -673,7 +673,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 	configureRusefiLuaUtilHooks(l);
 
 	lua_register(l, "readPin", lua_readpin);
-	lua_register(l, "vin", lua_vin);
 	lua_register(l, "getAuxAnalog", lua_getAuxAnalog);
 	lua_register(l, "getSensorByIndex", lua_getSensorByIndex);
 	lua_register(l, "getSensor", lua_getSensorByName);
