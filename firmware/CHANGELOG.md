@@ -43,6 +43,7 @@ or
  - AC pressure switch & startup delay #623
  - Y axis override for VVT target
  - Feature to skip initial trigger pulses for noisy triggers #634
+ - VVT open loop "hold" table #638
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs

@@ -135,8 +135,21 @@ void VvtController::setTargetOffset(float targetOffset) {
 }
 
 expected<percent_t> VvtController::getOpenLoop(angle_t /* target */) {
-	// TODO: could/should we do open loop?
-	return 0;
+	const auto& bins = config->vvtOpenLoop[m_cam].bins;
+	const auto& values = config->vvtOpenLoop[m_cam].values;
+
+	// Oil temp if we have it
+	// Coolant temp if we don't
+	// And if it's dead, default to 80C
+	float temp;
+	auto oilT = Sensor::get(SensorType::OilTemperature);
+	if (oilT) {
+		temp = oilT.Value;
+	} else {
+		temp = Sensor::get(SensorType::Clt).value_or(80);
+	}
+
+	return interpolate2d(temp, bins, values);
 }
 
 expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observation) {
