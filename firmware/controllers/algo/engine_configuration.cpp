@@ -444,6 +444,11 @@ static void setDefaultEngineConfiguration() {
 	setRpmTableBin(config->vvtTable1RpmBins);
 	setLinearCurve(config->vvtTable2LoadBins, 20, 120, 10);
 	setRpmTableBin(config->vvtTable2RpmBins);
+
+	for (size_t i = 0; i < efi::size(config->vvtOpenLoop); i++) {
+		setLinearCurve(config->vvtOpenLoop[i].bins, -20, 120, 1);
+	}
+
 	setLinearCurve(config->scriptTable1LoadBins, 20, 120, 10);
 	setRpmTableBin(config->scriptTable1RpmBins);
 	setLinearCurve(config->scriptTable2LoadBins, 20, 120, 10);
