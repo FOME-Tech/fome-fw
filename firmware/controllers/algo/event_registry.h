@@ -21,12 +21,12 @@ struct AngleBasedEvent {
 	 */
 	AngleBasedEvent *nextToothEvent = nullptr;
 
-	float enginePhase;
+	EngPhase eventPhase;
 
-	void setAngle(angle_t angle);
+	void setAngle(EngPhase angle);
 
-	bool shouldSchedule(float currentPhase, float nextPhase) const;
-	float getAngleFromNow(float currentPhase) const;
+	bool shouldSchedule(const EnginePhaseInfo& phase) const;
+	float getAngleFromNow(const EnginePhaseInfo& phase) const;
 };
 
 #define MAX_OUTPUTS_FOR_IGNITION 2

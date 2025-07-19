@@ -2,19 +2,14 @@
 
 class TriggerScheduler : public EngineModule {
 public:
-	void schedule(AngleBasedEvent* event, angle_t angle, action_s action);
+	void schedule(AngleBasedEvent* event, EngPhase angle, action_s action);
 
 	bool scheduleOrQueue(AngleBasedEvent *event,
-							efitick_t edgeTimestamp,
-							angle_t angle,
+							EngPhase angle,
 							action_s action,
-							float currentPhase, float nextPhase);
+							const EnginePhaseInfo& phase);
 
-	void onEnginePhase(float /*rpm*/,
-							efitick_t /*edgeTimestamp*/,
-							angle_t /*currentPhase*/,
-							angle_t /*nextPhase*/)
-							override;
+	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
 
 	// For unit tests
 	AngleBasedEvent * getElementAtIndexForUnitTest(int index);

@@ -354,7 +354,7 @@ efitick_t scheduleByAngle(scheduling_s *timer, efitick_t edgeTimestamp, angle_t 
 		action_s action) {
 	float delayUs = engine->rpmCalculator.oneDegreeUs * angle;
 
-    // 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
+	// 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
 	int32_t delayNt = USF2NT(delayUs);
 	efitick_t delayedTime = edgeTimestamp + efidur_t{delayNt};
 
