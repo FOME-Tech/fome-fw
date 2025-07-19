@@ -781,9 +781,6 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 ! same length used for critical and soft error messages
 #define ERROR_BUFFER_SIZE 120
 
-#define VIN_NUMBER_SIZE 17
-	custom vin_number_t @@VIN_NUMBER_SIZE@@ string, ASCII, @OFFSET@, @@VIN_NUMBER_SIZE@@
-
 	custom vehicle_info_t @@VEHICLE_INFO_SIZE@@ string, ASCII, @OFFSET@, @@VEHICLE_INFO_SIZE@@
 	custom gppwm_note_t @@GPPWM_NOTE_SIZE@@ string, ASCII, @OFFSET@, @@GPPWM_NOTE_SIZE@@
 
@@ -1306,9 +1303,6 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
         hpfp_cam_e hpfpCam;
         uint8_t hpfpPeakPos;Crank angle ATDC of first lobe peak;"deg", 1, 0, 0, 255, 0
         uint8_t hpfpMinAngle;If the requested activation time is below this angle, don't bother running the pump;"deg", 1, 0, 0, 255, 0
-
-		vin_number_t vinNumber
-
 
 	uint16_t autoscale hpfpPumpVolume;Size of the pump chamber in cc. Typical Bosch HDP5 has a 9.0mm diameter, typical BMW N* stroke is 4.4mm.;"cc", 0.001, 0, 0, 65, 3
 	uint8_t hpfpActivationAngle;How long to keep the valve activated (in order to allow the pump to build pressure and keep the valve open on its own);"deg", 1, 0, 0, 255, 0
