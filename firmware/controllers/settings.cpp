@@ -485,8 +485,6 @@ void initSettings() {
 	addConsoleActionSS(CMD_TRIGGER_PIN, setTriggerInputPin);
 	addConsoleActionSS(CMD_TRIGGER_SIMULATOR_PIN, setTriggerSimulatorPin);
 
-	addConsoleActionI(CMD_ECU_UNLOCK, unlockEcu);
-
 	addConsoleActionS(CMD_ALTERNATOR_PIN, setAlternatorPin);
 	addConsoleActionS(CMD_IDLE_PIN, setIdlePin);
 

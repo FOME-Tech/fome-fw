@@ -886,7 +886,6 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	bit unused1192b2
 	bit boardUseTachPullUp,"12v","5v"
 	bit boardUseTempPullUp,"With Pull Ups","Piggyback Mode"
-	bit yesUnderstandLocking,"yes","no"
 	bit silentTriggerError;Sometimes we have a performance issue while printing error
 	bit useLinearCltSensor
 	bit canReadEnabled;enable can_read/disable can_read
@@ -1365,8 +1364,6 @@ output_pin_e acrPin2;
 	uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.1, 0, 0, 10, 1
 	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
 
-	uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
-
 	#define fuel_pressure_sensor_mode_e_enum "Absolute", "Gauge", "Differential", "INVALID"
 	custom fuel_pressure_sensor_mode_e 1 bits, U08, @OFFSET@, [0:1], @@fuel_pressure_sensor_mode_e_enum@@
 	fuel_pressure_sensor_mode_e fuelPressureSensorMode
@@ -1824,7 +1821,6 @@ end_struct
 #define CMD_RESET_ENGINE_SNIFFER "reset_engine_chart"
 #define CMD_FUNCTIONAL_TEST_MODE "test_mode"
 
-#define CMD_ECU_UNLOCK "unlock"
 #define CMD_ENGINE_TYPE "engine_type"
 #define CMD_INJECTION "injection"
 #define CMD_IGNITION "ignition"
