@@ -118,8 +118,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 	// don't allow split inj in simultaneous mode
-	// TODO: #364 implement logic to actually enable split injections
-	bool doSplitInjection = false && !isSimultaneous;
+	bool doSplitInjection = engine->engineState.doSplitInjection && !isSimultaneous;
 
 	// Select fuel mass from the correct cylinder
 	auto cycleMassGrams = engine->cylinders[this->cylinderNumber].getInjectionMass();
@@ -200,16 +199,16 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	ctx.stage2Active = hasStage2Injection;
 	ctx.outputsMask = calculateInjectorOutputMask();
 
+	if (doSplitInjection) {
+		ctx.splitDurationUs = durationUsStage1;
+	}
+
 #if EFI_PRINTF_FUEL_DETAILS
 if (printFuelDebug) {
 	printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n", ctx.outputsMask, (int)durationUsStage1,
 			(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
 }
 #endif /*EFI_PRINTF_FUEL_DETAILS */
-
-	if (doSplitInjection) {
-		ctx.splitDurationUs = durationUsStage1;
-	}
 
 	// Correctly wrap injection start angle
 	float angleFromNow = eventAngle - phase.currentEngPhase.angle;

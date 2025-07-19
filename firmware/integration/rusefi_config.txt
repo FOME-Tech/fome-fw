@@ -406,7 +406,6 @@ bit etb_use_two_wires;TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT us
 bit isDoubleSolenoidIdle;Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 bit enableStagedInjection
 bit useTLE8888_cranking_hack;
-bit kickStartCranking;Experimental kick start cranking mode
 bit useSeparateIdleTablesForCrankingTaper;This uses separate ignition timing and VE tables not only for idle conditions, also during the postcranking-to-idle taper transition (See also afterCrankingIACtaperDuration).
 bit launchControlEnabled;
 bit doNotFilterTriggerEdgeNoise,"without filter","with filter";"Detect double trigger edges"
@@ -415,7 +414,6 @@ bit useRunningMathForCranking,"Fuel Map","Fixed";For cranking either use the spe
 bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
-bit artificialTestMisfire,"Danger Mode","No thank you";Experimental setting that will cause a misfire\nDO NOT ENABLE.
 bit fakeFullSyncForStimulation;In internal trigger stimulation mode, control whether we pretend a cam is present to resolve full sync. When set to true, sequential fuel/spark will work as if a cam signal was detected.
 bit cltSensorPulldown
 bit iatSensorPulldown
@@ -782,9 +780,6 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 ! same length used for critical and soft error messages
 #define ERROR_BUFFER_SIZE 120
 
-#define VIN_NUMBER_SIZE 17
-	custom vin_number_t @@VIN_NUMBER_SIZE@@ string, ASCII, @OFFSET@, @@VIN_NUMBER_SIZE@@
-
 	custom vehicle_info_t @@VEHICLE_INFO_SIZE@@ string, ASCII, @OFFSET@, @@VEHICLE_INFO_SIZE@@
 	custom gppwm_note_t @@GPPWM_NOTE_SIZE@@ string, ASCII, @OFFSET@, @@GPPWM_NOTE_SIZE@@
 
@@ -887,7 +882,6 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	bit unused1192b2
 	bit boardUseTachPullUp,"12v","5v"
 	bit boardUseTempPullUp,"With Pull Ups","Piggyback Mode"
-	bit yesUnderstandLocking,"yes","no"
 	bit silentTriggerError;Sometimes we have a performance issue while printing error
 	bit useLinearCltSensor
 	bit canReadEnabled;enable can_read/disable can_read
@@ -1309,9 +1303,6 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
         uint8_t hpfpPeakPos;Crank angle ATDC of first lobe peak;"deg", 1, 0, 0, 255, 0
         uint8_t hpfpMinAngle;If the requested activation time is below this angle, don't bother running the pump;"deg", 1, 0, 0, 255, 0
 
-		vin_number_t vinNumber
-
-
 	uint16_t autoscale hpfpPumpVolume;Size of the pump chamber in cc. Typical Bosch HDP5 has a 9.0mm diameter, typical BMW N* stroke is 4.4mm.;"cc", 0.001, 0, 0, 65, 3
 	uint8_t hpfpActivationAngle;How long to keep the valve activated (in order to allow the pump to build pressure and keep the valve open on its own);"deg", 1, 0, 0, 255, 0
 	uint8_t issFilterReciprocal;;"", 1, 0, 0, 255, 0
@@ -1365,8 +1356,6 @@ output_pin_e acrPin2;
 
 	uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.1, 0, 0, 10, 1
 	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
-
-	uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
 
 	#define fuel_pressure_sensor_mode_e_enum "Absolute", "Gauge", "Differential", "INVALID"
 	custom fuel_pressure_sensor_mode_e 1 bits, U08, @OFFSET@, [0:1], @@fuel_pressure_sensor_mode_e_enum@@
@@ -1832,7 +1821,6 @@ end_struct
 #define CMD_RESET_ENGINE_SNIFFER "reset_engine_chart"
 #define CMD_FUNCTIONAL_TEST_MODE "test_mode"
 
-#define CMD_ECU_UNLOCK "unlock"
 #define CMD_ENGINE_TYPE "engine_type"
 #define CMD_INJECTION "injection"
 #define CMD_IGNITION "ignition"

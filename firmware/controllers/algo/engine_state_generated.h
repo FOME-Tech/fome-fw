@@ -143,8 +143,9 @@ struct engine_state_s {
 	bool brakePedalState : 1 {};
 	// offset 44 bit 3
 	bool startStopState : 1 {};
+	// Split injection active
 	// offset 44 bit 4
-	bool unusedBit_44_4 : 1 {};
+	bool doSplitInjection : 1 {};
 	// offset 44 bit 5
 	bool unusedBit_44_5 : 1 {};
 	// offset 44 bit 6

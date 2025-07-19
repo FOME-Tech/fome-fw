@@ -204,6 +204,20 @@ void EngineState::updateTChargeK(float rpm, float tps) {
 #endif
 }
 
+void EngineState::updateSplitInjection() {
+	if (!requestSplitInjection) {
+		doSplitInjection = false;
+		return;
+	}
+
+	// toggle every 2 seconds
+	if (splitInjectionTimer.hasElapsedSec(2)) {
+		splitInjectionTimer.reset();
+
+		doSplitInjection ^= true;
+	}
+}
+
 void TriggerConfiguration::update() {
 	VerboseTriggerSynchDetails = isVerboseTriggerSynchDetails();
 	TriggerType = getType();
@@ -224,26 +238,4 @@ trigger_config_s VvtTriggerConfiguration::getType() const {
 
 bool VvtTriggerConfiguration::isVerboseTriggerSynchDetails() const {
 	return engineConfiguration->verboseVVTDecoding;
-}
-
-bool isLockedFromUser() {
-	int lock = engineConfiguration->tuneHidingKey;
-	bool isLocked = lock > 0;
-	if (isLocked) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "password protected");
-	}
-	return isLocked;
-}
-
-void unlockEcu(int password) {
-	if (password != engineConfiguration->tuneHidingKey) {
-		efiPrintf("Nope rebooting...");
-#if EFI_PROD_CODE
-		scheduleReboot();
-#endif // EFI_PROD_CODE
-	} else {
-		efiPrintf("Unlocked! Burning...");
-		engineConfiguration->tuneHidingKey = 0;
-		requestBurn();
-	}
 }
