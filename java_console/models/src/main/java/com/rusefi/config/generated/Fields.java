@@ -899,7 +899,7 @@ public class Fields {
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int PEDAL_TO_TPS_SIZE = 8;
-	public static final int persistent_config_s_size = 22100;
+	public static final int persistent_config_s_size = 22132;
 	public static final int pid_s_size = 20;
 	public static final int pin_input_mode_e_PI_DEFAULT = 0;
 	public static final int pin_input_mode_e_PI_PULLDOWN = 2;
@@ -990,7 +990,7 @@ public class Fields {
 	public static final int TOOTH_PACKET_SIZE = 2;
 	public static final String TOP_DEAD_CENTER_MESSAGE = "r";
 	public static final int TORQUE_CURVE_SIZE = 6;
-	public static final int TOTAL_CONFIG_SIZE = 22100;
+	public static final int TOTAL_CONFIG_SIZE = 22132;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int TPS_TPS_ACCEL_CLT_CORR_TABLE = 4;
 	public static final int TPS_TPS_ACCEL_TABLE = 8;
@@ -1158,7 +1158,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.19.f407-discovery.3562628758";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.19.f407-discovery.3754848762";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1320;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -1213,6 +1213,7 @@ public class Fields {
 	public static final int vvt_mode_e_VVT_SINGLE_TOOTH = 1;
 	public static final int vvt_mode_e_VVT_TOYOTA_3_TOOTH = 2;
 	public static final int vvt_mode_e_VVT_TOYOTA_4_1 = 6;
+	public static final int VvtOpenLoop_size = 16;
 	public static final int WidebandMode_AemXSeries = 2;
 	public static final int WidebandMode_Analog = 0;
 	public static final int WidebandMode_FOMEInternal = 1;
@@ -2736,4 +2737,8 @@ public class Fields {
 	public static final Field IDLEFLOWESTIMATEPOSITION = Field.create("IDLEFLOWESTIMATEPOSITION", 22076, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 	public static final Field AIRMASSTOTIMINGBINS = Field.create("AIRMASSTOTIMINGBINS", 22084, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field AIRMASSTOTIMINGVALUES = Field.create("AIRMASSTOTIMINGVALUES", 22092, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTOPENLOOP1_BINS = Field.create("VVTOPENLOOP1_BINS", 22100, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTOPENLOOP1_VALUES = Field.create("VVTOPENLOOP1_VALUES", 22108, FieldType.INT8).setScale(0.5).setBaseOffset(0);
+	public static final Field VVTOPENLOOP2_BINS = Field.create("VVTOPENLOOP2_BINS", 22116, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field VVTOPENLOOP2_VALUES = Field.create("VVTOPENLOOP2_VALUES", 22124, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 }
