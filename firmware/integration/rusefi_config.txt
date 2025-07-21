@@ -1774,7 +1774,7 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	VvtOpenLoop[2 iterate] vvtOpenLoop
 
-	uint8_t[6] autoscale knockGainLoadBins;;"", 10, 0, 0, 1000, 0
+	uint8_t[6] autoscale knockGainLoadBins;;"%", 10, 0, 0, 1000, 0
 	uint8_t[6] autoscale knockGainRpmBins;;"RPM", 100, 0, 0, 25000, 0
 
 	struct KnockGain
