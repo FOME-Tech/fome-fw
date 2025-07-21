@@ -850,6 +850,7 @@ public class Fields {
 	public static final int InjectorNonlinearMode_INJ_None = 0;
 	public static final int InjectorNonlinearMode_INJ_PolynomialAdder = 1;
 	public static final int InjectorNonlinearMode_INJ_SmallPulseAdder = 3;
+	public static final int KnockGain_size = 36;
 	public static final int launchActivationMode_e_ALWAYS_ACTIVE_LAUNCH = 2;
 	public static final int launchActivationMode_e_CLUTCH_INPUT_LAUNCH = 1;
 	public static final int launchActivationMode_e_SWITCH_INPUT_LAUNCH = 0;
@@ -899,7 +900,7 @@ public class Fields {
 	public static final int PACK_MULT_TEMPERATURE = 100;
 	public static final int PACK_MULT_VOLTAGE = 1000;
 	public static final int PEDAL_TO_TPS_SIZE = 8;
-	public static final int persistent_config_s_size = 22132;
+	public static final int persistent_config_s_size = 22576;
 	public static final int pid_s_size = 20;
 	public static final int pin_input_mode_e_PI_DEFAULT = 0;
 	public static final int pin_input_mode_e_PI_PULLDOWN = 2;
@@ -952,7 +953,6 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
-	public static final int SIGNATURE_HASH = 343392070;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -991,7 +991,7 @@ public class Fields {
 	public static final int TOOTH_PACKET_SIZE = 2;
 	public static final String TOP_DEAD_CENTER_MESSAGE = "r";
 	public static final int TORQUE_CURVE_SIZE = 6;
-	public static final int TOTAL_CONFIG_SIZE = 22132;
+	public static final int TOTAL_CONFIG_SIZE = 22576;
 	public static final int TPS_2_BYTE_PACKING_MULT = 100;
 	public static final int TPS_TPS_ACCEL_CLT_CORR_TABLE = 4;
 	public static final int TPS_TPS_ACCEL_TABLE = 8;
@@ -1159,7 +1159,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.21.f407-discovery.343392070";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.21.f407-discovery.3365236553";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1308;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -2742,4 +2742,18 @@ public class Fields {
 	public static final Field VVTOPENLOOP1_VALUES = Field.create("VVTOPENLOOP1_VALUES", 22108, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 	public static final Field VVTOPENLOOP2_BINS = Field.create("VVTOPENLOOP2_BINS", 22116, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 	public static final Field VVTOPENLOOP2_VALUES = Field.create("VVTOPENLOOP2_VALUES", 22124, FieldType.INT8).setScale(0.5).setBaseOffset(0);
+	public static final Field KNOCKGAINLOADBINS = Field.create("KNOCKGAINLOADBINS", 22132, FieldType.INT8).setScale(10.0).setBaseOffset(0);
+	public static final Field KNOCKGAINRPMBINS = Field.create("KNOCKGAINRPMBINS", 22138, FieldType.INT8).setScale(100.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS1_GAIN = Field.create("KNOCKGAINS1_GAIN", 22144, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS2_GAIN = Field.create("KNOCKGAINS2_GAIN", 22180, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS3_GAIN = Field.create("KNOCKGAINS3_GAIN", 22216, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS4_GAIN = Field.create("KNOCKGAINS4_GAIN", 22252, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS5_GAIN = Field.create("KNOCKGAINS5_GAIN", 22288, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS6_GAIN = Field.create("KNOCKGAINS6_GAIN", 22324, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS7_GAIN = Field.create("KNOCKGAINS7_GAIN", 22360, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS8_GAIN = Field.create("KNOCKGAINS8_GAIN", 22396, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS9_GAIN = Field.create("KNOCKGAINS9_GAIN", 22432, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS10_GAIN = Field.create("KNOCKGAINS10_GAIN", 22468, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS11_GAIN = Field.create("KNOCKGAINS11_GAIN", 22504, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS12_GAIN = Field.create("KNOCKGAINS12_GAIN", 22540, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 }
