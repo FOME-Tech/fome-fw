@@ -953,6 +953,7 @@ public class Fields {
 	public static final int SelectedGear_Neutral = 5;
 	public static final int SelectedGear_Park = 3;
 	public static final int SelectedGear_Reverse = 4;
+	public static final int SIGNATURE_HASH = 395121977;
 	public static final int spi_device_e_SPI_DEVICE_1 = 1;
 	public static final int spi_device_e_SPI_DEVICE_2 = 2;
 	public static final int spi_device_e_SPI_DEVICE_3 = 3;
@@ -1159,7 +1160,7 @@ public class Fields {
 	public static final int TS_RESPONSE_UNDERRUN = 0x80;
 	public static final int TS_RESPONSE_UNRECOGNIZED_COMMAND = 0x83;
 	public static final char TS_SET_LOGGER_SWITCH = 'l';
-	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.21.f407-discovery.3365236553";
+	public static final String TS_SIGNATURE = "rusEFI (FOME) master.2025.07.21.f407-discovery.395121977";
 	public static final char TS_SINGLE_WRITE_COMMAND = 'W';
 	public static final int TS_TOTAL_OUTPUT_SIZE = 1308;
 	public static final String TS_TRIGGER_SCOPE_CHANNEL_1_NAME = "Channel 1";
@@ -2744,16 +2745,16 @@ public class Fields {
 	public static final Field VVTOPENLOOP2_VALUES = Field.create("VVTOPENLOOP2_VALUES", 22124, FieldType.INT8).setScale(0.5).setBaseOffset(0);
 	public static final Field KNOCKGAINLOADBINS = Field.create("KNOCKGAINLOADBINS", 22132, FieldType.INT8).setScale(10.0).setBaseOffset(0);
 	public static final Field KNOCKGAINRPMBINS = Field.create("KNOCKGAINRPMBINS", 22138, FieldType.INT8).setScale(100.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS1_GAIN = Field.create("KNOCKGAINS1_GAIN", 22144, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS2_GAIN = Field.create("KNOCKGAINS2_GAIN", 22180, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS3_GAIN = Field.create("KNOCKGAINS3_GAIN", 22216, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS4_GAIN = Field.create("KNOCKGAINS4_GAIN", 22252, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS5_GAIN = Field.create("KNOCKGAINS5_GAIN", 22288, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS6_GAIN = Field.create("KNOCKGAINS6_GAIN", 22324, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS7_GAIN = Field.create("KNOCKGAINS7_GAIN", 22360, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS8_GAIN = Field.create("KNOCKGAINS8_GAIN", 22396, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS9_GAIN = Field.create("KNOCKGAINS9_GAIN", 22432, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS10_GAIN = Field.create("KNOCKGAINS10_GAIN", 22468, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS11_GAIN = Field.create("KNOCKGAINS11_GAIN", 22504, FieldType.INT8).setScale(1.0).setBaseOffset(0);
-	public static final Field KNOCKGAINS12_GAIN = Field.create("KNOCKGAINS12_GAIN", 22540, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS1_TABLE = Field.create("KNOCKGAINS1_TABLE", 22144, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS2_TABLE = Field.create("KNOCKGAINS2_TABLE", 22180, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS3_TABLE = Field.create("KNOCKGAINS3_TABLE", 22216, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS4_TABLE = Field.create("KNOCKGAINS4_TABLE", 22252, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS5_TABLE = Field.create("KNOCKGAINS5_TABLE", 22288, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS6_TABLE = Field.create("KNOCKGAINS6_TABLE", 22324, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS7_TABLE = Field.create("KNOCKGAINS7_TABLE", 22360, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS8_TABLE = Field.create("KNOCKGAINS8_TABLE", 22396, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS9_TABLE = Field.create("KNOCKGAINS9_TABLE", 22432, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS10_TABLE = Field.create("KNOCKGAINS10_TABLE", 22468, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS11_TABLE = Field.create("KNOCKGAINS11_TABLE", 22504, FieldType.INT8).setScale(1.0).setBaseOffset(0);
+	public static final Field KNOCKGAINS12_TABLE = Field.create("KNOCKGAINS12_TABLE", 22540, FieldType.INT8).setScale(1.0).setBaseOffset(0);
 }
