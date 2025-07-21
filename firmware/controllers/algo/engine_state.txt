@@ -43,8 +43,8 @@ struct_no_prefix engine_state_s
 
 	uint32_t startStopStateToggleCounter
 
-	uint32_t fuelInjectionCounter;Fuel: Injection counter
-	uint32_t sparkCounter;Ign: Spark counter
+	uint16_t fuelInjectionCounter;Fuel: Injection counter
+	uint16_t sparkCounter;Ign: Spark counter
 
 	! Values used for load axes for fuel/ign tables
 	! These may or may not be the same value, depending on mode
