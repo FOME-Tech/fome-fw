@@ -125,9 +125,24 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 			}
 		}
 
-		if (oilp && engineConfiguration->enableOilPressureProtect) {
-			float minPressure = interpolate2d(rpm, config->minimumOilPressureBins, config->minimumOilPressureValues);
-			bool isPressureSufficient = oilp.Value > minPressure;
+		if (engineConfiguration->enableOilPressureProtect) {
+			bool isPressureSufficient;
+			if (engineConfiguration->useOilPressureSwitch) {
+				isPressureSufficient = getOilSwitchState();
+			} else {
+				if (oilp) {
+					float minPressure = interpolate2d(
+											rpm,
+											config->minimumOilPressureBins,
+											config->minimumOilPressureValues
+										);
+					isPressureSufficient = oilp.Value > minPressure;
+				} else {
+					// The sensor is dead, assume things are fine
+					// (sensor error is separately handled)
+					isPressureSufficient = true;
+				}
+			}
 
 			if (isPressureSufficient) {
 				m_lowOilPressureTimer.reset(nowNt);
