@@ -4,13 +4,13 @@ struct wall_fuel_state_s {
 	// Wall fuel correction
 	// mg
 	// offset 0
-	scaled_channel<int16_t, 10, 1> wallFuelCorrection = (int16_t)0;
+	float wallFuelCorrection = (float)0;
 	// Wall fuel amount
 	// mg
-	// offset 2
-	scaled_channel<uint16_t, 10, 1> wallFuel = (uint16_t)0;
+	// offset 4
+	float wallFuel = (float)0;
 };
-static_assert(sizeof(wall_fuel_state_s) == 4);
+static_assert(sizeof(wall_fuel_state_s) == 8);
 static_assert(offsetof(wall_fuel_state_s, wallFuelCorrection) == 0);
-static_assert(offsetof(wall_fuel_state_s, wallFuel) == 2);
+static_assert(offsetof(wall_fuel_state_s, wallFuel) == 4);
 
