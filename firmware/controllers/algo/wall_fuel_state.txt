@@ -1,4 +1,4 @@
 struct_no_prefix wall_fuel_state_s
-	int16_t autoscale wallFuelCorrection;Wall fuel correction;"mg", 0.1, 0, 0, 0, 1
-	uint16_t autoscale wallFuel;Wall fuel amount;"mg", 0.1, 0, 0, 0, 1
+	float wallFuelCorrection;Wall fuel correction;"mg", 1, 0, 0, 0, 1
+	float wallFuel;Wall fuel amount;"mg", 1, 0, 0, 0, 1
 end_struct
