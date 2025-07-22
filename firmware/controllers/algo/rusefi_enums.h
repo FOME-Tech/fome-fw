@@ -657,6 +657,11 @@ enum class DtcSeverity : uint8_t {
 	LimpLevel2 = 3,
 };
 
+enum class oilPressureSource_e : uint8_t {
+	Switch = 0,
+	Sensor = 1,
+};
+
 #define SC_Exhaust_First 1
 
 #endif // __cplusplus
