@@ -126,7 +126,17 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 		}
 
 		if (oilp && engineConfiguration->enableOilPressureProtect) {
-			if (engineConfiguration->oilPressureSource == oilPressureSource_e::Sensor) {
+			if (engineConfiguration->useOilPressureSwitch) {
+				if (hasOilPressureSwitch()) {
+					if (getOilSwitchState()) {
+						m_lowOilPressureTimer.reset(nowNt);
+					}
+
+					if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
+						allowFuel.clear(ClearReason::OilPressure);
+					}
+				}
+			} else {
 				float minPressure = interpolate2d(rpm, config->minimumOilPressureBins, config->minimumOilPressureValues);
 				bool isPressureSufficient = oilp.Value > minPressure;
 
@@ -136,16 +146,6 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 
 				if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
 					allowFuel.clear(ClearReason::OilPressure);
-				}
-			} else {
-				if (hasOilPressureSwitch()) {
-					if (getOilSwitchState()) {
-						m_lowOilPressureTimer.reset(nowNt);
-					}
-
-					if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
-						allowFuel.clear(ClearReason::OilPressure);
-					}
 				}
 			}
 		}
