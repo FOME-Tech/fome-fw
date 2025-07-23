@@ -127,29 +127,35 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 
 		if (engineConfiguration->enableOilPressureProtect) {
 			bool isPressureSufficient;
-			if (engineConfiguration->useOilPressureSwitch) {
-				isPressureSufficient = getOilSwitchState();
-			} else {
-				if (oilp) {
-					float minPressure = interpolate2d(
-											rpm,
-											config->minimumOilPressureBins,
-											config->minimumOilPressureValues
-										);
-					isPressureSufficient = oilp.Value > minPressure;
+			static bool afterStartDelayPassed = false;
+			if (engineConfiguration->oilPressureProtectionStartDelay < engine->rpmCalculator.getSecondsSinceEngineStart(nowNt)) {
+				afterStartDelayPassed = true;
+			}
+			if (afterStartDelayPassed) {
+				if (engineConfiguration->useOilPressureSwitch) {
+					isPressureSufficient = getOilSwitchState();
 				} else {
-					// The sensor is dead, assume things are fine
-					// (sensor error is separately handled)
-					isPressureSufficient = true;
+					if (oilp) {
+						float minPressure = interpolate2d(
+												rpm,
+												config->minimumOilPressureBins,
+												config->minimumOilPressureValues
+											);
+						isPressureSufficient = oilp.Value > minPressure;
+					} else {
+						// The sensor is dead, assume things are fine
+						// (sensor error is separately handled)
+						isPressureSufficient = true;
+					}
 				}
-			}
 
-			if (isPressureSufficient) {
-				m_lowOilPressureTimer.reset(nowNt);
-			}
+				if (isPressureSufficient) {
+					m_lowOilPressureTimer.reset(nowNt);
+				}
 
-			if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
-				allowFuel.clear(ClearReason::OilPressure);
+				if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
+					allowFuel.clear(ClearReason::OilPressure);
+				}
 			}
 		}
 	} else {
