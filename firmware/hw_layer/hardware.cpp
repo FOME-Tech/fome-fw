@@ -178,8 +178,12 @@ void stopSpi(spi_device_e device) {
 
 void applyNewHardwareSettings() {
 #if EFI_PROD_CODE
-	bool allowDangerousHardwareUpdates =
-		!engine->rpmCalculator.isRunning();
+	#if EFI_SHAFT_POSITION_INPUT
+		bool allowDangerousHardwareUpdates =
+			!engine->rpmCalculator.isRunning();
+	#else // not EFI_SHAFT_POSITION_INPUT
+		bool allowDangerousHardwareUpdates = true;
+	#endif // EFI_SHAFT_POSITION_INPUT
 #endif
 
 	/**
