@@ -177,14 +177,14 @@ void stopSpi(spi_device_e device) {
  */
 
 void applyNewHardwareSettings() {
-    /**
-     * All 'stop' methods need to go before we begin starting pins.
-     *
-     * We take settings from 'activeConfiguration' not 'engineConfiguration' while stopping hardware.
-     * Some hardware is restart unconditionally on change of parameters while for some systems we make extra effort and restart only
-     * relevant settings were changes.
-     *
-     */
+	/**
+	 * All 'stop' methods need to go before we begin starting pins.
+	 *
+	 * We take settings from 'activeConfiguration' not 'engineConfiguration' while stopping hardware.
+	 * Some hardware is restart unconditionally on change of parameters while for some systems we make extra effort and restart only
+	 * relevant settings were changes.
+	 *
+	 */
 	ButtonDebounce::stopConfigurationList();
 
 #if EFI_PROD_CODE
@@ -261,7 +261,7 @@ void applyNewHardwareSettings() {
 
 	enginePins.startPins();
 
-    initKLine();
+	initKLine();
 
 #if EFI_PROD_CODE && EFI_IDLE_CONTROL
 	if (isIdleHardwareRestartNeeded()) {
