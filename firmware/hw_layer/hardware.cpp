@@ -191,10 +191,6 @@ void applyNewHardwareSettings() {
 	stopSensors();
 #endif // EFI_PROD_CODE
 
-#if EFI_CAN_SUPPORT
-	stopCanPins();
-#endif /* EFI_CAN_SUPPORT */
-
 	stopHardware();
 
 	if (isConfigurationChanged(is_enabled_spi_1)) {
