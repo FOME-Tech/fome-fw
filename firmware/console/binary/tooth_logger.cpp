@@ -19,8 +19,9 @@ static_assert(sizeof(composite_logger_s) == COMPOSITE_PACKET_SIZE, "composite pa
 static volatile bool ToothLoggerEnabled = false;
 static uint32_t lastEdgeTimestamp = 0;
 
+static bool wasSecondary = false;
 static bool currentTrigger1 = false;
-static bool currentTrigger2 = false;
+static bool camStates[4] = {false};
 static bool currentTdc = false;
 
 #if EFI_UNIT_TEST
@@ -200,8 +201,12 @@ static void SetNextCompositeEntry(efitick_t timestamp) {
 		// TS uses big endian, grumble
 		entry->timestamp = SWAP_UINT32(nowUs);
 		entry->priLevel = currentTrigger1;
-		entry->secLevel = currentTrigger2;
-		entry->trigger = currentTdc;
+		entry->cam1 = camStates[0];
+		entry->cam2 = camStates[1];
+		entry->cam3 = camStates[2];
+		entry->cam4 = camStates[3];
+		entry->trigger = wasSecondary;
+		entry->tdc = currentTdc;
 		entry->sync = engine->triggerCentral.triggerState.getShaftSynchronized();
 	}
 
@@ -242,15 +247,16 @@ static void LogTriggerTooth(efitick_t timestamp) {
 }
 
 void LogPrimaryTriggerTooth(efitick_t timestamp, bool state) {
+	wasSecondary = false;
 	currentTrigger1 = state;
 
 	LogTriggerTooth(timestamp);
 }
 
 void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state) {
-	// TODO: use camIndex and log all 4 cams
-	UNUSED(camIndex);
-	currentTrigger2 = state;
+	wasSecondary = true;
+
+	camStates[camIndex] = state;
 
 	LogTriggerTooth(timestamp);
 }
