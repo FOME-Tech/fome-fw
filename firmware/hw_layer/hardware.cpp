@@ -177,8 +177,10 @@ void stopSpi(spi_device_e device) {
  */
 
 void applyNewHardwareSettings() {
+#if EFI_PROD_CODE
 	bool allowDangerousHardwareUpdates =
 		!engine->rpmCalculator.isRunning();
+#endif
 
 	/**
 	 * All 'stop' methods need to go before we begin starting pins.
