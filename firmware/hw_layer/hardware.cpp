@@ -177,6 +177,9 @@ void stopSpi(spi_device_e device) {
  */
 
 void applyNewHardwareSettings() {
+	bool allowDangerousHardwareUpdates =
+		!engine->rpmCalculator.isRunning();
+
 	/**
 	 * All 'stop' methods need to go before we begin starting pins.
 	 *
@@ -188,7 +191,9 @@ void applyNewHardwareSettings() {
 	ButtonDebounce::stopConfigurationList();
 
 #if EFI_PROD_CODE
-	stopSensors();
+	if (allowDangerousHardwareUpdates) {
+		stopSensors();
+	}
 #endif // EFI_PROD_CODE
 
 	stopHardware();
