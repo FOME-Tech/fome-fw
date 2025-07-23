@@ -75,11 +75,7 @@ static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
 	}
 }
 
-/*==========================================================================*/
-/* Exported functions.														*/
-/*==========================================================================*/
-
-void stopTriggerInputPins() {
+static void stopTriggerInputPins() {
 	for (int i = 0; i < TRIGGER_INPUT_PIN_COUNT; i++) {
 		if (isConfigurationChanged(triggerInputPins[i])) {
 			turnOffTriggerInputPin(i, true);
@@ -94,7 +90,7 @@ void stopTriggerInputPins() {
 
 static const char* const camNames[] = { "cam1", "cam2", "cam3", "cam4"};
 
-void startTriggerInputPins() {
+static void startTriggerInputPins() {
 	for (int i = 0; i < TRIGGER_INPUT_PIN_COUNT; i++) {
 		if (isConfigurationChanged(triggerInputPins[i])) {
 			const char * msg = (i == 0 ? "Trigger #1" : (i == 1 ? "Trigger #2" : "Trigger #3"));
@@ -109,13 +105,9 @@ void startTriggerInputPins() {
 	}
 }
 
-void turnOnTriggerInputPins() {
-	applyNewTriggerInputPins();
-}
-
 #endif /* (HAL_TRIGGER_USE_PAL == TRUE) */
 
-void applyNewTriggerInputPins() {
+void updateTriggerInputPins() {
 	if (hasFirmwareError()) {
 		return;
 	}

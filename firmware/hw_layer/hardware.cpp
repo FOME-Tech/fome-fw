@@ -191,10 +191,6 @@ void applyNewHardwareSettings() {
 	stopSensors();
 #endif // EFI_PROD_CODE
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
-	stopTriggerInputPins();
-#endif /* EFI_SHAFT_POSITION_INPUT */
-
 #if EFI_CAN_SUPPORT
 	stopCanPins();
 #endif /* EFI_CAN_SUPPORT */
@@ -243,7 +239,7 @@ void applyNewHardwareSettings() {
 	 ******************************************/
 
 #if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
-	startTriggerInputPins();
+	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
 	startHardware();
@@ -414,7 +410,7 @@ void initHardware() {
 #endif /* EFI_CAN_SUPPORT */
 
 #if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
-	turnOnTriggerInputPins();
+	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
 #if EFI_MEMS
