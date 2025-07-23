@@ -38,7 +38,7 @@ void SetNextCompositeEntry(efitick_t timestamp) {
 
 	event.timestamp = timestamp;
 	event.primaryTrigger = currentTrigger1;
-	event.secondaryTrigger = currentTrigger2;
+	event.secondaryTrigger = camStates[0];
 	event.isTDC = currentTdc;
 	event.sync = engine->triggerCentral.triggerState.getShaftSynchronized();
 
