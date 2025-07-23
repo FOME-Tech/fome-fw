@@ -30,10 +30,6 @@ void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state);
 
 void LogTriggerTopDeadCenter(efitick_t timestamp);
 
-void LogTriggerCoilState(efitick_t timestamp, bool state);
-
-void LogTriggerInjectorState(efitick_t timestamp, bool state);
-
 typedef struct __attribute__ ((packed)) {
 	// the whole order of all packet bytes is reversed, not just the 'endian-swap' integers
 	uint32_t timestamp;
@@ -42,8 +38,6 @@ typedef struct __attribute__ ((packed)) {
 	bool secLevel : 1;
 	bool trigger : 1;
 	bool sync : 1;
-	bool coil : 1;
-	bool injector : 1;
 } composite_logger_s;
 
 static constexpr size_t toothLoggerEntriesPerBuffer = 250;

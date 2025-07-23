@@ -22,10 +22,6 @@ static uint32_t lastEdgeTimestamp = 0;
 static bool currentTrigger1 = false;
 static bool currentTrigger2 = false;
 static bool currentTdc = false;
-// any coil, all coils thrown together
-static bool currentCoilState = false;
-// same about injectors
-static bool currentInjectorState = false;
 
 #if EFI_UNIT_TEST
 #include "logicdata.h"
@@ -44,8 +40,6 @@ void SetNextCompositeEntry(efitick_t timestamp) {
 	event.secondaryTrigger = currentTrigger2;
 	event.isTDC = currentTdc;
 	event.sync = engine->triggerCentral.triggerState.getShaftSynchronized();
-	event.coil = currentCoilState;
-	event.injector = currentInjectorState;
 
 	events.push_back(event);
 }
@@ -209,8 +203,6 @@ static void SetNextCompositeEntry(efitick_t timestamp) {
 		entry->secLevel = currentTrigger2;
 		entry->trigger = currentTdc;
 		entry->sync = engine->triggerCentral.triggerState.getShaftSynchronized();
-		entry->coil = currentCoilState;
-		entry->injector = currentInjectorState;
 	}
 
 	// if the buffer is full...
@@ -272,24 +264,6 @@ void LogTriggerTopDeadCenter(efitick_t timestamp) {
 	SetNextCompositeEntry(timestamp);
 	currentTdc = false;
 	SetNextCompositeEntry(timestamp + 10);
-}
-
-void LogTriggerCoilState(efitick_t timestamp, bool state) {
-	if (!ToothLoggerEnabled) {
-		return;
-	}
-	currentCoilState = state;
-	UNUSED(timestamp);
-	//SetNextCompositeEntry(timestamp, trigger1, trigger2, trigger);
-}
-
-void LogTriggerInjectorState(efitick_t timestamp, bool state) {
-	if (!ToothLoggerEnabled) {
-		return;
-	}
-	currentInjectorState = state;
-	UNUSED(timestamp);
-	//SetNextCompositeEntry(timestamp, trigger1, trigger2, trigger);
 }
 
 void EnableToothLoggerIfNotEnabled() {
