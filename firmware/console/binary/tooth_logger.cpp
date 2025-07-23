@@ -233,7 +233,7 @@ static void SetNextCompositeEntry(efitick_t timestamp) {
 
 #endif // EFI_UNIT_TEST
 
-void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp) {
+static void LogTriggerTooth(efitick_t timestamp) {
 	// bail if we aren't enabled
 	if (!ToothLoggerEnabled) {
 		return;
@@ -246,40 +246,21 @@ void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp) {
 
 	ScopePerf perf(PE::LogTriggerTooth);
 
-/*
-		// We currently only support the primary trigger falling edge
-    	// (this is the edge that VR sensors are accurate on)
-    	// Since VR sensors are the most useful case here, this is okay for now.
-    	if (tooth != SHAFT_PRIMARY_FALLING) {
-    		return;
-    	}
-
-    	uint32_t nowUs = NT2US(timestamp);
-    	// 10us per LSB - this gives plenty of accuracy, yet fits 655.35 ms in to a uint16
-    	uint16_t delta = static_cast<uint16_t>((nowUs - lastEdgeTimestamp) / 10);
-    	lastEdgeTimestamp = nowUs;
-
-    	SetNextEntry(delta);
-*/
-
-	switch (tooth) {
-	case TriggerEvent::PrimaryFalling:
-		currentTrigger1 = false;
-		break;
-	case TriggerEvent::PrimaryRising:
-		currentTrigger1 = true;
-		break;
-	case TriggerEvent::SecondaryFalling:
-		currentTrigger2 = false;
-		break;
-	case TriggerEvent::SecondaryRising:
-		currentTrigger2 = true;
-		break;
-	default:
-		break;
-	}
-
 	SetNextCompositeEntry(timestamp);
+}
+
+void LogPrimaryTriggerTooth(efitick_t timestamp, bool state) {
+	currentTrigger1 = state;
+
+	LogTriggerTooth(timestamp);
+}
+
+void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state) {
+	// TODO: use camIndex and log all 4 cams
+	UNUSED(camIndex);
+	currentTrigger2 = state;
+
+	LogTriggerTooth(timestamp);
 }
 
 void LogTriggerTopDeadCenter(efitick_t timestamp) {
