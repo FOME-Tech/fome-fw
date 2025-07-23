@@ -220,7 +220,7 @@ static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	addEngineSnifferVvtEvent(index, isRising);
 
 #if EFI_TOOTH_LOGGER
-	LogTriggerTooth(isRising ? TriggerEvent::SecondaryRising : TriggerEvent::SecondaryFalling, nowNt);
+	LogCamTriggerTooth(nowNt, index, isRising);
 #endif /* EFI_TOOTH_LOGGER */
 }
 
@@ -423,7 +423,7 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 	// We want to do this before anything else as we
 	// actually want to capture any noise/jitter that may be occurring
 
-	LogTriggerTooth(signal, timestamp);
+	LogPrimaryTriggerTooth(timestamp, isRising);
 #endif /* EFI_TOOTH_LOGGER */
 
 	if (!isUsefulSignal(signal, getTriggerCentral()->triggerShape)) {

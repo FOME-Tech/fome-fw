@@ -25,7 +25,8 @@ void EnableToothLogger();
 void DisableToothLogger();
 
 // A new tooth has arrived! Log to the buffer if enabled.
-void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp);
+void LogPrimaryTriggerTooth(efitick_t timestamp, bool state);
+void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state);
 
 void LogTriggerTopDeadCenter(efitick_t timestamp);
 
