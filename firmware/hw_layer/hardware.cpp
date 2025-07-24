@@ -350,10 +350,6 @@ void startHardware() {
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	startPedalPins();
-
-#if EFI_CAN_SUPPORT
-	startCanPins();
-#endif /* EFI_CAN_SUPPORT */
 }
 
 void initHardware() {

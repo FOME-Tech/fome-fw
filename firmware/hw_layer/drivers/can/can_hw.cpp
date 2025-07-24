@@ -93,12 +93,7 @@ void setCanType(int type) {
 	canInfo();
 }
 
-void startCanPins() {
-	// nothing to do if we aren't enabled...
-	if (!isCanEnabled) {
-		return;
-	}
-
+static void startCanPins() {
 	// Validate pins
 	if (!isValidCanTxPin(engineConfiguration->canTxPin)) {
 		if (!isBrainPinValid(engineConfiguration->canTxPin)) {
@@ -179,9 +174,11 @@ void initCan() {
 	}
 
 	isCanEnabled = true;
+
+	startCanPins();
 }
 
-bool getIsCanEnabled(void) {
+bool getIsCanEnabled() {
 	return isCanEnabled;
 }
 
