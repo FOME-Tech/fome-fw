@@ -334,8 +334,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			vvtPosition -= crankOffset;
 		}
 
-		vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
-
 		// this could be just an 'if' but let's have it expandable for future use :)
 		switch(engineConfiguration->vvtMode[camIndex]) {
 		case VVT_HONDA_K_INTAKE:
@@ -345,7 +343,8 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			vvtPosition = wrapVvt(vvtPosition, 180);
 			break;
 		default:
-			// else, do nothing
+			// "normal" cam patterns: wrap in to +-360 deg
+			vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
 			break;
 		}
 
