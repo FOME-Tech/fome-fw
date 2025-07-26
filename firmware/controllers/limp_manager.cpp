@@ -128,9 +128,6 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 		if (engineConfiguration->enableOilPressureProtect) {
 			bool isPressureSufficient;
 			static bool afterStartDelayPassed = false;
-			if (engineConfiguration->oilPressureProtectionStartDelay < engine->rpmCalculator.getSecondsSinceEngineStart(nowNt)) {
-				afterStartDelayPassed = true;
-			}
 			if (afterStartDelayPassed) {
 				if (engineConfiguration->useOilPressureSwitch) {
 					isPressureSufficient = getOilSwitchState();
@@ -155,6 +152,10 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 
 				if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
 					allowFuel.clear(ClearReason::OilPressure);
+				}
+			} else {
+				if (engineConfiguration->oilPressureProtectionStartDelay < engine->rpmCalculator.getSecondsSinceEngineStart(nowNt)) {
+					afterStartDelayPassed = true;
 				}
 			}
 		}
