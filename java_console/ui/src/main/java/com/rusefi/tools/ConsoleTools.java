@@ -1,17 +1,9 @@
 package com.rusefi.tools;
 
-import com.opensr5.ConfigurationImage;
-import com.opensr5.io.ConfigurationImageFile;
 import com.rusefi.*;
 import com.rusefi.autodetect.PortDetector;
-import com.rusefi.autodetect.SerialAutoChecker;
 import com.rusefi.binaryprotocol.BinaryProtocol;
-import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.EngineState;
-import com.rusefi.core.Pair;
-import com.rusefi.core.ResponseBuffer;
-import com.rusefi.core.SignatureHelper;
 import com.rusefi.io.ConnectionStateListener;
 import com.rusefi.io.ConnectionStatusLogic;
 import com.rusefi.io.IoStream;
@@ -20,16 +12,10 @@ import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.maintenance.ExecHelper;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 import java.util.function.Function;
-
-import static com.rusefi.binaryprotocol.BinaryProtocol.sleep;
-import static com.rusefi.binaryprotocol.IoHelper.getCrc32;
 
 public class ConsoleTools {
     public static final String RUS_EFI_NOT_DETECTED = "rusEFI not detected";

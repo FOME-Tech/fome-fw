@@ -1,8 +1,6 @@
 package com.rusefi.binaryprotocol.test;
 
 import com.opensr5.ConfigurationImage;
-import com.opensr5.ini.field.ScalarIniField;
-import com.rusefi.TestHelper;
 import com.rusefi.binaryprotocol.BinaryProtocolState;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.LinkConnector;

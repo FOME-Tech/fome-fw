@@ -4,7 +4,6 @@ import com.opensr5.ConfigurationImage;
 import com.rusefi.config.FieldType;
 import org.jetbrains.annotations.NotNull;
 
-import javax.management.ObjectName;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;

@@ -9,7 +9,6 @@ import com.opensr5.io.DataListener;
 import com.rusefi.NamedThreadFactory;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.binaryprotocol.test.Bug3923;
-import com.rusefi.io.IoStream;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
