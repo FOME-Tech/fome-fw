@@ -12,7 +12,7 @@ import static com.rusefi.test.newParse.NewParseHelper.parse;
 
 public class ParseStructTest {
     @Test
-    public void structEmpty() throws IOException {
+    public void structEmpty() {
         ParseState state = parse(
                 "struct myStruct\n\n" +
                 "end_struct\n"
@@ -35,7 +35,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structEmptyNoPrefix() throws IOException {
+    public void structEmptyNoPrefix() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n\n" +
                         "end_struct\n"
@@ -48,7 +48,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structMultiple() throws IOException {
+    public void structMultiple() {
         ParseState state = parse(
                 "struct myStruct1\n\n" +
                         "end_struct\n" +
@@ -67,7 +67,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structNested() throws IOException {
+    public void structNested() {
         ParseState state = parse(
                 "struct myStructOuter\n" +
                         "struct myStructInner\n\n" +
@@ -86,7 +86,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structContainsStruct() throws IOException {
+    public void structContainsStruct() {
         ParseState state = parse(
                 "struct myStruct\n\n" +
                         "end_struct\n" +
@@ -107,7 +107,7 @@ public class ParseStructTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void structMissingStruct() throws IOException {
+    public void structMissingStruct() {
         parse(
             "struct myStruct2\n" +
             "myStruct foo\n" +
@@ -115,7 +115,7 @@ public class ParseStructTest {
         );
     }
 
-    private static Field parseSingleField(String fieldLine) throws IOException {
+    private static Field parseSingleField(String fieldLine) {
         ParseState state = parse(
                 "struct myStruct\n" +
                         fieldLine + "\n" +
@@ -213,7 +213,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arrayOfStructs() throws IOException {
+    public void arrayOfStructs() {
         ParseState state = parse(
                 "struct myStruct\n\n" +
                         "end_struct\n" +
@@ -241,7 +241,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void typedefScalar() throws IOException {
+    public void typedefScalar() {
         ParseState ps = parse("custom myTypedef 4 scalar, F32, @OFFSET@, \"unit\", 1, 2, 3, 4, 5\n" +
                 "struct myStruct\n" +
                 "myTypedef foo;comment\n" +
@@ -266,7 +266,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void typedefString() throws IOException {
+    public void typedefString() {
         ParseState ps = parse("custom lua_script_t 1000 string, ASCII, @OFFSET@, 1000\n" +
                 "struct myStruct\n" +
                 "lua_script_t luaScript\n" +
@@ -278,7 +278,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void unused() throws IOException {
+    public void unused() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
                         "unused 27\n" +
@@ -291,7 +291,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void bitFieldsBasic() throws IOException {
+    public void bitFieldsBasic() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
                         "bit myBit1\n" +

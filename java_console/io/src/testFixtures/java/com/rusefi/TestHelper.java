@@ -74,7 +74,7 @@ public class TestHelper {
         return targetEcuSocket;
     }
 
-    public static BinaryProtocolServer createVirtualController(int controllerPort, ConfigurationImage controllerImage, BinaryProtocolServer.Context context) throws InterruptedException {
+    public static BinaryProtocolServer createVirtualController(int controllerPort, ConfigurationImage controllerImage, BinaryProtocolServer.Context context) {
         try {
             return createVirtualController(controllerImage, controllerPort, context);
         } catch (IOException e) {
