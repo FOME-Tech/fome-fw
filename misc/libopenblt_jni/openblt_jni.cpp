@@ -118,6 +118,11 @@ static bool setupCan(JNIEnv* env, jobject jCallbacks) {
 	return false;
 }
 
+static bool setupTcp(JNIEnv* env, jstring hostname, jint port, jobject jCallbacks) {
+	// TODO
+	return flase;
+}
+
 static bool erase(JNIEnv* env, jobject jCallbacks) {
 	Callbacks cb(env, jCallbacks, "Erase", true);
 
@@ -277,6 +282,24 @@ extern "C" JNIEXPORT void JNICALL Java_com_rusefi_maintenance_OpenbltJni_flashCa
 	}
 
 	if (!setupCan(env, jCallbacks)) {
+		return;
+	}
+
+	if (!erase(env, jCallbacks)) {
+		return;
+	}
+
+	if (!program(env, jCallbacks)) {
+		return;
+	}
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_rusefi_maintenance_OpenbltJni_flashTcpNative(JNIEnv * env, jobject, jstring jFirmwareFile, jstring jHostname, jint port, jobject jCallbacks) {
+	if (!loadFirmware(env, jFirmwareFile, jCallbacks)) {
+		return;
+	}
+
+	if (!setupTcp(env, jHostname, port, jCallbacks)) {
 		return;
 	}
 
