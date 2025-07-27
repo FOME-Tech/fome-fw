@@ -322,7 +322,7 @@ public enum SerialPortScanner {
     }
 
     public static String getEcuSignature(String port) {
-        try (IoStream stream = BufferedSerialIoStream.openPort(port)) {
+        try (IoStream stream = LinkManager.open(port)) {
             return SerialAutoChecker.checkResponse(stream);
         } catch (Exception e) {
             return null;
@@ -330,7 +330,7 @@ public enum SerialPortScanner {
     }
 
     public static boolean fomeEcuHasOpenblt(String port) {
-        try (IoStream stream = BufferedSerialIoStream.openPort(port)) {
+        try (IoStream stream = LinkManager.open(port)) {
             if (stream == null) {
                 return false;
             }
@@ -351,7 +351,7 @@ public enum SerialPortScanner {
     }
 
     public static boolean isPortOpenblt(String port) {
-        try (IoStream stream = BufferedSerialIoStream.openPort(port)) {
+        try (IoStream stream = LinkManager.open(port)) {
             if (stream == null) {
                 return false;
             }
