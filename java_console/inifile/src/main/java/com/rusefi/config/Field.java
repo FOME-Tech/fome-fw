@@ -50,26 +50,6 @@ public class Field {
         this.bitOffset = bitOffset;
     }
 
-    /**
-     * Finds field by name, ignoring case
-     */
-    public static Field findFieldOrNull(Field[] values, String instancePrefix, String fieldName) {
-        Objects.requireNonNull(fieldName);
-        for (Field f : values) {
-            if (fieldName.equalsIgnoreCase(f.getName()))
-                return f;
-        }
-        // 2nd pass - let's try to find field with prefix if it was not found without prefix
-        if (!instancePrefix.isEmpty()) {
-            fieldName = instancePrefix + "_" + fieldName;
-            for (Field f : values) {
-                if (fieldName.equalsIgnoreCase(f.getName()))
-                    return f;
-            }
-        }
-        return null;
-    }
-
     public static String niceToString(double value, int precision) {
         int scale = (int) Math.log10(value);
         int places = 1 + Math.max(0, precision - scale);
@@ -176,10 +156,6 @@ public class Field {
 
     public static Field create(String name, int offset, FieldType type) {
         return new Field(name, offset, type);
-    }
-
-    public boolean getBooleanValue(ConfigurationImage ci) {
-        return getValue(ci) != 0.0;
     }
 
     public Field setScale(double scale) {

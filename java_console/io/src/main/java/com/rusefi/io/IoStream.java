@@ -6,7 +6,6 @@ import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.binaryprotocol.IoHelper;
 import com.rusefi.io.serial.AbstractIoStream;
-import com.rusefi.io.serial.StreamStatistics;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -18,7 +17,7 @@ import java.io.IOException;
  * <p>
  * 5/11/2015.
  */
-public interface IoStream extends WriteStream, Closeable, StreamStatistics {
+public interface IoStream extends WriteStream, Closeable {
     static String printHexBinary(byte[] data) {
         if (data == null)
             return "(null)";
@@ -66,8 +65,6 @@ public interface IoStream extends WriteStream, Closeable, StreamStatistics {
     void setInputListener(DataListener listener);
 
     boolean isClosed();
-
-    AbstractIoStream.StreamStats getStreamStats();
 
     void close();
 

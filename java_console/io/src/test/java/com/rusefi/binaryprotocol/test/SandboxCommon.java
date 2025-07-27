@@ -25,47 +25,6 @@ public class SandboxCommon {
         log.configureDebugEnabled(false);
     }
 
-    static ConfigurationImage readImage(IoStream tsStream, LinkManager linkManager) throws InterruptedException {
-        AtomicReference<ConfigurationImage> configurationImageAtomicReference = new AtomicReference<>();
-        CountDownLatch imageLatch = new CountDownLatch(1);
-
-        StreamConnector streamConnector = new StreamConnector(linkManager, () -> tsStream);
-        linkManager.setConnector(streamConnector);
-        streamConnector.connectAndReadConfiguration(new ConnectionStateListener() {
-            @Override
-            public void onConnectionEstablished() {
-                log.info("onConnectionEstablished");
-
-                BinaryProtocol currentStreamState = linkManager.getCurrentStreamState();
-                if (currentStreamState == null) {
-                    log.info("No BinaryProtocol");
-                } else {
-                    BinaryProtocolState binaryProtocolState = currentStreamState.getBinaryProtocolState();
-                    ConfigurationImage ci = binaryProtocolState.getControllerConfiguration();
-                    configurationImageAtomicReference.set(ci);
-                    imageLatch.countDown();
-                }
-            }
-
-            @Override
-            public void onConnectionFailed(String s) {
-                log.info("onConnectionFailed");
-            }
-        });
-
-        imageLatch.await(1, TimeUnit.MINUTES);
-        ConfigurationImage ci = configurationImageAtomicReference.get();
-        log.info("Got ConfigurationImage " + ci + ", size=" + ci.getSize());
-        return ci;
-    }
-
-    static void verifySignature(IoStream tsStream, String prefix, String suffix) throws IOException {
-        String signature = BinaryProtocol.getSignature(tsStream);
-        log.info(prefix + "Got " + signature + " signature via " + suffix);
-        if (signature == null || !signature.startsWith(Fields.PROTOCOL_SIGNATURE_PREFIX))
-            throw new IllegalStateException("Unexpected S " + signature);
-    }
-
     static void runGetProtocolCommand(String prefix, IoStream tsStream) throws IOException {
         IncomingDataBuffer dataBuffer = tsStream.getDataBuffer();
         tsStream.write(new byte[]{Fields.TS_GET_PROTOCOL_VERSION_COMMAND_F});

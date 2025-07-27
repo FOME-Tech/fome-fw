@@ -37,11 +37,9 @@ public class IncomingDataBuffer {
      * buffer for queued response bytes from controller
      */
     private final CircularByteBuffer cbb = new CircularByteBuffer(BUFFER_SIZE);
-    private final AbstractIoStream.StreamStats streamStats;
 
-    public IncomingDataBuffer(String loggingPrefix, AbstractIoStream.StreamStats streamStats) {
+    public IncomingDataBuffer(String loggingPrefix) {
         this.loggingPrefix = loggingPrefix;
-        this.streamStats = Objects.requireNonNull(streamStats, "streamStats");
     }
 
     public byte[] getPacket(String msg) throws EOFException {
@@ -93,15 +91,10 @@ public class IncomingDataBuffer {
         if (Bug3923.obscene && packet.length < 10)
             log.info("got packet: " + Arrays.toString(packet));
 
-        onPacketArrived();
         // if (log.debugEnabled())
         //     log.trace("packet arrived: " + Arrays.toString(packet) + ": crc OK");
 
         return packet;
-    }
-
-    public void onPacketArrived() {
-        streamStats.onPacketArrived();
     }
 
     public void addData(byte[] freshData) {
@@ -148,12 +141,6 @@ public class IncomingDataBuffer {
         return false; // looks good!
     }
 
-    public int getPendingCount() {
-        synchronized (cbb) {
-            return cbb.length();
-        }
-    }
-
     public void dropPending() {
         // todo: when exactly do we need this logic?
         synchronized (cbb) {
@@ -168,14 +155,12 @@ public class IncomingDataBuffer {
     }
 
     public int getByte() throws EOFException {
-        streamStats.onArrived(1);
         synchronized (cbb) {
             return cbb.getByte();
         }
     }
 
     public int getShort() throws EOFException {
-        streamStats.onArrived(2);
         synchronized (cbb) {
             int result = cbb.getShort();
             if (log.debugEnabled() || Bug3923.obscene)
@@ -185,7 +170,6 @@ public class IncomingDataBuffer {
     }
 
     public int getInt() throws EOFException {
-        streamStats.onArrived(4);
         synchronized (cbb) {
             int result = cbb.getInt();
             if (log.debugEnabled() || Bug3923.obscene)
@@ -200,11 +184,6 @@ public class IncomingDataBuffer {
             if (log.debugEnabled() || Bug3923.obscene)
                 log.info(packet.length + " consumed, " + cbb.length() + " remaining");
         }
-        streamStats.onArrived(packet.length);
-    }
-
-    public byte readByte() throws IOException {
-        return readByte(Timeouts.BINARY_IO_TIMEOUT);
     }
 
     public byte readByte(int timeoutMs) throws IOException {
@@ -212,20 +191,6 @@ public class IncomingDataBuffer {
         if (isTimeout)
             throw new EOFException("Timeout in readByte " + timeoutMs);
         return (byte) getByte();
-    }
-
-    public int readInt() throws EOFException {
-        boolean isTimeout = waitForBytes(loggingPrefix + "readInt", System.currentTimeMillis(), 4);
-        if (isTimeout)
-            throw new EOFException("Timeout in readInt ");
-        return swap32(getInt());
-    }
-
-    public short readShort() throws EOFException {
-        boolean isTimeout = waitForBytes(loggingPrefix + "readShort", System.currentTimeMillis(), 2);
-        if (isTimeout)
-            throw new EOFException("Timeout in readShort");
-        return (short) swap16(getShort());
     }
 
     public void read(byte[] packet) throws EOFException {

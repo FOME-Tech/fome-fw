@@ -131,10 +131,6 @@ public class LinkManager implements Closeable {
         return connector.getBinaryProtocol();
     }
 
-    public BinaryProtocolState getBinaryProtocolState() {
-        return connector.getBinaryProtocolState();
-    }
-
     public CommandQueue getCommandQueue() {
         return commandQueue;
     }

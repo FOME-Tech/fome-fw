@@ -190,37 +190,34 @@ public class BinaryProtocol {
         if (!linkManager.COMMUNICATION_QUEUE.isEmpty()) {
             log.info("Current queue size: " + linkManager.COMMUNICATION_QUEUE.size());
         }
-        Runnable textPull = new Runnable() {
-            @Override
-            public void run() {
-                while (!isClosed) {
+        Runnable textPull = () -> {
+            while (!isClosed) {
 //                    FileLog.rlog("queue: " + LinkManager.COMMUNICATION_QUEUE.toString());
-                    if (linkManager.COMMUNICATION_QUEUE.isEmpty()) {
-                        linkManager.submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                isGoodOutputChannels = requestOutputChannels();
-                                // todo: programmatically detect run under gradle?
-                                boolean verbose = false;
-                                if (verbose)
-                                    System.out.println("requestOutputChannels " + isGoodOutputChannels);
-                                if (isGoodOutputChannels)
-                                    HeartBeatListeners.onDataArrived();
-                                if (linkManager.isNeedPullText()) {
-                                    String text = requestPendingTextMessages();
-                                    if (text != null) {
-                                        textListener.onDataArrived((text + "\r\n").getBytes());
-                                        if (verbose)
-                                            System.out.println("textListener");
-                                    }
+                if (linkManager.COMMUNICATION_QUEUE.isEmpty()) {
+                    linkManager.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            isGoodOutputChannels = requestOutputChannels();
+                            // todo: programmatically detect run under gradle?
+                            boolean verbose = false;
+                            if (verbose)
+                                System.out.println("requestOutputChannels " + isGoodOutputChannels);
+                            if (isGoodOutputChannels)
+                                HeartBeatListeners.onDataArrived();
+                            if (linkManager.isNeedPullText()) {
+                                String text = requestPendingTextMessages();
+                                if (text != null) {
+                                    textListener.onDataArrived((text + "\r\n").getBytes());
+                                    if (verbose)
+                                        System.out.println("textListener");
                                 }
                             }
-                        });
-                    }
-                    sleep(Timeouts.TEXT_PULL_PERIOD);
+                        }
+                    });
                 }
-                log.info("Port shutdown: Stopping text pull");
+                sleep(Timeouts.TEXT_PULL_PERIOD);
             }
+            log.info("Port shutdown: Stopping text pull");
         };
         Thread tr = THREAD_FACTORY.newThread(textPull);
         tr.start();
@@ -495,8 +492,6 @@ public class BinaryProtocol {
             reassemblyIdx += chunkSize;
             remaining -= chunkSize;
         }
-
-        state.setCurrentOutputs(reassemblyBuffer);
 
         SensorCentral.getInstance().grabSensorValues(reassemblyBuffer);
         return true;

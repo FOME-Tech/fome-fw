@@ -10,9 +10,6 @@ import java.net.Socket;
 import static com.rusefi.io.tcp.TcpConnector.DEFAULT_PORT;
 import static com.rusefi.io.tcp.TcpConnector.LOCALHOST;
 
-/**
- * @see TcpServerSandbox
- */
 public class TcpClientSandbox {
     public static void main(String[] args) throws IOException {
         Socket s = new Socket(LOCALHOST, DEFAULT_PORT);

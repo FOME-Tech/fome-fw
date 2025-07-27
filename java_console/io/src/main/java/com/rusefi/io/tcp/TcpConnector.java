@@ -29,26 +29,6 @@ public class TcpConnector {
         }
     }
 
-    /*
-        public static String doUnpackConfirmation(String message) {
-            String confirmation = message.substring(CommandQueue.CONFIRMATION_PREFIX.length());
-            int index = confirmation.indexOf(":");
-            if (index < 0) {
-                return null;
-            }
-            String number = confirmation.substring(index + 1);
-            int length;
-            try {
-                length = Integer.parseInt(number);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-            if (length != index) {
-                return null;
-            }
-            return confirmation.substring(0, length);
-        }
-        */
     public static class InvalidTcpPort extends IOException {
     }
 
