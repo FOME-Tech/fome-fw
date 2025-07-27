@@ -268,10 +268,12 @@ public enum SerialPortScanner {
     public void startTimer() {
         isRunning = true;
         Thread portsScanner = new Thread(() -> {
-            boolean isFirstTime = true;
+            // Do a fast query checking only hardware serial ports
+            findAllAvailablePorts(false);
+
             while (isRunning) {
-                findAllAvailablePorts(!isFirstTime);
-                isFirstTime = false;
+                findAllAvailablePorts(true);
+
                 try {
                     //noinspection BusyWait
                     Thread.sleep(300);

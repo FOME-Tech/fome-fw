@@ -97,7 +97,6 @@ public class StartupFrame {
 
         connectPanel.add(comboPorts);
         final JComboBox<String> comboSpeeds = createSpeedCombo();
-        comboSpeeds.setToolTipText("For 'STMicroelectronics Virtual COM Port' device any speed setting would work the same");
         connectPanel.add(comboSpeeds);
 
         final JButton connectButton = new JButton("Connect", new ImageIcon(getClass().getResource("/com/rusefi/connect48.png")));
