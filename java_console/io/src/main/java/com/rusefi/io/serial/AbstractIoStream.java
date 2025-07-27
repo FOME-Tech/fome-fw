@@ -11,7 +11,6 @@ public abstract class AbstractIoStream implements IoStream {
 
     protected final StreamStats streamStats = new StreamStats();
     private final AtomicInteger bytesOut = new AtomicInteger();
-    private long latestActivity;
 
     public IncomingDataBuffer createDataBuffer(String loggingPrefix) {
         IncomingDataBuffer incomingData = new IncomingDataBuffer(loggingPrefix, getStreamStats());
@@ -39,15 +38,6 @@ public abstract class AbstractIoStream implements IoStream {
     }
 
     @Override
-    public void onActivity() {
-        latestActivity = System.currentTimeMillis();
-    }
-
-    public long latestActivityTime() {
-        return latestActivity;
-    }
-
-    @Override
     public boolean isClosed() {
         return isClosed;
     }
@@ -57,24 +47,12 @@ public abstract class AbstractIoStream implements IoStream {
         private int maxPacketGap;
         private final AtomicInteger totalBytesArrived = new AtomicInteger();
 
-        public long getPreviousPacketArrivalTime() {
-            return previousPacketArrivalTime;
-        }
-
-        /**
-         * @return maximum time in MS between full valid packets received via this stream
-         */
-        public int getMaxPacketGap() {
-            return maxPacketGap;
-        }
-
         public void onPacketArrived() {
             long now = System.currentTimeMillis();
             if (previousPacketArrivalTime != 0) {
                 maxPacketGap = (int) Math.max(maxPacketGap, now - previousPacketArrivalTime);
             }
             previousPacketArrivalTime = now;
-            AbstractIoStream.this.onActivity();
         }
 
         public void onArrived(int length) {

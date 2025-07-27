@@ -88,15 +88,6 @@ public class MainFrame {
             @Override
             public void onConnectionEstablished() {
                 ConnectionWatchdog.init(linkManager);
-
-                SwingUtilities.invokeLater(() -> {
-                    /**
-                     * todo: we are definitely not handling reconnect properly, no code to shut down old instance of server
-                     * before launching new instance
-                     */
-                    new BinaryProtocolServer().start(linkManager);
-                });
-
             }
         });
 

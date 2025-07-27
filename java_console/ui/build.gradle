@@ -17,7 +17,6 @@ dependencies {
     implementation global_libs.junit
 
     testImplementation global_libs.mockito
-    testImplementation testFixtures(project(':ecu_io'))
 }
 
 shadowJar {

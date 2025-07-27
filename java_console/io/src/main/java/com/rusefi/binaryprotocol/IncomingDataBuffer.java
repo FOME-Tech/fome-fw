@@ -154,7 +154,7 @@ public class IncomingDataBuffer {
         }
     }
 
-    public int dropPending() {
+    public void dropPending() {
         // todo: when exactly do we need this logic?
         synchronized (cbb) {
             int pending = cbb.length();
@@ -164,7 +164,6 @@ public class IncomingDataBuffer {
                 cbb.get(bytes);
                 log.error("DROPPED FROM BUFFER: " + IoStream.printByteArray(bytes));
             }
-            return pending;
         }
     }
 

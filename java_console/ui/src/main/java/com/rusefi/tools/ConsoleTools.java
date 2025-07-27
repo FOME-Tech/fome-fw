@@ -25,7 +25,6 @@ public class ConsoleTools {
 
     static {
         registerTool("help", args -> printTools(), "Print this help.");
-        registerTool("headless", ConsoleTools::runHeadless, "Connect to rusEFI controller and start saving logs.");
 
         registerTool("ptrace_enums", ConsoleTools::runPerfTraceTool, "NOT A USER TOOL. Development tool to process performance trace enums");
 
@@ -81,27 +80,6 @@ public class ConsoleTools {
 
     private static void runPerfTraceTool(String[] args) throws IOException {
         PerfTraceTool.readPerfTrace(args[1], args[2], args[3], args[4]);
-    }
-
-    private static void runHeadless(String[] args) {
-        String onConnectedCallback = args.length > 1 ? args[1] : null;
-        String onDisconnectedCallback = args.length > 2 ? args[2] : null;
-
-        ConnectionStatusLogic.INSTANCE.addListener(new ConnectionStatusLogic.Listener() {
-            @Override
-            public void onConnectionStatus(boolean isConnected) {
-                if (isConnected) {
-                    invokeCallback(onConnectedCallback);
-                } else {
-                    invokeCallback(onDisconnectedCallback);
-                }
-            }
-        });
-
-        startAndConnect(linkManager -> {
-            new BinaryProtocolServer().start(linkManager);
-            return null;
-        });
     }
 
     public static void startAndConnect(final Function<LinkManager, Void> onConnectionEstablished) {
