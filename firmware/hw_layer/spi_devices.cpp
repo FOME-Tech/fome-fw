@@ -13,27 +13,6 @@ void unlockSpi(spi_device_e device) {
 	spiReleaseBus(getSpiDevice(device));
 }
 
-static void initSpiModules() {
-	if (engineConfiguration->is_enabled_spi_1) {
-		turnOnSpi(SPI_DEVICE_1);
-	}
-	if (engineConfiguration->is_enabled_spi_2) {
-		turnOnSpi(SPI_DEVICE_2);
-	}
-	if (engineConfiguration->is_enabled_spi_3) {
-		turnOnSpi(SPI_DEVICE_3);
-	}
-	if (engineConfiguration->is_enabled_spi_4) {
-		turnOnSpi(SPI_DEVICE_4);
-	}
-	if (engineConfiguration->is_enabled_spi_5) {
-		turnOnSpi(SPI_DEVICE_5);
-	}
-	if (engineConfiguration->is_enabled_spi_6) {
-		turnOnSpi(SPI_DEVICE_6);
-	}
-}
-
 /**
  * @return NULL if SPI device not specified
  */
