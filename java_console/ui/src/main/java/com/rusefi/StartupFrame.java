@@ -261,7 +261,7 @@ public class StartupFrame {
     private static void updateTsIniCache() {
         new Thread(() -> {
             try {
-                File cacheDir = new File(System.getProperty("user.home"), ".efiAnalytics\\TunerStudio\\config\\ecuDef");
+                File cacheDir = new File(System.getProperty("user.home"), ".efiAnalytics/TunerStudio/config/ecuDef");
 
                 if (!cacheDir.exists() || !cacheDir.canWrite()) {
                     log.warn("TS ini cache prime failed, cache dir does not exist or not writable: " + cacheDir);
