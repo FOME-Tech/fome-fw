@@ -78,30 +78,33 @@ static SPIConfig wifi_spicfg = {
 
 #endif
 
-static OutputPin wifiCs;
-static OutputPin wifiReset;
-
 sint8 nm_bus_init(void*) {
 	auto spi = getWifiSpiDevice();
 	if (spi == SPI_NONE) {
 		return M2M_ERR_BUS_FAIL;
 	}
 
+	// Force turn on SPI
+	turnOnSpi(spi);
+
 	// Set up chip select, reset
-	wifiCs.initPin("WiFi CS", getWifiCsPin());
-	wifiCs.setValue(1);
-	wifiReset.initPin("WiFi RST", getWifiResetPin());
+	efiSetPadMode("WiFi CS", getWifiCsPin(), PAL_MODE_OUTPUT_PUSHPULL | PAL_STM32_OSPEED_HIGHEST);
+	wifi_spicfg.ssport = getBrainPinPort(getWifiCsPin());
+	wifi_spicfg.sspad = getBrainPinIndex(getWifiCsPin());
+	palSetPad(wifi_spicfg.ssport, wifi_spicfg.sspad);
+
+	efiSetPadMode("WiFi RST", getWifiResetPin(), PAL_MODE_OUTPUT_PUSHPULL);
+	auto rstPort = getBrainPinPort(getWifiResetPin());
+	auto rstPin = getBrainPinIndex(getWifiResetPin());
 
 	// Reset the chip
-	wifiReset.setValue(0);
+	palClearPad(rstPort, rstPin);
 	chThdSleepMilliseconds(10);
-	wifiReset.setValue(1);
+	palSetPad(rstPort, rstPin);
 	chThdSleepMilliseconds(10);
 
 	// Set up SPI
 	wifiSpi = getSpiDevice(spi);
-	wifi_spicfg.ssport = wifiCs.m_port;
-	wifi_spicfg.sspad = wifiCs.m_pin;
 	spiStart(wifiSpi, &wifi_spicfg);
 
 	// Take exclusive access of the bus for WiFi use, don't release it until the bus is de-init.
