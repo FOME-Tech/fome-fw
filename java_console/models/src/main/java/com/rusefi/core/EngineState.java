@@ -19,8 +19,6 @@ import static com.devexperts.logging.Logging.getLogging;
  */
 public class EngineState {
     private static final Logging log = getLogging(EngineState.class);
-
-    public static final String PACKING_DELIMITER = ":";
     private final Object lock = new Object();
 
     public void replaceStringValueAction(String key, Consumer<String> callback) {
