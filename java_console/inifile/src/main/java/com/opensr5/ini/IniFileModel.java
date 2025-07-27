@@ -17,24 +17,11 @@ public class IniFileModel {
     public static final String FOME_INI_PREFIX = "fome_";
     public static final String FOME_INI_SUFFIX = ".ini";
     public static final String INI_FILE_PATH = System.getProperty("ini_file_path", "..");
-    private static final String SECTION_PAGE = "page";
-    private static final String FIELD_TYPE_SCALAR = "scalar";
     public static final String FIELD_TYPE_STRING = "string";
-    private static final String FIELD_TYPE_ARRAY = "array";
-    private static final String FIELD_TYPE_BITS = "bits";
 
     private static IniFileModel INSTANCE;
 
-    public final Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-
-    public final Map<String, String> tooltips = new TreeMap<>();
-    public final Map<String, String> protocolMeta = new TreeMap<>();
-    private boolean isConstantsSection;
-
     private File sourceFile;
-
-    private boolean isInSettingContextHelp = false;
-    private boolean isInsidePageDefinition;
 
     private String signature = null;
 
@@ -82,89 +69,14 @@ public class IniFileModel {
         String rawText = line.getRawText();
         try {
             LinkedList<String> list = new LinkedList<>(Arrays.asList(line.getTokens()));
-
-            if (!list.isEmpty() && list.get(0).equals(SECTION_PAGE)) {
-                isInsidePageDefinition = true;
-                return;
-            }
-
-            // todo: use TSProjectConsumer constant
-            if (isInSettingContextHelp) {
-                // todo: use TSProjectConsumer constant
-                if (rawText.contains("SettingContextHelpEnd")) {
-                    isInSettingContextHelp = false;
-                }
-                if (list.size() == 2)
-                    tooltips.put(list.get(0), list.get(1));
-                return;
-            } else if (rawText.contains("SettingContextHelp")) {
-                isInsidePageDefinition = false;
-                isInSettingContextHelp = true;
-                return;
-            }
-
-            if (RawIniFile.Line.isCommentLine(rawText))
-                return;
-
-            if (RawIniFile.Line.isPreprocessorDirective(rawText))
-                return;
-
-            trim(list);
-
-            if (list.isEmpty())
-                return;
-
             String first = list.getFirst();
 
-            if (first.startsWith("[") && first.endsWith("]")) {
-                log.info("Section " + first);
-                isConstantsSection = first.equals("[Constants]");
-            }
-
-            if (isConstantsSection) {
-                if (isInsidePageDefinition) {
-                    if (list.size() > 1)
-                        handleFieldDefinition(list);
-                    return;
-                } else {
-                    if (list.size() > 1) {
-                        protocolMeta.put(list.get(0), list.get(1));
-                    }
-                }
-            }
-
-        if ("signature".equals(first)) {
+            if ("signature".equals(first)) {
                 handleSignature(list);
             }
         } catch (RuntimeException e) {
             throw new IllegalStateException("While [" + rawText + "]", e);
         }
-    }
-
-    private void handleFieldDefinition(LinkedList<String> list) {
-        switch (list.get(1)) {
-            case FIELD_TYPE_SCALAR:
-                registerField(ScalarIniField.parse(list));
-                break;
-            case FIELD_TYPE_STRING:
-                registerField(StringIniField.parse(list));
-                break;
-            case FIELD_TYPE_ARRAY:
-                registerField(ArrayIniField.parse(list));
-                break;
-            case FIELD_TYPE_BITS:
-                registerField(EnumIniField.parse(list));
-                break;
-            default:
-                throw new IllegalStateException("Unexpected " + list);
-        }
-    }
-
-    private void registerField(IniField field) {
-        // todo: only the first occurrence should matter, but com.rusefi.ui.TuneReadWriteTest is failing when uncommented :(
-        //if (allIniFields.containsKey(field.getName()))
-        //	return;
-        allIniFields.put(field.getName(), field);
     }
 
     private void handleSignature(LinkedList<String> list) {
@@ -177,11 +89,6 @@ public class IniFileModel {
 
     public String getSignature() {
         return signature;
-    }
-
-    private void trim(LinkedList<String> list) {
-        while (!list.isEmpty() && list.getFirst().isEmpty())
-            list.removeFirst();
     }
 
     public static synchronized IniFileModel getInstance() throws IOException {
