@@ -1,6 +1,7 @@
 package com.rusefi;
 
 import com.devexperts.logging.Logging;
+import com.opensr5.ini.IniFileModel;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.serial.BaudRateHolder;
 import com.rusefi.maintenance.ProgramSelector;
@@ -16,6 +17,10 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -29,7 +34,6 @@ import static com.rusefi.ui.util.UiUtils.*;
  * <p/>
  * 2/14/14
  * @see SimulatorHelper
- * @see FirmwareFlasher
  */
 public class StartupFrame {
     private static final Logging log = getLogging(Launcher.class);
@@ -76,6 +80,9 @@ public class StartupFrame {
         });
         frame.setResizable(false);
         UiUtils.setAppIcon(frame);
+
+        // Attempt to drop our ini in to the TS cache
+        updateTsIniCache();
     }
 
     @NotNull
@@ -249,5 +256,40 @@ public class StartupFrame {
             combo.addItem(Integer.toString(speed));
         combo.setSelectedItem(defaultSpeed);
         return combo;
+    }
+
+    private static void updateTsIniCache() {
+        new Thread(() -> {
+            try {
+                File cacheDir = new File(System.getProperty("user.home"), ".efiAnalytics\\TunerStudio\\config\\ecuDef");
+
+                if (!cacheDir.exists() || !cacheDir.canWrite()) {
+                    log.warn("TS ini cache prime failed, cache dir does not exist or not writable: " + cacheDir);
+                    return;
+                }
+
+                String signature = IniFileModel.getInstance().getSignature();
+                // Replace spaces, punctuation, then add the ini file extension
+                String destFileName = signature.replaceAll("[() ]+", "_") + ".ini";
+
+                File dest = new File(cacheDir, destFileName);
+
+                // If the file already exists, skip it
+                if (dest.exists()) {
+                    log.info("TS ini cache prime skipped, target already exists: " + dest.getCanonicalPath());
+                    return;
+                }
+
+                Path sourcePath = IniFileModel.getInstance().getSourceFile().toPath();
+                Path destPath = dest.toPath();
+
+                // Copy source -> dest
+                Files.copy(sourcePath, dest.toPath());
+
+                log.info("Successfully primed TS ini cache " + sourcePath + " -> " + destPath);
+            } catch (IOException e) {
+                log.error("Failed to prime TS ini cache", e);
+            }
+        }).start();
     }
 }

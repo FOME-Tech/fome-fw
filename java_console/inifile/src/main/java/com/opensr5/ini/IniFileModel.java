@@ -2,6 +2,7 @@ package com.opensr5.ini;
 
 import com.devexperts.logging.Logging;
 import com.opensr5.ini.field.*;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
@@ -13,8 +14,8 @@ import java.util.*;
  */
 public class IniFileModel {
     private static final Logging log = Logging.getLogging(IniFileModel.class);
-    public static final String RUSEFI_INI_PREFIX = "rusefi";
-    public static final String RUSEFI_INI_SUFFIX = ".ini";
+    public static final String FOME_INI_PREFIX = "fome_";
+    public static final String FOME_INI_SUFFIX = ".ini";
     public static final String INI_FILE_PATH = System.getProperty("ini_file_path", "..");
     private static final String SECTION_PAGE = "page";
     private static final String FIELD_TYPE_SCALAR = "scalar";
@@ -29,38 +30,27 @@ public class IniFileModel {
     private final Map<String, DialogModel.Field> allFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     // this is only used while reading model - TODO extract reader
     private final List<DialogModel.Field> fieldsOfCurrentDialog = new ArrayList<>();
-    public Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    public final Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    public Map<String, String> tooltips = new TreeMap<>();
-    public Map<String, String> protocolMeta = new TreeMap<>();
+    public final Map<String, String> tooltips = new TreeMap<>();
+    public final Map<String, String> protocolMeta = new TreeMap<>();
     private boolean isConstantsSection;
 
-    public static void main(String[] args) {
-        log.info("Dialogs: " + IniFileModel.getInstance().dialogs);
-    }
+    private File sourceFile;
 
     private boolean isInSettingContextHelp = false;
     private boolean isInsidePageDefinition;
 
-    public IniFileModel findAndReadIniFile(String iniFilePath) {
-        String fileName = findMetaInfoFile(iniFilePath);
-        return readIniFile(fileName);
-    }
+    private String signature = null;
 
-    public IniFileModel readIniFile(String fileName) {
-        File input = null;
-        if (fileName != null)
-            input = new File(fileName);
-        if (fileName == null || !input.exists()) {
-            log.error("No such file: " + fileName);
-            return null;
-        }
+    public void findAndReadIniFile() throws IOException {
+        File input = findFile(INI_FILE_PATH, FOME_INI_PREFIX, FOME_INI_SUFFIX);
 
-        log.info("Reading " + fileName);
+        log.info("Reading " + input.getCanonicalPath());
         RawIniFile content = IniFileReader.read(input);
 
         readIniFile(content);
-        return this;
+        sourceFile = input;
     }
 
     public IniFileModel readIniFile(RawIniFile content) {
@@ -71,23 +61,25 @@ public class IniFileModel {
         return this;
     }
 
-    private static String findMetaInfoFile(String iniFilePath) {
-        return findFile(iniFilePath, RUSEFI_INI_PREFIX, RUSEFI_INI_SUFFIX);
+    @NotNull
+    private static File findFile(String fileDirectory, String prefix, String suffix) throws IOException {
+        File dir = new File(fileDirectory);
+        if (!dir.isDirectory()) {
+            throw new IllegalArgumentException("Cannot search path " + fileDirectory + " as it is not a directory");
+        }
+
+        log.info("Searching for " + prefix + "*" + suffix + " in " + fileDirectory);
+        for (File f : dir.listFiles()) {
+            if (f.getName().startsWith(prefix) && f.getName().endsWith(suffix)) {
+                return f;
+            }
+        }
+
+        throw new FileNotFoundException("No matching ini found in dir " + dir.getCanonicalPath());
     }
 
-    @Nullable
-    public static String findFile(String fileDirectory, String prefix, String suffix) {
-        File dir = new File(fileDirectory);
-        if (!dir.isDirectory())
-            return null;
-        log.info("Searching for " + prefix + "*" + suffix + " in " + fileDirectory);
-        for (String file : dir.list()) {
-            if (file.contains(" "))
-                continue; // spaces not acceptable
-            if (file.startsWith(prefix) && file.endsWith(suffix))
-                return fileDirectory + File.separator + file;
-        }
-        return null;
+    public File getSourceFile() {
+        return sourceFile;
     }
 
     private void finishDialog() {
@@ -162,6 +154,8 @@ public class IniFileModel {
                 handleDialog(list);
             } else if ("field".equals(first)) {
                 handleField(list);
+            } else if ("signature".equals(first)) {
+                handleSignature(list);
             }
         } catch (RuntimeException e) {
             throw new IllegalStateException("While [" + rawText + "]", e);
@@ -210,6 +204,18 @@ public class IniFileModel {
         log.debug("IniFileModel: Field label=[" + uiFieldName + "] : key=[" + key + "]");
     }
 
+    private void handleSignature(LinkedList<String> list) {
+        list.removeFirst(); // "signature"
+
+        this.signature = list.removeFirst().replace("\"", "");
+
+        log.debug("IniFileModel: ECU signature: " + signature);
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
     public Map<String, DialogModel.Field> getAllFields() {
         return allFields;
     }
@@ -245,10 +251,10 @@ public class IniFileModel {
         return null;
     }
 
-    public static synchronized IniFileModel getInstance() {
+    public static synchronized IniFileModel getInstance() throws IOException {
         if (INSTANCE == null) {
             INSTANCE = new IniFileModel();
-            INSTANCE.findAndReadIniFile(INI_FILE_PATH);
+            INSTANCE.findAndReadIniFile();
         }
         return INSTANCE;
     }
