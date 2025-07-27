@@ -24,12 +24,7 @@ public class IniFileModel {
     private static final String FIELD_TYPE_BITS = "bits";
 
     private static IniFileModel INSTANCE;
-    private String dialogId;
-    private String dialogUiName;
-    private final Map<String, DialogModel> dialogs = new TreeMap<>();
-    private final Map<String, DialogModel.Field> allFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-    // this is only used while reading model - TODO extract reader
-    private final List<DialogModel.Field> fieldsOfCurrentDialog = new ArrayList<>();
+
     public final Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     public final Map<String, String> tooltips = new TreeMap<>();
@@ -57,7 +52,7 @@ public class IniFileModel {
         for (RawIniFile.Line line : content.getLines()) {
             handleLine(line);
         }
-        finishDialog();
+
         return this;
     }
 
@@ -80,17 +75,6 @@ public class IniFileModel {
 
     public File getSourceFile() {
         return sourceFile;
-    }
-
-    private void finishDialog() {
-        if (fieldsOfCurrentDialog.isEmpty())
-            return;
-        if (dialogUiName == null)
-            dialogUiName = dialogId;
-        dialogs.put(dialogUiName, new DialogModel(dialogId, dialogUiName, fieldsOfCurrentDialog));
-
-        dialogId = null;
-        fieldsOfCurrentDialog.clear();
     }
 
     private void handleLine(RawIniFile.Line line) {
@@ -149,12 +133,7 @@ public class IniFileModel {
                 }
             }
 
-
-            if ("dialog".equals(first)) {
-                handleDialog(list);
-            } else if ("field".equals(first)) {
-                handleField(list);
-            } else if ("signature".equals(first)) {
+        if ("signature".equals(first)) {
                 handleSignature(list);
             }
         } catch (RuntimeException e) {
@@ -188,22 +167,6 @@ public class IniFileModel {
         allIniFields.put(field.getName(), field);
     }
 
-    private void handleField(LinkedList<String> list) {
-        list.removeFirst(); // "field"
-
-        String uiFieldName = list.isEmpty() ? "" : list.removeFirst();
-
-        String key = list.isEmpty() ? null : list.removeFirst();
-
-        DialogModel.Field field = new DialogModel.Field(key, uiFieldName);
-        if (key != null) {
-            // UI labels do not have 'key'
-            allFields.put(key, field);
-        }
-        fieldsOfCurrentDialog.add(field);
-        log.debug("IniFileModel: Field label=[" + uiFieldName + "] : key=[" + key + "]");
-    }
-
     private void handleSignature(LinkedList<String> list) {
         list.removeFirst(); // "signature"
 
@@ -216,39 +179,9 @@ public class IniFileModel {
         return signature;
     }
 
-    public Map<String, DialogModel.Field> getAllFields() {
-        return allFields;
-    }
-
-    @Nullable
-    public DialogModel.Field getField(String key) {
-        return allFields.get(key);
-    }
-
-    private void handleDialog(LinkedList<String> list) {
-        finishDialog();
-        list.removeFirst(); // "dialog"
-        //                    trim(list);
-        String keyword = list.removeFirst();
-//                    trim(list);
-        String name = list.isEmpty() ? null : list.removeFirst();
-
-        dialogId = keyword;
-        dialogUiName = name;
-        log.debug("IniFileModel: Dialog key=" + keyword + ": name=[" + name + "]");
-    }
-
     private void trim(LinkedList<String> list) {
         while (!list.isEmpty() && list.getFirst().isEmpty())
             list.removeFirst();
-    }
-
-    public IniField findByOffset(int i) {
-        for (IniField field : allIniFields.values()) {
-            if (i >= field.getOffset() && i < field.getOffset() + field.getSize())
-                return field;
-        }
-        return null;
     }
 
     public static synchronized IniFileModel getInstance() throws IOException {
@@ -257,9 +190,5 @@ public class IniFileModel {
             INSTANCE.findAndReadIniFile();
         }
         return INSTANCE;
-    }
-
-    public Map<String, DialogModel> getDialogs() {
-        return dialogs;
     }
 }
