@@ -91,7 +91,7 @@
 /*
  * EXT driver system settings.
  */
-
+#ifndef EFI_BOOTLOADER
 #define STM32_DISABLE_EXTI0_HANDLER
 #define STM32_DISABLE_EXTI1_HANDLER
 #define STM32_DISABLE_EXTI2_HANDLER
@@ -99,6 +99,7 @@
 #define STM32_DISABLE_EXTI4_HANDLER
 #define STM32_DISABLE_EXTI5_9_HANDLER
 #define STM32_DISABLE_EXTI10_15_HANDLER
+#endif // EFI_BOOTLOADER
 
 // we hijack this interrupt handler as the EXTI chained handler, see digital_input_exti.cpp
 #define STM32_I2C_I2C1_IRQ_PRIORITY         ICU_PRIORITY
