@@ -34,13 +34,10 @@ public class BitConfigField extends BaseConfigField {
             }
         });
 
-        view.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (ec)
-                    return;
-                sendValue(field, view.isSelected() ? "1" : "0");
-            }
+        view.addActionListener(e -> {
+            if (ec)
+                return;
+            sendValue(field, view.isSelected() ? "1" : "0");
         });
     }
 

@@ -57,19 +57,4 @@ public class ConfigUiField extends BaseConfigField {
         Number value = field.getValue(ci);
         setValue(value);
     }
-
-    public static double getFloatValue(ConfigurationImage ci, Field field) {
-        float value = field.getValue(ci).floatValue();
-        // this hack is trying to restore lost precision. It's a lame hack
-        String str = df.format(value);
-        try {
-            return df.parse(str).doubleValue();
-        } catch (ParseException e) {
-            throw new IllegalStateException("While parsing [" + str + "]");
-        }
-    }
-
-    public static int getIntValue(ConfigurationImage ci, Field field) {
-        return field.getValue(ci).intValue();
-    }
 }
