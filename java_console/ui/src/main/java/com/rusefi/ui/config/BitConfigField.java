@@ -16,7 +16,7 @@ public class BitConfigField extends BaseConfigField {
     public BitConfigField(UIContext uiContext, final Field field, String caption) {
         super(uiContext, field);
         createUi(caption, view);
-        requestInitialValue(field); // this is not in base constructor so that view is created by the time we invoke it
+        requestInitialValue(); // this is not in base constructor so that view is created by the time we invoke it
 
         MessagesCentral.getInstance().addListener(new MessagesCentral.MessageListener() {
             @Override

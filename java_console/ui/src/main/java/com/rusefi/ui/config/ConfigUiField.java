@@ -18,7 +18,7 @@ public class ConfigUiField extends BaseConfigField {
     public ConfigUiField(UIContext uiContext, final Field field, String topLabel) {
         super(uiContext, field);
         createUi(topLabel, view);
-        requestInitialValue(field); // this is not in base constructor so that view is created by the time we invoke it
+        requestInitialValue(); // this is not in base constructor so that view is created by the time we invoke it
 
         MessagesCentral.getInstance().addListener(new MessagesCentral.MessageListener() {
             @Override

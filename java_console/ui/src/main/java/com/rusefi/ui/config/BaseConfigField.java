@@ -28,11 +28,11 @@ public abstract class BaseConfigField {
         status.setToolTipText("Pending...");
     }
 
-    protected void requestInitialValue(final Field field) {
-        ConnectionStatusLogic.INSTANCE.executeOnceConnected(() -> processInitialValue(field));
+    protected void requestInitialValue() {
+        ConnectionStatusLogic.INSTANCE.executeOnceConnected(this::processInitialValue);
     }
 
-    private void processInitialValue(Field field) {
+    private void processInitialValue() {
         BinaryProtocol bp = uiContext.getLinkManager().getCurrentStreamState();
         if (bp == null)
             return;
