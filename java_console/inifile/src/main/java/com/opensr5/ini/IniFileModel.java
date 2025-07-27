@@ -30,10 +30,10 @@ public class IniFileModel {
     private final Map<String, DialogModel.Field> allFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     // this is only used while reading model - TODO extract reader
     private final List<DialogModel.Field> fieldsOfCurrentDialog = new ArrayList<>();
-    public Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    public final Map<String, IniField> allIniFields = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    public Map<String, String> tooltips = new TreeMap<>();
-    public Map<String, String> protocolMeta = new TreeMap<>();
+    public final Map<String, String> tooltips = new TreeMap<>();
+    public final Map<String, String> protocolMeta = new TreeMap<>();
     private boolean isConstantsSection;
 
     private File sourceFile;
