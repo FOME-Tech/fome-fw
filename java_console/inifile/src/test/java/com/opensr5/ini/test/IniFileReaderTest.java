@@ -1,7 +1,6 @@
 package com.opensr5.ini.test;
 
 import com.opensr5.ini.*;
-import com.opensr5.ini.field.ArrayIniField;
 import com.opensr5.ini.field.EnumIniField;
 import com.opensr5.ini.field.IniField;
 import org.jetbrains.annotations.NotNull;
