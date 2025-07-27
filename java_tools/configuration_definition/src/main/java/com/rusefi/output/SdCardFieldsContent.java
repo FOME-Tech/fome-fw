@@ -3,8 +3,6 @@ package com.rusefi.output;
 import com.rusefi.ConfigField;
 import com.rusefi.ReaderState;
 
-import java.io.IOException;
-
 import static com.rusefi.output.JavaSensorsConsumer.quote;
 import static com.rusefi.VariableRegistry.unquote;
 

@@ -6,8 +6,6 @@ import com.rusefi.newparse.parsing.Definition;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 import static com.rusefi.test.newParse.NewParseHelper.parse;
 
 

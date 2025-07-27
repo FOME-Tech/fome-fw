@@ -35,12 +35,7 @@ public class LinkManager implements Closeable {
     @NotNull
     public static final LogLevel LOG_LEVEL = LogLevel.INFO;
 
-    public static final LinkDecoder ENCODER = new LinkDecoder() {
-        @Override
-        public String unpack(String packedLine) {
-            return packedLine;
-        }
-    };
+    public static final LinkDecoder ENCODER = new LinkDecoder() {};
 
     private final CommandQueue commandQueue;
 
