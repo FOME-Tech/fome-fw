@@ -28,7 +28,7 @@ void NetTransmitPacket(blt_int8u *data, blt_int8u len) {
 }
 
 blt_bool NetReceivePacket(blt_int8u *data, blt_int8u *len) {
-	*len = server.recvTimeout(data, *len, TIME_MS2I(1000));
+	*len = server.recvTimeout(data, BOOT_COM_RX_MAX_DATA, TIME_MS2I(100));
 
 	return *len > 0 ? BLT_TRUE : BLT_FALSE;
 }
