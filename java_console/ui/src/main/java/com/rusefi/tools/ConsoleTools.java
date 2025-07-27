@@ -67,14 +67,6 @@ public class ConsoleTools {
         // version is printed by already, all we need is to do nothing
     }
 
-    private static void printCrc(ConfigurationImage image) {
-        int crc32 = getCrc32(image.getContent());
-        int crc16 = crc32 & 0xFFFF;
-        System.out.printf("tune_CRC32_hex=0x%x\n", crc32);
-        System.out.printf("tune_CRC16_hex=0x%x\n", crc16);
-        System.out.println("tune_CRC16=" + crc16);
-    }
-
     private static void registerTool(String command, ConsoleTool callback, String help) {
         TOOLS.put(command, callback);
         toolsHelp.put(command, help);

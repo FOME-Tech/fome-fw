@@ -60,7 +60,6 @@ public class EngineState {
                 listener.beforeLine(response);
                 while (!response.isEmpty())
                     response = handleResponse(response, listener);
-                listener.afterLine(copy);
             }
         });
 
@@ -118,8 +117,6 @@ public class EngineState {
 
             String strValue = response.substring(beginIndex, endIndex);
             pair.second.accept(strValue);
-            if (listener != null)
-                listener.onKeyValue(key, strValue);
 
             response = response.substring(endIndex);
             if (!response.isEmpty())
@@ -189,21 +186,10 @@ public class EngineState {
 
     public interface EngineStateListener {
         void beforeLine(String fullLine);
-
-        void onKeyValue(String key, String value);
-
-        void afterLine(String fullLine);
     }
 
     public static class EngineStateListenerImpl implements EngineStateListener {
         public void beforeLine(String fullLine) {
-        }
-
-        @Override
-        public void onKeyValue(String key, String value) {
-        }
-
-        public void afterLine(String fullLine) {
         }
     }
 }

@@ -8,7 +8,6 @@ import com.rusefi.core.SignatureHelper;
 import com.rusefi.Timeouts;
 import com.rusefi.binaryprotocol.test.Bug3923;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.Pair;
 import com.rusefi.core.SensorCentral;
 import com.rusefi.io.*;
 import com.rusefi.io.commands.ByteRange;
@@ -151,7 +150,6 @@ public class BinaryProtocol {
         try {
             signature = getSignature(stream);
             log.info("Got " + signature + " signature");
-            SignatureHelper.downloadIfNotAvailable(SignatureHelper.getUrl(signature));
         } catch (IOException e) {
             return "Failed to read signature " + e;
         }
@@ -421,10 +419,8 @@ public class BinaryProtocol {
 
     /**
      * This method blocks until a confirmation is received or {@link Timeouts#BINARY_IO_TIMEOUT} is reached
-     *
-     * @return true in case of timeout, false if got proper confirmation
      */
-    private boolean sendTextCommand(String text) {
+    private void sendTextCommand(String text) {
         byte[] command = getTextCommandBytesOnlyText(text);
 
         long start = System.currentTimeMillis();
@@ -433,9 +429,8 @@ public class BinaryProtocol {
             if (!checkResponseCode(response, (byte) Fields.TS_RESPONSE_OK) || response.length != 1) {
                 continue;
             }
-            return false;
+            return;
         }
-        return true;
     }
 
     public static byte[] getTextCommandBytes(String text) {
