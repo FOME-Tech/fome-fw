@@ -10,7 +10,6 @@ import com.rusefi.core.SignatureHelper;
 import com.rusefi.io.IoStream;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
-import com.rusefi.io.serial.BufferedSerialIoStream;
 import com.rusefi.io.tcp.TcpConnector;
 import com.rusefi.maintenance.DfuFlasher;
 import org.jetbrains.annotations.NotNull;
@@ -107,7 +106,7 @@ public enum SerialPortScanner {
     }
 
     private static PortResult inspectPort(String serialPort) {
-        log.info("Determining type of serial port: " + serialPort);
+        log.info("Determining type of port: " + serialPort);
 
         boolean isOpenblt = isPortOpenblt(serialPort);
         log.info("Port " + serialPort + (isOpenblt ? " looks like" : " does not look like") + " an OpenBLT bootloader");
@@ -201,19 +200,23 @@ public enum SerialPortScanner {
     private void findAllAvailablePorts(boolean includeSlowLookup) {
         List<PortResult> ports = new ArrayList<>();
 
-        String[] serialPorts = LinkManager.getCommPorts();
+        ArrayList<String> candidatePorts = new ArrayList<>(Arrays.asList(LinkManager.getCommPorts()));
 
         List<String> portsToInspect = new ArrayList<>();
 
-        for (String serialPort : serialPorts) {
+        if (includeSlowLookup) {
+            candidatePorts.addAll(TcpConnector.getAvailablePorts());
+        }
+
+        for (String candidate : candidatePorts) {
             // First, check the port cache
-            if (portCache.containsKey(serialPort)) {
+            if (portCache.containsKey(candidate)) {
                 // We've already probed this port - don't re-probe it again
-                PortResult cached = portCache.get(serialPort);
+                PortResult cached = portCache.get(candidate);
 
                 ports.add(cached);
             } else {
-                portsToInspect.add(serialPort);
+                portsToInspect.add(candidate);
             }
         }
 
@@ -230,7 +233,7 @@ public enum SerialPortScanner {
             // In any other scenario, auto could have unexpected behavior for the user
             List<String> toRemove = new ArrayList<>();
             for (String x : portCache.keySet()) {
-                if (Arrays.stream(serialPorts).noneMatch(x::equals)) {
+                if (candidatePorts.stream().noneMatch(x::equals)) {
                     toRemove.add(x);
                 }
             }
@@ -244,12 +247,6 @@ public enum SerialPortScanner {
 
         // Sort ports by their type to put your ECU at the top
         ports.sort(Comparator.comparingInt(a -> a.type.sortOrder));
-
-        if (includeSlowLookup) {
-            for (String tcpPort : TcpConnector.getAvailablePorts()) {
-                ports.add(new PortResult(tcpPort, SerialPortType.FomeEcu));
-            }
-        }
 
         boolean dfuConnected = DfuFlasher.detectSTM32BootloaderDriverState(UpdateOperationCallbacks.DUMMY);
 
