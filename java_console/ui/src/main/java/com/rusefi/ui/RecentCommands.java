@@ -23,8 +23,6 @@ import static com.rusefi.core.preferences.storage.PersistentConfiguration.getCon
  */
 
 public class RecentCommands {
-    private final static Logging log = Logging.getLogging(RecentCommands.class);
-
     private final static int NUMBER_OF_COMMANDS = 40;
     private static final String KEY = "recent_commands";
     private static final String DELIMETER = "|";

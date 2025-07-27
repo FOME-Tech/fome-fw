@@ -156,11 +156,6 @@ abstract public class ByteBuffer {
     }
 
     /**
-     * Clears the buffer.
-     */
-    abstract public void clear();
-
-    /**
      * @return a little-endian 32-bit integer from the buffer.
      * @throws EOFException
      */

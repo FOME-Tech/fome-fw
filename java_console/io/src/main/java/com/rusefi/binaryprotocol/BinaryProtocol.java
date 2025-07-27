@@ -55,33 +55,6 @@ public class BinaryProtocol {
     // todo: this ioLock needs better documentation!
     private final Object ioLock = new Object();
 
-    public static String findCommand(byte command) {
-        switch (command) {
-            case Fields.TS_COMMAND_F:
-                return "PROTOCOL";
-            case Fields.TS_CRC_CHECK_COMMAND:
-                return "CRC_CHECK";
-            case Fields.TS_BURN_COMMAND:
-                return "BURN";
-            case Fields.TS_HELLO_COMMAND:
-                return "HELLO";
-            case Fields.TS_READ_COMMAND:
-                return "READ";
-            case Fields.TS_GET_TEXT:
-                return "TS_GET_TEXT";
-            case Fields.TS_GET_FIRMWARE_VERSION:
-                return "GET_FW_VERSION";
-            case Fields.TS_CHUNK_WRITE_COMMAND:
-                return "WRITE_CHUNK";
-            case Fields.TS_OUTPUT_COMMAND:
-                return "TS_OUTPUT_COMMAND";
-            case Fields.TS_RESPONSE_OK:
-                return "TS_RESPONSE_OK";
-            default:
-                return "command " + (char) command + "/" + command;
-        }
-    }
-
     public boolean isClosed;
 
     public final CommunicationLoggingListener communicationLoggingListener;
@@ -495,9 +468,5 @@ public class BinaryProtocol {
 
         SensorCentral.getInstance().grabSensorValues(reassemblyBuffer);
         return true;
-    }
-
-    public BinaryProtocolState getBinaryProtocolState() {
-        return state;
     }
 }

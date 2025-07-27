@@ -22,8 +22,6 @@ import static com.devexperts.logging.Logging.getLogging;
  * Andrey Belomutskiy, (c) 2013-2020
  */
 public class PortHolder {
-    private static final Logging log = getLogging(PortHolder.class);
-
     private final DataListener dataListener;
     private final Callable<IoStream> ioStreamFactory;
     private final LinkManager linkManager;

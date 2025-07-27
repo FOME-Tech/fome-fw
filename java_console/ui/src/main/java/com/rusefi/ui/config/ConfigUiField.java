@@ -16,7 +16,6 @@ import java.text.ParseException;
 
 public class ConfigUiField extends BaseConfigField {
     private final JTextField view = new JTextFieldWithWidth(200);
-    private final static DecimalFormat df = new DecimalFormat("0.0000");
 
     public ConfigUiField(UIContext uiContext, final Field field, String topLabel) {
         super(uiContext, field);
