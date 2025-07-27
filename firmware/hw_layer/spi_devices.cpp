@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #if HAL_USE_SPI
-extern bool isSpiInitialized[6];
 
 /**
  * Only one consumer can use SPI bus at a given time

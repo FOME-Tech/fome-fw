@@ -106,6 +106,8 @@ static void calcFastAdcIndexes() {
 #endif/* HAL_USE_ADC */
 }
 
+extern bool isSpiInitialized[6];
+
 void stopSpi(spi_device_e device) {
 #if HAL_USE_SPI
 	if (!isSpiInitialized[device]) {
