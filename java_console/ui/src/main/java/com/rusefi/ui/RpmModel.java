@@ -16,11 +16,8 @@ import java.util.List;
  */
 public class RpmModel {
     private static final RpmModel INSTANCE = new RpmModel();
-    private static final double SMOOTHING_RATIO = 0.05;
-    private int displayedValue;
     private int value;
     private final List<RpmListener> listeners = new ArrayList<>();
-    private long timeAtLastUpdate;
 
     public static RpmModel getInstance() {
         return INSTANCE;
@@ -39,16 +36,6 @@ public class RpmModel {
 
     public int getValue() {
         return value;
-    }
-
-    public int getSmoothedValue() {
-        int diff = Math.abs(displayedValue - value);
-        boolean isOlderThenOneSecond = System.currentTimeMillis() - timeAtLastUpdate > 1000;
-        if (diff > value * SMOOTHING_RATIO || isOlderThenOneSecond) {
-            timeAtLastUpdate = System.currentTimeMillis();
-            displayedValue = value;
-        }
-        return displayedValue;
     }
 
     public void addListener(RpmListener listener) {
