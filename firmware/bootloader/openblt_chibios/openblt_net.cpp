@@ -32,3 +32,14 @@ blt_bool NetReceivePacket(blt_int8u *data, blt_int8u *len) {
 
 	return *len > 0 ? BLT_TRUE : BLT_FALSE;
 }
+
+static const wifi_string_t ssid = "FOME Bootloader";
+static const wifi_string_t password = "";
+
+const wifi_string_t& getWifiSsid() {
+	return ssid;
+}
+
+const wifi_string_t& getWifiPassword() {
+	return password;
+}

@@ -206,6 +206,14 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	}
 }
 
+__attribute__((weak)) const wifi_string_t& getWifiSsid() {
+	return config->wifiAccessPointSsid;
+}
+
+__attribute__((weak)) const wifi_string_t& getWifiPassword() {
+	return config->wifiAccessPointPassword;
+}
+
 class WifiHelperThread : public ThreadController<4096> {
 public:
 	WifiHelperThread() : ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
@@ -241,15 +249,17 @@ private:
 		}
 
 		static tstrM2MAPConfig apConfig;
-		strncpy(apConfig.au8SSID, config->wifiAccessPointSsid, std::min(sizeof(apConfig.au8SSID), sizeof(config->wifiAccessPointSsid)));
+		const wifi_string_t& ssid = getWifiSsid();
+		strncpy(apConfig.au8SSID, ssid, std::min(sizeof(apConfig.au8SSID), sizeof(ssid)));
 		apConfig.u8ListenChannel = 1;
 		apConfig.u8SsidHide = 0;
 
-		size_t keyLength = strlen(config->wifiAccessPointPassword);
+		const wifi_string_t& password = getWifiPassword();
+		size_t keyLength = strlen(password);
 		if (keyLength > 0) {
 			apConfig.u8SecType = M2M_WIFI_SEC_WPA_PSK;
 			apConfig.u8KeySz = keyLength;
-			strncpy((char*)apConfig.au8Key, config->wifiAccessPointPassword, std::min(sizeof(apConfig.au8Key), sizeof(config->wifiAccessPointPassword)));
+			strncpy((char*)apConfig.au8Key, password, std::min(sizeof(apConfig.au8Key), sizeof(password)));
 		} else {
 			apConfig.u8SecType = M2M_WIFI_SEC_OPEN;
 		}
