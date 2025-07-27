@@ -135,7 +135,7 @@ class ThreadNameFormatter implements Comparable<ThreadNameFormatter> {
 		synchronized (NAME_CONVERSIONS) {
 			if (NAME_CONVERSIONS.size() <= MAX_NAME_CONVERSIONS_CACHE_SIZE)
 				return; // everything is Ok
-			ThreadNameFormatter[] entries = NAME_CONVERSIONS.toArray(new ThreadNameFormatter[NAME_CONVERSIONS.size()]);
+			ThreadNameFormatter[] entries = NAME_CONVERSIONS.toArray(new ThreadNameFormatter[0]);
 			QuickSort.sort(entries);
 			for (int i = 0; i < entries.length - MAX_NAME_CONVERSIONS_CACHE_SIZE / 2; i++)
 				NAME_CONVERSIONS.removeKey(entries[i].thread_name);

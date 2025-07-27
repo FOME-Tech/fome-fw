@@ -34,7 +34,7 @@ public class OutputChannelVisitorBase extends ILayoutVisitor {
         }
     }
 
-    protected class NameReplacer {
+    protected static class NameReplacer {
         public final String name;
 
         public NameReplacer(String name) {
