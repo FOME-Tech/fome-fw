@@ -70,9 +70,11 @@ public class LinkManager implements Closeable {
 
     @NotNull
     public static IoStream open(String port) throws IOException {
-        if (TcpConnector.isTcpPort(port))
+        if (TcpConnector.isTcpPort(port)) {
             return TcpIoStream.open(port);
-        return BufferedSerialIoStream.openPort(port);
+        } else {
+            return BufferedSerialIoStream.openPort(port);
+        }
     }
 
     @NotNull
