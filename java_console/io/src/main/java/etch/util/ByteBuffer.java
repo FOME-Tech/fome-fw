@@ -174,7 +174,6 @@ abstract public class ByteBuffer {
     }
 
     public int getByte() throws EOFException {
-        int b0 = get() & 255;
-        return b0;
+        return get() & 255;
     }
 }

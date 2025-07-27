@@ -16,14 +16,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collector;
 import javax.annotation.Nonnull;
@@ -1272,7 +1265,7 @@ public class IndexedSet<K, V> extends AbstractConcurrentSet<V> implements Clonea
 			Map.Entry<?, ?> e = (Map.Entry<?, ?>)obj;
 			Object key = getKey();
 			Object ekey = e.getKey();
-			return (key == null ? ekey == null : key.equals(ekey)) && value.equals(e.getValue());
+			return (Objects.equals(key, ekey)) && value.equals(e.getValue());
 		}
 
 		public int hashCode() {

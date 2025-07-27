@@ -174,6 +174,6 @@ class ThreadNameFormatter implements Comparable<ThreadNameFormatter> {
 	}
 
 	public int compareTo(ThreadNameFormatter o) {
-		return last_time < o.last_time ? -1 : last_time > o.last_time ? 1 : 0;
+		return Long.compare(last_time, o.last_time);
 	}
 }

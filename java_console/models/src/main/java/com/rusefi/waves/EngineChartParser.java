@@ -25,11 +25,7 @@ public class EngineChartParser {
         while (index + 2 < array.length) {
             String name = array[index];
 
-            StringBuilder sb = map.get(name);
-            if (sb == null) {
-                sb = new StringBuilder();
-                map.put(name, sb);
-            }
+            StringBuilder sb = map.computeIfAbsent(name, k -> new StringBuilder());
 
             String signal = array[index + 1];
             String val = array[index + 2];

@@ -21,9 +21,7 @@ public class ControllerConnectorState {
             return linkManager;
 
         LinkManager linkManager = new LinkManager();
-        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, (String firmwareVersion1) -> {
-                firmwareVersion = firmwareVersion1;
-        });
+        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, (String firmwareVersion1) -> firmwareVersion = firmwareVersion1);
 
         /**
          * with real hardware we have noise on all analog inputs which gives us random sensor data, we cannot really

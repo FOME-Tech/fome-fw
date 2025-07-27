@@ -36,6 +36,7 @@ public class JustOneInstance {
                 try {
                     serverSocket = new ServerSocket(PORT, 1);
 
+                    //noinspection InfiniteLoopStatement
                     while (true) {
                         // Wait for a connection
                         Socket clientSocket = serverSocket.accept();

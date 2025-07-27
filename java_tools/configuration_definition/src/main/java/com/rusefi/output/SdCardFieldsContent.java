@@ -9,8 +9,8 @@ import static com.rusefi.VariableRegistry.unquote;
 public class SdCardFieldsContent {
     private final StringBuilder body = new StringBuilder();
 
-    public String home = "engine->outputChannels";
-    public Boolean isPtr = false;
+    public final String home = "engine->outputChannels";
+    public final Boolean isPtr = false;
 
     public void handleEndStruct(ReaderState state, ConfigStructure structure) {
         if (state.isStackEmpty()) {
