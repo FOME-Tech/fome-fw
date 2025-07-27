@@ -3,7 +3,6 @@ HW_LAYER_INC=	$(PROJECT_DIR)/hw_layer $(PROJECT_DIR)/hw_layer/adc \
 	$(PROJECT_DIR)/hw_layer/digital_input \
 	$(PROJECT_DIR)/hw_layer/digital_input/trigger \
 	$(PROJECT_DIR)/hw_layer/microsecond_timer \
-	$(PROJECT_DIR)/hw_layer/atwinc1500 \
 
 HW_INC = hw_layer/$(CPU_HWLAYER) \
 	$(PROJECT_DIR)/hw_layer/ports \
@@ -29,7 +28,6 @@ HW_LAYER_EMS_CPP = \
 	$(PROJECT_DIR)/hw_layer/io_pins.cpp \
 	$(PROJECT_DIR)/hw_layer/rtc_helper.cpp \
 	$(PROJECT_DIR)/hw_layer/debounce.cpp \
-	$(PROJECT_DIR)/hw_layer/atwinc1500/wifi_bsp.cpp \
 
 ifeq ($(USE_OPENBLT),yes)
 	HW_LAYER_EMS += \
