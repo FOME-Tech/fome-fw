@@ -11,8 +11,6 @@ import com.rusefi.ui.util.JTextFieldWithWidth;
 import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.text.DecimalFormat;
-import java.text.ParseException;
 
 public class ConfigUiField extends BaseConfigField {
     private final JTextField view = new JTextFieldWithWidth(200);

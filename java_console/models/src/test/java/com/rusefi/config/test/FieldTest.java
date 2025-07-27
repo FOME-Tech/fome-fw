@@ -1,9 +1,7 @@
 package com.rusefi.config.test;
 
-import com.opensr5.ConfigurationImage;
 import com.rusefi.config.Field;
 import com.rusefi.config.FieldCommandResponse;
-import com.rusefi.config.generated.Fields;
 import com.rusefi.core.Pair;
 import org.junit.Test;
 

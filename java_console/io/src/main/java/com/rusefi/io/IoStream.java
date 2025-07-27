@@ -5,7 +5,6 @@ import com.opensr5.io.WriteStream;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.binaryprotocol.IoHelper;
-import com.rusefi.io.serial.AbstractIoStream;
 
 import java.io.Closeable;
 import java.io.IOException;

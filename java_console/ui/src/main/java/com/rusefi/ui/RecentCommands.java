@@ -1,6 +1,5 @@
 package com.rusefi.ui;
 
-import com.devexperts.logging.Logging;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.CommandQueue;
 import com.rusefi.ui.util.UiUtils;

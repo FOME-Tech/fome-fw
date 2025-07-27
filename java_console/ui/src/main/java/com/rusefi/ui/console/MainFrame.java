@@ -5,7 +5,6 @@ import com.rusefi.*;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.*;
-import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.core.preferences.storage.Node;
 import com.rusefi.ui.FrameHelper;
 import com.rusefi.ui.util.UiUtils;

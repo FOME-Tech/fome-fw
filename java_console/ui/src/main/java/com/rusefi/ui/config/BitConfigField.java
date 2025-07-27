@@ -8,8 +8,6 @@ import com.rusefi.core.MessagesCentral;
 import com.rusefi.ui.UIContext;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class BitConfigField extends BaseConfigField {
     private final JCheckBox view = new JCheckBox();

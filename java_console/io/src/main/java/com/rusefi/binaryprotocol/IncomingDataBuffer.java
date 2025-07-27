@@ -4,14 +4,12 @@ import com.devexperts.logging.Logging;
 import com.rusefi.Timeouts;
 import com.rusefi.binaryprotocol.test.Bug3923;
 import com.rusefi.io.IoStream;
-import com.rusefi.io.serial.AbstractIoStream;
 import etch.util.CircularByteBuffer;
 import net.jcip.annotations.ThreadSafe;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Objects;
 
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.binaryprotocol.IoHelper.*;

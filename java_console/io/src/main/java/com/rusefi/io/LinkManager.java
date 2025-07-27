@@ -5,7 +5,6 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.rusefi.Callable;
 import com.rusefi.NamedThreadFactory;
 import com.rusefi.binaryprotocol.BinaryProtocol;
-import com.rusefi.binaryprotocol.BinaryProtocolState;
 import com.rusefi.core.EngineState;
 import com.rusefi.io.serial.BufferedSerialIoStream;
 import com.rusefi.io.serial.StreamConnector;

@@ -1,8 +1,6 @@
 package com.rusefi.io;
 
 import com.rusefi.binaryprotocol.BinaryProtocol;
-import com.rusefi.binaryprotocol.BinaryProtocolState;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Andrey Belomutskiy

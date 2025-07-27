@@ -3,7 +3,6 @@ package com.rusefi.io.commands;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.IoStream;
-import com.rusefi.io.tcp.BinaryProtocolServer;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.EOFException;

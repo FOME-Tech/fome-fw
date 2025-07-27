@@ -5,10 +5,8 @@ import com.rusefi.autodetect.PortDetector;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.ConnectionStateListener;
-import com.rusefi.io.ConnectionStatusLogic;
 import com.rusefi.io.IoStream;
 import com.rusefi.io.LinkManager;
-import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.maintenance.ExecHelper;
 import org.jetbrains.annotations.Nullable;
 
