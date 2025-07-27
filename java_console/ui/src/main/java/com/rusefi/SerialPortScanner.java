@@ -279,7 +279,7 @@ public enum SerialPortScanner {
                     //noinspection BusyWait
                     Thread.sleep(300);
                 } catch (InterruptedException e) {
-                    throw new IllegalStateException(e);
+                    // swallow interruptions
                 }
             }
 
