@@ -23,12 +23,26 @@ void NetDeferredInit() {
 	server.startListening(address);
 }
 
+uint8_t header[4] = {0xde, 0xad, 0xbe, 0xef};
+
+uint8_t outBuffer[512];
+
 void NetTransmitPacket(blt_int8u *data, blt_int8u len) {
-	server.send(data, len);
+	memcpy(outBuffer + 4, data, len);
+	memcpy(outBuffer, header, 4);
+	server.send(outBuffer, len + 4);
 }
 
 blt_bool NetReceivePacket(blt_int8u *data, blt_int8u *len) {
-	*len = server.recvTimeout(data, BOOT_COM_RX_MAX_DATA, TIME_MS2I(100));
+	*len = server.recvTimeout(data, BOOT_COM_RX_MAX_DATA + 4, TIME_MS2I(100));
+
+	if (*len >= 4) {
+		*len -= 4;
+		// memcpy(header, data, 4);
+		memcpy(data, data + 4, *len);
+	} else {
+		*len = 0;
+	}
 
 	return *len > 0 ? BLT_TRUE : BLT_FALSE;
 }
