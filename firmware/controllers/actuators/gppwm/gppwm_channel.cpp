@@ -79,7 +79,7 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 	case GPPWM_Egt2:
 		return engine->outputChannels.egt[1];
 	case GPPWM_VehicleSpeed:
-		return Sensor::get(SensorType::VehicleSpeed).value_or(0);
+		return Sensor::getOrZero(SensorType::VehicleSpeed);
 	case GPPWM_OilPressure:
 		return Sensor::get(SensorType::OilPressure);
 	case GPPWM_OilTemp:
