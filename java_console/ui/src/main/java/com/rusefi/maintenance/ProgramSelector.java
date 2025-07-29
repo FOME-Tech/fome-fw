@@ -249,6 +249,22 @@ public class ProgramSelector {
         }
     }
 
+    private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
+        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+
+        try {
+            OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
+
+            callbacks.log("Update completed successfully!");
+            callbacks.done();
+        } catch (Throwable e) {
+            callbacks.log("Error: " + e);
+            callbacks.error();
+        } finally {
+            OpenbltJni.stop(cb);
+        }
+    }
+
     @NotNull
     public static JComponent createHelpButton() {
         return new URLLabel("HOWTO Update Firmware", HELP);

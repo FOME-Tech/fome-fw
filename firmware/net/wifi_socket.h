@@ -3,6 +3,9 @@
 void initWifi();
 void waitForWifiInit();
 
+const wifi_string_t& getWifiSsid();
+const wifi_string_t& getWifiPassword();
+
 struct sockaddr_in;
 
 class ServerSocket {

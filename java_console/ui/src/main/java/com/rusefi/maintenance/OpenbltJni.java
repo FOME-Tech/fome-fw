@@ -59,11 +59,16 @@ public final class OpenbltJni {
         flashCanNative(filename, callbacks);
     }
 
+    public static void flashTcp(String filename, String host, int port, OpenbltCallbacks callbacks) {
+        flashTcpNative(filename, host, port, callbacks);
+    }
+
     public static void stop(OpenbltCallbacks callbacks) {
         stopNative(callbacks);
     }
 
     private static native void flashSerialNative(String filename, String serialPort, OpenbltCallbacks callbacks);
     private static native void flashCanNative(String filename, OpenbltCallbacks callbacks);
+    private static native void flashTcpNative(String filename, String host, int port, OpenbltCallbacks callbacks);
     private static native void stopNative(OpenbltCallbacks callbacks);
 }
