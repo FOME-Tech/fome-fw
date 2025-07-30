@@ -10,7 +10,15 @@ extern "C" {
 
 static ServerSocket server;
 
+static bool didInit = false;
+
 void NetDeferredInit() {
+	if (didInit) {
+		return;
+	}
+
+	didInit = true;
+
 	initWifi();
 	waitForWifiInit();
 
@@ -60,4 +68,18 @@ const wifi_string_t& getWifiSsid() {
 
 const wifi_string_t& getWifiPassword() {
 	return password;
+}
+
+void DoWifiDisconnect() {
+	if (!didInit) {
+		return;
+	}
+
+	if (server.closeSocket()) {
+		// The socket was open, let the message get out before we reset WiFi
+		chThdSleepMilliseconds(1000);
+
+		// Stop WiFi so it comes up cleanly in the main firmware
+		stopWifi();
+	}
 }
