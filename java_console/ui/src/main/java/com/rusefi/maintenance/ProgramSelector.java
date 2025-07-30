@@ -233,11 +233,18 @@ public class ProgramSelector {
         };
     }
 
+    private static final boolean useNewImpl = false;
+
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
         OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            OpenbltJni.flashSerial("../fome_update.srec", port, cb);
+            if (useNewImpl) {
+                OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, null, cb);
+                flasher.flash("../fome_update.srec");
+            } else {
+                OpenbltJni.flashSerial("../fome_update.srec", port, cb);
+            }
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
@@ -253,7 +260,12 @@ public class ProgramSelector {
         OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
+            if (useNewImpl) {
+                OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, null, cb);
+                flasher.flash("../fome_update.srec");
+            } else {
+                OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
+            }
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
