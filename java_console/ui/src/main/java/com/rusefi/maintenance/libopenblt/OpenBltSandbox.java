@@ -5,16 +5,8 @@ import com.rusefi.maintenance.libopenblt.transport.XcpNet;
 
 public class OpenBltSandbox {
     public static void main(String[] args) {
-        XcpSettings settings = new XcpSettings();
-        settings.timeoutT1 = 1000;
-        settings.timeoutT3 = 2000;
-        settings.timeoutT4 = 10000;
-        settings.timeoutT5 = 1000;
-        settings.timeoutT6 = 50;
-        settings.timeoutT7 = 2000;
-
         try (IXcpTransport transport = new XcpNet("192.168.10.1", 29000)) {
-            XcpLoader loader = new XcpLoader(transport, settings);
+            XcpLoader loader = new XcpLoader(transport, new XcpSettings());
 
             loader.start();
 

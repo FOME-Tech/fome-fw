@@ -69,17 +69,25 @@ public class OpenBltFlasher {
     private class ProgressUpdater {
         private int mTotalProcessed = 0;
 
+        private int mLastPercent = -1;
+
         void processBytes(int thisChunk) {
             mTotalProcessed += thisChunk;
 
-            mCallbacks.updateProgress((int)(100.0 * mTotalProcessed / mTotalFileSize));
+            int percent = (int)(100.0 * mTotalProcessed / mTotalFileSize);
+
+            if (percent != mLastPercent) {
+                mLastPercent = percent;
+
+                mCallbacks.updateProgress(percent);
+            }
         }
     }
 
     private void erase() throws IOException {
         final ProgressUpdater pu = new ProgressUpdater();
 
-        forEachFirmwareChunk(32768, (Chunk c) -> {
+        forEachFirmwareChunk(65536, (Chunk c) -> {
             mLoader.clearMemory(c.address, c.data.length);
 
             pu.processBytes(c.data.length);
@@ -89,7 +97,7 @@ public class OpenBltFlasher {
     private void write() throws IOException {
         final ProgressUpdater pu = new ProgressUpdater();
 
-        forEachFirmwareChunk(256, (Chunk c) -> {
+        forEachFirmwareChunk(200, (Chunk c) -> {
             mLoader.writeData(c.address, c.data);
 
             pu.processBytes(c.data.length);
