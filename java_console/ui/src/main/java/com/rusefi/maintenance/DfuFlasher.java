@@ -6,8 +6,8 @@ import com.rusefi.config.generated.Fields;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.DfuHelper;
 import com.rusefi.io.IoStream;
+import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
-import com.rusefi.io.serial.BufferedSerialIoStream;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -56,7 +56,15 @@ public class DfuFlasher {
 
     public static void rebootToDfu(String port, UpdateOperationCallbacks callbacks, String command) {
         callbacks.log("Using selected " + port + "\n");
-        IoStream stream = BufferedSerialIoStream.openPort(port);
+
+        IoStream stream;
+        try {
+            stream = LinkManager.open(port);
+        } catch (IOException e) {
+            callbacks.log("Error opening port: " + e);
+            callbacks.error();
+            return;
+        }
 
         DfuHelper.sendDfuRebootCommand(stream, callbacks, command);
     }
