@@ -7,6 +7,7 @@ import com.rusefi.config.generated.Fields;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
+import com.rusefi.maintenance.libopenblt.XcpSettings;
 import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
 import org.jetbrains.annotations.NotNull;
@@ -240,7 +241,7 @@ public class ProgramSelector {
 
         try {
             if (useNewImpl) {
-                OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, null, cb);
+                OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
                 flasher.flash("../fome_update.srec");
             } else {
                 OpenbltJni.flashSerial("../fome_update.srec", port, cb);
@@ -261,7 +262,7 @@ public class ProgramSelector {
 
         try {
             if (useNewImpl) {
-                OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, null, cb);
+                OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
                 flasher.flash("../fome_update.srec");
             } else {
                 OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
