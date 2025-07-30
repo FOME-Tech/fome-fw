@@ -236,7 +236,7 @@ public:
 			m2m_wifi_handle_events(nullptr);
 
 			if (!ServerSocket::checkSend()) {
-				isrSemaphore.wait(TIME_MS2I(1));
+				isrSemaphore.wait(TIME_MS2I(10));
 			}
 		}
 	}
