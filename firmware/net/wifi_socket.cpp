@@ -305,6 +305,8 @@ void waitForWifiInit() {
 }
 
 void stopWifi() {
+	m2m_wifi_disable_ap();
+	chThdSleepMilliseconds(500);
 	m2m_wifi_deinit(nullptr);
 }
 

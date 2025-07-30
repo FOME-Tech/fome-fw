@@ -77,7 +77,7 @@ void DoWifiDisconnect() {
 
 	if (server.closeSocket()) {
 		// The socket was open, let the message get out before we reset WiFi
-		chThdSleepMilliseconds(1000);
+		chThdSleepMilliseconds(500);
 
 		// Stop WiFi so it comes up cleanly in the main firmware
 		stopWifi();
