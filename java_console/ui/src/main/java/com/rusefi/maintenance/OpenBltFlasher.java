@@ -37,6 +37,7 @@ public class OpenBltFlasher {
     public void flash(String filename) throws IOException {
         loadFile(filename);
 
+        mCallbacks.setPhase("Connect to target", false);
         // Prepare loader
         mLoader.start();
 
@@ -46,12 +47,14 @@ public class OpenBltFlasher {
         // Write new data
         write();
 
+        mCallbacks.setPhase("Cleanup", false);
         // Done, stop the session!
         mLoader.stop();
     }
 
     private void loadFile(String filename) throws IOException {
-        mCallbacks.log("Parsing firmware file...");
+        mCallbacks.setPhase("Load firmware file", false);
+//        mCallbacks.log("Parsing firmware file...");
 
         SrecParser file = new SrecParser();
         file.parse(new File(filename));
@@ -85,6 +88,7 @@ public class OpenBltFlasher {
     }
 
     private void erase() throws IOException {
+        mCallbacks.setPhase("Erase", true);
         final ProgressUpdater pu = new ProgressUpdater();
 
         forEachFirmwareChunk(65536, (Chunk c) -> {
@@ -95,6 +99,7 @@ public class OpenBltFlasher {
     }
 
     private void write() throws IOException {
+        mCallbacks.setPhase("Program", true);
         final ProgressUpdater pu = new ProgressUpdater();
 
         forEachFirmwareChunk(200, (Chunk c) -> {
