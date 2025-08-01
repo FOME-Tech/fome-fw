@@ -1,6 +1,5 @@
 package com.rusefi.trigger;
 
-import com.rusefi.config.generated.Fields;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -8,9 +7,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.rusefi.config.generated.Fields.*;
-
 public class TriggerWheelInfo {
+    private static final String TRIGGER_CYCLE_DURATION = "cycleDuration";
+    private static final String TRIGGER_GAP_FROM = "gapFrom";
+    private static final String TRIGGER_GAP_TO = "gapTo";
+    private static final String TRIGGER_GAPS_COUNT = "gapsCount";
+    private static final String TRIGGER_HARDCODED_OPERATION_MODE = "knownOperationMode";
+    private static final String TRIGGER_HAS_SECOND_CHANNEL = "hasSecondChannel";
+    private static final String TRIGGER_IS_CRANK_KEY = "crankBased";
+    private static final String TRIGGER_IS_SECOND_WHEEL_CAM = "isSecondWheelCam";
+    private static final String TRIGGER_WITH_SYNC = "isSynchronizationNeeded";
+    private static final String TRIGGERS_FILE_NAME = "triggers.txt";
+
     private static final String TRIGGERTYPE = "TRIGGERTYPE";
     static final String DEFAULT_WORK_FOLDER = ".." + File.separator + "unit_tests";
 
@@ -123,7 +131,7 @@ public class TriggerWheelInfo {
     }
 
     static void readWheels(String workingFolder, TriggerWheelInfoConsumer consumer) {
-        String fileName = workingFolder + File.separator + Fields.TRIGGERS_FILE_NAME;
+        String fileName = workingFolder + File.separator + TRIGGERS_FILE_NAME;
         BufferedReader br;
         try {
             br = new BufferedReader(new FileReader(fileName));
