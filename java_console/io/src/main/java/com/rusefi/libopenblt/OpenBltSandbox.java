@@ -1,7 +1,7 @@
-package com.rusefi.maintenance.libopenblt;
+package com.rusefi.libopenblt;
 
-import com.rusefi.maintenance.libopenblt.transport.IXcpTransport;
-import com.rusefi.maintenance.libopenblt.transport.XcpNet;
+import com.rusefi.libopenblt.transport.IXcpTransport;
+import com.rusefi.libopenblt.transport.XcpNet;
 
 public class OpenBltSandbox {
     public static void main(String[] args) {

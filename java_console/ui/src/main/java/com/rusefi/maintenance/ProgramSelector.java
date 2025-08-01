@@ -7,7 +7,7 @@ import com.rusefi.config.generated.Fields;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
-import com.rusefi.maintenance.libopenblt.XcpSettings;
+import com.rusefi.libopenblt.XcpSettings;
 import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
 import org.jetbrains.annotations.NotNull;
