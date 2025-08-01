@@ -7,13 +7,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class SrecParser {
     public static class SRecord {
-        public int address;
-        public byte[] data;
+        public final int address;
+        public final byte[] data;
 
         public SRecord(int address, byte[] data) {
             this.address = address;

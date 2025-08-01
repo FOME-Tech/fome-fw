@@ -1,5 +1,7 @@
-package com.rusefi.libopenblt;
+package com.rusefi.test;
 
+import com.rusefi.libopenblt.XcpLoader;
+import com.rusefi.libopenblt.XcpSettings;
 import com.rusefi.libopenblt.transport.IXcpTransport;
 import com.rusefi.libopenblt.transport.XcpNet;
 
