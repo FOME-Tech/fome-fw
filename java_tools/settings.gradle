@@ -18,6 +18,8 @@ include ':inifile'
 project(':inifile').projectDir = new File('../java_console/inifile')
 include ':models'
 project(':models').projectDir = new File('../java_console/models')
+include ':generated'
+project(':generated').projectDir = new File('../java_console/generated')
 include ':autotest'
 project(':autotest').projectDir = new File('../java_console/autotest')
 include ':ui'
