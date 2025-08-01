@@ -74,9 +74,9 @@
 	/** \brief Enable/disable the NET transport layer. */
 	#define BOOT_COM_NET_ENABLE               (1)
 	/** \brief Configure number of bytes in the target->host data packet. */
-	#define BOOT_COM_NET_TX_MAX_DATA          (200)
+	#define BOOT_COM_NET_TX_MAX_DATA          (240)
 	/** \brief Configure number of bytes in the host->target data packet. */
-	#define BOOT_COM_NET_RX_MAX_DATA          (200)
+	#define BOOT_COM_NET_RX_MAX_DATA          (240)
 	/** \brief Configure the port that the TCP/IP server listens on */
 	#define BOOT_COM_NET_PORT                 (29000)
 	/** \brief Enable/disable DHCP client for automatically obtaining an IP address. */
