@@ -11,7 +11,6 @@ configurations {
 dependencies {
     implementation project(':ecu_io')
     implementation project(':luaformatter')
-    implementation project(':config_definition_base')
     implementation project(':logging')
 	implementation project(':trigger')
     implementation 'com.miglayout:miglayout-swing:4.1'
