@@ -13,6 +13,7 @@ dependencies {
     implementation project(':luaformatter')
     implementation project(':config_definition_base')
     implementation project(':logging')
+	implementation project(':trigger')
     implementation 'com.miglayout:miglayout-swing:4.1'
     implementation global_libs.junit
     implementation group: 'com.fazecast', name: 'jSerialComm', version: '2.10.3'

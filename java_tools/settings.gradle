@@ -8,6 +8,8 @@ include ':config_definition_base'
 project(':config_definition_base').projectDir = new File('configuration_definition_base')
 include ':config_definition'
 project(':config_definition').projectDir = new File('configuration_definition')
+include ':trigger'
+project(':trigger').projectDir = new File('trigger')
 include ':ecu_io'
 project(':ecu_io').projectDir = new File('../java_console/io')
 include ':logging'

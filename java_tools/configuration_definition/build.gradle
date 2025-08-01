@@ -10,9 +10,9 @@ defaultTasks 'shadowJar'
 
 dependencies {
     api project(':config_definition_base')
-    implementation project(':models')
     antlr global_libs.antlr
     implementation global_libs.snakeyaml
+    api project(':trigger')
 }
 
 shadowJar {

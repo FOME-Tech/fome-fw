@@ -4,14 +4,12 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="delegatedBuild" value="true" />
-        <option name="testRunner" value="GRADLE" />
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleJvm" value="1.8" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/../java_console/autotest" />
+            <option value="$PROJECT_DIR$/../java_console/generated" />
             <option value="$PROJECT_DIR$/../java_console/inifile" />
             <option value="$PROJECT_DIR$/../java_console/io" />
             <option value="$PROJECT_DIR$/../java_console/logging" />
@@ -19,12 +17,12 @@
             <option value="$PROJECT_DIR$/../java_console/luaformatter_module" />
             <option value="$PROJECT_DIR$/../java_console/models" />
             <option value="$PROJECT_DIR$/../java_console/shared_io" />
-            <option value="$PROJECT_DIR$/../java_console/shared_ui" />
             <option value="$PROJECT_DIR$/../java_console/ui" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/configuration_definition" />
             <option value="$PROJECT_DIR$/configuration_definition_base" />
             <option value="$PROJECT_DIR$/enum_to_string" />
+            <option value="$PROJECT_DIR$/trigger" />
           </set>
         </option>
       </GradleProjectSettings>
