@@ -11,7 +11,7 @@ defaultTasks 'shadowJar'
 dependencies {
     api project(':inifile')
     api project(':enum_to_string')
-    api project(':core_io')
+    api project(':util')
     api project(':trigger')
 
     antlr global_libs.antlr
