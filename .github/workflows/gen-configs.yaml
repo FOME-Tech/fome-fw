@@ -40,7 +40,7 @@ jobs:
       run: |
         rm ./generated/engine_configuration_generated_structures.h
         rm ./generated/rusefi_generated.h
-        git checkout -- ../java_console/generated/src/main/java/com/rusefi/config/generated/Fields.java
+        rm ../java_console/generated/src/main/java/com/rusefi/config/generated/Fields.java
         ./gen_config_board.sh config/boards/f407-discovery f407-discovery
 
     # Commit changes and catch the error that occurs if nothing has been changed (without catching other errors)
@@ -55,7 +55,6 @@ jobs:
         git add 'firmware/*/auto_generated*.h'
         git add 'firmware/config/boards/*/generated_ts_name_by_pin.cpp'
         git add java_console/io/src/main/java/com/rusefi/enums
-        git add java_console/generated/src/main/java/com/rusefi/config/generated
         git add *_generated.h
         # get the original ramdisk images back in order to not overwrite the default placeholder
         git checkout -- firmware/hw_layer/mass_storage/ramdisk_image.h firmware/hw_layer/mass_storage/ramdisk_image_compressed.h
