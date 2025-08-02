@@ -37,13 +37,9 @@ jobs:
         working-directory: ./firmware/
         run: ./gen_config_board.sh config/boards/f407-discovery f407-discovery
 
-      - name: Print GCC version
-        working-directory: .
-        run: gcc -v
-
-      - name: Build console
+      - name: Build & Test everything java_tools gradle while we are here
         working-directory: ./java_tools
-        run: ./gradlew :ui:shadowJar
+        run: ./gradlew build test
 
       - name: Attach console junit results
         if: always()
@@ -51,12 +47,3 @@ jobs:
         with:
           name: console junit
           path: ./java_console/build/*.txt
-
-      - name: Test everything java_tools gradle while we are here
-        working-directory: ./java_tools
-        run: ./gradlew test
-
-      # this job focuses of tool validation so we do not push fresh enums here
-      - name: Generate Enums using freshly compiled tool
-        working-directory: ./firmware/
-        run: ./gen_enum_to_string.sh
