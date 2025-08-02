@@ -16,8 +16,8 @@
             <option value="$PROJECT_DIR$/../java_console/logging-api" />
             <option value="$PROJECT_DIR$/../java_console/luaformatter_module" />
             <option value="$PROJECT_DIR$/../java_console/models" />
-            <option value="$PROJECT_DIR$/../java_console/shared_io" />
             <option value="$PROJECT_DIR$/../java_console/ui" />
+            <option value="$PROJECT_DIR$/../java_console/util" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/configuration_definition" />
             <option value="$PROJECT_DIR$/enum_to_string" />
