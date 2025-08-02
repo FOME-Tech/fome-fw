@@ -108,6 +108,7 @@ void setDefaultBaseEngine() {
 
 	// Oil pressure protection
 	engineConfiguration->minimumOilPressureTimeout = 0.5f;
+	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;
 	setLinearCurve(config->minimumOilPressureBins, 0, 7000);
 }
 
