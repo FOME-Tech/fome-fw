@@ -31,7 +31,8 @@ void ServerSocket::onAccept(int connectedSocket) {
 	recv(m_connectedSocket, &m_recvBuf, 1, 0);
 }
 
-void ServerSocket::onClose() {
+bool ServerSocket::closeSocket() {
+	bool wasOpen = m_connectedSocket != -1;
 	close(m_connectedSocket);
 
 	m_connectedSocket = -1;
@@ -40,6 +41,12 @@ void ServerSocket::onClose() {
 		chibios_rt::CriticalSectionLocker csl;
 		iqResetI(&m_recvQueue);
 	}
+
+	return wasOpen;
+}
+
+void ServerSocket::onClose() {
+	closeSocket();
 }
 
 void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
@@ -229,7 +236,7 @@ public:
 			m2m_wifi_handle_events(nullptr);
 
 			if (!ServerSocket::checkSend()) {
-				isrSemaphore.wait(TIME_MS2I(1));
+				isrSemaphore.wait(TIME_MS2I(10));
 			}
 		}
 	}
@@ -295,6 +302,12 @@ void waitForWifiInit() {
 	while (!wifiHelper.initDone()) {
 		chThdSleepMilliseconds(10);
 	}
+}
+
+void stopWifi() {
+	m2m_wifi_disable_ap();
+	chThdSleepMilliseconds(500);
+	m2m_wifi_deinit(nullptr);
 }
 
 #endif

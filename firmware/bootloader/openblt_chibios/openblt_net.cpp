@@ -10,7 +10,15 @@ extern "C" {
 
 static ServerSocket server;
 
+static bool didInit = false;
+
 void NetDeferredInit() {
+	if (didInit) {
+		return;
+	}
+
+	didInit = true;
+
 	initWifi();
 	waitForWifiInit();
 
@@ -28,23 +36,27 @@ uint8_t header[4] = {0xde, 0xad, 0xbe, 0xef};
 uint8_t outBuffer[512];
 
 void NetTransmitPacket(blt_int8u *data, blt_int8u len) {
-	memcpy(outBuffer + 4, data, len);
-	memcpy(outBuffer, header, 4);
-	server.send(outBuffer, len + 4);
+	memcpy(outBuffer + 1, data, len);
+	outBuffer[0] = len;
+	server.send(outBuffer, len + 1);
 }
 
 blt_bool NetReceivePacket(blt_int8u *data, blt_int8u *len) {
-	*len = server.recvTimeout(data, BOOT_COM_RX_MAX_DATA + 4, TIME_MS2I(100));
+	uint8_t lengthByte;
 
-	if (*len >= 4) {
-		*len -= 4;
-		// memcpy(header, data, 4);
-		memcpy(data, data + 4, *len);
-	} else {
-		*len = 0;
+	auto lengthByteLen = server.recvTimeout(&lengthByte, 1, TIME_MS2I(1000));
+
+	if (lengthByteLen == 0 || lengthByte == 0) {
+		return BLT_FALSE;
 	}
 
-	return *len > 0 ? BLT_TRUE : BLT_FALSE;
+	*len = server.recvTimeout(data, lengthByte, TIME_MS2I(10));
+
+	if (*len != lengthByte) {
+		return BLT_FALSE;
+	}
+
+	return BLT_TRUE;
 }
 
 static const wifi_string_t ssid = "FOME Bootloader";
@@ -56,4 +68,18 @@ const wifi_string_t& getWifiSsid() {
 
 const wifi_string_t& getWifiPassword() {
 	return password;
+}
+
+void DoWifiDisconnect() {
+	if (!didInit) {
+		return;
+	}
+
+	if (server.closeSocket()) {
+		// The socket was open, let the message get out before we reset WiFi
+		chThdSleepMilliseconds(500);
+
+		// Stop WiFi so it comes up cleanly in the main firmware
+		stopWifi();
+	}
 }
