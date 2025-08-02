@@ -34,6 +34,10 @@ jobs:
         sudo ./add-ubuntu-latest-apt-mirrors.sh
         sudo apt-get install gcc-multilib g++-multilib mtools dosfstools zip
 
+    - name: Build Config Tools
+      working-directory: ./java_tools
+      run: ./gradlew :config_definition:shadowJar :enum_to_string:shadowJar
+
     - name: Compile Linux Simulator
       working-directory: ./simulator/
       run: SHORT_BOARD_NAME=f407-discovery ./compile.sh
