@@ -9,10 +9,10 @@ apply from: '../../java_tools/dependencies.gradle'
 defaultTasks 'shadowJar'
 
 dependencies {
-    api project(':inifile')
-    api project(':enum_to_string')
-    api project(':util')
-    api project(':trigger')
+    implementation project(':inifile')
+    implementation project(':enum_to_string')
+    implementation project(':util')
+    implementation project(':trigger')
 
     antlr global_libs.antlr
     implementation global_libs.snakeyaml
