@@ -25,6 +25,10 @@ jobs:
           sudo ./add-ubuntu-latest-apt-mirrors.sh
           sudo apt-get install sshpass mtools
 
+      - name: Build Config Tools
+        working-directory: ./java_tools
+        run: ./gradlew :config_definition:shadowJar :enum_to_string:shadowJar
+
       - name: Generate Live Documentation
         working-directory: ./firmware/
         run: ./gen_live_documentation.sh
@@ -48,17 +52,9 @@ jobs:
           name: console junit
           path: ./java_console/build/*.txt
 
-      - name: Configuration Definition CI, without pushing new .jar
-        working-directory: ./java_tools
-        run: ./gradlew :config_definition:shadowJar
-
       - name: Test everything java_tools gradle while we are here
         working-directory: ./java_tools
         run: ./gradlew test
-
-      - name: Configuration Definition and other tools CI, without pushing new .jars
-        working-directory: ./java_tools
-        run: ./gradlew shadowJar
 
       # this job focuses of tool validation so we do not push fresh enums here
       - name: Generate Enums using freshly compiled tool
