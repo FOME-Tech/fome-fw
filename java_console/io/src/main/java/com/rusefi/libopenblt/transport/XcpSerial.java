@@ -38,8 +38,8 @@ public class XcpSerial implements IXcpTransport{
                 throw new IllegalStateException("Cannot connect when already connected");
             }
 
-            SerialPort port = SerialPort.getCommPort(mPortName);
-            if (!mPort.openPort()) {
+            final SerialPort port = SerialPort.getCommPort(mPortName);
+            if (!port.openPort()) {
                 throw new IOException("Failed to connect to serial port: " + mPortName);
             }
 
