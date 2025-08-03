@@ -52,7 +52,7 @@ public class TSProjectConsumer implements ConfigurationConsumer {
         tsHeader.write("pageSize            = " + totalTsSize + ToolUtil.EOL);
         tsHeader.write("page = 1" + ToolUtil.EOL);
         tsHeader.write(fieldsSection);
-        if (tsOutput.getSettingContextHelp().length() > 0) {
+        if (!tsOutput.getSettingContextHelp().isEmpty()) {
             tsHeader.write("[" + SETTING_CONTEXT_HELP + "]" + ToolUtil.EOL);
             tsHeader.write(tsOutput.getSettingContextHelp() + ToolUtil.EOL + ToolUtil.EOL);
             tsHeader.write("; " + SETTING_CONTEXT_HELP_END + ToolUtil.EOL);

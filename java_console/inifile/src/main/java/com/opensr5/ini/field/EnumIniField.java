@@ -123,7 +123,7 @@ public class EnumIniField extends IniField {
 
         public ParseBitRange invoke(String bitRange) {
             bitRange = bitRange.replaceAll("[\\]\\[:]", " ").trim();
-            String bitPositions[] = bitRange.split(" ");
+            String[] bitPositions = bitRange.split(" ");
             if (bitPositions.length != 2)
                 throw new IllegalStateException("Bit position " + bitRange);
             bitPosition = Integer.parseInt(bitPositions[0]);

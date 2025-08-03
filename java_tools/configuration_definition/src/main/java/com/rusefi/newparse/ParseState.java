@@ -295,7 +295,7 @@ public class ParseState implements DefinitionsState {
             return;
         }
 
-        if (ctx.fieldOption().size() == 0) {
+        if (ctx.fieldOption().isEmpty()) {
             if (ctx.SemicolonedString() != null) {
                 String text = ctx.SemicolonedString().getText();
                 options.comment = text.substring(1, text.length() - 1).trim();
@@ -317,7 +317,7 @@ public class ParseState implements DefinitionsState {
                 options.digits = Integer.parseInt(ctx.integer().getText());
 
                 // we should have consumed everything on the results list
-                assert(evalResults.size() == 0);
+                assert(evalResults.isEmpty());
             }
 
             return;
@@ -360,7 +360,7 @@ public class ParseState implements DefinitionsState {
         }
 
         // we should have consumed everything on the results list
-        assert(evalResults.size() == 0);
+        assert(evalResults.isEmpty());
     }
 
     @Override

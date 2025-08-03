@@ -42,7 +42,6 @@ public enum Sensor {
     ;
 
     private final String name;
-    private final String units;
 
     @NotNull
     private final FieldType type;
@@ -63,7 +62,6 @@ public enum Sensor {
         this.type = type;
         this.offset = field.getTotalOffset();
         this.scale = scale;
-        this.units = units;
     }
 
     Sensor(String name, FieldType type, Field field) {
