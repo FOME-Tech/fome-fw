@@ -18,8 +18,7 @@ public class JustOneInstance {
     public static boolean isAlreadyRunning() {
         if (Boolean.getBoolean("SKIP_ONE_INSTANCE_CHECK"))
             return false;
-        try {
-            Socket clientSocket = new Socket();
+        try (Socket clientSocket = new Socket()) {
             clientSocket.connect(new InetSocketAddress("localhost", PORT), LOCAL_CONNECTION_TIMEOUT_MS);
             System.out.println("*** Already running!");
             return true;

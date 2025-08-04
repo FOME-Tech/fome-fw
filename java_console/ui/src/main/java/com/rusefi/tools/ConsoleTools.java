@@ -70,9 +70,10 @@ public class ConsoleTools {
         String autoDetectedPort = autoDetectPort();
         if (autoDetectedPort == null)
             return;
-        IoStream stream = LinkManager.open(autoDetectedPort);
-        byte[] commandBytes = BinaryProtocol.getTextCommandBytes(command);
-        stream.sendPacket(commandBytes);
+        try (IoStream stream = LinkManager.open(autoDetectedPort)) {
+            byte[] commandBytes = BinaryProtocol.getTextCommandBytes(command);
+            stream.sendPacket(commandBytes);
+        }
     }
 
 

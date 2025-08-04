@@ -2,14 +2,11 @@ package com.rusefi;
 
 import com.devexperts.logging.Logging;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.ISensorCentral;
 import com.rusefi.core.Sensor;
 import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.trigger_type_e;
 import com.rusefi.io.CommandQueue;
-import com.rusefi.io.ConnectionStateListener;
 import com.rusefi.io.LinkManager;
-import com.rusefi.io.tcp.TcpConnector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CountDownLatch;
