@@ -10,7 +10,7 @@ public:
 
 	void configure(uint8_t sensorIndex);
 
-	bool acceptFrame(const CANRxFrame& frame) const override;
+	bool acceptFrame(CanBusIndex busIndex, const CANRxFrame& frame) const override;
 
 protected:
 	// Dispatches to one of the three decoders below

@@ -90,7 +90,7 @@ struct CanListenerTailSentinel : public CanListener {
 	{
 	}
 
-	bool acceptFrame(const CANRxFrame&) const override {
+	bool acceptFrame(CanBusIndex, const CANRxFrame&) const override {
 		return false;
 	}
 
@@ -102,11 +102,11 @@ struct CanListenerTailSentinel : public CanListener {
 static CanListenerTailSentinel tailSentinel;
 CanListener *canListeners_head = &tailSentinel;
 
-static void serviceCanSubscribers(const CANRxFrame &frame, efitick_t nowNt) {
+static void serviceCanSubscribers(CanBusIndex busIndex, const CANRxFrame &frame, efitick_t nowNt) {
 	CanListener *current = canListeners_head;
 
 	while (current) {
-		current = current->processFrame(frame, nowNt);
+		current = current->processFrame(busIndex, frame, nowNt);
 	}
 }
 
@@ -255,7 +255,7 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_
 		printPacket(busIndex, frame);
 	}
 
-	serviceCanSubscribers(frame, nowNt);
+	serviceCanSubscribers(busIndex, frame, nowNt);
 
 	// todo: convert to CanListener or not?
 	//Vss is configurable, should we handle it here:

@@ -16,8 +16,8 @@ public:
 	{
 	}
 
-	CanListener* processFrame(const CANRxFrame& frame, efitick_t nowNt) {
-		if (acceptFrame(frame)) {
+	CanListener* processFrame(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
+		if (acceptFrame(busIndex, frame)) {
 			decodeFrame(frame, nowNt);
 		}
 
@@ -42,7 +42,7 @@ public:
 
 	// Return true if the provided frame should be accepted for processing by the listener.
 	// Override if you need more complex logic than comparing to a single ID.
-	virtual bool acceptFrame(const CANRxFrame& frame) const {
+	virtual bool acceptFrame(CanBusIndex /*busIndex*/, const CANRxFrame& frame) const {
 		return CAN_ID(frame) == m_id;
 	}
 

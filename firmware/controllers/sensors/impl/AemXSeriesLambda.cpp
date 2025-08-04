@@ -6,20 +6,19 @@
 static constexpr uint32_t aem_base    = 0x180;
 static constexpr uint32_t rusefi_base = 0x190;
 
-AemXSeriesWideband::AemXSeriesWideband(uint8_t sensorIndex, SensorType type)
+AemXSeriesWideband::AemXSeriesWideband(SensorType type)
 	: CanSensorBase(
 		0,	// ID passed here doesn't matter since we override acceptFrame
 		type,
 		MS2NT(21)	// sensor transmits at 100hz, allow a frame to be missed
 	)
-	, m_sensorIndex(sensorIndex)
 {}
 
 void AemXSeriesWideband::configure(uint8_t sensorIndex) {
 	m_sensorIndex = sensorIndex;
 }
 
-bool AemXSeriesWideband::acceptFrame(const CANRxFrame& frame) const {
+bool AemXSeriesWideband::acceptFrame(CanBusIndex /*busIndex*/, const CANRxFrame& frame) const {
 	if (frame.DLC != 8) {
 		return false;
 	}
