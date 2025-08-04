@@ -22,7 +22,6 @@
 #include "eficonsole.h"
 #include "console_io.h"
 #include "idle_thread.h"
-#include "kline.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
