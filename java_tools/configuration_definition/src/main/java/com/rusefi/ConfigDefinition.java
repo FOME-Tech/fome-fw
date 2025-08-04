@@ -209,7 +209,7 @@ public class ConfigDefinition {
             // store the CRC32 as a built-in variable
             tmpRegistry.register(SIGNATURE_HASH, uniqueId.encode());
             tmpRegistry.readPrependValues(signaturePrependFile);
-            state.addDestination(new SignatureConsumer(signatureDestination, tmpRegistry));
+            ExtraUtil.writeDefinesToFile(tmpRegistry, signatureDestination);
         }
 
         if (state.isDestinationsEmpty())
