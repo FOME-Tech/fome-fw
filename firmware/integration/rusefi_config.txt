@@ -755,7 +755,7 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 	output_pin_e acRelayPin;
 
 	uint8_t autoscale minimumOilPressureTimeout;Delay before cutting fuel due to low oil pressure. Use this to ignore short pressure blips and sensor noise.;"sec", 0.1, 0, 0, 5, 1
-	uint8_t autoscale oilPressureProtectionStartDelay;Delay before the oil pressure protection starts working after the start of the engine.;"sec", 0.1, 0, 0, 5, 5
+	uint8_t autoscale oilPressureProtectionStartDelay;Delay before the oil pressure protection starts working after the start of the engine.;"sec", 0.1, 0, 0, 5, 1
 
 	spi_device_e drv8860spiDevice;
 
