@@ -13,20 +13,19 @@ static FunctionalSensor lambdaSensor2(SensorType::Lambda2, MS2NT(50));
 #include "AemXSeriesLambda.h"
 
 #if EFI_CAN_SUPPORT
-static AemXSeriesWideband aem1(0, SensorType::Lambda1);
-static AemXSeriesWideband aem2(1, SensorType::Lambda2);
-static AemXSeriesWideband aem3(2, SensorType::Lambda3);
-static AemXSeriesWideband aem4(3, SensorType::Lambda4);
+static AemXSeriesWideband canWidebands[] = {
+	SensorType::Lambda1,
+	SensorType::Lambda2,
+	SensorType::Lambda3,
+	SensorType::Lambda4,
+};
 #endif
 
 template <>
 const wideband_state_s* getLiveData(size_t idx) {
 #if EFI_CAN_SUPPORT
-	switch (idx) {
-		case 0: return &aem1;
-		case 1: return &aem2;
-		case 2: return &aem3;
-		case 3: return &aem4;
+	if (idx < efi::size(canWidebands)) {
+		return &canWidebands[idx];
 	}
 #endif
 
@@ -51,10 +50,14 @@ void initLambda() {
 			return;
 		}
 
-		registerCanSensor(aem1);
-		registerCanSensor(aem2);
-		registerCanSensor(aem3);
-		registerCanSensor(aem4);
+		for (size_t i = 0; i < efi::size(canWidebands); i++) {
+			auto& sensor = canWidebands[i];
+
+			sensor.configure(config->lambdaSensorSourceIndex[i]);
+
+			// TODO: register for a particular bus, not all busses!
+			registerCanSensor(sensor);
+		}
 
 		return;
 	}

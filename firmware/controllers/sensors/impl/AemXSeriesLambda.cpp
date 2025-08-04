@@ -15,6 +15,10 @@ AemXSeriesWideband::AemXSeriesWideband(uint8_t sensorIndex, SensorType type)
 	, m_sensorIndex(sensorIndex)
 {}
 
+void AemXSeriesWideband::configure(uint8_t sensorIndex) {
+	m_sensorIndex = sensorIndex;
+}
+
 bool AemXSeriesWideband::acceptFrame(const CANRxFrame& frame) const {
 	if (frame.DLC != 8) {
 		return false;

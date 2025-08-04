@@ -6,7 +6,9 @@
 
 class AemXSeriesWideband final : public CanSensorBase, public wideband_state_s {
 public:
-	AemXSeriesWideband(uint8_t sensorIndex, SensorType type);
+	AemXSeriesWideband(SensorType type);
+
+	void configure(uint8_t sensorIndex);
 
 	bool acceptFrame(const CANRxFrame& frame) const override;
 
@@ -22,5 +24,5 @@ protected:
 	void decodeRusefiDiag(const CANRxFrame& frame);
 
 private:
-	const uint8_t m_sensorIndex;
+	uint8_t m_sensorIndex = 0;
 };
