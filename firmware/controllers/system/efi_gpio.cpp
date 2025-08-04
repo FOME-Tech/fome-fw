@@ -213,10 +213,6 @@ void EnginePins::unregisterPins() {
 	stopIgnitionPins();
 	stopAuxValves();
 
-#if EFI_ELECTRONIC_THROTTLE_BODY
-	unregisterEtbPins();
-#endif /* EFI_ELECTRONIC_THROTTLE_BODY */
-
 	// todo: add pinMode
 	unregisterOutputIfPinChanged(sdCsPin, sdCardCsPin);
 	unregisterOutputIfPinChanged(accelerometerCs, LIS302DLCsPin);

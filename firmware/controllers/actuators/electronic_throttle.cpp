@@ -879,10 +879,6 @@ void setDefaultEtbBiasCurve() {
 	copyArray(config->etbBiasValues, defaultBiasValues);
 }
 
-void unregisterEtbPins() {
-	// todo: we probably need an implementation here?!
-}
-
 void doInitElectronicThrottle() {
 	bool hasPedal = Sensor::hasSensor(SensorType::AcceleratorPedalPrimary);
 
