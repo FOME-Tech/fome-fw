@@ -17,7 +17,18 @@ $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
 $(OBJS) : $(GENERATED)
 $(PCHOBJ) : $(GENERATED)
 
+JAVA_TOOLS = $(BUILDDIR)/java_tools.cookie
+
+$(JAVA_TOOLS) :
+	cd $(PROJECT_DIR)/../java_tools && ./build_tools.sh
+	echo "done" > $@
+
+# Generated files depend on the generation tools
+$(GENERATED) : $(JAVA_TOOLS)
+
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*
+	rm -f $(PROJECT_DIR)/../java_tools/ConfigDefinition.jar
+	rm -f $(PROJECT_DIR)/../java_tools/enum2string.jar
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image.h
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image_compressed.h

@@ -36,10 +36,6 @@ jobs:
       working-directory: .
       run: gcc -v
 
-    - name: Build Config Tools
-      working-directory: ./java_tools
-      run: ./build_tools.sh
-
     - name: Build Tests
       working-directory: ./unit_tests/
       run: make -j4 COVERAGE=yes
