@@ -15,7 +15,6 @@ dependencies {
     implementation project(':trigger')
     implementation 'com.miglayout:miglayout-swing:4.1'
     implementation global_libs.junit
-    implementation group: 'com.fazecast', name: 'jSerialComm', version: '2.10.3'
 
     testImplementation global_libs.mockito
 }
