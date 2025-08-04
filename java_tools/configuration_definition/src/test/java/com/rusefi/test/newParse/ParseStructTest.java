@@ -130,7 +130,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void scalarOptions() throws IOException {
+    public void scalarOptions() {
         Field f = parseSingleField("int foo;comment;\"units\", 1, 2, 3, 4, 5");
         ScalarField sf = (ScalarField) f;
 
@@ -145,7 +145,7 @@ public class ParseStructTest {
         Assert.assertEquals(5, opt.digits);
     }
 
-    private static void checkType(String inputType, int size, String cType, String tsType) throws IOException {
+    private static void checkType(String inputType, int size, String cType, String tsType) {
         ScalarField sf = (ScalarField) parseSingleField(inputType + " foo");
 
         Assert.assertEquals("foo", sf.name);
@@ -157,7 +157,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void typeMappings() throws IOException {
+    public void typeMappings() {
         checkType("int", 4, "int", "S32");
 
         checkType("int8_t", 1, "int8_t", "S08");
@@ -171,7 +171,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arraySingleDimension() throws IOException {
+    public void arraySingleDimension() {
         Field f = parseSingleField("uint8_t[10] testBins");
 
         Assert.assertTrue(f instanceof ArrayField);
@@ -186,7 +186,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arrayMultiDimension() throws IOException {
+    public void arrayMultiDimension() {
         Field f = parseSingleField("uint8_t[5 x 8] testBins");
 
         Assert.assertTrue(f instanceof ArrayField);
@@ -198,7 +198,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arrayIterate() throws IOException {
+    public void arrayIterate() {
         Field f = parseSingleField("uint8_t[10 iterate] testBins");
 
         Assert.assertTrue(f instanceof ArrayField);
@@ -208,7 +208,7 @@ public class ParseStructTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void checkMultiDimensionArrayIterateThrows() throws IOException {
+    public void checkMultiDimensionArrayIterateThrows() {
         parseSingleField("uint8_t[5 x 8 iterate] testBins");
     }
 

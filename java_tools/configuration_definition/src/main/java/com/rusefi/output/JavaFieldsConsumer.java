@@ -48,7 +48,7 @@ public abstract class JavaFieldsConsumer implements ConfigurationConsumer {
     }
 
     @Override
-    public void handleEndStruct(ReaderState readerState, ConfigStructure structure) throws IOException {
+    public void handleEndStruct(ReaderState readerState, ConfigStructure structure) {
         FieldsStrategy fieldsStrategy = new FieldsStrategy() {
             protected int writeOneField(FieldIterator iterator, String prefix, int tsPosition) {
                 ConfigField prev = iterator.getPrev();

@@ -6,6 +6,8 @@ import com.rusefi.util.Output;
 import com.rusefi.util.SystemOut;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static com.rusefi.util.IoUtils.CHARSET;
 
@@ -67,7 +69,7 @@ public class TSProjectConsumer implements ConfigurationConsumer {
      * TODO: start generating [outputs] section as well
      */
     private TsFileContent readTsTemplateInputFile(String fileName) throws IOException {
-        BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), CHARSET));
+        BufferedReader r = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(fileName)), CHARSET));
 
         StringBuilder prefix = new StringBuilder();
         StringBuilder postfix = new StringBuilder();
@@ -136,7 +138,7 @@ public class TSProjectConsumer implements ConfigurationConsumer {
     }
 
     @Override
-    public void handleEndStruct(ReaderState readerState, ConfigStructure structure) throws IOException {
+    public void handleEndStruct(ReaderState readerState, ConfigStructure structure) {
         state.getVariableRegistry().register(structure.getName() + "_size", structure.getTotalSize());
         totalTsSize = tsOutput.run(readerState, structure, 0);
 

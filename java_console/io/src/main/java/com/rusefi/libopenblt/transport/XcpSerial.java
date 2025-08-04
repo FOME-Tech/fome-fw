@@ -59,12 +59,12 @@ public class XcpSerial implements IXcpTransport{
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         disconnect();
     }
 
     @Override
-    public byte[] sendPacket(byte[] request, int timeoutMs, int expectResponseBytes) throws IOException {
+    public byte[] sendPacket(byte[] request, int timeoutMs, int expectResponseBytes) {
         synchronized (mLock) {
             checkPort();
 
