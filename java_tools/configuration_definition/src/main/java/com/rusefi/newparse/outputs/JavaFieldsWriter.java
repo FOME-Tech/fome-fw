@@ -130,20 +130,21 @@ public class JavaFieldsWriter {
         public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
             if (arrayDims.length == 0) {
                 visit(scalar, ps, prefixer, offsetAdd, -1);
-            } else if (arrayDims.length == 1) {
-                int elementOffset = offsetAdd;
-
-                for (int i = 0; i < arrayDims[0]; i++) {
-                    visit(scalar, ps, prefixer, elementOffset, i + 1);
-                    elementOffset += scalar.type.size;
-                }
             } else {
-                throw new IllegalStateException("Output channels don't support multi dimension arrays");
+                // ignore arrays in the java writer
             }
         }
 
         public void visit(BitGroupLayout bitGroup, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-            // TODO?
+            // ignore bits in the java writer
+        }
+
+        public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+            // ignore enums in the java writer
+        }
+
+        public void visit(StringLayout str, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+            // ignore strings in the java writer
         }
     }
 }

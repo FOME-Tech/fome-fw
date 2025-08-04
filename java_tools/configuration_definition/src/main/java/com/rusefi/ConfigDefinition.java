@@ -3,6 +3,7 @@ package com.rusefi;
 // import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.CStructWriter;
+import com.rusefi.newparse.outputs.JavaFieldsWriter;
 import com.rusefi.newparse.outputs.TsWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
@@ -69,6 +70,7 @@ public class ConfigDefinition {
         String destCDefinesFileName = null;
         String cHeaderDestination = null;
         String tsIniDestination = null;
+        String javaFieldsDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         String signatureDestination = null;
@@ -102,6 +104,7 @@ public class ConfigDefinition {
                     destCDefinesFileName = args[i + 1];
                     break;
                 case KEY_JAVA_DESTINATION:
+                    javaFieldsDestination = args[i + 1];
                     state.addJavaDestination(args[i + 1]);
                     break;
                 case "-field_lookup_file": {
@@ -202,6 +205,12 @@ public class ConfigDefinition {
             // Write tunerstudio layout
             TsWriter writer = new TsWriter();
             writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination + ".test");
+
+            // Write Java fields
+            JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination + ".test", 0);
+            javaWriter.writeDefinitions(parseState.getDefinitions());
+            javaWriter.writeFields(parseState);
+            javaWriter.finish();
         }
 
         if (tsTemplateFile != null) {
