@@ -57,6 +57,8 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 		allowFuel.clear(ClearReason::LambdaProtection);
 	}
 
+	updateCutsBoostCut(allowFuel);
+
 #if EFI_SHAFT_POSITION_INPUT
 	updateCutsEngineSync(allowFuel, allowSpark);
 
