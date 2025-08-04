@@ -91,8 +91,8 @@ public abstract class JavaFieldsConsumer implements ConfigurationConsumer {
                     } else {
                         content.append(getJavaType(configField.getElementSize()));
                     }
-                    content.append(")" + ".setScale(" + configField.autoscaleSpecNumber() + ")" +
-                            terminateField());
+                    content.append(")");
+                    content.append(terminateField());
                 }
 
                 tsPosition += configField.getSize(next);

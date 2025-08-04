@@ -41,20 +41,10 @@ public class Field {
         return Double.toString(Math.round(value * toScale) / toScale);
     }
 
-    public String getName() {
-        return name;
-    }
-
     public String setCommand() {
         if (type == FieldType.BIT)
             return "set_bit " + getOffset() + " " + bitOffset;
         return getType().getStoreCommand() + " " + getOffset();
-    }
-
-    public String getCommand() {
-        if (type == FieldType.BIT)
-            return "get_bit " + getOffset() + " " + bitOffset;
-        return type.getLoadCommand() + " " + getOffset();
     }
 
     /**
@@ -66,10 +56,6 @@ public class Field {
 
     public int getTotalOffset() {
         return baseOffset + offset;
-    }
-
-    public int getBitOffset() {
-        return bitOffset;
     }
 
     public FieldType getType() {
@@ -121,21 +107,12 @@ public class Field {
         return value.doubleValue() * multiplier;
     }
 
-    @NotNull
-    public ByteBuffer getByteBuffer(ConfigurationImage ci) {
-        return ci.getByteBuffer(getOffset(), 4);
-    }
-
     public static Field create(String name, int offset, FieldType type, int bitOffset) {
         return new Field(name, offset, type, bitOffset);
     }
 
     public static Field create(String name, int offset, FieldType type) {
         return new Field(name, offset, type);
-    }
-
-    public Field setScale(double scale) {
-        return this;
     }
 
     public Field setBaseOffset(int baseOffset) {

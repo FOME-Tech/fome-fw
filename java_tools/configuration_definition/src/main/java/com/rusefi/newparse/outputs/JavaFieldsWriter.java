@@ -119,12 +119,6 @@ public class JavaFieldsWriter {
             ps.print(", FieldType.");
             ps.print(toJavaType(scalar.type.tsType));
 
-            // if (scalar.options.scale != 1) {
-            if (!scalar.type.tsType.equals("F32")) {
-                ps.print(").setScale(");
-                ps.print(scalar.options.scale);
-            }
-
             ps.print(").setBaseOffset(");
 
             // TODO
