@@ -395,7 +395,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->ecumasterEgtToCanBaseId = 0x660;
 
 	for (size_t i = 0; i < efi::size(config->lambdaSensorSourceIndex); i++) {
-		config->lambdaSensorSourceIndex = i;
+		config->lambdaSensorSourceIndex[i] = i;
 	}
 
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
