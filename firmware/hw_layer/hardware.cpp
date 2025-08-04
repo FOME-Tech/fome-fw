@@ -205,7 +205,7 @@ void applyNewHardwareSettings() {
 
 #if EFI_PROD_CODE && EFI_IDLE_CONTROL
 	if (isIdleHardwareRestartNeeded()) {
-		 initIdleHardware();
+		initIdleHardware();
 	}
 #endif
 
