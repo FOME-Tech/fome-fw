@@ -54,10 +54,10 @@ public class EngineState {
                 int i = response.indexOf(Logger.END_OF_TIMESTAND_TAG);
                 if (i != -1)
                     response = response.substring(i + Logger.END_OF_TIMESTAND_TAG.length());
-                String copy = response;
                 listener.beforeLine(response);
-                while (!response.isEmpty())
-                    response = handleResponse(response, listener);
+                while (!response.isEmpty()) {
+                    response = handleResponse(response);
+                }
             }
         });
 
@@ -66,14 +66,13 @@ public class EngineState {
 
     /**
      * @param response input string
-     * @param listener obviously
      * @return unused part of the response
      */
-    private String handleResponse(String response, EngineStateListener listener) {
+    private String handleResponse(String response) {
         String originalResponse = response;
         synchronized (lock) {
             for (StringActionPair pair : actions)
-                response = handleStringActionPair(response, pair, listener);
+                response = handleStringActionPair(response, pair);
         }
         if (originalResponse.length() == response.length()) {
             log.info("EngineState.unknown: " + response);
@@ -96,16 +95,7 @@ public class EngineState {
         return response;
     }
 
-    public static String skipToken(String string) {
-        int keyEnd = string.indexOf(Fields.LOG_DELIMITER);
-        if (keyEnd == -1) {
-            // discarding invalid line
-            return "";
-        }
-        return string.substring(keyEnd + Fields.LOG_DELIMITER.length());
-    }
-
-    public static String handleStringActionPair(String response, StringActionPair pair, EngineStateListener listener) {
+    public static String handleStringActionPair(String response, StringActionPair pair) {
         if (startWithIgnoreCase(response, pair.prefix)) {
             String key = pair.first;
             int beginIndex = key.length() + 1;
