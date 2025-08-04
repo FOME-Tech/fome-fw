@@ -76,6 +76,8 @@ public class ConfigDefinition {
         List<String> enumInputFiles = new ArrayList<>();
         PinoutLogic pinoutLogic = null;
 
+        ParseState parseState = new ParseState(state.getEnumsReader());
+
         for (int i = 0; i < args.length - 1; i += 2) {
             String key = args[i];
             switch (key) {
@@ -114,7 +116,7 @@ public class ConfigDefinition {
                     // yes, we take three parameters here thus pre-increment!
                     String fileName = args[++i + 1];
                     try {
-                        state.getVariableRegistry().register(keyName, IoUtil2.readFile(fileName));
+                        parseState.addDefinition(state.getVariableRegistry(), keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
                     } catch (RuntimeException e) {
                         throw new IllegalStateException("While processing " + fileName, e);
                     }
@@ -163,7 +165,6 @@ public class ConfigDefinition {
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
         }
 
-        ParseState parseState = new ParseState(state.getEnumsReader());
         // Add the variable for the config signature
         FirmwareVersion uniqueId = new FirmwareVersion(IoUtil2.getCrc32(state.getInputFiles()));
         SignatureConsumer.storeUniqueBuildId(state, parseState, tsTemplateFile, uniqueId);
