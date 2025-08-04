@@ -45,7 +45,7 @@ java \
 	-triggerInputFolder ../unit_tests \
 	-with_c_defines false \
 	-field_lookup_file generated/value_lookup_generated.cpp generated/value_lookup_generated.md \
-	-java_destination ../java_console/models/src/main/java/com/rusefi/config/generated/Fields.java \
+	-java_destination ../java_console/generated/src/main/java/com/rusefi/config/generated/Fields.java \
 	-initialize_to_zero false \
 	-signature tunerstudio/generated/signature_${SHORT_BOARDNAME}.txt \
 	-signature_destination generated/signature_${SHORT_BOARDNAME}.h \

@@ -142,9 +142,6 @@ static void printEngineSnifferPinMappings() {
 		printOutPin(enginePins.injectors[i].getShortName(), engineConfiguration->injectionPins[i]);
 		printOutPin(enginePins.injectorsStage2[i].getShortName(), engineConfiguration->injectionPinsStage2[i]);
 	}
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		printOutPin(enginePins.auxValve[i].getShortName(), engineConfiguration->auxValves[i]);
-	}
 #endif /* EFI_PROD_CODE */
 }
 

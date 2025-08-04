@@ -25,6 +25,10 @@ jobs:
           sudo ./add-ubuntu-latest-apt-mirrors.sh
           sudo apt-get install sshpass mtools
 
+      - name: Build Config Tools
+        working-directory: ./java_tools
+        run: ./gradlew :config_definition:shadowJar :enum_to_string:shadowJar
+
       - name: Generate Live Documentation
         working-directory: ./firmware/
         run: ./gen_live_documentation.sh
@@ -33,22 +37,9 @@ jobs:
         working-directory: ./firmware/
         run: ./gen_config_board.sh config/boards/f407-discovery f407-discovery
 
-      - name: Generate Java (Antlr)
+      - name: Build & Test everything java_tools gradle while we are here
         working-directory: ./java_tools
-        run: ./gradlew :config_definition:generateGrammarSource
-
-      - name: Print GCC version
-        working-directory: .
-        run: gcc -v
-
-      - name: Test console
-        # at the moment 'jar' task does not depend on tests?! maybe because tests take some time?
-        working-directory: ./java_tools
-        run: ./gradlew test
-
-      - name: Build console
-        working-directory: ./java_tools
-        run: ./gradlew :ui:shadowJar
+        run: ./gradlew build test
 
       - name: Attach console junit results
         if: always()
@@ -56,20 +47,3 @@ jobs:
         with:
           name: console junit
           path: ./java_console/build/*.txt
-
-      - name: Configuration Definition CI, without pushing new .jar
-        working-directory: ./java_tools
-        run: ./gradlew :config_definition:shadowJar
-
-      - name: Test everything java_tools gradle while we are here
-        working-directory: ./java_tools
-        run: ./gradlew test
-
-      - name: Configuration Definition and other tools CI, without pushing new .jars
-        working-directory: ./java_tools
-        run: ./gradlew shadowJar
-
-      # this job focuses of tool validation so we do not push fresh enums here
-      - name: Generate Enums using freshly compiled tool
-        working-directory: ./firmware/
-        run: ./gen_enum_to_string.sh

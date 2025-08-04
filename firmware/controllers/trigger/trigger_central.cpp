@@ -215,12 +215,28 @@ static angle_t wrapVvt(angle_t vvtPosition, int period) {
 	return vvtPosition;
 }
 
+static angle_t wrapVvtForCamType(angle_t vvtPosition, vvt_mode_e mode) {
+	// this could be just an 'if' but let's have it expandable for future use :)
+	switch(mode) {
+	case VVT_HONDA_K_INTAKE:
+		// honda K has four tooth in VVT intake trigger
+		// so we just wrap each of those to 720 / 4
+	case VVT_TOYOTA_3_TOOTH:
+		// Toyota 3 tooth vvt angle comes pre-wrapped,
+		// so just ensure the crankOffset didn't break it
+		return wrapVvt(vvtPosition, 180);
+	default:
+		// "normal" cam patterns: wrap in to +-360 deg
+		return wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
+	}
+}
+
 static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
 	addEngineSnifferVvtEvent(index, isRising);
 
 #if EFI_TOOTH_LOGGER
-	LogTriggerTooth(isRising ? TriggerEvent::SecondaryRising : TriggerEvent::SecondaryFalling, nowNt);
+	LogCamTriggerTooth(nowNt, index, isRising);
 #endif /* EFI_TOOTH_LOGGER */
 }
 
@@ -334,21 +350,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			vvtPosition -= crankOffset;
 		}
 
-		vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
-
-		// this could be just an 'if' but let's have it expandable for future use :)
-		switch(engineConfiguration->vvtMode[camIndex]) {
-		case VVT_HONDA_K_INTAKE:
-			// honda K has four tooth in VVT intake trigger, so we just wrap each of those to 720 / 4
-		case VVT_TOYOTA_3_TOOTH:
-			// Toyota 3 tooth vvt angle comes pre-wrapped, so ensure the crankOffset doesn't break it
-			vvtPosition = wrapVvt(vvtPosition, 180);
-			break;
-		default:
-			// else, do nothing
-			break;
-		}
-
 		if (std::abs(currentTrgPhase.Value.angle) < 7) {
 			/**
 			 * we prefer not to have VVT sync right at trigger sync so that we do not have phase detection error if things happen a bit in
@@ -357,10 +358,10 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 			 */
 			warning(ObdCode::CUSTOM_VVT_SYNC_POSITION, "VVT sync position too close to trigger sync");
 		}
-	} else {
-		// Not using this cam for engine sync, just wrap the value in to the reasonable range
-		vvtPosition = wrapVvt(vvtPosition, FOUR_STROKE_CYCLE_DURATION);
 	}
+
+	// Wrap the vvt position back in to the reasonable range
+	vvtPosition = wrapVvtForCamType(vvtPosition, engineConfiguration->vvtMode[camIndex]);
 
 	// Only record VVT position if we have full engine sync - may be bogus before that point
 	auto& vvtPos = tc->vvtPosition[bankIndex][camIndex];
@@ -423,7 +424,7 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 	// We want to do this before anything else as we
 	// actually want to capture any noise/jitter that may be occurring
 
-	LogTriggerTooth(signal, timestamp);
+	LogPrimaryTriggerTooth(timestamp, isRising);
 #endif /* EFI_TOOTH_LOGGER */
 
 	if (!isUsefulSignal(signal, getTriggerCentral()->triggerShape)) {

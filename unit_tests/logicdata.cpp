@@ -33,7 +33,7 @@
 #define SIGN_FLAG 0x80000000L
 
 // todo: numChannels 7 or numChannels 8 does not work? :(
-#define numChannels 6
+#define numChannels 4
 #define reservedDurationInSamples 10
 
 static const char *channelNames[] = { "Primary", "Secondary", "TDC",
@@ -380,10 +380,6 @@ static int getChannelState(int ch, const CompositeEvent* event) {
 		return event->isTDC;
 	case 3:
 		return event->sync;
-	case 4:
-		return event->coil;
-	case 5:
-		return event->injector;
 	}
 	return -1;
 }

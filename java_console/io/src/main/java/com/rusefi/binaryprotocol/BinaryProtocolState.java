@@ -10,20 +10,10 @@ public class BinaryProtocolState {
      * Snapshot of current gauges status
      * @see Fields#TS_OUTPUT_COMMAND
      */
-    private byte[] currentOutputs;
-
     public void setController(ConfigurationImage controller) {
         synchronized (imageLock) {
             this.controller = controller.clone();
         }
-    }
-
-    public byte[] getCurrentOutputs() {
-        return currentOutputs;
-    }
-
-    public void setCurrentOutputs(byte[] currentOutputs) {
-        this.currentOutputs = currentOutputs;
     }
 
     public ConfigurationImage getControllerConfiguration() {
@@ -31,12 +21,6 @@ public class BinaryProtocolState {
             if (controller == null)
                 return null;
             return controller.clone();
-        }
-    }
-
-    public void setRange(byte[] src, int scrPos, int offset, int count) {
-        synchronized (imageLock) {
-            System.arraycopy(src, scrPos, controller.getContent(), offset, count);
         }
     }
 }

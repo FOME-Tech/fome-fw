@@ -179,10 +179,6 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		idx++;
 	}
 
-#if EFI_TOOTH_LOGGER
-	LogTriggerCoilState(nowNt, false);
-#endif // EFI_TOOTH_LOGGER
-
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
 	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
@@ -247,10 +243,6 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 		engine->onIgnitionEvent(ctx, true);
 	}
 #endif
-
-#if EFI_TOOTH_LOGGER
-	LogTriggerCoilState(nowNt, true);
-#endif // EFI_TOOTH_LOGGER
 
 	if (engineConfiguration->enableTrailingSparks) {
 		IgnitionOutputPin *output = &enginePins.trailingCoils[event->cylinderNumber];

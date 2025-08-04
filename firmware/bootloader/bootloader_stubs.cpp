@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "hardware.h"
+#include "digital_input_exti.h"
 
 /*
  * We need only a small portion of code from FOME codebase in the bootloader.
@@ -28,3 +29,27 @@ void threadInitHook(void*) {}
 void onLockHook() {}
 void onUnlockHook() {}
 //#endif /* ENABLE_PERF_TRACE */
+
+static ExtiCallback callback;
+void extiCallbackThunk(void* data) {
+	callback(data, 0);
+}
+
+// EXT is not able to give you the front direction but you could read the pin in the callback.
+void efiExtiEnablePin(const char *msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void *cb_data) {
+	ioportid_t port = getHwPort(msg, brainPin);
+	int index = getHwPin(msg, brainPin);
+
+	ioline_t line = PAL_LINE(port, index);
+	palEnableLineEvent(line, mode);
+	callback = cb;
+	palSetLineCallback(line, extiCallbackThunk, cb_data);
+}
+
+void efiExtiDisablePin(brain_pin_e brainPin) {
+	ioportid_t port = getHwPort("", brainPin);
+	int index = getHwPin("", brainPin);
+
+	ioline_t line = PAL_LINE(port, index);
+	palDisableLineEvent(line);
+}

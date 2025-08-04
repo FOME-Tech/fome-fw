@@ -1,10 +1,7 @@
 package com.rusefi.test;
 
-import com.rusefi.BitState;
 import com.rusefi.ReaderStateImpl;
-import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.output.GetOutputValueConsumer;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Ignore;
 import org.junit.Test;
 

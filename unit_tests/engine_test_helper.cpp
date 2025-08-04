@@ -185,13 +185,13 @@ void EngineTestHelper::smartFireFall(float delayMs) {
  */
 void EngineTestHelper::firePrimaryTriggerRise() {
 	efitick_t nowNt = getTimeNowNt();
-	LogTriggerTooth(TriggerEvent::PrimaryRising, nowNt);
+	LogPrimaryTriggerTooth(nowNt, true);
 	handleShaftSignal(0, true, nowNt);
 }
 
 void EngineTestHelper::firePrimaryTriggerFall() {
 	efitick_t nowNt = getTimeNowNt();
-	LogTriggerTooth(TriggerEvent::PrimaryFalling, nowNt);
+	LogPrimaryTriggerTooth(nowNt, true);
 	handleShaftSignal(0, false, nowNt);
 }
 

@@ -17,11 +17,10 @@ TEST(realk20, cranking) {
 	while (reader.haveMore()) {
 		reader.processLine(&eth);
 
-		// TODO
-		// float vvtI = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
-		// if (vvtI != 0) {
-		// 	EXPECT_TRUE(vvtI > -10 && vvtI < 10);
-		// }
+		auto vvtI = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
+		if (vvtI) {
+			EXPECT_TRUE(vvtI.Value > -20 && vvtI.Value < 10) << "VVT angle: " << vvtI.Value;
+		}
 
 		auto vvtE = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/1);
 		if (vvtE) {

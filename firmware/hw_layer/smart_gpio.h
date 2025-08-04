@@ -27,8 +27,6 @@ BOARD_MC33810_COUNT + \
 0)
 #endif
 
-void initSmartGpio(void);
-void startSmartCsPins(void);
-void stopSmartCsPins(void);
+void initSmartGpio();
 
-void tle8888startup(void);
+void tle8888startup();

@@ -115,7 +115,7 @@ public:
 	{
 	}
 
-	virtual void decodeFrame(const CANRxFrame& frame, efitick_t nowNt);
+	void decodeFrame(const CANRxFrame& frame, efitick_t nowNt) override;
 
 	bool get(CanRxMessage &item, int timeout) {
 		return rxFifo.get(item, timeout);

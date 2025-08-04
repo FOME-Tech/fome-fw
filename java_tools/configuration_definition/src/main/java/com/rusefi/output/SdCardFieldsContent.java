@@ -3,18 +3,16 @@ package com.rusefi.output;
 import com.rusefi.ConfigField;
 import com.rusefi.ReaderState;
 
-import java.io.IOException;
-
 import static com.rusefi.output.JavaSensorsConsumer.quote;
 import static com.rusefi.VariableRegistry.unquote;
 
 public class SdCardFieldsContent {
     private final StringBuilder body = new StringBuilder();
 
-    public String home = "engine->outputChannels";
-    public Boolean isPtr = false;
+    public final String home = "engine->outputChannels";
+    public final Boolean isPtr = false;
 
-    public void handleEndStruct(ReaderState state, ConfigStructure structure) throws IOException {
+    public void handleEndStruct(ReaderState state, ConfigStructure structure) {
         if (state.isStackEmpty()) {
             PerFieldWithStructuresIterator iterator = new PerFieldWithStructuresIterator(state, structure.getTsFields(), "",
                     (configField, prefix, prefix2) -> processOutput(prefix, prefix2), ".");

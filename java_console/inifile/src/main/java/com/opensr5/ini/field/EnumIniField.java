@@ -4,7 +4,6 @@ import com.opensr5.ConfigurationImage;
 import com.rusefi.config.FieldType;
 import org.jetbrains.annotations.NotNull;
 
-import javax.management.ObjectName;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
@@ -124,7 +123,7 @@ public class EnumIniField extends IniField {
 
         public ParseBitRange invoke(String bitRange) {
             bitRange = bitRange.replaceAll("[\\]\\[:]", " ").trim();
-            String bitPositions[] = bitRange.split(" ");
+            String[] bitPositions = bitRange.split(" ");
             if (bitPositions.length != 2)
                 throw new IllegalStateException("Bit position " + bitRange);
             bitPosition = Integer.parseInt(bitPositions[0]);

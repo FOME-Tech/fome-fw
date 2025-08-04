@@ -4,13 +4,14 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.parsing.Struct;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class CStructWriter {
-    public void writeCStructs(ParseState parser, String outputFile) throws FileNotFoundException {
-        writeCStructs(parser, new PrintStreamAlwaysUnix(new FileOutputStream(outputFile)));
+    public void writeCStructs(ParseState parser, String outputFile) throws IOException {
+        writeCStructs(parser, new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile))));
     }
 
     public void writeCStructs(ParseState parser, PrintStream ps) {

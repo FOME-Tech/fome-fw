@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20021
+#define FLASH_DATA_VERSION 20022
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -908,7 +908,6 @@ bit launchSparkCutEnable;This is the Cut Mode normally used
 	bit boardUseD4PullDown,"With Pull Down","With Pull Up"
 	bit boardUseD5PullDown,"With Pull Down","With Pull Up"
 bit verboseIsoTp
-bit engineSnifferFocusOnInputs
 bit launchActivateInverted
 bit twoStroke,"Two Stroke","Four Stroke"
 bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skipped wheel located?
@@ -996,7 +995,6 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	pid_s idleRpmPid
 	float wwaeBeta;0 = No fuel settling on port walls 1 = All the fuel settling on port walls setting this to 0 disables the wall wetting enrichment. ;"Fraction", 1, 0, 0, 1, 2
 
-	Gpio[AUX_DIGITAL_VALVE_COUNT iterate] auxValves
 	switch_input_pin_e tcuUpshiftButtonPin
 	switch_input_pin_e tcuDownshiftButtonPin
 
@@ -1256,11 +1254,6 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 4, 0
 
 	uint8_t[8] autoscale primeValues;;"mg", 5, 0, 0, 1250, 0
-
-	uint8_t autoscale triggerCompCenterVolt;Trigger comparator center point voltage;"V", @@VOLTAGE_1_BYTE_PACKING_DIV@@, 0, 0, 5.1, 2
-	uint8_t autoscale triggerCompHystMin;Trigger comparator hysteresis voltage (Min);"V", @@VOLTAGE_1_BYTE_PACKING_DIV@@, 0, 0, 5.1, 2
-	uint8_t autoscale triggerCompHystMax;Trigger comparator hysteresis voltage (Max);"V", @@VOLTAGE_1_BYTE_PACKING_DIV@@, 0, 0, 5.1, 2
-	uint8_t autoscale triggerCompSensorSatRpm;VR-sensor saturation RPM;"RPM", 50, 0, 0, 12000, 0
 
 	gppwm_channel[GPPWM_CHANNELS iterate] gppwm;
 
@@ -1786,6 +1779,8 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	KnockGain[MAX_CYLINDER_COUNT iterate] knockGains
 
+	uint8_t[4 iterate] lambdaSensorSourceIndex;Physical CAN bus sensor index to use for logical lambda sensor channel;"", 1, 0, 0, 15, 0
+	uint8_t[4 iterate] lambdaSensorSourceBus;CAN bus to use for lambda sensor channel;"", 1, 1, 1, 2, 0
 end_struct
 
 ! Pedal Position Sensor
@@ -1977,7 +1972,6 @@ end_struct
 #define ts_show_vbatt true
 #define ts_show_clt_iat_pullup true
 #define ts_show_tunerstudio_port true
-#define ts_show_trigger_comparator false
 #define ts_show_auxserial_pins true
 #define ts_show_can2 true
 #define ts_show_software_knock false

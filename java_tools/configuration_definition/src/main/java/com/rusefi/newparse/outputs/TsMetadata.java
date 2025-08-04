@@ -19,7 +19,7 @@ public class TsMetadata {
             comment = comment.substring(1).trim();
         }
 
-        if (comment.length() == 0) {
+        if (comment.isEmpty()) {
             return;
         }
 

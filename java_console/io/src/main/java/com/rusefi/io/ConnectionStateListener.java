@@ -6,8 +6,6 @@ package com.rusefi.io;
  * @see ConnectionStatusValue
  */
 public interface ConnectionStateListener extends ConnectionFailedListener {
-    ConnectionStateListener VOID = new AbstractConnectionStateListener();
-
     /**
      * This method is invoked once we have connection & configuration from controller
      */

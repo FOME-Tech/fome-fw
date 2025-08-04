@@ -78,11 +78,11 @@ static bool loadFirmware(JNIEnv* env, jstring jFilename, jobject jCallbacks) {
 	return true;
 }
 
-static tBltSessionSettingsXcpV10 xcpSettings;
-static tBltTransportSettingsXcpV10Rs232 transportSettings;
-static char s_portName[256];
-
 static bool setupSerial(JNIEnv* env, jstring jSerialPort, jobject jCallbacks) {
+	static tBltSessionSettingsXcpV10 xcpSettings;
+	static tBltTransportSettingsXcpV10Rs232 transportSettings;
+	static char s_portName[256];
+
 	Callbacks cb(env, jCallbacks, "Start session", false);
 
 	xcpSettings.timeoutT1 = 1000;
@@ -116,6 +116,39 @@ static bool setupCan(JNIEnv* env, jobject jCallbacks) {
 
 	cb.error("CAN not supported yet!");
 	return false;
+}
+
+static bool setupTcp(JNIEnv* env, jstring jHostname, jint port, jobject jCallbacks) {
+	static tBltSessionSettingsXcpV10 xcpSettings;
+	static tBltTransportSettingsXcpV10Net transportSettings;
+	static char s_hostname[256];
+
+	Callbacks cb(env, jCallbacks, "Start session", false);
+
+	xcpSettings.timeoutT1 = 1000;
+	xcpSettings.timeoutT3 = 2000;
+	xcpSettings.timeoutT4 = 10000;
+	xcpSettings.timeoutT5 = 1000;
+	xcpSettings.timeoutT6 = 50;
+	xcpSettings.timeoutT7 = 2000;
+	xcpSettings.seedKeyFile = nullptr;
+	xcpSettings.connectMode = 0;
+
+	const char* hostname = env->GetStringUTFChars(jHostname, 0);
+	strncpy(s_hostname, hostname, sizeof(s_hostname));
+	env->ReleaseStringUTFChars(jHostname, hostname);
+
+	transportSettings.address = s_hostname;
+	transportSettings.port = port;
+
+	BltSessionInit(BLT_SESSION_XCP_V10, &xcpSettings, BLT_TRANSPORT_XCP_V10_NET, &transportSettings);
+
+	if (BltSessionStart() != BLT_RESULT_OK) {
+		cb.error("BltSessionStart() failed");
+		return false;
+	}
+
+	return true;
 }
 
 static bool erase(JNIEnv* env, jobject jCallbacks) {
@@ -277,6 +310,24 @@ extern "C" JNIEXPORT void JNICALL Java_com_rusefi_maintenance_OpenbltJni_flashCa
 	}
 
 	if (!setupCan(env, jCallbacks)) {
+		return;
+	}
+
+	if (!erase(env, jCallbacks)) {
+		return;
+	}
+
+	if (!program(env, jCallbacks)) {
+		return;
+	}
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_rusefi_maintenance_OpenbltJni_flashTcpNative(JNIEnv * env, jobject, jstring jFirmwareFile, jstring jHostname, jint port, jobject jCallbacks) {
+	if (!loadFirmware(env, jFirmwareFile, jCallbacks)) {
+		return;
+	}
+
+	if (!setupTcp(env, jHostname, port, jCallbacks)) {
 		return;
 	}
 

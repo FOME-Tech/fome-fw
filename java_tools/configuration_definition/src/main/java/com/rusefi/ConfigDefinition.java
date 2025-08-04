@@ -2,6 +2,9 @@ package com.rusefi;
 
 // import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.outputs.CStructWriter;
+import com.rusefi.newparse.outputs.JavaFieldsWriter;
+import com.rusefi.newparse.outputs.TsWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.pinout.PinoutLogic;
@@ -66,12 +69,16 @@ public class ConfigDefinition {
         String tsTemplateFile = null;
         String destCDefinesFileName = null;
         String cHeaderDestination = null;
+        String tsIniDestination = null;
+        String javaFieldsDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         String signatureDestination = null;
         String signaturePrependFile = null;
         List<String> enumInputFiles = new ArrayList<>();
         PinoutLogic pinoutLogic = null;
+
+        ParseState parseState = new ParseState(state.getEnumsReader());
 
         for (int i = 0; i < args.length - 1; i += 2) {
             String key = args[i];
@@ -97,6 +104,7 @@ public class ConfigDefinition {
                     destCDefinesFileName = args[i + 1];
                     break;
                 case KEY_JAVA_DESTINATION:
+                    javaFieldsDestination = args[i + 1];
                     state.addJavaDestination(args[i + 1]);
                     break;
                 case "-field_lookup_file": {
@@ -111,7 +119,7 @@ public class ConfigDefinition {
                     // yes, we take three parameters here thus pre-increment!
                     String fileName = args[++i + 1];
                     try {
-                        state.getVariableRegistry().register(keyName, IoUtil2.readFile(fileName));
+                        parseState.addDefinition(state.getVariableRegistry(), keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
                     } catch (RuntimeException e) {
                         throw new IllegalStateException("While processing " + fileName, e);
                     }
@@ -135,6 +143,7 @@ public class ConfigDefinition {
                     enumInputFiles.add(args[i + 1]);
                     break;
                 case "-ts_output_name":
+                    tsIniDestination = args[i + 1];
                     state.setTsFileOutputName(args[i + 1]);
                     break;
                 case KEY_BOARD_NAME:
@@ -159,7 +168,7 @@ public class ConfigDefinition {
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
         }
 
-        ParseState parseState = new ParseState(state.getEnumsReader());
+        parseState.updateEnumsFromReader();
         // Add the variable for the config signature
         FirmwareVersion uniqueId = new FirmwareVersion(IoUtil2.getCrc32(state.getInputFiles()));
         SignatureConsumer.storeUniqueBuildId(state, parseState, tsTemplateFile, uniqueId);
@@ -190,12 +199,18 @@ public class ConfigDefinition {
             }
 
             // Write C structs
-            // CStructWriter cStructs = new CStructWriter();
-            // cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
+            CStructWriter cStructs = new CStructWriter();
+            cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
 
             // Write tunerstudio layout
-            // TsWriter writer = new TsWriter();
-            // writer.writeTunerstudio(parseState, tsTemplateFile, state.getTsFileOutputName() + ".test");
+            TsWriter writer = new TsWriter();
+            writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination + ".test");
+
+            // Write Java fields
+            JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination + ".test", 0);
+            javaWriter.writeDefinitions(parseState.getDefinitions());
+            javaWriter.writeFields(parseState);
+            javaWriter.finish();
         }
 
         if (tsTemplateFile != null) {
@@ -205,7 +220,7 @@ public class ConfigDefinition {
             // store the CRC32 as a built-in variable
             tmpRegistry.register(SIGNATURE_HASH, uniqueId.encode());
             tmpRegistry.readPrependValues(signaturePrependFile);
-            state.addDestination(new SignatureConsumer(signatureDestination, tmpRegistry));
+            ExtraUtil.writeDefinesToFile(tmpRegistry, signatureDestination);
         }
 
         if (state.isDestinationsEmpty())

@@ -48,11 +48,6 @@ public class StreamConnector implements LinkConnector {
     }
 
     @Override
-    public String unpack(String packet) {
-        return packet;
-    }
-
-    @Override
     public void send(String text, boolean fireEvent) throws InterruptedException {
         portHolder.packAndSend(text, fireEvent);
     }

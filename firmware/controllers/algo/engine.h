@@ -269,8 +269,6 @@ public:
 
 	void setConfig();
 
-	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
-
 #if EFI_UNIT_TEST
 	bool needTdcCallback = true;
 #endif /* EFI_UNIT_TEST */

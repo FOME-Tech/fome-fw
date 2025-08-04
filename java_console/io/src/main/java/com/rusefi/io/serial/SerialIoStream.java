@@ -9,7 +9,6 @@ import com.opensr5.io.DataListener;
 import com.rusefi.NamedThreadFactory;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.binaryprotocol.test.Bug3923;
-import com.rusefi.io.IoStream;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class SerialIoStream extends AbstractIoStream {
     protected static SerialPort openSerial(String port) {
         SerialPort serialPort = SerialPort.getCommPort(port);
         serialPort.setBaudRate(BaudRateHolder.INSTANCE.baudRate);
-        boolean openedOk = serialPort.openPort(0);
+        boolean openedOk = serialPort.openPort();
         if (!openedOk) {
             log.error("Error opening " + port + " maybe no permissions?");
             // todo: leverage jSerialComm method once we start using version 2.9+

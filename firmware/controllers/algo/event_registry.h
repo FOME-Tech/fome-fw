@@ -72,15 +72,4 @@ public:
 	bool isReady = false;
 };
 
-class AuxActor {
-public:
-	int phaseIndex;
-	int valveIndex;
-	angle_t extra;
-
-	AngleBasedEvent open;
-	AngleBasedEvent close;
-};
-
-
 IgnitionEventList *getIgnitionEvents();

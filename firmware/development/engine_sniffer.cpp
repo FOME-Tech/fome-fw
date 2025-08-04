@@ -228,9 +228,7 @@ void initWaveChart(WaveChart *chart) {
 }
 
 void addEngineSnifferOutputPinEvent(NamedOutputPin *pin, bool isRise) {
-	if (!engineConfiguration->engineSnifferFocusOnInputs) {
-		addEngineSnifferEvent(pin->getShortName(), isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
-	}
+	addEngineSnifferEvent(pin->getShortName(), isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
 }
 
 void addEngineSnifferTdcEvent(int rpm) {
