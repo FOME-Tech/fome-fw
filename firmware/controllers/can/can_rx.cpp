@@ -102,7 +102,7 @@ struct CanListenerTailSentinel : public CanListener {
 static CanListenerTailSentinel tailSentinel;
 CanListener *canListeners_head = &tailSentinel;
 
-void serviceCanSubscribers(const CANRxFrame &frame, efitick_t nowNt) {
+static void serviceCanSubscribers(const CANRxFrame &frame, efitick_t nowNt) {
 	CanListener *current = canListeners_head;
 
 	while (current) {
