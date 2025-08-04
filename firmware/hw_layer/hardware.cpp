@@ -204,8 +204,6 @@ void applyNewHardwareSettings() {
 
 	enginePins.startPins();
 
-	initKLine();
-
 #if EFI_PROD_CODE && EFI_IDLE_CONTROL
 	if (isIdleHardwareRestartNeeded()) {
 		 initIdleHardware();
