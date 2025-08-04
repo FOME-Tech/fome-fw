@@ -11,12 +11,13 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * As of Nov 2022 this implementation is not used in prod :(
- */
 public class TsWriter {
-    // matches strings in the form of @@MY_var_123@@
-    private static final Pattern VAR = Pattern.compile("@@([a-zA-Z0-9_]+?)@@");
+    private static final Pattern[] REPLACEMENT_PATTERNS = new Pattern[] {
+        // matches strings in the form of @@MY_var_123@@
+        Pattern.compile("@@([a-zA-Z0-9_]+?)@@"),
+        // matches strings in the form of @#OTHER_var_456#@
+        Pattern.compile("@#([a-zA-Z0-9_]+?)#@")
+    };
 
     private static final Pattern OPTIONAL_LINE = Pattern.compile("@@if_([a-zA-Z0-9_]+)");
 
@@ -38,9 +39,9 @@ public class TsWriter {
             }
 
             // Check if this line has a "skip me" suffix
-            Matcher match = OPTIONAL_LINE.matcher(line);
-            if (match.find()) {
-                String varName = match.group(1);
+            Matcher skipMatch = OPTIONAL_LINE.matcher(line);
+            if (skipMatch.find()) {
+                String varName = skipMatch.group(1);
 
                 Definition def = parser.findDefinition(varName);
 
@@ -50,17 +51,30 @@ public class TsWriter {
                 }
 
                 // Delete that part of the line
-                line = line.replace(match.group(0), "");
+                line = line.replace(skipMatch.group(0), "");
             }
 
             // Don't strip surrounding quotes of the FIRST replace of the line - only do it in nested replacements
             boolean isNested = false;
 
             // While there is a line to replace, do it
-            while (line.contains("@@")) {
-                match = VAR.matcher(line);
+            while (line.contains("@@") || line.contains("@#")) {
+                Matcher match = null;
+                boolean forceStripQuotes = false;
+                for (Pattern p : REPLACEMENT_PATTERNS) {
+                    Matcher candidate = p.matcher(line);
 
-                if (!match.find()) {
+                    if (candidate.find()) {
+                        match = candidate;
+
+                        if (p.pattern().startsWith("@#")) {
+                            forceStripQuotes = true;
+                        }
+                        break;
+                    }
+                }
+
+                if (match == null) {
                     throw new RuntimeException("Failed to resolve definition in line: " + line);
                 }
 
@@ -70,11 +84,13 @@ public class TsWriter {
                 String replacement = def != null ? def.toString() : "MISSING DEFINITION";
 
                 // Strip off any quotes from the resolved string - we may be trying to concatenate inside a string literal where quotes aren't allowed
-                while (isNested && replacement.startsWith("\"") && replacement.endsWith("\"")) {
+                while ((isNested || forceStripQuotes)
+                        && ((replacement.startsWith("\"") && replacement.endsWith("\""))
+                        || (replacement.startsWith("'") && replacement.endsWith("'")))) {
                     replacement = replacement.substring(1, replacement.length() - 1);
                 }
 
-                line = line.replaceAll(match.group(0), replacement);
+                line = line.replace(match.group(0), replacement);
 
                 if (!isNested) {
                     isNested = true;
