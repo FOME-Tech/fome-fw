@@ -154,6 +154,8 @@ void LimpManager::updateCutsEngineSync(Clearable& allowFuel, Clearable& allowSpa
 
 void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& allowFuel) {
 	if (engine->rpmCalculator.isRunning()) {
+		float engineRunTime = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt);
+
 		bool hasOilpSensor = Sensor::hasSensor(SensorType::OilPressure);
 		auto oilp = Sensor::get(SensorType::OilPressure);
 		uint16_t minOilPressure = engineConfiguration->minOilPressureAfterStart;
@@ -161,7 +163,7 @@ void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& a
 		// Only check if the setting is enabled and you have an oil pressure sensor
 		if (minOilPressure > 0 && hasOilpSensor) {
 			// Has it been long enough we should have pressure?
-			bool isTimedOut = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) > 5.0f;
+			bool isTimedOut = engineRunTime > 5.0f;
 
 			// Only check before timed out
 			if (!isTimedOut) {
@@ -181,7 +183,7 @@ void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& a
 
 		if (engineConfiguration->enableOilPressureProtect) {
 			bool isPressureSufficient;
-			if (engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) < engineConfiguration->oilPressureProtectionStartDelay) {
+			if (engineRunTime < engineConfiguration->oilPressureProtectionStartDelay) {
 				// If we are still in the start delay, assume pressure is sufficient
 				isPressureSufficient = true;
 			} else if (engineConfiguration->useOilPressureSwitch) {
