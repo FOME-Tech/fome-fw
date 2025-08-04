@@ -2,6 +2,9 @@
 
 #include "AemXSeriesLambda.h"
 
+#define CHECKBUS(bus, id, result)		do { frame.SID = id; EXPECT_EQ(result, dut.acceptFrame(bus, frame)); } while (0)
+#define CHECK(id, result)				CHECKBUS(CanBusIndex::Bus0, id, result)
+
 TEST(CanWideband, AcceptFrameId0) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -14,22 +17,15 @@ TEST(CanWideband, AcceptFrameId0) {
 
 	// Check that the AEM format frame is accepted, but not FOME
 	engineConfiguration->widebandMode = WidebandMode::AemXSeries;
-	frame.SID = 0x180;
-	EXPECT_TRUE(dut.acceptFrame(frame));
-	frame.SID = 0x190;
-	EXPECT_FALSE(dut.acceptFrame(frame));
-	frame.SID = 0x191;
-	EXPECT_FALSE(dut.acceptFrame(frame));
+	CHECK(0x180, true);
+	CHECK(0x190, false);
+	CHECK(0x191, false);
 
 	// Check that the FOME format frame is accepted, but not AEM
 	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
-	frame.SID = 0x180;
-	EXPECT_FALSE(dut.acceptFrame(frame));
-	frame.SID = 0x190;
-	EXPECT_TRUE(dut.acceptFrame(frame));
-	frame.SID = 0x191;
-	EXPECT_TRUE(dut.acceptFrame(frame));
-	
+	CHECK(0x180, false);
+	CHECK(0x190, true);
+	CHECK(0x191, true);
 }
 
 TEST(CanWideband, AcceptFrameId1) {
@@ -44,21 +40,15 @@ TEST(CanWideband, AcceptFrameId1) {
 
 	// Check that the AEM format frame is accepted, but not FOME
 	engineConfiguration->widebandMode = WidebandMode::AemXSeries;
-	frame.SID = 0x181;
-	EXPECT_TRUE(dut.acceptFrame(frame));
-	frame.SID = 0x192;
-	EXPECT_FALSE(dut.acceptFrame(frame));
-	frame.SID = 0x193;
-	EXPECT_FALSE(dut.acceptFrame(frame));
+	CHECK(0x181, true);
+	CHECK(0x192, false);
+	CHECK(0x193, false);
 
 	// Check that the FOME format frame is accepted, but not AEM
 	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
-	frame.SID = 0x181;
-	EXPECT_FALSE(dut.acceptFrame(frame));
-	frame.SID = 0x192;
-	EXPECT_TRUE(dut.acceptFrame(frame));
-	frame.SID = 0x193;
-	EXPECT_TRUE(dut.acceptFrame(frame));
+	CHECK(0x181, false);
+	CHECK(0x192, true);
+	CHECK(0x193, true);
 }
 
 TEST(CanWideband, DecodeValidAemFormat) {
@@ -90,7 +80,7 @@ TEST(CanWideband, DecodeValidAemFormat) {
 	frame.data8[7] = 0;
 
 	// check that lambda updates
-	dut.processFrame(frame, getTimeNowNt());
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(0.8f, Sensor::get(SensorType::Lambda1).value_or(-1));
 
 
@@ -99,7 +89,7 @@ TEST(CanWideband, DecodeValidAemFormat) {
 		1 << 1 |	// LSU 4.9 detected
 		0 << 7;		// Data INVALID
 
-	dut.processFrame(frame, getTimeNowNt());
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 
 
@@ -109,7 +99,7 @@ TEST(CanWideband, DecodeValidAemFormat) {
 		1 << 7;		// Data valid
 	frame.data8[7] = 1 << 6; // Sensor fault!
 
-	dut.processFrame(frame, getTimeNowNt());
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 
 	Sensor::resetRegistry();
@@ -145,7 +135,7 @@ TEST(CanWideband, DecodeRusefiStandard) {
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 
 	// check that lambda updates
-	dut.processFrame(frame, getTimeNowNt());
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(0.7f, Sensor::get(SensorType::Lambda1).value_or(-1));
 
 	// Check that temperature updates
@@ -153,7 +143,7 @@ TEST(CanWideband, DecodeRusefiStandard) {
 
 	// Check that valid bit is respected (should be invalid now)
 	frame.data8[1] = 0;
-	dut.processFrame(frame, getTimeNowNt());
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 }
 
@@ -172,5 +162,5 @@ TEST(CanWideband, DecodeRusefiStandardWrongVersion) {
 	// version - WRONG VERSION ON PURPOSE!
 	frame.data8[0] = RUSEFI_WIDEBAND_VERSION + 1;
 
-	EXPECT_FATAL_ERROR(dut.processFrame(frame, getTimeNowNt()));
+	EXPECT_FATAL_ERROR(dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt()));
 }
