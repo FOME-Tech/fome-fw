@@ -27,19 +27,11 @@ public class Field {
         this(name, offset, type, NO_BIT_OFFSET);
     }
 
-    public Field(String name, int offset, FieldType type, String... options) {
-        this(name, offset, type, NO_BIT_OFFSET, options);
-    }
-
     public Field(String name, int offset, FieldType type, int bitOffset) {
-        this(name, offset, type, bitOffset, null);
+        this(name, offset, 0, type, bitOffset);
     }
 
-    public Field(String name, int offset, FieldType type, int bitOffset, String[] options) {
-        this(name, offset, 0, type, bitOffset, options);
-    }
-
-    public Field(String name, int offset, int stringSize, FieldType type, int bitOffset, String... options) {
+    public Field(String name, int offset, int stringSize, FieldType type, int bitOffset) {
         this.name = name;
         this.offset = offset;
         this.type = type;
@@ -140,10 +132,6 @@ public class Field {
 
     public static Field create(String name, int offset, FieldType type, int bitOffset) {
         return new Field(name, offset, type, bitOffset);
-    }
-
-    public static Field create(String name, int offset, FieldType type, String... options) {
-        return new Field(name, offset, type, options);
     }
 
     public static Field create(String name, int offset, int stringSize, FieldType type) {

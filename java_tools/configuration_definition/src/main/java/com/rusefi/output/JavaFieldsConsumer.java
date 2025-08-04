@@ -83,16 +83,6 @@ public abstract class JavaFieldsConsumer implements ConfigurationConsumer {
                     writeJavaFieldName(nameWithPrefix, tsPosition);
                     content.append("FieldType.FLOAT)" + terminateField());
                 } else {
-                    String enumOptions = state.getVariableRegistry().get(configField.getType() + VariableRegistry.FULL_JAVA_ENUM);
-                    if (enumOptions == null)
-                        enumOptions = state.getVariableRegistry().get(configField.getType() + VariableRegistry.ENUM_SUFFIX);
-
-                    if (enumOptions != null && !existingJavaEnums.contains(configField.getType())) {
-                        existingJavaEnums.add(configField.getType());
-                        content.append("\tpublic static final String[] " + configField.getType() + " = {" + enumOptions + "};" + EOL);
-                    }
-
-
                     writeJavaFieldName(nameWithPrefix, tsPosition);
                     if (isStringField(configField)) {
                         String custom = state.getTsCustomLine().get(configField.getType());
@@ -101,9 +91,6 @@ public abstract class JavaFieldsConsumer implements ConfigurationConsumer {
                         content.append(stringSize + ", FieldType.STRING");
                     } else {
                         content.append(getJavaType(configField.getElementSize()));
-                    }
-                    if (enumOptions != null) {
-                        content.append(", " + configField.getType());
                     }
                     content.append(")" + ".setScale(" + configField.autoscaleSpecNumber() + ")" +
                             terminateField());
