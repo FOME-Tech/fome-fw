@@ -165,6 +165,7 @@ public class ConfigDefinition {
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
         }
 
+        parseState.updateEnumsFromReader();
         // Add the variable for the config signature
         FirmwareVersion uniqueId = new FirmwareVersion(IoUtil2.getCrc32(state.getInputFiles()));
         SignatureConsumer.storeUniqueBuildId(state, parseState, tsTemplateFile, uniqueId);

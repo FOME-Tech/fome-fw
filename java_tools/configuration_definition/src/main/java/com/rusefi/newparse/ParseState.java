@@ -40,7 +40,9 @@ public class ParseState implements DefinitionsState {
 
     public ParseState(EnumsReader enumsReader) {
         this.enumsReader = enumsReader;
+    }
 
+    public void updateEnumsFromReader() {
         for (Map.Entry<String, EnumsReader.EnumState> enumType : this.enumsReader.getEnums().entrySet()) {
             String name = enumType.getKey();
 
