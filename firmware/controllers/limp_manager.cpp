@@ -127,7 +127,10 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 
 		if (engineConfiguration->enableOilPressureProtect) {
 			bool isPressureSufficient;
-			if (engineConfiguration->useOilPressureSwitch) {
+			if (engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) < engineConfiguration->oilPressureProtectionStartDelay) {
+				// If we are still in the start delay, assume pressure is sufficient
+				isPressureSufficient = true;
+			} else if (engineConfiguration->useOilPressureSwitch) {
 				isPressureSufficient = getOilSwitchState();
 			} else {
 				if (oilp) {
