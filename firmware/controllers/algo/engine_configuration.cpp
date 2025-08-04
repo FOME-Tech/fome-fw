@@ -394,6 +394,10 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
 	engineConfiguration->ecumasterEgtToCanBaseId = 0x660;
 
+	for (size_t i = 0; i < efi::size(config->lambdaSensorSourceIndex); i++) {
+		config->lambdaSensorSourceIndex = i;
+	}
+
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
 

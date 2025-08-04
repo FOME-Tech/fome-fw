@@ -1780,6 +1780,8 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	KnockGain[MAX_CYLINDER_COUNT iterate] knockGains
 
+	uint8_t[4 iterate] lambdaSensorSourceIndex;Physical CAN bus sensor index to use for logical lambda sensor channel;"", 1, 0, 0, 15, 0
+	uint8_t[4 iterate] lambdaSensorSourceBus;CAN bus to use for lambda sensor channel;"", 1, 1, 1, 2, 0
 end_struct
 
 ! Pedal Position Sensor
