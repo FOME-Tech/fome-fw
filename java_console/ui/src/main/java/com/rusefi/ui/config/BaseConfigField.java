@@ -78,10 +78,4 @@ public abstract class BaseConfigField {
     public JPanel getContent() {
         return panel;
     }
-
-    @NotNull
-    protected ByteBuffer getByteBuffer(ConfigurationImage ci) {
-        return field.getByteBuffer(ci);
-    }
-
 }
