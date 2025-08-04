@@ -252,7 +252,7 @@ public class ConfigFieldParserTest {
         JavaFieldsConsumer javaFieldsConsumer = new TestJavaFieldsConsumer(state);
         state.readBufferedReader(test, javaFieldsConsumer);
 
-        assertEquals("\tpublic static final Field VAR = Field.create(\"VAR\", 0, 120, FieldType.STRING).setScale(1.0).setBaseOffset(0);\n" +
+        assertEquals("\tpublic static final Field VAR = Field.create(\"VAR\", 0, FieldType.STRING).setScale(1.0).setBaseOffset(0);\n" +
                         "\tpublic static final Field PERIODMS = Field.create(\"PERIODMS\", 120, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
                         "\tpublic static final Field ALIGNMENTFILL_AT_122 = Field.create(\"ALIGNMENTFILL_AT_122\", 122, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n",
                 javaFieldsConsumer.getContent());

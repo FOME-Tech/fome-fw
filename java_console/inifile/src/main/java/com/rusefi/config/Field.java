@@ -28,10 +28,6 @@ public class Field {
     }
 
     public Field(String name, int offset, FieldType type, int bitOffset) {
-        this(name, offset, 0, type, bitOffset);
-    }
-
-    public Field(String name, int offset, int stringSize, FieldType type, int bitOffset) {
         this.name = name;
         this.offset = offset;
         this.type = type;
@@ -132,10 +128,6 @@ public class Field {
 
     public static Field create(String name, int offset, FieldType type, int bitOffset) {
         return new Field(name, offset, type, bitOffset);
-    }
-
-    public static Field create(String name, int offset, int stringSize, FieldType type) {
-        return new Field(name, offset, stringSize, type, 0);
     }
 
     public static Field create(String name, int offset, FieldType type) {

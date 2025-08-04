@@ -87,8 +87,7 @@ public abstract class JavaFieldsConsumer implements ConfigurationConsumer {
                     if (isStringField(configField)) {
                         String custom = state.getTsCustomLine().get(configField.getType());
                         String[] tokens = custom.split(",");
-                        String stringSize = tokens[3].trim();
-                        content.append(stringSize + ", FieldType.STRING");
+                        content.append("FieldType.STRING");
                     } else {
                         content.append(getJavaType(configField.getElementSize()));
                     }
