@@ -55,9 +55,10 @@ void VvtController::onFastCallback() {
 }
 
 void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+	m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
+	m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
+
 	if (!previousConfig || !m_pid.isSame(&previousConfig->auxPid[m_cam])) {
-		m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
-		m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 		m_pid.reset();
 	}
 }
