@@ -66,6 +66,7 @@ public class ConfigDefinition {
         String tsTemplateFile = null;
         String destCDefinesFileName = null;
         String cHeaderDestination = null;
+        String tsIniDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         String signatureDestination = null;
@@ -135,6 +136,7 @@ public class ConfigDefinition {
                     enumInputFiles.add(args[i + 1]);
                     break;
                 case "-ts_output_name":
+                    tsIniDestination = args[i + 1];
                     state.setTsFileOutputName(args[i + 1]);
                     break;
                 case KEY_BOARD_NAME:
