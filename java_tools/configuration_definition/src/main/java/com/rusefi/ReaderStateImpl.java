@@ -10,6 +10,8 @@ import com.rusefi.util.SystemOut;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -99,7 +101,7 @@ public class ReaderStateImpl implements ReaderState {
          * the destinations/writers
          */
         SystemOut.println("Reading definition from " + definitionInputFile);
-        BufferedReader definitionReader = new BufferedReader(new InputStreamReader(new FileInputStream(definitionInputFile), IoUtils.CHARSET));
+        BufferedReader definitionReader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(definitionInputFile)), IoUtils.CHARSET));
         readBufferedReader(definitionReader, destinations);
     }
 

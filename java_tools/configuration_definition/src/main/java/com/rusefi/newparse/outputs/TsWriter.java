@@ -6,6 +6,8 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Definition;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +21,7 @@ public class TsWriter {
     private static final Pattern OPTIONAL_LINE = Pattern.compile("@@if_([a-zA-Z0-9_]+)");
 
     public void writeTunerstudio(ParseState parser, String inputFile, String outputFile) throws IOException {
-        PrintStream ps = new PrintStreamAlwaysUnix(new FileOutputStream(outputFile));
+        PrintStream ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
         writeTunerstudio(parser, inputFile, ps);
         ps.close();
     }

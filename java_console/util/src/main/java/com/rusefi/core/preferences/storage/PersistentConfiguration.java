@@ -5,6 +5,8 @@ import com.rusefi.core.FileUtil;
 import java.beans.XMLDecoder;
 import java.beans.XMLEncoder;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +53,7 @@ public class PersistentConfiguration {
             return;
         }
         try {
-            BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(CONFIG_FILE_NAME));
+            BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(Paths.get(CONFIG_FILE_NAME)));
             /**
              * interesting things are happening while this is executed under TS as a plugin so we need non-default CL parameter
              */
