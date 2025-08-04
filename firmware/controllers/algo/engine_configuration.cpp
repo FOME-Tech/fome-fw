@@ -51,7 +51,6 @@
 
 #include "GY6_139QMB.h"
 
-#include "nissan_primera.h"
 #include "nissan_vq.h"
 
 #include "mazda_miata.h"
@@ -813,9 +812,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 	case engine_type_e::FORD_ASPIRE_1996:
 		setFordAspireEngineConfiguration();
-		break;
-	case engine_type_e::NISSAN_PRIMERA:
-		setNissanPrimeraEngineConfiguration();
 		break;
 	case engine_type_e::FRANKENSO_MIATA_NA6_MAP:
 		setMiataNA6_MAP_Frankenso();

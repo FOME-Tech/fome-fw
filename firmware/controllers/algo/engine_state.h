@@ -31,9 +31,6 @@ public:
 
 	WarningCodeState warnings;
 
-	float auxValveStart = 0;
-	float auxValveEnd = 0;
-
 	/**
 	 * MAP averaging angle start, in relation to 'mapAveragingSchedulingAtIndex' trigger index index
 	 */

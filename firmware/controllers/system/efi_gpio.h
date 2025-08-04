@@ -106,7 +106,6 @@ public:
 	InjectorOutputPin injectorsStage2[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin coils[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin trailingCoils[MAX_CYLINDER_COUNT];
-	NamedOutputPin auxValve[AUX_DIGITAL_VALVE_COUNT];
 	OutputPin tcuSolenoids[TCU_SOLENOID_COUNT];
 	OutputPin tcuTccOnoffSolenoid;
 	OutputPin tcuTccPwmSolenoid;
@@ -116,11 +115,9 @@ public:
 private:
 	void startInjectionPins();
 	void startIgnitionPins();
-	void startAuxValves();
 
 	void stopInjectionPins();
 	void stopIgnitionPins();
-	void stopAuxValves();
 };
 
 #endif /* __cplusplus */

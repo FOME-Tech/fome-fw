@@ -32,7 +32,6 @@ enum class engine_type_e : uint32_t {
 	 */
 	FORD_ASPIRE_1996 = 3,
 
-	NISSAN_PRIMERA = 5,
 	PROTEUS_HARLEY = 6,
 	FORD_INLINE_6_1995 = 7,
 	/**
@@ -199,6 +198,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_5 = 5,
 	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,

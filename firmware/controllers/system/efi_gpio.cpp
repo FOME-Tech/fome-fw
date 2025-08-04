@@ -58,8 +58,6 @@ static const char* const injectorStage2Names[] = { "Injector Second Stage 1", "I
 static const char* const injectorStage2ShortNames[] = { PROTOCOL_INJ1_STAGE2_SHORT_NAME, "j2", "j3", "j4", "j5", "j6", "j7", "j8",
 		"j9", "jA", "jB", "jC"};
 
-static const char* const auxValveShortNames[] = { "a1", "a2"};
-
 static RegisteredOutputPin * registeredOutputHead = nullptr;
 
 RegisteredOutputPin::RegisteredOutputPin(const char *registrationName, size_t pinOffset,
@@ -171,11 +169,6 @@ EnginePins::EnginePins() :
 		enginePins.injectorsStage2[i].setName(injectorStage2Names[i]);
 		enginePins.injectorsStage2[i].shortName = injectorStage2ShortNames[i];
 	}
-
-	static_assert(efi::size(auxValveShortNames) >= AUX_DIGITAL_VALVE_COUNT, "Too many aux valve pins");
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		enginePins.auxValve[i].setName(auxValveShortNames[i]);
-	}
 }
 
 /**
@@ -202,16 +195,12 @@ bool EnginePins::stopPins() {
 		result |= injectorsStage2[i].stop();
 		result |= trailingCoils[i].stop();
 	}
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		result |= auxValve[i].stop();
-	}
 	return result;
 }
 
 void EnginePins::unregisterPins() {
 	stopInjectionPins();
 	stopIgnitionPins();
-	stopAuxValves();
 
 	// todo: add pinMode
 	unregisterOutputIfPinChanged(sdCsPin, sdCardCsPin);
@@ -236,7 +225,6 @@ void EnginePins::startPins() {
 #if EFI_ENGINE_CONTROL
 	startInjectionPins();
 	startIgnitionPins();
-	startAuxValves();
 #endif /* EFI_ENGINE_CONTROL */
 
 	RegisteredOutputPin * pin = registeredOutputHead;
@@ -264,28 +252,6 @@ void EnginePins::stopInjectionPins() {
 		unregisterOutputIfPinOrModeChanged(enginePins.injectors[i], injectionPins[i], injectionPinMode);
 		unregisterOutputIfPinOrModeChanged(enginePins.injectorsStage2[i], injectionPinsStage2[i], injectionPinMode);
 	}
-}
-
-void EnginePins::stopAuxValves() {
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		NamedOutputPin *output = &enginePins.auxValve[i];
-		// todo: do we need auxValveMode and reuse code?
-		if (isConfigurationChanged(auxValves[i])) {
-			(output)->deInit();
-		}
-	}
-}
-
-void EnginePins::startAuxValves() {
-#if EFI_PROD_CODE
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		NamedOutputPin *output = &enginePins.auxValve[i];
-		// todo: do we need auxValveMode and reuse code?
-		if (isConfigurationChanged(auxValves[i])) {
-			output->initPin(output->getName(), engineConfiguration->auxValves[i]);
-		}
-	}
-#endif /* EFI_PROD_CODE */
 }
 
 void EnginePins::startIgnitionPins() {
