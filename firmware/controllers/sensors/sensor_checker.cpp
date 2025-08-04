@@ -170,13 +170,14 @@ static bool check(SensorType type) {
 
 	if (code != ObdCode::None) {
 		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
-		setError(true, code);
-	} else {
+
 		// Determine what to do about this particular code
 		auto severity = getSeverityForCode(code);
 		if (severity != DtcSeverity::Ignore) {
-			setError(false, code);
+			setError(true, code);
 		}
+	} else {
+		setError(false, code);
 	}
 
 	return false;
