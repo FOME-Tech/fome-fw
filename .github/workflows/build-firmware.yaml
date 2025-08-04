@@ -268,7 +268,7 @@ jobs:
 
     - name: Build Config Tools
       working-directory: ./java_tools
-      run: ./gradlew :config_definition:shadowJar :enum_to_string:shadowJar
+      run: ./build_tools.sh
 
     - name: Generate Live Documentation
       working-directory: ./firmware/
