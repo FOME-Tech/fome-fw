@@ -41,7 +41,12 @@ public class JavaFieldsWriter {
         for (final Map.Entry<String, Definition> d : sortedDefs.collect(Collectors.toList())) {
             String name = d.getKey();
 
-            if (name.endsWith(VariableRegistry._16_HEX_SUFFIX) || name.endsWith(VariableRegistry._HEX_SUFFIX)) {
+            if (name.endsWith(VariableRegistry._16_HEX_SUFFIX) || name.endsWith(VariableRegistry._HEX_SUFFIX) || name.endsWith(VariableRegistry.ENUM_SUFFIX)) {
+                continue;
+            }
+
+            if (d.getValue().isMultilineString()) {
+                // Skip multiline definitions
                 continue;
             }
 
