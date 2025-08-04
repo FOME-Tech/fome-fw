@@ -14,10 +14,10 @@ static FunctionalSensor lambdaSensor2(SensorType::Lambda2, MS2NT(50));
 
 #if EFI_CAN_SUPPORT
 static AemXSeriesWideband canWidebands[] = {
-	SensorType::Lambda1,
-	SensorType::Lambda2,
-	SensorType::Lambda3,
-	SensorType::Lambda4,
+	{ 0, SensorType::Lambda1 },
+	{ 1, SensorType::Lambda2 },
+	{ 2, SensorType::Lambda3 },
+	{ 3, SensorType::Lambda4 },
 };
 #endif
 
@@ -51,12 +51,7 @@ void initLambda() {
 		}
 
 		for (size_t i = 0; i < efi::size(canWidebands); i++) {
-			auto& sensor = canWidebands[i];
-
-			sensor.configure(config->lambdaSensorSourceIndex[i]);
-
-			// TODO: register for a particular bus, not all busses!
-			registerCanSensor(sensor);
+			registerCanSensor(canWidebands[i]);
 		}
 
 		return;
