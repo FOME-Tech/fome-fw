@@ -28,7 +28,5 @@ $(GENERATED) : $(JAVA_TOOLS)
 
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*
-	rm -f $(PROJECT_DIR)/../java_tools/ConfigDefinition.jar
-	rm -f $(PROJECT_DIR)/../java_tools/enum2string.jar
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image.h
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image_compressed.h
