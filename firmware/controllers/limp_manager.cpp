@@ -127,36 +127,32 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 
 		if (engineConfiguration->enableOilPressureProtect) {
 			bool isPressureSufficient;
-			static bool afterStartDelayPassed = false;
-			if (afterStartDelayPassed) {
-				if (engineConfiguration->useOilPressureSwitch) {
-					isPressureSufficient = getOilSwitchState();
-				} else {
-					if (oilp) {
-						float minPressure = interpolate2d(
-												rpm,
-												config->minimumOilPressureBins,
-												config->minimumOilPressureValues
-											);
-						isPressureSufficient = oilp.Value > minPressure;
-					} else {
-						// The sensor is dead, assume things are fine
-						// (sensor error is separately handled)
-						isPressureSufficient = true;
-					}
-				}
-
-				if (isPressureSufficient) {
-					m_lowOilPressureTimer.reset(nowNt);
-				}
-
-				if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
-					allowFuel.clear(ClearReason::OilPressure);
-				}
+			if (engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) < engineConfiguration->oilPressureProtectionStartDelay) {
+				// If we are still in the start delay, assume pressure is sufficient
+				isPressureSufficient = true;
+			} else if (engineConfiguration->useOilPressureSwitch) {
+				isPressureSufficient = getOilSwitchState();
 			} else {
-				if (engineConfiguration->oilPressureProtectionStartDelay < engine->rpmCalculator.getSecondsSinceEngineStart(nowNt)) {
-					afterStartDelayPassed = true;
+				if (oilp) {
+					float minPressure = interpolate2d(
+											rpm,
+											config->minimumOilPressureBins,
+											config->minimumOilPressureValues
+										);
+					isPressureSufficient = oilp.Value > minPressure;
+				} else {
+					// The sensor is dead, assume things are fine
+					// (sensor error is separately handled)
+					isPressureSufficient = true;
 				}
+			}
+
+			if (isPressureSufficient) {
+				m_lowOilPressureTimer.reset(nowNt);
+			}
+
+			if (m_lowOilPressureTimer.hasElapsedSec(engineConfiguration->minimumOilPressureTimeout)) {
+				allowFuel.clear(ClearReason::OilPressure);
 			}
 		}
 	} else {
