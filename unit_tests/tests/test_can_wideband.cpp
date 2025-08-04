@@ -2,8 +2,8 @@
 
 #include "AemXSeriesLambda.h"
 
-#define CHECKBUS(bus, id, result)		do { frame.SID = id; EXPECT_EQ(result, dut.acceptFrame(bus, frame)); } while (0)
-#define CHECK(id, result)				CHECKBUS(CanBusIndex::Bus0, id, result)
+#define CHECKBUS(d, bus, id, result)	do { frame.SID = id; EXPECT_EQ(result, d.acceptFrame(bus, frame)); } while (0)
+#define CHECK(id, result)				CHECKBUS(dut, CanBusIndex::Bus0, id, result)
 
 TEST(CanWideband, AcceptFrameId0) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
@@ -49,6 +49,42 @@ TEST(CanWideband, AcceptFrameId1) {
 	CHECK(0x181, false);
 	CHECK(0x192, true);
 	CHECK(0x193, true);
+}
+
+TEST(CanWideband, AcceptChecksBus) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->widebandMode = WidebandMode::AemXSeries;
+
+	AemXSeriesWideband dut1(0, SensorType::Lambda1);
+	AemXSeriesWideband dut2(1, SensorType::Lambda2);
+
+	CANRxFrame frame;
+
+	frame.IDE = false;
+	frame.DLC = 8;
+
+	// Channel 1: bus 0, index 3
+	config->lambdaSensorSourceBus[0] = 0;
+	config->lambdaSensorSourceIndex[0] = 3;
+	auto bus0 = CanBusIndex::Bus0;
+
+	// Channel 2: bus 1, index 2
+	config->lambdaSensorSourceBus[1] = 1;
+	config->lambdaSensorSourceIndex[1] = 2;
+	auto bus1 = CanBusIndex::Bus1;
+
+	// Check that Sensor1 only listens to bus 0, index 3
+	CHECKBUS(dut1, CanBusIndex::Bus0, 0x182, false);
+	CHECKBUS(dut1, CanBusIndex::Bus0, 0x183, true);
+	CHECKBUS(dut1, CanBusIndex::Bus1, 0x182, false);
+	CHECKBUS(dut1, CanBusIndex::Bus1, 0x183, false);
+
+	// Check that Sensor2 only listens to bus 0, index 3
+	CHECKBUS(dut2, CanBusIndex::Bus0, 0x182, false);
+	CHECKBUS(dut2, CanBusIndex::Bus0, 0x183, false);
+	CHECKBUS(dut2, CanBusIndex::Bus1, 0x182, true);
+	CHECKBUS(dut2, CanBusIndex::Bus1, 0x183, false);
 }
 
 TEST(CanWideband, DecodeValidAemFormat) {
