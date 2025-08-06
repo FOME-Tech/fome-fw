@@ -12,6 +12,7 @@ import com.rusefi.trigger.TriggerWheelTSLogic;
 import com.rusefi.util.SystemOut;
 
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -64,7 +65,7 @@ public class ConfigDefinition {
             return;
         }
 
-        SystemOut.println(ConfigDefinition.class + " Invoked with " + Arrays.toString(args));
+        SystemOut.println(ConfigDefinition.class + " Invoked with " + Arrays.toString(args) + " from " + Paths.get("").toAbsolutePath());
 
         String tsTemplateFile = null;
         String destCDefinesFileName = null;
