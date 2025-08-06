@@ -182,6 +182,14 @@ ifeq ($(USE_WIFI),yes)
   ALLCPPSRC += $(PROJECT_DIR)/bootloader/openblt_chibios/openblt_net.cpp
 endif
 
+$(info PROJECT_BOARD: $(PROJECT_BOARD))
+$(info BOARD_DIR:     $(BOARD_DIR))
+$(info PROJECT_CPU:   $(PROJECT_CPU))
+$(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
+$(info CPU_HWLAYER:   $(CPU_HWLAYER))
+$(info CONFDIR:       $(CONFDIR))
+$(info LDSCRIPT:      $(LDSCRIPT))
+
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CSRC =  $(ALLCSRC) \
