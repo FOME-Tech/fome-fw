@@ -11,7 +11,7 @@ GENERATED := \
 $(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
 	@echo Generating config files...
 	cd $(PROJECT_DIR) && ./gen_live_documentation.sh
-	cd $(PROJECT_DIR) && ./gen_config_board.sh $(BOARD_DIR) $(SHORT_BOARD_NAME)
+	cd $(PROJECT_DIR) && ./gen_config_board.sh $(realpath $(BOARD_DIR)) $(SHORT_BOARD_NAME)
 
 # All c/c++ objects depend on generated
 $(OBJS) : $(GENERATED)
