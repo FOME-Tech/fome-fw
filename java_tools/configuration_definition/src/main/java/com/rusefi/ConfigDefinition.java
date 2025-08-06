@@ -13,6 +13,7 @@ import com.rusefi.util.SystemOut;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -22,8 +23,6 @@ import java.util.*;
  * @see ConfigurationConsumer
  */
 public class ConfigDefinition {
-    public static final String SIGNATURE_HASH = "SIGNATURE_HASH";
-
     private static final String KEY_DEFINITION = "-definition";
     private static final String KEY_TS_TEMPLATE = "-ts_template";
     private static final String KEY_C_DESTINATION = "-c_destination";
@@ -31,8 +30,6 @@ public class ConfigDefinition {
     public static final String KEY_WITH_C_DEFINES = "-with_c_defines";
     private static final String KEY_JAVA_DESTINATION = "-java_destination";
     public static final String KEY_PREPEND = "-prepend";
-    private static final String KEY_SIGNATURE = "-signature";
-    private static final String KEY_SIGNATURE_DESTINATION = "-signature_destination";
     private static final String KEY_ZERO_INIT = "-initialize_to_zero";
     private static final String KEY_BOARD_NAME = "-board";
     /**
@@ -74,10 +71,10 @@ public class ConfigDefinition {
         String javaFieldsDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
-        String signatureDestination = null;
-        String signaturePrependFile = null;
         List<String> enumInputFiles = new ArrayList<>();
         PinoutLogic pinoutLogic = null;
+        String branchName = null;
+        String shortBoardName = null;
 
         ParseState parseState = new ParseState(state.getEnumsReader());
 
@@ -132,14 +129,6 @@ public class ConfigDefinition {
                 case KEY_PREPEND:
                     state.addPrepend(args[i + 1].trim());
                     break;
-                case KEY_SIGNATURE:
-                    signaturePrependFile = args[i + 1];
-                    state.getPrependFiles().add(args[i + 1]);
-                    // don't add this file to the 'inputFiles'
-                    break;
-                case KEY_SIGNATURE_DESTINATION:
-                    signatureDestination = args[i + 1];
-                    break;
                 case EnumToString.KEY_ENUM_INPUT_FILE:
                     enumInputFiles.add(args[i + 1]);
                     break;
@@ -152,6 +141,12 @@ public class ConfigDefinition {
                     pinoutLogic = PinoutLogic.create(boardName);
                     for (String inputFile : pinoutLogic.getInputFiles())
                         state.addInputFile(inputFile);
+                    break;
+                case "-branch":
+                    branchName = args[i + 1];
+                    break;
+                case "-boardName":
+                    shortBoardName = args[i + 1];
                     break;
             }
         }
@@ -170,9 +165,13 @@ public class ConfigDefinition {
         }
 
         parseState.updateEnumsFromReader();
-        // Add the variable for the config signature
-        FirmwareVersion uniqueId = new FirmwareVersion(IoUtil2.getCrc32(state.getInputFiles()));
-        SignatureConsumer.storeUniqueBuildId(state, parseState, tsTemplateFile, uniqueId);
+
+        {
+            // Add the variable for the config signature
+            String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(state.getInputFiles())));
+            parseState.addDefinition(state.getVariableRegistry(), "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
+            System.out.println("Signature: " + signature);
+        }
 
         new TriggerWheelTSLogic().execute(triggersInputFolder, state.getVariableRegistry());
 
@@ -216,12 +215,6 @@ public class ConfigDefinition {
 
         if (tsTemplateFile != null) {
             state.addDestination(new TSProjectConsumer(tsTemplateFile, state));
-
-            VariableRegistry tmpRegistry = new VariableRegistry();
-            // store the CRC32 as a built-in variable
-            tmpRegistry.register(SIGNATURE_HASH, uniqueId.encode());
-            tmpRegistry.readPrependValues(signaturePrependFile);
-            ExtraUtil.writeDefinesToFile(tmpRegistry, signatureDestination);
         }
 
         if (state.isDestinationsEmpty())
@@ -232,5 +225,11 @@ public class ConfigDefinition {
         if (destCDefinesFileName != null) {
             ExtraUtil.writeDefinesToFile(state.getVariableRegistry(), destCDefinesFileName);
         }
+    }
+
+    private static String buildSignature(String branch, String boardName, String inputFilesHash) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd");
+
+        return "\"rusEFI (FOME) " + branch + "." + df.format(new Date()) + "."+ boardName + "." + inputFilesHash + "\"";
     }
 }
