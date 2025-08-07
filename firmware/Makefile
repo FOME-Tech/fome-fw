@@ -2,7 +2,11 @@
 # See fome-fw/firmware/DEVELOPER.md
 ##############################################################################
 
-CHIBIOS = ChibiOS
+# Define project name here
+PROJECT = fome
+PROJECT_DIR = .
+
+CHIBIOS = $(PROJECT_DIR)/ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
 RULESFILE = $(RULESPATH)/rules.mk
 
@@ -10,11 +14,7 @@ ifneq ("$(wildcard $(../.git))","")
 $(error ../.git not found. We expect source code to be cloned not downloaded as zip file.")
 endif
 
-include rusefi_rules.mk
-
-# Define project name here
-PROJECT = fome
-PROJECT_DIR = .
+include $(PROJECT_DIR)/rusefi_rules.mk
 GENERATED_DIR = $(PROJECT_DIR)/generated
 
 # Configure precompiled header
@@ -22,15 +22,14 @@ PCH_DIR = $(PROJECT_DIR)/pch
 PCHSRC = $(PCH_DIR)/pch.h
 PCHSUB = firmware
 
-# Imported source files and paths
-CHIBIOS_CONTRIB = ChibiOS-Contrib
+CHIBIOS_CONTRIB= $(PROJECT_DIR)/ChibiOS-Contrib
 
 # Configure libfirmware Paths/Includes
 RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 
-include rusefi.mk
+include $(PROJECT_DIR)/rusefi.mk
 
 # by default EXTRA_PARAMS is empty and we create 'debug' version of the firmware with additional assertions and statistics
 # for 'release' options see 'clean_compile_two_versions.bat' file
