@@ -284,7 +284,7 @@ jobs:
       if: ${{ env.full == 'true' }}
       working-directory: ./simulator/
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
-      run: OS="Windows_NT" make -j8 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=${{matrix.folder}} 
+      run: OS="Windows_NT" make -j8 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=../firmware/${{matrix.folder}} 
 
     - name: Download LibOpenBLT Tool (Linux)
       uses: actions/download-artifact@v4
