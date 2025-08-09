@@ -122,6 +122,8 @@
 #define EFI_BOARD_TEST FALSE
 
 #define EFI_LUA TRUE
+
+#undef LUA_USER_HEAP
 #define LUA_USER_HEAP 100000
 
 #define EFI_DYNO_VIEW TRUE
