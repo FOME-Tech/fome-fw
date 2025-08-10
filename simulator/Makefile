@@ -201,6 +201,7 @@ ASMSRC = $(PORTASM)
 
 INCDIR = . \
   $(PCH_DIR) \
+  $(BOARDINC) \
   $(ALLINC) \
   $(MODULES_INC) \
   $(CHIBIOS)/os/various/cpp_wrappers \
