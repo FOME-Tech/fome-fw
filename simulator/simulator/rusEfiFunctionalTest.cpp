@@ -94,18 +94,13 @@ void rusEfiFunctionalTest(void) {
 	initFlash();
 	loadConfiguration();
 
-#if EFI_EMULATE_POSITION_SENSORS
 	enableTriggerStimulator();
-#endif
 
 	commonInitEngineController();
 
-#if EFI_SHAFT_POSITION_INPUT
 	initTriggerCentral();
-#endif // EFI_SHAFT_POSITION_INPUT
-#if EFI_EMULATE_POSITION_SENSORS
+
 	initTriggerEmulator();
-#endif // EFI_EMULATE_POSITION_SENSORS
 
 	startStatusThreads();
 
@@ -119,11 +114,9 @@ void rusEfiFunctionalTest(void) {
 
 	initMainLoop();
 
-#if EFI_EMULATE_POSITION_SENSORS
 	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
-#endif // EFI_EMULATE_POSITION_SENSORS
 
-engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
+	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
 
 	startSerialChannels();
 
