@@ -35,19 +35,19 @@
 
 #include <charconv>
 
-#define MFI_LONG_BLINK	1500
-#define MFI_SHORT_BLINK	400
-#define MFI_BLINK_SEPARATOR 400
-#define MFI_CHECKENGINE_LIGHT 10000
+#define BLINK_HALF_PERIOD 500
+#define GAP_BETWEEN_DIGITS_MS 1000
+#define GAP_BETWEEN_CODES_MS 5000
 
-static void blink_digits(int digit, int duration) {
-	for (int iter = 0; iter < digit; iter++) {
-		// todo: why we set LOW and then HIGH? not the other way around?
-		enginePins.checkEnginePin.setValue(0);
-		chThdSleepMilliseconds(duration);
+static void blink_digit(int digit) {
+	for (int i = 0; i < digit; i++) {
 		enginePins.checkEnginePin.setValue(1);
-		chThdSleepMilliseconds(MFI_BLINK_SEPARATOR);
+		chThdSleepMilliseconds(BLINK_HALF_PERIOD);
+		enginePins.checkEnginePin.setValue(0);
+		chThdSleepMilliseconds(BLINK_HALF_PERIOD);
 	}
+
+	chThdSleepMilliseconds(GAP_BETWEEN_DIGITS_MS);
 }
 
 static int char2int(char c) {
@@ -71,12 +71,7 @@ static void displayErrorCode(ObdCode code) {
 	size_t length = ret.ptr - buf;
 
 	for (size_t i = 0; i < length; i++) {
-		int digit = char2int(buf[i]) + 1;
-
-		if (i % 2 == 0)
-			blink_digits(digit, MFI_SHORT_BLINK);		// even 2,0 - long blink
-		else
-			blink_digits(digit, MFI_LONG_BLINK); 		// odd  3,1 - short blink
+		blink_digit(char2int(buf[i]) + 1);
 	}
 }
 
@@ -84,16 +79,14 @@ class MILController : public PeriodicController<UTILITY_THREAD_STACK_SIZE> {
 public:
 	MILController()	: PeriodicController("MFIndicator") { }
 private:
-	void PeriodicTask(efitick_t nowNt) override	{
-		UNUSED(nowNt);
-
+	void PeriodicTask(efitick_t) override	{
 		static error_codes_set_s localErrorCopy;
-		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
 		getErrorCodes(&localErrorCopy);
 
 		if (localErrorCopy.count) {
 			for (int i = 0; i < localErrorCopy.count; i++) {
 				displayErrorCode(localErrorCopy.error_codes[i]);
+				chThdSleepMilliseconds(GAP_BETWEEN_CODES_MS);
 			}
 		} else {
 			// Turn on the CEL while the engine is stopped
