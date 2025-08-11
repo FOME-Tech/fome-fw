@@ -79,14 +79,20 @@ class MILController : public PeriodicController<UTILITY_THREAD_STACK_SIZE> {
 public:
 	MILController()	: PeriodicController("MFIndicator") { }
 private:
-	void PeriodicTask(efitick_t) override	{
+	void OnStarted() override {
+		// Always do a 3 second blink on boot
+		enginePins.checkEnginePin.setValue(1);
+		chThdSleepMilliseconds(3000);
+	}
+
+	void PeriodicTask(efitick_t) override {
 		static error_codes_set_s localErrorCopy;
 		getErrorCodes(&localErrorCopy);
 
 		if (localErrorCopy.count) {
 			for (int i = 0; i < localErrorCopy.count; i++) {
-				displayErrorCode(localErrorCopy.error_codes[i]);
 				chThdSleepMilliseconds(GAP_BETWEEN_CODES_MS);
+				displayErrorCode(localErrorCopy.error_codes[i]);
 			}
 		} else {
 			// Turn on the CEL while the engine is stopped
