@@ -58,7 +58,9 @@ java \
 	-enumInputFile controllers/algo/rusefi_enums.h \
 	-enumInputFile controllers/algo/rusefi_hw_enums.h \
 	-c_defines        generated/rusefi_generated.h \
-	-c_destination    generated/engine_configuration_generated_structures.h
+	-c_destination    generated/engine_configuration_generated_structures.h \
+	-makefileDep      .dep/fome_generated.d \
+
 
 [ $? -eq 0 ] || { echo "ERROR generating TunerStudio config for ${BOARD_DIR}"; exit 1; }
 

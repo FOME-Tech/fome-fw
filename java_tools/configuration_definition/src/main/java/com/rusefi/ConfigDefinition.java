@@ -1,9 +1,9 @@
 package com.rusefi;
 
-// import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.outputs.JavaFieldsWriter;
+import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
 import com.rusefi.newparse.outputs.TsWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
@@ -12,16 +12,11 @@ import com.rusefi.trigger.TriggerWheelTSLogic;
 import com.rusefi.util.SystemOut;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-/**
- * Andrey Belomutskiy, (c) 2013-2020
- * 1/12/15
- *
- * @see ConfigurationConsumer
- */
 public class ConfigDefinition {
     private static final String KEY_DEFINITION = "-definition";
     private static final String KEY_TS_TEMPLATE = "-ts_template";
@@ -69,6 +64,7 @@ public class ConfigDefinition {
         String cHeaderDestination = null;
         String tsIniDestination = null;
         String javaFieldsDestination = null;
+        String makefileDepsDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         List<String> enumInputFiles = new ArrayList<>();
@@ -148,6 +144,9 @@ public class ConfigDefinition {
                 case "-boardName":
                     shortBoardName = args[i + 1];
                     break;
+                case "-makefileDep":
+                    makefileDepsDestination = args[i + 1];
+                    break;
             }
         }
 
@@ -171,6 +170,10 @@ public class ConfigDefinition {
             String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(state.getInputFiles())));
             parseState.addDefinition(state.getVariableRegistry(), "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
             System.out.println("Signature: " + signature);
+        }
+
+        if (makefileDepsDestination != null && cHeaderDestination != null) {
+            writeMakefileDependencyFile(state.getInputFiles(), cHeaderDestination, makefileDepsDestination);
         }
 
         new TriggerWheelTSLogic().execute(triggersInputFolder, state.getVariableRegistry());
@@ -231,5 +234,24 @@ public class ConfigDefinition {
         SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd");
 
         return "\"rusEFI (FOME) " + branch + "." + df.format(new Date()) + "."+ boardName + "." + inputFilesHash + "\"";
+    }
+
+    private static void writeMakefileDependencyFile(List<String> inputFiles, String cHeaderDestination, String makefileDepsDestination) throws IOException {
+        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(makefileDepsDestination)));
+
+        // The output depends on all inputs
+        f.print(cHeaderDestination + ": ");
+        for (String input : inputFiles) {
+            f.print(input);
+            f.print(" ");
+        }
+        f.println();
+
+        // Inform make of all inputs, these have no dependencies
+        for (String input : inputFiles) {
+            f.println(input + ":\n");
+        }
+
+        f.close();
     }
 }
