@@ -85,11 +85,6 @@
 #define EFI_BLUETOOTH_SETUP TRUE
 #endif /* EFI_BLUETOOTH_SETUP */
 
-/**
- * TunerStudio debug output
- */
-#define EFI_TUNER_STUDIO_VERBOSE TRUE
-
 #define EFI_DEFAILED_LOGGING FALSE
 
 /**
