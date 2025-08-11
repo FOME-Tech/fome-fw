@@ -268,14 +268,9 @@
 #endif
 
 #define EFI_ELECTRONIC_THROTTLE_BODY TRUE
-//#define EFI_ELECTRONIC_THROTTLE_BODY FALSE
 
-/**
- * Do we need Malfunction Indicator blinking logic?
- */
 #ifndef EFI_MALFUNCTION_INDICATOR
 #define EFI_MALFUNCTION_INDICATOR TRUE
-//#define EFI_MALFUNCTION_INDICATOR FALSE
 #endif
 
 // todo: most of this should become configurable

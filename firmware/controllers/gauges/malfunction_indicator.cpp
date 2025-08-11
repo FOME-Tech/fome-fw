@@ -82,22 +82,20 @@ private:
 	void PeriodicTask(efitick_t nowNt) override	{
 		UNUSED(nowNt);
 
-#if EFI_SHAFT_POSITION_INPUT
 		static error_codes_set_s localErrorCopy;
 		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
 		getErrorCodes(&localErrorCopy);
 
 		if (localErrorCopy.count) {
-			for (int p = 0; p < localErrorCopy.count; p++) {
+			for (int i = 0; i < localErrorCopy.count; i++) {
 				// Calculate how many digits in this integer and display error code from start to end
-				int code = (int)localErrorCopy.error_codes[p];
+				int code = (int)localErrorCopy.error_codes[i];
 				DisplayErrorCode(DigitLength(code), code);
 			}
 		} else {
 			// Turn on the CEL while the engine is stopped
 			enginePins.checkEnginePin.setValue(!engine->rpmCalculator.isRunning());
 		}
-#endif // EFI_SHAFT_POSITION_INPUT
 	}
 };
 
