@@ -13,6 +13,7 @@ import com.rusefi.util.SystemOut;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -237,7 +238,9 @@ public class ConfigDefinition {
     }
 
     private static void writeMakefileDependencyFile(List<String> inputFiles, String cHeaderDestination, String makefileDepsDestination) throws IOException {
-        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(makefileDepsDestination)));
+        Path path = Paths.get(makefileDepsDestination);
+        Files.createDirectories(path.getParent());
+        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(path));
 
         // The output depends on all inputs
         f.print(cHeaderDestination + ": ");
