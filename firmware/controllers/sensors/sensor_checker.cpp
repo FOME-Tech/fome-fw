@@ -125,8 +125,6 @@ inline const char* describeUnexpected(UnexpectedCode code) {
 	}
 }
 
-#define GET_SEVERITY(dtc) case static_cast<ObdCode>(dtc): return p##dtc;
-
 static DtcSeverity getSeverityForCode(ObdCode code) {
 	const auto& c = engineConfiguration->dtcControl;
 
