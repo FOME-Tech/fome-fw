@@ -33,6 +33,8 @@
 
 #include "periodic_thread_controller.h"
 
+#include <charconv>
+
 #define MFI_LONG_BLINK	1500
 #define MFI_SHORT_BLINK	400
 #define MFI_BLINK_SEPARATOR 400
@@ -48,27 +50,30 @@ static void blink_digits(int digit, int duration) {
 	}
 }
 
-// calculate how many digits our code have
-static int DigitLength(int digit) {
-	int i = 0;
-	while (digit > 0) {
-		digit = digit / 10;
-		++i;
+static int char2int(char c) {
+	if (c >= '0' && c <= '9') {
+		return c - '0';
+	} else if (c >= 'a' && c <= 'f') {
+		return c - 'a' + 0xa;
+	} else if (c >= 'A' && c <= 'F') {
+		return c - 'A' + 0xa;
+	} else {
+		return 0;
 	}
-	return i;
 }
 
 // display code
-static void DisplayErrorCode(int length, int code) {
-	// todo: I suggest we use 'itoa' method to simplify this logic
-	for (int iter = length - 1; iter >= 0; iter--) {
-		int ourDigit = (int) efiPow10(iter);		// 10^0 = 1, 10^1 = 10, 10^2=100, 10^3 = 1000, ....
-		int digit = 1;						// as we remember "0" we show as one blink
-		while (code >= ourDigit) {
-			code = code - ourDigit;
-			digit++;
-		}
-		if (iter % 2 == 0)
+static void displayErrorCode(ObdCode code) {
+	char buf[8];
+
+	// write it as a hex string
+	auto ret = std::to_chars(buf, buf + std::size(buf), (int)code, 16);
+	size_t length = ret.ptr - buf;
+
+	for (size_t i = 0; i < length; i++) {
+		int digit = char2int(buf[i]) + 1;
+
+		if (i % 2 == 0)
 			blink_digits(digit, MFI_SHORT_BLINK);		// even 2,0 - long blink
 		else
 			blink_digits(digit, MFI_LONG_BLINK); 		// odd  3,1 - short blink
@@ -88,9 +93,7 @@ private:
 
 		if (localErrorCopy.count) {
 			for (int i = 0; i < localErrorCopy.count; i++) {
-				// Calculate how many digits in this integer and display error code from start to end
-				int code = (int)localErrorCopy.error_codes[i];
-				DisplayErrorCode(DigitLength(code), code);
+				displayErrorCode(localErrorCopy.error_codes[i]);
 			}
 		} else {
 			// Turn on the CEL while the engine is stopped
