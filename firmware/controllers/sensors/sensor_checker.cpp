@@ -222,16 +222,21 @@ void SensorChecker::onSlowCallback() {
 			setError(false, ObdCode::Sensor5vSupplyHigh);
 			setError(false, ObdCode::Sensor5vSupplyLow);
 		}
-
 	} else {
-		bool batteryVoltageSufficient = Sensor::getOrZero(SensorType::BatteryVoltage) > 7.0f;
+		if (Sensor::getOrZero(SensorType::BatteryVoltage) < 7.0f) {
+			m_timeSinceVbattLow.reset();
+		}
+
+		if (!m_ignitionIsOn) {
+			// timer keeps track of how long since the state was turned to on (ie, how long ago was it last off)
+			m_timeSinceIgnOff.reset();
+		}
 
 		// Don't check when:
-		// - battery voltage is too low for sensors to work
-		// - the ignition is off
-		// - ignition was just turned on (let things stabilize first)
+		// - battery voltage is too low for sensors to work (with stabilization time)
+		// - the ignition is off (with stabilization time)
 		// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
-		bool shouldCheck = batteryVoltageSufficient && m_ignitionIsOn && m_timeSinceIgnOff.hasElapsedSec(5);
+		bool shouldCheck = m_timeSinceVbattLow.hasElapsedSec(5) && m_timeSinceIgnOff.hasElapsedSec(5);
 		m_analogSensorsShouldWork = shouldCheck;
 		if (!shouldCheck) {
 			return;
@@ -331,9 +336,4 @@ void SensorChecker::onSlowCallback() {
 
 void SensorChecker::onIgnitionStateChanged(bool ignitionOn) {
 	m_ignitionIsOn = ignitionOn;
-
-	if (!ignitionOn) {
-		// timer keeps track of how long since the state was turned to on (ie, how long ago was it last off)
-		m_timeSinceIgnOff.reset();
-	}
 }
