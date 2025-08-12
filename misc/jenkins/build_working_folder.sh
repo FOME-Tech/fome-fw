@@ -43,10 +43,8 @@ cp simulator/build/fome_simulator.exe     $CONSOLE_FOLDER
 cp misc/console_launcher/fome_*.exe     $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/libopenblt.dll        $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/libopenblt.so         $CONSOLE_FOLDER
-cp firmware/ext/openblt/Host/libopenblt.dylib      $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/openblt_jni.dll    $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/libopenblt_jni.so     $CONSOLE_FOLDER
-cp firmware/ext/openblt/Host/libopenblt_jni.dylib  $CONSOLE_FOLDER
 
 cp firmware/tunerstudio/generated/$INI_FILE_OVERRIDE $FOLDER
 # Unsetting since would not be used anywhere else
