@@ -3,8 +3,10 @@ BOARDCPPSRC = $(BOARD_DIR)/board_configuration.cpp
 DDEFS += -DLED_CRITICAL_ERROR_BRAIN_PIN=Gpio::B14
 
 # Enable ethernet
-LWIP = yes
-include $(PROJECT_DIR)/controllers/modules/ethernet_console/ethernet_console.mk
+ifneq ($(PROJECT_CPU),simulator)
+	LWIP = yes
+	include $(PROJECT_DIR)/controllers/modules/ethernet_console/ethernet_console.mk
+else
 
 # This is an F429!
 IS_STM32F429 = yes
