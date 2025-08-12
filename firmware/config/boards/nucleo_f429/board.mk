@@ -6,7 +6,7 @@ DDEFS += -DLED_CRITICAL_ERROR_BRAIN_PIN=Gpio::B14
 ifneq ($(PROJECT_CPU),simulator)
 	LWIP = yes
 	include $(PROJECT_DIR)/controllers/modules/ethernet_console/ethernet_console.mk
-else
+endif
 
 # This is an F429!
 IS_STM32F429 = yes
