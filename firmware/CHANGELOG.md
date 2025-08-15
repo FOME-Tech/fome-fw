@@ -50,6 +50,7 @@ or
  - Speed up bootloader launch by 250ms
  - Move ETB sensor redundancy from Experimental/Broken/Parking Lot to sensor dialogs #165
  - K20/K24 intake VVT angle reads correctly
+ - Easier to decipher check engine light blink codes #653
 
 ## February 2025 Release
 
