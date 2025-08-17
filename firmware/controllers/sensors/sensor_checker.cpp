@@ -245,7 +245,6 @@ void SensorChecker::onSlowCallback() {
 
 	// Check sensors
 	bool tps1DependenciesOk = check(SensorType::Tps1Primary);
-
 	if (Sensor::isRedundant(SensorType::Tps1)) {
 		tps1DependenciesOk &= check(SensorType::Tps1Secondary);
 
