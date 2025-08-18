@@ -853,15 +853,6 @@ static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& tri
 	shape.initializeSyncPoint(initState, triggerConfig);
 }
 
-void TriggerCentral::validateCamVvtCounters() {
-	int camVvtValidationIndex = triggerState.getCrankSynchronizationCounter() % 255;
-	if (camVvtValidationIndex == 0) {
-		vvtState[0][0].edgeCountRise = 0;
-	} else if (camVvtValidationIndex == 0xFE && vvtState[0][0].edgeCountRise < 60) {
-		// magic logic: we expect at least 60 CAM/VVT events for each 256 trigger cycles, otherwise throw a code
-		warning(ObdCode::OBD_Camshaft_Position_Sensor_Circuit_Range_Performance, "No Camshaft Position Sensor signals");
-	}
-}
 /**
  * Calculate 'shape.triggerShapeSynchPointIndex' value using 'TriggerDecoderBase *state'
  */

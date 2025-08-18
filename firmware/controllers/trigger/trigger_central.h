@@ -28,8 +28,6 @@
 class Engine;
 typedef void (*ShaftPositionListener)(TriggerEvent signal, uint32_t index, efitick_t edgeTimestamp);
 
-#define HAVE_CAM_INPUT() (isBrainPinValid(engineConfiguration->camInputs[0]))
-
 /**
  * Maybe merge TriggerCentral and TriggerState classes into one class?
  * Probably not: we have an instance of TriggerState which is used for trigger initialization,
@@ -41,7 +39,6 @@ public:
 	angle_t syncAndReport(int divider, int remainder);
 	void handleShaftSignal(TriggerEvent signal, efitick_t timestamp);
 	void resetCounters();
-	void validateCamVvtCounters();
 	void updateWaveform();
 
 	InstantRpmCalculator instantRpm;
