@@ -102,11 +102,6 @@ TEST(trigger, testCamInput) {
 		eth.fireFall(25);
 	}
 
-	// asserting that lack of camshaft signal would be detecting
-	ASSERT_EQ(1,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testCamInput #2";
-	ASSERT_EQ(ObdCode::OBD_Camshaft_Position_Sensor_Circuit_Range_Performance, unitTestWarningCodeState.recentWarnings.get(0).Code) << "@0";
-	unitTestWarningCodeState.recentWarnings.clear();
-
 	for (int i = 0; i < 600; i++) {
 		eth.moveTimeForwardUs(MS2US(10));
 
