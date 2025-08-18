@@ -71,6 +71,8 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 		return trigger_type_e::TT_VVT_MIATA_NA;
 	case VVT_BOSCH_QUICK_START:
 		return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
+	case VVT_BMW_N63TU:
+    	return trigger_type_e::TT_VVT_BMW_N63TU;
 	case VVT_HONDA_K_EXHAUST:
 		return trigger_type_e::TT_HONDA_K_CAM_4_1;
 	case VVT_HONDA_K_INTAKE:
