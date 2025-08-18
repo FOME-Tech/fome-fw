@@ -70,11 +70,6 @@ void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 		return;
 	}
 
-	if (rpm == NOISY_RPM || !isValidRpm(rpm)) {
-		warning(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction, "noisy trigger");
-		return;
-	}
-
 	if (trgEventIndex == 0) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule

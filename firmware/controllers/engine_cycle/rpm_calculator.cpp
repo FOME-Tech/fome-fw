@@ -46,10 +46,6 @@ uint32_t RpmCalculator::getRevolutionCounterSinceStart(void) const {
 	return revolutionCounterSinceStart;
 }
 
-/**
- * @return -1 in case of isNoisySignal(), current RPM otherwise
- * See NOISY_RPM
- */
 float RpmCalculator::getCachedRpm() const {
 	return cachedRpmValue;
 }
@@ -155,6 +151,10 @@ void RpmCalculator::assignRpmValue(float floatRpmValue) {
 }
 
 void RpmCalculator::setRpmValue(float value) {
+	if (value > MAX_ALLOWED_RPM) {
+		value = 0;
+	}
+
 	assignRpmValue(value);
 
 	// Change state
@@ -260,7 +260,7 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 		 */
 			if (!alwaysInstantRpm) {
 				if (periodSeconds == 0) {
-					rpmState->setRpmValue(NOISY_RPM);
+					rpmState->setRpmValue(0);
 					rpmState->rpmRate = 0;
 				} else {
 					int mult = (int)getEngineCycle(getEngineRotationState()->getOperationMode()) / 360;
@@ -269,7 +269,7 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 					auto rpmDelta = rpm - rpmState->previousRpmValue;
 					rpmState->rpmRate = rpmDelta / (mult * periodSeconds);
 
-					rpmState->setRpmValue(rpm > UNREALISTIC_RPM ? NOISY_RPM : rpm);
+					rpmState->setRpmValue(rpm);
 				}
 			}
 		} else {
@@ -336,7 +336,7 @@ void tdcMarkCallback(
 		int revIndex2 = getRevolutionCounter() % 2;
 		float rpm = Sensor::getOrZero(SensorType::Rpm);
 		// todo: use tooth event-based scheduling, not just time-based scheduling
-		if (isValidRpm(rpm)) {
+		if (rpm != 0) {
 			angle_t tdcPosition = tdcPosition();
 			// we need a positive angle offset here
 			wrapAngle(tdcPosition, "tdcPosition", ObdCode::CUSTOM_ERR_6553);

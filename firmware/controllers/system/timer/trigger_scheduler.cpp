@@ -81,7 +81,7 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 
 void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 
-	if (!isValidRpm(rpm) || !EFI_SHAFT_POSITION_INPUT) {
+	if (rpm == 0 || !EFI_SHAFT_POSITION_INPUT) {
 		 // this might happen for instance in case of a single trigger event after a pause
 		return;
 	}
