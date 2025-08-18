@@ -228,6 +228,50 @@ static ObdCode getCodeForIgnition(int idx, brain_pin_diag_e diag) {
 }
 #endif // BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
 
+static void checkTriggerDecoder(TriggerDecoderBase& decoder, ObdCode tooManyErrorsCode) {
+	if (decoder.triggerErrorCounter > 50) {
+		handleCodeSeverity(tooManyErrorsCode);
+	}
+}
+
+static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSignalCode, ObdCode tooManyErrorsCode) {
+	{
+		int inputIndex = bank * CAMS_PER_BANK + cam;
+		if (!isBrainPinValid(engineConfiguration->camInputs[inputIndex])) {
+			// No pin configured, skip this cam
+			return;
+		}
+	}
+
+	auto& decoder = engine->triggerCentral.vvtState[bank][cam];
+
+	// scenarios to detect:
+	// 1. There is no signal present whatsoever
+	//		-> no rising edges counted
+	// 2. There are some edges present, but we couldn't sync
+	//		-> no VVT position means cam is invalid
+	// 3. Some intermittent issue is letting us limp along, but sporadic sync errors are piling up
+	//		-> sync error counter is high
+
+	// Scenario 1: No signal at all
+	if (decoder.edgeCountRise == 0) {
+		handleCodeSeverity(noSignalCode);
+		return;
+	}
+
+	// Scenario 2: Signal, but no sync
+	{
+		// If there's no valid VVT position, this hasn't decoded in the last second
+		auto vvtResult = engine->triggerCentral.getVVTPosition(bank, cam);
+		if (!check(vvtResult, noSignalCode, name)) {
+			return;
+		}
+	}
+
+	// Scenario 3: Pile of sync errors (same check as primary trigger)
+	checkTriggerDecoder(decoder, tooManyErrorsCode);
+}
+
 void SensorChecker::onSlowCallback() {
 	if (Sensor::hasSensor(SensorType::Sensor5vVoltage)) {
 		float sensorSupply = Sensor::getOrZero(SensorType::Sensor5vVoltage);
@@ -301,6 +345,36 @@ void SensorChecker::onSlowCallback() {
 
 	check(SensorType::OilPressure);
 	check(SensorType::OilTemperature);
+
+	checkTriggerDecoder(engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
+
+	// Only check cams if the engine moved recently, AND the primary trigger has 10 syncs
+	if (engine->triggerCentral.engineMovedRecently() && engine->triggerCentral.triggerState.crankSynchronizationCounter > 10) {
+		checkCamDecoder(
+			0, 0,
+			"VVT Bank 1 Intake",
+			ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
+			ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors
+		);
+		checkCamDecoder(
+			0, 1,
+			"VVT Bank 1 Exhaust",
+			ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
+			ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors
+		);
+		checkCamDecoder(
+			1, 0,
+			"VVT Bank 2 Intake",
+			ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
+			ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors
+		);
+		checkCamDecoder(
+			1, 1,
+			"VVT Bank 2 Exhaust",
+			ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
+			ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors
+		);
+	}
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
