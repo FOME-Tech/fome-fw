@@ -258,7 +258,7 @@
 /*
  * ADC driver system settings.
  */
-#define STM32_ADC_DUAL_MODE                 FALSE
+#define STM32_ADC_DUAL_MODE                 TRUE
 #define STM32_ADC_SAMPLES_SIZE              32
 #define STM32_ADC_USE_ADC12                 TRUE
 
