@@ -149,6 +149,32 @@ static DtcSeverity getSeverityForCode(ObdCode code) {
 	}
 }
 
+static void handleCodeSeverity(ObdCode code) {
+	// Determine what to do about this particular code
+	auto severity = getSeverityForCode(code);
+	if (severity != DtcSeverity::Ignore) {
+		setError(true, code);
+	}
+}
+
+static bool check(SensorResult result, ObdCode code, const char* name) {
+	// If the sensor is OK, nothing to check.
+	if (result) {
+		return true;
+	}
+
+	if (code != ObdCode::None) {
+		warning(code, "Sensor fault: %s %s", name, describeUnexpected(result.Code));
+
+		// Determine what to do about this particular code
+		handleCodeSeverity(code);
+	} else {
+		setError(false, code);
+	}
+
+	return false;
+}
+
 // Returns true checks on dependent sensors should happen
 // (returns false if broken or not configured)
 static bool check(SensorType type) {
@@ -157,7 +183,7 @@ static bool check(SensorType type) {
 		return false;
 	}
 
-	auto result = Sensor::get(type);
+	SensorResult result = Sensor::get(type);
 
 	// If the sensor is OK, nothing to check.
 	if (result) {
@@ -166,19 +192,7 @@ static bool check(SensorType type) {
 
 	ObdCode code = getCode(type, result.Code);
 
-	if (code != ObdCode::None) {
-		warning(code, "Sensor fault: %s %s", Sensor::getSensorName(type), describeUnexpected(result.Code));
-
-		// Determine what to do about this particular code
-		auto severity = getSeverityForCode(code);
-		if (severity != DtcSeverity::Ignore) {
-			setError(true, code);
-		}
-	} else {
-		setError(false, code);
-	}
-
-	return false;
+	return check(result, code, Sensor::getSensorName(type));
 }
 
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
