@@ -55,8 +55,6 @@ TrgPhase TriggerCentral::toTrgPhase(const EngPhase& engPhase) const {
 }
 
 TriggerCentral::TriggerCentral() :
-		vvtEventRiseCounter(),
-		vvtEventFallCounter(),
 		vvtPosition(),
 		triggerState("TRG")
 {
@@ -254,11 +252,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	int bankIndex = index / CAMS_PER_BANK;
 	int camIndex = index % CAMS_PER_BANK;
-	if (isRising) {
-		tc->vvtEventRiseCounter[index]++;
-	} else {
-		tc->vvtEventFallCounter[index]++;
-	}
+
 	if (engineConfiguration->vvtMode[camIndex] == VVT_INACTIVE) {
 		warning(ObdCode::CUSTOM_VVT_MODE_NOT_SELECTED, "VVT: event on %d but no mode", camIndex);
 	}
@@ -711,7 +705,7 @@ static void triggerShapeInfo() {
 extern PwmConfig triggerSignal;
 #endif /* #if EFI_PROD_CODE */
 
-void triggerInfo(void) {
+void triggerInfo() {
 #if EFI_PROD_CODE || EFI_SIMULATOR
 
 	TriggerCentral *tc = getTriggerCentral();
@@ -771,21 +765,16 @@ void triggerInfo(void) {
 #endif /* EFI_EMULATE_POSITION_SENSORS */
 	}
 
-
 	for (int camInputIndex = 0; camInputIndex < CAM_INPUTS_COUNT; camInputIndex++) {
 		if (isBrainPinValid(engineConfiguration->camInputs[camInputIndex])) {
 			int camLogicalIndex = camInputIndex % CAMS_PER_BANK;
 			efiPrintf("VVT input: %s mode %s", hwPortname(engineConfiguration->camInputs[camInputIndex]),
 					getVvt_mode_e(engineConfiguration->vvtMode[camLogicalIndex]));
-			efiPrintf("VVT %d event counters: %d/%d",
-					camInputIndex,
-					tc->vvtEventRiseCounter[camInputIndex], tc->vvtEventFallCounter[camInputIndex]);
 		}
 	}
 
 	efiPrintf("primary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[0]));
 	efiPrintf("secondary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[1]));
-
 
 	efiPrintf("totalTriggerHandlerMaxTime=%lu", triggerMaxDuration);
 

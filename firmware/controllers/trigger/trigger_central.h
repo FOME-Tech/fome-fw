@@ -131,9 +131,6 @@ public:
 		return engineMovedRecently(getTimeNowNt());
 	}
 
-	int vvtEventRiseCounter[CAM_INPUTS_COUNT];
-	int vvtEventFallCounter[CAM_INPUTS_COUNT];
-
 	expected<angle_t> getVVTPosition(uint8_t bankIndex, uint8_t camIndex);
 
 #if EFI_UNIT_TEST
@@ -205,7 +202,7 @@ private:
 	expected<TrgPhase> expectedNextPhase = unexpected;
 };
 
-void triggerInfo(void);
+void triggerInfo();
 void hwHandleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp);
 void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp);
 void hwHandleVvtCamSignal(bool isRising, efitick_t timestamp, int index);
@@ -213,8 +210,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t timestamp, int index);
 void validateTriggerInputs();
 
 void initTriggerCentral();
-
-int isSignalDecoderError(void);
 
 void onConfigurationChangeTriggerCallback();
 
