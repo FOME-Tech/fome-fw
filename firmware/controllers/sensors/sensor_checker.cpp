@@ -142,6 +142,15 @@ static DtcSeverity getSeverityForCode(ObdCode code) {
 		case 0x179: return c.p0179;
 		case 0x197: return c.p0197;
 		case 0x198: return c.p0198;
+		case 0x336: return c.p0336;
+		case 0x340: return c.camNoSignal;
+		case 0x341: return c.camSyncErrors;
+		case 0x345: return c.camNoSignal;
+		case 0x346: return c.camSyncErrors;
+		case 0x365: return c.camNoSignal;
+		case 0x366: return c.camSyncErrors;
+		case 0x385: return c.camNoSignal;
+		case 0x386: return c.camSyncErrors;
 		case 0x522: return c.p0522;
 		case 0x523: return c.p0523;
 		default:
