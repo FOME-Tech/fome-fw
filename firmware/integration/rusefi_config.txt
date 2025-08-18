@@ -1453,6 +1453,13 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 		DtcSeverity p0197;Behavior for P0197: Engine Oil Temperature Sensor Circuit Low. Triggered when oil temp sensor voltage is less than 0.05 volts.
 		DtcSeverity p0198;Behavior for P0198: Engine Oil Temperature Sensor Circuit High. Triggered when oil temp sensor voltage is greater than 4.9 volts.
 
+		! Crank sensor
+		DtcSeverity p0336;Behavior for P0336: Crank sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
+
+		! Cam sensors
+		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the primary trigger signal is present, but cam signal is not.
+		DtcSeverity camSyncErrors;Behavior for P0341/P0346/P0366/P0386: Cam sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
+
 		! Oil pressure
 		DtcSeverity p0522;Behavior for P0522: Engine Oil Pressure Sensor Circuit Low. Triggered when oil pressure sensor voltage is less than allowed limits.
 		DtcSeverity p0523;Behavior for P0523: Engine Oil Pressure Sensor Circuit High. Triggered when oil pressure sensor voltage is greater than allowed limits.
