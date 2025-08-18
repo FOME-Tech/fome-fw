@@ -44,6 +44,7 @@ or
  - Y axis override for VVT target
  - Feature to skip initial trigger pulses for noisy triggers #634
  - VVT open loop "hold" table #638
+ - Fire DTCs for detectable cam/crank errors
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
