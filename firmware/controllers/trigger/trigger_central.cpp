@@ -926,12 +926,16 @@ void TriggerCentral::updateWaveform() {
 				vvtTriggerConfiguration[camIndex],
 				initState
 			);
-		}
 
-		// If we have cam inputs, we can expect trigger disambiguation later.
-		// If no cam inputs are set, we can run in crank-only mode
-		if (isBrainPinValid(engineConfiguration->camInputs[camIndex])) {
-			expectDisambiguation = true;
+			for (int bankIndex = 0; bankIndex < BANKS_COUNT; bankIndex++) {
+				int inputIndex = bankIndex * CAMS_PER_BANK + camIndex;
+
+				// If we have cam inputs, we can expect trigger disambiguation later.
+				// If no cam inputs are set, we can run in crank-only mode
+				if (isBrainPinValid(engineConfiguration->camInputs[inputIndex])) {
+					expectDisambiguation = true;
+				}
+			}
 		}
 	}
 
