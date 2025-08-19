@@ -228,6 +228,7 @@ static ObdCode getCodeForIgnition(int idx, brain_pin_diag_e diag) {
 }
 #endif // BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
 
+#if EFI_SHAFT_POSITION_INPUT
 static void checkTriggerDecoder(TriggerDecoderBase& decoder, ObdCode tooManyErrorsCode) {
 	if (decoder.triggerErrorCounter > 50) {
 		handleCodeSeverity(tooManyErrorsCode);
@@ -271,6 +272,7 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	// Scenario 3: Pile of sync errors (same check as primary trigger)
 	checkTriggerDecoder(decoder, tooManyErrorsCode);
 }
+#endif // EFI_SHAFT_POSITION_INPUT
 
 void SensorChecker::onSlowCallback() {
 	if (Sensor::hasSensor(SensorType::Sensor5vVoltage)) {
@@ -346,6 +348,7 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::OilPressure);
 	check(SensorType::OilTemperature);
 
+#if EFI_SHAFT_POSITION_INPUT
 	checkTriggerDecoder(engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
 
 	// Only check cams if the engine moved recently, AND the primary trigger has 10 syncs
@@ -375,6 +378,7 @@ void SensorChecker::onSlowCallback() {
 			ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors
 		);
 	}
+#endif // EFI_SHAFT_POSITION_INPUT
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
