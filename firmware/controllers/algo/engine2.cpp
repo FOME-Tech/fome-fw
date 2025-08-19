@@ -246,6 +246,10 @@ bool VvtTriggerConfiguration::needsTriggerDecoder() const {
 }
 
 trigger_config_s VvtTriggerConfiguration::getType() const {
+	if (!needsTriggerDecoder()) {
+		return { trigger_type_e::TT_UNUSED, 0, 0 };
+	}
+
 	// Convert from VVT type to trigger_config_s
 	return { getVvtTriggerType(getVvtMode()), 0, 0 };
 }
