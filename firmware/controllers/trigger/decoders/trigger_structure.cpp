@@ -543,10 +543,6 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 		configureDaihatsu4(this);
 		break;
 
-	case trigger_type_e::TT_VVT_TOYOTA_3_TOOTH:
-		initializeSkippedToothTrigger(this, 3, 0, triggerOperationMode, SyncEdge::RiseOnly);
-		break;
-
 	case trigger_type_e::TT_36_2_1_1:
 		initialize36_2_1_1(this);
 		break;

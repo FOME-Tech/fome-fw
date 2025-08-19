@@ -63,8 +63,6 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 	switch (vvtMode) {
 	case VVT_INACTIVE:
 		return trigger_type_e::TT_ONE;
-	case VVT_TOYOTA_3_TOOTH:
-		return trigger_type_e::TT_VVT_TOYOTA_3_TOOTH;
 	case VVT_MIATA_NB:
 		return trigger_type_e::TT_VVT_MIATA_NB;
 	case VVT_MIATA_NA:
@@ -73,10 +71,6 @@ trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 		return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
 	case VVT_HONDA_K_EXHAUST:
 		return trigger_type_e::TT_HONDA_K_CAM_4_1;
-	case VVT_HONDA_K_INTAKE:
-	case VVT_SINGLE_TOOTH:
-	case VVT_MAP_V_TWIN:
-		return trigger_type_e::TT_ONE;
 	case VVT_FORD_ST170:
 		return trigger_type_e::TT_FORD_ST170;
 	case VVT_BARRA_3_PLUS_1:
