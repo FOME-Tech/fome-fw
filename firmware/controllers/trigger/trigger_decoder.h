@@ -53,6 +53,9 @@ public:
 	{
 	}
 
+	vvt_mode_e getVvtMode() const;
+	bool needsTriggerDecoder() const;
+
 protected:
 	bool isVerboseTriggerSynchDetails() const override;
 	trigger_config_s getType() const override;

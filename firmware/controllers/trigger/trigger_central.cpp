@@ -126,15 +126,6 @@ int getCrankDivider(operation_mode_e operationMode) {
 	return 1;
 }
 
-static bool vvtWithRealDecoder(vvt_mode_e vvtMode) {
-	// todo: why does VVT_TOYOTA_3_TOOTH not use real decoder?
-	return vvtMode != VVT_INACTIVE
-			&& vvtMode != VVT_TOYOTA_3_TOOTH
-			&& vvtMode != VVT_HONDA_K_INTAKE
-			&& vvtMode != VVT_MAP_V_TWIN
-			&& vvtMode != VVT_SINGLE_TOOTH;
-}
-
 angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 	angle_t engineCycle = getEngineCycle(getEngineRotationState()->getOperationMode());
 
@@ -259,7 +250,7 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	const auto& vvtShape = tc->vvtShape[camIndex];
 
-	bool isVvtWithRealDecoder = vvtWithRealDecoder(engineConfiguration->vvtMode[camIndex]);
+	bool isVvtWithRealDecoder = tc->vvtTriggerConfiguration[camIndex].needsTriggerDecoder();
 
 	// Non real decoders only use the rising edge
 	bool vvtUseOnlyRise = !isVvtWithRealDecoder || vvtShape.useOnlyRisingEdges;
@@ -919,11 +910,11 @@ void TriggerCentral::updateWaveform() {
 	bool expectDisambiguation = !primaryNeedsDisambiguation;
 
 	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
-		// todo: should 'vvtWithRealDecoder' be used here?
-		if (engineConfiguration->vvtMode[camIndex] != VVT_INACTIVE) {
+		auto& cfg = vvtTriggerConfiguration[camIndex];
+		if (cfg.getVvtMode() != VVT_INACTIVE) {
 			initVvtShape(
 				vvtShape[camIndex],
-				vvtTriggerConfiguration[camIndex],
+				cfg,
 				initState
 			);
 

@@ -231,9 +231,23 @@ bool PrimaryTriggerConfiguration::isVerboseTriggerSynchDetails() const {
 	return engineConfiguration->verboseTriggerSynchDetails;
 }
 
+vvt_mode_e VvtTriggerConfiguration::getVvtMode() const {
+	return engineConfiguration->vvtMode[m_index];
+}
+
+bool VvtTriggerConfiguration::needsTriggerDecoder() const {
+	auto mode = getVvtMode();
+
+	return mode != VVT_INACTIVE
+			&& mode != VVT_TOYOTA_3_TOOTH
+			&& mode != VVT_HONDA_K_INTAKE
+			&& mode != VVT_MAP_V_TWIN
+			&& mode != VVT_SINGLE_TOOTH;
+}
+
 trigger_config_s VvtTriggerConfiguration::getType() const {
 	// Convert from VVT type to trigger_config_s
-	return { getVvtTriggerType(engineConfiguration->vvtMode[m_index]), 0, 0 };
+	return { getVvtTriggerType(getVvtMode()), 0, 0 };
 }
 
 bool VvtTriggerConfiguration::isVerboseTriggerSynchDetails() const {
