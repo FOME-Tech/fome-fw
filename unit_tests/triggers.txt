@@ -675,7 +675,7 @@ event 0 0 1 0.00 1.000000
 event 1 0 0 180.00 nan
 event 2 1 1 360.00 nan
 event 3 1 0 540.00 nan
-TRIGGERTYPE 17 6 TT_VVT_TOYOTA_3_TOOTH 0.00
+TRIGGERTYPE 17 2 TT_UNUSED_17 0.00
 knownOperationMode=false
 crankBased=false
 hasSecondChannel=false
@@ -687,11 +687,7 @@ gapFrom.0=0.750000
 gapTo.0=1.250000
 # end of meta section
 event 0 0 1 0.00 1.000000
-event 1 0 0 0.00 nan
-event 2 0 1 240.00 1.000000
-event 3 0 0 240.00 nan
-event 4 0 1 480.00 1.000000
-event 5 0 0 480.00 nan
+event 1 0 0 360.00 nan
 TRIGGERTYPE 18 2 TT_ONE 0.00
 knownOperationMode=false
 crankBased=false
