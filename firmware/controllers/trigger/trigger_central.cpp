@@ -912,11 +912,13 @@ void TriggerCentral::updateWaveform() {
 	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		auto& cfg = vvtTriggerConfiguration[camIndex];
 		if (cfg.getVvtMode() != VVT_INACTIVE) {
-			initVvtShape(
-				vvtShape[camIndex],
-				cfg,
-				initState
-			);
+			if (cfg.needsTriggerDecoder()) {
+				initVvtShape(
+					vvtShape[camIndex],
+					cfg,
+					initState
+				);
+			}
 
 			for (int bankIndex = 0; bankIndex < BANKS_COUNT; bankIndex++) {
 				int inputIndex = bankIndex * CAMS_PER_BANK + camIndex;
