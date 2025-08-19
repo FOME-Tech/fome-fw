@@ -532,6 +532,7 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 		break;
 
 	case trigger_type_e::TT_ONE:
+	case trigger_type_e::TT_UNUSED_17:
 		initializeSkippedToothTrigger(this, 1, 0, triggerOperationMode, SyncEdge::Rise);
 		break;
 
