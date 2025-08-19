@@ -544,6 +544,8 @@ case trigger_type_e::TT_TRI_TACH:
   return "TT_TRI_TACH";
 case trigger_type_e::TT_UNUSED:
   return "TT_UNUSED";
+case trigger_type_e::TT_UNUSED_17:
+  return "TT_UNUSED_17";
 case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:
   return "TT_VVT_BARRA_3_PLUS_1";
 case trigger_type_e::TT_VVT_BOSCH_QUICK_START:
@@ -562,8 +564,6 @@ case trigger_type_e::TT_VVT_MITSUBISHI_6G75:
   return "TT_VVT_MITSUBISHI_6G75";
 case trigger_type_e::TT_VVT_NISSAN_VQ35:
   return "TT_VVT_NISSAN_VQ35";
-case trigger_type_e::TT_VVT_TOYOTA_3_TOOTH:
-  return "TT_VVT_TOYOTA_3_TOOTH";
 case trigger_type_e::TT_VVT_TOYOTA_4_1:
   return "TT_VVT_TOYOTA_4_1";
   }
