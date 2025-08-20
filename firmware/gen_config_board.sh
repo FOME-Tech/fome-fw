@@ -45,7 +45,7 @@ java \
 	-field_lookup_file generated/value_lookup_generated.cpp generated/value_lookup_generated.md \
 	-java_destination ../java_console/generated/src/main/java/com/rusefi/config/generated/Fields.java \
 	-initialize_to_zero false \
-	-branch `git branch --show-current` \
+	-branch "$(git branch --show-current)" \
 	-ts_template ./tunerstudio/tunerstudio.template.ini \
 	-ts_output_name ./tunerstudio/generated/${INI} \
 	-board ${BOARD_DIR} \
