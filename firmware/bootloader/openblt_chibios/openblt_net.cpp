@@ -44,13 +44,13 @@ void NetTransmitPacket(blt_int8u *data, blt_int8u len) {
 blt_bool NetReceivePacket(blt_int8u *data, blt_int8u *len) {
 	uint8_t lengthByte;
 
-	auto lengthByteLen = server.recvTimeout(&lengthByte, 1, TIME_MS2I(1000));
+	auto lengthByteLen = server.recvTimeout(&lengthByte, 1, TIME_IMMEDIATE);
 
 	if (lengthByteLen == 0 || lengthByte == 0) {
 		return BLT_FALSE;
 	}
 
-	*len = server.recvTimeout(data, lengthByte, TIME_MS2I(10));
+	*len = server.recvTimeout(data, lengthByte, TIME_MS2I(100));
 
 	if (*len != lengthByte) {
 		return BLT_FALSE;
