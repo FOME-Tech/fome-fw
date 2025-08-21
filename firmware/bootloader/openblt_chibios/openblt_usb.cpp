@@ -48,14 +48,7 @@ void Rs232TransmitPacket(blt_int8u *data, blt_int8u len)
   /* first transmit the length of the packet */
   Rs232TransmitByte(len);
 
-  /* transmit all the packet bytes one-by-one */
-  for (data_index = 0; data_index < len; data_index++)
-  {
-    /* keep the watchdog happy */
-    CopService();
-    /* write byte */
-    Rs232TransmitByte(data[data_index]);
-  }
+  chnWriteTimeout(&SDU1, data, len, TIME_INFINITE);
 } /*** end of Rs232TransmitPacket ***/
 
 /************************************************************************************//**
@@ -131,8 +124,6 @@ blt_bool Rs232ReceivePacket(blt_int8u *data, blt_int8u *len)
 
 static blt_bool Rs232ReceiveByte(blt_int8u *data)
 {
-	doDeferredUsbInit();
-
 	if (!is_usb_serial_ready()) {
 		return BLT_FALSE;
 	}
@@ -144,7 +135,5 @@ static blt_bool Rs232ReceiveByte(blt_int8u *data)
 
 static void Rs232TransmitByte(blt_int8u data)
 {
-	doDeferredUsbInit();
-
 	chnWriteTimeout(&SDU1, &data, 1, TIME_INFINITE);
 }
