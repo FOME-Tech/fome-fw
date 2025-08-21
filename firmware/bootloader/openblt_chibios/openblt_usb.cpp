@@ -131,8 +131,6 @@ blt_bool Rs232ReceivePacket(blt_int8u *data, blt_int8u *len)
 
 static blt_bool Rs232ReceiveByte(blt_int8u *data)
 {
-	doDeferredUsbInit();
-
 	if (!is_usb_serial_ready()) {
 		return BLT_FALSE;
 	}
@@ -144,7 +142,5 @@ static blt_bool Rs232ReceiveByte(blt_int8u *data)
 
 static void Rs232TransmitByte(blt_int8u data)
 {
-	doDeferredUsbInit();
-
 	chnWriteTimeout(&SDU1, &data, 1, TIME_INFINITE);
 }
