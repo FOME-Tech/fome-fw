@@ -547,7 +547,10 @@ void initBenchTest() {
 	addConsoleAction("mainrelaybench", mainRelayBench);
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
-	addConsoleAction("update_wideband", []() { widebandUpdatePending = true; });
+	addConsoleAction("update_wideband", []() {
+		widebandUpdatePending = true;
+		benchSemaphore.signal();
+	});
 	addConsoleActionI("set_wideband_index", [](int index) { setWidebandOffset(index); });
 #endif // EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
 
