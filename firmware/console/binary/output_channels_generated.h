@@ -169,8 +169,11 @@ struct output_channels_s {
 	// kPa
 	// offset 32
 	scaled_channel<uint16_t, 30, 1> baroPressure = (uint16_t)0;
+	// %
 	// offset 34
-	uint16_t unused34 = (uint16_t)0;
+	uint8_t widebandUpdateProgress = (uint8_t)0;
+	// offset 35
+	uint8_t unused35 = (uint8_t)0;
 	// VBatt
 	// V
 	// offset 36
@@ -746,7 +749,8 @@ static_assert(offsetof(output_channels_s, rawMaf) == 26);
 static_assert(offsetof(output_channels_s, mafMeasured) == 28);
 static_assert(offsetof(output_channels_s, MAPValue) == 30);
 static_assert(offsetof(output_channels_s, baroPressure) == 32);
-static_assert(offsetof(output_channels_s, unused34) == 34);
+static_assert(offsetof(output_channels_s, widebandUpdateProgress) == 34);
+static_assert(offsetof(output_channels_s, unused35) == 35);
 static_assert(offsetof(output_channels_s, VBatt) == 36);
 static_assert(offsetof(output_channels_s, oilPressure) == 38);
 static_assert(offsetof(output_channels_s, vvtPositionB1I) == 40);
