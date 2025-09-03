@@ -1367,7 +1367,6 @@ int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
 	int8_t ALSMaxCLT;;"C", 1, 0, 0, 105, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
-	uint8_t acRelayAlternatorDutyAdder;Add alternator duty while AC is turned on to compensate for the radiator/blower fans.;"%", 1, 0, 0, 100, 0
 	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
 
 	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
