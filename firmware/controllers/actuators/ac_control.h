@@ -10,6 +10,7 @@ public:
 	void onSlowCallback() override;
 
 	virtual bool isAcEnabled() const;
+	virtual bool isAcCompressorEnabled() const;
 
 	Timer timeSinceStateChange;
 
