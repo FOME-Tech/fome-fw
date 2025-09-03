@@ -196,10 +196,36 @@ TEST(idle_v2, runningFanAcBump) {
 	// Should be base position
 	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
 
-	// Turn on AC!
+	// Turn on A/C!
 	engine->module<AcController>()->acButtonState = true;
 	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
 	engine->module<AcController>()->acButtonState = false;
+
+	// Begin A/C Pressure Switch testing
+	//engineConfiguration->acSwitch = Gpio::G1;
+	engineConfiguration->acPressureSwitch = Gpio::G2;
+	//setMockState(engineConfiguration->acSwitch, false);
+	//setMockState(engineConfiguration->acPressureSwitch, false);
+	engine->module<AcController>()->acPressureSwitchState = false;
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+
+	//setMockState(engineConfiguration->acSwitch, true);
+	engine->module<AcController>()->acButtonState = true;
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+
+	//setMockState(engineConfiguration->acPressureSwitch, true);
+	engine->module<AcController>()->acPressureSwitchState = true;
+	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
+
+	//setMockState(engineConfiguration->acSwitch, false);
+	engine->module<AcController>()->acButtonState = false;
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+
+	//engineConfiguration->acSwitch = Gpio::Unassigned;
+	//setMockState(engineConfiguration->acPressureSwitch, false);
+	engineConfiguration->acPressureSwitch = Gpio::Unassigned;
+	engine->module<AcController>()->acPressureSwitchState = false;
+	// End A/C Pressure Switch testing
 
 	// Turn the fan on!
 	enginePins.fanRelay.setValue(1);

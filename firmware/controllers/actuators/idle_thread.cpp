@@ -30,7 +30,8 @@ IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
 	// Why do we bump based on button not based on actual A/C relay state?
 	// Because AC output has a delay to allow idle bump to happen first, so that the airflow increase gets a head start on the load increase
 	// alternator duty cycle has a similar logic
-	targetRpmAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleRpmBump : 0;
+	targetRpmAcBump = (!hasAcPressure() || engine->module<AcController>().unmock().acPressureSwitchState)
+		&& engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleRpmBump : 0;
 
 	auto target = targetRpmByClt + targetRpmAcBump + luaAddRpm;
 
@@ -130,7 +131,8 @@ percent_t IdleController::getRunningOpenLoop(float rpm, float clt, SensorResult 
 	openLoopBase = running;
 
 	// Now we bump it by the AC/fan amount if necessary
-	openLoopAcBump = engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleExtraOffset : 0;
+	openLoopAcBump = (!hasAcPressure() || engine->module<AcController>().unmock().acPressureSwitchState)
+		&& engine->module<AcController>().unmock().acButtonState ? engineConfiguration->acIdleExtraOffset : 0;
 	openLoopFanBump =
 		  (enginePins.fanRelay.getLogicValue()  ? engineConfiguration->fan1ExtraIdle : 0)
 		+ (enginePins.fanRelay2.getLogicValue() ? engineConfiguration->fan2ExtraIdle : 0);
