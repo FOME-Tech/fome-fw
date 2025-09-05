@@ -35,8 +35,12 @@ fi
 
 if uname | grep "NT"; then
   HEX2DFU=../misc/encedo_hex2dfu/hex2dfu.exe
+elif uname | grep "Darwin"; then
+  HEX2DFU=../misc/encedo_hex2dfu/hex2dfu_darwin.bin
+  TOOLCHAIN=ext/build-tools/arm-gnu-toolchain-11.3.rel1-darwin-x86_64-arm-none-eabi/bin/arm-none-eabi-
 else
   HEX2DFU=../misc/encedo_hex2dfu/hex2dfu.bin
+  TOOLCHAIN=ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-
 fi
 chmod u+x $HEX2DFU
 
@@ -47,7 +51,7 @@ rm -f deliver/*
 rm build/fome.bin build/fome.srec
 
 # Extract the firmware's base address from the elf - it may be different depending on exact CPU
-firmwareBaseAddress="$(objdump -h -j .vectors build/fome.elf | awk '/.vectors/ {print $5 }')"
+firmwareBaseAddress="$($TOOLCHAIN"objdump" -h -j .vectors build/fome.elf | awk '/.vectors/ {print $5 }')"
 checksumAddress="$(printf "%X\n" $((0x$firmwareBaseAddress+0x1c)))"
 
 echo "Base address is 0x$firmwareBaseAddress"
@@ -57,8 +61,8 @@ echo "$SCRIPT_NAME: invoking hex2dfu to place image checksum"
 $HEX2DFU -i build/fome.hex -c $checksumAddress -b build/fome.bin
 rm build/fome.hex
 # re-make hex, srec with the checksum in place
-objcopy -I binary -O ihex --change-addresses=0x$firmwareBaseAddress build/fome.bin build/fome.hex
-objcopy -I binary -O srec --change-addresses=0x$firmwareBaseAddress build/fome.bin build/fome.srec
+$TOOLCHAIN"objcopy" -I binary -O ihex --change-addresses=0x$firmwareBaseAddress build/fome.bin build/fome.hex
+$TOOLCHAIN"objcopy" -I binary -O srec --change-addresses=0x$firmwareBaseAddress build/fome.bin build/fome.srec
 
 if [ "$USE_OPENBLT" = "yes" ]; then
   # this image is suitable for update through bootloader only
