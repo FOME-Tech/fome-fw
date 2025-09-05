@@ -143,8 +143,9 @@ struct engine_state_s {
 	bool brakePedalState : 1 {};
 	// offset 44 bit 3
 	bool startStopState : 1 {};
+	// Split injection active
 	// offset 44 bit 4
-	bool unusedBit_44_4 : 1 {};
+	bool doSplitInjection : 1 {};
 	// offset 44 bit 5
 	bool unusedBit_44_5 : 1 {};
 	// offset 44 bit 6
@@ -203,44 +204,44 @@ struct engine_state_s {
 	uint32_t startStopStateToggleCounter = (uint32_t)0;
 	// Fuel: Injection counter
 	// offset 52
-	uint32_t fuelInjectionCounter = (uint32_t)0;
+	uint16_t fuelInjectionCounter = (uint16_t)0;
 	// Ign: Spark counter
-	// offset 56
-	uint32_t sparkCounter = (uint32_t)0;
+	// offset 54
+	uint16_t sparkCounter = (uint16_t)0;
 	// Fuel: Load
-	// offset 60
+	// offset 56
 	float fuelingLoad = (float)0;
 	// Ign: Load
-	// offset 64
+	// offset 60
 	float ignitionLoad = (float)0;
 	// %
-	// offset 68
+	// offset 64
 	scaled_channel<uint16_t, 100, 1> veTableYAxis = (uint16_t)0;
 	// %
-	// offset 70
+	// offset 66
 	scaled_channel<uint16_t, 100, 1> idleVeTableYAxis = (uint16_t)0;
 	// Air: Flow estimate
 	// kg/h
-	// offset 72
+	// offset 68
 	scaled_channel<uint16_t, 10, 1> airflowEstimate = (uint16_t)0;
 	// MAP cyl
 	// kPa
-	// offset 74
+	// offset 70
 	uint8_t mapPerCylinder[12];
-	// offset 86
-	uint8_t alignmentFill_at_86[2];
+	// offset 82
+	uint8_t alignmentFill_at_82[2];
 };
-static_assert(sizeof(engine_state_s) == 88);
+static_assert(sizeof(engine_state_s) == 84);
 static_assert(offsetof(engine_state_s, baroCorrection) == 36);
 static_assert(offsetof(engine_state_s, hellenBoardId) == 40);
 static_assert(offsetof(engine_state_s, mapAveragingDuration) == 42);
 static_assert(offsetof(engine_state_s, startStopStateToggleCounter) == 48);
 static_assert(offsetof(engine_state_s, fuelInjectionCounter) == 52);
-static_assert(offsetof(engine_state_s, sparkCounter) == 56);
-static_assert(offsetof(engine_state_s, fuelingLoad) == 60);
-static_assert(offsetof(engine_state_s, ignitionLoad) == 64);
-static_assert(offsetof(engine_state_s, veTableYAxis) == 68);
-static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 70);
-static_assert(offsetof(engine_state_s, airflowEstimate) == 72);
-static_assert(offsetof(engine_state_s, mapPerCylinder) == 74);
+static_assert(offsetof(engine_state_s, sparkCounter) == 54);
+static_assert(offsetof(engine_state_s, fuelingLoad) == 56);
+static_assert(offsetof(engine_state_s, ignitionLoad) == 60);
+static_assert(offsetof(engine_state_s, veTableYAxis) == 64);
+static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 66);
+static_assert(offsetof(engine_state_s, airflowEstimate) == 68);
+static_assert(offsetof(engine_state_s, mapPerCylinder) == 70);
 

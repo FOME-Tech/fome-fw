@@ -269,8 +269,6 @@ public:
 
 	void setConfig();
 
-	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
-
 #if EFI_UNIT_TEST
 	bool needTdcCallback = true;
 #endif /* EFI_UNIT_TEST */
@@ -372,7 +370,7 @@ public:
 	 */
 	bool isMainRelayEnabled() const;
 
-	void onSparkFireKnockSense(uint8_t cylinderIndex, efitick_t nowNt);
+	void onSparkFireKnockSense(uint8_t cylinderIndex);
 
 #if EFI_UNIT_TEST
 	AirmassModelBase* mockAirmassModel = nullptr;
@@ -384,16 +382,12 @@ private:
 	void injectEngineReferences();
 };
 
-trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode);
-
 void applyNonPersistentConfiguration();
 void prepareOutputSignals();
 
 // todo: huh we also have validateConfig()?!
 void validateConfiguration();
 void scheduleReboot();
-bool isLockedFromUser();
-void unlockEcu(int password);
 
 // These externs aren't needed for unit tests - everything is injected instead
 #if !EFI_UNIT_TEST

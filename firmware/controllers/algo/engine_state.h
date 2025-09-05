@@ -31,9 +31,6 @@ public:
 
 	WarningCodeState warnings;
 
-	float auxValveStart = 0;
-	float auxValveEnd = 0;
-
 	/**
 	 * MAP averaging angle start, in relation to 'mapAveragingSchedulingAtIndex' trigger index index
 	 */
@@ -69,6 +66,11 @@ public:
 	multispark_state multispark;
 
 	bool shouldUpdateInjectionTiming = true;
+
+	void updateSplitInjection();
+
+	Timer splitInjectionTimer;
+	bool requestSplitInjection = false;
 
 	void updateMapCylinderOffsets();
 	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};

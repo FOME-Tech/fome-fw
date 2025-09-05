@@ -29,8 +29,6 @@
 #define DEFAULT_SIM_RPM 1200
 #define DEFAULT_SNIFFER_THR 2500
 
-extern WaveChart waveChart;
-
 static void assertString(const char*actual, const char *expected) {
 	if (strcmp(actual, expected) != 0) {
 		printf("assertString FAILED\n");
@@ -101,19 +99,23 @@ void rusEfiFunctionalTest(void) {
 	commonInitEngineController();
 
 	initTriggerCentral();
+
 	initTriggerEmulator();
 
 	startStatusThreads();
 
 	startLoggingProcessor();
 
+#if EFI_FILE_LOGGING
 	initSdCardLogger();
+#endif // EFI_FILE_LOGGING
 
 	runChprintfTest();
 
 	initMainLoop();
 
 	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
+
 	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
 
 	startSerialChannels();
@@ -133,9 +135,16 @@ void rusEfiFunctionalTest(void) {
 	main_loop_started = true;
 }
 
+#if EFI_ENGINE_SNIFFER
+extern WaveChart waveChart;
+#endif // EFI_ENGINE_SNIFFER
+
 void printPendingMessages(void) {
 	updateDevConsoleState();
+
+#if EFI_ENGINE_SNIFFER
 	waveChart.publishIfFull();
+#endif // EFI_ENGINE_SNIFFER
 }
 
 int isSerialOverTcpReady;

@@ -370,18 +370,20 @@ enum class ObdCode : uint16_t {
 	//P0332 Knock Sensor 2 Circuit Low Input (Bank 2)
 	//P0333 Knock Sensor 2 Circuit High Input (Bank 2)
 	//P0334 Knock Sensor 2 Circuit Intermittent (Bank 2)
-	OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction = 0x0335,
+	//P0335 Crankshaft Position Sensor A Circuit Malfunction
+	OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors = 0x0336,
 	//P0336 Crankshaft Position Sensor A Circuit Range/Performance
 	//P0337 Crankshaft Position Sensor A Circuit Low Input
 	//P0338 Crankshaft Position Sensor A Circuit High Input
 	//P0339 Crankshaft Position Sensor A Circuit Intermittent
 	//P0340 Camshaft Position Sensor Circuit Malfunction
-	OBD_Camshaft_Position_Sensor_Circuit_Range_Performance = 0x0341,
+	OBD_Camshaft_Position_Sensor_B1I_NoSignal = 0x0340,
+	OBD_Camshaft_Position_Sensor_B1I_SyncErrors = 0x0341,
 	//P0342 Camshaft Position Sensor Circuit Low Input
 	//P0343 Camshaft Position Sensor Circuit High Input
 	//P0344 Camshaft Position Sensor Circuit Intermittent
-	//P0345 Camshaft Position Sensor A Circuit Malfunction (Bank 2)
-	//P0346 Camshaft Position Sensor A Circuit Range/Performance (Bank 2)
+	OBD_Camshaft_Position_Sensor_B2I_NoSignal = 0x0345,
+	OBD_Camshaft_Position_Sensor_B2I_SyncErrors = 0x0346,
 	//P0347 Camshaft Position Sensor A Circuit Low Input (Bank 2)
 	//P0348 Camshaft Position Sensor A Circuit High Input (Bank 2)
 	//P0349 Camshaft Position Sensor A Circuit Intermittent (Bank 2)
@@ -400,8 +402,8 @@ enum class ObdCode : uint16_t {
 	OBD_Ignition_Circuit_12 = 0x0362,
 	//P0363 Misfire Detected - Fueling Disabled
 	//P0364 Reserved
-	//P0365 Camshaft Position Sensor "B" Circuit (Bank 1)
-	//P0366 Camshaft Position Sensor "B" Circuit Range/Performance (Bank 1)
+	OBD_Camshaft_Position_Sensor_B1E_NoSignal = 0x0365,
+	OBD_Camshaft_Position_Sensor_B1E_SyncErrors = 0x0366,
 	//P0367 Camshaft Position Sensor "B" Circuit Low (Bank 1)
 	//P0368 Camshaft Position Sensor "B" Circuit High (Bank 1)
 	//P0369 Camshaft Position Sensor "B" Circuit Intermittent (Bank 1)
@@ -420,8 +422,8 @@ enum class ObdCode : uint16_t {
 	//P0382 Exhaust Gas Recirculation Flow Malfunction
 	//P0383 Glow Plug Control Module Control Circuit Low
 	//P0384 Glow Plug Control Module Control Circuit High
-	//P0385 Crankshaft Position Sensor B Circuit Malfunction
-	//P0386 Crankshaft Position Sensor B Circuit Range/Performance
+	OBD_Camshaft_Position_Sensor_B2E_NoSignal = 0x0385,
+	OBD_Camshaft_Position_Sensor_B2E_SyncErrors = 0x0386,
 	//P0387 Crankshaft Position Sensor B Circuit Low Input
 	//P0388 Crankshaft Position Sensor B Circuit High Input
 	//P0389 Crankshaft Position Sensor B Circuit Intermittent
@@ -2106,7 +2108,7 @@ enum class ObdCode : uint16_t {
 	// not used CUSTOM_6726 = 6726,
 	CUSTOM_VVT_MODE_NOT_SELECTED = 6727,
 	CUSTOM_ERR_6728 = 6728,
-	CUSTOM_ARTIFICIAL_MISFIRE = 6729,
+	CUSTOM_ERR_6729 = 6729,
 
 	CUSTOM_ERR_6899 = 6899,
 	CUSTOM_ERR_6900 = 6900,

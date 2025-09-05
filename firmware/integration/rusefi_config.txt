@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20021
+#define FLASH_DATA_VERSION 20022
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -406,7 +406,6 @@ bit etb_use_two_wires;TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT us
 bit isDoubleSolenoidIdle;Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 bit enableStagedInjection
 bit useTLE8888_cranking_hack;
-bit kickStartCranking;Experimental kick start cranking mode
 bit useSeparateIdleTablesForCrankingTaper;This uses separate ignition timing and VE tables not only for idle conditions, also during the postcranking-to-idle taper transition (See also afterCrankingIACtaperDuration).
 bit launchControlEnabled;
 bit doNotFilterTriggerEdgeNoise,"without filter","with filter";"Detect double trigger edges"
@@ -415,7 +414,6 @@ bit useRunningMathForCranking,"Fuel Map","Fixed";For cranking either use the spe
 bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
-bit artificialTestMisfire,"Danger Mode","No thank you";Experimental setting that will cause a misfire\nDO NOT ENABLE.
 bit fakeFullSyncForStimulation;In internal trigger stimulation mode, control whether we pretend a cam is present to resolve full sync. When set to true, sequential fuel/spark will work as if a cam signal was detected.
 bit cltSensorPulldown
 bit iatSensorPulldown
@@ -485,6 +483,8 @@ angle_t crankingTimingAngle;Ignition advance angle used during engine cranking, 
 int8_t gapTrackingLengthOverride;How many consecutive gap rations have to match expected ranges for sync to happen;"count", 1, 0, 1, @@GAP_TRACKING_LENGTH@@, 0
  uint8_t maxIdleVss;Above this speed, disable closed loop idle control. Set to 0 to disable (allow closed loop idle at any speed).;"kph", 1, 0, 0, 100, 0
  uint16_t minOilPressureAfterStart;Expected oil pressure after starting the engine. If oil pressure does not reach this level within 5 seconds of engine start, fuel will be cut. Set to 0 to disable and always allow starting.;"kPa", 1, 0, 0, 1000, 0
+ switch_input_pin_e oilPressureSwitch
+ pin_input_mode_e oilPressureSwitchMode
 
 angle_t fixedModeTiming;This value is the ignition timing used when in 'fixed timing' mode, i.e. constant timing\nThis mode is useful when adjusting distributor location.;"RPM", 1, 0, 0, 3000, 0
 
@@ -755,6 +755,7 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 	output_pin_e acRelayPin;
 
 	uint8_t autoscale minimumOilPressureTimeout;Delay before cutting fuel due to low oil pressure. Use this to ignore short pressure blips and sensor noise.;"sec", 0.1, 0, 0, 5, 1
+	uint8_t autoscale oilPressureProtectionStartDelay;Delay before the oil pressure protection starts working after the start of the engine.;"sec", 0.1, 0, 0, 5, 1
 
 	spi_device_e drv8860spiDevice;
 
@@ -781,9 +782,6 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 #define CRITICAL_PREFIX "CRITICAL"
 ! same length used for critical and soft error messages
 #define ERROR_BUFFER_SIZE 120
-
-#define VIN_NUMBER_SIZE 17
-	custom vin_number_t @@VIN_NUMBER_SIZE@@ string, ASCII, @OFFSET@, @@VIN_NUMBER_SIZE@@
 
 	custom vehicle_info_t @@VEHICLE_INFO_SIZE@@ string, ASCII, @OFFSET@, @@VEHICLE_INFO_SIZE@@
 	custom gppwm_note_t @@GPPWM_NOTE_SIZE@@ string, ASCII, @OFFSET@, @@GPPWM_NOTE_SIZE@@
@@ -884,10 +882,9 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
 	bit widebandOnSecondBus,"2","1";Select which bus the wideband controller is attached to.
 	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
-	bit unused1192b2
+	bit useOilPressureSwitch,"Switch","Sensor"
 	bit boardUseTachPullUp,"12v","5v"
 	bit boardUseTempPullUp,"With Pull Ups","Piggyback Mode"
-	bit yesUnderstandLocking,"yes","no"
 	bit silentTriggerError;Sometimes we have a performance issue while printing error
 	bit useLinearCltSensor
 	bit canReadEnabled;enable can_read/disable can_read
@@ -911,7 +908,6 @@ bit launchSparkCutEnable;This is the Cut Mode normally used
 	bit boardUseD4PullDown,"With Pull Down","With Pull Up"
 	bit boardUseD5PullDown,"With Pull Down","With Pull Up"
 bit verboseIsoTp
-bit engineSnifferFocusOnInputs
 bit launchActivateInverted
 bit twoStroke,"Two Stroke","Four Stroke"
 bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skipped wheel located?
@@ -999,18 +995,17 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	pid_s idleRpmPid
 	float wwaeBeta;0 = No fuel settling on port walls 1 = All the fuel settling on port walls setting this to 0 disables the wall wetting enrichment. ;"Fraction", 1, 0, 0, 1, 2
 
-	Gpio[AUX_DIGITAL_VALVE_COUNT iterate] auxValves
 	switch_input_pin_e tcuUpshiftButtonPin
 	switch_input_pin_e tcuDownshiftButtonPin
 
-	float throttlePedalUpVoltage;;"voltage", 1, 0, -6, 6, 2
-	float throttlePedalWOTVoltage;Pedal in the floor;"voltage", 1, 0, -6, 6, 2
+	float throttlePedalUpVoltage;;"volts", 1, 0, -6, 6, 2
+	float throttlePedalWOTVoltage;Pedal in the floor;"volts", 1, 0, -6, 6, 2
 	
 	int16_t startUpFuelPumpDuration;When ignition is turned on, turn fuel pump on to build fuel pressure;"seconds", 1, 0, 0, 6000, 0
 
 	uint16_t mafFilterParameter;larger value = larger intake manifold volume;"", 1, 0, 0, 10000, 0
 
-	float targetVBatt;This is the target battery voltage the alternator PID control will attempt to maintain;"Volts", 1, 0, 0, 30, 1
+	float targetVBatt;This is the target battery voltage the alternator PID control will attempt to maintain;"volts", 1, 0, 0, 30, 1
 	uint8_t dfcoRetardDeg;Retard timing by this amount during DFCO. Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"deg", 1, 0, 0, 30, 0
 	uint8_t autoscale dfcoRetardRampInTime;Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"s", 0.1, 0, 0, 1, 1
 
@@ -1212,7 +1207,10 @@ tChargeMode_e tChargeMode;
 	int16_t coastingFuelCutTps;Throttle position below which fuel cut is active. With an electronic throttle enabled, this checks against pedal position.;"%", 1, 0, 0, 20, 0
 	int16_t coastingFuelCutClt;Fuel cutoff is disabled when the engine is cold.;"C", 1, 0, -100, 100, 0
 
-	int16_t unused1892
+	uint8_t triggerSkipPulses;Some trigger hardware may generate noise when the engine starts moving. Set this to ignore the first pulses when the engine starts moving.;"count", 1, 0, 0, 250, 0
+
+	uint8_t unused1769
+
 	int16_t coastingFuelCutMap;MAP value above which fuel injection is re-enabled.;"kPa", 1, 0, 0, 250, 0
 
 	linear_sensor_s highPressureFuel;
@@ -1257,11 +1255,6 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 	uint8_t[8] autoscale primeValues;;"mg", 5, 0, 0, 1250, 0
 
-	uint8_t autoscale triggerCompCenterVolt;Trigger comparator center point voltage;"V", @@VOLTAGE_1_BYTE_PACKING_DIV@@, 0, 0, 5.1, 2
-	uint8_t autoscale triggerCompHystMin;Trigger comparator hysteresis voltage (Min);"V", @@VOLTAGE_1_BYTE_PACKING_DIV@@, 0, 0, 5.1, 2
-	uint8_t autoscale triggerCompHystMax;Trigger comparator hysteresis voltage (Max);"V", @@VOLTAGE_1_BYTE_PACKING_DIV@@, 0, 0, 5.1, 2
-	uint8_t autoscale triggerCompSensorSatRpm;VR-sensor saturation RPM;"RPM", 50, 0, 0, 12000, 0
-
 	gppwm_channel[GPPWM_CHANNELS iterate] gppwm;
 
 	uint16_t mc33_i_boost;Boost Current;"mA", 1, 0, 1000, 25000, 0
@@ -1283,7 +1276,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 	uint8_t autoscale dfcoDelay;Delay before cutting fuel. Set to 0 to cut immediately with no delay. May cause rumbles and pops out of your exhaust...;"sec", 0.1, 0, 0, 10, 1
 	uint8_t autoscale acDelay;Delay before engaging the AC compressor. Set to 0 to engage immediately with no delay. Use this to prevent bogging at idle when AC engages.;"sec", 0.1, 0, 0, 10, 1
-	uint8_t autoscale acStartDelay;Deley before the AC compressor engages after the start of the engine. Set 0 to engage immediately.;"sec", 0.1, 0, 0, 20, 1
+	uint8_t autoscale acStartDelay;Delay before the AC compressor engages after the start of the engine. Set 0 to engage immediately.;"sec", 0.1, 0, 0, 20, 1
 
 	pin_input_mode_e acSwitchMode
 	pin_input_mode_e acPressureSwitchMode
@@ -1306,9 +1299,6 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
         uint8_t hpfpPeakPos;Crank angle ATDC of first lobe peak;"deg", 1, 0, 0, 255, 0
         uint8_t hpfpMinAngle;If the requested activation time is below this angle, don't bother running the pump;"deg", 1, 0, 0, 255, 0
 
-		vin_number_t vinNumber
-
-
 	uint16_t autoscale hpfpPumpVolume;Size of the pump chamber in cc. Typical Bosch HDP5 has a 9.0mm diameter, typical BMW N* stroke is 4.4mm.;"cc", 0.001, 0, 0, 65, 3
 	uint8_t hpfpActivationAngle;How long to keep the valve activated (in order to allow the pump to build pressure and keep the valve open on its own);"deg", 1, 0, 0, 255, 0
 	uint8_t issFilterReciprocal;;"", 1, 0, 0, 255, 0
@@ -1319,9 +1309,9 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 	output_pin_e[4 iterate] stepper_raw_output;
 
-    uint16_t[GEARS_COUNT iterate] autoscale gearRatio;;"ratio", 0.01, 0, 0, 10, 2
+	uint16_t[GEARS_COUNT iterate] autoscale gearRatio;;"ratio", 0.01, 0, 0, 10, 2
 
-uint16_t vvtActivationDelayMs;We need to give engine time to build oil pressure without diverting it to VVT;"ms", 1, 0, 0, 65000, 0
+	uint16_t vvtActivationDelayMs;We need to give engine time to build oil pressure without diverting it to VVT;"ms", 1, 0, 0, 65000, 0
 
 #define gear_controller_e_enum "None", "Button Shift"
 		custom GearControllerMode 1 bits, U08, @OFFSET@, [0:1], @@gear_controller_e_enum@@
@@ -1363,8 +1353,6 @@ output_pin_e acrPin2;
 	uint8_t autoscale etbMinimumPosition;Set a minimum allowed target position to avoid slamming/driving against the hard mechanical stop in the throttle.;"%", 0.1, 0, 0, 10, 1
 	uint8_t autoscale ignTestOffTime;Time between bench test pulses;"ms", 5, 0, 0, 2000, 0
 
-	uint16_t tuneHidingKey;;"", 1, 0, 0, 20000, 0
-
 	#define fuel_pressure_sensor_mode_e_enum "Absolute", "Gauge", "Differential", "INVALID"
 	custom fuel_pressure_sensor_mode_e 1 bits, U08, @OFFSET@, [0:1], @@fuel_pressure_sensor_mode_e_enum@@
 	fuel_pressure_sensor_mode_e fuelPressureSensorMode
@@ -1379,7 +1367,6 @@ int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
 	int8_t ALSMaxCLT;;"C", 1, 0, 0, 105, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
-	uint8_t acRelayAlternatorDutyAdder;Add alternator duty while AC is turned on to compensate for the radiator/blower fans.;"%", 1, 0, 0, 100, 0
 	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
 
 	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
@@ -1464,6 +1451,13 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 		! Oil Temp
 		DtcSeverity p0197;Behavior for P0197: Engine Oil Temperature Sensor Circuit Low. Triggered when oil temp sensor voltage is less than 0.05 volts.
 		DtcSeverity p0198;Behavior for P0198: Engine Oil Temperature Sensor Circuit High. Triggered when oil temp sensor voltage is greater than 4.9 volts.
+
+		! Crank sensor
+		DtcSeverity p0336;Behavior for P0336: Crank sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
+
+		! Cam sensors
+		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the primary trigger signal is present, but cam signal is not.
+		DtcSeverity camSyncErrors;Behavior for P0341/P0346/P0366/P0386: Cam sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
 
 		! Oil pressure
 		DtcSeverity p0522;Behavior for P0522: Engine Oil Pressure Sensor Circuit Low. Triggered when oil pressure sensor voltage is less than allowed limits.
@@ -1729,7 +1723,7 @@ uint16_t[HPFP_COMPENSATION_SIZE] autoscale hpfpCompensationLoadBins;;"cc/lobe", 
 uint8_t[HPFP_COMPENSATION_SIZE] autoscale hpfpCompensationRpmBins;;"RPM", 50, 0, 0, 12500, 0
 
 uint16_t[ENGINE_NOISE_CURVE_SIZE] knockNoiseRpmBins;;"RPM", 1, 0, 0, 30000, 0
-int8_t[ENGINE_NOISE_CURVE_SIZE] autoscale knockBaseNoise;Knock sensor output knock detection threshold depending on current RPM.;"dB", 0.5, 0, -50, 10, 1
+int8_t[ENGINE_NOISE_CURVE_SIZE] autoscale knockBaseNoise;Knock sensor output knock detection threshold depending on current RPM.;"dBv", 0.5, 0, -60, 10, 1
 
 uint8_t[TPS_TPS_ACCEL_CLT_CORR_TABLE] autoscale tpsTspCorrValuesBins;;"RPM", 50, 0, 0, 17500, 0
 uint8_t[TPS_TPS_ACCEL_CLT_CORR_TABLE] autoscale tpsTspCorrValues;Multiplier applied to the output of the TPS/TPS Acceleration Extra Fuel table. In general, engines may need more acceleration enrichment at lower engine speeds than higher engine speeds. A value of 2.0 multiplies the additional acceleration enrichment pulsewidth by 200%, a value of 1.0 does not modify the output.;"multiplier", 0.02, 0, 0, 5, 2
@@ -1774,6 +1768,25 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	int8_t[8] airmassToTimingBins;;"mg", 1, 0, -100, 100, 0
 	int8_t[8] airmassToTimingValues;;"deg", 1, 0, -30, 30, 0
+
+	struct VvtOpenLoop
+		int8_t[8] bins;;"deg C", 1, 0, -40, 120, 0
+		uint8_t[8] autoscale values;;"%", 0.5, 0, 0, 100, 0
+	end_struct
+
+	VvtOpenLoop[2 iterate] vvtOpenLoop
+
+	uint8_t[6] autoscale knockGainLoadBins;;"%", 10, 0, 0, 1000, 0
+	uint8_t[6] autoscale knockGainRpmBins;;"RPM", 100, 0, 0, 25000, 0
+
+	struct KnockGain
+		int8_t[6 x 6] table;;"dB", 1, 0, -80, 80, 0
+	end_struct
+
+	KnockGain[MAX_CYLINDER_COUNT iterate] knockGains
+
+	uint8_t[4 iterate] lambdaSensorSourceIndex;Physical CAN bus sensor index to use for logical lambda sensor channel;"", 1, 0, 0, 15, 0
+	uint8_t[4 iterate] lambdaSensorSourceBus;CAN bus to use for lambda sensor channel;"", 1, 1, 1, 2, 0
 end_struct
 
 ! Pedal Position Sensor
@@ -1822,7 +1835,6 @@ end_struct
 #define CMD_RESET_ENGINE_SNIFFER "reset_engine_chart"
 #define CMD_FUNCTIONAL_TEST_MODE "test_mode"
 
-#define CMD_ECU_UNLOCK "unlock"
 #define CMD_ENGINE_TYPE "engine_type"
 #define CMD_INJECTION "injection"
 #define CMD_IGNITION "ignition"
@@ -1966,7 +1978,6 @@ end_struct
 #define ts_show_vbatt true
 #define ts_show_clt_iat_pullup true
 #define ts_show_tunerstudio_port true
-#define ts_show_trigger_comparator false
 #define ts_show_auxserial_pins true
 #define ts_show_can2 true
 #define ts_show_software_knock false

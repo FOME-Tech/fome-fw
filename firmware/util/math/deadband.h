@@ -30,5 +30,5 @@ public:
 	}
 
 private:
-	bool m_lastState =false;
+	bool m_lastState = false;
 };

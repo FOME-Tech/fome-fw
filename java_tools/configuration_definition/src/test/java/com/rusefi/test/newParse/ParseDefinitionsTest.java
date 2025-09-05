@@ -6,14 +6,12 @@ import com.rusefi.newparse.parsing.Definition;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 import static com.rusefi.test.newParse.NewParseHelper.parse;
 
 
 public class ParseDefinitionsTest {
     @Test
-    public void basicIntegerDefinition() throws IOException {
+    public void basicIntegerDefinition() {
         ParseState state = parse("#define foo 123");
 
         Assert.assertNull(state.findDefinition("notFoo"));
@@ -28,7 +26,7 @@ public class ParseDefinitionsTest {
     }
 
     @Test
-    public void basicDoubleDefinition() throws IOException {
+    public void basicDoubleDefinition() {
         ParseState state = parse("#define foo 123.5");
 
         Definition def = state.findDefinition("foo");
@@ -38,7 +36,7 @@ public class ParseDefinitionsTest {
     }
 
     @Test
-    public void basicStringDefinition() throws IOException {
+    public void basicStringDefinition() {
         ParseState state = parse("#define foo \"fooValue\"");
 
         Definition def = state.findDefinition("foo");
@@ -49,7 +47,7 @@ public class ParseDefinitionsTest {
     }
 
     @Test
-    public void definitionWithNumexprValue() throws IOException {
+    public void definitionWithNumexprValue() {
         ParseState state = parse("#define foo 5 + 8 * 2 + 3");
 
         Definition def = state.findDefinition("foo");
@@ -59,7 +57,7 @@ public class ParseDefinitionsTest {
     }
 
     @Test
-    public void definitionWithAnotherDefinition() throws IOException {
+    public void definitionWithAnotherDefinition() {
         ParseState state = parse(
             "#define val1 20\n" +
             "#define val2 val1 + 1\n" +
@@ -80,7 +78,7 @@ public class ParseDefinitionsTest {
 
 
     @Test(expected = RuntimeException.class)
-    public void definitionEvalMissingDefinition() throws IOException {
+    public void definitionEvalMissingDefinition() {
         parse(
             "#define val1 20\n" +
             "#define val2 val1 + 1\n" +
@@ -89,7 +87,7 @@ public class ParseDefinitionsTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void definitionEvalNonNumeric() throws IOException {
+    public void definitionEvalNonNumeric() {
         parse(
                 "#define val1 \"foo\"\n" +
                         "#define val2 val1 + 1"

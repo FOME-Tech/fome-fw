@@ -56,57 +56,7 @@ void Engine::resetEngineSnifferIfInTestMode() {
 #endif /* EFI_ENGINE_SNIFFER */
 }
 
-/**
- * VVT decoding delegates to universal trigger decoder. Here we map vvt_mode_e into corresponding trigger_type_e
- */
-trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
-	switch (vvtMode) {
-	case VVT_INACTIVE:
-		return trigger_type_e::TT_ONE;
-	case VVT_TOYOTA_3_TOOTH:
-		return trigger_type_e::TT_VVT_TOYOTA_3_TOOTH;
-	case VVT_MIATA_NB:
-		return trigger_type_e::TT_VVT_MIATA_NB;
-	case VVT_MIATA_NA:
-		return trigger_type_e::TT_VVT_MIATA_NA;
-	case VVT_BOSCH_QUICK_START:
-		return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
-	case VVT_HONDA_K_EXHAUST:
-		return trigger_type_e::TT_HONDA_K_CAM_4_1;
-	case VVT_HONDA_K_INTAKE:
-	case VVT_SINGLE_TOOTH:
-	case VVT_MAP_V_TWIN:
-		return trigger_type_e::TT_ONE;
-	case VVT_FORD_ST170:
-		return trigger_type_e::TT_FORD_ST170;
-	case VVT_BARRA_3_PLUS_1:
-		return trigger_type_e::TT_VVT_BARRA_3_PLUS_1;
-	case VVT_MAZDA_SKYACTIV:
-		return trigger_type_e::TT_VVT_MAZDA_SKYACTIV;
-	case VVT_MAZDA_L:
-		return trigger_type_e::TT_VVT_MAZDA_L;
-	case VVT_NISSAN_VQ:
-		return trigger_type_e::TT_VVT_NISSAN_VQ35;
-	case VVT_TOYOTA_4_1:
-		return trigger_type_e::TT_VVT_TOYOTA_4_1;
-	case VVT_MITSUBISHI_3A92:
-		return trigger_type_e::TT_VVT_MITSUBISHI_3A92;
-	case VVT_MITSUBISHI_6G75:
-	case VVT_NISSAN_MR:
-		return trigger_type_e::TT_NISSAN_MR18_CAM_VVT;
-	case VVT_MITSUBISHI_4G9x:
-		return trigger_type_e::TT_MITSU_4G9x_CAM;
-	case VVT_MITSUBISHI_4G63:
-		return trigger_type_e::TT_MITSU_4G63_CAM;
-	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getVvtTriggerType for %s", getVvt_mode_e(vvtMode));
-		return trigger_type_e::TT_ONE; // we have to return something for the sake of -Werror=return-type
-	}
-}
-
 void Engine::updateTriggerWaveform() {
-
-
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	// we have a confusing threading model so some synchronization would not hurt
 	chibios_rt::CriticalSectionLocker csl;
@@ -156,6 +106,8 @@ void Engine::periodicSlowCallback() {
 	void baroLps25Update();
 	baroLps25Update();
 #endif // EFI_PROD_CODE
+
+	engineState.updateSplitInjection();
 }
 
 /**

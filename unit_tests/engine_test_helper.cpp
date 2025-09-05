@@ -185,13 +185,13 @@ void EngineTestHelper::smartFireFall(float delayMs) {
  */
 void EngineTestHelper::firePrimaryTriggerRise() {
 	efitick_t nowNt = getTimeNowNt();
-	LogTriggerTooth(TriggerEvent::PrimaryRising, nowNt);
+	LogPrimaryTriggerTooth(nowNt, true);
 	handleShaftSignal(0, true, nowNt);
 }
 
 void EngineTestHelper::firePrimaryTriggerFall() {
 	efitick_t nowNt = getTimeNowNt();
-	LogTriggerTooth(TriggerEvent::PrimaryFalling, nowNt);
+	LogPrimaryTriggerTooth(nowNt, true);
 	handleShaftSignal(0, false, nowNt);
 }
 
@@ -307,7 +307,7 @@ const AngleBasedEvent * EngineTestHelper::assertTriggerEvent(const char *msg,
 		EXPECT_NEAR_M4((void*)event->action.getCallback() == (void*) callback, 1) << msg << " callback up/down";
 	}
 
-	EXPECT_NEAR_M4(enginePhase, event->enginePhase) << msg << " angle";
+	EXPECT_NEAR_M4(enginePhase, event->eventPhase.angle) << msg << " angle";
 	return event;
 }
 

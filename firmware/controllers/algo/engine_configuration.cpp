@@ -51,7 +51,6 @@
 
 #include "GY6_139QMB.h"
 
-#include "nissan_primera.h"
 #include "nissan_vq.h"
 
 #include "mazda_miata.h"
@@ -394,6 +393,10 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
 	engineConfiguration->ecumasterEgtToCanBaseId = 0x660;
 
+	for (size_t i = 0; i < efi::size(config->lambdaSensorSourceIndex); i++) {
+		config->lambdaSensorSourceIndex[i] = i;
+	}
+
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
 
@@ -444,6 +447,11 @@ static void setDefaultEngineConfiguration() {
 	setRpmTableBin(config->vvtTable1RpmBins);
 	setLinearCurve(config->vvtTable2LoadBins, 20, 120, 10);
 	setRpmTableBin(config->vvtTable2RpmBins);
+
+	for (size_t i = 0; i < efi::size(config->vvtOpenLoop); i++) {
+		setLinearCurve(config->vvtOpenLoop[i].bins, -20, 120, 1);
+	}
+
 	setLinearCurve(config->scriptTable1LoadBins, 20, 120, 10);
 	setRpmTableBin(config->scriptTable1RpmBins);
 	setLinearCurve(config->scriptTable2LoadBins, 20, 120, 10);
@@ -804,9 +812,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 	case engine_type_e::FORD_ASPIRE_1996:
 		setFordAspireEngineConfiguration();
-		break;
-	case engine_type_e::NISSAN_PRIMERA:
-		setNissanPrimeraEngineConfiguration();
 		break;
 	case engine_type_e::FRANKENSO_MIATA_NA6_MAP:
 		setMiataNA6_MAP_Frankenso();

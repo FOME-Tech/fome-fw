@@ -29,3 +29,5 @@ bool getAcToggle();
 bool hasAcPressure();
 bool getAcPressure();
 
+bool hasOilPressureSwitch();
+bool getOilSwitchState();

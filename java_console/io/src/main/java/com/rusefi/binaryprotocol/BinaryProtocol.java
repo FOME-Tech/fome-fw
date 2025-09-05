@@ -4,11 +4,9 @@ import com.devexperts.logging.Logging;
 import com.opensr5.ConfigurationImage;
 import com.opensr5.io.DataListener;
 import com.rusefi.NamedThreadFactory;
-import com.rusefi.core.SignatureHelper;
 import com.rusefi.Timeouts;
 import com.rusefi.binaryprotocol.test.Bug3923;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.Pair;
 import com.rusefi.core.SensorCentral;
 import com.rusefi.io.*;
 import com.rusefi.io.commands.ByteRange;
@@ -56,33 +54,6 @@ public class BinaryProtocol {
 
     // todo: this ioLock needs better documentation!
     private final Object ioLock = new Object();
-
-    public static String findCommand(byte command) {
-        switch (command) {
-            case Fields.TS_COMMAND_F:
-                return "PROTOCOL";
-            case Fields.TS_CRC_CHECK_COMMAND:
-                return "CRC_CHECK";
-            case Fields.TS_BURN_COMMAND:
-                return "BURN";
-            case Fields.TS_HELLO_COMMAND:
-                return "HELLO";
-            case Fields.TS_READ_COMMAND:
-                return "READ";
-            case Fields.TS_GET_TEXT:
-                return "TS_GET_TEXT";
-            case Fields.TS_GET_FIRMWARE_VERSION:
-                return "GET_FW_VERSION";
-            case Fields.TS_CHUNK_WRITE_COMMAND:
-                return "WRITE_CHUNK";
-            case Fields.TS_OUTPUT_COMMAND:
-                return "TS_OUTPUT_COMMAND";
-            case Fields.TS_RESPONSE_OK:
-                return "TS_RESPONSE_OK";
-            default:
-                return "command " + (char) command + "/" + command;
-        }
-    }
 
     public boolean isClosed;
 
@@ -151,7 +122,6 @@ public class BinaryProtocol {
         try {
             signature = getSignature(stream);
             log.info("Got " + signature + " signature");
-            SignatureHelper.downloadIfNotAvailable(SignatureHelper.getUrl(signature));
         } catch (IOException e) {
             return "Failed to read signature " + e;
         }
@@ -193,37 +163,34 @@ public class BinaryProtocol {
         if (!linkManager.COMMUNICATION_QUEUE.isEmpty()) {
             log.info("Current queue size: " + linkManager.COMMUNICATION_QUEUE.size());
         }
-        Runnable textPull = new Runnable() {
-            @Override
-            public void run() {
-                while (!isClosed) {
+        Runnable textPull = () -> {
+            while (!isClosed) {
 //                    FileLog.rlog("queue: " + LinkManager.COMMUNICATION_QUEUE.toString());
-                    if (linkManager.COMMUNICATION_QUEUE.isEmpty()) {
-                        linkManager.submit(new Runnable() {
-                            @Override
-                            public void run() {
-                                isGoodOutputChannels = requestOutputChannels();
-                                // todo: programmatically detect run under gradle?
-                                boolean verbose = false;
-                                if (verbose)
-                                    System.out.println("requestOutputChannels " + isGoodOutputChannels);
-                                if (isGoodOutputChannels)
-                                    HeartBeatListeners.onDataArrived();
-                                if (linkManager.isNeedPullText()) {
-                                    String text = requestPendingTextMessages();
-                                    if (text != null) {
-                                        textListener.onDataArrived((text + "\r\n").getBytes());
-                                        if (verbose)
-                                            System.out.println("textListener");
-                                    }
+                if (linkManager.COMMUNICATION_QUEUE.isEmpty()) {
+                    linkManager.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            isGoodOutputChannels = requestOutputChannels();
+                            // todo: programmatically detect run under gradle?
+                            boolean verbose = false;
+                            if (verbose)
+                                System.out.println("requestOutputChannels " + isGoodOutputChannels);
+                            if (isGoodOutputChannels)
+                                HeartBeatListeners.onDataArrived();
+                            if (linkManager.isNeedPullText()) {
+                                String text = requestPendingTextMessages();
+                                if (text != null) {
+                                    textListener.onDataArrived((text + "\r\n").getBytes());
+                                    if (verbose)
+                                        System.out.println("textListener");
                                 }
                             }
-                        });
-                    }
-                    sleep(Timeouts.TEXT_PULL_PERIOD);
+                        }
+                    });
                 }
-                log.info("Port shutdown: Stopping text pull");
+                sleep(Timeouts.TEXT_PULL_PERIOD);
             }
+            log.info("Port shutdown: Stopping text pull");
         };
         Thread tr = THREAD_FACTORY.newThread(textPull);
         tr.start();
@@ -421,10 +388,8 @@ public class BinaryProtocol {
 
     /**
      * This method blocks until a confirmation is received or {@link Timeouts#BINARY_IO_TIMEOUT} is reached
-     *
-     * @return true in case of timeout, false if got proper confirmation
      */
-    private boolean sendTextCommand(String text) {
+    private void sendTextCommand(String text) {
         byte[] command = getTextCommandBytesOnlyText(text);
 
         long start = System.currentTimeMillis();
@@ -433,9 +398,8 @@ public class BinaryProtocol {
             if (!checkResponseCode(response, (byte) Fields.TS_RESPONSE_OK) || response.length != 1) {
                 continue;
             }
-            return false;
+            return;
         }
-        return true;
     }
 
     public static byte[] getTextCommandBytes(String text) {
@@ -502,13 +466,7 @@ public class BinaryProtocol {
             remaining -= chunkSize;
         }
 
-        state.setCurrentOutputs(reassemblyBuffer);
-
         SensorCentral.getInstance().grabSensorValues(reassemblyBuffer);
         return true;
-    }
-
-    public BinaryProtocolState getBinaryProtocolState() {
-        return state;
     }
 }

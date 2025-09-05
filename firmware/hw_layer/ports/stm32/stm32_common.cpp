@@ -477,7 +477,7 @@ static int getSpiAf(SPIDriver *driver) {
 	return -1;
 }
 
-brain_pin_e getMisoPin(spi_device_e device) {
+__attribute__((weak)) brain_pin_e getMisoPin(spi_device_e device) {
 	switch(device) {
 	case SPI_DEVICE_1:
 		return engineConfiguration->spi1misoPin;
@@ -497,7 +497,7 @@ brain_pin_e getMisoPin(spi_device_e device) {
 	return Gpio::Unassigned;
 }
 
-brain_pin_e getMosiPin(spi_device_e device) {
+__attribute__((weak)) brain_pin_e getMosiPin(spi_device_e device) {
 	switch(device) {
 	case SPI_DEVICE_1:
 		return engineConfiguration->spi1mosiPin;
@@ -517,7 +517,7 @@ brain_pin_e getMosiPin(spi_device_e device) {
 	return Gpio::Unassigned;
 }
 
-brain_pin_e getSckPin(spi_device_e device) {
+__attribute__((weak)) brain_pin_e getSckPin(spi_device_e device) {
 	switch(device) {
 	case SPI_DEVICE_1:
 		return engineConfiguration->spi1sckPin;

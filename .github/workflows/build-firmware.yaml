@@ -52,45 +52,8 @@ jobs:
           ./deliver/libopenblt.so
           ./deliver/libopenblt_jni.so
 
-  build-libopenblt-macos:
-    runs-on: macos-13
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-
-    - name: cmake configure libopenblt
-      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: make libopenblt
-      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: make -j8
-
-    - name: cmake configure libopenblt_jni
-      working-directory: ./misc/libopenblt_jni/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: make libopenblt_jni
-      working-directory: ./misc/libopenblt_jni/build
-      run: make -j8
-
-    - name: coalesce
-      run: |
-        mkdir deliver
-        cp ./firmware/ext/openblt/Host/libopenblt.dylib deliver/
-        cp ./misc/libopenblt_jni/build/libopenblt_jni.dylib deliver/
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: libopenblt-macos
-        path: |
-          ./deliver/libopenblt.dylib
-          ./deliver/libopenblt_jni.dylib
-
   build-firmware:
-    needs: [build-libopenblt-linux, build-libopenblt-macos]
+    needs: [build-libopenblt-linux]
     runs-on: ubuntu-latest-selfhost
 
     strategy:
@@ -266,10 +229,6 @@ jobs:
     #     sudo apt-get install zip
     #     sudo apt-get install dosfstools
 
-    - name: Generate Live Documentation
-      working-directory: ./firmware/
-      run: ./gen_live_documentation.sh
-
     # Build the firmware!
     - name: Build Firmware
       run: bash misc/jenkins/compile_other_versions/compile.sh ${{matrix.folder}} ${{matrix.build-target}}
@@ -288,18 +247,12 @@ jobs:
       if: ${{ env.full == 'true' }}
       working-directory: ./simulator/
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
-      run: OS="Windows_NT" SHORT_BOARD_NAME=${{matrix.build-target}} ./compile.sh
+      run: OS="Windows_NT" make -j8 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=../firmware/${{matrix.folder}} 
 
     - name: Download LibOpenBLT Tool (Linux)
       uses: actions/download-artifact@v4
       with:
         name: libopenblt-linux
-        path: ./firmware/ext/openblt/Host/
-
-    - name: Download LibOpenBLT Tool (MacOS)
-      uses: actions/download-artifact@v4
-      with:
-        name: libopenblt-macos
         path: ./firmware/ext/openblt/Host/
 
     - name: Package Bundle

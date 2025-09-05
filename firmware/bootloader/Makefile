@@ -173,6 +173,23 @@ ifeq ($(SD_BOOTLOADER),yes)
   ALLCSRC += $(PROJECT_DIR)/ext/openblt/Target/Source/file.c
 endif
 
+ifeq ($(USE_WIFI),yes)
+  include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
+  include $(PROJECT_DIR)/net/net.mk
+
+  DDEFS += -DEFI_WIFI=1 # -DETH_MODE=1
+
+  ALLCPPSRC += $(PROJECT_DIR)/bootloader/openblt_chibios/openblt_net.cpp
+endif
+
+$(info PROJECT_BOARD: $(PROJECT_BOARD))
+$(info BOARD_DIR:     $(BOARD_DIR))
+$(info PROJECT_CPU:   $(PROJECT_CPU))
+$(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
+$(info CPU_HWLAYER:   $(CPU_HWLAYER))
+$(info CONFDIR:       $(CONFDIR))
+$(info LDSCRIPT:      $(LDSCRIPT))
+
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CSRC =  $(ALLCSRC) \
@@ -196,6 +213,7 @@ CPPSRC = $(ALLCPPSRC) \
 	$(BOARDCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
+	$(PROJECT_DIR)/hw_layer/spi_devices.cpp \
 	$(RUSEFI_LIB_CPP) \
 	$(PROJECT_DIR)/util/crc_accelerator.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \

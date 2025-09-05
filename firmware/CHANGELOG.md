@@ -40,13 +40,21 @@ or
  - MAF filtering for better transient response
  - Minimum injector pulse width setting
  - Allow selection of DTC severity #625
- - AC pressure switch & startup delay #623
+ - AC pressure switch & startup delay (#623, #660, #661, #662)
  - Y axis override for VVT target
+ - Feature to skip initial trigger pulses for noisy triggers #634
+ - VVT open loop "hold" table #638
+ - Fire DTCs for detectable cam/crank errors
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
  - Speed up bootloader launch by 250ms
  - Move ETB sensor redundancy from Experimental/Broken/Parking Lot to sensor dialogs #165
+ - K20/K24 intake VVT angle reads correctly
+ - Easier to decipher check engine light blink codes #653
+
+### Removed
+ - Removed A/C-based alternator open-loop duty adder (#660)
 
 ## February 2025 Release
 

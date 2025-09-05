@@ -55,17 +55,17 @@ TEST(TriggerDecoder, FindsFirstSyncPoint) {
 	t += MS2NT(1);
 	doTooth(dut, shape, cfg, t);
 	EXPECT_FALSE(dut.getShaftSynchronized());
-	EXPECT_EQ(2, dut.currentCycle.current_index);
+	EXPECT_EQ(0, dut.currentCycle.current_index);
 
 	t += MS2NT(1);
 	doTooth(dut, shape, cfg, t);
 	EXPECT_FALSE(dut.getShaftSynchronized());
-	EXPECT_EQ(4, dut.currentCycle.current_index);
+	EXPECT_EQ(0, dut.currentCycle.current_index);
 
 	t += MS2NT(1);
 	doTooth(dut, shape, cfg, t);
 	EXPECT_FALSE(dut.getShaftSynchronized());
-	EXPECT_EQ(6, dut.currentCycle.current_index);
+	EXPECT_EQ(0, dut.currentCycle.current_index);
 
 	// Missing tooth, 2x normal length!
 	t += MS2NT(2);
@@ -268,12 +268,12 @@ TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
 		// normal tooth
 		t += MS2NT(1);
 		doTooth(dut, shape, cfg, t);
-		EXPECT_EQ(2, dut.currentCycle.current_index);
+		EXPECT_EQ(i == 0 ? 0 : 2, dut.currentCycle.current_index);
 
 		// normal tooth
 		t += MS2NT(1);
 		doTooth(dut, shape, cfg, t);
-		EXPECT_EQ(4, dut.currentCycle.current_index);
+		EXPECT_EQ(i == 0 ? 0 : 4, dut.currentCycle.current_index);
 
 		// Missing tooth, 2x normal length!
 		t += MS2NT(2);

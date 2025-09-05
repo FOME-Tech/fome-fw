@@ -26,7 +26,7 @@ bool TriggerScheduler::assertNotInList(AngleBasedEvent *head, AngleBasedEvent *e
 	return false;
 }
 
-void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s action) {
+void TriggerScheduler::schedule(AngleBasedEvent* event, EngPhase angle, action_s action) {
 	event->setAngle(angle);
 
 	schedule(event, action);
@@ -39,18 +39,17 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, angle_t angle, action_s 
  *         false if event was put into queue for scheduling at a later tooth
  */
 bool TriggerScheduler::scheduleOrQueue(AngleBasedEvent *event,
-		efitick_t edgeTimestamp,
-		angle_t angle,
+		EngPhase angle,
 		action_s action,
-		float currentPhase, float nextPhase) {
+		const EnginePhaseInfo& phase) {
 	event->setAngle(angle);
 
-	if (event->shouldSchedule(currentPhase, nextPhase)) {
+	if (event->shouldSchedule(phase)) {
 		// if we're due now, just schedule the event
 		scheduleByAngle(
 			&event->scheduling,
-			edgeTimestamp,
-			event->getAngleFromNow(currentPhase),
+			phase.timestamp,
+			event->getAngleFromNow(phase),
 			action
 		);
 
@@ -80,10 +79,9 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 	}
 }
 
-void TriggerScheduler::onEnginePhase(float rpm,
-							   efitick_t edgeTimestamp, float currentPhase, float nextPhase) {
+void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 
-	if (!isValidRpm(rpm) || !EFI_SHAFT_POSITION_INPUT) {
+	if (rpm == 0 || !EFI_SHAFT_POSITION_INPUT) {
 		 // this might happen for instance in case of a single trigger event after a pause
 		return;
 	}
@@ -100,7 +98,7 @@ void TriggerScheduler::onEnginePhase(float rpm,
 
 	LL_FOREACH_SAFE2(keephead, current, tmp, nextToothEvent)
 	{
-		if (current->shouldSchedule(currentPhase, nextPhase)) {
+		if (current->shouldSchedule(phase)) {
 			// time to fire a spark which was scheduled previously
 
 			// Yes this looks like O(n^2), but that's only over the entire engine
@@ -120,8 +118,8 @@ void TriggerScheduler::onEnginePhase(float rpm,
 
 			scheduleByAngle(
 				sDown,
-				edgeTimestamp,
-				current->getAngleFromNow(currentPhase),
+				phase.timestamp,
+				current->getAngleFromNow(phase),
 				current->action
 			);
 		} else {
@@ -138,16 +136,16 @@ void TriggerScheduler::onEnginePhase(float rpm,
 	}
 }
 
-void AngleBasedEvent::setAngle(angle_t angle) {
-	this->enginePhase = angle;
+void AngleBasedEvent::setAngle(EngPhase angle) {
+	eventPhase = getTriggerCentral()->toTrgPhase(angle);
 }
 
-bool AngleBasedEvent::shouldSchedule(float currentPhase, float nextPhase) const {
-	return isPhaseInRange(this->enginePhase, currentPhase, nextPhase);
+bool AngleBasedEvent::shouldSchedule(const EnginePhaseInfo& phase) const {
+	return isPhaseInRange(eventPhase, phase);
 }
 
-float AngleBasedEvent::getAngleFromNow(float currentPhase) const {
-	float angleOffset = this->enginePhase - currentPhase;
+float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {
+	float angleOffset = eventPhase - phase.currentTrgPhase;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
 	}

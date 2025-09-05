@@ -5,7 +5,6 @@ import com.fazecast.jSerialComm.SerialPort;
 import com.rusefi.Callable;
 import com.rusefi.NamedThreadFactory;
 import com.rusefi.binaryprotocol.BinaryProtocol;
-import com.rusefi.binaryprotocol.BinaryProtocolState;
 import com.rusefi.core.EngineState;
 import com.rusefi.io.serial.BufferedSerialIoStream;
 import com.rusefi.io.serial.StreamConnector;
@@ -35,12 +34,7 @@ public class LinkManager implements Closeable {
     @NotNull
     public static final LogLevel LOG_LEVEL = LogLevel.INFO;
 
-    public static final LinkDecoder ENCODER = new LinkDecoder() {
-        @Override
-        public String unpack(String packedLine) {
-            return packedLine;
-        }
-    };
+    public static final LinkDecoder ENCODER = new LinkDecoder() {};
 
     private final CommandQueue commandQueue;
 
@@ -76,9 +70,11 @@ public class LinkManager implements Closeable {
 
     @NotNull
     public static IoStream open(String port) throws IOException {
-        if (TcpConnector.isTcpPort(port))
+        if (TcpConnector.isTcpPort(port)) {
             return TcpIoStream.open(port);
-        return BufferedSerialIoStream.openPort(port);
+        } else {
+            return BufferedSerialIoStream.openPort(port);
+        }
     }
 
     @NotNull
@@ -134,10 +130,6 @@ public class LinkManager implements Closeable {
     public BinaryProtocol getCurrentStreamState() {
         Objects.requireNonNull(connector, "connector");
         return connector.getBinaryProtocol();
-    }
-
-    public BinaryProtocolState getBinaryProtocolState() {
-        return connector.getBinaryProtocolState();
     }
 
     public CommandQueue getCommandQueue() {

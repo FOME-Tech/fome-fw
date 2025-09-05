@@ -105,12 +105,6 @@ static void printErrorCounters() {
 
 #endif // EFI_TUNER_STUDIO
 
-void tunerStudioDebug(TsChannelBase* tsChannel, const char *msg) {
-#if EFI_TUNER_STUDIO_VERBOSE
-	efiPrintf("%s: %s", tsChannel->getName(), msg);
-#endif /* EFI_TUNER_STUDIO_VERBOSE */
-}
-
 uint8_t* getWorkingPageAddr() {
 	return (uint8_t*)engineConfiguration;
 }
@@ -140,10 +134,6 @@ extern bool rebootForPresetPending;
 void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count,
 		void *content) {
 	tsState.writeChunkCommandCounter++;
-	if (isLockedFromUser()) {
-		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
-		return;
-	}
 
 	efiPrintf("TS -> Write chunk offset %d count %d", offset, count);
 
@@ -187,10 +177,6 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
  */
 void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, uint16_t offset, uint8_t value) {
 	tsState.writeValueCommandCounter++;
-	if (isLockedFromUser()) {
-		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
-		return;
-	}
 
 	efiPrintf("TS -> Write value offset %d value %d", offset, value);
 
@@ -220,14 +206,7 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 		return;
 	}
 
-	uint8_t* addr;
-	if (isLockedFromUser()) {
-		// to have rusEFI console happy just send all zeros within a valid packet
-		addr = (uint8_t*)&tsChannel->scratchBuffer;
-		memset(addr, 0, count);
-	} else {
-		addr = getWorkingPageAddr() + offset;
-	}
+	uint8_t* addr = getWorkingPageAddr() + offset;
 	tsChannel->writeCrcPacketLocked(addr, count);
 }
 
@@ -326,8 +305,6 @@ bool TunerStudio::handlePlainCommand(TsChannelBase* tsChannel, uint8_t command) 
 		 * If you are able to just make your firmware ignore the command that would work.
 		 * Currently on some firmware versions the F command is not used and is just ignored by the firmware as a unknown command."
 		 */
-
-		tunerStudioDebug(tsChannel, "not ignoring F");
 		tsChannel->write((const uint8_t *)TS_PROTOCOL, strlen(TS_PROTOCOL));
 		tsChannel->flush();
 		return true;
@@ -491,7 +468,7 @@ void TunerstudioThread::ThreadTask() {
 tunerstudio_counters_s tsState;
 
 void tunerStudioError(TsChannelBase* tsChannel, const char *msg) {
-	tunerStudioDebug(tsChannel, msg);
+	efiPrintf("%s: %s", tsChannel->getName(), msg);
 	printErrorCounters();
 	tsState.errorCounter++;
 }

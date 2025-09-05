@@ -46,10 +46,6 @@ uint32_t RpmCalculator::getRevolutionCounterSinceStart(void) const {
 	return revolutionCounterSinceStart;
 }
 
-/**
- * @return -1 in case of isNoisySignal(), current RPM otherwise
- * See NOISY_RPM
- */
 float RpmCalculator::getCachedRpm() const {
 	return cachedRpmValue;
 }
@@ -155,6 +151,10 @@ void RpmCalculator::assignRpmValue(float floatRpmValue) {
 }
 
 void RpmCalculator::setRpmValue(float value) {
+	if (value > MAX_ALLOWED_RPM) {
+		value = 0;
+	}
+
 	assignRpmValue(value);
 
 	// Change state
@@ -235,18 +235,12 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
  * updated here.
  * This callback is invoked on interrupt thread.
  */
-void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
-		uint32_t trgEventIndex, efitick_t nowNt) {
-
+void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
 
 	RpmCalculator *rpmState = &engine->rpmCalculator;
 
 	if (trgEventIndex == 0) {
-		if (HAVE_CAM_INPUT()) {
-			engine->triggerCentral.validateCamVvtCounters();
-		}
-
 		bool hadRpmRecently = rpmState->checkIfSpinning(nowNt);
 
 		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(nowNt);
@@ -261,7 +255,7 @@ void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 		 */
 			if (!alwaysInstantRpm) {
 				if (periodSeconds == 0) {
-					rpmState->setRpmValue(NOISY_RPM);
+					rpmState->setRpmValue(0);
 					rpmState->rpmRate = 0;
 				} else {
 					int mult = (int)getEngineCycle(getEngineRotationState()->getOperationMode()) / 360;
@@ -270,7 +264,7 @@ void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 					auto rpmDelta = rpm - rpmState->previousRpmValue;
 					rpmState->rpmRate = rpmDelta / (mult * periodSeconds);
 
-					rpmState->setRpmValue(rpm > UNREALISTIC_RPM ? NOISY_RPM : rpm);
+					rpmState->setRpmValue(rpm);
 				}
 			}
 		} else {
@@ -284,7 +278,6 @@ void rpmShaftPositionCallback(TriggerEvent ckpSignalType,
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(
-		engine->triggerCentral.triggerState.currentCycle.current_index,
 		engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails,
 		trgEventIndex, nowNt);
 
@@ -338,7 +331,7 @@ void tdcMarkCallback(
 		int revIndex2 = getRevolutionCounter() % 2;
 		float rpm = Sensor::getOrZero(SensorType::Rpm);
 		// todo: use tooth event-based scheduling, not just time-based scheduling
-		if (isValidRpm(rpm)) {
+		if (rpm != 0) {
 			angle_t tdcPosition = tdcPosition();
 			// we need a positive angle offset here
 			wrapAngle(tdcPosition, "tdcPosition", ObdCode::CUSTOM_ERR_6553);
@@ -356,7 +349,7 @@ efitick_t scheduleByAngle(scheduling_s *timer, efitick_t edgeTimestamp, angle_t 
 		action_s action) {
 	float delayUs = engine->rpmCalculator.oneDegreeUs * angle;
 
-    // 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
+	// 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
 	int32_t delayNt = USF2NT(delayUs);
 	efitick_t delayedTime = edgeTimestamp + efidur_t{delayNt};
 

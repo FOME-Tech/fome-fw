@@ -27,16 +27,16 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
     private final List<VariableRecord> getterPairs = new ArrayList<>();
     private final String fileName;
 
-    public String currentSectionPrefix = "engine->outputChannels";
+    public final String currentSectionPrefix = "engine->outputChannels";
     public String conditional;
-    public Boolean isPtr = false;
+    public final Boolean isPtr = false;
 
     public GetOutputValueConsumer(String fileName) {
         this.fileName = fileName;
     }
 
     @Override
-    public void handleEndStruct(ReaderState state, ConfigStructure structure) throws IOException {
+    public void handleEndStruct(ReaderState state, ConfigStructure structure) {
         if (state.isStackEmpty()) {
             PerFieldWithStructuresIterator iterator = new PerFieldWithStructuresIterator(state, structure.getTsFields(), "",
                     (readerState, cf, prefix) -> processOutput(cf, prefix), ".");

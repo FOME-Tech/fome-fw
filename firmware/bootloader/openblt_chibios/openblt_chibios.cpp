@@ -14,6 +14,8 @@ void TimerReset() { }
 void CopService() { }
 void TimerUpdate() { }
 
+void DoWifiDisconnect();
+
 extern "C" void __core_init() {
 	// This overrides the built-in __core_init() function
 	// We do this to avoid enabling the D/I caches, which
@@ -82,6 +84,9 @@ void CpuStartUserProgram(void)
 #if (BOOT_COM_ENABLE > 0)
   /* release the communication interface */
   ComFree();
+#endif
+#if EFI_WIFI
+  DoWifiDisconnect();
 #endif
   /* reset the HAL */
   chSysDisable();

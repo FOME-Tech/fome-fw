@@ -135,6 +135,7 @@ TEST(limp, boostCut) {
 TEST(limp, oilPressureStartupFailureCase) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->minOilPressureAfterStart = 200;
+	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;
 
 	LimpManager dut;
 
@@ -168,6 +169,7 @@ TEST(limp, oilPressureStartupFailureCase) {
 TEST(limp, oilPressureStartupSuccessCase) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->minOilPressureAfterStart = 200;
+	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;
 
 	LimpManager dut;
 
@@ -205,6 +207,7 @@ TEST(limp, oilPressureStartupSuccessCase) {
 
 TEST(limp, oilPressureRunning) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;
 	engineConfiguration->enableOilPressureProtect = true;
 	engineConfiguration->minimumOilPressureTimeout = 1.0f;
 	setArrayValues(config->minimumOilPressureValues, 100);
@@ -217,7 +220,8 @@ TEST(limp, oilPressureRunning) {
 	// Start the engine
 	engine->rpmCalculator.setRpmValue(1000);
 
-	// update & check: injection should be allowed
+	// wait 2.1sec to elapse the start delay then update & check: injection should be allowed
+	advanceTimeUs(2.1e6);
 	dut.updateState(1000, getTimeNowNt());
 	EXPECT_TRUE(dut.allowInjection());
 

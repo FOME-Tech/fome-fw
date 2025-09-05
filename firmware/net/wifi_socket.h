@@ -2,6 +2,10 @@
 
 void initWifi();
 void waitForWifiInit();
+void stopWifi();
+
+const wifi_string_t& getWifiSsid();
+const wifi_string_t& getWifiPassword();
 
 struct sockaddr_in;
 
@@ -9,10 +13,11 @@ class ServerSocket {
 public:
 	ServerSocket();
 
-	// User functions: listen, recv, send
+	// User functions: listen, recv, send, close
 	void startListening(const sockaddr_in& addr);
 	size_t recvTimeout(uint8_t* buffer, size_t size, int timeout);
 	void send(uint8_t* buffer, size_t size);
+	bool closeSocket();
 
 	// Calls up from the driver to notify of a change
 	void onAccept(int connectedSocket);

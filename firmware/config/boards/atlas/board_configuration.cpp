@@ -150,6 +150,21 @@ void setBoardConfigOverrides() {
 	engineConfiguration->sdCardSpiDevice = SPI_NONE;
 }
 
+#if EFI_BOOTLOADER
+	// Return the SPI pins for the WiFi device
+	brain_pin_e getMisoPin(spi_device_e) {
+		return Gpio::E5;
+	}
+
+	brain_pin_e getMosiPin(spi_device_e) {
+		return Gpio::E6;
+	}
+
+	brain_pin_e getSckPin(spi_device_e) {
+		return Gpio::E2;
+	}
+#endif // EFI_BOOTLOADER
+
 void setBoardDefaultConfiguration() {
 	setupEtb();
 	setInjectorPins();

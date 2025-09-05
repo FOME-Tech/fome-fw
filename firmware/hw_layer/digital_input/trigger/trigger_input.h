@@ -11,9 +11,6 @@
 #include "trigger_structure.h"
 #include "trigger_central.h"
 
-void turnOnTriggerInputPins();
-void applyNewTriggerInputPins();
-void startTriggerInputPins();
-void stopTriggerInputPins();
+void updateTriggerInputPins();
 
 void onTriggerChanged(efitick_t stamp, bool isPrimary, bool isRising);

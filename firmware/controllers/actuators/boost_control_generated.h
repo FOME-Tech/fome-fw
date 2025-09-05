@@ -71,11 +71,10 @@ struct boost_control_s {
 	// offset 0 bit 31
 	bool unusedBit_0_31 : 1 {};
 	// Lua target mult
-	// v
 	// offset 4
 	float luaTargetMult = (float)0;
 	// Lua target add
-	// v
+	// percent
 	// offset 8
 	scaled_channel<int16_t, 2, 1> luaTargetAdd = (int16_t)0;
 	// Target
@@ -83,11 +82,11 @@ struct boost_control_s {
 	// offset 10
 	scaled_channel<int16_t, 30, 1> boostControlTarget = (int16_t)0;
 	// Open loop
-	// v
+	// percent
 	// offset 12
 	float openLoopPart = (float)0;
 	// Lua open loop add
-	// v
+	// percent
 	// offset 16
 	float luaOpenLoopAdd = (float)0;
 	// Closed loop

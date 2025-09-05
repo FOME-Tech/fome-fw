@@ -21,12 +21,12 @@ struct AngleBasedEvent {
 	 */
 	AngleBasedEvent *nextToothEvent = nullptr;
 
-	float enginePhase;
+	TrgPhase eventPhase;
 
-	void setAngle(angle_t angle);
+	void setAngle(EngPhase angle);
 
-	bool shouldSchedule(float currentPhase, float nextPhase) const;
-	float getAngleFromNow(float currentPhase) const;
+	bool shouldSchedule(const EnginePhaseInfo& phase) const;
+	float getAngleFromNow(const EnginePhaseInfo& phase) const;
 };
 
 #define MAX_OUTPUTS_FOR_IGNITION 2
@@ -71,16 +71,5 @@ public:
 	IgnitionEvent elements[MAX_CYLINDER_COUNT];
 	bool isReady = false;
 };
-
-class AuxActor {
-public:
-	int phaseIndex;
-	int valveIndex;
-	angle_t extra;
-
-	AngleBasedEvent open;
-	AngleBasedEvent close;
-};
-
 
 IgnitionEventList *getIgnitionEvents();

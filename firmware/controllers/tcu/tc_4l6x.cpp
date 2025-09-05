@@ -53,7 +53,7 @@ void Gm4l6xTransmissionController::update(gear_e gear) {
 
 	float time = isShiftCompleted();
 	if (time != 0) {
-		engine->outputChannels.lastShiftTime = time;
+		// engine->outputChannels.lastShiftTime = time;
 		isShifting = false;
 	}
 }

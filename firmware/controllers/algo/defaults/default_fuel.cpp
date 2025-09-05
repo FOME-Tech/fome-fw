@@ -192,7 +192,7 @@ static void setDefaultLambdaTable() {
 	}
 }
 
-void setDefaultWallWetting() {
+static void setDefaultWallWetting() {
 #if !EFI_UNIT_TEST
 	// todo: this is a reasonable default for what kinds of engines exactly?
 	engineConfiguration->wwaeTau = 0.3;

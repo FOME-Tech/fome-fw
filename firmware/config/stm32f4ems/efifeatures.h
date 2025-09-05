@@ -85,11 +85,6 @@
 #define EFI_BLUETOOTH_SETUP TRUE
 #endif /* EFI_BLUETOOTH_SETUP */
 
-/**
- * TunerStudio debug output
- */
-#define EFI_TUNER_STUDIO_VERBOSE TRUE
-
 #define EFI_DEFAILED_LOGGING FALSE
 
 /**
@@ -268,14 +263,9 @@
 #endif
 
 #define EFI_ELECTRONIC_THROTTLE_BODY TRUE
-//#define EFI_ELECTRONIC_THROTTLE_BODY FALSE
 
-/**
- * Do we need Malfunction Indicator blinking logic?
- */
 #ifndef EFI_MALFUNCTION_INDICATOR
 #define EFI_MALFUNCTION_INDICATOR TRUE
-//#define EFI_MALFUNCTION_INDICATOR FALSE
 #endif
 
 // todo: most of this should become configurable

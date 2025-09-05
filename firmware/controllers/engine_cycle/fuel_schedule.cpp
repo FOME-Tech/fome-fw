@@ -109,17 +109,16 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 	return mask;
 }
 
-void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
+void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	auto eventAngle = injectionStartAngle;
 
 	// Determine whether our angle is going to happen before (or near) the next tooth
-	if (!isPhaseInRange(eventAngle, currentPhase, nextPhase)) {
+	if (!isPhaseInRange(EngPhase{eventAngle}, phase)) {
 		return;
 	}
 
 	// don't allow split inj in simultaneous mode
-	// TODO: #364 implement logic to actually enable split injections
-	bool doSplitInjection = false && !isSimultaneous;
+	bool doSplitInjection = engine->engineState.doSplitInjection && !isSimultaneous;
 
 	// Select fuel mass from the correct cylinder
 	auto cycleMassGrams = engine->cylinders[this->cylinderNumber].getInjectionMass();
@@ -146,7 +145,7 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 
 		float actualInjectedMass = numberOfInjections * (injectionMassStage1 + injectionMassStage2);
 
-		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, nowNt);
+		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, phase.timestamp);
 		#endif // MODULE_TRIP_ODO
 	}
 
@@ -200,6 +199,10 @@ void InjectionEvent::onTriggerTooth(efitick_t nowNt, float currentPhase, float n
 	ctx.stage2Active = hasStage2Injection;
 	ctx.outputsMask = calculateInjectorOutputMask();
 
+	if (doSplitInjection) {
+		ctx.splitDurationUs = durationUsStage1;
+	}
+
 #if EFI_PRINTF_FUEL_DETAILS
 if (printFuelDebug) {
 	printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n", ctx.outputsMask, (int)durationUsStage1,
@@ -207,18 +210,14 @@ if (printFuelDebug) {
 }
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
-	if (doSplitInjection) {
-		ctx.splitDurationUs = durationUsStage1;
-	}
-
 	// Correctly wrap injection start angle
-	float angleFromNow = eventAngle - currentPhase;
+	float angleFromNow = eventAngle - phase.currentEngPhase.angle;
 	if (angleFromNow < 0) {
 		angleFromNow += getEngineState()->engineCycle;
 	}
 
 	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, nowNt, angleFromNow, { &startInjection, ctx });
+	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, { &startInjection, ctx });
 
 	// Schedule closing stage 1
 	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
@@ -233,14 +232,14 @@ if (printFuelDebug) {
 	}
 
 #if EFI_UNIT_TEST
-	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n", angleFromNow, (int)NT2US(startTime - nowNt), (int)durationUsStage1, (int)durationUsStage2);
+	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n", angleFromNow, (int)NT2US(startTime - phase.timestamp), (int)durationUsStage1, (int)durationUsStage2);
 #endif
 #if EFI_DEFAILED_LOGGING
 	efiPrintf("handleFuel pin=%s eventIndex %d duration=%.2fms %d", outputs[0]->name,
 			injEventIndex,
 			injectionDurationStage1,
 			getRevolutionCounter());
-	efiPrintf("handleFuel pin=%s delay=%.2f %d", outputs[0]->name, NT2US(startTime - nowNt),
+	efiPrintf("handleFuel pin=%s delay=%.2f %d", outputs[0]->name, NT2US(startTime - phase.timestamp),
 			getRevolutionCounter());
 #endif /* EFI_DEFAILED_LOGGING */
 }
@@ -370,14 +369,14 @@ void FuelSchedule::addFuelEvents() {
 	isReady = true;
 }
 
-void FuelSchedule::onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase) {
+void FuelSchedule::onTriggerTooth(const EnginePhaseInfo& phase) {
 	// Wait for schedule to be built - this happens the first time we get RPM
 	if (!isReady) {
 		return;
 	}
 
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-		elements[i].onTriggerTooth(nowNt, currentPhase, nextPhase);
+		elements[i].onTriggerTooth(phase);
 	}
 }
 

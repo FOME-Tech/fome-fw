@@ -54,7 +54,7 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 
 	{
 		// Command part of CRC
-		Crc crc;
+		Crc crc(size);
 		crc.addData(headerBuffer + 2, 1);
 
 		if (size) {

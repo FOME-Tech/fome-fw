@@ -134,6 +134,14 @@ private:
 
 	void setFaultRevLimit(int limit);
 
+	void updateCutsHarleyAcr(Clearable& allowFuel);
+	void updateCutsHardRevLimit(float rpm, Clearable& allowFuel, Clearable& allowSpark);
+	void updateCutsEngineSync(Clearable& allowFuel, Clearable& allowSpark);
+	void updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& allowFuel);
+	void updateCutsBoostCut(Clearable& allowFuel);
+	void updateCutsInjectorDuty(float rpm, efitick_t nowNt, Clearable& allowFuel);
+	void updateCutsFloodClear(Clearable& allowFuel);
+
 	Hysteresis m_revLimitHysteresis;
 	Hysteresis m_boostCutHysteresis;
 	Hysteresis m_injectorDutyCutHysteresis;

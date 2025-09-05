@@ -48,7 +48,6 @@ public class IsoTpCanDecoder {
                 numBytesAvailable = Math.min(this.waitingForNumBytes, 6);
                 waitingForNumBytes -= numBytesAvailable;
                 dataOffset = 2;
-                onTpFirstFrame();
                 break;
             case ISO_TP_FRAME_CONSECUTIVE:
                 frameIdx = data[0] & 0xf;
@@ -76,8 +75,5 @@ public class IsoTpCanDecoder {
         if (log.debugEnabled())
             log.debug(numBytesAvailable + " bytes(s) arrived in this packet: " + IoStream.printByteArray(bytes));
         return bytes;
-    }
-
-    protected void onTpFirstFrame() {
     }
 }

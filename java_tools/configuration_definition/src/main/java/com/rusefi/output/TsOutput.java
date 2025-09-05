@@ -67,7 +67,7 @@ public class TsOutput {
                 }
 
                 ConfigStructure cs = configField.getStructureType();
-                if (configField.getComment() != null && configField.getComment().trim().length() > 0 && cs == null) {
+                if (configField.getComment() != null && !configField.getComment().trim().isEmpty() && cs == null) {
                     String commentContent = configField.getCommentTemplated();
                     commentContent = ConfigFieldImpl.unquote(commentContent);
                     settingContextHelp.append("\t" + nameWithPrefix + " = " + quote(commentContent) + EOL);

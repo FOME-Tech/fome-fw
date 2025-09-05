@@ -68,7 +68,7 @@ void TriggerDecoderBase::setTriggerErrorState() {
 }
 
 void TriggerDecoderBase::resetCurrentCycleState() {
-	memset(currentCycle.eventCount, 0, sizeof(currentCycle.eventCount));
+	setArrayValues(currentCycle.eventCount, 0);
 	currentCycle.current_index = 0;
 }
 
@@ -191,29 +191,28 @@ int TriggerDecoderBase::getCurrentIndex() const {
 angle_t PrimaryTriggerDecoder::syncEnginePhase(int divider, int remainder, angle_t engineCycle) {
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, divider > 1, "syncEnginePhase divider", false);
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, remainder < divider, "syncEnginePhase remainder", false);
-	angle_t totalShift = 0;
-	while (getCrankSynchronizationCounter() % divider != remainder) {
-		/**
-		 * we are here if we've detected the cam sensor within the wrong crank phase
-		 * let's increase the trigger event counter, that would adjust the state of
-		 * virtual crank-based trigger
-		 */
-		incrementShaftSynchronizationCounter();
-		totalShift += engineCycle / divider;
+
+	auto currentRemainder = getCrankSynchronizationCounter() % divider;
+	auto totalShift = (remainder - currentRemainder) * engineCycle / divider;
+
+	if (totalShift < 0) {
+		totalShift += engineCycle;
 	}
 
-	// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
-	m_hasSynchronizedPhase = true;
+	{
+		chibios_rt::CriticalSectionLocker csl;
 
-	if (totalShift > 0) {
-		camResyncCounter++;
+		// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
+		m_hasSynchronizedPhase = true;
+
+		if (m_phaseAdjustment != totalShift) {
+			// Resync angle changed - count how many times this happens
+			m_phaseAdjustment = totalShift;
+			m_camResyncCounter++;
+		}
 	}
 
 	return totalShift;
-}
-
-void TriggerDecoderBase::incrementShaftSynchronizationCounter() {
-	crankSynchronizationCounter++;
 }
 
 // Returns true if syncEnginePhase has been called,
@@ -310,7 +309,7 @@ void TriggerDecoderBase::onShaftSynchronization(
 	resetCurrentCycleState();
 
 	if (wasSynchronized) {
-		incrementShaftSynchronizationCounter();
+		crankSynchronizationCounter++;
 	} else {
 		// We have just synchronized, this is the zeroth revolution
 		crankSynchronizationCounter = 0;
@@ -571,8 +570,11 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			nextTriggerEvent();
 
 			onShaftSynchronization(wasSynchronized, nowNt, triggerShape);
-		} else {	/* if (!isSynchronizationPoint) */
-			nextTriggerEvent();
+		} else {
+			// If not the sync point but we are synchronized, just increment tooth index.
+			if (getShaftSynchronized()) {
+				nextTriggerEvent();
+			}
 		}
 
 		for (int i = triggerShape.gapTrackingLength; i > 0; i--) {

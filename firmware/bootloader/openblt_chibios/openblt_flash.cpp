@@ -51,7 +51,7 @@ blt_bool FlashVerifyChecksum() {
 	}
 
 	// part before checksum+size
-	Crc crc;
+	Crc crc(imageSize);
 	crc.addData(start, checksumOffset);
 
 	// part after checksum+size

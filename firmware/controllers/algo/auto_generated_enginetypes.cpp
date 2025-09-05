@@ -75,6 +75,8 @@ case COMMAND_X14_GRAB_PEDAL_UP:
   return "COMMAND_X14_GRAB_PEDAL_UP";
 case COMMAND_X14_RESET_TLE8888:
   return "COMMAND_X14_RESET_TLE8888";
+case COMMAND_X14_SPLIT_INJ:
+  return "COMMAND_X14_SPLIT_INJ";
 case COMMAND_X14_UNUSED_0:
   return "COMMAND_X14_UNUSED_0";
 case COMMAND_X14_UNUSED_1:
@@ -241,6 +243,8 @@ case engine_type_e::ET_UNUSED_33:
   return "ET_UNUSED_33";
 case engine_type_e::ET_UNUSED_43:
   return "ET_UNUSED_43";
+case engine_type_e::ET_UNUSED_5:
+  return "ET_UNUSED_5";
 case engine_type_e::ET_UNUSED_57:
   return "ET_UNUSED_57";
 case engine_type_e::ET_UNUSED_60:
@@ -345,8 +349,6 @@ case engine_type_e::MRE_SUBARU_EJ18:
   return "MRE_SUBARU_EJ18";
 case engine_type_e::MRE_VW_B6:
   return "MRE_VW_B6";
-case engine_type_e::NISSAN_PRIMERA:
-  return "NISSAN_PRIMERA";
 case engine_type_e::POLYGONUS_MIATA_MSM:
   return "POLYGONUS_MIATA_MSM";
 case engine_type_e::POLYGONUS_MIATA_NA6:
@@ -542,6 +544,8 @@ case trigger_type_e::TT_TRI_TACH:
   return "TT_TRI_TACH";
 case trigger_type_e::TT_UNUSED:
   return "TT_UNUSED";
+case trigger_type_e::TT_UNUSED_17:
+  return "TT_UNUSED_17";
 case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:
   return "TT_VVT_BARRA_3_PLUS_1";
 case trigger_type_e::TT_VVT_BOSCH_QUICK_START:
@@ -560,8 +564,6 @@ case trigger_type_e::TT_VVT_MITSUBISHI_6G75:
   return "TT_VVT_MITSUBISHI_6G75";
 case trigger_type_e::TT_VVT_NISSAN_VQ35:
   return "TT_VVT_NISSAN_VQ35";
-case trigger_type_e::TT_VVT_TOYOTA_3_TOOTH:
-  return "TT_VVT_TOYOTA_3_TOOTH";
 case trigger_type_e::TT_VVT_TOYOTA_4_1:
   return "TT_VVT_TOYOTA_4_1";
   }

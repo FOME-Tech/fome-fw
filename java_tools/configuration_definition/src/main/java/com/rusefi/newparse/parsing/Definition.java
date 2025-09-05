@@ -25,6 +25,14 @@ public class Definition {
         return this.value instanceof Integer;
     }
 
+    public boolean isString() {
+        return this.value instanceof String;
+    }
+
+    public boolean isMultilineString() {
+        return isString() && ((String)this.value).contains("\n");
+    }
+
     public double asDouble() {
         if (this.value instanceof Double) {
             return ((Double)this.value);

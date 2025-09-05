@@ -12,28 +12,35 @@ AemXSeriesWideband::AemXSeriesWideband(uint8_t sensorIndex, SensorType type)
 		type,
 		MS2NT(21)	// sensor transmits at 100hz, allow a frame to be missed
 	)
-	, m_sensorIndex(sensorIndex)
+	, m_logicalIndex(sensorIndex)
 {}
 
-bool AemXSeriesWideband::acceptFrame(const CANRxFrame& frame) const {
+bool AemXSeriesWideband::acceptFrame(CanBusIndex busIndex, const CANRxFrame& frame) const {
 	if (frame.DLC != 8) {
+		return false;
+	}
+
+	if (static_cast<int>(busIndex) != config->lambdaSensorSourceBus[m_logicalIndex]) {
+		// Wrong bus, ignore
 		return false;
 	}
 
 	uint32_t id = CAN_ID(frame);
 	auto mode = engineConfiguration->widebandMode;
 
+	auto deviceIndex = config->lambdaSensorSourceIndex[m_logicalIndex];
+
 	switch (mode) {
 		case WidebandMode::Analog: {
 			break;
 		} case WidebandMode::AemXSeries: {
 			// 0th sensor is 0x180, 1st sensor is 0x181, etc
-			uint32_t aemXSeriesId = aem_base + m_sensorIndex;
+			uint32_t aemXSeriesId = aem_base + deviceIndex;
 
 			return id == aemXSeriesId;
 		} case WidebandMode::FOMEInternal: {
 			// 0th sensor is 0x190 and 0x191, 1st sensor is 0x192 and 0x193
-			uint32_t rusefiBaseId = rusefi_base + 2 * m_sensorIndex;
+			uint32_t rusefiBaseId = rusefi_base + 2 * deviceIndex;
 
 			return id == rusefiBaseId || id == rusefiBaseId + 1;
 		}
@@ -93,7 +100,7 @@ void AemXSeriesWideband::decodeRusefiStandard(const CANRxFrame& frame, efitick_t
 	auto data = reinterpret_cast<const wbo::StandardData*>(&frame.data8[0]);
 
 	if (data->Version != RUSEFI_WIDEBAND_VERSION) {
-		firmwareError(ObdCode::OBD_WB_FW_Mismatch, "Wideband controller index %d has wrong firmware version, please update!", m_sensorIndex);
+		firmwareError(ObdCode::OBD_WB_FW_Mismatch, "Wideband controller index %d has wrong firmware version, please update!", m_logicalIndex);
 		return;
 	}
 
@@ -125,8 +132,8 @@ void AemXSeriesWideband::decodeRusefiDiag(const CANRxFrame& frame) {
 	faultCode = static_cast<uint8_t>(data->Status);
 
 	if (data->Status != wbo::Fault::None) {
-		auto code = m_sensorIndex == 0 ? ObdCode::Wideband_1_Fault : ObdCode::Wideband_2_Fault;
-		warning(code, "Wideband #%d fault: %s", (m_sensorIndex + 1), wbo::describeFault(data->Status));
+		auto code = m_logicalIndex == 0 ? ObdCode::Wideband_1_Fault : ObdCode::Wideband_2_Fault;
+		warning(code, "Wideband #%d fault: %s", (m_logicalIndex + 1), wbo::describeFault(data->Status));
 	}
 }
 

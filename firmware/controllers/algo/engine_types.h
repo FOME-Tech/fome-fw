@@ -32,7 +32,6 @@ enum class engine_type_e : uint32_t {
 	 */
 	FORD_ASPIRE_1996 = 3,
 
-	NISSAN_PRIMERA = 5,
 	PROTEUS_HARLEY = 6,
 	FORD_INLINE_6_1995 = 7,
 	/**
@@ -199,6 +198,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_5 = 5,
 	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
@@ -316,11 +316,9 @@ enum class trigger_type_e : uint32_t {
 	 * see also TT_ONE a bit below
 	 */
 	TT_ONE_PLUS_ONE = 16,
-	/**
-	 * VVT for 2JZ
-	 * three evenly spaces teeth
-	 */
-	TT_VVT_TOYOTA_3_TOOTH = 17,
+
+	TT_UNUSED_17 = 17,
+
 	// just one channel with just one tooth
 	TT_ONE = 18,
 
@@ -582,4 +580,5 @@ typedef enum {
 	COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14,
 	COMMAND_X14_BURN_WITHOUT_FLASH = 0x15,
 	COMMAND_X14_FORCE_RESYNC = 0x16,
+	COMMAND_X14_SPLIT_INJ = 0x17,
 } command_x14_e;

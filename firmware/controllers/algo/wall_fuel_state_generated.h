@@ -1,12 +1,12 @@
 #pragma once
 #include "rusefi_types.h"
 struct wall_fuel_state_s {
-	// fuel wallwetting injection time
-	//  correction to account for wall wetting effect for current cycle
+	// Wall fuel correction
+	// mg
 	// offset 0
 	float wallFuelCorrection = (float)0;
-	// Fuel on the wall
-	// in ms of injector open time for each injector.
+	// Wall fuel amount
+	// mg
 	// offset 4
 	float wallFuel = (float)0;
 };

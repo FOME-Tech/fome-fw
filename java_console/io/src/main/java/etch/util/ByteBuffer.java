@@ -156,11 +156,6 @@ abstract public class ByteBuffer {
     }
 
     /**
-     * Clears the buffer.
-     */
-    abstract public void clear();
-
-    /**
      * @return a little-endian 32-bit integer from the buffer.
      * @throws EOFException
      */
@@ -179,7 +174,6 @@ abstract public class ByteBuffer {
     }
 
     public int getByte() throws EOFException {
-        int b0 = get() & 255;
-        return b0;
+        return get() & 255;
     }
 }
