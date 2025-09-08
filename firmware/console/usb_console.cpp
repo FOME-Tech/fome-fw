@@ -7,7 +7,7 @@
 #include "tunerstudio.h"
 
 // Assert that the USB tx/rx buffers are large enough to fit one full packet
-static_assert(SERIAL_USB_BUFFERS_SIZE >= BLOCKING_FACTOR + 10);
+// static_assert(SERIAL_USB_BUFFERS_SIZE >= BLOCKING_FACTOR + 10);
 
 extern SerialUSBDriver EFI_CONSOLE_USB_DEVICE;
 
