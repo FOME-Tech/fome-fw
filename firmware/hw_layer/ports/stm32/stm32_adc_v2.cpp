@@ -301,6 +301,11 @@ adcsample_t getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
+	if (token >= efi::size(fastAdcSampleBuf)) {
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "bad ADC token: %zu", token);
+		return 0;
+	}
+
 	return fastAdcSampleBuf[token];
 }
 
