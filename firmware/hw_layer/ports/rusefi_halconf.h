@@ -77,8 +77,8 @@
 
 // USB Serial
 // Round up to the next multiple of 64 bytes from BLOCKING_FACTOR+10 to allow space for header/checksum
-#define SERIAL_USB_BUFFERS_SIZE     (((BLOCKING_FACTOR + 10) / 64) + 1) * 64
-#define SERIAL_USB_BUFFERS_NUMBER   2
+#define SERIAL_USB_BUFFERS_SIZE     64
+#define SERIAL_USB_BUFFERS_NUMBER   24
 
 // USB Mass Storage
 #ifdef EFI_USE_COMPRESSED_INI_MSD
