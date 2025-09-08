@@ -76,9 +76,16 @@
 #define PAL_USE_CALLBACKS           TRUE
 
 // USB Serial
-// Round up to the next multiple of 64 bytes from BLOCKING_FACTOR+10 to allow space for header/checksum
-#define SERIAL_USB_BUFFERS_SIZE     64
-#define SERIAL_USB_BUFFERS_NUMBER   24
+#define SERIAL_USB_BUFFERS_RX_SIZE     64
+
+#if (SERIAL_USB_BUFFERS_RX_SIZE != 64)
+#error Please keep SERIAL_USB_BUFFERS_SIZE until https://forum.chibios.org/viewtopic.php?f=35&t=6395 is properly fixed!
+#endif
+
+#define SERIAL_USB_BUFFERS_RX_NUMBER   24
+
+#define SERIAL_USB_BUFFERS_TX_SIZE     1024
+#define SERIAL_USB_BUFFERS_TX_NUMBER   2
 
 // USB Mass Storage
 #ifdef EFI_USE_COMPRESSED_INI_MSD
