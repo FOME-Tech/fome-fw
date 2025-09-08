@@ -65,7 +65,7 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 	sramState->Err.FaultType = type;
 	sramState->Err.FaultAddress = faultAddress;
 	sramState->Err.Csfr = csfr;
-	memcpy(&sramState->Err.FaultCtx, ctx, sizeof(port_extctx));
+	sramState->Err.FaultCtx = *ctx;
 }
 #endif /* EFI_PROD_CODE */
 

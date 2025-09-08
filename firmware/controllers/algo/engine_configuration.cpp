@@ -110,7 +110,7 @@
 engine_configuration_s activeConfiguration;
 
 void rememberCurrentConfiguration() {
-	memcpy(&activeConfiguration, engineConfiguration, sizeof(engine_configuration_s));
+	activeConfiguration = *engineConfiguration;
 }
 
 static void wipeString(char *string, int size) {
