@@ -270,9 +270,13 @@ static size_t fastAdcChannelCount = 0;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
-FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
+FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	if (!isAdcChannelValid(channel)) {
 		return invalidToken;
+	}
+
+	if (fastAdcChannelCount >= ADC_MAX_CHANNELS_COUNT) {
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "too many fast ADC channels, attempted channel was %s", msg);
 	}
 
 	// hwChannel = which external pin are we using
@@ -320,7 +324,7 @@ static void fast_adc_timer_callback(GPTDriver*) {
 		return;
 	}
 
-	if (adcgrpcfgFast.num_channels == 0) {
+	if (adcgrpcfgFast.num_channels == 0 || adcgrpcfgFast.num_channels >= ADC_MAX_CHANNELS_COUNT) {
 		// No channels configured (yet), don't attempt to sample
 		// with an invalid configuration
 		return;
