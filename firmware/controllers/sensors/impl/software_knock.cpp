@@ -90,7 +90,7 @@ void initSoftwareKnock() {
 			}
 
 			if (bore < 10 || bore > 200) {
-				firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid knock cylinder bore: %.1f", bore);
+				firmwareError("Invalid knock cylinder bore: %.1f", bore);
 				return;
 			}
 

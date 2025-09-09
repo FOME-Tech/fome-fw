@@ -121,7 +121,7 @@ float getMcuTemperature() {
 	if (degrees > 150.0f || degrees < -50.0f) {
 /*
  * we have a sporadic issue with this check todo https://github.com/rusefi/rusefi/issues/2552
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid CPU temperature measured %f", degrees);
+		firmwareError("Invalid CPU temperature measured %f", degrees);
  */
 	}
 
@@ -276,7 +276,7 @@ FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	}
 
 	if (fastAdcChannelCount >= ADC_MAX_CHANNELS_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "too many fast ADC channels, attempted channel was %s", msg);
+		firmwareError("too many fast ADC channels, attempted channel was %s", msg);
 	}
 
 	// hwChannel = which external pin are we using
@@ -306,7 +306,7 @@ adcsample_t getFastAdc(FastAdcToken token) {
 	}
 
 	if (token >= efi::size(fastAdcSampleBuf)) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "bad ADC token: %zu", token);
+		firmwareError("bad ADC token: %zu", token);
 		return 0;
 	}
 

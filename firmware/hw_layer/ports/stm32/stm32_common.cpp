@@ -135,7 +135,7 @@ adc_channel_e getAdcChannel(brain_pin_e pin) {
 	case Gpio::Unassigned:
 		return EFI_ADC_NONE;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getAdcChannel %d", (int)pin);
+		firmwareError("getAdcChannel %d", (int)pin);
 		return EFI_ADC_ERROR;
 	}
 }
@@ -215,7 +215,7 @@ public:
 
 	void setDuty(float duty) override {
 		if (!m_driver) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Attempted to set duty on null hard PWM device");
+			firmwareError("Attempted to set duty on null hard PWM device");
 			return;
 		}
 
@@ -309,7 +309,7 @@ stm32_hardware_pwm* getNextPwmDevice() {
 		}
 	}
 
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Run out of hardware PWM devices!");
+	firmwareError("Run out of hardware PWM devices!");
 	return nullptr;
 }
 
@@ -708,7 +708,7 @@ if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
 	return &CAND2;
 #endif
 
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
+	firmwareError("invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
 	return nullptr;
 }
 

@@ -121,7 +121,7 @@ int getCrankDivider(operation_mode_e operationMode) {
 		return 1;
 	}
 
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "unexpected operationMode in getCrankDivider");
+	firmwareError("unexpected operationMode in getCrankDivider");
 
 	return 1;
 }
@@ -954,11 +954,11 @@ bool TriggerCentral::isTriggerConfigChanged() {
 
 void validateTriggerInputs() {
 	if (!isBrainPinValid(engineConfiguration->triggerInputPins[0]) && isBrainPinValid(engineConfiguration->triggerInputPins[1])) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "First trigger channel is missing");
+		firmwareError("First trigger channel is missing");
 	}
 
 	if (!isBrainPinValid(engineConfiguration->camInputs[0]) && isBrainPinValid(engineConfiguration->camInputs[2])) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "First bank cam input is required if second bank specified");
+		firmwareError("First bank cam input is required if second bank specified");
 	}
 }
 

@@ -164,7 +164,7 @@ AngleBasedEvent * TriggerScheduler::getElementAtIndexForUnitTest(int index) {
 			return current;
 		index--;
 	}
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getElementAtIndexForUnitText: null");
+	firmwareError("getElementAtIndexForUnitText: null");
 	return nullptr;
 }
 #endif /* EFI_UNIT_TEST */

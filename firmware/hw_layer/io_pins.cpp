@@ -111,7 +111,7 @@ static CanInputPin canVirtualInputs[CAN_VIRTUAL_INPUT_PINS_COUNT];
 
 void setCanVirtualInput(size_t idx, bool value) {
 	if (idx >= CAN_VIRTUAL_INPUT_PINS_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid setCanVirtualInput index %u", idx);
+		firmwareError("invalid setCanVirtualInput index %u", idx);
 		return;
 	}
 
@@ -120,7 +120,7 @@ void setCanVirtualInput(size_t idx, bool value) {
 
 static bool readCanVirtualInput(size_t idx) {
 	if (idx >= CAN_VIRTUAL_INPUT_PINS_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid readCanVirtualInput index %u", idx);
+		firmwareError("invalid readCanVirtualInput index %u", idx);
 		return false;
 	}
 

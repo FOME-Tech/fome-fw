@@ -78,7 +78,7 @@ static void sayHello() {
 
 	int flashSize = TM_ID_GetFlashSize();
 	if (flashSize < MIN_FLASH_SIZE) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Expected at least %dK of flash but found %dK", MIN_FLASH_SIZE, flashSize);
+		firmwareError("Expected at least %dK of flash but found %dK", MIN_FLASH_SIZE, flashSize);
 	}
 
 	// todo: bug, at the moment we report 1MB on dual-bank F7
@@ -121,7 +121,7 @@ static void cmd_threads() {
 		efiPrintf("%s\t%08x\t%lu\t%d", tp->name, (unsigned int)tp->wabase, tp->time, freeBytes);
 
 		if (freeBytes < 64) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
+			firmwareError("Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
 		}
 
 		tp = chRegNextThread(tp);
