@@ -32,10 +32,6 @@ static void testCritical() {
 	chDbgCheck(0);
 }
 
-static void myerror() {
-	firmwareError(ObdCode::CUSTOM_ERR_TEST_ERROR, "firmwareError: %d", getRusEfiVersion());
-}
-
 static void sayHello() {
 	efiPrintf(PROTOCOL_HELLO_PREFIX " rusEFI LLC (c) 2012-2023. All rights reserved.");
 	efiPrintf(PROTOCOL_HELLO_PREFIX " built from " GIT_HASH);
@@ -157,7 +153,7 @@ void initializeConsole() {
 	addConsoleAction("hello", sayHello);
 
 	addConsoleAction("critical", testCritical);
-	addConsoleAction("error", myerror);
+	addConsoleAction("error", []() { firmwareError("firmwareError: %d", getRusEfiVersion()); });
 	addConsoleAction("threadsinfo", cmd_threads);
 	addConsoleAction("stackoverflow", [](){ fib(10000); });
 }
