@@ -37,7 +37,7 @@ using critical_msg_t = char[ERROR_BUFFER_SIZE];
  *
  * see also warning()
  */
-void firmwareError(ObdCode code, const char *fmt, ...)
+void firmwareError(ObdCode code, const char* fmt, ...)
 #if EFI_PROD_CODE
 __attribute__ ((format (printf, 2, 3)))
 #endif
@@ -71,3 +71,5 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+void firmwareError(const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
