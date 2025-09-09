@@ -221,8 +221,6 @@ void applyNewHardwareSettings() {
 #if EFI_VVT_PID
 	startVvtControlPins();
 #endif /* EFI_VVT_PID */
-
-	calcFastAdcIndexes();
 }
 
 // Weak link a stub so that every board doesn't have to implement this function
