@@ -504,12 +504,12 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 	// Check that this OutputPin isn't already assigned to another pin (reinit is allowed to change mode)
 	// To avoid this error, call deInit() first
 	if (isBrainPinValid(m_brainPin) && m_brainPin != brainPin) {
-		firmwareError(ObdCode::CUSTOM_OBD_PIN_CONFLICT, "outputPin [%s] already assigned, cannot reassign without unregister first", msg);
+		firmwareError("outputPin [%s] already assigned, cannot reassign without unregister first", msg);
 		return;
 	}
 
 	if (outputMode > OM_OPENDRAIN_INVERTED) {
-		firmwareError(ObdCode::CUSTOM_INVALID_MODE_SETTING, "%s invalid pin_output_mode_e %d %s",
+		firmwareError("%s invalid pin_output_mode_e %d %s",
 				msg,
 				outputMode,
 				hwPortname(brainPin)
