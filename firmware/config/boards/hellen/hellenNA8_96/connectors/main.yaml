@@ -201,7 +201,19 @@ pins:
     ts_name: 3R - IGN_2 (2&3)
     function: Coil #2
     type: ign
-    
+
+  - id: E4
+    class: outputs
+    ts_name: IGN 3
+    function: Coil #3
+    type: ign
+
+  - id: E3
+    class: outputs
+    ts_name: IGN 4
+    function: Coil #4
+    type: ign
+
   - pin: 3S
     id: [A7, EFI_ADC_7]
     class: [switch_inputs, analog_inputs]
