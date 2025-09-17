@@ -53,6 +53,7 @@ or
  - K20/K24 intake VVT angle reads correctly
  - Easier to decipher check engine light blink codes #653
  - TunerStudio: Provide sensible EGT sensor "high" alerting threshold defaults
+ - Improve knock detection dialog UX
 
 ### Removed
  - Removed A/C-based alternator open-loop duty adder (#660)
