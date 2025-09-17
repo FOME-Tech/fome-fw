@@ -1209,7 +1209,7 @@ tChargeMode_e tChargeMode;
 
 	uint8_t triggerSkipPulses;Some trigger hardware may generate noise when the engine starts moving. Set this to ignore the first pulses when the engine starts moving.;"count", 1, 0, 0, 250, 0
 
-	uint8_t unused1769
+	uint8_t autoscale mapAveragingCylinderBalanceMinRpm;Above this RPM, apply automatic cylinder balancing to MAP measurements.;"rpm", 100, 0, 0, 10000, 0
 
 	int16_t coastingFuelCutMap;MAP value above which fuel injection is re-enabled.;"kPa", 1, 0, 0, 250, 0
 

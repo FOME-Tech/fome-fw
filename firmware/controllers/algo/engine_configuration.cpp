@@ -557,6 +557,7 @@ static void setDefaultEngineConfiguration() {
 #endif
 
 	engineConfiguration->isMapAveragingEnabled = true;
+	engineConfiguration->mapAveragingCylinderBalanceMinRpm = 1500;
 	engineConfiguration->isWaveAnalyzerEnabled = true;
 
 	engineConfiguration->acIdleRpmBump = 200;
