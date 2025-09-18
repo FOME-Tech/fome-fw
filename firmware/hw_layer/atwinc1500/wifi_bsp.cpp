@@ -113,23 +113,6 @@ sint8 nm_bus_init(void*) {
 	return M2M_SUCCESS;
 }
 
-sint8 nm_bus_deinit(void) {
-	spiReleaseBus(wifiSpi);
-	spiStop(wifiSpi);
-	resetSpiDevice(wifiSpi);
-
-	efiSetPadMode("WiFi CS", getWifiCsPin(), PAL_MODE_INPUT_PULLUP);
-
-	nm_bsp_interrupt_ctrl(0);
-
-	return M2M_SUCCESS;
-}
-
-sint8 nm_bus_speed(uint8 /*level*/) {
-	// Do we even need to do anything here?
-	return M2M_SUCCESS;
-}
-
 static void resetSpiDevice(SPIDriver* spi) {
 #if STM32_SPI_USE_SPI1
 	if (spi == &SPID1) {
@@ -166,6 +149,23 @@ static void resetSpiDevice(SPIDriver* spi) {
 		rccResetSPI6();
 	}
 #endif // STM32_SPI_USE_SPI6
+}
+
+sint8 nm_bus_deinit(void) {
+	spiReleaseBus(wifiSpi);
+	spiStop(wifiSpi);
+	resetSpiDevice(wifiSpi);
+
+	efiSetPadMode("WiFi CS", getWifiCsPin(), PAL_MODE_INPUT_PULLUP);
+
+	nm_bsp_interrupt_ctrl(0);
+
+	return M2M_SUCCESS;
+}
+
+sint8 nm_bus_speed(uint8 /*level*/) {
+	// Do we even need to do anything here?
+	return M2M_SUCCESS;
 }
 
 sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
