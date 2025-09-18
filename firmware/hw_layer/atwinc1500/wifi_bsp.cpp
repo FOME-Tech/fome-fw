@@ -116,6 +116,11 @@ sint8 nm_bus_init(void*) {
 sint8 nm_bus_deinit(void) {
 	spiReleaseBus(wifiSpi);
 	spiStop(wifiSpi);
+	resetSpiDevice(wifiSpi);
+
+	efiSetPadMode("WiFi CS", getWifiCsPin(), PAL_MODE_INPUT_PULLUP);
+
+	nm_bsp_interrupt_ctrl(0);
 
 	return M2M_SUCCESS;
 }
