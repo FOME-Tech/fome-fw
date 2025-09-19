@@ -95,6 +95,8 @@ void updateWidebandFirmware() {
 		engine->outputChannels.widebandUpdateProgress = 100 * i / totalSize;
 	}
 
+	engine->outputChannels.widebandUpdateProgress = 100;
+
 	efiPrintf("Wideband Update: Update complete! Rebooting controller.");
 
 	{
