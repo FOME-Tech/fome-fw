@@ -348,19 +348,23 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->auxPid[0].iFactor = 0.005;
 	engineConfiguration->auxPid[0].dFactor = 0;
 	engineConfiguration->auxPid[0].offset = 33;
-	engineConfiguration->auxPid[0].minValue = 10;
-	engineConfiguration->auxPid[0].maxValue = 90;
-	engineConfiguration->vvtItermMin[0] = -100;
-	engineConfiguration->vvtItermMax[0] = 100;
+	engineConfiguration->auxPid[0].minValue = -50;
+	engineConfiguration->auxPid[0].maxValue = 50;
+	engineConfiguration->vvtItermMin[0] = -50;
+	engineConfiguration->vvtItermMax[0] = 50;
+	engineConfiguration->vvtOutputMin[0] = 10;
+	engineConfiguration->vvtOutputMax[0] = 90;
 
 	engineConfiguration->vvtOutputFrequency = 300; // VVT solenoid control
 
 	engineConfiguration->isCylinderCleanupEnabled = true;
 
-	engineConfiguration->auxPid[1].minValue = 10;
-	engineConfiguration->auxPid[1].maxValue = 90;
-	engineConfiguration->vvtItermMin[1] = -100;
-	engineConfiguration->vvtItermMax[1] = 100;
+	engineConfiguration->auxPid[1].minValue = -50;
+	engineConfiguration->auxPid[1].maxValue = 50;
+	engineConfiguration->vvtItermMin[1] = -50;
+	engineConfiguration->vvtItermMax[1] = 50;
+	engineConfiguration->vvtOutputMin[1] = 10;
+	engineConfiguration->vvtOutputMax[1] = 90;
 
 	engineConfiguration->turboSpeedSensorMultiplier = 1;
 
