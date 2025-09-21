@@ -121,7 +121,7 @@ float getMcuTemperature() {
 	if (degrees > 150.0f || degrees < -50.0f) {
 /*
  * we have a sporadic issue with this check todo https://github.com/rusefi/rusefi/issues/2552
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid CPU temperature measured %f", degrees);
+		firmwareError("Invalid CPU temperature measured %f", degrees);
  */
 	}
 
@@ -270,9 +270,13 @@ static size_t fastAdcChannelCount = 0;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
-FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
+FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	if (!isAdcChannelValid(channel)) {
 		return invalidToken;
+	}
+
+	if (fastAdcChannelCount >= ADC_MAX_CHANNELS_COUNT) {
+		firmwareError("too many fast ADC channels, attempted channel was %s", msg);
 	}
 
 	// hwChannel = which external pin are we using
@@ -301,6 +305,11 @@ adcsample_t getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
+	if (token >= efi::size(fastAdcSampleBuf)) {
+		firmwareError("bad ADC token: %zu", token);
+		return 0;
+	}
+
 	return fastAdcSampleBuf[token];
 }
 
@@ -315,7 +324,7 @@ static void fast_adc_timer_callback(GPTDriver*) {
 		return;
 	}
 
-	if (adcgrpcfgFast.num_channels == 0) {
+	if (adcgrpcfgFast.num_channels == 0 || adcgrpcfgFast.num_channels >= ADC_MAX_CHANNELS_COUNT) {
 		// No channels configured (yet), don't attempt to sample
 		// with an invalid configuration
 		return;

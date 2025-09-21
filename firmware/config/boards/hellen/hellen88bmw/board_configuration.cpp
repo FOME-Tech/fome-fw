@@ -41,7 +41,7 @@ static void setupVbatt() {
 	// pin input +12 from Main Relay
 	engineConfiguration->vbattAdcChannel = H144_IN_VBATT; // 4T
 
-	engineConfiguration->adcVcc = 3.29f;
+	engineConfiguration->adcVcc = 3.3f;
 }
 
 static void setupDefaultSensorInputs() {

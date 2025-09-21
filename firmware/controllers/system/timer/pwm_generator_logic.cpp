@@ -288,11 +288,11 @@ void PwmConfig::weComplexInit(
 
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6582, periodNt != 0, "period is not initialized");
 	if (seq->phaseCount == 0) {
-		firmwareError(ObdCode::CUSTOM_ERR_PWM_1, "signal length cannot be zero");
+		firmwareError("signal length cannot be zero");
 		return;
 	}
 	if (seq->phaseCount > PWM_PHASE_MAX_COUNT) {
-		firmwareError(ObdCode::CUSTOM_ERR_PWM_2, "too many phases in PWM");
+		firmwareError("too many phases in PWM");
 		return;
 	}
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6583, seq->waveCount > 0, "waveCount should be positive");
@@ -315,7 +315,7 @@ void startSimplePwm(SimplePwm *state, const char *msg,
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, state != NULL, "state");
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_DUTY_ASSERT, dutyCycle >= 0 && dutyCycle <= 1, "dutyCycle");
 	if (frequency < 1) {
-		warning(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "low frequency %.2f %s", frequency, msg);
+		warning(ObdCode::OBD_PCM_Processor_Fault, "low frequency %.2f %s", frequency, msg);
 		return;
 	}
 

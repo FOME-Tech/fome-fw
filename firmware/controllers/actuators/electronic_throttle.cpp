@@ -913,7 +913,7 @@ void doInitElectronicThrottle() {
 	if (!anyEtbConfigured) {
 		// It's not valid to have a PPS without any ETBs - check that at least one ETB was enabled along with the pedal
 		if (hasPedal) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "A pedal position sensor was configured, but no electronic throttles are configured.");
+			firmwareError("A pedal position sensor was configured, but no electronic throttles are configured.");
 		}
 	}
 

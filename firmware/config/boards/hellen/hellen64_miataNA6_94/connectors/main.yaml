@@ -48,6 +48,18 @@ pins:
     ts_name: 1H - Ignition 2 & 3
     type: ign
 
+  - id: E4
+    class: outputs
+    ts_name: IGN 3
+    function: Coil #3
+    type: ign
+
+  - id: E3
+    class: outputs
+    ts_name: IGN 4
+    function: Coil #4
+    type: ign
+
   - pin: 1I
     function: USB GND
     type: gnd

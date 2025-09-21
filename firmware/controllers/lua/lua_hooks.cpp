@@ -289,6 +289,7 @@ static int lua_getDigital(lua_State* l) {
 		case 1: state = engine->engineState.clutchUpState; break;
 		case 2: state = engine->engineState.brakePedalState; break;
 		case 3: state = engine->module<AcController>().unmock().acButtonState; break;
+		case 4: state = engine->module<AcController>().unmock().acPressureSwitchState; break;
 		default:
 			// Return nil to indicate invalid parameter
 			lua_pushnil(l);

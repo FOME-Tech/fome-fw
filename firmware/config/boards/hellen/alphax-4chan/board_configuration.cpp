@@ -74,7 +74,7 @@ static void setupVbatt() {
 
 	engineConfiguration->vbattAdcChannel = H144_IN_VBATT;
 
-	engineConfiguration->adcVcc = 3.29f;
+	engineConfiguration->adcVcc = 3.3f;
 }
 
 static void setupDefaultSensorInputs() {

@@ -73,8 +73,7 @@ fi
 if [ "$USE_OPENBLT" = "yes" ]; then
   echo "$SCRIPT_NAME: invoking hex2dfu for OpenBLT"
 
-  # do we need all these formats?
-  cp bootloader/blbuild/fome_bl.bin  deliver/fome_bl.bin
+  cp bootloader/blbuild/fome_bl.srec  deliver/fome_bl.srec
 
   echo "$SCRIPT_NAME: invoking hex2dfu for combined OpenBLT+FOME image"
   $HEX2DFU -i bootloader/blbuild/fome_bl.hex -i build/fome.hex -b deliver/fome.bin

@@ -153,7 +153,7 @@ void initIdleHardware() {
 
 		if (engineConfiguration->isDoubleSolenoidIdle) {
 			if (!isBrainPinValid(engineConfiguration->secondSolenoidPin)) {
-				firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Second idle pin should be configured for double solenoid mode.");
+				firmwareError("Second idle pin should be configured for double solenoid mode.");
 				return;
 			}
 

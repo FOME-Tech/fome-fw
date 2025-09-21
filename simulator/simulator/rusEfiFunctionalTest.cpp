@@ -32,7 +32,7 @@
 static void assertString(const char*actual, const char *expected) {
 	if (strcmp(actual, expected) != 0) {
 		printf("assertString FAILED\n");
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "chprintf test: got %s while %s", actual, expected);
+		firmwareError("chprintf test: got %s while %s", actual, expected);
 	}
 }
 

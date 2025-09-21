@@ -102,6 +102,8 @@ public:
 
 	void init(const TpsConfig& primary, const TpsConfig& secondary, float secondaryMaximum, bool allowIdenticalSensors = false) {
 		bool hasFirst = m_pri.init(primary);
+		bool hasSecond = m_sec.init(secondary);
+
 		if (!hasFirst) {
 			// no input if we have no first channel
 			return;
@@ -119,8 +121,7 @@ public:
 				return;
 			}
 		}
-
-		bool hasSecond = m_sec.init(secondary);
+		
 		if (secondaryMaximum == 0) {
 			// config compat, if 0, then assume you want full-scale redundancy
 			secondaryMaximum = 100;
