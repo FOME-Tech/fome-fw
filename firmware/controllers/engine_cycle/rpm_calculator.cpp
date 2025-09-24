@@ -194,6 +194,19 @@ void RpmCalculator::onSlowCallback() {
 	if (!engine->triggerCentral.engineMovedRecently(getTimeNowNt())) {
 		setStopSpinning();
 	}
+
+	if (engineConfiguration->alwaysInstantRpm) {
+		float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+		if (rpm == 0 || m_lastRpm == 0) {
+			rpmRate = 0;
+		} else {
+			auto delta = rpm - m_lastRpm;
+			rpmRate = delta / (SLOW_CALLBACK_PERIOD_MS * 0.001f);
+		}
+
+		m_lastRpm = rpm;
+	}
 }
 
 void RpmCalculator::setStopSpinning() {
@@ -243,19 +256,19 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(nowNt);
 
 		if (hadRpmRecently) {
-		/**
-		 * Four stroke cycle is two crankshaft revolutions
-		 *
-		 * We always do '* 2' because the event signal is already adjusted to 'per engine cycle'
-		 * and each revolution of crankshaft consists of two engine cycles revolutions
-		 *
-		 */
+			/**
+			 * Four stroke cycle is two crankshaft revolutions
+			 *
+			 * We always do '* 2' because the event signal is already adjusted to 'per engine cycle'
+			 * and each revolution of crankshaft consists of two engine cycles revolutions
+			 *
+			 */
 			if (!alwaysInstantRpm) {
 				if (periodSeconds == 0) {
 					rpmState->setRpmValue(0);
 					rpmState->rpmRate = 0;
 				} else {
-					int mult = (int)getEngineCycle(getEngineRotationState()->getOperationMode()) / 360;
+					float mult = getEngineCycle(getEngineRotationState()->getOperationMode()) / 360;
 					float rpm = 60 * mult / periodSeconds;
 
 					auto rpmDelta = rpm - rpmState->previousRpmValue;

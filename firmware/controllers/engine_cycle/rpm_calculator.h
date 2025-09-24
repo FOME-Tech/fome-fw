@@ -158,6 +158,9 @@ private:
 	bool isSpinning = false;
 
 	Timer engineStartTimer;
+
+	// Last RPM for purposes of calculating rpmRate while in "always instant RPM" mode
+	float m_lastRpm = 0;
 };
 
 void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp);
