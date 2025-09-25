@@ -129,11 +129,11 @@ void AemXSeriesWideband::decodeRusefiDiag(const CANRxFrame& frame) {
 	// no conversion, just ohms
 	esr = data->Esr;
 
-	faultCode = static_cast<uint8_t>(data->status);
+	faultCode = static_cast<uint8_t>(data->Status);
 
-	if (wbo::isStatusError(data->status)) {
+	if (wbo::describeFault(data->Status)) {
 		auto code = m_logicalIndex == 0 ? ObdCode::Wideband_1_Fault : ObdCode::Wideband_2_Fault;
-		warning(code, "Wideband #%d fault: %s", (m_logicalIndex + 1), wbo::describeStatus(data->status));
+		warning(code, "Wideband #%d fault: %s", (m_logicalIndex + 1), wbo::describeFault(data->Status));
 	}
 }
 
