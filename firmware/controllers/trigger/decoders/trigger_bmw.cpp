@@ -5,8 +5,9 @@
 #include "trigger_bmw.h"
 
 void initializeVvtN63TU(TriggerWaveform *s) {
-    // Cam runs once per 720 KW, but we describe it in 0..360 cam degrees.
     s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Both);
+    // True means it's a cam wheel
+    s->isSecondWheelCam = true;
 
     // per-state ratio acceptance windows
     s->setTriggerSynchronizationGap3(0, 1.8f, 3.2f);   // around 2.60
@@ -23,10 +24,11 @@ void initializeVvtN63TU(TriggerWaveform *s) {
     //r4 = g4/g3 = 90/70 = 1.285714
     //r5 = g5/g4 = 25/90 = 0.277778
 
-    s->addEvent360(25, TriggerValue::RISE); //pos1
-    s->addEvent360(90, TriggerValue::FALL); //pos2
-    s->addEvent360(180, TriggerValue::RISE); //pos3
-    s->addEvent360(200, TriggerValue::FALL); //pos4
-    s->addEvent360(270, TriggerValue::RISE); //pos5
-    s->addEvent360(360, TriggerValue::FALL); //pos6
+    // Edges: (angle, isRising, wheel)
+    s->addEvent720( 50.0f,  true,  TriggerWheel::T_PRIMARY);
+    s->addEvent720(180.0f,  false, TriggerWheel::T_PRIMARY);
+    s->addEvent720(360.0f,  true,  TriggerWheel::T_PRIMARY);
+    s->addEvent720(400.0f,  false, TriggerWheel::T_PRIMARY);
+    s->addEvent720(540.0f,  true,  TriggerWheel::T_PRIMARY);
+    s->addEvent720(720.0f,  false, TriggerWheel::T_PRIMARY);
 }
