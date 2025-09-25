@@ -2,7 +2,7 @@
 
 #include "pch.h"
 #include "trigger_structure.h"
-#include "trigger_universal.h"
+#include "trigger_bmw.h"
 
 void initializeVvtN63TU(TriggerWaveform *s) {
     // Cam runs once per 720 KW, but we describe it in 0..360 cam degrees.
