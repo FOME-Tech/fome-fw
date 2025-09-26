@@ -84,6 +84,22 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 		return Sensor::get(SensorType::OilPressure);
 	case GPPWM_OilTemp:
 		return Sensor::get(SensorType::OilTemperature);
+	case CAN_Input_1:
+		return efiReadPin(Gpio::CAN_INPUT_0);
+	case CAN_Input_2:
+		return efiReadPin(Gpio::CAN_INPUT_1);
+	case CAN_Input_3:
+		return efiReadPin(Gpio::CAN_INPUT_2);
+	case CAN_Input_4:
+		return efiReadPin(Gpio::CAN_INPUT_3);
+	case CAN_Input_5:
+		return efiReadPin(Gpio::CAN_INPUT_4);
+	case CAN_Input_6:
+		return efiReadPin(Gpio::CAN_INPUT_5);
+	case CAN_Input_7:
+		return efiReadPin(Gpio::CAN_INPUT_6);
+	case CAN_Input_8:
+		return efiReadPin(Gpio::CAN_INPUT_7);
 	}
 
 	return unexpected;
