@@ -471,6 +471,11 @@ uint16_t boostControlMinRpm; Minimum RPM to enable boost control. Use this to av
 uint8_t boostControlMinTps; Minimum TPS to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.;"", 1, 0, 0, 100, 0
 uint8_t boostControlMinMap; Minimum MAP to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.;"", 1, 0, 0, 250, 0
 
+gppwm_channel_e boostOpenLoopXAxis;Select the parameter to use for the X axis of the open loop boost table.
+gppwm_channel_e boostOpenLoopYAxis;Select the parameter to use for the Y axis of the open loop boost table.
+gppwm_channel_e boostClosedLoopXAxis;Select the parameter to use for the X axis of the closed loop boost table.
+gppwm_channel_e boostClosedLoopYAxis;Select the parameter to use for the Y axis of the closed loop boost table.
+
 custom timing_mode_e 1 bits, U08, @OFFSET@, [0:0], "dynamic", "fixed"
 timing_mode_e timingMode;Dynamic uses the timing map to decide the ignition timing, Static timing fixes the timing to the value set below (only use for checking static timing with a timing light).
 
