@@ -4,6 +4,8 @@
 #include "crc_accelerator.h"
 
 void checkBootloaderIntegrity() {
+	efiPrintf("Current boot address: 0x%08x", getBootAddress());
+
 	// Bootloader always lives in the first page of flash - FLASH_BASE
 	bool bootloaderIntact = checkFirmwareImageIntegrity(FLASH_BASE);
 
