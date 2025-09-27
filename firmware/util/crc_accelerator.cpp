@@ -77,3 +77,26 @@ void Crc::addData(const void* buf, size_t size) {
 uint32_t Crc::getCrc() const {
 	return m_crc;
 }
+
+bool checkFirmwareImageIntegrity(uintptr_t baseAddress) {
+	static const size_t checksumOffset = 0x1C;
+
+	uint8_t* start = reinterpret_cast<uint8_t*>(baseAddress);
+	size_t imageSize = *reinterpret_cast<size_t*>(start + checksumOffset + 4);
+
+	if (imageSize > 1024 * 1024) {
+		// impossibly large size, invalid
+		return false;
+	}
+
+	// part before checksum+size
+	Crc crc(imageSize);
+	crc.addData(start, checksumOffset);
+
+	// part after checksum+size
+	crc.addData(start + checksumOffset + 4, imageSize - (checksumOffset + 4));
+
+	uint32_t storedChecksum = *reinterpret_cast<uint32_t*>(start + checksumOffset);
+
+	return crc.getCrc() == storedChecksum;
+}

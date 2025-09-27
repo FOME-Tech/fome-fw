@@ -7,7 +7,9 @@ extern "C" {
 }
 
 blt_addr FlashGetUserProgBaseAddress() {
+#ifdef EFI_BOOTLOADER
 	return FLASH_BASE + 128 * 1024;
+#endif
 }
 
 #define FLASH_INVALID_ADDRESS 0xffffffff

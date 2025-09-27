@@ -7,7 +7,9 @@ extern "C" {
 }
 
 blt_addr FlashGetUserProgBaseAddress() {
+#ifdef EFI_BOOTLOADER
 	return FLASH_BASE + 32 * 1024;
+#endif
 }
 
 blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
