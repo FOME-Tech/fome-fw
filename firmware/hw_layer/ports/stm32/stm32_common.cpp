@@ -409,6 +409,7 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	return BOR_Result_Ok;
 }
 
+#if CORTEX_MODEL == 7
 uintptr_t getBootAddress() {
 	FLASH_OBProgramInitTypeDef flashData;
 
@@ -426,7 +427,15 @@ bool setBootAddress(uintptr_t address) {
 
 	FLASH_OBProgramInitTypeDef flashData;
 
+#ifdef STM32H7XX
+	flashData.BootConfig = OB_BOOT_ADD0;
 	flashData.OptionType = OPTIONBYTE_BOOTADD;
+#endif
+
+#ifdef STM32F7XX
+	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
+#endif
+
 	flashData.BootAddr0 = address;
 
 	HAL_FLASH_OB_Unlock();
@@ -436,6 +445,7 @@ bool setBootAddress(uintptr_t address) {
 
 	return status == HAL_OK;
 }
+#endif // CORTEX_MODEL == 7
 
 void baseMCUInit(void) {
 	// looks like this holds a random value on start? Let's set a nice clean zero
