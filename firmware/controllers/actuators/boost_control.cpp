@@ -14,8 +14,8 @@
 
 #define NO_PIN_PERIOD 500
 
-static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, uint8_t, uint8_t> boostMapOpen;
-static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, uint8_t, uint8_t> boostMapClosed;
+static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapOpen;
+static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapClosed;
 static SimplePwm boostPwmControl("boost");
 
 void BoostController::init(IPwm* pwm, const ValueProvider3D* openLoopMap, const ValueProvider3D* closedLoopTargetMap, pid_s* pidParams) {
@@ -273,7 +273,7 @@ void initBoostCtrl() {
 
 	// Set up open & closed loop tables
 	boostMapOpen.init(config->boostTableOpenLoop, config->boostTpsBins, config->boostRpmBins);
-	boostMapClosed.init(config->boostTableClosedLoop, config->boostTpsBins, config->boostRpmBins);
+	boostMapClosed.init(config->boostTableClosedLoop, config->boostClosedLoopYAxisBins, config->boostClosedLoopXAxisBins);
 
 	// Set up boost controller instance
 	engine->module<BoostController>().unmock().init(&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
