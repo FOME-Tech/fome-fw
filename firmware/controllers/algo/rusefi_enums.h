@@ -469,6 +469,11 @@ typedef enum __attribute__ ((__packed__)) {
 } boostType_e;
 
 typedef enum __attribute__ ((__packed__)) {
+	TPS = 0,
+	MAP = 1,
+} boostOpenLoopLoad_e;
+
+typedef enum __attribute__ ((__packed__)) {
 	SWITCH_INPUT_LAUNCH = 0,
 	CLUTCH_INPUT_LAUNCH = 1,
 	ALWAYS_ACTIVE_LAUNCH = 2,
