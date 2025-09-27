@@ -12,8 +12,6 @@
 #include "electronic_throttle.h"
 #include "gppwm_channel.h"
 
-#define NO_PIN_PERIOD 500
-
 static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapOpen;
 static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapClosed;
 static SimplePwm boostPwmControl("boost");
