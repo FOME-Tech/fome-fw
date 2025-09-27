@@ -34,53 +34,40 @@ if [ "${USE_OPENBLT-no}" = "yes" ]; then
 fi
 
 if uname | grep "NT"; then
-  HEX2DFU=../misc/encedo_hex2dfu/hex2dfu.exe
+  export HEX2DFU=../misc/encedo_hex2dfu/hex2dfu.exe
 else
-  HEX2DFU=../misc/encedo_hex2dfu/hex2dfu.bin
+  export HEX2DFU=../misc/encedo_hex2dfu/hex2dfu.bin
 fi
 chmod u+x $HEX2DFU
 
 mkdir -p deliver
-rm -f deliver/*
+rm -rf deliver/*
+mkdir -p deliver/temp
 
-# delete everything we're going to regenerate
-rm build/fome.bin build/fome.srec
-
-# Extract the firmware's base address from the elf - it may be different depending on exact CPU
-firmwareBaseAddress="$(objdump -h -j .vectors build/fome.elf | awk '/.vectors/ {print $5 }')"
-checksumAddress="$(printf "%X\n" $((0x$firmwareBaseAddress+0x1c)))"
-
-echo "Base address is 0x$firmwareBaseAddress"
-echo "Checksum address is 0x$checksumAddress"
-
-echo "$SCRIPT_NAME: invoking hex2dfu to place image checksum"
-$HEX2DFU -i build/fome.hex -c $checksumAddress -b build/fome.bin
-rm build/fome.hex
-# re-make hex, srec with the checksum in place
-objcopy -I binary -O ihex --change-addresses=0x$firmwareBaseAddress build/fome.bin build/fome.hex
-objcopy -I binary -O srec --change-addresses=0x$firmwareBaseAddress build/fome.bin build/fome.srec
+# Add a checksum to the main firmware image
+$FW_DIR/config/boards/write_firmware_checksum.sh build/fome.elf deliver/temp/main_firmware
 
 if [ "$USE_OPENBLT" = "yes" ]; then
   # this image is suitable for update through bootloader only
   # srec is the only format used by OpenBLT host tools
-  cp build/fome.srec deliver/fome_update.srec
+  cp deliver/temp/main_firmware.srec deliver/fome_update.srec
 else
   # standalone image (for use with no bootloader)
-  cp build/fome.bin  deliver/
+  cp deliver/temp/main_firmware.bin deliver/fome.bin
 fi
 
 # bootloader and combined image
 if [ "$USE_OPENBLT" = "yes" ]; then
+  # Add a checksum to the bootloader image
+  $FW_DIR/config/boards/write_firmware_checksum.sh bootloader/blbuild/fome_bl.elf deliver/temp/bootloader
+
+  cp deliver/temp/bootloader.srec deliver/fome_bl.srec
+
   echo "$SCRIPT_NAME: invoking hex2dfu for OpenBLT"
 
-  cp bootloader/blbuild/fome_bl.srec  deliver/fome_bl.srec
-
   echo "$SCRIPT_NAME: invoking hex2dfu for combined OpenBLT+FOME image"
-  $HEX2DFU -i bootloader/blbuild/fome_bl.hex -i build/fome.hex -b deliver/fome.bin
+  $HEX2DFU -i deliver/temp/bootloader.hex -i deliver/temp/main_firmware.hex -b deliver/fome.bin
 fi
 
-echo "$SCRIPT_NAME: build folder content:"
-ls -l build
-
 echo "$SCRIPT_NAME: deliver folder content:"
-ls -l deliver
+ls -lh deliver
