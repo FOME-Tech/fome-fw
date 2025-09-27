@@ -89,11 +89,11 @@ bool checkFirmwareImageIntegrity(uintptr_t baseAddress) {
 		return false;
 	}
 
-	// part before checksum+size
+	// part before checksum
 	Crc crc(imageSize);
 	crc.addData(start, checksumOffset);
 
-	// part after checksum+size
+	// part after checksum (note: size is included in the checksum!)
 	crc.addData(start + checksumOffset + 4, imageSize - (checksumOffset + 4));
 
 	uint32_t storedChecksum = *reinterpret_cast<uint32_t*>(start + checksumOffset);

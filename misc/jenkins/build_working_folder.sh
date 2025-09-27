@@ -58,7 +58,7 @@ cp firmware/deliver/fome.bin $FOLDER
 [ -e firmware/deliver/fome_bl.srec ] && { cp firmware/deliver/fome_bl.srec $FOLDER ; }
 # update srec
 [ -e firmware/deliver/fome_update.srec ] && { cp firmware/deliver/fome_update.srec $FOLDER ; }
-
+# combined image
 [ -e firmware/deliver/fome.bin ] || { echo "$SCRIPT_NAME: fome.bin not found"; exit 1; }
 
 cd temp
