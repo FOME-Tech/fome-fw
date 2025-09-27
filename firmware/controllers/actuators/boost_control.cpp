@@ -71,8 +71,8 @@ expected<float> BoostController::getSetpoint() {
 		return unexpected;
 	}
 
-	engine->outputChannels.boostClosedLoopXAxisValue = xAxis.Value;
-	engine->outputChannels.boostClosedLoopYAxisValue = yAxis.Value;
+	boostClosedLoopXAxisValue = xAxis.Value;
+	boostClosedLoopYAxisValue = yAxis.Value;
 
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_closedLoopTargetMap != nullptr, "boost closed loop target", unexpected);
 
@@ -82,10 +82,10 @@ expected<float> BoostController::getSetpoint() {
 	for (size_t i = 0; i < efi::size(config->boostClosedLoopBlends); i++) {
 		auto result = calculateBlend(config->boostClosedLoopBlends[i], xAxis.Value, yAxis.Value);
 
-		engine->outputChannels.boostClosedLoopBlendParameter[i] = result.BlendParameter;
-		engine->outputChannels.boostClosedLoopBlendBias[i] = result.Bias;
-		engine->outputChannels.boostClosedLoopBlendOutput[i] = result.Value;
-		engine->outputChannels.boostClosedLoopBlendYAxis[i] = result.TableYAxis;
+		boostClosedLoopBlendParameter[i] = result.BlendParameter;
+		boostClosedLoopBlendBias[i] = result.Bias;
+		boostClosedLoopBlendOutput[i] = result.Value;
+		boostClosedLoopBlendYAxis[i] = result.TableYAxis;
 
 		target += result.Value;
 	}
@@ -107,8 +107,8 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 		return unexpected;
 	}
 
-	engine->outputChannels.boostOpenLoopXAxisValue = xAxis.Value;
-	engine->outputChannels.boostOpenLoopYAxisValue = yAxis.Value;
+	boostOpenLoopXAxisValue = xAxis.Value;
+	boostOpenLoopYAxisValue = yAxis.Value;
 
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_openLoopMap != nullptr, "boost open loop", unexpected);
 
@@ -118,10 +118,10 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 	for (size_t i = 0; i < efi::size(config->boostOpenLoopBlends); i++) {
 		auto result = calculateBlend(config->boostOpenLoopBlends[i], xAxis.Value, yAxis.Value);
 
-		engine->outputChannels.boostOpenLoopBlendParameter[i] = result.BlendParameter;
-		engine->outputChannels.boostOpenLoopBlendBias[i] = result.Bias;
-		engine->outputChannels.boostOpenLoopBlendOutput[i] = result.Value;
-		engine->outputChannels.boostOpenLoopBlendYAxis[i] = result.TableYAxis;
+		boostOpenLoopBlendParameter[i] = result.BlendParameter;
+		boostOpenLoopBlendBias[i] = result.Bias;
+		boostOpenLoopBlendOutput[i] = result.Value;
+		boostOpenLoopBlendYAxis[i] = result.TableYAxis;
 
 		openLoop += result.Value;
 	}
