@@ -55,7 +55,7 @@ cp -r misc/install/STM32_Programmer_CLI $CONSOLE_FOLDER
 cp firmware/deliver/fome.bin $FOLDER
 
 # bootloader
-[ -e firmware/deliver/fome_bl.bin ] && { cp firmware/deliver/fome_bl.bin $FOLDER ; }
+[ -e firmware/deliver/fome_bl.srec ] && { cp firmware/deliver/fome_bl.srec $FOLDER ; }
 # update srec
 [ -e firmware/deliver/fome_update.srec ] && { cp firmware/deliver/fome_update.srec $FOLDER ; }
 
