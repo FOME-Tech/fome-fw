@@ -82,18 +82,19 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 	UNUSED(target);
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	auto driverIntent = Sensor::get(SensorType::DriverThrottleIntent);
-	if (!driverIntent) {
+	SensorType loadSource = engineConfiguration->boostOpenLoopLoadSource == TPS ? SensorType::DriverThrottleIntent : SensorType::Map;
+	auto load = Sensor::get(loadSource);
+	if (!load) {
 		return unexpected;
 	}
 
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_openLoopMap != nullptr, "boost open loop", unexpected);
 
-	float openLoop = luaOpenLoopAdd + m_openLoopMap->getValue(rpm, driverIntent.Value);
+	float openLoop = luaOpenLoopAdd + m_openLoopMap->getValue(rpm, load.Value);
 
 	// Add any blends if configured
 	for (size_t i = 0; i < efi::size(config->boostOpenLoopBlends); i++) {
-		auto result = calculateBlend(config->boostOpenLoopBlends[i], rpm, driverIntent.Value);
+		auto result = calculateBlend(config->boostOpenLoopBlends[i], rpm, load.Value);
 
 		engine->outputChannels.boostOpenLoopBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.boostOpenLoopBlendBias[i] = result.Bias;
@@ -192,9 +193,11 @@ void setDefaultBoostParameters() {
 	engineConfiguration->boostPid.iFactor = 0.3;
 	engineConfiguration->boostPid.maxValue = 20;
 	engineConfiguration->boostPid.minValue = -20;
+	engineConfiguration->boostOpenLoopLoadSource = TPS;
 
 	setLinearCurve(config->boostRpmBins, 0, 8000, 1);
 	setLinearCurve(config->boostTpsBins, 0, 100, 1);
+	setLinearCurve(config->boostMapBins, 0, 200, 1);
 
 	for (int loadIndex = 0; loadIndex < BOOST_LOAD_COUNT; loadIndex++) {
 		for (int rpmIndex = 0; rpmIndex < BOOST_RPM_COUNT; rpmIndex++) {

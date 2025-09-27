@@ -575,6 +575,7 @@ bool validateConfig() {
 	// Boost
 	if (engineConfiguration->isBoostControlEnabled) {
 		ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
+		ensureArrayIsAscending("Boost control MAP", config->boostMapBins);
 		ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
 	}
 #endif // EFI_BOOST_CONTROL
