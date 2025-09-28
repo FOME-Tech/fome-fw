@@ -409,6 +409,44 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	return BOR_Result_Ok;
 }
 
+#if CORTEX_MODEL == 7
+uintptr_t getBootAddress() {
+	FLASH_OBProgramInitTypeDef flashData;
+
+	/* Read option bytes */
+	HAL_FLASHEx_OBGetConfig(&flashData);
+
+	return flashData.BootAddr0;
+}
+
+bool setBootAddress(uintptr_t address) {
+	if ((address & 0xFFFF) != 0) {
+		// Boot address is not allowed to have lower 16 bits set
+		return false;
+	}
+
+	FLASH_OBProgramInitTypeDef flashData;
+
+#ifdef STM32H7XX
+	flashData.BootConfig = OB_BOOT_ADD0;
+	flashData.OptionType = OPTIONBYTE_BOOTADD;
+#endif
+
+#ifdef STM32F7XX
+	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
+#endif
+
+	flashData.BootAddr0 = address;
+
+	HAL_FLASH_OB_Unlock();
+	HAL_FLASHEx_OBProgram(&flashData);
+	HAL_StatusTypeDef status = HAL_FLASH_OB_Launch();
+	HAL_FLASH_OB_Lock();
+
+	return status == HAL_OK;
+}
+#endif // CORTEX_MODEL == 7
+
 void baseMCUInit(void) {
 	// looks like this holds a random value on start? Let's set a nice clean zero
 	DWT->CYCCNT = 0;
