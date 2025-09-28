@@ -220,6 +220,8 @@ void setDefaultBoostParameters() {
 
 	setLinearCurve(config->boostRpmBins, 0, 8000, 1);
 	setLinearCurve(config->boostTpsBins, 0, 100, 1);
+	setLinearCurve(config->boostClosedLoopXAxisBins, 0, 8000, 1);
+	setLinearCurve(config->boostClosedLoopYAxisBins, 0, 100, 1);
 
 	for (int loadIndex = 0; loadIndex < BOOST_LOAD_COUNT; loadIndex++) {
 		for (int rpmIndex = 0; rpmIndex < BOOST_RPM_COUNT; rpmIndex++) {
