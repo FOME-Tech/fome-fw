@@ -430,10 +430,6 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 		clearWarnings();
 		break;
 
-	case TS_DEBUG_MODE:
-		engineConfiguration->debugMode = (debug_mode_e)index;
-		break;
-
 	case TS_IGNITION_CATEGORY:
 		if (!running) {
 			doRunSparkBench(index, engineConfiguration->ignTestOnTime,
