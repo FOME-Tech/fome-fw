@@ -557,10 +557,19 @@ bool validateConfig() {
 	// Idle tables
 	ensureArrayIsAscending("Idle target RPM", config->cltIdleRpmBins);
 	ensureArrayIsAscending("Idle warmup mult", config->cltIdleCorrBins);
-	ensureArrayIsAscendingOrDefault("Idle coasting RPM", config->iacCoastingRpmBins);
-	ensureArrayIsAscendingOrDefault("Idle VE RPM", config->idleVeRpmBins);
-	ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
-	ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
+
+	if (engineConfiguration->useIacTableForCoasting) {
+		ensureArrayIsAscendingOrDefault("Idle coasting RPM", config->iacCoastingRpmBins);
+	}
+
+	if (engineConfiguration->useSeparateVeForIdle) {
+		ensureArrayIsAscendingOrDefault("Idle VE RPM", config->idleVeRpmBins);
+		ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
+	}
+
+	if (engineConfiguration->useSeparateAdvanceForIdle) {
+		ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
+	}
 
 	for (size_t index = 0; index < efi::size(config->vrThreshold); index++) {
 		auto& cfg = config->vrThreshold[index];
