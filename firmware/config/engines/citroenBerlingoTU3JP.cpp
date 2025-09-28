@@ -77,7 +77,6 @@ void setCitroenBerlingoTU3JPConfiguration() {
 
 
 //	engineConfiguration->o2heaterPin = Gpio::C13;
-//	engineConfiguration->logicAnalyzerPins[1] = Gpio::Unassigned;
 
 	/**
 	 * Inputs

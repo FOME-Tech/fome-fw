@@ -60,13 +60,6 @@
 
 //#define EFI_UART_ECHO_TEST_MODE TRUE
 
-/**
- * Build-in logic analyzer support. Logic analyzer viewer is one of the java console panes.
- */
-#ifndef EFI_LOGIC_ANALYZER
-#define EFI_LOGIC_ANALYZER TRUE
-#endif
-
 #ifndef HAL_TRIGGER_USE_PAL
 #define HAL_TRIGGER_USE_PAL TRUE
 #endif /* HAL_TRIGGER_USE_PAL */

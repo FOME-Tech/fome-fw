@@ -55,10 +55,6 @@
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
 
-#if EFI_LOGIC_ANALYZER
-#include "logic_analyzer.h"
-#endif /* EFI_LOGIC_ANALYZER */
-
 #if ! EFI_UNIT_TEST
 #include "init.h"
 #endif /* EFI_UNIT_TEST */
@@ -640,12 +636,6 @@ void initEngineController() {
 	addConsoleAction("sensorinfo", printSensorInfo);
 
 	commonInitEngineController();
-
-#if EFI_LOGIC_ANALYZER
-	if (engineConfiguration->isWaveAnalyzerEnabled) {
-		initWaveAnalyzer();
-	}
-#endif /* EFI_LOGIC_ANALYZER */
 
 	if (hasFirmwareError()) {
 		return;

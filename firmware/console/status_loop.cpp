@@ -27,10 +27,6 @@
 #include "pch.h"
 #include "status_loop.h"
 
-#if EFI_LOGIC_ANALYZER
-#include "logic_analyzer.h"
-#endif /* EFI_LOGIC_ANALYZER */
-
 #include "trigger_central.h"
 #include "sensor_reader.h"
 #include "console_io.h"
@@ -130,11 +126,6 @@ static void printEngineSnifferPinMappings() {
 		extern const char *vvtNames[];
 		printOutPin(vvtNames[i], engineConfiguration->camInputs[i]);
 	}
-#if EFI_LOGIC_ANALYZER
-	printOutPin(PROTOCOL_WA_CHANNEL_1, engineConfiguration->logicAnalyzerPins[0]);
-	printOutPin(PROTOCOL_WA_CHANNEL_2, engineConfiguration->logicAnalyzerPins[1]);
-#endif /* EFI_LOGIC_ANALYZER */
-
 	int cylCount = minI(engineConfiguration->cylindersCount, MAX_CYLINDER_COUNT);
 	for (int i = 0; i < cylCount; i++) {
 		printOutPin(enginePins.coils[i].getShortName(), engineConfiguration->ignitionPins[i]);
@@ -165,16 +156,6 @@ void printOverallStatus() {
 		printEngineSnifferPinMappings();
 	}
 }
-
-#if !defined(LOGIC_ANALYZER_BUFFER_SIZE)
-// TODO: how small can this be?
-#define LOGIC_ANALYZER_BUFFER_SIZE 1000
-#endif /* LOGIC_ANALYZER_BUFFER_SIZE */
-
-#if EFI_LOGIC_ANALYZER
-static char logicAnalyzerBuffer[LOGIC_ANALYZER_BUFFER_SIZE];
-static Logging logicAnalyzerLogger("logic analyzer", logicAnalyzerBuffer, sizeof(logicAnalyzerBuffer));
-#endif // EFI_LOGIC_ANALYZER
 
 /**
  * @brief Sends all pending data to rusEfi console
@@ -207,11 +188,6 @@ void updateDevConsoleState() {
 #else
 	chThdSleepMilliseconds(200);
 #endif
-
-#if EFI_LOGIC_ANALYZER
-	printWave(&logicAnalyzerLogger);
-	scheduleLogging(&logicAnalyzerLogger);
-#endif /* EFI_LOGIC_ANALYZER */
 }
 
 static void initStatusLeds() {
@@ -577,11 +553,6 @@ void updateTunerStudioState() {
 #if (BOARD_TLE8888_COUNT > 0)
 		tle8888PostState();
 #endif /* BOARD_TLE8888_COUNT */
-		break;
-	case DBG_LOGIC_ANALYZER: 
-#if EFI_LOGIC_ANALYZER	
-		reportLogicAnalyzerToTS();
-#endif /* EFI_LOGIC_ANALYZER */		
 		break;
 	default:
 		;

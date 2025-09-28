@@ -165,7 +165,6 @@ struct_no_prefix engine_configuration_s
 #define HW_MAX_ADC_INDEX 17
 #define TRIGGER_SIMULATOR_PIN_COUNT 2
 #define TRIGGER_INPUT_PIN_COUNT 2
-#define LOGIC_ANALYZER_CHANNEL_COUNT 4
 #define SCRIPT_SETTING_COUNT 8
 
 #define VEHICLE_INFO_SIZE 32
@@ -690,8 +689,6 @@ bit is_enabled_spi_2
 	bit alignEngineSnifferAtTDC
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
-
-	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
 
 	! 536870911 = 2^29-1, the maximum valid extended ID
 	uint32_t verboseCanBaseAddress;The ECU base CAN address (ID).\n\nValue is specified as a decimal number e.g. 512 is 0x200 in HEX.;"dec", 1, 0, 0, 536870911, 0
@@ -1887,11 +1884,6 @@ end_struct
 #define PROTOCOL_VVT2_NAME "VVT2"
 #define PROTOCOL_VVT3_NAME "VVT3"
 #define PROTOCOL_VVT4_NAME "VVT4"
-
-#define PROTOCOL_WA_CHANNEL_1 "input1"
-#define PROTOCOL_WA_CHANNEL_2 "input2"
-#define PROTOCOL_WA_CHANNEL_3 "input3"
-#define PROTOCOL_WA_CHANNEL_4 "input4"
 
 
 #define TS_PROTOCOL "001"
