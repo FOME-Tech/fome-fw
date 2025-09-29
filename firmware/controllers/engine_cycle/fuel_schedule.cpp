@@ -12,17 +12,15 @@
 extern bool printFuelDebug;
 
 void startInjection(InjectorContext ctx) {
-	efitick_t nowNt = getTimeNowNt();
-
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
 	while(mask) {
 		if (mask & 0x1) {
-			enginePins.injectors[idx].open(nowNt);
+			enginePins.injectors[idx].open();
 
 			if (ctx.stage2Active) {
-				enginePins.injectorsStage2[idx].open(nowNt);
+				enginePins.injectorsStage2[idx].open();
 			}
 		}
 
@@ -32,14 +30,12 @@ void startInjection(InjectorContext ctx) {
 }
 
 void endInjection(InjectorContext ctx) {
-	efitick_t nowNt = getTimeNowNt();
-
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
 	while(mask) {
 		if (mask & 0x1) {
-			enginePins.injectors[idx].close(nowNt);
+			enginePins.injectors[idx].close();
 		}
 
 		mask = mask >> 1;
@@ -64,14 +60,12 @@ void endInjection(InjectorContext ctx) {
 }
 
 void endInjectionStage2(InjectorContext ctx) {
-	efitick_t nowNt = getTimeNowNt();
-
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
 	while(mask) {
 		if (mask & 0x1) {
-			enginePins.injectorsStage2[idx].close(nowNt);
+			enginePins.injectorsStage2[idx].close();
 		}
 
 		mask = mask >> 1;

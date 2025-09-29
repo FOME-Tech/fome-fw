@@ -12,7 +12,6 @@
 #include "trigger_decoder.h"
 #include "main_trigger_callback.h"
 #include "listener_array.h"
-#include "logic_analyzer.h"
 
 #include "local_version_holder.h"
 #include "trigger_simulator.h"
@@ -639,10 +638,6 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	// Schedule the TDC mark
 	tdcMarkCallback(triggerIndexForListeners, timestamp);
 
-#if EFI_LOGIC_ANALYZER
-	waTriggerEventListener(signal, triggerIndexForListeners, timestamp);
-#endif
-
 	EngPhase currentEnginePhase = toEngPhase(currentTrgPhase);
 	currentEngineDecodedPhase = currentEnginePhase.angle;
 
@@ -764,9 +759,6 @@ void triggerInfo() {
 					getVvt_mode_e(engineConfiguration->vvtMode[camLogicalIndex]));
 		}
 	}
-
-	efiPrintf("primary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[0]));
-	efiPrintf("secondary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[1]));
 
 	efiPrintf("totalTriggerHandlerMaxTime=%lu", triggerMaxDuration);
 

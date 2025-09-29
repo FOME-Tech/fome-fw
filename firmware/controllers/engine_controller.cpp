@@ -55,10 +55,6 @@
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
 
-#if EFI_LOGIC_ANALYZER
-#include "logic_analyzer.h"
-#endif /* EFI_LOGIC_ANALYZER */
-
 #if ! EFI_UNIT_TEST
 #include "init.h"
 #endif /* EFI_UNIT_TEST */
@@ -557,10 +553,19 @@ bool validateConfig() {
 	// Idle tables
 	ensureArrayIsAscending("Idle target RPM", config->cltIdleRpmBins);
 	ensureArrayIsAscending("Idle warmup mult", config->cltIdleCorrBins);
-	ensureArrayIsAscendingOrDefault("Idle coasting RPM", config->iacCoastingRpmBins);
-	ensureArrayIsAscendingOrDefault("Idle VE RPM", config->idleVeRpmBins);
-	ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
-	ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
+
+	if (engineConfiguration->useIacTableForCoasting) {
+		ensureArrayIsAscendingOrDefault("Idle coasting RPM", config->iacCoastingRpmBins);
+	}
+
+	if (engineConfiguration->useSeparateVeForIdle) {
+		ensureArrayIsAscendingOrDefault("Idle VE RPM", config->idleVeRpmBins);
+		ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
+	}
+
+	if (engineConfiguration->useSeparateAdvanceForIdle) {
+		ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
+	}
 
 	for (size_t index = 0; index < efi::size(config->vrThreshold); index++) {
 		auto& cfg = config->vrThreshold[index];
@@ -631,12 +636,6 @@ void initEngineController() {
 	addConsoleAction("sensorinfo", printSensorInfo);
 
 	commonInitEngineController();
-
-#if EFI_LOGIC_ANALYZER
-	if (engineConfiguration->isWaveAnalyzerEnabled) {
-		initWaveAnalyzer();
-	}
-#endif /* EFI_LOGIC_ANALYZER */
 
 	if (hasFirmwareError()) {
 		return;

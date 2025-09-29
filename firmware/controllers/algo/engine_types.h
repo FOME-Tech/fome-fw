@@ -499,7 +499,7 @@ enum class trigger_type_e : uint32_t {
 };
 
 typedef enum {
-	TS_DEBUG_MODE = 0,
+	TS_UNUSED_0 = 0,
 	TS_UNUSED_1 = 1,
 	TS_UNUSED_2 = 2,
 	TS_UNUSED_3 = 3,
