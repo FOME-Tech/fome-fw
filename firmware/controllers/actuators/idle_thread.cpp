@@ -232,7 +232,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 		// Otherwise they will affect the idle position much later, when the throttle is closed.
 		if (mightResetPid) {
 			// we reset only if I-term is negative, because the positive I-term is good - it keeps RPM from dropping too low
-			if (m_pid.getIntegration() <= 0) {
+			if (m_pid.getIntegration() <= 0 || engineConfiguration->alwaysResetPidLeavingIdle) {
 				m_pid.reset();
 			}
 
