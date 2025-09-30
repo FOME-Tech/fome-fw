@@ -1,5 +1,5 @@
 struct_no_prefix wideband_state_s
-	uint8_t faultCode;Fault code
+	uint8_t faultCode;Status code
 
 	uint8_t heaterDuty;Heater duty;"%", 1, 0, 0, 100, 0
 	uint8_t pumpDuty;Pump duty;"%", 1, 0, 0, 100, 0

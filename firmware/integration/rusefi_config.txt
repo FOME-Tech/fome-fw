@@ -165,7 +165,6 @@ struct_no_prefix engine_configuration_s
 #define HW_MAX_ADC_INDEX 17
 #define TRIGGER_SIMULATOR_PIN_COUNT 2
 #define TRIGGER_INPUT_PIN_COUNT 2
-#define LOGIC_ANALYZER_CHANNEL_COUNT 4
 #define SCRIPT_SETTING_COUNT 8
 
 #define VEHICLE_INFO_SIZE 32
@@ -371,9 +370,9 @@ uint16_t rpmHardLimit;Hard cut above this RPM. Set slightly lower than absolute 
 uint16_t engineSnifferRpmThreshold;Engine sniffer would be disabled above this rpm;"RPM", 1, 0, 0, 30000, 0
 
 	uint8_t autoscale multisparkMaxRpm;Disable multispark above this engine speed.;"rpm", 50, 0, 0, 3000, 0
-	uint8_t autoscale maxAcRpm;Above this RPM, disable AC. Set to 0 to disable check.;"rpm", 50, 0, 0, 10000, 0
-	uint8_t maxAcTps;Above this TPS, disable AC. Set to 0 to disable check.;"%", 1, 0, 0, 100, 0
-	uint8_t maxAcClt;Above this CLT, disable AC to prevent overheating the engine. Set to 0 to disable check.;"deg C", 1, 0, 0, 150, 0
+	uint8_t autoscale maxAcRpm;Above this RPM, disable A/C. Set to 0 to disable check. 200 rpm deadband. ;"rpm", 50, 0, 0, 10000, 0
+	uint8_t maxAcTps;Above this TPS, disable A/C. Set to 0 to disable check. 5 % deadband.;"%", 1, 0, 0, 100, 0
+	uint8_t maxAcClt;Above this CLT, disable A/C to prevent overheating the engine. Set to 0 to disable check. 5 deg C deadband.;"deg C", 1, 0, 0, 150, 0
 
 	uint8_t multisparkMaxSparkingAngle;This parameter sets the latest that the last multispark can occur after the main ignition event. For example, if the ignition timing is 30 degrees BTDC, and this parameter is set to 45, no multispark will ever be fired after 15 degrees ATDC.;"deg", 1, 0, 0, 60, 0
 	uint8_t multisparkMaxExtraSparkCount;Configures the maximum number of extra sparks to fire (does not include main spark);"count", 1, 0, 1, 5, 0
@@ -691,8 +690,6 @@ bit is_enabled_spi_2
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
 
-	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
-
 	! 536870911 = 2^29-1, the maximum valid extended ID
 	uint32_t verboseCanBaseAddress;The ECU base CAN address (ID).\n\nValue is specified as a decimal number e.g. 512 is 0x200 in HEX.;"dec", 1, 0, 0, 536870911, 0
 
@@ -929,7 +926,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit isWaveAnalyzerEnabled
 	bit useSeparateVeForIdle;This activates a separate fuel table for Idle, this allows fine tuning of the idle fuelling.
 	bit verboseTriggerSynchDetails;Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
-	bit unused1188b12
+	bit alwaysResetPidLeavingIdle
 	bit canBroadcastEgt;Disable to skip cam data frame (base + 9) if you have no EGT sensing.
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
 	bit unused1200b14
@@ -1108,6 +1105,8 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint16_t vvtOutputFrequency;;"Hz", 1, 0, 100, 1000, 0
 	int8_t[CAMS_PER_BANK iterate] vvtItermMin;;"", 1, 0, -100, 100, 0
 	int8_t[CAMS_PER_BANK iterate] vvtItermMax;;"", 1, 0, -100, 100, 0
+	int8_t[CAMS_PER_BANK iterate] vvtOutputMin;;"", 1, 0, 0, 100, 0
+	int8_t[CAMS_PER_BANK iterate] vvtOutputMax;;"", 1, 0, 0, 100, 0
 	int8_t minimumIgnitionTiming;Minimim timing advance allowed. No spark on any cylinder will ever fire after this angle BTDC. For example, setting -10 here means no spark ever fires later than 10 deg ATDC. Note that this only concerns the primary spark: any trailing sparks or multispark may violate this constraint.;"deg BTDC", 1, 0, -90, 90, 0
 	int8_t maximumIgnitionTiming;Maximum timing advance allowed. No spark on any cylinder will ever fire before this angle BTDC. For example, setting 45 here means no spark ever fires earlier than 45 deg BTDC;"deg BTDC", 1, 0, -90, 90, 0
 	uint16_t alternatorPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
@@ -1209,7 +1208,7 @@ tChargeMode_e tChargeMode;
 
 	uint8_t triggerSkipPulses;Some trigger hardware may generate noise when the engine starts moving. Set this to ignore the first pulses when the engine starts moving.;"count", 1, 0, 0, 250, 0
 
-	uint8_t unused1769
+	uint8_t autoscale mapAveragingCylinderBalanceMinRpm;Above this RPM, apply automatic cylinder balancing to MAP measurements.;"rpm", 100, 0, 0, 10000, 0
 
 	int16_t coastingFuelCutMap;MAP value above which fuel injection is re-enabled.;"kPa", 1, 0, 0, 250, 0
 
@@ -1885,11 +1884,6 @@ end_struct
 #define PROTOCOL_VVT2_NAME "VVT2"
 #define PROTOCOL_VVT3_NAME "VVT3"
 #define PROTOCOL_VVT4_NAME "VVT4"
-
-#define PROTOCOL_WA_CHANNEL_1 "input1"
-#define PROTOCOL_WA_CHANNEL_2 "input2"
-#define PROTOCOL_WA_CHANNEL_3 "input3"
-#define PROTOCOL_WA_CHANNEL_4 "input4"
 
 
 #define TS_PROTOCOL "001"

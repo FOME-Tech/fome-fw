@@ -1,7 +1,7 @@
 #pragma once
 #include "rusefi_types.h"
 struct wideband_state_s {
-	// Fault code
+	// Status code
 	// offset 0
 	uint8_t faultCode = (uint8_t)0;
 	// Heater duty

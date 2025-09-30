@@ -182,6 +182,13 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 		float voltageRatio = 14 / clampF(10, Sensor::get(SensorType::BatteryVoltage).value_or(14), 24);
 		vvtPct *= voltageRatio;
 
+		// Clamp final output min/max
+		vvtPct = clampF(
+			engineConfiguration->vvtOutputMin[m_cam],
+			vvtPct,
+			engineConfiguration->vvtOutputMax[m_cam]
+		);
+
 		vvtOutput = vvtPct;
 
 		m_pwm->setSimplePwmDutyCycle(PERCENT_TO_DUTY(vvtPct));

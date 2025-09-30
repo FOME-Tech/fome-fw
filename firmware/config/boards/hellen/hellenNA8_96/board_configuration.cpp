@@ -43,7 +43,7 @@ static void setupVbatt() {
 	// pin input +12 from Main Relay
 	engineConfiguration->vbattAdcChannel = EFI_ADC_5; // 4T
 
-	engineConfiguration->adcVcc = 3.29f;
+	engineConfiguration->adcVcc = 3.3f;
 }
 
 static void setupDefaultSensorInputs() {

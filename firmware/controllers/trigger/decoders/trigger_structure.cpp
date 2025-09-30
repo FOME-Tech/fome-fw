@@ -119,7 +119,7 @@ bool TriggerWaveform::needsDisambiguation() const {
 		case TWO_STROKE:
 			return false;
 		default:
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "bad operationMode() in needsDisambiguation");
+			firmwareError("bad operationMode() in needsDisambiguation");
 			return true;
 	}
 }
@@ -185,7 +185,7 @@ void TriggerWaveform::calculateExpectedEventCounts() {
 	if (!useOnlyRisingEdges) {
 		for (size_t i = 0; i < efi::size(expectedEventCount); i++) {
 			if (getExpectedEventCount((TriggerWheel)i) % 2 != 0) {
-				firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "Trigger: should be even number of events index=%d count=%d", i, getExpectedEventCount((TriggerWheel)i));
+				firmwareError("Trigger: should be even number of events index=%d count=%d", i, getExpectedEventCount((TriggerWheel)i));
 			}
 		}
 	}
@@ -193,13 +193,13 @@ void TriggerWaveform::calculateExpectedEventCounts() {
 	bool isSingleToothOnPrimaryChannel = useOnlyRisingEdges ? getExpectedEventCount(TriggerWheel::T_PRIMARY) == 1 : getExpectedEventCount(TriggerWheel::T_PRIMARY) == 2;
 	// todo: next step would be to set 'isSynchronizationNeeded' automatically based on the logic we have here
 	if (!shapeWithoutTdc && isSingleToothOnPrimaryChannel != !isSynchronizationNeeded) {
-		firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "shapeWithoutTdc isSynchronizationNeeded isSingleToothOnPrimaryChannel constraint violation");
+		firmwareError("shapeWithoutTdc isSynchronizationNeeded isSingleToothOnPrimaryChannel constraint violation");
 	}
 	if (isSingleToothOnPrimaryChannel) {
 		useOnlyPrimaryForSync = true;
 	} else {
 		if (getExpectedEventCount(TriggerWheel::T_SECONDARY) == 0 && useOnlyPrimaryForSync) {
-			firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "why would you set useOnlyPrimaryForSync with only one trigger wheel?");
+			firmwareError("why would you set useOnlyPrimaryForSync with only one trigger wheel?");
 		}
 	}
 }
@@ -295,7 +295,7 @@ void TriggerWaveform::addEvent(angle_t angle, bool state, TriggerWheel const cha
 	isRiseEvent[index] = state;
 
 	if ((unsigned)index != wave.phaseCount) {
-		firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "are we ever here?");
+		firmwareError("are we ever here?");
 	}
 
 	wave.phaseCount++;

@@ -133,6 +133,7 @@
 #include "mass_storage_init.h"
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
+#include "bootloader_updater.h"
 
 #include <setjmp.h>
 
@@ -236,6 +237,10 @@ void runRusEfi() {
 
 	// periodic events need to be initialized after fuel&spark pins to avoid a warning
 	initMainLoop();
+
+#if EFI_USE_OPENBLT
+	checkBootloaderIntegrity();
+#endif
 
 	runMainLoop();
 }

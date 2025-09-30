@@ -12,7 +12,6 @@
 #include "trigger_decoder.h"
 #include "main_trigger_callback.h"
 #include "listener_array.h"
-#include "logic_analyzer.h"
 
 #include "local_version_holder.h"
 #include "trigger_simulator.h"
@@ -121,7 +120,7 @@ int getCrankDivider(operation_mode_e operationMode) {
 		return 1;
 	}
 
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "unexpected operationMode in getCrankDivider");
+	firmwareError("unexpected operationMode in getCrankDivider");
 
 	return 1;
 }
@@ -638,10 +637,6 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	// Schedule the TDC mark
 	tdcMarkCallback(triggerIndexForListeners, timestamp);
 
-#if EFI_LOGIC_ANALYZER
-	waTriggerEventListener(signal, triggerIndexForListeners, timestamp);
-#endif
-
 	EngPhase currentEnginePhase = toEngPhase(currentTrgPhase);
 	currentEngineDecodedPhase = currentEnginePhase.angle;
 
@@ -763,9 +758,6 @@ void triggerInfo() {
 					getVvt_mode_e(engineConfiguration->vvtMode[camLogicalIndex]));
 		}
 	}
-
-	efiPrintf("primary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[0]));
-	efiPrintf("secondary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[1]));
 
 	efiPrintf("totalTriggerHandlerMaxTime=%lu", triggerMaxDuration);
 
@@ -954,11 +946,11 @@ bool TriggerCentral::isTriggerConfigChanged() {
 
 void validateTriggerInputs() {
 	if (!isBrainPinValid(engineConfiguration->triggerInputPins[0]) && isBrainPinValid(engineConfiguration->triggerInputPins[1])) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "First trigger channel is missing");
+		firmwareError("First trigger channel is missing");
 	}
 
 	if (!isBrainPinValid(engineConfiguration->camInputs[0]) && isBrainPinValid(engineConfiguration->camInputs[2])) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "First bank cam input is required if second bank specified");
+		firmwareError("First bank cam input is required if second bank specified");
 	}
 }
 

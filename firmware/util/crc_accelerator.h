@@ -22,3 +22,11 @@ inline uint32_t singleCrc(const void* buf, size_t size) {
 	crc.addData(buf, size);
 	return crc.getCrc();
 }
+
+struct FirmwareVerifyResult {
+	bool Valid;
+	uint32_t StoredCrc;
+	uint32_t CalculatedCrc;
+};
+
+bool checkFirmwareImageIntegrity(uintptr_t baseAddress);

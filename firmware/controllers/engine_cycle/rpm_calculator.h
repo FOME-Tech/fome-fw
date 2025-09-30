@@ -140,11 +140,6 @@ private:
 	 float cachedRpmValue = 0;
 
 	/**
-	 * Should be called once we've realized engine is not spinning any more.
-	 */
-	void setStopped();
-
-	/**
 	 * This counter is incremented with each revolution of one of the shafts. Could be
 	 * crankshaft could be camshaft.
 	 */
@@ -163,6 +158,9 @@ private:
 	bool isSpinning = false;
 
 	Timer engineStartTimer;
+
+	// Last RPM for purposes of calculating rpmRate while in "always instant RPM" mode
+	float m_lastRpm = 0;
 };
 
 void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp);

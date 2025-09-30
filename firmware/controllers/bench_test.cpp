@@ -332,7 +332,7 @@ static void handleBenchCategory(uint16_t index) {
 		return;
 #endif // EFI_VVT_PID
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench function %d", index);
+		firmwareError("Unexpected bench function %d", index);
 	}
 }
 
@@ -405,7 +405,7 @@ static void handleCommandX14(uint16_t index) {
 		engine->engineState.requestSplitInjection ^= true;
 		return;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench x14 %d", index);
+		firmwareError("Unexpected bench x14 %d", index);
 	}
 }
 
@@ -428,10 +428,6 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 	switch (subsystem) {
 	case TS_CLEAR_WARNINGS:
 		clearWarnings();
-		break;
-
-	case TS_DEBUG_MODE:
-		engineConfiguration->debugMode = (debug_mode_e)index;
 		break;
 
 	case TS_IGNITION_CATEGORY:
@@ -508,7 +504,7 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 #endif
 
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench subsystem %d %d", subsystem, index);
+		firmwareError("Unexpected bench subsystem %d %d", subsystem, index);
 	}
 }
 

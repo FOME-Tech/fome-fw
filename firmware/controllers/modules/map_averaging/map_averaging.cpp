@@ -116,8 +116,10 @@ void MapAverager::onSample(float map, uint8_t cylinderNumber) {
 	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinder)) {
 		engine->engineState.mapPerCylinder[cylinderNumber] = map;
 
-		// correct the reading by this cylinder's MAP offset
-		map -= engine->engineState.mapCylinderBalance[cylinderNumber];
+		if (Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->mapAveragingCylinderBalanceMinRpm) {
+			// correct the reading by this cylinder's MAP offset, but only if sufficient RPM
+			map -= engine->engineState.mapCylinderBalance[cylinderNumber];
+		}
 	}
 
 	// TODO: this should be per-sensor, not one for all MAP sensors

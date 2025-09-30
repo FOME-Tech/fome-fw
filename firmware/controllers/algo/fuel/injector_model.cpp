@@ -124,7 +124,7 @@ float InjectorModelWithConfig::getInjectorFlowRatio() {
 
 	if (referencePressure < 50) {
 		// impossibly low fuel ref pressure
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Impossible fuel reference pressure: %f", referencePressure);
+		firmwareError("Impossible fuel reference pressure: %f", referencePressure);
 
 		return 1.0f;
 	}

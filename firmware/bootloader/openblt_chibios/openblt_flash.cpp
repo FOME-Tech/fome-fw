@@ -38,26 +38,8 @@ blt_bool FlashVerifyChecksum() {
 		return BLT_FALSE;
 	}
 
-	static const size_t checksumOffset = 0x1C;
-
 	// Now do the actual CRC check to ensure we didn't get stuck with a half-written firmware image
-	uint8_t* start = reinterpret_cast<uint8_t*>(FlashGetUserProgBaseAddress());
-
-	size_t imageSize = *reinterpret_cast<size_t*>(start + checksumOffset + 4);
-
-	if (imageSize > 1024 * 1024) {
-		// impossibly large size, invalid
-		return BLT_FALSE;
-	}
-
-	// part before checksum+size
-	Crc crc(imageSize);
-	crc.addData(start, checksumOffset);
-
-	// part after checksum+size
-	crc.addData(start + checksumOffset + 4, imageSize - (checksumOffset + 4));
-
-	uint32_t storedChecksum = *reinterpret_cast<uint32_t*>(start + checksumOffset);
-
-	return (crc.getCrc() == storedChecksum) ? BLT_TRUE : BLT_FALSE;
+	return
+		checkFirmwareImageIntegrity(FlashGetUserProgBaseAddress())
+		? BLT_TRUE : BLT_FALSE;
 }
