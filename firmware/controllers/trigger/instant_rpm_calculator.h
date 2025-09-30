@@ -40,10 +40,6 @@ public:
 	size_t spinningEventIndex = 0;
 
 	/**
-	 * instant RPM calculated at this trigger wheel tooth
-	 */
-	float instantRpmValue[PWM_PHASE_MAX_COUNT];
-	/**
 	 * Stores last non-zero instant RPM value to fix early instability
 	 */
 	float prevInstantRpmValue = 0;
@@ -54,6 +50,4 @@ private:
 	float calculateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 		uint32_t index, efitick_t nowNt);
-
-	float m_instantRpmRatio = 0;
 };

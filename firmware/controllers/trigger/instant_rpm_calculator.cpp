@@ -78,8 +78,6 @@ float InstantRpmCalculator::calculateInstantRpm(
 	}
 
 	float instantRpm = (60000000.0 / 360 * US_TO_NT_MULTIPLIER) * angleDiff / time;
-	assertIsInBoundsWithResult(current_index, instantRpmValue, "instantRpmValue", 0);
-	instantRpmValue[current_index] = instantRpm;
 
 	// This fixes early RPM instability based on incomplete data
 	if (instantRpm < RPM_LOW_THRESHOLD) {
@@ -87,8 +85,6 @@ float InstantRpmCalculator::calculateInstantRpm(
 	}
 
 	prevInstantRpmValue = instantRpm;
-
-	m_instantRpmRatio = instantRpm / instantRpmValue[prevIndex];
 
 	return instantRpm;
 }
