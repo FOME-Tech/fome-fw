@@ -5,10 +5,9 @@
 #if EFI_SHAFT_POSITION_INPUT
 
 InstantRpmCalculator::InstantRpmCalculator() :
-			//https://en.cppreference.com/w/cpp/language/zero_initialization
-			timeOfLastEvent()
-			, instantRpmValue()
-	{
+	//https://en.cppreference.com/w/cpp/language/zero_initialization
+	timeOfLastEvent()
+{
 }
 
 void InstantRpmCalculator::movePreSynchTimestamps() {
