@@ -109,6 +109,8 @@ int intFlashSectorErase(flashsector_t sector) {
 		sectorRegIdx = sector;
 	}
 
+	efiPrintf("Flash: erase sector %d bank %d sectorRegIdx %d...", sector, ctlr ? 2 : 1, sectorRegIdx);
+
 	/* Unlock flash for write access */
 	if (intFlashUnlock(ctlr) == HAL_FAILED)
 		return FLASH_RETURN_NO_PERMISSION;
@@ -156,6 +158,8 @@ int intFlashSectorErase(flashsector_t sector) {
 	/* Check deleted sector for errors */
 	if (intFlashIsErased(intFlashSectorBegin(sector), flashSectorSize(sector)) == FALSE)
 		return FLASH_RETURN_BAD_FLASH; /* Sector is not empty despite the erase cycle! */
+
+	efiPrintf("...flash erase done!");
 
 	/* Successfully deleted sector */
 	return FLASH_RETURN_SUCCESS;
