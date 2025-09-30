@@ -458,6 +458,8 @@ TEST(idle_v2, RunningToIdleTransition) {
 	engineConfiguration->idleRpmPid.minValue = -50;
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
+	engineConfiguration->alwaysResetPidLeavingIdle = true;
+
 	SensorResult expectedTps = 0;
 	float expectedClt = 37;
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, expectedTps.Value);
@@ -483,8 +485,7 @@ TEST(idle_v2, RunningToIdleTransition) {
 
 	// back to running mode, should reset all:
 	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 1100));
-	// FIXME!, this should be 0
-	EXPECT_NEAR(0.01, dut.getIdlePid()->getIntegration(), EPS2D);
+	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
 }
 
 
