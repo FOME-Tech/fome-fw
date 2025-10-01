@@ -118,6 +118,18 @@ int intFlashSectorErase(flashsector_t sector) {
 	if (intFlashUnlock(ctlr) == HAL_FAILED)
 		return FLASH_RETURN_NO_PERMISSION;
 
+	// Mitigation for https://github.com/FOME-Tech/fome-fw/issues/685
+	struct ScopeCacheDisabler {
+		ScopeCacheDisabler() {
+			SCB_DisableICache();
+			SCB_InvalidateICache();
+		}
+
+		~ScopeCacheDisabler() {
+			SCB_EnableICache();
+		}
+	} cacheDisabler;
+
 	/* Wait for any busy flags. */
 	intFlashWaitWithSleep();
 
