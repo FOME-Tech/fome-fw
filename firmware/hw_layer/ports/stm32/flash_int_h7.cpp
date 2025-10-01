@@ -23,6 +23,7 @@
 #define FLASH_CR_STRT FLASH_CR_START
 
 // QW bit supercedes the older BSY bit
+#define intFlashWaitWithSleep() do { chThdSleepMilliseconds(1); }  while (FLASH_SR & FLASH_SR_QW);
 #define intFlashWaitWhileBusy() do { __DSB(); } while (FLASH_SR & FLASH_SR_QW);
 
 flashaddr_t intFlashSectorBegin(flashsector_t sector) {
@@ -118,7 +119,7 @@ int intFlashSectorErase(flashsector_t sector) {
 		return FLASH_RETURN_NO_PERMISSION;
 
 	/* Wait for any busy flags. */
-	intFlashWaitWhileBusy();
+	intFlashWaitWithSleep();
 
 	/* Clearing error status bits.*/
 	intFlashClearErrors(ctlr);
@@ -139,7 +140,7 @@ int intFlashSectorErase(flashsector_t sector) {
 	FLASH_CR |= (FLASH_CR_SER | FLASH_CR_PSIZE_VALUE | (sectorRegIdx << FLASH_CR_SNB_Pos) | FLASH_CR_START);
 
 	/* Wait until it's finished. */
-	intFlashWaitWhileBusy();
+	intFlashWaitWithSleep();
 
 	/* Sector erase flag does not clear automatically. */
 	FLASH_CR &= ~FLASH_CR_SER;
