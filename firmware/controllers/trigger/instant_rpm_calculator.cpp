@@ -5,10 +5,9 @@
 #if EFI_SHAFT_POSITION_INPUT
 
 InstantRpmCalculator::InstantRpmCalculator() :
-			//https://en.cppreference.com/w/cpp/language/zero_initialization
-			timeOfLastEvent()
-			, instantRpmValue()
-	{
+	//https://en.cppreference.com/w/cpp/language/zero_initialization
+	timeOfLastEvent()
+{
 }
 
 void InstantRpmCalculator::movePreSynchTimestamps() {
@@ -31,7 +30,7 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 		firstDst = triggerSize - spinningEventIndex;
 	}
 
-	memcpy(timeOfLastEvent + firstDst, spinningEvents + firstSrc, eventsToCopy * sizeof(timeOfLastEvent[0]));
+	memmove(timeOfLastEvent + firstDst, timeOfLastEvent + firstSrc, eventsToCopy * sizeof(timeOfLastEvent[0]));
 }
 
 float InstantRpmCalculator::calculateInstantRpm(
@@ -78,8 +77,6 @@ float InstantRpmCalculator::calculateInstantRpm(
 	}
 
 	float instantRpm = (60000000.0 / 360 * US_TO_NT_MULTIPLIER) * angleDiff / time;
-	assertIsInBoundsWithResult(current_index, instantRpmValue, "instantRpmValue", 0);
-	instantRpmValue[current_index] = instantRpm;
 
 	// This fixes early RPM instability based on incomplete data
 	if (instantRpm < RPM_LOW_THRESHOLD) {
@@ -88,14 +85,12 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	prevInstantRpmValue = instantRpm;
 
-	m_instantRpmRatio = instantRpm / instantRpmValue[prevIndex];
-
 	return instantRpm;
 }
 
 void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 	// here we remember tooth timestamps which happen prior to synchronization
-	if (spinningEventIndex >= efi::size(spinningEvents)) {
+	if (spinningEventIndex >= efi::size(timeOfLastEvent)) {
 		// too many events while trying to find synchronization point
 		// todo: better implementation would be to shift here or use cyclic buffer so that we keep last
 		// 'PRE_SYNC_EVENTS' events
@@ -103,7 +98,7 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 	}
 
 	uint32_t nowNt32 = nowNt;
-	spinningEvents[spinningEventIndex] = nowNt32;
+	timeOfLastEvent[spinningEventIndex] = nowNt32;
 
 	// If we are using only rising edges, we never write in to the odd-index slots that
 	// would be used by falling edges

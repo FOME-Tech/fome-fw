@@ -232,7 +232,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 		// Otherwise they will affect the idle position much later, when the throttle is closed.
 		if (mightResetPid) {
 			// we reset only if I-term is negative, because the positive I-term is good - it keeps RPM from dropping too low
-			if (m_pid.getIntegration() <= 0) {
+			if (m_pid.getIntegration() <= 0 || engineConfiguration->alwaysResetPidLeavingIdle) {
 				m_pid.reset();
 			}
 
@@ -243,16 +243,10 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 		return 0;
 	}
 
-	percent_t newValue = m_pid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
-
-	// the state of PID has been changed, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
+	// the state of PID is about to change, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
 	mightResetPid = true;
 
-	// Apply PID Deactivation Threshold as a smooth taper for TPS transients.
-	// if tps==0 then PID just works as usual, or we completely disable it if tps>=threshold
-	// TODO: should we just remove this? It reduces the gain if your zero throttle stop isn't perfect,
-	// which could give unstable results.
-	return interpolateClamped(0, newValue, engineConfiguration->idlePidDeactivationTpsThreshold, 0, tpsPos);
+	return m_pid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 }
 
 float IdleController::getIdlePosition(float rpm) {

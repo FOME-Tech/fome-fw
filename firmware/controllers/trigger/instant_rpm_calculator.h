@@ -27,7 +27,6 @@ public:
 
 	void resetInstantRpm() {
 		setArrayValues(timeOfLastEvent, 0);
-		setArrayValues(spinningEvents, 0);
 		spinningEventIndex = 0;
 		prevInstantRpmValue = 0;
 		m_instantRpm = 0;
@@ -40,13 +39,6 @@ public:
 
 	size_t spinningEventIndex = 0;
 
-	// we might need up to one full trigger cycle of events - which on 60-2 means storage for ~120
-	// todo: change the implementation to reuse 'timeOfLastEvent'
-	uint32_t spinningEvents[120];
-	/**
-	 * instant RPM calculated at this trigger wheel tooth
-	 */
-	float instantRpmValue[PWM_PHASE_MAX_COUNT];
 	/**
 	 * Stores last non-zero instant RPM value to fix early instability
 	 */
@@ -58,6 +50,4 @@ private:
 	float calculateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 		uint32_t index, efitick_t nowNt);
-
-	float m_instantRpmRatio = 0;
 };
