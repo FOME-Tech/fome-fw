@@ -123,9 +123,8 @@ int intFlashSectorErase(flashsector_t sector) {
 	/* Clearing error status bits.*/
 	intFlashClearErrors(ctlr);
 
-	/* Setup parallelism before any program/erase */
-	FLASH_CR &= ~FLASH_CR_PSIZE_MASK;
-	FLASH_CR |= FLASH_CR_PSIZE_VALUE;
+	// Reset voltage range & sector number
+	FLASH_CR &= ~(FLASH_CR_PSIZE | FLASH_CR_SNB);
 
 	/* Start deletion of sector.
 	 * SNB(4:1) is defined as:
@@ -137,12 +136,7 @@ int intFlashSectorErase(flashsector_t sector) {
 	 * ...
 	 * 11011 sector 23 (the end of 2nd bank, 2Mb border)
 	 * others not allowed */
-	FLASH_CR &= ~FLASH_CR_SNB_Msk;
-	FLASH_CR |= (sectorRegIdx << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk;
-	/* sector erase */
-	FLASH_CR |= FLASH_CR_SER;
-	/* start erase operation */
-	FLASH_CR |= FLASH_CR_STRT;
+	FLASH_CR |= (FLASH_CR_SER | FLASH_CR_PSIZE_VALUE | (sectorRegIdx << FLASH_CR_SNB_Pos) | FLASH_CR_START);
 
 	/* Wait until it's finished. */
 	intFlashWaitWhileBusy();
