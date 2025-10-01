@@ -110,9 +110,11 @@ int intFlashSectorErase(flashsector_t sector) {
 		sectorRegIdx = sector;
 	}
 
+#ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: erase sector %d bank %d sectorRegIdx %d...", sector, ctlr ? 2 : 1, sectorRegIdx);
 	Timer eraseTimer;
 	eraseTimer.reset();
+#endif
 
 	/* Unlock flash for write access */
 	if (intFlashUnlock(ctlr) == HAL_FAILED)
@@ -168,16 +170,20 @@ int intFlashSectorErase(flashsector_t sector) {
 	if (intFlashIsErased(intFlashSectorBegin(sector), flashSectorSize(sector)) == FALSE)
 		return FLASH_RETURN_BAD_FLASH; /* Sector is not empty despite the erase cycle! */
 
+#ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: erase done in %.2f sec", eraseTimer.getElapsedSeconds());
+#endif
 
 	/* Successfully deleted sector */
 	return FLASH_RETURN_SUCCESS;
 }
 
 int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
+#ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: write %d bytes at 0x%08x", size, address);
 	Timer writeTimer;
 	writeTimer.reset();
+#endif
 
 	// Select the appropriate controller for this address
 	flashsector_t sector = intFlashSectorAt(address);
@@ -232,7 +238,9 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	/* Lock flash again */
 	intFlashLock();
 
+#ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: write done in %.2f sec", writeTimer.getElapsedSeconds());
+#endif
 
 	return FLASH_RETURN_SUCCESS;
 }
