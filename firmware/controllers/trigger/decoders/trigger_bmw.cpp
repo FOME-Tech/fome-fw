@@ -11,12 +11,12 @@ void initializeVvtN63TU(TriggerWaveform *s) {
 
 	s->setTriggerSynchronizationGap2(1.4, 1.6);
 
-    s->addEvent360(10, true, TriggerWheel::T_PRIMARY);
-    s->addEvent360(95, false, TriggerWheel::T_PRIMARY);
-
-    s->addEvent360(125, true, TriggerWheel::T_PRIMARY);
-    s->addEvent360(185, false, TriggerWheel::T_PRIMARY);
-    
-    s->addEvent360(280, true, TriggerWheel::T_PRIMARY);
-    s->addEvent360(305, false, TriggerWheel::T_PRIMARY);
+s->addEvent720(13,  true,  TriggerWheel::T_PRIMARY);
+s->addEvent720(185,  false, TriggerWheel::T_PRIMARY);
+	
+s->addEvent720(246,  true,  TriggerWheel::T_PRIMARY);
+s->addEvent720(365,  false, TriggerWheel::T_PRIMARY);
+	
+s->addEvent720(551,  true,  TriggerWheel::T_PRIMARY);
+s->addEvent720(604,  false, TriggerWheel::T_PRIMARY);
 }
