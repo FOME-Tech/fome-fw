@@ -134,7 +134,7 @@ void setWidebandOffset(uint8_t index) {
 }
 
 void sendWidebandInfo() {
-	CanTxMessage m(WB_MSG_ECU_STATUS, 2, getWidebandBus(), true);
+	CanTxMessage m(WB_MSG_ECU_STATUS, 3, getWidebandBus(), true);
 
 	float vbatt = Sensor::getOrZero(SensorType::BatteryVoltage) * 10;
 
@@ -142,6 +142,10 @@ void sendWidebandInfo() {
 
 	// Offset 1 bit 0 = heater enable
 	m[1] = enginePins.o2heater.getLogicValue() ? 0x01 : 0x00;
+
+	// Offset 2: pump gain adjustment (0-200%)
+	auto gain = engineConfiguration->widebandPumpGain;
+	m[2] = gain != 0 ? gain : 100;
 }
 
 #endif // EFI_WIDEBAND_FIRMWARE_UPDATE && HAL_USE_CAN

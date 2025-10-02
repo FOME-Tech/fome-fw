@@ -544,6 +544,8 @@ static void setDefaultEngineConfiguration() {
 
 	setEgoSensor(ES_14Point7_Free);
 
+	engineConfiguration->widebandPumpGain = 100;
+
 	engineConfiguration->globalFuelCorrection = 1;
 	engineConfiguration->adcVcc = 3.3f;
 
