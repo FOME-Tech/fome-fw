@@ -9,8 +9,8 @@ void initializeVvtN63TU(TriggerWaveform *s) {
     
     s->shapeWithoutTdc = true;
 
-	s->setTriggerSynchronizationGap2(0.56f, 0.70f);
-	s->setSecondTriggerSynchronizationGap2(1.28f, 1.62f);
+	s->setTriggerSynchronizationGap2(0.70f, 0.82f);
+	s->setSecondTriggerSynchronizationGap2(1.25f, 1.40f);
 
     s->addEvent360(25, true, TriggerWheel::T_PRIMARY);
     s->addEvent360(90, false, TriggerWheel::T_PRIMARY);
