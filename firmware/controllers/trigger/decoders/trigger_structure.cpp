@@ -21,7 +21,7 @@
 
 #include "pch.h"
 
-
+#include "trigger_bmw.h"
 #include "trigger_chrysler.h"
 #include "trigger_gm.h"
 #include "trigger_nissan.h"
@@ -686,6 +686,10 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 	case trigger_type_e::TT_GM_24x_2:
 		initGmLS24_3deg(this);
 		break;
+
+    case trigger_type_e::TT_VVT_BMW_N63TU:
+        initializeVvtN63TU(this);
+        break; 
 
 	case trigger_type_e::TT_SUBARU_7_WITHOUT_6:
 		initializeSubaruOnly7(this);
