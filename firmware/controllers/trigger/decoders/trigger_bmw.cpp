@@ -5,19 +5,19 @@
 #include "trigger_bmw.h"
 
 void initializeVvtN63TU(TriggerWaveform *s) {
-    s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Both);
+    s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Fall);
     
     s->shapeWithoutTdc = true;
 
 	s->setTriggerSynchronizationGap(0.581);
 	s->setSecondTriggerSynchronizationGap(1.722);
 
-    s->addEvent360(25, TriggerValue::RISE); //pos1
-    s->addEvent360(90, TriggerValue::FALL); //pos2
+    s->addEvent360(25, true, TriggerWheel::T_PRIMARY);
+    s->addEvent360(90, false, TriggerWheel::T_PRIMARY);
+
+    s->addEvent360(180, true, TriggerWheel::T_PRIMARY);
+    s->addEvent360(200, false, TriggerWheel::T_PRIMARY);
     
-    s->addEvent360(180, TriggerValue::RISE); //pos3
-    s->addEvent360(200, TriggerValue::FALL); //pos4
-    
-    s->addEvent360(270, TriggerValue::RISE); //pos5
-    s->addEvent360(360, TriggerValue::FALL); //pos6
+    s->addEvent360(270, true, TriggerWheel::T_PRIMARY);
+    s->addEvent360(360, false, TriggerWheel::T_PRIMARY);
 }
