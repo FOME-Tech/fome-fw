@@ -6,8 +6,6 @@
 
 void initializeVvtN63TU(TriggerWaveform *s) {
     s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Fall);
-    
-    s->shapeWithoutTdc = true;
 
 	s->setTriggerSynchronizationGap(1.583);
 	s->setSecondTriggerSynchronizationGap(0.5);
