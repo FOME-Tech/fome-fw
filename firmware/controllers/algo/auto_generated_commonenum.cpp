@@ -703,6 +703,8 @@ const char *getVvt_mode_e(vvt_mode_e value){
 switch(value) {
 case VVT_BARRA_3_PLUS_1:
   return "VVT_BARRA_3_PLUS_1";
+case VVT_BMW_N63TU:
+  return "VVT_BMW_N63TU";
 case VVT_BOSCH_QUICK_START:
   return "VVT_BOSCH_QUICK_START";
 case VVT_FORD_ST170:

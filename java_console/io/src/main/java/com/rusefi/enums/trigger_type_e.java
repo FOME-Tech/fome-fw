@@ -82,5 +82,6 @@ public enum trigger_type_e {
 	TT_GM_24x_2,
 	TT_VVT_MAZDA_L,
 	TT_VVT_MIATA_NA,
+	TT_VVT_BMW_N63TU,
 	TT_UNUSED,
 }

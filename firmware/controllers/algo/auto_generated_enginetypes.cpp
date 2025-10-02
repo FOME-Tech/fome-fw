@@ -548,6 +548,8 @@ case trigger_type_e::TT_UNUSED_17:
   return "TT_UNUSED_17";
 case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:
   return "TT_VVT_BARRA_3_PLUS_1";
+case trigger_type_e::TT_VVT_BMW_N63TU:
+  return "TT_VVT_BMW_N63TU";
 case trigger_type_e::TT_VVT_BOSCH_QUICK_START:
   return "TT_VVT_BOSCH_QUICK_START";
 case trigger_type_e::TT_VVT_MAZDA_L:
