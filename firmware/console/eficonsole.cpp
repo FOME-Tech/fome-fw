@@ -52,12 +52,6 @@ static void sayHello() {
 	efiPrintf("hellenBoardId=%d", engine->engineState.hellenBoardId);
 
 #if defined(STM32F4) || defined(STM32F7) || defined(STM32H7)
-	uint32_t *uid = ((uint32_t *)UID_BASE);
-	efiPrintf("UID=%x %x %x", (unsigned int)uid[0], (unsigned int)uid[1], (unsigned int)uid[2]);
-
-	efiPrintf("can read 0x20000010 %d", ramReadProbe((const char *)0x20000010));
-	efiPrintf("can read 0x20020010 %d", ramReadProbe((const char *)0x20020010));
-	efiPrintf("can read 0x20070010 %d", ramReadProbe((const char *)0x20070010));
 
 #if defined(STM32F4)
 	efiPrintf("isStm32F42x %s", boolToString(isStm32F42x()));
