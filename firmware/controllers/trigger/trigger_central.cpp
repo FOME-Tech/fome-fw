@@ -698,8 +698,6 @@ void triggerInfo() {
 	TriggerCentral *tc = getTriggerCentral();
 	TriggerWaveform *ts = &tc->triggerShape;
 
-#endif /* HAL_TRIGGER_USE_PAL */
-
 	efiPrintf("Template %s (%d) trigger %s (%d) syncEdge=%s tdcOffset=%.2f",
 			getEngine_type_e(engineConfiguration->engineType), (int)engineConfiguration->engineType,
 			getTrigger_type_e(engineConfiguration->trigger.type), (int)engineConfiguration->trigger.type,
