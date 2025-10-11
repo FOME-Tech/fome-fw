@@ -24,7 +24,6 @@
  * 4) static constexpr LogField fields[] SD card logging
  *
  * see also [OutputChannels] in tunerstudio.template.ini
- * see also TS_OUTPUT_SIZE in rusefi_config.txt
  */
 struct TunerStudioOutputChannels : output_channels_s { };
 

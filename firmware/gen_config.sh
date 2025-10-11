@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-echo "This script reads rusefi_config.txt and produces firmware persistent configuration headers"
+echo "This script reads fome_config.txt and produces firmware persistent configuration headers"
 echo "The storage section of fome.ini is updated as well"
 
 rm -f gen_config.log

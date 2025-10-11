@@ -8,7 +8,7 @@ GENERATED := \
 # $(GENERATED_DIR)/value_lookup_generated.cpp
 # TODO: how do we list multiple dependencies without the build happening multiple times?
 
-$(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
+$(GENERATED) : $(PROJECT_DIR)/integration/fome_config.txt
 	@echo Generating config files...
 	cd $(PROJECT_DIR) && ./gen_live_documentation.sh
 	cd $(PROJECT_DIR) && ./gen_config_board.sh $(realpath $(BOARD_DIR)) $(SHORT_BOARD_NAME)
