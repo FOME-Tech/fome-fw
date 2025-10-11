@@ -33,26 +33,16 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 	memmove(timeOfLastEvent + firstDst, timeOfLastEvent + firstSrc, eventsToCopy * sizeof(timeOfLastEvent[0]));
 }
 
-float InstantRpmCalculator::calculateInstantRpm(
+expected<float> InstantRpmCalculator::calculateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t current_index, efitick_t nowNt) {
-
-	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
-	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
-	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t nowNt32 = nowNt;
-
-	assertIsInBoundsWithResult(current_index, timeOfLastEvent, "calc timeOfLastEvent", 0);
-
-	// Record the time of this event so we can calculate RPM from it later
-	timeOfLastEvent[current_index] = nowNt32;
+	uint32_t current_index, uint32_t nowNt32, angle_t window) const {
 
 	// Determine where we currently are in the revolution
 	angle_t currentAngle = triggerFormDetails->eventAngles[current_index];
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, !std::isnan(currentAngle), "eventAngles", 0);
 
 	// Hunt for a tooth ~90 degrees ago to compare to the current time
-	angle_t previousAngle = currentAngle - engineConfiguration->instantRpmRange;
+	angle_t previousAngle = currentAngle - window;
 	wrapAngle(previousAngle, "prevAngle", ObdCode::CUSTOM_ERR_TRIGGER_ANGLE_RANGE);
 	int prevIndex = triggerShape.findAngleIndex(triggerFormDetails, previousAngle);
 
@@ -62,7 +52,7 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// No previous timestamp, instant RPM isn't ready yet
 	if (time90ago == 0) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	uint32_t time = nowNt32 - time90ago;
@@ -73,17 +63,15 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// just for safety, avoid divide-by-0
 	if (time == 0) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	float instantRpm = (60000000.0 / 360 * US_TO_NT_MULTIPLIER) * angleDiff / time;
 
 	// This fixes early RPM instability based on incomplete data
 	if (instantRpm < RPM_LOW_THRESHOLD) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
-
-	prevInstantRpmValue = instantRpm;
 
 	return instantRpm;
 }
@@ -109,8 +97,21 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 void InstantRpmCalculator::updateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 	uint32_t index, efitick_t nowNt) {
-	m_instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index,
-					   nowNt);
+
+	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
+	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
+	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
+	uint32_t nowNt32 = nowNt;
+
+	assertIsInBounds(index, timeOfLastEvent, "calc timeOfLastEvent");
+
+	// Record the time of this event so we can calculate RPM from it later
+	timeOfLastEvent[index] = nowNt32;
+
+	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
+	if (instantRpm) {
+		m_instantRpm = instantRpm.Value;
+	}
 }
 
 #endif // EFI_SHAFT_POSITION_INPUT

@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-echo "This script reads rusefi_config.txt and produces firmware persistent configuration headers"
+echo "This script reads fome_config.txt and produces firmware persistent configuration headers"
 echo "the storage section of rusefiXXX.ini is updated as well"
 
 if [ -z "$1" ]; then
@@ -51,9 +51,9 @@ java \
 	-board ${BOARD_DIR} \
 	-boardName ${SHORT_BOARDNAME} \
 	-prepend generated/total_live_data_generated.h \
-	-prepend integration/rusefi_config_shared.txt \
+	-prepend integration/fome_config_shared.txt \
 	-prepend ${BOARD_DIR}/prepend.txt \
-	-definition integration/rusefi_config.txt \
+	-definition integration/fome_config.txt \
 	-enumInputFile controllers/algo/engine_types.h \
 	-enumInputFile controllers/algo/rusefi_enums.h \
 	-enumInputFile controllers/algo/rusefi_hw_enums.h \

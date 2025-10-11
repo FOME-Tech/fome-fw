@@ -17,22 +17,22 @@ Usages:
   - name: output_channels
     java: TsOutputs.java
     folder: console/binary
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "engine->outputChannels"
 
   - name: fuel_computer
     folder: controllers/algo/fuel
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "engine->fuelComputer"
 
   - name: ignition_state
     folder: controllers/algo/ignition
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "engine->ignitionState"
 
   - name: knock_controller
     folder: controllers/engine_cycle
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "___engine.module<KnockController>()"
     isPtr: true
 
@@ -41,7 +41,7 @@ Usages:
 
   - name: injector_model
     folder: controllers/algo/fuel
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     # constexpr: "___engine.module<InjectorModel>()"
     # isPtr: true
 
@@ -50,11 +50,11 @@ Usages:
 
   - name: antilag_system_state
     folder: controllers/algo
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
 
   - name: boost_control
     folder: controllers/actuators
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "___engine.module<BoostController>()"
     isPtr: true
     conditional_compilation: "EFI_BOOST_CONTROL"
@@ -62,7 +62,7 @@ Usages:
 
   - name: ac_control
     folder: controllers/actuators
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "___engine.module<AcController>()"
     isPtr: true
     output_name: AC
@@ -85,28 +85,28 @@ Usages:
 
   - name: engine_state
     folder: controllers/algo
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "engine->engineState"
 
   - name: tps_accel_state
     folder: controllers/algo
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
 
   - name: trigger_central
     folder: controllers/trigger
     constexpr: "engine->triggerCentral"
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     conditional_compilation: "EFI_SHAFT_POSITION_INPUT"
 
   - name: trigger_state
     folder: controllers/trigger
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     java: TriggerState.java
     output_name: [ "Trg", "VVT B1I", "VVT B1E", "VVT B2I", "VVT B2E" ]
 
   - name: trigger_state_primary
     folder: controllers/trigger
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     output_name: Trg
 
   - name: wall_fuel_state
@@ -114,12 +114,12 @@ Usages:
 
   - name: idle_state
     folder: controllers/actuators
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     output_name: Idle
 
   - name: electronic_throttle
     folder: controllers/actuators
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     output_name: [ "ETB 1", "ETB 2" ]
 
   - name: wideband_state
@@ -128,7 +128,7 @@ Usages:
 
   - name: dc_motors
     folder: controllers/actuators
-    prepend: integration/rusefi_config_shared.txt
+    prepend: integration/fome_config_shared.txt
     constexpr: "engine->dc_motors"
 
   - name: throttle_model
