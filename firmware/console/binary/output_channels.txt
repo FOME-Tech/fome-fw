@@ -85,9 +85,9 @@ struct_no_prefix output_channels_s
 	uint8_t currentIgnitionMode;@@GAUGE_NAME_IGNITION_MODE@@
 	uint8_t currentInjectionMode;@@GAUGE_NAME_INJECTION_MODE@@
 
-	; --- Ignition sequencing telemetry ---
-	; 0 = unknown/not-synced. Otherwise 1..N (N = number of ignition outputs).
-	ign_next_output  U08  "next" 1 0  1  0    ; 1..IGNITION_OUTPUT_COUNT, 0 = unknown
+	; --- Ignition dwell telemetry (who is ON right now) ---
+	; 0 = none. Otherwise 1..N (N = number of ignition outputs / cylinders).
+	uint8_t ignActiveOutput;Ign: Active output;"idx", 1, 0, 0, 32, 0
 
 	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 100, 1
 
