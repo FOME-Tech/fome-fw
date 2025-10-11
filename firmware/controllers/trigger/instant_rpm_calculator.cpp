@@ -35,24 +35,14 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 
 float InstantRpmCalculator::calculateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t current_index, efitick_t nowNt) {
-
-	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
-	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
-	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t nowNt32 = nowNt;
-
-	assertIsInBoundsWithResult(current_index, timeOfLastEvent, "calc timeOfLastEvent", 0);
-
-	// Record the time of this event so we can calculate RPM from it later
-	timeOfLastEvent[current_index] = nowNt32;
+	uint32_t current_index, uint32_t nowNt32, angle_t window) const {
 
 	// Determine where we currently are in the revolution
 	angle_t currentAngle = triggerFormDetails->eventAngles[current_index];
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, !std::isnan(currentAngle), "eventAngles", 0);
 
 	// Hunt for a tooth ~90 degrees ago to compare to the current time
-	angle_t previousAngle = currentAngle - engineConfiguration->instantRpmRange;
+	angle_t previousAngle = currentAngle - window;
 	wrapAngle(previousAngle, "prevAngle", ObdCode::CUSTOM_ERR_TRIGGER_ANGLE_RANGE);
 	int prevIndex = triggerShape.findAngleIndex(triggerFormDetails, previousAngle);
 
@@ -83,8 +73,6 @@ float InstantRpmCalculator::calculateInstantRpm(
 		return prevInstantRpmValue;
 	}
 
-	prevInstantRpmValue = instantRpm;
-
 	return instantRpm;
 }
 
@@ -109,8 +97,20 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 void InstantRpmCalculator::updateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 	uint32_t index, efitick_t nowNt) {
-	m_instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index,
-					   nowNt);
+
+	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
+	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
+	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
+	uint32_t nowNt32 = nowNt;
+
+	assertIsInBounds(index, timeOfLastEvent, "calc timeOfLastEvent");
+
+	// Record the time of this event so we can calculate RPM from it later
+	timeOfLastEvent[index] = nowNt32;
+
+	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
+	m_instantRpm = instantRpm;
+	prevInstantRpmValue = instantRpm;
 }
 
 #endif // EFI_SHAFT_POSITION_INPUT

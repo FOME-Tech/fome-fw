@@ -49,5 +49,5 @@ public:
 private:
 	float calculateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-		uint32_t index, efitick_t nowNt);
+		uint32_t index, uint32_t nowNt32, angle_t window) const;
 };

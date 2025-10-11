@@ -288,8 +288,11 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(
-		engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails,
-		trgEventIndex, nowNt);
+		engine->triggerCentral.triggerShape,
+		&engine->triggerCentral.triggerFormDetails,
+		trgEventIndex,
+		nowNt
+	);
 
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	if (alwaysInstantRpm) {
