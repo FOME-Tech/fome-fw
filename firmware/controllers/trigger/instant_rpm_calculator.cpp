@@ -33,7 +33,7 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 	memmove(timeOfLastEvent + firstDst, timeOfLastEvent + firstSrc, eventsToCopy * sizeof(timeOfLastEvent[0]));
 }
 
-float InstantRpmCalculator::calculateInstantRpm(
+expected<float> InstantRpmCalculator::calculateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 	uint32_t current_index, uint32_t nowNt32, angle_t window) const {
 
@@ -52,7 +52,7 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// No previous timestamp, instant RPM isn't ready yet
 	if (time90ago == 0) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	uint32_t time = nowNt32 - time90ago;
@@ -63,14 +63,14 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// just for safety, avoid divide-by-0
 	if (time == 0) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	float instantRpm = (60000000.0 / 360 * US_TO_NT_MULTIPLIER) * angleDiff / time;
 
 	// This fixes early RPM instability based on incomplete data
 	if (instantRpm < RPM_LOW_THRESHOLD) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	return instantRpm;
@@ -109,8 +109,9 @@ void InstantRpmCalculator::updateInstantRpm(
 	timeOfLastEvent[index] = nowNt32;
 
 	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
-	m_instantRpm = instantRpm;
-	prevInstantRpmValue = instantRpm;
+	if (instantRpm) {
+		m_instantRpm = instantRpm.Value;
+	}
 }
 
 #endif // EFI_SHAFT_POSITION_INPUT
