@@ -729,10 +729,16 @@ struct output_channels_s {
 	// kg/h
 	// offset 600
 	scaled_channel<uint16_t, 10, 1> mafMeasured_preFilter = (uint16_t)0;
+	// rpm
 	// offset 602
-	uint8_t alignmentFill_at_602[2];
+	uint16_t cylinderRpm[12];
+	// rpm
+	// offset 626
+	uint16_t cylinderRpmDelta[12];
+	// offset 650
+	uint8_t alignmentFill_at_650[2];
 };
-static_assert(sizeof(output_channels_s) == 604);
+static_assert(sizeof(output_channels_s) == 652);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, speedToRpmRatio) == 8);
@@ -915,4 +921,6 @@ static_assert(offsetof(output_channels_s, pad) == 595);
 static_assert(offsetof(output_channels_s, mapAveragingSamples) == 596);
 static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 598);
 static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 600);
+static_assert(offsetof(output_channels_s, cylinderRpm) == 602);
+static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 626);
 

@@ -15,7 +15,7 @@ public:
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	void updateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-		uint32_t index, efitick_t nowNt);
+		uint32_t index, const EnginePhaseInfo& phaseInfo);
 #endif
 	/**
 	 * Update timeOfLastEvent[] on every trigger event - even without synchronization
@@ -43,4 +43,9 @@ private:
 	expected<float> calculateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 		uint32_t index, uint32_t nowNt32, angle_t window) const;
+
+	void updateCylinderContribution(TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
+		uint32_t current_index, uint32_t nowNt32, const EnginePhaseInfo& phase);
+
+	float m_lastCylRpm = 0;
 };

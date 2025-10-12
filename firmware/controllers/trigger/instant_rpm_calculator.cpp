@@ -96,12 +96,12 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 
 void InstantRpmCalculator::updateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t index, efitick_t nowNt) {
+	uint32_t index, const EnginePhaseInfo& phaseInfo) {
 
 	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
 	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
 	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t nowNt32 = nowNt;
+	uint32_t nowNt32 = phaseInfo.timestamp;
 
 	assertIsInBounds(index, timeOfLastEvent, "calc timeOfLastEvent");
 
@@ -111,6 +111,38 @@ void InstantRpmCalculator::updateInstantRpm(
 	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
 	if (instantRpm) {
 		m_instantRpm = instantRpm.Value;
+		updateCylinderContribution(triggerShape, triggerFormDetails, index, nowNt32, phaseInfo);
+	}
+}
+
+void InstantRpmCalculator::updateCylinderContribution(TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
+	uint32_t current_index, uint32_t nowNt32, const EnginePhaseInfo& phaseInfo) {
+	int minTriggerLength = engineConfiguration->cylindersCount * 2;
+	if (triggerShape.getLength() < minTriggerLength) {
+		// Not enough teeth to reasonably determine cylinder contribution
+		return;
+	}
+
+	float measurementWindow = engineConfiguration->cylContributionWindow;
+	float measurementOffset = engineConfiguration->cylContributionPhase;
+
+	if (measurementWindow <= 0) {
+		return;
+	}
+
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		auto& cyl = engine->cylinders[i];
+
+		auto measurementAngle = cyl.getAngleOffset() + measurementOffset;
+		wrapAngle(measurementAngle, "misfire angle", ObdCode::OBD_PCM_Processor_Fault);
+
+		if (isPhaseInRange(EngPhase{measurementAngle}, phaseInfo)) {
+			if (auto rpm = calculateInstantRpm(triggerShape, triggerFormDetails, current_index, nowNt32, measurementWindow)) {
+				engine->outputChannels.cylinderRpm[i] = rpm.Value;
+				engine->outputChannels.cylinderRpmDelta[i] = rpm.Value - m_lastCylRpm;
+				m_lastCylRpm = rpm.Value;
+			}
+		}
 	}
 }
 
