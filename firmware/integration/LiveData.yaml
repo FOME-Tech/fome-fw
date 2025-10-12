@@ -126,11 +126,6 @@ Usages:
     folder: controllers/sensors/
     output_name: [ "WBO 1", "WBO 2" ]
 
-  - name: dc_motors
-    folder: controllers/actuators
-    prepend: integration/fome_config_shared.txt
-    constexpr: "engine->dc_motors"
-
   - name: throttle_model
     folder: controllers/math
     output_name: Throttle model
