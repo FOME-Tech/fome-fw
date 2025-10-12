@@ -8,8 +8,6 @@ case LDS_antilag_system_state:
   return "LDS_antilag_system_state";
 case LDS_boost_control:
   return "LDS_boost_control";
-case LDS_dc_motors:
-  return "LDS_dc_motors";
 case LDS_electronic_throttle:
   return "LDS_electronic_throttle";
 case LDS_engine_state:
