@@ -96,12 +96,12 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 
 void InstantRpmCalculator::updateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t index, efitick_t nowNt) {
+	uint32_t index, const EnginePhaseInfo& phaseInfo) {
 
 	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
 	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
 	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t nowNt32 = nowNt;
+	uint32_t nowNt32 = phaseInfo.timestamp;
 
 	assertIsInBounds(index, timeOfLastEvent, "calc timeOfLastEvent");
 

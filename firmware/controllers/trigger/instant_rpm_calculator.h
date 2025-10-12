@@ -15,7 +15,7 @@ public:
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	void updateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-		uint32_t index, efitick_t nowNt);
+		uint32_t index, const EnginePhaseInfo& phaseInfo);
 #endif
 	/**
 	 * Update timeOfLastEvent[] on every trigger event - even without synchronization
