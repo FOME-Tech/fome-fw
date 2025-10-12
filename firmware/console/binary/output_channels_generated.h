@@ -734,11 +734,11 @@ struct output_channels_s {
 	uint16_t cylinderRpm[12];
 	// rpm
 	// offset 626
-	uint16_t cylinderRpmDelta[12];
-	// offset 650
-	uint8_t alignmentFill_at_650[2];
+	int8_t cylinderRpmDelta[12];
+	// offset 638
+	uint8_t alignmentFill_at_638[2];
 };
-static_assert(sizeof(output_channels_s) == 652);
+static_assert(sizeof(output_channels_s) == 640);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, speedToRpmRatio) == 8);
