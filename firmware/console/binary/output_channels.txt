@@ -235,10 +235,10 @@ struct_no_prefix output_channels_s
 	uint8_t vssEdgeCounter
 	uint8_t issEdgeCounter
 
-	float auxLinear1;@@GAUGE_NAME_AUX_LINEAR_1@@;"", 1, 0, 0, 0, 2
-	float auxLinear2;@@GAUGE_NAME_AUX_LINEAR_2@@;"", 1, 0, 0, 0, 2
-	float auxLinear3;@@GAUGE_NAME_AUX_LINEAR_3@@;"", 1, 0, 0, 0, 2
-	float auxLinear4;@@GAUGE_NAME_AUX_LINEAR_4@@;"", 1, 0, 0, 0, 2
+	int16_t autoscale auxLinear1;@@GAUGE_NAME_AUX_LINEAR_1@@;"", 0.1, 0, 0, 0, 1
+	int16_t autoscale auxLinear2;@@GAUGE_NAME_AUX_LINEAR_2@@;"", 0.1, 0, 0, 0, 1
+	int16_t autoscale auxLinear3;@@GAUGE_NAME_AUX_LINEAR_3@@;"", 0.1, 0, 0, 0, 1
+	int16_t autoscale auxLinear4;@@GAUGE_NAME_AUX_LINEAR_4@@;"", 0.1, 0, 0, 0, 1
 
 
 	uint16_t autoscale fallbackMap;;"kPa", 0.1, 0, 0, 1000, 1
