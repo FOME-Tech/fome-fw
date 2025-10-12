@@ -83,10 +83,6 @@ struct_no_prefix output_channels_s
 	uint8_t currentIgnitionMode;@@GAUGE_NAME_IGNITION_MODE@@
 	uint8_t currentInjectionMode;@@GAUGE_NAME_INJECTION_MODE@@
 
-	! --- Ignition dwell telemetry (who is ON right now) ---
-	! 0 = none. Otherwise 1..N (N = number of ignition outputs / cylinders).
-	uint8_t ignActiveOutput;Ign: Active output;"idx", 1, 0, 0, 32, 0
-
 	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 100, 1
 
 	uint16_t unused66
@@ -157,6 +153,10 @@ struct_no_prefix output_channels_s
 	uint16_t lastErrorCode;@@GAUGE_NAME_WARNING_LAST@@;"error",1, 0, 0, 0, 0
 
 	uint16_t[8 iterate] recentErrorCode;;"error", 1, 0, 0, 0, 0
+
+	! --- Ignition dwell telemetry (who is ON right now) ---
+	! 0 = none. Otherwise 1..N (N = number of ignition outputs / cylinders).
+	uint8_t ignActiveOutput;Ign: Active output;"idx", 1, 0, 0, 32, 0
 
 ! todo: re-implement enableLogDebugChannels
 	float debugFloatField1;;"val", 1, 0, 0, 0, 3
