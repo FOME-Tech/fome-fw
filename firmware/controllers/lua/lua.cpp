@@ -318,7 +318,8 @@ static bool runOneLua(lua_Alloc alloc, const char* script) {
 	}
 
 	while (!needsReset && !chThdShouldTerminateX()) {
-		efitick_t beforeNt = getTimeNowNt();
+		Timer t;
+		t.reset();
 #if EFI_CAN_SUPPORT
 		// First, process any pending can RX messages
 		doLuaCanRx(ls);
@@ -329,9 +330,10 @@ static bool runOneLua(lua_Alloc alloc, const char* script) {
 
 		invokeTick(ls);
 
-		chThdSleep(TIME_US2I(luaTickPeriodUs));
-		engine->outputChannels.luaLastCycleDuration = (getTimeNowNt() - beforeNt);
+		engine->outputChannels.luaLastCycleDuration = t.getElapsedUs();
 		engine->outputChannels.luaInvocationCounter++;
+
+		chThdSleep(TIME_US2I(luaTickPeriodUs));
 	}
 
 	resetLua();
