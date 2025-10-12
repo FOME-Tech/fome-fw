@@ -75,16 +75,6 @@ extern int maxTriggerReentrant;
 extern uint32_t maxLockedDuration;
 
 /**
- * This is useful if we are changing engine mode dynamically
- * For example http://rusefi.com/forum/viewtopic.php?f=5&t=1085
- */
-static int packEngineMode() {
-	return (engineConfiguration->fuelAlgorithm << 4) +
-			(engineConfiguration->injectionMode << 2) +
-			engineConfiguration->ignitionMode;
-}
-
-/**
  * Time when the firmware version was last reported
  * TODO: implement a request/response instead of just constantly sending this out
  */
@@ -466,10 +456,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->tsConfigVersion = TS_FILE_VERSION;
 	static_assert(offsetof (TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
 
-	DcHardware *dc = getdcHardware();
-	engine->dc_motors.dcOutput0 = dc->dcMotor.get();
-	engine->dc_motors.isEnabled0_int = dc->msg() == nullptr;
-
 #if EFI_SHAFT_POSITION_INPUT
 
 	tsOutputChannels->RPMValue = rpm;
@@ -493,7 +479,6 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->seconds = getTimeNowS();
 
-	tsOutputChannels->engineMode = packEngineMode();
 	tsOutputChannels->firmwareVersion = getRusEfiVersion();
 
 	tsOutputChannels->accelerationLat = engine->sensors.accelerometer.lat;
