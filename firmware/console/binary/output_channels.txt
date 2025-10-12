@@ -4,9 +4,7 @@
 ! See also LiveData.yaml
 !
 
-
 struct_no_prefix output_channels_s
-
 	bit sd_present;SD: Present
 	bit sd_logging_internal;SD: Logging
 	bit triggerScopeReady
@@ -345,4 +343,7 @@ struct_no_prefix output_channels_s
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
 
 	uint16_t autoscale mafMeasured_preFilter;MAF: Pre-filter;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
+
+	uint16_t[12 iterate] cylinderRpm;;"rpm", 1, 0, 0, 0, 0
+	uint16_t[12 iterate] cylinderRpmDelta;;"rpm", 1, 0, 0, 0, 0
 end_struct
