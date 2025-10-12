@@ -111,11 +111,12 @@ void InstantRpmCalculator::updateInstantRpm(
 	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
 	if (instantRpm) {
 		m_instantRpm = instantRpm.Value;
+		updateCylinderContribution(triggerShape, triggerFormDetails, index, nowNt32, phaseInfo);
 	}
 }
 
 void InstantRpmCalculator::updateCylinderContribution(TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t current_index, uint32_t nowNt32, angle_t window, const EnginePhaseInfo& phase) {
+	uint32_t current_index, uint32_t nowNt32, const EnginePhaseInfo& phaseInfo) {
 	int minTriggerLength = engineConfiguration->cylindersCount * 2;
 	if (triggerShape.getLength() < minTriggerLength) {
 		// Not enough teeth to reasonably determine cylinder contribution
@@ -135,10 +136,8 @@ void InstantRpmCalculator::updateCylinderContribution(TriggerWaveform const & tr
 		auto measurementAngle = cyl.getAngleOffset() + measurementOffset;
 		wrapAngle(measurementAngle, "misfire angle", ObdCode::OBD_PCM_Processor_Fault);
 
-		if (isPhaseInRange(EngPhase{measurementAngle}, phase)) {
+		if (isPhaseInRange(EngPhase{measurementAngle}, phaseInfo)) {
 			if (auto rpm = calculateInstantRpm(triggerShape, triggerFormDetails, current_index, nowNt32, measurementWindow)) {
-				efiPrintf("******************** Cyl %d RPM %.1f (delta)", i + 1, rpm.Value, (rpm.Value - m_lastCylRpm));
-
 				engine->outputChannels.cylinderRpm[i] = rpm.Value;
 				engine->outputChannels.cylinderRpmDelta[i] = rpm.Value - m_lastCylRpm;
 				m_lastCylRpm = rpm.Value;
