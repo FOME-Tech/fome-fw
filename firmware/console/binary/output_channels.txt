@@ -158,7 +158,6 @@ struct_no_prefix output_channels_s
 	! 0 = none. Otherwise 1..N (N = number of ignition outputs / cylinders).
 	uint8_t ignActiveOutput;Ign: Active output;"idx", 1, 0, 0, 32, 0
 
-! todo: re-implement enableLogDebugChannels
 	float debugFloatField1;;"val", 1, 0, 0, 0, 3
 	float debugFloatField2;;"val", 1, 0, 0, 0, 3
 	float debugFloatField3;;"val", 1, 0, 0, 0, 3
