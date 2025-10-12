@@ -4,9 +4,7 @@
 ! See also LiveData.yaml
 !
 
-
 struct_no_prefix output_channels_s
-
 	bit sd_present;SD: Present
 	bit sd_logging_internal;SD: Logging
 	bit triggerScopeReady
