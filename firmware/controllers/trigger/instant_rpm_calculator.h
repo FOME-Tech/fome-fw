@@ -43,4 +43,9 @@ private:
 	expected<float> calculateInstantRpm(
 		TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
 		uint32_t index, uint32_t nowNt32, angle_t window) const;
+
+	void updateCylinderContribution(TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
+		uint32_t current_index, uint32_t nowNt32, angle_t window, const EnginePhaseInfo& phase);
+
+	float m_lastCylRpm = 0;
 };
