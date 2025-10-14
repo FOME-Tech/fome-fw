@@ -81,31 +81,29 @@ struct boost_control_s {
 	// kPa
 	// offset 10
 	scaled_channel<int16_t, 30, 1> boostControlTarget = (int16_t)0;
-	// Open loop
-	// percent
-	// offset 12
-	float openLoopPart = (float)0;
 	// Lua open loop add
 	// percent
-	// offset 16
+	// offset 12
 	float luaOpenLoopAdd = (float)0;
+	// Open loop
+	// percent
+	// offset 16
+	scaled_channel<uint8_t, 2, 1> openLoopPart = (uint8_t)0;
 	// Closed loop
 	// %
-	// offset 20
+	// offset 17
 	scaled_channel<int8_t, 2, 1> boostControllerClosedLoopPart = (int8_t)0;
-	// offset 21
-	uint8_t alignmentFill_at_21[1];
 	// Output
 	// percent
-	// offset 22
+	// offset 18
 	scaled_channel<int16_t, 100, 1> boostOutput = (int16_t)0;
 };
-static_assert(sizeof(boost_control_s) == 24);
+static_assert(sizeof(boost_control_s) == 20);
 static_assert(offsetof(boost_control_s, luaTargetMult) == 4);
 static_assert(offsetof(boost_control_s, luaTargetAdd) == 8);
 static_assert(offsetof(boost_control_s, boostControlTarget) == 10);
-static_assert(offsetof(boost_control_s, openLoopPart) == 12);
-static_assert(offsetof(boost_control_s, luaOpenLoopAdd) == 16);
-static_assert(offsetof(boost_control_s, boostControllerClosedLoopPart) == 20);
-static_assert(offsetof(boost_control_s, boostOutput) == 22);
+static_assert(offsetof(boost_control_s, luaOpenLoopAdd) == 12);
+static_assert(offsetof(boost_control_s, openLoopPart) == 16);
+static_assert(offsetof(boost_control_s, boostControllerClosedLoopPart) == 17);
+static_assert(offsetof(boost_control_s, boostOutput) == 18);
 
