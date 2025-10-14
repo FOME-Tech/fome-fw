@@ -478,11 +478,6 @@ void TriggerCentral::decodeMapCam(efitick_t timestamp, EngPhase currentPhase) {
 			mapCamPrevCycleValue = map;
 
 			if (diff > 0) {
-				mapVvt_map_peak++;
-				int revolutionCounter = getTriggerCentral()->triggerState.getCrankSynchronizationCounter();
-				mapVvt_MAP_AT_CYCLE_COUNT = revolutionCounter - prevChangeAtCycle;
-				prevChangeAtCycle = revolutionCounter;
-
 				hwHandleVvtCamSignal(true,  timestamp, /*index*/0);
 				hwHandleVvtCamSignal(false, timestamp, /*index*/0);
 #if EFI_UNIT_TEST
