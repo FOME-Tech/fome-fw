@@ -25,7 +25,6 @@
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
 #include "launch_control.h"
