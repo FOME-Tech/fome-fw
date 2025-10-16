@@ -347,8 +347,9 @@ void initFuelMap() {
 float getCltFuelCorrection() {
 	const auto clt = Sensor::get(SensorType::Clt);
 	
-	if (!clt)
+	if (!clt) {
 		return 1; // this error should be already reported somewhere else, let's just handle it
+	}
 
 	return interpolate2d(clt.Value, config->cltFuelCorrBins, config->cltFuelCorr);
 }
@@ -356,8 +357,9 @@ float getCltFuelCorrection() {
 float getIatFuelCorrection() {
 	const auto iat = Sensor::get(SensorType::Iat);
 
-	if (!iat)
+	if (!iat) {
 		return 1; // this error should be already reported somewhere else, let's just handle it
+	}
 
 	return interpolate2d(iat.Value, config->iatFuelCorrBins, config->iatFuelCorr);
 }
