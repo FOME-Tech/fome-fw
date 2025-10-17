@@ -156,7 +156,8 @@ sint8 nm_bus_deinit(void) {
 	spiStop(wifiSpi);
 	resetSpiDevice(wifiSpi);
 
-	efiSetPadMode("WiFi CS", getWifiCsPin(), PAL_MODE_INPUT_PULLUP);
+	efiSetPadUnused(getWifiCsPin());
+	efiSetPadUnused(getWifiResetPin());
 
 	nm_bsp_interrupt_ctrl(0);
 
