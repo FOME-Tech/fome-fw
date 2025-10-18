@@ -88,7 +88,6 @@ public:
 
 	angle_t mapCamPrevToothAngle = -1;
 	float mapCamPrevCycleValue = 0;
-	int prevChangeAtCycle = 0;
 
 	/**
 	 * value of 'triggerShape.getLength()'

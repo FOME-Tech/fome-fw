@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1400
+#define BLOCKING_FACTOR 1300
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -253,7 +253,7 @@ struct pid_s
 end_struct
 
 struct cranking_parameters_s
-float baseFuel;Base mass of the per-cylinder fuel injected during cranking. This is then modified by the multipliers for CLT, IAT, TPS ect, to give the final cranking pulse width.\nA reasonable starting point is 60mg per liter per cylinder.\nex: 2 liter 4 cyl = 500cc/cyl, so 30mg cranking fuel.;"mg", 1, 0, 0, 500, 1
+uint16_t autoscale baseFuel;Base mass of the per-cylinder fuel injected during cranking. This is then modified by the multipliers for CLT, IAT, TPS ect, to give the final cranking pulse width.\nA reasonable starting point is 60mg per liter per cylinder.\nex: 2 liter 4 cyl = 500cc/cyl, so 30mg cranking fuel.;"mg", 0.1, 0, 0, 500, 1
 int16_t rpm;This sets the RPM limit below which the ECU will use cranking fuel and ignition logic, typically this is around 350-450rpm.;"RPM", 1, 0, 0, 3000, 0
 end_struct
 
@@ -331,11 +331,11 @@ adc_channel_e hwChannel;
 end_struct
 
 struct MAP_sensor_config_s
-float[MAP_ANGLE_SIZE] samplingAngleBins;;"", 1, 0, 0, 18000, 2
-float[MAP_ANGLE_SIZE] samplingAngle;MAP averaging sampling start crank degree angle;"deg", 1, 0, -720, 720, 2
-float[MAP_WINDOW_SIZE] samplingWindowBins;;"", 1, 0, 0, 18000, 2
-float[MAP_WINDOW_SIZE] samplingWindow;MAP averaging angle crank degree duration;"deg", 1, 0, -720, 720, 2
-air_pressure_sensor_config_s sensor
+	uint16_t[MAP_ANGLE_SIZE] samplingAngleBins;;"", 1, 0, 0, 18000, 0
+	uint16_t[MAP_ANGLE_SIZE] samplingAngle;MAP averaging sampling start crank degree angle;"deg", 1, 0, -720, 720, 0
+	uint16_t[MAP_WINDOW_SIZE] samplingWindowBins;;"", 1, 0, 0, 18000, 0
+	uint16_t[MAP_WINDOW_SIZE] samplingWindow;MAP averaging angle crank degree duration;"deg", 1, 0, 0, 720, 0
+	air_pressure_sensor_config_s sensor
 end_struct
 
 struct_no_prefix thermistor_conf_s
@@ -1483,8 +1483,8 @@ engine_configuration_s engineConfiguration;
 
 	int8_t[CLT_CURVE_SIZE] autoscale cltIdleRpmBins;CLT-based target RPM for automatic idle controller;"C", 2, 0, -40, 200, 0
 	uint8_t[CLT_CURVE_SIZE] autoscale cltIdleRpm;Sets the target engine speed that is used for the closed-loop idle air and closed-loop idle timing algorithms.;"RPM", 20, 0, 0, 5000, 0
-	float[CLT_TIMING_CURVE_SIZE] cltTimingBins;CLT-based timing correction;"C", 1, 0, -100, 250, 1
-	float[CLT_TIMING_CURVE_SIZE] cltTimingExtra;;"degree", 1, 0, -400, 400, 0
+	int8_t[CLT_TIMING_CURVE_SIZE] cltTimingBins;CLT-based timing correction;"C", 1, 0, -40, 120, 1
+	int8_t[CLT_TIMING_CURVE_SIZE] autoscale cltTimingExtra;;"degree", 0.1, 0, -30, 30, 1
 
 
 	int16_t[SCRIPT_CURVE_16] autoscale scriptCurve1Bins;;"x", 0.1, 0, -3270, 3270, 2

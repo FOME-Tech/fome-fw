@@ -25,7 +25,7 @@ void setDefaultBaseEngine() {
 
 	engineConfiguration->instantRpmRange = 90;
 	engineConfiguration->cylContributionWindow = 90;
-	engineConfiguration->cylContributionPhase = 45;
+	engineConfiguration->cylContributionPhase = 180;
 
 	engineConfiguration->compressionRatio = 9;
 

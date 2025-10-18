@@ -11,8 +11,8 @@ struct_no_prefix boost_control_s
 	int16_t autoscale boostControlTarget;Target;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 300, 1
 
 	! Open loop
-	float openLoopPart;Open loop;"percent", 1, 0, -100, 100, 1
 	float luaOpenLoopAdd;"Lua open loop add";"percent", 1, 0, -100, 100, 1
+	uint8_t autoscale openLoopPart;Open loop;"percent", 0.5, 0, 0, 100, 1
 
 	! Closed loop
 	int8_t autoscale boostControllerClosedLoopPart;Closed loop;"%", 0.5, 0, -50, 50, 1

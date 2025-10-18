@@ -103,6 +103,8 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 		openLoop += result.Value;
 	}
 
+	openLoop = clampF(0, openLoop, 100);
+
 	openLoopPart = openLoop;
 	return openLoop;
 }
