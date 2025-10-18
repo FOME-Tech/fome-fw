@@ -41,6 +41,24 @@ static int getIgnitionPinForIndex(int cylinderIndex, ignition_mode_e ignitionMod
 	}
 }
 
+// --- Active ignition output tracking (for OCH: ignActiveOutput) ---
+static volatile uint32_t s_ignPinMask = 0;
+
+// Return 1-based index of the lowest-numbered active bit, or 0 if none.
+static inline uint8_t firstSetBitIndex1(uint32_t m) {
+	if (!m) return 0;
+	int idx0 = __builtin_ctz(m); // 0-based
+	return (uint8_t)(idx0 + 1);
+}
+
+// Map a trailing coil pin back to its cylinder index (0-based), or -1 if not found.
+static inline int trailingIndexFromPin(const IgnitionOutputPin* pin) {
+	for (int i = 0; i < (int)engineConfiguration->cylindersCount; i++) {
+		if (&enginePins.trailingCoils[i] == pin) return i;
+	}
+	return -1;
+}
+
 angle_t OneCylinder::getSparkAngle(angle_t lateAdjustment) const {
 	// Compute the final ignition timing including all "late" adjustments
 	angle_t finalIgnitionTiming = m_timingAdvance + lateAdjustment;
@@ -128,12 +146,23 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
 }
 
+// Trailing coil helpers: update mask & OCH when trailing coil charges/fires.
 static void chargeTrailingSpark(IgnitionOutputPin* pin) {
 	pin->setHigh();
+	int i = trailingIndexFromPin(pin);
+	if (i >= 0) {
+		s_ignPinMask |= (1u << i);
+		engine->outputChannels.ignActiveOutput = firstSetBitIndex1(s_ignPinMask);
+	}
 }
 
 static void fireTrailingSpark(IgnitionOutputPin* pin) {
 	pin->setLow();
+	int i = trailingIndexFromPin(pin);
+	if (i >= 0) {
+		s_ignPinMask &= ~(1u << i);
+		engine->outputChannels.ignActiveOutput = firstSetBitIndex1(s_ignPinMask);
+	}
 }
 
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
@@ -155,7 +184,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		ctx.sparksRemaining = 0;
 
 		// re-schedule ourselves at a later time once enough dwell has elapsed
-		// This is fine to do because it will retard the effective ignition timing, but 
+		// This is fine to do because it will retard the effective ignition timing, but
 		// ensure the coil has enough energy to actually fire (we would rather retard timing than misfire)
 		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, delayedFireTime, { fireSparkAndPrepareNextSchedule, ctx });
 		return;
@@ -170,14 +199,20 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
-	while(mask) {
+	while (mask) {
 		if (mask & 0x1) {
 			enginePins.coils[idx].setLow();
+
+			// Clear this cylinder's active bit
+			s_ignPinMask &= ~(1u << idx);
 		}
 
-		mask = mask >> 1;
+		mask >>= 1;
 		idx++;
 	}
+
+	// Republish (becomes 0 if no coils are high)
+	engine->outputChannels.ignActiveOutput = firstSetBitIndex1(s_ignPinMask);
 
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
@@ -225,17 +260,22 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
-	while(mask) {
+	while (mask) {
 		if (mask & 0x1) {
 			enginePins.coils[idx].setHigh();
+
+			// Mark this cylinder as active (dwell high)
+			s_ignPinMask |= (1u << idx);
 		}
 
-		mask = mask >> 1;
+		mask >>= 1;
 		idx++;
 	}
 
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+	// Publish 1-based index of any active output (0 if none)
+	engine->outputChannels.ignActiveOutput = firstSetBitIndex1(s_ignPinMask);
 
+	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
 	event->actualDwellTimer.reset(nowNt);
 
 #if EFI_UNIT_TEST
@@ -336,7 +376,7 @@ void initializeIgnitionActions() {
 
 static void prepareIgnitionSchedule() {
 	ScopePerf perf(PE::PrepareIgnitionSchedule);
-	
+
 	/**
 	 * TODO: warning. there is a bit of a hack here, todo: improve.
 	 * currently output signals/times dwellStartTimer from the previous revolutions could be
