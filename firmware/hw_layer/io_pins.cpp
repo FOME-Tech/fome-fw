@@ -20,7 +20,7 @@
 void efiSetPadUnused(brain_pin_e brainPin) {
 #if EFI_PROD_CODE
 	/* input with pull up, is it safe? */
-	iomode_t mode = PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP;
+	const iomode_t mode = PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP;
 
 	if (brain_pin_is_onchip(brainPin)) {
 		ioportid_t port = getHwPort("unused", brainPin);
