@@ -46,6 +46,8 @@ extern int waveChartUsedSize;
 extern WaveChart waveChart;
 #endif /* EFI_ENGINE_SNIFFER */
 
+#include "malfunction_central.h"
+
 void Engine::resetEngineSnifferIfInTestMode() {
 #if EFI_ENGINE_SNIFFER
 	if (isFunctionalTestMode) {
@@ -164,6 +166,17 @@ void Engine::updateSwitchInputs() {
 
 	engine->engineState.clutchUpState = getClutchUpState();
 	engine->engineState.brakePedalState = getBrakePedalState();
+
+	if(isBrainPinValid(engineConfiguration->pgPins[0]) && isBrainPinValid(engineConfiguration->pgPins[1])){
+		engine->engineState.pgState = getPgstate(0) && getPgstate(1);
+		if(!engine->engineState.pgState){
+			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
+		}
+		else
+		{
+			removeError(ObdCode::CUSTOM_ERR_PG_STATE);
+		}
+	}
 
 #endif // EFI_GPIO_HARDWARE
 }

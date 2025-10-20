@@ -39,6 +39,11 @@ static const brain_pin_e ignPins[] = {
 	PROTEUS_IGN_12,
 };
 
+static const brain_pin_e pgPins[] = {
+	PROTEUS_5V_PG_1,
+	PROTEUS_5V_PG_2,
+};
+
 static void setInjectorPins() {
 	copyArray(engineConfiguration->injectionPins, injPins);
 }
@@ -128,6 +133,14 @@ static void setupSdCard() {
 	engineConfiguration->spi3mosiPin = Gpio::C12;
 }
 
+static void setupPowerGoodPins() {
+	efiSetPadMode("PG1",  pgPins[0], PAL_MODE_INPUT);
+	efiSetPadMode("PG2",  pgPins[1], PAL_MODE_INPUT);
+
+	engineConfiguration->pgPins[0] = pgPins[0];
+	engineConfiguration->pgPins[1] = pgPins[1];
+}
+
 void setBoardConfigOverrides() {
 	setupSdCard();
 	setupVbatt();
@@ -155,6 +168,7 @@ void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 	setupEtb();
+	setupPowerGoodPins();
 
 	engineConfiguration->isSdCardEnabled = true;
 
