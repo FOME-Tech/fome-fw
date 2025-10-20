@@ -10,11 +10,10 @@
 
 #include "boost_control.h"
 #include "electronic_throttle.h"
+#include "gppwm_channel.h"
 
-#define NO_PIN_PERIOD 500
-
-static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, uint8_t, uint8_t> boostMapOpen;
-static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, uint8_t, uint8_t> boostMapClosed;
+static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapOpen;
+static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapClosed;
 static SimplePwm boostPwmControl("boost");
 
 void BoostController::init(IPwm* pwm, const ValueProvider3D* openLoopMap, const ValueProvider3D* closedLoopTargetMap, pid_s* pidParams) {
@@ -44,6 +43,15 @@ expected<float> BoostController::observePlant() const {
 	return Sensor::get(SensorType::Map);
 }
 
+static SensorResult getAxisValue(gppwm_channel_e channel) {
+	if (channel == GPPWM_Tps) {
+		// Back compat to use pedal if ETB is configured, otherwise real TPS
+		return Sensor::get(SensorType::DriverThrottleIntent);
+	}
+
+	return readGppwmChannel(channel);
+}
+
 expected<float> BoostController::getSetpoint() {
 	// If we're in open loop only mode, disregard any target computation.
 	// Open loop needs to work even in case of invalid closed loop config
@@ -51,25 +59,31 @@ expected<float> BoostController::getSetpoint() {
 		return 0;
 	}
 
-	float rpm = Sensor::getOrZero(SensorType::Rpm);
-
-	auto driverIntent = Sensor::get(SensorType::DriverThrottleIntent);
-	if (!driverIntent) {
+	auto xAxis = getAxisValue(engineConfiguration->boostClosedLoopXAxis);
+	if (!xAxis) {
 		return unexpected;
 	}
 
+	auto yAxis = getAxisValue(engineConfiguration->boostClosedLoopYAxis);
+	if (!yAxis) {
+		return unexpected;
+	}
+
+	boostClosedLoopXAxisValue = xAxis.Value;
+	boostClosedLoopYAxisValue = yAxis.Value;
+
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_closedLoopTargetMap != nullptr, "boost closed loop target", unexpected);
 
-	float target = m_closedLoopTargetMap->getValue(rpm, driverIntent.Value);
+	float target = m_closedLoopTargetMap->getValue(xAxis.Value, yAxis.Value);
 
 	// Add any blends if configured
 	for (size_t i = 0; i < efi::size(config->boostClosedLoopBlends); i++) {
-		auto result = calculateBlend(config->boostClosedLoopBlends[i], rpm, driverIntent.Value);
+		auto result = calculateBlend(config->boostClosedLoopBlends[i], xAxis.Value, yAxis.Value);
 
-		engine->outputChannels.boostClosedLoopBlendParameter[i] = result.BlendParameter;
-		engine->outputChannels.boostClosedLoopBlendBias[i] = result.Bias;
-		engine->outputChannels.boostClosedLoopBlendOutput[i] = result.Value;
-		engine->outputChannels.boostClosedLoopBlendYAxis[i] = result.TableYAxis;
+		boostClosedLoopBlendParameter[i] = result.BlendParameter;
+		boostClosedLoopBlendBias[i] = result.Bias;
+		boostClosedLoopBlendOutput[i] = result.Value;
+		boostClosedLoopBlendYAxis[i] = result.TableYAxis;
 
 		target += result.Value;
 	}
@@ -81,24 +95,31 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 	// Boost control open loop doesn't care about target - only TPS/RPM
 	UNUSED(target);
 
-	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	auto driverIntent = Sensor::get(SensorType::DriverThrottleIntent);
-	if (!driverIntent) {
+	auto xAxis = getAxisValue(engineConfiguration->boostOpenLoopXAxis);
+	if (!xAxis) {
 		return unexpected;
 	}
 
+	auto yAxis = getAxisValue(engineConfiguration->boostOpenLoopYAxis);
+	if (!yAxis) {
+		return unexpected;
+	}
+
+	boostOpenLoopXAxisValue = xAxis.Value;
+	boostOpenLoopYAxisValue = yAxis.Value;
+
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_openLoopMap != nullptr, "boost open loop", unexpected);
 
-	float openLoop = luaOpenLoopAdd + m_openLoopMap->getValue(rpm, driverIntent.Value);
+	float openLoop = luaOpenLoopAdd + m_openLoopMap->getValue(xAxis.Value, yAxis.Value);
 
 	// Add any blends if configured
 	for (size_t i = 0; i < efi::size(config->boostOpenLoopBlends); i++) {
-		auto result = calculateBlend(config->boostOpenLoopBlends[i], rpm, driverIntent.Value);
+		auto result = calculateBlend(config->boostOpenLoopBlends[i], xAxis.Value, yAxis.Value);
 
-		engine->outputChannels.boostOpenLoopBlendParameter[i] = result.BlendParameter;
-		engine->outputChannels.boostOpenLoopBlendBias[i] = result.Bias;
-		engine->outputChannels.boostOpenLoopBlendOutput[i] = result.Value;
-		engine->outputChannels.boostOpenLoopBlendYAxis[i] = result.TableYAxis;
+		boostOpenLoopBlendParameter[i] = result.BlendParameter;
+		boostOpenLoopBlendBias[i] = result.Bias;
+		boostOpenLoopBlendOutput[i] = result.Value;
+		boostOpenLoopBlendYAxis[i] = result.TableYAxis;
 
 		openLoop += result.Value;
 	}
@@ -194,9 +215,15 @@ void setDefaultBoostParameters() {
 	engineConfiguration->boostPid.iFactor = 0.3;
 	engineConfiguration->boostPid.maxValue = 20;
 	engineConfiguration->boostPid.minValue = -20;
+	engineConfiguration->boostOpenLoopXAxis = GPPWM_Rpm;
+	engineConfiguration->boostOpenLoopYAxis = GPPWM_Tps;
+	engineConfiguration->boostClosedLoopXAxis = GPPWM_Rpm;
+	engineConfiguration->boostClosedLoopYAxis = GPPWM_Tps;
 
 	setLinearCurve(config->boostRpmBins, 0, 8000, 1);
 	setLinearCurve(config->boostTpsBins, 0, 100, 1);
+	setLinearCurve(config->boostClosedLoopXAxisBins, 0, 8000, 1);
+	setLinearCurve(config->boostClosedLoopYAxisBins, 0, 100, 1);
 
 	for (int loadIndex = 0; loadIndex < BOOST_LOAD_COUNT; loadIndex++) {
 		for (int rpmIndex = 0; rpmIndex < BOOST_RPM_COUNT; rpmIndex++) {
@@ -248,7 +275,7 @@ void initBoostCtrl() {
 
 	// Set up open & closed loop tables
 	boostMapOpen.init(config->boostTableOpenLoop, config->boostTpsBins, config->boostRpmBins);
-	boostMapClosed.init(config->boostTableClosedLoop, config->boostTpsBins, config->boostRpmBins);
+	boostMapClosed.init(config->boostTableClosedLoop, config->boostClosedLoopYAxisBins, config->boostClosedLoopXAxisBins);
 
 	// Set up boost controller instance
 	engine->module<BoostController>().unmock().init(&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
