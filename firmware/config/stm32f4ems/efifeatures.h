@@ -60,13 +60,6 @@
 
 //#define EFI_UART_ECHO_TEST_MODE TRUE
 
-/**
- * Build-in logic analyzer support. Logic analyzer viewer is one of the java console panes.
- */
-#ifndef EFI_LOGIC_ANALYZER
-#define EFI_LOGIC_ANALYZER TRUE
-#endif
-
 #ifndef HAL_TRIGGER_USE_PAL
 #define HAL_TRIGGER_USE_PAL TRUE
 #endif /* HAL_TRIGGER_USE_PAL */
@@ -239,14 +232,14 @@
 		// F4 ethernet needs some extra space
 		#define LUA_USER_HEAP 25000
 	#else // MODULE_ETHERNET_CONSOLE
-		#define LUA_USER_HEAP 50000
+		#define LUA_USER_HEAP 65000
 	#endif
 #else
 	// small memory F40x can't fit perf trace
 	#define ENABLE_PERF_TRACE FALSE
 
 	#ifndef LUA_USER_HEAP
-	#define LUA_USER_HEAP 25000
+	#define LUA_USER_HEAP 30000
 	#endif
 #endif
 

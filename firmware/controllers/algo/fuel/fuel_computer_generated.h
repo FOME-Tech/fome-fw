@@ -31,26 +31,28 @@ static_assert(offsetof(running_fuel_s, baseFuel) == 16);
 static_assert(offsetof(running_fuel_s, fuel) == 18);
 
 struct fuel_computer_s {
+	// offset 0
+	running_fuel_s running;
 	// Fuel: Total correction
 	// mult
-	// offset 0
-	float totalFuelCorrection = (float)0;
-	// offset 4
-	running_fuel_s running;
+	// offset 20
+	scaled_channel<uint16_t, 100, 1> totalFuelCorrection = (uint16_t)0;
 	// %
-	// offset 24
+	// offset 22
 	scaled_channel<uint16_t, 100, 1> afrTableYAxis = (uint16_t)0;
 	// Fuel: target lambda
-	// offset 26
+	// offset 24
 	scaled_channel<uint16_t, 10000, 1> targetLambda = (uint16_t)0;
 	// Fuel: target AFR
 	// ratio
-	// offset 28
+	// offset 26
 	scaled_channel<uint16_t, 1000, 1> targetAFR = (uint16_t)0;
 	// Fuel: Stoich ratio
 	// ratio
-	// offset 30
+	// offset 28
 	scaled_channel<uint16_t, 1000, 1> stoichiometricRatio = (uint16_t)0;
+	// offset 30
+	uint8_t alignmentFill_at_30[2];
 	// offset 32
 	float sdTcharge_coff = (float)0;
 	// Air: Cylinder airmass
@@ -63,11 +65,11 @@ struct fuel_computer_s {
 	float normalizedCylinderFilling = (float)0;
 };
 static_assert(sizeof(fuel_computer_s) == 44);
-static_assert(offsetof(fuel_computer_s, totalFuelCorrection) == 0);
-static_assert(offsetof(fuel_computer_s, afrTableYAxis) == 24);
-static_assert(offsetof(fuel_computer_s, targetLambda) == 26);
-static_assert(offsetof(fuel_computer_s, targetAFR) == 28);
-static_assert(offsetof(fuel_computer_s, stoichiometricRatio) == 30);
+static_assert(offsetof(fuel_computer_s, totalFuelCorrection) == 20);
+static_assert(offsetof(fuel_computer_s, afrTableYAxis) == 22);
+static_assert(offsetof(fuel_computer_s, targetLambda) == 24);
+static_assert(offsetof(fuel_computer_s, targetAFR) == 26);
+static_assert(offsetof(fuel_computer_s, stoichiometricRatio) == 28);
 static_assert(offsetof(fuel_computer_s, sdTcharge_coff) == 32);
 static_assert(offsetof(fuel_computer_s, sdAirMassInOneCylinder) == 36);
 static_assert(offsetof(fuel_computer_s, normalizedCylinderFilling) == 40);

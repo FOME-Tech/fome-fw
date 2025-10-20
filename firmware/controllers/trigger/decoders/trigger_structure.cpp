@@ -384,11 +384,8 @@ void TriggerWaveform::setThirdTriggerSynchronizationGap(float syncRatio) {
 	setTriggerSynchronizationGap3(/*gapIndex*/2, syncRatio * TRIGGER_GAP_DEVIATION_LOW, syncRatio * TRIGGER_GAP_DEVIATION_HIGH);
 }
 
-/**
- * External logger is needed because at this point our logger is not yet initialized
- */
 void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperationMode, const TriggerConfiguration& triggerConfig) {
-	efiPrintf("initializeTriggerWaveform(%s/%d)", getTrigger_type_e(triggerConfig.TriggerType.type), (int)triggerConfig.TriggerType.type);
+	efiPrintf("initializeTriggerWaveform #%d: %s)", (int)triggerConfig.TriggerType.type, getTrigger_type_e(triggerConfig.TriggerType.type));
 
 	shapeDefinitionError = false;
 

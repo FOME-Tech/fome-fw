@@ -113,5 +113,16 @@ void efiSetPadMode(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 	palSetPadMode(port, pin, mode);
 }
 
+void efiSetPadUnused(brain_pin_e brainPin) {
+	ioportid_t port = getHwPort("", brainPin);
+	ioportmask_t pin = getHwPin("", brainPin);
+	/* paranoid */
+	if (!port) {
+		return;
+	}
+
+	palSetPadMode(port, pin, PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP);
+}
+
 // Weak linked default implementation (not necessarily required for all boards)
 __attribute__((weak)) void preHalInit() { }

@@ -224,7 +224,7 @@ static void writeDtc(T& msg, size_t offset, ObdCode code) {
 
 uint8_t responseBytes[MAX_ERROR_CODES_COUNT * 2];
 
-static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
+static void handleDtcRequest(uint8_t service, size_t numCodes, ObdCode* dtcCode, CanBusIndex busIndex) {
 	if (numCodes == 0) {
 		// No DTCs: Respond with no trouble codes
 		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
@@ -238,8 +238,8 @@ static void handleDtcRequest(uint8_t service, int numCodes, ObdCode* dtcCode, Ca
 		tx[1] = 0x40 + service;		// Service $03 response
 		tx[2] = numCodes;			// N stored codes
 
-		for (int i = 0; i < numCodes; i++) {
-			int dest = 3 + 2 * i;
+		for (size_t i = 0; i < numCodes; i++) {
+			size_t dest = 3 + 2 * i;
 			writeDtc(tx, dest, dtcCode[i]);
 		}
 	} else {

@@ -269,8 +269,9 @@ void Engine::setConfig() {
 
 void Engine::efiWatchdog() {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
-	if (isRunningPwmTest)
+	if (isRunningPwmTest) {
 		return;
+	}
 
 	if (module<PrimeController>()->isPriming()) {
 		return;
@@ -284,20 +285,15 @@ void Engine::efiWatchdog() {
 		return;
 	}
 
-	/**
-	 * todo: better watch dog implementation should be implemented - see
-	 * http://sourceforge.net/p/rusefi/tickets/96/
-	 */
 	if (engine->triggerCentral.engineMovedRecently()) {
 		// Engine moved recently, no need to safe pins.
 		return;
 	}
+
 	getTriggerCentral()->isSpinningJustForWatchdog = false;
 	ignitionEvents.isReady = false;
-#if EFI_PROD_CODE || EFI_SIMULATOR
-	efiPrintf("engine has STOPPED");
-	triggerInfo();
-#endif
+
+	efiPrintf("Engine stopped, safing pins");
 
 	enginePins.stopPins();
 #endif // EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT

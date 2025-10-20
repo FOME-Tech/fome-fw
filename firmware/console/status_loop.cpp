@@ -27,10 +27,6 @@
 #include "pch.h"
 #include "status_loop.h"
 
-#if EFI_LOGIC_ANALYZER
-#include "logic_analyzer.h"
-#endif /* EFI_LOGIC_ANALYZER */
-
 #include "trigger_central.h"
 #include "sensor_reader.h"
 #include "console_io.h"
@@ -79,16 +75,6 @@ extern int maxTriggerReentrant;
 extern uint32_t maxLockedDuration;
 
 /**
- * This is useful if we are changing engine mode dynamically
- * For example http://rusefi.com/forum/viewtopic.php?f=5&t=1085
- */
-static int packEngineMode() {
-	return (engineConfiguration->fuelAlgorithm << 4) +
-			(engineConfiguration->injectionMode << 2) +
-			engineConfiguration->ignitionMode;
-}
-
-/**
  * Time when the firmware version was last reported
  * TODO: implement a request/response instead of just constantly sending this out
  */
@@ -130,11 +116,6 @@ static void printEngineSnifferPinMappings() {
 		extern const char *vvtNames[];
 		printOutPin(vvtNames[i], engineConfiguration->camInputs[i]);
 	}
-#if EFI_LOGIC_ANALYZER
-	printOutPin(PROTOCOL_WA_CHANNEL_1, engineConfiguration->logicAnalyzerPins[0]);
-	printOutPin(PROTOCOL_WA_CHANNEL_2, engineConfiguration->logicAnalyzerPins[1]);
-#endif /* EFI_LOGIC_ANALYZER */
-
 	int cylCount = minI(engineConfiguration->cylindersCount, MAX_CYLINDER_COUNT);
 	for (int i = 0; i < cylCount; i++) {
 		printOutPin(enginePins.coils[i].getShortName(), engineConfiguration->ignitionPins[i]);
@@ -165,16 +146,6 @@ void printOverallStatus() {
 		printEngineSnifferPinMappings();
 	}
 }
-
-#if !defined(LOGIC_ANALYZER_BUFFER_SIZE)
-// TODO: how small can this be?
-#define LOGIC_ANALYZER_BUFFER_SIZE 1000
-#endif /* LOGIC_ANALYZER_BUFFER_SIZE */
-
-#if EFI_LOGIC_ANALYZER
-static char logicAnalyzerBuffer[LOGIC_ANALYZER_BUFFER_SIZE];
-static Logging logicAnalyzerLogger("logic analyzer", logicAnalyzerBuffer, sizeof(logicAnalyzerBuffer));
-#endif // EFI_LOGIC_ANALYZER
 
 /**
  * @brief Sends all pending data to rusEfi console
@@ -207,11 +178,6 @@ void updateDevConsoleState() {
 #else
 	chThdSleepMilliseconds(200);
 #endif
-
-#if EFI_LOGIC_ANALYZER
-	printWave(&logicAnalyzerLogger);
-	scheduleLogging(&logicAnalyzerLogger);
-#endif /* EFI_LOGIC_ANALYZER */
 }
 
 static void initStatusLeds() {
@@ -490,10 +456,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->tsConfigVersion = TS_FILE_VERSION;
 	static_assert(offsetof (TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
 
-	DcHardware *dc = getdcHardware();
-	engine->dc_motors.dcOutput0 = dc->dcMotor.get();
-	engine->dc_motors.isEnabled0_int = dc->msg() == nullptr;
-
 #if EFI_SHAFT_POSITION_INPUT
 
 	tsOutputChannels->RPMValue = rpm;
@@ -517,7 +479,6 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->seconds = getTimeNowS();
 
-	tsOutputChannels->engineMode = packEngineMode();
 	tsOutputChannels->firmwareVersion = getRusEfiVersion();
 
 	tsOutputChannels->accelerationLat = engine->sensors.accelerometer.lat;
@@ -577,11 +538,6 @@ void updateTunerStudioState() {
 #if (BOARD_TLE8888_COUNT > 0)
 		tle8888PostState();
 #endif /* BOARD_TLE8888_COUNT */
-		break;
-	case DBG_LOGIC_ANALYZER: 
-#if EFI_LOGIC_ANALYZER	
-		reportLogicAnalyzerToTS();
-#endif /* EFI_LOGIC_ANALYZER */		
 		break;
 	default:
 		;

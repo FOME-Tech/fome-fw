@@ -52,7 +52,7 @@ static void cam_callback(void *arg, efitick_t stamp) {
 int extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft) {
 	brain_pin_e brainPin = isTriggerShaft ? engineConfiguration->triggerInputPins[index] : engineConfiguration->camInputs[index];
 
-	efiPrintf("extiTriggerTurnOnInputPin %s %s", msg, hwPortname(brainPin));
+	efiPrintf("Trigger input (EXTI) for \"%s\" on \"%s\"", msg, hwPortname(brainPin));
 
 	/* TODO:
 	 * * do not set to both edges if we need only one

@@ -58,6 +58,7 @@ or
  - Easier to decipher check engine light blink codes #653
  - TunerStudio: Provide sensible EGT sensor "high" alerting threshold defaults
  - Improve knock detection dialog UX
+ - Increase memory available to Lua on STM32F4 and STM32F7-based ECUs
 
 ### Removed
  - Removed A/C-based alternator open-loop duty adder (#660)

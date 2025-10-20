@@ -245,15 +245,15 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
  * updated here.
  * This callback is invoked on interrupt thread.
  */
-void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
+void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo) {
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
 
 	RpmCalculator *rpmState = &engine->rpmCalculator;
 
 	if (trgEventIndex == 0) {
-		bool hadRpmRecently = rpmState->checkIfSpinning(nowNt);
+		bool hadRpmRecently = rpmState->checkIfSpinning(phaseInfo.timestamp);
 
-		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(nowNt);
+		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(phaseInfo.timestamp);
 
 		if (hadRpmRecently) {
 			/**
@@ -288,8 +288,11 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(
-		engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails,
-		trgEventIndex, nowNt);
+		engine->triggerCentral.triggerShape,
+		&engine->triggerCentral.triggerFormDetails,
+		trgEventIndex,
+		phaseInfo
+	);
 
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	if (alwaysInstantRpm) {

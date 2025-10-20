@@ -16,7 +16,6 @@
 #include "bench_test.h"
 #include "pin_repository.h"
 #include "max31855.h"
-#include "logic_analyzer.h"
 #include "smart_gpio.h"
 #include "accelerometer.h"
 #include "eficonsole.h"
@@ -215,9 +214,6 @@ void applyNewHardwareSettings() {
 #if EFI_EMULATE_POSITION_SENSORS
 	startTriggerEmulatorPins();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
-#if EFI_LOGIC_ANALYZER
-	startLogicAnalyzerPins();
-#endif /* EFI_LOGIC_ANALYZER */
 #if EFI_VVT_PID
 	startVvtControlPins();
 #endif /* EFI_VVT_PID */
@@ -273,10 +269,6 @@ void initHardwareNoConfig() {
 
 void stopHardware() {
 	stopPedalPins();
-
-#if EFI_LOGIC_ANALYZER
-	stopLogicAnalyzerPins();
-#endif /* EFI_LOGIC_ANALYZER */
 
 #if EFI_EMULATE_POSITION_SENSORS
 	stopTriggerEmulatorPins();

@@ -12,7 +12,6 @@
 #include "trigger_decoder.h"
 #include "main_trigger_callback.h"
 #include "listener_array.h"
-#include "logic_analyzer.h"
 
 #include "local_version_holder.h"
 #include "trigger_simulator.h"
@@ -479,11 +478,6 @@ void TriggerCentral::decodeMapCam(efitick_t timestamp, EngPhase currentPhase) {
 			mapCamPrevCycleValue = map;
 
 			if (diff > 0) {
-				mapVvt_map_peak++;
-				int revolutionCounter = getTriggerCentral()->triggerState.getCrankSynchronizationCounter();
-				mapVvt_MAP_AT_CYCLE_COUNT = revolutionCounter - prevChangeAtCycle;
-				prevChangeAtCycle = revolutionCounter;
-
 				hwHandleVvtCamSignal(true,  timestamp, /*index*/0);
 				hwHandleVvtCamSignal(false, timestamp, /*index*/0);
 #if EFI_UNIT_TEST
@@ -632,16 +626,6 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		m_lastToothPhaseFromSyncPoint = currentTrgPhase;
 	}
 
-	// Update engine RPM
-	rpmShaftPositionCallback(triggerIndexForListeners, timestamp);
-
-	// Schedule the TDC mark
-	tdcMarkCallback(triggerIndexForListeners, timestamp);
-
-#if EFI_LOGIC_ANALYZER
-	waTriggerEventListener(signal, triggerIndexForListeners, timestamp);
-#endif
-
 	EngPhase currentEnginePhase = toEngPhase(currentTrgPhase);
 	currentEngineDecodedPhase = currentEnginePhase.angle;
 
@@ -662,7 +646,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
 	}
 
-	EnginePhaseInfo phaseInfo {
+	const EnginePhaseInfo phaseInfo {
 		.timestamp = timestamp,
 
 		.currentTrgPhase = currentTrgPhase,
@@ -671,6 +655,12 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		.currentEngPhase = currentEnginePhase,
 		.nextEngPhase = toEngPhase(nextPhase),
 	};
+
+	// Update engine RPM
+	rpmShaftPositionCallback(triggerIndexForListeners, phaseInfo);
+
+	// Schedule the TDC mark
+	tdcMarkCallback(triggerIndexForListeners, timestamp);
 
 	// Handle ignition and injection
 	mainTriggerCallback(triggerIndexForListeners, phaseInfo);
@@ -701,13 +691,6 @@ void triggerInfo() {
 
 	TriggerCentral *tc = getTriggerCentral();
 	TriggerWaveform *ts = &tc->triggerShape;
-
-
-#if (HAL_TRIGGER_USE_PAL == TRUE) && (PAL_USE_CALLBACKS == TRUE)
-		efiPrintf("trigger PAL mode %d", tc->hwTriggerInputEnabled);
-#else
-
-#endif /* HAL_TRIGGER_USE_PAL */
 
 	efiPrintf("Template %s (%d) trigger %s (%d) syncEdge=%s tdcOffset=%.2f",
 			getEngine_type_e(engineConfiguration->engineType), (int)engineConfiguration->engineType,
@@ -763,9 +746,6 @@ void triggerInfo() {
 					getVvt_mode_e(engineConfiguration->vvtMode[camLogicalIndex]));
 		}
 	}
-
-	efiPrintf("primary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[0]));
-	efiPrintf("secondary logic input: %s", hwPortname(engineConfiguration->logicAnalyzerPins[1]));
 
 	efiPrintf("totalTriggerHandlerMaxTime=%lu", triggerMaxDuration);
 

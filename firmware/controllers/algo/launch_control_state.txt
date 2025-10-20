@@ -1,6 +1,4 @@
 struct_no_prefix launch_control_state_s
-	int retardThresholdRpm;Launch control: Retard threshold RPM
-
 	bit combinedConditions;Launch control: combinedConditions
 	bit launchActivatePinState;Launch control: launchActivatePinState
 	bit isLaunchCondition;Launch control: isLaunchCondition
@@ -12,4 +10,6 @@ struct_no_prefix launch_control_state_s
 	bit rpmCondition;Launch control: rpmCondition
 	bit speedCondition;Launch control: speedCondition
 	bit tpsCondition;Launch control: tpsCondition
+
+	uint16_t retardThresholdRpm;Launch control: Retard threshold RPM
 end_struct

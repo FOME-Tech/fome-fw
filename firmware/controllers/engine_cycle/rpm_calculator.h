@@ -163,7 +163,7 @@ private:
 	float m_lastRpm = 0;
 };
 
-void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp);
+void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo);
 
 void tdcMarkCallback(
 		uint32_t trgEventIndex, efitick_t edgeTimestamp);

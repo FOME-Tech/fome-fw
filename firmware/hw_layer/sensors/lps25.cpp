@@ -11,8 +11,9 @@
 #include "lps25.h"
 
 static constexpr uint8_t addr = 0x5C;
-static constexpr uint8_t expectedWhoAmILps22 = 0xB1;
+static constexpr uint8_t expectedWhoAmILps22Hb = 0xB1;
 static constexpr uint8_t expectedWhoAmILps25 = 0xBD;
+static constexpr uint8_t expectedWhoAmILps22Df = 0xB4;
 
 // Control register 1
 #define LPS_CR1_PD (1 << 7)
@@ -45,8 +46,11 @@ bool Lps25::init(brain_pin_e scl, brain_pin_e sda) {
 
 	switch (whoAmI)
 	{
-	case expectedWhoAmILps22:
-		m_type = Type::Lps22;
+	case expectedWhoAmILps22Hb:
+		m_type = Type::Lps22Hb;
+		break;
+	case expectedWhoAmILps22Df:
+		m_type = Type::Lps22Df;
 		break;
 	case expectedWhoAmILps25:
 		m_type = Type::Lps25;
@@ -150,7 +154,8 @@ expected<float> Lps25::readTemperatureC() {
 	float tempC;
 	switch (m_type)
 	{
-	case Type::Lps22:
+	case Type::Lps22Hb:
+	case Type::Lps22Df:
 		tempC = rawTemp / 100.0f;
 		break;
 	case Type::Lps25:
@@ -170,7 +175,8 @@ expected<float> Lps25::readTemperatureC() {
 uint8_t Lps25::regCr1() const {
 	switch (m_type)
 	{
-	case Type::Lps22:
+	case Type::Lps22Hb:
+	case Type::Lps22Df:
 		return REG_Cr1_Lps22;
 	case Type::Lps25:
 	default:

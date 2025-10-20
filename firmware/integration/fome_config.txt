@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20022
+#define FLASH_DATA_VERSION 20023
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1350
+#define BLOCKING_FACTOR 1300
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -165,7 +165,6 @@ struct_no_prefix engine_configuration_s
 #define HW_MAX_ADC_INDEX 17
 #define TRIGGER_SIMULATOR_PIN_COUNT 2
 #define TRIGGER_INPUT_PIN_COUNT 2
-#define LOGIC_ANALYZER_CHANNEL_COUNT 4
 #define SCRIPT_SETTING_COUNT 8
 
 #define VEHICLE_INFO_SIZE 32
@@ -254,7 +253,7 @@ struct pid_s
 end_struct
 
 struct cranking_parameters_s
-float baseFuel;Base mass of the per-cylinder fuel injected during cranking. This is then modified by the multipliers for CLT, IAT, TPS ect, to give the final cranking pulse width.\nA reasonable starting point is 60mg per liter per cylinder.\nex: 2 liter 4 cyl = 500cc/cyl, so 30mg cranking fuel.;"mg", 1, 0, 0, 500, 1
+uint16_t autoscale baseFuel;Base mass of the per-cylinder fuel injected during cranking. This is then modified by the multipliers for CLT, IAT, TPS ect, to give the final cranking pulse width.\nA reasonable starting point is 60mg per liter per cylinder.\nex: 2 liter 4 cyl = 500cc/cyl, so 30mg cranking fuel.;"mg", 0.1, 0, 0, 500, 1
 int16_t rpm;This sets the RPM limit below which the ECU will use cranking fuel and ignition logic, typically this is around 350-450rpm.;"RPM", 1, 0, 0, 3000, 0
 end_struct
 
@@ -332,11 +331,11 @@ adc_channel_e hwChannel;
 end_struct
 
 struct MAP_sensor_config_s
-float[MAP_ANGLE_SIZE] samplingAngleBins;;"", 1, 0, 0, 18000, 2
-float[MAP_ANGLE_SIZE] samplingAngle;MAP averaging sampling start crank degree angle;"deg", 1, 0, -720, 720, 2
-float[MAP_WINDOW_SIZE] samplingWindowBins;;"", 1, 0, 0, 18000, 2
-float[MAP_WINDOW_SIZE] samplingWindow;MAP averaging angle crank degree duration;"deg", 1, 0, -720, 720, 2
-air_pressure_sensor_config_s sensor
+	uint16_t[MAP_ANGLE_SIZE] samplingAngleBins;;"", 1, 0, 0, 18000, 0
+	uint16_t[MAP_ANGLE_SIZE] samplingAngle;MAP averaging sampling start crank degree angle;"deg", 1, 0, -720, 720, 0
+	uint16_t[MAP_WINDOW_SIZE] samplingWindowBins;;"", 1, 0, 0, 18000, 0
+	uint16_t[MAP_WINDOW_SIZE] samplingWindow;MAP averaging angle crank degree duration;"deg", 1, 0, 0, 720, 0
+	air_pressure_sensor_config_s sensor
 end_struct
 
 struct_no_prefix thermistor_conf_s
@@ -383,6 +382,9 @@ ignition_mode_e ignitionMode;Single coil = distributor\nIndividual coils = one c
 
 custom can_nbc_e 1 bits, U08, @OFFSET@, [0:4], "None", "FIAT", "VAG", "MAZDA RX8", "BMW", "W202", "BMW E90", "Haltech", "VAG MQB", "Nissan VQ35", "Genesis Coupe", "Honda K", "AiM", "type 13", "type 14"
 can_nbc_e canNbcType
+
+uint8_t cylContributionWindow;;"deg", 1, 0, 45, 180, 0
+uint8_t cylContributionPhase;;"deg", 1, 0, 0, 250, 0
 
 struct injector_s
 	float flow;This is your injector flow at the fuel pressure used in the vehicle.;"", 1, 0, 0, 99999, 2
@@ -696,8 +698,6 @@ bit is_enabled_spi_2
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
 
-	brain_input_pin_e[LOGIC_ANALYZER_CHANNEL_COUNT iterate] logicAnalyzerPins;
-
 	! 536870911 = 2^29-1, the maximum valid extended ID
 	uint32_t verboseCanBaseAddress;The ECU base CAN address (ID).\n\nValue is specified as a decimal number e.g. 512 is 0x200 in HEX.;"dec", 1, 0, 0, 536870911, 0
 
@@ -934,7 +934,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit isWaveAnalyzerEnabled
 	bit useSeparateVeForIdle;This activates a separate fuel table for Idle, this allows fine tuning of the idle fuelling.
 	bit verboseTriggerSynchDetails;Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
-	bit unused1188b12
+	bit alwaysResetPidLeavingIdle
 	bit canBroadcastEgt;Disable to skip cam data frame (base + 9) if you have no EGT sensing.
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
 	bit unused1200b14
@@ -1375,6 +1375,7 @@ int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
+	uint8_t widebandPumpGain;;"%", 1, 0, 0, 200, 0
 
 	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
 
@@ -1487,8 +1488,8 @@ engine_configuration_s engineConfiguration;
 
 	int8_t[CLT_CURVE_SIZE] autoscale cltIdleRpmBins;CLT-based target RPM for automatic idle controller;"C", 2, 0, -40, 200, 0
 	uint8_t[CLT_CURVE_SIZE] autoscale cltIdleRpm;Sets the target engine speed that is used for the closed-loop idle air and closed-loop idle timing algorithms.;"RPM", 20, 0, 0, 5000, 0
-	float[CLT_TIMING_CURVE_SIZE] cltTimingBins;CLT-based timing correction;"C", 1, 0, -100, 250, 1
-	float[CLT_TIMING_CURVE_SIZE] cltTimingExtra;;"degree", 1, 0, -400, 400, 0
+	int8_t[CLT_TIMING_CURVE_SIZE] cltTimingBins;CLT-based timing correction;"C", 1, 0, -40, 120, 1
+	int8_t[CLT_TIMING_CURVE_SIZE] autoscale cltTimingExtra;;"degree", 0.1, 0, -30, 30, 1
 
 
 	int16_t[SCRIPT_CURVE_16] autoscale scriptCurve1Bins;;"x", 0.1, 0, -3270, 3270, 2
@@ -1894,11 +1895,6 @@ end_struct
 #define PROTOCOL_VVT2_NAME "VVT2"
 #define PROTOCOL_VVT3_NAME "VVT3"
 #define PROTOCOL_VVT4_NAME "VVT4"
-
-#define PROTOCOL_WA_CHANNEL_1 "input1"
-#define PROTOCOL_WA_CHANNEL_2 "input2"
-#define PROTOCOL_WA_CHANNEL_3 "input3"
-#define PROTOCOL_WA_CHANNEL_4 "input4"
 
 
 #define TS_PROTOCOL "001"

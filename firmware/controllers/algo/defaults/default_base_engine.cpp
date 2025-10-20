@@ -23,8 +23,9 @@ void setDefaultBaseEngine() {
 	engineConfiguration->displacement = 2;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 
-    // todo: extract constant in instant_rpm_calculator.h?
-    engineConfiguration->instantRpmRange = 90;
+	engineConfiguration->instantRpmRange = 90;
+	engineConfiguration->cylContributionWindow = 90;
+	engineConfiguration->cylContributionPhase = 180;
 
 	engineConfiguration->compressionRatio = 9;
 

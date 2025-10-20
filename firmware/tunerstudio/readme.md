@@ -11,14 +11,14 @@ The `translations` directory contains non-English-language translations
 for TunerStudio.
 
 In TunerStudio some fields have little question mark on the left of the name for additional field tips.
-Those tips are defined in `../integration/rusefi_config.txt`
+Those tips are defined in `../integration/fome_config.txt`
 
 The initialization files are automatically generated from a combination
 of input files located both in this directory and in the board-specific
 directories .
 
 `fome_*.ini` files are generated based on the following four inputs:
-1) `rusefi_config.txt` contains configuration region definition in proprietary text format.
+1) `fome_config.txt` contains configuration region definition in proprietary text format.
 2) `tunerstudio.template.ini` contains the UI - all the menus and dialogs. UI definition starts at `menuDialog = main`
 line - here you will see all top level menus defined with internal IDs and visible text labels.
 3) `mapping.yaml` is a minor detail related to how pins are named in drop downs
@@ -31,4 +31,4 @@ On Linux this may be run with `gen_config.sh`.
 
 Q: how do I offer my changes to TS project?
 
-A: please PR only source files (tunerstudio.template.ini & rusefi_config.txt). Once merged, gen_config.sh would be executed automatically and results would be pushed by automation.
+A: please PR only source files (tunerstudio.template.ini & fome_config.txt). Once merged, gen_config.sh would be executed automatically and results would be pushed by automation.

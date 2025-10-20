@@ -88,7 +88,7 @@ static void stopTriggerInputPins() {
 	}
 }
 
-static const char* const camNames[] = { "cam1", "cam2", "cam3", "cam4"};
+static const char* const camNames[] = { "Cam B1I", "Cam B1E", "Cam B2I", "Cam B2E"};
 
 static void startTriggerInputPins() {
 	for (int i = 0; i < TRIGGER_INPUT_PIN_COUNT; i++) {

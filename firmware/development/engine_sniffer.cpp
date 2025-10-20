@@ -220,7 +220,6 @@ void initWaveChart(WaveChart *chart) {
 	chart->init();
 
 #if ! EFI_UNIT_TEST
-	printStatus();
 	addConsoleActionI("chartsize", setChartSize);
 	// this is used by HW CI
 	addConsoleAction(CMD_RESET_ENGINE_SNIFFER, resetNow);
@@ -238,13 +237,6 @@ void addEngineSnifferTdcEvent(int rpm) {
 	waveChart.startDataCollection();
 
 	addEngineSnifferEvent(TOP_DEAD_CENTER_MESSAGE, (char* ) rpmBuffer);
-}
-
-void addEngineSnifferLogicAnalyzerEvent(int laIndex, bool isRise) {
-	extern const char *laNames[];
-	const char *name = laNames[laIndex];
-
-	addEngineSnifferEvent(name, isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
 }
 
 void addEngineSnifferCrankEvent(int wheelIndex, int triggerEventIndex, bool isRise) {

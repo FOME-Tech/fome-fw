@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "wifi_socket.h"
+#include "thread_controller.h"
 #include "socket/include/socket.h"
 
 extern "C" {
@@ -11,6 +12,23 @@ extern "C" {
 static ServerSocket server;
 
 static bool didInit = false;
+static bool wifiInitDone = false;
+
+struct WifiInitFinisher : public ThreadController<4096> {
+	WifiInitFinisher() : ThreadController("WiFi init", WIFI_THREAD_PRIORITY) {}
+
+	void ThreadTask() override {
+		waitForWifiInit();
+
+		// Start listening on the socket
+		sockaddr_in address;
+		address.sin_family = AF_INET;
+		address.sin_port = _htons(29000);
+		address.sin_addr.s_addr = 0;
+
+		server.startListening(address);
+	}
+} wifiInitFinisher;
 
 void NetDeferredInit() {
 	if (didInit) {
@@ -20,15 +38,8 @@ void NetDeferredInit() {
 	didInit = true;
 
 	initWifi();
-	waitForWifiInit();
 
-	// Start listening on the socket
-	sockaddr_in address;
-	address.sin_family = AF_INET;
-	address.sin_port = _htons(29000);
-	address.sin_addr.s_addr = 0;
-
-	server.startListening(address);
+	wifiInitFinisher.start();
 }
 
 uint8_t header[4] = {0xde, 0xad, 0xbe, 0xef};
@@ -36,12 +47,20 @@ uint8_t header[4] = {0xde, 0xad, 0xbe, 0xef};
 uint8_t outBuffer[512];
 
 void NetTransmitPacket(blt_int8u *data, blt_int8u len) {
+	if (!wifiInitDone) {
+		return;
+	}
+
 	memcpy(outBuffer + 1, data, len);
 	outBuffer[0] = len;
 	server.send(outBuffer, len + 1);
 }
 
 blt_bool NetReceivePacket(blt_int8u *data, blt_int8u *len) {
+	if (!wifiInitDone) {
+		return BLT_FALSE;
+	}
+
 	uint8_t lengthByte;
 
 	auto lengthByteLen = server.recvTimeout(&lengthByte, 1, TIME_IMMEDIATE);
