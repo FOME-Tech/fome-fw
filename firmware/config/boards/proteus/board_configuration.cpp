@@ -209,15 +209,14 @@ Gpio* getBoardMetaOutputs() {
 }
 
 void initBoardSensors() {
-	efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
-	efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
-	engineConfiguration->pgPins[0] = pgPins[0];
-	engineConfiguration->pgPins[1] = pgPins[1];
+	auto mode = PI_PULLUP;
+	efiSetPadMode("PG1", pgPins[0], mode);
+	efiSetPadMode("PG2", pgPins[1], mode);
 }
 
 void checkBoardPowerSupply() {
-	if(isBrainPinValid(engineConfiguration->pgPins[0]) && isBrainPinValid(engineConfiguration->pgPins[1])){
-		engine->engineState.pgState = getPgstate(0) && getPgstate(1);
+	if(isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])){
+		engine->engineState.pgState = efiReadPin(pgPins[0]) && efiReadPin(pgPins[1]);
 		if(!engine->engineState.pgState){
 			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
 		} else {
