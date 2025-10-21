@@ -20,10 +20,10 @@ void initSensors() {
 	acDebounce.init(MS2NT(15), engineConfiguration->acSwitch, engineConfiguration->acSwitchMode);
 	acPressureDebounce.init(MS2NT(15), engineConfiguration->acPressureSwitch, engineConfiguration->acPressureSwitchMode);
 	oilPressureSwitchDebounce.init(MS2NT(15), engineConfiguration->oilPressureSwitch, engineConfiguration->oilPressureSwitchMode);
-	
+
 	if(isBrainPinValid(engineConfiguration->pgPins[0]) && isBrainPinValid(engineConfiguration->pgPins[1]))
 	{
-		auto type = PI_DEFAULT;
+		auto type = PI_PULLUP;
 		pgInput1.init(MS2NT(15), engineConfiguration->pgPins[0], type);
 		pgInput2.init(MS2NT(15), engineConfiguration->pgPins[1], type);
 	}
