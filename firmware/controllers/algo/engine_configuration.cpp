@@ -959,3 +959,4 @@ __attribute__((weak)) int getBoardMetaOutputsCount() { return 0; }
 __attribute__((weak)) Gpio* getBoardMetaOutputs() { return nullptr; }
 
 __attribute__((weak)) void initBoardSensors() { }
+__attribute__((weak)) void checkBoardPowerSupply() { }

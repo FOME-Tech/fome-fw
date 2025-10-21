@@ -310,6 +310,9 @@ void SensorChecker::onSlowCallback() {
 		if (!shouldCheck) {
 			return;
 		}
+
+		// Perform any special board-specific power supply checks
+		checkBoardPowerSupply();
 	}
 
 	// Check sensors
