@@ -8,6 +8,7 @@
 
 #include "pch.h"
 #include "proteus_meta.h"
+#include "malfunction_central.h"
 
 static const brain_pin_e injPins[] = {
 	PROTEUS_LS_1,
@@ -37,6 +38,11 @@ static const brain_pin_e ignPins[] = {
 	PROTEUS_IGN_10,
 	PROTEUS_IGN_11,
 	PROTEUS_IGN_12,
+};
+
+static const brain_pin_e pgPins[] = {
+	PROTEUS_5V_PG_1,
+	PROTEUS_5V_PG_2,
 };
 
 static void setInjectorPins() {
@@ -200,4 +206,22 @@ int getBoardMetaOutputsCount() {
 
 Gpio* getBoardMetaOutputs() {
 	return PROTEUS_OUTPUTS;
+}
+
+void initBoardSensors() {
+	efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
+	efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
+	engineConfiguration->pgPins[0] = pgPins[0];
+	engineConfiguration->pgPins[1] = pgPins[1];
+}
+
+void checkBoardPowerSupply() {
+	if(isBrainPinValid(engineConfiguration->pgPins[0]) && isBrainPinValid(engineConfiguration->pgPins[1])){
+		engine->engineState.pgState = getPgstate(0) && getPgstate(1);
+		if(!engine->engineState.pgState){
+			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
+		} else {
+			removeError(ObdCode::CUSTOM_ERR_PG_STATE);
+		}
+	}
 }

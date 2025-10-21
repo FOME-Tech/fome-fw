@@ -222,6 +222,7 @@ struct_no_prefix engine_configuration_s
 #define GPPWM_NOTE_SIZE 16
 
 #define CAN_VIRTUAL_INPUT_PINS_COUNT 8
+#define MAX_PG_PIN_COUNT 2
 
 struct stft_cell_cfg_s
 	int8_t maxAdd;Maximum % of fuel possible for fuel trim to add while in this region.;"%", 1, 0, 0, 25, 0
@@ -642,6 +643,8 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 	Gpio sdCardCsPin;
 	Gpio canTxPin;set_can_tx_pin X
 	Gpio canRxPin;set_can_rx_pin X
+
+	Gpio[MAX_PG_PIN_COUNT iterate] pgPins;
 
 	brain_input_pin_e tcuInputSpeedSensorPin
 	uint8_t tcuInputSpeedSensorTeeth;;"", 1, 0, 0, 100, 0

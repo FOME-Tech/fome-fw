@@ -31,3 +31,5 @@ bool getAcPressure();
 
 bool hasOilPressureSwitch();
 bool getOilSwitchState();
+
+bool getPgstate(uint8_t index);
