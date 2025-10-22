@@ -13,7 +13,7 @@ public class ToolUtil {
          * historically somehow '!' was the start of comment line
          * '//' is the later added alternative.
          */
-        return line.length() == 0 || line.startsWith("!") || line.startsWith("//");
+        return line.isEmpty() || line.startsWith("!") || line.startsWith("//");
     }
 
     static boolean startsWithToken(String line, String token) {

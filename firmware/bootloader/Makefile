@@ -8,7 +8,7 @@
 ifeq ($(DEBUG_LEVEL_OPT),)
   # this value would be used by default. For 'debug' configuration override with '-O0 -ggdb -g' or something along these lines
   DEBUG_LEVEL_OPT = -Os -ggdb -g
-  DDEFS += -DEFI_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_STACK_CHECK=FALSE -DCH_DBG_FILL_THREADS=FALSE -DCH_DBG_THREADS_PROFILING=FALSE
+  DDEFS += -DEFI_ENABLE_ASSERTS=FALSE -DCH_DBG_ENABLE_ASSERTS=FALSE -DCH_DBG_FILL_THREADS=FALSE -DCH_DBG_THREADS_PROFILING=FALSE
 endif
 
 DDEFS += -DENABLE_AUTO_DETECT_HSE=TRUE -DSTM32_HSECLK=25000000
@@ -102,11 +102,6 @@ ifeq ($(USE_EXCEPTIONS_STACKSIZE),)
   USE_EXCEPTIONS_STACKSIZE = 0x1000
 endif
 
-# Enables the use of FPU on Cortex-M4 (no, softfp, hard).
-ifeq ($(USE_FPU),)
-  USE_FPU = hard
-endif
-
 #
 # Architecture or project specific options
 ##############################################################################
@@ -167,6 +162,34 @@ include $(PROJECT_DIR)/controllers/controllers.mk
 include $(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER)/hw_ports.mk
 include $(PROJECT_DIR)/hw_layer/drivers/drivers.mk
 
+ifeq ($(SD_BOOTLOADER),yes)
+  DDEFS += -DSD_BOOTLOADER
+  include $(CHIBIOS)/os/various/fatfs_bindings/fatfs.mk
+  include $(PROJECT_DIR)/ext/FatFS/fatfs.mk
+  ALLCPPSRC += \
+				$(PROJECT_DIR)/hw_layer/mmc_card_attach.cpp \
+				$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_file.cpp \
+
+  ALLCSRC += $(PROJECT_DIR)/ext/openblt/Target/Source/file.c
+endif
+
+ifeq ($(USE_WIFI),yes)
+  include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
+  include $(PROJECT_DIR)/net/net.mk
+
+  DDEFS += -DEFI_WIFI=1 # -DETH_MODE=1
+
+  ALLCPPSRC += $(PROJECT_DIR)/bootloader/openblt_chibios/openblt_net.cpp
+endif
+
+$(info PROJECT_BOARD: $(PROJECT_BOARD))
+$(info BOARD_DIR:     $(BOARD_DIR))
+$(info PROJECT_CPU:   $(PROJECT_CPU))
+$(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
+$(info CPU_HWLAYER:   $(CPU_HWLAYER))
+$(info CONFDIR:       $(CONFDIR))
+$(info LDSCRIPT:      $(LDSCRIPT))
+
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CSRC =  $(ALLCSRC) \
@@ -190,9 +213,12 @@ CPPSRC = $(ALLCPPSRC) \
 	$(BOARDCPPSRC) \
 	$(PROJECT_DIR)/util/efilib.cpp \
 	$(PROJECT_DIR)/hw_layer/pin_repository.cpp \
+	$(PROJECT_DIR)/hw_layer/spi_devices.cpp \
 	$(RUSEFI_LIB_CPP) \
+	$(PROJECT_DIR)/util/crc_accelerator.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_chibios.cpp \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_flash.cpp \
+	$(PROJECT_DIR)/bootloader/openblt_chibios/$(MCU_BOOTLOADER_FLASH) \
 	$(PROJECT_DIR)/bootloader/openblt_chibios/openblt_usb.cpp \
 	bootloader_stubs.cpp \
 	bootloader_main.cpp
@@ -236,6 +262,7 @@ INCDIR = $(ALLINC) \
 	$(PROJECT_DIR)/ext \
 	$(PROJECT_DIR)/ext_algo \
 	$(GENERATED_DIR) \
+	$(PROJECT_DIR)/ext/FatFS \
 	$(UTIL_INC) \
 	$(PROJECT_DIR)/console_util \
 	$(PROJECT_DIR)/console \
@@ -297,6 +324,7 @@ OD   = $(TRGT)objdump
 SZ   = $(TRGT)size
 HEX  = $(CP) -O ihex
 BIN  = $(CP) -O binary
+SREC = $(CP) -O srec
 
 # ARM-specific options here
 AOPT =

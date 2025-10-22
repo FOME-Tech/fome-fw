@@ -10,7 +10,6 @@
  */
 
 #include <rusefi/arrays.h>
-#include <rusefi/crc.h>
 #include <rusefi/fragments.h>
 #include <rusefi/interpolation.h>
 #include <rusefi/isnan.h>

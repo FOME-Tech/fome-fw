@@ -25,24 +25,23 @@ void EnableToothLogger();
 void DisableToothLogger();
 
 // A new tooth has arrived! Log to the buffer if enabled.
-void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp);
+void LogPrimaryTriggerTooth(efitick_t timestamp, bool state);
+void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state);
 
 void LogTriggerTopDeadCenter(efitick_t timestamp);
-
-void LogTriggerCoilState(efitick_t timestamp, bool state);
-
-void LogTriggerInjectorState(efitick_t timestamp, bool state);
 
 typedef struct __attribute__ ((packed)) {
 	// the whole order of all packet bytes is reversed, not just the 'endian-swap' integers
 	uint32_t timestamp;
 	// unfortunately all these fields are required by TS...
 	bool priLevel : 1;
-	bool secLevel : 1;
+	bool cam1 : 1;
 	bool trigger : 1;
 	bool sync : 1;
-	bool coil : 1;
-	bool injector : 1;
+	bool tdc : 1;
+	bool cam2 : 1;
+	bool cam3 : 1;
+	bool cam4 : 1;
 } composite_logger_s;
 
 static constexpr size_t toothLoggerEntriesPerBuffer = 250;

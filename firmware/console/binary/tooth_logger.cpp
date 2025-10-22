@@ -19,13 +19,10 @@ static_assert(sizeof(composite_logger_s) == COMPOSITE_PACKET_SIZE, "composite pa
 static volatile bool ToothLoggerEnabled = false;
 static uint32_t lastEdgeTimestamp = 0;
 
+static bool wasSecondary = false;
 static bool currentTrigger1 = false;
-static bool currentTrigger2 = false;
+static bool camStates[4] = {false};
 static bool currentTdc = false;
-// any coil, all coils thrown together
-static bool currentCoilState = false;
-// same about injectors
-static bool currentInjectorState = false;
 
 #if EFI_UNIT_TEST
 #include "logicdata.h"
@@ -41,11 +38,9 @@ void SetNextCompositeEntry(efitick_t timestamp) {
 
 	event.timestamp = timestamp;
 	event.primaryTrigger = currentTrigger1;
-	event.secondaryTrigger = currentTrigger2;
+	event.secondaryTrigger = camStates[0];
 	event.isTDC = currentTdc;
 	event.sync = engine->triggerCentral.triggerState.getShaftSynchronized();
-	event.coil = currentCoilState;
-	event.injector = currentInjectorState;
 
 	events.push_back(event);
 }
@@ -206,11 +201,13 @@ static void SetNextCompositeEntry(efitick_t timestamp) {
 		// TS uses big endian, grumble
 		entry->timestamp = SWAP_UINT32(nowUs);
 		entry->priLevel = currentTrigger1;
-		entry->secLevel = currentTrigger2;
-		entry->trigger = currentTdc;
+		entry->cam1 = camStates[0];
+		entry->cam2 = camStates[1];
+		entry->cam3 = camStates[2];
+		entry->cam4 = camStates[3];
+		entry->trigger = wasSecondary;
+		entry->tdc = currentTdc;
 		entry->sync = engine->triggerCentral.triggerState.getShaftSynchronized();
-		entry->coil = currentCoilState;
-		entry->injector = currentInjectorState;
 	}
 
 	// if the buffer is full...
@@ -233,7 +230,7 @@ static void SetNextCompositeEntry(efitick_t timestamp) {
 
 #endif // EFI_UNIT_TEST
 
-void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp) {
+static void LogTriggerTooth(efitick_t timestamp) {
 	// bail if we aren't enabled
 	if (!ToothLoggerEnabled) {
 		return;
@@ -246,40 +243,22 @@ void LogTriggerTooth(TriggerEvent tooth, efitick_t timestamp) {
 
 	ScopePerf perf(PE::LogTriggerTooth);
 
-/*
-		// We currently only support the primary trigger falling edge
-    	// (this is the edge that VR sensors are accurate on)
-    	// Since VR sensors are the most useful case here, this is okay for now.
-    	if (tooth != SHAFT_PRIMARY_FALLING) {
-    		return;
-    	}
-
-    	uint32_t nowUs = NT2US(timestamp);
-    	// 10us per LSB - this gives plenty of accuracy, yet fits 655.35 ms in to a uint16
-    	uint16_t delta = static_cast<uint16_t>((nowUs - lastEdgeTimestamp) / 10);
-    	lastEdgeTimestamp = nowUs;
-
-    	SetNextEntry(delta);
-*/
-
-	switch (tooth) {
-	case TriggerEvent::PrimaryFalling:
-		currentTrigger1 = false;
-		break;
-	case TriggerEvent::PrimaryRising:
-		currentTrigger1 = true;
-		break;
-	case TriggerEvent::SecondaryFalling:
-		currentTrigger2 = false;
-		break;
-	case TriggerEvent::SecondaryRising:
-		currentTrigger2 = true;
-		break;
-	default:
-		break;
-	}
-
 	SetNextCompositeEntry(timestamp);
+}
+
+void LogPrimaryTriggerTooth(efitick_t timestamp, bool state) {
+	wasSecondary = false;
+	currentTrigger1 = state;
+
+	LogTriggerTooth(timestamp);
+}
+
+void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state) {
+	wasSecondary = true;
+
+	camStates[camIndex] = state;
+
+	LogTriggerTooth(timestamp);
 }
 
 void LogTriggerTopDeadCenter(efitick_t timestamp) {
@@ -291,24 +270,6 @@ void LogTriggerTopDeadCenter(efitick_t timestamp) {
 	SetNextCompositeEntry(timestamp);
 	currentTdc = false;
 	SetNextCompositeEntry(timestamp + 10);
-}
-
-void LogTriggerCoilState(efitick_t timestamp, bool state) {
-	if (!ToothLoggerEnabled) {
-		return;
-	}
-	currentCoilState = state;
-	UNUSED(timestamp);
-	//SetNextCompositeEntry(timestamp, trigger1, trigger2, trigger);
-}
-
-void LogTriggerInjectorState(efitick_t timestamp, bool state) {
-	if (!ToothLoggerEnabled) {
-		return;
-	}
-	currentInjectorState = state;
-	UNUSED(timestamp);
-	//SetNextCompositeEntry(timestamp, trigger1, trigger2, trigger);
 }
 
 void EnableToothLoggerIfNotEnabled() {

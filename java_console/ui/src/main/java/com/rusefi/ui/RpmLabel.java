@@ -39,11 +39,7 @@ public class RpmLabel {
 
         RpmModel.getInstance().addListener(new RpmModel.RpmListener() {
             public void onRpmChange(RpmModel rpm) {
-                int value = rpm.getSmoothedValue();
-                if (value == -1)
-                    rpmValue.setText("Noise");
-                else
-                    rpmValue.setText(value + "");
+                rpmValue.setText(Integer.toString(rpm.getValue()));
             }
         });
 

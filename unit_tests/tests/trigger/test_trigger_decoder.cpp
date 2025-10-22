@@ -97,9 +97,9 @@ TEST(trigger, test1995FordInline6TriggerDecoder) {
 	ASSERT_EQ(true,  ecl->isReady) << "ford inline ignition events size";
 
 	EXPECT_NEAR(ecl->elements[0].dwellAngle, 8.960f, 1e-3);
-	EXPECT_NEAR(ecl->elements[0].sparkAngle, 14.96f, 1e-3);
+	EXPECT_NEAR(ecl->elements[0].calculateSparkAngle(), 14.96f, 1e-3);
 	EXPECT_NEAR(ecl->elements[5].dwellAngle, 608.960f, 1e-3);
-	EXPECT_NEAR(ecl->elements[5].sparkAngle, 614.960f, 1e-3);
+	EXPECT_NEAR(ecl->elements[5].calculateSparkAngle(), 614.960f, 1e-3);
 
 	engine->ignitionState.updateDwell(2000, false);
 	ASSERT_FLOAT_EQ(0.5, engine->ignitionState.getDwell()) << "running dwell";
@@ -195,13 +195,10 @@ TEST(misc, testRpmCalculator) {
 	ASSERT_EQ(4, engine->triggerCentral.triggerShape.findAngleIndex(&engine->triggerCentral.triggerFormDetails, 240));
 	ASSERT_EQ(4, engine->triggerCentral.triggerShape.findAngleIndex(&engine->triggerCentral.triggerFormDetails, 241));
 
-	eth.fireTriggerEvents(/* count */ 48);
+	eth.smartFireTriggerEvents2(/* count */ 48, 5);
 
 	ASSERT_EQ(1500,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM";
 	ASSERT_EQ(14, engine->triggerCentral.triggerState.getCurrentIndex()) << "index #1";
-
-
-	eth.executeActions();
 
 //	debugSignalExecutor = true;
 
@@ -228,7 +225,7 @@ TEST(misc, testRpmCalculator) {
 	EXPECT_NEAR_M3(111.1111, engine->rpmCalculator.oneDegreeUs) << "one degree";
 	ASSERT_EQ(1, ilist->isReady) << "size #2";
 	EXPECT_NEAR_M3(ilist->elements[0].dwellAngle, 8.5f);
-	EXPECT_NEAR_M3(ilist->elements[0].sparkAngle, 13.0f);
+	EXPECT_NEAR_M3(ilist->elements[0].calculateSparkAngle(), 13.0f);
 
 	ASSERT_EQ(0, eth.engine.triggerCentral.triggerState.getCurrentIndex()) << "index #2";
 	ASSERT_EQ(4, engine->scheduler.size());
@@ -237,12 +234,12 @@ TEST(misc, testRpmCalculator) {
 
 		EXPECT_EQ(ev0->action.getCallback(), (void*)turnSparkPinHigh) << "Call@0";
 		EXPECT_EQ(start + 944, ev0->momentX) << "ev 0";
-		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev0->action.getArgument())->outputs[0]) << "coil 0";
+		EXPECT_EQ(1, (uintptr_t)ev0->action.getArgument()) << "coil 0";
 
 		scheduling_s *ev1 = engine->scheduler.getForUnitTest(1);
 		EXPECT_EQ(ev1->action.getCallback(), (void*)fireSparkAndPrepareNextSchedule) << "Call@1";
 		EXPECT_EQ(start + 1444, ev1->momentX) << "ev 1";
-		EXPECT_EQ((uintptr_t)&enginePins.coils[0], (uintptr_t)((IgnitionEvent*)ev1->action.getArgument())->outputs[0]) << "coil 1";
+		EXPECT_EQ(1, (uintptr_t)ev1->action.getArgument()) << "coil 1";
 	}
 
 	engine->scheduler.clear();
@@ -344,18 +341,15 @@ TEST(trigger, testTriggerDecoder) {
 
 	testTriggerDecoder2("testFordEscortGt", engine_type_e::FORD_ESCORT_GT, 0, 0.8096, 0.3844);
 
-	testTriggerDecoder2("NISSAN_PRIMERA", engine_type_e::NISSAN_PRIMERA, 2, 0.9611, 0.0);
-
 	testTriggerDecoder2("test1+1", engine_type_e::DEFAULT_FRANKENSO, 0, 0.7500, 0.2500);
 
 	testTriggerDecoder2("testCitroen", engine_type_e::CITROEN_TU3JP, 0, 0.4833, 0);
 
 	testTriggerDecoder2("testMitsu", engine_type_e::MITSU_4G93, 9, 0.3553, 0.3752);
+
 	{
 		EngineTestHelper eth(engine_type_e::MITSU_4G93);
 
-
-		eth.persistentConfig.engineConfiguration.sensorChartMode = SC_DETAILED_RPM;
 		applyNonPersistentConfiguration();
 
 	}
@@ -381,24 +375,19 @@ TEST(trigger, testTriggerDecoder) {
 	testTriggerDecoder2("vw ABA", engine_type_e::VW_ABA, 0, 0.51666, 0.0);
 }
 
-static void assertInjectionEventBase(const char *msg, InjectionEvent *ev, int injectorIndex, int eventIndex, angle_t angleOffset) {
-	EXPECT_EQ(injectorIndex, ev->outputs[0]->injectorIndex) << msg << "inj index";
+static void assertInjectionEventBase(const char *msg, InjectionEvent *ev, uint16_t injectorOutputMask, angle_t angleOffset) {
+	EXPECT_EQ(ev->calculateInjectorOutputMask(), injectorOutputMask) << msg << "inj output mask";
 	EXPECT_NEAR_M4(angleOffset, ev->injectionStartAngle) << msg << "inj index";
 }
 
 static void assertInjectionEvent(const char *msg, InjectionEvent *ev, int injectorIndex, int eventIndex, angle_t angleOffset) {
-	assertInjectionEventBase(msg, ev, injectorIndex, eventIndex, angleOffset);
-
-	// There should NOT be a second injector configured
-	EXPECT_EQ(nullptr, ev->outputs[1]);
+	assertInjectionEventBase(msg, ev, (1 << injectorIndex), angleOffset);
 }
 
 static void assertInjectionEventBatch(const char *msg, InjectionEvent *ev, int injectorIndex, int secondInjectorIndex, int eventIndex, angle_t angleOffset) {
-	assertInjectionEventBase(msg, ev, injectorIndex, eventIndex, angleOffset);
-
-	// There should be a second injector - confirm it's the correct one
-	ASSERT_NE(nullptr, ev->outputs[1]);
-	EXPECT_EQ(secondInjectorIndex, ev->outputs[1]->injectorIndex);
+	uint16_t mask = (1 << injectorIndex) | (1 << secondInjectorIndex);
+	
+	assertInjectionEventBase(msg, ev, mask, angleOffset);
 }
 
 static void setTestBug299(EngineTestHelper *eth) {
@@ -989,111 +978,6 @@ TEST(big, testFuelSchedulerBug299smallAndLarge) {
 	eth.moveTimeForwardUs(MS2US(20));
 	eth.executeActions();
 	ASSERT_EQ(0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testFuelSchedulerBug299smallAndLarge";
-}
-
-TEST(big, testSparkReverseOrderBug319) {
-	printf("*************************************************** testSparkReverseOrderBug319 small to medium\r\n");
-
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	engineConfiguration->isFasterEngineSpinUpEnabled = false;
-	engine->tdcMarkEnabled = false;
-
-	engineConfiguration->isInjectionEnabled = false;
-	engineConfiguration->cylindersCount = 4;
-	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
-
-	setConstantDwell(45);
-
-	engine->triggerCentral.syncAndReport(2, 0);
-
-	// this is needed to update injectorLag
-	engine->updateSlowSensors();
-
-	eth.setTriggerType(trigger_type_e::TT_ONE);
-	eth.engine.periodicFastCallback();
-
-	setWholeTimingTable(0);
-
-	eth.fireRise(20);
-	eth.fireFall(20);
-
-	engine->triggerCentral.syncAndReport(2, 0);
-
-	eth.executeActions();
-
-	eth.fireRise(20);
-	eth.fireFall(20);
-
-	EXPECT_NEAR_M3(3000, Sensor::getOrZero(SensorType::Rpm)) << "testSparkReverseOrderBug319: RPM";
-
-
-	ASSERT_EQ(8, engine->scheduler.size()) << "testSparkReverseOrderBug319: queue size";
-	eth.executeActions();
-	printf("***************************************************\r\n");
-
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	/**
-	 * here we throw scheduling logic off
-	 */
-	eth.fireFall(0.1); // executing new signal too early
-	eth.executeActions();
-
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #1";
-
-
-	eth.moveTimeForwardUs(MS2US(200)); // moving time forward to execute all pending actions
-	eth.executeActions();
-
-	ASSERT_EQ(0, enginePins.coils[3].outOfOrder) << "out-of-order #2";
-
-	printf("*************************************************** now let's have a good engine cycle and confirm things work\r\n");
-
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	ASSERT_EQ(545,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#2";
-
-	ASSERT_EQ(0, enginePins.coils[3].outOfOrder) << "out-of-order #3";
-
-
-	eth.fireFall(20);
-	eth.executeActions();
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #4";
-
-	printf("*************************************************** (rpm is back) now let's have a good engine cycle and confirm things work\r\n");
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	ASSERT_EQ(3000,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#3";
-
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #5 on c4";
-
-
-	eth.fireFall(20);
-	eth.executeActions();
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #6 on c4";
-
-	printf("*************************************************** (rpm is back 2) now let's have a good engine cycle and confirm things work\r\n");
-
-	eth.fireRise(20);
-	eth.executeActions();
-
-	ASSERT_EQ(3000,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#4";
-
-	ASSERT_EQ(1, enginePins.coils[3].outOfOrder) << "out-of-order #7";
-
-
-	eth.fireFall(20);
-	eth.executeActions();
-	ASSERT_EQ(0, enginePins.coils[3].outOfOrder) << "out-of-order #8";
-	ASSERT_EQ(2,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#SparkReverseOrderBug319";
-	ASSERT_EQ(ObdCode::CUSTOM_DWELL_TOO_LONG, unitTestWarningCodeState.recentWarnings.get(0).Code) << "warning @0";
-	ASSERT_EQ(ObdCode::CUSTOM_OUT_OF_ORDER_COIL, unitTestWarningCodeState.recentWarnings.get(1).Code);
 }
 
 TEST(big, testMissedSpark299) {

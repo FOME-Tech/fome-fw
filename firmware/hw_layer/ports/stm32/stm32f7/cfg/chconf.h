@@ -745,6 +745,9 @@
  */
 #define CORTEX_ENABLE_WFI_IDLE TRUE
 
+#define PORT_ENABLE_GUARD_PAGES TRUE
+#define PORT_USE_GUARD_MPU_REGION       MPU_REGION_6
+
 #endif  /* CHCONF_H */
 
 /** @} */

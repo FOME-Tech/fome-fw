@@ -5,15 +5,16 @@ import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Struct;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class SdLogWriter {
     private final PrintStream ps;
 
-    public SdLogWriter(String outputFile) throws FileNotFoundException {
-        this(new PrintStreamAlwaysUnix(new FileOutputStream(outputFile)));
+    public SdLogWriter(String outputFile) throws IOException {
+        this(new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile))));
     }
 
     public SdLogWriter(PrintStream ps) {

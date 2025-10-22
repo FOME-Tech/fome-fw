@@ -22,8 +22,6 @@ DDEFS += -DEFI_USE_UART_DMA=FALSE
 # maybe a way to disable SPI2 privately
 #DDEFS += -DSTM32_SPI_USE_SPI2=FALSE
 
-DDEFS += -DBOARD_L9779_COUNT=0
-
 DDEFS += -DFIRMWARE_ID=\"microRusEFI\"
 DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE -DSTM32_ADC_USE_ADC3=TRUE
 DDEFS += $(VAR_DEF_ENGINE_TYPE)
@@ -35,6 +33,8 @@ ifeq ($(PROJECT_CPU),ARCH_STM32F7)
 SHORT_BOARD_NAME = mre_f7
 else ifeq ($(PROJECT_CPU),ARCH_STM32F4)
 SHORT_BOARD_NAME = mre_f4
+else ifewq ($(PROJECT_CPU),simulator)
+SHORT_BOARD_NAME = mre_simulator
 else
 $(error Unsupported PROJECT_CPU for microRusEFI: [$(PROJECT_CPU)])
 endif

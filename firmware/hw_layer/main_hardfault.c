@@ -32,7 +32,18 @@ typedef enum  {
 
 void logHardFault(uint32_t type, uintptr_t faultAddress, struct port_extctx* ctx, uint32_t csfr);
 
+static volatile uint32_t faultAddress = 0;
+
+// Store whether hitting the hard fault handler should immediately reset
+// Hitting the bkpt() instruction triggers a hard fault if the debugger is not attached,
+// so store whether that was the reason for hitting the hard fault handler
+static bool hardFaultResetPending = false;
+
 void HardFault_Handler_C(void* sp) {
+	if (hardFaultResetPending) {
+		NVIC_SystemReset();
+	}
+
 	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
 	//Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
@@ -42,7 +53,7 @@ void HardFault_Handler_C(void* sp) {
 	volatile FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
 	//For HardFault/BusFault this is the address that was accessed causing the error
-	volatile uint32_t faultAddress = SCB->BFAR;
+	faultAddress = SCB->BFAR;
 
 	//Flags about hardfault / busfault
 	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
@@ -59,7 +70,7 @@ void HardFault_Handler_C(void* sp) {
 
 	logHardFault(faultType, faultAddress, &ctx, SCB->CFSR >> SCB_CFSR_BUSFAULTSR_Pos);
 
-	//Cause debugger to stop. Ignored if no debugger is attached
+	hardFaultResetPending = true;
 	bkpt();
 	NVIC_SystemReset();
 }
@@ -90,11 +101,18 @@ void UsageFault_Handler_C(void* sp) {
 
 	logHardFault(faultType, 0, &ctx, SCB->CFSR);
 
+	hardFaultResetPending = true;
 	bkpt();
 	NVIC_SystemReset();
 }
 
 void MemManage_Handler_C(void* sp) {
+	// Disable the MPU so we don't get smacked with a double fault while trying to save state
+	mpuDisable();
+
+	//For HardFault/BusFault this is the address that was accessed causing the error
+	faultAddress = SCB->MMFAR;
+
 	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
 	//Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
@@ -103,8 +121,6 @@ void MemManage_Handler_C(void* sp) {
 	//Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
 	FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
-	//For HardFault/BusFault this is the address that was accessed causing the error
-	volatile uint32_t faultAddress = SCB->MMFAR;
 
 	//Flags about hardfault / busfault
 	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
@@ -121,6 +137,7 @@ void MemManage_Handler_C(void* sp) {
 
 	logHardFault(faultType, faultAddress, &ctx, SCB->CFSR);
 
+	hardFaultResetPending = true;
 	bkpt();
 	NVIC_SystemReset();
 }

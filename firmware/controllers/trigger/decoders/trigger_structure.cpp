@@ -39,10 +39,6 @@
 #include "trigger_universal.h"
 #include "trigger_mercedes.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 TriggerWaveform::TriggerWaveform() {
 	initialize(OM_NONE, SyncEdge::Rise);
 }
@@ -123,7 +119,7 @@ bool TriggerWaveform::needsDisambiguation() const {
 		case TWO_STROKE:
 			return false;
 		default:
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "bad operationMode() in needsDisambiguation");
+			firmwareError("bad operationMode() in needsDisambiguation");
 			return true;
 	}
 }
@@ -189,7 +185,7 @@ void TriggerWaveform::calculateExpectedEventCounts() {
 	if (!useOnlyRisingEdges) {
 		for (size_t i = 0; i < efi::size(expectedEventCount); i++) {
 			if (getExpectedEventCount((TriggerWheel)i) % 2 != 0) {
-				firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "Trigger: should be even number of events index=%d count=%d", i, getExpectedEventCount((TriggerWheel)i));
+				firmwareError("Trigger: should be even number of events index=%d count=%d", i, getExpectedEventCount((TriggerWheel)i));
 			}
 		}
 	}
@@ -197,13 +193,13 @@ void TriggerWaveform::calculateExpectedEventCounts() {
 	bool isSingleToothOnPrimaryChannel = useOnlyRisingEdges ? getExpectedEventCount(TriggerWheel::T_PRIMARY) == 1 : getExpectedEventCount(TriggerWheel::T_PRIMARY) == 2;
 	// todo: next step would be to set 'isSynchronizationNeeded' automatically based on the logic we have here
 	if (!shapeWithoutTdc && isSingleToothOnPrimaryChannel != !isSynchronizationNeeded) {
-		firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "shapeWithoutTdc isSynchronizationNeeded isSingleToothOnPrimaryChannel constraint violation");
+		firmwareError("shapeWithoutTdc isSynchronizationNeeded isSingleToothOnPrimaryChannel constraint violation");
 	}
 	if (isSingleToothOnPrimaryChannel) {
 		useOnlyPrimaryForSync = true;
 	} else {
 		if (getExpectedEventCount(TriggerWheel::T_SECONDARY) == 0 && useOnlyPrimaryForSync) {
-			firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "why would you set useOnlyPrimaryForSync with only one trigger wheel?");
+			firmwareError("why would you set useOnlyPrimaryForSync with only one trigger wheel?");
 		}
 	}
 }
@@ -299,7 +295,7 @@ void TriggerWaveform::addEvent(angle_t angle, bool state, TriggerWheel const cha
 	isRiseEvent[index] = state;
 
 	if ((unsigned)index != wave.phaseCount) {
-		firmwareError(ObdCode::ERROR_TRIGGER_DRAMA, "are we ever here?");
+		firmwareError("are we ever here?");
 	}
 
 	wave.phaseCount++;
@@ -388,15 +384,8 @@ void TriggerWaveform::setThirdTriggerSynchronizationGap(float syncRatio) {
 	setTriggerSynchronizationGap3(/*gapIndex*/2, syncRatio * TRIGGER_GAP_DEVIATION_LOW, syncRatio * TRIGGER_GAP_DEVIATION_HIGH);
 }
 
-/**
- * External logger is needed because at this point our logger is not yet initialized
- */
 void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperationMode, const TriggerConfiguration& triggerConfig) {
-
-#if EFI_PROD_CODE
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6641, getCurrentRemainingStack() > EXPECTED_REMAINING_STACK, "init t");
-	efiPrintf("initializeTriggerWaveform(%s/%d)", getTrigger_type_e(triggerConfig.TriggerType.type), (int)triggerConfig.TriggerType.type);
-#endif
+	efiPrintf("initializeTriggerWaveform #%d: %s)", (int)triggerConfig.TriggerType.type, getTrigger_type_e(triggerConfig.TriggerType.type));
 
 	shapeDefinitionError = false;
 
@@ -540,6 +529,7 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 		break;
 
 	case trigger_type_e::TT_ONE:
+	case trigger_type_e::TT_UNUSED_17:
 		initializeSkippedToothTrigger(this, 1, 0, triggerOperationMode, SyncEdge::Rise);
 		break;
 
@@ -549,10 +539,6 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 
 	case trigger_type_e::TT_DAIHATSU:
 		configureDaihatsu4(this);
-		break;
-
-	case trigger_type_e::TT_VVT_TOYOTA_3_TOOTH:
-		initializeSkippedToothTrigger(this, 3, 0, triggerOperationMode, SyncEdge::RiseOnly);
 		break;
 
 	case trigger_type_e::TT_36_2_1_1:
@@ -577,8 +563,11 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 
 	case trigger_type_e::TT_TOOTHED_WHEEL_36_2:
 		initializeSkippedToothTrigger(this, 36, 2, triggerOperationMode, SyncEdge::RiseOnly);
-		setTriggerSynchronizationGap3(/*gapIndex*/0, /*from*/1.6, 3.5);
-		setTriggerSynchronizationGap3(/*gapIndex*/1, /*from*/0.7, 1.3); // second gap is not required to synch on perfect signal but is needed to handle to reject cranking transition noise
+		setTriggerSynchronizationGap3(/*gapIndex*/0, /*from*/1.6, 4.5);
+
+		// second gap is not required to synch on perfect signal but is needed to handle to reject cranking transition noise
+		setTriggerSynchronizationGap3(/*gapIndex*/1, /*from*/0.6, 1.5);
+		setTriggerSynchronizationGap3(/*gapIndex*/2, /*from*/0.6, 1.5);
 		break;
 
 	case trigger_type_e::TT_60_2_VW:

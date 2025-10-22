@@ -15,12 +15,10 @@
 
 class InjectionEvent {
 public:
-	InjectionEvent();
-
 	bool update();
 
 	// Call this every decoded trigger tooth.  It will schedule any relevant events for this injector.
-	void onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase);
+	void onTriggerTooth(const EnginePhaseInfo& phase);
 
 	WallFuel& getWallFuel();
 
@@ -28,9 +26,11 @@ public:
 		ownIndex = index;
 	}
 
+	uint16_t calculateInjectorOutputMask() const;
+
 private:
 	// Update the injection start angle
-	bool updateInjectionAngle();
+	bool updateInjectionAngle(injection_mode_e mode);
 
 	/**
 	 * This is a performance optimization for IM_SIMULTANEOUS fuel strategy.
@@ -39,18 +39,41 @@ private:
 	bool isSimultaneous = false;
 	uint8_t ownIndex = 0;
 	uint8_t cylinderNumber = 0;
+	injection_mode_e m_injectionMode = IM_SEQUENTIAL;
 
 	WallFuel wallFuel;
 
 public:
 	// TODO: this should be private
-	InjectorOutputPin *outputs[MAX_WIRES_COUNT];
-	InjectorOutputPin *outputsStage2[MAX_WIRES_COUNT];
 	float injectionStartAngle = 0;
-	efidur_t splitInjectionDuration;
 };
 
-void turnInjectionPinHigh(uintptr_t arg);
+union InjectorContext {
+	constexpr InjectorContext() {
+		// First, initialize all bits to a preditable state
+		_pad = nullptr;
+
+		// Then initialize real values
+		outputsMask = 0;
+		eventIndex = 0xF;
+		splitDurationUs = 0;
+		stage2Active = false;
+	}
+
+	struct {
+		uint16_t outputsMask:12;
+		uint8_t eventIndex:4;
+		uint16_t splitDurationUs:15;
+		bool stage2Active:1;
+	};
+	void* _pad;
+};
+
+static_assert(sizeof(InjectorContext) <= sizeof(void*));
+
+void startInjection(InjectorContext ctx);
+void endInjection(InjectorContext ctx);
+void endInjectionStage2(InjectorContext ctx);
 
 
 /**
@@ -64,12 +87,10 @@ public:
 	void invalidate();
 
 	// Call this every trigger tooth.  It will schedule all required injector events.
-	void onTriggerTooth(efitick_t nowNt, float currentPhase, float nextPhase);
+	void onTriggerTooth(const EnginePhaseInfo& phase);
 
 	// Calculate injector opening angle, pins, and mode for all injectors
 	void addFuelEvents();
-
-	void resetOverlapping();
 
 	/**
 	 * injection events, per cylinder

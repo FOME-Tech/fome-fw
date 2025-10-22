@@ -65,12 +65,8 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 	sramState->Err.FaultType = type;
 	sramState->Err.FaultAddress = faultAddress;
 	sramState->Err.Csfr = csfr;
-	memcpy(&sramState->Err.FaultCtx, ctx, sizeof(port_extctx));
+	sramState->Err.FaultCtx = *ctx;
 }
-
-extern ioportid_t criticalErrorLedPort;
-extern ioportmask_t criticalErrorLedPin;
-extern uint8_t criticalErrorLedState;
 #endif /* EFI_PROD_CODE */
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
@@ -96,7 +92,7 @@ void chDbgPanic3(const char *msg, const char * file, int line) {
 	exit(-1);
 #else // EFI_PROD_CODE
 
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "assert fail %s %s:%d", msg, file, line);
+	firmwareError("assert fail %s %s:%d", msg, file, line);
 
 	// If on the main thread, longjmp back to the init process so we can keep USB alive
 	if (chThdGetSelfX()->threadId == 0) {
@@ -211,7 +207,7 @@ void onUnlockHook(void) {
 #include <stdexcept>
 #endif
 
-void firmwareError(ObdCode code, const char *fmt, ...) {
+static void vfirmwareError(ObdCode code, const char* fmt, va_list ap) {
 #if EFI_PROD_CODE
 	if (hasFirmwareErrorFlag) {
 		return;
@@ -222,12 +218,9 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 	getLimpManager()->fatalError();
 	engine->engineState.warnings.addWarningCode(code);
 #ifdef EFI_PRINT_ERRORS_AS_WARNINGS
-	va_list ap;
-	va_start(ap, fmt);
 	chvsnprintf(warningBuffer, sizeof(warningBuffer), fmt, ap);
-	va_end(ap);
 #endif
-	palWritePad(criticalErrorLedPort, criticalErrorLedPin, criticalErrorLedState);
+	enginePins.errorLedPin.setValue(1);
 	turnAllPinsOff();
 	enginePins.communicationLedPin.setValue(1);
 	setError(true, code);
@@ -240,10 +233,7 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 		strncpy((char*) criticalErrorMessageBuffer, fmt, sizeof(criticalErrorMessageBuffer) - 1);
 		criticalErrorMessageBuffer[sizeof(criticalErrorMessageBuffer) - 1] = 0; // just to be sure
 	} else {
-		va_list ap;
-		va_start(ap, fmt);
 		chvsnprintf(criticalErrorMessageBuffer, sizeof(criticalErrorMessageBuffer), fmt, ap);
-		va_end(ap);
 	}
 
 	int errorMessageSize = strlen((char*)criticalErrorMessageBuffer);
@@ -263,10 +253,7 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 
 	char errorBuffer[200];
 
-	va_list ap;
-	va_start(ap, fmt);
 	vsnprintf(errorBuffer, sizeof(errorBuffer), fmt, ap);
-	va_end(ap);
 
 	printf("\x1B[31m>>>>>>>>>> firmwareError [%s]\r\n\x1B[0m\r\n", errorBuffer);
 
@@ -274,4 +261,18 @@ void firmwareError(ObdCode code, const char *fmt, ...) {
 	throw std::logic_error(errorBuffer);
 #endif /* EFI_SIMULATOR */
 #endif
+}
+
+void firmwareError(ObdCode code, const char* fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	vfirmwareError(code, fmt, ap);
+	va_end(ap);
+}
+
+void firmwareError(const char* fmt, ...) {
+	va_list ap;
+	va_start(ap, fmt);
+	vfirmwareError(ObdCode::OBD_PCM_Processor_Fault, fmt, ap);
+	va_end(ap);
 }

@@ -22,10 +22,8 @@ public class SerialSandbox {
             System.out.println(new Date() + ": onDataArrival alive for " + seconds + " second(s) textPull=" + textPull + " " + autoDetectResult.getSignature());
         });
 
-        LinkManager linkManager = new LinkManager()
-                .setNeedPullText(textPull); // todo: open issue #2
-
-        try {
+        try (LinkManager linkManager = new LinkManager()) {
+            linkManager.setNeedPullText(textPull); // todo: open issue #2
             linkManager.connect(port).await(60, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             throw new IllegalStateException("Not connected in time");

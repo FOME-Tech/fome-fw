@@ -36,12 +36,6 @@ const char *vvtNames[] = {
 		PROTOCOL_VVT3_NAME,
 		PROTOCOL_VVT4_NAME};
 
-const char *laNames[] = {
-		PROTOCOL_WA_CHANNEL_1,
-		PROTOCOL_WA_CHANNEL_2,
-		PROTOCOL_WA_CHANNEL_3,
-		PROTOCOL_WA_CHANNEL_4};
-
 // these short names are part of engine sniffer protocol
 static const char* const sparkShortNames[] = { PROTOCOL_COIL1_SHORT_NAME, "c2", "c3", "c4", "c5", "c6", "c7", "c8",
 		"c9", "cA", "cB", "cD"};
@@ -57,8 +51,6 @@ static const char* const injectorStage2Names[] = { "Injector Second Stage 1", "I
 
 static const char* const injectorStage2ShortNames[] = { PROTOCOL_INJ1_STAGE2_SHORT_NAME, "j2", "j3", "j4", "j5", "j6", "j7", "j8",
 		"j9", "jA", "jB", "jC"};
-
-static const char* const auxValveShortNames[] = { "a1", "a2"};
 
 static RegisteredOutputPin * registeredOutputHead = nullptr;
 
@@ -157,7 +149,6 @@ EnginePins::EnginePins() :
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
-		enginePins.coils[i].coilIndex = i;
 		enginePins.coils[i].setName(sparkNames[i]);
 		enginePins.coils[i].shortName = sparkShortNames[i];
 
@@ -171,11 +162,6 @@ EnginePins::EnginePins() :
 		enginePins.injectorsStage2[i].injectorIndex = i;
 		enginePins.injectorsStage2[i].setName(injectorStage2Names[i]);
 		enginePins.injectorsStage2[i].shortName = injectorStage2ShortNames[i];
-	}
-
-	static_assert(efi::size(auxValveShortNames) >= AUX_DIGITAL_VALVE_COUNT, "Too many aux valve pins");
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		enginePins.auxValve[i].setName(auxValveShortNames[i]);
 	}
 }
 
@@ -203,20 +189,12 @@ bool EnginePins::stopPins() {
 		result |= injectorsStage2[i].stop();
 		result |= trailingCoils[i].stop();
 	}
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		result |= auxValve[i].stop();
-	}
 	return result;
 }
 
 void EnginePins::unregisterPins() {
 	stopInjectionPins();
 	stopIgnitionPins();
-	stopAuxValves();
-
-#if EFI_ELECTRONIC_THROTTLE_BODY
-	unregisterEtbPins();
-#endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
 	// todo: add pinMode
 	unregisterOutputIfPinChanged(sdCsPin, sdCardCsPin);
@@ -241,7 +219,6 @@ void EnginePins::startPins() {
 #if EFI_ENGINE_CONTROL
 	startInjectionPins();
 	startIgnitionPins();
-	startAuxValves();
 #endif /* EFI_ENGINE_CONTROL */
 
 	RegisteredOutputPin * pin = registeredOutputHead;
@@ -254,8 +231,6 @@ void EnginePins::startPins() {
 void EnginePins::reset() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		injectors[i].reset();
-		coils[i].reset();
-		trailingCoils[i].reset();
 	}
 }
 
@@ -271,28 +246,6 @@ void EnginePins::stopInjectionPins() {
 		unregisterOutputIfPinOrModeChanged(enginePins.injectors[i], injectionPins[i], injectionPinMode);
 		unregisterOutputIfPinOrModeChanged(enginePins.injectorsStage2[i], injectionPinsStage2[i], injectionPinMode);
 	}
-}
-
-void EnginePins::stopAuxValves() {
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		NamedOutputPin *output = &enginePins.auxValve[i];
-		// todo: do we need auxValveMode and reuse code?
-		if (isConfigurationChanged(auxValves[i])) {
-			(output)->deInit();
-		}
-	}
-}
-
-void EnginePins::startAuxValves() {
-#if EFI_PROD_CODE
-	for (int i = 0; i < AUX_DIGITAL_VALVE_COUNT; i++) {
-		NamedOutputPin *output = &enginePins.auxValve[i];
-		// todo: do we need auxValveMode and reuse code?
-		if (isConfigurationChanged(auxValves[i])) {
-			output->initPin(output->getName(), engineConfiguration->auxValves[i]);
-		}
-	}
-#endif /* EFI_PROD_CODE */
 }
 
 void EnginePins::startIgnitionPins() {
@@ -413,15 +366,6 @@ void InjectorOutputPin::reset() {
 
 	// todo: this could be refactored by calling some super-reset method
 	m_currentLogicValue = 0;
-}
-
-IgnitionOutputPin::IgnitionOutputPin() {
-	reset();
-}
-
-void IgnitionOutputPin::reset() {
-	outOfOrder = false;
-	signalFallSparkId = 0;
 }
 
 bool OutputPin::isInitialized() const {
@@ -554,12 +498,12 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 	// Check that this OutputPin isn't already assigned to another pin (reinit is allowed to change mode)
 	// To avoid this error, call deInit() first
 	if (isBrainPinValid(m_brainPin) && m_brainPin != brainPin) {
-		firmwareError(ObdCode::CUSTOM_OBD_PIN_CONFLICT, "outputPin [%s] already assigned, cannot reassign without unregister first", msg);
+		firmwareError("outputPin [%s] already assigned, cannot reassign without unregister first", msg);
 		return;
 	}
 
 	if (outputMode > OM_OPENDRAIN_INVERTED) {
-		firmwareError(ObdCode::CUSTOM_INVALID_MODE_SETTING, "%s invalid pin_output_mode_e %d %s",
+		firmwareError("%s invalid pin_output_mode_e %d %s",
 				msg,
 				outputMode,
 				hwPortname(brainPin)
@@ -577,7 +521,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 
 		// Validate port
 		if (!port) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "OutputPin::initPin got invalid port for pin idx %d", static_cast<int>(brainPin));
+			firmwareError("OutputPin::initPin got invalid port for pin idx %d", static_cast<int>(brainPin));
 			return;
 		}
 
@@ -618,7 +562,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 
 			// if the pin was set to logical 1, then set an error and disable the pin so that things don't catch fire
 			if (logicalValue) {
-				firmwareError(ObdCode::OBD_PCM_Processor_Fault, "HARDWARE VALIDATION FAILED %s: unexpected startup pin state %s actual value=%d logical value=%d mode=%s", msg, hwPortname(m_brainPin), actualValue, logicalValue, getPin_output_mode_e(outputMode));
+				firmwareError("HARDWARE VALIDATION FAILED %s: unexpected startup pin state %s actual value=%d logical value=%d mode=%s", msg, hwPortname(m_brainPin), actualValue, logicalValue, getPin_output_mode_e(outputMode));
 				OutputPin::deInit();
 			}
 		}
@@ -652,18 +596,9 @@ void OutputPin::deInit() {
 
 #if EFI_GPIO_HARDWARE
 
-// questionable trick: we avoid using 'getHwPort' and 'getHwPin' in case of errors in order to increase the changes of turning the LED
-// by reducing stack requirement
-ioportid_t criticalErrorLedPort;
-ioportmask_t criticalErrorLedPin;
-uint8_t criticalErrorLedState;
-
 #if EFI_PROD_CODE
 static void initErrorLed(Gpio led) {
-	enginePins.errorLedPin.initPin("led: CRITICAL status", led, (LED_PIN_MODE));
-	criticalErrorLedPort = getHwPort("CRITICAL", led);
-	criticalErrorLedPin = getHwPin("CRITICAL", led);
-	criticalErrorLedState = (LED_PIN_MODE == OM_INVERTED) ? 0 : 1;
+	enginePins.errorLedPin.initPin("Error LED", led, (LED_PIN_MODE));
 }
 #endif /* EFI_PROD_CODE */
 

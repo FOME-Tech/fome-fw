@@ -9,11 +9,15 @@
 
 #include "pch.h"
 
-ButtonDebounce acDebounce("ac_switch");
+static ButtonDebounce acDebounce("ac_switch");
+static ButtonDebounce acPressureDebounce("ac_pressure_switch");
+static ButtonDebounce oilPressureSwitchDebounce("oil_pressure_switch");
 
 void initSensors() {
 	initMapDecoder();
 	acDebounce.init(MS2NT(15), engineConfiguration->acSwitch, engineConfiguration->acSwitchMode);
+	acPressureDebounce.init(MS2NT(15), engineConfiguration->acPressureSwitch, engineConfiguration->acPressureSwitchMode);
+	oilPressureSwitchDebounce.init(MS2NT(15), engineConfiguration->oilPressureSwitch, engineConfiguration->oilPressureSwitchMode);
 }
 
 bool getAcToggle() {
@@ -22,4 +26,20 @@ bool getAcToggle() {
 
 bool hasAcToggle() {
 	return isBrainPinValid(engineConfiguration->acSwitch);
+}
+
+bool hasAcPressure() {
+	return isBrainPinValid(engineConfiguration->acPressureSwitch);
+}
+
+bool getAcPressure() {
+	return acPressureDebounce.readPinState();
+}
+
+bool hasOilPressureSwitch() {
+	return isBrainPinValid(engineConfiguration->oilPressureSwitch);
+}
+
+bool getOilSwitchState() {
+	return oilPressureSwitchDebounce.readPinState();
 }

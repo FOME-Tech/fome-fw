@@ -34,23 +34,61 @@ public:
 		return connectionSocket != -1;
 	}
 
-	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) override {
-		// If not the end of a packet, set the MSG_MORE flag to indicate to the transport
-		// that we have more to add to the buffer before queuing a flush.
-		auto flags = isEndOfPacket ? 0 : MSG_MORE;
-		lwip_send(connectionSocket, buffer, size, flags);
+	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) override {
+		while (size) {
+			size_t remain = TCP_MSS - m_size;
+			size_t chunkSize = std::min(size, remain);
+
+			memcpy(m_buffer + m_size, buffer, chunkSize);
+
+			m_size += chunkSize;
+			buffer += chunkSize;
+			size -= chunkSize;
+
+			if (m_size == TCP_MSS) {
+				flush();
+			}
+		}
 	}
 
-	size_t readTimeout(uint8_t* buffer, size_t size, int /*timeout*/) override {
-		auto result = lwip_recv(connectionSocket, buffer, size, /*flags =*/ 0);
+	void flush() {
+		if (!m_size) {
+			// spurious flush
+			return;
+		}
 
-		if (result == -1) {
+		lwip_send(connectionSocket, m_buffer, m_size, 0);
+		m_size = 0;
+	}
+
+	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
+		// Convert back to ms
+		timeout = TIME_I2MS(timeout);
+		int res = lwip_setsockopt(connectionSocket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+		if (res == -1) {
+			// something went wrong with the socket, close it and try again
+			lwip_close(connectionSocket);
 			do_connection();
 			return 0;
 		}
 
-		return result;
+		auto result = lwip_recv(connectionSocket, buffer, size, /*flags =*/ 0);
+		if (result > 0) {
+			// success, bytes were returned
+			return result;
+		} else if (result == 0) {
+			// 0 result means the socket is dead
+			do_connection();
+			return 0;
+		} else {
+			// negative result means timeout
+			return 0;
+		}
 	}
+
+private:
+	uint8_t m_buffer[TCP_MSS];
+	size_t m_size = 0;
 };
 
 static EthernetChannel ethChannel;

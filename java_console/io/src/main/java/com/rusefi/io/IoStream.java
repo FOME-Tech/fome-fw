@@ -5,13 +5,8 @@ import com.opensr5.io.WriteStream;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.binaryprotocol.IncomingDataBuffer;
 import com.rusefi.binaryprotocol.IoHelper;
-import com.rusefi.io.serial.AbstractIoStream;
-import com.rusefi.io.serial.StreamStatistics;
-import com.rusefi.io.tcp.BinaryProtocolServer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
-import java.io.EOFException;
 import java.io.IOException;
 
 /**
@@ -21,7 +16,7 @@ import java.io.IOException;
  * <p>
  * 5/11/2015.
  */
-public interface IoStream extends WriteStream, Closeable, StreamStatistics {
+public interface IoStream extends WriteStream, Closeable {
     static String printHexBinary(byte[] data) {
         if (data == null)
             return "(null)";
@@ -48,24 +43,6 @@ public interface IoStream extends WriteStream, Closeable, StreamStatistics {
         return printHexBinary(data) + sb;
     }
 
-    @NotNull
-    default BinaryProtocolServer.Packet readPacket() throws IOException {
-        short length = readShort();
-        return BinaryProtocolServer.readPromisedBytes(getDataBuffer(), length);
-    }
-
-    default void sendPacket(BinaryProtocolServer.Packet packet) throws IOException {
-        writeShort(packet.getPacket().length);
-        write(packet.getPacket());
-        writeInt(packet.getCrc());
-        flush();
-        onActivity();
-    }
-
-    long latestActivityTime();
-
-    void onActivity();
-
     default void sendPacket(byte[] plainPacket) throws IOException {
         if (plainPacket.length == 0)
             throw new IllegalArgumentException("Empty packets are not valid.");
@@ -88,21 +65,7 @@ public interface IoStream extends WriteStream, Closeable, StreamStatistics {
 
     boolean isClosed();
 
-    AbstractIoStream.StreamStats getStreamStats();
-
     void close();
 
     IncomingDataBuffer getDataBuffer();
-
-    default short readShort() throws EOFException {
-        return getDataBuffer().readShort();
-    }
-
-    default byte[] sendAndGetPacket(byte[] packet, String message) throws IOException {
-        // synchronization is needed for example to help SD card download to live with gauge poker
-        synchronized (this) {
-            sendPacket(packet);
-            return getDataBuffer().getPacket(message);
-        }
-    }
 }

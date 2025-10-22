@@ -32,7 +32,6 @@ static void commonNA8() {
 	engineConfiguration->idlerpmpid_iTermMin = -15;
 	engineConfiguration->idlerpmpid_iTermMax = 30;
 	engineConfiguration->acIdleExtraOffset = 15;
-	engineConfiguration->idlePidRpmDeadZone = 100;
 	engineConfiguration->idlePidRpmUpperLimit = 350;
 
 	engineConfiguration->iacByTpsTaper = 6;

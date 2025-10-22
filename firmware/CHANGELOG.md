@@ -30,6 +30,37 @@ or
 
 ## Unreleased
 
+### Added
+ - Allow fractional tachometer pulse ratio for fine tachometer calibration
+ - Add an option to ramp the idle target down as engine speed returns to idle. Makes the running -> idle transition much smoother while in closed loop mode #570
+ - Lua functions `storePersistentValue`/`getPersistentValue` to persist values in backup memory between reboots #592
+ - Fully disable VVT when the target is 0. This prevents trying to control VVT when near the stop, which can damage the locking pin on some engines.
+ - Automatic cylinder balancing of MAP sensor readings for smoother running at high load #610
+ - Table-based injector small pulse compensation #609
+ - MAF filtering for better transient response
+ - Minimum injector pulse width setting
+ - Allow selection of DTC severity #625
+ - AC pressure switch & startup delay (#623, #660, #661, #662)
+ - Y axis override for VVT target
+ - Feature to skip initial trigger pulses for noisy triggers #634
+ - VVT open loop "hold" table #638
+ - Fire DTCs for detectable cam/crank errors
+
+### Fixed
+ - CAN reception on STM32H7-based ECUs
+ - Speed up bootloader launch by 250ms
+ - Move ETB sensor redundancy from Experimental/Broken/Parking Lot to sensor dialogs #165
+ - K20/K24 intake VVT angle reads correctly
+ - Easier to decipher check engine light blink codes #653
+ - TunerStudio: Provide sensible EGT sensor "high" alerting threshold defaults
+ - Improve knock detection dialog UX
+ - Increase memory available to Lua on STM32F4 and STM32F7-based ECUs
+
+### Removed
+ - Removed A/C-based alternator open-loop duty adder (#660)
+
+## February 2025 Release
+
 ### Breaking Changes
  - Large data logging improvements and changes - in TunerStudio, you may need to re-create your dash layouts from default and then re-add any broken gauges and indicators.
 
@@ -39,10 +70,14 @@ or
  - Support 4 independent wideband O2 channels, and 4 fuel trim banks
  - Flash error codes for some sensors using the check engine light #526
  - Implement knock sensing support for STM32H7 chips
+ - Show knock sensing window on FOME console engine sniffer
 
 ### Fixed
  - Idle VE table's indicator dot properly tracks when using an idle VE Y-axis override
  - Minor performance improvements to injection/ignition scheduling
+ - Per-cylinder knock sensing while in wasted spark mode (fixed by #553)
+ - Improved transitions between fuel/spark modes, improves cranking and startup (#551, #553. #554)
+ - Disable radiator fans while ignition switch is off
 
 ## September 2024 Release
 

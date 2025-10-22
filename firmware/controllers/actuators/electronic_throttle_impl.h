@@ -35,7 +35,7 @@ public:
 
 	// Called when the configuration may have changed.  Controller will
 	// reset if necessary.
-	void onConfigurationChange(pid_s* previousConfiguration);
+	void onConfigurationChange(engine_configuration_s* previousConfiguration);
 
 	// Helpers for individual parts of throttle control
 	expected<percent_t> observePlant() const override;

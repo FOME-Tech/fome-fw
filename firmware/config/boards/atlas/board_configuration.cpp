@@ -1,8 +1,11 @@
 #include "pch.h"
 
 #include "adc_subscription.h"
+
+#ifndef EFI_BOOTLOADER
 #include "functional_sensor.h"
 #include "linear_func.h"
+#endif
 
 static const brain_pin_e injPins[] = {
 	Gpio::G5,
@@ -47,7 +50,7 @@ Gpio getCommsLedPin() {
 }
 
 Gpio getRunningLedPin() {
-	return Gpio::C15;
+	return Gpio::D14;
 }
 
 Gpio getWarningLedPin() {
@@ -77,8 +80,8 @@ static void setupVbatt() {
 	// 82k high side/10k low side = 9.2
 	engineConfiguration->vbattDividerCoeff = (92.0f / 10.0f);
 
-	// Battery sense on PA7
-	engineConfiguration->vbattAdcChannel = EFI_ADC_7;
+	// Battery sense on PC5
+	engineConfiguration->vbattAdcChannel = EFI_ADC_15;
 
 	engineConfiguration->adcVcc = 3.3f;
 }
@@ -133,7 +136,34 @@ void setBoardConfigOverrides() {
 	engineConfiguration->spi4sckPin = Gpio::E2;
 	engineConfiguration->spi4misoPin = Gpio::E5;
 	engineConfiguration->spi4mosiPin = Gpio::E6;
+
+	// Clear SPI SD card pins in case it's enabled from porting a Proteus tune
+	if (engineConfiguration->sdCardSpiDevice || isBrainPinValid(engineConfiguration->sdCardCsPin)) {
+		engineConfiguration->is_enabled_spi_3 = false;
+		engineConfiguration->spi3sckPin = Gpio::Unassigned;
+		engineConfiguration->spi3misoPin = Gpio::Unassigned;
+		engineConfiguration->spi3mosiPin = Gpio::Unassigned;
+	}
+
+	// Force disable SPI SD
+	engineConfiguration->sdCardCsPin = Gpio::Unassigned;
+	engineConfiguration->sdCardSpiDevice = SPI_NONE;
 }
+
+#if EFI_BOOTLOADER
+	// Return the SPI pins for the WiFi device
+	brain_pin_e getMisoPin(spi_device_e) {
+		return Gpio::E5;
+	}
+
+	brain_pin_e getMosiPin(spi_device_e) {
+		return Gpio::E6;
+	}
+
+	brain_pin_e getSckPin(spi_device_e) {
+		return Gpio::E2;
+	}
+#endif // EFI_BOOTLOADER
 
 void setBoardDefaultConfiguration() {
 	setupEtb();
@@ -154,6 +184,7 @@ void preHalInit() {
 	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 }
 
+#ifndef EFI_BOOTLOADER
 void initBoardSensors() {
 	{
 		static LinearFunc mrSenseFunc;
@@ -165,7 +196,7 @@ void initBoardSensors() {
 		mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
 		mrSenseSensor.setFunction(mrSenseFunc);
 		AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
-		mrSenseSensor.Register();
+		// mrSenseSensor.Register();
 	}
 
 	{
@@ -177,6 +208,7 @@ void initBoardSensors() {
 		sensor5vFunc.configure(0, 0, 1, sensor5vRatio, 0, 50);
 		sensor5vSensor.setFunction(sensor5vFunc);
 		AdcSubscription::SubscribeSensor(sensor5vSensor, EFI_ADC_17, /*bandwidth*/ 20, /*ratio*/ 1);
-		sensor5vSensor.Register();
+		// sensor5vSensor.Register();
 	}
 }
+#endif

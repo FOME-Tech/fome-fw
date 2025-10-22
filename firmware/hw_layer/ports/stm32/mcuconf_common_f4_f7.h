@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "mcuconf_community.h"
+
 #include "efifeatures.h"
 
 /**
@@ -89,19 +91,26 @@
 /*
  * EXT driver system settings.
  */
+#ifdef EFI_BOOTLOADER
+	// Bootloader: use normal ChibiOS-defined interrupts
+	#define STM32_IRQ_EXTI_PRIORITY             ICU_PRIORITY
 
-#define STM32_DISABLE_EXTI0_HANDLER
-#define STM32_DISABLE_EXTI1_HANDLER
-#define STM32_DISABLE_EXTI2_HANDLER
-#define STM32_DISABLE_EXTI3_HANDLER
-#define STM32_DISABLE_EXTI4_HANDLER
-#define STM32_DISABLE_EXTI5_9_HANDLER
-#define STM32_DISABLE_EXTI10_15_HANDLER
+#else // not EFI_BOOTLOADER
+	// Not bootloader: EXTI gets maximum priority and custom interruts
+	#define STM32_IRQ_EXTI_PRIORITY             CORTEX_MAXIMUM_PRIORITY
+
+	#define STM32_DISABLE_EXTI0_HANDLER
+	#define STM32_DISABLE_EXTI1_HANDLER
+	#define STM32_DISABLE_EXTI2_HANDLER
+	#define STM32_DISABLE_EXTI3_HANDLER
+	#define STM32_DISABLE_EXTI4_HANDLER
+	#define STM32_DISABLE_EXTI5_9_HANDLER
+	#define STM32_DISABLE_EXTI10_15_HANDLER
+#endif // EFI_BOOTLOADER
 
 // we hijack this interrupt handler as the EXTI chained handler, see digital_input_exti.cpp
 #define STM32_I2C_I2C1_IRQ_PRIORITY         ICU_PRIORITY
 
-#define STM32_IRQ_EXTI_PRIORITY             CORTEX_MAXIMUM_PRIORITY
 #define STM32_IRQ_EXTI0_PRIORITY            STM32_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI1_PRIORITY            STM32_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI2_PRIORITY            STM32_IRQ_EXTI_PRIORITY

@@ -76,13 +76,13 @@ public:
 	int m_totalSteps = 0;
 
 protected:
-	void setInitialPosition(void);
+	void setInitialPosition();
 
 	void saveStepperPos(int pos);
 	int loadStepperPos();
 
 	void changeCurrentPosition(bool positive);
-	void postCurrentPosition(void);
+	void postCurrentPosition();
 
 	StepperHw* m_hw = nullptr;
 

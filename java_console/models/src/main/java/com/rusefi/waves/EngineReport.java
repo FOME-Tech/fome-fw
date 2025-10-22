@@ -16,8 +16,6 @@ import static com.rusefi.config.generated.Fields.PROTOCOL_ES_UP;
  *
  * Date: 6/23/13
  * Andrey Belomutskiy, (c) 2013-2020
- *
- * @see SensorSnifferPane
  */
 public class EngineReport {
     public static final String ENGINE_CHART = Fields.PROTOCOL_ENGINE_SNIFFER;

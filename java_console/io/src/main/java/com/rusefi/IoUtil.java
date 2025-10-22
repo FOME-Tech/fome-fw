@@ -2,14 +2,11 @@ package com.rusefi;
 
 import com.devexperts.logging.Logging;
 import com.rusefi.config.generated.Fields;
-import com.rusefi.core.ISensorCentral;
 import com.rusefi.core.Sensor;
 import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.trigger_type_e;
 import com.rusefi.io.CommandQueue;
-import com.rusefi.io.ConnectionStateListener;
 import com.rusefi.io.LinkManager;
-import com.rusefi.io.tcp.TcpConnector;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CountDownLatch;
@@ -103,50 +100,6 @@ public class IoUtil {
         log.info("AUTOTEST RPM change [" + rpm + "] executed in " + (System.currentTimeMillis() - time));
     }
 
-    static void waitForFirstResponse() throws InterruptedException {
-        log.info("Let's give it some time to start...");
-        final CountDownLatch startup = new CountDownLatch(1);
-        long waitStart = System.currentTimeMillis();
-
-        ISensorCentral.ListenerToken listener = SensorCentral.getInstance().addListener(Sensor.RPMValue, value -> startup.countDown());
-        startup.await(5, TimeUnit.SECONDS);
-        listener.remove();
-        FileLog.MAIN.logLine("Got first signal in " + (System.currentTimeMillis() - waitStart));
-    }
-
-    static void connectToSimulator(LinkManager linkManager, boolean startProcess) throws InterruptedException {
-        if (startProcess) {
-            if (!TcpConnector.getAvailablePorts().isEmpty())
-                throw new IllegalStateException("Port already binded on startup?");
-            SimulatorExecHelper.startSimulator();
-        }
-
-
-//        FileLog.rlog("Waiting for TCP port...");
-//        for (int i = 0; i < 180; i++) {
-//            if (!TcpConnector.getAvailablePorts().isEmpty())
-//                break;
-//            Thread.sleep(1000);
-//        }
-//        if (TcpConnector.getAvailablePorts().isEmpty())
-//            throw new IllegalStateException("Did we start it?");
-//        /**
-//         * If we open a connection just to validate that the process has started, we are getting
-//         * weird issues with the second - actual connection
-//         */
-//        FileLog.rlog("Time for simulator to close the port...");
-//        Thread.sleep(3000);
-//
-//        FileLog.rlog("Got a TCP port! Connecting...");
-
-        /**
-         * TCP connector is blocking
-         */
-        linkManager.startAndConnect("" + TcpConnector.DEFAULT_PORT, ConnectionStateListener.VOID);
-        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_VERSION_TAG, (s) -> { });
-        waitForFirstResponse();
-    }
-
     @SuppressWarnings("UnusedDeclaration")
     public static void sleepSeconds(int seconds) {
         FileLog.MAIN.logLine("Sleeping " + seconds + " seconds");
@@ -159,7 +112,6 @@ public class IoUtil {
 
     public static void realHardwareConnect(LinkManager linkManager, String port) {
         linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_OUTPIN, (s) -> { });
-        linkManager.getEngineState().registerStringValueAction(AverageAnglesUtil.KEY, (s) -> { });
 
         try {
             linkManager.connect(port).await(60, TimeUnit.SECONDS);

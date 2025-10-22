@@ -41,6 +41,9 @@ int getCylinderKnockBank(uint8_t cylinderNumber) {
 }
 
 bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float dbv, efitick_t lastKnockTime) {
+	// Adjust by the user-configured gain for this cylinder
+	dbv += m_gain[cylinderNumber];
+
 	bool isKnock = dbv > m_knockThreshold;
 
 	// Per-cylinder peak detector
@@ -83,9 +86,6 @@ uint32_t KnockControllerBase::getKnockCount() const {
 }
 
 void KnockControllerBase::onFastCallback() {
-	m_knockThreshold = getKnockThreshold();
-	m_maximumRetard = getMaximumRetard();
-
 	constexpr auto callbackPeriodSeconds = FAST_CALLBACK_PERIOD_MS / 1000.0f;
 
 	auto applyAmount = engineConfiguration->knockRetardReapplyRate * callbackPeriodSeconds;
@@ -107,6 +107,20 @@ void KnockControllerBase::onFastCallback() {
 
 	hasKnockRecently = !m_lastKnockTimer.hasElapsedSec(0.5f);
 	hasKnockRetardNow = m_knockRetard > 0;
+
+	m_knockThreshold = getKnockThreshold();
+	m_maximumRetard = getMaximumRetard();
+
+	auto rpm = Sensor::getOrZero(SensorType::Rpm);
+	auto load = getIgnitionLoad();
+
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		m_gain[i] = interpolate3d(
+			config->knockGains[i].table,
+			config->knockGainLoadBins, load,
+			config->knockGainRpmBins, rpm
+		);
+	}
 }
 
 float KnockController::getKnockThreshold() const {
@@ -137,7 +151,10 @@ static uint8_t cylinderNumberCopy;
 
 // Called when its time to start listening for knock
 // Does some math, then hands off to the driver to start any sampling hardware
-static void startKnockSampling(void* = nullptr) {
+void Engine::onSparkFireKnockSense(uint8_t cylinderNumber) {
+	cylinderNumberCopy = cylinderNumber;
+
+#if EFI_SOFTWARE_KNOCK
 	if (!engine->rpmCalculator.isRunning()) {
 		return;
 	}
@@ -150,21 +167,5 @@ static void startKnockSampling(void* = nullptr) {
 
 	// Call the driver to begin sampling
 	onStartKnockSampling(cylinderNumberCopy, samplingSeconds, channel);
-}
-
-void Engine::onSparkFireKnockSense(uint8_t cylinderNumber, efitick_t nowNt) {
-	cylinderNumberCopy = cylinderNumber;
-
-#if EFI_SOFTWARE_KNOCK
-	auto window = engineConfiguration->knockDetectionWindowStart;
-	
-	if (window == 0) {
-		startKnockSampling();
-	} else {
-		scheduleByAngle(nullptr, nowNt,
-				/*angle*/engineConfiguration->knockDetectionWindowStart, startKnockSampling);
-	}
-#else
-	UNUSED(nowNt);
 #endif
 }

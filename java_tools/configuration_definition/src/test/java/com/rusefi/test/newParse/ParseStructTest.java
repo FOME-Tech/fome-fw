@@ -12,7 +12,7 @@ import static com.rusefi.test.newParse.NewParseHelper.parse;
 
 public class ParseStructTest {
     @Test
-    public void structEmpty() throws IOException {
+    public void structEmpty() {
         ParseState state = parse(
                 "struct myStruct\n\n" +
                 "end_struct\n"
@@ -35,7 +35,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structEmptyNoPrefix() throws IOException {
+    public void structEmptyNoPrefix() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n\n" +
                         "end_struct\n"
@@ -48,7 +48,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structMultiple() throws IOException {
+    public void structMultiple() {
         ParseState state = parse(
                 "struct myStruct1\n\n" +
                         "end_struct\n" +
@@ -67,7 +67,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structNested() throws IOException {
+    public void structNested() {
         ParseState state = parse(
                 "struct myStructOuter\n" +
                         "struct myStructInner\n\n" +
@@ -86,7 +86,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void structContainsStruct() throws IOException {
+    public void structContainsStruct() {
         ParseState state = parse(
                 "struct myStruct\n\n" +
                         "end_struct\n" +
@@ -107,7 +107,7 @@ public class ParseStructTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void structMissingStruct() throws IOException {
+    public void structMissingStruct() {
         parse(
             "struct myStruct2\n" +
             "myStruct foo\n" +
@@ -115,7 +115,7 @@ public class ParseStructTest {
         );
     }
 
-    private static Field parseSingleField(String fieldLine) throws IOException {
+    private static Field parseSingleField(String fieldLine) {
         ParseState state = parse(
                 "struct myStruct\n" +
                         fieldLine + "\n" +
@@ -130,7 +130,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void scalarOptions() throws IOException {
+    public void scalarOptions() {
         Field f = parseSingleField("int foo;comment;\"units\", 1, 2, 3, 4, 5");
         ScalarField sf = (ScalarField) f;
 
@@ -145,7 +145,7 @@ public class ParseStructTest {
         Assert.assertEquals(5, opt.digits);
     }
 
-    private static void checkType(String inputType, int size, String cType, String tsType) throws IOException {
+    private static void checkType(String inputType, int size, String cType, String tsType) {
         ScalarField sf = (ScalarField) parseSingleField(inputType + " foo");
 
         Assert.assertEquals("foo", sf.name);
@@ -157,7 +157,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void typeMappings() throws IOException {
+    public void typeMappings() {
         checkType("int", 4, "int", "S32");
 
         checkType("int8_t", 1, "int8_t", "S08");
@@ -171,7 +171,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arraySingleDimension() throws IOException {
+    public void arraySingleDimension() {
         Field f = parseSingleField("uint8_t[10] testBins");
 
         Assert.assertTrue(f instanceof ArrayField);
@@ -186,7 +186,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arrayMultiDimension() throws IOException {
+    public void arrayMultiDimension() {
         Field f = parseSingleField("uint8_t[5 x 8] testBins");
 
         Assert.assertTrue(f instanceof ArrayField);
@@ -198,7 +198,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void arrayIterate() throws IOException {
+    public void arrayIterate() {
         Field f = parseSingleField("uint8_t[10 iterate] testBins");
 
         Assert.assertTrue(f instanceof ArrayField);
@@ -208,12 +208,12 @@ public class ParseStructTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void checkMultiDimensionArrayIterateThrows() throws IOException {
+    public void checkMultiDimensionArrayIterateThrows() {
         parseSingleField("uint8_t[5 x 8 iterate] testBins");
     }
 
     @Test
-    public void arrayOfStructs() throws IOException {
+    public void arrayOfStructs() {
         ParseState state = parse(
                 "struct myStruct\n\n" +
                         "end_struct\n" +
@@ -241,7 +241,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void typedefScalar() throws IOException {
+    public void typedefScalar() {
         ParseState ps = parse("custom myTypedef 4 scalar, F32, @OFFSET@, \"unit\", 1, 2, 3, 4, 5\n" +
                 "struct myStruct\n" +
                 "myTypedef foo;comment\n" +
@@ -266,7 +266,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void typedefString() throws IOException {
+    public void typedefString() {
         ParseState ps = parse("custom lua_script_t 1000 string, ASCII, @OFFSET@, 1000\n" +
                 "struct myStruct\n" +
                 "lua_script_t luaScript\n" +
@@ -278,7 +278,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void unused() throws IOException {
+    public void unused() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
                         "unused 27\n" +
@@ -291,7 +291,7 @@ public class ParseStructTest {
     }
 
     @Test
-    public void bitFieldsBasic() throws IOException {
+    public void bitFieldsBasic() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
                         "bit myBit1\n" +
@@ -344,10 +344,10 @@ public class ParseStructTest {
     public void tableFixedSize() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
-                        "table\n" +
-                        "rows num 4 uint8_t rowVals\n" +
-                        "cols num 8 uint16_t colVals\n" +
-                        "values float tableVals\n" +
+                        "begin_table\n" +
+                        "table_rows num 4 uint8_t rowVals\n" +
+                        "table_cols num 8 uint16_t colVals\n" +
+                        "table_values float tableVals\n" +
                         "end_table\n" +
                         "end_struct\n"
         );
@@ -374,11 +374,11 @@ public class ParseStructTest {
     public void tableMultiValues() {
         ParseState state = parse(
                 "struct_no_prefix myStruct\n" +
-                        "table\n" +
-                        "rows num 4 uint8_t rowVals\n" +
-                        "cols num 8 uint16_t colVals\n" +
-                        "values float tableValsF\n" +
-                        "values int tableValsI\n" +
+                        "begin_table\n" +
+                        "table_rows num 4 uint8_t rowVals\n" +
+                        "table_cols num 8 uint16_t colVals\n" +
+                        "table_values float tableValsF\n" +
+                        "table_values int tableValsI\n" +
                         "end_table\n" +
                         "end_struct\n"
         );

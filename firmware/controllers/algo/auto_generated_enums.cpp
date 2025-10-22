@@ -98,22 +98,22 @@ case Gpio::C8:
   return "C8";
 case Gpio::C9:
   return "C9";
-case Gpio::CAN_PIN_0:
-  return "CAN_PIN_0";
-case Gpio::CAN_PIN_1:
-  return "CAN_PIN_1";
-case Gpio::CAN_PIN_2:
-  return "CAN_PIN_2";
-case Gpio::CAN_PIN_3:
-  return "CAN_PIN_3";
-case Gpio::CAN_PIN_4:
-  return "CAN_PIN_4";
-case Gpio::CAN_PIN_5:
-  return "CAN_PIN_5";
-case Gpio::CAN_PIN_6:
-  return "CAN_PIN_6";
-case Gpio::CAN_PIN_7:
-  return "CAN_PIN_7";
+case Gpio::CAN_INPUT_0:
+  return "CAN_INPUT_0";
+case Gpio::CAN_INPUT_1:
+  return "CAN_INPUT_1";
+case Gpio::CAN_INPUT_2:
+  return "CAN_INPUT_2";
+case Gpio::CAN_INPUT_3:
+  return "CAN_INPUT_3";
+case Gpio::CAN_INPUT_4:
+  return "CAN_INPUT_4";
+case Gpio::CAN_INPUT_5:
+  return "CAN_INPUT_5";
+case Gpio::CAN_INPUT_6:
+  return "CAN_INPUT_6";
+case Gpio::CAN_INPUT_7:
+  return "CAN_INPUT_7";
 case Gpio::D0:
   return "D0";
 case Gpio::D1:
@@ -308,74 +308,6 @@ case Gpio::I9:
   return "I9";
 case Gpio::Invalid:
   return "Invalid";
-case Gpio::L9779_IGN_1:
-  return "L9779_IGN_1";
-case Gpio::L9779_IGN_2:
-  return "L9779_IGN_2";
-case Gpio::L9779_IGN_3:
-  return "L9779_IGN_3";
-case Gpio::L9779_IGN_4:
-  return "L9779_IGN_4";
-case Gpio::L9779_OUT_1:
-  return "L9779_OUT_1";
-case Gpio::L9779_OUT_10:
-  return "L9779_OUT_10";
-case Gpio::L9779_OUT_11:
-  return "L9779_OUT_11";
-case Gpio::L9779_OUT_12:
-  return "L9779_OUT_12";
-case Gpio::L9779_OUT_13:
-  return "L9779_OUT_13";
-case Gpio::L9779_OUT_14:
-  return "L9779_OUT_14";
-case Gpio::L9779_OUT_15:
-  return "L9779_OUT_15";
-case Gpio::L9779_OUT_16:
-  return "L9779_OUT_16";
-case Gpio::L9779_OUT_17:
-  return "L9779_OUT_17";
-case Gpio::L9779_OUT_18:
-  return "L9779_OUT_18";
-case Gpio::L9779_OUT_19:
-  return "L9779_OUT_19";
-case Gpio::L9779_OUT_2:
-  return "L9779_OUT_2";
-case Gpio::L9779_OUT_20:
-  return "L9779_OUT_20";
-case Gpio::L9779_OUT_25:
-  return "L9779_OUT_25";
-case Gpio::L9779_OUT_26:
-  return "L9779_OUT_26";
-case Gpio::L9779_OUT_27:
-  return "L9779_OUT_27";
-case Gpio::L9779_OUT_28:
-  return "L9779_OUT_28";
-case Gpio::L9779_OUT_3:
-  return "L9779_OUT_3";
-case Gpio::L9779_OUT_4:
-  return "L9779_OUT_4";
-case Gpio::L9779_OUT_5:
-  return "L9779_OUT_5";
-case Gpio::L9779_OUT_6:
-  return "L9779_OUT_6";
-case Gpio::L9779_OUT_7:
-  return "L9779_OUT_7";
-case Gpio::L9779_OUT_8:
-  return "L9779_OUT_8";
-case Gpio::L9779_OUT_9:
-  return "L9779_OUT_9";
-case Gpio::L9779_OUT_A:
-  return "L9779_OUT_A";
-case Gpio::L9779_OUT_B:
-  return "L9779_OUT_B";
-case Gpio::L9779_OUT_C:
-  return "L9779_OUT_C";
-case Gpio::L9779_OUT_D:
-  return "L9779_OUT_D";
-case Gpio::L9779_OUT_MRD:
-  return "L9779_OUT_MRD";
-case Gpio::L9779_PIN_KEY:
-  return "L9779_PIN_KEY";
 case Gpio::MC33972_PIN_1:
   return "MC33972_PIN_1";
 case Gpio::MC33972_PIN_21:

@@ -68,7 +68,7 @@
  * Register constants are taken from the ST header.
  */
 #define STM32_VOS                           STM32_VOS_SCALE1
-#define STM32_PWR_CR1                       (PWR_CR1_SVOS_1 | PWR_CR1_SVOS_0)
+#define STM32_PWR_CR1                       (PWR_CR1_SVOS_1 | PWR_CR1_SVOS_0 | PWR_CR1_DBP)
 #define STM32_PWR_CR2                       (PWR_CR2_BREN)
 #define STM32_PWR_CR3                       (PWR_CR3_LDOEN | PWR_CR3_USB33DEN)
 #define STM32_PWR_CPUCR                     0
@@ -185,19 +185,26 @@
 /*
  * IRQ system settings.
  */
+#ifdef EFI_BOOTLOADER
+	// Bootloader: use normal ChibiOS-defined interrupts
+	#define STM32_IRQ_EXTI_PRIORITY             6
 
-#define STM32_DISABLE_EXTI0_HANDLER
-#define STM32_DISABLE_EXTI1_HANDLER
-#define STM32_DISABLE_EXTI2_HANDLER
-#define STM32_DISABLE_EXTI3_HANDLER
-#define STM32_DISABLE_EXTI4_HANDLER
-#define STM32_DISABLE_EXTI5_9_HANDLER
-#define STM32_DISABLE_EXTI10_15_HANDLER
+#else // not EFI_BOOTLOADER
+	// Not bootloader: EXTI gets maximum priority and custom interruts
+	#define STM32_IRQ_EXTI_PRIORITY             CORTEX_MAXIMUM_PRIORITY
+
+	#define STM32_DISABLE_EXTI0_HANDLER
+	#define STM32_DISABLE_EXTI1_HANDLER
+	#define STM32_DISABLE_EXTI2_HANDLER
+	#define STM32_DISABLE_EXTI3_HANDLER
+	#define STM32_DISABLE_EXTI4_HANDLER
+	#define STM32_DISABLE_EXTI5_9_HANDLER
+	#define STM32_DISABLE_EXTI10_15_HANDLER
+#endif // EFI_BOOTLOADER
 
 // we hijack this interrupt handler as the EXTI chained handler, see digital_input_exti.cpp
 #define STM32_I2C_I2C1_IRQ_PRIORITY         6
 
-#define STM32_IRQ_EXTI_PRIORITY             CORTEX_MAXIMUM_PRIORITY
 #define STM32_IRQ_EXTI0_PRIORITY            STM32_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI1_PRIORITY            STM32_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI2_PRIORITY            STM32_IRQ_EXTI_PRIORITY
@@ -519,5 +526,7 @@
 #define STM32_SYSCLK STM32_SYS_CK
 
 #define ENABLE_AUTO_DETECT_HSE              TRUE
+
+#include "mcuconf_community.h"
 
 #endif /* MCUCONF_H */

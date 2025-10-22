@@ -23,20 +23,23 @@ static_assert(offsetof(pid_status_2_s, error) == 8);
 static_assert(offsetof(pid_status_2_s, resetCounter) == 10);
 
 struct vvt_s {
+	// offset 0
+	scaled_channel<int16_t, 10, 1> targetYAxis = (int16_t)0;
 	// Target
 	// deg
-	// offset 0
+	// offset 2
 	scaled_channel<uint16_t, 10, 1> vvtTarget = (uint16_t)0;
 	// Output duty
 	// %
-	// offset 2
-	scaled_channel<uint8_t, 2, 1> vvtOutput = (uint8_t)0;
-	// offset 3
-	uint8_t alignmentFill_at_3[1];
 	// offset 4
+	scaled_channel<uint8_t, 2, 1> vvtOutput = (uint8_t)0;
+	// offset 5
+	uint8_t alignmentFill_at_5[3];
+	// offset 8
 	pid_status_2_s pidState;
 };
-static_assert(sizeof(vvt_s) == 16);
-static_assert(offsetof(vvt_s, vvtTarget) == 0);
-static_assert(offsetof(vvt_s, vvtOutput) == 2);
+static_assert(sizeof(vvt_s) == 20);
+static_assert(offsetof(vvt_s, targetYAxis) == 0);
+static_assert(offsetof(vvt_s, vvtTarget) == 2);
+static_assert(offsetof(vvt_s, vvtOutput) == 4);
 

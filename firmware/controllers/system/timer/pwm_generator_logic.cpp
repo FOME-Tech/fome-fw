@@ -261,12 +261,8 @@ static void timerCallback(PwmConfig *state) {
 		// we are here when PWM gets stopped
 		return;
 	}
-	if (state->m_executor == nullptr) {
-		firmwareError(ObdCode::CUSTOM_NULL_EXECUTOR, "exec on %s", state->m_name);
-		return;
-	}
 
-	state->m_executor->schedule(state->m_name, &state->scheduling, switchTimeNt, { timerCallback, state });
+	engine->scheduler.schedule(state->m_name, &state->scheduling, switchTimeNt, { timerCallback, state });
 	state->dbgNestingLevel--;
 }
 
@@ -285,19 +281,18 @@ void copyPwmParameters(PwmConfig *state, MultiChannelStateSequence const * seq) 
  * this method also starts the timer cycle
  * See also startSimplePwm
  */
-void PwmConfig::weComplexInit(Scheduler *executor,
+void PwmConfig::weComplexInit(
 		MultiChannelStateSequence const * seq,
 		pwm_cycle_callback *pwmCycleCallback, pwm_gen_callback *stateChangeCallback) {
-	m_executor = executor;
 	isStopRequested = false;
 
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6582, periodNt != 0, "period is not initialized");
 	if (seq->phaseCount == 0) {
-		firmwareError(ObdCode::CUSTOM_ERR_PWM_1, "signal length cannot be zero");
+		firmwareError("signal length cannot be zero");
 		return;
 	}
 	if (seq->phaseCount > PWM_PHASE_MAX_COUNT) {
-		firmwareError(ObdCode::CUSTOM_ERR_PWM_2, "too many phases in PWM");
+		firmwareError("too many phases in PWM");
 		return;
 	}
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6583, seq->waveCount > 0, "waveCount should be positive");
@@ -315,12 +310,12 @@ void PwmConfig::weComplexInit(Scheduler *executor,
 	timerCallback(this);
 }
 
-void startSimplePwm(SimplePwm *state, const char *msg, Scheduler *executor,
+void startSimplePwm(SimplePwm *state, const char *msg,
 		OutputPin *output, float frequency, float dutyCycle) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, state != NULL, "state");
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_DUTY_ASSERT, dutyCycle >= 0 && dutyCycle <= 1, "dutyCycle");
 	if (frequency < 1) {
-		warning(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "low frequency %.2f %s", frequency, msg);
+		warning(ObdCode::OBD_PCM_Processor_Fault, "low frequency %.2f %s", frequency, msg);
 		return;
 	}
 
@@ -333,24 +328,22 @@ void startSimplePwm(SimplePwm *state, const char *msg, Scheduler *executor,
 
 	state->setFrequency(frequency);
 	state->setSimplePwmDutyCycle(dutyCycle);
-	state->weComplexInit(executor, &state->seq, nullptr, applyPinState);
+	state->weComplexInit(&state->seq, nullptr, applyPinState);
 }
 
 void startSimplePwmExt(SimplePwm *state, const char *msg,
-		Scheduler *executor,
 		brain_pin_e brainPin, OutputPin *output, float frequency,
 		float dutyCycle) {
 
 	output->initPin(msg, brainPin);
 
-	startSimplePwm(state, msg, executor, output, frequency, dutyCycle);
+	startSimplePwm(state, msg, output, frequency, dutyCycle);
 }
 
 /**
  * @param dutyCycle value between 0 and 1
  */
 void startSimplePwmHard(SimplePwm *state, const char *msg,
-		Scheduler *executor,
 		brain_pin_e brainPin, OutputPin *output, float frequency,
 		float dutyCycle) {
 #if EFI_PROD_CODE && HAL_USE_PWM
@@ -360,7 +353,7 @@ void startSimplePwmHard(SimplePwm *state, const char *msg,
 		state->hardPwm = hardPwm;
 	} else {
 #endif
-		startSimplePwmExt(state, msg, executor, brainPin, output, frequency, dutyCycle);
+		startSimplePwmExt(state, msg, brainPin, output, frequency, dutyCycle);
 #if EFI_PROD_CODE && HAL_USE_PWM
 	}
 #endif

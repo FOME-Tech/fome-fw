@@ -31,10 +31,8 @@
 
 #include "spark_logic.h"
 
-static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
+static void handleFuel(const EnginePhaseInfo& phase) {
 	ScopePerf perf(PE::HandleFuel);
-
-	efiAssertVoid(ObdCode::CUSTOM_STACK_6627, getCurrentRemainingStack() > 128, "lowstck#3");
 
 	if (!getLimpManager()->allowInjection().value) {
 		return;
@@ -47,14 +45,14 @@ static void handleFuel(efitick_t nowNt, float currentPhase, float nextPhase) {
 		fs->addFuelEvents();
 	}
 
-	fs->onTriggerTooth(nowNt, currentPhase, nextPhase);
+	fs->onTriggerTooth(phase);
 }
 
 /**
  * This is the main trigger event handler.
  * Both injection and ignition are controlled from this method.
  */
-void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_t currentPhase, angle_t nextPhase) {
+void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 	ScopePerf perf(PE::MainTriggerCallback);
 
 	if (hasFirmwareError()) {
@@ -72,15 +70,10 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 		return;
 	}
 
-	if (rpm == NOISY_RPM || !isValidRpm(rpm)) {
-		warning(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction, "noisy trigger");
-		return;
-	}
-
 	if (trgEventIndex == 0) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
-			getFuelSchedule()->isReady = false;
+			getFuelSchedule()->invalidate();
 			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about trigger shape & optimization?)
 			// see updateTriggerWaveform() -> prepareOutputSignals()
 
@@ -89,20 +82,18 @@ void mainTriggerCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp, angle_
 		}
 	}
 
-	engine->engineModules.apply_all([=](auto & m) {
-		m.onEnginePhase(rpm, edgeTimestamp, currentPhase, nextPhase);
-	});
+	engine->engineModules.apply_all([=](auto & m) { m.onEnginePhase(rpm, phase); });
 
 	/**
 	 * For fuel we schedule start of injection based on trigger angle, and then inject for
 	 * specified duration of time
 	 */
-	handleFuel(edgeTimestamp, currentPhase, nextPhase);
+	handleFuel(phase);
 
 	/**
 	 * For spark we schedule both start of coil charge and actual spark based on trigger angle
 	 */
-	onTriggerEventSparkLogic(edgeTimestamp, currentPhase, nextPhase);
+	onTriggerEventSparkLogic(phase);
 }
 
 #endif /* EFI_ENGINE_CONTROL */

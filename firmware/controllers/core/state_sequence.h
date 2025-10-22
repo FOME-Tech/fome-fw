@@ -74,7 +74,7 @@ public:
 	bool getChannelState(int channelIndex, int phaseIndex) const override {
 		if (channelIndex >= waveCount) {
 			// todo: would be nice to get this asserting working
-			//firmwareError(ObdCode::OBD_PCM_Processor_Fault, "channel index %d/%d", channelIndex, waveCount);
+			//firmwareError("channel index %d/%d", channelIndex, waveCount);
 		}
 		return (waveForm[phaseIndex] >> channelIndex) & 1;
 	}
@@ -90,7 +90,7 @@ public:
 	void setChannelState(const int channelIndex, const int phaseIndex, bool state) {
 		if (channelIndex >= waveCount) {
 			// todo: would be nice to get this asserting working
-			//firmwareError(ObdCode::OBD_PCM_Processor_Fault, "channel index %d/%d", channelIndex, waveCount);
+			//firmwareError("channel index %d/%d", channelIndex, waveCount);
 		}
 		uint8_t & ref = waveForm[phaseIndex];
 		ref = (ref & ~(1U << channelIndex)) | ((state ? 1 : 0) << channelIndex);

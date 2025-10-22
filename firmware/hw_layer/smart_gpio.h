@@ -13,7 +13,6 @@
 #include "drivers/gpio/mc33972.h"
 #include "drivers/gpio/tle8888.h"
 #include "drivers/gpio/drv8860.h"
-// we seem OK without L9779 here do we need those includes at all?
 #endif /* EFI_PROD_CODE */
 
 #if EFI_UNIT_TEST
@@ -25,12 +24,9 @@ BOARD_MC33972_COUNT + \
 BOARD_TLE8888_COUNT + \
 BOARD_DRV8860_COUNT + \
 BOARD_MC33810_COUNT + \
-BOARD_L9779_COUNT + \
 0)
 #endif
 
-void initSmartGpio(void);
-void startSmartCsPins(void);
-void stopSmartCsPins(void);
+void initSmartGpio();
 
-void tle8888startup(void);
+void tle8888startup();

@@ -50,8 +50,6 @@ typedef unsigned int time_t;
 #define UTILITY_THREAD_STACK_SIZE 400
 #endif /* UTILITY_THREAD_STACK_SIZE */
 
-#define getCurrentRemainingStack() getRemainingStack(chThdGetSelfX())
-
 /**
  * rusEfi is placing some of data structures into CCM memory simply
  * in order to use that memory - no magic about which RAM is faster etc.

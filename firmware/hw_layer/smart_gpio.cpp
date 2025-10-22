@@ -17,7 +17,6 @@
 #include "drivers/gpio/mc33810.h"
 #include "drivers/gpio/tle8888.h"
 #include "drivers/gpio/drv8860.h"
-#include "drivers/gpio/l9779.h"
 #include "drivers/gpio/tle9104.h"
 
 #if (BOARD_TLE6240_COUNT > 0)
@@ -97,46 +96,6 @@ struct mc33972_config mc33972 = {
 };
 #endif /* (BOARD_MC33972_COUNT > 0) */
 
-#if (BOARD_L9779_COUNT > 0)
-static OutputPin l9779Cs;
-struct l9779_config l9779_cfg = {
-	.spi_bus = NULL,
-	.spi_config = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 =
-			SPI_CR1_16BIT_MODE |
-			SPI_CR1_SSM |
-			SPI_CR1_SSI |
-			//SPI_CR1_LSBFIRST |	//MSB first
-			((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) |	// div = 16, up to 8 MHz
-			SPI_CR1_MSTR |
-			SPI_CR1_CPHA |
-			0,
-		.cr2 = SPI_CR2_16BIT_MODE
-	},
-	.direct_gpio = {
-		/* IGNI1..IGNI4 */
-		[0]  = {.port = NULL,	.pad = 0},
-		[1]  = {.port = NULL,	.pad = 0},
-		[2]  = {.port = NULL,	.pad = 0},
-		[3]  = {.port = NULL,	.pad = 0},
-		/* IN1..IN7 */
-		[4]  = {.port = NULL,	.pad = 0},
-		[5]  = {.port = NULL,	.pad = 0},
-		[6]  = {.port = NULL,	.pad = 0},
-		[7]  = {.port = NULL,	.pad = 0},
-		[8]  = {.port = NULL,	.pad = 0},
-		[9]  = {.port = NULL,	.pad = 0},
-		[10] = {.port = NULL,	.pad = 0},
-	},
-	/* PWM (IN8) */
-	.pwm_gpio = {.port = NULL,	.pad = 0},
-};
-#endif /* (BOARD_L9779_COUNT > 0) */
-
 #if (BOARD_TLE8888_COUNT > 0)
 static OutputPin tle8888Cs;
 struct tle8888_config tle8888_cfg = {
@@ -213,10 +172,12 @@ struct drv8860_config drv8860 = {
 #endif /* (BOARD_DRV8860_COUNT > 0) */
 
 void initSmartGpio() {
-	startSmartCsPins();
-
 #if (BOARD_TLE6240_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->tle6240_cs)) {
+		tle6240Cs.initPin("tle6240 CS", engineConfiguration->tle6240_cs,
+			engineConfiguration->tle6240_csPinMode);
+		tle6240Cs.setValue(true);
+
 		tle6240.spi_config.ssport = getHwPort("tle6240 CS", engineConfiguration->tle6240_cs);
 		tle6240.spi_config.sspad = getHwPin("tle6240 CS", engineConfiguration->tle6240_cs);
 		tle6240.spi_bus = getSpiDevice(engineConfiguration->tle6240spiDevice);
@@ -228,6 +189,10 @@ void initSmartGpio() {
 
 #if (BOARD_MC33972_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->mc33972_cs)) {
+		mc33972Cs.initPin("mc33972 CS", engineConfiguration->mc33972_cs,
+				engineConfiguration->mc33972_csPinMode);
+		mc33972Cs.setValue(true);
+
 		// todo: reuse initSpiCs method?
 		mc33972.spi_config.ssport = getHwPort("mc33972 CS", engineConfiguration->mc33972_cs);
 		mc33972.spi_config.sspad = getHwPin("mc33972 CS", engineConfiguration->mc33972_cs);
@@ -239,21 +204,12 @@ void initSmartGpio() {
 	}
 #endif /* (BOARD_MC33972_COUNT > 0) */
 
-#if (BOARD_L9779_COUNT > 0)
-	if (isBrainPinValid(engineConfiguration->l9779_cs)) {
-		// todo: reuse initSpiCs method?
-		l9779_cfg.spi_config.ssport = getHwPort("l9779 CS", engineConfiguration->l9779_cs);
-		l9779_cfg.spi_config.sspad = getHwPin("l9779 CS", engineConfiguration->l9779_cs);
-		l9779_cfg.spi_bus = getSpiDevice(engineConfiguration->l9779spiDevice);
-		// todo: propogate 'basePinOffset' parameter
-		int ret = l9779_add(Gpio::L9779_IGN_1, 0, &l9779_cfg);
-
-		efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, ret == (int)Gpio::L9779_IGN_1, "l9779");
-	}
-#endif /* (BOARD_L9779_COUNT > 0) */
-
 #if (BOARD_TLE8888_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->tle8888_cs)) {
+		tle8888Cs.initPin("tle8888 CS", engineConfiguration->tle8888_cs,
+			engineConfiguration->tle8888_csPinMode);
+		tle8888Cs.setValue(true);
+		
 		// todo: reuse initSpiCs method?
 		tle8888_cfg.spi_config.ssport = getHwPort("tle8888 CS", engineConfiguration->tle8888_cs);
 		tle8888_cfg.spi_config.sspad = getHwPin("tle8888 CS", engineConfiguration->tle8888_cs);
@@ -271,6 +227,10 @@ void initSmartGpio() {
 
 #if (BOARD_DRV8860_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->drv8860_cs)) {
+		drv8860Cs.initPin("drv8860 CS", engineConfiguration->drv8860_cs,
+				engineConfiguration->drv8860_csPinMode);
+		drv8860Cs.setValue(true);
+
 		drv8860.spi_config.ssport = getHwPort("drv8860 CS", engineConfiguration->drv8860_cs);
 		drv8860.spi_config.sspad = getHwPin("drv8860 CS", engineConfiguration->drv8860_cs);
 		drv8860.spi_bus = getSpiDevice(engineConfiguration->drv8860spiDevice);
@@ -305,56 +265,6 @@ void tle8888startup() {
 			tle8888CrankingResetTime = nowNt;
 		}
 	}
-}
-
-void stopSmartCsPins() {
-#if (BOARD_TLE8888_COUNT > 0)
-	efiSetPadUnused(activeConfiguration.tle8888_cs);
-#endif /* BOARD_TLE8888_COUNT */
-#if (BOARD_TLE6240_COUNT > 0)
-	efiSetPadUnused(activeConfiguration.tle6240_cs);
-#endif /* BOARD_TLE6240_COUNT */
-#if (BOARD_MC33972_COUNT > 0)
-	efiSetPadUnused(activeConfiguration.mc33972_cs);
-#endif /* BOARD_MC33972_COUNT */
-#if (BOARD_DRV8860_COUNT > 0)
-	efiSetPadUnused(activeConfiguration.drv8860_cs);
-#endif /* BOARD_DRV8860_COUNT */
-#if (BOARD_MC33810_COUNT > 0)
-	/* none of official boards has this IC */
-#endif /* (BOARD_MC33810_COUNT > 0) */
-#if (BOARD_TLE9104_COUNT > 0)
-	// No official boards have this IC
-#endif
-}
-
-void startSmartCsPins() {
-#if (BOARD_TLE8888_COUNT > 0)
-	tle8888Cs.initPin("tle8888 CS", engineConfiguration->tle8888_cs,
-				engineConfiguration->tle8888_csPinMode);
-	tle8888Cs.setValue(true);
-#endif /* BOARD_TLE8888_COUNT */
-#if (BOARD_TLE6240_COUNT > 0)
-	tle6240Cs.initPin("tle6240 CS", engineConfiguration->tle6240_cs,
-				engineConfiguration->tle6240_csPinMode);
-	tle6240Cs.setValue(true);
-#endif /* BOARD_TLE6240_COUNT */
-#if (BOARD_MC33972_COUNT > 0)
-	mc33972Cs.initPin("mc33972 CS", engineConfiguration->mc33972_cs,
-				engineConfiguration->mc33972_csPinMode);
-	mc33972Cs.setValue(true);
-#endif /* BOARD_MC33972_COUNT */
-#if (BOARD_DRV8860_COUNT > 0)
-	drv8860Cs.initPin("drv8860 CS", engineConfiguration->drv8860_cs,
-				engineConfiguration->drv8860_csPinMode);
-	drv8860Cs.setValue(true);
-#endif /* BOARD_DRV8860_COUNT */
-#if (BOARD_MC33810_COUNT > 0)
-	/* none of official boards has this IC */
-#endif /* (BOARD_MC33810_COUNT > 0) */
-#if (BOARD_TLE9104_COUNT > 0)
-	// No official boards have this IC
-#endif
 }
 
 #endif /* EFI_PROD_CODE */

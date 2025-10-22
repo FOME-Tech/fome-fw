@@ -32,7 +32,6 @@ enum class engine_type_e : uint32_t {
 	 */
 	FORD_ASPIRE_1996 = 3,
 
-	NISSAN_PRIMERA = 5,
 	PROTEUS_HARLEY = 6,
 	FORD_INLINE_6_1995 = 7,
 	/**
@@ -136,8 +135,6 @@ enum class engine_type_e : uint32_t {
 
 	TLE8888_BENCH_ENGINE = 59,
 
-	L9779_BENCH_ENGINE = 60,
-
 	MRE_VW_B6 = 62,
 
 	PROTEUS_BMW_M73 = 63,
@@ -201,6 +198,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_5 = 5,
 	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
@@ -210,6 +208,7 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_33 = 33,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
+	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
 
 	/**
@@ -317,11 +316,9 @@ enum class trigger_type_e : uint32_t {
 	 * see also TT_ONE a bit below
 	 */
 	TT_ONE_PLUS_ONE = 16,
-	/**
-	 * VVT for 2JZ
-	 * three evenly spaces teeth
-	 */
-	TT_VVT_TOYOTA_3_TOOTH = 17,
+
+	TT_UNUSED_17 = 17,
+
 	// just one channel with just one tooth
 	TT_ONE = 18,
 
@@ -490,8 +487,8 @@ enum class trigger_type_e : uint32_t {
 	TT_VVT_MIATA_NA = 76,
 
 
-	// do not forget to edit "#define trigger_type_e_enum" line in integration/rusefi_config.txt file to propogate new value to rusefi.ini TS project
-	// do not forget to invoke "gen_config.bat" once you make changes to integration/rusefi_config.txt
+	// do not forget to edit "#define trigger_type_e_enum" line in integration/fome_config.txt file to propogate new value to rusefi.ini TS project
+	// do not forget to invoke "gen_config.bat" once you make changes to integration/fome_config.txt
 	// todo: one day a hero would integrate some of these things into Makefile in order to reduce manual magic
 	//
 	// Another point: once you add a new trigger, run get_trigger_images.bat which would run fome_test.exe from unit_tests
@@ -500,7 +497,7 @@ enum class trigger_type_e : uint32_t {
 };
 
 typedef enum {
-	TS_DEBUG_MODE = 0,
+	TS_UNUSED_0 = 0,
 	TS_UNUSED_1 = 1,
 	TS_UNUSED_2 = 2,
 	TS_UNUSED_3 = 3,
@@ -583,4 +580,5 @@ typedef enum {
 	COMMAND_X14_ETB_DISABLE_JAM_DETECT = 0x14,
 	COMMAND_X14_BURN_WITHOUT_FLASH = 0x15,
 	COMMAND_X14_FORCE_RESYNC = 0x16,
+	COMMAND_X14_SPLIT_INJ = 0x17,
 } command_x14_e;

@@ -9,14 +9,16 @@ apply from: '../../java_tools/dependencies.gradle'
 defaultTasks 'shadowJar'
 
 dependencies {
-    api project(':config_definition_base')
-    implementation project(':models')
+    implementation project(':inifile')
+    implementation project(':enum_to_string')
+    implementation project(':util')
+    implementation project(':trigger')
+
     antlr global_libs.antlr
     implementation global_libs.snakeyaml
 }
 
 shadowJar {
-    dependsOn(':enum_to_string:shadowJar')
     /*
      to exclude suffix '-all'
      in resulting archive file name
@@ -27,7 +29,7 @@ shadowJar {
     destinationDirectory = file( '$rootDir/../..' )
     manifest {
         attributes(
-                'Main-Class': 'com.rusefi.ConfigDefinition'
+            'Main-Class': 'com.rusefi.ConfigDefinition'
         )
     }
     dependencies {

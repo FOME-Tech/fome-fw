@@ -1,5 +1,6 @@
 struct_no_prefix ac_control_s
 	bit acButtonState;Switch state
+	bit acPressureSwitchState;Pressure switch state
 	bit m_acEnabled;Enabled
 	bit engineTooSlow;Engine too slow
 	bit engineTooFast;Engine too fast

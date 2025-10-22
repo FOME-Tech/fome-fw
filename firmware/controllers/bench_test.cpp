@@ -214,26 +214,22 @@ static void luaOutBench2(float humanIndex, float onTime, float offTime, float co
 	doRunBenchTestLuaOutput((int)humanIndex, onTime, offTime, (int)count);
 }
 
-static void fanBenchExt(float onTime) {
-	pinbench(onTime, 100.0, 1.0, enginePins.fanRelay);
+void fanBench() {
+	engine->module<FanControl1>()->benchTest();
 }
 
-void fanBench(void) {
-	fanBenchExt(3000.0);
-}
-
-void fan2Bench(void) {
-	pinbench(3000.0, 100.0, 1.0, enginePins.fanRelay2);
+void fan2Bench() {
+	engine->module<FanControl2>()->benchTest();
 }
 
 /**
  * we are blinking for 16 seconds so that one can click the button and walk around to see the light blinking
  */
-void milBench(void) {
+void milBench() {
 	pinbench(500.0, 500.0, 16, enginePins.checkEnginePin);
 }
 
-void starterRelayBench(void) {
+void starterRelayBench() {
 	pinbench(6000.0, 100.0, 1, enginePins.starterControl);
 }
 
@@ -241,20 +237,19 @@ static void fuelPumpBenchExt(float durationMs) {
 	pinbench(durationMs, 100.0, 1.0, enginePins.fuelPumpRelay);
 }
 
-void acRelayBench(void) {
+void acRelayBench() {
 	pinbench(1000.0, 100.0, 1, enginePins.acRelay);
 }
 
 static void mainRelayBench() {
-	// main relay is usually "ON" via FSIO thus bench testing that one is pretty unusual
-	engine->mainRelayBenchTimer.reset();
+	engine->module<MainRelayController>()->benchTest();
 }
 
-static void hpfpValveBench(void) {
+static void hpfpValveBench() {
 	pinbench(20.0, engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount, enginePins.hpfpValve);
 }
 
-void fuelPumpBench(void) {
+void fuelPumpBench() {
 	fuelPumpBenchExt(3000.0);
 }
 
@@ -337,7 +332,7 @@ static void handleBenchCategory(uint16_t index) {
 		return;
 #endif // EFI_VVT_PID
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench function %d", index);
+		firmwareError("Unexpected bench function %d", index);
 	}
 }
 
@@ -406,8 +401,11 @@ static void handleCommandX14(uint16_t index) {
 		engine->triggerCentral.syncAndReport(2, 1);
 		return;
 #endif // EFI_SHAFT_POSITION_INPUT
+	case COMMAND_X14_SPLIT_INJ:
+		engine->engineState.requestSplitInjection ^= true;
+		return;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench x14 %d", index);
+		firmwareError("Unexpected bench x14 %d", index);
 	}
 }
 
@@ -430,10 +428,6 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 	switch (subsystem) {
 	case TS_CLEAR_WARNINGS:
 		clearWarnings();
-		break;
-
-	case TS_DEBUG_MODE:
-		engineConfiguration->debugMode = (debug_mode_e)index;
 		break;
 
 	case TS_IGNITION_CATEGORY:
@@ -510,7 +504,7 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 #endif
 
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Unexpected bench subsystem %d %d", subsystem, index);
+		firmwareError("Unexpected bench subsystem %d %d", subsystem, index);
 	}
 }
 
@@ -545,12 +539,14 @@ void initBenchTest() {
 
 	addConsoleAction(CMD_FAN_BENCH, fanBench);
 	addConsoleAction(CMD_FAN2_BENCH, fan2Bench);
-	addConsoleActionF("fanbench2", fanBenchExt);
 
 	addConsoleAction("mainrelaybench", mainRelayBench);
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
-	addConsoleAction("update_wideband", []() { widebandUpdatePending = true; });
+	addConsoleAction("update_wideband", []() {
+		widebandUpdatePending = true;
+		benchSemaphore.signal();
+	});
 	addConsoleActionI("set_wideband_index", [](int index) { setWidebandOffset(index); });
 #endif // EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
 

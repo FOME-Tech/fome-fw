@@ -1,6 +1,5 @@
 package com.rusefi.io.serial;
 
-import com.devexperts.logging.Logging;
 import com.rusefi.Callable;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.io.ConnectionStateListener;
@@ -13,8 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.awt.*;
 
-import static com.devexperts.logging.Logging.getLogging;
-
 /**
  * This class holds the reference to the actual Serial port object
  * <p/>
@@ -22,8 +19,6 @@ import static com.devexperts.logging.Logging.getLogging;
  * Andrey Belomutskiy, (c) 2013-2020
  */
 public class PortHolder {
-    private static final Logging log = getLogging(PortHolder.class);
-
     private final DataListener dataListener;
     private final Callable<IoStream> ioStreamFactory;
     private final LinkManager linkManager;

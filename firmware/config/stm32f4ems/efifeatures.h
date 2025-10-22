@@ -42,10 +42,6 @@
 #define EFI_ENABLE_CRITICAL_ENGINE_STOP TRUE
 #define EFI_ENABLE_ENGINE_WARNING TRUE
 
-#ifndef SC_BUFFER_SIZE
-#define SC_BUFFER_SIZE 4000
-#endif
-
 /**
  * if you have a 60-2 trigger, or if you just want better performance, you
  * probably want EFI_ENABLE_ASSERTS to be FALSE. Also you would probably want to FALSE
@@ -64,13 +60,6 @@
 
 //#define EFI_UART_ECHO_TEST_MODE TRUE
 
-/**
- * Build-in logic analyzer support. Logic analyzer viewer is one of the java console panes.
- */
-#ifndef EFI_LOGIC_ANALYZER
-#define EFI_LOGIC_ANALYZER TRUE
-#endif
-
 #ifndef HAL_TRIGGER_USE_PAL
 #define HAL_TRIGGER_USE_PAL TRUE
 #endif /* HAL_TRIGGER_USE_PAL */
@@ -88,11 +77,6 @@
 #ifndef EFI_BLUETOOTH_SETUP
 #define EFI_BLUETOOTH_SETUP TRUE
 #endif /* EFI_BLUETOOTH_SETUP */
-
-/**
- * TunerStudio debug output
- */
-#define EFI_TUNER_STUDIO_VERBOSE TRUE
 
 #define EFI_DEFAILED_LOGGING FALSE
 
@@ -147,10 +131,6 @@
 
 #ifndef BOARD_TLE8888_COUNT
 #define BOARD_TLE8888_COUNT 	1
-#endif
-
-#ifndef BOARD_L9779_COUNT
-#define BOARD_L9779_COUNT 	1
 #endif
 
 #ifndef BOARD_DRV8860_COUNT
@@ -252,14 +232,14 @@
 		// F4 ethernet needs some extra space
 		#define LUA_USER_HEAP 25000
 	#else // MODULE_ETHERNET_CONSOLE
-		#define LUA_USER_HEAP 50000
+		#define LUA_USER_HEAP 65000
 	#endif
 #else
 	// small memory F40x can't fit perf trace
 	#define ENABLE_PERF_TRACE FALSE
 
 	#ifndef LUA_USER_HEAP
-	#define LUA_USER_HEAP 25000
+	#define LUA_USER_HEAP 30000
 	#endif
 #endif
 
@@ -271,23 +251,14 @@
 #define EFI_ENGINE_SNIFFER TRUE
 #endif
 
-#ifndef EFI_SENSOR_CHART
-#define EFI_SENSOR_CHART TRUE
-#endif
-
 #ifndef DL_OUTPUT_BUFFER
 #define DL_OUTPUT_BUFFER 6500
 #endif
 
 #define EFI_ELECTRONIC_THROTTLE_BODY TRUE
-//#define EFI_ELECTRONIC_THROTTLE_BODY FALSE
 
-/**
- * Do we need Malfunction Indicator blinking logic?
- */
 #ifndef EFI_MALFUNCTION_INDICATOR
 #define EFI_MALFUNCTION_INDICATOR TRUE
-//#define EFI_MALFUNCTION_INDICATOR FALSE
 #endif
 
 // todo: most of this should become configurable

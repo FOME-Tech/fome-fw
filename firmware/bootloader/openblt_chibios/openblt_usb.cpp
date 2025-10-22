@@ -8,6 +8,18 @@ extern "C" {
 }
 
 void Rs232Init() {
+	// Actual USB init is deferred to doDeferredUsbInit
+}
+
+void doDeferredUsbInit() {
+	static bool didInit = false;
+
+	if (didInit) {
+		return;
+	}
+
+	didInit = true;
+
 	// Set up USB serial
 	usb_serial_start();
 }
@@ -26,6 +38,8 @@ static void     Rs232TransmitByte(blt_int8u data);
 ****************************************************************************************/
 void Rs232TransmitPacket(blt_int8u *data, blt_int8u len)
 {
+  doDeferredUsbInit();
+
   blt_int16u data_index;
 
   /* verify validity of the len-paramenter */
@@ -34,14 +48,7 @@ void Rs232TransmitPacket(blt_int8u *data, blt_int8u len)
   /* first transmit the length of the packet */
   Rs232TransmitByte(len);
 
-  /* transmit all the packet bytes one-by-one */
-  for (data_index = 0; data_index < len; data_index++)
-  {
-    /* keep the watchdog happy */
-    CopService();
-    /* write byte */
-    Rs232TransmitByte(data[data_index]);
-  }
+  chnWriteTimeout(&SDU1, data, len, TIME_INFINITE);
 } /*** end of Rs232TransmitPacket ***/
 
 /************************************************************************************//**
@@ -53,6 +60,8 @@ void Rs232TransmitPacket(blt_int8u *data, blt_int8u len)
 ****************************************************************************************/
 blt_bool Rs232ReceivePacket(blt_int8u *data, blt_int8u *len)
 {
+  doDeferredUsbInit();
+
   static blt_int8u xcpCtoReqPacket[BOOT_COM_RS232_RX_MAX_DATA+1];  /* one extra for length */
   static blt_int8u xcpCtoRxLength;
   static blt_bool  xcpCtoRxInProgress = BLT_FALSE;

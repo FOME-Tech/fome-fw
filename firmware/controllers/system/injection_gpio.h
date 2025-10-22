@@ -6,16 +6,13 @@
 
 #include "efi_output.h"
 
-void startSimultaneousInjection(void* = nullptr);
-void endSimultaneousInjectionOnlyTogglePins();
-
 class InjectorOutputPin final : public NamedOutputPin {
 public:
 	InjectorOutputPin();
 	void reset();
 
-	void open(efitick_t nowNt);
-	void close(efitick_t nowNt);
+	void open();
+	void close();
 
 	int8_t getOverlappingCounter() const { return m_overlappingCounter; }
 

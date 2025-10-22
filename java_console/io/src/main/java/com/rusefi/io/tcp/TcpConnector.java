@@ -5,8 +5,8 @@ import com.devexperts.logging.Logging;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 
 import static com.devexperts.logging.Logging.getLogging;
 
@@ -17,8 +17,10 @@ import static com.devexperts.logging.Logging.getLogging;
 public class TcpConnector {
     private static final Logging log = getLogging(TcpConnector.class);
 
-    public final static int DEFAULT_PORT = 29001;
+    public final static int DEFAULT_SIMULATOR_PORT = 29001;
+    public final static int DEFAULT_WIFI_PORT = 29000;
     public static final String LOCALHOST = "localhost";
+    public static final String DEFAULT_WIFI_HOST = "192.168.10.1";
 
     public static boolean isTcpPort(String port) {
         try {
@@ -29,26 +31,6 @@ public class TcpConnector {
         }
     }
 
-    /*
-        public static String doUnpackConfirmation(String message) {
-            String confirmation = message.substring(CommandQueue.CONFIRMATION_PREFIX.length());
-            int index = confirmation.indexOf(":");
-            if (index < 0) {
-                return null;
-            }
-            String number = confirmation.substring(index + 1);
-            int length;
-            try {
-                length = Integer.parseInt(number);
-            } catch (NumberFormatException e) {
-                return null;
-            }
-            if (length != index) {
-                return null;
-            }
-            return confirmation.substring(0, length);
-        }
-        */
     public static class InvalidTcpPort extends IOException {
     }
 
@@ -64,22 +46,52 @@ public class TcpConnector {
 
     public static String getHostname(String port) {
         String[] portParts = port.split(":");
-        return (portParts.length == 1 ? LOCALHOST : portParts[0].length() > 0 ? portParts[0] : LOCALHOST);
+        return (portParts.length == 1 ? LOCALHOST : !portParts[0].isEmpty() ? portParts[0] : LOCALHOST);
+    }
+
+    private static String makePortString(String hostname, int port) {
+        return hostname + ":" + port;
     }
 
     public static Collection<String> getAvailablePorts() {
-        return isTcpPortOpened() ? Collections.singletonList("" + DEFAULT_PORT) : Collections.emptyList();
+        Collection<String> ports = new ArrayList<>();
+        final String[] candidates = new String[] {
+                makePortString(DEFAULT_WIFI_HOST, DEFAULT_WIFI_PORT),
+                makePortString(LOCALHOST, DEFAULT_SIMULATOR_PORT)
+        };
+
+        for (String candidate : candidates) {
+            try {
+                if (checkHost(candidate)) {
+                    ports.add(candidate);
+                }
+            } catch (InvalidTcpPort e) {
+            }
+        }
+
+        return ports;
     }
 
-    public static boolean isTcpPortOpened() {
+    private static Boolean checkHost(String hostAndPort) throws InvalidTcpPort {
+        String host = getHostname(hostAndPort);
+        int port = getTcpPort(hostAndPort);
+
         long now = System.currentTimeMillis();
         try {
             Socket s = new Socket();
-            s.connect(new InetSocketAddress(LOCALHOST, DEFAULT_PORT), 500);
+            s.connect(new InetSocketAddress(host, port), 300);
             s.close();
             return true;
         } catch (IOException e) {
-            log.info("Connection refused in getAvailablePorts(): simulator not running in " + (System.currentTimeMillis() - now) + "ms");
+            log.info("checkHost(" + hostAndPort + ") failed in " + (System.currentTimeMillis() - now) + "ms");
+            return false;
+        }
+    }
+
+    public static boolean isSimulatorActive() {
+        try {
+            return checkHost(makePortString(LOCALHOST, DEFAULT_SIMULATOR_PORT));
+        } catch (InvalidTcpPort t) {
             return false;
         }
     }

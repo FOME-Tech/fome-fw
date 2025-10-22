@@ -28,7 +28,7 @@ void resetLuaCanRx() {
 
 void addLuaCanRxFilter(int32_t eid, uint32_t mask, CanBusIndex bus, int callback) {
 	if (filterCount >= maxFilterCount) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Too many Lua CAN RX filters");
+		firmwareError("Too many Lua CAN RX filters");
 	}
 
 	efiPrintf("Added Lua CAN RX filter id 0x%x mask 0x%x with%s custom function", (unsigned int)eid, (unsigned int)mask, (callback == -1 ? "out" : ""));

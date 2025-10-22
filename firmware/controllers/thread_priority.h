@@ -35,7 +35,7 @@
 #define WIFI_THREAD_PRIORITY (NORMALPRIO)
 
 // Less important things
-#define PRIO_MMC (NORMALPRIO - 1)
+#define SD_CARD_LOGGER (NORMALPRIO - 1)
 
 // These can get starved without too much adverse effect
 #define PRIO_AUX_SERIAL NORMALPRIO

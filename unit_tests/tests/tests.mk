@@ -46,7 +46,6 @@ TESTS_SRC_CPP = \
 	tests/lua/test_lua_hooks.cpp \
 	tests/lua/test_lua_Leiderman_Khlystov.cpp \
 	tests/lua/test_can_filter.cpp \
-	tests/lua/test_lua_vin.cpp \
 	tests/util/test_scaled_channel.cpp \
 	tests/util/test_timer.cpp \
 	tests/system/test_periodic_thread_controller.cpp \
@@ -114,3 +113,4 @@ TESTS_SRC_CPP = \
 	tests/actuators/test_tacho.cpp \
 	tests/actuators/test_vvt.cpp \
 	tests/test_obd2.cpp \
+	tests/test_trip_odometer.cpp \

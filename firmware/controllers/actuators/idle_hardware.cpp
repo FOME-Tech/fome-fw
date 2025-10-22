@@ -148,18 +148,16 @@ void initIdleHardware() {
 		 */
 		// todo: even for double-solenoid mode we can probably use same single SimplePWM
 		startSimplePwm(&idleSolenoidOpen, "Idle Valve Open",
-			&engine->scheduler,
 			&enginePins.idleSolenoidPin,
 			engineConfiguration->idle.solenoidFrequency, PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
 
 		if (engineConfiguration->isDoubleSolenoidIdle) {
 			if (!isBrainPinValid(engineConfiguration->secondSolenoidPin)) {
-				firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Second idle pin should be configured for double solenoid mode.");
+				firmwareError("Second idle pin should be configured for double solenoid mode.");
 				return;
 			}
 
 			startSimplePwm(&idleSolenoidClose, "Idle Valve Close",
-				&engine->scheduler,
 				&enginePins.secondIdleSolenoidPin,
 				engineConfiguration->idle.solenoidFrequency, PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
 		}

@@ -19,7 +19,7 @@
 #include "main_trigger_callback.h"
 #include "bench_test.h"
 #include "tunerstudio.h"
-#include "mmc_card.h"
+#include "sd_file_log.h"
 #include "memstreams.h"
 #include <chprintf.h>
 #include "rusefi_lua.h"
@@ -29,16 +29,10 @@
 #define DEFAULT_SIM_RPM 1200
 #define DEFAULT_SNIFFER_THR 2500
 
-extern WaveChart waveChart;
-
-int getRemainingStack(thread_t*) {
-	return 99999;
-}
-
 static void assertString(const char*actual, const char *expected) {
 	if (strcmp(actual, expected) != 0) {
 		printf("assertString FAILED\n");
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "chprintf test: got %s while %s", actual, expected);
+		firmwareError("chprintf test: got %s while %s", actual, expected);
 	}
 }
 
@@ -105,19 +99,23 @@ void rusEfiFunctionalTest(void) {
 	commonInitEngineController();
 
 	initTriggerCentral();
+
 	initTriggerEmulator();
 
 	startStatusThreads();
 
 	startLoggingProcessor();
 
-	initMmcCard();
+#if EFI_FILE_LOGGING
+	initSdCardLogger();
+#endif // EFI_FILE_LOGGING
 
 	runChprintfTest();
 
 	initMainLoop();
 
 	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
+
 	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
 
 	startSerialChannels();
@@ -137,9 +135,16 @@ void rusEfiFunctionalTest(void) {
 	main_loop_started = true;
 }
 
+#if EFI_ENGINE_SNIFFER
+extern WaveChart waveChart;
+#endif // EFI_ENGINE_SNIFFER
+
 void printPendingMessages(void) {
 	updateDevConsoleState();
+
+#if EFI_ENGINE_SNIFFER
 	waveChart.publishIfFull();
+#endif // EFI_ENGINE_SNIFFER
 }
 
 int isSerialOverTcpReady;

@@ -51,17 +51,9 @@
 #include "vr_pwm.h"
 #include "adc_subscription.h"
 
-#if EFI_SENSOR_CHART
-#include "sensor_chart.h"
-#endif /* EFI_SENSOR_CHART */
-
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
-
-#if EFI_LOGIC_ANALYZER
-#include "logic_analyzer.h"
-#endif /* EFI_LOGIC_ANALYZER */
 
 #if ! EFI_UNIT_TEST
 #include "init.h"
@@ -100,8 +92,6 @@ void doPeriodicSlowCallback() {
 	ScopePerf perf(PE::EnginePeriodicSlowCallback);
 
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6661, getCurrentRemainingStack() > 64, "lowStckOnEv");
-
 	slowStartStopButtonCallback();
 
 	engine->rpmCalculator.onSlowCallback();
@@ -415,10 +405,6 @@ void commonInitEngineController() {
 	engine->injectionEvents.addFuelEvents();
 #endif // EFI_ENGINE_CONTROL
 
-#if EFI_SENSOR_CHART
-	initSensorChart();
-#endif /* EFI_SENSOR_CHART */
-
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	initSettings();
 
@@ -495,7 +481,7 @@ void commonInitEngineController() {
 // Returns false if there's an obvious problem with the loaded configuration
 bool validateConfig() {
 	if (engineConfiguration->cylindersCount > MAX_CYLINDER_COUNT) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid cylinder count: %d", engineConfiguration->cylindersCount);
+		firmwareError("Invalid cylinder count: %d", engineConfiguration->cylindersCount);
 		return false;
 	}
 
@@ -520,8 +506,10 @@ bool validateConfig() {
 
 		ensureArrayIsAscendingOrDefault("TPS TPS RPM correction", config->tpsTspCorrValuesBins);
 
-		ensureArrayIsAscendingOrDefault("Staging Load", config->injectorStagingLoadBins);
-		ensureArrayIsAscendingOrDefault("Staging RPM", config->injectorStagingRpmBins);
+		if (engineConfiguration->enableStagedInjection) {
+			ensureArrayIsAscendingOrDefault("Staging Load", config->injectorStagingLoadBins);
+			ensureArrayIsAscendingOrDefault("Staging RPM", config->injectorStagingRpmBins);
+		}
 	}
 
 	// Ignition
@@ -547,9 +535,11 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Script Curve 5", config->scriptCurve5Bins);
 	ensureArrayIsAscendingOrDefault("Script Curve 6", config->scriptCurve6Bins);
 
-// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
+	// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
 
-	ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+	if (isAdcChannelValid(engineConfiguration->mafAdcChannel)) {
+		ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+	}
 
 	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {
 		ensureArrayIsAscending("Fuel level curve", config->fuelLevelBins);
@@ -563,10 +553,19 @@ bool validateConfig() {
 	// Idle tables
 	ensureArrayIsAscending("Idle target RPM", config->cltIdleRpmBins);
 	ensureArrayIsAscending("Idle warmup mult", config->cltIdleCorrBins);
-	ensureArrayIsAscendingOrDefault("Idle coasting RPM", config->iacCoastingRpmBins);
-	ensureArrayIsAscendingOrDefault("Idle VE RPM", config->idleVeRpmBins);
-	ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
-	ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
+
+	if (engineConfiguration->useIacTableForCoasting) {
+		ensureArrayIsAscendingOrDefault("Idle coasting RPM", config->iacCoastingRpmBins);
+	}
+
+	if (engineConfiguration->useSeparateVeForIdle) {
+		ensureArrayIsAscendingOrDefault("Idle VE RPM", config->idleVeRpmBins);
+		ensureArrayIsAscendingOrDefault("Idle VE Load", config->idleVeLoadBins);
+	}
+
+	if (engineConfiguration->useSeparateAdvanceForIdle) {
+		ensureArrayIsAscendingOrDefault("Idle timing", config->idleAdvanceBins);
+	}
 
 	for (size_t index = 0; index < efi::size(config->vrThreshold); index++) {
 		auto& cfg = config->vrThreshold[index];
@@ -579,16 +578,20 @@ bool validateConfig() {
 
 #if EFI_BOOST_CONTROL
 	// Boost
-	ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
-	ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+	if (engineConfiguration->isBoostControlEnabled) {
+		ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
+		ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+	}
 #endif // EFI_BOOST_CONTROL
 
 #if EFI_ANTILAG_SYSTEM
 	// ALS
-	ensureArrayIsAscendingOrDefault("ign ALS TPS", config->alsIgnRetardLoadBins);
-	ensureArrayIsAscendingOrDefault("ign ALS RPM", config->alsIgnRetardrpmBins);
-	ensureArrayIsAscendingOrDefault("fuel ALS TPS", config->alsFuelAdjustmentLoadBins);
-	ensureArrayIsAscendingOrDefault("fuel ALS RPM", config->alsFuelAdjustmentrpmBins);
+	if (engineConfiguration->antiLagEnabled) {
+		ensureArrayIsAscendingOrDefault("ign ALS TPS", config->alsIgnRetardLoadBins);
+		ensureArrayIsAscendingOrDefault("ign ALS RPM", config->alsIgnRetardrpmBins);
+		ensureArrayIsAscendingOrDefault("fuel ALS TPS", config->alsFuelAdjustmentLoadBins);
+		ensureArrayIsAscendingOrDefault("fuel ALS RPM", config->alsFuelAdjustmentrpmBins);
+	}
 #endif // EFI_ANTILAG_SYSTEM
 
 	// ETB
@@ -620,6 +623,10 @@ bool validateConfig() {
 		ensureArrayIsAscending("Oil pressure protection", config->minimumOilPressureBins);
 	}
 
+	if (engineConfiguration->injectorNonlinearMode == INJ_SmallPulseAdder) {
+		ensureArrayIsAscending("Small PW adder", config->smallPulseAdderBins);
+	}
+
 	return true;
 }
 
@@ -630,12 +637,6 @@ void initEngineController() {
 
 	commonInitEngineController();
 
-#if EFI_LOGIC_ANALYZER
-	if (engineConfiguration->isWaveAnalyzerEnabled) {
-		initWaveAnalyzer();
-	}
-#endif /* EFI_LOGIC_ANALYZER */
-
 	if (hasFirmwareError()) {
 		return;
 	}
@@ -644,30 +645,9 @@ void initEngineController() {
 }
 
 /**
- * these two variables are here only to let us know how much RAM is available, also these
- * help to notice when RAM usage goes up - if a code change adds to RAM usage these variables would fail
- * linking process which is the way to raise the alarm
- *
- * You get "cannot move location counter backwards" linker error when you run out of RAM. When you run out of RAM you shall reduce these
- * UNUSED_SIZE constants.
- */
-#ifndef RAM_UNUSED_SIZE
-#define RAM_UNUSED_SIZE 30000
-#endif
-#ifndef CCM_UNUSED_SIZE
-#define CCM_UNUSED_SIZE 512
-#endif
-static char UNUSED_RAM_SIZE[RAM_UNUSED_SIZE];
-static char UNUSED_CCM_SIZE[CCM_UNUSED_SIZE] CCM_OPTIONAL;
-
-/**
  * See also GIT_HASH
  */
 int getRusEfiVersion() {
-	if (UNUSED_RAM_SIZE[0] != 0)
-		return 123; // this is here to make the compiler happy about the unused array
-	if (UNUSED_CCM_SIZE[0] * 0 != 0)
-		return 3211; // this is here to make the compiler happy about the unused array
 	return VCS_DATE;
 }
 #endif /* EFI_UNIT_TEST */

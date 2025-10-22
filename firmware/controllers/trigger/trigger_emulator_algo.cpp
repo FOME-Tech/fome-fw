@@ -147,7 +147,6 @@ static void startSimulatedTriggerSignal() {
 	TriggerWaveform *s = &engine->triggerCentral.triggerShape;
 	setTriggerEmulatorRPM(engineConfiguration->triggerSimulatorRpm);
 	triggerSignal.weComplexInit(
-			&engine->scheduler,
 			&s->wave,
 			updateTriggerWaveformIfNeeded, (pwm_gen_callback*)emulatorApplyPinState);
 
@@ -187,10 +186,7 @@ void onConfigurationChangeRpmEmulatorCallback(engine_configuration_s *previousCo
 }
 
 void initTriggerEmulator() {
-	efiPrintf("Emulating %s", getEngine_type_e(engineConfiguration->engineType));
-
 	startTriggerEmulatorPins();
-
 	initTriggerEmulatorLogic();
 }
 

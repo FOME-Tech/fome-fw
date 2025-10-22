@@ -1,5 +1,18 @@
 #include "global.h"
 #include "rusefi_enums.h"
+const char *getDtcSeverity(DtcSeverity value){
+switch(value) {
+case DtcSeverity::Ignore:
+  return "Ignore";
+case DtcSeverity::LimpLevel1:
+  return "LimpLevel1";
+case DtcSeverity::LimpLevel2:
+  return "LimpLevel2";
+case DtcSeverity::WarningOnly:
+  return "WarningOnly";
+  }
+ return NULL;
+}
 const char *getGearControllerMode(GearControllerMode value){
 switch(value) {
 case GearControllerMode::ButtonShift:
@@ -30,6 +43,8 @@ case INJ_None:
   return "INJ_None";
 case INJ_PolynomialAdder:
   return "INJ_PolynomialAdder";
+case INJ_SmallPulseAdder:
+  return "INJ_SmallPulseAdder";
   }
  return NULL;
 }
@@ -103,6 +118,17 @@ case TsCalMode::Tps2SecondaryMax:
   return "Tps2SecondaryMax";
 case TsCalMode::Tps2SecondaryMin:
   return "Tps2SecondaryMin";
+  }
+ return NULL;
+}
+const char *getWidebandMode(WidebandMode value){
+switch(value) {
+case WidebandMode::AemXSeries:
+  return "AemXSeries";
+case WidebandMode::Analog:
+  return "Analog";
+case WidebandMode::FOMEInternal:
+  return "FOMEInternal";
   }
  return NULL;
 }
@@ -379,6 +405,10 @@ case GPPWM_LuaGauge2:
   return "GPPWM_LuaGauge2";
 case GPPWM_Map:
   return "GPPWM_Map";
+case GPPWM_OilPressure:
+  return "GPPWM_OilPressure";
+case GPPWM_OilTemp:
+  return "GPPWM_OilTemp";
 case GPPWM_Rpm:
   return "GPPWM_Rpm";
 case GPPWM_Tps:
@@ -562,19 +592,6 @@ case OM_OPENDRAIN:
   return "OM_OPENDRAIN";
 case OM_OPENDRAIN_INVERTED:
   return "OM_OPENDRAIN_INVERTED";
-  }
- return NULL;
-}
-const char *getSensor_chart_e(sensor_chart_e value){
-switch(value) {
-case SC_DETAILED_RPM:
-  return "SC_DETAILED_RPM";
-case SC_OFF:
-  return "SC_OFF";
-case SC_RPM_ACCEL:
-  return "SC_RPM_ACCEL";
-case SC_TRIGGER:
-  return "SC_TRIGGER";
   }
  return NULL;
 }

@@ -43,7 +43,7 @@ static void setupVbatt() {
 	// pin input +12 from Main Relay
 	engineConfiguration->vbattAdcChannel = EFI_ADC_5; // 4T
 
-	engineConfiguration->adcVcc = 3.29f;
+	engineConfiguration->adcVcc = 3.3f;
 }
 
 static void setupDefaultSensorInputs() {
@@ -74,6 +74,11 @@ void setBoardConfigOverrides() {
     setDefaultHellenAtPullUps();
 
 	setHellenCan();
+
+	engineConfiguration->etb_use_two_wires = true;
+	engineConfiguration->etbIo[0].directionPin1 = Gpio::C7;	// PWM 3
+	engineConfiguration->etbIo[0].directionPin2 = Gpio::C8;	// PWM 4
+	engineConfiguration->etbIo[0].controlPin = Gpio::C6;		// PWM 2
 }
 
 /**

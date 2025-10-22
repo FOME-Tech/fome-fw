@@ -176,10 +176,10 @@ public class ConfigFieldParserTest {
         JavaFieldsConsumer javaFieldsConsumer = new TestJavaFieldsConsumer(state);
         state.readBufferedReader(test, (javaFieldsConsumer));
 
-        assertEquals("\tpublic static final Field PIN = Field.create(\"PIN\", 0, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                "\tpublic static final Field PAD = Field.create(\"PAD\", 1, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                "\tpublic static final Field RPMBINS = Field.create(\"RPMBINS\", 4, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                "\tpublic static final Field VALUES = Field.create(\"VALUES\", 10, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n", javaFieldsConsumer.getContent());
+        assertEquals("\tpublic static final Field PIN = Field.create(\"PIN\", 0, FieldType.INT8).setBaseOffset(0);\n" +
+                "\tpublic static final Field PAD = Field.create(\"PAD\", 1, FieldType.INT8).setBaseOffset(0);\n" +
+                "\tpublic static final Field RPMBINS = Field.create(\"RPMBINS\", 4, FieldType.INT8).setBaseOffset(0);\n" +
+                "\tpublic static final Field VALUES = Field.create(\"VALUES\", 10, FieldType.INT8).setBaseOffset(0);\n", javaFieldsConsumer.getContent());
     }
 
     @Test
@@ -252,9 +252,9 @@ public class ConfigFieldParserTest {
         JavaFieldsConsumer javaFieldsConsumer = new TestJavaFieldsConsumer(state);
         state.readBufferedReader(test, javaFieldsConsumer);
 
-        assertEquals("\tpublic static final Field VAR = Field.create(\"VAR\", 0, 120, FieldType.STRING).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field PERIODMS = Field.create(\"PERIODMS\", 120, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field ALIGNMENTFILL_AT_122 = Field.create(\"ALIGNMENTFILL_AT_122\", 122, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n",
+        assertEquals("\tpublic static final Field VAR = Field.create(\"VAR\", 0, FieldType.STRING).setBaseOffset(0);\n" +
+                        "\tpublic static final Field PERIODMS = Field.create(\"PERIODMS\", 120, FieldType.INT16).setBaseOffset(0);\n" +
+                        "\tpublic static final Field ALIGNMENTFILL_AT_122 = Field.create(\"ALIGNMENTFILL_AT_122\", 122, FieldType.INT8).setBaseOffset(0);\n",
                 javaFieldsConsumer.getContent());
     }
 
@@ -291,56 +291,6 @@ public class ConfigFieldParserTest {
     }
 
     @Test
-    public void testFsioVisible() {
-        {
-            ReaderStateImpl state = new ReaderStateImpl();
-            ConfigFieldImpl cf = ConfigFieldImpl.parse(state, "int fsio_visible field");
-            assertEquals(cf.getType(), "int");
-            assertTrue(cf.isFsioVisible());
-            assertEquals("Name", cf.getName(), "field");
-        }
-
-        {
-            ReaderStateImpl state = new ReaderStateImpl();
-            String test = "struct pid_s\n" +
-                    "\tint16_t fsio_visible offset;Linear addition to PID logic;\"\",      1,      0,       -1000, 1000,      0\n" +
-                    "\tint16_t periodMs;PID dTime;\"ms\",      1,      0,       0, 3000,      0\n" +
-                    "\tint16_t fsio_visible minValue;Output min value;\"\",        1,     0,  -30000,    30000.0,  0\n" +
-                    "end_struct\n" +
-                    "struct_no_prefix engine_configuration_s\n" +
-                    "\tpid_s alternatorControl;\n" +
-                    "#define ETB_COUNT 2\n" +
-                    "\tpid_s[ETB_COUNT iterate] etb;\n" +
-                    "end_struct\n" +
-                    "" +
-                    "";
-
-            JavaFieldsConsumer javaFieldsConsumer = new TestJavaFieldsConsumer(state);
-
-            state.readBufferedReader(test, (javaFieldsConsumer));
-
-
-            assertEquals("\tpublic static final Field OFFSET = Field.create(\"OFFSET\", 0, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field PERIODMS = Field.create(\"PERIODMS\", 2, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field MINVALUE = Field.create(\"MINVALUE\", 4, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ALIGNMENTFILL_AT_6 = Field.create(\"ALIGNMENTFILL_AT_6\", 6, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ALTERNATORCONTROL_OFFSET = Field.create(\"ALTERNATORCONTROL_OFFSET\", 0, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ALTERNATORCONTROL_PERIODMS = Field.create(\"ALTERNATORCONTROL_PERIODMS\", 2, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ALTERNATORCONTROL_MINVALUE = Field.create(\"ALTERNATORCONTROL_MINVALUE\", 4, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ALTERNATORCONTROL_ALIGNMENTFILL_AT_6 = Field.create(\"ALTERNATORCONTROL_ALIGNMENTFILL_AT_6\", 6, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB1_OFFSET = Field.create(\"ETB1_OFFSET\", 8, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB1_PERIODMS = Field.create(\"ETB1_PERIODMS\", 10, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB1_MINVALUE = Field.create(\"ETB1_MINVALUE\", 12, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB1_ALIGNMENTFILL_AT_6 = Field.create(\"ETB1_ALIGNMENTFILL_AT_6\", 14, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB2_OFFSET = Field.create(\"ETB2_OFFSET\", 16, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB2_PERIODMS = Field.create(\"ETB2_PERIODMS\", 18, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB2_MINVALUE = Field.create(\"ETB2_MINVALUE\", 20, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                            "\tpublic static final Field ETB2_ALIGNMENTFILL_AT_6 = Field.create(\"ETB2_ALIGNMENTFILL_AT_6\", 22, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n",
-                    javaFieldsConsumer.getContent());
-        }
-    }
-
-    @Test
     public void test2byteOffset() {
         String test = "struct_no_prefix pid_s\n" +
                 "\tint8_t byte1\n" +
@@ -355,12 +305,12 @@ public class ConfigFieldParserTest {
         ReaderStateImpl state = new ReaderStateImpl();
         JavaFieldsConsumer javaFieldsConsumer = new TestJavaFieldsConsumer(state);
         state.readBufferedReader(test, consumer, javaFieldsConsumer);
-        assertEquals("\tpublic static final Field BYTE1 = Field.create(\"BYTE1\", 0, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field ALIGNMENTFILL_AT_1 = Field.create(\"ALIGNMENTFILL_AT_1\", 1, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field SHORT = Field.create(\"SHORT\", 2, FieldType.INT16).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field INT2 = Field.create(\"INT2\", 4, FieldType.INT).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field BYTE2 = Field.create(\"BYTE2\", 8, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
-                        "\tpublic static final Field ALIGNMENTFILL_AT_9 = Field.create(\"ALIGNMENTFILL_AT_9\", 9, FieldType.INT8).setScale(1.0).setBaseOffset(0);\n" +
+        assertEquals("\tpublic static final Field BYTE1 = Field.create(\"BYTE1\", 0, FieldType.INT8).setBaseOffset(0);\n" +
+                        "\tpublic static final Field ALIGNMENTFILL_AT_1 = Field.create(\"ALIGNMENTFILL_AT_1\", 1, FieldType.INT8).setBaseOffset(0);\n" +
+                        "\tpublic static final Field SHORT = Field.create(\"SHORT\", 2, FieldType.INT16).setBaseOffset(0);\n" +
+                        "\tpublic static final Field INT2 = Field.create(\"INT2\", 4, FieldType.INT).setBaseOffset(0);\n" +
+                        "\tpublic static final Field BYTE2 = Field.create(\"BYTE2\", 8, FieldType.INT8).setBaseOffset(0);\n" +
+                        "\tpublic static final Field ALIGNMENTFILL_AT_9 = Field.create(\"ALIGNMENTFILL_AT_9\", 9, FieldType.INT8).setBaseOffset(0);\n" +
                         "\tpublic static final Field PERIODMS = Field.create(\"PERIODMS\", 12, FieldType.BIT, 0).setBaseOffset(0);\n",
                 javaFieldsConsumer.getContent());
         assertEquals("struct pid_s {\n" +
@@ -456,7 +406,7 @@ public class ConfigFieldParserTest {
         ReaderStateImpl state = new ReaderStateImpl();
         JavaFieldsConsumer javaFieldsConsumer = new TestJavaFieldsConsumer(state);
         state.readBufferedReader(test, consumer, javaFieldsConsumer);
-        assertEquals("\tpublic static final Field FIELD1 = Field.create(\"FIELD1\", 0, FieldType.INT).setScale(0.01).setBaseOffset(0);\n",
+        assertEquals("\tpublic static final Field FIELD1 = Field.create(\"FIELD1\", 0, FieldType.INT).setBaseOffset(0);\n",
                 javaFieldsConsumer.getContent());
         assertEquals("struct pid_s {\n" +
                 "\t// ratio\n" +

@@ -165,13 +165,13 @@ static LuaHandle setupLuaState(lua_Alloc alloc) {
 	LuaHandle ls = lua_newstate(alloc, NULL);
 
 	if (!ls) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Failed to start Lua interpreter");
+		firmwareError("Failed to start Lua interpreter");
 
 		return nullptr;
 	}
 
 	lua_atpanic(ls, [](lua_State* l) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Lua panic: %s", lua_tostring(l, -1));
+		firmwareError("Lua panic: %s", lua_tostring(l, -1));
 
 		// hang the lua thread
 		while (true) ;
@@ -197,7 +197,7 @@ static LuaHandle setupLuaState(lua_Alloc alloc) {
 }
 
 static bool loadScript(LuaHandle& ls, const char* scriptStr) {
-	efiPrintf(TAG "loading script length: %lu...", efiStrlen(scriptStr));
+	efiPrintf(TAG "loading script length: %u...", std::strlen(scriptStr));
 
 	if (0 != luaL_dostring(ls, scriptStr)) {
 		efiPrintf(TAG "ERROR loading script: %s", lua_tostring(ls, -1));
@@ -318,7 +318,8 @@ static bool runOneLua(lua_Alloc alloc, const char* script) {
 	}
 
 	while (!needsReset && !chThdShouldTerminateX()) {
-		efitick_t beforeNt = getTimeNowNt();
+		Timer t;
+		t.reset();
 #if EFI_CAN_SUPPORT
 		// First, process any pending can RX messages
 		doLuaCanRx(ls);
@@ -329,9 +330,10 @@ static bool runOneLua(lua_Alloc alloc, const char* script) {
 
 		invokeTick(ls);
 
-		chThdSleep(TIME_US2I(luaTickPeriodUs));
-		engine->outputChannels.luaLastCycleDuration = (getTimeNowNt() - beforeNt);
+		engine->outputChannels.luaLastCycleDuration = t.getElapsedUs();
 		engine->outputChannels.luaInvocationCounter++;
+
+		chThdSleep(TIME_US2I(luaTickPeriodUs));
 	}
 
 	resetLua();

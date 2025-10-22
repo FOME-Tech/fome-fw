@@ -127,19 +127,23 @@ void EngineState::periodicFastCallback() {
 	auto tps = Sensor::get(SensorType::Tps1);
 	updateTChargeK(rpm, tps.value_or(0));
 
-	float untrimmedInjectionMass = getInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
+	float cycleFuelMass = getCycleInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
 	auto clResult = fuelClosedLoopCorrection();
 
-	injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
-	float stage2InjectionMass = untrimmedInjectionMass * injectionStage2Fraction;
-	float stage1InjectionMass = untrimmedInjectionMass - stage2InjectionMass;
+	{
+		float injectionFuelMass = cycleFuelMass * getInjectionModeDurationMultiplier(getCurrentInjectionMode());
+		
+		injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
+		float stage2InjectionMass = injectionFuelMass * injectionStage2Fraction;
+		float stage1InjectionMass = injectionFuelMass - stage2InjectionMass;
 
-	// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
-	engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
-	engine->engineState.injectionDurationStage2 =
-		engineConfiguration->enableStagedInjection
-		? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
-		: 0;
+		// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
+		engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
+		engine->engineState.injectionDurationStage2 =
+			engineConfiguration->enableStagedInjection
+			? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
+			: 0;
+	}
 
 	float fuelLoad = getFuelingLoad();
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);
@@ -164,7 +168,7 @@ void EngineState::periodicFastCallback() {
 		auto cylinderTrim = getCylinderFuelTrim(i, rpm, fuelLoad);
 
 		// Apply both per-bank and per-cylinder trims
-		engine->cylinders[i].setInjectionMass(untrimmedInjectionMass * bankTrim * cylinderTrim);
+		engine->cylinders[i].setInjectionMass(cycleFuelMass * bankTrim * cylinderTrim);
 
 		engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad));
 	}
@@ -200,6 +204,20 @@ void EngineState::updateTChargeK(float rpm, float tps) {
 #endif
 }
 
+void EngineState::updateSplitInjection() {
+	if (!requestSplitInjection) {
+		doSplitInjection = false;
+		return;
+	}
+
+	// toggle every 2 seconds
+	if (splitInjectionTimer.hasElapsedSec(2)) {
+		splitInjectionTimer.reset();
+
+		doSplitInjection ^= true;
+	}
+}
+
 void TriggerConfiguration::update() {
 	VerboseTriggerSynchDetails = isVerboseTriggerSynchDetails();
 	TriggerType = getType();
@@ -213,33 +231,71 @@ bool PrimaryTriggerConfiguration::isVerboseTriggerSynchDetails() const {
 	return engineConfiguration->verboseTriggerSynchDetails;
 }
 
+vvt_mode_e VvtTriggerConfiguration::getVvtMode() const {
+	return engineConfiguration->vvtMode[m_index];
+}
+
+bool VvtTriggerConfiguration::needsTriggerDecoder() const {
+	auto mode = getVvtMode();
+
+	return mode != VVT_INACTIVE
+			&& mode != VVT_TOYOTA_3_TOOTH
+			&& mode != VVT_HONDA_K_INTAKE
+			&& mode != VVT_MAP_V_TWIN
+			&& mode != VVT_SINGLE_TOOTH;
+}
+
+// VVT decoding uses "normal" trigger shapes for decoding but is configured separately.
+// This maps from vvt_mode_e -> trigger_type_e (for supported shapes)
+static trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
+	switch (vvtMode) {
+	case VVT_INACTIVE:
+		return trigger_type_e::TT_ONE;
+	case VVT_MIATA_NB:
+		return trigger_type_e::TT_VVT_MIATA_NB;
+	case VVT_MIATA_NA:
+		return trigger_type_e::TT_VVT_MIATA_NA;
+	case VVT_BOSCH_QUICK_START:
+		return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
+	case VVT_HONDA_K_EXHAUST:
+		return trigger_type_e::TT_HONDA_K_CAM_4_1;
+	case VVT_FORD_ST170:
+		return trigger_type_e::TT_FORD_ST170;
+	case VVT_BARRA_3_PLUS_1:
+		return trigger_type_e::TT_VVT_BARRA_3_PLUS_1;
+	case VVT_MAZDA_SKYACTIV:
+		return trigger_type_e::TT_VVT_MAZDA_SKYACTIV;
+	case VVT_MAZDA_L:
+		return trigger_type_e::TT_VVT_MAZDA_L;
+	case VVT_NISSAN_VQ:
+		return trigger_type_e::TT_VVT_NISSAN_VQ35;
+	case VVT_TOYOTA_4_1:
+		return trigger_type_e::TT_VVT_TOYOTA_4_1;
+	case VVT_MITSUBISHI_3A92:
+		return trigger_type_e::TT_VVT_MITSUBISHI_3A92;
+	case VVT_MITSUBISHI_6G75:
+	case VVT_NISSAN_MR:
+		return trigger_type_e::TT_NISSAN_MR18_CAM_VVT;
+	case VVT_MITSUBISHI_4G9x:
+		return trigger_type_e::TT_MITSU_4G9x_CAM;
+	case VVT_MITSUBISHI_4G63:
+		return trigger_type_e::TT_MITSU_4G63_CAM;
+	default:
+		firmwareError("getVvtTriggerType for %s", getVvt_mode_e(vvtMode));
+		return trigger_type_e::TT_ONE; // we have to return something for the sake of -Werror=return-type
+	}
+}
+
+
 trigger_config_s VvtTriggerConfiguration::getType() const {
+	if (!needsTriggerDecoder()) {
+		return { trigger_type_e::TT_UNUSED, 0, 0 };
+	}
+
 	// Convert from VVT type to trigger_config_s
-	return { getVvtTriggerType(engineConfiguration->vvtMode[m_index]), 0, 0 };
+	return { getVvtTriggerType(getVvtMode()), 0, 0 };
 }
 
 bool VvtTriggerConfiguration::isVerboseTriggerSynchDetails() const {
 	return engineConfiguration->verboseVVTDecoding;
-}
-
-bool isLockedFromUser() {
-	int lock = engineConfiguration->tuneHidingKey;
-	bool isLocked = lock > 0;
-	if (isLocked) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "password protected");
-	}
-	return isLocked;
-}
-
-void unlockEcu(int password) {
-	if (password != engineConfiguration->tuneHidingKey) {
-		efiPrintf("Nope rebooting...");
-#if EFI_PROD_CODE
-		scheduleReboot();
-#endif // EFI_PROD_CODE
-	} else {
-		efiPrintf("Unlocked! Burning...");
-		engineConfiguration->tuneHidingKey = 0;
-		requestBurn();
-	}
 }

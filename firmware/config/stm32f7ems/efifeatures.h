@@ -14,9 +14,6 @@
 
 #pragma once
 
-#undef EFI_MAX_31855
-#define EFI_MAX_31855 FALSE
-
 #undef EFI_MC33816
 #define EFI_MC33816 FALSE
 
@@ -43,4 +40,4 @@
 #define EFI_FLASH_WRITE_THREAD TRUE
 
 #undef LUA_USER_HEAP
-#define LUA_USER_HEAP 100000
+#define LUA_USER_HEAP 200000

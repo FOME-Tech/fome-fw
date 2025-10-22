@@ -31,7 +31,7 @@ public class SdCardFieldsConsumer implements ConfigurationConsumer {
     }
 
     @Override
-    public void handleEndStruct(ReaderState state, ConfigStructure structure) throws IOException {
+    public void handleEndStruct(ReaderState state, ConfigStructure structure) {
         content.handleEndStruct(state, structure);
     }
 

@@ -26,3 +26,8 @@ void initSensors();
 bool hasAcToggle();
 bool getAcToggle();
 
+bool hasAcPressure();
+bool getAcPressure();
+
+bool hasOilPressureSwitch();
+bool getOilSwitchState();

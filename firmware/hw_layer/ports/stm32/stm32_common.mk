@@ -16,7 +16,8 @@ RUSEFIASM = \
 
 HW_INC += \
 	$(HW_STM32_PORT_DIR) \
-	$(HW_STM32_PORT_DIR)/serial_over_usb
+	$(HW_STM32_PORT_DIR)/serial_over_usb \
+	$(HW_STM32_PORT_DIR)/cfg
 
 ifeq ($(EFI_HAS_EXT_SDRAM), yes)
 	USE_OPT += -Wl,--defsym=STM32_HAS_SDRAM=1

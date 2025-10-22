@@ -25,7 +25,11 @@ struct AdcSubscriptionEntry {
 	bool HasUpdated = false;
 };
 
-static AdcSubscriptionEntry s_entries[16];
+#ifndef ADC_SUBSCRIPTION_SLOTS
+#define ADC_SUBSCRIPTION_SLOTS 16
+#endif
+
+static AdcSubscriptionEntry s_entries[ADC_SUBSCRIPTION_SLOTS];
 
 static AdcSubscriptionEntry* findEntry(FunctionalSensor* sensor) {
 	for (size_t i = 0; i < efi::size(s_entries); i++) {

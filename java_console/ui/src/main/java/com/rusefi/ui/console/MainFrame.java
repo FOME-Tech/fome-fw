@@ -5,7 +5,6 @@ import com.rusefi.*;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.*;
-import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.core.preferences.storage.Node;
 import com.rusefi.ui.FrameHelper;
 import com.rusefi.ui.util.UiUtils;
@@ -88,15 +87,6 @@ public class MainFrame {
             @Override
             public void onConnectionEstablished() {
                 ConnectionWatchdog.init(linkManager);
-
-                SwingUtilities.invokeLater(() -> {
-                    /**
-                     * todo: we are definitely not handling reconnect properly, no code to shut down old instance of server
-                     * before launching new instance
-                     */
-                    new BinaryProtocolServer().start(linkManager);
-                });
-
             }
         });
 

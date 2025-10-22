@@ -1,8 +1,10 @@
 #include "pch.h"
-#include "Lps25Sensor.h"
+#include "stored_value_sensor.h"
+#include "lps25.h"
 
 static Lps25 device;
-static Lps25Sensor sensor(device);
+static StoredValueSensor baroSensor(SensorType::BarometricPressure, MS2NT(1000));
+static StoredValueSensor tempSensor(SensorType::EcuInternalTemperature, MS2NT(1000));
 
 void initBaro() {
 	// If there's already an external (analog) baro sensor configured,
@@ -12,14 +14,21 @@ void initBaro() {
 	}
 
 	if (device.init(engineConfiguration->lps25BaroSensorScl, engineConfiguration->lps25BaroSensorSda)) {
-		sensor.Register();
+		baroSensor.Register();
+		tempSensor.Register();
 	}
 }
 
 void baroLps25Update() {
 #if EFI_PROD_CODE
 	if (device.hasInit()) {
-		sensor.update();
+		if (auto baro = device.readPressureKpa()) {
+			baroSensor.setValidValue(baro.Value, getTimeNowNt());
+		}
+
+		if (auto temp = device.readTemperatureC()) {
+			tempSensor.setValidValue(temp.Value, getTimeNowNt());
+		}
 	}
 #endif // EFI_PROD_CODE
 }

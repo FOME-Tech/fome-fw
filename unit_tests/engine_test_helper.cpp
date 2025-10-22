@@ -185,13 +185,13 @@ void EngineTestHelper::smartFireFall(float delayMs) {
  */
 void EngineTestHelper::firePrimaryTriggerRise() {
 	efitick_t nowNt = getTimeNowNt();
-	LogTriggerTooth(TriggerEvent::PrimaryRising, nowNt);
+	LogPrimaryTriggerTooth(nowNt, true);
 	handleShaftSignal(0, true, nowNt);
 }
 
 void EngineTestHelper::firePrimaryTriggerFall() {
 	efitick_t nowNt = getTimeNowNt();
-	LogTriggerTooth(TriggerEvent::PrimaryFalling, nowNt);
+	LogPrimaryTriggerTooth(nowNt, true);
 	handleShaftSignal(0, false, nowNt);
 }
 
@@ -279,14 +279,12 @@ void EngineTestHelper::fireTriggerEvents(int count) {
 	fireTriggerEvents2(count, 5); // 5ms
 }
 
-void EngineTestHelper::assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, long injectorIndex) {
-	InjectionEvent *event = &engine.injectionEvents.elements[injectorIndex];
-	assertEvent(msg, eventIndex, (void*)turnInjectionPinHigh, momentX, event);
+void EngineTestHelper::assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
+	assertEvent(msg, eventIndex, (void*)startInjection, momentX, injectorIndex);
 }
 
-void EngineTestHelper::assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, long injectorIndex) {
-	InjectionEvent *event = &engine.injectionEvents.elements[injectorIndex];
-	assertEvent(msg, eventIndex, (void*)turnInjectionPinLow, momentX, event);
+void EngineTestHelper::assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
+	assertEvent(msg, eventIndex, (void*)endInjection, momentX, injectorIndex);
 }
 
 scheduling_s * EngineTestHelper::assertEvent5(const char *msg, int index, void *callback, efitimeus_t expectedTimestamp) {
@@ -309,7 +307,7 @@ const AngleBasedEvent * EngineTestHelper::assertTriggerEvent(const char *msg,
 		EXPECT_NEAR_M4((void*)event->action.getCallback() == (void*) callback, 1) << msg << " callback up/down";
 	}
 
-	EXPECT_NEAR_M4(enginePhase, event->enginePhase) << msg << " angle";
+	EXPECT_NEAR_M4(enginePhase, event->eventPhase.angle) << msg << " angle";
 	return event;
 }
 
@@ -318,14 +316,12 @@ scheduling_s * EngineTestHelper::assertScheduling(const char *msg, int index, sc
 	return actual;
 }
 
-void EngineTestHelper::assertEvent(const char *msg, int index, void *callback, efitimeus_t momentX, InjectionEvent *expectedEvent) {
+void EngineTestHelper::assertEvent(const char *msg, int index, void *callback, efitimeus_t momentX, int injectorIndex) {
 	scheduling_s *event = assertEvent5(msg, index, callback, momentX);
 
-	InjectionEvent *actualEvent = (InjectionEvent *)event->action.getArgument();
-
-	ASSERT_EQ(expectedEvent->outputs[0], actualEvent->outputs[0]) << msg;
+	InjectorContext ctx = bit_cast<InjectorContext>(event->action.getArgument());
+	ASSERT_EQ(ctx.eventIndex, injectorIndex);
 }
-
 
 void EngineTestHelper::applyTriggerWaveform() {
 	engine.updateTriggerWaveform();

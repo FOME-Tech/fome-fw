@@ -102,11 +102,6 @@ TEST(trigger, testCamInput) {
 		eth.fireFall(25);
 	}
 
-	// asserting that lack of camshaft signal would be detecting
-	ASSERT_EQ(1,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testCamInput #2";
-	ASSERT_EQ(ObdCode::OBD_Camshaft_Position_Sensor_Circuit_Range_Performance, unitTestWarningCodeState.recentWarnings.get(0).Code) << "@0";
-	unitTestWarningCodeState.recentWarnings.clear();
-
 	for (int i = 0; i < 600; i++) {
 		eth.moveTimeForwardUs(MS2US(10));
 
@@ -181,8 +176,9 @@ TEST(trigger, testNB2CamInput) {
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
 	EXPECT_NEAR(297.5f, engine->triggerCentral.getVVTPosition(0, 0).value_or(0), EPS2D);
-	// actually position based on VVT!
-	ASSERT_EQ(totalRevolutionCountBeforeVvtSync + 3, engine->triggerCentral.triggerState.getCrankSynchronizationCounter());
+	// actually position based on cam!
+	EXPECT_FLOAT_EQ(540, engine->triggerCentral.triggerState.m_phaseAdjustment);
+	EXPECT_TRUE(engine->triggerCentral.triggerState.hasSynchronizedPhase());
 
 	EXPECT_EQ(39, waveChart.getSize());
 }

@@ -1,8 +1,6 @@
 package com.rusefi.io;
 
 import com.rusefi.binaryprotocol.BinaryProtocol;
-import com.rusefi.binaryprotocol.BinaryProtocolState;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author Andrey Belomutskiy
@@ -24,40 +22,11 @@ public interface LinkConnector extends LinkDecoder {
         }
     };
 
-    @NotNull
-    static LinkConnector getDetachedConnector(BinaryProtocolState state) {
-        return new LinkConnector() {
-            @Override
-            public BinaryProtocolState getBinaryProtocolState() {
-                return state;
-            }
-
-            @Override
-            public void connectAndReadConfiguration(ConnectionStateListener listener) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void send(String command, boolean fireEvent) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public BinaryProtocol getBinaryProtocol() {
-                throw new UnsupportedOperationException();
-            }
-        };
-    }
-
     void connectAndReadConfiguration(ConnectionStateListener listener);
 
     void send(String command, boolean fireEvent) throws InterruptedException;
 
     BinaryProtocol getBinaryProtocol();
-
-    default BinaryProtocolState getBinaryProtocolState() {
-        return getBinaryProtocol().getBinaryProtocolState();
-    }
 
     default void stop() {
     }

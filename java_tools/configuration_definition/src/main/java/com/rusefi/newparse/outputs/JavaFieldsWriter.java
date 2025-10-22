@@ -9,7 +9,6 @@ import com.rusefi.newparse.parsing.Struct;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,7 +41,12 @@ public class JavaFieldsWriter {
         for (final Map.Entry<String, Definition> d : sortedDefs.collect(Collectors.toList())) {
             String name = d.getKey();
 
-            if (name.endsWith(VariableRegistry._16_HEX_SUFFIX) || name.endsWith(VariableRegistry._HEX_SUFFIX)) {
+            if (name.endsWith(VariableRegistry._16_HEX_SUFFIX) || name.endsWith(VariableRegistry._HEX_SUFFIX) || name.endsWith(VariableRegistry.ENUM_SUFFIX)) {
+                continue;
+            }
+
+            if (d.getValue().isMultilineString()) {
+                // Skip multiline definitions
                 continue;
             }
 
@@ -120,12 +124,6 @@ public class JavaFieldsWriter {
             ps.print(", FieldType.");
             ps.print(toJavaType(scalar.type.tsType));
 
-            // if (scalar.options.scale != 1) {
-            if (!scalar.type.tsType.equals("F32")) {
-                ps.print(").setScale(");
-                ps.print(scalar.options.scale);
-            }
-
             ps.print(").setBaseOffset(");
 
             // TODO
@@ -137,20 +135,21 @@ public class JavaFieldsWriter {
         public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
             if (arrayDims.length == 0) {
                 visit(scalar, ps, prefixer, offsetAdd, -1);
-            } else if (arrayDims.length == 1) {
-                int elementOffset = offsetAdd;
-
-                for (int i = 0; i < arrayDims[0]; i++) {
-                    visit(scalar, ps, prefixer, elementOffset, i + 1);
-                    elementOffset += scalar.type.size;
-                }
             } else {
-                throw new IllegalStateException("Output channels don't support multi dimension arrays");
+                // ignore arrays in the java writer
             }
         }
 
         public void visit(BitGroupLayout bitGroup, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-            // TODO?
+            // ignore bits in the java writer
+        }
+
+        public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+            // ignore enums in the java writer
+        }
+
+        public void visit(StringLayout str, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+            // ignore strings in the java writer
         }
     }
 }

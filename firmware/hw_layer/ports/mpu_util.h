@@ -74,6 +74,9 @@ typedef enum {
 BOR_Level_t BOR_Get(void);
 BOR_Result_t BOR_Set(BOR_Level_t BORValue);
 
+uintptr_t getBootAddress();
+bool setBootAddress(uintptr_t address);
+
 extern "C"
 {
 #endif /* __cplusplus */

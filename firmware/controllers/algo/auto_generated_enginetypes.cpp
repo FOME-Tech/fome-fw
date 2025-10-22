@@ -75,6 +75,8 @@ case COMMAND_X14_GRAB_PEDAL_UP:
   return "COMMAND_X14_GRAB_PEDAL_UP";
 case COMMAND_X14_RESET_TLE8888:
   return "COMMAND_X14_RESET_TLE8888";
+case COMMAND_X14_SPLIT_INJ:
+  return "COMMAND_X14_SPLIT_INJ";
 case COMMAND_X14_UNUSED_0:
   return "COMMAND_X14_UNUSED_0";
 case COMMAND_X14_UNUSED_1:
@@ -241,8 +243,12 @@ case engine_type_e::ET_UNUSED_33:
   return "ET_UNUSED_33";
 case engine_type_e::ET_UNUSED_43:
   return "ET_UNUSED_43";
+case engine_type_e::ET_UNUSED_5:
+  return "ET_UNUSED_5";
 case engine_type_e::ET_UNUSED_57:
   return "ET_UNUSED_57";
+case engine_type_e::ET_UNUSED_60:
+  return "ET_UNUSED_60";
 case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
 case engine_type_e::ET_UNUSED_66:
@@ -323,8 +329,6 @@ case engine_type_e::HELLEN_NB2:
   return "HELLEN_NB2";
 case engine_type_e::HELLEN_NB2_36:
   return "HELLEN_NB2_36";
-case engine_type_e::L9779_BENCH_ENGINE:
-  return "L9779_BENCH_ENGINE";
 case engine_type_e::MAZDA_MIATA_2003_BOARD_TEST:
   return "MAZDA_MIATA_2003_BOARD_TEST";
 case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
@@ -345,8 +349,6 @@ case engine_type_e::MRE_SUBARU_EJ18:
   return "MRE_SUBARU_EJ18";
 case engine_type_e::MRE_VW_B6:
   return "MRE_VW_B6";
-case engine_type_e::NISSAN_PRIMERA:
-  return "NISSAN_PRIMERA";
 case engine_type_e::POLYGONUS_MIATA_MSM:
   return "POLYGONUS_MIATA_MSM";
 case engine_type_e::POLYGONUS_MIATA_NA6:
@@ -542,6 +544,8 @@ case trigger_type_e::TT_TRI_TACH:
   return "TT_TRI_TACH";
 case trigger_type_e::TT_UNUSED:
   return "TT_UNUSED";
+case trigger_type_e::TT_UNUSED_17:
+  return "TT_UNUSED_17";
 case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:
   return "TT_VVT_BARRA_3_PLUS_1";
 case trigger_type_e::TT_VVT_BOSCH_QUICK_START:
@@ -560,8 +564,6 @@ case trigger_type_e::TT_VVT_MITSUBISHI_6G75:
   return "TT_VVT_MITSUBISHI_6G75";
 case trigger_type_e::TT_VVT_NISSAN_VQ35:
   return "TT_VVT_NISSAN_VQ35";
-case trigger_type_e::TT_VVT_TOYOTA_3_TOOTH:
-  return "TT_VVT_TOYOTA_3_TOOTH";
 case trigger_type_e::TT_VVT_TOYOTA_4_1:
   return "TT_VVT_TOYOTA_4_1";
   }
@@ -573,8 +575,6 @@ case TS_BENCH_CATEGORY:
   return "TS_BENCH_CATEGORY";
 case TS_CLEAR_WARNINGS:
   return "TS_CLEAR_WARNINGS";
-case TS_DEBUG_MODE:
-  return "TS_DEBUG_MODE";
 case TS_IGNITION_CATEGORY:
   return "TS_IGNITION_CATEGORY";
 case TS_INJECTOR_CATEGORY:
@@ -587,6 +587,8 @@ case TS_SET_ENGINE_TYPE:
   return "TS_SET_ENGINE_TYPE";
 case TS_SOLENOID_CATEGORY:
   return "TS_SOLENOID_CATEGORY";
+case TS_UNUSED_0:
+  return "TS_UNUSED_0";
 case TS_UNUSED_1:
   return "TS_UNUSED_1";
 case TS_UNUSED_10:

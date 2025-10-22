@@ -54,9 +54,7 @@ const char * boolToString(bool value);
 
 char * efiTrim(char *param);
 int mytolower(const char c);
-uint32_t efiStrlen(const char *param);
 int efiPow10(int param);
-bool startsWith(const char *line, const char *prefix);
 int indexOf(const char *string, char ch);
 float atoff(const char *string);
 int atoi(const char *string);
@@ -81,8 +79,6 @@ bool strEqualCaseInsensitive(const char *str1, const char *str2);
 bool strEqual(const char *str1, const char *str2);
 
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed);
-
-bool isPhaseInRange(float test, float current, float next);
 
 #ifdef __cplusplus
 }

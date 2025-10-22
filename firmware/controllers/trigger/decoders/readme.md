@@ -4,7 +4,7 @@ This folder is and should not be aware of engine.h or engine_configuration.h
 
 # Hints on adding new trigger
 
-Step 1: add into rusefi_config.txt
+Step 1: add into fome_config.txt
 
 Step 2: add into rusefi_enums.h, update TT_UNUSED, invoke gen_enum script
 

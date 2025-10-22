@@ -34,7 +34,7 @@ TriggerDecoderBase::TriggerDecoderBase(const char* name)
 	resetState();
 }
 
-bool TriggerDecoderBase::getShaftSynchronized() {
+bool TriggerDecoderBase::getShaftSynchronized() const {
 	return shaft_is_synchronized;
 }
 
@@ -68,7 +68,7 @@ void TriggerDecoderBase::setTriggerErrorState() {
 }
 
 void TriggerDecoderBase::resetCurrentCycleState() {
-	memset(currentCycle.eventCount, 0, sizeof(currentCycle.eventCount));
+	setArrayValues(currentCycle.eventCount, 0);
 	currentCycle.current_index = 0;
 }
 
@@ -191,29 +191,28 @@ int TriggerDecoderBase::getCurrentIndex() const {
 angle_t PrimaryTriggerDecoder::syncEnginePhase(int divider, int remainder, angle_t engineCycle) {
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, divider > 1, "syncEnginePhase divider", false);
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, remainder < divider, "syncEnginePhase remainder", false);
-	angle_t totalShift = 0;
-	while (getCrankSynchronizationCounter() % divider != remainder) {
-		/**
-		 * we are here if we've detected the cam sensor within the wrong crank phase
-		 * let's increase the trigger event counter, that would adjust the state of
-		 * virtual crank-based trigger
-		 */
-		incrementShaftSynchronizationCounter();
-		totalShift += engineCycle / divider;
+
+	auto currentRemainder = getCrankSynchronizationCounter() % divider;
+	auto totalShift = (remainder - currentRemainder) * engineCycle / divider;
+
+	if (totalShift < 0) {
+		totalShift += engineCycle;
 	}
 
-	// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
-	m_hasSynchronizedPhase = true;
+	{
+		chibios_rt::CriticalSectionLocker csl;
 
-	if (totalShift > 0) {
-		camResyncCounter++;
+		// Allow injection/ignition to happen, we've now fully sync'd the crank based on new cam information
+		m_hasSynchronizedPhase = true;
+
+		if (m_phaseAdjustment != totalShift) {
+			// Resync angle changed - count how many times this happens
+			m_phaseAdjustment = totalShift;
+			m_camResyncCounter++;
+		}
 	}
 
 	return totalShift;
-}
-
-void TriggerDecoderBase::incrementShaftSynchronizationCounter() {
-	crankSynchronizationCounter++;
 }
 
 // Returns true if syncEnginePhase has been called,
@@ -222,7 +221,7 @@ void TriggerDecoderBase::incrementShaftSynchronizationCounter() {
 // If we're self stimulating, assume we have full sync so that outputs work during self stim
 bool PrimaryTriggerDecoder::hasSynchronizedPhase() const {
 #if EFI_PROD_CODE
-	if (getTriggerCentral()->directSelfStimulation) {
+	if (getTriggerCentral()->directSelfStimulation && engineConfiguration->fakeFullSyncForStimulation) {
 		return true;
 	}
 #endif
@@ -310,7 +309,7 @@ void TriggerDecoderBase::onShaftSynchronization(
 	resetCurrentCycleState();
 
 	if (wasSynchronized) {
-		incrementShaftSynchronizationCounter();
+		crankSynchronizationCounter++;
 	} else {
 		// We have just synchronized, this is the zeroth revolution
 		crankSynchronizationCounter = 0;
@@ -370,8 +369,15 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		const TriggerEvent signal,
 		const efitick_t nowNt) {
 	ScopePerf perf(PE::DecodeTriggerEvent);
-	
-	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > 1) {
+
+	// Timeout below approximately 12 rpm, but a maximum of 1 second timeout
+	// Trigger shape length is ~4x tooth count (rise + fall / doubled for 4 stroke),
+	// so extra multiply by 4 then 5 second maximum revolution
+	float triggerTimeoutPeriod = clampF(0.1f, 20.0f / triggerShape.getLength(), 1.0f);
+	float previousEventTime = previousEventTimer.getElapsedSecondsAndReset(nowNt);
+	if (previousEventTime > triggerTimeoutPeriod) {
+		efiPrintf("Reset sync as time since last trigger event is %.3fs, threshold %.3f", previousEventTime, triggerTimeoutPeriod);
+
 		/**
 		 * We are here if there is a time gap between now and previous shaft event - that means the engine is not running.
 		 * That means we have lost synchronization since the engine is not running :)
@@ -567,8 +573,11 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			nextTriggerEvent();
 
 			onShaftSynchronization(wasSynchronized, nowNt, triggerShape);
-		} else {	/* if (!isSynchronizationPoint) */
-			nextTriggerEvent();
+		} else {
+			// If not the sync point but we are synchronized, just increment tooth index.
+			if (getShaftSynchronized()) {
+				nextTriggerEvent();
+			}
 		}
 
 		for (int i = triggerShape.gapTrackingLength; i > 0; i--) {
@@ -616,7 +625,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	}
 }
 
-bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) const {
+bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) {
 	// Miata NB needs a special decoder.
 	// The problem is that the crank wheel only has 4 teeth, also symmetrical, so the pattern
 	// is long-short-long-short for one crank rotation.
@@ -628,19 +637,35 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 	// Instead of detecting short/long, this logic first checks for "maybe short" and "maybe long",
 	// then simply tests longer vs. shorter instead of absolute value.
 	if (triggerType == trigger_type_e::TT_MIATA_VVT) {
-		auto secondGap = (float)toothDurations[1] / toothDurations[2];
+		bool useToothCounting = getShaftSynchronized() && (Sensor::getOrZero(SensorType::Rpm) < 1000);
 
-		bool currentGapOk = isInRange(triggerShape.syncronizationRatioFrom[0], (float)triggerSyncGapRatio, triggerShape.syncronizationRatioTo[0]);
-		bool secondGapOk  = isInRange(triggerShape.syncronizationRatioFrom[1], secondGap,  triggerShape.syncronizationRatioTo[1]);
+		// If we got reasonable sync and we're spinning slowly, just count teeth. This is necessary
+		// because a large jump in speed can cause the "long gap" to actually be shorter than the previous
+		// "short gap", but the engine sped up a bunch.
+		if (useToothCounting) {
+			// If we're an NB and have a reasonable gap, let's just say we're still synchronized
+			if (isInRange(0.4f, (float)triggerSyncGapRatio, 2.0f)) {
+				// If the last tooth wasn't a sync point, this one is
+				return getCurrentIndex() != 0;
+			} else {
+				setShaftSynchronized(false);
+				return false;
+			}
+		} else {
+			auto secondGap = (float)toothDurations[1] / toothDurations[2];
 
-		// One or both teeth was impossible range, this is not the sync point
-		if (!currentGapOk || !secondGapOk) {
-			return false;
+			bool currentGapOk = isInRange(triggerShape.syncronizationRatioFrom[0], (float)triggerSyncGapRatio, triggerShape.syncronizationRatioTo[0]);
+			bool secondGapOk  = isInRange(triggerShape.syncronizationRatioFrom[1], secondGap,  triggerShape.syncronizationRatioTo[1]);
+
+			// One or both teeth was impossible range, this is not the sync point
+			if (!currentGapOk || !secondGapOk) {
+				return false;
+			}
+
+			// If both teeth are in the range of possibility, return whether this gap is
+			// shorter than the last or not.  If it is, this is the sync point.
+			return triggerSyncGapRatio < secondGap;
 		}
-
-		// If both teeth are in the range of possibility, return whether this gap is
-		// shorter than the last or not.  If it is, this is the sync point.
-		return triggerSyncGapRatio < secondGap;
 	}
 
 	for (int i = 0; i < triggerShape.gapTrackingLength; i++) {
@@ -677,10 +702,6 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 expected<uint32_t> TriggerDecoderBase::findTriggerZeroEventIndex(
 		TriggerWaveform& shape,
 		const TriggerConfiguration& triggerConfiguration) {
-#if EFI_PROD_CODE
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, getCurrentRemainingStack() > 128, "findPos", -1);
-#endif
-
 	resetState();
 
 	if (shape.shapeDefinitionError) {

@@ -7,8 +7,9 @@ import com.rusefi.tracing.JsonOutput;
 import com.rusefi.ui.RpmModel;
 
 import javax.swing.*;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 import static com.rusefi.binaryprotocol.IoHelper.checkResponseCode;
@@ -35,7 +36,7 @@ public class PerformanceTraceHelper {
             String fileName = FileLog.getDate() + "_rpm_" + rpm + "_rusEFI_trace" + ".json";
 
 
-            JsonOutput.writeToStream(data, new FileOutputStream(fileName));
+            JsonOutput.writeToStream(data, Files.newOutputStream(Paths.get(fileName)));
         } catch (IOException | InterruptedException e1) {
             throw new IllegalStateException(e1);
         }

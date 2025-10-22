@@ -16,8 +16,6 @@ struct CompositeEvent {
     bool secondaryTrigger;
     bool isTDC;
     bool sync;
-    bool coil;
-    bool injector;
 };
 
 void writeFile(const char * fileName, const std::vector<CompositeEvent>& events);

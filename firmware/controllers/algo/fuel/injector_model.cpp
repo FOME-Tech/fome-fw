@@ -31,6 +31,10 @@ float InjectorModelWithConfig::getBaseFlowRate() const {
 	}
 }
 
+float InjectorModelWithConfig::getMinimumPulse() const {
+	return engineConfiguration->minimumInjectionPulseWidth;
+}
+
 float InjectorModelPrimary::getSmallPulseFlowRate() const {
 	return engineConfiguration->fordInjectorSmallPulseSlope;
 }
@@ -120,7 +124,7 @@ float InjectorModelWithConfig::getInjectorFlowRatio() {
 
 	if (referencePressure < 50) {
 		// impossibly low fuel ref pressure
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Impossible fuel reference pressure: %f", referencePressure);
+		firmwareError("Impossible fuel reference pressure: %f", referencePressure);
 
 		return 1.0f;
 	}
@@ -164,6 +168,9 @@ float InjectorModelBase::getInjectionDuration(float fuelMassGram) const {
 	// Get the no-offset duration
 	float baseDuration = getBaseDurationImpl(fuelMassGram);
 
+	// Clamp to minimum injection pulse
+	baseDuration = std::max(baseDuration, getMinimumPulse());
+
 	// Add deadtime offset
 	return baseDuration + m_deadtime;
 }
@@ -181,16 +188,31 @@ float InjectorModelBase::getBaseDurationImpl(float fuelMassGram) const {
 		if (fuelMassGram < m_smallPulseBreakPoint) {
 			// Small pulse uses a different slope, and adds the "zero fuel pulse" offset
 			return (fuelMassGram / m_smallPulseFlowRate * 1000) + m_smallPulseOffset;
-		} else {
-			// Large pulse
-			return baseDuration;
 		}
+
+		// large pulse uses base duration
+		break;
 	case INJ_PolynomialAdder:
 		return correctInjectionPolynomial(baseDuration);
+	case INJ_SmallPulseAdder:
+		if (baseDuration < engineConfiguration->applyNonlinearBelowPulse) {
+			return baseDuration +
+				interpolate2d(
+					baseDuration,
+					config->smallPulseAdderBins,
+					config->smallPulseAdderValues
+				);
+		}
+
+		// large pulse uses base duration
+		break;
 	case INJ_None:
 	default:
-		return baseDuration;
+		// no correction, use base duration
+		break;
 	}
+
+	return baseDuration;
 }
 
 float InjectorModelBase::correctInjectionPolynomial(float baseDuration) const {

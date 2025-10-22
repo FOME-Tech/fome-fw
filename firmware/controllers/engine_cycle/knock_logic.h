@@ -36,6 +36,8 @@ private:
 	PD allCylinderPeakDetector;
 
 	Timer m_lastKnockTimer;
+
+	int8_t m_gain[MAX_CYLINDER_COUNT];
 };
 
 class KnockController : public KnockControllerBase {

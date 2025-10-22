@@ -3,9 +3,12 @@
 struct trigger_state_primary_s {
 	// Resync counter
 	// offset 0
-	uint8_t camResyncCounter = (uint8_t)0;
+	uint8_t m_camResyncCounter = (uint8_t)0;
 	// offset 1
-	uint8_t alignmentFill_at_1[3];
+	uint8_t alignmentFill_at_1[1];
+	// Resync phase adjustment
+	// offset 2
+	uint16_t m_phaseAdjustment = (uint16_t)0;
 	// Fully synchronized
 	// offset 4 bit 0
 	bool m_hasSynchronizedPhase : 1 {};
@@ -73,5 +76,6 @@ struct trigger_state_primary_s {
 	bool unusedBit_4_31 : 1 {};
 };
 static_assert(sizeof(trigger_state_primary_s) == 8);
-static_assert(offsetof(trigger_state_primary_s, camResyncCounter) == 0);
+static_assert(offsetof(trigger_state_primary_s, m_camResyncCounter) == 0);
+static_assert(offsetof(trigger_state_primary_s, m_phaseAdjustment) == 2);
 

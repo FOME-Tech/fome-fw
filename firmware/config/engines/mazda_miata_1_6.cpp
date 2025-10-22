@@ -324,9 +324,8 @@ void setMiataNa6_Polygonus() {
 	engineConfiguration->lowPressureFuel.value2 = 689.5;
 
 	// Built in wideband controller on bus 2
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 	engineConfiguration->widebandOnSecondBus = true;
-	engineConfiguration->enableVerboseCanTx = true;
 
 	// Outputs
 	engineConfiguration->fuelPumpPin = PROTEUS_LS_9;

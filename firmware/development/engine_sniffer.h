@@ -13,7 +13,7 @@
 #include "datalogging.h"
 
 void addEngineSnifferTdcEvent(int rpm);
-void addEngineSnifferLogicAnalyzerEvent(int laIndex, bool isRise);
+
 /**
  * @param wheelIndex 0 or 1
  * @triggerEventIndex index from sync point, from 0 to number of teeth in engine cycle

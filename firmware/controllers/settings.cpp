@@ -49,10 +49,6 @@ static void setIdleSolenoidFrequency(int value) {
 	incrementGlobalConfigurationVersion();
 }
 
-static void setSensorChartMode(int value) {
-	engineConfiguration->sensorChartMode = (sensor_chart_e) value;
-}
-
 static void setCrankingRpm(int value) {
 	engineConfiguration->cranking.rpm = value;
 }
@@ -247,20 +243,6 @@ static void setAnalogInputPin(const char *sensorStr, const char *pinName) {
 }
 #endif // HAL_USE_ADC
 
-static void setLogicInputPin(const char *indexStr, const char *pinName) {
-	int index = atoi(indexStr);
-	if (index < 0 || index > 2) {
-		return;
-	}
-	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
-	if (pin == Gpio::Invalid) {
-		return;
-	}
-	efiPrintf("setting logic input pin[%d] to %s please save&restart", index, hwPortname(pin));
-	engineConfiguration->logicAnalyzerPins[index] = pin;
-	incrementGlobalConfigurationVersion();
-}
-
 #endif // EFI_PROD_CODE
 
 static void enableOrDisable(const char *param, bool isEnabled) {
@@ -276,8 +258,6 @@ static void enableOrDisable(const char *param, bool isEnabled) {
 		engineConfiguration->verboseCan = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "verboseIsoTp")) {
 		engineConfiguration->verboseIsoTp = isEnabled;
-	} else if (strEqualCaseInsensitive(param, "artificialMisfire")) {
-		engineConfiguration->artificialTestMisfire = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "can_broadcast")) {
 		engineConfiguration->enableVerboseCanTx = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "etb_auto")) {
@@ -399,7 +379,6 @@ const command_i_s commandsI[] = {{"ignition_mode", setIgnitionMode},
 #if EFI_ENGINE_CONTROL
 		{"cranking_rpm", setCrankingRpm},
 		{"injection_mode", setInjectionMode},
-		{"sensor_chart_mode", setSensorChartMode},
 		{"timing_mode", setTimingMode},
 		{CMD_ENGINE_TYPE, setEngineType},
 		{"rpm_hard_limit", setRpmHardLimit},
@@ -492,15 +471,12 @@ void initSettings() {
 	addConsoleActionSS(CMD_TRIGGER_PIN, setTriggerInputPin);
 	addConsoleActionSS(CMD_TRIGGER_SIMULATOR_PIN, setTriggerSimulatorPin);
 
-	addConsoleActionI(CMD_ECU_UNLOCK, unlockEcu);
-
 	addConsoleActionS(CMD_ALTERNATOR_PIN, setAlternatorPin);
 	addConsoleActionS(CMD_IDLE_PIN, setIdlePin);
 
 #if HAL_USE_ADC
 	addConsoleActionSS("set_analog_input_pin", setAnalogInputPin);
 #endif // HAL_USE_ADC
-	addConsoleActionSS(CMD_LOGIC_PIN, setLogicInputPin);
 #endif // EFI_PROD_CODE
 }
 

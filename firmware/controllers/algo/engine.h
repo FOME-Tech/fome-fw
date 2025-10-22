@@ -25,7 +25,6 @@
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
 #include "launch_control.h"
@@ -122,7 +121,7 @@ public:
 	// **************************
 
 	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
-	expected<angle_t> computeInjectionAngle() const;
+	expected<angle_t> computeInjectionAngle(injection_mode_e mode) const;
 
 	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
 	mass_t getInjectionMass() const {
@@ -163,6 +162,8 @@ private:
 	// 10 means 10 degrees BTDC
 	angle_t m_timingAdvance = 0;
 };
+
+union IgnitionContext;
 
 class Engine final : public TriggerStateListener {
 public:
@@ -267,8 +268,6 @@ public:
 
 	void setConfig();
 
-	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
-
 #if EFI_UNIT_TEST
 	bool needTdcCallback = true;
 #endif /* EFI_UNIT_TEST */
@@ -288,7 +287,7 @@ public:
 #if EFI_UNIT_TEST
 	TestExecutor scheduler;
 
-	std::function<void(IgnitionEvent*, bool)> onIgnitionEvent;
+	std::function<void(const IgnitionContext&, bool)> onIgnitionEvent;
 #endif // EFI_UNIT_TEST
 
 #if EFI_ENGINE_CONTROL
@@ -324,6 +323,7 @@ public:
 
 	void periodicFastCallback();
 	void periodicSlowCallback();
+	void onEngineStopped();
 	void updateSlowSensors();
 	void updateSwitchInputs();
 	void updateTriggerWaveform();
@@ -340,21 +340,12 @@ public:
 
 	EngineState engineState;
 
-	dc_motors_s dc_motors;
-
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM
 	 */
-	percent_t blipIdlePosition;
-	efitimeus_t timeToStopBlip = 0;
 	efitimeus_t timeToStopIdleTest = 0;
 
-
 	SensorsState sensors;
-	Timer mainRelayBenchTimer;
-
-
-	void preCalculate();
 
 	void efiWatchdog();
 
@@ -371,15 +362,13 @@ public:
 	 */
 	bool isInShutdownMode() const;
 
-	bool isInMainRelayBench();
-
 	/**
 	 * The stepper does not work if the main relay is turned off (it requires +12V).
 	 * Needed by the stepper motor code to detect if it works.
 	 */
 	bool isMainRelayEnabled() const;
 
-	void onSparkFireKnockSense(uint8_t cylinderIndex, efitick_t nowNt);
+	void onSparkFireKnockSense(uint8_t cylinderIndex);
 
 #if EFI_UNIT_TEST
 	AirmassModelBase* mockAirmassModel = nullptr;
@@ -391,16 +380,12 @@ private:
 	void injectEngineReferences();
 };
 
-trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode);
-
 void applyNonPersistentConfiguration();
 void prepareOutputSignals();
 
 // todo: huh we also have validateConfig()?!
 void validateConfiguration();
 void scheduleReboot();
-bool isLockedFromUser();
-void unlockEcu(int password);
 
 // These externs aren't needed for unit tests - everything is injected instead
 #if !EFI_UNIT_TEST

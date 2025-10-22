@@ -6,8 +6,8 @@
 
 #include "digital_input_exti.h"
 
-static FunctionalSensor flexSensor(SensorType::FuelEthanolPercent, MS2NT(500));
-static StoredValueSensor flexFuelTemp(SensorType::FuelTemperature, MS2NT(500));
+static FunctionalSensor flexSensor(SensorType::FuelEthanolPercent, MS2NT(30000));
+static StoredValueSensor flexFuelTemp(SensorType::FuelTemperature, MS2NT(30000));
 static FlexConverter converter;
 
 static Biquad flexTempFilter;

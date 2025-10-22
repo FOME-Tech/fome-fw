@@ -7,6 +7,7 @@ import com.rusefi.config.generated.Fields;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
+import com.rusefi.libopenblt.XcpSettings;
 import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
 import org.jetbrains.annotations.NotNull;
@@ -233,11 +234,39 @@ public class ProgramSelector {
         };
     }
 
+    private static final boolean useNewImpl = false;
+
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
         OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            OpenbltJni.flashSerial("../fome_update.srec", port, cb);
+            if (useNewImpl) {
+                OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
+                flasher.flash("../fome_update.srec");
+            } else {
+                OpenbltJni.flashSerial("../fome_update.srec", port, cb);
+            }
+
+            callbacks.log("Update completed successfully!");
+            callbacks.done();
+        } catch (Throwable e) {
+            callbacks.log("Error: " + e);
+            callbacks.error();
+        } finally {
+            OpenbltJni.stop(cb);
+        }
+    }
+
+    private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
+        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+
+        try {
+            if (useNewImpl) {
+                OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
+                flasher.flash("../fome_update.srec");
+            } else {
+                OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
+            }
 
             callbacks.log("Update completed successfully!");
             callbacks.done();

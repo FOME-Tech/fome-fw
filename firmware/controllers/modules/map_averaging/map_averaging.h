@@ -26,6 +26,8 @@ public:
 
 	SensorResult submit(float sensorVolts);
 
+	void onSample(float map, uint8_t cylinderNumber);
+
 	void setFunction(SensorConverter& func) {
 		m_function = &func;
 	}
@@ -49,10 +51,7 @@ public:
 	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
 
 	void onFastCallback() override;
-	void onEnginePhase(float rpm,
-						efitick_t edgeTimestamp,
-						float currentPhase,
-						float nextPhase) override;
+	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
 
-	void submitSample(float volts);
+	void submitSample(float voltsMap1, float voltsMap2);
 };

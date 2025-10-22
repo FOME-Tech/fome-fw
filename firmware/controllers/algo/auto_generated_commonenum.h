@@ -1,6 +1,9 @@
 #include "rusefi_enums.h"
 #pragma once
 #if __cplusplus
+const char *getDtcSeverity(DtcSeverity value);
+#endif //__cplusplus
+#if __cplusplus
 const char *getGearControllerMode(GearControllerMode value);
 #endif //__cplusplus
 #if __cplusplus
@@ -15,6 +18,9 @@ const char *getTransmissionControllerMode(TransmissionControllerMode value);
 #endif //__cplusplus
 #if __cplusplus
 const char *getTsCalMode(TsCalMode value);
+#endif //__cplusplus
+#if __cplusplus
+const char *getWidebandMode(WidebandMode value);
 #endif //__cplusplus
 #if __cplusplus
 const char *getWssToVssMode(WssToVssMode value);
@@ -45,7 +51,6 @@ const char *getLoad_override_e(load_override_e value);
 const char *getOperation_mode_e(operation_mode_e value);
 const char *getPin_input_mode_e(pin_input_mode_e value);
 const char *getPin_output_mode_e(pin_output_mode_e value);
-const char *getSensor_chart_e(sensor_chart_e value);
 const char *getSpi_device_e(spi_device_e value);
 const char *getSpi_speed_e(spi_speed_e value);
 const char *getStepper_num_micro_steps_e(stepper_num_micro_steps_e value);

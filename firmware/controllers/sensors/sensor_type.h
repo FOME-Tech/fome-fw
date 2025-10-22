@@ -29,6 +29,8 @@ enum class SensorType : unsigned char {
 
 	AmbientTemperature,
 
+	EcuInternalTemperature,
+
 	OilPressure,
 	OilTemperature,
 
@@ -92,9 +94,6 @@ enum class SensorType : unsigned char {
 	MapSlow,
 
 	InputShaftSpeed,
-
-	EGT1,
-	EGT2,
 
 	Maf2,	// Second bank MAF sensor
 

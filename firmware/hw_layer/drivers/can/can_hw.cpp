@@ -93,45 +93,32 @@ void setCanType(int type) {
 	canInfo();
 }
 
-void stopCanPins() {
-	efiSetPadUnusedIfConfigurationChanged(canTxPin);
-	efiSetPadUnusedIfConfigurationChanged(canRxPin);
-	efiSetPadUnusedIfConfigurationChanged(can2TxPin);
-	efiSetPadUnusedIfConfigurationChanged(can2RxPin);
-}
-
-// at the moment we support only very limited runtime configuration change, still not supporting online CAN toggle
-void startCanPins() {
-	// nothing to do if we aren't enabled...
-	if (!isCanEnabled) {
-		return;
-	}
-
+static void startCanPins() {
 	// Validate pins
 	if (!isValidCanTxPin(engineConfiguration->canTxPin)) {
 		if (!isBrainPinValid(engineConfiguration->canTxPin)) {
-			// todo: smarter online change of settings, kill isCanEnabled with fire
 			return;
 		}
+
 		firmwareError(ObdCode::CUSTOM_OBD_70, "invalid CAN TX %s", hwPortname(engineConfiguration->canTxPin));
 		return;
 	}
 
 	if (!isValidCanRxPin(engineConfiguration->canRxPin)) {
 		if (!isBrainPinValid(engineConfiguration->canRxPin)) {
-			// todo: smarter online change of settings, kill isCanEnabled with fire
 			return;
 		}
+
 		firmwareError(ObdCode::CUSTOM_OBD_70, "invalid CAN RX %s", hwPortname(engineConfiguration->canRxPin));
 		return;
 	}
 
 #if EFI_PROD_CODE
-	efiSetPadModeIfConfigurationChanged("CAN TX", canTxPin, PAL_MODE_ALTERNATE(EFI_CAN_TX_AF));
-	efiSetPadModeIfConfigurationChanged("CAN RX", canRxPin, PAL_MODE_ALTERNATE(EFI_CAN_RX_AF));
+	efiSetPadMode("CAN TX", engineConfiguration->canTxPin, PAL_MODE_ALTERNATE(EFI_CAN_TX_AF));
+	efiSetPadMode("CAN RX", engineConfiguration->canRxPin, PAL_MODE_ALTERNATE(EFI_CAN_RX_AF));
 
-	efiSetPadModeIfConfigurationChanged("CAN2 TX", can2TxPin, PAL_MODE_ALTERNATE(EFI_CAN_TX_AF));
-	efiSetPadModeIfConfigurationChanged("CAN2 RX", can2RxPin, PAL_MODE_ALTERNATE(EFI_CAN_RX_AF));
+	efiSetPadMode("CAN2 TX", engineConfiguration->can2TxPin, PAL_MODE_ALTERNATE(EFI_CAN_TX_AF));
+	efiSetPadMode("CAN2 RX", engineConfiguration->can2RxPin, PAL_MODE_ALTERNATE(EFI_CAN_RX_AF));
 #endif // EFI_PROD_CODE
 }
 
@@ -156,7 +143,7 @@ void initCan() {
 
 	// Devices can't be the same!
 	if (device1 == device2) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "CAN pins must be set to different devices");
+		firmwareError("CAN pins must be set to different devices");
 		return;
 	}
 
@@ -187,9 +174,11 @@ void initCan() {
 	}
 
 	isCanEnabled = true;
+
+	startCanPins();
 }
 
-bool getIsCanEnabled(void) {
+bool getIsCanEnabled() {
 	return isCanEnabled;
 }
 

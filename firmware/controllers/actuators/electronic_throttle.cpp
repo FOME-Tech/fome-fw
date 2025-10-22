@@ -193,8 +193,6 @@ bool EtbController::init(dc_function_e function, DcMotor *motor, pid_s *pidParam
 	m_pid.initPidClass(pidParameters);
 	m_pedalMap = pedalMap;
 
-	reset();
-
 	return true;
 }
 
@@ -204,8 +202,17 @@ void EtbController::reset() {
 	etbPpsErrorCounter = 0;
 }
 
-void EtbController::onConfigurationChange(pid_s* previousConfiguration) {
-	if (m_motor && !m_pid.isSame(previousConfiguration)) {
+static pid_s* getPidForDcFunction(engine_configuration_s* cfg, dc_function_e function) {
+	switch (function) {
+		case DC_Wastegate: return &cfg->etbWastegatePid;
+		default: return &cfg->etb;
+	}
+}
+
+void EtbController::onConfigurationChange(engine_configuration_s* previousConfiguration) {
+	auto previousPid = getPidForDcFunction(previousConfiguration, m_function);
+
+	if (m_motor && !m_pid.isSame(previousPid)) {
 		m_shouldResetPid = true;
 	}
 
@@ -856,7 +863,7 @@ void setDefaultEtbParameters() {
 
 void onConfigurationChangeElectronicThrottleCallback(engine_configuration_s *previousConfiguration) {
 	for (int i = 0; i < ETB_COUNT; i++) {
-		etbControllers[i]->onConfigurationChange(&previousConfiguration->etb);
+		etbControllers[i]->onConfigurationChange(previousConfiguration);
 	}
 }
 
@@ -870,17 +877,6 @@ static const float defaultBiasValues[] = {
 void setDefaultEtbBiasCurve() {
 	copyArray(config->etbBiasBins, defaultBiasBins);
 	copyArray(config->etbBiasValues, defaultBiasValues);
-}
-
-void unregisterEtbPins() {
-	// todo: we probably need an implementation here?!
-}
-
-static pid_s* getPidForDcFunction(dc_function_e function) {
-	switch (function) {
-		case DC_Wastegate: return &engineConfiguration->etbWastegatePid;
-		default: return &engineConfiguration->etb;
-	}
 }
 
 void doInitElectronicThrottle() {
@@ -908,7 +904,7 @@ void doInitElectronicThrottle() {
 			continue;
 		}
 
-		auto pid = getPidForDcFunction(func);
+		auto pid = getPidForDcFunction(engineConfiguration, func);
 
 		bool dcConfigured = controller->init(func, motor, pid, &pedal2tpsMap, hasPedal);
 		anyEtbConfigured |= dcConfigured && controller->isEtbMode();
@@ -917,7 +913,7 @@ void doInitElectronicThrottle() {
 	if (!anyEtbConfigured) {
 		// It's not valid to have a PPS without any ETBs - check that at least one ETB was enabled along with the pedal
 		if (hasPedal) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "A pedal position sensor was configured, but no electronic throttles are configured.");
+			firmwareError("A pedal position sensor was configured, but no electronic throttles are configured.");
 		}
 	}
 
@@ -947,6 +943,8 @@ void initElectronicThrottle() {
 
 	for (int i = 0; i < ETB_COUNT; i++) {
 		engine->etbControllers[i] = etbControllers[i];
+
+		etbControllers[i]->reset();
 	}
 
 	pedal2tpsMap.init(config->pedalToTpsTable, config->pedalToTpsPedalBins, config->pedalToTpsRpmBins);

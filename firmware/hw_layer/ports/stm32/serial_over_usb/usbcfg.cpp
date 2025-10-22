@@ -16,7 +16,11 @@
 */
 
 #include "pch.h"
+
+#if HAL_USE_USB_MSD
 #include "mmc_card.h"
+#include "mass_storage_device.h"
+#endif // HAL_USE_USB_MSD
 
 #if HAL_USE_SERIAL_USB
 
@@ -73,8 +77,8 @@ static const uint8_t vcom_device_descriptor_data[18] = {
  * Device Descriptor wrapper.
  */
 static const USBDescriptor vcom_device_descriptor = {
-  sizeof vcom_device_descriptor_data,
-  vcom_device_descriptor_data
+	sizeof vcom_device_descriptor_data,
+	vcom_device_descriptor_data
 };
 
 /* Configuration Descriptor tree for a CDC.*/
@@ -186,60 +190,60 @@ static const uint8_t vcom_configuration_descriptor_data[DESCRIPTOR_SIZE] = {
  * Configuration Descriptor wrapper.
  */
 static const USBDescriptor vcom_configuration_descriptor = {
-  sizeof vcom_configuration_descriptor_data,
-  vcom_configuration_descriptor_data
+	sizeof vcom_configuration_descriptor_data,
+	vcom_configuration_descriptor_data
 };
 
 /*
  * U.S. English language identifier.
  */
 static const uint8_t vcom_string0[] = {
-  USB_DESC_BYTE(4),                     /* bLength.                         */
-  USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
-  USB_DESC_WORD(0x0409)                 /* wLANGID (U.S. English).          */
+	USB_DESC_BYTE(4),                     /* bLength.                         */
+	USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
+	USB_DESC_WORD(0x0409)                 /* wLANGID (U.S. English).          */
 };
 
 /*
  * Vendor string.
  */
 static const uint8_t vcom_string1[] = {
-  USB_DESC_BYTE(10),                    /* bLength.                         */
-  USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
-  'F', 0, 'O', 0, 'M', 0, 'E', 0, 0, 0
+	USB_DESC_BYTE(10),                    /* bLength.                         */
+	USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
+	'F', 0, 'O', 0, 'M', 0, 'E', 0, 0, 0
 };
 
 /*
  * Device Description string.
  */
 static const uint8_t vcom_string2[] = {
-  USB_DESC_BYTE(54),                    /* bLength.                         */
-  USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
-  'F', 0, 'O', 0, 'M', 0, 'E', 0, ' ', 0, 'E', 0, 'n', 0, 'g', 0,
-  'i', 0, 'n', 0, 'e', 0, ' ', 0, 'M', 0, 'a', 0, 'n', 0, 'a', 0,
-  'g', 0, 'e', 0, 'm', 0, 'e', 0, 'n', 0, 't', 0, ' ', 0, 'E', 0,
-  'C', 0, 'U', 0, 0, 0
+	USB_DESC_BYTE(54),                    /* bLength.                         */
+	USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
+	'F', 0, 'O', 0, 'M', 0, 'E', 0, ' ', 0, 'E', 0, 'n', 0, 'g', 0,
+	'i', 0, 'n', 0, 'e', 0, ' ', 0, 'M', 0, 'a', 0, 'n', 0, 'a', 0,
+	'g', 0, 'e', 0, 'm', 0, 'e', 0, 'n', 0, 't', 0, ' ', 0, 'E', 0,
+	'C', 0, 'U', 0, 0, 0
 };
 
 /*
  * Serial Number string.
  */
 static uint8_t vcom_string3[] = {
-  USB_DESC_BYTE(50),                     /* bLength.                         */
-  USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
-  '0', 0, '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0,
-  '8', 0, '9', 0, 'A', 0, 'B', 0, 'C', 0, 'D', 0, 'E', 0, 'F', 0,
-  '0', 0, '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0,
-  0, 0
+	USB_DESC_BYTE(50),                     /* bLength.                         */
+	USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
+	'0', 0, '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0,
+	'8', 0, '9', 0, 'A', 0, 'B', 0, 'C', 0, 'D', 0, 'E', 0, 'F', 0,
+	'0', 0, '1', 0, '2', 0, '3', 0, '4', 0, '5', 0, '6', 0, '7', 0,
+	0, 0
 };
 
 /*
  * Strings wrappers array.
  */
 static const USBDescriptor vcom_strings[] = {
-  {sizeof vcom_string0, vcom_string0},
-  {sizeof vcom_string1, vcom_string1},
-  {sizeof vcom_string2, vcom_string2},
-  {sizeof vcom_string3, vcom_string3}
+	{sizeof vcom_string0, vcom_string0},
+	{sizeof vcom_string1, vcom_string1},
+	{sizeof vcom_string2, vcom_string2},
+	{sizeof vcom_string3, vcom_string3}
 };
 
 static char nib2char(uint8_t nibble) {
@@ -274,23 +278,22 @@ void usbPopulateSerialNumber(const uint8_t* serialNumber, size_t bytes) {
  * Handles the GET_DESCRIPTOR callback. All required descriptors must be
  * handled here.
  */
-static const USBDescriptor *get_descriptor(USBDriver *usbp,
+static const USBDescriptor *get_descriptor(USBDriver*,
                                            uint8_t dtype,
                                            uint8_t dindex,
-                                           uint16_t lang) {
+                                           uint16_t /*lang*/) {
+	switch (dtype) {
+	case USB_DESCRIPTOR_DEVICE:
+		return &vcom_device_descriptor;
+	case USB_DESCRIPTOR_CONFIGURATION:
+		return &vcom_configuration_descriptor;
+	case USB_DESCRIPTOR_STRING:
+		if (dindex < 4) {
+			return &vcom_strings[dindex];
+		}
+	}
 
-  (void)usbp;
-  (void)lang;
-  switch (dtype) {
-  case USB_DESCRIPTOR_DEVICE:
-    return &vcom_device_descriptor;
-  case USB_DESCRIPTOR_CONFIGURATION:
-    return &vcom_configuration_descriptor;
-  case USB_DESCRIPTOR_STRING:
-    if (dindex < 4)
-      return &vcom_strings[dindex];
-  }
-  return NULL;
+	return nullptr;
 }
 
 #if HAL_USE_USB_MSD
@@ -327,100 +330,97 @@ static USBInEndpointState cdcDataInstate;
 static USBOutEndpointState cdcDataOutstate;
 // CDC data initialization structure (both IN and OUT).
 static const USBEndpointConfig cdcDataEpConfig = {
-  USB_EP_MODE_TYPE_BULK,
-  NULL,
-  sduDataTransmitted,
-  sduDataReceived,
-  0x0040,
-  0x0040,
-  &cdcDataInstate,
-  &cdcDataOutstate,
-  4,
-  NULL
+	USB_EP_MODE_TYPE_BULK,
+	NULL,
+	sduDataTransmitted,
+	sduDataReceived,
+	0x0040,
+	0x0040,
+	&cdcDataInstate,
+	&cdcDataOutstate,
+	4,
+	NULL
 };
 
 // IN CDC interrupt state.
 static USBInEndpointState cdcInterruptInstate;
 // CDC interrupt initialization structure (IN only).
 static const USBEndpointConfig cdcInterruptEpConfig = {
-  USB_EP_MODE_TYPE_INTR,
-  NULL,
-  sduInterruptTransmitted,
-  NULL,
-  0x0010,
-  0x0000,
-  &cdcInterruptInstate,
-  NULL,
-  1,
-  NULL
+	USB_EP_MODE_TYPE_INTR,
+	NULL,
+	sduInterruptTransmitted,
+	NULL,
+	0x0010,
+	0x0000,
+	&cdcInterruptInstate,
+	NULL,
+	1,
+	NULL
 };
 
 /*
  * Handles the USB driver global events.
  */
 static void usb_event(USBDriver *usbp, usbevent_t event) {
-  switch (event) {
-  case USB_EVENT_ADDRESS:
-    return;
-  case USB_EVENT_CONFIGURED:
-    chSysLockFromISR();
+	switch (event) {
+	case USB_EVENT_ADDRESS:
+		return;
+	case USB_EVENT_CONFIGURED:
+		chSysLockFromISR();
 
-    /* Enables the endpoints specified into the configuration.
-       Note, this callback is invoked from an ISR so I-Class functions
-       must be used.*/
-#if HAL_USE_USB_MSD
-    usbInitEndpointI(usbp, USB_MSD_DATA_EP, &msdEpConfig);
-#endif
+		/* Enables the endpoints specified into the configuration.
+		Note, this callback is invoked from an ISR so I-Class functions
+		must be used.*/
+	#if HAL_USE_USB_MSD
+		usbInitEndpointI(usbp, USB_MSD_DATA_EP, &msdEpConfig);
+	#endif
 
-    usbInitEndpointI(usbp, USBD1_DATA_REQUEST_EP, &cdcDataEpConfig);
-    usbInitEndpointI(usbp, USBD1_INTERRUPT_REQUEST_EP, &cdcInterruptEpConfig);
+		usbInitEndpointI(usbp, USBD1_DATA_REQUEST_EP, &cdcDataEpConfig);
+		usbInitEndpointI(usbp, USBD1_INTERRUPT_REQUEST_EP, &cdcInterruptEpConfig);
 
-    /* Resetting the state of the CDC subsystem.*/
-    sduConfigureHookI(&SDU1);
+		/* Resetting the state of the CDC subsystem.*/
+		sduConfigureHookI(&SDU1);
 
-    #if HAL_USE_USB_MSD
-        // Tell the MMC thread to wake up and mount the card as a USB device
-        onUsbConnectedNotifyMmcI();
-    #endif
+		#if HAL_USE_USB_MSD
+			// Tell the MMC thread to wake up and mount the card as a USB device
+			onUsbConnectedNotifyMmcI();
+		#endif
 
-    chSysUnlockFromISR();
-    return;
-  case USB_EVENT_RESET:
-    /* Falls into.*/
-  case USB_EVENT_UNCONFIGURED:
-    /* Falls into.*/
-  case USB_EVENT_SUSPEND:
-    chSysLockFromISR();
+		chSysUnlockFromISR();
+		return;
+	case USB_EVENT_RESET:
+		/* Falls into.*/
+	case USB_EVENT_UNCONFIGURED:
+		/* Falls into.*/
+	case USB_EVENT_SUSPEND:
+		chSysLockFromISR();
 
-    /* Disconnection event on suspend.*/
-    sduSuspendHookI(&SDU1);
+		/* Disconnection event on suspend.*/
+		sduSuspendHookI(&SDU1);
 
-    chSysUnlockFromISR();
-    return;
-  case USB_EVENT_WAKEUP:
-    chSysLockFromISR();
+		chSysUnlockFromISR();
+		return;
+	case USB_EVENT_WAKEUP:
+		chSysLockFromISR();
 
-    /* Disconnection event on suspend.*/
-    sduWakeupHookI(&SDU1);
+		/* Disconnection event on suspend.*/
+		sduWakeupHookI(&SDU1);
 
-    chSysUnlockFromISR();
-    return;
-  case USB_EVENT_STALLED:
-    return;
-  }
-  return;
+		chSysUnlockFromISR();
+		return;
+	case USB_EVENT_STALLED:
+		return;
+	}
+	return;
 }
 
 /*
  * Handles the USB driver global events.
  */
-static void sof_handler(USBDriver *usbp) {
-
-  (void)usbp;
-
-  osalSysLockFromISR();
-  sduSOFHookI(&SDU1);
-  osalSysUnlockFromISR();
+static void sof_handler(USBDriver*) {
+	osalSysLockFromISR();
+	sduSOFHookI(&SDU1);
+	osalSysUnlockFromISR();
 }
 
 // We need a custom hook to handle both MSD and CDC at the same time
@@ -440,10 +440,10 @@ static bool hybridRequestHook(USBDriver *usbp) {
  * USB driver configuration.
  */
 const USBConfig usbcfg = {
-  usb_event,
-  get_descriptor,
-  hybridRequestHook,
-  sof_handler
+	usb_event,
+	get_descriptor,
+	hybridRequestHook,
+	sof_handler
 };
 
 /*
@@ -451,15 +451,15 @@ const USBConfig usbcfg = {
  */
 const SerialUSBConfig serusbcfg = {
 #if STM32_USB_USE_OTG1
-  .usbp = &USBD1,
+	.usbp = &USBD1,
 #elif STM32_USB_USE_OTG2
-  .usbp = &USBD2,
+	.usbp = &USBD2,
 #else
-  #error Serial over USB needs OTG1 or OTG2 to be enabled
+	#error Serial over USB needs OTG1 or OTG2 to be enabled
 #endif
-  .bulk_in = USBD1_DATA_REQUEST_EP,
-  .bulk_out = USBD1_DATA_AVAILABLE_EP,
-  .int_in = USBD1_INTERRUPT_REQUEST_EP
+	.bulk_in = USBD1_DATA_REQUEST_EP,
+	.bulk_out = USBD1_DATA_AVAILABLE_EP,
+	.int_in = USBD1_INTERRUPT_REQUEST_EP
 };
 
 #endif /* EFI_USB_SERIAL */

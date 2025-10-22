@@ -1,17 +1,12 @@
-
 struct_no_prefix idle_state_s
 	custom percent_t 4 scalar, F32, @OFFSET@, "", 1, 0, 0, 100, 2
 
 	bit mightResetPid;mightResetPid\nThe idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.\nThe throttle pedal can be pressed for a long time, making the PID data obsolete (thus the reset is required).\nWe set 'mightResetPid' to true only if PID was actually used (i.e. idlePid.getOutput() was called) to save some CPU resources.\nSee automaticIdleController().
-	bit shouldResetPid;shouldResetPid
 	bit wasResetPid;wasResetPid\nThis is needed to slowly turn on the PID back after it was reset.
-	bit mustResetPid;mustResetPid\nThis is used when the PID configuration is changed, to guarantee the reset
 
 	bit isCranking;cranking
 	bit isIacTableForCoasting
 	bit notIdling
-	bit needReset;reset
-	bit isInDeadZone;dead zone
 	bit isBlipping
 	bit looksLikeRunning
 	bit looksLikeCoasting
@@ -25,14 +20,17 @@ struct_no_prefix idle_state_s
 	percent_t luaAddRpm;Target RPM: Lua adder
 
 	uint16_t idleTarget;Target RPM
+	uint16_t idleEntryRpm;Entry threshold
+	uint16_t idleExitRpm;Exit threshold
 
 	! Open loop
-	uint8_t autoscale openLoopBase;Open loop: Base;"%", 0.5, 0, 0, 100, 1
-	uint8_t openLoopAcBump;Open loop: AC bump;"%", 1, 0, 0, 100, 0
-	uint8_t openLoopFanBump;Open loop: Fan bump;"%", 1, 0, 0, 100, 0
 	percent_t luaAdd;Open loop: Lua Adder
 	percent_t iacByTpsTaper;Open loop: iacByTpsTaper
 	percent_t iacByRpmTaper;Open loop: iacByRpmTaper
+
+	uint8_t autoscale openLoopBase;Open loop: Base;"%", 0.5, 0, 0, 100, 1
+	uint8_t openLoopAcBump;Open loop: AC bump;"%", 1, 0, 0, 100, 0
+	uint8_t openLoopFanBump;Open loop: Fan bump;"%", 1, 0, 0, 100, 0
 
 	uint8_t autoscale openLoop;Open loop;"%", 0.5, 0, 0, 100, 1
 
@@ -41,4 +39,7 @@ struct_no_prefix idle_state_s
 
 	! Final output
 	percent_t currentIdlePosition;Position;"%", 1, 0, 0, 0, 1
+
+	uint16_t idleTargetAirmass;Target airmass;"mg", 1, 0, 0, 0, 0
+	uint16_t autoscale idleTargetFlow;Target airflow;"kg/h", 0.01, 0, 0, 0, 2
 end_struct

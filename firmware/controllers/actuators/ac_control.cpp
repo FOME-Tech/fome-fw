@@ -42,11 +42,22 @@ bool AcController::getAcState() {
 	auto maxTps = engineConfiguration->maxAcTps;
 	tpsTooHigh = maxTps != 0 && maxTpsDeadband.gt(Sensor::getOrZero(SensorType::Tps1), maxTps);
 	if (tpsTooHigh) {
-			return false;
+		return false;
 	}
+
 	if (isDisabledByLua) {
 		return false;
 	}
+
+	if (hasAcPressure() && !getAcPressure()) {
+		return false;
+	}
+
+	#if EFI_SHAFT_POSITION_INPUT
+		if (engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) < engineConfiguration->acStartDelay) {
+			return false;
+		}
+	#endif // EFI_SHAFT_POSITION_INPUT
 
 	// All conditions allow AC, simply pass thru switch
 	return acButtonState;

@@ -90,7 +90,7 @@ struct CanListenerTailSentinel : public CanListener {
 	{
 	}
 
-	bool acceptFrame(const CANRxFrame&) const override {
+	bool acceptFrame(CanBusIndex, const CANRxFrame&) const override {
 		return false;
 	}
 
@@ -102,11 +102,11 @@ struct CanListenerTailSentinel : public CanListener {
 static CanListenerTailSentinel tailSentinel;
 CanListener *canListeners_head = &tailSentinel;
 
-void serviceCanSubscribers(const CANRxFrame &frame, efitick_t nowNt) {
+static void serviceCanSubscribers(CanBusIndex busIndex, const CANRxFrame &frame, efitick_t nowNt) {
 	CanListener *current = canListeners_head;
 
 	while (current) {
-		current = current->processFrame(frame, nowNt);
+		current = current->processFrame(busIndex, frame, nowNt);
 	}
 }
 
@@ -209,14 +209,53 @@ static void processCanRxImu(const CANRxFrame& frame) {
 	}
 }
 
-void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame &frame, efitick_t nowNt) {
+static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
+	if (!engineConfiguration->ecumasterEgtToCan) {
+		return;
+	}
+
+	size_t offset = 0;
+
+	auto baseId = engineConfiguration->ecumasterEgtToCanBaseId;
+
+	if (CAN_SID(frame) == baseId + 0) {
+		offset = 0;
+	} else if (CAN_SID(frame) == baseId + 1) {
+		offset = 4;
+	} else {
+		return;
+	}
+
+	for (int i = 0; i < 4; i++) {
+		engine->outputChannels.egt[i + offset] = frame.data16[i];
+	}
+}
+
+#if EFI_GPIO_HARDWARE
+static void processCanInputPins(CanBusIndex busIndex, const CANRxFrame& frame) {
+	for (size_t i = 0; i < CAN_VIRTUAL_INPUT_PINS_COUNT; i++) {
+		const auto& inputConf = engineConfiguration->canVirtualInputs[i];
+
+		if (CAN_ID(frame) != inputConf.id) {
+			continue;
+		}
+
+		// extract the requested bit
+		bool value = (frame.data8[inputConf.byte] >> inputConf.bitOffset) & 0x01;
+
+		setCanVirtualInput(i, value);
+	}
+}
+#endif
+
+void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
 	if (engineConfiguration->verboseCan && busIndex == CanBusIndex::Bus0) {
 		printPacket(busIndex, frame);
 	} else if (engineConfiguration->verboseCan2 && busIndex == CanBusIndex::Bus1) {
 		printPacket(busIndex, frame);
 	}
 
-	serviceCanSubscribers(frame, nowNt);
+	serviceCanSubscribers(busIndex, frame, nowNt);
 
 	// todo: convert to CanListener or not?
 	//Vss is configurable, should we handle it here:
@@ -228,6 +267,12 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame &frame, efitick_
 	processCanBenchTest(frame);
 
 	processLuaCan(busIndex, frame);
+
+	processEgtCan(busIndex, frame);
+
+	#if EFI_GPIO_HARDWARE
+		processCanInputPins(busIndex, frame);
+	#endif
 
 	obdOnCanPacketRx(frame, busIndex);
 

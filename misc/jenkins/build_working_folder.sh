@@ -43,10 +43,8 @@ cp simulator/build/fome_simulator.exe     $CONSOLE_FOLDER
 cp misc/console_launcher/fome_*.exe     $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/libopenblt.dll        $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/libopenblt.so         $CONSOLE_FOLDER
-cp firmware/ext/openblt/Host/libopenblt.dylib      $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/openblt_jni.dll    $CONSOLE_FOLDER
 cp firmware/ext/openblt/Host/libopenblt_jni.so     $CONSOLE_FOLDER
-cp firmware/ext/openblt/Host/libopenblt_jni.dylib  $CONSOLE_FOLDER
 
 cp firmware/tunerstudio/generated/$INI_FILE_OVERRIDE $FOLDER
 # Unsetting since would not be used anywhere else
@@ -57,10 +55,10 @@ cp -r misc/install/STM32_Programmer_CLI $CONSOLE_FOLDER
 cp firmware/deliver/fome.bin $FOLDER
 
 # bootloader
-[ -e firmware/deliver/fome_bl.bin ] && { cp firmware/deliver/fome_bl.bin $FOLDER ; }
+[ -e firmware/deliver/fome_bl.srec ] && { cp firmware/deliver/fome_bl.srec $FOLDER ; }
 # update srec
 [ -e firmware/deliver/fome_update.srec ] && { cp firmware/deliver/fome_update.srec $FOLDER ; }
-
+# combined image
 [ -e firmware/deliver/fome.bin ] || { echo "$SCRIPT_NAME: fome.bin not found"; exit 1; }
 
 cd temp

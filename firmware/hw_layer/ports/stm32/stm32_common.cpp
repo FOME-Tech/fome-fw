@@ -145,7 +145,7 @@ adc_channel_e getAdcChannel(brain_pin_e pin) {
 	case Gpio::Unassigned:
 		return EFI_ADC_NONE;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "getAdcChannel %d", (int)pin);
+		firmwareError("getAdcChannel %d", (int)pin);
 		return EFI_ADC_ERROR;
 	}
 }
@@ -191,14 +191,14 @@ public:
 
 		// These timers are only 16 bit - don't risk overflow
 		if (m_period > 0xFFF0) {
-			firmwareError(ObdCode::CUSTOM_OBD_LOW_FREQUENCY, "PWM Frequency too low %.1f hz on pin \"%s\"", frequency, msg);
+			firmwareError("PWM Frequency too low %.1f hz on pin \"%s\"", frequency, msg);
 			return;
 		}
 
 		// If we have too few usable bits, we run out of resolution, so don't allow that either.
 		// 200 counts = 0.5% resolution
 		if (m_period < 200) {
-			firmwareError(ObdCode::CUSTOM_OBD_HIGH_FREQUENCY, "PWM Frequency too high %.1f hz on pin \"%s\"", frequency, msg);
+			firmwareError("PWM Frequency too high %.1f hz on pin \"%s\"", frequency, msg);
 			return;
 		}
 
@@ -225,7 +225,7 @@ public:
 
 	void setDuty(float duty) override {
 		if (!m_driver) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Attempted to set duty on null hard PWM device");
+			firmwareError("Attempted to set duty on null hard PWM device");
 			return;
 		}
 
@@ -319,7 +319,7 @@ stm32_hardware_pwm* getNextPwmDevice() {
 		}
 	}
 
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Run out of hardware PWM devices!");
+	firmwareError("Run out of hardware PWM devices!");
 	return nullptr;
 }
 
@@ -419,6 +419,44 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	return BOR_Result_Ok;
 }
 
+#if CORTEX_MODEL == 7
+uintptr_t getBootAddress() {
+	FLASH_OBProgramInitTypeDef flashData;
+
+	/* Read option bytes */
+	HAL_FLASHEx_OBGetConfig(&flashData);
+
+	return flashData.BootAddr0;
+}
+
+bool setBootAddress(uintptr_t address) {
+	if ((address & 0xFFFF) != 0) {
+		// Boot address is not allowed to have lower 16 bits set
+		return false;
+	}
+
+	FLASH_OBProgramInitTypeDef flashData;
+
+#ifdef STM32H7XX
+	flashData.BootConfig = OB_BOOT_ADD0;
+	flashData.OptionType = OPTIONBYTE_BOOTADD;
+#endif
+
+#ifdef STM32F7XX
+	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
+#endif
+
+	flashData.BootAddr0 = address;
+
+	HAL_FLASH_OB_Unlock();
+	HAL_FLASHEx_OBProgram(&flashData);
+	HAL_StatusTypeDef status = HAL_FLASH_OB_Launch();
+	HAL_FLASH_OB_Lock();
+
+	return status == HAL_OK;
+}
+#endif // CORTEX_MODEL == 7
+
 void baseMCUInit(void) {
 	// looks like this holds a random value on start? Let's set a nice clean zero
 	DWT->CYCCNT = 0;
@@ -430,10 +468,8 @@ extern uint32_t __main_stack_base__;
 
 typedef struct port_intctx intctx_t;
 
-EXTERNC int getRemainingStack(thread_t *otp) {
+int getRemainingStack(thread_t *otp) {
 #if CH_DBG_ENABLE_STACK_CHECK
-	// this would dismiss coverity warning - see http://rusefi.com/forum/viewtopic.php?f=5&t=655
-	// coverity[uninit_use]
 	register intctx_t *r13 asm ("r13");
 	otp->activeStack = r13;
 
@@ -489,7 +525,7 @@ static int getSpiAf(SPIDriver *driver) {
 	return -1;
 }
 
-brain_pin_e getMisoPin(spi_device_e device) {
+__attribute__((weak)) brain_pin_e getMisoPin(spi_device_e device) {
 	switch(device) {
 	case SPI_DEVICE_1:
 		return engineConfiguration->spi1misoPin;
@@ -509,7 +545,7 @@ brain_pin_e getMisoPin(spi_device_e device) {
 	return Gpio::Unassigned;
 }
 
-brain_pin_e getMosiPin(spi_device_e device) {
+__attribute__((weak)) brain_pin_e getMosiPin(spi_device_e device) {
 	switch(device) {
 	case SPI_DEVICE_1:
 		return engineConfiguration->spi1mosiPin;
@@ -529,7 +565,7 @@ brain_pin_e getMosiPin(spi_device_e device) {
 	return Gpio::Unassigned;
 }
 
-brain_pin_e getSckPin(spi_device_e device) {
+__attribute__((weak)) brain_pin_e getSckPin(spi_device_e device) {
 	switch(device) {
 	case SPI_DEVICE_1:
 		return engineConfiguration->spi1sckPin;
@@ -709,16 +745,19 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 	if (pinRx == Gpio::Unassigned && pinTx == Gpio::Unassigned) {
 		return nullptr;
 	}
-#if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
-   if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
-      return &CAND1;
+
+	#if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
+if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
+	return &CAND1;
 #endif
+
 #if STM32_CAN_USE_CAN2 || STM32_CAN_USE_FDCAN2
-   if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
-      return &CAND2;
+if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
+	return &CAND2;
 #endif
-   firmwareError(ObdCode::OBD_PCM_Processor_Fault, "invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
-   return nullptr;
+
+	firmwareError("invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
+	return nullptr;
 }
 
 #endif /* EFI_CAN_SUPPORT */
