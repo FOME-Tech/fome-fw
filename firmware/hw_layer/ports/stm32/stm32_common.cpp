@@ -89,6 +89,16 @@ brain_pin_e getAdcChannelBrainPin(const char*, adc_channel_e hwChannel) {
 		return Gpio::C4;
 	case EFI_ADC_15:
 		return Gpio::C5;
+#ifdef STM32H7XX
+	case EFI_ADC_16:
+		return Gpio::F11;
+	case EFI_ADC_17:
+		return Gpio::F12;
+	case EFI_ADC_18:
+		return Gpio::F13;
+	case EFI_ADC_19:
+		return Gpio::F14;
+#endif // STM32H7xx
 	default:
 /* todo: what is upper range ADC is used while lower range ADC is not used? how do we still mark pin used?
 external muxes for internal ADC #3350
