@@ -311,8 +311,10 @@ void SensorChecker::onSlowCallback() {
 			return;
 		}
 
+#if EFI_PROD_CODE
 		// Perform any special board-specific power supply checks
 		checkBoardPowerSupply();
+#endif
 	}
 
 	// Check sensors
