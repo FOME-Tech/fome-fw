@@ -78,8 +78,10 @@ static void initSpiModules() {
 
 #if HAL_USE_ADC
 
+#ifdef MODULE_MAP_AVERAGING
 static FastAdcToken fastMapSampleIndex;
 static FastAdcToken fastMapSampleIndex2;
+#endif
 
 /**
  * This method is not in the adc* lower-level file because it is more business logic then hardware.
@@ -98,10 +100,10 @@ void onFastAdcComplete(adcsample_t*) {
 #endif /* HAL_USE_ADC */
 
 static void calcFastAdcIndexes() {
-#if HAL_USE_ADC && EFI_USE_FAST_ADC
+#ifdef MODULE_MAP_AVERAGING
 	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", engineConfiguration->map.sensor.hwChannel);
 	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", engineConfiguration->map2HwChannel);
-#endif/* HAL_USE_ADC */
+#endif/* MODULE_MAP_AVERAGING */
 }
 
 extern bool isSpiInitialized[6];

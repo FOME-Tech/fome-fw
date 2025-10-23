@@ -113,8 +113,10 @@ void updateTriggerInputPins() {
 	}
 
 #if EFI_PROD_CODE
+#if HAL_TRIGGER_USE_PAL
 	// first we will turn off all the changed pins
 	stopTriggerInputPins();
+#endif // HAL_TRIGGER_USE_PAL
 
 	if (isBrainPinValid(engineConfiguration->triggerInputPins[0])) {
 		engine->rpmCalculator.Register();
@@ -123,8 +125,10 @@ void updateTriggerInputPins() {
 		engine->rpmCalculator.unregister();
 	}
 
+#if HAL_TRIGGER_USE_PAL
 	// then we will enable all the changed pins
 	startTriggerInputPins();
+#endif // HAL_TRIGGER_USE_PAL
 #endif /* EFI_PROD_CODE */
 }
 
