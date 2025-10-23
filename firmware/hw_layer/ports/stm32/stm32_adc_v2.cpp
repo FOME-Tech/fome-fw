@@ -19,12 +19,14 @@
 static OutputPin muxControl;
 #endif // ADC_MUX_PIN
 
+#if EFI_USE_FAST_ADC
 static void fast_adc_timer_callback(GPTDriver*);
 static const GPTConfig fast_adc_timer_config = {
 	GPT_FREQ_FAST,
 	fast_adc_timer_callback,
 	0, 0
 };
+#endif
 
 void portInitAdc() {
 	// Init slow ADC
