@@ -518,6 +518,8 @@ bool validateConfig() {
 
 		ensureArrayIsAscending("Ignition load", config->ignitionLoadBins);
 		ensureArrayIsAscending("Ignition RPM", config->ignitionRpmBins);
+		ensureArrayIsAscending("Ignition load", config->trailingIgnitionLoadBins);
+		ensureArrayIsAscending("Ignition RPM", config->trailingIgnitionRpmBins);
 
 		ensureArrayIsAscending("Ignition CLT corr", config->cltTimingBins);
 

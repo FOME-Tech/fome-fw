@@ -60,6 +60,7 @@ static void buildTimingMap(float advanceMax) {
 		for (int rpmIndex = 0; rpmIndex < IGN_RPM_COUNT; rpmIndex++) {
 			float rpm = config->ignitionRpmBins[rpmIndex];
 			config->ignitionTable[loadIndex][rpmIndex] = getInitialAdvance(rpm, load, advanceMax);
+			config->trailingIgnitionTable[loadIndex][rpmIndex] = 5;
 		}
 	}
 }
@@ -85,10 +86,9 @@ void setDefaultIgnition() {
 
 	// Ignition advance table
 	setLinearCurve(config->ignitionLoadBins, 20, 120, 3);
+	setLinearCurve(config->trailingIgnitionLoadBins, 20, 120, 3);
 	setTimingRpmBin(800, 7000);
 	buildTimingMap(35);
-
-	engineConfiguration->trailingSparkAngle = 10;
 
 	// CLT correction
 	setLinearCurve(config->cltTimingBins, CLT_CURVE_RANGE_FROM, 120, 1);

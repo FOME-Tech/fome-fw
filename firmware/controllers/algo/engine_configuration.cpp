@@ -198,6 +198,7 @@ void setWholeIatCorrTimingTable(float value) {
  */
 void setWholeTimingTable_d(angle_t value) {
 	setTable(config->ignitionTable, value);
+	setTable(config->trailingIgnitionTable, value);
 }
 
 static void initTemperatureCurve(float *bins, float *values, int size, float defaultValue) {

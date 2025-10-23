@@ -111,6 +111,7 @@ static void setDebugMode(int value) {
 
 static void setWholeTimingMap(float value) {
 	setTable(config->ignitionTable, value);
+	setTable(config->trailingIgnitionTable, value);
 }
 
 static void setWholeTimingMapCmd(float value) {
