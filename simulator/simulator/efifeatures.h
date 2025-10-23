@@ -133,8 +133,6 @@
 
 #define EFI_TUNER_STUDIO TRUE
 
-#define EFI_BOARD_TEST FALSE
-
 #define EFI_LUA TRUE
 
 #undef LUA_USER_HEAP
