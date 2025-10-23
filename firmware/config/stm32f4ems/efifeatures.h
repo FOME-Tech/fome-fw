@@ -9,8 +9,6 @@
 
 #pragma once
 
-#define EFI_GPIO_HARDWARE TRUE
-
 #ifndef EFI_BOOST_CONTROL
 #define EFI_BOOST_CONTROL TRUE
 #endif
