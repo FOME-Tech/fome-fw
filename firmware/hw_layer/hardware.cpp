@@ -98,7 +98,7 @@ void onFastAdcComplete(adcsample_t*) {
 #endif /* HAL_USE_ADC */
 
 static void calcFastAdcIndexes() {
-#if HAL_USE_ADC
+#if HAL_USE_ADC && EFI_USE_FAST_ADC
 	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", engineConfiguration->map.sensor.hwChannel);
 	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", engineConfiguration->map2HwChannel);
 #endif/* HAL_USE_ADC */
