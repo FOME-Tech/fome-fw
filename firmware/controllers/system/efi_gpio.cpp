@@ -589,7 +589,7 @@ void OutputPin::deInit() {
 
 void initPrimaryPins() {
 #if EFI_PROD_CODE
-	enginePins.errorLedPin.initPin("Error LED", led, (LED_PIN_MODE));
+	enginePins.errorLedPin.initPin("Error LED", LED_CRITICAL_ERROR_BRAIN_PIN, (LED_PIN_MODE));
 
 	addConsoleAction("gpio_pins", EnginePins::debug);
 #endif /* EFI_PROD_CODE */
