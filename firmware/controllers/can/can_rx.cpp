@@ -231,7 +231,6 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 	}
 }
 
-#if EFI_GPIO_HARDWARE
 static void processCanInputPins(CanBusIndex busIndex, const CANRxFrame& frame) {
 	for (size_t i = 0; i < CAN_VIRTUAL_INPUT_PINS_COUNT; i++) {
 		const auto& inputConf = engineConfiguration->canVirtualInputs[i];
@@ -246,7 +245,6 @@ static void processCanInputPins(CanBusIndex busIndex, const CANRxFrame& frame) {
 		setCanVirtualInput(i, value);
 	}
 }
-#endif
 
 void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
 	if (engineConfiguration->verboseCan && busIndex == CanBusIndex::Bus0) {
@@ -270,9 +268,7 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_
 
 	processEgtCan(busIndex, frame);
 
-	#if EFI_GPIO_HARDWARE
-		processCanInputPins(busIndex, frame);
-	#endif
+	processCanInputPins(busIndex, frame);
 
 	obdOnCanPacketRx(frame, busIndex);
 

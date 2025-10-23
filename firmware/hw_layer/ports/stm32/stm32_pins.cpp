@@ -10,8 +10,6 @@
 
 #include "smart_gpio.h"
 
-#if EFI_GPIO_HARDWARE
-
 #define PORT_SIZE 16
 
 static ioportid_t ports[] = {GPIOA,
@@ -203,5 +201,3 @@ brain_pin_e parseBrainPin(const char *str) {
 unsigned int getBrainPinOnchipNum(void) {
 	return BRAIN_PIN_ONCHIP_PINS;
 }
-
-#endif /* EFI_GPIO_HARDWARE */
