@@ -181,4 +181,8 @@ void setMockState(brain_pin_e pin, bool state) {
 	mockPinStates[static_cast<int>(pin)] = state;
 }
 
+void setCanVirtualInput(size_t idx, bool value) {
+	mockPinStates[static_cast<size_t>(Gpio::CAN_INPUT_0) + idx] = value;
+}
+
 #endif /* EFI_PROD_CODE */
