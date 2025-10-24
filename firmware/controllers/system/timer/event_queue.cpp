@@ -15,6 +15,7 @@
 
 #include "event_queue.h"
 #include "efitime.h"
+#include "pool_allocator.h"
 #include "utlist.h"
 
 #if EFI_UNIT_TEST
@@ -23,42 +24,7 @@ extern bool verboseMode;
 
 EventQueue::EventQueue(efidur_t lateDelay)
 	: m_lateDelay(lateDelay)
-{
-	for (size_t i = 0; i < efi::size(m_pool); i++) {
-		tryReturnScheduling(&m_pool[i]);
-	}
-
-#if EFI_PROD_CODE
-	getTunerStudioOutputChannels()->schedulingUsedCount = 0;
-#endif
-}
-
-scheduling_s* EventQueue::getFreeScheduling() {
-	auto retVal = m_freelist;
-
-	if (retVal) {
-		m_freelist = retVal->nextScheduling_s;
-		retVal->nextScheduling_s = nullptr;
-
-#if EFI_PROD_CODE
-		getTunerStudioOutputChannels()->schedulingUsedCount++;
-#endif
-	}
-
-	return retVal;
-}
-
-void EventQueue::tryReturnScheduling(scheduling_s* sched) {
-	// Only return this scheduling to the free list if it's from the correct pool
-	if (sched >= &m_pool[0] && sched <= &m_pool[efi::size(m_pool) - 1]) {
-		sched->nextScheduling_s = m_freelist;
-		m_freelist = sched;
-
-#if EFI_PROD_CODE
-		getTunerStudioOutputChannels()->schedulingUsedCount--;
-#endif
-	}
-}
+{ }
 
 /**
  * @return true if inserted into the head of the list
@@ -67,8 +33,10 @@ bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s 
 	ScopePerf perf(PE::EventQueueInsertTask);
 
 	if (!scheduling) {
-		scheduling = getFreeScheduling();
-
+		scheduling = m_schedulingPool.get();
+#if EFI_PROD_CODE
+		getTunerStudioOutputChannels()->schedulingUsedCount = m_schedulingPool.used();
+#endif
 		// If still null, the free list is empty and all schedulings in the pool have been expended.
 		if (!scheduling) {
 			// TODO: should we warn or error here?
@@ -101,7 +69,7 @@ bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s 
 	} else {
 		// here we know we are not in the head of the list, let's find the position - linear search
 		scheduling_s *insertPosition = m_head;
-		while (insertPosition->nextScheduling_s != NULL && insertPosition->nextScheduling_s->momentX < timeX) {
+		while (insertPosition->nextScheduling_s && insertPosition->nextScheduling_s->momentX < timeX) {
 			insertPosition = insertPosition->nextScheduling_s;
 		}
 
@@ -245,7 +213,10 @@ bool EventQueue::executeOne(efitick_t now) {
 	auto action = current->action;
 	current->action = {};
 
-	tryReturnScheduling(current);
+	m_schedulingPool.tryReturn(current);
+#if EFI_PROD_CODE
+	getTunerStudioOutputChannels()->schedulingUsedCount = m_schedulingPool.used();
+#endif
 	current = nullptr;
 
 #if EFI_UNIT_TEST
