@@ -45,6 +45,7 @@ or
  - Feature to skip initial trigger pulses for noisy triggers #634
  - VVT open loop "hold" table #638
  - Fire DTCs for detectable cam/crank errors
+ - Implement a trailing spark table (for rotary and dual-plug engines) #695
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs
