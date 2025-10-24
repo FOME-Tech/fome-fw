@@ -29,7 +29,7 @@ EventQueue::EventQueue(efidur_t lateDelay)
 /**
  * @return true if inserted into the head of the list
  */
-bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s action) {
+bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action) {
 	ScopePerf perf(PE::EventQueueInsertTask);
 
 	if (!scheduling) {
@@ -46,7 +46,7 @@ bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s 
 	}
 
 	assertListIsSorted();
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, action.getCallback() != NULL, "NULL callback", false);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, action.getCallback() != nullptr, "NULL callback", false);
 
 	if (scheduling->action) {
 #if EFI_UNIT_TEST
@@ -63,18 +63,18 @@ bool EventQueue::insertTask(scheduling_s *scheduling, efitick_t timeX, action_s 
 
 	if (!m_head || timeX < m_head->momentX) {
 		// here we insert into head of the linked list
-		LL_PREPEND2(m_head, scheduling, nextScheduling_s);
+		LL_PREPEND2(m_head, scheduling, next);
 		assertListIsSorted();
 		return true;
 	} else {
 		// here we know we are not in the head of the list, let's find the position - linear search
-		scheduling_s *insertPosition = m_head;
-		while (insertPosition->nextScheduling_s && insertPosition->nextScheduling_s->momentX < timeX) {
-			insertPosition = insertPosition->nextScheduling_s;
+		scheduling_s* insertPosition = m_head;
+		while (insertPosition->next && insertPosition->next->momentX < timeX) {
+			insertPosition = insertPosition->next;
 		}
 
-		scheduling->nextScheduling_s = insertPosition->nextScheduling_s;
-		insertPosition->nextScheduling_s = scheduling;
+		scheduling->next = insertPosition->next;
+		insertPosition->next = scheduling;
 		assertListIsSorted();
 		return false;
 	}
@@ -95,17 +95,17 @@ void EventQueue::remove(scheduling_s* scheduling) {
 
 	// Special case: is the item to remove at the head?
 	if (scheduling == m_head) {
-		m_head = m_head->nextScheduling_s;
-		scheduling->nextScheduling_s = nullptr;
+		m_head = m_head->next;
+		scheduling->next = nullptr;
 		scheduling->action = {};
 	} else {
 		auto prev = m_head;	// keep track of the element before the one to remove, so we can link around it
-		auto current = prev->nextScheduling_s;
+		auto current = prev->next;
 
 		// Find our element
 		while (current && current != scheduling) {
 			prev = current;
-			current = current->nextScheduling_s;
+			current = current->next;
 		}
 
 		// Walked off the end, this is an error since this *should* have been scheduled
@@ -117,10 +117,10 @@ void EventQueue::remove(scheduling_s* scheduling) {
 		efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, current == scheduling, "current not equal to scheduling");
 
 		// Link around the removed item
-		prev->nextScheduling_s = current->nextScheduling_s;
+		prev->next = current->next;
 
 		// Clean the item to remove
-		current->nextScheduling_s = nullptr;
+		current->next = nullptr;
 		current->action = {};
 	}
 
@@ -206,8 +206,8 @@ bool EventQueue::executeOne(efitick_t now) {
 	}
 
 	// step the head forward, unlink this element, clear scheduled flag
-	m_head = current->nextScheduling_s;
-	current->nextScheduling_s = nullptr;
+	m_head = current->next;
+	current->next = nullptr;
 
 	// Grab the action but clear it in the event so we can reschedule from the action's execution
 	auto action = current->action;
@@ -234,38 +234,38 @@ bool EventQueue::executeOne(efitick_t now) {
 }
 
 int EventQueue::size() const {
-	scheduling_s *tmp;
+	scheduling_s* tmp;
 	int result;
-	LL_COUNT2(m_head, tmp, result, nextScheduling_s);
+	LL_COUNT2(m_head, tmp, result, next);
 	return result;
 }
 
 void EventQueue::assertListIsSorted() const {
 #if EFI_UNIT_TEST || EFI_SIMULATOR
-	scheduling_s *current = m_head;
-	while (current != NULL && current->nextScheduling_s != NULL) {
-		efiAssertVoid(ObdCode::CUSTOM_ERR_6623, current->momentX <= current->nextScheduling_s->momentX, "list order");
-		current = current->nextScheduling_s;
+	scheduling_s* current = m_head;
+	while (current && current->next) {
+		efiAssertVoid(ObdCode::CUSTOM_ERR_6623, current->momentX <= current->next->momentX, "list order");
+		current = current->next;
 	}
 #endif // EFI_UNIT_TEST || EFI_SIMULATOR
 }
 
-scheduling_s * EventQueue::getHead() {
+scheduling_s* EventQueue::getHead() {
 	return m_head;
 }
 
 // todo: reduce code duplication with another 'getElementAtIndexForUnitText'
-scheduling_s *EventQueue::getElementAtIndexForUnitText(int index) {
-	scheduling_s * current;
+scheduling_s* EventQueue::getElementAtIndexForUnitText(int index) {
+	scheduling_s* current;
 
-	LL_FOREACH2(m_head, current, nextScheduling_s)
+	LL_FOREACH2(m_head, current, next)
 	{
 		if (index == 0)
 			return current;
 		index--;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void EventQueue::clear() {
@@ -273,11 +273,11 @@ void EventQueue::clear() {
 	while(m_head) {
 		auto x = m_head;
 		// link next element to head
-		m_head = x->nextScheduling_s;
+		m_head = x->next;
 
 		// Reset this element
 		x->momentX = {};
-		x->nextScheduling_s = nullptr;
+		x->next = nullptr;
 		x->action = {};
 	}
 

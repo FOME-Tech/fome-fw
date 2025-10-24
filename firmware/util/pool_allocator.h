@@ -18,8 +18,8 @@ public:
 		auto retVal = m_freelist;
 
 		if (retVal) {
-			m_freelist = retVal->nextScheduling_s;
-			retVal->nextScheduling_s = nullptr;
+			m_freelist = retVal->next;
+			retVal->next = nullptr;
 
 			m_used++;
 		}
@@ -30,7 +30,7 @@ public:
 	void tryReturn(T* element) {
 		// Only return this scheduling to the free list if it's from the our pool
 		if (element >= &m_pool[0] && element <= &m_pool[efi::size(m_pool) - 1]) {
-			element->nextScheduling_s = m_freelist;
+			element->next = m_freelist;
 			m_freelist = element;
 
 			m_used--;
