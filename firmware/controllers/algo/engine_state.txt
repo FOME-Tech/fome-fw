@@ -40,6 +40,7 @@ struct_no_prefix engine_state_s
 	bit brakePedalState;@@INDICATOR_NAME_BRAKE_DOWN@@
 	bit startStopState
 	bit doSplitInjection;Split injection active
+	bit pgState;
 
 	uint16_t fuelInjectionCounter;Fuel: Injection counter
 	uint16_t sparkCounter;Ign: Spark counter

@@ -133,3 +133,6 @@
 #define PROTEUS_DIGITAL_4 Gpio::E14
 #define PROTEUS_DIGITAL_5 Gpio::E13
 #define PROTEUS_DIGITAL_6 Gpio::E15
+
+#define PROTEUS_5V_PG_1 Gpio::C14
+#define PROTEUS_5V_PG_2 Gpio::C15
