@@ -90,7 +90,7 @@ void setDefaultIgnition() {
 
 	// Trailing spark table
 	setLinearCurve(config->trailingIgnitionLoadBins, 20, 120, 3);
-	setRpmBin(config->ignitionRpmBins, efi::size(config->ignitionRpmBins), 800, 7000);
+	setRpmBin(config->trailingIgnitionRpmBins, efi::size(config->trailingIgnitionRpmBins), 800, 7000);
 	setTable(config->trailingIgnitionTable, 10);
 
 	// CLT correction
