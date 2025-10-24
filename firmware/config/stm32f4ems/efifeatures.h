@@ -174,10 +174,6 @@
 #define EFI_MAIN_RELAY_CONTROL FALSE
 #endif
 
-#ifndef EFI_PWM
-#define EFI_PWM TRUE
-#endif
-
 #ifndef EFI_VEHICLE_SPEED
 #define EFI_VEHICLE_SPEED TRUE
 #endif
