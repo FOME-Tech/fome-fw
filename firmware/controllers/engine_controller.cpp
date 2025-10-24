@@ -519,6 +519,11 @@ bool validateConfig() {
 		ensureArrayIsAscending("Ignition load", config->ignitionLoadBins);
 		ensureArrayIsAscending("Ignition RPM", config->ignitionRpmBins);
 
+		if (engineConfiguration->enableTrailingSparks) {
+			ensureArrayIsAscending("Trailing spark load", config->trailingIgnitionLoadBins);
+			ensureArrayIsAscending("Trailing spark RPM", config->trailingIgnitionRpmBins);
+		}
+
 		ensureArrayIsAscending("Ignition CLT corr", config->cltTimingBins);
 
 		ensureArrayIsAscending("Ignition IAT corr IAT", config->ignitionIatCorrTempBins);

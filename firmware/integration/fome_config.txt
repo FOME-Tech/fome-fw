@@ -511,8 +511,6 @@ adc_channel_e vbattAdcChannel;This is the processor input pin that the battery v
 adc_channel_e fuelLevelSensor;This is the processor pin that your fuel level sensor in connected to. This is a non standard input so will need to be user defined.
 	adc_channel_e tps2_1AdcChannel;Second throttle body, first sensor
 
-	uint8_t autoscale trailingSparkAngle;;"angle", 0.1, 0, 0, 20, 1
-
 	uint8_t acIdleExtraOffset;Additional idle % while A/C is active;"%", 1, 0, 0, 100, 0
 
 	uint16_t autoscale finalGearRatio;Ratio between the wheels and your transmission output. ;"ratio", 0.01, 0, 0, 10, 2
@@ -1582,6 +1580,9 @@ uint16_t[SCRIPT_TABLE_8] vvtTable2RpmBins;;"RPM", 1, 0, 0, 18000, 0
 int16_t[IGN_RPM_COUNT x IGN_LOAD_COUNT] autoscale ignitionTable;;"deg", 0.1, 0, -20, 90, 1
 uint16_t[IGN_LOAD_COUNT] ignitionLoadBins;;"Load", 1, 0, 0, 1000, 0
 uint16_t[IGN_RPM_COUNT] ignitionRpmBins;;"RPM",	   1, 0, 0, 18000, 0
+uint8_t[8 x 8] autoscale trailingIgnitionTable;;"deg", 0.1, 0, 0, 25, 1
+uint16_t[8] trailingIgnitionLoadBins;;"Load", 1, 0, 0, 1000, 0
+uint16_t[8] trailingIgnitionRpmBins;;"RPM",	   1, 0, 0, 18000, 0
 
 uint16_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale veTable;;"%", 0.1, 0, 0, 999, 1
 uint16_t[FUEL_LOAD_COUNT] veLoadBins;;"kPa",	1, 0, 0, 1000, 0
