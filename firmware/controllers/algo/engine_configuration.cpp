@@ -143,9 +143,6 @@ __attribute__((weak)) void boardOnConfigurationChange(engine_configuration_s* /*
  */
 void incrementGlobalConfigurationVersion() {
 	engine->globalConfigurationVersion++;
-#if EFI_DEFAILED_LOGGING
-	efiPrintf("set globalConfigurationVersion=%d", globalConfigurationVersion);
-#endif /* EFI_DEFAILED_LOGGING */
 
 	applyNewHardwareSettings();
 

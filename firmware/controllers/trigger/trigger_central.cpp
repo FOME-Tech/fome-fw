@@ -800,12 +800,8 @@ void onConfigurationChangeTriggerCallback() {
 		engine->updateTriggerWaveform();
 	#endif
 	}
-#if EFI_DEFAILED_LOGGING
-	efiPrintf("isTriggerConfigChanged=%d", triggerConfigChanged);
-#endif /* EFI_DEFAILED_LOGGING */
-
 	// we do not want to miss two updates in a row
-	getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange = getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange || changed;
+	getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange |= changed;
 }
 
 static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& triggerConfig, TriggerDecoderBase &initState) {

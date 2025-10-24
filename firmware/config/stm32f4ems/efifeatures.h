@@ -70,8 +70,6 @@
 #define EFI_BLUETOOTH_SETUP TRUE
 #endif /* EFI_BLUETOOTH_SETUP */
 
-#define EFI_DEFAILED_LOGGING FALSE
-
 /**
  * Dev console support.
  */
