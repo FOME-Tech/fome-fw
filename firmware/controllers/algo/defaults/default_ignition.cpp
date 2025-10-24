@@ -85,10 +85,12 @@ void setDefaultIgnition() {
 
 	// Ignition advance table
 	setLinearCurve(config->ignitionLoadBins, 20, 120, 3);
-	setLinearCurve(config->trailingIgnitionLoadBins, 20, 120, 3);
 	setTimingRpmBin(800, 7000);
 	buildTimingMap(35);
 
+	// Trailing spark table
+	setLinearCurve(config->trailingIgnitionLoadBins, 20, 120, 3);
+	setRpmBin(config->ignitionRpmBins, efi::size(config->ignitionRpmBins), 800, 7000);
 	setTable(config->trailingIgnitionTable, 10);
 
 	// CLT correction
