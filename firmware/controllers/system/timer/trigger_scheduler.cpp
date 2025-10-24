@@ -2,6 +2,8 @@
 
 #include "event_queue.h"
 
+#include "utlist.h"
+
 bool TriggerScheduler::assertNotInList(AngleBasedEvent *head, AngleBasedEvent *element) {
 	/* this code is just to validate state, no functional load*/
 	decltype(head) current;

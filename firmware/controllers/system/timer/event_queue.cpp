@@ -15,6 +15,7 @@
 
 #include "event_queue.h"
 #include "efitime.h"
+#include "utlist.h"
 
 #if EFI_UNIT_TEST
 extern bool verboseMode;

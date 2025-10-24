@@ -8,7 +8,6 @@
 #pragma once
 
 #include "scheduler.h"
-#include "utlist.h"
 #include <rusefi/expected.h>
 
 #define QUEUE_LENGTH_LIMIT 1000

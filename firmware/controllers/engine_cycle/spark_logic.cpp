@@ -9,7 +9,6 @@
 
 #include "spark_logic.h"
 
-#include "utlist.h"
 #include "event_queue.h"
 
 #include "knock_logic.h"
