@@ -151,10 +151,6 @@
  #define EFI_MEMS FALSE
 #endif
 
-#ifndef EFI_INTERNAL_ADC
-#define EFI_INTERNAL_ADC TRUE
-#endif
-
 #define EFI_USE_FAST_ADC TRUE
 
 #ifndef EFI_CAN_SUPPORT

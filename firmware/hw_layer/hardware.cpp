@@ -262,7 +262,7 @@ void initHardwareNoConfig() {
 
 	boardInitHardware();
 
-#if EFI_INTERNAL_ADC
+#if EFI_PROD_CODE
 	portInitAdc();
 #endif
 }
