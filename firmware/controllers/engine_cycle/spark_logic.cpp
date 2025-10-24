@@ -92,19 +92,19 @@ angle_t IgnitionEvent::calculateSparkAngle() const {
 	return sparkAngle;
 }
 
-static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent *event) {
+static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_t sparkDwell, IgnitionEvent& event) {
 	// todo: clean up this implementation? does not look too nice as is.
 
-	const int realCylinderNumber = getCylinderNumberAtIndex(event->cylinderIndex);
+	const int realCylinderNumber = getCylinderNumberAtIndex(event.cylinderIndex);
 
 	// let's save planned duration so that we can later compare it with reality
-	event->sparkDwell = sparkDwell;
+	event.sparkDwell = sparkDwell;
 
 	// Stash which cylinder we're scheduling so that knock sensing knows which
 	// cylinder just fired
-	event->cylinderNumber = realCylinderNumber;
+	event.cylinderNumber = realCylinderNumber;
 
-	auto sparkAngle = event->calculateSparkAngle();
+	auto sparkAngle = event.calculateSparkAngle();
 
 	auto ignitionMode = getCurrentIgnitionMode();
 
@@ -121,8 +121,8 @@ static void prepareCylinderIgnitionSchedule(angle_t dwellAngleDuration, floatms_
 	assertAngleRange(dwellStartAngle, "findAngle dwellStartAngle", ObdCode::CUSTOM_ERR_6550);
 	wrapAngle(dwellStartAngle, "findAngle#7", ObdCode::CUSTOM_ERR_6550);
 
-	event->m_ignitionMode = ignitionMode;
-	event->dwellAngle = dwellStartAngle;
+	event.m_ignitionMode = ignitionMode;
+	event.dwellAngle = dwellStartAngle;
 
 	engine->outputChannels.currentIgnitionMode = static_cast<uint8_t>(ignitionMode);
 }
@@ -137,10 +137,10 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+	auto& event = engine->ignitionEvents.elements[ctx.eventIndex];
 
-	float actualDwellMs = event->actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
-	float minDwell = 0.8f * event->sparkDwell;
+	float actualDwellMs = event.actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
+	float minDwell = 0.8f * event.sparkDwell;
 	if (!ctx.isOverdwellProtect && actualDwellMs < minDwell) {
 		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
 
@@ -156,7 +156,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		// re-schedule ourselves at a later time once enough dwell has elapsed
 		// This is fine to do because it will retard the effective ignition timing, but 
 		// ensure the coil has enough energy to actually fire (we would rather retard timing than misfire)
-		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, delayedFireTime, { fireSparkAndPrepareNextSchedule, ctx });
+		engine->scheduler.schedule("firing", &event.sparkEvent.scheduling, delayedFireTime, { fireSparkAndPrepareNextSchedule, ctx });
 		return;
 	}
 
@@ -180,7 +180,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
-	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event->sparkDwell;
+	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event.sparkDwell;
 #endif
 
 	// now that we've just fired a coil let's prepare the new schedule for the next engine revolution
@@ -200,14 +200,14 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		efitick_t nextFiring = nextDwellStart + engine->engineState.multispark.dwell;
 
 		// We can schedule both of these right away, since we're going for "asap" not "particular angle"
-		engine->scheduler.schedule("dwell", &event->dwellStartTimer, nextDwellStart, { &turnSparkPinHigh, ctx });
-		engine->scheduler.schedule("firing", &event->sparkEvent.scheduling, nextFiring, { fireSparkAndPrepareNextSchedule, ctx });
+		engine->scheduler.schedule("dwell", &event.dwellStartTimer, nextDwellStart, { &turnSparkPinHigh, ctx });
+		engine->scheduler.schedule("firing", &event.sparkEvent.scheduling, nextFiring, { fireSparkAndPrepareNextSchedule, ctx });
 	} else {
 		if (engineConfiguration->enableTrailingSparks && !ctx.isOverdwellProtect) {
 			// Trailing sparks are enabled - schedule an event for the corresponding trailing coil
 			scheduleByAngle(
-				&event->trailingSparkFire, nowNt, engine->engineState.trailingSparkAngle,
-				{ &fireTrailingSpark, &enginePins.trailingCoils[event->cylinderNumber] }
+				&event.trailingSparkFire, nowNt, engine->engineState.trailingSparkAngle,
+				{ &fireTrailingSpark, &enginePins.trailingCoils[event.cylinderNumber] }
 			);
 		}
 
@@ -215,7 +215,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 		prepareCylinderIgnitionSchedule(dwellAngleDuration, sparkDwell, event);
 	}
 
-	engine->onSparkFireKnockSense(event->cylinderNumber);
+	engine->onSparkFireKnockSense(event.cylinderNumber);
 }
 
 void turnSparkPinHigh(IgnitionContext ctx) {
@@ -233,9 +233,9 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 		idx++;
 	}
 
-	IgnitionEvent *event = &engine->ignitionEvents.elements[ctx.eventIndex];
+	auto& event = engine->ignitionEvents.elements[ctx.eventIndex];
 
-	event->actualDwellTimer.reset(nowNt);
+	event.actualDwellTimer.reset(nowNt);
 
 #if EFI_UNIT_TEST
 	if (engine->onIgnitionEvent) {
@@ -244,27 +244,27 @@ void turnSparkPinHigh(IgnitionContext ctx) {
 #endif
 
 	if (engineConfiguration->enableTrailingSparks) {
-		IgnitionOutputPin *output = &enginePins.trailingCoils[event->cylinderNumber];
+		IgnitionOutputPin* output = &enginePins.trailingCoils[event.cylinderNumber];
 		// Trailing sparks are enabled - schedule an event for the corresponding trailing coil
 		scheduleByAngle(
-			&event->trailingSparkCharge, nowNt, engine->engineState.trailingSparkAngle,
+			&event.trailingSparkCharge, nowNt, engine->engineState.trailingSparkAngle,
 			{ &chargeTrailingSpark, output }
 		);
 	}
 }
 
-static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dwellMs, EngPhase dwellAngle, EngPhase sparkAngle, const EnginePhaseInfo& phase) {
+static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent& event, float dwellMs, EngPhase dwellAngle, EngPhase sparkAngle, const EnginePhaseInfo& phase) {
 	float angleOffset = dwellAngle - phase.currentEngPhase;
 	if (angleOffset < 0) {
 		angleOffset += engine->engineState.engineCycle;
 	}
 
 	engine->engineState.sparkCounter++;
-	event->wasSparkLimited = limitedSpark;
+	event.wasSparkLimited = limitedSpark;
 
 	IgnitionContext ctx;
-	ctx.outputsMask = event->calculateIgnitionOutputMask();
-	ctx.eventIndex = event->cylinderIndex;
+	ctx.outputsMask = event.calculateIgnitionOutputMask();
+	ctx.eventIndex = event.cylinderIndex;
 	ctx.sparksRemaining = limitedSpark ? 0 : engine->engineState.multispark.count;
 
 	efitick_t chargeTime;
@@ -279,7 +279,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		 * the coil.
 		 */
 		chargeTime = scheduleByAngle(
-						&event->dwellStartTimer,
+						&event.dwellStartTimer,
 						phase.timestamp,
 						angleOffset,
 						{ &turnSparkPinHigh, ctx }
@@ -294,7 +294,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 	assertAngleRange(sparkAngle.angle, "findAngle#a5", ObdCode::CUSTOM_ERR_6549);
 
 	bool scheduled = engine->module<TriggerScheduler>()->scheduleOrQueue(
-		&event->sparkEvent,
+		&event.sparkEvent,
 		sparkAngle,
 		{ fireSparkAndPrepareNextSchedule, ctx },
 		phase
@@ -307,7 +307,7 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 		ctx.isOverdwellProtect = true;
 		engine->scheduler.schedule(
 			"overdwell",
-			&event->sparkEvent.scheduling,
+			&event.sparkEvent.scheduling,
 			fireTime,
 			{ fireSparkAndPrepareNextSchedule, ctx }
 		);
@@ -315,22 +315,22 @@ static void scheduleSparkEvent(bool limitedSpark, IgnitionEvent *event, float dw
 }
 
 void initializeIgnitionActions() {
-	IgnitionEventList *list = &engine->ignitionEvents;
+	IgnitionEventList& list = engine->ignitionEvents;
 	angle_t dwellAngle = engine->ignitionState.dwellAngle;
 	floatms_t sparkDwell = engine->ignitionState.getDwell();
 	if (std::isnan(engine->cylinders[0].getIgnitionTimingBtdc()) || std::isnan(dwellAngle)) {
 		// error should already be reported
 		// need to invalidate previous ignition schedule
-		list->isReady = false;
+		list.isReady = false;
 		return;
 	}
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6592, engineConfiguration->cylindersCount > 0, "cylindersCount");
 
 	for (size_t cylinderIndex = 0; cylinderIndex < engineConfiguration->cylindersCount; cylinderIndex++) {
-		list->elements[cylinderIndex].cylinderIndex = cylinderIndex;
-		prepareCylinderIgnitionSchedule(dwellAngle, sparkDwell, &list->elements[cylinderIndex]);
+		list.elements[cylinderIndex].cylinderIndex = cylinderIndex;
+		prepareCylinderIgnitionSchedule(dwellAngle, sparkDwell, list.elements[cylinderIndex]);
 	}
-	list->isReady = true;
+	list.isReady = true;
 }
 
 static void prepareIgnitionSchedule() {
@@ -396,9 +396,9 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 
 	if (engine->ignitionEvents.isReady) {
 		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
-			IgnitionEvent *event = &engine->ignitionEvents.elements[i];
+			auto& event = engine->ignitionEvents.elements[i];
 
-			angle_t dwellAngle = event->dwellAngle;
+			angle_t dwellAngle = event.dwellAngle;
 
 			angle_t sparkAngleAdjust = 0;
 
@@ -424,7 +424,7 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 				continue;
 			}
 
-			angle_t sparkAngle = sparkAngleAdjust + event->calculateSparkAngle();
+			angle_t sparkAngle = sparkAngleAdjust + event.calculateSparkAngle();
 			if (sparkAngle > 720) {
 				sparkAngle -= 720;
 			}
