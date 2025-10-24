@@ -272,9 +272,7 @@ public:
 	bool needTdcCallback = true;
 #endif /* EFI_UNIT_TEST */
 
-
-	int getGlobalConfigurationVersion(void) const;
-
+	int getGlobalConfigurationVersion() const;
 
 	// a pointer with interface type would make this code nicer but would carry extra runtime
 	// cost to resolve pointer, we use instances as a micro optimization

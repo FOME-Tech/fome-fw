@@ -122,7 +122,7 @@ using floatus_t = float;
  */
 using percent_t = float;
 
-typedef void (*Void)(void);
+typedef void (*Void)();
 
 using lua_script_t = char[LUA_SCRIPT_SIZE];
 

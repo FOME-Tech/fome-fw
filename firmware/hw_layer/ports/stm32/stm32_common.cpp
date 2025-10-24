@@ -349,7 +349,7 @@ stm32_hardware_pwm* getNextPwmDevice() {
 }
 #endif
 
-static void reset_and_jump(void) {
+static void reset_and_jump() {
 	#ifdef STM32H7XX
 		// H7 needs a forcible reset of the USB peripheral(s) in order for the bootloader to work properly.
 		// If you don't do this, the bootloader will execute, but USB doesn't work (nobody knows why)

@@ -151,7 +151,7 @@ static void resetSpiDevice(SPIDriver* spi) {
 #endif // STM32_SPI_USE_SPI6
 }
 
-sint8 nm_bus_deinit(void) {
+sint8 nm_bus_deinit() {
 	spiReleaseBus(wifiSpi);
 	spiStop(wifiSpi);
 	resetSpiDevice(wifiSpi);

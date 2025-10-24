@@ -198,6 +198,6 @@ brain_pin_e parseBrainPin(const char *str) {
 	return (brain_pin_e)(basePin + pin);
 }
 
-unsigned int getBrainPinOnchipNum(void) {
+unsigned int getBrainPinOnchipNum() {
 	return BRAIN_PIN_ONCHIP_PINS;
 }
