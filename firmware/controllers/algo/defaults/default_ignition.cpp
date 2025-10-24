@@ -60,9 +60,10 @@ static void buildTimingMap(float advanceMax) {
 		for (int rpmIndex = 0; rpmIndex < IGN_RPM_COUNT; rpmIndex++) {
 			float rpm = config->ignitionRpmBins[rpmIndex];
 			config->ignitionTable[loadIndex][rpmIndex] = getInitialAdvance(rpm, load, advanceMax);
-			config->trailingIgnitionTable[loadIndex][rpmIndex] = 5;
 		}
 	}
+
+	setTable(config->trailingIgnitionTable, 10);
 }
 
 void setDefaultIgnition() {
