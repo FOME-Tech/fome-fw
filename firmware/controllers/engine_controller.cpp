@@ -47,7 +47,6 @@
 #include "date_stamp.h"
 #include "buttonshift.h"
 #include "start_stop.h"
-#include "dynoview.h"
 #include "vr_pwm.h"
 #include "adc_subscription.h"
 

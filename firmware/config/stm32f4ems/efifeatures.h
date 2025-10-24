@@ -21,8 +21,6 @@
 #define EFI_ANTILAG_SYSTEM TRUE
 #endif
 
-#define EFI_DYNO_VIEW TRUE
-
 #ifndef EFI_TOOTH_LOGGER
 #define EFI_TOOTH_LOGGER TRUE
 #endif

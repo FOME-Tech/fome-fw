@@ -21,7 +21,6 @@
 #include "idle_hardware.h"
 #include "gppwm.h"
 #include "speedometer.h"
-#include "dynoview.h"
 #include "boost_control.h"
 #include "ac_control.h"
 #include "vr_pwm.h"
@@ -96,10 +95,6 @@ void Engine::periodicSlowCallback() {
 
 #if (BOARD_TLE8888_COUNT > 0)
 	tle8888startup();
-#endif
-
-#if EFI_DYNO_VIEW
-	updateDynoView();
 #endif
 
 #if EFI_PROD_CODE

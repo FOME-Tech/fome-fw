@@ -42,7 +42,6 @@
 #include "periodic_thread_controller.h"
 #include "binary_logging.h"
 #include "buffered_writer.h"
-#include "dynoview.h"
 #include "frequency_sensor.h"
 #include "digital_input_exti.h"
 #include "dc_motors.h"
@@ -485,10 +484,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->accelerationLon = engine->sensors.accelerometer.lon;
 	tsOutputChannels->accelerationVert = engine->sensors.accelerometer.vert;
 	tsOutputChannels->gyroYaw = engine->sensors.accelerometer.yawRate;
-
-#if EFI_DYNO_VIEW
-	tsOutputChannels->VssAcceleration = getDynoviewAcceleration();
-#endif
 
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
 	extern FrequencySensor inputShaftSpeedSensor;
