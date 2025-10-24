@@ -98,6 +98,9 @@ public:
 	 */
 	void assignRpmValue(float value);
 	uint32_t getRevolutionCounterSinceStart() const;
+
+	void storeInstantRpm(bool alwaysInstantRpm, float rpm, efitick_t timestamp);
+
 	/**
 	 * RPM rate of change between current RPM and RPM measured during previous engine cycle
 	 * see also SC_RPM_ACCEL
@@ -161,6 +164,11 @@ private:
 
 	// Last RPM for purposes of calculating rpmRate while in "always instant RPM" mode
 	float m_lastRpm = 0;
+
+	Timer m_instantRpmDeltaTimer;
+
+	float m_instantRpm = 0;
+	efitick_t m_lastInstantRpmTime;
 };
 
 void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo);
