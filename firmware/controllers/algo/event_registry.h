@@ -19,7 +19,7 @@ struct AngleBasedEvent {
 	/**
 	 * Trigger-based scheduler maintains a linked list of all pending tooth-based events.
 	 */
-	AngleBasedEvent *nextToothEvent = nullptr;
+	AngleBasedEvent* next = nullptr;
 
 	TrgPhase eventPhase;
 
@@ -58,7 +58,7 @@ public:
 	 */
 	int cylinderIndex = 0;
 	int8_t cylinderNumber = 0;
-	char *name = nullptr;
+	char* name = nullptr;
 
 	ignition_mode_e m_ignitionMode = IM_INDIVIDUAL_COILS;
 };
@@ -72,4 +72,4 @@ public:
 	bool isReady = false;
 };
 
-IgnitionEventList *getIgnitionEvents();
+IgnitionEventList* getIgnitionEvents();
