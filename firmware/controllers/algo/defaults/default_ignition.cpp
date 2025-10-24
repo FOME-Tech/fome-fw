@@ -62,8 +62,6 @@ static void buildTimingMap(float advanceMax) {
 			config->ignitionTable[loadIndex][rpmIndex] = getInitialAdvance(rpm, load, advanceMax);
 		}
 	}
-
-	setTable(config->trailingIgnitionTable, 10);
 }
 
 void setDefaultIgnition() {
@@ -90,6 +88,8 @@ void setDefaultIgnition() {
 	setLinearCurve(config->trailingIgnitionLoadBins, 20, 120, 3);
 	setTimingRpmBin(800, 7000);
 	buildTimingMap(35);
+
+	setTable(config->trailingIgnitionTable, 10);
 
 	// CLT correction
 	setLinearCurve(config->cltTimingBins, CLT_CURVE_RANGE_FROM, 120, 1);
