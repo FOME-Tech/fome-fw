@@ -174,7 +174,6 @@ angle_t OneCylinder::getAngleOffset() const {
 
 void setTimingRpmBin(float from, float to) {
 	setRpmBin(config->ignitionRpmBins, IGN_RPM_COUNT, from, to);
-	setRpmBin(config->trailingIgnitionRpmBins, IGN_RPM_COUNT, from, to);
 }
 
 /**
