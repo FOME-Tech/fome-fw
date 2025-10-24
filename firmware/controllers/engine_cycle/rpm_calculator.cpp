@@ -248,10 +248,10 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
 void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo) {
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
 
-	RpmCalculator *rpmState = &engine->rpmCalculator;
+	RpmCalculator& rpmState = engine->rpmCalculator;
 
 	if (trgEventIndex == 0) {
-		bool hadRpmRecently = rpmState->checkIfSpinning(phaseInfo.timestamp);
+		bool hadRpmRecently = rpmState.checkIfSpinning(phaseInfo.timestamp);
 
 		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(phaseInfo.timestamp);
 
@@ -265,16 +265,16 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 			 */
 			if (!alwaysInstantRpm) {
 				if (periodSeconds == 0) {
-					rpmState->setRpmValue(0);
-					rpmState->rpmRate = 0;
+					rpmState.setRpmValue(0);
+					rpmState.rpmRate = 0;
 				} else {
 					float mult = getEngineCycle(getEngineRotationState()->getOperationMode()) / 360;
 					float rpm = 60 * mult / periodSeconds;
 
-					auto rpmDelta = rpm - rpmState->previousRpmValue;
-					rpmState->rpmRate = rpmDelta / (mult * periodSeconds);
+					auto rpmDelta = rpm - rpmState.previousRpmValue;
+					rpmState.rpmRate = rpmDelta / (mult * periodSeconds);
 
-					rpmState->setRpmValue(rpm);
+					rpmState.setRpmValue(rpm);
 				}
 			}
 		} else {
@@ -283,7 +283,7 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 			engine->triggerCentral.instantRpm.movePreSynchTimestamps();
 		}
 
-		rpmState->onNewEngineCycle();
+		rpmState.onNewEngineCycle();
 	}
 
 	// Always update instant RPM even when not spinning up
@@ -296,9 +296,9 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	if (alwaysInstantRpm) {
-		rpmState->setRpmValue(instantRpm);
-	} else if (rpmState->isSpinningUp()) {
-		rpmState->assignRpmValue(instantRpm);
+		rpmState.setRpmValue(instantRpm);
+	} else if (rpmState.isSpinningUp()) {
+		rpmState.assignRpmValue(instantRpm);
 	}
 }
 

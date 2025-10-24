@@ -670,27 +670,20 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 }
 
 static void triggerShapeInfo() {
-#if EFI_PROD_CODE || EFI_SIMULATOR
-	TriggerWaveform *shape = &getTriggerCentral()->triggerShape;
-	TriggerFormDetails *triggerFormDetails = &getTriggerCentral()->triggerFormDetails;
+	TriggerWaveform& shape = getTriggerCentral()->triggerShape;
+	TriggerFormDetails& triggerFormDetails = getTriggerCentral()->triggerFormDetails;
 	efiPrintf("syncEdge=%s", getSyncEdge(TRIGGER_WAVEFORM(m_syncEdge)));
 	efiPrintf("gap from %.2f to %.2f", TRIGGER_WAVEFORM(syncronizationRatioFrom[0]), TRIGGER_WAVEFORM(syncronizationRatioTo[0]));
 
-	for (size_t i = 0; i < shape->getSize(); i++) {
-		efiPrintf("event %d %.2f", i, triggerFormDetails->eventAngles[i]);
+	for (size_t i = 0; i < shape.getSize(); i++) {
+		efiPrintf("event %d %.2f", i, triggerFormDetails.eventAngles[i]);
 	}
-#endif
 }
-
-#if EFI_PROD_CODE
-extern PwmConfig triggerSignal;
-#endif /* #if EFI_PROD_CODE */
 
 void triggerInfo() {
 #if EFI_PROD_CODE || EFI_SIMULATOR
-
 	TriggerCentral *tc = getTriggerCentral();
-	TriggerWaveform *ts = &tc->triggerShape;
+	TriggerWaveform& ts = tc->triggerShape;
 
 	efiPrintf("Template %s (%d) trigger %s (%d) syncEdge=%s tdcOffset=%.2f",
 			getEngine_type_e(engineConfiguration->engineType), (int)engineConfiguration->engineType,
@@ -709,9 +702,8 @@ void triggerInfo() {
 	efiPrintf("trigger type=%d/need2ndChannel=%s", (int)engineConfiguration->trigger.type,
 			boolToString(TRIGGER_WAVEFORM(needSecondTriggerInput)));
 
-
 	efiPrintf("synchronizationNeeded=%s/isError=%s/total errors=%d ord_err=%lu/total revolutions=%d/self=%s",
-			boolToString(ts->isSynchronizationNeeded),
+			boolToString(ts.isSynchronizationNeeded),
 			boolToString(tc->isTriggerDecoderError()),
 			tc->triggerState.triggerErrorCounter,
 			tc->triggerState.orderingErrorCounter,
@@ -725,15 +717,16 @@ void triggerInfo() {
 #endif /* EFI_PROD_CODE || EFI_SIMULATOR */
 
 #if EFI_PROD_CODE
-
 	efiPrintf("primary trigger input: %s", hwPortname(engineConfiguration->triggerInputPins[0]));
 	efiPrintf("primary trigger simulator: %s freq=%d",
 			hwPortname(engineConfiguration->triggerSimulatorPins[0]),
 			engineConfiguration->triggerSimulatorRpm);
 
-	if (ts->needSecondTriggerInput) {
+	if (ts.needSecondTriggerInput) {
 		efiPrintf("secondary trigger input: %s", hwPortname(engineConfiguration->triggerInputPins[1]));
 #if EFI_EMULATE_POSITION_SENSORS
+		extern PwmConfig triggerSignal;
+
 		efiPrintf("secondary trigger simulator: %s phase=%d",
 				hwPortname(engineConfiguration->triggerSimulatorPins[1]), triggerSignal.safe.phaseIndex);
 #endif /* EFI_EMULATE_POSITION_SENSORS */
@@ -754,7 +747,6 @@ void triggerInfo() {
 #if EFI_ENGINE_SNIFFER
 	efiPrintf("engine sniffer current size=%d", waveChart.getSize());
 #endif /* EFI_ENGINE_SNIFFER */
-
 }
 
 static void resetRunningTriggerCounters() {
