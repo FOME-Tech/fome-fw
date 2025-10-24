@@ -196,7 +196,7 @@ void applyNewHardwareSettings() {
 	 * Start everything back with new settings *
 	 ******************************************/
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
+#if EFI_SHAFT_POSITION_INPUT
 	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
@@ -331,7 +331,7 @@ void initHardware() {
 	initCan();
 #endif /* EFI_CAN_SUPPORT */
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
+#if EFI_SHAFT_POSITION_INPUT
 	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 

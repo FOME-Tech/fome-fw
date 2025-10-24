@@ -8,13 +8,7 @@
 #include "pch.h"
 #include "trigger_input.h"
 
-/* TODO:
- * - merge comparator trigger
- */
-
 #if (EFI_SHAFT_POSITION_INPUT) || defined(__DOXYGEN__)
-
-#if (HAL_TRIGGER_USE_PAL == TRUE)
 
 int  extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft);
 void extiTriggerTurnOffInputPin(brain_pin_e brainPin);
@@ -41,6 +35,7 @@ static int turnOnTriggerInputPin(const char *msg, int index, bool isTriggerShaft
 		return 0;
 	}
 
+#if EFI_PROD_CODE
 	/* ... then EXTI */
 	if (extiTriggerTurnOnInputPin(msg, index, isTriggerShaft) >= 0) {
 		if (isTriggerShaft) {
@@ -50,6 +45,7 @@ static int turnOnTriggerInputPin(const char *msg, int index, bool isTriggerShaft
 		}
 		return 0;
 	}
+#endif
 
 	firmwareError(ObdCode::CUSTOM_ERR_NOT_INPUT_PIN, "%s: Not input pin %s", msg, hwPortname(brainPin));
 
@@ -60,6 +56,7 @@ static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
 	brain_pin_e brainPin = isTriggerShaft ?
 		activeConfiguration.triggerInputPins[index] : activeConfiguration.camInputs[index];
 
+#if EFI_PROD_CODE
 	if (isTriggerShaft) {
 		if (shaftTriggerType[index] == TRIGGER_EXTI) {
 			extiTriggerTurnOffInputPin(brainPin);
@@ -73,6 +70,9 @@ static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
 
 		camTriggerType[index] = TRIGGER_NONE;
 	}
+#else // EFI_PROD_CODE
+	UNUSED(brainPin);
+#endif // EFI_PROD_CODE
 }
 
 static void stopTriggerInputPins() {
@@ -105,18 +105,13 @@ static void startTriggerInputPins() {
 	}
 }
 
-#endif /* (HAL_TRIGGER_USE_PAL == TRUE) */
-
 void updateTriggerInputPins() {
 	if (hasFirmwareError()) {
 		return;
 	}
 
-#if EFI_PROD_CODE
-#if HAL_TRIGGER_USE_PAL
 	// first we will turn off all the changed pins
 	stopTriggerInputPins();
-#endif // HAL_TRIGGER_USE_PAL
 
 	if (isBrainPinValid(engineConfiguration->triggerInputPins[0])) {
 		engine->rpmCalculator.Register();
@@ -125,11 +120,8 @@ void updateTriggerInputPins() {
 		engine->rpmCalculator.unregister();
 	}
 
-#if HAL_TRIGGER_USE_PAL
 	// then we will enable all the changed pins
 	startTriggerInputPins();
-#endif // HAL_TRIGGER_USE_PAL
-#endif /* EFI_PROD_CODE */
 }
 
 #endif /* EFI_SHAFT_POSITION_INPUT */
