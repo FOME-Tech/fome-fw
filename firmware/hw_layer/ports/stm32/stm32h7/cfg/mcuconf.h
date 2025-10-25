@@ -188,9 +188,6 @@
  * IRQ system settings.
  */
 
-// we hijack this interrupt handler as the EXTI chained handler, see digital_input_exti.cpp
-#define STM32_I2C_I2C1_IRQ_PRIORITY         6
-
 #define STM32_IRQ_EXTI0_PRIORITY            EFI_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI1_PRIORITY            EFI_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI2_PRIORITY            EFI_IRQ_EXTI_PRIORITY

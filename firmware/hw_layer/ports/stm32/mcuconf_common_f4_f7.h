@@ -58,9 +58,6 @@
 #define STM32_CAN_CAN2_IRQ_PRIORITY         EFI_IRQ_CAN_PRIORITY
 #define STM32_CAN_CAN3_IRQ_PRIORITY         EFI_IRQ_CAN_PRIORITY
 
-// we hijack this interrupt handler as the EXTI chained handler, see digital_input_exti.cpp
-#define STM32_I2C_I2C1_IRQ_PRIORITY         EFI_IRQ_EXTI_HANDOFF_PRIORITY
-
 #define STM32_IRQ_EXTI0_PRIORITY            EFI_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI1_PRIORITY            EFI_IRQ_EXTI_PRIORITY
 #define STM32_IRQ_EXTI2_PRIORITY            EFI_IRQ_EXTI_PRIORITY
