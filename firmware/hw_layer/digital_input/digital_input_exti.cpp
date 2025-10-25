@@ -18,9 +18,9 @@
  * because pin '0' would be used on two different ports
  */
 
-#ifdef STM32_I2C_I2C1_IRQ_PRIORITY
+#ifdef EFI_IRQ_EXTI_HANDOFF_PRIORITY
 void efiExtiInit() {
-	nvicEnableVector(I2C1_EV_IRQn, STM32_I2C_I2C1_IRQ_PRIORITY);
+	nvicEnableVector(I2C1_EV_IRQn, EFI_IRQ_EXTI_HANDOFF_PRIORITY);
 }
 
 struct ExtiChannel
