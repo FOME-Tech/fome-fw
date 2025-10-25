@@ -184,24 +184,6 @@
 #define STM32_I2C_DMA_ERROR_HOOK(i2cp)      osalSysHalt("DMA failure")
 
 /*
- * ICU driver system settings.
- */
-#define STM32_ICU_USE_TIM1                  FALSE
-#define STM32_ICU_USE_TIM2                  TRUE
-#define STM32_ICU_USE_TIM3                  FALSE
-#define STM32_ICU_USE_TIM4                  FALSE
-#define STM32_ICU_USE_TIM5                  FALSE
-#define STM32_ICU_USE_TIM8                  FALSE
-#define STM32_ICU_USE_TIM9                  FALSE
-#define STM32_ICU_TIM1_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM2_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM3_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM4_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM5_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM8_IRQ_PRIORITY         ICU_PRIORITY
-#define STM32_ICU_TIM9_IRQ_PRIORITY         ICU_PRIORITY
-
-/*
  * MAC driver system settings.
  */
 #define STM32_MAC_TRANSMIT_BUFFERS          2
