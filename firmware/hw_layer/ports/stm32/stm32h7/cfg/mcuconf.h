@@ -282,19 +282,6 @@
 #define STM32_CAN_USE_FDCAN2                TRUE
 
 /*
- * DAC driver system settings.
- */
-#define STM32_DAC_DUAL_MODE                 FALSE
-#define STM32_DAC_USE_DAC1_CH1              FALSE
-#define STM32_DAC_USE_DAC1_CH2              FALSE
-#define STM32_DAC_DAC1_CH1_IRQ_PRIORITY     10
-#define STM32_DAC_DAC1_CH2_IRQ_PRIORITY     10
-#define STM32_DAC_DAC1_CH1_DMA_PRIORITY     2
-#define STM32_DAC_DAC1_CH2_DMA_PRIORITY     2
-#define STM32_DAC_DAC1_CH1_DMA_STREAM       STM32_DMA_STREAM_ID_ANY
-#define STM32_DAC_DAC1_CH2_DMA_STREAM       STM32_DMA_STREAM_ID_ANY
-
-/*
  * GPT driver system settings.
  */
 #define STM32_GPT_USE_TIM1                  FALSE
@@ -311,32 +298,6 @@
 #define STM32_GPT_USE_TIM15                 FALSE
 #define STM32_GPT_USE_TIM16                 FALSE
 #define STM32_GPT_USE_TIM17                 FALSE
-
-/*
- * I2C driver system settings.
- */
-#define STM32_I2C_USE_I2C1                  FALSE
-#define STM32_I2C_USE_I2C2                  FALSE
-#define STM32_I2C_USE_I2C3                  FALSE
-#define STM32_I2C_USE_I2C4                  FALSE
-#define STM32_I2C_BUSY_TIMEOUT              50
-#define STM32_I2C_I2C1_RX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C1_TX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C2_RX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C2_TX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C3_RX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C3_TX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C4_RX_BDMA_STREAM       STM32_BDMA_STREAM_ID_ANY
-#define STM32_I2C_I2C4_TX_BDMA_STREAM       STM32_BDMA_STREAM_ID_ANY
-// STM32_I2C_I2C1_IRQ_PRIORITY is defined above, reused for fast EXTI handoff
-#define STM32_I2C_I2C2_IRQ_PRIORITY         5
-#define STM32_I2C_I2C3_IRQ_PRIORITY         5
-#define STM32_I2C_I2C4_IRQ_PRIORITY         5
-#define STM32_I2C_I2C1_DMA_PRIORITY         3
-#define STM32_I2C_I2C2_DMA_PRIORITY         3
-#define STM32_I2C_I2C3_DMA_PRIORITY         3
-#define STM32_I2C_I2C4_DMA_PRIORITY         3
-#define STM32_I2C_DMA_ERROR_HOOK(i2cp)      osalSysHalt("DMA failure")
 
 /*
  * MAC driver system settings.
