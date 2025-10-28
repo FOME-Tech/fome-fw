@@ -192,6 +192,8 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 		}
 	}
 
+	assertInterruptPriority(__func__, EFI_IRQ_EXTI_HANDOFF_PRIORITY);
+
 	OSAL_IRQ_EPILOGUE();
 }
 

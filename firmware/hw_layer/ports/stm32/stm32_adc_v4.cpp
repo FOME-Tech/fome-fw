@@ -90,6 +90,8 @@ static void adc_callback(ADCDriver *adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onFastAdcComplete(adcp->samples);
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 // ADC Clock is 25MHz
@@ -233,6 +235,8 @@ static void knockCompletionCallback(ADCDriver* adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onKnockSamplingComplete();
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 static void knockErrorCallback(ADCDriver*, adcerror_t) {
