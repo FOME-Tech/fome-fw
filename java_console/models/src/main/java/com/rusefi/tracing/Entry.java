@@ -66,8 +66,8 @@ public class Entry {
             for (int i = 0; i < packet.length - 1; i += 8) {
                 byte type = is.readByte();
                 byte phase = is.readByte();
-                byte isr = is.readByte();
-                byte thread = is.readByte();
+                int isr = is.readByte() & 0xFF;
+                int thread = is.readByte() & 0xFF;
 
                 long timestampNs = readInt(is);
                 if (i == 0) {
