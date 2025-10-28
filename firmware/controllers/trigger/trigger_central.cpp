@@ -229,6 +229,8 @@ static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 }
 
 void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
+	ScopePerf perf(PE::VvtHandleShaftSignal);
+
 	TriggerCentral *tc = getTriggerCentral();
 	if (tc->directSelfStimulation || !tc->hwTriggerInputEnabled) {
 		// sensor noise + self-stim = loss of trigger sync

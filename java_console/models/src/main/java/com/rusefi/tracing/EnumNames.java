@@ -51,6 +51,7 @@ public class EnumNames {
 	"GlobalUnlock",
 	"SoftwareKnockProcess",
 	"LogTriggerTooth",
-	"LuaTickFunction"
+	"LuaTickFunction",
+	"VvtHandleShaftSignal"
 	};
 }
