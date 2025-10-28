@@ -94,10 +94,17 @@ static int lua_getSensorRaw(lua_State* l) {
 	return 1;
 }
 
-static int lua_hasSensor(lua_State* l) {
+static int lua_hasSensorIdx(lua_State* l) {
 	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
 
 	lua_pushboolean(l, Sensor::hasSensor(static_cast<SensorType>(zeroBasedSensorIndex)));
+	return 1;
+}
+
+static int lua_hasSensorName(lua_State* l) {
+	auto sensorName = luaL_checklstring(l, 1, nullptr);
+
+	lua_pushboolean(l, Sensor::hasSensor(findSensorTypeByName(sensorName)));
 	return 1;
 }
 
@@ -678,7 +685,8 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getSensorByIndex", lua_getSensorByIndex);
 	lua_register(l, "getSensor", lua_getSensorByName);
 	lua_register(l, "getSensorRaw", lua_getSensorRaw);
-	lua_register(l, "hasSensor", lua_hasSensor);
+	lua_register(l, "hasSensorIdx", lua_hasSensorIdx);
+	lua_register(l, "hasSensorName", lua_hasSensorName);
 	lua_register(l, "table3d", [](lua_State* l2) {
 		auto humanTableIdx = luaL_checkinteger(l2, 1);
 		auto x = luaL_checknumber(l2, 2);
