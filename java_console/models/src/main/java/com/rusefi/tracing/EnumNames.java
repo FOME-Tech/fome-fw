@@ -16,7 +16,7 @@ public class EnumNames {
 	"SingleTimerExecutorDoExecute",
 	"SingleTimerExecutorScheduleTimerCallback",
 	"PeriodicControllerPeriodicTask",
-	"INVALID2",
+	"MainLoop",
 	"AdcCallbackFast",
 	"AdcProcessSlow",
 	"AdcConversionSlow",
@@ -51,5 +51,6 @@ public class EnumNames {
 	"GlobalUnlock",
 	"SoftwareKnockProcess",
 	"LogTriggerTooth",
+	"LuaTickFunction"
 	};
 }

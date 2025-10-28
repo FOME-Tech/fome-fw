@@ -230,6 +230,8 @@ static void adc_callback_fast(ADCDriver *adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onFastAdcComplete(adcp->samples);
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 ADCConversionGroup adcgrpcfgFast = {
@@ -333,6 +335,8 @@ static void fast_adc_timer_callback(GPTDriver*) {
 	}
 
 	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdcSampleBuf, ADC_BUF_DEPTH_FAST);
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 #endif // EFI_USE_FAST_ADC
@@ -344,6 +348,8 @@ static void knockCompletionCallback(ADCDriver* adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onKnockSamplingComplete();
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 static void knockErrorCallback(ADCDriver*, adcerror_t) {
