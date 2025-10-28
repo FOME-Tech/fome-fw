@@ -10,20 +10,18 @@ import java.util.List;
 import static com.rusefi.tracing.EnumNames.TypeNames;
 
 public class Entry {
-    // todo: maybe convert on firmware side so that CPU MHz are not accounted for on the java side?
-    private static final double MAGIC_NT = 168.0;
     private final String name;
     private final Phase phase;
     private final int isr;
     private final int thread;
-    private double timestampSeconds;
+    private long timestampNs;
 
-    public Entry(String name, Phase phase, double timestampSeconds, int isr, int thread) {
+    public Entry(String name, Phase phase, long timestampNs, int isr, int thread) {
         this.name = name;
         this.phase = phase;
         this.isr = isr;
         this.thread = thread;
-        this.timestampSeconds = timestampSeconds;
+        this.timestampNs = timestampNs;
     }
 
     private static void AppendKeyValuePair(StringBuilder sb, String x, String y) {
@@ -58,34 +56,30 @@ public class Entry {
         return ((ch4 << 24) + (ch3 << 16) + (ch2 << 8) + ch1);
     }
 
-
     public static List<Entry> parseBuffer(byte[] packet) {
         List<Entry> result = new ArrayList<>();
-        double minValue = Double.MAX_VALUE;
+
         try {
             DataInputStream is = new DataInputStream(new ByteArrayInputStream(packet));
             is.readByte(); // skip TS result code
-            int firstTimeStamp = 0;
+            long firstTimeStamp = 0;
             for (int i = 0; i < packet.length - 1; i += 8) {
                 byte type = is.readByte();
                 byte phase = is.readByte();
                 byte isr = is.readByte();
                 byte thread = is.readByte();
 
-                int timestampNt = readInt(is);
+                long timestampNs = readInt(is);
                 if (i == 0) {
-                    firstTimeStamp = timestampNt;
+                    firstTimeStamp = timestampNs;
                 } else {
-                    if (timestampNt < firstTimeStamp) {
+                    if (timestampNs < firstTimeStamp) {
                         System.out.println("Dropping the remainder of the packet at " + i + " due to "
-                                + timestampNt + " below " + firstTimeStamp);
+                                + timestampNs + " below " + firstTimeStamp);
                         break;
                     }
                 }
 
-
-                double timestampSeconds = timestampNt / MAGIC_NT;
-                minValue = Math.min(minValue, timestampSeconds);
                 String name;
                 if (type == 1) {
                     name = "ISR: " + thread;
@@ -95,22 +89,13 @@ public class Entry {
                     name = TypeNames[type];
                 }
 
-                Entry e = new Entry(name, Phase.decode(phase), timestampSeconds, isr, thread);
+                Entry e = new Entry(name, Phase.decode(phase), timestampNs, isr, thread);
                 result.add(e);
             }
-
-            for (Entry e : result)
-                e.adjustTimestamp(minValue);
-
-
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
         return result;
-    }
-
-    private void adjustTimestamp(double minValue) {
-        timestampSeconds -= minValue;
     }
 
     @Override
@@ -127,7 +112,8 @@ public class Entry {
         sb.append(",");
         AppendKeyValuePair(sb, "pid", isr);
         sb.append(",");
-        AppendKeyValuePair(sb, "ts", timestampSeconds);
+        double timestampUs = 1e-3 * timestampNs;
+        AppendKeyValuePair(sb, "ts", timestampUs);
         sb.append("}");
 
         return sb.toString();
