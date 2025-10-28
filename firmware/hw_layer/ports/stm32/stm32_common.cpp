@@ -855,7 +855,7 @@ __attribute__((weak)) void boardPrepareForStandby() {
 }
 
 void assertInterruptPriority(const char* func, uint8_t expectedPrio) {
-	auto isr = static_cast<int8_t>(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) - 16;
+	auto isr = static_cast<uint8_t>(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) - 16;
 
 	auto actualMask = NVIC->IP[isr];
 	auto expectedMask = NVIC_PRIORITY_MASK(expectedPrio);
