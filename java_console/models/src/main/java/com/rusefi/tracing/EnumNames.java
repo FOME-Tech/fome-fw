@@ -52,6 +52,8 @@ public class EnumNames {
 	"SoftwareKnockProcess",
 	"LogTriggerTooth",
 	"LuaTickFunction",
-	"VvtHandleShaftSignal"
+	"VvtHandleShaftSignal",
+	"WifiSpi",
+	"WifiHandleEvents"
 	};
 }

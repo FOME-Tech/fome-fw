@@ -233,7 +233,10 @@ public:
 
 		while (true)
 		{
-			m2m_wifi_handle_events(nullptr);
+			{
+				ScopePerf perf(PE::WifiHandleEvents);
+				m2m_wifi_handle_events(nullptr);
+			}
 
 			if (!ServerSocket::checkSend()) {
 				isrSemaphore.wait(TIME_MS2I(10));

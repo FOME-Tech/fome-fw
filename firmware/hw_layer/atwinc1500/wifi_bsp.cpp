@@ -170,6 +170,8 @@ sint8 nm_bus_speed(uint8 /*level*/) {
 }
 
 sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
+	ScopePerf perf(PE::WifiSpi);
+
 	if (u16Sz < 16) {
 		spiSelectI(wifiSpi);
 
