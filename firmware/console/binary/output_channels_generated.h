@@ -679,42 +679,24 @@ struct output_channels_s {
 	// offset 520
 	scaled_channel<int16_t, 10, 1> veBlendYAxis[4];
 	// offset 528
-	scaled_channel<int16_t, 10, 1> boostOpenLoopBlendParameter[2];
-	// %
-	// offset 532
-	scaled_channel<uint8_t, 2, 1> boostOpenLoopBlendBias[2];
-	// %
-	// offset 534
-	int8_t boostOpenLoopBlendOutput[2];
-	// offset 536
-	scaled_channel<int16_t, 10, 1> boostOpenLoopBlendYAxis[2];
-	// offset 540
-	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendParameter[2];
-	// %
-	// offset 544
-	scaled_channel<uint8_t, 2, 1> boostClosedLoopBlendBias[2];
-	// %
-	// offset 546
-	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendOutput[2];
-	// offset 550
-	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendYAxis[2];
-	// offset 554
 	uint16_t mapAveragingSamples = (uint16_t)0;
 	// ratio
-	// offset 556
+	// offset 530
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
 	// MAF: Pre-filter
 	// kg/h
-	// offset 558
+	// offset 532
 	scaled_channel<uint16_t, 10, 1> mafMeasured_preFilter = (uint16_t)0;
 	// rpm
-	// offset 560
+	// offset 534
 	uint16_t cylinderRpm[12];
 	// rpm
-	// offset 584
+	// offset 558
 	int8_t cylinderRpmDelta[12];
+	// offset 570
+	uint8_t alignmentFill_at_570[2];
 };
-static_assert(sizeof(output_channels_s) == 596);
+static_assert(sizeof(output_channels_s) == 572);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, coolant) == 8);
@@ -879,17 +861,9 @@ static_assert(offsetof(output_channels_s, veBlendParameter) == 500);
 static_assert(offsetof(output_channels_s, veBlendBias) == 508);
 static_assert(offsetof(output_channels_s, veBlendOutput) == 512);
 static_assert(offsetof(output_channels_s, veBlendYAxis) == 520);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendParameter) == 528);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendBias) == 532);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendOutput) == 534);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendYAxis) == 536);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendParameter) == 540);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendBias) == 544);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendOutput) == 546);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendYAxis) == 550);
-static_assert(offsetof(output_channels_s, mapAveragingSamples) == 554);
-static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 556);
-static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 558);
-static_assert(offsetof(output_channels_s, cylinderRpm) == 560);
-static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 584);
+static_assert(offsetof(output_channels_s, mapAveragingSamples) == 528);
+static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 530);
+static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 532);
+static_assert(offsetof(output_channels_s, cylinderRpm) == 534);
+static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 558);
 
