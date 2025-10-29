@@ -1,5 +1,4 @@
 #pragma once
-#include "ch.h"
 
 template<typename V>
 struct StrPair { const char* key; V value; };
