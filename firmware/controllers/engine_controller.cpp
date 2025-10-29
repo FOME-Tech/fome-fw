@@ -47,7 +47,6 @@
 #include "date_stamp.h"
 #include "buttonshift.h"
 #include "start_stop.h"
-#include "dynoview.h"
 #include "vr_pwm.h"
 #include "adc_subscription.h"
 
@@ -518,6 +517,11 @@ bool validateConfig() {
 
 		ensureArrayIsAscending("Ignition load", config->ignitionLoadBins);
 		ensureArrayIsAscending("Ignition RPM", config->ignitionRpmBins);
+
+		if (engineConfiguration->enableTrailingSparks) {
+			ensureArrayIsAscending("Trailing spark load", config->trailingIgnitionLoadBins);
+			ensureArrayIsAscending("Trailing spark RPM", config->trailingIgnitionRpmBins);
+		}
 
 		ensureArrayIsAscending("Ignition CLT corr", config->cltTimingBins);
 

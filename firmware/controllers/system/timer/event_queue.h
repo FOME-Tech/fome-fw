@@ -8,8 +8,8 @@
 #pragma once
 
 #include "scheduler.h"
-#include "utlist.h"
 #include <rusefi/expected.h>
+#include "pool_allocator.h"
 
 #define QUEUE_LENGTH_LIMIT 1000
 
@@ -48,7 +48,6 @@ private:
 	scheduling_s *m_head = nullptr;
 	const efidur_t m_lateDelay;
 
-	scheduling_s* m_freelist = nullptr; 
-	scheduling_s m_pool[64];
+	PoolAllocator<scheduling_s, 64> m_schedulingPool;
 };
 

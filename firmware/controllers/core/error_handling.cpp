@@ -176,7 +176,7 @@ uint32_t maxLockedDuration = 0;
  */
 #endif /* EFI_CLOCK_LOCKS */
 
-void onLockHook(void) {
+void onLockHook() {
 #if ENABLE_PERF_TRACE
 	perfEventInstantGlobal(PE::GlobalLock);
 #endif /* ENABLE_PERF_TRACE */
@@ -186,7 +186,7 @@ void onLockHook(void) {
 #endif /* EFI_CLOCK_LOCKS */
 }
 
-void onUnlockHook(void) {
+void onUnlockHook() {
 #if EFI_CLOCK_LOCKS
 	uint32_t lockedDuration = getTimeNowLowerNt() - lastLockTime;
 	if (lockedDuration > maxLockedDuration) {

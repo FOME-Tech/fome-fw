@@ -24,7 +24,7 @@ struct TraceEntry
 {
 	PE Event;
 	EPhase Phase;
-	int8_t IsrId;
+	uint8_t IsrId;
 	uint8_t ThreadId;
 	uint32_t Timestamp;
 };
@@ -57,8 +57,6 @@ static void perfEventImpl(PE event, EPhase phase)
 		return;
 	}
 
-	// todo: why doesn't getTimeNowLowerNt() work here?
-	// It returns 0 like we're in a unit test
 	uint32_t timestamp = port_rt_get_counter_value();
 
 	size_t idx;
@@ -89,13 +87,15 @@ static void perfEventImpl(PE event, EPhase phase)
 	entry.Event = event;
 	entry.Phase = phase;
 	// Get the current active interrupt - this is the "process ID"
-	auto isr = static_cast<int8_t>(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk);
-	entry.IsrId = isr - 16;
+	auto isr = static_cast<uint8_t>(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk);
 
 	// Get the current thread (if not interrupt) and use as the thread ID
 	if (isr == 0) {
 		entry.ThreadId = chThdGetSelfX()->threadId;
+		entry.IsrId = 0;
 	} else {
+		entry.IsrId = isr - 16;
+
 		// Interrupts have no thread - all are T0
 		entry.ThreadId = 0;
 	}
@@ -120,9 +120,24 @@ void perfTraceEnable() {
 	s_isTracing = true;
 }
 
+static inline uint32_t ticksToNs(uint32_t ticks) {
+	const float ratio = 1e9 / STM32_SYSCLK;
+	return (uint32_t)(ratio * ticks);
+}
+
 const BigBufferHandle perfTraceGetBuffer() {
 	// stop tracing if you try to get the buffer early
 	stopTrace();
+
+	auto timestampOffset = s_traceBuffer.get<TraceEntry>()[0].Timestamp;
+
+	for (size_t i = 0; i < TRACE_BUFFER_LENGTH; i++) {
+		auto& entry = s_traceBuffer.get<TraceEntry>()[i];
+
+		// Remove offset and convert ticks -> nanoseconds
+		// (first entry will be zero timestamp)
+		entry.Timestamp = ticksToNs(entry.Timestamp - timestampOffset);
+	}
 
 	// transfer ownership of the buffer to the caller
 	return efi::move(s_traceBuffer);

@@ -68,7 +68,7 @@ struct scheduling_s {
 	efitick_t momentX;
 
 	// Scheduler implementation uses a sorted linked list of these scheduling records.
-	scheduling_s *nextScheduling_s = nullptr;
+	scheduling_s *next = nullptr;
 
 	action_s action;
 };

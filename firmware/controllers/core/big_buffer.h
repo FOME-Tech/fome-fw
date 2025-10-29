@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "rusefi_generated.h"
+
 #ifndef BIG_BUFFER_SIZE
 #define BIG_BUFFER_SIZE 8192
 #endif

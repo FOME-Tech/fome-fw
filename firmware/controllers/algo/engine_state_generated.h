@@ -147,7 +147,7 @@ struct engine_state_s {
 	// offset 44 bit 4
 	bool doSplitInjection : 1 {};
 	// offset 44 bit 5
-	bool unusedBit_44_5 : 1 {};
+	bool pgState : 1 {};
 	// offset 44 bit 6
 	bool unusedBit_44_6 : 1 {};
 	// offset 44 bit 7

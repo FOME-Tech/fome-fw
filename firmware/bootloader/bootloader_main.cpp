@@ -11,7 +11,7 @@ extern "C" {
 
 class : public chibios_rt::BaseStaticThread<256> {
 protected:
-	void main(void) override {
+	void main() override {
 		Gpio yellow = getWarningLedPin();
 		Gpio blue = getCommsLedPin();
 		Gpio green = getRunningLedPin();
@@ -83,7 +83,7 @@ class : public chibios_rt::BaseStaticThread<1024> {
 	}
 } openblt;
 
-int main(void) {
+int main() {
 	preHalInit();
 	halInit();
 	chSysInit();

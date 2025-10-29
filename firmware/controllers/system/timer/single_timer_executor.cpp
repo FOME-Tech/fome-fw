@@ -152,7 +152,7 @@ void SingleTimerExecutor::scheduleTimerCallback() {
 	setHardwareSchedulerTimer(nowNt, nextEventTimeNt.Value);
 }
 
-void initSingleTimerExecutorHardware(void) {
+void initSingleTimerExecutorHardware() {
 	initMicrosecondTimer();
 }
 

@@ -461,7 +461,7 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 	case TS_X14:
 		handleCommandX14(index);
 		break;
-#if defined(EFI_WIDEBAND_FIRMWARE_UPDATE) && EFI_CAN_SUPPORT
+#if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
 	case TS_WIDEBAND:
 		setWidebandOffset(index);
 		break;

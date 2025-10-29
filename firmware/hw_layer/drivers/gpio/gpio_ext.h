@@ -42,7 +42,7 @@ int gpiochip_register(brain_pin_e base, const char *name, GpioChip& chip, size_t
 int gpiochips_setPinNames(brain_pin_e base, const char **names);
 
 /* gpio extenders subsystem init */
-int gpiochips_init(void);
+int gpiochips_init();
 
 int gpiochips_setPadMode(brain_pin_e pin, iomode_t mode);
 int gpiochips_writePad(brain_pin_e pin, int value);
@@ -50,4 +50,4 @@ int gpiochips_readPad(brain_pin_e pin);
 brain_pin_diag_e gpiochips_getDiag(brain_pin_e pin);
 
 /* return total number of external gpios */
-int gpiochips_get_total_pins(void);
+int gpiochips_get_total_pins();

@@ -89,6 +89,16 @@ brain_pin_e getAdcChannelBrainPin(const char*, adc_channel_e hwChannel) {
 		return Gpio::C4;
 	case EFI_ADC_15:
 		return Gpio::C5;
+#ifdef STM32H7XX
+	case EFI_ADC_16:
+		return Gpio::F11;
+	case EFI_ADC_17:
+		return Gpio::F12;
+	case EFI_ADC_18:
+		return Gpio::F13;
+	case EFI_ADC_19:
+		return Gpio::F14;
+#endif // STM32H7xx
 	default:
 /* todo: what is upper range ADC is used while lower range ADC is not used? how do we still mark pin used?
 external muxes for internal ADC #3350
@@ -339,7 +349,7 @@ stm32_hardware_pwm* getNextPwmDevice() {
 }
 #endif
 
-static void reset_and_jump(void) {
+static void reset_and_jump() {
 	#ifdef STM32H7XX
 		// H7 needs a forcible reset of the USB peripheral(s) in order for the bootloader to work properly.
 		// If you don't do this, the bootloader will execute, but USB doesn't work (nobody knows why)
@@ -842,6 +852,17 @@ void boardPreparePA0ForStandby() {
 
 __attribute__((weak)) void boardPrepareForStandby() {
 	boardPreparePA0ForStandby();
+}
+
+void assertInterruptPriority(const char* func, uint8_t expectedPrio) {
+	auto isr = static_cast<uint8_t>(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) - 16;
+
+	auto actualMask = NVIC->IP[isr];
+	auto expectedMask = NVIC_PRIORITY_MASK(expectedPrio);
+
+	if (actualMask != expectedMask) {
+		firmwareError("bad isr priority at %s expected %02x got %02x", func, expectedMask, actualMask);
+	}
 }
 
 #endif // EFI_PROD_CODE

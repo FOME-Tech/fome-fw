@@ -2,11 +2,13 @@
 
 #include "event_queue.h"
 
-bool TriggerScheduler::assertNotInList(AngleBasedEvent *head, AngleBasedEvent *element) {
+#include "utlist.h"
+
+bool TriggerScheduler::assertNotInList(AngleBasedEvent* head, AngleBasedEvent* element) {
 	/* this code is just to validate state, no functional load*/
 	decltype(head) current;
 	int counter = 0;
-	LL_FOREACH2(head, current, nextToothEvent) {
+	LL_FOREACH2(head, current, next) {
 		if (++counter > QUEUE_LENGTH_LIMIT) {
 			firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Looped queue?");
 			return false;
@@ -38,7 +40,7 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, EngPhase angle, action_s
  * @return true if event corresponds to current tooth and was time-based scheduler
  *         false if event was put into queue for scheduling at a later tooth
  */
-bool TriggerScheduler::scheduleOrQueue(AngleBasedEvent *event,
+bool TriggerScheduler::scheduleOrQueue(AngleBasedEvent* event,
 		EngPhase angle,
 		action_s action,
 		const EnginePhaseInfo& phase) {
@@ -74,7 +76,7 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 		if (!assertNotInList(m_angleBasedEventsHead, event)) {
 			// Use Append to retain some semblance of event ordering in case of
 			// time skew.  Thus on events are always followed by off events.
-			LL_APPEND2(m_angleBasedEventsHead, event, nextToothEvent);
+			LL_APPEND2(m_angleBasedEventsHead, event, next);
 		}
 	}
 }
@@ -85,8 +87,7 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 		return;
 	}
 
-	AngleBasedEvent *current, *tmp, *keephead;
-	AngleBasedEvent *keeptail = nullptr;
+	AngleBasedEvent* keephead = nullptr;
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
@@ -95,7 +96,11 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 		m_angleBasedEventsHead = nullptr;
 	}
 
-	LL_FOREACH_SAFE2(keephead, current, tmp, nextToothEvent)
+	AngleBasedEvent* current = nullptr;
+	AngleBasedEvent* tmp = nullptr;
+	AngleBasedEvent* keeptail = nullptr;
+
+	LL_FOREACH_SAFE2(keephead, current, tmp, next)
 	{
 		if (current->shouldSchedule(phase)) {
 			// time to fire a spark which was scheduled previously
@@ -107,7 +112,7 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 			// tooth, which means the outer loop is really only O(n).  And if we are
 			// firing many events per teeth, then it's likely the events before this
 			// one also fired and thus the call to LL_DELETE2 is closer to O(1).
-			LL_DELETE2(keephead, current, nextToothEvent);
+			LL_DELETE2(keephead, current, next);
 
 			scheduling_s * sDown = &current->scheduling;
 
@@ -130,7 +135,7 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 		chibios_rt::CriticalSectionLocker csl;
 
 		// Put any new entries onto the end of the keep list
-		keeptail->nextToothEvent = m_angleBasedEventsHead;
+		keeptail->next = m_angleBasedEventsHead;
 		m_angleBasedEventsHead = keephead;
 	}
 }
@@ -154,10 +159,10 @@ float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {
 
 #if EFI_UNIT_TEST
 // todo: reduce code duplication with another 'getElementAtIndexForUnitText'
-AngleBasedEvent * TriggerScheduler::getElementAtIndexForUnitTest(int index) {
-	AngleBasedEvent * current;
+AngleBasedEvent* TriggerScheduler::getElementAtIndexForUnitTest(int index) {
+	AngleBasedEvent* current;
 
-	LL_FOREACH2(m_angleBasedEventsHead, current, nextToothEvent)
+	LL_FOREACH2(m_angleBasedEventsHead, current, next)
 	{
 		if (index == 0)
 			return current;

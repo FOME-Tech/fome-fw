@@ -69,6 +69,8 @@ endif
 # See explanation in main firmware Makefile for these three defines
 USE_OPT += $(RUSEFI_OPT) -DEFI_UNIT_TEST=0 -DEFI_PROD_CODE=0 -DEFI_SIMULATOR=1 -DHW_HELLEN_SKIP_BOARD_TYPE
 
+NO_MAP_AVERAGING = yes
+
 # Enable address sanitizer, but not on Windows since x86_64-w64-mingw32-g++ doesn't support it.
 ifeq ($(SANITIZE),yes)
   USE_OPT += -fsanitize=address
