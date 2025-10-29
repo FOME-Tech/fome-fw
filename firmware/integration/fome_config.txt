@@ -473,6 +473,11 @@ uint16_t boostControlMinRpm; Minimum RPM to enable boost control. Use this to av
 uint8_t boostControlMinTps; Minimum TPS to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.;"", 1, 0, 0, 100, 0
 uint8_t boostControlMinMap; Minimum MAP to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.;"", 1, 0, 0, 250, 0
 
+gppwm_channel_e boostOpenLoopXAxis;Select the parameter to use for the X axis of the open loop boost table.
+gppwm_channel_e boostOpenLoopYAxis;Select the parameter to use for the Y axis of the open loop boost table.
+gppwm_channel_e boostClosedLoopXAxis;Select the parameter to use for the X axis of the closed loop boost table.
+gppwm_channel_e boostClosedLoopYAxis;Select the parameter to use for the Y axis of the closed loop boost table.
+
 custom timing_mode_e 1 bits, U08, @OFFSET@, [0:0], "dynamic", "fixed"
 timing_mode_e timingMode;Dynamic uses the timing map to decide the ignition timing, Static timing fixes the timing to the value set below (only use for checking static timing with a timing light).
 
@@ -1512,10 +1517,12 @@ uint8_t[CLT_CURVE_SIZE] autoscale iacCoastingRpmBins;RPM-based idle position for
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoasting;    RPM-based idle position for coasting;"%", 0.5, 0, 0, 100, 1
 
 uint8_t[BOOST_RPM_COUNT x BOOST_LOAD_COUNT] autoscale boostTableOpenLoop;;"", {1/2}, 0, 0, 100, 1
-uint8_t[BOOST_RPM_COUNT] autoscale boostRpmBins;;"RPM", 100, 0, 0, 25000, 0
+int16_t[BOOST_RPM_COUNT] boostRpmBins;;"", 1, 0, -10000, 10000, 0
+int16_t[BOOST_LOAD_COUNT] boostTpsBins;;"", 1, 0, -10000, 10000, 0
 
 uint8_t[BOOST_RPM_COUNT x BOOST_LOAD_COUNT] autoscale boostTableClosedLoop;;"", 2, 0, 0, 3000, 0
-uint8_t[BOOST_LOAD_COUNT] boostTpsBins;;"%", 1, 0, 0, 100, 0
+int16_t[BOOST_RPM_COUNT] boostClosedLoopXAxisBins;;"", 1, 0, -10000, 10000, 0
+int16_t[BOOST_LOAD_COUNT] boostClosedLoopYAxisBins;;"", 1, 0, -10000, 10000, 0
 
 uint8_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] pedalToTpsTable;;"%", 1, 0, 0, 100, 0
 uint8_t[PEDAL_TO_TPS_SIZE] pedalToTpsPedalBins;;"%", 1, 0, 0, 120, 0

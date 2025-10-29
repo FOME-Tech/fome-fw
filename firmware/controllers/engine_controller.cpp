@@ -583,8 +583,13 @@ bool validateConfig() {
 #if EFI_BOOST_CONTROL
 	// Boost
 	if (engineConfiguration->isBoostControlEnabled) {
-		ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
-		ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+		ensureArrayIsAscending("Boost open loop Y axis", config->boostTpsBins);
+		ensureArrayIsAscending("Boost open loop X axis", config->boostRpmBins);
+
+		if (engineConfiguration->boostType != CLOSED_LOOP) {
+			ensureArrayIsAscending("Boost closed loop X axis", config->boostClosedLoopXAxisBins);
+			ensureArrayIsAscending("Boost closed loop Y axis", config->boostClosedLoopYAxisBins);
+		}
 	}
 #endif // EFI_BOOST_CONTROL
 
