@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "auto_generated_sensor.h"
+#include "small_hashmap.h"
 
 // This struct represents one sensor in the registry.
 // It stores whether the sensor should use a mock value,
@@ -255,17 +256,14 @@ void Sensor::setInvalidMockValue(SensorType type) {
 	}
 }
 
-/**
- * this is definitely not the fastest implementation possible but good enough for now?
- * todo: some sort of hashmap in the future?
- */
+using Map = StaticStringHashMap<SensorType, 80>;
+
+inline constexpr Map kMap = make_static_string_hashmap<Map>(kSensorPairs);
+
 SensorType findSensorTypeByName(const char *name) {
-	for (int i = 0; i < (int)SensorType::PlaceholderLast; i++) {
-		SensorType type = (SensorType)i;
-		const char *sensorName = getSensorType(type);
-		if (strEqualCaseInsensitive(sensorName, name)) {
-			return type;
-		}
+	const auto* result = kMap.find(name);
+	if (result) {
+		return static_cast<SensorType>(*result);
 	}
 
 	return SensorType::Invalid;
