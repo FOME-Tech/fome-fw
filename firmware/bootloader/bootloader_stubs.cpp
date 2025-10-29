@@ -53,3 +53,7 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	ioline_t line = PAL_LINE(port, index);
 	palDisableLineEvent(line);
 }
+
+void perfEventBegin(PE) { }
+void perfEventEnd(PE) { }
+void perfEventInstantGlobal(PE) { }
