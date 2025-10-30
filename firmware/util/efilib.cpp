@@ -200,27 +200,6 @@ bool strEqualCaseInsensitive(const char *str1, const char *str2) {
 	return true;
 }
 
-/*
-** return lower-case of c if upper-case, else c
-*/
-int mytolower(const char c) {
-	if (c >= 'A' && c <= 'Z') {
-		return c - 'A' + 'a';
-	} else {
-		return c;
-	}
-}
-
-int djb2lowerCase(const char *str) {
-	unsigned long hash = 5381;
-
-	while (char c = *str++) {
-		hash = 33 * hash + mytolower(c);
-	}
-
-	return hash;
-}
-
 bool strEqual(const char *str1, const char *str2) {
 	// todo: there must be a standard function?!
 	size_t len1 = strlen(str1);
