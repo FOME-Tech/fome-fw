@@ -137,7 +137,6 @@ ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin);
 ioportid_t getHwPort(const char *msg, brain_pin_e brainPin);
 const char *portname(ioportid_t GPIOx);
 
-void printSpiConfig(const char *msg, spi_device_e device);
 brain_pin_e parseBrainPin(const char *str);
 
 extern EnginePins enginePins;
