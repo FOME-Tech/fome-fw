@@ -198,6 +198,6 @@ public class LiveDataProcessor {
 
         String outputPath = "../java_console/io/src/main/java/com/rusefi/enums";
         InvokeReader request = new InvokeReader(outputPath, Collections.singletonList(enumContentFileName));
-        EnumToString.handleRequest(request);
+        new EnumToString().handleRequest(request);
     }
 }
