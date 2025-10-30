@@ -103,7 +103,7 @@ public class EnumToString {
     }
 
     private static String getMethodSignature(String enumName) {
-        return "constexpr const char* get" + capitalize(enumName) + "(" + enumName + " value)";
+        return "constexpr inline const char* get" + capitalize(enumName) + "(" + enumName + " value)";
     }
 
     private static String capitalize(String enumName) {
