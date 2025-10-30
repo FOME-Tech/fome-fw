@@ -38,10 +38,8 @@ public:
 
 	brain_pin_diag_e getDiag() const;
 
-#if EFI_GPIO_HARDWARE
 	ioportid_t m_port = 0;
 	uint8_t m_pin = 0;
-#endif /* EFI_GPIO_HARDWARE */
 
 #if EFI_UNIT_TEST
 	int unitTestTurnedOnCounter = 0;
@@ -49,10 +47,10 @@ public:
 
 	brain_pin_e m_brainPin = Gpio::Unassigned;
 
-#if (EFI_GPIO_HARDWARE && (BOARD_EXT_GPIOCHIPS > 0))
+#if (BOARD_EXT_GPIOCHIPS > 0)
 	/* used for external pins */
 	bool ext = false;
-#endif /* EFI_GPIO_HARDWARE */
+#endif /* BOARD_EXT_GPIOCHIPS */
 
 	int8_t m_currentLogicValue = INITIAL_PIN_STATE;
 	/**

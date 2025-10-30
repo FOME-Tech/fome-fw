@@ -47,17 +47,6 @@
  * Some triggers do not require synchronization, this case we just count signals.
  * A single tooth primary signal would be a typical example when synchronization is not needed.
  *
- *
- * @section sec_timers Timers
- * At the moment rusEfi is build using 5 times:
- * <BR>1) 1MHz microsecond_timer.cpp
- * <BR>2) 10KHz fast ADC callback pwmpcb_fast adc_inputs.cpp
- * <BR>3) slow ADC callback pwmpcb_slow adc_inputs.cpp
- * <BR>4) periodicFastTimer engine_controller.cpp
- * <BR>5) periodicSlowTimer engine_controller.cpp
- *
- *
- *
  * @section sec_scheduler Event Scheduler
  *
  * It is a general agreement to measure all angles in crank shaft angles. In a four stroke

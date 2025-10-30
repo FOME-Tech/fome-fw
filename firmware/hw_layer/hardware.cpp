@@ -78,8 +78,10 @@ static void initSpiModules() {
 
 #if HAL_USE_ADC
 
+#ifdef MODULE_MAP_AVERAGING
 static FastAdcToken fastMapSampleIndex;
 static FastAdcToken fastMapSampleIndex2;
+#endif
 
 /**
  * This method is not in the adc* lower-level file because it is more business logic then hardware.
@@ -98,10 +100,10 @@ void onFastAdcComplete(adcsample_t*) {
 #endif /* HAL_USE_ADC */
 
 static void calcFastAdcIndexes() {
-#if HAL_USE_ADC
+#ifdef MODULE_MAP_AVERAGING
 	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", engineConfiguration->map.sensor.hwChannel);
 	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", engineConfiguration->map2HwChannel);
-#endif/* HAL_USE_ADC */
+#endif/* MODULE_MAP_AVERAGING */
 }
 
 extern bool isSpiInitialized[6];
@@ -194,7 +196,7 @@ void applyNewHardwareSettings() {
 	 * Start everything back with new settings *
 	 ******************************************/
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
+#if EFI_SHAFT_POSITION_INPUT
 	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
@@ -231,12 +233,10 @@ void initHardwareNoConfig() {
 	initPinRepository();
 #endif
 
-#if EFI_GPIO_HARDWARE
 	/**
 	 * We need the LED_ERROR pin even before we read configuration
 	 */
 	initPrimaryPins();
-#endif // EFI_GPIO_HARDWARE
 
 #if EFI_PROD_CODE
 	// it's important to initialize this pretty early in the game before any scheduling usages
@@ -262,7 +262,7 @@ void initHardwareNoConfig() {
 
 	boardInitHardware();
 
-#if EFI_INTERNAL_ADC
+#if EFI_PROD_CODE
 	portInitAdc();
 #endif
 }
@@ -331,7 +331,7 @@ void initHardware() {
 	initCan();
 #endif /* EFI_CAN_SUPPORT */
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
+#if EFI_SHAFT_POSITION_INPUT
 	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 

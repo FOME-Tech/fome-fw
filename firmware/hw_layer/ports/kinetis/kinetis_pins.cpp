@@ -9,8 +9,6 @@
 
 #include "pch.h"
 
-#if EFI_GPIO_HARDWARE
-
 // This is the radical departure from STM32
 #define PORT_SIZE 18
 
@@ -119,5 +117,3 @@ brain_pin_e parseBrainPin(const char *str) {
 unsigned int getBrainPinOnchipNum(void) {
 	return BRAIN_PIN_ONCHIP_PINS;
 }
-
-#endif /* EFI_GPIO_HARDWARE */

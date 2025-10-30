@@ -473,6 +473,11 @@ uint16_t boostControlMinRpm; Minimum RPM to enable boost control. Use this to av
 uint8_t boostControlMinTps; Minimum TPS to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.;"", 1, 0, 0, 100, 0
 uint8_t boostControlMinMap; Minimum MAP to enable boost control. Use this to avoid solenoid noise at idle, and help spool in some cases.;"", 1, 0, 0, 250, 0
 
+gppwm_channel_e boostOpenLoopXAxis;Select the parameter to use for the X axis of the open loop boost table.
+gppwm_channel_e boostOpenLoopYAxis;Select the parameter to use for the Y axis of the open loop boost table.
+gppwm_channel_e boostClosedLoopXAxis;Select the parameter to use for the X axis of the closed loop boost table.
+gppwm_channel_e boostClosedLoopYAxis;Select the parameter to use for the Y axis of the closed loop boost table.
+
 custom timing_mode_e 1 bits, U08, @OFFSET@, [0:0], "dynamic", "fixed"
 timing_mode_e timingMode;Dynamic uses the timing map to decide the ignition timing, Static timing fixes the timing to the value set below (only use for checking static timing with a timing light).
 
@@ -510,8 +515,6 @@ float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your
 adc_channel_e vbattAdcChannel;This is the processor input pin that the battery voltage circuit is connected to, if you are unsure of what pin to use, check the schematic that corresponds to your PCB.
 adc_channel_e fuelLevelSensor;This is the processor pin that your fuel level sensor in connected to. This is a non standard input so will need to be user defined.
 	adc_channel_e tps2_1AdcChannel;Second throttle body, first sensor
-
-	uint8_t autoscale trailingSparkAngle;;"angle", 0.1, 0, 0, 20, 1
 
 	uint8_t acIdleExtraOffset;Additional idle % while A/C is active;"%", 1, 0, 0, 100, 0
 
@@ -1514,10 +1517,12 @@ uint8_t[CLT_CURVE_SIZE] autoscale iacCoastingRpmBins;RPM-based idle position for
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoasting;    RPM-based idle position for coasting;"%", 0.5, 0, 0, 100, 1
 
 uint8_t[BOOST_RPM_COUNT x BOOST_LOAD_COUNT] autoscale boostTableOpenLoop;;"", {1/2}, 0, 0, 100, 1
-uint8_t[BOOST_RPM_COUNT] autoscale boostRpmBins;;"RPM", 100, 0, 0, 25000, 0
+int16_t[BOOST_RPM_COUNT] boostRpmBins;;"", 1, 0, -10000, 10000, 0
+int16_t[BOOST_LOAD_COUNT] boostTpsBins;;"", 1, 0, -10000, 10000, 0
 
 uint8_t[BOOST_RPM_COUNT x BOOST_LOAD_COUNT] autoscale boostTableClosedLoop;;"", 2, 0, 0, 3000, 0
-uint8_t[BOOST_LOAD_COUNT] boostTpsBins;;"%", 1, 0, 0, 100, 0
+int16_t[BOOST_RPM_COUNT] boostClosedLoopXAxisBins;;"", 1, 0, -10000, 10000, 0
+int16_t[BOOST_LOAD_COUNT] boostClosedLoopYAxisBins;;"", 1, 0, -10000, 10000, 0
 
 uint8_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] pedalToTpsTable;;"%", 1, 0, 0, 100, 0
 uint8_t[PEDAL_TO_TPS_SIZE] pedalToTpsPedalBins;;"%", 1, 0, 0, 120, 0
@@ -1582,6 +1587,9 @@ uint16_t[SCRIPT_TABLE_8] vvtTable2RpmBins;;"RPM", 1, 0, 0, 18000, 0
 int16_t[IGN_RPM_COUNT x IGN_LOAD_COUNT] autoscale ignitionTable;;"deg", 0.1, 0, -20, 90, 1
 uint16_t[IGN_LOAD_COUNT] ignitionLoadBins;;"Load", 1, 0, 0, 1000, 0
 uint16_t[IGN_RPM_COUNT] ignitionRpmBins;;"RPM",	   1, 0, 0, 18000, 0
+uint8_t[8 x 8] autoscale trailingIgnitionTable;;"deg", 0.1, 0, 0, 25, 1
+uint16_t[8] trailingIgnitionLoadBins;;"Load", 1, 0, 0, 1000, 0
+uint16_t[8] trailingIgnitionRpmBins;;"RPM",	   1, 0, 0, 18000, 0
 
 uint16_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale veTable;;"%", 0.1, 0, 0, 999, 1
 uint16_t[FUEL_LOAD_COUNT] veLoadBins;;"kPa",	1, 0, 0, 1000, 0

@@ -236,7 +236,7 @@ void addEngineSnifferTdcEvent(int rpm) {
 
 	waveChart.startDataCollection();
 
-	addEngineSnifferEvent(TOP_DEAD_CENTER_MESSAGE, (char* ) rpmBuffer);
+	addEngineSnifferEvent(TOP_DEAD_CENTER_MESSAGE, rpmBuffer);
 }
 
 void addEngineSnifferCrankEvent(int wheelIndex, int triggerEventIndex, bool isRise) {
@@ -256,5 +256,9 @@ void addEngineSnifferVvtEvent(int vvtIndex, bool isRise) {
 	addEngineSnifferEvent(vvtName, isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
 }
 
+#else // EFI_ENGINE_SNIFFER
+void addEngineSnifferCrankEvent(int, int, bool) { }
+void addEngineSnifferVvtEvent(int, bool) { }
+void addEngineSnifferTdcEvent(int) { }
 #endif /* EFI_ENGINE_SNIFFER */
 

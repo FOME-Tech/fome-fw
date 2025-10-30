@@ -120,8 +120,10 @@ TEST_F(SensorBasic, HasSensorMock) {
 	ASSERT_TRUE(Sensor::hasSensor(SensorType::Clt));
 }
 
-
 TEST_F(SensorBasic, FindByName) {
 	ASSERT_EQ(SensorType::Clt, findSensorTypeByName("Clt"));
 	ASSERT_EQ(SensorType::Clt, findSensorTypeByName("cLT"));
+	ASSERT_EQ(SensorType::Tps1, findSensorTypeByName("tps1"));
+
+	ASSERT_EQ(SensorType::Invalid, findSensorTypeByName("bogus sensor"));
 }

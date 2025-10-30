@@ -7,6 +7,8 @@ PROJECT_DIR = ../firmware
 UNIT_TESTS_DIR=$(PROJECT_DIR)/../unit_tests
 GENERATED_DIR = $(PROJECT_DIR)/generated
 
+NO_MAP_AVERAGING = yes
+
 # Imported source files and paths
 include $(PROJECT_DIR)/console/console.mk
 include $(PROJECT_DIR)/console/binary/tunerstudio.mk

@@ -174,9 +174,7 @@ void EngineState::periodicFastCallback() {
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
-
-	// TODO: calculate me from a table!
-	trailingSparkAngle = engineConfiguration->trailingSparkAngle;
+	trailingSparkAngle = interpolate3d(config->trailingIgnitionTable, config->trailingIgnitionLoadBins, fuelLoad, config->trailingIgnitionRpmBins, rpm);
 
 	multispark.count = getMultiSparkCount(rpm);
 

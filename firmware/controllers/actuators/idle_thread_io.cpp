@@ -87,7 +87,7 @@ void setTargetIdleRpm(int value) {
 /**
  * Idle test would activate the solenoid for three seconds
  */
-void startIdleBench(void) {
+void startIdleBench() {
 	engine->timeToStopIdleTest = getTimeNowUs() + MS2US(3000); // 3 seconds
 	efiPrintf("idle valve bench test");
 }

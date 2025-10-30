@@ -104,11 +104,11 @@ static void cmd_threads() {
 
 	thread_t* tp = chRegFirstThread();
 
-	efiPrintf("name\twabase\ttime\tfree stack\tprio");
+	efiPrintf("id\tname\twabase\ttime\tfree stack\tprio");
 
 	while (tp) {
 		int freeBytes = CountFreeStackSpace(tp->wabase);
-		efiPrintf("%s\t%08x\t%lu\t%d\t%ld", tp->name, (unsigned int)tp->wabase, tp->time, freeBytes, tp->realprio);
+		efiPrintf("%d: %s\t%08x\t%lu\t%d\t%ld", tp->threadId, tp->name, (unsigned int)tp->wabase, tp->time, freeBytes, tp->realprio);
 
 		if (freeBytes < 64) {
 			firmwareError("Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);

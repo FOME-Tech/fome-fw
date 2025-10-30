@@ -31,14 +31,11 @@ void efiSetPadMode(const char *msg, brain_pin_e pin, iomode_t mode);
 void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brainPin, iomode_t mode);
 void efiSetPadUnused(brain_pin_e brainPin);
 
-#if EFI_GPIO_HARDWARE
 bool efiReadPin(brain_pin_e pin);
 
 iomode_t getInputMode(pin_input_mode_e mode);
 
 void setCanVirtualInput(size_t idx, bool value);
-
-#endif /* EFI_GPIO_HARDWARE */
 
 #if ! EFI_PROD_CODE
 #define BRAIN_PIN_COUNT (1 << 8 * sizeof(brain_pin_e))

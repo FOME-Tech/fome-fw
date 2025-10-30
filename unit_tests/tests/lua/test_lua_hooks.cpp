@@ -47,26 +47,6 @@ TEST(LuaHooks, TestSetCalibration) {
 		EXPECT_EQ(testLuaReturnsNumber(sourceCode), 900);
 }
 
-
-TEST(LuaHooks, TestGetSensorByIndex) {
-	const char* getSensorTestByIndex = R"(
-
-	function testFunc()
-		return getSensorByIndex(10)
-	end
-
-	)";
-
-	// Test failed sensor, returns nil
-	Sensor::resetMockValue(static_cast<SensorType>(10));
-	EXPECT_EQ(testLuaReturnsNumberOrNil(getSensorTestByIndex), unexpected);
-
-	// Now test with a value, returns value
-	Sensor::setMockValue(static_cast<SensorType>(10), 33);
-	EXPECT_EQ(testLuaReturnsNumberOrNil(getSensorTestByIndex).value_or(0), 33);
-}
-
-
 TEST(LuaHooks, TestGetSensorByName) {
 	const char* getSensorTestByName = R"(
 

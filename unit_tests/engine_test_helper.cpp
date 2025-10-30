@@ -297,8 +297,8 @@ scheduling_s * EngineTestHelper::assertEvent5(const char *msg, int index, void *
 	return event;
 }
 
-const AngleBasedEvent * EngineTestHelper::assertTriggerEvent(const char *msg,
-		int index, AngleBasedEvent *expected,
+const AngleBasedEvent* EngineTestHelper::assertTriggerEvent(const char *msg,
+		int index, AngleBasedEvent* expected,
 		void *callback,
 		angle_t enginePhase) {
 	auto event = engine.module<TriggerScheduler>()->getElementAtIndexForUnitTest(index);

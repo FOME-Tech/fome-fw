@@ -9,8 +9,6 @@
 
 #pragma once
 
-#define EFI_GPIO_HARDWARE TRUE
-
 #ifndef EFI_BOOST_CONTROL
 #define EFI_BOOST_CONTROL TRUE
 #endif
@@ -22,8 +20,6 @@
 #ifndef EFI_ANTILAG_SYSTEM
 #define EFI_ANTILAG_SYSTEM TRUE
 #endif
-
-#define EFI_DYNO_VIEW TRUE
 
 #ifndef EFI_TOOTH_LOGGER
 #define EFI_TOOTH_LOGGER TRUE
@@ -60,10 +56,6 @@
 
 //#define EFI_UART_ECHO_TEST_MODE TRUE
 
-#ifndef HAL_TRIGGER_USE_PAL
-#define HAL_TRIGGER_USE_PAL TRUE
-#endif /* HAL_TRIGGER_USE_PAL */
-
 /**
  * TunerStudio support.
  */
@@ -77,8 +69,6 @@
 #ifndef EFI_BLUETOOTH_SETUP
 #define EFI_BLUETOOTH_SETUP TRUE
 #endif /* EFI_BLUETOOTH_SETUP */
-
-#define EFI_DEFAILED_LOGGING FALSE
 
 /**
  * Dev console support.
@@ -153,10 +143,6 @@
  #define EFI_MEMS FALSE
 #endif
 
-#ifndef EFI_INTERNAL_ADC
-#define EFI_INTERNAL_ADC TRUE
-#endif
-
 #define EFI_USE_FAST_ADC TRUE
 
 #ifndef EFI_CAN_SUPPORT
@@ -178,10 +164,6 @@
  */
 #ifndef EFI_MAIN_RELAY_CONTROL
 #define EFI_MAIN_RELAY_CONTROL FALSE
-#endif
-
-#ifndef EFI_PWM
-#define EFI_PWM TRUE
 #endif
 
 #ifndef EFI_VEHICLE_SPEED

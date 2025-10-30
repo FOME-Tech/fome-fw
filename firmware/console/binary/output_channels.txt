@@ -235,8 +235,6 @@ struct_no_prefix output_channels_s
 	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
 	int8_t tcuCurrentGear;@@GAUGE_NAME_CURRENT_GEAR@@;"gear", 1, 0, -1, 10, 0
 
-	uint16_t autoscale VssAcceleration;Vss Accel;"m/s2",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 2
-
 	int16_t autoscale accelerationVert;@@GAUGE_NAME_ACCEL_VERT@@;"G",{1/1000}, 0, 0, 0, 0
 	int16_t autoscale gyroYaw;@@GAUGE_NAME_GYRO_YAW@@;"deg/sec",{1/1000}, 0, 0, 0, 0
 
@@ -300,16 +298,6 @@ struct_no_prefix output_channels_s
 	uint8_t[VE_BLEND_COUNT iterate] autoscale veBlendBias;;"%", 0.5, 0, 0, 100, 1
 	int16_t[VE_BLEND_COUNT iterate] autoscale veBlendOutput;;"%", 0.01, 0, -50, 50, 2
 	int16_t[VE_BLEND_COUNT iterate] autoscale veBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
-
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostOpenLoopBlendParameter;;"", 0.1, 0, -1000, 1000, 1
-	uint8_t[BOOST_BLEND_COUNT iterate] autoscale boostOpenLoopBlendBias;;"%", 0.5, 0, 0, 100, 1
-	int8_t[BOOST_BLEND_COUNT iterate] boostOpenLoopBlendOutput;;"%", 1, 0, -100, 100, 0
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostOpenLoopBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
-
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendParameter;;"", 0.1, 0, -1000, 1000, 1
-	uint8_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendBias;;"%", 0.5, 0, 0, 100, 1
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendOutput;;"%", 0.1, 0, -1000, 1000, 1
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
 
 	uint16_t mapAveragingSamples
 

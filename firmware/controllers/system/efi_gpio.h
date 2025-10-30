@@ -16,12 +16,7 @@
 
 void initPrimaryPins();
 void initOutputPins();
-
-#if EFI_GPIO_HARDWARE
-void turnAllPinsOff(void);
-#else /* EFI_GPIO_HARDWARE */
-#define turnAllPinsOff() {}
-#endif /* EFI_GPIO_HARDWARE */
+void turnAllPinsOff();
 
 
 #ifdef __cplusplus
@@ -138,15 +133,10 @@ private:
 #define getElectricalValue(logicalValue, mode) \
 	(logicalValue ? getElectricalValue1(mode) : getElectricalValue0(mode))
 
-#if EFI_GPIO_HARDWARE
-
-EXTERNC ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin);
-EXTERNC ioportid_t getHwPort(const char *msg, brain_pin_e brainPin);
+ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin);
+ioportid_t getHwPort(const char *msg, brain_pin_e brainPin);
 const char *portname(ioportid_t GPIOx);
 
-#endif /* EFI_GPIO_HARDWARE */
-
-void printSpiConfig(const char *msg, spi_device_e device);
 brain_pin_e parseBrainPin(const char *str);
 
 extern EnginePins enginePins;
