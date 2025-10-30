@@ -19,16 +19,17 @@ public class EnumToString {
     /**
      * same header for .cpp and .h
      */
-    private final static StringBuilder headerFileContent = new StringBuilder();
+    private final StringBuilder headerFileContent = new StringBuilder();
 
     public final static String KEY_ENUM_INPUT_FILE = "-enumInputFile";
 
     public static void main(String[] args) throws IOException {
         InvokeReader invokeReader = new InvokeReader(args).invoke();
-        handleRequest(invokeReader);
+        EnumToString instance = new EnumToString();
+        instance.handleRequest(invokeReader);
     }
 
-    public static void handleRequest(InvokeReader invokeReader) throws IOException {
+    public void handleRequest(InvokeReader invokeReader) throws IOException {
         String outputPath = invokeReader.getOutputPath();
 
         EnumsReader enumsReader = new EnumsReader();
