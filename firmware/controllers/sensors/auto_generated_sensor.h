@@ -1,5 +1,3 @@
-#include "sensor_type.h"
-#pragma once
 constexpr inline const char* getSensorType(SensorType value){
 switch(value) {
 case SensorType::AcceleratorPedal:

@@ -1,5 +1,3 @@
-#include "sync_edge.h"
-#pragma once
 constexpr inline const char* getSyncEdge(SyncEdge value){
 switch(value) {
 case SyncEdge::Both:

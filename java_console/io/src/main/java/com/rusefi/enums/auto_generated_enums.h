@@ -1,5 +1,3 @@
-#include "live_data_ids.h"
-#pragma once
 constexpr inline const char* getLive_data_e(live_data_e value){
 switch(value) {
 case LDS_ac_control:

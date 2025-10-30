@@ -1,5 +1,3 @@
-#include "engine_types.h"
-#pragma once
 constexpr inline const char* getBench_mode_e(bench_mode_e value){
 switch(value) {
 case BENCH_AC_COMPRESSOR_RELAY:

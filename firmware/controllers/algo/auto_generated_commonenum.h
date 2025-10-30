@@ -1,5 +1,3 @@
-#include "rusefi_enums.h"
-#pragma once
 constexpr inline const char* getDtcSeverity(DtcSeverity value){
 switch(value) {
 case DtcSeverity::Ignore:

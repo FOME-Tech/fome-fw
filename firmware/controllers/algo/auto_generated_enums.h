@@ -1,5 +1,3 @@
-#include "rusefi_hw_enums.h"
-#pragma once
 constexpr inline const char* getGpio(Gpio value){
 switch(value) {
 case Gpio::A0:
