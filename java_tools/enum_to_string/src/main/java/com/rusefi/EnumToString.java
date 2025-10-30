@@ -14,7 +14,6 @@ import java.util.*;
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class EnumToString {
-    private final StringBuilder cppFileContent = new StringBuilder();
     private final StringBuilder includesSection = new StringBuilder();
 
     /**
@@ -35,21 +34,17 @@ public class EnumToString {
         EnumsReader enumsReader = new EnumsReader();
         EnumToString state = new EnumToString();
 
+        headerFileContent.append("#pragma once\n");
+
         for (String inputFile : invokeReader.getInputFiles()) {
             state.consumeFile(enumsReader, invokeReader.getInputPath(), inputFile);
         }
 
-        headerFileContent.append("#pragma once\n");
-
         state.outputData(enumsReader);
 
-
-        state.cppFileContent.insert(0, state.includesSection);
         headerFileContent.insert(0, state.includesSection);
 
         SystemOut.println("includesSection:\n" + state.includesSection + "end of includesSection\n");
-
-        state.cppFileContent.insert(0, "#include \"global.h\"\n");
 
         new File(outputPath).mkdirs();
         state.writeCppAndHeaderFiles(outputPath + File.separator + "auto_generated_" +
@@ -58,11 +53,7 @@ public class EnumToString {
     }
 
     private void writeCppAndHeaderFiles(String outFileName) throws IOException {
-        LazyFile bw = new LazyFile(outFileName + ".cpp");
-        bw.write(cppFileContent.toString());
-        bw.close();
-
-        bw = new LazyFile(outFileName + ".h");
+        LazyFile bw = new LazyFile(outFileName + ".h");
         bw.write(headerFileContent.toString());
         bw.close();
     }
@@ -82,12 +73,7 @@ public class EnumToString {
         for (Map.Entry<String, EnumsReader.EnumState> e : enumsReader.getEnums().entrySet()) {
             String enumName = e.getKey();
             EnumsReader.EnumState enumState = e.getValue();
-            cppFileContent.append(makeCode(enumName, enumState));
-            if (enumState.isEnumClass)
-                headerFileContent.append("#if __cplusplus\n");
-            headerFileContent.append(getMethodSignature(enumName) + ";\n");
-            if (enumState.isEnumClass)
-                headerFileContent.append("#endif //__cplusplus\n");
+            headerFileContent.append(makeCode(enumName, enumState));
         }
         SystemOut.println("EnumToString: " + headerFileContent.length() + " bytes of content\n");
         return this;
@@ -110,22 +96,21 @@ public class EnumToString {
         }
 
         sb.append("  }\n");
-        sb.append(" return NULL;\n");
+        sb.append(" return \"unknown\";\n");
         sb.append("}\n");
 
         return sb.toString();
     }
 
     private static String getMethodSignature(String enumName) {
-        return "const char *get" + capitalize(enumName) + "(" + enumName + " value)";
+        return "constexpr const char* get" + capitalize(enumName) + "(" + enumName + " value)";
     }
 
     private static String capitalize(String enumName) {
         return Character.toUpperCase(enumName.charAt(0)) + enumName.substring(1);
     }
 
-    public String getCppFileContent() {
-        return cppFileContent.toString();
+    public String getContent() {
+        return headerFileContent.toString();
     }
-
 }
