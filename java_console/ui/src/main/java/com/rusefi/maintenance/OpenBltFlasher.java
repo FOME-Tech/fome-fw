@@ -14,22 +14,22 @@ import java.util.List;
 
 public class OpenBltFlasher {
     private final XcpLoader mLoader;
-    private final OpenbltJni.OpenbltCallbacks mCallbacks;
+    private final OpenbltCallbacks mCallbacks;
 
     private List<SrecParser.SRecord> mSegments;
     private int mTotalFileSize;
 
-    private OpenBltFlasher(IXcpTransport transport, XcpSettings settings, OpenbltJni.OpenbltCallbacks callbacks) {
+    private OpenBltFlasher(IXcpTransport transport, XcpSettings settings, OpenbltCallbacks callbacks) {
         mLoader = new XcpLoader(transport, settings);
         mCallbacks = callbacks;
     }
 
-    public static OpenBltFlasher makeSerial(String portName, XcpSettings settings, OpenbltJni.OpenbltCallbacks callbacks) {
+    public static OpenBltFlasher makeSerial(String portName, XcpSettings settings, OpenbltCallbacks callbacks) {
         IXcpTransport transport = new XcpSerial(portName);
         return new OpenBltFlasher(transport, settings, callbacks);
     }
 
-    public static OpenBltFlasher makeTcp(String hostname, int port, XcpSettings settings, OpenbltJni.OpenbltCallbacks callbacks) {
+    public static OpenBltFlasher makeTcp(String hostname, int port, XcpSettings settings, OpenbltCallbacks callbacks) {
         IXcpTransport transport = new XcpNet(hostname, port);
         return new OpenBltFlasher(transport, settings, callbacks);
     }
@@ -138,7 +138,7 @@ public class OpenBltFlasher {
     }
 
     public static void main(String[] args) throws Exception {
-        OpenBltFlasher f = OpenBltFlasher.makeTcp("192.168.10.1", 29000, new XcpSettings(), new OpenbltJni.OpenbltCallbacks() {
+        OpenBltFlasher f = OpenBltFlasher.makeTcp("192.168.10.1", 29000, new XcpSettings(), new OpenbltCallbacks() {
             @Override
             public void log(String line) {
                 System.out.println(line);

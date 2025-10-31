@@ -140,22 +140,6 @@ public class ProgramSelector {
         DfuFlasher.rebootToDfu(selectedPort, callbacks, Fields.CMD_REBOOT_OPENBLT);
     }
 
-    private void flashOpenBltCan(UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
-
-        try {
-            OpenbltJni.flashCan("../fome_update.srec", cb);
-
-            callbacks.log("Update completed successfully!");
-            callbacks.done();
-        } catch (Throwable e) {
-            callbacks.log("Error: " + e);
-            callbacks.error();
-        } finally {
-            OpenbltJni.stop(cb);
-        }
-    }
-
     private void flashOpenbltSerialAutomatic(String fomePort, UpdateOperationCallbacks callbacks) {
         String[] portsBefore = LinkManager.getCommPorts();
         rebootToOpenblt(fomePort, callbacks);
@@ -210,8 +194,8 @@ public class ProgramSelector {
         flashOpenbltSerialJni(openbltPort, callbacks);
     }
 
-    private OpenbltJni.OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
-        return new OpenbltJni.OpenbltCallbacks() {
+    private OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
+        return new OpenbltCallbacks() {
             @Override
             public void log(String line) {
                 callbacks.log(line);
@@ -234,51 +218,35 @@ public class ProgramSelector {
         };
     }
 
-    private static final boolean useNewImpl = false;
+    private static final boolean useNewImpl = true;
 
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            if (useNewImpl) {
-                OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
-                flasher.flash("../fome_update.srec");
-            } else {
-                OpenbltJni.flashSerial("../fome_update.srec", port, cb);
-            }
+            OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
+            flasher.flash("../fome_update.srec");
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
         } catch (Throwable e) {
             callbacks.log("Error: " + e);
             callbacks.error();
-        } finally {
-            if (!useNewImpl) {
-                OpenbltJni.stop(cb);
-            }
         }
     }
 
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            if (useNewImpl) {
-                OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
-                flasher.flash("../fome_update.srec");
-            } else {
-                OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
-            }
+            OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
+            flasher.flash("../fome_update.srec");
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
         } catch (Throwable e) {
             callbacks.log("Error: " + e);
             callbacks.error();
-        } finally {
-            if (!useNewImpl) {
-                OpenbltJni.stop(cb);
-            }
         }
     }
 
