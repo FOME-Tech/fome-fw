@@ -36,8 +36,8 @@ ALLINC += \
 	$(PROJECT_DIR)/config/engines \
 	$(BOARDS_DIR) \
 	$(PROJECT_DIR)/hw_layer/algo \
-    $(PROJECT_DIR)/init \
-    $(PROJECT_DIR)/ext_algo \
+	$(PROJECT_DIR)/init \
+	$(PROJECT_DIR)/ext \
 	$(HW_LAYER_DRIVERS_INC) \
 	$(HW_LAYER_INC) \
   	$(HW_SENSORS_INC) \

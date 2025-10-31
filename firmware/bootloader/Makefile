@@ -260,7 +260,6 @@ INCDIR = $(ALLINC) \
 	$(CONFIG) \
 	$(CONFDIR) \
 	$(PROJECT_DIR)/ext \
-	$(PROJECT_DIR)/ext_algo \
 	$(GENERATED_DIR) \
 	$(PROJECT_DIR)/ext/FatFS \
 	$(UTIL_INC) \
