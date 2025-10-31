@@ -253,7 +253,9 @@ public class ProgramSelector {
             callbacks.log("Error: " + e);
             callbacks.error();
         } finally {
-            OpenbltJni.stop(cb);
+            if (!useNewImpl) {
+                OpenbltJni.stop(cb);
+            }
         }
     }
 
@@ -274,7 +276,9 @@ public class ProgramSelector {
             callbacks.log("Error: " + e);
             callbacks.error();
         } finally {
-            OpenbltJni.stop(cb);
+            if (!useNewImpl) {
+                OpenbltJni.stop(cb);
+            }
         }
     }
 
