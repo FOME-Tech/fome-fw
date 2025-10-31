@@ -141,7 +141,7 @@ public class ProgramSelector {
     }
 
     private void flashOpenBltCan(UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             OpenbltJni.flashCan("../fome_update.srec", cb);
@@ -210,8 +210,8 @@ public class ProgramSelector {
         flashOpenbltSerialJni(openbltPort, callbacks);
     }
 
-    private OpenbltJni.OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
-        return new OpenbltJni.OpenbltCallbacks() {
+    private OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
+        return new OpenbltCallbacks() {
             @Override
             public void log(String line) {
                 callbacks.log(line);
@@ -237,7 +237,7 @@ public class ProgramSelector {
     private static final boolean useNewImpl = false;
 
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             if (useNewImpl) {
@@ -260,7 +260,7 @@ public class ProgramSelector {
     }
 
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             if (useNewImpl) {

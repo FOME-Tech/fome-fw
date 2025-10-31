@@ -8,15 +8,6 @@ import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 
 public final class OpenbltJni {
-    public interface OpenbltCallbacks
-    {
-        void log(String line);
-        void updateProgress(int percent);
-        void error(String line);
-
-        void setPhase(String title, boolean hasProgress);
-    }
-
     private static final String OS_NAME = System.getProperty("os.name").toLowerCase(Locale.ROOT);
     private static final boolean IS_MAC = OS_NAME.contains("mac") || OS_NAME.contains("darwin");
 
