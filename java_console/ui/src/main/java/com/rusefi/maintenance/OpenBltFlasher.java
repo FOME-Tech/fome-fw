@@ -54,7 +54,6 @@ public class OpenBltFlasher {
 
     private void loadFile(String filename) throws IOException {
         mCallbacks.setPhase("Load firmware file", false);
-//        mCallbacks.log("Parsing firmware file...");
 
         SrecParser file = new SrecParser();
         file.parse(new File(filename));
