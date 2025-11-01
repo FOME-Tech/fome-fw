@@ -54,6 +54,7 @@ public class EnumNames {
 	"LuaTickFunction",
 	"VvtHandleShaftSignal",
 	"WifiSpi",
-	"WifiHandleEvents"
+	"WifiHandleEvents",
+	"Idle"
 	};
 }
