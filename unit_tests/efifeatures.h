@@ -7,8 +7,6 @@
 
 #pragma once
 
-#define EFI_ENABLE_ASSERTS TRUE
-
 #define EFI_ANTILAG_SYSTEM TRUE
 
 #define EFI_TUNER_STUDIO TRUE
