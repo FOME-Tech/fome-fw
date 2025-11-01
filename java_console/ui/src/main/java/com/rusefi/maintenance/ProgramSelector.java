@@ -233,7 +233,7 @@ public class ProgramSelector {
         };
     }
 
-    private static final boolean useNewImpl = false;
+    private static final boolean useNewImpl = true;
 
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
         OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
