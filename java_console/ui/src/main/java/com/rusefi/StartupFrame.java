@@ -65,9 +65,7 @@ public class StartupFrame {
     private final JLabel noPortsMessage = new JLabel("<html>No ports found!<br>Confirm blue LED is blinking</html>");
 
     public StartupFrame() {
-//        AudioPlayback.start();
-        String title = "FOME console version " + Launcher.CONSOLE_VERSION;
-        frame = new JFrame(appendBundleName(title));
+        frame = new JFrame("FOME Console");
         frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -83,12 +81,6 @@ public class StartupFrame {
 
         // Attempt to drop our ini in to the TS cache
         updateTsIniCache();
-    }
-
-    @NotNull
-    public static String appendBundleName(String title) {
-        String bundleName = BundleUtil.readBundleFullNameNotNull();
-        return title + " " + bundleName;
     }
 
     public void chooseSerialPort() {
@@ -158,7 +150,7 @@ public class StartupFrame {
             rightPanel.add(logo);
         rightPanel.add(new JLabel("FOME (c) 2023-2025"));
         rightPanel.add(new JLabel("rusEFI (c) 2012-2023"));
-        rightPanel.add(new JLabel("Version " + Launcher.CONSOLE_VERSION));
+        rightPanel.add(new JLabel(BundleUtil.readBundleFullNameNotNull()));
 
         JPanel content = new JPanel(new BorderLayout());
         content.add(leftPanel, BorderLayout.WEST);

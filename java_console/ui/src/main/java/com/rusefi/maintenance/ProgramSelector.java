@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static com.rusefi.StartupFrame.appendBundleName;
 import static com.rusefi.core.preferences.storage.PersistentConfiguration.getConfig;
 import static com.rusefi.ui.util.UiUtils.trueLayout;
 
@@ -121,7 +120,7 @@ public class ProgramSelector {
                         throw new IllegalArgumentException("How did you " + selectedMode);
                 }
 
-                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(appendBundleName(jobName + " " + Launcher.CONSOLE_VERSION));
+                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(jobName + " " + BundleUtil.readBundleFullNameNotNull());
                 final Consumer<UpdateOperationCallbacks> job2 = job;
                 ExecHelper.submitAction(() -> {
                     SerialPortScanner.INSTANCE.stopTimer();
