@@ -15,45 +15,7 @@ on:
         type: string
 
 jobs:
-  build-libopenblt-linux:
-    runs-on: ubuntu-latest-selfhost
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-
-    - name: cmake configure libopenblt
-      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: make libopenblt
-      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: make -j8
-
-    - name: cmake configure libopenblt_jni
-      working-directory: ./misc/libopenblt_jni/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: make libopenblt_jni
-      working-directory: ./misc/libopenblt_jni/build
-      run: make -j8
-
-    - name: coalesce
-      run: |
-        mkdir deliver
-        cp ./firmware/ext/openblt/Host/libopenblt.so deliver/
-        cp ./misc/libopenblt_jni/build/libopenblt_jni.so deliver/
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: libopenblt-linux
-        path: |
-          ./deliver/libopenblt.so
-          ./deliver/libopenblt_jni.so
-
   build-firmware:
-    needs: [build-libopenblt-linux]
     runs-on: ubuntu-latest-selfhost
 
     strategy:
@@ -248,12 +210,6 @@ jobs:
       working-directory: ./simulator/
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
       run: OS="Windows_NT" make -j8 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=../firmware/${{matrix.folder}} 
-
-    - name: Download LibOpenBLT Tool (Linux)
-      uses: actions/download-artifact@v4
-      with:
-        name: libopenblt-linux
-        path: ./firmware/ext/openblt/Host/
 
     - name: Package Bundle
       if: ${{ env.full == 'true' }}
