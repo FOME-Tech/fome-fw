@@ -120,7 +120,7 @@ public class ProgramSelector {
                         throw new IllegalArgumentException("How did you " + selectedMode);
                 }
 
-                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(jobName + " " + BundleUtil.readBundleFullNameNotNull());
+                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(jobName);
                 final Consumer<UpdateOperationCallbacks> job2 = job;
                 ExecHelper.submitAction(() -> {
                     SerialPortScanner.INSTANCE.stopTimer();
