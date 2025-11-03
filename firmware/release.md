@@ -3,7 +3,7 @@
 1. In changelog.md, rename the "unreleased" section to "Month 20YY Release", copy the unreleased section in the comment to replace the renamed one, and commit the change to master.
 1. Create a release branch off master in the format `release_YYMMDD`, for example `release_230410` for a release in 10 April 2023. Run `git checkout -b release_YYMMDD`
 1. Create a tag on that branch in the format `release_YYMMDD_nn` where `nn` is a sequence number (so we can release a patch off the same branch later and they sort correctly). Run `git tag release_YYMMDD_nn`
-1. Push the branch and tags
+1. Push the branch and tags: `git push && git push --tags`
 1. Manually run the `Firmware at GHA` build:
     * Use workflow from: tag name created above, `release_YYMMDD_nn`
     * Check `Upload build outputs`
