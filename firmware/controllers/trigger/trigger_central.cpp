@@ -222,7 +222,7 @@ static angle_t wrapVvtForCamType(angle_t vvtPosition, vvt_mode_e mode) {
 
 static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
-	addEngineSnifferVvtEvent(index, isRising);
+	addEngineSnifferVvtEvent(nowNt, index, isRising);
 
 #if EFI_TOOTH_LOGGER
 	LogCamTriggerTooth(nowNt, index, isRising);
@@ -445,7 +445,7 @@ void TriggerCentral::resetCounters() {
 
 static const int wheelIndeces[4] = { 0, 0, 1, 1};
 
-static void reportEventToWaveChart(TriggerEvent ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
+static void reportEventToWaveChart(efitick_t timestamp, TriggerEvent ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
 	if (!getTriggerCentral()->isEngineSnifferEnabled) { // this is here just as a shortcut so that we avoid engine sniffer as soon as possible
 		return; // engineSnifferRpmThreshold is accounted for inside getTriggerCentral()->isEngineSnifferEnabled
 	}
@@ -454,10 +454,10 @@ static void reportEventToWaveChart(TriggerEvent ckpSignalType, int triggerEventI
 
 	bool isUp = isTriggerUpEvent(ckpSignalType);
 
-	addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp);
+	addEngineSnifferCrankEvent(timestamp, wheelIndex, triggerEventIndex, isUp);
 	if (addOppositeEvent) {
 		// let's add the opposite event right away
-		addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, !isUp);
+		addEngineSnifferCrankEvent(timestamp, wheelIndex, triggerEventIndex, !isUp);
 	}
 }
 
@@ -597,7 +597,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	// Don't propagate state if we don't know where we are
 	if (!decodeResult) {
 		// We don't have sync, but report to the wave chart anyway as index 0.
-		reportEventToWaveChart(signal, 0, triggerShape.useOnlyRisingEdges);
+		reportEventToWaveChart(timestamp, signal, 0, triggerShape.useOnlyRisingEdges);
 
 		expectedNextPhase = unexpected;
 
@@ -614,7 +614,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	int crankInternalIndex = triggerState.getCrankSynchronizationCounter() % crankDivider;
 	int triggerIndexForListeners = decodeResult.Value.CurrentIndex + (crankInternalIndex * triggerShape.getSize());
 
-	reportEventToWaveChart(signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
+	reportEventToWaveChart(timestamp, signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
 
 	// Look up this tooth's angle from the sync point. If this tooth is the sync point, we'll get 0 here.
 	TrgPhase currentTrgPhase{ getTriggerCentral()->triggerFormDetails.eventAngles[triggerIndexForListeners] };

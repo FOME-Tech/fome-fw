@@ -81,9 +81,6 @@ static void printPacket(CanBusIndex busIndex, const CANRxFrame &rx) {
 			rx.data8[4], rx.data8[5], rx.data8[6], rx.data8[7]);
 
 }
-
-volatile float canMap = 0;
-
 struct CanListenerTailSentinel : public CanListener {
 	CanListenerTailSentinel()
 		: CanListener(0)

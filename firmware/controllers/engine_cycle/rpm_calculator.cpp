@@ -343,9 +343,12 @@ static void onTdcCallback(void *) {
 #endif /* EFI_UNIT_TEST */
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	addEngineSnifferTdcEvent(rpm);
+
+	auto nowNt = getTimeNowNt();
+
+	addEngineSnifferTdcEvent(nowNt, rpm);
 #if EFI_TOOTH_LOGGER
-	LogTriggerTopDeadCenter(getTimeNowNt());
+	LogTriggerTopDeadCenter(nowNt);
 #endif /* EFI_TOOTH_LOGGER */
 }
 

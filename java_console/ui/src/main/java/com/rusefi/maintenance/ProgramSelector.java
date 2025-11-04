@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static com.rusefi.StartupFrame.appendBundleName;
 import static com.rusefi.core.preferences.storage.PersistentConfiguration.getConfig;
 import static com.rusefi.ui.util.UiUtils.trueLayout;
 
@@ -121,7 +120,7 @@ public class ProgramSelector {
                         throw new IllegalArgumentException("How did you " + selectedMode);
                 }
 
-                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(appendBundleName(jobName + " " + Launcher.CONSOLE_VERSION));
+                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(jobName);
                 final Consumer<UpdateOperationCallbacks> job2 = job;
                 ExecHelper.submitAction(() -> {
                     SerialPortScanner.INSTANCE.stopTimer();
@@ -141,7 +140,7 @@ public class ProgramSelector {
     }
 
     private void flashOpenBltCan(UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             OpenbltJni.flashCan("../fome_update.srec", cb);
@@ -210,8 +209,8 @@ public class ProgramSelector {
         flashOpenbltSerialJni(openbltPort, callbacks);
     }
 
-    private OpenbltJni.OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
-        return new OpenbltJni.OpenbltCallbacks() {
+    private OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
+        return new OpenbltCallbacks() {
             @Override
             public void log(String line) {
                 callbacks.log(line);
@@ -234,10 +233,10 @@ public class ProgramSelector {
         };
     }
 
-    private static final boolean useNewImpl = false;
+    private static final boolean useNewImpl = true;
 
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             if (useNewImpl) {
@@ -253,12 +252,14 @@ public class ProgramSelector {
             callbacks.log("Error: " + e);
             callbacks.error();
         } finally {
-            OpenbltJni.stop(cb);
+            if (!useNewImpl) {
+                OpenbltJni.stop(cb);
+            }
         }
     }
 
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             if (useNewImpl) {
@@ -274,7 +275,9 @@ public class ProgramSelector {
             callbacks.log("Error: " + e);
             callbacks.error();
         } finally {
-            OpenbltJni.stop(cb);
+            if (!useNewImpl) {
+                OpenbltJni.stop(cb);
+            }
         }
     }
 

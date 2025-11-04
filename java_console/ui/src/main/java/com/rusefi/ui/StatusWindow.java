@@ -38,8 +38,6 @@ public class StatusWindow implements StatusConsumer {
         };
         content.add(messagesScroll, BorderLayout.CENTER);
 
-        append("Console version " + rusEFIVersion.CONSOLE_VERSION);
-        append("Windows " + System.getProperty("os.version"));
         append("Bundle " + BundleUtil.readBundleFullNameNotNull());
     }
 

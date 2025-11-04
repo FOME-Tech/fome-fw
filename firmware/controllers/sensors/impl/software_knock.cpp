@@ -14,9 +14,8 @@ static int8_t currentCylinderNumber = 0;
 static efitick_t lastKnockSampleTime;
 static Biquad knockFilter;
 
-static volatile bool knockIsSampling = false;
-static volatile bool knockNeedsProcess = false;
-static volatile size_t sampleCount = 0;
+static bool knockNeedsProcess = false;
+static size_t sampleCount = 0;
 
 chibios_rt::BinarySemaphore knockSem(/* taken =*/ true);
 

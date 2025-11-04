@@ -1,6 +1,7 @@
 package com.rusefi;
 
 import com.devexperts.logging.Logging;
+import com.rusefi.config.generated.Fields;
 import com.rusefi.core.rusEFIVersion;
 import com.rusefi.tools.ConsoleTools;
 import com.rusefi.ui.engine.EngineSnifferPanel;
@@ -31,7 +32,7 @@ public class Launcher extends rusEFIVersion {
      * @see StartupFrame if no parameters specified
      */
     public static void main(final String[] args) throws Exception {
-        log.info("rusEFI UI console " + CONSOLE_VERSION);
+        log.info("FOME UI Console for " + Fields.TS_SIGNATURE);
         log.info("Compiled " + new Date(rusEFIVersion.classBuildTimeMillis()));
         log.info("\n\n");
         PersistentConfiguration.registerShutdownHook();

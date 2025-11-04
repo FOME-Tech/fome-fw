@@ -38,18 +38,6 @@
 #define EFI_ENABLE_CRITICAL_ENGINE_STOP TRUE
 #define EFI_ENABLE_ENGINE_WARNING TRUE
 
-/**
- * if you have a 60-2 trigger, or if you just want better performance, you
- * probably want EFI_ENABLE_ASSERTS to be FALSE. Also you would probably want to FALSE
- * CH_DBG_ENABLE_CHECKS
- * CH_DBG_ENABLE_ASSERTS
- * in chconf.h
- *
- */
-#if !defined(EFI_ENABLE_ASSERTS)
- #define EFI_ENABLE_ASSERTS TRUE
-#endif /* EFI_ENABLE_ASSERTS */
-
 #ifndef EFI_CLOCK_LOCKS
 #define EFI_CLOCK_LOCKS TRUE
 #endif

@@ -28,7 +28,7 @@ or
 
 # Changelog
 
-## Unreleased
+## November 2025 Release
 
 ### Breaking Changes
  - Closed loop boost control tables now have their own axes, rather than sharing with open loop. If using closed loop boost control, you will have to reconfigure the X/Y axes on the closed loop table.
