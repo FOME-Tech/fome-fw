@@ -34,4 +34,4 @@ ifeq ($(PROJECT_CPU),ARCH_STM32F4)
 endif
 
 # We are running on Proteus hardware!
-DDEFS += -DHW_PROTEUS=1
+DDEFS += -DHW_PROTEUS=1 -DHW_POLYGONUS_PRESETS=1
