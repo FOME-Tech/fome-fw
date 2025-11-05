@@ -245,6 +245,8 @@ case engine_type_e::ET_UNUSED_5:
   return "ET_UNUSED_5";
 case engine_type_e::ET_UNUSED_57:
   return "ET_UNUSED_57";
+case engine_type_e::ET_UNUSED_6:
+  return "ET_UNUSED_6";
 case engine_type_e::ET_UNUSED_60:
   return "ET_UNUSED_60";
 case engine_type_e::ET_UNUSED_61:
@@ -365,8 +367,6 @@ case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
   return "PROTEUS_E65_6H_MAN_IN_THE_MIDDLE";
 case engine_type_e::PROTEUS_GM_LS_4:
   return "PROTEUS_GM_LS_4";
-case engine_type_e::PROTEUS_HARLEY:
-  return "PROTEUS_HARLEY";
 case engine_type_e::PROTEUS_HONDA_K:
   return "PROTEUS_HONDA_K";
 case engine_type_e::PROTEUS_LUA_DEMO:
