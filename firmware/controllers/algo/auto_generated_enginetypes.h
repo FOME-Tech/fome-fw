@@ -251,6 +251,8 @@ case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
 case engine_type_e::ET_UNUSED_66:
   return "ET_UNUSED_66";
+case engine_type_e::ET_UNUSED_91:
+  return "ET_UNUSED_91";
 case engine_type_e::ET_UNUSED_92:
   return "ET_UNUSED_92";
 case engine_type_e::ET_UNUSED_93:
@@ -367,8 +369,6 @@ case engine_type_e::PROTEUS_HARLEY:
   return "PROTEUS_HARLEY";
 case engine_type_e::PROTEUS_HONDA_K:
   return "PROTEUS_HONDA_K";
-case engine_type_e::PROTEUS_HONDA_OBD2A:
-  return "PROTEUS_HONDA_OBD2A";
 case engine_type_e::PROTEUS_LUA_DEMO:
   return "PROTEUS_LUA_DEMO";
 case engine_type_e::PROTEUS_QC_TEST_BOARD:
