@@ -7,6 +7,10 @@
 
 #pragma once
 
+#if !HW_PROTEUS
+#error "this file intended for only Proteus hardware"
+#endif
+
 #define PROTEUS_LS_1 Gpio::D7
 // pin 15/black35
 #define PROTEUS_LS_2 Gpio::G9

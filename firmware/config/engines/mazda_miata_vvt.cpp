@@ -52,10 +52,7 @@
 #include "custom_engine.h"
 #include "mazda_miata_base_maps.h"
 
-
-#if HW_PROTEUS
-#include "proteus_meta.h"
-#endif
+#include "polygonus_meta.h"
 
 #include "mre_meta.h"
 
@@ -636,7 +633,7 @@ static void setMiataNB2_MRE_common() {
 /**
  * https://github.com/rusefi/rusefi/wiki/HOWTO-TCU-A42DE-on-Proteus
  */
-#if HW_PROTEUS
+#if HW_POLYGONUS_PRESETS
 void setMiataNB2_Proteus_TCU() {
 	engineConfiguration->tcuEnabled = true;
 
@@ -835,7 +832,7 @@ void setMiataNB_MSM_Polygonus() {
 	// MSM gets a different IAT from the other NBs
 	engineConfiguration->iat.config = { 0, 40, 60, 112000, 17000, 8000, 0 };
 }
-#endif // HW_PROTEUS
+#endif // HW_POLYGONUS_PRESETS
 
 #if HW_HELLEN
 void setHellenNB1() {
