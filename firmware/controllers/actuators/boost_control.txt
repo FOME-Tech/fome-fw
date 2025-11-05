@@ -35,5 +35,4 @@ struct_no_prefix boost_control_s
 	int16_t boostOpenLoopYAxisValue;;"", 1, 0, -10000, 10000, 0
 	int16_t boostClosedLoopXAxisValue;;"", 1, 0, -10000, 10000, 0
 	int16_t boostClosedLoopYAxisValue;;"", 1, 0, -10000, 10000, 0
-
 end_struct
