@@ -373,9 +373,9 @@ static void setDefaultEngineConfiguration() {
 	setDefaultEtbParameters();
 	setDefaultEtbBiasCurve();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	setDefaultBoostParameters();
-#endif
+#endif // EFI_ENGINE_CONTROL
 
 	// OBD-II default rate is 500kbps
 	engineConfiguration->canBaudRate = B500KBPS;

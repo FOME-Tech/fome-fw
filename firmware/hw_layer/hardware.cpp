@@ -210,9 +210,9 @@ void applyNewHardwareSettings() {
 	}
 #endif
 
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	startBoostPin();
-#endif
+#endif // EFI_ENGINE_CONTROL
 #if EFI_EMULATE_POSITION_SENSORS
 	startTriggerEmulatorPins();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
