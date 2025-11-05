@@ -705,9 +705,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::PROTEUS_HONDA_K:
 		setProteusHondaElement2003();
 		break;
-	case engine_type_e::PROTEUS_HONDA_OBD2A:
-		setProteusHondaOBD2A();
-		break;
 	case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
 		setEngineProteusGearboxManInTheMiddle();
 		break;

@@ -180,8 +180,6 @@ enum class engine_type_e : uint32_t {
 
 	PROTEUS_HONDA_K = 90,
 
-	PROTEUS_HONDA_OBD2A = 91,
-
 	ET_UNUSED_92 = 92,
 
 	ET_UNUSED_93 = 93,
@@ -210,6 +208,7 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
+	ET_UNUSED_91 = 91,
 
 	/**
 	 * this configuration has as few pins configured as possible
