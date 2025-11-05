@@ -291,8 +291,8 @@ void setHellenNA6() {
 	engineConfiguration->map.sensor.type = MT_MPX4250;
 }
 
-#if HW_PROTEUS
-#include "proteus_meta.h"
+#if HW_POLYGONUS_PRESETS
+#include "polygonus_meta.h"
 
 void setMiataNa6_Polygonus() {
 	miataNAcommonEngineSettings();
