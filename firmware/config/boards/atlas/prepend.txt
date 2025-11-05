@@ -16,6 +16,7 @@
 #define show_test_presets false
 #define show_Frankenso_presets false
 #define show_microRusEFI_presets false
+#define show_polygonus_presets true
 
 ! Atlas is guaranteed dual bank flash, so there's no delay when sending the burn command.
 ! All commands should complete effectively instantly.
