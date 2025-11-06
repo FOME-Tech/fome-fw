@@ -696,9 +696,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::PROTEUS_BMW_M73:
 		setEngineBMW_M73_Proteus();
 		break;
-	case engine_type_e::MIATA_PROTEUS_TCU:
-		setMiataNB2_Proteus_TCU();
-		break;
 	case engine_type_e::PROTEUS_HONDA_K:
 		setProteusHondaElement2003();
 		break;
