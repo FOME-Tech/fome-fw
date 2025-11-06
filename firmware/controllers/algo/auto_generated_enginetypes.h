@@ -225,6 +225,8 @@ case engine_type_e::DODGE_RAM:
   return "DODGE_RAM";
 case engine_type_e::ETB_BENCH_ENGINE:
   return "ETB_BENCH_ENGINE";
+case engine_type_e::ET_UNUSED_1:
+  return "ET_UNUSED_1";
 case engine_type_e::ET_UNUSED_13:
   return "ET_UNUSED_13";
 case engine_type_e::ET_UNUSED_15:
@@ -335,8 +337,6 @@ case engine_type_e::MAZDA_MIATA_2003_BOARD_TEST:
   return "MAZDA_MIATA_2003_BOARD_TEST";
 case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
   return "MAZDA_MIATA_2003_NA_RAIL";
-case engine_type_e::MIATA_PROTEUS_TCU:
-  return "MIATA_PROTEUS_TCU";
 case engine_type_e::MINIMAL_PINS:
   return "MINIMAL_PINS";
 case engine_type_e::MITSU_4G93:

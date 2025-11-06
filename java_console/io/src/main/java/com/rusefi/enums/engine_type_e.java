@@ -6,7 +6,7 @@ package com.rusefi.enums;
 
 public enum engine_type_e {
 	DEFAULT_FRANKENSO,
-	MIATA_PROTEUS_TCU,
+	ET_UNUSED_1,
 	DODGE_NEON_1995,
 	FORD_ASPIRE_1996,
 	POLYGONUS_MIATA_NA6,
