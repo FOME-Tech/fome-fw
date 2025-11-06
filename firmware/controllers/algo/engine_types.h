@@ -19,8 +19,6 @@
 enum class engine_type_e : uint32_t {
 	DEFAULT_FRANKENSO = 0,
 
-	MIATA_PROTEUS_TCU = 1,
-
 	/**
 	 * 1995 Dodge Neon
 	 * http://rusefi.com/forum/viewtopic.php?t=360
@@ -195,6 +193,7 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_NB2 = 67,
 	POLYGONUS_MIATA_MSM = 12,
 
+	ET_UNUSED_1 = 1,
 	ET_UNUSED_5 = 5,
 	ET_UNUSED_6 = 6,
 	ET_UNUSED_19 = 19,
