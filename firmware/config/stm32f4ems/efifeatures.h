@@ -9,10 +9,6 @@
 
 #pragma once
 
-#ifndef EFI_BOOST_CONTROL
-#define EFI_BOOST_CONTROL TRUE
-#endif
-
 #ifndef EFI_LAUNCH_CONTROL
 #define EFI_LAUNCH_CONTROL TRUE
 #endif

@@ -6,7 +6,7 @@
 #include "gm_ls_4.h"
 #include "defaults.h"
 #include <rusefi/arrays.h>
-#include "proteus_meta.h"
+#include "polygonus_meta.h"
 
 void setGmLs4() {
 	engineConfiguration->globalTriggerAngleOffset = 86;

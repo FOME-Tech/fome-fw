@@ -23,12 +23,6 @@ void setMazdaMiata2003EngineConfiguration();
 void setMazdaMiata2003EngineConfigurationNaFuelRail();
 void setMazdaMiata2003EngineConfigurationBoardTest();
 
-/**
- * https://github.com/rusefi/rusefi/wiki/Mazda-Miata-2001
- * set engine_type 1
- */
-void setMiataNB2_Proteus_TCU();
-
 void setMiataNB1_Polygonus();
 void setMiataNB2_Polygonus();
 void setMiataNB_MSM_Polygonus();

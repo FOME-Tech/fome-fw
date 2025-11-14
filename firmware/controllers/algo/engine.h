@@ -215,9 +215,9 @@ public:
 		VvtController3,
 		VvtController4,
 #endif // EFI_VVT_PID
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 		BoostController,
-#endif // EFI_BOOST_CONTROL
+#endif // EFI_ENGINE_CONTROL
 		LedBlinkingTask,
 		TpsAccelEnrichment,
 

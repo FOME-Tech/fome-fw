@@ -6,7 +6,7 @@
  */
 #include "pch.h"
 
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 
 #include "boost_control.h"
 #include "electronic_throttle.h"
@@ -285,4 +285,4 @@ void initBoostCtrl() {
 #endif
 }
 
-#endif
+#endif // EFI_ENGINE_CONTROL

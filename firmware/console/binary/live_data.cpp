@@ -54,11 +54,7 @@ const injector_model_s* getLiveData(size_t) {
 
 template<>
 const boost_control_s* getLiveData(size_t) {
-#if EFI_BOOST_CONTROL
 	return &engine->module<BoostController>().unmock();
-#else
-	return nullptr;
-#endif
 }
 
 template<>

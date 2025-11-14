@@ -15,45 +15,7 @@ on:
         type: string
 
 jobs:
-  build-libopenblt-linux:
-    runs-on: ubuntu-latest-selfhost
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
-
-    - name: cmake configure libopenblt
-      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: make libopenblt
-      working-directory: ./firmware/ext/openblt/Host/Source/LibOpenBLT/build
-      run: make -j8
-
-    - name: cmake configure libopenblt_jni
-      working-directory: ./misc/libopenblt_jni/build
-      run: cmake -DCMAKE_BUILD_TYPE=Release ..
-
-    - name: make libopenblt_jni
-      working-directory: ./misc/libopenblt_jni/build
-      run: make -j8
-
-    - name: coalesce
-      run: |
-        mkdir deliver
-        cp ./firmware/ext/openblt/Host/libopenblt.so deliver/
-        cp ./misc/libopenblt_jni/build/libopenblt_jni.so deliver/
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: libopenblt-linux
-        path: |
-          ./deliver/libopenblt.so
-          ./deliver/libopenblt_jni.so
-
   build-firmware:
-    needs: [build-libopenblt-linux]
     runs-on: ubuntu-latest-selfhost
 
     strategy:
@@ -86,9 +48,9 @@ jobs:
           #   folder: config/boards/hellen/harley81
           #   ini-file: fome_harley81.ini
 
-          - build-target: small-can-board
-            folder: config/boards/hellen/small-can-board
-            ini-file: fome_small-can-board.ini
+        #   - build-target: small-can-board
+        #     folder: config/boards/hellen/small-can-board
+        #     ini-file: fome_small-can-board.ini
 
           # - build-target: hellen88bmw
           #   folder: config/boards/hellen/hellen88bmw
@@ -110,9 +72,9 @@ jobs:
             folder: config/boards/hellen/hellen64_miataNA6_94
             ini-file: fome_hellenNA6.ini
 
-          - build-target: hellen128
-            folder: config/boards/hellen/hellen128
-            ini-file: fome_hellen128.ini
+        #   - build-target: hellen128
+        #     folder: config/boards/hellen/hellen128
+        #     ini-file: fome_hellen128.ini
 
           # - build-target: hellen121vag
           #   folder: config/boards/hellen/hellen121vag
@@ -178,13 +140,13 @@ jobs:
           #   folder: config/boards/f429-discovery
           #   ini-file: fome_f429-discovery.ini
 
-          - build-target: core8
-            folder: config/boards/core8
-            ini-file: fome_core8.ini
+        #   - build-target: core8
+        #     folder: config/boards/core8
+        #     ini-file: fome_core8.ini
 
-          - build-target: core48
-            folder: config/boards/core48
-            ini-file: fome_core48.ini
+        #   - build-target: core48
+        #     folder: config/boards/core48
+        #     ini-file: fome_core48.ini
 
           - build-target: atlas
             folder: config/boards/atlas
@@ -248,12 +210,6 @@ jobs:
       working-directory: ./simulator/
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
       run: OS="Windows_NT" make -j8 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=../firmware/${{matrix.folder}} 
-
-    - name: Download LibOpenBLT Tool (Linux)
-      uses: actions/download-artifact@v4
-      with:
-        name: libopenblt-linux
-        path: ./firmware/ext/openblt/Host/
 
     - name: Package Bundle
       if: ${{ env.full == 'true' }}

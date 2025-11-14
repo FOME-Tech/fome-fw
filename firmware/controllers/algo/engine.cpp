@@ -181,9 +181,7 @@ void Engine::resetLua() {
 	engineState.lua.fuelMult = 1;
 	engineState.lua.luaDisableEtb = false;
 	engineState.lua.luaIgnCut = false;
-#if EFI_BOOST_CONTROL
 	module<BoostController>().unmock().resetLua();
-#endif // EFI_BOOST_CONTROL
 	ignitionState.luaTimingAdd = 0;
 	ignitionState.luaTimingMult = 1;
 #if EFI_IDLE_CONTROL

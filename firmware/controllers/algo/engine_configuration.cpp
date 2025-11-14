@@ -373,9 +373,9 @@ static void setDefaultEngineConfiguration() {
 	setDefaultEtbParameters();
 	setDefaultEtbBiasCurve();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	setDefaultBoostParameters();
-#endif
+#endif // EFI_ENGINE_CONTROL
 
 	// OBD-II default rate is 500kbps
 	engineConfiguration->canBaudRate = B500KBPS;
@@ -693,24 +693,22 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::PROTEUS_LUA_DEMO:
 		proteusLuaDemo();
 		break;
-	case engine_type_e::PROTEUS_HARLEY:
-		proteusHarley();
-		break;
 	case engine_type_e::PROTEUS_BMW_M73:
 		setEngineBMW_M73_Proteus();
-		break;
-	case engine_type_e::MIATA_PROTEUS_TCU:
-		setMiataNB2_Proteus_TCU();
 		break;
 	case engine_type_e::PROTEUS_HONDA_K:
 		setProteusHondaElement2003();
 		break;
-	case engine_type_e::PROTEUS_HONDA_OBD2A:
-		setProteusHondaOBD2A();
-		break;
 	case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
 		setEngineProteusGearboxManInTheMiddle();
 		break;
+#ifdef HARDWARE_CI
+	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
+		setProteusAnalogPwmTest();
+		break;
+#endif // HARDWARE_CI
+#endif // HW_PROTEUS
+#if HW_POLYGONUS_PRESETS
 	case engine_type_e::POLYGONUS_MIATA_NA6:
 		setMiataNa6_Polygonus();
 		break;
@@ -723,12 +721,7 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::POLYGONUS_MIATA_MSM:
 		setMiataNB_MSM_Polygonus();
 		break;
-#ifdef HARDWARE_CI
-	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
-		setProteusAnalogPwmTest();
-		break;
-#endif // HARDWARE_CI
-#endif // HW_PROTEUS
+#endif // HW_POLYGONUS_PRESETS
 #if HW_HELLEN
 	case engine_type_e::HELLEN_128_MERCEDES_4_CYL:
 		setHellenMercedes128_4_cyl();

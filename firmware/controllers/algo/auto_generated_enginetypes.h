@@ -225,6 +225,8 @@ case engine_type_e::DODGE_RAM:
   return "DODGE_RAM";
 case engine_type_e::ETB_BENCH_ENGINE:
   return "ETB_BENCH_ENGINE";
+case engine_type_e::ET_UNUSED_1:
+  return "ET_UNUSED_1";
 case engine_type_e::ET_UNUSED_13:
   return "ET_UNUSED_13";
 case engine_type_e::ET_UNUSED_15:
@@ -245,12 +247,16 @@ case engine_type_e::ET_UNUSED_5:
   return "ET_UNUSED_5";
 case engine_type_e::ET_UNUSED_57:
   return "ET_UNUSED_57";
+case engine_type_e::ET_UNUSED_6:
+  return "ET_UNUSED_6";
 case engine_type_e::ET_UNUSED_60:
   return "ET_UNUSED_60";
 case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
 case engine_type_e::ET_UNUSED_66:
   return "ET_UNUSED_66";
+case engine_type_e::ET_UNUSED_91:
+  return "ET_UNUSED_91";
 case engine_type_e::ET_UNUSED_92:
   return "ET_UNUSED_92";
 case engine_type_e::ET_UNUSED_93:
@@ -331,8 +337,6 @@ case engine_type_e::MAZDA_MIATA_2003_BOARD_TEST:
   return "MAZDA_MIATA_2003_BOARD_TEST";
 case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
   return "MAZDA_MIATA_2003_NA_RAIL";
-case engine_type_e::MIATA_PROTEUS_TCU:
-  return "MIATA_PROTEUS_TCU";
 case engine_type_e::MINIMAL_PINS:
   return "MINIMAL_PINS";
 case engine_type_e::MITSU_4G93:
@@ -363,12 +367,8 @@ case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
   return "PROTEUS_E65_6H_MAN_IN_THE_MIDDLE";
 case engine_type_e::PROTEUS_GM_LS_4:
   return "PROTEUS_GM_LS_4";
-case engine_type_e::PROTEUS_HARLEY:
-  return "PROTEUS_HARLEY";
 case engine_type_e::PROTEUS_HONDA_K:
   return "PROTEUS_HONDA_K";
-case engine_type_e::PROTEUS_HONDA_OBD2A:
-  return "PROTEUS_HONDA_OBD2A";
 case engine_type_e::PROTEUS_LUA_DEMO:
   return "PROTEUS_LUA_DEMO";
 case engine_type_e::PROTEUS_QC_TEST_BOARD:
