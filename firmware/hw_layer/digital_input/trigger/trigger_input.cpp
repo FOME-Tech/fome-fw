@@ -113,15 +113,6 @@ void updateTriggerInputPins() {
 	// first we will turn off all the changed pins
 	stopTriggerInputPins();
 
-#if EFI_PROD_CODE
-	if (isBrainPinValid(engineConfiguration->triggerInputPins[0])) {
-		engine->rpmCalculator.Register();
-	} else {
-		// if we do not have primary input channel maybe it's BCM mode and we inject RPM value via Lua?
-		engine->rpmCalculator.unregister();
-	}
-#endif
-
 	// then we will enable all the changed pins
 	startTriggerInputPins();
 }
