@@ -211,14 +211,13 @@ void RpmCalculator::onSlowCallback() {
 		// zero dt means instant RPM didn't update since the last slow callback
 		if (rpm == 0 || m_lastRpm == 0 || dt == 0) {
 			rpmRate = 0;
-			m_lastRpm = 0;
 		} else {
 			// Compute change in RPM
 			auto dRpm = rpm - m_lastRpm;
 			rpmRate = dRpm / dt;
-
-			m_lastRpm = rpm;
 		}
+
+		m_lastRpm = rpm;
 	}
 }
 
