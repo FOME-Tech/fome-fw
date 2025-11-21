@@ -46,7 +46,12 @@ float Pid::getUnclampedOutput(float target, float input, float dTime) {
 
 	float pTerm = m_parameters->pFactor * error;
 	updateITerm(m_parameters->iFactor * dTime * error);
-	dTerm = m_parameters->dFactor / dTime * (error - previousError);
+
+	if (m_errorRateOfChangeOverride) {
+		dTerm = m_parameters->dFactor * m_errorRateOfChangeOverride.Value;
+	} else {
+		dTerm = m_parameters->dFactor / dTime * (error - previousError);
+	}
 
 	previousError = error;
 
@@ -85,6 +90,10 @@ float Pid::getIntegration() const {
 
 void Pid::setErrorAmplification(float coef) {
 	errorAmplificationCoef = coef;
+}
+
+void Pid::setDTermOverride(expected<float> errorRateOfChange) {
+	m_errorRateOfChangeOverride = errorRateOfChange;
 }
 
 #if EFI_TUNER_STUDIO

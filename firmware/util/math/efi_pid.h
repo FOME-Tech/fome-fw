@@ -31,6 +31,7 @@ public:
 
 	float getIntegration() const;
 	void setErrorAmplification(float coef);
+	void setDTermOverride(expected<float> errorRateOfChange);
 #if EFI_TUNER_STUDIO
 	void postState(pid_status_s& pidStatus) const;
 #endif /* EFI_TUNER_STUDIO */
@@ -45,4 +46,6 @@ protected:
 private:
 	// doesn't limit the result
 	float getUnclampedOutput(float target, float input, float dTime);
+
+	expected<float> m_errorRateOfChangeOverride{unexpected};
 };

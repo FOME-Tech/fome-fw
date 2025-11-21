@@ -246,6 +246,7 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 	// the state of PID is about to change, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
 	mightResetPid = true;
 
+	m_pid.setDTermOverride(-rpmRate);
 	return m_pid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 }
 

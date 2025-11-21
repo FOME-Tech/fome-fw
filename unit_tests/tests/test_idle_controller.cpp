@@ -446,6 +446,30 @@ TEST(idle_v2, closedLoopBasic) {
 	EXPECT_FLOAT_EQ(25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 850, 0, /*tgt*/ 900));
 }
 
+TEST(idle_v2, closedLoopInjectedRpmRate) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+
+	// PID should be using rpmRate for the d term, rather than calculating for itself
+	engineConfiguration->idleRpmPid.pFactor = 0;
+	engineConfiguration->idleRpmPid.iFactor = 0;
+	engineConfiguration->idleRpmPid.dFactor = 0.1;
+	engineConfiguration->idleRpmPid.iFactor = 0;
+	engineConfiguration->idleRpmPid.minValue = -50;
+	engineConfiguration->idleRpmPid.maxValue = 50;
+
+	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
+	dut.getClosedLoop(ICP::Idling, 0, 900, 0, 900);
+	advanceTimeUs(5'000'000);
+
+	// Positive rpmRate -> negative output
+	EXPECT_FLOAT_EQ(-10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ 100, /*tgt*/ 900));
+
+	// Negative rpmRate -> positive output
+	EXPECT_FLOAT_EQ(10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ -100, /*tgt*/ 900));
+}
+
 struct IntegrationIdleMock : public IdleController {
 	MOCK_METHOD(TargetInfo, getTargetRpm, (float clt), (override));
 	MOCK_METHOD(ICP, determinePhase, (float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));
