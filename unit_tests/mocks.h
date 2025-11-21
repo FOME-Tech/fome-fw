@@ -134,7 +134,7 @@ public:
 	MOCK_METHOD(float, getClosedLoop, (IIdleController::Phase phase, float tps, float rpm, float rpmRate, float target), (override));
 	MOCK_METHOD(float, getCrankingTaperFraction, (float clt), (const, override));
 	MOCK_METHOD(bool, isIdlingOrTaper, (), (const, override));
-	MOCK_METHOD(float, getIdleTimingAdjustment, (float rpm), (override));
+	MOCK_METHOD(float, getIdleTimingAdjustment, (float rpm, float rpmRate), (override));
 };
 
 class MockIgnitionController : public IgnitionController {

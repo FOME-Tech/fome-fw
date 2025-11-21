@@ -47,5 +47,6 @@ private:
 	// doesn't limit the result
 	float getUnclampedOutput(float target, float input, float dTime);
 
+	bool m_hasPreviousError{false};
 	expected<float> m_errorRateOfChangeOverride{unexpected};
 };

@@ -193,11 +193,11 @@ percent_t IdleController::getOpenLoop(Phase phase, float rpm, float clt, SensorR
 	return interpolateClamped(0, crankingValvePosition, 1, running, crankingTaperFraction);
 }
 
-float IdleController::getIdleTimingAdjustment(float rpm) {
-	return getIdleTimingAdjustment(rpm, m_lastTargetRpm, m_lastPhase);
+float IdleController::getIdleTimingAdjustment(float rpm, float rpmRate) {
+	return getIdleTimingAdjustment(rpm, rpmRate, m_lastTargetRpm, m_lastPhase);
 }
 
-float IdleController::getIdleTimingAdjustment(float rpm, float targetRpm, Phase phase) {
+float IdleController::getIdleTimingAdjustment(float rpm, float rpmRate, float targetRpm, Phase phase) {
 	// if not enabled, do nothing
 	if (!engineConfiguration->useIdleTimingPidControl) {
 		return 0;
@@ -213,6 +213,7 @@ float IdleController::getIdleTimingAdjustment(float rpm, float targetRpm, Phase 
 		return m_modeledFlowIdleTiming;
 	} else {
 		// We're now in the idle mode, and RPM is inside the Timing-PID regulator work zone!
+		m_timingPid.setDTermOverride(-rpmRate);
 		return m_timingPid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 	}
 }

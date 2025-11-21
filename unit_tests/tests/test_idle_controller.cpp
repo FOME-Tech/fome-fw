@@ -24,29 +24,38 @@ TEST(idle_v2, timingPid) {
 	engineConfiguration->useIdleTimingPidControl = true;
 
 	engineConfiguration->idleTimingPid.pFactor = 0.1;
+	engineConfiguration->idleTimingPid.dFactor = 0.03;
 	engineConfiguration->idleTimingPid.minValue = -10;
 	engineConfiguration->idleTimingPid.maxValue = 10;
 	dut.init();
 
 	// Check that out of idle mode it doesn't do anything
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Cranking));
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Coasting));
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Running));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Cranking));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Coasting));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Running));
 
 	// Check that it works in idle mode
-	EXPECT_FLOAT_EQ(-5, dut.getIdleTimingAdjustment(1050, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-5, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Idling));
 
 	// ...but not when disabled
 	engineConfiguration->useIdleTimingPidControl = false;
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Idling));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, 0, ICP::Idling));
 
 	engineConfiguration->useIdleTimingPidControl = true;
 
-	EXPECT_FLOAT_EQ(5,    dut.getIdleTimingAdjustment(950,  1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(2.5,  dut.getIdleTimingAdjustment(975,  1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(0,    dut.getIdleTimingAdjustment(1000, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(-2.5, dut.getIdleTimingAdjustment(1025, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(-5,   dut.getIdleTimingAdjustment(1050, 1000, ICP::Idling));
+	// Test P term
+	EXPECT_FLOAT_EQ(5,    dut.getIdleTimingAdjustment(950,  0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(2.5,  dut.getIdleTimingAdjustment(975,  0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(0,    dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-2.5, dut.getIdleTimingAdjustment(1025, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-5,   dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Idling));
+
+	// Test D term
+	// Negative rate of change -> add timing
+	// Positive rate of change -> remove timing
+	EXPECT_FLOAT_EQ( 3, dut.getIdleTimingAdjustment(1000, -100, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ( 0, dut.getIdleTimingAdjustment(1000,    0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-3, dut.getIdleTimingAdjustment(1000,  100, 1000, ICP::Idling));
 }
 
 TEST(idle_v2, testTargetRpm) {
