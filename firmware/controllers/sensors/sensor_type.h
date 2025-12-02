@@ -41,7 +41,7 @@ enum class SensorType : unsigned char {
 	FuelTemperature,
 
 	// This is the "resolved" position, potentially composited out of the following two
-	Tps1, // 10
+	Tps1,
 	// This is the first sensor
 	Tps1Primary,
 	// This is the second sensor
@@ -59,7 +59,7 @@ enum class SensorType : unsigned char {
 	// This maps to the pedal if we have one, and Tps1 if not.
 	DriverThrottleIntent,
 
-	AuxTemp1, // 20
+	AuxTemp1,
 	AuxTemp2,
 
 	Lambda1,
@@ -74,6 +74,8 @@ enum class SensorType : unsigned char {
 	BatteryVoltage,
 	MainRelayVoltage,
 	Sensor5vVoltage,
+
+	EcuBackupVoltage, // STM32 Vbat
 
 	BarometricPressure,
 

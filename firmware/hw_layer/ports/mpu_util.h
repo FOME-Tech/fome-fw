@@ -22,6 +22,7 @@ bool isStm32F42x();
 // ADC
 #if HAL_USE_ADC
 void portInitAdc();
+float getMcuBackupVoltage();
 float getMcuTemperature();
 // Convert all slow ADC inputs.  Returns true if the conversion succeeded, false if a failure occured.
 bool readSlowAnalogInputs();

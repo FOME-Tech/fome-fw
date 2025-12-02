@@ -40,6 +40,7 @@ public enum SensorType {
 	BatteryVoltage,
 	MainRelayVoltage,
 	Sensor5vVoltage,
+	EcuBackupVoltage,
 	BarometricPressure,
 	FuelLevel,
 	VehicleSpeed,

@@ -85,8 +85,8 @@ static const ADCConversionGroup tempSensorConvGroup = {
 	.cr2				= ADC_CR2_SWSTART,
 	// sample times for channels 10...18
 	.smpr1 =
-		ADC_SMPR1_SMP_VBAT(ADC_SAMPLE_144)    |	/* input18 - temperature and vbat input on some STM32F7xx */
-		ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_144),	/* input16 - temperature sensor input on STM32F4xx */
+		ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_144) |	/* input16 - temperature sensor on STM32F40x/F41x */
+		ADC_SMPR1_SMP_VBAT(ADC_SAMPLE_144),		/* input18 - temperature sensor and vbat on STM32F42x/F43x and some STM32F7xx */
 	.smpr2 = 0,
 	.htr = 0, .ltr = 0,
 	.sqr1 = 0,
@@ -103,8 +103,8 @@ static const ADCConversionGroup tempSensorConvGroup = {
 static constexpr int oversample = 4;
 static adcsample_t samples[oversample];
 
-float getMcuTemperature() {
-	// Temperature sensor is only physically wired to ADC1
+float getInternalAdcVoltage() {
+	// The temperature sensor, VREFINT and the VBAT channel are available only on the master ADC1 peripheral.
 	adcConvert(&ADCD1, &tempSensorConvGroup, samples, oversample);
 
 	uint32_t sum = 0;
@@ -112,13 +112,33 @@ float getMcuTemperature() {
 		sum += samples[i];
 	}
 
-	float volts = (float)sum / (4096 * oversample);
-	volts *= engineConfiguration->adcVcc;
+	float sense = (float)sum / (4095 * oversample);
+	sense *= engineConfiguration->adcVcc;
 
-	volts -= 0.760f; // Subtract the reference voltage at 25 deg C
-	float degrees = volts / 0.0025f; // Divide by slope 2.5mV
+	return sense;
+}
 
-	degrees += 25.0; // Add the 25 deg C
+float getMcuBackupVoltage() {
+	// the backup Vbat voltage (RTC, coin cell, backup, battery)
+
+	adcSTM32EnableVBATE();
+
+	float volts = getInternalAdcVoltage();
+
+	adcSTM32DisableVBATE();
+
+	return volts;
+}
+
+float getMcuTemperature() {
+	// the internal device junction temperature sensor
+
+	float volts = getInternalAdcVoltage();
+
+	volts -= 0.760f; // Subtract the reference voltage at 25 deg C: 0.76 V
+	float degrees = volts / 0.0025f; // Divide by average slope: 2.5mV
+
+	degrees += 25.0f; // Add the 25 deg C
 
 	if (degrees > 150.0f || degrees < -50.0f) {
 /*

@@ -80,6 +80,11 @@ void portInitAdc() {
 	SYSCFG->PMCR &= ~(SYSCFG_PMCR_PA0SO | SYSCFG_PMCR_PA1SO | SYSCFG_PMCR_PC2SO | SYSCFG_PMCR_PC3SO);
 }
 
+float getMcuBackupVoltage() {
+	// the backup Vbat voltage (RTC, coin cell, backup, battery)
+	return 0;
+}
+
 float getMcuTemperature() {
 	// Ugh, internal temp sensor is wired to ADC3, which makes it nearly useless on the H7.
 	return 0;
