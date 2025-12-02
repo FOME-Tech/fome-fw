@@ -135,6 +135,7 @@ struct_no_prefix output_channels_s
 	uint16_t autoscale mafMeasured;@@GAUGE_NAME_AIR_FLOW_MEASURED@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 	uint16_t autoscale mafMeasured2;@@GAUGE_NAME_AIR_FLOW_MEASURED_2@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 
+	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"deg C",1, 0, 0, 0, 0
 	uint16_t autoscale mcuBackupVoltage;@@GAUGE_NAME_ECU_BACKUP_VOLTAGE@@;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
 
 ! Fueling
@@ -164,8 +165,6 @@ struct_no_prefix output_channels_s
 
 	uint8_t widebandUpdateProgress;;"%", 1, 0, 0, 100, 0
 	uint8_t orderingErrorCounter;;"",1, 0, 0, 0, 0
-
-	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"deg C",1, 0, 0, 0, 0
 
 	uint16_t autoscale actualLastInjection;@@GAUGE_NAME_FUEL_LAST_INJECTION@@\nActual last injection time - including all compensation and injection mode;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
 	uint16_t autoscale actualLastInjectionStage2;@@GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2@@;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
