@@ -365,6 +365,9 @@ static void updateMiscSensors() {
 	engine->outputChannels.internalMcuTemperature =
 		Sensor::get(SensorType::EcuInternalTemperature)
 		.value_or(getMCUInternalTemperature());
+	engine->outputChannels.mcuBackupVoltage =
+		Sensor::get(SensorType::EcuBackupVoltage)
+		.value_or(getMCUBackupVoltage());
 #endif /* HAL_USE_ADC */
 }
 

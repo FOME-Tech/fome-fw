@@ -46,6 +46,11 @@ float getVoltage(const char *msg, adc_channel_e hwChannel) {
 static uint32_t slowAdcCounter = 0;
 
 static float mcuTemperature;
+static float mcuBackupVoltage;
+
+float getMCUBackupVoltage() {
+	return mcuBackupVoltage;
+}
 
 float getMCUInternalTemperature() {
 	return mcuTemperature;
@@ -77,6 +82,7 @@ void updateSlowAdc(efitick_t nowNt) {
 
 		// Ask the port to sample the MCU temperature
 		mcuTemperature = getMcuTemperature();
+		mcuBackupVoltage = getMcuBackupVoltage();
 	}
 
 	{

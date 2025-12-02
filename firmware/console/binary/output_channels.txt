@@ -135,6 +135,7 @@ struct_no_prefix output_channels_s
 	uint16_t autoscale mafMeasured;@@GAUGE_NAME_AIR_FLOW_MEASURED@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 	uint16_t autoscale mafMeasured2;@@GAUGE_NAME_AIR_FLOW_MEASURED_2@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 
+	uint16_t autoscale mcuBackupVoltage;@@GAUGE_NAME_ECU_BACKUP_VOLTAGE@@;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
 
 ! Fueling
 	int16_t[STFT_BANK_COUNT iterate] autoscale fuelPidCorrection;Fuel: Trim bank;"%",{1/@@PACK_MULT_PERCENT@@}, 0, -20, 20, 2

@@ -75,6 +75,8 @@ enum class SensorType : unsigned char {
 	MainRelayVoltage,
 	Sensor5vVoltage,
 
+	EcuBackupVoltage, // STM32 Vbat
+
 	BarometricPressure,
 
 	FuelLevel,
