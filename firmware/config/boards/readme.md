@@ -1,6 +1,6 @@
 # Boards Directory
 
-rusEFI supports quite a wide array of hardware - we support stm32f4 and we support stm32h7, we have [kinetis](https://www.nxp.com/products/processors-and-microcontrollers/arm-microcontrollers/general-purpose-mcus/k-series-cortex-m4:KINETIS_K_SERIES) and we support cypress MCUs. We support on-board a number of smart GPIO chips, overall we support quite a wide array of hardware. With all those options our goal is to provide nice _user_ experience which means upfront investment by _board designer_.
+FOME supports an array of ST hardware: we support STM32F4, STM32F7, and we support STM32H7. We support on-board a number of smart GPIO chips, overall we support quite a wide array of hardware. With all those options our goal is to provide nice _user_ experience which means upfront investment by _board designer_.
 
 For best user experience we have more than a dozen of different _binaries_ which are all compiled from same _firmware_ files with different configuration. This folder is all about that process.
 
