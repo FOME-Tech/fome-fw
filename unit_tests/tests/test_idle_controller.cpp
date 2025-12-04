@@ -190,9 +190,16 @@ TEST(idle_v2, runningOpenLoopBasic) {
 
 TEST(idle_v2, runningFanAcBump) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	IdleController dut;
+	//IdleController dut;
+
+	engine->rpmCalculator.setRpmValue(1000);
+	Sensor::setMockValue(SensorType::Rpm, 1000);
 
 	engineConfiguration->manIdlePosition = 50;
+	engineConfiguration->maxAcRpm = 5000;
+	engineConfiguration->maxAcClt = 200;
+	engineConfiguration->maxAcTps = 100;
+
 	engineConfiguration->acIdleExtraOffset = 9;
 	engineConfiguration->fan1ExtraIdle = 7;
 	engineConfiguration->fan2ExtraIdle = 3;
@@ -202,12 +209,19 @@ TEST(idle_v2, runningFanAcBump) {
 	// Start with fan off
 	enginePins.fanRelay.setValue(0);
 
+	//auto dut = engine->module<IdleController>();
+
 	// Should be base position
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 
 	// Turn on A/C!
+	//engineConfiguration->acSwitch = Gpio::G1;
+	//setMockState(engineConfiguration->acSwitch, true);
 	engine->module<AcController>()->acButtonState = true;
-	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
+	//engineConfiguration->acPressureSwitch = Gpio::G2;
+	engine->module<AcController>()->onSlowCallback();
+
+	EXPECT_FLOAT_EQ(50 + 9, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 	engine->module<AcController>()->acButtonState = false;
 
 	// Begin A/C Pressure Switch testing
@@ -216,40 +230,46 @@ TEST(idle_v2, runningFanAcBump) {
 	//setMockState(engineConfiguration->acSwitch, false);
 	//setMockState(engineConfiguration->acPressureSwitch, false);
 	engine->module<AcController>()->acPressureSwitchState = false;
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	engine->module<AcController>()->onSlowCallback();
+	EXPECT_FLOAT_EQ(50, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 
 	//setMockState(engineConfiguration->acSwitch, true);
 	engine->module<AcController>()->acButtonState = true;
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	engine->module<AcController>()->onSlowCallback();
+	EXPECT_FLOAT_EQ(50, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 
 	//setMockState(engineConfiguration->acPressureSwitch, true);
 	engine->module<AcController>()->acPressureSwitchState = true;
-	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
+	engine->module<AcController>()->onSlowCallback();
+	EXPECT_FLOAT_EQ(50 + 9, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 
 	//setMockState(engineConfiguration->acSwitch, false);
 	engine->module<AcController>()->acButtonState = false;
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	engine->module<AcController>()->onSlowCallback();
+	EXPECT_FLOAT_EQ(50, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 
 	//engineConfiguration->acSwitch = Gpio::Unassigned;
 	//setMockState(engineConfiguration->acPressureSwitch, false);
 	engineConfiguration->acPressureSwitch = Gpio::Unassigned;
 	engine->module<AcController>()->acPressureSwitchState = false;
+	engine->module<AcController>()->onSlowCallback();
 	// End A/C Pressure Switch testing
 
 	// Turn the fan on!
 	enginePins.fanRelay.setValue(1);
-	EXPECT_FLOAT_EQ(50 + 7, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50 + 7, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 	enginePins.fanRelay.setValue(0);
 
 	// Turn on the other fan!
 	enginePins.fanRelay2.setValue(1);
-	EXPECT_FLOAT_EQ(50 + 3, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50 + 3, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 
 	// Turn on everything!
 	engine->module<AcController>()->acButtonState = true;
 	enginePins.fanRelay.setValue(1);
 	enginePins.fanRelay2.setValue(1);
-	EXPECT_FLOAT_EQ(50 + 9 + 7 + 3, dut.getRunningOpenLoop(0, 10, 0));
+	engine->module<AcController>()->onSlowCallback();
+	EXPECT_FLOAT_EQ(50 + 9 + 7 + 3, engine->module<IdleController>()->getRunningOpenLoop(0, 10, 0));
 }
 
 TEST(idle_v2, runningOpenLoopTpsTaper) {
