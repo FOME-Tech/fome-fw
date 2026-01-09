@@ -657,6 +657,13 @@ enum class DtcSeverity : uint8_t {
 	LimpLevel2 = 3,
 };
 
+typedef enum __attribute__ ((__packed__)) {
+	None = 0,
+	First,
+	Second,
+	Both,
+} canBroadcast_e;
+
 #define SC_Exhaust_First 1
 
 #endif // __cplusplus
