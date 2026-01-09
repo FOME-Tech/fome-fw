@@ -658,10 +658,10 @@ enum class DtcSeverity : uint8_t {
 };
 
 typedef enum __attribute__ ((__packed__)) {
-	None = 0,
-	First,
-	Second,
-	Both,
+	none = 0,
+	first,
+	second,
+	both,
 } canBroadcast_e;
 
 #define SC_Exhaust_First 1

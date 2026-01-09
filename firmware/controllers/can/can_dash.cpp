@@ -1288,41 +1288,41 @@ static void populateFrame(Aim5f7& msg) {
 	msg.LambdaTarget2 = (float)engine->fuelComputer.targetLambda;
 }
 
-static inline void sendAimFrames(CanBusIndex channel) {
-    #define TX(T, id) transmitStruct<T>((id), false, channel)
-
-    TX(Aim5f0, 0x5f0);
-    TX(Aim5f1, 0x5f1);
-    TX(Aim5f2, 0x5f2);
-    TX(Aim5f3, 0x5f3);
-    TX(Aim5f4, 0x5f4);
-    TX(Aim5f5, 0x5f5);
-    TX(Aim5f6, 0x5f6);
-    TX(Aim5f7, 0x5f7);
-
-    #undef TX
-}
-
 void canDashboardAim(CanCycle cycle) {
     if (!cycle.isInterval(CI::_10ms)) {
         return;
     }
 
+	auto SendOn = [&](CanBusIndex channel) {
+		#define TX(T, id) transmitStruct<T>(id, false, channel)
+
+		TX(Aim5f0, 0x5f0);
+    	TX(Aim5f1, 0x5f1);
+    	TX(Aim5f2, 0x5f2);
+    	TX(Aim5f3, 0x5f3);
+    	TX(Aim5f4, 0x5f4);
+    	TX(Aim5f5, 0x5f5);
+    	TX(Aim5f6, 0x5f6);
+    	TX(Aim5f7, 0x5f7);
+
+		#undef TX
+	};
+
     switch (engineConfiguration->canBroadcastUseChannel) {
-        case canBroadcast_e::First:
-            sendAimFrames(CanBusIndex::Bus0);
+        case canBroadcast_e::first:
+            SendOn(CanBusIndex::Bus0);
             break;
 
-        case canBroadcast_e::Second:
-            sendAimFrames(CanBusIndex::Bus1);
+        case canBroadcast_e::second:
+            SendOn(CanBusIndex::Bus1);
             break;
 
-        case canBroadcast_e::Both:
-            sendAimFrames(CanBusIndex::Bus0);
-            sendAimFrames(CanBusIndex::Bus1);
+        case canBroadcast_e::both:
+            SendOn(CanBusIndex::Bus0);
+            SendOn(CanBusIndex::Bus1);
             break;
 
-        case canBroadcast_e::None:
+        case canBroadcast_e::none:
 			break;
         default:
             break;

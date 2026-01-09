@@ -246,10 +246,10 @@ void sendCanVerbose() {
     };
 
     switch (engineConfiguration->canBroadcastUseChannel) {
-		case canBroadcast_e::None: break;
-        case canBroadcast_e::First: sendOn(CanBusIndex::Bus0); break;
-        case canBroadcast_e::Second: sendOn(CanBusIndex::Bus1); break;
-        case canBroadcast_e::Both:
+		case canBroadcast_e::none: break;
+        case canBroadcast_e::first: sendOn(CanBusIndex::Bus0); break;
+        case canBroadcast_e::second: sendOn(CanBusIndex::Bus1); break;
+        case canBroadcast_e::both:
             sendOn(CanBusIndex::Bus0);
             sendOn(CanBusIndex::Bus1);
             break;
