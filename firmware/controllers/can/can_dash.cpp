@@ -1289,44 +1289,31 @@ static void populateFrame(Aim5f7& msg) {
 }
 
 void canDashboardAim(CanCycle cycle) {
-    if (!cycle.isInterval(CI::_10ms)) {
-        return;
-    }
+	if (!cycle.isInterval(CI::_10ms)) {
+		return;
+	}
 
-	auto SendOn = [&](CanBusIndex channel) {
-		#define TX(T, id) transmitStruct<T>(id, false, channel)
+	CanBusIndex canChannel =
+		engineConfiguration->canBroadcastUseChannelTwo
+			? CanBusIndex::Bus1
+			: CanBusIndex::Bus0;
 
-		TX(Aim5f0, 0x5f0);
-    	TX(Aim5f1, 0x5f1);
-    	TX(Aim5f2, 0x5f2);
-    	TX(Aim5f3, 0x5f3);
-    	TX(Aim5f4, 0x5f4);
-    	TX(Aim5f5, 0x5f5);
-    	TX(Aim5f6, 0x5f6);
-    	TX(Aim5f7, 0x5f7);
+	transmitStruct<Aim5f0>(0x5f0, false, canChannel);
+	transmitStruct<Aim5f1>(0x5f1, false, canChannel);
+	transmitStruct<Aim5f2>(0x5f2, false, canChannel);
+	transmitStruct<Aim5f3>(0x5f3, false, canChannel);
+	transmitStruct<Aim5f4>(0x5f4, false, canChannel);
+	transmitStruct<Aim5f5>(0x5f5, false, canChannel);
+	transmitStruct<Aim5f6>(0x5f6, false, canChannel);
+	transmitStruct<Aim5f7>(0x5f7, false, canChannel);
 
-		#undef TX
-	};
-
-    switch (engineConfiguration->canBroadcastUseChannel) {
-        case canBroadcast_e::first:
-            SendOn(CanBusIndex::Bus0);
-            break;
-
-        case canBroadcast_e::second:
-            SendOn(CanBusIndex::Bus1);
-            break;
-
-        case canBroadcast_e::both:
-            SendOn(CanBusIndex::Bus0);
-            SendOn(CanBusIndex::Bus1);
-            break;
-
-        case canBroadcast_e::none:
-			break;
-        default:
-            break;
-    }
+	// there are more, but less important for us
+	// transmitStruct<Aim5f8>(0x5f8, false);
+	// transmitStruct<Aim5f9>(0x5f9, false);
+	// transmitStruct<Aim5fa>(0x5fa, false);
+	// transmitStruct<Aim5fb>(0x5fb, false);
+	// transmitStruct<Aim5fc>(0x5fc, false);
+	// transmitStruct<Aim5fd>(0x5fd, false);
 }
 
 #endif // EFI_CAN_SUPPORT
