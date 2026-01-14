@@ -813,7 +813,7 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 	bit knockBankCyl11,"Channel 2","Channel 1"
 	bit knockBankCyl12,"Channel 2","Channel 1"
 	bit tcuEnabled
-canBroadcast_e canBroadcastUseChannel;
+canBroadcast_e canBroadcastUseChannelTwo;
 	bit useRawOutputToDriveIdleStepper;If enabled we use four Push-Pull outputs to directly drive stepper idle air valve coilss
 bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bus CAN messages in FOME console
 

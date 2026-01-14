@@ -245,7 +245,7 @@ void sendCanVerbose() {
         #undef TX
     };
 
-    switch (engineConfiguration->canBroadcastUseChannel) {
+    switch (engineConfiguration->canBroadcastUseChannelTwo) {
 		case canBroadcast_e::none: break;
         case canBroadcast_e::first: sendOn(CanBusIndex::Bus0); break;
         case canBroadcast_e::second: sendOn(CanBusIndex::Bus1); break;
