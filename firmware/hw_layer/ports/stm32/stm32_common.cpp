@@ -243,9 +243,6 @@ private:
 };
 }
 
-/**
-  * Could this be unified with getIcuParams() method?
-  */
 static expected<stm32_pwm_config> getConfigForPin(brain_pin_e pin) {
 	switch (pin) {
 #if STM32_PWM_USE_TIM1
