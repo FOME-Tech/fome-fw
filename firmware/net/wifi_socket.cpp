@@ -188,6 +188,14 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 		case SOCKET_MSG_ACCEPT: {
 			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
 			if (acceptMsg && (acceptMsg->sock >= 0)) {
+				// Enable TCP keep-alive on the connected socket to detect dead peers
+				int keepAlive = 1;
+				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPALIVE, &keepAlive, sizeof(keepAlive));
+
+				// Use a shorter idle time before keep-alive starts (10 seconds instead of default 60)
+				int keepIdle = 20;  // units of 500ms
+				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPIDLE, &keepIdle, sizeof(keepIdle));
+
 				if (auto server = ServerSocket::findListener(sock)) {
 					server->onAccept(acceptMsg->sock);
 				}
