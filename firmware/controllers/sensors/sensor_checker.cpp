@@ -446,7 +446,7 @@ void SensorChecker::onSlowCallback() {
 	auto knockNoiseTimeout = engineConfiguration->knockNoiseTimeout;
 	if (engineConfiguration->enableSoftwareKnock && knockNoiseTimeout > 0 && engine->rpmCalculator.isRunning()) {
 		for (size_t i = 0; i < efi::size(m_lastGoodKnockSampleTimer); i++) {
-			if (m_lastGoodKnockSampleTimer[i].hasElapsedSec(knockNoiseTimeout)) {
+			if (m_hasSeenKnockSensor[i] && m_lastGoodKnockSampleTimer[i].hasElapsedSec(knockNoiseTimeout)) {
 				auto code = i == 0 ? ObdCode::OBD_Knock_Sensor_1_Low : ObdCode::OBD_Knock_Sensor_2_Low;
 
 				handleCodeSeverity(code);
@@ -456,6 +456,7 @@ void SensorChecker::onSlowCallback() {
 		// Not running or knock disabled - reset state
 		for (size_t i = 0; i < efi::size(m_lastGoodKnockSampleTimer); i++) {
 			m_lastGoodKnockSampleTimer[i].reset();
+			m_hasSeenKnockSensor[i] = false;
 		}
 	}
 #endif // EFI_SOFTWARE_KNOCK
@@ -465,6 +466,14 @@ void SensorChecker::onIgnitionStateChanged(bool ignitionOn) {
 	m_ignitionIsOn = ignitionOn;
 }
 
-void SensorChecker::onGoodKnockSensorSignal(uint8_t channelIdx, efitick_t knockSenseTime) {
-	m_lastGoodKnockSampleTimer[channelIdx].reset(knockSenseTime);
+void SensorChecker::onKnockSensorSignal(float dbv, uint8_t channelIdx, efitick_t knockSenseTime) {
+	m_hasSeenKnockSensor[channelIdx] = true;
+
+	// Track when we last had a reasonable signal level (for sensor disconnect detection)
+	// A working knock sensor typically reads -50 to -20 dBv during normal operation
+	// A disconnected sensor reads essentially noise floor, below -80 dBv
+	if (dbv > engineConfiguration->knockNoiseThreshold) {
+		m_lastGoodKnockSampleTimer[channelIdx].reset(knockSenseTime);
+	}
+	
 }

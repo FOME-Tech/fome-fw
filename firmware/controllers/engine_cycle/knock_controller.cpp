@@ -53,13 +53,6 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, uint8_t 
 	// All-cylinders peak detector
 	m_knockLevel = allCylinderPeakDetector.detect(dbv, lastKnockTime);
 
-	// Track when we last had a reasonable signal level (for sensor disconnect detection)
-	// A working knock sensor typically reads -50 to -20 dBv during normal operation
-	// A disconnected sensor reads essentially noise floor, below -80 dBv
-	if (dbv > engineConfiguration->knockNoiseThreshold) {
-		engine->module<SensorChecker>()->onGoodKnockSensorSignal(channelIdx, lastKnockTime);
-	}
-
 	if (isKnock) {
 		m_knockCount++;
 		m_lastKnockTimer.reset(lastKnockTime);
@@ -80,6 +73,8 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, uint8_t 
 			m_knockRetard = clampF(0, newRetard, m_maximumRetard);
 		}
 	}
+
+	engine->module<SensorChecker>()->onKnockSensorSignal(dbv, channelIdx, lastKnockTime);
 
 	return isKnock;
 }

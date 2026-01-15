@@ -10,7 +10,7 @@ public:
 		return m_analogSensorsShouldWork;
 	}
 
-	void onGoodKnockSensorSignal(uint8_t channelIdx, efitick_t knockSenseTime);
+	void onKnockSensorSignal(float dbv, uint8_t channelIdx, efitick_t knockSenseTime);
 
 private:
 	bool m_ignitionIsOn = false;
@@ -18,6 +18,7 @@ private:
 	Timer m_timeSinceVbattLow;
 
 	Timer m_lastGoodKnockSampleTimer[2];
+	bool m_hasSeenKnockSensor[2];
 
 	bool m_analogSensorsShouldWork = false;
 };
