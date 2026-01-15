@@ -45,7 +45,6 @@
 #include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
-#include "buttonshift.h"
 #include "start_stop.h"
 #include "vr_pwm.h"
 #include "adc_subscription.h"
@@ -117,18 +116,6 @@ void doPeriodicSlowCallback() {
 		writeToFlashIfPending();
 	#endif /* EFI_INTERNAL_FLASH */
 #endif /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
-
-#if EFI_TCU
-	if (engineConfiguration->tcuEnabled && engineConfiguration->gearControllerMode != GearControllerMode::None) {
-		if (engine->gearController == NULL) {
-			initGearController();
-		} else if (engine->gearController->getMode() != engineConfiguration->gearControllerMode) {
-			initGearController();
-		}
-		engine->gearController->update();
-	}
-#endif
-
 }
 
 char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer) {
@@ -445,10 +432,6 @@ void commonInitEngineController() {
 #if EFI_IDLE_CONTROL
 	startIdleThread();
 #endif /* EFI_IDLE_CONTROL */
-
-#if EFI_TCU
-	initGearController();
-#endif
 
 	initButtonDebounce();
 	initStartStopButton();

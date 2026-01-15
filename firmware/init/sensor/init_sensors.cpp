@@ -65,7 +65,6 @@ void stopSensors() {
 	deinitTurbochargerSpeedSensor();
 	deinitAuxSpeedSensors();
 	deinitMap();
-	deinitInputShaftSpeedSensor();
 }
 
 void reconfigureSensors() {
@@ -79,7 +78,6 @@ void reconfigureSensors() {
 	initAuxSensors();
 	initVehicleSpeedSensor();
 	initTurbochargerSpeedSensor();
-	initInputShaftSpeedSensor();
 }
 
 // Mocking/testing helpers

@@ -152,14 +152,6 @@ static void doRunSparkBench(size_t humanIndex, float onTime, float offTime, int 
 	pinbench(onTime, offTime, count, enginePins.coils[humanIndex - 1]);
 }
 
-static void doRunSolenoidBench(size_t humanIndex, float onTime, float offTime, int count) {
-	if (humanIndex < 1 || humanIndex > TCU_SOLENOID_COUNT) {
-		efiPrintf("Invalid index: %d", humanIndex);
-		return;
-	}
-	pinbench(onTime, offTime, count, enginePins.tcuSolenoids[humanIndex - 1]);
-}
-
 static void doRunBenchTestLuaOutput(size_t humanIndex, float onTime, float offTime, int count) {
 	if (humanIndex < 1 || humanIndex > LUA_PWM_COUNT) {
 		efiPrintf("Invalid index: %d", humanIndex);
@@ -196,14 +188,6 @@ static void sparkBenchExt(float humanIndex, float onTime, float offTime, float c
  */
 static void sparkBench(float onTime, float offTime, float count) {
 	sparkBenchExt(1, onTime, offTime, count);
-}
-
-/**
- * solenoid #2, 1000ms ON, 1000ms OFF, repeat 3 times
- * tcusolbench 2 1000 1000 3
- */
-static void tcuSolenoidBench(float humanIndex, float onTime, float offTime, float count) {
-	doRunSolenoidBench((int)humanIndex, onTime, offTime, (int)count);
 }
 
 /**
@@ -444,13 +428,6 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 		}
 		break;
 
-	case TS_SOLENOID_CATEGORY:
-		if (!running) {
-			doRunSolenoidBench(index, 1000.0,
-				1000.0, engineConfiguration->benchTestCount);
-		}
-		break;
-
 	case TS_LUA_OUTPUT_CATEGORY:
 		if (!running) {
 			doRunBenchTestLuaOutput(index, 4.0,
@@ -532,8 +509,6 @@ void initBenchTest() {
 
 	addConsoleActionFFF(CMD_SPARK_BENCH, sparkBench);
 	addConsoleActionFFFF("sparkbench2", sparkBenchExt);
-
-	addConsoleActionFFFF("tcusolbench", tcuSolenoidBench);
 
 	addConsoleAction(CMD_AC_RELAY_BENCH, acRelayBench);
 

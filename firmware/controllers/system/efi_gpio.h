@@ -101,11 +101,6 @@ public:
 	InjectorOutputPin injectorsStage2[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin coils[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin trailingCoils[MAX_CYLINDER_COUNT];
-	OutputPin tcuSolenoids[TCU_SOLENOID_COUNT];
-	OutputPin tcuTccOnoffSolenoid;
-	OutputPin tcuTccPwmSolenoid;
-	OutputPin tcuPcSolenoid;
-	OutputPin tcu32Solenoid;
 
 private:
 	void startInjectionPins();
