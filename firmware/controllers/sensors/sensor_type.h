@@ -93,8 +93,6 @@ enum class SensorType : unsigned char {
 	// MAP decoding happens only that often thus this is NOT raw MAP as flows from ADC
 	MapSlow,
 
-	InputShaftSpeed,
-
 	Maf2,	// Second bank MAF sensor
 
 	Map2,

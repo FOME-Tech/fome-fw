@@ -70,8 +70,6 @@ case SensorType::FuelTemperature:
   return "FuelTemperature";
 case SensorType::Iat:
   return "Iat";
-case SensorType::InputShaftSpeed:
-  return "InputShaftSpeed";
 case SensorType::Invalid:
   return "Invalid";
 case SensorType::Lambda1:

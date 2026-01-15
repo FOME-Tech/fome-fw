@@ -55,11 +55,6 @@
 #define GAUGE_NAME_VVT_OUTPUT_B2I "VVT: bank 2 intake output"
 #define GAUGE_NAME_VVT_OUTPUT_B2E "VVT: bank 2 exhaust output"
 
-#define GAUGE_NAME_DESIRED_GEAR "TCU: Desired Gear"
-#define GAUGE_NAME_CURRENT_GEAR "Current Gear"
-#define GAUGE_NAME_ISS "TCU: Input Shaft Speed"
-#define GAUGE_NAME_TC_RATIO "TCU: Torque Converter Ratio"
-
 #define GAUGE_NAME_VVS "Vehicle Speed"
 #define GAUGE_NAME_WHEEL_SPEED_LF "Wheel speed: LF"
 #define GAUGE_NAME_WHEEL_SPEED_RF "Wheel speed: RF"

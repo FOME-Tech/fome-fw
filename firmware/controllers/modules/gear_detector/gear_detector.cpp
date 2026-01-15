@@ -113,12 +113,7 @@ float GearDetector::computeGearboxRatio() const {
 		return 0;
 	}
 
-	float engineRpm;
-	if (Sensor::hasSensor(SensorType::InputShaftSpeed)) {
-		engineRpm = Sensor::getOrZero(SensorType::InputShaftSpeed);
-	} else {
-		engineRpm = Sensor::getOrZero(SensorType::Rpm);
-	}
+	float engineRpm = Sensor::getOrZero(SensorType::Rpm);
 
 	return engineRpm / driveshaftRpm;
 }

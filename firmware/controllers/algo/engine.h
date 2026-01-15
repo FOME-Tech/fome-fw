@@ -17,8 +17,6 @@
 #include "accel_enrichment.h"
 #include "trigger_central.h"
 #include "local_version_holder.h"
-#include "buttonshift.h"
-#include "gear_controller.h"
 #include "high_pressure_fuel_pump.h"
 #include "limp_manager.h"
 #include "pin_repository.h"
@@ -236,10 +234,6 @@ public:
 		return engineModules.get<get_t>();
 	}
 
-#if EFI_TCU
-	GearControllerBase *gearController;
-#endif
-	
 #if EFI_LAUNCH_CONTROL
 	LaunchControlBase launchController;
 	SoftSparkLimiter softSparkLimiter;

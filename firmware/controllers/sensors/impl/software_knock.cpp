@@ -10,7 +10,8 @@
 #include "knock_config.h"
 #include "ch.hpp"
 
-static int8_t currentCylinderNumber = 0;
+static uint8_t currentCylinderNumber = 0;
+static uint8_t currentChannelIdx = 0;
 static efitick_t lastKnockSampleTime;
 static Biquad knockFilter;
 
@@ -60,6 +61,7 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 
 	// Stash the current cylinder's number so we can store the result appropriately
 	currentCylinderNumber = cylinderNumber;
+	currentChannelIdx = channelIdx;
 
 	adcStartConversionI(&KNOCK_ADC, conversionGroup, knockSampleBuffer, sampleCount);
 	lastKnockSampleTime = getTimeNowNt();
@@ -151,7 +153,7 @@ static void processLastKnockEvent() {
 	// clamp to reasonable range
 	db = clampF(-100, db, 100);
 
-	engine->module<KnockController>()->onKnockSenseCompleted(currentCylinderNumber, db, lastKnockTime);
+	engine->module<KnockController>()->onKnockSenseCompleted(currentCylinderNumber, currentChannelIdx, db, lastKnockTime);
 }
 
 void KnockThread::ThreadTask() {

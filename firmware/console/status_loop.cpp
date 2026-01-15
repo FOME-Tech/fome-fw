@@ -357,7 +357,6 @@ static void updateMiscSensors() {
 
 	engine->outputChannels.wastegatePositionSensor = Sensor::getOrZero(SensorType::WastegatePosition);
 
-	engine->outputChannels.ISSValue = Sensor::getOrZero(SensorType::InputShaftSpeed);
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
@@ -486,8 +485,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->gyroYaw = engine->sensors.accelerometer.yawRate;
 
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
-	extern FrequencySensor inputShaftSpeedSensor;
-	tsOutputChannels->issEdgeCounter = inputShaftSpeedSensor.eventCounter;
 	extern FrequencySensor vehicleSpeedSensor;
 	tsOutputChannels->vssEdgeCounter = vehicleSpeedSensor.eventCounter;
 

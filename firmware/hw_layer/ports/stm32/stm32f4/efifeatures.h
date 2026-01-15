@@ -154,10 +154,6 @@
 #define EFI_VEHICLE_SPEED TRUE
 #endif
 
-#ifndef EFI_TCU
-#define EFI_TCU TRUE
-#endif
-
 #ifndef EFI_ENGINE_EMULATOR
 #define EFI_ENGINE_EMULATOR TRUE
 #endif
@@ -245,22 +241,6 @@
 #define EFI_CUSTOM_PANIC_METHOD TRUE
 
 #define ADC_CHANNEL_VREF ADC_CHANNEL_IN14
-
-/**
- * currently ChibiOS uses only first and second channels of each timer for input capture
- *
- * So, our options are:
- *
- * TIM2_CH1
- *  PA5
- *
- * TIM4_CH1
- *  PB6
- * 	PD12
- *
- * TIM9_CH1
- *  PE5
- */
 
 // allow override of EFI_USE_UART_DMA from cmdline passed defs
 #ifndef EFI_USE_UART_DMA
