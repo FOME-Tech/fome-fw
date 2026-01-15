@@ -179,11 +179,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			}
 		} break;
 		case SOCKET_MSG_LISTEN: {
-			auto listenMsg = reinterpret_cast<tstrSocketListenMsg*>(pvMsg);
-			if (listenMsg && listenMsg->status == 0) {
-				// Listening, now accept a connection
-				accept(sock, nullptr, nullptr);
-			}
+			// no-op, accept() is implicit
 		} break;
 		case SOCKET_MSG_ACCEPT: {
 			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
