@@ -153,6 +153,8 @@ static DtcSeverity getSeverityForCode(ObdCode code) {
 		case 0x386: return c.camSyncErrors;
 		case 0x522: return c.p0522;
 		case 0x523: return c.p0523;
+		case 0x327: // falls through
+		case 0x332: return c.knockSensorLow;
 		default:
 			return DtcSeverity::WarningOnly;
 	}
@@ -437,8 +439,32 @@ void SensorChecker::onSlowCallback() {
 	engine->outputChannels.injectorFault = anyInjectorHasProblem;
 	engine->outputChannels.ignitionFault = anyIgnHasProblem;
 #endif // BOARD_EXT_GPIOCHIPS > 0
+
+#if EFI_SOFTWARE_KNOCK
+	// Check for missing knock sensor (signal too low for too long)
+	// Only check if knock sensing is enabled and engine is running
+	auto knockNoiseTimeout = engineConfiguration->knockNoiseTimeout;
+	if (engineConfiguration->enableSoftwareKnock && knockNoiseTimeout > 0 && engine->rpmCalculator.isRunning()) {
+		for (size_t i = 0; i < efi::size(m_lastGoodKnockSampleTimer); i++) {
+			if (m_lastGoodKnockSampleTimer[i].hasElapsedSec(knockNoiseTimeout)) {
+				auto code = i == 0 ? ObdCode::OBD_Knock_Sensor_1_Low : ObdCode::OBD_Knock_Sensor_2_Low;
+
+				handleCodeSeverity(code);
+			}
+		}
+	} else {
+		// Not running or knock disabled - reset state
+		for (size_t i = 0; i < efi::size(m_lastGoodKnockSampleTimer); i++) {
+			m_lastGoodKnockSampleTimer[i].reset();
+		}
+	}
+#endif // EFI_SOFTWARE_KNOCK
 }
 
 void SensorChecker::onIgnitionStateChanged(bool ignitionOn) {
 	m_ignitionIsOn = ignitionOn;
+}
+
+void SensorChecker::onGoodKnockSensorSignal(uint8_t channelIdx, efitick_t knockSenseTime) {
+	m_lastGoodKnockSampleTimer[channelIdx].reset(knockSenseTime);
 }

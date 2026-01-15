@@ -582,6 +582,8 @@ end_struct
 
 uint8_t autoscale knockRetardAggression;Ignition timing to remove when a knock event occurs. Advice: 5% (mild), 10% (turbo/high comp.), 15% (high knock, e.g. GDI), 20% (spicy lump),;"%", 0.1, 0, 0, 20, 1
 uint8_t autoscale knockRetardReapplyRate;After a knock event, reapply timing at this rate.;"deg/s", 0.1, 0, 0, 10, 1
+int8_t knockNoiseThreshold;Knock sensor signal level below which the sensor is considered broken or disconnected. Typical working sensors read -50 to -20 dBv.;"dBv", 1, 0, -100, 0, 0
+uint8_t knockNoiseTimeout;Duration the knock sensor signal must be too low before a fault is reported.;"seconds", 1, 0, 0, 30, 0
 
 #define engineSyncCam_enum "Intake First Bank", "Exhaust First Bank", "Intake Second Bank", "Exhaust Second Bank"
 custom engineSyncCam_e 1 bits, S08, @OFFSET@, [0:1], @@engineSyncCam_enum@@
@@ -1465,6 +1467,9 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 		! Oil pressure
 		DtcSeverity p0522;Behavior for P0522: Engine Oil Pressure Sensor Circuit Low. Triggered when oil pressure sensor voltage is less than allowed limits.
 		DtcSeverity p0523;Behavior for P0523: Engine Oil Pressure Sensor Circuit High. Triggered when oil pressure sensor voltage is greater than allowed limits.
+
+		! Knock
+		DtcSeverity knockSensorLow;Behavior for P0327/P0332: Knock Sensor 1/2 Circuit Low Input. Triggered for each knock sensor when the signal is below the specified threshold for longer than the specified timeout.
 	end_struct
 
 	Dtcs dtcControl
