@@ -10,7 +10,7 @@
  * @author Andrey Belomutskiy, (c) 2012-2020
  */
 
-#include "../stm32f4ems/efifeatures.h"
+#include "../stm32f4/efifeatures.h"
 
 #pragma once
 

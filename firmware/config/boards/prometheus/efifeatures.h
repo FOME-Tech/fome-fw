@@ -7,7 +7,7 @@
  * @author andreika, (c) 2017
  */
 
-#include "../../stm32f4ems/efifeatures.h"
+#include "../../../hw_layer/ports/stm32/stm32f4/efifeatures.h"
 
 #pragma once
 
