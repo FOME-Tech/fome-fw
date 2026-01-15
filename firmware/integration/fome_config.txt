@@ -295,6 +295,8 @@ custom pin_input_mode_e 1 bits, U08,	@OFFSET@,	[0:1], @@pin_input_mode_e_enum@@
 #define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp"
 custom gppwm_channel_e 1 bits, U08, @OFFSET@, [0:5], @@gppwm_channel_e_enum@@
 
+custom canBroadcast_e 1 bits, U08, @OFFSET@, [0:1], "none", "first", "second", "both"
+
 struct gppwm_channel
 	output_pin_e pin;Select a pin to use for PWM or on-off output.;
 	uint8_t dutyIfError;If an error (with a sensor, etc) is detected, this value is used instead of reading from the table.\nThis should be a safe value for whatever hardware is connected to prevent damage.;"%", 1, 0, 0, 100, 0
@@ -806,7 +808,8 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 	bit knockBankCyl10,"Channel 2","Channel 1"
 	bit knockBankCyl11,"Channel 2","Channel 1"
 	bit knockBankCyl12,"Channel 2","Channel 1"
-bit canBroadcastUseChannelTwo,"second","first"
+	bit tcuEnabled
+canBroadcast_e canBroadcastUseChannelTwo;
 	bit useRawOutputToDriveIdleStepper;If enabled we use four Push-Pull outputs to directly drive stepper idle air valve coilss
 bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bus CAN messages in FOME console
 
