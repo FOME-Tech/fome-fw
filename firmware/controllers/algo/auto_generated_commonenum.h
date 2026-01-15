@@ -217,6 +217,19 @@ case PIN_SHORT_TO_GND:
   }
  return "unknown";
 }
+constexpr inline const char* getCanBroadcast_e(canBroadcast_e value){
+switch(value) {
+case both:
+  return "both";
+case first:
+  return "first";
+case none:
+  return "none";
+case second:
+  return "second";
+  }
+ return "unknown";
+}
 constexpr inline const char* getCan_baudrate_e(can_baudrate_e value){
 switch(value) {
 case B100KBPS:
