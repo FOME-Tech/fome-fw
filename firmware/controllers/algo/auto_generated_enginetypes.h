@@ -583,8 +583,6 @@ case TS_SET_DEFAULT_ENGINE:
   return "TS_SET_DEFAULT_ENGINE";
 case TS_SET_ENGINE_TYPE:
   return "TS_SET_ENGINE_TYPE";
-case TS_SOLENOID_CATEGORY:
-  return "TS_SOLENOID_CATEGORY";
 case TS_UNUSED_0:
   return "TS_UNUSED_0";
 case TS_UNUSED_1:
@@ -609,6 +607,8 @@ case TS_UNUSED_23:
   return "TS_UNUSED_23";
 case TS_UNUSED_24:
   return "TS_UNUSED_24";
+case TS_UNUSED_25:
+  return "TS_UNUSED_25";
 case TS_UNUSED_26:
   return "TS_UNUSED_26";
 case TS_UNUSED_27:
