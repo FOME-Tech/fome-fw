@@ -87,3 +87,8 @@ void AcController::onSlowCallback() {
 bool AcController::isAcEnabled() const {
 	return m_acEnabled;
 }
+
+// accounts for A/C delay
+bool AcController::isAcCompressorEnabled() const {
+	return acCompressorState;
+}
