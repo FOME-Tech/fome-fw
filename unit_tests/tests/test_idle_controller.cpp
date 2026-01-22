@@ -500,7 +500,7 @@ TEST(idle_v2, RunningToIdleTransition) {
 	Sensor::setMockValue(SensorType::VehicleSpeed, 15.0);
 
 	// we are on running state still, so 0 idle position
-	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 1100));
+	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 0, 1100));
 	dut.getIdlePid()->postState(engine->outputChannels.idleStatus);
 
 	EXPECT_EQ(0, engine->outputChannels.idleStatus.dTerm);
@@ -509,15 +509,15 @@ TEST(idle_v2, RunningToIdleTransition) {
 	advanceTimeUs(5'000'000);
 
 	// now we are idling
-	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 1100), EPS2D);
+	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 0, 1100), EPS2D);
 	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
 
 	// still idle, add some error:
-	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 1120), EPS2D);
+	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 0, 1120), EPS2D);
 	EXPECT_NEAR(0.01, dut.getIdlePid()->getIntegration(), EPS2D);
 
 	// back to running mode, should reset all:
-	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 1100));
+	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 0, 1100));
 	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
 }
 
