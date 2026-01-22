@@ -127,10 +127,6 @@ bool validateOffsetCount(size_t offset, size_t count, TsChannelBase* tsChannel);
 
 extern bool rebootForPresetPending;
 
-/**
- * This command is needed to make the whole transfer a bit faster
- * @note See also handleWriteValueCommand
- */
 void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count,
 		void *content) {
 	tsState.writeChunkCommandCounter++;
@@ -169,27 +165,6 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
 
 	crc = SWAP_UINT32(crc);
 	tsChannel->copyAndWriteSmallCrcPacket((const uint8_t *) &crc, sizeof(crc));
-}
-
-/**
- * 'Write' command receives a single value at a given offset
- * @note Writing values one by one is pretty slow
- */
-void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, uint16_t offset, uint8_t value) {
-	tsState.writeValueCommandCounter++;
-
-	efiPrintf("TS -> Write value offset %d value %d", offset, value);
-
-	if (validateOffsetCount(offset, 1, tsChannel)) {
-		return;
-	}
-
-	// Skip the write if a preset was just loaded - we don't want to overwrite it
-	if (!rebootForPresetPending) {
-		getWorkingPageAddr()[offset] = value;
-	}
-	// Force any board configuration options that humans shouldn't be able to change
-	setBoardConfigOverrides();
 }
 
 void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) {
@@ -246,7 +221,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel) {
 
 static bool isKnownCommand(char command) {
 	return command == TS_HELLO_COMMAND || command == TS_READ_COMMAND || command == TS_OUTPUT_COMMAND
-			|| command == TS_BURN_COMMAND || command == TS_SINGLE_WRITE_COMMAND
+			|| command == TS_BURN_COMMAND
 			|| command == TS_CHUNK_WRITE_COMMAND || command == TS_EXECUTE
 			|| command == TS_IO_TEST_COMMAND
 			|| command == TS_SET_LOGGER_SWITCH
@@ -553,12 +528,6 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 		break;
 	case TS_CHUNK_WRITE_COMMAND:
 		handleWriteChunkCommand(tsChannel, offset, count, data + sizeof(TunerStudioWriteChunkRequest));
-		break;
-	case TS_SINGLE_WRITE_COMMAND:
-		{
-			uint8_t value = data[4];
-			handleWriteValueCommand(tsChannel, offset, value);
-		}
 		break;
 	case TS_CRC_CHECK_COMMAND:
 		handleCrc32Check(tsChannel, offset, count);
