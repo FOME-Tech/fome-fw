@@ -167,7 +167,7 @@ class Engine final : public TriggerStateListener {
 public:
 	Engine();
 
-	TunerStudioOutputChannels outputChannels;
+	TunerStudioOutputChannels outputChannels{};
 
 	/**
 	 * Sometimes for instance during shutdown we need to completely supress CAN TX
