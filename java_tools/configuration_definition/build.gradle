@@ -44,6 +44,6 @@ shadowJar {
 test {
 	testLogging {
 		events = ["failed"]
-		exceptionFormat ="full"
+		exceptionFormat = "full"
 	}
 }

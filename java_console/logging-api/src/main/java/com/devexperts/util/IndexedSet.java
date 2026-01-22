@@ -1308,7 +1308,7 @@ public class IndexedSet<K, V> extends AbstractConcurrentSet<V> implements Clonea
 
 	private static final int GOLDEN_RATIO = 0x9E3779B9;
 	private static final int MAGIC = 0xC96B5A35;
-	private static int magicSeed = (int) (System.currentTimeMillis() * Runtime.getRuntime().freeMemory());
+	private static int magicSeed = (int)(System.currentTimeMillis() * Runtime.getRuntime().freeMemory());
 
 	/**
 	 * Generates next MAGIC number with proper distribution and difference of bits.
