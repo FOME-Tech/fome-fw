@@ -11,7 +11,7 @@ extern "C" {
 
 class : public chibios_rt::BaseStaticThread<256> {
 protected:
-	void main(void) override {
+	void main() override {
 		Gpio yellow = getWarningLedPin();
 		Gpio blue = getCommsLedPin();
 		Gpio green = getRunningLedPin();
@@ -83,7 +83,7 @@ class : public chibios_rt::BaseStaticThread<1024> {
 	}
 } openblt;
 
-int main(void) {
+int main() {
 	preHalInit();
 	halInit();
 	chSysInit();
@@ -111,6 +111,17 @@ void efiSetPadMode(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 	}
 
 	palSetPadMode(port, pin, mode);
+}
+
+void efiSetPadUnused(brain_pin_e brainPin) {
+	ioportid_t port = getHwPort("", brainPin);
+	ioportmask_t pin = getHwPin("", brainPin);
+	/* paranoid */
+	if (!port) {
+		return;
+	}
+
+	palSetPadMode(port, pin, PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP);
 }
 
 // Weak linked default implementation (not necessarily required for all boards)

@@ -42,7 +42,7 @@ bool RpmCalculator::isSpinningUp() const {
 	return state == SPINNING_UP;
 }
 
-uint32_t RpmCalculator::getRevolutionCounterSinceStart(void) const {
+uint32_t RpmCalculator::getRevolutionCounterSinceStart() const {
 	return revolutionCounterSinceStart;
 }
 
@@ -185,7 +185,7 @@ void RpmCalculator::onNewEngineCycle() {
 	revolutionCounterSinceStart++;
 }
 
-uint32_t RpmCalculator::getRevolutionCounterM(void) const {
+uint32_t RpmCalculator::getRevolutionCounterM() const {
 	return revolutionCounterSinceBoot;
 }
 
@@ -196,13 +196,25 @@ void RpmCalculator::onSlowCallback() {
 	}
 
 	if (engineConfiguration->alwaysInstantRpm) {
-		float rpm = Sensor::getOrZero(SensorType::Rpm);
+		float rpm;
+		efitick_t lastInstantRpmTime;
 
-		if (rpm == 0 || m_lastRpm == 0) {
+		{
+			chibios_rt::CriticalSectionLocker csl;
+			rpm = m_instantRpm;
+			lastInstantRpmTime = m_lastInstantRpmTime;
+		}
+
+		// Compute time since the last rpm rate update
+		auto dt = m_instantRpmDeltaTimer.getElapsedSecondsAndReset(lastInstantRpmTime);
+
+		// zero dt means instant RPM didn't update since the last slow callback
+		if (rpm == 0 || m_lastRpm == 0 || dt == 0) {
 			rpmRate = 0;
 		} else {
-			auto delta = rpm - m_lastRpm;
-			rpmRate = delta / (SLOW_CALLBACK_PERIOD_MS * 0.001f);
+			// Compute change in RPM
+			auto dRpm = rpm - m_lastRpm;
+			rpmRate = dRpm / dt;
 		}
 
 		m_lastRpm = rpm;
@@ -245,15 +257,15 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
  * updated here.
  * This callback is invoked on interrupt thread.
  */
-void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
+void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo) {
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
 
-	RpmCalculator *rpmState = &engine->rpmCalculator;
+	RpmCalculator& rpmState = engine->rpmCalculator;
 
 	if (trgEventIndex == 0) {
-		bool hadRpmRecently = rpmState->checkIfSpinning(nowNt);
+		bool hadRpmRecently = rpmState.checkIfSpinning(phaseInfo.timestamp);
 
-		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(nowNt);
+		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(phaseInfo.timestamp);
 
 		if (hadRpmRecently) {
 			/**
@@ -265,16 +277,16 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 			 */
 			if (!alwaysInstantRpm) {
 				if (periodSeconds == 0) {
-					rpmState->setRpmValue(0);
-					rpmState->rpmRate = 0;
+					rpmState.setRpmValue(0);
+					rpmState.rpmRate = 0;
 				} else {
 					float mult = getEngineCycle(getEngineRotationState()->getOperationMode()) / 360;
 					float rpm = 60 * mult / periodSeconds;
 
-					auto rpmDelta = rpm - rpmState->previousRpmValue;
-					rpmState->rpmRate = rpmDelta / (mult * periodSeconds);
+					auto rpmDelta = rpm - rpmState.previousRpmValue;
+					rpmState.rpmRate = rpmDelta / (mult * periodSeconds);
 
-					rpmState->setRpmValue(rpm);
+					rpmState.setRpmValue(rpm);
 				}
 			}
 		} else {
@@ -283,19 +295,33 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, efitick_t nowNt) {
 			engine->triggerCentral.instantRpm.movePreSynchTimestamps();
 		}
 
-		rpmState->onNewEngineCycle();
+		rpmState.onNewEngineCycle();
 	}
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(
-		engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails,
-		trgEventIndex, nowNt);
+		engine->triggerCentral.triggerShape,
+		&engine->triggerCentral.triggerFormDetails,
+		trgEventIndex,
+		phaseInfo
+	);
 
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
+	rpmState.storeInstantRpm(alwaysInstantRpm, instantRpm, phaseInfo.timestamp);
+}
+
+void RpmCalculator::storeInstantRpm(bool alwaysInstantRpm, float instantRpm, efitick_t timestamp) {
 	if (alwaysInstantRpm) {
-		rpmState->setRpmValue(instantRpm);
-	} else if (rpmState->isSpinningUp()) {
-		rpmState->assignRpmValue(instantRpm);
+		setRpmValue(instantRpm);
+	} else if (isSpinningUp()) {
+		assignRpmValue(instantRpm);
+	}
+
+	{
+		chibios_rt::CriticalSectionLocker csl;
+
+		m_instantRpm = instantRpm;
+		m_lastInstantRpmTime = timestamp;
 	}
 }
 
@@ -316,9 +342,12 @@ static void onTdcCallback(void *) {
 #endif /* EFI_UNIT_TEST */
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	addEngineSnifferTdcEvent(rpm);
+
+	auto nowNt = getTimeNowNt();
+
+	addEngineSnifferTdcEvent(nowNt, rpm);
 #if EFI_TOOTH_LOGGER
-	LogTriggerTopDeadCenter(getTimeNowNt());
+	LogTriggerTopDeadCenter(nowNt);
 #endif /* EFI_TOOTH_LOGGER */
 }
 

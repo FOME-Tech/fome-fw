@@ -52,7 +52,7 @@ public class EnumToStringTest {
         assertEquals("GPIO_INVALID", second.getName());
         assertEquals("1", second.getValue());
 
-        assertEquals("const char *getBrain_pin_e(brain_pin_e value){\n" +
+        assertEquals("constexpr inline const char* getBrain_pin_e(brain_pin_e value){\n" +
                 "switch(value) {\n" +
                 "case GPIO_HEX:\n" +
                 "  return \"GPIO_HEX\";\n" +
@@ -61,8 +61,8 @@ public class EnumToStringTest {
                 "case GPIO_UNASSIGNED:\n" +
                 "  return \"GPIO_UNASSIGNED\";\n" +
                 "  }\n" +
-                " return NULL;\n" +
-                "}\n", enumToString.getCppFileContent());
+                " return \"unknown\";\n" +
+                "}\n", enumToString.getContent());
     }
 
     @Test
@@ -74,15 +74,15 @@ public class EnumToStringTest {
                         "} brain_pin_e ;");
         EnumsReader enumsReader = new EnumsReader().read(reader);
         EnumToString enumToString = process(enumsReader);
-        assertEquals("const char *getBrain_pin_e(brain_pin_e value){\n" +
+        assertEquals("constexpr inline const char* getBrain_pin_e(brain_pin_e value){\n" +
                 "switch(value) {\n" +
                 "case GPIO_INVALID:\n" +
                 "  return \"GPIO_INVALID\";\n" +
                 "case GPIO_UNASSIGNED:\n" +
                 "  return \"GPIO_UNASSIGNED\";\n" +
                 "  }\n" +
-                " return NULL;\n" +
-                "}\n", enumToString.getCppFileContent());
+                " return \"unknown\";\n" +
+                "}\n", enumToString.getContent());
     }
 
     @Test
@@ -94,15 +94,15 @@ public class EnumToStringTest {
                         "} brain_pin_e ;");
         EnumsReader enumsReader = new EnumsReader().read(reader);
         EnumToString enumToString = process(enumsReader);
-        assertEquals("const char *getMyEnum(myEnum value){\n" +
+        assertEquals("constexpr inline const char* getMyEnum(myEnum value){\n" +
                 "switch(value) {\n" +
                 "case myEnum::GPIO_INVALID:\n" +
                 "  return \"GPIO_INVALID\";\n" +
                 "case myEnum::GPIO_UNASSIGNED:\n" +
                 "  return \"GPIO_UNASSIGNED\";\n" +
                 "  }\n" +
-                " return NULL;\n" +
-                "}\n", enumToString.getCppFileContent());
+                " return \"unknown\";\n" +
+                "}\n", enumToString.getContent());
     }
 
     @Test
@@ -157,16 +157,16 @@ public class EnumToStringTest {
 
         EnumsReader enumsReader = new EnumsReader().read(reader);
         EnumToString enumToString = process(enumsReader);
-        assertEquals("const char *getPidAutoTune_AutoTunerState(PidAutoTune_AutoTunerState value){\n" +
+        assertEquals("constexpr inline const char* getPidAutoTune_AutoTunerState(PidAutoTune_AutoTunerState value){\n" +
                 "switch(value) {\n" +
                 "case AUTOTUNER_OFF:\n" +
                 "  return \"AUTOTUNER_OFF\";\n" +
                 "case STEADY_STATE_AT_BASELINE:\n" +
                 "  return \"STEADY_STATE_AT_BASELINE\";\n" +
                 "  }\n" +
-                " return NULL;\n" +
+                " return \"unknown\";\n" +
                 "}\n" +
-                "const char *getIdle_state_e(idle_state_e value){\n" +
+                "constexpr inline const char* getIdle_state_e(idle_state_e value){\n" +
                 "switch(value) {\n" +
                 "case Force_4bytes_size_idle_state_e:\n" +
                 "  return \"Force_4bytes_size_idle_state_e\";\n" +
@@ -175,8 +175,8 @@ public class EnumToStringTest {
                 "case TPS_THRESHOLD:\n" +
                 "  return \"TPS_THRESHOLD\";\n" +
                 "  }\n" +
-                " return NULL;\n" +
-                "}\n", enumToString.getCppFileContent());
+                " return \"unknown\";\n" +
+                "}\n", enumToString.getContent());
     }
 
     @Test

@@ -31,6 +31,8 @@ TEST(gpio, testPinInitInverted) {
 }
 
 TEST(gpio, multipleInit) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	OutputPin dut;
 
 	// Initial setup should be ok
@@ -44,6 +46,8 @@ TEST(gpio, multipleInit) {
 }
 
 TEST(gpio, deInit) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	OutputPin dut;
 
 	// Initial setup should be ok
@@ -56,6 +60,8 @@ TEST(gpio, deInit) {
 }
 
 TEST(gpio, pinSetNotInverted) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	OutputPin dut;
 
 	dut.initPin("test", Gpio::A6, OM_DEFAULT);
@@ -73,6 +79,8 @@ TEST(gpio, pinSetNotInverted) {
 }
 
 TEST(gpio, pinSetInverted) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
 	OutputPin dut;
 
 	dut.initPin("test", Gpio::A6, OM_INVERTED);

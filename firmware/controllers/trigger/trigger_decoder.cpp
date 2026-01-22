@@ -374,7 +374,10 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	// Trigger shape length is ~4x tooth count (rise + fall / doubled for 4 stroke),
 	// so extra multiply by 4 then 5 second maximum revolution
 	float triggerTimeoutPeriod = clampF(0.1f, 20.0f / triggerShape.getLength(), 1.0f);
-	if (previousEventTimer.getElapsedSecondsAndReset(nowNt) > triggerTimeoutPeriod) {
+	float previousEventTime = previousEventTimer.getElapsedSecondsAndReset(nowNt);
+	if (previousEventTime > triggerTimeoutPeriod) {
+		efiPrintf("Reset sync as time since last trigger event is %.3fs, threshold %.3f", previousEventTime, triggerTimeoutPeriod);
+
 		/**
 		 * We are here if there is a time gap between now and previous shaft event - that means the engine is not running.
 		 * That means we have lost synchronization since the engine is not running :)

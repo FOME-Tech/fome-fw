@@ -10,7 +10,6 @@
 
 #include "pch.h"
 
-
 #if EFI_PROD_CODE
 #include "mpu_util.h"
 #endif // EFI_PROD_CODE

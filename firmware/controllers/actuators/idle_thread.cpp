@@ -193,11 +193,11 @@ percent_t IdleController::getOpenLoop(Phase phase, float rpm, float clt, SensorR
 	return interpolateClamped(0, crankingValvePosition, 1, running, crankingTaperFraction);
 }
 
-float IdleController::getIdleTimingAdjustment(float rpm) {
-	return getIdleTimingAdjustment(rpm, m_lastTargetRpm, m_lastPhase);
+float IdleController::getIdleTimingAdjustment(float rpm, float rpmRate) {
+	return getIdleTimingAdjustment(rpm, rpmRate, m_lastTargetRpm, m_lastPhase);
 }
 
-float IdleController::getIdleTimingAdjustment(float rpm, float targetRpm, Phase phase) {
+float IdleController::getIdleTimingAdjustment(float rpm, float rpmRate, float targetRpm, Phase phase) {
 	// if not enabled, do nothing
 	if (!engineConfiguration->useIdleTimingPidControl) {
 		return 0;
@@ -213,6 +213,7 @@ float IdleController::getIdleTimingAdjustment(float rpm, float targetRpm, Phase 
 		return m_modeledFlowIdleTiming;
 	} else {
 		// We're now in the idle mode, and RPM is inside the Timing-PID regulator work zone!
+		m_timingPid.setDTermOverride(-rpmRate);
 		return m_timingPid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 	}
 }
@@ -225,7 +226,7 @@ static void finishIdleTestIfNeeded() {
 /**
  * @return idle valve position percentage for automatic closed loop mode
  */
-float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float targetRpm) {
+float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float rpmRate, float targetRpm) {
 	notIdling = phase != IIdleController::Phase::Idling;
 	if (notIdling) {
 		// Don't store old I and D terms if PID doesn't work anymore.
@@ -246,10 +247,11 @@ float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, 
 	// the state of PID is about to change, so we might reset it now, but only when needed (see idlePidDeactivationTpsThreshold)
 	mightResetPid = true;
 
+	m_pid.setDTermOverride(-rpmRate);
 	return m_pid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
 }
 
-float IdleController::getIdlePosition(float rpm) {
+float IdleController::getIdlePosition(float rpm, float rpmRate) {
 #if EFI_SHAFT_POSITION_INPUT
 	// Simplify hardware CI: we borrow the idle valve controller as a PWM source for various stimulation tasks
 	// The logic in this function is solidly unit tested, so it's not necessary to re-test the particulars on real hardware.
@@ -303,7 +305,7 @@ float IdleController::getIdlePosition(float rpm) {
 			m_pid.reset();
 		}
 
-		auto closedLoop = getClosedLoop(phase, tps.Value, rpm, targetRpm.ClosedLoopTarget);
+		auto closedLoop = getClosedLoop(phase, tps.Value, rpm, rpmRate, targetRpm.ClosedLoopTarget);
 		idleClosedLoop = closedLoop;
 		iacPosition += closedLoop;
 	} else {
@@ -359,7 +361,10 @@ float IdleController::getIdlePosition(float rpm) {
 
 void IdleController::onFastCallback() {
 #if EFI_SHAFT_POSITION_INPUT
-	float position = getIdlePosition(engine->triggerCentral.instantRpm.getInstantRpm());
+	float position = getIdlePosition(
+		engine->triggerCentral.instantRpm.getInstantRpm(),
+		engine->rpmCalculator.getRpmAcceleration()
+	);
 	applyIACposition(position);
 #endif // EFI_SHAFT_POSITION_INPUT
 }

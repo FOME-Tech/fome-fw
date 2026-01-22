@@ -102,16 +102,15 @@ const char* swapOutputBuffers(size_t* actualOutputBufferSize) {
 	}
 
 	*actualOutputBufferSize = readBuffer->length();
-#if EFI_ENABLE_ASSERTS
-	size_t expectedOutputSize = std::strlen(readBuffer->get());
 
 	// Check that the actual length of the buffer matches the expected length of how much we thought we wrote
+	size_t expectedOutputSize = std::strlen(readBuffer->get());
 	if (*actualOutputBufferSize != expectedOutputSize) {
 		firmwareError(ObdCode::ERROR_LOGGING_SIZE_CALC, "lsize mismatch %d vs strlen %d", *actualOutputBufferSize, expectedOutputSize);
 
 		return nullptr;
 	}
-#endif /* EFI_ENABLE_ASSERTS */
+
 	return readBuffer->get();
 }
 

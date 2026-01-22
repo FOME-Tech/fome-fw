@@ -19,16 +19,14 @@ void firmwareError(ObdCode /*code*/, const char* /*fmt*/, ...) {
 }
 namespace priv { void efiPrintfInternal(const char* /*format*/, ...) { } }
 
-// this is supposed to be taken from chconf_common.h but it does not work? I am not sure why :(
-// TODO: make this be defined by chconf_common.h?
-//#if ! ENABLE_PERF_TRACE
 void irqEnterHook() {}
 void irqExitHook() {}
 void contextSwitchHook() {}
 void threadInitHook(void*) {}
 void onLockHook() {}
 void onUnlockHook() {}
-//#endif /* ENABLE_PERF_TRACE */
+void onIdleEnterHook() {}
+void onIdleExitHook() {}
 
 static ExtiCallback callback;
 void extiCallbackThunk(void* data) {
@@ -53,3 +51,7 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	ioline_t line = PAL_LINE(port, index);
 	palDisableLineEvent(line);
 }
+
+void perfEventBegin(PE) { }
+void perfEventEnd(PE) { }
+void perfEventInstantGlobal(PE) { }

@@ -30,10 +30,20 @@ void contextSwitchHook() {
 	perfEventInstantGlobal(PE::ContextSwitch);
 }
 
+void onIdleEnterHook() {
+	perfEventBegin(PE::Idle);
+}
+
+void onIdleExitHook() {
+	perfEventEnd(PE::Idle);
+}
+
 #else
 void irqEnterHook() {}
 void irqExitHook() {}
 void contextSwitchHook() {}
+void onIdleEnterHook() {}
+void onIdleExitHook() {}
 #endif /* ENABLE_PERF_TRACE */
 
 static void onStartStopButtonToggle() {

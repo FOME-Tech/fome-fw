@@ -255,16 +255,24 @@ void Sensor::setInvalidMockValue(SensorType type) {
 	}
 }
 
-/**
- * this is definitely not the fastest implementation possible but good enough for now?
- * todo: some sort of hashmap in the future?
- */
-SensorType findSensorTypeByName(const char *name) {
-	for (int i = 0; i < (int)SensorType::PlaceholderLast; i++) {
-		SensorType type = (SensorType)i;
-		const char *sensorName = getSensorType(type);
-		if (strEqualCaseInsensitive(sensorName, name)) {
-			return type;
+constexpr auto makeSensorNameHashes() {
+	std::array<int, static_cast<size_t>(SensorType::PlaceholderLast)> result;
+
+	for (size_t i = 0; i < result.size(); i++) {
+		result[i] = djb2lowerCase(getSensorType(static_cast<SensorType>(i)));
+	}
+
+	return result;
+}
+
+static constexpr auto sensorNameHashes = makeSensorNameHashes();
+
+SensorType findSensorTypeByName(const char* name) {
+	auto hash = djb2lowerCase(name);
+
+	for (size_t i = 0; i < sensorNameHashes.size(); i++) {
+		if (hash == sensorNameHashes[i]) {
+			return static_cast<SensorType>(i);
 		}
 	}
 

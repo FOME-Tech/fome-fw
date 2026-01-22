@@ -7,7 +7,7 @@
  * @author Andrey Gusakov, 2021
  */
 
-#include "../../stm32f7ems/efifeatures.h"
+#include "../../../hw_layer/ports/stm32/stm32f7/efifeatures.h"
 
 #ifndef EFIFEATURES_SUBARUEG33_H_
 #define EFIFEATURES_SUBARUEG33_H_

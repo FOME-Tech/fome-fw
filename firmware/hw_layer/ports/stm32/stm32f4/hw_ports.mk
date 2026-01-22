@@ -23,6 +23,3 @@ ifeq ($(IS_STM32F429),yes)
 else
 	DDEFS += -DSTM32F407xx
 endif
-
-# TODO: remove, for efifeatures.h
-ALLINC += $(PROJECT_DIR)/config/stm32f4ems

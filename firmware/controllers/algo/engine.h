@@ -17,15 +17,12 @@
 #include "accel_enrichment.h"
 #include "trigger_central.h"
 #include "local_version_holder.h"
-#include "buttonshift.h"
-#include "gear_controller.h"
 #include "high_pressure_fuel_pump.h"
 #include "limp_manager.h"
 #include "pin_repository.h"
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
 #include "launch_control.h"
@@ -170,7 +167,7 @@ class Engine final : public TriggerStateListener {
 public:
 	Engine();
 
-	TunerStudioOutputChannels outputChannels;
+	TunerStudioOutputChannels outputChannels{};
 
 	/**
 	 * Sometimes for instance during shutdown we need to completely supress CAN TX
@@ -216,9 +213,9 @@ public:
 		VvtController3,
 		VvtController4,
 #endif // EFI_VVT_PID
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 		BoostController,
-#endif // EFI_BOOST_CONTROL
+#endif // EFI_ENGINE_CONTROL
 		LedBlinkingTask,
 		TpsAccelEnrichment,
 
@@ -237,10 +234,6 @@ public:
 		return engineModules.get<get_t>();
 	}
 
-#if EFI_TCU
-	GearControllerBase *gearController;
-#endif
-	
 #if EFI_LAUNCH_CONTROL
 	LaunchControlBase launchController;
 	SoftSparkLimiter softSparkLimiter;
@@ -273,9 +266,7 @@ public:
 	bool needTdcCallback = true;
 #endif /* EFI_UNIT_TEST */
 
-
-	int getGlobalConfigurationVersion(void) const;
-
+	int getGlobalConfigurationVersion() const;
 
 	// a pointer with interface type would make this code nicer but would carry extra runtime
 	// cost to resolve pointer, we use instances as a micro optimization
@@ -340,8 +331,6 @@ public:
 	void resetEngineSnifferIfInTestMode();
 
 	EngineState engineState;
-
-	dc_motors_s dc_motors;
 
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM

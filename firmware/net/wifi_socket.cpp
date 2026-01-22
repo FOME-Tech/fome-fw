@@ -179,15 +179,19 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			}
 		} break;
 		case SOCKET_MSG_LISTEN: {
-			auto listenMsg = reinterpret_cast<tstrSocketListenMsg*>(pvMsg);
-			if (listenMsg && listenMsg->status == 0) {
-				// Listening, now accept a connection
-				accept(sock, nullptr, nullptr);
-			}
+			// no-op, accept() is implicit
 		} break;
 		case SOCKET_MSG_ACCEPT: {
 			auto acceptMsg = reinterpret_cast<tstrSocketAcceptMsg*>(pvMsg);
 			if (acceptMsg && (acceptMsg->sock >= 0)) {
+				// Enable TCP keep-alive on the connected socket to detect dead peers
+				int keepAlive = 1;
+				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPALIVE, &keepAlive, sizeof(keepAlive));
+
+				// Use a shorter idle time before keep-alive starts (10 seconds instead of default 60)
+				int keepIdle = 20;  // units of 500ms
+				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPIDLE, &keepIdle, sizeof(keepIdle));
+
 				if (auto server = ServerSocket::findListener(sock)) {
 					server->onAccept(acceptMsg->sock);
 				}
@@ -233,7 +237,10 @@ public:
 
 		while (true)
 		{
-			m2m_wifi_handle_events(nullptr);
+			{
+				ScopePerf perf(PE::WifiHandleEvents);
+				m2m_wifi_handle_events(nullptr);
+			}
 
 			if (!ServerSocket::checkSend()) {
 				isrSemaphore.wait(TIME_MS2I(10));

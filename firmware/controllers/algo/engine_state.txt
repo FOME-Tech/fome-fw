@@ -40,8 +40,7 @@ struct_no_prefix engine_state_s
 	bit brakePedalState;@@INDICATOR_NAME_BRAKE_DOWN@@
 	bit startStopState
 	bit doSplitInjection;Split injection active
-
-	uint32_t startStopStateToggleCounter
+	bit pgState;
 
 	uint16_t fuelInjectionCounter;Fuel: Injection counter
 	uint16_t sparkCounter;Ign: Spark counter
@@ -55,6 +54,7 @@ struct_no_prefix engine_state_s
 	uint16_t autoscale idleVeTableYAxis;;"%",{1/100}, 0, 0, 0, 0
 
 	uint16_t autoscale airflowEstimate;@@GAUGE_NAME_AIR_FLOW_ESTIMATE@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
+	uint16_t startStopStateToggleCounter
 
 	uint8_t[12 iterate] mapPerCylinder;MAP cyl;"kPa", 1, 0, 0, 0, 0
 end_struct

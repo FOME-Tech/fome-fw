@@ -10,7 +10,7 @@
  * @author Andrey Belomutskiy, (c) 2012-2020
  */
 
-#include "../stm32f4ems/efifeatures.h"
+#include "../stm32f4/efifeatures.h"
 
 #pragma once
 
@@ -40,4 +40,4 @@
 #define EFI_FLASH_WRITE_THREAD TRUE
 
 #undef LUA_USER_HEAP
-#define LUA_USER_HEAP 100000
+#define LUA_USER_HEAP 200000

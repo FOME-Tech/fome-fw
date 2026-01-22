@@ -12,7 +12,7 @@
 
 #include "pch.h"
 
-#if EFI_SHAFT_POSITION_INPUT && (HAL_TRIGGER_USE_PAL == TRUE)
+#if EFI_SHAFT_POSITION_INPUT && EFI_PROD_CODE
 
 #include "trigger_input.h"
 #include "digital_input_exti.h"
@@ -52,7 +52,7 @@ static void cam_callback(void *arg, efitick_t stamp) {
 int extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft) {
 	brain_pin_e brainPin = isTriggerShaft ? engineConfiguration->triggerInputPins[index] : engineConfiguration->camInputs[index];
 
-	efiPrintf("extiTriggerTurnOnInputPin %s %s", msg, hwPortname(brainPin));
+	efiPrintf("Trigger input (EXTI) for \"%s\" on \"%s\"", msg, hwPortname(brainPin));
 
 	/* TODO:
 	 * * do not set to both edges if we need only one
@@ -72,4 +72,4 @@ void extiTriggerTurnOffInputPin(brain_pin_e brainPin) {
 	efiExtiDisablePin(brainPin);
 }
 
-#endif /* (EFI_SHAFT_POSITION_INPUT && (HAL_TRIGGER_USE_PAL == TRUE)) */
+#endif /* EFI_SHAFT_POSITION_INPUT && EFI_PROD_CODE */

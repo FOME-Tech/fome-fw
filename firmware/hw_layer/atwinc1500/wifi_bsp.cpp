@@ -151,12 +151,13 @@ static void resetSpiDevice(SPIDriver* spi) {
 #endif // STM32_SPI_USE_SPI6
 }
 
-sint8 nm_bus_deinit(void) {
+sint8 nm_bus_deinit() {
 	spiReleaseBus(wifiSpi);
 	spiStop(wifiSpi);
 	resetSpiDevice(wifiSpi);
 
-	efiSetPadMode("WiFi CS", getWifiCsPin(), PAL_MODE_INPUT_PULLUP);
+	efiSetPadUnused(getWifiCsPin());
+	efiSetPadUnused(getWifiResetPin());
 
 	nm_bsp_interrupt_ctrl(0);
 
@@ -169,6 +170,8 @@ sint8 nm_bus_speed(uint8 /*level*/) {
 }
 
 sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
+	ScopePerf perf(PE::WifiSpi);
+
 	if (u16Sz < 16) {
 		spiSelectI(wifiSpi);
 

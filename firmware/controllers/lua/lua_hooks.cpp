@@ -64,12 +64,6 @@ static int lua_getAuxAnalog(lua_State* l) {
 	return getSensor(l, type);
 }
 
-static int lua_getSensorByIndex(lua_State* l) {
-	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
-
-	return getSensor(l, static_cast<SensorType>(zeroBasedSensorIndex));
-}
-
 static SensorType findSensorByName(lua_State* l, const char* name) {
 	SensorType type = findSensorTypeByName(name);
 
@@ -80,24 +74,25 @@ static SensorType findSensorByName(lua_State* l, const char* name) {
 	return type;
 }
 
-static int lua_getSensorByName(lua_State* l) {
-	auto sensorName = luaL_checklstring(l, 1, nullptr);
-	SensorType type = findSensorByName(l, sensorName);
+static SensorType luaL_checkSensorType(lua_State* l, int arg) {
+	auto sensorName = luaL_checklstring(l, arg, nullptr);
+	return findSensorByName(l, sensorName);
+}
 
+static int lua_getSensorByName(lua_State* l) {
+	auto type = luaL_checkSensorType(l, 1);
 	return getSensor(l, type);
 }
 
 static int lua_getSensorRaw(lua_State* l) {
-	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
-
-	lua_pushnumber(l, Sensor::getRaw(static_cast<SensorType>(zeroBasedSensorIndex)));
+	auto type = luaL_checkSensorType(l, 1);
+	lua_pushnumber(l, Sensor::getRaw(type));
 	return 1;
 }
 
 static int lua_hasSensor(lua_State* l) {
-	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
-
-	lua_pushboolean(l, Sensor::hasSensor(static_cast<SensorType>(zeroBasedSensorIndex)));
+	auto type = luaL_checkSensorType(l, 1);
+	lua_pushboolean(l, Sensor::hasSensor(type));
 	return 1;
 }
 
@@ -675,7 +670,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 
 	lua_register(l, "readPin", lua_readpin);
 	lua_register(l, "getAuxAnalog", lua_getAuxAnalog);
-	lua_register(l, "getSensorByIndex", lua_getSensorByIndex);
 	lua_register(l, "getSensor", lua_getSensorByName);
 	lua_register(l, "getSensorRaw", lua_getSensorRaw);
 	lua_register(l, "hasSensor", lua_hasSensor);
@@ -765,7 +759,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	lua_register(l, "setBoostTargetAdd", [](lua_State* l2) {
 		engine->module<BoostController>().unmock().luaTargetAdd = luaL_checknumber(l2, 1);
 		return 0;
@@ -778,7 +772,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		engine->module<BoostController>().unmock().luaOpenLoopAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
-#endif // EFI_BOOST_CONTROL
+#endif // EFI_ENGINE_CONTROL
 #if EFI_IDLE_CONTROL
 	lua_register(l, "setIdleAdd", [](lua_State* l2) {
 		engine->module<IdleController>().unmock().luaAdd = luaL_checknumber(l2, 1);

@@ -319,9 +319,6 @@ void NamedOutputPin::setHigh() {
 		efiPrintf("pin %s goes high", m_name);
 	}
 #endif // EFI_UNIT_TEST
-#if EFI_DEFAILED_LOGGING
-//	signal->hi_time = hTimeNow();
-#endif /* EFI_DEFAILED_LOGGING */
 
 	// turn the output level ACTIVE
 	setValue(true);
@@ -347,13 +344,12 @@ void NamedOutputPin::setLow() {
 }
 
 bool NamedOutputPin::stop() {
-#if EFI_GPIO_HARDWARE
 	if (isInitialized() && getLogicValue()) {
 		setValue(false);
 		efiPrintf("turning off %s", m_name);
 		return true;
 	}
-#endif /* EFI_GPIO_HARDWARE */
+
 	return false;
 }
 
@@ -457,8 +453,6 @@ brain_pin_diag_e OutputPin::getDiag() const {
 }
 
 void initOutputPins() {
-#if EFI_GPIO_HARDWARE
-
 #if HAL_USE_SPI
 	enginePins.sdCsPin.initPin("SD CS", engineConfiguration->sdCardCsPin);
 #endif /* HAL_USE_SPI */
@@ -469,8 +463,6 @@ void initOutputPins() {
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	enginePins.o2heater.initPin("O2 heater", engineConfiguration->o2heaterPin);
-
-#endif /* EFI_GPIO_HARDWARE */
 }
 
 void OutputPin::initPin(const char *msg, brain_pin_e brainPin) {
@@ -511,7 +503,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		return;
 	}
 
-#if EFI_GPIO_HARDWARE && EFI_PROD_CODE
+#if EFI_PROD_CODE
 	#if (BOARD_EXT_GPIOCHIPS > 0)
 		this->ext = false;
 	#endif
@@ -543,7 +535,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 	// mystery state being driven on the pin (potentially dangerous).
 	setDefaultPinState(outputMode);
 
-#if EFI_GPIO_HARDWARE && EFI_PROD_CODE
+#if EFI_PROD_CODE
 	iomode_t ioMode = (outputMode == OM_DEFAULT || outputMode == OM_INVERTED) ?
 		PAL_MODE_OUTPUT_PUSHPULL : PAL_MODE_OUTPUT_OPENDRAIN;
 
@@ -568,7 +560,7 @@ void OutputPin::initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e
 		}
 	}
 #endif // DISABLE_PIN_STATE_VALIDATION
-#endif /* EFI_GPIO_HARDWARE */
+#endif /* EFI_PROD_CODE */
 }
 
 void OutputPin::deInit() {
@@ -586,25 +578,15 @@ void OutputPin::deInit() {
 
 	efiPrintf("unregistering %s", hwPortname(m_brainPin));
 
-#if EFI_GPIO_HARDWARE && EFI_PROD_CODE
 	efiSetPadUnused(m_brainPin);
-#endif /* EFI_GPIO_HARDWARE */
 
 	// Clear the pin so that it won't get set any more
 	m_brainPin = Gpio::Unassigned;
 }
 
-#if EFI_GPIO_HARDWARE
-
-#if EFI_PROD_CODE
-static void initErrorLed(Gpio led) {
-	enginePins.errorLedPin.initPin("Error LED", led, (LED_PIN_MODE));
-}
-#endif /* EFI_PROD_CODE */
-
 void initPrimaryPins() {
 #if EFI_PROD_CODE
-	initErrorLed(LED_CRITICAL_ERROR_BRAIN_PIN);
+	enginePins.errorLedPin.initPin("Error LED", LED_CRITICAL_ERROR_BRAIN_PIN, (LED_PIN_MODE));
 
 	addConsoleAction("gpio_pins", EnginePins::debug);
 #endif /* EFI_PROD_CODE */
@@ -614,11 +596,10 @@ void initPrimaryPins() {
  * This method is part of fatal error handling.
  * The whole method is pretty naive, but that's at least something.
  */
-void turnAllPinsOff(void) {
+void turnAllPinsOff() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		enginePins.injectors[i].setValue(false);
 		enginePins.coils[i].setValue(false);
 		enginePins.trailingCoils[i].setValue(false);
 	}
 }
-#endif /* EFI_GPIO_HARDWARE */

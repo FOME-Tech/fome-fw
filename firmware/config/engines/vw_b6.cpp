@@ -12,7 +12,7 @@
 #include "electronic_throttle.h"
 #include "mre_meta.h"
 #include "defaults.h"
-#include "proteus_meta.h"
+#include "polygonus_meta.h"
 
 static inline void commonPassatB6() {
 	setCrankOperationMode();

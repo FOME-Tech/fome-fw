@@ -1,6 +1,4 @@
 struct_no_prefix fuel_computer_s
-
-	float totalFuelCorrection;Fuel: Total correction;"mult", 1, 0, 0, 3, 2
 	struct running_fuel_s
 		float postCrankingFuelCorrection;Fuel: Post cranking mult
 		float intakeTemperatureCoefficient;@@GAUGE_NAME_FUEL_IAT_CORR@@
@@ -15,6 +13,7 @@ struct_no_prefix fuel_computer_s
 	! actually define a member of 'running_fuel_s' type
 	running_fuel_s running
 
+	uint16_t autoscale totalFuelCorrection;Fuel: Total correction;"mult", 0.01, 0, 0, 3, 2
 	uint16_t autoscale afrTableYAxis;;"%",{1/100}, 0, 0, 0, 0
 	uint16_t autoscale targetLambda;@@GAUGE_NAME_TARGET_LAMBDA@@;"",{1/@@PACK_MULT_LAMBDA@@}, 0, 0.5,1.5, 2
 	uint16_t autoscale targetAFR;@@GAUGE_NAME_TARGET_AFR@@;"ratio", {1/@@PACK_MULT_AFR@@}, 0, 10,20, 2

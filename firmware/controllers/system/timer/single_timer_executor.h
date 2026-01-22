@@ -29,6 +29,6 @@ private:
 	void scheduleTimerCallback();
 };
 
-void initSingleTimerExecutorHardware(void);
+void initSingleTimerExecutorHardware();
 void executorStatistics();
 

@@ -362,12 +362,12 @@ enum class ObdCode : uint16_t {
 	//P0324 Knock Control System Error
 	//P0325 Knock Sensor 1 Circuit Malfunction (Bank I or Single Sensor)
 	//P0326 Knock Sensor 1 Circuit Range/Performance (Bank 1 or Single Sensor)
-	//P0327 Knock Sensor 1 Circuit Low Input (Bank I or Single Sensor)
+	OBD_Knock_Sensor_1_Low = 0x0327,
 	//P0328 Knock Sensor 1 Circuit High Input (Bank I or Single Sensor)
 	//P0329 Knock Sensor 1 Circuit Intermittent (Bank 1 or Single Sensor)
 	//P0330 Knock Sensor 2 Circuit Malfunction (Bank 2)
 	//P0331 Knock Sensor 2 Circuit Range/Performance (Bank 2)
-	//P0332 Knock Sensor 2 Circuit Low Input (Bank 2)
+	OBD_Knock_Sensor_2_Low = 0x0332,
 	//P0333 Knock Sensor 2 Circuit High Input (Bank 2)
 	//P0334 Knock Sensor 2 Circuit Intermittent (Bank 2)
 	//P0335 Crankshaft Position Sensor A Circuit Malfunction
@@ -2044,7 +2044,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_6666 = 6666,
 	CUSTOM_ERR_ADCANCE_CALC_ANGLE = 6667,
 	CUSTOM_ERR_ETB_TARGET = 6668,
-	CUSTOM_ERR_6669 = 6669,
+	CUSTOM_ERR_PG_STATE = 6669,
 
 	CUSTOM_ERR_6670 = 6670,
 	CUSTOM_ERR_6671 = 6671,

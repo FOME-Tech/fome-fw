@@ -221,7 +221,7 @@ static angle_t wrapVvtForCamType(angle_t vvtPosition, vvt_mode_e mode) {
 
 static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 	// If we care about both edges OR displayLogicLevel is set, log every front exactly as it is
-	addEngineSnifferVvtEvent(index, isRising);
+	addEngineSnifferVvtEvent(nowNt, index, isRising);
 
 #if EFI_TOOTH_LOGGER
 	LogCamTriggerTooth(nowNt, index, isRising);
@@ -229,6 +229,8 @@ static void logVvtFront(bool isRising, efitick_t nowNt, int index) {
 }
 
 void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
+	ScopePerf perf(PE::VvtHandleShaftSignal);
+
 	TriggerCentral *tc = getTriggerCentral();
 	if (tc->directSelfStimulation || !tc->hwTriggerInputEnabled) {
 		// sensor noise + self-stim = loss of trigger sync
@@ -442,7 +444,7 @@ void TriggerCentral::resetCounters() {
 
 static const int wheelIndeces[4] = { 0, 0, 1, 1};
 
-static void reportEventToWaveChart(TriggerEvent ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
+static void reportEventToWaveChart(efitick_t timestamp, TriggerEvent ckpSignalType, int triggerEventIndex, bool addOppositeEvent) {
 	if (!getTriggerCentral()->isEngineSnifferEnabled) { // this is here just as a shortcut so that we avoid engine sniffer as soon as possible
 		return; // engineSnifferRpmThreshold is accounted for inside getTriggerCentral()->isEngineSnifferEnabled
 	}
@@ -451,10 +453,10 @@ static void reportEventToWaveChart(TriggerEvent ckpSignalType, int triggerEventI
 
 	bool isUp = isTriggerUpEvent(ckpSignalType);
 
-	addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, isUp);
+	addEngineSnifferCrankEvent(timestamp, wheelIndex, triggerEventIndex, isUp);
 	if (addOppositeEvent) {
 		// let's add the opposite event right away
-		addEngineSnifferCrankEvent(wheelIndex, triggerEventIndex, !isUp);
+		addEngineSnifferCrankEvent(timestamp, wheelIndex, triggerEventIndex, !isUp);
 	}
 }
 
@@ -478,11 +480,6 @@ void TriggerCentral::decodeMapCam(efitick_t timestamp, EngPhase currentPhase) {
 			mapCamPrevCycleValue = map;
 
 			if (diff > 0) {
-				mapVvt_map_peak++;
-				int revolutionCounter = getTriggerCentral()->triggerState.getCrankSynchronizationCounter();
-				mapVvt_MAP_AT_CYCLE_COUNT = revolutionCounter - prevChangeAtCycle;
-				prevChangeAtCycle = revolutionCounter;
-
 				hwHandleVvtCamSignal(true,  timestamp, /*index*/0);
 				hwHandleVvtCamSignal(false, timestamp, /*index*/0);
 #if EFI_UNIT_TEST
@@ -599,7 +596,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	// Don't propagate state if we don't know where we are
 	if (!decodeResult) {
 		// We don't have sync, but report to the wave chart anyway as index 0.
-		reportEventToWaveChart(signal, 0, triggerShape.useOnlyRisingEdges);
+		reportEventToWaveChart(timestamp, signal, 0, triggerShape.useOnlyRisingEdges);
 
 		expectedNextPhase = unexpected;
 
@@ -616,7 +613,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	int crankInternalIndex = triggerState.getCrankSynchronizationCounter() % crankDivider;
 	int triggerIndexForListeners = decodeResult.Value.CurrentIndex + (crankInternalIndex * triggerShape.getSize());
 
-	reportEventToWaveChart(signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
+	reportEventToWaveChart(timestamp, signal, triggerIndexForListeners, triggerShape.useOnlyRisingEdges);
 
 	// Look up this tooth's angle from the sync point. If this tooth is the sync point, we'll get 0 here.
 	TrgPhase currentTrgPhase{ getTriggerCentral()->triggerFormDetails.eventAngles[triggerIndexForListeners] };
@@ -630,12 +627,6 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		m_lastToothTimer.reset(timestamp);
 		m_lastToothPhaseFromSyncPoint = currentTrgPhase;
 	}
-
-	// Update engine RPM
-	rpmShaftPositionCallback(triggerIndexForListeners, timestamp);
-
-	// Schedule the TDC mark
-	tdcMarkCallback(triggerIndexForListeners, timestamp);
 
 	EngPhase currentEnginePhase = toEngPhase(currentTrgPhase);
 	currentEngineDecodedPhase = currentEnginePhase.angle;
@@ -657,7 +648,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
 	}
 
-	EnginePhaseInfo phaseInfo {
+	const EnginePhaseInfo phaseInfo {
 		.timestamp = timestamp,
 
 		.currentTrgPhase = currentTrgPhase,
@@ -667,6 +658,12 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		.nextEngPhase = toEngPhase(nextPhase),
 	};
 
+	// Update engine RPM
+	rpmShaftPositionCallback(triggerIndexForListeners, phaseInfo);
+
+	// Schedule the TDC mark
+	tdcMarkCallback(triggerIndexForListeners, timestamp);
+
 	// Handle ignition and injection
 	mainTriggerCallback(triggerIndexForListeners, phaseInfo);
 
@@ -675,34 +672,20 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 }
 
 static void triggerShapeInfo() {
-#if EFI_PROD_CODE || EFI_SIMULATOR
-	TriggerWaveform *shape = &getTriggerCentral()->triggerShape;
-	TriggerFormDetails *triggerFormDetails = &getTriggerCentral()->triggerFormDetails;
+	TriggerWaveform& shape = getTriggerCentral()->triggerShape;
+	TriggerFormDetails& triggerFormDetails = getTriggerCentral()->triggerFormDetails;
 	efiPrintf("syncEdge=%s", getSyncEdge(TRIGGER_WAVEFORM(m_syncEdge)));
 	efiPrintf("gap from %.2f to %.2f", TRIGGER_WAVEFORM(syncronizationRatioFrom[0]), TRIGGER_WAVEFORM(syncronizationRatioTo[0]));
 
-	for (size_t i = 0; i < shape->getSize(); i++) {
-		efiPrintf("event %d %.2f", i, triggerFormDetails->eventAngles[i]);
+	for (size_t i = 0; i < shape.getSize(); i++) {
+		efiPrintf("event %d %.2f", i, triggerFormDetails.eventAngles[i]);
 	}
-#endif
 }
-
-#if EFI_PROD_CODE
-extern PwmConfig triggerSignal;
-#endif /* #if EFI_PROD_CODE */
 
 void triggerInfo() {
 #if EFI_PROD_CODE || EFI_SIMULATOR
-
 	TriggerCentral *tc = getTriggerCentral();
-	TriggerWaveform *ts = &tc->triggerShape;
-
-
-#if (HAL_TRIGGER_USE_PAL == TRUE) && (PAL_USE_CALLBACKS == TRUE)
-		efiPrintf("trigger PAL mode %d", tc->hwTriggerInputEnabled);
-#else
-
-#endif /* HAL_TRIGGER_USE_PAL */
+	TriggerWaveform& ts = tc->triggerShape;
 
 	efiPrintf("Template %s (%d) trigger %s (%d) syncEdge=%s tdcOffset=%.2f",
 			getEngine_type_e(engineConfiguration->engineType), (int)engineConfiguration->engineType,
@@ -721,9 +704,8 @@ void triggerInfo() {
 	efiPrintf("trigger type=%d/need2ndChannel=%s", (int)engineConfiguration->trigger.type,
 			boolToString(TRIGGER_WAVEFORM(needSecondTriggerInput)));
 
-
 	efiPrintf("synchronizationNeeded=%s/isError=%s/total errors=%d ord_err=%lu/total revolutions=%d/self=%s",
-			boolToString(ts->isSynchronizationNeeded),
+			boolToString(ts.isSynchronizationNeeded),
 			boolToString(tc->isTriggerDecoderError()),
 			tc->triggerState.triggerErrorCounter,
 			tc->triggerState.orderingErrorCounter,
@@ -737,15 +719,16 @@ void triggerInfo() {
 #endif /* EFI_PROD_CODE || EFI_SIMULATOR */
 
 #if EFI_PROD_CODE
-
 	efiPrintf("primary trigger input: %s", hwPortname(engineConfiguration->triggerInputPins[0]));
 	efiPrintf("primary trigger simulator: %s freq=%d",
 			hwPortname(engineConfiguration->triggerSimulatorPins[0]),
 			engineConfiguration->triggerSimulatorRpm);
 
-	if (ts->needSecondTriggerInput) {
+	if (ts.needSecondTriggerInput) {
 		efiPrintf("secondary trigger input: %s", hwPortname(engineConfiguration->triggerInputPins[1]));
 #if EFI_EMULATE_POSITION_SENSORS
+		extern PwmConfig triggerSignal;
+
 		efiPrintf("secondary trigger simulator: %s phase=%d",
 				hwPortname(engineConfiguration->triggerSimulatorPins[1]), triggerSignal.safe.phaseIndex);
 #endif /* EFI_EMULATE_POSITION_SENSORS */
@@ -766,7 +749,6 @@ void triggerInfo() {
 #if EFI_ENGINE_SNIFFER
 	efiPrintf("engine sniffer current size=%d", waveChart.getSize());
 #endif /* EFI_ENGINE_SNIFFER */
-
 }
 
 static void resetRunningTriggerCounters() {
@@ -812,12 +794,8 @@ void onConfigurationChangeTriggerCallback() {
 		engine->updateTriggerWaveform();
 	#endif
 	}
-#if EFI_DEFAILED_LOGGING
-	efiPrintf("isTriggerConfigChanged=%d", triggerConfigChanged);
-#endif /* EFI_DEFAILED_LOGGING */
-
 	// we do not want to miss two updates in a row
-	getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange = getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange || changed;
+	getTriggerCentral()->triggerConfigChangedOnLastConfigurationChange |= changed;
 }
 
 static void initVvtShape(TriggerWaveform& shape, const TriggerConfiguration& triggerConfig, TriggerDecoderBase &initState) {

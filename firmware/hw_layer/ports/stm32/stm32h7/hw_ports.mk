@@ -19,6 +19,3 @@ USE_FPU_OPT = -mfloat-abi=$(USE_FPU) -mfpu=fpv5-d16
 LDSCRIPT = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32h7/STM32H743xI.ld
 ALLCSRC += $(CHIBIOS)/os/hal/boards/ST_NUCLEO144_H743ZI/board.c
 CONFDIR = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32h7/cfg
-
-# TODO: remove, for efifeatures.h
-ALLINC += $(PROJECT_DIR)/config/stm32h7ems

@@ -46,9 +46,19 @@ float Pid::getUnclampedOutput(float target, float input, float dTime) {
 
 	float pTerm = m_parameters->pFactor * error;
 	updateITerm(m_parameters->iFactor * dTime * error);
-	dTerm = m_parameters->dFactor / dTime * (error - previousError);
+
+	if (m_errorRateOfChangeOverride) {
+		dTerm = m_parameters->dFactor * m_errorRateOfChangeOverride.Value;
+	} else {
+		if (m_hasPreviousError) {
+			dTerm = m_parameters->dFactor / dTime * (error - previousError);
+		} else {
+			dTerm = 0;
+		}
+	}
 
 	previousError = error;
+	m_hasPreviousError = true;
 
 	if (dTime <=0) {
 		warning(ObdCode::CUSTOM_PID_DTERM, "PID: unexpected dTime");
@@ -74,7 +84,8 @@ float Pid::getOutput(float target, float input, float dTime) {
 
 void Pid::reset() {
 	dTerm = iTerm = 0;
-	lastOutput = lastInput = lastTarget = previousError = 0;
+	lastOutput = lastInput = lastTarget = 0;
+	m_hasPreviousError = false;
 	errorAmplificationCoef = 1.0f;
 	resetCounter++;
 }
@@ -85,6 +96,10 @@ float Pid::getIntegration() const {
 
 void Pid::setErrorAmplification(float coef) {
 	errorAmplificationCoef = coef;
+}
+
+void Pid::setDTermOverride(expected<float> errorRateOfChange) {
+	m_errorRateOfChangeOverride = errorRateOfChange;
 }
 
 #if EFI_TUNER_STUDIO

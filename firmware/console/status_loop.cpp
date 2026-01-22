@@ -42,7 +42,6 @@
 #include "periodic_thread_controller.h"
 #include "binary_logging.h"
 #include "buffered_writer.h"
-#include "dynoview.h"
 #include "frequency_sensor.h"
 #include "digital_input_exti.h"
 #include "dc_motors.h"
@@ -73,16 +72,6 @@ extern WaveChart waveChart;
 
 extern int maxTriggerReentrant;
 extern uint32_t maxLockedDuration;
-
-/**
- * This is useful if we are changing engine mode dynamically
- * For example http://rusefi.com/forum/viewtopic.php?f=5&t=1085
- */
-static int packEngineMode() {
-	return (engineConfiguration->fuelAlgorithm << 4) +
-			(engineConfiguration->injectionMode << 2) +
-			engineConfiguration->ignitionMode;
-}
 
 /**
  * Time when the firmware version was last reported
@@ -368,7 +357,6 @@ static void updateMiscSensors() {
 
 	engine->outputChannels.wastegatePositionSensor = Sensor::getOrZero(SensorType::WastegatePosition);
 
-	engine->outputChannels.ISSValue = Sensor::getOrZero(SensorType::InputShaftSpeed);
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
@@ -466,10 +454,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->tsConfigVersion = TS_FILE_VERSION;
 	static_assert(offsetof (TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
 
-	DcHardware *dc = getdcHardware();
-	engine->dc_motors.dcOutput0 = dc->dcMotor.get();
-	engine->dc_motors.isEnabled0_int = dc->msg() == nullptr;
-
 #if EFI_SHAFT_POSITION_INPUT
 
 	tsOutputChannels->RPMValue = rpm;
@@ -493,7 +477,6 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->seconds = getTimeNowS();
 
-	tsOutputChannels->engineMode = packEngineMode();
 	tsOutputChannels->firmwareVersion = getRusEfiVersion();
 
 	tsOutputChannels->accelerationLat = engine->sensors.accelerometer.lat;
@@ -501,13 +484,7 @@ void updateTunerStudioState() {
 	tsOutputChannels->accelerationVert = engine->sensors.accelerometer.vert;
 	tsOutputChannels->gyroYaw = engine->sensors.accelerometer.yawRate;
 
-#if EFI_DYNO_VIEW
-	tsOutputChannels->VssAcceleration = getDynoviewAcceleration();
-#endif
-
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
-	extern FrequencySensor inputShaftSpeedSensor;
-	tsOutputChannels->issEdgeCounter = inputShaftSpeedSensor.eventCounter;
 	extern FrequencySensor vehicleSpeedSensor;
 	tsOutputChannels->vssEdgeCounter = vehicleSpeedSensor.eventCounter;
 

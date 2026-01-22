@@ -22,12 +22,10 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static com.rusefi.StartupFrame.appendBundleName;
 import static com.rusefi.core.preferences.storage.PersistentConfiguration.getConfig;
 import static com.rusefi.ui.util.UiUtils.trueLayout;
 
 public class ProgramSelector {
-
     private static final String AUTO_DFU = "Auto DFU Update";
     private static final String MANUAL_DFU = "Manual DFU Update";
     private static final String DFU_SWITCH = "Switch to DFU Mode";
@@ -35,7 +33,6 @@ public class ProgramSelector {
     private static final String OPENBLT_MANUAL = "Manual OpenBLT Update";
     private static final String OPENBLT_AUTO = "Auto OpenBLT Update";
     private static final String DFU_ERASE = "Full Chip Erase";
-    private static final String OPENBLT_CAN = "OpenBLT via CAN";
 
     public static final boolean IS_WIN = System.getProperty("os.name").toLowerCase().contains("win");
 
@@ -53,7 +50,7 @@ public class ProgramSelector {
         controls.add(mode);
 
         String persistedMode = getConfig().getRoot().getProperty(getClass().getSimpleName());
-        if (Arrays.asList(AUTO_DFU, MANUAL_DFU, OPENBLT_CAN, OPENBLT_SWITCH, OPENBLT_MANUAL, OPENBLT_AUTO, DFU_ERASE, DFU_SWITCH).contains(persistedMode))
+        if (Arrays.asList(AUTO_DFU, MANUAL_DFU, OPENBLT_SWITCH, OPENBLT_MANUAL, OPENBLT_AUTO, DFU_ERASE, DFU_SWITCH).contains(persistedMode))
             mode.setSelectedItem(persistedMode);
 
         JButton updateFirmware = new JButton("Update Firmware",
@@ -101,10 +98,6 @@ public class ProgramSelector {
                         jobName = "OpenBLT switch";
                         job = (callbacks) -> rebootToOpenblt(selectedPort.port, callbacks);
                         break;
-                    case OPENBLT_CAN:
-                        jobName = "OpenBLT via CAN";
-                        job = ProgramSelector.this::flashOpenBltCan;
-                        break;
                     case OPENBLT_MANUAL:
                         jobName = "OpenBLT via Serial";
                         job = (callbacks) -> flashOpenbltSerialJni(selectedPort.port, callbacks);
@@ -121,7 +114,7 @@ public class ProgramSelector {
                         throw new IllegalArgumentException("How did you " + selectedMode);
                 }
 
-                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(appendBundleName(jobName + " " + Launcher.CONSOLE_VERSION));
+                final UpdateOperationCallbacks callbacks = new UpdateStatusWindow(jobName);
                 final Consumer<UpdateOperationCallbacks> job2 = job;
                 ExecHelper.submitAction(() -> {
                     SerialPortScanner.INSTANCE.stopTimer();
@@ -138,22 +131,6 @@ public class ProgramSelector {
 
     private static void rebootToOpenblt(String selectedPort, UpdateOperationCallbacks callbacks) {
         DfuFlasher.rebootToDfu(selectedPort, callbacks, Fields.CMD_REBOOT_OPENBLT);
-    }
-
-    private void flashOpenBltCan(UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
-
-        try {
-            OpenbltJni.flashCan("../fome_update.srec", cb);
-
-            callbacks.log("Update completed successfully!");
-            callbacks.done();
-        } catch (Throwable e) {
-            callbacks.log("Error: " + e);
-            callbacks.error();
-        } finally {
-            OpenbltJni.stop(cb);
-        }
     }
 
     private void flashOpenbltSerialAutomatic(String fomePort, UpdateOperationCallbacks callbacks) {
@@ -210,8 +187,8 @@ public class ProgramSelector {
         flashOpenbltSerialJni(openbltPort, callbacks);
     }
 
-    private OpenbltJni.OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
-        return new OpenbltJni.OpenbltCallbacks() {
+    private OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
+        return new OpenbltCallbacks() {
             @Override
             public void log(String line) {
                 callbacks.log(line);
@@ -234,47 +211,35 @@ public class ProgramSelector {
         };
     }
 
-    private static final boolean useNewImpl = false;
+    private static final boolean useNewImpl = true;
 
     private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            if (useNewImpl) {
-                OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
-                flasher.flash("../fome_update.srec");
-            } else {
-                OpenbltJni.flashSerial("../fome_update.srec", port, cb);
-            }
+            OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
+            flasher.flash("../fome_update.srec");
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
         } catch (Throwable e) {
             callbacks.log("Error: " + e);
             callbacks.error();
-        } finally {
-            OpenbltJni.stop(cb);
         }
     }
 
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
-        OpenbltJni.OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
-            if (useNewImpl) {
-                OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
-                flasher.flash("../fome_update.srec");
-            } else {
-                OpenbltJni.flashTcp("../fome_update.srec", hostname, port, cb);
-            }
+            OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
+            flasher.flash("../fome_update.srec");
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
         } catch (Throwable e) {
             callbacks.log("Error: " + e);
             callbacks.error();
-        } finally {
-            OpenbltJni.stop(cb);
         }
     }
 

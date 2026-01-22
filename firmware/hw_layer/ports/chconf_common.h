@@ -21,6 +21,8 @@ extern "C"
  void threadInitHook(void* tp);
  void onLockHook(void);
  void onUnlockHook(void);
+ void onIdleEnterHook(void);
+ void onIdleExitHook(void);
  #endif /* __ASSEMBLER__ */
 #ifdef __cplusplus
 }
@@ -91,6 +93,28 @@ extern "C" {
   /* IRQ epilogue code here.*/                                              \
   irqExitHook();                                                            \
 }
+
+
+/**
+ * @brief   Idle thread enter hook.
+ * @note    This hook is invoked within a critical zone, no OS functions
+ *          should be invoked from here.
+ * @note    This macro can be used to activate a power saving mode.
+ */
+#define CH_CFG_IDLE_ENTER_HOOK() {                                          \
+  onIdleEnterHook();                                                \
+}
+
+/**
+ * @brief   Idle thread leave hook.
+ * @note    This hook is invoked within a critical zone, no OS functions
+ *          should be invoked from here.
+ * @note    This macro can be used to deactivate a power saving mode.
+ */
+#define CH_CFG_IDLE_LEAVE_HOOK() {                                          \
+  onIdleExitHook();                                               \
+}
+
 
 /**
  * declared as a macro so that this code does not use stack

@@ -54,11 +54,7 @@ const injector_model_s* getLiveData(size_t) {
 
 template<>
 const boost_control_s* getLiveData(size_t) {
-#if EFI_BOOST_CONTROL
 	return &engine->module<BoostController>().unmock();
-#else
-	return nullptr;
-#endif
 }
 
 template<>
@@ -98,11 +94,6 @@ const engine_state_s* getLiveData(size_t) {
 template<>
 const tps_accel_state_s* getLiveData(size_t) {
 	return &engine->module<TpsAccelEnrichment>().unmock();
-}
-
-template<>
-const dc_motors_s* getLiveData(size_t) {
-	return &engine->dc_motors;
 }
 
 template<>

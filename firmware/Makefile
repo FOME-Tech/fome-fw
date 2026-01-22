@@ -268,7 +268,7 @@ ASMXSRC = $(ALLXASMSRC) \
   $(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
 
 #
-# WARNING! order of variables is important here - for instance cypress own folders should go before default folders
+# WARNING! order of variables is important here - for instance hw layer ports own folders should go before default folders
 #
 INCDIR = \
   $(PCH_DIR) \

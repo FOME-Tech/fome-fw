@@ -37,6 +37,7 @@
 #include "thread_priority.h"
 #include "tooth_logger.h"
 #include "main_loop.h"
+#include "debounce.h"
 
 #if EFI_UNIT_TEST
 #include <gtest/gtest.h>

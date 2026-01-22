@@ -21,7 +21,7 @@ public class ConfigDefinitionTest {
 
         VariableRegistry variableRegistry = new VariableRegistry();
 
-        variableRegistry.readPrependValues(FIRMWARE + File.separator + "integration/rusefi_config.txt");
+        variableRegistry.readPrependValues(FIRMWARE + File.separator + "integration/fome_config.txt");
 
 
         String sb = variableRegistry.getEnumOptionsForTunerStudio(enumsReader, "engine_type_e");

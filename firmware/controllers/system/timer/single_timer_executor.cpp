@@ -46,7 +46,6 @@ SingleTimerExecutor::SingleTimerExecutor()
 void SingleTimerExecutor::schedule(const char *msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
 	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
 
-#if EFI_ENABLE_ASSERTS
 	efidur_t deltaTimeNt = nt - getTimeNowNt();
 
 	if (deltaTimeNt >= TOO_FAR_INTO_FUTURE_NT) {
@@ -55,7 +54,6 @@ void SingleTimerExecutor::schedule(const char *msg, scheduling_s* scheduling, ef
 		firmwareError(ObdCode::CUSTOM_ERR_TASK_TIMER_OVERFLOW, "schedule() too far: %ld %s", intDeltaTimeNt, msg);
 		return;
 	}
-#endif
 
 	scheduleCounter++;
 
@@ -152,7 +150,7 @@ void SingleTimerExecutor::scheduleTimerCallback() {
 	setHardwareSchedulerTimer(nowNt, nextEventTimeNt.Value);
 }
 
-void initSingleTimerExecutorHardware(void) {
+void initSingleTimerExecutorHardware() {
 	initMicrosecondTimer();
 }
 

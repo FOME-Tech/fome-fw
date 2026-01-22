@@ -19,12 +19,14 @@
 static OutputPin muxControl;
 #endif // ADC_MUX_PIN
 
+#if EFI_USE_FAST_ADC
 static void fast_adc_timer_callback(GPTDriver*);
 static const GPTConfig fast_adc_timer_config = {
 	GPT_FREQ_FAST,
 	fast_adc_timer_callback,
 	0, 0
 };
+#endif
 
 void portInitAdc() {
 	// Init slow ADC
@@ -110,7 +112,7 @@ float getMcuTemperature() {
 		sum += samples[i];
 	}
 
-	float volts = (float)sum / (4096 * oversample);
+	float volts = (float)sum / (4095 * oversample);
 	volts *= engineConfiguration->adcVcc;
 
 	volts -= 0.760f; // Subtract the reference voltage at 25 deg C
@@ -228,6 +230,8 @@ static void adc_callback_fast(ADCDriver *adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onFastAdcComplete(adcp->samples);
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 ADCConversionGroup adcgrpcfgFast = {
@@ -331,6 +335,8 @@ static void fast_adc_timer_callback(GPTDriver*) {
 	}
 
 	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdcSampleBuf, ADC_BUF_DEPTH_FAST);
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 #endif // EFI_USE_FAST_ADC
@@ -342,6 +348,8 @@ static void knockCompletionCallback(ADCDriver* adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onKnockSamplingComplete();
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 static void knockErrorCallback(ADCDriver*, adcerror_t) {

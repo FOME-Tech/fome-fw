@@ -14,22 +14,22 @@ import java.util.List;
 
 public class OpenBltFlasher {
     private final XcpLoader mLoader;
-    private final OpenbltJni.OpenbltCallbacks mCallbacks;
+    private final OpenbltCallbacks mCallbacks;
 
     private List<SrecParser.SRecord> mSegments;
     private int mTotalFileSize;
 
-    private OpenBltFlasher(IXcpTransport transport, XcpSettings settings, OpenbltJni.OpenbltCallbacks callbacks) {
+    private OpenBltFlasher(IXcpTransport transport, XcpSettings settings, OpenbltCallbacks callbacks) {
         mLoader = new XcpLoader(transport, settings);
         mCallbacks = callbacks;
     }
 
-    public static OpenBltFlasher makeSerial(String portName, XcpSettings settings, OpenbltJni.OpenbltCallbacks callbacks) {
+    public static OpenBltFlasher makeSerial(String portName, XcpSettings settings, OpenbltCallbacks callbacks) {
         IXcpTransport transport = new XcpSerial(portName);
         return new OpenBltFlasher(transport, settings, callbacks);
     }
 
-    public static OpenBltFlasher makeTcp(String hostname, int port, XcpSettings settings, OpenbltJni.OpenbltCallbacks callbacks) {
+    public static OpenBltFlasher makeTcp(String hostname, int port, XcpSettings settings, OpenbltCallbacks callbacks) {
         IXcpTransport transport = new XcpNet(hostname, port);
         return new OpenBltFlasher(transport, settings, callbacks);
     }
@@ -54,7 +54,6 @@ public class OpenBltFlasher {
 
     private void loadFile(String filename) throws IOException {
         mCallbacks.setPhase("Load firmware file", false);
-//        mCallbacks.log("Parsing firmware file...");
 
         SrecParser file = new SrecParser();
         file.parse(new File(filename));
@@ -91,7 +90,12 @@ public class OpenBltFlasher {
         mCallbacks.setPhase("Erase", true);
         final ProgressUpdater pu = new ProgressUpdater();
 
-        forEachFirmwareChunk(65536, (Chunk c) -> {
+        // Some bootloaders in the wild (F7 1MB, in particular) have a bug that they might not
+        // erase the 2nd page if an erase request is made across a page boundary. Because of
+        // that, erase very small chunks, which will result in an aligned erase request with the
+        // beginning of every page. Most of these requests will instantly return as it was already
+        // erased by a previous request erasing a full page.
+        forEachFirmwareChunk(4096, (Chunk c) -> {
             mLoader.clearMemory(c.address, c.data.length);
 
             pu.processBytes(c.data.length);
@@ -139,7 +143,7 @@ public class OpenBltFlasher {
     }
 
     public static void main(String[] args) throws Exception {
-        OpenBltFlasher f = OpenBltFlasher.makeTcp("192.168.10.1", 29000, new XcpSettings(), new OpenbltJni.OpenbltCallbacks() {
+        OpenBltFlasher f = OpenBltFlasher.makeTcp("192.168.10.1", 29000, new XcpSettings(), new OpenbltCallbacks() {
             @Override
             public void log(String line) {
                 System.out.println(line);

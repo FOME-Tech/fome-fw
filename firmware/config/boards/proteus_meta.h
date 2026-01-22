@@ -7,6 +7,10 @@
 
 #pragma once
 
+#if !HW_PROTEUS
+#error "this file intended for only Proteus hardware"
+#endif
+
 #define PROTEUS_LS_1 Gpio::D7
 // pin 15/black35
 #define PROTEUS_LS_2 Gpio::G9
@@ -133,3 +137,6 @@
 #define PROTEUS_DIGITAL_4 Gpio::E14
 #define PROTEUS_DIGITAL_5 Gpio::E13
 #define PROTEUS_DIGITAL_6 Gpio::E15
+
+#define PROTEUS_5V_PG_1 Gpio::C14
+#define PROTEUS_5V_PG_2 Gpio::C15

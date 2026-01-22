@@ -26,7 +26,6 @@ import java.util.Map;
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.StartupFrame.setFrameIcon;
 import static com.rusefi.core.preferences.storage.PersistentConfiguration.getConfig;
-import static com.rusefi.core.rusEFIVersion.CONSOLE_VERSION;
 
 /**
  * @see StartupFrame
@@ -60,7 +59,6 @@ public class ConsoleUI {
         this.port = port;
         MainFrame mainFrame = new MainFrame(this, tabbedPane);
         setFrameIcon(mainFrame.getFrame().getFrame());
-        log.info("FOME EFI Console " + CONSOLE_VERSION);
 
         getConfig().getRoot().setProperty(PORT_KEY, port);
         getConfig().getRoot().setProperty(SPEED_KEY, BaudRateHolder.INSTANCE.baudRate);

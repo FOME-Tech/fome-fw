@@ -45,9 +45,7 @@
 #include "speedometer.h"
 #include "gppwm.h"
 #include "date_stamp.h"
-#include "buttonshift.h"
 #include "start_stop.h"
-#include "dynoview.h"
 #include "vr_pwm.h"
 #include "adc_subscription.h"
 
@@ -118,18 +116,6 @@ void doPeriodicSlowCallback() {
 		writeToFlashIfPending();
 	#endif /* EFI_INTERNAL_FLASH */
 #endif /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
-
-#if EFI_TCU
-	if (engineConfiguration->tcuEnabled && engineConfiguration->gearControllerMode != GearControllerMode::None) {
-		if (engine->gearController == NULL) {
-			initGearController();
-		} else if (engine->gearController->getMode() != engineConfiguration->gearControllerMode) {
-			initGearController();
-		}
-		engine->gearController->update();
-	}
-#endif
-
 }
 
 char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer) {
@@ -447,10 +433,6 @@ void commonInitEngineController() {
 	startIdleThread();
 #endif /* EFI_IDLE_CONTROL */
 
-#if EFI_TCU
-	initGearController();
-#endif
-
 	initButtonDebounce();
 	initStartStopButton();
 
@@ -462,17 +444,15 @@ void commonInitEngineController() {
 	initMapAveraging();
 #endif /* MODULE_MAP_AVERAGING */
 
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	initBoostCtrl();
-#endif /* EFI_BOOST_CONTROL */
+#endif /* EFI_ENGINE_CONTROL */
 
 #if EFI_LAUNCH_CONTROL
 	initLaunchControl();
 #endif
 
-#if EFI_UNIT_TEST
 	engine->rpmCalculator.Register();
-#endif /* EFI_UNIT_TEST */
 
 	initTachometer();
 	initSpeedometer();
@@ -518,6 +498,11 @@ bool validateConfig() {
 
 		ensureArrayIsAscending("Ignition load", config->ignitionLoadBins);
 		ensureArrayIsAscending("Ignition RPM", config->ignitionRpmBins);
+
+		if (engineConfiguration->enableTrailingSparks) {
+			ensureArrayIsAscending("Trailing spark load", config->trailingIgnitionLoadBins);
+			ensureArrayIsAscending("Trailing spark RPM", config->trailingIgnitionRpmBins);
+		}
 
 		ensureArrayIsAscending("Ignition CLT corr", config->cltTimingBins);
 
@@ -576,13 +561,16 @@ bool validateConfig() {
 		ensureArrayIsAscending("VR threshold", cfg.rpmBins);
 	}
 
-#if EFI_BOOST_CONTROL
 	// Boost
 	if (engineConfiguration->isBoostControlEnabled) {
-		ensureArrayIsAscending("Boost control TPS", config->boostTpsBins);
-		ensureArrayIsAscending("Boost control RPM", config->boostRpmBins);
+		ensureArrayIsAscending("Boost open loop Y axis", config->boostTpsBins);
+		ensureArrayIsAscending("Boost open loop X axis", config->boostRpmBins);
+
+		if (engineConfiguration->boostType == CLOSED_LOOP) {
+			ensureArrayIsAscending("Boost closed loop X axis", config->boostClosedLoopXAxisBins);
+			ensureArrayIsAscending("Boost closed loop Y axis", config->boostClosedLoopYAxisBins);
+		}
 	}
-#endif // EFI_BOOST_CONTROL
 
 #if EFI_ANTILAG_SYSTEM
 	// ALS
@@ -645,30 +633,9 @@ void initEngineController() {
 }
 
 /**
- * these two variables are here only to let us know how much RAM is available, also these
- * help to notice when RAM usage goes up - if a code change adds to RAM usage these variables would fail
- * linking process which is the way to raise the alarm
- *
- * You get "cannot move location counter backwards" linker error when you run out of RAM. When you run out of RAM you shall reduce these
- * UNUSED_SIZE constants.
- */
-#ifndef RAM_UNUSED_SIZE
-#define RAM_UNUSED_SIZE 30000
-#endif
-#ifndef CCM_UNUSED_SIZE
-#define CCM_UNUSED_SIZE 512
-#endif
-static char UNUSED_RAM_SIZE[RAM_UNUSED_SIZE];
-static char UNUSED_CCM_SIZE[CCM_UNUSED_SIZE] CCM_OPTIONAL;
-
-/**
  * See also GIT_HASH
  */
 int getRusEfiVersion() {
-	if (UNUSED_RAM_SIZE[0] != 0)
-		return 123; // this is here to make the compiler happy about the unused array
-	if (UNUSED_CCM_SIZE[0] * 0 != 0)
-		return 3211; // this is here to make the compiler happy about the unused array
 	return VCS_DATE;
 }
 #endif /* EFI_UNIT_TEST */
