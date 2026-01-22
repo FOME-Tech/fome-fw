@@ -50,7 +50,6 @@ public enum SensorType {
 	TurbochargerSpeed,
 	MapFast,
 	MapSlow,
-	InputShaftSpeed,
 	Maf2,
 	Map2,
 	MapSlow2,

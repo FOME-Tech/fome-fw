@@ -40,7 +40,7 @@ int getCylinderKnockBank(uint8_t cylinderNumber) {
 	}
 }
 
-bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float dbv, efitick_t lastKnockTime) {
+bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, uint8_t channelIdx, float dbv, efitick_t lastKnockTime) {
 	// Adjust by the user-configured gain for this cylinder
 	dbv += m_gain[cylinderNumber];
 
@@ -73,6 +73,8 @@ bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, float db
 			m_knockRetard = clampF(0, newRetard, m_maximumRetard);
 		}
 	}
+
+	engine->module<SensorChecker>()->onKnockSensorSignal(dbv, channelIdx, lastKnockTime);
 
 	return isKnock;
 }

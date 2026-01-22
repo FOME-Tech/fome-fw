@@ -122,7 +122,7 @@ static void setupDefaultSensorInputs() {
 
 }
 
-void setBoardDefaultConfiguration(void) {
+void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 

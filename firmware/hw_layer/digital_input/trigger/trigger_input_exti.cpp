@@ -12,7 +12,7 @@
 
 #include "pch.h"
 
-#if EFI_SHAFT_POSITION_INPUT && (HAL_TRIGGER_USE_PAL == TRUE)
+#if EFI_SHAFT_POSITION_INPUT && EFI_PROD_CODE
 
 #include "trigger_input.h"
 #include "digital_input_exti.h"
@@ -72,4 +72,4 @@ void extiTriggerTurnOffInputPin(brain_pin_e brainPin) {
 	efiExtiDisablePin(brainPin);
 }
 
-#endif /* (EFI_SHAFT_POSITION_INPUT && (HAL_TRIGGER_USE_PAL == TRUE)) */
+#endif /* EFI_SHAFT_POSITION_INPUT && EFI_PROD_CODE */

@@ -129,7 +129,6 @@ struct_no_prefix output_channels_s
 ! Misc sensors
 	uint16_t autoscale VBatt;@@GAUGE_NAME_VBAT@@;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
 	int16_t autoscale wastegatePositionSensor;@@GAUGE_NAME_WG_POSITION@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
-	uint16_t ISSValue;@@GAUGE_NAME_ISS@@;"RPM",1, 0, 0, 8000, 0
 	uint16_t auxSpeed1;Aux speed 1;"s",1, 0, 0, 0, 0
 	uint16_t auxSpeed2;Aux speed 2;"s",1, 0, 0, 0, 0
 	uint16_t autoscale mafMeasured;@@GAUGE_NAME_AIR_FLOW_MEASURED@@;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
@@ -152,7 +151,6 @@ struct_no_prefix output_channels_s
 
 ! Gear detect
 	uint8_t detectedGear;@@GAUGE_NAME_DETECTED_GEAR@@;"", 1, 0, 0, @@GEARS_COUNT@@, 0
-	int8_t tcuDesiredGear;@@GAUGE_NAME_DESIRED_GEAR@@;"gear",1, 0, -1, 10, 0
 	uint8_t maxTriggerReentrant;;"", 1, 0, 0, 100, 0
 
 ! Lua
@@ -183,7 +181,6 @@ struct_no_prefix output_channels_s
 	uint8_t currentIgnitionMode;@@GAUGE_NAME_IGNITION_MODE@@
 	uint8_t currentInjectionMode;@@GAUGE_NAME_INJECTION_MODE@@
 	uint8_t idleStepperTargetPosition;Idle: Stepper target position;"", 1, 0, 0, 0, 0
-	uint8_t tcu_currentRange;"TCU: Current Range";"", 1, 0, 0, 0, 0
 
 	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 100, 1
 
@@ -233,9 +230,6 @@ struct_no_prefix output_channels_s
 	uint16_t[EGT_CHANNEL_COUNT iterate] egt;EGT;"deg C", 1, 0, 0, 0, 0
 
 	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
-	int8_t tcuCurrentGear;@@GAUGE_NAME_CURRENT_GEAR@@;"gear", 1, 0, -1, 10, 0
-
-	uint16_t autoscale VssAcceleration;Vss Accel;"m/s2",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 2
 
 	int16_t autoscale accelerationVert;@@GAUGE_NAME_ACCEL_VERT@@;"G",{1/1000}, 0, 0, 0, 0
 	int16_t autoscale gyroYaw;@@GAUGE_NAME_GYRO_YAW@@;"deg/sec",{1/1000}, 0, 0, 0, 0
@@ -261,10 +255,7 @@ struct_no_prefix output_channels_s
 
 	uint16_t testBenchIter;;"count",1, 0, 0, 0, 0
 
-	uint16_t autoscale tcRatio;@@GAUGE_NAME_TC_RATIO@@;"value",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 0
-
 	uint8_t vssEdgeCounter
-	uint8_t issEdgeCounter
 
 	uint16_t autoscale fallbackMap;;"kPa", 0.1, 0, 0, 1000, 1
 
@@ -300,16 +291,6 @@ struct_no_prefix output_channels_s
 	uint8_t[VE_BLEND_COUNT iterate] autoscale veBlendBias;;"%", 0.5, 0, 0, 100, 1
 	int16_t[VE_BLEND_COUNT iterate] autoscale veBlendOutput;;"%", 0.01, 0, -50, 50, 2
 	int16_t[VE_BLEND_COUNT iterate] autoscale veBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
-
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostOpenLoopBlendParameter;;"", 0.1, 0, -1000, 1000, 1
-	uint8_t[BOOST_BLEND_COUNT iterate] autoscale boostOpenLoopBlendBias;;"%", 0.5, 0, 0, 100, 1
-	int8_t[BOOST_BLEND_COUNT iterate] boostOpenLoopBlendOutput;;"%", 1, 0, -100, 100, 0
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostOpenLoopBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
-
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendParameter;;"", 0.1, 0, -1000, 1000, 1
-	uint8_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendBias;;"%", 0.5, 0, 0, 100, 1
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendOutput;;"%", 0.1, 0, -1000, 1000, 1
-	int16_t[BOOST_BLEND_COUNT iterate] autoscale boostClosedLoopBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
 
 	uint16_t mapAveragingSamples
 

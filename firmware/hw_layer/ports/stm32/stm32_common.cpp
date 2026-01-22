@@ -243,9 +243,6 @@ private:
 };
 }
 
-/**
-  * Could this be unified with getIcuParams() method?
-  */
 static expected<stm32_pwm_config> getConfigForPin(brain_pin_e pin) {
 	switch (pin) {
 #if STM32_PWM_USE_TIM1
@@ -349,7 +346,7 @@ stm32_hardware_pwm* getNextPwmDevice() {
 }
 #endif
 
-static void reset_and_jump(void) {
+static void reset_and_jump() {
 	#ifdef STM32H7XX
 		// H7 needs a forcible reset of the USB peripheral(s) in order for the bootloader to work properly.
 		// If you don't do this, the bootloader will execute, but USB doesn't work (nobody knows why)
@@ -852,6 +849,17 @@ void boardPreparePA0ForStandby() {
 
 __attribute__((weak)) void boardPrepareForStandby() {
 	boardPreparePA0ForStandby();
+}
+
+void assertInterruptPriority(const char* func, uint8_t expectedPrio) {
+	auto isr = static_cast<uint8_t>(SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) - 16;
+
+	auto actualMask = NVIC->IP[isr];
+	auto expectedMask = NVIC_PRIORITY_MASK(expectedPrio);
+
+	if (actualMask != expectedMask) {
+		firmwareError("bad isr priority at %s expected %02x got %02x", func, expectedMask, actualMask);
+	}
 }
 
 #endif // EFI_PROD_CODE

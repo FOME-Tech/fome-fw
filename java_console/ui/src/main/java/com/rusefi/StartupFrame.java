@@ -65,9 +65,7 @@ public class StartupFrame {
     private final JLabel noPortsMessage = new JLabel("<html>No ports found!<br>Confirm blue LED is blinking</html>");
 
     public StartupFrame() {
-//        AudioPlayback.start();
-        String title = "FOME console version " + Launcher.CONSOLE_VERSION;
-        frame = new JFrame(appendBundleName(title));
+        frame = new JFrame("FOME Console");
         frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -83,12 +81,6 @@ public class StartupFrame {
 
         // Attempt to drop our ini in to the TS cache
         updateTsIniCache();
-    }
-
-    @NotNull
-    public static String appendBundleName(String title) {
-        String bundleName = BundleUtil.readBundleFullNameNotNull();
-        return title + " " + bundleName;
     }
 
     public void chooseSerialPort() {
@@ -158,7 +150,7 @@ public class StartupFrame {
             rightPanel.add(logo);
         rightPanel.add(new JLabel("FOME (c) 2023-2025"));
         rightPanel.add(new JLabel("rusEFI (c) 2012-2023"));
-        rightPanel.add(new JLabel("Version " + Launcher.CONSOLE_VERSION));
+        rightPanel.add(new JLabel(BundleUtil.readBundleFullNameNotNull()));
 
         JPanel content = new JPanel(new BorderLayout());
         content.add(leftPanel, BorderLayout.WEST);
@@ -220,7 +212,14 @@ public class StartupFrame {
 
         // Ensure that the bundle matches between the controller and console
         if (selectedPort.signature != null && !selectedPort.signature.matchesBundle()) {
-            int result = JOptionPane.showConfirmDialog(this.frame, "Looks like you're using the wrong console bundle for your controller.\nYou can attempt to proceed, but unexpected behavior may result.\nContinue at your own risk.", "WARNING", JOptionPane.OK_CANCEL_OPTION);
+            String target = BundleUtil.getBundleTarget();
+            String message = String.format(
+                    "Looks like you're using the wrong console bundle for your controller.\nYou can attempt to proceed, but unexpected behavior may result.\nContinue at your own risk.\n\nController: %s\nBundle: %s",
+                    selectedPort.signature.getBundleTarget(),
+                    target
+                );
+
+            int result = JOptionPane.showConfirmDialog(this.frame, message, "WARNING", JOptionPane.OK_CANCEL_OPTION);
 
             if (result != JOptionPane.OK_OPTION) {
                 return;

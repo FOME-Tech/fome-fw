@@ -57,7 +57,7 @@ Usages:
     prepend: integration/fome_config_shared.txt
     constexpr: "___engine.module<BoostController>()"
     isPtr: true
-    conditional_compilation: "EFI_BOOST_CONTROL"
+    conditional_compilation: "EFI_ENGINE_CONTROL"
     output_name: Boost
 
   - name: ac_control

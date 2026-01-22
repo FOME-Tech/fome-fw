@@ -619,10 +619,6 @@ void EtbController::checkJam(percent_t setpoint, percent_t observation) {
 	}
 }
 
-#if EFI_UNIT_TEST
-#define chThdSleepMilliseconds(x) {}
-#endif // EFI_UNIT_TEST
-
 #include <utility>
 
 template <typename TBase>

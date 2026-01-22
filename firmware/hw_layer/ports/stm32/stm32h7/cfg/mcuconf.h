@@ -17,6 +17,8 @@
 #ifndef MCUCONF_H
 #define MCUCONF_H
 
+#include "interrupt_priority.h"
+
 /*
  * STM32H7xx drivers configuration.
  * The following settings override the default settings present in
@@ -185,33 +187,14 @@
 /*
  * IRQ system settings.
  */
-#ifdef EFI_BOOTLOADER
-	// Bootloader: use normal ChibiOS-defined interrupts
-	#define STM32_IRQ_EXTI_PRIORITY             6
 
-#else // not EFI_BOOTLOADER
-	// Not bootloader: EXTI gets maximum priority and custom interruts
-	#define STM32_IRQ_EXTI_PRIORITY             CORTEX_MAXIMUM_PRIORITY
-
-	#define STM32_DISABLE_EXTI0_HANDLER
-	#define STM32_DISABLE_EXTI1_HANDLER
-	#define STM32_DISABLE_EXTI2_HANDLER
-	#define STM32_DISABLE_EXTI3_HANDLER
-	#define STM32_DISABLE_EXTI4_HANDLER
-	#define STM32_DISABLE_EXTI5_9_HANDLER
-	#define STM32_DISABLE_EXTI10_15_HANDLER
-#endif // EFI_BOOTLOADER
-
-// we hijack this interrupt handler as the EXTI chained handler, see digital_input_exti.cpp
-#define STM32_I2C_I2C1_IRQ_PRIORITY         6
-
-#define STM32_IRQ_EXTI0_PRIORITY            STM32_IRQ_EXTI_PRIORITY
-#define STM32_IRQ_EXTI1_PRIORITY            STM32_IRQ_EXTI_PRIORITY
-#define STM32_IRQ_EXTI2_PRIORITY            STM32_IRQ_EXTI_PRIORITY
-#define STM32_IRQ_EXTI3_PRIORITY            STM32_IRQ_EXTI_PRIORITY
-#define STM32_IRQ_EXTI4_PRIORITY            STM32_IRQ_EXTI_PRIORITY
-#define STM32_IRQ_EXTI5_9_PRIORITY          STM32_IRQ_EXTI_PRIORITY
-#define STM32_IRQ_EXTI10_15_PRIORITY        STM32_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI0_PRIORITY            EFI_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI1_PRIORITY            EFI_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI2_PRIORITY            EFI_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI3_PRIORITY            EFI_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI4_PRIORITY            EFI_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI5_9_PRIORITY          EFI_IRQ_EXTI_PRIORITY
+#define STM32_IRQ_EXTI10_15_PRIORITY        EFI_IRQ_EXTI_PRIORITY
 
 #define STM32_IRQ_EXTI16_PRIORITY           6
 #define STM32_IRQ_EXTI17_PRIORITY           6
@@ -219,22 +202,22 @@
 #define STM32_IRQ_EXTI19_PRIORITY           6
 #define STM32_IRQ_EXTI20_21_PRIORITY        6
 
-#define STM32_IRQ_FDCAN1_PRIORITY           10
-#define STM32_IRQ_FDCAN2_PRIORITY           10
+#define STM32_IRQ_FDCAN1_PRIORITY           EFI_IRQ_CAN_PRIORITY
+#define STM32_IRQ_FDCAN2_PRIORITY           EFI_IRQ_CAN_PRIORITY
 
 #define STM32_IRQ_MDMA_PRIORITY             9
 
 #define STM32_IRQ_QUADSPI1_PRIORITY         10
 
-#define STM32_IRQ_SDMMC1_PRIORITY           9
-#define STM32_IRQ_SDMMC2_PRIORITY           9
+#define STM32_IRQ_SDMMC1_PRIORITY           EFI_IRQ_SDMMC_PRIORITY
+#define STM32_IRQ_SDMMC2_PRIORITY           EFI_IRQ_SDMMC_PRIORITY
 
 #define STM32_IRQ_TIM1_UP_PRIORITY          7
 #define STM32_IRQ_TIM1_CC_PRIORITY          7
 #define STM32_IRQ_TIM2_PRIORITY             7
 #define STM32_IRQ_TIM3_PRIORITY             7
 #define STM32_IRQ_TIM4_PRIORITY             7
-#define STM32_IRQ_TIM5_PRIORITY             7
+#define STM32_IRQ_TIM5_PRIORITY             EFI_IRQ_SCHEDULING_TIMER_PRIORITY
 #define STM32_IRQ_TIM6_PRIORITY             7
 #define STM32_IRQ_TIM7_PRIORITY             7
 #define STM32_IRQ_TIM8_BRK_TIM12_PRIORITY   7
@@ -245,15 +228,15 @@
 #define STM32_IRQ_TIM16_PRIORITY            7
 #define STM32_IRQ_TIM17_PRIORITY            7
 
-#define STM32_IRQ_USART1_PRIORITY           12
-#define STM32_IRQ_USART2_PRIORITY           12
-#define STM32_IRQ_USART3_PRIORITY           12
-#define STM32_IRQ_UART4_PRIORITY            12
-#define STM32_IRQ_UART5_PRIORITY            12
-#define STM32_IRQ_USART6_PRIORITY           12
-#define STM32_IRQ_UART7_PRIORITY            12
-#define STM32_IRQ_UART8_PRIORITY            12
-#define STM32_IRQ_LPUART1_PRIORITY          12
+#define STM32_IRQ_USART1_PRIORITY           EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_USART2_PRIORITY           EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_USART3_PRIORITY           EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_UART4_PRIORITY            EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_UART5_PRIORITY            EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_USART6_PRIORITY           EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_UART7_PRIORITY            EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_UART8_PRIORITY            EFI_IRQ_UART_PRIORITY
+#define STM32_IRQ_LPUART1_PRIORITY          EFI_IRQ_UART_PRIORITY
 
 /*
  * ADC driver system settings.
@@ -270,8 +253,8 @@
 #define STM32_ADC_ADC3_BDMA_STREAM          STM32_BDMA_STREAM_ID_ANY
 #define STM32_ADC_ADC12_DMA_PRIORITY        2
 #define STM32_ADC_ADC3_DMA_PRIORITY         2
-#define STM32_ADC_ADC12_IRQ_PRIORITY        5
-#define STM32_ADC_ADC3_IRQ_PRIORITY         5
+#define STM32_ADC_ADC12_IRQ_PRIORITY        EFI_IRQ_ADC_PRIORITY
+#define STM32_ADC_ADC3_IRQ_PRIORITY         EFI_IRQ_ADC_PRIORITY
 #define STM32_ADC_ADC12_CLOCK_MODE          ADC_CCR_CKMODE_ADCCK
 #define STM32_ADC_ADC3_CLOCK_MODE           ADC_CCR_CKMODE_ADCCK
 
@@ -280,19 +263,6 @@
  */
 #define STM32_CAN_USE_FDCAN1                TRUE
 #define STM32_CAN_USE_FDCAN2                TRUE
-
-/*
- * DAC driver system settings.
- */
-#define STM32_DAC_DUAL_MODE                 FALSE
-#define STM32_DAC_USE_DAC1_CH1              FALSE
-#define STM32_DAC_USE_DAC1_CH2              FALSE
-#define STM32_DAC_DAC1_CH1_IRQ_PRIORITY     10
-#define STM32_DAC_DAC1_CH2_IRQ_PRIORITY     10
-#define STM32_DAC_DAC1_CH1_DMA_PRIORITY     2
-#define STM32_DAC_DAC1_CH2_DMA_PRIORITY     2
-#define STM32_DAC_DAC1_CH1_DMA_STREAM       STM32_DMA_STREAM_ID_ANY
-#define STM32_DAC_DAC1_CH2_DMA_STREAM       STM32_DMA_STREAM_ID_ANY
 
 /*
  * GPT driver system settings.
@@ -311,48 +281,6 @@
 #define STM32_GPT_USE_TIM15                 FALSE
 #define STM32_GPT_USE_TIM16                 FALSE
 #define STM32_GPT_USE_TIM17                 FALSE
-
-/*
- * I2C driver system settings.
- */
-#define STM32_I2C_USE_I2C1                  FALSE
-#define STM32_I2C_USE_I2C2                  FALSE
-#define STM32_I2C_USE_I2C3                  FALSE
-#define STM32_I2C_USE_I2C4                  FALSE
-#define STM32_I2C_BUSY_TIMEOUT              50
-#define STM32_I2C_I2C1_RX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C1_TX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C2_RX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C2_TX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C3_RX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C3_TX_DMA_STREAM        STM32_DMA_STREAM_ID_ANY
-#define STM32_I2C_I2C4_RX_BDMA_STREAM       STM32_BDMA_STREAM_ID_ANY
-#define STM32_I2C_I2C4_TX_BDMA_STREAM       STM32_BDMA_STREAM_ID_ANY
-// STM32_I2C_I2C1_IRQ_PRIORITY is defined above, reused for fast EXTI handoff
-#define STM32_I2C_I2C2_IRQ_PRIORITY         5
-#define STM32_I2C_I2C3_IRQ_PRIORITY         5
-#define STM32_I2C_I2C4_IRQ_PRIORITY         5
-#define STM32_I2C_I2C1_DMA_PRIORITY         3
-#define STM32_I2C_I2C2_DMA_PRIORITY         3
-#define STM32_I2C_I2C3_DMA_PRIORITY         3
-#define STM32_I2C_I2C4_DMA_PRIORITY         3
-#define STM32_I2C_DMA_ERROR_HOOK(i2cp)      osalSysHalt("DMA failure")
-
-/*
- * ICU driver system settings.
- */
-#define STM32_ICU_USE_TIM1                  FALSE
-#define STM32_ICU_USE_TIM2                  FALSE
-#define STM32_ICU_USE_TIM3                  FALSE
-#define STM32_ICU_USE_TIM4                  FALSE
-#define STM32_ICU_USE_TIM5                  FALSE
-#define STM32_ICU_USE_TIM8                  FALSE
-#define STM32_ICU_USE_TIM12                 FALSE
-#define STM32_ICU_USE_TIM13                 FALSE
-#define STM32_ICU_USE_TIM14                 FALSE
-#define STM32_ICU_USE_TIM15                 FALSE
-#define STM32_ICU_USE_TIM16                 FALSE
-#define STM32_ICU_USE_TIM17                 FALSE
 
 /*
  * MAC driver system settings.
@@ -442,18 +370,18 @@
 #define STM32_SPI_SPI4_DMA_PRIORITY         1
 #define STM32_SPI_SPI5_DMA_PRIORITY         1
 #define STM32_SPI_SPI6_DMA_PRIORITY         1
-#define STM32_SPI_SPI1_IRQ_PRIORITY         10
-#define STM32_SPI_SPI2_IRQ_PRIORITY         10
-#define STM32_SPI_SPI3_IRQ_PRIORITY         10
-#define STM32_SPI_SPI4_IRQ_PRIORITY         10
-#define STM32_SPI_SPI5_IRQ_PRIORITY         10
-#define STM32_SPI_SPI6_IRQ_PRIORITY         10
+#define STM32_SPI_SPI1_IRQ_PRIORITY         EFI_IRQ_SPI_PRIORITY
+#define STM32_SPI_SPI2_IRQ_PRIORITY         EFI_IRQ_SPI_PRIORITY
+#define STM32_SPI_SPI3_IRQ_PRIORITY         EFI_IRQ_SPI_PRIORITY
+#define STM32_SPI_SPI4_IRQ_PRIORITY         EFI_IRQ_SPI_PRIORITY
+#define STM32_SPI_SPI5_IRQ_PRIORITY         EFI_IRQ_SPI_PRIORITY
+#define STM32_SPI_SPI6_IRQ_PRIORITY         EFI_IRQ_SPI_PRIORITY
 #define STM32_SPI_DMA_ERROR_HOOK(spip)      osalSysHalt("DMA failure")
 
 /*
  * ST driver system settings.
  */
-#define STM32_ST_IRQ_PRIORITY               8
+#define STM32_ST_IRQ_PRIORITY               EFI_IRQ_SYSTICK_PRIORITY
 #define STM32_ST_USE_TIMER                  2
 
 /*
@@ -503,8 +431,8 @@
  */
 #define STM32_USB_USE_OTG1                  TRUE
 #define STM32_USB_USE_OTG2                  FALSE
-#define STM32_USB_OTG1_IRQ_PRIORITY         14
-#define STM32_USB_OTG2_IRQ_PRIORITY         14
+#define STM32_USB_OTG1_IRQ_PRIORITY         EFI_IRQ_USB_PRIORITY
+#define STM32_USB_OTG2_IRQ_PRIORITY         EFI_IRQ_USB_PRIORITY
 #define STM32_USB_OTG1_RX_FIFO_SIZE         512
 #define STM32_USB_OTG2_RX_FIFO_SIZE         1024
 #define STM32_USB_HOST_WAKEUP_DURATION      2

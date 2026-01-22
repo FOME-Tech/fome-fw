@@ -109,13 +109,9 @@ static void setDebugMode(int value) {
 	engineConfiguration->debugMode = (debug_mode_e) value;
 }
 
-static void setWholeTimingMap(float value) {
-	setTable(config->ignitionTable, value);
-}
-
 static void setWholeTimingMapCmd(float value) {
 	efiPrintf("Setting whole timing advance map to %.2f", value);
-	setWholeTimingMap(value);
+	setWholeTimingTable(value);
 	engine->resetEngineSnifferIfInTestMode();
 }
 

@@ -24,29 +24,38 @@ TEST(idle_v2, timingPid) {
 	engineConfiguration->useIdleTimingPidControl = true;
 
 	engineConfiguration->idleTimingPid.pFactor = 0.1;
+	engineConfiguration->idleTimingPid.dFactor = 0.03;
 	engineConfiguration->idleTimingPid.minValue = -10;
 	engineConfiguration->idleTimingPid.maxValue = 10;
 	dut.init();
 
 	// Check that out of idle mode it doesn't do anything
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Cranking));
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Coasting));
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Running));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Cranking));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Coasting));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Running));
 
 	// Check that it works in idle mode
-	EXPECT_FLOAT_EQ(-5, dut.getIdleTimingAdjustment(1050, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-5, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Idling));
 
 	// ...but not when disabled
 	engineConfiguration->useIdleTimingPidControl = false;
-	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, ICP::Idling));
+	EXPECT_EQ(0, dut.getIdleTimingAdjustment(1050, 1000, 0, ICP::Idling));
 
 	engineConfiguration->useIdleTimingPidControl = true;
 
-	EXPECT_FLOAT_EQ(5,    dut.getIdleTimingAdjustment(950,  1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(2.5,  dut.getIdleTimingAdjustment(975,  1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(0,    dut.getIdleTimingAdjustment(1000, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(-2.5, dut.getIdleTimingAdjustment(1025, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(-5,   dut.getIdleTimingAdjustment(1050, 1000, ICP::Idling));
+	// Test P term
+	EXPECT_FLOAT_EQ(5,    dut.getIdleTimingAdjustment(950,  0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(2.5,  dut.getIdleTimingAdjustment(975,  0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(0,    dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-2.5, dut.getIdleTimingAdjustment(1025, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-5,   dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Idling));
+
+	// Test D term
+	// Negative rate of change -> add timing
+	// Positive rate of change -> remove timing
+	EXPECT_FLOAT_EQ( 3, dut.getIdleTimingAdjustment(1000, -100, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ( 0, dut.getIdleTimingAdjustment(1000,    0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-3, dut.getIdleTimingAdjustment(1000,  100, 1000, ICP::Idling));
 }
 
 TEST(idle_v2, testTargetRpm) {
@@ -436,21 +445,45 @@ TEST(idle_v2, closedLoopBasic) {
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
 	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
-	dut.getClosedLoop(ICP::Idling, 0, 900, 900);
+	dut.getClosedLoop(ICP::Idling, 0, 900, 0, 900);
 	advanceTimeUs(5'000'000);
 
 	// Test above target, should return negative
-	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 950, /*tgt*/ 900));
+	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 950, 0, /*tgt*/ 900));
 
 	// Below target, should return positive
-	EXPECT_FLOAT_EQ(25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 850, /*tgt*/ 900));
+	EXPECT_FLOAT_EQ(25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 850, 0, /*tgt*/ 900));
+}
+
+TEST(idle_v2, closedLoopInjectedRpmRate) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+
+	// PID should be using rpmRate for the d term, rather than calculating for itself
+	engineConfiguration->idleRpmPid.pFactor = 0;
+	engineConfiguration->idleRpmPid.iFactor = 0;
+	engineConfiguration->idleRpmPid.dFactor = 0.1;
+	engineConfiguration->idleRpmPid.iFactor = 0;
+	engineConfiguration->idleRpmPid.minValue = -50;
+	engineConfiguration->idleRpmPid.maxValue = 50;
+
+	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
+	dut.getClosedLoop(ICP::Idling, 0, 900, 0, 900);
+	advanceTimeUs(5'000'000);
+
+	// Positive rpmRate -> negative output
+	EXPECT_FLOAT_EQ(-10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ 100, /*tgt*/ 900));
+
+	// Negative rpmRate -> positive output
+	EXPECT_FLOAT_EQ(10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ -100, /*tgt*/ 900));
 }
 
 struct IntegrationIdleMock : public IdleController {
 	MOCK_METHOD(TargetInfo, getTargetRpm, (float clt), (override));
 	MOCK_METHOD(ICP, determinePhase, (float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));
 	MOCK_METHOD(float, getOpenLoop, (ICP phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction), (override));
-	MOCK_METHOD(float, getClosedLoop, (ICP phase, float tps, float rpm, float target), (override));
+	MOCK_METHOD(float, getClosedLoop, (ICP phase, float tps, float rpm, float rpmRate, float target), (override));
 	MOCK_METHOD(float, getCrankingTaperFraction, (float clt), (const, override));
 };
 
@@ -484,7 +517,7 @@ TEST(idle_v2, IntegrationManual) {
 
 	// getClosedLoop() should not be called!
 
-	EXPECT_EQ(13, dut.getIdlePosition(950));
+	EXPECT_EQ(13, dut.getIdlePosition(950, 0));
 }
 
 TEST(idle_v2, IntegrationAutomatic) {
@@ -518,11 +551,11 @@ TEST(idle_v2, IntegrationAutomatic) {
 		.WillOnce(Return(13));
 
 	// Closed loop should get called
-	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedTps.Value, 950, 1000))
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedTps.Value, 950, 100, 1000))
 		.WillOnce(Return(7));
 
 	// Result should be open + closed
-	EXPECT_EQ(13 + 7, dut.getIdlePosition(950));
+	EXPECT_EQ(13 + 7, dut.getIdlePosition(950, 100));
 }
 
 TEST(idle_v2, IntegrationClamping) {
@@ -556,9 +589,9 @@ TEST(idle_v2, IntegrationClamping) {
 		.WillOnce(Return(75));
 
 	// Closed loop should get called
-	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedTps.Value, 950, 1000))
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedTps.Value, 950, 100, 1000))
 		.WillOnce(Return(75));
 
 	// Result would be 75 + 75 = 150, but it should clamp to 100
-	EXPECT_EQ(100, dut.getIdlePosition(950));
+	EXPECT_EQ(100, dut.getIdlePosition(950, 100));
 }

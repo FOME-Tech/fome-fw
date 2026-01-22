@@ -101,7 +101,3 @@ void setProteusHondaElement2003() {
 
 #endif // HW_PROTEUS
 }
-
-void setProteusHondaOBD2A() {
-
-}

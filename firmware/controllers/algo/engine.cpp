@@ -21,7 +21,6 @@
 #include "idle_hardware.h"
 #include "gppwm.h"
 #include "speedometer.h"
-#include "dynoview.h"
 #include "boost_control.h"
 #include "ac_control.h"
 #include "vr_pwm.h"
@@ -98,10 +97,6 @@ void Engine::periodicSlowCallback() {
 	tle8888startup();
 #endif
 
-#if EFI_DYNO_VIEW
-	updateDynoView();
-#endif
-
 #if EFI_PROD_CODE
 	void baroLps25Update();
 	baroLps25Update();
@@ -123,7 +118,6 @@ void Engine::updateSlowSensors() {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
-#if EFI_GPIO_HARDWARE
 static bool getClutchUpState() {
 	if (isBrainPinValid(engineConfiguration->clutchUpPin)) {
 		return engineConfiguration->clutchUpPinInverted ^ efiReadPin(engineConfiguration->clutchUpPin);
@@ -137,10 +131,8 @@ static bool getBrakePedalState() {
 	}
 	return engine->engineState.lua.brakePedalState;
 }
-#endif // EFI_GPIO_HARDWARE
 
 void Engine::updateSwitchInputs() {
-#if EFI_GPIO_HARDWARE
 	// this value is not used yet
 	if (isBrainPinValid(engineConfiguration->clutchDownPin)) {
 		engine->engineState.clutchDownState = engineConfiguration->clutchDownPinInverted ^ efiReadPin(engineConfiguration->clutchDownPin);
@@ -164,15 +156,13 @@ void Engine::updateSwitchInputs() {
 
 	engine->engineState.clutchUpState = getClutchUpState();
 	engine->engineState.brakePedalState = getBrakePedalState();
-
-#endif // EFI_GPIO_HARDWARE
 }
 
 Engine::Engine() {
 	reset();
 }
 
-int Engine::getGlobalConfigurationVersion(void) const {
+int Engine::getGlobalConfigurationVersion() const {
 	return globalConfigurationVersion;
 }
 
@@ -191,9 +181,7 @@ void Engine::resetLua() {
 	engineState.lua.fuelMult = 1;
 	engineState.lua.luaDisableEtb = false;
 	engineState.lua.luaIgnCut = false;
-#if EFI_BOOST_CONTROL
 	module<BoostController>().unmock().resetLua();
-#endif // EFI_BOOST_CONTROL
 	ignitionState.luaTimingAdd = 0;
 	ignitionState.luaTimingMult = 1;
 #if EFI_IDLE_CONTROL

@@ -104,7 +104,7 @@ public class MainFrame {
         String disconnected = ConnectionStatusLogic.INSTANCE.isConnected() ? "" : "DISCONNECTED ";
         BinaryProtocol bp = consoleUI.uiContext.getLinkManager().getCurrentStreamState();
         String signature = bp == null ? "not loaded" : "Signature: " + bp.signature;
-        frame.getFrame().setTitle(disconnected + "FOME EFI Console " + Launcher.CONSOLE_VERSION + "; firmware=" + Launcher.firmwareVersion.get() + "@" + consoleUI.getPort() + " " + signature);
+        frame.getFrame().setTitle(disconnected + "FOME EFI Console firmware=" + Launcher.firmwareVersion.get() + "@" + consoleUI.getPort() + " " + signature);
     }
 
     private void windowClosedHandler() {
@@ -113,7 +113,6 @@ public class MainFrame {
          */
         SimulatorHelper.onWindowClosed();
         Node root = getConfig().getRoot();
-        root.setProperty("version", Launcher.CONSOLE_VERSION);
         root.setProperty(ConsoleUI.TAB_INDEX, tabbedPane.tabbedPane.getSelectedIndex());
         getConfig().save();
         BinaryProtocol bp = consoleUI.uiContext.getLinkManager().getCurrentStreamState();

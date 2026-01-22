@@ -358,71 +358,65 @@ struct output_channels_s {
 	// %
 	// offset 156
 	scaled_channel<int16_t, 100, 1> wastegatePositionSensor = (int16_t)0;
-	// TCU: Input Shaft Speed
-	// RPM
-	// offset 158
-	uint16_t ISSValue = (uint16_t)0;
 	// Aux speed 1
 	// s
-	// offset 160
+	// offset 158
 	uint16_t auxSpeed1 = (uint16_t)0;
 	// Aux speed 2
 	// s
-	// offset 162
+	// offset 160
 	uint16_t auxSpeed2 = (uint16_t)0;
 	// MAF
 	// kg/h
-	// offset 164
+	// offset 162
 	scaled_channel<uint16_t, 10, 1> mafMeasured = (uint16_t)0;
 	// MAF #2
 	// kg/h
-	// offset 166
+	// offset 164
 	scaled_channel<uint16_t, 10, 1> mafMeasured2 = (uint16_t)0;
 	// Fuel: Trim bank
 	// %
-	// offset 168
+	// offset 166
 	scaled_channel<int16_t, 100, 1> fuelPidCorrection[4];
 	// %
-	// offset 176
+	// offset 174
 	scaled_channel<uint16_t, 100, 1> Gego = (uint16_t)0;
 	// Fuel: Flow rate
 	// gram/s
-	// offset 178
+	// offset 176
 	scaled_channel<uint16_t, 200, 1> fuelFlowRate = (uint16_t)0;
 	// Fuel: Total consumed
 	// grams
-	// offset 180
+	// offset 178
 	uint16_t totalFuelConsumption = (uint16_t)0;
 	// sec
-	// offset 182
+	// offset 180
 	uint16_t ignitionOnTime = (uint16_t)0;
 	// sec
-	// offset 184
+	// offset 182
 	uint16_t engineRunTime = (uint16_t)0;
 	// km
-	// offset 186
+	// offset 184
 	scaled_channel<uint16_t, 10, 1> distanceTraveled = (uint16_t)0;
 	// Fuel: Wall amount
 	// mg
-	// offset 188
+	// offset 186
 	scaled_channel<uint16_t, 100, 1> wallFuelAmount = (uint16_t)0;
 	// Fuel: Wall correction
 	// mg
-	// offset 190
+	// offset 188
 	scaled_channel<int16_t, 100, 1> wallFuelCorrectionValue = (int16_t)0;
 	// Fuel: VE
 	// ratio
-	// offset 192
+	// offset 190
 	scaled_channel<uint8_t, 2, 1> veValue = (uint8_t)0;
 	// Detected Gear
-	// offset 193
+	// offset 191
 	uint8_t detectedGear = (uint8_t)0;
-	// TCU: Desired Gear
-	// gear
-	// offset 194
-	int8_t tcuDesiredGear = (int8_t)0;
-	// offset 195
+	// offset 192
 	uint8_t maxTriggerReentrant = (uint8_t)0;
+	// offset 193
+	uint8_t alignmentFill_at_193[3];
 	// Lua: Gauge
 	// value
 	// offset 196
@@ -487,9 +481,8 @@ struct output_channels_s {
 	// Idle: Stepper target position
 	// offset 228
 	uint8_t idleStepperTargetPosition = (uint8_t)0;
-	// TCU: Current Range
 	// offset 229
-	uint8_t tcu_currentRange = (uint8_t)0;
+	uint8_t alignmentFill_at_229[1];
 	// Ign: Coil duty cycle
 	// %
 	// offset 230
@@ -573,154 +566,126 @@ struct output_channels_s {
 	uint16_t egt[8];
 	// offset 336
 	uint8_t fuelClosedLoopBinIdx = (uint8_t)0;
-	// Current Gear
-	// gear
 	// offset 337
-	int8_t tcuCurrentGear = (int8_t)0;
-	// Vss Accel
-	// m/s2
-	// offset 338
-	scaled_channel<uint16_t, 300, 1> VssAcceleration = (uint16_t)0;
+	uint8_t alignmentFill_at_337[1];
 	// Accel: Vertical
 	// G
-	// offset 340
+	// offset 338
 	scaled_channel<int16_t, 1000, 1> accelerationVert = (int16_t)0;
 	// Gyro: Yaw rate
 	// deg/sec
-	// offset 342
+	// offset 340
 	scaled_channel<int16_t, 1000, 1> gyroYaw = (int16_t)0;
 	// Turbocharger Speed
 	// hz
-	// offset 344
+	// offset 342
 	uint16_t turboSpeed = (uint16_t)0;
 	// Ign: Timing Cyl
 	// deg
-	// offset 346
+	// offset 344
 	scaled_channel<int16_t, 50, 1> ignitionAdvanceCyl[12];
 	// Ign: Cut Code
 	// code
-	// offset 370
+	// offset 368
 	int8_t sparkCutReason = (int8_t)0;
 	// Fuel: Cut Code
 	// code
-	// offset 371
+	// offset 369
 	int8_t fuelCutReason = (int8_t)0;
 	// rpm
-	// offset 372
+	// offset 370
 	uint16_t instantRpm = (uint16_t)0;
 	// count
-	// offset 374
+	// offset 372
 	uint16_t testBenchIter = (uint16_t)0;
-	// TCU: Torque Converter Ratio
-	// value
-	// offset 376
-	scaled_channel<uint16_t, 100, 1> tcRatio = (uint16_t)0;
-	// offset 378
+	// offset 374
 	uint8_t vssEdgeCounter = (uint8_t)0;
-	// offset 379
-	uint8_t issEdgeCounter = (uint8_t)0;
+	// offset 375
+	uint8_t alignmentFill_at_375[1];
 	// kPa
-	// offset 380
+	// offset 376
 	scaled_channel<uint16_t, 10, 1> fallbackMap = (uint16_t)0;
 	// Instant MAP
 	// kPa
-	// offset 382
+	// offset 378
 	scaled_channel<uint16_t, 30, 1> instantMAPValue = (uint16_t)0;
 	// us
-	// offset 384
+	// offset 380
 	uint16_t maxLockedDuration = (uint16_t)0;
 	// CAN: Tx OK
-	// offset 386
+	// offset 382
 	uint16_t canWriteOk = (uint16_t)0;
 	// CAN: Tx err
-	// offset 388
+	// offset 384
 	uint16_t canWriteNotOk = (uint16_t)0;
-	// offset 390
+	// offset 386
 	uint8_t starterState = (uint8_t)0;
-	// offset 391
+	// offset 387
 	uint8_t starterRelayDisable = (uint8_t)0;
 	// Ign: Multispark count
-	// offset 392
+	// offset 388
 	uint8_t multiSparkCounter = (uint8_t)0;
-	// offset 393
+	// offset 389
 	uint8_t extiOverflowCount = (uint8_t)0;
-	// offset 394
-	uint8_t alignmentFill_at_394[2];
-	// offset 396
+	// offset 390
+	uint8_t alignmentFill_at_390[2];
+	// offset 392
 	pid_status_s alternatorStatus;
-	// offset 408
+	// offset 404
 	pid_status_s idleStatus;
-	// offset 420
+	// offset 416
 	pid_status_s etbStatus;
-	// offset 432
+	// offset 428
 	pid_status_s boostStatus;
-	// offset 444
+	// offset 440
 	pid_status_s wastegateDcStatus;
 	// GPPWM Output
 	// %
-	// offset 456
+	// offset 452
 	scaled_channel<uint8_t, 2, 1> gppwmOutput[4];
-	// offset 460
+	// offset 456
 	int16_t gppwmXAxis[4];
-	// offset 468
+	// offset 464
 	scaled_channel<int16_t, 10, 1> gppwmYAxis[4];
-	// offset 476
+	// offset 472
 	scaled_channel<int16_t, 10, 1> ignBlendParameter[4];
 	// %
-	// offset 484
+	// offset 480
 	scaled_channel<uint8_t, 2, 1> ignBlendBias[4];
 	// deg
-	// offset 488
+	// offset 484
 	scaled_channel<int16_t, 100, 1> ignBlendOutput[4];
-	// offset 496
+	// offset 492
 	scaled_channel<int16_t, 10, 1> ignBlendYAxis[4];
-	// offset 504
+	// offset 500
 	scaled_channel<int16_t, 10, 1> veBlendParameter[4];
 	// %
-	// offset 512
+	// offset 508
 	scaled_channel<uint8_t, 2, 1> veBlendBias[4];
 	// %
-	// offset 516
+	// offset 512
 	scaled_channel<int16_t, 100, 1> veBlendOutput[4];
-	// offset 524
+	// offset 520
 	scaled_channel<int16_t, 10, 1> veBlendYAxis[4];
-	// offset 532
-	scaled_channel<int16_t, 10, 1> boostOpenLoopBlendParameter[2];
-	// %
-	// offset 536
-	scaled_channel<uint8_t, 2, 1> boostOpenLoopBlendBias[2];
-	// %
-	// offset 538
-	int8_t boostOpenLoopBlendOutput[2];
-	// offset 540
-	scaled_channel<int16_t, 10, 1> boostOpenLoopBlendYAxis[2];
-	// offset 544
-	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendParameter[2];
-	// %
-	// offset 548
-	scaled_channel<uint8_t, 2, 1> boostClosedLoopBlendBias[2];
-	// %
-	// offset 550
-	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendOutput[2];
-	// offset 554
-	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendYAxis[2];
-	// offset 558
+	// offset 528
 	uint16_t mapAveragingSamples = (uint16_t)0;
 	// ratio
-	// offset 560
+	// offset 530
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
 	// MAF: Pre-filter
 	// kg/h
-	// offset 562
+	// offset 532
 	scaled_channel<uint16_t, 10, 1> mafMeasured_preFilter = (uint16_t)0;
 	// rpm
-	// offset 564
+	// offset 534
 	uint16_t cylinderRpm[12];
 	// rpm
-	// offset 588
+	// offset 558
 	int8_t cylinderRpmDelta[12];
+	// offset 570
+	uint8_t alignmentFill_at_570[2];
 };
-static_assert(sizeof(output_channels_s) == 600);
+static_assert(sizeof(output_channels_s) == 572);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, coolant) == 8);
@@ -790,24 +755,22 @@ static_assert(offsetof(output_channels_s, auxLinear3) == 150);
 static_assert(offsetof(output_channels_s, auxLinear4) == 152);
 static_assert(offsetof(output_channels_s, VBatt) == 154);
 static_assert(offsetof(output_channels_s, wastegatePositionSensor) == 156);
-static_assert(offsetof(output_channels_s, ISSValue) == 158);
-static_assert(offsetof(output_channels_s, auxSpeed1) == 160);
-static_assert(offsetof(output_channels_s, auxSpeed2) == 162);
-static_assert(offsetof(output_channels_s, mafMeasured) == 164);
-static_assert(offsetof(output_channels_s, mafMeasured2) == 166);
-static_assert(offsetof(output_channels_s, fuelPidCorrection) == 168);
-static_assert(offsetof(output_channels_s, Gego) == 176);
-static_assert(offsetof(output_channels_s, fuelFlowRate) == 178);
-static_assert(offsetof(output_channels_s, totalFuelConsumption) == 180);
-static_assert(offsetof(output_channels_s, ignitionOnTime) == 182);
-static_assert(offsetof(output_channels_s, engineRunTime) == 184);
-static_assert(offsetof(output_channels_s, distanceTraveled) == 186);
-static_assert(offsetof(output_channels_s, wallFuelAmount) == 188);
-static_assert(offsetof(output_channels_s, wallFuelCorrectionValue) == 190);
-static_assert(offsetof(output_channels_s, veValue) == 192);
-static_assert(offsetof(output_channels_s, detectedGear) == 193);
-static_assert(offsetof(output_channels_s, tcuDesiredGear) == 194);
-static_assert(offsetof(output_channels_s, maxTriggerReentrant) == 195);
+static_assert(offsetof(output_channels_s, auxSpeed1) == 158);
+static_assert(offsetof(output_channels_s, auxSpeed2) == 160);
+static_assert(offsetof(output_channels_s, mafMeasured) == 162);
+static_assert(offsetof(output_channels_s, mafMeasured2) == 164);
+static_assert(offsetof(output_channels_s, fuelPidCorrection) == 166);
+static_assert(offsetof(output_channels_s, Gego) == 174);
+static_assert(offsetof(output_channels_s, fuelFlowRate) == 176);
+static_assert(offsetof(output_channels_s, totalFuelConsumption) == 178);
+static_assert(offsetof(output_channels_s, ignitionOnTime) == 180);
+static_assert(offsetof(output_channels_s, engineRunTime) == 182);
+static_assert(offsetof(output_channels_s, distanceTraveled) == 184);
+static_assert(offsetof(output_channels_s, wallFuelAmount) == 186);
+static_assert(offsetof(output_channels_s, wallFuelCorrectionValue) == 188);
+static_assert(offsetof(output_channels_s, veValue) == 190);
+static_assert(offsetof(output_channels_s, detectedGear) == 191);
+static_assert(offsetof(output_channels_s, maxTriggerReentrant) == 192);
 static_assert(offsetof(output_channels_s, luaGauges) == 196);
 static_assert(offsetof(output_channels_s, luaLastCycleDuration) == 204);
 static_assert(offsetof(output_channels_s, luaInvocationCounter) == 206);
@@ -826,7 +789,6 @@ static_assert(offsetof(output_channels_s, ignitionAdvance) == 224);
 static_assert(offsetof(output_channels_s, currentIgnitionMode) == 226);
 static_assert(offsetof(output_channels_s, currentInjectionMode) == 227);
 static_assert(offsetof(output_channels_s, idleStepperTargetPosition) == 228);
-static_assert(offsetof(output_channels_s, tcu_currentRange) == 229);
 static_assert(offsetof(output_channels_s, coilDutyCycle) == 230);
 static_assert(offsetof(output_channels_s, seconds) == 232);
 static_assert(offsetof(output_channels_s, firmwareVersion) == 236);
@@ -853,50 +815,38 @@ static_assert(offsetof(output_channels_s, debugIntField4) == 316);
 static_assert(offsetof(output_channels_s, debugIntField5) == 318);
 static_assert(offsetof(output_channels_s, egt) == 320);
 static_assert(offsetof(output_channels_s, fuelClosedLoopBinIdx) == 336);
-static_assert(offsetof(output_channels_s, tcuCurrentGear) == 337);
-static_assert(offsetof(output_channels_s, VssAcceleration) == 338);
-static_assert(offsetof(output_channels_s, accelerationVert) == 340);
-static_assert(offsetof(output_channels_s, gyroYaw) == 342);
-static_assert(offsetof(output_channels_s, turboSpeed) == 344);
-static_assert(offsetof(output_channels_s, ignitionAdvanceCyl) == 346);
-static_assert(offsetof(output_channels_s, sparkCutReason) == 370);
-static_assert(offsetof(output_channels_s, fuelCutReason) == 371);
-static_assert(offsetof(output_channels_s, instantRpm) == 372);
-static_assert(offsetof(output_channels_s, testBenchIter) == 374);
-static_assert(offsetof(output_channels_s, tcRatio) == 376);
-static_assert(offsetof(output_channels_s, vssEdgeCounter) == 378);
-static_assert(offsetof(output_channels_s, issEdgeCounter) == 379);
-static_assert(offsetof(output_channels_s, fallbackMap) == 380);
-static_assert(offsetof(output_channels_s, instantMAPValue) == 382);
-static_assert(offsetof(output_channels_s, maxLockedDuration) == 384);
-static_assert(offsetof(output_channels_s, canWriteOk) == 386);
-static_assert(offsetof(output_channels_s, canWriteNotOk) == 388);
-static_assert(offsetof(output_channels_s, starterState) == 390);
-static_assert(offsetof(output_channels_s, starterRelayDisable) == 391);
-static_assert(offsetof(output_channels_s, multiSparkCounter) == 392);
-static_assert(offsetof(output_channels_s, extiOverflowCount) == 393);
-static_assert(offsetof(output_channels_s, gppwmOutput) == 456);
-static_assert(offsetof(output_channels_s, gppwmXAxis) == 460);
-static_assert(offsetof(output_channels_s, gppwmYAxis) == 468);
-static_assert(offsetof(output_channels_s, ignBlendParameter) == 476);
-static_assert(offsetof(output_channels_s, ignBlendBias) == 484);
-static_assert(offsetof(output_channels_s, ignBlendOutput) == 488);
-static_assert(offsetof(output_channels_s, ignBlendYAxis) == 496);
-static_assert(offsetof(output_channels_s, veBlendParameter) == 504);
-static_assert(offsetof(output_channels_s, veBlendBias) == 512);
-static_assert(offsetof(output_channels_s, veBlendOutput) == 516);
-static_assert(offsetof(output_channels_s, veBlendYAxis) == 524);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendParameter) == 532);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendBias) == 536);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendOutput) == 538);
-static_assert(offsetof(output_channels_s, boostOpenLoopBlendYAxis) == 540);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendParameter) == 544);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendBias) == 548);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendOutput) == 550);
-static_assert(offsetof(output_channels_s, boostClosedLoopBlendYAxis) == 554);
-static_assert(offsetof(output_channels_s, mapAveragingSamples) == 558);
-static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 560);
-static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 562);
-static_assert(offsetof(output_channels_s, cylinderRpm) == 564);
-static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 588);
+static_assert(offsetof(output_channels_s, accelerationVert) == 338);
+static_assert(offsetof(output_channels_s, gyroYaw) == 340);
+static_assert(offsetof(output_channels_s, turboSpeed) == 342);
+static_assert(offsetof(output_channels_s, ignitionAdvanceCyl) == 344);
+static_assert(offsetof(output_channels_s, sparkCutReason) == 368);
+static_assert(offsetof(output_channels_s, fuelCutReason) == 369);
+static_assert(offsetof(output_channels_s, instantRpm) == 370);
+static_assert(offsetof(output_channels_s, testBenchIter) == 372);
+static_assert(offsetof(output_channels_s, vssEdgeCounter) == 374);
+static_assert(offsetof(output_channels_s, fallbackMap) == 376);
+static_assert(offsetof(output_channels_s, instantMAPValue) == 378);
+static_assert(offsetof(output_channels_s, maxLockedDuration) == 380);
+static_assert(offsetof(output_channels_s, canWriteOk) == 382);
+static_assert(offsetof(output_channels_s, canWriteNotOk) == 384);
+static_assert(offsetof(output_channels_s, starterState) == 386);
+static_assert(offsetof(output_channels_s, starterRelayDisable) == 387);
+static_assert(offsetof(output_channels_s, multiSparkCounter) == 388);
+static_assert(offsetof(output_channels_s, extiOverflowCount) == 389);
+static_assert(offsetof(output_channels_s, gppwmOutput) == 452);
+static_assert(offsetof(output_channels_s, gppwmXAxis) == 456);
+static_assert(offsetof(output_channels_s, gppwmYAxis) == 464);
+static_assert(offsetof(output_channels_s, ignBlendParameter) == 472);
+static_assert(offsetof(output_channels_s, ignBlendBias) == 480);
+static_assert(offsetof(output_channels_s, ignBlendOutput) == 484);
+static_assert(offsetof(output_channels_s, ignBlendYAxis) == 492);
+static_assert(offsetof(output_channels_s, veBlendParameter) == 500);
+static_assert(offsetof(output_channels_s, veBlendBias) == 508);
+static_assert(offsetof(output_channels_s, veBlendOutput) == 512);
+static_assert(offsetof(output_channels_s, veBlendYAxis) == 520);
+static_assert(offsetof(output_channels_s, mapAveragingSamples) == 528);
+static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 530);
+static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 532);
+static_assert(offsetof(output_channels_s, cylinderRpm) == 534);
+static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 558);
 

@@ -42,7 +42,6 @@
 #include "periodic_thread_controller.h"
 #include "binary_logging.h"
 #include "buffered_writer.h"
-#include "dynoview.h"
 #include "frequency_sensor.h"
 #include "digital_input_exti.h"
 #include "dc_motors.h"
@@ -358,7 +357,6 @@ static void updateMiscSensors() {
 
 	engine->outputChannels.wastegatePositionSensor = Sensor::getOrZero(SensorType::WastegatePosition);
 
-	engine->outputChannels.ISSValue = Sensor::getOrZero(SensorType::InputShaftSpeed);
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
@@ -486,13 +484,7 @@ void updateTunerStudioState() {
 	tsOutputChannels->accelerationVert = engine->sensors.accelerometer.vert;
 	tsOutputChannels->gyroYaw = engine->sensors.accelerometer.yawRate;
 
-#if EFI_DYNO_VIEW
-	tsOutputChannels->VssAcceleration = getDynoviewAcceleration();
-#endif
-
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
-	extern FrequencySensor inputShaftSpeedSensor;
-	tsOutputChannels->issEdgeCounter = inputShaftSpeedSensor.eventCounter;
 	extern FrequencySensor vehicleSpeedSensor;
 	tsOutputChannels->vssEdgeCounter = vehicleSpeedSensor.eventCounter;
 

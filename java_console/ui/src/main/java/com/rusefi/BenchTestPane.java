@@ -29,7 +29,6 @@ public class BenchTestPane {
         content.add(createFuelPumpTest());
         content.add(createSparkTest());
         content.add(createInjectorTest());
-        content.add(createSolenoidTest());
         content.add(createMILTest());
         content.add(createIdleTest());
         content.add(createStarterTest());
@@ -115,17 +114,6 @@ public class BenchTestPane {
             @Override
             protected String getCommand() {
                 return "fuelbench2 1000 " + indexes.getSelectedItem() + " 5 333 3";
-            }
-        };
-        return panel.getContent();
-    }
-
-    private Component createSolenoidTest() {
-        final JComboBox<Integer> indexes = createIndexCombo(Fields.TCU_SOLENOID_COUNT);
-        CommandControl panel = new CommandControl(uiContext,"TCU Solenoid #", "solenoid.jpg", TEST, indexes) {
-            @Override
-            protected String getCommand() {
-                return "tcusolbench 1000 " + indexes.getSelectedItem() + " 1000 1000 3";
             }
         };
         return panel.getContent();

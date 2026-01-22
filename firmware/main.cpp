@@ -12,7 +12,7 @@
 #include "rusefi.h"
 #include "mpu_util.h"
 
-int main(void) {
+int main() {
 	// Maybe your board needs to do something special before HAL init
 	preHalInit();
 

@@ -81,9 +81,6 @@ static void printPacket(CanBusIndex busIndex, const CANRxFrame &rx) {
 			rx.data8[4], rx.data8[5], rx.data8[6], rx.data8[7]);
 
 }
-
-volatile float canMap = 0;
-
 struct CanListenerTailSentinel : public CanListener {
 	CanListenerTailSentinel()
 		: CanListener(0)
@@ -231,7 +228,6 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 	}
 }
 
-#if EFI_GPIO_HARDWARE
 static void processCanInputPins(CanBusIndex busIndex, const CANRxFrame& frame) {
 	for (size_t i = 0; i < CAN_VIRTUAL_INPUT_PINS_COUNT; i++) {
 		const auto& inputConf = engineConfiguration->canVirtualInputs[i];
@@ -246,7 +242,6 @@ static void processCanInputPins(CanBusIndex busIndex, const CANRxFrame& frame) {
 		setCanVirtualInput(i, value);
 	}
 }
-#endif
 
 void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
 	if (engineConfiguration->verboseCan && busIndex == CanBusIndex::Bus0) {
@@ -270,9 +265,7 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_
 
 	processEgtCan(busIndex, frame);
 
-	#if EFI_GPIO_HARDWARE
-		processCanInputPins(busIndex, frame);
-	#endif
+	processCanInputPins(busIndex, frame);
 
 	obdOnCanPacketRx(frame, busIndex);
 

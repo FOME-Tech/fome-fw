@@ -156,12 +156,6 @@ public class ReaderStateImpl implements ReaderState {
             // at the moment we read 0=NONE as two tokens, thus enums.size() is divided by two
             if (enums.size() / 2 > totalCount)
                 throw new IllegalStateException(name + ": Too many options in " + tunerStudioLine + " capacity=" + totalCount + "/size=" + enums.size());
-/*
-    this does not work right now since smt32 and kinetis enum sizes could be different but same .txt file
-    todo: identify relevant bitsizes and use variables for bitsizes?
-            if (enums.size() <= totalCount / 2)
-                throw new IllegalStateException("Too many bits allocated for " + enums + " capacity=" + totalCount + "/size=" + enums.size());
-*/
         }
 
         tsCustomLine.put(name, tunerStudioLine);

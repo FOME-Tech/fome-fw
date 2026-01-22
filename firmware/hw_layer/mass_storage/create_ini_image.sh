@@ -11,6 +11,12 @@ if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ] || [ "$(expr substr $(uname 
   exit 0
 fi
 
+if [[ "$OSTYPE" == darwin* ]]; then
+  echo "Skipping INI image creation on macOS (missing dosfstools)"
+  exit 0
+fi
+
+
 FULL_INI=$1
 H_OUTPUT=$2
 FS_SIZE=$3

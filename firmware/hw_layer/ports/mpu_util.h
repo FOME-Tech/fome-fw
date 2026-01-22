@@ -77,6 +77,8 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue);
 uintptr_t getBootAddress();
 bool setBootAddress(uintptr_t address);
 
+void assertInterruptPriority(const char* func, uint8_t expectedPrio);
+
 extern "C"
 {
 #endif /* __cplusplus */

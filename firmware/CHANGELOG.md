@@ -28,7 +28,10 @@ or
 
 # Changelog
 
-## Unreleased
+## November 2025 Release
+
+### Breaking Changes
+ - Closed loop boost control tables now have their own axes, rather than sharing with open loop. If using closed loop boost control, you will have to reconfigure the X/Y axes on the closed loop table.
 
 ### Added
  - Allow fractional tachometer pulse ratio for fine tachometer calibration
@@ -45,6 +48,8 @@ or
  - Feature to skip initial trigger pulses for noisy triggers #634
  - VVT open loop "hold" table #638
  - Fire DTCs for detectable cam/crank errors
+ - Selectable X/Y axis channels for boost control #861
+ - Implement a trailing spark table (for rotary and dual-plug engines) #695
 
 ### Fixed
  - CAN reception on STM32H7-based ECUs

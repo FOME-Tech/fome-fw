@@ -88,7 +88,10 @@ void setDefaultIgnition() {
 	setTimingRpmBin(800, 7000);
 	buildTimingMap(35);
 
-	engineConfiguration->trailingSparkAngle = 10;
+	// Trailing spark table
+	setLinearCurve(config->trailingIgnitionLoadBins, 20, 120, 3);
+	setRpmBin(config->trailingIgnitionRpmBins, efi::size(config->trailingIgnitionRpmBins), 800, 7000);
+	setTable(config->trailingIgnitionTable, 10);
 
 	// CLT correction
 	setLinearCurve(config->cltTimingBins, CLT_CURVE_RANGE_FROM, 120, 1);
