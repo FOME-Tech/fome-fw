@@ -479,6 +479,49 @@ TEST(idle_v2, closedLoopInjectedRpmRate) {
 	EXPECT_FLOAT_EQ(10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ -100, /*tgt*/ 900));
 }
 
+
+TEST(idle_v2, RunningToIdleTransition) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+
+	engineConfiguration->idleRpmPid.pFactor = 0.5;
+	engineConfiguration->idleRpmPid.iFactor = 0.0040;
+	engineConfiguration->idleRpmPid.dFactor = 0.0001;
+	engineConfiguration->idleRpmPid.minValue = -50;
+	engineConfiguration->idleRpmPid.maxValue = 50;
+
+	engineConfiguration->alwaysResetPidLeavingIdle = true;
+
+	SensorResult expectedTps = 0;
+	float expectedClt = 37;
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, expectedTps.Value);
+	Sensor::setMockValue(SensorType::Clt, expectedClt);
+	Sensor::setMockValue(SensorType::VehicleSpeed, 15.0);
+
+	// we are on running state still, so 0 idle position
+	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 0, 1100));
+	dut.getIdlePid()->postState(engine->outputChannels.idleStatus);
+
+	EXPECT_EQ(0, engine->outputChannels.idleStatus.dTerm);
+	EXPECT_EQ(0, engine->outputChannels.idleStatus.iTerm);
+	EXPECT_EQ(0, engine->outputChannels.idleStatus.pTerm);
+	advanceTimeUs(5'000'000);
+
+	// now we are idling
+	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 0, 1100), EPS2D);
+	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
+
+	// still idle, add some error:
+	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 0, 1120), EPS2D);
+	EXPECT_NEAR(0.01, dut.getIdlePid()->getIntegration(), EPS2D);
+
+	// back to running mode, should reset all:
+	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 0, 1100));
+	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
+}
+
+
 struct IntegrationIdleMock : public IdleController {
 	MOCK_METHOD(TargetInfo, getTargetRpm, (float clt), (override));
 	MOCK_METHOD(ICP, determinePhase, (float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));

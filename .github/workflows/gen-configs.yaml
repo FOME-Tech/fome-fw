@@ -54,6 +54,7 @@ jobs:
 
     # Commit changes and catch the error that occurs if nothing has been changed (without catching other errors)
     - name: Commit fresh generated headers and TS project
+      if: ${{ github.repository == 'FOME-Tech/fome-fw' }}
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       run: |
@@ -87,7 +88,7 @@ jobs:
       id: extract_branch
 
     - name: Push configs
-      if: ${{env.NOCOMMIT != 'true'}}
+      if: ${{ github.repository == 'FOME-Tech/fome-fw' && env.NOCOMMIT != 'true' }}
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ github.token }}

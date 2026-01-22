@@ -87,6 +87,12 @@ public:
 		return m_lastPhase == Phase::Idling || (engineConfiguration->useSeparateIdleTablesForCrankingTaper && m_lastPhase == Phase::CrankToIdleTaper);
 	}
 
+#ifdef EFI_UNIT_TEST
+	Pid *getIdlePid() {
+		return &m_pid;
+	}
+#endif
+
 private:
 	Pid m_pid;
 

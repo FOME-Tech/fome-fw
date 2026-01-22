@@ -1875,9 +1875,6 @@ end_struct
 ! returns getFirmwareError(), works together with ind_hasFatalError
 #define TS_GET_CONFIG_ERROR 'e'
 
-
-! 0x57 pageValueWrite
-#define TS_SINGLE_WRITE_COMMAND 'W'
 ! 0x43 pageChunkWrite
 #define TS_CHUNK_WRITE_COMMAND 'C'
 ! 0x42 burnCommand
