@@ -32,12 +32,9 @@ public class SystemOut {
         if (parentFile != null)
             parentFile.mkdirs();
         logFile = new PrintWriter(new FileWriter(fileName, true));
-        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-            @Override
-            public void run() {
-                close();
-                System.out.println("SystemOut Hook done for " + fileName);
-            }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            close();
+            System.out.println("SystemOut Hook done for " + fileName);
         }));
     }
 

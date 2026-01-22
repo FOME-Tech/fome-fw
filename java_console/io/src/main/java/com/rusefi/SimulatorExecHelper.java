@@ -28,7 +28,10 @@ public class SimulatorExecHelper {
             FileLog.MAIN.logLine("Binary size: " + binary.length());
 
             FileLog.MAIN.logLine("Executing " + binary.getPath());
-            SimulatorExecHelper.simulatorProcess = Runtime.getRuntime().exec(binary.getPath());
+            SimulatorExecHelper.simulatorProcess =
+                new ProcessBuilder(binary.getPath())
+                    .inheritIO()
+                    .start();
             FileLog.MAIN.logLine("simulatorProcess: " + SimulatorExecHelper.simulatorProcess);
 
             dumpProcessOutput(SimulatorExecHelper.simulatorProcess);

@@ -36,9 +36,10 @@ public class PersistentConfiguration {
      */
     public static synchronized void registerShutdownHook() {
         if (hookRegistered) {
-            hookRegistered = true;
             return;
         }
+        hookRegistered = true;
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutdown hook...");
             getConfig().save();

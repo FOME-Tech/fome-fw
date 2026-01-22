@@ -110,7 +110,7 @@ public class ConsoleTools {
             @Override
             public void run() {
                 try {
-                    Runtime.getRuntime().exec(callback);
+                    new ProcessBuilder(callback).start();
                 } catch (IOException e) {
                     throw new IllegalStateException(e);
                 }

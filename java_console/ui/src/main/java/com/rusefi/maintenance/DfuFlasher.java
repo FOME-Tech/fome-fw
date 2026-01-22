@@ -197,7 +197,12 @@ public class DfuFlasher {
         List<String> report = new ArrayList<>();
 
         try {
-            Process powerShellProcess = Runtime.getRuntime().exec("powershell \"Get-PnpDevice -PresentOnly\"");
+            Process powerShellProcess = new ProcessBuilder(
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                "Get-PnpDevice -PresentOnly"
+            ).start();
             // Getting the results
             powerShellProcess.getOutputStream().close();
 

@@ -1,6 +1,7 @@
 plugins {
     id 'java-library'
-    id 'com.github.johnrengelman.shadow' version "${shadowVersion}"
+    id 'com.gradleup.shadow' version "${shadowVersion}"
+
     id 'antlr'
 }
 
@@ -42,7 +43,7 @@ shadowJar {
 
 test {
 	testLogging {
-		events "failed"
-		exceptionFormat "full"
+		events = ["failed"]
+		exceptionFormat ="full"
 	}
 }
