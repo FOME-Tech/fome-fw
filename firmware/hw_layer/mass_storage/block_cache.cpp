@@ -92,7 +92,18 @@ static bool write(void* instance, uint32_t startblk, const uint8_t* buffer, uint
 	}
 
 	chibios_rt::MutexLocker lock(bc->m_deviceMutex);
+
+	bc->invalidateCacheIfInRange(startblk, n);
+
 	return bc->m_backing->vmt->write(bc->m_backing, startblk, buffer, n);
+}
+
+void BlockCache::invalidateCacheIfInRange(uint32_t startblk, uint32_t n) {
+	// Invalidate cache if written range overlaps cached block
+	auto cached = m_cachedBlockId;
+	if (cached >= 0 && (uint32_t)cached >= startblk && (uint32_t)cached < startblk + n) {
+		m_cachedBlockId = -1;
+	}
 }
 
 bool BlockCache::fetchBlock(uint32_t blockId) {
@@ -129,8 +140,10 @@ void BlockCache::readThread() {
 			h->result = HAL_SUCCESS;
 		}
 
-		// Copy from the cache to the output buffer
-		memcpy(h->buffer, m_cachedBlockData, MMCSD_BLOCK_SIZE);
+		// Copy from the cache to the output buffer (only if read succeeded)
+		if (h->result == HAL_SUCCESS) {
+			memcpy(h->buffer, m_cachedBlockData, MMCSD_BLOCK_SIZE);
+		}
 
 		// return the completed request
 		m_completed.post(h, TIME_INFINITE);

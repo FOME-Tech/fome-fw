@@ -14,9 +14,10 @@ struct BlockCache {
 
 	BlockCache(uint8_t* cachedBlockData);
 
-	void start(BaseBlockDevice* cachedBlockData);
+	void start(BaseBlockDevice* backing);
 
 	bool read(uint32_t startblk, uint8_t* buffer);
+	void invalidateCacheIfInRange(uint32_t startblk, uint32_t n);
 
 private:
 	bool fetchBlock(uint32_t blockId);
