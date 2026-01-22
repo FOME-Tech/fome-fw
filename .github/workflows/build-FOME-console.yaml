@@ -23,7 +23,7 @@ jobs:
         working-directory: ./.github/workflows/
         run: |
           sudo ./add-ubuntu-latest-apt-mirrors.sh
-          sudo apt-get install sshpass mtools
+          sudo apt-get install sshpass mtools openjdk-25-jdk-headless
 
       - name: Build Config Tools
         working-directory: ./java_tools
