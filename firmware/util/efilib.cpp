@@ -27,18 +27,11 @@ float efiRound(float value, float precision) {
 	return fixNegativeZero(a * precision);
 }
 
-uint32_t efiStrlen(const char *param) {
-	const char *s;
-	for (s = param; *s; ++s)
-		;
-	return (s - param);
-}
-
 char * efiTrim(char *param) {
 	while (param[0] == ' ') {
 		param++; // that would skip leading spaces
 	}
-	int len = efiStrlen(param);
+	int len = std::strlen(param);
 	while (len > 0 && param[len - 1] == ' ') {
 		param[len - 1] = 0;
 		len--;
@@ -46,23 +39,10 @@ char * efiTrim(char *param) {
 	return param;
 }
 
-bool startsWith(const char *line, const char *prefix) {
-	uint32_t len = efiStrlen(prefix);
-	if (efiStrlen(line) < len) {
-		return false;
-	}
-	for (uint32_t i = 0; i < len; i++) {
-		if (line[i] != prefix[i]) {
-			return false;
-		}
-	}
-	return true;
-}
-
 int indexOf(const char *string, char c) {
 	// a standard function for this is strnchr?
 	// todo: on the other hand MISRA wants us not to use standard headers
-	int len = efiStrlen(string);
+	int len = std::strlen(string);
 	for (int i = 0; i < len; i++) {
 		if (string[i] == c) {
 			return i;
@@ -218,27 +198,6 @@ bool strEqualCaseInsensitive(const char *str1, const char *str2) {
 	}
 
 	return true;
-}
-
-/*
-** return lower-case of c if upper-case, else c
-*/
-int mytolower(const char c) {
-	if (c >= 'A' && c <= 'Z') {
-		return c - 'A' + 'a';
-	} else {
-		return c;
-	}
-}
-
-int djb2lowerCase(const char *str) {
-	unsigned long hash = 5381;
-
-	while (char c = *str++) {
-		hash = 33 * hash + mytolower(c);
-	}
-
-	return hash;
 }
 
 bool strEqual(const char *str1, const char *str2) {

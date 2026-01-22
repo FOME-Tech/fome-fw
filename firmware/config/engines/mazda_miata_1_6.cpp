@@ -291,8 +291,8 @@ void setHellenNA6() {
 	engineConfiguration->map.sensor.type = MT_MPX4250;
 }
 
-#if HW_PROTEUS
-#include "proteus_meta.h"
+#if HW_POLYGONUS_PRESETS
+#include "polygonus_meta.h"
 
 void setMiataNa6_Polygonus() {
 	miataNAcommonEngineSettings();
@@ -324,9 +324,8 @@ void setMiataNa6_Polygonus() {
 	engineConfiguration->lowPressureFuel.value2 = 689.5;
 
 	// Built in wideband controller on bus 2
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 	engineConfiguration->widebandOnSecondBus = true;
-	engineConfiguration->enableVerboseCanTx = true;
 
 	// Outputs
 	engineConfiguration->fuelPumpPin = PROTEUS_LS_9;

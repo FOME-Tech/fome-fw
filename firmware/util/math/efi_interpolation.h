@@ -16,10 +16,6 @@
 
 #include <type_traits>
 
-#ifndef DEBUG_INTERPOLATION
-#define DEBUG_INTERPOLATION FALSE
-#endif
-
 #define INTERPOLATION_A(x1, y1, x2, y2) ((y1 - y2) / (x1 - x2))
 
 float interpolateClamped(float x1, float y1, float x2, float y2, float x);

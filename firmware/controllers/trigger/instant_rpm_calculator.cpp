@@ -5,10 +5,9 @@
 #if EFI_SHAFT_POSITION_INPUT
 
 InstantRpmCalculator::InstantRpmCalculator() :
-			//https://en.cppreference.com/w/cpp/language/zero_initialization
-			timeOfLastEvent()
-			, instantRpmValue()
-	{
+	//https://en.cppreference.com/w/cpp/language/zero_initialization
+	timeOfLastEvent()
+{
 }
 
 void InstantRpmCalculator::movePreSynchTimestamps() {
@@ -31,29 +30,19 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 		firstDst = triggerSize - spinningEventIndex;
 	}
 
-	memcpy(timeOfLastEvent + firstDst, spinningEvents + firstSrc, eventsToCopy * sizeof(timeOfLastEvent[0]));
+	memmove(timeOfLastEvent + firstDst, timeOfLastEvent + firstSrc, eventsToCopy * sizeof(timeOfLastEvent[0]));
 }
 
-float InstantRpmCalculator::calculateInstantRpm(
+expected<float> InstantRpmCalculator::calculateInstantRpm(
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t current_index, efitick_t nowNt) {
-
-	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
-	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
-	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
-	uint32_t nowNt32 = nowNt;
-
-	assertIsInBoundsWithResult(current_index, timeOfLastEvent, "calc timeOfLastEvent", 0);
-
-	// Record the time of this event so we can calculate RPM from it later
-	timeOfLastEvent[current_index] = nowNt32;
+	uint32_t current_index, uint32_t nowNt32, angle_t window) const {
 
 	// Determine where we currently are in the revolution
 	angle_t currentAngle = triggerFormDetails->eventAngles[current_index];
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, !std::isnan(currentAngle), "eventAngles", 0);
 
 	// Hunt for a tooth ~90 degrees ago to compare to the current time
-	angle_t previousAngle = currentAngle - engineConfiguration->instantRpmRange;
+	angle_t previousAngle = currentAngle - window;
 	wrapAngle(previousAngle, "prevAngle", ObdCode::CUSTOM_ERR_TRIGGER_ANGLE_RANGE);
 	int prevIndex = triggerShape.findAngleIndex(triggerFormDetails, previousAngle);
 
@@ -63,7 +52,7 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// No previous timestamp, instant RPM isn't ready yet
 	if (time90ago == 0) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	uint32_t time = nowNt32 - time90ago;
@@ -74,28 +63,22 @@ float InstantRpmCalculator::calculateInstantRpm(
 
 	// just for safety, avoid divide-by-0
 	if (time == 0) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
 
 	float instantRpm = (60000000.0 / 360 * US_TO_NT_MULTIPLIER) * angleDiff / time;
-	assertIsInBoundsWithResult(current_index, instantRpmValue, "instantRpmValue", 0);
-	instantRpmValue[current_index] = instantRpm;
 
 	// This fixes early RPM instability based on incomplete data
 	if (instantRpm < RPM_LOW_THRESHOLD) {
-		return prevInstantRpmValue;
+		return unexpected;
 	}
-
-	prevInstantRpmValue = instantRpm;
-
-	m_instantRpmRatio = instantRpm / instantRpmValue[prevIndex];
 
 	return instantRpm;
 }
 
 void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 	// here we remember tooth timestamps which happen prior to synchronization
-	if (spinningEventIndex >= efi::size(spinningEvents)) {
+	if (spinningEventIndex >= efi::size(timeOfLastEvent)) {
 		// too many events while trying to find synchronization point
 		// todo: better implementation would be to shift here or use cyclic buffer so that we keep last
 		// 'PRE_SYNC_EVENTS' events
@@ -103,7 +86,7 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 	}
 
 	uint32_t nowNt32 = nowNt;
-	spinningEvents[spinningEventIndex] = nowNt32;
+	timeOfLastEvent[spinningEventIndex] = nowNt32;
 
 	// If we are using only rising edges, we never write in to the odd-index slots that
 	// would be used by falling edges
@@ -112,12 +95,55 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 }
 
 void InstantRpmCalculator::updateInstantRpm(
-		uint32_t current_index,
 	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t index, efitick_t nowNt) {
+	uint32_t index, const EnginePhaseInfo& phaseInfo) {
 
-	m_instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index,
-					   nowNt);
+	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
+	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
+	// The difference is guaranteed to be short (it's 90 degrees of engine rotation!), so it won't overflow.
+	uint32_t nowNt32 = phaseInfo.timestamp;
+
+	assertIsInBounds(index, timeOfLastEvent, "calc timeOfLastEvent");
+
+	// Record the time of this event so we can calculate RPM from it later
+	timeOfLastEvent[index] = nowNt32;
+
+	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
+	if (instantRpm) {
+		m_instantRpm = instantRpm.Value;
+		updateCylinderContribution(triggerShape, triggerFormDetails, index, nowNt32, phaseInfo);
+	}
+}
+
+void InstantRpmCalculator::updateCylinderContribution(TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
+	uint32_t current_index, uint32_t nowNt32, const EnginePhaseInfo& phaseInfo) {
+	int minTriggerLength = engineConfiguration->cylindersCount * 2;
+	if (triggerShape.getLength() < minTriggerLength) {
+		// Not enough teeth to reasonably determine cylinder contribution
+		return;
+	}
+
+	float measurementWindow = engineConfiguration->cylContributionWindow;
+	float measurementOffset = engineConfiguration->cylContributionPhase;
+
+	if (measurementWindow <= 0) {
+		return;
+	}
+
+	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		auto& cyl = engine->cylinders[i];
+
+		auto measurementAngle = cyl.getAngleOffset() + measurementOffset;
+		wrapAngle(measurementAngle, "misfire angle", ObdCode::OBD_PCM_Processor_Fault);
+
+		if (isPhaseInRange(EngPhase{measurementAngle}, phaseInfo)) {
+			if (auto rpm = calculateInstantRpm(triggerShape, triggerFormDetails, current_index, nowNt32, measurementWindow)) {
+				engine->outputChannels.cylinderRpm[i] = rpm.Value;
+				engine->outputChannels.cylinderRpmDelta[i] = rpm.Value - m_lastCylRpm;
+				m_lastCylRpm = rpm.Value;
+			}
+		}
+	}
 }
 
 #endif // EFI_SHAFT_POSITION_INPUT

@@ -35,6 +35,10 @@
 
 #include "rusefi_halconf.h"
 
+#include "../../cfg/halconf_community.h"
+
+#define HAL_USE_CRC                 TRUE
+
 /**
  * @brief   Enables the FLASH subsystem.
  */
@@ -71,7 +75,7 @@
  * @brief   Enables the ICU subsystem.
  */
 #if !defined(HAL_USE_ICU) || defined(__DOXYGEN__)
-#define HAL_USE_ICU                 TRUE
+#define HAL_USE_ICU                 FALSE
 #endif
 
 /**

@@ -1,7 +1,10 @@
 package com.rusefi;
 
-// import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.outputs.CStructWriter;
+import com.rusefi.newparse.outputs.JavaFieldsWriter;
+import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
+import com.rusefi.newparse.outputs.TsWriter;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.output.*;
 import com.rusefi.pinout.PinoutLogic;
@@ -9,17 +12,13 @@ import com.rusefi.trigger.TriggerWheelTSLogic;
 import com.rusefi.util.SystemOut;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
-/**
- * Andrey Belomutskiy, (c) 2013-2020
- * 1/12/15
- *
- * @see ConfigurationConsumer
- */
 public class ConfigDefinition {
-    public static final String SIGNATURE_HASH = "SIGNATURE_HASH";
-
     private static final String KEY_DEFINITION = "-definition";
     private static final String KEY_TS_TEMPLATE = "-ts_template";
     private static final String KEY_C_DESTINATION = "-c_destination";
@@ -27,8 +26,6 @@ public class ConfigDefinition {
     public static final String KEY_WITH_C_DEFINES = "-with_c_defines";
     private static final String KEY_JAVA_DESTINATION = "-java_destination";
     public static final String KEY_PREPEND = "-prepend";
-    private static final String KEY_SIGNATURE = "-signature";
-    private static final String KEY_SIGNATURE_DESTINATION = "-signature_destination";
     private static final String KEY_ZERO_INIT = "-initialize_to_zero";
     private static final String KEY_BOARD_NAME = "-board";
     /**
@@ -61,17 +58,22 @@ public class ConfigDefinition {
             return;
         }
 
-        SystemOut.println(ConfigDefinition.class + " Invoked with " + Arrays.toString(args));
+        SystemOut.println(ConfigDefinition.class + " Invoked with " + Arrays.toString(args) + " from " + Paths.get("").toAbsolutePath());
 
         String tsTemplateFile = null;
         String destCDefinesFileName = null;
         String cHeaderDestination = null;
+        String tsIniDestination = null;
+        String javaFieldsDestination = null;
+        String makefileDepsDestination = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
-        String signatureDestination = null;
-        String signaturePrependFile = null;
         List<String> enumInputFiles = new ArrayList<>();
         PinoutLogic pinoutLogic = null;
+        String branchName = null;
+        String shortBoardName = null;
+
+        ParseState parseState = new ParseState(state.getEnumsReader());
 
         for (int i = 0; i < args.length - 1; i += 2) {
             String key = args[i];
@@ -97,6 +99,7 @@ public class ConfigDefinition {
                     destCDefinesFileName = args[i + 1];
                     break;
                 case KEY_JAVA_DESTINATION:
+                    javaFieldsDestination = args[i + 1];
                     state.addJavaDestination(args[i + 1]);
                     break;
                 case "-field_lookup_file": {
@@ -111,7 +114,7 @@ public class ConfigDefinition {
                     // yes, we take three parameters here thus pre-increment!
                     String fileName = args[++i + 1];
                     try {
-                        state.getVariableRegistry().register(keyName, IoUtil2.readFile(fileName));
+                        parseState.addDefinition(state.getVariableRegistry(), keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
                     } catch (RuntimeException e) {
                         throw new IllegalStateException("While processing " + fileName, e);
                     }
@@ -123,18 +126,11 @@ public class ConfigDefinition {
                 case KEY_PREPEND:
                     state.addPrepend(args[i + 1].trim());
                     break;
-                case KEY_SIGNATURE:
-                    signaturePrependFile = args[i + 1];
-                    state.getPrependFiles().add(args[i + 1]);
-                    // don't add this file to the 'inputFiles'
-                    break;
-                case KEY_SIGNATURE_DESTINATION:
-                    signatureDestination = args[i + 1];
-                    break;
                 case EnumToString.KEY_ENUM_INPUT_FILE:
                     enumInputFiles.add(args[i + 1]);
                     break;
                 case "-ts_output_name":
+                    tsIniDestination = args[i + 1];
                     state.setTsFileOutputName(args[i + 1]);
                     break;
                 case KEY_BOARD_NAME:
@@ -142,6 +138,15 @@ public class ConfigDefinition {
                     pinoutLogic = PinoutLogic.create(boardName);
                     for (String inputFile : pinoutLogic.getInputFiles())
                         state.addInputFile(inputFile);
+                    break;
+                case "-branch":
+                    branchName = args[i + 1];
+                    break;
+                case "-boardName":
+                    shortBoardName = args[i + 1];
+                    break;
+                case "-makefileDep":
+                    makefileDepsDestination = args[i + 1];
                     break;
             }
         }
@@ -159,10 +164,18 @@ public class ConfigDefinition {
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
         }
 
-        ParseState parseState = new ParseState(state.getEnumsReader());
-        // Add the variable for the config signature
-        FirmwareVersion uniqueId = new FirmwareVersion(IoUtil2.getCrc32(state.getInputFiles()));
-        SignatureConsumer.storeUniqueBuildId(state, parseState, tsTemplateFile, uniqueId);
+        parseState.updateEnumsFromReader();
+
+        {
+            // Add the variable for the config signature
+            String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(state.getInputFiles())));
+            parseState.addDefinition(state.getVariableRegistry(), "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
+            System.out.println("Signature: " + signature);
+        }
+
+        if (makefileDepsDestination != null && cHeaderDestination != null) {
+            writeMakefileDependencyFile(state.getInputFiles(), cHeaderDestination, makefileDepsDestination);
+        }
 
         new TriggerWheelTSLogic().execute(triggersInputFolder, state.getVariableRegistry());
 
@@ -190,22 +203,22 @@ public class ConfigDefinition {
             }
 
             // Write C structs
-            // CStructWriter cStructs = new CStructWriter();
-            // cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
+            CStructWriter cStructs = new CStructWriter();
+            cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
 
             // Write tunerstudio layout
-            // TsWriter writer = new TsWriter();
-            // writer.writeTunerstudio(parseState, tsTemplateFile, state.getTsFileOutputName() + ".test");
+            TsWriter writer = new TsWriter();
+            writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination + ".test");
+
+            // Write Java fields
+            JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination + ".test", 0);
+            javaWriter.writeDefinitions(parseState.getDefinitions());
+            javaWriter.writeFields(parseState);
+            javaWriter.finish();
         }
 
         if (tsTemplateFile != null) {
             state.addDestination(new TSProjectConsumer(tsTemplateFile, state));
-
-            VariableRegistry tmpRegistry = new VariableRegistry();
-            // store the CRC32 as a built-in variable
-            tmpRegistry.register(SIGNATURE_HASH, uniqueId.encode());
-            tmpRegistry.readPrependValues(signaturePrependFile);
-            state.addDestination(new SignatureConsumer(signatureDestination, tmpRegistry));
         }
 
         if (state.isDestinationsEmpty())
@@ -216,5 +229,32 @@ public class ConfigDefinition {
         if (destCDefinesFileName != null) {
             ExtraUtil.writeDefinesToFile(state.getVariableRegistry(), destCDefinesFileName);
         }
+    }
+
+    private static String buildSignature(String branch, String boardName, String inputFilesHash) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd");
+
+        return "\"rusEFI (FOME) " + branch + "." + df.format(new Date()) + "."+ boardName + "." + inputFilesHash + "\"";
+    }
+
+    private static void writeMakefileDependencyFile(List<String> inputFiles, String cHeaderDestination, String makefileDepsDestination) throws IOException {
+        Path path = Paths.get(makefileDepsDestination);
+        Files.createDirectories(path.getParent());
+        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(path));
+
+        // The output depends on all inputs
+        f.print(cHeaderDestination + ": ");
+        for (String input : inputFiles) {
+            f.print(input);
+            f.print(" ");
+        }
+        f.println();
+
+        // Inform make of all inputs, these have no dependencies
+        for (String input : inputFiles) {
+            f.println(input + ":\n");
+        }
+
+        f.close();
     }
 }

@@ -7,6 +7,7 @@
 
 #include "pch.h"
 
+#include <rusefi/crc.h>
 #include <string.h>
 
 #include "cyclic_buffer.h"
@@ -14,7 +15,6 @@
 #include "malfunction_central.h"
 #include "cli_registry.h"
 
-#include "mmc_card.h"
 #include "fl_stack.h"
 
 #include "big_buffer.h"

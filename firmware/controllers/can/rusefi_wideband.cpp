@@ -44,6 +44,8 @@ void updateWidebandFirmware() {
 	efiPrintf("***************************************");
 	efiPrintf("Wideband Update: Rebooting to bootloader...");
 
+	engine->outputChannels.widebandUpdateProgress = 0;
+
 	// The first request will reboot the chip (if necessary), and the second one will enable bootloader mode
 	// If the chip was already in bootloader (aka manual mode), then that's ok - the second request will
 	// just be safely ignored (but acked)
@@ -89,7 +91,11 @@ void updateWidebandFirmware() {
 			efiPrintf("Wideband Update ERROR: Expected ACK from data write, didn't get one.");
 			return;
 		}
+
+		engine->outputChannels.widebandUpdateProgress = 100 * i / totalSize;
 	}
+
+	engine->outputChannels.widebandUpdateProgress = 100;
 
 	efiPrintf("Wideband Update: Update complete! Rebooting controller.");
 
@@ -121,14 +127,14 @@ void setWidebandOffset(uint8_t index) {
 	}
 
 	if (!waitAck()) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Wideband index set failed: no controller detected!");
+		firmwareError("Wideband index set failed: no controller detected!");
 	}
 
 	waitingBootloaderThread = nullptr;
 }
 
 void sendWidebandInfo() {
-	CanTxMessage m(WB_MGS_ECU_STATUS, 2, getWidebandBus(), true);
+	CanTxMessage m(WB_MSG_ECU_STATUS, 3, getWidebandBus(), true);
 
 	float vbatt = Sensor::getOrZero(SensorType::BatteryVoltage) * 10;
 
@@ -136,6 +142,10 @@ void sendWidebandInfo() {
 
 	// Offset 1 bit 0 = heater enable
 	m[1] = enginePins.o2heater.getLogicValue() ? 0x01 : 0x00;
+
+	// Offset 2: pump gain adjustment (0-200%)
+	auto gain = engineConfiguration->widebandPumpGain;
+	m[2] = gain != 0 ? gain : 100;
 }
 
 #endif // EFI_WIDEBAND_FIRMWARE_UPDATE && HAL_USE_CAN

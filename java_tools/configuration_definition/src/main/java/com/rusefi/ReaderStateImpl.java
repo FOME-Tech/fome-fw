@@ -10,6 +10,8 @@ import com.rusefi.util.SystemOut;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -82,7 +84,7 @@ public class ReaderStateImpl implements ReaderState {
         String trueName = bitNameParts.length > 1 ? bitNameParts[1].replaceAll("\"", "") : null;
         String falseName = bitNameParts.length > 2 ? bitNameParts[2].replaceAll("\"", "") : null;
 
-        ConfigFieldImpl bitField = new ConfigFieldImpl(state, bitNameParts[0], comment, null, BOOLEAN_T, new int[0], null, false, false, false, trueName, falseName);
+        ConfigFieldImpl bitField = new ConfigFieldImpl(state, bitNameParts[0], comment, null, BOOLEAN_T, new int[0], null, false, false, trueName, falseName);
         if (state.stack.isEmpty())
             throw new IllegalStateException("Parent structure expected");
         ConfigStructureImpl structure = state.stack.peek();
@@ -99,7 +101,7 @@ public class ReaderStateImpl implements ReaderState {
          * the destinations/writers
          */
         SystemOut.println("Reading definition from " + definitionInputFile);
-        BufferedReader definitionReader = new BufferedReader(new InputStreamReader(new FileInputStream(definitionInputFile), IoUtils.CHARSET));
+        BufferedReader definitionReader = new BufferedReader(new InputStreamReader(Files.newInputStream(Paths.get(definitionInputFile)), IoUtils.CHARSET));
         readBufferedReader(definitionReader, destinations);
     }
 
@@ -154,12 +156,6 @@ public class ReaderStateImpl implements ReaderState {
             // at the moment we read 0=NONE as two tokens, thus enums.size() is divided by two
             if (enums.size() / 2 > totalCount)
                 throw new IllegalStateException(name + ": Too many options in " + tunerStudioLine + " capacity=" + totalCount + "/size=" + enums.size());
-/*
-    this does not work right now since smt32 and kinetis enum sizes could be different but same .txt file
-    todo: identify relevant bitsizes and use variables for bitsizes?
-            if (enums.size() <= totalCount / 2)
-                throw new IllegalStateException("Too many bits allocated for " + enums + " capacity=" + totalCount + "/size=" + enums.size());
-*/
         }
 
         tsCustomLine.put(name, tunerStudioLine);
@@ -291,7 +287,7 @@ public class ReaderStateImpl implements ReaderState {
         if (cf == null) {
             if (ConfigFieldImpl.isPreprocessorDirective(line)) {
                 cf = new ConfigFieldImpl(state, "", line, null,
-                        ConfigFieldImpl.DIRECTIVE_T, new int[0], null, false, false, false,
+                        ConfigFieldImpl.DIRECTIVE_T, new int[0], null, false, false,
                         null, null);
             } else {
                 throw new IllegalStateException("Cannot parse line [" + line + "]");
@@ -320,7 +316,7 @@ public class ReaderStateImpl implements ReaderState {
             for (int i = 1; i <= cf.getArraySizes()[0]; i++) {
                 String commentWithIndex = getCommentWithIndex(cf, i);
                 ConfigFieldImpl element = new ConfigFieldImpl(state, cf.getName() + i, commentWithIndex, null,
-                        cf.getType(), new int[0], cf.getTsInfo(), false, false, cf.isHasAutoscale(), null, null);
+                        cf.getType(), new int[0], cf.getTsInfo(), false, cf.isHasAutoscale(), null, null);
                 element.setFromIterate(cf.getName(), i);
                 structure.addTs(element);
             }

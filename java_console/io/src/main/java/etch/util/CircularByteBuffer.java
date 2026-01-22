@@ -48,13 +48,6 @@ public class CircularByteBuffer extends ByteBuffer {
     }
 
     @Override
-    public void clear() {
-        length = 0;
-        nextGet = 0;
-        nextPut = 0;
-    }
-
-    @Override
     public int size() {
         return size;
     }

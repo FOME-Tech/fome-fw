@@ -37,7 +37,7 @@ using critical_msg_t = char[ERROR_BUFFER_SIZE];
  *
  * see also warning()
  */
-void firmwareError(ObdCode code, const char *fmt, ...)
+void firmwareError(ObdCode code, const char* fmt, ...)
 #if EFI_PROD_CODE
 __attribute__ ((format (printf, 2, 3)))
 #endif
@@ -52,13 +52,8 @@ const char* getCriticalErrorMessage();
 // todo: better place for this shared declaration?
 int getRusEfiVersion();
 
-#if EFI_ENABLE_ASSERTS
-  #define efiAssert(code, condition, message, result) { if (!(condition)) { firmwareError(code, message); return result; } }
-  #define efiAssertVoid(code, condition, message) { if (!(condition)) { firmwareError(code, message); return; } }
-#else /* EFI_ENABLE_ASSERTS */
-  #define efiAssert(code, condition, message, result) { }
-  #define efiAssertVoid(code, condition, message) { }
-#endif /* EFI_ENABLE_ASSERTS */
+#define efiAssert(code, condition, message, result) { if (!(condition)) { firmwareError(code, message); return result; } }
+#define efiAssertVoid(code, condition, message) { if (!(condition)) { firmwareError(code, message); return; } }
 
 #if EFI_PROD_CODE
 #include <hal.h>
@@ -71,3 +66,5 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+
+void firmwareError(const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));

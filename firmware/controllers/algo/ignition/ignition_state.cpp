@@ -70,6 +70,7 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 		engine->outputChannels.ignBlendParameter[i] = result.BlendParameter;
 		engine->outputChannels.ignBlendBias[i] = result.Bias;
 		engine->outputChannels.ignBlendOutput[i] = result.Value;
+		engine->outputChannels.ignBlendYAxis[i] = result.TableYAxis;
 
 		advanceAngle += result.Value;
 	}
@@ -130,7 +131,8 @@ void IgnitionState::updateAdvanceCorrections(float engineLoad) {
 
 	#if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
-	timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm);
+	float rpmRate = engine->rpmCalculator.getRpmAcceleration();
+	timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm, rpmRate);
 	#endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 
 	dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();

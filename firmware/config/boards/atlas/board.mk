@@ -19,9 +19,12 @@ DDEFS += -DEFI_SDC_DEVICE=SDCD1
 DDEFS += -DSTM32_LSE_BYPASS
 
 # We are running on Atlas hardware!
-DDEFS += -DHW_ATLAS=1
+DDEFS += -DHW_ATLAS=1 -DHW_POLYGONUS_PRESETS=1
 
 # Atlas has WiFi
 USE_WIFI = yes
+
+# Enable the SD card bootloader
+SD_BOOTLOADER = yes
 
 SHORT_BOARD_NAME = atlas

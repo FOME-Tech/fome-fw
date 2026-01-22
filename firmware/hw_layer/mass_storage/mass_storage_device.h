@@ -12,6 +12,9 @@
 
 #if HAL_USE_USB_MSD
 
+struct USBDriver;
+bool msd_request_hook_new(USBDriver *usbp);
+
 class MassStorageController : public ThreadController<USB_MSD_THREAD_WA_SIZE> {
 public:
 	MassStorageController(USBDriver* usb);

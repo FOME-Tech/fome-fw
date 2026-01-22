@@ -122,13 +122,11 @@ using floatus_t = float;
  */
 using percent_t = float;
 
-typedef void (*Void)(void);
+typedef void (*Void)();
 
 using lua_script_t = char[LUA_SCRIPT_SIZE];
 
 using vehicle_info_t = char[VEHICLE_INFO_SIZE];
-
-using vin_number_t = char[VIN_NUMBER_SIZE];
 
 using gppwm_note_t = char[GPPWM_NOTE_SIZE];
 

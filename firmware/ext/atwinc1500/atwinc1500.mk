@@ -1,7 +1,8 @@
 ATWINC_DIR = $(PROJECT_DIR)/ext/atwinc1500
 
 ALLINC += \
-	$(ATWINC_DIR)
+	$(ATWINC_DIR) \
+	$(PROJECT_DIR)/hw_layer/atwinc1500 \
 
 
 # $(ATWINC_DIR)/bsp/include \
@@ -26,6 +27,6 @@ ALLCPPSRC += \
 	$(ATWINC_DIR)/driver/source/nmuart.cpp \
 	$(ATWINC_DIR)/socket/source/socket.cpp \
 	$(ATWINC_DIR)/spi_flash/source/spi_flash.cpp \
-
+	$(PROJECT_DIR)/hw_layer/atwinc1500/wifi_bsp.cpp \
 
 #$(ATWINC_DIR)/driver/source/m2m_ssl.c

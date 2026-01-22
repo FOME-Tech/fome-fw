@@ -10,8 +10,6 @@
 #include <stdint.h>
 #include <rusefi/arrays.h>
 
-int djb2lowerCase(const char *str);
-
 #define _MAX_FILLER 11
 
 // http://en.wikipedia.org/wiki/Endianness
@@ -53,10 +51,29 @@ extern "C"
 const char * boolToString(bool value);
 
 char * efiTrim(char *param);
-int mytolower(const char c);
-uint32_t efiStrlen(const char *param);
+
+/*
+** return lower-case of c if upper-case, else c
+*/
+constexpr inline int mytolower(const char c) {
+	if (c >= 'A' && c <= 'Z') {
+		return c - 'A' + 'a';
+	} else {
+		return c;
+	}
+}
+
+constexpr inline int djb2lowerCase(const char *str) {
+	unsigned long hash = 5381;
+
+	while (char c = *str++) {
+		hash = 33 * hash + mytolower(c);
+	}
+
+	return hash;
+}
+
 int efiPow10(int param);
-bool startsWith(const char *line, const char *prefix);
 int indexOf(const char *string, char ch);
 float atoff(const char *string);
 int atoi(const char *string);
@@ -81,8 +98,6 @@ bool strEqualCaseInsensitive(const char *str1, const char *str2);
 bool strEqual(const char *str1, const char *str2);
 
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed);
-
-bool isPhaseInRange(float test, float current, float next);
 
 #ifdef __cplusplus
 }

@@ -29,7 +29,7 @@
 #include "engine_sniffer.h"
 
 #if EFI_ENGINE_SNIFFER
-#define addEngineSnifferEvent(name, msg) { if (getTriggerCentral()->isEngineSnifferEnabled) { waveChart.addEvent3((name), (msg)); } }
+#define addEngineSnifferEvent(timestamp, name, msg) { if (getTriggerCentral()->isEngineSnifferEnabled) { waveChart.addEvent3((timestamp), (name), (msg)); } }
  #else
 #define addEngineSnifferEvent(n, msg) {}
 #endif /* EFI_ENGINE_SNIFFER */
@@ -146,11 +146,9 @@ void WaveChart::publish() {
 /**
  * @brief	Register an event for digital sniffer
  */
-void WaveChart::addEvent3(const char *name, const char * msg) {
+void WaveChart::addEvent3(efitick_t nowNt, const char *name, const char * msg) {
 #if EFI_TEXT_LOGGING
 	ScopePerf perf(PE::EngineSniffer);
-	efitick_t nowNt = getTimeNowNt();
-
 	if (nowNt < pauseEngineSnifferUntilNt) {
 		return;
 	}
@@ -220,7 +218,6 @@ void initWaveChart(WaveChart *chart) {
 	chart->init();
 
 #if ! EFI_UNIT_TEST
-	printStatus();
 	addConsoleActionI("chartsize", setChartSize);
 	// this is used by HW CI
 	addConsoleAction(CMD_RESET_ENGINE_SNIFFER, resetNow);
@@ -228,43 +225,38 @@ void initWaveChart(WaveChart *chart) {
 }
 
 void addEngineSnifferOutputPinEvent(NamedOutputPin *pin, bool isRise) {
-	if (!engineConfiguration->engineSnifferFocusOnInputs) {
-		addEngineSnifferEvent(pin->getShortName(), isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
-	}
+	addEngineSnifferEvent(getTimeNowNt(), pin->getShortName(), isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
 }
 
-void addEngineSnifferTdcEvent(int rpm) {
+void addEngineSnifferTdcEvent(efitick_t timestamp, int rpm) {
 	static char rpmBuffer[_MAX_FILLER];
 	itoa10(rpmBuffer, rpm);
 
 	waveChart.startDataCollection();
 
-	addEngineSnifferEvent(TOP_DEAD_CENTER_MESSAGE, (char* ) rpmBuffer);
+	addEngineSnifferEvent(timestamp, TOP_DEAD_CENTER_MESSAGE, rpmBuffer);
 }
 
-void addEngineSnifferLogicAnalyzerEvent(int laIndex, bool isRise) {
-	extern const char *laNames[];
-	const char *name = laNames[laIndex];
-
-	addEngineSnifferEvent(name, isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
-}
-
-void addEngineSnifferCrankEvent(int wheelIndex, int triggerEventIndex, bool isRise) {
+void addEngineSnifferCrankEvent(efitick_t timestamp, int wheelIndex, int triggerEventIndex, bool isRise) {
 	static const char *crankName[2] = { PROTOCOL_CRANK1, PROTOCOL_CRANK2 };
 
 	shaft_signal_msg_index[0] = (isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN)[0];
 	// shaft_signal_msg_index[1] is assigned once and forever in the init method below
 	itoa10(&shaft_signal_msg_index[2], triggerEventIndex);
 
-	addEngineSnifferEvent(crankName[wheelIndex], (char* ) shaft_signal_msg_index);
+	addEngineSnifferEvent(timestamp, crankName[wheelIndex], (char* ) shaft_signal_msg_index);
 }
 
-void addEngineSnifferVvtEvent(int vvtIndex, bool isRise) {
+void addEngineSnifferVvtEvent(efitick_t timestamp, int vvtIndex, bool isRise) {
 	extern const char *vvtNames[];
 	const char *vvtName = vvtNames[vvtIndex];
 
-	addEngineSnifferEvent(vvtName, isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
+	addEngineSnifferEvent(timestamp, vvtName, isRise ? PROTOCOL_ES_UP : PROTOCOL_ES_DOWN);
 }
 
+#else // EFI_ENGINE_SNIFFER
+void addEngineSnifferCrankEvent(efitick_t, int, int, bool) { }
+void addEngineSnifferVvtEvent(int, bool) { }
+void addEngineSnifferTdcEvent(int) { }
 #endif /* EFI_ENGINE_SNIFFER */
 

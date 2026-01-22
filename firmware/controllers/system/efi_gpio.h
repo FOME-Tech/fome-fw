@@ -16,12 +16,7 @@
 
 void initPrimaryPins();
 void initOutputPins();
-
-#if EFI_GPIO_HARDWARE
-void turnAllPinsOff(void);
-#else /* EFI_GPIO_HARDWARE */
-#define turnAllPinsOff() {}
-#endif /* EFI_GPIO_HARDWARE */
+void turnAllPinsOff();
 
 
 #ifdef __cplusplus
@@ -106,21 +101,13 @@ public:
 	InjectorOutputPin injectorsStage2[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin coils[MAX_CYLINDER_COUNT];
 	IgnitionOutputPin trailingCoils[MAX_CYLINDER_COUNT];
-	NamedOutputPin auxValve[AUX_DIGITAL_VALVE_COUNT];
-	OutputPin tcuSolenoids[TCU_SOLENOID_COUNT];
-	OutputPin tcuTccOnoffSolenoid;
-	OutputPin tcuTccPwmSolenoid;
-	OutputPin tcuPcSolenoid;
-	OutputPin tcu32Solenoid;
 
 private:
 	void startInjectionPins();
 	void startIgnitionPins();
-	void startAuxValves();
 
 	void stopInjectionPins();
 	void stopIgnitionPins();
-	void stopAuxValves();
 };
 
 #endif /* __cplusplus */
@@ -141,15 +128,10 @@ private:
 #define getElectricalValue(logicalValue, mode) \
 	(logicalValue ? getElectricalValue1(mode) : getElectricalValue0(mode))
 
-#if EFI_GPIO_HARDWARE
-
-EXTERNC ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin);
-EXTERNC ioportid_t getHwPort(const char *msg, brain_pin_e brainPin);
+ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin);
+ioportid_t getHwPort(const char *msg, brain_pin_e brainPin);
 const char *portname(ioportid_t GPIOx);
 
-#endif /* EFI_GPIO_HARDWARE */
-
-void printSpiConfig(const char *msg, spi_device_e device);
 brain_pin_e parseBrainPin(const char *str);
 
 extern EnginePins enginePins;

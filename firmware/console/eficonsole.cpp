@@ -32,10 +32,6 @@ static void testCritical() {
 	chDbgCheck(0);
 }
 
-static void myerror() {
-	firmwareError(ObdCode::CUSTOM_ERR_TEST_ERROR, "firmwareError: %d", getRusEfiVersion());
-}
-
 static void sayHello() {
 	efiPrintf(PROTOCOL_HELLO_PREFIX " rusEFI LLC (c) 2012-2023. All rights reserved.");
 	efiPrintf(PROTOCOL_HELLO_PREFIX " built from " GIT_HASH);
@@ -56,12 +52,6 @@ static void sayHello() {
 	efiPrintf("hellenBoardId=%d", engine->engineState.hellenBoardId);
 
 #if defined(STM32F4) || defined(STM32F7) || defined(STM32H7)
-	uint32_t *uid = ((uint32_t *)UID_BASE);
-	efiPrintf("UID=%x %x %x", (unsigned int)uid[0], (unsigned int)uid[1], (unsigned int)uid[2]);
-
-	efiPrintf("can read 0x20000010 %d", ramReadProbe((const char *)0x20000010));
-	efiPrintf("can read 0x20020010 %d", ramReadProbe((const char *)0x20020010));
-	efiPrintf("can read 0x20070010 %d", ramReadProbe((const char *)0x20070010));
 
 #if defined(STM32F4)
 	efiPrintf("isStm32F42x %s", boolToString(isStm32F42x()));
@@ -78,7 +68,7 @@ static void sayHello() {
 
 	int flashSize = TM_ID_GetFlashSize();
 	if (flashSize < MIN_FLASH_SIZE) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Expected at least %dK of flash but found %dK", MIN_FLASH_SIZE, flashSize);
+		firmwareError("Expected at least %dK of flash but found %dK", MIN_FLASH_SIZE, flashSize);
 	}
 
 	// todo: bug, at the moment we report 1MB on dual-bank F7
@@ -114,14 +104,14 @@ static void cmd_threads() {
 
 	thread_t* tp = chRegFirstThread();
 
-	efiPrintf("name\twabase\ttime\tfree stack");
+	efiPrintf("id\tname\twabase\ttime\tfree stack\tprio");
 
 	while (tp) {
 		int freeBytes = CountFreeStackSpace(tp->wabase);
-		efiPrintf("%s\t%08x\t%lu\t%d", tp->name, (unsigned int)tp->wabase, tp->time, freeBytes);
+		efiPrintf("%d: %s\t%08x\t%lu\t%d\t%ld", tp->threadId, tp->name, (unsigned int)tp->wabase, tp->time, freeBytes, tp->realprio);
 
 		if (freeBytes < 64) {
-			firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
+			firmwareError("Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
 		}
 
 		tp = chRegNextThread(tp);
@@ -157,7 +147,7 @@ void initializeConsole() {
 	addConsoleAction("hello", sayHello);
 
 	addConsoleAction("critical", testCritical);
-	addConsoleAction("error", myerror);
+	addConsoleAction("error", []() { firmwareError("firmwareError: %d", getRusEfiVersion()); });
 	addConsoleAction("threadsinfo", cmd_threads);
 	addConsoleAction("stackoverflow", [](){ fib(10000); });
 }

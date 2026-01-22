@@ -26,7 +26,6 @@ void setDefaultEtbBiasCurve();
 void setDefaultEtbParameters();
 void setBoschVNH2SP30Curve();
 void onConfigurationChangeElectronicThrottleCallback(engine_configuration_s *previousConfiguration);
-void unregisterEtbPins();
 void setProteusHitachiEtbDefaults();
 
 void etbAutocal(size_t throttleIndex);

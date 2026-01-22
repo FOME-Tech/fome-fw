@@ -7,6 +7,8 @@ HW_LAYER_EMS_CPP += $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/mpu_util.cpp \
 					$(PROJECT_DIR)/hw_layer/ports/stm32/stm32_adc_v2.cpp \
 					$(HW_STM32_PORT_DIR)/flash_int_f4_f7.cpp \
 
+MCU_BOOTLOADER_FLASH = openblt_flash_f4_f7.cpp
+
 MCU = cortex-m4
 USE_FPU = hard
 LDSCRIPT = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/STM32F4.ld
@@ -21,6 +23,3 @@ ifeq ($(IS_STM32F429),yes)
 else
 	DDEFS += -DSTM32F407xx
 endif
-
-# TODO: remove, for efifeatures.h
-ALLINC += $(PROJECT_DIR)/config/stm32f4ems

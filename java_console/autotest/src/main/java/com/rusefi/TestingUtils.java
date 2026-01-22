@@ -6,18 +6,12 @@ import com.rusefi.functional_tests.EcuTestHelper;
 import com.rusefi.io.CommandQueue;
 import com.rusefi.waves.EngineChart;
 import com.rusefi.waves.EngineReport;
-import com.rusefi.waves.RevolutionLog;
 import com.rusefi.waves.EngineChartParser;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.Assert.fail;
-
 import static com.devexperts.logging.Logging.getLogging;
-import static com.rusefi.waves.EngineReport.isCloseEnough;
 
 /**
  * @author Andrey Belomutskiy

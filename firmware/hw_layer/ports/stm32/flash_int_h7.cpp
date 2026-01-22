@@ -23,6 +23,7 @@
 #define FLASH_CR_STRT FLASH_CR_START
 
 // QW bit supercedes the older BSY bit
+#define intFlashWaitWithSleep() do { chThdSleepMilliseconds(1); }  while (FLASH_SR & FLASH_SR_QW);
 #define intFlashWaitWhileBusy() do { __DSB(); } while (FLASH_SR & FLASH_SR_QW);
 
 flashaddr_t intFlashSectorBegin(flashsector_t sector) {
@@ -109,19 +110,36 @@ int intFlashSectorErase(flashsector_t sector) {
 		sectorRegIdx = sector;
 	}
 
+#ifndef EFI_BOOTLOADER
+	efiPrintf("Flash: erase sector %d bank %d sectorRegIdx %d...", sector, ctlr ? 2 : 1, sectorRegIdx);
+	Timer eraseTimer;
+	eraseTimer.reset();
+#endif
+
 	/* Unlock flash for write access */
 	if (intFlashUnlock(ctlr) == HAL_FAILED)
 		return FLASH_RETURN_NO_PERMISSION;
 
+	// Mitigation for https://github.com/FOME-Tech/fome-fw/issues/685
+	struct ScopeCacheDisabler {
+		ScopeCacheDisabler() {
+			SCB_DisableICache();
+			SCB_InvalidateICache();
+		}
+
+		~ScopeCacheDisabler() {
+			SCB_EnableICache();
+		}
+	} cacheDisabler;
+
 	/* Wait for any busy flags. */
-	intFlashWaitWhileBusy();
+	intFlashWaitWithSleep();
 
 	/* Clearing error status bits.*/
 	intFlashClearErrors(ctlr);
 
-	/* Setup parallelism before any program/erase */
-	FLASH_CR &= ~FLASH_CR_PSIZE_MASK;
-	FLASH_CR |= FLASH_CR_PSIZE_VALUE;
+	// Reset voltage range & sector number
+	FLASH_CR &= ~(FLASH_CR_PSIZE | FLASH_CR_SNB);
 
 	/* Start deletion of sector.
 	 * SNB(4:1) is defined as:
@@ -133,15 +151,10 @@ int intFlashSectorErase(flashsector_t sector) {
 	 * ...
 	 * 11011 sector 23 (the end of 2nd bank, 2Mb border)
 	 * others not allowed */
-	FLASH_CR &= ~FLASH_CR_SNB_Msk;
-	FLASH_CR |= (sectorRegIdx << FLASH_CR_SNB_Pos) & FLASH_CR_SNB_Msk;
-	/* sector erase */
-	FLASH_CR |= FLASH_CR_SER;
-	/* start erase operation */
-	FLASH_CR |= FLASH_CR_STRT;
+	FLASH_CR |= (FLASH_CR_SER | FLASH_CR_PSIZE_VALUE | (sectorRegIdx << FLASH_CR_SNB_Pos) | FLASH_CR_START);
 
 	/* Wait until it's finished. */
-	intFlashWaitWhileBusy();
+	intFlashWaitWithSleep();
 
 	/* Sector erase flag does not clear automatically. */
 	FLASH_CR &= ~FLASH_CR_SER;
@@ -157,11 +170,21 @@ int intFlashSectorErase(flashsector_t sector) {
 	if (intFlashIsErased(intFlashSectorBegin(sector), flashSectorSize(sector)) == FALSE)
 		return FLASH_RETURN_BAD_FLASH; /* Sector is not empty despite the erase cycle! */
 
+#ifndef EFI_BOOTLOADER
+	efiPrintf("Flash: erase done in %.2f sec", eraseTimer.getElapsedSeconds());
+#endif
+
 	/* Successfully deleted sector */
 	return FLASH_RETURN_SUCCESS;
 }
 
 int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
+#ifndef EFI_BOOTLOADER
+	efiPrintf("Flash: write %d bytes at 0x%08x", size, address);
+	Timer writeTimer;
+	writeTimer.reset();
+#endif
+
 	// Select the appropriate controller for this address
 	flashsector_t sector = intFlashSectorAt(address);
 	uint8_t ctlr = sector >= 8;
@@ -214,6 +237,10 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 
 	/* Lock flash again */
 	intFlashLock();
+
+#ifndef EFI_BOOTLOADER
+	efiPrintf("Flash: write done in %.2f sec", writeTimer.getElapsedSeconds());
+#endif
 
 	return FLASH_RETURN_SUCCESS;
 }

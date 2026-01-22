@@ -108,10 +108,10 @@ enum class ObdCode : uint16_t {
 	//P0097 Intake Air Temperature Sensor 2 Circuit Low
 	//P0098 Intake Air Temperature Sensor 2 Circuit High
 	//P0099 Intake Air Temperature Sensor 2 Circuit Intermittent/Erratic
-	OBD_Mass_or_Volume_Air_Flow_Circuit_Malfunction = 0x0100,
-	//P0101 Mass or Volume Air Flow Circuit Range/Performance Problem
-	//P0102 Mass or Volume Air Flow Circuit Low Input
-	//P0103 Mass or Volume Air Flow Circuit High Input
+	//P0100 Mass or Volume Air Flow Circuit Malfunction
+	OBD_Maf_Timeout = 0x0101,
+	OBD_Maf_Low = 0x0102,
+	OBD_Maf_High = 0x0103,
 	//P0104 Mass or Volume Air Flow Circuit Intermittent
 	OBD_Manifold_Absolute_Pressure_Circuit_Malfunction = 0x0105,
 	//P0106 Manifold Absolute Pressure/Barometric Pressure Circuit Range/Performance Problem
@@ -362,26 +362,28 @@ enum class ObdCode : uint16_t {
 	//P0324 Knock Control System Error
 	//P0325 Knock Sensor 1 Circuit Malfunction (Bank I or Single Sensor)
 	//P0326 Knock Sensor 1 Circuit Range/Performance (Bank 1 or Single Sensor)
-	//P0327 Knock Sensor 1 Circuit Low Input (Bank I or Single Sensor)
+	OBD_Knock_Sensor_1_Low = 0x0327,
 	//P0328 Knock Sensor 1 Circuit High Input (Bank I or Single Sensor)
 	//P0329 Knock Sensor 1 Circuit Intermittent (Bank 1 or Single Sensor)
 	//P0330 Knock Sensor 2 Circuit Malfunction (Bank 2)
 	//P0331 Knock Sensor 2 Circuit Range/Performance (Bank 2)
-	//P0332 Knock Sensor 2 Circuit Low Input (Bank 2)
+	OBD_Knock_Sensor_2_Low = 0x0332,
 	//P0333 Knock Sensor 2 Circuit High Input (Bank 2)
 	//P0334 Knock Sensor 2 Circuit Intermittent (Bank 2)
-	OBD_Crankshaft_Position_Sensor_A_Circuit_Malfunction = 0x0335,
+	//P0335 Crankshaft Position Sensor A Circuit Malfunction
+	OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors = 0x0336,
 	//P0336 Crankshaft Position Sensor A Circuit Range/Performance
 	//P0337 Crankshaft Position Sensor A Circuit Low Input
 	//P0338 Crankshaft Position Sensor A Circuit High Input
 	//P0339 Crankshaft Position Sensor A Circuit Intermittent
 	//P0340 Camshaft Position Sensor Circuit Malfunction
-	OBD_Camshaft_Position_Sensor_Circuit_Range_Performance = 0x0341,
+	OBD_Camshaft_Position_Sensor_B1I_NoSignal = 0x0340,
+	OBD_Camshaft_Position_Sensor_B1I_SyncErrors = 0x0341,
 	//P0342 Camshaft Position Sensor Circuit Low Input
 	//P0343 Camshaft Position Sensor Circuit High Input
 	//P0344 Camshaft Position Sensor Circuit Intermittent
-	//P0345 Camshaft Position Sensor A Circuit Malfunction (Bank 2)
-	//P0346 Camshaft Position Sensor A Circuit Range/Performance (Bank 2)
+	OBD_Camshaft_Position_Sensor_B2I_NoSignal = 0x0345,
+	OBD_Camshaft_Position_Sensor_B2I_SyncErrors = 0x0346,
 	//P0347 Camshaft Position Sensor A Circuit Low Input (Bank 2)
 	//P0348 Camshaft Position Sensor A Circuit High Input (Bank 2)
 	//P0349 Camshaft Position Sensor A Circuit Intermittent (Bank 2)
@@ -400,8 +402,8 @@ enum class ObdCode : uint16_t {
 	OBD_Ignition_Circuit_12 = 0x0362,
 	//P0363 Misfire Detected - Fueling Disabled
 	//P0364 Reserved
-	//P0365 Camshaft Position Sensor "B" Circuit (Bank 1)
-	//P0366 Camshaft Position Sensor "B" Circuit Range/Performance (Bank 1)
+	OBD_Camshaft_Position_Sensor_B1E_NoSignal = 0x0365,
+	OBD_Camshaft_Position_Sensor_B1E_SyncErrors = 0x0366,
 	//P0367 Camshaft Position Sensor "B" Circuit Low (Bank 1)
 	//P0368 Camshaft Position Sensor "B" Circuit High (Bank 1)
 	//P0369 Camshaft Position Sensor "B" Circuit Intermittent (Bank 1)
@@ -420,8 +422,8 @@ enum class ObdCode : uint16_t {
 	//P0382 Exhaust Gas Recirculation Flow Malfunction
 	//P0383 Glow Plug Control Module Control Circuit Low
 	//P0384 Glow Plug Control Module Control Circuit High
-	//P0385 Crankshaft Position Sensor B Circuit Malfunction
-	//P0386 Crankshaft Position Sensor B Circuit Range/Performance
+	OBD_Camshaft_Position_Sensor_B2E_NoSignal = 0x0385,
+	OBD_Camshaft_Position_Sensor_B2E_SyncErrors = 0x0386,
 	//P0387 Crankshaft Position Sensor B Circuit Low Input
 	//P0388 Crankshaft Position Sensor B Circuit High Input
 	//P0389 Crankshaft Position Sensor B Circuit Intermittent
@@ -1727,7 +1729,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_OBD_UNKNOWN_FIRING_ORDER = 6023,
 	CUSTOM_OBD_WRONG_FIRING_ORDER = 6024,
 	CUSTOM_OBD_IGNITION_MODE = 6025,
-	CUSTOM_OBD_26 = 6026,
+	CUSTOM_ERR_6026 = 6026,
 	CUSTOM_UNEXPECTED_ENGINE_TYPE = 6027,
 	CUSTOM_INVALID_TPS_SETTING = 6028,
 
@@ -1751,8 +1753,8 @@ enum class ObdCode : uint16_t {
 	CUSTOM_OBD_6045 = 6045,
 	CUSTOM_OBD_6046 = 6046,
 	CUSTOM_OBD_6047 = 6047,
-	CUSTOM_OBD_PIN_CONFLICT = 6048,
-	CUSTOM_OBD_LOW_FREQUENCY = 6049,
+	CUSTOM_OBD_6048 = 6048,
+	CUSTOM_OBD_6049 = 6049,
 
 	// not used CUSTOM_6051 = 6051,
 	CUSTOM_OBD_TS_PAGE_MISMATCH = 6052,
@@ -1761,7 +1763,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_INTERPOLATE_NAN = 6055,
 	ERROR_HISTO_NAME = 6056,
 	// unused code: CUSTOM_6057 = 6057,
-	CUSTOM_OBD_HIGH_FREQUENCY = 6058,
+	CUSTOM_OBD_6058 = 6058,
 	// unused code: CUSTOM_OBD_59 = 6059,
 
 	CUSTOM_OBD_MMC_START1 = 6060,
@@ -1814,7 +1816,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_INVALID_INJECTION_MODE = 6104,
 	CUSTOM_ERR_WAVE_1 = 6105,
 	CUSTOM_ERR_WAVE_2 = 6106,
-	CUSTOM_ERR_TEST_ERROR = 6107,
+	CUSTOM_ERR_6107 = 6107,
 	CUSTOM_ERR_IGNITION_MODE = 6108,
 	CUSTOM_ERR_CAN_CONFIGURATION = 6109,
 
@@ -1824,8 +1826,8 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_THERM = 6113,
 	CUSTOM_ERR_NATURAL_LOGARITHM_ERROR = 6114,
 	CUSTOM_ERR_LOOPED_QUEUE = 6115,
-	CUSTOM_ERR_PWM_1 = 6116,
-	CUSTOM_ERR_PWM_2 = 6117,
+	CUSTOM_ERR_6116 = 6116,
+	CUSTOM_ERR_6117 = 6117,
 	CUSTOM_ERR_DWELL_DURATION = 6118,
 	CUSTOM_ERR_NO_SHAPE = 6119,
 
@@ -1856,7 +1858,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_SKIPPED_TOOTH_SHAPE = 6143,
 	CUSTOM_ERR_UNEXPECTED_SHAFT_EVENT = 6144,
 	CUSTOM_ERR_SD_MOUNT_FAILED = 6145,
-	CUSTOM_ERR_SD_SEEK_FAILED = 6146,
+	CUSTOM_ERR_6146 = 6146,
 	CUSTOM_ERR_OUT_OF_ORDER = 6147,
 	CUSTOM_ERR_T2_CHARGE = 6148,
 
@@ -1873,7 +1875,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_TRG_ANGLE_ORDER = 6510,
 	CUSTOM_ERR_STATE_NULL = 6511,
 	CUSTOM_ERR_SAME_ANGLE = 6512,
-	ERROR_TRIGGER_DRAMA = 6513,
+	CUSTOM_ERR_6513 = 6513,
 	CUSTOM_MAP_ANGLE_PARAM = 6514,
 	CUSTOM_ERR_DISPLAY_MODE = 6515,
 	CUSTOM_ERR_ADC_UNKNOWN_CHANNEL = 6516,
@@ -2042,7 +2044,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_6666 = 6666,
 	CUSTOM_ERR_ADCANCE_CALC_ANGLE = 6667,
 	CUSTOM_ERR_ETB_TARGET = 6668,
-	CUSTOM_ERR_6669 = 6669,
+	CUSTOM_ERR_PG_STATE = 6669,
 
 	CUSTOM_ERR_6670 = 6670,
 	CUSTOM_ERR_6671 = 6671,
@@ -2098,7 +2100,7 @@ enum class ObdCode : uint16_t {
 	CUSTOM_ERR_ZERO_E85_MULT = 6716,
 
 	CUSTOM_INVALID_ADC = 6720,
-	CUSTOM_INVALID_MODE_SETTING = 6721,
+	CUSTOM_ERR_6721 = 6721,
 	CUSTOM_ERR_TASK_TIMER_OVERFLOW = 6722,
 	// not used CUSTOM_6723 = 6723,
 	CUSTOM_ERR_TLE8888_RESPONSE = 6724,
@@ -2106,7 +2108,7 @@ enum class ObdCode : uint16_t {
 	// not used CUSTOM_6726 = 6726,
 	CUSTOM_VVT_MODE_NOT_SELECTED = 6727,
 	CUSTOM_ERR_6728 = 6728,
-	CUSTOM_ARTIFICIAL_MISFIRE = 6729,
+	CUSTOM_ERR_6729 = 6729,
 
 	CUSTOM_ERR_6899 = 6899,
 	CUSTOM_ERR_6900 = 6900,

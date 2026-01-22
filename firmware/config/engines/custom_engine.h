@@ -23,7 +23,6 @@ void mreBCM();
  */
 void proteusBoardTest();
 void proteusLuaDemo();
-void proteusHarley();
 void proteusDcWastegateTest();
 
 void setTest33816EngineConfiguration();

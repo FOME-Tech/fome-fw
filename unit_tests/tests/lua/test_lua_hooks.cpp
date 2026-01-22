@@ -47,26 +47,6 @@ TEST(LuaHooks, TestSetCalibration) {
 		EXPECT_EQ(testLuaReturnsNumber(sourceCode), 900);
 }
 
-
-TEST(LuaHooks, TestGetSensorByIndex) {
-	const char* getSensorTestByIndex = R"(
-
-	function testFunc()
-		return getSensorByIndex(10)
-	end
-
-	)";
-
-	// Test failed sensor, returns nil
-	Sensor::resetMockValue(static_cast<SensorType>(10));
-	EXPECT_EQ(testLuaReturnsNumberOrNil(getSensorTestByIndex), unexpected);
-
-	// Now test with a value, returns value
-	Sensor::setMockValue(static_cast<SensorType>(10), 33);
-	EXPECT_EQ(testLuaReturnsNumberOrNil(getSensorTestByIndex).value_or(0), 33);
-}
-
-
 TEST(LuaHooks, TestGetSensorByName) {
 	const char* getSensorTestByName = R"(
 
@@ -213,4 +193,33 @@ end
 
 TEST(LuaHooks, LuaPid) {
 	EXPECT_EQ(testLuaReturnsNumber(pidTest), 0);
+}
+
+TEST(LuaHooks, TestPersistentValues) {
+	//EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	EXPECT_ANY_THROW(testLuaExecString("getPersistentValue(0)"));
+	EXPECT_NO_THROW(testLuaExecString("getPersistentValue(1)"));
+	EXPECT_NO_THROW(testLuaExecString("getPersistentValue(64)"));
+	EXPECT_ANY_THROW(testLuaExecString("getPersistentValue(65)"));
+
+	const char* initialCode = R"(
+	function testFunc()
+		return getPersistentValue(1)
+	end
+	)";
+	EXPECT_EQ(testLuaReturnsNumber(initialCode), 0);
+
+	EXPECT_ANY_THROW(testLuaExecString("storePersistentValue(0, 1)"));
+	EXPECT_NO_THROW(testLuaExecString("storePersistentValue(1, 1)"));
+	EXPECT_NO_THROW(testLuaExecString("storePersistentValue(64, 1)"));
+	EXPECT_ANY_THROW(testLuaExecString("storePersistentValue(65, 1)"));
+
+	const char* storeRetrieveCode = R"(
+	function testFunc()
+		storePersistentValue(1, 1.5)
+		return getPersistentValue(1)
+	end
+	)";
+	EXPECT_EQ(testLuaReturnsNumber(storeRetrieveCode), 1.5);
 }

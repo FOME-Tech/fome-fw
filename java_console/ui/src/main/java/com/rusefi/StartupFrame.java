@@ -1,6 +1,7 @@
 package com.rusefi;
 
 import com.devexperts.logging.Logging;
+import com.opensr5.ini.IniFileModel;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.serial.BaudRateHolder;
 import com.rusefi.maintenance.ProgramSelector;
@@ -16,6 +17,10 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -29,7 +34,6 @@ import static com.rusefi.ui.util.UiUtils.*;
  * <p/>
  * 2/14/14
  * @see SimulatorHelper
- * @see FirmwareFlasher
  */
 public class StartupFrame {
     private static final Logging log = getLogging(Launcher.class);
@@ -61,9 +65,7 @@ public class StartupFrame {
     private final JLabel noPortsMessage = new JLabel("<html>No ports found!<br>Confirm blue LED is blinking</html>");
 
     public StartupFrame() {
-//        AudioPlayback.start();
-        String title = "FOME console version " + Launcher.CONSOLE_VERSION;
-        frame = new JFrame(appendBundleName(title));
+        frame = new JFrame("FOME Console");
         frame.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -76,12 +78,9 @@ public class StartupFrame {
         });
         frame.setResizable(false);
         UiUtils.setAppIcon(frame);
-    }
 
-    @NotNull
-    public static String appendBundleName(String title) {
-        String bundleName = BundleUtil.readBundleFullNameNotNull();
-        return title + " " + bundleName;
+        // Attempt to drop our ini in to the TS cache
+        updateTsIniCache();
     }
 
     public void chooseSerialPort() {
@@ -90,7 +89,6 @@ public class StartupFrame {
 
         connectPanel.add(comboPorts);
         final JComboBox<String> comboSpeeds = createSpeedCombo();
-        comboSpeeds.setToolTipText("For 'STMicroelectronics Virtual COM Port' device any speed setting would work the same");
         connectPanel.add(comboSpeeds);
 
         final JButton connectButton = new JButton("Connect", new ImageIcon(getClass().getResource("/com/rusefi/connect48.png")));
@@ -150,9 +148,9 @@ public class StartupFrame {
         JLabel logo = createLogoLabel();
         if (logo != null)
             rightPanel.add(logo);
-        rightPanel.add(new JLabel("FOME (c) 2023-2023"));
+        rightPanel.add(new JLabel("FOME (c) 2023-2025"));
         rightPanel.add(new JLabel("rusEFI (c) 2012-2023"));
-        rightPanel.add(new JLabel("Version " + Launcher.CONSOLE_VERSION));
+        rightPanel.add(new JLabel(BundleUtil.readBundleFullNameNotNull()));
 
         JPanel content = new JPanel(new BorderLayout());
         content.add(leftPanel, BorderLayout.WEST);
@@ -214,7 +212,14 @@ public class StartupFrame {
 
         // Ensure that the bundle matches between the controller and console
         if (selectedPort.signature != null && !selectedPort.signature.matchesBundle()) {
-            int result = JOptionPane.showConfirmDialog(this.frame, "Looks like you're using the wrong console bundle for your controller.\nYou can attempt to proceed, but unexpected behavior may result.\nContinue at your own risk.", "WARNING", JOptionPane.OK_CANCEL_OPTION);
+            String target = BundleUtil.getBundleTarget();
+            String message = String.format(
+                    "Looks like you're using the wrong console bundle for your controller.\nYou can attempt to proceed, but unexpected behavior may result.\nContinue at your own risk.\n\nController: %s\nBundle: %s",
+                    selectedPort.signature.getBundleTarget(),
+                    target
+                );
+
+            int result = JOptionPane.showConfirmDialog(this.frame, message, "WARNING", JOptionPane.OK_CANCEL_OPTION);
 
             if (result != JOptionPane.OK_OPTION) {
                 return;
@@ -249,5 +254,40 @@ public class StartupFrame {
             combo.addItem(Integer.toString(speed));
         combo.setSelectedItem(defaultSpeed);
         return combo;
+    }
+
+    private static void updateTsIniCache() {
+        new Thread(() -> {
+            try {
+                File cacheDir = new File(System.getProperty("user.home"), ".efiAnalytics/TunerStudio/config/ecuDef");
+
+                if (!cacheDir.exists() || !cacheDir.canWrite()) {
+                    log.warn("TS ini cache prime failed, cache dir does not exist or not writable: " + cacheDir);
+                    return;
+                }
+
+                String signature = IniFileModel.getInstance().getSignature();
+                // Replace spaces, punctuation, then add the ini file extension
+                String destFileName = signature.replaceAll("[() ]+", "_") + ".ini";
+
+                File dest = new File(cacheDir, destFileName);
+
+                // If the file already exists, skip it
+                if (dest.exists()) {
+                    log.info("TS ini cache prime skipped, target already exists: " + dest.getCanonicalPath());
+                    return;
+                }
+
+                Path sourcePath = IniFileModel.getInstance().getSourceFile().toPath();
+                Path destPath = dest.toPath();
+
+                // Copy source -> dest
+                Files.copy(sourcePath, dest.toPath());
+
+                log.info("Successfully primed TS ini cache " + sourcePath + " -> " + destPath);
+            } catch (IOException e) {
+                log.error("Failed to prime TS ini cache", e);
+            }
+        }).start();
     }
 }

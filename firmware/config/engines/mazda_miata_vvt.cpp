@@ -52,10 +52,7 @@
 #include "custom_engine.h"
 #include "mazda_miata_base_maps.h"
 
-
-#if HW_PROTEUS
-#include "proteus_meta.h"
-#endif
+#include "polygonus_meta.h"
 
 #include "mre_meta.h"
 
@@ -296,7 +293,6 @@ static void setCommonMazdaNB() {
 
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->idlePidRpmUpperLimit = 350;
-	engineConfiguration->idlePidRpmDeadZone = 100;
 
 	engineConfiguration->idleRpmPid.pFactor = 0.0065;
 	engineConfiguration->idleRpmPid.iFactor = 0.3;
@@ -634,64 +630,7 @@ static void setMiataNB2_MRE_common() {
 }
 #endif // HW_MICRO_RUSEFI
 
-/**
- * https://github.com/rusefi/rusefi/wiki/HOWTO-TCU-A42DE-on-Proteus
- */
-#if HW_PROTEUS
-void setMiataNB2_Proteus_TCU() {
-	engineConfiguration->tcuEnabled = true;
-
-	strcpy(engineConfiguration->engineCode, "NB2");
-	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_MAZDA);
-	strcpy(engineConfiguration->vehicleName, "TCU test");
-
-	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL;
-	engineConfiguration->trigger.customTotalToothCount = 10;
-	engineConfiguration->trigger.customSkippedToothCount = 0;
-
-
-	engineConfiguration->triggerInputPins[0] = Gpio::Unassigned;
-	engineConfiguration->tcuInputSpeedSensorPin = PROTEUS_VR_1;
-
-	engineConfiguration->vehicleSpeedSensorInputPin = PROTEUS_VR_2;
-
-	engineConfiguration->driveWheelRevPerKm = 544;	// 205/50R15
-	engineConfiguration->vssGearRatio = 4.3;
-	engineConfiguration->vssToothCount = 22;
-
-	// "Highside 2"
-	engineConfiguration->tcu_solenoid[0] = Gpio::A8;
-	// "Highside 1"
-	engineConfiguration->tcu_solenoid[1] = Gpio::A9;
-
-	// "Digital 1" green
-	engineConfiguration->tcuUpshiftButtonPin = Gpio::C6;
-	engineConfiguration->tcuUpshiftButtonPinMode = PI_PULLUP;
-	// "Digital 6" white
-	engineConfiguration->tcuDownshiftButtonPin = Gpio::E15;
-	engineConfiguration->tcuDownshiftButtonPinMode = PI_PULLUP;
-
-	// R
-	config->tcuSolenoidTable[0][0] = 1;
-	config->tcuSolenoidTable[0][1] = 0;
-	// P/N
-	config->tcuSolenoidTable[1][0] = 1;
-	config->tcuSolenoidTable[1][1] = 0;
-	// 1
-	config->tcuSolenoidTable[2][0] = 1;
-	config->tcuSolenoidTable[2][1] = 0;
-	// 2
-	config->tcuSolenoidTable[3][0] = 1;
-	config->tcuSolenoidTable[3][1] = 1;
-	// 3
-	config->tcuSolenoidTable[4][0] = 0;
-	config->tcuSolenoidTable[4][1] = 1;
-	// 4
-	config->tcuSolenoidTable[5][0] = 0;
-	config->tcuSolenoidTable[5][1] = 0;
-
-}
-
+#if HW_POLYGONUS_PRESETS
 void setMiataNbPolygonusCommon() {
 	engineConfiguration->triggerInputPins[0] = PROTEUS_VR_1;
 	engineConfiguration->vehicleSpeedSensorInputPin = PROTEUS_DIGITAL_3;
@@ -738,7 +677,7 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->idle.solenoidPin = PROTEUS_LS_10;
 
 	// Built in wideband controller on bus 2
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
 	engineConfiguration->widebandOnSecondBus = true;
 	engineConfiguration->enableVerboseCanTx = true;
 
@@ -836,7 +775,7 @@ void setMiataNB_MSM_Polygonus() {
 	// MSM gets a different IAT from the other NBs
 	engineConfiguration->iat.config = { 0, 40, 60, 112000, 17000, 8000, 0 };
 }
-#endif // HW_PROTEUS
+#endif // HW_POLYGONUS_PRESETS
 
 #if HW_HELLEN
 void setHellenNB1() {

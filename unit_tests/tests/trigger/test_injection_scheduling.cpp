@@ -52,7 +52,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	event.injectionStartAngle = 125;
 
 	// We are at 120 degrees now, next tooth 130
-	event.onTriggerTooth(nowNt, 120, 130);
+	event.onTriggerTooth({ nowNt, 0, 0, 120, 130 });
 }
 
 TEST(injectionScheduling, InjectionIsScheduledDualStage) {
@@ -109,7 +109,7 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	event.injectionStartAngle = 125;
 
 	// We are at 120 degrees now, next tooth 130
-	event.onTriggerTooth(nowNt, 120, 130);
+	event.onTriggerTooth({ nowNt, 0, 0, 120, 130 });
 }
 
 TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
@@ -153,7 +153,7 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 	event.injectionStartAngle = 715;
 
 	// We are at 710 degrees now, next tooth 010
-	event.onTriggerTooth(nowNt, 710, 010);
+	event.onTriggerTooth({ nowNt, 0, 0, 710, 010 });
 }
 
 TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
@@ -197,7 +197,7 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 	event.injectionStartAngle = 5;
 
 	// We are at 710 degrees now, next tooth 010
-	event.onTriggerTooth(nowNt, 710, 010);
+	event.onTriggerTooth({ nowNt, 0, 0, 710, 010 });
 }
 
 TEST(injectionScheduling, InjectionNotScheduled) {
@@ -228,7 +228,7 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 	event.injectionStartAngle = 125;
 
 	// We are at 130 degrees now, next tooth 140
-	event.onTriggerTooth(nowNt, 130, 140);
+	event.onTriggerTooth({ nowNt, 0, 0, 130, 140 });
 }
 
 TEST(injectionScheduling, SplitInjectionScheduled) {

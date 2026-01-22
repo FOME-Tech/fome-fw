@@ -8,13 +8,7 @@
 #include "pch.h"
 #include "trigger_input.h"
 
-/* TODO:
- * - merge comparator trigger
- */
-
 #if (EFI_SHAFT_POSITION_INPUT) || defined(__DOXYGEN__)
-
-#if (HAL_TRIGGER_USE_PAL == TRUE)
 
 int  extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft);
 void extiTriggerTurnOffInputPin(brain_pin_e brainPin);
@@ -41,6 +35,7 @@ static int turnOnTriggerInputPin(const char *msg, int index, bool isTriggerShaft
 		return 0;
 	}
 
+#if EFI_PROD_CODE
 	/* ... then EXTI */
 	if (extiTriggerTurnOnInputPin(msg, index, isTriggerShaft) >= 0) {
 		if (isTriggerShaft) {
@@ -52,6 +47,7 @@ static int turnOnTriggerInputPin(const char *msg, int index, bool isTriggerShaft
 	}
 
 	firmwareError(ObdCode::CUSTOM_ERR_NOT_INPUT_PIN, "%s: Not input pin %s", msg, hwPortname(brainPin));
+#endif
 
 	return -1;
 }
@@ -60,6 +56,7 @@ static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
 	brain_pin_e brainPin = isTriggerShaft ?
 		activeConfiguration.triggerInputPins[index] : activeConfiguration.camInputs[index];
 
+#if EFI_PROD_CODE
 	if (isTriggerShaft) {
 		if (shaftTriggerType[index] == TRIGGER_EXTI) {
 			extiTriggerTurnOffInputPin(brainPin);
@@ -73,13 +70,12 @@ static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
 
 		camTriggerType[index] = TRIGGER_NONE;
 	}
+#else // EFI_PROD_CODE
+	UNUSED(brainPin);
+#endif // EFI_PROD_CODE
 }
 
-/*==========================================================================*/
-/* Exported functions.														*/
-/*==========================================================================*/
-
-void stopTriggerInputPins() {
+static void stopTriggerInputPins() {
 	for (int i = 0; i < TRIGGER_INPUT_PIN_COUNT; i++) {
 		if (isConfigurationChanged(triggerInputPins[i])) {
 			turnOffTriggerInputPin(i, true);
@@ -92,9 +88,9 @@ void stopTriggerInputPins() {
 	}
 }
 
-static const char* const camNames[] = { "cam1", "cam2", "cam3", "cam4"};
+static const char* const camNames[] = { "Cam B1I", "Cam B1E", "Cam B2I", "Cam B2E"};
 
-void startTriggerInputPins() {
+static void startTriggerInputPins() {
 	for (int i = 0; i < TRIGGER_INPUT_PIN_COUNT; i++) {
 		if (isConfigurationChanged(triggerInputPins[i])) {
 			const char * msg = (i == 0 ? "Trigger #1" : (i == 1 ? "Trigger #2" : "Trigger #3"));
@@ -109,31 +105,16 @@ void startTriggerInputPins() {
 	}
 }
 
-void turnOnTriggerInputPins() {
-	applyNewTriggerInputPins();
-}
-
-#endif /* (HAL_TRIGGER_USE_PAL == TRUE) */
-
-void applyNewTriggerInputPins() {
+void updateTriggerInputPins() {
 	if (hasFirmwareError()) {
 		return;
 	}
 
-#if EFI_PROD_CODE
 	// first we will turn off all the changed pins
 	stopTriggerInputPins();
 
-	if (isBrainPinValid(engineConfiguration->triggerInputPins[0])) {
-		engine->rpmCalculator.Register();
-	} else {
-		// if we do not have primary input channel maybe it's BCM mode and we inject RPM value via Lua?
-		engine->rpmCalculator.unregister();
-	}
-
 	// then we will enable all the changed pins
 	startTriggerInputPins();
-#endif /* EFI_PROD_CODE */
 }
 
 #endif /* EFI_SHAFT_POSITION_INPUT */

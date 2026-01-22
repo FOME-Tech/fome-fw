@@ -21,6 +21,7 @@ public:
 	virtual expected<float> getFuelDifferentialPressure() const = 0;
 
 	virtual float getBaseFlowRate() const = 0;
+	virtual float getMinimumPulse() const = 0;
 
 	virtual InjectorNonlinearMode getNonlinearMode() const = 0;
 	float getBaseDurationImpl(float baseDuration) const;
@@ -52,6 +53,7 @@ public:
 	float getBaseFlowRate() const override;
 	float getInjectorFlowRatio() override;
 	expected<float> getFuelDifferentialPressure() const override;
+	float getMinimumPulse() const override;
 
 	using interface_t = IInjectorModel; // Mock interface
 

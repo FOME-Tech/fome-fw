@@ -9,6 +9,8 @@
 
 #include "tunerstudio_io.h"
 
+#include "crc_accelerator.h"
+
 #if EFI_SIMULATOR
 #include "rusEfiFunctionalTest.h"
 #endif // EFI_SIMULATOR
@@ -48,14 +50,20 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 		write(buf, size, /*isEndOfPacket*/false);
 	}
 
-	// Command part of CRC
-	uint32_t crc = crc32((void*)(headerBuffer + 2), 1);
-
-	// Data part of CRC
-	crc = crc32inc((void*)buf, crc, size);
-
 	uint8_t crcBuffer[4];
-	*(uint32_t*)crcBuffer = SWAP_UINT32(crc);
+
+	{
+		// Command part of CRC
+		Crc crc(size);
+		crc.addData(headerBuffer + 2, 1);
+
+		if (size) {
+			// Data part of CRC
+			crc.addData(buf, size);
+		}
+
+		*(uint32_t*)crcBuffer = SWAP_UINT32(crc.getCrc());
+	}
 
 	// Lastly the CRC footer
 	write(crcBuffer, sizeof(crcBuffer), /*isEndOfPacket*/true);

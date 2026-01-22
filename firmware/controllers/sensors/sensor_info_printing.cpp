@@ -4,7 +4,6 @@
 #include "redundant_sensor.h"
 #include "fallback_sensor.h"
 #include "frequency_sensor.h"
-#include "Lps25Sensor.h"
 #include "linear_func.h"
 #include "resistance_func.h"
 #include "thermistor_func.h"
@@ -62,10 +61,6 @@ void RpmCalculator::showInfo(const char* /*sensorName*/) const {
 		get().value_or(0)
 	);
 #endif // EFI_SHAFT_POSITION_INPUT
-}
-
-void Lps25Sensor::showInfo(const char* sensorName) const {
-	efiPrintf("%s: LPS25 baro %.2f kPa", sensorName, get().Value);
 }
 
 void LinearFunc::showInfo(float testRawValue) const {

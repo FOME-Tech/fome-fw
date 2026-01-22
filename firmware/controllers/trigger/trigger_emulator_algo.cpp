@@ -156,7 +156,6 @@ static void startSimulatedTriggerSignal() {
 void enableTriggerStimulator() {
 	startSimulatedTriggerSignal();
 	engine->triggerCentral.directSelfStimulation = true;
-    engine->rpmCalculator.Register();
     incrementGlobalConfigurationVersion();
 }
 
@@ -186,10 +185,7 @@ void onConfigurationChangeRpmEmulatorCallback(engine_configuration_s *previousCo
 }
 
 void initTriggerEmulator() {
-	efiPrintf("Emulating %s", getEngine_type_e(engineConfiguration->engineType));
-
 	startTriggerEmulatorPins();
-
 	initTriggerEmulatorLogic();
 }
 

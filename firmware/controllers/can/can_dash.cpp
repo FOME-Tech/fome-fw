@@ -170,7 +170,7 @@ void updateDash(CanCycle cycle) {
 		canDashboardAim(cycle);
 		break;
 	default:
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Nothing for canNbcType %s", getCan_nbc_e(engineConfiguration->canNbcType));
+		firmwareError("Nothing for canNbcType %s", getCan_nbc_e(engineConfiguration->canNbcType));
 		break;
 	}
 }
@@ -1293,10 +1293,7 @@ void canDashboardAim(CanCycle cycle) {
 		return;
 	}
 
-	CanBusIndex canChannel =
-		engineConfiguration->canBroadcastUseChannelTwo
-			? CanBusIndex::Bus1
-			: CanBusIndex::Bus0;
+	constexpr CanBusIndex canChannel = CanBusIndex::Bus0;
 
 	transmitStruct<Aim5f0>(0x5f0, false, canChannel);
 	transmitStruct<Aim5f1>(0x5f1, false, canChannel);

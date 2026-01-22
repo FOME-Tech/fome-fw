@@ -38,6 +38,74 @@ TEST(VVT, Setpoint) {
 	EXPECT_EQ(20, dut.getSetpoint().value_or(0));
 }
 
+struct FakeMap : public ValueProvider3D {
+	float setpoint;
+
+	float getValue(float xColumn, float yRow) const override {
+		return setpoint;
+	}
+};
+
+TEST(VVT, SetpointHysteresisAdvancingCam) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	FakeMap targetMap;
+
+	VvtController dut(0, 0, 0);
+	dut.init(&targetMap, nullptr);
+
+	// 0 position returns unexpected
+	targetMap.setpoint = 0;
+	EXPECT_EQ(-1000, dut.getSetpoint().value_or(-1000));
+
+	// Between hysteresis still return unexpected
+	targetMap.setpoint = 2;
+	EXPECT_EQ(-1000, dut.getSetpoint().value_or(-1000));
+
+	// Above hysteresis returns real value
+	targetMap.setpoint = 5;
+	EXPECT_EQ(5, dut.getSetpoint().value_or(-1000));
+
+	// Between hysteresis still returns valid
+	targetMap.setpoint = 2;
+	EXPECT_EQ(2, dut.getSetpoint().value_or(-1000));
+
+	// Back under hysteresis retuns unexpected again
+	targetMap.setpoint = 0.5;
+	EXPECT_EQ(-1000, dut.getSetpoint().value_or(-1000));
+}
+
+TEST(VVT, SetpointHysteresisRetardingCam) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->invertVvtControlIntake = true;
+
+	FakeMap targetMap;
+
+	VvtController dut(0, 0, 0);
+	dut.init(&targetMap, nullptr);
+
+	// 0 position returns unexpected
+	targetMap.setpoint = 0;
+	EXPECT_EQ(-1000, dut.getSetpoint().value_or(-1000));
+
+	// Between hysteresis still return unexpected
+	targetMap.setpoint = -2;
+	EXPECT_EQ(-1000, dut.getSetpoint().value_or(-1000));
+
+	// Above hysteresis returns real value
+	targetMap.setpoint = -5;
+	EXPECT_EQ(-5, dut.getSetpoint().value_or(-1000));
+
+	// Between hysteresis still returns valid
+	targetMap.setpoint = -2;
+	EXPECT_EQ(-2, dut.getSetpoint().value_or(-1000));
+
+	// Back under hysteresis retuns unexpected again
+	targetMap.setpoint = -0.5;
+	EXPECT_EQ(-1000, dut.getSetpoint().value_or(-1000));
+}
+
 TEST(VVT, ObservePlant) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -51,10 +119,34 @@ TEST(VVT, ObservePlant) {
 }
 
 TEST(VVT, OpenLoop) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	copyArray(config->vvtOpenLoop[0].bins, { -20, 0, 20, 40, 60, 80, 100, 120 });
+	copyArray(config->vvtOpenLoop[0].values, { 0, 10, 20, 30, 40, 50, 60, 70 });
+
 	VvtController dut(0, 0, 0);
 
-	// No open loop for now
-	EXPECT_EQ(dut.getOpenLoop(10), 0);
+	// Check first with oil temperature
+	Sensor::resetMockValue(SensorType::Clt);
+	Sensor::setMockValue(SensorType::OilTemperature, 20);
+	EXPECT_EQ(dut.getOpenLoop(0), 20);
+	Sensor::setMockValue(SensorType::OilTemperature, 100);
+	EXPECT_EQ(dut.getOpenLoop(0), 60);
+
+	// Both sensors dead, expect 80C value
+	Sensor::resetMockValue(SensorType::Clt);
+	Sensor::resetMockValue(SensorType::OilTemperature);
+
+	// Check coolant temp
+	Sensor::setMockValue(SensorType::Clt, 20);
+	EXPECT_EQ(dut.getOpenLoop(0), 20);
+	Sensor::setMockValue(SensorType::Clt, 100);
+	EXPECT_EQ(dut.getOpenLoop(0), 60);
+
+	// In case you have both, it should us oil T
+	Sensor::setMockValue(SensorType::OilTemperature, 40);
+	Sensor::setMockValue(SensorType::Clt, 60);
+	EXPECT_EQ(dut.getOpenLoop(0), 30);
 }
 
 TEST(VVT, ClosedLoopNotInverted) {

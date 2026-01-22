@@ -109,13 +109,9 @@ static void setDebugMode(int value) {
 	engineConfiguration->debugMode = (debug_mode_e) value;
 }
 
-static void setWholeTimingMap(float value) {
-	setTable(config->ignitionTable, value);
-}
-
 static void setWholeTimingMapCmd(float value) {
 	efiPrintf("Setting whole timing advance map to %.2f", value);
-	setWholeTimingMap(value);
+	setWholeTimingTable(value);
 	engine->resetEngineSnifferIfInTestMode();
 }
 
@@ -243,20 +239,6 @@ static void setAnalogInputPin(const char *sensorStr, const char *pinName) {
 }
 #endif // HAL_USE_ADC
 
-static void setLogicInputPin(const char *indexStr, const char *pinName) {
-	int index = atoi(indexStr);
-	if (index < 0 || index > 2) {
-		return;
-	}
-	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
-	if (pin == Gpio::Invalid) {
-		return;
-	}
-	efiPrintf("setting logic input pin[%d] to %s please save&restart", index, hwPortname(pin));
-	engineConfiguration->logicAnalyzerPins[index] = pin;
-	incrementGlobalConfigurationVersion();
-}
-
 #endif // EFI_PROD_CODE
 
 static void enableOrDisable(const char *param, bool isEnabled) {
@@ -272,8 +254,6 @@ static void enableOrDisable(const char *param, bool isEnabled) {
 		engineConfiguration->verboseCan = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "verboseIsoTp")) {
 		engineConfiguration->verboseIsoTp = isEnabled;
-	} else if (strEqualCaseInsensitive(param, "artificialMisfire")) {
-		engineConfiguration->artificialTestMisfire = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "can_broadcast")) {
 		engineConfiguration->enableVerboseCanTx = isEnabled;
 	} else if (strEqualCaseInsensitive(param, "etb_auto")) {
@@ -487,15 +467,12 @@ void initSettings() {
 	addConsoleActionSS(CMD_TRIGGER_PIN, setTriggerInputPin);
 	addConsoleActionSS(CMD_TRIGGER_SIMULATOR_PIN, setTriggerSimulatorPin);
 
-	addConsoleActionI(CMD_ECU_UNLOCK, unlockEcu);
-
 	addConsoleActionS(CMD_ALTERNATOR_PIN, setAlternatorPin);
 	addConsoleActionS(CMD_IDLE_PIN, setIdlePin);
 
 #if HAL_USE_ADC
 	addConsoleActionSS("set_analog_input_pin", setAnalogInputPin);
 #endif // HAL_USE_ADC
-	addConsoleActionSS(CMD_LOGIC_PIN, setLogicInputPin);
 #endif // EFI_PROD_CODE
 }
 

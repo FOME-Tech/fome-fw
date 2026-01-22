@@ -4,11 +4,9 @@ CONTROLLERS_SENSORS_SRC_CPP = \
 	$(PROJECT_DIR)/controllers/sensors/core/sensor.cpp \
  	$(PROJECT_DIR)/controllers/sensors/thermistors.cpp \
 	$(PROJECT_DIR)/controllers/sensors/allsensors.cpp \
-	$(PROJECT_DIR)/controllers/sensors/auto_generated_sensor.cpp \
 	$(PROJECT_DIR)/controllers/sensors/impl/AemXSeriesLambda.cpp \
 	$(PROJECT_DIR)/controllers/sensors/impl/map.cpp \
 	$(PROJECT_DIR)/controllers/sensors/impl/maf.cpp \
-	$(PROJECT_DIR)/controllers/sensors/impl/Lps25Sensor.cpp \
 	$(PROJECT_DIR)/controllers/sensors/tps.cpp \
 	$(PROJECT_DIR)/controllers/sensors/impl/ego.cpp \
 	$(PROJECT_DIR)/controllers/sensors/sensor_info_printing.cpp \

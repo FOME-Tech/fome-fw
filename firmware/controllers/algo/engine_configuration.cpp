@@ -51,7 +51,6 @@
 
 #include "GY6_139QMB.h"
 
-#include "nissan_primera.h"
 #include "nissan_vq.h"
 
 #include "mazda_miata.h"
@@ -111,7 +110,7 @@
 engine_configuration_s activeConfiguration;
 
 void rememberCurrentConfiguration() {
-	memcpy(&activeConfiguration, engineConfiguration, sizeof(engine_configuration_s));
+	activeConfiguration = *engineConfiguration;
 }
 
 static void wipeString(char *string, int size) {
@@ -141,19 +140,13 @@ __attribute__((weak)) void boardOnConfigurationChange(engine_configuration_s* /*
  * online tuning of most values in the maps does not count as configuration change, but 'Burn' command does
  *
  * this method is NOT currently invoked on ECU start - actual user input has to happen!
- * See preCalculate which is invoked BOTH on start and configuration change
  */
 void incrementGlobalConfigurationVersion() {
 	engine->globalConfigurationVersion++;
-#if EFI_DEFAILED_LOGGING
-	efiPrintf("set globalConfigurationVersion=%d", globalConfigurationVersion);
-#endif /* EFI_DEFAILED_LOGGING */
 
 	applyNewHardwareSettings();
 
 	boardOnConfigurationChange(&activeConfiguration);
-
-	engine->preCalculate();
 
 #if EFI_ELECTRONIC_THROTTLE_BODY
 	onConfigurationChangeElectronicThrottleCallback(&activeConfiguration);
@@ -352,15 +345,23 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->auxPid[0].iFactor = 0.005;
 	engineConfiguration->auxPid[0].dFactor = 0;
 	engineConfiguration->auxPid[0].offset = 33;
-	engineConfiguration->auxPid[0].minValue = 10;
-	engineConfiguration->auxPid[0].maxValue = 90;
+	engineConfiguration->auxPid[0].minValue = -50;
+	engineConfiguration->auxPid[0].maxValue = 50;
+	engineConfiguration->vvtItermMin[0] = -50;
+	engineConfiguration->vvtItermMax[0] = 50;
+	engineConfiguration->vvtOutputMin[0] = 10;
+	engineConfiguration->vvtOutputMax[0] = 90;
 
 	engineConfiguration->vvtOutputFrequency = 300; // VVT solenoid control
 
 	engineConfiguration->isCylinderCleanupEnabled = true;
 
-	engineConfiguration->auxPid[1].minValue = 10;
-	engineConfiguration->auxPid[1].maxValue = 90;
+	engineConfiguration->auxPid[1].minValue = -50;
+	engineConfiguration->auxPid[1].maxValue = 50;
+	engineConfiguration->vvtItermMin[1] = -50;
+	engineConfiguration->vvtItermMax[1] = 50;
+	engineConfiguration->vvtOutputMin[1] = 10;
+	engineConfiguration->vvtOutputMax[1] = 90;
 
 	engineConfiguration->turboSpeedSensorMultiplier = 1;
 
@@ -372,23 +373,30 @@ static void setDefaultEngineConfiguration() {
 	setDefaultEtbParameters();
 	setDefaultEtbBiasCurve();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	setDefaultBoostParameters();
-#endif
+#endif // EFI_ENGINE_CONTROL
 
 	// OBD-II default rate is 500kbps
 	engineConfiguration->canBaudRate = B500KBPS;
 	engineConfiguration->can2BaudRate = B500KBPS;
 
 	setBosch0280218037();
+	engineConfiguration->mafMinVoltage = 0;
+	engineConfiguration->mafMaxVoltage = 5;
 
 	engineConfiguration->canSleepPeriodMs = 50;
 	engineConfiguration->canReadEnabled = true;
 	engineConfiguration->canWriteEnabled = true;
 	engineConfiguration->canVssScaling = 1.0f;
 
-	// Don't enable, but set default address
+	// Don't enable, but set default addresses
 	engineConfiguration->verboseCanBaseAddress = CAN_DEFAULT_BASE;
+	engineConfiguration->ecumasterEgtToCanBaseId = 0x660;
+
+	for (size_t i = 0; i < efi::size(config->lambdaSensorSourceIndex); i++) {
+		config->lambdaSensorSourceIndex[i] = i;
+	}
 
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
@@ -440,6 +448,11 @@ static void setDefaultEngineConfiguration() {
 	setRpmTableBin(config->vvtTable1RpmBins);
 	setLinearCurve(config->vvtTable2LoadBins, 20, 120, 10);
 	setRpmTableBin(config->vvtTable2RpmBins);
+
+	for (size_t i = 0; i < efi::size(config->vvtOpenLoop); i++) {
+		setLinearCurve(config->vvtOpenLoop[i].bins, -20, 120, 1);
+	}
+
 	setLinearCurve(config->scriptTable1LoadBins, 20, 120, 10);
 	setRpmTableBin(config->scriptTable1RpmBins);
 	setLinearCurve(config->scriptTable2LoadBins, 20, 120, 10);
@@ -528,6 +541,8 @@ static void setDefaultEngineConfiguration() {
 
 	setEgoSensor(ES_14Point7_Free);
 
+	engineConfiguration->widebandPumpGain = 100;
+
 	engineConfiguration->globalFuelCorrection = 1;
 	engineConfiguration->adcVcc = 3.3f;
 
@@ -545,14 +560,10 @@ static void setDefaultEngineConfiguration() {
 #endif
 
 	engineConfiguration->isMapAveragingEnabled = true;
+	engineConfiguration->mapAveragingCylinderBalanceMinRpm = 1500;
 	engineConfiguration->isWaveAnalyzerEnabled = true;
 
 	engineConfiguration->acIdleRpmBump = 200;
-
-	// Currently this is offset from fire event, not TDC
-	// TODO: convert to offset from TDC
-	engineConfiguration->knockDetectionWindowStart = 15.0 + 5.0;
-	engineConfiguration->knockDetectionWindowEnd = 15.0 + 45.0;
 
 	engineConfiguration->triggerSimulatorRpm = 1200;
 	engineConfiguration->fakeFullSyncForStimulation = true;
@@ -682,24 +693,22 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::PROTEUS_LUA_DEMO:
 		proteusLuaDemo();
 		break;
-	case engine_type_e::PROTEUS_HARLEY:
-		proteusHarley();
-		break;
 	case engine_type_e::PROTEUS_BMW_M73:
 		setEngineBMW_M73_Proteus();
-		break;
-	case engine_type_e::MIATA_PROTEUS_TCU:
-		setMiataNB2_Proteus_TCU();
 		break;
 	case engine_type_e::PROTEUS_HONDA_K:
 		setProteusHondaElement2003();
 		break;
-	case engine_type_e::PROTEUS_HONDA_OBD2A:
-		setProteusHondaOBD2A();
-		break;
 	case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
 		setEngineProteusGearboxManInTheMiddle();
 		break;
+#ifdef HARDWARE_CI
+	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
+		setProteusAnalogPwmTest();
+		break;
+#endif // HARDWARE_CI
+#endif // HW_PROTEUS
+#if HW_POLYGONUS_PRESETS
 	case engine_type_e::POLYGONUS_MIATA_NA6:
 		setMiataNa6_Polygonus();
 		break;
@@ -712,12 +721,7 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::POLYGONUS_MIATA_MSM:
 		setMiataNB_MSM_Polygonus();
 		break;
-#ifdef HARDWARE_CI
-	case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
-		setProteusAnalogPwmTest();
-		break;
-#endif // HARDWARE_CI
-#endif // HW_PROTEUS
+#endif // HW_POLYGONUS_PRESETS
 #if HW_HELLEN
 	case engine_type_e::HELLEN_128_MERCEDES_4_CYL:
 		setHellenMercedes128_4_cyl();
@@ -805,9 +809,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 	case engine_type_e::FORD_ASPIRE_1996:
 		setFordAspireEngineConfiguration();
-		break;
-	case engine_type_e::NISSAN_PRIMERA:
-		setNissanPrimeraEngineConfiguration();
 		break;
 	case engine_type_e::FRANKENSO_MIATA_NA6_MAP:
 		setMiataNA6_MAP_Frankenso();
@@ -899,7 +900,6 @@ void validateConfiguration() {
 		// todo: extract constant in instant_rpm_calculator.h?
 		engineConfiguration->instantRpmRange = 90;
 	}
-	engine->preCalculate();
 }
 
 void applyNonPersistentConfiguration() {
@@ -927,6 +927,20 @@ void commonFrankensoAnalogInputs() {
 	engineConfiguration->vbattAdcChannel = EFI_ADC_14;
 }
 
+bool isSdCardEnabled() {
+	return engineConfiguration->isSdCardEnabled;
+}
+
+#if EFI_PROD_CODE
+SPIDriver* getSdCardSpiDevice() {
+	return getSpiDevice(engineConfiguration->sdCardSpiDevice);
+}
+
+Gpio getSdCardCsPin() {
+	return engineConfiguration->sdCardCsPin;
+}
+#endif // EFI_PROD_CODE
+
 // These symbols are weak so that a board_configuration.cpp file can override them
 __attribute__((weak)) void setBoardDefaultConfiguration() { }
 __attribute__((weak)) void setBoardConfigOverrides() { }
@@ -935,3 +949,4 @@ __attribute__((weak)) int getBoardMetaOutputsCount() { return 0; }
 __attribute__((weak)) Gpio* getBoardMetaOutputs() { return nullptr; }
 
 __attribute__((weak)) void initBoardSensors() { }
+__attribute__((weak)) void checkBoardPowerSupply() { }

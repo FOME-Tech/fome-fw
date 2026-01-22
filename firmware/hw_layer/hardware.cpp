@@ -16,19 +16,15 @@
 #include "bench_test.h"
 #include "pin_repository.h"
 #include "max31855.h"
-#include "logic_analyzer.h"
 #include "smart_gpio.h"
 #include "accelerometer.h"
 #include "eficonsole.h"
 #include "console_io.h"
 #include "idle_thread.h"
-#include "kline.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
 #endif /* EFI_PROD_CODE */
-
-#include "mmc_card.h"
 
 #include "AdcConfiguration.h"
 #include "idle_hardware.h"
@@ -57,19 +53,6 @@
 #endif
 
 #if HAL_USE_SPI
-extern bool isSpiInitialized[6];
-
-/**
- * Only one consumer can use SPI bus at a given time
- */
-void lockSpi(spi_device_e device) {
-	spiAcquireBus(getSpiDevice(device));
-}
-
-void unlockSpi(spi_device_e device) {
-	spiReleaseBus(getSpiDevice(device));
-}
-
 static void initSpiModules() {
 	if (engineConfiguration->is_enabled_spi_1) {
 		turnOnSpi(SPI_DEVICE_1);
@@ -91,52 +74,14 @@ static void initSpiModules() {
 	}
 }
 
-/**
- * @return NULL if SPI device not specified
- */
-SPIDriver * getSpiDevice(spi_device_e spiDevice) {
-	if (spiDevice == SPI_NONE) {
-		return NULL;
-	}
-#if STM32_SPI_USE_SPI1
-	if (spiDevice == SPI_DEVICE_1) {
-		return &SPID1;
-	}
-#endif
-#if STM32_SPI_USE_SPI2
-	if (spiDevice == SPI_DEVICE_2) {
-		return &SPID2;
-	}
-#endif
-#if STM32_SPI_USE_SPI3
-	if (spiDevice == SPI_DEVICE_3) {
-		return &SPID3;
-	}
-#endif
-#if STM32_SPI_USE_SPI4
-	if (spiDevice == SPI_DEVICE_4) {
-		return &SPID4;
-	}
-#endif
-#if STM32_SPI_USE_SPI5
-	if (spiDevice == SPI_DEVICE_5) {
-		return &SPID5;
-	}
-#endif
-#if STM32_SPI_USE_SPI6
-	if (spiDevice == SPI_DEVICE_6) {
-		return &SPID6;
-	}
-#endif
-	firmwareError(ObdCode::CUSTOM_ERR_UNEXPECTED_SPI, "Unexpected SPI device: %d", spiDevice);
-	return NULL;
-}
 #endif
 
 #if HAL_USE_ADC
 
+#ifdef MODULE_MAP_AVERAGING
 static FastAdcToken fastMapSampleIndex;
 static FastAdcToken fastMapSampleIndex2;
+#endif
 
 /**
  * This method is not in the adc* lower-level file because it is more business logic then hardware.
@@ -155,11 +100,13 @@ void onFastAdcComplete(adcsample_t*) {
 #endif /* HAL_USE_ADC */
 
 static void calcFastAdcIndexes() {
-#if HAL_USE_ADC
-	fastMapSampleIndex = enableFastAdcChannel("Fast MAP", engineConfiguration->map.sensor.hwChannel);
-	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP", engineConfiguration->map2HwChannel);
-#endif/* HAL_USE_ADC */
+#ifdef MODULE_MAP_AVERAGING
+	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", engineConfiguration->map.sensor.hwChannel);
+	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", engineConfiguration->map2HwChannel);
+#endif/* MODULE_MAP_AVERAGING */
 }
+
+extern bool isSpiInitialized[6];
 
 void stopSpi(spi_device_e device) {
 #if HAL_USE_SPI
@@ -179,27 +126,30 @@ void stopSpi(spi_device_e device) {
  */
 
 void applyNewHardwareSettings() {
-    /**
-     * All 'stop' methods need to go before we begin starting pins.
-     *
-     * We take settings from 'activeConfiguration' not 'engineConfiguration' while stopping hardware.
-     * Some hardware is restart unconditionally on change of parameters while for some systems we make extra effort and restart only
-     * relevant settings were changes.
-     *
-     */
+#if EFI_PROD_CODE
+	#if EFI_SHAFT_POSITION_INPUT
+		bool allowDangerousHardwareUpdates =
+			!engine->rpmCalculator.isRunning();
+	#else // not EFI_SHAFT_POSITION_INPUT
+		bool allowDangerousHardwareUpdates = true;
+	#endif // EFI_SHAFT_POSITION_INPUT
+#endif
+
+	/**
+	 * All 'stop' methods need to go before we begin starting pins.
+	 *
+	 * We take settings from 'activeConfiguration' not 'engineConfiguration' while stopping hardware.
+	 * Some hardware is restart unconditionally on change of parameters while for some systems we make extra effort and restart only
+	 * relevant settings were changes.
+	 *
+	 */
 	ButtonDebounce::stopConfigurationList();
 
 #if EFI_PROD_CODE
-	stopSensors();
+	if (allowDangerousHardwareUpdates) {
+		stopSensors();
+	}
 #endif // EFI_PROD_CODE
-
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
-	stopTriggerInputPins();
-#endif /* EFI_SHAFT_POSITION_INPUT */
-
-#if EFI_CAN_SUPPORT
-	stopCanPins();
-#endif /* EFI_CAN_SUPPORT */
 
 	stopHardware();
 
@@ -235,7 +185,9 @@ void applyNewHardwareSettings() {
 	enginePins.unregisterPins();
 
 #if EFI_PROD_CODE
-	reconfigureSensors();
+	if (allowDangerousHardwareUpdates) {
+		reconfigureSensors();
+	}
 #endif /* EFI_PROD_CODE */
 
 	ButtonDebounce::startConfigurationList();
@@ -244,51 +196,29 @@ void applyNewHardwareSettings() {
 	 * Start everything back with new settings *
 	 ******************************************/
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
-	startTriggerInputPins();
+#if EFI_SHAFT_POSITION_INPUT
+	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
 	startHardware();
 
-#if EFI_PROD_CODE && (BOARD_EXT_GPIOCHIPS > 0)
-	/* TODO: properly restart gpio chips...
-	 * This is only workaround for "CS pin lost" bug
-	 * see: https://github.com/rusefi/rusefi/issues/2107
-	 * We should provide better way to gracefully stop all
-	 * gpio chips: set outputs to safe state, release all
-	 * on-chip resources (gpios, SPIs, etc) and then restart
-	 * with updated settings.
-	 * Following code just re-inits CS pins for all external
-	 * gpio chips, but does not update CS pin definition in
-	 * gpio chips private data/settings. So changing CS pin
-	 * on-fly does not work */
-	startSmartCsPins();
-#endif /* (BOARD_EXT_GPIOCHIPS > 0) */
-
 	enginePins.startPins();
-
-    initKLine();
 
 #if EFI_PROD_CODE && EFI_IDLE_CONTROL
 	if (isIdleHardwareRestartNeeded()) {
-		 initIdleHardware();
+		initIdleHardware();
 	}
 #endif
 
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	startBoostPin();
-#endif
+#endif // EFI_ENGINE_CONTROL
 #if EFI_EMULATE_POSITION_SENSORS
 	startTriggerEmulatorPins();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
-#if EFI_LOGIC_ANALYZER
-	startLogicAnalyzerPins();
-#endif /* EFI_LOGIC_ANALYZER */
 #if EFI_VVT_PID
 	startVvtControlPins();
 #endif /* EFI_VVT_PID */
-
-	calcFastAdcIndexes();
 }
 
 // Weak link a stub so that every board doesn't have to implement this function
@@ -303,12 +233,10 @@ void initHardwareNoConfig() {
 	initPinRepository();
 #endif
 
-#if EFI_GPIO_HARDWARE
 	/**
 	 * We need the LED_ERROR pin even before we read configuration
 	 */
 	initPrimaryPins();
-#endif // EFI_GPIO_HARDWARE
 
 #if EFI_PROD_CODE
 	// it's important to initialize this pretty early in the game before any scheduling usages
@@ -327,10 +255,6 @@ void initHardwareNoConfig() {
 	initTriggerCentral();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
-#if EFI_FILE_LOGGING
-	initEarlyMmcCard();
-#endif // EFI_FILE_LOGGING
-
 #if HAL_USE_PAL && EFI_PROD_CODE
 	// this should be initialized before detectBoardType()
 	efiExtiInit();
@@ -338,21 +262,13 @@ void initHardwareNoConfig() {
 
 	boardInitHardware();
 
-#if EFI_INTERNAL_ADC
+#if EFI_PROD_CODE
 	portInitAdc();
 #endif
 }
 
 void stopHardware() {
 	stopPedalPins();
-
-#if EFI_PROD_CODE && (BOARD_EXT_GPIOCHIPS > 0)
-	stopSmartCsPins();
-#endif /* (BOARD_EXT_GPIOCHIPS > 0) */
-
-#if EFI_LOGIC_ANALYZER
-	stopLogicAnalyzerPins();
-#endif /* EFI_LOGIC_ANALYZER */
 
 #if EFI_EMULATE_POSITION_SENSORS
 	stopTriggerEmulatorPins();
@@ -372,10 +288,6 @@ void startHardware() {
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	startPedalPins();
-
-#if EFI_CAN_SUPPORT
-	startCanPins();
-#endif /* EFI_CAN_SUPPORT */
 }
 
 void initHardware() {
@@ -419,8 +331,8 @@ void initHardware() {
 	initCan();
 #endif /* EFI_CAN_SUPPORT */
 
-#if EFI_PROD_CODE && EFI_SHAFT_POSITION_INPUT
-	turnOnTriggerInputPins();
+#if EFI_SHAFT_POSITION_INPUT
+	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
 #if EFI_MEMS

@@ -7,7 +7,7 @@ import static org.junit.Assert.assertEquals;
 
 public class LuaFormatterTest {
     @Test
-    public void test() throws Exception {
+    public void test() {
         String code = "function onCanRx(bus, id, dlc, data)\n" +
                 "  --print('got CAN id=' .. id .. ' dlc='  .. dlc)\n" +
                 "  id11=id%2048\n" +

@@ -8,6 +8,7 @@
 
 #include "pch.h"
 #include "proteus_meta.h"
+#include "malfunction_central.h"
 
 static const brain_pin_e injPins[] = {
 	PROTEUS_LS_1,
@@ -37,6 +38,11 @@ static const brain_pin_e ignPins[] = {
 	PROTEUS_IGN_10,
 	PROTEUS_IGN_11,
 	PROTEUS_IGN_12,
+};
+
+static const brain_pin_e pgPins[] = {
+	PROTEUS_5V_PG_1,
+	PROTEUS_5V_PG_2,
 };
 
 static void setInjectorPins() {
@@ -137,11 +143,8 @@ void setBoardConfigOverrides() {
 
 	engineConfiguration->canTxPin = Gpio::D1;
 	engineConfiguration->canRxPin = Gpio::D0;
-
-#if defined(STM32F4) || defined(STM32F7)
 	engineConfiguration->can2RxPin = Gpio::B12;
 	engineConfiguration->can2TxPin = Gpio::B13;
-#endif
 
 	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
 	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
@@ -203,4 +206,22 @@ int getBoardMetaOutputsCount() {
 
 Gpio* getBoardMetaOutputs() {
 	return PROTEUS_OUTPUTS;
+}
+
+void initBoardSensors() {
+	if(isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])){
+		efiSetPadMode("PG1", pgPins[0], PI_PULLUP);
+		efiSetPadMode("PG2", pgPins[1], PI_PULLUP);
+	}
+}
+
+void checkBoardPowerSupply() {
+	if(isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])){
+		engine->engineState.pgState = efiReadPin(pgPins[0]) && efiReadPin(pgPins[1]);
+		if(!engine->engineState.pgState){
+			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
+		} else {
+			removeError(ObdCode::CUSTOM_ERR_PG_STATE);
+		}
+	}
 }

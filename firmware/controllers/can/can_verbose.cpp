@@ -148,7 +148,7 @@ struct Fueling {
 
 static void populateFrame(Fueling& msg) {
 	msg.cylAirmass = engine->fuelComputer.sdAirMassInOneCylinder;
-	msg.estAirflow = engine->engineState.airflowEstimate;
+	msg.estAirflow = (float)engine->engineState.airflowEstimate;
 	msg.fuel_pulse = (float)engine->outputChannels.actualLastInjection;
 	msg.knockCount = engine->module<KnockController>()->getKnockCount();
 }
@@ -214,34 +214,49 @@ struct Egts {
 };
 
 static void populateFrame(Egts& msg) {
-	msg.egt[0] = Sensor::getOrZero(SensorType::EGT1) / 5;
-	msg.egt[1] = Sensor::getOrZero(SensorType::EGT2) / 5;
+	for (size_t i = 0; i < std::min(efi::size(msg.egt), efi::size(engine->outputChannels.egt)); i++) {
+		msg.egt[i] = engine->outputChannels.egt[i] / 5;
+	}
 }
 
 void sendCanVerbose() {
-	auto base = engineConfiguration->verboseCanBaseAddress;
-	auto isExt = engineConfiguration->rusefiVerbose29b;
-	CanBusIndex canChannel =
-		engineConfiguration->canBroadcastUseChannelTwo
-			? CanBusIndex::Bus1
-			: CanBusIndex::Bus0;
+    const auto base  = engineConfiguration->verboseCanBaseAddress;
+    const auto isExt = engineConfiguration->rusefiVerbose29b;
 
-	transmitStruct<Status>		(base + 0, isExt, canChannel);
-	transmitStruct<Speeds>		(base + 1, isExt, canChannel);
-	transmitStruct<PedalAndTps>	(base + 2, isExt, canChannel);
-	transmitStruct<Sensors1>	(base + 3, isExt, canChannel);
-	transmitStruct<Sensors2>	(base + 4, isExt, canChannel);
-	transmitStruct<Fueling>		(base + 5, isExt, canChannel);
-	transmitStruct<Fueling2>	(base + 6, isExt, canChannel);
-	transmitStruct<Fueling3>	(base + 7, isExt, canChannel);
+    auto sendOn = [&](CanBusIndex channel) {
+        #define TX(T, off) transmitStruct<T>(base + (off), isExt, channel)
 
-	if (engineConfiguration->canBroadcastCams) {
-		transmitStruct<Cams>	(base + 8, isExt, canChannel);
-	}
+        TX(Status,       0);
+        TX(Speeds,       1);
+        TX(PedalAndTps,  2);
+        TX(Sensors1,     3);
+        TX(Sensors2,     4);
+        TX(Fueling,      5);
+        TX(Fueling2,     6);
+        TX(Fueling3,     7);
 
-	if (engineConfiguration->canBroadcastEgt) {
-		transmitStruct<Egts>	(base + 9, isExt, canChannel);
-	}
+        if (engineConfiguration->canBroadcastCams) {
+            TX(Cams, 8);
+        }
+        if (engineConfiguration->canBroadcastEgt) {
+            TX(Egts, 9);
+        }
+
+        #undef TX
+    };
+
+    switch (engineConfiguration->canBroadcastUseChannelTwo) {
+		case canBroadcast_e::none: break;
+        case canBroadcast_e::first: sendOn(CanBusIndex::Bus0); break;
+        case canBroadcast_e::second: sendOn(CanBusIndex::Bus1); break;
+        case canBroadcast_e::both:
+            sendOn(CanBusIndex::Bus0);
+            sendOn(CanBusIndex::Bus1);
+            break;
+
+        default:
+            break;
+    }
 }
 
 #endif // EFI_CAN_SUPPORT

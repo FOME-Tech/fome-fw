@@ -18,9 +18,9 @@
  * because pin '0' would be used on two different ports
  */
 
-#ifdef STM32_I2C_I2C1_IRQ_PRIORITY
+#ifdef EFI_IRQ_EXTI_HANDOFF_PRIORITY
 void efiExtiInit() {
-	nvicEnableVector(I2C1_EV_IRQn, STM32_I2C_I2C1_IRQ_PRIORITY);
+	nvicEnableVector(I2C1_EV_IRQn, EFI_IRQ_EXTI_HANDOFF_PRIORITY);
 }
 
 struct ExtiChannel
@@ -192,6 +192,8 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 		}
 	}
 
+	assertInterruptPriority(__func__, EFI_IRQ_EXTI_HANDOFF_PRIORITY);
+
 	OSAL_IRQ_EPILOGUE();
 }
 
@@ -253,7 +255,7 @@ CH_FAST_IRQ_HANDLER(VectorE0) {
 
 // TODO: non-stm32 exti
 void efiExtiInit() {
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault, "exti not supported");
+	firmwareError("exti not supported");
 }
 
 void efiExtiEnablePin(const char *, brain_pin_e, uint32_t, ExtiCallback, void *) { }

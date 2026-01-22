@@ -20,7 +20,7 @@
 void efiSetPadUnused(brain_pin_e brainPin) {
 #if EFI_PROD_CODE
 	/* input with pull up, is it safe? */
-	iomode_t mode = PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP;
+	const iomode_t mode = PAL_STM32_MODE_INPUT | PAL_STM32_PUPDR_PULLUP;
 
 	if (brain_pin_is_onchip(brainPin)) {
 		ioportid_t port = getHwPort("unused", brainPin);
@@ -86,15 +86,70 @@ void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brain
 #include "main_trigger_callback.h"
 #endif /* EFI_ENGINE_CONTROL */
 
-bool efiReadPin(brain_pin_e pin) {
-	if (!isBrainPinValid(pin))
+class CanInputPin final {
+public:
+	bool get(float timeoutSec, bool defaultValue) const {
+		if (m_timeout.hasElapsedSec(timeoutSec)) {
+			return defaultValue;
+		}
+
+		return m_value;
+	}
+
+	void set(bool value) {
+		m_value = value;
+		m_timeout.reset();
+	}
+
+private:
+	// state
+	Timer m_timeout;
+	bool m_value;
+};
+
+static CanInputPin canVirtualInputs[CAN_VIRTUAL_INPUT_PINS_COUNT];
+
+void setCanVirtualInput(size_t idx, bool value) {
+	if (idx >= CAN_VIRTUAL_INPUT_PINS_COUNT) {
+		firmwareError("invalid setCanVirtualInput index %u", idx);
+		return;
+	}
+
+	canVirtualInputs[idx].set(value);
+}
+
+static bool readCanVirtualInput(size_t idx) {
+	if (idx >= CAN_VIRTUAL_INPUT_PINS_COUNT) {
+		firmwareError("invalid readCanVirtualInput index %u", idx);
 		return false;
-	if (brain_pin_is_onchip(pin))
+	}
+
+	const auto& inputConf = engineConfiguration->canVirtualInputs[idx];
+
+	return canVirtualInputs[idx].get(
+		inputConf.timeout,
+		inputConf.defaultValue != 0
+	);
+}
+
+bool efiReadPin(Gpio pin) {
+	if (!isBrainPinValid(pin)) {
+		return false;
+	}
+
+	if (brain_pin_is_onchip(pin)) {
 		return palReadPad(getHwPort("readPin", pin), getHwPin("readPin", pin));
+	}
+
 	#if (BOARD_EXT_GPIOCHIPS > 0)
-		else if (brain_pin_is_ext(pin))
+		if (brain_pin_is_ext(pin)) {
 			return (gpiochips_readPad(pin) > 0);
+		}
 	#endif
+
+	if (pin >= Gpio::CAN_INPUT_0 && pin <= Gpio::CAN_INPUT_7) {
+		return readCanVirtualInput(pin - Gpio::CAN_INPUT_0);
+	}
 
 	/* incorrect pin */
 	return false;
@@ -124,6 +179,10 @@ bool efiReadPin(brain_pin_e pin) {
 
 void setMockState(brain_pin_e pin, bool state) {
 	mockPinStates[static_cast<int>(pin)] = state;
+}
+
+void setCanVirtualInput(size_t idx, bool value) {
+	mockPinStates[static_cast<size_t>(Gpio::CAN_INPUT_0) + idx] = value;
 }
 
 #endif /* EFI_PROD_CODE */

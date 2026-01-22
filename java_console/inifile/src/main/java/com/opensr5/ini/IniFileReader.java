@@ -57,7 +57,7 @@ public class IniFileReader {
         if (sb.length() > 0)
             strings.add(sb.toString());
 
-        return strings.toArray(new String[strings.size()]);
+        return strings.toArray(new String[0]);
     }
 
     private static boolean isTokenSeparator(int c) {

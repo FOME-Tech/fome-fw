@@ -53,13 +53,6 @@
 #endif
 
 /**
- * @brief   Enables the CRC subsystem.
- */
-#if !defined(HAL_USE_CRC) || defined(__DOXYGEN__)
-#define HAL_USE_CRC                 FALSE
-#endif
-
-/**
  * @brief   Enables the USBH subsystem.
  */
 #if !defined(HAL_USE_USBH) || defined(__DOXYGEN__)
@@ -153,7 +146,7 @@
  * @note    Disabling this option saves both code and data space.
  */
 #if !defined(CRC_USE_MUTUAL_EXCLUSION) || defined(__DOXYGEN__)
-#define CRC_USE_MUTUAL_EXCLUSION    TRUE
+#define CRC_USE_MUTUAL_EXCLUSION    FALSE
 #endif
 
 

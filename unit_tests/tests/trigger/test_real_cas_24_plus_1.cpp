@@ -45,12 +45,17 @@ TEST(realCas24Plus1, spinningOnBench) {
 		}
 
 		bool hasFullSync = getTriggerCentral()->triggerState.hasSynchronizedPhase();
-		if (!gotFullSync && hasFullSync) {
-			gotFullSync = true;
+		if (hasFullSync) {
+			// Adjustment should be by 270 degrees
+			EXPECT_FLOAT_EQ(getTriggerCentral()->triggerState.m_phaseAdjustment, 270);
 
-			// Should get full sync on the first cam tooth
-			EXPECT_EQ(eventCount, 40);
-			EXPECT_NEAR(rpm, 915.08f, 0.1);
+			if (!gotFullSync) {
+				gotFullSync = true;
+
+				// Should get full sync on the first cam tooth
+				EXPECT_EQ(eventCount, 40);
+				EXPECT_NEAR(rpm, 915.08f, 0.1);
+			}
 		}
 
 		auto vvt = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);

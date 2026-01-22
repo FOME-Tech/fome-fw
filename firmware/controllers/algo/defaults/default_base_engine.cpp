@@ -23,8 +23,9 @@ void setDefaultBaseEngine() {
 	engineConfiguration->displacement = 2;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 
-    // todo: extract constant in instant_rpm_calculator.h?
-    engineConfiguration->instantRpmRange = 90;
+	engineConfiguration->instantRpmRange = 90;
+	engineConfiguration->cylContributionWindow = 90;
+	engineConfiguration->cylContributionPhase = 180;
 
 	engineConfiguration->compressionRatio = 9;
 
@@ -94,9 +95,6 @@ void setDefaultBaseEngine() {
 	engineConfiguration->etbMinimumPosition = 1;
 	engineConfiguration->etbMaximumPosition = 99;
 
-	engineConfiguration->tcuInputSpeedSensorTeeth = 1;
-	engineConfiguration->issFilterReciprocal = 2;
-
 	// Check engine light
 #if EFI_PROD_CODE
 	engineConfiguration->warningPeriod = 10;
@@ -108,6 +106,7 @@ void setDefaultBaseEngine() {
 
 	// Oil pressure protection
 	engineConfiguration->minimumOilPressureTimeout = 0.5f;
+	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;
 	setLinearCurve(config->minimumOilPressureBins, 0, 7000);
 }
 

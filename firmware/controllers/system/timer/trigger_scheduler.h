@@ -2,27 +2,22 @@
 
 class TriggerScheduler : public EngineModule {
 public:
-	void schedule(AngleBasedEvent* event, angle_t angle, action_s action);
+	void schedule(AngleBasedEvent* event, EngPhase angle, action_s action);
 
-	bool scheduleOrQueue(AngleBasedEvent *event,
-							efitick_t edgeTimestamp,
-							angle_t angle,
+	bool scheduleOrQueue(AngleBasedEvent* event,
+							EngPhase angle,
 							action_s action,
-							float currentPhase, float nextPhase);
+							const EnginePhaseInfo& phase);
 
-	void onEnginePhase(float /*rpm*/,
-							efitick_t /*edgeTimestamp*/,
-							angle_t /*currentPhase*/,
-							angle_t /*nextPhase*/)
-							override;
+	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
 
 	// For unit tests
-	AngleBasedEvent * getElementAtIndexForUnitTest(int index);
+	AngleBasedEvent* getElementAtIndexForUnitTest(int index);
 
 private:
 	void schedule(AngleBasedEvent* event, action_s action);
 
-	bool assertNotInList(AngleBasedEvent *head, AngleBasedEvent *element);
+	bool assertNotInList(AngleBasedEvent* head, AngleBasedEvent* element);
 
 	/**
 	 * That's the linked list of pending events scheduled in relation to trigger
@@ -30,5 +25,5 @@ private:
 	 * trigger index We can make it an array of lists per trigger index, but that would take
 	 * some RAM and probably not needed yet.
 	 */
-	AngleBasedEvent *m_angleBasedEventsHead = nullptr;
+	AngleBasedEvent* m_angleBasedEventsHead = nullptr;
 };

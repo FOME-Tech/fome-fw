@@ -102,7 +102,7 @@ public class LiveDataProcessor {
                 cStructs.writeCStructs(parseState, cHeaderDestination);
 
                 if (javaName != null) {
-                    JavaFieldsWriter javaWriter = new JavaFieldsWriter("../java_console/models/src/main/java/com/rusefi/config/generated/" + javaName, outputChannelWriter.getSize());
+                    JavaFieldsWriter javaWriter = new JavaFieldsWriter("../java_console/generated/src/main/java/com/rusefi/config/generated/" + javaName, outputChannelWriter.getSize());
                     javaWriter.writeDefinitions(parseState.getDefinitions());
                     javaWriter.writeFields(parseState);
                     javaWriter.finish();
@@ -198,6 +198,6 @@ public class LiveDataProcessor {
 
         String outputPath = "../java_console/io/src/main/java/com/rusefi/enums";
         InvokeReader request = new InvokeReader(outputPath, Collections.singletonList(enumContentFileName));
-        EnumToString.handleRequest(request);
+        new EnumToString().handleRequest(request);
     }
 }

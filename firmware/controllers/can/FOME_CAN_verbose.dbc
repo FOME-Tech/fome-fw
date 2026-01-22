@@ -36,16 +36,6 @@ BS_:
 BU_:
 
 
-BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
- SG_ AFR : 7|16@0+ (0.001,0) [0|0] "AFR" Vector__XXX
- SG_ VVTPos : 24|16@1- (0.02,0) [0|0] "deg" Vector__XXX
- SG_ NewSignal_0010 : 24|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ NewSignal_0009 : 16|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ NewSignal_0008 : 8|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ NewSignal_0015 : 8|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ NewSignal_0016 : 16|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ NewSignal_0024 : 0|8@1+ (1,0) [0|0] "" Vector__XXX
-
 BO_ 512 BASE0: 8 Vector__XXX
  SG_ WarningCounter : 0|16@1+ (1,0) [0|0] "" Vector__XXX
  SG_ LastError : 16|16@1+ (1,0) [0|0] "" Vector__XXX
@@ -98,8 +88,8 @@ BO_ 517 BASE5: 8 Vector__XXX
 BO_ 518 BASE6: 8 Vector__XXX
  SG_ FuelUsed : 0|16@1+ (1,0) [0|0] "g" Vector__XXX
  SG_ FuelFlow : 16|16@1+ (0.005,0) [0|327] "g/s" Vector__XXX
- SG_ FuelTrim1 : 32|16@1+ (0.01,0) [-50|50] "%" Vector__XXX
- SG_ FuelTrim2 : 48|16@1+ (0.01,0) [-50|50] "%" Vector__XXX
+ SG_ FuelTrim1 : 32|16@1- (0.01,0) [-50|50] "%" Vector__XXX
+ SG_ FuelTrim2 : 48|16@1- (0.01,0) [-50|50] "%" Vector__XXX
 
 BO_ 519 BASE7: 8 Vector__XXX
  SG_ Lam1 : 0|16@1+ (0.0001,0) [0|2] "lambda" Vector__XXX
@@ -128,10 +118,6 @@ BO_ 521 BASE9: 8 Vector__XXX
  SG_ Egt8 : 56|8@1+ (5,0) [0|1250] "deg C" Vector__XXX
 
 
-
-CM_ SG_ 3221225472 AFR "Current AFR Reading
-";
-CM_ SG_ 3221225472 VVTPos "Current VVT Position Reading";
 CM_ SG_ 512 WarningCounter "Total warnings since ECU start time";
 CM_ SG_ 512 LastError "Last error code";
 CM_ SG_ 512 RevLimAct "RPM Limiter Active";
@@ -144,14 +130,12 @@ CM_ SG_ 512 CurrentGear "Current detected gear. 0 means neutral, 1 means first, 
 CM_ SG_ 512 DistanceTraveled "Distance traveled since reset";
 CM_ SG_ 513 RPM "Current RPM";
 CM_ SG_ 513 IgnitionTiming "Current Ignition Timing. Positive is advance.";
-CM_ SG_ 513 InjDuty "Injection Duty
-";
+CM_ SG_ 513 InjDuty "Injection Duty";
 CM_ SG_ 513 IgnDuty "Ignition Duty";
 CM_ SG_ 513 VehicleSpeed "Current Vehicle Speed";
 CM_ SG_ 513 FlexPct "Ethanol percent";
 CM_ BO_ 514 "Throttle positions";
-CM_ SG_ 514 PPS "Current Accelerator Pedal Position
-";
+CM_ SG_ 514 PPS "Current Accelerator Pedal Position";
 CM_ SG_ 514 TPS1 "Throttle Body 1 Position";
 CM_ SG_ 514 TPS2 "Throttle Body 2 Position";
 CM_ SG_ 514 Wastegate "Wastegate actuator position";
@@ -165,8 +149,7 @@ CM_ SG_ 515 FuelLevel "Current Fuel Level";
 CM_ SG_ 516 OilPress "Current Oil Pressure Reading";
 CM_ SG_ 516 BattVolt "Current Battery Voltage Reading";
 CM_ SG_ 517 CylAM "Current Estimated Cylinder Airmass";
-CM_ SG_ 517 EstMAF "Current Estimated Total Airflow
-";
+CM_ SG_ 517 EstMAF "Current Estimated Total Airflow";
 CM_ SG_ 517 InjPW "Current Commanded Injector Pulsewidth";
 CM_ SG_ 517 KnockCt "Knock detection counter";
 CM_ SG_ 518 FuelUsed "Total fuel consumed";

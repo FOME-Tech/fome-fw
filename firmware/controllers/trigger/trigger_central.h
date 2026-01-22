@@ -16,6 +16,7 @@
 #include "pin_repository.h"
 #include "local_version_holder.h"
 #include "cyclic_buffer.h"
+#include "engine_phase_angle.h"
 
 #define MAP_CAM_BUFFER 64
 
@@ -26,8 +27,6 @@
 
 class Engine;
 typedef void (*ShaftPositionListener)(TriggerEvent signal, uint32_t index, efitick_t edgeTimestamp);
-
-#define HAVE_CAM_INPUT() (isBrainPinValid(engineConfiguration->camInputs[0]))
 
 /**
  * Maybe merge TriggerCentral and TriggerState classes into one class?
@@ -40,7 +39,6 @@ public:
 	angle_t syncAndReport(int divider, int remainder);
 	void handleShaftSignal(TriggerEvent signal, efitick_t timestamp);
 	void resetCounters();
-	void validateCamVvtCounters();
 	void updateWaveform();
 
 	InstantRpmCalculator instantRpm;
@@ -90,7 +88,6 @@ public:
 
 	angle_t mapCamPrevToothAngle = -1;
 	float mapCamPrevCycleValue = 0;
-	int prevChangeAtCycle = 0;
 
 	/**
 	 * value of 'triggerShape.getLength()'
@@ -110,7 +107,7 @@ public:
 
 	bool isTriggerDecoderError();
 
-	expected<float> getCurrentEnginePhase(efitick_t nowNt) const;
+	expected<TrgPhase> getCurrentEnginePhase(efitick_t nowNt) const;
 
 	float getSecondsSinceTriggerEvent(efitick_t nowNt) const {
 		return m_lastEventTimer.getElapsedSeconds(nowNt);
@@ -132,9 +129,6 @@ public:
 	bool engineMovedRecently() const {
 		return engineMovedRecently(getTimeNowNt());
 	}
-
-	int vvtEventRiseCounter[CAM_INPUTS_COUNT];
-	int vvtEventFallCounter[CAM_INPUTS_COUNT];
 
 	expected<angle_t> getVVTPosition(uint8_t bankIndex, uint8_t camIndex);
 
@@ -180,27 +174,34 @@ public:
 	// Keep track of the last time we got a valid trigger event
 	Timer m_lastEventTimer;
 
+	// Number of teeth skipped during startup (see triggerSkipPulses)
+	size_t m_skipTeethCount = 0;
+
 	/**
 	 * this is based on engineSnifferRpmThreshold settings and current RPM
 	 */
 	bool isEngineSnifferEnabled = false;
 
+	// Convert from trigger phase space to engine phase space
+	EngPhase toEngPhase(const TrgPhase& trgPhase) const;
+	TrgPhase toTrgPhase(const EngPhase& engPhase) const;
+
 private:
-	void decodeMapCam(efitick_t nowNt, float currentPhase);
+	void decodeMapCam(efitick_t nowNt, EngPhase currentPhase);
 
 	bool isToothExpectedNow(efitick_t timestamp);
 
 	// Time since the last tooth
 	Timer m_lastToothTimer;
 	// Phase of the last tooth relative to the sync point
-	float m_lastToothPhaseFromSyncPoint;
+	TrgPhase m_lastToothPhaseFromSyncPoint;
 
 	// At what engine phase do we expect the next tooth to arrive?
 	// Used for checking whether your trigger pattern is correct.
-	expected<float> expectedNextPhase = unexpected;
+	expected<TrgPhase> expectedNextPhase = unexpected;
 };
 
-void triggerInfo(void);
+void triggerInfo();
 void hwHandleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp);
 void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp);
 void hwHandleVvtCamSignal(bool isRising, efitick_t timestamp, int index);
@@ -208,8 +209,6 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t timestamp, int index);
 void validateTriggerInputs();
 
 void initTriggerCentral();
-
-int isSignalDecoderError(void);
 
 void onConfigurationChangeTriggerCallback();
 

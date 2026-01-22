@@ -2,7 +2,11 @@
 # See fome-fw/firmware/DEVELOPER.md
 ##############################################################################
 
-CHIBIOS = ChibiOS
+# Define project name here
+PROJECT = fome
+PROJECT_DIR = .
+
+CHIBIOS = $(PROJECT_DIR)/ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
 RULESFILE = $(RULESPATH)/rules.mk
 
@@ -10,11 +14,7 @@ ifneq ("$(wildcard $(../.git))","")
 $(error ../.git not found. We expect source code to be cloned not downloaded as zip file.")
 endif
 
-include rusefi_rules.mk
-
-# Define project name here
-PROJECT = fome
-PROJECT_DIR = .
+include $(PROJECT_DIR)/rusefi_rules.mk
 GENERATED_DIR = $(PROJECT_DIR)/generated
 
 # Configure precompiled header
@@ -22,15 +22,14 @@ PCH_DIR = $(PROJECT_DIR)/pch
 PCHSRC = $(PCH_DIR)/pch.h
 PCHSUB = firmware
 
-# Imported source files and paths
-CHIBIOS_CONTRIB = ChibiOS-Contrib
+CHIBIOS_CONTRIB= $(PROJECT_DIR)/ChibiOS-Contrib
 
 # Configure libfirmware Paths/Includes
 RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 
-include rusefi.mk
+include $(PROJECT_DIR)/rusefi.mk
 
 # by default EXTRA_PARAMS is empty and we create 'debug' version of the firmware with additional assertions and statistics
 # for 'release' options see 'clean_compile_two_versions.bat' file
@@ -172,10 +171,6 @@ endif
 include $(CHIBIOS)/os/hal/lib/streams/streams.mk
 include $(CHIBIOS)/os/various/cpp_wrappers/chcpp.mk
 
-ifeq ($(LWIP),yes)
-  include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
-endif
-
 include $(CHIBIOS)/os/hal/lib/complex/mfs/hal_mfs.mk
 
 ifeq ($(USE_FATFS),yes)
@@ -190,7 +185,12 @@ endif
 
 ifeq ($(USE_WIFI),yes)
   include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
-  DDEFS += -DEFI_WIFI=1
+  DDEFS += -DEFI_WIFI=1 # -DETH_MODE=1
+  # LWIP = yes
+endif
+
+ifeq ($(LWIP),yes)
+  include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
 endif
 
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
@@ -201,6 +201,7 @@ ifeq ($(USE_OPENBLT),yes)
   # Reserve start of flash for OpenBLT
   USE_OPT += -Wl,--defsym=HAS_BOOTLOADER=1
   DDEFS += -DEFI_USE_OPENBLT=TRUE
+  ALLCPPSRC += $(PROJECT_DIR)/controllers/system/bootloader_updater.cpp
 endif
 
 $(info PROJECT_BOARD: $(PROJECT_BOARD))
@@ -267,7 +268,7 @@ ASMXSRC = $(ALLXASMSRC) \
   $(PROJECT_DIR)/hw_layer/main_hardfault_asm.S
 
 #
-# WARNING! order of variables is important here - for instance cypress own folders should go before default folders
+# WARNING! order of variables is important here - for instance hw layer ports own folders should go before default folders
 #
 INCDIR = \
   $(PCH_DIR) \
@@ -279,7 +280,7 @@ INCDIR = \
   $(RUSEFI_LIB_INC) \
   $(CONFDIR) \
   $(GENERATED_DIR) \
-  ext/FatFS \
+  $(PROJECT_DIR)/ext/FatFS \
   $(PROJECT_DIR)/hw_layer/mass_storage \
   $(HW_INC) \
   development/hw_layer \

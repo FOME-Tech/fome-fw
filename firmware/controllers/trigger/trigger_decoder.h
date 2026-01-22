@@ -53,6 +53,9 @@ public:
 	{
 	}
 
+	vvt_mode_e getVvtMode() const;
+	bool needsTriggerDecoder() const;
+
 protected:
 	bool isVerboseTriggerSynchDetails() const override;
 	trigger_config_s getType() const override;
@@ -90,10 +93,6 @@ public:
 	 */
 	int getCurrentIndex() const;
 	int getCrankSynchronizationCounter() const;
-	/**
-	 * this is important for crank-based virtual trigger and VVT magic
-	 */
-	void incrementShaftSynchronizationCounter();
 
 #if EFI_UNIT_TEST
 	/**
@@ -146,7 +145,7 @@ public:
 
 	virtual void resetState();
 	void setShaftSynchronized(bool value);
-	bool getShaftSynchronized();
+	bool getShaftSynchronized() const;
 
 	/**
 	 * this is start of real trigger cycle
@@ -177,7 +176,7 @@ protected:
 
 private:
 	void resetCurrentCycleState();
-	bool isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) const;
+	bool isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType);
 
 	bool validateEventCounters(const TriggerWaveform& triggerShape) const;
 
@@ -189,9 +188,6 @@ private:
 	Timer m_timeSinceDecodeError;
 };
 
-/**
- * the reason for sub-class is simply to save RAM but not having statistics in the trigger initialization instance
- */
 class PrimaryTriggerDecoder : public TriggerDecoderBase, public trigger_state_primary_s {
 public:
 	PrimaryTriggerDecoder(const char* name);
@@ -200,6 +196,7 @@ public:
 	void resetHasFullSync() {
 		// If this trigger doesn't need disambiguation, we already have phase sync
 		m_hasSynchronizedPhase = !m_needsDisambiguation;
+		m_phaseAdjustment = 0;
 	}
 
 	angle_t syncEnginePhase(int divider, int remainder, angle_t engineCycle);

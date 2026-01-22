@@ -11,7 +11,6 @@
 
 #if EFI_CAN_SUPPORT
 #include "can.h"
-#include "dynoview.h"
 #include "stored_value_sensor.h"
 
 static bool isInit = false;
@@ -146,10 +145,6 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 
 	if (auto speed = tryDecodeVss(type, frame); speed && (wssToVss == WssToVssMode::None)) {
 		canSpeed.setValidValue(speed.Value * engineConfiguration->canVssScaling, nowNt);
-
-#if EFI_DYNO_VIEW
-		updateDynoViewCan();
-#endif
 	}
 
 	if (auto wss = tryDecodeWss(type, frame)) {

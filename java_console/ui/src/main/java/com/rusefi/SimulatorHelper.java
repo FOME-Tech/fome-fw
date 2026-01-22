@@ -43,7 +43,7 @@ public class SimulatorHelper {
 
         boolean isPortOpened = false;
         for (int i = 0; i < 60 && !isPortOpened; i++) {
-            isPortOpened = TcpConnector.isTcpPortOpened();
+            isPortOpened = TcpConnector.isSimulatorActive();
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -52,9 +52,9 @@ public class SimulatorHelper {
         }
         if (!isPortOpened)
             throw new IllegalStateException("Port not opened?");
-        FileLog.MAIN.logLine("Port " + TcpConnector.DEFAULT_PORT + " is alive");
+        FileLog.MAIN.logLine("Port " + TcpConnector.DEFAULT_SIMULATOR_PORT + " is alive");
 
-        new ConsoleUI("" + TcpConnector.DEFAULT_PORT);
+        new ConsoleUI("" + TcpConnector.DEFAULT_SIMULATOR_PORT);
     }
 
     public static JComponent createSimulatorComponent(final StartupFrame portSelector) {
@@ -65,8 +65,8 @@ public class SimulatorHelper {
             return new JLabel(e.getMessage());
         }
 
-        if (TcpConnector.isTcpPortOpened()) {
-            return new JLabel("Port " + TcpConnector.DEFAULT_PORT + " already busy. Simulator running?");
+        if (TcpConnector.isSimulatorActive()) {
+            return new JLabel("Port " + TcpConnector.DEFAULT_SIMULATOR_PORT + " already busy. Simulator running?");
         }
 
         JButton simulatorButton = new JButton("Start Virtual Simulator");
@@ -79,7 +79,7 @@ public class SimulatorHelper {
         });
         setToolTip(simulatorButton, "Connect to totally virtual simulator",
                 "You do not need any hardware to try rusEfi",
-                "This works via localhost: " + TcpConnector.DEFAULT_PORT + " TCP/IP port");
+                "This works via localhost: " + TcpConnector.DEFAULT_SIMULATOR_PORT + " TCP/IP port");
 
         return simulatorButton;
     }

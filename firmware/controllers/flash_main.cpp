@@ -16,6 +16,7 @@
 #include "eficonsole.h"
 
 #include "flash_int.h"
+#include "crc_accelerator.h"
 
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
@@ -73,7 +74,7 @@ const MFSConfig mfsd_nor_config = {
  */
 
 static uint32_t flashStateCrc(const persistent_config_container_s& state) {
-	return crc32(&state.persistentConfiguration, sizeof(persistent_config_s));
+	return singleCrc(&state.persistentConfiguration, sizeof(persistent_config_s));
 }
 
 #if EFI_FLASH_WRITE_THREAD
@@ -139,13 +140,13 @@ int eraseAndFlashCopy(flashaddr_t storageAddress, const TStorage& data) {
 
 	auto err = intFlashErase(storageAddress, sizeof(TStorage));
 	if (FLASH_RETURN_SUCCESS != err) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Failed to erase flash at 0x%08x: %d", storageAddress, err);
+		firmwareError("Failed to erase flash at 0x%08x: %d", storageAddress, err);
 		return err;
 	}
 
 	err = intFlashWrite(storageAddress, reinterpret_cast<const char*>(&data), sizeof(TStorage));
 	if (FLASH_RETURN_SUCCESS != err) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Failed to write flash at 0x%08x: %d", storageAddress, err);
+		firmwareError("Failed to write flash at 0x%08x: %d", storageAddress, err);
 		return err;
 	}
 

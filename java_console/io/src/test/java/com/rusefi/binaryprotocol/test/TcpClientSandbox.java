@@ -7,15 +7,12 @@ import com.rusefi.io.tcp.TcpIoStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import static com.rusefi.io.tcp.TcpConnector.DEFAULT_PORT;
+import static com.rusefi.io.tcp.TcpConnector.DEFAULT_SIMULATOR_PORT;
 import static com.rusefi.io.tcp.TcpConnector.LOCALHOST;
 
-/**
- * @see TcpServerSandbox
- */
 public class TcpClientSandbox {
     public static void main(String[] args) throws IOException {
-        Socket s = new Socket(LOCALHOST, DEFAULT_PORT);
+        Socket s = new Socket(LOCALHOST, DEFAULT_SIMULATOR_PORT);
         TcpIoStream tsStream = new TcpIoStream("sandbox", s);
 
         LinkManager linkManager = new LinkManager();

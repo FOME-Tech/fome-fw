@@ -75,12 +75,12 @@
 #include "trigger_scope.h"
 #include "electronic_throttle.h"
 #include "live_data.h"
+#include "crc_accelerator.h"
 
 #include <string.h>
 #include "bench_test.h"
 #include "gitversion.h"
 #include "status_loop.h"
-#include "mmc_card.h"
 
 #include "signature.h"
 
@@ -105,12 +105,6 @@ static void printErrorCounters() {
 
 #endif // EFI_TUNER_STUDIO
 
-void tunerStudioDebug(TsChannelBase* tsChannel, const char *msg) {
-#if EFI_TUNER_STUDIO_VERBOSE
-	efiPrintf("%s: %s", tsChannel->getName(), msg);
-#endif /* EFI_TUNER_STUDIO_VERBOSE */
-}
-
 uint8_t* getWorkingPageAddr() {
 	return (uint8_t*)engineConfiguration;
 }
@@ -133,17 +127,9 @@ bool validateOffsetCount(size_t offset, size_t count, TsChannelBase* tsChannel);
 
 extern bool rebootForPresetPending;
 
-/**
- * This command is needed to make the whole transfer a bit faster
- * @note See also handleWriteValueCommand
- */
 void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count,
 		void *content) {
 	tsState.writeChunkCommandCounter++;
-	if (isLockedFromUser()) {
-		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
-		return;
-	}
 
 	efiPrintf("TS -> Write chunk offset %d count %d", offset, count);
 
@@ -174,36 +160,11 @@ void TunerStudio::handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, ui
 
 	const uint8_t* start = getWorkingPageAddr() + offset;
 
-	uint32_t crc = crc32(start, count);
+	uint32_t crc = singleCrc(start, count);
 	efiPrintf("TS <- Get CRC offset %d count %d result %08x", offset, count, (unsigned int)crc);
 
 	crc = SWAP_UINT32(crc);
 	tsChannel->copyAndWriteSmallCrcPacket((const uint8_t *) &crc, sizeof(crc));
-}
-
-/**
- * 'Write' command receives a single value at a given offset
- * @note Writing values one by one is pretty slow
- */
-void TunerStudio::handleWriteValueCommand(TsChannelBase* tsChannel, uint16_t offset, uint8_t value) {
-	tsState.writeValueCommandCounter++;
-	if (isLockedFromUser()) {
-		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
-		return;
-	}
-
-	efiPrintf("TS -> Write value offset %d value %d", offset, value);
-
-	if (validateOffsetCount(offset, 1, tsChannel)) {
-		return;
-	}
-
-	// Skip the write if a preset was just loaded - we don't want to overwrite it
-	if (!rebootForPresetPending) {
-		getWorkingPageAddr()[offset] = value;
-	}
-	// Force any board configuration options that humans shouldn't be able to change
-	setBoardConfigOverrides();
 }
 
 void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) {
@@ -220,20 +181,13 @@ void TunerStudio::handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offse
 		return;
 	}
 
-	uint8_t* addr;
-	if (isLockedFromUser()) {
-		// to have rusEFI console happy just send all zeros within a valid packet
-		addr = (uint8_t*)&tsChannel->scratchBuffer;
-		memset(addr, 0, count);
-	} else {
-		addr = getWorkingPageAddr() + offset;
-	}
+	uint8_t* addr = getWorkingPageAddr() + offset;
 	tsChannel->writeCrcPacketLocked(addr, count);
 }
 
 #endif // EFI_TUNER_STUDIO
 
-void requestBurn(void) {
+void requestBurn() {
 #if !EFI_UNIT_TEST
 	onBurnRequest();
 
@@ -267,7 +221,7 @@ static void handleBurnCommand(TsChannelBase* tsChannel) {
 
 static bool isKnownCommand(char command) {
 	return command == TS_HELLO_COMMAND || command == TS_READ_COMMAND || command == TS_OUTPUT_COMMAND
-			|| command == TS_BURN_COMMAND || command == TS_SINGLE_WRITE_COMMAND
+			|| command == TS_BURN_COMMAND
 			|| command == TS_CHUNK_WRITE_COMMAND || command == TS_EXECUTE
 			|| command == TS_IO_TEST_COMMAND
 			|| command == TS_SET_LOGGER_SWITCH
@@ -326,8 +280,6 @@ bool TunerStudio::handlePlainCommand(TsChannelBase* tsChannel, uint8_t command) 
 		 * If you are able to just make your firmware ignore the command that would work.
 		 * Currently on some firmware versions the F command is not used and is just ignored by the firmware as a unknown command."
 		 */
-
-		tunerStudioDebug(tsChannel, "not ignoring F");
 		tsChannel->write((const uint8_t *)TS_PROTOCOL, strlen(TS_PROTOCOL));
 		tsChannel->flush();
 		return true;
@@ -444,7 +396,7 @@ static int tsProcessOne(TsChannelBase* tsChannel) {
 
 	expectedCrc = SWAP_UINT32(expectedCrc);
 
-	uint32_t actualCrc = crc32(tsChannel->scratchBuffer, incomingPacketSize);
+	uint32_t actualCrc = singleCrc(tsChannel->scratchBuffer, incomingPacketSize);
 	if (actualCrc != expectedCrc) {
 		/* send error only if previously we were in sync */
 		if (tsChannel->in_sync) {
@@ -491,7 +443,7 @@ void TunerstudioThread::ThreadTask() {
 tunerstudio_counters_s tsState;
 
 void tunerStudioError(TsChannelBase* tsChannel, const char *msg) {
-	tunerStudioDebug(tsChannel, msg);
+	efiPrintf("%s: %s", tsChannel->getName(), msg);
 	printErrorCounters();
 	tsState.errorCounter++;
 }
@@ -576,12 +528,6 @@ int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int i
 		break;
 	case TS_CHUNK_WRITE_COMMAND:
 		handleWriteChunkCommand(tsChannel, offset, count, data + sizeof(TunerStudioWriteChunkRequest));
-		break;
-	case TS_SINGLE_WRITE_COMMAND:
-		{
-			uint8_t value = data[4];
-			handleWriteValueCommand(tsChannel, offset, value);
-		}
 		break;
 	case TS_CRC_CHECK_COMMAND:
 		handleCrc32Check(tsChannel, offset, count);
@@ -695,7 +641,7 @@ static char tsErrorBuff[80];
 
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
 
-void startTunerStudioConnectivity(void) {
+void startTunerStudioConnectivity() {
 	// Assert tune & output channel struct sizes
 	static_assert(sizeof(persistent_config_s) == TOTAL_CONFIG_SIZE, "TS datapage size mismatch");
 // useful trick if you need to know how far off is the static_assert

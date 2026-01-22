@@ -11,23 +11,36 @@
 # todo: automatically execute that command same as we automatically fetch submodules?
 #
 
+# Define project name here
+ifeq ($(OS),Windows_NT)
+  PROJECT = fome_simulator.exe
+else
+  PROJECT = fome_simulator
+endif
+PROJECT_DIR = ../firmware
+PROJECT_CPU=simulator
 
-
-CHIBIOS = ../firmware/ChibiOS
-CHIBIOS_CONTRIB= ../firmware/ChibiOS-Contrib
+CHIBIOS = $(PROJECT_DIR)/ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/SIMIA32/compilers/GCC
 RULESFILE = $(RULESPATH)/rules.mk
 
-PROJECT_CPU=simulator
-GENERATED_DIR = $(PROJECT_DIR)/generated
+include $(PROJECT_DIR)/rusefi_rules.mk
 
-include ../firmware/rusefi.mk
-include ../firmware/rusefi_rules.mk
+GENERATED_DIR = $(PROJECT_DIR)/generated
 
 # Configure precompiled header
 PCH_DIR = $(PROJECT_DIR)/pch
 PCHSRC = $(PCH_DIR)/pch.h
 PCHSUB = simulator
+
+CHIBIOS_CONTRIB= $(PROJECT_DIR)/ChibiOS-Contrib
+
+# Configure libfirmware Paths/Includes
+RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
+include $(RUSEFI_LIB)/util/util.mk
+include $(RUSEFI_LIB)/pt2001/pt2001.mk
+
+include $(PROJECT_DIR)/rusefi.mk
 
 # used by USE_SMART_BUILD
 CONFDIR = .
@@ -54,10 +67,9 @@ ifeq ($(USE_OPT),)
 endif
 
 # See explanation in main firmware Makefile for these three defines
-USE_OPT += $(RUSEFI_OPT) -DEFI_UNIT_TEST=0 -DEFI_PROD_CODE=0 -DEFI_SIMULATOR=1
+USE_OPT += $(RUSEFI_OPT) -DEFI_UNIT_TEST=0 -DEFI_PROD_CODE=0 -DEFI_SIMULATOR=1 -DHW_HELLEN_SKIP_BOARD_TYPE
 
-# define hardwares, but we aren't any of them
-USE_OPT += -DHW_MICRO_RUSEFI=0 -DHW_PROTEUS=0 -DHW_FRANKENSO=0 -DHW_HELLEN=0
+NO_MAP_AVERAGING = yes
 
 # Enable address sanitizer, but not on Windows since x86_64-w64-mingw32-g++ doesn't support it.
 ifeq ($(SANITIZE),yes)
@@ -118,22 +130,16 @@ endif
 # Project, sources and paths
 #
 
-# Define project name here
-ifeq ($(OS),Windows_NT)
-  PROJECT = fome_simulator.exe
-else
-  PROJECT = fome_simulator
-endif
-PROJECT_DIR = ../firmware
 
+BOARDINC = $(BOARD_DIR)
+include $(BOARD_DIR)/board.mk
+ifeq ($(SHORT_BOARD_NAME),)
+$(error SHORT_BOARD_NAME not set, something wrong with your board.mk file)
+endif
 DDEFS += -DSHORT_BOARD_NAME=$(SHORT_BOARD_NAME)
 
-# Imported source files and paths
 
-# Configure libfirmware Paths/Includes
-RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
-include $(RUSEFI_LIB)/util/util.mk
-include $(RUSEFI_LIB)/pt2001/pt2001.mk
+# Imported source files and paths
 
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
@@ -160,6 +166,12 @@ include $(PROJECT_DIR)/console/console.mk
 include $(PROJECT_DIR)/common.mk
 include $(PROJECT_DIR)/controllers/modules/modules.mk
 
+$(info PROJECT_BOARD: $(PROJECT_BOARD))
+$(info BOARD_DIR:     $(BOARD_DIR))
+$(info PROJECT_CPU:   $(PROJECT_CPU))
+$(info SHORT_BOARD_NAME: $(SHORT_BOARD_NAME))
+$(info CONFDIR:       $(CONFDIR))
+$(info MODULES_INC:   $(MODULES_INC))
 
 # C sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
@@ -191,6 +203,7 @@ ASMSRC = $(PORTASM)
 
 INCDIR = . \
   $(PCH_DIR) \
+  $(BOARDINC) \
   $(ALLINC) \
   $(MODULES_INC) \
   $(CHIBIOS)/os/various/cpp_wrappers \
@@ -259,8 +272,6 @@ CPPWARN = -Wall -Wextra -Wundef
 
 # List all user C define here, like -D_DEBUG=1
 UDEFS = -DSIMULATOR
-DDEFS += -DFIRMWARE_ID=\"simulator\"
-
 
 # Define ASM defines here
 UADEFS =

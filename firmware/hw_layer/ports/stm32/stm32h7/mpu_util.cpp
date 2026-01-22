@@ -14,7 +14,7 @@ bool allowFlashWhileRunning() {
 	return true;
 }
 
-size_t flashSectorSize(flashsector_t sector) {
+size_t flashSectorSize(flashsector_t) {
 	// All sectors on H7 are 128k
 	return 128 * 1024;
 }

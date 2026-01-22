@@ -19,12 +19,14 @@
 static OutputPin muxControl;
 #endif // ADC_MUX_PIN
 
+#if EFI_USE_FAST_ADC
 static void fast_adc_timer_callback(GPTDriver*);
 static const GPTConfig fast_adc_timer_config = {
 	GPT_FREQ_FAST,
 	fast_adc_timer_callback,
 	0, 0
 };
+#endif
 
 void portInitAdc() {
 	// Init slow ADC
@@ -110,7 +112,7 @@ float getMcuTemperature() {
 		sum += samples[i];
 	}
 
-	float volts = (float)sum / (4096 * oversample);
+	float volts = (float)sum / (4095 * oversample);
 	volts *= engineConfiguration->adcVcc;
 
 	volts -= 0.760f; // Subtract the reference voltage at 25 deg C
@@ -121,7 +123,7 @@ float getMcuTemperature() {
 	if (degrees > 150.0f || degrees < -50.0f) {
 /*
  * we have a sporadic issue with this check todo https://github.com/rusefi/rusefi/issues/2552
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Invalid CPU temperature measured %f", degrees);
+		firmwareError("Invalid CPU temperature measured %f", degrees);
  */
 	}
 
@@ -228,6 +230,8 @@ static void adc_callback_fast(ADCDriver *adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onFastAdcComplete(adcp->samples);
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 ADCConversionGroup adcgrpcfgFast = {
@@ -270,9 +274,13 @@ static size_t fastAdcChannelCount = 0;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
-FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
+FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	if (!isAdcChannelValid(channel)) {
 		return invalidToken;
+	}
+
+	if (fastAdcChannelCount >= ADC_MAX_CHANNELS_COUNT) {
+		firmwareError("too many fast ADC channels, attempted channel was %s", msg);
 	}
 
 	// hwChannel = which external pin are we using
@@ -301,6 +309,11 @@ adcsample_t getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
+	if (token >= efi::size(fastAdcSampleBuf)) {
+		firmwareError("bad ADC token: %zu", token);
+		return 0;
+	}
+
 	return fastAdcSampleBuf[token];
 }
 
@@ -315,13 +328,15 @@ static void fast_adc_timer_callback(GPTDriver*) {
 		return;
 	}
 
-	if (adcgrpcfgFast.num_channels == 0) {
+	if (adcgrpcfgFast.num_channels == 0 || adcgrpcfgFast.num_channels >= ADC_MAX_CHANNELS_COUNT) {
 		// No channels configured (yet), don't attempt to sample
 		// with an invalid configuration
 		return;
 	}
 
 	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdcSampleBuf, ADC_BUF_DEPTH_FAST);
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 #endif // EFI_USE_FAST_ADC
@@ -333,6 +348,8 @@ static void knockCompletionCallback(ADCDriver* adcp) {
 	if (adcp->state == ADC_COMPLETE) {
 		onKnockSamplingComplete();
 	}
+
+	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
 static void knockErrorCallback(ADCDriver*, adcerror_t) {

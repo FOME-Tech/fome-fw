@@ -10,7 +10,6 @@
  */
 
 #include <rusefi/arrays.h>
-#include <rusefi/crc.h>
 #include <rusefi/fragments.h>
 #include <rusefi/interpolation.h>
 #include <rusefi/isnan.h>
@@ -38,6 +37,7 @@
 #include "thread_priority.h"
 #include "tooth_logger.h"
 #include "main_loop.h"
+#include "debounce.h"
 
 #if EFI_UNIT_TEST
 #include <gtest/gtest.h>

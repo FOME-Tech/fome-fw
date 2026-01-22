@@ -308,7 +308,7 @@
  * @note    Requires @p CH_CFG_USE_HEAP and/or @p CH_CFG_USE_MEMPOOLS.
  */
 #if !defined(CH_CFG_USE_DYNAMIC)
-#define CH_CFG_USE_DYNAMIC                  FALSE
+#define CH_CFG_USE_DYNAMIC                  TRUE
 #endif
 
 /** @} */
@@ -651,26 +651,6 @@
  */
 #define CH_CFG_THREAD_EXIT_HOOK(tp) {                                       \
   /* Add threads finalization code here.*/                                  \
-}
-
-/**
- * @brief   Idle thread enter hook.
- * @note    This hook is invoked within a critical zone, no OS functions
- *          should be invoked from here.
- * @note    This macro can be used to activate a power saving mode.
- */
-#define CH_CFG_IDLE_ENTER_HOOK() {                                          \
-  /* Idle-enter code here.*/                                                \
-}
-
-/**
- * @brief   Idle thread leave hook.
- * @note    This hook is invoked within a critical zone, no OS functions
- *          should be invoked from here.
- * @note    This macro can be used to deactivate a power saving mode.
- */
-#define CH_CFG_IDLE_LEAVE_HOOK() {                                          \
-  /* Idle-leave code here.*/                                                \
 }
 
 /**

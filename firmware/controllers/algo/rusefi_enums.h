@@ -580,6 +580,7 @@ typedef enum __attribute__ ((__packed__)) {
 	INJ_None = 0,
 	INJ_PolynomialAdder = 1,
 	INJ_FordModel = 2,
+	INJ_SmallPulseAdder = 3,
 } InjectorNonlinearMode;
 
 typedef enum __attribute__ ((__packed__)) {
@@ -642,6 +643,26 @@ enum class SelectedGear : uint8_t {
 	Manual1 = 10,
 	Low = 11,
 };
+
+enum class WidebandMode : uint8_t {
+	Analog = 0,
+	FOMEInternal = 1,
+	AemXSeries = 2,
+};
+
+enum class DtcSeverity : uint8_t {
+	WarningOnly = 0,
+	Ignore = 1,
+	LimpLevel1 = 2,
+	LimpLevel2 = 3,
+};
+
+typedef enum __attribute__ ((__packed__)) {
+	none = 0,
+	first,
+	second,
+	both,
+} canBroadcast_e;
 
 #define SC_Exhaust_First 1
 

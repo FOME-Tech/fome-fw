@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-echo "This script reads rusefi_config.txt and produces firmware persistent configuration headers"
+echo "This script reads fome_config.txt and produces firmware persistent configuration headers"
 echo "the storage section of rusefiXXX.ini is updated as well"
 
 if [ -z "$1" ]; then
@@ -20,8 +20,6 @@ SHORT_BOARDNAME=$2
 INI="fome_${SHORT_BOARDNAME}.ini"
 
 echo "BOARD_DIR=${BOARD_DIR} SHORT_BOARDNAME=${SHORT_BOARDNAME}"
-
-bash gen_signature.sh ${SHORT_BOARDNAME}
 
 PREPEND_FILE=${BOARD_DIR}/prepend.txt
 
@@ -45,22 +43,24 @@ java \
 	-triggerInputFolder ../unit_tests \
 	-with_c_defines false \
 	-field_lookup_file generated/value_lookup_generated.cpp generated/value_lookup_generated.md \
-	-java_destination ../java_console/models/src/main/java/com/rusefi/config/generated/Fields.java \
+	-java_destination ../java_console/generated/src/main/java/com/rusefi/config/generated/Fields.java \
 	-initialize_to_zero false \
-	-signature tunerstudio/generated/signature_${SHORT_BOARDNAME}.txt \
-	-signature_destination generated/signature_${SHORT_BOARDNAME}.h \
+	-branch "$(git branch --show-current)" \
 	-ts_template ./tunerstudio/tunerstudio.template.ini \
 	-ts_output_name ./tunerstudio/generated/${INI} \
 	-board ${BOARD_DIR} \
+	-boardName ${SHORT_BOARDNAME} \
 	-prepend generated/total_live_data_generated.h \
-	-prepend integration/rusefi_config_shared.txt \
+	-prepend integration/fome_config_shared.txt \
 	-prepend ${BOARD_DIR}/prepend.txt \
-	-definition integration/rusefi_config.txt \
+	-definition integration/fome_config.txt \
 	-enumInputFile controllers/algo/engine_types.h \
 	-enumInputFile controllers/algo/rusefi_enums.h \
 	-enumInputFile controllers/algo/rusefi_hw_enums.h \
 	-c_defines        generated/rusefi_generated.h \
-	-c_destination    generated/engine_configuration_generated_structures.h
+	-c_destination    generated/engine_configuration_generated_structures.h \
+	-makefileDep      .dep/fome_generated.d \
+
 
 [ $? -eq 0 ] || { echo "ERROR generating TunerStudio config for ${BOARD_DIR}"; exit 1; }
 

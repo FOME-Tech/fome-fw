@@ -78,7 +78,7 @@ void CsvReader::processLine(EngineTestHelper *eth) {
 	}
 
 	if (timeStampstr == nullptr) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "End of File");
+		firmwareError("End of File");
 		return;
 	}
 

@@ -29,6 +29,8 @@ enum class SensorType : unsigned char {
 
 	AmbientTemperature,
 
+	EcuInternalTemperature,
+
 	OilPressure,
 	OilTemperature,
 
@@ -90,11 +92,6 @@ enum class SensorType : unsigned char {
 	// Slow MAP is asynchronous - not synced to anything, normal analog sampling
 	// MAP decoding happens only that often thus this is NOT raw MAP as flows from ADC
 	MapSlow,
-
-	InputShaftSpeed,
-
-	EGT1,
-	EGT2,
 
 	Maf2,	// Second bank MAF sensor
 

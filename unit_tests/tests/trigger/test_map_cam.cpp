@@ -24,8 +24,7 @@ TEST(trigger, map_cam_by_magic_point) {
 	eth.smartFireTriggerEvents2(/*count*/10, /*delayMs*/200);
 	ASSERT_EQ(150,  Sensor::getOrZero(SensorType::Rpm)) << "RPM";
 
-	ASSERT_EQ(1, engine->triggerCentral.mapVvt_map_peak);
-	ASSERT_EQ(0, engine->triggerCentral.triggerState.camResyncCounter);
+	ASSERT_EQ(0, engine->triggerCentral.triggerState.m_camResyncCounter);
 
 	// Nothing should have been scheduled yet
 	ASSERT_EQ(1, engine->scheduler.size());
@@ -35,9 +34,7 @@ TEST(trigger, map_cam_by_magic_point) {
 	engine->outputChannels.instantMAPValue = 120;
 	eth.smartFireTriggerEvents2(/*count*/4, /*delayMs*/200);
 
-	ASSERT_EQ(2, engine->triggerCentral.mapVvt_map_peak);
-	ASSERT_EQ(1, engine->triggerCentral.triggerState.camResyncCounter);
-	ASSERT_EQ(10, engine->triggerCentral.mapVvt_MAP_AT_CYCLE_COUNT);
+	ASSERT_EQ(1, engine->triggerCentral.triggerState.m_camResyncCounter);
 
 	ASSERT_EQ(ClearReason::None, getLimpManager()->allowIgnition().reason);
 	ASSERT_EQ(ClearReason::None, getLimpManager()->allowInjection().reason);

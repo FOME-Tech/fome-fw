@@ -1,6 +1,8 @@
 package com.rusefi.util;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * This file would override file content only of content has changed, disregarding the magic tag line.
@@ -13,7 +15,7 @@ public class LazyFile implements Output {
     public LazyFile(String filename) {
         if (!TEST.equals(filename)) {
             try {
-                fw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(filename), IoUtils.CHARSET));
+                fw = new PrintWriter(new OutputStreamWriter(Files.newOutputStream(Paths.get(filename)), IoUtils.CHARSET));
             } catch (IOException e) {
                 // ignore?
             }

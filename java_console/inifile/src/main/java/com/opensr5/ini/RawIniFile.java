@@ -3,8 +3,9 @@ package com.opensr5.ini;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,8 +35,8 @@ public class RawIniFile {
         }
     }
 
-    public static RawIniFile read(String fileName) throws FileNotFoundException {
-        return IniFileReader.read(new FileInputStream(fileName));
+    public static RawIniFile read(String fileName) throws IOException {
+        return IniFileReader.read(Files.newInputStream(Paths.get(fileName)));
     }
 
     @NotNull

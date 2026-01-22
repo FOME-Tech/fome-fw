@@ -21,7 +21,10 @@ bool FanController::getState(bool acActive, bool lastState) {
 	hot = clt.value_or(0) > getFanOnTemp();
 	cold = clt.value_or(0) < getFanOffTemp();
 
-	if (!m_ignitionState) {
+	if (!m_benchTestTimer.hasElapsedSec(3)) {
+		// Run the fan when bench test is active
+		return true;
+	} else if (!m_ignitionState) {
 		// Inhibit while ignition is off
 		return false;
 	} else if (cranking) {
@@ -67,4 +70,8 @@ void FanController::onSlowCallback() {
 
 void FanController::onIgnitionStateChanged(bool ignitionOn) {
 	m_ignitionState = ignitionOn;
+}
+
+void FanController::benchTest() {
+	m_benchTestTimer.reset();
 }

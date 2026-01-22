@@ -47,17 +47,6 @@
  * Some triggers do not require synchronization, this case we just count signals.
  * A single tooth primary signal would be a typical example when synchronization is not needed.
  *
- *
- * @section sec_timers Timers
- * At the moment rusEfi is build using 5 times:
- * <BR>1) 1MHz microsecond_timer.cpp
- * <BR>2) 10KHz fast ADC callback pwmpcb_fast adc_inputs.cpp
- * <BR>3) slow ADC callback pwmpcb_slow adc_inputs.cpp
- * <BR>4) periodicFastTimer engine_controller.cpp
- * <BR>5) periodicSlowTimer engine_controller.cpp
- *
- *
- *
  * @section sec_scheduler Event Scheduler
  *
  * It is a general agreement to measure all angles in crank shaft angles. In a four stroke
@@ -94,17 +83,6 @@
  * Definition of the Tunerstudio configuration interface, gauges, and indicators
  * tunerstudio/tunerstudio.template.ini
  *
- * @section config Persistent Configuration
- *
- * Definition of configuration data structure:  
- * integration/rusefi_config.txt  
- * This file has a lot of information and instructions in its comment header.
- * in order to use CONFIG macro you need EXTERN_CONFIG and include engine_configuration.h
- * Please note that due to TunerStudio protocol it's important to have the total structure size in synch between the firmware and TS .ini file -
- * just to make sure that this is not forgotten the size of the structure is hard-coded as PAGE_0_SIZE constant. There is always some 'unused' fields added in advance so that
- * one can add some fields without the pain of increasing the total configuration page size.
- * <br>See flash_main.cpp
- *
  * @section sec_fuel_injection Fuel Injection
  *
  *
@@ -129,10 +107,11 @@
 #include "custom_engine.h"
 #include "mpu_util.h"
 #include "tunerstudio.h"
-#include "mmc_card.h"
+#include "sd_file_log.h"
 #include "mass_storage_init.h"
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
+#include "bootloader_updater.h"
 
 #include <setjmp.h>
 
@@ -237,6 +216,10 @@ void runRusEfi() {
 	// periodic events need to be initialized after fuel&spark pins to avoid a warning
 	initMainLoop();
 
+#if EFI_USE_OPENBLT
+	checkBootloaderIntegrity();
+#endif
+
 	runMainLoop();
 }
 
@@ -262,7 +245,7 @@ void runRusEfiWithConfig() {
 #endif
 
 #if EFI_FILE_LOGGING
-	initMmcCard();
+	initSdCardLogger();
 #endif /* EFI_FILE_LOGGING */
 
 #if EFI_CAN_SERIAL

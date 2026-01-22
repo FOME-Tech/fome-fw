@@ -21,7 +21,7 @@
 #define PRINT_EOL ""
 #endif
 
-// todo: this file is asking to improve conditional compilation. unit_tests and cypress/kinetis are both special cases
+// todo: this file is asking to improve conditional compilation. unit_tests is a special case
 #if HAL_USE_CAN || EFI_UNIT_TEST
 #include "serial_can.h"
 #include "can.h"

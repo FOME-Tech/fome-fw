@@ -37,7 +37,7 @@ public:
 		// If there's somebody already here - a consumer tried to double-register a sensor
 		if (m_sensor && m_sensor != sensor) {
 			// This sensor has already been registered. Don't re-register it.
-			firmwareError(ObdCode::CUSTOM_OBD_26, "Duplicate registration for sensor \"%s\"", sensor->getSensorName());
+			firmwareError("Duplicate registration for sensor \"%s\"", sensor->getSensorName());
 			return false;
 		} else {
 			// Put the sensor in the registry
@@ -255,16 +255,24 @@ void Sensor::setInvalidMockValue(SensorType type) {
 	}
 }
 
-/**
- * this is definitely not the fastest implementation possible but good enough for now?
- * todo: some sort of hashmap in the future?
- */
-SensorType findSensorTypeByName(const char *name) {
-	for (int i = 0; i < (int)SensorType::PlaceholderLast; i++) {
-		SensorType type = (SensorType)i;
-		const char *sensorName = getSensorType(type);
-		if (strEqualCaseInsensitive(sensorName, name)) {
-			return type;
+constexpr auto makeSensorNameHashes() {
+	std::array<int, static_cast<size_t>(SensorType::PlaceholderLast)> result;
+
+	for (size_t i = 0; i < result.size(); i++) {
+		result[i] = djb2lowerCase(getSensorType(static_cast<SensorType>(i)));
+	}
+
+	return result;
+}
+
+static constexpr auto sensorNameHashes = makeSensorNameHashes();
+
+SensorType findSensorTypeByName(const char* name) {
+	auto hash = djb2lowerCase(name);
+
+	for (size_t i = 0; i < sensorNameHashes.size(); i++) {
+		if (hash == sensorNameHashes[i]) {
+			return static_cast<SensorType>(i);
 		}
 	}
 

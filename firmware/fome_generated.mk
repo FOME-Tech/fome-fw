@@ -8,14 +8,23 @@ GENERATED := \
 # $(GENERATED_DIR)/value_lookup_generated.cpp
 # TODO: how do we list multiple dependencies without the build happening multiple times?
 
-$(GENERATED) : $(PROJECT_DIR)/integration/rusefi_config.txt
+$(GENERATED) : $(PROJECT_DIR)/integration/fome_config.txt
 	@echo Generating config files...
-	cd $(PROJECT_DIR) && $(PROJECT_DIR)/gen_live_documentation.sh
-	cd $(PROJECT_DIR) && $(PROJECT_DIR)/gen_config_board.sh $(BOARD_DIR) $(SHORT_BOARD_NAME)
+	cd $(PROJECT_DIR) && ./gen_live_documentation.sh
+	cd $(PROJECT_DIR) && ./gen_config_board.sh $(realpath $(BOARD_DIR)) $(SHORT_BOARD_NAME)
 
 # All c/c++ objects depend on generated
 $(OBJS) : $(GENERATED)
 $(PCHOBJ) : $(GENERATED)
+
+JAVA_TOOLS = $(BUILDDIR)/java_tools.cookie
+
+$(JAVA_TOOLS) :
+	cd $(PROJECT_DIR)/../java_tools && ./build_tools.sh
+	echo "done" > $@
+
+# Generated files depend on the generation tools
+$(GENERATED) : $(JAVA_TOOLS)
 
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*

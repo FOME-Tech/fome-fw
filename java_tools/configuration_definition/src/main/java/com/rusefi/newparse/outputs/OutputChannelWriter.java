@@ -5,9 +5,10 @@ import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Struct;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * As of Nov 2022 this implementation is not used in prod :(
@@ -16,9 +17,9 @@ public class OutputChannelWriter {
     private final PrintStream ps;
     private final PrintStream psDatalog;
 
-    public OutputChannelWriter(String outputFile, String datalogOutputFile) throws FileNotFoundException {
-        this.ps = new PrintStreamAlwaysUnix(new FileOutputStream(outputFile));
-        this.psDatalog = new PrintStreamAlwaysUnix(new FileOutputStream(datalogOutputFile));
+    public OutputChannelWriter(String outputFile, String datalogOutputFile) throws IOException {
+        this.ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
+        this.psDatalog = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(datalogOutputFile)));
     }
 
     public OutputChannelWriter(PrintStream ps, PrintStream psDatalog) {

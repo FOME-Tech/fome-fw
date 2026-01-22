@@ -5,7 +5,6 @@ import com.rusefi.*;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.config.generated.Fields;
 import com.rusefi.io.*;
-import com.rusefi.io.tcp.BinaryProtocolServer;
 import com.rusefi.core.preferences.storage.Node;
 import com.rusefi.ui.FrameHelper;
 import com.rusefi.ui.util.UiUtils;
@@ -88,15 +87,6 @@ public class MainFrame {
             @Override
             public void onConnectionEstablished() {
                 ConnectionWatchdog.init(linkManager);
-
-                SwingUtilities.invokeLater(() -> {
-                    /**
-                     * todo: we are definitely not handling reconnect properly, no code to shut down old instance of server
-                     * before launching new instance
-                     */
-                    new BinaryProtocolServer().start(linkManager);
-                });
-
             }
         });
 
@@ -114,7 +104,7 @@ public class MainFrame {
         String disconnected = ConnectionStatusLogic.INSTANCE.isConnected() ? "" : "DISCONNECTED ";
         BinaryProtocol bp = consoleUI.uiContext.getLinkManager().getCurrentStreamState();
         String signature = bp == null ? "not loaded" : "Signature: " + bp.signature;
-        frame.getFrame().setTitle(disconnected + "FOME EFI Console " + Launcher.CONSOLE_VERSION + "; firmware=" + Launcher.firmwareVersion.get() + "@" + consoleUI.getPort() + " " + signature);
+        frame.getFrame().setTitle(disconnected + "FOME EFI Console firmware=" + Launcher.firmwareVersion.get() + "@" + consoleUI.getPort() + " " + signature);
     }
 
     private void windowClosedHandler() {
@@ -123,7 +113,6 @@ public class MainFrame {
          */
         SimulatorHelper.onWindowClosed();
         Node root = getConfig().getRoot();
-        root.setProperty("version", Launcher.CONSOLE_VERSION);
         root.setProperty(ConsoleUI.TAB_INDEX, tabbedPane.tabbedPane.getSelectedIndex());
         getConfig().save();
         BinaryProtocol bp = consoleUI.uiContext.getLinkManager().getCurrentStreamState();

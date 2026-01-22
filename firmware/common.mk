@@ -8,6 +8,7 @@ include $(PROJECT_DIR)/development/development.mk
 include $(PROJECT_DIR)/hw_layer/hw_layer.mk
 include $(PROJECT_DIR)/hw_layer/sensors/sensors.mk
 include $(PROJECT_DIR)/hw_layer/drivers/drivers.mk
+include $(PROJECT_DIR)/net/net.mk
 
 ALLCSRC += \
 	$(UTILSRC)
@@ -35,8 +36,8 @@ ALLINC += \
 	$(PROJECT_DIR)/config/engines \
 	$(BOARDS_DIR) \
 	$(PROJECT_DIR)/hw_layer/algo \
-    $(PROJECT_DIR)/init \
-    $(PROJECT_DIR)/ext_algo \
+	$(PROJECT_DIR)/init \
+	$(PROJECT_DIR)/ext \
 	$(HW_LAYER_DRIVERS_INC) \
 	$(HW_LAYER_INC) \
   	$(HW_SENSORS_INC) \

@@ -33,45 +33,45 @@
 
 #include "periodic_thread_controller.h"
 
-#define MFI_LONG_BLINK	1500
-#define MFI_SHORT_BLINK	400
-#define MFI_BLINK_SEPARATOR 400
-#define MFI_CHECKENGINE_LIGHT 10000
+#include <charconv>
 
-static void blink_digits(int digit, int duration) {
-	for (int iter = 0; iter < digit; iter++) {
-		// todo: why we set LOW and then HIGH? not the other way around?
-		enginePins.checkEnginePin.setValue(0);
-		chThdSleepMilliseconds(duration);
+#define BLINK_HALF_PERIOD 500
+#define GAP_BETWEEN_DIGITS_MS 1000
+#define GAP_BETWEEN_CODES_MS 5000
+
+static void blink_digit(int digit) {
+	for (int i = 0; i < digit; i++) {
 		enginePins.checkEnginePin.setValue(1);
-		chThdSleepMilliseconds(MFI_BLINK_SEPARATOR);
+		chThdSleepMilliseconds(BLINK_HALF_PERIOD);
+		enginePins.checkEnginePin.setValue(0);
+		chThdSleepMilliseconds(BLINK_HALF_PERIOD);
 	}
+
+	chThdSleepMilliseconds(GAP_BETWEEN_DIGITS_MS);
 }
 
-// calculate how many digits our code have
-static int DigitLength(int digit) {
-	int i = 0;
-	while (digit > 0) {
-		digit = digit / 10;
-		++i;
+static int char2int(char c) {
+	if (c >= '0' && c <= '9') {
+		return c - '0';
+	} else if (c >= 'a' && c <= 'f') {
+		return c - 'a' + 0xa;
+	} else if (c >= 'A' && c <= 'F') {
+		return c - 'A' + 0xa;
+	} else {
+		return 0;
 	}
-	return i;
 }
 
 // display code
-static void DisplayErrorCode(int length, int code) {
-	// todo: I suggest we use 'itoa' method to simplify this logic
-	for (int iter = length - 1; iter >= 0; iter--) {
-		int ourDigit = (int) efiPow10(iter);		// 10^0 = 1, 10^1 = 10, 10^2=100, 10^3 = 1000, ....
-		int digit = 1;						// as we remember "0" we show as one blink
-		while (code >= ourDigit) {
-			code = code - ourDigit;
-			digit++;
-		}
-		if (iter % 2 == 0)
-			blink_digits(digit, MFI_SHORT_BLINK);		// even 2,0 - long blink
-		else
-			blink_digits(digit, MFI_LONG_BLINK); 		// odd  3,1 - short blink
+static void displayErrorCode(ObdCode code) {
+	char buf[8];
+
+	// write it as a hex string
+	auto ret = std::to_chars(buf, buf + std::size(buf), (int)code, 16);
+	size_t length = ret.ptr - buf;
+
+	for (size_t i = 0; i < length; i++) {
+		blink_digit(char2int(buf[i]) + 1);
 	}
 }
 
@@ -79,38 +79,31 @@ class MILController : public PeriodicController<UTILITY_THREAD_STACK_SIZE> {
 public:
 	MILController()	: PeriodicController("MFIndicator") { }
 private:
-	void PeriodicTask(efitick_t nowNt) override	{
-		UNUSED(nowNt);
+	void OnStarted() override {
+		// Always do a 3 second blink on boot
+		enginePins.checkEnginePin.setValue(1);
+		chThdSleepMilliseconds(3000);
+	}
 
-#if EFI_SHAFT_POSITION_INPUT
+	void PeriodicTask(efitick_t) override {
 		static error_codes_set_s localErrorCopy;
-		// todo: why do I not see this on a real vehicle? is this whole blinking logic not used?
 		getErrorCodes(&localErrorCopy);
 
 		if (localErrorCopy.count) {
-			for (int p = 0; p < localErrorCopy.count; p++) {
-				// Calculate how many digits in this integer and display error code from start to end
-				int code = (int)localErrorCopy.error_codes[p];
-				DisplayErrorCode(DigitLength(code), code);
+			for (int i = 0; i < localErrorCopy.count; i++) {
+				chThdSleepMilliseconds(GAP_BETWEEN_CODES_MS);
+				displayErrorCode(localErrorCopy.error_codes[i]);
 			}
 		} else {
 			// Turn on the CEL while the engine is stopped
 			enginePins.checkEnginePin.setValue(!engine->rpmCalculator.isRunning());
 		}
-#endif // EFI_SHAFT_POSITION_INPUT
 	}
 };
 
 static MILController instance;
 
-bool isMilEnabled() {
-	return isBrainPinValid(engineConfiguration->malfunctionIndicatorPin);
-}
-
-void initMalfunctionIndicator(void) {
-	if (!isMilEnabled()) {
-		return;
-	}
+void initMalfunctionIndicator() {
 	instance.setPeriod(10 /*ms*/);
 	instance.start();
 }

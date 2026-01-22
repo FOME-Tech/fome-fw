@@ -82,7 +82,7 @@ public class PinoutLogic {
             String nothingName = namePinType.getNothingName();
             EnumsReader.EnumState enumList = enumsReader.getEnums().get(pinType);
             EnumPair pair = enumToOptionsList(nothingName, enumList, kv.getValue());
-            if (pair.getSimpleForm().length() > 0) {
+            if (!pair.getSimpleForm().isEmpty()) {
                 // we seem to be here if specific pin category like switch_inputs has no pins
                 parseState.addDefinition(registry, outputEnumName + ENUM_SUFFIX, pair.getShorterForm(), Definition.OverwritePolicy.IgnoreNew);
             }
@@ -174,7 +174,7 @@ public class PinoutLogic {
                 }
             } else if (pinId instanceof String) {
                 String pinIdString = (String) pinId;
-                if (pinIdString.length() == 0) {
+                if (pinIdString.isEmpty()) {
                     throw new IllegalStateException("Unexpected empty ID field");
                 }
                 addPinToList(pinIdString, (String) pinTsName, (String) pinClass);

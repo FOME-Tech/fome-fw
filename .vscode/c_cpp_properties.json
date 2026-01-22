@@ -10,6 +10,9 @@
 				"EFI_SIMULATOR",
 				"EFI_FILE_LOGGING",
 				"EFI_CAN_SUPPORT",
+				"EFI_WIFI",
+				"EFI_USE_FAST_ADC",
+				"EFI_SOFTWARE_KNOCK"
 			],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",

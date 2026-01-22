@@ -5,7 +5,7 @@ package com.rusefi.enums;
 
 
 public enum ts_command_e {
-	TS_DEBUG_MODE,
+	TS_UNUSED_0,
 	TS_UNUSED_1,
 	TS_UNUSED_2,
 	TS_UNUSED_3,
@@ -30,7 +30,7 @@ public enum ts_command_e {
 	TS_BENCH_CATEGORY,
 	TS_UNUSED_23,
 	TS_UNUSED_24,
-	TS_SOLENOID_CATEGORY,
+	TS_UNUSED_25,
 	TS_UNUSED_26,
 	TS_UNUSED_27,
 	TS_UNUSED_28,

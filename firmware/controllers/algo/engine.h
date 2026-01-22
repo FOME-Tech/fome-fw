@@ -17,15 +17,12 @@
 #include "accel_enrichment.h"
 #include "trigger_central.h"
 #include "local_version_holder.h"
-#include "buttonshift.h"
-#include "gear_controller.h"
 #include "high_pressure_fuel_pump.h"
 #include "limp_manager.h"
 #include "pin_repository.h"
 #include "ac_control.h"
 #include "knock_logic.h"
 #include "idle_state_generated.h"
-#include "dc_motors_generated.h"
 #include "idle_thread.h"
 #include "injector_model.h"
 #include "launch_control.h"
@@ -216,9 +213,9 @@ public:
 		VvtController3,
 		VvtController4,
 #endif // EFI_VVT_PID
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 		BoostController,
-#endif // EFI_BOOST_CONTROL
+#endif // EFI_ENGINE_CONTROL
 		LedBlinkingTask,
 		TpsAccelEnrichment,
 
@@ -237,10 +234,6 @@ public:
 		return engineModules.get<get_t>();
 	}
 
-#if EFI_TCU
-	GearControllerBase *gearController;
-#endif
-	
 #if EFI_LAUNCH_CONTROL
 	LaunchControlBase launchController;
 	SoftSparkLimiter softSparkLimiter;
@@ -269,15 +262,11 @@ public:
 
 	void setConfig();
 
-	AuxActor auxValves[AUX_DIGITAL_VALVE_COUNT][2];
-
 #if EFI_UNIT_TEST
 	bool needTdcCallback = true;
 #endif /* EFI_UNIT_TEST */
 
-
-	int getGlobalConfigurationVersion(void) const;
-
+	int getGlobalConfigurationVersion() const;
 
 	// a pointer with interface type would make this code nicer but would carry extra runtime
 	// cost to resolve pointer, we use instances as a micro optimization
@@ -326,6 +315,7 @@ public:
 
 	void periodicFastCallback();
 	void periodicSlowCallback();
+	void onEngineStopped();
 	void updateSlowSensors();
 	void updateSwitchInputs();
 	void updateTriggerWaveform();
@@ -342,19 +332,12 @@ public:
 
 	EngineState engineState;
 
-	dc_motors_s dc_motors;
-
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM
 	 */
 	efitimeus_t timeToStopIdleTest = 0;
 
-
 	SensorsState sensors;
-	Timer mainRelayBenchTimer;
-
-
-	void preCalculate();
 
 	void efiWatchdog();
 
@@ -371,15 +354,13 @@ public:
 	 */
 	bool isInShutdownMode() const;
 
-	bool isInMainRelayBench();
-
 	/**
 	 * The stepper does not work if the main relay is turned off (it requires +12V).
 	 * Needed by the stepper motor code to detect if it works.
 	 */
 	bool isMainRelayEnabled() const;
 
-	void onSparkFireKnockSense(uint8_t cylinderIndex, efitick_t nowNt);
+	void onSparkFireKnockSense(uint8_t cylinderIndex);
 
 #if EFI_UNIT_TEST
 	AirmassModelBase* mockAirmassModel = nullptr;
@@ -391,16 +372,12 @@ private:
 	void injectEngineReferences();
 };
 
-trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode);
-
 void applyNonPersistentConfiguration();
 void prepareOutputSignals();
 
 // todo: huh we also have validateConfig()?!
 void validateConfiguration();
 void scheduleReboot();
-bool isLockedFromUser();
-void unlockEcu(int password);
 
 // These externs aren't needed for unit tests - everything is injected instead
 #if !EFI_UNIT_TEST

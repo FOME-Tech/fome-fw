@@ -36,7 +36,8 @@ jobs:
         echo -e -n "#pragma once\n#define VCS_DATE $(date "+%Y%m%d")\n" > ./firmware/controllers/date_stamp.h
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub set-date Action"
-        git commit -m "Update date" -a 2>&1 | grep -E '(nothing to commit|changed)'
+        git add ./firmware/controllers/date_stamp.h
+        git commit -m "Update date" 2>&1 | grep -E '(nothing to commit|changed)'
 
     - name: Push changed date file
       if: ${{ env.skip != 'true' }}

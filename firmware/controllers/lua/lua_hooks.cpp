@@ -2,7 +2,9 @@
 
 #include "rusefi_lua.h"
 #include "lua_hooks.h"
+#include <rusefi/crc.h>
 
+#include "backup_ram.h"
 #include "fuel_math.h"
 #include "airmass.h"
 #include "lua_airmass.h"
@@ -26,17 +28,6 @@ using namespace luaaa;
 #if EFI_PROD_CODE
 #include "electronic_throttle.h"
 #endif // EFI_PROD_CODE
-
-static int lua_vin(lua_State* l) {
-	auto zeroBasedCharIndex = luaL_checkinteger(l, 1);
-	if (zeroBasedCharIndex < 0 || zeroBasedCharIndex > VIN_NUMBER_SIZE) {
-		lua_pushnil(l);
-	} else {
-		char value = engineConfiguration->vinNumber[zeroBasedCharIndex];
-		lua_pushnumber(l, value);
-	}
-	return 1;
-}
 
 static int lua_readpin(lua_State* l) {
 #if EFI_PROD_CODE
@@ -73,12 +64,6 @@ static int lua_getAuxAnalog(lua_State* l) {
 	return getSensor(l, type);
 }
 
-static int lua_getSensorByIndex(lua_State* l) {
-	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
-
-	return getSensor(l, static_cast<SensorType>(zeroBasedSensorIndex));
-}
-
 static SensorType findSensorByName(lua_State* l, const char* name) {
 	SensorType type = findSensorTypeByName(name);
 
@@ -89,24 +74,25 @@ static SensorType findSensorByName(lua_State* l, const char* name) {
 	return type;
 }
 
-static int lua_getSensorByName(lua_State* l) {
-	auto sensorName = luaL_checklstring(l, 1, nullptr);
-	SensorType type = findSensorByName(l, sensorName);
+static SensorType luaL_checkSensorType(lua_State* l, int arg) {
+	auto sensorName = luaL_checklstring(l, arg, nullptr);
+	return findSensorByName(l, sensorName);
+}
 
+static int lua_getSensorByName(lua_State* l) {
+	auto type = luaL_checkSensorType(l, 1);
 	return getSensor(l, type);
 }
 
 static int lua_getSensorRaw(lua_State* l) {
-	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
-
-	lua_pushnumber(l, Sensor::getRaw(static_cast<SensorType>(zeroBasedSensorIndex)));
+	auto type = luaL_checkSensorType(l, 1);
+	lua_pushnumber(l, Sensor::getRaw(type));
 	return 1;
 }
 
 static int lua_hasSensor(lua_State* l) {
-	auto zeroBasedSensorIndex = luaL_checkinteger(l, 1);
-
-	lua_pushboolean(l, Sensor::hasSensor(static_cast<SensorType>(zeroBasedSensorIndex)));
+	auto type = luaL_checkSensorType(l, 1);
+	lua_pushboolean(l, Sensor::hasSensor(type));
 	return 1;
 }
 
@@ -298,6 +284,7 @@ static int lua_getDigital(lua_State* l) {
 		case 1: state = engine->engineState.clutchUpState; break;
 		case 2: state = engine->engineState.brakePedalState; break;
 		case 3: state = engine->module<AcController>().unmock().acButtonState; break;
+		case 4: state = engine->module<AcController>().unmock().acPressureSwitchState; break;
 		default:
 			// Return nil to indicate invalid parameter
 			lua_pushnil(l);
@@ -396,6 +383,45 @@ static int lua_setAirmass(lua_State* l) {
 
 #endif // EFI_UNIT_TEST
 
+auto& checkBackupSram(lua_State* l) {
+	auto backupRam = getBackupSram();
+
+	if (!backupRam) {
+		luaL_error(l, "Backup RAM error or not supported!");
+	}
+
+	return *backupRam;
+}
+
+static int lua_getPersistentValue(lua_State* l) {
+	auto idx = luaL_checkinteger(l, 1);
+
+	auto &backupRam = checkBackupSram(l);
+
+	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
+		luaL_error(l, "invalid backup ram index: %d", idx);
+	}
+
+	lua_pushnumber(l, backupRam.LuaPersistentData[idx - 1]);
+	return 1;
+}
+
+static int lua_storePersistentValue(lua_State* l) {
+	auto idx = luaL_checkinteger(l, 1);
+
+	auto &backupRam = checkBackupSram(l);
+
+	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
+		luaL_error(l, "invalid backup ram index: %d", idx);
+	}
+
+	auto value = luaL_checknumber(l, 2);
+
+	backupRam.LuaPersistentData[idx - 1] = value;
+
+	return 0;
+}
+
 // TODO: PR this back in to https://github.com/gengyong/luaaa
 namespace LUAAA_NS {
     template<typename TCLASS, typename ...ARGS>
@@ -444,7 +470,7 @@ struct LuaSensor final : public StoredValueSensor {
 
 	// do we need method defined exactly on LuaSensor for Luaa to be happy?
 	void setTimeout(int timeoutMs) override {
-	    StoredValueSensor::setTimeout(timeoutMs);
+		StoredValueSensor::setTimeout(timeoutMs);
 	}
 
 	void setRedundant(bool value) {
@@ -592,7 +618,7 @@ int lua_canRxAddMask(lua_State* l) {
 				callback = getLuaFunc(l);
 			} else {
 				// handle canRxAddMask(bus, id, mask)
-		    	bus = validateCanChannelAndConvertFromHumanIntoZeroIndex(l);
+				bus = validateCanChannelAndConvertFromHumanIntoZeroIndex(l);
 				eid = luaL_checkinteger(l, 2);
 				mask = luaL_checkinteger(l, 3);
 			}
@@ -643,9 +669,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 	configureRusefiLuaUtilHooks(l);
 
 	lua_register(l, "readPin", lua_readpin);
-	lua_register(l, "vin", lua_vin);
 	lua_register(l, "getAuxAnalog", lua_getAuxAnalog);
-	lua_register(l, "getSensorByIndex", lua_getSensorByIndex);
 	lua_register(l, "getSensor", lua_getSensorByName);
 	lua_register(l, "getSensorRaw", lua_getSensorRaw);
 	lua_register(l, "hasSensor", lua_hasSensor);
@@ -672,6 +696,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
+	lua_register(l, "getPersistentValue", lua_getPersistentValue);
+	lua_register(l, "storePersistentValue", lua_storePersistentValue);
+
 #if EFI_LAUNCH_CONTROL
 	lua_register(l, "setSparkSkipRatio", [](lua_State* l2) {
 		auto targetSkipRatio = luaL_checknumber(l2, 1);
@@ -688,9 +715,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 			return 0;
 		}
 		if (!engine->triggerCentral.directSelfStimulation) {
-		    enableTriggerStimulator();
+			enableTriggerStimulator();
 		}
-        setTriggerEmulatorRPM(rpm);
+		setTriggerEmulatorRPM(rpm);
 		return 0;
 	});
 #endif // EFI_UNIT_TEST
@@ -732,7 +759,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 
-#if EFI_BOOST_CONTROL
+#if EFI_ENGINE_CONTROL
 	lua_register(l, "setBoostTargetAdd", [](lua_State* l2) {
 		engine->module<BoostController>().unmock().luaTargetAdd = luaL_checknumber(l2, 1);
 		return 0;
@@ -745,7 +772,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		engine->module<BoostController>().unmock().luaOpenLoopAdd = luaL_checknumber(l2, 1);
 		return 0;
 	});
-#endif // EFI_BOOST_CONTROL
+#endif // EFI_ENGINE_CONTROL
 #if EFI_IDLE_CONTROL
 	lua_register(l, "setIdleAdd", [](lua_State* l2) {
 		engine->module<IdleController>().unmock().luaAdd = luaL_checknumber(l2, 1);
@@ -908,6 +935,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		doScheduleStopEngine();
 		return 0;
 	});
+
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getTimeSinceTriggerEventMs", [](lua_State* l2) {
 		int result = engine->triggerCentral.m_lastEventTimer.getElapsedUs() / 1000;

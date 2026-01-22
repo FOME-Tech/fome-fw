@@ -71,42 +71,81 @@ struct boost_control_s {
 	// offset 0 bit 31
 	bool unusedBit_0_31 : 1 {};
 	// Lua target mult
-	// v
 	// offset 4
 	float luaTargetMult = (float)0;
 	// Lua target add
-	// v
+	// percent
 	// offset 8
 	scaled_channel<int16_t, 2, 1> luaTargetAdd = (int16_t)0;
 	// Target
 	// kPa
 	// offset 10
 	scaled_channel<int16_t, 30, 1> boostControlTarget = (int16_t)0;
-	// Open loop
-	// v
-	// offset 12
-	float openLoopPart = (float)0;
 	// Lua open loop add
-	// v
-	// offset 16
+	// percent
+	// offset 12
 	float luaOpenLoopAdd = (float)0;
+	// Open loop
+	// percent
+	// offset 16
+	scaled_channel<uint8_t, 2, 1> openLoopPart = (uint8_t)0;
 	// Closed loop
 	// %
-	// offset 20
+	// offset 17
 	scaled_channel<int8_t, 2, 1> boostControllerClosedLoopPart = (int8_t)0;
-	// offset 21
-	uint8_t alignmentFill_at_21[1];
 	// Output
 	// percent
-	// offset 22
+	// offset 18
 	scaled_channel<int16_t, 100, 1> boostOutput = (int16_t)0;
+	// offset 20
+	scaled_channel<int16_t, 10, 1> boostOpenLoopBlendParameter[2];
+	// %
+	// offset 24
+	scaled_channel<uint8_t, 2, 1> boostOpenLoopBlendBias[2];
+	// %
+	// offset 26
+	int8_t boostOpenLoopBlendOutput[2];
+	// offset 28
+	int16_t boostOpenLoopBlendYAxis[2];
+	// offset 32
+	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendParameter[2];
+	// %
+	// offset 36
+	scaled_channel<uint8_t, 2, 1> boostClosedLoopBlendBias[2];
+	// %
+	// offset 38
+	scaled_channel<int16_t, 10, 1> boostClosedLoopBlendOutput[2];
+	// offset 42
+	int16_t boostClosedLoopBlendYAxis[2];
+	// offset 46
+	int16_t boostOpenLoopXAxisValue = (int16_t)0;
+	// offset 48
+	int16_t boostOpenLoopYAxisValue = (int16_t)0;
+	// offset 50
+	int16_t boostClosedLoopXAxisValue = (int16_t)0;
+	// offset 52
+	int16_t boostClosedLoopYAxisValue = (int16_t)0;
+	// offset 54
+	uint8_t alignmentFill_at_54[2];
 };
-static_assert(sizeof(boost_control_s) == 24);
+static_assert(sizeof(boost_control_s) == 56);
 static_assert(offsetof(boost_control_s, luaTargetMult) == 4);
 static_assert(offsetof(boost_control_s, luaTargetAdd) == 8);
 static_assert(offsetof(boost_control_s, boostControlTarget) == 10);
-static_assert(offsetof(boost_control_s, openLoopPart) == 12);
-static_assert(offsetof(boost_control_s, luaOpenLoopAdd) == 16);
-static_assert(offsetof(boost_control_s, boostControllerClosedLoopPart) == 20);
-static_assert(offsetof(boost_control_s, boostOutput) == 22);
+static_assert(offsetof(boost_control_s, luaOpenLoopAdd) == 12);
+static_assert(offsetof(boost_control_s, openLoopPart) == 16);
+static_assert(offsetof(boost_control_s, boostControllerClosedLoopPart) == 17);
+static_assert(offsetof(boost_control_s, boostOutput) == 18);
+static_assert(offsetof(boost_control_s, boostOpenLoopBlendParameter) == 20);
+static_assert(offsetof(boost_control_s, boostOpenLoopBlendBias) == 24);
+static_assert(offsetof(boost_control_s, boostOpenLoopBlendOutput) == 26);
+static_assert(offsetof(boost_control_s, boostOpenLoopBlendYAxis) == 28);
+static_assert(offsetof(boost_control_s, boostClosedLoopBlendParameter) == 32);
+static_assert(offsetof(boost_control_s, boostClosedLoopBlendBias) == 36);
+static_assert(offsetof(boost_control_s, boostClosedLoopBlendOutput) == 38);
+static_assert(offsetof(boost_control_s, boostClosedLoopBlendYAxis) == 42);
+static_assert(offsetof(boost_control_s, boostOpenLoopXAxisValue) == 46);
+static_assert(offsetof(boost_control_s, boostOpenLoopYAxisValue) == 48);
+static_assert(offsetof(boost_control_s, boostClosedLoopXAxisValue) == 50);
+static_assert(offsetof(boost_control_s, boostClosedLoopYAxisValue) == 52);
 

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "engine_configuration.h"
+#include "engine_phase_angle.h"
 
 class EngineModule {
 public:
@@ -20,6 +21,9 @@ public:
 	// Called approx 200Hz
 	virtual void onFastCallback() { }
 
+	// Called when the engine stops. Reset your state, etc to prepare for the next start.
+	virtual void onEngineStop() { }
+
 	// Called whenever the ignition switch state changes
 	virtual void onIgnitionStateChanged(bool /*ignitionOn*/) { }
 
@@ -27,9 +31,5 @@ public:
 	virtual bool needsDelayedShutoff() { return false; }
 
 	// Called on every successfully decoded tooth of the primary trigger
-	virtual void onEnginePhase(float /*rpm*/,
-								efitick_t /*edgeTimestamp*/,
-								angle_t /*currentPhase*/,
-								angle_t /*nextPhase*/)
-								{ }
+	virtual void onEnginePhase(float /*rpm*/, const EnginePhaseInfo& /*phase*/) { }
 };

@@ -54,9 +54,6 @@
 //#undef STM32_USB_USE_OTG1
 //#define STM32_USB_USE_OTG1                  FALSE
 
-#undef STM32_I2C_USE_I2C1
-#define STM32_I2C_USE_I2C1                  FALSE
-
 #undef STM32_SPI_USE_SPI2
 #define STM32_SPI_USE_SPI2                  FALSE
 

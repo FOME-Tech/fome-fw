@@ -25,6 +25,8 @@ const char * getBoardSpecificPinName(brain_pin_e brainPin) {
 		case Gpio::D14: return "3W - IDLE";
 		case Gpio::D9: return "3S - A/C Fan 94-95";
 		case Gpio::E12: return "Digital 1";
+		case Gpio::E3: return "IGN 4";
+		case Gpio::E4: return "IGN 3";
 		case Gpio::E5: return "1H - Ignition 2 & 3";
 		case Gpio::F11: return "1M - VSS";
 		case Gpio::F12: return "2J - Boost Control";

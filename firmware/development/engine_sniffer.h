@@ -12,14 +12,14 @@
 
 #include "datalogging.h"
 
-void addEngineSnifferTdcEvent(int rpm);
-void addEngineSnifferLogicAnalyzerEvent(int laIndex, bool isRise);
+void addEngineSnifferTdcEvent(efitick_t timestamp, int rpm);
+
 /**
  * @param wheelIndex 0 or 1
  * @triggerEventIndex index from sync point, from 0 to number of teeth in engine cycle
  */
-void addEngineSnifferCrankEvent(int wheelIndex, int triggerEventIndex, bool isRise);
-void addEngineSnifferVvtEvent(int vvtIndex, bool isRise);
+void addEngineSnifferCrankEvent(efitick_t timestamp, int wheelIndex, int triggerEventIndex, bool isRise);
+void addEngineSnifferVvtEvent(efitick_t timestamp, int vvtIndex, bool isRise);
 void addEngineSnifferOutputPinEvent(NamedOutputPin *pin, bool isRise);
 
 #if EFI_ENGINE_SNIFFER
@@ -31,7 +31,7 @@ class WaveChart {
 public:
 	WaveChart();
 	void init();
-	void addEvent3(const char *name, const char *msg);
+	void addEvent3(efitick_t nowNt, const char *name, const char *msg);
 	void reset();
 	void startDataCollection();
 	void publishIfFull();

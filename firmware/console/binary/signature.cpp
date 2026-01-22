@@ -10,28 +10,8 @@
 
 #include "pch.h"
 
-#include "signature.h"
-
-// We take these precautions to avoid redefinition of signature in generated .h files
-#undef SIGNATURE_HASH
-#undef TS_SIGNATURE
-
-#ifndef SHORT_BOARD_NAME
-#define SHORT_BOARD_NAME f407-discovery
-#endif /* SHORT_BOARD_NAME */
-
-#pragma message ("SHORT_BOARD_NAME: " QUOTE(SHORT_BOARD_NAME))
-
-#define SIGNATURE_NAME signature_
-#define SIGNATURE_EXT .h
-
-#if !EFI_UNIT_TEST
-#define SIGNATURE_H_FILENAME QUOTE(SIGNATURE_NAME SHORT_BOARD_NAME SIGNATURE_EXT)
-#include SIGNATURE_H_FILENAME
-
 #pragma message ("TS_SIGNATURE: " TS_SIGNATURE)
 
-const char *getTsSignature() {
+const char* getTsSignature() {
 	return TS_SIGNATURE;
 }
-#endif
