@@ -42,6 +42,7 @@ public class ProgramSelector {
     private final JLabel noHardware = new JLabel("Nothing detected");
     private final JPanel controls = new JPanel(new FlowLayout());
     private final JComboBox<String> mode = new JComboBox<>();
+    private final JButton actionButton;
 
     public ProgramSelector(JComboBox<SerialPortScanner.PortResult> comboPorts) {
         content.add(controls, BorderLayout.NORTH);
@@ -53,13 +54,16 @@ public class ProgramSelector {
         if (Arrays.asList(AUTO_DFU, MANUAL_DFU, OPENBLT_SWITCH, OPENBLT_MANUAL, OPENBLT_AUTO, DFU_ERASE, DFU_SWITCH).contains(persistedMode))
             mode.setSelectedItem(persistedMode);
 
-        JButton updateFirmware = new JButton("Update Firmware",
+        actionButton = new JButton("Update Firmware",
                 UiUtils.loadIcon("upload48.png"));
-        controls.add(updateFirmware);
+        controls.add(actionButton);
+
+        // Update button text when mode selection changes
+        mode.addItemListener(e -> updateActionButtonText());
 
         comboPorts.addItemListener(this::selectedPortChanged);
 
-        updateFirmware.addActionListener(new ActionListener() {
+        actionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 final String selectedMode = (String) mode.getSelectedItem();
@@ -300,8 +304,33 @@ public class ProgramSelector {
         // Show update controls if there are any options
         controls.setVisible(0 != mode.getItemCount());
 
+        updateActionButtonText();
+
         trueLayout(mode);
         trueLayout(content);
+    }
+
+    private void updateActionButtonText() {
+        String selectedMode = (String) mode.getSelectedItem();
+        if (selectedMode == null) {
+            actionButton.setText("Update Firmware");
+            return;
+        }
+
+        switch (selectedMode) {
+            case DFU_SWITCH:
+                actionButton.setText("Reboot to DFU");
+                break;
+            case OPENBLT_SWITCH:
+                actionButton.setText("Reboot to Bootloader");
+                break;
+            case DFU_ERASE:
+                actionButton.setText("Erase Chip");
+                break;
+            default:
+                actionButton.setText("Update Firmware");
+                break;
+        }
     }
 
     public void apply(SerialPortScanner.AvailableHardware currentHardware) {
