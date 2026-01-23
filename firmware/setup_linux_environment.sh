@@ -9,7 +9,7 @@
 # Purposes for dependencies:
 #  - `gcc`, `gdb`, `gcc-multilib`, `g++-multilib`: Native compilers for your PC, used for unit tests and simulator.
 #  - `make`: GNU Make, build tool that orchestrates the correct build steps.
-#  - `openjdk-8-jdk-headless`: Java compiler for FOME console and code generation tools.
+#  - `openjdk-21-jdk-headless`: Java compiler for FOME console and code generation tools.
 #  - `mtools`, `zip`, `xxd`, `dosfstools`: Used to generate the on-ECU filesystem that stores the matching ini file.
 #
 
@@ -26,7 +26,7 @@ git submodule update --init
 sudo apt-get update
 
 # install dependencies
-sudo apt-get install -y build-essential gcc gdb gcc-multilib g++-multilib make openjdk-8-jdk-headless mtools zip xxd dosfstools lcov file rsync
+sudo apt-get install -y build-essential gcc gdb gcc-multilib g++-multilib make openjdk-21-jdk-headless mtools zip xxd dosfstools lcov file rsync
 
 # Allow the current user to use serial ports
 sudo usermod -a -G dialout $USER
