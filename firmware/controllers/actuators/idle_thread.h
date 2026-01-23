@@ -45,7 +45,7 @@ struct IIdleController {
 	virtual float getCrankingOpenLoop(float clt) const = 0;
 	virtual float getRunningOpenLoop(float rpm, float clt, SensorResult tps) = 0;
 	virtual float getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) = 0;
-	virtual float getClosedLoop(Phase phase, float tps, float rpm, float rpmRate, float target) = 0;
+	virtual float getClosedLoop(Phase phase, float rpm, float rpmRate, float target) = 0;
 	virtual float getCrankingTaperFraction(float clt) const = 0;
 	virtual bool isIdlingOrTaper() const = 0;
 	virtual float getIdleTimingAdjustment(float rpm, float rpmRate) = 0;
@@ -76,7 +76,7 @@ public:
 	float getIdleTimingAdjustment(float rpm, float rpmRate, float targetRpm, Phase phase);
 
 	// CLOSED LOOP CORRECTION
-	float getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float rpmRate, float targetRpm) override;
+	float getClosedLoop(IIdleController::Phase phase, float rpm, float rpmRate, float targetRpm) override;
 
 	void onConfigurationChange(engine_configuration_s const * previousConfig) override final;
 	void onFastCallback() override final;

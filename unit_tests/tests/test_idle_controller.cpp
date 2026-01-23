@@ -445,14 +445,14 @@ TEST(idle_v2, closedLoopBasic) {
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
 	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
-	dut.getClosedLoop(ICP::Idling, 0, 900, 0, 900);
+	dut.getClosedLoop(ICP::Idling, 900, 0, 900);
 	advanceTimeUs(5'000'000);
 
 	// Test above target, should return negative
-	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 950, 0, /*tgt*/ 900));
+	EXPECT_FLOAT_EQ(-25, dut.getClosedLoop(ICP::Idling, /*rpm*/ 950, 0, /*tgt*/ 900));
 
 	// Below target, should return positive
-	EXPECT_FLOAT_EQ(25, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 850, 0, /*tgt*/ 900));
+	EXPECT_FLOAT_EQ(25, dut.getClosedLoop(ICP::Idling, /*rpm*/ 850, 0, /*tgt*/ 900));
 }
 
 TEST(idle_v2, closedLoopInjectedRpmRate) {
@@ -469,14 +469,14 @@ TEST(idle_v2, closedLoopInjectedRpmRate) {
 	engineConfiguration->idleRpmPid.maxValue = 50;
 
 	// burn one update then advance time 5 seconds to avoid difficulty from wasResetPid
-	dut.getClosedLoop(ICP::Idling, 0, 900, 0, 900);
+	dut.getClosedLoop(ICP::Idling, 900, 0, 900);
 	advanceTimeUs(5'000'000);
 
 	// Positive rpmRate -> negative output
-	EXPECT_FLOAT_EQ(-10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ 100, /*tgt*/ 900));
+	EXPECT_FLOAT_EQ(-10, dut.getClosedLoop(ICP::Idling, /*rpm*/ 900, /*rpmRate*/ 100, /*tgt*/ 900));
 
 	// Negative rpmRate -> positive output
-	EXPECT_FLOAT_EQ(10, dut.getClosedLoop(ICP::Idling, 0, /*rpm*/ 900, /*rpmRate*/ -100, /*tgt*/ 900));
+	EXPECT_FLOAT_EQ(10, dut.getClosedLoop(ICP::Idling, /*rpm*/ 900, /*rpmRate*/ -100, /*tgt*/ 900));
 }
 
 
@@ -500,7 +500,7 @@ TEST(idle_v2, RunningToIdleTransition) {
 	Sensor::setMockValue(SensorType::VehicleSpeed, 15.0);
 
 	// we are on running state still, so 0 idle position
-	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 0, 1100));
+	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, 950, 0, 1100));
 	dut.getIdlePid()->postState(engine->outputChannels.idleStatus);
 
 	EXPECT_EQ(0, engine->outputChannels.idleStatus.dTerm);
@@ -509,15 +509,15 @@ TEST(idle_v2, RunningToIdleTransition) {
 	advanceTimeUs(5'000'000);
 
 	// now we are idling
-	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 0, 1100), EPS2D);
+	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, 950, 0, 1100), EPS2D);
 	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
 
 	// still idle, add some error:
-	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, expectedTps.Value, 950, 0, 1120), EPS2D);
+	EXPECT_NEAR(50, dut.getClosedLoop(ICP::Idling, 950, 0, 1120), EPS2D);
 	EXPECT_NEAR(0.01, dut.getIdlePid()->getIntegration(), EPS2D);
 
 	// back to running mode, should reset all:
-	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, expectedTps.Value, 950, 0, 1100));
+	EXPECT_EQ(0, dut.getClosedLoop(ICP::Running, 950, 0, 1100));
 	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
 }
 
@@ -526,7 +526,7 @@ struct IntegrationIdleMock : public IdleController {
 	MOCK_METHOD(TargetInfo, getTargetRpm, (float clt), (override));
 	MOCK_METHOD(ICP, determinePhase, (float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));
 	MOCK_METHOD(float, getOpenLoop, (ICP phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction), (override));
-	MOCK_METHOD(float, getClosedLoop, (ICP phase, float tps, float rpm, float rpmRate, float target), (override));
+	MOCK_METHOD(float, getClosedLoop, (ICP phase, float rpm, float rpmRate, float target), (override));
 	MOCK_METHOD(float, getCrankingTaperFraction, (float clt), (const, override));
 };
 
@@ -594,7 +594,7 @@ TEST(idle_v2, IntegrationAutomatic) {
 		.WillOnce(Return(13));
 
 	// Closed loop should get called
-	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedTps.Value, 950, 100, 1000))
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000))
 		.WillOnce(Return(7));
 
 	// Result should be open + closed
@@ -632,7 +632,7 @@ TEST(idle_v2, IntegrationClamping) {
 		.WillOnce(Return(75));
 
 	// Closed loop should get called
-	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedTps.Value, 950, 100, 1000))
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000))
 		.WillOnce(Return(75));
 
 	// Result would be 75 + 75 = 150, but it should clamp to 100
