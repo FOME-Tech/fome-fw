@@ -14,7 +14,7 @@
 
 #include "mpu_util.h"
 
-// Both ADCs should be running at 25MHz
+// All ADCs should be running at 40MHz
 static_assert(STM32_ADC12_CLOCK == 40000000);
 static_assert(STM32_ADC3_CLOCK == 40000000);
 
