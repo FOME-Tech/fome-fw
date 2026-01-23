@@ -25,7 +25,7 @@
 	#define KNOCK_SAMPLE_RATE (STM32_ADC3_CLOCK / (H7_KNOCK_OVERSAMPLE * (32 + 8)))
 
 	static_assert(KNOCK_SAMPLE_RATE == 250000);
-	static_assert(STM32_ADCCLK == 80000000);
+	static_assert(STM32_ADCCLK == 40000000);
 	static_assert(STM32_ADC3_CLOCK == 40000000);
 
 #else
