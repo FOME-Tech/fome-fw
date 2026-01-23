@@ -9,7 +9,6 @@ import com.rusefi.ui.util.HorizontalLine;
 import com.rusefi.ui.util.UiUtils;
 import com.rusefi.util.IoUtils;
 import net.miginfocom.swing.MigLayout;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.putgemin.VerticalFlowLayout;
 
@@ -62,7 +61,9 @@ public class StartupFrame {
      * closing the application.
      */
     private boolean isProceeding;
-    private final JLabel noPortsMessage = new JLabel("<html>No ports found!<br>Confirm blue LED is blinking</html>");
+    private final JLabel statusMessage = new JLabel();
+    private JButton connectButton;
+    private SerialPortScanner.AvailableHardware currentHardware;
 
     public StartupFrame() {
         frame = new JFrame("FOME Console");
@@ -91,11 +92,13 @@ public class StartupFrame {
         final JComboBox<String> comboSpeeds = createSpeedCombo();
         connectPanel.add(comboSpeeds);
 
-        final JButton connectButton = new JButton("Connect", new ImageIcon(getClass().getResource("/com/rusefi/connect48.png")));
-        //connectButton.setBackground(new Color(RUSEFI_ORANGE)); // custom orange
+        connectButton = new JButton("Connect", new ImageIcon(getClass().getResource("/com/rusefi/connect48.png")));
         setToolTip(connectButton, "Connect to real hardware");
         connectPanel.add(connectButton);
         connectPanel.setVisible(false);
+
+        // Update connect button state when port selection changes
+        comboPorts.addItemListener(e -> updateConnectButtonState());
 
         frame.getRootPane().setDefaultButton(connectButton);
         connectButton.addKeyListener(new KeyAdapter() {
@@ -113,7 +116,7 @@ public class StartupFrame {
         leftPanel.add(miscPanel);
 
         realHardwarePanel.add(connectPanel, "right, wrap");
-        realHardwarePanel.add(noPortsMessage, "right, wrap");
+        realHardwarePanel.add(statusMessage, "right, wrap");
 
         ProgramSelector selector = new ProgramSelector(comboPorts);
 
@@ -162,14 +165,69 @@ public class StartupFrame {
         UiUtils.centerWindow(frame);
     }
 
-    private void applyKnownPorts(SerialPortScanner.AvailableHardware currentHardware) {
-        List<SerialPortScanner.PortResult> ports = currentHardware.getKnownPorts();
+    private void applyKnownPorts(SerialPortScanner.AvailableHardware hardware) {
+        this.currentHardware = hardware;
+        List<SerialPortScanner.PortResult> ports = hardware.getKnownPorts();
         log.info("Rendering available ports: " + ports);
-        connectPanel.setVisible(!ports.isEmpty());
-        noPortsMessage.setVisible(ports.isEmpty());
 
         applyPortSelectionToUIcontrol(ports);
+
+        // Update UI visibility and status message based on what hardware is detected
+        boolean hasAnyPorts = !ports.isEmpty();
+        connectPanel.setVisible(hasAnyPorts);
+
+        updateConnectButtonState();
+
         UiUtils.trueLayout(connectPanel);
+    }
+
+    private void updateConnectButtonState() {
+        if (connectButton == null) {
+            return;
+        }
+
+        boolean dfuFound = currentHardware != null && currentHardware.dfuFound;
+        SerialPortScanner.PortResult selectedPort = (SerialPortScanner.PortResult) comboPorts.getSelectedItem();
+
+        if (selectedPort == null) {
+            // No serial ports available
+            connectButton.setEnabled(false);
+            connectButton.setToolTipText("No port selected");
+
+            if (dfuFound) {
+                statusMessage.setText("<html>DFU device detected.<br>Use firmware update options below.</html>");
+            } else {
+                statusMessage.setText("<html>No ports found!<br>Confirm blue LED is blinking</html>");
+            }
+            return;
+        }
+
+        boolean canConnect = selectedPort.isEcu();
+        connectButton.setEnabled(canConnect);
+
+        // Build status message - port type info, plus DFU if present
+        String portStatus;
+        if (canConnect) {
+            connectButton.setToolTipText("Connect to ECU at " + selectedPort.port);
+            portStatus = null;
+        } else if (selectedPort.type == SerialPortScanner.SerialPortType.OpenBlt) {
+            connectButton.setToolTipText("Cannot connect - device is in bootloader mode");
+            portStatus = "Bootloader mode - use Update Firmware below";
+        } else {
+            connectButton.setToolTipText("Cannot connect to unknown device");
+            portStatus = "Unknown device type";
+        }
+
+        // Combine port status with DFU status if both present
+        if (portStatus != null && dfuFound) {
+            statusMessage.setText("<html>" + portStatus + "<br>DFU device also detected.</html>");
+        } else if (portStatus != null) {
+            statusMessage.setText("<html>" + portStatus + "</html>");
+        } else if (dfuFound) {
+            statusMessage.setText("<html>DFU device also detected.</html>");
+        } else {
+            statusMessage.setText("");
+        }
     }
 
     public static void setFrameIcon(Frame frame) {
