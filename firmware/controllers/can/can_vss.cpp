@@ -118,7 +118,7 @@ static expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
 	};
 }
 
-expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
+static expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
 	switch (type) {
 		case BMW_e90:
 			return processBMW_e90Wss(frame);
