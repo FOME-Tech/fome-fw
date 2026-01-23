@@ -17,7 +17,7 @@ dependencies {
     api project(':models')
     api project(':util')
 
-    implementation "com.fazecast:jSerialComm:2.11.4"
+    implementation global_libs.jSerialComm
     implementation global_libs.jcip
     implementation project(':logging')
 

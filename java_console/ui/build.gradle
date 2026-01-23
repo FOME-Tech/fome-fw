@@ -13,7 +13,7 @@ dependencies {
     implementation project(':luaformatter')
     implementation project(':logging')
     implementation project(':trigger')
-    implementation 'com.miglayout:miglayout-swing:4.1'
+    implementation global_libs.miglayout
     implementation global_libs.junit
 
     testImplementation global_libs.mockito

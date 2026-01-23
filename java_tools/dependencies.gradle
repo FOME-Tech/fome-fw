@@ -7,5 +7,7 @@ ext {
           mockito        : "org.mockito:mockito-all:1.10.19",
           snakeyaml      : "org.yaml:snakeyaml:1.26",
           jcip           : 'net.jcip:jcip-annotations:1.0',
+          jSerialComm    : 'com.fazecast:jSerialComm:2.11.4',
+          miglayout      : 'com.miglayout:miglayout-swing:4.1',
   ]
 }
