@@ -277,6 +277,12 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 #endif // EFI_SHAFT_POSITION_INPUT
 
 void SensorChecker::onSlowCallback() {
+	bool hasBeenRunningOneSecond = getTimeNowNt() > MS2NT(1000);
+	if (!hasBeenRunningOneSecond) {
+		// Don't bother checking ANYTHING for a second to allow power to stabilize
+		return;
+	}
+
 	if (Sensor::hasSensor(SensorType::Sensor5vVoltage)) {
 		float sensorSupply = Sensor::getOrZero(SensorType::Sensor5vVoltage);
 
@@ -284,14 +290,17 @@ void SensorChecker::onSlowCallback() {
 		if (sensorSupply > 5.25f) {
 			warning(ObdCode::Sensor5vSupplyHigh, "5V sensor supply high: %.2f", sensorSupply);
 			setError(true, ObdCode::Sensor5vSupplyHigh);
+			m_analogSensorsShouldWork = false;
 			return;
 		} else if (sensorSupply < 4.75f) {
 			warning(ObdCode::Sensor5vSupplyLow, "5V sensor supply low: %.2f", sensorSupply);
 			setError(true, ObdCode::Sensor5vSupplyLow);
+			m_analogSensorsShouldWork = false;
 			return;
 		} else {
 			setError(false, ObdCode::Sensor5vSupplyHigh);
 			setError(false, ObdCode::Sensor5vSupplyLow);
+			m_analogSensorsShouldWork = true;
 		}
 	} else {
 		if (Sensor::getOrZero(SensorType::BatteryVoltage) < 7.0f) {
