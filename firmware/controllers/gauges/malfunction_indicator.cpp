@@ -105,7 +105,7 @@ static MILController instance;
 
 void initMalfunctionIndicator() {
 	instance.setPeriod(10 /*ms*/);
-	instance.start();
+	instance.startThread();
 }
 
 #endif /* EFI_MALFUNCTION_INDICATOR */

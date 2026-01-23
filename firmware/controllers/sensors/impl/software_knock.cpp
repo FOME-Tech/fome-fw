@@ -107,7 +107,7 @@ void initSoftwareKnock() {
 #if KNOCK_HAS_CH2		
 		efiSetPadMode("knock ch2", KNOCK_PIN_CH2, PAL_MODE_INPUT_ANALOG);
 #endif
-		kt.start();
+		kt.startThread();
 	}
 }
 

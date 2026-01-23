@@ -43,7 +43,7 @@ public:
 	/**
 	 * @brief Start the thread.
 	 */
-	void start()
+	void startThread()
 	{
 		if (!m_started)
 		{

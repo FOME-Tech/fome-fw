@@ -302,7 +302,7 @@ private:
 static NO_CACHE WifiHelperThread wifiHelper;
 
 void initWifi() {
-	wifiHelper.start();
+	wifiHelper.startThread();
 }
 
 void waitForWifiInit() {

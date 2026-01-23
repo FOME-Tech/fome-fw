@@ -88,11 +88,11 @@ class SerialTsChannel;
 
 void startSerialChannels() {
 #if defined(TS_PRIMARY_UxART_PORT)
-	primaryChannelThread.start();
+	primaryChannelThread.startThread();
 #endif
 
 #if defined(TS_SECONDARY_UxART_PORT)
-	secondaryChannelThread.start();
+	secondaryChannelThread.startThread();
 #endif
 }
 

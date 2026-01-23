@@ -36,7 +36,7 @@ public:
 		m_device = device;
 
 		if (device) {
-			ThreadController::start();
+			ThreadController::startThread();
 		}
 	}
 
@@ -165,7 +165,7 @@ void initCan() {
 
 	// fire up threads, as necessary
 	if (engineConfiguration->canWriteEnabled) {
-		canWrite.start();
+		canWrite.startThread();
 	}
 
 	if (engineConfiguration->canReadEnabled) {

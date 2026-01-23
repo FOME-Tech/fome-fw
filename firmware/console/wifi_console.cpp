@@ -100,7 +100,7 @@ static NO_CACHE WifiConsoleThread wifiThread;
 void startWifiConsole() {
 	initWifi();
 
-	wifiThread.start();
+	wifiThread.startThread();
 }
 
 #endif // EFI_WIFI

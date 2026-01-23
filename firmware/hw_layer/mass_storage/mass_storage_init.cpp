@@ -140,7 +140,7 @@ void initUsbMsd() {
 	msd.attachLun(1, (BaseBlockDevice*)&ND1, blkbufSdmmc, &sdCardInquiry, nullptr);
 
 	// start the mass storage thread
-	msd.start();
+	msd.startThread();
 }
 
 #endif // HAL_USE_USB_MSD

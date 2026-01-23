@@ -39,7 +39,7 @@ void NetDeferredInit() {
 
 	initWifi();
 
-	wifiInitFinisher.start();
+	wifiInitFinisher.startThread();
 }
 
 uint8_t header[4] = {0xde, 0xad, 0xbe, 0xef};

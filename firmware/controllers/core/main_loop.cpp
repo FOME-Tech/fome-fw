@@ -22,7 +22,7 @@ private:
 static MainLoop mainLoop CCM_OPTIONAL;
 
 void initMainLoop() {
-	mainLoop.start();
+	mainLoop.startThread();
 }
 
 MainLoop::MainLoop()
