@@ -18,24 +18,17 @@ dependencies {
     implementation global_libs.snakeyaml
 }
 
-shadowJar {
-    /*
-     to exclude suffix '-all'
-     in resulting archive file name
-    */
-    archiveBaseName = 'ConfigDefinition'
-    archiveClassifier = ''
+tasks.named('shadowJar').configure {
+    archiveBaseName.set('ConfigDefinition')
+    archiveClassifier.set('')
+    destinationDirectory.set(file("${rootDir}/../.."))
 
-    destinationDirectory = file( '$rootDir/../..' )
     manifest {
-        attributes(
-            'Main-Class': 'com.rusefi.ConfigDefinition'
-        )
+        attributes 'Main-Class': 'com.rusefi.ConfigDefinition'
     }
+
+    // icu4j is huge, exclude it
     dependencies {
-        exclude(dependency(global_libs.jsr305))
-        exclude(dependency(global_libs.junit))
-        exclude(dependency(global_libs.annotations))
         exclude(dependency('com.ibm.icu:icu4j:.*'))
     }
 }

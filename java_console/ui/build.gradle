@@ -19,9 +19,7 @@ dependencies {
     testImplementation global_libs.mockito
 }
 
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
-tasks.named('shadowJar', ShadowJar) {
+tasks.named('shadowJar').configure {
     destinationDirectory.set(file("${rootDir}/../java_console_binary"))
     archiveBaseName.set("fome_console")
     archiveClassifier.set("")
