@@ -30,7 +30,7 @@ public class SimulatorHelper {
             public void run() {
                 try {
                     FileLog.SIMULATOR_CONSOLE.start();
-                    process = Runtime.getRuntime().exec(binary.getPath());
+                    process = new ProcessBuilder(binary.getPath()).start();
                     FileLog.MAIN.logLine("Executing " + binary.getPath() + "=" + process);
                     SimulatorExecHelper.dumpProcessOutput(process);
                 } catch (IOException e) {

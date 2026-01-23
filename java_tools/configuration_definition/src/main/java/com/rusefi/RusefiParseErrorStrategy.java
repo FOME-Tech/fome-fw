@@ -15,7 +15,7 @@ public class RusefiParseErrorStrategy extends DefaultErrorStrategy {
     private boolean hadError = false;
 
     public static void parseDefinitionFile(ParseTreeListener listener, String filePath) throws IOException {
-        CharStream in = new ANTLRInputStream(Files.newInputStream(Paths.get(filePath)));
+        CharStream in = CharStreams.fromPath(Paths.get(filePath));
 
         long start = System.nanoTime();
         parse(listener, in);
@@ -25,7 +25,7 @@ public class RusefiParseErrorStrategy extends DefaultErrorStrategy {
     }
 
     public static void parseDefinitionString(ParseTreeListener listener, String content) {
-        CharStream in = new ANTLRInputStream(content);
+        CharStream in = CharStreams.fromString(content);
 
         long start = System.nanoTime();
         parse(listener, in);

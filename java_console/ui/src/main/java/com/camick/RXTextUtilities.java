@@ -26,7 +26,7 @@ public class RXTextUtilities
 
         try
         {
-            Rectangle r = component.modelToView(component.getCaretPosition());
+            Rectangle r = component.modelToView2D(component.getCaretPosition()).getBounds();
             JViewport viewport = (JViewport)container;
             int extentHeight = viewport.getExtentSize().height;
             int viewHeight = viewport.getViewSize().height;
@@ -56,7 +56,7 @@ public class RXTextUtilities
 
         try
         {
-            Rectangle r = component.modelToView( component.getCaretPosition() );
+            Rectangle r = component.modelToView2D( component.getCaretPosition() ).getBounds();
             int width = r.x - component.getInsets().left;
             column = width / characterWidth;
         }
