@@ -215,7 +215,13 @@ static size_t indexForSlowAdcChannel(adc_channel_e channel) {
 
 static bool didStart = false;
 
-static NO_CACHE adcsample_t adcSampleBuffer[slowChannelCount];
+// In dual mode, each 32-bit DMA transfer contains two 16-bit samples:
+// lower 16 bits from ADC1, upper 16 bits from ADC2.
+// Use a union to provide both views of the buffer.
+static NO_CACHE union {
+	adcsample_t samples32[slowChannelCount / 2];  // 32-bit view for HAL/DMA
+	uint16_t samples16[slowChannelCount];          // 16-bit view for reading
+} sampleBuffer;
 
 bool readSlowAnalogInputs() {
 	// This only needs to happen once, as the timer will continue firing the ADC and writing to the buffer without our help
@@ -224,10 +230,13 @@ bool readSlowAnalogInputs() {
 	}
 	didStart = true;
 
+	setArrayValues(sampleBuffer.samples16, 0);
+
 	{
 		chibios_rt::CriticalSectionLocker csl;
 		// Oversampling and right-shift happen in hardware, so we can sample directly to the output buffer
-		adcStartConversionI(&ADCD1, &convGroupSlow, adcSampleBuffer, 1);
+		// Pass the 32-bit view to the HAL - it will receive slowChannelCount/2 32-bit samples in dual mode
+		adcStartConversionI(&ADCD1, &convGroupSlow, sampleBuffer.samples32, 1);
 	}
 
 	constexpr uint32_t samplingRate = H7_ADC_SPEED;
@@ -252,11 +261,14 @@ bool readSlowAnalogInputs() {
 adcsample_t getSlowAdcSample(adc_channel_e channel) {
 	auto index = indexForSlowAdcChannel(channel);
 
+	// In dual mode, the 16-bit samples are interleaved: ADC1, ADC2, ADC1, ADC2, ...
+	// The scramble table returns 0-9 for ADC1 channels and 10-19 for ADC2 channels.
 	if (index >= 10) {
-		// Top half of channels were sampled by the slave ADC, therefore are in the upper half of the 32-bit word
-		return (adcSampleBuffer[index - 10] >> 16) & 0xFFFF;
+		// ADC2 channels: odd indices in the interleaved 16-bit array
+		return sampleBuffer.samples16[(index - 10) * 2 + 1];
 	} else {
-		return adcSampleBuffer[index] & 0xFFFF;
+		// ADC1 channels: even indices in the interleaved 16-bit array
+		return sampleBuffer.samples16[index * 2];
 	}
 }
 
