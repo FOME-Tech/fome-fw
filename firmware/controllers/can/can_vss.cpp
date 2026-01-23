@@ -81,7 +81,7 @@ struct WssResult {
 	float rr;
 };
 
-static constexpr float E90Wss(const uint8_t& data)
+static float E90Wss(const uint8_t& data)
 {
 	return (*reinterpret_cast<const int16_t*>(&data)) * 0.0625f;
 }
