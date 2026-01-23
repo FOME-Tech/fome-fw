@@ -200,19 +200,6 @@ static constexpr ADCConversionGroup convGroupSlow = {
 	},
 };
 
-static const uint8_t adcChannelScramble[20] = {
-	0, 1, 2, 3, 4, 5,		// ADC1: PA0-5
-	10, 11,					// ADC2: PA6/7
-	6, 7,					// ADC1: PB0/1
-	12, 13, 14, 15, 16, 17,	// ADC2: PC0-5
-	8, 9,					// ADC1: PF11/12
-	18, 19					// ADC2: PF13/14
-};
-
-static size_t indexForSlowAdcChannel(adc_channel_e channel) {
-	return adcChannelScramble[channel - EFI_ADC_0];
-}
-
 static bool didStart = false;
 
 // In dual mode, each 32-bit DMA transfer contains two 16-bit samples:
@@ -259,17 +246,21 @@ bool readSlowAnalogInputs() {
 }
 
 adcsample_t getSlowAdcSample(adc_channel_e channel) {
-	auto index = indexForSlowAdcChannel(channel);
+	// Maps ADC channel to index in the interleaved 16-bit sample buffer.
+	// In dual mode, samples are interleaved: ADC1[0], ADC2[0], ADC1[1], ADC2[1], ...
+	// ADC1 channels (seq 0-9) map to even indices, ADC2 channels (seq 0-9) map to odd indices.
+	static const uint8_t descramble[20] = {
+		0, 2, 4, 6, 8, 10,		// ADC1: PA0-5 (seq 0-5 -> indices 0,2,4,6,8,10)
+		1, 3,					// ADC2: PA6/7 (seq 0-1 -> indices 1,3)
+		12, 14,					// ADC1: PB0/1 (seq 6-7 -> indices 12,14)
+		5, 7, 9, 11, 13, 15,	// ADC2: PC0-5 (seq 2-7 -> indices 5,7,9,11,13,15)
+		16, 18,					// ADC1: PF11/12 (seq 8-9 -> indices 16,18)
+		17, 19					// ADC2: PF13/14 (seq 8-9 -> indices 17,19)
+	};
 
-	// In dual mode, the 16-bit samples are interleaved: ADC1, ADC2, ADC1, ADC2, ...
-	// The scramble table returns 0-9 for ADC1 channels and 10-19 for ADC2 channels.
-	if (index >= 10) {
-		// ADC2 channels: odd indices in the interleaved 16-bit array
-		return sampleBuffer.samples16[(index - 10) * 2 + 1];
-	} else {
-		// ADC1 channels: even indices in the interleaved 16-bit array
-		return sampleBuffer.samples16[index * 2];
-	}
+	auto channelIndex = channel - EFI_ADC_0;
+	auto bufferPosition = descramble[channelIndex];
+	return sampleBuffer.samples16[bufferPosition];
 }
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
