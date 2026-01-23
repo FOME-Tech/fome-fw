@@ -196,19 +196,32 @@ void initBoardSensors() {
 		mrSenseFunc.configure(0, 0, 1, mrSenseRatio, 0, 50);
 		mrSenseSensor.setFunction(mrSenseFunc);
 		AdcSubscription::SubscribeSensor(mrSenseSensor, EFI_ADC_16, /*bandwidth*/ 20, /*ratio*/ 1);
-		// mrSenseSensor.Register();
+		mrSenseSensor.Register();
 	}
 
 	{
 		static LinearFunc sensor5vFunc;
 		static FunctionalSensor sensor5vSensor(SensorType::Sensor5vVoltage, MS2NT(100));
 
-		const float sensor5vRatio = 2;;
+		const float sensor5vRatio = 2;
 
 		sensor5vFunc.configure(0, 0, 1, sensor5vRatio, 0, 50);
 		sensor5vSensor.setFunction(sensor5vFunc);
 		AdcSubscription::SubscribeSensor(sensor5vSensor, EFI_ADC_17, /*bandwidth*/ 20, /*ratio*/ 1);
-		// sensor5vSensor.Register();
+		sensor5vSensor.Register();
+	}
+
+	{
+		static LinearFunc vboostFunc;
+		static FunctionalSensor vboostSensor(SensorType::VboostVoltage, MS2NT(100));
+
+		// 82k high side/10k low side = 9.2
+		const float vboostRatio = (92.0f / 10.0f);
+
+		vboostFunc.configure(0, 0, 1, vboostRatio, 0, 50);
+		vboostSensor.setFunction(vboostFunc);
+		AdcSubscription::SubscribeSensor(vboostSensor, EFI_ADC_18, /*bandwidth*/ 20, /*ratio*/ 1);
+		vboostSensor.Register();
 	}
 }
 #endif

@@ -14,7 +14,7 @@
 
 #include "mpu_util.h"
 
-// Both ADCs should be running at 25MHz
+// All ADCs should be running at 40MHz
 static_assert(STM32_ADC12_CLOCK == 40000000);
 static_assert(STM32_ADC3_CLOCK == 40000000);
 
@@ -101,8 +101,8 @@ static void adc_callback(ADCDriver *adcp) {
 // We sample at 10khz, or a period of 100us
 #define ADC_SAMPLING_SLOW ADC_SMPR_SMP_16P5
 
-// Sample the 16 channels that line up with the STM32F4/F7
-constexpr size_t slowChannelCount = 16;
+// Sample the 16 channels that line up with the STM32F4/F7, plus PF11/12/13/14
+constexpr size_t slowChannelCount = 20;
 
 // Conversion group for slow channels
 // This simply samples every channel in sequence
@@ -119,8 +119,7 @@ static constexpr ADCConversionGroup convGroupSlow = {
 	.pcsel				= 0xFFFFFFFF, // enable analog switches on all channels
 	// Thresholds aren't used
 	.ltr1 = 0, .htr1 = 0, .ltr2 = 0, .htr2 = 0, .ltr3 = 0, .htr3 = 0,
-	.awd2cr = 0,
-	.awd3cr = 0,
+	.awd2cr = 0, .awd3cr = 0,
 	.smpr = {
 		// Configure all channels to use ADC_SAMPLING_SLOW time
 		ADC_SMPR1_SMP_AN0(ADC_SAMPLING_SLOW) |
@@ -145,30 +144,71 @@ static constexpr ADCConversionGroup convGroupSlow = {
 		ADC_SMPR2_SMP_AN19(ADC_SAMPLING_SLOW)
 	},
 	.sqr = {
-		// The seemingly insane values here exist to put the values
-		// in the buffer in the same order as the ADCv2 (F4/F7) ADC
+		// ADC1 samples the first 10 channels: PA0-5, PB0-1, PF11-12
 		ADC_SQR1_SQ1_N(16) |	// PA0 (aka PA0_C)
 		ADC_SQR1_SQ2_N(17) |	// PA1 (aka PA1_C)
 		ADC_SQR1_SQ3_N(14) |	// PA2
 		ADC_SQR1_SQ4_N(15),		// PA3
 		ADC_SQR2_SQ5_N(18) |	// PA4
 		ADC_SQR2_SQ6_N(19) |	// PA5
-		ADC_SQR2_SQ7_N(3) |		// PA6
-		ADC_SQR2_SQ8_N(7) |		// PA7
-		ADC_SQR2_SQ9_N(9),		// PB0
-		ADC_SQR3_SQ10_N(5) |	// PB1
-		ADC_SQR3_SQ11_N(10) |	// PC0
-		ADC_SQR3_SQ12_N(11) |	// PC1
-		ADC_SQR3_SQ13_N(12) |	// PC2 (aka PC2_C)
-		ADC_SQR3_SQ14_N(13),	// PC3 (aka PC3_C)
-		ADC_SQR4_SQ15_N(4) |	// PC4
-		ADC_SQR4_SQ16_N(8)		// PC5
+		ADC_SQR2_SQ7_N(9) |		// PB0
+		ADC_SQR2_SQ8_N(5) |		// PB1
+		ADC_SQR2_SQ9_N(2),		// PF11
+		ADC_SQR3_SQ10_N(6),		// PF12
+		0
+	},
+
+	// Thresholds aren't used
+	.sltr1 = 0, .shtr1 = 0, .sltr2 = 0, .shtr2 = 0, .sltr3 = 0, .shtr3 = 0,
+	.sawd2cr = 0, .sawd3cr = 0,
+	.ssmpr = {
+		// Configure all channels to use ADC_SAMPLING_SLOW time
+		ADC_SMPR1_SMP_AN0(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN1(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN2(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN3(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN4(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN5(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN6(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN7(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN8(ADC_SAMPLING_SLOW) |
+		ADC_SMPR1_SMP_AN9(ADC_SAMPLING_SLOW),
+		ADC_SMPR2_SMP_AN10(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN11(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN12(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN13(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN14(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN15(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN16(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN17(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN18(ADC_SAMPLING_SLOW) |
+		ADC_SMPR2_SMP_AN19(ADC_SAMPLING_SLOW)
+	},
+	.ssqr = {
+		// ADC2 samples the second 10 channels: PA6-7, PC0-5, PF11-14
+		ADC_SQR1_SQ1_N(3) |	// PA6 (aka PA0_C)
+		ADC_SQR1_SQ2_N(7) |	// PA7 (aka PA1_C)
+		ADC_SQR1_SQ3_N(10) |	// PC0
+		ADC_SQR1_SQ4_N(11),		// PC1
+		ADC_SQR2_SQ5_N(12) |	// PC2
+		ADC_SQR2_SQ6_N(13) |	// PC3
+		ADC_SQR2_SQ7_N(4) |		// PC4
+		ADC_SQR2_SQ8_N(8) |		// PC5
+		ADC_SQR2_SQ9_N(2),		// PF13
+		ADC_SQR3_SQ10_N(6),		// PF14
+		0
 	},
 };
 
 static bool didStart = false;
 
-static NO_CACHE adcsample_t adcSampleBuffer[SLOW_ADC_CHANNEL_COUNT];
+// In dual mode, each 32-bit DMA transfer contains two 16-bit samples:
+// lower 16 bits from ADC1, upper 16 bits from ADC2.
+// Use a union to provide both views of the buffer.
+static NO_CACHE union {
+	adcsample_t samples32[slowChannelCount / 2];  // 32-bit view for HAL/DMA
+	uint16_t samples16[slowChannelCount];          // 16-bit view for reading
+} sampleBuffer;
 
 bool readSlowAnalogInputs() {
 	// This only needs to happen once, as the timer will continue firing the ADC and writing to the buffer without our help
@@ -177,10 +217,13 @@ bool readSlowAnalogInputs() {
 	}
 	didStart = true;
 
+	setArrayValues(sampleBuffer.samples16, 0);
+
 	{
 		chibios_rt::CriticalSectionLocker csl;
 		// Oversampling and right-shift happen in hardware, so we can sample directly to the output buffer
-		adcStartConversionI(&ADCD1, &convGroupSlow, adcSampleBuffer, 1);
+		// Pass the 32-bit view to the HAL - it will receive slowChannelCount/2 32-bit samples in dual mode
+		adcStartConversionI(&ADCD1, &convGroupSlow, sampleBuffer.samples32, 1);
 	}
 
 	constexpr uint32_t samplingRate = H7_ADC_SPEED;
@@ -203,7 +246,21 @@ bool readSlowAnalogInputs() {
 }
 
 adcsample_t getSlowAdcSample(adc_channel_e channel) {
-	return adcSampleBuffer[channel - EFI_ADC_0];
+	// Maps ADC channel to index in the interleaved 16-bit sample buffer.
+	// In dual mode, samples are interleaved: ADC1[0], ADC2[0], ADC1[1], ADC2[1], ...
+	// ADC1 channels (seq 0-9) map to even indices, ADC2 channels (seq 0-9) map to odd indices.
+	static const uint8_t descramble[20] = {
+		0, 2, 4, 6, 8, 10,		// ADC1: PA0-5 (seq 0-5 -> indices 0,2,4,6,8,10)
+		1, 3,					// ADC2: PA6/7 (seq 0-1 -> indices 1,3)
+		12, 14,					// ADC1: PB0/1 (seq 6-7 -> indices 12,14)
+		5, 7, 9, 11, 13, 15,	// ADC2: PC0-5 (seq 2-7 -> indices 5,7,9,11,13,15)
+		16, 18,					// ADC1: PF11/12 (seq 8-9 -> indices 16,18)
+		17, 19					// ADC2: PF13/14 (seq 8-9 -> indices 17,19)
+	};
+
+	auto channelIndex = channel - EFI_ADC_0;
+	auto bufferPosition = descramble[channelIndex];
+	return sampleBuffer.samples16[bufferPosition];
 }
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
@@ -287,6 +344,12 @@ static const ADCConversionGroup adcConvGroupCh1 = {
 		0,
 		0
 	},
+
+	// Dual mode isn't used on knock ADC, so all zeroes
+	.sltr1 = 0, .shtr1 = 0, .sltr2 = 0, .shtr2 = 0, .sltr3 = 0, .shtr3 = 0,
+	.sawd2cr = 0, .sawd3cr = 0,
+	.ssmpr = {0, 0},
+	.ssqr = {0, 0, 0, 0},
 };
 
 // Not all boards have a second channel - configure it if it exists
@@ -312,6 +375,12 @@ static const ADCConversionGroup adcConvGroupCh2 = {
 		0,
 		0
 	},
+
+	// Dual mode isn't used on knock ADC, so all zeroes
+	.sltr1 = 0, .shtr1 = 0, .sltr2 = 0, .shtr2 = 0, .sltr3 = 0, .shtr3 = 0,
+	.sawd2cr = 0, .sawd3cr = 0,
+	.ssmpr = {0, 0},
+	.ssqr = {0, 0, 0, 0},
 };
 #endif // KNOCK_HAS_CH2
 
