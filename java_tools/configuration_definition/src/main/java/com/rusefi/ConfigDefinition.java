@@ -66,9 +66,12 @@ public class ConfigDefinition {
         String tsIniDestination = null;
         String javaFieldsDestination = null;
         String makefileDepsDestination = null;
+        String stampFile = null;
+        String fieldLookupFile = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         List<String> enumInputFiles = new ArrayList<>();
+        List<String> outputFiles = new ArrayList<>();
         PinoutLogic pinoutLogic = null;
         String branchName = null;
         String shortBoardName = null;
@@ -104,6 +107,7 @@ public class ConfigDefinition {
                     break;
                 case "-field_lookup_file": {
                     String cppFile = args[i + 1];
+                    fieldLookupFile = cppFile;
                     String mdFile = args[i + 2];
                     i++;
                     state.addDestination(new GetConfigValueConsumer(cppFile, mdFile));
@@ -148,6 +152,9 @@ public class ConfigDefinition {
                 case "-makefileDep":
                     makefileDepsDestination = args[i + 1];
                     break;
+                case "-stampFile":
+                    stampFile = args[i + 1];
+                    break;
             }
         }
 
@@ -159,6 +166,7 @@ public class ConfigDefinition {
         if (!enumInputFiles.isEmpty()) {
             for (String ef : enumInputFiles) {
                 state.read(new FileReader(ef));
+                state.addInputFile(ef);
             }
 
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
@@ -173,8 +181,26 @@ public class ConfigDefinition {
             System.out.println("Signature: " + signature);
         }
 
-        if (makefileDepsDestination != null && cHeaderDestination != null) {
-            writeMakefileDependencyFile(state.getInputFiles(), cHeaderDestination, makefileDepsDestination);
+        if (triggersInputFolder != null) {
+            state.addInputFile(triggersInputFolder + File.separator + "triggers.txt");
+        }
+
+        if (makefileDepsDestination != null) {
+            // Use stamp file as target if provided, otherwise fall back to cHeaderDestination
+            String depTarget = stampFile != null ? stampFile : cHeaderDestination;
+            if (depTarget != null) {
+                // Build list of output files
+                if (cHeaderDestination != null) {
+                    outputFiles.add(cHeaderDestination);
+                }
+                if (destCDefinesFileName != null) {
+                    outputFiles.add(destCDefinesFileName);
+                }
+                if (fieldLookupFile != null) {
+                    outputFiles.add(fieldLookupFile);
+                }
+                writeMakefileDependencyFile(state.getInputFiles(), depTarget, makefileDepsDestination, outputFiles);
+            }
         }
 
         new TriggerWheelTSLogic().execute(triggersInputFolder, state.getVariableRegistry());
@@ -237,13 +263,13 @@ public class ConfigDefinition {
         return "\"rusEFI (FOME) " + branch + "." + df.format(new Date()) + "."+ boardName + "." + inputFilesHash + "\"";
     }
 
-    private static void writeMakefileDependencyFile(List<String> inputFiles, String cHeaderDestination, String makefileDepsDestination) throws IOException {
+    private static void writeMakefileDependencyFile(List<String> inputFiles, String targetFile, String makefileDepsDestination, List<String> outputFiles) throws IOException {
         Path path = Paths.get(makefileDepsDestination);
         Files.createDirectories(path.getParent());
         PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(path));
 
-        // The output depends on all inputs
-        f.print(cHeaderDestination + ": ");
+        // The target (stamp file or generated header) depends on all inputs
+        f.print(targetFile + ": ");
         for (String input : inputFiles) {
             f.print(input);
             f.print(" ");
@@ -252,8 +278,25 @@ public class ConfigDefinition {
 
         // Inform make of all inputs, these have no dependencies
         for (String input : inputFiles) {
-            f.println(input + ":\n");
+            f.println(input + ":");
+            f.println();
         }
+
+        f.close();
+
+        // Write the outputs .mk file for make to know about generated files
+        writeOutputsMkFile(path.getParent(), outputFiles);
+    }
+
+    private static void writeOutputsMkFile(Path depDir, List<String> outputFiles) throws IOException {
+        Path mkPath = depDir.resolve("generated_config_outputs.mk");
+        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(mkPath));
+
+        f.print("GENERATED_FILES +=");
+        for (String output : outputFiles) {
+            f.print(" \\\n\t" + output);
+        }
+        f.println();
 
         f.close();
     }

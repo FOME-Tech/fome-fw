@@ -17,6 +17,7 @@ fi
 
 BOARD_DIR=$1
 SHORT_BOARDNAME=$2
+STAMP_FILE=${3:-}
 INI="fome_${SHORT_BOARDNAME}.ini"
 
 echo "BOARD_DIR=${BOARD_DIR} SHORT_BOARDNAME=${SHORT_BOARDNAME}"
@@ -60,6 +61,7 @@ java \
 	-c_defines        generated/rusefi_generated.h \
 	-c_destination    generated/engine_configuration_generated_structures.h \
 	-makefileDep      .dep/fome_generated.d \
+	${STAMP_FILE:+-stampFile "$STAMP_FILE"}
 
 
 [ $? -eq 0 ] || { echo "ERROR generating TunerStudio config for ${BOARD_DIR}"; exit 1; }

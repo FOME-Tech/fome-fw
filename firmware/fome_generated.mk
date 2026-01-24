@@ -1,21 +1,24 @@
-GENERATED := \
-	$(GENERATED_DIR)/engine_configuration_generated_structures.h \
-# $(GENERATED_DIR)/live_data_fragments.h \
-# $(GENERATED_DIR)/live_data_ids.h \
-# $(GENERATED_DIR)/log_fields_generated.h \
-# $(GENERATED_DIR)/output_lookup_generated.cpp \
-# $(GENERATED_DIR)/rusefi_generated.h \
-# $(GENERATED_DIR)/value_lookup_generated.cpp
-# TODO: how do we list multiple dependencies without the build happening multiple times?
+# Stamp file tracks when generation last ran
+GENERATED_STAMP := $(BUILDDIR)/generated.stamp
 
-$(GENERATED) : $(PROJECT_DIR)/integration/fome_config.txt
+# Generated files list - populated by included .mk files from Java tools
+GENERATED_FILES :=
+-include $(PROJECT_DIR)/.dep/generated_live_data_outputs.mk
+-include $(PROJECT_DIR)/.dep/generated_config_outputs.mk
+
+# Generation rule uses stamp file as target
+$(GENERATED_STAMP) : $(PROJECT_DIR)/integration/fome_config.txt
 	@echo Generating config files...
-	cd $(PROJECT_DIR) && ./gen_live_documentation.sh
-	cd $(PROJECT_DIR) && ./gen_config_board.sh $(realpath $(BOARD_DIR)) $(SHORT_BOARD_NAME)
+	cd $(PROJECT_DIR) && ./gen_live_documentation.sh $(GENERATED_STAMP)
+	cd $(PROJECT_DIR) && ./gen_config_board.sh $(realpath $(BOARD_DIR)) $(SHORT_BOARD_NAME) $(GENERATED_STAMP)
+	@touch $@
 
-# All c/c++ objects depend on generated
-$(OBJS) : $(GENERATED)
-$(PCHOBJ) : $(GENERATED)
+# Generated files depend on stamp (prevents orphaned file issues)
+$(GENERATED_FILES) : $(GENERATED_STAMP)
+
+# All c/c++ objects depend on generated stamp
+$(OBJS) : $(GENERATED_STAMP)
+$(PCHOBJ) : $(GENERATED_STAMP)
 
 JAVA_TOOLS = $(BUILDDIR)/java_tools.cookie
 
@@ -24,9 +27,10 @@ $(JAVA_TOOLS) :
 	echo "done" > $@
 
 # Generated files depend on the generation tools
-$(GENERATED) : $(JAVA_TOOLS)
+$(GENERATED_STAMP) : $(JAVA_TOOLS)
 
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*
+	rm -f $(GENERATED_STAMP)
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image.h
 	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image_compressed.h
