@@ -10,6 +10,7 @@
 #include "lua_airmass.h"
 #include "value_lookup.h"
 #include "can_filter.h"
+#include "lua_outputs_hashes.h"
 #if EFI_CAN_SUPPORT || EFI_UNIT_TEST
 #include "can_msg_tx.h"
 #endif // EFI_CAN_SUPPORT
@@ -858,6 +859,17 @@ void configureRusefiLuaHooks(lua_State* l) {
 		}
 
 		lua_pushnumber(l2, result.Value);
+		return 1;
+	});
+	lua_register(l, "getOutputValue", [](lua_State* l2) {
+		auto propertyName = luaL_checklstring(l2, 1, nullptr);
+		auto result = getOuputValueByName(propertyName);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getOutput: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, static_cast<int>(result));
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
