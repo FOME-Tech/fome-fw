@@ -500,8 +500,29 @@ void setDateTime(const char * const isoDateTime) {
 				dateTime.hour <= 23 &&
 				dateTime.minute <= 59 &&
 				dateTime.second <= 59) {
+
+			auto timeBeforeSet = getRtcDateTime();
 			// doesn't concern about leap years or seconds; ChibiOS doesn't support (added) leap seconds anyway
 			setRtcDateTime(&dateTime);
+
+			// spit the time back out to make sure the RTC works, and how much it was changed by
+			printRtcDateTime();
+
+			// Check if previous time was valid (not at epoch)
+			if (timeBeforeSet.year == 1980) {
+				efiPrintf("RTC was not previously set");
+			} else {
+				// Compute approximate delta in seconds (ignoring leap years and varying month lengths)
+				int32_t deltaSec =
+					(static_cast<int32_t>(dateTime.year) - static_cast<int32_t>(timeBeforeSet.year)) * 365 * 24 * 60 * 60 +
+					(static_cast<int32_t>(dateTime.month) - static_cast<int32_t>(timeBeforeSet.month)) * 30 * 24 * 60 * 60 +
+					(static_cast<int32_t>(dateTime.day) - static_cast<int32_t>(timeBeforeSet.day)) * 24 * 60 * 60 +
+					(static_cast<int32_t>(dateTime.hour) - static_cast<int32_t>(timeBeforeSet.hour)) * 60 * 60 +
+					(static_cast<int32_t>(dateTime.minute) - static_cast<int32_t>(timeBeforeSet.minute)) * 60 +
+					(static_cast<int32_t>(dateTime.second) - static_cast<int32_t>(timeBeforeSet.second));
+				efiPrintf("RTC adjusted by %ld seconds", deltaSec);
+			}
+
 			return;
 		}
 	}
