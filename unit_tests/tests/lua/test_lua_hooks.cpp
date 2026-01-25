@@ -223,3 +223,45 @@ TEST(LuaHooks, TestPersistentValues) {
 	)";
 	EXPECT_EQ(testLuaReturnsNumber(storeRetrieveCode), 1.5);
 }
+
+TEST(LuaHooks, TestGetChannel_TpsCaseInsensitive_Float) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	Sensor::setMockValue(SensorType::Tps1, 42.25f);
+
+	EXPECT_FLOAT_EQ(testLuaReturnsNumber(R"(
+		function testFunc()
+			return getChannel("TPS")
+		end
+	)"), 42.25f);
+
+	Sensor::setMockValue(SensorType::Tps1, 7.5f);
+
+	EXPECT_FLOAT_EQ(testLuaReturnsNumber(R"(
+		function testFunc()
+			return getChannel("tps")
+		end
+	)"), 7.5f);
+}
+
+TEST(LuaHooks, TestGetChannel_AfrPreservesFraction) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// AFR = Lambda1 * stoichRatioPrimary
+	Sensor::setMockValue(SensorType::Lambda1, 0.93f);
+	engineConfiguration->stoichRatioPrimary = 14.7f; // 13.671
+
+	EXPECT_NEAR(testLuaReturnsNumber(R"(
+		function testFunc()
+			return getChannel("AFR")
+		end
+	)"), 13.671f, 1e-4f);
+}
+
+TEST(LuaHooks, TestGetChannel_InvalidNameThrows) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	EXPECT_ANY_THROW(testLuaExecString(R"(
+		getChannel("DefinitelyNotAChannel")
+	)"));
+}
