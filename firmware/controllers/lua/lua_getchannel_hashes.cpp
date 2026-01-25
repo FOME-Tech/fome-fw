@@ -1,5 +1,4 @@
 #include "lua_getchannel_hashes.h"
-#include <array>
 #include "fuel_math.h"
 
 float getChannelByName(const char *name)
