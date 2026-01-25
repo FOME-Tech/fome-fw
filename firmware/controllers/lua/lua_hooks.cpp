@@ -869,7 +869,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 			luaL_error(l2, "Invalid getChannel: %s", propertyName);
 		}
 
-		lua_pushnumber(l2, static_cast<int>(result));
+		lua_pushnumber(l2, result);
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
