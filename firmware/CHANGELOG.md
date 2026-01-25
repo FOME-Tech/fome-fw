@@ -28,6 +28,19 @@ or
 
 # Changelog
 
+## Unreleased
+
+### Breaking Changes
+ - Upgrade console to use Java 21. This may require an update of your Java runtime.
+
+### Added
+ - Dead knock sensor detection #578
+ - Allow sending CAN broadcast on both busses #712
+
+### Fixed
+ - Fix OpenBLT updating 1MB STM32F7-based ECUs
+ - Improve RPM rate of change signal to idle control so the D-term is actually usable
+
 ## November 2025 Release
 
 ### Breaking Changes
