@@ -1,0 +1,18 @@
+# List of all the board related files.
+BOARDCPPSRC =  $(BOARD_DIR)/board_configuration.cpp
+
+# Override DEFAULT_ENGINE_TYPE
+
+DDEFS += -DFIRMWARE_ID=\"APEX\"
+IS_STM32F429 = yes
+
+DDEFS += -DEFI_SOFTWARE_KNOCK=TRUE -DSTM32_ADC_USE_ADC3=TRUE
+DDEFS += -DEFI_CONSOLE_TX_BRAIN_PIN=Gpio::D5 -DEFI_CONSOLE_RX_BRAIN_PIN=Gpio::D6 -DTS_PRIMARY_UxART_PORT=UARTD2 -DSTM32_UART_USE_USART2=1
+# EGT chip
+DDEFS += -DEFI_MAX_31855=TRUE
+
+SHORT_BOARD_NAME = apex
+
+# 48K would not fit
+# DDEFS += -DLUA_USER_HEAP=45000 need to be done in efifutures.h
+
