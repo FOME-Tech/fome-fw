@@ -79,6 +79,7 @@ class : public chibios_rt::BaseStaticThread<1024> {
 
 		while (true) {
 			BootTask();
+			chThdSleepMilliseconds(1);
 		}
 	}
 } openblt;
