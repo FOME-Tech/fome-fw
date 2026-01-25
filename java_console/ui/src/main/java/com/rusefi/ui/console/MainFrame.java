@@ -26,6 +26,7 @@ public class MainFrame {
     @NotNull
     private final ConsoleUI consoleUI;
     private final TabbedPanel tabbedPane;
+    private volatile boolean dateSetForThisConnection = false;
 
     /**
      * @see StartupFrame
@@ -65,7 +66,10 @@ public class MainFrame {
         ConnectionStatusLogic.INSTANCE.addListener(isConnected -> SwingUtilities.invokeLater(() -> {
             setTitle();
             UiUtils.trueRepaint(tabbedPane.tabbedPane); // this would repaint status label
-            if (ConnectionStatusLogic.INSTANCE.getValue() == ConnectionStatusValue.CONNECTED) {
+            if (!isConnected) {
+                dateSetForThisConnection = false;
+            } else if (ConnectionStatusLogic.INSTANCE.getValue() == ConnectionStatusValue.CONNECTED && !dateSetForThisConnection) {
+                dateSetForThisConnection = true;
                 LocalDateTime dateTime = LocalDateTime.now(ZoneOffset.systemDefault());
                 String isoDateTime = dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
                 consoleUI.uiContext.getLinkManager().execute(() -> consoleUI.uiContext.getCommandQueue().write(IoUtil.getSetCommand(Fields.CMD_DATE) +
