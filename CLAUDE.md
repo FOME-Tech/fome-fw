@@ -30,7 +30,7 @@ Outputs are placed in `firmware/deliver/`:
 
 ```bash
 cd unit_tests
-make -j12
+make -j$(($(nproc)*1.5))
 ./build/fome_test
 
 # Run a specific test
