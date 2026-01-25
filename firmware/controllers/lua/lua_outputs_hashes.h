@@ -1,4 +1,4 @@
 #pragma once
 #include "pch.h"
 
-float getOuputValueByName(const char* name);
+float getChannelByName(const char* name);

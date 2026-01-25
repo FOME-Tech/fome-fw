@@ -861,12 +861,12 @@ void configureRusefiLuaHooks(lua_State* l) {
 		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
-	lua_register(l, "getOutputValue", [](lua_State* l2) {
+	lua_register(l, "getChannel", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
-		auto result = getOuputValueByName(propertyName);
+		auto result = getChannelByName(propertyName);
 
 		if (!result) {
-			luaL_error(l2, "Invalid getOutput: %s", propertyName);
+			luaL_error(l2, "Invalid getChannel: %s", propertyName);
 		}
 
 		lua_pushnumber(l2, static_cast<int>(result));
