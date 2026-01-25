@@ -1,4 +1,4 @@
-#include "lua_outputs_hashes.h"
+#include "lua_getchannel_hashes.h"
 #include <array>
 #include "fuel_math.h"
 
