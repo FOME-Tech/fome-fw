@@ -227,21 +227,30 @@ TEST(LuaHooks, TestPersistentValues) {
 TEST(LuaHooks, TestGetChannel_TpsCaseInsensitive_Float) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	Sensor::setMockValue(SensorType::Tps1, 42.25f);
+	Sensor::setMockValue(SensorType::Rpm, 2000.0f);
+	Sensor::setMockValue(SensorType::Map, 60.0f);
+	engineConfiguration->injector.flow = 300.0f;
+	engineConfiguration->stoichRatioPrimary = 14.7f;
+	engineConfiguration->cylindersCount = 4;
 
-	EXPECT_FLOAT_EQ(testLuaReturnsNumber(R"(
+	EXPECT_NEAR(testLuaReturnsNumber(R"(
 		function testFunc()
-			return getChannel("TPS")
+			return getChannel("FuelFlow")
 		end
-	)"), 42.25f);
+	)"), 10.7f, 1e-4f);
 
-	Sensor::setMockValue(SensorType::Tps1, 7.5f);
+	Sensor::setMockValue(SensorType::Rpm, 4000.0f);
+	Sensor::setMockValue(SensorType::Map, 60.0f);
+	engineConfiguration->injector.flow = 300.0f;
+	engineConfiguration->stoichRatioPrimary = 14.7f;
+	engineConfiguration->cylindersCount = 4;
 
-	EXPECT_FLOAT_EQ(testLuaReturnsNumber(R"(
+
+	EXPECT_NEAR(testLuaReturnsNumber(R"(
 		function testFunc()
-			return getChannel("tps")
+			return getChannel("fuelflow")
 		end
-	)"), 7.5f);
+	)"), 21.3f, 1e-4f);
 }
 
 TEST(LuaHooks, TestGetChannel_AfrPreservesFraction) {
