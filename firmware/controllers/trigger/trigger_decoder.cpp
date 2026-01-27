@@ -449,6 +449,26 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		if (triggerShape.isSynchronizationNeeded) {
 			triggerSyncGapRatio = (float)toothDurations[0] / toothDurations[1];
 
+			// Check if this gap is absurdly long compared to any expected gap in the trigger shape.
+			// This provides faster engine-stop detection than the time-based timeout above,
+			// catching cases like a 50ms gap when normal teeth are 1ms apart.
+			// maxToothGapRatio is pre-calculated during trigger shape initialization.
+			if (std::isfinite(triggerSyncGapRatio) && triggerShape.maxToothGapRatio > 0) {
+				// If gap exceeds 4x the maximum ratio found in the trigger pattern,
+				// the engine has likely stopped.
+				constexpr float engineStoppedGapMultiplier = 4.0f;
+				float threshold = triggerShape.maxToothGapRatio * engineStoppedGapMultiplier;
+				if (triggerSyncGapRatio > threshold) {
+					efiPrintf("Trigger gap ratio %.1f exceeds max pattern ratio %.1f x %.1f, resetting sync",
+							triggerSyncGapRatio, triggerShape.maxToothGapRatio, engineStoppedGapMultiplier);
+
+					setShaftSynchronized(false);
+					if (triggerStateListener) {
+						triggerStateListener->OnTriggerSynchronizationLost();
+					}
+				}
+			}
+
 			isSynchronizationPoint = isSyncPoint(triggerShape, triggerConfiguration.TriggerType.type);
 			if (isSynchronizationPoint) {
 				enginePins.debugTriggerSync.toggle();

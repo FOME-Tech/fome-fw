@@ -121,6 +121,13 @@ public:
 	 */
 	int syncRatioAvg;
 
+	/**
+	 * Maximum gap ratio found in the trigger pattern.
+	 * Used to detect engine stop (gap much larger than this indicates engine stopped).
+	 * Calculated during trigger shape initialization by analyzing all tooth gaps.
+	 */
+	float maxToothGapRatio = 0;
+
 
 	/**
 	 * Trigger indexes within trigger cycle are counted from synchronization point, and all
@@ -145,6 +152,7 @@ public:
 	bool useOnlyRisingEdges;
 
 	void calculateExpectedEventCounts();
+	void calculateMaxToothGapRatio();
 
 	size_t getExpectedEventCount(TriggerWheel channelIndex) const;
 

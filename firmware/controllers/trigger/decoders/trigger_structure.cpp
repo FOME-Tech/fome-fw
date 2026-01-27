@@ -204,6 +204,45 @@ void TriggerWaveform::calculateExpectedEventCounts() {
 	}
 }
 
+/**
+ * Calculate the maximum gap ratio that occurs in the trigger pattern.
+ * This is used to detect engine stop - if we see a gap much larger than
+ * the maximum expected, the engine has likely stopped.
+ */
+void TriggerWaveform::calculateMaxToothGapRatio() {
+	int count = getSize();
+	if (count < 3) {
+		// Not enough teeth to calculate meaningful gap ratios
+		maxToothGapRatio = 0;
+		return;
+	}
+
+	// Helper to get switch time with wrap-around handling.
+	// When index wraps past count, add 1.0 to represent the next cycle.
+	auto wrappedSwitchTime = [this, count](int index) {
+		int cycles = index / count;
+		int wrapped = index % count;
+		return wave.getSwitchTime(wrapped) + cycles;
+	};
+
+	float maxRatio = 0;
+
+	// Calculate gap ratios for all teeth including wrap-around.
+	// Loop count+2 times to cover all ratios (each ratio needs 3 consecutive teeth).
+	for (int i = 0; i < count; i++) {
+		float prevGap = wrappedSwitchTime(i + 1) - wrappedSwitchTime(i);
+		float currentGap = wrappedSwitchTime(i + 2) - wrappedSwitchTime(i + 1);
+
+		if (prevGap > 0 && currentGap > 0) {
+			float ratio = currentGap / prevGap;
+			maxRatio = std::max(maxRatio, ratio);
+		}
+	}
+
+	// Ensure minimum of 1.0 (normal evenly-spaced teeth)
+	maxToothGapRatio = std::max(maxRatio, 1.0f);
+}
+
 void TriggerWaveform::addEvent720(angle_t angle, bool state, TriggerWheel const channelIndex) {
 	addEvent(angle / FOUR_STROKE_CYCLE_DURATION, state, channelIndex);
 }
@@ -710,6 +749,7 @@ void TriggerWaveform::initializeTriggerWaveform(operation_mode_e triggerOperatio
 	 * and move it here, after all events were added.
 	 */
 	calculateExpectedEventCounts();
+	calculateMaxToothGapRatio();
 	version++;
 
 	if (!shapeDefinitionError) {
