@@ -18,7 +18,6 @@ ENGINES_SRC_CPP = $(PROJECT_DIR)/config/engines/ford_aspire.cpp \
 	$(PROJECT_DIR)/config/engines/mercedes.cpp \
 	$(PROJECT_DIR)/config/engines/honda_k_dbc.cpp \
 	$(PROJECT_DIR)/config/engines/hyundai.cpp \
-	$(PROJECT_DIR)/config/engines/subaru.cpp \
 	$(PROJECT_DIR)/config/engines/mazda_626.cpp \
 	$(PROJECT_DIR)/config/engines/sachs.cpp \
 	$(PROJECT_DIR)/config/engines/test_engine.cpp \

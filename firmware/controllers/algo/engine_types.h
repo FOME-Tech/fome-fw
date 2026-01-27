@@ -51,9 +51,6 @@ enum class engine_type_e : uint32_t {
 
 	TEST_33816 = 18,
 
-
-	SUBARU_2003_WRX = 22,
-
 	/**
 	 * microRusEFI used as Body Control Module BCM BCU
 	 */
@@ -81,8 +78,6 @@ enum class engine_type_e : uint32_t {
 	CAMARO_4 = 35,
 
 	HELLEN_128_MERCEDES_4_CYL = 36,
-
-	MRE_SUBARU_EJ18 = 37,
 
 	PROTEUS_VW_B6 = 39,
 
@@ -138,8 +133,6 @@ enum class engine_type_e : uint32_t {
 	MRE_M111 = 68,
 
 	HELLEN_NB2 = 69,
-
-	SUBARUEG33_DEFAULTS = 70,
 
 	HELLEN_121_VAG_4_CYL = 71,
 	HELLEN_121_NISSAN_6_CYL = 72,
@@ -199,12 +192,15 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_13 = 13,
 	ET_UNUSED_15 = 15,
 	ET_UNUSED_16 = 16,
+	ET_UNUSED_22 = 22,
 	ET_UNUSED_33 = 33,
+	ET_UNUSED_37 = 37,
 	ET_UNUSED_38 = 38,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
+	ET_UNUSED_70 = 70,
 	ET_UNUSED_91 = 91,
 
 	/**
