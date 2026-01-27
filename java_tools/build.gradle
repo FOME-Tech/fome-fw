@@ -27,7 +27,10 @@ subprojects {
             // Exclude compile-only annotations and test dependencies from fat jars
             dependencies {
                 exclude(dependency(global_libs.jsr305))
-                exclude(dependency(global_libs.junit))
+                // autotest uses JUnit at runtime for test automation
+                if (project.name != 'autotest') {
+                    exclude(dependency(global_libs.junit))
+                }
                 exclude(dependency(global_libs.annotations))
             }
         }
