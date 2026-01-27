@@ -215,8 +215,6 @@ case engine_type_e::CITROEN_TU3JP:
   return "CITROEN_TU3JP";
 case engine_type_e::DEFAULT_FRANKENSO:
   return "DEFAULT_FRANKENSO";
-case engine_type_e::DISCOVERY_PDM:
-  return "DISCOVERY_PDM";
 case engine_type_e::DODGE_NEON_1995:
   return "DODGE_NEON_1995";
 case engine_type_e::DODGE_NEON_2003_CRANK:
@@ -231,6 +229,8 @@ case engine_type_e::ET_UNUSED_13:
   return "ET_UNUSED_13";
 case engine_type_e::ET_UNUSED_15:
   return "ET_UNUSED_15";
+case engine_type_e::ET_UNUSED_16:
+  return "ET_UNUSED_16";
 case engine_type_e::ET_UNUSED_17:
   return "ET_UNUSED_17";
 case engine_type_e::ET_UNUSED_19:
@@ -241,6 +241,8 @@ case engine_type_e::ET_UNUSED_21:
   return "ET_UNUSED_21";
 case engine_type_e::ET_UNUSED_33:
   return "ET_UNUSED_33";
+case engine_type_e::ET_UNUSED_38:
+  return "ET_UNUSED_38";
 case engine_type_e::ET_UNUSED_43:
   return "ET_UNUSED_43";
 case engine_type_e::ET_UNUSED_5:
@@ -339,8 +341,6 @@ case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
   return "MAZDA_MIATA_2003_NA_RAIL";
 case engine_type_e::MINIMAL_PINS:
   return "MINIMAL_PINS";
-case engine_type_e::MITSU_4G93:
-  return "MITSU_4G93";
 case engine_type_e::MRE_BOARD_NEW_TEST:
   return "MRE_BOARD_NEW_TEST";
 case engine_type_e::MRE_BODY_CONTROL:
