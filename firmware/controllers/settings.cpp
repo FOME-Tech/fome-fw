@@ -459,7 +459,7 @@ void initSettings() {
 	addConsoleActionS(CMD_ENABLE, enable);
 	addConsoleActionS(CMD_DISABLE, disable);
 
-	addConsoleActionSS("set", setValue);
+	addConsoleActionSS(CMD_SET, setValue);
 	addConsoleActionS("get", getValue);
 
 #if EFI_PROD_CODE

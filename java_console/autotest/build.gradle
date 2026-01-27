@@ -1,5 +1,6 @@
 plugins {
     id 'java-library'
+    id 'com.gradleup.shadow' version "${shadowVersion}"
 }
 
 apply from: '../../java_tools/dependencies.gradle'
