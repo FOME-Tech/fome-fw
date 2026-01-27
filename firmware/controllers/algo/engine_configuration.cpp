@@ -39,7 +39,6 @@
 #include "citroenBerlingoTU3JP.h"
 #include "custom_engine.h"
 #include "dodge_neon.h"
-#include "dodge_ram.h"
 
 #include "engine_template.h"
 
@@ -819,9 +818,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		break;
 	case engine_type_e::CITROEN_TU3JP:
 		setCitroenBerlingoTU3JPConfiguration();
-		break;
-	case engine_type_e::DODGE_RAM:
-		setDodgeRam1996();
 		break;
 	case engine_type_e::VW_ABA:
 		setVwAba();

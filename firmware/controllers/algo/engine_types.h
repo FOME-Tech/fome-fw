@@ -121,7 +121,6 @@ enum class engine_type_e : uint32_t {
 
 	PROTEUS_BMW_M73 = 63,
 
-	DODGE_RAM = 64,
 	CITROEN_TU3JP = 65,
 
 	MRE_M111 = 68,
@@ -195,6 +194,7 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
+	ET_UNUSED_64 = 64,
 	ET_UNUSED_70 = 70,
 	ET_UNUSED_91 = 91,
 
