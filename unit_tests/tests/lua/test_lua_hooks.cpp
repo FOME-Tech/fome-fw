@@ -227,6 +227,14 @@ TEST(LuaHooks, TestPersistentValues) {
 TEST(LuaHooks, TestGetChannel_InjectorPulseWidth) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
+	engine->outputChannels.actualLastInjection = 0;
+
+	EXPECT_EQ(testLuaReturnsNumber(R"(
+		function testFunc()
+			return getChannel("InjectorPulseWidth")
+		end
+	)"), 0);
+
 	engine->outputChannels.actualLastInjection = 1.23f;
 
 	EXPECT_NEAR(testLuaReturnsNumber(R"(
