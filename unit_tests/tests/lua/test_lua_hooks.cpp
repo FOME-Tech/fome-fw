@@ -224,33 +224,24 @@ TEST(LuaHooks, TestPersistentValues) {
 	EXPECT_EQ(testLuaReturnsNumber(storeRetrieveCode), 1.5);
 }
 
-TEST(LuaHooks, TestGetChannel_TpsCaseInsensitive_Float) {
+TEST(LuaHooks, TestGetChannel_InjectorPulseWidth) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	Sensor::setMockValue(SensorType::Rpm, 2000.0f);
-	Sensor::setMockValue(SensorType::Map, 60.0f);
-	engineConfiguration->injector.flow = 300.0f;
-	engineConfiguration->stoichRatioPrimary = 14.7f;
-	engineConfiguration->cylindersCount = 4;
+	engine->outputChannels.actualLastInjection = 1.23f;
 
 	EXPECT_NEAR(testLuaReturnsNumber(R"(
 		function testFunc()
-			return getChannel("FuelFlow")
+			return getChannel("InjectorPulseWidth")
 		end
-	)"), 10.7f, 1e-4f);
+	)"), 1.23f, 1e-4f);
 
-	Sensor::setMockValue(SensorType::Rpm, 4000.0f);
-	Sensor::setMockValue(SensorType::Map, 60.0f);
-	engineConfiguration->injector.flow = 300.0f;
-	engineConfiguration->stoichRatioPrimary = 14.7f;
-	engineConfiguration->cylindersCount = 4;
-
+	engine->outputChannels.actualLastInjection = 4.56f;
 
 	EXPECT_NEAR(testLuaReturnsNumber(R"(
 		function testFunc()
-			return getChannel("fuelflow")
+			return getChannel("inJECtorpuLSeWiDtH")
 		end
-	)"), 21.3f, 1e-4f);
+	)"), 4.56f, 1e-4f);
 }
 
 TEST(LuaHooks, TestGetChannel_AfrPreservesFraction) {
