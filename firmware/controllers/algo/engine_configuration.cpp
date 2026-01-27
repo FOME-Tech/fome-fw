@@ -48,9 +48,6 @@
 
 #include "honda_k_dbc.h"
 #include "hyundai.h"
-
-#include "GY6_139QMB.h"
-
 #include "nissan_vq.h"
 
 #include "mazda_miata.h"
@@ -60,7 +57,6 @@
 #include "mazda_626.h"
 #include "m111.h"
 #include "mercedes.h"
-#include "mitsubishi.h"
 
 #include "gm_ls_4.h"
 #include "subaru.h"
@@ -785,7 +781,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::DEFAULT_FRANKENSO:
 		setFrankensoConfiguration();
 		break;
-	case engine_type_e::DISCOVERY_PDM:
 	case engine_type_e::TEST_ENGINE:
 		setTestCamEngineConfiguration();
 		break;
@@ -822,14 +817,8 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::FRANKENSO_MAZDA_MIATA_NA8:
 		setFrankensoMazdaMiataNA8Configuration();
 		break;
-	case engine_type_e::MITSU_4G93:
-		setMitsubishiConfiguration();
-		break;
 	case engine_type_e::FORD_INLINE_6_1995:
 		setFordInline6();
-		break;
-	case engine_type_e::GY6_139QMB:
-		setGy6139qmbDefaultEngineConfiguration();
 		break;
 	case engine_type_e::FORD_ESCORT_GT:
 		setFordEscortGt();

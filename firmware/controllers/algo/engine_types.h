@@ -49,8 +49,6 @@ enum class engine_type_e : uint32_t {
 
 	FORD_ESCORT_GT = 14,
 
-	MITSU_4G93 = 16,
-
 	TEST_33816 = 18,
 
 
@@ -85,8 +83,6 @@ enum class engine_type_e : uint32_t {
 	HELLEN_128_MERCEDES_4_CYL = 36,
 
 	MRE_SUBARU_EJ18 = 37,
-
-	DISCOVERY_PDM = 38,
 
 	PROTEUS_VW_B6 = 39,
 
@@ -202,7 +198,9 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_17 = 17,
 	ET_UNUSED_13 = 13,
 	ET_UNUSED_15 = 15,
+	ET_UNUSED_16 = 16,
 	ET_UNUSED_33 = 33,
+	ET_UNUSED_38 = 38,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_60 = 60,
