@@ -239,8 +239,12 @@ case engine_type_e::ET_UNUSED_20:
   return "ET_UNUSED_20";
 case engine_type_e::ET_UNUSED_21:
   return "ET_UNUSED_21";
+case engine_type_e::ET_UNUSED_22:
+  return "ET_UNUSED_22";
 case engine_type_e::ET_UNUSED_33:
   return "ET_UNUSED_33";
+case engine_type_e::ET_UNUSED_37:
+  return "ET_UNUSED_37";
 case engine_type_e::ET_UNUSED_38:
   return "ET_UNUSED_38";
 case engine_type_e::ET_UNUSED_43:
@@ -257,6 +261,10 @@ case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
 case engine_type_e::ET_UNUSED_66:
   return "ET_UNUSED_66";
+case engine_type_e::ET_UNUSED_70:
+  return "ET_UNUSED_70";
+case engine_type_e::ET_UNUSED_8:
+  return "ET_UNUSED_8";
 case engine_type_e::ET_UNUSED_91:
   return "ET_UNUSED_91";
 case engine_type_e::ET_UNUSED_92:
@@ -283,8 +291,6 @@ case engine_type_e::FRANKENSO_MIATA_NA6_MAP:
   return "FRANKENSO_MIATA_NA6_MAP";
 case engine_type_e::FRANKENSO_QA_ENGINE:
   return "FRANKENSO_QA_ENGINE";
-case engine_type_e::GY6_139QMB:
-  return "GY6_139QMB";
 case engine_type_e::HELLEN_121_NISSAN_4_CYL:
   return "HELLEN_121_NISSAN_4_CYL";
 case engine_type_e::HELLEN_121_NISSAN_6_CYL:
@@ -347,8 +353,6 @@ case engine_type_e::MRE_BODY_CONTROL:
   return "MRE_BODY_CONTROL";
 case engine_type_e::MRE_M111:
   return "MRE_M111";
-case engine_type_e::MRE_SUBARU_EJ18:
-  return "MRE_SUBARU_EJ18";
 case engine_type_e::MRE_VW_B6:
   return "MRE_VW_B6";
 case engine_type_e::POLYGONUS_MIATA_MSM:
@@ -377,10 +381,6 @@ case engine_type_e::PROTEUS_VW_B6:
   return "PROTEUS_VW_B6";
 case engine_type_e::SACHS:
   return "SACHS";
-case engine_type_e::SUBARUEG33_DEFAULTS:
-  return "SUBARUEG33_DEFAULTS";
-case engine_type_e::SUBARU_2003_WRX:
-  return "SUBARU_2003_WRX";
 case engine_type_e::TEST_33816:
   return "TEST_33816";
 case engine_type_e::TEST_CRANK_ENGINE:
