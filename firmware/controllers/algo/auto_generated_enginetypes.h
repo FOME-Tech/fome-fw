@@ -219,8 +219,6 @@ case engine_type_e::DODGE_NEON_1995:
   return "DODGE_NEON_1995";
 case engine_type_e::DODGE_NEON_2003_CRANK:
   return "DODGE_NEON_2003_CRANK";
-case engine_type_e::DODGE_RAM:
-  return "DODGE_RAM";
 case engine_type_e::ETB_BENCH_ENGINE:
   return "ETB_BENCH_ENGINE";
 case engine_type_e::ET_UNUSED_1:
@@ -259,6 +257,8 @@ case engine_type_e::ET_UNUSED_60:
   return "ET_UNUSED_60";
 case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
+case engine_type_e::ET_UNUSED_64:
+  return "ET_UNUSED_64";
 case engine_type_e::ET_UNUSED_66:
   return "ET_UNUSED_66";
 case engine_type_e::ET_UNUSED_70:
