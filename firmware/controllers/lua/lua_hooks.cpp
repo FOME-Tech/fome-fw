@@ -861,8 +861,8 @@ void configureRusefiLuaHooks(lua_State* l) {
 		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
-#endif
-#if EFI_PROD_CODE || EFI_SIMULATOR || EFI_UNIT_TEST
+#endif // EFI_PROD_CODE || EFI_SIMULATOR
+
 	lua_register(l, "getChannel", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto result = getChannelByName(propertyName);
@@ -874,7 +874,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 		lua_pushnumber(l2, result);
 		return 1;
 	});
-#endif // EFI_PROD_CODE || EFI_SIMULATOR || EFI_UNIT_TEST
 
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getEngineState", [](lua_State* l2) {
