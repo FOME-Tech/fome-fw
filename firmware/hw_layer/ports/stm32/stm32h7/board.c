@@ -22,6 +22,8 @@
 #include "hal.h"
 #include "stm32_gpio.h"
 
+void stm32_rtc_init(void);
+
 /*===========================================================================*/
 /* Driver local definitions.                                                 */
 /*===========================================================================*/
@@ -210,6 +212,8 @@ static void stm32_gpio_init(void) {
 void __early_init(void) {
 
   stm32_gpio_init();
+
+  stm32_rtc_init();
 
   stm32_clock_init();
 }
