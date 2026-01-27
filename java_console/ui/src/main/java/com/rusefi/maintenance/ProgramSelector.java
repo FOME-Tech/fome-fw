@@ -7,6 +7,7 @@ import com.rusefi.config.generated.Fields;
 import com.rusefi.core.io.BundleUtil;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
+import com.rusefi.io.tcp.TcpConnector;
 import com.rusefi.libopenblt.XcpSettings;
 import com.rusefi.ui.util.URLLabel;
 import com.rusefi.ui.util.UiUtils;
@@ -104,11 +105,11 @@ public class ProgramSelector {
                         break;
                     case OPENBLT_MANUAL:
                         jobName = "OpenBLT via Serial";
-                        job = (callbacks) -> flashOpenbltSerialJni(selectedPort.port, callbacks);
+                        job = (callbacks) -> flashOpenblt(selectedPort.port, false, callbacks);
                         break;
                     case OPENBLT_AUTO:
                         jobName = "OpenBLT via Serial";
-                        job = (callbacks) -> flashOpenbltSerialAutomatic(selectedPort.port, callbacks);
+                        job = (callbacks) -> flashOpenblt(selectedPort.port, true, callbacks);
                         break;
                     case DFU_ERASE:
                         jobName = "DFU erase";
@@ -137,58 +138,82 @@ public class ProgramSelector {
         DfuFlasher.rebootToDfu(selectedPort, callbacks, Fields.CMD_REBOOT_OPENBLT);
     }
 
-    private void flashOpenbltSerialAutomatic(String fomePort, UpdateOperationCallbacks callbacks) {
-        String[] portsBefore = LinkManager.getCommPorts();
-        rebootToOpenblt(fomePort, callbacks);
+    private void flashOpenblt(String fomePort, boolean rebootFirst, UpdateOperationCallbacks callbacks) {
+        String port;
 
-        // Give the bootloader a sec to enumerate
-        BinaryProtocol.sleep(3000);
+        if (rebootFirst) {
+            String[] portsBefore = LinkManager.getCommPorts();
+            rebootToOpenblt(fomePort, callbacks);
 
-        String[] portsAfter = LinkManager.getCommPorts();
+            // Give the bootloader a sec to enumerate
+            BinaryProtocol.sleep(3000);
 
-        // Check that the ECU disappeared from the "after" list
-        if (Arrays.asList(portsAfter).contains(fomePort)) {
-            callbacks.log("Looks like your ECU didn't reboot to OpenBLT");
-            callbacks.error();
-            return;
-        }
+            String[] portsAfter = LinkManager.getCommPorts();
 
-        // Check that exactly one thing appeared in the "after" list
-        ArrayList<String> newItems = new ArrayList<>();
-        for (String s : portsAfter) {
-            if (Arrays.stream(portsBefore).noneMatch(s::equals)) {
-                // This item is in the after list but not before list
-                newItems.add(s);
+            // Check that the ECU disappeared from the "after" list
+            if (Arrays.asList(portsAfter).contains(fomePort)) {
+                callbacks.log("Looks like your ECU didn't reboot to OpenBLT");
+                callbacks.error();
+                return;
             }
+
+            // Check that exactly one thing appeared in the "after" list
+            ArrayList<String> newItems = new ArrayList<>();
+            for (String s : portsAfter) {
+                if (Arrays.stream(portsBefore).noneMatch(s::equals)) {
+                    // This item is in the after list but not before list
+                    newItems.add(s);
+                }
+            }
+
+            if (newItems.isEmpty()) {
+                callbacks.log("Looks like your ECU disappeared during the update process. Please try again.");
+                callbacks.error();
+                return;
+            }
+
+            if (newItems.size() > 1) {
+                // More than one port appeared? whattt?
+                callbacks.log("Unable to find ECU after reboot as multiple serial ports appeared. Before: " + portsBefore.length + " After: " + portsAfter.length);
+                callbacks.error();
+                return;
+            }
+
+            port = newItems.get(0);
+
+            // Check that the one that appeared is indeed OpenBLT
+            boolean isOpenBlt = SerialPortScanner.isPortOpenblt(port);
+
+            if (!isOpenBlt) {
+                callbacks.log("A serial port appeared as it should, but OpenBLT didn't respond.");
+                callbacks.error();
+                return;
+            }
+
+            callbacks.log("Serial port " + port + " appeared and looks like OpenBLT, programming firmware...");
+        } else {
+            port = fomePort;
         }
 
-        if (newItems.isEmpty()) {
-            callbacks.log("Looks like your ECU disappeared during the update process. Please try again.");
+        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
+
+        try {
+            OpenBltFlasher flasher;
+            if (TcpConnector.isTcpPort(port)) {
+                String[] splits = port.split(":");
+                flasher = OpenBltFlasher.makeTcp(splits[0], Integer.parseInt(splits[1]), new XcpSettings(), cb);
+            } else {
+                flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
+            }
+
+            flasher.flash("/Users/matthewkennedy/Downloads/fome.snapshot.20260124_071756.atlas/fome_update.srec");
+
+            callbacks.log("Update completed successfully!");
+            callbacks.done();
+        } catch (Throwable e) {
+            callbacks.log("Error: " + e);
             callbacks.error();
-            return;
         }
-
-        if (newItems.size() > 1) {
-            // More than one port appeared? whattt?
-            callbacks.log("Unable to find ECU after reboot as multiple serial ports appeared. Before: " + portsBefore.length + " After: " + portsAfter.length);
-            callbacks.error();
-            return;
-        }
-
-        String openbltPort = newItems.get(0);
-
-        // Check that the one that appeared is indeed OpenBLT
-        boolean isOpenBlt = SerialPortScanner.isPortOpenblt(openbltPort);
-
-        if (!isOpenBlt) {
-            callbacks.log("A serial port appeared as it should, but OpenBLT didn't respond.");
-            callbacks.error();
-            return;
-        }
-
-        callbacks.log("Serial port " + openbltPort + " appeared and looks like OpenBLT, programming firmware...");
-
-        flashOpenbltSerialJni(openbltPort, callbacks);
     }
 
     private OpenbltCallbacks makeOpenbltCallbacks(UpdateOperationCallbacks callbacks) {
@@ -216,21 +241,6 @@ public class ProgramSelector {
     }
 
     private static final boolean useNewImpl = true;
-
-    private void flashOpenbltSerialJni(String port, UpdateOperationCallbacks callbacks) {
-        OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
-
-        try {
-            OpenBltFlasher flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
-            flasher.flash("../fome_update.srec");
-
-            callbacks.log("Update completed successfully!");
-            callbacks.done();
-        } catch (Throwable e) {
-            callbacks.log("Error: " + e);
-            callbacks.error();
-        }
-    }
 
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
         OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);

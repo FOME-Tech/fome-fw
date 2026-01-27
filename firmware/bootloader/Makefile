@@ -24,6 +24,10 @@ DDEFS += -DEFI_USB_SERIAL=TRUE -DHAL_USE_USB_MSD=FALSE
 # disable CAN
 DDEFS += -DEFI_CAN_SUPPORT=FALSE
 
+# Offset the WiFi MAC address in the bootloader so we can switch the hosted network name
+# and not confuse connected clients (they see a new AP, rather than an AP that changed network name)
+DDEFS += -DWIFI_OFFSET_MAC
+
 # Cache is disabled on F7, H7
 DDEFS += -DSTM32_SRAM2_NOCACHE=FALSE -DSTM32_NOCACHE_SRAM1_SRAM2=FALSE -DSTM32_NOCACHE_SRAM3=FALSE
 

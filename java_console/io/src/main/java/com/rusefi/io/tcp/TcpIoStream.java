@@ -42,6 +42,7 @@ public class TcpIoStream extends AbstractIoStream {
         int portPart = TcpConnector.getTcpPort(port);
         String hostname = TcpConnector.getHostname(port);
         Socket socket = new Socket(hostname, portPart);
+        socket.setTcpNoDelay(true);
 
         return new TcpIoStream("[start] ", socket);
     }

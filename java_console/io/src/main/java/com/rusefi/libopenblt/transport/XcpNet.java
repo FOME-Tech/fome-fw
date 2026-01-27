@@ -60,6 +60,8 @@ public class XcpNet implements IXcpTransport {
             mSocket = new Socket(hostname, port);
             mReader = mSocket.getInputStream();
             mWriter = mSocket.getOutputStream();
+
+            mSocket.setTcpNoDelay(true);
         }
 
         @Override
