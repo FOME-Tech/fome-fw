@@ -871,7 +871,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 			luaL_error(l2, "Invalid getChannel: %s", propertyName);
 		}
 
-		lua_pushnumber(l2, result);
+		lua_pushnumber(l2, result.Value);
 		return 1;
 	});
 

@@ -1,7 +1,9 @@
+#include "pch.h"
+
 #include "lua_getchannel.h"
 #include "fuel_math.h"
 
-float getChannelByName(const char* name) {
+expected<float> getChannelByName(const char* name) {
 	switch (djb2lowerCase(name)) {
 	case djb2lowerCase("FuelFlow"):
 		return engine->module<TripOdometer>()->getConsumptionGramPerSecond();
@@ -10,8 +12,8 @@ float getChannelByName(const char* name) {
 	case djb2lowerCase("InjectorDutyCycle"):
 		return getInjectorDutyCycle(Sensor::getOrZero(SensorType::Rpm));
 	case djb2lowerCase("InjectorPulseWidth"):
-		return engine->outputChannels.actualLastInjection;
+		return static_cast<float>(engine->outputChannels.actualLastInjection);
 	default:
-		return 0.0f;
+		return unexpected;
 	}
 }
