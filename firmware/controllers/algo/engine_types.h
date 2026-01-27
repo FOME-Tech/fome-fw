@@ -31,12 +31,6 @@ enum class engine_type_e : uint32_t {
 	FORD_ASPIRE_1996 = 3,
 
 	FORD_INLINE_6_1995 = 7,
-	/**
-	 * one cylinder engine
-	 * 139qmb 50-90cc
-	 * http://rusefi.com/forum/viewtopic.php?f=3&t=332
-	 */
-	GY6_139QMB = 8,
 
 	PROTEUS_E65_6H_MAN_IN_THE_MIDDLE = 9,
 	HELLEN_NA8_96 = 10,
@@ -185,6 +179,7 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_1 = 1,
 	ET_UNUSED_5 = 5,
 	ET_UNUSED_6 = 6,
+	ET_UNUSED_8 = 8,
 	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,

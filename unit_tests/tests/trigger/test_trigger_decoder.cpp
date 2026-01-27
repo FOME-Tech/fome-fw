@@ -336,7 +336,6 @@ TEST(trigger, testTriggerDecoder) {
 	testTriggerDecoder2("test 2/1 rise", engine_type_e::TEST_ISSUE_366_RISE, 0, 0.0000, 0.0);
 
 	testTriggerDecoder2("test engine", engine_type_e::TEST_ENGINE, 0, 0.7500, 0.2500);
-	testTriggerDecoder2("testGY6_139QMB", engine_type_e::GY6_139QMB, 0, 0.4375, 0.0);
 
 	testTriggerDecoder2("testFordEscortGt", engine_type_e::FORD_ESCORT_GT, 0, 0.8096, 0.3844);
 
