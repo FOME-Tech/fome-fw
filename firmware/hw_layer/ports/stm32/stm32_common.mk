@@ -19,6 +19,8 @@ HW_INC += \
 	$(HW_STM32_PORT_DIR)/serial_over_usb \
 	$(HW_STM32_PORT_DIR)/cfg
 
+ALLCSRC += $(HW_STM32_PORT_DIR)/board.c
+
 ifeq ($(EFI_HAS_EXT_SDRAM), yes)
 	USE_OPT += -Wl,--defsym=STM32_HAS_SDRAM=1
 	DDEFS += -DEFI_HAS_EXT_SDRAM
