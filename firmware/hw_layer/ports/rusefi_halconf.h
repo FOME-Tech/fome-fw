@@ -71,6 +71,8 @@
 
 // MMC SPI
 #define MMC_NICE_WAITING            TRUE
+#define MMC_IDLE_TIMEOUT_MS         1000
+#define MMC_USE_MUTUAL_EXCLUSION    FALSE
 
 // PAL
 #define PAL_USE_CALLBACKS           TRUE

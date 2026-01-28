@@ -1,5 +1,5 @@
 /*
-    ChibiOS - Copyright (C) 2006..2018 Giovanni Di Sirio
+    ChibiOS - Copyright (C) 2006..2020 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 #define HALCONF_H
 
 #define _CHIBIOS_HAL_CONF_
-#define _CHIBIOS_HAL_CONF_VER_7_1_
+#define _CHIBIOS_HAL_CONF_VER_9_0_
 
 #include "mcuconf.h"
 
@@ -50,56 +50,63 @@
  * @brief   Enables the DAC subsystem.
  */
 #if !defined(HAL_USE_DAC) || defined(__DOXYGEN__)
-#define HAL_USE_DAC                         FALSE
+#define HAL_USE_DAC                 FALSE
 #endif
 
 /**
  * @brief   Enables the EFlash subsystem.
  */
 #if !defined(HAL_USE_EFL) || defined(__DOXYGEN__)
-#define HAL_USE_EFL                         FALSE
+#define HAL_USE_EFL                 FALSE
 #endif
 
 /**
  * @brief   Enables the I2C subsystem.
  */
 #if !defined(HAL_USE_I2C) || defined(__DOXYGEN__)
-#define HAL_USE_I2C                         FALSE
+#define HAL_USE_I2C                 FALSE
 #endif
 
 /**
  * @brief   Enables the ICU subsystem.
  */
 #if !defined(HAL_USE_ICU) || defined(__DOXYGEN__)
-#define HAL_USE_ICU                         FALSE
+#define HAL_USE_ICU                 FALSE
 #endif
 
 /**
  * @brief   Enables the PWM subsystem.
  */
 #if !defined(HAL_USE_PWM) || defined(__DOXYGEN__)
-#define HAL_USE_PWM                         TRUE
+#define HAL_USE_PWM                 TRUE
+#endif
+
+/**
+ * @brief   Enables the QSPI subsystem.
+ */
+#if !defined(HAL_USE_QSPI) || defined(__DOXYGEN__)
+#define HAL_USE_QSPI                FALSE
 #endif
 
 /**
  * @brief   Enables the RTC subsystem.
  */
 #if !defined(HAL_USE_RTC) || defined(__DOXYGEN__)
-#define HAL_USE_RTC                         TRUE
+#define HAL_USE_RTC                 TRUE
 #endif
 
 /**
  * @brief   Enables the SDC subsystem.
  */
 #if !defined(HAL_USE_SDC) || defined(__DOXYGEN__)
-#define HAL_USE_SDC                         FALSE
+#define HAL_USE_SDC                 FALSE
 #endif
 
 /**
  * @brief   Enables the SERIAL subsystem.
  */
 #if !defined(HAL_USE_SERIAL) || defined(__DOXYGEN__)
-#define HAL_USE_SERIAL                      TRUE
+#define HAL_USE_SERIAL              TRUE
 #endif
 
 /**
@@ -113,14 +120,14 @@
  * @brief   Enables the SPI subsystem.
  */
 #if !defined(HAL_USE_SPI) || defined(__DOXYGEN__)
-#define HAL_USE_SPI                         TRUE
+#define HAL_USE_SPI                 TRUE
 #endif
 
 /**
  * @brief   Enables the TRNG subsystem.
  */
 #if !defined(HAL_USE_TRNG) || defined(__DOXYGEN__)
-#define HAL_USE_TRNG                        FALSE
+#define HAL_USE_TRNG                FALSE
 #endif
 
 /**
@@ -134,7 +141,7 @@
  * @brief   Enables the WDG subsystem.
  */
 #if !defined(HAL_USE_WDG) || defined(__DOXYGEN__)
-#define HAL_USE_WDG                         FALSE
+#define HAL_USE_WDG                 FALSE
 #endif
 
 /**
@@ -168,25 +175,14 @@
 #endif
 
 /*===========================================================================*/
-/* CRY driver related settings.                                              */
+/* I2C driver related settings.                                              */
 /*===========================================================================*/
 
 /**
- * @brief   Enables the SW fall-back of the cryptographic driver.
- * @details When enabled, this option, activates a fall-back software
- *          implementation for algorithms not supported by the underlying
- *          hardware.
- * @note    Fall-back implementations may not be present for all algorithms.
+ * @brief   Enables the mutual exclusion APIs on the I2C bus.
  */
-#if !defined(HAL_CRY_USE_FALLBACK) || defined(__DOXYGEN__)
-#define HAL_CRY_USE_FALLBACK                FALSE
-#endif
-
-/**
- * @brief   Makes the driver forcibly use the fall-back implementations.
- */
-#if !defined(HAL_CRY_ENFORCE_FALLBACK) || defined(__DOXYGEN__)
-#define HAL_CRY_ENFORCE_FALLBACK            FALSE
+#if !defined(I2C_USE_MUTUAL_EXCLUSION) || defined(__DOXYGEN__)
+#define I2C_USE_MUTUAL_EXCLUSION            TRUE
 #endif
 
 /*===========================================================================*/
@@ -198,7 +194,7 @@
  * @note    Attempts are performed at 10mS intervals.
  */
 #if !defined(SDC_INIT_RETRY) || defined(__DOXYGEN__)
-#define SDC_INIT_RETRY                      100
+#define SDC_INIT_RETRY              100
 #endif
 
 /**
@@ -207,7 +203,7 @@
  *          at @p FALSE.
  */
 #if !defined(SDC_MMC_SUPPORT) || defined(__DOXYGEN__)
-#define SDC_MMC_SUPPORT                     FALSE
+#define SDC_MMC_SUPPORT             FALSE
 #endif
 
 /**
@@ -217,7 +213,7 @@
  *          lower priority, this may slow down the driver a bit however.
  */
 #if !defined(SDC_NICE_WAITING) || defined(__DOXYGEN__)
-#define SDC_NICE_WAITING                    TRUE
+#define SDC_NICE_WAITING            TRUE
 #endif
 
 /**
@@ -244,7 +240,7 @@
  *          default configuration.
  */
 #if !defined(SERIAL_DEFAULT_BITRATE) || defined(__DOXYGEN__)
-#define SERIAL_DEFAULT_BITRATE              38400
+#define SERIAL_DEFAULT_BITRATE      38400
 #endif
 
 /**
@@ -255,7 +251,7 @@
  *          buffers.
  */
 #if !defined(SERIAL_BUFFERS_SIZE) || defined(__DOXYGEN__)
-#define SERIAL_BUFFERS_SIZE                 16
+#define SERIAL_BUFFERS_SIZE         16
 #endif
 
 /*===========================================================================*/
@@ -263,11 +259,10 @@
 /*===========================================================================*/
 
 /**
- * @brief   Enables circular transfers APIs.
- * @note    Disabling this option saves both code and data space.
+ * @brief   Inserts an assertion on function errors before returning.
  */
-#if !defined(SPI_USE_CIRCULAR) || defined(__DOXYGEN__)
-#define SPI_USE_CIRCULAR                    FALSE
+#if !defined(SPI_USE_ASSERT_ON_ERROR) || defined(__DOXYGEN__)
+#define SPI_USE_ASSERT_ON_ERROR             TRUE
 #endif
 
 /**
@@ -295,7 +290,7 @@
  * @note    Disabling this option saves both code and data space.
  */
 #if !defined(UART_USE_MUTUAL_EXCLUSION) || defined(__DOXYGEN__)
-#define UART_USE_MUTUAL_EXCLUSION           FALSE
+#define UART_USE_MUTUAL_EXCLUSION   FALSE
 #endif
 
 #endif /* HALCONF_H */
