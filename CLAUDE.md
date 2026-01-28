@@ -43,6 +43,8 @@ Unit tests use Google Test and run on amd64/aarch64, not on the ECU.
 
 Code generation occurs as part of the normal firmware and unit test builds, via `firmware/fome_generated.mk`.
 
+If there is a build failure that looks like generated files are missing, try running `make clean` first. In general, there should be no reason to manually run generated code scripts.
+
 ## Architecture
 
 ### Directory Structure
