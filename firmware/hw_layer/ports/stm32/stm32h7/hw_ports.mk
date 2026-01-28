@@ -6,7 +6,6 @@ HW_LAYER_EMS += $(HW_STM32_PORT_DIR)/stm32h7/stm32h7xx_hal_flash.c \
 HW_LAYER_EMS_CPP += $(HW_STM32_PORT_DIR)/stm32h7/mpu_util.cpp \
 					$(HW_STM32_PORT_DIR)/stm32_adc_v4.cpp \
 					$(HW_STM32_PORT_DIR)/flash_int_h7.cpp \
-					$(HW_STM32_PORT_DIR)/rtc_setup_h7.cpp \
 
 MCU_BOOTLOADER_FLASH = openblt_flash_h7.cpp
 
