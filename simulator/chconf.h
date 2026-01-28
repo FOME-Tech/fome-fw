@@ -785,6 +785,9 @@
 
 #define PORT_GUARD_PAGE_SIZE 0
 
+#define port_is_locked(x) ((x) == 1)
+#define port_get_lock_status() (port_get_irq_status())
+
 #endif  /* CHCONF_H */
 
 /** @} */
