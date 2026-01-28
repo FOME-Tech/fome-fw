@@ -1,5 +1,5 @@
 /*
-    ChibiOS - Copyright (C) 2006..2015 Giovanni Di Sirio
+    ChibiOS - Copyright (C) 2006..2020 Giovanni Di Sirio
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 #define HALCONF_H
 
 #define _CHIBIOS_HAL_CONF_
-#define _CHIBIOS_HAL_CONF_VER_7_1_
+#define _CHIBIOS_HAL_CONF_VER_9_0_
 
 #include "mcuconf.h"
 
@@ -41,14 +41,10 @@
 #define HAL_USE_CRC                 FALSE
 
 /**
- * @brief   Enables the FLASH subsystem.
+ * @brief   Enables the cryptographic subsystem.
  */
-#if !defined(HAL_USE_FLASH) || defined(__DOXYGEN__)
-#define HAL_USE_FLASH               FALSE
-#endif
-
-#if !defined(PAL_USE_WAIT) || defined(__DOXYGEN__)
-#define PAL_USE_WAIT                FALSE
+#if !defined(HAL_USE_CRY) || defined(__DOXYGEN__)
+#define HAL_USE_CRY                         FALSE
 #endif
 
 /**
@@ -59,10 +55,10 @@
 #endif
 
 /**
- * @brief   Enables the EXT subsystem.
+ * @brief   Enables the EFlash subsystem.
  */
-#if !defined(HAL_USE_EXT) || defined(__DOXYGEN__)
-#define HAL_USE_EXT                 FALSE
+#if !defined(HAL_USE_EFL) || defined(__DOXYGEN__)
+#define HAL_USE_EFL                 FALSE
 #endif
 
 /**
@@ -108,10 +104,24 @@
 #endif
 
 /**
+ * @brief   Enables the SIO subsystem.
+ */
+#if !defined(HAL_USE_SIO) || defined(__DOXYGEN__)
+#define HAL_USE_SIO                         FALSE
+#endif
+
+/**
  * @brief   Enables the SPI subsystem.
  */
 #if !defined(HAL_USE_SPI) || defined(__DOXYGEN__)
 #define HAL_USE_SPI                 TRUE
+#endif
+
+/**
+ * @brief   Enables the TRNG subsystem.
+ */
+#if !defined(HAL_USE_TRNG) || defined(__DOXYGEN__)
+#define HAL_USE_TRNG                FALSE
 #endif
 
 /**
@@ -131,6 +141,47 @@
  */
 #if !defined(HAL_USE_WDG) || defined(__DOXYGEN__)
 #define HAL_USE_WDG                 FALSE
+#endif
+
+/**
+ * @brief   Enables the WSPI subsystem.
+ */
+#if !defined(HAL_USE_WSPI) || defined(__DOXYGEN__)
+#define HAL_USE_WSPI                        FALSE
+#endif
+
+/*===========================================================================*/
+/* PAL driver related settings.                                              */
+/*===========================================================================*/
+
+/**
+ * @brief   Enables synchronous APIs.
+ * @note    Disabling this option saves both code and data space.
+ */
+#if !defined(PAL_USE_WAIT) || defined(__DOXYGEN__)
+#define PAL_USE_WAIT                        FALSE
+#endif
+
+/*===========================================================================*/
+/* CAN driver related settings.                                              */
+/*===========================================================================*/
+
+/**
+ * @brief   Enforces the driver to use direct callbacks rather than OSAL events.
+ */
+#if !defined(CAN_ENFORCE_USE_CALLBACKS) || defined(__DOXYGEN__)
+#define CAN_ENFORCE_USE_CALLBACKS           FALSE
+#endif
+
+/*===========================================================================*/
+/* I2C driver related settings.                                              */
+/*===========================================================================*/
+
+/**
+ * @brief   Enables the mutual exclusion APIs on the I2C bus.
+ */
+#if !defined(I2C_USE_MUTUAL_EXCLUSION) || defined(__DOXYGEN__)
+#define I2C_USE_MUTUAL_EXCLUSION            TRUE
 #endif
 
 /*===========================================================================*/
@@ -164,6 +215,20 @@
 #define SDC_NICE_WAITING            TRUE
 #endif
 
+/**
+ * @brief   OCR initialization constant for V20 cards.
+ */
+#if !defined(SDC_INIT_OCR_V20) || defined(__DOXYGEN__)
+#define SDC_INIT_OCR_V20                    0x50FF8000U
+#endif
+
+/**
+ * @brief   OCR initialization constant for non-V20 cards.
+ */
+#if !defined(SDC_INIT_OCR) || defined(__DOXYGEN__)
+#define SDC_INIT_OCR                        0x80100000U
+#endif
+
 /*===========================================================================*/
 /* SERIAL driver related settings.                                           */
 /*===========================================================================*/
@@ -186,6 +251,25 @@
  */
 #if !defined(SERIAL_BUFFERS_SIZE) || defined(__DOXYGEN__)
 #define SERIAL_BUFFERS_SIZE         16
+#endif
+
+/*===========================================================================*/
+/* SPI driver related settings.                                              */
+/*===========================================================================*/
+
+/**
+ * @brief   Inserts an assertion on function errors before returning.
+ */
+#if !defined(SPI_USE_ASSERT_ON_ERROR) || defined(__DOXYGEN__)
+#define SPI_USE_ASSERT_ON_ERROR             TRUE
+#endif
+
+/**
+ * @brief   Handling method for SPI CS line.
+ * @note    Disabling this option saves both code and data space.
+ */
+#if !defined(SPI_SELECT_MODE) || defined(__DOXYGEN__)
+#define SPI_SELECT_MODE                     SPI_SELECT_MODE_PAD
 #endif
 
 /*===========================================================================*/
