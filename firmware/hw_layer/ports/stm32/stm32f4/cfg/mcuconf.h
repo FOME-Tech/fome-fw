@@ -36,6 +36,7 @@
 #define STM32F415_MCUCONF
 #define STM32F407_MCUCONF
 #define STM32F417_MCUCONF
+#define STM32F429_MCUCONF
 
 // Allows LSE init to timeout and configure fallback RTC clock source in case
 #define RUSEFI_STM32_LSE_WAIT_MAX           1000000
@@ -80,20 +81,12 @@
 #define STM32_BKPRAM_ENABLE                 TRUE
 
 /*
- * GPT driver system settings.
+ * RTC driver system settings.
  */
-#define STM32_GPT_TIM1_IRQ_PRIORITY         7
-#define STM32_GPT_TIM2_IRQ_PRIORITY         7
-#define STM32_GPT_TIM3_IRQ_PRIORITY         7
-#define STM32_GPT_TIM4_IRQ_PRIORITY         7
-#define STM32_GPT_TIM5_IRQ_PRIORITY         7
-// GPT TIM6 is in mcuconf_common_f4_f7.h
-#define STM32_GPT_TIM7_IRQ_PRIORITY         7
-#define STM32_GPT_TIM8_IRQ_PRIORITY         7
-#define STM32_GPT_TIM9_IRQ_PRIORITY         7
-#define STM32_GPT_TIM11_IRQ_PRIORITY        7
-#define STM32_GPT_TIM12_IRQ_PRIORITY        7
-#define STM32_GPT_TIM14_IRQ_PRIORITY        7
+#define STM32_RTC_PRESA_VALUE               32
+#define STM32_RTC_PRESS_VALUE               1024
+#define STM32_RTC_CR_INIT                   0
+#define STM32_RTC_TAMPCR_INIT               0
 
 /*
  * SDC driver system settings.
