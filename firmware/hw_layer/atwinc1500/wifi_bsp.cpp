@@ -54,7 +54,9 @@ tstrNmBusCapabilities egstrNmBusCapabilities = { .u16MaxTrxSz = 4096 };
 // fast mode is 80mhz/2 = 40MHz
 static SPIConfig wifi_spicfg = {
 		.circular = false,
-		.end_cb = NULL,
+		.slave = false,
+		.data_cb = NULL,
+		.error_cb = NULL,
 		.ssport = NULL,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
@@ -69,7 +71,9 @@ static SPIConfig wifi_spicfg = {
 
 static SPIConfig wifi_spicfg = {
 		.circular = false,
-		.end_cb = NULL,
+		.slave = false,
+		.data_cb = NULL,
+		.error_cb = NULL,
 		.ssport = NULL,
 		.sspad = 0,
 		.cr1 = SPI_BaudRatePrescaler_2,
