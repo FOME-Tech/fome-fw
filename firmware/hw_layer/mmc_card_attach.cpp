@@ -36,7 +36,10 @@ struct {
 		FATFS fs;
 		FIL file;
 		SdLogBufferWriter logBuffer;
-		uint8_t mmcOperationBuffer[MMC_BUFFER_SIZE];
+
+		#if HAL_USE_MMC_SPI
+			uint8_t mmcOperationBuffer[MMC_BUFFER_SIZE];
+		#endif
 	} usedPart;
 
 	static_assert(sizeof(usedPart) <= 2048);
