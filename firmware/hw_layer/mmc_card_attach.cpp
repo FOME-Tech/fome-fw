@@ -36,6 +36,7 @@ struct {
 		FATFS fs;
 		FIL file;
 		SdLogBufferWriter logBuffer;
+		uint8_t mmcOperationBuffer[MMC_BUFFER_SIZE];
 	} usedPart;
 
 	static_assert(sizeof(usedPart) <= 2048);
@@ -90,7 +91,7 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 	}
 
 	// We think we have everything for the card, let's try to mount it!
-	mmcObjectInit(&MMCD1);
+	mmcObjectInit(&MMCD1, mmcCardCacheControlledStorage.mmcOperationBuffer);
 	mmcStart(&MMCD1, &mmccfg);
 
 	// Performs the initialization procedure on the inserted card.
