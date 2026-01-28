@@ -6,6 +6,11 @@
 #define STM32_RTCSEL_LSE STM32_RTCSEL_LSE_CK
 #endif
 
+// STM32F4 doesn't have LSEDRV, so ignore it
+#ifndef STM32_LSEDRV
+#define STM32_LSEDRV 0
+#endif
+
 extern "C" void stm32_rtc_init() {
 	// Allow backup domain access
 	#ifdef STM32F4XX
