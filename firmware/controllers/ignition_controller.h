@@ -2,7 +2,7 @@
 
 #include "engine_module.h"
 
-#include "timer.h"
+#include "efi_timer.h"
 
 class IgnitionController : public EngineModule {
 public:

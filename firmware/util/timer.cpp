@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "timer.h"
+#include "efi_timer.h"
 
 Timer::Timer() {
 	init();

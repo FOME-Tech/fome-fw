@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "timer.h"
+#include "efi_timer.h"
 
 void doScheduleStopEngine();
 

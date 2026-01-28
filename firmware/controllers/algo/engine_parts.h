@@ -8,9 +8,7 @@
 #pragma once
 
 #include "static_vector.h"
-#include "timer.h"
-
-#define MOCK_ADC_SIZE 26
+#include "efi_timer.h"
 
 struct Accelerometer {
 	float lat = 0; // G value
