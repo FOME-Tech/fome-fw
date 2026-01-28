@@ -1,5 +1,11 @@
 #include "pch.h"
 
+// STM32_RTCSEL_LSE is F4/F7
+// STM32_RTCSEL_LSE_CK is H7
+#ifndef STM32_RTCSEL_LSE
+#define STM32_RTCSEL_LSE STM32_RTCSEL_LSE_CK
+#endif
+
 extern "C" void stm32_rtc_init() {
 	// Allow backup domain access
 	PWR->CR1 |= PWR_CR1_DBP;
@@ -21,7 +27,7 @@ extern "C" void stm32_rtc_init() {
 	RCC->BDCR = RCC_BDCR_BDRST;
 	RCC->BDCR = 0;
 
-	if (STM32_RTCSEL == STM32_RTCSEL_LSE_CK) {
+	if (STM32_RTCSEL == STM32_RTCSEL_LSE) {
 		// Enable LSE in bypass mode
 		RCC->BDCR |= lseMode;
 		RCC->BDCR |= lseEnable;
