@@ -116,7 +116,8 @@ void stopMmcBlockDevice() {
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
 static const SDCConfig sdcConfig = {
-	SDC_MODE_4BIT
+	.bus_width = SDC_MODE_4BIT,
+	.slowdown = 0,
 };
 
 BaseBlockDevice* initializeMmcBlockDevice() {
