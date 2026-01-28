@@ -471,7 +471,7 @@ int getRemainingStack(thread_t *otp) {
 	otp->activeStack = r13;
 
 	int remainingStack;
-    if (ch.dbg.isr_cnt > 0) {
+	if (ch0.dbg.isr_cnt > 0) {
 		// ISR context
 		remainingStack = (int)(r13 - 1) - (int)&__main_stack_base__;
 	} else {
