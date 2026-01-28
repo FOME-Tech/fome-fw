@@ -91,7 +91,7 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 	}
 
 	// We think we have everything for the card, let's try to mount it!
-	mmcObjectInit(&MMCD1, mmcCardCacheControlledStorage.mmcOperationBuffer);
+	mmcObjectInit(&MMCD1, mmcCardCacheControlledStorage.usedPart.mmcOperationBuffer);
 	mmcStart(&MMCD1, &mmccfg);
 
 	// Performs the initialization procedure on the inserted card.
