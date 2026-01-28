@@ -12,7 +12,6 @@ MCU_BOOTLOADER_FLASH = openblt_flash_f4_f7.cpp
 MCU = cortex-m4
 USE_FPU = hard
 LDSCRIPT = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/STM32F4.ld
-ALLCSRC += $(CHIBIOS)/os/hal/boards/ST_STM32F4_DISCOVERY/board.c
 CONFDIR = $(PROJECT_DIR)/hw_layer/ports/stm32/stm32f4/cfg
 
 # STM32F42x has extra memory, so change some flags so we can use it.
