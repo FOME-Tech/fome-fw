@@ -8,7 +8,11 @@
 
 extern "C" void stm32_rtc_init() {
 	// Allow backup domain access
-	PWR->CR1 |= PWR_CR1_DBP;
+	#ifdef STM32F4XX
+		PWR->CR |= PWR_CR_DBP;
+	#else // not F4
+		PWR->CR1 |= PWR_CR1_DBP;
+	#endif
 
 	uint32_t lseMode = STM32_LSEDRV | RCC_BDCR_LSEBYP;
 	uint32_t lseEnable = RCC_BDCR_LSEON;
