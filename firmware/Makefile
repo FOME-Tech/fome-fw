@@ -188,7 +188,32 @@ ifeq ($(USE_WIFI),yes)
 endif
 
 ifeq ($(LWIP),yes)
-  include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
+  ARCHIVE_LWIP := $(CHIBIOS)/ext/lwip-2.1.2.7z
+  LWIP_DIR     := $(CHIBIOS)/ext/lwip
+  LWIP_STAMP   := $(LWIP_DIR)/.extracted
+  # Extract lwIP once (stamp file)
+  $(LWIP_STAMP): $(ARCHIVE_LWIP)
+	@echo "Extracting $(ARCHIVE_LWIP)..."
+	rm -rf $(LWIP_DIR)
+	mkdir -p $(LWIP_DIR)
+	7z x $(ARCHIVE_LWIP) -o$(LWIP_DIR)
+	touch $(LWIP_STAMP)
+
+  .PHONY: configure-lwip
+  configure-lwip: $(LWIP_STAMP)
+
+  # If lwIP isn't extracted yet, do a "configure-only" pass and re-run make
+  ifeq ($(wildcard $(LWIP_STAMP)),)
+    $(info lwIP not extracted yet -> running configure pass)
+    .PHONY: _do_configure
+    _do_configure: configure-lwip
+    $(shell $(MAKE) --no-print-directory _do_configure)
+  endif
+
+  # Only include the bindings once the extracted tree exists
+  ifneq ($(wildcard $(LWIP_STAMP)),)
+    include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
+  endif
 endif
 
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
