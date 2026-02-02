@@ -24,45 +24,45 @@ protected:
 };
 
 struct FanControl1 : public FanController {
-	OutputPin& getPin() {
+	OutputPin& getPin() override {
 		return enginePins.fanRelay;
 	}
 
-	float getFanOnTemp() {
+	float getFanOnTemp() override {
 		return engineConfiguration->fanOnTemperature;
 	}
 
-	float getFanOffTemp() {
+	float getFanOffTemp() override {
 		return engineConfiguration->fanOffTemperature;
 	}
 
-	bool enableWithAc() {
+	bool enableWithAc() override {
 		return engineConfiguration->enableFan1WithAc;
 	}
 
-	bool disableWhenStopped() {
+	bool disableWhenStopped() override {
 		return engineConfiguration->disableFan1WhenStopped;
 	}
 };
 
 struct FanControl2 : public FanController {
-	OutputPin& getPin() {
+	OutputPin& getPin() override {
 		return enginePins.fanRelay2;
 	}
 
-	float getFanOnTemp() {
+	float getFanOnTemp() override {
 		return engineConfiguration->fan2OnTemperature;
 	}
 
-	float getFanOffTemp() {
+	float getFanOffTemp() override {
 		return engineConfiguration->fan2OffTemperature;
 	}
 
-	bool enableWithAc() {
+	bool enableWithAc() override {
 		return engineConfiguration->enableFan2WithAc;
 	}
 
-	bool disableWhenStopped() {
+	bool disableWhenStopped() override {
 		return engineConfiguration->disableFan2WhenStopped;
 	}
 };
