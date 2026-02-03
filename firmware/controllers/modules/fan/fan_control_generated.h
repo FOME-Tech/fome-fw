@@ -71,6 +71,17 @@ struct fan_control_s {
 	bool unusedBit_0_30 : 1 {};
 	// offset 0 bit 31
 	bool unusedBit_0_31 : 1 {};
+	// PWM duty
+	// %
+	// offset 4
+	scaled_channel<uint8_t, 2, 1> fanDuty = (uint8_t)0;
+	// offset 5
+	uint8_t alignmentFill_at_5[3];
+	// PWM table X axis
+	// offset 8
+	float fanXAxisValue = (float)0;
 };
-static_assert(sizeof(fan_control_s) == 4);
+static_assert(sizeof(fan_control_s) == 12);
+static_assert(offsetof(fan_control_s, fanDuty) == 4);
+static_assert(offsetof(fan_control_s, fanXAxisValue) == 8);
 
