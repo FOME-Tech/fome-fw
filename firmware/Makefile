@@ -5,6 +5,7 @@
 # Define project name here
 PROJECT = fome
 PROJECT_DIR = .
+.DEFAULT_GOAL := all
 
 CHIBIOS = $(PROJECT_DIR)/ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
@@ -187,34 +188,40 @@ ifeq ($(USE_WIFI),yes)
   # LWIP = yes
 endif
 
+ARCHIVE_LWIP := $(CHIBIOS)/ext/lwip-2.1.2.7z
+LWIP_DIR     := $(CHIBIOS)/ext/lwip
+
 ifeq ($(LWIP),yes)
-  ARCHIVE_LWIP := $(CHIBIOS)/ext/lwip-2.1.2.7z
-  LWIP_DIR     := $(CHIBIOS)/ext/lwip
-  LWIP_STAMP   := $(LWIP_DIR)/.extracted
-  # Extract lwIP once (stamp file)
-  $(LWIP_STAMP): $(ARCHIVE_LWIP)
+
+  # This is BOTH the "stamp" and an include file.
+  # GNU make will rebuild included makefiles and restart automatically.
+  LWIP_STAMP_MK := $(LWIP_DIR)/.extracted.mk
+
+  -include $(LWIP_STAMP_MK)
+
+  $(LWIP_STAMP_MK): $(ARCHIVE_LWIP)
 	@echo "Extracting $(ARCHIVE_LWIP)..."
 	rm -rf $(LWIP_DIR)
 	mkdir -p $(LWIP_DIR)
-	7z x $(ARCHIVE_LWIP) -o$(LWIP_DIR)
-	touch $(LWIP_STAMP)
+	7z x $(ARCHIVE_LWIP) -o$(CHIBIOS)/ext
+	@echo "LWIP_EXTRACTED := yes" > $@
 
   .PHONY: configure-lwip
-  configure-lwip: $(LWIP_STAMP)
+  configure-lwip: $(LWIP_STAMP_MK)
 
-  # If lwIP isn't extracted yet, do a "configure-only" pass and re-run make
-  ifeq ($(wildcard $(LWIP_STAMP)),)
-    $(info lwIP not extracted yet -> running configure pass)
-    .PHONY: _do_configure
-    _do_configure: configure-lwip
-    $(shell $(MAKE) --no-print-directory _do_configure)
-  endif
-
-  # Only include the bindings once the extracted tree exists
-  ifneq ($(wildcard $(LWIP_STAMP)),)
+  ifeq ($(LWIP_EXTRACTED),yes)
     include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
+  else
+    $(info lwIP not extracted yet - will extract and restart make)
   endif
+
 endif
+
+.PHONY: CLEAN_LWIP_HOOK
+CLEAN_LWIP_HOOK:
+	@echo "Cleaning lwIP extracted tree..."
+	$(RM) -r $(LWIP_DIR)
+	$(RM) -f $(LWIP_STAMP_MK)
 
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
 include $(PROJECT_DIR)/common.mk
@@ -385,6 +392,6 @@ include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
 include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
 
-.PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
+.PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK CLEAN_LWIP_HOOK
 
-CLEAN_RULE_HOOK: CLEAN_PCH_HOOK CLEAN_GENERATED_HOOK
+CLEAN_RULE_HOOK: CLEAN_PCH_HOOK CLEAN_GENERATED_HOOK CLEAN_LWIP_HOOK
