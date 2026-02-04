@@ -10,7 +10,7 @@
 #include "trigger_structure.h"
 #include "trigger_state_generated.h"
 #include "trigger_state_primary_generated.h"
-#include "timer.h"
+#include "efi_timer.h"
 
 const char *getTriggerEvent(TriggerEvent value);
 

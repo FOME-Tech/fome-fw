@@ -4,7 +4,7 @@
 
 #pragma once
 #include "engine_module.h"
-#include "timer.h"
+#include "efi_timer.h"
 #include "limp_manager.h"
 
 // DFCO = deceleration fuel cut off, ie, save gas when your foot is off the pedal

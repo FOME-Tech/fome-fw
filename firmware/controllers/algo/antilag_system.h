@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "timer.h"
+#include "efi_timer.h"
 #include "antilag_system_state_generated.h"
 
 void initAntilagSystem();
