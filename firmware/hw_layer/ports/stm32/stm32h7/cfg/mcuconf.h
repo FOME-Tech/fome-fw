@@ -42,6 +42,9 @@
 #define STM32H747_MCUCONF
 #define STM32H757_MCUCONF
 
+// Allows LSE init to timeout and configure fallback RTC clock source in case
+#define RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL    STM32_RTCSEL_LSI_CK
+
 /*
  * General settings.
  */
