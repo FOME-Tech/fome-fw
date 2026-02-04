@@ -388,7 +388,7 @@ void startLua() {
 	initLuaCanRx();
 #endif // EFI_CAN_SUPPORT
 
-	luaThread.start();
+	luaThread.startThread();
 
 	addConsoleActionS("lua", [](const char* str){
 		if (interactivePending) {

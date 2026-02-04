@@ -226,7 +226,7 @@ static void finishIdleTestIfNeeded() {
 /**
  * @return idle valve position percentage for automatic closed loop mode
  */
-float IdleController::getClosedLoop(IIdleController::Phase phase, float tpsPos, float rpm, float rpmRate, float targetRpm) {
+float IdleController::getClosedLoop(IIdleController::Phase phase, float rpm, float rpmRate, float targetRpm) {
 	notIdling = phase != IIdleController::Phase::Idling;
 	if (notIdling) {
 		// Don't store old I and D terms if PID doesn't work anymore.
@@ -305,7 +305,7 @@ float IdleController::getIdlePosition(float rpm, float rpmRate) {
 			m_pid.reset();
 		}
 
-		auto closedLoop = getClosedLoop(phase, tps.Value, rpm, rpmRate, targetRpm.ClosedLoopTarget);
+		auto closedLoop = getClosedLoop(phase, rpm, rpmRate, targetRpm.ClosedLoopTarget);
 		idleClosedLoop = closedLoop;
 		iacPosition += closedLoop;
 	} else {

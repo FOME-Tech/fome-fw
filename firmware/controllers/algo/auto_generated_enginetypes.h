@@ -215,14 +215,10 @@ case engine_type_e::CITROEN_TU3JP:
   return "CITROEN_TU3JP";
 case engine_type_e::DEFAULT_FRANKENSO:
   return "DEFAULT_FRANKENSO";
-case engine_type_e::DISCOVERY_PDM:
-  return "DISCOVERY_PDM";
 case engine_type_e::DODGE_NEON_1995:
   return "DODGE_NEON_1995";
 case engine_type_e::DODGE_NEON_2003_CRANK:
   return "DODGE_NEON_2003_CRANK";
-case engine_type_e::DODGE_RAM:
-  return "DODGE_RAM";
 case engine_type_e::ETB_BENCH_ENGINE:
   return "ETB_BENCH_ENGINE";
 case engine_type_e::ET_UNUSED_1:
@@ -231,6 +227,8 @@ case engine_type_e::ET_UNUSED_13:
   return "ET_UNUSED_13";
 case engine_type_e::ET_UNUSED_15:
   return "ET_UNUSED_15";
+case engine_type_e::ET_UNUSED_16:
+  return "ET_UNUSED_16";
 case engine_type_e::ET_UNUSED_17:
   return "ET_UNUSED_17";
 case engine_type_e::ET_UNUSED_19:
@@ -239,8 +237,14 @@ case engine_type_e::ET_UNUSED_20:
   return "ET_UNUSED_20";
 case engine_type_e::ET_UNUSED_21:
   return "ET_UNUSED_21";
+case engine_type_e::ET_UNUSED_22:
+  return "ET_UNUSED_22";
 case engine_type_e::ET_UNUSED_33:
   return "ET_UNUSED_33";
+case engine_type_e::ET_UNUSED_37:
+  return "ET_UNUSED_37";
+case engine_type_e::ET_UNUSED_38:
+  return "ET_UNUSED_38";
 case engine_type_e::ET_UNUSED_43:
   return "ET_UNUSED_43";
 case engine_type_e::ET_UNUSED_5:
@@ -253,8 +257,14 @@ case engine_type_e::ET_UNUSED_60:
   return "ET_UNUSED_60";
 case engine_type_e::ET_UNUSED_61:
   return "ET_UNUSED_61";
+case engine_type_e::ET_UNUSED_64:
+  return "ET_UNUSED_64";
 case engine_type_e::ET_UNUSED_66:
   return "ET_UNUSED_66";
+case engine_type_e::ET_UNUSED_70:
+  return "ET_UNUSED_70";
+case engine_type_e::ET_UNUSED_8:
+  return "ET_UNUSED_8";
 case engine_type_e::ET_UNUSED_91:
   return "ET_UNUSED_91";
 case engine_type_e::ET_UNUSED_92:
@@ -281,8 +291,6 @@ case engine_type_e::FRANKENSO_MIATA_NA6_MAP:
   return "FRANKENSO_MIATA_NA6_MAP";
 case engine_type_e::FRANKENSO_QA_ENGINE:
   return "FRANKENSO_QA_ENGINE";
-case engine_type_e::GY6_139QMB:
-  return "GY6_139QMB";
 case engine_type_e::HELLEN_121_NISSAN_4_CYL:
   return "HELLEN_121_NISSAN_4_CYL";
 case engine_type_e::HELLEN_121_NISSAN_6_CYL:
@@ -339,16 +347,12 @@ case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
   return "MAZDA_MIATA_2003_NA_RAIL";
 case engine_type_e::MINIMAL_PINS:
   return "MINIMAL_PINS";
-case engine_type_e::MITSU_4G93:
-  return "MITSU_4G93";
 case engine_type_e::MRE_BOARD_NEW_TEST:
   return "MRE_BOARD_NEW_TEST";
 case engine_type_e::MRE_BODY_CONTROL:
   return "MRE_BODY_CONTROL";
 case engine_type_e::MRE_M111:
   return "MRE_M111";
-case engine_type_e::MRE_SUBARU_EJ18:
-  return "MRE_SUBARU_EJ18";
 case engine_type_e::MRE_VW_B6:
   return "MRE_VW_B6";
 case engine_type_e::POLYGONUS_MIATA_MSM:
@@ -377,10 +381,6 @@ case engine_type_e::PROTEUS_VW_B6:
   return "PROTEUS_VW_B6";
 case engine_type_e::SACHS:
   return "SACHS";
-case engine_type_e::SUBARUEG33_DEFAULTS:
-  return "SUBARUEG33_DEFAULTS";
-case engine_type_e::SUBARU_2003_WRX:
-  return "SUBARU_2003_WRX";
 case engine_type_e::TEST_33816:
   return "TEST_33816";
 case engine_type_e::TEST_CRANK_ENGINE:

@@ -81,12 +81,12 @@ struct WssResult {
 	float rr;
 };
 
-static constexpr float E90Wss(const uint8_t& data)
+static float E90Wss(const uint8_t& data)
 {
 	return (*reinterpret_cast<const int16_t*>(&data)) * 0.0625f;
 }
 
-expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
+static expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 	// E90 Wheel speed frame
 	if (CAN_SID(frame) != 0x0ce) {
 		return unexpected;
@@ -104,7 +104,7 @@ static constexpr float NcWss(uint16_t data) {
 	return 0.01f * SWAP_UINT16(data) - 100;
 }
 
-expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
+static expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
 	// NC ABS wheel speed frame
 	if (CAN_SID(frame) != 0x4b0) {
 		return unexpected;
@@ -118,7 +118,7 @@ expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
 	};
 }
 
-expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
+static expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
 	switch (type) {
 		case BMW_e90:
 			return processBMW_e90Wss(frame);

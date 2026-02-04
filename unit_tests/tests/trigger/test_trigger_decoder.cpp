@@ -326,8 +326,6 @@ TEST(trigger, testTriggerDecoder) {
 
 	testTriggerDecoder2("ford aspire", engine_type_e::FORD_ASPIRE_1996, 4, 0.0000, 0.5);
 
-	testTriggerDecoder2("dodge ram", engine_type_e::DODGE_RAM, 16, 0.5000, 0.06);
-
 	testTriggerDecoder2("Miata NB2", engine_type_e::HELLEN_NB2, 3, 0.3888888955, 0);
 
 	printf("====================================================================================== testTriggerDecoder part 3\r\n");
@@ -336,24 +334,12 @@ TEST(trigger, testTriggerDecoder) {
 	testTriggerDecoder2("test 2/1 rise", engine_type_e::TEST_ISSUE_366_RISE, 0, 0.0000, 0.0);
 
 	testTriggerDecoder2("test engine", engine_type_e::TEST_ENGINE, 0, 0.7500, 0.2500);
-	testTriggerDecoder2("testGY6_139QMB", engine_type_e::GY6_139QMB, 0, 0.4375, 0.0);
-	testTriggerDecoder2("testSubary", engine_type_e::SUBARU_2003_WRX, 0, 0.4000, 0.0);
 
 	testTriggerDecoder2("testFordEscortGt", engine_type_e::FORD_ESCORT_GT, 0, 0.8096, 0.3844);
 
 	testTriggerDecoder2("test1+1", engine_type_e::DEFAULT_FRANKENSO, 0, 0.7500, 0.2500);
 
 	testTriggerDecoder2("testCitroen", engine_type_e::CITROEN_TU3JP, 0, 0.4833, 0);
-
-	testTriggerDecoder2("testMitsu", engine_type_e::MITSU_4G93, 9, 0.3553, 0.3752);
-
-	{
-		EngineTestHelper eth(engine_type_e::MITSU_4G93);
-
-		applyNonPersistentConfiguration();
-
-	}
-
 	testTriggerDecoder2("citroen", engine_type_e::CITROEN_TU3JP, 0, 0.4833, 0.0, 2.9994);
 
 	testTriggerDecoder2("CAMARO_4", engine_type_e::CAMARO_4, 40, 0.5, 0);

@@ -6,6 +6,7 @@ import com.rusefi.InvokeReader;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.*;
+import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
 import com.rusefi.newparse.parsing.Definition;
 import org.yaml.snakeyaml.Yaml;
 
@@ -13,7 +14,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,9 +43,12 @@ public class LiveDataProcessor {
 
     private final String extraPrepend = System.getProperty("LiveDataProcessor.extra_prepend");
 
+    private final ArrayList<String> inputFiles = new ArrayList<>();
+    private final ArrayList<String> outputFiles = new ArrayList<>();
+
     public static void main(String[] args) throws IOException {
-        if (args.length != 1) {
-            System.err.println("One parameter expected: name of live data yaml input file");
+        if (args.length < 1) {
+            System.err.println("Usage: LiveDataProcessor <yaml_file> [-makefileDep <dep_file>] [-stampFile <stamp_file>]");
             System.exit(-1);
         }
 
@@ -50,18 +56,37 @@ public class LiveDataProcessor {
         Files.createDirectories(Paths.get(tsOutputsDestination));
 
         String yamlFileName = args[0];
+        String makefileDepsDestination = null;
+        String stampFile = null;
+
+        // Parse optional arguments
+        for (int i = 1; i < args.length - 1; i += 2) {
+            if ("-makefileDep".equals(args[i])) {
+                makefileDepsDestination = args[i + 1];
+            } else if ("-stampFile".equals(args[i])) {
+                stampFile = args[i + 1];
+            }
+        }
+
         Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(new FileReader(yamlFileName));
 
         LiveDataProcessor liveDataProcessor = new LiveDataProcessor();
+        liveDataProcessor.inputFiles.add(yamlFileName);
 
         int sensorTsPosition = liveDataProcessor.handleYaml(data);
         liveDataProcessor.writeFiles();
 
         log.info("TS_TOTAL_OUTPUT_SIZE=" + sensorTsPosition);
-        try (FileWriter fw = new FileWriter("generated/total_live_data_generated.h")) {
+        String totalLiveDataFile = "generated/total_live_data_generated.h";
+        try (FileWriter fw = new FileWriter(totalLiveDataFile)) {
             fw.write(header);
             fw.write("#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition);
+        }
+        liveDataProcessor.outputFiles.add(totalLiveDataFile);
+
+        if (makefileDepsDestination != null) {
+            liveDataProcessor.writeMakefileDependencyFile(makefileDepsDestination, stampFile);
         }
     }
 
@@ -86,6 +111,13 @@ public class LiveDataProcessor {
             baseAddressCHeader.append("#define ").append(name.toUpperCase()).append("_BASE_ADDRESS ").append(startingPosition).append("\n");
 
             String cHeaderDestination = folder + File.separator + name + "_generated.h";
+            String definitionFile = folder + File.separator + name + ".txt";
+
+            // Track input files for dependency generation
+            inputFiles.add(definitionFile);
+            if (prepend != null && !prepend.isEmpty()) {
+                inputFiles.add(prepend);
+            }
 
             {
                 ParseState parseState = new ParseState();
@@ -96,7 +128,7 @@ public class LiveDataProcessor {
                     RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prepend);
                 }
 
-                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), folder + File.separator + name + ".txt");
+                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), definitionFile);
 
                 CStructWriter cStructs = new CStructWriter();
                 cStructs.writeCStructs(parseState, cHeaderDestination);
@@ -191,13 +223,59 @@ public class LiveDataProcessor {
             fw.write(enumContent.toString());
             fw.write(baseAddressCHeader.toString());
         }
+        outputFiles.add(enumContentFileName);
 
-        try (FileWriter fw = new FileWriter("generated/live_data_fragments.h")) {
+        String fragmentsFile = "generated/live_data_fragments.h";
+        try (FileWriter fw = new FileWriter(fragmentsFile)) {
             fw.write(fragmentsContent.toString());
         }
+        outputFiles.add(fragmentsFile);
 
         String outputPath = "../java_console/io/src/main/java/com/rusefi/enums";
         InvokeReader request = new InvokeReader(outputPath, Collections.singletonList(enumContentFileName));
         new EnumToString().handleRequest(request);
+    }
+
+    private void writeMakefileDependencyFile(String makefileDepsDestination, String stampFile) throws IOException {
+        // Also add the outputs generated by SdLogWriter and OutputLookupWriter
+        outputFiles.add("generated/log_fields_generated.h");
+        outputFiles.add("generated/output_lookup_generated.cpp");
+
+        Path path = Paths.get(makefileDepsDestination);
+        Files.createDirectories(path.getParent());
+        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(path));
+
+        // Use stamp file as target if provided, otherwise use the first output file
+        String target = stampFile != null ? stampFile : outputFiles.get(0);
+        f.print(target + ": ");
+        for (String input : inputFiles) {
+            f.print(input);
+            f.print(" ");
+        }
+        f.println();
+
+        // Inform make of all inputs, these have no dependencies
+        for (String input : inputFiles) {
+            f.println(input + ":");
+            f.println();
+        }
+
+        f.close();
+
+        // Write the outputs .mk file for make to know about generated files
+        writeOutputsMkFile(path.getParent());
+    }
+
+    private void writeOutputsMkFile(Path depDir) throws IOException {
+        Path mkPath = depDir.resolve("generated_live_data_outputs.mk");
+        PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(mkPath));
+
+        f.print("GENERATED_FILES +=");
+        for (String output : outputFiles) {
+            f.print(" \\\n\t" + output);
+        }
+        f.println();
+
+        f.close();
     }
 }

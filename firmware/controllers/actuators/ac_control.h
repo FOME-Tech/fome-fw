@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ac_control_generated.h"
-#include "timer.h"
+#include "efi_timer.h"
 
 class AcController : public ac_control_s, public EngineModule {
 public:

@@ -180,7 +180,7 @@ void initMicrosecondTimer() {
 
 	watchDogBuddyCallback(NULL);
 #if EFI_EMULATE_POSITION_SENSORS
-	watchdogControllerInstance.start();
+	watchdogControllerInstance.startThread();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
 }
 

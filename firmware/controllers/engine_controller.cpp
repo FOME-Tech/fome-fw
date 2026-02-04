@@ -41,6 +41,7 @@
 #include "accelerometer.h"
 #include "vvt.h"
 #include "boost_control.h"
+#include "fan_control.h"
 #include "launch_control.h"
 #include "speedometer.h"
 #include "gppwm.h"
@@ -446,6 +447,7 @@ void commonInitEngineController() {
 
 #if EFI_ENGINE_CONTROL
 	initBoostCtrl();
+	initFanControl();
 #endif /* EFI_ENGINE_CONTROL */
 
 #if EFI_LAUNCH_CONTROL

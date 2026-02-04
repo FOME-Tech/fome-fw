@@ -27,6 +27,8 @@ struct WifiInitFinisher : public ThreadController<4096> {
 		address.sin_addr.s_addr = 0;
 
 		server.startListening(address);
+
+		wifiInitDone = true;
 	}
 } wifiInitFinisher;
 
@@ -39,7 +41,7 @@ void NetDeferredInit() {
 
 	initWifi();
 
-	wifiInitFinisher.start();
+	wifiInitFinisher.startThread();
 }
 
 uint8_t header[4] = {0xde, 0xad, 0xbe, 0xef};

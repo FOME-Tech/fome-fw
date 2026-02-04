@@ -89,9 +89,9 @@ public class TextEditor {
 
     private void installUndoRedoKeystrokes() {
         KeyStroke undoKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_Z, InputEvent.CTRL_MASK);
+                KeyEvent.VK_Z, InputEvent.CTRL_DOWN_MASK);
         KeyStroke redoKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_Y, InputEvent.CTRL_MASK);
+                KeyEvent.VK_Y, InputEvent.CTRL_DOWN_MASK);
 
         UndoManager undoManager = new UndoManager();
 

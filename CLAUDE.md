@@ -10,6 +10,8 @@ FOME (Free Open Motorsports ECU) is an open-source engine control unit firmware 
 
 Default to building with 12 threads unless otherwise specified (-j12 etc).
 
+NEVER attempt to build one file manually, always do it via the board build scripts.
+
 ### Building Firmware
 
 Each board+chip combination has its own compile script in `firmware/config/boards/<board>/`:
@@ -28,7 +30,7 @@ Outputs are placed in `firmware/deliver/`:
 
 ```bash
 cd unit_tests
-make
+make -j12
 ./build/fome_test
 
 # Run a specific test
@@ -39,16 +41,9 @@ Unit tests use Google Test and run on amd64/aarch64, not on the ECU.
 
 ### Code Generation
 
-```bash
-# Generate configs for a specific board
-firmware/gen_config_board.sh <board>
+Code generation occurs as part of the normal firmware and unit test builds, via `firmware/fome_generated.mk`.
 
-# Generate all board configs
-firmware/gen_config.sh
-
-# Generate enum-to-string conversions
-firmware/gen_enum_to_string.sh
-```
+If there is a build failure that looks like generated files are missing, try running `make clean` first. In general, there should be no reason to manually run generated code scripts.
 
 ## Architecture
 

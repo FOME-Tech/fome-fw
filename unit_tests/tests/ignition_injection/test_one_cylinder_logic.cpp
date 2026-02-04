@@ -7,7 +7,17 @@
 #include "spark_logic.h"
 
 TEST(issues, issueOneCylinderSpecialCase968) {
-	EngineTestHelper eth(engine_type_e::GY6_139QMB);
+	EngineTestHelper eth(engine_type_e::MINIMAL_PINS);
+
+	engineConfiguration->cranking.rpm = 1100;
+	engineConfiguration->globalTriggerAngleOffset = 45;
+	engineConfiguration->displacement = 0.072; // 72cc
+	engineConfiguration->cylindersCount = 1;
+	engineConfiguration->firingOrder = FO_1;
+
+	engineConfiguration->injectionMode = IM_SEQUENTIAL;
+	engineConfiguration->ignitionMode = IM_ONE_COIL;
+
 	setTable(config->injectionPhase, -180.0f);
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
 	engine->tdcMarkEnabled = false;

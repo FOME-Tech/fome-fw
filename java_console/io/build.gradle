@@ -17,12 +17,12 @@ dependencies {
     api project(':models')
     api project(':util')
 
-    implementation group: 'com.fazecast', name: 'jSerialComm', version: '2.10.3'
+    implementation global_libs.jSerialComm
     implementation global_libs.jcip
     implementation project(':logging')
 
     // junit 4.13 does not mix well with httpclient :(
-    testImplementation group: 'junit', name: 'junit', version: '4.8.2'
+    testImplementation 'junit:junit:4.8.2'
     testFixturesImplementation global_libs.mockito
     testFixturesApi global_libs.annotations
     testFixturesApi global_libs.junit

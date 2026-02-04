@@ -361,6 +361,7 @@ public enum SerialPortScanner {
             request[2] = 0; // connectMode
 
             stream.write(request);
+            stream.flush();
 
             IncomingDataBuffer idb = stream.getDataBuffer();
 

@@ -39,7 +39,6 @@
 #include "citroenBerlingoTU3JP.h"
 #include "custom_engine.h"
 #include "dodge_neon.h"
-#include "dodge_ram.h"
 
 #include "engine_template.h"
 
@@ -48,9 +47,6 @@
 
 #include "honda_k_dbc.h"
 #include "hyundai.h"
-
-#include "GY6_139QMB.h"
-
 #include "nissan_vq.h"
 
 #include "mazda_miata.h"
@@ -60,10 +56,8 @@
 #include "mazda_626.h"
 #include "m111.h"
 #include "mercedes.h"
-#include "mitsubishi.h"
 
 #include "gm_ls_4.h"
-#include "subaru.h"
 #include "test_engine.h"
 #include "sachs.h"
 #include "vw.h"
@@ -661,9 +655,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::MRE_M111:
 		setM111EngineConfiguration();
 		break;
-	case engine_type_e::MRE_SUBARU_EJ18:
-		setSubaruEJ18_MRE();
-		break;
 	case engine_type_e::MRE_BOARD_NEW_TEST:
 		mreBoardNewTest();
 		break;
@@ -671,8 +662,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::BMW_M73_MRE_SLAVE:
 		setEngineBMW_M73_microRusEfi();
 		break;
-	case engine_type_e::ET_UNUSED_20:
-	case engine_type_e::ET_UNUSED_66:
 	case engine_type_e::MRE_BODY_CONTROL:
 		mreBCM();
 		break;
@@ -785,7 +774,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::DEFAULT_FRANKENSO:
 		setFrankensoConfiguration();
 		break;
-	case engine_type_e::DISCOVERY_PDM:
 	case engine_type_e::TEST_ENGINE:
 		setTestCamEngineConfiguration();
 		break;
@@ -822,27 +810,14 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	case engine_type_e::FRANKENSO_MAZDA_MIATA_NA8:
 		setFrankensoMazdaMiataNA8Configuration();
 		break;
-	case engine_type_e::MITSU_4G93:
-		setMitsubishiConfiguration();
-		break;
 	case engine_type_e::FORD_INLINE_6_1995:
 		setFordInline6();
-		break;
-	case engine_type_e::GY6_139QMB:
-		setGy6139qmbDefaultEngineConfiguration();
 		break;
 	case engine_type_e::FORD_ESCORT_GT:
 		setFordEscortGt();
 		break;
-	case engine_type_e::ET_UNUSED_21:
 	case engine_type_e::CITROEN_TU3JP:
 		setCitroenBerlingoTU3JPConfiguration();
-		break;
-	case engine_type_e::SUBARU_2003_WRX:
-		setSubaru2003Wrx();
-		break;
-	case engine_type_e::DODGE_RAM:
-		setDodgeRam1996();
 		break;
 	case engine_type_e::VW_ABA:
 		setVwAba();
@@ -875,11 +850,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		setTest33816EngineConfiguration();
 		break;
 #endif // HW_FRANKENSO
-#ifdef HW_SUBARU_EG33
-	case engine_type_e::SUBARUEG33_DEFAULTS:
-		setSubaruEG33Defaults();
-		break;
-#endif //HW_SUBARU_EG33
 	default:
 		firmwareError(ObdCode::CUSTOM_UNEXPECTED_ENGINE_TYPE, "Unexpected engine type: %d", (int)engineType);
 	}

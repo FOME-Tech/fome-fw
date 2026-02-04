@@ -103,7 +103,7 @@ struct CanTsThread : public TunerstudioThread {
 static CanTsThread canTsThread;
 
 void startCanConsole() {
-	canTsThread.start();
+	canTsThread.startThread();
 	canStreamInit();
 }
 

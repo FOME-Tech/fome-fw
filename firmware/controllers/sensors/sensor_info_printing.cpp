@@ -53,7 +53,7 @@ void FallbackSensor::showInfo(const char* sensorName) const {
 
 void RpmCalculator::showInfo(const char* /*sensorName*/) const {
 #if EFI_SHAFT_POSITION_INPUT
-	efiPrintf("RPM sensor: stopped: %d spinning up: %d cranking: %d running: %d rpm: %f", 
+	efiPrintf("RPM sensor: stopped: %d spinning up: %d cranking: %d running: %d rpm: %.1f", 
 		isStopped(),
 		isSpinningUp(),
 		isCranking(),

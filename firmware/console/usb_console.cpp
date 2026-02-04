@@ -50,7 +50,7 @@ struct UsbThread : public TunerstudioThread {
 static CCM_OPTIONAL UsbThread usbConsole;
 
 void startUsbConsole() {
-	usbConsole.start();
+	usbConsole.startThread();
 }
 
 #endif // EFI_USB_SERIAL

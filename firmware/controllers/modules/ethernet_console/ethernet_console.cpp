@@ -117,5 +117,5 @@ struct EthernetThread : public TunerstudioThread {
 static EthernetThread ethernetConsole;
 
 void EthernetConsoleModule::initNoConfiguration() {
-	ethernetConsole.start();
+	ethernetConsole.startThread();
 }

@@ -5,4 +5,6 @@ struct_no_prefix fan_control_s
 	bit hot;Above hot threshold
 	bit cold;Below cold threshold
 	bit m_state;On
+	uint8_t autoscale fanDuty;PWM duty;"%", 0.5, 0, 0, 100, 1
+	float fanXAxisValue;PWM table X axis
 end_struct

@@ -244,10 +244,6 @@ void setMiataNA6_MAP_Frankenso() {
 	// white wire from 1E - TOP of W4 to BOTTOM W62
 	engineConfiguration->malfunctionIndicatorPin = Gpio::D5;
 
-	// yellow wire from 1V/W22 to bottom of W48
-	engineConfiguration->clutchDownPin = Gpio::A3;
-	engineConfiguration->clutchDownPinMode = PI_PULLUP;
-
 	// green wire from 1Q/W17 to bottom of W46
 	engineConfiguration->acSwitch = Gpio::A6;
 

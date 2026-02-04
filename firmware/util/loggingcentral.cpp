@@ -160,7 +160,7 @@ void startLoggingProcessor() {
 	}
 
 	// Start processing used buffers
-	lbf.start();
+	lbf.startThread();
 }
 
 #endif // EFI_PROD_CODE

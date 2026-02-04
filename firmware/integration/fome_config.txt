@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1300
+#define BLOCKING_FACTOR 1320
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -399,6 +399,8 @@ bit enableFan1WithAc;Turn on this fan when AC is on.
 bit enableFan2WithAc;Turn on this fan when AC is on.
 bit disableFan1WhenStopped;Inhibit operation of this fan while the engine is not running.
 bit disableFan2WhenStopped;Inhibit operation of this fan while the engine is not running.
+bit fan1UsePwmMode,"PWM","On/Off";Use PWM mode for fan 1 instead of on/off.
+bit fan2UsePwmMode,"PWM","On/Off";Use PWM mode for fan 2 instead of on/off.
 bit enableTrailingSparks;Enable secondary spark outputs that fire after the primary (rotaries, twin plug engines).
 bit etb_use_two_wires;TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT use two wire mode.
 bit isDoubleSolenoidIdle;Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
@@ -500,6 +502,11 @@ float vbattDividerCoeff;This is the ratio of the resistors for the battery volta
 
 uint8_t fanOnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"deg C", 1, 0, 0, 150, 0
 uint8_t fanOffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"deg C", 1, 0, 0, 150, 0
+
+uint16_t fanPwmFrequency;PWM frequency for cooling fans in PWM mode;"Hz", 1, 0, 10, 500, 0
+gppwm_channel_e fan1PwmXAxis;X axis source for fan 1 PWM table.
+gppwm_channel_e fan2PwmXAxis;X axis source for fan 2 PWM table.
+uint8_t fanPwmSafetyDuty;Fan duty when CLT sensor fails in PWM mode;"%", 1, 0, 0, 100, 0
 
 output_pin_e acrPin;
 
@@ -1740,6 +1747,20 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	uint8_t[4 iterate] lambdaSensorSourceIndex;Physical CAN bus sensor index to use for logical lambda sensor channel;"", 1, 0, 0, 15, 0
 	uint8_t[4 iterate] lambdaSensorSourceBus;CAN bus to use for lambda sensor channel;"", 1, 1, 1, 2, 0
+
+	#define FAN_TABLE_SIZE 6
+
+	! Fan 1 PWM tables
+	int8_t[FAN_TABLE_SIZE] fan1CltBins;;"C", 1, 0, -40, 120, 0
+	int16_t[FAN_TABLE_SIZE] autoscale fan1XAxisBins;;"", 0.1, 0, -10000, 10000, 1
+	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOff;Fan 1 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
+	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOn;Fan 1 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
+
+	! Fan 2 PWM tables
+	int8_t[FAN_TABLE_SIZE] fan2CltBins;;"C", 1, 0, -40, 120, 0
+	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
+	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
+	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 end_struct
 
 ! Pedal Position Sensor

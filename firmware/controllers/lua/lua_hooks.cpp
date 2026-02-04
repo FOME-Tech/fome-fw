@@ -10,6 +10,7 @@
 #include "lua_airmass.h"
 #include "value_lookup.h"
 #include "can_filter.h"
+#include "lua_getchannel.h"
 #if EFI_CAN_SUPPORT || EFI_UNIT_TEST
 #include "can_msg_tx.h"
 #endif // EFI_CAN_SUPPORT
@@ -861,6 +862,18 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 1;
 	});
 #endif // EFI_PROD_CODE || EFI_SIMULATOR
+
+	lua_register(l, "getChannel", [](lua_State* l2) {
+		auto propertyName = luaL_checklstring(l2, 1, nullptr);
+		auto result = getChannelByName(propertyName);
+
+		if (!result) {
+			luaL_error(l2, "Invalid getChannel: %s", propertyName);
+		}
+
+		lua_pushnumber(l2, result.Value);
+		return 1;
+	});
 
 #if EFI_SHAFT_POSITION_INPUT
 	lua_register(l, "getEngineState", [](lua_State* l2) {

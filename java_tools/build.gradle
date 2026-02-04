@@ -20,7 +20,24 @@ allprojects {
     }
 }
 
-// gradlew allDeps 
+// Common shadowJar configuration for all modules that use the shadow plugin
+subprojects {
+    pluginManager.withPlugin('com.gradleup.shadow') {
+        tasks.named('shadowJar').configure {
+            // Exclude compile-only annotations and test dependencies from fat jars
+            dependencies {
+                exclude(dependency(global_libs.jsr305))
+                // autotest uses JUnit at runtime for test automation
+                if (project.name != 'autotest') {
+                    exclude(dependency(global_libs.junit))
+                }
+                exclude(dependency(global_libs.annotations))
+            }
+        }
+    }
+}
+
+// gradlew allDeps
 subprojects {
     task allDeps(type: DependencyReportTask) {}
 }

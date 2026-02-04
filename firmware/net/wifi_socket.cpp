@@ -262,6 +262,15 @@ private:
 			return false;
 		}
 
+		#ifdef WIFI_OFFSET_MAC
+		{
+			uint8_t mac[6];
+			m2m_wifi_get_mac_address(mac);
+			mac[5]++;
+			m2m_wifi_set_mac_address(mac);
+		}
+		#endif
+
 		static tstrM2MAPConfig apConfig;
 		const wifi_string_t& ssid = getWifiSsid();
 		strncpy(apConfig.au8SSID, ssid, std::min(sizeof(apConfig.au8SSID), sizeof(ssid)));
@@ -302,7 +311,7 @@ private:
 static NO_CACHE WifiHelperThread wifiHelper;
 
 void initWifi() {
-	wifiHelper.start();
+	wifiHelper.startThread();
 }
 
 void waitForWifiInit() {

@@ -31,12 +31,6 @@ enum class engine_type_e : uint32_t {
 	FORD_ASPIRE_1996 = 3,
 
 	FORD_INLINE_6_1995 = 7,
-	/**
-	 * one cylinder engine
-	 * 139qmb 50-90cc
-	 * http://rusefi.com/forum/viewtopic.php?f=3&t=332
-	 */
-	GY6_139QMB = 8,
 
 	PROTEUS_E65_6H_MAN_IN_THE_MIDDLE = 9,
 	HELLEN_NA8_96 = 10,
@@ -49,12 +43,7 @@ enum class engine_type_e : uint32_t {
 
 	FORD_ESCORT_GT = 14,
 
-	MITSU_4G93 = 16,
-
 	TEST_33816 = 18,
-
-
-	SUBARU_2003_WRX = 22,
 
 	/**
 	 * microRusEFI used as Body Control Module BCM BCU
@@ -83,10 +72,6 @@ enum class engine_type_e : uint32_t {
 	CAMARO_4 = 35,
 
 	HELLEN_128_MERCEDES_4_CYL = 36,
-
-	MRE_SUBARU_EJ18 = 37,
-
-	DISCOVERY_PDM = 38,
 
 	PROTEUS_VW_B6 = 39,
 
@@ -136,14 +121,11 @@ enum class engine_type_e : uint32_t {
 
 	PROTEUS_BMW_M73 = 63,
 
-	DODGE_RAM = 64,
 	CITROEN_TU3JP = 65,
 
 	MRE_M111 = 68,
 
 	HELLEN_NB2 = 69,
-
-	SUBARUEG33_DEFAULTS = 70,
 
 	HELLEN_121_VAG_4_CYL = 71,
 	HELLEN_121_NISSAN_6_CYL = 72,
@@ -196,17 +178,24 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_1 = 1,
 	ET_UNUSED_5 = 5,
 	ET_UNUSED_6 = 6,
+	ET_UNUSED_8 = 8,
 	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
 	ET_UNUSED_17 = 17,
 	ET_UNUSED_13 = 13,
 	ET_UNUSED_15 = 15,
+	ET_UNUSED_16 = 16,
+	ET_UNUSED_22 = 22,
 	ET_UNUSED_33 = 33,
+	ET_UNUSED_37 = 37,
+	ET_UNUSED_38 = 38,
 	ET_UNUSED_43 = 43,
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
+	ET_UNUSED_64 = 64,
+	ET_UNUSED_70 = 70,
 	ET_UNUSED_91 = 91,
 
 	/**

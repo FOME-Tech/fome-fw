@@ -77,7 +77,7 @@ public class ExecHelper {
     public static String executeCommand(String command, UpdateOperationCallbacks callbacks, StringBuffer output, StringBuffer error, File workingDir) {
         callbacks.log("Executing " + command);
         try {
-            Process p = Runtime.getRuntime().exec(command, null, workingDir);
+            Process p = new ProcessBuilder(command.split(" ")).directory(workingDir).start();
             startStreamThread(p, p.getInputStream(), output, callbacks);
             startStreamThread(p, p.getErrorStream(), error, callbacks);
             p.waitFor(3, TimeUnit.MINUTES);

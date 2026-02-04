@@ -184,7 +184,7 @@ public class Logging {
 		Map<String, Exception> errors = new LinkedHashMap<>();
 		if (!className.isEmpty()) {
 			try {
-				impl = (DefaultLogging)Class.forName(className).newInstance();
+				impl = (DefaultLogging)Class.forName(className).getDeclaredConstructor().newInstance();
 				errors.putAll(impl.configure());
 			} catch (Throwable t) {
 				// failed to configure with passed class name
@@ -211,7 +211,7 @@ public class Logging {
  */
 		if (impl == null) {
 			try {
-				impl = (DefaultLogging)Class.forName("com.devexperts.logging.Log4j2Logging").newInstance();
+				impl = (DefaultLogging)Class.forName("com.devexperts.logging.Log4j2Logging").getDeclaredConstructor().newInstance();
 				errors.putAll(impl.configure());
 			} catch (Throwable t) {
 				// failed to configure log4j2
