@@ -44,7 +44,7 @@ extern "C" void stm32_rtc_init() {
 		size_t lseWaitCounter = 0;
 		// Waits until LSE is stable or times out.
 		while ((RCC->BDCR & RCC_BDCR_LSERDY) == 0) {
-			if (lseWaitCounter++ > RUSEFI_STM32_LSE_WAIT_MAX) {
+			if (lseWaitCounter++ > FOME_STM32_LSE_WAIT_MAX) {
 				// LSE timed out, give up and don't configure the RTC
 				return;
 			}

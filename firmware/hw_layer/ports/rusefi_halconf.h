@@ -99,3 +99,7 @@
 
 // Used by CRC
 #define HAL_USE_COMMUNITY TRUE
+
+// RTC initialization
+// Allows LSE init to timeout and configure fallback RTC clock source in case
+#define FOME_STM32_LSE_WAIT_MAX           1000000
