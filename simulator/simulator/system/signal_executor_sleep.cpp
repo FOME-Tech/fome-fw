@@ -41,7 +41,7 @@ void SleepExecutor::schedule(const char *msg, scheduling_s* scheduling, efitick_
 	doScheduleForLater(scheduling, NT2US(timeNt) - getTimeNowUs(), action);
 }
 
-static void timerCallback(CallbackContext* ctx) {
+static void timerCallback(virtual_timer_t*, CallbackContext* ctx) {
 	// Grab the action but clear it in the event so we can reschedule from the action's execution
 	action_s action = ctx->scheduling->action;
 	ctx->scheduling->action = {};

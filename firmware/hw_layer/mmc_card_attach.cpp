@@ -36,6 +36,10 @@ struct {
 		FATFS fs;
 		FIL file;
 		SdLogBufferWriter logBuffer;
+
+		#if HAL_USE_MMC_SPI
+			uint8_t mmcOperationBuffer[MMC_BUFFER_SIZE];
+		#endif
 	} usedPart;
 
 	static_assert(sizeof(usedPart) <= 2048);
@@ -90,7 +94,7 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 	}
 
 	// We think we have everything for the card, let's try to mount it!
-	mmcObjectInit(&MMCD1);
+	mmcObjectInit(&MMCD1, mmcCardCacheControlledStorage.usedPart.mmcOperationBuffer);
 	mmcStart(&MMCD1, &mmccfg);
 
 	// Performs the initialization procedure on the inserted card.
@@ -115,7 +119,8 @@ void stopMmcBlockDevice() {
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
 static const SDCConfig sdcConfig = {
-	SDC_MODE_4BIT
+	.bus_width = SDC_MODE_4BIT,
+	.slowdown = 0,
 };
 
 BaseBlockDevice* initializeMmcBlockDevice() {
