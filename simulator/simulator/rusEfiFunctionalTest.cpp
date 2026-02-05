@@ -118,8 +118,6 @@ void rusEfiFunctionalTest(void) {
 
 	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
 
-	startSerialChannels();
-
 	engineConfiguration->enableVerboseCanTx = true;
 
 #if HAL_USE_CAN

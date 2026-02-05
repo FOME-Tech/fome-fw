@@ -9,8 +9,6 @@ endif
 
 DDEFS += -DEFI_MAIN_RELAY_CONTROL=TRUE
 
-DDEFS += -DSTM32_SERIAL_USE_USART2=TRUE
-
 DDEFS += -DADC_MUX_PIN=Gpio::F2
 
 # Add them all together

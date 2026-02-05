@@ -129,7 +129,4 @@ protected:
 // that's 1 second
 #define SR5_READ_TIMEOUT TIME_MS2I(1000)
 
-void startSerialChannels();
-SerialTsChannelBase* getBluetoothChannel();
-
 void startCanConsole();

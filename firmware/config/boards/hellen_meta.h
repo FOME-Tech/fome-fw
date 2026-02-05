@@ -53,14 +53,6 @@ void detectHellenBoardType();
 #define H64_OUT_PWM5 Gpio::A9
 #define H64_OUT_PWM6 Gpio::A15
 
-// stm32 UART8
-#define H144_UART1_RX Gpio::E0
-#define H144_UART1_TX Gpio::E1
-
-// stm32 UART2
-#define H144_UART2_RX Gpio::D6
-#define H144_UART2_TX Gpio::D5
-
 #define H144_LED1_RED Gpio::G0
 #define H144_LED2 Gpio::G1
 #define H144_LED3 Gpio::E7

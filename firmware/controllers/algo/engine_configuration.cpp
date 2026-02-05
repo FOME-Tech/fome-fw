@@ -213,16 +213,6 @@ void setDefaultBasePins() {
 	// needed also by bootloader code
 	setPinConfigurationOverrides();
 #endif /* EFI_PROD_CODE */
-
-	// set UART pads configuration based on the board
-// needed also by bootloader code
-#ifdef TS_SECONDARY_UxART_PORT
-	engineConfiguration->binarySerialTxPin = Gpio::C10;
-	engineConfiguration->binarySerialRxPin = Gpio::C11;
-#endif // TS_SECONDARY_UxART_PORT
-
-	engineConfiguration->tunerStudioSerialSpeed = TS_DEFAULT_SPEED;
-	engineConfiguration->uartConsoleSerialSpeed = 115200;
 }
 
 // needed also by bootloader code

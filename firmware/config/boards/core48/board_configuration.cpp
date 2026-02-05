@@ -138,8 +138,6 @@ void setBoardConfigOverrides() {
 	//SERIAL 
 	engineConfiguration->binarySerialTxPin = Gpio::A9;
 	engineConfiguration->binarySerialRxPin = Gpio::A10;
-	engineConfiguration->tunerStudioSerialSpeed = SERIAL_SPEED;
-	engineConfiguration->uartConsoleSerialSpeed = SERIAL_SPEED;
 
 
 

@@ -660,8 +660,6 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 
 	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 3
 
-	uint32_t tunerStudioSerialSpeed;Secondary TTL channel baud rate;"BPs", 1, 0, 0, 1000000, 0
-
 	float compressionRatio;For reference, not used by the ECU.;"CR", 1, 0, 0, 300, 1
 
 	Gpio[TRIGGER_SIMULATOR_PIN_COUNT iterate] triggerSimulatorPins;Generate a synthetic trigger signal for an external ECU
@@ -731,7 +729,6 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	uint8_t etbMaximumPosition;Maximum allowed ETB position. Some throttles go past fully open, so this allows you to limit it to fully open.;"%", 1, 0, 70, 100, 0
 
 
-custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UART3"
 	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, 250, 0
 	Gpio debugMapAveraging;
 	output_pin_e starterRelayDisablePin;
@@ -780,7 +777,6 @@ custom uart_device_e 1 bits, U08, @OFFSET@, [0:1], "Off", "UART1", "UART2", "UAR
 	Gpio spi3misoPin;
 
 	Gpio spi3sckPin;
-	uart_device_e consoleUartDevice;
 
 #define CAN_RX_PREFIX "CAN_rx"
 
@@ -1039,7 +1035,6 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	debug_mode_e debugMode;See https://wiki.fome.tech/r/debugmode
 	uint8_t fan1ExtraIdle;Additional idle % when fan #1 is active;"%", 1, 0, 0, 100, 0
 
-	uint32_t uartConsoleSerialSpeed;Band rate for primary TTL;"BPs", 1, 0, 0, 1000000, 0
 	float tpsDecelEnleanmentThreshold;For decel we simply multiply delta of TPS and tFor decel we do not use table?!;"roc", 1, 0, 0, 200, 1
 	float tpsDecelEnleanmentMultiplier;Magic multiplier, we multiply delta of TPS and get fuel squirt duration;"coeff", 1, 0, 0, 200, 2
 

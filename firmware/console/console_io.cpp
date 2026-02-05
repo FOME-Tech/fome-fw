@@ -38,7 +38,6 @@
 
 #include "console_io.h"
 #include "tunerstudio.h"
-#include "connector_uart_dma.h"
 
 #if EFI_SIMULATOR
 #include "rusEfiFunctionalTest.h"

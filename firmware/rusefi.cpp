@@ -208,9 +208,6 @@ void runRusEfi() {
 	startTunerStudioConnectivity();
 #endif /* EFI_TUNER_STUDIO */
 
-	// Start hardware serial ports (including bluetooth, if present)
-	startSerialChannels();
-
 	runRusEfiWithConfig();
 
 	// periodic events need to be initialized after fuel&spark pins to avoid a warning

@@ -70,7 +70,6 @@
 
 #include "tunerstudio_io.h"
 #include "console_io.h"
-#include "bluetooth.h"
 #include "tunerstudio_io.h"
 #include "trigger_scope.h"
 #include "electronic_throttle.h"
@@ -308,13 +307,6 @@ static int tsProcessOne(TsChannelBase* tsChannel) {
 
 	if (received != 1) {
 //			tunerStudioError("ERROR: no command");
-#if EFI_BLUETOOTH_SETUP
-		if (tsChannel == getBluetoothChannel()) {
-			// no data in a whole second means time to disconnect BT
-			// assume there's connection loss and notify the bluetooth init code
-			bluetoothSoftwareDisconnectNotify(getBluetoothChannel());
-		}
-#endif  /* EFI_BLUETOOTH_SETUP */
 		tsChannel->in_sync = false;
 		return -1;
 	}
@@ -652,25 +644,6 @@ void startTunerStudioConnectivity() {
 	memset(&tsState, 0, sizeof(tsState));
 
 	addConsoleAction("tsinfo", printErrorCounters);
-
-#if EFI_BLUETOOTH_SETUP
-	// module initialization start (it waits for disconnect and then communicates to the module)
-	// Usage:   "bluetooth_hc06 <baud> <name> <pincode>"
-	// Example: "bluetooth_hc06 38400 rusefi 1234"
-	// bluetooth_jdy 115200 alphax 1234
-	addConsoleActionSSS("bluetooth_hc05", [](const char *baudRate, const char *name, const char *pinCode) {
-		bluetoothStart(BLUETOOTH_HC_05, baudRate, name, pinCode);
-	});
-	addConsoleActionSSS("bluetooth_hc06", [](const char *baudRate, const char *name, const char *pinCode) {
-		bluetoothStart(BLUETOOTH_HC_06, baudRate, name, pinCode);
-	});
-	addConsoleActionSSS("bluetooth_bk", [](const char *baudRate, const char *name, const char *pinCode) {
-		bluetoothStart(BLUETOOTH_BK3231, baudRate, name, pinCode);
-	});
-	addConsoleActionSSS("bluetooth_jdy", [](const char *baudRate, const char *name, const char *pinCode) {
-		bluetoothStart(BLUETOOTH_JDY_3x, baudRate, name, pinCode);
-	});
-#endif /* EFI_BLUETOOTH_SETUP */
 }
 
 #endif
