@@ -206,7 +206,7 @@ public class ProgramSelector {
                 flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
             }
 
-            flasher.flash("/Users/matthewkennedy/Downloads/fome.snapshot.20260124_071756.atlas/fome_update.srec");
+            flasher.flash("../fome_update.srec");
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
