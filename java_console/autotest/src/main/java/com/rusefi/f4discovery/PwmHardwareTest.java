@@ -36,7 +36,6 @@ public class PwmHardwareTest extends RusefiTestBase {
 
     private static final int FREQUENCY = 160;
 
-    @Ignore
     @Test
     public void scheduleBurnDoesNotAffectTriggerIssue2839() {
         ecu.setEngineType(engine_type_e.FORD_ASPIRE_1996);
@@ -58,6 +57,7 @@ public class PwmHardwareTest extends RusefiTestBase {
         assertEquals("totalTriggerErrorCounter", triggerErrors, totalTriggerErrorsNow);
     }
 
+    @Ignore
     @Test
     public void testIdlePin() {
         ecu.setEngineType(engine_type_e.FRANKENSO_MIATA_NA6_MAP);
