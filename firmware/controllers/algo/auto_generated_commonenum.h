@@ -686,21 +686,6 @@ case TL_SEMI_AUTO:
   }
  return "unknown";
 }
-constexpr inline const char* getUart_device_e(uart_device_e value){
-switch(value) {
-case UART_DEVICE_1:
-  return "UART_DEVICE_1";
-case UART_DEVICE_2:
-  return "UART_DEVICE_2";
-case UART_DEVICE_3:
-  return "UART_DEVICE_3";
-case UART_DEVICE_4:
-  return "UART_DEVICE_4";
-case UART_NONE:
-  return "UART_NONE";
-  }
- return "unknown";
-}
 constexpr inline const char* getVe_override_e(ve_override_e value){
 switch(value) {
 case VE_MAP:
