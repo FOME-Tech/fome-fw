@@ -3,6 +3,7 @@
 
 #include "gppwm_channel.h"
 
+#include "ac_control.h"
 #include "table_helper.h"
 #include <rusefi/expected.h>
 
@@ -84,6 +85,8 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 		return Sensor::get(SensorType::OilPressure);
 	case GPPWM_OilTemp:
 		return Sensor::get(SensorType::OilTemperature);
+	case GPPWM_AcState:
+		return 100.0f * engine->module<AcController>()->acCompressorState;
 	}
 
 	return unexpected;

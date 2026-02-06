@@ -514,6 +514,7 @@ typedef enum __attribute__ ((__packed__)) {
 	GPPWM_VehicleSpeed = 31,
 	GPPWM_OilPressure = 32,
 	GPPWM_OilTemp = 33,
+	GPPWM_AcState = 34,
 } gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this enum
 
 typedef enum __attribute__ ((__packed__)) {
