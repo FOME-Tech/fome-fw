@@ -186,7 +186,7 @@ endif
 ifeq ($(USE_WIFI),yes)
   include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
   DDEFS += -DEFI_WIFI=1
-  LWIP = yes
+  # LWIP = yes
   lwip_dir := $(PROJECT_DIR)/lwip/src
 endif
 
