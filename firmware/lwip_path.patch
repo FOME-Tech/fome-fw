@@ -1,9 +1,0 @@
---- a/ChibiOS/os/various/lwip_bindings/lwip.mk
-+++ b/ChibiOS/os/various/lwip_bindings/lwip.mk
-@@ -1,5 +1,5 @@
- # List of the required lwIP files.
--LWIPDIR = $(CHIBIOS)/ext/lwip/src
-+LWIPDIR = $(lwip_dir)
- 
- # The various blocks of files are outlined in Filelists.mk.
- include $(LWIPDIR)/Filelists.mk
