@@ -263,14 +263,6 @@ typedef enum __attribute__ ((__packed__)) {
 } injection_mode_e;
 
 typedef enum __attribute__ ((__packed__)) {
-	UART_NONE = 0,
-	UART_DEVICE_1 = 1,
-	UART_DEVICE_2 = 2,
-	UART_DEVICE_3 = 3,
-	UART_DEVICE_4 = 4,
-} uart_device_e;
-
-typedef enum __attribute__ ((__packed__)) {
 	_5MHz,
 	_2_5MHz,
 	_1_25MHz,

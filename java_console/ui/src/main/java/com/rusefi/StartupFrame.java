@@ -3,7 +3,6 @@ package com.rusefi;
 import com.devexperts.logging.Logging;
 import com.opensr5.ini.IniFileModel;
 import com.rusefi.core.io.BundleUtil;
-import com.rusefi.io.serial.BaudRateHolder;
 import com.rusefi.maintenance.ProgramSelector;
 import com.rusefi.ui.util.HorizontalLine;
 import com.rusefi.ui.util.UiUtils;
@@ -89,8 +88,6 @@ public class StartupFrame {
         miscPanel.setBorder(new TitledBorder(BorderFactory.createLineBorder(Color.darkGray), "Miscellaneous"));
 
         connectPanel.add(comboPorts);
-        final JComboBox<String> comboSpeeds = createSpeedCombo();
-        connectPanel.add(comboSpeeds);
 
         connectButton = new JButton("Connect", new ImageIcon(getClass().getResource("/com/rusefi/connect48.png")));
         setToolTip(connectButton, "Connect to real hardware");
@@ -105,12 +102,12 @@ public class StartupFrame {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    connectButtonAction(comboSpeeds);
+                    connectButtonAction();
                 }
             }
         });
 
-        connectButton.addActionListener(e -> connectButtonAction(comboSpeeds));
+        connectButton.addActionListener(e -> connectButtonAction());
 
         leftPanel.add(realHardwarePanel);
         leftPanel.add(miscPanel);
@@ -260,8 +257,7 @@ public class StartupFrame {
         return UiUtils.loadIcon(logoName);
     }
 
-    private void connectButtonAction(JComboBox<String> comboSpeeds) {
-        BaudRateHolder.INSTANCE.baudRate = Integer.parseInt((String) comboSpeeds.getSelectedItem());
+    private void connectButtonAction() {
         SerialPortScanner.PortResult selectedPort = ((SerialPortScanner.PortResult)comboPorts.getSelectedItem());
 
         if (selectedPort == null) {
@@ -303,15 +299,6 @@ public class StartupFrame {
         String defaultPort = getConfig().getRoot().getProperty(ConsoleUI.PORT_KEY);
         comboPorts.setSelectedItem(defaultPort);
         trueLayout(comboPorts);
-    }
-
-    private static JComboBox<String> createSpeedCombo() {
-        JComboBox<String> combo = new JComboBox<>();
-        String defaultSpeed = getConfig().getRoot().getProperty(ConsoleUI.SPEED_KEY, "115200");
-        for (int speed : new int[]{9600, 14400, 19200, 38400, 57600, 115200, 460800, 921600})
-            combo.addItem(Integer.toString(speed));
-        combo.setSelectedItem(defaultSpeed);
-        return combo;
     }
 
     private static void updateTsIniCache() {

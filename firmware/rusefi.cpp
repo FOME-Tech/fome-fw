@@ -208,9 +208,6 @@ void runRusEfi() {
 	startTunerStudioConnectivity();
 #endif /* EFI_TUNER_STUDIO */
 
-	// Start hardware serial ports (including bluetooth, if present)
-	startSerialChannels();
-
 	runRusEfiWithConfig();
 
 	// periodic events need to be initialized after fuel&spark pins to avoid a warning
@@ -286,7 +283,7 @@ void runMainLoop() {
 	 * control is around main_trigger_callback
 	 */
 	while (true) {
-#if EFI_CLI_SUPPORT && !EFI_UART_ECHO_TEST_MODE
+#if EFI_CLI_SUPPORT
 		// sensor state + all pending messages for our own rusEfi console
 		// todo: is this mostly dead code?
 		updateDevConsoleState();

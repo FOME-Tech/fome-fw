@@ -13,10 +13,6 @@ DDEFS += -DFIRMWARE_ID=\"EG33\"
 
 SHORT_BOARD_NAME = subaru_eg33_f7
 
-#Some options override
-DDEFS += -DHAL_USE_UART=FALSE
-DDEFS += -DUART_USE_WAIT=FALSE
-
 #Mass Storage
 DDEFS += -DEFI_EMBED_INI_MSD=TRUE
 

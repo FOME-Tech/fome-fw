@@ -17,20 +17,6 @@
 #undef EFI_MC33816
 #define EFI_MC33816 FALSE
 
-// todo: our "DMA-half" ChibiOS patch not implemented for USARTv2/STM32F7/STM32H7
-#undef EFI_USE_UART_DMA
-#define EFI_USE_UART_DMA FALSE
-
-// UART driver not implemented on F7
-
-#define AUX_SERIAL_DEVICE (&SD6)
-
-#undef EFI_CONSOLE_TX_BRAIN_PIN
-#define EFI_CONSOLE_TX_BRAIN_PIN Gpio::D8
-
-#undef EFI_CONSOLE_RX_BRAIN_PIN
-#define EFI_CONSOLE_RX_BRAIN_PIN Gpio::D9
-
 #define EFI_USE_COMPRESSED_INI_MSD
 
 #undef ENABLE_PERF_TRACE

@@ -110,7 +110,7 @@
  * @brief   Enables the SERIAL subsystem.
  */
 #if !defined(HAL_USE_SERIAL) || defined(__DOXYGEN__)
-#define HAL_USE_SERIAL              TRUE
+#define HAL_USE_SERIAL              FALSE
 #endif
 
 /**
@@ -124,12 +124,7 @@
  * @brief   Enables the UART subsystem.
  */
 #if !defined(HAL_USE_UART) || defined(__DOXYGEN__)
-/* Configured in efifeatures.h */
-#if defined(TS_PRIMARY_UxART_PORT)
-#define HAL_USE_UART                TRUE
-#else
 #define HAL_USE_UART                FALSE
-#endif
 #endif
 
 /**
@@ -203,12 +198,7 @@
  * @note    Disabling this option saves both code and data space.
  */
 #if !defined(UART_USE_WAIT) || defined(__DOXYGEN__)
-/* Configured in efifeatures.h */
-#if defined(TS_PRIMARY_UxART_PORT)
-#define UART_USE_WAIT               TRUE
-#else
 #define UART_USE_WAIT               FALSE
-#endif
 #endif
 
 /**

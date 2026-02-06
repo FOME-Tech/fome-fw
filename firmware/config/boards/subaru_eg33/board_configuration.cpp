@@ -24,14 +24,6 @@ Gpio getRunningLedPin() {
  * @todo    Add your board-specific code, if any.
  */
 void setBoardDefaultConfiguration() {
-	engineConfiguration->binarySerialTxPin = Gpio::E1;
-	engineConfiguration->binarySerialRxPin = Gpio::E0;
-	/* actually Bluetooth/WiFi interface */
-	//engineConfiguration->consoleSerialTxPin = Gpio::C10;
-	//engineConfiguration->consoleSerialRxPin = Gpio::C11;
-	engineConfiguration->tunerStudioSerialSpeed = SERIAL_SPEED;
-	engineConfiguration->uartConsoleSerialSpeed = SERIAL_SPEED;
-
 	/* Battery voltage */
 	engineConfiguration->vbattAdcChannel = EFI_ADC_6;
 	/* Vbat divider: 10K + 1K */

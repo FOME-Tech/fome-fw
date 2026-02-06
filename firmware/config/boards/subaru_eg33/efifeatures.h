@@ -12,9 +12,6 @@
 #ifndef EFIFEATURES_SUBARUEG33_H_
 #define EFIFEATURES_SUBARUEG33_H_
 
-/* debug console */
-#define TS_PRIMARY_UxART_PORT		SD1
-
 #undef BOARD_TLE6240_COUNT
 #define BOARD_TLE6240_COUNT			1
 
@@ -60,37 +57,6 @@
 #define EFI_SDC_DEVICE				SDCD2
 
 #define ADC_CHANNEL_VREF			ADC_CHANNEL_IN14
-
-#undef EFI_BLUETOOTH_SETUP
-#define EFI_BLUETOOTH_SETUP			FALSE
-
-#undef SERIAL_SPEED
-#define SERIAL_SPEED				115200
-
-#ifdef TS_PRIMARY_UxART_PORT
-	#undef EFI_CONSOLE_TX_PORT
-	#define EFI_CONSOLE_TX_PORT 		GPIOA
-	#undef EFI_CONSOLE_TX_PIN
-	#define EFI_CONSOLE_TX_PIN			9
-	#undef EFI_CONSOLE_RX_PORT
-	#define EFI_CONSOLE_RX_PORT			GPIOA
-	#undef EFI_CONSOLE_RX_PIN
-	#define EFI_CONSOLE_RX_PIN 			10
-	#undef EFI_CONSOLE_AF
-	#define EFI_CONSOLE_AF 				7
-#endif
-
-#undef TS_SERIAL_AF
-#define TS_SERIAL_AF				8
-
-/* no console switch */
-#undef CONSOLE_MODE_SWITCH_PORT
-#undef CONSOLE_MODE_SWITCH_PIN
-#define GET_CONSOLE_MODE_VALUE()	(FALSE)
-
-/* no reset switch */
-#undef CONFIG_RESET_SWITCH_PORT
-#undef CONFIG_RESET_SWITCH_PIN
 
 #undef ADC_VCC
 #define ADC_VCC						2.5f
