@@ -87,11 +87,13 @@ blt_bool Rs232ReceivePacket(blt_int8u *data, blt_int8u *len)
   }
   else
   {
-    /* store the next packet byte */
-    if (Rs232ReceiveByte(&xcpCtoReqPacket[xcpCtoRxLength+1]) == BLT_TRUE)
+    /* try to read all remaining packet bytes at once */
+    blt_int8u remaining = xcpCtoReqPacket[0] - xcpCtoRxLength;
+    auto bytesRead = chnReadTimeout(&SDU1, &xcpCtoReqPacket[xcpCtoRxLength + 1], remaining, TIME_IMMEDIATE);
+
+    if (bytesRead > 0)
     {
-      /* increment the packet data count */
-      xcpCtoRxLength++;
+      xcpCtoRxLength += bytesRead;
 
       /* check to see if the entire packet was received */
       if (xcpCtoRxLength == xcpCtoReqPacket[0])
