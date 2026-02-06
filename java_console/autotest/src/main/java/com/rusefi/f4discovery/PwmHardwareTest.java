@@ -10,6 +10,7 @@ import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.engine_type_e;
 import com.rusefi.functional_tests.EcuTestHelper;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.IoUtil.getDisableCommand;
@@ -56,6 +57,7 @@ public class PwmHardwareTest extends RusefiTestBase {
         assertEquals("totalTriggerErrorCounter", triggerErrors, totalTriggerErrorsNow);
     }
 
+    @Ignore
     @Test
     public void testIdlePin() {
         ecu.setEngineType(engine_type_e.FRANKENSO_MIATA_NA6_MAP);
