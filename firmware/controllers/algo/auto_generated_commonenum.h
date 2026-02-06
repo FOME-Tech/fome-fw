@@ -370,6 +370,8 @@ case REVERSE:
 }
 constexpr inline const char* getGppwm_channel_e(gppwm_channel_e value){
 switch(value) {
+case GPPWM_AcState:
+  return "GPPWM_AcState";
 case GPPWM_AccelPedal:
   return "GPPWM_AccelPedal";
 case GPPWM_AuxLinear1:
