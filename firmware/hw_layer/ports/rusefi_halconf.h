@@ -90,9 +90,6 @@
 #define SPI_USE_WAIT                TRUE
 #define SPI_USE_MUTUAL_EXCLUSION    TRUE
 
-// Extra field in the UART driver's struct to store a reference to the DMA receive buffer object
-#define UART_DRIVER_EXT_FIELDS void* dmaAdapterInstance;
-
 // Ethernet MAC
 #define MAC_USE_ZERO_COPY FALSE
 #define MAC_USE_EVENTS TRUE
