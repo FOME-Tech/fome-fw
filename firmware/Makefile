@@ -186,11 +186,11 @@ endif
 ifeq ($(USE_WIFI),yes)
   include $(PROJECT_DIR)/ext/atwinc1500/atwinc1500.mk
   DDEFS += -DEFI_WIFI=1 # -DETH_MODE=1
-  # LWIP = yes
-  lwip_dir := $(PROJECT_DIR)/lwip/src
+  LWIP = yes
 endif
 
 ifeq ($(LWIP),yes)
+  lwip_dir := $(PROJECT_DIR)/lwip/src
   # Force LWIPDIR used by lwip_bindings/lwip.mk
   override LWIPDIR := $(lwip_dir)
 
