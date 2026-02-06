@@ -38,21 +38,12 @@
 #define EFI_CLOCK_LOCKS TRUE
 #endif
 
-//#define EFI_UART_ECHO_TEST_MODE TRUE
-
 /**
  * TunerStudio support.
  */
 #ifndef EFI_TUNER_STUDIO
 #define EFI_TUNER_STUDIO TRUE
 #endif
-
-/**
- * Bluetooth UART setup support.
- */
-#ifndef EFI_BLUETOOTH_SETUP
-#define EFI_BLUETOOTH_SETUP TRUE
-#endif /* EFI_BLUETOOTH_SETUP */
 
 /**
  * Dev console support.
@@ -241,32 +232,6 @@
 #define EFI_CUSTOM_PANIC_METHOD TRUE
 
 #define ADC_CHANNEL_VREF ADC_CHANNEL_IN14
-
-// allow override of EFI_USE_UART_DMA from cmdline passed defs
-#ifndef EFI_USE_UART_DMA
-#define EFI_USE_UART_DMA TRUE
-#endif
-
-#define AUX_SERIAL_DEVICE (&SD6)
-
-#ifndef EFI_CONSOLE_TX_BRAIN_PIN
-#define EFI_CONSOLE_TX_BRAIN_PIN Gpio::C10
-#endif
-
-#ifndef EFI_CONSOLE_RX_BRAIN_PIN
-#define EFI_CONSOLE_RX_BRAIN_PIN Gpio::C11
-#endif
-// todo: this should be detected automatically based on pin selection
-// https://github.com/rusefi/rusefi/issues/3536
-#ifndef EFI_CONSOLE_AF
-#define EFI_CONSOLE_AF 7
-#endif
-
-// todo: this should be detected automatically based on pin selection
-// https://github.com/rusefi/rusefi/issues/3536
-#ifndef TS_SERIAL_AF
-#define TS_SERIAL_AF 7
-#endif
 
 #ifndef LED_CRITICAL_ERROR_BRAIN_PIN
 #define LED_CRITICAL_ERROR_BRAIN_PIN Gpio::D14
