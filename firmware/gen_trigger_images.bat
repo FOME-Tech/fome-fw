@@ -3,7 +3,7 @@ rem these images placed into unit_tests/triggers
 rem and later manually published at https://rusefi.com/images/triggers/
 
 cd ../unit_tests
-make -j4
+make -j$(($(nproc)*1.5))
 if not exist build/fome_test.exe echo UNIT TEST COMPILATION FAILED
 if not exist build/fome_test.exe exit -1
 
