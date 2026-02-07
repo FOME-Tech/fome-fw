@@ -21,7 +21,7 @@ cd $FW_DIR
 mkdir -p .dep # ChibiOS build's DEPDIR
 mkdir -p build # ChibiOS build's BUILDDIR
 echo "Calling make for the main firmware..."
-make make -j$(( $(nproc) * 3 / 2 )) -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
+make -j$(( $(nproc) * 3 / 2 )) -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
 [ -e build/fome.hex ] || { echo "FAILED to compile by $SCRIPT_NAME with $PROJECT_BOARD $DEBUG_LEVEL_OPT and $EXTRA_PARAMS"; exit 1; }
 if [ "${USE_OPENBLT-no}" = "yes" ]; then
   # TODO: why is this rm necessary?
@@ -29,7 +29,7 @@ if [ "${USE_OPENBLT-no}" = "yes" ]; then
   rm engine_modules_generated*
   rm modules_list_generated*
   echo "Calling make for the bootloader..."
-  cd bootloader; make make -j$(( $(nproc) * 3 / 2 )) PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
+  cd bootloader; make -j$(( $(nproc) * 3 / 2 )) PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
   [ -e bootloader/blbuild/fome_bl.hex ] || { echo "FAILED to compile OpenBLT by $SCRIPT_NAME with $PROJECT_BOARD"; exit 1; }
 fi
 
