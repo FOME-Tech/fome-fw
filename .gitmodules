@@ -44,3 +44,7 @@
 	path = firmware/ext/build-tools
 	url = https://github.com/FOME-Tech/build-tools.git
 	branch = main
+[submodule "firmware/lwip"]
+	path = firmware/lwip
+	url = https://github.com/dynfer/lwip.git
+	branch = main
