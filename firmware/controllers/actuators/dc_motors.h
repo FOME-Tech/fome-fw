@@ -18,7 +18,8 @@ DcMotor* initDcMotor(brain_pin_e coil_p, brain_pin_e coil_m, size_t index);
 struct PwmWrapper : public IPwm {
 	OutputPin& m_pin;
 
-	PwmWrapper(OutputPin& pin) : m_pin(pin) { }
+	PwmWrapper(OutputPin& pin)
+		: m_pin(pin) {}
 
 	void setSimplePwmDutyCycle(float dutyCycle) override {
 		m_pin.setValue(dutyCycle > 0.5f);
@@ -40,17 +41,19 @@ private:
 	SimplePwm m_pwm2;
 
 	bool isStarted = false;
+
 public:
+	DcHardware()
+		: dcMotor(m_disablePin) {}
 
-	DcHardware() : dcMotor(m_disablePin) {}
-
-	void start(bool useTwoWires,
-				brain_pin_e pinEnable,
-				brain_pin_e pinDir1,
-				brain_pin_e pinDir2,
-				brain_pin_e pinDisable,
-				bool isInverted,
-				int frequency);
+	void
+	start(bool useTwoWires,
+		  brain_pin_e pinEnable,
+		  brain_pin_e pinDir1,
+		  brain_pin_e pinDir2,
+		  brain_pin_e pinDisable,
+		  bool isInverted,
+		  int frequency);
 
 	TwoPinDcMotor dcMotor;
 
@@ -59,7 +62,7 @@ public:
 		m_pwm2.setFrequency(frequency);
 	}
 
-	const char *msg() {
+	const char* msg() {
 		return dcMotor.msg();
 	}
 
