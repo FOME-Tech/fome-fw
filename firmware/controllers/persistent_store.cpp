@@ -30,7 +30,7 @@ persistent_config_container_s persistentState CCM_OPTIONAL;
 
 #else // EFI_UNIT_TEST
 
-persistent_config_s * config;
-engine_configuration_s * engineConfiguration;
+persistent_config_s* config;
+engine_configuration_s* engineConfiguration;
 
 #endif /* EFI_UNIT_TEST */

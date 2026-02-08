@@ -22,10 +22,9 @@ static bool noFiringUntilVvtSync(vvt_mode_e vvtMode) {
 	// Symmetrical crank modes require cam sync before firing
 	// non-symmetrical cranks can use faster spin-up mode (firing in wasted/batch before VVT sync)
 	// Examples include Nissan MR/VQ, Miata NB, etc
-	return
-		operationMode == FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR ||
-		operationMode == FOUR_STROKE_THREE_TIMES_CRANK_SENSOR ||
-		operationMode == FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR;
+	return operationMode == FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR ||
+		   operationMode == FOUR_STROKE_THREE_TIMES_CRANK_SENSOR ||
+		   operationMode == FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR;
 }
 
 void LimpManager::onFastCallback() {
@@ -77,13 +76,13 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 	updateCutsFloodClear(allowFuel);
 
 	if (!engine->isMainRelayEnabled()) {
-/*
-todo AndreiKA this change breaks 22 unit tests?
-		allowFuel.clear();
-		allowSpark.clear();
-*/
+		/*
+		todo AndreiKA this change breaks 22 unit tests?
+				allowFuel.clear();
+				allowSpark.clear();
+		*/
 	}
-	
+
 #endif // EFI_SHAFT_POSITION_INPUT
 
 #if EFI_LAUNCH_CONTROL
@@ -120,9 +119,11 @@ void LimpManager::updateCutsHarleyAcr(Clearable& allowFuel) {
 
 void LimpManager::updateCutsHardRevLimit(float rpm, Clearable& allowFuel, Clearable& allowSpark) {
 	// User-configured hard RPM limit, either constant or CLT-lookup
-	m_hardRevLimit = engineConfiguration->useCltBasedRpmLimit
-		? interpolate2d(Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
-		: (float)engineConfiguration->rpmHardLimit;
+	m_hardRevLimit =
+			engineConfiguration->useCltBasedRpmLimit
+					? interpolate2d(
+							  Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
+					: (float)engineConfiguration->rpmHardLimit;
 
 	if (isHardRevLimit(rpm)) {
 		if (engineConfiguration->cutFuelOnHardLimit) {
@@ -142,12 +143,12 @@ void LimpManager::updateCutsHardRevLimit(float rpm, Clearable& allowFuel, Cleara
 
 void LimpManager::updateCutsEngineSync(Clearable& allowFuel, Clearable& allowSpark) {
 #if EFI_SHAFT_POSITION_INPUT
-	if (noFiringUntilVvtSync(engineConfiguration->vvtMode[0])
-			&& !engine->triggerCentral.triggerState.hasSynchronizedPhase()) {
-		// Any engine that requires cam-assistance for a full crank sync (symmetrical crank) can't schedule until we have cam sync
-		// examples:
-		// NB2, Nissan VQ/MR: symmetrical crank wheel and we need to make sure no spark happens out of sync
-		// VTwin Harley: uneven firing order, so we need "cam" MAP sync to make sure no spark happens out of sync
+	if (noFiringUntilVvtSync(engineConfiguration->vvtMode[0]) &&
+		!engine->triggerCentral.triggerState.hasSynchronizedPhase()) {
+		// Any engine that requires cam-assistance for a full crank sync (symmetrical crank) can't schedule until we
+		// have cam sync examples: NB2, Nissan VQ/MR: symmetrical crank wheel and we need to make sure no spark happens
+		// out of sync VTwin Harley: uneven firing order, so we need "cam" MAP sync to make sure no spark happens out of
+		// sync
 		allowFuel.clear(ClearReason::EnginePhase);
 		allowSpark.clear(ClearReason::EnginePhase);
 	}
@@ -192,11 +193,8 @@ void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& a
 				isPressureSufficient = getOilSwitchState();
 			} else {
 				if (oilp) {
-					float minPressure = interpolate2d(
-											rpm,
-											config->minimumOilPressureBins,
-											config->minimumOilPressureValues
-										);
+					float minPressure =
+							interpolate2d(rpm, config->minimumOilPressureBins, config->minimumOilPressureValues);
 					isPressureSufficient = oilp.Value > minPressure;
 				} else {
 					// The sensor is dead, assume things are fine
@@ -250,7 +248,8 @@ void LimpManager::updateCutsInjectorDuty(float rpm, efitick_t nowNt, Clearable& 
 	}
 
 	// True if isOverSustainedDutyCycle has been true for longer than the timeout
-	bool sustainedLimitTimedOut = m_injectorDutySustainedTimer.hasElapsedSec(engineConfiguration->maxInjectorDutySustainedTimeout);
+	bool sustainedLimitTimedOut =
+			m_injectorDutySustainedTimer.hasElapsedSec(engineConfiguration->maxInjectorDutySustainedTimeout);
 
 	bool someLimitTripped = isOverInstantDutyCycle || sustainedLimitTimedOut;
 
@@ -262,8 +261,7 @@ void LimpManager::updateCutsInjectorDuty(float rpm, efitick_t nowNt, Clearable& 
 
 void LimpManager::updateCutsFloodClear(Clearable& allowFuel) {
 	// If the pedal is pushed while not running, cut fuel to clear a flood condition.
-	if (!engine->rpmCalculator.isRunning() &&
-		engineConfiguration->isCylinderCleanupEnabled &&
+	if (!engine->rpmCalculator.isRunning() && engineConfiguration->isCylinderCleanupEnabled &&
 		Sensor::getOrZero(SensorType::DriverThrottleIntent) > CLEANUP_MODE_TPS) {
 		allowFuel.clear(ClearReason::FloodClear);
 	}
@@ -282,7 +280,7 @@ void LimpManager::onIgnitionStateChanged(bool ignitionOn) {
 
 void LimpManager::reportEtbProblem() {
 	m_allowEtb.clear(ClearReason::EtbProblem);
-	setFaultRevLimit(/*rpm*/1500);
+	setFaultRevLimit(/*rpm*/ 1500);
 }
 
 void LimpManager::fatalError() {
@@ -291,7 +289,7 @@ void LimpManager::fatalError() {
 	m_allowInjection.clear(ClearReason::Fatal);
 	m_allowTriggerInput.clear(ClearReason::Fatal);
 
-	setFaultRevLimit(/*rpm*/0);
+	setFaultRevLimit(/*rpm*/ 0);
 }
 
 void LimpManager::setFaultRevLimit(int limit) {

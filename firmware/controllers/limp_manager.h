@@ -13,17 +13,17 @@ enum class ClearReason : uint8_t {
 	FaultRevLimit,
 	BoostCut, // 5
 	OilPressure,
-	StopRequested, // 7
-	EtbProblem, // 8
-	LaunchCut, // 9
+	StopRequested,	   // 7
+	EtbProblem,		   // 8
+	LaunchCut,		   // 9
 	InjectorDutyCycle, // 10
-	FloodClear, // 11
-	EnginePhase, // 12
-	KickStart, // 13
-	IgnitionOff, // 14
-	Lua, // 15
-	ACR, // 16 - Harley Automatic Compression Release
-	LambdaProtection, // 17
+	FloodClear,		   // 11
+	EnginePhase,	   // 12
+	KickStart,		   // 13
+	IgnitionOff,	   // 14
+	Lua,			   // 15
+	ACR,			   // 16 - Harley Automatic Compression Release
+	LambdaProtection,  // 17
 
 	// Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 	// todo: add a code generator between ClearReason and fuelIgnCutCodeList in tunerstudio.template.ini
@@ -47,8 +47,10 @@ enum class TpsState : uint8_t {
 // Only allows clearing the value, but never resetting it.
 class Clearable {
 public:
-	Clearable() : m_value(true) {}
-	Clearable(bool value) : m_value(value) {
+	Clearable()
+		: m_value(true) {}
+	Clearable(bool value)
+		: m_value(value) {
 		if (!m_value) {
 			m_clearReason = ClearReason::Settings;
 		}
@@ -91,7 +93,7 @@ public:
 		return test(value > rising, value < falling);
 	}
 
-	bool test (bool risingCondition, bool fallingCondition) {
+	bool test(bool risingCondition, bool fallingCondition) {
 		if (risingCondition) {
 			m_state = true;
 		} else if (fallingCondition) {
@@ -174,6 +176,4 @@ private:
 	Timer m_lowOilPressureTimer;
 };
 
-LimpManager * getLimpManager();
-
-
+LimpManager* getLimpManager();

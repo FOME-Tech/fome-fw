@@ -23,7 +23,6 @@
 
 #include "pch.h"
 
-
 #include "trigger_central.h"
 #include "script_impl.h"
 #include "idle_thread.h"
@@ -54,23 +53,23 @@
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 #include "init.h"
 #endif /* EFI_UNIT_TEST */
 
 #if !EFI_UNIT_TEST
 
 /**
- * Would love to pass reference to configuration object into constructor but C++ does allow attributes after parenthesized initializer
+ * Would love to pass reference to configuration object into constructor but C++ does allow attributes after
+ * parenthesized initializer
  */
 Engine ___engine CCM_OPTIONAL;
 
 #else // EFI_UNIT_TEST
 
-Engine * engine;
+Engine* engine;
 
 #endif /* EFI_UNIT_TEST */
-
 
 void initDataStructures() {
 #if EFI_ENGINE_CONTROL
@@ -81,8 +80,7 @@ void initDataStructures() {
 static void resetAccel() {
 	engine->module<TpsAccelEnrichment>()->resetAE();
 
-	for (size_t i = 0; i < efi::size(engine->injectionEvents.elements); i++)
-	{
+	for (size_t i = 0; i < efi::size(engine->injectionEvents.elements); i++) {
 		engine->injectionEvents.elements[i].getWallFuel().resetWF();
 	}
 }
@@ -113,13 +111,13 @@ void doPeriodicSlowCallback() {
 
 	engine->periodicSlowCallback();
 #else /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
-	#if EFI_INTERNAL_FLASH
-		writeToFlashIfPending();
-	#endif /* EFI_INTERNAL_FLASH */
+#if EFI_INTERNAL_FLASH
+	writeToFlashIfPending();
+#endif /* EFI_INTERNAL_FLASH */
 #endif /* if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT */
 }
 
-char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer) {
+char* getPinNameByAdcChannel(const char* msg, adc_channel_e hwChannel, char* buffer) {
 #if HAL_USE_ADC
 	if (!isAdcChannelValid(hwChannel)) {
 		strcpy(buffer, "NONE");
@@ -143,12 +141,12 @@ static void printSensorInfo() {
 	Sensor::showAllSensorInfo();
 }
 
-#define isOutOfBounds(offset) ((offset<0) || (offset) >= (int) sizeof(engine_configuration_s))
+#define isOutOfBounds(offset) ((offset < 0) || (offset) >= (int)sizeof(engine_configuration_s))
 
 static void getShort(int offset) {
 	if (isOutOfBounds(offset))
 		return;
-	uint16_t *ptr = (uint16_t *) (&((char *) engineConfiguration)[offset]);
+	uint16_t* ptr = (uint16_t*)(&((char*)engineConfiguration)[offset]);
 	uint16_t value = *ptr;
 	/**
 	 * this response is part of rusEfi console API
@@ -159,7 +157,7 @@ static void getShort(int offset) {
 static void getByte(int offset) {
 	if (isOutOfBounds(offset))
 		return;
-	uint8_t *ptr = (uint8_t *) (&((char *) engineConfiguration)[offset]);
+	uint8_t* ptr = (uint8_t*)(&((char*)engineConfiguration)[offset]);
 	uint8_t value = *ptr;
 	/**
 	 * this response is part of rusEfi console API
@@ -167,7 +165,7 @@ static void getByte(int offset) {
 	efiPrintf("byte%s%d is %d", CONSOLE_DATA_PROTOCOL_TAG, offset, value);
 }
 
-static void setBit(const char *offsetStr, const char *bitStr, const char *valueStr) {
+static void setBit(const char* offsetStr, const char* bitStr, const char* valueStr) {
 	int offset = atoi(offsetStr);
 	if (absI(offset) == absI(ATOI_ERROR_CODE)) {
 		efiPrintf("invalid offset [%s]", offsetStr);
@@ -186,7 +184,7 @@ static void setBit(const char *offsetStr, const char *bitStr, const char *valueS
 		efiPrintf("invalid value [%s]", valueStr);
 		return;
 	}
-	int *ptr = (int *) (&((char *) engineConfiguration)[offset]);
+	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	*ptr ^= (-value ^ *ptr) & (1 << bit);
 	/**
 	 * this response is part of rusEfi console API
@@ -198,8 +196,8 @@ static void setBit(const char *offsetStr, const char *bitStr, const char *valueS
 static void setShort(const int offset, const int value) {
 	if (isOutOfBounds(offset))
 		return;
-	uint16_t *ptr = (uint16_t *) (&((char *) engineConfiguration)[offset]);
-	*ptr = (uint16_t) value;
+	uint16_t* ptr = (uint16_t*)(&((char*)engineConfiguration)[offset]);
+	*ptr = (uint16_t)value;
 	getShort(offset);
 	incrementGlobalConfigurationVersion();
 }
@@ -207,8 +205,8 @@ static void setShort(const int offset, const int value) {
 static void setByte(const int offset, const int value) {
 	if (isOutOfBounds(offset))
 		return;
-	uint8_t *ptr = (uint8_t *) (&((char *) engineConfiguration)[offset]);
-	*ptr = (uint8_t) value;
+	uint8_t* ptr = (uint8_t*)(&((char*)engineConfiguration)[offset]);
+	*ptr = (uint8_t)value;
 	getByte(offset);
 	incrementGlobalConfigurationVersion();
 }
@@ -216,7 +214,7 @@ static void setByte(const int offset, const int value) {
 static void getBit(int offset, int bit) {
 	if (isOutOfBounds(offset))
 		return;
-	int *ptr = (int *) (&((char *) engineConfiguration)[offset]);
+	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	int value = (*ptr >> bit) & 1;
 	/**
 	 * this response is part of rusEfi console API
@@ -227,7 +225,7 @@ static void getBit(int offset, int bit) {
 static void getInt(int offset) {
 	if (isOutOfBounds(offset))
 		return;
-	int *ptr = (int *) (&((char *) engineConfiguration)[offset]);
+	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	int value = *ptr;
 	/**
 	 * this response is part of rusEfi console API
@@ -238,7 +236,7 @@ static void getInt(int offset) {
 static void setInt(const int offset, const int value) {
 	if (isOutOfBounds(offset))
 		return;
-	int *ptr = (int *) (&((char *) engineConfiguration)[offset]);
+	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	*ptr = value;
 	getInt(offset);
 	incrementGlobalConfigurationVersion();
@@ -247,7 +245,7 @@ static void setInt(const int offset, const int value) {
 static void getFloat(int offset) {
 	if (isOutOfBounds(offset))
 		return;
-	float *ptr = (float *) (&((char *) engineConfiguration)[offset]);
+	float* ptr = (float*)(&((char*)engineConfiguration)[offset]);
 	float value = *ptr;
 	/**
 	 * this response is part of rusEfi console API
@@ -255,7 +253,7 @@ static void getFloat(int offset) {
 	efiPrintf("float%s%d is %.5f", CONSOLE_DATA_PROTOCOL_TAG, offset, value);
 }
 
-static void setFloat(const char *offsetStr, const char *valueStr) {
+static void setFloat(const char* offsetStr, const char* valueStr) {
 	int offset = atoi(offsetStr);
 	if (absI(offset) == absI(ATOI_ERROR_CODE)) {
 		efiPrintf("invalid offset [%s]", offsetStr);
@@ -268,17 +266,17 @@ static void setFloat(const char *offsetStr, const char *valueStr) {
 		efiPrintf("invalid value [%s]", valueStr);
 		return;
 	}
-	float *ptr = (float *) (&((char *) engineConfiguration)[offset]);
+	float* ptr = (float*)(&((char*)engineConfiguration)[offset]);
 	*ptr = value;
 	getFloat(offset);
 	incrementGlobalConfigurationVersion();
 }
 
 static void initConfigActions() {
-	addConsoleActionSS("set_float", (VoidCharPtrCharPtr) setFloat);
-	addConsoleActionII("set_int", (VoidIntInt) setInt);
-	addConsoleActionII("set_short", (VoidIntInt) setShort);
-	addConsoleActionII("set_byte", (VoidIntInt) setByte);
+	addConsoleActionSS("set_float", (VoidCharPtrCharPtr)setFloat);
+	addConsoleActionII("set_int", (VoidIntInt)setInt);
+	addConsoleActionII("set_short", (VoidIntInt)setShort);
+	addConsoleActionII("set_byte", (VoidIntInt)setByte);
 	addConsoleActionSSS("set_bit", setBit);
 
 	addConsoleActionI("get_float", getFloat);
@@ -341,13 +339,13 @@ void LedBlinkingTask::updateCommsLed() {
 	if (consoleByteArrived.exchange(false)) {
 		enginePins.communicationLedPin.toggle();
 	} else {
-		bool usbReady = 
-			#if EFI_USB_SERIAL
+		bool usbReady =
+#if EFI_USB_SERIAL
 				is_usb_serial_ready()
-			#else 
+#else
 				true
-			#endif
-			;
+#endif
+				;
 
 		// toggle the state 1/20 of the time so it blinks at you a little
 		bool ledState = usbReady ^ (m_commBlinkCounter >= 19);
@@ -522,7 +520,8 @@ bool validateConfig() {
 	ensureArrayIsAscendingOrDefault("Script Curve 5", config->scriptCurve5Bins);
 	ensureArrayIsAscendingOrDefault("Script Curve 6", config->scriptCurve6Bins);
 
-	// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage", engineConfiguration->dwellVoltageCorrVoltBins);
+	// todo: huh? why does this not work on CI?	ensureArrayIsAscendingOrDefault("Dwell Correction Voltage",
+	// engineConfiguration->dwellVoltageCorrVoltBins);
 
 	if (isAdcChannelValid(engineConfiguration->mafAdcChannel)) {
 		ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);

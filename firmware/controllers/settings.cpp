@@ -8,7 +8,7 @@
 
 #include "pch.h"
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 
 #include "eficonsole.h"
 #include "trigger_decoder.h"
@@ -40,7 +40,7 @@ extern WaveChart waveChart;
 #endif // EFI_ENGINE_SNIFFER
 
 static void setTimingMode(int value) {
-	engineConfiguration->timingMode = (timing_mode_e) value;
+	engineConfiguration->timingMode = (timing_mode_e)value;
 	incrementGlobalConfigurationVersion();
 }
 
@@ -57,11 +57,11 @@ static void setCrankingRpm(int value) {
  * this method is used in console - it also prints current configuration
  */
 static void setAlgorithmInt(int value) {
-	setAlgorithm((engine_load_mode_e) value);
+	setAlgorithm((engine_load_mode_e)value);
 }
 
 static void setFiringOrder(int value) {
-	engineConfiguration->firingOrder = (firing_order_e) value;
+	engineConfiguration->firingOrder = (firing_order_e)value;
 }
 
 static void setRpmHardLimit(int value) {
@@ -84,12 +84,12 @@ static void setCrankingTimingAngle(float value) {
 }
 
 static void setInjectionMode(int value) {
-	engineConfiguration->injectionMode = (injection_mode_e) value;
+	engineConfiguration->injectionMode = (injection_mode_e)value;
 	incrementGlobalConfigurationVersion();
 }
 
 static void setIgnitionMode(int value) {
-	engineConfiguration->ignitionMode = (ignition_mode_e) value;
+	engineConfiguration->ignitionMode = (ignition_mode_e)value;
 	incrementGlobalConfigurationVersion();
 	prepareOutputSignals();
 }
@@ -99,14 +99,14 @@ static void setIndividualCoilsIgnition() {
 }
 
 static void setTriggerType(int value) {
-	engineConfiguration->trigger.type = (trigger_type_e) value;
+	engineConfiguration->trigger.type = (trigger_type_e)value;
 	incrementGlobalConfigurationVersion();
 	efiPrintf("Do you need to also invoke set operation_mode X?");
 	engine->resetEngineSnifferIfInTestMode();
 }
 
 static void setDebugMode(int value) {
-	engineConfiguration->debugMode = (debug_mode_e) value;
+	engineConfiguration->debugMode = (debug_mode_e)value;
 }
 
 static void setWholeTimingMapCmd(float value) {
@@ -117,7 +117,7 @@ static void setWholeTimingMapCmd(float value) {
 
 #if EFI_PROD_CODE
 
-static brain_pin_e parseBrainPinWithErrorMessage(const char *pinName) {
+static brain_pin_e parseBrainPinWithErrorMessage(const char* pinName) {
 	brain_pin_e pin = parseBrainPin(pinName);
 	if (pin == Gpio::Invalid) {
 		efiPrintf("invalid pin name [%s]", pinName);
@@ -131,7 +131,7 @@ static brain_pin_e parseBrainPinWithErrorMessage(const char *pinName) {
  * todo: this method counts index from 1 while at least 'set_trigger_input_pin' counts from 0.
  * todo: make things consistent
  */
-static void setIgnitionPin(const char *indexStr, const char *pinName) {
+static void setIgnitionPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr) - 1; // convert from human index into software index
 	if (index < 0 || index >= MAX_CYLINDER_COUNT)
 		return;
@@ -144,7 +144,7 @@ static void setIgnitionPin(const char *indexStr, const char *pinName) {
 	incrementGlobalConfigurationVersion();
 }
 
-static void setIndividualPin(const char *pinName, brain_pin_e *targetPin, const char *name) {
+static void setIndividualPin(const char* pinName, brain_pin_e* targetPin, const char* name) {
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
 	if (pin == Gpio::Invalid) {
 		return;
@@ -155,16 +155,16 @@ static void setIndividualPin(const char *pinName, brain_pin_e *targetPin, const 
 }
 
 // set vss_pin
-static void setVssPin(const char *pinName) {
+static void setVssPin(const char* pinName) {
 	setIndividualPin(pinName, &engineConfiguration->vehicleSpeedSensorInputPin, "VSS");
 }
 
 // set_idle_pin none
-static void setIdlePin(const char *pinName) {
+static void setIdlePin(const char* pinName) {
 	setIndividualPin(pinName, &engineConfiguration->idle.solenoidPin, "idle");
 }
 
-static void setAlternatorPin(const char *pinName) {
+static void setAlternatorPin(const char* pinName) {
 	setIndividualPin(pinName, &engineConfiguration->alternatorControlPin, "alternator");
 }
 
@@ -174,7 +174,7 @@ static void setAlternatorPin(const char *pinName) {
  * todo: this method counts index from 0 while at least 'set_ignition_pin' counts from 1.
  * todo: make things consistent
  */
-static void setTriggerInputPin(const char *indexStr, const char *pinName) {
+static void setTriggerInputPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr);
 	if (index < 0 || index > 2)
 		return;
@@ -187,7 +187,7 @@ static void setTriggerInputPin(const char *indexStr, const char *pinName) {
 	incrementGlobalConfigurationVersion();
 }
 
-static void setTriggerSimulatorPin(const char *indexStr, const char *pinName) {
+static void setTriggerSimulatorPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr);
 	if (index < 0 || index >= TRIGGER_SIMULATOR_PIN_COUNT)
 		return;
@@ -203,7 +203,7 @@ static void setTriggerSimulatorPin(const char *indexStr, const char *pinName) {
 #if HAL_USE_ADC
 // set_analog_input_pin pps pa4
 // set_analog_input_pin afr none
-static void setAnalogInputPin(const char *sensorStr, const char *pinName) {
+static void setAnalogInputPin(const char* sensorStr, const char* pinName) {
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
 	if (pin == Gpio::Invalid) {
 		return;
@@ -241,7 +241,7 @@ static void setAnalogInputPin(const char *sensorStr, const char *pinName) {
 
 #endif // EFI_PROD_CODE
 
-static void enableOrDisable(const char *param, bool isEnabled) {
+static void enableOrDisable(const char* param, bool isEnabled) {
 	if (strEqualCaseInsensitive(param, "useTLE8888_cranking_hack")) {
 		engineConfiguration->useTLE8888_cranking_hack = isEnabled;
 #if EFI_SHAFT_POSITION_INPUT
@@ -321,11 +321,11 @@ static void enableOrDisable(const char *param, bool isEnabled) {
 	efiPrintf("[%s] %s", param, isEnabled ? "enabled" : "disabled");
 }
 
-static void enable(const char *param) {
+static void enable(const char* param) {
 	enableOrDisable(param, true);
 }
 
-static void disable(const char *param) {
+static void disable(const char* param) {
 	enableOrDisable(param, false);
 }
 
@@ -336,7 +336,7 @@ void scheduleStopEngine() {
 	doScheduleStopEngine();
 }
 
-static void getValue(const char *paramStr) {
+static void getValue(const char* paramStr) {
 	{
 		expected<float> value = getConfigValueByName(paramStr);
 		if (value) {
@@ -353,12 +353,12 @@ static void getValue(const char *paramStr) {
 }
 
 struct command_i_s {
-	const char *token;
+	const char* token;
 	VoidInt callback;
 };
 
 struct command_f_s {
-	const char *token;
+	const char* token;
 	VoidFloat callback;
 };
 
@@ -371,7 +371,8 @@ const command_f_s commandsF[] = {
 
 };
 
-const command_i_s commandsI[] = {{"ignition_mode", setIgnitionMode},
+const command_i_s commandsI[] = {
+		{"ignition_mode", setIgnitionMode},
 #if EFI_ENGINE_CONTROL
 		{"cranking_rpm", setCrankingRpm},
 		{"injection_mode", setInjectionMode},
@@ -397,11 +398,11 @@ const command_i_s commandsI[] = {{"ignition_mode", setIgnitionMode},
 
 };
 
-static void setValue(const char *paramStr, const char *valueStr) {
+static void setValue(const char* paramStr, const char* valueStr) {
 	float valueF = atoff(valueStr);
 	int valueI = atoi(valueStr);
 
-	const command_f_s *currentF = &commandsF[0];
+	const command_f_s* currentF = &commandsF[0];
 	while (currentF < commandsF + efi::size(commandsF)) {
 		if (strEqualCaseInsensitive(paramStr, currentF->token)) {
 			currentF->callback(valueF);
@@ -410,7 +411,7 @@ static void setValue(const char *paramStr, const char *valueStr) {
 		currentF++;
 	}
 
-	const command_i_s *currentI = &commandsI[0];
+	const command_i_s* currentI = &commandsI[0];
 	while (currentI < commandsI + efi::size(commandsI)) {
 		if (strEqualCaseInsensitive(paramStr, currentI->token)) {
 			currentI->callback(valueI);
@@ -454,7 +455,7 @@ void initSettings() {
 
 	addConsoleActionF("set_whole_timing_map", setWholeTimingMapCmd);
 
-	addConsoleAction("stopengine", (Void) scheduleStopEngine);
+	addConsoleAction("stopengine", (Void)scheduleStopEngine);
 
 	addConsoleActionS(CMD_ENABLE, enable);
 	addConsoleActionS(CMD_DISABLE, disable);
@@ -479,12 +480,12 @@ void initSettings() {
 void printDateTime() {
 #if EFI_RTC
 	printRtcDateTime();
-#else // EFI_RTC
+#else  // EFI_RTC
 	efiPrintf("Cannot print time: RTC not supported");
 #endif // EFI_RTC
 }
 
-void setDateTime(const char * const isoDateTime) {
+void setDateTime(const char* const isoDateTime) {
 #if EFI_RTC
 	if (strlen(isoDateTime) >= 19 && isoDateTime[10] == 'T') {
 		efidatetime_t dateTime;
@@ -494,12 +495,8 @@ void setDateTime(const char * const isoDateTime) {
 		dateTime.hour = atoi(isoDateTime + 11);
 		dateTime.minute = atoi(isoDateTime + 14);
 		dateTime.second = atoi(isoDateTime + 17);
-		if (dateTime.year != ATOI_ERROR_CODE &&
-				dateTime.month >= 1 && dateTime.month <= 12 &&
-				dateTime.day >= 1 && dateTime.day <= 31 &&
-				dateTime.hour <= 23 &&
-				dateTime.minute <= 59 &&
-				dateTime.second <= 59) {
+		if (dateTime.year != ATOI_ERROR_CODE && dateTime.month >= 1 && dateTime.month <= 12 && dateTime.day >= 1 &&
+			dateTime.day <= 31 && dateTime.hour <= 23 && dateTime.minute <= 59 && dateTime.second <= 59) {
 
 			auto timeBeforeSet = getRtcDateTime();
 			// doesn't concern about leap years or seconds; ChibiOS doesn't support (added) leap seconds anyway
@@ -514,12 +511,14 @@ void setDateTime(const char * const isoDateTime) {
 			} else {
 				// Compute approximate delta in seconds (ignoring leap years and varying month lengths)
 				int32_t deltaSec =
-					(static_cast<int32_t>(dateTime.year) - static_cast<int32_t>(timeBeforeSet.year)) * 365 * 24 * 60 * 60 +
-					(static_cast<int32_t>(dateTime.month) - static_cast<int32_t>(timeBeforeSet.month)) * 30 * 24 * 60 * 60 +
-					(static_cast<int32_t>(dateTime.day) - static_cast<int32_t>(timeBeforeSet.day)) * 24 * 60 * 60 +
-					(static_cast<int32_t>(dateTime.hour) - static_cast<int32_t>(timeBeforeSet.hour)) * 60 * 60 +
-					(static_cast<int32_t>(dateTime.minute) - static_cast<int32_t>(timeBeforeSet.minute)) * 60 +
-					(static_cast<int32_t>(dateTime.second) - static_cast<int32_t>(timeBeforeSet.second));
+						(static_cast<int32_t>(dateTime.year) - static_cast<int32_t>(timeBeforeSet.year)) * 365 * 24 *
+								60 * 60 +
+						(static_cast<int32_t>(dateTime.month) - static_cast<int32_t>(timeBeforeSet.month)) * 30 * 24 *
+								60 * 60 +
+						(static_cast<int32_t>(dateTime.day) - static_cast<int32_t>(timeBeforeSet.day)) * 24 * 60 * 60 +
+						(static_cast<int32_t>(dateTime.hour) - static_cast<int32_t>(timeBeforeSet.hour)) * 60 * 60 +
+						(static_cast<int32_t>(dateTime.minute) - static_cast<int32_t>(timeBeforeSet.minute)) * 60 +
+						(static_cast<int32_t>(dateTime.second) - static_cast<int32_t>(timeBeforeSet.second));
 				efiPrintf("RTC adjusted by %ld seconds", deltaSec);
 			}
 
@@ -527,7 +526,7 @@ void setDateTime(const char * const isoDateTime) {
 		}
 	}
 	efiPrintf("date_set Date parameter %s is wrong", isoDateTime);
-#else // EFI_RTC
+#else  // EFI_RTC
 	efiPrintf("Cannot set time: RTC not supported");
 #endif // EFI_RTC
 }
@@ -554,6 +553,6 @@ void setEngineType(engine_type_e value) {
 	}
 
 	incrementGlobalConfigurationVersion();
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 #endif // ! EFI_UNIT_TEST
 }

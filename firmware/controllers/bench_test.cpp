@@ -121,9 +121,8 @@ static BenchParams benchParams;
 
 static chibios_rt::CounterSemaphore benchSemaphore(0);
 
-static void pinbench(float ontime, float offtime, size_t iterations, OutputPin& pin)
-{
-	benchParams = { &pin, ontime, offtime, iterations };
+static void pinbench(float ontime, float offtime, size_t iterations, OutputPin& pin) {
+	benchParams = {&pin, ontime, offtime, iterations};
 
 	// let's signal bench thread to wake up
 	isBenchTestPending = true;
@@ -239,9 +238,11 @@ void fuelPumpBench() {
 
 class BenchController : public ThreadController<UTILITY_THREAD_STACK_SIZE> {
 public:
-	BenchController() : ThreadController("BenchTest", PRIO_BENCH_TEST) { }
+	BenchController()
+		: ThreadController("BenchTest", PRIO_BENCH_TEST) {}
+
 private:
-	void ThreadTask() override	{
+	void ThreadTask() override {
 		while (true) {
 			benchSemaphore.wait();
 
@@ -251,9 +252,9 @@ private:
 			}
 
 			if (widebandUpdatePending) {
-	#if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
+#if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
 				updateWidebandFirmware();
-	#endif
+#endif
 				widebandUpdatePending = false;
 			}
 		}
@@ -263,133 +264,133 @@ private:
 static BenchController instance;
 
 static void handleBenchCategory(uint16_t index) {
-	switch(index) {
-	case BENCH_MAIN_RELAY:
-		mainRelayBench();
-		return;
-	case BENCH_HPFP_VALVE:
-		hpfpValveBench();
-		return;
-	case BENCH_STARTER_ENABLE_RELAY:
-		starterRelayBench();
-		return;
-	case BENCH_CHECK_ENGINE_LIGHT:
-		// cmd_test_check_engine_light
-		milBench();
-		return;
-	case BENCH_AC_COMPRESSOR_RELAY:
-		acRelayBench();
-		return;
-	case BENCH_FAN_RELAY:
-		fanBench();
-		return;
-	case BENCH_IDLE_VALVE:
-		// cmd_test_idle_valve
+	switch (index) {
+		case BENCH_MAIN_RELAY:
+			mainRelayBench();
+			return;
+		case BENCH_HPFP_VALVE:
+			hpfpValveBench();
+			return;
+		case BENCH_STARTER_ENABLE_RELAY:
+			starterRelayBench();
+			return;
+		case BENCH_CHECK_ENGINE_LIGHT:
+			// cmd_test_check_engine_light
+			milBench();
+			return;
+		case BENCH_AC_COMPRESSOR_RELAY:
+			acRelayBench();
+			return;
+		case BENCH_FAN_RELAY:
+			fanBench();
+			return;
+		case BENCH_IDLE_VALVE:
+			// cmd_test_idle_valve
 #if EFI_IDLE_CONTROL
-		startIdleBench();
+			startIdleBench();
 #endif /* EFI_IDLE_CONTROL */
-		return;
-	case BENCH_FAN_RELAY_2:
-		fan2Bench();
-		return;
-	case BENCH_CANCEL:
-		cancelBenchTest();
-		return;
-	case BENCH_FUEL_PUMP_ON:
-		engine->module<FuelPumpController>()->forcePumpState(true);
-		return;
-	case BENCH_FUEL_PUMP_OFF:
-		engine->module<FuelPumpController>()->forcePumpState(false);
-		return;
+			return;
+		case BENCH_FAN_RELAY_2:
+			fan2Bench();
+			return;
+		case BENCH_CANCEL:
+			cancelBenchTest();
+			return;
+		case BENCH_FUEL_PUMP_ON:
+			engine->module<FuelPumpController>()->forcePumpState(true);
+			return;
+		case BENCH_FUEL_PUMP_OFF:
+			engine->module<FuelPumpController>()->forcePumpState(false);
+			return;
 #if EFI_VVT_PID
-	case BENCH_VVT_1_TARGET_BUMP:
-		engine->module<VvtController1>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
-		return;
-	case BENCH_VVT_2_TARGET_BUMP:
-		engine->module<VvtController2>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
-		return;
-	case BENCH_VVT_3_TARGET_BUMP:
-		engine->module<VvtController3>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
-		return;
-	case BENCH_VVT_4_TARGET_BUMP:
-		engine->module<VvtController4>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
-		return;
+		case BENCH_VVT_1_TARGET_BUMP:
+			engine->module<VvtController1>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+			return;
+		case BENCH_VVT_2_TARGET_BUMP:
+			engine->module<VvtController2>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+			return;
+		case BENCH_VVT_3_TARGET_BUMP:
+			engine->module<VvtController3>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+			return;
+		case BENCH_VVT_4_TARGET_BUMP:
+			engine->module<VvtController4>()->setTargetOffset(engineConfiguration->vvtBumpAmount);
+			return;
 #endif // EFI_VVT_PID
-	default:
-		firmwareError("Unexpected bench function %d", index);
+		default:
+			firmwareError("Unexpected bench function %d", index);
 	}
 }
 
 static void handleCommandX14(uint16_t index) {
 	switch (index) {
-	case COMMAND_X14_GRAB_PEDAL_UP:
-		grabPedalIsUp();
-		return;
-	case COMMAND_X14_GRAB_PEDAL_DOWN:
-		grabPedalIsWideOpen();
-		return;
-	case COMMAND_X14_RESET_TLE8888:
+		case COMMAND_X14_GRAB_PEDAL_UP:
+			grabPedalIsUp();
+			return;
+		case COMMAND_X14_GRAB_PEDAL_DOWN:
+			grabPedalIsWideOpen();
+			return;
+		case COMMAND_X14_RESET_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
-		tle8888_req_init();
+			tle8888_req_init();
 #endif
-		return;
-	case COMMAND_X14_WRITE_CONFIG:
-		// cmd_write_config
+			return;
+		case COMMAND_X14_WRITE_CONFIG:
+			// cmd_write_config
 #if EFI_INTERNAL_FLASH
-		writeToFlashNow();
+			writeToFlashNow();
 #endif /* EFI_INTERNAL_FLASH */
-		return;
+			return;
 #if EFI_EMULATE_POSITION_SENSORS
-	case COMMAND_X14_ENABLE_SELF_STIM:
-		enableTriggerStimulator();
-		return;
-	case COMMAND_X14_DISABLE_SELF_STIM:
-		disableTriggerStimulator();
-		return;
-	case COMMAND_X14_ENABLE_EXTERNAL_STIM:
-		enableExternalTriggerStimulator();
-		return;
+		case COMMAND_X14_ENABLE_SELF_STIM:
+			enableTriggerStimulator();
+			return;
+		case COMMAND_X14_DISABLE_SELF_STIM:
+			disableTriggerStimulator();
+			return;
+		case COMMAND_X14_ENABLE_EXTERNAL_STIM:
+			enableExternalTriggerStimulator();
+			return;
 #endif // EFI_EMULATE_POSITION_SENSORS
 #if EFI_ELECTRONIC_THROTTLE_BODY
-	case COMMAND_X14_ETB_AUTO_CALIBRATE:
-		etbAutocal(0);
-		return;
-	case COMMAND_X14_ETB2_AUTO_CALIBRATE:
-		etbAutocal(1);
-		return;
-	case COMMAND_X14_ETB_AUTOTUNE:
-		engine->etbAutoTune = true;
-		return;
-	case COMMAND_X14_ETB_AUTOTUNE_STOP:
-		engine->etbAutoTune = false;
+		case COMMAND_X14_ETB_AUTO_CALIBRATE:
+			etbAutocal(0);
+			return;
+		case COMMAND_X14_ETB2_AUTO_CALIBRATE:
+			etbAutocal(1);
+			return;
+		case COMMAND_X14_ETB_AUTOTUNE:
+			engine->etbAutoTune = true;
+			return;
+		case COMMAND_X14_ETB_AUTOTUNE_STOP:
+			engine->etbAutoTune = false;
 #if EFI_TUNER_STUDIO
-		engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
+			engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
 #endif // EFI_TUNER_STUDIO
-		return;
-	case COMMAND_X14_ETB_DISABLE_JAM_DETECT:
-		engine->etbIgnoreJamProtection = true;
-		return;
+			return;
+		case COMMAND_X14_ETB_DISABLE_JAM_DETECT:
+			engine->etbIgnoreJamProtection = true;
+			return;
 #endif // EFI_ELECTRONIC_THROTTLE_BODY
-	case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:
-		widebandUpdatePending = true;
-		benchSemaphore.signal();
-		return;
-	case COMMAND_X14_BURN_WITHOUT_FLASH:
+		case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:
+			widebandUpdatePending = true;
+			benchSemaphore.signal();
+			return;
+		case COMMAND_X14_BURN_WITHOUT_FLASH:
 #if EFI_PROD_CODE
-		extern bool burnWithoutFlash;
-		burnWithoutFlash = true;
+			extern bool burnWithoutFlash;
+			burnWithoutFlash = true;
 #endif // EFI_PROD_CODE
-		return;
+			return;
 #if EFI_SHAFT_POSITION_INPUT
-	case COMMAND_X14_FORCE_RESYNC:
-		engine->triggerCentral.syncAndReport(2, 1);
-		return;
+		case COMMAND_X14_FORCE_RESYNC:
+			engine->triggerCentral.syncAndReport(2, 1);
+			return;
 #endif // EFI_SHAFT_POSITION_INPUT
-	case COMMAND_X14_SPLIT_INJ:
-		engine->engineState.requestSplitInjection ^= true;
-		return;
-	default:
-		firmwareError("Unexpected bench x14 %d", index);
+		case COMMAND_X14_SPLIT_INJ:
+			engine->engineState.requestSplitInjection ^= true;
+			return;
+		default:
+			firmwareError("Unexpected bench x14 %d", index);
 	}
 }
 
@@ -397,11 +398,12 @@ extern bool rebootForPresetPending;
 
 static void fatalErrorForPresetApply() {
 	rebootForPresetPending = true;
-	firmwareError(ObdCode::OBD_PCM_Processor_Fault,
-		"\n\nTo complete preset apply:\n"
-		"   1. Close TunerStudio\n"
-		"   2. Power cycle ECU\n"
-		"   3. Open TunerStudio and reconnect\n\n");
+	firmwareError(
+			ObdCode::OBD_PCM_Processor_Fault,
+			"\n\nTo complete preset apply:\n"
+			"   1. Close TunerStudio\n"
+			"   2. Power cycle ECU\n"
+			"   3. Open TunerStudio and reconnect\n\n");
 }
 
 void executeTSCommand(uint16_t subsystem, uint16_t index) {
@@ -410,85 +412,91 @@ void executeTSCommand(uint16_t subsystem, uint16_t index) {
 	bool running = !engine->rpmCalculator.isStopped();
 
 	switch (subsystem) {
-	case TS_CLEAR_WARNINGS:
-		clearWarnings();
-		break;
+		case TS_CLEAR_WARNINGS:
+			clearWarnings();
+			break;
 
-	case TS_IGNITION_CATEGORY:
-		if (!running) {
-			doRunSparkBench(index, engineConfiguration->ignTestOnTime,
-				engineConfiguration->ignTestOffTime, engineConfiguration->ignTestCount);
-		}
-		break;
+		case TS_IGNITION_CATEGORY:
+			if (!running) {
+				doRunSparkBench(
+						index,
+						engineConfiguration->ignTestOnTime,
+						engineConfiguration->ignTestOffTime,
+						engineConfiguration->ignTestCount);
+			}
+			break;
 
-	case TS_INJECTOR_CATEGORY:
-		if (!running) {
-			doRunFuelInjBench(index, engineConfiguration->benchTestOnTime,
-				engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount);
-		}
-		break;
+		case TS_INJECTOR_CATEGORY:
+			if (!running) {
+				doRunFuelInjBench(
+						index,
+						engineConfiguration->benchTestOnTime,
+						engineConfiguration->benchTestOffTime,
+						engineConfiguration->benchTestCount);
+			}
+			break;
 
-	case TS_LUA_OUTPUT_CATEGORY:
-		if (!running) {
-			doRunBenchTestLuaOutput(index, 4.0,
-				engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount);
-		}
-		break;
+		case TS_LUA_OUTPUT_CATEGORY:
+			if (!running) {
+				doRunBenchTestLuaOutput(
+						index, 4.0, engineConfiguration->benchTestOffTime, engineConfiguration->benchTestCount);
+			}
+			break;
 
-	case TS_X14:
-		handleCommandX14(index);
-		break;
+		case TS_X14:
+			handleCommandX14(index);
+			break;
 #if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
-	case TS_WIDEBAND:
-		setWidebandOffset(index);
-		break;
+		case TS_WIDEBAND:
+			setWidebandOffset(index);
+			break;
 #endif // EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
-	case TS_BENCH_CATEGORY:
-		handleBenchCategory(index);
-		break;
+		case TS_BENCH_CATEGORY:
+			handleBenchCategory(index);
+			break;
 
-	case TS_SET_ENGINE_TYPE:
-		fatalErrorForPresetApply();
-		setEngineType(index);
-		break;
+		case TS_SET_ENGINE_TYPE:
+			fatalErrorForPresetApply();
+			setEngineType(index);
+			break;
 
-	case TS_SET_DEFAULT_ENGINE:
-		fatalErrorForPresetApply();
-		setEngineType(engine_type_e::DEFAULT_ENGINE_TYPE);
-		break;
+		case TS_SET_DEFAULT_ENGINE:
+			fatalErrorForPresetApply();
+			setEngineType(engine_type_e::DEFAULT_ENGINE_TYPE);
+			break;
 
-	case 0x79:
-		scheduleStopEngine();
-		break;
+		case 0x79:
+			scheduleStopEngine();
+			break;
 
-	case 0xba:
+		case 0xba:
 #if EFI_PROD_CODE
-		jump_to_bootloader();
+			jump_to_bootloader();
 #endif /* EFI_PROD_CODE */
-		break;
+			break;
 
-	case 0xbb:
+		case 0xbb:
 #if EFI_PROD_CODE
-		rebootNow();
+			rebootNow();
 #endif /* EFI_PROD_CODE */
-		break;
+			break;
 
 #if EFI_USE_OPENBLT
-	case 0xbc:
-		/* Jump to OpenBLT if present */
-		jump_to_openblt();
-		break;
+		case 0xbc:
+			/* Jump to OpenBLT if present */
+			jump_to_openblt();
+			break;
 #endif
 
-	default:
-		firmwareError("Unexpected bench subsystem %d %d", subsystem, index);
+		default:
+			firmwareError("Unexpected bench subsystem %d %d", subsystem, index);
 	}
 }
 
 void onConfigurationChangeBenchTest() {
 	// default values if configuration was not specified
 	if (engineConfiguration->benchTestOnTime == 0) {
-		engineConfiguration->benchTestOnTime = 4; 
+		engineConfiguration->benchTestOnTime = 4;
 	}
 
 	if (engineConfiguration->benchTestOffTime < 5) {

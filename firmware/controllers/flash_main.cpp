@@ -38,31 +38,27 @@ static bool needToWriteConfiguration = false;
 NO_CACHE SNORDriver snor1;
 
 const WSPIConfig WSPIcfg1 = {
-	.end_cb			= NULL,
-	.error_cb		= NULL,
-	.dcr			= STM32_DCR_FSIZE(23U) |	/* 8MB device.          */
-					  STM32_DCR_CSHT(1U)		/* NCS 2 cycles delay.  */
+		.end_cb = NULL,
+		.error_cb = NULL,
+		.dcr = STM32_DCR_FSIZE(23U) | /* 8MB device.          */
+			   STM32_DCR_CSHT(1U)	  /* NCS 2 cycles delay.  */
 };
 
-const SNORConfig snorcfg1 = {
-	.busp			= &WSPID1,
-	.buscfg			= &WSPIcfg1
-};
+const SNORConfig snorcfg1 = {.busp = &WSPID1, .buscfg = &WSPIcfg1};
 
 /* Managed Flash Storage stuff */
 MFSDriver mfsd;
 
 const MFSConfig mfsd_nor_config = {
-	.flashp			= (BaseFlash *)&snor1,
-	.erased			= 0xFFFFFFFFU,
-	.bank_size		= 64 * 1024U,
-	.bank0_start	= 0U,
-	.bank0_sectors	= 128U,	/* 128 * 4 K = 0.5 Mb */
-	.bank1_start	= 128U,
-	.bank1_sectors	= 128U
-};
+		.flashp = (BaseFlash*)&snor1,
+		.erased = 0xFFFFFFFFU,
+		.bank_size = 64 * 1024U,
+		.bank0_start = 0U,
+		.bank0_sectors = 128U, /* 128 * 4 K = 0.5 Mb */
+		.bank1_start = 128U,
+		.bank1_sectors = 128U};
 
-#define EFI_MFS_SETTINGS_RECORD_ID		1
+#define EFI_MFS_SETTINGS_RECORD_ID 1
 
 #endif
 
@@ -78,7 +74,7 @@ static uint32_t flashStateCrc(const persistent_config_container_s& state) {
 }
 
 #if EFI_FLASH_WRITE_THREAD
-chibios_rt::BinarySemaphore flashWriteSemaphore(/*taken =*/ true);
+chibios_rt::BinarySemaphore flashWriteSemaphore(/*taken =*/true);
 
 #if EFI_STORAGE_EXT_SNOR == TRUE
 /* in case of MFS we need more stack */
@@ -176,8 +172,7 @@ void writeToFlashNow() {
 	 * do we need to have two copies?
 	 * do we need to protect it with CRC? */
 
-	err = mfsWriteRecord(&mfsd, EFI_MFS_SETTINGS_RECORD_ID,
-						 sizeof(persistentState), (uint8_t *)&persistentState);
+	err = mfsWriteRecord(&mfsd, EFI_MFS_SETTINGS_RECORD_ID, sizeof(persistentState), (uint8_t*)&persistentState);
 
 	if (err == MFS_NO_ERROR)
 		isSuccess = true;
@@ -231,7 +226,7 @@ static FlashState readOneConfigurationCopy(flashaddr_t address) {
 		return FlashState::BlankChip;
 	}
 
-	intFlashRead(address, (char *) &persistentState, sizeof(persistentState));
+	intFlashRead(address, (char*)&persistentState, sizeof(persistentState));
 
 	auto flashCrc = flashStateCrc(persistentState);
 
@@ -253,13 +248,13 @@ static FlashState readOneConfigurationCopy(flashaddr_t address) {
  * this method could and should be executed before we have any
  * connectivity so no console output here
  *
- * in this method we read first copy of configuration in flash. if that first copy has CRC or other issues we read second copy.
+ * in this method we read first copy of configuration in flash. if that first copy has CRC or other issues we read
+ * second copy.
  */
 static FlashState readConfiguration() {
 #if EFI_STORAGE_EXT_SNOR == TRUE
 	size_t settings_size = sizeof(persistentState);
-	mfs_error_t err = mfsReadRecord(&mfsd, EFI_MFS_SETTINGS_RECORD_ID,
-						&settings_size, (uint8_t *)&persistentState);
+	mfs_error_t err = mfsReadRecord(&mfsd, EFI_MFS_SETTINGS_RECORD_ID, &settings_size, (uint8_t*)&persistentState);
 
 	// TODO: check err result better?
 	if (err == MFS_NO_ERROR) {
@@ -307,11 +302,14 @@ void readFromFlash() {
 			break;
 		case FlashState::IncompatibleVersion:
 			// Preserve engine type from old config
-			efiPrintf("Resetting due to version mismatch but preserving engine type [%d]", (int)engineConfiguration->engineType);
+			efiPrintf(
+					"Resetting due to version mismatch but preserving engine type [%d]",
+					(int)engineConfiguration->engineType);
 			resetConfigurationExt(engineConfiguration->engineType);
 			break;
 		case FlashState::Ok:
-			// At this point we know that CRC and version number is what we expect. Safe to assume it's a valid configuration.
+			// At this point we know that CRC and version number is what we expect. Safe to assume it's a valid
+			// configuration.
 			applyNonPersistentConfiguration();
 			efiPrintf("Read valid configuration from flash!");
 			break;

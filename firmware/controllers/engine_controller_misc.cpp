@@ -7,7 +7,6 @@
 
 #include "pch.h"
 
-
 extern ButtonDebounce startStopButtonDebounce;
 
 static uint8_t nextThreadId = 0;
@@ -52,9 +51,10 @@ static void onStartStopButtonToggle() {
 	if (engine->rpmCalculator.isStopped()) {
 		bool wasStarterEngaged = enginePins.starterControl.getAndSet(1);
 		if (!wasStarterEngaged) {
-		    engine->startStopStateLastPushTime = getTimeNowNt();
-		    efiPrintf("Let's crank this engine for up to %d seconds via %s!",
-		    		engineConfiguration->startCrankingDuration,
+			engine->startStopStateLastPushTime = getTimeNowNt();
+			efiPrintf(
+					"Let's crank this engine for up to %d seconds via %s!",
+					engineConfiguration->startCrankingDuration,
 					hwPortname(engineConfiguration->starterControlPin));
 		}
 	} else if (engine->rpmCalculator.isRunning()) {
@@ -62,7 +62,6 @@ static void onStartStopButtonToggle() {
 		doScheduleStopEngine();
 	}
 }
-
 
 void slowStartStopButtonCallback() {
 	bool startStopState = startStopButtonDebounce.readPinEvent();
@@ -74,9 +73,9 @@ void slowStartStopButtonCallback() {
 	engine->engineState.startStopState = startStopState;
 
 	if (engine->startStopStateLastPushTime == 0) {
-   		// nothing is going on with startStop button
-   		return;
-   	}
+		// nothing is going on with startStop button
+		return;
+	}
 
 	// TODO: split starter (/disable relay) control in to its own controller
 	if (engine->rpmCalculator.isRunning()) {
@@ -88,7 +87,8 @@ void slowStartStopButtonCallback() {
 		}
 	}
 
-	if (getTimeNowNt() - engine->startStopStateLastPushTime > NT_PER_SECOND * engineConfiguration->startCrankingDuration) {
+	if (getTimeNowNt() - engine->startStopStateLastPushTime >
+		NT_PER_SECOND * engineConfiguration->startCrankingDuration) {
 		bool wasStarterEngaged = enginePins.starterControl.getAndSet(0);
 		if (wasStarterEngaged) {
 			efiPrintf("Cranking timeout %d seconds", engineConfiguration->startCrankingDuration);
