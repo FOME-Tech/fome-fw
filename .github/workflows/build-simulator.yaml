@@ -17,7 +17,7 @@ jobs:
         git submodule update --init --depth=1 firmware/libfirmware
         git submodule update --init --depth=1 firmware/ext/lua
         git submodule update --init --depth=1 firmware/ext/luaaa
-        git submodule update --init --depth=1 firmware/controllers/can/wideband_firmware
+        git submodule update --init --depth=1 firmware/ext/wideband_firmware
 
     - uses: actions/setup-java@v4
       with:

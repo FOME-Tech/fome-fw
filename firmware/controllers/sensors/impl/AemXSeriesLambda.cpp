@@ -95,7 +95,7 @@ void AemXSeriesWideband::decodeAemXSeries(const CANRxFrame& frame, efitick_t now
 	}
 }
 
-#include "wideband_firmware/for_rusefi/wideband_can.h"
+#include "../../../ext/wideband_firmware/for_rusefi/wideband_can.h"
 
 void AemXSeriesWideband::decodeRusefiStandard(const CANRxFrame& frame, efitick_t nowNt) {
 	auto data = reinterpret_cast<const wbo::StandardData*>(&frame.data8[0]);

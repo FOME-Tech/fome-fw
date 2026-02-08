@@ -5,11 +5,11 @@
 #include "ch.h"
 #include "can_msg_tx.h"
 #include "rusefi_wideband.h"
-#include "wideband_firmware/for_rusefi/wideband_can.h"
+#include "../../ext/wideband_firmware/for_rusefi/wideband_can.h"
 
 // This file contains an array called build_wideband_noboot_bin
 // This array contains the firmware image for the wideband contoller
-#include "wideband_firmware/for_rusefi/wideband_image.h"
+#include "../../ext/wideband_firmware/for_rusefi/wideband_image.h"
 
 #define EVT_BOOTLOADER_ACK EVENT_MASK(0)
 
