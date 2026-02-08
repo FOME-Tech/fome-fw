@@ -1,7 +1,7 @@
 /**
  * @file DcMotor.cpp
  * @brief DC motor controller
- * 
+ *
  * @date Dec 22, 2018
  * @author Matthew Kennedy
  */
@@ -11,8 +11,7 @@
 #include "dc_motor.h"
 
 TwoPinDcMotor::TwoPinDcMotor(OutputPin& disablePin)
-	: m_disable(&disablePin)
-{
+	: m_disable(&disablePin) {
 	disable("init");
 }
 
@@ -31,7 +30,7 @@ void TwoPinDcMotor::enable() {
 	m_msg = nullptr;
 }
 
-void TwoPinDcMotor::disable(const char *msg) {
+void TwoPinDcMotor::disable(const char* msg) {
 	if (m_disable) {
 		m_disable->setValue(true);
 	}
@@ -53,8 +52,7 @@ float TwoPinDcMotor::get() const {
 /**
  * @param duty value between -1.0 and 1.0
  */
-bool TwoPinDcMotor::set(float duty)
-{
+bool TwoPinDcMotor::set(float duty) {
 	m_value = duty;
 
 	// For low voltage, voltageRatio will be >1 to boost duty so that motor current stays the same
@@ -84,8 +82,7 @@ bool TwoPinDcMotor::set(float duty)
 		duty = 1.0f;
 	}
 	// Disable for very small duty
-	else if (duty < 0.01f)
-	{
+	else if (duty < 0.01f) {
 		duty = 0.0f;
 	}
 

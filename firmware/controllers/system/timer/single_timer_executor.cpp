@@ -8,7 +8,8 @@
  * with the level of precision we need, and realistically it should not.
  *
  * Update: actually newer ChibiOS has tickless mode and what we have here is pretty much the same thing :)
- * open question if rusEfi should simply migrate to ChibiOS tickless scheduling (which would increase coupling with ChibiOS)
+ * open question if rusEfi should simply migrate to ChibiOS tickless scheduling (which would increase coupling with
+ * ChibiOS)
  *
  * See https://rusefi.com/forum/viewtopic.php?f=5&t=373&start=360#p30895
  * for some performance data: with 'debug' firmware we spend about 5% of CPU in TIM5 handler which seem to be executed
@@ -21,7 +22,6 @@
  */
 
 #include "pch.h"
-
 
 #include "single_timer_executor.h"
 #include "efitime.h"
@@ -39,11 +39,9 @@ void globalTimerCallback() {
 
 SingleTimerExecutor::SingleTimerExecutor()
 	// 8us is roughly the cost of the interrupt + overhead of a single timer event
-	: queue(US2NT(8))
-{
-}
+	: queue(US2NT(8)) {}
 
-void SingleTimerExecutor::schedule(const char *msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
+void SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
 	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
 
 	efidur_t deltaTimeNt = nt - getTimeNowNt();
@@ -167,4 +165,3 @@ void executorStatistics() {
 }
 
 #endif /* EFI_SIGNAL_EXECUTOR_ONE_TIMER */
-

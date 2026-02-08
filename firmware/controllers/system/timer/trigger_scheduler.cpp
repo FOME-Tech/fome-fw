@@ -18,7 +18,7 @@ bool TriggerScheduler::assertNotInList(AngleBasedEvent* head, AngleBasedEvent* e
 			/**
 			 * for example, this might happen in case of sudden RPM change if event
 			 * was not scheduled by angle but was scheduled by time. In case of scheduling
-			 * by time with slow RPM the whole next fast revolution might be within the wait 
+			 * by time with slow RPM the whole next fast revolution might be within the wait
 			 */
 			warning(ObdCode::CUSTOM_RE_ADDING_INTO_EXECUTION_QUEUE, "re-adding element into event_queue");
 			return true;
@@ -40,20 +40,13 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, EngPhase angle, action_s
  * @return true if event corresponds to current tooth and was time-based scheduler
  *         false if event was put into queue for scheduling at a later tooth
  */
-bool TriggerScheduler::scheduleOrQueue(AngleBasedEvent* event,
-		EngPhase angle,
-		action_s action,
-		const EnginePhaseInfo& phase) {
+bool TriggerScheduler::scheduleOrQueue(
+		AngleBasedEvent* event, EngPhase angle, action_s action, const EnginePhaseInfo& phase) {
 	event->setAngle(angle);
 
 	if (event->shouldSchedule(phase)) {
 		// if we're due now, just schedule the event
-		scheduleByAngle(
-			&event->scheduling,
-			phase.timestamp,
-			event->getAngleFromNow(phase),
-			action
-		);
+		scheduleByAngle(&event->scheduling, phase.timestamp, event->getAngleFromNow(phase), action);
 
 		return true;
 	} else {
@@ -83,7 +76,7 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 
 void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 	if (rpm == 0 || !EFI_SHAFT_POSITION_INPUT) {
-		 // this might happen for instance in case of a single trigger event after a pause
+		// this might happen for instance in case of a single trigger event after a pause
 		return;
 	}
 
@@ -100,8 +93,7 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 	AngleBasedEvent* tmp = nullptr;
 	AngleBasedEvent* keeptail = nullptr;
 
-	LL_FOREACH_SAFE2(keephead, current, tmp, next)
-	{
+	LL_FOREACH_SAFE2(keephead, current, tmp, next) {
 		if (current->shouldSchedule(phase)) {
 			// time to fire a spark which was scheduled previously
 
@@ -114,18 +106,13 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 			// one also fired and thus the call to LL_DELETE2 is closer to O(1).
 			LL_DELETE2(keephead, current, next);
 
-			scheduling_s * sDown = &current->scheduling;
+			scheduling_s* sDown = &current->scheduling;
 
 			// In case this event was scheduled by overdwell protection, cancel it so
 			// we can re-schedule at the correct time
 			engine->scheduler.cancel(sDown);
 
-			scheduleByAngle(
-				sDown,
-				phase.timestamp,
-				current->getAngleFromNow(phase),
-				current->action
-			);
+			scheduleByAngle(sDown, phase.timestamp, current->getAngleFromNow(phase), current->action);
 		} else {
 			keeptail = current; // Used for fast list concatenation
 		}
@@ -162,8 +149,7 @@ float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {
 AngleBasedEvent* TriggerScheduler::getElementAtIndexForUnitTest(int index) {
 	AngleBasedEvent* current;
 
-	LL_FOREACH2(m_angleBasedEventsHead, current, next)
-	{
+	LL_FOREACH2(m_angleBasedEventsHead, current, next) {
 		if (index == 0)
 			return current;
 		index--;

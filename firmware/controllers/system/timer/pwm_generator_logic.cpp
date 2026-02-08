@@ -19,13 +19,13 @@
 // 99% duty cycle
 #define FULL_PWM_THRESHOLD 0.99
 
-SimplePwm::SimplePwm()
-{
+SimplePwm::SimplePwm() {
 	seq.waveCount = 1;
 	seq.phaseCount = 2;
 }
 
-SimplePwm::SimplePwm(const char *name) : SimplePwm()  {
+SimplePwm::SimplePwm(const char* name)
+	: SimplePwm() {
 	m_name = name;
 }
 
@@ -91,11 +91,12 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
 /**
  * returns absolute timestamp of state change
  */
-static efitick_t getNextSwitchTimeNt(PwmConfig *state) {
+static efitick_t getNextSwitchTimeNt(PwmConfig* state) {
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, state->safe.phaseIndex < PWM_PHASE_MAX_COUNT, "phaseIndex range", 0);
 	int iteration = state->safe.iteration;
 	// we handle PM_ZERO and PM_FULL separately
-	float switchTime = state->mode == PM_NORMAL ? state->multiChannelStateSequence->getSwitchTime(state->safe.phaseIndex) : 1;
+	float switchTime =
+			state->mode == PM_NORMAL ? state->multiChannelStateSequence->getSwitchTime(state->safe.phaseIndex) : 1;
 	float periodNt = state->safe.periodNt;
 #if DEBUG_PWM
 	efiPrintf("iteration=%d switchTime=%.2f period=%.2f", iteration, switchTime, period);
@@ -237,9 +238,10 @@ efitick_t PwmConfig::togglePwmState() {
 		}
 	}
 #if EFI_UNIT_TEST
-	printf("PWM: nextSwitchTimeNt=%d phaseIndex=%d iteration=%d\r\n", nextSwitchTimeNt,
-			safe.phaseIndex,
-			safe.iteration);
+	printf("PWM: nextSwitchTimeNt=%d phaseIndex=%d iteration=%d\r\n",
+		   nextSwitchTimeNt,
+		   safe.phaseIndex,
+		   safe.iteration);
 #endif /* EFI_UNIT_TEST */
 	return nextSwitchTimeNt;
 }
@@ -249,7 +251,7 @@ efitick_t PwmConfig::togglePwmState() {
  *
  * First invocation happens on application thread
  */
-static void timerCallback(PwmConfig *state) {
+static void timerCallback(PwmConfig* state) {
 	ScopePerf perf(PE::PwmGeneratorCallback);
 
 	state->dbgNestingLevel++;
@@ -261,7 +263,7 @@ static void timerCallback(PwmConfig *state) {
 		return;
 	}
 
-	engine->scheduler.schedule(state->m_name, &state->scheduling, switchTimeNt, { timerCallback, state });
+	engine->scheduler.schedule(state->m_name, &state->scheduling, switchTimeNt, {timerCallback, state});
 	state->dbgNestingLevel--;
 }
 
@@ -269,7 +271,7 @@ static void timerCallback(PwmConfig *state) {
  * Incoming parameters are potentially just values on current stack, so we have to copy
  * into our own permanent storage, right?
  */
-void copyPwmParameters(PwmConfig *state, MultiChannelStateSequence const * seq) {
+void copyPwmParameters(PwmConfig* state, MultiChannelStateSequence const* seq) {
 	state->multiChannelStateSequence = seq;
 	if (state->mode == PM_NORMAL) {
 		state->multiChannelStateSequence->checkSwitchTimes(1);
@@ -281,8 +283,9 @@ void copyPwmParameters(PwmConfig *state, MultiChannelStateSequence const * seq) 
  * See also startSimplePwm
  */
 void PwmConfig::weComplexInit(
-		MultiChannelStateSequence const * seq,
-		pwm_cycle_callback *pwmCycleCallback, pwm_gen_callback *stateChangeCallback) {
+		MultiChannelStateSequence const* seq,
+		pwm_cycle_callback* pwmCycleCallback,
+		pwm_gen_callback* stateChangeCallback) {
 	isStopRequested = false;
 
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6582, periodNt != 0, "period is not initialized");
@@ -309,8 +312,7 @@ void PwmConfig::weComplexInit(
 	timerCallback(this);
 }
 
-void startSimplePwm(SimplePwm *state, const char *msg,
-		OutputPin *output, float frequency, float dutyCycle) {
+void startSimplePwm(SimplePwm* state, const char* msg, OutputPin* output, float frequency, float dutyCycle) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, state != NULL, "state");
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_DUTY_ASSERT, dutyCycle >= 0 && dutyCycle <= 1, "dutyCycle");
 	if (frequency < 1) {
@@ -330,9 +332,8 @@ void startSimplePwm(SimplePwm *state, const char *msg,
 	state->weComplexInit(&state->seq, nullptr, applyPinState);
 }
 
-void startSimplePwmExt(SimplePwm *state, const char *msg,
-		brain_pin_e brainPin, OutputPin *output, float frequency,
-		float dutyCycle) {
+void startSimplePwmExt(
+		SimplePwm* state, const char* msg, brain_pin_e brainPin, OutputPin* output, float frequency, float dutyCycle) {
 
 	output->initPin(msg, brainPin);
 
@@ -342,9 +343,8 @@ void startSimplePwmExt(SimplePwm *state, const char *msg,
 /**
  * @param dutyCycle value between 0 and 1
  */
-void startSimplePwmHard(SimplePwm *state, const char *msg,
-		brain_pin_e brainPin, OutputPin *output, float frequency,
-		float dutyCycle) {
+void startSimplePwmHard(
+		SimplePwm* state, const char* msg, brain_pin_e brainPin, OutputPin* output, float frequency, float dutyCycle) {
 #if EFI_PROD_CODE && HAL_USE_PWM
 	auto hardPwm = hardware_pwm::tryInitPin(msg, brainPin, frequency, dutyCycle);
 
@@ -361,11 +361,11 @@ void startSimplePwmHard(SimplePwm *state, const char *msg,
 /**
  * This method controls the actual hardware pins
  */
-void applyPinState(int stateIndex, PwmConfig *state) /* pwm_gen_callback */ {
+void applyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */ {
 #if EFI_PROD_CODE
 	if (!engine->isPwmEnabled) {
 		for (int channelIndex = 0; channelIndex < state->multiChannelStateSequence->waveCount; channelIndex++) {
-			OutputPin *output = state->outputPins[channelIndex];
+			OutputPin* output = state->outputPins[channelIndex];
 			output->setValue(0);
 		}
 		return;
@@ -373,9 +373,12 @@ void applyPinState(int stateIndex, PwmConfig *state) /* pwm_gen_callback */ {
 #endif // EFI_PROD_CODE
 
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6663, stateIndex < PWM_PHASE_MAX_COUNT, "invalid stateIndex");
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6664, state->multiChannelStateSequence->waveCount <= PWM_PHASE_MAX_WAVE_PER_PWM, "invalid waveCount");
+	efiAssertVoid(
+			ObdCode::CUSTOM_ERR_6664,
+			state->multiChannelStateSequence->waveCount <= PWM_PHASE_MAX_WAVE_PER_PWM,
+			"invalid waveCount");
 	for (int channelIndex = 0; channelIndex < state->multiChannelStateSequence->waveCount; channelIndex++) {
-		OutputPin *output = state->outputPins[channelIndex];
+		OutputPin* output = state->outputPins[channelIndex];
 		bool value = state->multiChannelStateSequence->getChannelState(channelIndex, stateIndex);
 		output->setValue(value);
 	}

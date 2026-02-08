@@ -18,7 +18,7 @@
  */
 class EventQueue {
 public:
-	// See comment in EventQueue::executeAll for info about lateDelay - it sets the 
+	// See comment in EventQueue::executeAll for info about lateDelay - it sets the
 	// time gap between events for which we will wait instead of rescheduling the next
 	// event in a group of events near one another.
 	explicit EventQueue(efidur_t lateDelay = {});
@@ -26,7 +26,7 @@ public:
 	/**
 	 * O(size) - linear search in sorted linked list
 	 */
-	bool insertTask(scheduling_s *scheduling, efitick_t timeX, action_s action);
+	bool insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
 	void remove(scheduling_s* scheduling);
 
 	int executeAll(efitick_t now);
@@ -35,19 +35,19 @@ public:
 	expected<efitick_t> getNextEventTime(efitick_t nowUs) const;
 	void clear();
 	int size() const;
-	scheduling_s *getElementAtIndexForUnitText(int index);
-	scheduling_s * getHead();
+	scheduling_s* getElementAtIndexForUnitText(int index);
+	scheduling_s* getHead();
 
 	scheduling_s* getFreeScheduling();
 	void tryReturnScheduling(scheduling_s* sched);
+
 private:
 	void assertListIsSorted() const;
 	/**
 	 * this list is sorted
 	 */
-	scheduling_s *m_head = nullptr;
+	scheduling_s* m_head = nullptr;
 	const efidur_t m_lateDelay;
 
 	PoolAllocator<scheduling_s, 64> m_schedulingPool;
 };
-

@@ -4,10 +4,7 @@ class TriggerScheduler : public EngineModule {
 public:
 	void schedule(AngleBasedEvent* event, EngPhase angle, action_s action);
 
-	bool scheduleOrQueue(AngleBasedEvent* event,
-							EngPhase angle,
-							action_s action,
-							const EnginePhaseInfo& phase);
+	bool scheduleOrQueue(AngleBasedEvent* event, EngPhase angle, action_s action, const EnginePhaseInfo& phase);
 
 	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
 

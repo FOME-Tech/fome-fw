@@ -35,8 +35,8 @@ typedef struct {
 
 class PwmConfig;
 
-typedef void (pwm_cycle_callback)(PwmConfig *state);
-typedef void (pwm_gen_callback)(int stateIndex, PwmConfig* pwm);
+typedef void(pwm_cycle_callback)(PwmConfig* state);
+typedef void(pwm_gen_callback)(int stateIndex, PwmConfig* pwm);
 
 typedef enum {
 	PM_ZERO,
@@ -52,9 +52,7 @@ public:
 	PwmConfig();
 
 	void weComplexInit(
-			MultiChannelStateSequence const * seq,
-			pwm_cycle_callback *pwmCycleCallback,
-			pwm_gen_callback *callback);
+			MultiChannelStateSequence const* seq, pwm_cycle_callback* pwmCycleCallback, pwm_gen_callback* callback);
 
 	/**
 	 * We need to handle zero duty cycle and 100% duty cycle in a special way
@@ -68,11 +66,12 @@ public:
 	void setFrequency(float frequency);
 
 	void handleCycleStart();
-	const char *m_name;
+	const char* m_name;
 
-	// todo: 'outputPins' should be extracted away from here since technically one can want PWM scheduler without actual pin output
-	OutputPin *outputPins[PWM_PHASE_MAX_WAVE_PER_PWM];
-	MultiChannelStateSequence const * multiChannelStateSequence = nullptr;
+	// todo: 'outputPins' should be extracted away from here since technically one can want PWM scheduler without actual
+	// pin output
+	OutputPin* outputPins[PWM_PHASE_MAX_WAVE_PER_PWM];
+	MultiChannelStateSequence const* multiChannelStateSequence = nullptr;
 	efitick_t togglePwmState();
 	void stop();
 
@@ -85,12 +84,13 @@ public:
 	/**
 	 * this callback is invoked before each wave generation cycle
 	 */
-	pwm_cycle_callback *m_pwmCycleCallback = nullptr;
+	pwm_cycle_callback* m_pwmCycleCallback = nullptr;
 
 	/**
 	 * this main callback is invoked when it's time to switch level on any of the output channels
 	 */
-	pwm_gen_callback *m_stateChangeCallback = nullptr;
+	pwm_gen_callback* m_stateChangeCallback = nullptr;
+
 private:
 	/**
 	 * float value of PWM period
@@ -111,7 +111,7 @@ struct IPwm {
 class SimplePwm : public PwmConfig, public IPwm {
 public:
 	SimplePwm();
-	SimplePwm(const char *name);
+	SimplePwm(const char* name);
 	void setSimplePwmDutyCycle(float dutyCycle) override;
 	MultiChannelStateSequenceWithData<2> seq;
 	hardware_pwm* hardPwm = nullptr;
@@ -126,21 +126,15 @@ void applyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */;
 /**
  * Start a one-channel software PWM driver.
  */
-void startSimplePwm(SimplePwm *state, const char *msg,
-		OutputPin *output,
-		float frequency, float dutyCycle);
+void startSimplePwm(SimplePwm* state, const char* msg, OutputPin* output, float frequency, float dutyCycle);
 
 /**
  * initialize GPIO pin and start a one-channel software PWM driver.
  */
-void startSimplePwmExt(SimplePwm *state,
-		const char *msg,
-		brain_pin_e brainPin, OutputPin *output,
-		float frequency, float dutyCycle);
+void startSimplePwmExt(
+		SimplePwm* state, const char* msg, brain_pin_e brainPin, OutputPin* output, float frequency, float dutyCycle);
 
-void startSimplePwmHard(SimplePwm *state, const char *msg,
-		brain_pin_e brainPin, OutputPin *output, float frequency,
-		float dutyCycle);
+void startSimplePwmHard(
+		SimplePwm* state, const char* msg, brain_pin_e brainPin, OutputPin* output, float frequency, float dutyCycle);
 
-void copyPwmParameters(PwmConfig *state, MultiChannelStateSequence const * seq);
-
+void copyPwmParameters(PwmConfig* state, MultiChannelStateSequence const* seq);

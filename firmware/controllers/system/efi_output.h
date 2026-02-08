@@ -21,10 +21,11 @@
 class OutputPin {
 public:
 	// initializes pin & registers it in pin repository
-	void initPin(const char *msg, brain_pin_e brainPin, pin_output_mode_e outputMode, bool forceInitWithFatalError = false);
+	void
+	initPin(const char* msg, brain_pin_e brainPin, pin_output_mode_e outputMode, bool forceInitWithFatalError = false);
 
 	// same as above, with OM_DEFAULT mode
-	void initPin(const char *msg, brain_pin_e brainPin);
+	void initPin(const char* msg, brain_pin_e brainPin);
 
 	// dissociates pin from this output and un-registers it in pin repository
 	void deInit();
@@ -55,7 +56,8 @@ public:
 	int8_t m_currentLogicValue = INITIAL_PIN_STATE;
 	/**
 	 * we track current pin status so that we do not touch the actual hardware if we want to write new pin bit
-	 * which is same as current pin value. This maybe helps in case of status leds, but maybe it's a total over-engineering
+	 * which is same as current pin value. This maybe helps in case of status leds, but maybe it's a total
+	 * over-engineering
 	 */
 private:
 	// todo: inline this method?
@@ -75,9 +77,9 @@ public:
 	explicit NamedOutputPin(const char* name, const char* shortName);
 	virtual void setHigh();
 	virtual void setLow();
-	const char *getName() const;
+	const char* getName() const;
 	void setName(const char*);
-	const char *getShortName() const;
+	const char* getShortName() const;
 	/**
 	 * @return true if pin was stopped
 	 */

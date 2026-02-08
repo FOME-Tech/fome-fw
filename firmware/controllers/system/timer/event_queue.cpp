@@ -23,8 +23,7 @@ extern bool verboseMode;
 #endif /* EFI_UNIT_TEST */
 
 EventQueue::EventQueue(efidur_t lateDelay)
-	: m_lateDelay(lateDelay)
-{ }
+	: m_lateDelay(lateDelay) {}
 
 /**
  * @return true if inserted into the head of the list
@@ -99,7 +98,7 @@ void EventQueue::remove(scheduling_s* scheduling) {
 		scheduling->next = nullptr;
 		scheduling->action = {};
 	} else {
-		auto prev = m_head;	// keep track of the element before the one to remove, so we can link around it
+		auto prev = m_head; // keep track of the element before the one to remove, so we can link around it
 		auto current = prev->next;
 
 		// Find our element
@@ -137,9 +136,10 @@ expected<efitick_t> EventQueue::getNextEventTime(efitick_t nowX) const {
 	if (m_head) {
 		if (m_head->momentX <= nowX) {
 			/**
-			 * We are here if action timestamp is in the past. We should rarely be here since this 'getNextEventTime()' is
-			 * always invoked by 'scheduleTimerCallback' which is always invoked right after 'executeAllPendingActions' - but still,
-			 * for events which are really close to each other we would end up here.
+			 * We are here if action timestamp is in the past. We should rarely be here since this 'getNextEventTime()'
+			 * is always invoked by 'scheduleTimerCallback' which is always invoked right after
+			 * 'executeAllPendingActions' - but still, for events which are really close to each other we would end up
+			 * here.
 			 *
 			 * looks like we end up here after 'writeconfig' (which freezes the firmware) - we are late
 			 * for the next scheduled event
@@ -258,8 +258,7 @@ scheduling_s* EventQueue::getHead() {
 scheduling_s* EventQueue::getElementAtIndexForUnitText(int index) {
 	scheduling_s* current;
 
-	LL_FOREACH2(m_head, current, next)
-	{
+	LL_FOREACH2(m_head, current, next) {
 		if (index == 0)
 			return current;
 		index--;
@@ -270,7 +269,7 @@ scheduling_s* EventQueue::getElementAtIndexForUnitText(int index) {
 
 void EventQueue::clear() {
 	// Flush the queue, resetting all scheduling_s as though we'd executed them
-	while(m_head) {
+	while (m_head) {
 		auto x = m_head;
 		// link next element to head
 		m_head = x->next;
