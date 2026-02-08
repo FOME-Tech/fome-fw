@@ -27,10 +27,12 @@ public class PinoutLogicIntegratedTest {
                         "#include \"pch.h\"\n" +
                         "\n" +
                         "// see comments at declaration in pin_repository.h\n" +
-                        "const char * getBoardSpecificPinName(brain_pin_e brainPin) {\n" +
-                        "\tswitch(brainPin) {\n" +
-                        "\t\tcase Gpio::E11: return \"Digital 2\";\n" +
-                        "\t\tdefault: return nullptr;\n" +
+                        "const char* getBoardSpecificPinName(brain_pin_e brainPin) {\n" +
+                        "\tswitch (brainPin) {\n" +
+                        "\t\tcase Gpio::E11:\n" +
+                        "\t\t\treturn \"Digital 2\";\n" +
+                        "\t\tdefault:\n" + 
+                        "\t\t\treturn nullptr;\n" +
                         "\t}\n" +
                         "\treturn nullptr;\n" +
                         "}\n");
@@ -52,10 +54,12 @@ public class PinoutLogicIntegratedTest {
                         "#include \"pch.h\"\n" +
                         "\n" +
                         "// see comments at declaration in pin_repository.h\n" +
-                        "const char * getBoardSpecificPinName(brain_pin_e brainPin) {\n" +
-                        "\tswitch(brainPin) {\n" +
-                        "\t\tcase Gpio::E11: return \"1 - Digital 2\";\n" +
-                        "\t\tdefault: return nullptr;\n" +
+                        "const char* getBoardSpecificPinName(brain_pin_e brainPin) {\n" +
+                        "\tswitch (brainPin) {\n" +
+                        "\t\tcase Gpio::E11:\n" + 
+                        "\t\t\treturn \"1 - Digital 2\";\n" +
+                        "\t\tdefault:\n"+
+                        "\t\t\treturn nullptr;\n" +
                         "\t}\n" +
                         "\treturn nullptr;\n" +
                         "}\n");
