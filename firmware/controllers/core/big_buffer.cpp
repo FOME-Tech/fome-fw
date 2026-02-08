@@ -25,9 +25,7 @@ static void releaseBuffer(void* bufferPtr, BigBufferUser user) {
 
 BigBufferHandle::BigBufferHandle(void* buffer, BigBufferUser user)
 	: m_bufferPtr(buffer)
-	, m_user(user)
-{
-}
+	, m_user(user) {}
 
 BigBufferHandle::BigBufferHandle(BigBufferHandle&& other) {
 	// swap contents of the two objects, the destructor will clean up the old object
@@ -35,7 +33,7 @@ BigBufferHandle::BigBufferHandle(BigBufferHandle&& other) {
 	std::swap(m_user, other.m_user);
 }
 
-BigBufferHandle& BigBufferHandle::operator= (BigBufferHandle&& other) {
+BigBufferHandle& BigBufferHandle::operator=(BigBufferHandle&& other) {
 	// swap contents of the two objects, the destructor will clean up the old object
 	std::swap(m_bufferPtr, other.m_bufferPtr);
 	std::swap(m_user, other.m_user);

@@ -12,8 +12,7 @@
 #include <cstdint>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif /* __cplusplus */
 
 /**
@@ -22,11 +21,11 @@ extern "C"
  *
  * see also firmwareError()
  */
-bool warning(ObdCode code, const char *fmt, ...)
+bool warning(ObdCode code, const char* fmt, ...)
 #if EFI_PROD_CODE
-__attribute__ ((format (printf, 2, 3)))
+		__attribute__((format(printf, 2, 3)))
 #endif
-;
+		;
 
 using critical_msg_t = char[ERROR_BUFFER_SIZE];
 
@@ -39,9 +38,9 @@ using critical_msg_t = char[ERROR_BUFFER_SIZE];
  */
 void firmwareError(ObdCode code, const char* fmt, ...)
 #if EFI_PROD_CODE
-__attribute__ ((format (printf, 2, 3)))
+		__attribute__((format(printf, 2, 3)))
 #endif
-;
+		;
 
 extern bool hasFirmwareErrorFlag;
 
@@ -52,8 +51,20 @@ const char* getCriticalErrorMessage();
 // todo: better place for this shared declaration?
 int getRusEfiVersion();
 
-#define efiAssert(code, condition, message, result) { if (!(condition)) { firmwareError(code, message); return result; } }
-#define efiAssertVoid(code, condition, message) { if (!(condition)) { firmwareError(code, message); return; } }
+#define efiAssert(code, condition, message, result)                                                                    \
+	{                                                                                                                  \
+		if (!(condition)) {                                                                                            \
+			firmwareError(code, message);                                                                              \
+			return result;                                                                                             \
+		}                                                                                                              \
+	}
+#define efiAssertVoid(code, condition, message)                                                                        \
+	{                                                                                                                  \
+		if (!(condition)) {                                                                                            \
+			firmwareError(code, message);                                                                              \
+			return;                                                                                                    \
+		}                                                                                                              \
+	}
 
 #if EFI_PROD_CODE
 #include <hal.h>
@@ -67,4 +78,4 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 }
 #endif /* __cplusplus */
 
-void firmwareError(const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
+void firmwareError(const char* fmt, ...) __attribute__((format(printf, 1, 2)));

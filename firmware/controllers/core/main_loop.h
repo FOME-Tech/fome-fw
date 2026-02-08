@@ -21,11 +21,16 @@ inline constexpr bool operator&(LoopPeriod a, LoopPeriod b) {
 
 constexpr int hzForPeriod(LoopPeriod p) {
 	switch (p) {
-		case LoopPeriod::None: return 0;
-		case LoopPeriod::Period1000hz: return 1000;
-		case LoopPeriod::Period500hz: return 500;
-		case LoopPeriod::Period250hz: return 250;
-		case LoopPeriod::Period20hz: return 20;
+		case LoopPeriod::None:
+			return 0;
+		case LoopPeriod::Period1000hz:
+			return 1000;
+		case LoopPeriod::Period500hz:
+			return 500;
+		case LoopPeriod::Period250hz:
+			return 250;
+		case LoopPeriod::Period20hz:
+			return 20;
 	}
 
 	return 0;

@@ -16,7 +16,7 @@ static critical_msg_t criticalErrorMessageBuffer;
 
 bool hasFirmwareErrorFlag = false;
 
-const char *dbg_panic_file;
+const char* dbg_panic_file;
 int dbg_panic_line;
 
 const char* getCriticalErrorMessage() {
@@ -28,23 +28,27 @@ void checkLastBootError() {
 	auto sramState = getBackupSram();
 
 	switch (sramState->Err.Cookie) {
-	case ErrorCookie::FirmwareError:
-		efiPrintf("Last boot had firmware error: %s", sramState->Err.ErrorString);
-		break;
-	case ErrorCookie::HardFault: {
-		efiPrintf("Last boot had hard fault type: %x addr: %x CSFR: %x", (unsigned int)sramState->Err.FaultType, (unsigned int)sramState->Err.FaultAddress, (unsigned int)sramState->Err.Csfr);
+		case ErrorCookie::FirmwareError:
+			efiPrintf("Last boot had firmware error: %s", sramState->Err.ErrorString);
+			break;
+		case ErrorCookie::HardFault: {
+			efiPrintf(
+					"Last boot had hard fault type: %x addr: %x CSFR: %x",
+					(unsigned int)sramState->Err.FaultType,
+					(unsigned int)sramState->Err.FaultAddress,
+					(unsigned int)sramState->Err.Csfr);
 
-		// Print out the context as a sequence of uintptr
-		uintptr_t* data = reinterpret_cast<uintptr_t*>(&sramState->Err.FaultCtx);
-		for (size_t i = 0; i < sizeof(port_extctx) / sizeof(uintptr_t); i++) {
-			efiPrintf("Fault ctx %d: %x", i, data[i]);
+			// Print out the context as a sequence of uintptr
+			uintptr_t* data = reinterpret_cast<uintptr_t*>(&sramState->Err.FaultCtx);
+			for (size_t i = 0; i < sizeof(port_extctx) / sizeof(uintptr_t); i++) {
+				efiPrintf("Fault ctx %d: %x", i, data[i]);
+			}
+
+			break;
 		}
-
-		break;
-	}
-	default:
-		// No cookie stored or invalid cookie (ie, backup RAM contains random garbage)
-		break;
+		default:
+			// No cookie stored or invalid cookie (ie, backup RAM contains random garbage)
+			break;
 	}
 
 	// Reset cookie so we don't print it again.
@@ -71,7 +75,7 @@ void logHardFault(uint32_t type, uintptr_t faultAddress, port_extctx* ctx, uint3
 
 #if EFI_SIMULATOR || EFI_PROD_CODE
 
-void chDbgPanic3(const char *msg, const char * file, int line) {
+void chDbgPanic3(const char* msg, const char* file, int line) {
 #if EFI_PROD_CODE
 	// Attempt to break in to the debugger, if attached
 	__asm volatile("BKPT #0\n");
@@ -125,7 +129,7 @@ WarningCodeState unitTestWarningCodeState;
  *
  * @returns TRUE in case there were warnings recently
  */
-bool warning(ObdCode code, const char *fmt, ...) {
+bool warning(ObdCode code, const char* fmt, ...) {
 	if (hasFirmwareErrorFlag) {
 		return true;
 	}
@@ -230,7 +234,7 @@ static void vfirmwareError(ObdCode code, const char* fmt, va_list ap) {
 		 * in case of simple error message let's reduce stack usage
 		 * chvsnprintf could cause an overflow if we're already low
 		 */
-		strncpy((char*) criticalErrorMessageBuffer, fmt, sizeof(criticalErrorMessageBuffer) - 1);
+		strncpy((char*)criticalErrorMessageBuffer, fmt, sizeof(criticalErrorMessageBuffer) - 1);
 		criticalErrorMessageBuffer[sizeof(criticalErrorMessageBuffer) - 1] = 0; // just to be sure
 	} else {
 		chvsnprintf(criticalErrorMessageBuffer, sizeof(criticalErrorMessageBuffer), fmt, ap);
