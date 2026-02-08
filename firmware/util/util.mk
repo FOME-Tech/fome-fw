@@ -5,7 +5,6 @@ UTILSRC = \
 
 UTILSRC_CPP = \
 	$(UTIL_DIR)/efitime.cpp \
-	$(UTIL_DIR)/containers/listener_array.cpp \
 	$(UTIL_DIR)/containers/local_version_holder.cpp \
 	$(UTIL_DIR)/math/biquad.cpp \
 	$(UTIL_DIR)/math/efi_pid.cpp \

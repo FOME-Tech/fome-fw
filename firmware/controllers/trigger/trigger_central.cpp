@@ -11,7 +11,6 @@
 #include "trigger_central.h"
 #include "trigger_decoder.h"
 #include "main_trigger_callback.h"
-#include "listener_array.h"
 
 #include "local_version_holder.h"
 #include "trigger_simulator.h"

@@ -8,7 +8,6 @@
 #pragma once
 
 #include "rusefi_enums.h"
-#include "listener_array.h"
 #include "trigger_decoder.h"
 #include "instant_rpm_calculator.h"
 #include "trigger_central_generated.h"

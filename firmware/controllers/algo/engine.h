@@ -13,7 +13,6 @@
 #include "rpm_calculator.h"
 #include "event_registry.h"
 #include "table_helper.h"
-#include "listener_array.h"
 #include "accel_enrichment.h"
 #include "trigger_central.h"
 #include "local_version_holder.h"
