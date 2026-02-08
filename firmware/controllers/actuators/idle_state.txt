@@ -1,7 +1,7 @@
 struct_no_prefix idle_state_s
 	custom percent_t 4 scalar, F32, @OFFSET@, "", 1, 0, 0, 100, 2
 
-	bit mightResetPid;mightResetPid\nThe idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.\nThe throttle pedal can be pressed for a long time, making the PID data obsolete (thus the reset is required).\nWe set 'mightResetPid' to true only if PID was actually used (i.e. idlePid.getOutput() was called) to save some CPU resources.\nSee automaticIdleController().
+	bit mightResetPid;mightResetPid\nThe idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.
 	bit wasResetPid;wasResetPid\nThis is needed to slowly turn on the PID back after it was reset.
 
 	bit isCranking;cranking
