@@ -30,12 +30,12 @@
 
 /* TODO: chnage array to list? */
 struct gpiochip {
-	brain_pin_e			base;
-	size_t				size;
-	GpioChip			*chip;
-	const char			*name;
+	brain_pin_e base;
+	size_t size;
+	GpioChip* chip;
+	const char* name;
 	/* optional names of each gpio */
-	const char			**gpio_names;
+	const char** gpio_names;
 };
 
 static gpiochip chips[BOARD_EXT_GPIOCHIPS];
@@ -47,10 +47,9 @@ static gpiochip chips[BOARD_EXT_GPIOCHIPS];
 /**
  * @return pointer to GPIO device for specified pin
  */
-static gpiochip *gpiochip_find(brain_pin_e pin)
-{
+static gpiochip* gpiochip_find(brain_pin_e pin) {
 	for (int i = 0; i < BOARD_EXT_GPIOCHIPS; i++) {
-		gpiochip *chip = &chips[i];
+		gpiochip* chip = &chips[i];
 
 		if ((pin >= chip->base) && (pin < (chip->base + chip->size)))
 			return chip;
@@ -68,9 +67,8 @@ static gpiochip *gpiochip_find(brain_pin_e pin)
  * @details
  */
 
-int gpiochips_getPinOffset(brain_pin_e pin)
-{
-	gpiochip *chip = gpiochip_find(pin);
+int gpiochips_getPinOffset(brain_pin_e pin) {
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (chip)
 		return pin - chip->base;
@@ -78,14 +76,13 @@ int gpiochips_getPinOffset(brain_pin_e pin)
 	return -1;
 }
 
-
 /**
  * @brief Get external chip name
  * @details return gpiochip name
  */
 
-const char *gpiochips_getChipName(brain_pin_e pin) {
-	gpiochip *chip = gpiochip_find(pin);
+const char* gpiochips_getChipName(brain_pin_e pin) {
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (chip)
 		return chip->name;
@@ -98,10 +95,9 @@ const char *gpiochips_getChipName(brain_pin_e pin) {
  * @details return pin name or gpiochip name (if no pins names provided)
  */
 
-const char *gpiochips_getPinName(brain_pin_e pin)
-{
+const char* gpiochips_getPinName(brain_pin_e pin) {
 	int offset;
-	gpiochip *chip = gpiochip_find(pin);
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (chip) {
 		offset = pin - chip->base;
@@ -121,8 +117,7 @@ const char *gpiochips_getPinName(brain_pin_e pin)
  * else returns chip base
  */
 
-int gpiochip_register(brain_pin_e base, const char *name, GpioChip& gpioChip, size_t size)
-{
+int gpiochip_register(brain_pin_e base, const char* name, GpioChip& gpioChip, size_t size) {
 	/* zero size? */
 	if (!size)
 		return -1;
@@ -134,7 +129,7 @@ int gpiochip_register(brain_pin_e base, const char *name, GpioChip& gpioChip, si
 	/* check for overlap with other chips */
 	for (int i = 0; i < BOARD_EXT_GPIOCHIPS; i++) {
 		if (chips[i].base != Gpio::Unassigned) {
-			#define in_range(a, b, c)	(((a) > (b)) && ((a) < (c)))
+#define in_range(a, b, c) (((a) > (b)) && ((a) < (c)))
 			if (in_range(base, chips[i].base, chips[i].base + chips[i].size))
 				return -1;
 			if (in_range(base + size, chips[i].base, chips[i].base + chips[i].size))
@@ -142,7 +137,7 @@ int gpiochip_register(brain_pin_e base, const char *name, GpioChip& gpioChip, si
 		}
 	}
 
-	gpiochip *chip = nullptr;
+	gpiochip* chip = nullptr;
 
 	/* find free gpiochip struct */
 	for (int i = 0; i < BOARD_EXT_GPIOCHIPS; i++) {
@@ -168,16 +163,14 @@ int gpiochip_register(brain_pin_e base, const char *name, GpioChip& gpioChip, si
 	return (int)base;
 }
 
-
 /**
  * @brief Unregister gpiochip
  * @details removes chip from list
  * TODO: call deinit?
  */
 
-int gpiochip_unregister(brain_pin_e base)
-{
-	gpiochip *chip = gpiochip_find(base);
+int gpiochip_unregister(brain_pin_e base) {
+	gpiochip* chip = gpiochip_find(base);
 
 	if (!chip)
 		return -1;
@@ -202,9 +195,8 @@ int gpiochip_unregister(brain_pin_e base)
  * Names array size should be aqual to chip gpio count
  */
 
-int gpiochips_setPinNames(brain_pin_e base, const char **names)
-{
-	gpiochip *chip = gpiochip_find(base);
+int gpiochips_setPinNames(brain_pin_e base, const char** names) {
+	gpiochip* chip = gpiochip_find(base);
 
 	if (!chip)
 		return -1;
@@ -220,12 +212,11 @@ int gpiochips_setPinNames(brain_pin_e base, const char **names)
  * calles when OS is ready, so gpiochip can start threads, use drivers and so on.
  */
 
-int gpiochips_init(void)
-{
+int gpiochips_init(void) {
 	int pins_added = 0;
 
 	for (int i = 0; i < BOARD_EXT_GPIOCHIPS; i++) {
-		gpiochip *chip = &chips[i];
+		gpiochip* chip = &chips[i];
 
 		if (chip->base == Gpio::Unassigned)
 			continue;
@@ -250,9 +241,8 @@ int gpiochips_init(void)
  */
 /* this fuction uses iomode_t that is related to STM32 (or other MCU)
  * output modes. Use some common enums? */
-int gpiochips_setPadMode(brain_pin_e pin, iomode_t mode)
-{
-	gpiochip *chip = gpiochip_find(pin);
+int gpiochips_setPadMode(brain_pin_e pin, iomode_t mode) {
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (!chip)
 		return -1;
@@ -269,9 +259,8 @@ int gpiochips_setPadMode(brain_pin_e pin, iomode_t mode)
  * else return value from gpiochip driver;
  */
 
-int gpiochips_writePad(brain_pin_e pin, int value)
-{
-	gpiochip *chip = gpiochip_find(pin);
+int gpiochips_writePad(brain_pin_e pin, int value) {
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (!chip)
 		return -1;
@@ -287,9 +276,8 @@ int gpiochips_writePad(brain_pin_e pin, int value)
  * else return value from gpiochip driver;
  */
 
-int gpiochips_readPad(brain_pin_e pin)
-{
-	gpiochip *chip = gpiochip_find(pin);
+int gpiochips_readPad(brain_pin_e pin) {
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (!chip)
 		return -1;
@@ -305,9 +293,8 @@ int gpiochips_readPad(brain_pin_e pin)
  * else return brain_pin_diag_e from gpiochip driver;
  */
 
-brain_pin_diag_e gpiochips_getDiag(brain_pin_e pin)
-{
-	gpiochip *chip = gpiochip_find(pin);
+brain_pin_diag_e gpiochips_getDiag(brain_pin_e pin) {
+	gpiochip* chip = gpiochip_find(pin);
 
 	if (!chip)
 		return PIN_INVALID;
@@ -321,13 +308,12 @@ brain_pin_diag_e gpiochips_getDiag(brain_pin_e pin)
  * but later fails to init.
  */
 
-int gpiochips_get_total_pins(void)
-{
+int gpiochips_get_total_pins(void) {
 	int i;
 	int cnt = 0;
 
 	for (i = 0; i < BOARD_EXT_GPIOCHIPS; i++) {
-		gpiochip *chip = &chips[i];
+		gpiochip* chip = &chips[i];
 
 		if (chip->base == Gpio::Unassigned)
 			continue;
@@ -346,39 +332,38 @@ int gpiochips_getPinOffset(brain_pin_e pin) {
 	return -1;
 }
 
-const char *gpiochips_getChipName(brain_pin_e pin) {
+const char* gpiochips_getChipName(brain_pin_e pin) {
 	(void)pin;
 
 	return nullptr;
 }
 
-const char *gpiochips_getPinName(brain_pin_e pin) {
+const char* gpiochips_getPinName(brain_pin_e pin) {
 	(void)pin;
 
 	return nullptr;
 }
 
-int gpiochip_register(brain_pin_e base, const char *name, GpioChip&, size_t size)
-{
-	(void)base; (void)name; (void)size;
+int gpiochip_register(brain_pin_e base, const char* name, GpioChip&, size_t size) {
+	(void)base;
+	(void)name;
+	(void)size;
 
 	return 0;
 }
 
-int gpiochips_setPinNames(brain_pin_e pin, const char **names)
-{
-	(void)pin; (void)names;
+int gpiochips_setPinNames(brain_pin_e pin, const char** names) {
+	(void)pin;
+	(void)names;
 
 	return 0;
 }
 
-int gpiochips_init(void)
-{
+int gpiochips_init(void) {
 	return 0;
 }
 
-int gpiochips_get_total_pins(void)
-{
+int gpiochips_get_total_pins(void) {
 	return 0;
 }
 

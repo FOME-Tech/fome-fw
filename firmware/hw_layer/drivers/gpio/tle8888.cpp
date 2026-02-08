@@ -49,7 +49,7 @@ static Timer diagResponse;
 /* Driver local definitions.												*/
 /*==========================================================================*/
 
-#define DRIVER_NAME				"tle8888"
+#define DRIVER_NAME "tle8888"
 
 typedef enum {
 	TLE8888_DISABLED = 0,
@@ -60,101 +60,100 @@ typedef enum {
 
 /* SPI communication helpers */
 /* C0 */
-#define CMD_READ			(0 << 0)
-#define CMD_WRITE			(1 << 0)
+#define CMD_READ (0 << 0)
+#define CMD_WRITE (1 << 0)
 /* C7:1 */
-#define CMD_REG_ADDR(a)		(((a) & 0x7f) << 1)
+#define CMD_REG_ADDR(a) (((a) & 0x7f) << 1)
 /* CD7:0 */
-#define CMD_REG_DATA(d)		(((d) & 0xff) << 8)
+#define CMD_REG_DATA(d) (((d) & 0xff) << 8)
 
-#define CMD_W(a, d)			(static_cast<uint16_t>((CMD_WRITE | CMD_REG_ADDR(a) | CMD_REG_DATA(d))))
-#define CMD_R(a)			(static_cast<uint16_t>((CMD_READ | CMD_REG_ADDR(a))))
+#define CMD_W(a, d) (static_cast<uint16_t>((CMD_WRITE | CMD_REG_ADDR(a) | CMD_REG_DATA(d))))
+#define CMD_R(a) (static_cast<uint16_t>((CMD_READ | CMD_REG_ADDR(a))))
 
-#define REG_INVALID			0x00
+#define REG_INVALID 0x00
 
 /* Command registers */
-#define CMD_CMD0(d)			CMD_W(0x01, d)
-#define REG_CMD0_MRSE		BIT(0)
-#define REG_CMD0_MRON		BIT(1)
+#define CMD_CMD0(d) CMD_W(0x01, d)
+#define REG_CMD0_MRSE BIT(0)
+#define REG_CMD0_MRON BIT(1)
 /* Window watchdog open WWDOWT window time = 12.8 mS - fixed value for TLE8888QK */
-#define CMD_WWDSERVICECMD	CMD_W(0x15, 0x03)
-#define CMD_FWDRESPCMD(d)	CMD_W(0x16, d)
-#define CMD_FWDRESPSYNCCMD(d)	CMD_W(0x17, d)
+#define CMD_WWDSERVICECMD CMD_W(0x15, 0x03)
+#define CMD_FWDRESPCMD(d) CMD_W(0x16, d)
+#define CMD_FWDRESPSYNCCMD(d) CMD_W(0x17, d)
 
-#define CMD_SR_CODE			0x1a
-#define CMD_SR				CMD_W(CMD_SR_CODE, 0x03)
-#define CMD_OE_SET			CMD_W(0x1c, 0x02)
-#define CMD_OE_CLR			CMD_W(0x1c, 0x01)
-#define CMD_CHIP_UNLOCK		CMD_W(0x1e, 0x01)
-//#define CMD_CHIP_LOCK		CMD_W(0x1e, 0x02)
+#define CMD_SR_CODE 0x1a
+#define CMD_SR CMD_W(CMD_SR_CODE, 0x03)
+#define CMD_OE_SET CMD_W(0x1c, 0x02)
+#define CMD_OE_CLR CMD_W(0x1c, 0x01)
+#define CMD_CHIP_UNLOCK CMD_W(0x1e, 0x01)
+// #define CMD_CHIP_LOCK		CMD_W(0x1e, 0x02)
 
 /* Diagnostic registers */
-#define REG_DIAG(n)			(0x20 + ((n) & 0x01))
-#define CMD_DIAG(n)			CMD_R(REG_DIAG(n))
-#define CMD_VRSDIAG(n)		CMD_R(0x22 + ((n) & 0x01))
-#define CMD_COMDIAG			CMD_R(0x24)
-#define CMD_OUTDIAG(n)		CMD_R(0x25 + ((n) & 0x07))
-#define CMD_PPOVDIAG		CMD_R(0x2a)
-#define CMD_BRIDIAG(n)		CMD_R(0x2b + ((n) & 0x01))
-#define CMD_IGNDIAG			CMD_R(0x2d)
-#define CMD_WDDIAG			CMD_R(0x2e)
+#define REG_DIAG(n) (0x20 + ((n) & 0x01))
+#define CMD_DIAG(n) CMD_R(REG_DIAG(n))
+#define CMD_VRSDIAG(n) CMD_R(0x22 + ((n) & 0x01))
+#define CMD_COMDIAG CMD_R(0x24)
+#define CMD_OUTDIAG(n) CMD_R(0x25 + ((n) & 0x07))
+#define CMD_PPOVDIAG CMD_R(0x2a)
+#define CMD_BRIDIAG(n) CMD_R(0x2b + ((n) & 0x01))
+#define CMD_IGNDIAG CMD_R(0x2d)
+#define CMD_WDDIAG CMD_R(0x2e)
 
 /* Status registers */
-#define REG_OPSTAT(n)		(0x34 + ((n) & 0x01))
-#define CMD_OPSTAT(n)		CMD_R(REG_OPSTAT(n))
-#define REG_OPSTAT_MR		BIT(3)
-#define REG_OPSTAT_WAKE		BIT(1)
-#define REG_OPSTAT_KEY		BIT(0)
-#define REG_WWDSTAT			0x36
-#define CMD_WWDSTAT			CMD_R(REG_WWDSTAT)
-#define REG_FWDSTAT(n)		(0x37 + ((n) & 0x01))
-#define CMD_FWDSTAT(n)		CMD_R(REG_FWDSTAT(n))
-#define REG_TECSTAT			0x39
-#define CMD_TECSTAT			CMD_R(REG_TECSTAT)
+#define REG_OPSTAT(n) (0x34 + ((n) & 0x01))
+#define CMD_OPSTAT(n) CMD_R(REG_OPSTAT(n))
+#define REG_OPSTAT_MR BIT(3)
+#define REG_OPSTAT_WAKE BIT(1)
+#define REG_OPSTAT_KEY BIT(0)
+#define REG_WWDSTAT 0x36
+#define CMD_WWDSTAT CMD_R(REG_WWDSTAT)
+#define REG_FWDSTAT(n) (0x37 + ((n) & 0x01))
+#define CMD_FWDSTAT(n) CMD_R(REG_FWDSTAT(n))
+#define REG_TECSTAT 0x39
+#define CMD_TECSTAT CMD_R(REG_TECSTAT)
 
 /* Configuration registers */
-#define CMD_OUTCONFIG(n, d)	CMD_W(0x40 + (n), d)
-#define CMD_BRICONFIG(n, d)	CMD_W(0x46 + ((n) & 0x01), d)
-#define CMD_IGNCONFIG(d)	CMD_W(0x48, d)
-#define CMD_VRSCONFIG(n, d)	CMD_W(0x49 + ((n) & 0x03), d)
-#define CMD_OPCONFIG0(d)	CMD_W(0x4e, d)
-#define CMD_INCONFIG(n, d)	CMD_W(0x53 + ((n) & 0x03), d)
-#define CMD_DDCONFIG(n, d)	CMD_W(0x57 + ((n) & 0x03), d)
-#define CMD_OECONFIG(n, d)	CMD_W(0x5b + ((n) & 0x03), d)
+#define CMD_OUTCONFIG(n, d) CMD_W(0x40 + (n), d)
+#define CMD_BRICONFIG(n, d) CMD_W(0x46 + ((n) & 0x01), d)
+#define CMD_IGNCONFIG(d) CMD_W(0x48, d)
+#define CMD_VRSCONFIG(n, d) CMD_W(0x49 + ((n) & 0x03), d)
+#define CMD_OPCONFIG0(d) CMD_W(0x4e, d)
+#define CMD_INCONFIG(n, d) CMD_W(0x53 + ((n) & 0x03), d)
+#define CMD_DDCONFIG(n, d) CMD_W(0x57 + ((n) & 0x03), d)
+#define CMD_OECONFIG(n, d) CMD_W(0x5b + ((n) & 0x03), d)
 
 /* Control registers */
-#define CMD_CONT(n, d)		CMD_W(0x7b + ((n) & 0x03), d)
+#define CMD_CONT(n, d) CMD_W(0x7b + ((n) & 0x03), d)
 
 /* Looks like reset value is 113.6ms? 1.6ms * 0x47 */
-#define FWD_PERIOD_MS		(20)
+#define FWD_PERIOD_MS (20)
 
 /* Default closed window time is 0b0011.1111 * 1.6 = 100.8mS
  * Default open window time is 0b0011 * 3.2 = 12.8 mS */
-#define WWD_PERIOD_MS		(100.8 + (12.8 / 2))
+#define WWD_PERIOD_MS (100.8 + (12.8 / 2))
 
 /* TODO: add irq support */
-#define DIAG_PERIOD_MS		(7)
+#define DIAG_PERIOD_MS (7)
 
 const uint8_t tle8888_fwd_responses[16][4] = {
-	/* Reverse order:
-	 * RESP3,RESP2,RESP1,RESP0 */
-	{0xFF, 0x0F, 0xF0, 0x00},
-	{0xB0, 0x40, 0xBF, 0x4F},
-	{0xE9, 0x19, 0xE6, 0x16},
-	{0xA6, 0x56, 0xA9, 0x59},
-	{0x75, 0x85, 0x7A, 0x8A},
-	{0x3A, 0xCA, 0x35, 0xC5},
-	{0x63, 0x93, 0x6C, 0x9C},
-	{0x2C, 0xDC, 0x23, 0xD3},
-	{0xD2, 0x22, 0xDD, 0x2D},
-	{0x9D, 0x6D, 0x92, 0x62},
-	{0xC4, 0x34, 0xCB, 0x3B},
-	{0x8B, 0x7B, 0x84, 0x74},
-	{0x58, 0xA8, 0x57, 0xA7},
-	{0x17, 0xE7, 0x18, 0xE8},
-	{0x4E, 0xBE, 0x41, 0xB1},
-	{0x01, 0xF1, 0x0E, 0xFE}
-};
+		/* Reverse order:
+		 * RESP3,RESP2,RESP1,RESP0 */
+		{0xFF, 0x0F, 0xF0, 0x00},
+		{0xB0, 0x40, 0xBF, 0x4F},
+		{0xE9, 0x19, 0xE6, 0x16},
+		{0xA6, 0x56, 0xA9, 0x59},
+		{0x75, 0x85, 0x7A, 0x8A},
+		{0x3A, 0xCA, 0x35, 0xC5},
+		{0x63, 0x93, 0x6C, 0x9C},
+		{0x2C, 0xDC, 0x23, 0xD3},
+		{0xD2, 0x22, 0xDD, 0x2D},
+		{0x9D, 0x6D, 0x92, 0x62},
+		{0xC4, 0x34, 0xCB, 0x3B},
+		{0x8B, 0x7B, 0x84, 0x74},
+		{0x58, 0xA8, 0x57, 0xA7},
+		{0x17, 0xE7, 0x18, 0xE8},
+		{0x4E, 0xBE, 0x41, 0xB1},
+		{0x01, 0xF1, 0x0E, 0xFE}};
 
 /*==========================================================================*/
 /* Driver exported variables.												*/
@@ -176,9 +175,9 @@ struct Tle8888 : public GpioChip {
 
 	// internal functions
 	void read_reg(uint16_t reg, uint16_t* val);
-	int spi_rw(uint16_t tx, uint16_t *rx_ptr);
+	int spi_rw(uint16_t tx, uint16_t* rx_ptr);
 	int spi_validate(uint16_t rx);
-	int spi_rw_array(const uint16_t *tx, uint16_t *rx, int n);
+	int spi_rw_array(const uint16_t* tx, uint16_t* rx, int n);
 	int update_status_and_diag();
 
 	int update_output();
@@ -200,95 +199,92 @@ struct Tle8888 : public GpioChip {
 
 	int chip_init_data();
 
-	const tle8888_config	*cfg;
+	const tle8888_config* cfg;
 
 	/* thread stuff */
-	thread_t 					*thread;
+	thread_t* thread;
 	THD_WORKING_AREA(thread_wa, 256);
-	semaphore_t					wake;
+	semaphore_t wake;
 
 	/* state to be sent to chip */
-	uint32_t					o_state;
+	uint32_t o_state;
 	/* direct driven output mask */
-	uint32_t					o_direct_mask;
+	uint32_t o_direct_mask;
 	/* output enabled mask */
-	uint32_t					o_oe_mask;
+	uint32_t o_oe_mask;
 	/* push-pull enabled mask (for OUT21..OUT24 only) */
 	/* this is overhead to store 4 bits in uint32_t
 	 * but I don't want any magic shift math */
-	uint32_t					o_pp_mask;
+	uint32_t o_pp_mask;
 	/* cached output registers state - value last send to chip */
-	uint32_t					o_data_cached;
+	uint32_t o_data_cached;
 
-	tle8888_drv_state			drv_state;
+	tle8888_drv_state drv_state;
 
 	/* direct drive mapping registers */
-	uint8_t						InConfig[TLE8888_DIRECT_MISC];
+	uint8_t InConfig[TLE8888_DIRECT_MISC];
 
 	/* last accessed register, for validation on next SPI access */
-	uint8_t						last_reg;
+	uint8_t last_reg;
 
 	/* diagnostic registers */
-	uint8_t						OutDiag[5];
-	uint8_t						PPOVDiag;
-	uint8_t						BriDiag[2];
-	uint8_t						IgnDiag;
+	uint8_t OutDiag[5];
+	uint8_t PPOVDiag;
+	uint8_t BriDiag[2];
+	uint8_t IgnDiag;
 	/* status registers */
-	uint8_t						OpStat[2];
+	uint8_t OpStat[2];
 
 	/* last diagnostic was read */
-	systime_t					diag_ts;
+	systime_t diag_ts;
 
 	/* WD stuff */
-	uint8_t						wwd_err_cnt;
-	uint8_t						fwd_err_cnt;
-	uint8_t						tot_err_cnt;
-	uint8_t						wd_diag;
-	bool						wd_happy;
-	systime_t					wwd_ts;
-	systime_t					fwd_ts;
+	uint8_t wwd_err_cnt;
+	uint8_t fwd_err_cnt;
+	uint8_t tot_err_cnt;
+	uint8_t wd_diag;
+	bool wd_happy;
+	systime_t wwd_ts;
+	systime_t fwd_ts;
 
 	/* chip needs reintialization due to some critical issue */
-	bool						need_init;
+	bool need_init;
 
 	/* main relay output */
-	bool						mr_manual;
+	bool mr_manual;
 
 	/* statistic */
-	int							por_cnt;
-	int							wdr_cnt;
-	int							comfe_cnt;
-	int							init_cnt;
-	int							init_req_cnt;
-	int							spi_cnt;
-	uint16_t					recentTx;
-	uint16_t					recentRx;
+	int por_cnt;
+	int wdr_cnt;
+	int comfe_cnt;
+	int init_cnt;
+	int init_req_cnt;
+	int spi_cnt;
+	uint16_t recentTx;
+	uint16_t recentRx;
 };
 
 static Tle8888 chips[BOARD_TLE8888_COUNT];
 
 static const char* tle8888_pin_names[TLE8888_SIGNALS] = {
-	"TLE8888.INJ1",		"TLE8888.INJ2",		"TLE8888.INJ3",		"TLE8888.INJ4",
-	"TLE8888.OUT5",		"TLE8888.OUT6",		"TLE8888.OUT7",		"TLE8888.OUT8",
-	"TLE8888.OUT9",		"TLE8888.OUT10",	"TLE8888.OUT11",	"TLE8888.OUT12",
-	"TLE8888.OUT13",	"TLE8888.OUT14",	"TLE8888.OUT15",	"TLE8888.OUT16",
-	"TLE8888.OUT17",	"TLE8888.OUT18",	"TLE8888.OUT19",	"TLE8888.OUT20",
-	"TLE8888.OUT21",	"TLE8888.OUT22",	"TLE8888.OUT23",	"TLE8888.OUT24",
-	"TLE8888.IGN1",		"TLE8888.IGN2",		"TLE8888.IGN3",		"TLE8888.IGN4",
-	"TLE8888.MR",		"TLE8888.KEY",		"TLE8888.WAKE"
-};
+		"TLE8888.INJ1",	 "TLE8888.INJ2",  "TLE8888.INJ3",  "TLE8888.INJ4",	"TLE8888.OUT5",	 "TLE8888.OUT6",
+		"TLE8888.OUT7",	 "TLE8888.OUT8",  "TLE8888.OUT9",  "TLE8888.OUT10", "TLE8888.OUT11", "TLE8888.OUT12",
+		"TLE8888.OUT13", "TLE8888.OUT14", "TLE8888.OUT15", "TLE8888.OUT16", "TLE8888.OUT17", "TLE8888.OUT18",
+		"TLE8888.OUT19", "TLE8888.OUT20", "TLE8888.OUT21", "TLE8888.OUT22", "TLE8888.OUT23", "TLE8888.OUT24",
+		"TLE8888.IGN1",	 "TLE8888.IGN2",  "TLE8888.IGN3",  "TLE8888.IGN4",	"TLE8888.MR",	 "TLE8888.KEY",
+		"TLE8888.WAKE"};
 
 #if EFI_TUNER_STUDIO
 // set debug_mode 31
 void tle8888PostState() {
-	Tle8888 *chip = &chips[0];
+	Tle8888* chip = &chips[0];
 
 	engine->outputChannels.debugIntField1 = chip->wwd_err_cnt;
 	engine->outputChannels.debugIntField2 = chip->fwd_err_cnt;
 	engine->outputChannels.debugIntField3 = chip->tot_err_cnt;
-	//engine->outputChannels.debugIntField1 = chip->spi_cnt;
-	//engine->outputChannels.debugIntField2 = chip->tx;
-	//engine->outputChannels.debugIntField3 = chip->rx;
+	// engine->outputChannels.debugIntField1 = chip->spi_cnt;
+	// engine->outputChannels.debugIntField2 = chip->tx;
+	// engine->outputChannels.debugIntField3 = chip->rx;
 	engine->outputChannels.debugIntField5 = chip->init_cnt;
 
 	engine->outputChannels.debugFloatField3 = chip->OpStat[1];
@@ -302,8 +298,7 @@ void tle8888PostState() {
 /* Driver local functions.													*/
 /*==========================================================================*/
 
-int Tle8888::spi_validate(uint16_t rx)
-{
+int Tle8888::spi_validate(uint16_t rx) {
 	uint8_t reg = getRegisterFromResponse(rx);
 
 	if ((last_reg != REG_INVALID) && (last_reg != reg)) {
@@ -340,11 +335,10 @@ int Tle8888::spi_validate(uint16_t rx)
 /**
  * @returns -1 in case of communication error
  */
-int Tle8888::spi_rw(uint16_t tx, uint16_t *rx_ptr)
-{
+int Tle8888::spi_rw(uint16_t tx, uint16_t* rx_ptr) {
 	int ret;
 	uint16_t rx;
-	SPIDriver *spi = cfg->spi_bus;
+	SPIDriver* spi = cfg->spi_bus;
 
 	/**
 	 * 15.1 SPI Protocol
@@ -386,10 +380,9 @@ int Tle8888::spi_rw(uint16_t tx, uint16_t *rx_ptr)
 /**
  * @return -1 in case of communication error
  */
-int Tle8888::spi_rw_array(const uint16_t *tx, uint16_t *rx, int n)
-{
+int Tle8888::spi_rw_array(const uint16_t* tx, uint16_t* rx, int n) {
 	int ret = 0;
-	SPIDriver *spi = cfg->spi_bus;
+	SPIDriver* spi = cfg->spi_bus;
 
 	if (n <= 0) {
 		return -2;
@@ -443,8 +436,7 @@ int Tle8888::spi_rw_array(const uint16_t *tx, uint16_t *rx, int n)
  * @details Sends ORed data to register.
  */
 
-int Tle8888::update_output()
-{
+int Tle8888::update_output() {
 	int i;
 	int ret;
 
@@ -472,17 +464,15 @@ int Tle8888::update_output()
 	o_data |= o_pp_mask;
 
 	uint16_t tx[] = {
-		/* bridge config */
-		CMD_BRICONFIG(0, briconfig0),
-		/* output enables */
-		CMD_CONT(0, o_data >>  0),
-		CMD_CONT(1, o_data >>  8),
-		CMD_CONT(2, o_data >> 16),
-		CMD_CONT(3, o_data >> 24),
-		/* Main Relay output: manual vs auto-mode */
-		CMD_CMD0((mr_manual ? REG_CMD0_MRSE : 0x0) |
-				 ((o_data & BIT(TLE8888_OUTPUT_MR)) ? REG_CMD0_MRON : 0x0))
-	};
+			/* bridge config */
+			CMD_BRICONFIG(0, briconfig0),
+			/* output enables */
+			CMD_CONT(0, o_data >> 0),
+			CMD_CONT(1, o_data >> 8),
+			CMD_CONT(2, o_data >> 16),
+			CMD_CONT(3, o_data >> 24),
+			/* Main Relay output: manual vs auto-mode */
+			CMD_CMD0((mr_manual ? REG_CMD0_MRSE : 0x0) | ((o_data & BIT(TLE8888_OUTPUT_MR)) ? REG_CMD0_MRON : 0x0))};
 	ret = spi_rw_array(tx, NULL, efi::size(tx));
 
 	if (ret == 0) {
@@ -497,23 +487,21 @@ int Tle8888::update_output()
  * @brief read TLE8888 diagnostic registers data.
  * @details Chained read of several registers
  */
-int Tle8888::update_status_and_diag()
-{
+int Tle8888::update_status_and_diag() {
 	int ret = 0;
 	const uint16_t tx[] = {
-		CMD_OUTDIAG(0),
-		CMD_OUTDIAG(1),
-		CMD_OUTDIAG(2),
-		CMD_OUTDIAG(3),
-		CMD_OUTDIAG(4),
-		CMD_PPOVDIAG,
-		CMD_BRIDIAG(0),
-		CMD_BRIDIAG(1),
-		CMD_IGNDIAG,
-		CMD_OPSTAT(0),
-		CMD_OPSTAT(1),
-		CMD_OPSTAT(1)
-	};
+			CMD_OUTDIAG(0),
+			CMD_OUTDIAG(1),
+			CMD_OUTDIAG(2),
+			CMD_OUTDIAG(3),
+			CMD_OUTDIAG(4),
+			CMD_PPOVDIAG,
+			CMD_BRIDIAG(0),
+			CMD_BRIDIAG(1),
+			CMD_IGNDIAG,
+			CMD_OPSTAT(0),
+			CMD_OPSTAT(1),
+			CMD_OPSTAT(1)};
 	uint16_t rx[efi::size(tx)];
 
 	ret = spi_rw_array(tx, rx, efi::size(tx));
@@ -526,12 +514,12 @@ int Tle8888::update_status_and_diag()
 		OutDiag[2] = getDataFromResponse(rx[2 + 1]);
 		OutDiag[3] = getDataFromResponse(rx[3 + 1]);
 		OutDiag[4] = getDataFromResponse(rx[4 + 1]);
-		PPOVDiag   = getDataFromResponse(rx[5 + 1]);
+		PPOVDiag = getDataFromResponse(rx[5 + 1]);
 		BriDiag[0] = getDataFromResponse(rx[6 + 1]);
 		BriDiag[1] = getDataFromResponse(rx[7 + 1]);
-		IgnDiag    = getDataFromResponse(rx[8 + 1]);
-		OpStat[0]  = getDataFromResponse(rx[9 + 1]);
-		OpStat[1]  = getDataFromResponse(rx[10 + 1]);
+		IgnDiag = getDataFromResponse(rx[8 + 1]);
+		OpStat[0] = getDataFromResponse(rx[9 + 1]);
+		OpStat[1] = getDataFromResponse(rx[10 + 1]);
 	}
 
 	return ret;
@@ -542,8 +530,7 @@ int Tle8888::update_status_and_diag()
  * @details This is faster than updating Cont registers over SPI
  */
 
-int Tle8888::update_direct_output(size_t pin, int value)
-{
+int Tle8888::update_direct_output(size_t pin, int value) {
 	int index = -1;
 
 	if (pin < 4) {
@@ -568,11 +555,9 @@ int Tle8888::update_direct_output(size_t pin, int value)
 		return -1;
 
 	if (value)
-		palSetPort(cfg->direct_gpio[index].port,
-				   PAL_PORT_BIT(cfg->direct_gpio[index].pad));
+		palSetPort(cfg->direct_gpio[index].port, PAL_PORT_BIT(cfg->direct_gpio[index].pad));
 	else
-		palClearPort(cfg->direct_gpio[index].port,
-				   PAL_PORT_BIT(cfg->direct_gpio[index].pad));
+		palClearPort(cfg->direct_gpio[index].port, PAL_PORT_BIT(cfg->direct_gpio[index].pad));
 	return 0;
 }
 
@@ -581,8 +566,7 @@ int Tle8888::update_direct_output(size_t pin, int value)
  * @details Wake up driver. Will cause output register update
  */
 
-int Tle8888::wake_driver()
-{
+int Tle8888::wake_driver() {
 	/* Entering a reentrant critical zone.*/
 	chibios_rt::CriticalSectionLocker csl;
 	chSemSignalI(&wake);
@@ -597,8 +581,7 @@ int Tle8888::wake_driver()
 	return 0;
 }
 
-static brain_pin_diag_e tle8888_2b_to_diag_no_temp(unsigned int bits)
-{
+static brain_pin_diag_e tle8888_2b_to_diag_no_temp(unsigned int bits) {
 	if (bits == 0x01)
 		return PIN_SHORT_TO_BAT;
 	if (bits == 0x02)
@@ -608,8 +591,7 @@ static brain_pin_diag_e tle8888_2b_to_diag_no_temp(unsigned int bits)
 	return PIN_OK;
 }
 
-static brain_pin_diag_e tle8888_2b_to_diag_with_temp(unsigned int bits)
-{
+static brain_pin_diag_e tle8888_2b_to_diag_with_temp(unsigned int bits) {
 	int diag = tle8888_2b_to_diag_no_temp(bits);
 
 	if (diag == PIN_SHORT_TO_BAT)
@@ -632,68 +614,64 @@ int Tle8888::chip_reset() {
 	return ret;
 }
 
-int Tle8888::chip_init()
-{
+int Tle8888::chip_init() {
 	int ret;
 
 	/* statistic */
 	init_cnt++;
 
 	uint16_t tx[] = {
-		/* unlock */
-		CMD_CHIP_UNLOCK,
-		/* set INCONFIG - aux input mapping */
-		CMD_INCONFIG(0, InConfig[0]),
-		CMD_INCONFIG(1, InConfig[1]),
-		CMD_INCONFIG(2, InConfig[2]),
-		CMD_INCONFIG(3, InConfig[3]),
-		/* Diagnnostic settings */
-		/* Enable open load detection and disable switch off
-		 * in case of overcurrent for OUTPUT1..4 */
-		CMD_OUTCONFIG(0, BIT(7) | BIT(5) | BIT(3) | BIT(1)),
-		/* Enable open load detection and disable switch off
-		 * in case of overcurrent for OUTPUT5..7 */
-		CMD_OUTCONFIG(1, BIT(5) | BIT(3) | BIT(1)),
+			/* unlock */
+			CMD_CHIP_UNLOCK,
+			/* set INCONFIG - aux input mapping */
+			CMD_INCONFIG(0, InConfig[0]),
+			CMD_INCONFIG(1, InConfig[1]),
+			CMD_INCONFIG(2, InConfig[2]),
+			CMD_INCONFIG(3, InConfig[3]),
+			/* Diagnnostic settings */
+			/* Enable open load detection and disable switch off
+			 * in case of overcurrent for OUTPUT1..4 */
+			CMD_OUTCONFIG(0, BIT(7) | BIT(5) | BIT(3) | BIT(1)),
+			/* Enable open load detection and disable switch off
+			 * in case of overcurrent for OUTPUT5..7 */
+			CMD_OUTCONFIG(1, BIT(5) | BIT(3) | BIT(1)),
 #if 1
-		/* MRE 0.5.? share same outputs between OUTPUT8..13
-		 * and analog inputs. Disable diagnostic pull-down
-		 * not to affect analog inputs.
-		 * Disable open load detection and set short to bat
-		 * thresholt to 125 mV (default) for OUTPUT8..13 */
-		CMD_OUTCONFIG(2, (0x0 << 6) | 0x00),	
+			/* MRE 0.5.? share same outputs between OUTPUT8..13
+			 * and analog inputs. Disable diagnostic pull-down
+			 * not to affect analog inputs.
+			 * Disable open load detection and set short to bat
+			 * thresholt to 125 mV (default) for OUTPUT8..13 */
+			CMD_OUTCONFIG(2, (0x0 << 6) | 0x00),
 #else
-		/* Enable open load detection and set short to bat
-		 * thresholt to 125 mV (default) for OUTPUT8..13 */
-		CMD_OUTCONFIG(2, (0x0 << 6) | BIT(5) | BIT(4) | BIT(3) | BIT(2) | BIT(1) | BIT(0)),
+			/* Enable open load detection and set short to bat
+			 * thresholt to 125 mV (default) for OUTPUT8..13 */
+			CMD_OUTCONFIG(2, (0x0 << 6) | BIT(5) | BIT(4) | BIT(3) | BIT(2) | BIT(1) | BIT(0)),
 #endif
-		/* Enable open load detection and disable switch off
-		 * in case of overcurrent for OUTPUT14
-		 * Set short to bat threshold to 125mV (default) for
-		 * OUTPUT12..13 and OUTPUT10..11 */
-		CMD_OUTCONFIG(3, BIT(5) | (0x0 << 2) | (0x0 << 0)),
-		/* No delayed off function for OUTPUT17
-		 * Enable open load detection and disable switch off
-		 * in case of overcurrent for OUTPUT15..17 */
-		CMD_OUTCONFIG(4, BIT(5) | BIT(3) | BIT(1)),
-		/* Enable open load detection and disable switch off
-		 * in case of overcurrent for OUTPUT18..20 */
-		CMD_OUTCONFIG(5, BIT(5) | BIT(3) | BIT(1)),
-		/* set OE and DD registers */
-		CMD_OECONFIG(0, o_oe_mask >>  0),
-		CMD_DDCONFIG(0, o_direct_mask >> 0),
-		CMD_OECONFIG(1, o_oe_mask >>  8),
-		CMD_DDCONFIG(1, o_direct_mask >> 8),
-		CMD_OECONFIG(2, o_oe_mask >>  16),
-		CMD_DDCONFIG(2, o_direct_mask >> 16),
-		CMD_OECONFIG(3, o_oe_mask >>  24),
-		CMD_DDCONFIG(3, o_direct_mask >> 24),
-		/* set VR mode: VRS/Hall */
-		CMD_VRSCONFIG(1, (0 << 4) |
-						 (cfg->mode << 2) |
-						 (0 << 0)),
-		/* enable outputs */
-		CMD_OE_SET
-	};
+			/* Enable open load detection and disable switch off
+			 * in case of overcurrent for OUTPUT14
+			 * Set short to bat threshold to 125mV (default) for
+			 * OUTPUT12..13 and OUTPUT10..11 */
+			CMD_OUTCONFIG(3, BIT(5) | (0x0 << 2) | (0x0 << 0)),
+			/* No delayed off function for OUTPUT17
+			 * Enable open load detection and disable switch off
+			 * in case of overcurrent for OUTPUT15..17 */
+			CMD_OUTCONFIG(4, BIT(5) | BIT(3) | BIT(1)),
+			/* Enable open load detection and disable switch off
+			 * in case of overcurrent for OUTPUT18..20 */
+			CMD_OUTCONFIG(5, BIT(5) | BIT(3) | BIT(1)),
+			/* set OE and DD registers */
+			CMD_OECONFIG(0, o_oe_mask >> 0),
+			CMD_DDCONFIG(0, o_direct_mask >> 0),
+			CMD_OECONFIG(1, o_oe_mask >> 8),
+			CMD_DDCONFIG(1, o_direct_mask >> 8),
+			CMD_OECONFIG(2, o_oe_mask >> 16),
+			CMD_DDCONFIG(2, o_direct_mask >> 16),
+			CMD_OECONFIG(3, o_oe_mask >> 24),
+			CMD_DDCONFIG(3, o_direct_mask >> 24),
+			/* set VR mode: VRS/Hall */
+			CMD_VRSCONFIG(1, (0 << 4) | (cfg->mode << 2) | (0 << 0)),
+			/* enable outputs */
+			CMD_OE_SET};
 
 	ret = spi_rw_array(tx, NULL, efi::size(tx));
 
@@ -752,7 +730,7 @@ int Tle8888::wd_get_status() {
 		/* Reset caused by TEC
 		 * Reset caused by FWD
 		 * Reset caused by WWD */
-		 return -1;
+		return -1;
 	}
 	if (wd_diag & 0x0f) {
 		/* Some error in WD handling */
@@ -791,8 +769,7 @@ int Tle8888::wd_feed() {
 		fwd_err_cnt = getDataFromResponse(fwd_reg) & 0x7f;
 		tot_err_cnt = getDataFromResponse(tec_reg) & 0x7f;
 
-		wd_happy = ((wwd_err_cnt == 0) &&
-						  (fwd_err_cnt == 0));
+		wd_happy = ((wwd_err_cnt == 0) && (fwd_err_cnt == 0));
 
 		return wd_get_status();
 	} else {
@@ -819,7 +796,7 @@ int Tle8888::calc_sleep_interval() {
 /*==========================================================================*/
 
 static THD_FUNCTION(tle8888_driver_thread, p) {
-	Tle8888 *chip = reinterpret_cast<Tle8888*>(p);
+	Tle8888* chip = reinterpret_cast<Tle8888*>(p);
 	sysinterval_t poll_interval = 0;
 
 	chRegSetThreadName(DRIVER_NAME);
@@ -834,9 +811,7 @@ static THD_FUNCTION(tle8888_driver_thread, p) {
 		/* default polling interval */
 		poll_interval = TIME_MS2I(DIAG_PERIOD_MS);
 
-		if ((chip->cfg == NULL) ||
-			(chip->drv_state == TLE8888_DISABLED) ||
-			(chip->drv_state == TLE8888_FAILED))
+		if ((chip->cfg == NULL) || (chip->drv_state == TLE8888_DISABLED) || (chip->drv_state == TLE8888_FAILED))
 			continue;
 
 		bool wd_happy = chip->wd_happy;
@@ -939,7 +914,7 @@ int Tle8888::writePad(unsigned int pin, int value) {
 		chibios_rt::CriticalSectionLocker csl;
 
 		if (value) {
-			o_state |=  BIT(pin);
+			o_state |= BIT(pin);
 		} else {
 			o_state &= ~BIT(pin);
 		}
@@ -967,7 +942,8 @@ int Tle8888::readPad(size_t pin) {
 		return !!(OpStat[0] & REG_OPSTAT_MR);
 	} else if (pin == TLE8888_INPUT_KEY) {
 		return !!(OpStat[0] & REG_OPSTAT_KEY);
-	}  if (pin == TLE8888_INPUT_WAKE) {
+	}
+	if (pin == TLE8888_INPUT_WAKE) {
 		return !!(OpStat[0] & REG_OPSTAT_WAKE);
 	}
 
@@ -1019,11 +995,9 @@ brain_pin_diag_e Tle8888::getOutputDiag(size_t pin) {
 		int diag;
 
 		diag = tle8888_2b_to_diag_no_temp((BriDiag[0] >> ((pin - 20) * 2)) & 0x03);
-		if (((pin == 22) || (pin == 23)) &&
-			(BriDiag[1] & BIT(5)))
+		if (((pin == 22) || (pin == 23)) && (BriDiag[1] & BIT(5)))
 			diag |= PIN_DRIVER_OVERTEMP;
-		if (((pin == 20) || (pin == 21)) &&
-			(BriDiag[1] & BIT(4)))
+		if (((pin == 20) || (pin == 21)) && (BriDiag[1] & BIT(4)))
 			diag |= PIN_DRIVER_OVERTEMP;
 		if (BriDiag[1] & BIT(pin - 20))
 			diag |= PIN_OVERLOAD; /* overcurrent */
@@ -1036,15 +1010,13 @@ brain_pin_diag_e Tle8888::getOutputDiag(size_t pin) {
 	return PIN_OK;
 }
 
-brain_pin_diag_e Tle8888::getInputDiag(unsigned int pin)
-{
+brain_pin_diag_e Tle8888::getInputDiag(unsigned int pin) {
 	(void)pin;
 
 	return PIN_OK;
 }
 
-brain_pin_diag_e Tle8888::getDiag(size_t pin)
-{
+brain_pin_diag_e Tle8888::getDiag(size_t pin) {
 	if (pin >= TLE8888_SIGNALS)
 		return PIN_INVALID;
 
@@ -1060,8 +1032,8 @@ int Tle8888::chip_init_data() {
 	int ret = 0;
 
 	o_direct_mask = 0;
-	o_oe_mask		= 0;
-	o_pp_mask		= 0;
+	o_oe_mask = 0;
+	o_pp_mask = 0;
 
 	/* mark pins used */
 	if (cfg->reset.port != NULL) {
@@ -1138,7 +1110,7 @@ int Tle8888::chip_init_data() {
 		palClearPort(cfg->direct_gpio[i].port, PAL_PORT_BIT(cfg->direct_gpio[i].pad));
 
 		/* enable direct drive */
-		o_direct_mask	|= mask;
+		o_direct_mask |= mask;
 
 		/* calculate INCONFIG - aux input mapping for IN9..IN12 */
 		if (i >= 8) {
@@ -1152,15 +1124,15 @@ int Tle8888::chip_init_data() {
 
 	/* Enable Push-Pull mode for OUT21..OUT24 */
 	if (cfg->stepper) {
-		o_pp_mask	|= BIT(20) | BIT(21) | BIT(22) | BIT(23);
+		o_pp_mask |= BIT(20) | BIT(21) | BIT(22) | BIT(23);
 	}
 
 	/* enable all direct driven */
-	o_oe_mask		|= o_direct_mask;
+	o_oe_mask |= o_direct_mask;
 
 	/* enable all ouputs
 	 * TODO: add API to enable/disable? */
-	o_oe_mask		|= 0x0ffffff0;
+	o_oe_mask |= 0x0ffffff0;
 
 	return 0;
 
@@ -1181,8 +1153,7 @@ err_gpios:
 	return ret;
 }
 
-int Tle8888::init()
-{
+int Tle8888::init() {
 	int ret;
 
 	/* check for multiple init */
@@ -1207,14 +1178,12 @@ int Tle8888::init()
 	chSemObjectInit(&wake, 10);
 
 	/* start thread */
-	thread = chThdCreateStatic(thread_wa, sizeof(thread_wa),
-									 PRIO_GPIOCHIP, tle8888_driver_thread, this);
+	thread = chThdCreateStatic(thread_wa, sizeof(thread_wa), PRIO_GPIOCHIP, tle8888_driver_thread, this);
 
 	return 0;
 }
 
-int Tle8888::deinit()
-{
+int Tle8888::deinit() {
 	/* disable pins */
 	if (cfg->ign_en.port)
 		palClearPort(cfg->ign_en.port, PAL_PORT_BIT(cfg->ign_en.pad));
@@ -1233,13 +1202,12 @@ int Tle8888::deinit()
  * @return return gpio chip base
  */
 
-int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config *cfg) {
+int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config* cfg) {
 
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, cfg != NULL, "8888CFG", 0)
 
-	/* no config or no such chip */
-	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_TLE8888_COUNT))
-		return -1;
+			/* no config or no such chip */
+			if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_TLE8888_COUNT)) return -1;
 
 	/* check for valid chip select.
 	 * TODO: remove this check? CS can be driven by SPI */
@@ -1272,8 +1240,7 @@ int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config *cfg)
 /*==========================================================================*/
 /* Driver exported debug functions.												*/
 /*==========================================================================*/
-void Tle8888::read_reg(uint16_t reg, uint16_t *val)
-{
+void Tle8888::read_reg(uint16_t reg, uint16_t* val) {
 	spi_rw(CMD_R(reg), val);
 }
 
@@ -1303,9 +1270,10 @@ void tle8888_dump_regs() {
 
 #else /* BOARD_TLE8888_COUNT > 0 */
 
-int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config *cfg)
-{
-	(void)base; (void)index; (void)cfg;
+int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config* cfg) {
+	(void)base;
+	(void)index;
+	(void)cfg;
 
 	return -1;
 }

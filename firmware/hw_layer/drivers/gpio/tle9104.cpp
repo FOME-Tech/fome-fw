@@ -20,7 +20,6 @@ struct Tle9104 : public GpioChip {
 	int writePad(size_t pin, int value) override;
 	brain_pin_diag_e getDiag(size_t pin) override;
 
-
 	uint16_t readWrite(uint8_t addr, uint8_t data);
 	uint16_t read(uint8_t addr);
 	void write(uint8_t addr, uint8_t data);
@@ -28,7 +27,6 @@ struct Tle9104 : public GpioChip {
 	void updateDiagState();
 
 	const tle9104_config* cfg;
-
 
 	uint8_t diag_off;
 	uint8_t diag_on12;

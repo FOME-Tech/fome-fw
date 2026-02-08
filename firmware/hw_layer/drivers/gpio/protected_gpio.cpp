@@ -72,7 +72,9 @@ brain_pin_diag_e ProtectedGpio::getDiag() const {
 
 class ProtectedGpios : public GpioChip {
 public:
-	int init() override { return 0; }
+	int init() override {
+		return 0;
+	}
 	int setPadMode(size_t pin, iomode_t mode) override;
 	int writePad(size_t pin, int value) override;
 	int readPad(size_t pin) override;
