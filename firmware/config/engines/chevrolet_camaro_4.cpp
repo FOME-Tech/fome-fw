@@ -16,7 +16,6 @@
 void setCamaro4() {
 	setFrankensoConfiguration();
 
-
 	setAlgorithm(LM_SPEED_DENSITY);
 
 	engineConfiguration->displacement = 5.7;
@@ -39,7 +38,6 @@ void setCamaro4() {
 
 	engineConfiguration->mafAdcChannel = EFI_ADC_NONE;
 
-
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_2;
 
 	// todo: move this into trigger definition
@@ -55,7 +53,6 @@ void setCamaro4() {
 
 	engineConfiguration->afr.hwChannel = EFI_ADC_13;
 
-
 	engineConfiguration->idle.solenoidPin = Gpio::Unassigned;
 	engineConfiguration->fuelPumpPin = Gpio::Unassigned;
 
@@ -67,7 +64,6 @@ void setCamaro4() {
 	engineConfiguration->injectionPins[5] = Gpio::E4;
 	engineConfiguration->injectionPins[6] = Gpio::D3;
 	engineConfiguration->injectionPins[7] = Gpio::E2;
-
 
 	engineConfiguration->ignitionPins[0] = Gpio::C9;
 	engineConfiguration->ignitionPins[1] = Gpio::C7;
@@ -82,5 +78,3 @@ void setCamaro4() {
 	engineConfiguration->fanPin = Gpio::Unassigned;
 	engineConfiguration->mainRelayPin = Gpio::D5;
 }
-
-

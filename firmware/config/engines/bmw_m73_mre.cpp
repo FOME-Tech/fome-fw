@@ -65,7 +65,7 @@
 #include "bmw_m73.h"
 
 void setEngineBMW_M73_microRusEfi() {
-	 m73engine();
+	m73engine();
 	// 13641435991 injector
 	engineConfiguration->injector.flow = 180; // cc/min, who knows if this number is real - no good source of info
 
@@ -91,7 +91,6 @@ void setEngineBMW_M73_microRusEfi() {
 	engineConfiguration->starterControlPin = Gpio::TLE8888_PIN_24;
 #endif /* BOARD_TLE8888_COUNT */
 
-
 	// set_analog_input_pin pps PA7
 	// EFI_ADC_7: "31 - AN volt 3" - PA7
 	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_7;
@@ -99,7 +98,6 @@ void setEngineBMW_M73_microRusEfi() {
 	engineConfiguration->canReadEnabled = true;
 	engineConfiguration->canWriteEnabled = true;
 	engineConfiguration->enableVerboseCanTx = true;
-
 
 	// do I have VR wires flipped?
 	engineConfiguration->trigger.type = trigger_type_e::TT_60_2_VW;
