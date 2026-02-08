@@ -29,10 +29,7 @@ void initSpeedometer() {
 		return;
 	}
 
-	startSimplePwm(&speedoPwm,
-					"Speedometer",
-					&enginePins.speedoOut,
-					NAN, 0.5f);
+	startSimplePwm(&speedoPwm, "Speedometer", &enginePins.speedoOut, NAN, 0.5f);
 
 	hasSpeedoInit = true;
 }

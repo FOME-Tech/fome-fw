@@ -29,7 +29,13 @@ private:
 
 class StepDirectionStepper final : public StepperHw {
 public:
-	void initialize(brain_pin_e stepPin, brain_pin_e directionPin, pin_output_mode_e directionPinMode, float reactionTime, brain_pin_e enablePin, pin_output_mode_e enablePinMode);
+	void initialize(
+			brain_pin_e stepPin,
+			brain_pin_e directionPin,
+			pin_output_mode_e directionPinMode,
+			float reactionTime,
+			brain_pin_e enablePin,
+			pin_output_mode_e enablePinMode);
 
 	bool step(bool positive) override;
 
@@ -95,7 +101,8 @@ protected:
 
 class StepperMotor final : public StepperMotorBase, private ThreadController<UTILITY_THREAD_STACK_SIZE> {
 public:
-	StepperMotor() : ThreadController("stepper", PRIO_STEPPER) {}
+	StepperMotor()
+		: ThreadController("stepper", PRIO_STEPPER) {}
 
 	void initialize(StepperHw* hardware, int totalSteps);
 

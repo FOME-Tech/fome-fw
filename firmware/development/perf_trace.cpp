@@ -12,16 +12,14 @@
 #error ENABLE_PERF_TRACE must be defined!
 #endif
 
-enum class EPhase : char
-{
+enum class EPhase : char {
 	Start,
 	End,
 	InstantThread,
 	InstantGlobal,
 };
 
-struct TraceEntry
-{
+struct TraceEntry {
 	PE Event;
 	EPhase Phase;
 	uint8_t IsrId;
@@ -45,13 +43,12 @@ static void stopTrace() {
 	s_nextIdx = 0;
 }
 
-static void perfEventImpl(PE event, EPhase phase)
-{
+static void perfEventImpl(PE event, EPhase phase) {
 	// Bail if we aren't allowed to trace
 	if constexpr (!ENABLE_PERF_TRACE) {
 		return;
 	}
-	
+
 	// Bail if we aren't tracing
 	if (!s_isTracing || !s_traceBuffer) {
 		return;

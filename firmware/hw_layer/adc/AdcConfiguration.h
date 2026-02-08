@@ -22,4 +22,3 @@
 #endif // SLOW_ADC_CHANNEL_COUNT
 
 #endif /* HAL_USE_ADC */
-

@@ -36,4 +36,4 @@ void clearWarnings();
 /**
  * @brief Copies the current set of errors into the specified buffer
  */
-void getErrorCodes(error_codes_set_s * buffer);
+void getErrorCodes(error_codes_set_s* buffer);

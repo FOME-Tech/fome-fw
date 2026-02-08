@@ -2,11 +2,12 @@
  * @file	adc_inputs.cpp
  * @brief	Low level ADC code
  *
- * rusEfi uses two ADC devices on the same 16 pins at the moment. Two ADC devices are used in orde to distinguish between
- * fast and slow devices. The idea is that but only having few channels in 'fast' mode we can sample those faster?
+ * rusEfi uses two ADC devices on the same 16 pins at the moment. Two ADC devices are used in orde to distinguish
+ * between fast and slow devices. The idea is that but only having few channels in 'fast' mode we can sample those
+ * faster?
  *
- * At the moment rusEfi does not allow to have more than 16 ADC channels combined. At the moment there is no flexibility to use
- * any ADC pins, only the hardcoded choice of 16 pins.
+ * At the moment rusEfi does not allow to have more than 16 ADC channels combined. At the moment there is no flexibility
+ * to use any ADC pins, only the hardcoded choice of 16 pins.
  *
  * Slow ADC group is used for IAT, CLT, AFR, VBATT etc - this one is currently sampled at 500Hz
  *
@@ -34,12 +35,12 @@ float __attribute__((weak)) getAnalogInputDividerCoefficient(adc_channel_e) {
 #include "protected_gpio.h"
 
 // Board voltage, with divider coefficient accounted for
-float getVoltageDivided(const char *msg, adc_channel_e hwChannel) {
+float getVoltageDivided(const char* msg, adc_channel_e hwChannel) {
 	return getVoltage(msg, hwChannel) * getAnalogInputDividerCoefficient(hwChannel);
 }
 
 // voltage in MCU universe, from zero to VDD
-float getVoltage(const char *msg, adc_channel_e hwChannel) {
+float getVoltage(const char* msg, adc_channel_e hwChannel) {
 	return adcToVolts(getSlowAdcValue(msg, hwChannel));
 }
 
@@ -51,7 +52,7 @@ float getMCUInternalTemperature() {
 	return mcuTemperature;
 }
 
-int getSlowAdcValue(const char *msg, adc_channel_e hwChannel) {
+int getSlowAdcValue(const char* msg, adc_channel_e hwChannel) {
 	if (!isAdcChannelValid(hwChannel)) {
 		warning(ObdCode::CUSTOM_OBD_ANALOG_INPUT_NOT_CONFIGURED, "ADC: %s input is not configured", msg);
 		return -1;

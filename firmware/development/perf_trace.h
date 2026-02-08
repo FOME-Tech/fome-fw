@@ -88,15 +88,14 @@ void perfTraceEnable();
 const BigBufferHandle perfTraceGetBuffer();
 
 #if ENABLE_PERF_TRACE
-class ScopePerf
-{
+class ScopePerf {
 public:
-	ScopePerf(PE event) : m_event(event) {
+	ScopePerf(PE event)
+		: m_event(event) {
 		perfEventBegin(event);
 	}
 
-	~ScopePerf()
-	{
+	~ScopePerf() {
 		perfEventEnd(m_event);
 	}
 

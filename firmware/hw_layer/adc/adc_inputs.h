@@ -42,17 +42,17 @@ void updateSlowAdc(efitick_t nowNt);
 int getAdcChannelPin(adc_channel_e hwChannel);
 
 // deprecated - migrate to 'getAdcChannelBrainPin'
-ioportid_t getAdcChannelPort(const char *msg, adc_channel_e hwChannel);
+ioportid_t getAdcChannelPort(const char* msg, adc_channel_e hwChannel);
 
 adc_channel_e getAdcChannel(brain_pin_e pin);
-brain_pin_e getAdcChannelBrainPin(const char *msg, adc_channel_e hwChannel);
+brain_pin_e getAdcChannelBrainPin(const char* msg, adc_channel_e hwChannel);
 
 // wait until slow ADC readings are valid
 void waitForSlowAdc();
 
 int getAdcHardwareIndexByInternalIndex(int index);
 
-int getSlowAdcValue(const char *msg, adc_channel_e index);
+int getSlowAdcValue(const char* msg, adc_channel_e index);
 float getMCUInternalTemperature(void);
 
 #define adcToVoltsDivided(adc, hwChannel) (adcToVolts(adc) * getAnalogInputDividerCoefficient(hwChannel))
@@ -64,18 +64,17 @@ float getMCUInternalTemperature(void);
  */
 // todo: migrate to continuous ADC mode? probably not - we cannot afford the callback in
 // todo: continuous mode. todo: look into our options
-#define GPT_FREQ_FAST 100000   /* PWM clock frequency. I wonder what does this setting mean?  */
-#define GPT_PERIOD_FAST 10  /* PWM period (in PWM ticks).    */
-#endif /* GPT_FREQ_FAST GPT_PERIOD_FAST */
+#define GPT_FREQ_FAST 100000 /* PWM clock frequency. I wonder what does this setting mean?  */
+#define GPT_PERIOD_FAST 10	 /* PWM period (in PWM ticks).    */
+#endif						 /* GPT_FREQ_FAST GPT_PERIOD_FAST */
 
 /* Depth of the conversion buffer, channels are sampled X times each.*/
 #ifndef ADC_BUF_DEPTH_FAST
-#define ADC_BUF_DEPTH_FAST      4
+#define ADC_BUF_DEPTH_FAST 4
 #endif
 
 // This callback is called by the ADC driver when a new fast ADC sample is ready
 void onFastAdcComplete(adcsample_t* samples);
-
 
 using FastAdcToken = size_t;
 
