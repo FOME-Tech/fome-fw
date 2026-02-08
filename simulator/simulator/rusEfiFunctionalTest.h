@@ -9,4 +9,4 @@
 
 void rusEfiFunctionalTest(void);
 void printPendingMessages(void);
-void logMsg(const char *fmt, ...);
+void logMsg(const char* fmt, ...);

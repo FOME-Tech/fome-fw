@@ -8,4 +8,3 @@
 #pragma once
 
 #include "adc_math.h"
-

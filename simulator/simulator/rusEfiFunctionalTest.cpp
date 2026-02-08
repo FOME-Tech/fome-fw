@@ -29,7 +29,7 @@
 #define DEFAULT_SIM_RPM 1200
 #define DEFAULT_SNIFFER_THR 2500
 
-static void assertString(const char*actual, const char *expected) {
+static void assertString(const char* actual, const char* expected) {
 	if (strcmp(actual, expected) != 0) {
 		printf("assertString FAILED\n");
 		firmwareError("chprintf test: got %s while %s", actual, expected);
@@ -39,28 +39,25 @@ static void assertString(const char*actual, const char *expected) {
 static void runChprintfTest() {
 	static MemoryStream ts;
 	static char testBuffer[200];
-	msObjectInit(&ts, (uint8_t *) testBuffer, sizeof(testBuffer), 0);
-
+	msObjectInit(&ts, (uint8_t*)testBuffer, sizeof(testBuffer), 0);
 
 	ts.eos = 0; // reset
 	chprintf((BaseSequentialStream*)&ts, "%.2f - %.2f", NAN, NAN);
 	ts.buffer[ts.eos] = 0;
 	assertString(testBuffer, "NaN - NaN");
 
-// it's a very, very long and mostly forgotten story how this became our %.2f precision format
+	// it's a very, very long and mostly forgotten story how this became our %.2f precision format
 	ts.eos = 0; // reset
 	chprintf((BaseSequentialStream*)&ts, "%.2f/%.4f/%.4f", 0.239f, 239.932, 0.1234);
 	ts.buffer[ts.eos] = 0;
 
 	assertString(testBuffer, "0.23/239.9320/0.1234");
 
-
 	{
 		LoggingWithStorage testLogging("test");
 		testLogging.appendFloat(1.23, 5);
 		testLogging.appendFloat(1.234, 2);
 		assertString(testLogging.m_buffer, "1.230001.23");
-
 	}
 
 	{
@@ -70,10 +67,9 @@ static void runChprintfTest() {
 	}
 	{
 		LoggingWithStorage testLogging("test");
-		testLogging.appendPrintf( "a%.2fb%fc", -1.2, -3.4);
+		testLogging.appendPrintf("a%.2fb%fc", -1.2, -3.4);
 		assertString(testLogging.m_buffer, "a-1.20b-3.400000095c");
 	}
-
 }
 
 void rusEfiFunctionalTest(void) {
@@ -87,7 +83,6 @@ void rusEfiFunctionalTest(void) {
 	initializeConsole();
 
 	initDataStructures();
-
 
 	// todo: reduce code duplication with initEngineController
 
@@ -151,23 +146,20 @@ bool isCommandLineConsoleReady(void) {
 	return isSerialOverTcpReady;
 }
 
-void applyNewConfiguration(void) {
-}
-
-void onFatalError(const char *msg, const char * file, int line) {
+void onFatalError(const char* msg, const char* file, int line) {
 	printf("onFatalError %s %s%d", msg, file, line);
 	exit(-1);
 }
 
-void logMsg(const char *format, ...) {
-//	FILE * fp;
-//	fp = fopen ("simulator.log", "a");
-//
-//	va_list(args);
-//	va_start(args, format);
-//	vfprintf(fp, format, args);
-//
-//	fclose(fp);
+void logMsg(const char* format, ...) {
+	//	FILE * fp;
+	//	fp = fopen ("simulator.log", "a");
+	//
+	//	va_list(args);
+	//	va_start(args, format);
+	//	vfprintf(fp, format, args);
+	//
+	//	fclose(fp);
 }
 
 #if HAL_USE_CAN
@@ -182,8 +174,7 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 }
 #endif // HAL_USE_CAN
 
-void setBoardConfigOverrides() {
-}
+void setBoardConfigOverrides() {}
 
 void initBoardSensors() {
 	// Simulator gets battery voltage so it detects ignition-on

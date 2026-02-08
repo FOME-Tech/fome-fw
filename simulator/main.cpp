@@ -24,15 +24,15 @@
 #include <fstream>
 #include <sstream>
 
-#define CONSOLE_WA_SIZE     THD_WORKING_AREA_SIZE(4096)
+#define CONSOLE_WA_SIZE THD_WORKING_AREA_SIZE(4096)
 
 bool main_loop_started = false;
 
-static thread_t *cdtp;
+static thread_t* cdtp;
 
 #define cputs(msg) chMsgSend(cdtp, (msg_t)msg)
 
-void printToConsole(const char *p) {
+void printToConsole(const char* p) {
 	cputs(p);
 }
 
@@ -43,10 +43,10 @@ void printToConsole(const char *p) {
  */
 THD_FUNCTION(console_thread, arg) {
 
-	(void) arg;
+	(void)arg;
 	while (!chThdShouldTerminateX()) {
-		thread_t *tp = chMsgWait();
-		puts((char *) chMsgGet(tp));
+		thread_t* tp = chMsgWait();
+		puts((char*)chMsgGet(tp));
 		fflush(stdout);
 		chMsgRelease(tp, MSG_OK);
 	}
@@ -65,21 +65,21 @@ static void termination_handler(eventid_t /*id*/) {
 
 	cputs("Init: shell on SD1 terminated");
 	chSysLock();
-    oqResetI(&SD1.oqueue);
-    chSchRescheduleS();
+	oqResetI(&SD1.oqueue);
+	chSchRescheduleS();
 	chSysUnlock();
 
 	// todo: 2nd port for TS
 
-//  if (shelltp2 && chThdTerminated(shelltp2)) {
-//    chThdWait(shelltp2);
-//    shelltp2 = NULL;
-//    chThdSleepMilliseconds(10);
-//    cputs("Init: shell on SD2 terminated");
-//    chSysLock();
-//    chOQResetI(&SD2.oqueue);
-//    chSysUnlock();
-//  }
+	//  if (shelltp2 && chThdTerminated(shelltp2)) {
+	//    chThdWait(shelltp2);
+	//    shelltp2 = NULL;
+	//    chThdSleepMilliseconds(10);
+	//    cputs("Init: shell on SD2 terminated");
+	//    chSysLock();
+	//    chOQResetI(&SD2.oqueue);
+	//    chSysUnlock();
+	//  }
 }
 
 static event_listener_t sd1fel, sd2fel;
@@ -92,19 +92,18 @@ static event_listener_t sd1fel, sd2fel;
 static void sd1_handler(eventid_t id) {
 	eventflags_t flags;
 
-	(void) id;
+	(void)id;
 	flags = chEvtGetAndClearFlags(&sd1fel);
 	if ((flags & CHN_CONNECTED)) {
 		cputs("Init: connection on SD1");
 		isSerialOverTcpReady = TRUE;
-
 	}
 	if (flags & CHN_DISCONNECTED) {
 		cputs("Init: disconnection on SD1");
 		isSerialOverTcpReady = FALSE;
 		chSysLock();
-	    iqResetI(&SD1.iqueue);
-	    chSchRescheduleS();
+		iqResetI(&SD1.iqueue);
+		chSchRescheduleS();
 		chSysUnlock();
 	}
 }
@@ -117,7 +116,7 @@ static void sd1_handler(eventid_t id) {
 static void sd2_handler(eventid_t id) {
 	eventflags_t flags;
 
-	(void) id;
+	(void)id;
 	flags = chEvtGetAndClearFlags(&sd2fel);
 	if ((flags & CHN_CONNECTED)) {
 		cputs("Init: connection on SD2");
@@ -125,13 +124,13 @@ static void sd2_handler(eventid_t id) {
 	if (flags & CHN_DISCONNECTED) {
 		cputs("Init: disconnection on SD2");
 		chSysLock();
-	    iqResetI(&SD2.iqueue);
-	    chSchRescheduleS();
+		iqResetI(&SD2.iqueue);
+		chSchRescheduleS();
 		chSysUnlock();
 	}
 }
 
-static evhandler_t fhandlers[] = { termination_handler, sd1_handler, sd2_handler };
+static evhandler_t fhandlers[] = {termination_handler, sd1_handler, sd2_handler};
 
 bool verboseMode = true;
 
@@ -165,9 +164,7 @@ int main(int argc, char** argv) {
 	/*
 	 * Console thread started.
 	 */
-	cdtp = chThdCreateFromHeap(NULL, CONSOLE_WA_SIZE,
-			"sim",
-			NORMALPRIO + 1, console_thread, NULL);
+	cdtp = chThdCreateFromHeap(NULL, CONSOLE_WA_SIZE, "sim", NORMALPRIO + 1, console_thread, NULL);
 
 	/*
 	 * Initializing connection/disconnection events.
@@ -197,7 +194,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-
 uintptr_t getFlashAddrFirstCopy() {
 	return 1;
 }
@@ -220,7 +216,7 @@ int intFlashErase(flashaddr_t address, size_t) {
 	// Try to delete the file, swallow any errors (we can overwrite it anyway)
 	try {
 		std::filesystem::remove(makeFileName(address));
-	} catch (...) { }
+	} catch (...) {}
 
 	return FLASH_RETURN_SUCCESS;
 }
