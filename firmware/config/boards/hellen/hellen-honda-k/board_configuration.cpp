@@ -40,7 +40,7 @@ static void setupVbatt() {
 }
 
 static void setupDefaultSensorInputs() {
-    engineConfiguration->vehicleSpeedSensorInputPin = H144_IN_VSS;
+	engineConfiguration->vehicleSpeedSensorInputPin = H144_IN_VSS;
 
 	engineConfiguration->tps1_1AdcChannel = H144_IN_TPS;
 
@@ -70,17 +70,15 @@ void setBoardConfigOverrides() {
 	// ex or in?
 	engineConfiguration->camInputs[1] = H144_IN_RES2;
 
-
-//    //ETB1
-//    // PWM pin
-//    engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM2;
-//    // DIR pin
-//	engineConfiguration->etbIo[0].directionPin1 = H144_OUT_PWM3;
-//   	// Disable pin
-//   	engineConfiguration->etbIo[0].disablePin = H144_OUT_IO12;
-//   	// Unused
-// 	engineConfiguration->etbIo[0].directionPin2 = Gpio::Unassigned;
-
+	//    //ETB1
+	//    // PWM pin
+	//    engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM2;
+	//    // DIR pin
+	//	engineConfiguration->etbIo[0].directionPin1 = H144_OUT_PWM3;
+	//   	// Disable pin
+	//   	engineConfiguration->etbIo[0].disablePin = H144_OUT_IO12;
+	//   	// Unused
+	// 	engineConfiguration->etbIo[0].directionPin2 = Gpio::Unassigned;
 }
 
 /**
@@ -112,8 +110,8 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->brakePedalPin = H144_IN_CAM;
 	engineConfiguration->acRelayPin = H144_LS_5;
-//    engineConfiguration->tachOutputPin = ;
-//	engineConfiguration->acSwitch = H144_IN_RES1;
+	//    engineConfiguration->tachOutputPin = ;
+	//	engineConfiguration->acSwitch = H144_IN_RES1;
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
@@ -131,5 +129,5 @@ void setBoardDefaultConfiguration() {
 	setCommonNTCSensor(&engineConfiguration->clt, HELLEN_DEFAULT_AT_PULLUP);
 	setCommonNTCSensor(&engineConfiguration->iat, HELLEN_DEFAULT_AT_PULLUP);
 
-    setTPS1Calibration(90, 830, 1000, 0);
+	setTPS1Calibration(90, 830, 1000, 0);
 }

@@ -61,11 +61,11 @@ static void setupDefaultSensorInputs() {
 	engineConfiguration->mafAdcChannel = EFI_ADC_NONE;
 	engineConfiguration->map.sensor.hwChannel = EFI_ADC_10;
 
-	engineConfiguration->afr.hwChannel = EFI_ADC_0;	// ADC1_16
+	engineConfiguration->afr.hwChannel = EFI_ADC_0; // ADC1_16
 
-	engineConfiguration->clt.adcChannel = H144_IN_CLT;	// ADC3_0
+	engineConfiguration->clt.adcChannel = H144_IN_CLT; // ADC3_0
 
-	engineConfiguration->iat.adcChannel = H144_IN_IAT;	// ADC3_1
+	engineConfiguration->iat.adcChannel = H144_IN_IAT; // ADC3_1
 }
 
 void setBoardConfigOverrides() {
@@ -78,7 +78,7 @@ void setBoardConfigOverrides() {
 	setHellenSdCardSpi3();
 #endif
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	setHellenCan();
 }
@@ -97,16 +97,16 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->isSdCardEnabled = true;
 
 	engineConfiguration->fuelPumpPin = Gpio::G2;	// OUT_IO9
-	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
+	engineConfiguration->fanPin = Gpio::D12;		// OUT_PWM8
 	engineConfiguration->mainRelayPin = Gpio::I2;	// OUT_LOW3
-	engineConfiguration->tachOutputPin = Gpio::D14;	// OUT_PWM6
+	engineConfiguration->tachOutputPin = Gpio::D14; // OUT_PWM6
 
 	engineConfiguration->useStepperIdle = true;
 	engineConfiguration->useHbridgesToDriveIdleStepper = true;
-	engineConfiguration->stepperDcIo[0].directionPin1 = Gpio::C6;	// COIL_A1 = OUT_PWM2
-	engineConfiguration->stepperDcIo[0].directionPin2 = Gpio::C7;	// COIL_A2 = OUT_PWM3
-	engineConfiguration->stepperDcIo[1].directionPin1 = Gpio::C8;	// COIL_B1 = OUT_PWM4
-	engineConfiguration->stepperDcIo[1].directionPin2 = Gpio::C9;	// COIL_B2 = OUT_PWM5
+	engineConfiguration->stepperDcIo[0].directionPin1 = Gpio::C6; // COIL_A1 = OUT_PWM2
+	engineConfiguration->stepperDcIo[0].directionPin2 = Gpio::C7; // COIL_A2 = OUT_PWM3
+	engineConfiguration->stepperDcIo[1].directionPin1 = Gpio::C8; // COIL_B1 = OUT_PWM4
+	engineConfiguration->stepperDcIo[1].directionPin2 = Gpio::C9; // COIL_B2 = OUT_PWM5
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
@@ -116,5 +116,5 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 
-	engineConfiguration->injectionMode = IM_SEQUENTIAL;	// IM_SIMULTANEOUS; //IM_BATCH;
+	engineConfiguration->injectionMode = IM_SEQUENTIAL; // IM_SIMULTANEOUS; //IM_BATCH;
 }

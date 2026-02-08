@@ -45,7 +45,6 @@
 // pin 23/black35
 #define PROTEUS_LS_16 Gpio::E2
 
-
 // pin 2/black35
 #define PROTEUS_HS_1 Gpio::A9
 
@@ -120,7 +119,6 @@
 
 // PA4
 #define PROTEUS_IN_ANALOG_VOLT_9 EFI_ADC_4
-
 
 // PA5
 #define PROTEUS_IN_ANALOG_VOLT_10 EFI_ADC_5

@@ -75,27 +75,27 @@ static bool isFirstInvocation = true;
 
 static void setHellen128ETBConfig() {
 	BitbangI2c m_i2c;
-	uint8_t variant[2]={0xff,0xff};
+	uint8_t variant[2] = {0xff, 0xff};
 
-	//same pins as for LPS25
+	// same pins as for LPS25
 	if (isFirstInvocation) {
 		isFirstInvocation = false;
 		m_i2c.init(Gpio::B10, Gpio::B11);
 	}
 	m_i2c.read(0x20, variant, sizeof(variant));
 
-	efiPrintf ("BoardID [%02x%02x] ", variant[0],variant[1] );
+	efiPrintf("BoardID [%02x%02x] ", variant[0], variant[1]);
 
-	//Rev C is different then Rev A/B
+	// Rev C is different then Rev A/B
 	if ((variant[0] == 0x63) && (variant[1] == 0x00)) {
 		// TLE9201 driver
 		// This chip has three control pins:
 		// DIR - sets direction of the motor
 		// PWM - pwm control (enable high, coast low)
 		// DIS - disables motor (enable low)
-		
-		//ETB1
-		// PWM pin
+
+		// ETB1
+		//  PWM pin
 		engineConfiguration->etbIo[0].controlPin = H176_OUT_PWM3;
 		// DIR pin
 		engineConfiguration->etbIo[0].directionPin1 = H176_OUT_PWM2;
@@ -104,8 +104,8 @@ static void setHellen128ETBConfig() {
 		// Unused
 		engineConfiguration->etbIo[0].directionPin2 = Gpio::Unassigned;
 
-		//ETB2
-		// PWM pin
+		// ETB2
+		//  PWM pin
 		engineConfiguration->etbIo[1].controlPin = Gpio::I2;
 		// DIR pin
 		engineConfiguration->etbIo[1].directionPin1 = Gpio::H13;
@@ -118,12 +118,12 @@ static void setHellen128ETBConfig() {
 		engineConfiguration->etb_use_two_wires = false;
 
 	} else {
-		//Set default ETB config
+		// Set default ETB config
 		engineConfiguration->etbIo[0].directionPin1 = H176_OUT_PWM2;
 		engineConfiguration->etbIo[0].directionPin2 = H176_OUT_PWM3;
 		engineConfiguration->etbIo[0].controlPin = H176_OUT_PWM1; // ETB_EN
 		engineConfiguration->etb_use_two_wires = true;
-	}	
+	}
 }
 
 #include "hellen_leds_176.cpp"
@@ -135,7 +135,7 @@ void setBoardConfigOverrides() {
 
 	setHellen128ETBConfig();
 
-    // this specific Hellen has less common pull-up value R49
+	// this specific Hellen has less common pull-up value R49
 	engineConfiguration->clt.config.bias_resistor = 2700;
 	engineConfiguration->iat.config.bias_resistor = 2700;
 
@@ -160,7 +160,7 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->fuelPumpPin = Gpio::D15;
 	engineConfiguration->idle.solenoidPin = Gpio::Unassigned;
-	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
+	engineConfiguration->fanPin = Gpio::D12; // OUT_PWM8
 	engineConfiguration->mainRelayPin = Gpio::Unassigned;
 
 	engineConfiguration->starterControlPin = H176_OUT_IO10;
@@ -176,7 +176,7 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 	engineConfiguration->crankingInjectionMode = IM_SEQUENTIAL;
-	engineConfiguration->injectionMode = IM_SEQUENTIAL;//IM_BATCH;// IM_SEQUENTIAL;
+	engineConfiguration->injectionMode = IM_SEQUENTIAL; // IM_BATCH;// IM_SEQUENTIAL;
 
 	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_MERCEDES);
 	strcpy(engineConfiguration->engineCode, "");

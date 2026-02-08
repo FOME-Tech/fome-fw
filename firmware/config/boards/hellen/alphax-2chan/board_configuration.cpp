@@ -84,7 +84,7 @@ void boardInitHardware() {
 	boardOnConfigurationChange(nullptr);
 }
 
-void boardOnConfigurationChange(engine_configuration_s * /*previousConfiguration*/) {
+void boardOnConfigurationChange(engine_configuration_s* /*previousConfiguration*/) {
 	alphaTachPullUp.setValue(engineConfiguration->boardUseTachPullUp);
 	alphaTempPullUp.setValue(engineConfiguration->boardUseTempPullUp);
 	alphaCrankPPullUp.setValue(engineConfiguration->boardUseCrankPullUp);
@@ -103,7 +103,7 @@ void setBoardConfigOverrides() {
 		setHellenSdCardSpi1();
 	}
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	setHellenCan();
 }
@@ -119,13 +119,13 @@ void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 
-    engineConfiguration->boardUseTempPullUp = true;
+	engineConfiguration->boardUseTempPullUp = true;
 
 	engineConfiguration->acSwitch = Gpio::Unassigned;
 	engineConfiguration->fuelPumpPin = H144_OUT_PWM2;
 	engineConfiguration->fanPin = H144_OUT_PWM4;
 	engineConfiguration->mainRelayPin = Gpio::Unassigned;
-    engineConfiguration->tachOutputPin = H144_OUT_PWM3;
+	engineConfiguration->tachOutputPin = H144_OUT_PWM3;
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
@@ -138,7 +138,7 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->clutchDownPin = H144_IN_D_2;
 	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
 	engineConfiguration->launchActivationMode = CLUTCH_INPUT_LAUNCH;
-// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
+	// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
 	config->vrThreshold[0].pin = H144_OUT_PWM6;
 }
 
@@ -153,9 +153,9 @@ static Gpio OUTPUTS[] = {
 };
 
 int getBoardMetaOutputsCount() {
-    return efi::size(OUTPUTS);
+	return efi::size(OUTPUTS);
 }
 
 Gpio* getBoardMetaOutputs() {
-    return OUTPUTS;
+	return OUTPUTS;
 }

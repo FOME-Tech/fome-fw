@@ -70,10 +70,10 @@ static void setupDefaultSensorInputs() {
 void setBoardConfigOverrides() {
 	setupVbatt();
 
-    // hellen88bmw uses L6205PD
+	// hellen88bmw uses L6205PD
 	engineConfiguration->etbIo[0].directionPin1 = H144_OUT_PWM2; // ETB+
 	engineConfiguration->etbIo[0].directionPin2 = H144_OUT_PWM3; // ETB-
-	engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM1; // ETB_EN
+	engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM1;	 // ETB_EN
 	engineConfiguration->etb_use_two_wires = true;
 
 	setHellenSdCardSpi3();
@@ -100,21 +100,19 @@ void setBoardDefaultConfiguration() {
 
 	setHellenCan();
 
-	engineConfiguration->fuelPumpPin = Gpio::D12;	// OUT_IO9 // 113 Fuel Pump Relay
+	engineConfiguration->fuelPumpPin = Gpio::D12; // OUT_IO9 // 113 Fuel Pump Relay
 	engineConfiguration->idle.solenoidPin = H144_OUT_PWM5;
-//	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
-	engineConfiguration->mainRelayPin = Gpio::G14;	// pin: 111a, OUT_IO3
+	//	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
+	engineConfiguration->mainRelayPin = Gpio::G14; // pin: 111a, OUT_IO3
 	engineConfiguration->tachOutputPin = H144_OUT_PWM7;
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
 
-
 	// Some sensible defaults for other options
 	setCrankOperationMode();
 
 	setAlgorithm(LM_SPEED_DENSITY);
-
 
 	// Bosch VQ40 VR56 VK56 0280158007
 	engineConfiguration->injector.flow = 296.2;

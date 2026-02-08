@@ -8,33 +8,33 @@
 #endif
 
 static const brain_pin_e injPins[] = {
-	Gpio::G5,
-	Gpio::G6,
-	Gpio::G7,
-	Gpio::G8,
-	Gpio::C6,
-	Gpio::C7,
-	Gpio::A15,
-	Gpio::D3,
-	Gpio::B4,
-	Gpio::B5,
-	Gpio::B6,
-	Gpio::B7,
+		Gpio::G5,
+		Gpio::G6,
+		Gpio::G7,
+		Gpio::G8,
+		Gpio::C6,
+		Gpio::C7,
+		Gpio::A15,
+		Gpio::D3,
+		Gpio::B4,
+		Gpio::B5,
+		Gpio::B6,
+		Gpio::B7,
 };
 
 static const brain_pin_e ignPins[] = {
-	Gpio::B3,
-	Gpio::G15,
-	Gpio::G14,
-	Gpio::G13,
-	Gpio::G12,
-	Gpio::G11,
-	Gpio::G10,
-	Gpio::G9,
-	Gpio::D7,
-	Gpio::D6,
-	Gpio::D5,
-	Gpio::D4,
+		Gpio::B3,
+		Gpio::G15,
+		Gpio::G14,
+		Gpio::G13,
+		Gpio::G12,
+		Gpio::G11,
+		Gpio::G10,
+		Gpio::G9,
+		Gpio::D7,
+		Gpio::D6,
+		Gpio::D5,
+		Gpio::D4,
 };
 
 static void setInjectorPins() {
@@ -151,18 +151,18 @@ void setBoardConfigOverrides() {
 }
 
 #if EFI_BOOTLOADER
-	// Return the SPI pins for the WiFi device
-	brain_pin_e getMisoPin(spi_device_e) {
-		return Gpio::E5;
-	}
+// Return the SPI pins for the WiFi device
+brain_pin_e getMisoPin(spi_device_e) {
+	return Gpio::E5;
+}
 
-	brain_pin_e getMosiPin(spi_device_e) {
-		return Gpio::E6;
-	}
+brain_pin_e getMosiPin(spi_device_e) {
+	return Gpio::E6;
+}
 
-	brain_pin_e getSckPin(spi_device_e) {
-		return Gpio::E2;
-	}
+brain_pin_e getSckPin(spi_device_e) {
+	return Gpio::E2;
+}
 #endif // EFI_BOOTLOADER
 
 void setBoardDefaultConfiguration() {
@@ -176,12 +176,12 @@ void setBoardDefaultConfiguration() {
 }
 
 void preHalInit() {
-	efiSetPadMode("SDMMC",  Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
-	efiSetPadMode("SDMMC",  Gpio::C9, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC", Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC", Gpio::C9, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
-	efiSetPadMode("SDMMC",  Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode("SDMMC", Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 }
 
 #ifndef EFI_BOOTLOADER
@@ -203,7 +203,8 @@ void initBoardSensors() {
 		static LinearFunc sensor5vFunc;
 		static FunctionalSensor sensor5vSensor(SensorType::Sensor5vVoltage, MS2NT(100));
 
-		const float sensor5vRatio = 2;;
+		const float sensor5vRatio = 2;
+		;
 
 		sensor5vFunc.configure(0, 0, 1, sensor5vRatio, 0, 50);
 		sensor5vSensor.setFunction(sensor5vFunc);

@@ -4,8 +4,7 @@
  * @brief Board-specific initialization code.
  * @todo  Add your board-specific code, if any.
  */
-void boardInit()
-{
+void boardInit() {
 	/* NOP */
 }
 
