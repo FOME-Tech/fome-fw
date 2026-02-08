@@ -28,9 +28,9 @@ TEST(CanFilterTest, orderOfBusinessOne) {
 	resetLuaCanRx();
 
 	// accept everything as first filter
-	addLuaCanRxFilter(/*eid*/0, 0, CanBusIndex::Any, CALLBACK_ALL);
+	addLuaCanRxFilter(/*eid*/ 0, 0, CanBusIndex::Any, CALLBACK_ALL);
 
-	addLuaCanRxFilter(/*eid*/239, FILTER_SPECIFIC, CanBusIndex::Any, CALLBACK_239);
+	addLuaCanRxFilter(/*eid*/ 239, FILTER_SPECIFIC, CanBusIndex::Any, CALLBACK_239);
 
 	// filters are applied in the order in which those were added
 	ASSERT_EQ(CALLBACK_ALL, getFilterForId(CanBusIndex::Bus0, /*id*/ 0)->Callback);
@@ -40,9 +40,9 @@ TEST(CanFilterTest, orderOfBusinessOne) {
 TEST(CanFilterTest, orderOfBusinessTwo) {
 	resetLuaCanRx();
 
-	addLuaCanRxFilter(/*eid*/239, FILTER_SPECIFIC, CanBusIndex::Any, CALLBACK_239);
+	addLuaCanRxFilter(/*eid*/ 239, FILTER_SPECIFIC, CanBusIndex::Any, CALLBACK_239);
 	// accept everything as last filter
-	addLuaCanRxFilter(/*eid*/0, 0, CanBusIndex::Any, CALLBACK_ALL);
+	addLuaCanRxFilter(/*eid*/ 0, 0, CanBusIndex::Any, CALLBACK_ALL);
 
 	// filters are applied in the order in which those were added
 	ASSERT_EQ(CALLBACK_ALL, getFilterForId(CanBusIndex::Bus0, /*id*/ 0)->Callback);

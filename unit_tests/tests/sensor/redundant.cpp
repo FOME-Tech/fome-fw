@@ -2,8 +2,7 @@
 
 #include "redundant_sensor.h"
 
-class SensorRedundant : public ::testing::Test
-{
+class SensorRedundant : public ::testing::Test {
 protected:
 	RedundantSensor dut;
 	MockSensor m1, m2;
@@ -11,12 +10,9 @@ protected:
 	SensorRedundant()
 		: dut(SensorType::Tps1, SensorType::Tps1Primary, SensorType::Tps1Secondary)
 		, m1(SensorType::Tps1Primary)
-		, m2(SensorType::Tps1Secondary)
-	{
-	}
+		, m2(SensorType::Tps1Secondary) {}
 
-	void SetUp() override
-	{
+	void SetUp() override {
 		Sensor::resetRegistry();
 
 		// Other tests verify registry function - don't re-test it here
@@ -27,22 +23,17 @@ protected:
 		dut.configure(5.0f, false);
 	}
 
-	void TearDown() override
-	{
+	void TearDown() override {
 		Sensor::resetRegistry();
 	}
 };
 
-TEST_F(SensorRedundant, CheckIsRedundant)
-{
+TEST_F(SensorRedundant, CheckIsRedundant) {
 	// Expect isRedundant
-	{
-		EXPECT_TRUE(dut.isRedundant());
-	}
+	{ EXPECT_TRUE(dut.isRedundant()); }
 }
 
-TEST_F(SensorRedundant, SetOnlyOneSensor)
-{
+TEST_F(SensorRedundant, SetOnlyOneSensor) {
 	// Don't set any sensors - expect invalid
 	{
 		auto result = dut.get();
@@ -70,8 +61,7 @@ TEST_F(SensorRedundant, SetOnlyOneSensor)
 	}
 }
 
-TEST_F(SensorRedundant, CheckOnlySecondInvalid)
-{
+TEST_F(SensorRedundant, CheckOnlySecondInvalid) {
 	// Set second sensor only
 	m2.set(66.0f);
 
@@ -82,8 +72,7 @@ TEST_F(SensorRedundant, CheckOnlySecondInvalid)
 	}
 }
 
-TEST_F(SensorRedundant, DifferenceNone)
-{
+TEST_F(SensorRedundant, DifferenceNone) {
 	// Set both sensors to the same value
 	m1.set(10);
 	m2.set(10);
@@ -96,8 +85,7 @@ TEST_F(SensorRedundant, DifferenceNone)
 	}
 }
 
-TEST_F(SensorRedundant, DifferenceNearLimit)
-{
+TEST_F(SensorRedundant, DifferenceNearLimit) {
 	// Set both sensors to nearly the limit (4.998 apart)
 	m1.set(7.501f);
 	m2.set(12.499f);
@@ -110,8 +98,7 @@ TEST_F(SensorRedundant, DifferenceNearLimit)
 	}
 }
 
-TEST_F(SensorRedundant, DifferenceOverLimit)
-{
+TEST_F(SensorRedundant, DifferenceOverLimit) {
 	// Set both sensors barely over the limit (5.002 apart)
 	m1.set(7.499f);
 	m2.set(12.501f);
@@ -123,8 +110,7 @@ TEST_F(SensorRedundant, DifferenceOverLimit)
 	}
 }
 
-TEST_F(SensorRedundant, DifferenceOverLimitSwapped)
-{
+TEST_F(SensorRedundant, DifferenceOverLimitSwapped) {
 	// Now try it the other way (m1 > m2)
 	m1.set(12.501f);
 	m2.set(7.499f);
@@ -136,8 +122,7 @@ TEST_F(SensorRedundant, DifferenceOverLimitSwapped)
 	}
 }
 
-class SensorRedundantIgnoreSecond : public ::testing::Test
-{
+class SensorRedundantIgnoreSecond : public ::testing::Test {
 protected:
 	RedundantSensor dut;
 	MockSensor m1, m2;
@@ -145,12 +130,9 @@ protected:
 	SensorRedundantIgnoreSecond()
 		: dut(SensorType::Tps1, SensorType::Tps1Primary, SensorType::Tps1Secondary)
 		, m1(SensorType::Tps1Primary)
-		, m2(SensorType::Tps1Secondary)
-	{
-	}
+		, m2(SensorType::Tps1Secondary) {}
 
-	void SetUp() override
-	{
+	void SetUp() override {
 		Sensor::resetRegistry();
 
 		// Other tests verify registry function - don't re-test it here
@@ -161,22 +143,17 @@ protected:
 		dut.configure(5.0f, true);
 	}
 
-	void TearDown() override
-	{
+	void TearDown() override {
 		Sensor::resetRegistry();
 	}
 };
 
-TEST_F(SensorRedundantIgnoreSecond, CheckIsRedundant)
-{
+TEST_F(SensorRedundantIgnoreSecond, CheckIsRedundant) {
 	// Expect not isRedundant
-	{
-		EXPECT_FALSE(dut.isRedundant());
-	}
+	{ EXPECT_FALSE(dut.isRedundant()); }
 }
 
-TEST_F(SensorRedundantIgnoreSecond, OnlyFirst)
-{
+TEST_F(SensorRedundantIgnoreSecond, OnlyFirst) {
 	// Don't set any sensors - expect invalid
 	{
 		auto result = dut.get();
@@ -205,8 +182,7 @@ TEST_F(SensorRedundantIgnoreSecond, OnlyFirst)
 	}
 }
 
-TEST_F(SensorRedundantIgnoreSecond, CheckOnlySecondInvalid)
-{
+TEST_F(SensorRedundantIgnoreSecond, CheckOnlySecondInvalid) {
 	// Set second sensor only
 	m2.set(66.0f);
 
@@ -217,8 +193,7 @@ TEST_F(SensorRedundantIgnoreSecond, CheckOnlySecondInvalid)
 	}
 }
 
-class SensorRedundantPartialSecond : public ::testing::Test
-{
+class SensorRedundantPartialSecond : public ::testing::Test {
 protected:
 	RedundantSensor dut;
 	MockSensor m1, m2;
@@ -226,12 +201,9 @@ protected:
 	SensorRedundantPartialSecond()
 		: dut(SensorType::Tps1, SensorType::Tps1Primary, SensorType::Tps1Secondary)
 		, m1(SensorType::Tps1Primary)
-		, m2(SensorType::Tps1Secondary)
-	{
-	}
+		, m2(SensorType::Tps1Secondary) {}
 
-	void SetUp() override
-	{
+	void SetUp() override {
 		Sensor::resetRegistry();
 
 		// Other tests verify registry function - don't re-test it here
@@ -242,21 +214,16 @@ protected:
 		dut.configure(5.0f, false, 50);
 	}
 
-	void TearDown() override
-	{
+	void TearDown() override {
 		Sensor::resetRegistry();
 	}
 };
 
-TEST_F(SensorRedundantPartialSecond, CheckIsRedundant)
-{
-	{
-		EXPECT_TRUE(dut.isRedundant());
-	}
+TEST_F(SensorRedundantPartialSecond, CheckIsRedundant) {
+	{ EXPECT_TRUE(dut.isRedundant()); }
 }
 
-TEST_F(SensorRedundantPartialSecond, SetNone)
-{
+TEST_F(SensorRedundantPartialSecond, SetNone) {
 	// Don't set any sensors - expect invalid
 	{
 		auto result = dut.get();
@@ -265,8 +232,7 @@ TEST_F(SensorRedundantPartialSecond, SetNone)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
-{
+TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor) {
 	// Set first sensor
 	m1.set(24.0f);
 
@@ -277,8 +243,7 @@ TEST_F(SensorRedundantPartialSecond, SetOnlyOneSensor)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, SetTwoSensors)
-{
+TEST_F(SensorRedundantPartialSecond, SetTwoSensors) {
 	// Set first sensor
 	m1.set(0.0f);
 	// Set second sensor
@@ -292,8 +257,7 @@ TEST_F(SensorRedundantPartialSecond, SetTwoSensors)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, CheckOnlySecondInvalid)
-{
+TEST_F(SensorRedundantPartialSecond, CheckOnlySecondInvalid) {
 	// Set second sensor only
 	m2.set(66.0f);
 
@@ -304,8 +268,7 @@ TEST_F(SensorRedundantPartialSecond, CheckOnlySecondInvalid)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, DifferenceNone)
-{
+TEST_F(SensorRedundantPartialSecond, DifferenceNone) {
 	// Set both sensors to the same value
 	m1.set(10);
 	m2.set(20);
@@ -318,8 +281,7 @@ TEST_F(SensorRedundantPartialSecond, DifferenceNone)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, DifferenceNearLimit)
-{
+TEST_F(SensorRedundantPartialSecond, DifferenceNearLimit) {
 	// Set both sensors to nearly the limit (4.998 apart)
 	m1.set(7.501f);
 	m2.set(2 * 12.499f);
@@ -332,8 +294,7 @@ TEST_F(SensorRedundantPartialSecond, DifferenceNearLimit)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, DifferenceOverLimit)
-{
+TEST_F(SensorRedundantPartialSecond, DifferenceOverLimit) {
 	// Set both sensors barely over the limit (5.002 apart)
 	m1.set(7.499f);
 	m2.set(2 * 12.501f);
@@ -345,8 +306,7 @@ TEST_F(SensorRedundantPartialSecond, DifferenceOverLimit)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, DifferenceOverLimitSwapped)
-{
+TEST_F(SensorRedundantPartialSecond, DifferenceOverLimitSwapped) {
 	// Now try it the other way (m1 > m2)
 	m1.set(12.501f);
 	m2.set(2 * 7.499f);
@@ -358,8 +318,7 @@ TEST_F(SensorRedundantPartialSecond, DifferenceOverLimitSwapped)
 	}
 }
 
-TEST_F(SensorRedundantPartialSecond, PartialRedundancyRange)
-{
+TEST_F(SensorRedundantPartialSecond, PartialRedundancyRange) {
 	// Set the value like it's at 75%
 	m1.set(75);
 	m2.set(100);

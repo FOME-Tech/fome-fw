@@ -109,4 +109,3 @@ TEST_F(SensorMocking, ResetWithResetRegistry) {
 		EXPECT_FALSE(result.Valid);
 	}
 }
-

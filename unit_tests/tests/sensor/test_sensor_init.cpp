@@ -8,26 +8,26 @@ static void postToFuncSensor(Sensor* s, float value) {
 	static_cast<FunctionalSensor*>(s)->postRawValue(value, getTimeNowNt());
 }
 
-#define EXPECT_POINT_VALID(s, raw, expect) \
-	{\
-		postToFuncSensor(s, raw); \
-		auto res = s->get(); \
-		EXPECT_TRUE(res.Valid); \
-		EXPECT_NEAR(res.Value, expect, EPS2D); \
+#define EXPECT_POINT_VALID(s, raw, expect)                                                                             \
+	{                                                                                                                  \
+		postToFuncSensor(s, raw);                                                                                      \
+		auto res = s->get();                                                                                           \
+		EXPECT_TRUE(res.Valid);                                                                                        \
+		EXPECT_NEAR(res.Value, expect, EPS2D);                                                                         \
 	}
 
-#define EXPECT_POINT_INVALID(s, raw) \
-	{\
-		postToFuncSensor(s, raw); \
-		auto res = s->get(); \
-		EXPECT_FALSE(res.Valid); \
+#define EXPECT_POINT_INVALID(s, raw)                                                                                   \
+	{                                                                                                                  \
+		postToFuncSensor(s, raw);                                                                                      \
+		auto res = s->get();                                                                                           \
+		EXPECT_FALSE(res.Valid);                                                                                       \
 	}
 
 TEST(SensorInit, Tps) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->tpsMin = 200;	// 1 volt
-	engineConfiguration->tpsMax = 800;	// 4 volts
+	engineConfiguration->tpsMin = 200; // 1 volt
+	engineConfiguration->tpsMax = 800; // 4 volts
 
 	initTps();
 
@@ -37,7 +37,7 @@ TEST(SensorInit, Tps) {
 
 	// Test in range
 	EXPECT_POINT_VALID(s, 1.0f, 0.0f);	// closed throttle
-	EXPECT_POINT_VALID(s, 2.5f, 50.0f);	// half throttle
+	EXPECT_POINT_VALID(s, 2.5f, 50.0f); // half throttle
 	EXPECT_POINT_VALID(s, 4.0f, 100.0f) // full throttle
 
 	// Test out of range
@@ -53,41 +53,41 @@ TEST(SensorInit, TpsValuesTooClose) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	// Should fail, 0.49 volts apart
-	engineConfiguration->tpsMin = 200;	// 1.00 volt
-	engineConfiguration->tpsMax = 298;	// 1.49 volts
+	engineConfiguration->tpsMin = 200; // 1.00 volt
+	engineConfiguration->tpsMax = 298; // 1.49 volts
 	EXPECT_FATAL_ERROR(initTps());
 	Sensor::resetRegistry();
 
 	// Should fail, -0.49 volts apart
-	engineConfiguration->tpsMin = 298;	// 1.49 volt
-	engineConfiguration->tpsMax = 200;	// 1.00 volts
+	engineConfiguration->tpsMin = 298; // 1.49 volt
+	engineConfiguration->tpsMax = 200; // 1.00 volts
 	EXPECT_FATAL_ERROR(initTps());
 	Sensor::resetRegistry();
 
 	// Should succeed, 0.51 volts apart
-	engineConfiguration->tpsMin = 200;	// 1.00 volt
-	engineConfiguration->tpsMax = 302;	// 1.51 volts
+	engineConfiguration->tpsMin = 200; // 1.00 volt
+	engineConfiguration->tpsMax = 302; // 1.51 volts
 	EXPECT_NO_FATAL_ERROR(initTps());
 	Sensor::resetRegistry();
 
 	// Should succeed, -0.51 volts apart
-	engineConfiguration->tpsMin = 302;	// 1.51 volt
-	engineConfiguration->tpsMax = 200;	// 1.00 volts
+	engineConfiguration->tpsMin = 302; // 1.51 volt
+	engineConfiguration->tpsMax = 200; // 1.00 volts
 	EXPECT_NO_FATAL_ERROR(initTps());
 	Sensor::resetRegistry();
 
 	// With no pin, it should be ok that they are the same
 	// Should succeed, -0.51 volts apart
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_NONE;
-	engineConfiguration->tpsMin = 200;	// 1.00 volt
-	engineConfiguration->tpsMax = 200;	// 1.00 volts
+	engineConfiguration->tpsMin = 200; // 1.00 volt
+	engineConfiguration->tpsMax = 200; // 1.00 volts
 	EXPECT_NO_FATAL_ERROR(initTps());
 	Sensor::resetRegistry();
 
 	// Test a random bogus pin index, shouldn't fail
 	engineConfiguration->tps1_1AdcChannel = static_cast<adc_channel_e>(EFI_ADC_ERROR);
-	engineConfiguration->tpsMin = 200;	// 1.00 volt
-	engineConfiguration->tpsMax = 200;	// 1.00 volt
+	engineConfiguration->tpsMin = 200; // 1.00 volt
+	engineConfiguration->tpsMax = 200; // 1.00 volt
 	EXPECT_NO_FATAL_ERROR(initTps());
 	Sensor::resetRegistry();
 
@@ -111,7 +111,7 @@ TEST(SensorInit, Pedal) {
 
 	// Test in range
 	EXPECT_POINT_VALID(s, 1.0f, 0.0f);	// closed throttle
-	EXPECT_POINT_VALID(s, 2.5f, 50.0f);	// half throttle
+	EXPECT_POINT_VALID(s, 2.5f, 50.0f); // half throttle
 	EXPECT_POINT_VALID(s, 4.0f, 100.0f) // full throttle
 
 	// Test out of range
@@ -142,7 +142,6 @@ TEST(SensorInit, DriverIntentNoPedal) {
 	// Should get the TPS
 	EXPECT_EQ(Sensor::get(SensorType::DriverThrottleIntent).Value, 25);
 }
-
 
 TEST(SensorInit, DriverIntentWithPedal) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
@@ -179,8 +178,8 @@ TEST(SensorInit, OilPressure) {
 	ASSERT_NE(nullptr, s);
 
 	// Test in range
-	EXPECT_POINT_VALID(s, 1.0f, 0.0f);	// minimum
-	EXPECT_POINT_VALID(s, 2.5f, 500.0f);	// mid
+	EXPECT_POINT_VALID(s, 1.0f, 0.0f);	 // minimum
+	EXPECT_POINT_VALID(s, 2.5f, 500.0f); // mid
 	EXPECT_POINT_VALID(s, 4.0f, 1000.0f) // maximium
 
 	// Test out of range
@@ -202,9 +201,9 @@ TEST(SensorInit, Clt) {
 	ASSERT_NE(nullptr, s);
 
 	// Test in range
-	EXPECT_POINT_VALID(s, 4.61648f, 0.0f);	// minimum - 0C
-	EXPECT_POINT_VALID(s, 3.6829f, 30.0f);	// mid - 30C
-	EXPECT_POINT_VALID(s, 1.0294f, 100.0f)	// maximium - 100C
+	EXPECT_POINT_VALID(s, 4.61648f, 0.0f); // minimum - 0C
+	EXPECT_POINT_VALID(s, 3.6829f, 30.0f); // mid - 30C
+	EXPECT_POINT_VALID(s, 1.0294f, 100.0f) // maximium - 100C
 
 	// Test out of range
 	EXPECT_POINT_INVALID(s, 0.0f);

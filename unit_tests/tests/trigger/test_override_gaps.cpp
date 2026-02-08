@@ -22,8 +22,4 @@ TEST(subaru, overrideGap) {
 	ASSERT_EQ(2, engine->triggerCentral.triggerShape.gapTrackingLength);
 
 	ASSERT_EQ(FALSE, engine->triggerCentral.triggerShape.shapeDefinitionError) << "overrideGap shapeDefinitionError";
-
 }
-
-
-

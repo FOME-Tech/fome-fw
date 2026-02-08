@@ -11,15 +11,15 @@
 
 class TriggerCallback {
 public:
-	Engine *engine;
+	Engine* engine;
 	int toothIndex;
-	TriggerWaveform *form;
+	TriggerWaveform* form;
 	bool isVvt;
 	int vvtBankIndex;
 	scheduling_s sched;
 };
 
-static void func(TriggerCallback *callback) {
+static void func(TriggerCallback* callback) {
 	int formIndex = callback->toothIndex % callback->form->getSize();
 
 	bool value = callback->form->wave.getChannelState(0, formIndex);
@@ -32,8 +32,8 @@ static void func(TriggerCallback *callback) {
 	}
 }
 
-
-static void scheduleTriggerEvents(TriggerWaveform *shape,
+static void scheduleTriggerEvents(
+		TriggerWaveform* shape,
 		float timeScale,
 		int count,
 		bool isVvt,
@@ -61,12 +61,11 @@ static void scheduleTriggerEvents(TriggerWaveform *shape,
 
 			efitick_t timeNt = efitick_t{US2NT(timeScale * 1000 * angle)};
 
-			engine->scheduler.schedule("test", &param->sched, timeNt, { func, param.get() });
+			engine->scheduler.schedule("test", &param->sched, timeNt, {func, param.get()});
 			totalIndex++;
 		}
 	}
 }
-
 
 TEST(nissan, vq_vvt) {
 	// hold a reference to the heap allocated scheduling events until the test is done
@@ -83,9 +82,14 @@ TEST(nissan, vq_vvt) {
 		static TriggerWaveform crank;
 		initializeNissanVQ35crank(&crank);
 
-		scheduleTriggerEvents(&crank,
+		scheduleTriggerEvents(
+				&crank,
 				/* timeScale */ 1,
-				cyclesCount, false, -1, 0, ptrs);
+				cyclesCount,
+				false,
+				-1,
+				0,
+				ptrs);
 	}
 	float vvtTimeScale = 1;
 
@@ -95,9 +99,11 @@ TEST(nissan, vq_vvt) {
 		static TriggerWaveform vvt;
 		initializeNissanVQvvt(&vvt);
 
-		scheduleTriggerEvents(&vvt,
+		scheduleTriggerEvents(
+				&vvt,
 				/* timeScale */ vvtTimeScale,
-				cyclesCount / 6, true,
+				cyclesCount / 6,
+				true,
 				/* vvtBankIndex */ 0,
 				/* vvtOffset */ testVvtOffset,
 				ptrs);
@@ -107,10 +113,12 @@ TEST(nissan, vq_vvt) {
 		static TriggerWaveform vvt;
 		initializeNissanVQvvt(&vvt);
 
-		scheduleTriggerEvents(&vvt,
+		scheduleTriggerEvents(
+				&vvt,
 				/* timeScale */ vvtTimeScale,
-				cyclesCount / 6, true,
-				/* vvtBankIndex */1,
+				cyclesCount / 6,
+				true,
+				/* vvtBankIndex */ 1,
 				/* vvtOffset */ testVvtOffset + NISSAN_VQ_CAM_OFFSET,
 				ptrs);
 	}
@@ -120,12 +128,12 @@ TEST(nissan, vq_vvt) {
 
 	eth.setTimeAndInvokeEventsUs(1475000);
 	ASSERT_EQ(167, round(Sensor::getOrZero(SensorType::Rpm)));
-	TriggerCentral *tc = &engine->triggerCentral;
+	TriggerCentral* tc = &engine->triggerCentral;
 
 	eth.setTimeAndInvokeEventsUs(3593000);
 	ASSERT_TRUE(tc->vvtState[0][0].getShaftSynchronized());
 
-	scheduling_s *head;
+	scheduling_s* head;
 
 	int queueIndex = 0;
 	while ((head = engine->scheduler.getHead()) != nullptr) {
@@ -134,7 +142,7 @@ TEST(nissan, vq_vvt) {
 		ASSERT_TRUE(tc->vvtState[0][0].getShaftSynchronized());
 		// let's celebrate that vvtPosition stays the same
 		ASSERT_NEAR(34, tc->getVVTPosition(0, 0).value_or(0), EPS2D) << "queueIndex=" << queueIndex;
-    	queueIndex++;
+		queueIndex++;
 	}
 	ASSERT_TRUE(queueIndex == 422) << "Total queueIndex=" << queueIndex;
 

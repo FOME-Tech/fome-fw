@@ -39,8 +39,8 @@ TEST(LuaE38, tps) {
 }
 
 TEST(LuaE38, packECMEngineStatus) {
-	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(
-			TWO_BYTES_MSB ARRAY_EQUALS PRINT_ARRAY R"(
+	EXPECT_NEAR_M3(
+			testLuaReturnsNumberOrNil(TWO_BYTES_MSB ARRAY_EQUALS PRINT_ARRAY R"(
 tps = 5.881
                                              		function testFunc()
 		canEngine = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
@@ -50,26 +50,29 @@ tps = 5.881
 		expected = { 0x00, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x00 }
 		return equals(canEngine, expected)
                                              		end
-                                             		)"
-			).value_or(0), 0);
+                                             		)")
+					.value_or(0),
+			0);
 }
 
 #define ECMEngineCoolantTemp "\ndata = { 0x00, 0xCA, 0x69, 0x3F, 0x6A, 0x00, 0x00, 0x00}\n "
 
 TEST(LuaE38, clt) {
 
-	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(TWO_BYTES_MSB ECMEngineCoolantTemp R"(
+	EXPECT_NEAR_M3(
+			testLuaReturnsNumberOrNil(TWO_BYTES_MSB ECMEngineCoolantTemp R"(
                                              		function testFunc()
                                              			clt = data[3] -40
                                              			return clt
                                              		end
-                                             		)"
-			).value_or(0), 65);
+                                             		)")
+					.value_or(0),
+			65);
 }
 
 TEST(LuaE38, packECMEngineCoolantTemp) {
-	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(
-			TWO_BYTES_MSB ARRAY_EQUALS PRINT_ARRAY R"(
+	EXPECT_NEAR_M3(
+			testLuaReturnsNumberOrNil(TWO_BYTES_MSB ARRAY_EQUALS PRINT_ARRAY R"(
 clt = 65
                                              		function testFunc()
 		canEngine = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
@@ -79,6 +82,7 @@ clt = 65
 		expected = { 0x00, 0x00, 0x69, 0x00, 0x00, 0x00, 0x00, 0x00 }
 		return equals(canEngine, expected)
                                              		end
-                                             		)"
-			).value_or(0), 0);
+                                             		)")
+					.value_or(0),
+			0);
 }

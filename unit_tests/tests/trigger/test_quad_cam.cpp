@@ -26,7 +26,7 @@ TEST(trigger, testQuadCam) {
 
 	eth.fireFall(12.5);
 	eth.fireRise(12.5);
-	ASSERT_EQ( 0,  Sensor::getOrZero(SensorType::Rpm));
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm));
 
 	eth.fireFall(12.5);
 	eth.fireRise(12.5);
@@ -85,8 +85,14 @@ TEST(trigger, testQuadCam) {
 
 	// All four cams should have different positions, each retarded by 1ms from the last
 	float oneMsDegrees = 1000 / engine->rpmCalculator.oneDegreeUs;
-	EXPECT_NEAR(basePos - oneMsDegrees * 1, engine->triggerCentral.getVVTPosition(firstBank, firstCam).value_or(0), EPS3D);
-	EXPECT_NEAR(basePos - oneMsDegrees * 2, engine->triggerCentral.getVVTPosition(firstBank, secondCam).value_or(0), EPS3D);
-	EXPECT_NEAR(basePos - oneMsDegrees * 3, engine->triggerCentral.getVVTPosition(secondBank, firstCam).value_or(0), EPS3D);
-	EXPECT_NEAR(basePos - oneMsDegrees * 4, engine->triggerCentral.getVVTPosition(secondBank, secondCam).value_or(0), EPS3D);
+	EXPECT_NEAR(
+			basePos - oneMsDegrees * 1, engine->triggerCentral.getVVTPosition(firstBank, firstCam).value_or(0), EPS3D);
+	EXPECT_NEAR(
+			basePos - oneMsDegrees * 2, engine->triggerCentral.getVVTPosition(firstBank, secondCam).value_or(0), EPS3D);
+	EXPECT_NEAR(
+			basePos - oneMsDegrees * 3, engine->triggerCentral.getVVTPosition(secondBank, firstCam).value_or(0), EPS3D);
+	EXPECT_NEAR(
+			basePos - oneMsDegrees * 4,
+			engine->triggerCentral.getVVTPosition(secondBank, secondCam).value_or(0),
+			EPS3D);
 }

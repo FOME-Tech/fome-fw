@@ -33,13 +33,15 @@ TEST(realCas24Plus1, spinningOnBench) {
 
 		// Expect that all teeth are in the correct spot
 		float angleError = getTriggerCentral()->triggerToothAngleError;
-		EXPECT_TRUE(angleError < 3 && angleError > -3) << "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
+		EXPECT_TRUE(angleError < 3 && angleError > -3)
+				<< "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
 
 		auto rpm = Sensor::getOrZero(SensorType::Rpm);
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first (primary) sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first (primary) sync point - this means the instant RPM pre-sync
+			// event copy all worked OK
 			EXPECT_EQ(eventCount, 7);
 			EXPECT_NEAR(rpm, 808.32f, 0.1);
 		}
@@ -58,7 +60,7 @@ TEST(realCas24Plus1, spinningOnBench) {
 			}
 		}
 
-		auto vvt = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
+		auto vvt = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0);
 		if (vvt) {
 			// cam position should never be reported outside of correct range
 			EXPECT_TRUE(vvt.Value > -10 && vvt.Value < -9);

@@ -75,47 +75,60 @@ TEST(LuaBasic, WrongReturnTypeExpectIntegerReturnsNil) {
 }
 
 TEST(LuaBasic, ExpectNumOrNilReturnsNil) {
-	EXPECT_EQ(testLuaReturnsNumberOrNil(R"(
+	EXPECT_EQ(
+			testLuaReturnsNumberOrNil(R"(
 		function testFunc()
 			return nil
 		end
-	)"), unexpected);
+	)"),
+			unexpected);
 }
 
 TEST(LuaBasic, ExpectNumOrNilReturnsNumber) {
-	EXPECT_FLOAT_EQ(56.3f, testLuaReturnsNumberOrNil(R"(
+	EXPECT_FLOAT_EQ(
+			56.3f,
+			testLuaReturnsNumberOrNil(R"(
 		function testFunc()
 			return 56.3
 		end
-	)").value_or(0));
+	)")
+					.value_or(0));
 }
 
 TEST(LuaPid, Offset) {
-	EXPECT_FLOAT_EQ(18.0f, testLuaReturnsNumberOrNil(R"(
+	EXPECT_FLOAT_EQ(
+			18.0f,
+			testLuaReturnsNumberOrNil(R"(
 		function testFunc()
 pid = Pid.new(2, 0, 0, -100, 100)
 pid:setOffset(20)
 			return pid:get(20, 21)
 		end
-	)").value_or(0));
+	)")
+					.value_or(0));
 }
 
 TEST(LuaBasic, ExpectNumOrNilReturnsNothing) {
 	// Returning nothing is generally functionally equivalent to returning nil
-	EXPECT_EQ(testLuaReturnsNumberOrNil(R"(
+	EXPECT_EQ(
+			testLuaReturnsNumberOrNil(R"(
 		function testFunc()
 			return
 		end
-	)"), unexpected);
+	)"),
+			unexpected);
 }
 
 TEST(LuaSensor, Timeout) {
-	EXPECT_FLOAT_EQ(0.0f, testLuaReturnsNumberOrNil(R"(
+	EXPECT_FLOAT_EQ(
+			0.0f,
+			testLuaReturnsNumberOrNil(R"(
 		function testFunc()
 			cltSensor = Sensor.new("clt")
 			cltSensor:setTimeout(3000)
 		end
-	)").value_or(0));
+	)")
+					.value_or(0));
 }
 
 TEST(SystemLua, ScriptLoads) {

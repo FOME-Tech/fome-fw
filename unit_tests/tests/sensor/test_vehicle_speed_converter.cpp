@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "vehicle_speed_converter.h"
 
-
 float GetVssFor(float revPerKm, float axle, float teeth, float hz) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
