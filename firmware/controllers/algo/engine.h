@@ -121,7 +121,8 @@ public:
 	// Get the angle to open this cylinder's injector, in engine cycle angle, relative to #1 TDC
 	expected<angle_t> computeInjectionAngle(injection_mode_e mode) const;
 
-	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections later)
+	// This cylinder's per-cycle injection mass, uncorrected for injection mode (may be split in to multiple injections
+	// later)
 	mass_t getInjectionMass() const {
 		return m_injectionMass;
 	}
@@ -179,58 +180,59 @@ public:
 
 	PinRepository pinRepository;
 
-	IEtbController *etbControllers[ETB_COUNT] = {nullptr};
+	IEtbController* etbControllers[ETB_COUNT] = {nullptr};
 
 	FuelComputer fuelComputer;
 
 	type_list<
-		Mockable<InjectorModelPrimary>,
-		Mockable<InjectorModelSecondary>,
+			Mockable<InjectorModelPrimary>,
+			Mockable<InjectorModelSecondary>,
 #if EFI_IDLE_CONTROL
-		Mockable<IdleController>,
+			Mockable<IdleController>,
 #endif // EFI_IDLE_CONTROL
-		TriggerScheduler,
+			TriggerScheduler,
 #if EFI_HPFP && EFI_ENGINE_CONTROL
-		HpfpController,
+			HpfpController,
 #endif // EFI_HPFP && EFI_ENGINE_CONTROL
-		Mockable<ThrottleModel>,
+			Mockable<ThrottleModel>,
 #if EFI_ALTERNATOR_CONTROL
-		AlternatorController,
+			AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */
-		MainRelayController,
-		Mockable<IgnitionController>,
-		Mockable<AcController>,
-		PrimeController,
-		DfcoController,
-		HarleyAcr,
-		Mockable<WallFuelController>,
-		KnockController,
-		SensorChecker,
-		LimpManager,
+			MainRelayController,
+			Mockable<IgnitionController>,
+			Mockable<AcController>,
+			PrimeController,
+			DfcoController,
+			HarleyAcr,
+			Mockable<WallFuelController>,
+			KnockController,
+			SensorChecker,
+			LimpManager,
 #if EFI_VVT_PID
-		VvtController1,
-		VvtController2,
-		VvtController3,
-		VvtController4,
+			VvtController1,
+			VvtController2,
+			VvtController3,
+			VvtController4,
 #endif // EFI_VVT_PID
 #if EFI_ENGINE_CONTROL
-		BoostController,
+			BoostController,
 #endif // EFI_ENGINE_CONTROL
-		LedBlinkingTask,
-		TpsAccelEnrichment,
+			LedBlinkingTask,
+			TpsAccelEnrichment,
 
-		#ifndef EFI_BOOTLOADER
-		#include "modules_list_generated.h"
-		#endif
+#ifndef EFI_BOOTLOADER
+#include "modules_list_generated.h"
+#endif
 
-		EngineModule // dummy placeholder so the previous entries can all have commas
-		> engineModules;
+			EngineModule // dummy placeholder so the previous entries can all have commas
+			>
+			engineModules;
 
 	/**
 	 * Slightly shorter helper function to keep the code looking clean.
 	 */
-	template<typename get_t>
-	constexpr auto & module() {
+	template <typename get_t>
+	constexpr auto& module() {
 		return engineModules.get<get_t>();
 	}
 
@@ -333,7 +335,8 @@ public:
 	EngineState engineState;
 
 	/**
-	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of RPM
+	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of
+	 * RPM
 	 */
 	efitimeus_t timeToStopIdleTest = 0;
 
@@ -382,7 +385,7 @@ void scheduleReboot();
 // These externs aren't needed for unit tests - everything is injected instead
 #if !EFI_UNIT_TEST
 extern Engine ___engine;
-static constexpr Engine * const engine = &___engine;
-#else // EFI_UNIT_TEST
-extern Engine *engine;
+static constexpr Engine* const engine = &___engine;
+#else  // EFI_UNIT_TEST
+extern Engine* engine;
 #endif // EFI_UNIT_TEST

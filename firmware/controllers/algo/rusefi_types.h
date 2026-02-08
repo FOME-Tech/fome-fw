@@ -12,13 +12,7 @@
 #include <float.h>
 #include <cstdint>
 #include <cstddef>
-#if defined __GNUC__
-// GCC
 #include <sys/types.h>
-#else
-// IAR
-using time_t = uint32_t;
-#endif
 
 #include "rusefi_generated.h"
 #include "rusefi_enums.h"
@@ -55,7 +49,8 @@ using time_t = uint32_t;
 
 struct efidur_t {
 	constexpr efidur_t() = default;
-	constexpr efidur_t(int64_t c) : m_count(c) { }
+	constexpr efidur_t(int64_t c)
+		: m_count(c) {}
 
 	constexpr operator int64_t() const {
 		return m_count;
@@ -75,13 +70,14 @@ private:
 
 struct efitick_t {
 	constexpr efitick_t() = default;
-	constexpr efitick_t(int64_t c) : count(c) { }
+	constexpr efitick_t(int64_t c)
+		: count(c) {}
 
 	constexpr operator int64_t() const {
 		return count;
 	}
 
-	efitick_t& operator+=(const efidur_t &s) {
+	efitick_t& operator+=(const efidur_t& s) {
 		count += s.count();
 		return *this;
 	}
@@ -155,11 +151,12 @@ typedef void (*VoidIntInt)(int, int);
 typedef void (*VoidIntIntVoidPtr)(int, int, void*);
 typedef void (*VoidIntFloat)(int, float);
 
-typedef void (*VoidCharPtr)(const char *);
-typedef void (*VoidCharPtrVoidPtr)(const char *, void*);
+typedef void (*VoidCharPtr)(const char*);
+typedef void (*VoidCharPtrVoidPtr)(const char*, void*);
 
-typedef void (*VoidCharPtrCharPtr)(const char *, const char *);
-typedef void (*VoidCharPtrCharPtrVoidPtr)(const char *, const char *, void*);
+typedef void (*VoidCharPtrCharPtr)(const char*, const char*);
+typedef void (*VoidCharPtrCharPtrVoidPtr)(const char*, const char*, void*);
 
-typedef void (*VoidCharPtrCharPtrCharPtr)(const char *, const char *, const char *);
-typedef void (*VoidCharPtrCharPtrCharPtrCharPtrCharPtr)(const char *, const char *, const char *, const char *, const char *);
+typedef void (*VoidCharPtrCharPtrCharPtr)(const char*, const char*, const char*);
+typedef void (*VoidCharPtrCharPtrCharPtrCharPtrCharPtr)(
+		const char*, const char*, const char*, const char*, const char*);

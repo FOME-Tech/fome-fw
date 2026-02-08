@@ -10,9 +10,10 @@
 #include "rusefi_enums.h"
 
 /**
- * thank you https://www.ingenieriaymecanicaautomotriz.com/firing-order-its-purpose-and-order-in-different-numbers-of-cylinders/
+ * thank you
+ * https://www.ingenieriaymecanicaautomotriz.com/firing-order-its-purpose-and-order-in-different-numbers-of-cylinders/
  */
-typedef enum __attribute__ ((__packed__)) {
+typedef enum __attribute__((__packed__)) {
 	FO_1 = 0,
 
 	// 2 cylinder
@@ -25,22 +26,21 @@ typedef enum __attribute__ ((__packed__)) {
 	// 4 cylinder
 	FO_1_3_4_2 = 1, // typical inline 4
 	FO_1_2_4_3 = 2,
-	FO_1_3_2_4 = 3, // for example horizontally opposed engine
+	FO_1_3_2_4 = 3,	 // for example horizontally opposed engine
 	FO_1_4_3_2 = 17, // for example VW aircooled boxer engine
 
 	// 5 cylinder
 	FO_1_2_4_5_3 = 6,
 
 	// 6 cylinder
-	FO_1_5_3_6_2_4 = 4, // VAG VR6, Straight-6, Opel Omega A
+	FO_1_5_3_6_2_4 = 4,	 // VAG VR6, Straight-6, Opel Omega A
 	FO_1_6_5_4_3_2 = 30, // GM 3800 engine
 	FO_1_4_5_2_3_6 = 31, // Chevrolet Corvair
-	FO_1_4_2_5_3_6 = 7, // Mercedes-Benz M104 engine
-	FO_1_2_3_4_5_6 = 9, // all Nissan v6, GM 60-Degree V6 engine
+	FO_1_4_2_5_3_6 = 7,	 // Mercedes-Benz M104 engine
+	FO_1_2_3_4_5_6 = 9,	 // all Nissan v6, GM 60-Degree V6 engine
 	FO_1_6_3_2_5_4 = 13, // EG33
 	FO_1_4_3_6_2_5 = 27, // VAG v6 different from VAG VR6
 	FO_1_6_2_4_3_5 = 29, // Some 911
-
 
 	// todo: one day we shall support 7 cylinder radial, probably not before one actually approaches us
 	// 1-3-5-7-2-4-6 7-cylinder single row radial engine
@@ -72,7 +72,6 @@ typedef enum __attribute__ ((__packed__)) {
 	// 1,12,4,9,2,11,6,7,3,10,5,8 Lamborghini Aventador
 	FO_1_2_3_4_5_6_7_8_9_10_11_12 = 23, // mostly for hardware testing purposes
 
-
 	// 16 cylinder
 	// unfortunately not supported by default firmware because MAX_CYLINDER_COUNT=12 by default
 	FO_1_14_9_4_7_12_15_6_13_8_3_16_11_2_5_10 = 22, // WR16
@@ -81,8 +80,10 @@ typedef enum __attribute__ ((__packed__)) {
 } firing_order_e;
 
 /**
- * @param cylinderIndex Queried position in the firing order. 0 means the first cylinder to fire, 1 means second, etc. Maximum cylinderCount - 1.
+ * @param cylinderIndex Queried position in the firing order. 0 means the first cylinder to fire, 1 means second, etc.
+ * Maximum cylinderCount - 1.
  * @return The cylinder number in the requested position, from 0 to cylindersCount - 1.
- *         For example, getCylinderNumberAtIndex(2) means the 3rd cylinder to fire, and on a 1342 4-cyl will return 3, indicating cylinder 4.
+ *         For example, getCylinderNumberAtIndex(2) means the 3rd cylinder to fire, and on a 1342 4-cyl will return 3,
+ * indicating cylinder 4.
  */
 size_t getCylinderNumberAtIndex(size_t cylinderIndex);

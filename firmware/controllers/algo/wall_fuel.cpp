@@ -82,21 +82,13 @@ float WallFuelController::computeTau() const {
 	// CLT failure, this is not critical to get perfect
 	float clt = Sensor::get(SensorType::Clt).value_or(90);
 
-	float tau = interpolate2d(
-		clt,
-		config->wwCltBins,
-		config->wwTauCltValues
-	);
+	float tau = interpolate2d(clt, config->wwCltBins, config->wwTauCltValues);
 
 	// If you have a MAP sensor, apply MAP correction
 	if (Sensor::hasSensor(SensorType::Map)) {
 		auto map = Sensor::get(SensorType::Map).value_or(60);
 
-		tau *= interpolate2d(
-			map,
-			config->wwMapBins,
-			config->wwTauMapValues
-		);
+		tau *= interpolate2d(map, config->wwMapBins, config->wwTauMapValues);
 	}
 
 	return tau;
@@ -111,21 +103,13 @@ float WallFuelController::computeBeta() const {
 	// CLT failure, this is not critical to get perfect
 	float clt = Sensor::get(SensorType::Clt).value_or(90);
 
-	float beta = interpolate2d(
-		clt,
-		config->wwCltBins,
-		config->wwBetaCltValues
-	);
+	float beta = interpolate2d(clt, config->wwCltBins, config->wwBetaCltValues);
 
 	// If you have a MAP sensor, apply MAP correction
 	if (Sensor::hasSensor(SensorType::Map)) {
 		auto map = Sensor::get(SensorType::Map).value_or(60);
 
-		beta *= interpolate2d(
-			map,
-			config->wwMapBins,
-			config->wwBetaMapValues
-		);
+		beta *= interpolate2d(map, config->wwMapBins, config->wwBetaMapValues);
 	}
 
 	// Clamp to 0..1 (you can't have more than 100% of the fuel hit the wall!)

@@ -12,7 +12,6 @@
 
 #include "rusefi_generated.h"
 
-
 /**
  * http://rusefi.com/wiki/index.php?title=Manual:Engine_Type
  */
@@ -99,7 +98,6 @@ enum class engine_type_e : uint32_t {
 
 	BMW_M73_MRE_SLAVE = 51,
 
-
 	TEST_ISSUE_366_BOTH = 52,
 	TEST_ISSUE_366_RISE = 53,
 
@@ -151,7 +149,7 @@ enum class engine_type_e : uint32_t {
 
 	HELLEN_NB2_36 = 86,
 
-	HELLEN_121_NISSAN_ALMERA_N16  = 87,
+	HELLEN_121_NISSAN_ALMERA_N16 = 87,
 
 	HELLEN_128_MERCEDES_6_CYL = 88,
 
@@ -207,7 +205,7 @@ enum class engine_type_e : uint32_t {
 /**
  * https://rusefi.com//wiki/index.php?title=Manual:Debug_fields
  */
-typedef enum __attribute__ ((__packed__)) {
+typedef enum __attribute__((__packed__)) {
 	DBG_0 = 0,
 	DBG_1 = 1,
 	DBG_2 = 2,
@@ -453,7 +451,6 @@ enum class trigger_type_e : uint32_t {
 	// Mitsubishi 3 cyl and 6 cyl
 	TT_36_2_1_1 = 71,
 
-
 	TT_VVT_MITSUBISHI_6G75 = 72,
 
 	TT_VVT_TOYOTA_4_1 = 73,
@@ -473,12 +470,13 @@ enum class trigger_type_e : uint32_t {
 
 	TT_VVT_MIATA_NA = 76,
 
-
-	// do not forget to edit "#define trigger_type_e_enum" line in integration/fome_config.txt file to propogate new value to rusefi.ini TS project
-	// do not forget to invoke "gen_config.bat" once you make changes to integration/fome_config.txt
-	// todo: one day a hero would integrate some of these things into Makefile in order to reduce manual magic
+	// do not forget to edit "#define trigger_type_e_enum" line in integration/fome_config.txt file to propogate new
+	// value to rusefi.ini TS project do not forget to invoke "gen_config.bat" once you make changes to
+	// integration/fome_config.txt todo: one day a hero would integrate some of these things into Makefile in order to
+	// reduce manual magic
 	//
-	// Another point: once you add a new trigger, run get_trigger_images.bat which would run fome_test.exe from unit_tests
+	// Another point: once you add a new trigger, run get_trigger_images.bat which would run fome_test.exe from
+	// unit_tests
 	//
 	TT_UNUSED = 77, // this is used if we want to iterate over all trigger types
 };

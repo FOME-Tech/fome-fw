@@ -45,6 +45,7 @@ public:
 	void setTargetSkipRatio(float targetSkipRatio);
 
 	bool shouldSkip();
+
 private:
 	bool wasJustSkipped = false;
 	float m_targetSkipRatio = 0;
