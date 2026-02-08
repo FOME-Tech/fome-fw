@@ -6,7 +6,8 @@ static uint8_t st5TestBuffer[16000];
 
 class BufferTsChannel : public TsChannelBase {
 public:
-	BufferTsChannel() : TsChannelBase("Test") { }
+	BufferTsChannel()
+		: TsChannelBase("Test") {}
 
 	void write(const uint8_t* buffer, size_t size, bool /*isLastWriteInTransaction*/) override {
 		memcpy(&st5TestBuffer[writeIdx], buffer, size);
@@ -38,7 +39,6 @@ static void assertCrcPacket(BufferTsChannel& dut) {
 	ASSERT_EQ(st5TestBuffer[2], TS_RESPONSE_OK);
 
 	ASSERT_EQ(memcmp(&st5TestBuffer[3], PAYLOAD, SIZE), 0);
-
 
 	// todo: proper uint32 comparison
 	ASSERT_EQ(st5TestBuffer[6], 86);

@@ -3,12 +3,12 @@
  *
  * @date Nov 18, 2020
  * @author Andrey Belomutskiy, (c) 2012-2020
-*/
+ */
 
 #include "pch.h"
 
 TEST(start, startStop) {
-	std::unordered_map<SensorType, float> sensorVals = {{ SensorType::AcceleratorPedal, 0 }};
+	std::unordered_map<SensorType, float> sensorVals = {{SensorType::AcceleratorPedal, 0}};
 	EngineTestHelper eth(engine_type_e::PROTEUS_BMW_M73, sensorVals);
 	eth.moveTimeForwardAndInvokeEventsSec(1); // '0' time has special meaning for implementation so let's move forward
 
@@ -24,8 +24,6 @@ TEST(start, startStop) {
 	eth.moveTimeForwardAndInvokeEventsSec(10);
 	slowStartStopButtonCallback();
 	ASSERT_FALSE(efiReadPin(engineConfiguration->starterControlPin));
-
-
 
 	eth.moveTimeForwardAndInvokeEventsSec(10);
 	// hit 'start' button! inverted since pull-up

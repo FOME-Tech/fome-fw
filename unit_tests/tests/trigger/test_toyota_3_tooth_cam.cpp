@@ -20,11 +20,11 @@ TEST(Toyota3ToothCam, RealEngineRunning) {
 
 	while (reader.haveMore()) {
 		reader.processLine(&eth);
-		auto vvt1 = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
+		auto vvt1 = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0);
 
 		if (vvt1) {
 			if (!hasSeenFirstVvt) {
-				EXPECT_NEAR(vvt1.Value, 0, /*precision*/1);
+				EXPECT_NEAR(vvt1.Value, 0, /*precision*/ 1);
 				hasSeenFirstVvt = true;
 			}
 
@@ -35,7 +35,7 @@ TEST(Toyota3ToothCam, RealEngineRunning) {
 
 	EXPECT_EQ(getTriggerCentral()->triggerState.m_camResyncCounter, 0);
 
-	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0), 0, 1);
+	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0).value_or(0), 0, 1);
 	ASSERT_EQ(3078, round(Sensor::getOrZero(SensorType::Rpm)));
 
 	// TODO: why warnings?
@@ -74,8 +74,7 @@ static void test3tooth(size_t revsBeforeVvt, size_t teethBeforeVvt, bool expectS
 
 	// Do some number of revolutions before firing the cam tooth
 	for (size_t i = 0; i < revsBeforeVvt; i++) {
-		for (size_t j = 0; i < 10; i++)
-		{
+		for (size_t j = 0; i < 10; i++) {
 			eth.fireFall(1);
 			eth.fireRise(9);
 		}

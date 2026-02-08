@@ -33,11 +33,10 @@ typedef unsigned int time_t;
 #include <ch.hpp>
 #endif /* __cplusplus */
 
-
 /* definition to expand macro then apply to pragma message */
 #define VALUE_TO_STRING(x) #x
 #define VALUE(x) VALUE_TO_STRING(x)
-#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
+#define VAR_NAME_VALUE(var) #var "=" VALUE(var)
 
 /**
  * project-wide default thread stack size
@@ -62,12 +61,12 @@ typedef unsigned int time_t;
 // CCM memory is 64k
 #define CCM_OPTIONAL __attribute__((section(".ram4")))
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
-#define NO_CACHE		// F4 has no cache, do nothing
-#define SDMMC_MEMORY(size)	// F4 has no cache, do nothing
+#define NO_CACHE		   // F4 has no cache, do nothing
+#define SDMMC_MEMORY(size) // F4 has no cache, do nothing
 #elif defined(STM32F7XX)
 // DTCM memory is 128k
 #define CCM_OPTIONAL __attribute__((section(".ram3")))
-//TODO: update LD file!
+// TODO: update LD file!
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
 // SRAM2 is 16k and set to disable dcache
 #define NO_CACHE __attribute__((section(".ram2")))
@@ -75,17 +74,18 @@ typedef unsigned int time_t;
 #elif defined(STM32H7XX)
 // DTCM memory is 128k
 #define CCM_OPTIONAL __attribute__((section(".ram5")))
-//TODO: update LD file!
+// TODO: update LD file!
 #define SDRAM_OPTIONAL __attribute__((section(".ram8")))
 // SRAM3 is 32k and set to disable dcache
 #define NO_CACHE __attribute__((section(".ram3")))
 // On H7, SDMMC1 can only talk to AXI, and aligned to the size of the
 // object, so its MPU region can disable caching
-#define SDMMC_MEMORY(size) __attribute__((section(".ram0")))  __attribute__ ((aligned (size)))
+#define SDMMC_MEMORY(size) __attribute__((section(".ram0"))) __attribute__((aligned(size)))
 #else /* this MCU doesn't need these */
 #define CCM_OPTIONAL
 #define NO_CACHE
 #define SDMMC_MEMORY
 #endif
 
-#define UNIT_TEST_BUSY_WAIT_CALLBACK() {}
+#define UNIT_TEST_BUSY_WAIT_CALLBACK()                                                                                 \
+	{}

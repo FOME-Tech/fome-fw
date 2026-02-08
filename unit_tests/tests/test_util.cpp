@@ -17,15 +17,13 @@
 
 #include "big_buffer.h"
 
-TEST(util, testitoa)
-{
+TEST(util, testitoa) {
 	char buffer[12];
 	itoa10(buffer, 239);
 	ASSERT_TRUE(strEqual(buffer, "239"));
 }
 
-TEST(util, negativeZero)
-{
+TEST(util, negativeZero) {
 	ASSERT_TRUE(IS_NEGATIVE_ZERO(-0.0));
 
 	ASSERT_FALSE(IS_NEGATIVE_ZERO(-10.0));
@@ -33,26 +31,24 @@ TEST(util, negativeZero)
 	ASSERT_FALSE(IS_NEGATIVE_ZERO(0.0));
 }
 
-TEST(util, crc8)
-{
+TEST(util, crc8) {
 	const uint8_t crc8_tab[] = {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38};
 
 	ASSERT_EQ(0xB, crc8(crc8_tab, 8));
 }
 
-TEST(util, crc)
-{
+TEST(util, crc) {
 	ASSERT_EQ(4, efiRound(4.4, 1));
 	ASSERT_FLOAT_EQ(1.2, efiRound(1.2345, 0.1));
 	ASSERT_FLOAT_EQ(0.2, efiRound(0.2345, 0.1));
 
-	const char *A = "A";
+	const char* A = "A";
 
 	uint32_t c = crc32(A, 1);
 	printf("crc32(A)=%x\r\n", c);
 	EXPECT_EQ(0xd3d99e8b, c) << "crc32 1";
 
-	const char *line = "AbcDEFGF";
+	const char* line = "AbcDEFGF";
 	c = crc32(line, 8);
 	printf("crc32(line)=%x\r\n", c);
 	EXPECT_EQ(0x4775a7b1, c) << "crc32 line";
@@ -62,16 +58,14 @@ TEST(util, crc)
 	EXPECT_EQ(0x4775a7b1, c) << "crc32 line inc";
 }
 
-TEST(util, cyclicBufferContains)
-{
+TEST(util, cyclicBufferContains) {
 	cyclic_buffer<int> sb;
 	sb.add(10);
 	ASSERT_EQ(TRUE, sb.contains(10));
 	ASSERT_EQ(FALSE, sb.contains(11));
 }
 
-TEST(util, cyclicBuffer)
-{
+TEST(util, cyclicBuffer) {
 	cyclic_buffer<int> sb;
 
 	{
@@ -97,16 +91,14 @@ TEST(util, cyclicBuffer)
 	}
 }
 
-static void testMalfunctionCentralRemoveNonExistent()
-{
+static void testMalfunctionCentralRemoveNonExistent() {
 	clearWarnings();
 
 	// this should not crash
 	removeError(ObdCode::OBD_TPS1_Correlation);
 }
 
-static void testMalfunctionCentralSameElementAgain()
-{
+static void testMalfunctionCentralSameElementAgain() {
 	clearWarnings();
 	error_codes_set_s localCopy;
 
@@ -116,8 +108,7 @@ static void testMalfunctionCentralSameElementAgain()
 	ASSERT_EQ(1, localCopy.count);
 }
 
-static void testMalfunctionCentralRemoveFirstElement()
-{
+static void testMalfunctionCentralRemoveFirstElement() {
 	clearWarnings();
 	error_codes_set_s localCopy;
 
@@ -137,8 +128,7 @@ static void testMalfunctionCentralRemoveFirstElement()
 	ASSERT_EQ(secondElement, localCopy.error_codes[0]);
 }
 
-TEST(misc, testMalfunctionCentral)
-{
+TEST(misc, testMalfunctionCentral) {
 	testMalfunctionCentralRemoveNonExistent();
 	testMalfunctionCentralSameElementAgain();
 	testMalfunctionCentralRemoveFirstElement();
@@ -170,8 +160,7 @@ TEST(misc, testMalfunctionCentral)
 	getErrorCodes(&localCopy);
 	// todo:	ASSERT_EQ(2, localCopy.count);
 
-	for (int c = 0; c < 100; c++)
-	{
+	for (int c = 0; c < 100; c++) {
 		addError((ObdCode)c);
 	}
 	getErrorCodes(&localCopy);
@@ -186,22 +175,19 @@ TEST(misc, testMalfunctionCentral)
 static int lastInteger = -1;
 static int lastInteger2 = -1;
 
-static void testEchoI(int param)
-{
+static void testEchoI(int param) {
 	lastInteger = param;
 }
 
-static void testEchoII(int param, int param2)
-{
+static void testEchoII(int param, int param2) {
 	lastInteger = param;
 	lastInteger2 = param2;
 }
 
-static const char *lastFirst = NULL;
-static const char *lastThird = NULL;
+static const char* lastFirst = NULL;
+static const char* lastThird = NULL;
 
-static void testEchoSSS(const char *first, const char *second, const char *third)
-{
+static void testEchoSSS(const char* first, const char* second, const char* third) {
 	lastFirst = first;
 	lastThird = third;
 }
@@ -210,8 +196,7 @@ static float fFirst;
 static float fSecond;
 static float fThird;
 
-static void testEchoFFF(float first, float second, float third)
-{
+static void testEchoFFF(float first, float second, float third) {
 	fFirst = first;
 	fSecond = second;
 	fThird = third;
@@ -222,13 +207,12 @@ static void testEchoFFF(float first, float second, float third)
 // this buffer is needed because on Unix you would not be able to change static char constants
 static char buffer[300];
 
-TEST(misc, testConsoleLogic)
-{
+TEST(misc, testConsoleLogic) {
 	resetConsoleActions();
 
 	helpCommand();
 
-	char *cmd = "he ha";
+	char* cmd = "he ha";
 	ASSERT_EQ(2, findEndOfToken(cmd));
 
 	cmd = "\"hee\" ha";
@@ -296,8 +280,7 @@ TEST(misc, testConsoleLogic)
 
 static char buff[32];
 
-TEST(misc, testMisc)
-{
+TEST(misc, testMisc) {
 	strcpy(buff, "  ab  ");
 	// we need a mutable array here
 	ASSERT_TRUE(strEqual("ab", efiTrim(buff)));
@@ -321,13 +304,11 @@ TEST(misc, testMisc)
 	//	ASSERT_EQ(SPARKOUT_12_OUTPUT, getPinByName("spa12"));
 }
 
-int getRusEfiVersion()
-{
+int getRusEfiVersion() {
 	return TS_FILE_VERSION;
 }
 
-TEST(util, PeakDetect)
-{
+TEST(util, PeakDetect) {
 	constexpr int startTime = 50;
 	constexpr int timeout = 100;
 	PeakDetect<int, timeout> dut;
@@ -348,8 +329,7 @@ TEST(util, PeakDetect)
 	EXPECT_EQ(dut.detect(500, startTime + timeout + 1), 500);
 }
 
-TEST(util, WrapAround62)
-{
+TEST(util, WrapAround62) {
 	// Random test
 	{
 		WrapAround62 t;
@@ -360,18 +340,15 @@ TEST(util, WrapAround62)
 		uint32_t seed = time(NULL);
 		printf("Testing with seed 0x%08x\n", seed);
 		srand(seed);
-		for (unsigned i = 0; i < 10000; i++)
-		{
+		for (unsigned i = 0; i < 10000; i++) {
 			int32_t delta = rand();
-			if (delta < 0)
-			{
+			if (delta < 0) {
 				delta = ~delta;
 			}
 			delta -= RAND_MAX >> 1;
 
 			// Cap negative test
-			if (delta < 0 && -delta > actual)
-			{
+			if (delta < 0 && -delta > actual) {
 				delta = -actual;
 			}
 
@@ -418,8 +395,7 @@ TEST(util, WrapAround62)
 	}
 }
 
-TEST(util, isInRange)
-{
+TEST(util, isInRange) {
 	EXPECT_FALSE(isInRange(5, 4, 10));
 	EXPECT_TRUE(isInRange(5, 5, 10));
 	EXPECT_TRUE(isInRange(5, 7, 10));
@@ -427,8 +403,7 @@ TEST(util, isInRange)
 	EXPECT_FALSE(isInRange(5, 11, 10));
 }
 
-TEST(util, wrapAngle)
-{
+TEST(util, wrapAngle) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	// Test within range
@@ -451,8 +426,7 @@ TEST(util, wrapAngle)
 
 BigBufferUser getBigBufferCurrentUser();
 
-TEST(BigBuffer, CppMagic)
-{
+TEST(BigBuffer, CppMagic) {
 	BigBufferHandle h = getBigBuffer(BigBufferUser::ToothLogger);
 	ASSERT_EQ(getBigBufferCurrentUser(), BigBufferUser::ToothLogger);
 	h = {};
