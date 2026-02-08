@@ -76,4 +76,4 @@ public:
 	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
 
-EngineState * getEngineState();
+EngineState* getEngineState();

@@ -15,8 +15,8 @@ static void setDefaultMultisparkParameters() {
 }
 
 static void setDefaultIatTimingCorrection() {
-	copyArray(config->ignitionIatCorrTempBins, { -40, 0, 10, 20, 30, 40, 50, 60});
-	setLinearCurve(config->ignitionIatCorrLoadBins, /*from=*/ 0, /*to*/ 140, 1);
+	copyArray(config->ignitionIatCorrTempBins, {-40, 0, 10, 20, 30, 40, 50, 60});
+	setLinearCurve(config->ignitionIatCorrLoadBins, /*from=*/0, /*to*/ 140, 1);
 
 	// top 5 rows are the same
 	for (size_t i = 3; i < 8; i++) {
@@ -101,8 +101,8 @@ void setDefaultIgnition() {
 	setDefaultIatTimingCorrection();
 
 	// Give default axes for cylinder trim tables
-	copyArray(config->ignTrimRpmBins, { 1000, 3000, 5000, 7000 });
-	copyArray(config->ignTrimLoadBins, { 20, 50, 80, 100 });
+	copyArray(config->ignTrimRpmBins, {1000, 3000, 5000, 7000});
+	copyArray(config->ignTrimLoadBins, {20, 50, 80, 100});
 
 	// Default axes for VE blends
 	for (size_t i = 0; i < efi::size(config->ignBlends); i++) {

@@ -32,47 +32,11 @@ static void setBosch02880155868(injector_s& cfg) {
 }
 
 static void setDefaultWarmupFuelEnrichment() {
-	static const float bins[] =
-	{
-		-40,
-		-30,
-		-20,
-		-10,
-		0,
-		10,
-		20,
-		30,
-		40,
-		50,
-		60,
-		70,
-		80,
-		90,
-		100,
-		110
-	};
+	static const float bins[] = {-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110};
 
 	copyArray(config->cltFuelCorrBins, bins);
 
-	static const float values[] =
-	{
-		1.50,
-		1.50,
-		1.42,
-		1.36,
-		1.28,
-		1.19,
-		1.12,
-		1.10,
-		1.06,
-		1.06,
-		1.03,
-		1.01,
-		1,
-		1,
-		1,
-		1
-	};
+	static const float values[] = {1.50, 1.50, 1.42, 1.36, 1.28, 1.19, 1.12, 1.10, 1.06, 1.06, 1.03, 1.01, 1, 1, 1, 1};
 
 	copyArray(config->cltFuelCorr, values);
 }
@@ -88,8 +52,8 @@ static void setDefaultVETable() {
 	setTable(config->baroCorrTable, 1);
 
 	// Give default axes for cylinder trim tables
-	copyArray(config->fuelTrimRpmBins, { 1000, 3000, 5000, 7000 });
-	copyArray(config->fuelTrimLoadBins, { 20, 50, 80, 100 });
+	copyArray(config->fuelTrimRpmBins, {1000, 3000, 5000, 7000});
+	copyArray(config->fuelTrimLoadBins, {20, 50, 80, 100});
 
 	// Default axes for VE blends
 	for (size_t i = 0; i < efi::size(config->veBlends); i++) {
@@ -110,8 +74,8 @@ static void setDefaultFuelCutParameters() {
 	engineConfiguration->coastingFuelCutMap = 30;
 	engineConfiguration->coastingFuelCutClt = 60;
 
-	copyArray(config->dfcoMapRpmValuesBins, { 1500, 2000, 3500, 5000 });
-	copyArray(config->dfcoMapRpmValues, { 30, 25, 20, 18 });
+	copyArray(config->dfcoMapRpmValuesBins, {1500, 2000, 3500, 5000});
+	copyArray(config->dfcoMapRpmValues, {30, 25, 20, 18});
 }
 
 static void setDefaultStftSettings() {
@@ -153,14 +117,14 @@ static void setDefaultStftSettings() {
 }
 
 static const uint8_t tpsTpsTable[TPS_TPS_ACCEL_TABLE][TPS_TPS_ACCEL_TABLE] = {
-	{ 0, 0, 0, 0, 0, 0, 0, 0 },
-	{ 2, 0, 0, 0, 0, 0, 0, 0 },
-	{ 3, 2, 0, 0, 0, 0, 0, 0 },
-	{ 4, 3, 2, 0, 0, 0, 0, 0 },
-	{ 5, 4, 3, 2, 0, 0, 0, 0 },
-	{ 5, 5, 4, 3, 2, 0, 0, 0 },
-	{ 6, 5, 5, 4, 3, 2, 0, 0 },
-	{ 7, 6, 5, 5, 4, 3, 2, 0 },
+		{0, 0, 0, 0, 0, 0, 0, 0},
+		{2, 0, 0, 0, 0, 0, 0, 0},
+		{3, 2, 0, 0, 0, 0, 0, 0},
+		{4, 3, 2, 0, 0, 0, 0, 0},
+		{5, 4, 3, 2, 0, 0, 0, 0},
+		{5, 5, 4, 3, 2, 0, 0, 0},
+		{6, 5, 5, 4, 3, 2, 0, 0},
+		{7, 6, 5, 5, 4, 3, 2, 0},
 };
 
 static void setMazdaMiataNbTpsTps() {
@@ -170,18 +134,28 @@ static void setMazdaMiataNbTpsTps() {
 }
 
 static void setDefaultLambdaTable() {
-	static constexpr float mapBins[] = {
-		30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 150, 175, 200, 225, 250
-	};
+	static constexpr float mapBins[] = {30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 150, 175, 200, 225, 250};
 	copyArray(config->lambdaLoadBins, mapBins);
 
 	setRpmTableBin(config->lambdaRpmBins);
 
 	static constexpr float rowValues[] = {
-		1,		1,		1,		1,		// 30, 40, 50, 60 kpa
-		1,		0.95,	0.92,	0.90,	// 70, 80, 90, 100 kpa
-		0.89,	0.88,	0.86,	0.84,	// 110, 120, 130, 150 kpa
-		0.8,	0.77,	0.75,	0.73,	// 175, 200, 225, 250 kpa
+			1,
+			1,
+			1,
+			1, // 30, 40, 50, 60 kpa
+			1,
+			0.95,
+			0.92,
+			0.90, // 70, 80, 90, 100 kpa
+			0.89,
+			0.88,
+			0.86,
+			0.84, // 110, 120, 130, 150 kpa
+			0.8,
+			0.77,
+			0.75,
+			0.73, // 175, 200, 225, 250 kpa
 	};
 
 	// Set each row to the corresponding value from rowValues
@@ -205,24 +179,16 @@ static void setDefaultWallWetting() {
 
 	// These values are derived from the GM factory tune for a gen3 LS engine
 	// Who knows if they're good for anything else, but at least they look nice?
-	static constexpr float tauClt[] = {
-		1.45, 1.30, 1.17, 1.05, 0.90, 0.82, 0.75, 0.70
-	};
+	static constexpr float tauClt[] = {1.45, 1.30, 1.17, 1.05, 0.90, 0.82, 0.75, 0.70};
 	copyArray(config->wwTauCltValues, tauClt);
 
-	static constexpr float tauMap[] = {
-		0.38, 0.55, 0.69, 0.86, 0.90, 0.95, 0.97, 1.00
-	};
+	static constexpr float tauMap[] = {0.38, 0.55, 0.69, 0.86, 0.90, 0.95, 0.97, 1.00};
 	copyArray(config->wwTauMapValues, tauMap);
 
-	static constexpr float betaClt[] = {
-		0.73, 0.66, 0.57, 0.46, 0.38, 0.31, 0.24, 0.19
-	};
+	static constexpr float betaClt[] = {0.73, 0.66, 0.57, 0.46, 0.38, 0.31, 0.24, 0.19};
 	copyArray(config->wwBetaCltValues, betaClt);
 
-	static constexpr float betaMap[] = {
-		0.21, 0.40, 0.60, 0.79, 0.85, 0.90, 0.95, 1.00
-	};
+	static constexpr float betaMap[] = {0.21, 0.40, 0.60, 0.79, 0.85, 0.90, 0.95, 1.00};
 	copyArray(config->wwBetaMapValues, betaMap);
 }
 
@@ -241,8 +207,8 @@ static void setDefaultLambdaProtection() {
 
 static void setDefaultPriming() {
 	// These defaults are reasonable for ~500cc cylinders
-	static constexpr int8_t primeBins[]     = { -40, -20,   0,  20, 40, 60, 80, 100 };
-	static constexpr uint16_t primeValues[] = { 755, 605, 265, 140, 75, 50, 45,  40 };
+	static constexpr int8_t primeBins[] = {-40, -20, 0, 20, 40, 60, 80, 100};
+	static constexpr uint16_t primeValues[] = {755, 605, 265, 140, 75, 50, 45, 40};
 
 	copyArray(engineConfiguration->primeBins, primeBins);
 	copyArray(engineConfiguration->primeValues, primeValues);

@@ -14,22 +14,16 @@ AirmassResult AlphaNAirmass::getAirmass(float rpm, bool postState) {
 	float ve = getVe(rpm, tps.Value, postState);
 
 	// optionally use real IAT instead of fixed air temperature
-	constexpr float standardIat = 20.0f;	// std atmosphere temperature
-	float iat = engineConfiguration->alphaNUseIat
-		? Sensor::get(SensorType::Iat).value_or(standardIat)
-		: standardIat;
+	constexpr float standardIat = 20.0f; // std atmosphere temperature
+	float iat = engineConfiguration->alphaNUseIat ? Sensor::get(SensorType::Iat).value_or(standardIat) : standardIat;
 
 	float iatK = iat + 273;
 
 	// TODO: should this be barometric pressure and/or temperature compensated?
 	mass_t airmass = getAirmassImpl(
-		ve,
-		101.325f,		// std atmosphere pressure
-		iatK
-	);
+			ve,
+			101.325f, // std atmosphere pressure
+			iatK);
 
-	return {
-		airmass,
-		tps.Value
-	};
+	return {airmass, tps.Value};
 }

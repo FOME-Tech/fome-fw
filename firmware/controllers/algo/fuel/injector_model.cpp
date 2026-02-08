@@ -15,7 +15,8 @@ void InjectorModelBase::prepare() {
 		m_smallPulseBreakPoint = getSmallPulseBreakPoint();
 
 		// amount added to small pulses to correct for the "kink" from low flow region
-		m_smallPulseOffset = 1000 * ((m_smallPulseBreakPoint / m_massFlowRate) - (m_smallPulseBreakPoint / m_smallPulseFlowRate));
+		m_smallPulseOffset =
+				1000 * ((m_smallPulseBreakPoint / m_massFlowRate) - (m_smallPulseBreakPoint / m_smallPulseFlowRate));
 	}
 }
 
@@ -75,13 +76,11 @@ expected<float> InjectorModelWithConfig::getFuelDifferentialPressure() const {
 	switch (engineConfiguration->injectorCompensationMode) {
 		case ICM_FixedRailPressure:
 			// Add barometric pressure, as "fixed" really means "fixed pressure above atmosphere"
-			return
-				  engineConfiguration->fuelReferencePressure
-				+ baroKpa
-				- map.value_or(101.325);
+			return engineConfiguration->fuelReferencePressure + baroKpa - map.value_or(101.325);
 		case ICM_SensedRailPressure: {
 			if (!Sensor::hasSensor(SensorType::FuelPressureInjector)) {
-				warning(ObdCode::OBD_Fuel_Pressure_Sensor_Missing, "Fuel pressure compensation is set to use a pressure sensor, but none is configured.");
+				warning(ObdCode::OBD_Fuel_Pressure_Sensor_Missing,
+						"Fuel pressure compensation is set to use a pressure sensor, but none is configured.");
 				return unexpected;
 			}
 
@@ -110,7 +109,9 @@ expected<float> InjectorModelWithConfig::getFuelDifferentialPressure() const {
 
 					return fps.Value - map.Value;
 			}
-		} default: return unexpected;
+		}
+		default:
+			return unexpected;
 	}
 }
 
@@ -153,10 +154,9 @@ float InjectorModelWithConfig::getInjectorFlowRatio() {
 
 float InjectorModelWithConfig::getDeadtime() const {
 	return interpolate2d(
-		Sensor::get(SensorType::BatteryVoltage).value_or(VBAT_FALLBACK_VALUE),
-		m_cfg->battLagCorrBins,
-		m_cfg->battLagCorr
-	);
+			Sensor::get(SensorType::BatteryVoltage).value_or(VBAT_FALLBACK_VALUE),
+			m_cfg->battLagCorrBins,
+			m_cfg->battLagCorr);
 }
 
 float InjectorModelBase::getInjectionDuration(float fuelMassGram) const {
@@ -184,32 +184,28 @@ float InjectorModelBase::getBaseDurationImpl(float fuelMassGram) const {
 	floatms_t baseDuration = fuelMassGram / m_massFlowRate * 1000;
 
 	switch (getNonlinearMode()) {
-	case INJ_FordModel:
-		if (fuelMassGram < m_smallPulseBreakPoint) {
-			// Small pulse uses a different slope, and adds the "zero fuel pulse" offset
-			return (fuelMassGram / m_smallPulseFlowRate * 1000) + m_smallPulseOffset;
-		}
+		case INJ_FordModel:
+			if (fuelMassGram < m_smallPulseBreakPoint) {
+				// Small pulse uses a different slope, and adds the "zero fuel pulse" offset
+				return (fuelMassGram / m_smallPulseFlowRate * 1000) + m_smallPulseOffset;
+			}
 
-		// large pulse uses base duration
-		break;
-	case INJ_PolynomialAdder:
-		return correctInjectionPolynomial(baseDuration);
-	case INJ_SmallPulseAdder:
-		if (baseDuration < engineConfiguration->applyNonlinearBelowPulse) {
-			return baseDuration +
-				interpolate2d(
-					baseDuration,
-					config->smallPulseAdderBins,
-					config->smallPulseAdderValues
-				);
-		}
+			// large pulse uses base duration
+			break;
+		case INJ_PolynomialAdder:
+			return correctInjectionPolynomial(baseDuration);
+		case INJ_SmallPulseAdder:
+			if (baseDuration < engineConfiguration->applyNonlinearBelowPulse) {
+				return baseDuration +
+					   interpolate2d(baseDuration, config->smallPulseAdderBins, config->smallPulseAdderValues);
+			}
 
-		// large pulse uses base duration
-		break;
-	case INJ_None:
-	default:
-		// no correction, use base duration
-		break;
+			// large pulse uses base duration
+			break;
+		case INJ_None:
+		default:
+			// no correction, use base duration
+			break;
 	}
 
 	return baseDuration;
@@ -236,17 +232,11 @@ float InjectorModelBase::correctInjectionPolynomial(float baseDuration) const {
 }
 
 InjectorModelWithConfig::InjectorModelWithConfig(const injector_s* const cfg)
-	: m_cfg(cfg)
-{
-}
+	: m_cfg(cfg) {}
 
 InjectorModelPrimary::InjectorModelPrimary()
-	: InjectorModelWithConfig(&engineConfiguration->injector)
-{
-}
+	: InjectorModelWithConfig(&engineConfiguration->injector) {}
 
 // TODO: actual separate config for second bank!
 InjectorModelSecondary::InjectorModelSecondary()
-	: InjectorModelWithConfig(&engineConfiguration->injectorSecondary)
-{
-}
+	: InjectorModelWithConfig(&engineConfiguration->injectorSecondary) {}

@@ -15,7 +15,8 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 	 */
 	float tChargeK = engine->engineState.sd.tChargeK;
 	if (std::isnan(tChargeK)) {
-		warning(ObdCode::CUSTOM_ERR_TCHARGE_NOT_READY2, "tChargeK not ready"); // this would happen before we have CLT reading for example
+		warning(ObdCode::CUSTOM_ERR_TCHARGE_NOT_READY2,
+				"tChargeK not ready"); // this would happen before we have CLT reading for example
 		return {};
 	}
 
@@ -28,8 +29,8 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 	}
 
 	return {
-		airMass,
-		map,	// AFR/VE table Y axis
+			airMass,
+			map, // AFR/VE table Y axis
 	};
 }
 
@@ -60,11 +61,13 @@ float SpeedDensityAirmass::getMap(float rpm, bool postState) const {
 	if (!map) {
 		// MAP sensor is dead, nothing we can do
 		return fallbackMap;
-	} else if (engineConfiguration->useMapEstimateDuringTransient && engine->module<TpsAccelEnrichment>()->isAboveAccelThreshold) {
+	} else if (
+			engineConfiguration->useMapEstimateDuringTransient &&
+			engine->module<TpsAccelEnrichment>()->isAboveAccelThreshold) {
 		// Take the greater of real or estimated map so we don't under-fuel on a transient
 		return std::max(map.Value, fallbackMap);
 	} else {
-		// Normal operation, 
+		// Normal operation,
 		return map.Value;
 	}
 }

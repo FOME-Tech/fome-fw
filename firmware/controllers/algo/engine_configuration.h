@@ -17,14 +17,15 @@
 #define CLT_MANUAL_IDLE_CORRECTION config->cltIdleCorrBins, config->cltIdleCorr, CLT_CURVE_SIZE
 #define WARMUP_CLT_EXTRA_FUEL_CURVE config->cltFuelCorrBins, config->cltFuelCorr, CLT_CURVE_SIZE
 #define IAT_FUEL_CORRECTION_CURVE config->iatFuelCorrBins, config->iatFuelCorr, IAT_CURVE_SIZE
-#define INJECTOR_LAG_CURVE engineConfiguration->injector.battLagCorrBins, engineConfiguration->injector.battLagCorr, VBAT_INJECTOR_CURVE_SIZE
+#define INJECTOR_LAG_CURVE                                                                                             \
+	engineConfiguration->injector.battLagCorrBins, engineConfiguration->injector.battLagCorr, VBAT_INJECTOR_CURVE_SIZE
 
 #define MOCK_UNDEFINED -1
 
 void setCrankOperationMode();
 void setCamOperationMode();
 
-void prepareVoidConfiguration(engine_configuration_s *activeConfiguration);
+void prepareVoidConfiguration(engine_configuration_s* activeConfiguration);
 void setTargetRpmCurve(int rpm);
 void setFuelTablesLoadBin(float minValue, float maxValue);
 void setWholeIatCorrTimingTable(float value);
@@ -42,7 +43,7 @@ void incrementGlobalConfigurationVersion();
 
 void commonFrankensoAnalogInputs();
 
-void emptyCallbackWithConfiguration(engine_configuration_s * engine);
+void emptyCallbackWithConfiguration(engine_configuration_s* engine);
 
 typedef void (*configuration_callback_t)(engine_configuration_s*);
 
@@ -63,19 +64,18 @@ void setBoardConfigOverrides();
 // Init any sensors built in to the board that don't need config
 void initBoardSensors();
 void checkBoardPowerSupply();
-void boardOnConfigurationChange(engine_configuration_s *previousConfiguration);
+void boardOnConfigurationChange(engine_configuration_s* previousConfiguration);
 Gpio getCommsLedPin();
 Gpio getWarningLedPin();
 Gpio getRunningLedPin();
 
 #if !EFI_UNIT_TEST
 extern persistent_config_container_s persistentState;
-static engine_configuration_s * const engineConfiguration =
-	&persistentState.persistentConfiguration.engineConfiguration;
-static persistent_config_s * const config = &persistentState.persistentConfiguration;
-#else // EFI_UNIT_TEST
-extern engine_configuration_s *engineConfiguration;
-extern persistent_config_s *config;
+static engine_configuration_s* const engineConfiguration = &persistentState.persistentConfiguration.engineConfiguration;
+static persistent_config_s* const config = &persistentState.persistentConfiguration;
+#else  // EFI_UNIT_TEST
+extern engine_configuration_s* engineConfiguration;
+extern persistent_config_s* config;
 #endif // EFI_UNIT_TEST
 
 extern engine_configuration_s activeConfiguration;

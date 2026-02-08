@@ -3,14 +3,19 @@
 #include "airmass.h"
 #include "idle_thread.h"
 
-AirmassVeModelBase::AirmassVeModelBase(const ValueProvider3D* veTable) : m_veTable(veTable) {}
+AirmassVeModelBase::AirmassVeModelBase(const ValueProvider3D* veTable)
+	: m_veTable(veTable) {}
 
 static float getVeLoadAxis(ve_override_e mode, float passedLoad) {
-	switch(mode) {
-		case VE_None: return passedLoad;
-		case VE_MAP: return Sensor::getOrZero(SensorType::Map);
-		case VE_TPS: return Sensor::getOrZero(SensorType::Tps1);
-		default: return 0;
+	switch (mode) {
+		case VE_None:
+			return passedLoad;
+		case VE_MAP:
+			return Sensor::getOrZero(SensorType::Map);
+		case VE_TPS:
+			return Sensor::getOrZero(SensorType::Tps1);
+		default:
+			return 0;
 	}
 }
 
@@ -25,15 +30,11 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 #if EFI_IDLE_CONTROL
 	auto tps = Sensor::get(SensorType::Tps1);
 	// get VE from the separate table for Idle if idling
-	if (engine->module<IdleController>()->isIdlingOrTaper() &&
-		tps && engineConfiguration->useSeparateVeForIdle) {
+	if (engine->module<IdleController>()->isIdlingOrTaper() && tps && engineConfiguration->useSeparateVeForIdle) {
 		idleVeLoad = getVeLoadAxis(engineConfiguration->idleVeOverrideMode, load);
 
-		percent_t idleVe = interpolate3d(
-			config->idleVeTable,
-			config->idleVeLoadBins, idleVeLoad,
-			config->idleVeRpmBins, rpm
-		);
+		percent_t idleVe =
+				interpolate3d(config->idleVeTable, config->idleVeLoadBins, idleVeLoad, config->idleVeRpmBins, rpm);
 
 		// interpolate between idle table and normal (running) table using TPS threshold
 		// 0 TPS -> idle table
@@ -75,9 +76,5 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 }
 
 float AirmassVeModelBase::getVeImpl(float rpm, percent_t load) const {
-	return interpolate3d(
-		config->veTable,
-		config->veLoadBins, load,
-		config->veRpmBins, rpm
-	);
+	return interpolate3d(config->veTable, config->veLoadBins, load, config->veRpmBins, rpm);
 }
