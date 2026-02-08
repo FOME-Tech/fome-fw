@@ -11,7 +11,7 @@ ALLCPPSRC += $(LUA_DIR)/lua.cpp \
 			 $(LUA_DIR)/lua_can_rx.cpp \
 			 $(LUA_DIR)/lua_getchannel.cpp \
 
-ALLINC += $(LUA_DIR) $(LUA_DIR)/luaaa $(LUA_EXT)
+ALLINC += $(LUA_DIR) $(PROJECT_DIR)/ext/luaaa $(LUA_EXT)
 ALLCSRC += \
 	$(LUA_EXT)/lapi.c \
 	$(LUA_EXT)/lcode.c \

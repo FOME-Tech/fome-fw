@@ -22,7 +22,7 @@
 	url = https://github.com/rusefi/lua
 	branch = rusefi-5.4.3
 [submodule "firmware/controllers/lua/luaaa"]
-	path = firmware/controllers/lua/luaaa
+	path = firmware/ext/luaaa
 	url = https://github.com/rusefi/luaaa
 	branch = rusefi_prod_2021_11_12
 [submodule "firmware/ext/openblt"]
