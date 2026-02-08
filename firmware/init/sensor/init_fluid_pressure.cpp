@@ -68,10 +68,8 @@ void initFluidPressure() {
 	initFluidPressure(auxLinear4Func, auxLinear4Sensor, engineConfiguration->auxLinear4, 10);
 
 	injectorPressure.setProxiedSensor(
-		engineConfiguration->injectorPressureType == IPT_High
-		? SensorType::FuelPressureHigh
-		: SensorType::FuelPressureLow
-	);
+			engineConfiguration->injectorPressureType == IPT_High ? SensorType::FuelPressureHigh
+																  : SensorType::FuelPressureLow);
 
 	injectorPressure.Register();
 }

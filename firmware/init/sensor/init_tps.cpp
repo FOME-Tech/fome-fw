@@ -24,8 +24,7 @@ class FuncSensPair {
 public:
 	FuncSensPair(float divideInput, SensorType type)
 		: m_func(divideInput)
-		, m_sens(type, MS2NT(10))
-	{
+		, m_sens(type, MS2NT(10)) {
 		m_sens.setFunction(m_func);
 	}
 
@@ -57,7 +56,7 @@ private:
 		// Only configure if we have a channel
 		if (!isAdcChannelValid(cfg.channel)) {
 #if EFI_UNIT_TEST
-	printf("Configured NO hardware %s\n", name());
+			printf("Configured NO hardware %s\n", name());
 #endif
 			return false;
 		}
@@ -69,20 +68,20 @@ private:
 
 		// If the voltage for closed vs. open is very near, something is wrong with your calibration
 		if (split < 0.5f) {
-			firmwareError(ObdCode::OBD_TPS_Configuration, "\"%s\" problem: open %.2f/closed %.2f cal values are too close together. Check your calibration and wiring!", name(),
+			firmwareError(
+					ObdCode::OBD_TPS_Configuration,
+					"\"%s\" problem: open %.2f/closed %.2f cal values are too close together. Check your calibration "
+					"and wiring!",
+					name(),
 					cfg.open,
 					cfg.closed);
 			return false;
 		}
 
-		m_func.configure(
-			cfg.closed, 0,
-			cfg.open, 100, 
-			cfg.min, cfg.max
-		);
+		m_func.configure(cfg.closed, 0, cfg.open, 100, cfg.min, cfg.max);
 
 #if EFI_UNIT_TEST
-	printf("Configured YES %s\n", name());
+		printf("Configured YES %s\n", name());
 #endif
 		return true;
 	}
@@ -96,11 +95,13 @@ public:
 	RedundantPair(FuncSensPair& pri, FuncSensPair& sec, SensorType outputType)
 		: m_pri(pri)
 		, m_sec(sec)
-		, m_redund(outputType, m_pri.type(), m_sec.type())
-	{
-	}
+		, m_redund(outputType, m_pri.type(), m_sec.type()) {}
 
-	void init(const TpsConfig& primary, const TpsConfig& secondary, float secondaryMaximum, bool allowIdenticalSensors = false) {
+	void
+	init(const TpsConfig& primary,
+		 const TpsConfig& secondary,
+		 float secondaryMaximum,
+		 bool allowIdenticalSensors = false) {
 		bool hasFirst = m_pri.init(primary);
 		bool hasSecond = m_sec.init(secondary);
 
@@ -117,17 +118,25 @@ public:
 			bool tooCloseOpen = std::abs(primary.open - secondary.open) < 0.2f;
 
 			if (hasBothSensors && tooCloseClosed && tooCloseOpen) {
-				firmwareError(ObdCode::OBD_TPS_Configuration, "Configuration for redundant pair %s/%s are too similar - did you wire one sensor to both inputs...?", m_pri.name(), m_sec.name());
+				firmwareError(
+						ObdCode::OBD_TPS_Configuration,
+						"Configuration for redundant pair %s/%s are too similar - did you wire one sensor to both "
+						"inputs...?",
+						m_pri.name(),
+						m_sec.name());
 				return;
 			}
 		}
-		
+
 		if (secondaryMaximum == 0) {
 			// config compat, if 0, then assume you want full-scale redundancy
 			secondaryMaximum = 100;
 		} else if (secondaryMaximum < 20) {
 			// don't allow <20% partial redundancy
-			warning(ObdCode::CUSTOM_INVALID_TPS_SETTING, "Configuration for partial redundant switch-over too low: %.1f %s", secondaryMaximum, m_redund.getSensorName());
+			warning(ObdCode::CUSTOM_INVALID_TPS_SETTING,
+					"Configuration for partial redundant switch-over too low: %.1f %s",
+					secondaryMaximum,
+					m_redund.getSensorName());
 			secondaryMaximum = 20;
 		}
 
@@ -180,28 +189,54 @@ void initTps() {
 	// Throttle sensors
 	float throttleSecondaryMaximum = engineConfiguration->tpsSecondaryMaximum;
 	tps1.init(
-		{ engineConfiguration->tps1_1AdcChannel, (float)engineConfiguration->tpsMin, (float)engineConfiguration->tpsMax, min, max },
-		{ engineConfiguration->tps1_2AdcChannel, (float)engineConfiguration->tps1SecondaryMin, (float)engineConfiguration->tps1SecondaryMax, min, max },
-		throttleSecondaryMaximum
-	);
+			{engineConfiguration->tps1_1AdcChannel,
+			 (float)engineConfiguration->tpsMin,
+			 (float)engineConfiguration->tpsMax,
+			 min,
+			 max},
+			{engineConfiguration->tps1_2AdcChannel,
+			 (float)engineConfiguration->tps1SecondaryMin,
+			 (float)engineConfiguration->tps1SecondaryMax,
+			 min,
+			 max},
+			throttleSecondaryMaximum);
 
 	tps2.init(
-		{ engineConfiguration->tps2_1AdcChannel, (float)engineConfiguration->tps2Min, (float)engineConfiguration->tps2Max, min, max },
-		{ engineConfiguration->tps2_2AdcChannel, (float)engineConfiguration->tps2SecondaryMin, (float)engineConfiguration->tps2SecondaryMax, min, max },
-		throttleSecondaryMaximum
-	);
+			{engineConfiguration->tps2_1AdcChannel,
+			 (float)engineConfiguration->tps2Min,
+			 (float)engineConfiguration->tps2Max,
+			 min,
+			 max},
+			{engineConfiguration->tps2_2AdcChannel,
+			 (float)engineConfiguration->tps2SecondaryMin,
+			 (float)engineConfiguration->tps2SecondaryMax,
+			 min,
+			 max},
+			throttleSecondaryMaximum);
 
 	// Pedal sensors
 	float pedalSecondaryMaximum = engineConfiguration->ppsSecondaryMaximum;
 	pedal.init(
-		{ engineConfiguration->throttlePedalPositionAdcChannel, engineConfiguration->throttlePedalUpVoltage, engineConfiguration->throttlePedalWOTVoltage, min, max },
-		{ engineConfiguration->throttlePedalPositionSecondAdcChannel, engineConfiguration->throttlePedalSecondaryUpVoltage, engineConfiguration->throttlePedalSecondaryWOTVoltage, min, max },
-		pedalSecondaryMaximum,
-		engineConfiguration->allowIdenticalPps
-	);
+			{engineConfiguration->throttlePedalPositionAdcChannel,
+			 engineConfiguration->throttlePedalUpVoltage,
+			 engineConfiguration->throttlePedalWOTVoltage,
+			 min,
+			 max},
+			{engineConfiguration->throttlePedalPositionSecondAdcChannel,
+			 engineConfiguration->throttlePedalSecondaryUpVoltage,
+			 engineConfiguration->throttlePedalSecondaryWOTVoltage,
+			 min,
+			 max},
+			pedalSecondaryMaximum,
+			engineConfiguration->allowIdenticalPps);
 
 	// Other TPS-like sensors
-	wastegate.init({ engineConfiguration->wastegatePositionSensor, (float)engineConfiguration->wastegatePositionMin, (float)engineConfiguration->wastegatePositionMax, min, max });
+	wastegate.init(
+			{engineConfiguration->wastegatePositionSensor,
+			 (float)engineConfiguration->wastegatePositionMin,
+			 (float)engineConfiguration->wastegatePositionMax,
+			 min,
+			 max});
 
 	// Route the pedal or TPS to driverIntent as appropriate
 	if (isAdcChannelValid(engineConfiguration->throttlePedalPositionAdcChannel)) {

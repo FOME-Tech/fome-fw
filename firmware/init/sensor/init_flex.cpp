@@ -60,9 +60,7 @@ void initFlexSensor() {
 	flexSensor.setFunction(converter);
 
 #if EFI_PROD_CODE
-	efiExtiEnablePin("flex", flexPin,
-		PAL_EVENT_MODE_BOTH_EDGES,
-		flexCallback, nullptr);
+	efiExtiEnablePin("flex", flexPin, PAL_EVENT_MODE_BOTH_EDGES, flexCallback, nullptr);
 #endif // EFI_PROD_CODE
 
 	flexSensor.Register();
