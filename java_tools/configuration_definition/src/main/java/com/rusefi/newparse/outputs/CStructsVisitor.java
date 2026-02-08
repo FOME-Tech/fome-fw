@@ -18,8 +18,6 @@ public class CStructsVisitor extends ILayoutVisitor {
 
         // Emit assertions to check that the offset of each child is correct according to the C++ compiler
         sl.children.forEach(c -> c.writeCOffsetCheck(ps, sl.typeName));
-
-        ps.println();
     }
 
     public void visit(StructLayout sl, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
