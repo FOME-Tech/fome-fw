@@ -13,8 +13,7 @@
 
 struct CompressedBlockDevice {
 	const BaseBlockDeviceVMT* vmt;
-	_base_block_device_data
-	int32_t lastBlock;
+	_base_block_device_data int32_t lastBlock;
 	uzlib_uncomp d;
 	uint8_t dictionary[32768];
 	const uint8_t* source;

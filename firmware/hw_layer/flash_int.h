@@ -48,18 +48,18 @@
  */
 // Warning, flashdata_t must be unsigned!!!
 #if defined(STM32F4XX) || defined(STM32H7XX)
-#define FLASH_CR_PSIZE_MASK         (FLASH_CR_PSIZE_0 | FLASH_CR_PSIZE_1)
+#define FLASH_CR_PSIZE_MASK (FLASH_CR_PSIZE_0 | FLASH_CR_PSIZE_1)
 #if ((STM32_VDD >= 270) && (STM32_VDD <= 360))
-#define FLASH_CR_PSIZE_VALUE        FLASH_CR_PSIZE_1
+#define FLASH_CR_PSIZE_VALUE FLASH_CR_PSIZE_1
 typedef uint32_t flashdata_t;
 #elif (STM32_VDD >= 240) && (STM32_VDD < 270)
-#define FLASH_CR_PSIZE_VALUE        FLASH_CR_PSIZE_0
+#define FLASH_CR_PSIZE_VALUE FLASH_CR_PSIZE_0
 typedef uint16_t flashdata_t;
 #elif (STM32_VDD >= 210) && (STM32_VDD < 240)
-#define FLASH_CR_PSIZE_VALUE        FLASH_CR_PSIZE_0
+#define FLASH_CR_PSIZE_VALUE FLASH_CR_PSIZE_0
 typedef uint16_t flashdata_t;
 #elif (STM32_VDD >= 180) && (STM32_VDD < 210)
-#define FLASH_CR_PSIZE_VALUE        ((uint32_t)0x00000000)
+#define FLASH_CR_PSIZE_VALUE ((uint32_t)0x00000000)
 typedef uint8_t flashdata_t;
 #else
 #error "invalid VDD voltage specified"
@@ -67,15 +67,15 @@ typedef uint8_t flashdata_t;
 #endif /* defined(STM32F4XX) || defined(STM32H7XX) */
 
 #if defined(STM32F7XX)
-#define FLASH_CR_PSIZE_MASK         (FLASH_CR_PSIZE_0 | FLASH_CR_PSIZE_1)
+#define FLASH_CR_PSIZE_MASK (FLASH_CR_PSIZE_0 | FLASH_CR_PSIZE_1)
 #if ((STM32_VDD >= 270) && (STM32_VDD <= 300))
-#define FLASH_CR_PSIZE_VALUE        FLASH_CR_PSIZE_1
+#define FLASH_CR_PSIZE_VALUE FLASH_CR_PSIZE_1
 typedef uint32_t flashdata_t;
 #elif (STM32_VDD >= 210) && (STM32_VDD < 360)
-#define FLASH_CR_PSIZE_VALUE        FLASH_CR_PSIZE_0
+#define FLASH_CR_PSIZE_VALUE FLASH_CR_PSIZE_0
 typedef uint16_t flashdata_t;
 #elif (STM32_VDD >= 170) && (STM32_VDD < 360)
-#define FLASH_CR_PSIZE_VALUE        ((uint32_t)0x00000000)
+#define FLASH_CR_PSIZE_VALUE ((uint32_t)0x00000000)
 typedef uint8_t flashdata_t;
 #else
 #error "invalid VDD voltage specified"
