@@ -20,8 +20,8 @@ void NMI_Handler(void) {
 	NVIC_SystemReset();
 }
 
-//See http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABBGBEC.html
-typedef enum  {
+// See http://infocenter.arm.com/help/topic/com.arm.doc.dui0552a/BABBGBEC.html
+typedef enum {
 	Reset = 1,
 	NMI = 2,
 	HardFault = 3,
@@ -44,19 +44,19 @@ void HardFault_Handler_C(void* sp) {
 		NVIC_SystemReset();
 	}
 
-	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
-	//Get thread context. Contains main registers including PC and LR
+	// Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
+	// Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
 	memcpy(&ctx, sp, sizeof(struct port_extctx));
 
-	//Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
+	// Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
 	volatile FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
-	//For HardFault/BusFault this is the address that was accessed causing the error
+	// For HardFault/BusFault this is the address that was accessed causing the error
 	faultAddress = SCB->BFAR;
 
-	//Flags about hardfault / busfault
-	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
+	// Flags about hardfault / busfault
+	// See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
 	volatile bool isFaultPrecise = ((SCB->CFSR >> SCB_CFSR_BUSFAULTSR_Pos) & (1 << 1) ? true : false);
 	volatile bool isFaultImprecise = ((SCB->CFSR >> SCB_CFSR_BUSFAULTSR_Pos) & (1 << 2) ? true : false);
 	volatile bool isFaultOnUnstacking = ((SCB->CFSR >> SCB_CFSR_BUSFAULTSR_Pos) & (1 << 3) ? true : false);
@@ -76,16 +76,16 @@ void HardFault_Handler_C(void* sp) {
 }
 
 void UsageFault_Handler_C(void* sp) {
-	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
-	//Get thread context. Contains main registers including PC and LR
+	// Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
+	// Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
 	memcpy(&ctx, sp, sizeof(struct port_extctx));
 
-	//Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
+	// Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
 	volatile FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
-	//Flags about hardfault / busfault
-	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
+	// Flags about hardfault / busfault
+	// See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
 	volatile bool isUndefinedInstructionFault = ((SCB->CFSR >> SCB_CFSR_USGFAULTSR_Pos) & (1 << 0) ? true : false);
 	volatile bool isEPSRUsageFault = ((SCB->CFSR >> SCB_CFSR_USGFAULTSR_Pos) & (1 << 1) ? true : false);
 	volatile bool isInvalidPCFault = ((SCB->CFSR >> SCB_CFSR_USGFAULTSR_Pos) & (1 << 2) ? true : false);
@@ -110,20 +110,20 @@ void MemManage_Handler_C(void* sp) {
 	// Disable the MPU so we don't get smacked with a double fault while trying to save state
 	mpuDisable();
 
-	//For HardFault/BusFault this is the address that was accessed causing the error
+	// For HardFault/BusFault this is the address that was accessed causing the error
 	faultAddress = SCB->MMFAR;
 
-	//Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
-	//Get thread context. Contains main registers including PC and LR
+	// Copy to local variables (not pointers) to allow GDB "i loc" to directly show the info
+	// Get thread context. Contains main registers including PC and LR
 	struct port_extctx ctx;
 	memcpy(&ctx, sp, sizeof(struct port_extctx));
 
-	//Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
+	// Interrupt status register: Which interrupt have we encountered, e.g. HardFault?
 	FaultType faultType = (FaultType)__get_IPSR();
 	(void)faultType;
 
-	//Flags about hardfault / busfault
-	//See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
+	// Flags about hardfault / busfault
+	// See http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0552a/Cihdjcfc.html for reference
 	volatile bool isInstructionAccessViolation = ((SCB->CFSR >> SCB_CFSR_MEMFAULTSR_Pos) & (1 << 0) ? true : false);
 	volatile bool isDataAccessViolation = ((SCB->CFSR >> SCB_CFSR_MEMFAULTSR_Pos) & (1 << 1) ? true : false);
 	volatile bool isExceptionUnstackingFault = ((SCB->CFSR >> SCB_CFSR_MEMFAULTSR_Pos) & (1 << 3) ? true : false);

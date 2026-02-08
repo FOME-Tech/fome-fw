@@ -21,15 +21,14 @@
 #include "hardware.h"
 #include "mpu_util.h"
 
-static SPIConfig spiCfg = { .circular = false,
+static SPIConfig spiCfg = {
+		.circular = false,
 		.end_cb = NULL,
 		.ssport = NULL,
 		.sspad = 0,
-		.cr1 =
-				SPI_CR1_16BIT_MODE |
-				SPI_CR1_MSTR |
-//SPI_CR1_BR_1 // 5MHz
-		SPI_CR1_CPHA | SPI_CR1_BR_0 | SPI_CR1_BR_1 | SPI_CR1_BR_2 | SPI_CR1_SPE,
+		.cr1 = SPI_CR1_16BIT_MODE | SPI_CR1_MSTR |
+			   // SPI_CR1_BR_1 // 5MHz
+			   SPI_CR1_CPHA | SPI_CR1_BR_0 | SPI_CR1_BR_1 | SPI_CR1_BR_2 | SPI_CR1_SPE,
 		.cr2 = SPI_CR2_SSOE};
 
 class Pt2001 : public Pt2001Base {
@@ -158,8 +157,7 @@ void Pt2001::init() {
 	//
 	// see setTest33816EngineConfiguration for default configuration
 	// Pins
-	if (!isBrainPinValid(engineConfiguration->mc33816_cs) ||
-		!isBrainPinValid(engineConfiguration->mc33816_rstb) ||
+	if (!isBrainPinValid(engineConfiguration->mc33816_cs) || !isBrainPinValid(engineConfiguration->mc33816_rstb) ||
 		!isBrainPinValid(engineConfiguration->mc33816_driven)) {
 		return;
 	}

@@ -28,154 +28,123 @@
 #define TLE6240_RESET_PAD 3U
 #endif /* TLE6240_RESET_PAD */
 #ifndef TLE6240_DIRECT_IO
-#define TLE6240_DIRECT_IO \
-		/* IN1  - D_TACH_OUT */ \
-		[0] = {.port = GPIOG, .pad = 2}, \
-		/* IN2..4 grounded */ \
-		[1] = {.port = NULL, .pad = 0}, \
-		[2] = {.port = NULL, .pad = 0}, \
-		[3] = {.port = NULL, .pad = 0}, \
-		/* IN9  - D_INJ_5 */ \
-		[4] = {.port = GPIOD, .pad = 15}, \
-		/* IN10 - D_WASTGATE */ \
-		[5] = {.port = GPIOD, .pad = 14}, \
-		/* IN11 - D_IDLE_OPEN */ \
-		[6] = {.port = GPIOC, .pad = 6}, \
-		/* IN12 - D_IDLE_CLOSE */ \
-		[7] = {.port = GPIOC, .pad = 7},
+#define TLE6240_DIRECT_IO                                                                                              \
+	/* IN1  - D_TACH_OUT */                                                                                            \
+	[0] = {.port = GPIOG, .pad = 2}, /* IN2..4 grounded */                                                             \
+			[1] = {.port = NULL, .pad = 0}, [2] = {.port = NULL, .pad = 0},                                            \
+	[3] = {.port = NULL, .pad = 0},			  /* IN9  - D_INJ_5 */                                                     \
+			[4] = {.port = GPIOD, .pad = 15}, /* IN10 - D_WASTGATE */                                                  \
+			[5] = {.port = GPIOD, .pad = 14}, /* IN11 - D_IDLE_OPEN */                                                 \
+			[6] = {.port = GPIOC, .pad = 6},  /* IN12 - D_IDLE_CLOSE */                                                \
+			[7] = {.port = GPIOC, .pad = 7},
 #endif /* TLE6240_DIRECT_IO */
 
 static OutputPin tle6240Cs;
 struct tle6240_config tle6240 = {
-	.spi_bus = NULL,
-	.spi_config = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 =
-			SPI_CR1_16BIT_MODE |
-			SPI_CR1_SSM |
-			SPI_CR1_SSI |
-			/* SPI_CR1_LSBFIRST | */
-			((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) |	/* div = 16 */
-			SPI_CR1_MSTR |
-			/* SPI_CR1_CPOL | */ // = 0
-			SPI_CR1_CPHA | // = 1
-			0,
-		.cr2 = SPI_CR2_16BIT_MODE
-	},
-	.direct_io = {
-		TLE6240_DIRECT_IO
-	},
-	.reset = {.port = TLE6240_RESET_PORT, .pad = TLE6240_RESET_PAD}
-};
+		.spi_bus = NULL,
+		.spi_config =
+				{.circular = false,
+				 .end_cb = NULL,
+				 .ssport = NULL,
+				 .sspad = 0,
+				 .cr1 = SPI_CR1_16BIT_MODE | SPI_CR1_SSM | SPI_CR1_SSI |
+						/* SPI_CR1_LSBFIRST | */
+						((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) | /* div = 16 */
+						SPI_CR1_MSTR |
+						/* SPI_CR1_CPOL | */ // = 0
+						SPI_CR1_CPHA |		 // = 1
+						0,
+				 .cr2 = SPI_CR2_16BIT_MODE},
+		.direct_io = {TLE6240_DIRECT_IO},
+		.reset = {.port = TLE6240_RESET_PORT, .pad = TLE6240_RESET_PAD}};
 #endif /* (BOARD_TLE6240_COUNT > 0) */
 
 #if (BOARD_MC33972_COUNT > 0)
 static OutputPin mc33972Cs;
 struct mc33972_config mc33972 = {
-	.spi_bus = NULL,
-	.spi_config = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 =
-			SPI_CR1_8BIT_MODE |
-			SPI_CR1_SSM |
-			SPI_CR1_SSI |
-			/* SPI_CR1_LSBFIRST | */
-			((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) |	/* div = 16 */
-			SPI_CR1_MSTR |
-			/* SPI_CR1_CPOL | */ /* = 0 */
-			SPI_CR1_CPHA | /* = 1 */
-			0,
-		.cr2 = SPI_CR2_8BIT_MODE
-	},
+		.spi_bus = NULL,
+		.spi_config =
+				{.circular = false,
+				 .end_cb = NULL,
+				 .ssport = NULL,
+				 .sspad = 0,
+				 .cr1 = SPI_CR1_8BIT_MODE | SPI_CR1_SSM | SPI_CR1_SSI |
+						/* SPI_CR1_LSBFIRST | */
+						((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) | /* div = 16 */
+						SPI_CR1_MSTR |
+						/* SPI_CR1_CPOL | */ /* = 0 */
+						SPI_CR1_CPHA |		 /* = 1 */
+						0,
+				 .cr2 = SPI_CR2_8BIT_MODE},
 };
 #endif /* (BOARD_MC33972_COUNT > 0) */
 
 #if (BOARD_TLE8888_COUNT > 0)
 static OutputPin tle8888Cs;
 struct tle8888_config tle8888_cfg = {
-	.spi_bus = NULL,
-	.spi_config = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 =
-			SPI_CR1_16BIT_MODE |
-			SPI_CR1_SSM |
-			SPI_CR1_SSI |
-			SPI_CR1_LSBFIRST |	//LSB first
-			((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) |	// div = 16
-			SPI_CR1_MSTR |
-			SPI_CR1_CPHA |
-			0,
-		.cr2 = SPI_CR2_16BIT_MODE
-	},
-	.reset =  {.port = NULL,	.pad = 0},
-	.direct_gpio = {
-		/* IN1..4 -> OUT1..OUT4 (Injectors) */
-		[0] = {.port = GPIOE,	.pad = 14},
-		[1] = {.port = GPIOE,	.pad = 13},
-		[2] = {.port = GPIOE,	.pad = 12},
-		[3] = {.port = GPIOE,	.pad = 11},
-		/* IN5..8 -> IGN1..IGN4 (Ignitors) */
-		/* Not used */
-		[4] = {.port = NULL,	.pad = 0},
-		[5] = {.port = NULL,	.pad = 0},
-		[6] = {.port = NULL,	.pad = 0},
-		[7] = {.port = NULL,	.pad = 0},
-		/* Remapable IN9..12 */
-		[8] = {.port = GPIOE,	.pad = 10},
-		[9] = {.port = GPIOE,	.pad = 9},
-		[10] = {.port = GPIOE,	.pad = 8},
-		[11] = {.port = GPIOE,	.pad = 7},
-	},
-	.direct_maps = {
-		[0] = {.output =  5},	/* MRE: LS2 */
-		[1] = {.output =  6},	/* MRE: LS1 */
-		[2] = {.output = 21},	/* MRE: GP1 - not used when stepper = true */
-		[3] = {.output = 22},	/* MRE: GP2 - not used when stepper = true */
-	},
-	.ign_en =  {.port = GPIOD,	.pad = 10},
-	.inj_en =  {.port = GPIOD,	.pad = 11},
-	.mode = TL_AUTO,
-	.stepper = false
-};
+		.spi_bus = NULL,
+		.spi_config =
+				{.circular = false,
+				 .end_cb = NULL,
+				 .ssport = NULL,
+				 .sspad = 0,
+				 .cr1 = SPI_CR1_16BIT_MODE | SPI_CR1_SSM | SPI_CR1_SSI | SPI_CR1_LSBFIRST | // LSB first
+						((3 << SPI_CR1_BR_Pos) & SPI_CR1_BR) |								// div = 16
+						SPI_CR1_MSTR | SPI_CR1_CPHA | 0,
+				 .cr2 = SPI_CR2_16BIT_MODE},
+		.reset = {.port = NULL, .pad = 0},
+		.direct_gpio =
+				{
+						/* IN1..4 -> OUT1..OUT4 (Injectors) */
+						[0] = {.port = GPIOE, .pad = 14},
+						[1] = {.port = GPIOE, .pad = 13},
+						[2] = {.port = GPIOE, .pad = 12},
+						[3] = {.port = GPIOE, .pad = 11},
+						/* IN5..8 -> IGN1..IGN4 (Ignitors) */
+						/* Not used */
+						[4] = {.port = NULL, .pad = 0},
+						[5] = {.port = NULL, .pad = 0},
+						[6] = {.port = NULL, .pad = 0},
+						[7] = {.port = NULL, .pad = 0},
+						/* Remapable IN9..12 */
+						[8] = {.port = GPIOE, .pad = 10},
+						[9] = {.port = GPIOE, .pad = 9},
+						[10] = {.port = GPIOE, .pad = 8},
+						[11] = {.port = GPIOE, .pad = 7},
+				},
+		.direct_maps =
+				{
+						[0] = {.output = 5},  /* MRE: LS2 */
+						[1] = {.output = 6},  /* MRE: LS1 */
+						[2] = {.output = 21}, /* MRE: GP1 - not used when stepper = true */
+						[3] = {.output = 22}, /* MRE: GP2 - not used when stepper = true */
+				},
+		.ign_en = {.port = GPIOD, .pad = 10},
+		.inj_en = {.port = GPIOD, .pad = 11},
+		.mode = TL_AUTO,
+		.stepper = false};
 #endif
 
 #if (BOARD_DRV8860_COUNT > 0)
 static OutputPin drv8860Cs;
 struct drv8860_config drv8860 = {
-	.spi_bus = NULL,
-	.spi_config = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 =
-			SPI_CR1_16BIT_MODE |
-			SPI_CR1_SSM |
-			SPI_CR1_SSI |
-			((7 << SPI_CR1_BR_Pos) & SPI_CR1_BR) |	/* div = 32 */
-			SPI_CR1_MSTR |
-			SPI_CR1_CPOL |
-			0,
-		.cr2 = SPI_CR2_16BIT_MODE
-	},
-	.reset = {.port = DRV8860_RESET_PORT, .pad = DRV8860_RESET_PAD}
-};
+		.spi_bus = NULL,
+		.spi_config =
+				{.circular = false,
+				 .end_cb = NULL,
+				 .ssport = NULL,
+				 .sspad = 0,
+				 .cr1 = SPI_CR1_16BIT_MODE | SPI_CR1_SSM | SPI_CR1_SSI |
+						((7 << SPI_CR1_BR_Pos) & SPI_CR1_BR) | /* div = 32 */
+						SPI_CR1_MSTR | SPI_CR1_CPOL | 0,
+				 .cr2 = SPI_CR2_16BIT_MODE},
+		.reset = {.port = DRV8860_RESET_PORT, .pad = DRV8860_RESET_PAD}};
 #endif /* (BOARD_DRV8860_COUNT > 0) */
 
 void initSmartGpio() {
 #if (BOARD_TLE6240_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->tle6240_cs)) {
-		tle6240Cs.initPin("tle6240 CS", engineConfiguration->tle6240_cs,
-			engineConfiguration->tle6240_csPinMode);
+		tle6240Cs.initPin("tle6240 CS", engineConfiguration->tle6240_cs, engineConfiguration->tle6240_csPinMode);
 		tle6240Cs.setValue(true);
 
 		tle6240.spi_config.ssport = getHwPort("tle6240 CS", engineConfiguration->tle6240_cs);
@@ -189,8 +158,7 @@ void initSmartGpio() {
 
 #if (BOARD_MC33972_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->mc33972_cs)) {
-		mc33972Cs.initPin("mc33972 CS", engineConfiguration->mc33972_cs,
-				engineConfiguration->mc33972_csPinMode);
+		mc33972Cs.initPin("mc33972 CS", engineConfiguration->mc33972_cs, engineConfiguration->mc33972_csPinMode);
 		mc33972Cs.setValue(true);
 
 		// todo: reuse initSpiCs method?
@@ -206,10 +174,9 @@ void initSmartGpio() {
 
 #if (BOARD_TLE8888_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->tle8888_cs)) {
-		tle8888Cs.initPin("tle8888 CS", engineConfiguration->tle8888_cs,
-			engineConfiguration->tle8888_csPinMode);
+		tle8888Cs.initPin("tle8888 CS", engineConfiguration->tle8888_cs, engineConfiguration->tle8888_csPinMode);
 		tle8888Cs.setValue(true);
-		
+
 		// todo: reuse initSpiCs method?
 		tle8888_cfg.spi_config.ssport = getHwPort("tle8888 CS", engineConfiguration->tle8888_cs);
 		tle8888_cfg.spi_config.sspad = getHwPin("tle8888 CS", engineConfiguration->tle8888_cs);
@@ -227,8 +194,7 @@ void initSmartGpio() {
 
 #if (BOARD_DRV8860_COUNT > 0)
 	if (isBrainPinValid(engineConfiguration->drv8860_cs)) {
-		drv8860Cs.initPin("drv8860 CS", engineConfiguration->drv8860_cs,
-				engineConfiguration->drv8860_csPinMode);
+		drv8860Cs.initPin("drv8860 CS", engineConfiguration->drv8860_cs, engineConfiguration->drv8860_csPinMode);
 		drv8860Cs.setValue(true);
 
 		drv8860.spi_config.ssport = getHwPort("drv8860 CS", engineConfiguration->drv8860_cs);
@@ -260,8 +226,8 @@ void tle8888startup() {
 		efitick_t nowNt = getTimeNowNt();
 		if (nowNt - tle8888CrankingResetTime > MS2NT(300)) {
 			tle8888_req_init();
-			// let's reset TLE8888 every 300ms while cranking since that's the best we can do to deal with undervoltage reset
-			// PS: oh yes, it's a horrible design! Please suggest something better!
+			// let's reset TLE8888 every 300ms while cranking since that's the best we can do to deal with undervoltage
+			// reset PS: oh yes, it's a horrible design! Please suggest something better!
 			tle8888CrankingResetTime = nowNt;
 		}
 	}

@@ -10,7 +10,7 @@
 static bool fs_ready = false;
 
 #if HAL_USE_USB_MSD
-static chibios_rt::BinarySemaphore usbConnectedSemaphore(/* taken =*/ true);
+static chibios_rt::BinarySemaphore usbConnectedSemaphore(/* taken =*/true);
 
 void onUsbConnectedNotifyMmcI() {
 	usbConnectedSemaphore.signalI();
@@ -67,7 +67,7 @@ void unmountSdFilesystem() {
 	fs_ready = false;
 
 	// Unmount the volume
-	f_mount(nullptr, nullptr, 0);						// FatFs: Unregister work area prior to discard it
+	f_mount(nullptr, nullptr, 0); // FatFs: Unregister work area prior to discard it
 
 	stopMmcBlockDevice();
 

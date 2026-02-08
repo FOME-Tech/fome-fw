@@ -8,7 +8,6 @@
 
 #include "pch.h"
 
-
 #include "trigger_input.h"
 #include "can_hw.h"
 #include "hardware.h"
@@ -93,8 +92,7 @@ void onFastAdcComplete(adcsample_t*) {
 #ifdef MODULE_MAP_AVERAGING
 	engine->module<MapAveragingModule>()->submitSample(
 			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel),
-			adcToVoltsDivided(getFastAdc(fastMapSampleIndex2), engineConfiguration->map2HwChannel)
-		);
+			adcToVoltsDivided(getFastAdc(fastMapSampleIndex2), engineConfiguration->map2HwChannel));
 #endif // MODULE_MAP_AVERAGING
 }
 #endif /* HAL_USE_ADC */
@@ -103,7 +101,7 @@ static void calcFastAdcIndexes() {
 #ifdef MODULE_MAP_AVERAGING
 	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", engineConfiguration->map.sensor.hwChannel);
 	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", engineConfiguration->map2HwChannel);
-#endif/* MODULE_MAP_AVERAGING */
+#endif /* MODULE_MAP_AVERAGING */
 }
 
 extern bool isSpiInitialized[6];
@@ -122,25 +120,25 @@ void stopSpi(spi_device_e device) {
 
 /**
  * this method is NOT currently invoked on ECU start
- * todo: maybe start invoking this method on ECU start so that peripheral start-up initialization and restart are unified?
+ * todo: maybe start invoking this method on ECU start so that peripheral start-up initialization and restart are
+ * unified?
  */
 
 void applyNewHardwareSettings() {
 #if EFI_PROD_CODE
-	#if EFI_SHAFT_POSITION_INPUT
-		bool allowDangerousHardwareUpdates =
-			!engine->rpmCalculator.isRunning();
-	#else // not EFI_SHAFT_POSITION_INPUT
-		bool allowDangerousHardwareUpdates = true;
-	#endif // EFI_SHAFT_POSITION_INPUT
+#if EFI_SHAFT_POSITION_INPUT
+	bool allowDangerousHardwareUpdates = !engine->rpmCalculator.isRunning();
+#else  // not EFI_SHAFT_POSITION_INPUT
+	bool allowDangerousHardwareUpdates = true;
+#endif // EFI_SHAFT_POSITION_INPUT
 #endif
 
 	/**
 	 * All 'stop' methods need to go before we begin starting pins.
 	 *
 	 * We take settings from 'activeConfiguration' not 'engineConfiguration' while stopping hardware.
-	 * Some hardware is restart unconditionally on change of parameters while for some systems we make extra effort and restart only
-	 * relevant settings were changes.
+	 * Some hardware is restart unconditionally on change of parameters while for some systems we make extra effort and
+	 * restart only relevant settings were changes.
 	 *
 	 */
 	ButtonDebounce::stopConfigurationList();
@@ -222,8 +220,8 @@ void applyNewHardwareSettings() {
 }
 
 // Weak link a stub so that every board doesn't have to implement this function
-__attribute__((weak)) void boardInitHardware() { }
-__attribute__((weak)) void setPinConfigurationOverrides() { }
+__attribute__((weak)) void boardInitHardware() {}
+__attribute__((weak)) void setPinConfigurationOverrides() {}
 
 // This function initializes hardware that can do so before configuration is loaded
 void initHardwareNoConfig() {
@@ -354,19 +352,19 @@ void initHardware() {
 // this is F4 implementation but we will keep it here for now for simplicity
 int getSpiPrescaler(spi_speed_e speed, spi_device_e device) {
 	switch (speed) {
-	case _5MHz:
-		return device == SPI_DEVICE_1 ? SPI_BaudRatePrescaler_16 : SPI_BaudRatePrescaler_8;
-	case _2_5MHz:
-		return device == SPI_DEVICE_1 ? SPI_BaudRatePrescaler_32 : SPI_BaudRatePrescaler_16;
-	case _1_25MHz:
-		return device == SPI_DEVICE_1 ? SPI_BaudRatePrescaler_64 : SPI_BaudRatePrescaler_32;
+		case _5MHz:
+			return device == SPI_DEVICE_1 ? SPI_BaudRatePrescaler_16 : SPI_BaudRatePrescaler_8;
+		case _2_5MHz:
+			return device == SPI_DEVICE_1 ? SPI_BaudRatePrescaler_32 : SPI_BaudRatePrescaler_16;
+		case _1_25MHz:
+			return device == SPI_DEVICE_1 ? SPI_BaudRatePrescaler_64 : SPI_BaudRatePrescaler_32;
 
-	case _150KHz:
-		// SPI1 does not support 150KHz, it would be 300KHz for SPI1
-		return SPI_BaudRatePrescaler_256;
-	default:
-		// unexpected
-		return 0;
+		case _150KHz:
+			// SPI1 does not support 150KHz, it would be 300KHz for SPI1
+			return SPI_BaudRatePrescaler_256;
+		default:
+			// unexpected
+			return 0;
 	}
 }
 

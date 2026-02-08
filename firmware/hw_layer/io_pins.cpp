@@ -32,11 +32,11 @@ void efiSetPadUnused(brain_pin_e brainPin) {
 		palSetPadMode(port, pin, mode);
 		palWritePad(port, pin, 0);
 	}
-	#if (BOARD_EXT_GPIOCHIPS > 0)
-		else {
-			gpiochips_setPadMode(brainPin, mode);
-		}
-	#endif
+#if (BOARD_EXT_GPIOCHIPS > 0)
+	else {
+		gpiochips_setPadMode(brainPin, mode);
+	}
+#endif
 #endif /* EFI_PROD_CODE */
 
 	brain_pin_markUnused(brainPin);
@@ -45,7 +45,7 @@ void efiSetPadUnused(brain_pin_e brainPin) {
 /**
  * This method would set an error condition if pin is already used
  */
-void efiSetPadMode(const char *msg, brain_pin_e brainPin, iomode_t mode) {
+void efiSetPadMode(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 	if (!isBrainPinValid(brainPin)) {
 		// No pin configured, nothing to do here.
 		return;
@@ -58,7 +58,7 @@ void efiSetPadMode(const char *msg, brain_pin_e brainPin, iomode_t mode) {
 	}
 }
 
-void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brainPin, iomode_t mode) {
+void efiSetPadModeWithoutOwnershipAcquisition(const char* msg, brain_pin_e brainPin, iomode_t mode) {
 #if EFI_PROD_CODE
 	/*check if on-chip pin or external */
 	if (brain_pin_is_onchip(brainPin)) {
@@ -71,11 +71,11 @@ void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brain
 
 		palSetPadMode(port, pin, mode);
 	}
-	#if (BOARD_EXT_GPIOCHIPS > 0)
-		else {
-			gpiochips_setPadMode(brainPin, mode);
-		}
-	#endif
+#if (BOARD_EXT_GPIOCHIPS > 0)
+	else {
+		gpiochips_setPadMode(brainPin, mode);
+	}
+#endif
 
 #endif /* EFI_PROD_CODE */
 }
@@ -126,10 +126,7 @@ static bool readCanVirtualInput(size_t idx) {
 
 	const auto& inputConf = engineConfiguration->canVirtualInputs[idx];
 
-	return canVirtualInputs[idx].get(
-		inputConf.timeout,
-		inputConf.defaultValue != 0
-	);
+	return canVirtualInputs[idx].get(inputConf.timeout, inputConf.defaultValue != 0);
 }
 
 bool efiReadPin(Gpio pin) {
@@ -141,11 +138,11 @@ bool efiReadPin(Gpio pin) {
 		return palReadPad(getHwPort("readPin", pin), getHwPin("readPin", pin));
 	}
 
-	#if (BOARD_EXT_GPIOCHIPS > 0)
-		if (brain_pin_is_ext(pin)) {
-			return (gpiochips_readPad(pin) > 0);
-		}
-	#endif
+#if (BOARD_EXT_GPIOCHIPS > 0)
+	if (brain_pin_is_ext(pin)) {
+		return (gpiochips_readPad(pin) > 0);
+	}
+#endif
 
 	if (pin >= Gpio::CAN_INPUT_0 && pin <= Gpio::CAN_INPUT_7) {
 		return readCanVirtualInput(pin - Gpio::CAN_INPUT_0);
@@ -157,13 +154,13 @@ bool efiReadPin(Gpio pin) {
 
 iomode_t getInputMode(pin_input_mode_e mode) {
 	switch (mode) {
-	case PI_PULLUP:
-		return PAL_MODE_INPUT_PULLUP;
-	case PI_PULLDOWN:
-		return PAL_MODE_INPUT_PULLDOWN;
-	case PI_DEFAULT:
-	default:
-		return PAL_MODE_INPUT;
+		case PI_PULLUP:
+			return PAL_MODE_INPUT_PULLUP;
+		case PI_PULLDOWN:
+			return PAL_MODE_INPUT_PULLDOWN;
+		case PI_DEFAULT:
+		default:
+			return PAL_MODE_INPUT;
 	}
 }
 

@@ -23,7 +23,7 @@ void StepperMotorBase::setTargetPosition(float targetPositionSteps) {
 	}
 }
 
-void StepperMotorBase::initialize(StepperHw *hardware, int totalSteps) {
+void StepperMotorBase::initialize(StepperHw* hardware, int totalSteps) {
 	m_totalSteps = maxI(3, totalSteps);
 
 	m_hw = hardware;
@@ -84,7 +84,11 @@ void StepperMotorBase::setInitialPosition() {
 	bool forceStepperParking = !isRunning && tpsPos > STEPPER_PARKING_TPS;
 	if (engineConfiguration->stepperForceParkingEveryRestart)
 		forceStepperParking = true;
-	efiPrintf("Stepper: savedStepperPos=%d forceStepperParking=%d (tps=%.2f)", m_currentPosition, (forceStepperParking ? 1 : 0), tpsPos);
+	efiPrintf(
+			"Stepper: savedStepperPos=%d forceStepperParking=%d (tps=%.2f)",
+			m_currentPosition,
+			(forceStepperParking ? 1 : 0),
+			tpsPos);
 
 	if (m_currentPosition < 0 || forceStepperParking) {
 		efiPrintf("Stepper: starting parking...");
@@ -99,7 +103,8 @@ void StepperMotorBase::setInitialPosition() {
 		 *
 		 * Add extra steps to compensate step skipping by some old motors.
 		 */
-		int numParkingSteps = (int)efiRound((1.0f + (float)engineConfiguration->stepperParkingExtraSteps / PERCENT_MULT) * m_totalSteps, 1.0f);
+		int numParkingSteps = (int)efiRound(
+				(1.0f + (float)engineConfiguration->stepperParkingExtraSteps / PERCENT_MULT) * m_totalSteps, 1.0f);
 		for (int i = 0; i < numParkingSteps; i++) {
 			if (!m_hw->step(false)) {
 				initialPositionSet = false;
@@ -207,13 +212,19 @@ bool StepDirectionStepper::step(bool positive) {
 	return pulse();
 }
 
-void StepperMotor::initialize(StepperHw *hardware, int totalSteps) {
+void StepperMotor::initialize(StepperHw* hardware, int totalSteps) {
 	StepperMotorBase::initialize(hardware, totalSteps);
 
 	startThread();
 }
 
-void StepDirectionStepper::initialize(brain_pin_e stepPin, brain_pin_e directionPin, pin_output_mode_e directionPinMode, float reactionTime, brain_pin_e enablePin, pin_output_mode_e enablePinMode) {
+void StepDirectionStepper::initialize(
+		brain_pin_e stepPin,
+		brain_pin_e directionPin,
+		pin_output_mode_e directionPinMode,
+		float reactionTime,
+		brain_pin_e enablePin,
+		pin_output_mode_e enablePinMode) {
 	// avoid double-init
 	m_directionPin.deInit();
 	m_stepPin.deInit();
@@ -239,5 +250,5 @@ void StepDirectionStepper::initialize(brain_pin_e stepPin, brain_pin_e direction
 #endif
 
 #if EFI_UNIT_TEST
-void StepperHw::sleep() { }
+void StepperHw::sleep() {}
 #endif // EFI_UNIT_TEST
