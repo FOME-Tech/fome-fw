@@ -28,9 +28,6 @@
 #include "scheduler.h"
 #endif /* EFI_PROD_CODE */
 
-void setDiscoveryPdm() {
-}
-
 // todo: should this be part of more default configurations?
 void setFrankensoConfiguration() {
 	engineConfiguration->trigger.type = trigger_type_e::TT_ONE_PLUS_ONE;
@@ -62,7 +59,6 @@ void setFrankensoConfiguration() {
 	setCommonNTCSensor(&engineConfiguration->clt, 2700);
 	setCommonNTCSensor(&engineConfiguration->iat, 2700);
 
-
 	/**
 	 * http://rusefi.com/wiki/index.php?title=Manual:Hardware_Frankenso_board
 	 */
@@ -90,9 +86,9 @@ void setFrankensoConfiguration() {
 	engineConfiguration->injectionPins[2] = Gpio::B8; // #3
 #ifndef EFI_INJECTOR_PIN3
 	engineConfiguration->injectionPins[3] = Gpio::B7; // #4
-#else /* EFI_INJECTOR_PIN3 */
+#else												  /* EFI_INJECTOR_PIN3 */
 	engineConfiguration->injectionPins[3] = EFI_INJECTOR_PIN3; // #4
-#endif /* EFI_INJECTOR_PIN3 */
+#endif												  /* EFI_INJECTOR_PIN3 */
 
 	setAlgorithm(LM_SPEED_DENSITY);
 
@@ -112,7 +108,7 @@ void setFrankensoConfiguration() {
 	engineConfiguration->ignitionPins[3] = Gpio::E10;
 
 	// todo: 8.2 or 10k?
-	engineConfiguration->vbattDividerCoeff = ((float) (10 + 33)) / 10 * 2;
+	engineConfiguration->vbattDividerCoeff = ((float)(10 + 33)) / 10 * 2;
 }
 
 /**
@@ -149,11 +145,10 @@ void setFrankensoBoardTestConfiguration() {
 	engineConfiguration->idle.solenoidPin = Gpio::Unassigned;
 	engineConfiguration->fanPin = Gpio::Unassigned;
 
-
-	engineConfiguration->ignitionPins[0] = Gpio::C9; // coil in default pinout
-	engineConfiguration->ignitionPins[1] = Gpio::C7; // coil in default pinout
+	engineConfiguration->ignitionPins[0] = Gpio::C9;  // coil in default pinout
+	engineConfiguration->ignitionPins[1] = Gpio::C7;  // coil in default pinout
 	engineConfiguration->ignitionPins[2] = Gpio::E10; // coil in default pinout
-	engineConfiguration->ignitionPins[3] = Gpio::E8; // Miata VVT tach
+	engineConfiguration->ignitionPins[3] = Gpio::E8;  // Miata VVT tach
 
 	engineConfiguration->ignitionPins[4] = Gpio::E14; // coil in default pinout
 	engineConfiguration->ignitionPins[5] = Gpio::E12;
@@ -163,7 +158,6 @@ void setFrankensoBoardTestConfiguration() {
 	engineConfiguration->ignitionPins[8] = Gpio::E0; // brain board, not discovery
 	engineConfiguration->ignitionPins[9] = Gpio::E1; // brain board, not discovery
 }
-
 
 // ETB_BENCH_ENGINE
 // set engine_type 58
@@ -178,7 +172,6 @@ void setEtbTestConfiguration() {
 
 	setCrankOperationMode();
 	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL_60_2;
-
 
 	engineConfiguration->ignitionPins[0] = Gpio::Unassigned;
 	engineConfiguration->ignitionPins[1] = Gpio::Unassigned;
@@ -195,7 +188,7 @@ void setEtbTestConfiguration() {
 	setBoschVNH2SP30Curve();
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
 
-	engineConfiguration->tps1_1AdcChannel = EFI_ADC_2; // PA2
+	engineConfiguration->tps1_1AdcChannel = EFI_ADC_2;				  // PA2
 	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_9; // PB1
 
 	// turning off other PWMs to simplify debugging
@@ -245,12 +238,12 @@ void setTle8888TestConfiguration() {
 #endif /* BOARD_TLE8888_COUNT */
 
 	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_9; // PB1 // just any non-empty value for now
-	// ETB #1 top one - closer to 121 connector
-	// DIS PF12
-	// EN  PF13
-	// IN1 PF15
-	// IN2 PF14
-	// SF  PF11
+																	  // ETB #1 top one - closer to 121 connector
+																	  // DIS PF12
+																	  // EN  PF13
+																	  // IN1 PF15
+																	  // IN2 PF14
+																	  // SF  PF11
 #if defined(STM32_HAS_GPIOF) && STM32_HAS_GPIOF
 	engineConfiguration->etbIo[0].directionPin1 = Gpio::F15;
 	engineConfiguration->etbIo[0].directionPin2 = Gpio::F14;
@@ -269,17 +262,16 @@ void setTle8888TestConfiguration() {
 	engineConfiguration->etbIo[0].directionPin2 = Gpio::E4;
 	engineConfiguration->etbIo[0].disablePin = Gpio::E5;
 
-
-	engineConfiguration->tps1_1AdcChannel = EFI_ADC_3; // PA3
+	engineConfiguration->tps1_1AdcChannel = EFI_ADC_3;				  // PA3
 	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_7; // PA7
 
-//	engineConfiguration->etb.pFactor = 1.07;
-//	engineConfiguration->etb.iFactor = 	0.18;
-//	engineConfiguration->etb.dFactor = 0.24;
-//	engineConfiguration->etb.offset = 80;
+	//	engineConfiguration->etb.pFactor = 1.07;
+	//	engineConfiguration->etb.iFactor = 	0.18;
+	//	engineConfiguration->etb.dFactor = 0.24;
+	//	engineConfiguration->etb.offset = 80;
 
 	engineConfiguration->etb.pFactor = 22;
-	engineConfiguration->etb.iFactor = 	0;
+	engineConfiguration->etb.iFactor = 0;
 	engineConfiguration->etb.dFactor = 0;
 	engineConfiguration->etb.offset = 0;
 
@@ -315,7 +307,6 @@ static void mreBoardOldTest() {
 	// EFI_ADC_2: "24 - AN temp 3"
 	// test harness: Blue/White, 2K PD. expected 2.0v
 
-
 	// EFI_ADC_10: "27 - AN volt 1"
 	// test harness: Blue/Red, 3.84K PD / 5.3 PU. expected 1.6v
 	engineConfiguration->mafAdcChannel = EFI_ADC_10;
@@ -324,11 +315,9 @@ static void mreBoardOldTest() {
 	// test harness: Red/White 3.6K PD / 5.2 PU. expected 1.6v
 	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_14;
 
-
 	// EFI_ADC_4: "28 - AN volt 10"
 	// test harness: Red/Yellow
 	engineConfiguration->afr.hwChannel = EFI_ADC_4;
-
 
 	// EFI_ADC_7: "31 - AN volt 3"
 	// test harness: White/Red
@@ -346,19 +335,17 @@ static void mreBoardOldTest() {
 	engineConfiguration->ignitionPins[4 - 1] = Gpio::D7;
 	engineConfiguration->ignitionPins[3 - 1] = Gpio::D1;
 	engineConfiguration->ignitionPins[6 - 1] = Gpio::D2;
-	engineConfiguration->ignitionPins[1] =  Gpio::Unassigned;
+	engineConfiguration->ignitionPins[1] = Gpio::Unassigned;
 	engineConfiguration->ignitionPins[4] = Gpio::Unassigned;
 	engineConfiguration->ignitionPins[6] = Gpio::Unassigned;
 	engineConfiguration->ignitionPins[7] = Gpio::Unassigned;
-
 
 	engineConfiguration->fuelPumpPin = Gpio::Unassigned;
 	engineConfiguration->idle.solenoidPin = Gpio::Unassigned;
 	engineConfiguration->fanPin = Gpio::Unassigned;
 
 	// fuel pump is useful to test power on/off scenario
-//	engineConfiguration->fuelPumpPin = Gpio::TLE8888_PIN_22;
-
+	//	engineConfiguration->fuelPumpPin = Gpio::TLE8888_PIN_22;
 
 	// LED #1
 	// Gpio::TLE8888_PIN_22: "34 - GP Out 2"
@@ -419,7 +406,8 @@ void proteusDcWastegateTest() {
 	engineConfiguration->wastegatePositionMin = 700;
 	engineConfiguration->wastegatePositionMax = 4000;
 
-	strncpy(config->luaScript, R"(
+	strncpy(config->luaScript,
+			R"(
 
 mapSensor = Sensor.new("map")
 mapSensor : setTimeout(3000)
@@ -430,7 +418,8 @@ function onTick()
 	mapSensor : set(tps)
 end
 
-    )", efi::size(config->luaScript));
+    )",
+			efi::size(config->luaScript));
 }
 
 /**
@@ -441,7 +430,7 @@ void proteusBoardTest() {
 	engineConfiguration->cylindersCount = 12;
 	engineConfiguration->firingOrder = FO_1_2_3_4_5_6_7_8_9_10_11_12;
 	engineConfiguration->triggerSimulatorRpm = 600;
-    engineConfiguration->injector.flow = 4.6; // longer blink
+	engineConfiguration->injector.flow = 4.6; // longer blink
 
 	engineConfiguration->cranking.rpm = 100;
 	engineConfiguration->injectionMode = IM_SEQUENTIAL;
@@ -465,13 +454,12 @@ void proteusBoardTest() {
 	engineConfiguration->injectionPins[10] = PROTEUS_LS_12;
 	engineConfiguration->injectionPins[11] = PROTEUS_LS_13;
 
-
-    engineConfiguration->luaOutputPins[0] = PROTEUS_LS_7;
-    engineConfiguration->luaOutputPins[1] = PROTEUS_LS_14;
-    engineConfiguration->luaOutputPins[2] = PROTEUS_LS_15;
-    engineConfiguration->luaOutputPins[3] = PROTEUS_LS_16;
-    engineConfiguration->luaOutputPins[4] = PROTEUS_HS_2;
-    engineConfiguration->luaOutputPins[5] = PROTEUS_HS_4;
+	engineConfiguration->luaOutputPins[0] = PROTEUS_LS_7;
+	engineConfiguration->luaOutputPins[1] = PROTEUS_LS_14;
+	engineConfiguration->luaOutputPins[2] = PROTEUS_LS_15;
+	engineConfiguration->luaOutputPins[3] = PROTEUS_LS_16;
+	engineConfiguration->luaOutputPins[4] = PROTEUS_HS_2;
+	engineConfiguration->luaOutputPins[5] = PROTEUS_HS_4;
 
 	engineConfiguration->ignitionPins[0] = PROTEUS_IGN_1;
 	engineConfiguration->ignitionPins[1] = PROTEUS_IGN_2;
@@ -487,7 +475,8 @@ void proteusBoardTest() {
 	engineConfiguration->ignitionPins[10] = PROTEUS_HS_1;
 	engineConfiguration->ignitionPins[11] = PROTEUS_IGN_12;
 
-	strncpy(config->luaScript, R"(
+	strncpy(config->luaScript,
+			R"(
 	startPwm(0, 10, 0.5)
 	startPwm(1, 11, 0.5)
 	startPwm(2, 12, 0.5)
@@ -499,7 +488,8 @@ void proteusBoardTest() {
 
 	function onTick()
 	end
-    )", efi::size(config->luaScript));
+    )",
+			efi::size(config->luaScript));
 
 #endif // EFI_PROD_CODE
 
@@ -524,8 +514,7 @@ void mreBoardNewTest() {
 
 	engineConfiguration->cylindersCount = 12;
 	engineConfiguration->firingOrder = FO_1_2_3_4_5_6_7_8_9_10_11_12;
-    engineConfiguration->injector.flow = 5; // longer blink
-
+	engineConfiguration->injector.flow = 5; // longer blink
 
 #if (BOARD_TLE8888_COUNT > 0)
 	engineConfiguration->ignitionPins[1 - 1] = Gpio::D6;
@@ -545,7 +534,7 @@ void mreBoardNewTest() {
 
 	// LED #1
 	// Gpio::TLE8888_PIN_22: "34 - GP Out 2"
-	engineConfiguration->ignitionPins[10- 1] = Gpio::TLE8888_PIN_22;
+	engineConfiguration->ignitionPins[10 - 1] = Gpio::TLE8888_PIN_22;
 
 	// LED #2
 	// Gpio::TLE8888_PIN_23: "33 - GP Out 3"
@@ -575,29 +564,22 @@ void mreBoardNewTest() {
 	// Gpio::TLE8888_PIN_1: LED #3 - INJ#1
 	engineConfiguration->injectionPins[6 - 1] = Gpio::TLE8888_PIN_1;
 
-
-	engineConfiguration->injectionPins[7 - 1] = Gpio::A4; // AV10
-	engineConfiguration->injectionPins[8  - 1] = Gpio::B1; // AV9
-	engineConfiguration->injectionPins[9  - 1] = Gpio::B0; // AV8
+	engineConfiguration->injectionPins[7 - 1] = Gpio::A4;  // AV10
+	engineConfiguration->injectionPins[8 - 1] = Gpio::B1;  // AV9
+	engineConfiguration->injectionPins[9 - 1] = Gpio::B0;  // AV8
 	engineConfiguration->injectionPins[10 - 1] = Gpio::C4; // AV6
 
-	engineConfiguration->injectionPins[11- 1] = Gpio::TLE8888_PIN_13;
+	engineConfiguration->injectionPins[11 - 1] = Gpio::TLE8888_PIN_13;
 
-	engineConfiguration->injectionPins[12- 1] = Gpio::TLE8888_PIN_10;
+	engineConfiguration->injectionPins[12 - 1] = Gpio::TLE8888_PIN_10;
 #endif /* BOARD_TLE8888_COUNT */
-
 }
 
-static const float hardCodedHpfpLobeProfileQuantityBins[16] = {0.0, 1.0, 4.5, 9.5,
-16.5, 25.0, 34.5, 45.0 ,
-55.0, 65.5, 75.0, 83.5,
-90.5, 95.5, 99.0, 100.0};
+static const float hardCodedHpfpLobeProfileQuantityBins[16] = {
+		0.0, 1.0, 4.5, 9.5, 16.5, 25.0, 34.5, 45.0, 55.0, 65.5, 75.0, 83.5, 90.5, 95.5, 99.0, 100.0};
 
-static const float hardCodedHpfpLobeProfileAngle[16] = {0.0, 7.5, 16.5, 24.0,
-32.0 , 40.0, 48.0, 56.0,
-64.0 , 72.0, 80.0, 88.0,
-96.0 , 103.5, 112.5, 120.0
-};
+static const float hardCodedHpfpLobeProfileAngle[16] = {
+		0.0, 7.5, 16.5, 24.0, 32.0, 40.0, 48.0, 56.0, 64.0, 72.0, 80.0, 88.0, 96.0, 103.5, 112.5, 120.0};
 
 void setBoschHDEV_5_injectors() {
 	copyArray(config->hpfpLobeProfileQuantityBins, hardCodedHpfpLobeProfileQuantityBins);
@@ -628,7 +610,7 @@ void setBoschHDEV_5_injectors() {
 	engineConfiguration->mc33_hpfp_i_peak = 5; // A not mA like above
 	engineConfiguration->mc33_hpfp_i_hold = 3;
 	engineConfiguration->mc33_hpfp_i_hold_off = 10; // us
-	engineConfiguration->mc33_hpfp_max_hold = 10; // this value in ms not us
+	engineConfiguration->mc33_hpfp_max_hold = 10;	// this value in ms not us
 }
 
 /**
@@ -643,7 +625,6 @@ void setTest33816EngineConfiguration() {
 	// violet
 	// default spi3sckPin  PB3
 
-
 	engineConfiguration->triggerSimulatorPins[0] = Gpio::Unassigned;
 	engineConfiguration->triggerSimulatorPins[1] = Gpio::Unassigned;
 
@@ -651,7 +632,6 @@ void setTest33816EngineConfiguration() {
 	engineConfiguration->injectionPins[1] = Gpio::E2; // #2
 	engineConfiguration->injectionPins[2] = Gpio::B8; // #3
 	engineConfiguration->injectionPins[3] = Gpio::B7; // #4
-
 
 	// blue
 	engineConfiguration->mc33816_cs = Gpio::D7;
@@ -689,15 +669,12 @@ void proteusLuaDemo() {
 	strcpy(engineConfiguration->scriptCurveName[3 - 1], "bias");
 
 	/**
-	 * for this demo I use ETB just a sample object to control with PID. No reasonable person should consider actually using
-	 * Lua for actual intake ETB control while driving around the racing track - hard-coded ETB control is way smarter!
+	 * for this demo I use ETB just a sample object to control with PID. No reasonable person should consider actually
+	 * using Lua for actual intake ETB control while driving around the racing track - hard-coded ETB control is way
+	 * smarter!
 	 */
-	static const float defaultBiasBins[] = {
-		0, 1, 2, 4, 7, 98, 99, 100
-	};
-	static const float defaultBiasValues[] = {
-		-20, -18, -17, 0, 20, 21, 22, 25
-	};
+	static const float defaultBiasBins[] = {0, 1, 2, 4, 7, 98, 99, 100};
+	static const float defaultBiasValues[] = {-20, -18, -17, 0, 20, 21, 22, 25};
 
 	engineConfiguration->luaOutputPins[0] = Gpio::D12;
 	engineConfiguration->luaOutputPins[1] = Gpio::D10;
@@ -712,7 +689,6 @@ void proteusLuaDemo() {
 	engineConfiguration->auxAnalogInputs[0] = PROTEUS_IN_ANALOG_VOLT_10;
 	engineConfiguration->afr.hwChannel = EFI_ADC_NONE;
 
-
 	// ETB direction #1 PD10
 	engineConfiguration->etbIo[0].directionPin1 = Gpio::Unassigned;
 	// ETB control PD12
@@ -720,28 +696,28 @@ void proteusLuaDemo() {
 	// ETB disable PD11
 	engineConfiguration->etbIo[0].disablePin = Gpio::Unassigned;
 
-/**
-controlIndex = 0
-directionIndex = 1
+	/**
+	controlIndex = 0
+	directionIndex = 1
 
-  print('pid output ' .. output)
-  print('')
+	  print('pid output ' .. output)
+	  print('')
 
 
 
-  local duty = (bias + output) / 100
+	  local duty = (bias + output) / 100
 
---  isPositive = duty > 0;
---  pwmValue = isPositive and duty or -duty
---  setPwmDuty(controlIndex, pwmValue)
+	--  isPositive = duty > 0;
+	--  pwmValue = isPositive and duty or -duty
+	--  setPwmDuty(controlIndex, pwmValue)
 
---  dirValue = isPositive and 1 or 0;
---  setPwmDuty(directionIndex, dirValue)
+	--  dirValue = isPositive and 1 or 0;
+	--  setPwmDuty(directionIndex, dirValue)
 
---  print('pwm ' .. pwmValue .. ' dir ' .. dirValue)
+	--  print('pwm ' .. pwmValue .. ' dir ' .. dirValue)
 
- *
- */
+	 *
+	 */
 
 	auto script = R"(
 
@@ -804,6 +780,6 @@ void detectBoardType() {
 #if !EFI_UNIT_TEST
 	detectHellenBoardType();
 #endif /* EFI_UNIT_TEST */
-#endif //HW_HELLEN
-	// todo: add board ID detection?
+#endif // HW_HELLEN
+	   // todo: add board ID detection?
 }

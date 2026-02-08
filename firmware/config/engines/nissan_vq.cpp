@@ -28,11 +28,10 @@ void setHellen121nissanQR() {
 	engineConfiguration->invertCamVVTSignal = true;
 
 	engineConfiguration->vvtOffsets[0] = 157;
-
 }
 
 void setHellen121nissanVQ() {
-    #include "nissan_vq.lua"
+#include "nissan_vq.lua"
 
 	engineConfiguration->trigger.type = trigger_type_e::TT_NISSAN_VQ35;
 
@@ -51,14 +50,13 @@ void setHellen121nissanVQ() {
 	engineConfiguration->vvtOffsets[0 * CAMS_PER_BANK] = NISSAN_VQ_VVT_OFFSET;
 	engineConfiguration->vvtOffsets[1 * CAMS_PER_BANK] = NISSAN_VQ_VVT_OFFSET + NISSAN_VQ_CAM_OFFSET;
 
-
 	// VVT closed loop
 	engineConfiguration->auxPid[0].pFactor = 2;
 	engineConfiguration->auxPid[0].iFactor = 0.5;
 	engineConfiguration->auxPid[0].dFactor = 0.05;
 	engineConfiguration->auxPid[0].offset = 50;
-//	engineConfiguration->auxPid[0].minValue = 20;
-//	engineConfiguration->auxPid[0].maxValue = 90;
+	//	engineConfiguration->auxPid[0].minValue = 20;
+	//	engineConfiguration->auxPid[0].maxValue = 90;
 
 #if HW_HELLEN
 	engineConfiguration->vvtPins[0 * CAMS_PER_BANK] = H176_LS_7;
@@ -74,5 +72,4 @@ void setHellen121nissanAltimaN16() {
 	setHellen121nissanQR();
 	engineConfiguration->displacement = 1.8;
 	strcpy(engineConfiguration->engineCode, "N16");
-
 }

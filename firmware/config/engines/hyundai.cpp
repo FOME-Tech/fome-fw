@@ -10,7 +10,8 @@
 #include "hyundai.h"
 
 static void commonGenesisCoupe() {
-	strncpy(config->luaScript, R"(
+	strncpy(config->luaScript,
+			R"(
 
 -- code outside of functions is invoked once on start-up
 -- listen to CAN ID 0x4f0
@@ -41,7 +42,8 @@ function onTick()
 end
 
 
-)", efi::size(config->luaScript));
+)",
+			efi::size(config->luaScript));
 }
 
 void setGenesisCoupeBK1() {
@@ -50,7 +52,6 @@ void setGenesisCoupeBK1() {
 	// fuel system is fixed pressure 55psi
 	engineConfiguration->injector.flow = 354.19; // https://www.google.com/search?q=315*sqrt%2855%2F43.5%29
 	engineConfiguration->fuelReferencePressure = PSI2KPA(55);
-
 }
 
 void setGenesisCoupeBK2() {
@@ -60,5 +61,4 @@ void setGenesisCoupeBK2() {
 	// flow rate P2 = flow rate P1 * sqrt(P2/P1)
 	engineConfiguration->injector.flow = 629.03; // https://www.google.com/search?q=450*sqrt%2885%2F43.5%29
 	engineConfiguration->fuelReferencePressure = PSI2KPA(85);
-
 }

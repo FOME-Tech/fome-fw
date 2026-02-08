@@ -29,7 +29,7 @@ void setCitroenBerlingoTU3JPConfiguration() {
 	engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
 	engineConfiguration->rpmHardLimit = 5000;
 
-//	memcpy(config->ve2RpmBins, rpmSteps, sizeof(rpmSteps));
+	//	memcpy(config->ve2RpmBins, rpmSteps, sizeof(rpmSteps));
 
 	/**
 	 * Algorithm Alpha-N setting
@@ -59,7 +59,7 @@ void setCitroenBerlingoTU3JPConfiguration() {
 	engineConfiguration->ignitionPins[2] = Gpio::C15;
 	engineConfiguration->ignitionPins[3] = Gpio::Unassigned;
 
-	engineConfiguration->injector.flow = 137; //SIEMENS DEKA VAZ20734
+	engineConfiguration->injector.flow = 137; // SIEMENS DEKA VAZ20734
 	engineConfiguration->injectionPins[0] = Gpio::E6;
 	engineConfiguration->injectionPins[1] = Gpio::C13;
 	engineConfiguration->injectionPins[2] = Gpio::Unassigned;
@@ -75,8 +75,7 @@ void setCitroenBerlingoTU3JPConfiguration() {
 
 	engineConfiguration->fuelPumpPin = Gpio::B9;
 
-
-//	engineConfiguration->o2heaterPin = Gpio::C13;
+	//	engineConfiguration->o2heaterPin = Gpio::C13;
 
 	/**
 	 * Inputs
@@ -116,17 +115,17 @@ void setCitroenBerlingoTU3JPConfiguration() {
 	engineConfiguration->iat.adcChannel = EFI_ADC_13;
 	engineConfiguration->iat.config = {-20.0, 23.0, 92.0, 15600.0, 2250.0, 240.0, 2660};
 	/**
-	* CLT <LADA Samara>
-	*/
+	 * CLT <LADA Samara>
+	 */
 	engineConfiguration->clt.adcChannel = EFI_ADC_11;
 	engineConfiguration->clt.config = {-20.0, 25.0, 100.0, 28680.0, 2796.0, 177.0, 2660};
 	/**
 	 * vBatt
 	 */
 	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
-	engineConfiguration->vbattDividerCoeff = ((float) (2.6 + 10.1)) / 2.6 * 2;
+	engineConfiguration->vbattDividerCoeff = ((float)(2.6 + 10.1)) / 2.6 * 2;
 	/**
-	* WBO Innovate LC-1
-	*/
+	 * WBO Innovate LC-1
+	 */
 	engineConfiguration->afr.hwChannel = EFI_ADC_12;
 }

@@ -42,47 +42,42 @@ void setHondaK() {
 	engineConfiguration->tpsMin = 100;
 	engineConfiguration->tpsMax = 830;
 
-	gppwm_channel *vtsControl = &engineConfiguration->gppwm[0];
+	gppwm_channel* vtsControl = &engineConfiguration->gppwm[0];
 	vtsControl->pwmFrequency = 0;
 	strcpy(engineConfiguration->gpPwmNote[0], "VTS");
 }
-
 
 /**
  * K24A4 engine
  * PROTEUS_HONDA_K
  */
 void setProteusHondaElement2003() {
-    setHondaK();
-//	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL;
-//	engineConfiguration->trigger.customTotalToothCount = 12;
-//	engineConfiguration->trigger.customSkippedToothCount = 0;
+	setHondaK();
+	//	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL;
+	//	engineConfiguration->trigger.customTotalToothCount = 12;
+	//	engineConfiguration->trigger.customSkippedToothCount = 0;
 
-
-//	engineConfiguration->trigger.type = trigger_type_e::TT_HONDA_K_CAM_4_1; // cam as primary, ignoring crank
-//	engineConfiguration->globalTriggerAngleOffset = 570;
-
-
+	//	engineConfiguration->trigger.type = trigger_type_e::TT_HONDA_K_CAM_4_1; // cam as primary, ignoring crank
+	//	engineConfiguration->globalTriggerAngleOffset = 570;
 
 	strcpy(engineConfiguration->vehicleName, "test");
 
 #if HW_PROTEUS & EFI_PROD_CODE
-//	engineConfiguration->triggerInputPins[0] = PROTEUS_DIGITAL_2; // crank
-//	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_4; // intake
-//	engineConfiguration->camInputs[1 * CAMS_PER_BANK] = PROTEUS_DIGITAL_1; // exhaust
+	//	engineConfiguration->triggerInputPins[0] = PROTEUS_DIGITAL_2; // crank
+	//	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_4; // intake
+	//	engineConfiguration->camInputs[1 * CAMS_PER_BANK] = PROTEUS_DIGITAL_1; // exhaust
 
 	engineConfiguration->triggerInputPins[0] = PROTEUS_DIGITAL_1; // exhaust
-	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_4; // intake
-// inverted
+	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_4;		  // intake
+																  // inverted
 	// offset -41
-
 
 	engineConfiguration->injectionPins[0] = PROTEUS_LS_8;
 	engineConfiguration->injectionPins[1] = PROTEUS_LS_7;
 	engineConfiguration->injectionPins[2] = PROTEUS_LS_6;
 	engineConfiguration->injectionPins[3] = PROTEUS_LS_5;
 
-	gppwm_channel *vtsControl = &engineConfiguration->gppwm[0];
+	gppwm_channel* vtsControl = &engineConfiguration->gppwm[0];
 	vtsControl->pin = PROTEUS_HS_1;
 	engineConfiguration->vvtPins[0] = PROTEUS_HS_2;
 

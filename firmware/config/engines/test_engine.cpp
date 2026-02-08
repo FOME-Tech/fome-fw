@@ -19,10 +19,10 @@ void setTestCamEngineConfiguration() {
 	engineConfiguration->trigger.type = trigger_type_e::TT_ONE_PLUS_ONE;
 	setCamOperationMode();
 
-//	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL;
-//	trigger_config_s *triggerConfig = &engineConfiguration->trigger;
-//	triggerConfig->customTotalToothCount = 60;
-//	triggerConfig->customSkippedToothCount = 0;
+	//	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL;
+	//	trigger_config_s *triggerConfig = &engineConfiguration->trigger;
+	//	triggerConfig->customTotalToothCount = 60;
+	//	triggerConfig->customSkippedToothCount = 0;
 
 	engineConfiguration->mafAdcChannel = EFI_ADC_1;
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_2;
@@ -38,14 +38,13 @@ void setTestCamEngineConfiguration() {
 
 	engineConfiguration->malfunctionIndicatorPin = Gpio::Unassigned;
 
-	engineConfiguration->ignitionPins[0] = Gpio::C7; // #1
+	engineConfiguration->ignitionPins[0] = Gpio::C7;		 // #1
 	engineConfiguration->ignitionPins[1] = Gpio::Unassigned; // #2
 	engineConfiguration->ignitionPins[2] = Gpio::Unassigned; // #3
 	engineConfiguration->ignitionPins[3] = Gpio::Unassigned; // #4
 	engineConfiguration->ignitionPins[4] = Gpio::Unassigned; // #5
 	engineConfiguration->ignitionPins[5] = Gpio::Unassigned; // #6
 }
-
 
 void setTestCrankEngineConfiguration() {
 	setTestCamEngineConfiguration();
@@ -58,7 +57,7 @@ void setTestCrankEngineConfiguration() {
 }
 
 void setTestDcWastegateConfiguration() {
-    engineConfiguration->isBoostControlEnabled = 1;
+	engineConfiguration->isBoostControlEnabled = 1;
 	engineConfiguration->etbFunctions[0] = DC_Wastegate;
 	setTable(config->boostTableOpenLoop, 50);
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_1; // PA1

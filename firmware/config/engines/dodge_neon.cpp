@@ -104,9 +104,9 @@ void setDodgeNeonNGCEngineConfiguration() {
 	 * fuel 2.8
 	 *
 	 */
-	//setWholeTimingTable_d(12);
+	// setWholeTimingTable_d(12);
 
-	//setMap(config->veTable, 50);
+	// setMap(config->veTable, 50);
 
 	// set cranking_timing_angle 710
 	engineConfiguration->crankingTimingAngle = -710;
@@ -132,7 +132,7 @@ void setDodgeNeonNGCEngineConfiguration() {
 	engineConfiguration->afr.hwChannel = EFI_ADC_4;
 
 	commonFrankensoAnalogInputs();
-	engineConfiguration->vbattDividerCoeff = 9.75;// ((float) (8.2 + 33)) / 8.2 * 2;
+	engineConfiguration->vbattDividerCoeff = 9.75; // ((float) (8.2 + 33)) / 8.2 * 2;
 
 	/**
 	 * http://rusefi.com/wiki/index.php?title=Manual:Hardware_Frankenso_board
@@ -188,7 +188,6 @@ void setDodgeNeonNGCEngineConfiguration() {
 	 * Frankenso analog #12 PC4 ADC14 VBatt
 	 */
 
-
 	setDodgeSensor(&engineConfiguration->clt, 10000);
 	setDodgeSensor(&engineConfiguration->iat, 10000);
 
@@ -197,10 +196,9 @@ void setDodgeNeonNGCEngineConfiguration() {
 	 */
 	engineConfiguration->map.sensor.hwChannel = EFI_ADC_0; // PA0
 
-//	rev 0.1 green board
-//	engineConfiguration->map.sensor.hwChannel = EFI_ADC_6; // PA6
-//	engineConfiguration->tps1_1AdcChannel = EFI_ADC_15; // PC5
-
+	//	rev 0.1 green board
+	//	engineConfiguration->map.sensor.hwChannel = EFI_ADC_6; // PA6
+	//	engineConfiguration->tps1_1AdcChannel = EFI_ADC_15; // PC5
 
 	/**
 	 * TPS
@@ -225,19 +223,19 @@ void setDodgeNeonNGCEngineConfiguration() {
 
 	engineConfiguration->clutchDownPin = Gpio::C12;
 	engineConfiguration->clutchDownPinMode = PI_PULLUP;
-//	engineConfiguration->clutchUpPin = Gpio::A14; // note SWCLK - conflict with SWD
+	//	engineConfiguration->clutchUpPin = Gpio::A14; // note SWCLK - conflict with SWD
 	engineConfiguration->clutchUpPinMode = PI_PULLUP;
 
-//	engineConfiguration->vehicleSpeedSensorInputPin = Gpio::A8;
+	//	engineConfiguration->vehicleSpeedSensorInputPin = Gpio::A8;
 
 	engineConfiguration->fanOnTemperature = 92;
 	engineConfiguration->fanOffTemperature = 89;
-//	engineConfiguration->fanOnTemperature = 115; // knock testing - value is a bit high
-//	engineConfiguration->fanOffTemperature = 100;
+	//	engineConfiguration->fanOnTemperature = 115; // knock testing - value is a bit high
+	//	engineConfiguration->fanOffTemperature = 100;
 
 	setAlgorithm(LM_SPEED_DENSITY);
 
-//temp	engineConfiguration->alternatorControlPin = Gpio::D5;
+	// temp	engineConfiguration->alternatorControlPin = Gpio::D5;
 	engineConfiguration->targetVBatt = 14.0;
 	engineConfiguration->alternatorControl.offset = 20;
 	engineConfiguration->alternatorControl.pFactor = 20;
