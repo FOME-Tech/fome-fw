@@ -10,7 +10,7 @@
 
 #if EFI_TUNER_STUDIO
 
-void sendErrorCode(TsChannelBase *tsChannel, uint8_t code);
+void sendErrorCode(TsChannelBase* tsChannel, uint8_t code);
 
 static constexpr size_t getTunerStudioPageSize() {
 	return TOTAL_CONFIG_SIZE;
@@ -21,7 +21,11 @@ static constexpr size_t getTunerStudioPageSize() {
 bool validateOffsetCount(size_t offset, size_t count, TsChannelBase* tsChannel) {
 	auto pageSize = getTunerStudioPageSize();
 	if (offset + count > pageSize) {
-		efiPrintf("TS: Project mismatch? Too much configuration requested offset %d count %d but total size is %d", offset, count, pageSize);
+		efiPrintf(
+				"TS: Project mismatch? Too much configuration requested offset %d count %d but total size is %d",
+				offset,
+				count,
+				pageSize);
 		tunerStudioError(tsChannel, "ERROR: out of range");
 		sendErrorCode(tsChannel, TS_RESPONSE_OUT_OF_RANGE);
 		return true;
@@ -29,7 +33,6 @@ bool validateOffsetCount(size_t offset, size_t count, TsChannelBase* tsChannel) 
 
 	return false;
 }
-
 
 // This is used to prevent TS from reading/writing when we have just applied a preset, to prevent TS getting confused.
 // At the same time an ECU reboot is forced by triggering a fatal error, informing the user to please restart
@@ -45,7 +48,10 @@ void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, u
 	static_assert(BLOCKING_FACTOR >= TS_TOTAL_OUTPUT_SIZE + 10);
 
 	if (offset + count > TS_TOTAL_OUTPUT_SIZE) {
-		efiPrintf("TS: Version Mismatch? Too much outputs requested %d/%d/%d", offset, count,
+		efiPrintf(
+				"TS: Version Mismatch? Too much outputs requested %d/%d/%d",
+				offset,
+				count,
 				sizeof(TunerStudioOutputChannels));
 		sendErrorCode(tsChannel, TS_RESPONSE_OUT_OF_RANGE);
 		return;
@@ -55,7 +61,7 @@ void TunerStudio::cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, u
 	updateTunerStudioState();
 
 	// this method is invoked too often to print any debug information
-	uint8_t * scratchBuffer = (uint8_t *)tsChannel->scratchBuffer;
+	uint8_t* scratchBuffer = (uint8_t*)tsChannel->scratchBuffer;
 	/**
 	 * collect data from all models
 	 */

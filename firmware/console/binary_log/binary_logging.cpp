@@ -101,8 +101,6 @@ void writeFileHeader(Writer& outBuffer) {
 
 static uint8_t blockRollCounter = 0;
 
-//static efitimeus_t prevSdCardLineTime = 0;
-
 void writeSdBlock(Writer& outBuffer) {
 	static char buffer[16];
 

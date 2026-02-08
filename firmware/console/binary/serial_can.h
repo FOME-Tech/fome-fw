@@ -21,7 +21,6 @@
 #include "can_mocks.h"
 #endif /* EFI_UNIT_TEST */
 
-
 #define CAN_TIME_IMMEDIATE ((can_sysinterval_t)0)
 
 // most efficient sizes are 6 + x * 7 that way whole buffer is transmitted as (x+1) full packets
@@ -31,7 +30,6 @@
 #define CAN_FLOW_STATUS_OK 0
 #define CAN_FLOW_STATUS_WAIT_MORE 1
 #define CAN_FLOW_STATUS_ABORT 2
-
 
 enum IsoTpFrameType {
 	ISO_TP_FRAME_SINGLE = 0,
@@ -57,8 +55,8 @@ public:
 // We need an abstraction layer for unit-testing
 class ICanStreamer {
 public:
-	virtual can_msg_t transmit(canmbx_t mailbox, const CanTxMessage *ctfp, can_sysinterval_t timeout) = 0;
-	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame *crfp, can_sysinterval_t timeout) = 0;
+	virtual can_msg_t transmit(canmbx_t mailbox, const CanTxMessage* ctfp, can_sysinterval_t timeout) = 0;
+	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame* crfp, can_sysinterval_t timeout) = 0;
 };
 
 class CanStreamerState {
@@ -68,37 +66,39 @@ public:
 
 #if defined(TS_CAN_DEVICE_SHORT_PACKETS_IN_ONE_FRAME)
 	// used to restore the original packet with CRC
-    uint8_t tmpRxBuf[13];
+	uint8_t tmpRxBuf[13];
 #endif
 
 	// used for multi-frame ISO-TP packets
 	int waitingForNumBytes = 0;
 	int waitingForFrameIndex = 0;
 
-	ICanStreamer *streamer;
-	
-public:
-	CanStreamerState(ICanStreamer *s) : streamer(s) {}
+	ICanStreamer* streamer;
 
-	int sendFrame(const IsoTpFrameHeader & header, const uint8_t *data, int num, can_sysinterval_t timeout);
-	int receiveFrame(CANRxFrame *rxmsg, uint8_t *buf, int num, can_sysinterval_t timeout);
-	int getDataFromFifo(uint8_t *rxbuf, size_t &numBytes);
+public:
+	CanStreamerState(ICanStreamer* s)
+		: streamer(s) {}
+
+	int sendFrame(const IsoTpFrameHeader& header, const uint8_t* data, int num, can_sysinterval_t timeout);
+	int receiveFrame(CANRxFrame* rxmsg, uint8_t* buf, int num, can_sysinterval_t timeout);
+	int getDataFromFifo(uint8_t* rxbuf, size_t& numBytes);
 	// returns the number of bytes sent
-	int sendDataTimeout(const uint8_t *txbuf, int numBytes, can_sysinterval_t timeout);
+	int sendDataTimeout(const uint8_t* txbuf, int numBytes, can_sysinterval_t timeout);
 
 	// streaming support for TS I/O (see tunerstudio_io.cpp)
-	can_msg_t streamAddToTxTimeout(size_t *np, const uint8_t *txbuf, can_sysinterval_t timeout);
+	can_msg_t streamAddToTxTimeout(size_t* np, const uint8_t* txbuf, can_sysinterval_t timeout);
 	can_msg_t streamFlushTx(can_sysinterval_t timeout);
-	can_msg_t streamReceiveTimeout(size_t *np, uint8_t *rxbuf, can_sysinterval_t timeout);
+	can_msg_t streamReceiveTimeout(size_t* np, uint8_t* rxbuf, can_sysinterval_t timeout);
 };
 
 class CanRxMessage {
 public:
 	CanRxMessage() {}
-	CanRxMessage(const CANRxFrame &f) {
+	CanRxMessage(const CANRxFrame& f) {
 		frame = f;
 	}
-	CanRxMessage(const CanRxMessage& msg) : frame(msg.frame) {}
+	CanRxMessage(const CanRxMessage& msg)
+		: frame(msg.frame) {}
 	CanRxMessage& operator=(const CanRxMessage& msg) {
 		frame = msg.frame;
 		return *this;
@@ -111,13 +111,11 @@ public:
 class CanTsListener : public CanListener {
 public:
 	CanTsListener()
-		: CanListener(CAN_ECU_SERIAL_RX_ID)
-	{
-	}
+		: CanListener(CAN_ECU_SERIAL_RX_ID) {}
 
 	void decodeFrame(const CANRxFrame& frame, efitick_t nowNt) override;
 
-	bool get(CanRxMessage &item, int timeout) {
+	bool get(CanRxMessage& item, int timeout) {
 		return rxFifo.get(item, timeout);
 	}
 
@@ -130,15 +128,15 @@ class CanStreamer : public ICanStreamer {
 public:
 	void init();
 
-	virtual can_msg_t transmit(canmbx_t mailbox, const CanTxMessage *ctfp, can_sysinterval_t timeout) override;
-	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame *crfp, can_sysinterval_t timeout) override;
+	virtual can_msg_t transmit(canmbx_t mailbox, const CanTxMessage* ctfp, can_sysinterval_t timeout) override;
+	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame* crfp, can_sysinterval_t timeout) override;
 };
 
 void canStreamInit(void);
 
 // we don't have canStreamSendTimeout() because we need to "bufferize" the stream and send it in fixed-length packets
-msg_t canStreamAddToTxTimeout(size_t *np, const uint8_t *txbuf, sysinterval_t timeout);
+msg_t canStreamAddToTxTimeout(size_t* np, const uint8_t* txbuf, sysinterval_t timeout);
 msg_t canStreamFlushTx(sysinterval_t timeout);
 
-msg_t canStreamReceiveTimeout(size_t *np, uint8_t *rxbuf, sysinterval_t timeout);
+msg_t canStreamReceiveTimeout(size_t* np, uint8_t* rxbuf, sysinterval_t timeout);
 #endif /* HAL_USE_CAN */

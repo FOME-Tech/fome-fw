@@ -6,7 +6,7 @@
 static void memcpy_swapend(void* dest, const void* src, size_t num) {
 	const char* src2 = reinterpret_cast<const char*>(src);
 	char* dest2 = reinterpret_cast<char*>(dest);
-	
+
 	for (size_t i = 0; i < num; i++) {
 		// Endian swap - copy the end to the beginning
 		dest2[i] = src2[num - 1 - i];

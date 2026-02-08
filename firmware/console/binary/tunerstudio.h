@@ -25,8 +25,8 @@ typedef struct {
 
 extern tunerstudio_counters_s tsState;
 
-void tunerStudioDebug(TsChannelBase* tsChannel, const char *msg);
-void tunerStudioError(TsChannelBase* tsChannel, const char *msg);
+void tunerStudioDebug(TsChannelBase* tsChannel, const char* msg);
+void tunerStudioError(TsChannelBase* tsChannel, const char* msg);
 
 uint8_t* getWorkingPageAddr();
 
@@ -51,15 +51,12 @@ typedef struct {
 class TunerstudioThread : public ThreadController<CONNECTIVITY_THREAD_STACK> {
 public:
 	TunerstudioThread(const char* name)
-		: ThreadController(name, PRIO_CONSOLE)
-	{
-	}
+		: ThreadController(name, PRIO_CONSOLE) {}
 
 	// Initialize and return the channel to use for this thread.
 	virtual TsChannelBase* setupChannel() = 0;
 
 	void ThreadTask() override;
-
 };
 #endif
 

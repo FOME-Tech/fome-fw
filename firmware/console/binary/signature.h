@@ -6,7 +6,6 @@
  * @author andreika (c) 2020
  */
 
-
 #pragma once
 
-const char *getTsSignature();
+const char* getTsSignature();

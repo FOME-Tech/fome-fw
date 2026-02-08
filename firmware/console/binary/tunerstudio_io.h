@@ -22,16 +22,20 @@
 
 class TsChannelBase {
 public:
-	TsChannelBase(const char *name);
+	TsChannelBase(const char* name);
 	// Virtual functions - implement these for your underlying transport
 	virtual void write(const uint8_t* buffer, size_t size, bool isEndOfPacket = false) = 0;
 	virtual size_t readTimeout(uint8_t* buffer, size_t size, int timeout) = 0;
 
 	// These functions are optional to implement, not all channels need them
-	virtual void flush() { }
-	virtual bool isConfigured() const { return true; }
-	virtual bool isReady() const { return true; }
-	virtual void stop() { }
+	virtual void flush() {}
+	virtual bool isConfigured() const {
+		return true;
+	}
+	virtual bool isReady() const {
+		return true;
+	}
+	virtual void stop() {}
 
 	// Base functions that use the above virtual implementation
 	size_t read(uint8_t* buffer, size_t size);
@@ -46,10 +50,10 @@ public:
 	}
 
 #ifdef EFI_CAN_SERIAL
-	virtual	// CAN device needs this function to be virtual for small-packet optimization
+	virtual // CAN device needs this function to be virtual for small-packet optimization
 #endif
-	// Use when buf could change during execution. Makes a copy before computing checksum.
-	void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size);
+			// Use when buf could change during execution. Makes a copy before computing checksum.
+			void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size);
 
 	// Use when buf cannot change during execution. Computes checksum without an extra copy.
 	void writeCrcPacketLocked(uint8_t responseCode, const uint8_t* buf, size_t size);
@@ -75,7 +79,7 @@ public:
 	bool in_sync = false;
 
 protected:
-	const char * const m_name;
+	const char* const m_name;
 };
 
 #define CRC_VALUE_SIZE 4

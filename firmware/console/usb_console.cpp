@@ -14,9 +14,8 @@ extern SerialUSBDriver EFI_CONSOLE_USB_DEVICE;
 class UsbChannel final : public TsChannelBase {
 public:
 	UsbChannel(SerialUSBDriver& driver)
-		: TsChannelBase("USB"), m_channel(reinterpret_cast<BaseChannel*>(&driver))
-	{
-	}
+		: TsChannelBase("USB")
+		, m_channel(reinterpret_cast<BaseChannel*>(&driver)) {}
 
 	bool isReady() const override {
 		return is_usb_serial_ready();
@@ -37,7 +36,8 @@ private:
 static UsbChannel usbChannel(EFI_CONSOLE_USB_DEVICE);
 
 struct UsbThread : public TunerstudioThread {
-	UsbThread() : TunerstudioThread("USB Console") { }
+	UsbThread()
+		: TunerstudioThread("USB Console") {}
 
 	TsChannelBase* setupChannel() override {
 		// Start the port's USB stack

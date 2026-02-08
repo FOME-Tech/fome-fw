@@ -9,8 +9,12 @@ class LogField {
 public:
 	// Scaled channels, memcpys data directly and describes format in header
 	template <typename TValue, int TMult, int TDiv>
-	constexpr LogField(const scaled_channel<TValue, TMult, TDiv>& toRead,
-			   const char* name, const char* units, int8_t digits, const char* category = "none")
+	constexpr LogField(
+			const scaled_channel<TValue, TMult, TDiv>& toRead,
+			const char* name,
+			const char* units,
+			int8_t digits,
+			const char* category = "none")
 		: m_multiplier(float(TDiv) / TMult)
 		, m_addr(toRead.getFirstByteAddr())
 		, m_type(resolveType<TValue>())
@@ -18,14 +22,12 @@ public:
 		, m_size(sizeForType(resolveType<TValue>()))
 		, m_name(name)
 		, m_units(units)
-		, m_category(category)
-	{
-	}
+		, m_category(category) {}
 
 	// Non-scaled channel, works for plain arithmetic types (int, float, uint8_t, etc)
 	template <typename TValue, typename = typename std::enable_if<std::is_arithmetic_v<TValue>>::type>
-	constexpr LogField(TValue& toRead,
-			   const char* name, const char* units, int8_t digits, const char* category = "none")
+	constexpr LogField(
+			TValue& toRead, const char* name, const char* units, int8_t digits, const char* category = "none")
 		: m_multiplier(1)
 		, m_addr(&toRead)
 		, m_type(resolveType<TValue>())
@@ -33,9 +35,7 @@ public:
 		, m_size(sizeForType(resolveType<TValue>()))
 		, m_name(name)
 		, m_units(units)
-		, m_category(category)
-	{
-	}
+		, m_category(category) {}
 
 	enum class Type : uint8_t {
 		U08 = 0,
@@ -60,7 +60,7 @@ public:
 	size_t writeData(char* buffer) const;
 
 private:
-	template<typename T>
+	template <typename T>
 	static constexpr Type resolveType();
 
 	static constexpr size_t sizeForType(Type t) {
@@ -88,37 +88,37 @@ private:
 	const char* const m_category;
 };
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<uint8_t>() {
 	return Type::U08;
 }
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<int8_t>() {
 	return Type::S08;
 }
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<uint16_t>() {
 	return Type::U16;
 }
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<int16_t>() {
 	return Type::S16;
 }
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<uint32_t>() {
 	return Type::U32;
 }
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<int32_t>() {
 	return Type::S32;
 }
 
-template<>
+template <>
 constexpr LogField::Type LogField::resolveType<float>() {
 	return Type::F32;
 }

@@ -23,7 +23,6 @@
 
 #include "pch.h"
 
-
 #include "eficonsole.h"
 #include "console_io.h"
 #include "gitversion.h"
@@ -57,8 +56,8 @@ static void sayHello() {
 	efiPrintf("isStm32F42x %s", boolToString(isStm32F42x()));
 #endif // STM32F4
 
-#define 	TM_ID_GetFlashSize()    (*(__IO uint16_t *) (FLASHSIZE_BASE))
-#define MCU_REVISION_MASK  0xfff
+#define TM_ID_GetFlashSize() (*(__IO uint16_t*)(FLASHSIZE_BASE))
+#define MCU_REVISION_MASK 0xfff
 
 	int mcuRevision = DBGMCU->IDCODE & MCU_REVISION_MASK;
 
@@ -108,7 +107,14 @@ static void cmd_threads() {
 
 	while (tp) {
 		int freeBytes = CountFreeStackSpace(tp->wabase);
-		efiPrintf("%d: %s\t%08x\t%lu\t%d\t%ld", tp->threadId, tp->name, (unsigned int)tp->wabase, tp->time, freeBytes, tp->realprio);
+		efiPrintf(
+				"%d: %s\t%08x\t%lu\t%d\t%ld",
+				tp->threadId,
+				tp->name,
+				(unsigned int)tp->wabase,
+				tp->time,
+				freeBytes,
+				tp->realprio);
 
 		if (freeBytes < 64) {
 			firmwareError("Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
@@ -122,7 +128,7 @@ static void cmd_threads() {
 
 #else // CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 
-  efiPrintf("CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS is not enabled");
+	efiPrintf("CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS is not enabled");
 
 #endif
 }
@@ -143,11 +149,11 @@ void initializeConsole() {
 	startConsole(&handleConsoleLine);
 
 	sayHello();
-	addConsoleAction("test", [](){ /* do nothing */});
+	addConsoleAction("test", []() { /* do nothing */ });
 	addConsoleAction("hello", sayHello);
 
 	addConsoleAction("critical", testCritical);
 	addConsoleAction("error", []() { firmwareError("firmwareError: %d", getRusEfiVersion()); });
 	addConsoleAction("threadsinfo", cmd_threads);
-	addConsoleAction("stackoverflow", [](){ fib(10000); });
+	addConsoleAction("stackoverflow", []() { fib(10000); });
 }

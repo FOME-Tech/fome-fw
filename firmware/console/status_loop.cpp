@@ -79,10 +79,13 @@ extern uint32_t maxLockedDuration;
  */
 static Timer printVersionTimer;
 
-static void printRusefiVersion(const char *engineTypeName, const char *firmwareBuildId) {
+static void printRusefiVersion(const char* engineTypeName, const char* firmwareBuildId) {
 	// VersionChecker in rusEFI console is parsing these version string, please follow the expected format
-	efiPrintfProto(PROTOCOL_VERSION_TAG, "%d@%s %s %s %lu",
-			getRusEfiVersion(), GIT_HASH_SHORT,
+	efiPrintfProto(
+			PROTOCOL_VERSION_TAG,
+			"%d@%s %s %s %lu",
+			getRusEfiVersion(),
+			GIT_HASH_SHORT,
 			firmwareBuildId,
 			engineTypeName,
 			(uint32_t)getTimeNowS());
@@ -90,11 +93,11 @@ static void printRusefiVersion(const char *engineTypeName, const char *firmwareB
 
 // Inform the console about the mapping between a pin's logical name (for example, injector 3)
 // and the physical MCU pin backing that function (for example, PE3)
-static void printOutPin(const char *pinName, brain_pin_e hwPin) {
+static void printOutPin(const char* pinName, brain_pin_e hwPin) {
 	if (hwPin == Gpio::Unassigned || hwPin == Gpio::Invalid) {
 		return;
 	}
-	const char *hwPinName;
+	const char* hwPinName;
 	if (isBrainPinValid(hwPin)) {
 		hwPinName = hwPortname(hwPin);
 	} else {
@@ -112,7 +115,7 @@ static void printEngineSnifferPinMappings() {
 	printOutPin(PROTOCOL_CRANK1, engineConfiguration->triggerInputPins[0]);
 	printOutPin(PROTOCOL_CRANK2, engineConfiguration->triggerInputPins[1]);
 	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
-		extern const char *vvtNames[];
+		extern const char* vvtNames[];
 		printOutPin(vvtNames[i], engineConfiguration->camInputs[i]);
 	}
 	int cylCount = minI(engineConfiguration->cylindersCount, MAX_CYLINDER_COUNT);
@@ -164,7 +167,7 @@ void updateDevConsoleState() {
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	systime_t nowSeconds = getTimeNowS();
 
-	static systime_t timeOfPreviousReport = (systime_t) -1;
+	static systime_t timeOfPreviousReport = (systime_t)-1;
 	static int prevCkpEventCounter = -1;
 
 	int currentCkpEventCounter = engine->triggerCentral.triggerState.getTotalEventCounter();
@@ -247,13 +250,16 @@ static void updateThrottles() {
 	engine->outputChannels.isPedalError = !pedal.Valid && Sensor::hasSensor(SensorType::AcceleratorPedalPrimary);
 
 	// TPS 1 pri/sec split
-	engine->outputChannels.tps1Split = Sensor::getOrZero(SensorType::Tps1Primary) - Sensor::getOrZero(SensorType::Tps1Secondary);
+	engine->outputChannels.tps1Split =
+			Sensor::getOrZero(SensorType::Tps1Primary) - Sensor::getOrZero(SensorType::Tps1Secondary);
 	// TPS 2 pri/sec split
-	engine->outputChannels.tps2Split = Sensor::getOrZero(SensorType::Tps2Primary) - Sensor::getOrZero(SensorType::Tps2Secondary);
+	engine->outputChannels.tps2Split =
+			Sensor::getOrZero(SensorType::Tps2Primary) - Sensor::getOrZero(SensorType::Tps2Secondary);
 	// TPS1 - TPS2 split
 	engine->outputChannels.tps12Split = Sensor::getOrZero(SensorType::Tps1) - Sensor::getOrZero(SensorType::Tps2);
 	// Pedal pri/sec split
-	engine->outputChannels.accPedalSplit = Sensor::getOrZero(SensorType::AcceleratorPedalPrimary) - Sensor::getOrZero(SensorType::AcceleratorPedalSecondary);
+	engine->outputChannels.accPedalSplit = Sensor::getOrZero(SensorType::AcceleratorPedalPrimary) -
+										   Sensor::getOrZero(SensorType::AcceleratorPedalSecondary);
 }
 
 static void updateLambda() {
@@ -284,10 +290,14 @@ static void updateFuelSensors() {
 
 static void updateVvtSensors() {
 #if EFI_SHAFT_POSITION_INPUT
-	engine->outputChannels.vvtPositionB1I = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0);
-	engine->outputChannels.vvtPositionB1E = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/1).value_or(0);
-	engine->outputChannels.vvtPositionB2I = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0).value_or(0);
-	engine->outputChannels.vvtPositionB2E = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/1).value_or(0);
+	engine->outputChannels.vvtPositionB1I =
+			engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0).value_or(0);
+	engine->outputChannels.vvtPositionB1E =
+			engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 1).value_or(0);
+	engine->outputChannels.vvtPositionB2I =
+			engine->triggerCentral.getVVTPosition(/*bankIndex*/ 1, /*camIndex*/ 0).value_or(0);
+	engine->outputChannels.vvtPositionB2E =
+			engine->triggerCentral.getVVTPosition(/*bankIndex*/ 1, /*camIndex*/ 1).value_or(0);
 #endif
 }
 
@@ -360,10 +370,9 @@ static void updateMiscSensors() {
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
-#if	HAL_USE_ADC
+#if HAL_USE_ADC
 	engine->outputChannels.internalMcuTemperature =
-		Sensor::get(SensorType::EcuInternalTemperature)
-		.value_or(getMCUInternalTemperature());
+			Sensor::get(SensorType::EcuInternalTemperature).value_or(getMCUInternalTemperature());
 #endif /* HAL_USE_ADC */
 }
 
@@ -407,15 +416,15 @@ static void updateFuelInfo() {
 	updateFuelResults();
 
 	const auto& wallFuel = engine->injectionEvents.elements[0].getWallFuel();
-	engine->outputChannels.wallFuelAmount = wallFuel.getWallFuel() * 1000;			// Convert grams to mg
-	engine->outputChannels.wallFuelCorrectionValue = wallFuel.wallFuelCorrection * 1000;	// Convert grams to mg
+	engine->outputChannels.wallFuelAmount = wallFuel.getWallFuel() * 1000;				 // Convert grams to mg
+	engine->outputChannels.wallFuelCorrectionValue = wallFuel.wallFuelCorrection * 1000; // Convert grams to mg
 
 	engine->outputChannels.veValue = engine->engineState.currentVe;
 }
 
 static void updateFlags() {
 #if EFI_USB_SERIAL
-	engine->outputChannels.isUsbConnected =	is_usb_serial_ready();
+	engine->outputChannels.isUsbConnected = is_usb_serial_ready();
 #endif // EFI_USB_SERIAL
 
 	engine->outputChannels.isO2HeaterOn = enginePins.o2heater.getLogicValue();
@@ -439,10 +448,10 @@ static void updateFlags() {
 // todo: the 'let's copy internal state for external consumers' approach is DEPRECATED
 // As of 2022 it's preferred to leverage LiveData where all state is exposed
 void updateTunerStudioState() {
-	TunerStudioOutputChannels *tsOutputChannels = &engine->outputChannels;
+	TunerStudioOutputChannels* tsOutputChannels = &engine->outputChannels;
 #if EFI_SHAFT_POSITION_INPUT
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-#else /* EFI_SHAFT_POSITION_INPUT */
+#else  /* EFI_SHAFT_POSITION_INPUT */
 	float rpm = 0;
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
@@ -452,7 +461,7 @@ void updateTunerStudioState() {
 
 	// header
 	tsOutputChannels->tsConfigVersion = TS_FILE_VERSION;
-	static_assert(offsetof (TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
+	static_assert(offsetof(TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
 
 #if EFI_SHAFT_POSITION_INPUT
 
@@ -505,7 +514,8 @@ void updateTunerStudioState() {
 	tsOutputChannels->warningCounter = engine->engineState.warnings.warningCounter;
 	tsOutputChannels->lastErrorCode = static_cast<uint16_t>(engine->engineState.warnings.lastErrorCode);
 	for (int i = 0; i < 8; i++) {
-		tsOutputChannels->recentErrorCode[i] = static_cast<uint16_t>(engine->engineState.warnings.recentWarnings.get(i).Code);
+		tsOutputChannels->recentErrorCode[i] =
+				static_cast<uint16_t>(engine->engineState.warnings.recentWarnings.get(i).Code);
 	}
 
 	tsOutputChannels->starterState = enginePins.starterControl.getLogicValue();
@@ -525,14 +535,13 @@ void updateTunerStudioState() {
 	tsOutputChannels->extiOverflowCount = getExtiOverflowCounter();
 #endif
 
-	switch (engineConfiguration->debugMode)	{
-	case DBG_TLE8888:
+	switch (engineConfiguration->debugMode) {
+		case DBG_TLE8888:
 #if (BOARD_TLE8888_COUNT > 0)
-		tle8888PostState();
+			tle8888PostState();
 #endif /* BOARD_TLE8888_COUNT */
-		break;
-	default:
-		;
+			break;
+		default:;
 	}
 }
 

@@ -34,7 +34,7 @@ static char logName[_MAX_FILLER + 20];
 #define SHORT_TIME_LEN 13
 
 // print FAT error function
-static void printFatFsError(const char *str, FRESULT err) {
+static void printFatFsError(const char* str, FRESULT err) {
 	efiPrintf("FatFs Error \"%s\" %d", str, err);
 }
 
@@ -91,7 +91,7 @@ err:
 
 static void prepareLogFileName(int index) {
 	strcpy(logName, FOME_LOG_PREFIX);
-	char *ptr;
+	char* ptr;
 
 	if (dateToStringShort(&logName[PREFIX_LEN])) {
 		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
@@ -119,7 +119,7 @@ static bool createLogFile(int logFileIndex) {
 	FRESULT err = f_open(sd_mem::getLogFileFd(), logName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (err != FR_OK && err != FR_EXIST) {
 		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: mount failed");
-		printFatFsError("FS mount failed", err);	// else - show error
+		printFatFsError("FS mount failed", err); // else - show error
 		return false;
 	}
 
@@ -173,9 +173,7 @@ public:
 	bool failed = false;
 
 	SdLogBufferWriter()
-		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc)
-	{
-	}
+		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc) {}
 
 	size_t writeInternal(const char* buffer, size_t count) override {
 		m_stream.write(buffer, count);
@@ -188,11 +186,11 @@ private:
 };
 
 namespace sd_mem {
-	SdLogBufferWriter& getLogBuffer() {
-		static SdLogBufferWriter logBuffer;
-		return logBuffer;
-	}
+SdLogBufferWriter& getLogBuffer() {
+	static SdLogBufferWriter logBuffer;
+	return logBuffer;
 }
+} // namespace sd_mem
 
 #endif // EFI_PROD_CODE
 
@@ -237,15 +235,15 @@ static void sdTriggerLogger() {
 		auto buffer = GetToothLoggerBufferBlocking();
 
 		if (buffer) {
-			sd_mem::getLogBuffer().write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
+			sd_mem::getLogBuffer().write(
+					reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
 			ReturnToothLoggerBuffer(buffer);
 		}
-
 	}
 #endif /* EFI_TOOTH_LOGGER */
 }
 
-static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE);		// MMC monitor thread
+static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE); // MMC monitor thread
 static THD_FUNCTION(sdCardLoggerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("MMC Card Logger");
@@ -255,16 +253,16 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 		return;
 	}
 
-	#if EFI_PROD_CODE
-		int logFileIndex = incLogFileName();
-		if (!createLogFile(logFileIndex)) {
-			return;
-		}
-	#endif // EFI_PROD_CODE
+#if EFI_PROD_CODE
+	int logFileIndex = incLogFileName();
+	if (!createLogFile(logFileIndex)) {
+		return;
+	}
+#endif // EFI_PROD_CODE
 
-	#if EFI_TUNER_STUDIO
-		engine->outputChannels.sd_logging_internal = true;
-	#endif
+#if EFI_TUNER_STUDIO
+	engine->outputChannels.sd_logging_internal = true;
+#endif
 
 	if (engineConfiguration->sdTriggerLog) {
 		sdTriggerLogger();
