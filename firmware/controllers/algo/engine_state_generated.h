@@ -76,7 +76,6 @@ struct LuaAdjustments {
 static_assert(sizeof(LuaAdjustments) == 12);
 static_assert(offsetof(LuaAdjustments, fuelAdd) == 0);
 static_assert(offsetof(LuaAdjustments, fuelMult) == 4);
-
 struct speed_density_s {
 	// Air: Charge temperature estimate
 	// deg C
@@ -91,7 +90,6 @@ struct speed_density_s {
 static_assert(sizeof(speed_density_s) == 8);
 static_assert(offsetof(speed_density_s, tCharge) == 0);
 static_assert(offsetof(speed_density_s, tChargeK) == 4);
-
 struct cranking_fuel_s {
 	// Fuel: cranking CLT mult
 	// offset 0
@@ -114,7 +112,6 @@ static_assert(offsetof(cranking_fuel_s, coolantTemperatureCoefficient) == 0);
 static_assert(offsetof(cranking_fuel_s, tpsCoefficient) == 4);
 static_assert(offsetof(cranking_fuel_s, durationCoefficient) == 8);
 static_assert(offsetof(cranking_fuel_s, fuel) == 12);
-
 struct engine_state_s {
 	// offset 0
 	LuaAdjustments lua;
@@ -242,4 +239,3 @@ static_assert(offsetof(engine_state_s, idleVeTableYAxis) == 62);
 static_assert(offsetof(engine_state_s, airflowEstimate) == 64);
 static_assert(offsetof(engine_state_s, startStopStateToggleCounter) == 66);
 static_assert(offsetof(engine_state_s, mapPerCylinder) == 68);
-

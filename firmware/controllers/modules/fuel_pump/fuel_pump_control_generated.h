@@ -67,4 +67,3 @@ struct fuel_pump_control_s {
 	bool unusedBit_0_31 : 1 {};
 };
 static_assert(sizeof(fuel_pump_control_s) == 4);
-

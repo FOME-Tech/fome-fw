@@ -80,4 +80,3 @@ struct throttle_model_s {
 static_assert(sizeof(throttle_model_s) == 12);
 static_assert(offsetof(throttle_model_s, m_crossoverAngle) == 4);
 static_assert(offsetof(throttle_model_s, m_flowEstimate) == 8);
-

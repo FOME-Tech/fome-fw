@@ -21,7 +21,6 @@ static_assert(offsetof(pid_status_s, dTerm) == 4);
 static_assert(offsetof(pid_status_s, output) == 6);
 static_assert(offsetof(pid_status_s, error) == 8);
 static_assert(offsetof(pid_status_s, resetCounter) == 10);
-
 struct output_channels_s {
 	// SD: Present
 	// offset 0 bit 0
@@ -849,4 +848,3 @@ static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 530);
 static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 532);
 static_assert(offsetof(output_channels_s, cylinderRpm) == 534);
 static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 558);
-

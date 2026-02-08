@@ -36,4 +36,3 @@ static_assert(offsetof(wideband_state_s, pumpDuty) == 2);
 static_assert(offsetof(wideband_state_s, tempC) == 4);
 static_assert(offsetof(wideband_state_s, nernstVoltage) == 6);
 static_assert(offsetof(wideband_state_s, esr) == 8);
-

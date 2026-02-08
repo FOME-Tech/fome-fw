@@ -154,4 +154,3 @@ static_assert(offsetof(idle_state_s, idleClosedLoop) == 36);
 static_assert(offsetof(idle_state_s, currentIdlePosition) == 40);
 static_assert(offsetof(idle_state_s, idleTargetAirmass) == 44);
 static_assert(offsetof(idle_state_s, idleTargetFlow) == 46);
-

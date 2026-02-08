@@ -13,4 +13,3 @@ struct wall_fuel_state_s {
 static_assert(sizeof(wall_fuel_state_s) == 8);
 static_assert(offsetof(wall_fuel_state_s, wallFuelCorrection) == 0);
 static_assert(offsetof(wall_fuel_state_s, wallFuel) == 4);
-

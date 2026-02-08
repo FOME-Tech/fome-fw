@@ -21,7 +21,6 @@ static_assert(offsetof(pid_status_2_s, dTerm) == 4);
 static_assert(offsetof(pid_status_2_s, output) == 6);
 static_assert(offsetof(pid_status_2_s, error) == 8);
 static_assert(offsetof(pid_status_2_s, resetCounter) == 10);
-
 struct vvt_s {
 	// offset 0
 	scaled_channel<int16_t, 10, 1> targetYAxis = (int16_t)0;
@@ -42,4 +41,3 @@ static_assert(sizeof(vvt_s) == 20);
 static_assert(offsetof(vvt_s, targetYAxis) == 0);
 static_assert(offsetof(vvt_s, vvtTarget) == 2);
 static_assert(offsetof(vvt_s, vvtOutput) == 4);
-

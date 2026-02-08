@@ -107,4 +107,3 @@ static_assert(offsetof(tps_accel_state_s, maxExtraPerCycle) == 32);
 static_assert(offsetof(tps_accel_state_s, maxExtraPerPeriod) == 36);
 static_assert(offsetof(tps_accel_state_s, maxInjectedPerPeriod) == 40);
 static_assert(offsetof(tps_accel_state_s, cycleCnt) == 44);
-

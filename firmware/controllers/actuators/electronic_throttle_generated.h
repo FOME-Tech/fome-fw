@@ -130,4 +130,3 @@ static_assert(offsetof(electronic_throttle_s, etbTpsErrorCounter) == 24);
 static_assert(offsetof(electronic_throttle_s, etbPpsErrorCounter) == 26);
 static_assert(offsetof(electronic_throttle_s, jamTimer) == 28);
 static_assert(offsetof(electronic_throttle_s, etbErrorCode) == 30);
-

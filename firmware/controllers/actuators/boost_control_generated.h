@@ -148,4 +148,3 @@ static_assert(offsetof(boost_control_s, boostOpenLoopXAxisValue) == 46);
 static_assert(offsetof(boost_control_s, boostOpenLoopYAxisValue) == 48);
 static_assert(offsetof(boost_control_s, boostClosedLoopXAxisValue) == 50);
 static_assert(offsetof(boost_control_s, boostClosedLoopYAxisValue) == 52);
-

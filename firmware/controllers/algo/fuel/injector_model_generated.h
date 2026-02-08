@@ -17,4 +17,3 @@ static_assert(sizeof(injector_model_s) == 12);
 static_assert(offsetof(injector_model_s, m_deadtime) == 0);
 static_assert(offsetof(injector_model_s, pressureDelta) == 4);
 static_assert(offsetof(injector_model_s, pressureRatio) == 8);
-

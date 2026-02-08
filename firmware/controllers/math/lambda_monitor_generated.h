@@ -73,4 +73,3 @@ struct lambda_monitor_s {
 };
 static_assert(sizeof(lambda_monitor_s) == 8);
 static_assert(offsetof(lambda_monitor_s, lambdaTimeSinceGood) == 4);
-
