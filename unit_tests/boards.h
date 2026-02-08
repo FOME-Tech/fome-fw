@@ -12,8 +12,7 @@
 
 #define ADC_CHANNEL_VREF 0
 
-int getAdcValue(const char *msg, adc_channel_e channel);
-
+int getAdcValue(const char* msg, adc_channel_e channel);
 
 // via: ChibiOS/os/common/ports/templates/chcore.h
 /**
@@ -23,5 +22,4 @@ int getAdcValue(const char *msg, adc_channel_e channel);
  * @note    R2 and R13 are not saved because those are assumed to be immutable
  *          during the system life cycle.
  */
-struct port_extctx {
-};
+struct port_extctx {};

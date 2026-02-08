@@ -25,5 +25,4 @@ TEST(misc, testSetTableValue) {
 
 	setCurveValue(cfg.cltFuelCorrBins, cfg.cltFuelCorr, CLT_CURVE_SIZE, -50, 1.4);
 	ASSERT_FLOAT_EQ(1.4, cfg.cltFuelCorr[0]);
-
 }

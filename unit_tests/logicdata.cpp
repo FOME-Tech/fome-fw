@@ -36,13 +36,20 @@
 #define numChannels 4
 #define reservedDurationInSamples 10
 
-static const char *channelNames[] = { "Primary", "Secondary", "TDC",
-		"Sync", "Coil", "Injector", "Channel 6", "Channel 7" };
+static const char* channelNames[] = {
+		"Primary", "Secondary", "TDC", "Sync", "Coil", "Injector", "Channel 6", "Channel 7"};
 
-static int CHANNEL_FLAGS[] = { 0x13458b, 0x0000ff, 0x00a0f9, 0x00ffff, 0x00ff00,
-		0xff0000, 0xf020a0, };
+static int CHANNEL_FLAGS[] = {
+		0x13458b,
+		0x0000ff,
+		0x00a0f9,
+		0x00ffff,
+		0x00ff00,
+		0xff0000,
+		0xf020a0,
+};
 
-static FILE *ptr;
+static FILE* ptr;
 
 static uint32_t realDurationInSamples;
 static uint32_t scaledDurationInSamples;
@@ -57,7 +64,7 @@ static void writeAs(int64_t value, int numBytes) {
 	} else {
 		writeByte(numBytes);
 		for (int i = 0; i < numBytes; i++) {
-			writeByte((uint8_t) ((value >> (i * 8)) & 0xff));
+			writeByte((uint8_t)((value >> (i * 8)) & 0xff));
 		}
 	}
 }
@@ -79,7 +86,7 @@ static void write(int64_t value) {
 	}
 }
 
-static void writeString(const char *value) {
+static void writeString(const char* value) {
 	int len = strlen(value);
 	write(len);
 	for (int i = 0; i < len; i++) {
@@ -134,7 +141,6 @@ static void writeHeader() {
 	writeId(0, 0);
 	write(0);
 	write(0);
-
 }
 
 static void writeDouble(double value) {
@@ -144,7 +150,7 @@ static void writeDouble(double value) {
 		writeByte(0);
 	} else {
 		writeByte(8);
-		char* c = (char*) (void*) &value;
+		char* c = (char*)(void*)&value;
 
 		for (int i = 0; i < 8; i++) {
 			writeByte(c[i]);
@@ -160,8 +166,8 @@ static void writeChannelHeader(int ch) {
 	writeDouble(1.0);
 	write(0);
 	writeDouble(0.0);
-	write(1);	// or 2
-	writeDouble(0.0);	// or 1.0
+	write(1);		  // or 2
+	writeDouble(0.0); // or 1.0
 
 	// this part sounds like the 'next' pointer?
 	if (ch == numChannels - 1) {
@@ -174,18 +180,18 @@ static void writeChannelHeader(int ch) {
 	}
 }
 
-static void writeEdges(int64_t *chDeltas, bool useLongDeltas, int numEdges) {
+static void writeEdges(int64_t* chDeltas, bool useLongDeltas, int numEdges) {
 	for (int i = 0; i < numEdges; i++) {
 		uint64_t d = chDeltas[i];
 
 		// set 16-bit 'sign' flag
 		if (!useLongDeltas && (d & SIGN_FLAG) == SIGN_FLAG)
 			d = (d & 0x7fff) | (SIGN_FLAG >> 16);
-		writeByte((uint8_t) (d & 0xff));
-		writeByte((uint8_t) ((d >> 8) & 0xff));
+		writeByte((uint8_t)(d & 0xff));
+		writeByte((uint8_t)((d >> 8) & 0xff));
 		if (useLongDeltas) {
-			writeByte((uint8_t) ((d >> 16) & 0xff));
-			writeByte((uint8_t) ((d >> 24) & 0xff));
+			writeByte((uint8_t)((d >> 16) & 0xff));
+			writeByte((uint8_t)((d >> 24) & 0xff));
 		}
 	}
 	writeByte(0x00);
@@ -197,8 +203,8 @@ static void writeRaw(int value, int num) {
 	}
 }
 
-static void writeChannelData(int ch, int64_t *chDeltas, int chLastState,
-		int lastRecord, bool useLongDeltas, int numEdges) {
+static void
+writeChannelData(int ch, int64_t* chDeltas, int chLastState, int lastRecord, bool useLongDeltas, int numEdges) {
 	if (numEdges == 0)
 		lastRecord = 0;
 	write(CHANNEL_BLOCK);
@@ -219,10 +225,7 @@ static void writeChannelData(int ch, int64_t *chDeltas, int chLastState,
 
 	write(chLastState);
 
-	int chFlag =
-			(numEdges == 0) ?
-					FLAG_EMPTY :
-					(useLongDeltas ? FLAG_NOTEMPTY_LONG : FLAG_NOTEMPTY);
+	int chFlag = (numEdges == 0) ? FLAG_EMPTY : (useLongDeltas ? FLAG_NOTEMPTY_LONG : FLAG_NOTEMPTY);
 	write(chFlag);
 
 	if (ch == 0) {
@@ -298,7 +301,7 @@ static void writeChannelDataHeader() {
 	}
 
 	write(BLOCK);
-	int SUB_ARRAY[] = { SUB, SUB, 0, SUB, 0, SUB };
+	int SUB_ARRAY[] = {SUB, SUB, 0, SUB, 0, SUB};
 	write(SUB_ARRAY, 6);
 	write(0, 6);
 
@@ -317,8 +320,7 @@ static void writeChannelDataHeader() {
 	writeId(0, 0);
 
 	write(BLOCK);
-	uint32_t SAM_ARRAY[] = { realDurationInSamples, realDurationInSamples,
-			realDurationInSamples };
+	uint32_t SAM_ARRAY[] = {realDurationInSamples, realDurationInSamples, realDurationInSamples};
 	write(reinterpret_cast<int32_t*>(SAM_ARRAY), 3);
 	write(0);
 	write(SUB);
@@ -337,7 +339,7 @@ static void writeChannelDataHeader() {
 	write(1);
 	write(0, 3);
 	writeId(0, 0);
-	int ARR_6[] = { 0, 1, 1, 0, 1, 0x13 };
+	int ARR_6[] = {0, 1, 1, 0, 1, 0x13};
 	write(ARR_6, 6);
 	write(SUB);
 
@@ -346,7 +348,7 @@ static void writeChannelDataHeader() {
 	write(realDurationInSamples);
 	write(0, 2);
 	write(numChannels);
-	int ARR_3[] = { 1, 0, 1 };
+	int ARR_3[] = {1, 0, 1};
 	write(ARR_3, 3);
 }
 
@@ -372,14 +374,14 @@ static void writeChannelDataFooter() {
 
 static int getChannelState(int ch, const CompositeEvent* event) {
 	switch (ch) {
-	case 0:
-		return event->primaryTrigger;
-	case 1:
-		return event->secondaryTrigger;
-	case 2:
-		return event->isTDC;
-	case 3:
-		return event->sync;
+		case 0:
+			return event->primaryTrigger;
+		case 1:
+			return event->secondaryTrigger;
+		case 2:
+			return event->isTDC;
+		case 3:
+			return event->sync;
 	}
 	return -1;
 }
@@ -391,13 +393,14 @@ static void writeEvents(const std::vector<CompositeEvent>& events) {
 		return;
 	uint32_t firstRecordTs = events[1].timestamp;
 	uint32_t lastRecordTs = events[count - 1].timestamp;
-	// we don't know the total duration, so we create a margin after the last record which equals to the duration of the first event
+	// we don't know the total duration, so we create a margin after the last record which equals to the duration of the
+	// first event
 	realDurationInSamples = lastRecordTs + firstRecordTs;
 	scaledDurationInSamples = realDurationInSamples / 4;
 
 	writeChannelDataHeader();
 
-	int64_t *chDeltas = (int64_t*) malloc(sizeof(int64_t) * count);
+	int64_t* chDeltas = (int64_t*)malloc(sizeof(int64_t) * count);
 
 	bool useLongDeltas = false;
 	for (int ch = 0; ch < numChannels; ch++) {
@@ -429,8 +432,7 @@ static void writeEvents(const std::vector<CompositeEvent>& events) {
 				chPrevState = chState;
 			}
 		}
-		writeChannelData(ch, chDeltas, chPrevState, prevTs, useLongDeltas,
-				deltaCount);
+		writeChannelData(ch, chDeltas, chPrevState, prevTs, useLongDeltas, deltaCount);
 	}
 
 	free(chDeltas);
@@ -476,13 +478,13 @@ static void writeFooter() {
 	write(0, 4);
 
 	write(1);
-	write(0x29);  // ???
+	write(0x29); // ???
 	write(SUB);
 
 	writeTimingMarker();
 }
 
-void writeFile(const char * fileName, const std::vector<CompositeEvent>& events) {
+void writeFile(const char* fileName, const std::vector<CompositeEvent>& events) {
 
 	ptr = fopen(fileName, "wb");
 
@@ -491,5 +493,4 @@ void writeFile(const char * fileName, const std::vector<CompositeEvent>& events)
 	writeFooter();
 
 	fclose(ptr);
-
 }

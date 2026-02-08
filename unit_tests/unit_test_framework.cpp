@@ -9,7 +9,7 @@
 
 #include <stdlib.h>
 
-void chDbgAssert(int c, char *msg, void *arg) {
+void chDbgAssert(int c, char* msg, void* arg) {
 	if (!c) {
 		printf("assert failed: %s\r\n", msg);
 		exit(-1);

@@ -16,12 +16,11 @@
 
 extern EnginePins enginePins;
 
-class EngineTestHelperBase
-{
+class EngineTestHelperBase {
 public:
 	// we have the base method and base constructor in order to better control order if initialization
 	// base constructor contains things which need to be executed first
-	EngineTestHelperBase(Engine * eng, engine_configuration_s * config, persistent_config_s * pers);
+	EngineTestHelperBase(Engine* eng, engine_configuration_s* config, persistent_config_s* pers);
 	~EngineTestHelperBase();
 };
 
@@ -33,14 +32,17 @@ public:
 	explicit EngineTestHelper(engine_type_e engineType);
 	EngineTestHelper(engine_type_e engineType, const std::unordered_map<SensorType, float>& sensorValues);
 	EngineTestHelper(engine_type_e engineType, configuration_callback_t boardCallback);
-	EngineTestHelper(engine_type_e engineType, configuration_callback_t boardCallback, const std::unordered_map<SensorType, float>& sensorValues);
+	EngineTestHelper(
+			engine_type_e engineType,
+			configuration_callback_t boardCallback,
+			const std::unordered_map<SensorType, float>& sensorValues);
 	~EngineTestHelper();
 
-    float angleToTimeUs(angle_t angle) {
-        return angle * engine.rpmCalculator.oneDegreeUs;
-    }
+	float angleToTimeUs(angle_t angle) {
+		return angle * engine.rpmCalculator.oneDegreeUs;
+	}
 
-	warningBuffer_t *recentWarnings();
+	warningBuffer_t* recentWarnings();
 	int getWarningCounter();
 
 	void applyTriggerWaveform();
@@ -84,16 +86,18 @@ public:
 	 */
 	void clearQueue();
 
-	scheduling_s * assertEvent5(const char *msg, int index, void *callback, efitimeus_t expectedTimestamp);
-	scheduling_s * assertScheduling(const char *msg, int index, scheduling_s *expected, void *callback, efitimeus_t expectedTimestamp);
+	scheduling_s* assertEvent5(const char* msg, int index, void* callback, efitimeus_t expectedTimestamp);
+	scheduling_s*
+	assertScheduling(const char* msg, int index, scheduling_s* expected, void* callback, efitimeus_t expectedTimestamp);
 
-	const AngleBasedEvent* assertTriggerEvent(const char *msg, int index, AngleBasedEvent* expected, void *callback, angle_t enginePhase);
+	const AngleBasedEvent*
+	assertTriggerEvent(const char* msg, int index, AngleBasedEvent* expected, void* callback, angle_t enginePhase);
 
-	void assertEvent(const char *msg, int index, void *callback, efitimeus_t momentX, int injectorIndex);
-	void assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex);
-	void assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex);
+	void assertEvent(const char* msg, int index, void* callback, efitimeus_t momentX, int injectorIndex);
+	void assertInjectorUpEvent(const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex);
+	void assertInjectorDownEvent(const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex);
 	// todo: open question if this is worth a helper method or should be inlined?
-	void assertRpm(int expectedRpm, const char *msg = "RPM");
+	void assertRpm(int expectedRpm, const char* msg = "RPM");
 
 	int executeActions();
 	void moveTimeForwardMs(float deltaTimeMs);
@@ -105,10 +109,10 @@ public:
 	std::unique_ptr<::testing::NiceMock<MockAirmass>> mockAirmass;
 
 private:
-	void writeEvents(const char *fileName);
+	void writeEvents(const char* fileName);
 };
 
-void setupSimpleTestEngineWithMafAndTT_ONE_trigger(EngineTestHelper *eth, injection_mode_e injMode = IM_BATCH);
-void setupSimpleTestEngineWithMaf(EngineTestHelper *eth, injection_mode_e injectionMode, trigger_type_e trigger);
+void setupSimpleTestEngineWithMafAndTT_ONE_trigger(EngineTestHelper* eth, injection_mode_e injMode = IM_BATCH);
+void setupSimpleTestEngineWithMaf(EngineTestHelper* eth, injection_mode_e injectionMode, trigger_type_e trigger);
 
 void setVerboseTrigger(bool isEnabled);

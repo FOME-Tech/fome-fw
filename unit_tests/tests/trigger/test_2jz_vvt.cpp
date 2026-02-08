@@ -13,17 +13,16 @@ TEST(sensors, test2jz) {
 
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 
-	ASSERT_EQ( 0,  Sensor::getOrZero(SensorType::Rpm)) << "test2jz RPM";
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm)) << "test2jz RPM";
 	for (int i = 0; i < 2; i++) {
 		eth.fireRise(12.5);
 		eth.fireFall(12.5);
-		ASSERT_EQ( 0,  Sensor::getOrZero(SensorType::Rpm)) << "test2jz RPM at " << i;
+		ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm)) << "test2jz RPM at " << i;
 	}
 	eth.fireRise(12.5);
 	eth.fireFall(12.5);
 	// first time we have RPM
-	ASSERT_EQ(2400,  Sensor::getOrZero(SensorType::Rpm)) << "test2jz RPM";
-
+	ASSERT_EQ(2400, Sensor::getOrZero(SensorType::Rpm)) << "test2jz RPM";
 
 	eth.moveTimeForwardUs(MS2US(3)); // shifting VVT phase a few angles
 

@@ -26,14 +26,13 @@ extern bool printTriggerTrace;
 extern bool printFuelDebug;
 extern int minCrankingRpm;
 
-EngineTestHelperBase::EngineTestHelperBase(Engine * eng, engine_configuration_s * econfig, persistent_config_s * pers) {
+EngineTestHelperBase::EngineTestHelperBase(Engine* eng, engine_configuration_s* econfig, persistent_config_s* pers) {
 	// todo: make this not a global variable, we need currentTimeProvider interface on engine
 	setTimeNowUs(0);
 	minCrankingRpm = 0;
 	EnableToothLogger();
 	if (engine || engineConfiguration || config) {
-		firmwareError(ObdCode::OBD_PCM_Processor_Fault,
-			      "Engine configuration not cleaned up by previous test");
+		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Engine configuration not cleaned up by previous test");
 	}
 	engine = eng;
 	engineConfiguration = econfig;
@@ -47,18 +46,15 @@ EngineTestHelperBase::~EngineTestHelperBase() {
 }
 
 EngineTestHelper::EngineTestHelper(engine_type_e engineType)
-	: EngineTestHelper(engineType, &emptyCallbackWithConfiguration) {
-}
+	: EngineTestHelper(engineType, &emptyCallbackWithConfiguration) {}
 
 EngineTestHelper::EngineTestHelper(engine_type_e engineType, configuration_callback_t configurationCallback)
-	: EngineTestHelper(engineType, configurationCallback, {}) {
-}
+	: EngineTestHelper(engineType, configurationCallback, {}) {}
 
 EngineTestHelper::EngineTestHelper(engine_type_e engineType, const std::unordered_map<SensorType, float>& sensorValues)
-	: EngineTestHelper(engineType, &emptyCallbackWithConfiguration, sensorValues) {
-}
+	: EngineTestHelper(engineType, &emptyCallbackWithConfiguration, sensorValues) {}
 
-warningBuffer_t *EngineTestHelper::recentWarnings() {
+warningBuffer_t* EngineTestHelper::recentWarnings() {
 	return &unitTestWarningCodeState.recentWarnings;
 }
 
@@ -66,9 +62,11 @@ int EngineTestHelper::getWarningCounter() {
 	return unitTestWarningCodeState.warningCounter;
 }
 
-EngineTestHelper::EngineTestHelper(engine_type_e engineType, configuration_callback_t configurationCallback, const std::unordered_map<SensorType, float>& sensorValues) :
-	EngineTestHelperBase(&engine, &persistentConfig.engineConfiguration, &persistentConfig)
-{
+EngineTestHelper::EngineTestHelper(
+		engine_type_e engineType,
+		configuration_callback_t configurationCallback,
+		const std::unordered_map<SensorType, float>& sensorValues)
+	: EngineTestHelperBase(&engine, &persistentConfig.engineConfiguration, &persistentConfig) {
 	efi::clear(persistentConfig);
 
 	Sensor::setMockValue(SensorType::Clt, 70);
@@ -112,7 +110,7 @@ EngineTestHelper::EngineTestHelper(engine_type_e engineType, configuration_callb
 	commonInitEngineController();
 
 	// this is needed to have valid CLT and IAT.
-//todo: reuse 	initPeriodicEvents() method
+	// todo: reuse 	initPeriodicEvents() method
 	engine.periodicSlowCallback();
 
 	extern bool hasInitGtest;
@@ -134,9 +132,9 @@ EngineTestHelper::~EngineTestHelper() {
 	// Write history to file
 	extern bool hasInitGtest;
 	if (hasInitGtest) {
-    	std::stringstream filePath;
-    	filePath << "unittest_" << ::testing::UnitTest::GetInstance()->current_test_info()->name() << ".logicdata";
-	    writeEvents(filePath.str().c_str());
+		std::stringstream filePath;
+		filePath << "unittest_" << ::testing::UnitTest::GetInstance()->current_test_info()->name() << ".logicdata";
+		writeEvents(filePath.str().c_str());
 	}
 
 	// Cleanup
@@ -146,7 +144,7 @@ EngineTestHelper::~EngineTestHelper() {
 	memset(mockPinStates, 0, sizeof(mockPinStates));
 }
 
-void EngineTestHelper::writeEvents(const char *fileName) {
+void EngineTestHelper::writeEvents(const char* fileName) {
 	const auto& events = getCompositeEvents();
 	if (events.size() < 2) {
 		printf("Not enough data for %s\n", fileName);
@@ -196,7 +194,7 @@ void EngineTestHelper::firePrimaryTriggerFall() {
 }
 
 void EngineTestHelper::fireTriggerEventsWithDuration(float durationMs) {
-	fireTriggerEvents2(/*count*/1, durationMs);
+	fireTriggerEvents2(/*count*/ 1, durationMs);
 }
 
 /**
@@ -220,7 +218,7 @@ void EngineTestHelper::smartFireTriggerEvents2(int count, float durationMs) {
 
 void EngineTestHelper::clearQueue() {
 	engine.scheduler.executeAll(99999999); // this is needed to clear 'isScheduled' flag
-	ASSERT_EQ( 0,  engine.scheduler.size()) << "Failed to clearQueue";
+	ASSERT_EQ(0, engine.scheduler.size()) << "Failed to clearQueue";
 }
 
 int EngineTestHelper::executeActions() {
@@ -279,45 +277,46 @@ void EngineTestHelper::fireTriggerEvents(int count) {
 	fireTriggerEvents2(count, 5); // 5ms
 }
 
-void EngineTestHelper::assertInjectorUpEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
+void EngineTestHelper::assertInjectorUpEvent(const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
 	assertEvent(msg, eventIndex, (void*)startInjection, momentX, injectorIndex);
 }
 
-void EngineTestHelper::assertInjectorDownEvent(const char *msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
+void EngineTestHelper::assertInjectorDownEvent(
+		const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
 	assertEvent(msg, eventIndex, (void*)endInjection, momentX, injectorIndex);
 }
 
-scheduling_s * EngineTestHelper::assertEvent5(const char *msg, int index, void *callback, efitimeus_t expectedTimestamp) {
-	TestExecutor *executor = &engine.scheduler;
+scheduling_s*
+EngineTestHelper::assertEvent5(const char* msg, int index, void* callback, efitimeus_t expectedTimestamp) {
+	TestExecutor* executor = &engine.scheduler;
 	EXPECT_TRUE(executor->size() > index) << msg << " valid index";
-	scheduling_s *event = executor->getForUnitTest(index);
-	EXPECT_NEAR_M4((void*)event->action.getCallback() == (void*) callback, 1) << msg << " callback up/down";
+	scheduling_s* event = executor->getForUnitTest(index);
+	EXPECT_NEAR_M4((void*)event->action.getCallback() == (void*)callback, 1) << msg << " callback up/down";
 	efitimeus_t start = getTimeNowUs();
 	EXPECT_NEAR_M4(expectedTimestamp, event->momentX - start) << msg << " timestamp";
 	return event;
 }
 
-const AngleBasedEvent* EngineTestHelper::assertTriggerEvent(const char *msg,
-		int index, AngleBasedEvent* expected,
-		void *callback,
-		angle_t enginePhase) {
+const AngleBasedEvent* EngineTestHelper::assertTriggerEvent(
+		const char* msg, int index, AngleBasedEvent* expected, void* callback, angle_t enginePhase) {
 	auto event = engine.module<TriggerScheduler>()->getElementAtIndexForUnitTest(index);
 
 	if (callback) {
-		EXPECT_NEAR_M4((void*)event->action.getCallback() == (void*) callback, 1) << msg << " callback up/down";
+		EXPECT_NEAR_M4((void*)event->action.getCallback() == (void*)callback, 1) << msg << " callback up/down";
 	}
 
 	EXPECT_NEAR_M4(enginePhase, event->eventPhase.angle) << msg << " angle";
 	return event;
 }
 
-scheduling_s * EngineTestHelper::assertScheduling(const char *msg, int index, scheduling_s *expected, void *callback, efitimeus_t expectedTimestamp) {
-	scheduling_s * actual = assertEvent5(msg, index, callback, expectedTimestamp);
+scheduling_s* EngineTestHelper::assertScheduling(
+		const char* msg, int index, scheduling_s* expected, void* callback, efitimeus_t expectedTimestamp) {
+	scheduling_s* actual = assertEvent5(msg, index, callback, expectedTimestamp);
 	return actual;
 }
 
-void EngineTestHelper::assertEvent(const char *msg, int index, void *callback, efitimeus_t momentX, int injectorIndex) {
-	scheduling_s *event = assertEvent5(msg, index, callback, momentX);
+void EngineTestHelper::assertEvent(const char* msg, int index, void* callback, efitimeus_t momentX, int injectorIndex) {
+	scheduling_s* event = assertEvent5(msg, index, callback, momentX);
 
 	InjectorContext ctx = bit_cast<InjectorContext>(event->action.getArgument());
 	ASSERT_EQ(ctx.eventIndex, injectorIndex);
@@ -330,12 +329,11 @@ void EngineTestHelper::applyTriggerWaveform() {
 }
 
 // todo: open question if this is worth a helper method or should be inlined?
-void EngineTestHelper::assertRpm(int expectedRpm, const char *msg) {
+void EngineTestHelper::assertRpm(int expectedRpm, const char* msg) {
 	EXPECT_EQ(expectedRpm, Sensor::getOrZero(SensorType::Rpm)) << msg;
 }
 
-void setupSimpleTestEngineWithMaf(EngineTestHelper *eth, injection_mode_e injectionMode,
-		trigger_type_e trigger) {
+void setupSimpleTestEngineWithMaf(EngineTestHelper* eth, injection_mode_e injectionMode, trigger_type_e trigger) {
 	engineConfiguration->isIgnitionEnabled = false; // let's focus on injection
 	engineConfiguration->cylindersCount = 4;
 	// a bit of flexibility - the mode may be changed by some tests
@@ -348,18 +346,18 @@ void setupSimpleTestEngineWithMaf(EngineTestHelper *eth, injection_mode_e inject
 	// this is needed to update injectorLag
 	engine->updateSlowSensors();
 
-	ASSERT_EQ( 0,  engine->triggerCentral.isTriggerConfigChanged()) << "trigger #1";
+	ASSERT_EQ(0, engine->triggerCentral.isTriggerConfigChanged()) << "trigger #1";
 	eth->setTriggerType(trigger);
 }
 
 void EngineTestHelper::setTriggerType(trigger_type_e trigger) {
 	engineConfiguration->trigger.type = trigger;
 	incrementGlobalConfigurationVersion();
-	ASSERT_EQ( 1, engine.triggerCentral.isTriggerConfigChanged()) << "trigger #2";
+	ASSERT_EQ(1, engine.triggerCentral.isTriggerConfigChanged()) << "trigger #2";
 	applyTriggerWaveform();
 }
 
-void setupSimpleTestEngineWithMafAndTT_ONE_trigger(EngineTestHelper *eth, injection_mode_e injectionMode) {
+void setupSimpleTestEngineWithMafAndTT_ONE_trigger(EngineTestHelper* eth, injection_mode_e injectionMode) {
 	setCamOperationMode();
 	setupSimpleTestEngineWithMaf(eth, injectionMode, trigger_type_e::TT_ONE);
 }

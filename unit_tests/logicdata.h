@@ -11,11 +11,11 @@
 #include <cstdint>
 
 struct CompositeEvent {
-    uint32_t timestamp;
-    bool primaryTrigger;
-    bool secondaryTrigger;
-    bool isTDC;
-    bool sync;
+	uint32_t timestamp;
+	bool primaryTrigger;
+	bool secondaryTrigger;
+	bool isTDC;
+	bool sync;
 };
 
-void writeFile(const char * fileName, const std::vector<CompositeEvent>& events);
+void writeFile(const char* fileName, const std::vector<CompositeEvent>& events);
