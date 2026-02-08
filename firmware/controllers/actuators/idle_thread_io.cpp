@@ -24,7 +24,7 @@
 
 #include "pch.h"
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 #include "dc_motors.h"
 #include "idle_hardware.h"
 
@@ -43,7 +43,7 @@ void setManualIdleValvePosition(int positionPercent) {
 #endif /* EFI_UNIT_TEST */
 
 #if EFI_PROD_CODE
-static void startInputPinIfValid(const char *msg, brain_pin_e pin, pin_input_mode_e mode) {
+static void startInputPinIfValid(const char* msg, brain_pin_e pin, pin_input_mode_e mode) {
 	efiSetPadMode(msg, pin, getInputMode(mode));
 }
 #endif // EFI_PROD_CODE
@@ -52,7 +52,7 @@ percent_t getIdlePosition() {
 #if EFI_IDLE_CONTROL
 	return engine->module<IdleController>().unmock().currentIdlePosition;
 #else
-    return 0;
+	return 0;
 #endif
 }
 
@@ -60,13 +60,17 @@ void startPedalPins() {
 #if EFI_PROD_CODE
 	// this is neutral/no gear switch input. on Miata it's wired both to clutch pedal and neutral in gearbox
 	// this switch is not used yet
-	startInputPinIfValid("clutch down switch", engineConfiguration->clutchDownPin, engineConfiguration->clutchDownPinMode);
+	startInputPinIfValid(
+			"clutch down switch", engineConfiguration->clutchDownPin, engineConfiguration->clutchDownPinMode);
 
 	startInputPinIfValid("clutch up switch", engineConfiguration->clutchUpPin, engineConfiguration->clutchUpPinMode);
 
-	startInputPinIfValid("brake pedal switch", engineConfiguration->brakePedalPin, engineConfiguration->brakePedalPinMode);
-	startInputPinIfValid("Launch Button", engineConfiguration->launchActivatePin, engineConfiguration->launchActivatePinMode);
-	startInputPinIfValid("Antilag Button", engineConfiguration->ALSActivatePin, engineConfiguration->ALSActivatePinMode);
+	startInputPinIfValid(
+			"brake pedal switch", engineConfiguration->brakePedalPin, engineConfiguration->brakePedalPinMode);
+	startInputPinIfValid(
+			"Launch Button", engineConfiguration->launchActivatePin, engineConfiguration->launchActivatePinMode);
+	startInputPinIfValid(
+			"Antilag Button", engineConfiguration->ALSActivatePin, engineConfiguration->ALSActivatePinMode);
 #endif /* EFI_PROD_CODE */
 }
 
@@ -77,7 +81,7 @@ void stopPedalPins() {
 	brain_pin_markUnused(activeConfiguration.launchActivatePin);
 }
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 
 void setTargetIdleRpm(int value) {
 	setTargetRpmCurve(value);
@@ -96,14 +100,13 @@ void startIdleBench() {
 
 #if EFI_IDLE_CONTROL
 
-
 void setDefaultIdleParameters() {
 	engineConfiguration->idleRpmPid.pFactor = 0.01f;
 	engineConfiguration->idleRpmPid.iFactor = 0.05f;
 	engineConfiguration->idleRpmPid.dFactor = 0.0f;
 
 	engineConfiguration->idlerpmpid_iTermMin = -20;
-	engineConfiguration->idlerpmpid_iTermMax =  20;
+	engineConfiguration->idlerpmpid_iTermMax = 20;
 
 	// Good starting point is 10 degrees per 100 rpm, aka 0.1 deg/rpm
 	engineConfiguration->idleTimingPid.pFactor = 0.1f;
@@ -124,11 +127,11 @@ void startIdleThread() {
 	// Force the idle controller to use 0 offset, as this is handled by the open loop table instead.
 	engineConfiguration->idleRpmPid.offset = 0;
 
-	IdleController *controller = &engine->module<IdleController>().unmock();
+	IdleController* controller = &engine->module<IdleController>().unmock();
 
 	controller->init();
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 	// todo: we still have to explicitly init all hardware on start in addition to handling configuration change via
 	// 'applyNewHardwareSettings' todo: maybe unify these two use-cases?
 	initIdleHardware();
@@ -137,7 +140,7 @@ void startIdleThread() {
 	controller->openLoop = -100.0f;
 	controller->currentIdlePosition = -100.0f;
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 	// split this whole file into manual controller and auto controller? move these commands into the file
 	// which would be dedicated to just auto-controller?
 

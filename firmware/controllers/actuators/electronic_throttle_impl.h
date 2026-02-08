@@ -25,7 +25,12 @@
 
 class EtbController : public IEtbController, public electronic_throttle_s {
 public:
-	bool init(dc_function_e function, DcMotor *motor, pid_s *pidParameters, const ValueProvider3D* pedalMap, bool initializeThrottles) override;
+	bool
+	init(dc_function_e function,
+		 DcMotor* motor,
+		 pid_s* pidParameters,
+		 const ValueProvider3D* pedalMap,
+		 bool initializeThrottles) override;
 	void setIdlePosition(percent_t pos) override;
 	void setWastegatePosition(percent_t pos) override;
 	void reset() override;
@@ -53,7 +58,9 @@ public:
 	void setOutput(expected<percent_t> outputValue) override;
 
 	// Used to inspect the internal PID controller's state
-	const pid_state_s& getPidState() const override { return m_pid; };
+	const pid_state_s& getPidState() const override {
+		return m_pid;
+	};
 
 	// Override if this throttle needs special per-throttle adjustment (bank-to-bank trim, for example)
 	virtual percent_t getThrottleTrim(float /*rpm*/, percent_t /*targetPosition*/) const {
@@ -70,13 +77,17 @@ protected:
 	bool hadTpsError = false;
 	bool hadPpsError = false;
 
-	dc_function_e getFunction() const { return m_function; }
-	DcMotor* getMotor() { return m_motor; }
+	dc_function_e getFunction() const {
+		return m_function;
+	}
+	DcMotor* getMotor() {
+		return m_motor;
+	}
 
 private:
 	dc_function_e m_function = DC_None;
 	SensorType m_positionSensor = SensorType::Invalid;
-	DcMotor *m_motor = nullptr;
+	DcMotor* m_motor = nullptr;
 	Pid m_pid;
 	bool m_shouldResetPid = false;
 
@@ -107,7 +118,7 @@ private:
 	// These are set to correct order of magnitude starting points
 	// so we converge more quickly on the correct values
 	float m_a = 8;
-	float m_tu = 0.1f; 
+	float m_tu = 0.1f;
 
 	uint8_t m_autotuneCounter = 0;
 	uint8_t m_autotuneCurrentParam = 0;
@@ -117,7 +128,7 @@ private:
 
 void etbPidReset();
 
-class EtbController1 : public EtbController { };
+class EtbController1 : public EtbController {};
 
 class EtbController2 : public EtbController {
 public:

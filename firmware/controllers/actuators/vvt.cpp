@@ -21,14 +21,12 @@ static vvt_map_t vvtTable2;
 VvtController::VvtController(int index, int bankIndex, int camIndex)
 	: m_index(index)
 	, m_bank(bankIndex)
-	, m_cam(camIndex)
-{
-}
+	, m_cam(camIndex) {}
 
 void VvtController::init(const ValueProvider3D* targetMap, IPwm* pwm) {
 	// Use the same settings for the Nth cam in every bank (ie, all exhaust cams use the same PID)
 	m_pid.initPidClass(&engineConfiguration->auxPid[m_cam]);
-	
+
 	m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
 	m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 
@@ -46,7 +44,8 @@ void VvtController::onFastCallback() {
 	m_isCltWarmEnough = Sensor::getOrZero(SensorType::Clt) > engineConfiguration->vvtControlMinClt;
 
 	auto nowNt = getTimeNowNt();
-	m_engineRunningLongEnough = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) > engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
+	m_engineRunningLongEnough = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) >
+								engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
 	if (!m_engineRunningLongEnough) {
 		m_timeSinceEnabled.reset();
 	}
@@ -54,7 +53,7 @@ void VvtController::onFastCallback() {
 	update();
 }
 
-void VvtController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+void VvtController::onConfigurationChange(engine_configuration_s const* previousConfig) {
 	m_pid.iTermMin = engineConfiguration->vvtItermMin[m_cam];
 	m_pid.iTermMax = engineConfiguration->vvtItermMax[m_cam];
 
@@ -66,8 +65,10 @@ void VvtController::onConfigurationChange(engine_configuration_s const * previou
 static bool shouldInvertVvt(int camIndex) {
 	// grumble grumble, can't do an array of bits in c++
 	switch (camIndex) {
-		case 0: return engineConfiguration->invertVvtControlIntake;
-		case 1: return engineConfiguration->invertVvtControlExhaust;
+		case 0:
+			return engineConfiguration->invertVvtControlIntake;
+		case 1:
+			return engineConfiguration->invertVvtControlExhaust;
 	}
 
 	return false;
@@ -86,9 +87,7 @@ expected<angle_t> VvtController::getSetpoint() {
 	float load = getFuelingLoad();
 
 	auto yAxisOverride =
-		(m_cam == 0)
-		? engineConfiguration->vvtIntakeYAxisOverride
-		: engineConfiguration->vvtExhaustYAxisOverride;
+			(m_cam == 0) ? engineConfiguration->vvtIntakeYAxisOverride : engineConfiguration->vvtExhaustYAxisOverride;
 
 	if (yAxisOverride != GPPWM_Zero) {
 		load = readGppwmChannel(yAxisOverride).value_or(0);
@@ -103,11 +102,7 @@ expected<angle_t> VvtController::getSetpoint() {
 	}
 
 	// Ramp the target in over 2 seconds once we're allowed to control VVT
-	target = interpolateClamped(
-				0, 0,
-				2, target,
-				m_timeSinceEnabled.getElapsedSeconds()
-			);
+	target = interpolateClamped(0, 0, 2, target, m_timeSinceEnabled.getElapsedSeconds());
 
 	// If the target is very near the rest position, disable control entirely
 	// Couple reasons for this:
@@ -116,7 +111,7 @@ expected<angle_t> VvtController::getSetpoint() {
 	//       as this can cause problems with the lock pin jamming.
 	bool allowCamControl;
 	if (shouldInvertVvt(m_cam)) {
-		allowCamControl = m_targetHysteresis.test(target < -3, target > -1);
+		allowCamControl = m_targetHysteresis.test(target<-3, target> - 1);
 	} else {
 		allowCamControl = m_targetHysteresis.test(target > 3, target < 1);
 	}
@@ -169,10 +164,7 @@ expected<percent_t> VvtController::getClosedLoop(angle_t target, angle_t observa
 
 void VvtController::setOutput(expected<percent_t> outputValue) {
 #if EFI_SHAFT_POSITION_INPUT
-	bool enabled =
-		m_engineRunningLongEnough &&
-		m_isRpmHighEnough &&
-		m_isCltWarmEnough;
+	bool enabled = m_engineRunningLongEnough && m_isRpmHighEnough && m_isCltWarmEnough;
 
 	if (outputValue && enabled) {
 		float vvtPct = outputValue.Value;
@@ -183,11 +175,7 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 		vvtPct *= voltageRatio;
 
 		// Clamp final output min/max
-		vvtPct = clampF(
-			engineConfiguration->vvtOutputMin[m_cam],
-			vvtPct,
-			engineConfiguration->vvtOutputMax[m_cam]
-		);
+		vvtPct = clampF(engineConfiguration->vvtOutputMin[m_cam], vvtPct, engineConfiguration->vvtOutputMax[m_cam]);
 
 		vvtOutput = vvtPct;
 
@@ -205,35 +193,38 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 
 #if EFI_VVT_PID
 
-static const char *vvtOutputNames[CAM_INPUTS_COUNT] = {
-"Vvt Output#1",
+static const char* vvtOutputNames[CAM_INPUTS_COUNT] = {
+		"Vvt Output#1",
 #if CAM_INPUTS_COUNT > 1
-"Vvt Output#2",
+		"Vvt Output#2",
 #endif
 #if CAM_INPUTS_COUNT > 2
-"Vvt Output#3",
+		"Vvt Output#3",
 #endif
 #if CAM_INPUTS_COUNT > 3
-"Vvt Output#4",
+		"Vvt Output#4",
 #endif
- };
+};
 
 static OutputPin vvtPins[CAM_INPUTS_COUNT];
-static SimplePwm vvtPwms[CAM_INPUTS_COUNT] = { "VVT1", "VVT2", "VVT3", "VVT4" };
+static SimplePwm vvtPwms[CAM_INPUTS_COUNT] = {"VVT1", "VVT2", "VVT3", "VVT4"};
 
 static void turnVvtPidOn(int index) {
 	if (!isBrainPinValid(engineConfiguration->vvtPins[index])) {
 		return;
 	}
 
-	startSimplePwmExt(&vvtPwms[index], vvtOutputNames[index],
+	startSimplePwmExt(
+			&vvtPwms[index],
+			vvtOutputNames[index],
 			engineConfiguration->vvtPins[index],
 			&vvtPins[index],
-			engineConfiguration->vvtOutputFrequency, 0);
+			engineConfiguration->vvtOutputFrequency,
+			0);
 }
 
 void startVvtControlPins() {
-	for (int i = 0; i <CAM_INPUTS_COUNT; i++) {
+	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
 		turnVvtPidOn(i);
 	}
 }
@@ -249,11 +240,8 @@ void initVvtActuators() {
 		engineConfiguration->vvtControlMinRpm = engineConfiguration->cranking.rpm;
 	}
 
-	vvtTable1.init(config->vvtTable1, config->vvtTable1LoadBins,
-			config->vvtTable1RpmBins);
-	vvtTable2.init(config->vvtTable2, config->vvtTable2LoadBins,
-			config->vvtTable2RpmBins);
-
+	vvtTable1.init(config->vvtTable1, config->vvtTable1LoadBins, config->vvtTable1RpmBins);
+	vvtTable2.init(config->vvtTable2, config->vvtTable2LoadBins, config->vvtTable2RpmBins);
 
 	engine->module<VvtController1>()->init(&vvtTable1, &vvtPwms[0]);
 	engine->module<VvtController2>()->init(&vvtTable2, &vvtPwms[1]);

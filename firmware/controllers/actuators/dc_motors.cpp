@@ -9,7 +9,8 @@
 
 #include "dc_motors.h"
 
-void DcHardware::start(bool useTwoWires,
+void DcHardware::start(
+		bool useTwoWires,
 		brain_pin_e pinEnable,
 		brain_pin_e pinDir1,
 		brain_pin_e pinDir2,
@@ -23,7 +24,8 @@ void DcHardware::start(bool useTwoWires,
 	}
 	isStarted = true;
 
-	dcMotor.setType(useTwoWires ? TwoPinDcMotor::ControlType::PwmDirectionPins : TwoPinDcMotor::ControlType::PwmEnablePin);
+	dcMotor.setType(
+			useTwoWires ? TwoPinDcMotor::ControlType::PwmDirectionPins : TwoPinDcMotor::ControlType::PwmEnablePin);
 
 	// Configure the disable pin first - ensure things are in a safe state
 	m_disablePin.initPin("ETB Disable", pinDisable);
@@ -41,20 +43,10 @@ void DcHardware::start(bool useTwoWires,
 		m_pinEnable.initPin("ETB Enable", pinEnable);
 
 // no need to complicate event queue with ETB PWM in unit tests
-#if ! EFI_UNIT_TEST
-		startSimplePwmHard(&m_pwm1, "ETB Dir 1",
-			pinDir1,
-			&m_pinDir1,
-			clampedFrequency,
-			0
-		);
+#if !EFI_UNIT_TEST
+		startSimplePwmHard(&m_pwm1, "ETB Dir 1", pinDir1, &m_pinDir1, clampedFrequency, 0);
 
-		startSimplePwmHard(&m_pwm2, "ETB Dir 2",
-			pinDir2,
-			&m_pinDir2,
-			clampedFrequency,
-			0
-		);
+		startSimplePwmHard(&m_pwm2, "ETB Dir 2", pinDir2, &m_pinDir2, clampedFrequency, 0);
 #endif // EFI_UNIT_TEST
 
 		dcMotor.configure(wrappedEnable, m_pwm1, m_pwm2, isInverted);
@@ -63,13 +55,8 @@ void DcHardware::start(bool useTwoWires,
 		m_pinDir2.initPin("ETB Dir 2", pinDir2);
 
 // no need to complicate event queue with ETB PWM in unit tests
-#if ! EFI_UNIT_TEST
-		startSimplePwmHard(&m_pwm1, "ETB Enable",
-			pinEnable,
-			&m_pinEnable,
-			clampedFrequency,
-			0
-		);
+#if !EFI_UNIT_TEST
+		startSimplePwmHard(&m_pwm1, "ETB Enable", pinEnable, &m_pinEnable, clampedFrequency, 0);
 #endif // EFI_UNIT_TEST
 
 		dcMotor.configure(m_pwm1, wrappedDir1, wrappedDir2, isInverted);
@@ -82,15 +69,14 @@ DcMotor* initDcMotor(const dc_io& io, size_t index, bool useTwoWires) {
 	auto& hw = dcHardware[index];
 
 	hw.start(
-		useTwoWires,
-		io.controlPin,
-		io.directionPin1,
-		io.directionPin2,
-		io.disablePin,
-		// todo You would not believe how you invert TLE9201 #4579
-		engineConfiguration->stepperDcInvertedPins,
-		engineConfiguration->etbFreq
-	);
+			useTwoWires,
+			io.controlPin,
+			io.directionPin1,
+			io.directionPin2,
+			io.disablePin,
+			// todo You would not believe how you invert TLE9201 #4579
+			engineConfiguration->stepperDcInvertedPins,
+			engineConfiguration->etbFreq);
 
 	return &hw.dcMotor;
 }
@@ -99,13 +85,13 @@ DcMotor* initDcMotor(brain_pin_e coil_p, brain_pin_e coil_m, size_t index) {
 	auto& hw = dcHardware[index];
 
 	hw.start(
-		true, /* useTwoWires */
-		Gpio::Unassigned, /* pinEnable */
-		coil_p,
-		coil_m,
-		Gpio::Unassigned, /* pinDisable */
-		engineConfiguration->stepperDcInvertedPins,
-		engineConfiguration->etbFreq /* same in case of stepper? */
+			true,			  /* useTwoWires */
+			Gpio::Unassigned, /* pinEnable */
+			coil_p,
+			coil_m,
+			Gpio::Unassigned, /* pinDisable */
+			engineConfiguration->stepperDcInvertedPins,
+			engineConfiguration->etbFreq /* same in case of stepper? */
 	);
 
 	return &hw.dcMotor;

@@ -40,7 +40,7 @@ static bool getAcrState() {
 		// ACR active - not enough revs completed
 		return true;
 	}
-#else // EFI_SHAFT_POSITION_INPUT
+#else  // EFI_SHAFT_POSITION_INPUT
 	return false;
 #endif // EFI_SHAFT_POSITION_INPUT
 }

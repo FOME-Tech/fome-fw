@@ -64,8 +64,8 @@ void AlternatorController::setOutput(expected<percent_t> outputValue) {
 	}
 }
 
-void AlternatorController::onConfigurationChange(engine_configuration_s const * previousConfiguration) {
-	if(!previousConfiguration || !alternatorPid.isSame(&previousConfiguration->alternatorControl)) {
+void AlternatorController::onConfigurationChange(engine_configuration_s const* previousConfiguration) {
+	if (!previousConfiguration || !alternatorPid.isSame(&previousConfiguration->alternatorControl)) {
 		alternatorPid.reset();
 	}
 }
@@ -74,10 +74,12 @@ void initAlternatorCtrl() {
 	if (!isBrainPinValid(engineConfiguration->alternatorControlPin))
 		return;
 
-	startSimplePwm(&alternatorControl,
-				"Alternator control",
-				&enginePins.alternatorPin,
-				engineConfiguration->alternatorPwmFrequency, 0);
+	startSimplePwm(
+			&alternatorControl,
+			"Alternator control",
+			&enginePins.alternatorPin,
+			engineConfiguration->alternatorPwmFrequency,
+			0);
 }
 
 #endif /* EFI_ALTERNATOR_CONTROL */
