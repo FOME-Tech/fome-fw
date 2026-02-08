@@ -17,9 +17,7 @@ void initMapAveraging();
 class MapAverager : public StoredValueSensor {
 public:
 	MapAverager(SensorType type, efidur_t timeout)
-		: StoredValueSensor(type, timeout)
-	{
-	}
+		: StoredValueSensor(type, timeout) {}
 
 	void start(uint8_t cylinderNumber);
 	void stop();
@@ -48,7 +46,7 @@ MapAverager& getMapAvg(size_t idx);
 
 class MapAveragingModule : public EngineModule {
 public:
-	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
+	void onConfigurationChange(engine_configuration_s const* previousConfig) override;
 
 	void onFastCallback() override;
 	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;

@@ -26,9 +26,7 @@ static void do_connection() {
 class EthernetChannel final : public TsChannelBase {
 public:
 	EthernetChannel()
-		: TsChannelBase("Ethernet")
-	{
-	}
+		: TsChannelBase("Ethernet") {}
 
 	bool isReady() const override {
 		return connectionSocket != -1;
@@ -72,7 +70,7 @@ public:
 			return 0;
 		}
 
-		auto result = lwip_recv(connectionSocket, buffer, size, /*flags =*/ 0);
+		auto result = lwip_recv(connectionSocket, buffer, size, /*flags =*/0);
 		if (result > 0) {
 			// success, bytes were returned
 			return result;
@@ -94,7 +92,8 @@ private:
 static EthernetChannel ethChannel;
 
 struct EthernetThread : public TunerstudioThread {
-	EthernetThread() : TunerstudioThread("Ethernet Console") { }
+	EthernetThread()
+		: TunerstudioThread("Ethernet Console") {}
 
 	TsChannelBase* setupChannel() override {
 		lwipInit(nullptr);

@@ -5,15 +5,13 @@ static constexpr float geometricMean(float x, float y) {
 }
 
 GearDetector::GearDetector()
-	: Sensor(SensorType::DetectedGear)
-{
-}
+	: Sensor(SensorType::DetectedGear) {}
 
 GearDetector::~GearDetector() {
 	unregister();
 }
 
-void GearDetector::onConfigurationChange(engine_configuration_s const * /*previousConfig*/) {
+void GearDetector::onConfigurationChange(engine_configuration_s const* /*previousConfig*/) {
 	// Compute gear thresholds between gears
 
 	uint8_t gearCount = engineConfiguration->totalGearsCount;
@@ -38,7 +36,7 @@ void GearDetector::onConfigurationChange(engine_configuration_s const * /*previo
 
 	for (int i = 0; i < gearCount - 1; i++) {
 		// Threshold i is the threshold between gears i and i+1
-		float gearI        = engineConfiguration->gearRatio[i];
+		float gearI = engineConfiguration->gearRatio[i];
 		float gearIplusOne = engineConfiguration->gearRatio[i + 1];
 
 		if (gearI <= gearIplusOne) {
