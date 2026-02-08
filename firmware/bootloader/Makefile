@@ -123,7 +123,6 @@ PCHSUB = bootloader
 
 # Imported source files and paths
 CHIBIOS = $(PROJECT_DIR)/ext/ChibiOS
-# todo: looks like 'CHIBIOS_CONTRIB' path is universal shall we defined it only once?
 CHIBIOS_CONTRIB = $(PROJECT_DIR)/ext/ChibiOS-Contrib
 
 # Configure libfirmware Paths/Includes
