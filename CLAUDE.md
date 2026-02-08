@@ -45,6 +45,23 @@ Code generation occurs as part of the normal firmware and unit test builds, via 
 
 If there is a build failure that looks like generated files are missing, try running `make clean` first. In general, there should be no reason to manually run generated code scripts.
 
+### Code Formatting
+
+A `.clang-format` file at the repository root enforces consistent code style:
+- Tabs for indentation (width 4)
+- K&R brace style
+- Left-aligned pointers/references
+
+**VS Code integration**: Format-on-save is enabled for C/C++ files via `ms-vscode.cpptools`.
+
+**Manual formatting**:
+```bash
+# Format a single file
+clang-format -i <file>
+```
+
+**Excluded directories**: `firmware/ext/` and `firmware/ChibiOS/` (third-party code) are automatically excluded from formatting via `DisableFormat: true` markers.
+
 ## Architecture
 
 ### Directory Structure
