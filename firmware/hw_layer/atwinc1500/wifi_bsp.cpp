@@ -47,7 +47,7 @@ void nm_bsp_register_isr(tpfNmBspIsr pfIsr) {
 
 static SPIDriver* wifiSpi = nullptr;
 
-tstrNmBusCapabilities egstrNmBusCapabilities = { .u16MaxTrxSz = 4096 };
+tstrNmBusCapabilities egstrNmBusCapabilities = {.u16MaxTrxSz = 4096};
 
 #ifdef STM32H7XX
 // H7 SPI clock is set to 80MHz
@@ -58,9 +58,8 @@ static SPIConfig wifi_spicfg = {
 		.ssport = NULL,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
-			| 0 << 28 /* MBR = 0, divider = 2 */,
-		.cfg2 = 0
-};
+			  | 0 << 28 /* MBR = 0, divider = 2 */,
+		.cfg2 = 0};
 
 #else // Not H7, ie F4/F7
 
@@ -68,13 +67,7 @@ static SPIConfig wifi_spicfg = {
 // 216mhz F7: 54 or 27 MHz depending on whcih SPI device
 
 static SPIConfig wifi_spicfg = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 = SPI_BaudRatePrescaler_2,
-		.cr2 = 0
-};
+		.circular = false, .end_cb = NULL, .ssport = NULL, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_2, .cr2 = 0};
 
 #endif
 
@@ -190,13 +183,13 @@ sint8 nm_spi_rw(uint8* pu8Mosi, uint8* pu8Miso, uint16 u16Sz) {
 		// 	SCB_CleanDCache_by_Addr((uint32_t*)pu8Mosi, u16Sz);
 		// }
 		// #endif
-		
-		#ifdef STM32H7XX
+
+#ifdef STM32H7XX
 		/* workaround for silicon errata */
 		/* see https://github.com/rusefi/rusefi/issues/2395 */
 		resetSpiDevice(wifiSpi);
 		spiStart(wifiSpi, &wifi_spicfg);
-		#endif
+#endif
 
 		spiSelectI(wifiSpi);
 		if (pu8Mosi && pu8Miso) {

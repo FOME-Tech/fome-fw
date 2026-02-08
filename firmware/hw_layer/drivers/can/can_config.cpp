@@ -11,22 +11,22 @@
 // Clock rate of 42mhz for f4, 54mhz for f7, 80mhz for h7
 #ifdef STM32F4XX
 // These have an 85.7% sample point
-#define CAN_BTR_50  (CAN_BTR_SJW(0) | CAN_BTR_BRP(59) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
-#define CAN_BTR_83  (CAN_BTR_SJW(0) | CAN_BTR_BRP(35) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
+#define CAN_BTR_50 (CAN_BTR_SJW(0) | CAN_BTR_BRP(59) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
+#define CAN_BTR_83 (CAN_BTR_SJW(0) | CAN_BTR_BRP(35) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
 #define CAN_BTR_100 (CAN_BTR_SJW(0) | CAN_BTR_BRP(29) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
 #define CAN_BTR_125 (CAN_BTR_SJW(0) | CAN_BTR_BRP(23) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
 #define CAN_BTR_250 (CAN_BTR_SJW(0) | CAN_BTR_BRP(11) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
-#define CAN_BTR_500 (CAN_BTR_SJW(0) | CAN_BTR_BRP(5)  | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
-#define CAN_BTR_1k0 (CAN_BTR_SJW(0) | CAN_BTR_BRP(2)  | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
+#define CAN_BTR_500 (CAN_BTR_SJW(0) | CAN_BTR_BRP(5) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
+#define CAN_BTR_1k0 (CAN_BTR_SJW(0) | CAN_BTR_BRP(2) | CAN_BTR_TS1(10) | CAN_BTR_TS2(1))
 #elif defined(STM32F7XX)
 // These have an 88.9% sample point
-#define CAN_BTR_50  (CAN_BTR_SJW(0) | CAN_BTR_BRP(59) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
-#define CAN_BTR_83  (CAN_BTR_SJW(0) | CAN_BTR_BRP(35) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
+#define CAN_BTR_50 (CAN_BTR_SJW(0) | CAN_BTR_BRP(59) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
+#define CAN_BTR_83 (CAN_BTR_SJW(0) | CAN_BTR_BRP(35) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
 #define CAN_BTR_100 (CAN_BTR_SJW(0) | CAN_BTR_BRP(29) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
 #define CAN_BTR_125 (CAN_BTR_SJW(0) | CAN_BTR_BRP(23) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
 #define CAN_BTR_250 (CAN_BTR_SJW(0) | CAN_BTR_BRP(11) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
-#define CAN_BTR_500 (CAN_BTR_SJW(0) | CAN_BTR_BRP(5)  | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
-#define CAN_BTR_1k0 (CAN_BTR_SJW(0) | CAN_BTR_BRP(2)  | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
+#define CAN_BTR_500 (CAN_BTR_SJW(0) | CAN_BTR_BRP(5) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
+#define CAN_BTR_1k0 (CAN_BTR_SJW(0) | CAN_BTR_BRP(2) | CAN_BTR_TS1(14) | CAN_BTR_TS2(1))
 #elif defined(STM32H7XX)
 // FDCAN driver has different bit timing registers (yes, different format)
 // for the arbitration and data phases
@@ -65,106 +65,86 @@
  * automatic wakeup
  * automatic recover from abort mode
  * See section 22.7.7 on the STM32 reference manual.
- * 
+ *
  * 29 bit would be CAN_TI0R_EXID (?) but we do not mention it here
  * CAN_TI0R_STID "Standard Identifier or Extended Identifier"? not mentioned as well
  */
 #if defined(STM32F4XX) || defined(STM32F7XX)
-static const CANConfig canConfig50 = {
-	.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-	.btr = CAN_BTR_50
-};
+static const CANConfig canConfig50 = {.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, .btr = CAN_BTR_50};
 
-static const CANConfig canConfig83 = {
-	.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-	.btr = CAN_BTR_83
-};
+static const CANConfig canConfig83 = {.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, .btr = CAN_BTR_83};
 
-static const CANConfig canConfig100 = {
-	.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-	.btr = CAN_BTR_100
-};
+static const CANConfig canConfig100 = {.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, .btr = CAN_BTR_100};
 
-static const CANConfig canConfig125 = {
-	.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-	.btr = CAN_BTR_125
-};
+static const CANConfig canConfig125 = {.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, .btr = CAN_BTR_125};
 
-static const CANConfig canConfig250 = {
-	.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-	.btr = CAN_BTR_250
-};
+static const CANConfig canConfig250 = {.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, .btr = CAN_BTR_250};
 
-static const CANConfig canConfig500 = {
-	.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-	.btr = CAN_BTR_500
-};
+static const CANConfig canConfig500 = {.mcr = CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, .btr = CAN_BTR_500};
 
-static const CANConfig canConfig1000 = {
-CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
-CAN_BTR_1k0 };
+static const CANConfig canConfig1000 = {CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP, CAN_BTR_1k0};
 #elif defined(STM32H7XX)
 static const CANConfig canConfig50 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_50,
-	.DBTP = CAN_DBTP_50,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_50,
+		.DBTP = CAN_DBTP_50,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 
 static const CANConfig canConfig83 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_83,
-	.DBTP = CAN_DBTP_83,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_83,
+		.DBTP = CAN_DBTP_83,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 
 static const CANConfig canConfig100 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_100,
-	.DBTP = CAN_DBTP_100,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_100,
+		.DBTP = CAN_DBTP_100,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 
 static const CANConfig canConfig125 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_125,
-	.DBTP = CAN_DBTP_125,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_125,
+		.DBTP = CAN_DBTP_125,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 
 static const CANConfig canConfig250 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_250,
-	.DBTP = CAN_DBTP_250,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_250,
+		.DBTP = CAN_DBTP_250,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 
 static const CANConfig canConfig500 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_500,
-	.DBTP = CAN_DBTP_500,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_500,
+		.DBTP = CAN_DBTP_500,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 
 static const CANConfig canConfig1000 = {
-	.op_mode = OPMODE_CAN,
-	.NBTP = CAN_NBTP_1k0,
-	.DBTP = CAN_DBTP_1k0,
-	.CCCR = 0,
-	.TEST = 0,
-	.RXGFC = 0,
+		.op_mode = OPMODE_CAN,
+		.NBTP = CAN_NBTP_1k0,
+		.DBTP = CAN_DBTP_1k0,
+		.CCCR = 0,
+		.TEST = 0,
+		.RXGFC = 0,
 };
 #endif
 
@@ -182,21 +162,21 @@ static const CANConfig canConfig1000;
 
 const CANConfig* findCanConfig(can_baudrate_e rate) {
 	switch (rate) {
-	case B50KBPS:
-		return &canConfig50;
-	case B83KBPS:
-		return &canConfig83;
-	case B100KBPS:
-		return &canConfig100;
-	case B125KBPS:
-		return &canConfig125;
-	case B250KBPS:
-		return &canConfig250;
-	case B1MBPS:
-		return &canConfig1000;
-	case B500KBPS:
-	default:
-		return &canConfig500;
+		case B50KBPS:
+			return &canConfig50;
+		case B83KBPS:
+			return &canConfig83;
+		case B100KBPS:
+			return &canConfig100;
+		case B125KBPS:
+			return &canConfig125;
+		case B250KBPS:
+			return &canConfig250;
+		case B1MBPS:
+			return &canConfig1000;
+		case B500KBPS:
+		default:
+			return &canConfig500;
 	}
 }
 

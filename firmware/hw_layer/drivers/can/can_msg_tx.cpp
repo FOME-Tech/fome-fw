@@ -2,7 +2,7 @@
  * @file	can_msg_tx.cpp
  *
  * CAN message transmission
- * 
+ *
  * @date Mar 13, 2020
  * @author Matthew Kennedy, (c) 2012-2020
  */
@@ -23,8 +23,7 @@
 #endif // EFI_CAN_SUPPORT
 
 CanTxMessage::CanTxMessage(uint32_t eid, uint8_t dlc, CanBusIndex bus, bool isExtended)
-	: m_busIndex(bus)
-{
+	: m_busIndex(bus) {
 #if HAL_USE_CAN || EFI_UNIT_TEST
 #ifndef STM32H7XX
 	// ST bxCAN device
@@ -63,20 +62,26 @@ CanTxMessage::~CanTxMessage() {
 	}
 
 	if (engineConfiguration->verboseCan) {
-		#ifndef STM32H7XX
-			int id = (unsigned int)((m_frame.IDE == CAN_IDE_EXT) ? CAN_EID(m_frame) : CAN_SID(m_frame));
-		#else
-			int id = (unsigned int)(m_frame.common.XTD ? CAN_EID(m_frame) : CAN_SID(m_frame));
-		#endif
+#ifndef STM32H7XX
+		int id = (unsigned int)((m_frame.IDE == CAN_IDE_EXT) ? CAN_EID(m_frame) : CAN_SID(m_frame));
+#else
+		int id = (unsigned int)(m_frame.common.XTD ? CAN_EID(m_frame) : CAN_SID(m_frame));
+#endif
 
-		efiPrintf("CAN TX bus %d ID %x(%d) DLC %x: %x %x %x %x %x %x %x %x",
+		efiPrintf(
+				"CAN TX bus %d ID %x(%d) DLC %x: %x %x %x %x %x %x %x %x",
 				busIndex,
-				id, id,
+				id,
+				id,
 				m_frame.DLC,
-				m_frame.data8[0], m_frame.data8[1],
-				m_frame.data8[2], m_frame.data8[3],
-				m_frame.data8[4], m_frame.data8[5],
-				m_frame.data8[6], m_frame.data8[7]);
+				m_frame.data8[0],
+				m_frame.data8[1],
+				m_frame.data8[2],
+				m_frame.data8[3],
+				m_frame.data8[4],
+				m_frame.data8[5],
+				m_frame.data8[6],
+				m_frame.data8[7]);
 	}
 
 	// 100 ms timeout
@@ -118,10 +123,16 @@ static ICanTransmitMock* mockCan;
 CanTxMessage::~CanTxMessage() {
 	if (mockCan) {
 		mockCan->onTx(
-			m_frame.SID, m_frame.DLC,
-			m_frame.data8[0], m_frame.data8[1], m_frame.data8[2], m_frame.data8[3],
-			m_frame.data8[4], m_frame.data8[5], m_frame.data8[6], m_frame.data8[7]
-		);
+				m_frame.SID,
+				m_frame.DLC,
+				m_frame.data8[0],
+				m_frame.data8[1],
+				m_frame.data8[2],
+				m_frame.data8[3],
+				m_frame.data8[4],
+				m_frame.data8[5],
+				m_frame.data8[6],
+				m_frame.data8[7]);
 	}
 }
 

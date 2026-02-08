@@ -109,9 +109,7 @@ void portMicrosecondTimerCallback() {
 
 struct MicrosecondTimerWatchdogController : public PeriodicController<256> {
 	MicrosecondTimerWatchdogController()
-		: PeriodicController("MstWatchdog", NORMALPRIO, 2)
-	{
-	}
+		: PeriodicController("MstWatchdog", NORMALPRIO, 2) {}
 
 	void PeriodicTask(efitick_t nowNt) override {
 		// 2 seconds of inactivity would not look right
@@ -140,9 +138,12 @@ static Timer testScheduling;
 static void timerValidationCallback(void*) {
 	testSchedulingHappened = true;
 	float actualTimeSinceScheduling = 1e3 * testScheduling.getElapsedSeconds();
-	
+
 	if (absI(actualTimeSinceScheduling - TEST_CALLBACK_DELAY) > TEST_CALLBACK_DELAY * TIMER_PRECISION_THRESHOLD) {
-		firmwareError(ObdCode::CUSTOM_ERR_TIMER_TEST_CALLBACK_WRONG_TIME, "hwTimer broken precision: %.3f ms", actualTimeSinceScheduling);
+		firmwareError(
+				ObdCode::CUSTOM_ERR_TIMER_TEST_CALLBACK_WRONG_TIME,
+				"hwTimer broken precision: %.3f ms",
+				actualTimeSinceScheduling);
 	}
 }
 
@@ -158,10 +159,7 @@ static void validateHardwareTimer() {
 
 	// to save RAM let's use 'watchDogBuddy' here once before we enable watchdog
 	engine->scheduler.schedule(
-			"hw-validate",
-			&watchDogBuddy,
-			getTimeNowNt() + MS2NT(TEST_CALLBACK_DELAY),
-			timerValidationCallback);
+			"hw-validate", &watchDogBuddy, getTimeNowNt() + MS2NT(TEST_CALLBACK_DELAY), timerValidationCallback);
 
 	chThdSleepMilliseconds(TEST_CALLBACK_DELAY + 2);
 	if (!testSchedulingHappened) {

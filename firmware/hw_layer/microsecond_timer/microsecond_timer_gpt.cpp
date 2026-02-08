@@ -28,9 +28,11 @@ static void hwTimerCallback(GPTDriver*) {
  * The specific 1MHz frequency is important here since 'setHardwareUsTimer' method takes microsecond parameter
  * For any arbitrary frequency to work we would need an additional layer of conversion.
  */
-static constexpr GPTConfig gpt5cfg = { 1000000, /* 1 MHz timer clock.*/
+static constexpr GPTConfig gpt5cfg = {
+		1000000,		 /* 1 MHz timer clock.*/
 		hwTimerCallback, /* Timer callback.*/
-0, 0 };
+		0,
+		0};
 
 void portInitMicrosecondTimer() {
 	gptStart(&GPTDEVICE, &gpt5cfg);

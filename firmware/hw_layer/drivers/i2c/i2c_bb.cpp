@@ -36,13 +36,14 @@ void BitbangI2c::scl_low() {
 
 bool BitbangI2c::init(brain_pin_e scl, brain_pin_e sda) {
 #if EFI_PROD_CODE
-	if (m_sdaPort) return false;
+	if (m_sdaPort)
+		return false;
 
 	if (!isBrainPinValid(scl) || !isBrainPinValid(sda)) {
 		return false;
 	}
 
-	efiSetPadMode("i2c", scl, PAL_MODE_OUTPUT_OPENDRAIN); //PAL_STM32_OTYPE_OPENDRAIN
+	efiSetPadMode("i2c", scl, PAL_MODE_OUTPUT_OPENDRAIN); // PAL_STM32_OTYPE_OPENDRAIN
 	efiSetPadMode("i2c", sda, PAL_MODE_OUTPUT_OPENDRAIN);
 
 	m_sclPort = getHwPort("i2c", scl);
@@ -133,7 +134,7 @@ bool BitbangI2c::writeByte(uint8_t data) {
 
 		data = data << 1;
 	}
-	
+
 	// Force a release of the data line so the slave can ACK
 	sda_high();
 
@@ -165,7 +166,7 @@ uint8_t BitbangI2c::readByte(bool ack) {
 void BitbangI2c::waitQuarterBit() {
 	// This yields a bitrate of about 320khz on a 168MHz F4
 	for (size_t i = 0; i < 30; i++) {
-		__asm__ volatile ("nop");
+		__asm__ volatile("nop");
 	}
 }
 
@@ -183,7 +184,8 @@ void BitbangI2c::write(uint8_t addr, const uint8_t* writeData, size_t writeSize)
 	stop();
 }
 
-void BitbangI2c::writeRead(uint8_t addr, const uint8_t* writeData, size_t writeSize, uint8_t* readData, size_t readSize) {
+void BitbangI2c::writeRead(
+		uint8_t addr, const uint8_t* writeData, size_t writeSize, uint8_t* readData, size_t readSize) {
 	start();
 
 	// Address + write

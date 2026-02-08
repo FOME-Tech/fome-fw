@@ -18,13 +18,13 @@
 #include "digital_input_exti.h"
 
 #if (PAL_USE_CALLBACKS == FALSE)
-	#error "PAL_USE_CALLBACKS should be enabled to use HAL_TRIGGER_USE_PAL"
+#error "PAL_USE_CALLBACKS should be enabled to use HAL_TRIGGER_USE_PAL"
 #endif
 
 static ioline_t shaftLines[TRIGGER_INPUT_PIN_COUNT];
 static ioline_t camLines[CAM_INPUTS_COUNT];
 
-static void shaft_callback(void *arg, efitick_t stamp) {
+static void shaft_callback(void* arg, efitick_t stamp) {
 	// do the time sensitive things as early as possible!
 	int index = (int)arg;
 	ioline_t pal_line = shaftLines[index];
@@ -36,7 +36,7 @@ static void shaft_callback(void *arg, efitick_t stamp) {
 	hwHandleShaftSignal(index, rise, stamp);
 }
 
-static void cam_callback(void *arg, efitick_t stamp) {
+static void cam_callback(void* arg, efitick_t stamp) {
 	int index = (int)arg;
 	ioline_t pal_line = camLines[index];
 
@@ -49,8 +49,9 @@ static void cam_callback(void *arg, efitick_t stamp) {
 /* Exported functions.														*/
 /*==========================================================================*/
 
-int extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft) {
-	brain_pin_e brainPin = isTriggerShaft ? engineConfiguration->triggerInputPins[index] : engineConfiguration->camInputs[index];
+int extiTriggerTurnOnInputPin(const char* msg, int index, bool isTriggerShaft) {
+	brain_pin_e brainPin =
+			isTriggerShaft ? engineConfiguration->triggerInputPins[index] : engineConfiguration->camInputs[index];
 
 	efiPrintf("Trigger input (EXTI) for \"%s\" on \"%s\"", msg, hwPortname(brainPin));
 
@@ -63,7 +64,8 @@ int extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft) {
 	} else {
 		camLines[index] = pal_line;
 	}
-	efiExtiEnablePin(msg, brainPin, PAL_EVENT_MODE_BOTH_EDGES, isTriggerShaft ? shaft_callback : cam_callback, (void *)index);
+	efiExtiEnablePin(
+			msg, brainPin, PAL_EVENT_MODE_BOTH_EDGES, isTriggerShaft ? shaft_callback : cam_callback, (void*)index);
 
 	return 0;
 }
