@@ -20,8 +20,8 @@ using namespace std::string_literals;
 
 class TestCanStreamer : public ICanStreamer {
 public:
-	virtual can_msg_t transmit(canmbx_t mailbox, const CanTxMessage *ctfp, can_sysinterval_t timeout) override {
-		const CANTxFrame * frame = ctfp->getFrame();
+	virtual can_msg_t transmit(canmbx_t mailbox, const CanTxMessage* ctfp, can_sysinterval_t timeout) override {
+		const CANTxFrame* frame = ctfp->getFrame();
 		// invoke copy constructor to clone frame
 		CANTxFrame localCopy = *frame;
 		localCopy.DLC = 8;
@@ -29,7 +29,7 @@ public:
 		return CAN_MSG_OK;
 	}
 
-	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame *crfp, can_sysinterval_t timeout) override {
+	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame* crfp, can_sysinterval_t timeout) override {
 		if (crfList.empty())
 			return CAN_MSG_TIMEOUT;
 		*crfp = *crfList.begin();
@@ -37,11 +37,11 @@ public:
 		return CAN_MSG_OK;
 	}
 
-	template<typename T>
-	void checkFrame(const T & frame, const std::string & bytes, int frameIndex) {
+	template <typename T>
+	void checkFrame(const T& frame, const std::string& bytes, int frameIndex) {
 		EXPECT_EQ(bytes.size(), frame.DLC);
 		for (size_t i = 0; i < bytes.size(); i++) {
-  			EXPECT_EQ(bytes[i], frame.data8[i]) << "Frame byte #" << i << " differs! Frame " << frameIndex;
+			EXPECT_EQ(bytes[i], frame.data8[i]) << "Frame byte #" << i << " differs! Frame " << frameIndex;
 		}
 	}
 
@@ -52,9 +52,14 @@ public:
 
 class TestCanStreamerState : public CanStreamerState {
 public:
-	TestCanStreamerState() : CanStreamerState(&streamer) {}
+	TestCanStreamerState()
+		: CanStreamerState(&streamer) {}
 
-	void test(const std::vector<std::string> & dataList, const std::vector<std::string> & frames, int fifoLeftoverSize, const std::vector<size_t> & receiveChunks) {
+	void
+	test(const std::vector<std::string>& dataList,
+		 const std::vector<std::string>& frames,
+		 int fifoLeftoverSize,
+		 const std::vector<size_t>& receiveChunks) {
 		EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 		size_t totalSize = 0;
@@ -65,9 +70,9 @@ public:
 			totalSize += np;
 			totalData += data;
 
-			streamAddToTxTimeout(&np, (uint8_t *)data.c_str(), 0);
+			streamAddToTxTimeout(&np, (uint8_t*)data.c_str(), 0);
 		}
-		
+
 		// check the FIFO buf size
 		EXPECT_EQ(fifoLeftoverSize, txFifoBuf.getCount());
 
@@ -76,14 +81,14 @@ public:
 
 		// check if correct the TX frames were sent
 		EXPECT_EQ(frames.size(), streamer.ctfList.size());
-		
+
 		auto it1 = streamer.ctfList.begin();
 		int frameIndex = 0;
 		auto it2 = frames.begin();
 		for (; it1 != streamer.ctfList.end() && it2 != frames.end(); it1++, it2++) {
 			streamer.checkFrame(*it1, *it2, frameIndex++);
 		}
-	
+
 		// copy transmitted data back into the receive buffer
 		for (auto f : streamer.ctfList) {
 			CANRxFrame rf;
@@ -103,7 +108,7 @@ public:
 			streamReceiveTimeout(&nr, rxbuf, 0);
 			EXPECT_EQ(nr, chunkSize);
 			totalReceivedSize += nr;
-			totalReceivedData += std::string((const char *)rxbuf, nr);
+			totalReceivedData += std::string((const char*)rxbuf, nr);
 		}
 		// we should receive the same amount of bytes that we've sent
 		EXPECT_EQ(totalSize, totalReceivedSize);
@@ -113,7 +118,6 @@ public:
 		}
 		// check the FIFO buf size
 		EXPECT_EQ(0, rxFifoBuf.getCount());
-
 	}
 
 protected:
@@ -124,60 +128,139 @@ TEST(testCanSerial, test1Frame) {
 
 	{
 		TestCanStreamerState state;
-		state.test({ "1" }, { "\x01"s "1\0\0\0\0\0\0"s }, 1, { 1 }); // 1 byte -> 1 frame, 1 byte in FIFO
+		state.test(
+				{"1"},
+				{"\x01"s
+				 "1\0\0\0\0\0\0"s},
+				1,
+				{1}); // 1 byte -> 1 frame, 1 byte in FIFO
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0123456" }, { "\x07"s "0123456"s }, 7, { 7 }); // 7 bytes -> 1 8-byte frame
+		state.test(
+				{"0123456"},
+				{"\x07"s
+				 "0123456"s},
+				7,
+				{7}); // 7 bytes -> 1 8-byte frame
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0123456" }, { "\x07"s "0123456"s }, 7, { 1, 1, 1, 1, 1, 1, 1 }); // 7 bytes -> 1 8-byte frame, split receive test
+		state.test(
+				{"0123456"},
+				{"\x07"s
+				 "0123456"s},
+				7,
+				{1, 1, 1, 1, 1, 1, 1}); // 7 bytes -> 1 8-byte frame, split receive test
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0123456" }, { "\x07"s "0123456"s }, 7, { 3, 4 }); // 7 bytes -> 1 8-byte frame, split receive test
+		state.test(
+				{"0123456"},
+				{"\x07"s
+				 "0123456"s},
+				7,
+				{3, 4}); // 7 bytes -> 1 8-byte frame, split receive test
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0", "1", "2", "3", "4", "5", "6" }, { "\x07"s "0123456"s }, 7, { 7 }); // 7 bytes separately -> 1 8-byte frame
+		state.test(
+				{"0", "1", "2", "3", "4", "5", "6"},
+				{"\x07"s
+				 "0123456"s},
+				7,
+				{7}); // 7 bytes separately -> 1 8-byte frame
 	}
 }
 
 TEST(testCanSerial, test2Frames) {
 	{
 		TestCanStreamerState state;
-		state.test({ "01234567" }, { "\x10"s "\x08"s "012345"s, "\x21"s "67\0\0\0\0\0"s }, 8, { 8 }); // 8 bytes -> 2 8-byte frames, 8 bytes in FIFO
+		state.test(
+				{"01234567"},
+				{"\x10"s
+				 "\x08"s
+				 "012345"s,
+				 "\x21"s
+				 "67\0\0\0\0\0"s},
+				8,
+				{8}); // 8 bytes -> 2 8-byte frames, 8 bytes in FIFO
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0123456789A" }, { "\x10"s "\x0B"s "012345"s, "\x21"s "6789A\0\0"s }, 11, { 2, 5, 4 }); // 11 bytes -> 2 8-byte frames
+		state.test(
+				{"0123456789A"},
+				{"\x10"s
+				 "\x0B"s
+				 "012345"s,
+				 "\x21"s
+				 "6789A\0\0"s},
+				11,
+				{2, 5, 4}); // 11 bytes -> 2 8-byte frames
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0123456ABCDEFG" }, { "\x10"s  "\x0E"s "012345"s, "\x21"s "6ABCDEF"s, "\x22"s "G\0\0\0\0\0\0"s }, 14, { 14 }); // 14 bytes -> 3 8-byte frames, empty FIFO
+		state.test(
+				{"0123456ABCDEFG"},
+				{"\x10"s
+				 "\x0E"s
+				 "012345"s,
+				 "\x21"s
+				 "6ABCDEF"s,
+				 "\x22"s
+				 "G\0\0\0\0\0\0"s},
+				14,
+				{14}); // 14 bytes -> 3 8-byte frames, empty FIFO
 	}
 }
 
 TEST(testCanSerial, testIrregularSplits) {
 	{
 		TestCanStreamerState state;
-		state.test({ "012", "3456ABCDEFG" }, { "\x10"s  "\x0E"s "012345"s, "\x21"s "6ABCDEF"s, "\x22"s "G\0\0\0\0\0\0"s }, 14, { 7, 7 }); // 14 bytes -> 2 8-byte frames, empty FIFO
+		state.test(
+				{"012", "3456ABCDEFG"},
+				{"\x10"s
+				 "\x0E"s
+				 "012345"s,
+				 "\x21"s
+				 "6ABCDEF"s,
+				 "\x22"s
+				 "G\0\0\0\0\0\0"s},
+				14,
+				{7, 7}); // 14 bytes -> 2 8-byte frames, empty FIFO
 	}
 	{
 		TestCanStreamerState state;
-		state.test({ "0123456ABC", "DEFG" }, { "\x10"s  "\x0E"s "012345"s, "\x21"s "6ABCDEF"s, "\x22"s "G\0\0\0\0\0\0"s }, 14, { 14 }); // 14 bytes -> 2 8-byte frames, empty FIFO
+		state.test(
+				{"0123456ABC", "DEFG"},
+				{"\x10"s
+				 "\x0E"s
+				 "012345"s,
+				 "\x21"s
+				 "6ABCDEF"s,
+				 "\x22"s
+				 "G\0\0\0\0\0\0"s},
+				14,
+				{14}); // 14 bytes -> 2 8-byte frames, empty FIFO
 	}
 }
 
 TEST(testCanSerial, testLongMessage) {
 	{
 		TestCanStreamerState state;
-		state.test({ "abcdefghijklmnopqrstuvwxyz" }, {
-				"\x10"s  "\x1A"s "abcdef"s,
-				"\x21"s "ghijklm"s,
-				"\x22"s "nopqrst"s,
-			    "\x23"s "uvwxyz\0"s }, 26, { 26 }); // 26 bytes -> 4 8-byte frames, 5 bytes left in FIFO
+		state.test(
+				{"abcdefghijklmnopqrstuvwxyz"},
+				{"\x10"s
+				 "\x1A"s
+				 "abcdef"s,
+				 "\x21"s
+				 "ghijklm"s,
+				 "\x22"s
+				 "nopqrst"s,
+				 "\x23"s
+				 "uvwxyz\0"s},
+				26,
+				{26}); // 26 bytes -> 4 8-byte frames, 5 bytes left in FIFO
 	}
 }
 
@@ -189,26 +272,42 @@ TEST(testCanSerial, test64_7Message) {
 	buffer[0] = 1;
 
 	buffer[64 + 7 - 1] = 4;
-	std::string str(std::begin(buffer),std::end(buffer));
+	std::string str(std::begin(buffer), std::end(buffer));
 
 	TestCanStreamerState state;
-	state.test({ str }, {
-			/* 0 */
-			"\x10"s  "\x47"s "\x01\0\0\0\0\0"s,
-			"\x21"s "\0\0\0\0\0\0\0"s,
-			"\x22"s "\0\0\0\0\0\0\0"s,
-		    "\x23"s "\0\0\0\0\0\0\0"s,
-		    "\x24"s "\0\0\0\0\0\0\0"s,
-		    "\x25"s "\0\0\0\0\0\0\0"s,
-		    "\x26"s "\0\0\0\0\0\0\0"s,
-		    "\x27"s "\0\0\0\0\0\0\0"s,
-		    "\x28"s "\0\0\0\0\0\0\0"s,
-		    "\x29"s "\0\0\0\0\0\0\0"s,
+	state.test(
+			{str},
+			{
+					/* 0 */
+					"\x10"s
+					"\x47"s
+					"\x01\0\0\0\0\0"s,
+					"\x21"s
+					"\0\0\0\0\0\0\0"s,
+					"\x22"s
+					"\0\0\0\0\0\0\0"s,
+					"\x23"s
+					"\0\0\0\0\0\0\0"s,
+					"\x24"s
+					"\0\0\0\0\0\0\0"s,
+					"\x25"s
+					"\0\0\0\0\0\0\0"s,
+					"\x26"s
+					"\0\0\0\0\0\0\0"s,
+					"\x27"s
+					"\0\0\0\0\0\0\0"s,
+					"\x28"s
+					"\0\0\0\0\0\0\0"s,
+					"\x29"s
+					"\0\0\0\0\0\0\0"s,
 
-			/* 10 */
-			"\x2A"s "\0\4\0\0\0\0\0"s,
+					/* 10 */
+					"\x2A"s
+					"\0\4\0\0\0\0\0"s,
 
-	}, 71, { 64 + 7 });
+			},
+			71,
+			{64 + 7});
 }
 
 TEST(testCanSerial, test3_64_4Message) {
@@ -219,25 +318,40 @@ TEST(testCanSerial, test3_64_4Message) {
 	buffer64[0] = 1;
 
 	buffer64[64 - 1] = 4;
-	std::string str(std::begin(buffer64),std::end(buffer64));
+	std::string str(std::begin(buffer64), std::end(buffer64));
 
 	TestCanStreamerState state;
-	state.test({ "123"s, str, "abcd"s }, {
-			/* 0 */
-			"\x10"s  "\x47"s "123\1\0\0"s,
-			"\x21"s "\0\0\0\0\0\0\0"s,
-			"\x22"s "\0\0\0\0\0\0\0"s,
-		    "\x23"s "\0\0\0\0\0\0\0"s,
-		    "\x24"s "\0\0\0\0\0\0\0"s,
-		    "\x25"s "\0\0\0\0\0\0\0"s,
-		    "\x26"s "\0\0\0\0\0\0\0"s,
-		    "\x27"s "\0\0\0\0\0\0\0"s,
-		    "\x28"s "\0\0\0\0\0\0\0"s,
-		    "\x29"s "\0\0\0\0\4ab"s,
+	state.test(
+			{"123"s, str, "abcd"s},
+			{
+					/* 0 */
+					"\x10"s
+					"\x47"s
+					"123\1\0\0"s,
+					"\x21"s
+					"\0\0\0\0\0\0\0"s,
+					"\x22"s
+					"\0\0\0\0\0\0\0"s,
+					"\x23"s
+					"\0\0\0\0\0\0\0"s,
+					"\x24"s
+					"\0\0\0\0\0\0\0"s,
+					"\x25"s
+					"\0\0\0\0\0\0\0"s,
+					"\x26"s
+					"\0\0\0\0\0\0\0"s,
+					"\x27"s
+					"\0\0\0\0\0\0\0"s,
+					"\x28"s
+					"\0\0\0\0\0\0\0"s,
+					"\x29"s
+					"\0\0\0\0\4ab"s,
 
-			/* 10 */
-			"\x2A"s "cd\0\0\0\0\0"s,
+					/* 10 */
+					"\x2A"s
+					"cd\0\0\0\0\0"s,
 
-	}, 71, { 64 + 7 });
+			},
+			71,
+			{64 + 7});
 }
-

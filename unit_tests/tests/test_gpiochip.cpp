@@ -33,7 +33,7 @@ static TestChip1 testchip1;
 class TestChip2 : public GoodChip {
 	int writePad(size_t pin, int value) override {
 		if (value)
-			io_state |=  (1 << value);
+			io_state |= (1 << value);
 		else
 			io_state &= ~(1 << value);
 
@@ -114,5 +114,4 @@ TEST(gpioext, testGpioExt) {
 
 	EXPECT_TRUE(gpiochips_readPad((Gpio)(chip3_base + 16)) < 0);
 	EXPECT_TRUE(gpiochips_writePad((Gpio)(chip3_base + 16), 1) < 0);
-
 }

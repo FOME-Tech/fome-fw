@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iomanip>
 
-typedef struct __attribute__ ((packed)) {
+typedef struct __attribute__((packed)) {
 	// the whole order of all packet bytes is reversed, not just the 'endian-swap' integers
 	uint32_t timestamp;
 	// unfortunately all these fields are required by TS...
@@ -16,16 +16,13 @@ typedef struct __attribute__ ((packed)) {
 
 static_assert(sizeof(composite_logger_s) == 5);
 
-static inline uint32_t SWAP_UINT32(uint32_t x)
-{
-	return (((x >> 24) & 0x000000ff) | ((x <<  8) & 0x00ff0000) |
-			((x >>  8) & 0x0000ff00) | ((x << 24) & 0xff000000));
+static inline uint32_t SWAP_UINT32(uint32_t x) {
+	return (((x >> 24) & 0x000000ff) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | ((x << 24) & 0xff000000));
 }
 
 static constexpr double ticksPerSecond = 1e6;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
 	std::ifstream src(argv[1], std::ios::binary);
 	std::ofstream dst(argv[2], std::ios::binary);
 
@@ -33,8 +30,7 @@ int main(int argc, char** argv)
 
 	dst << "timestamp,pri,sec" << std::endl;
 
-	while (!src.eof())
-	{
+	while (!src.eof()) {
 		composite_logger_s entry;
 
 		src.read(reinterpret_cast<char*>(&entry), sizeof(composite_logger_s));

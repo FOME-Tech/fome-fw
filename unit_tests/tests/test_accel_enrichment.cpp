@@ -13,8 +13,6 @@
 #include "accel_enrichment.h"
 
 TEST(fuel, testTpsAccelEnrichmentMath) {
-	printf("====================================================================================== testAccelEnrichment\r\n");
-
 	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
 
 	engine->rpmCalculator.setRpmValue(600);
@@ -23,20 +21,20 @@ TEST(fuel, testTpsAccelEnrichmentMath) {
 	engine->module<TpsAccelEnrichment>()->setLength(4);
 
 	engine->module<TpsAccelEnrichment>()->onNewValue(0);
-	ASSERT_EQ( 0,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta";
+	ASSERT_EQ(0, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta";
 	engine->module<TpsAccelEnrichment>()->onNewValue(10);
-	ASSERT_EQ( 10,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#1";
+	ASSERT_EQ(10, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#1";
 	engine->module<TpsAccelEnrichment>()->onNewValue(30);
-	ASSERT_EQ( 20,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#2";
+	ASSERT_EQ(20, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#2";
 
 	engine->module<TpsAccelEnrichment>()->onNewValue(0);
-	ASSERT_EQ( 20,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#3";
+	ASSERT_EQ(20, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#3";
 	engine->module<TpsAccelEnrichment>()->onNewValue(0);
-	ASSERT_EQ( 20,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#4";
+	ASSERT_EQ(20, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#4";
 	engine->module<TpsAccelEnrichment>()->onNewValue(0);
-	ASSERT_EQ( 0,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#5";
+	ASSERT_EQ(0, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta#5";
 	engine->module<TpsAccelEnrichment>()->onNewValue(0);
-	ASSERT_EQ( 0,  engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta";
+	ASSERT_EQ(0, engine->module<TpsAccelEnrichment>()->getMaxDelta()) << "maxDelta";
 }
 
 TEST(fuel, testTpsAccelEnrichmentScheduling) {
@@ -49,14 +47,13 @@ TEST(fuel, testTpsAccelEnrichmentScheduling) {
 
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 
-
 	Sensor::setMockValue(SensorType::Tps1, 0);
 	engine->periodicSlowCallback();
 	Sensor::setMockValue(SensorType::Tps1, 7);
 	engine->periodicSlowCallback();
 
 	eth.fireTriggerEvents2(/* count */ 4, 25 /* ms */);
-	ASSERT_EQ( 1200,  Sensor::getOrZero(SensorType::Rpm)) << "RPM";
+	ASSERT_EQ(1200, Sensor::getOrZero(SensorType::Rpm)) << "RPM";
 	int expectedInvocationCounter = 1;
 	ASSERT_EQ(expectedInvocationCounter, engine->module<TpsAccelEnrichment>()->onUpdateInvocationCounter);
 
@@ -79,7 +76,7 @@ TEST(fuel, testTpsAccelEnrichmentScheduling) {
 	ASSERT_EQ(expectedInvocationCounter, engine->module<TpsAccelEnrichment>()->onUpdateInvocationCounter);
 }
 
-static void doFractionalTpsIteration(int period, int divisor, int numCycles, std::vector<floatms_t> &tpsEnrich) {
+static void doFractionalTpsIteration(int period, int divisor, int numCycles, std::vector<floatms_t>& tpsEnrich) {
 	// every cycle
 	engineConfiguration->tpsAccelFractionPeriod = period;
 	// split into 2 portions
@@ -95,8 +92,6 @@ static void doFractionalTpsIteration(int period, int divisor, int numCycles, std
 }
 
 TEST(fuel, testAccelEnrichmentFractionalTps) {
-	printf("====================================================================================== testAccelEnrichmentFractionalTps\r\n");
-
 	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
 
 	// setup
@@ -118,7 +113,6 @@ TEST(fuel, testAccelEnrichmentFractionalTps) {
 
 	engine->module<TpsAccelEnrichment>()->setLength(2);
 
-
 	const int numCycles = 4;
 	std::vector<floatms_t> tpsEnrich(numCycles);
 
@@ -136,11 +130,11 @@ TEST(fuel, testAccelEnrichmentFractionalTps) {
 	doFractionalTpsIteration(3, 1, numCycles, tpsEnrich);
 	// we have 1/3rd-portion for the first three cycles
 	const float th = (1.0f / 3.0f);
-	EXPECT_THAT(tpsEnrich, testing::ElementsAre(testing::FloatEq(th), testing::FloatEq(th), testing::FloatEq(th), 0.0f)) << "fractionalTps#3";
+	EXPECT_THAT(tpsEnrich, testing::ElementsAre(testing::FloatEq(th), testing::FloatEq(th), testing::FloatEq(th), 0.0f))
+			<< "fractionalTps#3";
 
 	// split every divided portion into 2 sub-portions (so the whole enrichment takes longer)
 	doFractionalTpsIteration(2, 2, numCycles, tpsEnrich);
 	// we have half-portion for the first two cycles, and 1/4-th portion for the next 2 cycles, and so on...
 	EXPECT_THAT(tpsEnrich, testing::ElementsAre(0.25f, 0.25f, 0.125f, 0.125f)) << "fractionalTps#4";
-
 }

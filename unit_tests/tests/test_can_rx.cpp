@@ -2,12 +2,13 @@
 
 #include "can_listener.h"
 
-using ::testing::StrictMock;
 using ::testing::_;
+using ::testing::StrictMock;
 
 class MockCanListener : public CanListener {
 public:
-	MockCanListener(uint32_t id) : CanListener(id) { }
+	MockCanListener(uint32_t id)
+		: CanListener(id) {}
 
 	MOCK_METHOD(void, decodeFrame, (const CANRxFrame& frame, efitick_t nowNt), (override));
 	MOCK_METHOD(bool, acceptFrame, (CanBusIndex index, const CANRxFrame& frame), (const, override));
@@ -39,9 +40,10 @@ TEST(CanListener, FrameNotAccepted) {
 }
 
 struct CanListenerNoDecode : public CanListener {
-	CanListenerNoDecode(uint32_t id) : CanListener(id) { }
+	CanListenerNoDecode(uint32_t id)
+		: CanListener(id) {}
 
-	void decodeFrame(const CANRxFrame& frame, efitick_t nowNt) override { }
+	void decodeFrame(const CANRxFrame& frame, efitick_t nowNt) override {}
 };
 
 TEST(CanListener, FrameAcceptedChecksId) {

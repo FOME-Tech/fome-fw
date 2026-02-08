@@ -3,8 +3,8 @@
 #include "injector_model.h"
 
 using ::testing::_;
-using ::testing::StrictMock;
 using ::testing::InSequence;
+using ::testing::StrictMock;
 
 using ::testing::Eq;
 using ::testing::Not;
@@ -42,7 +42,8 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
@@ -52,7 +53,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	event.injectionStartAngle = 125;
 
 	// We are at 120 degrees now, next tooth 130
-	event.onTriggerTooth({ nowNt, 0, 0, 120, 130 });
+	event.onTriggerTooth({nowNt, 0, 0, 120, 130});
 }
 
 TEST(injectionScheduling, InjectionIsScheduledDualStage) {
@@ -96,20 +97,23 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge (primary) 20ms later
 		efitick_t endTime1 = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime1, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, endTime1, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge (secondary) 10ms later
 		efitick_t endTime2 = startTime + MS2NT(10);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime2, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, endTime2, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}
 
 	// Event scheduled at 125 degrees
 	event.injectionStartAngle = 125;
 
 	// We are at 120 degrees now, next tooth 130
-	event.onTriggerTooth({ nowNt, 0, 0, 120, 130 });
+	event.onTriggerTooth({nowNt, 0, 0, 120, 130});
 }
 
 TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
@@ -143,7 +147,8 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 		// rising edge 5 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
@@ -153,7 +158,7 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 	event.injectionStartAngle = 715;
 
 	// We are at 710 degrees now, next tooth 010
-	event.onTriggerTooth({ nowNt, 0, 0, 710, 010 });
+	event.onTriggerTooth({nowNt, 0, 0, 710, 010});
 }
 
 TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
@@ -187,7 +192,8 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 		// rising edge 15 degrees from now
 		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 15);
 		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		// falling edge 20ms later
 		efitick_t endTime = startTime + MS2NT(20);
 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
@@ -197,7 +203,7 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 	event.injectionStartAngle = 5;
 
 	// We are at 710 degrees now, next tooth 010
-	event.onTriggerTooth({ nowNt, 0, 0, 710, 010 });
+	event.onTriggerTooth({nowNt, 0, 0, 710, 010});
 }
 
 TEST(injectionScheduling, InjectionNotScheduled) {
@@ -223,12 +229,11 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 		// Expect no scheduler calls!
 	}
 
-
 	// Event scheduled at 125 degrees
 	event.injectionStartAngle = 125;
 
 	// We are at 130 degrees now, next tooth 140
-	event.onTriggerTooth({ nowNt, 0, 0, 130, 140 });
+	event.onTriggerTooth({nowNt, 0, 0, 130, 140});
 }
 
 TEST(injectionScheduling, SplitInjectionScheduled) {
@@ -257,7 +262,8 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 		// - duration 10ms (ends 12ms from now)
 		efitick_t nowNt = getTimeNowNt();
 		efitick_t startTime = nowNt + MS2NT(2);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
+		EXPECT_CALL(
+				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 		efitick_t endTime = startTime + MS2NT(10);
 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
 	}

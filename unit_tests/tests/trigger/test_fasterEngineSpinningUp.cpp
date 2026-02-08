@@ -33,7 +33,7 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// check if the engine has the right state
 	ASSERT_EQ(SPINNING_UP, engine->rpmCalculator.getState());
 	// check RPM
-	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM=0";
+	ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm))) << "RPM=0";
 	// the queue should be empty, no trigger events yet
 	ASSERT_EQ(0, engine->scheduler.size()) << "plain#1";
 
@@ -45,7 +45,7 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// check if the mode is changed
 	ASSERT_EQ(SPINNING_UP, engine->rpmCalculator.getState());
 	// due to isFasterEngineSpinUp=true, we should have already detected RPM!
-	ASSERT_EQ( 300,  round(Sensor::getOrZero(SensorType::Rpm))) << "spinning-RPM#1";
+	ASSERT_EQ(300, round(Sensor::getOrZero(SensorType::Rpm))) << "spinning-RPM#1";
 	// two simultaneous injections
 	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
 	// test if they are simultaneous
@@ -67,13 +67,13 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// check if the mode is changed when fully synched
 	ASSERT_EQ(CRANKING, engine->rpmCalculator.getState());
 	// check RPM
-	ASSERT_EQ( 200,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#2";
+	ASSERT_EQ(200, round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#2";
 	// test if they are simultaneous in cranking mode too
 	ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode());
 	// Should still be in wasted spark since we don't have cam sync yet
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 	// two simultaneous injections
-	ASSERT_EQ( 4,  engine->scheduler.size()) << "plain#2";
+	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
 	// check real events
 	eth.assertEvent5("inj start#2", 0, (void*)startInjection, 148375);
 	eth.assertEvent5("inj end#2", 1, (void*)endInjection, 149999);
@@ -91,11 +91,11 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// check if the mode is now changed to 'running' at higher RPM
 	ASSERT_EQ(RUNNING, engine->rpmCalculator.getState());
 	// check RPM
-	ASSERT_EQ( 1000,  round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#3";
+	ASSERT_EQ(1000, round(Sensor::getOrZero(SensorType::Rpm))) << "RPM#3";
 	// check if the injection mode is back to sequential now
 	ASSERT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
 	// 4 sequential injections for the full cycle
-	ASSERT_EQ( 8,  engine->scheduler.size()) << "plain#3";
+	ASSERT_EQ(8, engine->scheduler.size()) << "plain#3";
 
 	// check real events for sequential injection
 	// Note: See addFuelEvents() fix inside setRpmValue()!

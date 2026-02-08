@@ -25,12 +25,12 @@ static void test(int engineSyncCam, float camOffsetAdd) {
 
 	while (reader.haveMore()) {
 		reader.processLine(&eth);
-		auto vvt1 = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
-		auto vvt2 = engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0);
+		auto vvt1 = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0);
+		auto vvt2 = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 1, /*camIndex*/ 0);
 
 		if (vvt1 && vvt1.Value != 0) {
 			if (!hasSeenFirstVvt) {
-				EXPECT_NEAR(vvt1.Value, 1.4, /*precision*/1);
+				EXPECT_NEAR(vvt1.Value, 1.4, /*precision*/ 1);
 				hasSeenFirstVvt = true;
 			}
 
@@ -44,9 +44,9 @@ static void test(int engineSyncCam, float camOffsetAdd) {
 		}
 	}
 
-	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0).value_or(0), 1.352, 1e-2);
-	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/1, /*camIndex*/0).value_or(0), 1.657, 1e-2);
-	ASSERT_EQ(243, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0).value_or(0), 1.352, 1e-2);
+	EXPECT_NEAR(engine->triggerCentral.getVVTPosition(/*bankIndex*/ 1, /*camIndex*/ 0).value_or(0), 1.657, 1e-2);
+	ASSERT_EQ(243, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 
 	ASSERT_EQ(0, eth.recentWarnings()->getCount());
 }

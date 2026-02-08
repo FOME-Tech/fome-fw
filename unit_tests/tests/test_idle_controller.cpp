@@ -11,8 +11,8 @@
 #include "idle_thread.h"
 #include "electronic_throttle.h"
 
-using ::testing::StrictMock;
 using ::testing::_;
+using ::testing::StrictMock;
 
 using ICP = IIdleController::Phase;
 using TgtInfo = IIdleController::TargetInfo;
@@ -44,18 +44,18 @@ TEST(idle_v2, timingPid) {
 	engineConfiguration->useIdleTimingPidControl = true;
 
 	// Test P term
-	EXPECT_FLOAT_EQ(5,    dut.getIdleTimingAdjustment(950,  0, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(2.5,  dut.getIdleTimingAdjustment(975,  0, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(0,    dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(5, dut.getIdleTimingAdjustment(950, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(2.5, dut.getIdleTimingAdjustment(975, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(0, dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling));
 	EXPECT_FLOAT_EQ(-2.5, dut.getIdleTimingAdjustment(1025, 0, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(-5,   dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-5, dut.getIdleTimingAdjustment(1050, 0, 1000, ICP::Idling));
 
 	// Test D term
 	// Negative rate of change -> add timing
 	// Positive rate of change -> remove timing
-	EXPECT_FLOAT_EQ( 3, dut.getIdleTimingAdjustment(1000, -100, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ( 0, dut.getIdleTimingAdjustment(1000,    0, 1000, ICP::Idling));
-	EXPECT_FLOAT_EQ(-3, dut.getIdleTimingAdjustment(1000,  100, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(3, dut.getIdleTimingAdjustment(1000, -100, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(0, dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling));
+	EXPECT_FLOAT_EQ(-3, dut.getIdleTimingAdjustment(1000, 100, 1000, ICP::Idling));
 }
 
 TEST(idle_v2, testTargetRpm) {
@@ -211,27 +211,27 @@ TEST(idle_v2, runningFanAcBump) {
 	engine->module<AcController>()->acButtonState = false;
 
 	// Begin A/C Pressure Switch testing
-	//engineConfiguration->acSwitch = Gpio::G1;
+	// engineConfiguration->acSwitch = Gpio::G1;
 	engineConfiguration->acPressureSwitch = Gpio::G2;
-	//setMockState(engineConfiguration->acSwitch, false);
-	//setMockState(engineConfiguration->acPressureSwitch, false);
+	// setMockState(engineConfiguration->acSwitch, false);
+	// setMockState(engineConfiguration->acPressureSwitch, false);
 	engine->module<AcController>()->acPressureSwitchState = false;
 	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
 
-	//setMockState(engineConfiguration->acSwitch, true);
+	// setMockState(engineConfiguration->acSwitch, true);
 	engine->module<AcController>()->acButtonState = true;
 	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
 
-	//setMockState(engineConfiguration->acPressureSwitch, true);
+	// setMockState(engineConfiguration->acPressureSwitch, true);
 	engine->module<AcController>()->acPressureSwitchState = true;
 	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
 
-	//setMockState(engineConfiguration->acSwitch, false);
+	// setMockState(engineConfiguration->acSwitch, false);
 	engine->module<AcController>()->acButtonState = false;
 	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
 
-	//engineConfiguration->acSwitch = Gpio::Unassigned;
-	//setMockState(engineConfiguration->acPressureSwitch, false);
+	// engineConfiguration->acSwitch = Gpio::Unassigned;
+	// setMockState(engineConfiguration->acPressureSwitch, false);
 	engineConfiguration->acPressureSwitch = Gpio::Unassigned;
 	engine->module<AcController>()->acPressureSwitchState = false;
 	// End A/C Pressure Switch testing
@@ -342,9 +342,9 @@ TEST(idle_v2, getCrankingTaperFraction) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	StrictMock<MockOpenLoopIdler> dut;
 
-    float expectedClt = 37;
+	float expectedClt = 37;
 	engineConfiguration->afterCrankingIACtaperDuration = 500;
-    engineConfiguration->useCrankingIdleTaperTableSetting = false;
+	engineConfiguration->useCrankingIdleTaperTableSetting = false;
 
 	// 0 cycles - no taper yet, pure cranking value
 	EXPECT_FLOAT_EQ(0, dut.getCrankingTaperFraction(expectedClt));
@@ -369,51 +369,50 @@ TEST(idle_v2, getCrankingTaperFraction) {
 }
 
 TEST(idle_v2, getCrankingTaperFractionWithMultiplier) {
-    EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-    StrictMock<MockOpenLoopIdler> dut;
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	StrictMock<MockOpenLoopIdler> dut;
 
-    float expectedClt = 40;
+	float expectedClt = 40;
 
-    engineConfiguration->afterCrankingIACtaperDuration = 200;
-    engineConfiguration->useCrankingIdleTaperTableSetting = true;
-	
+	engineConfiguration->afterCrankingIACtaperDuration = 200;
+	engineConfiguration->useCrankingIdleTaperTableSetting = true;
+
 	float curve[CLT_CRANKING_CURVE_SIZE] = {
-		1.0, // 0C
-		1.0, // 10C
-		1.0, // 20C
-		0.5, // 30C
-		0.4, // 40C
-		0.3, // 50C
-		0.2, // 60C
-		0.1  // 70C
-		};
+			1.0, // 0C
+			1.0, // 10C
+			1.0, // 20C
+			0.5, // 30C
+			0.4, // 40C
+			0.3, // 50C
+			0.2, // 60C
+			0.1	 // 70C
+	};
 
-    for (int i = 0; i < CLT_CRANKING_CURVE_SIZE; i++) {
-        config->cltCrankingTaperCorrBins[i] = i * 10;
-        config->cltCrankingTaperCorr[i] = curve[i];
-    }
+	for (int i = 0; i < CLT_CRANKING_CURVE_SIZE; i++) {
+		config->cltCrankingTaperCorrBins[i] = i * 10;
+		config->cltCrankingTaperCorr[i] = curve[i];
+	}
 
-    // 0 cycles - no taper yet, pure cranking value
-    EXPECT_FLOAT_EQ(0, dut.getCrankingTaperFraction(expectedClt));
+	// 0 cycles - no taper yet, pure cranking value
+	EXPECT_FLOAT_EQ(0, dut.getCrankingTaperFraction(expectedClt));
 
-    // 50 cycles in - total taper duration should be 200 * 0.4 (40C) = 80 cyclyes instead of 200
-    for (size_t i = 0; i < 50; i++) {
-        engine->rpmCalculator.onNewEngineCycle();
-    }
+	// 50 cycles in - total taper duration should be 200 * 0.4 (40C) = 80 cyclyes instead of 200
+	for (size_t i = 0; i < 50; i++) {
+		engine->rpmCalculator.onNewEngineCycle();
+	}
 	// So 80*0.625 = 50 cycles
-    EXPECT_FLOAT_EQ(0.625f, dut.getCrankingTaperFraction(expectedClt));
+	EXPECT_FLOAT_EQ(0.625f, dut.getCrankingTaperFraction(expectedClt));
 	// testing 20C colder, should use 1.0f so 200*0.25 = 50 cycles
-    EXPECT_FLOAT_EQ(0.25f, dut.getCrankingTaperFraction(expectedClt - 20));
+	EXPECT_FLOAT_EQ(0.25f, dut.getCrankingTaperFraction(expectedClt - 20));
 
 	// 200 cycles in - total taper duration should be done by 40C
-    for (size_t i = 0; i < 150; i++) {
-        engine->rpmCalculator.onNewEngineCycle();
-    }
+	for (size_t i = 0; i < 150; i++) {
+		engine->rpmCalculator.onNewEngineCycle();
+	}
 	// Taper last only 80 cycles, so 2.5*80 = 200 cycles
 	EXPECT_FLOAT_EQ(2.5f, dut.getCrankingTaperFraction(expectedClt));
 	// Taper last full length
 	EXPECT_FLOAT_EQ(1.0f, dut.getCrankingTaperFraction(expectedClt - 20));
-
 }
 
 TEST(idle_v2, openLoopCoastingTable) {
@@ -437,7 +436,7 @@ TEST(idle_v2, closedLoopBasic) {
 	dut.init();
 
 	// Not testing PID here, so we can set very simple PID gains
-	engineConfiguration->idleRpmPid.pFactor = 0.5;	// 0.5 output per 1 RPM error = 50% per 100 rpm
+	engineConfiguration->idleRpmPid.pFactor = 0.5; // 0.5 output per 1 RPM error = 50% per 100 rpm
 	engineConfiguration->idleRpmPid.iFactor = 0;
 	engineConfiguration->idleRpmPid.dFactor = 0;
 	engineConfiguration->idleRpmPid.iFactor = 0;
@@ -478,7 +477,6 @@ TEST(idle_v2, closedLoopInjectedRpmRate) {
 	// Negative rpmRate -> positive output
 	EXPECT_FLOAT_EQ(10, dut.getClosedLoop(ICP::Idling, /*rpm*/ 900, /*rpmRate*/ -100, /*tgt*/ 900));
 }
-
 
 TEST(idle_v2, RunningToIdleTransition) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
@@ -521,11 +519,18 @@ TEST(idle_v2, RunningToIdleTransition) {
 	EXPECT_NEAR(0, dut.getIdlePid()->getIntegration(), EPS2D);
 }
 
-
 struct IntegrationIdleMock : public IdleController {
 	MOCK_METHOD(TargetInfo, getTargetRpm, (float clt), (override));
-	MOCK_METHOD(ICP, determinePhase, (float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction), (override));
-	MOCK_METHOD(float, getOpenLoop, (ICP phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction), (override));
+	MOCK_METHOD(
+			ICP,
+			determinePhase,
+			(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction),
+			(override));
+	MOCK_METHOD(
+			float,
+			getOpenLoop,
+			(ICP phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction),
+			(override));
 	MOCK_METHOD(float, getClosedLoop, (ICP phase, float rpm, float rpmRate, float target), (override));
 	MOCK_METHOD(float, getCrankingTaperFraction, (float clt), (const, override));
 };
@@ -543,20 +548,16 @@ TEST(idle_v2, IntegrationManual) {
 	TgtInfo target{1000, 1100, 1100};
 
 	// Target of 1000 rpm
-	EXPECT_CALL(dut, getTargetRpm(expectedClt))
-		.WillOnce(Return(target));
+	EXPECT_CALL(dut, getTargetRpm(expectedClt)).WillOnce(Return(target));
 
 	// 30% of the way through cranking taper
-	EXPECT_CALL(dut, getCrankingTaperFraction(expectedClt))
-		.WillOnce(Return(0.3f));
+	EXPECT_CALL(dut, getCrankingTaperFraction(expectedClt)).WillOnce(Return(0.3f));
 
 	// Determine phase will claim we're idling
-	EXPECT_CALL(dut, determinePhase(950, target, expectedTps, 15, 0.3f))
-		.WillOnce(Return(ICP::Idling));
+	EXPECT_CALL(dut, determinePhase(950, target, expectedTps, 15, 0.3f)).WillOnce(Return(ICP::Idling));
 
 	// Open loop should be asked for an open loop position
-	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.3f))
-		.WillOnce(Return(13));
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.3f)).WillOnce(Return(13));
 
 	// getClosedLoop() should not be called!
 
@@ -578,24 +579,19 @@ TEST(idle_v2, IntegrationAutomatic) {
 	TgtInfo target{1000, 1100, 1100};
 
 	// Target of 1000 rpm
-	EXPECT_CALL(dut, getTargetRpm(expectedClt))
-		.WillOnce(Return(target));
+	EXPECT_CALL(dut, getTargetRpm(expectedClt)).WillOnce(Return(target));
 
 	// 40% of the way through cranking taper
-	EXPECT_CALL(dut, getCrankingTaperFraction(expectedClt))
-		.WillOnce(Return(0.4f));
+	EXPECT_CALL(dut, getCrankingTaperFraction(expectedClt)).WillOnce(Return(0.4f));
 
 	// Determine phase will claim we're idling
-	EXPECT_CALL(dut, determinePhase(950, target, expectedTps, 15, 0.4f))
-		.WillOnce(Return(ICP::Idling));
+	EXPECT_CALL(dut, determinePhase(950, target, expectedTps, 15, 0.4f)).WillOnce(Return(ICP::Idling));
 
 	// Open loop should be asked for an open loop position
-	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.4f))
-		.WillOnce(Return(13));
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.4f)).WillOnce(Return(13));
 
 	// Closed loop should get called
-	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000))
-		.WillOnce(Return(7));
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000)).WillOnce(Return(7));
 
 	// Result should be open + closed
 	EXPECT_EQ(13 + 7, dut.getIdlePosition(950, 100));
@@ -616,24 +612,19 @@ TEST(idle_v2, IntegrationClamping) {
 	TgtInfo target{1000, 1100, 1100};
 
 	// Target of 1000 rpm
-	EXPECT_CALL(dut, getTargetRpm(expectedClt))
-		.WillOnce(Return(target));
+	EXPECT_CALL(dut, getTargetRpm(expectedClt)).WillOnce(Return(target));
 
 	// 50% of the way through cranking taper
-	EXPECT_CALL(dut, getCrankingTaperFraction(expectedClt))
-		.WillOnce(Return(0.5f));
+	EXPECT_CALL(dut, getCrankingTaperFraction(expectedClt)).WillOnce(Return(0.5f));
 
 	// Determine phase will claim we're idling
-	EXPECT_CALL(dut, determinePhase(950, target, expectedTps, 15, 0.5f))
-		.WillOnce(Return(ICP::Idling));
+	EXPECT_CALL(dut, determinePhase(950, target, expectedTps, 15, 0.5f)).WillOnce(Return(ICP::Idling));
 
 	// Open loop should be asked for an open loop position
-	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.5f))
-		.WillOnce(Return(75));
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.5f)).WillOnce(Return(75));
 
 	// Closed loop should get called
-	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000))
-		.WillOnce(Return(75));
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000)).WillOnce(Return(75));
 
 	// Result would be 75 + 75 = 150, but it should clamp to 100
 	EXPECT_EQ(100, dut.getIdlePosition(950, 100));

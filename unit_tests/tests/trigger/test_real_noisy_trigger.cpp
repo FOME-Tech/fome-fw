@@ -43,7 +43,8 @@ static void testNoOverdwell(const char* file, bool instantRpm) {
 				} else {
 					auto actualDwell = 1e-3 * NT2USF(nowNt - coilStartTimes[cyl]);
 
-					EXPECT_LT(actualDwell, 50) << "Overdwell on cylinder " << (int)cyl << " of " << actualDwell << " ms";
+					EXPECT_LT(actualDwell, 50)
+							<< "Overdwell on cylinder " << (int)cyl << " of " << actualDwell << " ms";
 				}
 			}
 

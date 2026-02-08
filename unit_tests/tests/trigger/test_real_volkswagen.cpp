@@ -21,8 +21,8 @@ TEST(crankingVW, vwRealCrankingFromFile) {
 		reader.processLine(&eth);
 	}
 
-	ASSERT_EQ( 0, eth.recentWarnings()->getCount())<< "warningCounter#vwRealCranking";
-	ASSERT_EQ( 1695, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+	ASSERT_EQ(0, eth.recentWarnings()->getCount()) << "warningCounter#vwRealCranking";
+	ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 }
 
 TEST(crankingVW, crankingTwiceWithGap) {
@@ -34,13 +34,13 @@ TEST(crankingVW, crankingTwiceWithGap) {
 		CsvReader reader(1, /* vvtCount */ 0);
 
 		reader.open("tests/trigger/resources/nick_1.csv");
-		
+
 		while (reader.haveMore()) {
 			reader.processLine(&eth);
 		}
 
-		ASSERT_EQ(0, eth.recentWarnings()->getCount())<< "warningCounter#vwRealCranking";
-		ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+		ASSERT_EQ(0, eth.recentWarnings()->getCount()) << "warningCounter#vwRealCranking";
+		ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 	}
 
 	auto now = getTimeNowNt();
@@ -50,13 +50,13 @@ TEST(crankingVW, crankingTwiceWithGap) {
 		CsvReader reader(1, /* vvtCount */ 0, 10);
 
 		reader.open("tests/trigger/resources/nick_1.csv");
-		
+
 		while (reader.haveMore()) {
 			reader.processLine(&eth);
 		}
 
 		ASSERT_EQ(0, eth.recentWarnings()->getCount());
-		ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+		ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 	}
 
 	{
@@ -64,12 +64,12 @@ TEST(crankingVW, crankingTwiceWithGap) {
 		CsvReader reader(1, /* vvtCount */ 0, 314.159);
 
 		reader.open("tests/trigger/resources/nick_1.csv");
-		
+
 		while (reader.haveMore()) {
 			reader.processLine(&eth);
 		}
 
 		ASSERT_EQ(0, eth.recentWarnings()->getCount());
-		ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+		ASSERT_EQ(1695, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 	}
 }

@@ -3,7 +3,7 @@
 #include "logicdata_csv_reader.h"
 
 static int getExhaustIndex() {
-	return getTriggerCentral()->vvtState[/*bankIndex*/0][/*camIndex*/1].currentCycle.current_index;
+	return getTriggerCentral()->vvtState[/*bankIndex*/ 0][/*camIndex*/ 1].currentCycle.current_index;
 }
 
 TEST(realk20, cranking) {
@@ -17,16 +17,15 @@ TEST(realk20, cranking) {
 	while (reader.haveMore()) {
 		reader.processLine(&eth);
 
-		auto vvtI = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/0);
+		auto vvtI = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0);
 		if (vvtI) {
 			EXPECT_TRUE(vvtI.Value > -20 && vvtI.Value < 10) << "VVT angle: " << vvtI.Value;
 		}
 
-		auto vvtE = engine->triggerCentral.getVVTPosition(/*bankIndex*/0, /*camIndex*/1);
+		auto vvtE = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 1);
 		if (vvtE) {
 			EXPECT_TRUE(vvtE.Value > -10 && vvtE.Value < 10);
 		}
-
 	}
 
 	EXPECT_EQ(1192, round(Sensor::getOrZero(SensorType::Rpm)));

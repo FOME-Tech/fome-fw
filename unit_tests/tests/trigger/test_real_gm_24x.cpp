@@ -23,18 +23,20 @@ TEST(crankingGm24x, gmRealCrankingFromFile) {
 
 		// Expect that all teeth are in the correct spot
 		float angleError = getTriggerCentral()->triggerToothAngleError;
-		EXPECT_TRUE(angleError < 3 && angleError > -3) << "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
+		EXPECT_TRUE(angleError < 3 && angleError > -3)
+				<< "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
 
 		auto rpm = Sensor::getOrZero(SensorType::Rpm);
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy
+			// all worked OK
 			EXPECT_EQ(eventCount, 23);
 			EXPECT_NEAR(rpm, 77.0f, 0.1);
 		}
 	}
 
-	ASSERT_EQ( 0, eth.recentWarnings()->getCount())<< "warningCounter#vwRealCranking";
-	ASSERT_EQ( 139, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+	ASSERT_EQ(0, eth.recentWarnings()->getCount()) << "warningCounter#vwRealCranking";
+	ASSERT_EQ(139, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 }

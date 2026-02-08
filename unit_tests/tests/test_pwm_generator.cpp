@@ -11,10 +11,10 @@
 #define HIGH_VALUE 1
 static int expectedTimeOfNextEvent;
 
-static void assertNextEvent(const char *msg, int expectedPinState, TestExecutor *executor, OutputPin& pin) {
+static void assertNextEvent(const char* msg, int expectedPinState, TestExecutor* executor, OutputPin& pin) {
 	printf("PWM_test: Asserting event [%s]\r\n", msg);
 	// only one action expected in queue
-	ASSERT_EQ( 1,  executor->size()) << "PWM_test: schedulingQueue size";
+	ASSERT_EQ(1, executor->size()) << "PWM_test: schedulingQueue size";
 
 	// move time to next event timestamp
 	setTimeNowUs(expectedTimeOfNextEvent);
@@ -24,7 +24,7 @@ static void assertNextEvent(const char *msg, int expectedPinState, TestExecutor 
 	ASSERT_EQ(expectedPinState, pin.m_currentLogicValue) << msg << " pin state";
 
 	// assert that we have one new action in queue
-	ASSERT_EQ(1,  executor->size()) << "PWM_test: queue.size";
+	ASSERT_EQ(1, executor->size()) << "PWM_test: queue.size";
 }
 
 TEST(PWM, test100dutyCycle) {
@@ -40,10 +40,7 @@ TEST(PWM, test100dutyCycle) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->scheduler.setMockExecutor(&executor);
 
-	startSimplePwm(&pwm, "unit_test",
-			&pin,
-			1000 /* frequency */,
-			1.0 /* duty cycle */);
+	startSimplePwm(&pwm, "unit_test", &pin, 1000 /* frequency */, 1.0 /* duty cycle */);
 
 	expectedTimeOfNextEvent += 1000;
 	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
@@ -68,10 +65,7 @@ TEST(PWM, testSwitchToNanPeriod) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->scheduler.setMockExecutor(&executor);
 
-	startSimplePwm(&pwm, "unit_test",
-			&pin,
-			1000 /* frequency */,
-			0.60 /* duty cycle */);
+	startSimplePwm(&pwm, "unit_test", &pin, 1000 /* frequency */, 0.60 /* duty cycle */);
 
 	expectedTimeOfNextEvent += 600;
 	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
@@ -104,11 +98,7 @@ TEST(PWM, testPwmGenerator) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->scheduler.setMockExecutor(&executor);
 
-	startSimplePwm(&pwm,
-			"unit_test",
-			&pin,
-			1000 /* frequency */,
-			0.80 /* duty cycle */);
+	startSimplePwm(&pwm, "unit_test", &pin, 1000 /* frequency */, 0.80 /* duty cycle */);
 
 	expectedTimeOfNextEvent += 800;
 	EXPECT_EQ(expectedTimeOfNextEvent, executor.getForUnitTest(0)->momentX);
