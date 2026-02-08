@@ -40,8 +40,7 @@ void setSingleCoilDwell();
 // we combine trigger-defined triggerShape.tdcPosition with user-defined engineConfiguration->globalTriggerAngleOffset
 // expectation is that for well-known triggers engineConfiguration->globalTriggerAngleOffset would usually be zero
 // while for toothed wheels user would have to provide a value
-#define tdcPosition() \
-		(getTriggerCentral()->triggerShape.tdcPosition + engineConfiguration->globalTriggerAngleOffset)
+#define tdcPosition() (getTriggerCentral()->triggerShape.tdcPosition + engineConfiguration->globalTriggerAngleOffset)
 
 // Table blending helpers
 struct BlendResult {

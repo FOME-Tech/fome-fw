@@ -76,8 +76,7 @@ ignition_mode_e getCurrentIgnitionMode() {
 #if EFI_SHAFT_POSITION_INPUT
 	// In spin-up cranking mode we don't have full phase sync info yet, so wasted spark mode is better
 	if (ignitionMode == IM_INDIVIDUAL_COILS) {
-		bool missingPhaseInfoForSequential = 
-			!engine->triggerCentral.triggerState.hasSynchronizedPhase();
+		bool missingPhaseInfoForSequential = !engine->triggerCentral.triggerState.hasSynchronizedPhase();
 
 		if (engine->rpmCalculator.isSpinningUp() || missingPhaseInfoForSequential) {
 			ignitionMode = IM_WASTED_SPARK;
@@ -131,8 +130,8 @@ void prepareOutputSignals() {
 	updateCylinders();
 
 	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
-	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE
-								&& (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
+	getEngineState()->useOddFireWastedSpark =
+			operationMode != TWO_STROKE && (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
 
 #if EFI_SHAFT_POSITION_INPUT
 	engine->triggerCentral.prepareTriggerShape();
@@ -190,13 +189,13 @@ void setFlatInjectorLag(float value) {
 BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load) {
 	// If set to 0, skip the math as its disabled
 	if (cfg.blendParameter == GPPWM_Zero) {
-		return { 0, 0, 0, 0 };
+		return {0, 0, 0, 0};
 	}
 
 	auto value = readGppwmChannel(cfg.blendParameter);
 
 	if (!value) {
-		return { 0, 0, 0, 0 };
+		return {0, 0, 0, 0};
 	}
 
 	// Override Y axis value (if necessary)
@@ -205,15 +204,11 @@ BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load) {
 		load = readGppwmChannel(cfg.yAxisOverride).value_or(0);
 	}
 
-	float tableValue = interpolate3d(
-		cfg.table,
-		cfg.loadBins, load,
-		cfg.rpmBins, rpm
-	);
+	float tableValue = interpolate3d(cfg.table, cfg.loadBins, load, cfg.rpmBins, rpm);
 
 	float blendFactor = interpolate2d(value.Value, cfg.blendBins, cfg.blendValues);
 
-	return { value.Value, blendFactor, 0.01f * blendFactor * tableValue, load };
+	return {value.Value, blendFactor, 0.01f * blendFactor * tableValue, load};
 }
 
 #endif /* EFI_ENGINE_CONTROL */

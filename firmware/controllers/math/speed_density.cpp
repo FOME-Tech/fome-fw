@@ -18,18 +18,27 @@
 float IFuelComputer::getTChargeCoefficient(float rpm, float tps) {
 	// First, do TPS mode since it doesn't need any of the airflow math.
 	if (engineConfiguration->tChargeMode == TCHARGE_MODE_RPM_TPS) {
-		float minRpmKcurrentTPS = interpolateMsg("minRpm", tpMin,
-				engineConfiguration->tChargeMinRpmMinTps, tpMax,
-				engineConfiguration->tChargeMinRpmMaxTps, tps);
-		float maxRpmKcurrentTPS = interpolateMsg("maxRpm", tpMin,
-				engineConfiguration->tChargeMaxRpmMinTps, tpMax,
-				engineConfiguration->tChargeMaxRpmMaxTps, tps);
+		float minRpmKcurrentTPS = interpolateMsg(
+				"minRpm",
+				tpMin,
+				engineConfiguration->tChargeMinRpmMinTps,
+				tpMax,
+				engineConfiguration->tChargeMinRpmMaxTps,
+				tps);
+		float maxRpmKcurrentTPS = interpolateMsg(
+				"maxRpm",
+				tpMin,
+				engineConfiguration->tChargeMaxRpmMinTps,
+				tpMax,
+				engineConfiguration->tChargeMaxRpmMaxTps,
+				tps);
 
 		return interpolateMsg("Kcurr", rpmMin, minRpmKcurrentTPS, rpmMax, maxRpmKcurrentTPS, rpm);
 	}
 
 	constexpr floatms_t gramsPerMsToKgPerHour = (3600.0f * 1000.0f) / 1000.0f;
-	// We're actually using an 'old' airMass calculated for the previous cycle, but it's ok, we're not having any self-excitaton issues
+	// We're actually using an 'old' airMass calculated for the previous cycle, but it's ok, we're not having any
+	// self-excitaton issues
 	floatms_t airMassForEngine = sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
 	// airMass is in grams per 1 cycle for 1 cyl. Convert it to airFlow in kg/h for the engine.
 	// And if the engine is stopped (0 rpm), then airFlow is also zero (avoiding NaN division)
@@ -38,16 +47,13 @@ float IFuelComputer::getTChargeCoefficient(float rpm, float tps) {
 	if (engineConfiguration->tChargeMode == TCHARGE_MODE_AIR_INTERP) {
 		// just interpolate between user-specified min and max coefs, based on the max airFlow value
 		return interpolateClamped(
-			0.0, engineConfiguration->tChargeAirCoefMin,
-			engineConfiguration->tChargeAirFlowMax, engineConfiguration->tChargeAirCoefMax,
-			airFlow
-		);
+				0.0,
+				engineConfiguration->tChargeAirCoefMin,
+				engineConfiguration->tChargeAirFlowMax,
+				engineConfiguration->tChargeAirCoefMax,
+				airFlow);
 	} else if (engineConfiguration->tChargeMode == TCHARGE_MODE_AIR_INTERP_TABLE) {
-		return interpolate2d(
-			airFlow,
-			engineConfiguration->tchargeBins,
-			engineConfiguration->tchargeValues
-		);
+		return interpolate2d(airFlow, engineConfiguration->tchargeBins, engineConfiguration->tchargeValues);
 	} else {
 		firmwareError("Unexpected tChargeMode: %d", engineConfiguration->tChargeMode);
 		return 0;
@@ -62,7 +68,8 @@ temperature_t IFuelComputer::getTCharge(float rpm, float tps) {
 
 	float airTemp;
 
-	// Without either valid, return 0C.  It's wrong, but it'll pretend to be nice and dense, so at least you won't go lean.
+	// Without either valid, return 0C.  It's wrong, but it'll pretend to be nice and dense, so at least you won't go
+	// lean.
 	if (!iat && !clt) {
 		return 0;
 	} else if (!clt && iat) {

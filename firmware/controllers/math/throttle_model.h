@@ -22,7 +22,6 @@ protected:
 
 	// Given some MAP, what is the most the engine can pull through a wide open throttle, in g/s?
 	virtual float maxEngineFlow(float map) const = 0;
-
 };
 
 class ThrottleModel : public ThrottleModelBase {

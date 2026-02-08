@@ -4,8 +4,7 @@
 
 constexpr float integrator_dt = FAST_CALLBACK_PERIOD_MS * 0.001f;
 
-void ClosedLoopFuelCellBase::update(float lambdaDeadband, bool ignoreErrorMagnitude)
-{
+void ClosedLoopFuelCellBase::update(float lambdaDeadband, bool ignoreErrorMagnitude) {
 	// Compute how far off target we are
 	float lambdaError = getLambdaError();
 
@@ -24,8 +23,7 @@ void ClosedLoopFuelCellBase::update(float lambdaDeadband, bool ignoreErrorMagnit
 	}
 
 	// Integrate
-	float adjust = getIntegratorGain() * lambdaError * integrator_dt
-					+ m_adjustment;
+	float adjust = getIntegratorGain() * lambdaError * integrator_dt + m_adjustment;
 
 	// Clamp to bounds
 	float minAdjust = getMinAdjustment();
