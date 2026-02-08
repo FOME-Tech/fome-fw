@@ -3,9 +3,6 @@
 struct idle_state_s {
 	// mightResetPid
 	// The idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.
-	// The throttle pedal can be pressed for a long time, making the PID data obsolete (thus the reset is required).
-	// We set 'mightResetPid' to true only if PID was actually used (i.e. idlePid.getOutput() was called) to save some CPU resources.
-	// See automaticIdleController().
 	// offset 0 bit 0
 	bool mightResetPid : 1 {};
 	// wasResetPid
