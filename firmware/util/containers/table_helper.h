@@ -22,18 +22,20 @@ public:
 	virtual float getValue(float xColumn, float yRow) const = 0;
 };
 
-
 /**
  * this helper class brings together 3D table with two 2D axis curves
  */
-template<int TColNum, int TRowNum, typename TValue, typename TColumn, typename TRow>
+template <int TColNum, int TRowNum, typename TValue, typename TColumn, typename TRow>
 class Map3D : public ValueProvider3D {
 public:
 	template <typename TValueInit, typename TRowInit, typename TColumnInit>
-	void init(TValueInit (&table)[TRowNum][TColNum],
-				  const TRowInit (&rowBins)[TRowNum], const TColumnInit (&columnBins)[TColNum]) {
-		// This splits out here so that we don't need one overload of init per possible combination of table/rows/columns types/dimensions
-		// Overload resolution figures out the correct versions of the functions below to call, some of which have assertions about what's allowed
+	void
+	init(TValueInit (&table)[TRowNum][TColNum],
+		 const TRowInit (&rowBins)[TRowNum],
+		 const TColumnInit (&columnBins)[TColNum]) {
+		// This splits out here so that we don't need one overload of init per possible combination of
+		// table/rows/columns types/dimensions Overload resolution figures out the correct versions of the functions
+		// below to call, some of which have assertions about what's allowed
 		initValues(table);
 		initRows(rowBins);
 		initCols(columnBins);
@@ -45,10 +47,7 @@ public:
 			return 0;
 		}
 
-		return interpolate3d(*m_values,
-								*m_rowBins, yRow * m_rowMult,
-								*m_columnBins, xColumn * m_colMult) *
-			m_valueMult;
+		return interpolate3d(*m_values, *m_rowBins, yRow * m_rowMult, *m_columnBins, xColumn * m_colMult) * m_valueMult;
 	}
 
 	void setAll(TValue value) {
@@ -64,7 +63,7 @@ public:
 private:
 	template <int TMult, int TDiv>
 	void initValues(scaled_channel<TValue, TMult, TDiv> (&table)[TRowNum][TColNum]) {
-		m_values = reinterpret_cast<TValue (*)[TRowNum][TColNum]>(&table);
+		m_values = reinterpret_cast<TValue(*)[TRowNum][TColNum]>(&table);
 		m_valueMult = 1 / efi::ratio<TMult, TDiv>::asFloat();
 	}
 
@@ -75,7 +74,7 @@ private:
 
 	template <int TRowMult, int TRowDiv>
 	void initRows(const scaled_channel<TRow, TRowMult, TRowDiv> (&rowBins)[TRowNum]) {
-		m_rowBins = reinterpret_cast<const TRow (*)[TRowNum]>(&rowBins);
+		m_rowBins = reinterpret_cast<const TRow(*)[TRowNum]>(&rowBins);
 		m_rowMult = efi::ratio<TRowMult, TRowDiv>::asFloat();
 	}
 
@@ -86,7 +85,7 @@ private:
 
 	template <int TColMult, int TColDiv>
 	void initCols(const scaled_channel<TColumn, TColMult, TColDiv> (&columnBins)[TColNum]) {
-		m_columnBins = reinterpret_cast<const TColumn (*)[TColNum]>(&columnBins);
+		m_columnBins = reinterpret_cast<const TColumn(*)[TColNum]>(&columnBins);
 		m_colMult = efi::ratio<TColMult, TColDiv>::asFloat();
 	}
 
@@ -124,7 +123,7 @@ typedef Map3D<FUEL_RPM_COUNT, FUEL_LOAD_COUNT, uint16_t, uint16_t, uint16_t> map
 /**
  * @param precision for example '0.1' for one digit fractional part. Default to 0.01, two digits.
  */
-template<typename TValue, int TSize>
+template <typename TValue, int TSize>
 void setLinearCurve(TValue (&array)[TSize], float from, float to, float precision = 0.01f) {
 	for (int i = 0; i < TSize; i++) {
 		float value = interpolateClamped(0, from, TSize - 1, to, i);
@@ -136,7 +135,7 @@ void setLinearCurve(TValue (&array)[TSize], float from, float to, float precisio
 	}
 }
 
-template<typename TValue, int TSize>
+template <typename TValue, int TSize>
 void setArrayValues(TValue (&array)[TSize], float value) {
 	for (int i = 0; i < TSize; i++) {
 		array[i] = value;
@@ -172,11 +171,11 @@ constexpr void copyTable(TDest (&dest)[N][M], const TDest (&source)[N][M]) {
 	memcpy(dest, source, N * M * sizeof(TDest));
 }
 
-template<typename kType>
+template <typename kType>
 void setRpmBin(kType array[], int size, float idleRpm, float topRpm) {
 	array[0] = idleRpm - 150;
 	int rpmStep = (int)(efiRound((topRpm - idleRpm) / (size - 2), 50) - 150);
-	for (int i = 1; i < size - 1;i++)
+	for (int i = 1; i < size - 1; i++)
 		array[i] = idleRpm + rpmStep * (i - 1);
 	array[size - 1] = topRpm;
 }
@@ -184,7 +183,7 @@ void setRpmBin(kType array[], int size, float idleRpm, float topRpm) {
 /**
  * initialize RPM table axis using default RPM range
  */
-template<typename TValue, int TSize>
+template <typename TValue, int TSize>
 void setRpmTableBin(TValue (&array)[TSize]) {
 	setRpmBin(array, TSize, 800, 7000);
 }

@@ -8,7 +8,7 @@
  * @author andreika <prometheus.pcb@gmail.com>
  * @author Andrey Belomutskiy
  *
-*/
+ */
 
 #ifndef FIFO_BUFFER_H
 #define FIFO_BUFFER_H
@@ -20,7 +20,7 @@
 #endif // EFI_UNIT_TEST
 
 // todo: this is not a thread-safe version!
-template<typename T, size_t maxSize = CB_MAX_SIZE>
+template <typename T, size_t maxSize = CB_MAX_SIZE>
 class fifo_buffer : public cyclic_buffer<T, maxSize> {
 	using cyclic_buffer<T, maxSize>::add;
 	using cyclic_buffer<T, maxSize>::getSize;
@@ -28,15 +28,15 @@ class fifo_buffer : public cyclic_buffer<T, maxSize> {
 	using cyclic_buffer<T, maxSize>::m_size, cyclic_buffer<T, maxSize>::count;
 
 public:
-	fifo_buffer() : currentIndexRead(0) {
-	}
+	fifo_buffer()
+		: currentIndexRead(0) {}
 
 	virtual bool put(T item);
 	T get();
 	void clear() /*override*/;
 
-	virtual bool put(const T *items, int numItems);
-	
+	virtual bool put(const T* items, int numItems);
+
 	bool isEmpty() const {
 		return getCount() == 0;
 	}
@@ -45,23 +45,23 @@ public:
 		return getCount() >= getSize();
 	}
 
-    int getCount() const {
-        return cyclic_buffer<T, maxSize>::getCount();
-    }
+	int getCount() const {
+		return cyclic_buffer<T, maxSize>::getCount();
+	}
 
-    int getSize() const {
-        return cyclic_buffer<T, maxSize>::getSize();
-    }
+	int getSize() const {
+		return cyclic_buffer<T, maxSize>::getSize();
+	}
 
-    const volatile T* getElements() const {
-        return elements;
-    }
+	const volatile T* getElements() const {
+		return elements;
+	}
 
 public:
-    int currentIndexRead;	// FIFO "tail"
+	int currentIndexRead; // FIFO "tail"
 };
 
-template<typename T, size_t maxSize>
+template <typename T, size_t maxSize>
 bool fifo_buffer<T, maxSize>::put(T item) {
 	// check if full
 	if (!isFull()) {
@@ -71,8 +71,8 @@ bool fifo_buffer<T, maxSize>::put(T item) {
 	return false;
 }
 
-template<typename T, size_t maxSize>
-bool fifo_buffer<T, maxSize>::put(const T *items, int numItems) {
+template <typename T, size_t maxSize>
+bool fifo_buffer<T, maxSize>::put(const T* items, int numItems) {
 	for (int i = 0; i < numItems; i++) {
 		if (!put(items[i]))
 			return false;
@@ -80,9 +80,9 @@ bool fifo_buffer<T, maxSize>::put(const T *items, int numItems) {
 	return true;
 }
 
-template<typename T, size_t maxSize>
+template <typename T, size_t maxSize>
 T fifo_buffer<T, maxSize>::get() {
-	T &ret = (T &)elements[currentIndexRead];
+	T& ret = (T&)elements[currentIndexRead];
 	if (!isEmpty()) {
 		currentIndexRead = (currentIndexRead + 1) % m_size;
 		count--;
@@ -90,13 +90,13 @@ T fifo_buffer<T, maxSize>::get() {
 	return ret;
 }
 
-template<typename T, size_t maxSize>
+template <typename T, size_t maxSize>
 void fifo_buffer<T, maxSize>::clear() {
 	cyclic_buffer<T, maxSize>::clear();
 	currentIndexRead = 0;
 }
 
-template<typename T, size_t maxSize = CB_MAX_SIZE>
+template <typename T, size_t maxSize = CB_MAX_SIZE>
 class fifo_buffer_sync : public fifo_buffer<T, maxSize> {
 public:
 	fifo_buffer_sync() {
@@ -117,7 +117,7 @@ public:
 		return true;
 	}
 
-	bool put(const T *items, int numItems) override {
+	bool put(const T* items, int numItems) override {
 		for (int i = 0; i < numItems; i++) {
 			if (!put(items[i]))
 				return false;
@@ -125,7 +125,7 @@ public:
 		return true;
 	}
 
-	bool get(T &item, int timeout) {
+	bool get(T& item, int timeout) {
 		chSysLock();
 #if !EFI_UNIT_TEST
 		while (fifo_buffer<T, maxSize>::isEmpty()) {
@@ -139,7 +139,7 @@ public:
 		item = fifo_buffer<T, maxSize>::get();
 		chSysUnlock();
 		return true;
-    }
+	}
 
 	void clear() {
 		chSysLock();
