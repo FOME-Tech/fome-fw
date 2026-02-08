@@ -12,13 +12,12 @@
  *
  * The algo:
  * 1) Completely discharge the capacitor (all pins are low)
- * 2) Charge the capacitor until the voltage crosses the 0->1 voltage threshold (Vt) and measure the charging time #1 (Tc1).
- * 3) Immediately discharge the capacitor to some unknown low voltage (Vl) - it should be well below the Vt threshold,
- *    using the same period of time used for charging as the discharge period (Td = Tc1).
- * 4) Immediately charge the capacitor again and measure the time crossing the same 0->1 voltage threshold again (Tc2).
- * 5) Repeat the procedure several times to get more precise timings.
- * 6) Do some math and find the R and C values.
- * 7) Board_Id = the unique combination of indices of the "measured" R1 and R2.
+ * 2) Charge the capacitor until the voltage crosses the 0->1 voltage threshold (Vt) and measure the charging time #1
+ * (Tc1). 3) Immediately discharge the capacitor to some unknown low voltage (Vl) - it should be well below the Vt
+ * threshold, using the same period of time used for charging as the discharge period (Td = Tc1). 4) Immediately charge
+ * the capacitor again and measure the time crossing the same 0->1 voltage threshold again (Tc2). 5) Repeat the
+ * procedure several times to get more precise timings. 6) Do some math and find the R and C values. 7) Board_Id = the
+ * unique combination of indices of the "measured" R1 and R2.
  *
  * The math proof:
  * - Charging formula #1:
@@ -42,7 +41,7 @@
  *    Td, Tc1 and Tc2 are known.
  * - Solve the power function for X and get the desired R or C.
  *
- *   We use Newton's method (a fast-converging numerical solver when the 1st derivative is known) 
+ *   We use Newton's method (a fast-converging numerical solver when the 1st derivative is known)
  *   with estimated initial values.
  */
 
@@ -58,20 +57,20 @@
 */
 #include "hellen_board_id_resistors.h"
 
-//#define HELLEN_BOARD_ID_DEBUG
+// #define HELLEN_BOARD_ID_DEBUG
 
 #if EFI_PROD_CODE
 
-static void hellenBoardIdInputCallback(void *arg, efitick_t nowNt) {
+static void hellenBoardIdInputCallback(void* arg, efitick_t nowNt) {
 	UNUSED(arg);
-	HellenBoardIdFinderState *state = (HellenBoardIdFinderState *)arg;
+	HellenBoardIdFinderState* state = (HellenBoardIdFinderState*)arg;
 	// Now start discharging immediately! This should be the first command in the interrupt handler.
 	palClearPad(state->rOutputPinPort, state->rOutputPinIdx);
 
 	state->timeChargeNt = nowNt;
 
 	chibios_rt::CriticalSectionLocker csl;
-	chSemSignalI(&state->boardId_wake);  // no need to call chSchRescheduleS() because we're inside the ISR
+	chSemSignalI(&state->boardId_wake); // no need to call chSchRescheduleS() because we're inside the ISR
 }
 
 #endif /* EFI_PROD_CODE */
@@ -97,19 +96,16 @@ float HellenBoardIdSolver::solve(float Tc1, float Tc2, float x0, float y, float 
 	return result.Value;
 }
 
-float HellenBoardIdFinderBase::findClosestResistor(float R, bool testOnlyMajorSeries, int *rIdx) {
-	// the first "major" resistor uses less values (with more spacing between them) so that even less precise method cannot fail.
-	static const float rOnlyMajorValues[] = { 
-		HELLEN_BOARD_ID_MAJOR_RESISTORS
-	};
+float HellenBoardIdFinderBase::findClosestResistor(float R, bool testOnlyMajorSeries, int* rIdx) {
+	// the first "major" resistor uses less values (with more spacing between them) so that even less precise method
+	// cannot fail.
+	static const float rOnlyMajorValues[] = {HELLEN_BOARD_ID_MAJOR_RESISTORS};
 	// the minor resistor is always measured after the major one, when the exact capacitance is already knows,
 	// so we can use more values and detect them with better precision.
-	static const float rAllValues[] = { 
-		// these are equal to the major values and should be used first
-		HELLEN_BOARD_ID_MAJOR_RESISTORS
-		// these are extended series if 256 board IDs aren't enough (16*16).
-		HELLEN_BOARD_ID_MINOR_RESISTORS
-	};
+	static const float rAllValues[] = {// these are equal to the major values and should be used first
+									   HELLEN_BOARD_ID_MAJOR_RESISTORS
+											   // these are extended series if 256 board IDs aren't enough (16*16).
+											   HELLEN_BOARD_ID_MINOR_RESISTORS};
 
 	size_t rValueSize = testOnlyMajorSeries ? efi::size(rOnlyMajorValues) : efi::size(rAllValues);
 
@@ -123,15 +119,16 @@ float HellenBoardIdFinderBase::findClosestResistor(float R, bool testOnlyMajorSe
 			*rIdx = i;
 #ifdef HELLEN_BOARD_ID_DEBUG
 			efiPrintf("* [%d] R = %.0f, delta = %f", i, rAllValues[i], delta);
-#endif /* HELLEN_BOARD_ID_DEBUG */		
+#endif /* HELLEN_BOARD_ID_DEBUG */
 		}
 	}
 	return rAllValues[*rIdx];
 }
 
 float HellenBoardIdFinderBase::calcEstimatedResistance(float Tc1_us, float C) {
-	constexpr float Vcc = 3.3f - 0.1f;	// STM32 digital I/O voltage (adjusted for minor voltage drop)
-	constexpr float V01 = Vcc * 0.5f;	// let it be 1.6 volts (closer to the datasheet value), the exact value doesn't matter
+	constexpr float Vcc = 3.3f - 0.1f; // STM32 digital I/O voltage (adjusted for minor voltage drop)
+	constexpr float V01 =
+			Vcc * 0.5f; // let it be 1.6 volts (closer to the datasheet value), the exact value doesn't matter
 	// macos compiler doesn't like log() in constexpr
 	float log1V01Vcc = log(1.0f - V01 / Vcc);
 	// this is only an estimated value, we cannot use it for Board-ID detection!
@@ -139,13 +136,21 @@ float HellenBoardIdFinderBase::calcEstimatedResistance(float Tc1_us, float C) {
 	return Rest;
 }
 
-float HellenBoardIdFinderBase::calc(float Tc1_us, float Tc2_us, float Rest, float C, bool testOnlyMajorSeries, float *Rmeasured, float *newC, int *rIdx) {
+float HellenBoardIdFinderBase::calc(
+		float Tc1_us,
+		float Tc2_us,
+		float Rest,
+		float C,
+		bool testOnlyMajorSeries,
+		float* Rmeasured,
+		float* newC,
+		int* rIdx) {
 	constexpr float Cest = HELLEN_BOARD_ID_CAPACITOR;
 	// Now calculate the resistance value
 	HellenBoardIdSolver rSolver;
 
 	// solve the equation for R (1 Ohm precision is more than enough)
-    *Rmeasured = rSolver.solve(Tc1_us, Tc2_us, Rest, C, 1.0f);
+	*Rmeasured = rSolver.solve(Tc1_us, Tc2_us, Rest, C, 1.0f);
 
 	// add 22 Ohms for pin's internal resistance
 	// (according to the STM32 datasheets, the voltage drop on an output pin can be up to 0.4V for 8 mA current)
@@ -160,22 +165,23 @@ float HellenBoardIdFinderBase::calc(float Tc1_us, float Tc2_us, float Rest, floa
 	constexpr float capacitorPrecision = 0.1f;
 	constexpr float Cmin = Cest * (1.0f - capacitorPrecision);
 	constexpr float Cmax = Cest * (1.0f + capacitorPrecision);
-	
-	// solve the equation for C (1% precision)
-    *newC = cSolver.solve(Tc1_us, Tc2_us, Cmin, R + Rinternal, 0.01f);
-    // in case something went wrong, we must be in the allowed range
-    *newC = clampF(Cmin, *newC, Cmax);
 
-    return R;
+	// solve the equation for C (1% precision)
+	*newC = cSolver.solve(Tc1_us, Tc2_us, Cmin, R + Rinternal, 0.01f);
+	// in case something went wrong, we must be in the allowed range
+	*newC = clampF(Cmin, *newC, Cmax);
+
+	return R;
 }
 
 template <size_t NumPins>
-bool HellenBoardIdFinder<NumPins>::measureChargingTimes(int i, float & Tc1_us, float & Tc2_us) {
+bool HellenBoardIdFinder<NumPins>::measureChargingTimes(int i, float& Tc1_us, float& Tc2_us) {
 #if EFI_PROD_CODE
 	chSemReset(&state.boardId_wake, 0);
 
 	// full charge/discharge time, and also 'timeout' time
-	const int Tf_us = 50000; // 50 ms is more than enough to "fully" discharge the capacitor with any two resistors used at the same time.
+	const int Tf_us = 50000; // 50 ms is more than enough to "fully" discharge the capacitor with any two resistors used
+							 // at the same time.
 
 	// 1. Fully discharge the capacitor through both resistors (faster)
 	for (size_t k = 0; k < NumPins; k++) {
@@ -196,14 +202,14 @@ bool HellenBoardIdFinder<NumPins>::measureChargingTimes(int i, float & Tc1_us, f
 	state.rInputPinIdx = getBrainPinIndex(rPins[inputIdx]);
 	// set only high-Z input mode, no pull-ups/pull-downs allowed!
 	palSetPadMode(state.rInputPinPort, state.rInputPinIdx, PAL_MODE_INPUT);
-	efiExtiEnablePin("boardId", rPins[inputIdx], PAL_EVENT_MODE_RISING_EDGE, hellenBoardIdInputCallback, (void *)&state);
-    
-    int pinState = palReadPad(state.rInputPinPort, state.rInputPinIdx);
-    if (pinState != 0) {
-    	// the input pin state should be low when the capacitor is fully discharged
-    	efiPrintf("* Board detection error!");
-    	return false;
-    }
+	efiExtiEnablePin("boardId", rPins[inputIdx], PAL_EVENT_MODE_RISING_EDGE, hellenBoardIdInputCallback, (void*)&state);
+
+	int pinState = palReadPad(state.rInputPinPort, state.rInputPinIdx);
+	if (pinState != 0) {
+		// the input pin state should be low when the capacitor is fully discharged
+		efiPrintf("* Board detection error!");
+		return false;
+	}
 
 	// Timestamps:
 	// t1 = Starts charging from 0v
@@ -237,7 +243,8 @@ bool HellenBoardIdFinder<NumPins>::measureChargingTimes(int i, float & Tc1_us, f
 	// 5. And now just wait for the rest of the discharge process...
 	// Spin wait since chThdSleepMicroseconds() lacks the resolution we need
 	efitick_t t3 = t2 + Td_nt;
-	while (getTimeNowNt() < t3) ;
+	while (getTimeNowNt() < t3)
+		;
 
 	// the input pin state should be low when the capacitor is discharged to Vl
 	pinState = palReadPad(state.rInputPinPort, state.rInputPinIdx);
@@ -262,12 +269,12 @@ bool HellenBoardIdFinder<NumPins>::measureChargingTimes(int i, float & Tc1_us, f
 	efiPrintf("* Tc1 = %f, Tc2 = %f, Td = %f", Tc1_us, Tc2_us, Td_us);
 #endif /* HELLEN_BOARD_ID_DEBUG */
 
-    // sanity checks
-    if (pinState != 0) {
+	// sanity checks
+	if (pinState != 0) {
 		float Td_us = NT2USF(Td_nt);
 		efiPrintf("* Board detection error! (Td=%f is too small)", Td_us);
 		return false;
-    }
+	}
 
 	if (t4 <= t3) {
 		efiPrintf("* Estimates are out of limit! Something went wrong. Aborting!");
@@ -280,7 +287,7 @@ bool HellenBoardIdFinder<NumPins>::measureChargingTimes(int i, float & Tc1_us, f
 }
 
 template <size_t NumPins>
-bool HellenBoardIdFinder<NumPins>::measureChargingTimesAveraged(int i, float & Tc1_us, float & Tc2_us) {
+bool HellenBoardIdFinder<NumPins>::measureChargingTimesAveraged(int i, float& Tc1_us, float& Tc2_us) {
 	const int numTries = 3;
 
 	Tc1_us = 0;
@@ -301,23 +308,22 @@ bool HellenBoardIdFinder<NumPins>::measureChargingTimesAveraged(int i, float & T
 	return true;
 }
 
-
 int detectHellenBoardId() {
 	int boardId = -1;
 #ifdef HELLEN_BOARD_ID_PIN_1
 	efiPrintf("Starting Hellen Board ID detection...");
 	Timer t;
 	t.reset();
-	
+
 	const int numPins = 2;
-	Gpio rPins[numPins] = { HELLEN_BOARD_ID_PIN_1, HELLEN_BOARD_ID_PIN_2};
-	
+	Gpio rPins[numPins] = {HELLEN_BOARD_ID_PIN_1, HELLEN_BOARD_ID_PIN_2};
+
 	// We start from the estimated capacitance, but the real one can be +-10%
 	float C = HELLEN_BOARD_ID_CAPACITOR;
 
 	// we need to find the resistor values connected to the mcu pins and to the capacitor.
-	float R[numPins] = { 0 };
-	int rIdx[numPins] = { 0 };
+	float R[numPins] = {0};
+	int rIdx[numPins] = {0};
 
 	HellenBoardIdFinder<numPins> finder(rPins);
 
@@ -328,7 +334,7 @@ int detectHellenBoardId() {
 	for (int i = 0; i < numPins; i++) {
 #ifdef HELLEN_BOARD_ID_DEBUG
 		efiPrintf("*** Resistor R%d...", i + 1);
-#endif /* HELLEN_BOARD_ID_DEBUG */		
+#endif /* HELLEN_BOARD_ID_DEBUG */
 
 		float Tc1_us = 0, Tc2_us = 0;
 		// We need several measurements for each resistor to increase the presision.

@@ -11,4 +11,3 @@ Gpio getRunningLedPin() {
 	// this board has no running led
 	return Gpio::Unassigned;
 }
-

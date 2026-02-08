@@ -1,9 +1,9 @@
 Gpio getCommsLedPin() {
-	return Gpio::H10;  // blue
+	return Gpio::H10; // blue
 }
 
 Gpio getRunningLedPin() {
-	return Gpio::H9;  // green
+	return Gpio::H9; // green
 }
 
 Gpio getWarningLedPin() {

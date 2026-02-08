@@ -64,9 +64,9 @@ static void setEtbConfig() {
 static void setupVbatt() {
 	// 5.6k high side/10k low side = 1.56 ratio divider
 	engineConfiguration->analogInputDividerCoefficient = 1.56f;
-	
+
 	// 6.34k high side/ 1k low side
-	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1; 
+	engineConfiguration->vbattDividerCoeff = (6.34 + 1) / 1;
 
 	// Battery sense on PA7
 	engineConfiguration->vbattAdcChannel = EFI_ADC_0;
@@ -101,11 +101,11 @@ void setBoardConfigOverrides() {
 	engineConfiguration->clt.config.bias_resistor = 2490;
 	engineConfiguration->iat.config.bias_resistor = 2490;
 
-	//CAN 1 bus overwrites
+	// CAN 1 bus overwrites
 	engineConfiguration->canRxPin = Gpio::D0;
 	engineConfiguration->canTxPin = Gpio::D1;
 
-	//CAN 2 bus overwrites
+	// CAN 2 bus overwrites
 	engineConfiguration->can2RxPin = Gpio::B5;
 	engineConfiguration->can2TxPin = Gpio::B6;
 }
@@ -114,12 +114,11 @@ static void setupDefaultSensorInputs() {
 
 	engineConfiguration->afr.hwChannel = EFI_ADC_11;
 	setEgoSensor(ES_14Point7_Free);
-	
+
 	engineConfiguration->baroSensor.hwChannel = EFI_ADC_NONE;
 
 	engineConfiguration->lps25BaroSensorScl = Gpio::B10;
 	engineConfiguration->lps25BaroSensorSda = Gpio::B11;
-
 }
 
 void setBoardDefaultConfiguration() {
