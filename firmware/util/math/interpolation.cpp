@@ -25,7 +25,7 @@
  * @note	For example, "interpolateMsg("", engineConfiguration.tpsMin, 0, engineConfiguration.tpsMax, 100, adc);"
  * @see interpolateClamped
  */
-float interpolateMsg(const char *msg, float x1, float y1, float x2, float y2, float x) {
+float interpolateMsg(const char* msg, float x1, float y1, float x2, float y2, float x) {
 	if (std::isnan(x1) || std::isnan(x2) || std::isnan(y1) || std::isnan(y2)) {
 		warning(ObdCode::CUSTOM_ERR_INTERPOLATE_1, "interpolate%s: why param", msg);
 		return NAN;
@@ -39,13 +39,17 @@ float interpolateMsg(const char *msg, float x1, float y1, float x2, float y2, fl
 		/**
 		 * we could end up here for example while resetting bins while changing engine type
 		 */
-		warning(ObdCode::CUSTOM_ERR_INTERPOLATE_3, "interpolate%s: Same x1 and x2 in interpolate: %.2f/%.2f", msg, x1, x2);
+		warning(ObdCode::CUSTOM_ERR_INTERPOLATE_3,
+				"interpolate%s: Same x1 and x2 in interpolate: %.2f/%.2f",
+				msg,
+				x1,
+				x2);
 		return NAN;
 	}
 
 	// a*x1 + b = y1
 	// a*x2 + b = y2
-//	efiAssertVoid(ObdCode::CUSTOM_ERR_ASSERT_VOID, x1 != x2, "no way we can interpolate");
+	//	efiAssertVoid(ObdCode::CUSTOM_ERR_ASSERT_VOID, x1 != x2, "no way we can interpolate");
 	float a = INTERPOLATION_A(x1, y1, x2, y2);
 	if (std::isnan(a)) {
 		warning(ObdCode::CUSTOM_ERR_INTERPOLATE_4, "interpolate%s: why a", msg);

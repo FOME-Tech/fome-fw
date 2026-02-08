@@ -13,30 +13,29 @@
 #include "efi_pid.h"
 #include "math.h"
 
-Pid::Pid() : Pid(nullptr) { }
+Pid::Pid()
+	: Pid(nullptr) {}
 
-Pid::Pid(pid_s *parameters) {
+Pid::Pid(pid_s* parameters) {
 	initPidClass(parameters);
 }
 
-void Pid::initPidClass(pid_s *parameters) {
+void Pid::initPidClass(pid_s* parameters) {
 	m_parameters = parameters;
 	resetCounter = 0;
 
 	reset();
 }
 
-bool Pid::isSame(const pid_s *parameters) const {
+bool Pid::isSame(const pid_s* parameters) const {
 	if (!m_parameters) {
 		// this 'null' could happen on first execution during initialization
 		return false;
 	}
 
 	efiAssert(ObdCode::OBD_PCM_Processor_Fault, parameters != NULL, "PID::isSame NULL", false);
-	return m_parameters->pFactor == parameters->pFactor
-			&& m_parameters->iFactor == parameters->iFactor
-			&& m_parameters->dFactor == parameters->dFactor
-			&& m_parameters->offset == parameters->offset;
+	return m_parameters->pFactor == parameters->pFactor && m_parameters->iFactor == parameters->iFactor &&
+		   m_parameters->dFactor == parameters->dFactor && m_parameters->offset == parameters->offset;
 }
 
 float Pid::getUnclampedOutput(float target, float input, float dTime) {
@@ -60,7 +59,7 @@ float Pid::getUnclampedOutput(float target, float input, float dTime) {
 	previousError = error;
 	m_hasPreviousError = true;
 
-	if (dTime <=0) {
+	if (dTime <= 0) {
 		warning(ObdCode::CUSTOM_PID_DTERM, "PID: unexpected dTime");
 		return pTerm + m_parameters->offset;
 	}
@@ -115,8 +114,8 @@ void Pid::postState(pid_status_s& pidStatus) const {
 void Pid::updateITerm(float value) {
 	iTerm += value;
 	/**
-	 * If we have exceeded the ability of the controlled device to hit target, the I factor will keep accumulating and approach infinity.
-	 * Here we limit the I-term #353
+	 * If we have exceeded the ability of the controlled device to hit target, the I factor will keep accumulating and
+	 * approach infinity. Here we limit the I-term #353
 	 */
 	if (iTerm > m_parameters->maxValue * 100) {
 		iTerm = m_parameters->maxValue * 100;

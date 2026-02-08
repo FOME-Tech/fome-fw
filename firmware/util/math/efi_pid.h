@@ -21,9 +21,9 @@ struct pid_s;
 class Pid final : public pid_state_s {
 public:
 	Pid();
-	explicit Pid(pid_s *parameters);
-	void initPidClass(pid_s *parameters);
-	bool isSame(const pid_s *parameters) const;
+	explicit Pid(pid_s* parameters);
+	void initPidClass(pid_s* parameters);
+	bool isSame(const pid_s* parameters) const;
 
 	float getOutput(float target, float input, float dTime);
 
@@ -38,9 +38,10 @@ public:
 	int resetCounter;
 	// todo: move this to pid_s one day
 	float iTermMin = -1000000.0;
-	float iTermMax =  1000000.0;
+	float iTermMax = 1000000.0;
+
 protected:
-	pid_s *m_parameters = nullptr;
+	pid_s* m_parameters = nullptr;
 	void updateITerm(float value);
 
 private:
