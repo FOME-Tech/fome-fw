@@ -3,7 +3,8 @@
 #pragma once
 
 #undef EFI_USE_FAST_ADC
-// https://github.com/rusefi/rusefi/issues/3301 "H7 is currently actually using fast ADC exclusively - it just needs a bit of plumbing to make it work."
+// https://github.com/rusefi/rusefi/issues/3301 "H7 is currently actually using fast ADC exclusively - it just needs a
+// bit of plumbing to make it work."
 #define EFI_USE_FAST_ADC FALSE
 
 #undef EFI_MC33816
@@ -12,9 +13,9 @@
 #undef BOARD_TLE6240_COUNT
 #undef BOARD_MC33972_COUNT
 #undef BOARD_TLE8888_COUNT
-#define BOARD_TLE6240_COUNT	0
-#define BOARD_MC33972_COUNT	0
-#define BOARD_TLE8888_COUNT 	0
+#define BOARD_TLE6240_COUNT 0
+#define BOARD_MC33972_COUNT 0
+#define BOARD_TLE8888_COUNT 0
 
 #undef EFI_MAX_31855
 #define EFI_MAX_31855 FALSE

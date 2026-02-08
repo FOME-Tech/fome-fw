@@ -14,7 +14,7 @@ void jump_to_openblt();
 #endif
 bool allowFlashWhileRunning();
 
-bool ramReadProbe(volatile const char *read_address);
+bool ramReadProbe(volatile const char* read_address);
 #if defined(STM32F4)
 bool isStm32F42x();
 #endif // STM32F4
@@ -41,14 +41,15 @@ bool isValidSerialRxPin(brain_pin_e pin);
 
 // SPI
 #if HAL_USE_SPI
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi);
+void initSpiModule(SPIDriver* driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi);
 
-void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin);
+void initSpiCs(SPIConfig* spiConfig, brain_pin_e csPin);
 void turnOnSpi(spi_device_e device);
 #endif // HAL_USE_SPI
 
 #if HAL_USE_ICU
-bool getIcuParams(brain_pin_e hwPin, iomode_t *af_ptr, ICUDriver ** icu_ptr, icuchannel_t *channel_ptr, uint32_t *clock_ptr);
+bool getIcuParams(
+		brain_pin_e hwPin, iomode_t* af_ptr, ICUDriver** icu_ptr, icuchannel_t* channel_ptr, uint32_t* clock_ptr);
 #endif
 
 // MMC Card
@@ -79,8 +80,7 @@ bool setBootAddress(uintptr_t address);
 
 void assertInterruptPriority(const char* func, uint8_t expectedPrio);
 
-extern "C"
-{
+extern "C" {
 #endif /* __cplusplus */
 
 // these need to be declared with C linkage - they're called from C and asm files

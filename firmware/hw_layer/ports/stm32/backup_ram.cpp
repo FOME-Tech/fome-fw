@@ -14,8 +14,7 @@ extern BackupSramData __backup_sram_addr__;
 BackupSramData* getBackupSram() {
 	auto data = &__backup_sram_addr__;
 
-	if (data->Cookie != BackupSramData::ExpectedCookie ||
-		data->Version != FLASH_DATA_VERSION) {
+	if (data->Cookie != BackupSramData::ExpectedCookie || data->Version != FLASH_DATA_VERSION) {
 		// Cookie was invalid or version changed, reset to defaults
 		*data = {};
 	}

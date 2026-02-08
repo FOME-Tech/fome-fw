@@ -36,7 +36,7 @@ int intFlashErase(flashaddr_t address, size_t size) {
 bool intFlashIsErased(flashaddr_t address, size_t size) {
 #if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
 	// If we have a cache, invalidate the relevant cache lines.
-	// They may still contain old data, leading us to believe that the 
+	// They may still contain old data, leading us to believe that the
 	// flash erase failed.
 	SCB_InvalidateDCache_by_Addr((uint32_t*)address, size);
 #endif
@@ -45,13 +45,13 @@ bool intFlashIsErased(flashaddr_t address, size_t size) {
 	 * For efficiency, compare flashdata_t values as much as possible,
 	 * then, fallback to byte per byte comparison. */
 	while (size >= sizeof(flashdata_t)) {
-		if (*(volatile flashdata_t*) address != (flashdata_t) (-1)) // flashdata_t being unsigned, -1 is 0xFF..FF
+		if (*(volatile flashdata_t*)address != (flashdata_t)(-1)) // flashdata_t being unsigned, -1 is 0xFF..FF
 			return false;
 		address += sizeof(flashdata_t);
 		size -= sizeof(flashdata_t);
 	}
 	while (size > 0) {
-		if (*(char*) address != 0xFF)
+		if (*(char*)address != 0xFF)
 			return false;
 		++address;
 		--size;
@@ -64,14 +64,14 @@ bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
 	/* For efficiency, compare flashdata_t values as much as possible,
 	 * then, fallback to byte per byte comparison. */
 	while (size >= sizeof(flashdata_t)) {
-		if (*(volatile flashdata_t*) address != *(flashdata_t*) buffer)
+		if (*(volatile flashdata_t*)address != *(flashdata_t*)buffer)
 			return FALSE;
 		address += sizeof(flashdata_t);
 		buffer += sizeof(flashdata_t);
 		size -= sizeof(flashdata_t);
 	}
 	while (size > 0) {
-		if (*(volatile char*) address != *buffer)
+		if (*(volatile char*)address != *buffer)
 			return FALSE;
 		++address;
 		++buffer;
@@ -88,7 +88,7 @@ int intFlashRead(flashaddr_t source, char* destination, size_t size) {
 	SCB_InvalidateDCache_by_Addr((uint32_t*)source, size);
 #endif
 
-	memcpy(destination, (char*) source, size);
+	memcpy(destination, (char*)source, size);
 	return FLASH_RETURN_SUCCESS;
 }
 

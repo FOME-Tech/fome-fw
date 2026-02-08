@@ -21,8 +21,8 @@ static constexpr uint8_t expectedWhoAmILps22Df = 0xB4;
 #define LPS_CR1_BDU (1 << 2)
 
 // Status register flags
-#define LPS_SR_P_DA (1 << 0)	// Pressure data available
-#define LPS_SR_T_DA (1 << 1)	// Temperature data available
+#define LPS_SR_P_DA (1 << 0) // Pressure data available
+#define LPS_SR_T_DA (1 << 1) // Temperature data available
 
 #define REG_WhoAmI 0x0F
 
@@ -44,26 +44,24 @@ bool Lps25::init(brain_pin_e scl, brain_pin_e sda) {
 	// Read ident register
 	auto whoAmI = m_i2c.readRegister(addr, REG_WhoAmI);
 
-	switch (whoAmI)
-	{
-	case expectedWhoAmILps22Hb:
-		m_type = Type::Lps22Hb;
-		break;
-	case expectedWhoAmILps22Df:
-		m_type = Type::Lps22Df;
-		break;
-	case expectedWhoAmILps25:
-		m_type = Type::Lps25;
-		break;
-	default:
-		// chip not detected
-		return false;
+	switch (whoAmI) {
+		case expectedWhoAmILps22Hb:
+			m_type = Type::Lps22Hb;
+			break;
+		case expectedWhoAmILps22Df:
+			m_type = Type::Lps22Df;
+			break;
+		case expectedWhoAmILps25:
+			m_type = Type::Lps25;
+			break;
+		default:
+			// chip not detected
+			return false;
 	}
 
-	uint8_t cr1 = 
-		LPS_CR1_ODR_25hz |	// 25hz update rate
-		// TODO: should bdu be set?
-		LPS_CR1_BDU;		// Output registers update only when read
+	uint8_t cr1 = LPS_CR1_ODR_25hz | // 25hz update rate
+									 // TODO: should bdu be set?
+				  LPS_CR1_BDU; // Output registers update only when read
 
 	if (m_type == Type::Lps25) {
 		// Set to active mode
@@ -116,7 +114,7 @@ expected<float> Lps25::readPressureKpa() {
 	// 4096 counts per hectopascal
 	// = 40960 counts per kilopascal
 	constexpr float ratio = 1 / 40960.0f;
-	
+
 	float kilopascal = counts * ratio;
 
 	// Sensor limits are 26-126 kPa
@@ -152,17 +150,16 @@ expected<float> Lps25::readTemperatureC() {
 	int16_t rawTemp = static_cast<int16_t>(((h << 8) | l));
 
 	float tempC;
-	switch (m_type)
-	{
-	case Type::Lps22Hb:
-	case Type::Lps22Df:
-		tempC = rawTemp / 100.0f;
-		break;
-	case Type::Lps25:
-		tempC = 42.5f + (rawTemp / 480.0f);
-		break;
-	default:
-		return unexpected;
+	switch (m_type) {
+		case Type::Lps22Hb:
+		case Type::Lps22Df:
+			tempC = rawTemp / 100.0f;
+			break;
+		case Type::Lps25:
+			tempC = 42.5f + (rawTemp / 480.0f);
+			break;
+		default:
+			return unexpected;
 	}
 
 	if (tempC < -30 || tempC > 105) {
@@ -173,13 +170,12 @@ expected<float> Lps25::readTemperatureC() {
 }
 
 uint8_t Lps25::regCr1() const {
-	switch (m_type)
-	{
-	case Type::Lps22Hb:
-	case Type::Lps22Df:
-		return REG_Cr1_Lps22;
-	case Type::Lps25:
-	default:
-		return REG_Cr1_Lps25;
+	switch (m_type) {
+		case Type::Lps22Hb:
+		case Type::Lps22Df:
+			return REG_Cr1_Lps22;
+		case Type::Lps25:
+		default:
+			return REG_Cr1_Lps25;
 	}
 }

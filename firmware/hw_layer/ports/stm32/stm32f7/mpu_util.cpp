@@ -51,7 +51,8 @@ static DeviceType determineDevice() {
 }
 
 bool allowFlashWhileRunning() {
-	// Allow flash-while-running if dual bank mode is enabled, and we're a 2MB device (ie, no code located in second bank)
+	// Allow flash-while-running if dual bank mode is enabled, and we're a 2MB device (ie, no code located in second
+	// bank)
 	return determineDevice() == DeviceType::DualBank2MB;
 }
 
@@ -122,34 +123,34 @@ uintptr_t getFlashAddrSecondCopy() {
 	}
 }
 
-#define FLASH_ACR           (*(volatile uint32_t *)(FLASH_BASE + 0x00))
-#define FLASH_KEYR          (*(volatile uint32_t *)(FLASH_BASE + 0x04))
-#define FLASH_OPTKEYR       (*(volatile uint32_t *)(FLASH_BASE + 0x08))
-#define FLASH_SR            (*(volatile uint32_t *)(FLASH_BASE + 0x0C))
-#define FLASH_CR            (*(volatile uint32_t *)(FLASH_BASE + 0x10))
-#define FLASH_OPTCR         (*(volatile uint32_t *)(FLASH_BASE + 0x14))
+#define FLASH_ACR (*(volatile uint32_t*)(FLASH_BASE + 0x00))
+#define FLASH_KEYR (*(volatile uint32_t*)(FLASH_BASE + 0x04))
+#define FLASH_OPTKEYR (*(volatile uint32_t*)(FLASH_BASE + 0x08))
+#define FLASH_SR (*(volatile uint32_t*)(FLASH_BASE + 0x0C))
+#define FLASH_CR (*(volatile uint32_t*)(FLASH_BASE + 0x10))
+#define FLASH_OPTCR (*(volatile uint32_t*)(FLASH_BASE + 0x14))
 
-#define FLASH_OPTCR_STRT                       (1 << 1)
+#define FLASH_OPTCR_STRT (1 << 1)
 
-#define FLASH_OPTKEY1                         (0x08192A3B)
-#define FLASH_OPTKEY2                         (0x4C5D6E7F)
+#define FLASH_OPTKEY1 (0x08192A3B)
+#define FLASH_OPTKEY2 (0x4C5D6E7F)
 
-static void flash_wait_complete()
-{
-	do { __DSB(); } while (FLASH->SR & FLASH_SR_BSY);
+static void flash_wait_complete() {
+	do {
+		__DSB();
+	} while (FLASH->SR & FLASH_SR_BSY);
 }
 
-static void stm32f7_flash_mass_erase_dual_block()
-{
-    FLASH_CR |= FLASH_CR_MER1 | FLASH_CR_MER2;
-    FLASH_CR |= FLASH_CR_STRT;
-    flash_wait_complete();
-    FLASH_CR &= ~(FLASH_CR_MER1 | FLASH_CR_MER2);
+static void stm32f7_flash_mass_erase_dual_block() {
+	FLASH_CR |= FLASH_CR_MER1 | FLASH_CR_MER2;
+	FLASH_CR |= FLASH_CR_STRT;
+	flash_wait_complete();
+	FLASH_CR &= ~(FLASH_CR_MER1 | FLASH_CR_MER2);
 }
 
 /*
 STOP mode for F7 is needed for wakeup from multiple EXTI pins. For example PD0, which is CAN rx.
-However, for F40X & F42X this may be useless. STOP in itself eats more current than standby. 
+However, for F40X & F42X this may be useless. STOP in itself eats more current than standby.
 With F4 only having PA0 available for wakeup, this negates its need.
 */
 /*
@@ -167,7 +168,7 @@ void stm32_stop() {
 	boardPrepareForStop();
 
 	PWR->CSR1 |= PWR_CSR1_WUIF;
-	PWR->CR1 &= ~PWR_CR1_PDDS;	// cleared PDDS means stop mode (not standby) 
+	PWR->CR1 &= ~PWR_CR1_PDDS;	// cleared PDDS means stop mode (not standby)
 	PWR->CR1 |= PWR_CR1_FPDS;	// turn off flash in stop mode
 	PWR->CR1 |= PWR_CR1_UDEN;	// regulator underdrive in stop mode
 	PWR->CR1 |= PWR_CR1_LPUDS;	// low power regulator in under drive mode
@@ -182,15 +183,15 @@ void stm32_stop() {
 }
 */
 
-/* 
-Standby for both F4 & F7 works perfectly, with very little curent consumption. Downside is that theres a limited amount of pins that can wakeup F7, and only PA0 for F4XX.
-Cannot be used for CAN wakeup without hardware modificatinos.
+/*
+Standby for both F4 & F7 works perfectly, with very little curent consumption. Downside is that theres a limited amount
+of pins that can wakeup F7, and only PA0 for F4XX. Cannot be used for CAN wakeup without hardware modificatinos.
 */
 void stm32_standby() {
 	SysTick->CTRL = 0;
 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-	PWR->CR1 |= PWR_CR1_PDDS;	// PDDS = use standby mode (not stop mode)
-	PWR->CR1 |= PWR_CR1_CSBF;	// Clear standby flag
+	PWR->CR1 |= PWR_CR1_PDDS; // PDDS = use standby mode (not stop mode)
+	PWR->CR1 |= PWR_CR1_CSBF; // Clear standby flag
 
 	// Do anything the board wants to prepare for standby mode - enabling wakeup sources!
 	boardPrepareForStandby();

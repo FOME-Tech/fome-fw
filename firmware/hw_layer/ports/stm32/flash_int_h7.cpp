@@ -23,8 +23,14 @@
 #define FLASH_CR_STRT FLASH_CR_START
 
 // QW bit supercedes the older BSY bit
-#define intFlashWaitWithSleep() do { chThdSleepMilliseconds(1); }  while (FLASH_SR & FLASH_SR_QW);
-#define intFlashWaitWhileBusy() do { __DSB(); } while (FLASH_SR & FLASH_SR_QW);
+#define intFlashWaitWithSleep()                                                                                        \
+	do {                                                                                                               \
+		chThdSleepMilliseconds(1);                                                                                     \
+	} while (FLASH_SR & FLASH_SR_QW);
+#define intFlashWaitWhileBusy()                                                                                        \
+	do {                                                                                                               \
+		__DSB();                                                                                                       \
+	} while (FLASH_SR & FLASH_SR_QW);
 
 flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 	flashaddr_t address = FLASH_BASE;
@@ -35,13 +41,11 @@ flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 	return address;
 }
 
-static void intFlashClearErrors(uint8_t ctlr)
-{
+static void intFlashClearErrors(uint8_t ctlr) {
 	ctlr ? FLASH->CCR2 : FLASH->CCR1 = 0xffffffff;
 }
 
-static int intFlashCheckErrors(uint8_t ctlr)
-{
+static int intFlashCheckErrors(uint8_t ctlr) {
 	uint32_t sr = FLASH_SR;
 
 #ifdef FLASH_SR_OPERR
@@ -93,7 +97,8 @@ static bool intFlashUnlock(size_t ctlr) {
 /**
  * @brief Lock the flash memory for write access.
  */
-#define intFlashLock() { FLASH_CR |= FLASH_CR_LOCK; }
+#define intFlashLock()                                                                                                 \
+	{ FLASH_CR |= FLASH_CR_LOCK; }
 
 int intFlashSectorErase(flashsector_t sector) {
 	int ret;
@@ -219,7 +224,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		for (size_t i = 0; i < 8; i++) {
 			*pWrite++ = *pRead++;
 		}
-		
+
 		// Flush pipelines
 		__ISB();
 		__DSB();

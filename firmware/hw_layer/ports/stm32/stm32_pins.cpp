@@ -12,7 +12,8 @@
 
 #define PORT_SIZE 16
 
-static ioportid_t ports[] = {GPIOA,
+static ioportid_t ports[] = {
+		GPIOA,
 		GPIOB,
 		GPIOC,
 		GPIOD,
@@ -56,7 +57,7 @@ static ioportid_t ports[] = {GPIOA,
 /**
  * @deprecated - use hwPortname() instead
  */
-const char *portname(ioportid_t GPIOx) {
+const char* portname(ioportid_t GPIOx) {
 	if (GPIOx == GPIOA)
 		return "PA";
 	if (GPIOx == GPIOB)
@@ -151,7 +152,7 @@ int getPortPinIndex(ioportid_t port, ioportmask_t pin) {
 	return portIndex * PORT_SIZE + pin;
 }
 
-ioportid_t getHwPort(const char *msg, brain_pin_e brainPin) {
+ioportid_t getHwPort(const char* msg, brain_pin_e brainPin) {
 	if (!isBrainPinValid(brainPin) || !brain_pin_is_onchip(brainPin)) {
 		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid GPIO: %d", msg, (int)brainPin);
 		return nullptr;
@@ -163,7 +164,7 @@ ioportid_t getHwPort(const char *msg, brain_pin_e brainPin) {
 /**
  * this method returns the numeric part of pin name. For instance, for PC13 this would return '13'
  */
-ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin) {
+ioportmask_t getHwPin(const char* msg, brain_pin_e brainPin) {
 	if (!isBrainPinValid(brainPin) || !brain_pin_is_onchip(brainPin)) {
 		firmwareError(ObdCode::CUSTOM_ERR_INVALID_PIN, "%s: Invalid on-chip Gpio: %d", msg, (int)brainPin);
 		return 0;
@@ -177,7 +178,7 @@ ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin) {
  *
  * @return Gpio::Unassigned for "none", Gpio::Invalid for invalid entry
  */
-brain_pin_e parseBrainPin(const char *str) {
+brain_pin_e parseBrainPin(const char* str) {
 	if (strEqual(str, "none"))
 		return Gpio::Unassigned;
 	// todo: create method toLowerCase?
@@ -193,7 +194,7 @@ brain_pin_e parseBrainPin(const char *str) {
 	} else {
 		return Gpio::Invalid;
 	}
-	const char *pinStr = str + 2;
+	const char* pinStr = str + 2;
 	int pin = atoi(pinStr);
 	return (brain_pin_e)(basePin + pin);
 }

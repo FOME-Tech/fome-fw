@@ -22,7 +22,7 @@
 #if EFI_USE_OPENBLT
 /* communication with OpenBLT that is plain C, not to modify external file */
 extern "C" {
-	#include "openblt/shared_params.h"
+#include "openblt/shared_params.h"
 };
 #endif
 
@@ -57,101 +57,102 @@ brain_pin_e getAdcChannelBrainPin(const char*, adc_channel_e hwChannel) {
 
 	// todo: replace this with an array :)
 	switch (hwChannel) {
-	case EFI_ADC_0:
-		return Gpio::A0;
-	case EFI_ADC_1:
-		return Gpio::A1;
-	case EFI_ADC_2:
-		return Gpio::A2;
-	case EFI_ADC_3:
-		return Gpio::A3;
-	case EFI_ADC_4:
-		return Gpio::A4;
-	case EFI_ADC_5:
-		return Gpio::A5;
-	case EFI_ADC_6:
-		return Gpio::A6;
-	case EFI_ADC_7:
-		return Gpio::A7;
-	case EFI_ADC_8:
-		return Gpio::B0;
-	case EFI_ADC_9:
-		return Gpio::B1;
-	case EFI_ADC_10:
-		return Gpio::C0;
-	case EFI_ADC_11:
-		return Gpio::C1;
-	case EFI_ADC_12:
-		return Gpio::C2;
-	case EFI_ADC_13:
-		return Gpio::C3;
-	case EFI_ADC_14:
-		return Gpio::C4;
-	case EFI_ADC_15:
-		return Gpio::C5;
+		case EFI_ADC_0:
+			return Gpio::A0;
+		case EFI_ADC_1:
+			return Gpio::A1;
+		case EFI_ADC_2:
+			return Gpio::A2;
+		case EFI_ADC_3:
+			return Gpio::A3;
+		case EFI_ADC_4:
+			return Gpio::A4;
+		case EFI_ADC_5:
+			return Gpio::A5;
+		case EFI_ADC_6:
+			return Gpio::A6;
+		case EFI_ADC_7:
+			return Gpio::A7;
+		case EFI_ADC_8:
+			return Gpio::B0;
+		case EFI_ADC_9:
+			return Gpio::B1;
+		case EFI_ADC_10:
+			return Gpio::C0;
+		case EFI_ADC_11:
+			return Gpio::C1;
+		case EFI_ADC_12:
+			return Gpio::C2;
+		case EFI_ADC_13:
+			return Gpio::C3;
+		case EFI_ADC_14:
+			return Gpio::C4;
+		case EFI_ADC_15:
+			return Gpio::C5;
 #ifdef STM32H7XX
-	case EFI_ADC_16:
-		return Gpio::F11;
-	case EFI_ADC_17:
-		return Gpio::F12;
-	case EFI_ADC_18:
-		return Gpio::F13;
-	case EFI_ADC_19:
-		return Gpio::F14;
+		case EFI_ADC_16:
+			return Gpio::F11;
+		case EFI_ADC_17:
+			return Gpio::F12;
+		case EFI_ADC_18:
+			return Gpio::F13;
+		case EFI_ADC_19:
+			return Gpio::F14;
 #endif // STM32H7xx
-	default:
-/* todo: what is upper range ADC is used while lower range ADC is not used? how do we still mark pin used?
-external muxes for internal ADC #3350
-		firmwareError(ObdCode::CUSTOM_ERR_ADC_UNKNOWN_CHANNEL, "Unknown hw channel %d [%s]", hwChannel, msg);
-*/
-		return Gpio::Invalid;
+		default:
+			/* todo: what is upper range ADC is used while lower range ADC is not used? how do we still mark pin used?
+			external muxes for internal ADC #3350
+					firmwareError(ObdCode::CUSTOM_ERR_ADC_UNKNOWN_CHANNEL, "Unknown hw channel %d [%s]", hwChannel,
+			msg);
+			*/
+			return Gpio::Invalid;
 	}
 }
 
 adc_channel_e getAdcChannel(brain_pin_e pin) {
 	switch (pin) {
-	case Gpio::A0:
-		return EFI_ADC_0;
-	case Gpio::A1:
-		return EFI_ADC_1;
-	case Gpio::A2:
-		return EFI_ADC_2;
-	case Gpio::A3:
-		return EFI_ADC_3;
-	case Gpio::A4:
-		return EFI_ADC_4;
-	case Gpio::A5:
-		return EFI_ADC_5;
-	case Gpio::A6:
-		return EFI_ADC_6;
-	case Gpio::A7:
-		return EFI_ADC_7;
-	case Gpio::B0:
-		return EFI_ADC_8;
-	case Gpio::B1:
-		return EFI_ADC_9;
-	case Gpio::C0:
-		return EFI_ADC_10;
-	case Gpio::C1:
-		return EFI_ADC_11;
-	case Gpio::C2:
-		return EFI_ADC_12;
-	case Gpio::C3:
-		return EFI_ADC_13;
-	case Gpio::C4:
-		return EFI_ADC_14;
-	case Gpio::C5:
-		return EFI_ADC_15;
-	case Gpio::Unassigned:
-		return EFI_ADC_NONE;
-	default:
-		firmwareError("getAdcChannel %d", (int)pin);
-		return EFI_ADC_ERROR;
+		case Gpio::A0:
+			return EFI_ADC_0;
+		case Gpio::A1:
+			return EFI_ADC_1;
+		case Gpio::A2:
+			return EFI_ADC_2;
+		case Gpio::A3:
+			return EFI_ADC_3;
+		case Gpio::A4:
+			return EFI_ADC_4;
+		case Gpio::A5:
+			return EFI_ADC_5;
+		case Gpio::A6:
+			return EFI_ADC_6;
+		case Gpio::A7:
+			return EFI_ADC_7;
+		case Gpio::B0:
+			return EFI_ADC_8;
+		case Gpio::B1:
+			return EFI_ADC_9;
+		case Gpio::C0:
+			return EFI_ADC_10;
+		case Gpio::C1:
+			return EFI_ADC_11;
+		case Gpio::C2:
+			return EFI_ADC_12;
+		case Gpio::C3:
+			return EFI_ADC_13;
+		case Gpio::C4:
+			return EFI_ADC_14;
+		case Gpio::C5:
+			return EFI_ADC_15;
+		case Gpio::Unassigned:
+			return EFI_ADC_NONE;
+		default:
+			firmwareError("getAdcChannel %d", (int)pin);
+			return EFI_ADC_ERROR;
 	}
 }
 
 // deprecated - inline?
-ioportid_t getAdcChannelPort(const char *msg, adc_channel_e hwChannel) {
+ioportid_t getAdcChannelPort(const char* msg, adc_channel_e hwChannel) {
 	brain_pin_e brainPin = getAdcChannelBrainPin(msg, hwChannel);
 	return getHwPort(msg, brainPin);
 }
@@ -203,18 +204,15 @@ public:
 		}
 
 		const PWMConfig pwmcfg = {
-			c_timerFrequency,
-			m_period,
-			nullptr,
-			{
-				{PWM_OUTPUT_ACTIVE_HIGH, nullptr},
-				{PWM_OUTPUT_ACTIVE_HIGH, nullptr},
-				{PWM_OUTPUT_ACTIVE_HIGH, nullptr},
-				{PWM_OUTPUT_ACTIVE_HIGH, nullptr}
-			},
-			0,
-			0
-		};
+				c_timerFrequency,
+				m_period,
+				nullptr,
+				{{PWM_OUTPUT_ACTIVE_HIGH, nullptr},
+				 {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
+				 {PWM_OUTPUT_ACTIVE_HIGH, nullptr},
+				 {PWM_OUTPUT_ACTIVE_HIGH, nullptr}},
+				0,
+				0};
 
 		// Start the timer running
 		pwmStart(m_driver, &pwmcfg);
@@ -241,69 +239,104 @@ private:
 		return m_period * duty;
 	}
 };
-}
+} // namespace
 
 static expected<stm32_pwm_config> getConfigForPin(brain_pin_e pin) {
 	switch (pin) {
 #if STM32_PWM_USE_TIM1
-	case Gpio::A8:  return stm32_pwm_config{&PWMD1, /*channel*/0, /*AF*/1};
-	case Gpio::A9:  return stm32_pwm_config{&PWMD1, /*channel*/1, /*AF*/1};
-	case Gpio::A10: return stm32_pwm_config{&PWMD1, 2, 1};
-	case Gpio::A11: return stm32_pwm_config{&PWMD1, 3, 1};
+		case Gpio::A8:
+			return stm32_pwm_config{&PWMD1, /*channel*/ 0, /*AF*/ 1};
+		case Gpio::A9:
+			return stm32_pwm_config{&PWMD1, /*channel*/ 1, /*AF*/ 1};
+		case Gpio::A10:
+			return stm32_pwm_config{&PWMD1, 2, 1};
+		case Gpio::A11:
+			return stm32_pwm_config{&PWMD1, 3, 1};
 
-	case Gpio::E9:  return stm32_pwm_config{&PWMD1, 0, 1};
-	case Gpio::E11: return stm32_pwm_config{&PWMD1, 1, 1};
-	case Gpio::E13: return stm32_pwm_config{&PWMD1, 2, 1};
-	case Gpio::E14: return stm32_pwm_config{&PWMD1, 3, 1};
+		case Gpio::E9:
+			return stm32_pwm_config{&PWMD1, 0, 1};
+		case Gpio::E11:
+			return stm32_pwm_config{&PWMD1, 1, 1};
+		case Gpio::E13:
+			return stm32_pwm_config{&PWMD1, 2, 1};
+		case Gpio::E14:
+			return stm32_pwm_config{&PWMD1, 3, 1};
 #endif
 #if STM32_PWM_USE_TIM2
-	case Gpio::A15: return stm32_pwm_config{&PWMD2, 0, 1};
-	case Gpio::B3:  return stm32_pwm_config{&PWMD2, 1, 1};
-	case Gpio::B10: return stm32_pwm_config{&PWMD2, 2, 1};
-	case Gpio::B11: return stm32_pwm_config{&PWMD2, 3, 1};
+		case Gpio::A15:
+			return stm32_pwm_config{&PWMD2, 0, 1};
+		case Gpio::B3:
+			return stm32_pwm_config{&PWMD2, 1, 1};
+		case Gpio::B10:
+			return stm32_pwm_config{&PWMD2, 2, 1};
+		case Gpio::B11:
+			return stm32_pwm_config{&PWMD2, 3, 1};
 #endif
 #if STM32_PWM_USE_TIM3
-	case Gpio::B4:  return stm32_pwm_config{&PWMD3, 0, 2};
-	case Gpio::B5:  return stm32_pwm_config{&PWMD3, 1, 2};
+		case Gpio::B4:
+			return stm32_pwm_config{&PWMD3, 0, 2};
+		case Gpio::B5:
+			return stm32_pwm_config{&PWMD3, 1, 2};
 
-	case Gpio::C6:  return stm32_pwm_config{&PWMD3, 0, 2};
-	case Gpio::C7:  return stm32_pwm_config{&PWMD3, 1, 2};
+		case Gpio::C6:
+			return stm32_pwm_config{&PWMD3, 0, 2};
+		case Gpio::C7:
+			return stm32_pwm_config{&PWMD3, 1, 2};
 #endif
 #if STM32_PWM_USE_TIM4
-	case Gpio::B6:  return stm32_pwm_config{&PWMD4, 0, 2};
-	case Gpio::B7:  return stm32_pwm_config{&PWMD4, 1, 2};
-	case Gpio::B8:  return stm32_pwm_config{&PWMD4, 2, 2};
-	case Gpio::B9:  return stm32_pwm_config{&PWMD4, 3, 2};
+		case Gpio::B6:
+			return stm32_pwm_config{&PWMD4, 0, 2};
+		case Gpio::B7:
+			return stm32_pwm_config{&PWMD4, 1, 2};
+		case Gpio::B8:
+			return stm32_pwm_config{&PWMD4, 2, 2};
+		case Gpio::B9:
+			return stm32_pwm_config{&PWMD4, 3, 2};
 
-	case Gpio::D12: return stm32_pwm_config{&PWMD4, 0, 2};
-	case Gpio::D13: return stm32_pwm_config{&PWMD4, 1, 2};
-	case Gpio::D14: return stm32_pwm_config{&PWMD4, 2, 2};
-	case Gpio::D15: return stm32_pwm_config{&PWMD4, 3, 2};
+		case Gpio::D12:
+			return stm32_pwm_config{&PWMD4, 0, 2};
+		case Gpio::D13:
+			return stm32_pwm_config{&PWMD4, 1, 2};
+		case Gpio::D14:
+			return stm32_pwm_config{&PWMD4, 2, 2};
+		case Gpio::D15:
+			return stm32_pwm_config{&PWMD4, 3, 2};
 #endif
 #if STM32_PWM_USE_TIM5
-	case Gpio::A0:  return stm32_pwm_config{&PWMD5, 0, 2};
-	case Gpio::A1:  return stm32_pwm_config{&PWMD5, 1, 2};
-	case Gpio::A2:  return stm32_pwm_config{&PWMD5, 2, 2};
-	case Gpio::A3:  return stm32_pwm_config{&PWMD5, 3, 2};
+		case Gpio::A0:
+			return stm32_pwm_config{&PWMD5, 0, 2};
+		case Gpio::A1:
+			return stm32_pwm_config{&PWMD5, 1, 2};
+		case Gpio::A2:
+			return stm32_pwm_config{&PWMD5, 2, 2};
+		case Gpio::A3:
+			return stm32_pwm_config{&PWMD5, 3, 2};
 #endif
 #if STM32_PWM_USE_TIM8
 
 #if !STM32_PWM_USE_TIM3
-	// If TIM3 is not used, put these pins on TIM8 instead..
-	// See https://github.com/rusefi/rusefi/issues/639
-	// See https://github.com/rusefi/rusefi/pull/3032
-	case Gpio::C6:  return stm32_pwm_config{&PWMD8, 0, 3};
-	case Gpio::C7:  return stm32_pwm_config{&PWMD8, 1, 3};
+		// If TIM3 is not used, put these pins on TIM8 instead..
+		// See https://github.com/rusefi/rusefi/issues/639
+		// See https://github.com/rusefi/rusefi/pull/3032
+		case Gpio::C6:
+			return stm32_pwm_config{&PWMD8, 0, 3};
+		case Gpio::C7:
+			return stm32_pwm_config{&PWMD8, 1, 3};
 #endif
 
-	case Gpio::C8:  return stm32_pwm_config{&PWMD8, 2, 3};
-	case Gpio::C9:  return stm32_pwm_config{&PWMD8, 3, 3};
+		case Gpio::C8:
+			return stm32_pwm_config{&PWMD8, 2, 3};
+		case Gpio::C9:
+			return stm32_pwm_config{&PWMD8, 3, 3};
 #endif
 #if STM32_PWM_USE_TIM9
-	case Gpio::E5:  return stm32_pwm_config{&PWMD9, 0, 3};
-	case Gpio::E6:  return stm32_pwm_config{&PWMD9, 1, 3};
+		case Gpio::E5:
+			return stm32_pwm_config{&PWMD9, 0, 3};
+		case Gpio::E6:
+			return stm32_pwm_config{&PWMD9, 1, 3};
 #endif
-	default: return unexpected;
+		default:
+			return unexpected;
 	}
 };
 
@@ -321,7 +354,8 @@ stm32_hardware_pwm* getNextPwmDevice() {
 }
 
 /*static*/ hardware_pwm* hardware_pwm::tryInitPin(const char* msg, brain_pin_e pin, float frequencyHz, float duty) {
-	// Hardware PWM can't do very slow PWM - the timer counter is only 16 bits, so at 2MHz counting, that's a minimum of 31hz.
+	// Hardware PWM can't do very slow PWM - the timer counter is only 16 bits, so at 2MHz counting, that's a minimum of
+	// 31hz.
 	if (frequencyHz < 50) {
 		return nullptr;
 	}
@@ -347,12 +381,13 @@ stm32_hardware_pwm* getNextPwmDevice() {
 #endif
 
 static void reset_and_jump() {
-	#ifdef STM32H7XX
-		// H7 needs a forcible reset of the USB peripheral(s) in order for the bootloader to work properly.
-		// If you don't do this, the bootloader will execute, but USB doesn't work (nobody knows why)
-		// See https://community.st.com/s/question/0D53W00000vQEWsSAO/stm32h743-dfu-entry-doesnt-work-unless-boot0-held-high-at-poweron
-		RCC->AHB1ENR &= ~(RCC_AHB1ENR_USB1OTGHSEN | RCC_AHB1ENR_USB2OTGFSEN);
-	#endif
+#ifdef STM32H7XX
+	// H7 needs a forcible reset of the USB peripheral(s) in order for the bootloader to work properly.
+	// If you don't do this, the bootloader will execute, but USB doesn't work (nobody knows why)
+	// See
+	// https://community.st.com/s/question/0D53W00000vQEWsSAO/stm32h743-dfu-entry-doesnt-work-unless-boot0-held-high-at-poweron
+	RCC->AHB1ENR &= ~(RCC_AHB1ENR_USB1OTGHSEN | RCC_AHB1ENR_USB2OTGFSEN);
+#endif
 
 	// and now reboot
 	NVIC_SystemReset();
@@ -361,7 +396,7 @@ static void reset_and_jump() {
 void jump_to_bootloader() {
 	// leave DFU breadcrumb which assembly startup code would check, see [rusefi][DFU] section in assembly code
 
-	*((unsigned long *)0x2001FFF0) = 0xDEADBEEF; // End of RAM
+	*((unsigned long*)0x2001FFF0) = 0xDEADBEEF; // End of RAM
 
 	reset_and_jump();
 }
@@ -387,14 +422,13 @@ BOR_Level_t BOR_Get(void) {
 	HAL_FLASHEx_OBGetConfig(&FLASH_Handle);
 
 	/* Return BOR value */
-	return (BOR_Level_t) FLASH_Handle.BORLevel;
+	return (BOR_Level_t)FLASH_Handle.BORLevel;
 }
 
 BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	if (BOR_Get() == BORValue) {
 		return BOR_Result_Ok;
 	}
-
 
 	FLASH_OBProgramInitTypeDef FLASH_Handle;
 
@@ -465,13 +499,13 @@ extern uint32_t __main_stack_base__;
 
 typedef struct port_intctx intctx_t;
 
-int getRemainingStack(thread_t *otp) {
+int getRemainingStack(thread_t* otp) {
 #if CH_DBG_ENABLE_STACK_CHECK
-	register intctx_t *r13 asm ("r13");
+	register intctx_t* r13 asm("r13");
 	otp->activeStack = r13;
 
 	int remainingStack;
-    if (ch.dbg.isr_cnt > 0) {
+	if (ch.dbg.isr_cnt > 0) {
 		// ISR context
 		remainingStack = (int)(r13 - 1) - (int)&__main_stack_base__;
 	} else {
@@ -486,9 +520,9 @@ int getRemainingStack(thread_t *otp) {
 }
 
 #if HAL_USE_SPI
-bool isSpiInitialized[6] = { false, false, false, false, false, false};
+bool isSpiInitialized[6] = {false, false, false, false, false, false};
 
-static int getSpiAf(SPIDriver *driver) {
+static int getSpiAf(SPIDriver* driver) {
 #if STM32_SPI_USE_SPI1
 	if (driver == &SPID1) {
 		return EFI_SPI1_AF;
@@ -523,61 +557,61 @@ static int getSpiAf(SPIDriver *driver) {
 }
 
 __attribute__((weak)) brain_pin_e getMisoPin(spi_device_e device) {
-	switch(device) {
-	case SPI_DEVICE_1:
-		return engineConfiguration->spi1misoPin;
-	case SPI_DEVICE_2:
-		return engineConfiguration->spi2misoPin;
-	case SPI_DEVICE_3:
-		return engineConfiguration->spi3misoPin;
-	case SPI_DEVICE_4:
-		return engineConfiguration->spi4misoPin;
-	case SPI_DEVICE_5:
-		return engineConfiguration->spi5misoPin;
-	case SPI_DEVICE_6:
-		return engineConfiguration->spi6misoPin;
-	default:
-		break;
+	switch (device) {
+		case SPI_DEVICE_1:
+			return engineConfiguration->spi1misoPin;
+		case SPI_DEVICE_2:
+			return engineConfiguration->spi2misoPin;
+		case SPI_DEVICE_3:
+			return engineConfiguration->spi3misoPin;
+		case SPI_DEVICE_4:
+			return engineConfiguration->spi4misoPin;
+		case SPI_DEVICE_5:
+			return engineConfiguration->spi5misoPin;
+		case SPI_DEVICE_6:
+			return engineConfiguration->spi6misoPin;
+		default:
+			break;
 	}
 	return Gpio::Unassigned;
 }
 
 __attribute__((weak)) brain_pin_e getMosiPin(spi_device_e device) {
-	switch(device) {
-	case SPI_DEVICE_1:
-		return engineConfiguration->spi1mosiPin;
-	case SPI_DEVICE_2:
-		return engineConfiguration->spi2mosiPin;
-	case SPI_DEVICE_3:
-		return engineConfiguration->spi3mosiPin;
-	case SPI_DEVICE_4:
-		return engineConfiguration->spi4mosiPin;
-	case SPI_DEVICE_5:
-		return engineConfiguration->spi5mosiPin;
-	case SPI_DEVICE_6:
-		return engineConfiguration->spi6mosiPin;
-	default:
-		break;
+	switch (device) {
+		case SPI_DEVICE_1:
+			return engineConfiguration->spi1mosiPin;
+		case SPI_DEVICE_2:
+			return engineConfiguration->spi2mosiPin;
+		case SPI_DEVICE_3:
+			return engineConfiguration->spi3mosiPin;
+		case SPI_DEVICE_4:
+			return engineConfiguration->spi4mosiPin;
+		case SPI_DEVICE_5:
+			return engineConfiguration->spi5mosiPin;
+		case SPI_DEVICE_6:
+			return engineConfiguration->spi6mosiPin;
+		default:
+			break;
 	}
 	return Gpio::Unassigned;
 }
 
 __attribute__((weak)) brain_pin_e getSckPin(spi_device_e device) {
-	switch(device) {
-	case SPI_DEVICE_1:
-		return engineConfiguration->spi1sckPin;
-	case SPI_DEVICE_2:
-		return engineConfiguration->spi2sckPin;
-	case SPI_DEVICE_3:
-		return engineConfiguration->spi3sckPin;
-	case SPI_DEVICE_4:
-		return engineConfiguration->spi4sckPin;
-	case SPI_DEVICE_5:
-		return engineConfiguration->spi5sckPin;
-	case SPI_DEVICE_6:
-		return engineConfiguration->spi6sckPin;
-	default:
-		break;
+	switch (device) {
+		case SPI_DEVICE_1:
+			return engineConfiguration->spi1sckPin;
+		case SPI_DEVICE_2:
+			return engineConfiguration->spi2sckPin;
+		case SPI_DEVICE_3:
+			return engineConfiguration->spi3sckPin;
+		case SPI_DEVICE_4:
+			return engineConfiguration->spi4sckPin;
+		case SPI_DEVICE_5:
+			return engineConfiguration->spi5sckPin;
+		case SPI_DEVICE_6:
+			return engineConfiguration->spi6sckPin;
+		default:
+			break;
 	}
 	return Gpio::Unassigned;
 }
@@ -588,49 +622,37 @@ void turnOnSpi(spi_device_e device) {
 	isSpiInitialized[device] = true;
 	if (device == SPI_DEVICE_1) {
 #if STM32_SPI_USE_SPI1
-		initSpiModule(&SPID1, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device));
+		initSpiModule(&SPID1, getSckPin(device), getMisoPin(device), getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI1 */
 	}
 	if (device == SPI_DEVICE_2) {
 #if STM32_SPI_USE_SPI2
-		initSpiModule(&SPID2, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device));
+		initSpiModule(&SPID2, getSckPin(device), getMisoPin(device), getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI2 */
 	}
 	if (device == SPI_DEVICE_3) {
 #if STM32_SPI_USE_SPI3
-		initSpiModule(&SPID3, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device));
+		initSpiModule(&SPID3, getSckPin(device), getMisoPin(device), getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI3 */
 	}
 	if (device == SPI_DEVICE_4) {
 #if STM32_SPI_USE_SPI4
-		initSpiModule(&SPID4, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device));
+		initSpiModule(&SPID4, getSckPin(device), getMisoPin(device), getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI4 */
 	}
 	if (device == SPI_DEVICE_5) {
 #if STM32_SPI_USE_SPI5
-		initSpiModule(&SPID5, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device));
+		initSpiModule(&SPID5, getSckPin(device), getMisoPin(device), getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI5 */
 	}
 	if (device == SPI_DEVICE_6) {
 #if STM32_SPI_USE_SPI6
-		initSpiModule(&SPID6, getSckPin(device),
-				getMisoPin(device),
-				getMosiPin(device));
+		initSpiModule(&SPID6, getSckPin(device), getMisoPin(device), getMosiPin(device));
 #endif /* STM32_SPI_USE_SPI6 */
 	}
 }
 
-void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi) {
+void initSpiModule(SPIDriver* driver, brain_pin_e sck, brain_pin_e miso, brain_pin_e mosi) {
 
 	/**
 	 * See https://github.com/rusefi/rusefi/pull/664/
@@ -638,7 +660,7 @@ void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_p
 	 * Info on the silicon defect can be found in this document, section 2.5.2:
 	 * https://www.st.com/content/ccc/resource/technical/document/errata_sheet/0a/98/58/84/86/b6/47/a2/DM00037591.pdf/files/DM00037591.pdf/jcr:content/translations/en.DM00037591.pdf
 	 */
-	efiSetPadMode("SPI clock", sck,	PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
+	efiSetPadMode("SPI clock", sck, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
 
 	efiSetPadMode("SPI master out", mosi, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST);
 
@@ -646,10 +668,13 @@ void initSpiModule(SPIDriver *driver, brain_pin_e sck, brain_pin_e miso, brain_p
 	// so in case there is no SD card installed, the line could float low and indicate that
 	// the (non existent) card is busy.  We pull the line high to indicate "not busy" in case
 	// of a missing card.
-	efiSetPadMode("SPI master in ", miso, PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
+	efiSetPadMode(
+			"SPI master in ",
+			miso,
+			PAL_MODE_ALTERNATE(getSpiAf(driver)) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP);
 }
 
-void initSpiCs(SPIConfig *spiConfig, brain_pin_e csPin) {
+void initSpiCs(SPIConfig* spiConfig, brain_pin_e csPin) {
 	spiConfig->end_cb = nullptr;
 	ioportid_t port = getHwPort("spi", csPin);
 	ioportmask_t pin = getHwPin("spi", csPin);
@@ -667,9 +692,8 @@ SPIConfig mmc_hs_spicfg = {
 		.ssport = NULL,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
-			| 0 /* MBR = 0, divider = 2 */,
-		.cfg2 = 0
-};
+			  | 0 /* MBR = 0, divider = 2 */,
+		.cfg2 = 0};
 
 // Slow mode is 80mhz/4 = 20MHz
 SPIConfig mmc_ls_spicfg = {
@@ -678,9 +702,8 @@ SPIConfig mmc_ls_spicfg = {
 		.ssport = NULL,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
-			| SPI_CFG1_MBR_0 /* MBR = 001, divider = 4 */,
-		.cfg2 = 0
-};
+			  | SPI_CFG1_MBR_0 /* MBR = 001, divider = 4 */,
+		.cfg2 = 0};
 
 #else /* not STM32H7XX */
 
@@ -692,22 +715,10 @@ SPIConfig mmc_ls_spicfg = {
 // Slow mode is 13.5 or 6.75 MHz
 // Fast mode is 54 or 27 MHz (technically out of spec, needs testing!)
 SPIConfig mmc_hs_spicfg = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 = SPI_BaudRatePrescaler_2,
-		.cr2 = 0
-};
+		.circular = false, .end_cb = NULL, .ssport = NULL, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_2, .cr2 = 0};
 
 SPIConfig mmc_ls_spicfg = {
-		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
-		.sspad = 0,
-		.cr1 = SPI_BaudRatePrescaler_8,
-		.cr2 = 0
-};
+		.circular = false, .end_cb = NULL, .ssport = NULL, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_8, .cr2 = 0};
 #endif
 
 #endif /* HAL_USE_SPI */
@@ -731,11 +742,11 @@ static bool isValidCan2TxPin(brain_pin_e pin) {
 }
 
 bool isValidCanTxPin(brain_pin_e pin) {
-   return isValidCan1TxPin(pin) || isValidCan2TxPin(pin);
+	return isValidCan1TxPin(pin) || isValidCan2TxPin(pin);
 }
 
 bool isValidCanRxPin(brain_pin_e pin) {
-   return isValidCan1RxPin(pin) || isValidCan2RxPin(pin);
+	return isValidCan1RxPin(pin) || isValidCan2RxPin(pin);
 }
 
 CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
@@ -743,14 +754,14 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 		return nullptr;
 	}
 
-	#if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
-if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
-	return &CAND1;
+#if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
+	if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
+		return &CAND1;
 #endif
 
 #if STM32_CAN_USE_CAN2 || STM32_CAN_USE_FDCAN2
-if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
-	return &CAND2;
+	if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
+		return &CAND2;
 #endif
 
 	firmwareError("invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
@@ -761,15 +772,14 @@ if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
 
 #if defined(STM32F4) || defined(STM32F7) || defined(STM32H7)
 
-#define HWREG(x)                                                              \
-        (*((volatile unsigned long *)(x)))
+#define HWREG(x) (*((volatile unsigned long*)(x)))
 
-#define NVIC_FAULT_STAT         0xE000ED28  // Configurable Fault Status
-#define NVIC_FAULT_STAT_BFARV   0x00008000  // Bus Fault Address Register Valid
-#define NVIC_CFG_CTRL_BFHFNMIGN 0x00000100  // Ignore Bus Fault in NMI and
-                                            // Fault
-#define NVIC_CFG_CTRL           0xE000ED14  // Configuration and Control
-
+#define NVIC_FAULT_STAT 0xE000ED28		 // Configurable Fault Status
+#define NVIC_FAULT_STAT_BFARV 0x00008000 // Bus Fault Address Register Valid
+#define NVIC_CFG_CTRL_BFHFNMIGN                                                                                        \
+	0x00000100					 // Ignore Bus Fault in NMI and
+								 // Fault
+#define NVIC_CFG_CTRL 0xE000ED14 // Configuration and Control
 
 /**
  * @brief Probe an address to see if can be read without generating a bus fault
@@ -783,23 +793,22 @@ if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
  * @param[in] read_address The address to try reading a byte from
  * @return Returns true if no bus fault occurred reading from read_address, or false if a bus fault occurred.
  */
-bool ramReadProbe(volatile const char *read_address) {
-    bool address_readable = true;
+bool ramReadProbe(volatile const char* read_address) {
+	bool address_readable = true;
 
-    /* Clear any existing indication of a bus fault - BFARV is write one to clear */
-    HWREG (NVIC_FAULT_STAT) |= NVIC_FAULT_STAT_BFARV;
+	/* Clear any existing indication of a bus fault - BFARV is write one to clear */
+	HWREG(NVIC_FAULT_STAT) |= NVIC_FAULT_STAT_BFARV;
 
-    HWREG (NVIC_CFG_CTRL) |= NVIC_CFG_CTRL_BFHFNMIGN;
-    asm volatile ("  CPSID f;");
-    *read_address;
-    if ((HWREG (NVIC_FAULT_STAT) & NVIC_FAULT_STAT_BFARV) != 0)
-    {
-        address_readable = false;
-    }
-    asm volatile ("  CPSIE f;");
-    HWREG (NVIC_CFG_CTRL) &= ~NVIC_CFG_CTRL_BFHFNMIGN;
+	HWREG(NVIC_CFG_CTRL) |= NVIC_CFG_CTRL_BFHFNMIGN;
+	asm volatile("  CPSID f;");
+	*read_address;
+	if ((HWREG(NVIC_FAULT_STAT) & NVIC_FAULT_STAT_BFARV) != 0) {
+		address_readable = false;
+	}
+	asm volatile("  CPSIE f;");
+	HWREG(NVIC_CFG_CTRL) &= ~NVIC_CFG_CTRL_BFHFNMIGN;
 
-    return address_readable;
+	return address_readable;
 }
 
 #endif
@@ -807,11 +816,11 @@ bool ramReadProbe(volatile const char *read_address) {
 #if defined(STM32F4)
 bool isStm32F42x() {
 	// really it's enough to just check 0x20020010
-	return ramReadProbe((const char *)0x20000010) && ramReadProbe((const char *)0x20020010) && !ramReadProbe((const char *)0x20070010);
+	return ramReadProbe((const char*)0x20000010) && ramReadProbe((const char*)0x20020010) &&
+		   !ramReadProbe((const char*)0x20070010);
 }
 
 #endif
-
 
 // Stubs for per-board low power helpers
 __attribute__((weak)) void boardPrepareForStop() {
@@ -825,17 +834,17 @@ __attribute__((weak)) void boardPrepareForStop() {
 
 void boardPreparePA0ForStandby() {
 #ifdef STM32F4XX
-	//Enable Wakeup Pin for PA0
+	// Enable Wakeup Pin for PA0
 	PWR->CSR |= PWR_CSR_EWUP;
 
 	// Clear wakeup flag - it may be set if PA0 is already
 	// high when we enable it as a wake source
-	PWR->CR |= PWR_CR_CWUF; //Clear Wakeup Pin flag for PA0
+	PWR->CR |= PWR_CR_CWUF; // Clear Wakeup Pin flag for PA0
 #endif
 
 #ifdef STM32F7XX
-	PWR->CSR2 |= PWR_CSR2_EWUP1; //EWUP1: Enable Wakeup pin for PA0
-	PWR->CR2 |= PWR_CR2_CWUPF1; //Clear Wakeup Pin flag for PA0
+	PWR->CSR2 |= PWR_CSR2_EWUP1; // EWUP1: Enable Wakeup pin for PA0
+	PWR->CR2 |= PWR_CR2_CWUPF1;	 // Clear Wakeup Pin flag for PA0
 #endif
 
 #ifdef STM32H7XX
