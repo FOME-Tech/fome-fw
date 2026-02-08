@@ -9,8 +9,7 @@ TEST(BoostControl, Setpoint) {
 	MockVp3d targetMap;
 
 	// Just pass TPS input to output
-	EXPECT_CALL(targetMap, getValue(_, _))
-		.WillRepeatedly([](float xRpm, float tps) { return tps; });
+	EXPECT_CALL(targetMap, getValue(_, _)).WillRepeatedly([](float xRpm, float tps) { return tps; });
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->boostType = CLOSED_LOOP;
@@ -54,8 +53,7 @@ TEST(BoostControl, OpenLoop) {
 	MockVp3d openMap;
 
 	// Just pass MAP input to output
-	EXPECT_CALL(openMap, getValue(_, _))
-		.WillRepeatedly([](float xRpm, float tps) { return tps; });
+	EXPECT_CALL(openMap, getValue(_, _)).WillRepeatedly([](float xRpm, float tps) { return tps; });
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -77,10 +75,13 @@ TEST(BoostControl, TestClosedLoop) {
 	BoostController bc;
 
 	pid_s pidCfg = {
-		1, 0, 0,	 // P controller, easier to test
-		0,	// no offset
-		-100, 100, // min/max output
-		0	// alignment pad
+			1,
+			0,
+			0, // P controller, easier to test
+			0, // no offset
+			-100,
+			100, // min/max output
+			0	 // alignment pad
 	};
 
 	bc.init(nullptr, nullptr, nullptr, &pidCfg);

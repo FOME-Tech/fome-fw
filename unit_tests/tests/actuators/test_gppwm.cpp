@@ -84,10 +84,7 @@ TEST(GpPwm, TestGetOutput) {
 
 	MockVp3d table;
 
-	EXPECT_CALL(table, getValue(1200, 35.0f))
-		.WillRepeatedly([](float x, float tps) {
-			return tps;
-		});
+	EXPECT_CALL(table, getValue(1200, 35.0f)).WillRepeatedly([](float x, float tps) { return tps; });
 
 	ch.init(false, nullptr, nullptr, &table, &cfg);
 
@@ -99,5 +96,5 @@ TEST(GpPwm, TestGetOutput) {
 	// Set TPS, should return tps value
 	Sensor::setMockValue(SensorType::Tps1, 35.0f);
 	Sensor::setMockValue(SensorType::Rpm, 1200);
-	EXPECT_FLOAT_EQ(35.0f, ch.getOutput().Result);	
+	EXPECT_FLOAT_EQ(35.0f, ch.getOutput().Result);
 }

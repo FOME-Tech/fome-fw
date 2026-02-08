@@ -34,14 +34,13 @@ TEST(fuelControl, transitionIssue1592) {
 	engine->tdcMarkEnabled = false;
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth, IM_SEQUENTIAL);
 
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(500, _))
-		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(500, _)).WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
 
 	// This is easiest to trip on a wheel that requires sync
 	engineConfiguration->trigger.customTotalToothCount = 6;
 	engineConfiguration->trigger.customSkippedToothCount = 1;
 	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
-    setCamOperationMode();
+	setCamOperationMode();
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
 
 	setTable(config->injectionPhase, 0.0f);
@@ -74,12 +73,12 @@ TEST(fuelControl, transitionIssue1592) {
 		// Check that the action is correct - we don't care about the timing necessarily
 		auto sched_open = engine->scheduler.getForUnitTest(0);
 		ASSERT_EQ(sched_open->action.getArgument(), ctxAsPtr);
-		ASSERT_EQ(sched_open->action.getCallback(), (void(*)(void*))startInjection);
+		ASSERT_EQ(sched_open->action.getCallback(), (void (*)(void*))startInjection);
 
 		auto sched_close = engine->scheduler.getForUnitTest(1);
 		// Next action should be closing the same injector
 		ASSERT_EQ(sched_close->action.getArgument(), ctxAsPtr);
-		ASSERT_EQ(sched_close->action.getCallback(), (void(*)(void*))endInjection);
+		ASSERT_EQ(sched_close->action.getCallback(), (void (*)(void*))endInjection);
 	}
 
 	// Run the engine for some revs

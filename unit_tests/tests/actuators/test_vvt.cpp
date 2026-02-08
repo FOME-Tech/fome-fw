@@ -2,20 +2,19 @@
 
 #include "vvt.h"
 
-using ::testing::StrictMock;
 using ::testing::Return;
+using ::testing::StrictMock;
 
 TEST(VVT, Setpoint) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	// Set up a mock target map
 	StrictMock<MockVp3d> targetMap;
-	EXPECT_CALL(targetMap, getValue(4321, 55))
-		.WillRepeatedly(Return(20));
+	EXPECT_CALL(targetMap, getValue(4321, 55)).WillRepeatedly(Return(20));
 
 	// Mock necessary inputs
 	engine->engineState.fuelingLoad = 55;
-	Sensor::setMockValue(SensorType::Rpm,  4321);
+	Sensor::setMockValue(SensorType::Rpm, 4321);
 
 	VvtController dut(0, 0, 0);
 	dut.init(&targetMap, nullptr);
@@ -121,8 +120,8 @@ TEST(VVT, ObservePlant) {
 TEST(VVT, OpenLoop) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	copyArray(config->vvtOpenLoop[0].bins, { -20, 0, 20, 40, 60, 80, 100, 120 });
-	copyArray(config->vvtOpenLoop[0].values, { 0, 10, 20, 30, 40, 50, 60, 70 });
+	copyArray(config->vvtOpenLoop[0].bins, {-20, 0, 20, 40, 60, 80, 100, 120});
+	copyArray(config->vvtOpenLoop[0].values, {0, 10, 20, 30, 40, 50, 60, 70});
 
 	VvtController dut(0, 0, 0);
 

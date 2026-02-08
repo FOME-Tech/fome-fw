@@ -28,8 +28,7 @@ TEST(OddFireRunningMode, hd) {
 	setTable(config->ignitionTable, timing); // run mode timing
 
 	// we need some fuel duration so let's mock airmass just to have legit fuel, we do not care for amount here at all
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(/*any rpm*/_, _))
-		.WillRepeatedly(Return(AirmassResult{0.2008f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(/*any rpm*/ _, _)).WillRepeatedly(Return(AirmassResult{0.2008f, 50.0f}));
 
 	engineConfiguration->crankingTimingAngle = timing;
 	engine->tdcMarkEnabled = false; // reduce event queue noise TODO extract helper method
@@ -38,7 +37,7 @@ TEST(OddFireRunningMode, hd) {
 	// end of configuration
 
 	// send fake crank signal events so that ignition events are updated
-	eth.fireTriggerEvents2(2 /* count */ , 60 /* ms */);
+	eth.fireTriggerEvents2(2 /* count */, 60 /* ms */);
 
 	// Cyl 1 fires 19 degrees late
 	EXPECT_EQ(engine->ignitionEvents.elements[0].calculateSparkAngle(), 18);

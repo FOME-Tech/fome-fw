@@ -18,12 +18,9 @@ TEST(FuelComputer, getCycleFuel) {
 
 	MockFuelComputer dut;
 
-	EXPECT_CALL(dut, getTargetLambdaLoadAxis(FloatEq(0.8f)))
-		.WillOnce(Return(0.8f));
-	EXPECT_CALL(dut, getStoichiometricRatio())
-		.WillOnce(Return(3.0f));
-	EXPECT_CALL(dut, getTargetLambda(1000, FloatEq(0.8f)))
-		.WillOnce(Return(5.0f));
+	EXPECT_CALL(dut, getTargetLambdaLoadAxis(FloatEq(0.8f))).WillOnce(Return(0.8f));
+	EXPECT_CALL(dut, getStoichiometricRatio()).WillOnce(Return(3.0f));
+	EXPECT_CALL(dut, getTargetLambda(1000, FloatEq(0.8f))).WillOnce(Return(5.0f));
 
 	auto result = dut.getCycleFuel(7.0f, 1000, 0.8f);
 	EXPECT_FLOAT_EQ(result, 7.0f / (5 * 3));

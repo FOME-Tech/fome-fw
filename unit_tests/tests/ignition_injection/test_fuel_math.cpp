@@ -4,10 +4,10 @@
 #include "maf_airmass.h"
 #include "speed_density_airmass.h"
 
-using ::testing::StrictMock;
+using ::testing::_;
 using ::testing::FloatNear;
 using ::testing::InSequence;
-using ::testing::_;
+using ::testing::StrictMock;
 
 TEST(FuelMath, getStandardAirCharge) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
@@ -44,8 +44,7 @@ TEST(AirmassModes, AlphaNNormal) {
 
 	StrictMock<MockVp3d> veTable;
 
-	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D)))
-		.WillOnce(Return(35.0f));
+	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D))).WillOnce(Return(35.0f));
 
 	AlphaNAirmass dut(&veTable);
 
@@ -68,8 +67,7 @@ TEST(AirmassModes, AlphaNUseIat) {
 
 	StrictMock<MockVp3d> veTable;
 
-	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D)))
-		.WillRepeatedly(Return(35.0f));
+	EXPECT_CALL(veTable, getValue(1200, FloatNear(0.71f, EPS4D))).WillRepeatedly(Return(35.0f));
 
 	AlphaNAirmass dut(&veTable);
 
@@ -118,8 +116,7 @@ TEST(AirmassModes, MafNormal) {
 
 	MockVp3d veTable;
 	// Ensure that the correct cell is read from the VE table
-	EXPECT_CALL(veTable, getValue(6000, FloatNear(70.9814f, EPS4D)))
-		.WillOnce(Return(75.0f));
+	EXPECT_CALL(veTable, getValue(6000, FloatNear(70.9814f, EPS4D))).WillOnce(Return(75.0f));
 
 	MafAirmass dut(&veTable);
 
@@ -143,7 +140,8 @@ TEST(AirmassModes, VeOverride) {
 	}
 
 	struct DummyAirmassModel : public AirmassVeModelBase {
-		DummyAirmassModel(const ValueProvider3D* veTable) : AirmassVeModelBase(veTable) {}
+		DummyAirmassModel(const ValueProvider3D* veTable)
+			: AirmassVeModelBase(veTable) {}
 
 		AirmassResult getAirmass(float rpm, bool postState) override {
 			// Default load value 10, will be overriden
@@ -204,25 +202,24 @@ TEST(FuelMath, testDifferentInjectionModes) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
 
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1.3440001f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.3440001f, 50.0f}));
 
 	setInjectionMode((int)IM_BATCH);
 	engine->periodicFastCallback();
-	EXPECT_FLOAT_EQ( 20,  engine->engineState.injectionDuration) << "injection while batch";
+	EXPECT_FLOAT_EQ(20, engine->engineState.injectionDuration) << "injection while batch";
 
 	setInjectionMode((int)IM_SIMULTANEOUS);
 	engine->periodicFastCallback();
-	EXPECT_FLOAT_EQ( 10,  engine->engineState.injectionDuration) << "injection while simultaneous";
+	EXPECT_FLOAT_EQ(10, engine->engineState.injectionDuration) << "injection while simultaneous";
 
 	setInjectionMode((int)IM_SEQUENTIAL);
 	engine->periodicFastCallback();
-	EXPECT_FLOAT_EQ( 40,  engine->engineState.injectionDuration) << "injection while IM_SEQUENTIAL";
+	EXPECT_FLOAT_EQ(40, engine->engineState.injectionDuration) << "injection while IM_SEQUENTIAL";
 
 	setInjectionMode((int)IM_SINGLE_POINT);
 	engine->periodicFastCallback();
-	EXPECT_FLOAT_EQ( 40,  engine->engineState.injectionDuration) << "injection while IM_SINGLE_POINT";
-	EXPECT_EQ( 0, eth.recentWarnings()->getCount()) << "warningCounter#testDifferentInjectionModes";
+	EXPECT_FLOAT_EQ(40, engine->engineState.injectionDuration) << "injection while IM_SINGLE_POINT";
+	EXPECT_EQ(0, eth.recentWarnings()->getCount()) << "warningCounter#testDifferentInjectionModes";
 }
 
 TEST(FuelMath, deadtime) {
@@ -230,31 +227,29 @@ TEST(FuelMath, deadtime) {
 
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
 
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1.3440001f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.3440001f, 50.0f}));
 
 	// First test with no deadtime
 	engine->periodicFastCallback();
-	EXPECT_FLOAT_EQ( 20,  engine->engineState.injectionDuration);
+	EXPECT_FLOAT_EQ(20, engine->engineState.injectionDuration);
 
 	// Now add some deadtime
 	setArrayValues(engineConfiguration->injector.battLagCorr, 2.0f);
 
 	// Should have deadtime now!
 	engine->periodicFastCallback();
-	EXPECT_FLOAT_EQ( 20 + 2,  engine->engineState.injectionDuration);
+	EXPECT_FLOAT_EQ(20 + 2, engine->engineState.injectionDuration);
 }
 
 TEST(FuelMath, CylinderFuelTrim) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1, 50.0f}));
 
 	setTable(config->fuelTrims[0].table, -4);
 	setTable(config->fuelTrims[1].table, -2);
-	setTable(config->fuelTrims[2].table,  2);
-	setTable(config->fuelTrims[3].table,  4);
+	setTable(config->fuelTrims[2].table, 2);
+	setTable(config->fuelTrims[3].table, 4);
 
 	// run the fuel math
 	engine->periodicFastCallback();

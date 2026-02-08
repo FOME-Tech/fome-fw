@@ -16,7 +16,8 @@ TEST(ignition, twoCoils) {
 	EngineTestHelper eth(engine_type_e::FRANKENSO_BMW_M73_F);
 
 	// let's recalculate with zero timing so that we can focus on relation advance between cylinders
-	for (auto& c : engine->cylinders) c.setIgnitionTimingBtdc(0);
+	for (auto& c : engine->cylinders)
+		c.setIgnitionTimingBtdc(0);
 	initializeIgnitionActions();
 
 	// first one to fire uses first coil
@@ -48,8 +49,7 @@ TEST(ignition, trailingSpark) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
 
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
 
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
 	engineConfiguration->cylindersCount = 1;
@@ -67,7 +67,7 @@ TEST(ignition, trailingSpark) {
 	eth.fireTriggerEventsWithDuration(20);
 	// still no RPM since need to cycles measure cycle duration
 	eth.fireTriggerEventsWithDuration(20);
-	ASSERT_EQ( 3000,  Sensor::getOrZero(SensorType::Rpm)) << "RPM#0";
+	ASSERT_EQ(3000, Sensor::getOrZero(SensorType::Rpm)) << "RPM#0";
 
 	/**
 	 * Trigger up - scheduling fuel for full engine cycle
@@ -130,8 +130,8 @@ TEST(ignition, CylinderTimingTrim) {
 	// negative numbers retard timing, positive advance
 	setTable(config->ignTrims[0].table, -4);
 	setTable(config->ignTrims[1].table, -2);
-	setTable(config->ignTrims[2].table,  2);
-	setTable(config->ignTrims[3].table,  4);
+	setTable(config->ignTrims[2].table, 2);
+	setTable(config->ignTrims[3].table, 4);
 
 	// run the ignition math
 	engine->periodicFastCallback();
@@ -156,7 +156,6 @@ TEST(ignition, oddCylinderWastedSpark) {
 	efitick_t nowNt1 = 1000000;
 	efitick_t nowNt2 = 2222222;
 
-
 	engine->rpmCalculator.oneDegreeUs = 100;
 
 	{
@@ -170,7 +169,6 @@ TEST(ignition, oddCylinderWastedSpark) {
 		// Spark 15 deg from now
 		efitick_t endTime = startTime + nt1deg * 10;
 		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, _));
-
 
 		// Should schedule second dwell+fire pair, the out of phase copy
 		// Dwell 5 deg from now

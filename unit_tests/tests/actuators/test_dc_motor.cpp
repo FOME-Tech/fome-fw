@@ -9,8 +9,7 @@ using ::testing::StrictMock;
 TEST(DcMotor, Disable) {
 	StrictMock<MockOutputPin> dpin;
 
-	EXPECT_CALL(dpin, setValue(1))
-		.Times(2);	// happens twice - once for initial disable, once for set(0)
+	EXPECT_CALL(dpin, setValue(1)).Times(2); // happens twice - once for initial disable, once for set(0)
 
 	TwoPinDcMotor dut(dpin);
 }
@@ -79,7 +78,6 @@ TEST(DcMotor, PwmEnablePinModeNegative) {
 	MockPwm enable;
 	MockPwm dir1;
 	MockPwm dir2;
-	
 
 	EXPECT_CALL(enable, setSimplePwmDutyCycle(0.5f));
 	EXPECT_CALL(dir1, setSimplePwmDutyCycle(0));
@@ -97,7 +95,6 @@ TEST(DcMotor, PwmDirectionPinsModePositive) {
 	MockPwm enable;
 	MockPwm dir1;
 	MockPwm dir2;
-	
 
 	EXPECT_CALL(enable, setSimplePwmDutyCycle(1));
 	EXPECT_CALL(dir1, setSimplePwmDutyCycle(0.5f));
@@ -115,7 +112,6 @@ TEST(DcMotor, PwmDirectionPinsModeNegative) {
 	MockPwm enable;
 	MockPwm dir1;
 	MockPwm dir2;
-	
 
 	EXPECT_CALL(enable, setSimplePwmDutyCycle(1));
 	EXPECT_CALL(dir1, setSimplePwmDutyCycle(0));

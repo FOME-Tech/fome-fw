@@ -114,7 +114,7 @@ TEST(Actuators, FanPwm) {
 
 	// Enable PWM mode for fan 1
 	engineConfiguration->fan1UsePwmMode = true;
-	engineConfiguration->fan1PwmXAxis = GPPWM_Zero;  // Use Zero to avoid sensor mocking issues
+	engineConfiguration->fan1PwmXAxis = GPPWM_Zero; // Use Zero to avoid sensor mocking issues
 	engineConfiguration->fanPwmSafetyDuty = 100;
 
 	// Set up temperature thresholds
@@ -124,9 +124,9 @@ TEST(Actuators, FanPwm) {
 
 	// Set up simple duty tables - 50% when AC off, 75% when AC on
 	setLinearCurve(config->fan1CltBins, 0, 100);
-	setArrayValues(config->fan1XAxisBins, 0);  // All zeros since X axis is Zero
-	setTable(config->fan1DutyAcOff, 50);   // 50% duty
-	setTable(config->fan1DutyAcOn, 75);    // 75% duty
+	setArrayValues(config->fan1XAxisBins, 0); // All zeros since X axis is Zero
+	setTable(config->fan1DutyAcOff, 50);	  // 50% duty
+	setTable(config->fan1DutyAcOn, 75);		  // 75% duty
 
 	// Inject mock PWM
 	engine->module<FanControl1>()->setMockPwm(&testPwm);
@@ -144,14 +144,14 @@ TEST(Actuators, FanPwm) {
 	// Hot (above on threshold), fan should use PWM table
 	Sensor::setMockValue(SensorType::Clt, 95);
 	updateFan1();
-	EXPECT_NEAR(0.50, testPwm.lastDuty, 0.01);  // 50% duty from AC off table
+	EXPECT_NEAR(0.50, testPwm.lastDuty, 0.01); // 50% duty from AC off table
 	EXPECT_EQ(true, engine->module<FanControl1>()->m_state);
 
 	// Turn on AC, should use AC on table (75%)
 	mockAc.acState = true;
 	engineConfiguration->enableFan1WithAc = true;
 	updateFan1();
-	EXPECT_NEAR(0.75, testPwm.lastDuty, 0.01);  // 75% duty from AC on table
+	EXPECT_NEAR(0.75, testPwm.lastDuty, 0.01); // 75% duty from AC on table
 	EXPECT_EQ(true, engine->module<FanControl1>()->m_state);
 
 	// Turn off AC, back to AC off table

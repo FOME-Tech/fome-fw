@@ -60,8 +60,7 @@ TEST(etb, initializationMissingThrottle) {
 TEST(etb, initializationSingleThrottle) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
-	EXPECT_CALL(mocks[0], isEtbMode())
-	      .WillOnce(Return(true));
+	EXPECT_CALL(mocks[0], isEtbMode()).WillOnce(Return(true));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_Throttle1;
@@ -88,8 +87,7 @@ TEST(etb, initializationSingleThrottle) {
 TEST(etb, initializationSingleThrottleInSecondSlot) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
-	EXPECT_CALL(mocks[1], isEtbMode())
-	      .WillOnce(Return(true));
+	EXPECT_CALL(mocks[1], isEtbMode()).WillOnce(Return(true));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_None;
@@ -116,10 +114,8 @@ TEST(etb, initializationSingleThrottleInSecondSlot) {
 TEST(etb, initializationDualThrottle) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
-	EXPECT_CALL(mocks[0], isEtbMode())
-	      .WillOnce(Return(true));
-	EXPECT_CALL(mocks[1], isEtbMode())
-	      .WillOnce(Return(true));
+	EXPECT_CALL(mocks[0], isEtbMode()).WillOnce(Return(true));
+	EXPECT_CALL(mocks[1], isEtbMode()).WillOnce(Return(true));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -149,8 +145,7 @@ TEST(etb, initializationDualThrottle) {
 TEST(etb, initializationWastegate) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
-	EXPECT_CALL(mocks[0], isEtbMode())
-	      .WillOnce(Return(false));
+	EXPECT_CALL(mocks[0], isEtbMode()).WillOnce(Return(false));
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		engineConfiguration->etbFunctions[0] = DC_Wastegate;
@@ -162,7 +157,8 @@ TEST(etb, initializationWastegate) {
 	}
 
 	// Expect mock0 to be init as throttle 1, and PID wastegate params
-	EXPECT_CALL(mocks[0], init(DC_Wastegate, _, &engineConfiguration->etbWastegatePid, Ne(nullptr), false)).WillOnce(Return(true));
+	EXPECT_CALL(mocks[0], init(DC_Wastegate, _, &engineConfiguration->etbWastegatePid, Ne(nullptr), false))
+			.WillOnce(Return(true));
 
 	// Expect mock1 to be init as none
 	EXPECT_CALL(mocks[1], init(DC_None, _, _, _, false)).Times(0);
@@ -275,10 +271,7 @@ TEST(etb, testSetpointOnlyPedal) {
 
 	// Mock pedal map that's just passthru pedal -> target
 	StrictMock<MockVp3d> pedalMap;
-	EXPECT_CALL(pedalMap, getValue(_, _))
-		.WillRepeatedly([](float xRpm, float y) {
-			return y;
-		});
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float xRpm, float y) { return y; });
 
 	// Uninitialized ETB must return unexpected (and not deference a null pointer)
 	EXPECT_EQ(etb.getSetpoint(), unexpected);
@@ -332,10 +325,7 @@ TEST(etb, setpointSecondThrottleTrim) {
 
 	// Mock pedal map that's just passthru pedal -> target
 	StrictMock<MockVp3d> pedalMap;
-	EXPECT_CALL(pedalMap, getValue(_, _))
-		.WillRepeatedly([](float xRpm, float y) {
-			return y;
-		});
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float xRpm, float y) { return y; });
 
 	struct MockEtb2 : EtbController2 {
 		MOCK_METHOD(percent_t, getThrottleTrim, (float rpm, percent_t targetPosition), (const, override));
@@ -370,10 +360,7 @@ TEST(etb, setpointIdle) {
 
 	// Mock pedal map that's just passthru pedal -> target
 	StrictMock<MockVp3d> pedalMap;
-	EXPECT_CALL(pedalMap, getValue(_, _))
-		.WillRepeatedly([](float xRpm, float y) {
-			return y;
-		});
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float xRpm, float y) { return y; });
 	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
 
 	// No idle range, should just pass pedal
@@ -427,18 +414,15 @@ TEST(etb, setpointRevLimit) {
 
 	// Mock pedal map to just return 80%
 	StrictMock<MockVp3d> pedalMap;
-	EXPECT_CALL(pedalMap, getValue(_, _))
-		.WillRepeatedly([](float, float) {
-			return 80;
-		});
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float, float) { return 80; });
 	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
 
 	// Below threshold, should return unadjusted throttle
-	Sensor::setMockValue(SensorType::Rpm,  1000);
+	Sensor::setMockValue(SensorType::Rpm, 1000);
 	EXPECT_NEAR(80, etb.getSetpoint().value_or(-1), 1e-4);
 
 	// At threshold, should return unadjusted throttle
-	Sensor::setMockValue(SensorType::Rpm,  5000);
+	Sensor::setMockValue(SensorType::Rpm, 5000);
 	EXPECT_NEAR(80, etb.getSetpoint().value_or(-1), 1e-4);
 
 	// Middle of range, should return half of unadjusted
@@ -498,10 +482,7 @@ TEST(etb, setpointLuaAdder) {
 
 	// Mock pedal map to just return 50%
 	StrictMock<MockVp3d> pedalMap;
-	EXPECT_CALL(pedalMap, getValue(_, _))
-		.WillRepeatedly([](float, float) {
-			return 50;
-		});
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float, float) { return 50; });
 	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
 
 	// No adjustment, should be unadjusted
@@ -600,8 +581,7 @@ TEST(etb, setOutputValid) {
 
 	// Should be enabled and value set
 	EXPECT_CALL(motor, enable());
-	EXPECT_CALL(motor, set(0.25f))
-		.WillOnce(Return(false));
+	EXPECT_CALL(motor, set(0.25f)).WillOnce(Return(false));
 
 	etb.setOutput(25.0f);
 }
@@ -620,8 +600,7 @@ TEST(etb, setOutputValid2) {
 
 	// Should be enabled and value set
 	EXPECT_CALL(motor, enable());
-	EXPECT_CALL(motor, set(-0.25f))
-		.WillOnce(Return(false));
+	EXPECT_CALL(motor, set(-0.25f)).WillOnce(Return(false));
 
 	etb.setOutput(-25.0f);
 }
