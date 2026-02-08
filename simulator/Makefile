@@ -212,6 +212,7 @@ INCDIR = . \
   $(CHIBIOS)/os/hal/lib/streams \
   $(GENERATED_DIR) \
   $(RUSEFI_LIB_INC) \
+  simulator/cfg \
   simulator/system \
   simulator/can \
   simulator
