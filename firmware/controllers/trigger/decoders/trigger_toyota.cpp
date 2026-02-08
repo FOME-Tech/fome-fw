@@ -14,7 +14,7 @@
 /**
  * https://rusefi.com/forum/viewtopic.php?f=5&t=1720
  */
-void initialize2jzGE3_34_simulation_shape(TriggerWaveform *s) {
+void initialize2jzGE3_34_simulation_shape(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Rise);
 
 	float camD = 720 / 6; // 120
@@ -39,7 +39,6 @@ void initialize2jzGE3_34_simulation_shape(TriggerWaveform *s) {
 		s->addEvent720(crankAngle + crankDelta, false, TriggerWheel::T_SECONDARY); // 120
 		crankAngle += 10;
 	} // 2 + 22
-
 
 	camAngle += camD;
 
@@ -71,7 +70,6 @@ void initialize2jzGE3_34_simulation_shape(TriggerWaveform *s) {
 	camAngle += camD;
 	s->addEvent720(camAngle, true, TriggerWheel::T_PRIMARY); // 600
 	s->addEvent720(camAngle + 3, false, TriggerWheel::T_PRIMARY);
-
 
 	for (int i = 0; i < 12; i++) {
 		s->addEvent720(crankAngle + 5, true, TriggerWheel::T_SECONDARY);

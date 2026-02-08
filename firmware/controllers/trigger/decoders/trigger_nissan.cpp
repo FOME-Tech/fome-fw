@@ -15,7 +15,7 @@
 /**
  * 8,2,2,2 Nissan pattern
  */
-void initializeNissanSR20VE_4(TriggerWaveform *s) {
+void initializeNissanSR20VE_4(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Both);
 
 	s->tdcPosition = 630;
@@ -37,15 +37,14 @@ void initializeNissanSR20VE_4(TriggerWaveform *s) {
 	s->addEvent720(4 * 180, false);
 }
 
-static void addPrimaryToothEndingAt(TriggerWaveform *s, float fallAngle) {
+static void addPrimaryToothEndingAt(TriggerWaveform* s, float fallAngle) {
 	int vvtWidth = 20;
 
 	s->addEventAngle(fallAngle - vvtWidth, true);
 	s->addEventAngle(fallAngle, false);
-
 }
 
-void initializeNissanVQvvt(TriggerWaveform *s) {
+void initializeNissanVQvvt(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	int offset = 720 - 520;
@@ -67,7 +66,7 @@ void makeNissanPattern(TriggerWaveform* s, size_t halfCylinderCount, size_t tota
 
 	auto patternTeeth = totalWheel / halfCylinderCount;
 	auto toothCount = patternTeeth - missing;
-	
+
 	float currentAngle = missing * toothAngle;
 	for (size_t i = 0; i < toothCount; i++) {
 		currentAngle += toothAngle;
@@ -76,19 +75,19 @@ void makeNissanPattern(TriggerWaveform* s, size_t halfCylinderCount, size_t tota
 	}
 }
 
-void initializeNissanVQ35crank(TriggerWaveform *s) {
+void initializeNissanVQ35crank(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_THREE_TIMES_CRANK_SENSOR, SyncEdge::RiseOnly);
 
 	s->tdcPosition = 675;
 
 	// 6 cylinder = 36 tooth wheel, missing 2 teeth in 3 spots
 	makeNissanPattern(s, 3, 36, 2);
-	s->setTriggerSynchronizationGap3(/*gapIndex*/0, 0.2, 0.5);
-	s->setTriggerSynchronizationGap3(/*gapIndex*/1, 2, 4);
-	s->setTriggerSynchronizationGap3(/*gapIndex*/2, 0.6, 1.4);
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 0, 0.2, 0.5);
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 1, 2, 4);
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 2, 0.6, 1.4);
 }
 
-void initializeNissanMR18crank(TriggerWaveform *s) {
+void initializeNissanMR18crank(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR, SyncEdge::RiseOnly);
 
 	s->tdcPosition = 80;
@@ -98,7 +97,7 @@ void initializeNissanMR18crank(TriggerWaveform *s) {
 	s->setTriggerSynchronizationGap(0.33);
 }
 
-void initializeNissanQR25crank(TriggerWaveform *s) {
+void initializeNissanQR25crank(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR, SyncEdge::RiseOnly);
 	s->setTriggerSynchronizationGap(0.33);
 	s->setSecondTriggerSynchronizationGap(3);
@@ -113,14 +112,14 @@ void initializeNissanQR25crank(TriggerWaveform *s) {
 	}
 }
 
-static void addvq30tooth(TriggerWaveform *s, float angle) {
+static void addvq30tooth(TriggerWaveform* s, float angle) {
 	s->addEvent360(angle - 4, true);
 	s->addEvent360(angle, false);
 }
 
 // yes, this is CAM shaft shape NOT crank shaft shape!
 // we will add crank shape once Pavel makes progress
-void initializeNissanVQ30cam(TriggerWaveform *s) {
+void initializeNissanVQ30cam(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	s->tdcPosition = 120;
@@ -138,7 +137,7 @@ void initializeNissanVQ30cam(TriggerWaveform *s) {
 	addvq30tooth(s, x - (252 + 9 * 1));
 	addvq30tooth(s, x - (252 + 9 * 0));
 
-	addvq30tooth(s, x - (236        ));
+	addvq30tooth(s, x - (236));
 
 	addvq30tooth(s, x - (152 + 9 * 3));
 	addvq30tooth(s, x - (152 + 9 * 2));
@@ -154,12 +153,15 @@ void initializeNissanVQ30cam(TriggerWaveform *s) {
 	addvq30tooth(s, x - (52 + 9 * 1));
 	addvq30tooth(s, x - (52 + 9 * 0));
 
-	s->setTriggerSynchronizationGap3(/*gapIndex*/0, 5.78 * TRIGGER_GAP_DEVIATION_LOW, 5.78 * TRIGGER_GAP_DEVIATION_HIGH);
-	s->setTriggerSynchronizationGap3(/*gapIndex*/1, 0.38 * TRIGGER_GAP_DEVIATION_LOW, 0.38 * TRIGGER_GAP_DEVIATION_HIGH);
-	s->setTriggerSynchronizationGap3(/*gapIndex*/2, 2.67 * TRIGGER_GAP_DEVIATION_LOW, 2.67 * TRIGGER_GAP_DEVIATION_HIGH);
+	s->setTriggerSynchronizationGap3(
+			/*gapIndex*/ 0, 5.78 * TRIGGER_GAP_DEVIATION_LOW, 5.78 * TRIGGER_GAP_DEVIATION_HIGH);
+	s->setTriggerSynchronizationGap3(
+			/*gapIndex*/ 1, 0.38 * TRIGGER_GAP_DEVIATION_LOW, 0.38 * TRIGGER_GAP_DEVIATION_HIGH);
+	s->setTriggerSynchronizationGap3(
+			/*gapIndex*/ 2, 2.67 * TRIGGER_GAP_DEVIATION_LOW, 2.67 * TRIGGER_GAP_DEVIATION_HIGH);
 }
 
-void initializeNissanMRvvt(TriggerWaveform *s) {
+void initializeNissanMRvvt(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 	s->tdcPosition = 0;
 
@@ -172,7 +174,7 @@ void initializeNissanMRvvt(TriggerWaveform *s) {
 	int toothSpacing = 17;
 
 	// "1"
-	addvq30tooth(s, x + 0);	// <-- sync point here
+	addvq30tooth(s, x + 0); // <-- sync point here
 
 	// "3"
 	addvq30tooth(s, x + 90 + 0 * toothSpacing);

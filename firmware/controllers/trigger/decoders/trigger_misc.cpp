@@ -11,7 +11,7 @@
 #include "trigger_universal.h"
 
 // trigger_type_e::TT_FIAT_IAW_P8
-void configureFiatIAQ_P8(TriggerWaveform * s) {
+void configureFiatIAQ_P8(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Rise);
 
 	int width = 60;
@@ -26,7 +26,7 @@ void configureFiatIAQ_P8(TriggerWaveform * s) {
 }
 
 // trigger_type_e::TT_TRI_TACH
-void configureTriTach(TriggerWaveform * s) {
+void configureTriTach(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::RiseOnly);
 
 	s->isSynchronizationNeeded = false;
@@ -45,8 +45,14 @@ void configureTriTach(TriggerWaveform * s) {
 	s->addEventClamped(offset + angleUp, false, TriggerWheel::T_PRIMARY, NO_LEFT_FILTER, NO_RIGHT_FILTER);
 	s->addEventClamped(offset + angleUp + 0.1, false, TriggerWheel::T_SECONDARY, NO_LEFT_FILTER, NO_RIGHT_FILTER);
 
-
-	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, /* skipped */ 0, toothWidth, offset, engineCycle,
+	addSkippedToothTriggerEvents(
+			TriggerWheel::T_SECONDARY,
+			s,
+			totalTeethCount,
+			/* skipped */ 0,
+			toothWidth,
+			offset,
+			engineCycle,
 			1.0 * FOUR_STROKE_ENGINE_CYCLE / 135,
 			NO_RIGHT_FILTER);
 }
@@ -55,7 +61,7 @@ void configureTriTach(TriggerWaveform * s) {
  * based on https://fordsix.com/threads/understanding-standard-and-signature-pip-thick-film-ignition.81515/
  * based on https://www.w8ji.com/distributor_stabbing.htm
  */
-void configureFordPip(TriggerWaveform * s) {
+void configureFordPip(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Rise);
 
 	s->tdcPosition = 662.5;
@@ -70,15 +76,13 @@ void configureFordPip(TriggerWaveform * s) {
 	s->addEventAngle(oneCylinder * 0.75, true);
 	s->addEventAngle(oneCylinder, false);
 
-
 	for (int i = 2; i <= 8; i++) {
 		s->addEventAngle(oneCylinder * (i - 0.5), true);
 		s->addEventAngle(oneCylinder * i, false);
 	}
-
 }
 
-void configureFordST170(TriggerWaveform * s) {
+void configureFordST170(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 	int width = 10;
 
@@ -100,7 +104,7 @@ void configureFordST170(TriggerWaveform * s) {
 	s->addEventAngle(8 * total, false);
 }
 
-void configureDaihatsu4(TriggerWaveform * s) {
+void configureDaihatsu4(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	int width = 10;
@@ -110,7 +114,6 @@ void configureDaihatsu4(TriggerWaveform * s) {
 	s->addEventAngle(30 - width, true);
 	s->addEventAngle(30, false);
 
-
 	s->addEventAngle(s->getCycleDuration() / 3 - width, true);
 	s->addEventAngle(s->getCycleDuration() / 3, false);
 
@@ -119,10 +122,9 @@ void configureDaihatsu4(TriggerWaveform * s) {
 
 	s->addEventAngle(s->getCycleDuration() - width, true);
 	s->addEventAngle(s->getCycleDuration(), false);
-
 }
 
-void configureBarra3plus1cam(TriggerWaveform *s) {
+void configureBarra3plus1cam(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	// This wheel has four teeth
@@ -134,22 +136,22 @@ void configureBarra3plus1cam(TriggerWaveform *s) {
 		int offset = 120;
 
 		s->addEventAngle(offset + 2 * 0 - 10, true);
-		s->addEventAngle(offset + 2 * 0 +  0, false);
+		s->addEventAngle(offset + 2 * 0 + 0, false);
 
 		// short gap 60 deg
 
 		s->addEventAngle(offset + 2 * 60 - 10, true);
-		s->addEventAngle(offset + 2 * 60 +  0, false);
+		s->addEventAngle(offset + 2 * 60 + 0, false);
 
 		// long gap 120 deg
 
 		s->addEventAngle(offset + 2 * 180 - 10, true);
-		s->addEventAngle(offset + 2 * 180 +  0, false);
+		s->addEventAngle(offset + 2 * 180 + 0, false);
 
 		// long gap 120 deg
 
 		s->addEventAngle(offset + 2 * 300 - 10, true);
-		s->addEventAngle(offset + 2 * 300 +  0, false);
+		s->addEventAngle(offset + 2 * 300 + 0, false);
 
 		// short gap, 60 deg back to zero/720
 	}
@@ -160,10 +162,10 @@ void configureBarra3plus1cam(TriggerWaveform *s) {
 	s->setTriggerSynchronizationGap3(1, 0.8f, 1.2f);
 }
 
-void configureBenelli(TriggerWaveform *s) {
+void configureBenelli(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::RiseOnly);
 
-    constexpr float magic = 15;
+	constexpr float magic = 15;
 
 	float angle = 3 * magic;
 

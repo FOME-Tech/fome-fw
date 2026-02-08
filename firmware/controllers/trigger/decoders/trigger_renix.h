@@ -10,7 +10,7 @@
 class TriggerWaveform;
 
 // TT_RENIX_44_2_2
-void initializeRenix44_2_2(TriggerWaveform *s);
+void initializeRenix44_2_2(TriggerWaveform* s);
 
 // TT_RENIX_66_2_2_2
-void initializeRenix66_2_2(TriggerWaveform *s);
+void initializeRenix66_2_2(TriggerWaveform* s);

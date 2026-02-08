@@ -9,9 +9,9 @@
 
 class TriggerWaveform;
 
-void configureOnePlus16(TriggerWaveform *s);
+void configureOnePlus16(TriggerWaveform* s);
 
-void configureHondaCbr600(TriggerWaveform *s);
+void configureHondaCbr600(TriggerWaveform* s);
 
-void configureHondaK_12_1(TriggerWaveform *s);
-void configureHondaK_4_1(TriggerWaveform *s);
+void configureHondaK_12_1(TriggerWaveform* s);
+void configureHondaK_4_1(TriggerWaveform* s);

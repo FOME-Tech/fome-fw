@@ -16,8 +16,16 @@ angle_t getEngineCycle(operation_mode_e operationMode) {
 	return operationMode == TWO_STROKE ? 360 : FOUR_STROKE_ENGINE_CYCLE;
 }
 
-void addSkippedToothTriggerEvents(TriggerWheel wheel, TriggerWaveform *s, int totalTeethCount, int skippedCount,
-		float toothWidth, float offset, float engineCycle, float filterLeft, float filterRight) {
+void addSkippedToothTriggerEvents(
+		TriggerWheel wheel,
+		TriggerWaveform* s,
+		int totalTeethCount,
+		int skippedCount,
+		float toothWidth,
+		float offset,
+		float engineCycle,
+		float filterLeft,
+		float filterRight) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6586, totalTeethCount > 0, "total count");
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6587, skippedCount >= 0, "skipped count");
 
@@ -34,10 +42,13 @@ void addSkippedToothTriggerEvents(TriggerWheel wheel, TriggerWaveform *s, int to
 	s->addEventClamped(offset + engineCycle, false, wheel, filterLeft, filterRight);
 }
 
-void initializeSkippedToothTrigger(TriggerWaveform *s, int totalTeethCount, int skippedCount,
-		operation_mode_e operationMode, SyncEdge syncEdge) {
+void initializeSkippedToothTrigger(
+		TriggerWaveform* s, int totalTeethCount, int skippedCount, operation_mode_e operationMode, SyncEdge syncEdge) {
 	if (totalTeethCount <= 0) {
-		firmwareError(ObdCode::CUSTOM_OBD_TRIGGER_WAVEFORM, "Invalid total tooth count for missing tooth decoder: %d", totalTeethCount);
+		firmwareError(
+				ObdCode::CUSTOM_OBD_TRIGGER_WAVEFORM,
+				"Invalid total tooth count for missing tooth decoder: %d",
+				totalTeethCount);
 		s->setShapeDefinitionError(true);
 		return;
 	}
@@ -51,21 +62,29 @@ void initializeSkippedToothTrigger(TriggerWaveform *s, int totalTeethCount, int 
 
 	s->setTriggerSynchronizationGap(skippedCount + 1);
 	if (totalTeethCount > 6 && skippedCount > 0) {
-		// this gap is not required to synch on perfect signal but is needed to handle to reject cranking transition noise and potentially high rev noise as well
+		// this gap is not required to synch on perfect signal but is needed to handle to reject cranking transition
+		// noise and potentially high rev noise as well
 		s->setSecondTriggerSynchronizationGap(1);
 	}
 	s->shapeWithoutTdc = (totalTeethCount > 1) && (skippedCount == 0);
 	s->isSynchronizationNeeded = (totalTeethCount > 2) && (skippedCount != 0);
 
-
-	addSkippedToothTriggerEvents(TriggerWheel::T_PRIMARY, s, totalTeethCount, skippedCount, 0.5, 0, getEngineCycle(operationMode),
-	NO_LEFT_FILTER, NO_RIGHT_FILTER);
+	addSkippedToothTriggerEvents(
+			TriggerWheel::T_PRIMARY,
+			s,
+			totalTeethCount,
+			skippedCount,
+			0.5,
+			0,
+			getEngineCycle(operationMode),
+			NO_LEFT_FILTER,
+			NO_RIGHT_FILTER);
 }
 
-void configureOnePlusOne(TriggerWaveform *s) {
+void configureOnePlusOne(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Rise);
 
-	s->addEvent360( 90, true, TriggerWheel::T_PRIMARY);
+	s->addEvent360(90, true, TriggerWheel::T_PRIMARY);
 	s->addEvent360(180, false, TriggerWheel::T_PRIMARY);
 
 	s->addEvent360(270, true, TriggerWheel::T_SECONDARY);
@@ -75,18 +94,15 @@ void configureOnePlusOne(TriggerWaveform *s) {
 	s->useOnlyPrimaryForSync = true;
 }
 
-void configure3_1_cam(TriggerWaveform *s) {
+void configure3_1_cam(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
-
 	const float crankW = 360 / 3 / 2;
-
 
 	TriggerWheel crank = TriggerWheel::T_SECONDARY;
 
 	s->addEvent720(10, true, TriggerWheel::T_PRIMARY);
 	s->addEvent720(50, false, TriggerWheel::T_PRIMARY);
-
 
 	float a = 2 * crankW;
 
@@ -102,7 +118,7 @@ void configure3_1_cam(TriggerWaveform *s) {
 
 	// 2nd #1/3
 	s->addEvent720(a += crankW, true, crank);
-	s->addEvent720(a += crankW,  false, crank);
+	s->addEvent720(a += crankW, false, crank);
 
 	// 2nd #2/3
 	s->addEvent720(a += crankW, true, crank);
@@ -114,7 +130,7 @@ void configure3_1_cam(TriggerWaveform *s) {
 /**
  * https://rusefi.com/forum/viewtopic.php?f=5&t=1977
  */
-void configureKawaKX450F(TriggerWaveform *s) {
+void configureKawaKX450F(TriggerWaveform* s) {
 	float engineCycle = FOUR_STROKE_ENGINE_CYCLE;
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::Rise);
 
@@ -122,14 +138,14 @@ void configureKawaKX450F(TriggerWaveform *s) {
 
 	float toothWidth = 3 / 20.0;
 
-	addSkippedToothTriggerEvents(TriggerWheel::T_PRIMARY, s, 18, 0, toothWidth, 0, engineCycle,
-			NO_LEFT_FILTER, 720 - 39);
+	addSkippedToothTriggerEvents(
+			TriggerWheel::T_PRIMARY, s, 18, 0, toothWidth, 0, engineCycle, NO_LEFT_FILTER, 720 - 39);
 
 	s->addEvent(0.97, true, TriggerWheel::T_PRIMARY);
 	s->addEvent(1, false, TriggerWheel::T_PRIMARY);
 }
 
-void configureQuickStartSenderWheel(TriggerWaveform *s) {
+void configureQuickStartSenderWheel(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Fall);
 
 	int offset = 20;

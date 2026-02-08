@@ -9,7 +9,7 @@
 
 #include "trigger_suzuki.h"
 
-void initializeSuzukiG13B(TriggerWaveform *s) {
+void initializeSuzukiG13B(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	float w = 5;

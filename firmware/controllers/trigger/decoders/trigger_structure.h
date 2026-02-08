@@ -21,7 +21,11 @@
 #define TRIGGER_GAP_DEVIATION_LOW (1.0f - TRIGGER_GAP_DEVIATION)
 #define TRIGGER_GAP_DEVIATION_HIGH (1.0f + TRIGGER_GAP_DEVIATION)
 
-#define assertAngleRange(angle, msg, code) if (angle > 10000000 || angle < -10000000) { firmwareError(code, "angle range %s %d", msg, (int)angle);angle = 0;}
+#define assertAngleRange(angle, msg, code)                                                                             \
+	if (angle > 10000000 || angle < -10000000) {                                                                       \
+		firmwareError(code, "angle range %s %d", msg, (int)angle);                                                     \
+		angle = 0;                                                                                                     \
+	}
 
 // Shifts angle into the [0..720) range for four stroke and [0..360) for two stroke
 inline void wrapAngle(angle_t& angle, const char* msg, ObdCode code) {
@@ -43,7 +47,7 @@ inline void wrapAngle(angle_t& angle, const char* msg, ObdCode code) {
 }
 
 // proper method avoids un-wrapped state of variables
-inline angle_t wrapAngleMethod(angle_t param, const char *msg = "", ObdCode code = ObdCode::OBD_PCM_Processor_Fault) {
+inline angle_t wrapAngleMethod(angle_t param, const char* msg = "", ObdCode code = ObdCode::OBD_PCM_Processor_Fault) {
 	wrapAngle(param, msg, code);
 	return param;
 }
@@ -115,12 +119,10 @@ public:
 	float syncronizationRatioFrom[GAP_TRACKING_LENGTH];
 	float syncronizationRatioTo[GAP_TRACKING_LENGTH];
 
-
 	/**
 	 * used by NoiselessTriggerDecoder (See TriggerCentral::handleShaftSignal())
 	 */
 	int syncRatioAvg;
-
 
 	/**
 	 * Trigger indexes within trigger cycle are counted from synchronization point, and all
@@ -204,7 +206,8 @@ public:
 	/* (0..720] angle range
 	 * Deprecated?
 	 */
-	void addEventClamped(angle_t angle, bool state, TriggerWheel const channelIndex, float filterLeft, float filterRight);
+	void
+	addEventClamped(angle_t angle, bool state, TriggerWheel const channelIndex, float filterLeft, float filterRight);
 	operation_mode_e getWheelOperationMode() const;
 
 	void initialize(operation_mode_e operationMode, SyncEdge syncEdge);
@@ -239,12 +242,9 @@ public:
 	 */
 	expected<uint32_t> triggerShapeSynchPointIndex = unexpected;
 
-	void initializeSyncPoint(
-			TriggerDecoderBase& state,
-			const TriggerConfiguration& triggerConfiguration
-		);
+	void initializeSyncPoint(TriggerDecoderBase& state, const TriggerConfiguration& triggerConfiguration);
 
-	uint16_t findAngleIndex(TriggerFormDetails *details, angle_t angle) const;
+	uint16_t findAngleIndex(TriggerFormDetails* details, angle_t angle) const;
 
 private:
 	/**
@@ -268,7 +268,7 @@ private:
  */
 class TriggerFormDetails {
 public:
-	void prepareEventAngles(TriggerWaveform *shape);
+	void prepareEventAngles(TriggerWaveform* shape);
 
 	/**
 	 * These angles are in event coordinates - with synchronization point located at angle zero.

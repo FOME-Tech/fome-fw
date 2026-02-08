@@ -9,8 +9,8 @@
 
 class TriggerWaveform;
 
-void setVwConfiguration(TriggerWaveform *s);
+void setVwConfiguration(TriggerWaveform* s);
 /**
  * I know Skoda was not owned by VAG back than but that's OK
  */
-void setSkodaFavorit(TriggerWaveform *s);
+void setSkodaFavorit(TriggerWaveform* s);

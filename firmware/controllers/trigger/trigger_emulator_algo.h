@@ -14,7 +14,7 @@ void initTriggerEmulator();
 void startTriggerEmulatorPins();
 void stopTriggerEmulatorPins();
 void setTriggerEmulatorRPM(int value);
-void onConfigurationChangeRpmEmulatorCallback(engine_configuration_s *previousConfiguration);
+void onConfigurationChangeRpmEmulatorCallback(engine_configuration_s* previousConfiguration);
 
 // Start & stop trigger emulation
 void enableTriggerStimulator();
@@ -31,4 +31,3 @@ void initTriggerEmulatorLogic();
 
 int getPreviousIndex(const int currentIndex, const int size);
 bool needEvent(const int currentIndex, const MultiChannelStateSequence& mcss, int channelIndex);
-

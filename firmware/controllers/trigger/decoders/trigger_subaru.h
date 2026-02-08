@@ -9,8 +9,8 @@
 
 class TriggerWaveform;
 
-void initialize36_2_2_2(TriggerWaveform *s);
-void initializeSubaru7_6(TriggerWaveform *s);
-void initializeSubaruOnly7(TriggerWaveform *s);
-void initializeSubaru_SVX(TriggerWaveform *s);
-void initializeSubaruEZ30(TriggerWaveform *s);
+void initialize36_2_2_2(TriggerWaveform* s);
+void initializeSubaru7_6(TriggerWaveform* s);
+void initializeSubaruOnly7(TriggerWaveform* s);
+void initializeSubaru_SVX(TriggerWaveform* s);
+void initializeSubaruEZ30(TriggerWaveform* s);

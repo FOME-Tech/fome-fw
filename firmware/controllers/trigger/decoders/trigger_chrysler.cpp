@@ -10,7 +10,7 @@
 #include "trigger_chrysler.h"
 #include "trigger_universal.h"
 
-void initDodgeRam(TriggerWaveform *s) {
+void initDodgeRam(TriggerWaveform* s) {
 
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Rise);
 
@@ -25,7 +25,7 @@ void initDodgeRam(TriggerWaveform *s) {
 	s->addEvent720(720, false, TriggerWheel::T_PRIMARY);
 }
 
-void configureNeon2003TriggerWaveformCrank(TriggerWaveform *s) {
+void configureNeon2003TriggerWaveformCrank(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::RiseOnly);
 
 	s->setTriggerSynchronizationGap(3);
@@ -54,7 +54,7 @@ void configureNeon2003TriggerWaveformCrank(TriggerWaveform *s) {
 	s->addEvent360(130, true, TriggerWheel::T_PRIMARY);
 	s->addEvent360(135, false, TriggerWheel::T_PRIMARY);
 	s->addEvent360(140, true, TriggerWheel::T_PRIMARY);
-	s->addEvent360(145,false, TriggerWheel::T_PRIMARY);
+	s->addEvent360(145, false, TriggerWheel::T_PRIMARY);
 	s->addEvent360(150, true, TriggerWheel::T_PRIMARY);
 	s->addEvent360(155, false, TriggerWheel::T_PRIMARY);
 	s->addEvent360(160, true, TriggerWheel::T_PRIMARY);
@@ -97,8 +97,8 @@ void configureNeon2003TriggerWaveformCrank(TriggerWaveform *s) {
 	s->addEvent360(360, true, TriggerWheel::T_PRIMARY);
 }
 
-void configureNeon2003TriggerWaveformCam(TriggerWaveform *s) {
-// todo: move sync point so that two channel does not have false trigger issues
+void configureNeon2003TriggerWaveformCam(TriggerWaveform* s) {
+	// todo: move sync point so that two channel does not have false trigger issues
 	bool useOnlyPrimary = true;
 
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::Rise);
@@ -123,7 +123,6 @@ gap=1.43/0.71
 
 	float EPS_ANGLE = 0.3;
 
-
 	if (useOnlyPrimary) {
 		s->addEvent720(144, true, TriggerWheel::T_PRIMARY);
 		s->addEvent720(180, false, TriggerWheel::T_PRIMARY);
@@ -134,7 +133,7 @@ gap=1.43/0.71
 		s->addEvent720(288, true, TriggerWheel::T_PRIMARY);
 		s->addEvent720(324, false, TriggerWheel::T_PRIMARY);
 
-		s->addEvent720(360, true, TriggerWheel::T_PRIMARY); // width = 144
+		s->addEvent720(360, true, TriggerWheel::T_PRIMARY);	 // width = 144
 		s->addEvent720(504, false, TriggerWheel::T_PRIMARY); // width = 36
 		s->addEvent720(540, true, TriggerWheel::T_PRIMARY);
 		s->addEvent720(576, false, TriggerWheel::T_PRIMARY);
@@ -179,7 +178,7 @@ gap=1.43/0.71
 
 		s->addEvent720(144, true, TriggerWheel::T_PRIMARY);
 
-		s->addEvent720(145,false, TriggerWheel::T_SECONDARY);
+		s->addEvent720(145, false, TriggerWheel::T_SECONDARY);
 		s->addEvent720(150, true, TriggerWheel::T_SECONDARY);
 		s->addEvent720(155, false, TriggerWheel::T_SECONDARY);
 		s->addEvent720(160, true, TriggerWheel::T_SECONDARY);
@@ -320,14 +319,13 @@ gap=1.43/0.71
 	}
 }
 
-void configureDodgeStratusTriggerWaveform(TriggerWaveform *s) {
+void configureDodgeStratusTriggerWaveform(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 	s->tdcPosition = 150;
 
 	float w = 7;
 	float g = 20;
-	s->setTriggerSynchronizationGap2(CHRYSLER_NGC6_GAP - 0.25,
-			CHRYSLER_NGC6_GAP + 0.4);
+	s->setTriggerSynchronizationGap2(CHRYSLER_NGC6_GAP - 0.25, CHRYSLER_NGC6_GAP + 0.4);
 
 	float base = 0;
 	// 2 teeth
@@ -384,7 +382,7 @@ void configureDodgeStratusTriggerWaveform(TriggerWaveform *s) {
 	s->addEvent720(angle + w, false, TriggerWheel::T_PRIMARY);
 }
 
-void configureNeon1995TriggerWaveformOnlyCrank(TriggerWaveform *s) {
+void configureNeon1995TriggerWaveformOnlyCrank(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::Rise);
 
 	// Nominal gap 3.25
@@ -421,7 +419,7 @@ void configureNeon1995TriggerWaveformOnlyCrank(TriggerWaveform *s) {
 	s->addEvent360(base + 301, false, TriggerWheel::T_PRIMARY);
 }
 
-void initJeep18_2_2_2(TriggerWaveform *s) {
+void initJeep18_2_2_2(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 	s->isSynchronizationNeeded = false;
 	s->tdcPosition = 581;
@@ -445,7 +443,6 @@ void initJeep18_2_2_2(TriggerWaveform *s) {
 	s->addEvent720(696 - 720 + off, false, TriggerWheel::T_SECONDARY);
 	s->addEvent720(714 - 720 + off, true, TriggerWheel::T_SECONDARY);
 	s->addEvent720(716 - 720 + off, false, TriggerWheel::T_SECONDARY);
-
 
 	s->addEvent720(54 + off, true, TriggerWheel::T_SECONDARY);
 	s->addEvent720(56 + off, false, TriggerWheel::T_SECONDARY);
@@ -486,10 +483,9 @@ void initJeep18_2_2_2(TriggerWaveform *s) {
 	s->addEvent720(476 + off, false, TriggerWheel::T_SECONDARY);
 
 	s->addEvent720(508 + off, false, TriggerWheel::T_PRIMARY); // 720
-
 }
 
-static void add4cylblock(int off, TriggerWaveform *s) {
+static void add4cylblock(int off, TriggerWaveform* s) {
 	s->addEvent720(114 + off, true, TriggerWheel::T_SECONDARY);
 	s->addEvent720(114 + off + 2, false, TriggerWheel::T_SECONDARY);
 
@@ -504,7 +500,7 @@ static void add4cylblock(int off, TriggerWaveform *s) {
 }
 
 // trigger_type_e::TT_JEEP_4_CYL
-void initJeep_XJ_4cyl_2500(TriggerWaveform *s) {
+void initJeep_XJ_4cyl_2500(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 	s->isSynchronizationNeeded = false;
 	s->tdcPosition = 720 - 236;
@@ -520,10 +516,9 @@ void initJeep_XJ_4cyl_2500(TriggerWaveform *s) {
 	add4cylblock(offset + 360, s);
 
 	s->addEvent720(596 + offset, false, TriggerWheel::T_PRIMARY); // 720
-
 }
 
-void configureChryslerNGC_36_2_2(TriggerWaveform *s) {
+void configureChryslerNGC_36_2_2(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	float wide = 30 * 2;
@@ -531,9 +526,10 @@ void configureChryslerNGC_36_2_2(TriggerWaveform *s) {
 
 	s->setTriggerSynchronizationGap(3.5);
 	for (int i = 1; i < 15; i++) {
-		s->setTriggerSynchronizationGap3(/*gapIndex*/i, TRIGGER_GAP_DEVIATION_LOW, TRIGGER_GAP_DEVIATION_HIGH);
+		s->setTriggerSynchronizationGap3(/*gapIndex*/ i, TRIGGER_GAP_DEVIATION_LOW, TRIGGER_GAP_DEVIATION_HIGH);
 	}
-	s->setTriggerSynchronizationGap3(/*gapIndex*/15, 0.4 * TRIGGER_GAP_DEVIATION_LOW, 0.4 * TRIGGER_GAP_DEVIATION_HIGH);
+	s->setTriggerSynchronizationGap3(
+			/*gapIndex*/ 15, 0.4 * TRIGGER_GAP_DEVIATION_LOW, 0.4 * TRIGGER_GAP_DEVIATION_HIGH);
 
 	float base = 0;
 
