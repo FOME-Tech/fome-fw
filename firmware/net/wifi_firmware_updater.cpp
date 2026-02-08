@@ -4,7 +4,7 @@
 
 static bool isBigEndian() {
 	uint32_t test = 0x11223344;
-	uint8_t *pTest = reinterpret_cast<uint8_t *>(&test);
+	uint8_t* pTest = reinterpret_cast<uint8_t*>(&test);
 	return pTest[0] == 0x11;
 }
 
@@ -13,11 +13,14 @@ static uint32_t fromNetwork32(uint32_t from) {
 	if (be) {
 		return from;
 	} else {
-		uint8_t *pFrom = reinterpret_cast<uint8_t *>(&from);
+		uint8_t* pFrom = reinterpret_cast<uint8_t*>(&from);
 		uint32_t to;
-		to = pFrom[0]; to <<= 8;
-		to |= pFrom[1]; to <<= 8;
-		to |= pFrom[2]; to <<= 8;
+		to = pFrom[0];
+		to <<= 8;
+		to |= pFrom[1];
+		to <<= 8;
+		to |= pFrom[2];
+		to <<= 8;
 		to |= pFrom[3];
 		return to;
 	}
@@ -28,9 +31,10 @@ static uint16_t fromNetwork16(uint16_t from) {
 	if (be) {
 		return from;
 	} else {
-		uint8_t *pFrom = reinterpret_cast<uint8_t *>(&from);
+		uint8_t* pFrom = reinterpret_cast<uint8_t*>(&from);
 		uint16_t to;
-		to = pFrom[0]; to <<= 8;
+		to = pFrom[0];
+		to <<= 8;
 		to |= pFrom[1];
 		return to;
 	}
@@ -44,7 +48,6 @@ static uint16_t toNetwork16(uint16_t to) {
 	return fromNetwork16(to);
 }
 
-
 typedef struct __attribute__((__packed__)) {
 	uint8_t command;
 	uint32_t address;
@@ -56,11 +59,11 @@ typedef struct __attribute__((__packed__)) {
 
 static const int MAX_PAYLOAD_SIZE = 256;
 
-#define CMD_READ_FLASH        0x01
-#define CMD_WRITE_FLASH       0x02
-#define CMD_ERASE_FLASH       0x03
-#define CMD_MAX_PAYLOAD_SIZE  0x50
-#define CMD_HELLO             0x99
+#define CMD_READ_FLASH 0x01
+#define CMD_WRITE_FLASH 0x02
+#define CMD_ERASE_FLASH 0x03
+#define CMD_MAX_PAYLOAD_SIZE 0x50
+#define CMD_HELLO 0x99
 
 static int readch() {
 	uint8_t buf;
@@ -73,14 +76,14 @@ static int readch() {
 	}
 }
 
-static void receivePacket(UartPacket *pkt, uint8_t *payload) {
+static void receivePacket(UartPacket* pkt, uint8_t* payload) {
 	// Read command
-	uint8_t *p = reinterpret_cast<uint8_t *>(pkt);
+	uint8_t* p = reinterpret_cast<uint8_t*>(pkt);
 	uint16_t l = sizeof(UartPacket);
 	while (l > 0) {
 		int c = readch();
 		if (c == -1)
-		continue;
+			continue;
 		*p++ = c;
 		l--;
 	}
@@ -95,7 +98,7 @@ static void receivePacket(UartPacket *pkt, uint8_t *payload) {
 	while (l > 0) {
 		int c = readch();
 		if (c == -1)
-		continue;
+			continue;
 		*payload++ = c;
 		l--;
 	}
@@ -116,7 +119,8 @@ static void serialPrintStr(const char* str) {
 }
 
 struct WifiUpdaterThread : public ThreadController<4096> {
-	WifiUpdaterThread() : ThreadController("WifiPump", NORMALPRIO - 10) {}
+	WifiUpdaterThread()
+		: ThreadController("WifiPump", NORMALPRIO - 10) {}
 	void ThreadTask() override {
 		if (M2M_SUCCESS != m2m_wifi_download_mode()) {
 			return;
@@ -125,7 +129,7 @@ struct WifiUpdaterThread : public ThreadController<4096> {
 		auto flashSize = spi_flash_get_size();
 		(void)flashSize;
 
-		//int ret = spi_flash_erase(0, FLASH_SECTOR_SZ);
+		// int ret = spi_flash_erase(0, FLASH_SECTOR_SZ);
 		//(void)ret;
 
 		usb_serial_start();
@@ -145,7 +149,7 @@ struct WifiUpdaterThread : public ThreadController<4096> {
 
 			if (pkt.command == CMD_MAX_PAYLOAD_SIZE) {
 				uint16_t res = toNetwork16(MAX_PAYLOAD_SIZE);
-				serialPrint(reinterpret_cast<uint8_t *>(&res), sizeof(res));
+				serialPrint(reinterpret_cast<uint8_t*>(&res), sizeof(res));
 			}
 
 			if (pkt.command == CMD_READ_FLASH) {
@@ -188,4 +192,3 @@ static WifiUpdaterThread wifiUpdater;
 void startWifiUpdater() {
 	wifiUpdater.start();
 }
-

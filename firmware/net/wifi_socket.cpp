@@ -7,7 +7,7 @@
 #include "driver/include/m2m_wifi.h"
 #include "socket/include/socket.h"
 
-static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/ true);
+static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/true);
 
 /*static*/ ServerSocket* ServerSocket::s_serverList = nullptr;
 
@@ -189,7 +189,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPALIVE, &keepAlive, sizeof(keepAlive));
 
 				// Use a shorter idle time before keep-alive starts (10 seconds instead of default 60)
-				int keepIdle = 20;  // units of 500ms
+				int keepIdle = 20; // units of 500ms
 				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPIDLE, &keepIdle, sizeof(keepIdle));
 
 				if (auto server = ServerSocket::findListener(sock)) {
@@ -227,7 +227,8 @@ __attribute__((weak)) const wifi_string_t& getWifiPassword() {
 
 class WifiHelperThread : public ThreadController<4096> {
 public:
-	WifiHelperThread() : ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
+	WifiHelperThread()
+		: ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
 	void ThreadTask() override {
 		if (!initWifi()) {
 			return;
@@ -235,8 +236,7 @@ public:
 
 		m_initDone = true;
 
-		while (true)
-		{
+		while (true) {
 			{
 				ScopePerf perf(PE::WifiHandleEvents);
 				m2m_wifi_handle_events(nullptr);
@@ -262,14 +262,14 @@ private:
 			return false;
 		}
 
-		#ifdef WIFI_OFFSET_MAC
+#ifdef WIFI_OFFSET_MAC
 		{
 			uint8_t mac[6];
 			m2m_wifi_get_mac_address(mac);
 			mac[5]++;
 			m2m_wifi_set_mac_address(mac);
 		}
-		#endif
+#endif
 
 		static tstrM2MAPConfig apConfig;
 		const wifi_string_t& ssid = getWifiSsid();
@@ -288,10 +288,10 @@ private:
 		}
 
 		// IP Address
-		apConfig.au8DHCPServerIP[0]	= 192;
-		apConfig.au8DHCPServerIP[1]	= 168;
-		apConfig.au8DHCPServerIP[2]	= 10;
-		apConfig.au8DHCPServerIP[3]	= 1;
+		apConfig.au8DHCPServerIP[0] = 192;
+		apConfig.au8DHCPServerIP[1] = 168;
+		apConfig.au8DHCPServerIP[2] = 10;
+		apConfig.au8DHCPServerIP[3] = 1;
 
 		// Trigger AP
 		if (M2M_SUCCESS != m2m_wifi_enable_ap(&apConfig)) {

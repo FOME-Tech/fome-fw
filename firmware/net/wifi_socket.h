@@ -41,7 +41,7 @@ private:
 	const uint8_t* m_sendBuffer;
 	size_t m_sendSize;
 	bool m_sendRequest = false;
-	chibios_rt::BinarySemaphore m_sendDoneSemaphore{/* taken =*/ true};
+	chibios_rt::BinarySemaphore m_sendDoneSemaphore{/* taken =*/true};
 
 	// RX data
 	uint8_t m_recvBuf[512];
