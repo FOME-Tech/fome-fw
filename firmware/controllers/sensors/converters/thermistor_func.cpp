@@ -39,7 +39,7 @@ SensorResult ThermistorFunc::convert(float ohms) const {
 	return celsius;
 }
 
-void ThermistorFunc::configure(thermistor_conf_s &cfg) {
+void ThermistorFunc::configure(thermistor_conf_s& cfg) {
 	// https://en.wikipedia.org/wiki/Steinhart%E2%80%93Hart_equation
 	float l1 = logf(cfg.resistance_1);
 	float l2 = logf(cfg.resistance_2);

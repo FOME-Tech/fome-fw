@@ -50,7 +50,7 @@ void setBosch0280218004() {
 
 void setNissanMAF0031() {
 	int i = 0;
-	  // I am copy-pasting from a spreadsheet, it works better if voltage goes first
+	// I am copy-pasting from a spreadsheet, it works better if voltage goes first
 	i = addMafPointByVoltage(i, 0.29, 3.1768838175);
 	i = addMafPointByVoltage(i, 0.49, 3.6987752861);
 	i = addMafPointByVoltage(i, 0.72, 5.8013108424);

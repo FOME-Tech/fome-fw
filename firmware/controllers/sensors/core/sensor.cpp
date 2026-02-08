@@ -60,7 +60,7 @@ public:
 		}
 
 		// Get the sensor out of the entry
-		const Sensor *s = m_sensor;
+		const Sensor* s = m_sensor;
 		if (s) {
 			// If this sensor says it doesn't exist, return unexpected
 			if (!s->hasSensor()) {
@@ -139,13 +139,13 @@ void Sensor::unregister() {
 /*static*/ void Sensor::resetRegistry() {
 	// Clear all entries
 	for (size_t i = 0; i < efi::size(s_sensorRegistry); i++) {
-		auto &entry = s_sensorRegistry[i];
+		auto& entry = s_sensorRegistry[i];
 
 		entry.reset();
 	}
 }
 
-/*static*/ SensorRegistryEntry *Sensor::getEntryForType(SensorType type) {
+/*static*/ SensorRegistryEntry* Sensor::getEntryForType(SensorType type) {
 	size_t index = getIndex(type);
 	// Check that we didn't get garbage
 	if (index >= getIndex(SensorType::PlaceholderLast)) {
@@ -157,7 +157,7 @@ void Sensor::unregister() {
 
 #if EFI_UNIT_TEST
 // scary nullable return result thus you probably do not need this in production code
-/*static*/ const Sensor *Sensor::getSensorOfType(SensorType type) {
+/*static*/ const Sensor* Sensor::getSensorOfType(SensorType type) {
 	auto entry = getEntryForType(type);
 	return entry ? entry->getSensor() : nullptr;
 }

@@ -16,8 +16,10 @@ static ButtonDebounce oilPressureSwitchDebounce("oil_pressure_switch");
 void initSensors() {
 	initMapDecoder();
 	acDebounce.init(MS2NT(15), engineConfiguration->acSwitch, engineConfiguration->acSwitchMode);
-	acPressureDebounce.init(MS2NT(15), engineConfiguration->acPressureSwitch, engineConfiguration->acPressureSwitchMode);
-	oilPressureSwitchDebounce.init(MS2NT(15), engineConfiguration->oilPressureSwitch, engineConfiguration->oilPressureSwitchMode);
+	acPressureDebounce.init(
+			MS2NT(15), engineConfiguration->acPressureSwitch, engineConfiguration->acPressureSwitchMode);
+	oilPressureSwitchDebounce.init(
+			MS2NT(15), engineConfiguration->oilPressureSwitch, engineConfiguration->oilPressureSwitchMode);
 }
 
 bool getAcToggle() {

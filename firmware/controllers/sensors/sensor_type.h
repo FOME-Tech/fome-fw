@@ -17,7 +17,7 @@
  */
 enum class SensorType : unsigned char {
 	Invalid, // we need indeces for Lua consumers. At the moment we still do not expose constants into Lua :(
-	Clt, // 1
+	Clt,	 // 1
 	Iat,
 	Rpm,
 	/**
@@ -34,7 +34,7 @@ enum class SensorType : unsigned char {
 	OilPressure,
 	OilTemperature,
 
-	FuelPressureLow, // in kPa
+	FuelPressureLow,  // in kPa
 	FuelPressureHigh, // in kPa
 	FuelPressureInjector,
 
@@ -93,7 +93,7 @@ enum class SensorType : unsigned char {
 	// MAP decoding happens only that often thus this is NOT raw MAP as flows from ADC
 	MapSlow,
 
-	Maf2,	// Second bank MAF sensor
+	Maf2, // Second bank MAF sensor
 
 	Map2,
 	MapSlow2,

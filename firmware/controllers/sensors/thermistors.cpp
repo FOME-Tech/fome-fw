@@ -12,12 +12,12 @@
 
 #include "pch.h"
 
-void setDodgeSensor(ThermistorConf *thermistorConf, float pullup) {
+void setDodgeSensor(ThermistorConf* thermistorConf, float pullup) {
 	thermistorConf->config = {-40, 30, 120, 336660, 7550, 390, pullup};
 }
 
 // todo: better method name?
-void setCommonNTCSensor(ThermistorConf *thermistorConf, float pullup) {
+void setCommonNTCSensor(ThermistorConf* thermistorConf, float pullup) {
 	/**
 	 * 18K Ohm @ -20C
 	 * 2.1K Ohm @ 24C

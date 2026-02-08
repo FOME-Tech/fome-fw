@@ -16,9 +16,8 @@ void HellaOilLevelSensor::init(brain_pin_e pin) {
 	m_pin = pin;
 
 #if EFI_PROD_CODE
-	efiExtiEnablePin(getSensorName(), pin, 
-		PAL_EVENT_MODE_BOTH_EDGES,
-		hellaSensorExtiCallback, reinterpret_cast<void*>(this));
+	efiExtiEnablePin(
+			getSensorName(), pin, PAL_EVENT_MODE_BOTH_EDGES, hellaSensorExtiCallback, reinterpret_cast<void*>(this));
 #endif // EFI_PROD_CODE
 
 	Register();

@@ -44,12 +44,13 @@ void initVrPwm() {
 			continue;
 		}
 
-		startSimplePwmHard(&pwms[i], "VR PWM",
-			cfg.pin,
-			&pins[i],
-			10000,	// it's guaranteed to be hardware PWM, the faster the PWM, the less noise makes it through
-			0
-		);
+		startSimplePwmHard(
+				&pwms[i],
+				"VR PWM",
+				cfg.pin,
+				&pins[i],
+				10000, // it's guaranteed to be hardware PWM, the faster the PWM, the less noise makes it through
+				0);
 	}
 }
 

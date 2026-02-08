@@ -18,10 +18,9 @@ static Biquad knockFilter;
 static bool knockNeedsProcess = false;
 static size_t sampleCount = 0;
 
-chibios_rt::BinarySemaphore knockSem(/* taken =*/ true);
+chibios_rt::BinarySemaphore knockSem(/* taken =*/true);
 
 static NamedOutputPin knockSnifferPin("knock window", "kn");
-
 
 void onKnockSamplingComplete() {
 	knockSnifferPin.setLow();
@@ -34,16 +33,13 @@ void onKnockSamplingComplete() {
 	chSysUnlockFromISR();
 }
 
-
 void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t channelIdx) {
 	if (!engineConfiguration->enableSoftwareKnock) {
 		return;
 	}
 
 	// Cancel if ADC isn't ready
-	if (!((KNOCK_ADC.state == ADC_READY) ||
-			(KNOCK_ADC.state == ADC_COMPLETE) ||
-			(KNOCK_ADC.state == ADC_ERROR))) {
+	if (!((KNOCK_ADC.state == ADC_READY) || (KNOCK_ADC.state == ADC_COMPLETE) || (KNOCK_ADC.state == ADC_ERROR))) {
 		return;
 	}
 
@@ -54,7 +50,8 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 
 	// Convert sampling time to number of samples
 	constexpr int sampleRate = KNOCK_SAMPLE_RATE;
-	sampleCount = 0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(knockSampleBuffer)));
+	sampleCount =
+			0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(knockSampleBuffer)));
 
 	// Select the appropriate conversion group - it will differ depending on which sensor this cylinder should listen on
 	auto conversionGroup = getKnockConversionGroup(channelIdx);
@@ -70,7 +67,8 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 
 class KnockThread : public ThreadController<256> {
 public:
-	KnockThread() : ThreadController("knock", PRIO_KNOCK_PROCESS) {}
+	KnockThread()
+		: ThreadController("knock", PRIO_KNOCK_PROCESS) {}
 	void ThreadTask() override;
 };
 
@@ -104,7 +102,7 @@ void initSoftwareKnock() {
 		knockFilter.configureBandpass(KNOCK_SAMPLE_RATE, 1000 * freqKhz, 3);
 
 		efiSetPadMode("knock ch1", KNOCK_PIN_CH1, PAL_MODE_INPUT_ANALOG);
-#if KNOCK_HAS_CH2		
+#if KNOCK_HAS_CH2
 		efiSetPadMode("knock ch2", KNOCK_PIN_CH2, PAL_MODE_INPUT_ANALOG);
 #endif
 		kt.startThread();
@@ -153,7 +151,8 @@ static void processLastKnockEvent() {
 	// clamp to reasonable range
 	db = clampF(-100, db, 100);
 
-	engine->module<KnockController>()->onKnockSenseCompleted(currentCylinderNumber, currentChannelIdx, db, lastKnockTime);
+	engine->module<KnockController>()->onKnockSenseCompleted(
+			currentCylinderNumber, currentChannelIdx, db, lastKnockTime);
 }
 
 void KnockThread::ThreadTask() {

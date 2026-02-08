@@ -8,103 +8,171 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 		case SensorType::Tps1:
 		case SensorType::Tps1Primary:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_TPS1_Primary_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_TPS1_Primary_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_TPS1_Primary_High;
-				case UnexpectedCode::Inconsistent: return ObdCode::OBD_TPS1_Correlation;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_TPS1_Primary_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_TPS1_Primary_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_TPS1_Primary_High;
+				case UnexpectedCode::Inconsistent:
+					return ObdCode::OBD_TPS1_Correlation;
+				default:
+					break;
+			}
+			break;
 		case SensorType::Tps1Secondary:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_TPS1_Secondary_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_TPS1_Secondary_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_TPS1_Secondary_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_TPS1_Secondary_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_TPS1_Secondary_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_TPS1_Secondary_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::Tps2:
 		case SensorType::Tps2Primary:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_TPS2_Primary_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_TPS2_Primary_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_TPS2_Primary_High;
-				case UnexpectedCode::Inconsistent: return ObdCode::OBD_TPS2_Correlation;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_TPS2_Primary_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_TPS2_Primary_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_TPS2_Primary_High;
+				case UnexpectedCode::Inconsistent:
+					return ObdCode::OBD_TPS2_Correlation;
+				default:
+					break;
+			}
+			break;
 		case SensorType::Tps2Secondary:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_TPS2_Secondary_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_TPS2_Secondary_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_TPS2_Secondary_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_TPS2_Secondary_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_TPS2_Secondary_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_TPS2_Secondary_High;
+				default:
+					break;
+			}
+			break;
 
 		case SensorType::AcceleratorPedal:
 		case SensorType::AcceleratorPedalPrimary:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_PPS_Primary_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_PPS_Primary_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_PPS_Primary_High;
-				case UnexpectedCode::Inconsistent: return ObdCode::OBD_PPS_Correlation;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_PPS_Primary_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_PPS_Primary_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_PPS_Primary_High;
+				case UnexpectedCode::Inconsistent:
+					return ObdCode::OBD_PPS_Correlation;
+				default:
+					break;
+			}
+			break;
 		case SensorType::AcceleratorPedalSecondary:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_PPS_Secondary_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_PPS_Secondary_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_PPS_Secondary_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_PPS_Secondary_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_PPS_Secondary_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_PPS_Secondary_High;
+				default:
+					break;
+			}
+			break;
 
 		case SensorType::MapSlow:
 		case SensorType::MapSlow2:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_Map_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_Map_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_Map_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_Map_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_Map_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_Map_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::Maf:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_Maf_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_Maf_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_Maf_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_Maf_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_Maf_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_Maf_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::Clt:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_Clt_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_Clt_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_Clt_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_Clt_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_Clt_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_Clt_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::Iat:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_Iat_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_Iat_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_Iat_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_Iat_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_Iat_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_Iat_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::FuelEthanolPercent:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_FlexSensor_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_FlexSensor_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_FlexSensor_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_FlexSensor_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_FlexSensor_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_FlexSensor_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::OilPressure:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_OilP_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_OilP_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_OilP_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_OilP_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_OilP_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_OilP_High;
+				default:
+					break;
+			}
+			break;
 		case SensorType::OilTemperature:
 			switch (code) {
-				case UnexpectedCode::Timeout:      return ObdCode::OBD_OilT_Timeout;
-				case UnexpectedCode::Low:          return ObdCode::OBD_OilT_Low;
-				case UnexpectedCode::High:         return ObdCode::OBD_OilT_High;
-				default: break;
-			} break;
+				case UnexpectedCode::Timeout:
+					return ObdCode::OBD_OilT_Timeout;
+				case UnexpectedCode::Low:
+					return ObdCode::OBD_OilT_Low;
+				case UnexpectedCode::High:
+					return ObdCode::OBD_OilT_High;
+				default:
+					break;
+			}
+			break;
 		default:
 			break;
 	}
@@ -114,11 +182,16 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 
 inline const char* describeUnexpected(UnexpectedCode code) {
 	switch (code) {
-		case UnexpectedCode::Timeout: return "has timed out";
-		case UnexpectedCode::High: return "input too high";
-		case UnexpectedCode::Low: return "input too low";
-		case UnexpectedCode::Inconsistent: return "is inconsistent";
-		case UnexpectedCode::Configuration: return "is misconfigured";
+		case UnexpectedCode::Timeout:
+			return "has timed out";
+		case UnexpectedCode::High:
+			return "input too high";
+		case UnexpectedCode::Low:
+			return "input too low";
+		case UnexpectedCode::Inconsistent:
+			return "is inconsistent";
+		case UnexpectedCode::Configuration:
+			return "is misconfigured";
 		case UnexpectedCode::Unknown:
 		default:
 			return "unknown";
@@ -129,32 +202,57 @@ static DtcSeverity getSeverityForCode(ObdCode code) {
 	const auto& c = engineConfiguration->dtcControl;
 
 	switch (static_cast<uint16_t>(code)) {
-		case 0x102: return c.p0102;
-		case 0x103: return c.p0103;
-		case 0x107: return c.p0107;
-		case 0x108: return c.p0108;
-		case 0x112: return c.p0112;
-		case 0x113: return c.p0113;
-		case 0x117: return c.p0117;
-		case 0x118: return c.p0118;
-		case 0x176: return c.p0176;
-		case 0x178: return c.p0178;
-		case 0x179: return c.p0179;
-		case 0x197: return c.p0197;
-		case 0x198: return c.p0198;
-		case 0x336: return c.p0336;
-		case 0x340: return c.camNoSignal;
-		case 0x341: return c.camSyncErrors;
-		case 0x345: return c.camNoSignal;
-		case 0x346: return c.camSyncErrors;
-		case 0x365: return c.camNoSignal;
-		case 0x366: return c.camSyncErrors;
-		case 0x385: return c.camNoSignal;
-		case 0x386: return c.camSyncErrors;
-		case 0x522: return c.p0522;
-		case 0x523: return c.p0523;
+		case 0x102:
+			return c.p0102;
+		case 0x103:
+			return c.p0103;
+		case 0x107:
+			return c.p0107;
+		case 0x108:
+			return c.p0108;
+		case 0x112:
+			return c.p0112;
+		case 0x113:
+			return c.p0113;
+		case 0x117:
+			return c.p0117;
+		case 0x118:
+			return c.p0118;
+		case 0x176:
+			return c.p0176;
+		case 0x178:
+			return c.p0178;
+		case 0x179:
+			return c.p0179;
+		case 0x197:
+			return c.p0197;
+		case 0x198:
+			return c.p0198;
+		case 0x336:
+			return c.p0336;
+		case 0x340:
+			return c.camNoSignal;
+		case 0x341:
+			return c.camSyncErrors;
+		case 0x345:
+			return c.camNoSignal;
+		case 0x346:
+			return c.camSyncErrors;
+		case 0x365:
+			return c.camNoSignal;
+		case 0x366:
+			return c.camSyncErrors;
+		case 0x385:
+			return c.camNoSignal;
+		case 0x386:
+			return c.camSyncErrors;
+		case 0x522:
+			return c.p0522;
+		case 0x523:
+			return c.p0523;
 		case 0x327: // falls through
-		case 0x332: return c.knockSensorLow;
+		case 0x332:
+			return c.knockSensorLow;
 		default:
 			return DtcSeverity::WarningOnly;
 	}
@@ -365,34 +463,36 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::OilTemperature);
 
 #if EFI_SHAFT_POSITION_INPUT
-	checkTriggerDecoder(engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
+	checkTriggerDecoder(
+			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
 
 	// Only check cams if the engine moved recently, AND the primary trigger has 10 syncs
-	if (engine->triggerCentral.engineMovedRecently() && engine->triggerCentral.triggerState.crankSynchronizationCounter > 10) {
+	if (engine->triggerCentral.engineMovedRecently() &&
+		engine->triggerCentral.triggerState.crankSynchronizationCounter > 10) {
 		checkCamDecoder(
-			0, 0,
-			"VVT Bank 1 Intake",
-			ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
-			ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors
-		);
+				0,
+				0,
+				"VVT Bank 1 Intake",
+				ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors);
 		checkCamDecoder(
-			0, 1,
-			"VVT Bank 1 Exhaust",
-			ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
-			ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors
-		);
+				0,
+				1,
+				"VVT Bank 1 Exhaust",
+				ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors);
 		checkCamDecoder(
-			1, 0,
-			"VVT Bank 2 Intake",
-			ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
-			ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors
-		);
+				1,
+				0,
+				"VVT Bank 2 Intake",
+				ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors);
 		checkCamDecoder(
-			1, 1,
-			"VVT Bank 2 Exhaust",
-			ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
-			ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors
-		);
+				1,
+				1,
+				"VVT Bank 2 Exhaust",
+				ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors);
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
 
@@ -484,5 +584,4 @@ void SensorChecker::onKnockSensorSignal(float dbv, uint8_t channelIdx, efitick_t
 	if (dbv > engineConfiguration->knockNoiseThreshold) {
 		m_lastGoodKnockSampleTimer[channelIdx].reset(knockSenseTime);
 	}
-	
 }

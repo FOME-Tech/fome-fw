@@ -5,9 +5,7 @@
 RedundantSensor::RedundantSensor(SensorType outputType, SensorType first, SensorType second)
 	: Sensor(outputType)
 	, m_first(first)
-	, m_second(second)
-{
-}
+	, m_second(second) {}
 
 void RedundantSensor::configure(float maxDifference, bool ignoreSecondSensor, float secondMaximum) {
 	m_maxDifference = maxDifference;

@@ -1,6 +1,6 @@
 /**
  * @author Matthew Kennedy, (c) 2021
- * 
+ *
  * A function to convert input voltage output value based on a 2d table.
  */
 
@@ -16,15 +16,13 @@ class TableFunc final : public SensorConverter {
 public:
 	TableFunc(TBin (&bins)[TSize], TValue (&values)[TSize])
 		: m_bins(bins)
-		, m_values(values)
-	{
-	}
+		, m_values(values) {}
 
 	SensorResult convert(float inputValue) const override {
 		return interpolate2d(inputValue, m_bins, m_values);
 	}
 
-	void showInfo(float /*testInputValue*/) const override { }
+	void showInfo(float /*testInputValue*/) const override {}
 
 private:
 	TBin (&m_bins)[TSize];

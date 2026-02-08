@@ -3,17 +3,16 @@
 #if EFI_CAN_SUPPORT || EFI_UNIT_TEST
 #include "AemXSeriesLambda.h"
 
-static constexpr uint32_t aem_base    = 0x180;
+static constexpr uint32_t aem_base = 0x180;
 static constexpr uint32_t rusefi_base = 0x190;
 
 AemXSeriesWideband::AemXSeriesWideband(uint8_t sensorIndex, SensorType type)
 	: CanSensorBase(
-		0,	// ID passed here doesn't matter since we override acceptFrame
-		type,
-		MS2NT(21)	// sensor transmits at 100hz, allow a frame to be missed
-	)
-	, m_logicalIndex(sensorIndex)
-{}
+			  0, // ID passed here doesn't matter since we override acceptFrame
+			  type,
+			  MS2NT(21) // sensor transmits at 100hz, allow a frame to be missed
+			  )
+	, m_logicalIndex(sensorIndex) {}
 
 bool AemXSeriesWideband::acceptFrame(CanBusIndex busIndex, const CANRxFrame& frame) const {
 	if (frame.DLC != 8) {
@@ -33,12 +32,14 @@ bool AemXSeriesWideband::acceptFrame(CanBusIndex busIndex, const CANRxFrame& fra
 	switch (mode) {
 		case WidebandMode::Analog: {
 			break;
-		} case WidebandMode::AemXSeries: {
+		}
+		case WidebandMode::AemXSeries: {
 			// 0th sensor is 0x180, 1st sensor is 0x181, etc
 			uint32_t aemXSeriesId = aem_base + deviceIndex;
 
 			return id == aemXSeriesId;
-		} case WidebandMode::FOMEInternal: {
+		}
+		case WidebandMode::FOMEInternal: {
 			// 0th sensor is 0x190 and 0x191, 1st sensor is 0x192 and 0x193
 			uint32_t rusefiBaseId = rusefi_base + 2 * deviceIndex;
 
@@ -55,21 +56,21 @@ void AemXSeriesWideband::decodeFrame(const CANRxFrame& frame, efitick_t nowNt) {
 	// accept frame has already guaranteed that this message belongs to us
 	// We just have to check if it's AEM or FOME
 	switch (engineConfiguration->widebandMode) {
-	case WidebandMode::Analog:
-		// disabled, ignore
-		break;
-	case WidebandMode::AemXSeries:
-		decodeAemXSeries(frame, nowNt);
-		break;
-	case WidebandMode::FOMEInternal:
-		if ((id & 0x1) != 0) {
-			// low bit is set, this is the "diag" frame
-			decodeRusefiDiag(frame);
-		} else {
-			// low bit not set, this is standard frame
-			decodeRusefiStandard(frame, nowNt);
-		}
-		break;
+		case WidebandMode::Analog:
+			// disabled, ignore
+			break;
+		case WidebandMode::AemXSeries:
+			decodeAemXSeries(frame, nowNt);
+			break;
+		case WidebandMode::FOMEInternal:
+			if ((id & 0x1) != 0) {
+				// low bit is set, this is the "diag" frame
+				decodeRusefiDiag(frame);
+			} else {
+				// low bit not set, this is standard frame
+				decodeRusefiStandard(frame, nowNt);
+			}
+			break;
 	}
 }
 
@@ -100,7 +101,10 @@ void AemXSeriesWideband::decodeRusefiStandard(const CANRxFrame& frame, efitick_t
 	auto data = reinterpret_cast<const wbo::StandardData*>(&frame.data8[0]);
 
 	if (data->Version != RUSEFI_WIDEBAND_VERSION) {
-		firmwareError(ObdCode::OBD_WB_FW_Mismatch, "Wideband controller index %d has wrong firmware version, please update!", m_logicalIndex);
+		firmwareError(
+				ObdCode::OBD_WB_FW_Mismatch,
+				"Wideband controller index %d has wrong firmware version, please update!",
+				m_logicalIndex);
 		return;
 	}
 

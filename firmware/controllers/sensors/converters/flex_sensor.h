@@ -1,7 +1,6 @@
 #include "sensor_converter_func.h"
 #include "biquad.h"
 
-
 class FlexConverter : public SensorConverter {
 public:
 	FlexConverter() {

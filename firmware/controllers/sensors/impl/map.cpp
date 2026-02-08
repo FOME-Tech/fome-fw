@@ -29,7 +29,9 @@ static void printMAPInfo() {
 	efiPrintf("instant value=%.2fkPa", Sensor::getOrZero(SensorType::Map));
 
 #ifdef MODULE_MAP_AVERAGING
-	efiPrintf("map type=%d/%s MAP=%.2fkPa mapMinBufferLength=%d", engineConfiguration->map.sensor.type,
+	efiPrintf(
+			"map type=%d/%s MAP=%.2fkPa mapMinBufferLength=%d",
+			engineConfiguration->map.sensor.type,
 			getAir_pressure_sensor_type_e(engineConfiguration->map.sensor.type),
 			Sensor::getOrZero(SensorType::Map),
 			mapMinBufferLength);
@@ -38,10 +40,10 @@ static void printMAPInfo() {
 	adc_channel_e mapAdc = engineConfiguration->map.sensor.hwChannel;
 	char pinNameBuffer[16];
 
-	efiPrintf("MAP %.2fv @%s", getVoltage("mapinfo", mapAdc),
-			getPinNameByAdcChannel("map", mapAdc, pinNameBuffer));
+	efiPrintf("MAP %.2fv @%s", getVoltage("mapinfo", mapAdc), getPinNameByAdcChannel("map", mapAdc, pinNameBuffer));
 	if (engineConfiguration->map.sensor.type == MT_CUSTOM) {
-		efiPrintf("at %.2fv=%.2f at %.2fv=%.2f",
+		efiPrintf(
+				"at %.2fv=%.2f at %.2fv=%.2f",
 				engineConfiguration->mapLowValueVoltage,
 				engineConfiguration->map.sensor.lowValue,
 				engineConfiguration->mapHighValueVoltage,
@@ -49,9 +51,13 @@ static void printMAPInfo() {
 	}
 
 	if (Sensor::hasSensor(SensorType::BarometricPressure)) {
-		efiPrintf("baro type=%d value=%.2f", engineConfiguration->baroSensor.type, Sensor::get(SensorType::BarometricPressure).value_or(-1));
+		efiPrintf(
+				"baro type=%d value=%.2f",
+				engineConfiguration->baroSensor.type,
+				Sensor::get(SensorType::BarometricPressure).value_or(-1));
 		if (engineConfiguration->baroSensor.type == MT_CUSTOM) {
-			efiPrintf("min=%.2f@%.2f max=%.2f@%.2f",
+			efiPrintf(
+					"min=%.2f@%.2f max=%.2f@%.2f",
 					engineConfiguration->baroSensor.lowValue,
 					engineConfiguration->mapLowValueVoltage,
 					engineConfiguration->baroSensor.highValue,
