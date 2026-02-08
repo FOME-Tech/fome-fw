@@ -15,7 +15,7 @@
 		"**/.dep": true,
 		"**/build/lst": true,
 		"**/build/obj": true,
-		"firmware/ChibiOS/demos": true,
+		"firmware/ext/ChibiOS/demos": true,
 	},
 	"cSpell.words": [
 		"IACV"
