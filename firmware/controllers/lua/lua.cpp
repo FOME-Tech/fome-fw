@@ -19,9 +19,9 @@
 
 static char luaUserHeap[LUA_USER_HEAP]
 #ifdef EFI_HAS_EXT_SDRAM
-SDRAM_OPTIONAL
+		SDRAM_OPTIONAL
 #endif
-;
+		;
 
 class Heap {
 public:
@@ -40,13 +40,12 @@ public:
 	}
 
 public:
-	template<size_t TSize>
-	Heap(char (&buffer)[TSize])
-	{
+	template <size_t TSize>
+	Heap(char (&buffer)[TSize]) {
 		reinit(buffer, TSize);
 	}
 
-	void reinit(char *buffer, size_t size) {
+	void reinit(char* buffer, size_t size) {
 		efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, m_memoryUsed == 0, "Too late to reinit Lua heap");
 
 		m_size = size;
@@ -66,7 +65,7 @@ public:
 			return nullptr;
 		}
 
-		void *new_mem = alloc(nsize);
+		void* new_mem = alloc(nsize);
 
 		// Don't count the memory use if not allocated
 		if (new_mem) {
@@ -119,7 +118,7 @@ static void* myAlloc(void* /*ud*/, void* ptr, size_t osize, size_t nsize) {
 
 	return userHeap.realloc(ptr, osize, nsize);
 }
-#else // not EFI_PROD_CODE
+#else  // not EFI_PROD_CODE
 // Non-MCU code can use plain realloc function instead of custom implementation
 static void* myAlloc(void* /*ud*/, void* ptr, size_t /*osize*/, size_t nsize) {
 	if (!nsize) {
@@ -150,9 +149,9 @@ static int lua_setTickRate(lua_State* l) {
 
 static void loadLibraries(LuaHandle& ls) {
 	constexpr luaL_Reg libs[] = {
-		// TODO: do we even need the base lib?
-		//{ LUA_GNAME, luaopen_base },
-		{ LUA_MATHLIBNAME, luaopen_math },
+			// TODO: do we even need the base lib?
+			//{ LUA_GNAME, luaopen_base },
+			{LUA_MATHLIBNAME, luaopen_math},
 	};
 
 	for (size_t i = 0; i < efi::size(libs); i++) {
@@ -174,7 +173,8 @@ static LuaHandle setupLuaState(lua_Alloc alloc) {
 		firmwareError("Lua panic: %s", lua_tostring(l, -1));
 
 		// hang the lua thread
-		while (true) ;
+		while (true)
+			;
 
 		return 0;
 	});
@@ -275,7 +275,8 @@ void invokeTick(LuaHandle& ls) {
 }
 
 struct LuaThread : ThreadController<4096> {
-	LuaThread() : ThreadController("lua", PRIO_LUA) { }
+	LuaThread()
+		: ThreadController("lua", PRIO_LUA) {}
 
 	void ThreadTask() override;
 };
@@ -289,7 +290,6 @@ static void resetLua() {
 	// De-init pins, they will reinit next start of the script.
 	luaDeInitPins();
 }
-
 
 static bool needsReset = false;
 
@@ -376,9 +376,10 @@ void startLua() {
 	// we need this on microRusEFI for sure
 	// definitely should NOT have this on Proteus
 	// on Hellen a bit of open question what's the best track
-	// cute hack: let's check at runtime if you are a lucky owner of microRusEFI with extra RAM and use that extra RAM for extra Lua
+	// cute hack: let's check at runtime if you are a lucky owner of microRusEFI with extra RAM and use that extra RAM
+	// for extra Lua
 	if (isStm32F42x()) {
-		char *buffer = (char *)0x20020000;
+		char* buffer = (char*)0x20020000;
 		userHeap.reinit(buffer, 60000);
 	}
 #endif
@@ -390,7 +391,7 @@ void startLua() {
 
 	luaThread.startThread();
 
-	addConsoleActionS("lua", [](const char* str){
+	addConsoleActionS("lua", [](const char* str) {
 		if (interactivePending) {
 			return;
 		}
@@ -401,9 +402,7 @@ void startLua() {
 		interactivePending = true;
 	});
 
-	addConsoleAction("luareset", [](){
-		needsReset = true;
-	});
+	addConsoleAction("luareset", []() { needsReset = true; });
 
 	addConsoleAction("luamemory", printLuaMemoryInfo);
 #endif
@@ -411,7 +410,7 @@ void startLua() {
 
 #else // not EFI_UNIT_TEST
 
-void startLua() { }
+void startLua() {}
 
 #include <stdexcept>
 #include <string>

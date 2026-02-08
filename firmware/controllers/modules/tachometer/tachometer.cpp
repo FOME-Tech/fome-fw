@@ -10,7 +10,7 @@
 
 #include "pch.h"
 
-static SimplePwm tachControl("tach"); 
+static SimplePwm tachControl("tach");
 static float tachFreq;
 static float duty;
 
@@ -44,7 +44,7 @@ void TachometerModule::onFastCallback() {
 	float cycleTimeMs = 60000.0f / getRpm();
 	float periodTimeMs = cycleTimeMs / periods;
 	tachFreq = 1000.0f / periodTimeMs;
-	
+
 	if (engineConfiguration->tachPulseDurationAsDutyCycle) {
 		// Simple case - duty explicitly set
 		duty = engineConfiguration->tachPulseDuractionMs;
@@ -57,7 +57,7 @@ void TachometerModule::onFastCallback() {
 	if (tachFreq < 1) {
 		tachFreq = NAN;
 	}
-	
+
 	tachControl.setSimplePwmDutyCycle(duty);
 	tachControl.setFrequency(tachFreq);
 }
@@ -100,10 +100,7 @@ void initTachometer() {
 		return;
 	}
 
-	startSimplePwm(&tachControl,
-				"Tachometer",
-				&enginePins.tachOut,
-				NAN, 0.1f);
+	startSimplePwm(&tachControl, "Tachometer", &enginePins.tachOut, NAN, 0.1f);
 
 	tachHasInit = true;
 }

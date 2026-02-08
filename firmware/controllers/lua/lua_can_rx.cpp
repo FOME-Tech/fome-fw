@@ -2,15 +2,14 @@
 
 #include "can_filter.h"
 
-
 #if EFI_CAN_SUPPORT
 
 #include "rusefi_lua.h"
 
 extern "C" {
-	#include "lapi.h"
-	#include "ltable.h"
-	#include "lgc.h"
+#include "lapi.h"
+#include "ltable.h"
+#include "lgc.h"
 }
 
 // Stores information about one received CAN frame: which bus, plus the actual frame
@@ -63,8 +62,8 @@ void processLuaCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 }
 
 // From lapi.c:756, modified slightly
-static void lua_createtable_noGC(lua_State *L, int narray) {
-	Table *t;
+static void lua_createtable_noGC(lua_State* L, int narray) {
+	Table* t;
 	lua_lock(L);
 	t = luaH_new(L);
 	sethvalue2s(L, L->top, t);
@@ -152,7 +151,8 @@ bool doOneLuaCanRx(LuaHandle& ls) {
 
 void doLuaCanRx(LuaHandle& ls) {
 	// While it processed a frame, continue checking
-	while (doOneLuaCanRx(ls)) ;
+	while (doOneLuaCanRx(ls))
+		;
 }
 
 void initLuaCanRx() {
