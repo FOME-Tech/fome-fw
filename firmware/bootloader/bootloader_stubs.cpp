@@ -8,16 +8,16 @@
  * Mostly it's efi_gpio.cpp, flash_main.cpp, etc. needed only to make it work.
  * And stubs needed just to settle down compiler errors.
  * The whole idea of bootloader is to make it as small as possible and reasonably independent.
-*/
+ */
 
-void chDbgPanic3(const char* /*msg*/, const char* /*file*/, int /*line*/) {
-}
+void chDbgPanic3(const char* /*msg*/, const char* /*file*/, int /*line*/) {}
 
-void logHardFault(uint32_t /*type*/, uintptr_t /*faultAddress*/, struct port_extctx* /*ctx*/, uint32_t /*csfr*/) { }
+void logHardFault(uint32_t /*type*/, uintptr_t /*faultAddress*/, struct port_extctx* /*ctx*/, uint32_t /*csfr*/) {}
 
-void firmwareError(ObdCode /*code*/, const char* /*fmt*/, ...) {
-}
-namespace priv { void efiPrintfInternal(const char* /*format*/, ...) { } }
+void firmwareError(ObdCode /*code*/, const char* /*fmt*/, ...) {}
+namespace priv {
+void efiPrintfInternal(const char* /*format*/, ...) {}
+} // namespace priv
 
 void irqEnterHook() {}
 void irqExitHook() {}
@@ -34,7 +34,7 @@ void extiCallbackThunk(void* data) {
 }
 
 // EXT is not able to give you the front direction but you could read the pin in the callback.
-void efiExtiEnablePin(const char *msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void *cb_data) {
+void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	ioportid_t port = getHwPort(msg, brainPin);
 	int index = getHwPin(msg, brainPin);
 
@@ -52,6 +52,6 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	palDisableLineEvent(line);
 }
 
-void perfEventBegin(PE) { }
-void perfEventEnd(PE) { }
-void perfEventInstantGlobal(PE) { }
+void perfEventBegin(PE) {}
+void perfEventEnd(PE) {}
+void perfEventInstantGlobal(PE) {}
