@@ -31,34 +31,25 @@
 #include "fuel_math.h"
 #include "malfunction_central.h"
 
-static const int16_t supportedPids0120[] = { 
-	PID_MONITOR_STATUS,
-	PID_FUEL_SYSTEM_STATUS,
-	PID_ENGINE_LOAD,
-	PID_COOLANT_TEMP,
-	PID_STFT_BANK1,
-	PID_STFT_BANK2,
-	PID_INTAKE_MAP,
-	PID_RPM,
-	PID_SPEED,
-	PID_TIMING_ADVANCE,
-	PID_INTAKE_TEMP,
-	PID_THROTTLE,
-	-1
-};
+static const int16_t supportedPids0120[] = {
+		PID_MONITOR_STATUS,
+		PID_FUEL_SYSTEM_STATUS,
+		PID_ENGINE_LOAD,
+		PID_COOLANT_TEMP,
+		PID_STFT_BANK1,
+		PID_STFT_BANK2,
+		PID_INTAKE_MAP,
+		PID_RPM,
+		PID_SPEED,
+		PID_TIMING_ADVANCE,
+		PID_INTAKE_TEMP,
+		PID_THROTTLE,
+		-1};
 
-static const int16_t supportedPids2140[] = {
-	PID_FUEL_AIR_RATIO_1,
-	-1
-};
+static const int16_t supportedPids2140[] = {PID_FUEL_AIR_RATIO_1, -1};
 
-static const int16_t supportedPids4160[] = { 
-	PID_CONTROL_UNIT_VOLTAGE,
-	PID_ETHANOL,
-	PID_FUEL_RATE,
-	PID_OIL_TEMPERATURE,
-	-1
-};
+static const int16_t supportedPids4160[] = {
+		PID_CONTROL_UNIT_VOLTAGE, PID_ETHANOL, PID_FUEL_RATE, PID_OIL_TEMPERATURE, -1};
 
 static void obdSendPacket(int mode, uint8_t pid, int numBytes, uint32_t iValue, CanBusIndex busIndex) {
 	// Respond on the same bus we got the request from
@@ -85,10 +76,9 @@ static void obdSendValue(int mode, int PID, int numBytes, float value, CanBusInd
 	obdSendPacket(mode, PID, numBytes, iValue, busIndex);
 }
 
+// #define MOCK_SUPPORTED_PIDS 0xffffffff
 
-//#define MOCK_SUPPORTED_PIDS 0xffffffff
-
-static void obdWriteSupportedPids(uint8_t pid, int bitOffset, const int16_t *supportedPids, CanBusIndex busIndex) {
+static void obdWriteSupportedPids(uint8_t pid, int bitOffset, const int16_t* supportedPids, CanBusIndex busIndex) {
 	uint32_t value = 0;
 	// gather all 32 bit fields
 	for (int i = 0; i < 32 && supportedPids[i] > 0; i++)
@@ -129,94 +119,119 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 		// expect length 2: service + PID
 		return;
 	}
-	
+
 	auto pid = rx.data8[2];
 
 	switch (pid) {
-	case PID_SUPPORTED_PIDS_REQUEST_01_20:
-		obdWriteSupportedPids(pid, 1, supportedPids0120, busIndex);
-		break;
-	case PID_SUPPORTED_PIDS_REQUEST_21_40:
-		obdWriteSupportedPids(pid, 21, supportedPids2140, busIndex);
-		break;
-	case PID_SUPPORTED_PIDS_REQUEST_41_60:
-		obdWriteSupportedPids(pid, 41, supportedPids4160, busIndex);
-		break;
-	case PID_MONITOR_STATUS:
-		obdStatusQuery(pid, busIndex);
-		break;
-	case PID_FUEL_SYSTEM_STATUS:
-		// todo: add statuses
-		obdSendValue(_1_MODE, pid, 2, (2<<8)|(0), busIndex);	// 2 = "Closed loop, using oxygen sensor feedback to determine fuel mix"
-		break;
-	case PID_ENGINE_LOAD:
-		obdSendValue(_1_MODE, pid, 1, getFuelingLoad() * ODB_TPS_BYTE_PERCENT, busIndex);
-		break;
-	case PID_COOLANT_TEMP:
-		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Clt) + ODB_TEMP_EXTRA, busIndex);
-		break;
-	case PID_STFT_BANK1:
-		obdSendValue(_1_MODE, pid, 1, 128 * engine->stftCorrection[0], busIndex);
-		break;
-	case PID_STFT_BANK2:
-		obdSendValue(_1_MODE, pid, 1, 128 * engine->stftCorrection[1], busIndex);
-		break;
-	case PID_INTAKE_MAP:
-		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Map), busIndex);
-		break;
-	case PID_RPM:
-		obdSendValue(_1_MODE, pid, 2, Sensor::getOrZero(SensorType::Rpm) * ODB_RPM_MULT, busIndex);	//	rotation/min.	(A*256+B)/4
-		break;
-	case PID_SPEED:
-		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::VehicleSpeed), busIndex);
-		break;
-	case PID_TIMING_ADVANCE: {
-		float timing = engine->cylinders[0].getIgnitionTimingBtdc();
-		timing = (timing > 360.0f) ? (timing - 720.0f) : timing;
-		obdSendValue(_1_MODE, pid, 1, (timing + 64.0f) * 2.0f, busIndex);		// angle before TDC.	(A/2)-64
-		break;
+		case PID_SUPPORTED_PIDS_REQUEST_01_20:
+			obdWriteSupportedPids(pid, 1, supportedPids0120, busIndex);
+			break;
+		case PID_SUPPORTED_PIDS_REQUEST_21_40:
+			obdWriteSupportedPids(pid, 21, supportedPids2140, busIndex);
+			break;
+		case PID_SUPPORTED_PIDS_REQUEST_41_60:
+			obdWriteSupportedPids(pid, 41, supportedPids4160, busIndex);
+			break;
+		case PID_MONITOR_STATUS:
+			obdStatusQuery(pid, busIndex);
+			break;
+		case PID_FUEL_SYSTEM_STATUS:
+			// todo: add statuses
+			obdSendValue(
+					_1_MODE,
+					pid,
+					2,
+					(2 << 8) | (0),
+					busIndex); // 2 = "Closed loop, using oxygen sensor feedback to determine fuel mix"
+			break;
+		case PID_ENGINE_LOAD:
+			obdSendValue(_1_MODE, pid, 1, getFuelingLoad() * ODB_TPS_BYTE_PERCENT, busIndex);
+			break;
+		case PID_COOLANT_TEMP:
+			obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Clt) + ODB_TEMP_EXTRA, busIndex);
+			break;
+		case PID_STFT_BANK1:
+			obdSendValue(_1_MODE, pid, 1, 128 * engine->stftCorrection[0], busIndex);
+			break;
+		case PID_STFT_BANK2:
+			obdSendValue(_1_MODE, pid, 1, 128 * engine->stftCorrection[1], busIndex);
+			break;
+		case PID_INTAKE_MAP:
+			obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Map), busIndex);
+			break;
+		case PID_RPM:
+			obdSendValue(
+					_1_MODE,
+					pid,
+					2,
+					Sensor::getOrZero(SensorType::Rpm) * ODB_RPM_MULT,
+					busIndex); //	rotation/min.	(A*256+B)/4
+			break;
+		case PID_SPEED:
+			obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::VehicleSpeed), busIndex);
+			break;
+		case PID_TIMING_ADVANCE: {
+			float timing = engine->cylinders[0].getIgnitionTimingBtdc();
+			timing = (timing > 360.0f) ? (timing - 720.0f) : timing;
+			obdSendValue(_1_MODE, pid, 1, (timing + 64.0f) * 2.0f, busIndex); // angle before TDC.	(A/2)-64
+			break;
 		}
-	case PID_INTAKE_TEMP:
-		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Iat) + ODB_TEMP_EXTRA, busIndex);
-		break;
-	case PID_INTAKE_MAF:
-		obdSendValue(_1_MODE, pid, 2, Sensor::getOrZero(SensorType::Maf) * 100.0f, busIndex);	// grams/sec	(A*256+B)/100
-		break;
-	case PID_THROTTLE:
-		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Tps1) * ODB_TPS_BYTE_PERCENT, busIndex);	// (A*100/255)
-		break;
-	case PID_FUEL_AIR_RATIO_1: {
-		float lambda = clampF(0, Sensor::getOrZero(SensorType::Lambda1), 1.99f);
+		case PID_INTAKE_TEMP:
+			obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Iat) + ODB_TEMP_EXTRA, busIndex);
+			break;
+		case PID_INTAKE_MAF:
+			obdSendValue(
+					_1_MODE,
+					pid,
+					2,
+					Sensor::getOrZero(SensorType::Maf) * 100.0f,
+					busIndex); // grams/sec	(A*256+B)/100
+			break;
+		case PID_THROTTLE:
+			obdSendValue(
+					_1_MODE,
+					pid,
+					1,
+					Sensor::getOrZero(SensorType::Tps1) * ODB_TPS_BYTE_PERCENT,
+					busIndex); // (A*100/255)
+			break;
+		case PID_FUEL_AIR_RATIO_1: {
+			float lambda = clampF(0, Sensor::getOrZero(SensorType::Lambda1), 1.99f);
 
-		uint16_t scaled = lambda * 32768;
+			uint16_t scaled = lambda * 32768;
 
-		obdSendPacket(1, pid, 4, scaled << 16, busIndex);
-		break;
+			obdSendPacket(1, pid, 4, scaled << 16, busIndex);
+			break;
 
-	#ifdef MODULE_TRIP_ODO
-	} case PID_FUEL_RATE: {
-		float gPerSecond = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
-		float gPerHour = gPerSecond * 3600;
-		float literPerHour = gPerHour * 0.00139f;
-		obdSendValue(_1_MODE, pid, 2, literPerHour * 20.0f, busIndex);	//	L/h.	(A*256+B)/20
-		break;
-	#endif // MODULE_TRIP_ODO
-	} case PID_CONTROL_UNIT_VOLTAGE: {
-		obdSendValue(_1_MODE, pid, 2, 1000 * Sensor::getOrZero(SensorType::BatteryVoltage), busIndex);
-		break;
-	} case PID_ETHANOL: {
-		obdSendValue(_1_MODE, pid, 1, (255.0f / 100) * Sensor::getOrZero(SensorType::FuelEthanolPercent), busIndex);
-		break;
-	} case PID_OIL_TEMPERATURE: {
-		obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::OilTemperature) + ODB_TEMP_EXTRA, busIndex);
-		break;
-	} default:
-		// ignore unhandled PIDs
-		break;
+#ifdef MODULE_TRIP_ODO
+		}
+		case PID_FUEL_RATE: {
+			float gPerSecond = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+			float gPerHour = gPerSecond * 3600;
+			float literPerHour = gPerHour * 0.00139f;
+			obdSendValue(_1_MODE, pid, 2, literPerHour * 20.0f, busIndex); //	L/h.	(A*256+B)/20
+			break;
+#endif // MODULE_TRIP_ODO
+		}
+		case PID_CONTROL_UNIT_VOLTAGE: {
+			obdSendValue(_1_MODE, pid, 2, 1000 * Sensor::getOrZero(SensorType::BatteryVoltage), busIndex);
+			break;
+		}
+		case PID_ETHANOL: {
+			obdSendValue(_1_MODE, pid, 1, (255.0f / 100) * Sensor::getOrZero(SensorType::FuelEthanolPercent), busIndex);
+			break;
+		}
+		case PID_OIL_TEMPERATURE: {
+			obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::OilTemperature) + ODB_TEMP_EXTRA, busIndex);
+			break;
+		}
+		default:
+			// ignore unhandled PIDs
+			break;
 	}
 }
 
-template<typename T>
+template <typename T>
 static void writeDtc(T& msg, size_t offset, ObdCode code) {
 	msg[offset + 0] = (static_cast<uint16_t>(code) >> 8) & 0xFF;
 	msg[offset + 1] = (static_cast<uint16_t>(code) >> 0) & 0xFF;
@@ -228,15 +243,15 @@ static void handleDtcRequest(uint8_t service, size_t numCodes, ObdCode* dtcCode,
 	if (numCodes == 0) {
 		// No DTCs: Respond with no trouble codes
 		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
-		tx[0] = 0x2;				// 2 data bytes
-		tx[1] = 0x40 + service;		// Service $03 response
-		tx[2] = 0x0;				// No DTCs
+		tx[0] = 0x2;			// 2 data bytes
+		tx[1] = 0x40 + service; // Service $03 response
+		tx[2] = 0x0;			// No DTCs
 	} else if (numCodes <= 2) {
 		// Response will fit in a single frame
 		CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
-		tx[0] = 1 + 1 + 2 * numCodes;	// 1 (service) + 1 (num bytes) + 2*N (codes) data bytes
-		tx[1] = 0x40 + service;		// Service $03 response
-		tx[2] = numCodes;			// N stored codes
+		tx[0] = 1 + 1 + 2 * numCodes; // 1 (service) + 1 (num bytes) + 2*N (codes) data bytes
+		tx[1] = 0x40 + service;		  // Service $03 response
+		tx[2] = numCodes;			  // N stored codes
 
 		for (size_t i = 0; i < numCodes; i++) {
 			size_t dest = 3 + 2 * i;
@@ -252,12 +267,12 @@ static void handleDtcRequest(uint8_t service, size_t numCodes, ObdCode* dtcCode,
 			// ISO-TP first frame
 			CanTxMessage tx(OBD_TEST_RESPONSE, 8, busIndex, false);
 			// Header
-			tx[0] = 0x10;					// First frame
-			tx[1] =	1 + 1 + 2 * numCodes;	// Total bytes (service + num codes + codes)
+			tx[0] = 0x10;				  // First frame
+			tx[1] = 1 + 1 + 2 * numCodes; // Total bytes (service + num codes + codes)
 
 			// Start data
-			tx[2] = 0x40 + service;			// Service $03 response
-			tx[3] = numCodes;				// N stored codes
+			tx[2] = 0x40 + service; // Service $03 response
+			tx[3] = numCodes;		// N stored codes
 
 			for (size_t i = 0; i < 4; i++) {
 				tx[4 + i] = responseBytes[i];
@@ -295,20 +310,20 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 	auto service = rx.data8[1];
 
 	switch (service) {
-	case OBD_CURRENT_DATA:
-		handleGetDataRequest(length, rx, busIndex);
-		break;
-	case OBD_STORED_DTC:
-		static error_codes_set_s localErrorCopy;
-		getErrorCodes(&localErrorCopy);
+		case OBD_CURRENT_DATA:
+			handleGetDataRequest(length, rx, busIndex);
+			break;
+		case OBD_STORED_DTC:
+			static error_codes_set_s localErrorCopy;
+			getErrorCodes(&localErrorCopy);
 
-		handleDtcRequest(service, localErrorCopy.count, localErrorCopy.error_codes, busIndex);
-		break;
-	case OBD_PENDING_DTC:
-	case OBD_PERMANENT_DTC:
-		// We don't support pending or permanent DTCs.
-		handleDtcRequest(service, 0, nullptr, busIndex);
-		break;
+			handleDtcRequest(service, localErrorCopy.count, localErrorCopy.error_codes, busIndex);
+			break;
+		case OBD_PENDING_DTC:
+		case OBD_PERMANENT_DTC:
+			// We don't support pending or permanent DTCs.
+			handleDtcRequest(service, 0, nullptr, busIndex);
+			break;
 	}
 }
 // #endif /* HAL_USE_CAN */

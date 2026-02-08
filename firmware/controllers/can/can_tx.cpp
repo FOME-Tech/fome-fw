@@ -19,29 +19,35 @@
 
 extern CanListener* canListeners_head;
 
-
 CanWrite::CanWrite()
-	: PeriodicController("CAN TX", PRIO_CAN_TX, CAN_CYCLE_FREQ)
-{
-}
+	: PeriodicController("CAN TX", PRIO_CAN_TX, CAN_CYCLE_FREQ) {}
 
 static CI roundTxPeriodToCycle(uint16_t period) {
-	if (period < 10) return CI::_5ms;
-	else if (period < 20) return CI::_10ms;
-	else if (period < 50) return CI::_20ms;
-	else if (period < 100) return CI::_50ms;
-	else if (period < 200) return CI::_100ms;
-	else if (period < 250) return CI::_200ms;
-	else if (period < 500) return CI::_250ms;
-	else if (period < 1000) return CI::_500ms;
-	else return CI::_1000ms;
+	if (period < 10)
+		return CI::_5ms;
+	else if (period < 20)
+		return CI::_10ms;
+	else if (period < 50)
+		return CI::_20ms;
+	else if (period < 100)
+		return CI::_50ms;
+	else if (period < 200)
+		return CI::_100ms;
+	else if (period < 250)
+		return CI::_200ms;
+	else if (period < 500)
+		return CI::_250ms;
+	else if (period < 1000)
+		return CI::_500ms;
+	else
+		return CI::_1000ms;
 }
 
 void CanWrite::PeriodicTask(efitick_t) {
 	static uint16_t cycleCount = 0;
 	CanCycle cycle(cycleCount);
 
-	//in case we have Verbose Can enabled, we should keep user configured period
+	// in case we have Verbose Can enabled, we should keep user configured period
 	if (engineConfiguration->enableVerboseCanTx) {
 		auto roundedInterval = roundTxPeriodToCycle(engineConfiguration->canSleepPeriodMs);
 		if (cycle.isInterval(roundedInterval)) {
@@ -57,7 +63,7 @@ void CanWrite::PeriodicTask(efitick_t) {
 	}
 
 	if (cycle.isInterval(CI::_MAX_Cycle)) {
-		//we now reset cycleCount since we reached max cycle count
+		// we now reset cycleCount since we reached max cycle count
 		cycleCount = 0;
 	}
 

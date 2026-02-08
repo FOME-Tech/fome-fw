@@ -52,10 +52,10 @@ static void populateFrame(Status& msg) {
 
 	msg.gear = Sensor::getOrZero(SensorType::DetectedGear);
 
-	#ifdef MODULE_TRIP_ODO
+#ifdef MODULE_TRIP_ODO
 	// scale to units of 0.1km
 	msg.distanceTraveled = engine->module<TripOdometer>()->getDistanceMeters() / 100;
-	#endif
+#endif
 }
 
 struct Speeds {
@@ -89,8 +89,7 @@ struct PedalAndTps {
 	scaled_percent wastegate;
 };
 
-static void populateFrame(PedalAndTps& msg)
-{
+static void populateFrame(PedalAndTps& msg) {
 	msg.pedal = Sensor::get(SensorType::AcceleratorPedal).value_or(-1);
 	msg.tps1 = Sensor::get(SensorType::Tps1).value_or(-1);
 	msg.tps2 = Sensor::get(SensorType::Tps2).value_or(-1);
@@ -116,7 +115,7 @@ static void populateFrame(Sensors1& msg) {
 	msg.aux1 = Sensor::getOrZero(SensorType::AuxTemp1) + PACK_ADD_TEMPERATURE;
 	msg.aux2 = Sensor::getOrZero(SensorType::AuxTemp2) + PACK_ADD_TEMPERATURE;
 
-#if	HAL_USE_ADC
+#if HAL_USE_ADC
 	msg.mcuTemp = getMCUInternalTemperature() + PACK_ADD_TEMPERATURE;
 #endif
 
@@ -160,10 +159,10 @@ struct Fueling2 {
 };
 
 static void populateFrame(Fueling2& msg) {
-	#ifdef MODULE_TRIP_ODO
-		msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
-		msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
-	#endif // MODULE_TRIP_ODO
+#ifdef MODULE_TRIP_ODO
+	msg.fuelConsumedGram = engine->module<TripOdometer>()->getConsumedGrams();
+	msg.fuelFlowRate = engine->module<TripOdometer>()->getConsumptionGramPerSecond();
+#endif // MODULE_TRIP_ODO
 
 	for (size_t i = 0; i < 2; i++) {
 		msg.fuelTrim[i] = 100.0f * (engine->stftCorrection[i] - 1.0f);
@@ -197,9 +196,9 @@ struct Cams {
 
 static void populateFrame(Cams& msg) {
 #if EFI_SHAFT_POSITION_INPUT
-	msg.Bank1IntakeActual  = engine->triggerCentral.getVVTPosition(0, 0).value_or(0);
+	msg.Bank1IntakeActual = engine->triggerCentral.getVVTPosition(0, 0).value_or(0);
 	msg.Bank1ExhaustActual = engine->triggerCentral.getVVTPosition(0, 1).value_or(0);
-	msg.Bank2IntakeActual  = engine->triggerCentral.getVVTPosition(1, 0).value_or(0);
+	msg.Bank2IntakeActual = engine->triggerCentral.getVVTPosition(1, 0).value_or(0);
 	msg.Bank2ExhaustActual = engine->triggerCentral.getVVTPosition(1, 1).value_or(0);
 #endif // EFI_SHAFT_POSITION_INPUT
 
@@ -220,43 +219,47 @@ static void populateFrame(Egts& msg) {
 }
 
 void sendCanVerbose() {
-    const auto base  = engineConfiguration->verboseCanBaseAddress;
-    const auto isExt = engineConfiguration->rusefiVerbose29b;
+	const auto base = engineConfiguration->verboseCanBaseAddress;
+	const auto isExt = engineConfiguration->rusefiVerbose29b;
 
-    auto sendOn = [&](CanBusIndex channel) {
-        #define TX(T, off) transmitStruct<T>(base + (off), isExt, channel)
+	auto sendOn = [&](CanBusIndex channel) {
+#define TX(T, off) transmitStruct<T>(base + (off), isExt, channel)
+		TX(Status, 0);
+		TX(Speeds, 1);
+		TX(PedalAndTps, 2);
+		TX(Sensors1, 3);
+		TX(Sensors2, 4);
+		TX(Fueling, 5);
+		TX(Fueling2, 6);
+		TX(Fueling3, 7);
 
-        TX(Status,       0);
-        TX(Speeds,       1);
-        TX(PedalAndTps,  2);
-        TX(Sensors1,     3);
-        TX(Sensors2,     4);
-        TX(Fueling,      5);
-        TX(Fueling2,     6);
-        TX(Fueling3,     7);
+		if (engineConfiguration->canBroadcastCams) {
+			TX(Cams, 8);
+		}
+		if (engineConfiguration->canBroadcastEgt) {
+			TX(Egts, 9);
+		}
 
-        if (engineConfiguration->canBroadcastCams) {
-            TX(Cams, 8);
-        }
-        if (engineConfiguration->canBroadcastEgt) {
-            TX(Egts, 9);
-        }
+#undef TX
+	};
 
-        #undef TX
-    };
+	switch (engineConfiguration->canBroadcastUseChannelTwo) {
+		case canBroadcast_e::none:
+			break;
+		case canBroadcast_e::first:
+			sendOn(CanBusIndex::Bus0);
+			break;
+		case canBroadcast_e::second:
+			sendOn(CanBusIndex::Bus1);
+			break;
+		case canBroadcast_e::both:
+			sendOn(CanBusIndex::Bus0);
+			sendOn(CanBusIndex::Bus1);
+			break;
 
-    switch (engineConfiguration->canBroadcastUseChannelTwo) {
-		case canBroadcast_e::none: break;
-        case canBroadcast_e::first: sendOn(CanBusIndex::Bus0); break;
-        case canBroadcast_e::second: sendOn(CanBusIndex::Bus1); break;
-        case canBroadcast_e::both:
-            sendOn(CanBusIndex::Bus0);
-            sendOn(CanBusIndex::Bus1);
-            break;
-
-        default:
-            break;
-    }
+		default:
+			break;
+	}
 }
 
 #endif // EFI_CAN_SUPPORT

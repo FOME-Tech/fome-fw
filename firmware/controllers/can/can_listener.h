@@ -12,9 +12,7 @@
 class CanListener {
 public:
 	CanListener(uint32_t id)
-		: m_id(id)
-	{
-	}
+		: m_id(id) {}
 
 	CanListener* processFrame(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
 		if (acceptFrame(busIndex, frame)) {
