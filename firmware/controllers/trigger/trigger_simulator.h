@@ -16,18 +16,15 @@ int getSimulatedEventTime(const TriggerWaveform& shape, int i);
 
 class TriggerStimulatorHelper {
 public:
-
 	static expected<uint32_t> findTriggerSyncPoint(
-			TriggerWaveform& shape,
-			const TriggerConfiguration& triggerConfiguration,
-			TriggerDecoderBase& state);
+			TriggerWaveform& shape, const TriggerConfiguration& triggerConfiguration, TriggerDecoderBase& state);
 
 	static void assertSyncPosition(
 			const TriggerConfiguration& triggerConfiguration,
 			const uint32_t index,
 			TriggerDecoderBase& state,
-			TriggerWaveform& shape
-			);
+			TriggerWaveform& shape);
+
 private:
 	// send next event so that we can see how state reacts
 	static void feedSimulatedEvent(

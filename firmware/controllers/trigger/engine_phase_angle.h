@@ -1,7 +1,7 @@
 #pragma once
 
-struct TriggerPhase { };
-struct EnginePhase { };
+struct TriggerPhase {};
+struct EnginePhase {};
 
 template <typename TSpace>
 struct PhaseAngle {

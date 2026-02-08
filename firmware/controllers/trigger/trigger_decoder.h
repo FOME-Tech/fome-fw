@@ -12,7 +12,7 @@
 #include "trigger_state_primary_generated.h"
 #include "efi_timer.h"
 
-const char *getTriggerEvent(TriggerEvent value);
+const char* getTriggerEvent(TriggerEvent value);
 
 struct TriggerStateListener {
 #if EFI_SHAFT_POSITION_INPUT
@@ -24,7 +24,8 @@ struct TriggerStateListener {
 
 class TriggerConfiguration {
 public:
-	explicit TriggerConfiguration(const char* printPrefix) : PrintPrefix(printPrefix) {}
+	explicit TriggerConfiguration(const char* printPrefix)
+		: PrintPrefix(printPrefix) {}
 	void update();
 
 	const char* const PrintPrefix;
@@ -38,7 +39,8 @@ protected:
 
 class PrimaryTriggerConfiguration final : public TriggerConfiguration {
 public:
-	PrimaryTriggerConfiguration() : TriggerConfiguration("TRG ") {}
+	PrimaryTriggerConfiguration()
+		: TriggerConfiguration("TRG ") {}
 
 protected:
 	bool isVerboseTriggerSynchDetails() const override;
@@ -47,11 +49,9 @@ protected:
 
 class VvtTriggerConfiguration final : public TriggerConfiguration {
 public:
-	VvtTriggerConfiguration(const char * prefix, const int index)
+	VvtTriggerConfiguration(const char* prefix, const int index)
 		: TriggerConfiguration(prefix)
-		, m_index(index)
-	{
-	}
+		, m_index(index) {}
 
 	vvt_mode_e getVvtMode() const;
 	bool needsTriggerDecoder() const;
@@ -104,7 +104,7 @@ public:
 	int64_t getTotalEventCounter() const;
 
 	expected<TriggerDecodeResult> decodeTriggerEvent(
-			const char *msg,
+			const char* msg,
 			const TriggerWaveform& triggerShape,
 			TriggerStateListener* triggerStateListener,
 			const TriggerConfiguration& triggerConfiguration,
@@ -113,10 +113,7 @@ public:
 
 	void logEdgeCounters(bool isRising);
 
-	void onShaftSynchronization(
-			bool wasSynchronized,
-			const efitick_t nowNt,
-			const TriggerWaveform& triggerShape);
+	void onShaftSynchronization(bool wasSynchronized, const efitick_t nowNt, const TriggerWaveform& triggerShape);
 
 	bool isValidIndex(const TriggerWaveform& triggerShape) const;
 
@@ -153,10 +150,8 @@ public:
 	 */
 	efitick_t startOfCycleNt;
 
-	expected<uint32_t> findTriggerZeroEventIndex(
-			TriggerWaveform& shape,
-			const TriggerConfiguration& triggerConfiguration
-			);
+	expected<uint32_t>
+	findTriggerZeroEventIndex(TriggerWaveform& shape, const TriggerConfiguration& triggerConfiguration);
 
 	bool someSortOfTriggerError() const {
 		return !m_timeSinceDecodeError.hasElapsedSec(1);
@@ -167,10 +162,10 @@ protected:
 	// That means either:
 	//  - Too many events without a sync point
 	//  - Saw a sync point but the wrong number of events in the cycle
-	virtual void onTriggerError() { }
+	virtual void onTriggerError() {}
 
-	virtual void onNotEnoughTeeth(int, int) { }
-	virtual void onTooManyTeeth(int, int) { }
+	virtual void onNotEnoughTeeth(int, int) {}
+	virtual void onTooManyTeeth(int, int) {}
 
 	const char* const m_name;
 
@@ -226,7 +221,8 @@ private:
 
 class VvtTriggerDecoder : public TriggerDecoderBase {
 public:
-	VvtTriggerDecoder(const char* name) : TriggerDecoderBase(name) { }
+	VvtTriggerDecoder(const char* name)
+		: TriggerDecoderBase(name) {}
 
 	void onNotEnoughTeeth(int actual, int expected) override;
 	void onTooManyTeeth(int actual, int expected) override;
