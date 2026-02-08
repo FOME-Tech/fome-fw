@@ -15,18 +15,18 @@ static gppwm_Map3D_t table3;
 static gppwm_Map3D_t table4;
 
 static gppwm_Map3D_t* const tables[] = {
-	&table1,
-	&table2,
-	&table3,
-	&table4,
+		&table1,
+		&table2,
+		&table3,
+		&table4,
 };
 
-static const char *channelNames[GPPWM_CHANNELS] = { "GPPWM#1",
-"GPPWM#2",
-"GPPWM#3",
-"GPPWM#4",
- };
-
+static const char* channelNames[GPPWM_CHANNELS] = {
+		"GPPWM#1",
+		"GPPWM#2",
+		"GPPWM#3",
+		"GPPWM#4",
+};
 
 void initGpPwm() {
 	for (size_t i = 0; i < efi::size(channels); i++) {
