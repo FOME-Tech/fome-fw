@@ -78,3 +78,4 @@ struct trigger_state_primary_s {
 static_assert(sizeof(trigger_state_primary_s) == 8);
 static_assert(offsetof(trigger_state_primary_s, m_camResyncCounter) == 0);
 static_assert(offsetof(trigger_state_primary_s, m_phaseAdjustment) == 2);
+

@@ -27,3 +27,4 @@ static_assert(offsetof(trigger_central_s, mapVvt_MAP_AT_DIFF) == 2);
 static_assert(offsetof(trigger_central_s, currentEngineDecodedPhase) == 4);
 static_assert(offsetof(trigger_central_s, triggerToothAngleError) == 6);
 static_assert(offsetof(trigger_central_s, triggerIgnoredToothCount) == 8);
+

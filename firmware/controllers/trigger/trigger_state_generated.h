@@ -31,3 +31,4 @@ static_assert(offsetof(trigger_state_s, triggerErrorCounter) == 6);
 static_assert(offsetof(trigger_state_s, triggerStateIndex) == 8);
 static_assert(offsetof(trigger_state_s, edgeCountRise) == 10);
 static_assert(offsetof(trigger_state_s, edgeCountFall) == 12);
+
