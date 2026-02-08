@@ -40,7 +40,8 @@ int getCylinderKnockBank(uint8_t cylinderNumber) {
 	}
 }
 
-bool KnockControllerBase::onKnockSenseCompleted(uint8_t cylinderNumber, uint8_t channelIdx, float dbv, efitick_t lastKnockTime) {
+bool KnockControllerBase::onKnockSenseCompleted(
+		uint8_t cylinderNumber, uint8_t channelIdx, float dbv, efitick_t lastKnockTime) {
 	// Adjust by the user-configured gain for this cylinder
 	dbv += m_gain[cylinderNumber];
 
@@ -118,28 +119,21 @@ void KnockControllerBase::onFastCallback() {
 
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
 		m_gain[i] = interpolate3d(
-			config->knockGains[i].table,
-			config->knockGainLoadBins, load,
-			config->knockGainRpmBins, rpm
-		);
+				config->knockGains[i].table, config->knockGainLoadBins, load, config->knockGainRpmBins, rpm);
 	}
 }
 
 float KnockController::getKnockThreshold() const {
-	return interpolate2d(
-		Sensor::getOrZero(SensorType::Rpm),
-		config->knockNoiseRpmBins,
-		config->knockBaseNoise
-	);
+	return interpolate2d(Sensor::getOrZero(SensorType::Rpm), config->knockNoiseRpmBins, config->knockBaseNoise);
 }
 
 float KnockController::getMaximumRetard() const {
-	return
-		interpolate3d(
+	return interpolate3d(
 			config->maxKnockRetardTable,
-			config->maxKnockRetardLoadBins, getIgnitionLoad(),
-			config->maxKnockRetardRpmBins, Sensor::getOrZero(SensorType::Rpm)
-		);
+			config->maxKnockRetardLoadBins,
+			getIgnitionLoad(),
+			config->maxKnockRetardRpmBins,
+			Sensor::getOrZero(SensorType::Rpm));
 }
 
 // This callback is to be implemented by the knock sense driver
@@ -162,7 +156,8 @@ void Engine::onSparkFireKnockSense(uint8_t cylinderNumber) {
 	}
 
 	// Convert sampling angle to time
-	float samplingSeconds = engine->rpmCalculator.oneDegreeUs * engineConfiguration->knockSamplingDuration / US_PER_SECOND_F;
+	float samplingSeconds =
+			engine->rpmCalculator.oneDegreeUs * engineConfiguration->knockSamplingDuration / US_PER_SECOND_F;
 
 	// Look up which channel this cylinder uses
 	auto channel = getCylinderKnockBank(cylinderNumberCopy);

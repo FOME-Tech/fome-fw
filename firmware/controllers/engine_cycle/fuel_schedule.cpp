@@ -15,7 +15,7 @@ void startInjection(InjectorContext ctx) {
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
-	while(mask) {
+	while (mask) {
 		if (mask & 0x1) {
 			enginePins.injectors[idx].open();
 
@@ -33,7 +33,7 @@ void endInjection(InjectorContext ctx) {
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
-	while(mask) {
+	while (mask) {
 		if (mask & 0x1) {
 			enginePins.injectors[idx].close();
 		}
@@ -49,8 +49,8 @@ void endInjection(InjectorContext ctx) {
 		// Zero out the split duration so it doesn't repeat
 		ctx.splitDurationUs = 0;
 
-		getScheduler()->schedule("split inj", nullptr, openTime, { &startInjection, ctx });
-		getScheduler()->schedule("split inj", nullptr, closeTime, { endInjection, ctx });
+		getScheduler()->schedule("split inj", nullptr, openTime, {&startInjection, ctx});
+		getScheduler()->schedule("split inj", nullptr, closeTime, {endInjection, ctx});
 	} else {
 		// No splits remaining, prepare for next cycle
 		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
@@ -63,7 +63,7 @@ void endInjectionStage2(InjectorContext ctx) {
 	uint16_t mask = ctx.outputsMask;
 	size_t idx = 0;
 
-	while(mask) {
+	while (mask) {
 		if (mask & 0x1) {
 			enginePins.injectorsStage2[idx].close();
 		}
@@ -91,7 +91,10 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 			// Compute the position of this cylinder's twin in the firing order
 			// Each injector gets fired as a primary (the same as sequential), but also
 			// fires the injector 360 degrees later in the firing order.
-			mask |= (1 << getCylinderNumberAtIndex((ownIndex + (engineConfiguration->cylindersCount / 2)) % engineConfiguration->cylindersCount));
+			mask |=
+					(1 << getCylinderNumberAtIndex(
+							 (ownIndex + (engineConfiguration->cylindersCount / 2)) %
+							 engineConfiguration->cylindersCount));
 
 			// falls through
 		case IM_SEQUENTIAL:
@@ -134,13 +137,13 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	{
 		// Log this fuel as consumed
 
-		#ifdef MODULE_TRIP_ODO
+#ifdef MODULE_TRIP_ODO
 		int numberOfInjections = getNumberOfInjections(m_injectionMode);
 
 		float actualInjectedMass = numberOfInjections * (injectionMassStage1 + injectionMassStage2);
 
 		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, phase.timestamp);
-		#endif // MODULE_TRIP_ODO
+#endif // MODULE_TRIP_ODO
 	}
 
 	if (doSplitInjection) {
@@ -148,14 +151,18 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 		injectionMassStage1 = injectionMassStage1 / 2;
 	}
 
-	const floatms_t injectionDurationStage1 = engine->module<InjectorModelPrimary>()->getInjectionDuration(injectionMassStage1);
-	const floatms_t injectionDurationStage2 = injectionMassStage2 > 0 ? engine->module<InjectorModelSecondary>()->getInjectionDuration(injectionMassStage2) : 0;
+	const floatms_t injectionDurationStage1 =
+			engine->module<InjectorModelPrimary>()->getInjectionDuration(injectionMassStage1);
+	const floatms_t injectionDurationStage2 =
+			injectionMassStage2 > 0
+					? engine->module<InjectorModelSecondary>()->getInjectionDuration(injectionMassStage2)
+					: 0;
 
 #if EFI_PRINTF_FUEL_DETAILS
 	if (printFuelDebug) {
 		printf("fuel injectionDuration=%.2fms adjusted=%.2fms\n",
-				getEngineState()->injectionDuration,
-		  injectionDurationStage1);
+			   getEngineState()->injectionDuration,
+			   injectionDurationStage1);
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
@@ -177,8 +184,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	// Durations under 50us-ish aren't safe for the scheduler
 	// as their order may be swapped, resulting in a stuck open injector
 	// see https://github.com/rusefi/rusefi/pull/596 for more details
-	if (injectionDurationStage1 < 0.050f)
-	{
+	if (injectionDurationStage1 < 0.050f) {
 		return;
 	}
 
@@ -198,10 +204,12 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 #if EFI_PRINTF_FUEL_DETAILS
-if (printFuelDebug) {
-	printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n", ctx.outputsMask, (int)durationUsStage1,
-			(int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
-}
+	if (printFuelDebug) {
+		printf("handleFuelInjectionEvent fuelout %06x injection_duration %dus engineCycleDuration=%.1fms\t\n",
+			   ctx.outputsMask,
+			   (int)durationUsStage1,
+			   (int)MS2US(getCrankshaftRevolutionTimeMs(Sensor::getOrZero(SensorType::Rpm))) / 1000.0);
+	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
 	// Correctly wrap injection start angle
@@ -211,22 +219,26 @@ if (printFuelDebug) {
 	}
 
 	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, { &startInjection, ctx });
+	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, {&startInjection, ctx});
 
 	// Schedule closing stage 1
 	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
 	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
 
-	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, { &endInjection, ctx });
+	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, {&endInjection, ctx});
 
 	// Schedule closing stage 2 (if applicable)
 	if (hasStage2Injection) {
 		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, { &endInjectionStage2, ctx });
+		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, {&endInjectionStage2, ctx});
 	}
 
 #if EFI_UNIT_TEST
-	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n", angleFromNow, (int)NT2US(startTime - phase.timestamp), (int)durationUsStage1, (int)durationUsStage2);
+	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n",
+		   angleFromNow,
+		   (int)NT2US(startTime - phase.timestamp),
+		   (int)durationUsStage1,
+		   (int)durationUsStage2);
 #endif
 }
 

@@ -16,9 +16,8 @@ floatms_t PrimeController::getPrimeDuration() const {
 		return 0;
 	}
 
-	auto primeMass =
-		0.001f *	// convert milligram to gram
-		interpolate2d(clt.Value, engineConfiguration->primeBins, engineConfiguration->primeValues);
+	auto primeMass = 0.001f * // convert milligram to gram
+					 interpolate2d(clt.Value, engineConfiguration->primeBins, engineConfiguration->primeValues);
 
 	efiPrintf("Priming pulse mass: %.4f g", primeMass);
 
@@ -42,8 +41,8 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 		return;
 	}
 
-	// First, we need a protection against 'fake' ignition switch on and off (i.e. no engine started), to avoid repeated prime pulses.
-	// So we check and update the ignition switch counter in non-volatile backup-RAM
+	// First, we need a protection against 'fake' ignition switch on and off (i.e. no engine started), to avoid repeated
+	// prime pulses. So we check and update the ignition switch counter in non-volatile backup-RAM
 	uint32_t ignSwitchCounter = getKeyCycleCounter();
 
 	// if we're just toying with the ignition switch, give it another chance eventually...
@@ -52,7 +51,8 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 	}
 
 	// If we're going to skip this pulse, then save the counter as 0.
-	// That's because we'll definitely need the prime pulse next time (either due to the cylinder cleanup or the engine spinning)
+	// That's because we'll definitely need the prime pulse next time (either due to the cylinder cleanup or the engine
+	// spinning)
 	if (isPrimeInjectionPulseSkipped()) {
 		ignSwitchCounter = -1;
 	}
@@ -64,7 +64,7 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 		uint32_t primeDelayNt = MSF2NT(engineConfiguration->primingDelay * 1000 + minimumPrimeDelayMs);
 
 		auto startTime = getTimeNowNt() + primeDelayNt;
-		getScheduler()->schedule("prime start", nullptr, startTime, { PrimeController::onPrimeStartAdapter, this });
+		getScheduler()->schedule("prime start", nullptr, startTime, {PrimeController::onPrimeStartAdapter, this});
 	} else {
 		efiPrintf("Skipped priming pulse since ignSwitchCounter = %lu", ignSwitchCounter);
 	}
@@ -86,7 +86,7 @@ uint32_t PrimeController::getKeyCycleCounter() const {
 	return 0;
 }
 
-void PrimeController::setKeyCycleCounter(uint32_t) { }
+void PrimeController::setKeyCycleCounter(uint32_t) {}
 #endif
 
 void PrimeController::onPrimeStart() {
@@ -109,7 +109,7 @@ void PrimeController::onPrimeStart() {
 	ctx.outputsMask = (1 << engineConfiguration->cylindersCount) - 1;
 
 	startInjection(ctx);
-	getScheduler()->schedule("prime end", nullptr, endTime, { onPrimeEndAdapter, this });
+	getScheduler()->schedule("prime end", nullptr, endTime, {onPrimeEndAdapter, this});
 }
 
 void PrimeController::onPrimeEnd() {

@@ -65,7 +65,7 @@ static bool doesTriggerImplyOperationMode(trigger_type_e type) {
 		case trigger_type_e::TT_TOOTHED_WHEEL:
 		case trigger_type_e::TT_ONE:
 		case trigger_type_e::TT_3_1_CAM:
-		case trigger_type_e::TT_36_2_2_2:	// TODO: should this one be in this list?
+		case trigger_type_e::TT_36_2_2_2: // TODO: should this one be in this list?
 		case trigger_type_e::TT_TOOTHED_WHEEL_60_2:
 		case trigger_type_e::TT_TOOTHED_WHEEL_36_1:
 			// These modes could be either cam or crank speed
@@ -90,12 +90,10 @@ operation_mode_e RpmCalculator::getOperationMode() const {
 	}
 }
 
-
 #if EFI_SHAFT_POSITION_INPUT
 
-RpmCalculator::RpmCalculator() :
-		StoredValueSensor(SensorType::Rpm, efidur_t::zero())
-	{
+RpmCalculator::RpmCalculator()
+	: StoredValueSensor(SensorType::Rpm, efidur_t::zero()) {
 	assignRpmValue(0);
 }
 
@@ -134,7 +132,7 @@ void RpmCalculator::assignRpmValue(float floatRpmValue) {
 
 	cachedRpmValue = floatRpmValue;
 
-	setValidValue(floatRpmValue, {});	// 0 for current time since RPM sensor never times out
+	setValidValue(floatRpmValue, {}); // 0 for current time since RPM sensor never times out
 	if (cachedRpmValue <= 0) {
 		oneDegreeUs = NAN;
 	} else {
@@ -300,11 +298,7 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 
 	// Always update instant RPM even when not spinning up
 	engine->triggerCentral.instantRpm.updateInstantRpm(
-		engine->triggerCentral.triggerShape,
-		&engine->triggerCentral.triggerFormDetails,
-		trgEventIndex,
-		phaseInfo
-	);
+			engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails, trgEventIndex, phaseInfo);
 
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	rpmState.storeInstantRpm(alwaysInstantRpm, instantRpm, phaseInfo.timestamp);
@@ -329,12 +323,11 @@ float RpmCalculator::getSecondsSinceEngineStart(efitick_t nowNt) const {
 	return engineStartTimer.getElapsedSeconds(nowNt);
 }
 
-
 /**
- * This callback has nothing to do with actual engine control, it just sends a Top Dead Center mark to the rusEfi console
- * digital sniffer.
+ * This callback has nothing to do with actual engine control, it just sends a Top Dead Center mark to the rusEfi
+ * console digital sniffer.
  */
-static void onTdcCallback(void *) {
+static void onTdcCallback(void*) {
 #if EFI_UNIT_TEST
 	if (!engine->needTdcCallback) {
 		return;
@@ -354,8 +347,7 @@ static void onTdcCallback(void *) {
 /**
  * This trigger callback schedules the actual physical TDC callback in relation to trigger synchronization point.
  */
-void tdcMarkCallback(
-		uint32_t trgEventIndex, efitick_t edgeTimestamp) {
+void tdcMarkCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp) {
 	bool isTriggerSynchronizationPoint = trgEventIndex == 0;
 	if (isTriggerSynchronizationPoint && getTriggerCentral()->isEngineSnifferEnabled) {
 
@@ -364,7 +356,6 @@ void tdcMarkCallback(
 			return;
 		}
 #endif // EFI_UNIT_TEST
-
 
 		// two instances of scheduling_s are needed to properly handle event overlap
 		int revIndex2 = getRevolutionCounter() % 2;
@@ -384,8 +375,7 @@ void tdcMarkCallback(
  * The callback would be executed once after the duration of time which
  * it takes the crankshaft to rotate to the specified angle.
  */
-efitick_t scheduleByAngle(scheduling_s *timer, efitick_t edgeTimestamp, angle_t angle,
-		action_s action) {
+efitick_t scheduleByAngle(scheduling_s* timer, efitick_t edgeTimestamp, angle_t angle, action_s action) {
 	float delayUs = engine->rpmCalculator.oneDegreeUs * angle;
 
 	// 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
@@ -398,11 +388,7 @@ efitick_t scheduleByAngle(scheduling_s *timer, efitick_t edgeTimestamp, angle_t 
 }
 
 #else
-RpmCalculator::RpmCalculator() :
-		StoredValueSensor(SensorType::Rpm, 0)
-{
-
-}
+RpmCalculator::RpmCalculator()
+	: StoredValueSensor(SensorType::Rpm, 0) {}
 
 #endif /* EFI_SHAFT_POSITION_INPUT */
-

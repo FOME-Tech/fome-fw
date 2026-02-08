@@ -35,14 +35,15 @@ class HpfpController;
 
 class HpfpQuantity {
 public:
-// todo: shall we move into high_pressure_fuel_pump.txt and reduce OOP elegance or create a separate live data just for these ones?
+	// todo: shall we move into high_pressure_fuel_pump.txt and reduce OOP elegance or create a separate live data just
+	// for these ones?
 	float m_I_sum_percent = 0;
 	float m_pressureTarget_kPa = 0;
 
 	/**
 	 * Calculate where the pump should become active, in degrees before pump lobe TDC
 	 */
-	angle_t pumpAngleFuel(float rpm, HpfpController *model);
+	angle_t pumpAngleFuel(float rpm, HpfpController* model);
 
 	/**
 	 * Calculate the percent of the pump stroke needed to replace the fuel injected.  Also
@@ -87,13 +88,13 @@ private:
 	AngleBasedEvent m_event;
 
 	HpfpQuantity m_quantity;
-	HpfpLobe     m_lobe;
+	HpfpLobe m_lobe;
 
 	volatile bool m_running = false; ///< Whether events are being scheduled or not
 	volatile angle_t m_deadtime = 0; ///< Computed solenoid deadtime in degrees
 
 	void scheduleNextCycle();
 
-	static void pinTurnOn(HpfpController *self);
-	static void pinTurnOff(HpfpController *self);
+	static void pinTurnOn(HpfpController* self);
+	static void pinTurnOff(HpfpController* self);
 };

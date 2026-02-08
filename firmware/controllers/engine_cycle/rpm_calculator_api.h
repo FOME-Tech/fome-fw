@@ -19,6 +19,6 @@ public:
 	virtual operation_mode_e getOperationMode() const = 0;
 };
 
-EngineRotationState * getEngineRotationState();
+EngineRotationState* getEngineRotationState();
 
 injection_mode_e getCurrentInjectionMode();
