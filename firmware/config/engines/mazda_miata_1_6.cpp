@@ -102,7 +102,7 @@ void miataNAcommonEngineSettings() {
 	engineConfiguration->cranking.baseFuel = 27.5;
 
 	config->crankingFuelCoef[0] = 3.36; // base cranking fuel adjustment coefficient
-	config->crankingFuelBins[0] = -20; // temperature in C
+	config->crankingFuelBins[0] = -20;	// temperature in C
 	config->crankingFuelCoef[1] = 2.97;
 	config->crankingFuelBins[1] = -10;
 	config->crankingFuelCoef[2] = 2.69;
@@ -134,10 +134,10 @@ void miataNAcommonEngineSettings() {
 	engineConfiguration->idleTimingPid.pFactor = 0.1;
 	engineConfiguration->idleTimingPid.dFactor = 0.0001;
 	engineConfiguration->idleTimingPid.minValue = -15;
-	engineConfiguration->idleTimingPid.maxValue =  15;
+	engineConfiguration->idleTimingPid.maxValue = 15;
 
 	// Idle timing
-	static const uint16_t idleAdvanceBins[] = { 500, 650, 800, 950, 1050, 1200, 1350, 1500 };
+	static const uint16_t idleAdvanceBins[] = {500, 650, 800, 950, 1050, 1200, 1350, 1500};
 	copyArray(config->idleAdvanceBins, idleAdvanceBins);
 	setArrayValues(config->idleAdvance, 15);
 
@@ -160,7 +160,8 @@ void miataNAcommonEngineSettings() {
 	setMapVeTable();
 	setTable(config->injectionPhase, 400);
 
-	static const float cltFuelMultValues[] = { 1.25, 1.23, 1.2, 1.18, 1.16, 1.14, 1.11, 1.09, 1.07, 1.05, 1.02, 1, 1, 1, 1, 1 };
+	static const float cltFuelMultValues[] = {
+			1.25, 1.23, 1.2, 1.18, 1.16, 1.14, 1.11, 1.09, 1.07, 1.05, 1.02, 1, 1, 1, 1, 1};
 	copyArray(config->cltFuelCorr, cltFuelMultValues);
 
 	/**
@@ -169,8 +170,8 @@ void miataNAcommonEngineSettings() {
 	 */
 	engineConfiguration->injector.flow = 212;
 
-	static const float deadtimeBins[] = { 8, 9.6, 11.2, 12.8, 13.2, 14.4, 15.3, 16 };
-	static const float deadtimeValues[] = { 1.97, 1.52, 1.23, 1.04, 0.99, 0.9, 0.85, 0.73 };
+	static const float deadtimeBins[] = {8, 9.6, 11.2, 12.8, 13.2, 14.4, 15.3, 16};
+	static const float deadtimeValues[] = {1.97, 1.52, 1.23, 1.04, 0.99, 0.9, 0.85, 0.73};
 	copyArray(engineConfiguration->injector.battLagCorrBins, deadtimeBins);
 	copyArray(engineConfiguration->injector.battLagCorr, deadtimeValues);
 
@@ -181,8 +182,8 @@ void miataNAcommonEngineSettings() {
 	engineConfiguration->tpsMax = 872;
 
 	// CLT/IAT
-	engineConfiguration->clt.config = { -20, 40, 80, 16150, 1150, 330, 2700 };
-	engineConfiguration->iat.config = { -20, 40, 80, 16150, 1150, 330, 2700 };
+	engineConfiguration->clt.config = {-20, 40, 80, 16150, 1150, 330, 2700};
+	engineConfiguration->iat.config = {-20, 40, 80, 16150, 1150, 330, 2700};
 
 	engineConfiguration->map.sensor.type = MT_GM_3_BAR;
 
@@ -211,10 +212,10 @@ void miataNAcommonEngineSettings() {
 	// Set up closed loop fuel
 	engineConfiguration->fuelClosedLoopCorrectionEnabled = true;
 	engineConfiguration->stft.minAfr = 10;
-	engineConfiguration->stft.cellCfgs[0] = { 5, -5, 5 };
-	engineConfiguration->stft.cellCfgs[1] = { 15, -15, 10 };
-	engineConfiguration->stft.cellCfgs[2] = { 15, -15, 1 };
-	engineConfiguration->stft.cellCfgs[3] = { 5, -5, 30 };
+	engineConfiguration->stft.cellCfgs[0] = {5, -5, 5};
+	engineConfiguration->stft.cellCfgs[1] = {15, -15, 10};
+	engineConfiguration->stft.cellCfgs[2] = {15, -15, 1};
+	engineConfiguration->stft.cellCfgs[3] = {5, -5, 30};
 }
 
 /**
@@ -232,7 +233,7 @@ void setMiataNA6_MAP_Frankenso() {
 	// Wide band oxygen (from middle plug) to W52
 	engineConfiguration->afr.hwChannel = EFI_ADC_13; // PA3
 
-	engineConfiguration->vbattDividerCoeff = 9.75;// ((float) (8.2 + 33)) / 8.2 * 2;
+	engineConfiguration->vbattDividerCoeff = 9.75; // ((float) (8.2 + 33)) / 8.2 * 2;
 
 	engineConfiguration->isSdCardEnabled = true;
 
@@ -247,7 +248,7 @@ void setMiataNA6_MAP_Frankenso() {
 	// green wire from 1Q/W17 to bottom of W46
 	engineConfiguration->acSwitch = Gpio::A6;
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 	// W57 PE3 A/C compressor relay out
 	engineConfiguration->acRelayPin = Gpio::E3;
 	// W58 PE4 A/C fan relay out

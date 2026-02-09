@@ -56,8 +56,8 @@
 
 #include "mre_meta.h"
 
-static const uint16_t vvt18fsioRpmBins[] = { 950, 1800, 2500, 3300, 4200, 5000, 6000, 7200 };
-static const uint8_t vvt18fsioLoadBins[] = { 30, 40, 50, 60, 70, 75, 82, 100 };
+static const uint16_t vvt18fsioRpmBins[] = {950, 1800, 2500, 3300, 4200, 5000, 6000, 7200};
+static const uint8_t vvt18fsioLoadBins[] = {30, 40, 50, 60, 70, 75, 82, 100};
 
 static const uint8_t SCRIPT_TABLE_vvt_target[8][8] = {
 	{ 0,	0,	0,	0,	0,	0,	0,	0 },
@@ -138,7 +138,6 @@ static const uint8_t mapBased18vvtTimingTable[16][16] = {
 };
 #endif
 
-
 /*
 #define MAF_TRANSFER_SIZE 8
 
@@ -172,31 +171,10 @@ static const float mafTransferKgH[MAF_TRANSFER_SIZE] = {
 #define MAF_TRANSFER_SIZE 10
 
 // this transfer function somehow works with 1K pull-down
-static const float mafTransferVolts[MAF_TRANSFER_SIZE] = {
-		0.50,
-		0.87,
-		1.07,
-		1.53,
-		1.85,
-		2.11,
-		2.46,
-		3.00,
-		3.51,
-		4.50
-};
+static const float mafTransferVolts[MAF_TRANSFER_SIZE] = {0.50, 0.87, 1.07, 1.53, 1.85, 2.11, 2.46, 3.00, 3.51, 4.50};
 
 static const float mafTransferKgH[MAF_TRANSFER_SIZE] = {
-		0.00,
-		0.00,
-		1.00,
-		3.00,
-		8.00,
-		19.00,
-		45.00,
-		100.00,
-		175.00,
-		350.00
-};
+		0.00, 0.00, 1.00, 3.00, 8.00, 19.00, 45.00, 100.00, 175.00, 350.00};
 
 template <typename TSrc, typename TDst, size_t NSrc, size_t NDest>
 constexpr void copyArrayPartial(TDst (&dest)[NDest], const TSrc (&src)[NSrc]) {
@@ -217,8 +195,8 @@ static void setMAFTransferFunction() {
 }
 
 static void setMazdaMiataNbInjectorLag() {
-	static const float deadtimeBins[] = { 8, 9.6, 11.2, 12.8, 13.2, 14.4, 15.3, 16 };
-	static const float deadtimeValues[] = { 1.97, 1.52, 1.23, 1.04, 0.99, 0.9, 0.85, 0.73 };
+	static const float deadtimeBins[] = {8, 9.6, 11.2, 12.8, 13.2, 14.4, 15.3, 16};
+	static const float deadtimeValues[] = {1.97, 1.52, 1.23, 1.04, 0.99, 0.9, 0.85, 0.73};
 	copyArray(engineConfiguration->injector.battLagCorrBins, deadtimeBins);
 	copyArray(engineConfiguration->injector.battLagCorr, deadtimeValues);
 }
@@ -246,11 +224,11 @@ static void setCommonMazdaNB() {
 	engineConfiguration->fuelReferencePressure = 400; // 400 kPa, 58 psi
 	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
 
-
 	engineConfiguration->injectionMode = IM_SEQUENTIAL;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 
-	static const float cltFuelMultValues[] = { 1.25, 1.23, 1.2, 1.18, 1.16, 1.14, 1.11, 1.09, 1.07, 1.05, 1.02, 1, 1, 1, 1, 1 };
+	static const float cltFuelMultValues[] = {
+			1.25, 1.23, 1.2, 1.18, 1.16, 1.14, 1.11, 1.09, 1.07, 1.05, 1.02, 1, 1, 1, 1, 1};
 	copyArray(config->cltFuelCorr, cltFuelMultValues);
 
 	// Trigger
@@ -300,10 +278,10 @@ static void setCommonMazdaNB() {
 	engineConfiguration->idleRpmPid.minValue = -8;
 	engineConfiguration->idleRpmPid.maxValue = 10;
 	engineConfiguration->idlerpmpid_iTermMin = -15;
-	engineConfiguration->idlerpmpid_iTermMax =  30;
+	engineConfiguration->idlerpmpid_iTermMax = 30;
 
 	// Idle timing
-	static const uint16_t idleAdvanceBins[] = { 500, 650, 800, 950, 1050, 1200, 1350, 1500 };
+	static const uint16_t idleAdvanceBins[] = {500, 650, 800, 950, 1050, 1200, 1350, 1500};
 	copyArray(config->idleAdvanceBins, idleAdvanceBins);
 	setArrayValues(config->idleAdvance, 15);
 
@@ -347,8 +325,8 @@ static void setCommonMazdaNB() {
 	engineConfiguration->tpsMax = 650; // convert 12to10 bit (ADC/4)
 
 	// CLT/IAT
-	engineConfiguration->clt.config = { -10, 20, 80, 9000, 2500, 320, 0 };
-	engineConfiguration->iat.config = { -20, 40, 80, 16150, 1150, 330, 0 };
+	engineConfiguration->clt.config = {-10, 20, 80, 9000, 2500, 320, 0};
+	engineConfiguration->iat.config = {-20, 40, 80, 16150, 1150, 330, 0};
 
 	// MAF (todo: do we use this?)
 	setMAFTransferFunction();
@@ -434,17 +412,17 @@ void setMazdaMiata2003EngineConfiguration() {
 
 	setMazdaMiataEngineNB2Defaults();
 
-//	engineConfiguration->triggerInputPins[0] = Gpio::A8; // custom Frankenso wiring in order to use SPI1 for accelerometer
+	//	engineConfiguration->triggerInputPins[0] = Gpio::A8; // custom Frankenso wiring in order to use SPI1 for accelerometer
 	engineConfiguration->triggerInputPins[0] = Gpio::A5; // board still not modified
 	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
 	engineConfiguration->camInputs[0] = Gpio::C6;
 
-//	engineConfiguration->is_enabled_spi_1 = true;
+	//	engineConfiguration->is_enabled_spi_1 = true;
 
 	engineConfiguration->alternatorControlPin = Gpio::E10;
 	engineConfiguration->alternatorControlPinMode = OM_OPENDRAIN;
 
-//	engineConfiguration->vehicleSpeedSensorInputPin = Gpio::A8;
+	//	engineConfiguration->vehicleSpeedSensorInputPin = Gpio::A8;
 
 	engineConfiguration->vvtPins[0] = Gpio::E3; // VVT solenoid control
 
@@ -457,30 +435,26 @@ void setMazdaMiata2003EngineConfiguration() {
 	// set cranking_timing_angle 10
 	engineConfiguration->crankingTimingAngle = 10;
 
-/**
- * Saab attempt
- * Saab  coil on #1 PD8 extra blue wire
- * Miata coil on #2 PC9  - orange ECU wire "2&3"
- * Saab  coil on #3 PD9 extra white wire
- * Miata coil on #4 PE14 - white ECU wire "1&4"
- */
+	/**
+	 * Saab attempt
+	 * Saab  coil on #1 PD8 extra blue wire
+	 * Miata coil on #2 PC9  - orange ECU wire "2&3"
+	 * Saab  coil on #3 PD9 extra white wire
+	 * Miata coil on #4 PE14 - white ECU wire "1&4"
+	 */
 
 	engineConfiguration->ignitionPins[0] = Gpio::E14;
 	engineConfiguration->ignitionPins[1] = Gpio::Unassigned;
 	engineConfiguration->ignitionPins[2] = Gpio::C9;
 	engineConfiguration->ignitionPins[3] = Gpio::Unassigned;
 
-
-
 	engineConfiguration->malfunctionIndicatorPin = Gpio::D5;
 
-
-//	engineConfiguration->malfunctionIndicatorPin = Gpio::D9;
-//	engineConfiguration->malfunctionIndicatorPinMode = OM_INVERTED;
+	//	engineConfiguration->malfunctionIndicatorPin = Gpio::D9;
+	//	engineConfiguration->malfunctionIndicatorPinMode = OM_INVERTED;
 
 	// todo: blue jumper wire - what is it?!
 	// Frankenso analog #6 pin 3R, W56 (5th lower row pin from the end) top <> W45 bottom jumper, not OEM
-
 
 	// see setFrankensoConfiguration
 	// map.sensor.hwChannel = EFI_ADC_0; W53
@@ -489,7 +463,7 @@ void setMazdaMiata2003EngineConfiguration() {
 	 * PA4 Wideband O2 Sensor
 	 */
 	// todo: re-wire the board to use "Frankenso analog #7 pin 3J, W48 top <>W48 bottom jumper, not OEM"
-	//engineConfiguration->afr.hwChannel = EFI_ADC_3; // PA3
+	// engineConfiguration->afr.hwChannel = EFI_ADC_3; // PA3
 	engineConfiguration->afr.hwChannel = EFI_ADC_4;
 
 	//
@@ -502,7 +476,7 @@ void setMazdaMiata2003EngineConfiguration() {
 	 * set_fsio_setting 4 15
 	 */
 	engineConfiguration->scriptSetting[1] = 6500; // #2 RPM threshold
-	engineConfiguration->scriptSetting[2] = 105; // #3 CLT threshold
+	engineConfiguration->scriptSetting[2] = 105;  // #3 CLT threshold
 	engineConfiguration->scriptSetting[3] = 12.0; // #4 voltage threshold
 
 	// enable auto_idle
@@ -522,7 +496,6 @@ void setMazdaMiata2003EngineConfiguration() {
 
 	engineConfiguration->throttlePedalUpVoltage = 0.65f;
 
-
 	// TLE7209 two-wire ETB control
 	// PWM
 	engineConfiguration->etb_use_two_wires = true;
@@ -538,13 +511,13 @@ void setMazdaMiata2003EngineConfiguration() {
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_13; // PC3 blue
 
 	// set_analog_input_pin pps PA2
-/* a step back - Frankenso does not use ETB
-	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_2;
-*/
+	/* a step back - Frankenso does not use ETB
+		engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_2;
+	*/
 
-	//set etb_p 12
+	// set etb_p 12
 	engineConfiguration->etb.pFactor = 12; // a bit lower p-factor seems to work better on TLE9201? MRE?
-	engineConfiguration->etb.iFactor = 	0;
+	engineConfiguration->etb.iFactor = 0;
 	engineConfiguration->etb.dFactor = 0;
 	engineConfiguration->etb.offset = 40;
 	engineConfiguration->etb.minValue = -60;
@@ -571,7 +544,8 @@ void setMazdaMiata2003EngineConfigurationBoardTest() {
 static void setMiataNB2_MRE_common() {
 	setMazdaMiataEngineNB2Defaults();
 
-	// MRE has a special main relay control low side pin - rusEfi firmware is totally not involved with main relay control
+	// MRE has a special main relay control low side pin - rusEfi firmware is totally not involved with main relay
+	// control
 	//
 	// fuelPumpPin output is inherited from boards/microrusefi/board_configuration.cpp
 	// fanPin output is inherited from boards/microrusefi/board_configuration.cpp
@@ -587,7 +561,8 @@ static void setMiataNB2_MRE_common() {
 	engineConfiguration->camInputs[0] = Gpio::A5;
 	/**
 	 * By default "auto detection mode for VR sensor signals" is used
-	 * We know that for short & strange Hall (?) signals like Miata NB2 crank sensor this does not work well above certain RPM.
+	 * We know that for short & strange Hall (?) signals like Miata NB2 crank sensor this does not work well above
+	 * certain RPM.
 	 */
 	engineConfiguration->tle8888mode = TL_MANUAL;
 
@@ -608,7 +583,6 @@ static void setMiataNB2_MRE_common() {
 	// Gpio::TLE8888_PIN_23: "33 - GP Out 3"
 	engineConfiguration->malfunctionIndicatorPin = Gpio::TLE8888_PIN_23;
 
-
 	// todo: alternator warn
 	// ?
 
@@ -617,8 +591,8 @@ static void setMiataNB2_MRE_common() {
 
 	// set_analog_input_pin pps PA7
 	// EFI_ADC_7: "31 - AN volt 3" - PA7
-// disabled for now since only allowed with ETB
-//	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_7;
+	// disabled for now since only allowed with ETB
+	//	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_7;
 
 	engineConfiguration->tpsMin = 90;
 	engineConfiguration->tpsMax = 870;
@@ -651,9 +625,8 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
 	engineConfiguration->injectionMode = IM_SEQUENTIAL;
 
-
-	engineConfiguration->injectionPins[0] = PROTEUS_LS_1;  // BLU  # pin 3/black35
-	engineConfiguration->injectionPins[1] = PROTEUS_LS_2;  // BLK
+	engineConfiguration->injectionPins[0] = PROTEUS_LS_1; // BLU  # pin 3/black35
+	engineConfiguration->injectionPins[1] = PROTEUS_LS_2; // BLK
 	engineConfiguration->injectionPins[2] = PROTEUS_LS_3; // GRN
 	engineConfiguration->injectionPins[3] = PROTEUS_LS_4; // WHT
 
@@ -666,10 +639,9 @@ void setMiataNbPolygonusCommon() {
 	engineConfiguration->map.sensor.hwChannel = PROTEUS_IN_ANALOG_VOLT_1;
 	engineConfiguration->map.sensor.type = MT_MPXH6400;
 
-
 	engineConfiguration->tps1_1AdcChannel = PROTEUS_IN_ANALOG_VOLT_3;
 
-	engineConfiguration->clt.adcChannel =  PROTEUS_IN_ANALOG_TEMP_3;
+	engineConfiguration->clt.adcChannel = PROTEUS_IN_ANALOG_TEMP_3;
 	engineConfiguration->iat.adcChannel = PROTEUS_IN_ANALOG_TEMP_2;
 
 	engineConfiguration->fuelPumpPin = PROTEUS_LS_7;
@@ -727,9 +699,8 @@ void setMiataNB1_Polygonus() {
 	engineConfiguration->gppwm[0].onAboveDuty = 60;
 	engineConfiguration->gppwm[0].offBelowDuty = 40;
 	strcpy(engineConfiguration->gpPwmNote[0], "VICS");
-	copyArray(engineConfiguration->gppwm[0].rpmBins, { 0, 1000, 2000, 2500, 3500, 5500, 6500, 7000 });
-	for (size_t i = 0; i < efi::size(engineConfiguration->gppwm[0].table); i++)
-	{
+	copyArray(engineConfiguration->gppwm[0].rpmBins, {0, 1000, 2000, 2500, 3500, 5500, 6500, 7000});
+	for (size_t i = 0; i < efi::size(engineConfiguration->gppwm[0].table); i++) {
 		// Set the 3500 and 5500 rpm columns to 100
 		engineConfiguration->gppwm[0].table[i][4] = 100;
 		engineConfiguration->gppwm[0].table[i][5] = 100;
@@ -773,7 +744,7 @@ void setMiataNB_MSM_Polygonus() {
 	engineConfiguration->boostControlPin = PROTEUS_HS_3;
 
 	// MSM gets a different IAT from the other NBs
-	engineConfiguration->iat.config = { 0, 40, 60, 112000, 17000, 8000, 0 };
+	engineConfiguration->iat.config = {0, 40, 60, 112000, 17000, 8000, 0};
 }
 #endif // HW_POLYGONUS_PRESETS
 
@@ -785,7 +756,7 @@ void setHellenNB1() {
 }
 
 void setMiataNB2_Hellen72() {
-    setMazdaMiataEngineNB2Defaults();
+	setMazdaMiataEngineNB2Defaults();
 	strcpy(engineConfiguration->vehicleName, "H72 test");
 
 	engineConfiguration->tpsMin = 110; // convert 12to10 bit (ADC/4)
