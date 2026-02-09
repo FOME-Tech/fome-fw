@@ -19,6 +19,7 @@ fi
 files=$(find firmware unit_tests \
     -path "firmware/ext" -prune -o \
     -path "*/.git" -prune -o \
+    -path "unit_tests/googletest" -prune -o \
     -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cc" \) \
     -print)
 
