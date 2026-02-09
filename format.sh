@@ -1,0 +1,62 @@
+#!/bin/bash
+# Format firmware code with clang-format, excluding external code
+# Usage: ./format.sh [check]
+#   format.sh              - Format files in-place
+#   format.sh check        - Check if formatting is needed (exit 1 if changes needed)
+
+set -e
+
+CHECK_ONLY=false
+if [ "$1" = "check" ]; then
+    CHECK_ONLY=true
+fi
+
+# Find all C/C++ files in firmware and unit_tests directories
+# Exclude:
+#   - firmware/ext (external submodules)
+#   - .git directories (submodule markers)
+#   - generated files
+files=$(find firmware unit_tests \
+    -path "firmware/ext" -prune -o \
+    -path "*/.git" -prune -o \
+    -type f \( -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cc" \) \
+    -print)
+
+if [ -z "$files" ]; then
+    echo "No C/C++ files found"
+    exit 0
+fi
+
+if [ "$CHECK_ONLY" = true ]; then
+    # Check mode: use --output-replacements-xml to see if changes would be made
+    echo "Checking code formatting..."
+
+    # Create a temporary file to store any formatting differences
+    temp_file=$(mktemp)
+    trap "rm -f $temp_file" EXIT
+
+    has_changes=false
+    while IFS= read -r file; do
+        if ! clang-format --output-replacements-xml "$file" | grep -q "replacement offset"; then
+            # No replacements needed
+            :
+        else
+            echo "  Would reformat: $file"
+            has_changes=true
+        fi
+    done <<< "$files"
+
+    if [ "$has_changes" = true ]; then
+        echo "Formatting check failed. Run './format.sh' to fix."
+        exit 1
+    else
+        echo "Code formatting is correct."
+        exit 0
+    fi
+else
+    # Format mode: apply changes in-place
+    echo "Formatting code..."
+    echo "$files" | xargs -d '\n' clang-format -i
+    echo "Formatting complete"
+    exit 0
+fi
