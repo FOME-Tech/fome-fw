@@ -6,6 +6,7 @@ UseTab: Always
 TabWidth: 4
 IndentWidth: 4
 ContinuationIndentWidth: 8
+InsertNewlineAtEOF: true
 
 ColumnLimit: 120
 
