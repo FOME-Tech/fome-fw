@@ -36,7 +36,6 @@ for BOARD in \
    "config/boards/proteus proteus_f4" \
    "config/boards/proteus proteus_h7" \
    "config/boards/f407-discovery f407-discovery" \
-   "config/boards/f429-discovery f429-discovery" \
    "config/boards/atlas atlas"\
    "config/boards/tdg-pdm8 tdg-pdm8"\
    ; do
