@@ -132,10 +132,6 @@ jobs:
             folder: config/boards/f407-discovery
             ini-file: fome_f407-discovery.ini
 
-          # - build-target: f429-discovery
-          #   folder: config/boards/f429-discovery
-          #   ini-file: fome_f429-discovery.ini
-
         #   - build-target: core8
         #     folder: config/boards/core8
         #     ini-file: fome_core8.ini
