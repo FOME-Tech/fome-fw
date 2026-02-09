@@ -38,7 +38,7 @@
 	url = https://github.com/rusefi/luaformatter
 	branch = prod
 [submodule "firmware/libfirmware"]
-	path = firmware/libfirmware
+	path = firmware/ext/libfirmware
 	url = https://github.com/rusefi/libfirmware.git
 [submodule "firmware/ext/build-tools"]
 	path = firmware/ext/build-tools
