@@ -30,25 +30,28 @@ if [ -z "$files" ]; then
 fi
 
 if [ "$CHECK_ONLY" = true ]; then
-    # Check mode: use --output-replacements-xml to see if changes would be made
+    # Check mode: show formatting diffs
     echo "Checking code formatting..."
-
-    # Create a temporary file to store any formatting differences
-    temp_file=$(mktemp)
-    trap "rm -f $temp_file" EXIT
 
     has_changes=false
     while IFS= read -r file; do
-        if ! clang-format --output-replacements-xml "$file" | grep -q "replacement offset"; then
-            # No replacements needed
-            :
-        else
-            echo "  Would reformat: $file"
+        echo "Checking $file..."
+
+        # Get the formatted version
+        formatted=$(clang-format "$file")
+
+        # Compare with original
+        if ! diff -u "$file" <(echo "$formatted") > /dev/null 2>&1; then
+            # Changes needed - show the diff
+            echo ""
+            echo "=== Formatting changes needed in: $file ==="
+            diff -u "$file" <(echo "$formatted") || true
             has_changes=true
         fi
     done <<< "$files"
 
     if [ "$has_changes" = true ]; then
+        echo ""
         echo "Formatting check failed. Run './format.sh' to fix."
         exit 1
     else
