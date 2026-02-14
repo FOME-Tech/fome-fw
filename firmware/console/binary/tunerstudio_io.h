@@ -49,11 +49,8 @@ public:
 		return m_name;
 	}
 
-#ifdef EFI_CAN_SERIAL
-	virtual // CAN device needs this function to be virtual for small-packet optimization
-#endif
-			// Use when buf could change during execution. Makes a copy before computing checksum.
-			void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size);
+	// Use when buf could change during execution. Makes a copy before computing checksum.
+	virtual void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size);
 
 	// Use when buf cannot change during execution. Computes checksum without an extra copy.
 	void writeCrcPacketLocked(uint8_t responseCode, const uint8_t* buf, size_t size);

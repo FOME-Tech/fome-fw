@@ -25,7 +25,7 @@ PCHSUB = firmware
 CHIBIOS_CONTRIB = $(PROJECT_DIR)/ext/ChibiOS-Contrib
 
 # Configure libfirmware Paths/Includes
-RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
+RUSEFI_LIB = $(PROJECT_DIR)/ext/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 

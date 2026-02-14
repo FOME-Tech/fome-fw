@@ -72,37 +72,19 @@ void setFordEscortGt() {
 	engineConfiguration->displacement = 1.839;
 	setAlgorithm(LM_SPEED_DENSITY);
 
-	static const uint16_t veRpmBins[] = 
-	{
-		800,
-		1200,
-		1600,
-		2000,
-		2400,
-		2800,
-		3200,
-		3600,
-		4100,
-		4500,
-		4900,
-		5300,
-		5700,
-		6100,
-		6500,
-		7000
-	};
+	static const uint16_t veRpmBins[] = {
+			800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4100, 4500, 4900, 5300, 5700, 6100, 6500, 7000};
 
 	copyArray(config->veRpmBins, veRpmBins);
 
-
 	copyTable(config->veTable, racingFestivaVeTable);
 
-//	engineConfiguration->triggerInputPins[0] = Gpio::C6; // 2G YEL/BLU
-//	engineConfiguration->triggerInputPins[1] = Gpio::A5; // 2E White CKP
+	//	engineConfiguration->triggerInputPins[0] = Gpio::C6; // 2G YEL/BLU
+	//	engineConfiguration->triggerInputPins[1] = Gpio::A5; // 2E White CKP
 
 	// in case of SOHC distributor we only have one signal
-//	engineConfiguration->triggerInputPins[0] = Gpio::A5; // 2E White CKP
-//	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
+	//	engineConfiguration->triggerInputPins[0] = Gpio::A5; // 2E White CKP
+	//	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
 
 	// in case of DOHC distributor we have two signals
 	engineConfiguration->triggerInputPins[0] = Gpio::C6;
@@ -125,7 +107,6 @@ void setFordEscortGt() {
 	engineConfiguration->crankingIACposition = 65;
 
 	setWholeIatCorrTimingTable(0);
-
 
 	// set global_trigger_offset_angle -37
 	engineConfiguration->globalTriggerAngleOffset = -37;
@@ -173,7 +154,6 @@ void setFordEscortGt() {
 	engineConfiguration->injectionPins[0] = Gpio::D3;
 	engineConfiguration->injectionPins[1] = Gpio::E2;
 
-
 	// 40% idle is good default
 	engineConfiguration->idle.solenoidFrequency = 300;
 	engineConfiguration->idle.solenoidPin = Gpio::B9;
@@ -189,34 +169,17 @@ void setFordEscortGt() {
 	engineConfiguration->tpsMax = 115; // convert 12to10 bit (ADC/4)
 
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_3;
-//	engineConfiguration->map.sensor.hwChannel = EFI_ADC_4;
+	//	engineConfiguration->map.sensor.hwChannel = EFI_ADC_4;
 	engineConfiguration->mafAdcChannel = EFI_ADC_0;
 	engineConfiguration->clt.adcChannel = EFI_ADC_12;
 	engineConfiguration->iat.adcChannel = EFI_ADC_11;
 
 	// todo: 8.2 or 10k?
-	engineConfiguration->vbattDividerCoeff = ((float) (10 + 33)) / 10 * 2;
+	engineConfiguration->vbattDividerCoeff = ((float)(10 + 33)) / 10 * 2;
 
 	// VICS solenoid
-	static const uint16_t ignitionRpmBins[] =
-	{
-		800,
-		1200,
-		1600,
-		2000,
-		2400,
-		2800,
-		3200,
-		3600,
-		4100,
-		4500,
-		4900,
-		5300,
-		5700,
-		6100,
-		6500,
-		7000
-	};
+	static const uint16_t ignitionRpmBins[] = {
+			800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4100, 4500, 4900, 5300, 5700, 6100, 6500, 7000};
 
 	copyArray(config->ignitionRpmBins, ignitionRpmBins);
 
@@ -228,4 +191,3 @@ void setFordEscortGt() {
 
 	engineConfiguration->isSdCardEnabled = true;
 }
-

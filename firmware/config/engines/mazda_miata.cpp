@@ -100,5 +100,4 @@ void common079721_2351() {
 	engineConfiguration->mafAdcChannel = EFI_ADC_1;
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_3;
 	engineConfiguration->clt.adcChannel = EFI_ADC_11;
-
 }

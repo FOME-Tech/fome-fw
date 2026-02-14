@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Submodules
       run: |
         git submodule update --init --depth=1 unit_tests/googletest
-        git submodule update --init --depth=1 firmware/libfirmware
+        git submodule update --init --depth=1 firmware/ext/libfirmware
         git submodule update --init --depth=1 firmware/ext/lua
         git submodule update --init --depth=1 firmware/ext/luaaa
         git submodule update --init --depth=1 firmware/ext/wideband_firmware

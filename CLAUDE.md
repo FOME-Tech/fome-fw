@@ -54,6 +54,17 @@ A `.clang-format` file at the repository root enforces consistent code style:
 
 **VS Code integration**: Format-on-save is enabled for C/C++ files via `ms-vscode.cpptools`.
 
+**Using the format script**:
+```bash
+# Check formatting and show diffs
+./format.sh check
+
+# Apply formatting to all files
+./format.sh
+```
+
+The `format.sh` script automatically excludes external code (`firmware/ext/`, `unit_tests/googletest/`) and generated files. When running `check`, it displays a unified diff of formatting changes needed, making it easy to see exactly what would change.
+
 **Manual formatting**:
 ```bash
 # Format a single file

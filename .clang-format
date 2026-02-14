@@ -6,6 +6,7 @@ UseTab: Always
 TabWidth: 4
 IndentWidth: 4
 ContinuationIndentWidth: 8
+InsertNewlineAtEOF: true
 
 ColumnLimit: 120
 
@@ -21,7 +22,7 @@ ReferenceAlignment: Left
 DerivePointerAlignment: false
 
 # Template on its own line
-BreakTemplateDeclarations: Yes
+AlwaysBreakTemplateDeclarations: Yes
 
 # Constructor initializer lists: break before comma
 #   Foo()

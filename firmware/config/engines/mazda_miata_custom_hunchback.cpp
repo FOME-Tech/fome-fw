@@ -69,16 +69,11 @@ static const uint8_t mapBased18vvtVeTable_NA_fuel_rail[16][16] = {
 };
 #endif
 
-static const uint16_t mazda_miata_nb2_targetLambdaRpmBins[FUEL_RPM_COUNT] = {650, 800, 1050, 1300,
-		1550, 1800, 2050, 2300,
-		2550, 2800, 3050, 3300,
-		3550, 3800, 4050, 6400}
-;
+static const uint16_t mazda_miata_nb2_targetLambdaRpmBins[FUEL_RPM_COUNT] = {
+		650, 800, 1050, 1300, 1550, 1800, 2050, 2300, 2550, 2800, 3050, 3300, 3550, 3800, 4050, 6400};
 
-static const uint8_t mazda_miata_nb2_targetLambdaLoadBins[FUEL_LOAD_COUNT] = {10, 20, 30, 40,
-		50, 60, 70, 80,
-		90, 100, 110, 120,
-		130, 140, 150, 160};
+static const uint8_t mazda_miata_nb2_targetLambdaLoadBins[FUEL_LOAD_COUNT] = {
+		10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160};
 
 void setMazdaMiata2003EngineConfigurationNaFuelRail() {
 	setMazdaMiata2003EngineConfiguration();
@@ -103,13 +98,13 @@ void setMazdaMiata2003EngineConfigurationNaFuelRail() {
 
 	setEgoSensor(ES_14Point7_Free);
 
-	engineConfiguration->cranking.baseFuel = 27; // higher value for return system NA conversion since lower fuel pressure
+	engineConfiguration->cranking.baseFuel =
+			27; // higher value for return system NA conversion since lower fuel pressure
 	engineConfiguration->vbattDividerCoeff = 9.30; // actual value on my new board
 
 	engineConfiguration->ignitionDwellForCrankingMs = 8;
 
 	engineConfiguration->vvtOffsets[0] = 97;
-
 
 	engineConfiguration->rpmHardLimit = 7200; // we want to survive the race, but we also want some fun!
 
@@ -117,5 +112,3 @@ void setMazdaMiata2003EngineConfigurationNaFuelRail() {
 	engineConfiguration->manIdlePosition = 30;
 	engineConfiguration->crankingIACposition = 65;
 }
-
-
