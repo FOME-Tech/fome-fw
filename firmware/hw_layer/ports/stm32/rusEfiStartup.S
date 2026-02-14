@@ -32,7 +32,7 @@ BEQ UseDFU
 UseDFU:
 	// AN2606 Application note
 	// STM32 microcontroller system memory boot mode
-#include "dfu_init.h"
+#include "dfu_init.S"
 BX R0 // this jumps to DFU bootloader
 	// I believe we are never executing this line
 // [rusefi][DFU][end]
