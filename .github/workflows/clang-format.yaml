@@ -8,7 +8,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: true
+        # We don't need submodules - all code to check is in the fome-fw repo
+        submodules: false
 
     - name: Install clang-format
       run: |
