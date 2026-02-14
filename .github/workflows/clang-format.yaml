@@ -11,10 +11,18 @@ jobs:
         # We don't need submodules - all code to check is in the fome-fw repo
         submodules: false
 
-    - name: Install clang-format
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang-format
+    # - name: Install clang-format
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y clang-format
 
-    - name: Check code formatting
-      run: ./format.sh check
+    # - name: Check code formatting
+    #   run: ./format.sh check
+
+    - uses: DoozyX/clang-format-lint-action@v0.20
+      with:
+        clangFormatVersion: 20
+        source: '.'
+        exclude: './firmware/ext ./unit_tests/googletest *_generated.h ./firmware/generated'
+        style: file
+        check: true
