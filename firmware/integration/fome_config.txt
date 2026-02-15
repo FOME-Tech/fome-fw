@@ -395,8 +395,8 @@ bit isForcedInduction;Does the vehicle have a turbo or supercharger?
 bit useMapEstimateDuringTransient;During the TPS AE period, use the MAP estimate table value instead of true MAP (if greater than real MAP). This basically briefly runs in alpha-n during a transient, then returns to normal speed-density mode.
 bit lambdaProtectionEnable
 bit overrideTriggerGaps
-bit enableFan1WithAc;Turn on this fan when AC is on.
-bit enableFan2WithAc;Turn on this fan when AC is on.
+bit enableFan1WithAc;Turn on this fan when A/C is on.
+bit enableFan2WithAc;Turn on this fan when A/C is on.
 bit disableFan1WhenStopped;Inhibit operation of this fan while the engine is not running.
 bit disableFan2WhenStopped;Inhibit operation of this fan while the engine is not running.
 bit fan1UsePwmMode,"PWM","On/Off";Use PWM mode for fan 1 instead of on/off.
@@ -951,7 +951,7 @@ bit ALSActivateInverted
 
 	float turboSpeedSensorMultiplier;;"mult", 1, 0, 0, 7000, 3
 
-	int16_t acIdleRpmBump;Extra idle target speed when A/C is enabled. Some cars need the extra speed to keep the AC efficient while idling.;"RPM", 1, 0, 0, 1000, 0
+	int16_t acIdleRpmBump;Extra idle target speed when A/C is enabled. Some cars need the extra speed to keep the A/C efficient while idling.;"RPM", 1, 0, 0, 1000, 0
 
 	int16_t warningPeriod;;"seconds", 1, 0, 0, 60, 0
 
@@ -1264,8 +1264,8 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	uint8_t autoscale maxCamPhaseResolveRpm;Below this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at high RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
 
 	uint8_t autoscale dfcoDelay;Delay before cutting fuel. Set to 0 to cut immediately with no delay. May cause rumbles and pops out of your exhaust...;"sec", 0.1, 0, 0, 10, 1
-	uint8_t autoscale acDelay;Delay before engaging the AC compressor. Set to 0 to engage immediately with no delay. Use this to prevent bogging at idle when AC engages.;"sec", 0.1, 0, 0, 10, 1
-	uint8_t autoscale acStartDelay;Delay before the AC compressor engages after the start of the engine. Set 0 to engage immediately.;"sec", 0.1, 0, 0, 20, 1
+	uint8_t autoscale acDelay;Delay before engaging the A/C compressor. Set to 0 to engage immediately with no delay. Use this to prevent bogging at idle when A/C engages.;"sec", 0.1, 0, 0, 10, 1
+	uint8_t autoscale acStartDelay;Delay before the A/C compressor engages after the start of the engine. Set 0 to engage immediately.;"sec", 0.1, 0, 0, 20, 1
 
 	pin_input_mode_e acSwitchMode
 	pin_input_mode_e acPressureSwitchMode
