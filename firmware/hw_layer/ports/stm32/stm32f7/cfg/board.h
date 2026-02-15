@@ -30,7 +30,7 @@
  * Board identifier.
  */
 #define BOARD_ST_NUCLEO144_F767ZI
-#define BOARD_NAME                  "F7 for rusEFI"
+#define BOARD_NAME                  "FOME STM32F7"
 
 #define EFI_USB_AF 10U
 #define EFI_USB_SERIAL_DM Gpio::A11
