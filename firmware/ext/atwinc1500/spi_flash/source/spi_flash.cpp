@@ -687,7 +687,7 @@ sint8 spi_flash_erase(uint32 u32Offset, uint32 u32Sz)
 	uint32 t;
 	t = GetTickCount();
 #endif
-	M2M_PRINT("\r\n>Start erasing...\r\n");
+	M2M_INFO(">Start erasing...");
 	for(i = u32Offset; i < (u32Sz +u32Offset); i += (16*FLASH_PAGE_SZ))
 	{
 		ret += spi_flash_write_enable();
@@ -696,14 +696,15 @@ sint8 spi_flash_erase(uint32 u32Offset, uint32 u32Sz)
 		ret += spi_flash_read_status_reg(&tmp);
 		do
 		{
+			nm_bsp_sleep(10);
 			if(ret != M2M_SUCCESS) goto ERR;
 			ret += spi_flash_read_status_reg(&tmp);
 		}while(tmp & 0x01);
 		
 	}
-	M2M_PRINT("Done\r\n");
+	M2M_INFO("Done!");
 #ifdef PROFILING
-	M2M_PRINT("#Erase time = %f sec\n", (GetTickCount()-t)/1000.0);
+	M2M_INFO("#Erase time = %f sec\n", (GetTickCount()-t)/1000.0);
 #endif
 ERR:
 	return ret;
