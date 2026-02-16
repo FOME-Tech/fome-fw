@@ -3,6 +3,7 @@
 #if EFI_WIFI
 
 #include "wifi_socket.h"
+#include "wifi_sd_firmware_updater.h"
 #include "thread_controller.h"
 #include "driver/include/m2m_wifi.h"
 #include "socket/include/socket.h"
@@ -230,6 +231,10 @@ public:
 	WifiHelperThread()
 		: ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
 	void ThreadTask() override {
+		// Wait for any SD-based WiFi firmware update to finish
+		// before we try to initialize the WiFi module
+		waitForWifiSdUpdateComplete();
+
 		if (!initWifi()) {
 			return;
 		}

@@ -7,6 +7,10 @@
 #include "ff.h"
 #include "mass_storage_init.h"
 
+#if EFI_WIFI
+#include "wifi_sd_firmware_updater.h"
+#endif
+
 static bool fs_ready = false;
 
 #if HAL_USE_USB_MSD
@@ -27,8 +31,28 @@ bool mountSdFilesystem() {
 
 	// if no card, don't try to mount FS
 	if (!cardBlockDevice) {
+#if EFI_WIFI
+		signalWifiSdUpdateComplete();
+#endif
 		return false;
 	}
+
+	// Mount filesystem immediately (before USB wait)
+	if (f_mount(sd_mem::getFs(), "/", 1) != FR_OK) {
+		efiPrintf("SD card failed to mount filesystem");
+		stopMmcBlockDevice();
+#if EFI_WIFI
+		signalWifiSdUpdateComplete();
+#endif
+		return false;
+	}
+
+#if EFI_WIFI
+	// Check for WiFi firmware update/dump trigger files on SD card
+	tryUpdateWifiFirmwareFromSd();
+	tryDumpWifiFirmwareToSd();
+	signalWifiSdUpdateComplete();
+#endif
 
 #if HAL_USE_USB_MSD
 	// Wait for the USB stack to wake up, or a 5 second timeout, whichever occurs first
@@ -36,10 +60,9 @@ bool mountSdFilesystem() {
 
 	bool hasUsb = usbResult == MSG_OK;
 
-	// If we have a device AND USB is connected, mount the card to USB, otherwise
-	// mount the null device and try to mount the filesystem ourselves
-	if (cardBlockDevice && hasUsb) {
-		// Mount the real card to USB
+	// If USB is connected, unmount filesystem and hand card to USB
+	if (hasUsb) {
+		f_mount(nullptr, "/", 0);
 		attachMsdSdCard(cardBlockDevice);
 
 		// At this point we're done: don't try to write files ourselves
@@ -47,15 +70,10 @@ bool mountSdFilesystem() {
 	}
 #endif
 
-	// We were able to connect the SD card, mount the filesystem
-	if (f_mount(sd_mem::getFs(), "/", 1) == FR_OK) {
-		efiPrintf("SD card mounted!");
-		fs_ready = true;
-		return true;
-	} else {
-		efiPrintf("SD card failed to mount filesystem");
-		return false;
-	}
+	// No USB — filesystem already mounted, proceed with logging
+	efiPrintf("SD card mounted!");
+	fs_ready = true;
+	return true;
 }
 
 void unmountSdFilesystem() {

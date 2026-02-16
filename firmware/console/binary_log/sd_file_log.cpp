@@ -243,7 +243,13 @@ static void sdTriggerLogger() {
 #endif /* EFI_TOOTH_LOGGER */
 }
 
-static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE); // MMC monitor thread
+#if EFI_WIFI
+// WiFi needs extra stack, as WiFi firmware update happens from here
+static THD_WORKING_AREA(sdCardLoggerStack, 6 * UTILITY_THREAD_STACK_SIZE);
+#else // not EFI_WIFI
+static THD_WORKING_AREA(sdCardLoggerStack, 4 * UTILITY_THREAD_STACK_SIZE);
+#endif
+
 static THD_FUNCTION(sdCardLoggerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("MMC Card Logger");
