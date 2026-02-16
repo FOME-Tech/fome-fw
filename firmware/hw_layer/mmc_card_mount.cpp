@@ -38,19 +38,19 @@ bool mountSdFilesystem() {
 	}
 
 	// Mount filesystem immediately (before USB wait)
-	if (f_mount(sd_mem::getFs(), "/", 1) != FR_OK) {
-		efiPrintf("SD card failed to mount filesystem");
-		stopMmcBlockDevice();
+	bool mounted = f_mount(sd_mem::getFs(), "/", 1) == FR_OK;
+
+	if (mounted) {
 #if EFI_WIFI
-		signalWifiSdUpdateComplete();
+		// Check for WiFi firmware update/dump trigger files on SD card
+		tryUpdateWifiFirmwareFromSd();
+		tryDumpWifiFirmwareToSd();
 #endif
-		return false;
+	} else {
+		efiPrintf("SD card failed to mount filesystem");
 	}
 
 #if EFI_WIFI
-	// Check for WiFi firmware update/dump trigger files on SD card
-	tryUpdateWifiFirmwareFromSd();
-	tryDumpWifiFirmwareToSd();
 	signalWifiSdUpdateComplete();
 #endif
 
@@ -60,15 +60,22 @@ bool mountSdFilesystem() {
 
 	bool hasUsb = usbResult == MSG_OK;
 
-	// If USB is connected, unmount filesystem and hand card to USB
 	if (hasUsb) {
-		f_mount(nullptr, "/", 0);
+		// Unmount filesystem (if mounted) before handing card to USB
+		if (mounted) {
+			f_mount(nullptr, "/", 0);
+		}
 		attachMsdSdCard(cardBlockDevice);
 
 		// At this point we're done: don't try to write files ourselves
 		return false;
 	}
 #endif
+
+	if (!mounted) {
+		stopMmcBlockDevice();
+		return false;
+	}
 
 	// No USB — filesystem already mounted, proceed with logging
 	efiPrintf("SD card mounted!");
