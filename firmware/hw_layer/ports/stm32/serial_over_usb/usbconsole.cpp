@@ -16,6 +16,12 @@
 
 static bool isUsbSerialInitialized = false;
 
+#if HAL_USE_USB_MSD
+// When MSD is enabled, defer USB bus connection until the SD card thread
+// has finished any WiFi firmware updates and is ready to present media.
+static chibios_rt::BinarySemaphore usbEnumerationAllowed(/* taken =*/true);
+#endif
+
 /**
  * start USB serial using hard-coded communications pins (see comments inside the code)
  */
@@ -43,18 +49,20 @@ void usb_serial_start() {
 #endif /* EFI_SKIP_USB_DISCONNECT */
 	usbStart(serusbcfg.usbp, &usbcfg);
 
-	// Don't connect the bus yet if MSD is enabled - the SD card thread
-	// will connect after mounting the card so the host sees real media
-	// from the start, rather than swapping the null device later.
-#if !HAL_USE_USB_MSD
-	usbConnectBus(serusbcfg.usbp);
+#if HAL_USE_USB_MSD
+	// Wait for the SD card thread to signal that it's ready
+	usbEnumerationAllowed.wait();
 #endif
+
+	usbConnectBus(serusbcfg.usbp);
 
 	isUsbSerialInitialized = true;
 }
 
-void connectUsbBus() {
-	usbConnectBus(serusbcfg.usbp);
+void allowUsbEnumeration() {
+#if HAL_USE_USB_MSD
+	usbEnumerationAllowed.signal();
+#endif
 }
 
 bool is_usb_serial_ready() {

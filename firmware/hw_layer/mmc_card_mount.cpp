@@ -39,8 +39,8 @@ bool mountSdFilesystem() {
 		signalWifiSdUpdateComplete();
 #endif
 #if HAL_USE_USB_MSD
-		// No SD card - connect USB bus now so serial and INI drive still work
-		connectUsbBus();
+		// No SD card - allow USB to enumerate so serial and INI drive still work
+		allowUsbEnumeration();
 #endif
 		return false;
 	}
@@ -65,8 +65,8 @@ bool mountSdFilesystem() {
 #endif
 
 #if HAL_USE_USB_MSD
-	// Now connect the USB bus - the host will enumerate and see the real SD card
-	connectUsbBus();
+	// Allow USB to enumerate - the host will see the real SD card
+	allowUsbEnumeration();
 
 	// Wait for the USB enumeration, or a 5 second timeout, whichever occurs first
 	msg_t usbResult = usbConnectedSemaphore.wait(TIME_MS2I(5000));
@@ -80,9 +80,6 @@ bool mountSdFilesystem() {
 		// At this point we're done: don't try to write files ourselves
 		return false;
 	}
-
-	// Reclaim the card back from USB so that it doesn't get double mounted
-	attachMsdSdCard(nullptr);
 #endif
 
 	// We were able to connect the SD card, mount the filesystem
