@@ -42,9 +42,19 @@ void usb_serial_start() {
 	chThdSleepMilliseconds(250);
 #endif /* EFI_SKIP_USB_DISCONNECT */
 	usbStart(serusbcfg.usbp, &usbcfg);
+
+	// Don't connect the bus yet if MSD is enabled - the SD card thread
+	// will connect after mounting the card so the host sees real media
+	// from the start, rather than swapping the null device later.
+#if !HAL_USE_USB_MSD
 	usbConnectBus(serusbcfg.usbp);
+#endif
 
 	isUsbSerialInitialized = true;
+}
+
+void connectUsbBus() {
+	usbConnectBus(serusbcfg.usbp);
 }
 
 bool is_usb_serial_ready() {

@@ -6,6 +6,7 @@
 
 #include "ff.h"
 #include "mass_storage_init.h"
+#include "usbconsole.h"
 
 #if EFI_WIFI
 #include "wifi_sd_firmware_updater.h"
@@ -22,6 +23,9 @@ void onUsbConnectedNotifyMmcI() {
 #endif /* HAL_USE_USB_MSD */
 
 bool mountSdFilesystem() {
+	Timer t;
+	t.reset();
+
 	auto cardBlockDevice = initializeMmcBlockDevice();
 
 #if EFI_TUNER_STUDIO
@@ -34,10 +38,14 @@ bool mountSdFilesystem() {
 #if EFI_WIFI
 		signalWifiSdUpdateComplete();
 #endif
+#if HAL_USE_USB_MSD
+		// No SD card - connect USB bus now so serial and INI drive still work
+		connectUsbBus();
+#endif
 		return false;
 	}
 
-	// Mount filesystem immediately (before USB wait)
+	// Mount filesystem temporarily for WiFi update check
 	bool mounted = f_mount(sd_mem::getFs(), "/", 1) == FR_OK;
 
 	if (mounted) {
@@ -46,6 +54,8 @@ bool mountSdFilesystem() {
 		tryUpdateWifiFirmwareFromSd();
 		tryDumpWifiFirmwareToSd();
 #endif
+		// Unmount — we'll either hand the card to USB or re-mount for logging
+		f_mount(nullptr, "/", 0);
 	} else {
 		efiPrintf("SD card failed to mount filesystem");
 	}
@@ -55,32 +65,35 @@ bool mountSdFilesystem() {
 #endif
 
 #if HAL_USE_USB_MSD
-	// Wait for the USB stack to wake up, or a 5 second timeout, whichever occurs first
+	// Now connect the USB bus - the host will enumerate and see the real SD card
+	connectUsbBus();
+
+	// Wait for the USB enumeration, or a 5 second timeout, whichever occurs first
 	msg_t usbResult = usbConnectedSemaphore.wait(TIME_MS2I(5000));
 
 	bool hasUsb = usbResult == MSG_OK;
 
 	if (hasUsb) {
-		// Unmount filesystem (if mounted) before handing card to USB
-		if (mounted) {
-			f_mount(nullptr, "/", 0);
-		}
+		// Mount the real card to USB
 		attachMsdSdCard(cardBlockDevice);
 
 		// At this point we're done: don't try to write files ourselves
 		return false;
 	}
+
+	// Reclaim the card back from USB so that it doesn't get double mounted
+	attachMsdSdCard(nullptr);
 #endif
 
-	if (!mounted) {
-		stopMmcBlockDevice();
+	// We were able to connect the SD card, mount the filesystem
+	if (f_mount(sd_mem::getFs(), "/", 1) == FR_OK) {
+		efiPrintf("SD card mounted!");
+		fs_ready = true;
+		return true;
+	} else {
+		efiPrintf("SD card failed to mount filesystem");
 		return false;
 	}
-
-	// No USB — filesystem already mounted, proceed with logging
-	efiPrintf("SD card mounted!");
-	fs_ready = true;
-	return true;
 }
 
 void unmountSdFilesystem() {
