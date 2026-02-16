@@ -56,6 +56,7 @@ void tryUpdateWifiFirmwareFromSd() {
 	auto& wifiUpdateBuffer = sd_mem::getWifiUpdateBuffer();
 
 	uint32_t offset = 0;
+	int lastPct = -1;
 	while (offset < fileSize) {
 		UINT bytesRead;
 		if (f_read(fd, wifiUpdateBuffer.data(), wifiUpdateBuffer.size(), &bytesRead) != FR_OK || bytesRead == 0) {
@@ -73,7 +74,11 @@ void tryUpdateWifiFirmwareFromSd() {
 		}
 
 		offset += bytesRead;
-		efiPrintf("WiFi: wrote %lu / %lu", offset, fileSize);
+		int pct = offset * 100 / fileSize;
+		if (pct / 5 != lastPct / 5) {
+			efiPrintf("WiFi: writing %d%% (%lu / %lu)", pct, offset, fileSize);
+			lastPct = pct;
+		}
 	}
 
 	f_close(fd);
@@ -116,6 +121,7 @@ void tryDumpWifiFirmwareToSd() {
 	auto& wifiUpdateBuffer = sd_mem::getWifiUpdateBuffer();
 
 	uint32_t offset = 0;
+	int lastPct = -1;
 	while (offset < flashSize) {
 		uint32_t chunkSize = flashSize - offset;
 		if (chunkSize > wifiUpdateBuffer.size()) {
@@ -138,7 +144,11 @@ void tryDumpWifiFirmwareToSd() {
 		}
 
 		offset += chunkSize;
-		efiPrintf("WiFi: dumped %lu / %lu", offset, flashSize);
+		int pct = offset * 100 / flashSize;
+		if (pct / 5 != lastPct / 5) {
+			efiPrintf("WiFi: dumping %d%% (%lu / %lu)", pct, offset, flashSize);
+			lastPct = pct;
+		}
 	}
 
 	f_close(fd);
