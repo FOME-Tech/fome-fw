@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "wifi_socket.h"
+#include "wifi_sd_firmware_updater.h"
 #include "thread_controller.h"
 #include "socket/include/socket.h"
 
@@ -39,6 +40,10 @@ void NetDeferredInit() {
 	}
 
 	didInit = true;
+
+	// In the bootloader the SD-card WiFi firmware update never runs, so unblock
+	// WifiHelperThread (which waits on this semaphore before it calls initWifi()).
+	signalWifiSdUpdateComplete();
 
 	initWifi();
 
