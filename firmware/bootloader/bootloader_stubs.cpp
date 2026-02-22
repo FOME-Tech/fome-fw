@@ -1,9 +1,5 @@
 #include "pch.h"
 
-extern "C" {
-#include "boot.h"
-}
-
 #include "hardware.h"
 #include "digital_input_exti.h"
 
@@ -59,15 +55,3 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 void perfEventBegin(PE) {}
 void perfEventEnd(PE) {}
 void perfEventInstantGlobal(PE) {}
-
-#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
-#include "mmc_card.h"
-extern "C" blt_bool CpuUserProgramStartHook(void) {
-	// Properly stop the SDMMC peripheral before jumping to the firmware.
-	// Without this the bootloader leaves SDMMC1 powered (POWER=3, 24 MHz
-	// bypass clock) and the SD card selected; sdcConnect() in the firmware
-	// then fails with SDC_COMMAND_TIMEOUT on every command.
-	stopMmcBlockDevice();
-	return BLT_TRUE;
-}
-#endif
