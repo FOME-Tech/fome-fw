@@ -80,7 +80,9 @@ blt_bool BackDoorEntryHook(void)
 *   C P U   D R I V E R   H O O K   F U N C T I O N S
 ****************************************************************************************/
 
-#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
+/* For SD bootloader builds, CpuUserProgramStartHook is defined in bootloader_stubs.cpp
+ * (C++) so it can call stopMmcBlockDevice() to properly clean up before the jump. */
+#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0) && !defined(SD_BOOTLOADER)
 /************************************************************************************//**
 ** \brief     Callback that gets called when the bootloader is about to exit and
 **            hand over control to the user program. This is the last moment that

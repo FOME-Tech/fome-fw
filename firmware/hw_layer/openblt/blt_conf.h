@@ -50,8 +50,13 @@
 #define BOOT_CPU_SYSTEM_SPEED_KHZ        (1000)
 /** \brief Motorola or Intel style byte ordering. */
 #define BOOT_CPU_BYTE_ORDER_MOTOROLA     (0)
-/** \brief Enable/disable hook function call right before user program start. */
+/** \brief Enable/disable hook function call right before user program start.
+ *         Enabled for SD bootloader builds to properly stop SDMMC before jumping. */
+#ifdef SD_BOOTLOADER
+#define BOOT_CPU_USER_PROGRAM_START_HOOK (1)
+#else
 #define BOOT_CPU_USER_PROGRAM_START_HOOK (0)
+#endif
 
 
 /****************************************************************************************

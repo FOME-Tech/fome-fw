@@ -85,7 +85,10 @@
 #define STM32_HSI48_ENABLED                 TRUE
 #define STM32_HSE_ENABLED                   TRUE
 // see RUSEFI_STM32_LSE_WAIT_MAX
+// Override via board.mk: DDEFS += -DSTM32_LSE_ENABLED=FALSE for boards without LSE crystal
+#if !defined(STM32_LSE_ENABLED)
 #define STM32_LSE_ENABLED                   TRUE
+#endif
 #define STM32_HSIDIV                        STM32_HSIDIV_DIV1
 
 /*
@@ -135,7 +138,10 @@
  */
 #define STM32_SW                            STM32_SW_PLL1_P_CK
 // see RUSEFI_STM32_LSE_WAIT_MAX_RTCSEL
+// Override via board.mk: DDEFS += -DSTM32_RTCSEL=STM32_RTCSEL_LSI_CK for boards without LSE crystal
+#if !defined(STM32_RTCSEL)
 #define STM32_RTCSEL                        STM32_RTCSEL_LSE_CK
+#endif
 #define STM32_D1CPRE                        STM32_D1CPRE_DIV1
 #define STM32_D1HPRE                        STM32_D1HPRE_DIV2
 #define STM32_D1PPRE3                       STM32_D1PPRE3_DIV2
