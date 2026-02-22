@@ -114,7 +114,11 @@ void stopMmcBlockDevice() {
 
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
-static const SDCConfig sdcConfig = {SDC_MODE_4BIT};
+// Allow boards to override the bus width; default to 4-bit
+#ifndef EFI_SDC_MODE
+#define EFI_SDC_MODE SDC_MODE_4BIT
+#endif
+static const SDCConfig sdcConfig = {EFI_SDC_MODE};
 
 BaseBlockDevice* initializeMmcBlockDevice() {
 	if (!isSdCardEnabled()) {

@@ -147,6 +147,37 @@
 			"configFiles": ["interface/stlink.cfg", "target/stm32h7x.cfg"],
 			"rtos": "auto",
 			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
+		},
+		{
+			"name": "Debug Mikrus DF",
+			"type": "cortex-debug",
+			// Use "attach" - do NOT reflash. Flash manually with flash-mikrus.sh first.
+			// "launch" would overwrite the board with the raw ELF (no checksum), breaking bootloader integrity check.
+			"request": "attach",
+			"cwd": "${workspaceFolder}/firmware",
+			"executable": "${workspaceRoot}/firmware/build/fome.elf",
+			"device": "STM32H743V",
+			"v1": false,
+			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32H743x.svd",
+			"servertype": "openocd",
+			"configFiles": ["interface/stlink.cfg", "target/stm32h7x.cfg"],
+			"rtos": "auto",
+			"gdbPath": "/usr/bin/gdb-multiarch"
+		},
+		{
+			"name": "Debug Mikrus DF Bootloader",
+			"type": "cortex-debug",
+			// Use "attach" - do NOT reflash. Flash manually with flash-mikrus.sh first.
+			"request": "attach",
+			"cwd": "${workspaceFolder}/firmware",
+			"executable": "${workspaceRoot}/firmware/bootloader/blbuild/fome_bl.elf",
+			"device": "STM32H743V",
+			"v1": false,
+			"svdFile": "${workspaceRoot}/firmware/ext/cmsis-svd/STM32H743x.svd",
+			"servertype": "openocd",
+			"configFiles": ["interface/stlink.cfg", "target/stm32h7x.cfg"],
+			"rtos": "auto",
+			"gdbPath": "/usr/bin/gdb-multiarch"
 		}
 	]
 }

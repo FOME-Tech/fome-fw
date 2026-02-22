@@ -16,6 +16,10 @@ void TimerUpdate() {}
 
 void DoWifiDisconnect();
 
+#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
+extern "C" blt_bool CpuUserProgramStartHook(void);
+#endif
+
 extern "C" void __core_init() {
 	// This overrides the built-in __core_init() function
 	// We do this to avoid enabling the D/I caches, which

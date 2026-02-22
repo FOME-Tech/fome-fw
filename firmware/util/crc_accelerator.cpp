@@ -83,8 +83,8 @@ bool checkFirmwareImageIntegrity(uintptr_t baseAddress) {
 	uint8_t* start = reinterpret_cast<uint8_t*>(baseAddress);
 	size_t imageSize = *reinterpret_cast<size_t*>(start + checksumOffset + 4);
 
-	if (imageSize > 1024 * 1024) {
-		// impossibly large size, invalid
+	if (imageSize > 2 * 1024 * 1024) {
+		// impossibly large size, invalid (max 2MB for STM32H7)
 		return false;
 	}
 

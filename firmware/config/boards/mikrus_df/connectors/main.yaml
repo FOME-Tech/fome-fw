@@ -1,0 +1,181 @@
+---
+pins:
+  # ---- Analog Inputs ----
+  - pin: AN1
+    id: EFI_ADC_14
+    class: analog_inputs
+    ts_name: AN1 - Analog 1 (C4)
+    type: analog
+
+  - pin: AN2
+    id: EFI_ADC_15
+    class: analog_inputs
+    ts_name: AN2 - Analog 2 / MAP (C5)
+    type: analog
+
+  - pin: AN3
+    id: EFI_ADC_10
+    class: analog_inputs
+    ts_name: AN3 - Analog 3 / CLT (C0)
+    type: analog
+
+  - pin: AN4
+    id: EFI_ADC_11
+    class: analog_inputs
+    ts_name: AN4 - Analog 4 / IAT (C1)
+    type: analog
+
+  - pin: AN5
+    id: EFI_ADC_12
+    class: analog_inputs
+    ts_name: AN5 - Analog 5 (C2 / ADC3)
+    type: analog
+
+  - pin: AN6
+    id: EFI_ADC_13
+    class: analog_inputs
+    ts_name: AN6 - Analog 6 (C3 / ADC3)
+    type: analog
+
+  - pin: AN7
+    id: EFI_ADC_0
+    class: analog_inputs
+    ts_name: AN7 - Analog 7 (A0)
+    type: analog
+
+  - pin: AN8
+    id: EFI_ADC_1
+    class: analog_inputs
+    ts_name: AN8 - Analog 8 (A1)
+    type: analog
+
+  # ---- 12V Battery Sense ----
+  - pin: 12VSENSE
+    id: EFI_ADC_2
+    class: analog_inputs
+    ts_name: 12V Battery Sense (A2)
+    type: 12V
+
+  # ---- Injector Outputs ----
+  - pin: IN1
+    id: D7
+    class: outputs
+    ts_name: IN1 - Injector 1 (D7)
+    type: inj
+
+  - pin: IN2
+    id: B4
+    class: outputs
+    ts_name: IN2 - Injector 2 (B4)
+    type: inj
+
+  - pin: IN3
+    id: B5
+    class: outputs
+    ts_name: IN3 - Injector 3 (B5)
+    type: inj
+
+  - pin: IN4
+    id: B6
+    class: outputs
+    ts_name: IN4 - Injector 4 (B6)
+    type: inj
+
+  - pin: IN5
+    id: B7
+    class: outputs
+    ts_name: IN5 - Injector 5 (B7)
+    type: inj
+
+  - pin: IN6
+    id: B8
+    class: outputs
+    ts_name: IN6 - Injector 6 (B8)
+    type: inj
+
+  - pin: IN7
+    id: B9
+    class: outputs
+    ts_name: IN7 - Injector 7 (B9)
+    type: inj
+
+  - pin: IN8
+    id: A8
+    class: outputs
+    ts_name: IN8 - Injector 8 (A8)
+    type: inj
+
+  # ---- Ignition Outputs ----
+  - pin: IGN1
+    id: D4
+    class: outputs
+    ts_name: IGN1 - Ignition 1 (D4)
+    type: ign
+
+  - pin: IGN2
+    id: D3
+    class: outputs
+    ts_name: IGN2 - Ignition 2 (D3)
+    type: ign
+
+  # ---- Digital / Trigger Inputs ----
+  - pin: HALL1
+    id: [C6, C6]
+    class: [switch_inputs, event_inputs]
+    ts_name: HALL1 - Primary Trigger (C6)
+
+  - pin: HALL2
+    id: [E11, E11]
+    class: [switch_inputs, event_inputs]
+    ts_name: HALL2 - Secondary Trigger (E11)
+
+  - pin: VR1
+    id: [E7, E7]
+    class: [switch_inputs, event_inputs]
+    ts_name: VR1 - VR/Hall Input (E7)
+
+  # ---- DBW / ETB (TLE9201SG) ----
+  - pin: ETB_PWM
+    id: D12
+    class: outputs
+    ts_name: ETB PWM (D12)
+    type: etb
+
+  - pin: ETB_DIR
+    id: D10
+    class: outputs
+    ts_name: ETB Direction (D10)
+    type: etb
+
+  - pin: ETB_DIS
+    id: D11
+    class: outputs
+    ts_name: ETB Disable (D11)
+    type: etb
+
+  # ---- Status LEDs ----
+  - pin: LED_RED
+    id: E3
+    class: outputs
+    ts_name: LED Red / Error (E3)
+
+  - pin: LED_GREEN1
+    id: E4
+    class: outputs
+    ts_name: LED Green 1 / Comms (E4)
+
+  - pin: LED_GREEN2
+    id: E5
+    class: outputs
+    ts_name: LED Green 2 / Running (E5)
+
+  - pin: LED_ORANGE
+    id: E6
+    class: outputs
+    ts_name: LED Orange / Warning (E6)
+
+info:
+  title: Mikrus DF
+  directory: mikrus_df
+  name: mikrus_df
+  board_url: https://github.com/dflak
