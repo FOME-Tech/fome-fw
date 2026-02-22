@@ -69,6 +69,14 @@ blt_bool BackDoorEntryHook(void)
       (value == 0x01)) {
     /* clear */
     SharedParamsWriteByIndex(0, 0x00);
+#if (BOOT_COM_DEFERRED_INIT_ENABLE == 1) && (BOOT_COM_ENABLE > 0)
+    /* Initialize deferred communication interfaces (e.g. WiFi) so firmware
+     * updates are possible when the bootloader is activated via jump_to_openblt().
+     * Without this, deferred interfaces like WiFi are only initialized when
+     * NvmVerifyChecksum() fails, never when the backdoor is entered via SharedParams.
+     */
+    ComDeferredInit();
+#endif
     return BLT_TRUE;
   }
   return BLT_FALSE;
