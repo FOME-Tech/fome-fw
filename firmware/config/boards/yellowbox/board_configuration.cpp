@@ -1,7 +1,7 @@
 /**
- * @file boards/mikrus_df/board_configuration.cpp
+ * @file boards/yellowbox/board_configuration.cpp
  *
- * @brief Configuration defaults for the Mikrus DF board
+ * @brief Configuration defaults for the Yellowbox board
  *        MCU: STM32H743VIT
  */
 
@@ -9,77 +9,65 @@
 
 // 8 injector outputs
 static const brain_pin_e injPins[] = {
-	Gpio::D7, // IN1
-	Gpio::B4, // IN2
-	Gpio::B5, // IN3
-	Gpio::B6, // IN4
-	Gpio::B7, // IN5
-	Gpio::B8, // IN6
-	Gpio::B9, // IN7
-	Gpio::A8, // IN8
+		Gpio::D7, // IN1
+		Gpio::B4, // IN2
+		Gpio::B5, // IN3
+		Gpio::B6, // IN4
+		Gpio::B7, // IN5
+		Gpio::B8, // IN6
+		Gpio::B9, // IN7
+		Gpio::A8, // IN8
 };
 
 // 2 ignition outputs
 static const brain_pin_e ignPins[] = {
-	Gpio::D4, // IGN1
-	Gpio::D3, // IGN2
+		Gpio::D4, // IGN1
+		Gpio::D3, // IGN2
 };
 
-static void setInjectorPins()
-{
-	for (size_t i = 0; i < efi::size(injPins); i++)
-	{
+static void setInjectorPins() {
+	for (size_t i = 0; i < efi::size(injPins); i++) {
 		engineConfiguration->injectionPins[i] = injPins[i];
 	}
 }
 
-static void setIgnitionPins()
-{
-	for (size_t i = 0; i < efi::size(ignPins); i++)
-	{
+static void setIgnitionPins() {
+	for (size_t i = 0; i < efi::size(ignPins); i++) {
 		engineConfiguration->ignitionPins[i] = ignPins[i];
 	}
 }
 
 // PE3 is the red error LED, defined in board.mk as LED_CRITICAL_ERROR_BRAIN_PIN
-Gpio getCommsLedPin()
-{
+Gpio getCommsLedPin() {
 	return Gpio::E4; // GREEN
 }
 
-Gpio getRunningLedPin()
-{
+Gpio getRunningLedPin() {
 	return Gpio::E5; // GREEN
 }
 
-Gpio getWarningLedPin()
-{
+Gpio getWarningLedPin() {
 	return Gpio::E6; // ORANGE
 }
 
 // WiFi ATWINC1500 on SPI1
-spi_device_e getWifiSpiDevice()
-{
+spi_device_e getWifiSpiDevice() {
 	return SPI_DEVICE_1;
 }
 
-Gpio getWifiCsPin()
-{
+Gpio getWifiCsPin() {
 	return Gpio::A4; // SPI_SSN
 }
 
-Gpio getWifiResetPin()
-{
+Gpio getWifiResetPin() {
 	return Gpio::B0; // RESET_N
 }
 
-Gpio getWifiIsrPin()
-{
+Gpio getWifiIsrPin() {
 	return Gpio::B1; // IRQN
 }
 
-static void setupVbatt()
-{
+static void setupVbatt() {
 	// TODO: set analogInputDividerCoefficient to match the pull-up resistor
 	// used on sensor inputs (e.g. 1.0 if there is no additional divider).
 	engineConfiguration->analogInputDividerCoefficient = 1.0f;
@@ -95,8 +83,7 @@ static void setupVbatt()
 	engineConfiguration->adcVcc = 3.3f;
 }
 
-static void setupEtb()
-{
+static void setupEtb() {
 	// TLE9201SG H-bridge driver
 	// DIR  (PD10) - direction
 	// DIS  (PD11) - disable (active high disables driver)
@@ -111,8 +98,7 @@ static void setupEtb()
 	engineConfiguration->etb_use_two_wires = false;
 }
 
-static void setupDefaultSensorInputs()
-{
+static void setupDefaultSensorInputs() {
 	// HALL1 (PC6) as primary trigger, HALL2 (PE11) as secondary/cam
 	engineConfiguration->triggerInputPins[0] = Gpio::C6;  // HALL1
 	engineConfiguration->triggerInputPins[1] = Gpio::E11; // HALL2
@@ -130,8 +116,7 @@ static void setupDefaultSensorInputs()
 	// AN7 (PA0 = EFI_ADC_0) and AN8 (PA1 = EFI_ADC_1) are free for wideband, etc.
 }
 
-void setBoardConfigOverrides()
-{
+void setBoardConfigOverrides() {
 	setupVbatt();
 
 	engineConfiguration->canTxPin = Gpio::D1;
@@ -148,8 +133,7 @@ void setBoardConfigOverrides()
 	engineConfiguration->sdCardSpiDevice = SPI_NONE;
 }
 
-void setBoardDefaultConfiguration()
-{
+void setBoardDefaultConfiguration() {
 	setInjectorPins();
 	setIgnitionPins();
 	setupEtb();
@@ -161,42 +145,37 @@ void setBoardDefaultConfiguration()
 	engineConfiguration->canBaudRate = B500KBPS;
 }
 
-void preHalInit()
-{
-	// Bootloader leaves SDMMC1 powered (POWER=3, 24 MHz bypass clock running).
-	// Writing zeros to SDMMC registers in sdc_lld_start() is not enough —
-	// the peripheral state machine needs a full RCC hardware reset.
-	rccEnableSDMMC1(false);   // ensure clock gate is on before asserting reset
-	SDMMC1->POWER = 0;        // stop clock output before reset
-	rccResetSDMMC1();         // assert + deassert peripheral reset
+void preHalInit() {
 
 	// Configure SDMMC1 pins (AF12).
 	// Only 1-bit data bus is wired on this board revision (DAT0 only).
 	// To upgrade to 4-bit, connect PC9=DAT1, PC10=DAT2, PC11=DAT3 and
 	// change EFI_SDC_MODE to SDC_MODE_4BIT in board.mk.
-	efiSetPadMode("SDMMC", Gpio::C8,  PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP); // DAT0
-	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_FLOATING); // CLK - no pullup on clock
-	efiSetPadMode("SDMMC", Gpio::D2,  PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP); // CMD
+	efiSetPadMode(
+			"SDMMC", Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP); // DAT0
+	efiSetPadMode(
+			"SDMMC",
+			Gpio::C12,
+			PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_FLOATING); // CLK - no pullup on clock
+	efiSetPadMode("SDMMC", Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP); // CMD
 	// DAT1-3 unused for data in 1-bit mode, but DAT3 must be pulled high so the card
 	// selects SD mode (not SPI mode). DAT1/DAT2 pulled high per SD spec for 1-bit hosts.
-	efiSetPadMode("SDMMC", Gpio::C9,  PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT1
-	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT2
-	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT3 - required for SD mode selection
+	// efiSetPadMode("SDMMC", Gpio::C9, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP);	// DAT1
+	// efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT2
+	// efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT3 - required for SD mode
+	// selection
 }
 
 #if EFI_BOOTLOADER
-brain_pin_e getMisoPin(spi_device_e)
-{
+brain_pin_e getMisoPin(spi_device_e) {
 	return Gpio::A6;
 }
 
-brain_pin_e getMosiPin(spi_device_e)
-{
+brain_pin_e getMosiPin(spi_device_e) {
 	return Gpio::A7;
 }
 
-brain_pin_e getSckPin(spi_device_e)
-{
+brain_pin_e getSckPin(spi_device_e) {
 	return Gpio::A5;
 }
 #endif // EFI_BOOTLOADER

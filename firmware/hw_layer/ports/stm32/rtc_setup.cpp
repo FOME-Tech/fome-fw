@@ -19,7 +19,10 @@ extern "C" void stm32_rtc_init() {
 	PWR->CR1 |= PWR_CR1_DBP;
 #endif
 
-	uint32_t lseMode = STM32_LSEDRV | RCC_BDCR_LSEBYP;
+	uint32_t lseMode = STM32_LSEDRV;
+#if defined(STM32_LSE_BYPASS)
+	lseMode |= RCC_BDCR_LSEBYP;
+#endif
 	uint32_t lseEnable = RCC_BDCR_LSEON;
 	uint32_t rtcSel = STM32_RTCSEL;
 	uint32_t rtcEn = RCC_BDCR_RTCEN;

@@ -149,9 +149,9 @@
 			"gdbPath": "${workspaceRoot}/firmware/ext/build-tools/arm-gnu-toolchain-11.3.rel1-x86_64-arm-none-eabi/bin/arm-none-eabi-gdb"
 		},
 		{
-			"name": "Debug Mikrus DF",
+			"name": "Debug Yellowbox",
 			"type": "cortex-debug",
-			// Use "attach" - do NOT reflash. Flash manually with flash-mikrus.sh first.
+			// Use "attach" - do NOT reflash. Flash manually with flash-yellowbox.sh first.
 			// "launch" would overwrite the board with the raw ELF (no checksum), breaking bootloader integrity check.
 			"request": "attach",
 			"cwd": "${workspaceFolder}/firmware",
@@ -165,9 +165,9 @@
 			"gdbPath": "/usr/bin/gdb-multiarch"
 		},
 		{
-			"name": "Debug Mikrus DF Bootloader",
+			"name": "Debug Yellowbox Bootloader",
 			"type": "cortex-debug",
-			// Use "attach" - do NOT reflash. Flash manually with flash-mikrus.sh first.
+			// Use "attach" - do NOT reflash. Flash manually with flash-yellowbox.sh first.
 			"request": "attach",
 			"cwd": "${workspaceFolder}/firmware",
 			"executable": "${workspaceRoot}/firmware/bootloader/blbuild/fome_bl.elf",

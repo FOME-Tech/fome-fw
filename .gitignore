@@ -60,3 +60,17 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+build-mikrus.sh
+build-yellowbox.sh
+.vscode/launch.json
+flash-yellowbox.sh
+flash-mikrus.sh
+firmware/hw_layer/mass_storage/ramdisk_image_compressed.h
+firmware/hw_layer/mass_storage/ramdisk_image.h
+/current_console_output
+build-console.sh
+build-mikrus.sh
+firmware/config/boards/yellowbox/README.md
+firmware/config/boards/yellowbox/pinmap.txt
+firmware/hw_layer/mass_storage/ramdisk_image_compressed.h
+firmware/hw_layer/mass_storage/ramdisk_image.h

@@ -1,4 +1,4 @@
-# Mikrus DF board - STM32H743VIT
+# Yellowbox board - STM32H743VIT
 
 PROJECT_CPU = ARCH_STM32H7
 
@@ -8,7 +8,7 @@ BOARDCPPSRC = $(BOARD_DIR)/board_configuration.cpp
 # Error LED is red PE3
 DDEFS += -DLED_CRITICAL_ERROR_BRAIN_PIN=Gpio::E3
 
-DDEFS += -DFIRMWARE_ID=\"mikrus_df\"
+DDEFS += -DFIRMWARE_ID=\"yellowbox\"
 DDEFS += -DDEFAULT_ENGINE_TYPE=MINIMAL_PINS
 
 # ADC3 is needed for AN5 (PC2) and AN6 (PC3) which are ADC3-only on STM32H743.
@@ -29,6 +29,6 @@ USE_WIFI = yes
 # Enable the SD card bootloader
 SD_BOOTLOADER = yes
 
-DDEFS += -DHW_MIKRUS_DF=1
+DDEFS += -DHW_YELLOWBOX=1
 
-SHORT_BOARD_NAME = mikrus_df
+SHORT_BOARD_NAME = yellowbox

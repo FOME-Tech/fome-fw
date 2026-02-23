@@ -175,7 +175,7 @@ pins:
     ts_name: LED Orange / Warning (E6)
 
 info:
-  title: Mikrus DF
-  directory: mikrus_df
-  name: mikrus_df
+  title: Yellowbox
+  directory: yellowbox
+  name: yellowbox
   board_url: https://github.com/dflak
