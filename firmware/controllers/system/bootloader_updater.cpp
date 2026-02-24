@@ -45,8 +45,8 @@ static void flashBootloader() {
 	if (!currentBootloaderValid) {
 		efiPrintf("Bootloader update: current bootloader is CORRUPT, updating...");
 	} else {
-		efiPrintf("Bootloader update: CRC mismatch (flash 0x%08x, embedded 0x%08x), updating...",
-			flashCrc, embeddedCrc);
+		efiPrintf(
+				"Bootloader update: CRC mismatch (flash 0x%08x, embedded 0x%08x), updating...", flashCrc, embeddedCrc);
 	}
 
 	// Set boot address to firmware so MCU stays bootable during the update
@@ -94,12 +94,17 @@ void updateBootloader() {
 #endif
 
 	// Bootloader always lives in the first page of flash - FLASH_BASE
-	bool bootloaderIntact = checkFirmwareImageIntegrity(FLASH_BASE);
-
-	if (bootloaderIntact) {
+	if (checkFirmwareImageIntegrity(FLASH_BASE)) {
 		efiPrintf("Bootloader integrity check OK!");
 	} else {
 		efiPrintf("Bootloader integrity check failed - here be dragons!");
+	}
+
+	// Check our own firmware image too - not much we can do, but good to know
+	if (checkFirmwareImageIntegrity(SCB->VTOR)) {
+		efiPrintf("Firmware integrity check OK!");
+	} else {
+		efiPrintf("Firmware integrity check failed!");
 	}
 
 #if EFI_USE_OPENBLT && CORTEX_MODEL == 7
