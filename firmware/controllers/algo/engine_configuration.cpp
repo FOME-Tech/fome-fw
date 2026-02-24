@@ -395,7 +395,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->maxAcClt = 100;
 	engineConfiguration->maxAcTps = 75;
 
-	initTemperatureCurve(IAT_FUEL_CORRECTION_CURVE, 1);
+	initTemperatureCurve(config->iatFuelCorrBins, config->iatFuelCorr, IAT_CURVE_SIZE, 1);
 
 	engineConfiguration->auxPid[0].minValue = 10;
 	engineConfiguration->auxPid[0].maxValue = 90;
