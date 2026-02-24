@@ -3,10 +3,6 @@
 #include "bootloader_updater.h"
 #include "crc_accelerator.h"
 
-// uint32_t is unsigned long on ARM, but this printf handles %x for 32-bit values
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat"
-
 #if EFI_USE_OPENBLT && CORTEX_MODEL == 7
 #include "flash_int.h"
 
@@ -111,5 +107,3 @@ void updateBootloader() {
 	flashBootloader();
 #endif
 }
-
-#pragma GCC diagnostic pop

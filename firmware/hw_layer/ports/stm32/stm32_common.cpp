@@ -487,24 +487,19 @@ bool setBootAddress(uintptr_t address) {
 	return status == HAL_OK;
 }
 
-// uint32_t is unsigned long on ARM, but this printf handles %x for 32-bit values
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat"
-
 void preBootloaderUpdate() {
 	// Set boot address to the main firmware so that if power is lost during
 	// bootloader erase/write, the MCU still boots into working firmware
 	setBootAddress(SCB->VTOR);
-	efiPrintf("Boot address set to firmware: 0x%08x", SCB->VTOR);
+	efiPrintf("Boot address set to firmware: 0x%08x", (uintptr_t)SCB->VTOR);
 }
 
 void postBootloaderUpdate() {
 	// Restore boot address to the bootloader at the start of flash
 	setBootAddress(FLASH_BASE);
-	efiPrintf("Boot address restored to bootloader: 0x%08x", FLASH_BASE);
+	efiPrintf("Boot address restored to bootloader: 0x%08x", (uintptr_t)FLASH_BASE);
 }
 
-#pragma GCC diagnostic pop
 #endif // CORTEX_MODEL == 7
 
 void baseMCUInit(void) {
