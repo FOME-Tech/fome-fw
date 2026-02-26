@@ -190,6 +190,10 @@ ifeq ($(USE_WIFI),yes)
 endif
 
 ifeq ($(LWIP),yes)
+  lwip_dir := $(PROJECT_DIR)/lwip/src
+  # Force LWIPDIR used by lwip_bindings/lwip.mk
+  override LWIPDIR := $(lwip_dir)
+
   include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
 endif
 
