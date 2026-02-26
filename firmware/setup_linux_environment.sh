@@ -6,6 +6,7 @@
 #
 # This script will also work on a Windows Subsystem for Linux installation on top of a Windows PC.
 #
+#
 # Purposes for dependencies:
 #  - `gcc`, `gdb`, `gcc-multilib`, `g++-multilib`: Native compilers for your PC, used for unit tests and simulator.
 #  - `make`: GNU Make, build tool that orchestrates the correct build steps.
