@@ -11,6 +11,8 @@
 
 #include "buffered_writer.h"
 
+#include <array>
+
 BaseBlockDevice* initializeMmcBlockDevice();
 void stopMmcBlockDevice();
 
@@ -45,5 +47,6 @@ namespace sd_mem {
 FATFS* getFs();
 FIL* getLogFileFd();
 SdLogBufferWriter& getLogBuffer();
+std::array<uint8_t, 512>& getWifiUpdateBuffer();
 } // namespace sd_mem
 #endif // EFI_PROD_CODE

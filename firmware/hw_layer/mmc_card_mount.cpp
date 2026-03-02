@@ -6,6 +6,11 @@
 
 #include "ff.h"
 #include "mass_storage_init.h"
+#include "usbconsole.h"
+
+#if EFI_WIFI
+#include "wifi_sd_firmware_updater.h"
+#endif
 
 static bool fs_ready = false;
 
@@ -18,6 +23,9 @@ void onUsbConnectedNotifyMmcI() {
 #endif /* HAL_USE_USB_MSD */
 
 bool mountSdFilesystem() {
+	Timer t;
+	t.reset();
+
 	auto cardBlockDevice = initializeMmcBlockDevice();
 
 #if EFI_TUNER_STUDIO
@@ -27,18 +35,45 @@ bool mountSdFilesystem() {
 
 	// if no card, don't try to mount FS
 	if (!cardBlockDevice) {
+#if EFI_WIFI
+		signalWifiSdUpdateComplete();
+#endif
+#if HAL_USE_USB_MSD
+		// No SD card - allow USB to enumerate so serial and INI drive still work
+		allowUsbEnumeration();
+#endif
 		return false;
 	}
 
+	// Mount filesystem temporarily for WiFi update check
+	bool mounted = f_mount(sd_mem::getFs(), "/", 1) == FR_OK;
+
+	if (mounted) {
+#if EFI_WIFI
+		// Check for WiFi firmware update/dump trigger files on SD card
+		tryUpdateWifiFirmwareFromSd();
+		tryDumpWifiFirmwareToSd();
+#endif
+		// Unmount — we'll either hand the card to USB or re-mount for logging
+		f_mount(nullptr, "/", 0);
+	} else {
+		efiPrintf("SD card failed to mount filesystem");
+	}
+
+#if EFI_WIFI
+	signalWifiSdUpdateComplete();
+#endif
+
 #if HAL_USE_USB_MSD
-	// Wait for the USB stack to wake up, or a 5 second timeout, whichever occurs first
+	// Allow USB to enumerate - the host will see the real SD card
+	allowUsbEnumeration();
+
+	// Wait for the USB enumeration, or a 5 second timeout, whichever occurs first
 	msg_t usbResult = usbConnectedSemaphore.wait(TIME_MS2I(5000));
 
 	bool hasUsb = usbResult == MSG_OK;
 
-	// If we have a device AND USB is connected, mount the card to USB, otherwise
-	// mount the null device and try to mount the filesystem ourselves
-	if (cardBlockDevice && hasUsb) {
+	if (hasUsb) {
 		// Mount the real card to USB
 		attachMsdSdCard(cardBlockDevice);
 

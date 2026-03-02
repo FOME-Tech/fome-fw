@@ -36,13 +36,14 @@ struct {
 		FATFS fs;
 		FIL file;
 		SdLogBufferWriter logBuffer;
+		std::array<uint8_t, 512> wifiUpdateBuffer;
 	} usedPart;
 
-	static_assert(sizeof(usedPart) <= 2048);
+	static_assert(sizeof(usedPart) <= 4096);
 
 	// Fill the struct out to a full MPU region
-	uint8_t padding[2048 - sizeof(usedPart)];
-} mmcCardCacheControlledStorage SDMMC_MEMORY(2048);
+	uint8_t padding[4096 - sizeof(usedPart)];
+} mmcCardCacheControlledStorage SDMMC_MEMORY(4096);
 
 namespace sd_mem {
 FATFS* getFs() {
@@ -55,6 +56,10 @@ FIL* getLogFileFd() {
 
 SdLogBufferWriter& getLogBuffer() {
 	return mmcCardCacheControlledStorage.usedPart.logBuffer;
+}
+
+std::array<uint8_t, 512>& getWifiUpdateBuffer() {
+	return mmcCardCacheControlledStorage.usedPart.wifiUpdateBuffer;
 }
 } // namespace sd_mem
 
@@ -132,8 +137,8 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 #if defined(STM32H7XX) && !EFI_BOOTLOADER
 	{
 		void* base = &mmcCardCacheControlledStorage;
-		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
-		uint32_t size = MPU_RASR_SIZE_2K;
+		static_assert(sizeof(mmcCardCacheControlledStorage) == 4096);
+		uint32_t size = MPU_RASR_SIZE_4K;
 
 		mpuConfigureRegion(
 				MPU_REGION_5,
