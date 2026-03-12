@@ -81,10 +81,9 @@ ifeq ($(USE_LDOPT),)
   USE_LDOPT =
 endif
 
-# Enable this if you want link time optimizations (LTO)
-ifeq ($(USE_LTO),)
-  USE_LTO = yes
-endif
+# Parallel LTO for faster linking
+USE_LTO = no
+USE_OPT += -flto=auto
 
 # If enabled, this option allows to compile the application in THUMB mode.
 ifeq ($(USE_THUMB),)
