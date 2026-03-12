@@ -5,31 +5,38 @@ on: [push, pull_request]
 jobs:
   # This is just to ensure the simulator compiles on Linux
   build-simulator:
-    runs-on: ubuntu-latest-selfhost
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        submodules: true
 
-    # - uses: actions/setup-java@v4
-    #   with:
-    #     distribution: 'zulu'
-    #     java-version: '21'
+    - name: Checkout Submodules
+      run: |
+        git submodule update --init --depth=1 firmware/ext/ChibiOS
+        git submodule update --init --depth=1 firmware/ext/ChibiOS-Contrib
+        git submodule update --init --depth=1 firmware/ext/libfirmware
+        git submodule update --init --depth=1 firmware/ext/lua
+        git submodule update --init --depth=1 firmware/ext/luaaa
+        git submodule update --init --depth=1 firmware/ext/wideband_firmware
+
+    - uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '21'
 
     - name: Print GCC version
       working-directory: .
       run: gcc -v
 
-    # - name: Install multilib
-    #   working-directory: ./.github/workflows/
-    #   run: |
-    #     sudo ./add-ubuntu-latest-apt-mirrors.sh
-    #     sudo apt-get install gcc-multilib g++-multilib mtools dosfstools zip
+    - name: Install multilib
+      working-directory: ./.github/workflows/
+      run: |
+        sudo ./add-ubuntu-latest-apt-mirrors.sh
+        sudo apt-get install gcc-multilib g++-multilib mtools dosfstools zip
 
     - name: Compile Linux Simulator
       working-directory: ./simulator/
-      run: make -j20
+      run: make -j8
 
     - name: Run Linux Simulator for 10 seconds
       working-directory: ./simulator/
