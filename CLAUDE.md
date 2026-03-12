@@ -133,6 +133,10 @@ Key preprocessor flags that control compilation:
 - **Interrupt safety**: Be mindful of code that runs in interrupt context vs. thread context. Use appropriate synchronization primitives.
 - **Stack usage**: Keep stack allocations small. Large arrays should be static or global, not local variables.
 
+## Changelog
+
+When you make a user-facing change (new feature, bug fix, breaking change, removal), update `firmware/CHANGELOG.md` under the `## Unreleased` section. See `/changelog` for details on what counts and how to write entries.
+
 ## Development Notes
 
 - Supported IDE: Visual Studio Code
