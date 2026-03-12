@@ -88,10 +88,10 @@ clang-format -i <file>
   - `can/` - CAN bus communication
   - `lua/` - Runtime scripting
 - `firmware/hw_layer/` - Hardware abstraction layer
-- `firmware/libfirmware/` - Reusable library code
+- `firmware/ext/libfirmware/` - Reusable library code
 - `firmware/util/` - Self-contained utilities (no external dependencies)
 - `unit_tests/` - Google Test suite
-- `simulator/` - Windows/Linux firmware simulator
+- `simulator/` - Windows/Linux firmware simulator. Uses core ECU code, but runs on PC rather than MCU.
 
 ### Key Concepts
 
