@@ -7,13 +7,9 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+void usb_serial_start();
+bool is_usb_serial_ready();
 
-void usb_serial_start(void);
-bool is_usb_serial_ready(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+#if HAL_USE_USB_MSD
+void allowUsbEnumeration();
+#endif
