@@ -36,10 +36,21 @@ or
 ### Added
  - Dead knock sensor detection #578
  - Allow sending CAN broadcast on both busses #712
+ - PWM fan control with configurable duty cycle #233
+ - AC state available as a GPPWM axis (e.g. for AC-dependent fan control) #233
+ - Lua `getChannel` function for safely reading ECU values #721
+ - Improved Atlas board support, including Polygonus engine presets #700
+ - Clearer ignition/injection pin naming in TunerStudio #596
 
 ### Fixed
  - Fix OpenBLT updating 1MB STM32F7-based ECUs
  - Improve RPM rate of change signal to idle control so the D-term is actually usable
+ - Fix automatic knock frequency calculation when cylinder bore is not configured
+ - Correct ADC conversion precision #707
+ - Delay sensor error checking briefly after boot to avoid false errors
+ - Fix boost control blend table axis names in TunerStudio
+ - Default initialize output channels to avoid invalid values at startup
+ - Clean up CAN verbose DBC file, removing invalid/orphan entries #677
 
 ## November 2025 Release
 
