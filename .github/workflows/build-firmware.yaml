@@ -201,7 +201,7 @@ jobs:
       if: ${{ env.full == 'true' }}
       working-directory: ./simulator/
       # 'OS="Windows_NT"' allows us to build Windows executable on unix
-      run: OS="Windows_NT" make -j8 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=../firmware/${{matrix.folder}} 
+      run: OS="Windows_NT" make -j20 PROJECT_BOARD=${{matrix.build-target}} BOARD_DIR=../firmware/${{matrix.folder}} 
 
     - name: Package Bundle
       if: ${{ env.full == 'true' }}

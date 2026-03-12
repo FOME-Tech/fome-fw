@@ -34,7 +34,7 @@ if [ "${USE_OPENBLT-no}" = "yes" ]; then
   mkdir -p .dep
   mkdir -p build
   echo "Calling make for the bootloader..."
-  cd bootloader; make -j6 PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
+  cd bootloader; make -j20 PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR; cd ..
   [ -e bootloader/blbuild/fome_bl.hex ] || { echo "FAILED to compile OpenBLT by $SCRIPT_NAME with $PROJECT_BOARD"; exit 1; }
 
   # Add a checksum to the bootloader image
@@ -56,7 +56,7 @@ fi
 mkdir -p .dep # ChibiOS build's DEPDIR
 mkdir -p build # ChibiOS build's BUILDDIR
 echo "Calling make for the main firmware..."
-make -j6 -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
+make -j20 -r PROJECT_BOARD=$PROJECT_BOARD PROJECT_CPU=$PROJECT_CPU BOARD_DIR=$BOARD_DIR
 [ -e build/fome.hex ] || { echo "FAILED to compile by $SCRIPT_NAME with $PROJECT_BOARD $DEBUG_LEVEL_OPT and $EXTRA_PARAMS"; exit 1; }
 
 # Add a checksum to the main firmware image

@@ -88,10 +88,10 @@ clang-format -i <file>
   - `can/` - CAN bus communication
   - `lua/` - Runtime scripting
 - `firmware/hw_layer/` - Hardware abstraction layer
-- `firmware/libfirmware/` - Reusable library code
+- `firmware/ext/libfirmware/` - Reusable library code
 - `firmware/util/` - Self-contained utilities (no external dependencies)
 - `unit_tests/` - Google Test suite
-- `simulator/` - Windows/Linux firmware simulator
+- `simulator/` - Windows/Linux firmware simulator. Uses core ECU code, but runs on PC rather than MCU.
 
 ### Key Concepts
 
@@ -132,6 +132,10 @@ Key preprocessor flags that control compilation:
 - **No RTTI**: `dynamic_cast` and `typeid` are unavailable.
 - **Interrupt safety**: Be mindful of code that runs in interrupt context vs. thread context. Use appropriate synchronization primitives.
 - **Stack usage**: Keep stack allocations small. Large arrays should be static or global, not local variables.
+
+## Changelog
+
+When you make a user-facing change (new feature, bug fix, breaking change, removal), update `firmware/CHANGELOG.md` under the `## Unreleased` section. See `/changelog` for details on what counts and how to write entries.
 
 ## Development Notes
 
