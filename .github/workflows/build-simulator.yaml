@@ -9,8 +9,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Checkout Submodules
       with:
         submodules: true
 
