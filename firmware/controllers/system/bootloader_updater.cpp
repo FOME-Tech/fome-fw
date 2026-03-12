@@ -27,11 +27,11 @@ static void flashBootloader() {
 	bool currentBootloaderValid = checkFirmwareImageIntegrity(FLASH_BASE);
 
 	if (currentBootloaderValid && embeddedCrc == flashCrc) {
-		efiPrintf("Bootloader is up to date (CRC 0x%08x)", flashCrc);
+		efiPrintf("Bootloader is up to date (CRC 0x%08x)", (unsigned int)flashCrc);
 
 		// Bootloader is valid, but make sure boot address points to it
 		if (getBootAddress() != FLASH_BASE) {
-			efiPrintf("Boot address was 0x%08x, correcting to bootloader", getBootAddress());
+			efiPrintf("Boot address was 0x%08x, correcting to bootloader", (unsigned int)getBootAddress());
 			postBootloaderUpdate();
 		}
 
@@ -42,7 +42,9 @@ static void flashBootloader() {
 		efiPrintf("Bootloader update: current bootloader is CORRUPT, updating...");
 	} else {
 		efiPrintf(
-				"Bootloader update: CRC mismatch (flash 0x%08x, embedded 0x%08x), updating...", flashCrc, embeddedCrc);
+				"Bootloader update: CRC mismatch (flash 0x%08x, embedded 0x%08x), updating...",
+				(unsigned int)flashCrc,
+				(unsigned int)embeddedCrc);
 	}
 
 	// Set boot address to firmware so MCU stays bootable during the update
@@ -80,13 +82,13 @@ static void flashBootloader() {
 
 	// Success - restore boot address to bootloader
 	postBootloaderUpdate();
-	efiPrintf("Bootloader update: SUCCESS (new CRC 0x%08x)", embeddedCrc);
+	efiPrintf("Bootloader update: SUCCESS (new CRC 0x%08x)", (unsigned int)embeddedCrc);
 }
 #endif // EFI_USE_OPENBLT && CORTEX_MODEL == 7
 
 void updateBootloader() {
 #if CORTEX_MODEL == 7
-	efiPrintf("Current boot address: 0x%08x", getBootAddress());
+	efiPrintf("Current boot address: 0x%08x", (unsigned int)getBootAddress());
 #endif
 
 	// Bootloader always lives in the first page of flash - FLASH_BASE
