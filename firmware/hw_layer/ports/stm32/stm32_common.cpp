@@ -457,27 +457,39 @@ uintptr_t getBootAddress() {
 	/* Read option bytes */
 	HAL_FLASHEx_OBGetConfig(&flashData);
 
+#ifdef STM32F7XX
+	// F7 HAL returns encoded boot address (real address >> 14)
+	return flashData.BootAddr0 << 14;
+#else
+	// H7 HAL returns the real address directly
 	return flashData.BootAddr0;
+#endif
 }
 
 bool setBootAddress(uintptr_t address) {
-	if ((address & 0xFFFF) != 0) {
-		// Boot address is not allowed to have lower 16 bits set
-		return false;
-	}
-
 	FLASH_OBProgramInitTypeDef flashData;
 
 #ifdef STM32H7XX
+	if ((address & 0xFFFF) != 0) {
+		// H7 boot address must be 64KB aligned
+		return false;
+	}
+
 	flashData.BootConfig = OB_BOOT_ADD0;
 	flashData.OptionType = OPTIONBYTE_BOOTADD;
+	flashData.BootAddr0 = address;
 #endif
 
 #ifdef STM32F7XX
-	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
-#endif
+	if ((address & 0x3FFF) != 0) {
+		// F7 boot address must be 16KB aligned
+		return false;
+	}
 
-	flashData.BootAddr0 = address;
+	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
+	// F7 HAL expects encoded boot address (real address >> 14)
+	flashData.BootAddr0 = address >> 14;
+#endif
 
 	HAL_FLASH_OB_Unlock();
 	HAL_FLASHEx_OBProgram(&flashData);
