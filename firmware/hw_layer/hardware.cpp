@@ -35,6 +35,7 @@
 #include "software_knock.h"
 #include "trigger_scope.h"
 #include "init.h"
+#include "dma_buffers.h"
 #if EFI_MC33816
 #include "mc33816.h"
 #endif /* EFI_MC33816 */
@@ -261,6 +262,7 @@ void initHardwareNoConfig() {
 	boardInitHardware();
 
 #if EFI_PROD_CODE
+	dma_buffers::initMpu();
 	portInitAdc();
 #endif
 }

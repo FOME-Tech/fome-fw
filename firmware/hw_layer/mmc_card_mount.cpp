@@ -3,6 +3,7 @@
 #if EFI_FILE_LOGGING && EFI_PROD_CODE
 
 #include "mmc_card.h"
+#include "dma_buffers.h"
 
 #include "ff.h"
 #include "mass_storage_init.h"
@@ -48,7 +49,7 @@ bool mountSdFilesystem() {
 #endif
 
 	// We were able to connect the SD card, mount the filesystem
-	if (f_mount(sd_mem::getFs(), "/", 1) == FR_OK) {
+	if (f_mount(dma_buffers::fs(), "/", 1) == FR_OK) {
 		efiPrintf("SD card mounted!");
 		fs_ready = true;
 		return true;
