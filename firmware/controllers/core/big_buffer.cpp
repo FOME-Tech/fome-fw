@@ -4,10 +4,22 @@
 
 static BigBufferUser s_currentUser;
 
+#if EFI_PROD_CODE
+#include "dma_buffers.h"
+
+static uint8_t* getBigBufferPtr() {
+	return dma_buffers::bigBuffer();
+}
+#else
 // this buffer requires 4 byte alignment
 // Some users place C++ objects in this memory, and that has certain alignment
 // requirements.
 static __attribute__((aligned(4))) uint8_t s_bigBuffer[BIG_BUFFER_SIZE];
+
+static uint8_t* getBigBufferPtr() {
+	return s_bigBuffer;
+}
+#endif
 
 #if EFI_UNIT_TEST
 BigBufferUser getBigBufferCurrentUser() {
@@ -16,7 +28,7 @@ BigBufferUser getBigBufferCurrentUser() {
 #endif // EFI_UNIT_TEST
 
 static void releaseBuffer(void* bufferPtr, BigBufferUser user) {
-	if (bufferPtr != &s_bigBuffer || user != s_currentUser) {
+	if (bufferPtr != getBigBufferPtr() || user != s_currentUser) {
 		// todo: panic!
 	}
 
@@ -55,5 +67,5 @@ BigBufferHandle getBigBuffer(BigBufferUser user) {
 
 	s_currentUser = user;
 
-	return BigBufferHandle(s_bigBuffer, user);
+	return BigBufferHandle(getBigBufferPtr(), user);
 }

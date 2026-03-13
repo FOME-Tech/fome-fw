@@ -62,7 +62,7 @@ typedef unsigned int time_t;
 #define CCM_OPTIONAL __attribute__((section(".ram4")))
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
 #define NO_CACHE		   // F4 has no cache, do nothing
-#define SDMMC_MEMORY(size) // F4 has no cache, do nothing
+#define DMA_BUFFER_MEMORY(size) // F4 has no cache, do nothing
 #elif defined(STM32F7XX)
 // DTCM memory is 128k
 #define CCM_OPTIONAL __attribute__((section(".ram3")))
@@ -70,7 +70,8 @@ typedef unsigned int time_t;
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
 // SRAM2 is 16k and set to disable dcache
 #define NO_CACHE __attribute__((section(".ram2")))
-#define SDMMC_MEMORY(size) NO_CACHE
+// Use MPU region to disable caching, aligned to size for MPU
+#define DMA_BUFFER_MEMORY(size) __attribute__((section(".ram0"))) __attribute__((aligned(size)))
 #elif defined(STM32H7XX)
 // DTCM memory is 128k
 #define CCM_OPTIONAL __attribute__((section(".ram5")))
@@ -80,11 +81,11 @@ typedef unsigned int time_t;
 #define NO_CACHE __attribute__((section(".ram3")))
 // On H7, SDMMC1 can only talk to AXI, and aligned to the size of the
 // object, so its MPU region can disable caching
-#define SDMMC_MEMORY(size) __attribute__((section(".ram0"))) __attribute__((aligned(size)))
+#define DMA_BUFFER_MEMORY(size) __attribute__((section(".ram0"))) __attribute__((aligned(size)))
 #else /* this MCU doesn't need these */
 #define CCM_OPTIONAL
 #define NO_CACHE
-#define SDMMC_MEMORY
+#define DMA_BUFFER_MEMORY(size)
 #endif
 
 #define UNIT_TEST_BUSY_WAIT_CALLBACK()                                                                                 \
