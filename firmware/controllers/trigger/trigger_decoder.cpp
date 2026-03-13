@@ -307,7 +307,6 @@ bool TriggerDecoderBase::validateEventCounters(const TriggerWaveform& triggerSha
 	}
 
 #if EFI_UNIT_TEST
-	printf("validateEventCounters: isDecodingError=%d\n", isDecodingError);
 	if (isDecodingError) {
 		for (int i = 0; i < PWM_PHASE_MAX_WAVE_PER_PWM; i++) {
 			printf("count: cur=%d exp=%d\n",
