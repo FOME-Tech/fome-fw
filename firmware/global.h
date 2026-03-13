@@ -61,7 +61,7 @@ typedef unsigned int time_t;
 // CCM memory is 64k
 #define CCM_OPTIONAL __attribute__((section(".ram4")))
 #define SDRAM_OPTIONAL __attribute__((section(".ram7")))
-#define NO_CACHE		   // F4 has no cache, do nothing
+#define NO_CACHE				// F4 has no cache, do nothing
 #define DMA_BUFFER_MEMORY(size) // F4 has no cache, do nothing
 #elif defined(STM32F7XX)
 // DTCM memory is 128k
