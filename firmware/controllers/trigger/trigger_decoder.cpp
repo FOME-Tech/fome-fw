@@ -326,6 +326,17 @@ void TriggerDecoderBase::onShaftSynchronization(
 
 	if (wasSynchronized) {
 		crankSynchronizationCounter++;
+
+		// Wrap the counter before it overflows, at a multiple of all possible
+		// getCrankDivider() values (LCM of 1, 2, 4, 6, 24 = 24) so that
+		// crankSynchronizationCounter % crankDivider doesn't jump on wrap.
+		using counter_t = decltype(crankSynchronizationCounter);
+		static constexpr counter_t crankDividerLcm = 24;
+		static constexpr counter_t wrapAt =
+				(static_cast<uint64_t>(std::numeric_limits<counter_t>::max()) + 1) / crankDividerLcm * crankDividerLcm;
+		if (crankSynchronizationCounter == wrapAt) {
+			crankSynchronizationCounter = 0;
+		}
 	} else {
 		// We have just synchronized, this is the zeroth revolution
 		crankSynchronizationCounter = 0;
