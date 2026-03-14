@@ -75,15 +75,6 @@ typedef enum {
 BOR_Level_t BOR_Get(void);
 BOR_Result_t BOR_Set(BOR_Level_t BORValue);
 
-uintptr_t getBootAddress();
-bool setBootAddress(uintptr_t address);
-
-// Bootloader update safety functions (F7/H7 only)
-// Sets boot address to firmware so MCU remains bootable if power is lost during bootloader erase/write
-void preBootloaderUpdate();
-// Restores boot address to bootloader after successful update
-void postBootloaderUpdate();
-
 void assertInterruptPriority(const char* func, uint8_t expectedPrio);
 
 extern "C" {

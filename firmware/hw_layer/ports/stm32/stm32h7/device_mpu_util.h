@@ -14,3 +14,10 @@
 // todo SPI! #2284
 
 #define ADC_MAX_VALUE 65535
+
+#ifdef __cplusplus
+uintptr_t getBootAddress();
+bool setBootAddress(uintptr_t address);
+void preBootloaderUpdate();
+void postBootloaderUpdate();
+#endif

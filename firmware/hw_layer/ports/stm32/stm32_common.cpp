@@ -450,69 +450,6 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	return BOR_Result_Ok;
 }
 
-#if CORTEX_MODEL == 7
-uintptr_t getBootAddress() {
-	FLASH_OBProgramInitTypeDef flashData;
-
-	/* Read option bytes */
-	HAL_FLASHEx_OBGetConfig(&flashData);
-
-#ifdef STM32F7XX
-	// F7 HAL returns encoded boot address (real address >> 14)
-	return flashData.BootAddr0 << 14;
-#else
-	// H7 HAL returns the real address directly
-	return flashData.BootAddr0;
-#endif
-}
-
-bool setBootAddress(uintptr_t address) {
-	FLASH_OBProgramInitTypeDef flashData;
-
-#ifdef STM32H7XX
-	if ((address & 0xFFFF) != 0) {
-		// H7 boot address must be 64KB aligned
-		return false;
-	}
-
-	flashData.BootConfig = OB_BOOT_ADD0;
-	flashData.OptionType = OPTIONBYTE_BOOTADD;
-	flashData.BootAddr0 = address;
-#endif
-
-#ifdef STM32F7XX
-	if ((address & 0x3FFF) != 0) {
-		// F7 boot address must be 16KB aligned
-		return false;
-	}
-
-	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
-	// F7 HAL expects encoded boot address (real address >> 14)
-	flashData.BootAddr0 = address >> 14;
-#endif
-
-	HAL_FLASH_OB_Unlock();
-	HAL_FLASHEx_OBProgram(&flashData);
-	HAL_StatusTypeDef status = HAL_FLASH_OB_Launch();
-	HAL_FLASH_OB_Lock();
-
-	return status == HAL_OK;
-}
-
-void preBootloaderUpdate() {
-	// Set boot address to the main firmware so that if power is lost during
-	// bootloader erase/write, the MCU still boots into working firmware
-	setBootAddress(SCB->VTOR);
-	efiPrintf("Boot address set to firmware: 0x%08x", (uintptr_t)SCB->VTOR);
-}
-
-void postBootloaderUpdate() {
-	// Restore boot address to the bootloader at the start of flash
-	setBootAddress(FLASH_BASE);
-	efiPrintf("Boot address restored to bootloader: 0x%08x", (uintptr_t)FLASH_BASE);
-}
-
-#endif // CORTEX_MODEL == 7
 
 void baseMCUInit(void) {
 	// looks like this holds a random value on start? Let's set a nice clean zero

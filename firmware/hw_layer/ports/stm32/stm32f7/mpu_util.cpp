@@ -8,6 +8,7 @@
 #include "pch.h"
 
 #include "flash_int.h"
+#include "stm32f7xx_hal_flash.h"
 
 static bool isDualBank() {
 	// cleared bit indicates dual bank
@@ -187,6 +188,43 @@ void stm32_stop() {
 Standby for both F4 & F7 works perfectly, with very little curent consumption. Downside is that theres a limited amount
 of pins that can wakeup F7, and only PA0 for F4XX. Cannot be used for CAN wakeup without hardware modificatinos.
 */
+uintptr_t getBootAddress() {
+	FLASH_OBProgramInitTypeDef flashData;
+	HAL_FLASHEx_OBGetConfig(&flashData);
+
+	// F7 HAL returns encoded boot address (real address >> 14)
+	return flashData.BootAddr0 << 14;
+}
+
+bool setBootAddress(uintptr_t address) {
+	if ((address & 0x3FFF) != 0) {
+		// F7 boot address must be 16KB aligned
+		return false;
+	}
+
+	FLASH_OBProgramInitTypeDef flashData;
+	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
+	// F7 HAL expects encoded boot address (real address >> 14)
+	flashData.BootAddr0 = address >> 14;
+
+	HAL_FLASH_OB_Unlock();
+	HAL_FLASHEx_OBProgram(&flashData);
+	HAL_StatusTypeDef status = HAL_FLASH_OB_Launch();
+	HAL_FLASH_OB_Lock();
+
+	return status == HAL_OK;
+}
+
+void preBootloaderUpdate() {
+	setBootAddress(SCB->VTOR);
+	efiPrintf("Boot address set to firmware: 0x%08x", (uintptr_t)SCB->VTOR);
+}
+
+void postBootloaderUpdate() {
+	setBootAddress(FLASH_BASE);
+	efiPrintf("Boot address restored to bootloader: 0x%08x", (uintptr_t)FLASH_BASE);
+}
+
 void stm32_standby() {
 	SysTick->CTRL = 0;
 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
