@@ -216,7 +216,7 @@ void runRusEfi() {
 	initMainLoop();
 
 #if EFI_USE_OPENBLT
-	checkBootloaderIntegrity();
+	updateBootloader();
 #endif
 
 	runMainLoop();
