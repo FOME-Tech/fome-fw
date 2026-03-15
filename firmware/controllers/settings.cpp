@@ -105,10 +105,6 @@ static void setTriggerType(int value) {
 	engine->resetEngineSnifferIfInTestMode();
 }
 
-static void setDebugMode(int value) {
-	engineConfiguration->debugMode = (debug_mode_e)value;
-}
-
 static void setWholeTimingMapCmd(float value) {
 	efiPrintf("Setting whole timing advance map to %.2f", value);
 	setWholeTimingTable(value);
@@ -381,7 +377,6 @@ const command_i_s commandsI[] = {
 		{"rpm_hard_limit", setRpmHardLimit},
 		{"firing_order", setFiringOrder},
 		{"algorithm", setAlgorithmInt},
-		{"debug_mode", setDebugMode},
 		{"trigger_type", setTriggerType},
 		{"idle_solenoid_freq", setIdleSolenoidFrequency},
 #endif // EFI_ENGINE_CONTROL
