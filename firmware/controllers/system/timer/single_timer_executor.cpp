@@ -53,8 +53,6 @@ void SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, ef
 		return;
 	}
 
-	scheduleCounter++;
-
 	// Lock for queue insertion - we may already be locked, but that's ok
 	chibios_rt::CriticalSectionLocker csl;
 
@@ -75,8 +73,6 @@ void SingleTimerExecutor::cancel(scheduling_s* scheduling) {
 }
 
 void SingleTimerExecutor::onTimerCallback() {
-	timerCallbackCounter++;
-
 	chibios_rt::CriticalSectionLocker csl;
 
 	executeAllPendingActions();
@@ -89,7 +85,6 @@ void SingleTimerExecutor::onTimerCallback() {
 void SingleTimerExecutor::executeAllPendingActions() {
 	ScopePerf perf(PE::SingleTimerExecutorDoExecute);
 
-	executeAllPendingActionsInvocationCounter++;
 	/**
 	 * Let's execute actions we should execute at this point.
 	 * reentrantFlag takes care of the use case where the actions we are executing are scheduling
@@ -117,8 +112,6 @@ void SingleTimerExecutor::executeAllPendingActions() {
 		}
 
 	} while (didExecute);
-
-	maxExecuteCounter = maxI(maxExecuteCounter, executeCounter);
 
 	if (!isLocked()) {
 		firmwareError(ObdCode::CUSTOM_ERR_LOCK_ISSUE, "Someone has stolen my lock");
@@ -150,16 +143,6 @@ void SingleTimerExecutor::scheduleTimerCallback() {
 
 void initSingleTimerExecutorHardware() {
 	initMicrosecondTimer();
-}
-
-void executorStatistics() {
-#if EFI_TUNER_STUDIO
-	engine->outputChannels.debugIntField1 = ___engine.scheduler.timerCallbackCounter;
-	engine->outputChannels.debugIntField2 = ___engine.scheduler.executeAllPendingActionsInvocationCounter;
-	engine->outputChannels.debugIntField3 = ___engine.scheduler.scheduleCounter;
-	engine->outputChannels.debugIntField4 = ___engine.scheduler.executeCounter;
-	engine->outputChannels.debugIntField5 = ___engine.scheduler.maxExecuteCounter;
-#endif /* EFI_TUNER_STUDIO */
 }
 
 #endif /* EFI_SIGNAL_EXECUTOR_ONE_TIMER */

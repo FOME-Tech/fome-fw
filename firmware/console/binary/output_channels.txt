@@ -213,12 +213,6 @@ struct_no_prefix output_channels_s
 
 	uint16_t[8 iterate] recentErrorCode;;"error", 1, 0, 0, 0, 0
 
-	uint32_t debugIntField1;;"val", 1, 0, 0, 0, 0
-	uint32_t debugIntField2;;"val", 1, 0, 0, 0, 0
-	uint32_t debugIntField3;;"val", 1, 0, 0, 0, 0
-	int16_t debugIntField4;;"val", 1, 0, 0, 0, 0
-	int16_t debugIntField5;;"val", 1, 0, 0, 0, 0
-
 	uint16_t[EGT_CHANNEL_COUNT iterate] egt;EGT;"deg C", 1, 0, 0, 0, 0
 
 	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0

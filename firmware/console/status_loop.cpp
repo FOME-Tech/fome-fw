@@ -455,10 +455,6 @@ void updateTunerStudioState() {
 	float rpm = 0;
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
-#if EFI_PROD_CODE
-	executorStatistics();
-#endif /* EFI_PROD_CODE */
-
 	// header
 	tsOutputChannels->tsConfigVersion = TS_FILE_VERSION;
 	static_assert(offsetof(TunerStudioOutputChannels, tsConfigVersion) == TS_FILE_VERSION_OFFSET);
