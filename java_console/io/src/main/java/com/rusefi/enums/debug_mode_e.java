@@ -8,7 +8,7 @@ public enum debug_mode_e {
 	DBG_0,
 	DBG_1,
 	DBG_2,
-	DBG_STEPPER_IDLE_CONTROL,
+	DBG_3,
 	DBG_4,
 	DBG_5,
 	DBG_6,
@@ -51,7 +51,4 @@ public enum debug_mode_e {
 	DBG_43,
 	DBG_44,
 	DBG_LOGIC_ANALYZER,
-	DBG_46,
-	DBG_TCU,
-	DBG_LUA,
 }

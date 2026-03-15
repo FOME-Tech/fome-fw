@@ -140,6 +140,8 @@ constexpr inline const char* getDebug_mode_e(debug_mode_e value) {
 			return "DBG_27";
 		case DBG_29:
 			return "DBG_29";
+		case DBG_3:
+			return "DBG_3";
 		case DBG_30:
 			return "DBG_30";
 		case DBG_32:
@@ -168,8 +170,6 @@ constexpr inline const char* getDebug_mode_e(debug_mode_e value) {
 			return "DBG_43";
 		case DBG_44:
 			return "DBG_44";
-		case DBG_46:
-			return "DBG_46";
 		case DBG_5:
 			return "DBG_5";
 		case DBG_6:
@@ -188,14 +188,8 @@ constexpr inline const char* getDebug_mode_e(debug_mode_e value) {
 			return "DBG_EXECUTOR";
 		case DBG_LOGIC_ANALYZER:
 			return "DBG_LOGIC_ANALYZER";
-		case DBG_LUA:
-			return "DBG_LUA";
 		case DBG_METRICS:
 			return "DBG_METRICS";
-		case DBG_STEPPER_IDLE_CONTROL:
-			return "DBG_STEPPER_IDLE_CONTROL";
-		case DBG_TCU:
-			return "DBG_TCU";
 		case DBG_TLE8888:
 			return "DBG_TLE8888";
 	}
