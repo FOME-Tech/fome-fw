@@ -534,15 +534,6 @@ void updateTunerStudioState() {
 #if HAL_USE_PAL && EFI_PROD_CODE
 	tsOutputChannels->extiOverflowCount = getExtiOverflowCounter();
 #endif
-
-	switch (engineConfiguration->debugMode) {
-		case DBG_TLE8888:
-#if (BOARD_TLE8888_COUNT > 0)
-			tle8888PostState();
-#endif /* BOARD_TLE8888_COUNT */
-			break;
-		default:;
-	}
 }
 
 #endif /* EFI_TUNER_STUDIO */

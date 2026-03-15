@@ -37,7 +37,6 @@ void StepperMotorBase::saveStepperPos(int pos) {
 #if EFI_PROD_CODE
 	getBackupSram()->StepperPosition = pos + 1;
 #endif
-	postCurrentPosition();
 }
 
 int StepperMotorBase::loadStepperPos() {
@@ -53,15 +52,6 @@ void StepperMotorBase::changeCurrentPosition(bool positive) {
 		m_currentPosition++;
 	} else {
 		m_currentPosition--;
-	}
-	postCurrentPosition();
-}
-
-void StepperMotorBase::postCurrentPosition() {
-	if (engineConfiguration->debugMode == DBG_STEPPER_IDLE_CONTROL) {
-#if EFI_TUNER_STUDIO
-		engine->outputChannels.debugIntField5 = m_currentPosition;
-#endif /* EFI_TUNER_STUDIO */
 	}
 }
 

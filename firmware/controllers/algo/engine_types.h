@@ -209,7 +209,7 @@ typedef enum __attribute__((__packed__)) {
 	DBG_0 = 0,
 	DBG_1 = 1,
 	DBG_2 = 2,
-	DBG_STEPPER_IDLE_CONTROL = 3,
+	DBG_3 = 3,
 	DBG_4 = 4,
 	DBG_5 = 5,
 	DBG_6 = 6,
@@ -257,9 +257,6 @@ typedef enum __attribute__((__packed__)) {
 	DBG_43 = 43,
 	DBG_44 = 44,
 	DBG_LOGIC_ANALYZER = 45,
-	DBG_46 = 46,
-	DBG_TCU = 47,
-	DBG_LUA = 48,
 
 } debug_mode_e;
 

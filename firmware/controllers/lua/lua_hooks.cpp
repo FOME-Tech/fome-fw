@@ -333,26 +333,6 @@ static int lua_getAuxDigital(lua_State* l) {
 	return 1;
 }
 
-static int lua_setDebug(lua_State* l) {
-	// wrong debug mode, ignore
-	if (engineConfiguration->debugMode != DBG_LUA) {
-		return 0;
-	}
-
-	auto idx = luaL_checkinteger(l, 1);
-	auto val = luaL_checknumber(l, 2);
-
-	// invalid index, ignore
-	if (idx < 1 || idx > 7) {
-		return 0;
-	}
-
-	auto firstDebugField = &engine->outputChannels.debugFloatField1;
-	firstDebugField[idx - 1] = val;
-
-	return 0;
-}
-
 static auto lua_getAirmassResolveMode(lua_State* l) {
 	if (lua_gettop(l) == 0) {
 		// zero args, return configured mode
