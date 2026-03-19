@@ -68,8 +68,6 @@ static void printPacket(CanBusIndex busIndex, const CANRxFrame& rx) {
 	//		return;
 	//	}
 
-	// only print info if we're in can debug mode
-
 	int id = CAN_ID(rx);
 
 	// internet people use both hex and decimal to discuss packed IDs, for usability it's better to print both right

@@ -27,9 +27,6 @@
  * set mock_pedal_position X
  *
  *
- * set debug_mode 17
- * for PID outputs
- *
  * set_etb_duty X
  *
  * http://rusefi.com/forum/viewtopic.php?f=5&t=592
