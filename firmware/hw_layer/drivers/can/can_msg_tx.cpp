@@ -84,8 +84,8 @@ CanTxMessage::~CanTxMessage() {
 				m_frame.data8[7]);
 	}
 
-	// 100 ms timeout
-	msg_t msg = canTransmit(device, CAN_ANY_MAILBOX, &m_frame, TIME_MS2I(100));
+	// immediate timeout - if the hardware FIFO is full, drop the frame
+	msg_t msg = canTransmit(device, CAN_ANY_MAILBOX, &m_frame, TIME_IMMEDIATE);
 #if EFI_TUNER_STUDIO
 	if (msg == MSG_OK) {
 		engine->outputChannels.canWriteOk++;
