@@ -208,9 +208,12 @@ Gpio* getBoardMetaOutputs() {
 }
 
 void initBoardSensors() {
-	if (isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])) {
-		efiSetPadMode("PG1", pgPins[0], PI_PULLUP);
-		efiSetPadMode("PG2", pgPins[1], PI_PULLUP);
+	if (isBrainPinValid(pgPins[0])) {
+		efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
+	}
+
+	if (isBrainPinValid(pgPins[1])) {
+		efiSetPadMode("PG2", pgPins[1], PAL_MODE_INPUT_PULLUP);
 	}
 }
 
