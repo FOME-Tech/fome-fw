@@ -146,7 +146,7 @@ struct engine_state_s {
 	// offset 44 bit 5
 	bool pgState : 1 {};
 	// offset 44 bit 6
-	bool unusedBit_44_6 : 1 {};
+	bool pgState2 : 1 {};
 	// offset 44 bit 7
 	bool unusedBit_44_7 : 1 {};
 	// offset 44 bit 8
