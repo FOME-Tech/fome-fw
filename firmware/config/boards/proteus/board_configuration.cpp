@@ -215,12 +215,23 @@ void initBoardSensors() {
 }
 
 void checkBoardPowerSupply() {
-	if (isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])) {
-		engine->engineState.pgState = efiReadPin(pgPins[0]) && efiReadPin(pgPins[1]);
+	if (isBrainPinValid(pgPins[0])) {
+		engine->engineState.pgState = efiReadPin(pgPins[0]);
+
 		if (!engine->engineState.pgState) {
-			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
+			setError(true, ObdCode::Sensor5vSupplyLow);
 		} else {
-			removeError(ObdCode::CUSTOM_ERR_PG_STATE);
+			removeError(ObdCode::Sensor5vSupplyLow);
+		}
+	}
+
+	if (isBrainPinValid(pgPins[1])) {
+		engine->engineState.pgState2 = efiReadPin(pgPins[1]);
+
+		if (!engine->engineState.pgState2) {
+			setError(true, ObdCode::Sensor5VSupply2Low);
+		} else {
+			removeError(ObdCode::Sensor5VSupply2Low);
 		}
 	}
 }
