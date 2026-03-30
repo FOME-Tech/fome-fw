@@ -378,7 +378,7 @@ void TriggerDecoderBase::logEdgeCounters(bool isRising) {
 	if (isRising) {
 		edgeCountRise++;
 
-		if (edgeCountRise > 10) {
+		if (edgeCountRise > 5) {
 			hasSignal = true;
 		}
 	} else {
