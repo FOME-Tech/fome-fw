@@ -219,10 +219,6 @@ bool EventQueue::executeOne(efitick_t now) {
 #endif
 	current = nullptr;
 
-#if EFI_UNIT_TEST
-	printf("QUEUE: execute current=%d param=%d\r\n", (uintptr_t)current, (uintptr_t)action.getArgument());
-#endif
-
 	// Execute the current element
 	{
 		ScopePerf perf2(PE::EventQueueExecuteCallback);
