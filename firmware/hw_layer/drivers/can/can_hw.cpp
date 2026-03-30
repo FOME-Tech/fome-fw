@@ -62,7 +62,8 @@ private:
 
 CCM_OPTIONAL static CanRead canRead1(CanBusIndex::Bus0);
 CCM_OPTIONAL static CanRead canRead2(CanBusIndex::Bus1);
-static CanWrite canWrite CCM_OPTIONAL;
+CCM_OPTIONAL static CanWrite canWrite0(CanBusIndex::Bus0);
+CCM_OPTIONAL static CanWrite canWrite1(CanBusIndex::Bus1);
 
 static void canInfo() {
 	if (!isCanEnabled) {
@@ -173,7 +174,10 @@ void initCan() {
 
 	// fire up threads, as necessary
 	if (engineConfiguration->canWriteEnabled) {
-		canWrite.startThread();
+		if (device1)
+			canWrite0.startThread();
+		if (device2)
+			canWrite1.startThread();
 	}
 
 	if (engineConfiguration->canReadEnabled) {

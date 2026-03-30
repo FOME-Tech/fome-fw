@@ -55,8 +55,12 @@ void registerCanSensor(CanSensorBase& sensor);
 
 class CanWrite final : public PeriodicController<512> {
 public:
-	CanWrite();
+	CanWrite(CanBusIndex bus);
 	void PeriodicTask(efitick_t nowNt) override;
+
+private:
+	const CanBusIndex m_bus;
+	uint16_t m_cycleCount = 0;
 };
 
 // allow using shorthand CI

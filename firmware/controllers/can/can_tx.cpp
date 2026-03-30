@@ -17,10 +17,9 @@
 #include "can_sensor.h"
 #include "rusefi_wideband.h"
 
-extern CanListener* canListeners_head;
-
-CanWrite::CanWrite()
-	: PeriodicController("CAN TX", PRIO_CAN_TX, CAN_CYCLE_FREQ) {}
+CanWrite::CanWrite(CanBusIndex bus)
+	: PeriodicController(bus == CanBusIndex::Bus0 ? "CAN TX 0" : "CAN TX 1", PRIO_CAN_TX, CAN_CYCLE_FREQ)
+	, m_bus(bus) {}
 
 static CI roundTxPeriodToCycle(uint16_t period) {
 	if (period < 10)
@@ -44,32 +43,37 @@ static CI roundTxPeriodToCycle(uint16_t period) {
 }
 
 void CanWrite::PeriodicTask(efitick_t) {
-	static uint16_t cycleCount = 0;
-	CanCycle cycle(cycleCount);
+	CanCycle cycle(m_cycleCount);
 
 	// in case we have Verbose Can enabled, we should keep user configured period
 	if (engineConfiguration->enableVerboseCanTx) {
 		auto roundedInterval = roundTxPeriodToCycle(engineConfiguration->canSleepPeriodMs);
 		if (cycle.isInterval(roundedInterval)) {
-			void sendCanVerbose();
-			sendCanVerbose();
+			void sendCanVerbose(CanBusIndex bus);
+			sendCanVerbose(m_bus);
 		}
 	}
 
 	if (cycle.isInterval(CI::_MAX_Cycle)) {
 		// we now reset cycleCount since we reached max cycle count
-		cycleCount = 0;
+		m_cycleCount = 0;
 	}
 
-	updateDash(cycle);
+	// Dashboard messages are all hardcoded to Bus0
+	if (m_bus == CanBusIndex::Bus0) {
+		updateDash(cycle);
+	}
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE
 	if (engineConfiguration->widebandMode == WidebandMode::FOMEInternal && cycle.isInterval(CI::_50ms)) {
-		sendWidebandInfo();
+		auto wbBus = engineConfiguration->widebandOnSecondBus ? CanBusIndex::Bus1 : CanBusIndex::Bus0;
+		if (m_bus == wbBus) {
+			sendWidebandInfo();
+		}
 	}
 #endif
 
-	cycleCount++;
+	m_cycleCount++;
 }
 
 CanInterval CanCycle::computeFlags(uint32_t cycleCount) {

@@ -218,48 +218,44 @@ static void populateFrame(Egts& msg) {
 	}
 }
 
-void sendCanVerbose() {
+void sendCanVerbose(CanBusIndex bus) {
+	switch (engineConfiguration->canBroadcastUseChannelTwo) {
+		case canBroadcast_e::none:
+			return;
+		case canBroadcast_e::first:
+			if (bus != CanBusIndex::Bus0)
+				return;
+			break;
+		case canBroadcast_e::second:
+			if (bus != CanBusIndex::Bus1)
+				return;
+			break;
+		case canBroadcast_e::both:
+			break;
+		default:
+			return;
+	}
+
 	const auto base = engineConfiguration->verboseCanBaseAddress;
 	const auto isExt = engineConfiguration->rusefiVerbose29b;
 
-	auto sendOn = [&](CanBusIndex channel) {
-#define TX(T, off) transmitStruct<T>(base + (off), isExt, channel)
-		TX(Status, 0);
-		TX(Speeds, 1);
-		TX(PedalAndTps, 2);
-		TX(Sensors1, 3);
-		TX(Sensors2, 4);
-		TX(Fueling, 5);
-		TX(Fueling2, 6);
-		TX(Fueling3, 7);
+#define TX(T, off) transmitStruct<T>(base + (off), isExt, bus)
+	TX(Status, 0);
+	TX(Speeds, 1);
+	TX(PedalAndTps, 2);
+	TX(Sensors1, 3);
+	TX(Sensors2, 4);
+	TX(Fueling, 5);
+	TX(Fueling2, 6);
+	TX(Fueling3, 7);
 
-		if (engineConfiguration->canBroadcastCams) {
-			TX(Cams, 8);
-		}
-		if (engineConfiguration->canBroadcastEgt) {
-			TX(Egts, 9);
-		}
-
-#undef TX
-	};
-
-	switch (engineConfiguration->canBroadcastUseChannelTwo) {
-		case canBroadcast_e::none:
-			break;
-		case canBroadcast_e::first:
-			sendOn(CanBusIndex::Bus0);
-			break;
-		case canBroadcast_e::second:
-			sendOn(CanBusIndex::Bus1);
-			break;
-		case canBroadcast_e::both:
-			sendOn(CanBusIndex::Bus0);
-			sendOn(CanBusIndex::Bus1);
-			break;
-
-		default:
-			break;
+	if (engineConfiguration->canBroadcastCams) {
+		TX(Cams, 8);
 	}
+	if (engineConfiguration->canBroadcastEgt) {
+		TX(Egts, 9);
+	}
+#undef TX
 }
 
 #endif // EFI_CAN_SUPPORT
