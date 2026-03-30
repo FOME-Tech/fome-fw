@@ -52,6 +52,7 @@ or
  - Fix boost control blend table axis names in TunerStudio
  - Default initialize output channels to avoid invalid values at startup
  - Clean up CAN verbose DBC file, removing invalid/orphan entries #677
+ - Idle VE table when using an electronic throttle correctly uses accel pedal to match main idle logic
 
 ## November 2025 Release
 
