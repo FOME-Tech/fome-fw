@@ -56,12 +56,6 @@ void CanWrite::PeriodicTask(efitick_t) {
 		}
 	}
 
-	CanListener* current = canListeners_head;
-
-	while (current) {
-		current = current->request();
-	}
-
 	if (cycle.isInterval(CI::_MAX_Cycle)) {
 		// we now reset cycleCount since we reached max cycle count
 		cycleCount = 0;

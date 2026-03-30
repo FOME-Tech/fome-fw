@@ -30,10 +30,6 @@ public:
 		m_next = next;
 	}
 
-	virtual CanListener* request() {
-		return m_next;
-	}
-
 	bool hasNext() const {
 		return m_next;
 	}
