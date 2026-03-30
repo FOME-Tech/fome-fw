@@ -122,6 +122,8 @@ public:
 	 */
 	bool shaft_is_synchronized;
 
+	bool hasSignal = false;
+
 	Timer previousEventTimer;
 
 	void setTriggerErrorState();

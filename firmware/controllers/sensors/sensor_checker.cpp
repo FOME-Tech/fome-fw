@@ -355,7 +355,7 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	//		-> sync error counter is high
 
 	// Scenario 1: No signal at all
-	if (decoder.edgeCountRise == 0) {
+	if (!decoder.hasSignal) {
 		handleCodeSeverity(noSignalCode);
 		return;
 	}

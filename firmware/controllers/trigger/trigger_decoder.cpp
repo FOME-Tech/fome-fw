@@ -47,6 +47,7 @@ void TriggerDecoderBase::resetState() {
 
 	setArrayValues(toothDurations, 0);
 
+	hasSignal = false;
 	crankSynchronizationCounter = 0;
 	triggerErrorCounter = 0;
 	orderingErrorCounter = 0;
@@ -376,6 +377,10 @@ static bool shouldConsiderEdge(const TriggerWaveform& triggerShape, TriggerWheel
 void TriggerDecoderBase::logEdgeCounters(bool isRising) {
 	if (isRising) {
 		edgeCountRise++;
+
+		if (edgeCountRise > 10) {
+			hasSignal = true;
+		}
 	} else {
 		edgeCountFall++;
 	}
