@@ -77,12 +77,13 @@ size_t flashSectorSize(flashsector_t sector) {
 	// Pages are twice the size when in single bank mode
 	size_t dbMul = isDualBank() ? 1 : 2;
 
-	if (sector <= 3)
+	if (sector <= 3) {
 		return 16 * 1024 * dbMul;
-	else if (sector == 4)
+	} else if (sector == 4) {
 		return 64 * 1024 * dbMul;
-	else if (sector >= 5)
+	} else if (sector >= 5) {
 		return 128 * 1024 * dbMul;
+	}
 	return 0;
 }
 

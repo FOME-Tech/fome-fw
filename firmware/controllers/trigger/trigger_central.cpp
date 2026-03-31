@@ -416,8 +416,9 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 	}
 
 	uint32_t triggerHandlerEntryTime = getTimeNowLowerNt();
-	if (triggerReentrant > maxTriggerReentrant)
+	if (triggerReentrant > maxTriggerReentrant) {
 		maxTriggerReentrant = triggerReentrant;
+	}
 	triggerReentrant++;
 
 	getTriggerCentral()->handleShaftSignal(signal, timestamp);

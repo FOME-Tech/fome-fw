@@ -255,8 +255,9 @@ scheduling_s* EventQueue::getElementAtIndexForUnitText(int index) {
 	scheduling_s* current;
 
 	LL_FOREACH2(m_head, current, next) {
-		if (index == 0)
+		if (index == 0) {
 			return current;
+		}
 		index--;
 	}
 

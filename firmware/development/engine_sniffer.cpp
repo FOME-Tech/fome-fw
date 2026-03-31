@@ -161,8 +161,9 @@ void WaveChart::addEvent3(efitick_t nowNt, const char* name, const char* msg) {
 	if (!getTriggerCentral()->isEngineSnifferEnabled) {
 		return;
 	}
-	if (skipUntilEngineCycle != 0 && getRevolutionCounter() < skipUntilEngineCycle)
+	if (skipUntilEngineCycle != 0 && getRevolutionCounter() < skipUntilEngineCycle) {
 		return;
+	}
 #if EFI_SIMULATOR
 	// todo: add UI control to enable this for firmware if desired
 	// engineConfiguration->alignEngineSnifferAtTDC &&

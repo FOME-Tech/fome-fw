@@ -36,19 +36,21 @@
 static uint32_t scsi_transport_transmit(const SCSITransport* transport, const uint8_t* data, size_t len) {
 	usb_scsi_transport_handler_t* trp = reinterpret_cast<usb_scsi_transport_handler_t*>(transport->handler);
 	msg_t status = usbTransmit(trp->usbp, trp->ep, data, len);
-	if (MSG_OK == status)
+	if (MSG_OK == status) {
 		return len;
-	else
+	} else {
 		return 0;
+	}
 }
 
 static uint32_t scsi_transport_receive(const SCSITransport* transport, uint8_t* data, size_t len) {
 	usb_scsi_transport_handler_t* trp = reinterpret_cast<usb_scsi_transport_handler_t*>(transport->handler);
 	msg_t status = usbReceive(trp->usbp, trp->ep, data, len);
-	if (MSG_RESET != status)
+	if (MSG_RESET != status) {
 		return status;
-	else
+	} else {
 		return 0;
+	}
 }
 
 MassStorageController::MassStorageController(USBDriver* usb)

@@ -234,8 +234,9 @@ void RpmCalculator::setStopSpinning() {
 }
 
 void RpmCalculator::setSpinningUp(efitick_t nowNt) {
-	if (!engineConfiguration->isFasterEngineSpinUpEnabled)
+	if (!engineConfiguration->isFasterEngineSpinUpEnabled) {
 		return;
+	}
 	// Only a completely stopped and non-spinning engine can enter the spinning-up state.
 	if (isStopped() && !isSpinning) {
 		state = SPINNING_UP;

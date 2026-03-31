@@ -34,8 +34,9 @@ static_assert((H7_ADC_OVERSAMPLE & (H7_ADC_OVERSAMPLE - 1)) == 0, "H7_ADC_OVERSA
 
 static constexpr size_t log2_int(size_t x) {
 	size_t result = 0;
-	while (x >>= 1)
+	while (x >>= 1) {
 		result++;
+	}
 	return result;
 }
 

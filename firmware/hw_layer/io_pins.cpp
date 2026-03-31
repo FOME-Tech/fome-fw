@@ -66,8 +66,9 @@ void efiSetPadModeWithoutOwnershipAcquisition(const char* msg, brain_pin_e brain
 		ioportid_t port = getHwPort(msg, brainPin);
 		ioportmask_t pin = getHwPin(msg, brainPin);
 		/* paranoid */
-		if (!port)
+		if (!port) {
 			return;
+		}
 
 		palSetPadMode(port, pin, mode);
 	}

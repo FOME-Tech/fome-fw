@@ -174,10 +174,12 @@ void initCan() {
 
 	// fire up threads, as necessary
 	if (engineConfiguration->canWriteEnabled) {
-		if (device1)
+		if (device1) {
 			canWrite0.startThread();
-		if (device2)
+		}
+		if (device2) {
 			canWrite1.startThread();
+		}
 	}
 
 	if (engineConfiguration->canReadEnabled) {

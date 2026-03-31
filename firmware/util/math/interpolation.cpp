@@ -65,10 +65,12 @@ float interpolateMsg(const char* msg, float x1, float y1, float x2, float y2, fl
  * @see interpolateMsg
  */
 float interpolateClamped(float x1, float y1, float x2, float y2, float x) {
-	if (x <= x1)
+	if (x <= x1) {
 		return y1;
-	if (x >= x2)
+	}
+	if (x >= x2) {
 		return y2;
+	}
 
 	float a = INTERPOLATION_A(x1, y1, x2, y2);
 	float b = y1 - a * x1;

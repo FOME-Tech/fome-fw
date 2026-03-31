@@ -175,8 +175,9 @@ template <typename kType>
 void setRpmBin(kType array[], int size, float idleRpm, float topRpm) {
 	array[0] = idleRpm - 150;
 	int rpmStep = (int)(efiRound((topRpm - idleRpm) / (size - 2), 50) - 150);
-	for (int i = 1; i < size - 1; i++)
+	for (int i = 1; i < size - 1; i++) {
 		array[i] = idleRpm + rpmStep * (i - 1);
+	}
 	array[size - 1] = topRpm;
 }
 

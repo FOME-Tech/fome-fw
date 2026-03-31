@@ -39,8 +39,9 @@ bool DualHBridgeStepper::step(bool positive) {
 	if (engineConfiguration->stepperNumMicroSteps > 1) {
 		float dutyMult = engineConfiguration->stepperMaxDutyCycle * phaseDutyCycleDivisor;
 		int numStepIncr = maxNumSteps / engineConfiguration->stepperNumMicroSteps;
-		if (!positive)
+		if (!positive) {
 			numStepIncr = -numStepIncr;
+		}
 		for (int i = engineConfiguration->stepperNumMicroSteps; i > 0; i--) {
 			m_phase = (m_phase + numStepIncr) & tableSizeMask;
 			update(dutyMult);

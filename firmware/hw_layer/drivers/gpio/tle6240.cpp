@@ -156,8 +156,9 @@ int Tle6240::spi_rw(uint16_t tx, uint16_t* rx) {
 	/* Ownership release. */
 	spiReleaseBus(spi);
 
-	if (rx)
+	if (rx) {
 		*rx = rxb;
+	}
 
 	/* no errors for now */
 	return 0;
@@ -211,11 +212,14 @@ int Tle6240::chip_init() {
 	/* mark pins used */
 	// ret = gpio_pin_markUsed(cfg->spi_config.ssport, cfg->spi_config.sspad, DRIVER_NAME " CS");
 	ret = 0;
-	if (cfg->reset.port != NULL)
+	if (cfg->reset.port != NULL) {
 		ret |= gpio_pin_markUsed(cfg->reset.port, cfg->reset.pad, DRIVER_NAME " RST");
-	for (n = 0; n < TLE6240_DIRECT_OUTPUTS; n++)
-		if (cfg->direct_io[n].port)
+	}
+	for (n = 0; n < TLE6240_DIRECT_OUTPUTS; n++) {
+		if (cfg->direct_io[n].port) {
 			ret |= gpio_pin_markUsed(cfg->direct_io[n].port, cfg->direct_io[n].pad, DRIVER_NAME " DIRECT IO");
+		}
+	}
 
 	if (ret) {
 		ret = -1;
@@ -296,11 +300,14 @@ int Tle6240::chip_init() {
 err_gpios:
 	/* unmark pins */
 	// gpio_pin_markUnused(cfg->spi_config.ssport, cfg->spi_config.sspad);
-	if (cfg->reset.port != NULL)
+	if (cfg->reset.port != NULL) {
 		gpio_pin_markUnused(cfg->reset.port, cfg->reset.pad);
-	for (n = 0; n < TLE6240_DIRECT_OUTPUTS; n++)
-		if (cfg->direct_io[n].port)
+	}
+	for (n = 0; n < TLE6240_DIRECT_OUTPUTS; n++) {
+		if (cfg->direct_io[n].port) {
 			gpio_pin_markUnused(cfg->direct_io[n].port, cfg->direct_io[n].pad);
+		}
+	}
 
 	return ret;
 }
@@ -349,8 +356,9 @@ static THD_FUNCTION(tle6240_driver_thread, p) {
 			int ret;
 			Tle6240& chip = chips[i];
 
-			if (!chip.cfg || (chip.drv_state == TLE6240_DISABLED) || (chip.drv_state == TLE6240_FAILED))
+			if (!chip.cfg || (chip.drv_state == TLE6240_DISABLED) || (chip.drv_state == TLE6240_FAILED)) {
 				continue;
+			}
 
 			ret = chip.update_output_and_diag();
 			if (ret) {
@@ -371,16 +379,18 @@ static THD_FUNCTION(tle6240_driver_thread, p) {
 /*==========================================================================*/
 
 int Tle6240::writePad(unsigned int pin, int value) {
-	if (pin >= TLE6240_OUTPUTS)
+	if (pin >= TLE6240_OUTPUTS) {
 		return -1;
+	}
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
 
-		if (value)
+		if (value) {
 			o_state |= (1 << pin);
-		else
+		} else {
 			o_state &= ~(1 << pin);
+		}
 	}
 
 	/* direct driven? */
@@ -388,10 +398,11 @@ int Tle6240::writePad(unsigned int pin, int value) {
 		int n = (pin < 8) ? pin : (pin - 4);
 
 		/* TODO: ensure that TLE6240 configured in active high mode */
-		if (value)
+		if (value) {
 			palSetPort(cfg->direct_io[n].port, PAL_PORT_BIT(cfg->direct_io[n].pad));
-		else
+		} else {
 			palClearPort(cfg->direct_io[n].port, PAL_PORT_BIT(cfg->direct_io[n].pad));
+		}
 	} else {
 		tle6240_wake_driver();
 	}
@@ -403,27 +414,30 @@ brain_pin_diag_e Tle6240::getDiag(size_t pin) {
 	int val;
 	int diagVal;
 
-	if (pin >= TLE6240_OUTPUTS)
+	if (pin >= TLE6240_OUTPUTS) {
 		return PIN_INVALID;
+	}
 
 	val = (diag[(pin > 7) ? 1 : 0] >> ((pin % 8) * 2)) & 0x03;
-	if (val == 0x3)
+	if (val == 0x3) {
 		diagVal = PIN_OK;
-	else if (val == 0x2)
+	} else if (val == 0x2) {
 		/* Overload, shorted load or overtemperature */
 		diagVal = PIN_OVERLOAD | PIN_DRIVER_OVERTEMP;
-	else if (val == 0x1)
+	} else if (val == 0x1) {
 		diagVal = PIN_OPEN;
-	else if (val == 0x0)
+	} else if (val == 0x0) {
 		diagVal = PIN_SHORT_TO_GND;
+	}
 
 	return static_cast<brain_pin_diag_e>(diagVal);
 }
 
 int Tle6240::init() {
 	int ret = chip_init();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	drv_state = TLE6240_READY;
 
@@ -447,8 +461,9 @@ int tle6240_add(brain_pin_e base, unsigned int index, const tle6240_config* cfg)
 	Tle6240* chip;
 
 	/* no config or no such chip */
-	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_TLE6240_COUNT))
+	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_TLE6240_COUNT)) {
 		return -1;
+	}
 
 	/* check for valid cs.
 	 * TODO: remove this check? CS can be driven by SPI */
@@ -458,8 +473,9 @@ int tle6240_add(brain_pin_e base, unsigned int index, const tle6240_config* cfg)
 	chip = &chips[index];
 
 	/* already initted? */
-	if (chip->cfg != NULL)
+	if (chip->cfg != NULL) {
 		return -1;
+	}
 
 	chip->cfg = cfg;
 	chip->o_state = 0;
@@ -467,16 +483,18 @@ int tle6240_add(brain_pin_e base, unsigned int index, const tle6240_config* cfg)
 	chip->o_direct_mask = 0;
 	chip->drv_state = TLE6240_WAIT_INIT;
 	for (i = 0; i < TLE6240_DIRECT_OUTPUTS; i++) {
-		if (cfg->direct_io[i].port != 0)
+		if (cfg->direct_io[i].port != 0) {
 			chip->o_direct_mask |= (1 << ((i < 4) ? i : (i + 4)));
+		}
 	}
 
 	chip->drv_state = TLE6240_WAIT_INIT;
 
 	/* register, return gpio chip base */
 	ret = gpiochip_register(base, DRIVER_NAME, *chip, TLE6240_OUTPUTS);
-	if (ret < 0)
+	if (ret < 0) {
 		return ret;
+	}
 
 	/* set default pin names, board init code can rewrite */
 	gpiochips_setPinNames(base, tle6240_pin_names);

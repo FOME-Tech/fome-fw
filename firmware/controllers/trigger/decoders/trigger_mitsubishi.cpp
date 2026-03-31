@@ -37,28 +37,36 @@ static void addMitsu93(TriggerWaveform* s, bool addSecondary) {
 	float offset = addSecondary ? 0 : 120;
 
 	s->addEvent720(offset + 60, true, TriggerWheel::T_PRIMARY);
-	if (addSecondary)
+	if (addSecondary) {
 		s->addEvent720(offset + 180 - narrowW, true, TriggerWheel::T_SECONDARY);
+	}
 	s->addEvent720(offset + 146, false, TriggerWheel::T_PRIMARY);
-	if (addSecondary)
+	if (addSecondary) {
 		s->addEvent720(offset + 180, false, TriggerWheel::T_SECONDARY);
+	}
 
-	if (addSecondary)
+	if (addSecondary) {
 		s->addEvent720(offset + 360 - narrowW, true, TriggerWheel::T_SECONDARY);
-	if (addSecondary)
+	}
+	if (addSecondary) {
 		s->addEvent720(offset + 360, false, TriggerWheel::T_SECONDARY);
+	}
 
 	s->addEvent720(offset + 421, true, TriggerWheel::T_PRIMARY);
-	if (addSecondary)
+	if (addSecondary) {
 		s->addEvent720(offset + 540 - narrowW, true, TriggerWheel::T_SECONDARY);
-	if (addSecondary)
+	}
+	if (addSecondary) {
 		s->addEvent720(offset + 540, false, TriggerWheel::T_SECONDARY);
+	}
 
 	s->addEvent720(offset + 600, false, TriggerWheel::T_PRIMARY);
-	if (addSecondary)
+	if (addSecondary) {
 		s->addEvent720(offset + 720 - narrowW, true, TriggerWheel::T_SECONDARY);
-	if (addSecondary)
+	}
+	if (addSecondary) {
 		s->addEvent720(offset + 720.0, false, TriggerWheel::T_SECONDARY);
+	}
 
 	s->useOnlyPrimaryForSync = addSecondary;
 }

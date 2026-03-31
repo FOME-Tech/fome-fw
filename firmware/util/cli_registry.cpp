@@ -493,8 +493,9 @@ static int handleConsoleLineInternal(const char* commandLine, int lineLength) {
  * @brief This function takes care of one command line once we have it
  */
 void handleConsoleLine(char* line) {
-	if (line == NULL)
+	if (!line) {
 		return; // error detected
+	}
 
 	int lineLength = strlen(line);
 	if (lineLength > MAX_CMD_LINE_LENGTH) {

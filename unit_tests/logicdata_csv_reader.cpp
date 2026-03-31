@@ -123,7 +123,8 @@ void CsvReader::processLine(EngineTestHelper* eth) {
 }
 
 void CsvReader::readLine(EngineTestHelper* eth) {
-	if (!haveMore())
+	if (!haveMore()) {
 		return;
+	}
 	processLine(eth);
 }

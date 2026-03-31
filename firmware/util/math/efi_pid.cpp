@@ -125,8 +125,9 @@ void Pid::updateITerm(float value) {
 	}
 
 	// this is kind of a hack. a proper fix would be having separate additional settings 'maxIValue' and 'minIValye'
-	if (iTerm < -m_parameters->maxValue * 100)
+	if (iTerm < -m_parameters->maxValue * 100) {
 		iTerm = -m_parameters->maxValue * 100;
+	}
 	if (iTerm < iTermMin) {
 		iTerm = iTermMin;
 	}

@@ -223,12 +223,14 @@ void sendCanVerbose(CanBusIndex bus) {
 		case canBroadcast_e::none:
 			return;
 		case canBroadcast_e::first:
-			if (bus != CanBusIndex::Bus0)
+			if (bus != CanBusIndex::Bus0) {
 				return;
+			}
 			break;
 		case canBroadcast_e::second:
-			if (bus != CanBusIndex::Bus1)
+			if (bus != CanBusIndex::Bus1) {
 				return;
+			}
 			break;
 		case canBroadcast_e::both:
 			break;

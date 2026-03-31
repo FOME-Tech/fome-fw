@@ -71,8 +71,9 @@ void AlternatorController::onConfigurationChange(engine_configuration_s const* p
 }
 
 void initAlternatorCtrl() {
-	if (!isBrainPinValid(engineConfiguration->alternatorControlPin))
+	if (!isBrainPinValid(engineConfiguration->alternatorControlPin)) {
 		return;
+	}
 
 	startSimplePwm(
 			&alternatorControl,

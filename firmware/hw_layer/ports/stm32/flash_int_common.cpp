@@ -12,8 +12,9 @@ flashaddr_t intFlashSectorEnd(flashsector_t sector) {
 
 flashsector_t intFlashSectorAt(flashaddr_t address) {
 	flashsector_t sector = 0;
-	while (address >= intFlashSectorEnd(sector))
+	while (address >= intFlashSectorEnd(sector)) {
 		++sector;
+	}
 	return sector;
 }
 
@@ -21,12 +22,14 @@ int intFlashErase(flashaddr_t address, size_t size) {
 	while (size > 0) {
 		flashsector_t sector = intFlashSectorAt(address);
 		int err = intFlashSectorErase(sector);
-		if (err != FLASH_RETURN_SUCCESS)
+		if (err != FLASH_RETURN_SUCCESS) {
 			return err;
+		}
 		address = intFlashSectorEnd(sector);
 		size_t sector_size = flashSectorSize(sector);
-		if (sector_size >= size)
+		if (sector_size >= size) {
 			break;
+		}
 		size -= sector_size;
 	}
 
@@ -45,14 +48,16 @@ bool intFlashIsErased(flashaddr_t address, size_t size) {
 	 * For efficiency, compare flashdata_t values as much as possible,
 	 * then, fallback to byte per byte comparison. */
 	while (size >= sizeof(flashdata_t)) {
-		if (*(volatile flashdata_t*)address != (flashdata_t)(-1)) // flashdata_t being unsigned, -1 is 0xFF..FF
+		if (*(volatile flashdata_t*)address != (flashdata_t)(-1)) { // flashdata_t being unsigned, -1 is 0xFF..FF
 			return false;
+		}
 		address += sizeof(flashdata_t);
 		size -= sizeof(flashdata_t);
 	}
 	while (size > 0) {
-		if (*(char*)address != 0xFF)
+		if (*(char*)address != 0xFF) {
 			return false;
+		}
 		++address;
 		--size;
 	}
@@ -64,15 +69,17 @@ bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
 	/* For efficiency, compare flashdata_t values as much as possible,
 	 * then, fallback to byte per byte comparison. */
 	while (size >= sizeof(flashdata_t)) {
-		if (*(volatile flashdata_t*)address != *(flashdata_t*)buffer)
+		if (*(volatile flashdata_t*)address != *(flashdata_t*)buffer) {
 			return FALSE;
+		}
 		address += sizeof(flashdata_t);
 		buffer += sizeof(flashdata_t);
 		size -= sizeof(flashdata_t);
 	}
 	while (size > 0) {
-		if (*(volatile char*)address != *buffer)
+		if (*(volatile char*)address != *buffer) {
 			return FALSE;
+		}
 		++address;
 		++buffer;
 		--size;

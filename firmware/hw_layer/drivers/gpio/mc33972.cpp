@@ -145,8 +145,9 @@ int Mc33972::spi_w(uint32_t tx) {
 	/* Slave Select assertion. */
 	spiSelect(spi);
 	/* Atomic transfer operations. */
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 3; i++) {
 		rxb[i] = spiPolledExchange(spi, txb[i]);
+	}
 	/* Slave Select de-assertion. */
 	spiUnselect(spi);
 	/* Ownership release. */
@@ -173,8 +174,9 @@ int Mc33972::update_pullups() {
 
 	/* enable tri-state for all unused pins */
 	ret = spi_w(CMD_TRI_STATE(SP_BANK, SP_PINS_EXTRACT(~en_pins)));
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 	ret = spi_w(CMD_TRI_STATE(SG_BANK, SG_PINS_EXTRACT(~en_pins)));
 
 	return ret;
@@ -192,14 +194,17 @@ int Mc33972::comm_test() {
 	for (int i = 0; i < MC33972_INPUTS; i++) {
 		/* indexed starting from 1 */
 		ret = spi_w(CMD_ANALOG(0, i + 1));
-		if (ret)
+		if (ret) {
 			return ret;
+		}
 		ret = update_status();
-		if (ret)
+		if (ret) {
 			return ret;
+		}
 
-		if (i_state & PIN_MASK(i))
+		if (i_state & PIN_MASK(i)) {
 			return -1;
+		}
 	}
 
 	return 0;
@@ -216,8 +221,9 @@ int Mc33972::chip_init() {
 
 	/* reset first */
 	ret = spi_w(CMD_RST);
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	/* is it enought? */
 	chThdSleepMilliseconds(3);
@@ -235,21 +241,25 @@ int Mc33972::chip_init() {
 
 	/* check communication */
 	ret = comm_test();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	/* disable tri-state for used pins only */
 	ret = update_pullups();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	/* Set wetting current to 2 mA */
 	ret = spi_w(CMD_METALLIC(SP_BANK, 0));
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 	ret = spi_w(CMD_METALLIC(SG_BANK, 0));
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	return 0;
 }
@@ -297,8 +307,9 @@ static THD_FUNCTION(mc33972_driver_thread, p) {
 	while (1) {
 		msg_t msg = chSemWaitTimeout(&chip->wake, TIME_MS2I(MC33972_POLL_INTERVAL_MS));
 
-		if ((chip->cfg == NULL) || (chip->drv_state == MC33972_DISABLED) || (chip->drv_state == MC33972_FAILED))
+		if ((chip->cfg == NULL) || (chip->drv_state == MC33972_DISABLED) || (chip->drv_state == MC33972_FAILED)) {
 			continue;
+		}
 
 		if (msg == MSG_TIMEOUT) {
 			/* only input state update */
@@ -326,8 +337,9 @@ static THD_FUNCTION(mc33972_driver_thread, p) {
 /*==========================================================================*/
 
 int Mc33972::setPadMode(size_t pin, iomode_t mode) {
-	if (pin >= MC33972_INPUTS)
+	if (pin >= MC33972_INPUTS) {
 		return -1;
+	}
 
 	/* currently driver doesn't know how to hanlde different modes */
 	(void)mode;
@@ -347,8 +359,9 @@ int Mc33972::setPadMode(size_t pin, iomode_t mode) {
 }
 
 int Mc33972::readPad(size_t pin) {
-	if (pin >= MC33972_INPUTS)
+	if (pin >= MC33972_INPUTS) {
 		return -1;
+	}
 
 	/* convert to some common enum? */
 	return !!(i_state & PIN_MASK(pin));
@@ -357,12 +370,14 @@ int Mc33972::readPad(size_t pin) {
 brain_pin_diag_e Mc33972::getDiag(size_t pin) {
 	brain_pin_diag_e diag = PIN_OK;
 
-	if (pin >= MC33972_INPUTS)
+	if (pin >= MC33972_INPUTS) {
 		return PIN_INVALID;
+	}
 
 	/* one diag bit for all pins */
-	if (i_state & FLAG_THERM)
+	if (i_state & FLAG_THERM) {
 		diag = PIN_DRIVER_OVERTEMP;
+	}
 
 	return diag;
 }
@@ -396,8 +411,9 @@ int Mc33972::deinit() {
 
 int mc33972_add(brain_pin_e base, unsigned int index, const struct mc33972_config* cfg) {
 	/* no config or no such chip */
-	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_MC33972_COUNT))
+	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_MC33972_COUNT)) {
 		return -1;
+	}
 
 	/* check for valid cs.
 	 * DOTO: remove this check? CS can be driven by SPI */
@@ -408,8 +424,9 @@ int mc33972_add(brain_pin_e base, unsigned int index, const struct mc33972_confi
 	Mc33972& chip = chips[index];
 
 	/* already initted? */
-	if (chip.cfg != NULL)
+	if (chip.cfg != NULL) {
 		return -1;
+	}
 
 	chip.cfg = cfg;
 	chip.i_state = 0;

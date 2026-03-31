@@ -16,8 +16,9 @@ TEST(ignition, twoCoils) {
 	EngineTestHelper eth(engine_type_e::FRANKENSO_BMW_M73_F);
 
 	// let's recalculate with zero timing so that we can focus on relation advance between cylinders
-	for (auto& c : engine->cylinders)
+	for (auto& c : engine->cylinders) {
 		c.setIgnitionTimingBtdc(0);
+	}
 	initializeIgnitionActions();
 
 	// first one to fire uses first coil

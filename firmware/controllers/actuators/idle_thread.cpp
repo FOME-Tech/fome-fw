@@ -222,8 +222,9 @@ float IdleController::getIdleTimingAdjustment(float rpm, float rpmRate, float ta
 }
 
 static void finishIdleTestIfNeeded() {
-	if (engine->timeToStopIdleTest != 0 && getTimeNowUs() > engine->timeToStopIdleTest)
+	if (engine->timeToStopIdleTest != 0 && getTimeNowUs() > engine->timeToStopIdleTest) {
 		engine->timeToStopIdleTest = 0;
+	}
 }
 
 /**

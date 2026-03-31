@@ -140,8 +140,9 @@ int efiPow10(int param) {
  */
 float atoff(const char* param) {
 	uint32_t totallen = strlen(param);
-	if (totallen > sizeof(todofixthismesswithcopy) - 1)
+	if (totallen > sizeof(todofixthismesswithcopy) - 1) {
 		return (float)NAN;
+	}
 	strcpy(todofixthismesswithcopy, param);
 	char* string = todofixthismesswithcopy;
 	if (indexOf(string, 'n') != -1 || indexOf(string, 'N') != -1) {
@@ -157,20 +158,23 @@ float atoff(const char* param) {
 	if (dotIndex == -1) {
 		// just an integer
 		int result = atoi(string);
-		if (absI(result) == ATOI_ERROR_CODE)
+		if (absI(result) == ATOI_ERROR_CODE) {
 			return (float)NAN;
+		}
 		return (float)result;
 	}
 	// todo: this needs to be fixed
 	string[dotIndex] = 0;
 	int integerPart = atoi(string);
-	if (absI(integerPart) == ATOI_ERROR_CODE)
+	if (absI(integerPart) == ATOI_ERROR_CODE) {
 		return (float)NAN;
+	}
 	string += (dotIndex + 1);
 	int decimalLen = strlen(string);
 	int decimal = atoi(string);
-	if (absI(decimal) == ATOI_ERROR_CODE)
+	if (absI(decimal) == ATOI_ERROR_CODE) {
 		return (float)NAN;
+	}
 	float divider = 1.0;
 	// todo: reuse 'pow10' function which we have anyway
 	for (int i = 0; i < decimalLen; i++) {

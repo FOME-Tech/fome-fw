@@ -64,11 +64,13 @@ private:
 static BenchController instance;
 
 void initAccelerometer() {
-	if (!isBrainPinValid(engineConfiguration->LIS302DLCsPin))
+	if (!isBrainPinValid(engineConfiguration->LIS302DLCsPin)) {
 		return; // not used
+	}
 
-	if (!engineConfiguration->is_enabled_spi_1)
+	if (!engineConfiguration->is_enabled_spi_1) {
 		return; // temporary
+	}
 #if HAL_USE_SPI
 	driver = getSpiDevice(engineConfiguration->accelerometerSpiDevice);
 	if (driver == NULL) {

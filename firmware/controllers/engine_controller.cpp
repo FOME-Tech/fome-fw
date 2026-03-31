@@ -144,8 +144,9 @@ static void printSensorInfo() {
 #define isOutOfBounds(offset) ((offset < 0) || (offset) >= (int)sizeof(engine_configuration_s))
 
 static void getShort(int offset) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	uint16_t* ptr = (uint16_t*)(&((char*)engineConfiguration)[offset]);
 	uint16_t value = *ptr;
 	/**
@@ -155,8 +156,9 @@ static void getShort(int offset) {
 }
 
 static void getByte(int offset) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	uint8_t* ptr = (uint8_t*)(&((char*)engineConfiguration)[offset]);
 	uint8_t value = *ptr;
 	/**
@@ -194,8 +196,9 @@ static void setBit(const char* offsetStr, const char* bitStr, const char* valueS
 }
 
 static void setShort(const int offset, const int value) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	uint16_t* ptr = (uint16_t*)(&((char*)engineConfiguration)[offset]);
 	*ptr = (uint16_t)value;
 	getShort(offset);
@@ -203,8 +206,9 @@ static void setShort(const int offset, const int value) {
 }
 
 static void setByte(const int offset, const int value) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	uint8_t* ptr = (uint8_t*)(&((char*)engineConfiguration)[offset]);
 	*ptr = (uint8_t)value;
 	getByte(offset);
@@ -212,8 +216,9 @@ static void setByte(const int offset, const int value) {
 }
 
 static void getBit(int offset, int bit) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	int value = (*ptr >> bit) & 1;
 	/**
@@ -223,8 +228,9 @@ static void getBit(int offset, int bit) {
 }
 
 static void getInt(int offset) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	int value = *ptr;
 	/**
@@ -234,8 +240,9 @@ static void getInt(int offset) {
 }
 
 static void setInt(const int offset, const int value) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	int* ptr = (int*)(&((char*)engineConfiguration)[offset]);
 	*ptr = value;
 	getInt(offset);
@@ -243,8 +250,9 @@ static void setInt(const int offset, const int value) {
 }
 
 static void getFloat(int offset) {
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	float* ptr = (float*)(&((char*)engineConfiguration)[offset]);
 	float value = *ptr;
 	/**
@@ -259,8 +267,9 @@ static void setFloat(const char* offsetStr, const char* valueStr) {
 		efiPrintf("invalid offset [%s]", offsetStr);
 		return;
 	}
-	if (isOutOfBounds(offset))
+	if (isOutOfBounds(offset)) {
 		return;
+	}
 	float value = atoff(valueStr);
 	if (std::isnan(value)) {
 		efiPrintf("invalid value [%s]", valueStr);

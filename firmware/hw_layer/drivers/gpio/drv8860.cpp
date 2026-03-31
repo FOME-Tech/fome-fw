@@ -181,8 +181,9 @@ static THD_FUNCTION(drv8860_driver_thread, p) {
 
 		for (i = 0; i < BOARD_DRV8860_COUNT; i++) {
 			auto chip = &chips[i];
-			if ((chip->cfg == NULL) || (chip->drv_state == DRV8860_DISABLED) || (chip->drv_state == DRV8860_FAILED))
+			if ((chip->cfg == NULL) || (chip->drv_state == DRV8860_DISABLED) || (chip->drv_state == DRV8860_FAILED)) {
 				continue;
+			}
 
 			chip->update_outputs();
 		}
@@ -200,14 +201,16 @@ static THD_FUNCTION(drv8860_driver_thread, p) {
 /*==========================================================================*/
 
 int Drv8860::writePad(size_t pin, int value) {
-	if (pin >= DRV8860_OUTPUTS)
+	if (pin >= DRV8860_OUTPUTS) {
 		return -1;
+	}
 
 	/* TODO: lock */
-	if (value)
+	if (value) {
 		o_state |= (1 << pin);
-	else
+	} else {
 		o_state &= ~(1 << pin);
+	}
 	/* TODO: unlock */
 	wake_driver();
 
@@ -223,8 +226,9 @@ int Drv8860::init() {
 	int ret;
 
 	ret = chip_init();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	drv_state = DRV8860_READY;
 
@@ -245,8 +249,9 @@ int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config* cfg)
 	int ret;
 
 	/* no config or no such chip */
-	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_DRV8860_COUNT))
+	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_DRV8860_COUNT)) {
 		return -1;
+	}
 
 	/* check for valid cs.
 	 * TODO: remove this check? CS can be driven by SPI */
@@ -256,8 +261,9 @@ int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config* cfg)
 	auto& chip = chips[index];
 
 	/* already initted? */
-	if (!chip.cfg)
+	if (!chip.cfg) {
 		return -1;
+	}
 
 	chip.cfg = cfg;
 	chip.o_state = 0;
@@ -266,8 +272,9 @@ int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config* cfg)
 
 	/* register, return gpio chip base */
 	ret = gpiochip_register(base, DRIVER_NAME, chip, DRV8860_OUTPUTS);
-	if (ret < 0)
+	if (ret < 0) {
 		return ret;
+	}
 
 	/* set default pin names, board init code can rewrite */
 	gpiochips_setPinNames(static_cast<brain_pin_e>(ret), drv8860_pin_names);

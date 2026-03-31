@@ -72,8 +72,9 @@ void StepperMotorBase::setInitialPosition() {
 	// now check if stepper motor re-initialization is requested - if the throttle pedal is pressed at startup
 	auto tpsPos = Sensor::getOrZero(SensorType::DriverThrottleIntent);
 	bool forceStepperParking = !isRunning && tpsPos > STEPPER_PARKING_TPS;
-	if (engineConfiguration->stepperForceParkingEveryRestart)
+	if (engineConfiguration->stepperForceParkingEveryRestart) {
 		forceStepperParking = true;
+	}
 	efiPrintf(
 			"Stepper: savedStepperPos=%d forceStepperParking=%d (tps=%.2f)",
 			m_currentPosition,
@@ -168,8 +169,9 @@ void StepDirectionStepper::setDirection(bool isIncrementing) {
 
 bool StepDirectionStepper::pulse() {
 	// we move the motor only of it is powered from the main relay
-	if (!engine->isMainRelayEnabled())
+	if (!engine->isMainRelayEnabled()) {
 		return false;
+	}
 
 	m_enablePin.setValue(false); // enable stepper
 

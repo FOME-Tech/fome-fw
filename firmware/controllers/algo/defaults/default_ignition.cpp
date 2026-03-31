@@ -39,8 +39,9 @@ float getInitialAdvance(float rpm, float map, float advanceMax) {
 	map = std::min(map, 100.0f);
 	float advance = getAdvanceForRpm(rpm, advanceMax);
 
-	if (rpm >= 3000)
+	if (rpm >= 3000) {
 		return round10(advance + 0.1 * (100 - map));
+	}
 	return round10(advance + 0.1 * (100 - map) * rpm / 3000);
 }
 

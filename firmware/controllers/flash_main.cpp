@@ -174,8 +174,9 @@ void writeToFlashNow() {
 
 	err = mfsWriteRecord(&mfsd, EFI_MFS_SETTINGS_RECORD_ID, sizeof(persistentState), (uint8_t*)&persistentState);
 
-	if (err == MFS_NO_ERROR)
+	if (err == MFS_NO_ERROR) {
 		isSuccess = true;
+	}
 #endif
 
 #if EFI_STORAGE_INT_FLASH == TRUE

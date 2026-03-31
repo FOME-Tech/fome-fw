@@ -30,8 +30,9 @@ public:
 	}
 
 	virtual can_msg_t receive(canmbx_t mailbox, CANRxFrame* crfp, can_sysinterval_t timeout) override {
-		if (crfList.empty())
+		if (crfList.empty()) {
 			return CAN_MSG_TIMEOUT;
+		}
 		*crfp = *crfList.begin();
 		crfList.pop_front();
 		return CAN_MSG_OK;
