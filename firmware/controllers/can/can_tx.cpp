@@ -67,10 +67,7 @@ void CanWrite::PeriodicTask(efitick_t) {
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE
 	if (engineConfiguration->widebandMode == WidebandMode::FOMEInternal && cycle.isInterval(CI::_50ms)) {
-		auto wbBus = engineConfiguration->widebandOnSecondBus ? CanBusIndex::Bus1 : CanBusIndex::Bus0;
-		if (m_bus == wbBus) {
-			sendWidebandInfo();
-		}
+		sendWidebandInfo(m_bus);
 	}
 #endif
 
