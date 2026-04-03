@@ -26,12 +26,14 @@ bool waitAck() {
 	return chEvtWaitAnyTimeout(EVT_BOOTLOADER_ACK, TIME_MS2I(1000)) != 0;
 }
 
-static CanBusIndex getWidebandBus() {
-	return engineConfiguration->widebandOnSecondBus ? CanBusIndex::Bus1 : CanBusIndex::Bus0;
+static CanBusIndex getBusForSensor(uint8_t sensorIndex) {
+	// lambdaSensorSourceBus is 1-indexed: 1=Bus0, 2=Bus1
+	return config->lambdaSensorSourceBus[sensorIndex] == 2 ? CanBusIndex::Bus1 : CanBusIndex::Bus0;
 }
 
-void updateWidebandFirmware() {
-	CanBusIndex bus = getWidebandBus();
+void updateWidebandFirmware(uint8_t sensorIndex) {
+	CanBusIndex bus = getBusForSensor(sensorIndex);
+	uint8_t canIndex = config->lambdaSensorSourceIndex[sensorIndex];
 
 	// Clear any pending acks for this thread
 	chEvtGetAndClearEvents(EVT_BOOTLOADER_ACK);
@@ -46,23 +48,32 @@ void updateWidebandFirmware() {
 
 	engine->outputChannels.widebandUpdateProgress = 0;
 
-	// The first request will reboot the chip (if necessary), and the second one will enable bootloader mode
-	// If the chip was already in bootloader (aka manual mode), then that's ok - the second request will
-	// just be safely ignored (but acked)
-	for (int i = 0; i < 2; i++) {
-		{
-			// Send bootloader entry command
-			CanTxMessage m(WB_BL_ENTER, 0, bus, true);
-		}
-
-		if (!waitAck()) {
-			efiPrintf("Wideband Update ERROR: Expected ACK from entry to bootloader, didn't get one.");
-			return;
-		}
-
-		// Let the controller reboot (and show blinky lights for a second before the update begins)
-		chThdSleepMilliseconds(200);
+	// First request: DLC=1 with target index. The wideband main firmware will only reset
+	// the controller with a matching CanIndexOffset, leaving others undisturbed.
+	{
+		CanTxMessage m(WB_BL_ENTER, 1, bus, true);
+		m[0] = canIndex;
 	}
+
+	if (!waitAck()) {
+		efiPrintf("Wideband Update ERROR: Expected ACK from targeted entry, didn't get one.");
+		return;
+	}
+
+	// Let the controller reboot into the bootloader
+	chThdSleepMilliseconds(200);
+
+	// Second request: DLC=0. The bootloader requires DLC=0 to activate.
+	// Only the target controller is in bootloader at this point.
+	{ CanTxMessage m(WB_BL_ENTER, 0, bus, true); }
+
+	if (!waitAck()) {
+		efiPrintf("Wideband Update ERROR: Expected ACK from bootloader activation, didn't get one.");
+		return;
+	}
+
+	// Let the bootloader settle
+	chThdSleepMilliseconds(200);
 
 	efiPrintf("Wideband Update: in update mode, erasing flash...");
 
@@ -121,8 +132,13 @@ void setWidebandOffset(uint8_t index) {
 	efiPrintf("***************************************");
 	efiPrintf("Setting all connected widebands to index %d...", index);
 
+	// Send on both buses since we don't know which bus the controller is on
 	{
-		CanTxMessage m(WB_MSG_SET_INDEX, 1, getWidebandBus(), true);
+		CanTxMessage m(WB_MSG_SET_INDEX, 1, CanBusIndex::Bus0, true);
+		m[0] = index;
+	}
+	{
+		CanTxMessage m(WB_MSG_SET_INDEX, 1, CanBusIndex::Bus1, true);
 		m[0] = index;
 	}
 
@@ -133,8 +149,8 @@ void setWidebandOffset(uint8_t index) {
 	waitingBootloaderThread = nullptr;
 }
 
-void sendWidebandInfo() {
-	CanTxMessage m(WB_MSG_ECU_STATUS, 3, getWidebandBus(), true);
+void sendWidebandInfo(CanBusIndex bus) {
+	CanTxMessage m(WB_MSG_ECU_STATUS, 3, bus, true);
 
 	float vbatt = Sensor::getOrZero(SensorType::BatteryVoltage) * 10;
 

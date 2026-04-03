@@ -650,7 +650,7 @@ void setMiataNbPolygonusCommon() {
 
 	// Built in wideband controller on bus 2
 	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
-	engineConfiguration->widebandOnSecondBus = true;
+	config->lambdaSensorSourceBus[0] = 2;
 	engineConfiguration->enableVerboseCanTx = true;
 
 	engineConfiguration->fanPin = PROTEUS_LS_6;

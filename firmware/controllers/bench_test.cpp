@@ -115,7 +115,7 @@ static void runBench(BenchParams& params) {
 }
 
 static bool isBenchTestPending = false;
-static bool widebandUpdatePending = false;
+static int8_t widebandUpdatePendingIndex = -1;
 
 static BenchParams benchParams;
 
@@ -251,11 +251,11 @@ private:
 				runBench(benchParams);
 			}
 
-			if (widebandUpdatePending) {
+			if (widebandUpdatePendingIndex >= 0) {
 #if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
-				updateWidebandFirmware();
+				updateWidebandFirmware(widebandUpdatePendingIndex);
 #endif
-				widebandUpdatePending = false;
+				widebandUpdatePendingIndex = -1;
 			}
 		}
 	}
@@ -371,8 +371,20 @@ static void handleCommandX14(uint16_t index) {
 			engine->etbIgnoreJamProtection = true;
 			return;
 #endif // EFI_ELECTRONIC_THROTTLE_BODY
-		case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:
-			widebandUpdatePending = true;
+		case COMMAND_X14_WIDEBAND_UPDATE_0:
+			widebandUpdatePendingIndex = 0;
+			benchSemaphore.signal();
+			return;
+		case COMMAND_X14_WIDEBAND_UPDATE_1:
+			widebandUpdatePendingIndex = 1;
+			benchSemaphore.signal();
+			return;
+		case COMMAND_X14_WIDEBAND_UPDATE_2:
+			widebandUpdatePendingIndex = 2;
+			benchSemaphore.signal();
+			return;
+		case COMMAND_X14_WIDEBAND_UPDATE_3:
+			widebandUpdatePendingIndex = 3;
 			benchSemaphore.signal();
 			return;
 		case COMMAND_X14_BURN_WITHOUT_FLASH:
@@ -526,8 +538,8 @@ void initBenchTest() {
 	addConsoleAction("mainrelaybench", mainRelayBench);
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE && EFI_CAN_SUPPORT
-	addConsoleAction("update_wideband", []() {
-		widebandUpdatePending = true;
+	addConsoleActionI("update_wideband", [](int index) {
+		widebandUpdatePendingIndex = index;
 		benchSemaphore.signal();
 	});
 	addConsoleActionI("set_wideband_index", [](int index) { setWidebandOffset(index); });
