@@ -641,6 +641,7 @@ private:
 		TransmitPrimaryMin,
 		TransmitSecondaryMax,
 		TransmitSecondaryMin,
+		TransmitPartialSecondary,
 	};
 
 public:
@@ -688,11 +689,25 @@ public:
 
 		switch (phase) {
 			case ACPhase::Start:
+				// partial redundancy/tpsSecondaryMaximum -- used as temporaries
+				m_primaryMax = 0;
+				m_secondaryMax = 0;
+				m_partialSecondary = 0;
 				// Open the throttle
 				motor->set(0.5f);
 				motor->enable();
 				return ACPhase::Open;
 			case ACPhase::Open:
+				// partial redundancy/tpsSecondaryMaximum
+				m_primaryMin = m_primaryMax;
+				m_secondaryMin = m_secondaryMax;
+				m_primaryMax = Sensor::getRaw(functionToTpsSensorPrimary(myFunction));
+				m_secondaryMax = Sensor::getRaw(functionToTpsSensorSecondary(myFunction));
+				if (std::abs(m_secondaryMax - m_secondaryMin) < 0.5f && std::abs(m_primaryMax - m_primaryMin) > 0.5f) {
+					// primary transited while secondary did not -- corner
+					m_partialSecondary = m_primaryMax;
+				}
+
 				if (m_autocalTimer.hasElapsedMs(1000)) {
 					// Capture open position
 					m_primaryMax = Sensor::getRaw(functionToTpsSensorPrimary(myFunction));
@@ -752,11 +767,24 @@ public:
 				break;
 			case ACPhase::TransmitSecondaryMin:
 				if (m_autocalTimer.hasElapsedMs(500)) {
+					engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::TpsPartialSecondary;
+					if (m_partialSecondary != 0) {
+						engine->outputChannels.calibrationValue =
+								std::abs(m_partialSecondary - m_primaryMin) / std::abs(m_primaryMax - m_primaryMin);
+					} else {
+						engine->outputChannels.calibrationValue = 100;
+					}
+					return ACPhase::TransmitPartialSecondary;
+				}
+				break;
+			case ACPhase::TransmitPartialSecondary:
+				if (m_autocalTimer.hasElapsedMs(500)) {
 					// Done!
 					engine->outputChannels.calibrationMode = (uint8_t)TsCalMode::None;
 					return ACPhase::Stopped;
 				}
 				break;
+
 			case ACPhase::Stopped:
 				break;
 		}
@@ -773,6 +801,7 @@ private:
 	float m_secondaryMax;
 	float m_primaryMin;
 	float m_secondaryMin;
+	float m_partialSecondary;
 };
 
 // real implementation (we mock for some unit tests)
