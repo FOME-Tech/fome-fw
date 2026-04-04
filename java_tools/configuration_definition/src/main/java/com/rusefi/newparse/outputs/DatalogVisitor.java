@@ -19,9 +19,9 @@ public class DatalogVisitor extends OutputChannelVisitorBase {
         // Write the datalog entry as an integer, since there's no support for enums.
         ps.print("entry = ");
         ps.print(e.name);
-        ps.print(", \"");
+        ps.print(",\"");
         writeDatalogName(ps, e.name, e.options.comment);
-        ps.print("\", int,    \"%d\"");
+        ps.print("\",int,\"%d\"");
         ps.println();
     }
 
@@ -35,17 +35,18 @@ public class DatalogVisitor extends OutputChannelVisitorBase {
 
         ps.print("entry = ");
         ps.print(nameWithoutSpace);
-        ps.print(", \"");
+        ps.print(",\"");
 
-        String commentWithIndex = (idx <= 0 || scalar.options.comment.isEmpty()) ? scalar.options.comment : scalar.options.comment + " " + idx;
+        String comment = scalar.options.comment;
+        String commentWithIndex = (idx <= 0 || comment == null || comment.isEmpty()) ? comment : comment + " " + idx;
 
         writeDatalogName(ps, nameWithSpace, commentWithIndex);
-        ps.print("\", ");
+        ps.print("\",");
 
         if (scalar.type.tsType.equals("F32") || scalar.options.scale != 1 || scalar.options.digits != 0) {
-            ps.print("float,  \"%." + scalar.options.digits + "f\"");
+            ps.print("float,\"%." + scalar.options.digits + "f\"");
         } else {
-            ps.print("int,    \"%d\"");
+            ps.print("int,\"%d\"");
         }
 
         ps.println();

@@ -63,7 +63,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
         ps.println();
 
-        if (!str.comment.isEmpty()) {
+        if (str.comment != null && !str.comment.isEmpty()) {
             meta.addComment(name, str.comment);
         }
     }
