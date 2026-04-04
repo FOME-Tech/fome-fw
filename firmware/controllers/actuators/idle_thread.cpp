@@ -61,6 +61,8 @@ IIdleController::Phase IdleController::determinePhase(
 	looksLikeCrankToIdle = crankingTaperFraction < 1;
 
 	if (!engine->rpmCalculator.isRunning()) {
+		m_timeSinceCranking.reset();
+
 		return Phase::Cranking;
 	}
 
@@ -77,7 +79,8 @@ IIdleController::Phase IdleController::determinePhase(
 
 	// If rpm too high (but throttle not pressed), we're coasting
 	// ALSO, if still in the cranking taper, disable coasting
-	if (rpm > targetRpm.IdleExitRpm) {
+	if (rpm > targetRpm.IdleExitRpm ||
+		!m_timeSinceCranking.hasElapsedSec(engineConfiguration->inhibitIdleAfterCrankingTime)) {
 		looksLikeCoasting = true;
 	} else if (rpm < targetRpm.IdleEntryRpm) {
 		looksLikeCoasting = false;

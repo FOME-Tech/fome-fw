@@ -104,6 +104,7 @@ private:
 	int m_lastTargetRpm = 0;
 	efitimeus_t restoreAfterPidResetTimeUs = 0;
 
+	Timer m_timeSinceCranking;
 	Timer m_timeInIdlePhase;
 
 	Pid m_timingPid;
