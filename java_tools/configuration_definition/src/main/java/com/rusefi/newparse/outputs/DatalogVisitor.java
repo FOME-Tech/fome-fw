@@ -83,9 +83,9 @@ public class DatalogVisitor extends OutputChannelVisitorBase {
 
             ps.print("entry = ");
             ps.print(name);
-            ps.print(", \"");
+            ps.print(",\"");
             writeDatalogName(ps, name, bit.comment);
-            ps.print("\", int,    \"%d\"");
+            ps.print("\",int,\"%d\"");
 
             ps.println();
         }

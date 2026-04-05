@@ -56,18 +56,18 @@ public class OutputsTest {
         ReaderStateImpl state = new ReaderStateImpl();
 
         assertEquals(
-                "entry = issue_294_31, \"issue_294_31\", int,    \"%d\"\n" +
-                        "entry = knock1, \"knock 1\", int,    \"%d\"\n" +
-                        "entry = knock2, \"knock 2\", int,    \"%d\"\n" +
-                        "entry = withName1, \"MyNameIsEarl 1\", int,    \"%d\"\n" +
-                        "entry = withName2, \"MyNameIsEarl 2\", int,    \"%d\"\n" +
-                        "entry = baseFuel, \"hello\", float,  \"%.0f\"\n" +
-                        "entry = afr_type, \"PID dTime\", float,  \"%.1f\"\n" +
-                        "entry = speedToRpmRatio, \"s2rpm\", float,  \"%.2f\"\n" +
-                        "entry = afr_typet, \"afr_typet\", int,    \"%d\"\n" +
-                        "entry = vehicleSpeedKph, \"vehicleSpeedKph\", int,    \"%d\"\n" +
-                        "entry = isBrakePedalDown, \"is pedal down?\", int,    \"%d\"\n" +
-                        "entry = enableFan1WithAc, \"+Turn on this fan when AC is on.\", int,    \"%d\"\n", parseToDatalogs(test));
+                "entry = issue_294_31,\"issue_294_31\",int,\"%d\"\n" +
+                        "entry = knock1,\"knock 1\",int,\"%d\"\n" +
+                        "entry = knock2,\"knock 2\",int,\"%d\"\n" +
+                        "entry = withName1,\"MyNameIsEarl 1\",int,\"%d\"\n" +
+                        "entry = withName2,\"MyNameIsEarl 2\",int,\"%d\"\n" +
+                        "entry = baseFuel,\"hello\",float,\"%.0f\"\n" +
+                        "entry = afr_type,\"PID dTime\",float,\"%.1f\"\n" +
+                        "entry = speedToRpmRatio,\"s2rpm\",float,\"%.2f\"\n" +
+                        "entry = afr_typet,\"afr_typet\",int,\"%d\"\n" +
+                        "entry = vehicleSpeedKph,\"vehicleSpeedKph\",int,\"%d\"\n" +
+                        "entry = isBrakePedalDown,\"is pedal down?\",int,\"%d\"\n" +
+                        "entry = enableFan1WithAc,\"+Turn on this fan when AC is on.\",int,\"%d\"\n", parseToDatalogs(test));
     }
 
     @Test
@@ -79,8 +79,8 @@ public class OutputsTest {
                 "end_struct\n";
 
         assertEquals(
-                "entry = baseFuel, \"fuel: base mass\", int,    \"%d\"\n" +
-                        "entry = baseFuel2, \"line1\", int,    \"%d\"\n"
+                "entry = baseFuel,\"fuel: base mass\",int,\"%d\"\n" +
+                        "entry = baseFuel2,\"line1\",int,\"%d\"\n"
                 , parseToDatalogs(test));
 
     }
@@ -137,10 +137,10 @@ public class OutputsTest {
                 "end_struct\n";
 
         assertEquals(
-                "entry = alternatorStatus_iTerm, \"alternatorStatus_iTerm\", float,  \"%.4f\"\n" +
-                "entry = alternatorStatus_dTerm, \"alternatorStatus_dTerm\", float,  \"%.4f\"\n" +
-                "entry = idleStatus_iTerm, \"idleStatus_iTerm\", float,  \"%.4f\"\n" +
-                "entry = idleStatus_dTerm, \"idleStatus_dTerm\", float,  \"%.4f\"\n",
+                "entry = alternatorStatus_iTerm,\"alternatorStatus_iTerm\",float,\"%.4f\"\n" +
+                "entry = alternatorStatus_dTerm,\"alternatorStatus_dTerm\",float,\"%.4f\"\n" +
+                "entry = idleStatus_iTerm,\"idleStatus_iTerm\",float,\"%.4f\"\n" +
+                "entry = idleStatus_dTerm,\"idleStatus_dTerm\",float,\"%.4f\"\n",
                 parseToDatalogs(test));
     }
 
