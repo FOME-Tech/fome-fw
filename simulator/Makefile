@@ -192,6 +192,7 @@ CPPSRC = $(ALLCPPSRC) \
   simulator/framework.cpp \
   simulator/system/signal_executor_sleep.cpp \
   simulator/boards.cpp \
+  simulator/simulator_serial.cpp \
   $(TEST_SRC_CPP) \
   $(MODULES_CPPSRC) \
   $(RUSEFI_LIB_CPP) \
