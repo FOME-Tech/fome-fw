@@ -121,8 +121,8 @@ void setDefaultIdleParameters() {
 	// Idle region is target + 100 RPM
 	engineConfiguration->idlePidRpmUpperLimit = 100;
 
-	// Inhibit idle for 2 seconds after cranking
-	engineConfiguration->inhibitIdleAfterCrankingTime = 2;
+	// Inhibit idle for 1 second after cranking
+	engineConfiguration->inhibitIdleAfterCrankingTime = 1;
 
 	engineConfiguration->idleReturnTargetRamp = true;
 }
