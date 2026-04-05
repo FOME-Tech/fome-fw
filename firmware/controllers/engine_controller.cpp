@@ -53,11 +53,12 @@
 #include "tunerstudio.h"
 #endif /* EFI_TUNER_STUDIO */
 
-#if !EFI_UNIT_TEST
-#include "init.h"
-#endif /* EFI_UNIT_TEST */
+#if EFI_USB_SERIAL
+#include "usbconsole.h"
+#endif // EFI_USB_SERIAL
 
 #if !EFI_UNIT_TEST
+#include "init.h"
 
 /**
  * Would love to pass reference to configuration object into constructor but C++ does allow attributes after

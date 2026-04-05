@@ -10,14 +10,6 @@
 #include "global.h"
 #include "tunerstudio_impl.h"
 
-#if EFI_USB_SERIAL
-#include "usbconsole.h"
-#endif // EFI_USB_SERIAL
-
-#if EFI_PROD_CODE
-#include "pin_repository.h"
-#endif
-
 #define SCRATCH_BUFFER_PREFIX_SIZE 3
 
 class TsChannelBase {

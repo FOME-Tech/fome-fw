@@ -65,6 +65,10 @@ extern bool main_loop_started;
 #include "tle8888.h"
 #endif /* BOARD_TLE8888_COUNT */
 
+#if EFI_USB_SERIAL
+#include "usbconsole.h"
+#endif // EFI_USB_SERIAL
+
 #if EFI_ENGINE_SNIFFER
 #include "engine_sniffer.h"
 extern WaveChart waveChart;
