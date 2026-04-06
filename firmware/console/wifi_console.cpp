@@ -3,6 +3,7 @@
 #if EFI_WIFI
 
 #include "wifi_socket.h"
+#include "http_file_server.h"
 
 #include "socket/include/socket.h"
 
@@ -100,6 +101,8 @@ void startWifiConsole() {
 	initWifi();
 
 	wifiThread.startThread();
+
+	startHttpFileServer();
 }
 
 #endif // EFI_WIFI
