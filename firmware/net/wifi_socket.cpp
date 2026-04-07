@@ -26,9 +26,26 @@ void ServerSocket::startListening(const sockaddr_in& addr) {
 }
 
 void ServerSocket::onAccept(int connectedSocket) {
-	m_connectedSocket = connectedSocket;
+	// If we're busy handling a request, reject the new connection.
+	// This prevents clobbering the active socket mid-send (e.g. when
+	// a browser opens a parallel connection for /favicon.ico).
+	if (m_busy) {
+		close(connectedSocket);
+		return;
+	}
 
-	recv(m_connectedSocket, &m_recvBuf, 1, 0);
+	m_connectedSocket = connectedSocket;
+	m_sendRequest = false;
+
+#if !EFI_BOOTLOADER
+	m_remainingRecv = 0;
+	m_recvActive = false;
+#endif
+
+	{
+		chibios_rt::CriticalSectionLocker csl;
+		iqResetI(&m_recvQueue);
+	}
 }
 
 bool ServerSocket::closeSocket() {
@@ -36,6 +53,10 @@ bool ServerSocket::closeSocket() {
 	close(m_connectedSocket);
 
 	m_connectedSocket = -1;
+
+#if !EFI_BOOTLOADER
+	m_recvActive = false;
+#endif
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
@@ -58,6 +79,10 @@ void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
 		}
 	}
 
+#if !EFI_BOOTLOADER
+	m_remainingRecv = remaining;
+	m_recvActive = false; // We finished this recv, wait for checkRecv() to re-arm when space permits
+#else
 	size_t nextRecv;
 	if (remaining < 1) {
 		// Always try to read at least 1 byte
@@ -72,6 +97,7 @@ void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
 
 	// start the next recv
 	recv(m_connectedSocket, &m_recvBuf, nextRecv, 0);
+#endif
 }
 
 bool ServerSocket::hasConnectedSocket() const {
@@ -151,6 +177,37 @@ bool ServerSocket::trySendImpl() {
 
 	return false;
 }
+
+#if !EFI_BOOTLOADER
+bool ServerSocket::tryRecvImpl() {
+	if (m_connectedSocket != -1 && !m_recvActive) {
+		chibios_rt::CriticalSectionLocker csl;
+		size_t space = iqGetEmptyI(&m_recvQueue);
+		
+		size_t nextRecv = m_remainingRecv > 0 ? m_remainingRecv : sizeof(m_recvBuf);
+		if (nextRecv > sizeof(m_recvBuf)) nextRecv = sizeof(m_recvBuf);
+
+		// Apply flow control: only request more data if we guarantee we can buffer it!
+		if (space >= nextRecv) {
+			m_recvActive = true;
+			recv(m_connectedSocket, &m_recvBuf, nextRecv, 0);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/*static*/ bool ServerSocket::checkRecv() {
+	bool result = false;
+	auto current = s_serverList;
+	while (current) {
+		result |= current->tryRecvImpl();
+		current = current->m_nextServer;
+	}
+	return result;
+}
+#endif
 
 void os_hook_isr() {
 	isrSemaphore.signalI();
@@ -242,7 +299,12 @@ public:
 				m2m_wifi_handle_events(nullptr);
 			}
 
-			if (!ServerSocket::checkSend()) {
+			bool didWork = ServerSocket::checkSend();
+#if !EFI_BOOTLOADER
+			didWork |= ServerSocket::checkRecv();
+#endif
+
+			if (!didWork) {
 				isrSemaphore.wait(TIME_MS2I(10));
 			}
 		}
