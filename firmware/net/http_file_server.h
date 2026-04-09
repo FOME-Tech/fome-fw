@@ -8,4 +8,5 @@
  * Listens on port 80 on the ATWINC1500 WiFi AP (e.g. http://192.168.10.1/).
  */
 
+void waitForTsListening();
 void startHttpFileServer();

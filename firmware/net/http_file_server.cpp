@@ -476,6 +476,8 @@ static void handleUpload(ServerSocket& sock) {
 	// Parse query parameters from s_urlPath: "/upload?dir=/subdir/&name=file.txt"
 	char* queryStr = strchr(s_urlPath, '?');
 	if (!queryStr || s_contentLength == 0) {
+		efiPrintf("HTTP upload: bad request (queryStr=%s, contentLen=%u)",
+			queryStr ? "found" : "MISSING", (unsigned)s_contentLength);
 		sendBadRequest(sock);
 		return;
 	}
@@ -513,6 +515,12 @@ static void handleUpload(ServerSocket& sock) {
 	urlDecodeInPlace(dirPath);
 	urlDecodeInPlace(fileName);
 
+	// Reject directory traversal in dirPath
+	if (strstr(dirPath, "..")) {
+		sendBadRequest(sock);
+		return;
+	}
+
 	if (fileName[0] == '\0') {
 		sendBadRequest(sock);
 		return;
@@ -537,7 +545,9 @@ static void handleUpload(ServerSocket& sock) {
 
 	// Open file for writing
 	memset(&s_fil, 0, sizeof(s_fil));
-	if (f_open(&s_fil, fullPath, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
+	FRESULT fres = f_open(&s_fil, fullPath, FA_CREATE_ALWAYS | FA_WRITE);
+	if (fres != FR_OK) {
+		efiPrintf("HTTP upload: f_open failed (%d)", (int)fres);
 		httpWrite(sock,
 			"HTTP/1.0 500 Internal Server Error\r\n"
 			"Connection: close\r\n"
@@ -546,6 +556,8 @@ static void handleUpload(ServerSocket& sock) {
 		httpFlush(sock);
 		return;
 	}
+	efiPrintf("HTTP upload: file opened OK, receiving %u bytes (preamble=%u)",
+		(unsigned)s_contentLength, (unsigned)s_bodyPreambleLen);
 
 	uint32_t remaining = s_contentLength;
 	bool writeError = false;
@@ -583,12 +595,15 @@ static void handleUpload(ServerSocket& sock) {
 
 		size_t got = sock.recvTimeout(s_fileBuf, toRead, pktTimeout);
 		if (got == 0) {
+			efiPrintf("HTTP upload: recv timeout, remaining=%u", (unsigned)remaining);
 			writeError = true;
-			break; // timeout
+			break;
 		}
 
 		UINT written;
-		if (f_write(&s_fil, s_fileBuf, got, &written) != FR_OK) {
+		FRESULT wres = f_write(&s_fil, s_fileBuf, got, &written);
+		if (wres != FR_OK) {
+			efiPrintf("HTTP upload: f_write failed (%d)", (int)wres);
 			writeError = true;
 			break;
 		}
@@ -599,6 +614,8 @@ static void handleUpload(ServerSocket& sock) {
 	f_close(&s_fil);
 
 	if (writeError || remaining > 0) {
+		efiPrintf("HTTP upload: FAILED (writeErr=%d, remaining=%u)",
+			(int)writeError, (unsigned)remaining);
 		// Clean up partial file
 		f_unlink(fullPath);
 		httpWrite(sock,
@@ -628,28 +645,29 @@ static void handleRequest(ServerSocket& sock) {
 		return;
 	}
 
+	// --- POST /upload: dispatch BEFORE stripping query string ---
+	if (s_method == HTTP_POST) {
+		efiPrintf("HTTP: POST %s", s_urlPath);
+		if (strncmp(s_urlPath, "/upload", 7) == 0) {
+			handleUpload(sock);
+		} else {
+			sendNotFound(sock);
+		}
+		return;
+	}
+
+	// Strip query string (unused for GET requests)
 	char* queryStr = strchr(s_urlPath, '?');
 	if (queryStr) {
 		*queryStr = '\0';
 	}
 	urlDecodeInPlace(s_urlPath);
 
-	efiPrintf("HTTP: %s %s",
-		s_method == HTTP_GET ? "GET" : "POST", s_urlPath);
+	efiPrintf("HTTP: GET %s", s_urlPath);
 
 	// Security: reject directory traversal
 	if (strstr(s_urlPath, "..")) {
 		sendNotFound(sock);
-		return;
-	}
-
-	// --- POST /upload ---
-	if (s_method == HTTP_POST) {
-		if (strncmp(s_urlPath, "/upload", 7) == 0) {
-			handleUpload(sock);
-		} else {
-			sendNotFound(sock);
-		}
 		return;
 	}
 
@@ -708,6 +726,7 @@ public:
 #endif
 
 		waitForWifiInit();
+		waitForTsListening();  // Serialize: TS socket must finish binding first
 
 		sockaddr_in addr;
 		addr.sin_family = AF_INET;
@@ -715,7 +734,7 @@ public:
 		addr.sin_addr.s_addr = 0;
 		httpServer.startListening(addr);
 
-		efiPrintf("HTTP file server listening on port %d", HTTP_PORT);
+		efiPrintf("HTTP file server v2 listening on port %d", HTTP_PORT);
 
 		while (true) {
 			if (!httpServer.hasConnectedSocket()) {

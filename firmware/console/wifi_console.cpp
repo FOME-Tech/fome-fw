@@ -72,6 +72,14 @@ private:
 static NO_CACHE ServerSocket tsServer;
 static NO_CACHE WifiChannel wifiChannel(tsServer);
 
+static volatile bool s_tsListeningReady = false;
+
+void waitForTsListening() {
+	while (!s_tsListeningReady) {
+		chThdSleepMilliseconds(10);
+	}
+}
+
 static void startTsListening() {
 	// Start listening on the socket
 	sockaddr_in address;
@@ -90,6 +98,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		waitForWifiInit();
 
 		startTsListening();
+		s_tsListeningReady = true;
 
 		return &wifiChannel;
 	}
