@@ -48,7 +48,8 @@ bool mountSdFilesystem() {
 #endif
 
 	// We were able to connect the SD card, mount the filesystem
-	if (f_mount(sd_mem::getFs(), "/", 1) == FR_OK) {
+	FRESULT fres = f_mount(sd_mem::getFs(), "/", 1);
+	if (fres == FR_OK) {
 		efiPrintf("SD card mounted!");
 		fs_ready = true;
 		return true;

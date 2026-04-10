@@ -151,19 +151,12 @@ void preHalInit() {
 	// Only 1-bit data bus is wired on this board revision (DAT0 only).
 	// To upgrade to 4-bit, connect PC9=DAT1, PC10=DAT2, PC11=DAT3 and
 	// change EFI_SDC_MODE to SDC_MODE_4BIT in board.mk.
-	efiSetPadMode(
-			"SDMMC", Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP); // DAT0
-	efiSetPadMode(
-			"SDMMC",
-			Gpio::C12,
-			PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_FLOATING); // CLK - no pullup on clock
-	efiSetPadMode("SDMMC", Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_HIGHEST | PAL_STM32_PUPDR_PULLUP); // CMD
-	// DAT1-3 unused for data in 1-bit mode, but DAT3 must be pulled high so the card
-	// selects SD mode (not SPI mode). DAT1/DAT2 pulled high per SD spec for 1-bit hosts.
-	// efiSetPadMode("SDMMC", Gpio::C9, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP);	// DAT1
-	// efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT2
-	// efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT3 - required for SD mode
-	// selection
+	efiSetPadMode("SDMMC", Gpio::C8, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_MID1 | PAL_STM32_PUPDR_PULLUP); // DAT0
+	efiSetPadMode("SDMMC", Gpio::C9, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP);	// DAT1
+	efiSetPadMode("SDMMC", Gpio::C10, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT2
+	efiSetPadMode("SDMMC", Gpio::C11, PAL_MODE_INPUT | PAL_STM32_PUPDR_PULLUP); // DAT3
+	efiSetPadMode("SDMMC", Gpio::C12, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_MID1 | PAL_STM32_PUPDR_FLOATING); // CLK
+	efiSetPadMode("SDMMC", Gpio::D2, PAL_MODE_ALTERNATE(12) | PAL_STM32_OSPEED_MID1 | PAL_STM32_PUPDR_PULLUP); // CMD
 }
 
 #if EFI_BOOTLOADER

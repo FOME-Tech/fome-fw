@@ -116,10 +116,12 @@ void initUsbMsd() {
 		static_assert(sizeof(blkbufSdmmc) == 512);
 		uint32_t size = MPU_RASR_SIZE_512;
 
+		chSysLock();
 		mpuConfigureRegion(
 				MPU_REGION_4,
 				base,
 				MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | size | MPU_RASR_ENABLE);
+		chSysUnlock();
 		mpuEnable(MPU_CTRL_PRIVDEFENA);
 
 		/* Invalidating data cache to make sure that the MPU settings are taken

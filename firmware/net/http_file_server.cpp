@@ -717,10 +717,15 @@ public:
 #if defined(STM32H7XX)
 		// STM32H7 SDMMC1 and ATWINC1500 SPI DMA require buffers to be cache coherent.
 		// We allocate an 8KB aligned struct in AXI SRAM and use MPU to mark it non-cacheable.
+		efiPrintf("HTTP: MPU_REGION_2 at 0x%x, size %d", (unsigned)&httpCacheStorage, (int)sizeof(httpCacheStorage));
+		
+		chSysLock();
 		mpuConfigureRegion(
-				MPU_REGION_4,
+				MPU_REGION_2,
 				&httpCacheStorage,
 				MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | MPU_RASR_SIZE_8K | MPU_RASR_ENABLE);
+		chSysUnlock();
+
 		mpuEnable(MPU_CTRL_PRIVDEFENA);
 		SCB_CleanInvalidateDCache();
 #endif
