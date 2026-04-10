@@ -120,11 +120,6 @@ void stopMmcBlockDevice() {
 #endif
 static const SDCConfig sdcConfig = {EFI_SDC_MODE};
 
-#if defined(STM32H7XX)
-static uint8_t sdc_idma_buffer[512] SDMMC_MEMORY(512);
-static uint32_t sdc_idma_resp[4] SDMMC_MEMORY(32); // 32-byte aligned for cache safety
-#endif
-
 extern "C" void sdc_log(const char *msg) {
 	efiPrintf("%s", msg);
 }
@@ -135,12 +130,22 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 	}
 
 #if defined(STM32H7XX)
-	// STM32H7 SDMMC1 IDMA cannot access the stack (DTCM).
-	// We must provide a buffer in AXI SRAM for sdcConnect to use.
-	SDCD1.buf = sdc_idma_buffer;
-	SDCD1.resp = sdc_idma_resp;
+	/* 
+	 * Configure MPU region for AXI SRAM (0x24000000) to be non-cacheable.
+	 * This is required for SDMMC1 IDMA, which bypasses the D-Cache.
+	 * We do this BEFORE sdcStart/sdcConnect to ensure all initialization
+	 * handshakes are coherent.
+	 */
+	chSysLock();
+	mpuConfigureRegion(MPU_REGION_5, (void*)0x24000000,
+				MPU_RASR_SIZE_512K | MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | MPU_RASR_ENABLE);
+	chSysUnlock();
+	mpuEnable(MPU_CTRL_PRIVDEFENA);
 
-	efiPrintf("SDC: IDMA buffers set to %p and %p", sdc_idma_buffer, sdc_idma_resp);
+	/* Ensure no stale data remains in cache before SDMMC accesses it */
+	SCB_CleanInvalidateDCache();
+
+	efiPrintf("SDC: MPU region 5 (AXI SRAM) configured as non-cacheable for IDMA");
 #endif
 
 	sdcStart(&EFI_SDC_DEVICE, &sdcConfig);
@@ -148,32 +153,6 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 		efiPrintf("SD card (SDMMC) failed to connect. State=%u Errors=%u", (unsigned int)EFI_SDC_DEVICE.state, (unsigned int)EFI_SDC_DEVICE.errors);
 		return nullptr;
 	}
-
-// STM32H7 SDMMC1 needs the filesystem object to be in AXI
-// SRAM, but excluded from the cache
-#if defined(STM32H7XX) && !EFI_BOOTLOADER
-	{
-		void* base = &mmcCardCacheControlledStorage;
-		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
-
-		/* Configure MPU to make AXI SRAM non-cacheable for SDMMC IDMA */
-		chSysLock();
-		mpuConfigureRegion(MPU_REGION_5, (void*)0x24000000,
-					MPU_RASR_SIZE_256K | MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | MPU_RASR_ENABLE);
-		chSysUnlock();
-
-		/* Ensure no stale data remains in cache before SDMMC accesses it */
-		SCB_CleanInvalidateDCache();
-
-		mpuEnable(MPU_CTRL_PRIVDEFENA);
-
-		(void)base;
-
-		/* Invalidating data cache to make sure that the MPU settings are taken
-		immediately.*/
-		SCB_CleanInvalidateDCache();
-	}
-#endif
 
 	return reinterpret_cast<BaseBlockDevice*>(&EFI_SDC_DEVICE);
 }

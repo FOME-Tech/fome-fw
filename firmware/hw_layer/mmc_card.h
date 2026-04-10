@@ -19,6 +19,9 @@ void stopMmcBlockDevice();
 bool mountSdFilesystem();
 void unmountSdFilesystem();
 
+// Returns the filename of the currently active log, or nullptr if not logging.
+const char* getActiveLogFileName();
+
 void onUsbConnectedNotifyMmcI();
 
 // Implemented in firmware by reading from engineConfiguration

@@ -13,6 +13,7 @@
 #include "http_file_server.h"
 #include "wifi_socket.h"
 #include "thread_controller.h"
+#include "mmc_card.h"
 
 #include "socket/include/socket.h"
 #include "ff.h"
@@ -388,6 +389,11 @@ static void serveDirectoryListing(ServerSocket& sock, const char* path,
 
 	// --- Directory entries ---
 	while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != '\0') {
+		const char* activeLog = getActiveLogFileName();
+		if (activeLog && strcmp(fno.fname, activeLog) == 0) {
+			continue;
+		}
+
 		char sizeStr[24];
 		char dateStr[20];
 
@@ -428,6 +434,12 @@ static void serveDirectoryListing(ServerSocket& sock, const char* path,
  * Serve a file download.
  */
 static void serveFile(ServerSocket& sock, const char* path) {
+	const char* activeLog = getActiveLogFileName();
+	if (activeLog && strstr(path, activeLog)) {
+		sendNotFound(sock);
+		return;
+	}
+
 	memset(&s_fil, 0, sizeof(s_fil));
 	if (f_open(&s_fil, path, FA_READ) != FR_OK) {
 		sendNotFound(sock);
@@ -714,22 +726,6 @@ public:
 		: ThreadController("HTTP Files", WIFI_THREAD_PRIORITY - 1) {}
 
 	void ThreadTask() override {
-#if defined(STM32H7XX)
-		// STM32H7 SDMMC1 and ATWINC1500 SPI DMA require buffers to be cache coherent.
-		// We allocate an 8KB aligned struct in AXI SRAM and use MPU to mark it non-cacheable.
-		efiPrintf("HTTP: MPU_REGION_2 at 0x%x, size %d", (unsigned)&httpCacheStorage, (int)sizeof(httpCacheStorage));
-		
-		chSysLock();
-		mpuConfigureRegion(
-				MPU_REGION_2,
-				&httpCacheStorage,
-				MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | MPU_RASR_SIZE_8K | MPU_RASR_ENABLE);
-		chSysUnlock();
-
-		mpuEnable(MPU_CTRL_PRIVDEFENA);
-		SCB_CleanInvalidateDCache();
-#endif
-
 		waitForWifiInit();
 		waitForTsListening();  // Serialize: TS socket must finish binding first
 
