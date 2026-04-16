@@ -1,0 +1,13 @@
+// Stub build for the PEAK PCAN Basic Java API.
+//
+// On Windows with a real PCAN-USB adapter, replace the compiled output of this project
+// with the real peak-can-basic.jar downloaded from peak-system.com, and place
+// PCANBasic.dll + PCANBasic_JNI.dll on PATH or next to the console JAR.
+//
+// On Linux (SocketCAN) these stubs compile but will throw UnsupportedOperationException
+// at runtime if PCAN code paths are accidentally triggered (they will not be, because
+// PCanHelper.isAvailable() returns false on non-Windows platforms).
+
+plugins {
+    id 'java-library'
+}

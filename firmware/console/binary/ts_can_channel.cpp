@@ -101,7 +101,7 @@ static CanTsThread canTsThread;
 
 void startCanConsole() {
 	canTsThread.startThread();
-	canStreamInit();
+	canStreamInit(engineConfiguration->tsCanRxId, engineConfiguration->tsCanTxId, (CanBusIndex)engineConfiguration->tsCanBus);
 }
 
 #endif // EFI_CAN_SERIAL
