@@ -57,10 +57,12 @@ void portInitAdc() {
 		static_assert(sizeof(knockSampleBuffer) == 8192);
 		uint32_t size = MPU_RASR_SIZE_8K;
 
+		chSysLock();
 		mpuConfigureRegion(
 				MPU_REGION_3,
 				base,
 				MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | size | MPU_RASR_ENABLE);
+		chSysUnlock();
 		mpuEnable(MPU_CTRL_PRIVDEFENA);
 
 		/* Invalidating data cache to make sure that the MPU settings are taken

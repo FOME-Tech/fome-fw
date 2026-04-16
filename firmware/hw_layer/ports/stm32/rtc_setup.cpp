@@ -20,11 +20,9 @@ extern "C" void stm32_rtc_init() {
 #endif
 
 	uint32_t lseMode = STM32_LSEDRV;
-
-#ifdef STM32_LSE_BYPASS
+#if defined(STM32_LSE_BYPASS)
 	lseMode |= RCC_BDCR_LSEBYP;
 #endif
-
 	uint32_t lseEnable = RCC_BDCR_LSEON;
 	uint32_t rtcSel = STM32_RTCSEL;
 	uint32_t rtcEn = RCC_BDCR_RTCEN;
@@ -46,7 +44,7 @@ extern "C" void stm32_rtc_init() {
 		RCC->BDCR |= lseMode;
 		RCC->BDCR |= lseEnable;
 
-		volatile size_t lseWaitCounter = 0;
+		size_t lseWaitCounter = 0;
 		// Waits until LSE is stable or times out.
 		while ((RCC->BDCR & RCC_BDCR_LSERDY) == 0) {
 			if (lseWaitCounter++ > FOME_STM32_LSE_WAIT_MAX) {

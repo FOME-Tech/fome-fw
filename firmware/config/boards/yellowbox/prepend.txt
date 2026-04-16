@@ -1,0 +1,19 @@
+// CAN-to-console bridge IDs. Override here if 0x100/0x102 conflict with your vehicle bus.
+// Example: use 0x7E0/0x7E1 if your bus is clear of OBD2 traffic.
+// #define CAN_ECU_SERIAL_RX_ID 0x7E0
+// #define CAN_ECU_SERIAL_TX_ID 0x7E1
+
+#define ts_show_software_knock false
+#define ts_show_etb_pins true
+#define ts_show_sd_card true
+#define ts_show_sd_pins false
+#define ts_show_can_pins false
+#define ts_show_vbatt false
+#define ts_show_spi true
+#define ts_show_wifi true
+
+#define show_test_presets true
+#define show_microRusEFI_presets false
+#define show_Frankenso_presets false
+#define show_Hellen_presets false
+#define show_Proteus_presets false

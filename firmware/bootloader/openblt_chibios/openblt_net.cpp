@@ -9,7 +9,7 @@ extern "C" {
 #include "net.h"
 }
 
-static ServerSocket server;
+static ServerSocket server("openblt");
 
 static bool didInit = false;
 static bool wifiInitDone = false;

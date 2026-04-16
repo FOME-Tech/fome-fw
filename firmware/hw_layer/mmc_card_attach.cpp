@@ -12,6 +12,7 @@
 #if EFI_FILE_LOGGING && EFI_PROD_CODE
 
 #include "mmc_card.h"
+#include "dma_buffers.h"
 
 #if HAL_USE_MMC_SPI
 // Don't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),
@@ -83,16 +84,36 @@ void stopMmcBlockDevice() {
 
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
-static const SDCConfig sdcConfig = {SDC_MODE_4BIT};
+// Allow boards to override the bus width; default to 4-bit
+#ifndef EFI_SDC_MODE
+#define EFI_SDC_MODE SDC_MODE_4BIT
+#endif
+static const SDCConfig sdcConfig = {EFI_SDC_MODE};
+
+extern "C" void sdc_log(const char *msg) {
+	efiPrintf("%s", msg);
+}
 
 BaseBlockDevice* initializeMmcBlockDevice() {
 	if (!isSdCardEnabled()) {
 		return nullptr;
 	}
 
+#if defined(STM32H7XX)
+	/* 
+	 * Configure MPU region for all buffers that require cache-coherent access.
+	 * This is required for SDMMC1 IDMA, which bypasses the D-Cache.
+	 * We do this BEFORE sdcStart/sdcConnect to ensure all initialization
+	 * handshakes are coherent.
+	 */
+#if !EFI_BOOTLOADER
+	dma_buffers::initMpu();
+#endif
+#endif
+
 	sdcStart(&EFI_SDC_DEVICE, &sdcConfig);
 	if (sdcConnect(&EFI_SDC_DEVICE) != HAL_SUCCESS) {
-		efiPrintf("SD card (SDMMC) failed to connect");
+		efiPrintf("SD card (SDMMC) failed to connect. State=%u Errors=%u", (unsigned int)EFI_SDC_DEVICE.state, (unsigned int)EFI_SDC_DEVICE.errors);
 		return nullptr;
 	}
 
