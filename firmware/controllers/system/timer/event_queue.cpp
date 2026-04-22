@@ -219,10 +219,6 @@ bool EventQueue::executeOne(efitick_t now) {
 #endif
 	current = nullptr;
 
-#if EFI_UNIT_TEST
-	printf("QUEUE: execute current=%d param=%d\r\n", (uintptr_t)current, (uintptr_t)action.getArgument());
-#endif
-
 	// Execute the current element
 	{
 		ScopePerf perf2(PE::EventQueueExecuteCallback);
@@ -259,8 +255,9 @@ scheduling_s* EventQueue::getElementAtIndexForUnitText(int index) {
 	scheduling_s* current;
 
 	LL_FOREACH2(m_head, current, next) {
-		if (index == 0)
+		if (index == 0) {
 			return current;
+		}
 		index--;
 	}
 

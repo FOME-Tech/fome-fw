@@ -713,8 +713,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "setLuaGauge", [](lua_State* l2) {
 		auto index = luaL_checkinteger(l2, 1) - 1;
 		auto value = luaL_checknumber(l2, 2);
-		if (index < 0 || index >= LUA_GAUGE_COUNT)
+		if (index < 0 || index >= LUA_GAUGE_COUNT) {
 			return 0;
+		}
 		extern StoredValueSensor luaGauges[LUA_GAUGE_COUNT];
 		luaGauges[index].setValidValue(value, getTimeNowNt());
 		return 0;

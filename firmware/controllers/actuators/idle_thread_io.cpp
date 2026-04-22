@@ -33,8 +33,9 @@ void setIdleMode(idle_mode_e value) {
 }
 
 void setManualIdleValvePosition(int positionPercent) {
-	if (positionPercent < 1 || positionPercent > 99)
+	if (positionPercent < 1 || positionPercent > 99) {
 		return;
+	}
 	efiPrintf("setting idle valve position %d", positionPercent);
 	// todo: this is not great that we have to write into configuration here
 	engineConfiguration->manIdlePosition = positionPercent;
@@ -119,6 +120,9 @@ void setDefaultIdleParameters() {
 
 	// Idle region is target + 100 RPM
 	engineConfiguration->idlePidRpmUpperLimit = 100;
+
+	// Inhibit idle for 1 second after cranking
+	engineConfiguration->inhibitIdleAfterCrankingTime = 1;
 
 	engineConfiguration->idleReturnTargetRamp = true;
 }

@@ -160,6 +160,7 @@ struct_no_prefix output_channels_s
 
 
 	uint8_t widebandUpdateProgress;;"%", 1, 0, 0, 100, 0
+	uint8_t widebandUpdateState;;"", 1, 0, 0, 0, 0
 	uint8_t orderingErrorCounter;;"",1, 0, 0, 0, 0
 
 	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"deg C",1, 0, 0, 0, 0

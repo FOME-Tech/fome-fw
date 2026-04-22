@@ -346,8 +346,9 @@ int Tle8888::spi_rw(uint16_t tx, uint16_t* rx_ptr) {
 	recentRx = rx;
 	this->spi_cnt++;
 
-	if (rx_ptr)
+	if (rx_ptr) {
 		*rx_ptr = rx;
+	}
 
 	/* validate reply and save last accessed register */
 	ret = spi_validate(rx);
@@ -387,8 +388,9 @@ int Tle8888::spi_rw_array(const uint16_t* tx, uint16_t* rx, int n) {
 		/* data transfer */
 		uint16_t rxdata = spiPolledExchange(spi, tx[i]);
 
-		if (rx)
+		if (rx) {
 			rx[i] = rxdata;
+		}
 		/* Slave Select de-assertion. */
 		spiUnselect(spi);
 
@@ -401,8 +403,9 @@ int Tle8888::spi_rw_array(const uint16_t* tx, uint16_t* rx, int n) {
 		ret = spi_validate(rxdata);
 		last_reg = getRegisterFromResponse(tx[i]);
 
-		if (ret < 0)
+		if (ret < 0) {
 			break;
+		}
 	}
 	/* Ownership release. */
 	spiReleaseBus(spi);
@@ -531,13 +534,15 @@ int Tle8888::update_direct_output(size_t pin, int value) {
 	}
 
 	/* direct gpio not found */
-	if (index < 0)
+	if (index < 0) {
 		return -1;
+	}
 
-	if (value)
+	if (value) {
 		palSetPort(cfg->direct_gpio[index].port, PAL_PORT_BIT(cfg->direct_gpio[index].pad));
-	else
+	} else {
 		palClearPort(cfg->direct_gpio[index].port, PAL_PORT_BIT(cfg->direct_gpio[index].pad));
+	}
 	return 0;
 }
 
@@ -562,20 +567,24 @@ int Tle8888::wake_driver() {
 }
 
 static brain_pin_diag_e tle8888_2b_to_diag_no_temp(unsigned int bits) {
-	if (bits == 0x01)
+	if (bits == 0x01) {
 		return PIN_SHORT_TO_BAT;
-	if (bits == 0x02)
+	}
+	if (bits == 0x02) {
 		return PIN_OPEN;
-	if (bits == 0x03)
+	}
+	if (bits == 0x03) {
 		return PIN_SHORT_TO_GND;
+	}
 	return PIN_OK;
 }
 
 static brain_pin_diag_e tle8888_2b_to_diag_with_temp(unsigned int bits) {
 	int diag = tle8888_2b_to_diag_no_temp(bits);
 
-	if (diag == PIN_SHORT_TO_BAT)
+	if (diag == PIN_SHORT_TO_BAT) {
 		diag |= PIN_DRIVER_OVERTEMP;
+	}
 
 	return static_cast<brain_pin_diag_e>(diag);
 }
@@ -657,10 +666,12 @@ int Tle8888::chip_init() {
 
 	if (ret == 0) {
 		/* enable pins */
-		if (cfg->ign_en.port)
+		if (cfg->ign_en.port) {
 			palSetPort(cfg->ign_en.port, PAL_PORT_BIT(cfg->ign_en.pad));
-		if (cfg->inj_en.port)
+		}
+		if (cfg->inj_en.port) {
 			palSetPort(cfg->inj_en.port, PAL_PORT_BIT(cfg->inj_en.pad));
+		}
 	}
 
 	if (engineConfiguration->verboseTLE8888) {
@@ -764,10 +775,12 @@ int Tle8888::calc_sleep_interval() {
 	sysinterval_t fwd_delay = chTimeDiffX(now, fwd_ts);
 	sysinterval_t diag_delay = chTimeDiffX(now, diag_ts);
 
-	if ((diag_delay <= wwd_delay) && (diag_delay <= fwd_delay))
+	if ((diag_delay <= wwd_delay) && (diag_delay <= fwd_delay)) {
 		return diag_delay;
-	if (fwd_delay <= wwd_delay)
+	}
+	if (fwd_delay <= wwd_delay) {
 		return fwd_delay;
+	}
 	return wwd_delay;
 }
 
@@ -791,8 +804,9 @@ static THD_FUNCTION(tle8888_driver_thread, p) {
 		/* default polling interval */
 		poll_interval = TIME_MS2I(DIAG_PERIOD_MS);
 
-		if ((chip->cfg == NULL) || (chip->drv_state == TLE8888_DISABLED) || (chip->drv_state == TLE8888_FAILED))
+		if ((chip->cfg == NULL) || (chip->drv_state == TLE8888_DISABLED) || (chip->drv_state == TLE8888_FAILED)) {
 			continue;
+		}
 
 		bool wd_happy = chip->wd_happy;
 
@@ -856,8 +870,9 @@ static THD_FUNCTION(tle8888_driver_thread, p) {
 /*==========================================================================*/
 
 int Tle8888::setPadMode(unsigned int pin, iomode_t mode) {
-	if (pin >= TLE8888_SIGNALS)
+	if (pin >= TLE8888_SIGNALS) {
 		return -1;
+	}
 
 	/* if someone has requested MR pin - switch it to manual mode */
 	if (pin == TLE8888_OUTPUT_MR) {
@@ -887,8 +902,9 @@ int Tle8888::setPadMode(unsigned int pin, iomode_t mode) {
 
 int Tle8888::writePad(unsigned int pin, int value) {
 
-	if (pin >= TLE8888_OUTPUTS)
+	if (pin >= TLE8888_OUTPUTS) {
 		return -1;
+	}
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
@@ -910,8 +926,9 @@ int Tle8888::writePad(unsigned int pin, int value) {
 }
 
 int Tle8888::readPad(size_t pin) {
-	if (pin >= TLE8888_OUTPUTS)
+	if (pin >= TLE8888_OUTPUTS) {
 		return -1;
+	}
 
 	if (pin < TLE8888_OUTPUTS_REGULAR) {
 		/* return output state */
@@ -937,8 +954,9 @@ brain_pin_diag_e Tle8888::getOutputDiag(size_t pin) {
 		return PIN_DRIVER_OFF;
 	}
 	/* OUT1..OUT4, indexes 0..3 */
-	if (pin < 4)
+	if (pin < 4) {
 		return tle8888_2b_to_diag_with_temp((OutDiag[0] >> ((pin - 0) * 2)) & 0x03);
+	}
 	/* OUT5..OUT7, indexes 4..6 */
 	if (pin < 7) {
 		return tle8888_2b_to_diag_with_temp((OutDiag[1] >> ((pin - 4) * 2)) & 0x03);
@@ -948,44 +966,54 @@ brain_pin_diag_e Tle8888::getOutputDiag(size_t pin) {
 		int ret;
 
 		/* OUT8 */
-		if (pin == 7)
+		if (pin == 7) {
 			ret = tle8888_2b_to_diag_no_temp((OutDiag[1] >> 6) & 0x03);
+		}
 		/* OUT9..OUT12 */
-		else if (pin < 12)
+		else if (pin < 12) {
 			ret = tle8888_2b_to_diag_no_temp((OutDiag[2] >> ((pin - 8) * 2)) & 0x03);
+		}
 		/* OUT13 */
-		else /* if (pin == 12) */
+		else { /* if (pin == 12) */
 			ret = tle8888_2b_to_diag_no_temp((OutDiag[3] >> 0) & 0x03);
+		}
 
 		/* overvoltage bit */
-		if (PPOVDiag & BIT(pin - 7))
+		if (PPOVDiag & BIT(pin - 7)) {
 			ret |= PIN_SHORT_TO_BAT;
+		}
 
 		return static_cast<brain_pin_diag_e>(ret);
 	}
 	/* OUT14 to OUT16, indexes 13..15 */
-	if (pin < 16)
+	if (pin < 16) {
 		return tle8888_2b_to_diag_with_temp((OutDiag[3] >> ((pin - 13 + 1) * 2)) & 0x03);
+	}
 	/* OUT17 to OUT20, indexes 16..19 */
-	if (pin < 20)
+	if (pin < 20) {
 		return tle8888_2b_to_diag_with_temp((OutDiag[4] >> ((pin - 16) * 2)) & 0x03);
+	}
 	/* OUT21..OUT24, indexes 20..23 */
 	if (pin < 24) {
 		/* half bridges */
 		int diag;
 
 		diag = tle8888_2b_to_diag_no_temp((BriDiag[0] >> ((pin - 20) * 2)) & 0x03);
-		if (((pin == 22) || (pin == 23)) && (BriDiag[1] & BIT(5)))
+		if (((pin == 22) || (pin == 23)) && (BriDiag[1] & BIT(5))) {
 			diag |= PIN_DRIVER_OVERTEMP;
-		if (((pin == 20) || (pin == 21)) && (BriDiag[1] & BIT(4)))
+		}
+		if (((pin == 20) || (pin == 21)) && (BriDiag[1] & BIT(4))) {
 			diag |= PIN_DRIVER_OVERTEMP;
-		if (BriDiag[1] & BIT(pin - 20))
+		}
+		if (BriDiag[1] & BIT(pin - 20)) {
 			diag |= PIN_OVERLOAD; /* overcurrent */
+		}
 
 		return static_cast<brain_pin_diag_e>(diag);
 	}
-	if (pin < 28)
+	if (pin < 28) {
 		return tle8888_2b_to_diag_with_temp((IgnDiag >> ((pin - 24) * 2)) & 0x03);
+	}
 
 	return PIN_OK;
 }
@@ -997,13 +1025,15 @@ brain_pin_diag_e Tle8888::getInputDiag(unsigned int pin) {
 }
 
 brain_pin_diag_e Tle8888::getDiag(size_t pin) {
-	if (pin >= TLE8888_SIGNALS)
+	if (pin >= TLE8888_SIGNALS) {
 		return PIN_INVALID;
+	}
 
-	if (pin < TLE8888_OUTPUTS)
+	if (pin < TLE8888_OUTPUTS) {
 		return getOutputDiag(pin);
-	else
+	} else {
 		return getInputDiag(pin);
+	}
 }
 
 int Tle8888::chip_init_data() {
@@ -1118,12 +1148,15 @@ int Tle8888::chip_init_data() {
 
 err_gpios:
 	/* unmark pins */
-	if (cfg->inj_en.port != NULL)
+	if (cfg->inj_en.port != NULL) {
 		gpio_pin_markUnused(cfg->inj_en.port, cfg->inj_en.pad);
-	if (cfg->ign_en.port != NULL)
+	}
+	if (cfg->ign_en.port != NULL) {
 		gpio_pin_markUnused(cfg->ign_en.port, cfg->ign_en.pad);
-	if (cfg->reset.port != NULL)
+	}
+	if (cfg->reset.port != NULL) {
 		gpio_pin_markUnused(cfg->reset.port, cfg->reset.pad);
+	}
 	for (int j = 0; j < TLE8888_DIRECT_OUTPUTS; j++) {
 		if (cfg->direct_gpio[j].port) {
 			gpio_pin_markUnused(cfg->direct_gpio[j].port, cfg->direct_gpio[j].pad);
@@ -1137,16 +1170,19 @@ int Tle8888::init() {
 	int ret;
 
 	/* check for multiple init */
-	if (drv_state != TLE8888_WAIT_INIT)
+	if (drv_state != TLE8888_WAIT_INIT) {
 		return -1;
+	}
 
 	ret = chip_reset();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	ret = chip_init_data();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	/* force init from driver thread */
 	need_init = true;
@@ -1165,10 +1201,12 @@ int Tle8888::init() {
 
 int Tle8888::deinit() {
 	/* disable pins */
-	if (cfg->ign_en.port)
+	if (cfg->ign_en.port) {
 		palClearPort(cfg->ign_en.port, PAL_PORT_BIT(cfg->ign_en.pad));
-	if (cfg->inj_en.port)
+	}
+	if (cfg->inj_en.port) {
 		palClearPort(cfg->inj_en.port, PAL_PORT_BIT(cfg->inj_en.pad));
+	}
 
 	/* stop thread */
 	chThdTerminate(thread);
@@ -1191,14 +1229,16 @@ int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config* cfg)
 
 	/* check for valid chip select.
 	 * TODO: remove this check? CS can be driven by SPI */
-	if (cfg->spi_config.ssport == NULL)
+	if (cfg->spi_config.ssport == NULL) {
 		return -1;
+	}
 
 	Tle8888* chip = &chips[index];
 
 	/* already initted? */
-	if (chip->cfg)
+	if (chip->cfg) {
 		return -1;
+	}
 
 	chip->cfg = cfg;
 	chip->o_state = 0;
@@ -1208,8 +1248,9 @@ int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config* cfg)
 
 	/* register */
 	int ret = gpiochip_register(base, DRIVER_NAME, *chip, TLE8888_OUTPUTS);
-	if (ret < 0)
+	if (ret < 0) {
 		return ret;
+	}
 
 	/* set default pin names, board init code can rewrite */
 	gpiochips_setPinNames(base, tle8888_pin_names);

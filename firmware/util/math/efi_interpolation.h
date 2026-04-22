@@ -68,8 +68,9 @@ int findIndexMsg(const char* msg, const kType array[], int size, kType value) {
 		return 0;
 	}
 
-	if (value < array[0])
+	if (value < array[0]) {
 		return -1;
+	}
 	int middle;
 
 	int left = 0;
@@ -90,8 +91,9 @@ int findIndexMsg(const char* msg, const kType array[], int size, kType value) {
 
 		//		print("left=%d middle=%d right=%d: %.2f\r\n", left, middle, right, array[middle]);
 
-		if (middle == left)
+		if (middle == left) {
 			break;
+		}
 
 		if (middle != 0 && array[middle - 1] > array[middle]) {
 #if EFI_UNIT_TEST
@@ -126,7 +128,8 @@ int findIndexMsg(const char* msg, const kType array[], int size, kType value) {
 template <typename VType, typename kType>
 void setCurveValue(const kType bins[], VType values[], int size, float key, float value) {
 	int index = findIndexMsg("tbVl", bins, size, key);
-	if (index == -1)
+	if (index == -1) {
 		index = 0;
+	}
 	values[index] = value;
 }

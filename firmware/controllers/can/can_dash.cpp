@@ -449,8 +449,9 @@ void canDashboardBMWE90(CanCycle cycle) {
 
 		{ // RPM
 			rpmcounter++;
-			if (rpmcounter > 0xFE)
+			if (rpmcounter > 0xFE) {
 				rpmcounter = 0xF0;
+			}
 			CanTxMessage msg(E90_RPM, 3);
 			msg[0] = rpmcounter;
 			msg[1] = ((int)(Sensor::getOrZero(SensorType::Rpm)) * 4) & 0xFF;
@@ -459,8 +460,9 @@ void canDashboardBMWE90(CanCycle cycle) {
 
 		{ // oil & coolant temp (all in C, despite gauge being F)
 			tmp_cnt++;
-			if (tmp_cnt >= 0x0F)
+			if (tmp_cnt >= 0x0F) {
 				tmp_cnt = 0x00;
+			}
 			CanTxMessage msg(E90_TEMP, 8);
 			msg[0] = (int)(Sensor::getOrZero(SensorType::Clt) + e90_temp_offset);	   // coolant
 			msg[1] = (int)(Sensor::getOrZero(SensorType::AuxTemp1) + e90_temp_offset); // oil (AuxTemp1)
@@ -477,8 +479,9 @@ void canDashboardBMWE90(CanCycle cycle) {
 		{
 			// Seatbelt counter
 			seatbeltcnt++;
-			if (seatbeltcnt > 0xFE)
+			if (seatbeltcnt > 0xFE) {
 				seatbeltcnt = 0x00;
+			}
 			CanTxMessage msg(E90_SEATBELT_COUNTER, 2);
 			msg[0] = seatbeltcnt;
 			msg[1] = 0xFF;
@@ -488,10 +491,12 @@ void canDashboardBMWE90(CanCycle cycle) {
 			// Brake counter 100ms
 			brakecnt_1 += 16;
 			brakecnt_2 += 16;
-			if (brakecnt_1 > 0xEF)
+			if (brakecnt_1 > 0xEF) {
 				brakecnt_1 = 0x0F;
-			if (brakecnt_2 > 0xF0)
+			}
+			if (brakecnt_2 > 0xF0) {
 				brakecnt_2 = 0xA0;
+			}
 			CanTxMessage msg(E90_BRAKE_COUNTER, 8);
 			msg[0] = 0x00;
 			msg[1] = 0xE0;
@@ -505,8 +510,9 @@ void canDashboardBMWE90(CanCycle cycle) {
 
 		{ // ABS counter
 			abscounter++;
-			if (abscounter > 0xFE)
+			if (abscounter > 0xFE) {
 				abscounter = 0xF0;
+			}
 			CanTxMessage msg(E90_ABS_COUNTER, 2);
 			msg[0] = abscounter;
 			msg[1] = 0xFF;
@@ -523,8 +529,9 @@ void canDashboardBMWE90(CanCycle cycle) {
 
 		{ // Gear indicator/counter
 			gear_cnt++;
-			if (gear_cnt >= 0x0F)
+			if (gear_cnt >= 0x0F) {
 				gear_cnt = 0x00;
+			}
 			CanTxMessage msg(E90_GEAR, 6);
 			msg[0] = 0x78;
 			msg[1] = 0x0F;
@@ -542,8 +549,9 @@ void canDashboardBMWE90(CanCycle cycle) {
 			mph_2a = mph_a + mph_last;
 			mph_last = mph_2a;
 			mph_counter += mph_ctr * 100;
-			if (mph_counter >= 0xFFF0)
+			if (mph_counter >= 0xFFF0) {
 				mph_counter = 0xF000;
+			}
 			mph_timer = TIME_I2MS(chVTGetSystemTime());
 			CanTxMessage msg(E90_SPEED, 8);
 			msg[0] = mph_2a & 0xFF;

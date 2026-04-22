@@ -206,7 +206,7 @@ public class ProgramSelector {
                 flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
             }
 
-            flasher.flash("../fome_update.srec");
+            flasher.flash(getUpdateFilePath());
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
@@ -242,12 +242,16 @@ public class ProgramSelector {
 
     private static final boolean useNewImpl = true;
 
+    private static String getUpdateFilePath() {
+        return Launcher.INPUT_FILES_PATH + java.io.File.separator + "fome_update.srec";
+    }
+
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
         OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
-            flasher.flash("../fome_update.srec");
+            flasher.flash(getUpdateFilePath());
 
             callbacks.log("Update completed successfully!");
             callbacks.done();

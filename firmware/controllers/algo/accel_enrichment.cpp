@@ -116,8 +116,9 @@ void TpsAccelEnrichment::onEngineCycleTps() {
 int TpsAccelEnrichment::getMaxDeltaIndex() {
 	int len = minI(cb.getSize(), cb.getCount());
 	tooShort = len < 2;
-	if (tooShort)
+	if (tooShort) {
 		return 0;
+	}
 	int ci = cb.currentIndex - 1;
 	float maxValue = cb.get(ci) - cb.get(ci - 1);
 	int resultIndex = ci;

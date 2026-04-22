@@ -43,6 +43,7 @@ or
  - Clearer ignition/injection pin naming in TunerStudio #596
 
 ### Fixed
+ - Prevent false ETB jam detection when the throttle is not being commanded (for example with "Disable ETB if engine is stopped" enabled), which could latch the throttle off permanently
  - TPS/PPS raw voltage now readable even when calibration is invalid, allowing users to calibrate sensors #710
  - Fix OpenBLT updating 1MB STM32F7-based ECUs
  - Improve RPM rate of change signal to idle control so the D-term is actually usable
@@ -52,6 +53,7 @@ or
  - Fix boost control blend table axis names in TunerStudio
  - Default initialize output channels to avoid invalid values at startup
  - Clean up CAN verbose DBC file, removing invalid/orphan entries #677
+ - Idle VE table when using an electronic throttle correctly uses accel pedal to match main idle logic
 
 ## November 2025 Release
 

@@ -41,26 +41,32 @@ static int intFlashCheckErrors(void) {
 	uint32_t sr = FLASH_SR;
 
 #ifdef FLASH_SR_OPERR
-	if (sr & FLASH_SR_OPERR)
+	if (sr & FLASH_SR_OPERR) {
 		return FLASH_RETURN_OPERROR;
+	}
 #endif
-	if (sr & FLASH_SR_WRPERR)
+	if (sr & FLASH_SR_WRPERR) {
 		return FLASH_RETURN_WPERROR;
+	}
 #ifdef FLASH_SR_PGAERR
-	if (sr & FLASH_SR_PGAERR)
+	if (sr & FLASH_SR_PGAERR) {
 		return FLASH_RETURN_ALIGNERROR;
+	}
 #endif
 #ifdef FLASH_SR_PGPERR
-	if (sr & FLASH_SR_PGPERR)
+	if (sr & FLASH_SR_PGPERR) {
 		return FLASH_RETURN_PPARALLERROR;
+	}
 #endif
 #ifdef FLASH_SR_ERSERR
-	if (sr & FLASH_SR_ERSERR)
+	if (sr & FLASH_SR_ERSERR) {
 		return FLASH_RETURN_ESEQERROR;
+	}
 #endif
 #ifdef FLASH_SR_PGSERR
-	if (sr & FLASH_SR_PGSERR)
+	if (sr & FLASH_SR_PGSERR) {
 		return FLASH_RETURN_PSEQERROR;
+	}
 #endif
 
 	return FLASH_RETURN_SUCCESS;
@@ -73,16 +79,18 @@ static int intFlashCheckErrors(void) {
  */
 static bool intFlashUnlock(void) {
 	/* Check if unlock is really needed */
-	if (!(FLASH_CR & FLASH_CR_LOCK))
+	if (!(FLASH_CR & FLASH_CR_LOCK)) {
 		return HAL_SUCCESS;
+	}
 
 	/* Write magic unlock sequence */
 	FLASH_KEYR = 0x45670123;
 	FLASH_KEYR = 0xCDEF89AB;
 
 	/* Check if unlock was successful */
-	if (FLASH_CR & FLASH_CR_LOCK)
+	if (FLASH_CR & FLASH_CR_LOCK) {
 		return HAL_FAILED;
+	}
 	return HAL_SUCCESS;
 }
 
@@ -117,8 +125,9 @@ int intFlashSectorErase(flashsector_t sector) {
 #endif
 
 	/* Unlock flash for write access */
-	if (intFlashUnlock() == HAL_FAILED)
+	if (intFlashUnlock() == HAL_FAILED) {
 		return FLASH_RETURN_NO_PERMISSION;
+	}
 
 	/* Wait for any busy flags. */
 	intFlashWaitWhileBusy();
@@ -157,12 +166,14 @@ int intFlashSectorErase(flashsector_t sector) {
 	intFlashLock();
 
 	ret = intFlashCheckErrors();
-	if (ret != FLASH_RETURN_SUCCESS)
+	if (ret != FLASH_RETURN_SUCCESS) {
 		return ret;
+	}
 
 	/* Check deleted sector for errors */
-	if (intFlashIsErased(intFlashSectorBegin(sector), flashSectorSize(sector)) == FALSE)
+	if (intFlashIsErased(intFlashSectorBegin(sector), flashSectorSize(sector)) == FALSE) {
 		return FLASH_RETURN_BAD_FLASH; /* Sector is not empty despite the erase cycle! */
+	}
 
 	/* Successfully deleted sector */
 	return FLASH_RETURN_SUCCESS;
@@ -197,8 +208,9 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	int ret = FLASH_RETURN_SUCCESS;
 
 	/* Unlock flash for write access */
-	if (intFlashUnlock() == HAL_FAILED)
+	if (intFlashUnlock() == HAL_FAILED) {
 		return FLASH_RETURN_NO_PERMISSION;
+	}
 
 	/* Wait for any busy flags */
 	intFlashWaitWhileBusy();
@@ -222,16 +234,18 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 
 		/* Compute how much bytes one must update in the data read */
 		size_t chunkSize = sizeof(flashdata_t) - alignOffset;
-		if (chunkSize > size)
+		if (chunkSize > size) {
 			chunkSize = size; // this happens when both address and address + size are not aligned
+		}
 
 		/* Update the read data with buffer's data */
 		memcpy((char*)&tmp + alignOffset, buffer, chunkSize);
 
 		/* Write the new data in flash */
 		ret = intFlashWriteData(alignedFlashAddress, tmp);
-		if (ret != FLASH_RETURN_SUCCESS)
+		if (ret != FLASH_RETURN_SUCCESS) {
 			goto exit;
+		}
 
 		/* Advance */
 		address += chunkSize;
@@ -245,8 +259,9 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	while (size >= sizeof(flashdata_t)) {
 		//		print("flash write size=%d\r\n", size);
 		ret = intFlashWriteData(address, *(const flashdata_t*)buffer);
-		if (ret != FLASH_RETURN_SUCCESS)
+		if (ret != FLASH_RETURN_SUCCESS) {
 			goto exit;
+		}
 		address += sizeof(flashdata_t);
 		buffer += sizeof(flashdata_t);
 		size -= sizeof(flashdata_t);
@@ -260,8 +275,9 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		flashdata_t tmp = *(volatile flashdata_t*)address;
 		memcpy(&tmp, buffer, size);
 		ret = intFlashWriteData(address, tmp);
-		if (ret != FLASH_RETURN_SUCCESS)
+		if (ret != FLASH_RETURN_SUCCESS) {
 			goto exit;
+		}
 	}
 
 exit:

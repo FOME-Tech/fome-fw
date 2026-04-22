@@ -82,8 +82,9 @@ static void receivePacket(UartPacket* pkt, uint8_t* payload) {
 	uint16_t l = sizeof(UartPacket);
 	while (l > 0) {
 		int c = readch();
-		if (c == -1)
+		if (c == -1) {
 			continue;
+		}
 		*p++ = c;
 		l--;
 	}
@@ -97,8 +98,9 @@ static void receivePacket(UartPacket* pkt, uint8_t* payload) {
 	l = pkt->payloadLength;
 	while (l > 0) {
 		int c = readch();
-		if (c == -1)
+		if (c == -1) {
 			continue;
+		}
 		*payload++ = c;
 		l--;
 	}

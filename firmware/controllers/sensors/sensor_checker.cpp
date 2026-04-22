@@ -355,7 +355,7 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	//		-> sync error counter is high
 
 	// Scenario 1: No signal at all
-	if (decoder.edgeCountRise == 0) {
+	if (!decoder.hasSignal) {
 		handleCodeSeverity(noSignalCode);
 		return;
 	}
@@ -466,9 +466,9 @@ void SensorChecker::onSlowCallback() {
 	checkTriggerDecoder(
 			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
 
-	// Only check cams if the engine moved recently, AND the primary trigger has 10 syncs
+	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
 	if (engine->triggerCentral.engineMovedRecently() &&
-		engine->triggerCentral.triggerState.crankSynchronizationCounter > 10) {
+		engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
 		checkCamDecoder(
 				0,
 				0,

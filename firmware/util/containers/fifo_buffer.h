@@ -74,8 +74,9 @@ bool fifo_buffer<T, maxSize>::put(T item) {
 template <typename T, size_t maxSize>
 bool fifo_buffer<T, maxSize>::put(const T* items, int numItems) {
 	for (int i = 0; i < numItems; i++) {
-		if (!put(items[i]))
+		if (!put(items[i])) {
 			return false;
+		}
 	}
 	return true;
 }
@@ -119,8 +120,9 @@ public:
 
 	bool put(const T* items, int numItems) override {
 		for (int i = 0; i < numItems; i++) {
-			if (!put(items[i]))
+			if (!put(items[i])) {
 				return false;
+			}
 		}
 		return true;
 	}

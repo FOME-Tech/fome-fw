@@ -82,8 +82,9 @@ int CanStreamerState::sendFrame(
 	}
 
 	// send the frame!
-	if (streamer->transmit(CAN_ANY_MAILBOX, &txmsg, timeout) == CAN_MSG_OK)
+	if (streamer->transmit(CAN_ANY_MAILBOX, &txmsg, timeout) == CAN_MSG_OK) {
 		return numBytes;
+	}
 	return 0;
 }
 
@@ -137,8 +138,9 @@ int CanStreamerState::receiveFrame(CANRxFrame* rxmsg, uint8_t* buf, int num, can
 		// now set the packet size
 		*(uint16_t*)tmpRxBuf = SWAP_UINT16(numBytesAvailable);
 		// copy the data
-		if (numBytesAvailable > 0)
+		if (numBytesAvailable > 0) {
 			memcpy(tmpRxBuf + sizeof(uint16_t), srcBuf, numBytesAvailable);
+		}
 		// copy the crc to the end
 		memcpy(tmpRxBuf + sizeof(uint16_t) + numBytesAvailable, crcBuffer, sizeof(crcBuffer));
 
@@ -181,8 +183,9 @@ int CanStreamerState::sendDataTimeout(const uint8_t* txbuf, int numBytes, can_sy
 		PRINT("*** INFO: sendDataTimeout %d" PRINT_EOL, numBytes);
 	}
 
-	if (numBytes < 1)
+	if (numBytes < 1) {
 		return 0;
+	}
 
 	// 1 frame
 	if (numBytes <= 7) {
@@ -255,8 +258,9 @@ int CanStreamerState::sendDataTimeout(const uint8_t* txbuf, int numBytes, can_sy
 		header.index = ((idx++) & 0x0f);
 		header.numBytes = len;
 		int numSent = sendFrame(header, txbuf + offset, len, timeout);
-		if (numSent < 1)
+		if (numSent < 1) {
 			break;
+		}
 		totalNumSent += numSent;
 		offset += numSent;
 		numBytes -= numSent;
@@ -265,8 +269,9 @@ int CanStreamerState::sendDataTimeout(const uint8_t* txbuf, int numBytes, can_sy
 }
 
 int CanStreamerState::getDataFromFifo(uint8_t* rxbuf, size_t& numBytes) {
-	if (rxFifoBuf.isEmpty())
+	if (rxFifoBuf.isEmpty()) {
 		return 0;
+	}
 	int numReadFromFifo = minI(numBytes, rxFifoBuf.getCount());
 	// move bytes from the FIFO buffer
 	int i;
@@ -298,8 +303,9 @@ can_msg_t CanStreamerState::streamAddToTxTimeout(size_t* np, const uint8_t* txbu
 				  numBytes);
 		}
 
-		if (numSent < 1)
+		if (numSent < 1) {
 			break;
+		}
 		txFifoBuf.clear();
 		offset += numBytesToAdd;
 		numBytes -= numBytesToAdd;
@@ -342,8 +348,9 @@ can_msg_t CanStreamerState::streamReceiveTimeout(size_t* np, uint8_t* rxbuf, can
 		if (streamer->receive(CAN_ANY_MAILBOX, &rxmsg, timeout) == CAN_MSG_OK) {
 			int numReceived = receiveFrame(&rxmsg, rxbuf + i, availableBufferSpace, timeout);
 
-			if (numReceived < 1)
+			if (numReceived < 1) {
 				break;
+			}
 			availableBufferSpace -= numReceived;
 			i += numReceived;
 		} else {

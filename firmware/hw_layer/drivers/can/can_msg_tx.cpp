@@ -84,8 +84,8 @@ CanTxMessage::~CanTxMessage() {
 				m_frame.data8[7]);
 	}
 
-	// 100 ms timeout
-	msg_t msg = canTransmit(device, CAN_ANY_MAILBOX, &m_frame, TIME_MS2I(100));
+	// safe to block since each bus has its own TX thread
+	msg_t msg = canTransmit(device, CAN_ANY_MAILBOX, &m_frame, TIME_MS2I(10));
 #if EFI_TUNER_STUDIO
 	if (msg == MSG_OK) {
 		engine->outputChannels.canWriteOk++;

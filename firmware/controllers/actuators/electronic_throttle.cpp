@@ -474,6 +474,7 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 	}
 
 	if (m_isAutotune) {
+		resetJamTimer();
 		return getClosedLoopAutotune(target, observation);
 	} else {
 		checkJam(target, observation);
@@ -503,6 +504,7 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 		// Otherwise disable the motor.
 		m_motor->disable("setOutput");
 		m_outputDuty = 0;
+		resetJamTimer();
 	}
 }
 
@@ -586,10 +588,16 @@ void EtbController::update() {
 		// If engine is stopped and so configured, skip the ETB update entirely
 		// This is quieter and pulls less power than leaving it on all the time
 		m_motor->disable("etb status");
+		resetJamTimer();
 		return;
 	}
 
 	ClosedLoopController::update();
+}
+
+void EtbController::resetJamTimer() {
+	m_jamDetectTimer.reset();
+	jamDetected = false;
 }
 
 void EtbController::checkJam(percent_t setpoint, percent_t observation) {

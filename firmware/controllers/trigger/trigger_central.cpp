@@ -416,8 +416,9 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 	}
 
 	uint32_t triggerHandlerEntryTime = getTimeNowLowerNt();
-	if (triggerReentrant > maxTriggerReentrant)
+	if (triggerReentrant > maxTriggerReentrant) {
 		maxTriggerReentrant = triggerReentrant;
+	}
 	triggerReentrant++;
 
 	getTriggerCentral()->handleShaftSignal(signal, timestamp);
@@ -428,11 +429,13 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 }
 
 void TriggerCentral::resetCounters() {
+	triggerState.hasSignal = false;
 	triggerState.edgeCountRise = 0;
 	triggerState.edgeCountFall = 0;
 
 	for (int i = 0; i < 2; i++) {
 		for (int j = 0; j < 2; j++) {
+			vvtState[i][j].hasSignal = false;
 			vvtState[i][j].edgeCountRise = 0;
 			vvtState[i][j].edgeCountFall = 0;
 		}

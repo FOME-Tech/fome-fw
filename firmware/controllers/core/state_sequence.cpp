@@ -41,16 +41,18 @@ void MultiChannelStateSequence::checkSwitchTimes(const float scale) const {
 
 int MultiChannelStateSequence::findInsertionAngle(const float angle) const {
 	for (int i = phaseCount - 1; i >= 0; i--) {
-		if (angle > getSwitchTime(i))
+		if (angle > getSwitchTime(i)) {
 			return i + 1;
+		}
 	}
 	return 0;
 }
 
 expected<int> MultiChannelStateSequence::findAngleMatch(const float angle) const {
 	for (int i = 0; i < phaseCount; i++) {
-		if (isSameF(getSwitchTime(i), angle))
+		if (isSameF(getSwitchTime(i), angle)) {
 			return i;
+		}
 	}
 	return unexpected;
 }

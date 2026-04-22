@@ -687,7 +687,7 @@ enum class ObdCode : uint16_t {
 	// P0649 Speed Control Lamp Control Circuit
 	// P0650 Malfunction Indicator Lamp (MIL) Control Circuit Malfunction
 	// P0651 Sensor Reference Voltage &ldquo;B&rdquo; Circuit/Open
-	// P0652 Sensor Reference Voltage &ldquo;B&rdquo; Circuit Low
+	Sensor5VSupply2Low = 0x0652,
 	// P0653 Sensor Reference Voltage &ldquo;B&rdquo; Circuit High
 	// P0654 Engine RPM Output Circuit Malfunction
 	// P0655 Engine Hot Lamp Output Control Circuit Malfunction

@@ -38,8 +38,9 @@ static uint64_t binaryLogCount = 0;
 extern bool main_loop_started;
 
 void writeSdLogLine(Writer& bufferedWriter) {
-	if (!main_loop_started)
+	if (!main_loop_started) {
 		return;
+	}
 
 	if (binaryLogCount == 0) {
 		writeFileHeader(bufferedWriter);

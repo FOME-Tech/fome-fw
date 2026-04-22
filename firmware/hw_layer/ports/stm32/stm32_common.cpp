@@ -617,8 +617,9 @@ __attribute__((weak)) brain_pin_e getSckPin(spi_device_e device) {
 }
 
 void turnOnSpi(spi_device_e device) {
-	if (isSpiInitialized[device])
+	if (isSpiInitialized[device]) {
 		return; // already initialized
+	}
 	isSpiInitialized[device] = true;
 	if (device == SPI_DEVICE_1) {
 #if STM32_SPI_USE_SPI1
@@ -755,13 +756,15 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 	}
 
 #if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
-	if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
+	if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx)) {
 		return &CAND1;
+	}
 #endif
 
 #if STM32_CAN_USE_CAN2 || STM32_CAN_USE_FDCAN2
-	if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
+	if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx)) {
 		return &CAND2;
+	}
 #endif
 
 	firmwareError("invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));
