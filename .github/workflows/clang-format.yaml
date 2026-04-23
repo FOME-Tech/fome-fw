@@ -6,7 +6,7 @@ jobs:
   clang-format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         # We don't need submodules - all code to check is in the fome-fw repo
         submodules: false

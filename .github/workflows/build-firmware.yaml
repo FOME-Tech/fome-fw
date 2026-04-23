@@ -166,7 +166,7 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: true
 
