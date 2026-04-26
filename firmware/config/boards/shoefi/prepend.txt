@@ -1,0 +1,34 @@
+#define MAIN_HELP_URL "http://sho.halee.ca/shoefi"
+
+#define ts_show_vbatt true
+#define ts_show_clt_iat_pullup true
+#define ts_show_etb_pins true
+#define ts_show_analog_divider true
+#define ts_show_spi true
+#define ts_show_can_pins true
+#define ts_show_tunerstudio_port true
+#define ts_show_can2 true
+#define ts_show_software_knock true
+#define ts_show_hardware_simulator true
+#define ts_show_egt false
+#define ts_show_sd_card true
+#define ts_show_sd_pins true
+#define ts_show_full_pinout true
+
+#define ts_show_vr_threshold_all true
+#define ts_show_vr_threshold_pins true
+#define ts_show_vr_threshold_2 true
+
+#define ts_show_tcu true
+#define ts_show_gdi true
+
+//#define ts_show_onboard_accelerometer true
+
+#define ts_show_cylinder_7 false
+#define ts_show_cylinder_8 false
+#define ts_show_cylinder_9 false
+#define ts_show_cylinder_10 false
+#define ts_show_cylinder_11 false
+#define ts_show_cylinder_12 false
+
+#define FRONTEND_TITLE_BAR_NAME "SHOEFI"
