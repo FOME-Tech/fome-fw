@@ -24,9 +24,9 @@ jobs:
       matrix:
         include:
           # Board configurations
-          - build-target: hellen72
-            folder: config/boards/hellen/hellen72
-            ini-file: fome_hellen72.ini
+          # - build-target: hellen72
+          #   folder: config/boards/hellen/hellen72
+          #   ini-file: fome_hellen72.ini
 
           # - build-target: hellen81
           #   folder: config/boards/hellen/hellen81
@@ -148,9 +148,9 @@ jobs:
           #   folder: config/boards/tdg-pdm8
           #   ini-file: fome_tdg-pdm8.ini
           
-          # - build-target: shoefi
-          #   folder: config/boards/shoefi
-          #   ini-file: fome_shoefi.ini
+           - build-target: shoefi
+             folder: config/boards/shoefi
+             ini-file: fome_shoefi.ini
 
     steps:
     - name: Check branch name
