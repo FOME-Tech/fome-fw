@@ -66,8 +66,7 @@ public:
 protected:
 	void ThreadTask() override {
 		while (!chThdShouldTerminateX()) {
-			msg_t r = usbReceive(EFI_USB_DRIVER, EFI_USB_CDC_DATA_AVAILABLE_EP,
-			                     s_rxStaging, sizeof(s_rxStaging));
+			msg_t r = usbReceive(EFI_USB_DRIVER, EFI_USB_CDC_DATA_AVAILABLE_EP, s_rxStaging, sizeof(s_rxStaging));
 			if (r < 0) {
 				// MSG_RESET: endpoint aborted / USB not active. Drop any pending
 				// bytes and wait for reconfigure.
@@ -107,24 +106,24 @@ struct UsbThread : public TunerstudioThread {
 static CCM_OPTIONAL UsbThread usbConsole;
 
 // Called from usbconsole.cpp (port layer) at startup, replacing sduObjectInit/sduStart.
-extern "C" void usbDirectObjectInit() {
+void usbDirectObjectInit() {
 	iqObjectInit(&s_rxQueue, s_rxQueueBuf, sizeof(s_rxQueueBuf), nullptr, nullptr);
 }
 
 // Called from usbcfg.cpp on USB_EVENT_CONFIGURED (replaces sduConfigureHookI).
-extern "C" void usbDirectConfiguredHookI(USBDriver*) {
+void usbDirectConfiguredHookI(USBDriver*) {
 	s_configured = true;
 }
 
 // Called from usbcfg.cpp on USB_EVENT_RESET / USB_EVENT_UNCONFIGURED / USB_EVENT_SUSPEND
 // (replaces sduSuspendHookI).
-extern "C" void usbDirectSuspendHookI(USBDriver*) {
+void usbDirectSuspendHookI(USBDriver*) {
 	s_configured = false;
 	iqResetI(&s_rxQueue);
 }
 
 // Called from usbcfg.cpp on USB_EVENT_WAKEUP (replaces sduWakeupHookI).
-extern "C" void usbDirectWakeupHookI(USBDriver*) {
+void usbDirectWakeupHookI(USBDriver*) {
 	// Nothing to do — s_configured stays until USB_EVENT_CONFIGURED fires.
 }
 
