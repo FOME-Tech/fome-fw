@@ -28,7 +28,7 @@ or
 
 # Changelog
 
-## Unreleased
+## May 2026 Release
 
 ### Breaking Changes
  - Upgrade console to use Java 21. This may require an update of your Java runtime.
