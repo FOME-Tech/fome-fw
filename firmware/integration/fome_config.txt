@@ -927,7 +927,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit alwaysResetPidLeavingIdle
 	bit canBroadcastEgt;Disable to skip cam data frame (base + 9) if you have no EGT sensing.
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
-	bit unused1200b14
+	bit pairedOddFireWastedSpark
 bit useFixedBaroCorrFromMap
 bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In Constant mode, timing is automatically tapered to running as RPM increases.\nIn Table mode, the "Cranking ignition advance" table is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
