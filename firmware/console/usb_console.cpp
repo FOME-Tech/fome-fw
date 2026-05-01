@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if EFI_USB_SERIAL
+#if EFI_USB_SERIAL && !EFI_USB_SERIAL_DIRECT
 
 #include "usbconsole.h"
 #include "thread_controller.h"
@@ -53,4 +53,4 @@ void startUsbConsole() {
 	usbConsole.startThread();
 }
 
-#endif // EFI_USB_SERIAL
+#endif // EFI_USB_SERIAL && !EFI_USB_SERIAL_DIRECT
