@@ -41,7 +41,7 @@ or
  - Lua `getChannel` function for safely reading ECU values #721
  - Improved Atlas board support, including Polygonus engine presets #700
  - Clearer ignition/injection pin naming in TunerStudio #596
- - Dodge Viper V10 crank trigger pattern
+ - 1996-2006 Dodge Viper V10 crank trigger pattern
 
 ### Fixed
  - Prevent false ETB jam detection when the throttle is not being commanded (for example with "Disable ETB if engine is stopped" enabled), which could latch the throttle off permanently
