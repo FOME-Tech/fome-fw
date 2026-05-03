@@ -16,6 +16,9 @@ import static com.rusefi.CommandControl.TEST;
 import static com.rusefi.config.generated.Fields.*;
 
 public class BenchTestPane {
+    private static final String CMD_FORCE_G0_UPDATE = "force_g0_update";
+    private static final int G0_UPDATE_TIMEOUT_MS = 120_000;
+
     private final JPanel content = new JPanel(new GridLayout(2, 5));
     private final UIContext uiContext;
 
@@ -44,7 +47,30 @@ public class BenchTestPane {
                 return Fields.CMD_REBOOT_DFU;
             }
         }.getContent());
+        content.add(createForceG0Update());
         content.add(new MessagesView(config.getRoot()).messagesScroll);
+    }
+
+    private Component createForceG0Update() {
+        CommandControl panel = new FixedCommandControl(uiContext, "G0 Firmware", "", "Force Update", CMD_FORCE_G0_UPDATE) {
+            @NotNull
+            @Override
+            protected ActionListener createButtonListener() {
+                return e -> {
+                    int choice = JOptionPane.showConfirmDialog(
+                            content,
+                            "Force G0 firmware update?",
+                            "G0 Firmware Update",
+                            JOptionPane.OK_CANCEL_OPTION,
+                            JOptionPane.WARNING_MESSAGE);
+
+                    if (choice == JOptionPane.OK_OPTION) {
+                        uiContext.getCommandQueue().write(CMD_FORCE_G0_UPDATE, G0_UPDATE_TIMEOUT_MS);
+                    }
+                };
+            }
+        };
+        return panel.getContent();
     }
 
     private Component grabPerformanceTrace() {

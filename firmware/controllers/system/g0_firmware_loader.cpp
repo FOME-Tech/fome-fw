@@ -28,6 +28,7 @@ static constexpr uint8_t STM_BL_EXTENDED_ERASE = 0x44;
 static constexpr uint8_t STM_BL_WRITE_MEMORY = 0x31;
 static constexpr uint8_t STM_BL_GO = 0x21;
 static constexpr int STM_BL_INTER_BYTE_DELAY_US = 20;
+static constexpr int G0_FLASH_MAX_ATTEMPTS = 2;
 
 static constexpr uint8_t G0_APP_CMD_NOP = 0x00;
 static constexpr uint8_t G0_APP_CMD_READ_VERSION = 0x01;
@@ -36,6 +37,10 @@ static constexpr uint8_t G0_APP_CMD_ENTER_UPDATE = 0xA5;
 static constexpr uint8_t G0_APP_STATUS_READY = 0x00;
 static constexpr uint8_t G0_APP_STATUS_UPDATE_MODE = 0x01;
 static constexpr size_t G0_APP_FRAME_SIZE = 8;
+static constexpr size_t G0_SPI_DMA_BUFFER_SIZE = 258;
+
+static NO_CACHE uint8_t g0SpiTxBuffer[G0_SPI_DMA_BUFFER_SIZE];
+static NO_CACHE uint8_t g0SpiRxBuffer[G0_SPI_DMA_BUFFER_SIZE];
 
 static SPIConfig g0SpiConfig = {
 		.circular = false,
@@ -69,9 +74,10 @@ static void resetG0(bool bootloaderMode) {
 }
 
 static uint8_t spiByte(SPIDriver* spi, uint8_t tx) {
-	uint8_t rx = 0;
-	spiExchange(spi, 1, &tx, &rx);
-	return rx;
+	g0SpiTxBuffer[0] = tx;
+	g0SpiRxBuffer[0] = 0;
+	spiExchange(spi, 1, g0SpiTxBuffer, g0SpiRxBuffer);
+	return g0SpiRxBuffer[0];
 }
 
 static uint8_t bootloaderSpiByte(SPIDriver* spi, uint8_t tx) {
@@ -83,12 +89,20 @@ static uint8_t bootloaderSpiByte(SPIDriver* spi, uint8_t tx) {
 	return rx;
 }
 
+static bool handleBootloaderAck(SPIDriver* spi, uint8_t response) {
+	if (response == STM_BL_ACK) {
+		bootloaderSpiByte(spi, STM_BL_ACK);
+		return true;
+	}
+
+	return false;
+}
+
 static bool waitAck(SPIDriver* spi, int attempts = 200) {
 	while (attempts-- > 0) {
 		const uint8_t response = bootloaderSpiByte(spi, 0x00);
 
-		if (response == STM_BL_ACK) {
-			bootloaderSpiByte(spi, STM_BL_ACK);
+		if (handleBootloaderAck(spi, response)) {
 			return true;
 		}
 
@@ -104,7 +118,15 @@ static bool waitAck(SPIDriver* spi, int attempts = 200) {
 
 static bool sendBytesAndWaitAck(SPIDriver* spi, const uint8_t* data, size_t size) {
 	for (size_t i = 0; i < size; i++) {
-		bootloaderSpiByte(spi, data[i]);
+		const uint8_t response = bootloaderSpiByte(spi, data[i]);
+
+		if (handleBootloaderAck(spi, response)) {
+			return true;
+		}
+
+		if (response == STM_BL_NACK) {
+			return false;
+		}
 	}
 
 	return waitAck(spi);
@@ -165,29 +187,27 @@ static bool go(SPIDriver* spi, uint32_t address) {
 }
 
 static uint32_t readLe32(const uint8_t* data) {
-	return static_cast<uint32_t>(data[0])
-		| (static_cast<uint32_t>(data[1]) << 8)
-		| (static_cast<uint32_t>(data[2]) << 16)
-		| (static_cast<uint32_t>(data[3]) << 24);
+	return static_cast<uint32_t>(data[0]) | (static_cast<uint32_t>(data[1]) << 8) |
+		   (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[3]) << 24);
 }
 
 static void exchangeG0AppFrame(SPIDriver* spi, uint8_t command, uint8_t* rx) {
-	uint8_t tx[G0_APP_FRAME_SIZE] = {};
-	tx[0] = command;
+	memset(g0SpiTxBuffer, 0, G0_APP_FRAME_SIZE);
+	g0SpiTxBuffer[0] = command;
+	memset(g0SpiRxBuffer, 0, G0_APP_FRAME_SIZE);
 	memset(rx, 0, G0_APP_FRAME_SIZE);
 
 	spiSelect(spi);
-	spiExchange(spi, G0_APP_FRAME_SIZE, tx, rx);
+	spiExchange(spi, G0_APP_FRAME_SIZE, g0SpiTxBuffer, g0SpiRxBuffer);
 	spiUnselect(spi);
+
+	memcpy(rx, g0SpiRxBuffer, G0_APP_FRAME_SIZE);
 }
 
 static bool isG0AppResponse(const uint8_t* rx, uint8_t expectedLastCommand) {
 	const bool knownStatus = rx[0] == G0_APP_STATUS_READY || rx[0] == G0_APP_STATUS_UPDATE_MODE;
 
-	return knownStatus
-		&& rx[5] == expectedLastCommand
-		&& rx[6] == 0
-		&& rx[7] == 0;
+	return knownStatus && rx[5] == expectedLastCommand && rx[6] == 0 && rx[7] == 0;
 }
 
 static bool readG0AppVersion(SPIDriver* spi, uint32_t& version) {
@@ -262,9 +282,24 @@ static bool injectG0Firmware(SPIDriver* spi) {
 	return ok;
 }
 
+static bool injectG0FirmwareWithRetry(SPIDriver* spi) {
+	for (int attempt = 1; attempt <= G0_FLASH_MAX_ATTEMPTS; attempt++) {
+		efiPrintf("G0 firmware load: flash attempt %d/%d", attempt, G0_FLASH_MAX_ATTEMPTS);
+
+		if (injectG0Firmware(spi)) {
+			return true;
+		}
+
+		resetG0(false);
+	}
+
+	efiPrintf("G0 firmware load ERROR: aborting G0 flash after %d failed attempts", G0_FLASH_MAX_ATTEMPTS);
+	return false;
+}
+
 #endif // G0_FIRMWARE_IMAGE_AVAILABLE
 
-bool loadG0Firmware() {
+bool loadG0Firmware(bool forceUpdate) {
 #if G0_FIRMWARE_IMAGE_AVAILABLE
 	initControlPins();
 
@@ -287,20 +322,21 @@ bool loadG0Firmware() {
 	bool ok = true;
 
 	if (readG0AppVersion(spi, currentVersion)) {
-		efiPrintf("G0 firmware load: app version %d, bundled version %d",
-			static_cast<int>(currentVersion),
-			static_cast<int>(build_g0_extension_version));
+		efiPrintf(
+				"G0 firmware load: app version %d, bundled version %d",
+				static_cast<int>(currentVersion),
+				static_cast<int>(build_g0_extension_version));
 
-		if (currentVersion == build_g0_extension_version) {
+		if (!forceUpdate && currentVersion == build_g0_extension_version) {
 			efiPrintf("G0 firmware load: firmware is already current");
 		} else {
-			efiPrintf("G0 firmware load: requesting app update mode");
+			efiPrintf("G0 firmware load: requesting app update mode%s", forceUpdate ? " (forced)" : "");
 			requestG0AppUpdate(spi);
-			ok = injectG0Firmware(spi);
+			ok = injectG0FirmwareWithRetry(spi);
 		}
 	} else {
 		efiPrintf("G0 firmware load: no app version response, forcing update");
-		ok = injectG0Firmware(spi);
+		ok = injectG0FirmwareWithRetry(spi);
 	}
 
 	unlockSpi(G0_SPI_DEVICE);
@@ -320,7 +356,7 @@ bool loadG0Firmware() {
 
 #else
 
-bool loadG0Firmware() {
+bool loadG0Firmware(bool) {
 	efiPrintf("G0 firmware load is only available on Atlas with SPI enabled");
 	return false;
 }

@@ -174,6 +174,7 @@ void runRusEfi() {
 
 	addConsoleAction(CMD_REBOOT, scheduleReboot);
 	addConsoleAction(CMD_REBOOT_DFU, jump_to_bootloader);
+	addConsoleAction("force_g0_update", []() { loadG0Firmware(true); });
 
 #if EFI_USE_OPENBLT
 	addConsoleAction(CMD_REBOOT_OPENBLT, jump_to_openblt);
