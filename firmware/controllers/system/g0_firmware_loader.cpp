@@ -22,10 +22,12 @@ static constexpr brain_pin_e G0_SPI_CS_PIN = Gpio::F6;
 static constexpr uint32_t G0_FLASH_BASE = 0x08000000;
 
 static constexpr uint8_t STM_BL_ACK = 0x79;
+static constexpr uint8_t STM_BL_NACK = 0x1F;
 static constexpr uint8_t STM_BL_SYNC = 0x5A;
 static constexpr uint8_t STM_BL_EXTENDED_ERASE = 0x44;
 static constexpr uint8_t STM_BL_WRITE_MEMORY = 0x31;
 static constexpr uint8_t STM_BL_GO = 0x21;
+static constexpr int STM_BL_INTER_BYTE_DELAY_US = 20;
 
 static constexpr uint8_t G0_APP_CMD_NOP = 0x00;
 static constexpr uint8_t G0_APP_CMD_READ_VERSION = 0x01;
@@ -72,11 +74,28 @@ static uint8_t spiByte(SPIDriver* spi, uint8_t tx) {
 	return rx;
 }
 
+static uint8_t bootloaderSpiByte(SPIDriver* spi, uint8_t tx) {
+	const uint8_t rx = spiByte(spi, tx);
+
+	// AN4286 requires at least 15us between bytes for the STM32 ROM SPI bootloader.
+	chThdSleepMicroseconds(STM_BL_INTER_BYTE_DELAY_US);
+
+	return rx;
+}
+
 static bool waitAck(SPIDriver* spi, int attempts = 200) {
 	while (attempts-- > 0) {
-		if (spiByte(spi, 0x00) == STM_BL_ACK) {
+		const uint8_t response = bootloaderSpiByte(spi, 0x00);
+
+		if (response == STM_BL_ACK) {
+			bootloaderSpiByte(spi, STM_BL_ACK);
 			return true;
 		}
+
+		if (response == STM_BL_NACK) {
+			return false;
+		}
+
 		chThdSleepMilliseconds(1);
 	}
 
@@ -84,12 +103,15 @@ static bool waitAck(SPIDriver* spi, int attempts = 200) {
 }
 
 static bool sendBytesAndWaitAck(SPIDriver* spi, const uint8_t* data, size_t size) {
-	spiSend(spi, size, data);
+	for (size_t i = 0; i < size; i++) {
+		bootloaderSpiByte(spi, data[i]);
+	}
+
 	return waitAck(spi);
 }
 
 static bool sendCommand(SPIDriver* spi, uint8_t command) {
-	const uint8_t bytes[] = {command, static_cast<uint8_t>(command ^ 0xFF)};
+	const uint8_t bytes[] = {STM_BL_SYNC, command, static_cast<uint8_t>(command ^ 0xFF)};
 	return sendBytesAndWaitAck(spi, bytes, sizeof(bytes));
 }
 
@@ -204,7 +226,7 @@ static bool injectG0Firmware(SPIDriver* spi) {
 
 	spiSelect(spi);
 
-	spiByte(spi, STM_BL_SYNC);
+	bootloaderSpiByte(spi, STM_BL_SYNC);
 	if (!waitAck(spi)) {
 		spiUnselect(spi);
 		efiPrintf("G0 firmware load ERROR: no ACK from SPI bootloader");
