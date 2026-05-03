@@ -303,11 +303,6 @@ bool loadG0Firmware(bool forceUpdate) {
 #if G0_FIRMWARE_IMAGE_AVAILABLE
 	initControlPins();
 
-	engineConfiguration->is_enabled_spi_5 = true;
-	engineConfiguration->spi5sckPin = Gpio::F7;
-	engineConfiguration->spi5misoPin = Gpio::F8;
-	engineConfiguration->spi5mosiPin = Gpio::F9;
-
 	turnOnSpi(G0_SPI_DEVICE);
 
 	SPIDriver* spi = getSpiDevice(G0_SPI_DEVICE);
