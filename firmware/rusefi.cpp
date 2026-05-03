@@ -116,6 +116,7 @@
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
 #include "bootloader_updater.h"
+#include "g0_firmware_loader.h"
 
 #include <setjmp.h>
 
@@ -205,6 +206,10 @@ void runRusEfi() {
 
 	// Read configuration from flash memory
 	loadConfiguration();
+
+#if HW_ATLAS
+	loadG0Firmware();
+#endif
 
 #if EFI_TUNER_STUDIO
 	startTunerStudioConnectivity();
