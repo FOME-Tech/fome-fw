@@ -33,7 +33,7 @@ esac
 G0_TRGT="$FW_DIR/ext/build-tools/$COMPILER_PLATFORM/bin/arm-none-eabi-"
 [ -x "${G0_TRGT}g++" ] || { echo "Compiler not found at ${G0_TRGT}g++"; exit 1; }
 
-make -C "$G0_DIR" -j20 TRGT="$G0_TRGT" USE_OPT="-O0 -ggdb -fomit-frame-pointer -falign-functions=16 --specs=nosys.specs" for_fome_image
+make -C "$G0_DIR" -j$(nproc) TRGT="$G0_TRGT" USE_OPT="-Os -ggdb -fomit-frame-pointer -falign-functions=16 --specs=nosys.specs" for_fome_image
 
 G0_IMAGE_HEADER="$G0_DIR/for_fome/g0_firmware_image.h"
 G0_APP_VERSION=$(sed -nE 's/.*APP_VERSION = ([0-9]+)U;.*/\1/p' "$G0_DIR/source/spi_app_protocol.cpp" | head -n1)
