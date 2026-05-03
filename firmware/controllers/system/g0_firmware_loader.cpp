@@ -62,6 +62,14 @@ static void initControlPins() {
 	setPin(G0_RESET_PIN, true);
 }
 
+static void releaseControlPins() {
+	setPin(G0_BOOT_PIN, false);
+	setPin(G0_RESET_PIN, true);
+
+	efiSetPadMode("G0 BOOT", G0_BOOT_PIN, PAL_MODE_INPUT);
+	efiSetPadMode("G0 RESET", G0_RESET_PIN, PAL_MODE_INPUT);
+}
+
 static void resetG0(bool bootloaderMode) {
 	setPin(G0_BOOT_PIN, bootloaderMode);
 	chThdSleepMilliseconds(5);
@@ -335,6 +343,7 @@ bool loadG0Firmware(bool forceUpdate) {
 	}
 
 	unlockSpi(G0_SPI_DEVICE);
+	releaseControlPins();
 
 	if (ok) {
 		efiPrintf("G0 firmware load: complete");
