@@ -3,17 +3,6 @@
 #if HAL_USE_SPI
 
 /**
- * Only one consumer can use SPI bus at a given time
- */
-void lockSpi(spi_device_e device) {
-	spiAcquireBus(getSpiDevice(device));
-}
-
-void unlockSpi(spi_device_e device) {
-	spiReleaseBus(getSpiDevice(device));
-}
-
-/**
  * @return NULL if SPI device not specified
  */
 SPIDriver* getSpiDevice(spi_device_e spiDevice) {

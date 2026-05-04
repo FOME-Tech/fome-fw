@@ -30,6 +30,11 @@ or
 
 ## Unreleased
 
+### Added
+ - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
+
+## May 2026 Release
+
 ### Breaking Changes
  - Upgrade console to use Java 21. This may require an update of your Java runtime.
 
