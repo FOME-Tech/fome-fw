@@ -15,7 +15,7 @@
 		"**/.dep": true,
 		"**/build/lst": true,
 		"**/build/obj": true,
-		"firmware/ChibiOS/demos": true,
+		"firmware/ext/ChibiOS/demos": true,
 	},
 	"cSpell.words": [
 		"IACV"
@@ -23,4 +23,13 @@
 	"files.associations": {
 		"*.input": "ini"
 	},
+	"[c]": {
+		"editor.defaultFormatter": "ms-vscode.cpptools",
+		"editor.formatOnSave": true
+	},
+	"[cpp]": {
+		"editor.defaultFormatter": "ms-vscode.cpptools",
+		"editor.formatOnSave": true
+	},
+	"C_Cpp.clang_format_style": "file",
 }

@@ -4,7 +4,6 @@ import com.devexperts.logging.Logging;
 import com.rusefi.core.MessagesCentral;
 import com.rusefi.io.CommandQueue;
 import com.rusefi.io.LinkManager;
-import com.rusefi.io.serial.BaudRateHolder;
 import com.rusefi.ui.*;
 import com.rusefi.ui.console.MainFrame;
 import com.rusefi.ui.console.TabbedPanel;
@@ -36,7 +35,6 @@ public class ConsoleUI {
 
     public static final String TAB_INDEX = "main_tab";
     protected static final String PORT_KEY = "port";
-    protected static final String SPEED_KEY = "speed";
     public static EngineSnifferPanel engineSnifferPanel;
 
     private final TabbedPanel tabbedPane;
@@ -61,7 +59,6 @@ public class ConsoleUI {
         setFrameIcon(mainFrame.getFrame().getFrame());
 
         getConfig().getRoot().setProperty(PORT_KEY, port);
-        getConfig().getRoot().setProperty(SPEED_KEY, BaudRateHolder.INSTANCE.baudRate);
 
         LinkManager linkManager = uiContext.getLinkManager();
         // todo: this blocking IO operation should NOT be happening on the UI thread
@@ -142,9 +139,6 @@ public class ConsoleUI {
         JustOneInstance.onStart();
         try {
             boolean isPortDefined = args.length > 0;
-            boolean isBaudRateDefined = args.length > 1;
-            if (isBaudRateDefined)
-                BaudRateHolder.INSTANCE.baudRate = Integer.parseInt(args[1]);
 
             String port = null;
             if (isPortDefined)

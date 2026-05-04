@@ -50,11 +50,11 @@ Gpio getWarningLedPin() {
 }
 
 static void setupVbatt() {
-/*
- below 0.4
-	// 1k high side/1.5k low side = 1.6667 ratio divider
-	engineConfiguration->analogInputDividerCoefficient = 2.5f / 1.5f;
-*/
+	/*
+	 below 0.4
+		// 1k high side/1.5k low side = 1.6667 ratio divider
+		engineConfiguration->analogInputDividerCoefficient = 2.5f / 1.5f;
+	*/
 
 	// 6.8k high side/10k low side = 1.68 ratio divider
 	engineConfiguration->analogInputDividerCoefficient = 16.8f / 10.0f;
@@ -173,12 +173,11 @@ void setBoardDefaultConfiguration() {
 	// Gpio::TLE8888_PIN_21: "35 - GP Out 1"
 	engineConfiguration->fuelPumpPin = Gpio::TLE8888_PIN_21;
 
-//	engineConfiguration->isSdCardEnabled = true;
+	//	engineConfiguration->isSdCardEnabled = true;
 
 	// TLE8888 high current low side: VVT2 IN9 / OUT5
 	// Gpio::E10: "3 - Lowside 2"
 	engineConfiguration->idle.solenoidPin = Gpio::TLE8888_PIN_5;
-
 
 	// Gpio::TLE8888_PIN_22: "34 - GP Out 2"
 	engineConfiguration->fanPin = Gpio::TLE8888_PIN_22;
@@ -199,15 +198,15 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 	engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
-	engineConfiguration->injectionMode = IM_SIMULTANEOUS;//IM_BATCH;// IM_SEQUENTIAL;
+	engineConfiguration->injectionMode = IM_SIMULTANEOUS; // IM_BATCH;// IM_SEQUENTIAL;
 }
 
 static Gpio MRE_OUTPUTS[] = {
-	MRE_INJ_1,
-	MRE_INJ_2,
-	MRE_INJ_3,
-	MRE_INJ_4,
-	MRE_LS_1,
+		MRE_INJ_1,
+		MRE_INJ_2,
+		MRE_INJ_3,
+		MRE_INJ_4,
+		MRE_LS_1,
 };
 
 int getBoardMetaOutputsCount() {

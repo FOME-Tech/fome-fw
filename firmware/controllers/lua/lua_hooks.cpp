@@ -100,7 +100,7 @@ static int lua_hasSensor(lua_State* l) {
 /**
  * @return number of elements
  */
-static uint32_t getArray(lua_State* l, int paramIndex, uint8_t *data, uint32_t size) {
+static uint32_t getArray(lua_State* l, int paramIndex, uint8_t* data, uint32_t size) {
 	uint32_t result = 0;
 
 	luaL_checktype(l, paramIndex, LUA_TTABLE);
@@ -213,13 +213,13 @@ struct P {
 static P luaL_checkPwmIndex(lua_State* l, int pos) {
 	auto channel = luaL_checkinteger(l, pos);
 
-    // todo: what a mess :( CAN buses start at 1 and PWM channels start at 0 :(
+	// todo: what a mess :( CAN buses start at 1 and PWM channels start at 0 :(
 	// Ensure channel is valid
 	if (channel < 0 || channel >= LUA_PWM_COUNT) {
 		luaL_error(l, "setPwmDuty invalid channel %d", channel);
 	}
 
-	return { pwms[channel], channel };
+	return {pwms[channel], channel};
 }
 
 static int lua_startPwm(lua_State* l) {
@@ -231,10 +231,7 @@ static int lua_startPwm(lua_State* l) {
 	freq = clampF(1, freq, 1000);
 
 	startSimplePwmExt(
-		&p.pwm, "lua",
-		engineConfiguration->luaOutputPins[p.idx], &enginePins.luaOutputPins[p.idx],
-		freq, duty
-	);
+			&p.pwm, "lua", engineConfiguration->luaOutputPins[p.idx], &enginePins.luaOutputPins[p.idx], freq, duty);
 
 	return 0;
 }
@@ -281,11 +278,21 @@ static int lua_getDigital(lua_State* l) {
 	bool state = false;
 
 	switch (idx) {
-		case 0: state = engine->engineState.clutchDownState; break;
-		case 1: state = engine->engineState.clutchUpState; break;
-		case 2: state = engine->engineState.brakePedalState; break;
-		case 3: state = engine->module<AcController>().unmock().acButtonState; break;
-		case 4: state = engine->module<AcController>().unmock().acPressureSwitchState; break;
+		case 0:
+			state = engine->engineState.clutchDownState;
+			break;
+		case 1:
+			state = engine->engineState.clutchUpState;
+			break;
+		case 2:
+			state = engine->engineState.brakePedalState;
+			break;
+		case 3:
+			state = engine->module<AcController>().unmock().acButtonState;
+			break;
+		case 4:
+			state = engine->module<AcController>().unmock().acPressureSwitchState;
+			break;
 		default:
 			// Return nil to indicate invalid parameter
 			lua_pushnil(l);
@@ -324,26 +331,6 @@ static int lua_getAuxDigital(lua_State* l) {
 #endif // !EFI_SIMULATOR
 
 	return 1;
-}
-
-static int lua_setDebug(lua_State* l) {
-	// wrong debug mode, ignore
-	if (engineConfiguration->debugMode != DBG_LUA) {
-		return 0;
-	}
-
-	auto idx = luaL_checkinteger(l, 1);
-	auto val = luaL_checknumber(l, 2);
-
-	// invalid index, ignore
-	if (idx < 1 || idx > 7) {
-		return 0;
-	}
-
-	auto firstDebugField = &engine->outputChannels.debugFloatField1;
-	firstDebugField[idx - 1] = val;
-
-	return 0;
 }
 
 static auto lua_getAirmassResolveMode(lua_State* l) {
@@ -397,7 +384,7 @@ auto& checkBackupSram(lua_State* l) {
 static int lua_getPersistentValue(lua_State* l) {
 	auto idx = luaL_checkinteger(l, 1);
 
-	auto &backupRam = checkBackupSram(l);
+	auto& backupRam = checkBackupSram(l);
 
 	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
 		luaL_error(l, "invalid backup ram index: %d", idx);
@@ -410,7 +397,7 @@ static int lua_getPersistentValue(lua_State* l) {
 static int lua_storePersistentValue(lua_State* l) {
 	auto idx = luaL_checkinteger(l, 1);
 
-	auto &backupRam = checkBackupSram(l);
+	auto& backupRam = checkBackupSram(l);
 
 	if (idx < 1 || idx > efi::size(backupRam.LuaPersistentData)) {
 		luaL_error(l, "invalid backup ram index: %d", idx);
@@ -425,37 +412,34 @@ static int lua_storePersistentValue(lua_State* l) {
 
 // TODO: PR this back in to https://github.com/gengyong/luaaa
 namespace LUAAA_NS {
-    template<typename TCLASS, typename ...ARGS>
-    struct PlacementConstructorCaller<TCLASS, lua_State*, ARGS...>
-    {
-        // this speciailization passes the Lua state to the constructor as first argument, as it shouldn't
-        // participate in the index generation as it's not a normal parameter passed via the Lua stack.
+template <typename TCLASS, typename... ARGS>
+struct PlacementConstructorCaller<TCLASS, lua_State*, ARGS...> {
+	// this speciailization passes the Lua state to the constructor as first argument, as it shouldn't
+	// participate in the index generation as it's not a normal parameter passed via the Lua stack.
 
-        static TCLASS * Invoke(lua_State * state, void * mem)
-        {
-            return InvokeImpl(state, mem, typename make_indices<sizeof...(ARGS)>::type());
-        }
+	static TCLASS* Invoke(lua_State* state, void* mem) {
+		return InvokeImpl(state, mem, typename make_indices<sizeof...(ARGS)>::type());
+	}
 
-    private:
-        template<std::size_t ...Ns>
-        static TCLASS * InvokeImpl(lua_State * state, void * mem, indices<Ns...>)
-        {
-            (void)state;
-            return new(mem) TCLASS(state, LuaStack<ARGS>::get(state, Ns + 1)...);
-        }
-    };
-}
+private:
+	template <std::size_t... Ns>
+	static TCLASS* InvokeImpl(lua_State* state, void* mem, indices<Ns...>) {
+		(void)state;
+		return new (mem) TCLASS(state, LuaStack<ARGS>::get(state, Ns + 1)...);
+	}
+};
+} // namespace LUAAA_NS
 
 struct LuaSensor final : public StoredValueSensor {
-	LuaSensor() : LuaSensor(nullptr, "Invalid") { }
+	LuaSensor()
+		: LuaSensor(nullptr, "Invalid") {}
 
 	~LuaSensor() {
 		unregister();
 	}
 
 	LuaSensor(lua_State* l, const char* name)
-		: StoredValueSensor(findSensorByName(l, name), MS2NT(100))
-	{
+		: StoredValueSensor(findSensorByName(l, name), MS2NT(100)) {
 		// do a soft collision check to avoid a fatal error from the hard check in Register()
 		if (l && Sensor::hasSensor(type())) {
 			luaL_error(l, "Tried to create a Lua sensor of type %s, but one was already registered.", getSensorName());
@@ -488,7 +472,11 @@ struct LuaSensor final : public StoredValueSensor {
 
 	void showInfo(const char* sensorName) const override {
 		const auto value = get();
-		efiPrintf("Sensor \"%s\": Lua sensor: Valid: %s Converted value %.2f", sensorName, boolToString(value.Valid), value.Value);
+		efiPrintf(
+				"Sensor \"%s\": Lua sensor: Valid: %s Converted value %.2f",
+				sensorName,
+				boolToString(value.Valid),
+				value.Value);
 	}
 
 private:
@@ -499,8 +487,7 @@ struct LuaPid final {
 	LuaPid() = default;
 
 	LuaPid(float kp, float ki, float kd, float min, float max)
-		: m_pid(&m_params)
-	{
+		: m_pid(&m_params) {
 		m_params.pFactor = kp;
 		m_params.iFactor = ki;
 		m_params.dFactor = kd;
@@ -647,25 +634,22 @@ int lua_canRxAddMask(lua_State* l) {
 
 void configureRusefiLuaHooks(lua_State* l) {
 	LuaClass<Timer> luaTimer(l, "Timer");
-	luaTimer
-		.ctor()
-		.fun("reset",             static_cast<void (Timer::*)()     >(&Timer::reset            ))
-		.fun("getElapsedSeconds", static_cast<float(Timer::*)()const>(&Timer::getElapsedSeconds));
+	luaTimer.ctor()
+			.fun("reset", static_cast<void (Timer::*)()>(&Timer::reset))
+			.fun("getElapsedSeconds", static_cast<float (Timer::*)() const>(&Timer::getElapsedSeconds));
 
 	LuaClass<LuaSensor> luaSensor(l, "Sensor");
-	luaSensor
-		.ctor<lua_State*, const char*>()
-		.fun("set", &LuaSensor::set)
-		.fun("setRedundant", &LuaSensor::setRedundant)
-		.fun("setTimeout", &LuaSensor::setTimeout)
-		.fun("invalidate", &LuaSensor::invalidate);
+	luaSensor.ctor<lua_State*, const char*>()
+			.fun("set", &LuaSensor::set)
+			.fun("setRedundant", &LuaSensor::setRedundant)
+			.fun("setTimeout", &LuaSensor::setTimeout)
+			.fun("invalidate", &LuaSensor::invalidate);
 
 	LuaClass<LuaPid> luaPid(l, "Pid");
-	luaPid
-		.ctor<float, float, float, float, float>()
-		.fun("get", &LuaPid::get)
-		.fun("setOffset", &LuaPid::setOffset)
-		.fun("reset", &LuaPid::reset);
+	luaPid.ctor<float, float, float, float, float>()
+			.fun("get", &LuaPid::get)
+			.fun("setOffset", &LuaPid::setOffset)
+			.fun("reset", &LuaPid::reset);
 
 	configureRusefiLuaUtilHooks(l);
 
@@ -729,8 +713,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "setLuaGauge", [](lua_State* l2) {
 		auto index = luaL_checkinteger(l2, 1) - 1;
 		auto value = luaL_checknumber(l2, 2);
-		if (index < 0 || index >= LUA_GAUGE_COUNT)
+		if (index < 0 || index >= LUA_GAUGE_COUNT) {
 			return 0;
+		}
 		extern StoredValueSensor luaGauges[LUA_GAUGE_COUNT];
 		luaGauges[index].setValidValue(value, getTimeNowNt());
 		return 0;
@@ -890,7 +875,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		lua_pushnumber(l2, luaStateCode);
 		return 1;
 	});
-#endif //EFI_SHAFT_POSITION_INPUT
+#endif // EFI_SHAFT_POSITION_INPUT
 
 	lua_register(l, "setCalibration", [](lua_State* l2) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
@@ -940,7 +925,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getFan", lua_fan);
 	lua_register(l, "getDigital", lua_getDigital);
 	lua_register(l, "getAuxDigital", lua_getAuxDigital);
-	lua_register(l, "setDebug", lua_setDebug);
 	lua_register(l, "getAirmass", lua_getAirmass);
 	lua_register(l, "setAirmass", lua_setAirmass);
 

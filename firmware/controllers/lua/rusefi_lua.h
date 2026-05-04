@@ -6,8 +6,10 @@
 
 class LuaHandle final {
 public:
-	LuaHandle() : LuaHandle(nullptr) { }
-	LuaHandle(lua_State* ptr) : m_ptr(ptr) { }
+	LuaHandle()
+		: LuaHandle(nullptr) {}
+	LuaHandle(lua_State* ptr)
+		: m_ptr(ptr) {}
 
 	// Don't allow copying!
 	LuaHandle(const LuaHandle&) = delete;
@@ -35,7 +37,9 @@ public:
 		}
 	}
 
-	operator lua_State*() const { return m_ptr; }
+	operator lua_State*() const {
+		return m_ptr;
+	}
 
 private:
 	lua_State* m_ptr;

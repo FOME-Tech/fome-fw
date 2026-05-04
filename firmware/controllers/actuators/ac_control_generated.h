@@ -77,4 +77,3 @@ struct ac_control_s {
 	bool unusedBit_0_31 : 1 {};
 };
 static_assert(sizeof(ac_control_s) == 4);
-

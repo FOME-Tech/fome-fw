@@ -17,8 +17,7 @@ using ::testing::_;
 
 TEST(fuelCut, coasting) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
 	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
@@ -74,7 +73,9 @@ TEST(fuelCut, coasting) {
 	// restore CLT
 	Sensor::setMockValue(SensorType::Clt, hotClt);
 	// And set RPM - somewhere between RpmHigh and RpmLow threshold
-	Sensor::setMockValue(SensorType::Rpm, (engineConfiguration->coastingFuelCutRpmHigh + engineConfiguration->coastingFuelCutRpmLow) / 2);
+	Sensor::setMockValue(
+			SensorType::Rpm,
+			(engineConfiguration->coastingFuelCutRpmHigh + engineConfiguration->coastingFuelCutRpmLow) / 2);
 	eth.engine.periodicFastCallback();
 
 	// Fuel cut-off is enabled - nothing should change
@@ -133,8 +134,7 @@ TEST(fuelCut, coasting) {
 
 TEST(fuelCut, delay) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
 	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
@@ -204,8 +204,7 @@ TEST(fuelCut, delay) {
 
 TEST(fuelCut, mapTable) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
 	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
@@ -219,10 +218,10 @@ TEST(fuelCut, mapTable) {
 	// set cranking threshold
 	engineConfiguration->cranking.rpm = 999;
 
-	//setup MAP cutoff table
+	// setup MAP cutoff table
 	engineConfiguration->useTableForDfcoMap = true;
-	copyArray(config->dfcoMapRpmValuesBins, { 2000, 3000, 4000, 5000 });
-	copyArray(config->dfcoMapRpmValues, { 50, 30, 20, 10 });
+	copyArray(config->dfcoMapRpmValuesBins, {2000, 3000, 4000, 5000});
+	copyArray(config->dfcoMapRpmValues, {50, 30, 20, 10});
 
 	// basic engine setup
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
@@ -262,8 +261,7 @@ TEST(fuelCut, mapTable) {
 // testing the ablity to have clutch input disable fuel cut when configured
 TEST(fuelCut, clutch) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _))
-		.WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
 	engineConfiguration->stoichRatioPrimary = 10;
 
 	// configure coastingFuelCut
@@ -278,8 +276,8 @@ TEST(fuelCut, clutch) {
 
 	// basic engine setup
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
-	
-	//all other conditions should allow fuel cut
+
+	// all other conditions should allow fuel cut
 	float hotClt = engineConfiguration->coastingFuelCutClt + 1;
 	Sensor::setMockValue(SensorType::Clt, hotClt);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
@@ -304,7 +302,7 @@ TEST(fuelCut, clutch) {
 	eth.engine.periodicFastCallback();
 	EXPECT_CUT();
 
- 	//configure io, fuelCut should now be inhibited
+	// configure io, fuelCut should now be inhibited
 	engineConfiguration->clutchUpPin = Gpio::G2;
 	engineConfiguration->clutchUpPinMode = PI_PULLDOWN;
 	setMockState(engineConfiguration->clutchUpPin, false);

@@ -6,38 +6,40 @@
 
 // See https://github.com/google/googletest/blob/master/docs/gmock_cook_book.md#making-the-compilation-faster
 
-MockEtb::MockEtb() { }
-MockEtb::~MockEtb() { }
+MockEtb::MockEtb() {}
+MockEtb::~MockEtb() {}
 
-MockMotor::MockMotor() { }
-MockMotor::~MockMotor() { }
+MockMotor::MockMotor() {}
+MockMotor::~MockMotor() {}
 
-MockVp3d::MockVp3d() { }
-MockVp3d::~MockVp3d() { }
+MockVp3d::MockVp3d() {}
+MockVp3d::~MockVp3d() {}
 
-MockPwm::MockPwm() { }
-MockPwm::~MockPwm() { }
+MockPwm::MockPwm() {}
+MockPwm::~MockPwm() {}
 
-MockOutputPin::MockOutputPin() { }
-MockOutputPin::~MockOutputPin() { }
+MockOutputPin::MockOutputPin() {}
+MockOutputPin::~MockOutputPin() {}
 
-MockExecutor::MockExecutor() { }
-MockExecutor::~MockExecutor() { }
+MockExecutor::MockExecutor() {}
+MockExecutor::~MockExecutor() {}
 
-MockAirmass::MockAirmass() : AirmassVeModelBase(&veTable) { }
-MockAirmass::~MockAirmass() { }
+MockAirmass::MockAirmass()
+	: AirmassVeModelBase(&veTable) {}
+MockAirmass::~MockAirmass() {}
 
-MockInjectorModel2::MockInjectorModel2() { }
-MockInjectorModel2::~MockInjectorModel2() { }
+MockInjectorModel2::MockInjectorModel2() {}
+MockInjectorModel2::~MockInjectorModel2() {}
 
-MockStepperHardware::MockStepperHardware() { }
-MockStepperHardware::~MockStepperHardware() { }
+MockStepperHardware::MockStepperHardware() {}
+MockStepperHardware::~MockStepperHardware() {}
 
-MockTsChannel::MockTsChannel() : TsChannelBase("mock") { }
-MockTsChannel::~MockTsChannel() { }
+MockTsChannel::MockTsChannel()
+	: TsChannelBase("mock") {}
+MockTsChannel::~MockTsChannel() {}
 
-MockIdleController::MockIdleController() { }
-MockIdleController::~MockIdleController() { }
+MockIdleController::MockIdleController() {}
+MockIdleController::~MockIdleController() {}
 
-MockIgnitionController::MockIgnitionController() { }
-MockIgnitionController::~MockIgnitionController() { }
+MockIgnitionController::MockIgnitionController() {}
+MockIgnitionController::~MockIgnitionController() {}

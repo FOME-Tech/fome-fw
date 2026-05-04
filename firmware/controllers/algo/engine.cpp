@@ -25,7 +25,7 @@
 #include "ac_control.h"
 #include "vr_pwm.h"
 #if EFI_MC33816
- #include "mc33816.h"
+#include "mc33816.h"
 #endif // EFI_MC33816
 
 #if EFI_PROD_CODE
@@ -62,7 +62,6 @@ void Engine::updateTriggerWaveform() {
 
 	engine->triggerCentral.updateWaveform();
 
-
 	if (!engine->triggerCentral.triggerShape.shapeDefinitionError) {
 		prepareOutputSignals();
 	}
@@ -91,7 +90,7 @@ void Engine::periodicSlowCallback() {
 
 	updateGppwm();
 
-	engine->engineModules.apply_all([](auto & m) { m.onSlowCallback(); });
+	engine->engineModules.apply_all([](auto& m) { m.onSlowCallback(); });
 
 #if (BOARD_TLE8888_COUNT > 0)
 	tle8888startup();
@@ -135,7 +134,8 @@ static bool getBrakePedalState() {
 void Engine::updateSwitchInputs() {
 	// this value is not used yet
 	if (isBrainPinValid(engineConfiguration->clutchDownPin)) {
-		engine->engineState.clutchDownState = engineConfiguration->clutchDownPinInverted ^ efiReadPin(engineConfiguration->clutchDownPin);
+		engine->engineState.clutchDownState =
+				engineConfiguration->clutchDownPinInverted ^ efiReadPin(engineConfiguration->clutchDownPin);
 	}
 	{
 		bool currentState;
@@ -144,7 +144,7 @@ void Engine::updateSwitchInputs() {
 		} else {
 			currentState = engine->engineState.lua.acRequestState;
 		}
-		AcController & acController = engine->module<AcController>().unmock();
+		AcController& acController = engine->module<AcController>().unmock();
 		if (acController.acButtonState != currentState) {
 			acController.acButtonState = currentState;
 			acController.timeSinceStateChange.reset();
@@ -220,11 +220,14 @@ void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError)
 	// during first revolution and it's fine
 	if (wasSynchronized) {
 		// 'triggerStateListener is not null' means we are running a real engine and now just preparing trigger shape
-		// that's a bit of a hack, a sweet OOP solution would be a real callback or at least 'needDecodingErrorLogic' method?
+		// that's a bit of a hack, a sweet OOP solution would be a real callback or at least 'needDecodingErrorLogic'
+		// method?
 		if (isDecodingError) {
 #if EFI_PROD_CODE
-			if (engineConfiguration->verboseTriggerSynchDetails || (triggerCentral.triggerState.someSortOfTriggerError() && !engineConfiguration->silentTriggerError)) {
-				efiPrintf("error: synchronizationPoint @ index %lu expected %d/%d got %d/%d",
+			if (engineConfiguration->verboseTriggerSynchDetails ||
+				(triggerCentral.triggerState.someSortOfTriggerError() && !engineConfiguration->silentTriggerError)) {
+				efiPrintf(
+						"error: synchronizationPoint @ index %lu expected %d/%d got %d/%d",
 						triggerCentral.triggerState.currentCycle.current_index,
 						triggerCentral.triggerShape.getExpectedEventCount(TriggerWheel::T_PRIMARY),
 						triggerCentral.triggerShape.getExpectedEventCount(TriggerWheel::T_SECONDARY),
@@ -236,7 +239,6 @@ void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError)
 
 		engine->triggerCentral.triggerErrorDetection.add(isDecodingError);
 	}
-
 }
 #endif
 
@@ -290,12 +292,12 @@ void Engine::efiWatchdog() {
 void Engine::checkShutdown() {
 #if EFI_MAIN_RELAY_CONTROL
 	// if we are already in the "ignition_on" mode, then do nothing
-/* this logic is not alive
-	if (ignitionOnTimeNt > 0) {
-		return;
-	}
-todo: move to shutdown_controller.cpp
-*/
+	/* this logic is not alive
+		if (ignitionOnTimeNt > 0) {
+			return;
+		}
+	todo: move to shutdown_controller.cpp
+	*/
 
 	// here we are in the shutdown (the ignition is off) or initial mode (after the firmware fresh start)
 	// const efitick_t engineStopWaitTimeoutUs = 500000LL;	// 0.5 sec
@@ -306,7 +308,8 @@ todo: move to shutdown_controller.cpp
 		// if the ignition key is turned on again,
 		// we cancel the shutdown mode, but only if all shutdown procedures are complete
 		const float vBattThresholdOn = 8.0f;
-		// we fallback into zero instead of VBAT_FALLBACK_VALUE because it's not safe to false-trigger the "ignition on" event,
+		// we fallback into zero instead of VBAT_FALLBACK_VALUE because it's not safe to false-trigger the "ignition on"
+event,
 		// and we want to turn on the main relay only when 100% sure.
 		if ((Sensor::getOrZero(SensorType::BatteryVoltage) > vBattThresholdOn) && !isInShutdownMode()) {
 			ignitionOnTimeNt = getTimeNowNt();
@@ -376,8 +379,7 @@ injection_mode_e getCurrentInjectionMode() {
 
 #if EFI_SHAFT_POSITION_INPUT
 	if (runningMode == IM_SEQUENTIAL) {
-		bool missingPhaseInfoForSequential = 
-			!engine->triggerCentral.triggerState.hasSynchronizedPhase();
+		bool missingPhaseInfoForSequential = !engine->triggerCentral.triggerState.hasSynchronizedPhase();
 
 		bool willGetSequentialInfoLater = engine->triggerCentral.triggerState.expectDisambiguation();
 
@@ -405,45 +407,45 @@ void Engine::periodicFastCallback() {
 
 	speedoUpdate();
 
-	engineModules.apply_all([](auto & m) { m.onFastCallback(); });
+	engineModules.apply_all([](auto& m) { m.onFastCallback(); });
 }
 
 void Engine::onEngineStopped() {
 	engineModules.apply_all([](auto& m) { m.onEngineStop(); });
 }
 
-EngineRotationState * getEngineRotationState() {
+EngineRotationState* getEngineRotationState() {
 	return &engine->rpmCalculator;
 }
 
-EngineState * getEngineState() {
+EngineState* getEngineState() {
 	return &engine->engineState;
 }
 
-TunerStudioOutputChannels *getTunerStudioOutputChannels() {
+TunerStudioOutputChannels* getTunerStudioOutputChannels() {
 	return &engine->outputChannels;
 }
 
-Scheduler *getScheduler() {
+Scheduler* getScheduler() {
 	return &engine->scheduler;
 }
 
 #if EFI_SHAFT_POSITION_INPUT
-TriggerCentral * getTriggerCentral() {
+TriggerCentral* getTriggerCentral() {
 	return &engine->triggerCentral;
 }
 #endif // EFI_SHAFT_POSITION_INPUT
 
-LimpManager * getLimpManager() {
+LimpManager* getLimpManager() {
 	return &engine->module<LimpManager>().unmock();
 }
 
 #if EFI_ENGINE_CONTROL
-FuelSchedule *getFuelSchedule() {
+FuelSchedule* getFuelSchedule() {
 	return &engine->injectionEvents;
 }
 
-IgnitionEventList *getIgnitionEvents() {
+IgnitionEventList* getIgnitionEvents() {
 	return &engine->ignitionEvents;
 }
 #endif // EFI_ENGINE_CONTROL

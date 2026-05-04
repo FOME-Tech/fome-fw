@@ -9,11 +9,11 @@
 
 class TriggerWaveform;
 
-void initializeMazdaMiataNaShape(TriggerWaveform *s);
-void initializeMazdaMiataNb2Crank(TriggerWaveform *s);
-void initializeMazdaMiataVVtTestShape(TriggerWaveform *s);
-void configureMazdaProtegeSOHC(TriggerWaveform *s);
-void configureMazdaProtegeLx(TriggerWaveform *s);
+void initializeMazdaMiataNaShape(TriggerWaveform* s);
+void initializeMazdaMiataNb2Crank(TriggerWaveform* s);
+void initializeMazdaMiataVVtTestShape(TriggerWaveform* s);
+void configureMazdaProtegeSOHC(TriggerWaveform* s);
+void configureMazdaProtegeLx(TriggerWaveform* s);
 
 /**
  * TT_VVT_MIATA_NB2
@@ -22,9 +22,9 @@ void configureMazdaProtegeLx(TriggerWaveform *s);
  *
  * same decoder is used for VVT processing
  */
-void initializeMazdaMiataVVtCamShape(TriggerWaveform *s);
-void initializeMazdaMiataNaCamShape(TriggerWaveform *s);
+void initializeMazdaMiataVVtCamShape(TriggerWaveform* s);
+void initializeMazdaMiataNaCamShape(TriggerWaveform* s);
 
-void initializeMazdaSkyactivCam(TriggerWaveform *s);
+void initializeMazdaSkyactivCam(TriggerWaveform* s);
 
 void initializeMazdaLCam(TriggerWaveform* s);

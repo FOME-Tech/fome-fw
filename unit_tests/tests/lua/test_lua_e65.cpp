@@ -2,7 +2,8 @@
 #include "rusefi_lua.h"
 #include "lua_lib.h"
 
-#define BMW_CHECKSUM "	function bmwChecksum(canID, data, offset, length) \
+#define BMW_CHECKSUM                                                                                                   \
+	"	function bmwChecksum(canID, data, offset, length) \
 		checksum = canID   \
 		for i = offset, offset + length - 1,1 \
 		do \
@@ -44,7 +45,7 @@ function testFunc()
 	return 0.5 * (getTwoBytesLSB(data, 1, 1) >> 4)
 end
 )";
-			EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0x108 / 2);
+	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0x108 / 2);
 }
 
 // http://loopybunny.co.uk/CarPC/can/0AA.html
@@ -116,7 +117,6 @@ TEST(LuaE65, gearTorque3) {
 
 	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 0xDF9F);
 }
-
 
 TEST(LuaE65, sumChecksum) {
 	// checksum is first byte

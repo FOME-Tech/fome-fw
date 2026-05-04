@@ -4,12 +4,6 @@
 
 #if EFI_SHAFT_POSITION_INPUT
 
-InstantRpmCalculator::InstantRpmCalculator() :
-	//https://en.cppreference.com/w/cpp/language/zero_initialization
-	timeOfLastEvent()
-{
-}
-
 void InstantRpmCalculator::movePreSynchTimestamps() {
 	// here we take timestamps of events which happened prior to synchronization and place them
 	// at appropriate locations
@@ -34,8 +28,11 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 }
 
 expected<float> InstantRpmCalculator::calculateInstantRpm(
-	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t current_index, uint32_t nowNt32, angle_t window) const {
+		TriggerWaveform const& triggerShape,
+		TriggerFormDetails* triggerFormDetails,
+		uint32_t current_index,
+		uint32_t nowNt32,
+		angle_t window) const {
 
 	// Determine where we currently are in the revolution
 	angle_t currentAngle = triggerFormDetails->eventAngles[current_index];
@@ -95,8 +92,10 @@ void InstantRpmCalculator::setLastEventTimeForInstantRpm(efitick_t nowNt) {
 }
 
 void InstantRpmCalculator::updateInstantRpm(
-	TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t index, const EnginePhaseInfo& phaseInfo) {
+		TriggerWaveform const& triggerShape,
+		TriggerFormDetails* triggerFormDetails,
+		uint32_t index,
+		const EnginePhaseInfo& phaseInfo) {
 
 	// It's OK to truncate from 64b to 32b, ARM with single precision FPU uses an expensive
 	// software function to convert 64b int -> float, while 32b int -> float is very cheap hardware conversion
@@ -108,15 +107,20 @@ void InstantRpmCalculator::updateInstantRpm(
 	// Record the time of this event so we can calculate RPM from it later
 	timeOfLastEvent[index] = nowNt32;
 
-	auto instantRpm = calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
+	auto instantRpm =
+			calculateInstantRpm(triggerShape, triggerFormDetails, index, nowNt32, engineConfiguration->instantRpmRange);
 	if (instantRpm) {
 		m_instantRpm = instantRpm.Value;
 		updateCylinderContribution(triggerShape, triggerFormDetails, index, nowNt32, phaseInfo);
 	}
 }
 
-void InstantRpmCalculator::updateCylinderContribution(TriggerWaveform const & triggerShape, TriggerFormDetails *triggerFormDetails,
-	uint32_t current_index, uint32_t nowNt32, const EnginePhaseInfo& phaseInfo) {
+void InstantRpmCalculator::updateCylinderContribution(
+		TriggerWaveform const& triggerShape,
+		TriggerFormDetails* triggerFormDetails,
+		uint32_t current_index,
+		uint32_t nowNt32,
+		const EnginePhaseInfo& phaseInfo) {
 	int minTriggerLength = engineConfiguration->cylindersCount * 2;
 	if (triggerShape.getLength() < minTriggerLength) {
 		// Not enough teeth to reasonably determine cylinder contribution
@@ -137,7 +141,8 @@ void InstantRpmCalculator::updateCylinderContribution(TriggerWaveform const & tr
 		wrapAngle(measurementAngle, "misfire angle", ObdCode::OBD_PCM_Processor_Fault);
 
 		if (isPhaseInRange(EngPhase{measurementAngle}, phaseInfo)) {
-			if (auto rpm = calculateInstantRpm(triggerShape, triggerFormDetails, current_index, nowNt32, measurementWindow)) {
+			if (auto rpm = calculateInstantRpm(
+						triggerShape, triggerFormDetails, current_index, nowNt32, measurementWindow)) {
 				engine->outputChannels.cylinderRpm[i] = rpm.Value;
 				engine->outputChannels.cylinderRpmDelta[i] = rpm.Value - m_lastCylRpm;
 				m_lastCylRpm = rpm.Value;

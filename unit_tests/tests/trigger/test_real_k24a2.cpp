@@ -18,8 +18,8 @@ static void doTest(const char* testFile, int expectedRpm) {
 		engine->rpmCalculator.onSlowCallback();
 	}
 
-	ASSERT_EQ(0, eth.recentWarnings()->getCount())<< "warningCounter#vwRealCranking";
-	ASSERT_EQ(expectedRpm, round(Sensor::getOrZero(SensorType::Rpm)))<< reader.lineIndex();
+	ASSERT_EQ(0, eth.recentWarnings()->getCount()) << "warningCounter#vwRealCranking";
+	ASSERT_EQ(expectedRpm, round(Sensor::getOrZero(SensorType::Rpm))) << reader.lineIndex();
 }
 
 TEST(realk24, crankingNoPlugs1) {

@@ -3,8 +3,8 @@
 #include "crc_accelerator.h"
 
 extern "C" {
-	#include "boot.h"
-	#include "flash.h"
+#include "boot.h"
+#include "flash.h"
 }
 
 void FlashInit() {
@@ -22,10 +22,7 @@ blt_bool FlashErase(blt_addr addr, blt_int32u len) {
 		return BLT_TRUE;
 	}
 
-	return
-		(FLASH_RETURN_SUCCESS == intFlashErase(addr, len))
-		? BLT_TRUE
-		: BLT_FALSE;
+	return (FLASH_RETURN_SUCCESS == intFlashErase(addr, len)) ? BLT_TRUE : BLT_FALSE;
 }
 
 blt_bool FlashDone() {
@@ -39,7 +36,5 @@ blt_bool FlashVerifyChecksum() {
 	}
 
 	// Now do the actual CRC check to ensure we didn't get stuck with a half-written firmware image
-	return
-		checkFirmwareImageIntegrity(FlashGetUserProgBaseAddress())
-		? BLT_TRUE : BLT_FALSE;
+	return checkFirmwareImageIntegrity(FlashGetUserProgBaseAddress()) ? BLT_TRUE : BLT_FALSE;
 }

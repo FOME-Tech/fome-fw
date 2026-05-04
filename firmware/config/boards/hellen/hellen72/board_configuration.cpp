@@ -21,9 +21,9 @@ static void setInjectorPins() {
 }
 
 static void setIgnitionPins() {
-	engineConfiguration->ignitionPins[0] = H176_IGN_1; // 3F - IGN_1 (1&4)
-	engineConfiguration->ignitionPins[1] = Gpio::Unassigned ; // Gpio::E4
-	engineConfiguration->ignitionPins[2] = Gpio::E5; // 3I - IGN_2 (2&3)
+	engineConfiguration->ignitionPins[0] = H176_IGN_1;		 // 3F - IGN_1 (1&4)
+	engineConfiguration->ignitionPins[1] = Gpio::Unassigned; // Gpio::E4
+	engineConfiguration->ignitionPins[2] = Gpio::E5;		 // 3I - IGN_2 (2&3)
 	engineConfiguration->ignitionPins[3] = Gpio::Unassigned; // Gpio::E3
 }
 
@@ -73,13 +73,13 @@ void setBoardConfigOverrides() {
 		setHellenSdCardSpi2();
 	}
 
-    // NB2 still uses L6205PD
+	// NB2 still uses L6205PD
 	engineConfiguration->etbIo[0].directionPin1 = H144_OUT_PWM3; // ETB+
 	engineConfiguration->etbIo[0].directionPin2 = H144_OUT_PWM4; // ETB-
-	engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM2; // ETB_EN
+	engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM2;	 // ETB_EN
 	engineConfiguration->etb_use_two_wires = true;
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	setHellenCan();
 }
@@ -107,17 +107,16 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->clutchDownPin = H144_IN_RES3;
 	engineConfiguration->clutchDownPinInverted = true;
 
-	engineConfiguration->fuelPumpPin = Gpio::G2;	// OUT_IO9
-	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
-	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
+	engineConfiguration->fuelPumpPin = Gpio::G2;	   // OUT_IO9
+	engineConfiguration->idle.solenoidPin = Gpio::D14; // OUT_PWM5
+	engineConfiguration->fanPin = Gpio::D12;		   // OUT_PWM8
 	engineConfiguration->fan2Pin = Gpio::D9;
 	engineConfiguration->enableFan2WithAc = true;
-	engineConfiguration->mainRelayPin = Gpio::I2;	// OUT_LOW3
-	engineConfiguration->vvtPins[0] = Gpio::I0;    // 4R - VVT (O5)
+	engineConfiguration->mainRelayPin = Gpio::I2; // OUT_LOW3
+	engineConfiguration->vvtPins[0] = Gpio::I0;	  // 4R - VVT (O5)
 
-    engineConfiguration->tachOutputPin = Gpio::D13; // 3O - TACH (PWM7)
-    engineConfiguration->alternatorControlPin = Gpio::D15; // 3M - ALTERN (PWM6)
-
+	engineConfiguration->tachOutputPin = Gpio::D13;		   // 3O - TACH (PWM7)
+	engineConfiguration->alternatorControlPin = Gpio::D15; // 3M - ALTERN (PWM6)
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
@@ -126,8 +125,6 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
-
-
 
 	hellenWbo();
 }

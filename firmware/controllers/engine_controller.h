@@ -10,7 +10,7 @@
 
 // todo: huh we also have validateConfiguration()?!
 bool validateConfig();
-char * getPinNameByAdcChannel(const char *msg, adc_channel_e hwChannel, char *buffer);
+char* getPinNameByAdcChannel(const char* msg, adc_channel_e hwChannel, char* buffer);
 void initEngineController();
 void commonInitEngineController();
 void initStartStopButton();

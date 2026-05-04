@@ -16,7 +16,8 @@ static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boost
 static Map3D<BOOST_RPM_COUNT, BOOST_LOAD_COUNT, uint8_t, int16_t, int16_t> boostMapClosed;
 static SimplePwm boostPwmControl("boost");
 
-void BoostController::init(IPwm* pwm, const ValueProvider3D* openLoopMap, const ValueProvider3D* closedLoopTargetMap, pid_s* pidParams) {
+void BoostController::init(
+		IPwm* pwm, const ValueProvider3D* openLoopMap, const ValueProvider3D* closedLoopTargetMap, pid_s* pidParams) {
 	m_pwm = pwm;
 	m_openLoopMap = openLoopMap;
 	m_closedLoopTargetMap = closedLoopTargetMap;
@@ -33,7 +34,7 @@ void BoostController::resetLua() {
 	luaOpenLoopAdd = 0;
 }
 
-void BoostController::onConfigurationChange(engine_configuration_s const * previousConfig) {
+void BoostController::onConfigurationChange(engine_configuration_s const* previousConfig) {
 	if (!previousConfig || !m_pid.isSame(&previousConfig->boostPid)) {
 		m_shouldResetPid = true;
 	}
@@ -72,7 +73,8 @@ expected<float> BoostController::getSetpoint() {
 	boostClosedLoopXAxisValue = xAxis.Value;
 	boostClosedLoopYAxisValue = yAxis.Value;
 
-	efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_closedLoopTargetMap != nullptr, "boost closed loop target", unexpected);
+	efiAssert(
+			ObdCode::OBD_PCM_Processor_Fault, m_closedLoopTargetMap != nullptr, "boost closed loop target", unexpected);
 
 	float target = m_closedLoopTargetMap->getValue(xAxis.Value, yAxis.Value);
 
@@ -245,13 +247,7 @@ void startBoostPin() {
 		return;
 	}
 
-	startSimplePwm(
-		&boostPwmControl,
-		"Boost",
-		&enginePins.boostPin,
-		engineConfiguration->boostPwmFrequency,
-		0
-	);
+	startSimplePwm(&boostPwmControl, "Boost", &enginePins.boostPin, engineConfiguration->boostPwmFrequency, 0);
 #endif /* EFI_UNIT_TEST */
 }
 
@@ -275,10 +271,12 @@ void initBoostCtrl() {
 
 	// Set up open & closed loop tables
 	boostMapOpen.init(config->boostTableOpenLoop, config->boostTpsBins, config->boostRpmBins);
-	boostMapClosed.init(config->boostTableClosedLoop, config->boostClosedLoopYAxisBins, config->boostClosedLoopXAxisBins);
+	boostMapClosed.init(
+			config->boostTableClosedLoop, config->boostClosedLoopYAxisBins, config->boostClosedLoopXAxisBins);
 
 	// Set up boost controller instance
-	engine->module<BoostController>().unmock().init(&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
+	engine->module<BoostController>().unmock().init(
+			&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
 
 #if !EFI_UNIT_TEST
 	startBoostPin();

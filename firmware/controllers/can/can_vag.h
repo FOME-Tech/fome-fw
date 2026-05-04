@@ -13,12 +13,11 @@ void canDashboardVAG(CanCycle cycle);
  * https://rusefi.com/forum/download/file.php?id=9076
  */
 
-
 // https://wiki.openstreetmap.org/wiki/VW-CAN
 // 1056
-#define CAN_VAG_CLT_V2   0x420 /* _10ms cycle */
+#define CAN_VAG_CLT_V2 0x420 /* _10ms cycle */
 // 976
-#define CAN_VAG_IMMO     0x3D0 /* _10ms cycle */
+#define CAN_VAG_IMMO 0x3D0 /* _10ms cycle */
 
 // 0x280, 10ms period
 #define CAN_VAG_Motor_1 640

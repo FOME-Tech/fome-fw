@@ -11,38 +11,37 @@
 #include "malfunction_central.h"
 
 static const brain_pin_e injPins[] = {
-	PROTEUS_LS_1,
-	PROTEUS_LS_2,
-	PROTEUS_LS_3,
-	PROTEUS_LS_4,
-	PROTEUS_LS_5,
-	PROTEUS_LS_6,
-	PROTEUS_LS_7,
-	PROTEUS_LS_8,
-	PROTEUS_LS_9,
-	PROTEUS_LS_10,
-	PROTEUS_LS_11,
-	PROTEUS_LS_12
-};
+		PROTEUS_LS_1,
+		PROTEUS_LS_2,
+		PROTEUS_LS_3,
+		PROTEUS_LS_4,
+		PROTEUS_LS_5,
+		PROTEUS_LS_6,
+		PROTEUS_LS_7,
+		PROTEUS_LS_8,
+		PROTEUS_LS_9,
+		PROTEUS_LS_10,
+		PROTEUS_LS_11,
+		PROTEUS_LS_12};
 
 static const brain_pin_e ignPins[] = {
-	PROTEUS_IGN_1,
-	PROTEUS_IGN_2,
-	PROTEUS_IGN_3,
-	PROTEUS_IGN_4,
-	PROTEUS_IGN_5,
-	PROTEUS_IGN_6,
-	PROTEUS_IGN_7,
-	PROTEUS_IGN_8,
-	PROTEUS_IGN_9,
-	PROTEUS_IGN_10,
-	PROTEUS_IGN_11,
-	PROTEUS_IGN_12,
+		PROTEUS_IGN_1,
+		PROTEUS_IGN_2,
+		PROTEUS_IGN_3,
+		PROTEUS_IGN_4,
+		PROTEUS_IGN_5,
+		PROTEUS_IGN_6,
+		PROTEUS_IGN_7,
+		PROTEUS_IGN_8,
+		PROTEUS_IGN_9,
+		PROTEUS_IGN_10,
+		PROTEUS_IGN_11,
+		PROTEUS_IGN_12,
 };
 
 static const brain_pin_e pgPins[] = {
-	PROTEUS_5V_PG_1,
-	PROTEUS_5V_PG_2,
+		PROTEUS_5V_PG_1,
+		PROTEUS_5V_PG_2,
 };
 
 static void setInjectorPins() {
@@ -182,22 +181,22 @@ void boardPrepareForStop() {
 }
 
 static Gpio PROTEUS_OUTPUTS[] = {
-	PROTEUS_LS_1,
-	PROTEUS_LS_2,
-	PROTEUS_LS_3,
-	PROTEUS_LS_4,
-	PROTEUS_LS_5,
-	PROTEUS_LS_6,
-	PROTEUS_LS_7,
-	PROTEUS_LS_8,
-	PROTEUS_LS_9,
-	PROTEUS_LS_10,
-	PROTEUS_LS_11,
-	PROTEUS_LS_12,
-	PROTEUS_LS_13,
-	PROTEUS_LS_14,
-	PROTEUS_LS_15,
-	PROTEUS_LS_16,
+		PROTEUS_LS_1,
+		PROTEUS_LS_2,
+		PROTEUS_LS_3,
+		PROTEUS_LS_4,
+		PROTEUS_LS_5,
+		PROTEUS_LS_6,
+		PROTEUS_LS_7,
+		PROTEUS_LS_8,
+		PROTEUS_LS_9,
+		PROTEUS_LS_10,
+		PROTEUS_LS_11,
+		PROTEUS_LS_12,
+		PROTEUS_LS_13,
+		PROTEUS_LS_14,
+		PROTEUS_LS_15,
+		PROTEUS_LS_16,
 };
 
 int getBoardMetaOutputsCount() {
@@ -209,19 +208,39 @@ Gpio* getBoardMetaOutputs() {
 }
 
 void initBoardSensors() {
-	if(isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])){
-		efiSetPadMode("PG1", pgPins[0], PI_PULLUP);
-		efiSetPadMode("PG2", pgPins[1], PI_PULLUP);
+	if (isBrainPinValid(pgPins[0])) {
+		efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
+	}
+
+	if (isBrainPinValid(pgPins[1])) {
+		efiSetPadMode("PG2", pgPins[1], PAL_MODE_INPUT_PULLUP);
 	}
 }
 
-void checkBoardPowerSupply() {
-	if(isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])){
-		engine->engineState.pgState = efiReadPin(pgPins[0]) && efiReadPin(pgPins[1]);
-		if(!engine->engineState.pgState){
-			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
-		} else {
-			removeError(ObdCode::CUSTOM_ERR_PG_STATE);
-		}
+template <int index>
+static bool checkPowerSupplyPin(ObdCode code) {
+	static bool hasEverBeenGood;
+
+	if (!isBrainPinValid(pgPins[index])) {
+		return false;
 	}
+
+	bool state = efiReadPin(pgPins[index]);
+
+	if (state) {
+		hasEverBeenGood = true;
+		removeError(code);
+	} else if (hasEverBeenGood) {
+		// Only set an error if we ever saw it in the "good" state
+		// avoids setting the error if the chip is a TLS115B0 variant
+		// that lacks the power good output completely
+		setError(true, code);
+	}
+
+	return state;
+}
+
+void checkBoardPowerSupply() {
+	engine->engineState.pgState = checkPowerSupplyPin<0>(ObdCode::Sensor5vSupplyLow);
+	engine->engineState.pgState2 = checkPowerSupplyPin<1>(ObdCode::Sensor5VSupply2Low);
 }

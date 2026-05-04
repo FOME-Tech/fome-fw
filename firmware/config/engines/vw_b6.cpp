@@ -20,7 +20,7 @@ static inline void commonPassatB6() {
 	engineConfiguration->vvtMode[0] = VVT_BOSCH_QUICK_START;
 	engineConfiguration->map.sensor.type = MT_BOSCH_2_5;
 
-    setTable(config->injectionPhase, -180.0f);
+	setTable(config->injectionPhase, -180.0f);
 
 	engineConfiguration->etbIdleThrottleRange = 10;
 	engineConfiguration->idleMode = IM_AUTO;
@@ -30,7 +30,6 @@ static inline void commonPassatB6() {
 	engineConfiguration->isPhaseSyncRequiredForIgnition = true;
 
 	engineConfiguration->disableEtbWhenEngineStopped = true;
-
 
 	for (int i = 4; i < MAX_CYLINDER_COUNT; i++) {
 		engineConfiguration->injectionPins[i] = Gpio::Unassigned;
@@ -45,9 +44,9 @@ static inline void commonPassatB6() {
 	engineConfiguration->injectorCompensationMode = ICM_SensedRailPressure;
 	// Reference rail pressure is 10 000 kPa = 100 bar
 	engineConfiguration->fuelReferencePressure = 10000;
-	//setting "flat" 0.2 ms injector's lag time
+	// setting "flat" 0.2 ms injector's lag time
 	setArrayValues(engineConfiguration->injector.battLagCorr, 0.2);
-	
+
 	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_VAG);
 	strcpy(engineConfiguration->engineCode, "BPY");
 	strcpy(engineConfiguration->vehicleName, "test");
@@ -60,25 +59,29 @@ static inline void commonPassatB6() {
 	 * PSS-140
 	 */
 	// todo: calibration
-	engineConfiguration->highPressureFuel.v1 = 0.5; /* volts */;
+	engineConfiguration->highPressureFuel.v1 = 0.5; /* volts */
+	;
 	engineConfiguration->highPressureFuel.value1 = 0;
-	engineConfiguration->highPressureFuel.v2 = 4.5; /* volts */;
+	engineConfiguration->highPressureFuel.v2 = 4.5; /* volts */
+	;
 	engineConfiguration->highPressureFuel.value2 = BAR2KPA(140);
 
-	engineConfiguration->lowPressureFuel.v1 = 0.5; /* volts */;
+	engineConfiguration->lowPressureFuel.v1 = 0.5; /* volts */
+	;
 	engineConfiguration->lowPressureFuel.value1 = PSI2KPA(0);
-	engineConfiguration->lowPressureFuel.v2 = 4.5; /* volts */;
+	engineConfiguration->lowPressureFuel.v2 = 4.5; /* volts */
+	;
 	// todo: what's the proper calibration of this Bosch sensor? is it really 200psi?
 	engineConfiguration->lowPressureFuel.value2 = PSI2KPA(200);
 
-	gppwm_channel *lowPressureFuelPumpControl = &engineConfiguration->gppwm[1];
+	gppwm_channel* lowPressureFuelPumpControl = &engineConfiguration->gppwm[1];
 	strcpy(engineConfiguration->gpPwmNote[1], "LPFP");
 	lowPressureFuelPumpControl->pwmFrequency = 20;
 	lowPressureFuelPumpControl->loadAxis = GPPWM_FuelLoad;
 	lowPressureFuelPumpControl->dutyIfError = 50;
 	setTable(lowPressureFuelPumpControl->table, (uint8_t)50);
 
-	gppwm_channel *coolantControl = &engineConfiguration->gppwm[0];
+	gppwm_channel* coolantControl = &engineConfiguration->gppwm[0];
 	strcpy(engineConfiguration->gpPwmNote[0], "Rad Fan");
 	coolantControl->loadAxis = GPPWM_Clt;
 
@@ -92,7 +95,7 @@ static inline void commonPassatB6() {
 	// for now I just want to stop radiator whine
 	// todo: enable cooling!
 	/*
-    for (int load = 0; load < GPPWM_LOAD_COUNT; load++) {
+	for (int load = 0; load < GPPWM_LOAD_COUNT; load++) {
 		for (int r = 0; r < GPPWM_RPM_COUNT; r++) {
 			engineConfiguration->gppwm[0].table[load][r] = value;
 		}
@@ -125,26 +128,11 @@ static inline void commonPassatB6() {
 	engineConfiguration->crankingInjectionMode = IM_SEQUENTIAL;
 }
 
-
 // MAF signal frequency after hardware divider x16, Hz
-static const float hardCodedFreqBins[] = {139,
-		152,
-		180,
-		217,
-		280,
-		300,
-		365};
+static const float hardCodedFreqBins[] = {139, 152, 180, 217, 280, 300, 365};
 
 // MAF grams per second
-static const float hardCodedGperSValues[] {
-		3.58,
-		4.5,
-		6.7,
-		11,
-		22,
-		25,
-		40
-};
+static const float hardCodedGperSValues[]{3.58, 4.5, 6.7, 11, 22, 25, 40};
 
 /**
  * set engine_type 39
@@ -166,7 +154,6 @@ void setProteusVwPassatB6() {
 	}
 	strcpy(engineConfiguration->scriptCurveName[0], "MAFcurve");
 
-
 	commonPassatB6();
 	engineConfiguration->triggerInputPins[0] = PROTEUS_VR_1;
 	engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_2;
@@ -176,23 +163,22 @@ void setProteusVwPassatB6() {
 	engineConfiguration->lowPressureFuel.hwChannel = PROTEUS_IN_ANALOG_VOLT_5;
 	engineConfiguration->highPressureFuel.hwChannel = PROTEUS_IN_ANALOG_VOLT_4;
 
-	gppwm_channel *coolantControl = &engineConfiguration->gppwm[0];
+	gppwm_channel* coolantControl = &engineConfiguration->gppwm[0];
 	coolantControl->pin = PROTEUS_LS_5;
 
 	engineConfiguration->mainRelayPin = PROTEUS_LS_6;
 
-	gppwm_channel *lowPressureFuelPumpControl = &engineConfiguration->gppwm[1];
+	gppwm_channel* lowPressureFuelPumpControl = &engineConfiguration->gppwm[1];
 	lowPressureFuelPumpControl->pin = PROTEUS_LS_7;
 
-	//engineConfiguration->boostControlPin = PROTEUS_LS_8;
+	// engineConfiguration->boostControlPin = PROTEUS_LS_8;
 	engineConfiguration->vvtPins[0] = PROTEUS_LS_9;
 	engineConfiguration->hpfpValvePin = PROTEUS_LS_15;
-
 
 	engineConfiguration->tps1_2AdcChannel = PROTEUS_IN_TPS1_2;
 	setPPSInputs(PROTEUS_IN_ANALOG_VOLT_9, PROTEUS_IN_PPS2);
 
-    #include "vw_b6.lua"
+#include "vw_b6.lua"
 
 #endif
 }
@@ -210,15 +196,12 @@ void setMreVwPassatB6() {
 
 	engineConfiguration->tps1_2AdcChannel = MRE_IN_ANALOG_VOLT_9;
 
-
-
 	// EFI_ADC_7: "31 - AN volt 3" - PA7
 	// 36 - AN volt 8
 	setPPSInputs(MRE_IN_ANALOG_VOLT_3, MRE_IN_ANALOG_VOLT_8);
 
 	// "26 - AN volt 2"
 	engineConfiguration->highPressureFuel.hwChannel = MRE_IN_ANALOG_VOLT_2;
-
 
 	// "19 - AN volt 4"
 	engineConfiguration->lowPressureFuel.hwChannel = EFI_ADC_12;
@@ -234,7 +217,6 @@ void setMreVwPassatB6() {
 	engineConfiguration->spi3sckPin = Gpio::C10;
 	engineConfiguration->sdCardCsPin = Gpio::Unassigned;
 	engineConfiguration->is_enabled_spi_3 = true;
-
 
 	// J8 orange
 	engineConfiguration->mc33816_cs = Gpio::B8;
@@ -254,20 +236,17 @@ void setMreVwPassatB6() {
 	// J6 white
 	engineConfiguration->injectionPins[3] = Gpio::E0;
 
-
-	gppwm_channel *lowPressureFuelPumpControl = &engineConfiguration->gppwm[1];
+	gppwm_channel* lowPressureFuelPumpControl = &engineConfiguration->gppwm[1];
 
 	// "42 - Injector 4", somehow GP4 did not work? not enough current? not happy with diode?
 	lowPressureFuelPumpControl->pin = MRE_INJ_4;
 
-
-	gppwm_channel *coolantControl = &engineConfiguration->gppwm[0];
+	gppwm_channel* coolantControl = &engineConfiguration->gppwm[0];
 
 	coolantControl->pin = MRE_LS_2;
 	// "7 - Lowside 1"
-	//engineConfiguration->hpfpValvePin = MRE_LS_1;
+	// engineConfiguration->hpfpValvePin = MRE_LS_1;
 	engineConfiguration->hpfpValvePin = Gpio::B10; // AUX J13
-
 
 #endif /* HW_MICRO_RUSEFI */
 }

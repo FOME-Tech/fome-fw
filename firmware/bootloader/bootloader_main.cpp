@@ -5,8 +5,8 @@
 #include "rusefi.h"
 
 extern "C" {
-	#include "boot.h"
-	#include "shared_params.h"
+#include "boot.h"
+#include "shared_params.h"
 }
 
 class : public chibios_rt::BaseStaticThread<256> {
@@ -59,23 +59,23 @@ class : public chibios_rt::BaseStaticThread<1024> {
 		// Init openblt shared params
 		SharedParamsInit();
 
-		#if (BOOT_FILE_SYS_ENABLE > 0)
-			// Force a mount of the SD card, and if the update
-			// file exists, set the backdoor so we'll do an update
-			FileInit();
-			if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
-				SharedParamsInit();
-				SharedParamsWriteByIndex(0, 0x01);
-			}
-		#endif
+#if (BOOT_FILE_SYS_ENABLE > 0)
+		// Force a mount of the SD card, and if the update
+		// file exists, set the backdoor so we'll do an update
+		FileInit();
+		if (BLT_TRUE == FileIsFirmwareUpdateRequestedHook()) {
+			SharedParamsInit();
+			SharedParamsWriteByIndex(0, 0x01);
+		}
+#endif
 
 		// Init openblt itself
 		BootInit();
 
-		#if (BOOT_FILE_SYS_ENABLE > 0)
-			// Always attempt an SD firmware update (get you unstuck from corrupt firmware)
-			FileHandleFirmwareUpdateRequest();
-		#endif
+#if (BOOT_FILE_SYS_ENABLE > 0)
+		// Always attempt an SD firmware update (get you unstuck from corrupt firmware)
+		FileHandleFirmwareUpdateRequest();
+#endif
 
 		while (true) {
 			BootTask();
@@ -126,4 +126,4 @@ void efiSetPadUnused(brain_pin_e brainPin) {
 }
 
 // Weak linked default implementation (not necessarily required for all boards)
-__attribute__((weak)) void preHalInit() { }
+__attribute__((weak)) void preHalInit() {}

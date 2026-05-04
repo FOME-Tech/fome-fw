@@ -14,15 +14,12 @@
 
 // http://en.wikipedia.org/wiki/Endianness
 
-constexpr inline uint16_t SWAP_UINT16(uint16_t x)
-{
+constexpr inline uint16_t SWAP_UINT16(uint16_t x) {
 	return ((x << 8) | (x >> 8));
 }
 
-constexpr inline uint32_t SWAP_UINT32(uint32_t x)
-{
-	return (((x >> 24) & 0x000000ff) | ((x <<  8) & 0x00ff0000) |
-			((x >>  8) & 0x0000ff00) | ((x << 24) & 0xff000000));
+constexpr inline uint32_t SWAP_UINT32(uint32_t x) {
+	return (((x >> 24) & 0x000000ff) | ((x << 8) & 0x00ff0000) | ((x >> 8) & 0x0000ff00) | ((x << 24) & 0xff000000));
 }
 
 #define BIT(n) (UINT32_C(1) << (n))
@@ -44,13 +41,12 @@ constexpr inline uint32_t SWAP_UINT32(uint32_t x)
 #define QUOTE(x) Q(x)
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif /* __cplusplus */
 
-const char * boolToString(bool value);
+const char* boolToString(bool value);
 
-char * efiTrim(char *param);
+char* efiTrim(char* param);
 
 /*
 ** return lower-case of c if upper-case, else c
@@ -63,7 +59,7 @@ constexpr inline int mytolower(const char c) {
 	}
 }
 
-constexpr inline int djb2lowerCase(const char *str) {
+constexpr inline int djb2lowerCase(const char* str) {
 	unsigned long hash = 5381;
 
 	while (char c = *str++) {
@@ -74,9 +70,9 @@ constexpr inline int djb2lowerCase(const char *str) {
 }
 
 int efiPow10(int param);
-int indexOf(const char *string, char ch);
-float atoff(const char *string);
-int atoi(const char *string);
+int indexOf(const char* string, char ch);
+float atoff(const char* string);
+int atoi(const char* string);
 
 #define UNUSED(x) (void)(x)
 
@@ -87,15 +83,15 @@ int atoi(const char *string);
 float efiRound(float value, float precision);
 
 // sometimes known as 'itoa'
-char* itoa10(char *p, int num);
+char* itoa10(char* p, int num);
 
 /**
  * clamps value into the [0, 100] range
  */
 #define clampPercentValue(x) (clampF(0, x, 100))
 
-bool strEqualCaseInsensitive(const char *str1, const char *str2);
-bool strEqual(const char *str1, const char *str2);
+bool strEqualCaseInsensitive(const char* str1, const char* str2);
+bool strEqual(const char* str1, const char* str2);
 
 float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, float decrLimitPerSec, float secsPassed);
 
@@ -105,12 +101,21 @@ float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, f
 #include <cstddef>
 #include <cstring>
 
-#define IS_NEGATIVE_ZERO(value) (__builtin_signbit(value) && value==0)
+#define IS_NEGATIVE_ZERO(value) (__builtin_signbit(value) && value == 0)
 #define fixNegativeZero(value) (IS_NEGATIVE_ZERO(value) ? 0 : value)
 
-#define assertIsInBounds(length, array, msg) efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, std::is_unsigned_v<decltype(length)> && (length) < efi::size(array), msg)
+#define assertIsInBounds(length, array, msg)                                                                           \
+	efiAssertVoid(                                                                                                     \
+			ObdCode::OBD_PCM_Processor_Fault,                                                                          \
+			std::is_unsigned_v<decltype(length)> && (length) < efi::size(array),                                       \
+			msg)
 
-#define assertIsInBoundsWithResult(length, array, msg, failedResult) efiAssert(ObdCode::OBD_PCM_Processor_Fault, std::is_unsigned_v<decltype(length)> && (length) < efi::size(array), msg, failedResult)
+#define assertIsInBoundsWithResult(length, array, msg, failedResult)                                                   \
+	efiAssert(                                                                                                         \
+			ObdCode::OBD_PCM_Processor_Fault,                                                                          \
+			std::is_unsigned_v<decltype(length)> && (length) < efi::size(array),                                       \
+			msg,                                                                                                       \
+			failedResult)
 
 template <typename T>
 bool isInRange(T min, T val, T max) {
@@ -134,8 +139,7 @@ inline constexpr Gpio operator+(size_t a, Gpio b) {
 	return b + a;
 }
 
-namespace efi
-{
+namespace efi {
 template <class _Ty>
 struct remove_reference {
 	using type = _Ty;
@@ -159,6 +163,6 @@ template <class _Ty>
 constexpr remove_reference_t<_Ty>&& move(_Ty&& _Arg) noexcept {
 	return static_cast<remove_reference_t<_Ty>&&>(_Arg);
 }
-}
+} // namespace efi
 
 #endif /* __cplusplus */

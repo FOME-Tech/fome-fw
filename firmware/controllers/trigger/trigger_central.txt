@@ -4,7 +4,7 @@ struct_no_prefix trigger_central_s
 	int16_t autoscale mapVvt_MAP_AT_DIFF;;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 655, 2
 
 	uint16_t autoscale currentEngineDecodedPhase;Engine Phase;"deg",0.1, 0, 0, 720, 1
-	int16_t triggerToothAngleError;Trg: Tooth angle error;"deg", 0.01, 0, -30, 30, 2
+	int16_t autoscale triggerToothAngleError;Trg: Tooth angle error;"deg", 0.01, 0, -30, 30, 2
 
 	uint8_t triggerIgnoredToothCount;Trg: Ignored tooth count
 end_struct

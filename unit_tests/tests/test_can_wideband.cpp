@@ -2,8 +2,12 @@
 
 #include "AemXSeriesLambda.h"
 
-#define CHECKBUS(d, bus, id, result)	do { frame.SID = id; EXPECT_EQ(result, d.acceptFrame(bus, frame)); } while (0)
-#define CHECK(id, result)				CHECKBUS(dut, CanBusIndex::Bus0, id, result)
+#define CHECKBUS(d, bus, id, result)                                                                                   \
+	do {                                                                                                               \
+		frame.SID = id;                                                                                                \
+		EXPECT_EQ(result, d.acceptFrame(bus, frame));                                                                  \
+	} while (0)
+#define CHECK(id, result) CHECKBUS(dut, CanBusIndex::Bus0, id, result)
 
 TEST(CanWideband, AcceptFrameId0) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
@@ -104,36 +108,31 @@ TEST(CanWideband, DecodeValidAemFormat) {
 
 	frame.DLC = 8;
 
-	frame.data8[0] = 0x1F;	// 8000, lambda 0.8
+	frame.data8[0] = 0x1F; // 8000, lambda 0.8
 	frame.data8[1] = 0x40;
 	frame.data8[2] = 0;
 	frame.data8[3] = 0;
 	frame.data8[4] = 0;
 	frame.data8[5] = 0;
-	frame.data8[6] =
-		1 << 1 |	// LSU 4.9 detected
-		1 << 7;		// Data valid
+	frame.data8[6] = 1 << 1 | // LSU 4.9 detected
+					 1 << 7;  // Data valid
 	frame.data8[7] = 0;
 
 	// check that lambda updates
 	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(0.8f, Sensor::get(SensorType::Lambda1).value_or(-1));
 
-
 	// Now check invalid data
-	frame.data8[6] =
-		1 << 1 |	// LSU 4.9 detected
-		0 << 7;		// Data INVALID
+	frame.data8[6] = 1 << 1 | // LSU 4.9 detected
+					 0 << 7;  // Data INVALID
 
 	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 
-
 	// Now check sensor fault
-	frame.data8[6] =
-		1 << 1 |	// LSU 4.9 detected
-		1 << 7;		// Data valid
-	frame.data8[7] = 1 << 6; // Sensor fault!
+	frame.data8[6] = 1 << 1 | // LSU 4.9 detected
+					 1 << 7;  // Data valid
+	frame.data8[7] = 1 << 6;  // Sensor fault!
 
 	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));

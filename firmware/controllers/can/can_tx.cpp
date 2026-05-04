@@ -17,59 +17,61 @@
 #include "can_sensor.h"
 #include "rusefi_wideband.h"
 
-extern CanListener* canListeners_head;
-
-
-CanWrite::CanWrite()
-	: PeriodicController("CAN TX", PRIO_CAN_TX, CAN_CYCLE_FREQ)
-{
-}
+CanWrite::CanWrite(CanBusIndex bus)
+	: PeriodicController(bus == CanBusIndex::Bus0 ? "CAN TX 0" : "CAN TX 1", PRIO_CAN_TX, CAN_CYCLE_FREQ)
+	, m_bus(bus) {}
 
 static CI roundTxPeriodToCycle(uint16_t period) {
-	if (period < 10) return CI::_5ms;
-	else if (period < 20) return CI::_10ms;
-	else if (period < 50) return CI::_20ms;
-	else if (period < 100) return CI::_50ms;
-	else if (period < 200) return CI::_100ms;
-	else if (period < 250) return CI::_200ms;
-	else if (period < 500) return CI::_250ms;
-	else if (period < 1000) return CI::_500ms;
-	else return CI::_1000ms;
+	if (period < 10) {
+		return CI::_5ms;
+	} else if (period < 20) {
+		return CI::_10ms;
+	} else if (period < 50) {
+		return CI::_20ms;
+	} else if (period < 100) {
+		return CI::_50ms;
+	} else if (period < 200) {
+		return CI::_100ms;
+	} else if (period < 250) {
+		return CI::_200ms;
+	} else if (period < 500) {
+		return CI::_250ms;
+	} else if (period < 1000) {
+		return CI::_500ms;
+	} else {
+		return CI::_1000ms;
+	}
 }
 
 void CanWrite::PeriodicTask(efitick_t) {
-	static uint16_t cycleCount = 0;
-	CanCycle cycle(cycleCount);
+	CanCycle cycle(m_cycleCount);
 
-	//in case we have Verbose Can enabled, we should keep user configured period
+	// in case we have Verbose Can enabled, we should keep user configured period
 	if (engineConfiguration->enableVerboseCanTx) {
 		auto roundedInterval = roundTxPeriodToCycle(engineConfiguration->canSleepPeriodMs);
 		if (cycle.isInterval(roundedInterval)) {
-			void sendCanVerbose();
-			sendCanVerbose();
+			void sendCanVerbose(CanBusIndex bus);
+			sendCanVerbose(m_bus);
 		}
 	}
 
-	CanListener* current = canListeners_head;
-
-	while (current) {
-		current = current->request();
-	}
-
 	if (cycle.isInterval(CI::_MAX_Cycle)) {
-		//we now reset cycleCount since we reached max cycle count
-		cycleCount = 0;
+		// we now reset cycleCount since we reached max cycle count
+		m_cycleCount = 0;
 	}
 
-	updateDash(cycle);
+	// Dashboard messages are all hardcoded to Bus0
+	if (m_bus == CanBusIndex::Bus0) {
+		updateDash(cycle);
+	}
 
 #if EFI_WIDEBAND_FIRMWARE_UPDATE
 	if (engineConfiguration->widebandMode == WidebandMode::FOMEInternal && cycle.isInterval(CI::_50ms)) {
-		sendWidebandInfo();
+		sendWidebandInfo(m_bus);
 	}
 #endif
 
-	cycleCount++;
+	m_cycleCount++;
 }
 
 CanInterval CanCycle::computeFlags(uint32_t cycleCount) {

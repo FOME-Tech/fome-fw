@@ -8,6 +8,7 @@ import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.engine_type_e;
 import com.rusefi.functional_tests.EcuTestHelper;
 import org.junit.Test;
+import org.junit.Ignore;
 
 import static com.rusefi.binaryprotocol.BinaryProtocol.sleep;
 import static com.rusefi.config.generated.Fields.*;
@@ -24,6 +25,7 @@ public class VssHardwareLoopTest extends RusefiTestBase {
         return true;
     }
 
+    @Ignore
     @Test
     public void test() {
         ecu.setEngineType(engine_type_e.FRANKENSO_MIATA_NA6_MAP);

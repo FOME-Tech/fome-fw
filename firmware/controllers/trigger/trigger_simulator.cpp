@@ -11,7 +11,7 @@
 #include "trigger_emulator_algo.h"
 
 #if EFI_UNIT_TEST
-	extern bool printTriggerTrace;
+extern bool printTriggerTrace;
 #endif
 
 /**
@@ -35,21 +35,20 @@ int getSimulatedEventTime(const TriggerWaveform& shape, int i) {
 	int stateIndex = i % shape.getSize();
 	int loopIndex = i / shape.getSize();
 
-	return (int) (SIMULATION_CYCLE_PERIOD * (loopIndex + shape.wave.getSwitchTime(stateIndex)));
+	return (int)(SIMULATION_CYCLE_PERIOD * (loopIndex + shape.wave.getSwitchTime(stateIndex)));
 }
 
 void TriggerStimulatorHelper::feedSimulatedEvent(
 		const TriggerConfiguration& triggerConfiguration,
 		TriggerDecoderBase& state,
 		const TriggerWaveform& shape,
-		int i
-		) {
+		int i) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6593, shape.getSize() > 0, "size not zero");
 	int stateIndex = i % shape.getSize();
 
 	int time = getSimulatedEventTime(shape, i);
 
-	const auto & multiChannelStateSequence = shape.wave;
+	const auto& multiChannelStateSequence = shape.wave;
 
 #if EFI_UNIT_TEST
 	int prevIndex = getPreviousIndex(stateIndex, shape.getSize());
@@ -61,28 +60,33 @@ void TriggerStimulatorHelper::feedSimulatedEvent(
 	bool newSecondaryWheelState = multiChannelStateSequence.getChannelState(1, stateIndex);
 
 	if (printTriggerDebug) {
-		printf("TriggerStimulator: simulatedEvent: %d>%d primary %d>%d secondary %d>%d\r\n", prevIndex, stateIndex, primaryWheelState, newPrimaryWheelState,
-				secondaryWheelState, newSecondaryWheelState );
+		printf("TriggerStimulator: simulatedEvent: %d>%d primary %d>%d secondary %d>%d\r\n",
+			   prevIndex,
+			   stateIndex,
+			   primaryWheelState,
+			   newPrimaryWheelState,
+			   secondaryWheelState,
+			   newSecondaryWheelState);
 	}
 #endif /* EFI_UNIT_TEST */
 
-
 	// todo: code duplication with TriggerEmulatorHelper::handleEmulatorCallback?
 
-	constexpr TriggerEvent riseEvents[] = { TriggerEvent::PrimaryRising, TriggerEvent::SecondaryRising };
-	constexpr TriggerEvent fallEvents[] = { TriggerEvent::PrimaryFalling, TriggerEvent::SecondaryFalling };
+	constexpr TriggerEvent riseEvents[] = {TriggerEvent::PrimaryRising, TriggerEvent::SecondaryRising};
+	constexpr TriggerEvent fallEvents[] = {TriggerEvent::PrimaryFalling, TriggerEvent::SecondaryFalling};
 
 	for (size_t j = 0; j < PWM_PHASE_MAX_WAVE_PER_PWM; j++) {
 		if (needEvent(stateIndex, multiChannelStateSequence, j)) {
-			bool currentValue = multiChannelStateSequence.getChannelState(/*phaseIndex*/j, stateIndex);
+			bool currentValue = multiChannelStateSequence.getChannelState(/*phaseIndex*/ j, stateIndex);
 			TriggerEvent event = (currentValue ? riseEvents : fallEvents)[j];
 			if (isUsefulSignal(event, shape)) {
 				state.decodeTriggerEvent(
-					"sim",
+						"sim",
 						shape,
-					/* override */ nullptr,
-					triggerConfiguration,
-					event, time);
+						/* override */ nullptr,
+						triggerConfiguration,
+						event,
+						time);
 			}
 		}
 	}
@@ -92,8 +96,7 @@ void TriggerStimulatorHelper::assertSyncPosition(
 		const TriggerConfiguration& triggerConfiguration,
 		const uint32_t syncIndex,
 		TriggerDecoderBase& state,
-		TriggerWaveform& shape
-		) {
+		TriggerWaveform& shape) {
 
 // todo: is anything limiting this TEST_REVOLUTIONS? why does value '8' not work for example?
 #define TEST_REVOLUTIONS 6
@@ -107,7 +110,8 @@ void TriggerStimulatorHelper::assertSyncPosition(
 
 	int revolutionCounter = state.getCrankSynchronizationCounter();
 	if (revolutionCounter != TEST_REVOLUTIONS) {
-		warning(ObdCode::CUSTOM_OBD_TRIGGER_WAVEFORM, "sync failed/wrong gap parameters trigger=%s revolutionCounter=%d",
+		warning(ObdCode::CUSTOM_OBD_TRIGGER_WAVEFORM,
+				"sync failed/wrong gap parameters trigger=%s revolutionCounter=%d",
 				getTrigger_type_e(triggerConfiguration.TriggerType.type),
 				revolutionCounter);
 		shape.setShapeDefinitionError(true);
@@ -115,11 +119,11 @@ void TriggerStimulatorHelper::assertSyncPosition(
 	}
 	shape.shapeDefinitionError = false;
 #if EFI_UNIT_TEST
-		if (printTriggerTrace) {
-			printf("Happy %s revolutionCounter=%d\r\n",
-					getTrigger_type_e(triggerConfiguration.TriggerType.type),
-					revolutionCounter);
-		}
+	if (printTriggerTrace) {
+		printf("Happy %s revolutionCounter=%d\r\n",
+			   getTrigger_type_e(triggerConfiguration.TriggerType.type),
+			   revolutionCounter);
+	}
 #endif /* EFI_UNIT_TEST */
 }
 
@@ -127,9 +131,7 @@ void TriggerStimulatorHelper::assertSyncPosition(
  * @return trigger synchronization point index, or error code if not found
  */
 expected<uint32_t> TriggerStimulatorHelper::findTriggerSyncPoint(
-		TriggerWaveform& shape,
-		const TriggerConfiguration& triggerConfiguration,
-		TriggerDecoderBase& state) {
+		TriggerWaveform& shape, const TriggerConfiguration& triggerConfiguration, TriggerDecoderBase& state) {
 	for (int i = 0; i < 4 * PWM_PHASE_MAX_COUNT; i++) {
 		feedSimulatedEvent(triggerConfiguration, state, shape, i);
 
@@ -140,7 +142,9 @@ expected<uint32_t> TriggerStimulatorHelper::findTriggerSyncPoint(
 	shape.setShapeDefinitionError(true);
 
 	if (engineConfiguration->overrideTriggerGaps) {
-		firmwareError(ObdCode::CUSTOM_ERR_CUSTOM_GAPS_BAD, "The custom trigger gaps are invalid for the current trigger type.");
+		firmwareError(
+				ObdCode::CUSTOM_ERR_CUSTOM_GAPS_BAD,
+				"The custom trigger gaps are invalid for the current trigger type.");
 	} else {
 		firmwareError(ObdCode::CUSTOM_ERR_TRIGGER_SYNC, "findTriggerZeroEventIndex() failed");
 	}

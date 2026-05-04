@@ -39,7 +39,6 @@ static void common2jz() {
 	engineConfiguration->ignitionPins[4] = Gpio::E8;
 	engineConfiguration->ignitionPins[5] = Gpio::E12;
 
-
 	engineConfiguration->injectionPins[0] = Gpio::B9; // #1
 	engineConfiguration->injectionPins[1] = Gpio::E2; // #2
 	engineConfiguration->injectionPins[2] = Gpio::B8; // #3
@@ -62,7 +61,6 @@ static void common2jz() {
 	 */
 	engineConfiguration->clt.config = {-20, 40, 120.0, 15000, 1200, 200.0, 2700};
 	engineConfiguration->iat.config = {-20, 40, 120.0, 15000, 1200, 200.0, 2700};
-
 }
 
 /**
@@ -75,7 +73,7 @@ void setToyota_2jz_vics() {
 	setCrankOperationMode();
 	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL_36_2;
 
-	engineConfiguration->triggerInputPins[0] = Gpio::A5; // crank sensor
+	engineConfiguration->triggerInputPins[0] = Gpio::A5;		 // crank sensor
 	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned; // cam sensor will he handled by custom vtti code
 
 	engineConfiguration->camInputs[0] = Gpio::C6;
@@ -85,7 +83,7 @@ void setToyota_2jz_vics() {
 	engineConfiguration->globalTriggerAngleOffset = 155; // todo
 
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK; // just for now
-	engineConfiguration->injectionMode = IM_BATCH; // just for now
+	engineConfiguration->injectionMode = IM_BATCH;		 // just for now
 
 	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_TOYOTA);
 	strcpy(engineConfiguration->engineCode, "2JZ");

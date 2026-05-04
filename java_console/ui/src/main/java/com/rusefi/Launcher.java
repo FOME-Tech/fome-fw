@@ -2,11 +2,13 @@ package com.rusefi;
 
 import com.devexperts.logging.Logging;
 import com.rusefi.config.generated.Fields;
+import com.rusefi.core.io.BundleUtil;
 import com.rusefi.core.rusEFIVersion;
 import com.rusefi.tools.ConsoleTools;
 import com.rusefi.ui.engine.EngineSnifferPanel;
 import com.rusefi.core.preferences.storage.PersistentConfiguration;
 
+import java.io.File;
 import java.util.Date;
 
 import static com.devexperts.logging.Logging.getLogging;
@@ -23,8 +25,22 @@ import static com.devexperts.logging.Logging.getLogging;
  */
 public class Launcher extends rusEFIVersion {
     private static final Logging log = getLogging(Launcher.class);
-    public static final String INPUT_FILES_PATH = System.getProperty("input_files_path", "..");
-    public static final String TOOLS_PATH = System.getProperty("tools_path", ".");
+    public static final String INPUT_FILES_PATH = resolveInputFilesPath();
+    public static final String TOOLS_PATH = resolveToolsPath();
+
+    private static String resolveInputFilesPath() {
+        String override = System.getProperty("input_files_path");
+        if (override != null) return override;
+        File root = BundleUtil.getBundleRoot();
+        return root != null ? root.getAbsolutePath() : "..";
+    }
+
+    private static String resolveToolsPath() {
+        String override = System.getProperty("tools_path");
+        if (override != null) return override;
+        File console = BundleUtil.getConsoleDir();
+        return console != null ? console.getAbsolutePath() : ".";
+    }
 
     /**
      * rusEfi console entry point

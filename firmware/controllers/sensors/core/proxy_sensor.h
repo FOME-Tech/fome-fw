@@ -1,7 +1,7 @@
 /**
  * @file    proxy_sensor.h
  * @brief A sensor to duplicate a sensor to an additional SensorType.
- * 
+ *
  * This was built for the use case of "driver throttle intent" where we care what the driver's
  * right foot is doing, but that might mean TPS (cable throttle) or pedal (electronic throttle).
  *
@@ -15,7 +15,8 @@
 
 class ProxySensor final : public Sensor {
 public:
-	explicit ProxySensor(SensorType type) : Sensor(type) {}
+	explicit ProxySensor(SensorType type)
+		: Sensor(type) {}
 
 	void setProxiedSensor(SensorType proxiedSensor) {
 		m_proxiedSensor = proxiedSensor;

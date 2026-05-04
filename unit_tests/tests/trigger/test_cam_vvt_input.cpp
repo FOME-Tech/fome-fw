@@ -16,11 +16,12 @@ TEST(trigger, testNoStartUpWarningsNoSyncronizationTrigger) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	// one tooth does not need synchronization it just counts tooth
 	eth.setTriggerType(trigger_type_e::TT_ONE);
-	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
+	ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
 
-	eth.fireTriggerEvents2(/*count*/10, /*duration*/50);
-	ASSERT_EQ(1200,  round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
-	ASSERT_EQ( 0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testNoStartUpWarningsNoSyncronizationTrigger";
+	eth.fireTriggerEvents2(/*count*/ 10, /*duration*/ 50);
+	ASSERT_EQ(1200, round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
+	ASSERT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount())
+			<< "warningCounter#testNoStartUpWarningsNoSyncronizationTrigger";
 }
 
 TEST(trigger, testNoStartUpWarnings) {
@@ -29,7 +30,7 @@ TEST(trigger, testNoStartUpWarnings) {
 	engineConfiguration->trigger.customTotalToothCount = 3;
 	engineConfiguration->trigger.customSkippedToothCount = 1;
 	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
-	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
+	ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
 
 	for (int i = 0; i < 10; i++) {
 		eth.fireRise(50);
@@ -38,8 +39,8 @@ TEST(trigger, testNoStartUpWarnings) {
 		eth.fireFall(150);
 	}
 
-	ASSERT_EQ(400,  round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
-	ASSERT_EQ( 0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testNoStartUpWarnings";
+	ASSERT_EQ(400, round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
+	ASSERT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testNoStartUpWarnings";
 	// now let's post something unneeded
 	eth.fireRise(50);
 	eth.fireFall(50);
@@ -53,7 +54,8 @@ TEST(trigger, testNoStartUpWarnings) {
 		eth.fireRise(50);
 		eth.fireFall(150);
 	}
-	EXPECT_EQ( 1,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testNoStartUpWarnings CUSTOM_SYNC_COUNT_MISMATCH expected";
+	EXPECT_EQ(1, unitTestWarningCodeState.recentWarnings.getCount())
+			<< "warningCounter#testNoStartUpWarnings CUSTOM_SYNC_COUNT_MISMATCH expected";
 	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_TOO_MANY_TEETH, unitTestWarningCodeState.recentWarnings.get(0).Code);
 }
 
@@ -87,15 +89,15 @@ TEST(trigger, testCamInput) {
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 	engineConfiguration->camInputs[0] = Gpio::A10; // we just need to indicate that we have CAM
 
-	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm))) << "testCamInput RPM";
+	ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm))) << "testCamInput RPM";
 
 	for (int i = 0; i < 5; i++) {
 		eth.fireRise(25);
 		eth.fireFall(25);
 	}
 
-	ASSERT_EQ(1200,  round(Sensor::getOrZero(SensorType::Rpm)));
-	ASSERT_EQ(0,  unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testCamInput";
+	ASSERT_EQ(1200, round(Sensor::getOrZero(SensorType::Rpm)));
+	ASSERT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testCamInput";
 
 	for (int i = 0; i < 600; i++) {
 		eth.fireRise(25);
@@ -113,7 +115,7 @@ TEST(trigger, testCamInput) {
 		eth.moveTimeForwardUs(MS2US(15));
 
 		eth.firePrimaryTriggerRise();
-		EXPECT_EQ(1200,  round(Sensor::getOrZero(SensorType::Rpm)));
+		EXPECT_EQ(1200, round(Sensor::getOrZero(SensorType::Rpm)));
 
 		eth.moveTimeForwardUs(MS2US(25));
 		eth.firePrimaryTriggerFall();
@@ -129,16 +131,16 @@ TEST(trigger, testNB2CamInput) {
 
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
 
-	ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm)));
+	ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm)));
 	for (int i = 0; i < 6; i++) {
 		eth.fireRise(25 * 70 / 180);
 		eth.fireRise(25 * 110 / 180);
-		ASSERT_EQ( 0,  round(Sensor::getOrZero(SensorType::Rpm)));
+		ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm)));
 	}
 	eth.fireRise(25 * 70 / 180);
 	eth.fireRise(25 * 110 / 180);
 	// first time we have RPM
-	ASSERT_EQ(1250,  round(Sensor::getOrZero(SensorType::Rpm)));
+	ASSERT_EQ(1250, round(Sensor::getOrZero(SensorType::Rpm)));
 
 	int totalRevolutionCountBeforeVvtSync = 5;
 	// need to be out of VVT sync to see VVT sync in action
@@ -155,7 +157,7 @@ TEST(trigger, testNB2CamInput) {
 
 	eth.moveTimeForwardUs(MS2US(130));
 	hwHandleVvtCamSignal(false, getTimeNowNt(), 0);
-	eth.moveTimeForwardUs(MS2US( 30));
+	eth.moveTimeForwardUs(MS2US(30));
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
 	// second gap - short
@@ -172,7 +174,7 @@ TEST(trigger, testNB2CamInput) {
 
 	eth.moveTimeForwardUs(MS2US(130));
 	hwHandleVvtCamSignal(false, getTimeNowNt(), 0);
-	eth.moveTimeForwardUs(MS2US( 30));
+	eth.moveTimeForwardUs(MS2US(30));
 	hwHandleVvtCamSignal(true, getTimeNowNt(), 0);
 
 	EXPECT_NEAR(297.5f, engine->triggerCentral.getVVTPosition(0, 0).value_or(0), EPS2D);

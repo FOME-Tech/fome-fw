@@ -10,4 +10,3 @@
 #include "rusefi_lua.h"
 
 void configureRusefiLuaUtilHooks(lua_State* l);
-

@@ -3,7 +3,7 @@
 #include "electronic_throttle_impl.h"
 #include "live_data.h"
 
-static EtbController * initEtbIntegratedTest() {
+static EtbController* initEtbIntegratedTest() {
 	etbPidReset(); // ETB controlles are global shared instances :(
 
 	engineConfiguration->tps1_1AdcChannel = EFI_ADC_3;
@@ -11,7 +11,6 @@ static EtbController * initEtbIntegratedTest() {
 
 	engineConfiguration->throttlePedalPositionAdcChannel = EFI_ADC_3;
 	engineConfiguration->throttlePedalPositionSecondAdcChannel = EFI_ADC_3;
-
 
 	Sensor::setMockValue(SensorType::Tps1, 25.0f, true);
 
@@ -24,8 +23,8 @@ static EtbController * initEtbIntegratedTest() {
 }
 
 // TEST(etb, intermittentTps) {
-// 	EngineTestHelper eth(engine_type_e::TEST_ENGINE); // we have a destructor so cannot move EngineTestHelper into utility method
-// 	EtbController *etb = initEtbIntegratedTest();
+// 	EngineTestHelper eth(engine_type_e::TEST_ENGINE); // we have a destructor so cannot move EngineTestHelper into
+// utility method 	EtbController *etb = initEtbIntegratedTest();
 
 // 	// Tell the sensor checker that the ignition is on
 // 	engine->module<SensorChecker>()->onIgnitionStateChanged(true);
@@ -68,7 +67,8 @@ static EtbController * initEtbIntegratedTest() {
 // }
 
 // TEST(etb, intermittentPps) {
-// 	EngineTestHelper eth(engine_type_e::TEST_ENGINE); // we have a destructor so cannot move EngineTestHelper into utility method
+// 	EngineTestHelper eth(engine_type_e::TEST_ENGINE); // we have a destructor so cannot move EngineTestHelper into
+// utility method
 
 // 	Sensor::setMockValue(SensorType::AcceleratorPedal, 10, true);
 // 	EtbController *etb = initEtbIntegratedTest();

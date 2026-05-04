@@ -25,7 +25,7 @@ typedef enum {
 	BOR_Level_None = OB_BOR_OFF, // 0x0C=12  Supply voltage ranges from 1.62 to 2.10 V
 	BOR_Level_1 = OB_BOR_LEVEL1, // 0x08     Supply voltage ranges from 2.10 to 2.40 V
 	BOR_Level_2 = OB_BOR_LEVEL2, // 0x04     Supply voltage ranges from 2.40 to 2.70 V
-	BOR_Level_3 = OB_BOR_LEVEL3  // 0x00     Supply voltage ranges from 2.70 to 3.60 V
+	BOR_Level_3 = OB_BOR_LEVEL3	 // 0x00     Supply voltage ranges from 2.70 to 3.60 V
 } BOR_Level_t;
 
 // we are lucky - all CAN pins use the same AF

@@ -11,16 +11,15 @@
 
 ButtonDebounce* ButtonDebounce::s_firstDebounce = nullptr;
 
-ButtonDebounce::ButtonDebounce(const char *name)
-	: m_name(name)
-{
-}
+ButtonDebounce::ButtonDebounce(const char* name)
+	: m_name(name) {}
 
 /**
-We need to have a separate init function because we do not have the pin or mode in the context in which the class is originally created
+We need to have a separate init function because we do not have the pin or mode in the context in which the class is
+originally created
 */
-void ButtonDebounce::init(efidur_t threshold, brain_pin_e &pin, pin_input_mode_e &mode) {
-// we need to keep track of whether we have already been initialized due to the way unit tests run.
+void ButtonDebounce::init(efidur_t threshold, brain_pin_e& pin, pin_input_mode_e& mode) {
+	// we need to keep track of whether we have already been initialized due to the way unit tests run.
 	if (!isInstanceRegisteredInGlobalList) {
 		// Link us to the list that is used to track ButtonDebounce instances, so that when the configuration changes,
 		//  they can be looped through and updated.
@@ -35,16 +34,16 @@ void ButtonDebounce::init(efidur_t threshold, brain_pin_e &pin, pin_input_mode_e
 	isInstanceRegisteredInGlobalList = true;
 }
 
-void ButtonDebounce::stopConfigurationList () {
-	ButtonDebounce *listItem = s_firstDebounce;
+void ButtonDebounce::stopConfigurationList() {
+	ButtonDebounce* listItem = s_firstDebounce;
 	while (listItem != nullptr) {
 		listItem->stopConfiguration();
 		listItem = listItem->nextDebounce;
 	}
 }
 
-void ButtonDebounce::startConfigurationList () {
-	ButtonDebounce *listItem = s_firstDebounce;
+void ButtonDebounce::startConfigurationList() {
+	ButtonDebounce* listItem = s_firstDebounce;
 	while (listItem != nullptr) {
 		listItem->startConfiguration();
 		listItem = listItem->nextDebounce;
@@ -109,7 +108,7 @@ bool ButtonDebounce::readPinState() {
 }
 
 void ButtonDebounce::debug() {
-	ButtonDebounce *listItem = s_firstDebounce;
+	ButtonDebounce* listItem = s_firstDebounce;
 	while (listItem != nullptr) {
 #if EFI_PROD_CODE || EFI_UNIT_TEST
 		efiPrintf("%s timeLast %lu", listItem->m_name, (uint32_t)listItem->timeLast);

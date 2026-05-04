@@ -35,7 +35,8 @@ TEST(real4g93, cranking) {
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy
+			// all worked OK
 			EXPECT_EQ(reader.lineIndex(), 6);
 			EXPECT_NEAR(rpm, 132.77f, 0.1);
 		}
@@ -46,8 +47,8 @@ TEST(real4g93, cranking) {
 			EXPECT_EQ(reader.lineIndex(), 17);
 			EXPECT_NEAR(rpm, 204.01f, 0.1);
 		}
-//		float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
-// not looking too bad horrible		printf("rpm=%f instant=%f\n", rpm, instantRpm);
+		//		float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
+		// not looking too bad horrible		printf("rpm=%f instant=%f\n", rpm, instantRpm);
 	}
 
 	ASSERT_TRUE(gotRpm);
@@ -76,7 +77,8 @@ TEST(real4g93, crankingOn11) {
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy
+			// all worked OK
 			EXPECT_EQ(reader.lineIndex(), 7);
 			EXPECT_NEAR(rpm, 168.43f, 0.1);
 		}
@@ -107,12 +109,14 @@ TEST(real4g93, crankingCamOnly) {
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy
+			// all worked OK
 			EXPECT_EQ(reader.lineIndex(), 17);
 			EXPECT_NEAR(rpm, 194.61f, 0.1);
 		}
 
-		if (!gotSync && engine->triggerCentral.triggerState.getShaftSynchronized() && engine->triggerCentral.triggerState.hasSynchronizedPhase()) {
+		if (!gotSync && engine->triggerCentral.triggerState.getShaftSynchronized() &&
+			engine->triggerCentral.triggerState.hasSynchronizedPhase()) {
 			gotSync = true;
 
 			EXPECT_EQ(reader.lineIndex(), 17);

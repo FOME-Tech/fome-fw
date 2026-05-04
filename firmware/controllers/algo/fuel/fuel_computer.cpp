@@ -10,7 +10,7 @@
 
 mass_t FuelComputerBase::getCycleFuel(mass_t airmass, float rpm, float load) {
 	load = getTargetLambdaLoadAxis(load);
-	
+
 	float stoich = getStoichiometricRatio();
 	float lambda = getTargetLambda(rpm, load);
 	float afr = stoich * lambda;
@@ -55,13 +55,8 @@ float FuelComputer::getStoichiometricRatio() const {
 	return interpolateClamped(0, primary, 100, secondary, flex.Value);
 }
 
-
 float FuelComputer::getTargetLambda(float rpm, float load) const {
-	return interpolate3d(
-		config->lambdaTable,
-		config->lambdaLoadBins, load,
-		config->lambdaRpmBins, rpm
-	);
+	return interpolate3d(config->lambdaTable, config->lambdaLoadBins, load, config->lambdaRpmBins, rpm);
 }
 
 float FuelComputer::getTargetLambdaLoadAxis(float defaultLoad) const {
@@ -69,14 +64,20 @@ float FuelComputer::getTargetLambdaLoadAxis(float defaultLoad) const {
 }
 
 float IFuelComputer::getLoadOverride(float defaultLoad, load_override_e overrideMode) const {
-	switch(overrideMode) {
-		case AFR_None: return defaultLoad;
+	switch (overrideMode) {
+		case AFR_None:
+			return defaultLoad;
 		// MAP default to 200kpa - failed MAP goes rich
-		case AFR_MAP: return Sensor::get(SensorType::Map).value_or(200);
+		case AFR_MAP:
+			return Sensor::get(SensorType::Map).value_or(200);
 		// TPS/pedal default to 100% - failed TPS goes rich
-		case AFR_Tps: return Sensor::get(SensorType::Tps1).value_or(100);
-		case AFR_AccPedal: return Sensor::get(SensorType::AcceleratorPedal).value_or(100);
-		case AFR_CylFilling: return normalizedCylinderFilling;
-		default: return 0;
+		case AFR_Tps:
+			return Sensor::get(SensorType::Tps1).value_or(100);
+		case AFR_AccPedal:
+			return Sensor::get(SensorType::AcceleratorPedal).value_or(100);
+		case AFR_CylFilling:
+			return normalizedCylinderFilling;
+		default:
+			return 0;
 	}
 }

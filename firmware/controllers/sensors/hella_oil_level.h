@@ -4,7 +4,8 @@
 
 class HellaOilLevelSensor : public StoredValueSensor {
 public:
-	HellaOilLevelSensor(SensorType type) : StoredValueSensor(type, MS2NT(2000)) {}
+	HellaOilLevelSensor(SensorType type)
+		: StoredValueSensor(type, MS2NT(2000)) {}
 
 	void init(brain_pin_e pin);
 
@@ -20,6 +21,11 @@ private:
 	// Measures the time between pulses (rising -> rising)
 	Timer m_betweenPulseTimer;
 
-	enum class NextPulse { None, Temp, Level, Diag };
+	enum class NextPulse {
+		None,
+		Temp,
+		Level,
+		Diag
+	};
 	NextPulse m_nextPulse = NextPulse::None;
 };

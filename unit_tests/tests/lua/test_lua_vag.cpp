@@ -3,7 +3,8 @@
 #include "lua_lib.h"
 
 // XOR of the array, skipping target index
-#define VAG_CHECKSUM " \
+#define VAG_CHECKSUM                                                                                                   \
+	" \
 function xorChecksum(data, targetIndex) \
 	local index = 1 \
 	local result = 0 \
@@ -17,7 +18,6 @@ function xorChecksum(data, targetIndex) \
 	return result \
 end \
 "
-
 
 TEST(LuaVag, Checksum) {
 	const char* realdata = VAG_CHECKSUM R"(
@@ -65,7 +65,7 @@ TEST(LuaVag, packMotor1) {
 #define realMotor1Packet "\ndata = { 0x00, 0x27, 0x8A, 0x1A, 0x36, 0x4F, 0x19, 0x38}\n "
 
 TEST(LuaVag, unpackMotor1_engine_torq) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor1Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor1Packet R"(
 	function testFunc()
 		engineTorque = getBitRange(data, 8, 8) * 0.39
 		return engineTorque
@@ -76,7 +76,7 @@ TEST(LuaVag, unpackMotor1_engine_torq) {
 }
 
 TEST(LuaVag, unpackMotor1_rpm) {
-	const char* realdata = 	GET_BIT_RANGE_LSB	realMotor1Packet	R"(
+	const char* realdata = GET_BIT_RANGE_LSB realMotor1Packet R"(
 	function testFunc()
 		rpm = getBitRange(data, 16, 16) * 0.25
 		return rpm
@@ -87,7 +87,7 @@ TEST(LuaVag, unpackMotor1_rpm) {
 }
 
 TEST(LuaVag, unpackMotor1_inner_torq) {
-	const char* realdata = 	GET_BIT_RANGE_LSB	realMotor1Packet	R"(
+	const char* realdata = GET_BIT_RANGE_LSB realMotor1Packet R"(
 	function testFunc()
 		innerTorqWithoutExt = getBitRange(data, 32, 8) * 0.4
 		return innerTorqWithoutExt
@@ -98,7 +98,7 @@ TEST(LuaVag, unpackMotor1_inner_torq) {
 }
 
 TEST(LuaVag, unpackMotor1_tps) {
-	const char* realdata = 	GET_BIT_RANGE_LSB	realMotor1Packet	R"(
+	const char* realdata = GET_BIT_RANGE_LSB realMotor1Packet R"(
 	function testFunc()
 		tps = getBitRange(data, 40, 8) * 0.4
 		return tps
@@ -109,7 +109,7 @@ TEST(LuaVag, unpackMotor1_tps) {
 }
 
 TEST(LuaVag, unpackMotor1_torq_loss) {
-	const char* realdata = 	GET_BIT_RANGE_LSB	realMotor1Packet	R"(
+	const char* realdata = GET_BIT_RANGE_LSB realMotor1Packet R"(
 	function testFunc()
 		torqueLoss = getBitRange(data, 48, 8) * 0.39
 		return torqueLoss
@@ -119,9 +119,8 @@ TEST(LuaVag, unpackMotor1_torq_loss) {
 	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(realdata).value_or(0), 9.75);
 }
 
-
 TEST(LuaVag, unpackMotor1_torq_req) {
-	const char* realdata = 	GET_BIT_RANGE_LSB	realMotor1Packet	R"(
+	const char* realdata = GET_BIT_RANGE_LSB realMotor1Packet R"(
 	function testFunc()
 		requestedTorque = getBitRange(data, 56, 8) * 0.39
 		return requestedTorque
@@ -159,9 +158,8 @@ TEST(LuaVag, packMotor3) {
 	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 }
 
-
 TEST(LuaVag, unpackMotor3_tps) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor3Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor3Packet R"(
 	function testFunc()
 		tps = getBitRange(data, 56, 8) * 0.40
 		return tps
@@ -172,7 +170,7 @@ TEST(LuaVag, unpackMotor3_tps) {
 }
 
 TEST(LuaVag, unpackMotor3_pps) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor3Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor3Packet R"(
 	function testFunc()
 		pps = getBitRange(data, 16, 8) * 0.40
 		return pps
@@ -217,7 +215,6 @@ TEST(LuaVag, setBitRange) {
 		EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 	}
 
-
 	{
 		const char* script = PRINT_ARRAY ARRAY_EQUALS SET_BIT_RANGE_LSB R"(
 
@@ -234,11 +231,10 @@ TEST(LuaVag, setBitRange) {
 
 		EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(script).value_or(0), 0);
 	}
-
 }
 
 TEST(LuaVag, unpackMotor3_iat) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor3Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor3Packet R"(
 	function testFunc()
 		iat = getBitRange(data, 8, 8) * 0.75 - 48
 		return iat
@@ -249,7 +245,7 @@ TEST(LuaVag, unpackMotor3_iat) {
 }
 
 TEST(LuaVag, unpackMotor3_desired_wheel_torque) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor3Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor3Packet R"(
 	function testFunc()
 		desired_wheel_torque = getBitRange(data, 24, 12) * 0.39
 		return desired_wheel_torque
@@ -262,7 +258,7 @@ TEST(LuaVag, unpackMotor3_desired_wheel_torque) {
 #define realMotor6Packet "\ndata = { 0x3D, 0x54, 0x69, 0x7E, 0xFE, 0xFF, 0xFF, 0x80}\n "
 
 TEST(LuaVag, unpackMotor6_actual_torq) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor6Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor6Packet R"(
 	function testFunc()
 		actualTorque = getBitRange(data, 16, 8) * 0.39
 		return actualTorque
@@ -273,7 +269,7 @@ TEST(LuaVag, unpackMotor6_actual_torq) {
 }
 
 TEST(LuaVag, unpackMotor6_target_torq) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor6Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor6Packet R"(
 	function testFunc()
 		targetTorque = getBitRange(data, 8, 8) * 0.39
 		return targetTorque
@@ -284,7 +280,7 @@ TEST(LuaVag, unpackMotor6_target_torq) {
 }
 
 TEST(LuaVag, unpackMotor6_feedback) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor6Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor6Packet R"(
 	function testFunc()
 		feedbackGearbox = getBitRange(data, 40, 8) * 0.39
 		return feedbackGearbox
@@ -344,7 +340,7 @@ TEST(LuaVag, ChecksumMotor5) {
 }
 
 TEST(LuaVag, unpackMotor5_fuel) {
-	const char* script = 	GET_BIT_RANGE_LSB	realMotor5Packet	R"(
+	const char* script = GET_BIT_RANGE_LSB realMotor5Packet R"(
 	function testFunc()
 		fuelConsumption = getBitRange(data, 16, 15)
 		return fuelConsumption

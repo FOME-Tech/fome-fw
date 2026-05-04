@@ -8,7 +8,6 @@
 
 #include "pch.h"
 
-
 #if EFI_USB_SERIAL
 
 #include "usbconsole.h"
@@ -41,7 +40,7 @@ void usb_serial_start() {
 #ifndef EFI_SKIP_USB_DISCONNECT
 	usbDisconnectBus(serusbcfg.usbp);
 	chThdSleepMilliseconds(250);
-#endif/* EFI_SKIP_USB_DISCONNECT */
+#endif /* EFI_SKIP_USB_DISCONNECT */
 	usbStart(serusbcfg.usbp, &usbcfg);
 	usbConnectBus(serusbcfg.usbp);
 

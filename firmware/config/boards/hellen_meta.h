@@ -53,14 +53,6 @@ void detectHellenBoardType();
 #define H64_OUT_PWM5 Gpio::A9
 #define H64_OUT_PWM6 Gpio::A15
 
-// stm32 UART8
-#define H144_UART1_RX Gpio::E0
-#define H144_UART1_TX Gpio::E1
-
-// stm32 UART2
-#define H144_UART2_RX Gpio::D6
-#define H144_UART2_TX Gpio::D5
-
 #define H144_LED1_RED Gpio::G0
 #define H144_LED2 Gpio::G1
 #define H144_LED3 Gpio::E7
@@ -102,7 +94,6 @@ void detectHellenBoardType();
 #define H144_OUT_PWM6 Gpio::D14
 #define H144_OUT_PWM7 Gpio::D15
 #define H144_OUT_PWM8 Gpio::D12
-
 
 // also IO1/IO5 on rev 0.6
 #define H144_GP1 Gpio::D4
@@ -172,7 +163,6 @@ void detectHellenBoardType();
 // AIN8
 #define H144_IN_RES3 Gpio::F8
 #define H144_ADC_IN_RES3 ADC_CHANNEL_IN6
-
 
 #define H144_IN_AUX1 EFI_ADC_8
 //
@@ -293,7 +283,7 @@ inline void setHellenSdCardSpi3() {
 // *pullups* files CLT R211 IAT R213
 #define HELLEN_DEFAULT_AT_PULLUP 4700
 
-inline void setDefaultHellenAtPullUps(){
+inline void setDefaultHellenAtPullUps() {
 	engineConfiguration->clt.config.bias_resistor = HELLEN_DEFAULT_AT_PULLUP;
 	engineConfiguration->iat.config.bias_resistor = HELLEN_DEFAULT_AT_PULLUP;
 }

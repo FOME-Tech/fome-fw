@@ -54,9 +54,7 @@ public:
 	StoredValueSensor(SensorType type, efidur_t timeoutNt)
 		: Sensor(type)
 		, m_result(unexpected)
-		, m_timeoutPeriod(timeoutNt)
-	{
-	}
+		, m_timeoutPeriod(timeoutNt) {}
 
 	// Invalidate the stored value.
 	void invalidate() {
@@ -75,7 +73,7 @@ public:
 		m_lastUpdate = timestamp;
 	}
 
-	void showInfo(const char*) const override { }
+	void showInfo(const char*) const override {}
 
 	virtual void setTimeout(int timeoutMs) {
 		m_timeoutPeriod = MS2NT(timeoutMs);

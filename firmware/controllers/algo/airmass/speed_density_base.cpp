@@ -2,7 +2,7 @@
  * @file	speed_density_base.cpp
  *
  * Base for speed density (ie, ideal gas law) math shared by multiple fueling modes.
- * 
+ *
  * @date July 22, 2020
  * @author Matthew Kennedy, (C) 2020
  */

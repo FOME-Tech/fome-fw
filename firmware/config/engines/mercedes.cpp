@@ -10,12 +10,10 @@
 #include "hellen_meta.h"
 #endif // HW_HELLEN
 
-static void common() {
-
-}
+static void common() {}
 
 void setHellenMercedes128_4_cyl() {
-    common();
+	common();
 #if HW_HELLEN
 	engineConfiguration->injectionPins[0] = H144_LS_7;
 	engineConfiguration->injectionPins[1] = H176_LS_6;
@@ -30,7 +28,7 @@ void setHellenMercedes128_4_cyl() {
 
 // is this M104 or M112 or both?
 void setHellenMercedes128_6_cyl() {
-    common();
+	common();
 	engineConfiguration->cylindersCount = 6;
 	// 1-4-2-5-3-6 M104
 	engineConfiguration->firingOrder = FO_1_4_3_6_2_5; // M112
@@ -38,7 +36,7 @@ void setHellenMercedes128_6_cyl() {
 
 // M113
 void setHellenMercedes128_8_cyl() {
-    common();
+	common();
 	engineConfiguration->cylindersCount = 8;
 	engineConfiguration->firingOrder = FO_1_5_4_2_6_3_7_8;
 }

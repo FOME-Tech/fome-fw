@@ -13,6 +13,7 @@ struct IFuelComputer : public fuel_computer_s {
 	virtual mass_t getCycleFuel(mass_t airmass, float rpm, float load) = 0;
 	temperature_t getTCharge(float rpm, float tps);
 	float getLoadOverride(float defaultLoad, load_override_e overrideMode) const;
+
 private:
 	float getTChargeCoefficient(float rpm, float tps);
 };

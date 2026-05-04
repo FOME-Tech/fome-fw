@@ -18,8 +18,6 @@ public class CStructsVisitor extends ILayoutVisitor {
 
         // Emit assertions to check that the offset of each child is correct according to the C++ compiler
         sl.children.forEach(c -> c.writeCOffsetCheck(ps, sl.typeName));
-
-        ps.println();
     }
 
     public void visit(StructLayout sl, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
@@ -104,13 +102,13 @@ public class CStructsVisitor extends ILayoutVisitor {
     }
 
     @Override
-    public void visit(UnusedLayout u, PrintStream ps, StructNamePrefixer prefixer, int offestAdd, int[] arrayDims) {
+    public void visit(UnusedLayout u, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         u.writeCOffsetHeader(ps, null, null);
         ps.println("\tuint8_t alignmentFill_at_" + u.offsetWithinStruct + "[" + u.size + "];");
     }
 
     @Override
-    public void visit(StringLayout str, PrintStream ps, StructNamePrefixer prefixer, int offestAdd, int[] arrayDims) {
+    public void visit(StringLayout str, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         str.writeCOffsetHeader(ps, str.comment, null);
 
         if (arrayDims.length == 0) {
@@ -123,12 +121,12 @@ public class CStructsVisitor extends ILayoutVisitor {
     }
 
     @Override
-    public void visit(UnionLayout u, PrintStream ps, StructNamePrefixer prefixer, int offestAdd, int[] arrayDims) {
+    public void visit(UnionLayout u, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         u.writeCOffsetHeader(ps, "union size " + u.getSize() + ", " + u.children.size() + " members", null);
 
         // emit an anonymous union that contains all our members
         ps.println("\tunion {");
-        u.children.forEach(c -> c.visit(this, ps, prefixer, offestAdd, new int[0]));
+        u.children.forEach(c -> c.visit(this, ps, prefixer, offsetAdd, new int[0]));
         ps.println("\t};");
     }
 

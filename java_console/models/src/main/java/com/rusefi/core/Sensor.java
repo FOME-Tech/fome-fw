@@ -33,9 +33,6 @@ public enum Sensor {
     // Errors
     totalTriggerErrorCounter("TriggerErrorCount", FieldType.UINT16, TriggerState.TRIGGERERRORCOUNTER),
 
-    // Debug
-    debugIntField1(GAUGE_NAME_DEBUG_I1, FieldType.INT, TsOutputs.DEBUGINTFIELD1),
-
     // Raw sensors
     rawClt("raw CLT", FieldType.INT16, TsOutputs.RAWCLT, 1.0 / PACK_MULT_VOLTAGE, "volts"),
     rawIat("raw IAT", FieldType.INT16, TsOutputs.RAWIAT, 1.0 / PACK_MULT_VOLTAGE, "volts"),

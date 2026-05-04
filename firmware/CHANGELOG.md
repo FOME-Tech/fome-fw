@@ -30,16 +30,36 @@ or
 
 ## Unreleased
 
+### Added
+ - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
+
+## May 2026 Release
+
 ### Breaking Changes
  - Upgrade console to use Java 21. This may require an update of your Java runtime.
 
 ### Added
  - Dead knock sensor detection #578
  - Allow sending CAN broadcast on both busses #712
+ - PWM fan control with configurable duty cycle #233
+ - AC state available as a GPPWM axis (e.g. for AC-dependent fan control) #233
+ - Lua `getChannel` function for safely reading ECU values #721
+ - Improved Atlas board support, including Polygonus engine presets #700
+ - Clearer ignition/injection pin naming in TunerStudio #596
+ - 1996-2006 Dodge Viper V10 crank trigger pattern
 
 ### Fixed
+ - Prevent false ETB jam detection when the throttle is not being commanded (for example with "Disable ETB if engine is stopped" enabled), which could latch the throttle off permanently
+ - TPS/PPS raw voltage now readable even when calibration is invalid, allowing users to calibrate sensors #710
  - Fix OpenBLT updating 1MB STM32F7-based ECUs
  - Improve RPM rate of change signal to idle control so the D-term is actually usable
+ - Fix automatic knock frequency calculation when cylinder bore is not configured
+ - Correct ADC conversion precision #707
+ - Delay sensor error checking briefly after boot to avoid false errors
+ - Fix boost control blend table axis names in TunerStudio
+ - Default initialize output channels to avoid invalid values at startup
+ - Clean up CAN verbose DBC file, removing invalid/orphan entries #677
+ - Idle VE table when using an electronic throttle correctly uses accel pedal to match main idle logic
 
 ## November 2025 Release
 

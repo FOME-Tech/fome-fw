@@ -7,8 +7,7 @@ class MockTriggerConfiguration : public TriggerConfiguration {
 public:
 	MockTriggerConfiguration(trigger_config_s type)
 		: TriggerConfiguration("Mock")
-		, m_type(type)
-	{ }
+		, m_type(type) {}
 
 protected:
 	bool isVerboseTriggerSynchDetails() const override {
@@ -24,7 +23,8 @@ private:
 };
 
 struct MockTriggerDecoder : public TriggerDecoderBase {
-	MockTriggerDecoder() : TriggerDecoderBase("mock") { }
+	MockTriggerDecoder()
+		: TriggerDecoderBase("mock") {}
 
 	MOCK_METHOD(void, onTriggerError, (), (override));
 	MOCK_METHOD(void, onNotEnoughTeeth, (int actual, int expected), (override));
@@ -81,7 +81,6 @@ TEST(TriggerDecoder, FindsFirstSyncPoint) {
 
 	EXPECT_FALSE(dut.someSortOfTriggerError());
 }
-
 
 TEST(TriggerDecoder, FindsSyncPointMultipleRevolutions) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});

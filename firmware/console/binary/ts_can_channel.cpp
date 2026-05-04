@@ -18,12 +18,10 @@
 #error "EFI_CAN_SERIAL requires EFI_CAN_SUPPORT"
 #endif
 
-
 class CanTsChannel final : public TsChannelBase {
 public:
-	CanTsChannel() : TsChannelBase("CAN") {
-
-	}
+	CanTsChannel()
+		: TsChannelBase("CAN") {}
 	void start();
 
 	// TsChannelBase implementation
@@ -37,7 +35,6 @@ public:
 	void copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) override;
 };
 
-
 void CanTsChannel::start() {
 	if (!getIsCanEnabled()) {
 		warning(ObdCode::CUSTOM_ERR_CAN_CONFIGURATION, "CAN not enabled");
@@ -49,8 +46,7 @@ void CanTsChannel::start() {
 	}
 }
 
-void CanTsChannel::stop() {
-}
+void CanTsChannel::stop() {}
 
 void CanTsChannel::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) {
 #ifdef TS_CAN_DEVICE_SHORT_PACKETS_IN_ONE_FRAME
@@ -58,9 +54,9 @@ void CanTsChannel::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) {
 	// because the CAN protocol is already protected by its own checksum.
 	if ((size + 1) <= 7) {
 		uint8_t responseCode = TS_RESPONSE_OK;
-		write(&responseCode, 1, false);      // header without size
+		write(&responseCode, 1, false); // header without size
 		if (size > 0) {
-			write(buf, size, false);      // body
+			write(buf, size, false); // body
 		}
 		flush();
 		return;
@@ -92,7 +88,8 @@ bool CanTsChannel::isReady() const {
 static CanTsChannel canChannel;
 
 struct CanTsThread : public TunerstudioThread {
-	CanTsThread() : TunerstudioThread("CAN TS Channel") { }
+	CanTsThread()
+		: TunerstudioThread("CAN TS Channel") {}
 
 	TsChannelBase* setupChannel() override {
 		canChannel.start();

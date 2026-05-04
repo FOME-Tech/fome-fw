@@ -23,7 +23,7 @@ void StepperMotorBase::setTargetPosition(float targetPositionSteps) {
 	}
 }
 
-void StepperMotorBase::initialize(StepperHw *hardware, int totalSteps) {
+void StepperMotorBase::initialize(StepperHw* hardware, int totalSteps) {
 	m_totalSteps = maxI(3, totalSteps);
 
 	m_hw = hardware;
@@ -37,7 +37,6 @@ void StepperMotorBase::saveStepperPos(int pos) {
 #if EFI_PROD_CODE
 	getBackupSram()->StepperPosition = pos + 1;
 #endif
-	postCurrentPosition();
 }
 
 int StepperMotorBase::loadStepperPos() {
@@ -53,15 +52,6 @@ void StepperMotorBase::changeCurrentPosition(bool positive) {
 		m_currentPosition++;
 	} else {
 		m_currentPosition--;
-	}
-	postCurrentPosition();
-}
-
-void StepperMotorBase::postCurrentPosition() {
-	if (engineConfiguration->debugMode == DBG_STEPPER_IDLE_CONTROL) {
-#if EFI_TUNER_STUDIO
-		engine->outputChannels.debugIntField5 = m_currentPosition;
-#endif /* EFI_TUNER_STUDIO */
 	}
 }
 
@@ -82,9 +72,14 @@ void StepperMotorBase::setInitialPosition() {
 	// now check if stepper motor re-initialization is requested - if the throttle pedal is pressed at startup
 	auto tpsPos = Sensor::getOrZero(SensorType::DriverThrottleIntent);
 	bool forceStepperParking = !isRunning && tpsPos > STEPPER_PARKING_TPS;
-	if (engineConfiguration->stepperForceParkingEveryRestart)
+	if (engineConfiguration->stepperForceParkingEveryRestart) {
 		forceStepperParking = true;
-	efiPrintf("Stepper: savedStepperPos=%d forceStepperParking=%d (tps=%.2f)", m_currentPosition, (forceStepperParking ? 1 : 0), tpsPos);
+	}
+	efiPrintf(
+			"Stepper: savedStepperPos=%d forceStepperParking=%d (tps=%.2f)",
+			m_currentPosition,
+			(forceStepperParking ? 1 : 0),
+			tpsPos);
 
 	if (m_currentPosition < 0 || forceStepperParking) {
 		efiPrintf("Stepper: starting parking...");
@@ -99,7 +94,8 @@ void StepperMotorBase::setInitialPosition() {
 		 *
 		 * Add extra steps to compensate step skipping by some old motors.
 		 */
-		int numParkingSteps = (int)efiRound((1.0f + (float)engineConfiguration->stepperParkingExtraSteps / PERCENT_MULT) * m_totalSteps, 1.0f);
+		int numParkingSteps = (int)efiRound(
+				(1.0f + (float)engineConfiguration->stepperParkingExtraSteps / PERCENT_MULT) * m_totalSteps, 1.0f);
 		for (int i = 0; i < numParkingSteps; i++) {
 			if (!m_hw->step(false)) {
 				initialPositionSet = false;
@@ -173,8 +169,9 @@ void StepDirectionStepper::setDirection(bool isIncrementing) {
 
 bool StepDirectionStepper::pulse() {
 	// we move the motor only of it is powered from the main relay
-	if (!engine->isMainRelayEnabled())
+	if (!engine->isMainRelayEnabled()) {
 		return false;
+	}
 
 	m_enablePin.setValue(false); // enable stepper
 
@@ -207,13 +204,19 @@ bool StepDirectionStepper::step(bool positive) {
 	return pulse();
 }
 
-void StepperMotor::initialize(StepperHw *hardware, int totalSteps) {
+void StepperMotor::initialize(StepperHw* hardware, int totalSteps) {
 	StepperMotorBase::initialize(hardware, totalSteps);
 
 	startThread();
 }
 
-void StepDirectionStepper::initialize(brain_pin_e stepPin, brain_pin_e directionPin, pin_output_mode_e directionPinMode, float reactionTime, brain_pin_e enablePin, pin_output_mode_e enablePinMode) {
+void StepDirectionStepper::initialize(
+		brain_pin_e stepPin,
+		brain_pin_e directionPin,
+		pin_output_mode_e directionPinMode,
+		float reactionTime,
+		brain_pin_e enablePin,
+		pin_output_mode_e enablePinMode) {
 	// avoid double-init
 	m_directionPin.deInit();
 	m_stepPin.deInit();
@@ -239,5 +242,5 @@ void StepDirectionStepper::initialize(brain_pin_e stepPin, brain_pin_e direction
 #endif
 
 #if EFI_UNIT_TEST
-void StepperHw::sleep() { }
+void StepperHw::sleep() {}
 #endif // EFI_UNIT_TEST

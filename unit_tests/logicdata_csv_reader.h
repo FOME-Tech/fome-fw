@@ -9,26 +9,26 @@ const int NORMAL_ORDER[2] = {0, 1};
 
 const int REVERSE_ORDER[2] = {1, 0};
 
-
-
 class CsvReader {
 public:
-	CsvReader(size_t triggerCount, size_t vvtCount) : CsvReader(triggerCount, vvtCount, 0.0) {}
+	CsvReader(size_t triggerCount, size_t vvtCount)
+		: CsvReader(triggerCount, vvtCount, 0.0) {}
 	CsvReader(size_t triggerCount, size_t vvtCount, double timestampOffset)
 		: m_triggerCount(triggerCount)
 		, m_vvtCount(vvtCount)
-		, m_timestampOffset(timestampOffset)
-	{
-	}
+		, m_timestampOffset(timestampOffset) {}
 	~CsvReader();
 
 	bool twoBanksSingleCamMode = true;
 
-	void open(const char *fileName, const int* triggerColumnIndeces = NORMAL_ORDER, const int *vvtColumnIndeces = NORMAL_ORDER);
+	void
+	open(const char* fileName,
+		 const int* triggerColumnIndeces = NORMAL_ORDER,
+		 const int* vvtColumnIndeces = NORMAL_ORDER);
 	bool haveMore();
-	void processLine(EngineTestHelper *eth);
-	void readLine(EngineTestHelper *eth);
-	double readTimestampAndValues(double *v);
+	void processLine(EngineTestHelper* eth);
+	void readLine(EngineTestHelper* eth);
+	double readTimestampAndValues(double* v);
 
 	int lineIndex() const {
 		return m_lineIndex;
@@ -39,7 +39,7 @@ private:
 	const size_t m_vvtCount;
 	const double m_timestampOffset;
 
-	FILE *fp = nullptr;
+	FILE* fp = nullptr;
 	char buffer[255];
 
 	bool currentState[TRIGGER_INPUT_PIN_COUNT] = {0, 0};
@@ -50,4 +50,3 @@ private:
 	const int* m_triggerColumnIndeces;
 	const int* m_vvtColumnIndeces;
 };
-

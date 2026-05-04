@@ -18,25 +18,24 @@ void initPrimaryPins();
 void initOutputPins();
 void turnAllPinsOff();
 
-
 #ifdef __cplusplus
 
-
-class IgnitionOutputPin : public NamedOutputPin { };
+class IgnitionOutputPin : public NamedOutputPin {};
 
 /**
  * OutputPin with semi-automated init/deinit on configuration change
  */
 class RegisteredOutputPin : public virtual OutputPin {
 public:
-	RegisteredOutputPin(const char *registrationName, size_t pinOffset, size_t pinModeOffset);
-	RegisteredOutputPin(const char *registrationName, size_t pinOffset);
+	RegisteredOutputPin(const char* registrationName, size_t pinOffset, size_t pinModeOffset);
+	RegisteredOutputPin(const char* registrationName, size_t pinOffset);
 	void init();
 	void unregister();
 	RegisteredOutputPin* const next;
 	const char* getRegistrationName() const {
 		return m_registrationName;
 	}
+
 private:
 	const char* const m_registrationName;
 	const uint16_t m_pinOffset;
@@ -78,8 +77,8 @@ public:
 	 */
 	OutputPin errorLedPin;
 	OutputPin communicationLedPin; // blue LED on brain board by default
-	OutputPin warningLedPin; // orange LED on brain board by default
-	OutputPin runningLedPin; // green LED on brain board by default
+	OutputPin warningLedPin;	   // orange LED on brain board by default
+	OutputPin runningLedPin;	   // green LED on brain board by default
 
 	OutputPin debugTriggerSync;
 	RegisteredOutputPin boostPin;
@@ -125,14 +124,13 @@ private:
  */
 #define getElectricalValue1(mode) ((mode) == OM_DEFAULT || (mode) == OM_OPENDRAIN)
 
-#define getElectricalValue(logicalValue, mode) \
-	(logicalValue ? getElectricalValue1(mode) : getElectricalValue0(mode))
+#define getElectricalValue(logicalValue, mode) (logicalValue ? getElectricalValue1(mode) : getElectricalValue0(mode))
 
-ioportmask_t getHwPin(const char *msg, brain_pin_e brainPin);
-ioportid_t getHwPort(const char *msg, brain_pin_e brainPin);
-const char *portname(ioportid_t GPIOx);
+ioportmask_t getHwPin(const char* msg, brain_pin_e brainPin);
+ioportid_t getHwPort(const char* msg, brain_pin_e brainPin);
+const char* portname(ioportid_t GPIOx);
 
-brain_pin_e parseBrainPin(const char *str);
+brain_pin_e parseBrainPin(const char* str);
 
 extern EnginePins enginePins;
 

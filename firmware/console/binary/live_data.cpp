@@ -10,26 +10,26 @@
 #include "antilag_system_state_generated.h"
 #include "vvt_generated.h"
 
-template<>
+template <>
 const output_channels_s* getLiveData(size_t) {
 	return &engine->outputChannels;
 }
 
-template<>
+template <>
 const knock_controller_s* getLiveData(size_t) {
 	return &engine->module<KnockController>().unmock();
 }
 
-template<>
+template <>
 const high_pressure_fuel_pump_s* getLiveData(size_t) {
 #if EFI_HPFP
 	return &engine->module<HpfpController>().unmock();
 #else
-		return nullptr; // explicit null to confirm that this struct is handled
+	return nullptr; // explicit null to confirm that this struct is handled
 #endif // EFI_HPFP
 }
 
-template<>
+template <>
 const launch_control_state_s* getLiveData(size_t) {
 #if EFI_LAUNCH_CONTROL
 	return &engine->launchController;
@@ -38,7 +38,7 @@ const launch_control_state_s* getLiveData(size_t) {
 #endif
 }
 
-template<>
+template <>
 const antilag_system_state_s* getLiveData(size_t) {
 #if EFI_ANTILAG_SYSTEM
 	return &engine->antilagController;
@@ -47,56 +47,59 @@ const antilag_system_state_s* getLiveData(size_t) {
 #endif
 }
 
-template<>
+template <>
 const injector_model_s* getLiveData(size_t) {
 	return &engine->module<InjectorModelPrimary>().unmock();
 }
 
-template<>
+template <>
 const boost_control_s* getLiveData(size_t) {
 	return &engine->module<BoostController>().unmock();
 }
 
-template<>
+template <>
 const ac_control_s* getLiveData(size_t) {
 	return &engine->module<AcController>().unmock();
 }
 
-template<>
+template <>
 const fuel_computer_s* getLiveData(size_t) {
 	return &engine->fuelComputer;
 }
 
-template<>
+template <>
 const fan_control_s* getLiveData(size_t idx) {
 	switch (idx) {
-		case 0: return &engine->module<FanControl1>().unmock();
-		case 1: return &engine->module<FanControl2>().unmock();
-		default: return nullptr;
+		case 0:
+			return &engine->module<FanControl1>().unmock();
+		case 1:
+			return &engine->module<FanControl2>().unmock();
+		default:
+			return nullptr;
 	}
 }
 
-template<>
+template <>
 const fuel_pump_control_s* getLiveData(size_t) {
 	return &engine->module<FuelPumpController>().unmock();
 }
 
-template<>
+template <>
 const main_relay_s* getLiveData(size_t) {
 	return &engine->module<MainRelayController>().unmock();
 }
 
-template<>
+template <>
 const engine_state_s* getLiveData(size_t) {
 	return &engine->engineState;
 }
 
-template<>
+template <>
 const tps_accel_state_s* getLiveData(size_t) {
 	return &engine->module<TpsAccelEnrichment>().unmock();
 }
 
-template<>
+template <>
 const trigger_central_s* getLiveData(size_t) {
 #if EFI_SHAFT_POSITION_INPUT
 	return &engine->triggerCentral;
@@ -105,38 +108,49 @@ const trigger_central_s* getLiveData(size_t) {
 #endif
 }
 
-template<>
+template <>
 const trigger_state_s* getLiveData(size_t idx) {
 #if EFI_SHAFT_POSITION_INPUT
 	switch (idx) {
-		case 0: return &engine->triggerCentral.triggerState;
-		case 1: return &engine->triggerCentral.vvtState[0][0];
-		case 2: return &engine->triggerCentral.vvtState[0][1];
-		case 3: return &engine->triggerCentral.vvtState[1][0];
-		case 4: return &engine->triggerCentral.vvtState[1][1];
-		default: return nullptr;
+		case 0:
+			return &engine->triggerCentral.triggerState;
+		case 1:
+			return &engine->triggerCentral.vvtState[0][0];
+		case 2:
+			return &engine->triggerCentral.vvtState[0][1];
+		case 3:
+			return &engine->triggerCentral.vvtState[1][0];
+		case 4:
+			return &engine->triggerCentral.vvtState[1][1];
+		default:
+			return nullptr;
 	}
 #else
 	return nullptr;
 #endif
 }
 
-template<>
+template <>
 const vvt_s* getLiveData(size_t idx) {
 #if EFI_VVT_PID
 	switch (idx) {
-		case 0: return &engine->module<VvtController1>().unmock();
-		case 1: return &engine->module<VvtController2>().unmock();
-		case 2: return &engine->module<VvtController3>().unmock();
-		case 3: return &engine->module<VvtController4>().unmock();
-		default: return nullptr;
+		case 0:
+			return &engine->module<VvtController1>().unmock();
+		case 1:
+			return &engine->module<VvtController2>().unmock();
+		case 2:
+			return &engine->module<VvtController3>().unmock();
+		case 3:
+			return &engine->module<VvtController4>().unmock();
+		default:
+			return nullptr;
 	}
 #else
 	return nullptr;
 #endif
 }
 
-template<>
+template <>
 const trigger_state_primary_s* getLiveData(size_t) {
 #if EFI_SHAFT_POSITION_INPUT
 	return &engine->triggerCentral.triggerState;
@@ -145,12 +159,12 @@ const trigger_state_primary_s* getLiveData(size_t) {
 #endif
 }
 
-template<>
+template <>
 const wall_fuel_state_s* getLiveData(size_t) {
 	return &engine->injectionEvents.elements[0].getWallFuel();
 }
 
-template<>
+template <>
 const idle_state_s* getLiveData(size_t) {
 #if EFI_IDLE_CONTROL
 	return &engine->module<IdleController>().unmock();
@@ -159,17 +173,17 @@ const idle_state_s* getLiveData(size_t) {
 #endif
 }
 
-template<>
+template <>
 const ignition_state_s* getLiveData(size_t) {
 	return &engine->ignitionState;
 }
 
-template<>
+template <>
 const throttle_model_s* getLiveData(size_t) {
 	return &engine->module<ThrottleModel>().unmock();
 }
 
-template<>
+template <>
 const lambda_monitor_s* getLiveData(size_t) {
 	return &engine->lambdaMonitor;
 }
@@ -180,5 +194,5 @@ static const FragmentEntry fragments[] = {
 };
 
 FragmentList getLiveDataFragments() {
-	return { fragments, efi::size(fragments) };
+	return {fragments, efi::size(fragments)};
 }

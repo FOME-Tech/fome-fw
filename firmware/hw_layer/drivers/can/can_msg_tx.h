@@ -2,7 +2,7 @@
  * @file	can_msg_tx.h
  *
  * CAN message transmission
- * 
+ *
  * @date Mar 13, 2020
  * @author Matthew Kennedy, (c) 2012-2020
  */
@@ -16,14 +16,14 @@
 
 /**
  * Represent a message to be transmitted over CAN.
- * 
+ *
  * Usage:
  *   * Create an instance of CanTxMessage
- *   * Set any data you'd like to transmit either using the subscript operator to directly access bytes, or any of the helper functions.
+ *   * Set any data you'd like to transmit either using the subscript operator to directly access bytes, or any of the
+ * helper functions.
  *   * Upon destruction, the message is transmitted.
  */
-class CanTxMessage
-{
+class CanTxMessage {
 public:
 	/**
 	 * Create a new CAN message, with the specified extended ID.
@@ -60,7 +60,7 @@ public:
 	void setDlc(uint8_t dlc);
 
 #if HAL_USE_CAN || EFI_UNIT_TEST
-	const CANTxFrame *getFrame() const {
+	const CANTxFrame* getFrame() const {
 		return &m_frame;
 	}
 #endif // HAL_USE_CAN || EFI_UNIT_TEST
@@ -82,19 +82,19 @@ private:
  * A CAN message based on a type, removing the need for manually flipping bits/bytes.
  */
 template <typename TData>
-class CanTxTyped final : public CanTxMessage
-{
+class CanTxTyped final : public CanTxMessage {
 #if EFI_CAN_SUPPORT
 	static_assert(sizeof(TData) <= sizeof(CANTxFrame::data8));
 #endif // EFI_CAN_SUPPORT
 
 public:
-	explicit CanTxTyped(uint32_t id, bool isExtended, CanBusIndex canChannel) : CanTxMessage(id, sizeof(TData), canChannel, isExtended) { }
+	explicit CanTxTyped(uint32_t id, bool isExtended, CanBusIndex canChannel)
+		: CanTxMessage(id, sizeof(TData), canChannel, isExtended) {}
 
 #if EFI_CAN_SUPPORT
 	/**
-	 * Access members of the templated type.  
-	 * 
+	 * Access members of the templated type.
+	 *
 	 * So you can do:
 	 * CanTxTyped<MyType> d;
 	 * d->memberOfMyType = 23;
@@ -110,8 +110,7 @@ public:
 };
 
 template <typename TData>
-void transmitStruct(uint32_t id, bool isExtended, CanBusIndex canChannel)
-{
+void transmitStruct(uint32_t id, bool isExtended, CanBusIndex canChannel) {
 	CanTxTyped<TData> frame(id, isExtended, canChannel);
 	// Destruction of an instance of CanTxMessage will transmit the message over the wire.
 	// see CanTxMessage::~CanTxMessage()
@@ -119,7 +118,17 @@ void transmitStruct(uint32_t id, bool isExtended, CanBusIndex canChannel)
 }
 
 struct ICanTransmitMock {
-	virtual void onTx(uint32_t id, uint8_t dlc, uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3, uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7) = 0;
+	virtual void
+	onTx(uint32_t id,
+		 uint8_t dlc,
+		 uint8_t d0,
+		 uint8_t d1,
+		 uint8_t d2,
+		 uint8_t d3,
+		 uint8_t d4,
+		 uint8_t d5,
+		 uint8_t d6,
+		 uint8_t d7) = 0;
 };
 
 void setCanTxMockHandler(ICanTransmitMock* handler);

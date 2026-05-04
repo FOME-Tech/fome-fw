@@ -28,5 +28,4 @@ private:
 	 * we want local version to be 'old' on instantiation
 	 */
 	int localVersion = -1;
-
 };

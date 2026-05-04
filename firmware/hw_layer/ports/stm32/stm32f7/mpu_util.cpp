@@ -8,6 +8,7 @@
 #include "pch.h"
 
 #include "flash_int.h"
+#include "stm32f7xx_hal_flash.h"
 
 static bool isDualBank() {
 	// cleared bit indicates dual bank
@@ -51,7 +52,8 @@ static DeviceType determineDevice() {
 }
 
 bool allowFlashWhileRunning() {
-	// Allow flash-while-running if dual bank mode is enabled, and we're a 2MB device (ie, no code located in second bank)
+	// Allow flash-while-running if dual bank mode is enabled, and we're a 2MB device (ie, no code located in second
+	// bank)
 	return determineDevice() == DeviceType::DualBank2MB;
 }
 
@@ -76,12 +78,13 @@ size_t flashSectorSize(flashsector_t sector) {
 	// Pages are twice the size when in single bank mode
 	size_t dbMul = isDualBank() ? 1 : 2;
 
-	if (sector <= 3)
+	if (sector <= 3) {
 		return 16 * 1024 * dbMul;
-	else if (sector == 4)
+	} else if (sector == 4) {
 		return 64 * 1024 * dbMul;
-	else if (sector >= 5)
+	} else if (sector >= 5) {
 		return 128 * 1024 * dbMul;
+	}
 	return 0;
 }
 
@@ -122,34 +125,34 @@ uintptr_t getFlashAddrSecondCopy() {
 	}
 }
 
-#define FLASH_ACR           (*(volatile uint32_t *)(FLASH_BASE + 0x00))
-#define FLASH_KEYR          (*(volatile uint32_t *)(FLASH_BASE + 0x04))
-#define FLASH_OPTKEYR       (*(volatile uint32_t *)(FLASH_BASE + 0x08))
-#define FLASH_SR            (*(volatile uint32_t *)(FLASH_BASE + 0x0C))
-#define FLASH_CR            (*(volatile uint32_t *)(FLASH_BASE + 0x10))
-#define FLASH_OPTCR         (*(volatile uint32_t *)(FLASH_BASE + 0x14))
+#define FLASH_ACR (*(volatile uint32_t*)(FLASH_BASE + 0x00))
+#define FLASH_KEYR (*(volatile uint32_t*)(FLASH_BASE + 0x04))
+#define FLASH_OPTKEYR (*(volatile uint32_t*)(FLASH_BASE + 0x08))
+#define FLASH_SR (*(volatile uint32_t*)(FLASH_BASE + 0x0C))
+#define FLASH_CR (*(volatile uint32_t*)(FLASH_BASE + 0x10))
+#define FLASH_OPTCR (*(volatile uint32_t*)(FLASH_BASE + 0x14))
 
-#define FLASH_OPTCR_STRT                       (1 << 1)
+#define FLASH_OPTCR_STRT (1 << 1)
 
-#define FLASH_OPTKEY1                         (0x08192A3B)
-#define FLASH_OPTKEY2                         (0x4C5D6E7F)
+#define FLASH_OPTKEY1 (0x08192A3B)
+#define FLASH_OPTKEY2 (0x4C5D6E7F)
 
-static void flash_wait_complete()
-{
-	do { __DSB(); } while (FLASH->SR & FLASH_SR_BSY);
+static void flash_wait_complete() {
+	do {
+		__DSB();
+	} while (FLASH->SR & FLASH_SR_BSY);
 }
 
-static void stm32f7_flash_mass_erase_dual_block()
-{
-    FLASH_CR |= FLASH_CR_MER1 | FLASH_CR_MER2;
-    FLASH_CR |= FLASH_CR_STRT;
-    flash_wait_complete();
-    FLASH_CR &= ~(FLASH_CR_MER1 | FLASH_CR_MER2);
+static void stm32f7_flash_mass_erase_dual_block() {
+	FLASH_CR |= FLASH_CR_MER1 | FLASH_CR_MER2;
+	FLASH_CR |= FLASH_CR_STRT;
+	flash_wait_complete();
+	FLASH_CR &= ~(FLASH_CR_MER1 | FLASH_CR_MER2);
 }
 
 /*
 STOP mode for F7 is needed for wakeup from multiple EXTI pins. For example PD0, which is CAN rx.
-However, for F40X & F42X this may be useless. STOP in itself eats more current than standby. 
+However, for F40X & F42X this may be useless. STOP in itself eats more current than standby.
 With F4 only having PA0 available for wakeup, this negates its need.
 */
 /*
@@ -167,7 +170,7 @@ void stm32_stop() {
 	boardPrepareForStop();
 
 	PWR->CSR1 |= PWR_CSR1_WUIF;
-	PWR->CR1 &= ~PWR_CR1_PDDS;	// cleared PDDS means stop mode (not standby) 
+	PWR->CR1 &= ~PWR_CR1_PDDS;	// cleared PDDS means stop mode (not standby)
 	PWR->CR1 |= PWR_CR1_FPDS;	// turn off flash in stop mode
 	PWR->CR1 |= PWR_CR1_UDEN;	// regulator underdrive in stop mode
 	PWR->CR1 |= PWR_CR1_LPUDS;	// low power regulator in under drive mode
@@ -182,15 +185,52 @@ void stm32_stop() {
 }
 */
 
-/* 
-Standby for both F4 & F7 works perfectly, with very little curent consumption. Downside is that theres a limited amount of pins that can wakeup F7, and only PA0 for F4XX.
-Cannot be used for CAN wakeup without hardware modificatinos.
+/*
+Standby for both F4 & F7 works perfectly, with very little curent consumption. Downside is that theres a limited amount
+of pins that can wakeup F7, and only PA0 for F4XX. Cannot be used for CAN wakeup without hardware modificatinos.
 */
+uintptr_t getBootAddress() {
+	FLASH_OBProgramInitTypeDef flashData;
+	HAL_FLASHEx_OBGetConfig(&flashData);
+
+	// F7 HAL returns encoded boot address (real address >> 14)
+	return flashData.BootAddr0 << 14;
+}
+
+bool setBootAddress(uintptr_t address) {
+	if ((address & 0x3FFF) != 0) {
+		// F7 boot address must be 16KB aligned
+		return false;
+	}
+
+	FLASH_OBProgramInitTypeDef flashData;
+	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
+	// F7 HAL expects encoded boot address (real address >> 14)
+	flashData.BootAddr0 = address >> 14;
+
+	HAL_FLASH_OB_Unlock();
+	HAL_FLASHEx_OBProgram(&flashData);
+	HAL_StatusTypeDef status = HAL_FLASH_OB_Launch();
+	HAL_FLASH_OB_Lock();
+
+	return status == HAL_OK;
+}
+
+void preBootloaderUpdate() {
+	setBootAddress(SCB->VTOR);
+	efiPrintf("Boot address set to firmware: 0x%08x", (uintptr_t)SCB->VTOR);
+}
+
+void postBootloaderUpdate() {
+	setBootAddress(FLASH_BASE);
+	efiPrintf("Boot address restored to bootloader: 0x%08x", (uintptr_t)FLASH_BASE);
+}
+
 void stm32_standby() {
 	SysTick->CTRL = 0;
 	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-	PWR->CR1 |= PWR_CR1_PDDS;	// PDDS = use standby mode (not stop mode)
-	PWR->CR1 |= PWR_CR1_CSBF;	// Clear standby flag
+	PWR->CR1 |= PWR_CR1_PDDS; // PDDS = use standby mode (not stop mode)
+	PWR->CR1 |= PWR_CR1_CSBF; // Clear standby flag
 
 	// Do anything the board wants to prepare for standby mode - enabling wakeup sources!
 	boardPrepareForStandby();

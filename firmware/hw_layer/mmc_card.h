@@ -31,19 +31,9 @@ Gpio getSdCardCsPin();
 #endif // HAL_USE_SPI
 
 #if EFI_PROD_CODE
-	struct SdLogBufferWriter final : public BufferedWriter<512> {
-		bool failed = false;
+struct SdLogBufferWriter final : public BufferedWriter<512> {
+	bool failed = false;
 
-		size_t writeInternal(const char* buffer, size_t count) override;
-	};
-
-	#include "ff.h"
-
-	// These are to get objects that need to be in memory safe
-	// to access with the SD DMA controller
-	namespace sd_mem {
-		FATFS* getFs();
-		FIL* getLogFileFd();
-		SdLogBufferWriter& getLogBuffer();
-	}
+	size_t writeInternal(const char* buffer, size_t count) override;
+};
 #endif // EFI_PROD_CODE

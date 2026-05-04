@@ -30,7 +30,7 @@ expected<float> processBMW_e46(const CANRxFrame& frame) {
 	}
 
 	// average the rear wheels since those are the driven ones (more accurate gear detection!)
-	uint16_t left =  getTwoBytesLsb(frame, 4);
+	uint16_t left = getTwoBytesLsb(frame, 4);
 	uint16_t right = getTwoBytesLsb(frame, 6);
 
 	return (left + right) / (16 * 2);
@@ -81,8 +81,7 @@ struct WssResult {
 	float rr;
 };
 
-static float E90Wss(const uint8_t& data)
-{
+static float E90Wss(const uint8_t& data) {
 	return (*reinterpret_cast<const int16_t*>(&data)) * 0.0625f;
 }
 
@@ -92,12 +91,7 @@ static expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	return WssResult{
-		E90Wss(frame.data8[0]),
-		E90Wss(frame.data8[2]),
-		E90Wss(frame.data8[4]),
-		E90Wss(frame.data8[6])
-	};
+	return WssResult{E90Wss(frame.data8[0]), E90Wss(frame.data8[2]), E90Wss(frame.data8[4]), E90Wss(frame.data8[6])};
 }
 
 static constexpr float NcWss(uint16_t data) {
@@ -110,12 +104,7 @@ static expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	return WssResult{
-		NcWss(frame.data16[0]),
-		NcWss(frame.data16[1]),
-		NcWss(frame.data16[2]),
-		NcWss(frame.data16[3])
-	};
+	return WssResult{NcWss(frame.data16[0]), NcWss(frame.data16[1]), NcWss(frame.data16[2]), NcWss(frame.data16[3])};
 }
 
 static expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
@@ -170,7 +159,8 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 			case WssToVssMode::AverageAll:
 				canSpeed.setValidValue((frontAvg + rearAvg) / 2, nowNt);
 				break;
-			default: break;
+			default:
+				break;
 		}
 	}
 }

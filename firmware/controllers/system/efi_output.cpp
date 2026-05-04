@@ -4,5 +4,3 @@
  */
 
 #include "efi_output.h"
-
-

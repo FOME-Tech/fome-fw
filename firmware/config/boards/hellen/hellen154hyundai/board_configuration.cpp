@@ -46,7 +46,7 @@ static void setupDefaultSensorInputs() {
 	engineConfiguration->vvtMode[0] = VVT_SINGLE_TOOTH;
 	engineConfiguration->vvtMode[1] = VVT_SINGLE_TOOTH;
 
-    engineConfiguration->vehicleSpeedSensorInputPin = H144_IN_VSS;
+	engineConfiguration->vehicleSpeedSensorInputPin = H144_IN_VSS;
 
 	setTPS1Inputs(H144_IN_TPS, H144_IN_AUX1);
 
@@ -72,7 +72,7 @@ void setBoardConfigOverrides() {
 
 	setHellenSdCardSpi2();
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	// trigger inputs
 	engineConfiguration->triggerInputPins[1] = Gpio::Unassigned;
@@ -81,8 +81,8 @@ void setBoardConfigOverrides() {
 	engineConfiguration->camInputs[1] = H144_IN_D_AUX4;
 
 	if (engine->engineState.hellenBoardId == -1) {
-	    engineConfiguration->triggerInputPins[0] = H144_IN_CRANK;
-	    engineConfiguration->camInputs[0] = H144_IN_CAM;
+		engineConfiguration->triggerInputPins[0] = H144_IN_CRANK;
+		engineConfiguration->camInputs[0] = H144_IN_CAM;
 
 		// control pins are inverted since overall ECU pinout seems to be inverted
 		engineConfiguration->etbIo[0].directionPin1 = H144_OUT_PWM3;
@@ -106,31 +106,30 @@ void setBoardConfigOverrides() {
 		engineConfiguration->triggerInputPins[0] = H144_IN_SENS2;
 		engineConfiguration->camInputs[0] = H144_IN_SENS3;
 
-
 		// todo You would not believe how you invert TLE9201 #4579
 		engineConfiguration->stepperDcInvertedPins = true;
 
-	    //ETB1
-	    // PWM pin
-	    engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM2;
-	    // DIR pin
+		// ETB1
+		//  PWM pin
+		engineConfiguration->etbIo[0].controlPin = H144_OUT_PWM2;
+		// DIR pin
 		engineConfiguration->etbIo[0].directionPin1 = H144_OUT_PWM3;
-	   	// Disable pin
-	   	engineConfiguration->etbIo[0].disablePin = H144_OUT_IO12;
-	   	// Unused
-	 	engineConfiguration->etbIo[0].directionPin2 = Gpio::Unassigned;
+		// Disable pin
+		engineConfiguration->etbIo[0].disablePin = H144_OUT_IO12;
+		// Unused
+		engineConfiguration->etbIo[0].directionPin2 = Gpio::Unassigned;
 
 		// wastegate DC motor
-	    //ETB2
-	    // PWM pin
-	    engineConfiguration->etbIo[1].controlPin = H144_OUT_PWM4;
-	    // DIR pin
+		// ETB2
+		// PWM pin
+		engineConfiguration->etbIo[1].controlPin = H144_OUT_PWM4;
+		// DIR pin
 		engineConfiguration->etbIo[1].directionPin1 = H144_OUT_PWM5;
-	   	// Disable pin
-	   	engineConfiguration->etbIo[1].disablePin = H144_OUT_IO13;
-	   	// Unused
-	 	engineConfiguration->etbIo[1].directionPin2 = Gpio::Unassigned;
-    }
+		// Disable pin
+		engineConfiguration->etbIo[1].disablePin = H144_OUT_IO13;
+		// Unused
+		engineConfiguration->etbIo[1].directionPin2 = Gpio::Unassigned;
+	}
 }
 
 /**
@@ -153,9 +152,9 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->canRxPin = H176_CAN_RX;
 
 	engineConfiguration->fuelPumpPin = H144_OUT_IO9;
-//	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
-//	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
-	engineConfiguration->mainRelayPin = Gpio::G14;	// pin: 111a, OUT_IO3
+	//	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
+	//	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
+	engineConfiguration->mainRelayPin = Gpio::G14; // pin: 111a, OUT_IO3
 	engineConfiguration->malfunctionIndicatorPin = H144_OUT_PWM8;
 
 	engineConfiguration->brakePedalPin = H144_IN_RES3;
@@ -185,7 +184,5 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 
-
-
-    setTPS1Calibration(98, 926, 891, 69);
+	setTPS1Calibration(98, 926, 891, 69);
 }

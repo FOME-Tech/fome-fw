@@ -14,7 +14,6 @@
 #include "efi_scaled_channel.h"
 #include "output_channels_generated.h"
 
-
 /**
  * todo https://github.com/rusefi/rusefi/issues/197
  * three locations have to be changed manually
@@ -25,6 +24,6 @@
  *
  * see also [OutputChannels] in tunerstudio.template.ini
  */
-struct TunerStudioOutputChannels : output_channels_s { };
+struct TunerStudioOutputChannels : output_channels_s {};
 
-TunerStudioOutputChannels *getTunerStudioOutputChannels();
+TunerStudioOutputChannels* getTunerStudioOutputChannels();

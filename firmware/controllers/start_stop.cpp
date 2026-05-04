@@ -6,5 +6,8 @@ ButtonDebounce startStopButtonDebounce("start_button");
 
 void initStartStopButton() {
 	/* startCrankingDuration is efitimesec_t, so we need to multiply it by 1000 to get milliseconds*/
-	startStopButtonDebounce.init(MS2NT(engineConfiguration->startCrankingDuration * 1000), engineConfiguration->startStopButtonPin, engineConfiguration->startStopButtonMode);
+	startStopButtonDebounce.init(
+			MS2NT(engineConfiguration->startCrankingDuration * 1000),
+			engineConfiguration->startStopButtonPin,
+			engineConfiguration->startStopButtonMode);
 }

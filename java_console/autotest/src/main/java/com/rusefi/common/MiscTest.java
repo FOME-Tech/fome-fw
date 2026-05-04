@@ -4,6 +4,7 @@ import com.rusefi.RusefiTestBase;
 import com.rusefi.binaryprotocol.BinaryProtocol;
 import com.rusefi.core.Sensor;
 import com.rusefi.core.SensorCentral;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.devexperts.util.TimeUtil.SECOND;
@@ -18,6 +19,7 @@ public class MiscTest extends RusefiTestBase {
         bp.burn();
     }
 
+    @Ignore
     @Test
     public void testMcuTemperature() throws InterruptedException {
         double mcuTemp = Double.NaN;

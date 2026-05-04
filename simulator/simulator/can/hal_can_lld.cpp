@@ -1,17 +1,17 @@
 /*
-    ChibiOS - Copyright (C) 2006..2018 Giovanni Di Sirio
+	ChibiOS - Copyright (C) 2006..2018 Giovanni Di Sirio
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+	Licensed under the Apache License, Version 2.0 (the "License");
+	you may not use this file except in compliance with the License.
+	You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+		http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+	Unless required by applicable law or agreed to in writing, software
+	distributed under the License is distributed on an "AS IS" BASIS,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	See the License for the specific language governing permissions and
+	limitations under the License.
 */
 
 /**
@@ -84,7 +84,7 @@ static std::vector<CANDriver*> instances;
  *
  * @notapi
  */
-void can_lld_start(CANDriver *canp) {
+void can_lld_start(CANDriver* canp) {
 	(void)canp;
 
 	// Check that this device is not already started
@@ -137,7 +137,7 @@ void can_lld_start(CANDriver *canp) {
  *
  * @notapi
  */
-void can_lld_stop(CANDriver *canp) {
+void can_lld_stop(CANDriver* canp) {
 	(void)canp;
 
 	// Remove from the "interrupt handler" list
@@ -163,7 +163,7 @@ void can_lld_stop(CANDriver *canp) {
  *
  * @notapi
  */
-bool can_lld_is_tx_empty(CANDriver *canp, canmbx_t mailbox) {
+bool can_lld_is_tx_empty(CANDriver* canp, canmbx_t mailbox) {
 	(void)canp;
 	(void)mailbox;
 
@@ -181,9 +181,7 @@ bool can_lld_is_tx_empty(CANDriver *canp, canmbx_t mailbox) {
  *
  * @notapi
  */
-void can_lld_transmit(CANDriver *canp,
-                      canmbx_t mailbox,
-                      const CANTxFrame *ctfp) {
+void can_lld_transmit(CANDriver* canp, canmbx_t mailbox, const CANTxFrame* ctfp) {
 	(void)mailbox;
 
 	can_frame frame;
@@ -215,7 +213,7 @@ void can_lld_transmit(CANDriver *canp,
  *
  * @notapi
  */
-bool can_lld_is_rx_nonempty(CANDriver *canp, canmbx_t mailbox) {
+bool can_lld_is_rx_nonempty(CANDriver* canp, canmbx_t mailbox) {
 	(void)mailbox;
 
 	// CAN init failed, claim that the queue is full.
@@ -260,9 +258,7 @@ bool check_can_isr() {
  *
  * @notapi
  */
-void can_lld_receive(CANDriver *canp,
-                     canmbx_t mailbox,
-                     CANRxFrame *crfp) {
+void can_lld_receive(CANDriver* canp, canmbx_t mailbox, CANRxFrame* crfp) {
 	(void)mailbox;
 
 	auto queue = reinterpret_cast<std::queue<can_frame>*>(canp->rx);
@@ -282,7 +278,7 @@ void can_lld_receive(CANDriver *canp,
 	// SID bits overlap with EID, no reason to copy both, but mask off err/rtr/etc bits
 	crfp->EID = CAN_ERR_MASK & frame.can_id;
 
-	crfp->IDE = (frame.can_id &  CAN_EFF_FLAG) != 0;
+	crfp->IDE = (frame.can_id & CAN_EFF_FLAG) != 0;
 }
 
 /**
@@ -293,8 +289,7 @@ void can_lld_receive(CANDriver *canp,
  *
  * @notapi
  */
-void can_lld_abort(CANDriver *canp,
-                   canmbx_t mailbox) {
+void can_lld_abort(CANDriver* canp, canmbx_t mailbox) {
 	(void)canp;
 	(void)mailbox;
 }

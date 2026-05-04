@@ -42,9 +42,7 @@ private:
 
 class KnockController : public KnockControllerBase {
 public:
-	KnockController()
-	{
-	}
+	KnockController() {}
 
 	float getKnockThreshold() const override;
 	float getMaximumRetard() const override;

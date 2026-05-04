@@ -20,7 +20,7 @@ void addEngineSnifferTdcEvent(efitick_t timestamp, int rpm);
  */
 void addEngineSnifferCrankEvent(efitick_t timestamp, int wheelIndex, int triggerEventIndex, bool isRise);
 void addEngineSnifferVvtEvent(efitick_t timestamp, int vvtIndex, bool isRise);
-void addEngineSnifferOutputPinEvent(NamedOutputPin *pin, bool isRise);
+void addEngineSnifferOutputPinEvent(NamedOutputPin* pin, bool isRise);
 
 #if EFI_ENGINE_SNIFFER
 
@@ -31,7 +31,7 @@ class WaveChart {
 public:
 	WaveChart();
 	void init();
-	void addEvent3(efitick_t nowNt, const char *name, const char *msg);
+	void addEvent3(efitick_t nowNt, const char* name, const char* msg);
 	void reset();
 	void startDataCollection();
 	void publishIfFull();
@@ -56,8 +56,7 @@ private:
 	volatile int isInitialized = false;
 };
 
-void initWaveChart(WaveChart *chart);
+void initWaveChart(WaveChart* chart);
 void setChartSize(int newSize);
 
 #endif /* EFI_ENGINE_SNIFFER */
-

@@ -12,7 +12,7 @@
 void initScriptImpl();
 
 float getCurveValue(int index, float key);
-expected<int> getCurveIndexByName(const char *name);
-expected<int> getTableIndexByName(const char *name);
-expected<int> getSettingIndexByName(const char *name);
-ValueProvider3D *getscriptTable(int index);
+expected<int> getCurveIndexByName(const char* name);
+expected<int> getTableIndexByName(const char* name);
+expected<int> getSettingIndexByName(const char* name);
+ValueProvider3D* getscriptTable(int index);

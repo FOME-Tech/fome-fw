@@ -13,15 +13,19 @@
 #if HAL_USE_USB_MSD
 
 struct USBDriver;
-bool msd_request_hook_new(USBDriver *usbp);
+bool msd_request_hook_new(USBDriver* usbp);
 
 class MassStorageController : public ThreadController<USB_MSD_THREAD_WA_SIZE> {
 public:
 	MassStorageController(USBDriver* usb);
 
-	void attachLun(uint8_t lunIndex, BaseBlockDevice *blkdev, uint8_t *blkbuf,
-					const scsi_inquiry_response_t *inquiry,
-					const scsi_unit_serial_number_inquiry_response_t *serialInquiry);
+	void attachLun(
+			uint8_t lunIndex,
+			BaseBlockDevice* blkdev,
+			uint8_t* blkbuf,
+			const scsi_inquiry_response_t* inquiry,
+			const scsi_unit_serial_number_inquiry_response_t* serialInquiry);
+
 protected:
 	void ThreadTask() override;
 

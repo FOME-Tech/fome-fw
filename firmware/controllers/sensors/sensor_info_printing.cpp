@@ -15,7 +15,12 @@ void ProxySensor::showInfo(const char* sensorName) const {
 
 void FunctionalSensor::showInfo(const char* sensorName) const {
 	const auto value = get();
-	efiPrintf("Sensor \"%s\": Raw value: %.2f Valid: %s Converted value %.2f", sensorName, m_rawValue, boolToString(value.Valid), value.Value);
+	efiPrintf(
+			"Sensor \"%s\": Raw value: %.2f Valid: %s Converted value %.2f",
+			sensorName,
+			m_rawValue,
+			boolToString(value.Valid),
+			value.Value);
 
 	// now print out the underlying function's info
 	if (auto func = m_function) {
@@ -33,14 +38,14 @@ void CanSensorBase::showInfo(const char* sensorName) const {
 #endif // EFI_CAN_SUPPORT
 
 void RedundantSensor::showInfo(const char* sensorName) const {
-	efiPrintf("Sensor \"%s\" is redundant combining \"%s\" and \"%s\": primary only: %s partial secondary: %s (max: %f)",
-		sensorName,
-		getSensorName(m_first),
-		getSensorName(m_second),
-		boolToString(m_ignoreSecond),
-		boolToString(m_secondMaximum < 100),
-		m_secondMaximum
-	);
+	efiPrintf(
+			"Sensor \"%s\" is redundant combining \"%s\" and \"%s\": primary only: %s partial secondary: %s (max: %f)",
+			sensorName,
+			getSensorName(m_first),
+			getSensorName(m_second),
+			boolToString(m_ignoreSecond),
+			boolToString(m_secondMaximum < 100),
+			m_secondMaximum);
 }
 
 void FrequencySensor::showInfo(const char* sensorName) const {
@@ -48,18 +53,22 @@ void FrequencySensor::showInfo(const char* sensorName) const {
 }
 
 void FallbackSensor::showInfo(const char* sensorName) const {
-	efiPrintf("Sensor \"%s\" is fallback sensor with primary \"%s\" and fallback \"%s\"", sensorName, getSensorName(m_primary), getSensorName(m_fallback));
+	efiPrintf(
+			"Sensor \"%s\" is fallback sensor with primary \"%s\" and fallback \"%s\"",
+			sensorName,
+			getSensorName(m_primary),
+			getSensorName(m_fallback));
 }
 
 void RpmCalculator::showInfo(const char* /*sensorName*/) const {
 #if EFI_SHAFT_POSITION_INPUT
-	efiPrintf("RPM sensor: stopped: %d spinning up: %d cranking: %d running: %d rpm: %.1f", 
-		isStopped(),
-		isSpinningUp(),
-		isCranking(),
-		isRunning(),
-		get().value_or(0)
-	);
+	efiPrintf(
+			"RPM sensor: stopped: %d spinning up: %d cranking: %d running: %d rpm: %.1f",
+			isStopped(),
+			isSpinningUp(),
+			isCranking(),
+			isRunning(),
+			get().value_or(0));
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
@@ -71,7 +80,12 @@ void LinearFunc::showInfo(float testRawValue) const {
 
 void ResistanceFunc::showInfo(float testInputValue) const {
 	const auto result = convert(testInputValue);
-	efiPrintf("    %.2f volts -> %.1f ohms with supply voltage %.2f and pullup %.1f.", testInputValue, result.Value, m_supplyVoltage, m_pullupResistor);
+	efiPrintf(
+			"    %.2f volts -> %.1f ohms with supply voltage %.2f and pullup %.1f.",
+			testInputValue,
+			result.Value,
+			m_supplyVoltage,
+			m_pullupResistor);
 }
 
 void ThermistorFunc::showInfo(float testInputValue) const {

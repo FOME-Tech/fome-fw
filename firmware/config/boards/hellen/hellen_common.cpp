@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "hellen_meta.h"
 
-
 static OutputPin megaEn;
 
 void hellenWbo() {
@@ -36,7 +35,8 @@ void setHellen64MegaEnPin() {
 }
 
 void hellenBoardStandBy() {
-	// we need to turn 'megaEn' and pause for a bit to make sure that WBO is off and does not wake main firmware right away
+	// we need to turn 'megaEn' and pause for a bit to make sure that WBO is off and does not wake main firmware right
+	// away
 	megaEn.setValue(0);
 	// todo: 200ms is totally random what's the science for this sleep duration?
 	chThdSleepMilliseconds(200);
@@ -60,10 +60,10 @@ void detectHellenMcuType() {
 	// we test the red LED1 pin because the red LED used has the smallest voltage drop,
 	// and thus can be detected more accurately
 	static const brain_pin_e led1Pins[2] = {
-		// LED1 pin of the 176-pin mcu module (we check it first!)
-		H176_LED1_RED,
-		// LED1 pin of the 144-pin mcu module
-		H144_LED1_RED,
+			// LED1 pin of the 176-pin mcu module (we check it first!)
+			H176_LED1_RED,
+			// LED1 pin of the 144-pin mcu module
+			H144_LED1_RED,
 	};
 	int padState[2];
 	// check each mcu module type sequentially
@@ -75,7 +75,10 @@ void detectHellenMcuType() {
 		palSetPadMode(port, hwIndex, PAL_MODE_OUTPUT_PUSHPULL);
 		palClearPad(port, hwIndex);
 		// set LED1 pin to input
-		palSetPadMode(port, hwIndex, PAL_MODE_INPUT); // todo: currently we don't use PAL_MODE_INPUT_PULLDOWN - needs more testing
+		palSetPadMode(
+				port,
+				hwIndex,
+				PAL_MODE_INPUT); // todo: currently we don't use PAL_MODE_INPUT_PULLDOWN - needs more testing
 		// wait for the pin state to settle down
 		chThdSleepMilliseconds(1);
 		// get the pin states
@@ -90,8 +93,7 @@ void detectHellenMcuType() {
 	efiPrintf("Hellen board pin states = %d %d", padState[0], padState[1]);
 	if (padState[0] && !padState[1]) {
 		efiPrintf("* Hellen 176-pin mcu detected!");
-	}
-	else if (!padState[0] && padState[1]) {
+	} else if (!padState[0] && padState[1]) {
 		efiPrintf("* Hellen 144-pin mcu detected!");
 	} else {
 		efiPrintf("* Cannot detect Hellen mcu module!");

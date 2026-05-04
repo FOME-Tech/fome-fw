@@ -34,17 +34,12 @@
  * ECU pin 22: IN  RED/BRN GRN CLT sensor (only on first ECU)
  * ECU pin 27: OUT         ORG injector #6
  * ECU pin 28: OUT         RED injector #5
- * ECU pin 32: IN          ORG VR positive crankshaft sensor - only 2x 5k per channel, R111 not installed, W1002 not installed
- * ECU pin 34: IN              IAT sensor (only on second ECU)
- * ECU pin 36: IN              Knock Sensor #2
- * ECU pin 37: GND             Knock Sensor GND
- * ECU pin 40: OUT BRN/BLK GRN injector #3
- * ECU pin 41: OUT BRN/WHT BLU injector #1
- * ECU pin 45: GND             crankshaft shield
- * ECU pin 46: IN  BLK     BLU VR negative crankshaft sensor
- * ECU pin 47: GND BRN     BLK IAT sensor Ground (only on second ECU)
- * ECU pin 49: IN              Knock Sensor #1
- * ECU pin 50: GND             Knock Sensor GND
+ * ECU pin 32: IN          ORG VR positive crankshaft sensor - only 2x 5k per channel, R111 not installed, W1002 not
+ * installed ECU pin 34: IN              IAT sensor (only on second ECU) ECU pin 36: IN              Knock Sensor #2 ECU
+ * pin 37: GND             Knock Sensor GND ECU pin 40: OUT BRN/BLK GRN injector #3 ECU pin 41: OUT BRN/WHT BLU injector
+ * #1 ECU pin 45: GND             crankshaft shield ECU pin 46: IN  BLK     BLU VR negative crankshaft sensor ECU pin
+ * 47: GND BRN     BLK IAT sensor Ground (only on second ECU) ECU pin 49: IN              Knock Sensor #1 ECU pin 50:
+ * GND             Knock Sensor GND
  *
  * Plug #4 40 pin
  * ECU pin 6:  IN              start signal from ignition key
@@ -118,7 +113,6 @@ void m73engine() {
 	engineConfiguration->cylinderBore = 85.0;
 }
 
-
 // BMW_M73_F
 void setBMW_M73_TwoCoilUnitTest() {
 	// twoCoil configuration without unit tests ETB setup drama
@@ -150,7 +144,6 @@ Gpio::A7
 Gpio::A6
 	 */
 
-
 	engineConfiguration->fuelPumpPin = Gpio::Unassigned;
 	engineConfiguration->idle.solenoidPin = Gpio::Unassigned;
 	engineConfiguration->fanPin = Gpio::Unassigned;
@@ -163,7 +156,6 @@ Gpio::A6
 	 * AN7 tested pull-down 1M               PA6 PPS
 	 * AN8 tested no pull-down / no pull-up
 	 */
-
 
 	// For example TLE7209 - two control wires:
 	// PWM on both wires - one to open, another to close
@@ -190,7 +182,6 @@ Gpio::A6
 
 	engineConfiguration->tps2Min = engineConfiguration->tpsMin;
 	engineConfiguration->tps2Max = engineConfiguration->tpsMax;
-
 
 	engineConfiguration->injectionPins[0] = Gpio::Unassigned;
 	engineConfiguration->injectionPins[1] = Gpio::Unassigned;
@@ -251,7 +242,6 @@ void setEngineBMW_M73_Proteus() {
 
 	// 12 injectors defined in boards/proteus/board_configuration.cpp
 
-
 	strcpy(engineConfiguration->vehicleName, "Using Proteus");
 
 	// set_trigger_input_pin 0 PE7
@@ -265,10 +255,8 @@ void setEngineBMW_M73_Proteus() {
 	// todo: figure out exact values from TLE8888 breakout board used by Manhattan
 	// engineConfiguration->vbattDividerCoeff = 7.6; // is that Proteus 0.2 value?
 
-
 	// no idea why https://github.com/rusefi/rusefi/wiki/HOWTO-M73-v12-on-Proteus uses non default CLT pin
 	engineConfiguration->clt.adcChannel = PROTEUS_IN_ANALOG_TEMP_4;
-
 
 	// Gpio::E0:  "Lowside 14"
 	engineConfiguration->starterControlPin = Gpio::E0;

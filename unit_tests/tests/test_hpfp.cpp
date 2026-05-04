@@ -26,15 +26,14 @@ TEST(HPFP, Lobe) {
 
 	// Run through all five CAM modes
 	for (int cam = 0; cam < 5; cam++) {
-		static hpfp_cam_e map[5] = { HPFP_CAM_NONE, HPFP_CAM_IN1, HPFP_CAM_EX1,
-					     HPFP_CAM_IN2, HPFP_CAM_EX2};
+		static hpfp_cam_e map[5] = {HPFP_CAM_NONE, HPFP_CAM_IN1, HPFP_CAM_EX1, HPFP_CAM_IN2, HPFP_CAM_EX2};
 		engineConfiguration->hpfpCam = map[cam];
 
 		// Run through several cycles of the engine to make sure we keep wrapping around
 		for (int i = 0; i < 4; i++) {
 			EXPECT_EQ(lobe.findNextLobe(), 240 + 123 + cam * 20);
 			EXPECT_EQ(lobe.findNextLobe(), 480 + 123 + cam * 20);
-			EXPECT_EQ(lobe.findNextLobe(),   0 + 123 + cam * 20);
+			EXPECT_EQ(lobe.findNextLobe(), 0 + 123 + cam * 20);
 		}
 	}
 
@@ -44,14 +43,14 @@ TEST(HPFP, Lobe) {
 	EXPECT_EQ(lobe.findNextLobe(), 180 + 123);
 	EXPECT_EQ(lobe.findNextLobe(), 360 + 123);
 	EXPECT_EQ(lobe.findNextLobe(), 540 + 123);
-	EXPECT_EQ(lobe.findNextLobe(),   0 + 123);
+	EXPECT_EQ(lobe.findNextLobe(), 0 + 123);
 
 	// Can we change the peak position?
 	engineConfiguration->hpfpPeakPos = 95;
 	EXPECT_EQ(lobe.findNextLobe(), 180 + 95);
 	EXPECT_EQ(lobe.findNextLobe(), 360 + 95);
 	EXPECT_EQ(lobe.findNextLobe(), 540 + 95);
-	EXPECT_EQ(lobe.findNextLobe(),   0 + 95);
+	EXPECT_EQ(lobe.findNextLobe(), 0 + 95);
 }
 
 TEST(HPFP, InjectionReplacementFuel) {
@@ -79,8 +78,7 @@ TEST(HPFP, InjectionReplacementFuel) {
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 50 * 2.); // Ooops we maxed out
 
 	// Compensation testing
-	engineConfiguration->cylindersCount =
-		engineConfiguration->hpfpCamLobes; // Make math easier
+	engineConfiguration->cylindersCount = engineConfiguration->hpfpCamLobes; // Make math easier
 	for (int i = 0; i < HPFP_COMPENSATION_SIZE; i++) {
 		// one bin every 1000 RPM
 		config->hpfpCompensationRpmBins[i] = std::min(i * 1000, 8000);
@@ -134,10 +132,10 @@ TEST(HPFP, PI) {
 	Sensor::setMockValue(SensorType::Map, 40);
 	Sensor::setMockValue(SensorType::FuelPressureHigh, 1000);
 	EXPECT_FLOAT_EQ(math.calcPI(1000, 120), -20); // Test integral clamp
-	EXPECT_FLOAT_EQ(math.m_I_sum_percent, -20); // and again
+	EXPECT_FLOAT_EQ(math.m_I_sum_percent, -20);	  // and again
 	EXPECT_FLOAT_EQ(math.m_pressureTarget_kPa, 2010);
 	EXPECT_FLOAT_EQ(math.calcPI(1000, -40), 40); // Test integral clamp
-	EXPECT_FLOAT_EQ(math.m_I_sum_percent, 40); // and again
+	EXPECT_FLOAT_EQ(math.m_I_sum_percent, 40);	 // and again
 	EXPECT_FLOAT_EQ(math.m_pressureTarget_kPa, 2010);
 
 	// Test pressure decay
@@ -150,7 +148,7 @@ TEST(HPFP, PI) {
 	EXPECT_FLOAT_EQ(math.m_pressureTarget_kPa, 2036); // 5ms of decay
 
 	// Proportional gain
-	math.reset(); // Reset for ease of testing
+	math.reset();							  // Reset for ease of testing
 	EXPECT_FLOAT_EQ(math.calcPI(1000, 0), 0); // Validate reset
 	EXPECT_FLOAT_EQ(math.m_pressureTarget_kPa, 2010);
 	engineConfiguration->hpfpPidP = 0.01;
@@ -194,13 +192,13 @@ TEST(HPFP, Angle) {
 
 	HpfpController model;
 
-	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 25); // Double check baseline
-	EXPECT_FLOAT_EQ(math.calcPI(1000, 10), 0); // Validate no PI
+	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 25);		  // Double check baseline
+	EXPECT_FLOAT_EQ(math.calcPI(1000, 10), 0);				  // Validate no PI
 	EXPECT_NEAR(math.pumpAngleFuel(1000, &model), 37.5, 0.4); // Given the profile, should be 50% higher
 
 	engine->cylinders[0].setInjectionMass(0.08 /* cc/cyl */ * fuelDensity);
-	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 40); // Double check baseline
-	EXPECT_FLOAT_EQ(math.calcPI(1000, 10), 0); // Validate no PI
+	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 40);		// Double check baseline
+	EXPECT_FLOAT_EQ(math.calcPI(1000, 10), 0);				// Validate no PI
 	EXPECT_NEAR(math.pumpAngleFuel(1000, &model), 60, 0.4); // Given the profile, should be 50% higher
 
 	engineConfiguration->hpfpPidP = 0.01;
@@ -237,7 +235,7 @@ TEST(HPFP, Schedule) {
 		config->hpfpLobeProfileAngle[i] = 150. * i / (HPFP_LOBE_PROFILE_SIZE - 1);
 	}
 
-	auto & hpfp = *engine->module<HpfpController>();
+	auto& hpfp = *engine->module<HpfpController>();
 
 	StrictMock<MockExecutor> mockExec;
 	engine->scheduler.setMockExecutor(&mockExec);
@@ -247,7 +245,7 @@ TEST(HPFP, Schedule) {
 	constexpr angle_t angle1 = 270 - 37.6923065;
 	constexpr angle_t angle2 = angle1 + 30;
 
-	constexpr float tick_per_deg = USF2NT(1000000.)*60/360/1000;
+	constexpr float tick_per_deg = USF2NT(1000000.) * 60 / 360 / 1000;
 
 	constexpr efitick_t nt0 = tick_per_deg * angle0;
 	constexpr efitick_t nt1 = tick_per_deg * angle1;
@@ -258,13 +256,28 @@ TEST(HPFP, Schedule) {
 
 		// First call to setRpmValue will cause a dummy call to fast periodic timer.
 		// Injection Mass will be 0 so expect a no-op.
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), &hpfp.m_event.scheduling, nt0, action_s(HpfpController::pinTurnOff, &hpfp)));
+		EXPECT_CALL(
+				mockExec,
+				schedule(
+						testing::NotNull(),
+						&hpfp.m_event.scheduling,
+						nt0,
+						action_s(HpfpController::pinTurnOff, &hpfp)));
 
 		// Second call will be the start of a real pump event.
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), &hpfp.m_event.scheduling, nt1, action_s(HpfpController::pinTurnOn, &hpfp)));
+		EXPECT_CALL(
+				mockExec,
+				schedule(
+						testing::NotNull(), &hpfp.m_event.scheduling, nt1, action_s(HpfpController::pinTurnOn, &hpfp)));
 
 		// Third call will be off event
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), &hpfp.m_event.scheduling, nt2, action_s(HpfpController::pinTurnOff, &hpfp)));
+		EXPECT_CALL(
+				mockExec,
+				schedule(
+						testing::NotNull(),
+						&hpfp.m_event.scheduling,
+						nt2,
+						action_s(HpfpController::pinTurnOff, &hpfp)));
 	}
 	EXPECT_CALL(mockExec, cancel(_)).Times(2);
 
@@ -280,8 +293,7 @@ TEST(HPFP, Schedule) {
 	eth.assertTriggerEvent("h0", 0, &hpfp.m_event, (void*)&HpfpController::pinTurnOff, 270);
 
 	// Make the previous event happen, schedule the next.
-	engine->module<TriggerScheduler>()->onEnginePhase(
-		1000, { tick_per_deg * 0, 180, 360, 180, 360 });
+	engine->module<TriggerScheduler>()->onEnginePhase(1000, {tick_per_deg * 0, 180, 360, 180, 360});
 	// Mock executor doesn't run events, so we run it manually
 	HpfpController::pinTurnOff(&hpfp);
 
@@ -289,8 +301,7 @@ TEST(HPFP, Schedule) {
 	eth.assertTriggerEvent("h1", 0, &hpfp.m_event, (void*)&HpfpController::pinTurnOn, 450 - 37.6923065f);
 
 	// Make it happen
-	engine->module<TriggerScheduler>()->onEnginePhase(
-		1000, { tick_per_deg * 180, 360, 540, 360, 540 });
+	engine->module<TriggerScheduler>()->onEnginePhase(1000, {tick_per_deg * 180, 360, 540, 360, 540});
 
 	// Since we have a mock scheduler, lets insert the correct timestamp in the scheduling
 	// struct.

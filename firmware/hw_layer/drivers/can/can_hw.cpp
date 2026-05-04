@@ -28,11 +28,9 @@ class CanRead final : protected ThreadController<UTILITY_THREAD_STACK_SIZE> {
 public:
 	CanRead(CanBusIndex index)
 		: ThreadController("CAN RX", PRIO_CAN_RX)
-		, m_index(index)
-	{
-	}
+		, m_index(index) {}
 
-	void tryStart(CANDriver *device) {
+	void tryStart(CANDriver* device) {
 		m_device = device;
 
 		if (device) {
@@ -64,7 +62,8 @@ private:
 
 CCM_OPTIONAL static CanRead canRead1(CanBusIndex::Bus0);
 CCM_OPTIONAL static CanRead canRead2(CanBusIndex::Bus1);
-static CanWrite canWrite CCM_OPTIONAL;
+CCM_OPTIONAL static CanWrite canWrite0(CanBusIndex::Bus0);
+CCM_OPTIONAL static CanWrite canWrite1(CanBusIndex::Bus1);
 
 static void canInfo() {
 	if (!isCanEnabled) {
@@ -72,17 +71,27 @@ static void canInfo() {
 		return;
 	}
 
-	efiPrintf("CAN1 TX %s %s", hwPortname(engineConfiguration->canTxPin), getCan_baudrate_e(engineConfiguration->canBaudRate));
+	efiPrintf(
+			"CAN1 TX %s %s",
+			hwPortname(engineConfiguration->canTxPin),
+			getCan_baudrate_e(engineConfiguration->canBaudRate));
 	efiPrintf("CAN1 RX %s", hwPortname(engineConfiguration->canRxPin));
 
-	efiPrintf("CAN2 TX %s %s", hwPortname(engineConfiguration->can2TxPin), getCan_baudrate_e(engineConfiguration->can2BaudRate));
+	efiPrintf(
+			"CAN2 TX %s %s",
+			hwPortname(engineConfiguration->can2TxPin),
+			getCan_baudrate_e(engineConfiguration->can2BaudRate));
 	efiPrintf("CAN2 RX %s", hwPortname(engineConfiguration->can2RxPin));
 
-	efiPrintf("type=%d canReadEnabled=%s canWriteEnabled=%s period=%d", engineConfiguration->canNbcType,
-			boolToString(engineConfiguration->canReadEnabled), boolToString(engineConfiguration->canWriteEnabled),
+	efiPrintf(
+			"type=%d canReadEnabled=%s canWriteEnabled=%s period=%d",
+			engineConfiguration->canNbcType,
+			boolToString(engineConfiguration->canReadEnabled),
+			boolToString(engineConfiguration->canWriteEnabled),
 			engineConfiguration->canSleepPeriodMs);
 
-	efiPrintf("CAN rx_cnt=%d/tx_ok=%d/tx_not_ok=%d",
+	efiPrintf(
+			"CAN rx_cnt=%d/tx_ok=%d/tx_not_ok=%d",
 			engine->outputChannels.canReadCounter,
 			engine->outputChannels.canWriteOk,
 			engine->outputChannels.canWriteNotOk);
@@ -165,7 +174,12 @@ void initCan() {
 
 	// fire up threads, as necessary
 	if (engineConfiguration->canWriteEnabled) {
-		canWrite.startThread();
+		if (device1) {
+			canWrite0.startThread();
+		}
+		if (device2) {
+			canWrite1.startThread();
+		}
 	}
 
 	if (engineConfiguration->canReadEnabled) {

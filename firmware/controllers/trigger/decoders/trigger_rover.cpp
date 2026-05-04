@@ -13,7 +13,7 @@
 /**
  * https://en.wikipedia.org/wiki/Rover_K-series_engine
  */
-void initializeRoverK(TriggerWaveform *s) {
+void initializeRoverK(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::RiseOnly);
 
 	float tooth = 20;
@@ -54,5 +54,4 @@ void initializeRoverK(TriggerWaveform *s) {
 		s->addEvent720(base + tooth, false);
 		base += tooth;
 	}
-
 }

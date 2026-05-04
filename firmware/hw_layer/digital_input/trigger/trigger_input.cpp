@@ -10,7 +10,7 @@
 
 #if (EFI_SHAFT_POSITION_INPUT) || defined(__DOXYGEN__)
 
-int  extiTriggerTurnOnInputPin(const char *msg, int index, bool isTriggerShaft);
+int extiTriggerTurnOnInputPin(const char* msg, int index, bool isTriggerShaft);
 void extiTriggerTurnOffInputPin(brain_pin_e brainPin);
 
 enum triggerType {
@@ -21,9 +21,9 @@ enum triggerType {
 static triggerType shaftTriggerType[TRIGGER_INPUT_PIN_COUNT];
 static triggerType camTriggerType[CAM_INPUTS_COUNT];
 
-static int turnOnTriggerInputPin(const char *msg, int index, bool isTriggerShaft) {
-	brain_pin_e brainPin = isTriggerShaft ?
-		engineConfiguration->triggerInputPins[index] : engineConfiguration->camInputs[index];
+static int turnOnTriggerInputPin(const char* msg, int index, bool isTriggerShaft) {
+	brain_pin_e brainPin =
+			isTriggerShaft ? engineConfiguration->triggerInputPins[index] : engineConfiguration->camInputs[index];
 
 	if (isTriggerShaft) {
 		shaftTriggerType[index] = TRIGGER_NONE;
@@ -53,8 +53,8 @@ static int turnOnTriggerInputPin(const char *msg, int index, bool isTriggerShaft
 }
 
 static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
-	brain_pin_e brainPin = isTriggerShaft ?
-		activeConfiguration.triggerInputPins[index] : activeConfiguration.camInputs[index];
+	brain_pin_e brainPin =
+			isTriggerShaft ? activeConfiguration.triggerInputPins[index] : activeConfiguration.camInputs[index];
 
 #if EFI_PROD_CODE
 	if (isTriggerShaft) {
@@ -70,7 +70,7 @@ static void turnOffTriggerInputPin(int index, bool isTriggerShaft) {
 
 		camTriggerType[index] = TRIGGER_NONE;
 	}
-#else // EFI_PROD_CODE
+#else  // EFI_PROD_CODE
 	UNUSED(brainPin);
 #endif // EFI_PROD_CODE
 }
@@ -88,12 +88,12 @@ static void stopTriggerInputPins() {
 	}
 }
 
-static const char* const camNames[] = { "Cam B1I", "Cam B1E", "Cam B2I", "Cam B2E"};
+static const char* const camNames[] = {"Cam B1I", "Cam B1E", "Cam B2I", "Cam B2E"};
 
 static void startTriggerInputPins() {
 	for (int i = 0; i < TRIGGER_INPUT_PIN_COUNT; i++) {
 		if (isConfigurationChanged(triggerInputPins[i])) {
-			const char * msg = (i == 0 ? "Trigger #1" : (i == 1 ? "Trigger #2" : "Trigger #3"));
+			const char* msg = (i == 0 ? "Trigger #1" : (i == 1 ? "Trigger #2" : "Trigger #3"));
 			turnOnTriggerInputPin(msg, i, true);
 		}
 	}

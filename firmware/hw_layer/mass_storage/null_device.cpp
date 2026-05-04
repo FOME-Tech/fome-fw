@@ -13,7 +13,7 @@
 #include <cstring>
 
 struct NullDevice {
-	const struct BaseBlockDeviceVMT *vmt;
+	const struct BaseBlockDeviceVMT* vmt;
 	_base_block_device_data
 };
 
@@ -52,18 +52,17 @@ static bool nd_get_info(void*, BlockDeviceInfo* bdip) {
 }
 
 static const struct BaseBlockDeviceVMT ndVmt = {
-	(size_t)0, // instanceOffset
-	nd_is_inserted,
-	nd_is_protected,
+		(size_t)0, // instanceOffset
+		nd_is_inserted,
+		nd_is_protected,
 
-	// These functions just claim success to make the host happy
-	nd_return_success,
-	nd_return_success,
-	nd_return_success_read,
-	nd_return_success_write,
-	nd_return_success,
-	nd_get_info
-};
+		// These functions just claim success to make the host happy
+		nd_return_success,
+		nd_return_success,
+		nd_return_success_read,
+		nd_return_success_write,
+		nd_return_success,
+		nd_get_info};
 
 // This device is always ready and has no state
-NullDevice ND1 = { &ndVmt, BLK_READY };
+NullDevice ND1 = {&ndVmt, BLK_READY};

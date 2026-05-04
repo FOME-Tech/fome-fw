@@ -22,43 +22,12 @@ static SPIDriver* mmcSpiDevice = nullptr;
 MMCDriver MMCD1;
 
 // MMC/SD over SPI driver configuration
-static MMCConfig mmccfg = { NULL, &mmc_ls_spicfg, &mmc_hs_spicfg };
+static MMCConfig mmccfg = {NULL, &mmc_ls_spicfg, &mmc_hs_spicfg};
 
 #define LOCK_SD_SPI spiAcquireBus(mmcSpiDevice)
 #define UNLOCK_SD_SPI spiReleaseBus(mmcSpiDevice)
 
 #endif /* HAL_USE_MMC_SPI */
-
-#if !EFI_BOOTLOADER
-// On STM32H7, these objects need their own MPU region if using SDMMC1
-struct {
-	struct {
-		FATFS fs;
-		FIL file;
-		SdLogBufferWriter logBuffer;
-	} usedPart;
-
-	static_assert(sizeof(usedPart) <= 2048);
-
-	// Fill the struct out to a full MPU region
-	uint8_t padding[2048 - sizeof(usedPart)];
-} mmcCardCacheControlledStorage SDMMC_MEMORY(2048);
-
-namespace sd_mem {
-FATFS* getFs() {
-	return &mmcCardCacheControlledStorage.usedPart.fs;
-}
-
-FIL* getLogFileFd() {
-	return &mmcCardCacheControlledStorage.usedPart.file;
-}
-
-SdLogBufferWriter& getLogBuffer() {
-	return mmcCardCacheControlledStorage.usedPart.logBuffer;
-}
-} // namespace sd_mem
-
-#endif // !EFI_BOOTLOADER
 
 #if HAL_USE_MMC_SPI
 /*
@@ -66,12 +35,12 @@ SdLogBufferWriter& getLogBuffer() {
  * Returns a BaseBlockDevice* corresponding to the SD card if successful, otherwise nullptr.
  */
 BaseBlockDevice* initializeMmcBlockDevice() {
-	#if !EFI_BOOTLOADER
-		// Don't try to mount SD card in case of fatal error - hardware may be in an unexpected state
-		if (hasFirmwareError()) {
-			return nullptr;
-		}
-	#endif // EFI_BOOTLOADER
+#if !EFI_BOOTLOADER
+	// Don't try to mount SD card in case of fatal error - hardware may be in an unexpected state
+	if (hasFirmwareError()) {
+		return nullptr;
+	}
+#endif // EFI_BOOTLOADER
 
 	mmcSpiDevice = getSdCardSpiDevice();
 
@@ -106,17 +75,15 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 }
 
 void stopMmcBlockDevice() {
-	mmcDisconnect(&MMCD1);						// Brings the driver in a state safe for card removal.
-	mmcStop(&MMCD1);							// Disables the MMC peripheral.
+	mmcDisconnect(&MMCD1); // Brings the driver in a state safe for card removal.
+	mmcStop(&MMCD1);	   // Disables the MMC peripheral.
 	UNLOCK_SD_SPI;
 }
 #endif /* HAL_USE_MMC_SPI */
 
 // Some ECUs are wired for SDIO/SDMMC instead of SPI
 #ifdef EFI_SDC_DEVICE
-static const SDCConfig sdcConfig = {
-	SDC_MODE_4BIT
-};
+static const SDCConfig sdcConfig = {SDC_MODE_4BIT};
 
 BaseBlockDevice* initializeMmcBlockDevice() {
 	if (!isSdCardEnabled()) {
@@ -128,29 +95,6 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 		efiPrintf("SD card (SDMMC) failed to connect");
 		return nullptr;
 	}
-
-	// STM32H7 SDMMC1 needs the filesystem object to be in AXI
-	// SRAM, but excluded from the cache
-	#if defined(STM32H7XX) && !EFI_BOOTLOADER
-	{
-		void* base = &mmcCardCacheControlledStorage;
-		static_assert(sizeof(mmcCardCacheControlledStorage) == 2048);
-		uint32_t size = MPU_RASR_SIZE_2K;
-
-		mpuConfigureRegion(MPU_REGION_5,
-						base,
-						MPU_RASR_ATTR_AP_RW_RW |
-						MPU_RASR_ATTR_NON_CACHEABLE |
-						MPU_RASR_ATTR_S |
-						size |
-						MPU_RASR_ENABLE);
-		mpuEnable(MPU_CTRL_PRIVDEFENA);
-
-		/* Invalidating data cache to make sure that the MPU settings are taken
-		immediately.*/
-		SCB_CleanInvalidateDCache();
-	}
-	#endif
 
 	return reinterpret_cast<BaseBlockDevice*>(&EFI_SDC_DEVICE);
 }

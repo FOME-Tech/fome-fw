@@ -25,12 +25,10 @@ typedef uint16_t adcsample_t;
 #define EXPECT_NEAR_M3(x, y) EXPECT_NEAR((x), (y), 1e-3)
 #define EXPECT_NEAR_M4(a, b) EXPECT_NEAR(a, b, 1e-4)
 
-
 #ifdef __cplusplus
 #include "mock-threads.h"
 // todo: include it right here? #include "unit_test_framework.h"
-extern "C"
-{
+extern "C" {
 #endif /* __cplusplus */
 
 #define CH_FREQUENCY 1000
@@ -38,7 +36,7 @@ extern "C"
 
 typedef uint32_t systime_t;
 
-void chDbgAssert(int c, char *msg, void *arg);
+void chDbgAssert(int c, char* msg, void* arg);
 
 #define chDbgCheck(x, y) chDbgAssert(x, y, NULL)
 
@@ -46,26 +44,29 @@ void chDbgAssert(int c, char *msg, void *arg);
 }
 #endif /* __cplusplus */
 
-
 #define US_TO_NT_MULTIPLIER 100
 #define RUS_EFI_VERSION_TAG "rusEfiVersion"
 
 #define CCM_OPTIONAL
 
-#define chSysLock() {}
-#define chSysUnlock() {}
-#define osalThreadDequeueNextI(x, y) {}
+#define chSysLock()                                                                                                    \
+	{}
+#define chSysUnlock()                                                                                                  \
+	{}
+#define osalThreadDequeueNextI(x, y)                                                                                   \
+	{}
 
 #ifdef __cplusplus
 namespace chibios_rt {
-	// Noop for unit tests - this does real lock in FW/sim
-	class CriticalSectionLocker { };
-}
+// Noop for unit tests - this does real lock in FW/sim
+class CriticalSectionLocker {};
+} // namespace chibios_rt
 #endif
 
 struct virtual_timer_t;
 
-#define UNIT_TEST_BUSY_WAIT_CALLBACK() { advanceTimeUs(1); }
+#define UNIT_TEST_BUSY_WAIT_CALLBACK()                                                                                 \
+	{ advanceTimeUs(1); }
 
 #define chsnprintf snprintf
 #define chvsnprintf vsnprintf

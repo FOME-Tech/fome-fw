@@ -3,8 +3,8 @@
 #include "table_func.h"
 
 TEST(TableFuncTest, basic) {
-	float in[] = { 0, 10 };
-	float out[] = { 30, 40 };
+	float in[] = {0, 10};
+	float out[] = {30, 40};
 
 	TableFunc dut(in, out);
 

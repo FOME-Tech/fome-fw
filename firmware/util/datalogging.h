@@ -15,16 +15,16 @@
 class Logging {
 public:
 	Logging() = delete;
-	Logging(const char *name, char *buffer, int bufferSize);
+	Logging(const char* name, char* buffer, int bufferSize);
 
 	void reset();
 
-	void append(const char *text);
-	void appendFast(const char *text);
-	void appendPrintf(const char *fmt, ...)
-		#if EFI_PROD_CODE
-			__attribute__ ((format (printf, 2, 3)))
-		#endif
+	void append(const char* text);
+	void appendFast(const char* text);
+	void appendPrintf(const char* fmt, ...)
+#if EFI_PROD_CODE
+			__attribute__((format(printf, 2, 3)))
+#endif
 			;
 	void appendFloat(float value, int precision);
 
@@ -48,7 +48,7 @@ public:
 		return m_bufferSize - loggingSize();
 	}
 
-//private:
+	// private:
 	bool validateBuffer(uint32_t extraLen);
 
 	const char* const m_name;
@@ -70,8 +70,8 @@ public:
 
 class LoggingWithStorage : public Logging {
 public:
-	explicit LoggingWithStorage(const char *name);
+	explicit LoggingWithStorage(const char* name);
 	char DEFAULT_BUFFER[100];
 };
 
-void initLoggingExt(Logging *logging, const char *name, char *buffer, int bufferSize);
+void initLoggingExt(Logging* logging, const char* name, char* buffer, int bufferSize);

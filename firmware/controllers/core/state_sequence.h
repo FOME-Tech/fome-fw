@@ -29,8 +29,8 @@ enum class TriggerEvent {
 #ifndef PWM_PHASE_MAX_COUNT
 // as of April 2020, trigger which requires most array length is REMIX_66_2_2_2
 // we can probably reduce RAM usage if we have more custom logic of triggers with large number of tooth while
-// pretty easy logic. like we do not need to REALLY have an array to remember the shape of evenly spaces 360 or 60/2 trigger :)
-// todo https://github.com/rusefi/rusefi/issues/3003
+// pretty easy logic. like we do not need to REALLY have an array to remember the shape of evenly spaces 360 or 60/2
+// trigger :) todo https://github.com/rusefi/rusefi/issues/3003
 #define PWM_PHASE_MAX_COUNT 280
 #endif /* PWM_PHASE_MAX_COUNT */
 #define PWM_PHASE_MAX_WAVE_PER_PWM 2
@@ -61,10 +61,10 @@ public:
 	int findInsertionAngle(float angle) const;
 
 	uint16_t phaseCount = 0; // Number of timestamps
-	uint16_t waveCount = 0; // Number of waveforms
+	uint16_t waveCount = 0;	 // Number of waveforms
 };
 
-template<unsigned max_phase>
+template <unsigned max_phase>
 class MultiChannelStateSequenceWithData : public MultiChannelStateSequence {
 public:
 	float getSwitchTime(int phaseIndex) const override {
@@ -74,7 +74,7 @@ public:
 	bool getChannelState(int channelIndex, int phaseIndex) const override {
 		if (channelIndex >= waveCount) {
 			// todo: would be nice to get this asserting working
-			//firmwareError("channel index %d/%d", channelIndex, waveCount);
+			// firmwareError("channel index %d/%d", channelIndex, waveCount);
 		}
 		return (waveForm[phaseIndex] >> channelIndex) & 1;
 	}
@@ -90,9 +90,9 @@ public:
 	void setChannelState(const int channelIndex, const int phaseIndex, bool state) {
 		if (channelIndex >= waveCount) {
 			// todo: would be nice to get this asserting working
-			//firmwareError("channel index %d/%d", channelIndex, waveCount);
+			// firmwareError("channel index %d/%d", channelIndex, waveCount);
 		}
-		uint8_t & ref = waveForm[phaseIndex];
+		uint8_t& ref = waveForm[phaseIndex];
 		ref = (ref & ~(1U << channelIndex)) | ((state ? 1 : 0) << channelIndex);
 	}
 
@@ -100,4 +100,3 @@ private:
 	float switchTimes[max_phase];
 	uint8_t waveForm[max_phase];
 };
-

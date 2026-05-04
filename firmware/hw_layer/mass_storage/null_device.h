@@ -11,7 +11,7 @@
 #include "hal.h"
 
 struct NullDevice {
-	const struct BaseBlockDeviceVMT *vmt;
+	const struct BaseBlockDeviceVMT* vmt;
 	_base_block_device_data
 };
 

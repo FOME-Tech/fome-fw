@@ -48,7 +48,7 @@ void removeError(ObdCode errorCode) {
 			error_codes_set.error_codes[t] = error_codes_set.error_codes[t + 1];
 		}
 
-		error_codes_set.error_codes[--error_codes_set.count] = (ObdCode)0;				// place 0
+		error_codes_set.error_codes[--error_codes_set.count] = (ObdCode)0; // place 0
 	}
 }
 
@@ -60,7 +60,7 @@ void setError(bool isError, ObdCode errorCode) {
 	}
 }
 
-void getErrorCodes(error_codes_set_s * copy) {
+void getErrorCodes(error_codes_set_s* copy) {
 	copy->count = error_codes_set.count;
 	copyArray(copy->error_codes, error_codes_set.error_codes);
 }

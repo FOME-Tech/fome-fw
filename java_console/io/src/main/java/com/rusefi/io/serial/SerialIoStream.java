@@ -37,7 +37,7 @@ public class SerialIoStream extends AbstractIoStream {
     @Nullable
     protected static SerialPort openSerial(String port) {
         SerialPort serialPort = SerialPort.getCommPort(port);
-        serialPort.setBaudRate(BaudRateHolder.INSTANCE.baudRate);
+        serialPort.setBaudRate(1000000);
         boolean openedOk = serialPort.openPort();
         if (!openedOk) {
             log.error("Error opening " + port + " maybe no permissions?");

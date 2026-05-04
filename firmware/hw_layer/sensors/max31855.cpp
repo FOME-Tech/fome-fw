@@ -25,7 +25,7 @@
 
 #define EGT_ERROR_VALUE -1000
 
-static SPIDriver *driver;
+static SPIDriver* driver;
 
 static SPIConfig spiConfig[EGT_CHANNEL_COUNT];
 
@@ -48,21 +48,25 @@ static void showEgtInfo() {
 #define MC_VCC_BIT 4
 
 typedef enum {
-	MC_OK = 0, MC_INVALID = 1, MC_OPEN = 2, MC_SHORT_GND = 3, MC_SHORT_VCC = 4,
+	MC_OK = 0,
+	MC_INVALID = 1,
+	MC_OPEN = 2,
+	MC_SHORT_GND = 3,
+	MC_SHORT_VCC = 4,
 } max_32855_code;
 
-static const char * getMcCode(max_32855_code code) {
+static const char* getMcCode(max_32855_code code) {
 	switch (code) {
-	case MC_OK:
-		return "Ok";
-	case MC_OPEN:
-		return "Open";
-	case MC_SHORT_GND:
-		return "short gnd";
-	case MC_SHORT_VCC:
-		return "short VCC";
-	default:
-		return "invalid";
+		case MC_OK:
+			return "Ok";
+		case MC_OPEN:
+			return "Open";
+		case MC_SHORT_GND:
+			return "short gnd";
+		case MC_SHORT_VCC:
+			return "short VCC";
+		default:
+			return "invalid";
 	}
 }
 
@@ -148,9 +152,9 @@ void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 
 	// todo:spi device is now enabled separately - should probably be enabled here
 
-	addConsoleAction("egtinfo", (Void) showEgtInfo);
+	addConsoleAction("egtinfo", (Void)showEgtInfo);
 
-	addConsoleAction("egtread", (Void) egtRead);
+	addConsoleAction("egtread", (Void)egtRead);
 
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
 		if (isBrainPinValid(max31855_cs[i])) {

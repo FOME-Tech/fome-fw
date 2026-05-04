@@ -30,7 +30,7 @@ void LogCamTriggerTooth(efitick_t timestamp, int camIndex, bool state);
 
 void LogTriggerTopDeadCenter(efitick_t timestamp);
 
-typedef struct __attribute__ ((packed)) {
+typedef struct __attribute__((packed)) {
 	// the whole order of all packet bytes is reversed, not just the 'endian-swap' integers
 	uint32_t timestamp;
 	// unfortunately all these fields are required by TS...

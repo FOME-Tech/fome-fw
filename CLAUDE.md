@@ -30,7 +30,7 @@ Outputs are placed in `firmware/deliver/`:
 
 ```bash
 cd unit_tests
-make -j12
+make -j$(($(nproc)*1.5))
 ./build/fome_test
 
 # Run a specific test
@@ -44,6 +44,34 @@ Unit tests use Google Test and run on amd64/aarch64, not on the ECU.
 Code generation occurs as part of the normal firmware and unit test builds, via `firmware/fome_generated.mk`.
 
 If there is a build failure that looks like generated files are missing, try running `make clean` first. In general, there should be no reason to manually run generated code scripts.
+
+### Code Formatting
+
+A `.clang-format` file at the repository root enforces consistent code style:
+- Tabs for indentation (width 4)
+- K&R brace style
+- Left-aligned pointers/references
+
+**VS Code integration**: Format-on-save is enabled for C/C++ files via `ms-vscode.cpptools`.
+
+**Using the format script**:
+```bash
+# Check formatting and show diffs
+./format.sh check
+
+# Apply formatting to all files
+./format.sh
+```
+
+The `format.sh` script automatically excludes external code (`firmware/ext/`, `unit_tests/googletest/`) and generated files. When running `check`, it displays a unified diff of formatting changes needed, making it easy to see exactly what would change.
+
+**Manual formatting**:
+```bash
+# Format a single file
+clang-format -i <file>
+```
+
+**Excluded directories**: `firmware/ext/` and `firmware/ChibiOS/` (third-party code) are automatically excluded from formatting via `DisableFormat: true` markers.
 
 ## Architecture
 
@@ -60,10 +88,10 @@ If there is a build failure that looks like generated files are missing, try run
   - `can/` - CAN bus communication
   - `lua/` - Runtime scripting
 - `firmware/hw_layer/` - Hardware abstraction layer
-- `firmware/libfirmware/` - Reusable library code
+- `firmware/ext/libfirmware/` - Reusable library code
 - `firmware/util/` - Self-contained utilities (no external dependencies)
 - `unit_tests/` - Google Test suite
-- `simulator/` - Windows/Linux firmware simulator
+- `simulator/` - Windows/Linux firmware simulator. Uses core ECU code, but runs on PC rather than MCU.
 
 ### Key Concepts
 
@@ -104,6 +132,10 @@ Key preprocessor flags that control compilation:
 - **No RTTI**: `dynamic_cast` and `typeid` are unavailable.
 - **Interrupt safety**: Be mindful of code that runs in interrupt context vs. thread context. Use appropriate synchronization primitives.
 - **Stack usage**: Keep stack allocations small. Large arrays should be static or global, not local variables.
+
+## Changelog
+
+When you make a user-facing change (new feature, bug fix, breaking change, removal), update `firmware/CHANGELOG.md` under the `## Unreleased` section. See `/changelog` for details on what counts and how to write entries.
 
 ## Development Notes
 

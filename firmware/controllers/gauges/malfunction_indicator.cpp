@@ -77,7 +77,9 @@ static void displayErrorCode(ObdCode code) {
 
 class MILController : public PeriodicController<UTILITY_THREAD_STACK_SIZE> {
 public:
-	MILController()	: PeriodicController("MFIndicator") { }
+	MILController()
+		: PeriodicController("MFIndicator") {}
+
 private:
 	void OnStarted() override {
 		// Always do a 3 second blink on boot

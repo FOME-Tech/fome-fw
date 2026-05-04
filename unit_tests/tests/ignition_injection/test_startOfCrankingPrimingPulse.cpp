@@ -15,28 +15,26 @@ TEST(engine, testPlainCrankingWithoutAdvancedFeatures) {
 	engineConfiguration->cranking.baseFuel = 12;
 
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
-	ASSERT_EQ( 0,  Sensor::getOrZero(SensorType::Rpm)) << "RPM=0";
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm)) << "RPM=0";
 
 	eth.fireTriggerEventsWithDuration(/* durationMs */ 200);
 	// still no RPM since need to cycles measure cycle duration
-	ASSERT_EQ( 0,  Sensor::getOrZero(SensorType::Rpm)) << "start-RPM#1";
-
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm)) << "start-RPM#1";
 
 	eth.fireRise(/* delayMs */ 200);
-	ASSERT_EQ( 300,  Sensor::getOrZero(SensorType::Rpm)) << "RPM#2";
+	ASSERT_EQ(300, Sensor::getOrZero(SensorType::Rpm)) << "RPM#2";
 	// two simultaneous injections
-	ASSERT_EQ( 4,  engine->scheduler.size()) << "plain#2";
+	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
 
 	eth.assertEvent5("sim start", 0, (void*)startInjection, 100000 - 1625);
 	// -1 because ugh floating point math
 	eth.assertEvent5("sim end", 1, (void*)endInjection, 100000 - 1);
 }
 
-
 TEST(priming, startScheduling) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	ASSERT_EQ( 0,  Sensor::getOrZero(SensorType::Rpm)) << "RPM=0";
+	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm)) << "RPM=0";
 
 	// Turn on the ignition switch!
 	engine->module<PrimeController>()->onIgnitionStateChanged(true);
@@ -55,7 +53,7 @@ TEST(priming, duration) {
 	}
 
 	EXPECT_CALL(injectorModel, getInjectionDuration(0.075f)).WillOnce(Return(20.0f));
-	engineConfiguration->primeValues[5] = 75;	// <-- We test this point
+	engineConfiguration->primeValues[5] = 75; // <-- We test this point
 
 	// With coolant temp, we should see value from mock
 	Sensor::setMockValue(SensorType::Clt, 50);

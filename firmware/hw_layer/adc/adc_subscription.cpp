@@ -6,19 +6,16 @@
 
 #if EFI_UNIT_TEST
 
-/*static*/ void AdcSubscription::SubscribeSensor(FunctionalSensor&, adc_channel_e, float, float) {
-}
+/*static*/ void AdcSubscription::SubscribeSensor(FunctionalSensor&, adc_channel_e, float, float) {}
 
-/*static*/ void AdcSubscription::UnsubscribeSensor(FunctionalSensor&) {
-}
+/*static*/ void AdcSubscription::UnsubscribeSensor(FunctionalSensor&) {}
 
-/*static*/ void AdcSubscription::UnsubscribeSensor(FunctionalSensor&, adc_channel_e) {
-}
+/*static*/ void AdcSubscription::UnsubscribeSensor(FunctionalSensor&, adc_channel_e) {}
 
 #else
 
 struct AdcSubscriptionEntry {
-	FunctionalSensor *Sensor;
+	FunctionalSensor* Sensor;
 	float VoltsPerAdcVolt;
 	Biquad Filter;
 	adc_channel_e Channel;
@@ -46,10 +43,8 @@ static AdcSubscriptionEntry* findEntry() {
 	return findEntry(nullptr);
 }
 
-/*static*/ void AdcSubscription::SubscribeSensor(FunctionalSensor &sensor,
-									  adc_channel_e channel,
-									  float lowpassCutoff,
-									  float voltsPerAdcVolt /*= 0.0f*/) {
+/*static*/ void AdcSubscription::SubscribeSensor(
+		FunctionalSensor& sensor, adc_channel_e channel, float lowpassCutoff, float voltsPerAdcVolt /*= 0.0f*/) {
 	// Don't subscribe null channels
 	if (!isAdcChannelValid(channel)) {
 		return;
@@ -81,12 +76,12 @@ static AdcSubscriptionEntry* findEntry() {
 
 #if EFI_PROD_CODE
 	// Enable the input pin
-/**
-TODO: this code is similar to initIfValid, what is the plan? shall we extract helper method or else?
- */
+	/**
+	TODO: this code is similar to initIfValid, what is the plan? shall we extract helper method or else?
+	 */
 	brain_pin_e pin = getAdcChannelBrainPin(name, channel);
 	if (pin != Gpio::Invalid) {
-	// todo: external muxes for internal ADC #3350
+		// todo: external muxes for internal ADC #3350
 		efiSetPadMode(name, pin, PAL_MODE_INPUT_ANALOG);
 	}
 
@@ -141,7 +136,7 @@ void AdcSubscription::UpdateSubscribers(efitick_t nowNt) {
 	ScopePerf perf(PE::AdcSubscriptionUpdateSubscribers);
 
 	for (size_t i = 0; i < efi::size(s_entries); i++) {
-		auto &entry = s_entries[i];
+		auto& entry = s_entries[i];
 
 		if (!entry.Sensor) {
 			// Skip unconfigured entries
@@ -183,12 +178,13 @@ void AdcSubscription::PrintInfo() {
 		char pinNameBuffer[16];
 
 		efiPrintf(
-			"%s ADC%d %s adc=%.2f/input=%.2fv/divider=%.2f",
-			name,
-			channel,
-			getPinNameByAdcChannel(name, channel, pinNameBuffer),
-			mcuVolts, sensorVolts, entry.VoltsPerAdcVolt
-		);
+				"%s ADC%d %s adc=%.2f/input=%.2fv/divider=%.2f",
+				name,
+				channel,
+				getPinNameByAdcChannel(name, channel, pinNameBuffer),
+				mcuVolts,
+				sensorVolts,
+				entry.VoltsPerAdcVolt);
 	}
 }
 #endif // EFI_PROD_CODE

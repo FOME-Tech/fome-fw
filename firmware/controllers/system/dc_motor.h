@@ -2,7 +2,7 @@
  *  @file dc_motor.h
  *
  * ETB user documentation at https://github.com/rusefi/rusefi/wiki/HOWTO_electronic_throttle_body
- * 
+ *
  *
  *  @date Dec 22, 2018
  *  @author Matthew Kennedy, (c) 2018
@@ -12,12 +12,11 @@
 
 /**
  * @brief Brushed or brushless DC motor interface
- * 
+ *
  * Represents a DC motor (brushed or brushless) that provides simple
  * torque/power/current/duty cycle control, but not accurate absolute position control.
  */
-class DcMotor
-{
+class DcMotor {
 public:
 	/**
 	 * @brief Sets the motor duty cycle.
@@ -28,11 +27,12 @@ public:
 
 	/**
 	 * @brief Get the current motor duty cycle.
-	 * @return The current duty cycle setting. +1.0f represents full power forward, and -1.0f represents full power backward.
+	 * @return The current duty cycle setting. +1.0f represents full power forward, and -1.0f represents full power
+	 * backward.
 	 */
 	virtual float get() const = 0;
 
-	virtual void disable(const char *msg) = 0;
+	virtual void disable(const char* msg) = 0;
 	virtual void enable() = 0;
 
 	virtual bool isOpenDirection() const = 0;
@@ -52,21 +52,19 @@ class OutputPin;
  * @brief Represents a DC motor controller (H-bridge) with some combination of PWM and on/off control pins.
  *
  */
-class TwoPinDcMotor : public DcMotor
-{
+class TwoPinDcMotor : public DcMotor {
 public:
-	enum class ControlType
-	{
+	enum class ControlType {
 		/**
 		 * For example TLE7209 - two control wires:
 		 * PWM on both wires - one to open, another to close
 		 */
 		PwmDirectionPins,
 		/**
-		  * The control/enable pin is used for PWM and disable, and the two direction pins are used
-		  * to set the polarity of each half of the H bridge.  setting {dir1,dir2} = 10 should,
-		  * turn the motor one direction (positive duty), and = 01 should turn the other way (negative
-		  * duty).
+		 * The control/enable pin is used for PWM and disable, and the two direction pins are used
+		 * to set the polarity of each half of the H bridge.  setting {dir1,dir2} = 10 should,
+		 * turn the motor one direction (positive duty), and = 01 should turn the other way (negative
+		 * duty).
 		 *
 		 * For example VNH2SP30 - three control wires:
 		 * PWM on 'enable' PIN, two binary pins for direction
@@ -86,6 +84,7 @@ private:
 	bool m_isInverted = false;
 
 	ControlType m_type = ControlType::PwmDirectionPins;
+
 public:
 	/**
 	 * @param enable IPwm driver for enable pin, for PWM speed control.
@@ -101,7 +100,9 @@ public:
 	bool isOpenDirection() const override;
 
 	void enable() override;
-	void disable(const char *msg) override;
+	void disable(const char* msg) override;
 
-	void setType(ControlType type) { m_type = type; }
+	void setType(ControlType type) {
+		m_type = type;
+	}
 };

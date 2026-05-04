@@ -8,27 +8,27 @@
 #pragma once
 
 struct plain_get_integer_s {
-	const char *token;
-	int *value;
+	const char* token;
+	int* value;
 };
 
 struct plain_get_short_s {
-	const char *token;
-	uint16_t *value;
+	const char* token;
+	uint16_t* value;
 };
 
 struct plain_get_u8_s {
-	const char *token;
-	uint8_t *value;
+	const char* token;
+	uint8_t* value;
 };
 
 struct plain_get_float_s {
-	const char *token;
-	float *value;
+	const char* token;
+	float* value;
 };
 
-expected<float> getConfigValueByName(const char *name);
-void setConfigValueByName(const char *name, float value);
-expected<float> getOutputValueByName(const char *name);
+expected<float> getConfigValueByName(const char* name);
+void setConfigValueByName(const char* name, float value);
+expected<float> getOutputValueByName(const char* name);
 
-void * hackEngineConfigurationPointer(void *ptr);
+void* hackEngineConfigurationPointer(void* ptr);

@@ -32,7 +32,7 @@
 
 #include "pch.h"
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 
 #include "chmtx.h"
 #include "memstreams.h"
@@ -53,7 +53,7 @@ bool Logging::validateBuffer(uint32_t extraLen) {
 	return false;
 }
 
-void Logging::append(const char *text) {
+void Logging::append(const char* text) {
 	efiAssertVoid(ObdCode::CUSTOM_APPEND_NULL, text != NULL, "append NULL");
 	size_t extraLen = std::strlen(text);
 	bool isCapacityProblem = validateBuffer(extraLen);
@@ -70,14 +70,14 @@ void Logging::append(const char *text) {
 /**
  * @note This method if fast because it does not validate much, be sure what you are doing
  */
-void Logging::appendFast(const char *text) {
-	char *s = m_linePointer;
+void Logging::appendFast(const char* text) {
+	char* s = m_linePointer;
 	while ((*s++ = *text++) != 0)
 		;
 	m_linePointer = s - 1;
 }
 
-void Logging::appendPrintf(const char *fmt, ...) {
+void Logging::appendPrintf(const char* fmt, ...) {
 	size_t available = remainingSize();
 
 	va_list ap;
@@ -96,30 +96,31 @@ void Logging::appendFloat(float value, int precision) {
 	/**
 	 * todo: #1 this implementation is less than perfect
 	 * todo: #2 The only way to avoid double promotion would probably be using *float instead of float
-	 * See also http://stackoverflow.com/questions/5522051/printing-a-float-in-c-while-avoiding-variadic-parameter-promotion-to-double
+	 * See also
+	 * http://stackoverflow.com/questions/5522051/printing-a-float-in-c-while-avoiding-variadic-parameter-promotion-to-double
 	 */
 	switch (precision) {
-	case 1:
-		appendPrintf("%.1f", value);
-		break;
-	case 2:
-		appendPrintf("%.2f", value);
-		break;
-	case 3:
-		appendPrintf("%.3f", value);
-		break;
-	case 4:
-		appendPrintf("%.4f", value);
-		break;
-	case 5:
-		appendPrintf("%.5f", value);
-		break;
-	case 6:
-		appendPrintf("%.6f", value);
-		break;
+		case 1:
+			appendPrintf("%.1f", value);
+			break;
+		case 2:
+			appendPrintf("%.2f", value);
+			break;
+		case 3:
+			appendPrintf("%.3f", value);
+			break;
+		case 4:
+			appendPrintf("%.4f", value);
+			break;
+		case 5:
+			appendPrintf("%.5f", value);
+			break;
+		case 6:
+			appendPrintf("%.6f", value);
+			break;
 
-	default:
-		appendPrintf("%.2f", value);
+		default:
+			appendPrintf("%.2f", value);
 	}
 }
 
@@ -128,13 +129,12 @@ void Logging::reset() {
 	*m_linePointer = 0;
 }
 
-Logging::Logging(char const *name, char *buffer, int bufferSize)
+Logging::Logging(char const* name, char* buffer, int bufferSize)
 	: m_name(name)
 	, m_buffer(buffer)
-	, m_bufferSize(bufferSize)
-{
+	, m_bufferSize(bufferSize) {
 	reset();
 }
 
-LoggingWithStorage::LoggingWithStorage(const char *name) : Logging(name, DEFAULT_BUFFER, sizeof(DEFAULT_BUFFER)) {
-}
+LoggingWithStorage::LoggingWithStorage(const char* name)
+	: Logging(name, DEFAULT_BUFFER, sizeof(DEFAULT_BUFFER)) {}

@@ -6,19 +6,9 @@
  */
 
 #pragma once
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+typedef void (*CommandHandler)(char*);
 
-typedef void (*CommandHandler)(char *);
-
-#include "efifeatures.h"
-
-void consoleOutputBuffer(const uint8_t *buf, int size);
+void consoleOutputBuffer(const uint8_t* buf, int size);
 void startConsole(CommandHandler console_line_callback_p);
 void onDataArrived();

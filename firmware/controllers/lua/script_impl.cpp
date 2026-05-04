@@ -19,16 +19,16 @@ static ScriptTable scriptTable2;
 static ScriptTable scriptTable3;
 static ScriptTable scriptTable4;
 
-ValueProvider3D *getscriptTable(int index) {
+ValueProvider3D* getscriptTable(int index) {
 	switch (index) {
-	default:
-		return &scriptTable1;
-	case 1:
-		return &scriptTable2;
-	case 2:
-		return &scriptTable3;
-	case 3:
-		return &scriptTable4;
+		default:
+			return &scriptTable1;
+		case 1:
+			return &scriptTable2;
+		case 2:
+			return &scriptTable3;
+		case 3:
+			return &scriptTable4;
 	}
 }
 
@@ -36,7 +36,7 @@ ValueProvider3D *getscriptTable(int index) {
 /**
  * @return zero-based index of curve with given name
  */
-expected<int> getCurveIndexByName(const char *name) {
+expected<int> getCurveIndexByName(const char* name) {
 	for (int i = 0; i < SCRIPT_CURVE_COUNT; i++) {
 		if (strEqualCaseInsensitive(name, engineConfiguration->scriptCurveName[i])) {
 			return i;
@@ -46,7 +46,7 @@ expected<int> getCurveIndexByName(const char *name) {
 	return unexpected;
 }
 
-expected<int> getTableIndexByName(const char *name) {
+expected<int> getTableIndexByName(const char* name) {
 	for (int i = 0; i < SCRIPT_TABLE_COUNT; i++) {
 		if (strEqualCaseInsensitive(name, engineConfiguration->scriptTableName[i])) {
 			return i;
@@ -56,7 +56,7 @@ expected<int> getTableIndexByName(const char *name) {
 	return unexpected;
 }
 
-expected<int> getSettingIndexByName(const char *name) {
+expected<int> getSettingIndexByName(const char* name) {
 	for (int i = 0; i < SCRIPT_SETTING_COUNT; i++) {
 		if (strEqualCaseInsensitive(name, engineConfiguration->scriptSettingName[i])) {
 			return i;
@@ -69,28 +69,24 @@ expected<int> getSettingIndexByName(const char *name) {
 float getCurveValue(int index, float key) {
 	// not great code at all :(
 	switch (index) {
-	default:
-		return interpolate2d(key, config->scriptCurve1Bins, config->scriptCurve1);
-	case 1:
-		return interpolate2d(key, config->scriptCurve2Bins, config->scriptCurve2);
-	case 2:
-		return interpolate2d(key, config->scriptCurve3Bins, config->scriptCurve3);
-	case 3:
-		return interpolate2d(key, config->scriptCurve4Bins, config->scriptCurve4);
-	case 4:
-		return interpolate2d(key, config->scriptCurve5Bins, config->scriptCurve5);
-	case 5:
-		return interpolate2d(key, config->scriptCurve6Bins, config->scriptCurve6);
+		default:
+			return interpolate2d(key, config->scriptCurve1Bins, config->scriptCurve1);
+		case 1:
+			return interpolate2d(key, config->scriptCurve2Bins, config->scriptCurve2);
+		case 2:
+			return interpolate2d(key, config->scriptCurve3Bins, config->scriptCurve3);
+		case 3:
+			return interpolate2d(key, config->scriptCurve4Bins, config->scriptCurve4);
+		case 4:
+			return interpolate2d(key, config->scriptCurve5Bins, config->scriptCurve5);
+		case 5:
+			return interpolate2d(key, config->scriptCurve6Bins, config->scriptCurve6);
 	}
 }
 
 void initScriptImpl() {
-	scriptTable1.init(config->scriptTable1, config->scriptTable1LoadBins,
-			config->scriptTable1RpmBins);
-	scriptTable2.init(config->scriptTable2, config->scriptTable2LoadBins,
-			config->scriptTable2RpmBins);
-	scriptTable3.init(config->scriptTable3, config->scriptTable3LoadBins,
-			config->scriptTable3RpmBins);
-	scriptTable4.init(config->scriptTable4, config->scriptTable4LoadBins,
-			config->scriptTable4RpmBins);
+	scriptTable1.init(config->scriptTable1, config->scriptTable1LoadBins, config->scriptTable1RpmBins);
+	scriptTable2.init(config->scriptTable2, config->scriptTable2LoadBins, config->scriptTable2RpmBins);
+	scriptTable3.init(config->scriptTable3, config->scriptTable3LoadBins, config->scriptTable3RpmBins);
+	scriptTable4.init(config->scriptTable4, config->scriptTable4LoadBins, config->scriptTable4RpmBins);
 }

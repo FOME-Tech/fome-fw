@@ -14,7 +14,9 @@ public:
 	void open();
 	void close();
 
-	int8_t getOverlappingCounter() const { return m_overlappingCounter; }
+	int8_t getOverlappingCounter() const {
+		return m_overlappingCounter;
+	}
 
 	// todo: re-implement this injectorIndex via address manipulation to reduce memory usage?
 	int8_t injectorIndex;

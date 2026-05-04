@@ -12,7 +12,7 @@
 
 #include "trigger_renix.h"
 
-static void commonRenix(TriggerWaveform *s) {
+static void commonRenix(TriggerWaveform* s) {
 	// 44-2-2 is symmetrical so we only need to define one half
 	int count = 22;
 	float tooth = s->getCycleDuration() / count; // hint: tooth = 8.181818 degrees
@@ -31,13 +31,13 @@ static void commonRenix(TriggerWaveform *s) {
 }
 
 // trigger_type_e::TT_RENIX_44_2_2
-void initializeRenix44_2_2(TriggerWaveform *s) {
+void initializeRenix44_2_2(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR, SyncEdge::RiseOnly);
 	commonRenix(s);
 }
 
 // trigger_type_e::TT_RENIX_66_2_2_2
-void initializeRenix66_2_2(TriggerWaveform *s) {
+void initializeRenix66_2_2(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_THREE_TIMES_CRANK_SENSOR, SyncEdge::RiseOnly);
 	commonRenix(s);
 }

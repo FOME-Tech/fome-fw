@@ -41,20 +41,9 @@
 // project-wide default thread stack size
 #define UTILITY_THREAD_STACK_SIZE 1384
 
-#define UNIT_TEST_BUSY_WAIT_CALLBACK() {}
+#define UNIT_TEST_BUSY_WAIT_CALLBACK()                                                                                 \
+	{}
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif /* __cplusplus */
-
-void printToConsole(const char *p);
-
-void applyNewConfiguration(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+void printToConsole(const char* p);
 
 #define hal_lld_get_counter_value() 0
-

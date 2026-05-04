@@ -69,13 +69,12 @@ TEST(fuel, testWallWettingEnrichmentScheduling) {
 
 	eth.setTriggerType(trigger_type_e::TT_ONE);
 
-
 	eth.fireTriggerEvents2(/* count */ 4, 25 /* ms */);
-	ASSERT_EQ( 1200,  Sensor::getOrZero(SensorType::Rpm)) << "RPM";
+	ASSERT_EQ(1200, Sensor::getOrZero(SensorType::Rpm)) << "RPM";
 
 	int expectedInvocationCounter = 1;
 
-	for	(int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		ASSERT_EQ(expectedInvocationCounter, engine->injectionEvents.elements[i].getWallFuel().invocationCounter);
 	}
 
@@ -87,7 +86,7 @@ TEST(fuel, testWallWettingEnrichmentScheduling) {
 	eth.engine.periodicFastCallback();
 
 	// still same 1 per cylinder - wall wetting is NOT invoked from 'periodicFastCallback'
-	for	(int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++) {
 		ASSERT_EQ(expectedInvocationCounter, engine->injectionEvents.elements[i].getWallFuel().invocationCounter);
 	}
 

@@ -4,11 +4,11 @@
  * A single upcounting timer (currently TIM5) is used as a single timebase both for time
  * measurement and event scheduling.  This helps reduce jitter by not making another time
  * measurement at the time of scheduling.
- * 
+ *
  * This implementation only works on stm32 because it sets hardware registers directly.
- * ChibiOS doesn't support using timers in output compare mode, only PMW, so we have to 
+ * ChibiOS doesn't support using timers in output compare mode, only PMW, so we have to
  * manually configure the timer in outupt compare mode.
- * 
+ *
  * @date Dec 1, 2020
  * @author Matthew Kennedy, (c) 2012-2020
  */
@@ -35,25 +35,23 @@ static void hwTimerCallback(PWMDriver*) {
 }
 
 static constexpr PWMConfig timerConfig = {
-	.frequency = SCHEDULER_TIMER_FREQ,
-	/* wanted timer period = 2^32 counts,
-	 * but driver set (period - 1) value to register
-	 * also period is uint32_t
-	 * So set it to zero so it will overlap to 0xffffffff when writen to register */
-	.period = 0,
-	.callback = nullptr,		// No update callback
-	.channels = {
-		{PWM_OUTPUT_DISABLED, hwTimerCallback},	// Channel 0 = timer callback, others unused
-		{PWM_OUTPUT_DISABLED, nullptr},
-		{PWM_OUTPUT_DISABLED, nullptr},
-		{PWM_OUTPUT_DISABLED, nullptr}
-	},
-	.cr2 = 0,
+		.frequency = SCHEDULER_TIMER_FREQ,
+		/* wanted timer period = 2^32 counts,
+		 * but driver set (period - 1) value to register
+		 * also period is uint32_t
+		 * So set it to zero so it will overlap to 0xffffffff when writen to register */
+		.period = 0,
+		.callback = nullptr, // No update callback
+		.channels =
+				{{PWM_OUTPUT_DISABLED, hwTimerCallback}, // Channel 0 = timer callback, others unused
+				 {PWM_OUTPUT_DISABLED, nullptr},
+				 {PWM_OUTPUT_DISABLED, nullptr},
+				 {PWM_OUTPUT_DISABLED, nullptr}},
+		.cr2 = 0,
 #if STM32_PWM_USE_ADVANCED
-	.bdtr = 0,
+		.bdtr = 0,
 #endif
-	.dier = 0
-};
+		.dier = 0};
 
 void portInitMicrosecondTimer() {
 	pwmStart(&SCHEDULER_PWM_DEVICE, &timerConfig);

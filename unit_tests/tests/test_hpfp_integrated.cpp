@@ -16,19 +16,17 @@ TEST(HPFP, IntegratedSchedule) {
 	engineConfiguration->hpfpCamLobes = 3;
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
 
-
 	engineConfiguration->trigger.customTotalToothCount = 16;
 	engineConfiguration->trigger.customSkippedToothCount = 0;
 	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
-    setCamOperationMode();
+	setCamOperationMode();
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
 
-
-	eth.smartFireTriggerEvents2(/*count*/40, /*delay*/ 4);
+	eth.smartFireTriggerEvents2(/*count*/ 40, /*delay*/ 4);
 	ASSERT_EQ(937, round(Sensor::getOrZero(SensorType::Rpm)));
 
 	for (int i = 0; i < 100; i++) {
-		eth.smartFireTriggerEvents2(/*count*/1, /*delay*/ 4);
+		eth.smartFireTriggerEvents2(/*count*/ 1, /*delay*/ 4);
 		engine->periodicFastCallback();
 	}
 	/**
@@ -36,5 +34,3 @@ TEST(HPFP, IntegratedSchedule) {
 	 */
 	ASSERT_EQ(31, enginePins.hpfpValve.unitTestTurnedOnCounter);
 }
-
-

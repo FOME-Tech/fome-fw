@@ -24,7 +24,7 @@
 #include "pch.h"
 
 #if EFI_PRINTF_FUEL_DETAILS
-	bool printFuelDebug = false;
+bool printFuelDebug = false;
 #endif // EFI_PRINTF_FUEL_DETAILS
 
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
@@ -40,7 +40,7 @@ static void handleFuel(const EnginePhaseInfo& phase) {
 
 	// This is called in the fast callback already, but since we may have just achieved engine sync (and RPM)
 	// for the first time, force update the schedule so that we can inject immediately if necessary
-	FuelSchedule *fs = getFuelSchedule();
+	FuelSchedule* fs = getFuelSchedule();
 	if (!fs->isReady) {
 		fs->addFuelEvents();
 	}
@@ -74,15 +74,15 @@ void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
 			getFuelSchedule()->invalidate();
-			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about trigger shape & optimization?)
-			// see updateTriggerWaveform() -> prepareOutputSignals()
+			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about
+			// trigger shape & optimization?) see updateTriggerWaveform() -> prepareOutputSignals()
 
 			// we need this to apply new 'triggerIndexByAngle' values
 			engine->periodicFastCallback();
 		}
 	}
 
-	engine->engineModules.apply_all([=](auto & m) { m.onEnginePhase(rpm, phase); });
+	engine->engineModules.apply_all([=](auto& m) { m.onEnginePhase(rpm, phase); });
 
 	/**
 	 * For fuel we schedule start of injection based on trigger angle, and then inject for

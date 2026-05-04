@@ -22,9 +22,6 @@ void advanceTimeUs(int us) {
 	timeNowNt += US2NT(us);
 }
 
-void initLogging(LoggingWithStorage *logging, const char *name) {
-}
+void initLogging(LoggingWithStorage* logging, const char* name) {}
 
-void setBoardConfigOverrides() {
-}
-
+void setBoardConfigOverrides() {}

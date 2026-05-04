@@ -4,7 +4,8 @@
 
 class LinearFunc final : public SensorConverter {
 public:
-	LinearFunc(float divideInput = 1.0f) : m_divideInput(divideInput) {}
+	LinearFunc(float divideInput = 1.0f)
+		: m_divideInput(divideInput) {}
 
 	void configure(float in1, float out1, float in2, float out2, float minOutput, float maxOutput);
 

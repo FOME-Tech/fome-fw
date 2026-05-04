@@ -36,19 +36,19 @@ static bool is_protected(void*) {
 }
 
 static bool connect(void* instance) {
-  CompressedBlockDevice* cbd = reinterpret_cast<CompressedBlockDevice*>(instance);
-  if (BLK_STOP == cbd->state) {
-    cbd->state = BLK_READY;
-  }
-  return HAL_SUCCESS;
+	CompressedBlockDevice* cbd = reinterpret_cast<CompressedBlockDevice*>(instance);
+	if (BLK_STOP == cbd->state) {
+		cbd->state = BLK_READY;
+	}
+	return HAL_SUCCESS;
 }
 
 static bool disconnect(void* instance) {
 	CompressedBlockDevice* cbd = reinterpret_cast<CompressedBlockDevice*>(instance);
-  if (BLK_STOP != cbd->state) {
-    cbd->state = BLK_STOP;
-  }
-  return HAL_SUCCESS;
+	if (BLK_STOP != cbd->state) {
+		cbd->state = BLK_STOP;
+	}
+	return HAL_SUCCESS;
 }
 
 static bool read(void* instance, uint32_t startblk, uint8_t* buffer, uint32_t /*n*/) {
@@ -115,24 +115,23 @@ static bool get_info(void* instance, BlockDeviceInfo* bdip) {
 
 static bool sync(void* instance) {
 	CompressedBlockDevice* cbd = reinterpret_cast<CompressedBlockDevice*>(instance);
-  if (BLK_READY != cbd->state) {
-    return HAL_FAILED;
-  }
-  else {
-    return HAL_SUCCESS;
-  }
+	if (BLK_READY != cbd->state) {
+		return HAL_FAILED;
+	} else {
+		return HAL_SUCCESS;
+	}
 }
 
 static const BaseBlockDeviceVMT cbdVmt = {
-	(size_t)0, // instanceOffset
-	is_inserted,
-	is_protected,
-	connect,
-	disconnect,
-	read,
-	write,
-	sync,
-	get_info,
+		(size_t)0, // instanceOffset
+		is_inserted,
+		is_protected,
+		connect,
+		disconnect,
+		read,
+		write,
+		sync,
+		get_info,
 };
 
 void compressedBlockDeviceObjectInit(CompressedBlockDevice* cbd) {

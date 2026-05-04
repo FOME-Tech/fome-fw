@@ -1,4 +1,4 @@
-	/**
+/**
  * @file	console_io.cpp
  *
  * @date Dec 29, 2012
@@ -38,7 +38,6 @@
 
 #include "console_io.h"
 #include "tunerstudio.h"
-#include "connector_uart_dma.h"
 
 #if EFI_SIMULATOR
 #include "rusEfiFunctionalTest.h"

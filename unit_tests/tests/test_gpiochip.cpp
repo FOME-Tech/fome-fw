@@ -22,8 +22,9 @@ struct GoodChip : public GpioChip {
 
 class TestChip1 : public GoodChip {
 	int readPad(size_t pin) override {
-		if (pin & 0x01)
+		if (pin & 0x01) {
 			return 1;
+		}
 		return 0;
 	}
 };
@@ -32,10 +33,11 @@ static TestChip1 testchip1;
 
 class TestChip2 : public GoodChip {
 	int writePad(size_t pin, int value) override {
-		if (value)
-			io_state |=  (1 << value);
-		else
+		if (value) {
+			io_state |= (1 << value);
+		} else {
 			io_state &= ~(1 << value);
+		}
 
 		return 0;
 	}
@@ -114,5 +116,4 @@ TEST(gpioext, testGpioExt) {
 
 	EXPECT_TRUE(gpiochips_readPad((Gpio)(chip3_base + 16)) < 0);
 	EXPECT_TRUE(gpiochips_writePad((Gpio)(chip3_base + 16), 1) < 0);
-
 }

@@ -12,9 +12,7 @@ class WifiChannel final : public TsChannelBase {
 public:
 	WifiChannel(ServerSocket& server)
 		: TsChannelBase("WiFi")
-		, m_server(server)
-	{
-	}
+		, m_server(server) {}
 
 	bool isReady() const override {
 		return m_server.hasConnectedSocket();
@@ -84,7 +82,8 @@ static void startTsListening() {
 }
 
 struct WifiConsoleThread : public TunerstudioThread {
-	WifiConsoleThread() : TunerstudioThread("WiFi Console") { }
+	WifiConsoleThread()
+		: TunerstudioThread("WiFi Console") {}
 
 	TsChannelBase* setupChannel() override {
 		waitForWifiInit();

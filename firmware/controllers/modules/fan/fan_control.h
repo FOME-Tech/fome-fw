@@ -21,7 +21,9 @@ private:
 
 public:
 	// For unit testing only
-	void setMockPwm(IPwm* pwm) { m_pwm = pwm; }
+	void setMockPwm(IPwm* pwm) {
+		m_pwm = pwm;
+	}
 
 protected:
 	virtual OutputPin& getPin() = 0;

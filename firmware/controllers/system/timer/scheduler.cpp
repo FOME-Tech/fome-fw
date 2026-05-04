@@ -16,6 +16,6 @@ schfunc_t action_s::getCallback() const {
 	return m_callback;
 }
 
-void * action_s::getArgument() const {
+void* action_s::getArgument() const {
 	return m_param;
 }

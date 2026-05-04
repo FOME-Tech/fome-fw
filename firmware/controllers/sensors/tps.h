@@ -16,7 +16,7 @@
 #define TPS_TS_CONVERSION 200
 
 constexpr inline int convertVoltageTo10bitADC(float voltage) {
-	return (int) (voltage * TPS_TS_CONVERSION);
+	return (int)(voltage * TPS_TS_CONVERSION);
 }
 
 void grabTPSIsClosed();

@@ -19,32 +19,113 @@ TEST(BinaryLogField, FieldHeader) {
 
 	char buffer[89];
 	StrictMock<MockWriter> bufWriter;
-	EXPECT_CALL(bufWriter, write(_, 89))
-		.WillOnce([&] (const char* buf, size_t count) {
-			memcpy(buffer, buf, count);
-			return 0;
-		});
+	EXPECT_CALL(bufWriter, write(_, 89)).WillOnce([&](const char* buf, size_t count) {
+		memcpy(buffer, buf, count);
+		return 0;
+	});
 
 	// Should write 89 bytes
 	field.writeHeader(bufWriter);
 
 	// Expect correctly written header
-	EXPECT_THAT(buffer, ElementsAre(
-		1,	// type: int8_t
-		// name - 34 bytes, 0 padded
-		'n', 'a', 'm', 'e', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		// units - 10 bytes, 0 padded
-		'u', 'n', 'i', 't', 's', 0, 0, 0, 0, 0,
-		// display style: float
-		0,
-		// Scale = 0.1 (float)
-		0x3d, 0xcc, 0xcc, 0xcd,
-		// Transform - we always use 0
-		0, 0, 0, 0,
-		// Digits - 2, as configured
-		2,
-		'c', 'a', 't', 'e', 'g', 'o', 'r', 'y', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-	));
+	EXPECT_THAT(
+			buffer,
+			ElementsAre(
+					1, // type: int8_t
+					// name - 34 bytes, 0 padded
+					'n',
+					'a',
+					'm',
+					'e',
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					// units - 10 bytes, 0 padded
+					'u',
+					'n',
+					'i',
+					't',
+					's',
+					0,
+					0,
+					0,
+					0,
+					0,
+					// display style: float
+					0,
+					// Scale = 0.1 (float)
+					0x3d,
+					0xcc,
+					0xcc,
+					0xcd,
+					// Transform - we always use 0
+					0,
+					0,
+					0,
+					0,
+					// Digits - 2, as configured
+					2,
+					'c',
+					'a',
+					't',
+					'e',
+					'g',
+					'o',
+					'r',
+					'y',
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0,
+					0));
 }
 
 TEST(BinaryLogField, Value) {

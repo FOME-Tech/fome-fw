@@ -13,22 +13,21 @@
 #define INITIAL_PIN_STATE -1
 
 // mode >= 0  is always true since that's an unsigned
-#define assertOMode(mode) { \
-	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, mode <= OM_OPENDRAIN_INVERTED, "invalid pin_output_mode_e"); \
- }
+#define assertOMode(mode)                                                                                              \
+	{ efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, mode <= OM_OPENDRAIN_INVERTED, "invalid pin_output_mode_e"); }
 
-#define efiSetPadModeIfConfigurationChanged(msg, pin, mode)                      \
-	if (isConfigurationChanged(pin)) {                                           \
-		efiSetPadMode(msg, engineConfiguration->pin, mode);      \
+#define efiSetPadModeIfConfigurationChanged(msg, pin, mode)                                                            \
+	if (isConfigurationChanged(pin)) {                                                                                 \
+		efiSetPadMode(msg, engineConfiguration->pin, mode);                                                            \
 	}
 
-#define efiSetPadUnusedIfConfigurationChanged(pin)                               \
-	if (isConfigurationChanged(pin)) {                                           \
-		efiSetPadUnused(activeConfiguration.pin);   \
+#define efiSetPadUnusedIfConfigurationChanged(pin)                                                                     \
+	if (isConfigurationChanged(pin)) {                                                                                 \
+		efiSetPadUnused(activeConfiguration.pin);                                                                      \
 	}
 
-void efiSetPadMode(const char *msg, brain_pin_e pin, iomode_t mode);
-void efiSetPadModeWithoutOwnershipAcquisition(const char *msg, brain_pin_e brainPin, iomode_t mode);
+void efiSetPadMode(const char* msg, brain_pin_e pin, iomode_t mode);
+void efiSetPadModeWithoutOwnershipAcquisition(const char* msg, brain_pin_e brainPin, iomode_t mode);
 void efiSetPadUnused(brain_pin_e brainPin);
 
 bool efiReadPin(brain_pin_e pin);
@@ -37,7 +36,7 @@ iomode_t getInputMode(pin_input_mode_e mode);
 
 void setCanVirtualInput(size_t idx, bool value);
 
-#if ! EFI_PROD_CODE
+#if !EFI_PROD_CODE
 #define BRAIN_PIN_COUNT (1 << 8 * sizeof(brain_pin_e))
 extern bool mockPinStates[BRAIN_PIN_COUNT];
 

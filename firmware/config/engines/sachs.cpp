@@ -53,7 +53,6 @@ void setSachs() {
 	engineConfiguration->tpsMin = convertVoltageTo10bitADC(1.250);
 	engineConfiguration->tpsMax = convertVoltageTo10bitADC(4.538);
 
-
 	// Frankenstein: low side - out #1: PC14
 	// Frankenstein: low side - out #2: PC15
 	// Frankenstein: low side - out #3: PE6

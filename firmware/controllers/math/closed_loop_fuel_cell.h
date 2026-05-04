@@ -34,7 +34,7 @@ public:
 	}
 
 private:
-	const stft_cell_cfg_s *m_config = nullptr;
+	const stft_cell_cfg_s* m_config = nullptr;
 	SensorType m_lambdaSensor = SensorType::Invalid;
 
 protected:

@@ -27,13 +27,13 @@ static void releaseCrc() {
 
 #if HAL_USE_CRC
 static const CRCConfig crcCfg = {
-	.poly_size			= 32,
-	.poly				= 0x04C11DB7,
-	.initial_val		= 0xFFFFFFFF,
-	.final_val			= 0xFFFFFFFF,
-	.reflect_data		= true,
-	.reflect_remainder	= true,
-	.end_cb				= nullptr,
+		.poly_size = 32,
+		.poly = 0x04C11DB7,
+		.initial_val = 0xFFFFFFFF,
+		.final_val = 0xFFFFFFFF,
+		.reflect_data = true,
+		.reflect_remainder = true,
+		.end_cb = nullptr,
 };
 
 static bool didInit = false;
@@ -41,19 +41,18 @@ static bool didInit = false;
 #endif // HAL_USE_CRC
 
 Crc::Crc(size_t estimatedWorkSize)
-	: m_acquiredExclusive(tryAcquireCrc(estimatedWorkSize))
-{
-	#if HAL_USE_CRC
-		if (m_acquiredExclusive) {
-			if (didInit) {
-				crcResetI(&CRCD1);
-			} else {
-				didInit = true;
+	: m_acquiredExclusive(tryAcquireCrc(estimatedWorkSize)) {
+#if HAL_USE_CRC
+	if (m_acquiredExclusive) {
+		if (didInit) {
+			crcResetI(&CRCD1);
+		} else {
+			didInit = true;
 
-				crcStart(&CRCD1, &crcCfg);
-			}
+			crcStart(&CRCD1, &crcCfg);
 		}
-	#endif // HAL_USE_CRC
+	}
+#endif // HAL_USE_CRC
 }
 
 Crc::~Crc() {
@@ -63,12 +62,12 @@ Crc::~Crc() {
 }
 
 void Crc::addData(const void* buf, size_t size) {
-	#if HAL_USE_CRC
-		if (m_acquiredExclusive) {
-			m_crc = crcCalcI(&CRCD1, size, buf);
-			return;
-		}
-	#endif // HAL_USE_CRC
+#if HAL_USE_CRC
+	if (m_acquiredExclusive) {
+		m_crc = crcCalcI(&CRCD1, size, buf);
+		return;
+	}
+#endif // HAL_USE_CRC
 
 	// fall through to software CRC if hardware not available
 	m_crc = crc32inc(buf, m_crc, size);

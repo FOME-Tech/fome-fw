@@ -21,9 +21,7 @@ class CanSensorBase : public StoredValueSensor, public CanListener {
 public:
 	CanSensorBase(uint32_t eid, SensorType type, efidur_t timeout)
 		: StoredValueSensor(type, timeout)
-		, CanListener(eid)
-	{
-	}
+		, CanListener(eid) {}
 
 	void showInfo(const char* sensorName) const override;
 };
@@ -33,9 +31,7 @@ class CanSensor : public CanSensorBase {
 public:
 	CanSensor(uint32_t eid, uint8_t offset, SensorType type, efidur_t timeout)
 		: CanSensorBase(eid, type, timeout)
-		, m_offset(offset)
-	{
-	}
+		, m_offset(offset) {}
 
 	void decodeFrame(const CANRxFrame& frame, efitick_t nowNt) override {
 		// Compute the location of our data within the frame

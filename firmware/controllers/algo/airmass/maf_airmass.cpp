@@ -35,7 +35,7 @@ AirmassResult MafAirmass::getAirmass(float rpm, bool postState) {
 }
 
 /**
- * Function block now works to create a standardised load from the cylinder filling as well as tune fuel via VE table. 
+ * Function block now works to create a standardised load from the cylinder filling as well as tune fuel via VE table.
  * @return total duration of fuel injection per engine cycle, in milliseconds
  */
 AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool postState) const {
@@ -57,14 +57,14 @@ AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool post
 
 	mass_t cylinderAirmass = airPerRevolution / halfCylCount;
 
-	//Create % load for fuel table using relative naturally aspirated cylinder filling
+	// Create % load for fuel table using relative naturally aspirated cylinder filling
 	float airChargeLoad = 100 * cylinderAirmass / getStandardAirCharge();
-	
-	//Correct air mass by VE table
+
+	// Correct air mass by VE table
 	mass_t correctedAirmass = cylinderAirmass * getVe(rpm, airChargeLoad, postState);
 
 	return {
-		correctedAirmass,
-		airChargeLoad, // AFR/VE/ignition table Y axis
+			correctedAirmass,
+			airChargeLoad, // AFR/VE/ignition table Y axis
 	};
 }

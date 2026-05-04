@@ -29,15 +29,14 @@
 
 #if EFI_SIGNAL_EXECUTOR_SLEEP
 
-struct CallbackContext
-{
+struct CallbackContext {
 	scheduling_s* scheduling = nullptr;
 	bool shouldFree = false;
 };
 
-static void doScheduleForLater(scheduling_s *scheduling, int delayUs, action_s action);
+static void doScheduleForLater(scheduling_s* scheduling, int delayUs, action_s action);
 
-void SleepExecutor::schedule(const char *msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
+void SleepExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
 	doScheduleForLater(scheduling, NT2US(timeNt) - getTimeNowUs(), action);
 }
 
@@ -56,7 +55,7 @@ static void timerCallback(CallbackContext* ctx) {
 	action.execute();
 }
 
-static void doScheduleForLater(scheduling_s *scheduling, int delayUs, action_s action) {
+static void doScheduleForLater(scheduling_s* scheduling, int delayUs, action_s action) {
 	int delaySt = MY_US2ST(delayUs);
 	if (delaySt <= 0) {
 		/**

@@ -29,7 +29,6 @@ static_assert(offsetof(running_fuel_s, coolantTemperatureCoefficient) == 8);
 static_assert(offsetof(running_fuel_s, timeSinceCrankingInSecs) == 12);
 static_assert(offsetof(running_fuel_s, baseFuel) == 16);
 static_assert(offsetof(running_fuel_s, fuel) == 18);
-
 struct fuel_computer_s {
 	// offset 0
 	running_fuel_s running;
@@ -73,4 +72,3 @@ static_assert(offsetof(fuel_computer_s, stoichiometricRatio) == 28);
 static_assert(offsetof(fuel_computer_s, sdTcharge_coff) == 32);
 static_assert(offsetof(fuel_computer_s, sdAirMassInOneCylinder) == 36);
 static_assert(offsetof(fuel_computer_s, normalizedCylinderFilling) == 40);
-

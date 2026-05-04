@@ -2,8 +2,8 @@
 #include "flash_int.h"
 
 extern "C" {
-	#include "boot.h"
-	#include "flash.h"
+#include "boot.h"
+#include "flash.h"
 }
 
 blt_addr FlashGetUserProgBaseAddress() {
@@ -25,8 +25,7 @@ static blt_bool FlashWriteBlock(FlashBlockInfo& block) {
 	auto dst = block.base_addr;
 	size_t len = FLASH_WRITE_BLOCK_SIZE;
 
-	if (FLASH_RETURN_SUCCESS !=
-		intFlashWrite(dst, reinterpret_cast<const char*>(src), len)) {
+	if (FLASH_RETURN_SUCCESS != intFlashWrite(dst, reinterpret_cast<const char*>(src), len)) {
 		return BLT_FALSE;
 	}
 
@@ -107,7 +106,7 @@ static blt_bool FlashAddToBlock(FlashBlockInfo& block, blt_addr address, blt_int
 
 static FlashBlockInfo block;
 
-blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u *data) {
+blt_bool FlashWrite(blt_addr addr, blt_int32u len, blt_int8u* data) {
 	// don't allow overwriting the bootloader
 	if (addr < FlashGetUserProgBaseAddress()) {
 		return BLT_FALSE;

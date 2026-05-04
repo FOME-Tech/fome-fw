@@ -71,14 +71,14 @@ void setBoardConfigOverrides() {
 
 	setHellenSdCardSpi2();
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	setHellenCan();
 
 	engineConfiguration->etb_use_two_wires = true;
-	engineConfiguration->etbIo[0].directionPin1 = Gpio::C7;	// PWM 3
-	engineConfiguration->etbIo[0].directionPin2 = Gpio::C8;	// PWM 4
-	engineConfiguration->etbIo[0].controlPin = Gpio::C6;		// PWM 2
+	engineConfiguration->etbIo[0].directionPin1 = Gpio::C7; // PWM 3
+	engineConfiguration->etbIo[0].directionPin2 = Gpio::C8; // PWM 4
+	engineConfiguration->etbIo[0].controlPin = Gpio::C6;	// PWM 2
 }
 
 /**
@@ -99,10 +99,10 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->boostControlPin = H144_LS_6;
 	engineConfiguration->acSwitch = H144_IN_D_AUX3;
 	engineConfiguration->acRelayPin = H144_OUT_IO6;
-	engineConfiguration->fuelPumpPin = Gpio::G2;	// OUT_IO9
-	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
-	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
-    engineConfiguration->tachOutputPin = H144_OUT_PWM1;
+	engineConfiguration->fuelPumpPin = Gpio::G2;	   // OUT_IO9
+	engineConfiguration->idle.solenoidPin = Gpio::D14; // OUT_PWM5
+	engineConfiguration->fanPin = Gpio::D12;		   // OUT_PWM8
+	engineConfiguration->tachOutputPin = H144_OUT_PWM1;
 	engineConfiguration->fan2Pin = H144_OUT_IO2;
 
 	// "required" hardware is done - set some reasonable defaults
@@ -113,10 +113,8 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 
-
-
 	engineConfiguration->clutchDownPin = H144_IN_D_2;
 	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
 	engineConfiguration->launchActivationMode = CLUTCH_INPUT_LAUNCH;
-// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
+	// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
 }

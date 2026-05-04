@@ -13,7 +13,7 @@ static void freqSensorExtiCallback(void* arg, efitick_t nowNt) {
 	reinterpret_cast<FrequencySensor*>(arg)->onEdge(nowNt);
 }
 
-void FrequencySensor::initIfValid(brain_pin_e pin, SensorConverter &converter, float filterParameter) {
+void FrequencySensor::initIfValid(brain_pin_e pin, SensorConverter& converter, float filterParameter) {
 	if (!isBrainPinValid(pin)) {
 		return;
 	}
@@ -32,9 +32,8 @@ void FrequencySensor::initIfValid(brain_pin_e pin, SensorConverter &converter, f
 
 #if EFI_PROD_CODE
 	// todo: refactor https://github.com/rusefi/rusefi/issues/2123
-	efiExtiEnablePin(getSensorName(), pin, 
-		PAL_EVENT_MODE_FALLING_EDGE,
-		freqSensorExtiCallback, reinterpret_cast<void*>(this));
+	efiExtiEnablePin(
+			getSensorName(), pin, PAL_EVENT_MODE_FALLING_EDGE, freqSensorExtiCallback, reinterpret_cast<void*>(this));
 #endif // EFI_PROD_CODE
 
 	Register();

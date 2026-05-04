@@ -6,7 +6,7 @@
 #include "table_func.h"
 #include "func_chain.h"
 
-static FunctionalSensor maf (SensorType::Maf , /* timeout = */ MS2NT(50));
+static FunctionalSensor maf(SensorType::Maf, /* timeout = */ MS2NT(50));
 static FunctionalSensor maf2(SensorType::Maf2, /* timeout = */ MS2NT(50));
 
 // Just check min/max allowed voltage
@@ -80,7 +80,7 @@ static void initMaf(adc_channel_e channel, FunctionalSensor& m) {
 
 	m.setFunction(mafFunction);
 
-	AdcSubscription::SubscribeSensor(m, channel, /*lowpassCutoff =*/ 50);
+	AdcSubscription::SubscribeSensor(m, channel, /*lowpassCutoff =*/50);
 	m.Register();
 }
 

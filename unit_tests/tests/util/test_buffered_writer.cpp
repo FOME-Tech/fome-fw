@@ -7,8 +7,7 @@ using ::testing::Return;
 using ::testing::StrictMock;
 
 template <int TBufferSize>
-struct MockBufferedWriter : public BufferedWriter<TBufferSize>
-{
+struct MockBufferedWriter : public BufferedWriter<TBufferSize> {
 	MOCK_METHOD(size_t, writeInternal, (const char*, size_t), (override));
 };
 
@@ -40,7 +39,7 @@ TEST(BufferedWriter, WriteMultipleSmall) {
 	EXPECT_EQ(0, dut.write(testBuffer, 3));
 	EXPECT_EQ(0, dut.write(testBuffer, 3));
 	EXPECT_EQ(0, dut.write(testBuffer, 3));
-	EXPECT_EQ(10, dut.write(testBuffer, 3));	// <- this one should trigger a flush
+	EXPECT_EQ(10, dut.write(testBuffer, 3)); // <- this one should trigger a flush
 
 	// Flush the remainder
 	EXPECT_EQ(dut.flush(), 2);
@@ -60,9 +59,7 @@ TEST(BufferedWriter, WriteSingleFullBufferSize) {
 TEST(BufferedWriter, WriteLarge) {
 	StrictMock<MockBufferedWriter<10>> dut;
 
-	{
-		EXPECT_CALL(dut, writeInternal(_, 45)).WillOnce(Return(45));
-	}
+	{ EXPECT_CALL(dut, writeInternal(_, 45)).WillOnce(Return(45)); }
 
 	EXPECT_EQ(45, dut.write(testBuffer, 45));
 

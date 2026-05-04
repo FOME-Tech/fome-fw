@@ -2,7 +2,6 @@
 #include "rusefi_lua.h"
 #include "lua_lib.h"
 
-
 // Leiderman-Khlystov Coefficients for Estimating Engine Full Load Characteristics and Performance
 TEST(LuaVag, LeidermaKhlystov) {
 	const char* magic = LUA_POW R"(
@@ -59,7 +58,6 @@ print('LeidermanTorque ' .. LeidermanTorque)
 
 	EXPECT_NEAR_M3(testLuaReturnsNumberOrNil(magic).value_or(0), 156.463);
 }
-
 
 TEST(LuaVag, LeidermaKhlystov2) {
 	const char* magic = LUA_POW R"(

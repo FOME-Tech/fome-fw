@@ -13,7 +13,8 @@ void MainRelayController::onSlowCallback() {
 	}
 
 	// Query whether any engine modules want to keep the lights on
-	delayedShutoffRequested = engine->engineModules.aggregate([](auto& m, bool prev) { return m.needsDelayedShutoff() | prev; }, false);
+	delayedShutoffRequested =
+			engine->engineModules.aggregate([](auto& m, bool prev) { return m.needsDelayedShutoff() | prev; }, false);
 
 	// TODO: delayed shutoff timeout?
 
@@ -36,7 +37,10 @@ void MainRelayController::onSlowCallback() {
 			float batteryVolts = Sensor::getOrZero(SensorType::BatteryVoltage);
 
 			if (batteryVolts - mainRelayVolts > 3) {
-				warning(ObdCode::OBD_PCM_MainRelayFault, "Main relay fault! VBatt: %.1fv, MR: %.1fv", batteryVolts, mainRelayVolts);
+				warning(ObdCode::OBD_PCM_MainRelayFault,
+						"Main relay fault! VBatt: %.1fv, MR: %.1fv",
+						batteryVolts,
+						mainRelayVolts);
 			}
 		}
 	}

@@ -26,13 +26,15 @@ TEST(real4b11, running) {
 
 		// Expect that all teeth are in the correct spot
 		float angleError = getTriggerCentral()->triggerToothAngleError;
-		EXPECT_TRUE(angleError < 3 && angleError > -3) << "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
+		EXPECT_TRUE(angleError < 3 && angleError > -3)
+				<< "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
 
 		auto rpm = Sensor::getOrZero(SensorType::Rpm);
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy
+			// all worked OK
 			EXPECT_EQ(eventCount, 30);
 			EXPECT_NEAR(rpm, 1436.23f, 0.1);
 		}
@@ -64,7 +66,8 @@ TEST(real4b11, runningDoubledEdge) {
 		if (!gotRpm && rpm) {
 			gotRpm = true;
 
-			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy all worked OK
+			// We should get first RPM on exactly the first sync point - this means the instant RPM pre-sync event copy
+			// all worked OK
 			EXPECT_EQ(eventCount, 30);
 			EXPECT_NEAR(rpm, 1436.23f, 0.1);
 		}

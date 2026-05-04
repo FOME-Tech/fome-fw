@@ -81,7 +81,7 @@ void setBoardConfigOverrides() {
 	engineConfiguration->etbIo[0].controlPin = Gpio::D13; // ETB_EN out_pwm1
 	engineConfiguration->etb_use_two_wires = true;
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 }
 
 /**
@@ -102,20 +102,19 @@ void setBoardDefaultConfiguration() {
 
 	setHellenCan();
 
-	engineConfiguration->fuelPumpPin = Gpio::D12;	// OUT_IO9 // 113 Fuel Pump Relay
+	engineConfiguration->fuelPumpPin = Gpio::D12; // OUT_IO9 // 113 Fuel Pump Relay
 	engineConfiguration->idle.solenoidPin = Gpio::Unassigned;
-//	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
+	//	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
 	engineConfiguration->mainRelayPin = H144_OUT_IO3;
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
 
-
 	// Some sensible defaults for other options
 	setCrankOperationMode();
 
-//	setAlgorithm(LM_SPEED_DENSITY);
-    // at least this starts
+	//	setAlgorithm(LM_SPEED_DENSITY);
+	// at least this starts
 	engineConfiguration->fuelAlgorithm = LM_ALPHA_N;
 
 	engineConfiguration->cranking.rpm = 400;
@@ -127,7 +126,6 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->idlePidRpmUpperLimit = 300;
 	engineConfiguration->mapErrorDetectionTooLow = 10;
 
-
 	// Bosch VQ40 VR56 VK56 0280158007
 	engineConfiguration->injector.flow = 296.2;
 
@@ -136,7 +134,7 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 	engineConfiguration->injectionMode = IM_SEQUENTIAL;
 
-	engineConfiguration->luaOutputPins[0] = H144_OUT_IO4; // 104 ETB Relay
+	engineConfiguration->luaOutputPins[0] = H144_OUT_IO4;  // 104 ETB Relay
 	engineConfiguration->luaOutputPins[1] = H144_OUT_PWM2; // aux LS1, upstream oxygen heaters
 
 	setPPSCalibration(0.75, 4.45, 0.43, 2.20);
@@ -144,7 +142,7 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->startUpFuelPumpDuration = 4;
 	engineConfiguration->postCrankingFactor = 1.05;
 
-    setEtbPID(6.1350, 87.7182, 0.0702);
+	setEtbPID(6.1350, 87.7182, 0.0702);
 
 	// this calibration reminds me of VAG just flipped?
 	engineConfiguration->tpsMin = 100;

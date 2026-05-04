@@ -23,13 +23,14 @@
 #define PRIO_SERVO (NORMALPRIO + 5)
 #define PRIO_STEPPER (NORMALPRIO + 5)
 
-// Logging buffer flush is *slightly* above PRIO_CONSOLE so that we don't starve logging buffers during initialization and console commands
+// Logging buffer flush is *slightly* above PRIO_CONSOLE so that we don't starve logging buffers during initialization
+// and console commands
 #define PRIO_TEXT_LOG (NORMALPRIO + 4)
 
 #define TCPIP_THREAD_PRIO (NORMALPRIO + 3)
 #define LWIP_THREAD_PRIORITY (NORMALPRIO + 2)
 
-// Console thread 
+// Console thread
 #define PRIO_CONSOLE (NORMALPRIO + 1)
 
 #define WIFI_THREAD_PRIORITY (NORMALPRIO)

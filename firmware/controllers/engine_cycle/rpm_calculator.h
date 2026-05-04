@@ -74,7 +74,7 @@ public:
 	/**
 	 * Should be called on every trigger event when the engine is just starting to spin up.
 	 */
-	void setSpinningUp(efitick_t nowNt );
+	void setSpinningUp(efitick_t nowNt);
 	/**
 	 * Called if the synchronization is lost due to a trigger timeout.
 	 */
@@ -140,7 +140,7 @@ private:
 	 * At this point all this is performance optimization?
 	 * Open question is when do we need it for performance reasons.
 	 */
-	 float cachedRpmValue = 0;
+	float cachedRpmValue = 0;
 
 	/**
 	 * This counter is incremented with each revolution of one of the shafts. Could be
@@ -173,12 +173,10 @@ private:
 
 void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo);
 
-void tdcMarkCallback(
-		uint32_t trgEventIndex, efitick_t edgeTimestamp);
+void tdcMarkCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp);
 
 operation_mode_e lookupOperationMode();
 
 #define getRevolutionCounter() (engine->rpmCalculator.getRevolutionCounterM())
 
-efitick_t scheduleByAngle(scheduling_s *timer, efitick_t edgeTimestamp, angle_t angle, action_s action);
-
+efitick_t scheduleByAngle(scheduling_s* timer, efitick_t edgeTimestamp, angle_t angle, action_s action);

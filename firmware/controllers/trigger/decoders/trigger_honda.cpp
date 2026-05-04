@@ -10,39 +10,31 @@
 #include "trigger_honda.h"
 #include "trigger_universal.h"
 
-void configureHondaCbr600(TriggerWaveform *s) {
+void configureHondaCbr600(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 	s->useOnlyPrimaryForSync = true;
 	s->setTriggerSynchronizationGap(6);
 
-
 	int totalTeethCount = 24;
 	int skippedCount = 0;
 
-	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, skippedCount, 0.5, 0, 720,
-	0, 349);
+	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, skippedCount, 0.5, 0, 720, 0, 349);
 
 	s->addEvent720(350.0f, false, TriggerWheel::T_PRIMARY);
 	s->addEvent720(360.0f, true, TriggerWheel::T_PRIMARY);
 
 	s->addEvent720(360 + 0.2, false, TriggerWheel::T_SECONDARY);
 
-	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, skippedCount, 0.5, 0, 720,
-	361, 649);
-
-
+	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, skippedCount, 0.5, 0, 720, 361, 649);
 
 	s->addEvent720(650.0f, false, TriggerWheel::T_PRIMARY);
 	s->addEvent720(660.0f, true, TriggerWheel::T_PRIMARY);
 
 	s->addEvent720(660 + 0.2, false, TriggerWheel::T_SECONDARY);
 
+	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, skippedCount, 0.5, 0, 720, 661, 709);
 
-	addSkippedToothTriggerEvents(TriggerWheel::T_SECONDARY, s, totalTeethCount, skippedCount, 0.5, 0, 720,
-	661, 709);
-
-
-//	exit(-1);
+	//	exit(-1);
 
 	s->addEvent720(710.0f, false, TriggerWheel::T_PRIMARY);
 
@@ -51,7 +43,7 @@ void configureHondaCbr600(TriggerWaveform *s) {
 	s->addEvent720(720.0f, true, TriggerWheel::T_PRIMARY);
 }
 
-void configureOnePlus16(TriggerWaveform *s) {
+void configureOnePlus16(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
 	int count = 16;
@@ -63,7 +55,7 @@ void configureOnePlus16(TriggerWaveform *s) {
 
 	for (int i = 1; i <= count; i++) {
 		s->addEventAngle(tooth * i - width, true, TriggerWheel::T_SECONDARY);
-		s->addEventAngle(tooth * i,         false, TriggerWheel::T_SECONDARY);
+		s->addEventAngle(tooth * i, false, TriggerWheel::T_SECONDARY);
 	}
 
 	s->isSynchronizationNeeded = false;
@@ -72,11 +64,11 @@ void configureOnePlus16(TriggerWaveform *s) {
 static void kseriesTooth(TriggerWaveform* s, float end) {
 	// for VR we only handle rises so width does not matter much
 	s->addEvent360(end - 4, true, TriggerWheel::T_PRIMARY);
-	s->addEvent360(end    , false, TriggerWheel::T_PRIMARY);
+	s->addEvent360(end, false, TriggerWheel::T_PRIMARY);
 }
 
 // trigger_type_e::TT_HONDA_K_CRANK_12_1
-void configureHondaK_12_1(TriggerWaveform *s) {
+void configureHondaK_12_1(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CRANK_SENSOR, SyncEdge::RiseOnly);
 
 	// nominal gap 0.33
@@ -99,11 +91,11 @@ void configureHondaK_12_1(TriggerWaveform *s) {
  * Exhaust cam shaft, not variable on Honda K
  * 2003 Honda Element
  */
-void configureHondaK_4_1(TriggerWaveform *s) {
+void configureHondaK_4_1(TriggerWaveform* s) {
 	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
 
-	s->setTriggerSynchronizationGap3(/*gapIndex*/0, 1.5, 4.5);	// nominal 2.27
-	s->setTriggerSynchronizationGap3(/*gapIndex*/1, 0.1, 0.5);	// nominal 0.28
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 0, 1.5, 4.5); // nominal 2.27
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 1, 0.1, 0.5); // nominal 0.28
 
 	angle_t start = 55.5;
 	angle_t end = 70.5;

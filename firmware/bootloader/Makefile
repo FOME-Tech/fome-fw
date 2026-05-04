@@ -18,8 +18,6 @@ DDEFS += -DHAL_USE_EXT=FALSE -DHAL_USE_ICU=FALSE -DHAL_USE_PWM=FALSE -DEF_LUA=FA
 #disable ChibiOS flash driver and prevent header from include
 DDEFS += -DHAL_USE_FLASH=FALSE
 
-DDEFS += -DEFI_USE_UART_DMA=FALSE
-
 DDEFS += -DEFI_USB_SERIAL=TRUE -DHAL_USE_USB_MSD=FALSE
 # disable CAN
 DDEFS += -DEFI_CAN_SUPPORT=FALSE
@@ -64,10 +62,9 @@ ifeq ($(USE_LDOPT),)
   USE_LDOPT =
 endif
 
-# Enable this if you want link time optimizations (LTO)
-ifeq ($(USE_LTO),)
-  USE_LTO = yes
-endif
+# Parallel LTO for faster linking
+USE_LTO = no
+USE_OPT += -flto=auto
 
 # If enabled, this option allows to compile the application in THUMB mode.
 ifeq ($(USE_THUMB),)
@@ -124,12 +121,11 @@ PCHSRC = $(PCH_DIR)/pch.h
 PCHSUB = bootloader
 
 # Imported source files and paths
-CHIBIOS = $(PROJECT_DIR)/ChibiOS
-# todo: looks like 'CHIBIOS_CONTRIB' path is universal shall we defined it only once?
-CHIBIOS_CONTRIB = $(CHIBIOS)/../ChibiOS-Contrib
+CHIBIOS = $(PROJECT_DIR)/ext/ChibiOS
+CHIBIOS_CONTRIB = $(PROJECT_DIR)/ext/ChibiOS-Contrib
 
 # Configure libfirmware Paths/Includes
-RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
+RUSEFI_LIB = $(PROJECT_DIR)/ext/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 

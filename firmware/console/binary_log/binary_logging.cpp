@@ -38,8 +38,9 @@ static uint64_t binaryLogCount = 0;
 extern bool main_loop_started;
 
 void writeSdLogLine(Writer& bufferedWriter) {
-	if (!main_loop_started)
+	if (!main_loop_started) {
 		return;
+	}
 
 	if (binaryLogCount == 0) {
 		writeFileHeader(bufferedWriter);
@@ -100,8 +101,6 @@ void writeFileHeader(Writer& outBuffer) {
 }
 
 static uint8_t blockRollCounter = 0;
-
-//static efitimeus_t prevSdCardLineTime = 0;
 
 void writeSdBlock(Writer& outBuffer) {
 	static char buffer[16];

@@ -30,16 +30,11 @@ TEST(InjectorModel, Prepare) {
 TEST(InjectorModel, getInjectionDuration) {
 	StrictMock<MockInjectorModel> dut;
 
-	EXPECT_CALL(dut, getDeadtime())
-		.WillOnce(Return(2.0f));
-	EXPECT_CALL(dut, getInjectorFlowRatio())
-		.WillOnce(Return(1.0f));
-	EXPECT_CALL(dut, getBaseFlowRate())
-		.WillOnce(Return(4.8f)); // 400cc/min
-	EXPECT_CALL(dut, getNonlinearMode())
-		.WillRepeatedly(Return(INJ_None));
-	EXPECT_CALL(dut, getMinimumPulse())
-		.WillRepeatedly(Return(1.0f));
+	EXPECT_CALL(dut, getDeadtime()).WillOnce(Return(2.0f));
+	EXPECT_CALL(dut, getInjectorFlowRatio()).WillOnce(Return(1.0f));
+	EXPECT_CALL(dut, getBaseFlowRate()).WillOnce(Return(4.8f)); // 400cc/min
+	EXPECT_CALL(dut, getNonlinearMode()).WillRepeatedly(Return(INJ_None));
+	EXPECT_CALL(dut, getMinimumPulse()).WillRepeatedly(Return(1.0f));
 
 	dut.prepare();
 
@@ -56,16 +51,11 @@ TEST(InjectorModel, getInjectionDuration) {
 TEST(InjectorModel, getInjectionDurationWithFlowRatio) {
 	StrictMock<MockInjectorModel> dut;
 
-	EXPECT_CALL(dut, getDeadtime())
-		.WillOnce(Return(2.0f));
-	EXPECT_CALL(dut, getInjectorFlowRatio())
-		.WillOnce(Return(1.1f));
-	EXPECT_CALL(dut, getBaseFlowRate())
-		.WillOnce(Return(4.8f)); // 400cc/min
-	EXPECT_CALL(dut, getNonlinearMode())
-		.WillRepeatedly(Return(INJ_None));
-	EXPECT_CALL(dut, getMinimumPulse())
-		.WillRepeatedly(Return(0));
+	EXPECT_CALL(dut, getDeadtime()).WillOnce(Return(2.0f));
+	EXPECT_CALL(dut, getInjectorFlowRatio()).WillOnce(Return(1.1f));
+	EXPECT_CALL(dut, getBaseFlowRate()).WillOnce(Return(4.8f)); // 400cc/min
+	EXPECT_CALL(dut, getNonlinearMode()).WillRepeatedly(Return(INJ_None));
+	EXPECT_CALL(dut, getMinimumPulse()).WillRepeatedly(Return(0));
 
 	dut.prepare();
 
@@ -76,20 +66,14 @@ TEST(InjectorModel, getInjectionDurationWithFlowRatio) {
 TEST(InjectorModel, nonLinearFordMode) {
 	StrictMock<MockInjectorModel> dut;
 
-	EXPECT_CALL(dut, getDeadtime())
-		.WillOnce(Return(0));
-	EXPECT_CALL(dut, getInjectorFlowRatio())
-		.WillOnce(Return(1.0f));
+	EXPECT_CALL(dut, getDeadtime()).WillOnce(Return(0));
+	EXPECT_CALL(dut, getInjectorFlowRatio()).WillOnce(Return(1.0f));
 
 	// 2005 F150 injectors
-	EXPECT_CALL(dut, getBaseFlowRate())
-		.WillRepeatedly(Return(2.979f));
-	EXPECT_CALL(dut, getSmallPulseFlowRate())
-		.WillRepeatedly(Return(3.562f));
-	EXPECT_CALL(dut, getSmallPulseBreakPoint())
-		.WillRepeatedly(Return(0.00627f));
-	EXPECT_CALL(dut, getNonlinearMode())
-		.WillRepeatedly(Return(INJ_FordModel));
+	EXPECT_CALL(dut, getBaseFlowRate()).WillRepeatedly(Return(2.979f));
+	EXPECT_CALL(dut, getSmallPulseFlowRate()).WillRepeatedly(Return(3.562f));
+	EXPECT_CALL(dut, getSmallPulseBreakPoint()).WillRepeatedly(Return(0.00627f));
+	EXPECT_CALL(dut, getNonlinearMode()).WillRepeatedly(Return(INJ_FordModel));
 
 	dut.prepare();
 
@@ -128,12 +112,12 @@ TEST(InjectorModel, nonlinearPolynomial) {
 
 	// expect return of the original value, plus polynomial f(x)
 	EXPECT_NEAR(dut.correctInjectionPolynomial(-3), -3 + -13532, EPS4D);
-	EXPECT_NEAR(dut.correctInjectionPolynomial(-2), -2 +   -711, EPS4D);
-	EXPECT_NEAR(dut.correctInjectionPolynomial(-1), -1 +     -4, EPS4D);
-	EXPECT_NEAR(dut.correctInjectionPolynomial(0),   0 +      1, EPS4D);
-	EXPECT_NEAR(dut.correctInjectionPolynomial(1),   1 +     36, EPS4D);
-	EXPECT_NEAR(dut.correctInjectionPolynomial(2),   2 +   1793, EPS4D);
-	EXPECT_NEAR(dut.correctInjectionPolynomial(3),   3 +  24604, EPS4D);
+	EXPECT_NEAR(dut.correctInjectionPolynomial(-2), -2 + -711, EPS4D);
+	EXPECT_NEAR(dut.correctInjectionPolynomial(-1), -1 + -4, EPS4D);
+	EXPECT_NEAR(dut.correctInjectionPolynomial(0), 0 + 1, EPS4D);
+	EXPECT_NEAR(dut.correctInjectionPolynomial(1), 1 + 36, EPS4D);
+	EXPECT_NEAR(dut.correctInjectionPolynomial(2), 2 + 1793, EPS4D);
+	EXPECT_NEAR(dut.correctInjectionPolynomial(3), 3 + 24604, EPS4D);
 
 	// Check that the disable threshold works
 	EXPECT_NE(dut.correctInjectionPolynomial(9.9f), 9.9f);
@@ -166,14 +150,9 @@ struct TesterGetRailPressure : public InjectorModelPrimary {
 	MOCK_METHOD(expected<float>, getFuelDifferentialPressure, (), (const, override));
 };
 
-class FlowRateFixture : public ::testing::TestWithParam<float> {
-};
+class FlowRateFixture : public ::testing::TestWithParam<float> {};
 
-INSTANTIATE_TEST_SUITE_P(
-	InjectorModel,
-	FlowRateFixture,
-	::testing::Values(0.1f, 0.5f, 1.0f, 2.0f, 10.0f)
-);
+INSTANTIATE_TEST_SUITE_P(InjectorModel, FlowRateFixture, ::testing::Values(0.1f, 0.5f, 1.0f, 2.0f, 10.0f));
 
 TEST_P(FlowRateFixture, PressureRatio) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);

@@ -8,5 +8,4 @@ TEST(trigger, testCustomSkipped) {
 	engineConfiguration->trigger.customTotalToothCount = 24;
 	engineConfiguration->trigger.customSkippedToothCount = 2;
 	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
-
 }

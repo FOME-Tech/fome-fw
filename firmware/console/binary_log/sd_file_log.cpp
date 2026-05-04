@@ -3,6 +3,7 @@
 #if EFI_FILE_LOGGING
 
 #include "mmc_card.h"
+#include "dma_buffers.h"
 #include "binary_logging.h"
 
 int totalLoggedBytes = 0;
@@ -34,7 +35,7 @@ static char logName[_MAX_FILLER + 20];
 #define SHORT_TIME_LEN 13
 
 // print FAT error function
-static void printFatFsError(const char *str, FRESULT err) {
+static void printFatFsError(const char* str, FRESULT err) {
 	efiPrintf("FatFs Error \"%s\" %d", str, err);
 }
 
@@ -45,8 +46,8 @@ static int incLogFileName() {
 	// 3. write back to the index file
 	int logFileIndex = MIN_FILE_INDEX;
 
-	memset(sd_mem::getLogFileFd(), 0, sizeof(FIL));
-	FRESULT err = f_open(sd_mem::getLogFileFd(), LOG_INDEX_FILENAME, FA_READ);
+	memset(dma_buffers::logFileFd(), 0, sizeof(FIL));
+	FRESULT err = f_open(dma_buffers::logFileFd(), LOG_INDEX_FILENAME, FA_READ);
 	if (err != FR_OK && err != FR_EXIST) {
 		efiPrintf("SD log index file (%s) not found or error: %d", LOG_INDEX_FILENAME, err);
 		goto err;
@@ -55,7 +56,7 @@ static int incLogFileName() {
 	char data[20];
 	UINT fileLength;
 
-	err = f_read(sd_mem::getLogFileFd(), (void*)data, sizeof(data), &fileLength);
+	err = f_read(dma_buffers::logFileFd(), (void*)data, sizeof(data), &fileLength);
 	if (err != FR_OK) {
 		efiPrintf("SD log index file (%s) failed to read: %d", LOG_INDEX_FILENAME, err);
 		goto err;
@@ -77,13 +78,13 @@ static int incLogFileName() {
 err:
 	// Even in case of error, attempt to write the current index back to the
 	// file so we can read it out next time (and not fail)
-	f_close(sd_mem::getLogFileFd());
+	f_close(dma_buffers::logFileFd());
 
-	memset(sd_mem::getLogFileFd(), 0, sizeof(FIL));
-	err = f_open(sd_mem::getLogFileFd(), LOG_INDEX_FILENAME, FA_OPEN_ALWAYS | FA_WRITE);
+	memset(dma_buffers::logFileFd(), 0, sizeof(FIL));
+	err = f_open(dma_buffers::logFileFd(), LOG_INDEX_FILENAME, FA_OPEN_ALWAYS | FA_WRITE);
 	itoa10(data, logFileIndex);
-	f_write(sd_mem::getLogFileFd(), (void*)data, strlen(data), nullptr);
-	f_close(sd_mem::getLogFileFd());
+	f_write(dma_buffers::logFileFd(), (void*)data, strlen(data), nullptr);
+	f_close(dma_buffers::logFileFd());
 	efiPrintf("Done %d", logFileIndex);
 
 	return logFileIndex;
@@ -91,7 +92,7 @@ err:
 
 static void prepareLogFileName(int index) {
 	strcpy(logName, FOME_LOG_PREFIX);
-	char *ptr;
+	char* ptr;
 
 	if (dateToStringShort(&logName[PREFIX_LEN])) {
 		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
@@ -115,11 +116,11 @@ static void prepareLogFileName(int index) {
 static bool createLogFile(int logFileIndex) {
 	prepareLogFileName(logFileIndex);
 
-	memset(sd_mem::getLogFileFd(), 0, sizeof(FIL));
-	FRESULT err = f_open(sd_mem::getLogFileFd(), logName, FA_CREATE_ALWAYS | FA_WRITE);
+	memset(dma_buffers::logFileFd(), 0, sizeof(FIL));
+	FRESULT err = f_open(dma_buffers::logFileFd(), logName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (err != FR_OK && err != FR_EXIST) {
 		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: mount failed");
-		printFatFsError("FS mount failed", err);	// else - show error
+		printFatFsError("FS mount failed", err); // else - show error
 		return false;
 	}
 
@@ -131,13 +132,13 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 
 	totalLoggedBytes += count;
 
-	FRESULT err = f_write(sd_mem::getLogFileFd(), buffer, count, &bytesWritten);
+	FRESULT err = f_write(dma_buffers::logFileFd(), buffer, count, &bytesWritten);
 
 	if (bytesWritten != count) {
 		printFatFsError("write error or disk full", err);
 
 		// Close file and unmount volume (ignore errors, we're already in the shutdown path)
-		f_close(sd_mem::getLogFileFd());
+		f_close(dma_buffers::logFileFd());
 
 		unmountSdFilesystem();
 		failed = true;
@@ -150,7 +151,7 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 			 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
 			 * todo: one day someone should actually measure the relative cost of f_sync
 			 */
-			f_sync(sd_mem::getLogFileFd());
+			f_sync(dma_buffers::logFileFd());
 			totalSyncCounter++;
 			writeCounter = 0;
 		}
@@ -173,9 +174,7 @@ public:
 	bool failed = false;
 
 	SdLogBufferWriter()
-		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc)
-	{
-	}
+		: m_stream("fome_simulator_log.mlg", std::ios::binary | std::ios::trunc) {}
 
 	size_t writeInternal(const char* buffer, size_t count) override {
 		m_stream.write(buffer, count);
@@ -187,12 +186,12 @@ private:
 	std::ofstream m_stream;
 };
 
-namespace sd_mem {
-	SdLogBufferWriter& getLogBuffer() {
-		static SdLogBufferWriter logBuffer;
-		return logBuffer;
-	}
+namespace dma_buffers {
+SdLogBufferWriter& logBuffer() {
+	static SdLogBufferWriter logBuffer;
+	return logBuffer;
 }
+} // namespace dma_buffers
 
 #endif // EFI_PROD_CODE
 
@@ -209,10 +208,10 @@ void mlgLogger() {
 
 		systime_t before = chVTGetSystemTime();
 
-		writeSdLogLine(sd_mem::getLogBuffer());
+		writeSdLogLine(dma_buffers::logBuffer());
 
 		// Something went wrong (already handled), so cancel further writes
-		if (sd_mem::getLogBuffer().failed) {
+		if (dma_buffers::logBuffer().failed) {
 			return;
 		}
 
@@ -237,15 +236,15 @@ static void sdTriggerLogger() {
 		auto buffer = GetToothLoggerBufferBlocking();
 
 		if (buffer) {
-			sd_mem::getLogBuffer().write(reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
+			dma_buffers::logBuffer().write(
+					reinterpret_cast<const char*>(buffer->buffer), buffer->nextIdx * sizeof(composite_logger_s));
 			ReturnToothLoggerBuffer(buffer);
 		}
-
 	}
 #endif /* EFI_TOOTH_LOGGER */
 }
 
-static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE);		// MMC monitor thread
+static THD_WORKING_AREA(sdCardLoggerStack, 3 * UTILITY_THREAD_STACK_SIZE); // MMC monitor thread
 static THD_FUNCTION(sdCardLoggerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("MMC Card Logger");
@@ -255,16 +254,16 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 		return;
 	}
 
-	#if EFI_PROD_CODE
-		int logFileIndex = incLogFileName();
-		if (!createLogFile(logFileIndex)) {
-			return;
-		}
-	#endif // EFI_PROD_CODE
+#if EFI_PROD_CODE
+	int logFileIndex = incLogFileName();
+	if (!createLogFile(logFileIndex)) {
+		return;
+	}
+#endif // EFI_PROD_CODE
 
-	#if EFI_TUNER_STUDIO
-		engine->outputChannels.sd_logging_internal = true;
-	#endif
+#if EFI_TUNER_STUDIO
+	engine->outputChannels.sd_logging_internal = true;
+#endif
 
 	if (engineConfiguration->sdTriggerLog) {
 		sdTriggerLogger();

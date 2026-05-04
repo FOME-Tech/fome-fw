@@ -3,12 +3,12 @@
 #if BOARD_TLE9104_COUNT > 0
 
 struct tle9104_config {
-	SPIDriver		*spi_bus;
-	SPIConfig	spi_config;
+	SPIDriver* spi_bus;
+	SPIConfig spi_config;
 
 	struct {
-		ioportid_t		port;
-		uint_fast8_t	pad;
+		ioportid_t port;
+		uint_fast8_t pad;
 	} direct_io[4];
 
 	Gpio resn;

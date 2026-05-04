@@ -14,8 +14,9 @@
 #include "trigger_emulator_algo.h"
 
 void initEngineEmulator() {
-	if (hasFirmwareError())
+	if (hasFirmwareError()) {
 		return;
+	}
 
 #if EFI_EMULATE_POSITION_SENSORS
 	initTriggerEmulator();

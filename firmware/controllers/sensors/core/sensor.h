@@ -70,7 +70,7 @@ public:
 	/*
 	 * Static helper for sensor lookup
 	 */
-	static const Sensor *getSensorOfType(SensorType type);
+	static const Sensor* getSensorOfType(SensorType type);
 
 	/*
 	 * Get a reading from the specified sensor.
@@ -104,7 +104,6 @@ public:
 	 */
 	static void setMockValue(SensorType type, float value, bool mockRedundant = false);
 
-
 	static void setInvalidMockValue(SensorType type);
 
 	/*
@@ -118,7 +117,7 @@ public:
 	static void resetAllMocks();
 
 	/*
-	 * Inhibit sensor timeouts. Used if you're doing something that will block sensor updates, such as 
+	 * Inhibit sensor timeouts. Used if you're doing something that will block sensor updates, such as
 	 * erasing flash memory (which stalls the CPU on some MCUs)
 	 */
 	static void inhibitTimeouts(bool inhibit);
@@ -127,7 +126,9 @@ public:
 	 * Get a friendly name for the sensor.
 	 * For example, CLT, IAT, Throttle Position 2, etc.
 	 */
-	const char* getSensorName() const { return getSensorName(m_type); }
+	const char* getSensorName() const {
+		return getSensorName(m_type);
+	}
 	static const char* getSensorName(SensorType type);
 
 	// Retrieve the current reading from the sensor.
@@ -137,7 +138,8 @@ public:
 	// this should be field lookup and simple math.
 	virtual SensorResult get() const = 0;
 
-	// Retrieve whether the sensor is present.  Some sensors may be registered but not present, i.e. if initialization failed.
+	// Retrieve whether the sensor is present.  Some sensors may be registered but not present, i.e. if initialization
+	// failed.
 	virtual bool hasSensor() const {
 		return true;
 	}
@@ -186,7 +188,7 @@ private:
 	/*
 	 * Static helper for sensor lookup
 	 */
-	static SensorRegistryEntry *getEntryForType(SensorType type);
+	static SensorRegistryEntry* getEntryForType(SensorType type);
 };
 
 SensorType findSensorTypeByName(const char* name);

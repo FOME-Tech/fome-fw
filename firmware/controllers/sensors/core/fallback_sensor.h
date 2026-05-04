@@ -7,9 +7,7 @@ public:
 	FallbackSensor(SensorType outputType, SensorType primarySensor, SensorType fallbackSensor)
 		: Sensor(outputType)
 		, m_primary(primarySensor)
-		, m_fallback(fallbackSensor)
-	{
-	}
+		, m_fallback(fallbackSensor) {}
 
 	SensorResult get() const override {
 		auto primary = Sensor::get(m_primary);

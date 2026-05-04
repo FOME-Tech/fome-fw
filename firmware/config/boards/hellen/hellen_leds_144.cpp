@@ -1,9 +1,9 @@
 Gpio getCommsLedPin() {
-	return H144_LED3;  // blue
+	return H144_LED3; // blue
 }
 
 Gpio getRunningLedPin() {
-	return H144_LED2;  // green
+	return H144_LED2; // green
 }
 
 Gpio getWarningLedPin() {

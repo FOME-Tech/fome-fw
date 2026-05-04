@@ -9,11 +9,10 @@ public:
 	EngineTestHelper eth;
 	TurbochargerSpeedConverter dut;
 
-	TurbochargerSpeedConverterTest() : eth(ENGINE_TEST_HELPER) {
-	}
+	TurbochargerSpeedConverterTest()
+		: eth(ENGINE_TEST_HELPER) {}
 
-	void SetUp() override {
-	}
+	void SetUp() override {}
 
 	void SetCoef(float new_coef) {
 		engineConfiguration->turboSpeedSensorMultiplier = new_coef;
@@ -23,8 +22,7 @@ public:
 		return (speed / coef) / 60;
 	}
 
-	void TestForSpeedWithCoef(float expectedSpeed, float coef)
-	{
+	void TestForSpeedWithCoef(float expectedSpeed, float coef) {
 		SetCoef(coef);
 		auto inputFreq = GetFrequencyBySpeedAndCoef(expectedSpeed, coef);
 		auto result = dut.convert(inputFreq);
@@ -37,7 +35,7 @@ public:
  *  Converter must return valid and expected result for setted coef
  */
 TEST_F(TurbochargerSpeedConverterTest, returnExpectedResultForSettedCoef) {
-	
+
 	TestForSpeedWithCoef(0.0f, 0.5f);
 	TestForSpeedWithCoef(0.5f, 0.5f);
 	TestForSpeedWithCoef(10.0f, 0.5f);
@@ -50,7 +48,7 @@ TEST_F(TurbochargerSpeedConverterTest, returnExpectedResultForSettedCoef) {
  *  Converter must always return strong float zero if coef == 0.0f
  */
 TEST_F(TurbochargerSpeedConverterTest, zeroCoefReturnsZeroSpeedOnAnyInput) {
-	
+
 	SetCoef(0.0f);
 
 	{

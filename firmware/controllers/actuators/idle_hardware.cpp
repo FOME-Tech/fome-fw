@@ -3,7 +3,7 @@
  * @brief   Idle Air Control valve hardware
  *
  * @date November 3, 2020
- * 
+ *
  * This is just the hardware interface - deciding where to put the valve happens in idle_thread.cpp
  */
 
@@ -15,7 +15,7 @@
 #include "electronic_throttle.h"
 
 #include "dc_motors.h"
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 #include "stepper.h"
 /* Storing two following structs in CCM memory cause HardFault (at least on F4)
  * This need deep debuging. Until it is moved out of CMM. */
@@ -38,14 +38,10 @@ void applyIACposition(percent_t position) {
 	setEtbIdlePosition(position);
 #endif // EFI_ELECTRONIC_THROTTLE_BODY
 
-#if EFI_UNIT_TEST
-	if (false) {
-#endif // EFI_UNIT_TEST
-
-#if ! EFI_UNIT_TEST
 	if (engineConfiguration->useStepperIdle) {
+#if !EFI_UNIT_TEST
 		iacMotor.setTargetPosition(duty * engineConfiguration->idleStepperTotalSteps);
-#endif /* EFI_UNIT_TEST */
+#endif
 	} else {
 		// if not spinning or running a bench test, turn off the idle valve(s) to be quieter and save power
 #if EFI_SHAFT_POSITION_INPUT
@@ -74,18 +70,12 @@ void applyIACposition(percent_t position) {
 #if !EFI_UNIT_TEST
 
 bool isIdleHardwareRestartNeeded() {
-	return  isConfigurationChanged(stepperEnablePin) ||
-			isConfigurationChanged(stepperEnablePinMode) ||
-			isConfigurationChanged(idle.stepperStepPin) ||
-			isConfigurationChanged(idle.solenoidFrequency) ||
-			isConfigurationChanged(useStepperIdle) ||
-			isConfigurationChanged(idle.solenoidPin) ||
-			isConfigurationChanged(secondSolenoidPin) ||
-			isConfigurationChanged(useRawOutputToDriveIdleStepper) ||
-			isConfigurationChanged(stepper_raw_output[0])  ||
-			isConfigurationChanged(stepper_raw_output[1])  ||
-			isConfigurationChanged(stepper_raw_output[2])  ||
-			isConfigurationChanged(stepper_raw_output[3]);
+	return isConfigurationChanged(stepperEnablePin) || isConfigurationChanged(stepperEnablePinMode) ||
+		   isConfigurationChanged(idle.stepperStepPin) || isConfigurationChanged(idle.solenoidFrequency) ||
+		   isConfigurationChanged(useStepperIdle) || isConfigurationChanged(idle.solenoidPin) ||
+		   isConfigurationChanged(secondSolenoidPin) || isConfigurationChanged(useRawOutputToDriveIdleStepper) ||
+		   isConfigurationChanged(stepper_raw_output[0]) || isConfigurationChanged(stepper_raw_output[1]) ||
+		   isConfigurationChanged(stepper_raw_output[2]) || isConfigurationChanged(stepper_raw_output[3]);
 }
 
 bool isIdleMotorBusy() {
@@ -101,40 +91,33 @@ void initIdleHardware() {
 		StepperHw* hw;
 
 		if (engineConfiguration->useRawOutputToDriveIdleStepper) {
-			auto motorA = initDcMotor(engineConfiguration->stepper_raw_output[0],
-				engineConfiguration->stepper_raw_output[1], ETB_COUNT + 0);
-			auto motorB = initDcMotor(engineConfiguration->stepper_raw_output[2],
-				engineConfiguration->stepper_raw_output[3], ETB_COUNT + 1);
+			auto motorA = initDcMotor(
+					engineConfiguration->stepper_raw_output[0],
+					engineConfiguration->stepper_raw_output[1],
+					ETB_COUNT + 0);
+			auto motorB = initDcMotor(
+					engineConfiguration->stepper_raw_output[2],
+					engineConfiguration->stepper_raw_output[3],
+					ETB_COUNT + 1);
 
-			iacHbridgeHw.initialize(
-				motorA,
-				motorB,
-				engineConfiguration->idleStepperReactionTime
-			);
+			iacHbridgeHw.initialize(motorA, motorB, engineConfiguration->idleStepperReactionTime);
 
 			hw = &iacHbridgeHw;
 		} else if (engineConfiguration->useHbridgesToDriveIdleStepper) {
-			auto motorA = initDcMotor(engineConfiguration->stepperDcIo[0],
-				ETB_COUNT + 0, /*useTwoWires*/ true);
-			auto motorB = initDcMotor(engineConfiguration->stepperDcIo[1],
-				ETB_COUNT + 1, /*useTwoWires*/ true);
+			auto motorA = initDcMotor(engineConfiguration->stepperDcIo[0], ETB_COUNT + 0, /*useTwoWires*/ true);
+			auto motorB = initDcMotor(engineConfiguration->stepperDcIo[1], ETB_COUNT + 1, /*useTwoWires*/ true);
 
-			iacHbridgeHw.initialize(
-				motorA,
-				motorB,
-				engineConfiguration->idleStepperReactionTime
-			);
+			iacHbridgeHw.initialize(motorA, motorB, engineConfiguration->idleStepperReactionTime);
 
 			hw = &iacHbridgeHw;
 		} else {
 			iacStepperHw.initialize(
-				engineConfiguration->idle.stepperStepPin,
-				engineConfiguration->idle.stepperDirectionPin,
-				engineConfiguration->stepperDirectionPinMode,
-				engineConfiguration->idleStepperReactionTime,
-				engineConfiguration->stepperEnablePin,
-				engineConfiguration->stepperEnablePinMode
-			);
+					engineConfiguration->idle.stepperStepPin,
+					engineConfiguration->idle.stepperDirectionPin,
+					engineConfiguration->stepperDirectionPinMode,
+					engineConfiguration->idleStepperReactionTime,
+					engineConfiguration->stepperEnablePin,
+					engineConfiguration->stepperEnablePinMode);
 
 			hw = &iacStepperHw;
 		}
@@ -147,9 +130,12 @@ void initIdleHardware() {
 		 * Start PWM for idleValvePin
 		 */
 		// todo: even for double-solenoid mode we can probably use same single SimplePWM
-		startSimplePwm(&idleSolenoidOpen, "Idle Valve Open",
-			&enginePins.idleSolenoidPin,
-			engineConfiguration->idle.solenoidFrequency, PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
+		startSimplePwm(
+				&idleSolenoidOpen,
+				"Idle Valve Open",
+				&enginePins.idleSolenoidPin,
+				engineConfiguration->idle.solenoidFrequency,
+				PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
 
 		if (engineConfiguration->isDoubleSolenoidIdle) {
 			if (!isBrainPinValid(engineConfiguration->secondSolenoidPin)) {
@@ -157,9 +143,12 @@ void initIdleHardware() {
 				return;
 			}
 
-			startSimplePwm(&idleSolenoidClose, "Idle Valve Close",
-				&enginePins.secondIdleSolenoidPin,
-				engineConfiguration->idle.solenoidFrequency, PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
+			startSimplePwm(
+					&idleSolenoidClose,
+					"Idle Valve Close",
+					&enginePins.secondIdleSolenoidPin,
+					engineConfiguration->idle.solenoidFrequency,
+					PERCENT_TO_DUTY(engineConfiguration->manIdlePosition));
 		}
 	}
 }

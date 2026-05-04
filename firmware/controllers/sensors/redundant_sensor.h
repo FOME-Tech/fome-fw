@@ -4,11 +4,7 @@
 
 class RedundantSensor final : public Sensor {
 public:
-	RedundantSensor(
-		SensorType outputType,
-		SensorType firstSensor,
-		SensorType secondSensor
-	);
+	RedundantSensor(SensorType outputType, SensorType firstSensor, SensorType secondSensor);
 
 	void configure(float maxDifference, bool ignoreSecondSensor, float secondaryMaximum = 100);
 

@@ -14,8 +14,6 @@ typedef enum {
 } ts_response_format_e;
 
 class TunerStudioBase {
-public:
-
 protected:
 	virtual void cmdOutputChannels(TsChannelBase* tsChannel, uint16_t offset, uint16_t count) = 0;
 };
@@ -30,10 +28,9 @@ public:
 	 * this command is part of protocol initialization
 	 */
 	void handleQueryCommand(TsChannelBase* tsChannel, ts_response_format_e mode);
-	void handleExecuteCommand(TsChannelBase* tsChannel, char *data, int incomingPacketSize);
-	void handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count,
-			void *content);
-	void handleCrc32Check(TsChannelBase *tsChannel, uint16_t offset, uint16_t count);
+	void handleExecuteCommand(TsChannelBase* tsChannel, char* data, int incomingPacketSize);
+	void handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count, void* content);
+	void handleCrc32Check(TsChannelBase* tsChannel, uint16_t offset, uint16_t count);
 	void handlePageReadCommand(TsChannelBase* tsChannel, uint16_t offset, uint16_t count);
 
 private:

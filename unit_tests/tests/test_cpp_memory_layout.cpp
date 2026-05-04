@@ -13,29 +13,27 @@ struct TestParent {
 	float field1 = 333.33;
 };
 
-class TestPlainChild: public TestParent {
+class TestPlainChild : public TestParent {
 public:
 	float getSum();
 };
 
-class TestPlainChildExtraFields: public TestParent {
+class TestPlainChildExtraFields : public TestParent {
 public:
 	float field3 = 35555;
 	float field4 = 45555;
 };
 
-
 float TestPlainChild::getSum() {
 	return field0 + field1;
 }
 
-class TestChildWithVirtual: public TestParent {
+class TestChildWithVirtual : public TestParent {
 public:
 	virtual float getSumVirtual() {
 		return field0 + field1;
 	}
 };
-
 
 TEST(CppMemoryLayout, PlainStruct) {
 	TestPlainChild c;
@@ -68,18 +66,15 @@ TEST(CppMemoryLayout, VirtualStruct) {
 
 	ASSERT_EQ(sizeof(c), sizeof(TestParent) + MAGIC_VTABLE_SIZE);
 
-
 	int destimationInt = 1;
 	memcpy(&destimationInt, &c, 4);
 	ASSERT_NE(540, destimationInt);
 
 	// static_cast is smart to skip the vtable, we like static_cast
-	TestParent *parent = static_cast<TestParent*>(&c);
+	TestParent* parent = static_cast<TestParent*>(&c);
 	ASSERT_EQ((uintptr_t)&c.field0, (uintptr_t)parent);
 
 	ASSERT_EQ(MAGIC_VTABLE_SIZE, (uintptr_t)&c.field0 - (uintptr_t)&c);
-
-
 }
 
 TEST(CppMemoryLayout, PlainExtraFieldsStruct) {

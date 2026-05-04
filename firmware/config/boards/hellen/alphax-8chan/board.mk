@@ -15,6 +15,5 @@ DDEFS += -DADC_MUX_PIN=Gpio::B3
 
 include $(BOARDS_DIR)/hellen/hellen-common144.mk
 
-DDEFS += $(PRIMARY_COMMUNICATION_PORT_USART2)
 
 SHORT_BOARD_NAME = alphax-8chan

@@ -17,7 +17,7 @@
 #include "tunerstudio.h"
 #include "gitversion.h"
 
-#if ! EFI_UNIT_TEST
+#if !EFI_UNIT_TEST
 #include "status_loop.h"
 #endif
 
@@ -106,17 +106,22 @@ void EngineState::periodicFastCallback() {
 	if (engineConfiguration->postCrankingFuelUseTable) {
 		float postCrankingCorr = interpolate3d(
 				config->postCrankingEnrichTable,
-				config->postCrankingEnrichTempBins, Sensor::getOrZero(SensorType::Clt),
-				config->postCrankingEnrichRuntimeBins, engine->fuelComputer.running.timeSinceCrankingInSecs
-			);
+				config->postCrankingEnrichTempBins,
+				Sensor::getOrZero(SensorType::Clt),
+				config->postCrankingEnrichRuntimeBins,
+				engine->fuelComputer.running.timeSinceCrankingInSecs);
 
 		engine->fuelComputer.running.postCrankingFuelCorrection = clampF(1, postCrankingCorr, 5);
 	} else {
 		// for compatibility reasons, apply only if the factor is greater than unity (only allow adding fuel)
 		if (engineConfiguration->postCrankingFactor > 1.0f) {
 			// use interpolation for correction taper
-			engine->fuelComputer.running.postCrankingFuelCorrection = interpolateClamped(0.0f, engineConfiguration->postCrankingFactor,
-				engineConfiguration->postCrankingDurationSec, 1.0f, engine->fuelComputer.running.timeSinceCrankingInSecs);
+			engine->fuelComputer.running.postCrankingFuelCorrection = interpolateClamped(
+					0.0f,
+					engineConfiguration->postCrankingFactor,
+					engineConfiguration->postCrankingDurationSec,
+					1.0f,
+					engine->fuelComputer.running.timeSinceCrankingInSecs);
 		} else {
 			engine->fuelComputer.running.postCrankingFuelCorrection = 1.0f;
 		}
@@ -127,22 +132,24 @@ void EngineState::periodicFastCallback() {
 	auto tps = Sensor::get(SensorType::Tps1);
 	updateTChargeK(rpm, tps.value_or(0));
 
-	float cycleFuelMass = getCycleInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
+	float cycleFuelMass =
+			getCycleInjectionMass(rpm, isCranking) * engine->engineState.lua.fuelMult + engine->engineState.lua.fuelAdd;
 	auto clResult = fuelClosedLoopCorrection();
 
 	{
 		float injectionFuelMass = cycleFuelMass * getInjectionModeDurationMultiplier(getCurrentInjectionMode());
-		
+
 		injectionStage2Fraction = getStage2InjectionFraction(rpm, engine->fuelComputer.afrTableYAxis);
 		float stage2InjectionMass = injectionFuelMass * injectionStage2Fraction;
 		float stage1InjectionMass = injectionFuelMass - stage2InjectionMass;
 
 		// Store the pre-wall wetting injection duration for scheduling purposes only, not the actual injection duration
-		engine->engineState.injectionDuration = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
+		engine->engineState.injectionDuration =
+				engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1InjectionMass);
 		engine->engineState.injectionDurationStage2 =
-			engineConfiguration->enableStagedInjection
-			? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
-			: 0;
+				engineConfiguration->enableStagedInjection
+						? engine->module<InjectorModelSecondary>()->getInjectionDuration(stage2InjectionMass)
+						: 0;
 	}
 
 	float fuelLoad = getFuelingLoad();
@@ -150,11 +157,14 @@ void EngineState::periodicFastCallback() {
 	engine->lambdaMonitor.update(rpm, fuelLoad);
 
 	engine->ignitionState.updateAdvanceCorrections(ignitionLoad);
-	float untrimmedAdvance = engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking)
-					* engine->ignitionState.luaTimingMult + engine->ignitionState.luaTimingAdd;
+	float untrimmedAdvance =
+			engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking) * engine->ignitionState.luaTimingMult +
+			engine->ignitionState.luaTimingAdd;
 
 	// that's weird logic. also seems broken for two stroke?
-	engine->outputChannels.ignitionAdvance = (float)(untrimmedAdvance > FOUR_STROKE_CYCLE_DURATION / 2 ? untrimmedAdvance - FOUR_STROKE_CYCLE_DURATION : untrimmedAdvance);
+	engine->outputChannels.ignitionAdvance =
+			(float)(untrimmedAdvance > FOUR_STROKE_CYCLE_DURATION / 2 ? untrimmedAdvance - FOUR_STROKE_CYCLE_DURATION
+																	  : untrimmedAdvance);
 
 	// compute per-bank fueling
 	for (size_t i = 0; i < STFT_BANK_COUNT; i++) {
@@ -174,17 +184,22 @@ void EngineState::periodicFastCallback() {
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
-	trailingSparkAngle = interpolate3d(config->trailingIgnitionTable, config->trailingIgnitionLoadBins, fuelLoad, config->trailingIgnitionRpmBins, rpm);
+	trailingSparkAngle = interpolate3d(
+			config->trailingIgnitionTable,
+			config->trailingIgnitionLoadBins,
+			fuelLoad,
+			config->trailingIgnitionRpmBins,
+			rpm);
 
 	multispark.count = getMultiSparkCount(rpm);
 
 #if EFI_LAUNCH_CONTROL
 	engine->launchController.update();
-#endif //EFI_LAUNCH_CONTROL
+#endif // EFI_LAUNCH_CONTROL
 
 #if EFI_ANTILAG_SYSTEM
 	engine->antilagController.update();
-#endif //EFI_ANTILAG_SYSTEM
+#endif // EFI_ANTILAG_SYSTEM
 #endif // EFI_ENGINE_CONTROL
 }
 
@@ -195,7 +210,13 @@ void EngineState::updateTChargeK(float rpm, float tps) {
 		// control the rate of change or just fill with the initial value
 		efitick_t nowNt = getTimeNowNt();
 		float secsPassed = timeSinceLastTChargeK.getElapsedSeconds(nowNt);
-		sd.tCharge = (sd.tChargeK == 0) ? newTCharge : limitRateOfChange(newTCharge, sd.tCharge, engineConfiguration->tChargeAirIncrLimit, engineConfiguration->tChargeAirDecrLimit, secsPassed);
+		sd.tCharge = (sd.tChargeK == 0) ? newTCharge
+										: limitRateOfChange(
+												  newTCharge,
+												  sd.tCharge,
+												  engineConfiguration->tChargeAirIncrLimit,
+												  engineConfiguration->tChargeAirDecrLimit,
+												  secsPassed);
 		sd.tChargeK = convertCelsiusToKelvin(sd.tCharge);
 		timeSinceLastTChargeK.reset(nowNt);
 	}
@@ -236,62 +257,58 @@ vvt_mode_e VvtTriggerConfiguration::getVvtMode() const {
 bool VvtTriggerConfiguration::needsTriggerDecoder() const {
 	auto mode = getVvtMode();
 
-	return mode != VVT_INACTIVE
-			&& mode != VVT_TOYOTA_3_TOOTH
-			&& mode != VVT_HONDA_K_INTAKE
-			&& mode != VVT_MAP_V_TWIN
-			&& mode != VVT_SINGLE_TOOTH;
+	return mode != VVT_INACTIVE && mode != VVT_TOYOTA_3_TOOTH && mode != VVT_HONDA_K_INTAKE && mode != VVT_MAP_V_TWIN &&
+		   mode != VVT_SINGLE_TOOTH;
 }
 
 // VVT decoding uses "normal" trigger shapes for decoding but is configured separately.
 // This maps from vvt_mode_e -> trigger_type_e (for supported shapes)
 static trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 	switch (vvtMode) {
-	case VVT_INACTIVE:
-		return trigger_type_e::TT_ONE;
-	case VVT_MIATA_NB:
-		return trigger_type_e::TT_VVT_MIATA_NB;
-	case VVT_MIATA_NA:
-		return trigger_type_e::TT_VVT_MIATA_NA;
-	case VVT_BOSCH_QUICK_START:
-		return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
-	case VVT_HONDA_K_EXHAUST:
-		return trigger_type_e::TT_HONDA_K_CAM_4_1;
-	case VVT_FORD_ST170:
-		return trigger_type_e::TT_FORD_ST170;
-	case VVT_BARRA_3_PLUS_1:
-		return trigger_type_e::TT_VVT_BARRA_3_PLUS_1;
-	case VVT_MAZDA_SKYACTIV:
-		return trigger_type_e::TT_VVT_MAZDA_SKYACTIV;
-	case VVT_MAZDA_L:
-		return trigger_type_e::TT_VVT_MAZDA_L;
-	case VVT_NISSAN_VQ:
-		return trigger_type_e::TT_VVT_NISSAN_VQ35;
-	case VVT_TOYOTA_4_1:
-		return trigger_type_e::TT_VVT_TOYOTA_4_1;
-	case VVT_MITSUBISHI_3A92:
-		return trigger_type_e::TT_VVT_MITSUBISHI_3A92;
-	case VVT_MITSUBISHI_6G75:
-	case VVT_NISSAN_MR:
-		return trigger_type_e::TT_NISSAN_MR18_CAM_VVT;
-	case VVT_MITSUBISHI_4G9x:
-		return trigger_type_e::TT_MITSU_4G9x_CAM;
-	case VVT_MITSUBISHI_4G63:
-		return trigger_type_e::TT_MITSU_4G63_CAM;
-	default:
-		firmwareError("getVvtTriggerType for %s", getVvt_mode_e(vvtMode));
-		return trigger_type_e::TT_ONE; // we have to return something for the sake of -Werror=return-type
+		case VVT_INACTIVE:
+			return trigger_type_e::TT_ONE;
+		case VVT_MIATA_NB:
+			return trigger_type_e::TT_VVT_MIATA_NB;
+		case VVT_MIATA_NA:
+			return trigger_type_e::TT_VVT_MIATA_NA;
+		case VVT_BOSCH_QUICK_START:
+			return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
+		case VVT_HONDA_K_EXHAUST:
+			return trigger_type_e::TT_HONDA_K_CAM_4_1;
+		case VVT_FORD_ST170:
+			return trigger_type_e::TT_FORD_ST170;
+		case VVT_BARRA_3_PLUS_1:
+			return trigger_type_e::TT_VVT_BARRA_3_PLUS_1;
+		case VVT_MAZDA_SKYACTIV:
+			return trigger_type_e::TT_VVT_MAZDA_SKYACTIV;
+		case VVT_MAZDA_L:
+			return trigger_type_e::TT_VVT_MAZDA_L;
+		case VVT_NISSAN_VQ:
+			return trigger_type_e::TT_VVT_NISSAN_VQ35;
+		case VVT_TOYOTA_4_1:
+			return trigger_type_e::TT_VVT_TOYOTA_4_1;
+		case VVT_MITSUBISHI_3A92:
+			return trigger_type_e::TT_VVT_MITSUBISHI_3A92;
+		case VVT_MITSUBISHI_6G75:
+		case VVT_NISSAN_MR:
+			return trigger_type_e::TT_NISSAN_MR18_CAM_VVT;
+		case VVT_MITSUBISHI_4G9x:
+			return trigger_type_e::TT_MITSU_4G9x_CAM;
+		case VVT_MITSUBISHI_4G63:
+			return trigger_type_e::TT_MITSU_4G63_CAM;
+		default:
+			firmwareError("getVvtTriggerType for %s", getVvt_mode_e(vvtMode));
+			return trigger_type_e::TT_ONE; // we have to return something for the sake of -Werror=return-type
 	}
 }
 
-
 trigger_config_s VvtTriggerConfiguration::getType() const {
 	if (!needsTriggerDecoder()) {
-		return { trigger_type_e::TT_UNUSED, 0, 0 };
+		return {trigger_type_e::TT_UNUSED, 0, 0};
 	}
 
 	// Convert from VVT type to trigger_config_s
-	return { getVvtTriggerType(getVvtMode()), 0, 0 };
+	return {getVvtTriggerType(getVvtMode()), 0, 0};
 }
 
 bool VvtTriggerConfiguration::isVerboseTriggerSynchDetails() const {

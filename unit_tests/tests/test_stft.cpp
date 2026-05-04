@@ -19,8 +19,7 @@ TEST(ClosedLoopCell, TestDeadband) {
 	StrictMock<MockClCell> cl;
 
 	// Error is more than deadtime, so nothing else should be called
-	EXPECT_CALL(cl, getLambdaError())
-		.WillOnce(Return(0.05f));
+	EXPECT_CALL(cl, getLambdaError()).WillOnce(Return(0.05f));
 
 	cl.update(0.1f, true);
 
@@ -31,14 +30,10 @@ TEST(ClosedLoopCell, TestDeadband) {
 TEST(ClosedLoopFuelCell, AdjustRate) {
 	StrictMock<MockClCell> cl;
 
-	EXPECT_CALL(cl, getLambdaError())
-		.WillOnce(Return(0.1f));
-	EXPECT_CALL(cl, getMinAdjustment())
-		.WillOnce(Return(-0.2f));
-	EXPECT_CALL(cl, getMaxAdjustment())
-		.WillOnce(Return(0.2f));
-	EXPECT_CALL(cl, getIntegratorGain())
-		.WillOnce(Return(2.0f));
+	EXPECT_CALL(cl, getLambdaError()).WillOnce(Return(0.1f));
+	EXPECT_CALL(cl, getMinAdjustment()).WillOnce(Return(-0.2f));
+	EXPECT_CALL(cl, getMaxAdjustment()).WillOnce(Return(0.2f));
+	EXPECT_CALL(cl, getIntegratorGain()).WillOnce(Return(2.0f));
 
 	cl.update(0.0f, false);
 
@@ -79,8 +74,8 @@ TEST(ClosedLoopFuel, CellSelection) {
 TEST(ClosedLoopFuel, afrLimits) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->stft.minAfr = 10;  // 10.0 AFR
-	engineConfiguration->stft.maxAfr = 18;  // 18.0 AFR
+	engineConfiguration->stft.minAfr = 10; // 10.0 AFR
+	engineConfiguration->stft.maxAfr = 18; // 18.0 AFR
 
 	Sensor::setMockValue(SensorType::Lambda1, 0.1f);
 	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));

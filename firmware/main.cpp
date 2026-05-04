@@ -32,4 +32,4 @@ int main() {
 }
 
 // Weak linked default implementation (not necessarily required for all boards)
-__attribute__((weak)) void preHalInit() { }
+__attribute__((weak)) void preHalInit() {}

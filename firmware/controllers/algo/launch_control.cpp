@@ -21,11 +21,11 @@ bool LaunchControlBase::isInsideSwitchCondition() {
 	isSwitchActivated = engineConfiguration->launchActivationMode == SWITCH_INPUT_LAUNCH;
 	isClutchActivated = engineConfiguration->launchActivationMode == CLUTCH_INPUT_LAUNCH;
 
-
 	if (isSwitchActivated) {
 #if !EFI_SIMULATOR
 		if (isBrainPinValid(engineConfiguration->launchActivatePin)) {
-			launchActivatePinState = engineConfiguration->launchActivateInverted ^ efiReadPin(engineConfiguration->launchActivatePin);
+			launchActivatePinState =
+					engineConfiguration->launchActivateInverted ^ efiReadPin(engineConfiguration->launchActivatePin);
 		}
 #endif // EFI_PROD_CODE
 		return launchActivatePinState;
@@ -46,11 +46,12 @@ bool LaunchControlBase::isInsideSwitchCondition() {
  * This condition would only return true based on speed if DisablebySpeed is true
  * The condition logic is written in that way, that if we do not use disable by speed
  * then we have to return true, and trust that we would disable by other condition!
- */ 
+ */
 bool LaunchControlBase::isInsideSpeedCondition() const {
 	int speed = Sensor::getOrZero(SensorType::VehicleSpeed);
-	
-	return (engineConfiguration->launchSpeedThreshold > speed) || (!(engineConfiguration->launchActivationMode ==  ALWAYS_ACTIVE_LAUNCH));
+
+	return (engineConfiguration->launchSpeedThreshold > speed) ||
+		   (!(engineConfiguration->launchActivationMode == ALWAYS_ACTIVE_LAUNCH));
 }
 
 /**
@@ -64,7 +65,8 @@ bool LaunchControlBase::isInsideTpsCondition() const {
 		return false;
 	}
 
-    // todo: should this be 'launchTpsThreshold <= tps.Value' so that nicely calibrated TPS of zero does not prevent launch?
+	// todo: should this be 'launchTpsThreshold <= tps.Value' so that nicely calibrated TPS of zero does not prevent
+	// launch?
 	return engineConfiguration->launchTpsThreshold < tps.Value;
 }
 
@@ -92,7 +94,9 @@ LaunchControlBase::LaunchControlBase() {
 }
 
 bool LaunchControlBase::getFuelCoefficient() const {
-    return 1 + (isLaunchCondition && engineConfiguration->launchControlEnabled ? engineConfiguration->launchFuelAdderPercent / 100.0 : 0);
+	return 1 + (isLaunchCondition && engineConfiguration->launchControlEnabled
+						? engineConfiguration->launchFuelAdderPercent / 100.0
+						: 0);
 }
 
 void LaunchControlBase::update() {
@@ -103,13 +107,14 @@ void LaunchControlBase::update() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	combinedConditions = isLaunchConditionMet(rpm);
 
-	//and still recalculate in case user changed the values
-	retardThresholdRpm = engineConfiguration->launchRpm
-	/*
-	we never had UI for 'launchAdvanceRpmRange' so it was always zero. are we supposed to forget about this dead line
-	or it is supposed to be referencing 'launchTimingRpmRange'?
-	         + (engineConfiguration->enableLaunchRetard ? engineConfiguration->launchAdvanceRpmRange : 0)
-*/
+	// and still recalculate in case user changed the values
+	retardThresholdRpm =
+			engineConfiguration->launchRpm
+			/*
+			we never had UI for 'launchAdvanceRpmRange' so it was always zero. are we supposed to forget about this dead
+			line or it is supposed to be referencing 'launchTimingRpmRange'?
+					 + (engineConfiguration->enableLaunchRetard ? engineConfiguration->launchAdvanceRpmRange : 0)
+		*/
 			+ engineConfiguration->hardCutRpmRange;
 
 	if (!combinedConditions) {
@@ -140,7 +145,7 @@ void SoftSparkLimiter::setTargetSkipRatio(float targetSkipRatio) {
 
 static tinymt32_t tinymt;
 
-bool SoftSparkLimiter::shouldSkip()  {
+bool SoftSparkLimiter::shouldSkip() {
 	if (m_targetSkipRatio == 0 || wasJustSkipped) {
 		wasJustSkipped = false;
 		return false;
@@ -152,7 +157,7 @@ bool SoftSparkLimiter::shouldSkip()  {
 }
 
 void initLaunchControl() {
-    tinymt32_init(&tinymt, 1345135);
+	tinymt32_init(&tinymt, 1345135);
 }
 
 #endif /* EFI_LAUNCH_CONTROL */

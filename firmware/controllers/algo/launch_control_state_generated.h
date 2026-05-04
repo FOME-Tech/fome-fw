@@ -83,4 +83,3 @@ struct launch_control_state_s {
 };
 static_assert(sizeof(launch_control_state_s) == 8);
 static_assert(offsetof(launch_control_state_s, retardThresholdRpm) == 4);
-

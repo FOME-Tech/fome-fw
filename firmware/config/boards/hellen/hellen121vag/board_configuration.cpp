@@ -24,9 +24,9 @@ static void setInjectorPins() {
 
 static void setIgnitionPins() {
 	engineConfiguration->ignitionPins[0] = H176_IGN_1; // 102 - IGN_1
-	engineConfiguration->ignitionPins[1] = Gpio::E5 ; // 7 - IGN_2
-	engineConfiguration->ignitionPins[2] = Gpio::E4; // 111 - IGN_3
-	engineConfiguration->ignitionPins[3] = Gpio::E3; // 94 - IGN_4
+	engineConfiguration->ignitionPins[1] = Gpio::E5;   // 7 - IGN_2
+	engineConfiguration->ignitionPins[2] = Gpio::E4;   // 111 - IGN_3
+	engineConfiguration->ignitionPins[3] = Gpio::E3;   // 94 - IGN_4
 }
 
 static void setupVbatt() {
@@ -50,12 +50,12 @@ static void setupDefaultSensorInputs() {
 	// Direct hall-only cam input
 	engineConfiguration->camInputs[0] = Gpio::A6; // 86 - CAM1
 
-    // 92 - TPS 1
+	// 92 - TPS 1
 	setTPS1Inputs(H144_IN_TPS, H144_IN_AUX1);
 
-    // 34 In PPS1
-    // 35 In PPS2
-    setPPSInputs(H144_IN_PPS, H144_IN_AUX2);
+	// 34 In PPS1
+	// 35 In PPS2
+	setPPSInputs(H144_IN_PPS, H144_IN_AUX2);
 
 	setPPSCalibration(0.4, 2, 0.7, 4.1);
 
@@ -76,7 +76,7 @@ void setBoardConfigOverrides() {
 
 	setHellenSdCardSpi3();
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	setHellenCan();
 }
@@ -94,7 +94,7 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->etbIo[0].directionPin1 = Gpio::C6; // out_pwm2
 	engineConfiguration->etbIo[0].directionPin2 = Gpio::C7; // out_pwm3
-	engineConfiguration->etbIo[0].controlPin = Gpio::A8; // ETB_EN out_io12
+	engineConfiguration->etbIo[0].controlPin = Gpio::A8;	// ETB_EN out_io12
 	engineConfiguration->etb_use_two_wires = true;
 
 	setBoschVAGETB();
@@ -115,13 +115,13 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; // 47 - CEL
 	engineConfiguration->tachOutputPin = H144_OUT_PWM7;
 
-// earlier revisions?	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
-    engineConfiguration->idle.solenoidPin = H144_OUT_IO4;
+	// earlier revisions?	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
+	engineConfiguration->idle.solenoidPin = H144_OUT_IO4;
 
 	engineConfiguration->fanPin = H144_OUT_PWM8;
 	engineConfiguration->mainRelayPin = H144_OUT_IO1;
 
-//	engineConfiguration->injectorCompensationMode
+	//	engineConfiguration->injectorCompensationMode
 	engineConfiguration->fuelReferencePressure = 300;
 
 	// "required" hardware is done - set some reasonable defaults

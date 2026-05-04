@@ -12,10 +12,20 @@ TEST(logBuffer, writeSmall) {
 
 	dut.writeLine(&line);
 
-	EXPECT_THAT(dut.m_buffer, ElementsAre(
-		't', 'e', 's', 't', '\0',	// this part got copied in
-		0x55, 0x55, 0x55, 0x55, 0x55	// rest of the buffer is untouched
-	));
+	EXPECT_THAT(
+			dut.m_buffer,
+			ElementsAre(
+					't',
+					'e',
+					's',
+					't',
+					'\0', // this part got copied in
+					0x55,
+					0x55,
+					0x55,
+					0x55,
+					0x55 // rest of the buffer is untouched
+					));
 }
 
 TEST(logBuffer, writeOverflow) {
@@ -28,9 +38,5 @@ TEST(logBuffer, writeOverflow) {
 
 	dut.writeLine(&line);
 
-	EXPECT_THAT(dut.m_buffer, ElementsAre(
-		't', 'e', 's', 't',
-		't', 'e', 's', 't',
-		't', 0
-	));
+	EXPECT_THAT(dut.m_buffer, ElementsAre('t', 'e', 's', 't', 't', 'e', 's', 't', 't', 0));
 }

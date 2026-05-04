@@ -45,20 +45,18 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(engineLoad), "invalid el", NAN);
 
 	// compute base ignition angle from main table
-	float advanceAngle = interpolate3d(
-		config->ignitionTable,
-		config->ignitionLoadBins, engineLoad,
-		config->ignitionRpmBins, rpm
-	);
+	float advanceAngle =
+			interpolate3d(config->ignitionTable, config->ignitionLoadBins, engineLoad, config->ignitionRpmBins, rpm);
 
 #if EFI_ANTILAG_SYSTEM
 	if (engine->antilagController.isAntilagCondition) {
 		float throttleIntent = Sensor::getOrZero(SensorType::DriverThrottleIntent);
 		engine->antilagController.timingALSCorrection = interpolate3d(
-			config->ALSTimingRetardTable,
-			config->alsIgnRetardLoadBins, throttleIntent,
-			config->alsIgnRetardrpmBins, rpm
-		);
+				config->ALSTimingRetardTable,
+				config->alsIgnRetardLoadBins,
+				throttleIntent,
+				config->alsIgnRetardrpmBins,
+				rpm);
 		advanceAngle += engine->antilagController.timingALSCorrection;
 	}
 #endif /* EFI_ANTILAG_SYSTEM */
@@ -77,8 +75,7 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 
 	// get advance from the separate table for Idle
 #if EFI_IDLE_CONTROL
-	if (engineConfiguration->useSeparateAdvanceForIdle &&
-		engine->module<IdleController>()->isIdlingOrTaper()) {
+	if (engineConfiguration->useSeparateAdvanceForIdle && engine->module<IdleController>()->isIdlingOrTaper()) {
 		float idleAdvance = interpolate2d(rpm, config->idleAdvanceBins, config->idleAdvance);
 
 		auto tps = Sensor::get(SensorType::DriverThrottleIntent);
@@ -99,7 +96,7 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 			float launchAngle = engineConfiguration->launchTimingRetard;
 			int launchRpm = engineConfiguration->launchRpm;
 			int launchRpmWithTimingRange = launchRpm + engineConfiguration->launchTimingRpmRange;
-			 // interpolate timing from rpm at launch triggered to full retard at launch launchRpm + launchTimingRpmRange
+			// interpolate timing from rpm at launch triggered to full retard at launch launchRpm + launchTimingRpmRange
 			return interpolateClamped(launchRpm, advanceAngle, launchRpmWithTimingRange, launchAngle, rpm);
 		} else {
 			return engineConfiguration->launchTimingRetard;
@@ -113,27 +110,26 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 void IgnitionState::updateAdvanceCorrections(float engineLoad) {
 	if (auto iat = Sensor::get(SensorType::Iat)) {
 		timingIatCorrection = interpolate3d(
-			config->ignitionIatCorrTable,
-			config->ignitionIatCorrLoadBins, engineLoad,
-			config->ignitionIatCorrTempBins, iat.Value
-		);
+				config->ignitionIatCorrTable,
+				config->ignitionIatCorrLoadBins,
+				engineLoad,
+				config->ignitionIatCorrTempBins,
+				iat.Value);
 	} else {
 		timingIatCorrection = 0;
 	}
 
 	if (auto clt = Sensor::get(SensorType::Clt)) {
-		cltTimingCorrection = interpolate2d(
-				clt.Value, config->cltTimingBins, config->cltTimingExtra
-			);
+		cltTimingCorrection = interpolate2d(clt.Value, config->cltTimingBins, config->cltTimingExtra);
 	} else {
 		cltTimingCorrection = 0;
 	}
 
-	#if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
+#if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	float rpmRate = engine->rpmCalculator.getRpmAcceleration();
 	timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm, rpmRate);
-	#endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
+#endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 
 	dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();
 
@@ -146,18 +142,14 @@ void IgnitionState::updateAdvanceCorrections(float engineLoad) {
 angle_t IgnitionState::getAdvanceCorrections(bool isCranking) const {
 	// Allow correction only if set to dynamic
 	// AND we're either not cranking OR allowed to correct in cranking
-	bool allowCorrections = engineConfiguration->timingMode == TM_DYNAMIC
-		&& (!isCranking || engineConfiguration->useAdvanceCorrectionsForCranking);
+	bool allowCorrections = engineConfiguration->timingMode == TM_DYNAMIC &&
+							(!isCranking || engineConfiguration->useAdvanceCorrectionsForCranking);
 
 	if (!allowCorrections) {
 		return 0;
 	}
 
-	float result =
-		  timingIatCorrection
-		+ cltTimingCorrection
-		+ timingPidCorrection
-		- dfcoTimingRetard;
+	float result = timingIatCorrection + cltTimingCorrection + timingPidCorrection - dfcoTimingRetard;
 
 	return std::isnan(result) ? 0 : result;
 }
@@ -178,7 +170,12 @@ static angle_t getCrankingAdvance(float rpm, float engineLoad) {
 		minCrankingRpm = rpm;
 	}
 
-	return interpolateClamped(minCrankingRpm, engineConfiguration->crankingTimingAngle, engineConfiguration->cranking.rpm, crankingToRunningTransitionAngle, rpm);
+	return interpolateClamped(
+			minCrankingRpm,
+			engineConfiguration->crankingTimingAngle,
+			engineConfiguration->cranking.rpm,
+			crankingToRunningTransitionAngle,
+			rpm);
 }
 
 angle_t IgnitionState::getAdvance(float rpm, float engineLoad, bool isCranking) {
@@ -210,17 +207,13 @@ angle_t IgnitionState::getAdvance(float rpm, float engineLoad, bool isCranking) 
 
 angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad) {
 	return interpolate3d(
-		config->ignTrims[cylinderNumber].table,
-		config->ignTrimLoadBins, ignitionLoad,
-		config->ignTrimRpmBins, rpm
-	);
+			config->ignTrims[cylinderNumber].table, config->ignTrimLoadBins, ignitionLoad, config->ignTrimRpmBins, rpm);
 }
 
 size_t getMultiSparkCount(float rpm) {
 	// Compute multispark (if enabled)
-	if (engineConfiguration->multisparkEnable
-		&& rpm <= engineConfiguration->multisparkMaxRpm
-		&& engineConfiguration->multisparkMaxExtraSparkCount > 0) {
+	if (engineConfiguration->multisparkEnable && rpm <= engineConfiguration->multisparkMaxRpm &&
+		engineConfiguration->multisparkMaxExtraSparkCount > 0) {
 		// For zero RPM, disable multispark.  We don't yet know the engine speed, so multispark may not be safe.
 		if (rpm == 0) {
 			return 0;
@@ -268,8 +261,7 @@ floatms_t IgnitionState::getSparkDwell(float rpm, bool isCranking) {
 		dwellVoltageCorrection = interpolate2d(
 				Sensor::getOrZero(SensorType::BatteryVoltage),
 				config->dwellVoltageCorrVoltBins,
-				config->dwellVoltageCorrValues
-		);
+				config->dwellVoltageCorrValues);
 
 		// for compat (table full of zeroes)
 		if (dwellVoltageCorrection < 0.1f) {

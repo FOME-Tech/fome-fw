@@ -22,13 +22,13 @@ static void setInjectorPins() {
 	engineConfiguration->clutchDownPin = Gpio::C4; // Clutch switch input
 	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
 	engineConfiguration->launchActivationMode = CLUTCH_INPUT_LAUNCH;
-	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
+	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; // 1E - Check Engine Light
 }
 
 static void setIgnitionPins() {
-	engineConfiguration->ignitionPins[0] = Gpio::I8; // 3F - IGN_1 (1&4)
-	engineConfiguration->ignitionPins[1] = Gpio::Unassigned ; // Gpio::E4
-	engineConfiguration->ignitionPins[2] = Gpio::E5; // 3I - IGN_2 (2&3)
+	engineConfiguration->ignitionPins[0] = Gpio::I8;		 // 3F - IGN_1 (1&4)
+	engineConfiguration->ignitionPins[1] = Gpio::Unassigned; // Gpio::E4
+	engineConfiguration->ignitionPins[2] = Gpio::E5;		 // 3I - IGN_2 (2&3)
 	engineConfiguration->ignitionPins[3] = Gpio::Unassigned; // Gpio::E3
 }
 
@@ -71,15 +71,15 @@ void setBoardConfigOverrides() {
 
 	setHellenSdCardSpi2();
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	engineConfiguration->canTxPin = H176_CAN_TX;
 	engineConfiguration->canRxPin = H176_CAN_RX;
 
 	engineConfiguration->etb_use_two_wires = true;
-	engineConfiguration->etbIo[0].directionPin1 = Gpio::C7;	// PWM 3
-	engineConfiguration->etbIo[0].directionPin2 = Gpio::C8;	// PWM 4
-	engineConfiguration->etbIo[0].controlPin = Gpio::C6;		// PWM 2
+	engineConfiguration->etbIo[0].directionPin1 = Gpio::C7; // PWM 3
+	engineConfiguration->etbIo[0].directionPin2 = Gpio::C8; // PWM 4
+	engineConfiguration->etbIo[0].controlPin = Gpio::C6;	// PWM 2
 }
 
 /**
@@ -98,11 +98,11 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->enableSoftwareKnock = true;
 
 	// these stm32 pins do not match hellen_meta, is that because hellenNA6 is not using latest MCU version?
-	engineConfiguration->acRelayPin = Gpio::H15; // 1J - AC Relay
-	engineConfiguration->fuelPumpPin = Gpio::G2;	// OUT_IO9
-	engineConfiguration->idle.solenoidPin = Gpio::D14;	// OUT_PWM5
-	engineConfiguration->fanPin = Gpio::D12;	// OUT_PWM8
-	engineConfiguration->mainRelayPin = Gpio::I2;	// OUT_LOW3
+	engineConfiguration->acRelayPin = Gpio::H15;	   // 1J - AC Relay
+	engineConfiguration->fuelPumpPin = Gpio::G2;	   // OUT_IO9
+	engineConfiguration->idle.solenoidPin = Gpio::D14; // OUT_PWM5
+	engineConfiguration->fanPin = Gpio::D12;		   // OUT_PWM8
+	engineConfiguration->mainRelayPin = Gpio::I2;	   // OUT_LOW3
 	engineConfiguration->tachOutputPin = Gpio::I0;
 	engineConfiguration->malfunctionIndicatorPin = Gpio::G9;
 
@@ -115,6 +115,4 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
-
-
 }

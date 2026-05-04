@@ -4,8 +4,13 @@
 
 #include "fuel_math.h"
 
-static const float pressureRatioCorrectionBins[] =   { 0.53125, 0.546875, 0.5625, 0.578125, 0.59375, 0.609375, 0.625, 0.640625, 0.65625, 0.671875, 0.6875, 0.703125, 0.71875, 0.734375, 0.750, 0.765625, 0.78125, 0.796875, 0.8125, 0.828125, 0.84375, 0.859375, 0.875, 0.890625, 0.90625, 0.921875, 0.9375, 0.953125 };
-static const float pressureRatioCorrectionValues[] = {       1,   0.9993, 0.998,  0.995,    0.991,   0.986,    0.979, 0.972,    0.963,   0.953,    0.942,  0.930,    0.916,   0.901,    0.884, 0.866,    0.845,   0.824,    0.800,  0.774,    0.745,   0.714,    0.679, 0.642,    0.600,   0.553,    0.449,  0.449    };
+static const float pressureRatioCorrectionBins[] = {
+		0.53125, 0.546875, 0.5625,	0.578125, 0.59375, 0.609375, 0.625,	  0.640625, 0.65625, 0.671875,
+		0.6875,	 0.703125, 0.71875, 0.734375, 0.750,   0.765625, 0.78125, 0.796875, 0.8125,	 0.828125,
+		0.84375, 0.859375, 0.875,	0.890625, 0.90625, 0.921875, 0.9375,  0.953125};
+static const float pressureRatioCorrectionValues[] = {
+		1,	   0.9993, 0.998, 0.995, 0.991, 0.986, 0.979, 0.972, 0.963, 0.953, 0.942, 0.930, 0.916, 0.901,
+		0.884, 0.866,  0.845, 0.824, 0.800, 0.774, 0.745, 0.714, 0.679, 0.642, 0.600, 0.553, 0.449, 0.449};
 static float pressureRatioFlowCorrection(float pr) {
 	if (pr < 0.531) {
 		return 1.0;
@@ -48,9 +53,7 @@ public:
 	InverseFlowSolver(const ThrottleModelBase* model, float target, float pressureRatio, float p_up, float iat)
 		: m_model(*model)
 		, m_flowCorrection(flowCorrections(pressureRatio, p_up, iat))
-		, m_target(target)
-	{
-	}
+		, m_target(target) {}
 
 private:
 	const ThrottleModelBase& m_model;
@@ -121,9 +124,9 @@ expected<float> ThrottleModelBase::estimateThrottleFlow(float map, float tps) {
 	// or use Baro sensor if no TIP
 	// or use 101.325kPa (std atmosphere) if no Baro
 	// TODO: have a real TIP sensor
-	auto tip = 	Sensor::hasSensor(SensorType::ThrottleInletPressure) ? Sensor::get(SensorType::ThrottleInletPressure) :
-				Sensor::hasSensor(SensorType::BarometricPressure) ? Sensor::get(SensorType::BarometricPressure) :
-				SensorResult(101.325f);
+	auto tip = Sensor::hasSensor(SensorType::ThrottleInletPressure) ? Sensor::get(SensorType::ThrottleInletPressure)
+			 : Sensor::hasSensor(SensorType::BarometricPressure)	? Sensor::get(SensorType::BarometricPressure)
+																	: SensorResult(101.325f);
 
 	if (!tip || !iat) {
 		return unexpected;
@@ -133,7 +136,8 @@ expected<float> ThrottleModelBase::estimateThrottleFlow(float map, float tps) {
 }
 
 void ThrottleModelBase::onSlowCallback() {
-	m_flowEstimate = estimateThrottleFlow(Sensor::getOrZero(SensorType::Map), Sensor::getOrZero(SensorType::Tps1)).value_or(0);
+	m_flowEstimate =
+			estimateThrottleFlow(Sensor::getOrZero(SensorType::Map), Sensor::getOrZero(SensorType::Tps1)).value_or(0);
 }
 
 float ThrottleModel::effectiveArea(float tps) const {

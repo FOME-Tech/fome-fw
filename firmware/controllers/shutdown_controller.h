@@ -13,7 +13,7 @@ class ShutdownController {
 public:
 	void stopEngine() {
 		m_engineStopTimer.reset();
-//		ignitionOnTimeNt = 0;
+		// ignitionOnTimeNt = 0;
 	}
 
 	float getTimeSinceEngineStop(efitick_t nowNt) const {
@@ -34,5 +34,5 @@ private:
 	 * this is needed by and checkShutdown()
 	 */
 	// is this an unused boolean value?
-//	efitick_t ignitionOnTimeNt = 0;
+	// efitick_t ignitionOnTimeNt = 0;
 };

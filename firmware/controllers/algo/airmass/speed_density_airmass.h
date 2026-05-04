@@ -6,8 +6,7 @@ class SpeedDensityAirmass : public SpeedDensityBase {
 public:
 	explicit SpeedDensityAirmass(const ValueProvider3D* veTable, const ValueProvider3D& mapEstimationTable)
 		: SpeedDensityBase(veTable)
-		, m_mapEstimationTable(&mapEstimationTable)
-	{}
+		, m_mapEstimationTable(&mapEstimationTable) {}
 
 	AirmassResult getAirmass(float rpm, bool postState) override;
 	AirmassResult getAirmass(float rpm, float map, bool postState);

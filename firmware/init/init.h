@@ -4,7 +4,6 @@
 
 #pragma once
 
-
 // Call this once at startup to initialize, configure, and subscribe sensors
 void initNewSensors();
 

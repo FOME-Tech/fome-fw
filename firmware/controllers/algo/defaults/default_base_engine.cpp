@@ -41,13 +41,13 @@ void setDefaultBaseEngine() {
 	engineConfiguration->etbRevLimitRange = 250;
 
 	// CLT RPM limit table - just the X axis
-	copyArray(config->cltRevLimitRpmBins, { -20, 0, 40, 80 });
+	copyArray(config->cltRevLimitRpmBins, {-20, 0, 40, 80});
 
 	engineConfiguration->ALSMinRPM = 400;
 	engineConfiguration->ALSMaxRPM = 3200;
 	engineConfiguration->ALSMaxDuration = 3.5;
 	engineConfiguration->ALSMaxCLT = 105;
-//	engineConfiguration->alsMinPps = 10;
+	//	engineConfiguration->alsMinPps = 10;
 	engineConfiguration->alsMinTimeBetween = 5;
 	engineConfiguration->alsEtbPosition = 30;
 	engineConfiguration->ALSMaxTPS = 5;
@@ -63,7 +63,7 @@ void setDefaultBaseEngine() {
 	// Advanced Trigger
 
 	// Battery and alternator
-	engineConfiguration->vbattDividerCoeff = ((float) (15 + 65)) / 15;
+	engineConfiguration->vbattDividerCoeff = ((float)(15 + 65)) / 15;
 
 #if EFI_ALTERNATOR_CONTROL
 	setDefaultAlternatorParameters();

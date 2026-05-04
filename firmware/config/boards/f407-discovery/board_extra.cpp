@@ -9,8 +9,7 @@
  * @brief   Board-specific pin configuration code overrides. Needed by bootloader code.
  * @todo    Add your board-specific code, if any.
  */
-void setPinConfigurationOverrides() {
-}
+void setPinConfigurationOverrides() {}
 
 static void setDefaultFrankensoStepperIdleParameters() {
 	engineConfiguration->idle.stepperDirectionPin = Gpio::E10;
@@ -68,8 +67,6 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->spi3mosiPin = Gpio::B5;
 	engineConfiguration->spi3misoPin = Gpio::B4;
 	engineConfiguration->spi3sckPin = Gpio::B3;
-
-
 
 #if EFI_FILE_LOGGING
 	setDefaultSdCardParameters();

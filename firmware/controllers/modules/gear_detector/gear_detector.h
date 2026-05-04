@@ -6,7 +6,7 @@ public:
 	~GearDetector();
 
 	void onSlowCallback() override;
-	void onConfigurationChange(engine_configuration_s const * /*previousConfig*/) override;
+	void onConfigurationChange(engine_configuration_s const* /*previousConfig*/) override;
 
 	float getGearboxRatio() const;
 

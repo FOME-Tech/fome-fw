@@ -1,5 +1,4 @@
 #include "pch.h"
-//#include "efilib.h"
 
 TEST(util, hash) {
 	ASSERT_EQ(djb2lowerCase("Hello1"), 30950378);

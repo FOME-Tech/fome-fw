@@ -1,4 +1,5 @@
-// This file handles the "big buffer" - a shared buffer that can be used by multiple users depending on which function is enabled
+// This file handles the "big buffer" - a shared buffer that can be used by multiple users depending on which function
+// is enabled
 
 #pragma once
 

@@ -51,4 +51,3 @@ static_assert(offsetof(ignition_state_s, dfcoTimingRetard) == 18);
 static_assert(offsetof(ignition_state_s, dwellVoltageCorrection) == 20);
 static_assert(offsetof(ignition_state_s, luaTimingAdd) == 24);
 static_assert(offsetof(ignition_state_s, luaTimingMult) == 28);
-

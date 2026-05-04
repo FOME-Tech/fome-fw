@@ -20,34 +20,34 @@ bool acceptCanRx(int /*sid*/) {
 		// accept anything if filtering is not enabled
 		return true;
 	}
-/*
-	// the whole table reuse and 2D table cast to 1D array is a major hack, but it's OK for prototyping
-	SCRIPT_TABLE_8x8_f32t_linear *array =
-			(SCRIPT_TABLE_8x8_f32t_linear*) (void*) &config->scriptTable1;
+	/*
+		// the whole table reuse and 2D table cast to 1D array is a major hack, but it's OK for prototyping
+		SCRIPT_TABLE_8x8_f32t_linear *array =
+				(SCRIPT_TABLE_8x8_f32t_linear*) (void*) &config->scriptTable1;
 
-	int arraySize = efi::size(*array);
+		int arraySize = efi::size(*array);
 
-	int showOnlyCount = (int) array[arraySize - 1];
-	if (showOnlyCount > 0 && showOnlyCount < arraySize) {
-		for (int i = 0; i < showOnlyCount; i++) {
-			if (sid == (int) array[arraySize - 2 - i]) {
-				return true;
+		int showOnlyCount = (int) array[arraySize - 1];
+		if (showOnlyCount > 0 && showOnlyCount < arraySize) {
+			for (int i = 0; i < showOnlyCount; i++) {
+				if (sid == (int) array[arraySize - 2 - i]) {
+					return true;
+				}
+			}
+			// if white list is not empty and element not on the white list we do not check ignore list
+			return false;
+		}
+
+		int ignoreListCount = (int) array[0];
+		if (ignoreListCount > 0 && ignoreListCount < arraySize) {
+			for (int i = 0; i < ignoreListCount; i++) {
+				if (sid == (int) array[1 + i]) {
+					// element is in ignore list
+					return false;
+				}
 			}
 		}
-		// if white list is not empty and element not on the white list we do not check ignore list
-		return false;
-	}
-
-	int ignoreListCount = (int) array[0];
-	if (ignoreListCount > 0 && ignoreListCount < arraySize) {
-		for (int i = 0; i < ignoreListCount; i++) {
-			if (sid == (int) array[1 + i]) {
-				// element is in ignore list
-				return false;
-			}
-		}
-	}
-*/
+	*/
 	return true;
 }
 
@@ -62,30 +62,36 @@ bool acceptCanRx(int /*sid*/) {
 /**
  * this build-in CAN sniffer is very basic but that's our CAN sniffer
  */
-static void printPacket(CanBusIndex busIndex, const CANRxFrame &rx) {
-//	bool accept = acceptCanRx(CAN_SID(rx));
-//	if (!accept) {
-//		return;
-//	}
+static void printPacket(CanBusIndex busIndex, const CANRxFrame& rx) {
+	//	bool accept = acceptCanRx(CAN_SID(rx));
+	//	if (!accept) {
+	//		return;
+	//	}
 
 	// only print info if we're in can debug mode
 
 	int id = CAN_ID(rx);
 
-	// internet people use both hex and decimal to discuss packed IDs, for usability it's better to print both right here
-	efiPrintf("CAN RX bus %d ID %x(%d) DLC %d: %02x %02x %02x %02x %02x %02x %02x %02x",
+	// internet people use both hex and decimal to discuss packed IDs, for usability it's better to print both right
+	// here
+	efiPrintf(
+			"CAN RX bus %d ID %x(%d) DLC %d: %02x %02x %02x %02x %02x %02x %02x %02x",
 			static_cast<size_t>(busIndex),
-			id,	id, // once in hex, once in dec
+			id,
+			id, // once in hex, once in dec
 			rx.DLC,
-			rx.data8[0], rx.data8[1], rx.data8[2], rx.data8[3],
-			rx.data8[4], rx.data8[5], rx.data8[6], rx.data8[7]);
-
+			rx.data8[0],
+			rx.data8[1],
+			rx.data8[2],
+			rx.data8[3],
+			rx.data8[4],
+			rx.data8[5],
+			rx.data8[6],
+			rx.data8[7]);
 }
 struct CanListenerTailSentinel : public CanListener {
 	CanListenerTailSentinel()
-		: CanListener(0)
-	{
-	}
+		: CanListener(0) {}
 
 	bool acceptFrame(CanBusIndex, const CANRxFrame&) const override {
 		return false;
@@ -97,10 +103,10 @@ struct CanListenerTailSentinel : public CanListener {
 };
 
 static CanListenerTailSentinel tailSentinel;
-CanListener *canListeners_head = &tailSentinel;
+CanListener* canListeners_head = &tailSentinel;
 
-static void serviceCanSubscribers(CanBusIndex busIndex, const CANRxFrame &frame, efitick_t nowNt) {
-	CanListener *current = canListeners_head;
+static void serviceCanSubscribers(CanBusIndex busIndex, const CANRxFrame& frame, efitick_t nowNt) {
+	CanListener* current = canListeners_head;
 
 	while (current) {
 		current = current->processFrame(busIndex, frame, nowNt);
@@ -130,17 +136,17 @@ void registerCanSensor(CanSensorBase& sensor) {
 #define VAG_YAW_ACCEL_G_LONG 0x131
 
 /* Bosch Acceleration Sensor MM5.10 quantizations */
-#define MM5_10_RATE_QUANT			0.005
-#define MM5_10_ACC_QUANT			0.0001274
+#define MM5_10_RATE_QUANT 0.005
+#define MM5_10_ACC_QUANT 0.0001274
 
 /* Bosch Acceleration Sensor MM5.10 CAN IDs */
-#define MM5_10_YAW_Y				0x174
-#define MM5_10_ROLL_X				0x178
-#define MM5_10_Z					0x17C
+#define MM5_10_YAW_Y 0x174
+#define MM5_10_ROLL_X 0x178
+#define MM5_10_Z 0x17C
 
 /* Mercedes pn: A 006 542 26 18 CAN IDs */
-#define MM5_10_MB_YAW_Y_CANID		0x150
-#define MM5_10_MB_ROLL_X_CANID		0x151
+#define MM5_10_MB_YAW_Y_CANID 0x150
+#define MM5_10_MB_ROLL_X_CANID 0x151
 
 static uint16_t getLSB_intel(const CANRxFrame& frame, int offset) {
 	return (frame.data8[offset + 1] << 8) + frame.data8[offset];
@@ -173,21 +179,21 @@ static void processCanRxImu_BoschM5_10_Z(const CANRxFrame& frame) {
 }
 
 static void processCanRxImu(const CANRxFrame& frame) {
-/*
-	if (CAN_SID(frame) == 0x130) {
-		float a = getShiftedLSB_intel(frame, 0);
-		float b = getShiftedLSB_intel(frame, 4);
-		efiPrintf("CAN_rx 130 %f %f", a, b);
-	}
-
-	if (engineConfiguration->imuType == IMU_VAG) {
-		if (CAN_SID(frame) == VAG_YAW_RATE_G_LAT) {
-			efiPrintf("CAN_rx VAG_YAW_RATE_G_LAT");
-		} else if (CAN_SID(frame) == VAG_YAW_ACCEL_G_LONG) {
-			efiPrintf("CAN_rx VAG_YAW_ACCEL_G_LONG");
+	/*
+		if (CAN_SID(frame) == 0x130) {
+			float a = getShiftedLSB_intel(frame, 0);
+			float b = getShiftedLSB_intel(frame, 4);
+			efiPrintf("CAN_rx 130 %f %f", a, b);
 		}
-	}
-	*/
+
+		if (engineConfiguration->imuType == IMU_VAG) {
+			if (CAN_SID(frame) == VAG_YAW_RATE_G_LAT) {
+				efiPrintf("CAN_rx VAG_YAW_RATE_G_LAT");
+			} else if (CAN_SID(frame) == VAG_YAW_ACCEL_G_LONG) {
+				efiPrintf("CAN_rx VAG_YAW_ACCEL_G_LONG");
+			}
+		}
+		*/
 
 	if (engineConfiguration->imuType == IMU_MM5_10) {
 		if (CAN_SID(frame) == MM5_10_YAW_Y) {
@@ -253,7 +259,7 @@ void processCanRxMessage(CanBusIndex busIndex, const CANRxFrame& frame, efitick_
 	serviceCanSubscribers(busIndex, frame, nowNt);
 
 	// todo: convert to CanListener or not?
-	//Vss is configurable, should we handle it here:
+	// Vss is configurable, should we handle it here:
 	processCanRxVss(frame, nowNt);
 
 	// todo: convert to CanListener or not?

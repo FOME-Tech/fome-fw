@@ -9,7 +9,6 @@
 
 #include "engine_configuration.h"
 void setFrankensoConfiguration();
-void setDiscoveryPdm();
 void setFrankensoBoardTestConfiguration();
 void setEtbTestConfiguration();
 void setTle8888TestConfiguration();

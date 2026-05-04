@@ -23,7 +23,7 @@
 /* Driver local definitions.												*/
 /*==========================================================================*/
 
-#define DRIVER_NAME				"drv8860"
+#define DRIVER_NAME "drv8860"
 
 static bool drv_task_ready = false;
 
@@ -61,22 +61,34 @@ struct Drv8860 : public GpioChip {
 	void update_outputs();
 	int wake_driver();
 
-	const drv8860_config		*cfg;
+	const drv8860_config* cfg;
 	/* cached output state - state last send to chip */
-	uint16_t					o_state_cached;
+	uint16_t o_state_cached;
 	/* state to be sended to chip */
-	uint16_t					o_state;
+	uint16_t o_state;
 
-	drv8860_drv_state			drv_state;
+	drv8860_drv_state drv_state;
 };
 
 static Drv8860 chips[BOARD_DRV8860_COUNT];
 
 static const char* drv8860_pin_names[DRV8860_OUTPUTS] = {
-	"drv8860.OUT1",		"drv8860.OUT2",		"drv8860.OUT3",		"drv8860.OUT4",
-	"drv8860.OUT5",		"drv8860.OUT6",		"drv8860.OUT7",		"drv8860.OUT8",
-	"drv8860.OUT9",		"drv8860.OUT10",	"drv8860.OUT11",	"drv8860.OUT12",
-	"drv8860.OUT13",	"drv8860.OUT14",	"drv8860.OUT15",	"drv8860.OUT16",
+		"drv8860.OUT1",
+		"drv8860.OUT2",
+		"drv8860.OUT3",
+		"drv8860.OUT4",
+		"drv8860.OUT5",
+		"drv8860.OUT6",
+		"drv8860.OUT7",
+		"drv8860.OUT8",
+		"drv8860.OUT9",
+		"drv8860.OUT10",
+		"drv8860.OUT11",
+		"drv8860.OUT12",
+		"drv8860.OUT13",
+		"drv8860.OUT14",
+		"drv8860.OUT15",
+		"drv8860.OUT16",
 };
 
 /*==========================================================================*/
@@ -89,8 +101,8 @@ static const char* drv8860_pin_names[DRV8860_OUTPUTS] = {
  */
 
 void Drv8860::spi_send(uint16_t tx) {
-	SPIDriver *spi = cfg->spi_bus;
-	
+	SPIDriver* spi = cfg->spi_bus;
+
 	/* Acquire ownership of the bus. */
 	spiAcquireBus(spi);
 	/* Setup transfer parameters. */
@@ -169,10 +181,9 @@ static THD_FUNCTION(drv8860_driver_thread, p) {
 
 		for (i = 0; i < BOARD_DRV8860_COUNT; i++) {
 			auto chip = &chips[i];
-			if ((chip->cfg == NULL) ||
-				(chip->drv_state == DRV8860_DISABLED) ||
-				(chip->drv_state == DRV8860_FAILED))
+			if ((chip->cfg == NULL) || (chip->drv_state == DRV8860_DISABLED) || (chip->drv_state == DRV8860_FAILED)) {
 				continue;
+			}
 
 			chip->update_outputs();
 		}
@@ -190,17 +201,19 @@ static THD_FUNCTION(drv8860_driver_thread, p) {
 /*==========================================================================*/
 
 int Drv8860::writePad(size_t pin, int value) {
-	if (pin >= DRV8860_OUTPUTS)
+	if (pin >= DRV8860_OUTPUTS) {
 		return -1;
+	}
 
 	/* TODO: lock */
-	if (value)
-		o_state |=  (1 << pin);
-	else
+	if (value) {
+		o_state |= (1 << pin);
+	} else {
 		o_state &= ~(1 << pin);
+	}
 	/* TODO: unlock */
 	wake_driver();
-	
+
 	return 0;
 }
 
@@ -213,14 +226,14 @@ int Drv8860::init() {
 	int ret;
 
 	ret = chip_init();
-	if (ret)
+	if (ret) {
 		return ret;
+	}
 
 	drv_state = DRV8860_READY;
 
 	if (!drv_task_ready) {
-		chThdCreateStatic(drv8860_thread_1_wa, sizeof(drv8860_thread_1_wa),
-						  PRIO_GPIOCHIP, drv8860_driver_thread, NULL);
+		chThdCreateStatic(drv8860_thread_1_wa, sizeof(drv8860_thread_1_wa), PRIO_GPIOCHIP, drv8860_driver_thread, NULL);
 		drv_task_ready = true;
 	}
 
@@ -232,23 +245,25 @@ int Drv8860::init() {
  * @details Checks for valid config
  */
 
-int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config *cfg) {
+int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config* cfg) {
 	int ret;
 
 	/* no config or no such chip */
-	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_DRV8860_COUNT))
+	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_DRV8860_COUNT)) {
 		return -1;
+	}
 
 	/* check for valid cs.
 	 * TODO: remove this check? CS can be driven by SPI */
-	//if (cfg->spi_config.ssport == NULL)
+	// if (cfg->spi_config.ssport == NULL)
 	//	return -1;
 
 	auto& chip = chips[index];
 
 	/* already initted? */
-	if (!chip.cfg)
+	if (!chip.cfg) {
 		return -1;
+	}
 
 	chip.cfg = cfg;
 	chip.o_state = 0;
@@ -257,8 +272,9 @@ int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config *cfg)
 
 	/* register, return gpio chip base */
 	ret = gpiochip_register(base, DRIVER_NAME, chip, DRV8860_OUTPUTS);
-	if (ret < 0)
+	if (ret < 0) {
 		return ret;
+	}
 
 	/* set default pin names, board init code can rewrite */
 	gpiochips_setPinNames(static_cast<brain_pin_e>(ret), drv8860_pin_names);
@@ -268,8 +284,10 @@ int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config *cfg)
 
 #else /* BOARD_DRV8860_COUNT > 0 */
 
-int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config *cfg) {
-	(void)base; (void)index; (void)cfg;
+int drv8860_add(brain_pin_e base, unsigned int index, const drv8860_config* cfg) {
+	(void)base;
+	(void)index;
+	(void)cfg;
 
 	return -1;
 }

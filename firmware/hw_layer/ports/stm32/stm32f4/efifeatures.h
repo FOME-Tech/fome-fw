@@ -38,21 +38,12 @@
 #define EFI_CLOCK_LOCKS TRUE
 #endif
 
-//#define EFI_UART_ECHO_TEST_MODE TRUE
-
 /**
  * TunerStudio support.
  */
 #ifndef EFI_TUNER_STUDIO
 #define EFI_TUNER_STUDIO TRUE
 #endif
-
-/**
- * Bluetooth UART setup support.
- */
-#ifndef EFI_BLUETOOTH_SETUP
-#define EFI_BLUETOOTH_SETUP TRUE
-#endif /* EFI_BLUETOOTH_SETUP */
 
 /**
  * Dev console support.
@@ -96,23 +87,23 @@
 #define EFI_ENGINE_CONTROL TRUE
 
 #ifndef BOARD_TLE6240_COUNT
-#define BOARD_TLE6240_COUNT         0
+#define BOARD_TLE6240_COUNT 0
 #endif
 
 #ifndef BOARD_MC33972_COUNT
-#define BOARD_MC33972_COUNT			0
+#define BOARD_MC33972_COUNT 0
 #endif
 
 #ifndef BOARD_TLE8888_COUNT
-#define BOARD_TLE8888_COUNT 	1
+#define BOARD_TLE8888_COUNT 1
 #endif
 
 #ifndef BOARD_DRV8860_COUNT
-#define BOARD_DRV8860_COUNT         0
+#define BOARD_DRV8860_COUNT 0
 #endif
 
 #ifndef BOARD_MC33810_COUNT
-#define BOARD_MC33810_COUNT		0
+#define BOARD_MC33810_COUNT 0
 #endif
 
 #ifndef BOARD_TLE9104_COUNT
@@ -124,7 +115,7 @@
 #endif
 
 #if !defined(EFI_MEMS)
- #define EFI_MEMS FALSE
+#define EFI_MEMS FALSE
 #endif
 
 #define EFI_USE_FAST_ADC TRUE
@@ -181,28 +172,28 @@
 #define EFI_CONSOLE_USB_DEVICE SDU1
 
 #if defined(EFI_HAS_EXT_SDRAM)
-	#define ENABLE_PERF_TRACE TRUE
-	#define LUA_USER_HEAP (1 * 1024 * 1024)
+#define ENABLE_PERF_TRACE TRUE
+#define LUA_USER_HEAP (1 * 1024 * 1024)
 #elif defined(EFI_IS_F42x)
-	// F42x has more memory, so we can:
-	//  - use compressed USB MSD image (requires 32k of memory)
-	//  - use perf trace (requires ~16k of memory)
-	#define EFI_USE_COMPRESSED_INI_MSD
-	#define ENABLE_PERF_TRACE TRUE
+// F42x has more memory, so we can:
+//  - use compressed USB MSD image (requires 32k of memory)
+//  - use perf trace (requires ~16k of memory)
+#define EFI_USE_COMPRESSED_INI_MSD
+#define ENABLE_PERF_TRACE TRUE
 
-	#if MODULE_ETHERNET_CONSOLE
-		// F4 ethernet needs some extra space
-		#define LUA_USER_HEAP 25000
-	#else // MODULE_ETHERNET_CONSOLE
-		#define LUA_USER_HEAP 65000
-	#endif
+#if MODULE_ETHERNET_CONSOLE
+// F4 ethernet needs some extra space
+#define LUA_USER_HEAP 25000
+#else // MODULE_ETHERNET_CONSOLE
+#define LUA_USER_HEAP 65000
+#endif
 #else
-	// small memory F40x can't fit perf trace
-	#define ENABLE_PERF_TRACE FALSE
+// small memory F40x can't fit perf trace
+#define ENABLE_PERF_TRACE FALSE
 
-	#ifndef LUA_USER_HEAP
-	#define LUA_USER_HEAP 30000
-	#endif
+#ifndef LUA_USER_HEAP
+#define LUA_USER_HEAP 30000
+#endif
 #endif
 
 #ifndef EFI_LUA
@@ -226,7 +217,7 @@
 // todo: most of this should become configurable
 
 // todo: switch to continuous ADC conversion for fast ADC?
-#define EFI_INTERNAL_FAST_ADC_GPT	&GPTD6
+#define EFI_INTERNAL_FAST_ADC_GPT &GPTD6
 
 #define EFI_SPI1_AF 5
 #define EFI_SPI2_AF 5
@@ -242,40 +233,14 @@
 
 #define ADC_CHANNEL_VREF ADC_CHANNEL_IN14
 
-// allow override of EFI_USE_UART_DMA from cmdline passed defs
-#ifndef EFI_USE_UART_DMA
-#define EFI_USE_UART_DMA TRUE
-#endif
-
-#define AUX_SERIAL_DEVICE (&SD6)
-
-#ifndef EFI_CONSOLE_TX_BRAIN_PIN
-#define EFI_CONSOLE_TX_BRAIN_PIN Gpio::C10
-#endif
-
-#ifndef EFI_CONSOLE_RX_BRAIN_PIN
-#define EFI_CONSOLE_RX_BRAIN_PIN Gpio::C11
-#endif
-// todo: this should be detected automatically based on pin selection
-// https://github.com/rusefi/rusefi/issues/3536
-#ifndef EFI_CONSOLE_AF
-#define EFI_CONSOLE_AF 7
-#endif
-
-// todo: this should be detected automatically based on pin selection
-// https://github.com/rusefi/rusefi/issues/3536
-#ifndef TS_SERIAL_AF
-#define TS_SERIAL_AF 7
-#endif
-
 #ifndef LED_CRITICAL_ERROR_BRAIN_PIN
 #define LED_CRITICAL_ERROR_BRAIN_PIN Gpio::D14
 #endif
 
 #ifndef EFI_STORAGE_INT_FLASH
-#define EFI_STORAGE_INT_FLASH   TRUE
+#define EFI_STORAGE_INT_FLASH TRUE
 #endif
 
 #ifndef EFI_STORAGE_EXT_SNOR
-#define EFI_STORAGE_EXT_SNOR    FALSE
+#define EFI_STORAGE_EXT_SNOR FALSE
 #endif

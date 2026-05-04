@@ -15,8 +15,6 @@
 #include "malfunction_central.h"
 #include "cli_registry.h"
 
-#include "fl_stack.h"
-
 #include "big_buffer.h"
 
 TEST(util, testitoa) {
@@ -44,13 +42,13 @@ TEST(util, crc) {
 	ASSERT_FLOAT_EQ(1.2, efiRound(1.2345, 0.1));
 	ASSERT_FLOAT_EQ(0.2, efiRound(0.2345, 0.1));
 
-	const char * A = "A";
+	const char* A = "A";
 
 	uint32_t c = crc32(A, 1);
 	printf("crc32(A)=%x\r\n", c);
 	EXPECT_EQ(0xd3d99e8b, c) << "crc32 1";
 
-	const char * line = "AbcDEFGF";
+	const char* line = "AbcDEFGF";
 	c = crc32(line, 8);
 	printf("crc32(line)=%x\r\n", c);
 	EXPECT_EQ(0x4775a7b1, c) << "crc32 line";
@@ -88,10 +86,9 @@ TEST(util, cyclicBuffer) {
 
 		ASSERT_EQ(4, sb.maxValue(3));
 		ASSERT_EQ(4, sb.maxValue(113));
-		ASSERT_EQ( 2,  sb.minValue(3)) << "minValue(3)";
+		ASSERT_EQ(2, sb.minValue(3)) << "minValue(3)";
 		ASSERT_EQ(1, sb.minValue(113));
 	}
-
 }
 
 static void testMalfunctionCentralRemoveNonExistent() {
@@ -149,11 +146,11 @@ TEST(misc, testMalfunctionCentral) {
 	addError(code);
 
 	getErrorCodes(&localCopy);
-	ASSERT_EQ( 1,  localCopy.count) << "count #1";
+	ASSERT_EQ(1, localCopy.count) << "count #1";
 	ASSERT_EQ(code, localCopy.error_codes[0]);
 
 	// let's remove value which is not in the collection
-	removeError((ObdCode) 22);
+	removeError((ObdCode)22);
 	// element not present - nothing to removed
 	ASSERT_EQ(1, localCopy.count);
 	ASSERT_EQ(code, localCopy.error_codes[0]);
@@ -164,7 +161,7 @@ TEST(misc, testMalfunctionCentral) {
 	// todo:	ASSERT_EQ(2, localCopy.count);
 
 	for (int c = 0; c < 100; c++) {
-		addError((ObdCode) c);
+		addError((ObdCode)c);
 	}
 	getErrorCodes(&localCopy);
 	ASSERT_EQ(MAX_ERROR_CODES_COUNT, localCopy.count);
@@ -187,10 +184,10 @@ static void testEchoII(int param, int param2) {
 	lastInteger2 = param2;
 }
 
-static const char *lastFirst = NULL;
-static const char *lastThird = NULL;
+static const char* lastFirst = NULL;
+static const char* lastThird = NULL;
 
-static void testEchoSSS(const char *first, const char *second, const char *third) {
+static void testEchoSSS(const char* first, const char* second, const char* third) {
 	lastFirst = first;
 	lastThird = third;
 }
@@ -215,7 +212,7 @@ TEST(misc, testConsoleLogic) {
 
 	helpCommand();
 
-	char * cmd = "he ha";
+	char* cmd = "he ha";
 	ASSERT_EQ(2, findEndOfToken(cmd));
 
 	cmd = "\"hee\" ha";
@@ -246,7 +243,6 @@ TEST(misc, testConsoleLogic) {
 	strcpy(buffer, "echoi  240");
 	handleConsoleLine(buffer);
 	ASSERT_EQ(240, lastInteger);
-
 
 	printf("\r\naddConsoleActionII\r\n");
 	addConsoleActionII("echoii", testEchoII);
@@ -282,41 +278,12 @@ TEST(misc, testConsoleLogic) {
 	ASSERT_EQ(3.0, fThird);
 }
 
-TEST(misc, testFLStack) {
-	FLStack<int, 4> stack;
-	ASSERT_EQ(0, stack.size());
-
-	stack.push(123);
-	stack.push(234);
-	ASSERT_EQ(2, stack.size());
-
-	int v = stack.pop();
-	ASSERT_EQ(234, v);
-	ASSERT_EQ(1, stack.size());
-	ASSERT_EQ(123, stack.get(0));
-
-	v = stack.pop();
-	ASSERT_EQ(123, v);
-	ASSERT_EQ(0, stack.size());
-
-	stack.push(123);
-	stack.push(234);
-	stack.push(345);
-	stack.push(456);
-	ASSERT_EQ(4, stack.size());
-
-	stack.remove(123);
-	ASSERT_EQ(456, stack.get(0));
-	ASSERT_EQ(3, stack.size());
-}
-
 static char buff[32];
 
 TEST(misc, testMisc) {
 	strcpy(buff, "  ab  ");
 	// we need a mutable array here
 	ASSERT_TRUE(strEqual("ab", efiTrim(buff)));
-
 
 	{
 		float v = atoff("1.0");
@@ -333,8 +300,8 @@ TEST(misc, testMisc) {
 		EXPECT_TRUE(std::isnan(v));
 	}
 
-//	ASSERT_EQ(true, strEqual("spa3", getPinName(SPARKOUT_3_OUTPUT)));
-//	ASSERT_EQ(SPARKOUT_12_OUTPUT, getPinByName("spa12"));
+	//	ASSERT_EQ(true, strEqual("spa3", getPinName(SPARKOUT_3_OUTPUT)));
+	//	ASSERT_EQ(SPARKOUT_12_OUTPUT, getPinByName("spa12"));
 }
 
 int getRusEfiVersion() {

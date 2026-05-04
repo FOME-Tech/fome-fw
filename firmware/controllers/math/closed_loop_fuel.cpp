@@ -16,30 +16,32 @@ static Deadband<2> loadDeadband;
 
 static SensorType getSensorForBankIndex(size_t index) {
 	switch (index) {
-		case 0: return SensorType::Lambda1;
-		case 1: return SensorType::Lambda2;
-		case 2: return SensorType::Lambda3;
-		case 3: return SensorType::Lambda4;
-		default: return SensorType::Invalid;
+		case 0:
+			return SensorType::Lambda1;
+		case 1:
+			return SensorType::Lambda2;
+		case 2:
+			return SensorType::Lambda3;
+		case 3:
+			return SensorType::Lambda4;
+		default:
+			return SensorType::Invalid;
 	}
 }
 
 size_t computeStftBin(float rpm, float load, stft_s& cfg) {
 	// Low RPM -> idle
-	if (idleDeadband.lt(rpm, cfg.maxIdleRegionRpm))
-	{
+	if (idleDeadband.lt(rpm, cfg.maxIdleRegionRpm)) {
 		return 0;
 	}
 
 	// Low load -> overrun
-	if (overrunDeadband.lt(load, cfg.maxOverrunLoad))
-	{
+	if (overrunDeadband.lt(load, cfg.maxOverrunLoad)) {
 		return 1;
 	}
 
 	// High load -> power
-	if (loadDeadband.gt(load, cfg.minPowerLoad))
-	{
+	if (loadDeadband.gt(load, cfg.minPowerLoad)) {
 		return 2;
 	}
 

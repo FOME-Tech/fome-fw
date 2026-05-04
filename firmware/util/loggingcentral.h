@@ -13,17 +13,16 @@ class Logging;
 
 void startLoggingProcessor();
 
-const char* swapOutputBuffers(size_t *actualOutputBufferSize);
+const char* swapOutputBuffers(size_t* actualOutputBufferSize);
 
-namespace priv
-{
-	// internal implementation, use efiPrintf below
-	void efiPrintfInternal(const char *fmt, ...) 
-		#if EFI_PROD_CODE
-			__attribute__ ((format (printf, 1, 2)))
-		#endif
-			;
-}
+namespace priv {
+// internal implementation, use efiPrintf below
+void efiPrintfInternal(const char* fmt, ...)
+#if EFI_PROD_CODE
+		__attribute__((format(printf, 1, 2)))
+#endif
+		;
+} // namespace priv
 
 // "normal" logging messages need a header and footer, so put them in
 // the format string at compile time
@@ -33,7 +32,7 @@ namespace priv
 /**
  * This is the legacy function to copy the contents of a local Logging object in to the output buffer
  */
-void scheduleLogging(Logging *logging);
+void scheduleLogging(Logging* logging);
 
 // Stores the result of one call to efiPrintfInternal in the queue to be copied out to the output buffer
 struct LogLineBuffer {

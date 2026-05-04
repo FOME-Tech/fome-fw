@@ -7,7 +7,6 @@
 #include "global.h"
 #include "efi_gpio.h"
 #include "scheduler.h"
-#include "fl_stack.h"
 #include "trigger_structure.h"
 #include "wall_fuel.h"
 
@@ -61,10 +60,10 @@ union InjectorContext {
 	}
 
 	struct {
-		uint16_t outputsMask:12;
-		uint8_t eventIndex:4;
-		uint16_t splitDurationUs:15;
-		bool stage2Active:1;
+		uint16_t outputsMask : 12;
+		uint8_t eventIndex : 4;
+		uint16_t splitDurationUs : 15;
+		bool stage2Active : 1;
 	};
 	void* _pad;
 };
@@ -74,7 +73,6 @@ static_assert(sizeof(InjectorContext) <= sizeof(void*));
 void startInjection(InjectorContext ctx);
 void endInjection(InjectorContext ctx);
 void endInjectionStage2(InjectorContext ctx);
-
 
 /**
  * This class knows about when to inject fuel
@@ -99,4 +97,4 @@ public:
 	bool isReady = false;
 };
 
-FuelSchedule * getFuelSchedule();
+FuelSchedule* getFuelSchedule();

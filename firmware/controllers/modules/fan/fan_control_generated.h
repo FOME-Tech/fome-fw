@@ -84,4 +84,3 @@ struct fan_control_s {
 static_assert(sizeof(fan_control_s) == 12);
 static_assert(offsetof(fan_control_s, fanDuty) == 4);
 static_assert(offsetof(fan_control_s, fanXAxisValue) == 8);
-

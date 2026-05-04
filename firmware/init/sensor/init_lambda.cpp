@@ -14,10 +14,10 @@ static FunctionalSensor lambdaSensor2(SensorType::Lambda2, MS2NT(50));
 
 #if EFI_CAN_SUPPORT
 static AemXSeriesWideband canWidebands[] = {
-	{ 0, SensorType::Lambda1 },
-	{ 1, SensorType::Lambda2 },
-	{ 2, SensorType::Lambda3 },
-	{ 3, SensorType::Lambda4 },
+		{0, SensorType::Lambda1},
+		{1, SensorType::Lambda2},
+		{2, SensorType::Lambda3},
+		{3, SensorType::Lambda4},
 };
 #endif
 

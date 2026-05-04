@@ -16,6 +16,3 @@ include $(BOARDS_DIR)/hellen/hellen-common144.mk
 
 SHORT_BOARD_NAME = hellenNA8_96
 
-# Enable serial pins on expansion header
-DDEFS += $(PRIMARY_COMMUNICATION_PORT_USART2)
-

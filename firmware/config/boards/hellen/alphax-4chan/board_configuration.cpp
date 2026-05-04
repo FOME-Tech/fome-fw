@@ -121,7 +121,7 @@ void boardInitHardware() {
 	boardOnConfigurationChange(nullptr);
 }
 
-void boardOnConfigurationChange(engine_configuration_s * /*previousConfiguration*/) {
+void boardOnConfigurationChange(engine_configuration_s* /*previousConfiguration*/) {
 	alphaTachPullUp.setValue(engineConfiguration->boardUseTachPullUp);
 	alphaTempPullUp.setValue(engineConfiguration->boardUseTempPullUp);
 	alphaCrankPPullUp.setValue(engineConfiguration->boardUseCrankPullUp);
@@ -143,7 +143,7 @@ void setBoardConfigOverrides() {
 
 	setHellenSdCardSpi2();
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	setHellenCan();
 }
@@ -162,16 +162,16 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->vvtPins[0] = H144_OUT_PWM7;
 	engineConfiguration->vvtPins[1] = H144_OUT_PWM8;
 
-    engineConfiguration->boardUseTempPullUp = true;
-    // todo: use board ID condition? below D no SD, D and up with SD?
-    engineConfiguration->isSdCardEnabled = true;
+	engineConfiguration->boardUseTempPullUp = true;
+	// todo: use board ID condition? below D no SD, D and up with SD?
+	engineConfiguration->isSdCardEnabled = true;
 
 	engineConfiguration->acSwitch = Gpio::Unassigned;
 	engineConfiguration->fuelPumpPin = H144_OUT_IO12;
 	engineConfiguration->fanPin = H144_OUT_IO11;
 	engineConfiguration->mainRelayPin = H144_OUT_IO10;
-    engineConfiguration->tachOutputPin = H144_OUT_IO13;
-    engineConfiguration->boostControlPin = H144_OUT_PWM3;
+	engineConfiguration->tachOutputPin = H144_OUT_IO13;
+	engineConfiguration->boostControlPin = H144_OUT_PWM3;
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
@@ -181,12 +181,10 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 
-
-
 	engineConfiguration->clutchDownPin = H144_IN_D_2;
 	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
 	engineConfiguration->launchActivationMode = CLUTCH_INPUT_LAUNCH;
-// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
+	// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
 	config->vrThreshold[0].pin = H144_OUT_PWM6;
 	config->vrThreshold[1].pin = H144_OUT_PWM4;
 }
@@ -204,9 +202,9 @@ static Gpio OUTPUTS[] = {
 };
 
 int getBoardMetaOutputsCount() {
-    return efi::size(OUTPUTS);
+	return efi::size(OUTPUTS);
 }
 
 Gpio* getBoardMetaOutputs() {
-    return OUTPUTS;
+	return OUTPUTS;
 }

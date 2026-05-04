@@ -10,4 +10,4 @@
 
 class TriggerWaveform;
 
-void initializeRoverK(TriggerWaveform *s);
+void initializeRoverK(TriggerWaveform* s);

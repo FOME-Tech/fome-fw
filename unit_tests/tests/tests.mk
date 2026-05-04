@@ -35,6 +35,7 @@ TESTS_SRC_CPP = \
 	tests/ignition_injection/test_fuel_computer.cpp \
 	tests/ignition_injection/test_injector_model.cpp \
 	tests/ignition_injection/test_odd_firing_engine.cpp \
+	tests/ignition_injection/test_paired_wasted_spark.cpp \
 	tests/lua/test_lua_basic.cpp \
 	tests/lua/test_lookup.cpp \
 	tests/lua/test_lua_e38.cpp \
@@ -83,6 +84,7 @@ TESTS_SRC_CPP = \
 	tests/sensor/func_chain.cpp \
 	tests/sensor/redundant.cpp \
 	tests/sensor/test_sensor_init.cpp \
+	tests/sensor/test_sensor_checker.cpp \
 	tests/sensor/table_func.cpp \
 	tests/util/test_closed_loop_controller.cpp \
 	tests/test_stft.cpp \

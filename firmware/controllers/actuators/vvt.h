@@ -27,7 +27,7 @@ public:
 
 	// EngineModule implementation
 	void onFastCallback() override;
-	void onConfigurationChange(engine_configuration_s const * previousConfig) override;
+	void onConfigurationChange(engine_configuration_s const* previousConfig) override;
 
 	// ClosedLoopController implementation
 	expected<angle_t> observePlant() const override;
@@ -61,17 +61,21 @@ private:
 
 // Unique types for each VVT so they can be engine modules
 struct VvtController1 : public VvtController {
-	VvtController1() : VvtController(0, 0, 0) { }
+	VvtController1()
+		: VvtController(0, 0, 0) {}
 };
 
 struct VvtController2 : public VvtController {
-	VvtController2() : VvtController(1, 0, 1) { }
+	VvtController2()
+		: VvtController(1, 0, 1) {}
 };
 
 struct VvtController3 : public VvtController {
-	VvtController3() : VvtController(2, 1, 0) { }
+	VvtController3()
+		: VvtController(2, 1, 0) {}
 };
 
 struct VvtController4 : public VvtController {
-	VvtController4() : VvtController(3, 1, 1) { }
+	VvtController4()
+		: VvtController(3, 1, 1) {}
 };

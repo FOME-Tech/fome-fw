@@ -86,4 +86,3 @@ static_assert(offsetof(high_pressure_fuel_pump_s, fuel_requested_percent) == 4);
 static_assert(offsetof(high_pressure_fuel_pump_s, fuel_requested_percent_pi) == 8);
 static_assert(offsetof(high_pressure_fuel_pump_s, nextLobe) == 16);
 static_assert(offsetof(high_pressure_fuel_pump_s, di_nextStart) == 20);
-

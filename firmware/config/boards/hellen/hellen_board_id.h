@@ -9,11 +9,10 @@
 #pragma once
 
 // this is used by the detection method and should be visible to the interrupt handler (hellenBoardIdInputCallback)
-class HellenBoardIdFinderState
-{
+class HellenBoardIdFinderState {
 public:
 	efitick_t timeChargeNt = 0;
-	
+
 	ioportid_t rOutputPinPort;
 	int rOutputPinIdx;
 	ioportid_t rInputPinPort;
@@ -27,8 +26,7 @@ public:
 // We need to solve the following equation for R or C:
 //   X^Td - X^(Tc1+Td) + X^(Tc2-Tc1) - 1 = 0
 // where: X = exp(-1/(RC))
-class HellenBoardIdSolver : public NewtonsMethodSolver
-{
+class HellenBoardIdSolver : public NewtonsMethodSolver {
 public:
 	float fx(float x) override {
 		return exp(k1 / x) - exp(k2 / x) + exp(k3 / x) - 1.0;
@@ -47,13 +45,19 @@ private:
 	float k1, k2, k3;
 };
 
-
-class HellenBoardIdFinderBase
-{
+class HellenBoardIdFinderBase {
 public:
-	float calc(float Tc1_us, float Tc2_us, float Rest, float C, bool testOnlyMajorSeries, float *Rmeasured, float *Cest, int *rIdx);
+	float
+	calc(float Tc1_us,
+		 float Tc2_us,
+		 float Rest,
+		 float C,
+		 bool testOnlyMajorSeries,
+		 float* Rmeasured,
+		 float* Cest,
+		 int* rIdx);
 
-	float findClosestResistor(float R, bool testOnlyMajorSeries, int *rIdx);
+	float findClosestResistor(float R, bool testOnlyMajorSeries, int* rIdx);
 	float calcEstimatedResistance(float Tc1_us, float C);
 
 public:
@@ -61,17 +65,16 @@ public:
 };
 
 template <size_t NumPins>
-class HellenBoardIdFinder : public HellenBoardIdFinderBase
-{
+class HellenBoardIdFinder : public HellenBoardIdFinderBase {
 public:
-	HellenBoardIdFinder(brain_pin_e (&rP)[NumPins]) : rPins(rP) {}
+	HellenBoardIdFinder(brain_pin_e (&rP)[NumPins])
+		: rPins(rP) {}
 
 	// R1 or R2
-	bool measureChargingTimes(int i, float & Tc1_us, float & Tc2_us);
-	bool measureChargingTimesAveraged(int i, float & Tc1_us, float & Tc2_us);
+	bool measureChargingTimes(int i, float& Tc1_us, float& Tc2_us);
+	bool measureChargingTimesAveraged(int i, float& Tc1_us, float& Tc2_us);
 
 public:
 	brain_pin_e (&rPins)[NumPins];
 	HellenBoardIdFinderState state;
 };
-

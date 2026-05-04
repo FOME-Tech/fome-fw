@@ -6,7 +6,7 @@
 PROJECT = fome
 PROJECT_DIR = .
 
-CHIBIOS = $(PROJECT_DIR)/ChibiOS
+CHIBIOS = $(PROJECT_DIR)/ext/ChibiOS
 RULESPATH = $(CHIBIOS)/os/common/startup/ARMCMx/compilers/GCC/mk
 RULESFILE = $(RULESPATH)/rules.mk
 
@@ -22,10 +22,10 @@ PCH_DIR = $(PROJECT_DIR)/pch
 PCHSRC = $(PCH_DIR)/pch.h
 PCHSUB = firmware
 
-CHIBIOS_CONTRIB= $(PROJECT_DIR)/ChibiOS-Contrib
+CHIBIOS_CONTRIB = $(PROJECT_DIR)/ext/ChibiOS-Contrib
 
 # Configure libfirmware Paths/Includes
-RUSEFI_LIB = $(PROJECT_DIR)/libfirmware
+RUSEFI_LIB = $(PROJECT_DIR)/ext/libfirmware
 include $(RUSEFI_LIB)/util/util.mk
 include $(RUSEFI_LIB)/pt2001/pt2001.mk
 
@@ -81,10 +81,9 @@ ifeq ($(USE_LDOPT),)
   USE_LDOPT =
 endif
 
-# Enable this if you want link time optimizations (LTO)
-ifeq ($(USE_LTO),)
-  USE_LTO = yes
-endif
+# Parallel LTO for faster linking
+USE_LTO = no
+USE_OPT += -flto=auto
 
 # If enabled, this option allows to compile the application in THUMB mode.
 ifeq ($(USE_THUMB),)

@@ -3,9 +3,6 @@
 struct idle_state_s {
 	// mightResetPid
 	// The idea of 'mightResetPid' is to reset PID only once - each time when TPS > idlePidDeactivationTpsThreshold.
-	// The throttle pedal can be pressed for a long time, making the PID data obsolete (thus the reset is required).
-	// We set 'mightResetPid' to true only if PID was actually used (i.e. idlePid.getOutput() was called) to save some CPU resources.
-	// See automaticIdleController().
 	// offset 0 bit 0
 	bool mightResetPid : 1 {};
 	// wasResetPid
@@ -93,8 +90,11 @@ struct idle_state_s {
 	// Exit threshold
 	// offset 16
 	uint16_t idleExitRpm = (uint16_t)0;
+	// Phase
 	// offset 18
-	uint8_t alignmentFill_at_18[2];
+	uint8_t currentPhase = (uint8_t)0;
+	// offset 19
+	uint8_t alignmentFill_at_19[1];
 	// Open loop: Lua Adder
 	// offset 20
 	float luaAdd = (float)0;
@@ -143,6 +143,7 @@ static_assert(offsetof(idle_state_s, luaAddRpm) == 8);
 static_assert(offsetof(idle_state_s, idleTarget) == 12);
 static_assert(offsetof(idle_state_s, idleEntryRpm) == 14);
 static_assert(offsetof(idle_state_s, idleExitRpm) == 16);
+static_assert(offsetof(idle_state_s, currentPhase) == 18);
 static_assert(offsetof(idle_state_s, luaAdd) == 20);
 static_assert(offsetof(idle_state_s, iacByTpsTaper) == 24);
 static_assert(offsetof(idle_state_s, iacByRpmTaper) == 28);
@@ -154,4 +155,3 @@ static_assert(offsetof(idle_state_s, idleClosedLoop) == 36);
 static_assert(offsetof(idle_state_s, currentIdlePosition) == 40);
 static_assert(offsetof(idle_state_s, idleTargetAirmass) == 44);
 static_assert(offsetof(idle_state_s, idleTargetFlow) == 46);
-

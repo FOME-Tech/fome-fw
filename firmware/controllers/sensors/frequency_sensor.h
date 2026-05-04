@@ -8,10 +8,9 @@
 class FrequencySensor : public FunctionalSensor {
 public:
 	FrequencySensor(SensorType type, efidur_t timeoutPeriod)
-		: FunctionalSensor(type, timeoutPeriod)
-	{ }
+		: FunctionalSensor(type, timeoutPeriod) {}
 
-	void initIfValid(brain_pin_e pin, SensorConverter &converter, float filterParameter);
+	void initIfValid(brain_pin_e pin, SensorConverter& converter, float filterParameter);
 	void deInit();
 
 	// sad workaround: we are not good at BiQuad configuring
@@ -22,6 +21,7 @@ public:
 	void onEdge(efitick_t nowNt);
 
 	int eventCounter = 0;
+
 private:
 	Timer m_edgeTimer;
 	brain_pin_e m_pin = Gpio::Unassigned;

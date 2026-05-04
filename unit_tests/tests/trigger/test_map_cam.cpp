@@ -21,8 +21,8 @@ TEST(trigger, map_cam_by_magic_point) {
 
 	engineConfiguration->mapCamDetectionAnglePosition = 90;
 
-	eth.smartFireTriggerEvents2(/*count*/10, /*delayMs*/200);
-	ASSERT_EQ(150,  Sensor::getOrZero(SensorType::Rpm)) << "RPM";
+	eth.smartFireTriggerEvents2(/*count*/ 10, /*delayMs*/ 200);
+	ASSERT_EQ(150, Sensor::getOrZero(SensorType::Rpm)) << "RPM";
 
 	ASSERT_EQ(0, engine->triggerCentral.triggerState.m_camResyncCounter);
 
@@ -32,7 +32,7 @@ TEST(trigger, map_cam_by_magic_point) {
 	eth.assertEvent5("spark down#0", 0, (void*)fireSparkAndPrepareNextSchedule, 188333);
 
 	engine->outputChannels.instantMAPValue = 120;
-	eth.smartFireTriggerEvents2(/*count*/4, /*delayMs*/200);
+	eth.smartFireTriggerEvents2(/*count*/ 4, /*delayMs*/ 200);
 
 	ASSERT_EQ(1, engine->triggerCentral.triggerState.m_camResyncCounter);
 

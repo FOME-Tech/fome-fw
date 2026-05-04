@@ -12,16 +12,16 @@
 #include <hal.h>
 #include "efifeatures.h"
 
-#define MC33972_INPUTS				22
+#define MC33972_INPUTS 22
 
 /* DOTO: add irq support */
-#define MC33972_POLL_INTERVAL_MS	100
+#define MC33972_POLL_INTERVAL_MS 100
 
 struct mc33972_config {
 #if HAL_USE_SPI
-	SPIDriver		*spi_bus;
-	SPIConfig	spi_config;
+	SPIDriver* spi_bus;
+	SPIConfig spi_config;
 #endif
 };
 
-int mc33972_add(brain_pin_e base, unsigned int index, const struct mc33972_config *cfg);
+int mc33972_add(brain_pin_e base, unsigned int index, const struct mc33972_config* cfg);

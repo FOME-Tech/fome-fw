@@ -49,7 +49,7 @@ public:
 	// Flush the internal buffer to the underlying interface.
 	size_t flush() override {
 		size_t bytesToWrite = m_bytesUsed;
-		
+
 		if (bytesToWrite > 0) {
 			m_bytesUsed = 0;
 			return writeInternal(m_buffer, bytesToWrite);

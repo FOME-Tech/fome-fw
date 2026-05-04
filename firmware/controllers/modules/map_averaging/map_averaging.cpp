@@ -62,13 +62,17 @@ static void startAveraging(sampler* s) {
 
 	mapAveragingPin.setHigh();
 
-	scheduleByAngle(&s->timer, getTimeNowNt(), duration,
-		{ endAveraging, &averager });
+	scheduleByAngle(&s->timer, getTimeNowNt(), duration, {endAveraging, &averager});
 }
 
 void MapAverager::showInfo(const char* sensorName) const {
 	const auto value = get();
-	efiPrintf("Sensor \"%s\" is MAP averager: valid: %s value: %.2f averaged sample count: %d", sensorName, boolToString(value.Valid), value.Value, m_lastCounter);
+	efiPrintf(
+			"Sensor \"%s\" is MAP averager: valid: %s value: %.2f averaged sample count: %d",
+			sensorName,
+			boolToString(value.Valid),
+			value.Value,
+			m_lastCounter);
 }
 
 void MapAverager::start(uint8_t cylinderNumber) {
@@ -190,7 +194,7 @@ void MapAveragingModule::onFastCallback() {
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
-	MAP_sensor_config_s * c = &engineConfiguration->map;
+	MAP_sensor_config_s* c = &engineConfiguration->map;
 
 	angle_t start = interpolate2d(rpm, c->samplingAngleBins, c->samplingAngle);
 	efiAssertVoid(ObdCode::CUSTOM_ERR_MAP_START_ASSERT, !std::isnan(start), "start");
@@ -232,11 +236,11 @@ void MapAveragingModule::onEnginePhase(float /*rpm*/, const EnginePhaseInfo& pha
 		}
 
 		auto& s = samplers[i];
-		scheduleByAngle(&s.timer, phase.timestamp, angleOffset, { startAveraging, &s });
+		scheduleByAngle(&s.timer, phase.timestamp, angleOffset, {startAveraging, &s});
 	}
 }
 
-void MapAveragingModule::onConfigurationChange(engine_configuration_s const * previousConfig) {
+void MapAveragingModule::onConfigurationChange(engine_configuration_s const* previousConfig) {
 	if (!previousConfig || engineConfiguration->mapMinBufferLength != previousConfig->mapMinBufferLength) {
 		applyMapMinBufferLength();
 	}

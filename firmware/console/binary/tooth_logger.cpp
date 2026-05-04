@@ -93,7 +93,8 @@ void EnableToothLogger() {
 
 	// Empty the filled buffer list
 	CompositeBuffer* dummy;
-	while (MSG_TIMEOUT != filledBuffers.fetchI(&dummy)) ;
+	while (MSG_TIMEOUT != filledBuffers.fetchI(&dummy))
+		;
 
 	// Put all buffers in the free list
 	for (size_t i = 0; i < bufferCount; i++) {

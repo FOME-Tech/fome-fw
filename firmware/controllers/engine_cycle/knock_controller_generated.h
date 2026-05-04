@@ -96,4 +96,3 @@ static_assert(offsetof(knock_controller_s, m_knockRetard) == 20);
 static_assert(offsetof(knock_controller_s, m_knockThreshold) == 24);
 static_assert(offsetof(knock_controller_s, m_knockCount) == 28);
 static_assert(offsetof(knock_controller_s, m_maximumRetard) == 32);
-

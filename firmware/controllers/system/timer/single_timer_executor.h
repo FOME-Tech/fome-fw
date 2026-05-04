@@ -13,15 +13,13 @@
 class SingleTimerExecutor final : public Scheduler {
 public:
 	SingleTimerExecutor();
-	void schedule(const char *msg, scheduling_s *scheduling, efitick_t timeNt, action_s action) override;
+	void schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) override;
 	void cancel(scheduling_s* scheduling) override;
 
 	void onTimerCallback();
 	int timerCallbackCounter = 0;
-	int scheduleCounter = 0;
-	int maxExecuteCounter = 0;
 	int executeCounter;
-	int executeAllPendingActionsInvocationCounter = 0;
+
 private:
 	EventQueue queue;
 	bool reentrantFlag = false;
@@ -30,5 +28,3 @@ private:
 };
 
 void initSingleTimerExecutorHardware();
-void executorStatistics();
-

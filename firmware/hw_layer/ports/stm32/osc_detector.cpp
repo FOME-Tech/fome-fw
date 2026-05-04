@@ -3,15 +3,18 @@
  * @brief This logic automatically detects the speed of the
  *        oscillator or crystal connected to HSE.
  * @date 12 July 2021
- * 
- * It works by first using the reasonably-precise HSI oscillator (16MHz) to measure LSI (nominally 32khz, but wide tolerance).
- * Then, it switches the system clock source to HSE, and repeats the same measurement.  The inaccurate LSI will not drift
- * significantly in the short period of time between these two measurements, so use it as a transfer standard to compare the speed
- * of HSI and HSE.  The ratio between the measured speed of LSI when running on HSE vs. HSI will give the ratio of speeds of HSE
- * and HSI themselves.  Since we know the value of HSI (16mhz), we can compute the speed of HSE.
- * 
- * Lastly, the PLL is reconfigured to use the correct input divider such that the input frequency is 1MHz
- * (PLLM is set to N for an N-MHz HSE crystal).
+ *
+ * It works by connecting the HSERTC clock (HSE/32, which is the RTC reference clock) to a timer input
+ * and measuring the timer tick count during 10 edges of HSERTC. Since we know the timer clock frequency
+ * (STM32_TIMCLK2) and the HSERTC divider (32), we can calculate the precise HSE frequency from the ratio:
+ *
+ * hseFrequencyHz = (10 * rtcpreDivider * STM32_TIMCLK2) / timerCounts
+ *
+ * The RTC clock provides a stable reference tied to HSE (HSE/32) that's measured against the system clock,
+ * giving us the information needed to compute HSE frequency accurately.
+ *
+ * Lastly, the PLL is reconfigured to use the correct PLLM input divider so that the PLL input frequency
+ * matches the expected value (1MHz for F4/F7, 2MHz for H7).
  */
 
 #include "pch.h"
@@ -29,7 +32,8 @@ uint8_t autoDetectedRoundedMhz;
 
 static uint32_t getOneCapture() {
 	// wait for input capture
-	while ((TIMER->SR & TIM_SR_CC1IF) == 0);
+	while ((TIMER->SR & TIM_SR_CC1IF) == 0)
+		;
 
 	// Return captured count
 	return TIMER->CCR1;
@@ -42,8 +46,7 @@ static uint32_t getTimerCounts(size_t count) {
 	uint32_t firstCapture = getOneCapture();
 	uint32_t lastCapture = 0;
 
-	for (size_t i = 0; i < count; i++)
-	{
+	for (size_t i = 0; i < count; i++) {
 		lastCapture = getOneCapture();
 	}
 
@@ -74,20 +77,18 @@ static void reprogramPll(uint8_t roundedHseMhz) {
 
 	// H7 is configured for 2MHz input to PLL
 	auto pllm = roundedHseMhz / 2;
-	
+
 	// Set PLLM for all 3 PLLs to the new value, and select HSE as the clock source
-	RCC->PLLCKSELR = 
-		pllm << RCC_PLLCKSELR_DIVM1_Pos |
-		pllm << RCC_PLLCKSELR_DIVM2_Pos |
-		pllm << RCC_PLLCKSELR_DIVM3_Pos |
-		RCC_PLLCKSELR_PLLSRC_HSE;
+	RCC->PLLCKSELR = pllm << RCC_PLLCKSELR_DIVM1_Pos | pllm << RCC_PLLCKSELR_DIVM2_Pos |
+					 pllm << RCC_PLLCKSELR_DIVM3_Pos | RCC_PLLCKSELR_PLLSRC_HSE;
 
 	// Enable PLLs
 	RCC->CR |= RCC_CR_PLL1ON | RCC_CR_PLL2ON | RCC_CR_PLL3ON;
 
 	// Wait for PLLs to lock
 	auto readyMask = RCC_CR_PLL1RDY | RCC_CR_PLL2RDY | RCC_CR_PLL3RDY;
-	while ((RCC->CR & readyMask) != readyMask) ;
+	while ((RCC->CR & readyMask) != readyMask)
+		;
 
 	// Switch system clock source back to PLL
 	RCC->CFGR |= RCC_CFGR_SW_PLL1;
@@ -125,12 +126,14 @@ static void reprogramPll(uint8_t roundedHseMhz) {
 
 	// Reenable PLL, wait for lock
 	RCC->CR |= RCC_CR_PLLON;
-	while (!(RCC->CR & RCC_CR_PLLRDY));
+	while (!(RCC->CR & RCC_CR_PLLRDY))
+		;
 
 	// Switch clock source back to PLL
 	RCC->CFGR &= ~RCC_CFGR_SW;
 	RCC->CFGR |= RCC_CFGR_SW_PLL;
-	while ((RCC->CFGR & RCC_CFGR_SWS) != (STM32_SW << 2));
+	while ((RCC->CFGR & RCC_CFGR_SWS) != (STM32_SW << 2))
+		;
 }
 #endif
 

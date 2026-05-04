@@ -22,7 +22,8 @@ void setGmLs4() {
 
 	engineConfiguration->etbIdleThrottleRange = 15;
 
-    strncpy(config->luaScript, R"(
+	strncpy(config->luaScript,
+			R"(
 
 function getBitRange(data, bitIndex, bitWidth)
 	byteIndex = bitIndex >> 3
@@ -126,7 +127,8 @@ function onTick()
     end
 end
 
-    )", efi::size(config->luaScript));
+    )",
+			efi::size(config->luaScript));
 
 	setPPSCalibration(0.51, 2.11, 1.01, 4.23);
 	setTPS1Calibration(880, 129, 118, 870);
@@ -141,6 +143,6 @@ void setProteusGmLs4() {
 	setTPS1Inputs(PROTEUS_IN_ANALOG_VOLT_4, PROTEUS_IN_ANALOG_VOLT_3);
 
 // todo: tps
-#endif //HW_PROTEUS
+#endif // HW_PROTEUS
 	setGmLs4();
 }

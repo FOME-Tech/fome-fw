@@ -71,4 +71,3 @@ struct main_relay_s {
 	bool unusedBit_0_31 : 1 {};
 };
 static_assert(sizeof(main_relay_s) == 4);
-

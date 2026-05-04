@@ -8,7 +8,8 @@
  * with the level of precision we need, and realistically it should not.
  *
  * Update: actually newer ChibiOS has tickless mode and what we have here is pretty much the same thing :)
- * open question if rusEfi should simply migrate to ChibiOS tickless scheduling (which would increase coupling with ChibiOS)
+ * open question if rusEfi should simply migrate to ChibiOS tickless scheduling (which would increase coupling with
+ * ChibiOS)
  *
  * See https://rusefi.com/forum/viewtopic.php?f=5&t=373&start=360#p30895
  * for some performance data: with 'debug' firmware we spend about 5% of CPU in TIM5 handler which seem to be executed
@@ -21,7 +22,6 @@
  */
 
 #include "pch.h"
-
 
 #include "single_timer_executor.h"
 #include "efitime.h"
@@ -39,11 +39,9 @@ void globalTimerCallback() {
 
 SingleTimerExecutor::SingleTimerExecutor()
 	// 8us is roughly the cost of the interrupt + overhead of a single timer event
-	: queue(US2NT(8))
-{
-}
+	: queue(US2NT(8)) {}
 
-void SingleTimerExecutor::schedule(const char *msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
+void SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
 	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
 
 	efidur_t deltaTimeNt = nt - getTimeNowNt();
@@ -54,8 +52,6 @@ void SingleTimerExecutor::schedule(const char *msg, scheduling_s* scheduling, ef
 		firmwareError(ObdCode::CUSTOM_ERR_TASK_TIMER_OVERFLOW, "schedule() too far: %ld %s", intDeltaTimeNt, msg);
 		return;
 	}
-
-	scheduleCounter++;
 
 	// Lock for queue insertion - we may already be locked, but that's ok
 	chibios_rt::CriticalSectionLocker csl;
@@ -77,8 +73,6 @@ void SingleTimerExecutor::cancel(scheduling_s* scheduling) {
 }
 
 void SingleTimerExecutor::onTimerCallback() {
-	timerCallbackCounter++;
-
 	chibios_rt::CriticalSectionLocker csl;
 
 	executeAllPendingActions();
@@ -91,7 +85,6 @@ void SingleTimerExecutor::onTimerCallback() {
 void SingleTimerExecutor::executeAllPendingActions() {
 	ScopePerf perf(PE::SingleTimerExecutorDoExecute);
 
-	executeAllPendingActionsInvocationCounter++;
 	/**
 	 * Let's execute actions we should execute at this point.
 	 * reentrantFlag takes care of the use case where the actions we are executing are scheduling
@@ -119,8 +112,6 @@ void SingleTimerExecutor::executeAllPendingActions() {
 		}
 
 	} while (didExecute);
-
-	maxExecuteCounter = maxI(maxExecuteCounter, executeCounter);
 
 	if (!isLocked()) {
 		firmwareError(ObdCode::CUSTOM_ERR_LOCK_ISSUE, "Someone has stolen my lock");
@@ -154,17 +145,4 @@ void initSingleTimerExecutorHardware() {
 	initMicrosecondTimer();
 }
 
-void executorStatistics() {
-	if (engineConfiguration->debugMode == DBG_EXECUTOR) {
-#if EFI_TUNER_STUDIO
-		engine->outputChannels.debugIntField1 = ___engine.scheduler.timerCallbackCounter;
-		engine->outputChannels.debugIntField2 = ___engine.scheduler.executeAllPendingActionsInvocationCounter;
-		engine->outputChannels.debugIntField3 = ___engine.scheduler.scheduleCounter;
-		engine->outputChannels.debugIntField4 = ___engine.scheduler.executeCounter;
-		engine->outputChannels.debugIntField5 = ___engine.scheduler.maxExecuteCounter;
-#endif /* EFI_TUNER_STUDIO */
-	}
-}
-
 #endif /* EFI_SIGNAL_EXECUTOR_ONE_TIMER */
-

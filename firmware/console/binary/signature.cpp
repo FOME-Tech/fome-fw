@@ -10,7 +10,7 @@
 
 #include "pch.h"
 
-#pragma message ("TS_SIGNATURE: " TS_SIGNATURE)
+#pragma message("TS_SIGNATURE: " TS_SIGNATURE)
 
 const char* getTsSignature() {
 	return TS_SIGNATURE;

@@ -76,4 +76,3 @@ struct antilag_system_state_s {
 static_assert(sizeof(antilag_system_state_s) == 12);
 static_assert(offsetof(antilag_system_state_s, fuelALSCorrection) == 4);
 static_assert(offsetof(antilag_system_state_s, timingALSCorrection) == 8);
-

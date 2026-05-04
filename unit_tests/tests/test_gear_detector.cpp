@@ -27,7 +27,6 @@ TEST(GearDetector, ComputeGearRatio) {
 	EXPECT_EQ(0, GetGearRatioFor(507, 4.1, 0, 800));
 }
 
-
 TEST(GearDetector, GetRpmInGear) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

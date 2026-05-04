@@ -68,9 +68,7 @@ void setFrankensoMazdaMiataNA8Configuration() {
 	// blue jumper wire to W45 bottom jumper, not OEM
 	engineConfiguration->map.sensor.hwChannel = EFI_ADC_7;
 
-
-	engineConfiguration->vbattDividerCoeff = 9.75;// ((float) (8.2 + 33)) / 8.2 * 2;
-
+	engineConfiguration->vbattDividerCoeff = 9.75; // ((float) (8.2 + 33)) / 8.2 * 2;
 
 	engineConfiguration->injectionPins[0] = Gpio::D3; // #1 pin 3U
 	engineConfiguration->injectionPins[1] = Gpio::E2; // #2 pin 3V
@@ -81,5 +79,5 @@ void setFrankensoMazdaMiataNA8Configuration() {
 void setHellenMiata96() {
 	miataNAcommonEngineSettings();
 	commonNA8();
-    engineConfiguration->map.sensor.type = MT_MPXH6400;
+	engineConfiguration->map.sensor.type = MT_MPXH6400;
 }

@@ -98,8 +98,7 @@ void boardInitHardware() {
 	boardOnConfigurationChange(nullptr);
 }
 
-void boardOnConfigurationChange(engine_configuration_s * /*previousConfiguration*/) {
-}
+void boardOnConfigurationChange(engine_configuration_s* /*previousConfiguration*/) {}
 
 #include "hellen_leds_144.cpp"
 
@@ -108,7 +107,7 @@ void setBoardConfigOverrides() {
 
 	setHellenSdCardSpi2();
 
-    setDefaultHellenAtPullUps();
+	setDefaultHellenAtPullUps();
 
 	engineConfiguration->canTxPin = Gpio::D1;
 	engineConfiguration->canRxPin = Gpio::D0;
@@ -126,10 +125,10 @@ void setBoardDefaultConfiguration() {
 	setIgnitionPins();
 	setupEtb();
 	engineConfiguration->acSwitch = Gpio::Unassigned;
-//	engineConfiguration->fuelPumpPin = Gpio::Unassigned;//H144_OUT_PWM2;
-//	engineConfiguration->fanPin = Gpio::Unassigned;//H144_OUT_PWM4;
+	//	engineConfiguration->fuelPumpPin = Gpio::Unassigned;//H144_OUT_PWM2;
+	//	engineConfiguration->fanPin = Gpio::Unassigned;//H144_OUT_PWM4;
 	engineConfiguration->mainRelayPin = Gpio::Unassigned;
-    engineConfiguration->tachOutputPin = H144_OUT_PWM3;
+	engineConfiguration->tachOutputPin = H144_OUT_PWM3;
 
 	// "required" hardware is done - set some reasonable defaults
 	setupDefaultSensorInputs();
@@ -139,8 +138,6 @@ void setBoardDefaultConfiguration() {
 
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS; // IM_WASTED_SPARK
 
-
-
 	// random values to have valid config
 	engineConfiguration->tps1SecondaryMin = 1000;
 	engineConfiguration->tps1SecondaryMax = 0;
@@ -148,11 +145,10 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->throttlePedalSecondaryUpVoltage = 5.0;
 	engineConfiguration->throttlePedalSecondaryWOTVoltage = 0.0;
 
-
 	engineConfiguration->clutchDownPin = H144_IN_D_2;
 	engineConfiguration->clutchDownPinMode = PI_PULLDOWN;
 	engineConfiguration->launchActivationMode = CLUTCH_INPUT_LAUNCH;
-// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
+	// ?	engineConfiguration->malfunctionIndicatorPin = Gpio::G4; //1E - Check Engine Light
 	config->vrThreshold[0].pin = H144_OUT_PWM4;
 }
 

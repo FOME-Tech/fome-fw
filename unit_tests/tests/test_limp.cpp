@@ -54,8 +54,8 @@ TEST(limp, revLimitCltBased) {
 
 	// Configure CLT-based rev limit curve
 	engineConfiguration->useCltBasedRpmLimit = true;
-	copyArray(config->cltRevLimitRpmBins, { 10, 20, 30, 40 });
-	copyArray(config->cltRevLimitRpm, { 1000, 2000, 3000, 4000 });
+	copyArray(config->cltRevLimitRpmBins, {10, 20, 30, 40});
+	copyArray(config->cltRevLimitRpm, {1000, 2000, 3000, 4000});
 
 	LimpManager dut;
 
@@ -76,7 +76,6 @@ TEST(limp, revLimitCltBased) {
 	dut.updateState(900, 0);
 	EXPECT_TRUE(dut.allowIgnition());
 	EXPECT_TRUE(dut.allowInjection());
-
 
 	// Check middle temperature
 	Sensor::setMockValue(SensorType::Clt, 35);

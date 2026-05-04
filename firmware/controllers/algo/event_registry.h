@@ -10,7 +10,6 @@
 #include "global.h"
 #include "efi_gpio.h"
 #include "scheduler.h"
-#include "fl_stack.h"
 #include "trigger_structure.h"
 
 struct AngleBasedEvent {

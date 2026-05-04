@@ -38,7 +38,8 @@ float Ads1015::readChannel(uint8_t channel) {
 
 	// Wait for conversion to complete
 	// Bit is cleared while conversion is ongoing, set when done
-	while ((readReg(ADS1015_CONFIG) & 0x8000) == 0) ;
+	while ((readReg(ADS1015_CONFIG) & 0x8000) == 0)
+		;
 
 	// Read the result
 	int16_t result = readReg(ADS1015_CONV);

@@ -18,7 +18,8 @@ bool AntilagSystemBase::isInsideALSSwitchCondition() {
 	if (isALSSwitchActivated) {
 		if (isBrainPinValid(engineConfiguration->ALSActivatePin)) {
 #if EFI_PROD_CODE
-			ALSActivatePinState = engineConfiguration->ALSActivateInverted ^ efiReadPin(engineConfiguration->ALSActivatePin);
+			ALSActivatePinState =
+					engineConfiguration->ALSActivateInverted ^ efiReadPin(engineConfiguration->ALSActivatePin);
 #else
 			ALSActivatePinState = false;
 #endif
@@ -64,17 +65,13 @@ bool AntilagSystemBase::isAntilagConditionMet(float rpm) {
 	ALSMaxThrottleIntentCondition = isALSMaxThrottleIntentCondition();
 	ALSSwitchCondition = isInsideALSSwitchCondition();
 
-	return	ALSMinRPMCondition &&
-			ALSMaxRPMCondition &&
-			ALSMinCLTCondition &&
-			ALSMaxCLTCondition &&
-			ALSMaxThrottleIntentCondition &&
-			ALSSwitchCondition;
+	return ALSMinRPMCondition && ALSMaxRPMCondition && ALSMinCLTCondition && ALSMaxCLTCondition &&
+		   ALSMaxThrottleIntentCondition && ALSSwitchCondition;
 }
 
 void AntilagSystemBase::update() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-    isAntilagCondition = engineConfiguration->antiLagEnabled && isAntilagConditionMet(rpm);
+	isAntilagCondition = engineConfiguration->antiLagEnabled && isAntilagConditionMet(rpm);
 
 #if EFI_ANTILAG_SYSTEM
 	fuelALSCorrection = getFuelALSCorrection(rpm);

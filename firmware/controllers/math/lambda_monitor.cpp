@@ -3,13 +3,12 @@
 #include "lambda_monitor.h"
 
 float LambdaMonitor::getMaxAllowedLambda(float rpm, float load) const {
-	return
-		engine->fuelComputer.targetLambda
-		+ interpolate3d(
-			config->lambdaMaxDeviationTable,
-			config->lambdaMaxDeviationLoadBins, load,
-			config->lambdaMaxDeviationRpmBins, rpm
-		);
+	return engine->fuelComputer.targetLambda + interpolate3d(
+													   config->lambdaMaxDeviationTable,
+													   config->lambdaMaxDeviationLoadBins,
+													   load,
+													   config->lambdaMaxDeviationRpmBins,
+													   rpm);
 }
 
 float LambdaMonitor::getTimeout() const {
