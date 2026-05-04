@@ -100,9 +100,6 @@ sint8 nm_bus_init(void*) {
 	wifiSpi = getSpiDevice(spi);
 	spiStart(wifiSpi, &wifi_spicfg);
 
-	// Take exclusive access of the bus for WiFi use, don't release it until the bus is de-init.
-	spiAcquireBus(wifiSpi);
-
 	return M2M_SUCCESS;
 }
 
@@ -145,7 +142,6 @@ static void resetSpiDevice(SPIDriver* spi) {
 }
 
 sint8 nm_bus_deinit() {
-	spiReleaseBus(wifiSpi);
 	spiStop(wifiSpi);
 	resetSpiDevice(wifiSpi);
 
