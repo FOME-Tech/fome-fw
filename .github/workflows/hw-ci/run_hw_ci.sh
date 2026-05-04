@@ -5,8 +5,6 @@
 
 HW_SUITE=$1
 
-lsusb -v
-
 set -euo pipefail
 
 cd java_tools
