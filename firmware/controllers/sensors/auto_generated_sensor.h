@@ -128,6 +128,8 @@ constexpr inline const char* getSensorType(SensorType value) {
 			return "Tps2Secondary";
 		case SensorType::TurbochargerSpeed:
 			return "TurbochargerSpeed";
+		case SensorType::VboostVoltage:
+			return "VboostVoltage";
 		case SensorType::VehicleSpeed:
 			return "VehicleSpeed";
 		case SensorType::WastegatePosition:

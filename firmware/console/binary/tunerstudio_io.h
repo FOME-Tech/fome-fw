@@ -20,7 +20,6 @@ public:
 	virtual size_t readTimeout(uint8_t* buffer, size_t size, int timeout) = 0;
 
 	// These functions are optional to implement, not all channels need them
-	virtual void flush() {}
 	virtual bool isConfigured() const {
 		return true;
 	}
