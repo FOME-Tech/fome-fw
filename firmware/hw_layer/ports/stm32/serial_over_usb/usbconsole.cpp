@@ -16,11 +16,6 @@
 
 static bool isUsbSerialInitialized = false;
 
-#if EFI_USB_SERIAL_DIRECT
-// Defined in firmware/console/usb_console_direct.cpp
-void usbDirectObjectInit();
-#endif
-
 /**
  * start USB serial using hard-coded communications pins (see comments inside the code)
  */
@@ -30,9 +25,7 @@ void usb_serial_start() {
 	efiSetPadMode("USB DM", EFI_USB_SERIAL_DM, PAL_MODE_ALTERNATE(EFI_USB_AF));
 	efiSetPadMode("USB DP", EFI_USB_SERIAL_DP, PAL_MODE_ALTERNATE(EFI_USB_AF));
 
-#if EFI_USB_SERIAL_DIRECT
-	usbDirectObjectInit();
-#else
+#if ! EFI_USB_SERIAL_DIRECT
 	/*
 	 * Initializes a serial-over-USB CDC driver.
 	 */

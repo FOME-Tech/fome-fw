@@ -105,11 +105,6 @@ struct UsbThread : public TunerstudioThread {
 
 static CCM_OPTIONAL UsbThread usbConsole;
 
-// Called from usbconsole.cpp (port layer) at startup, replacing sduObjectInit/sduStart.
-void usbDirectObjectInit() {
-	iqObjectInit(&s_rxQueue, s_rxQueueBuf, sizeof(s_rxQueueBuf), nullptr, nullptr);
-}
-
 // Called from usbcfg.cpp on USB_EVENT_CONFIGURED (replaces sduConfigureHookI).
 void usbDirectConfiguredHookI(USBDriver*) {
 	s_configured = true;
@@ -128,6 +123,11 @@ void usbDirectWakeupHookI(USBDriver*) {
 }
 
 void startUsbConsole() {
+	// Initialize the RX queue before any thread can touch it. The pump thread
+	// may hit iqResetI on its first usbReceive (driver isn't started yet), so
+	// the queue must be valid before rxPump runs.
+	iqObjectInit(&s_rxQueue, s_rxQueueBuf, sizeof(s_rxQueueBuf), nullptr, nullptr);
+
 	rxPump.startThread();
 	usbConsole.startThread();
 }
