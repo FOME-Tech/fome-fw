@@ -55,7 +55,7 @@ void CanTsChannel::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) {
 		uint8_t responseCode = TS_RESPONSE_OK;
 		if (size > 0) {
 			write(&responseCode, 1, /*isEndOfPacket*/ false); // header without size
-			write(buf, size, /*isEndOfPacket*/ true);         // body, terminate the frame
+			write(buf, size, /*isEndOfPacket*/ true);		  // body, terminate the frame
 		} else {
 			write(&responseCode, 1, /*isEndOfPacket*/ true);
 		}
