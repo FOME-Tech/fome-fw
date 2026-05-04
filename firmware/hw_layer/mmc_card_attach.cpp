@@ -15,7 +15,7 @@
 
 #if HAL_USE_MMC_SPI
 // Don't re-read SD card spi device after boot - it could change mid transaction (TS thread could preempt),
-// which will cause disaster (usually multiple-unlock of the same mutex in UNLOCK_SD_SPI)
+// which will cause disaster
 static SPIDriver* mmcSpiDevice = nullptr;
 
 // MMC/SD driver instance.
@@ -23,9 +23,6 @@ MMCDriver MMCD1;
 
 // MMC/SD over SPI driver configuration
 static MMCConfig mmccfg = {NULL, &mmc_ls_spicfg, &mmc_hs_spicfg};
-
-#define LOCK_SD_SPI spiAcquireBus(mmcSpiDevice)
-#define UNLOCK_SD_SPI spiReleaseBus(mmcSpiDevice)
 
 #endif /* HAL_USE_MMC_SPI */
 
@@ -63,10 +60,8 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 	mmcStart(&MMCD1, &mmccfg);
 
 	// Performs the initialization procedure on the inserted card.
-	LOCK_SD_SPI;
 	if (mmcConnect(&MMCD1) != HAL_SUCCESS) {
 		efiPrintf("SD card (SPI) failed to connect");
-		UNLOCK_SD_SPI;
 		return nullptr;
 	}
 	// We intentionally never unlock in case of success, we take exclusive access of that spi device for SD use
@@ -77,7 +72,6 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 void stopMmcBlockDevice() {
 	mmcDisconnect(&MMCD1); // Brings the driver in a state safe for card removal.
 	mmcStop(&MMCD1);	   // Disables the MMC peripheral.
-	UNLOCK_SD_SPI;
 }
 #endif /* HAL_USE_MMC_SPI */
 
