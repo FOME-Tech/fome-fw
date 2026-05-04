@@ -36,7 +36,11 @@ G0_TRGT="$FW_DIR/ext/build-tools/$COMPILER_PLATFORM/bin/arm-none-eabi-"
 make -C "$G0_DIR" -j$(nproc) TRGT="$G0_TRGT" USE_OPT="-Os -ggdb -fomit-frame-pointer -falign-functions=16 --specs=nosys.specs" for_fome_image
 
 G0_IMAGE_HEADER="$G0_DIR/for_fome/g0_firmware_image.h"
-G0_APP_VERSION=$(sed -nE 's/.*APP_VERSION = ([0-9]+)U;.*/\1/p' "$G0_DIR/source/spi_app_protocol.cpp" | head -n1)
+G0_SPI_APP_PROTOCOL="$G0_DIR/spi_app_protocol.cpp"
+if [ ! -f "$G0_SPI_APP_PROTOCOL" ]; then
+  G0_SPI_APP_PROTOCOL="$G0_DIR/source/spi_app_protocol.cpp"
+fi
+G0_APP_VERSION=$(sed -nE 's/.*(APP_VERSION|appVersion) = ([0-9]+)U;.*/\2/p' "$G0_SPI_APP_PROTOCOL" | head -n1)
 [ -n "$G0_APP_VERSION" ] || { echo "Unable to determine G0 app version"; exit 1; }
 if ! grep -q 'build_g0_extension_version' "$G0_IMAGE_HEADER"; then
   printf '\nstatic const unsigned int build_g0_extension_version = %sU;\n' "$G0_APP_VERSION" >> "$G0_IMAGE_HEADER"
