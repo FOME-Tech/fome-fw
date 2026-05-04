@@ -29,17 +29,30 @@ public:
 	}
 
 	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) override {
+		// Coalesce small writes. writeCrcPacketLocked calls write() three times
+		// per response (header, data, CRC); for typical short replies all three
+		// fit in m_txBuffer and become a single usbTransmit.
 		if (size > 0) {
-			msg_t r = usbTransmit(EFI_USB_DRIVER, EFI_USB_CDC_DATA_REQUEST_EP, buffer, size);
-			if (r == MSG_RESET) {
-				m_bytesSinceEop = 0;
-				return;
+			size_t space = sizeof(m_txBuffer) - m_txFill;
+			if (size <= space) {
+				memcpy(m_txBuffer + m_txFill, buffer, size);
+				m_txFill += size;
+			} else {
+				flushBuffer();
+				if (size >= sizeof(m_txBuffer)) {
+					// Bulk payload — pass through directly to avoid an extra copy.
+					transmit(buffer, size);
+				} else {
+					memcpy(m_txBuffer, buffer, size);
+					m_txFill = size;
+				}
 			}
-			m_bytesSinceEop += size;
 		}
+
 		if (isEndOfPacket) {
+			flushBuffer();
 			// USB bulk-IN requires a short (or zero-length) packet to signal end-of-transfer.
-			// If the last transfer landed exactly on a 64-byte boundary, emit a ZLP so the
+			// If the cumulative bytes landed exactly on a 64-byte boundary, emit a ZLP so the
 			// host sees the packet boundary immediately instead of waiting for a short packet.
 			if (m_bytesSinceEop > 0 && (m_bytesSinceEop % CDC_PACKET_SIZE) == 0) {
 				usbTransmit(EFI_USB_DRIVER, EFI_USB_CDC_DATA_REQUEST_EP, nullptr, 0);
@@ -53,6 +66,27 @@ public:
 	}
 
 private:
+	void transmit(const uint8_t* buffer, size_t size) {
+		msg_t r = usbTransmit(EFI_USB_DRIVER, EFI_USB_CDC_DATA_REQUEST_EP, buffer, size);
+		if (r == MSG_RESET) {
+			m_bytesSinceEop = 0;
+		} else {
+			m_bytesSinceEop += size;
+		}
+	}
+
+	void flushBuffer() {
+		if (m_txFill == 0) {
+			return;
+		}
+		size_t n = m_txFill;
+		m_txFill = 0;
+		transmit(m_txBuffer, n);
+	}
+
+	static constexpr size_t TX_BUFFER_SIZE = 128;
+	uint8_t m_txBuffer[TX_BUFFER_SIZE];
+	size_t m_txFill = 0;
 	size_t m_bytesSinceEop = 0;
 };
 
