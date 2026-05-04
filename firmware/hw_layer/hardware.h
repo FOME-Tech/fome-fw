@@ -35,8 +35,6 @@ int getSpiPrescaler(spi_speed_e speed, spi_device_e device);
 
 SPIDriver* getSpiDevice(spi_device_e spiDevice);
 void turnOnSpi(spi_device_e device);
-void lockSpi(spi_device_e device);
-void unlockSpi(spi_device_e device);
 brain_pin_e getMisoPin(spi_device_e device);
 brain_pin_e getMosiPin(spi_device_e device);
 brain_pin_e getSckPin(spi_device_e device);
