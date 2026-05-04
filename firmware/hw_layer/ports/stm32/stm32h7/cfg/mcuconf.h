@@ -127,7 +127,7 @@
 #define STM32_PLL3_FRACN_VALUE              0
 #define STM32_PLL3_DIVP_VALUE               2
 #define STM32_PLL3_DIVQ_VALUE               20
-#define STM32_PLL3_DIVR_VALUE               12
+#define STM32_PLL3_DIVR_VALUE               24
 
 /*
  * Core clocks dynamic settings (can be changed at runtime).
