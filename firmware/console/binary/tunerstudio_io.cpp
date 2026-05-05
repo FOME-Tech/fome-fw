@@ -70,7 +70,6 @@ void TsChannelBase::writeCrcPacketLocked(const uint8_t responseCode, const uint8
 
 	// Lastly the CRC footer
 	write(crcBuffer, sizeof(crcBuffer), /*isEndOfPacket*/ true);
-	flush();
 }
 
 TsChannelBase::TsChannelBase(const char* name)
