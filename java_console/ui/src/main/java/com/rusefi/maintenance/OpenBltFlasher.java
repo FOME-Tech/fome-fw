@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public class OpenBltFlasher {
+    // 16 full PROGRAM_MAX packets with a 240-byte CTO, while still updating progress often.
+    private static final int PROGRAM_CHUNK_SIZE = 16 * 239;
+
     private final XcpLoader mLoader;
     private final OpenbltCallbacks mCallbacks;
 
@@ -106,7 +109,7 @@ public class OpenBltFlasher {
         mCallbacks.setPhase("Program", true);
         final ProgressUpdater pu = new ProgressUpdater();
 
-        forEachFirmwareChunk(199, (Chunk c) -> {
+        forEachFirmwareChunk(PROGRAM_CHUNK_SIZE, (Chunk c) -> {
             mLoader.writeData(c.address, c.data);
 
             pu.processBytes(c.data.length);
