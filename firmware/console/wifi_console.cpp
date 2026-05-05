@@ -18,24 +18,17 @@ public:
 		return m_server.hasConnectedSocket();
 	}
 
-	void write(const uint8_t* buffer, size_t size, bool /*isEndOfPacket*/) final override {
+	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) final override {
 		while (size) {
 			size_t chunkSize = writeChunk(buffer, size);
 
 			buffer += chunkSize;
 			size -= chunkSize;
 		}
-	}
 
-	void flush() final override {
-		if (m_writeSize == 0) {
-			// spurious flush, ignore
-			return;
+		if (isEndOfPacket) {
+			sendBuffer();
 		}
-
-		m_server.send(m_writeBuffer, m_writeSize);
-
-		m_writeSize = 0;
 	}
 
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override {
@@ -45,20 +38,28 @@ public:
 private:
 	ServerSocket& m_server;
 
+	void sendBuffer() {
+		if (m_writeSize == 0) {
+			return;
+		}
+
+		m_server.send(m_writeBuffer, m_writeSize);
+		m_writeSize = 0;
+	}
+
 	size_t writeChunk(const uint8_t* buffer, size_t size) {
-		// Maximum we can fit in the buffer before a flush
+		// Maximum we can fit in the buffer before we have to drain it
 		size_t available = SOCKET_BUFFER_MAX_LENGTH - m_writeSize;
 
 		// Size we will write to the buffer in this chunk
 		size_t chunkSize = std::min(size, available);
 
-		// Perform the write!
 		memcpy(&m_writeBuffer[m_writeSize], buffer, chunkSize);
 		m_writeSize += chunkSize;
 
-		// This write filled the buffer, flush it
+		// Buffer full mid-message: drain it so we can keep going.
 		if (m_writeSize == SOCKET_BUFFER_MAX_LENGTH) {
-			flush();
+			sendBuffer();
 		}
 
 		return chunkSize;
