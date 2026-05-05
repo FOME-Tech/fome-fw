@@ -9,8 +9,9 @@ G0_DIR="$FW_DIR/ext/g0_firmware"
 
 export USE_OPENBLT=yes
 
-if [ -e "$G0_DIR/.git" ]; then
-  git -C "$G0_DIR" submodule update --init --recursive
+git -C "$REPO_DIR" submodule sync firmware/ext/g0_firmware
+if [ "${UPDATE_G0_FIRMWARE-yes}" = "yes" ]; then
+  git -C "$REPO_DIR" submodule update --init --recursive --remote firmware/ext/g0_firmware
 else
   git -C "$REPO_DIR" submodule update --init --recursive firmware/ext/g0_firmware
 fi

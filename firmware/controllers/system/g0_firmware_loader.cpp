@@ -318,7 +318,7 @@ bool loadG0Firmware(bool forceUpdate) {
 	palSetPad(g0SpiConfig.ssport, g0SpiConfig.sspad);
 	spiStart(spi, &g0SpiConfig);
 
-	lockSpi(G0_SPI_DEVICE);
+	spiAcquireBus(spi);
 	resetG0(false);
 
 	uint32_t currentVersion = 0;
@@ -342,7 +342,7 @@ bool loadG0Firmware(bool forceUpdate) {
 		ok = injectG0FirmwareWithRetry(spi);
 	}
 
-	unlockSpi(G0_SPI_DEVICE);
+	spiReleaseBus(spi);
 	releaseControlPins();
 
 	if (ok) {
