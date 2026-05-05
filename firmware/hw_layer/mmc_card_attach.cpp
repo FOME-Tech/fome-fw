@@ -90,6 +90,10 @@ BaseBlockDevice* initializeMmcBlockDevice() {
 		return nullptr;
 	}
 
+	if (EFI_SDC_DEVICE.state == BLK_READY) {
+		return reinterpret_cast<BaseBlockDevice*>(&EFI_SDC_DEVICE);
+	}
+
 	sdcStart(&EFI_SDC_DEVICE, &sdcConfig);
 	if (sdcConnect(&EFI_SDC_DEVICE) != HAL_SUCCESS) {
 		efiPrintf("SD card (SDMMC) failed to connect");
