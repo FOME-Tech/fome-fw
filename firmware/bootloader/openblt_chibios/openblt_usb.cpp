@@ -43,8 +43,7 @@ void usbDirectSuspendHookI(USBDriver*) {
 }
 
 // Called from usbcfg.cpp on USB_EVENT_WAKEUP.
-void usbDirectWakeupHookI(USBDriver*) {
-}
+void usbDirectWakeupHookI(USBDriver*) {}
 
 void Rs232Init() {
 	// Actual USB init is deferred to doDeferredUsbInit
