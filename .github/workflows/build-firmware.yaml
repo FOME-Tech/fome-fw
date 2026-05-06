@@ -16,7 +16,7 @@ on:
 
 jobs:
   build-firmware:
-    runs-on: ubuntu-latest-selfhost
+    runs-on: ubuntu-latest
 
     strategy:
       # Let all builds finish even if one fails early
