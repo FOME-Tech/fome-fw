@@ -59,6 +59,12 @@ jobs:
       working-directory: ./java_tools
       run: ./gradlew :autotest:shadowJar
 
+    # Verify the OpenBLT update path produces a viable image: reboot the
+    # just-flashed firmware into OpenBLT and re-flash via the bootloader before
+    # we run any functional tests.
+    - name: OpenBLT update test
+      run: .github/workflows/hw-ci/openblt_update.sh ${{matrix.serial-device}}
+
     # This both compiles and runs HW CI tests
     - name: Run Hardware CI
       run: .github/workflows/hw-ci/run_hw_ci.sh ${{matrix.test-suite}}
