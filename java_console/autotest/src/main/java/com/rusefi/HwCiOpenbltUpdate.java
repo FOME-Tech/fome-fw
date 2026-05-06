@@ -10,17 +10,19 @@ import com.rusefi.maintenance.OpenBltFlasher;
 import com.rusefi.maintenance.OpenbltCallbacks;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Hardware CI entry point that flashes the ECU via OpenBLT, to verify that an
  * OpenBLT update path produces a viable firmware image.
  *
- * Usage: java ... com.rusefi.HwCiOpenbltUpdate &lt;running-firmware-port&gt; &lt;update.srec&gt;
+ * Usage: java ... com.rusefi.HwCiOpenbltUpdate &lt;serial-by-id-path&gt; &lt;update.srec&gt;
  *
- * The first argument is the serial port the firmware is currently enumerated as
- * (we send it a "reboot to OpenBLT" command). The second is the path to the
- * fome_update.srec image to push.
+ * The first argument is a stable /dev/serial/by-id/... path identifying the
+ * specific ECU. Both the firmware and the OpenBLT bootloader build use the
+ * same USB descriptors (vendor "FOME", same product, iSerial derived from the
+ * chip UID), so the same by-id path resolves to whichever mode the chip is
+ * currently in. We always talk to that exact port — never scan all ports —
+ * because more than one HW CI runner can share a host machine.
  */
 public class HwCiOpenbltUpdate {
     private static final long BOOTLOADER_DISCOVERY_TIMEOUT_MS = 15_000;
@@ -44,15 +46,15 @@ public class HwCiOpenbltUpdate {
         }
     }
 
-    private static void run(String fomePort, String srecPath) throws IOException {
-        System.out.println("Step 1/3: rebooting ECU at " + fomePort + " into OpenBLT...");
-        rebootToOpenblt(fomePort);
+    private static void run(String ecuPort, String srecPath) throws IOException {
+        System.out.println("Step 1/3: rebooting ECU at " + ecuPort + " into OpenBLT...");
+        rebootToOpenblt(ecuPort);
 
-        System.out.println("Step 2/3: waiting for OpenBLT bootloader to enumerate...");
-        String bltPort = waitForOpenbltPort();
+        System.out.println("Step 2/3: waiting for OpenBLT to respond on " + ecuPort + "...");
+        waitForOpenbltOnPort(ecuPort);
 
-        System.out.println("Step 3/3: flashing " + srecPath + " via OpenBLT on " + bltPort);
-        OpenBltFlasher flasher = OpenBltFlasher.makeSerial(bltPort, new XcpSettings(), new ConsoleOpenbltCallbacks());
+        System.out.println("Step 3/3: flashing " + srecPath + " via OpenBLT on " + ecuPort);
+        OpenBltFlasher flasher = OpenBltFlasher.makeSerial(ecuPort, new XcpSettings(), new ConsoleOpenbltCallbacks());
         flasher.flash(srecPath);
 
         System.out.println("OpenBLT update completed successfully.");
@@ -75,24 +77,24 @@ public class HwCiOpenbltUpdate {
         }
     }
 
-    private static String waitForOpenbltPort() throws IOException {
+    /**
+     * Polls the specific by-id port (the chip's stable USB serial identity) for
+     * an OpenBLT XCP CONNECT response. We deliberately don't scan all ports —
+     * multiple HW CI runners may share a host, and scanning could pick up a
+     * different chip's bootloader.
+     */
+    private static void waitForOpenbltOnPort(String port) throws IOException {
         long deadline = System.currentTimeMillis() + BOOTLOADER_DISCOVERY_TIMEOUT_MS;
-        String[] lastSeen = new String[0];
         while (System.currentTimeMillis() < deadline) {
             BinaryProtocol.sleep(BOOTLOADER_POLL_INTERVAL_MS);
-            lastSeen = LinkManager.getCommPorts();
-            for (String candidate : lastSeen) {
-                if (isPortOpenblt(candidate)) {
-                    return candidate;
-                }
+            if (isPortOpenblt(port)) {
+                return;
             }
         }
-        throw new IOException("OpenBLT bootloader did not respond within "
-                + BOOTLOADER_DISCOVERY_TIMEOUT_MS + "ms. Last visible ports: "
-                + Arrays.toString(lastSeen)
-                + " — either the firmware never received the reboot command, "
-                + "the bootloader didn't enumerate, or the bootloader's serial "
-                + "transport is broken.");
+        throw new IOException("OpenBLT bootloader did not respond on " + port + " within "
+                + BOOTLOADER_DISCOVERY_TIMEOUT_MS + "ms — either the firmware never received "
+                + "the reboot command, the bootloader didn't enumerate, or the bootloader's "
+                + "serial transport is broken.");
     }
 
     /**
