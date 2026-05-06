@@ -31,6 +31,11 @@ if [ ! -f "$SREC" ]; then
     exit 1
 fi
 
+sleep 1
+
+echo "Ports in /dev/serial/by-id:"
+ls /dev/serial/by-id
+
 java -cp java_console/autotest/build/libs/autotest-all.jar \
     com.rusefi.HwCiOpenbltUpdate "$SERIAL_DEVICE" "$SREC"
 
