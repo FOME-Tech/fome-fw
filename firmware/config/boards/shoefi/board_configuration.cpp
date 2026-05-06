@@ -162,7 +162,6 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->fuelPumpPin = Gpio::G4;
 	engineConfiguration->idle.solenoidPin = Gpio::G3;
 	engineConfiguration->tachOutputPin = Gpio::F13;
-	engineConfiguration->injectorCompensationMode = ICM_FixedRailPressure;
-	engineConfiguration->enableAemXSeries = true;
+	engineConfiguration->injectorCompensationMode = ICM_None;
 
 }
