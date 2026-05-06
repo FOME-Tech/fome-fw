@@ -3,27 +3,20 @@
 # Verify that an OpenBLT firmware update flashes a viable image.
 #
 # Assumes OpenOCD has just flashed the bootloader+firmware to the target. We
-# wait for the firmware to enumerate, then trigger a reboot into OpenBLT and
-# push deliver/fome_update.srec via the bootloader.
+# wait for the firmware to enumerate (matching the chip's USB serial), then
+# hand off to HwCiOpenbltUpdate which sends the reboot command, finds the
+# bootloader (potentially under a different by-id name with a different -ifNN
+# suffix), and pushes deliver/fome_update.srec via XCP.
 #
-# Usage: openblt_update.sh <serial-device>
+# Usage: openblt_update.sh <serial-substring>
 
 set -euo pipefail
 
-SERIAL_DEVICE=$1
+SN=$1
 
-echo "Waiting for firmware to enumerate at $SERIAL_DEVICE"
-for _ in $(seq 1 30); do
-    if [ -e "$SERIAL_DEVICE" ]; then
-        break
-    fi
-    sleep 1
-done
-
-if [ ! -e "$SERIAL_DEVICE" ]; then
-    echo "ERROR: serial device $SERIAL_DEVICE never appeared"
-    exit 1
-fi
+# Wait for any by-id entry that contains the chip serial — confirms the
+# firmware is alive on the bus before we attempt to talk to it.
+.github/workflows/hw-ci/resolve_ecu_port.sh "$SN" 30 >/dev/null
 
 SREC=firmware/deliver/fome_update.srec
 if [ ! -f "$SREC" ]; then
@@ -31,13 +24,11 @@ if [ ! -f "$SREC" ]; then
     exit 1
 fi
 
-sleep 1
-
-echo "Ports in /dev/serial/by-id:"
-ls /dev/serial/by-id
+echo "Ports in /dev/serial/by-id matching $SN:"
+ls /dev/serial/by-id | grep -F "$SN" || echo "(none)"
 
 if ! java -cp java_console/autotest/build/libs/autotest-all.jar \
-        com.rusefi.HwCiOpenbltUpdate "$SERIAL_DEVICE" "$SREC"; then
+        com.rusefi.HwCiOpenbltUpdate "$SN" "$SREC"; then
     echo "OpenBLT update failed. Ports in /dev/serial/by-id after failure:"
     ls /dev/serial/by-id || echo "(directory not present)"
     exit 1

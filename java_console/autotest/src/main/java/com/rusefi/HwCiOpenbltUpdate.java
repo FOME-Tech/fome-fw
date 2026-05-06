@@ -9,36 +9,45 @@ import com.rusefi.libopenblt.XcpSettings;
 import com.rusefi.maintenance.OpenBltFlasher;
 import com.rusefi.maintenance.OpenbltCallbacks;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Hardware CI entry point that flashes the ECU via OpenBLT, to verify that an
  * OpenBLT update path produces a viable firmware image.
  *
- * Usage: java ... com.rusefi.HwCiOpenbltUpdate &lt;serial-by-id-path&gt; &lt;update.srec&gt;
+ * Usage: java ... com.rusefi.HwCiOpenbltUpdate &lt;serial-substring&gt; &lt;update.srec&gt;
  *
- * The first argument is a stable /dev/serial/by-id/... path identifying the
- * specific ECU. Both the firmware and the OpenBLT bootloader build use the
- * same USB descriptors (vendor "FOME", same product, iSerial derived from the
- * chip UID), so the same by-id path resolves to whichever mode the chip is
- * currently in. We always talk to that exact port — never scan all ports —
- * because more than one HW CI runner can share a host machine.
+ * The first argument is the chip's iSerial substring (from the STM32 UID), e.g.
+ * "2B003B000A51343033393930". We never pin a fixed by-id path because the
+ * firmware build and the OpenBLT bootloader build may enumerate with different
+ * trailing interface suffixes (-if00 vs -if01) — but both always contain the
+ * chip serial. At every step we resolve fresh against /dev/serial/by-id.
+ *
+ * Multiple HW CI runners may share a host machine, so we always restrict to
+ * by-id entries matching this chip's serial.
  */
 public class HwCiOpenbltUpdate {
+    private static final File BY_ID_DIR = new File("/dev/serial/by-id");
+
+    private static final long FIRMWARE_PORT_TIMEOUT_MS = 15_000;
     private static final long BOOTLOADER_DISCOVERY_TIMEOUT_MS = 15_000;
-    private static final long BOOTLOADER_POLL_INTERVAL_MS = 500;
+    private static final long POLL_INTERVAL_MS = 500;
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.err.println("Usage: HwCiOpenbltUpdate <fome-serial-port> <update.srec>");
+            System.err.println("Usage: HwCiOpenbltUpdate <serial-substring> <update.srec>");
             System.exit(1);
         }
 
-        String fomePort = args[0];
+        String serialSubstring = args[0];
         String srecPath = args[1];
 
         try {
-            run(fomePort, srecPath);
+            run(serialSubstring, srecPath);
         } catch (Throwable t) {
             System.err.println("HwCiOpenbltUpdate FAILED: " + t.getMessage());
             t.printStackTrace();
@@ -46,15 +55,18 @@ public class HwCiOpenbltUpdate {
         }
     }
 
-    private static void run(String ecuPort, String srecPath) throws IOException {
-        System.out.println("Step 1/3: rebooting ECU at " + ecuPort + " into OpenBLT...");
-        rebootToOpenblt(ecuPort);
+    private static void run(String serialSubstring, String srecPath) throws IOException {
+        System.out.println("Step 1/3: locating running firmware port for chip " + serialSubstring + "...");
+        String firmwarePort = waitForAnyMatchingPort(serialSubstring, FIRMWARE_PORT_TIMEOUT_MS);
+        System.out.println("Firmware port: " + firmwarePort);
+        rebootToOpenblt(firmwarePort);
 
-        System.out.println("Step 2/3: waiting for OpenBLT to respond on " + ecuPort + "...");
-        waitForOpenbltOnPort(ecuPort);
+        System.out.println("Step 2/3: waiting for OpenBLT bootloader on chip " + serialSubstring + "...");
+        String bltPort = waitForOpenbltOnAnyMatchingPort(serialSubstring);
+        System.out.println("OpenBLT port: " + bltPort);
 
-        System.out.println("Step 3/3: flashing " + srecPath + " via OpenBLT on " + ecuPort);
-        OpenBltFlasher flasher = OpenBltFlasher.makeSerial(ecuPort, new XcpSettings(), new ConsoleOpenbltCallbacks());
+        System.out.println("Step 3/3: flashing " + srecPath + " via OpenBLT on " + bltPort);
+        OpenBltFlasher flasher = OpenBltFlasher.makeSerial(bltPort, new XcpSettings(), new ConsoleOpenbltCallbacks());
         flasher.flash(srecPath);
 
         System.out.println("OpenBLT update completed successfully.");
@@ -77,24 +89,60 @@ public class HwCiOpenbltUpdate {
         }
     }
 
-    /**
-     * Polls the specific by-id port (the chip's stable USB serial identity) for
-     * an OpenBLT XCP CONNECT response. We deliberately don't scan all ports —
-     * multiple HW CI runners may share a host, and scanning could pick up a
-     * different chip's bootloader.
-     */
-    private static void waitForOpenbltOnPort(String port) throws IOException {
-        long deadline = System.currentTimeMillis() + BOOTLOADER_DISCOVERY_TIMEOUT_MS;
-        while (System.currentTimeMillis() < deadline) {
-            BinaryProtocol.sleep(BOOTLOADER_POLL_INTERVAL_MS);
-            if (isPortOpenblt(port)) {
-                return;
+    /** Lists /dev/serial/by-id entries whose name contains the SN substring. */
+    private static List<String> findMatchingPorts(String serialSubstring) {
+        List<String> matches = new ArrayList<>();
+        File[] entries = BY_ID_DIR.listFiles();
+        if (entries == null) {
+            return matches;
+        }
+        for (File entry : entries) {
+            if (entry.getName().contains(serialSubstring)) {
+                matches.add(entry.getAbsolutePath());
             }
         }
-        throw new IOException("OpenBLT bootloader did not respond on " + port + " within "
-                + BOOTLOADER_DISCOVERY_TIMEOUT_MS + "ms — either the firmware never received "
-                + "the reboot command, the bootloader didn't enumerate, or the bootloader's "
-                + "serial transport is broken.");
+        return matches;
+    }
+
+    /** Polls until at least one by-id entry matches the chip serial, or times out. */
+    private static String waitForAnyMatchingPort(String serialSubstring, long timeoutMs) throws IOException {
+        long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            List<String> matches = findMatchingPorts(serialSubstring);
+            if (!matches.isEmpty()) {
+                return matches.get(0);
+            }
+            BinaryProtocol.sleep(POLL_INTERVAL_MS);
+        }
+        throw new IOException("No /dev/serial/by-id entry matching '" + serialSubstring
+                + "' appeared within " + timeoutMs + "ms. Visible entries: "
+                + Arrays.toString(BY_ID_DIR.list()));
+    }
+
+    /**
+     * Polls all by-id entries that match the chip serial, sending an XCP CONNECT
+     * to each, until one responds as OpenBLT or we time out. The bootloader
+     * may enumerate under a different by-id name than the firmware (different
+     * interface suffix), so we don't pin a fixed path.
+     */
+    private static String waitForOpenbltOnAnyMatchingPort(String serialSubstring) throws IOException {
+        long deadline = System.currentTimeMillis() + BOOTLOADER_DISCOVERY_TIMEOUT_MS;
+        List<String> lastSeen = new ArrayList<>();
+        while (System.currentTimeMillis() < deadline) {
+            BinaryProtocol.sleep(POLL_INTERVAL_MS);
+            lastSeen = findMatchingPorts(serialSubstring);
+            for (String candidate : lastSeen) {
+                if (isPortOpenblt(candidate)) {
+                    return candidate;
+                }
+            }
+        }
+        throw new IOException("OpenBLT bootloader for chip '" + serialSubstring
+                + "' did not respond within " + BOOTLOADER_DISCOVERY_TIMEOUT_MS
+                + "ms. Last visible matching ports: " + lastSeen
+                + " — either the firmware never received the reboot command, "
+                + "the bootloader didn't enumerate, or the bootloader's serial "
+                + "transport is broken.");
     }
 
     /**
