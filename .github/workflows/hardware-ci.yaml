@@ -52,7 +52,11 @@ jobs:
 
     - name: OpenOCD wipe & flash STM32
       working-directory: ./firmware
-      run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector 0 0 11" -c "flash write_image "deliver/fome.bin" 0x08000000" -c "reset run" -c "shutdown"
+      # TEMP: flash only the bootloader (firmware sectors stay erased) so the
+      # chip stays in OpenBLT regardless of the SharedParams handoff path.
+      # This lets the OpenBLT update step exercise the bootloader's flash path
+      # in isolation while we investigate the reboot-to-OpenBLT issue.
+      run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector 0 0 11" -c "flash write_image "bootloader/blbuild/fome_bl.bin" 0x08000000" -c "reset run" -c "shutdown"
 
     - name: Build Autotest jar
       working-directory: ./java_tools

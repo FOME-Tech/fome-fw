@@ -38,16 +38,25 @@ public class HwCiOpenbltUpdate {
     private static final long POLL_INTERVAL_MS = 500;
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("Usage: HwCiOpenbltUpdate <serial-substring> <update.srec>");
+        boolean skipReboot = false;
+        List<String> positional = new ArrayList<>();
+        for (String arg : args) {
+            if ("--skip-reboot".equals(arg)) {
+                skipReboot = true;
+            } else {
+                positional.add(arg);
+            }
+        }
+        if (positional.size() != 2) {
+            System.err.println("Usage: HwCiOpenbltUpdate [--skip-reboot] <serial-substring> <update.srec>");
             System.exit(1);
         }
 
-        String serialSubstring = args[0];
-        String srecPath = args[1];
+        String serialSubstring = positional.get(0);
+        String srecPath = positional.get(1);
 
         try {
-            run(serialSubstring, srecPath);
+            run(serialSubstring, srecPath, skipReboot);
         } catch (Throwable t) {
             System.err.println("HwCiOpenbltUpdate FAILED: " + t.getMessage());
             t.printStackTrace();
@@ -55,11 +64,15 @@ public class HwCiOpenbltUpdate {
         }
     }
 
-    private static void run(String serialSubstring, String srecPath) throws IOException {
-        System.out.println("Step 1/3: locating running firmware port for chip " + serialSubstring + "...");
-        String firmwarePort = waitForAnyMatchingPort(serialSubstring, FIRMWARE_PORT_TIMEOUT_MS);
-        System.out.println("Firmware port: " + firmwarePort);
-        rebootToOpenblt(firmwarePort);
+    private static void run(String serialSubstring, String srecPath, boolean skipReboot) throws IOException {
+        if (!skipReboot) {
+            System.out.println("Step 1/3: locating running firmware port for chip " + serialSubstring + "...");
+            String firmwarePort = waitForAnyMatchingPort(serialSubstring, FIRMWARE_PORT_TIMEOUT_MS);
+            System.out.println("Firmware port: " + firmwarePort);
+            rebootToOpenblt(firmwarePort);
+        } else {
+            System.out.println("Step 1/3: skipped (--skip-reboot); chip is expected to already be in OpenBLT.");
+        }
 
         System.out.println("Step 2/3: waiting for OpenBLT bootloader on chip " + serialSubstring + "...");
         String bltPort = waitForOpenbltOnAnyMatchingPort(serialSubstring);

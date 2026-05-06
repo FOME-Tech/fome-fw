@@ -28,7 +28,7 @@ echo "Ports in /dev/serial/by-id matching $SN:"
 ls /dev/serial/by-id | grep -F "$SN" || echo "(none)"
 
 if ! java -cp java_console/autotest/build/libs/autotest-all.jar \
-        com.rusefi.HwCiOpenbltUpdate "$SN" "$SREC"; then
+        com.rusefi.HwCiOpenbltUpdate --skip-reboot "$SN" "$SREC"; then
     echo "OpenBLT update failed. Ports in /dev/serial/by-id after failure:"
     ls /dev/serial/by-id || echo "(directory not present)"
     exit 1
