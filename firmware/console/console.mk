@@ -7,7 +7,7 @@ CONSOLE_SRC_CPP = $(CONSOLE_COMMON_SRC_CPP) \
 	$(PROJECT_DIR)/console/console_io.cpp \
 	$(PROJECT_DIR)/console/eficonsole.cpp \
 	$(PROJECT_DIR)/console/binary_log/binary_logging.cpp \
-	$(PROJECT_DIR)/console/binary_log/usb_console.cpp \
+	$(PROJECT_DIR)/console/usb_console_direct.cpp \
 	$(PROJECT_DIR)/console/binary_log/sd_file_log.cpp \
 	$(PROJECT_DIR)/console/wifi_console.cpp \
 

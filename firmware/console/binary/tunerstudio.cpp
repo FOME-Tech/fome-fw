@@ -249,7 +249,6 @@ void TunerStudio::handleQueryCommand(TsChannelBase* tsChannel, ts_response_forma
 		tsChannel->copyAndWriteSmallCrcPacket(buffer, size);
 	} else {
 		tsChannel->write(buffer, size, true);
-		tsChannel->flush();
 	}
 }
 
@@ -276,8 +275,7 @@ bool TunerStudio::handlePlainCommand(TsChannelBase* tsChannel, uint8_t command) 
 		 * Currently on some firmware versions the F command is not used and is just ignored by the firmware as a
 		 * unknown command."
 		 */
-		tsChannel->write((const uint8_t*)TS_PROTOCOL, strlen(TS_PROTOCOL));
-		tsChannel->flush();
+		tsChannel->write((const uint8_t*)TS_PROTOCOL, strlen(TS_PROTOCOL), /*isEndOfPacket*/ true);
 		return true;
 	} else {
 		// This wasn't a valid command

@@ -169,6 +169,10 @@
 #define EFI_USB_SERIAL TRUE
 #endif
 
+#ifndef EFI_USB_SERIAL_DIRECT
+#define EFI_USB_SERIAL_DIRECT TRUE
+#endif
+
 #define EFI_CONSOLE_USB_DEVICE SDU1
 
 #if defined(EFI_HAS_EXT_SDRAM)

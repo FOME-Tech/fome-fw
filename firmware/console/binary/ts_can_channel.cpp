@@ -25,9 +25,8 @@ public:
 	void start();
 
 	// TsChannelBase implementation
-	void write(const uint8_t* buffer, size_t size, bool) override;
+	void write(const uint8_t* buffer, size_t size, bool isEndOfPacket) override;
 	size_t readTimeout(uint8_t* buffer, size_t size, int timeout) override;
-	void flush() override;
 	bool isReady() const override;
 	void stop() override;
 
@@ -54,11 +53,12 @@ void CanTsChannel::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) {
 	// because the CAN protocol is already protected by its own checksum.
 	if ((size + 1) <= 7) {
 		uint8_t responseCode = TS_RESPONSE_OK;
-		write(&responseCode, 1, false); // header without size
 		if (size > 0) {
-			write(buf, size, false); // body
+			write(&responseCode, 1, /*isEndOfPacket*/ false); // header without size
+			write(buf, size, /*isEndOfPacket*/ true);		  // body, terminate the frame
+		} else {
+			write(&responseCode, 1, /*isEndOfPacket*/ true);
 		}
-		flush();
 		return;
 	}
 #endif /* TS_CAN_DEVICE_SHORT_PACKETS_IN_ONE_FRAME */
@@ -67,17 +67,17 @@ void CanTsChannel::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) {
 	TsChannelBase::copyAndWriteSmallCrcPacket(buf, size);
 }
 
-void CanTsChannel::write(const uint8_t* buffer, size_t size, bool) {
+void CanTsChannel::write(const uint8_t* buffer, size_t size, bool isEndOfPacket) {
 	canStreamAddToTxTimeout(&size, buffer, BINARY_IO_TIMEOUT);
+
+	if (isEndOfPacket) {
+		canStreamFlushTx(BINARY_IO_TIMEOUT);
+	}
 }
 
 size_t CanTsChannel::readTimeout(uint8_t* buffer, size_t size, int timeout) {
 	canStreamReceiveTimeout(&size, buffer, timeout);
 	return size;
-}
-
-void CanTsChannel::flush() {
-	canStreamFlushTx(BINARY_IO_TIMEOUT);
 }
 
 bool CanTsChannel::isReady() const {

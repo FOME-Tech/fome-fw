@@ -30,6 +30,11 @@ or
 
 ## Unreleased
 
+### Added
+ - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
+
+## May 2026 Release
+
 ### Breaking Changes
  - Upgrade console to use Java 21. This may require an update of your Java runtime.
 
@@ -41,7 +46,7 @@ or
  - Lua `getChannel` function for safely reading ECU values #721
  - Improved Atlas board support, including Polygonus engine presets #700
  - Clearer ignition/injection pin naming in TunerStudio #596
- - Dodge Viper V10 crank trigger pattern
+ - 1996-2006 Dodge Viper V10 crank trigger pattern
 
 ### Fixed
  - Prevent false ETB jam detection when the throttle is not being commanded (for example with "Disable ETB if engine is stopped" enabled), which could latch the throttle off permanently

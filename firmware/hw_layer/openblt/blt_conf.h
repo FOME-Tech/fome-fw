@@ -153,9 +153,9 @@
 /** \brief Configure the desired communication speed. */
 #define BOOT_COM_RS232_BAUDRATE          (115200)
 /** \brief Configure number of bytes in the target->host data packet. */
-#define BOOT_COM_RS232_TX_MAX_DATA       (200)
+#define BOOT_COM_RS232_TX_MAX_DATA       (240)
 /** \brief Configure number of bytes in the host->target data packet. */
-#define BOOT_COM_RS232_RX_MAX_DATA       (200)
+#define BOOT_COM_RS232_RX_MAX_DATA       (240)
 
 /** only USB supported, this is ignored but required */
 #define BOOT_COM_RS232_CHANNEL_INDEX 0
