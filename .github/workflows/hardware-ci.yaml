@@ -14,21 +14,21 @@ jobs:
             test-suite: com.rusefi.HwCiF4Discovery
             folder: config/boards/f407-discovery
             openocd-script: ../.github/workflows/openocd_ci_f4_discovery.cfg
-            serial-device: /dev/serial/by-id/usb-FOME_FOME_Engine_Management_ECU_2B003B000A51343033393930-if01
+            ecu-serial: 2B003B000A51343033393930
 
         #   - build-target: atlas
         #     runs-on: hw-ci-atlas
         #     test-suite: com.rusefi.HwCiAtlas
         #     folder: config/boards/atlas
         #     openocd-script: ../.github/workflows/openocd_ci_atlas.cfg
-        #     serial-device: /dev/serial/by-id/usb-FOME_FOME_Engine_Management_ECU_TODO
+        #     ecu-serial: TODO
 
           - build-target: proteus_f4
             runs-on: hw-ci-proteus
             test-suite: com.rusefi.HwCiF4Proteus
             folder: config/boards/proteus
             openocd-script: ../.github/workflows/openocd_ci_proteus.cfg
-            serial-device: /dev/serial/by-id/usb-FOME_FOME_Engine_Management_ECU_41003D000451383037343335-if01
+            ecu-serial: 41003D000451383037343335
 
     runs-on: ${{matrix.runs-on}}
 
@@ -43,7 +43,6 @@ jobs:
     - name: Set EXTRA env
       run: |
         echo "EXTRA_2_PARAMS=-DHARDWARE_CI" >> $GITHUB_ENV
-        echo "HARDWARE_CI_SERIAL_DEVICE=${{matrix.serial-device}}" >> $GITHUB_ENV
 
     - name: Build Firmware
       run: .github/workflows/hw-ci/build_for_hw_ci.sh ${{matrix.folder}} ${{matrix.build-target}}
@@ -53,13 +52,23 @@ jobs:
 
     - name: OpenOCD wipe & flash STM32
       working-directory: ./firmware
-      run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector 0 0 11" -c "flash write_image "deliver/fome.bin" 0x08000000" -c "reset run" -c "shutdown"
+      # TEMP: flash only the bootloader (firmware sectors stay erased) so the
+      # chip stays in OpenBLT regardless of the SharedParams handoff path.
+      # This lets the OpenBLT update step exercise the bootloader's flash path
+      # in isolation while we investigate the reboot-to-OpenBLT issue.
+      run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector 0 0 11" -c "flash write_image "bootloader/blbuild/fome_bl.bin" 0x08000000" -c "reset run" -c "shutdown"
 
     - name: Build Autotest jar
       working-directory: ./java_tools
       run: ./gradlew :autotest:shadowJar
 
+    # Verify the OpenBLT update path produces a viable image: reboot the
+    # just-flashed firmware into OpenBLT and re-flash via the bootloader before
+    # we run any functional tests.
+    - name: OpenBLT update test
+      run: .github/workflows/hw-ci/openblt_update.sh ${{matrix.ecu-serial}}
+
     # This both compiles and runs HW CI tests
     - name: Run Hardware CI
-      run: .github/workflows/hw-ci/run_hw_ci.sh ${{matrix.test-suite}}
+      run: .github/workflows/hw-ci/run_hw_ci.sh ${{matrix.ecu-serial}} ${{matrix.test-suite}}
 
