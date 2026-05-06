@@ -36,8 +36,12 @@ sleep 1
 echo "Ports in /dev/serial/by-id:"
 ls /dev/serial/by-id
 
-java -cp java_console/autotest/build/libs/autotest-all.jar \
-    com.rusefi.HwCiOpenbltUpdate "$SERIAL_DEVICE" "$SREC"
+if ! java -cp java_console/autotest/build/libs/autotest-all.jar \
+        com.rusefi.HwCiOpenbltUpdate "$SERIAL_DEVICE" "$SREC"; then
+    echo "OpenBLT update failed. Ports in /dev/serial/by-id after failure:"
+    ls /dev/serial/by-id || echo "(directory not present)"
+    exit 1
+fi
 
 echo "OpenBLT update completed; allowing the new firmware to boot..."
 sleep 5
