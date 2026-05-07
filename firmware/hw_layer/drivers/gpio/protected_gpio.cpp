@@ -52,17 +52,18 @@ int ProtectedGpio::get() const {
 }
 
 void ProtectedGpio::check(efitick_t /*nowNt*/) {
-	if (!m_config) {
-		return;
-	}
+	// if (!m_config) {
+	// 	return;
+	// }
 
-	float senseVolts = getVoltage("protected", m_config->SenseChannel);
-	float amps = senseVolts * m_config->AmpsPerVolt;
+	// TODO: refactor to use a sensor/adc subscription
+	// float senseVolts = getVoltage("protected", m_config->SenseChannel);
+	// float amps = senseVolts * m_config->AmpsPerVolt;
 
-	// TODO: smarter state machine
-	if (amps > m_config->MaximumAllowedCurrent) {
-		m_output.setValue(false);
-	}
+	// // TODO: smarter state machine
+	// if (amps > m_config->MaximumAllowedCurrent) {
+	// 	m_output.setValue(false);
+	// }
 }
 
 brain_pin_diag_e ProtectedGpio::getDiag() const {
