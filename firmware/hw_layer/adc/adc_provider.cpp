@@ -3,69 +3,87 @@
 #include "adc_provider.h"
 
 namespace {
-struct ProviderSlot {
-	AdcProvider* provider = nullptr;
-	size_t localIdx = 0;
+struct ProviderEntry {
+	AdcProvider* provider;
+	size_t firstChannelIndex;
+	size_t numChannels;
 };
 
-constexpr size_t SLOT_COUNT = EFI_ADC_LAST_CHANNEL - EFI_ADC_0;
+constexpr size_t MAX_PROVIDERS = 4;
 
-static ProviderSlot s_slots[SLOT_COUNT];
+static ProviderEntry s_providers[MAX_PROVIDERS];
+static size_t s_providerCount = 0;
 
-ProviderSlot* findSlot(adc_channel_e channel) {
+// Returns the provider that owns this channel and writes the provider-local
+// index to outLocalIdx. Returns nullptr if the channel isn't registered.
+AdcProvider* findProvider(adc_channel_e channel, size_t& outLocalIdx) {
 	if (!isAdcChannelValid(channel)) {
 		return nullptr;
 	}
 
-	size_t idx = channel - EFI_ADC_0;
-	if (idx >= SLOT_COUNT) {
-		return nullptr;
+	size_t globalIdx = channel - EFI_ADC_0;
+
+	for (size_t i = 0; i < s_providerCount; i++) {
+		auto& entry = s_providers[i];
+		if (globalIdx >= entry.firstChannelIndex && globalIdx < entry.firstChannelIndex + entry.numChannels) {
+			outLocalIdx = globalIdx - entry.firstChannelIndex;
+			return entry.provider;
+		}
 	}
 
-	return &s_slots[idx];
+	return nullptr;
 }
 } // namespace
 
 void registerAdcProvider(AdcProvider& provider, size_t firstChannelIndex, size_t numChannels) {
-	for (size_t i = 0; i < numChannels; i++) {
-		size_t globalIdx = firstChannelIndex + i;
-
-		if (globalIdx >= SLOT_COUNT) {
-			firmwareError(
-					ObdCode::CUSTOM_ERR_ASSERT,
-					"%s: ADC channel index %u out of range",
-					provider.name(),
-					(unsigned)globalIdx);
-			return;
-		}
-
-		s_slots[globalIdx] = {&provider, i};
-	}
-}
-
-float AdcProvider::getVoltage(adc_channel_e channel) {
-	auto slot = findSlot(channel);
-	if (!slot || !slot->provider) {
-		return 0;
-	}
-
-	return slot->provider->get(slot->localIdx);
-}
-
-bool AdcProvider::acquire(adc_channel_e channel) {
-	auto slot = findSlot(channel);
-	if (!slot || !slot->provider) {
-		return false;
-	}
-
-	return slot->provider->enable("adc", slot->localIdx);
-}
-
-void AdcProvider::release(adc_channel_e channel) {
-	auto slot = findSlot(channel);
-	if (!slot || !slot->provider) {
+	if (s_providerCount >= MAX_PROVIDERS) {
+		firmwareError(ObdCode::CUSTOM_ERR_ASSERT, "too many ADC providers registering %s", provider.name());
 		return;
 	}
 
-	slot->provider->disable(slot->localIdx);
+	size_t newEnd = firstChannelIndex + numChannels;
+	for (size_t i = 0; i < s_providerCount; i++) {
+		auto& existing = s_providers[i];
+		size_t existingEnd = existing.firstChannelIndex + existing.numChannels;
+		if (firstChannelIndex < existingEnd && existing.firstChannelIndex < newEnd) {
+			firmwareError(
+					ObdCode::CUSTOM_ERR_ASSERT,
+					"ADC provider %s overlaps %s",
+					provider.name(),
+					existing.provider->name());
+			return;
+		}
+	}
+
+	s_providers[s_providerCount++] = {&provider, firstChannelIndex, numChannels};
+}
+
+float AdcProvider::getVoltage(adc_channel_e channel) {
+	size_t localIdx;
+	auto provider = findProvider(channel, localIdx);
+	if (!provider) {
+		return 0;
+	}
+
+	return provider->get(localIdx);
+}
+
+bool AdcProvider::acquire(adc_channel_e channel) {
+	size_t localIdx;
+	auto provider = findProvider(channel, localIdx);
+	if (!provider) {
+		return false;
+	}
+
+	return provider->enable("adc", localIdx);
+}
+
+void AdcProvider::release(adc_channel_e channel) {
+	size_t localIdx;
+	auto provider = findProvider(channel, localIdx);
+	if (!provider) {
+		return;
+	}
+
+	provider->disable(localIdx);
 }
