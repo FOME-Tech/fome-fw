@@ -139,6 +139,23 @@ inline constexpr Gpio operator+(size_t a, Gpio b) {
 	return b + a;
 }
 
+inline constexpr size_t operator-(adc_channel_e a, adc_channel_e b) {
+	return (size_t)a - (size_t)b;
+}
+
+inline constexpr adc_channel_e operator-(adc_channel_e a, size_t b) {
+	return (adc_channel_e)((size_t)a - b);
+}
+
+inline constexpr adc_channel_e operator+(adc_channel_e a, size_t b) {
+	return (adc_channel_e)((size_t)a + b);
+}
+
+inline constexpr adc_channel_e operator+(size_t a, adc_channel_e b) {
+	// addition is commutative, just use the other operator
+	return b + a;
+}
+
 namespace efi {
 template <class _Ty>
 struct remove_reference {
