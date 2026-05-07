@@ -7,7 +7,6 @@
 
 #include "pch.h"
 
-#include "boards.h"
 #include "backup_ram.h"
 
 BackupSramData* getBackupSram() {

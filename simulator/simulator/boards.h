@@ -1,7 +1,6 @@
 
 #pragma once
 
-int getAdcValue(const char* msg, int channel);
 #define waitForSlowAdc()                                                                                               \
 	{}
 

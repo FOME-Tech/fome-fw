@@ -9,7 +9,6 @@
 #pragma once
 
 #include "global.h"
-#include "adc_math.h"
 
 float getAnalogInputDividerCoefficient(adc_channel_e);
 
@@ -50,12 +49,7 @@ brain_pin_e getAdcChannelBrainPin(const char* msg, adc_channel_e hwChannel);
 // wait until slow ADC readings are valid
 void waitForSlowAdc();
 
-int getAdcHardwareIndexByInternalIndex(int index);
-
-int getSlowAdcValue(const char* msg, adc_channel_e index);
-float getMCUInternalTemperature(void);
-
-#define adcToVoltsDivided(adc, hwChannel) (adcToVolts(adc) * getAnalogInputDividerCoefficient(hwChannel))
+float getMCUInternalTemperature();
 
 #if !defined(GPT_FREQ_FAST) || !defined(GPT_PERIOD_FAST)
 /**
@@ -79,7 +73,7 @@ void onFastAdcComplete(adcsample_t* samples);
 using FastAdcToken = size_t;
 
 FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel);
-adcsample_t getFastAdc(FastAdcToken token);
+float getFastAdc(FastAdcToken token);
 const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx);
 void onKnockSamplingComplete();
 #endif // HAL_USE_ADC
