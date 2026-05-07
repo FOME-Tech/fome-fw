@@ -21,52 +21,6 @@ static float validateBaroMap(float mapKPa) {
 	return mapKPa;
 }
 
-#if EFI_PROD_CODE
-
-extern int mapMinBufferLength;
-
-static void printMAPInfo() {
-	efiPrintf("instant value=%.2fkPa", Sensor::getOrZero(SensorType::Map));
-
-#ifdef MODULE_MAP_AVERAGING
-	efiPrintf(
-			"map type=%d/%s MAP=%.2fkPa mapMinBufferLength=%d",
-			engineConfiguration->map.sensor.type,
-			getAir_pressure_sensor_type_e(engineConfiguration->map.sensor.type),
-			Sensor::getOrZero(SensorType::Map),
-			mapMinBufferLength);
-#endif // MODULE_MAP_AVERAGING
-
-	adc_channel_e mapAdc = engineConfiguration->map.sensor.hwChannel;
-	char pinNameBuffer[16];
-
-	efiPrintf("MAP %.2fv @%s", getVoltage("mapinfo", mapAdc), getPinNameByAdcChannel("map", mapAdc, pinNameBuffer));
-	if (engineConfiguration->map.sensor.type == MT_CUSTOM) {
-		efiPrintf(
-				"at %.2fv=%.2f at %.2fv=%.2f",
-				engineConfiguration->mapLowValueVoltage,
-				engineConfiguration->map.sensor.lowValue,
-				engineConfiguration->mapHighValueVoltage,
-				engineConfiguration->map.sensor.highValue);
-	}
-
-	if (Sensor::hasSensor(SensorType::BarometricPressure)) {
-		efiPrintf(
-				"baro type=%d value=%.2f",
-				engineConfiguration->baroSensor.type,
-				Sensor::get(SensorType::BarometricPressure).value_or(-1));
-		if (engineConfiguration->baroSensor.type == MT_CUSTOM) {
-			efiPrintf(
-					"min=%.2f@%.2f max=%.2f@%.2f",
-					engineConfiguration->baroSensor.lowValue,
-					engineConfiguration->mapLowValueVoltage,
-					engineConfiguration->baroSensor.highValue,
-					engineConfiguration->mapHighValueVoltage);
-		}
-	}
-}
-#endif /* EFI_PROD_CODE */
-
 void initMapDecoder() {
 	if (engineConfiguration->useFixedBaroCorrFromMap) {
 		// Read initial MAP sensor value and store it for Baro correction.
@@ -83,8 +37,4 @@ void initMapDecoder() {
 			efiPrintf("The baro pressure is invalid. The fixed baro correction will be disabled!");
 		}
 	}
-
-#if EFI_PROD_CODE
-	addConsoleAction("mapinfo", printMAPInfo);
-#endif
 }
