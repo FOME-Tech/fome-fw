@@ -25,7 +25,6 @@
 #include "mpu_util.h"
 #endif /* EFI_PROD_CODE */
 
-#include "AdcConfiguration.h"
 #include "idle_hardware.h"
 #include "trigger_central.h"
 #include "gitversion.h"

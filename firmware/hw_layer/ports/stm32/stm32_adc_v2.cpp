@@ -8,8 +8,6 @@
 
 #include "pch.h"
 
-#include "AdcConfiguration.h"
-
 #if HAL_USE_ADC
 
 /* Depth of the conversion buffer, channels are sampled X times each.*/
@@ -189,6 +187,14 @@ static bool readBatch(adcsample_t* convertedSamples) {
 	return true;
 }
 
+#ifndef SLOW_ADC_CHANNEL_COUNT
+#ifdef ADC_MUX_PIN
+#define SLOW_ADC_CHANNEL_COUNT 32
+#else // not ADC_MUX_PIN
+#define SLOW_ADC_CHANNEL_COUNT 16
+#endif // def ADC_MUX_PIN
+#endif // SLOW_ADC_CHANNEL_COUNT
+
 static adcsample_t convertedAdcSamples[SLOW_ADC_CHANNEL_COUNT];
 
 bool readSlowAnalogInputs() {
@@ -226,8 +232,6 @@ static Stm32AdcV2Provider provider;
 
 #if EFI_USE_FAST_ADC
 
-#include "AdcConfiguration.h"
-
 static void adc_callback_fast(ADCDriver* adcp) {
 	// State may not be complete if we get a callback for "half done"
 	if (adcp->state == ADC_COMPLETE) {
@@ -263,6 +267,7 @@ ADCConversionGroup adcgrpcfgFast = {
 		.sqr3 = 0, // Conversion group sequence 1...6
 };
 
+static const size_t maxFastChannels = 8;
 static size_t fastAdcChannelCount = 0;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
@@ -272,7 +277,7 @@ FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 		return invalidToken;
 	}
 
-	if (fastAdcChannelCount >= ADC_MAX_CHANNELS_COUNT) {
+	if (fastAdcChannelCount >= maxFastChannels) {
 		firmwareError("too many fast ADC channels, attempted channel was %s", msg);
 	}
 
@@ -295,7 +300,7 @@ FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	return adcIndex;
 }
 
-static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
+static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * maxFastChannels];
 
 float getFastAdc(FastAdcToken token) {
 	if (token == invalidToken) {
@@ -320,7 +325,7 @@ static void fast_adc_timer_callback(GPTDriver*) {
 		return;
 	}
 
-	if (adcgrpcfgFast.num_channels == 0 || adcgrpcfgFast.num_channels >= ADC_MAX_CHANNELS_COUNT) {
+	if (adcgrpcfgFast.num_channels == 0 || adcgrpcfgFast.num_channels > maxFastChannels) {
 		// No channels configured (yet), don't attempt to sample
 		// with an invalid configuration
 		return;

@@ -8,8 +8,6 @@
 
 #include "pch.h"
 
-#include "AdcConfiguration.h"
-
 #if HAL_USE_ADC
 
 #include "mpu_util.h"
