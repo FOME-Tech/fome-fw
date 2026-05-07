@@ -279,12 +279,12 @@ FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
 	return static_cast<FastAdcToken>(channel);
 }
 
-adcsample_t getFastAdc(FastAdcToken token) {
+float getFastAdc(FastAdcToken token) {
 	if (token == invalidToken) {
 		return 0;
 	}
 
-	return getSample(token + EFI_ADC_0);
+	return engineConfiguration->adcVcc / ADC_MAX_VALUE * getSample(token + EFI_ADC_0);
 }
 
 #ifdef EFI_SOFTWARE_KNOCK

@@ -297,7 +297,7 @@ FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 
 static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * ADC_MAX_CHANNELS_COUNT];
 
-adcsample_t getFastAdc(FastAdcToken token) {
+float getFastAdc(FastAdcToken token) {
 	if (token == invalidToken) {
 		return 0;
 	}
@@ -307,7 +307,7 @@ adcsample_t getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
-	return fastAdcSampleBuf[token];
+	return engineConfiguration->adcVcc / ADC_MAX_VALUE * fastAdcSampleBuf[token];
 }
 
 auto& ADC_FAST_DEVICE = ADCD2;
