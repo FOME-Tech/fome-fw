@@ -214,7 +214,7 @@ bool readSlowAnalogInputs() {
 
 struct Stm32AdcV2Provider final : public Stm32AdcProviderBase {
 	Stm32AdcV2Provider() {
-		registerAdcProvider(*this, /*firstIndex*/ 0, /*size*/ 16);
+		registerAdcProvider(*this, /*firstIndex*/ 0, /*size*/ SLOW_ADC_CHANNEL_COUNT);
 	}
 
 	const char* name() const override {
