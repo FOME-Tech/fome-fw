@@ -206,9 +206,23 @@ bool readSlowAnalogInputs() {
 	return result;
 }
 
-adcsample_t getSlowAdcSample(adc_channel_e channel) {
-	return convertedAdcSamples[channel - EFI_ADC_0];
-}
+struct Stm32AdcV2Provider final : public Stm32AdcProviderBase {
+	Stm32AdcV2Provider() {
+		registerAdcProvider(*this, /*firstIndex*/ 0, /*size*/ 16);
+	}
+
+	const char* name() const override {
+		return "STM32 ADC v2";
+	}
+
+	float get(size_t idx) const override {
+		auto sample = convertedAdcSamples[idx];
+
+		return engineConfiguration->adcVcc / ADC_MAX_VALUE * sample;
+	}
+};
+
+static Stm32AdcV2Provider provider;
 
 #if EFI_USE_FAST_ADC
 

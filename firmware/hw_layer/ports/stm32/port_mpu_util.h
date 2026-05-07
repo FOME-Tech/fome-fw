@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "adc_provider.h"
 #include "device_mpu_util.h"
 
 #define MCU_SERIAL_NUMBER_BYTES 12
@@ -86,3 +87,8 @@ void boardPrepareForStop();
 // Called just before the MCU is put in standby mode
 void boardPrepareForStandby();
 #endif
+
+struct Stm32AdcProviderBase : public AdcProvider {
+	bool enable(const char* name, size_t idx) override;
+	void disable(size_t idx) override;
+};

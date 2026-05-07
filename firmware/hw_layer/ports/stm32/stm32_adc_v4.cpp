@@ -233,7 +233,7 @@ bool readSlowAnalogInputs() {
 	return true;
 }
 
-adcsample_t getSlowAdcSample(adc_channel_e channel) {
+static adcsample_t getSample(size_t index) {
 	// Maps ADC channel to index in the interleaved 16-bit sample buffer.
 	// In dual mode, samples are interleaved: ADC1[0], ADC2[0], ADC1[1], ADC2[1], ...
 	// ADC1 channels (seq 0-9) map to even indices, ADC2 channels (seq 0-9) map to odd indices.
@@ -246,10 +246,27 @@ adcsample_t getSlowAdcSample(adc_channel_e channel) {
 			17, 19				   // ADC2: PF13/14 (seq 8-9 -> indices 17,19)
 	};
 
-	auto channelIndex = channel - EFI_ADC_0;
-	auto bufferPosition = descramble[channelIndex];
+	auto bufferPosition = descramble[index];
 	return sampleBuffer.samples16[bufferPosition];
 }
+
+struct Stm32AdcV4Provider final : public Stm32AdcProviderBase {
+	Stm32AdcV4Provider() {
+		registerAdcProvider(*this, /*firstIndex*/ 0, /*size*/ 20);
+	}
+
+	const char* name() const override {
+		return "STM32 ADC v4";
+	}
+
+	float get(size_t idx) const override {
+		auto sample = getSample(idx);
+
+		return engineConfiguration->adcVcc / ADC_MAX_VALUE * sample;
+	}
+};
+
+static Stm32AdcV4Provider provider;
 
 static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
 
@@ -267,7 +284,7 @@ adcsample_t getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
-	return getSlowAdcSample(static_cast<adc_channel_e>(token));
+	return getSample(token + EFI_ADC_0);
 }
 
 #ifdef EFI_SOFTWARE_KNOCK
