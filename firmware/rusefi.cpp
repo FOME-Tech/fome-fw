@@ -117,6 +117,7 @@
 #include "rusefi_lua.h"
 #include "bootloader_updater.h"
 #include "g0_firmware_loader.h"
+#include "hw_layer/g0_gpio/g0_analog.h"
 
 #include <setjmp.h>
 
@@ -210,6 +211,7 @@ void runRusEfi() {
 
 #if HW_ATLAS
 	loadG0Firmware();
+	startG070SpiAdcProvider();
 #endif
 
 #if EFI_TUNER_STUDIO

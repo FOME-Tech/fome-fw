@@ -30,6 +30,7 @@ HW_LAYER_EMS_CPP = \
 	$(PROJECT_DIR)/hw_layer/io_pins.cpp \
 	$(PROJECT_DIR)/hw_layer/rtc_helper.cpp \
 	$(PROJECT_DIR)/hw_layer/debounce.cpp \
+	$(PROJECT_DIR)/hw_layer/g0_gpio/g0_analog.cpp
 
 ifeq ($(USE_OPENBLT),yes)
 	HW_LAYER_EMS += \
