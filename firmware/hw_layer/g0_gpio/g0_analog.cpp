@@ -102,20 +102,6 @@ private:
 		}
 	}
 
-	static void printFrame(const char* name, const uint8_t* rx) {
-		efiPrintf(
-				"%s: %02X %02X %02X %02X %02X %02X %02X %02X",
-				name,
-				rx[0],
-				rx[1],
-				rx[2],
-				rx[3],
-				rx[4],
-				rx[5],
-				rx[6],
-				rx[7]);
-	}
-
 	void pollAnalog() {
 		spiAcquireBus(spiDevice);
 
@@ -141,11 +127,12 @@ private:
 		const uint8_t command = rx[2];
 		const uint8_t payloadLength = rx[3];
 
-		static constexpr size_t printThrottle = 50;
-		static size_t printCounter = 0;
+		// static constexpr size_t printThrottle = 50;
+		// static size_t printCounter = 0;
 
-		const bool shouldPrint = (++printCounter >= printThrottle);
+		// const bool shouldPrint = (++printCounter >= printThrottle);
 
+		/*
 		if (shouldPrint) {
 			printCounter = 0;
 
@@ -156,6 +143,7 @@ private:
 					command,
 					payloadLength);
 		}
+		*/
 
 		if (status != 0x00 && status != 0x01) {
 			m_ready = false;
@@ -194,6 +182,7 @@ private:
 			m_millivolts[i] = getU16(rx, offset);
 		}
 
+		/*
 		if (shouldPrint) {
 			efiPrintf("G070 ADC values (mV):");
 
@@ -203,6 +192,7 @@ private:
 
 			efiPrintf("");
 		}
+		*/
 
 		m_ready = true;
 	}
@@ -246,5 +236,5 @@ void startG070SpiAdcProvider() {
 
 	g070SpiAdcProvider.start();
 
-	registerAdcProvider(g070SpiAdcProvider, EFI_ADC_19 - EFI_ADC_0, G070_ANALOG_CHANNEL_COUNT);
+	registerAdcProvider(g070SpiAdcProvider, EFI_ADC_19, G070_ANALOG_CHANNEL_COUNT);
 }
