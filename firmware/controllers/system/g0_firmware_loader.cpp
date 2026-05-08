@@ -38,7 +38,7 @@ static constexpr uint8_t G0_APP_STATUS_READY = 0x00;
 static constexpr uint8_t G0_APP_STATUS_UPDATE_MODE = 0x01;
 static constexpr size_t G0_APP_FRAME_SIZE = 36;
 static constexpr size_t G0_SPI_DMA_BUFFER_SIZE = 258;
-static constexpr uint8_t G0_APP_RESULT_OK = 0x01;
+static constexpr uint8_t G0_APP_RESULT_OK = 0x0;
 static constexpr uint8_t G0_APP_HEADER_SIZE = 4;
 
 static NO_CACHE uint8_t g0SpiTxBuffer[G0_SPI_DMA_BUFFER_SIZE];

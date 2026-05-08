@@ -657,7 +657,7 @@ void initSpiCs(SPIConfig* spiConfig, brain_pin_e csPin) {
 	ioportmask_t pin = getHwPin("spi", csPin);
 	spiConfig->ssport = port;
 	spiConfig->sspad = pin;
-	efiSetPadMode("chip select", csPin, PAL_STM32_MODE_OUTPUT);
+	efiSetPadModeWithoutOwnershipAcquisition("chip select", csPin, PAL_STM32_MODE_OUTPUT);
 }
 
 #ifdef STM32H7XX

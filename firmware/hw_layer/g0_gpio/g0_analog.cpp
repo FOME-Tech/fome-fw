@@ -7,7 +7,10 @@ static constexpr uint8_t spiAppFrameSize = 36U;
 static constexpr uint8_t spiCmdReadAnalog = 0x10U;
 static constexpr uint8_t spiCmdNop = 0x00U;
 static constexpr uint8_t spiAppHeaderSize = 4U;
-static constexpr uint8_t spiResultOk = 0x01U;
+static constexpr uint8_t spiResultOk = 0x00U;
+static constexpr uint8_t spiResultInvalid = 0x01U;
+static constexpr uint8_t spiResultRange = 0x02U;
+static constexpr uint8_t spiResultBusy = 0x03U;
 static constexpr spi_device_e G0_SPI_DEVICE = SPI_DEVICE_5;
 static constexpr brain_pin_e G0_SPI_CS_PIN = Gpio::F6;
 
@@ -62,22 +65,28 @@ public:
 	}
 
 	void start() {
+		if (m_started) {
+			efiPrintf("G070 SPI ADC provider: already started");
+			return;
+		}
+
+		m_started = true;
+
 		turnOnSpi(G0_SPI_DEVICE);
+
 		spiDevice = getSpiDevice(G0_SPI_DEVICE);
+
 		initSpiCs(&g0AnalogSpiConfig, G0_SPI_CS_PIN);
 		palSetPad(g0AnalogSpiConfig.ssport, g0AnalogSpiConfig.sspad);
-		if (spiDevice->state != SPI_READY) {
-			spiStart(spiDevice, &g0AnalogSpiConfig);
-		} else {
-			spiStop(spiDevice);
-			spiStart(spiDevice, &g0AnalogSpiConfig);
-			efiPrintf("G070 SPI ADC provider: SPI device was already ready, restarted it\n");
-		}
+
+		spiStart(spiDevice, &g0AnalogSpiConfig);
 
 		chThdCreateStatic(m_threadWa, sizeof(m_threadWa), NORMALPRIO, threadEntry, this);
 	}
 
 private:
+	bool m_started = false;
+
 	static THD_FUNCTION(threadEntry, arg) {
 		static_cast<G070SpiAdcProvider*>(arg)->thread();
 	}
@@ -93,33 +102,35 @@ private:
 		}
 	}
 
+	static void printFrame(const char* name, const uint8_t* rx) {
+		efiPrintf(
+				"%s: %02X %02X %02X %02X %02X %02X %02X %02X",
+				name,
+				rx[0],
+				rx[1],
+				rx[2],
+				rx[3],
+				rx[4],
+				rx[5],
+				rx[6],
+				rx[7]);
+	}
+
 	void pollAnalog() {
+		spiAcquireBus(spiDevice);
+
 		clearFrame(txBuf);
 		clearFrame(rxBuf);
-		/*
-		 * First frame:
-		 * Send READ_ANALOG command.
-		 * The response received here is from the previous command, so ignore it.
-		 */
+
+		// Always request the next analog frame.
+		// The received frame is the response to the previous command.
 		txBuf[0] = spiCmdReadAnalog;
 
-		spiAcquireBus(spiDevice);
 		spiSelect(spiDevice);
 		spiExchange(spiDevice, spiAppFrameSize, txBuf, rxBuf);
 		spiUnselect(spiDevice);
 
-		/*
-		 * Second frame:
-		 * Send NOP to clock out the READ_ANALOG response.
-		 */
-		clearFrame(txBuf);
-		clearFrame(rxBuf);
-
-		txBuf[0] = spiCmdNop;
-
-		spiSelect(spiDevice);
-		spiExchange(spiDevice, spiAppFrameSize, txBuf, rxBuf);
-		spiUnselect(spiDevice);
+		spiReleaseBus(spiDevice);
 
 		parseAnalogResponse(rxBuf);
 	}
@@ -130,22 +141,26 @@ private:
 		const uint8_t command = rx[2];
 		const uint8_t payloadLength = rx[3];
 
-		static constexpr size_t printThrottle = 10;
+		static constexpr size_t printThrottle = 50;
 		static size_t printCounter = 0;
 
 		const bool shouldPrint = (++printCounter >= printThrottle);
 
 		if (shouldPrint) {
 			printCounter = 0;
+
 			efiPrintf(
-					"G070 ADC response: status=0x%02X result=0x%02X command=0x%02X payloadLength=%d\n",
+					"G070 ADC response: status=0x%02X result=0x%02X command=0x%02X payloadLength=%d",
 					status,
 					result,
 					command,
 					payloadLength);
 		}
 
-		(void)status;
+		if (status != 0x00 && status != 0x01) {
+			m_ready = false;
+			return;
+		}
 
 		if (result != spiResultOk) {
 			m_ready = false;
@@ -153,10 +168,12 @@ private:
 		}
 
 		if (command != spiCmdReadAnalog) {
+			// This is often a valid NOP response, not necessarily garbage.
+			m_ready = false;
 			return;
 		}
 
-		if (payloadLength < 2) {
+		if (payloadLength != 26) {
 			m_ready = false;
 			return;
 		}
@@ -178,12 +195,13 @@ private:
 		}
 
 		if (shouldPrint) {
-
 			efiPrintf("G070 ADC values (mV):");
+
 			for (size_t i = 0; i < count; i++) {
 				efiPrintf(" %d", m_millivolts[i]);
 			}
-			efiPrintf("\n");
+
+			efiPrintf("");
 		}
 
 		m_ready = true;
@@ -217,7 +235,16 @@ static G070SpiAdcProvider g070SpiAdcProvider;
 }
 
 void startG070SpiAdcProvider() {
+	static bool started = false;
+
+	if (started) {
+		efiPrintf("startG070SpiAdcProvider: already started");
+		return;
+	}
+
+	started = true;
+
 	g070SpiAdcProvider.start();
 
-	registerAdcProvider(g070SpiAdcProvider, EFI_ADC_19, G070_ANALOG_CHANNEL_COUNT);
+	registerAdcProvider(g070SpiAdcProvider, EFI_ADC_19 - EFI_ADC_0, G070_ANALOG_CHANNEL_COUNT);
 }
