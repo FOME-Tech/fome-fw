@@ -30,7 +30,9 @@ HW_LAYER_EMS_CPP = \
 	$(PROJECT_DIR)/hw_layer/io_pins.cpp \
 	$(PROJECT_DIR)/hw_layer/rtc_helper.cpp \
 	$(PROJECT_DIR)/hw_layer/debounce.cpp \
-	$(PROJECT_DIR)/hw_layer/g0_gpio/g0_analog.cpp
+	$(PROJECT_DIR)/hw_layer/g0_extension/g0_extension_io.cpp \
+	$(PROJECT_DIR)/hw_layer/g0_extension/g0_extension_adc_provider.cpp \
+	$(PROJECT_DIR)/hw_layer/g0_extension/g0_extension_output_manager.cpp
 
 ifeq ($(USE_OPENBLT),yes)
 	HW_LAYER_EMS += \
@@ -41,4 +43,3 @@ endif
 # '-include' is a magic kind of 'include' which would survive if file to be included is not found
 #
 -include $(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER)/hw_ports.mk
-

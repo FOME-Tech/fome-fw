@@ -116,8 +116,8 @@
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
 #include "bootloader_updater.h"
-#include "g0_firmware_loader.h"
-#include "hw_layer/g0_gpio/g0_analog.h"
+#include "g0_extension_firmware.h"
+#include "hw_layer/g0_extension/g0_extension_io.h"
 
 #include <setjmp.h>
 
@@ -175,7 +175,7 @@ void runRusEfi() {
 
 	addConsoleAction(CMD_REBOOT, scheduleReboot);
 	addConsoleAction(CMD_REBOOT_DFU, jump_to_bootloader);
-	addConsoleAction("force_g0_update", []() { loadG0Firmware(true); });
+	addConsoleAction("force_g0_update", []() { loadG0ExtensionFirmware(true); });
 
 #if EFI_USE_OPENBLT
 	addConsoleAction(CMD_REBOOT_OPENBLT, jump_to_openblt);
@@ -210,8 +210,8 @@ void runRusEfi() {
 	loadConfiguration();
 
 #if HW_ATLAS
-	loadG0Firmware();
-	startG070SpiAdcProvider();
+	loadG0ExtensionFirmware();
+	startG0ExtensionIo();
 #endif
 
 #if EFI_TUNER_STUDIO

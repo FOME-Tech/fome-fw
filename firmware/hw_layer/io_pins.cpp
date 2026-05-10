@@ -12,7 +12,7 @@
 #if EFI_PROD_CODE
 
 #include "drivers/gpio/gpio_ext.h"
-#include "hw_layer/g0_gpio/g0_analog.h"
+#include "hw_layer/g0_extension/g0_extension_io.h"
 
 #include "status_loop.h"
 #include "console_io.h"
@@ -151,7 +151,7 @@ bool efiReadPin(Gpio pin) {
 	}
 
 	if (pin >= Gpio::G0_DIGITAL_IN_0 && pin <= Gpio::G0_DIGITAL_IN_3) {
-		return readG070DigitalInput(pin - Gpio::G0_DIGITAL_IN_0);
+		return readG0ExtensionDigitalInput(pin - Gpio::G0_DIGITAL_IN_0);
 	}
 
 	/* incorrect pin */
