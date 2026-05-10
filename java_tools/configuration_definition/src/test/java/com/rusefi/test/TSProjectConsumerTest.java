@@ -83,4 +83,28 @@ public class TSProjectConsumerTest {
                 "static_assert(sizeof(pid_s) == 24);\n" +
                 "\n", consumer.getContent());
     }
+
+    @Test
+    public void g0PinVisibilityPostProcessing() {
+        String input = ""
+                + "fanPin = bits, U16, 522, [0:7], 0=\"NONE\", 231=\"G0 Lowside 1\", 103=\"Lowside 1\"\n"
+                + "acSwitch = bits, U16, 1056, [0:7], 0=\"NONE\", 227=\"G0 Digital 1\", 98=\"Digital 1\"\n"
+                + "\tfield = \"Output\", fanPin\n"
+                + "\tfield = \"A/C switch\", acSwitch, { acSwitch != 0 }, { someEnable }\n";
+
+        String result = TSProjectConsumer.applyG0PinVisibility(input);
+
+        assertEquals(
+                "fanPin = bits, U16, 522, [0:7], 0=\"NONE\", 231=\"G0 Lowside 1\", 103=\"Lowside 1\"\n" +
+                        "fanPin_nog0 = bits, U16, 522, [0:7], 0=\"NONE\", 103=\"Lowside 1\"\n" +
+                        "acSwitch = bits, U16, 1056, [0:7], 0=\"NONE\", 227=\"G0 Digital 1\", 98=\"Digital 1\"\n" +
+                        "acSwitch_nog0 = bits, U16, 1056, [0:7], 0=\"NONE\", 98=\"Digital 1\"\n" +
+                        "\tfield = \"Output\", fanPin, { g0Present }\n" +
+                        "\tfield = \"Output\", fanPin_nog0, { !g0Present }\n" +
+                        "\tfield = \"A/C switch\", acSwitch, { (g0Present) && (acSwitch != 0) }, { someEnable }\n" +
+                        "\tfield = \"A/C switch\", acSwitch_nog0, { (!g0Present) && (acSwitch != 0) }, { someEnable }\n" +
+                        "\n" +
+                        "\n",
+                result);
+    }
 }

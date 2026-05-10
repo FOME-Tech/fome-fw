@@ -175,7 +175,7 @@ void runRusEfi() {
 
 	addConsoleAction(CMD_REBOOT, scheduleReboot);
 	addConsoleAction(CMD_REBOOT_DFU, jump_to_bootloader);
-	addConsoleAction("force_g0_update", []() { loadG0ExtensionFirmware(true); });
+	addConsoleAction("force_g0_update", []() { setG0ExtensionPresent(loadG0ExtensionFirmware(true)); });
 
 #if EFI_USE_OPENBLT
 	addConsoleAction(CMD_REBOOT_OPENBLT, jump_to_openblt);
@@ -210,8 +210,10 @@ void runRusEfi() {
 	loadConfiguration();
 
 #if HW_ATLAS
-	loadG0ExtensionFirmware();
-	startG0ExtensionIo();
+	setG0ExtensionPresent(loadG0ExtensionFirmware());
+	if (isG0ExtensionPresent()) {
+		startG0ExtensionIo();
+	}
 #endif
 
 #if EFI_TUNER_STUDIO

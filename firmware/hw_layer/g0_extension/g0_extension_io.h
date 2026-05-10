@@ -4,6 +4,8 @@
 #include "adc_provider.h"
 
 void startG0ExtensionIo();
+void setG0ExtensionPresent(bool present);
+bool isG0ExtensionPresent();
 bool readG0ExtensionDigitalInput(size_t idx);
 bool isG0ExtensionLowsidePin(brain_pin_e pin);
 void setG0ExtensionLowsideOutput(brain_pin_e pin, bool value);

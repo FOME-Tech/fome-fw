@@ -5,6 +5,8 @@
 
 namespace {
 
+static bool g0ExtensionPresent = false;
+
 class G0ExtensionLowsideHardwarePwm final : public hardware_pwm {
 public:
 	explicit G0ExtensionLowsideHardwarePwm(size_t outputIndex)
@@ -39,6 +41,14 @@ static G0ExtensionLowsideHardwarePwm g0ExtensionLowsidePwms[g0_extension::Output
 };
 
 } // namespace
+
+void setG0ExtensionPresent(bool present) {
+	g0ExtensionPresent = present;
+}
+
+bool isG0ExtensionPresent() {
+	return g0ExtensionPresent;
+}
 
 void startG0ExtensionIo() {
 	static bool started = false;
@@ -91,6 +101,14 @@ hardware_pwm* tryInitG0ExtensionLowsidePwm(brain_pin_e pin, float frequencyHz, f
 #else
 
 void startG0ExtensionIo() {}
+
+void setG0ExtensionPresent(bool present) {
+	(void)present;
+}
+
+bool isG0ExtensionPresent() {
+	return false;
+}
 
 bool readG0ExtensionDigitalInput(size_t idx) {
 	(void)idx;

@@ -38,6 +38,7 @@
 #include "main_trigger_callback.h"
 #include "spark_logic.h"
 #include "gitversion.h"
+#include "hw_layer/g0_extension/g0_extension_io.h"
 #include "can_hw.h"
 #include "periodic_thread_controller.h"
 #include "binary_logging.h"
@@ -492,6 +493,7 @@ void updateTunerStudioState() {
 	tsOutputChannels->gyroYaw = engine->sensors.accelerometer.yawRate;
 
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
+	tsOutputChannels->g0Present = isG0ExtensionPresent();
 	extern FrequencySensor vehicleSpeedSensor;
 	tsOutputChannels->vssEdgeCounter = vehicleSpeedSensor.eventCounter;
 
