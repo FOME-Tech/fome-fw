@@ -10,6 +10,9 @@
 #include "engine_sniffer.h"
 
 #include "drivers/gpio/gpio_ext.h"
+#if EFI_PROD_CODE
+#include "hw_layer/g0_gpio/g0_analog.h"
+#endif
 
 #if HW_HELLEN
 #include "hellen_meta.h"
@@ -458,6 +461,11 @@ void OutputPin::setValue(int logicValue) {
 	int electricalValue = getElectricalValue(logicValue, m_mode);
 
 #if EFI_PROD_CODE
+	if (isG070LowsidePin(m_brainPin)) {
+		setG070LowsideOutput(m_brainPin, electricalValue != 0);
+		return;
+	}
+
 #if (BOARD_EXT_GPIOCHIPS > 0)
 	if (!this->ext) {
 		setOnchipValue(electricalValue);
@@ -575,6 +583,11 @@ void OutputPin::initPin(
 	setDefaultPinState(outputMode);
 
 #if EFI_PROD_CODE
+	if (isG070LowsidePin(m_brainPin)) {
+		brain_pin_markUsed(m_brainPin, msg);
+		return;
+	}
+
 	iomode_t ioMode = (outputMode == OM_DEFAULT || outputMode == OM_INVERTED) ? PAL_MODE_OUTPUT_PUSHPULL
 																			  : PAL_MODE_OUTPUT_OPENDRAIN;
 
@@ -620,6 +633,15 @@ void OutputPin::deInit() {
 #endif // (BOARD_EXT_GPIOCHIPS > 0)
 
 	efiPrintf("unregistering %s", hwPortname(m_brainPin));
+
+#if EFI_PROD_CODE
+	if (isG070LowsidePin(m_brainPin)) {
+		disableG070LowsideOutput(m_brainPin);
+		brain_pin_markUnused(m_brainPin);
+		m_brainPin = Gpio::Unassigned;
+		return;
+	}
+#endif
 
 	efiSetPadUnused(m_brainPin);
 

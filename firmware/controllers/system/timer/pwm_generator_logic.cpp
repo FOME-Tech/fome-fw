@@ -320,6 +320,15 @@ void startSimplePwm(SimplePwm* state, const char* msg, OutputPin* output, float 
 		return;
 	}
 
+#if EFI_PROD_CODE && HAL_USE_PWM
+	if (isBrainPinValid(output->m_brainPin)) {
+		if (auto hardPwm = hardware_pwm::tryInitPin(msg, output->m_brainPin, frequency, dutyCycle)) {
+			state->hardPwm = hardPwm;
+			return;
+		}
+	}
+#endif
+
 	state->seq.setSwitchTime(0, dutyCycle);
 	state->seq.setSwitchTime(1, 1);
 	state->seq.setChannelState(0, 0, false);
@@ -346,9 +355,7 @@ void startSimplePwmExt(
 void startSimplePwmHard(
 		SimplePwm* state, const char* msg, brain_pin_e brainPin, OutputPin* output, float frequency, float dutyCycle) {
 #if EFI_PROD_CODE && HAL_USE_PWM
-	auto hardPwm = hardware_pwm::tryInitPin(msg, brainPin, frequency, dutyCycle);
-
-	if (hardPwm) {
+	if (auto hardPwm = hardware_pwm::tryInitPin(msg, brainPin, frequency, dutyCycle)) {
 		state->hardPwm = hardPwm;
 	} else {
 #endif

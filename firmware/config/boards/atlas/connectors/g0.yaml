@@ -62,3 +62,19 @@ pins:
   - id: G0_DIGITAL_IN_3
     class: switch_inputs
     ts_name: G0 Digital 4
+
+  - id: G0_LOWSIDE_0
+    class: outputs
+    ts_name: G0 Lowside 1
+
+  - id: G0_LOWSIDE_1
+    class: outputs
+    ts_name: G0 Lowside 2
+
+  - id: G0_LOWSIDE_2
+    class: outputs
+    ts_name: G0 Lowside 3
+
+  - id: G0_LOWSIDE_3
+    class: outputs
+    ts_name: G0 Lowside 4

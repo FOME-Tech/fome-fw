@@ -182,6 +182,7 @@ void Stm32AdcProviderBase::disable(size_t idx) {
 #if EFI_PROD_CODE
 
 #if HAL_USE_PWM
+#include "hw_layer/g0_gpio/g0_analog.h"
 namespace {
 struct stm32_pwm_config {
 	PWMDriver* const Driver;
@@ -368,6 +369,10 @@ stm32_hardware_pwm* getNextPwmDevice() {
 }
 
 /*static*/ hardware_pwm* hardware_pwm::tryInitPin(const char* msg, brain_pin_e pin, float frequencyHz, float duty) {
+	if (auto* g0Pwm = tryInitG070LowsidePwm(pin, frequencyHz, duty)) {
+		return g0Pwm;
+	}
+
 	// Hardware PWM can't do very slow PWM - the timer counter is only 16 bits, so at 2MHz counting, that's a minimum of
 	// 31hz.
 	if (frequencyHz < 50) {
