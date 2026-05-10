@@ -13,6 +13,9 @@ static constexpr uint8_t spiResultRange = 0x02U;
 static constexpr uint8_t spiResultBusy = 0x03U;
 static constexpr spi_device_e G0_SPI_DEVICE = SPI_DEVICE_5;
 static constexpr brain_pin_e G0_SPI_CS_PIN = Gpio::F6;
+static constexpr size_t G0_FIRST_ADC_INDEX = EFI_ADC_20 - EFI_ADC_0;
+// Edit this value to tune the fixed G0 ADC poll rate. 10 ms = 100 Hz.
+static constexpr uint32_t G0_POLL_INTERVAL_MS = 10;
 
 static SPIConfig g0AnalogSpiConfig = {
 		.circular = false,
@@ -97,8 +100,7 @@ private:
 		while (true) {
 			pollAnalog();
 
-			// 50 Hz update rate
-			chThdSleepMilliseconds(20);
+			chThdSleepMilliseconds(G0_POLL_INTERVAL_MS);
 		}
 	}
 
@@ -236,5 +238,5 @@ void startG070SpiAdcProvider() {
 
 	g070SpiAdcProvider.start();
 
-	registerAdcProvider(g070SpiAdcProvider, EFI_ADC_19, G070_ANALOG_CHANNEL_COUNT);
+	registerAdcProvider(g070SpiAdcProvider, G0_FIRST_ADC_INDEX, G070_ANALOG_CHANNEL_COUNT);
 }

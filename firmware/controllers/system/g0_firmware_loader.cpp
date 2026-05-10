@@ -319,11 +319,11 @@ bool loadG0Firmware(bool forceUpdate) {
 	turnOnSpi(G0_SPI_DEVICE);
 
 	SPIDriver* spi = getSpiDevice(G0_SPI_DEVICE);
+	spiAcquireBus(spi);
+
 	initSpiCs(&g0SpiConfig, G0_SPI_CS_PIN);
 	palSetPad(g0SpiConfig.ssport, g0SpiConfig.sspad);
 	spiStart(spi, &g0SpiConfig);
-
-	spiAcquireBus(spi);
 	resetG0(false);
 
 	uint32_t currentVersion = 0;
