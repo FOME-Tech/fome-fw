@@ -144,12 +144,15 @@ static void egtRead() {
 }
 
 void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
+#ifdef STM32H7XX
+	driver = getSpiDevice(SPI_DEVICE_5); // H7 has only SPI5 available for aux peripherals
+#else
 	driver = getSpiDevice(device);
 	if (driver == NULL) {
 		// error already reported
 		return;
 	}
-
+#endif
 	// todo:spi device is now enabled separately - should probably be enabled here
 
 	addConsoleAction("egtinfo", (Void)showEgtInfo);
@@ -163,7 +166,7 @@ void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 
 #ifdef STM32H7XX
 			spiConfig[i].cfg1 = 7 // 8 bits per byte
-					  | SPI_CFG1_MBR_DIV16;
+							  | SPI_CFG1_MBR_DIV16;
 #else
 			spiConfig[i].cr1 = getSpiPrescaler(_5MHz, device);
 #endif
