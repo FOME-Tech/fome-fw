@@ -55,9 +55,8 @@ bool bootloaderGo(SPIDriver* spi, uint32_t address);
 bool flashFirmwareImage(SPIDriver* spi);
 bool flashFirmwareImageWithRetry(SPIDriver* spi);
 
-uint32_t readLe32(const uint8_t* data);
-void exchangeAppFrame(SPIDriver* spi, uint8_t command, uint8_t* rx);
-bool isAppResponse(const uint8_t* rx, uint8_t expectedCommand, uint8_t expectedPayloadLength);
+void exchangeAppFrame(SPIDriver* spi, uint8_t command, app::AppFrame& rx);
+bool isAppResponse(const app::AppFrame& rx, uint8_t expectedCommand, uint8_t expectedPayloadLength);
 bool readAppVersion(SPIDriver* spi, uint32_t& version);
 void requestAppUpdate(SPIDriver* spi);
 

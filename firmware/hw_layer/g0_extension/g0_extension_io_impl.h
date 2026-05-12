@@ -38,8 +38,8 @@ struct PendingRequest {
 
 class OutputManager {
 public:
-	void prepareRequest(uint8_t* tx, PendingRequest& nextRequest);
-	void parseAck(const PendingRequest& pendingRequest, const uint8_t* rx);
+	void prepareRequest(protocol::AppFrame& tx, PendingRequest& nextRequest);
+	void parseAck(const PendingRequest& pendingRequest, const protocol::AppFrame& rx);
 	void requestOutput(size_t idx, bool enabled, uint32_t frequencyHz, uint16_t duty);
 
 private:

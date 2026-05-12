@@ -15,18 +15,13 @@ static SPIConfig g0ExtensionSpiConfig = {
 		.cfg1 = 7 | SPI_CFG1_MBR_2 | SPI_CFG1_MBR_1 | SPI_CFG1_MBR_0,
 		.cfg2 = 0};
 
-static NO_CACHE uint8_t txBuf[protocol::appFrameSize];
-static NO_CACHE uint8_t rxBuf[protocol::appFrameSize];
+static NO_CACHE protocol::AppFrame txBuf;
+static NO_CACHE protocol::AppFrame rxBuf;
 
-static void clearFrame(uint8_t* frame) {
+static void clearFrame(protocol::AppFrame& frame) {
 	for (size_t i = 0; i < protocol::appFrameSize; i++) {
-		frame[i] = 0;
+		frame.bytes[i] = 0;
 	}
-}
-
-static uint16_t getU16(const uint8_t* buffer, uint8_t offset) {
-	return static_cast<uint16_t>(buffer[offset]) |
-		   static_cast<uint16_t>(static_cast<uint16_t>(buffer[offset + 1]) << 8);
 }
 
 class G0ExtensionSpiAdcProvider final : public AdcProvider {
@@ -123,7 +118,7 @@ private:
 		prepareRequest(txBuf, nextRequest);
 
 		spiSelect(m_spiDevice);
-		spiExchange(m_spiDevice, protocol::appFrameSize, txBuf, rxBuf);
+		spiExchange(m_spiDevice, protocol::appFrameSize, txBuf.bytes, rxBuf.bytes);
 		spiUnselect(m_spiDevice);
 		spiReleaseBus(m_spiDevice);
 
@@ -131,15 +126,15 @@ private:
 		m_pendingRequest = nextRequest;
 	}
 
-	void prepareRequest(uint8_t* tx, PendingRequest& nextRequest) {
+	void prepareRequest(protocol::AppFrame& tx, PendingRequest& nextRequest) {
 		nextRequest = {};
 
 		// The G0 app protocol is pipelined: the response we receive now
 		// belongs to the previous request, while this request schedules the next reply.
 		if (m_nextDigitalInputToConfigure <= protocol::digitalInputCount) {
-			tx[0] = protocol::cmdSetInputMode;
-			tx[1] = static_cast<uint8_t>(m_nextDigitalInputToConfigure);
-			tx[2] = protocol::digitalMode;
+			tx.setInputModeRequest.command = protocol::cmdSetInputMode;
+			tx.setInputModeRequest.input = static_cast<uint8_t>(m_nextDigitalInputToConfigure);
+			tx.setInputModeRequest.mode = protocol::digitalMode;
 			m_nextDigitalInputToConfigure++;
 			return;
 		}
@@ -149,17 +144,17 @@ private:
 			return;
 		}
 
-		tx[0] = m_pollAnalogNext ? protocol::cmdReadAnalog : protocol::cmdReadDigitalAll;
+		tx.commandRequest.command = m_pollAnalogNext ? protocol::cmdReadAnalog : protocol::cmdReadDigitalAll;
 		m_pollAnalogNext = !m_pollAnalogNext;
 	}
 
-	void parseResponse(const uint8_t* rx) {
+	void parseResponse(const protocol::AppFrame& rx) {
 		if (m_pendingRequest.type == RequestType::SetOutput ||
 			m_pendingRequest.type == RequestType::DisableOutput) {
 			m_outputs.parseAck(m_pendingRequest, rx);
 		}
 
-		switch (rx[2]) {
+		switch (rx.responseHeader.command) {
 			case protocol::cmdReadAnalog:
 				parseAnalogResponse(rx);
 				break;
@@ -171,63 +166,54 @@ private:
 		}
 	}
 
-	void parseAnalogResponse(const uint8_t* rx) {
-		const uint8_t status = rx[0];
-		const uint8_t result = rx[1];
-		const uint8_t payloadLength = rx[3];
+	void parseAnalogResponse(const protocol::AppFrame& rx) {
+		const auto& response = rx.analogResponse;
+		const auto& header = response.header;
 
-		if (status != protocol::statusReady && status != protocol::statusUpdateMode) {
+		if (header.status != protocol::statusReady && header.status != protocol::statusUpdateMode) {
 			m_ready = false;
 			return;
 		}
 
-		if (result != protocol::resultOk || payloadLength != protocol::analogPayloadLength) {
+		if (header.result != protocol::resultOk || header.payloadLength != protocol::analogPayloadLength) {
 			m_ready = false;
 			return;
 		}
 
-		const bool analogReady = rx[protocol::appHeaderSize] != 0;
-		const uint8_t channelCount = rx[protocol::appHeaderSize + 1];
-
-		if (!analogReady) {
+		if (!response.ready) {
 			m_ready = false;
 			return;
 		}
 
-		const size_t count = channelCount < protocol::analogChannelCount ? channelCount : protocol::analogChannelCount;
+		const size_t count = response.channelCount < protocol::analogChannelCount ? response.channelCount : protocol::analogChannelCount;
 		for (size_t i = 0; i < count; i++) {
-			const uint8_t offset = static_cast<uint8_t>(protocol::appHeaderSize + 2 + i * 2);
-			m_millivolts[i] = getU16(rx, offset);
+			m_millivolts[i] = response.millivolts[i];
 		}
 
 		m_ready = true;
 	}
 
-	void parseDigitalResponse(const uint8_t* rx) {
-		const uint8_t status = rx[0];
-		const uint8_t result = rx[1];
-		const uint8_t payloadLength = rx[3];
+	void parseDigitalResponse(const protocol::AppFrame& rx) {
+		const auto& response = rx.digitalAllResponse;
+		const auto& header = response.header;
 
-		if (status != protocol::statusReady && status != protocol::statusUpdateMode) {
+		if (header.status != protocol::statusReady && header.status != protocol::statusUpdateMode) {
 			m_digitalReady = false;
 			return;
 		}
 
-		if (result != protocol::resultOk || payloadLength != protocol::digitalAllPayloadLength) {
+		if (header.result != protocol::resultOk || header.payloadLength != protocol::digitalAllPayloadLength) {
 			m_digitalReady = false;
 			return;
 		}
 
-		const uint8_t inputCount = rx[protocol::appHeaderSize];
-		if (inputCount != protocol::digitalInputCount) {
+		if (response.inputCount != protocol::digitalInputCount) {
 			m_digitalReady = false;
 			return;
 		}
 
 		for (size_t i = 0; i < protocol::digitalInputCount; i++) {
-			const uint8_t offset = static_cast<uint8_t>(protocol::appHeaderSize + 1 + i * 6);
-			const uint8_t flags = rx[offset + 1];
-			m_digitalLevels[i] = (flags & 0x01U) != 0;
+			m_digitalLevels[i] = (response.inputs[i].flags & 0x01U) != 0;
 		}
 
 		m_digitalReady = true;

@@ -3,23 +3,7 @@
 #if EFI_PROD_CODE
 
 namespace g0_extension {
-namespace {
-
-static void putU16(uint8_t* buffer, uint8_t offset, uint16_t value) {
-	buffer[offset] = static_cast<uint8_t>(value);
-	buffer[offset + 1] = static_cast<uint8_t>(value >> 8);
-}
-
-static void putU32(uint8_t* buffer, uint8_t offset, uint32_t value) {
-	buffer[offset] = static_cast<uint8_t>(value);
-	buffer[offset + 1] = static_cast<uint8_t>(value >> 8);
-	buffer[offset + 2] = static_cast<uint8_t>(value >> 16);
-	buffer[offset + 3] = static_cast<uint8_t>(value >> 24);
-}
-
-} // namespace
-
-void OutputManager::prepareRequest(uint8_t* tx, PendingRequest& nextRequest) {
+void OutputManager::prepareRequest(protocol::AppFrame& tx, PendingRequest& nextRequest) {
 	nextRequest = {};
 
 	for (size_t i = 0; i < protocol::outputCount; i++) {
@@ -31,14 +15,14 @@ void OutputManager::prepareRequest(uint8_t* tx, PendingRequest& nextRequest) {
 		nextRequest.outputIndex = i;
 
 		if (output.enabled) {
-			tx[0] = protocol::cmdSetOutput;
-			tx[1] = static_cast<uint8_t>(i + 1);
-			putU32(tx, 2, output.frequencyHz);
-			putU16(tx, 6, output.duty);
+			tx.setOutputRequest.command = protocol::cmdSetOutput;
+			tx.setOutputRequest.output = static_cast<uint8_t>(i + 1);
+			tx.setOutputRequest.frequencyHz = output.frequencyHz;
+			tx.setOutputRequest.duty = output.duty;
 			nextRequest.type = RequestType::SetOutput;
 		} else {
-			tx[0] = protocol::cmdDisableOutput;
-			tx[1] = static_cast<uint8_t>(i + 1);
+			tx.indexedRequest.command = protocol::cmdDisableOutput;
+			tx.indexedRequest.index = static_cast<uint8_t>(i + 1);
 			nextRequest.type = RequestType::DisableOutput;
 		}
 
@@ -50,7 +34,7 @@ void OutputManager::prepareRequest(uint8_t* tx, PendingRequest& nextRequest) {
 	}
 }
 
-void OutputManager::parseAck(const PendingRequest& pendingRequest, const uint8_t* rx) {
+void OutputManager::parseAck(const PendingRequest& pendingRequest, const protocol::AppFrame& rx) {
 	if (pendingRequest.outputIndex >= protocol::outputCount) {
 		return;
 	}
@@ -58,7 +42,7 @@ void OutputManager::parseAck(const PendingRequest& pendingRequest, const uint8_t
 	auto& output = m_outputs[pendingRequest.outputIndex];
 	output.pendingAck = false;
 
-	if (rx[1] != protocol::resultOk) {
+	if (rx.responseHeader.result != protocol::resultOk) {
 		output.dirty = true;
 		return;
 	}
