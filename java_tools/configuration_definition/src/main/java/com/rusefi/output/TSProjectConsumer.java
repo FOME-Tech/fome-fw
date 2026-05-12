@@ -25,6 +25,8 @@ public class TSProjectConsumer implements ConfigurationConsumer {
     private static final String FIELD_DIRECTIVE = "field =";
     private static final String G0_PRESENT_FIELD = "g0Present";
     private static final String NO_G0_SUFFIX = "_nog0";
+    private static final String SHORT_BOARD_NAME = "SHORT_BOARD_NAME";
+    private static final String ATLAS_BOARD_NAME = "atlas";
     public static final String SETTING_CONTEXT_HELP_END = "SettingContextHelpEnd";
     public static final String SETTING_CONTEXT_HELP = "SettingContextHelp";
 
@@ -71,8 +73,33 @@ public class TSProjectConsumer implements ConfigurationConsumer {
         content.append("; ").append(CONFIG_DEFINITION_END).append(ToolUtil.EOL);
         content.append(tsContent.getPostfix());
 
-        tsHeader.write(applyG0PinVisibility(content.toString()));
+        String renderedContent = content.toString();
+        if (shouldApplyAtlasG0PinVisibility()) {
+            renderedContent = applyG0PinVisibility(renderedContent);
+        } else {
+            renderedContent = stripAtlasOnlyG0Content(renderedContent);
+        }
+
+        tsHeader.write(renderedContent);
         tsHeader.close();
+    }
+
+    private boolean shouldApplyAtlasG0PinVisibility() {
+        return ATLAS_BOARD_NAME.equals(state.getVariableRegistry().get(SHORT_BOARD_NAME));
+    }
+
+    private static String stripAtlasOnlyG0Content(String content) {
+        StringBuilder result = new StringBuilder();
+
+        for (String line : content.split("\\r?\\n", -1)) {
+            if (line.contains(G0_PRESENT_FIELD)) {
+                continue;
+            }
+
+            result.append(line).append(ToolUtil.EOL);
+        }
+
+        return result.toString();
     }
 
     public static String applyG0PinVisibility(String content) {

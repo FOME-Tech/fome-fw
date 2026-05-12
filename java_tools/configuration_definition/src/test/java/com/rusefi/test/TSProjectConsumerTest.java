@@ -1,12 +1,19 @@
 package com.rusefi.test;
 
 import com.rusefi.ReaderStateImpl;
+import com.rusefi.TsFileContent;
 import com.rusefi.output.BaseCHeaderConsumer;
 import com.rusefi.output.JavaFieldsConsumer;
 import com.rusefi.output.TSProjectConsumer;
+import com.rusefi.util.Output;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.StringWriter;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class TSProjectConsumerTest {
     @Test
@@ -106,5 +113,60 @@ public class TSProjectConsumerTest {
                         "\n" +
                         "\n",
                 result);
+    }
+
+    @Test
+    public void g0PinVisibilityAppliedOnlyForAtlas() throws IOException {
+        String fieldsSection = ""
+                + "fanPin = bits, U16, 522, [0:7], 0=\"NONE\", 231=\"G0 Lowside 1\", 103=\"Lowside 1\"\n"
+                + "\tfield = \"Output\", fanPin\n";
+
+        ReaderStateImpl atlasState = new ReaderStateImpl();
+        atlasState.getVariableRegistry().register("SHORT_BOARD_NAME", "atlas");
+
+        ReaderStateImpl nonAtlasState = new ReaderStateImpl();
+        nonAtlasState.getVariableRegistry().register("SHORT_BOARD_NAME", "f407-discovery");
+
+        String atlasOutput = renderTsContent(atlasState, fieldsSection);
+        assertTrue(atlasOutput.contains("fanPin_nog0 = bits, U16, 522, [0:7], 0=\"NONE\", 103=\"Lowside 1\""));
+        assertTrue(atlasOutput.contains("\tfield = \"Output\", fanPin, { g0Present }"));
+        assertTrue(atlasOutput.contains("\tfield = \"Output\", fanPin_nog0, { !g0Present }"));
+
+        String nonAtlasOutput = renderTsContent(nonAtlasState, fieldsSection);
+        assertFalse(nonAtlasOutput.contains("fanPin_nog0"));
+        assertFalse(nonAtlasOutput.contains("g0Present"));
+        assertTrue(nonAtlasOutput.contains(fieldsSection));
+    }
+
+    private static String renderTsContent(ReaderStateImpl state, String fieldsSection) throws IOException {
+        StringWriter sw = new StringWriter();
+
+        class RenderableTSProjectConsumer extends TSProjectConsumer {
+            private RenderableTSProjectConsumer() {
+                super("", state);
+            }
+
+            public void render(String generatedFieldsSection) throws IOException {
+                writeTunerStudioFile("", generatedFieldsSection);
+            }
+
+            @Override
+            protected void writeTunerStudioFile(String tsPath, String generatedFieldsSection) throws IOException {
+                writeContent(generatedFieldsSection, new TsFileContent("", ""), new Output() {
+                    @Override
+                    public void write(String line) {
+                        sw.write(line);
+                    }
+
+                    @Override
+                    public void close() {
+                    }
+                });
+            }
+        }
+
+        RenderableTSProjectConsumer consumer = new RenderableTSProjectConsumer();
+        consumer.render(fieldsSection);
+        return sw.toString();
     }
 }
