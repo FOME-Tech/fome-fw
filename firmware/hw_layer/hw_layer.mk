@@ -29,10 +29,14 @@ HW_LAYER_EMS_CPP = \
 	$(PROJECT_DIR)/hw_layer/stepper_dual_hbridge.cpp \
 	$(PROJECT_DIR)/hw_layer/io_pins.cpp \
 	$(PROJECT_DIR)/hw_layer/rtc_helper.cpp \
-	$(PROJECT_DIR)/hw_layer/debounce.cpp \
+	$(PROJECT_DIR)/hw_layer/debounce.cpp
+
+ifeq ($(SHORT_BOARD_NAME),atlas)
+HW_LAYER_EMS_CPP += \
 	$(PROJECT_DIR)/hw_layer/g0_extension/g0_extension_io.cpp \
 	$(PROJECT_DIR)/hw_layer/g0_extension/g0_extension_adc_provider.cpp \
 	$(PROJECT_DIR)/hw_layer/g0_extension/g0_extension_output_manager.cpp
+endif
 
 ifeq ($(USE_OPENBLT),yes)
 	HW_LAYER_EMS += \

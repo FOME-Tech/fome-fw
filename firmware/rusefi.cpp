@@ -116,8 +116,10 @@
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
 #include "bootloader_updater.h"
+#if HW_ATLAS
 #include "g0_extension_firmware.h"
 #include "hw_layer/g0_extension/g0_extension_io.h"
+#endif
 
 #include <setjmp.h>
 
@@ -175,7 +177,9 @@ void runRusEfi() {
 
 	addConsoleAction(CMD_REBOOT, scheduleReboot);
 	addConsoleAction(CMD_REBOOT_DFU, jump_to_bootloader);
+#if HW_ATLAS
 	addConsoleAction("force_g0_update", []() { setG0ExtensionPresent(loadG0ExtensionFirmware(true)); });
+#endif
 
 #if EFI_USE_OPENBLT
 	addConsoleAction(CMD_REBOOT_OPENBLT, jump_to_openblt);
