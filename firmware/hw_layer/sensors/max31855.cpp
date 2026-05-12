@@ -161,7 +161,12 @@ void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 
 			initSpiCs(&spiConfig[i], max31855_cs[i]);
 
+#ifdef STM32H7XX
+			spiConfig[i].cfg1 = 7 // 8 bits per byte
+					  | SPI_CFG1_MBR_DIV16;
+#else
 			spiConfig[i].cr1 = getSpiPrescaler(_5MHz, device);
+#endif
 		}
 	}
 }
