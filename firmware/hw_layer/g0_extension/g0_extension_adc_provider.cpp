@@ -149,8 +149,7 @@ private:
 	}
 
 	void parseResponse(const protocol::AppFrame& rx) {
-		if (m_pendingRequest.type == RequestType::SetOutput ||
-			m_pendingRequest.type == RequestType::DisableOutput) {
+		if (m_pendingRequest.type == RequestType::SetOutput || m_pendingRequest.type == RequestType::DisableOutput) {
 			m_outputs.parseAck(m_pendingRequest, rx);
 		}
 
@@ -185,7 +184,8 @@ private:
 			return;
 		}
 
-		const size_t count = response.channelCount < protocol::analogChannelCount ? response.channelCount : protocol::analogChannelCount;
+		const size_t count = response.channelCount < protocol::analogChannelCount ? response.channelCount
+																				  : protocol::analogChannelCount;
 		for (size_t i = 0; i < count; i++) {
 			m_millivolts[i] = response.millivolts[i];
 		}

@@ -61,7 +61,8 @@ void startG0ExtensionIo() {
 	started = true;
 
 	g0_extension::startProvider();
-	registerAdcProvider(g0_extension::adcProvider(), g0_extension::FirstAdcIndex, g0_extension::protocol::analogChannelCount);
+	registerAdcProvider(
+			g0_extension::adcProvider(), g0_extension::FirstAdcIndex, g0_extension::protocol::analogChannelCount);
 }
 
 bool readG0ExtensionDigitalInput(size_t idx) {

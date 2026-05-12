@@ -71,7 +71,7 @@ void resetExtension(bool bootloaderMode) {
 
 bool loadG0ExtensionFirmware(bool forceUpdate) {
 #if HW_ATLAS && HAL_USE_SPI
-	#if G0_EXTENSION_FIRMWARE_IMAGE_AVAILABLE
+#if G0_EXTENSION_FIRMWARE_IMAGE_AVAILABLE
 	g0_extension_firmware::initControlPins();
 
 	turnOnSpi(g0_extension_firmware::SpiDevice);
@@ -116,10 +116,10 @@ bool loadG0ExtensionFirmware(bool forceUpdate) {
 	}
 
 	return ok;
-	#else
+#else
 	efiPrintf("G0 extension firmware ERROR: run `make -C firmware/ext/g0_firmware for_fome_image` first");
 	return false;
-	#endif
+#endif
 #else
 	(void)forceUpdate;
 	efiPrintf("G0 extension firmware is only available on Atlas with SPI enabled");
