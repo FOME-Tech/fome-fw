@@ -24,7 +24,7 @@ public:
 			duty = 1;
 		}
 
-		const auto scaledDuty = static_cast<uint16_t>(duty * g0_extension::OutputDutyMax);
+		const auto scaledDuty = static_cast<uint16_t>(duty * g0_extension::protocol::outputDutyMax);
 		g0_extension::setLowsidePwm(m_outputIndex, m_frequencyHz, scaledDuty);
 	}
 
@@ -33,7 +33,7 @@ private:
 	uint32_t m_frequencyHz = 1;
 };
 
-static G0ExtensionLowsideHardwarePwm g0ExtensionLowsidePwms[g0_extension::OutputCount] = {
+static G0ExtensionLowsideHardwarePwm g0ExtensionLowsidePwms[g0_extension::protocol::outputCount] = {
 		G0ExtensionLowsideHardwarePwm(0),
 		G0ExtensionLowsideHardwarePwm(1),
 		G0ExtensionLowsideHardwarePwm(2),
@@ -61,7 +61,7 @@ void startG0ExtensionIo() {
 	started = true;
 
 	g0_extension::startProvider();
-	registerAdcProvider(g0_extension::adcProvider(), g0_extension::FirstAdcIndex, g0_extension::AnalogChannelCount);
+	registerAdcProvider(g0_extension::adcProvider(), g0_extension::FirstAdcIndex, g0_extension::protocol::analogChannelCount);
 }
 
 bool readG0ExtensionDigitalInput(size_t idx) {

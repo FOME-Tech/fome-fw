@@ -15,11 +15,11 @@ static SPIConfig g0ExtensionSpiConfig = {
 		.cfg1 = 7 | SPI_CFG1_MBR_2 | SPI_CFG1_MBR_1 | SPI_CFG1_MBR_0,
 		.cfg2 = 0};
 
-static NO_CACHE uint8_t txBuf[SpiAppFrameSize];
-static NO_CACHE uint8_t rxBuf[SpiAppFrameSize];
+static NO_CACHE uint8_t txBuf[protocol::appFrameSize];
+static NO_CACHE uint8_t rxBuf[protocol::appFrameSize];
 
 static void clearFrame(uint8_t* frame) {
-	for (size_t i = 0; i < SpiAppFrameSize; i++) {
+	for (size_t i = 0; i < protocol::appFrameSize; i++) {
 		frame[i] = 0;
 	}
 }
@@ -38,7 +38,7 @@ public:
 	bool enable(const char* name, size_t idx) override {
 		(void)name;
 
-		if (idx >= AnalogChannelCount) {
+		if (idx >= protocol::analogChannelCount) {
 			return false;
 		}
 
@@ -47,7 +47,7 @@ public:
 	}
 
 	void disable(size_t idx) override {
-		if (idx >= AnalogChannelCount) {
+		if (idx >= protocol::analogChannelCount) {
 			return;
 		}
 
@@ -55,7 +55,7 @@ public:
 	}
 
 	float get(size_t idx) const override {
-		if (idx >= AnalogChannelCount || !m_ready) {
+		if (idx >= protocol::analogChannelCount || !m_ready) {
 			return 0.0f;
 		}
 
@@ -63,7 +63,7 @@ public:
 	}
 
 	bool readDigitalInput(size_t idx) const {
-		if (idx >= DigitalInputCount || !m_digitalReady) {
+		if (idx >= protocol::digitalInputCount || !m_digitalReady) {
 			return false;
 		}
 
@@ -71,7 +71,7 @@ public:
 	}
 
 	void setLowsideOutput(size_t idx, bool value) {
-		m_outputs.requestOutput(idx, value, 0, value ? OutputDutyMax : 0);
+		m_outputs.requestOutput(idx, value, 0, value ? protocol::outputDutyMax : 0);
 	}
 
 	void disableLowsideOutput(size_t idx) {
@@ -123,7 +123,7 @@ private:
 		prepareRequest(txBuf, nextRequest);
 
 		spiSelect(m_spiDevice);
-		spiExchange(m_spiDevice, SpiAppFrameSize, txBuf, rxBuf);
+		spiExchange(m_spiDevice, protocol::appFrameSize, txBuf, rxBuf);
 		spiUnselect(m_spiDevice);
 		spiReleaseBus(m_spiDevice);
 
@@ -136,10 +136,10 @@ private:
 
 		// The G0 app protocol is pipelined: the response we receive now
 		// belongs to the previous request, while this request schedules the next reply.
-		if (m_nextDigitalInputToConfigure <= DigitalInputCount) {
-			tx[0] = SpiCmdSetInputMode;
+		if (m_nextDigitalInputToConfigure <= protocol::digitalInputCount) {
+			tx[0] = protocol::cmdSetInputMode;
 			tx[1] = static_cast<uint8_t>(m_nextDigitalInputToConfigure);
-			tx[2] = SpiDigitalMode;
+			tx[2] = protocol::digitalMode;
 			m_nextDigitalInputToConfigure++;
 			return;
 		}
@@ -149,7 +149,7 @@ private:
 			return;
 		}
 
-		tx[0] = m_pollAnalogNext ? SpiCmdReadAnalog : SpiCmdReadDigitalAll;
+		tx[0] = m_pollAnalogNext ? protocol::cmdReadAnalog : protocol::cmdReadDigitalAll;
 		m_pollAnalogNext = !m_pollAnalogNext;
 	}
 
@@ -160,10 +160,10 @@ private:
 		}
 
 		switch (rx[2]) {
-			case SpiCmdReadAnalog:
+			case protocol::cmdReadAnalog:
 				parseAnalogResponse(rx);
 				break;
-			case SpiCmdReadDigitalAll:
+			case protocol::cmdReadDigitalAll:
 				parseDigitalResponse(rx);
 				break;
 			default:
@@ -176,27 +176,27 @@ private:
 		const uint8_t result = rx[1];
 		const uint8_t payloadLength = rx[3];
 
-		if (status != 0x00 && status != 0x01) {
+		if (status != protocol::statusReady && status != protocol::statusUpdateMode) {
 			m_ready = false;
 			return;
 		}
 
-		if (result != SpiResultOk || payloadLength != 26) {
+		if (result != protocol::resultOk || payloadLength != protocol::analogPayloadLength) {
 			m_ready = false;
 			return;
 		}
 
-		const bool analogReady = rx[SpiAppHeaderSize] != 0;
-		const uint8_t channelCount = rx[SpiAppHeaderSize + 1];
+		const bool analogReady = rx[protocol::appHeaderSize] != 0;
+		const uint8_t channelCount = rx[protocol::appHeaderSize + 1];
 
 		if (!analogReady) {
 			m_ready = false;
 			return;
 		}
 
-		const size_t count = channelCount < AnalogChannelCount ? channelCount : AnalogChannelCount;
+		const size_t count = channelCount < protocol::analogChannelCount ? channelCount : protocol::analogChannelCount;
 		for (size_t i = 0; i < count; i++) {
-			const uint8_t offset = static_cast<uint8_t>(SpiAppHeaderSize + 2 + i * 2);
+			const uint8_t offset = static_cast<uint8_t>(protocol::appHeaderSize + 2 + i * 2);
 			m_millivolts[i] = getU16(rx, offset);
 		}
 
@@ -208,24 +208,24 @@ private:
 		const uint8_t result = rx[1];
 		const uint8_t payloadLength = rx[3];
 
-		if (status != 0x00 && status != 0x01) {
+		if (status != protocol::statusReady && status != protocol::statusUpdateMode) {
 			m_digitalReady = false;
 			return;
 		}
 
-		if (result != SpiResultOk || payloadLength != 25) {
+		if (result != protocol::resultOk || payloadLength != protocol::digitalAllPayloadLength) {
 			m_digitalReady = false;
 			return;
 		}
 
-		const uint8_t inputCount = rx[SpiAppHeaderSize];
-		if (inputCount != DigitalInputCount) {
+		const uint8_t inputCount = rx[protocol::appHeaderSize];
+		if (inputCount != protocol::digitalInputCount) {
 			m_digitalReady = false;
 			return;
 		}
 
-		for (size_t i = 0; i < DigitalInputCount; i++) {
-			const uint8_t offset = static_cast<uint8_t>(SpiAppHeaderSize + 1 + i * 6);
+		for (size_t i = 0; i < protocol::digitalInputCount; i++) {
+			const uint8_t offset = static_cast<uint8_t>(protocol::appHeaderSize + 1 + i * 6);
 			const uint8_t flags = rx[offset + 1];
 			m_digitalLevels[i] = (flags & 0x01U) != 0;
 		}
@@ -236,11 +236,11 @@ private:
 private:
 	bool m_started = false;
 	SPIDriver* m_spiDevice = nullptr;
-	bool m_enabled[AnalogChannelCount] = {};
+	bool m_enabled[protocol::analogChannelCount] = {};
 	volatile bool m_ready = false;
-	volatile uint16_t m_millivolts[AnalogChannelCount] = {};
+	volatile uint16_t m_millivolts[protocol::analogChannelCount] = {};
 	volatile bool m_digitalReady = false;
-	volatile bool m_digitalLevels[DigitalInputCount] = {};
+	volatile bool m_digitalLevels[protocol::digitalInputCount] = {};
 	OutputManager m_outputs;
 	PendingRequest m_pendingRequest = {};
 	size_t m_nextDigitalInputToConfigure = 1;

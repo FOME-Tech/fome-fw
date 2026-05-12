@@ -1,24 +1,14 @@
 #pragma once
 
 #include "g0_extension_io.h"
+#include "../../ext/g0_firmware/for_fome/g0_spi_protocol.h"
 
 #if EFI_PROD_CODE
 
 namespace g0_extension {
 
-static constexpr size_t AnalogChannelCount = 12;
-static constexpr size_t DigitalInputCount = 4;
-static constexpr size_t OutputCount = 4;
-static constexpr size_t SpiAppFrameSize = 36U;
-static constexpr uint8_t SpiCmdReadAnalog = 0x10U;
-static constexpr uint8_t SpiCmdReadDigitalAll = 0x12U;
-static constexpr uint8_t SpiCmdSetOutput = 0x20U;
-static constexpr uint8_t SpiCmdDisableOutput = 0x21U;
-static constexpr uint8_t SpiCmdSetInputMode = 0x30U;
-static constexpr uint8_t SpiAppHeaderSize = 4U;
-static constexpr uint8_t SpiResultOk = 0x00U;
-static constexpr uint8_t SpiDigitalMode = 0x00U;
-static constexpr uint16_t OutputDutyMax = 10000U;
+namespace protocol = ::g0_spi_protocol;
+
 static constexpr spi_device_e SpiDevice = SPI_DEVICE_5;
 static constexpr brain_pin_e SpiCsPin = Gpio::F6;
 static constexpr size_t FirstAdcIndex = EFI_ADC_20 - EFI_ADC_0;
@@ -53,7 +43,7 @@ public:
 	void requestOutput(size_t idx, bool enabled, uint32_t frequencyHz, uint16_t duty);
 
 private:
-	OutputState m_outputs[OutputCount] = {};
+	OutputState m_outputs[protocol::outputCount] = {};
 };
 
 AdcProvider& adcProvider();

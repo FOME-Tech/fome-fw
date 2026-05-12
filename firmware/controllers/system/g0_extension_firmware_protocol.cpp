@@ -10,31 +10,31 @@ uint32_t readLe32(const uint8_t* data) {
 }
 
 void exchangeAppFrame(SPIDriver* spi, uint8_t command, uint8_t* rx) {
-	memset(txBuffer(), 0, AppFrameSize);
+	memset(txBuffer(), 0, app::appFrameSize);
 	txBuffer()[0] = command;
-	memset(rxBuffer(), 0, AppFrameSize);
-	memset(rx, 0, AppFrameSize);
+	memset(rxBuffer(), 0, app::appFrameSize);
+	memset(rx, 0, app::appFrameSize);
 
 	spiSelect(spi);
-	spiExchange(spi, AppFrameSize, txBuffer(), rxBuffer());
+	spiExchange(spi, app::appFrameSize, txBuffer(), rxBuffer());
 	spiUnselect(spi);
 
-	memcpy(rx, rxBuffer(), AppFrameSize);
+	memcpy(rx, rxBuffer(), app::appFrameSize);
 }
 
 bool isAppResponse(const uint8_t* rx, uint8_t expectedCommand, uint8_t expectedPayloadLength) {
-	const bool knownStatus = rx[0] == AppStatusReady || rx[0] == AppStatusUpdateMode;
-	return knownStatus && rx[1] == AppResultOk && rx[2] == expectedCommand && rx[3] == expectedPayloadLength;
+	const bool knownStatus = rx[0] == app::statusReady || rx[0] == app::statusUpdateMode;
+	return knownStatus && rx[1] == app::resultOk && rx[2] == expectedCommand && rx[3] == expectedPayloadLength;
 }
 
 bool readAppVersion(SPIDriver* spi, uint32_t& version) {
-	uint8_t rx[AppFrameSize];
+	uint8_t rx[app::appFrameSize];
 
-	exchangeAppFrame(spi, AppCmdReadVersion, rx);
+	exchangeAppFrame(spi, app::cmdReadVersion, rx);
 	chThdSleepMilliseconds(1);
-	exchangeAppFrame(spi, AppCmdNop, rx);
+	exchangeAppFrame(spi, app::cmdNop, rx);
 
-	if (!isAppResponse(rx, AppCmdReadVersion, 4)) {
+	if (!isAppResponse(rx, app::cmdReadVersion, app::versionPayloadLength)) {
 		efiPrintf(
 				"G0 extension firmware: invalid version response %02X %02X %02X %02X",
 				rx[0],
@@ -44,16 +44,16 @@ bool readAppVersion(SPIDriver* spi, uint32_t& version) {
 		return false;
 	}
 
-	version = readLe32(&rx[AppHeaderSize]);
+	version = readLe32(&rx[app::appHeaderSize]);
 	return true;
 }
 
 void requestAppUpdate(SPIDriver* spi) {
-	uint8_t rx[AppFrameSize];
+	uint8_t rx[app::appFrameSize];
 
-	exchangeAppFrame(spi, AppCmdEnterUpdate, rx);
+	exchangeAppFrame(spi, app::cmdEnterUpdate, rx);
 	chThdSleepMilliseconds(1);
-	exchangeAppFrame(spi, AppCmdNop, rx);
+	exchangeAppFrame(spi, app::cmdNop, rx);
 }
 
 } // namespace g0_extension_firmware

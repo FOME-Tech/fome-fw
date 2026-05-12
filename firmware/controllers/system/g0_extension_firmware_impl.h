@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pch.h"
+#include "../../ext/g0_firmware/for_fome/g0_spi_protocol.h"
 
 #if HW_ATLAS && HAL_USE_SPI
 
@@ -12,6 +13,8 @@
 #endif
 
 namespace g0_extension_firmware {
+
+namespace app = ::g0_spi_protocol;
 
 static constexpr spi_device_e SpiDevice = SPI_DEVICE_5;
 static constexpr brain_pin_e ResetPin = Gpio::B14;
@@ -28,16 +31,7 @@ static constexpr uint8_t BootloaderGo = 0x21;
 static constexpr int BootloaderInterByteDelayUs = 20;
 static constexpr int FlashMaxAttempts = 2;
 
-static constexpr uint8_t AppCmdNop = 0x00;
-static constexpr uint8_t AppCmdReadVersion = 0x01;
-static constexpr uint8_t AppCmdEnterUpdate = 0xA5;
-
-static constexpr uint8_t AppStatusReady = 0x00;
-static constexpr uint8_t AppStatusUpdateMode = 0x01;
-static constexpr size_t AppFrameSize = 36;
 static constexpr size_t SpiDmaBufferSize = 258;
-static constexpr uint8_t AppResultOk = 0x0;
-static constexpr uint8_t AppHeaderSize = 4;
 
 SPIConfig& spiConfig();
 uint8_t* txBuffer();
