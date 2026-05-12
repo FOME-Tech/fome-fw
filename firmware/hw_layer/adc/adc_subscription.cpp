@@ -1,18 +1,10 @@
 #include "pch.h"
 
 #include "adc_subscription.h"
+#include "adc_provider.h"
+#include "adc_inputs.h"
 
 #include "biquad.h"
-
-#if EFI_UNIT_TEST
-
-/*static*/ void AdcSubscription::SubscribeSensor(FunctionalSensor&, adc_channel_e, float, float) {}
-
-/*static*/ void AdcSubscription::UnsubscribeSensor(FunctionalSensor&) {}
-
-/*static*/ void AdcSubscription::UnsubscribeSensor(FunctionalSensor&, adc_channel_e) {}
-
-#else
 
 struct AdcSubscriptionEntry {
 	FunctionalSensor* Sensor;
@@ -74,22 +66,14 @@ static AdcSubscriptionEntry* findEntry() {
 		return;
 	}
 
-#if EFI_PROD_CODE
 	// Enable the input pin
-	/**
-	TODO: this code is similar to initIfValid, what is the plan? shall we extract helper method or else?
-	 */
-	brain_pin_e pin = getAdcChannelBrainPin(name, channel);
-	if (pin != Gpio::Invalid) {
-		// todo: external muxes for internal ADC #3350
-		efiSetPadMode(name, pin, PAL_MODE_INPUT_ANALOG);
-	}
+	AdcProvider::acquire(channel);
 
 	// if 0, default to the board's divider coefficient for given channel
 	if (voltsPerAdcVolt == 0) {
 		voltsPerAdcVolt = getAnalogInputDividerCoefficient(channel);
 	}
-#endif /* EFI_PROD_CODE */
+
 	// Populate the entry
 	entry->VoltsPerAdcVolt = voltsPerAdcVolt;
 	entry->Channel = channel;
@@ -108,10 +92,7 @@ static AdcSubscriptionEntry* findEntry() {
 		return;
 	}
 
-#if EFI_PROD_CODE
-	// Release the pin
-	efiSetPadUnused(getAdcChannelBrainPin("adc unsubscribe", entry->Channel));
-#endif // EFI_PROD_CODE
+	AdcProvider::release(entry->Channel);
 
 	sensor.unregister();
 
@@ -143,7 +124,7 @@ void AdcSubscription::UpdateSubscribers(efitick_t nowNt) {
 			continue;
 		}
 
-		float mcuVolts = getVoltage("sensor", entry.Channel);
+		float mcuVolts = AdcProvider::getVoltage(entry.Channel);
 		float sensorVolts = mcuVolts * entry.VoltsPerAdcVolt;
 
 		// On the very first update, preload the filter as if we've been
@@ -160,7 +141,6 @@ void AdcSubscription::UpdateSubscribers(efitick_t nowNt) {
 	}
 }
 
-#if EFI_PROD_CODE
 void AdcSubscription::PrintInfo() {
 	for (size_t i = 0; i < efi::size(s_entries); i++) {
 		auto& entry = s_entries[i];
@@ -171,7 +151,7 @@ void AdcSubscription::PrintInfo() {
 		}
 
 		const auto name = entry.Sensor->getSensorName();
-		float mcuVolts = getVoltage("sensor", entry.Channel);
+		float mcuVolts = AdcProvider::getVoltage(entry.Channel);
 		float sensorVolts = mcuVolts * entry.VoltsPerAdcVolt;
 		auto channel = entry.Channel;
 
@@ -187,6 +167,3 @@ void AdcSubscription::PrintInfo() {
 				entry.VoltsPerAdcVolt);
 	}
 }
-#endif // EFI_PROD_CODE
-
-#endif // !EFI_UNIT_TEST
