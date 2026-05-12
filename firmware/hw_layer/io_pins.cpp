@@ -152,11 +152,11 @@ bool efiReadPin(Gpio pin) {
 		return readCanVirtualInput(pin - Gpio::CAN_INPUT_0);
 	}
 
-	#if HW_ATLAS
+#if HW_ATLAS
 	if (pin >= Gpio::G0_DIGITAL_IN_0 && pin <= Gpio::G0_DIGITAL_IN_3) {
 		return readG0ExtensionDigitalInput(pin - Gpio::G0_DIGITAL_IN_0);
 	}
-	#endif
+#endif
 
 	/* incorrect pin */
 	return false;
