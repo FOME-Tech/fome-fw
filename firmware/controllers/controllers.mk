@@ -73,4 +73,3 @@ CONTROLLERS_INC=\
 	$(CONTROLLERS_DIR)/actuators \
 	$(CONTROLLERS_DIR)/actuators/gppwm \
 	$(CONTROLLERS_DIR)/serial \
-

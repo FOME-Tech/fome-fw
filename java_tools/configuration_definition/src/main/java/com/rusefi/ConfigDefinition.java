@@ -148,6 +148,7 @@ public class ConfigDefinition {
                     break;
                 case "-boardName":
                     shortBoardName = args[i + 1];
+                    state.getVariableRegistry().register("SHORT_BOARD_NAME", shortBoardName);
                     break;
                 case "-makefileDep":
                     makefileDepsDestination = args[i + 1];

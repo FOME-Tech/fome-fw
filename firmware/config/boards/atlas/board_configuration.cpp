@@ -137,6 +137,12 @@ void setBoardConfigOverrides() {
 	engineConfiguration->spi4misoPin = Gpio::E5;
 	engineConfiguration->spi4mosiPin = Gpio::E6;
 
+	// G0 extension firmware SPI
+	engineConfiguration->is_enabled_spi_5 = true;
+	engineConfiguration->spi5sckPin = Gpio::F7;
+	engineConfiguration->spi5misoPin = Gpio::F8;
+	engineConfiguration->spi5mosiPin = Gpio::F9;
+
 	// Clear SPI SD card pins in case it's enabled from porting a Proteus tune
 	if (engineConfiguration->sdCardSpiDevice || isBrainPinValid(engineConfiguration->sdCardCsPin)) {
 		engineConfiguration->is_enabled_spi_3 = false;

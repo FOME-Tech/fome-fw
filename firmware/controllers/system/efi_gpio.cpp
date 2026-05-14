@@ -10,6 +10,9 @@
 #include "engine_sniffer.h"
 
 #include "drivers/gpio/gpio_ext.h"
+#if EFI_PROD_CODE && HW_ATLAS
+#include "hw_layer/g0_extension/g0_extension_io.h"
+#endif
 
 #if HW_HELLEN
 #include "hellen_meta.h"
@@ -458,6 +461,13 @@ void OutputPin::setValue(int logicValue) {
 	int electricalValue = getElectricalValue(logicValue, m_mode);
 
 #if EFI_PROD_CODE
+#if HW_ATLAS
+	if (isG0ExtensionLowsidePin(m_brainPin)) {
+		setG0ExtensionLowsideOutput(m_brainPin, electricalValue != 0);
+		return;
+	}
+#endif
+
 #if (BOARD_EXT_GPIOCHIPS > 0)
 	if (!this->ext) {
 		setOnchipValue(electricalValue);
@@ -575,6 +585,13 @@ void OutputPin::initPin(
 	setDefaultPinState(outputMode);
 
 #if EFI_PROD_CODE
+#if HW_ATLAS
+	if (isG0ExtensionLowsidePin(m_brainPin)) {
+		brain_pin_markUsed(m_brainPin, msg);
+		return;
+	}
+#endif
+
 	iomode_t ioMode = (outputMode == OM_DEFAULT || outputMode == OM_INVERTED) ? PAL_MODE_OUTPUT_PUSHPULL
 																			  : PAL_MODE_OUTPUT_OPENDRAIN;
 
@@ -620,6 +637,17 @@ void OutputPin::deInit() {
 #endif // (BOARD_EXT_GPIOCHIPS > 0)
 
 	efiPrintf("unregistering %s", hwPortname(m_brainPin));
+
+#if EFI_PROD_CODE
+#if HW_ATLAS
+	if (isG0ExtensionLowsidePin(m_brainPin)) {
+		disableG0ExtensionLowsideOutput(m_brainPin);
+		brain_pin_markUnused(m_brainPin);
+		m_brainPin = Gpio::Unassigned;
+		return;
+	}
+#endif
+#endif
 
 	efiSetPadUnused(m_brainPin);
 
