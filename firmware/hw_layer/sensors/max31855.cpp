@@ -148,11 +148,11 @@ void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 	driver = getSpiDevice(SPI_DEVICE_5); // H7 has only SPI5 available for aux peripherals
 #else
 	driver = getSpiDevice(device);
+#endif
 	if (driver == NULL) {
 		// error already reported
 		return;
 	}
-#endif
 	// todo:spi device is now enabled separately - should probably be enabled here
 
 	addConsoleAction("egtinfo", (Void)showEgtInfo);
