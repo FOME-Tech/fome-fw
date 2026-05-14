@@ -25,7 +25,6 @@
 #include "mpu_util.h"
 #endif /* EFI_PROD_CODE */
 
-#include "AdcConfiguration.h"
 #include "idle_hardware.h"
 #include "trigger_central.h"
 #include "gitversion.h"
@@ -92,8 +91,9 @@ void onFastAdcComplete(adcsample_t*) {
 
 #ifdef MODULE_MAP_AVERAGING
 	engine->module<MapAveragingModule>()->submitSample(
-			adcToVoltsDivided(getFastAdc(fastMapSampleIndex), engineConfiguration->map.sensor.hwChannel),
-			adcToVoltsDivided(getFastAdc(fastMapSampleIndex2), engineConfiguration->map2HwChannel));
+			getFastAdc(fastMapSampleIndex) *
+					getAnalogInputDividerCoefficient(engineConfiguration->map.sensor.hwChannel),
+			getFastAdc(fastMapSampleIndex2) * getAnalogInputDividerCoefficient(engineConfiguration->map2HwChannel));
 #endif // MODULE_MAP_AVERAGING
 }
 #endif /* HAL_USE_ADC */

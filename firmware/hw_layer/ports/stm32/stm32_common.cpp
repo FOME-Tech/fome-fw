@@ -163,6 +163,20 @@ int getAdcChannelPin(adc_channel_e hwChannel) {
 	return getHwPin("get_pin", brainPin);
 }
 
+bool Stm32AdcProviderBase::enable(const char* name, size_t idx) {
+	brain_pin_e pin = getAdcChannelBrainPin(name, idx + EFI_ADC_0);
+	if (pin != Gpio::Invalid) {
+		efiSetPadMode(name, pin, PAL_MODE_INPUT_ANALOG);
+		return true;
+	}
+
+	return false;
+}
+
+void Stm32AdcProviderBase::disable(size_t idx) {
+	efiSetPadUnused(getAdcChannelBrainPin("adc unsubscribe", idx + EFI_ADC_0));
+}
+
 #endif /* HAL_USE_ADC */
 
 #if EFI_PROD_CODE

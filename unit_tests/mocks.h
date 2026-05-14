@@ -1,5 +1,15 @@
 #pragma once
 
+// via: ChibiOS/os/common/ports/templates/chcore.h
+/**
+ * @brief   Interrupt saved context.
+ * @details This structure represents the stack frame saved during a
+ *          preemption-capable interrupt handler.
+ * @note    R2 and R13 are not saved because those are assumed to be immutable
+ *          during the system life cycle.
+ */
+struct port_extctx {};
+
 #include "electronic_throttle.h"
 #include "dc_motor.h"
 #include "table_helper.h"
