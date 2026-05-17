@@ -144,7 +144,7 @@ static void egtRead() {
 }
 
 void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
-#ifdef HW_ATLAS || (HW_PROTEUS && defined(STM32H7XX))
+#if defined(HW_ATLAS) || (defined(HW_PROTEUS) && defined(STM32H7XX))
 	driver = getSpiDevice(SPI_DEVICE_5); // H7 has only SPI5 available for aux peripherals
 #else
 	driver = getSpiDevice(device);
