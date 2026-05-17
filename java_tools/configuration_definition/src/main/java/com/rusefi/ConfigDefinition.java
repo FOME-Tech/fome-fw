@@ -181,6 +181,16 @@ public class ConfigDefinition {
             System.out.println("Signature: " + signature);
         }
 
+        {
+            // MAX31855 is fixed to SPI5 on H7, so the TS device selector should be hidden.
+            boolean showMax31855SpiSelector = !isH7Board(shortBoardName);
+            parseState.addDefinition(
+                    state.getVariableRegistry(),
+                    "ts_show_max31855_spi",
+                    Boolean.toString(showMax31855SpiSelector),
+                    Definition.OverwritePolicy.NotAllowed);
+        }
+
         if (triggersInputFolder != null) {
             state.addInputFile(triggersInputFolder + File.separator + "triggers.txt");
         }
@@ -261,6 +271,15 @@ public class ConfigDefinition {
         SimpleDateFormat df = new SimpleDateFormat("yyyy.MM.dd");
 
         return "\"rusEFI (FOME) " + branch + "." + df.format(new Date()) + "."+ boardName + "." + inputFilesHash + "\"";
+    }
+
+    private static boolean isH7Board(String boardName) {
+        if (boardName == null) {
+            return false;
+        }
+
+        return boardName.equals("atlas")
+                || boardName.contains("_h7");
     }
 
     private static void writeMakefileDependencyFile(List<String> inputFiles, String targetFile, String makefileDepsDestination, List<String> outputFiles) throws IOException {
