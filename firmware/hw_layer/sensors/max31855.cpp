@@ -17,10 +17,6 @@
 
 #include "hardware.h"
 
-#if EFI_PROD_CODE
-#include "mpu_util.h"
-#endif /* EFI_PROD_CODE */
-
 #if EFI_MAX_31855
 
 #define EGT_ERROR_VALUE -1000
@@ -28,6 +24,14 @@
 static SPIDriver* driver;
 
 static SPIConfig spiConfig[EGT_CHANNEL_COUNT];
+static bool channelConfigured[EGT_CHANNEL_COUNT];
+static brain_pin_e channelCsBrainPin[EGT_CHANNEL_COUNT];
+static ioportid_t csPort[EGT_CHANNEL_COUNT];
+static ioportmask_t csPin[EGT_CHANNEL_COUNT];
+static NO_CACHE union {
+	uint32_t egtPacket[EGT_CHANNEL_COUNT];
+	uint8_t egtBytes[EGT_CHANNEL_COUNT][4];
+} readBuffer;
 
 static void showEgtInfo() {
 #if EFI_PROD_CODE
@@ -84,27 +88,43 @@ static max_32855_code getResultCode(uint32_t egtPacket) {
 	}
 }
 
-static uint32_t readEgtPacket(int egtChannel) {
-	union {
-		uint32_t egtPacket;
-		uint8_t egtBytes[4];
-	};
+static bool ensureChannelConfigured(int egtChannel) {
+	if (channelConfigured[egtChannel]) {
+		return true;
+	}
 
-	if (!driver) {
+	if (!isBrainPinValid(channelCsBrainPin[egtChannel])) {
+		return false;
+	}
+
+	csPort[egtChannel] = getHwPort("max31855", channelCsBrainPin[egtChannel]);
+	csPin[egtChannel] = getHwPin("max31855", channelCsBrainPin[egtChannel]);
+	efiSetPadMode("max31855 CS", channelCsBrainPin[egtChannel], PAL_STM32_MODE_OUTPUT);
+	palWritePad(csPort[egtChannel], csPin[egtChannel], PAL_HIGH);
+	channelConfigured[egtChannel] = true;
+
+	return true;
+}
+
+static uint32_t readEgtPacket(int egtChannel) {
+	if (!driver || !ensureChannelConfigured(egtChannel)) {
 		return 0xFFFFFFFF;
 	}
 
-	spiStart(driver, &spiConfig[egtChannel]);
-	spiSelect(driver);
+	spiAcquireBus(driver);
+	if (driver->state != SPI_READY || driver->config != &spiConfig[egtChannel]) {
+		spiStart(driver, &spiConfig[egtChannel]);
+	}
+	palWritePad(csPort[egtChannel], csPin[egtChannel], PAL_LOW);
 
-	for (int i = sizeof(egtBytes) - 1; i >= 0; i--) {
-		egtBytes[i] = spiPolledExchange(driver, 0);
+	for (int i = efi::size(readBuffer.egtBytes[egtChannel]) - 1; i >= 0; i--) {
+		readBuffer.egtBytes[egtChannel][i] = spiPolledExchange(driver, 0);
 	}
 
-	spiUnselect(driver);
-	spiStop(driver);
+	palWritePad(csPort[egtChannel], csPin[egtChannel], PAL_HIGH);
+	spiReleaseBus(driver);
 
-	return egtPacket;
+	return readBuffer.egtPacket[egtChannel];
 }
 
 #define GET_TEMPERATURE_C(x) (((x) >> 18) / 4)
@@ -160,10 +180,10 @@ void initMax31855(spi_device_e device, egt_cs_array_t max31855_cs) {
 	addConsoleAction("egtread", (Void)egtRead);
 
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
+		channelConfigured[i] = false;
+		channelCsBrainPin[i] = max31855_cs[i];
+
 		if (isBrainPinValid(max31855_cs[i])) {
-
-			initSpiCs(&spiConfig[i], max31855_cs[i]);
-
 #ifdef STM32H7XX
 			spiConfig[i].cfg1 = 7 // 8 bits per byte
 							  | SPI_CFG1_MBR_DIV16;
