@@ -148,6 +148,8 @@ void setBoardConfigOverrides() {
 	// Force disable SPI SD
 	engineConfiguration->sdCardCsPin = Gpio::Unassigned;
 	engineConfiguration->sdCardSpiDevice = SPI_NONE;
+
+	engineConfiguration->max31855spiDevice = SPI_DEVICE_5;
 }
 
 #if EFI_BOOTLOADER
