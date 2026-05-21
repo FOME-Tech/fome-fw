@@ -141,7 +141,7 @@ void rebootNow() {
 void scheduleReboot() {
 	efiPrintf("Rebooting in 3 seconds...");
 	chibios_rt::CriticalSectionLocker csl;
-	chVTSetI(&resetTimer, TIME_MS2I(3000), (vtfunc_t)rebootNow, NULL);
+	chVTSetI(&resetTimer, TIME_MS2I(3000), (vtfunc_t)rebootNow, nullptr);
 }
 
 static jmp_buf jmpEnv;

@@ -25,7 +25,7 @@
 
 #define EGT_ERROR_VALUE -1000
 
-static SPIDriver* driver;
+static SPIDriver* driver = nullptr;
 
 static SPIConfig spiConfig[EGT_CHANNEL_COUNT];
 
@@ -120,8 +120,7 @@ uint16_t getMax31855EgtValue(int egtChannel) {
 }
 
 static void egtRead() {
-
-	if (driver == NULL) {
+	if (!driver) {
 		efiPrintf("No SPI selected for EGT");
 		return;
 	}

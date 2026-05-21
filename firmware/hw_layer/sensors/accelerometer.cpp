@@ -34,7 +34,7 @@ static SPIDriver* driver;
  * The slave select line is the pin GPIOE_CS_SPI on the port GPIOE.
  */
 static const SPIConfig accelerometerCfg = {
-		.spi_bus = NULL,
+		.spi_bus = nullptr,
 		/* HW dependent part.*/
 		.ssport = GPIOE,
 		.sspad = GPIOE_PIN3,
@@ -73,7 +73,7 @@ void initAccelerometer() {
 	}
 #if HAL_USE_SPI
 	driver = getSpiDevice(engineConfiguration->accelerometerSpiDevice);
-	if (driver == NULL) {
+	if (!driver) {
 		// error already reported
 		return;
 	}
