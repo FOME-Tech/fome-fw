@@ -5,12 +5,6 @@
 #include "pch.h"
 #include "chconf_common.h"
 
-/**
- * @brief   Board-specific pin configuration code overrides. Needed by bootloader code.
- * @todo    Add your board-specific code, if any.
- */
-void setPinConfigurationOverrides() {}
-
 static void setDefaultFrankensoStepperIdleParameters() {
 	engineConfiguration->idle.stepperDirectionPin = Gpio::E10;
 	engineConfiguration->idle.stepperStepPin = Gpio::E12;

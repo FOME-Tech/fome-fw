@@ -222,7 +222,6 @@ void applyNewHardwareSettings() {
 
 // Weak link a stub so that every board doesn't have to implement this function
 __attribute__((weak)) void boardInitHardware() {}
-__attribute__((weak)) void setPinConfigurationOverrides() {}
 
 // This function initializes hardware that can do so before configuration is loaded
 void initHardwareNoConfig() {

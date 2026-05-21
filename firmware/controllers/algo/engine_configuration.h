@@ -29,9 +29,6 @@ void setWholeTimingTable_d(angle_t value);
 #define setWholeTimingTable(x) setWholeTimingTable_d(x);
 void setConstantDwell(floatms_t dwellMs);
 
-// needed by bootloader
-void setDefaultBasePins();
-
 void setDefaultSdCardParameters();
 
 void onBurnRequest();
