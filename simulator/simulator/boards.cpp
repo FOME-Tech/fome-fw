@@ -15,3 +15,7 @@ BackupSramData* getBackupSram() {
 	static BackupSramData data;
 	return &data;
 }
+
+float getAnalogInputDividerCoefficient(adc_channel_e) {
+	return 1;
+}
