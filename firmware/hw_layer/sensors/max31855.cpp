@@ -148,7 +148,8 @@ void initMax31855() {
 		return;
 	}
 
-	driver = getSpiDevice(engineConfiguration->max31855spiDevice);
+	auto device = engineConfiguration->max31855spiDevice;
+	driver = getSpiDevice(device);
 	if (!driver) {
 		return;
 	}
