@@ -135,6 +135,15 @@ int intFlashSectorErase(flashsector_t sector) {
 	/* Clearing error status bits.*/
 	intFlashClearErrors();
 
+#ifdef STM32F7XX
+	/* Disable ART + prefetch around the op to prevent speculative AXIM
+	 * fetches into the bank being erased, which can stall the core. */
+	uint32_t savedAcr = FLASH->ACR;
+	FLASH->ACR = savedAcr & ~(FLASH_ACR_ARTEN | FLASH_ACR_PRFTEN);
+	FLASH->ACR |= FLASH_ACR_ARTRST;
+	FLASH->ACR &= ~FLASH_ACR_ARTRST;
+#endif
+
 	/* Setup parallelism before any program/erase */
 	FLASH_CR &= ~FLASH_CR_PSIZE_MASK;
 	FLASH_CR |= FLASH_CR_PSIZE_VALUE;
@@ -161,6 +170,10 @@ int intFlashSectorErase(flashsector_t sector) {
 
 	/* Sector erase flag does not clear automatically. */
 	FLASH_CR &= ~FLASH_CR_SER;
+
+#ifdef STM32F7XX
+	FLASH->ACR = savedAcr;
+#endif
 
 	/* Lock flash again */
 	intFlashLock();
@@ -214,6 +227,15 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 
 	/* Wait for any busy flags */
 	intFlashWaitWhileBusy();
+
+#ifdef STM32F7XX
+	/* Disable ART + prefetch around the op to prevent speculative AXIM
+	 * fetches into the bank being programmed, which can stall the core. */
+	uint32_t savedAcr = FLASH->ACR;
+	FLASH->ACR = savedAcr & ~(FLASH_ACR_ARTEN | FLASH_ACR_PRFTEN);
+	FLASH->ACR |= FLASH_ACR_ARTRST;
+	FLASH->ACR &= ~FLASH_ACR_ARTRST;
+#endif
 
 	/* Setup parallelism before any program/erase */
 	FLASH->CR &= ~FLASH_CR_PSIZE_MASK;
@@ -281,6 +303,10 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	}
 
 exit:
+#ifdef STM32F7XX
+	FLASH->ACR = savedAcr;
+#endif
+
 	/* Lock flash again */
 	intFlashLock();
 
