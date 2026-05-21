@@ -255,11 +255,6 @@ void readFromFlash() {
 	validateConfiguration();
 }
 
-static void rewriteConfig() {
-	doResetConfiguration();
-	writeToFlashNow();
-}
-
 void initFlash() {
 	addConsoleAction("readconfig", readFromFlash);
 	/**
@@ -273,7 +268,6 @@ void initFlash() {
 	addConsoleAction(CMD_BURNCONFIG, requestBurn);
 #endif
 	addConsoleAction("resetconfig", doResetConfiguration);
-	addConsoleAction("rewriteconfig", rewriteConfig);
 
 #if EFI_FLASH_WRITE_THREAD
 	if (allowFlashWhileRunning()) {

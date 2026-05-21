@@ -304,7 +304,6 @@ static void setDefaultEngineNoiseTable() {
  * This method is invoked only when new configuration is needed:
  *  * recently re-flashed chip
  *  * flash version of configuration failed CRC check or appears to be older then FLASH_DATA_VERSION
- *  * 'rewriteconfig' command
  *  * 'set engine_type X' command
  *
  * This method should only change the state of the configuration data structure but should NOT change the state of
