@@ -323,7 +323,7 @@ void initHardware() {
 #endif /* EFI_MC33816 */
 
 #if EFI_MAX_31855
-	initMax31855(engineConfiguration->max31855spiDevice, engineConfiguration->max31855_cs);
+	initMax31855();
 #endif /* EFI_MAX_31855 */
 
 #if EFI_CAN_SUPPORT
