@@ -16,6 +16,7 @@
 #include "max31855.h"
 
 #include "hardware.h"
+#include "spi_thread.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
@@ -26,8 +27,11 @@
 #define EGT_ERROR_VALUE -1000
 
 static SPIDriver* driver = nullptr;
-
-static SPIConfig spiConfig[EGT_CHANNEL_COUNT];
+static SPIConfig spiConfig;
+static bool isChannelConfigured[EGT_CHANNEL_COUNT];
+static ioportid_t csPorts[EGT_CHANNEL_COUNT];
+static ioportmask_t csPads[EGT_CHANNEL_COUNT];
+static std::atomic<uint16_t> cachedEgtValues[EGT_CHANNEL_COUNT];
 
 static void showEgtInfo() {
 #if EFI_PROD_CODE
@@ -84,33 +88,40 @@ static max_32855_code getResultCode(uint32_t egtPacket) {
 	}
 }
 
-static uint32_t readEgtPacket(int egtChannel) {
+static void selectChannel(int channel) {
+	palClearPad(csPorts[channel], csPads[channel]);
+}
+
+static void unselectChannel(int channel) {
+	palSetPad(csPorts[channel], csPads[channel]);
+}
+
+static void initChipSelect(int channel, brain_pin_e csPin) {
+	csPorts[channel] = getHwPort("spi", csPin);
+	csPads[channel] = getHwPin("spi", csPin);
+	efiSetPadMode("chip select", csPin, PAL_STM32_MODE_OUTPUT);
+	unselectChannel(channel);
+}
+
+static uint32_t readEgtPacket(SPIDriver& spi, int channel) {
 	union {
 		uint32_t egtPacket;
 		uint8_t egtBytes[4];
 	};
 
-	if (!driver) {
-		return 0xFFFFFFFF;
-	}
-
-	spiStart(driver, &spiConfig[egtChannel]);
-	spiSelect(driver);
+	selectChannel(channel);
 
 	for (int i = sizeof(egtBytes) - 1; i >= 0; i--) {
-		egtBytes[i] = spiPolledExchange(driver, 0);
+		egtBytes[i] = spiPolledExchange(&spi, 0);
 	}
 
-	spiUnselect(driver);
-	spiStop(driver);
-
+	unselectChannel(channel);
 	return egtPacket;
 }
 
 #define GET_TEMPERATURE_C(x) (((x) >> 18) / 4)
 
-uint16_t getMax31855EgtValue(int egtChannel) {
-	uint32_t packet = readEgtPacket(egtChannel);
+static uint16_t decodeEgtValue(uint32_t packet) {
 	max_32855_code code = getResultCode(packet);
 	if (code != MC_OK) {
 		return EGT_ERROR_VALUE + code;
@@ -119,31 +130,95 @@ uint16_t getMax31855EgtValue(int egtChannel) {
 	}
 }
 
+static bool tryGetEgtErrorCode(uint16_t rawValue, max_32855_code& code) {
+	const auto signedValue = static_cast<int16_t>(rawValue);
+	if (signedValue > EGT_ERROR_VALUE + MC_SHORT_VCC) {
+		return false;
+	}
+
+	code = static_cast<max_32855_code>(signedValue - EGT_ERROR_VALUE);
+	return true;
+}
+
+class Max31855Channel final : public BackgroundSpiDevice {
+public:
+	explicit Max31855Channel(int channel)
+		: m_channel(channel) {}
+
+	bool isSpiThreadEnabled() const override {
+		return driver && isChannelConfigured[m_channel];
+	}
+
+	SPIDriver* getSpiThreadDriver() const override {
+		return driver;
+	}
+
+	SPIConfig* getSpiThreadConfig() override {
+		return &spiConfig;
+	}
+
+	int getSpiThreadPeriodMs() const override {
+		return 100;
+	}
+
+	void performSpiTransfer(SPIDriver& spi) override {
+		cachedEgtValues[m_channel].store(decodeEgtValue(readEgtPacket(spi, m_channel)), std::memory_order_relaxed);
+	}
+
+private:
+	const int m_channel;
+};
+
+static Max31855Channel max31855Channels[] = {
+		Max31855Channel(0),
+		Max31855Channel(1),
+		Max31855Channel(2),
+		Max31855Channel(3),
+		Max31855Channel(4),
+		Max31855Channel(5),
+		Max31855Channel(6),
+		Max31855Channel(7),
+};
+
+uint16_t getMax31855EgtValue(int egtChannel) {
+	if (egtChannel < 0 || egtChannel >= EGT_CHANNEL_COUNT) {
+		return EGT_ERROR_VALUE + MC_INVALID;
+	}
+
+	return cachedEgtValues[egtChannel].load(std::memory_order_relaxed);
+}
+
 static void egtRead() {
 	if (!driver) {
 		efiPrintf("No SPI selected for EGT");
 		return;
 	}
 
-	efiPrintf("Reading egt");
+	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
+		if (!isChannelConfigured[i]) {
+			continue;
+		}
 
-	uint32_t egtPacket = readEgtPacket(0);
-
-	max_32855_code code = getResultCode(egtPacket);
-
-	efiPrintf("egt %x code=%d %s", (unsigned int)egtPacket, (unsigned int)code, getMcCode(code));
-
-	if (code != MC_INVALID) {
-		int refBits = ((egtPacket & 0xFFFF) / 16); // bits 15:4
-		float refTemp = refBits / 16.0;
-		efiPrintf("reference temperature %.2f", refTemp);
-
-		efiPrintf("EGT temperature %lu", GET_TEMPERATURE_C(egtPacket));
+		const uint16_t rawValue = cachedEgtValues[i].load(std::memory_order_relaxed);
+		max_32855_code code;
+		if (tryGetEgtErrorCode(rawValue, code)) {
+			efiPrintf("egt%d %s", i, getMcCode(code));
+		} else {
+			efiPrintf("egt%d %uC", i, rawValue);
+		}
 	}
 }
 
 void initMax31855() {
+	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
+		isChannelConfigured[i] = false;
+		csPorts[i] = nullptr;
+		csPads[i] = 0;
+		cachedEgtValues[i].store(EGT_ERROR_VALUE + MC_INVALID, std::memory_order_relaxed);
+	}
+
 	if (!engineConfiguration->max31855enable) {
+		driver = nullptr;
 		return;
 	}
 
@@ -156,16 +231,22 @@ void initMax31855() {
 	addConsoleAction("egtinfo", (Void)showEgtInfo);
 	addConsoleAction("egtread", (Void)egtRead);
 
+	spiConfig.end_cb = nullptr;
+	spiConfig.ssport = nullptr;
+	spiConfig.sspad = 0;
+#ifdef STM32H7XX
+	spiConfig.cfg1 = 7 // 8 bits per byte
+					 | SPI_CFG1_MBR_DIV16;
+#else
+	spiConfig.cr1 = getSpiPrescaler(_5MHz, device);
+#endif
+
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
 		auto pin = engineConfiguration->max31855_cs[i];
 		if (isBrainPinValid(pin)) {
-			initSpiCs(&spiConfig[i], pin);
-#ifdef STM32H7XX
-			spiConfig[i].cfg1 = 7 // 8 bits per byte
-							  | SPI_CFG1_MBR_DIV16;
-#else
-			spiConfig[i].cr1 = getSpiPrescaler(_5MHz, device);
-#endif
+			isChannelConfigured[i] = true;
+			initChipSelect(i, pin);
+			registerBackgroundSpiDevice(max31855Channels[i]);
 		}
 	}
 }

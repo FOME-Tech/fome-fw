@@ -499,7 +499,7 @@ void updateTunerStudioState() {
 
 #if EFI_MAX_31855
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
-		if (isBrainPinValid(engineConfiguration->max31855_cs[0])) {
+		if (isBrainPinValid(engineConfiguration->max31855_cs[i])) {
 			tsOutputChannels->egt[i] = getMax31855EgtValue(i);
 		}
 	}
