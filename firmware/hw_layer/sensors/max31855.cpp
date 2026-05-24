@@ -236,7 +236,7 @@ void initMax31855() {
 	spiConfig.sspad = 0;
 #ifdef STM32H7XX
 	spiConfig.cfg1 = 7 // 8 bits per byte
-					 | SPI_CFG1_MBR_DIV16;
+				   | SPI_CFG1_MBR_DIV16;
 #else
 	spiConfig.cr1 = getSpiPrescaler(_5MHz, device);
 #endif
