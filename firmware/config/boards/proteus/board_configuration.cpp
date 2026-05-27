@@ -208,19 +208,39 @@ Gpio* getBoardMetaOutputs() {
 }
 
 void initBoardSensors() {
-	if (isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])) {
-		efiSetPadMode("PG1", pgPins[0], PI_PULLUP);
-		efiSetPadMode("PG2", pgPins[1], PI_PULLUP);
+	if (isBrainPinValid(pgPins[0])) {
+		efiSetPadMode("PG1", pgPins[0], PAL_MODE_INPUT_PULLUP);
+	}
+
+	if (isBrainPinValid(pgPins[1])) {
+		efiSetPadMode("PG2", pgPins[1], PAL_MODE_INPUT_PULLUP);
 	}
 }
 
-void checkBoardPowerSupply() {
-	if (isBrainPinValid(pgPins[0]) && isBrainPinValid(pgPins[1])) {
-		engine->engineState.pgState = efiReadPin(pgPins[0]) && efiReadPin(pgPins[1]);
-		if (!engine->engineState.pgState) {
-			setError(true, ObdCode::CUSTOM_ERR_PG_STATE);
-		} else {
-			removeError(ObdCode::CUSTOM_ERR_PG_STATE);
-		}
+template <int index>
+static bool checkPowerSupplyPin(ObdCode code) {
+	static bool hasEverBeenGood;
+
+	if (!isBrainPinValid(pgPins[index])) {
+		return false;
 	}
+
+	bool state = efiReadPin(pgPins[index]);
+
+	if (state) {
+		hasEverBeenGood = true;
+		removeError(code);
+	} else if (hasEverBeenGood) {
+		// Only set an error if we ever saw it in the "good" state
+		// avoids setting the error if the chip is a TLS115B0 variant
+		// that lacks the power good output completely
+		setError(true, code);
+	}
+
+	return state;
+}
+
+void checkBoardPowerSupply() {
+	engine->engineState.pgState = checkPowerSupplyPin<0>(ObdCode::Sensor5vSupplyLow);
+	engine->engineState.pgState2 = checkPowerSupplyPin<1>(ObdCode::Sensor5VSupply2Low);
 }

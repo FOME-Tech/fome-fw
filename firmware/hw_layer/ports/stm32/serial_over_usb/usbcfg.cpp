@@ -26,8 +26,15 @@
 
 #include "usbcfg.h"
 
+#if EFI_USB_SERIAL_DIRECT
+// Hooks implemented in firmware/console/usb_console_direct.cpp
+void usbDirectConfiguredHookI(USBDriver*);
+void usbDirectSuspendHookI(USBDriver*);
+void usbDirectWakeupHookI(USBDriver*);
+#else
 /* Virtual serial port over USB.*/
 SerialUSBDriver SDU1;
+#endif
 
 /*
  * Endpoints to be used for USBD1.
@@ -332,8 +339,15 @@ static USBOutEndpointState cdcDataOutstate;
 static const USBEndpointConfig cdcDataEpConfig = {
 	USB_EP_MODE_TYPE_BULK,
 	NULL,
+#if EFI_USB_SERIAL_DIRECT
+	// Direct mode uses blocking usbTransmit/usbReceive; no endpoint-complete
+	// callbacks are needed — the HAL wakes the caller via the ep state thread.
+	NULL,
+	NULL,
+#else
 	sduDataTransmitted,
 	sduDataReceived,
+#endif
 	0x0040,
 	0x0040,
 	&cdcDataInstate,
@@ -348,7 +362,11 @@ static USBInEndpointState cdcInterruptInstate;
 static const USBEndpointConfig cdcInterruptEpConfig = {
 	USB_EP_MODE_TYPE_INTR,
 	NULL,
+#if EFI_USB_SERIAL_DIRECT
+	NULL,
+#else
 	sduInterruptTransmitted,
+#endif
 	NULL,
 	0x0010,
 	0x0000,
@@ -379,7 +397,11 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
 		usbInitEndpointI(usbp, USBD1_INTERRUPT_REQUEST_EP, &cdcInterruptEpConfig);
 
 		/* Resetting the state of the CDC subsystem.*/
+#if EFI_USB_SERIAL_DIRECT
+		usbDirectConfiguredHookI(usbp);
+#else
 		sduConfigureHookI(&SDU1);
+#endif
 
 		#if HAL_USE_USB_MSD
 			// Tell the MMC thread to wake up and mount the card as a USB device
@@ -396,7 +418,11 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
 		chSysLockFromISR();
 
 		/* Disconnection event on suspend.*/
+#if EFI_USB_SERIAL_DIRECT
+		usbDirectSuspendHookI(usbp);
+#else
 		sduSuspendHookI(&SDU1);
+#endif
 
 		chSysUnlockFromISR();
 		return;
@@ -404,7 +430,11 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
 		chSysLockFromISR();
 
 		/* Disconnection event on suspend.*/
+#if EFI_USB_SERIAL_DIRECT
+		usbDirectWakeupHookI(usbp);
+#else
 		sduWakeupHookI(&SDU1);
+#endif
 
 		chSysUnlockFromISR();
 		return;
@@ -418,9 +448,11 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
  * Handles the USB driver global events.
  */
 static void sof_handler(USBDriver*) {
+#if !EFI_USB_SERIAL_DIRECT
 	osalSysLockFromISR();
 	sduSOFHookI(&SDU1);
 	osalSysUnlockFromISR();
+#endif
 }
 
 // We need a custom hook to handle both MSD and CDC at the same time
@@ -446,6 +478,7 @@ const USBConfig usbcfg = {
 	sof_handler
 };
 
+#if !EFI_USB_SERIAL_DIRECT
 /*
  * Serial over USB driver configuration.
  */
@@ -461,5 +494,6 @@ const SerialUSBConfig serusbcfg = {
 	.bulk_out = USBD1_DATA_AVAILABLE_EP,
 	.int_in = USBD1_INTERRUPT_REQUEST_EP
 };
+#endif
 
 #endif /* EFI_USB_SERIAL */

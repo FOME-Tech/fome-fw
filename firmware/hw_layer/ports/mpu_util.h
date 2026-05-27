@@ -25,8 +25,6 @@ void portInitAdc();
 float getMcuTemperature();
 // Convert all slow ADC inputs.  Returns true if the conversion succeeded, false if a failure occured.
 bool readSlowAnalogInputs();
-// Read the sampled value of a slow channel
-adcsample_t getSlowAdcSample(adc_channel_e channel);
 #endif
 
 // CAN bus
@@ -74,9 +72,6 @@ typedef enum {
 
 BOR_Level_t BOR_Get(void);
 BOR_Result_t BOR_Set(BOR_Level_t BORValue);
-
-uintptr_t getBootAddress();
-bool setBootAddress(uintptr_t address);
 
 void assertInterruptPriority(const char* func, uint8_t expectedPrio);
 

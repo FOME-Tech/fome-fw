@@ -15,11 +15,13 @@ HW_LAYER_EMS_CPP = \
 	$(PROJECT_DIR)/hw_layer/digital_input/trigger/trigger_input.cpp \
 	$(PROJECT_DIR)/hw_layer/digital_input/trigger/trigger_input_exti.cpp \
 	$(PROJECT_DIR)/hw_layer/hardware.cpp \
+	$(PROJECT_DIR)/hw_layer/dma_buffers.cpp \
 	$(PROJECT_DIR)/hw_layer/spi_devices.cpp \
 	$(PROJECT_DIR)/hw_layer/smart_gpio.cpp \
 	$(PROJECT_DIR)/hw_layer/mmc_card_attach.cpp \
 	$(PROJECT_DIR)/hw_layer/mmc_card_mount.cpp \
 	$(PROJECT_DIR)/hw_layer/adc/adc_inputs.cpp \
+	$(PROJECT_DIR)/hw_layer/adc/adc_provider.cpp \
 	$(PROJECT_DIR)/hw_layer/adc/adc_subscription.cpp \
 	$(PROJECT_DIR)/hw_layer/adc/ads1015.cpp \
 	$(PROJECT_DIR)/hw_layer/mc33816.cpp \

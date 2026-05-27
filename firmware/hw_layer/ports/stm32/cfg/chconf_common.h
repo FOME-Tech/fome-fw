@@ -36,7 +36,6 @@ extern "C"
 extern "C" {
 #endif
   void boardInit(void);
-  void setPinConfigurationOverrides(void);
 #ifdef __cplusplus
 }
 #endif

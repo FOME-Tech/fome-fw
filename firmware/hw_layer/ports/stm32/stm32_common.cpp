@@ -163,6 +163,20 @@ int getAdcChannelPin(adc_channel_e hwChannel) {
 	return getHwPin("get_pin", brainPin);
 }
 
+bool Stm32AdcProviderBase::enable(const char* name, size_t idx) {
+	brain_pin_e pin = getAdcChannelBrainPin(name, idx + EFI_ADC_0);
+	if (pin != Gpio::Invalid) {
+		efiSetPadMode(name, pin, PAL_MODE_INPUT_ANALOG);
+		return true;
+	}
+
+	return false;
+}
+
+void Stm32AdcProviderBase::disable(size_t idx) {
+	efiSetPadUnused(getAdcChannelBrainPin("adc unsubscribe", idx + EFI_ADC_0));
+}
+
 #endif /* HAL_USE_ADC */
 
 #if EFI_PROD_CODE
@@ -450,44 +464,6 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	return BOR_Result_Ok;
 }
 
-#if CORTEX_MODEL == 7
-uintptr_t getBootAddress() {
-	FLASH_OBProgramInitTypeDef flashData;
-
-	/* Read option bytes */
-	HAL_FLASHEx_OBGetConfig(&flashData);
-
-	return flashData.BootAddr0;
-}
-
-bool setBootAddress(uintptr_t address) {
-	if ((address & 0xFFFF) != 0) {
-		// Boot address is not allowed to have lower 16 bits set
-		return false;
-	}
-
-	FLASH_OBProgramInitTypeDef flashData;
-
-#ifdef STM32H7XX
-	flashData.BootConfig = OB_BOOT_ADD0;
-	flashData.OptionType = OPTIONBYTE_BOOTADD;
-#endif
-
-#ifdef STM32F7XX
-	flashData.OptionType = OPTIONBYTE_BOOTADDR_0;
-#endif
-
-	flashData.BootAddr0 = address;
-
-	HAL_FLASH_OB_Unlock();
-	HAL_FLASHEx_OBProgram(&flashData);
-	HAL_StatusTypeDef status = HAL_FLASH_OB_Launch();
-	HAL_FLASH_OB_Lock();
-
-	return status == HAL_OK;
-}
-#endif // CORTEX_MODEL == 7
-
 void baseMCUInit(void) {
 	// looks like this holds a random value on start? Let's set a nice clean zero
 	DWT->CYCCNT = 0;
@@ -617,8 +593,9 @@ __attribute__((weak)) brain_pin_e getSckPin(spi_device_e device) {
 }
 
 void turnOnSpi(spi_device_e device) {
-	if (isSpiInitialized[device])
+	if (isSpiInitialized[device]) {
 		return; // already initialized
+	}
 	isSpiInitialized[device] = true;
 	if (device == SPI_DEVICE_1) {
 #if STM32_SPI_USE_SPI1
@@ -688,8 +665,8 @@ void initSpiCs(SPIConfig* spiConfig, brain_pin_e csPin) {
 // fast mode is 80mhz/2 = 40MHz
 SPIConfig mmc_hs_spicfg = {
 		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
+		.end_cb = nullptr,
+		.ssport = nullptr,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
 			  | 0 /* MBR = 0, divider = 2 */,
@@ -698,8 +675,8 @@ SPIConfig mmc_hs_spicfg = {
 // Slow mode is 80mhz/4 = 20MHz
 SPIConfig mmc_ls_spicfg = {
 		.circular = false,
-		.end_cb = NULL,
-		.ssport = NULL,
+		.end_cb = nullptr,
+		.ssport = nullptr,
 		.sspad = 0,
 		.cfg1 = 7 // 8 bits per byte
 			  | SPI_CFG1_MBR_0 /* MBR = 001, divider = 4 */,
@@ -715,10 +692,10 @@ SPIConfig mmc_ls_spicfg = {
 // Slow mode is 13.5 or 6.75 MHz
 // Fast mode is 54 or 27 MHz (technically out of spec, needs testing!)
 SPIConfig mmc_hs_spicfg = {
-		.circular = false, .end_cb = NULL, .ssport = NULL, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_2, .cr2 = 0};
+		.circular = false, .end_cb = nullptr, .ssport = nullptr, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_2, .cr2 = 0};
 
 SPIConfig mmc_ls_spicfg = {
-		.circular = false, .end_cb = NULL, .ssport = NULL, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_8, .cr2 = 0};
+		.circular = false, .end_cb = nullptr, .ssport = nullptr, .sspad = 0, .cr1 = SPI_BaudRatePrescaler_8, .cr2 = 0};
 #endif
 
 #endif /* HAL_USE_SPI */
@@ -755,13 +732,15 @@ CANDriver* detectCanDevice(brain_pin_e pinRx, brain_pin_e pinTx) {
 	}
 
 #if STM32_CAN_USE_CAN1 || STM32_CAN_USE_FDCAN1
-	if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx))
+	if (isValidCan1RxPin(pinRx) && isValidCan1TxPin(pinTx)) {
 		return &CAND1;
+	}
 #endif
 
 #if STM32_CAN_USE_CAN2 || STM32_CAN_USE_FDCAN2
-	if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx))
+	if (isValidCan2RxPin(pinRx) && isValidCan2TxPin(pinTx)) {
 		return &CAND2;
+	}
 #endif
 
 	firmwareError("invalid CAN pins tx %s and rx %s", hwPortname(pinTx), hwPortname(pinRx));

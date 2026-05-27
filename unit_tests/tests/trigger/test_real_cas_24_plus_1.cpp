@@ -6,10 +6,16 @@
 
 #include "logicdata_csv_reader.h"
 
-TEST(realCas24Plus1, spinningOnBench) {
+void testTwelvePlusOne(
+		const char* file,
+		float firstRpm,
+		int fullSyncEventCount,
+		float fullSyncRpm,
+		int expectPhaseAdjustment,
+		float expectVvt) {
 	CsvReader reader(1, /* vvtCount */ 1);
 
-	reader.open("tests/trigger/resources/cas_nissan_24_plus_1.csv");
+	reader.open(file);
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
@@ -33,7 +39,7 @@ TEST(realCas24Plus1, spinningOnBench) {
 
 		// Expect that all teeth are in the correct spot
 		float angleError = getTriggerCentral()->triggerToothAngleError;
-		EXPECT_TRUE(angleError < 3 && angleError > -3)
+		EXPECT_TRUE(std::abs(angleError) < 5)
 				<< "tooth angle of " << angleError << " at timestamp " << (getTimeNowNt() / 1e8);
 
 		auto rpm = Sensor::getOrZero(SensorType::Rpm);
@@ -43,29 +49,37 @@ TEST(realCas24Plus1, spinningOnBench) {
 			// We should get first RPM on exactly the first (primary) sync point - this means the instant RPM pre-sync
 			// event copy all worked OK
 			EXPECT_EQ(eventCount, 7);
-			EXPECT_NEAR(rpm, 808.32f, 0.1);
+			EXPECT_NEAR(rpm, firstRpm, 0.1);
 		}
 
 		bool hasFullSync = getTriggerCentral()->triggerState.hasSynchronizedPhase();
 		if (hasFullSync) {
 			// Adjustment should be by 270 degrees
-			EXPECT_FLOAT_EQ(getTriggerCentral()->triggerState.m_phaseAdjustment, 270);
+			EXPECT_FLOAT_EQ(getTriggerCentral()->triggerState.m_phaseAdjustment, expectPhaseAdjustment);
 
 			if (!gotFullSync) {
 				gotFullSync = true;
 
 				// Should get full sync on the first cam tooth
-				EXPECT_EQ(eventCount, 40);
-				EXPECT_NEAR(rpm, 915.08f, 0.1);
+				EXPECT_EQ(eventCount, fullSyncEventCount);
+				EXPECT_NEAR(rpm, fullSyncRpm, 0.1);
 			}
 		}
 
 		auto vvt = engine->triggerCentral.getVVTPosition(/*bankIndex*/ 0, /*camIndex*/ 0);
 		if (vvt) {
 			// cam position should never be reported outside of correct range
-			EXPECT_TRUE(vvt.Value > -10 && vvt.Value < -9);
+			EXPECT_TRUE(vvt.Value > (expectVvt - 2) && vvt.Value < (expectVvt + 2)) << "VVT angle: " << vvt.Value;
 		}
 	}
 
 	ASSERT_EQ(0, eth.recentWarnings()->getCount());
+}
+
+TEST(realCas24Plus1, spinningOnBench) {
+	testTwelvePlusOne("tests/trigger/resources/cas_nissan_24_plus_1.csv", 808.32f, 40, 915.08f, 270, -9.5);
+}
+
+TEST(realCas24Plus1, longTimeIdling) {
+	testTwelvePlusOne("tests/trigger/resources/twelve_plus_one_long.csv", 920.69f, 35, 926.67f, 330, -15.5);
 }

@@ -7,11 +7,13 @@ typedef struct __attribute__((packed)) {
 	uint32_t timestamp;
 	// unfortunately all these fields are required by TS...
 	bool priLevel : 1;
-	bool secLevel : 1;
+	bool cam1 : 1;
 	bool trigger : 1;
 	bool sync : 1;
-	bool coil : 1;
-	bool injector : 1;
+	bool tdc : 1;
+	bool cam2 : 1;
+	bool cam3 : 1;
+	bool cam4 : 1;
 } composite_logger_s;
 
 static_assert(sizeof(composite_logger_s) == 5);
@@ -28,15 +30,14 @@ int main(int argc, char** argv) {
 
 	dst << std::setprecision(10);
 
-	dst << "timestamp,pri,sec" << std::endl;
+	dst << "timestamp,pri,cam1" << std::endl;
 
-	while (!src.eof()) {
-		composite_logger_s entry;
+	composite_logger_s entry;
 
-		src.read(reinterpret_cast<char*>(&entry), sizeof(composite_logger_s));
+	while (src.read(reinterpret_cast<char*>(&entry), sizeof(composite_logger_s))) {
 
 		double sec = SWAP_UINT32(entry.timestamp) / ticksPerSecond;
 
-		dst << sec << "," << entry.priLevel << "," << entry.secLevel << std::endl;
+		dst << sec << "," << entry.priLevel << "," << entry.cam1 << std::endl;
 	}
 }

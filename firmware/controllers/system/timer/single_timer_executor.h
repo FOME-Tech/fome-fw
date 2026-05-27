@@ -18,10 +18,7 @@ public:
 
 	void onTimerCallback();
 	int timerCallbackCounter = 0;
-	int scheduleCounter = 0;
-	int maxExecuteCounter = 0;
 	int executeCounter;
-	int executeAllPendingActionsInvocationCounter = 0;
 
 private:
 	EventQueue queue;
@@ -31,4 +28,3 @@ private:
 };
 
 void initSingleTimerExecutorHardware();
-void executorStatistics();

@@ -76,8 +76,11 @@ uint16_t IgnitionEvent::calculateIgnitionOutputMask() const {
 
 	uint16_t outputsMask = 1 << coilIndex;
 
-	// If wasted spark, find the paired coil in addition to "main" output for this cylinder
-	if (m_ignitionMode == IM_WASTED_SPARK) {
+	// If wasted spark, find the paired coil in addition to "main" output for this cylinder.
+	// Skip in pairedOddFireWastedSpark mode: a single physical coil is shared between companion cylinders, so only the
+	// first-half (lower firing-order index) cylinder slot gets a pin assigned and we drive only that one OutputPin from
+	// both events.
+	if (m_ignitionMode == IM_WASTED_SPARK && !engineConfiguration->pairedOddFireWastedSpark) {
 		int secondIndex = index + engineConfiguration->cylindersCount / 2;
 		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
 		outputsMask |= 1 << secondCoilIndex;

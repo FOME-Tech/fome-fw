@@ -141,7 +141,7 @@ void rebootNow() {
 void scheduleReboot() {
 	efiPrintf("Rebooting in 3 seconds...");
 	chibios_rt::CriticalSectionLocker csl;
-	chVTSetI(&resetTimer, TIME_MS2I(3000), (vtfunc_t)rebootNow, NULL);
+	chVTSetI(&resetTimer, TIME_MS2I(3000), (vtfunc_t)rebootNow, nullptr);
 }
 
 static jmp_buf jmpEnv;
@@ -216,7 +216,7 @@ void runRusEfi() {
 	initMainLoop();
 
 #if EFI_USE_OPENBLT
-	checkBootloaderIntegrity();
+	updateBootloader();
 #endif
 
 	runMainLoop();
@@ -310,8 +310,9 @@ void chDbgStackOverflowPanic(thread_t* otp) {
 	strcpy(panicMessage, "stack overflow: ");
 #if defined(CH_USE_REGISTRY)
 	int p_name_len = strlen(otp->p_name);
-	if (p_name_len < sizeof(panicMessage) - 2)
+	if (p_name_len < sizeof(panicMessage) - 2) {
 		strcat(panicMessage, otp->p_name);
+	}
 #endif
 	chDbgPanic3(panicMessage, __FILE__, __LINE__);
 }

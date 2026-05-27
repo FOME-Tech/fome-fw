@@ -81,12 +81,14 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 void efiExtiDisablePin(brain_pin_e brainPin) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
-	if (!isBrainPinValid(brainPin))
+	if (!isBrainPinValid(brainPin)) {
 		return;
+	}
 
 	ioportid_t port = getHwPort("exti", brainPin);
-	if (port == NULL)
+	if (port == NULL) {
 		return;
+	}
 	brain_pin_markUnused(brainPin);
 
 	int index = getHwPin("exti", brainPin);

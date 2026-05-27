@@ -28,7 +28,7 @@ public class TsWriter {
     }
 
     public void writeTunerstudio(ParseState parser, String inputFile, PrintStream ps) throws IOException {
-        BufferedReader is = new BufferedReader(new FileReader(inputFile));
+        try (BufferedReader is = new BufferedReader(new FileReader(inputFile))) {
 
         while (is.ready()) {
             String line = is.readLine();
@@ -103,7 +103,7 @@ public class TsWriter {
             ps.println(line);
         }
 
-        is.close();
+        } // try
     }
 
     public void writeLayoutAndComments(ParseState parser, PrintStream ps) {

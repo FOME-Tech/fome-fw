@@ -3,6 +3,7 @@
 #if EFI_WIFI
 
 #include "ff.h"
+#include "dma_buffers.h"
 #include "mmc_card.h"
 #include "spi_flash/include/spi_flash.h"
 #include "driver/include/m2m_wifi.h"
@@ -35,7 +36,7 @@ void tryUpdateWifiFirmwareFromSd() {
 		return;
 	}
 
-	FIL* fd = sd_mem::getLogFileFd(); // reuse DMA-safe FIL
+	FIL* fd = dma_buffers::logFileFd(); // reuse DMA-safe FIL
 	if (f_open(fd, "atwinc1500.bin", FA_READ) != FR_OK) {
 		efiPrintf("WiFi: failed to open file");
 		m2m_wifi_deinit(nullptr);
@@ -53,7 +54,7 @@ void tryUpdateWifiFirmwareFromSd() {
 		return;
 	}
 
-	auto& wifiUpdateBuffer = sd_mem::getWifiUpdateBuffer();
+	auto& wifiUpdateBuffer = dma_buffers::wifiUpdateBuffer();
 
 	uint32_t offset = 0;
 	int lastPct = -1;
@@ -110,7 +111,7 @@ void tryDumpWifiFirmwareToSd() {
 	uint32_t flashSize = programmer_get_flash_size();
 	efiPrintf("WiFi: flash size %lu bytes", flashSize);
 
-	FIL* fd = sd_mem::getLogFileFd();
+	FIL* fd = dma_buffers::logFileFd();
 	f_unlink("atwinc1500_dump.bin");
 	if (f_open(fd, "atwinc1500_dump.bin", FA_CREATE_NEW | FA_WRITE) != FR_OK) {
 		efiPrintf("WiFi: failed to create dump file");
@@ -118,7 +119,7 @@ void tryDumpWifiFirmwareToSd() {
 		return;
 	}
 
-	auto& wifiUpdateBuffer = sd_mem::getWifiUpdateBuffer();
+	auto& wifiUpdateBuffer = dma_buffers::wifiUpdateBuffer();
 
 	uint32_t offset = 0;
 	int lastPct = -1;

@@ -105,10 +105,6 @@ static void setTriggerType(int value) {
 	engine->resetEngineSnifferIfInTestMode();
 }
 
-static void setDebugMode(int value) {
-	engineConfiguration->debugMode = (debug_mode_e)value;
-}
-
 static void setWholeTimingMapCmd(float value) {
 	efiPrintf("Setting whole timing advance map to %.2f", value);
 	setWholeTimingTable(value);
@@ -133,8 +129,9 @@ static brain_pin_e parseBrainPinWithErrorMessage(const char* pinName) {
  */
 static void setIgnitionPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr) - 1; // convert from human index into software index
-	if (index < 0 || index >= MAX_CYLINDER_COUNT)
+	if (index < 0 || index >= MAX_CYLINDER_COUNT) {
 		return;
+	}
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
 	if (pin == Gpio::Invalid) {
 		return;
@@ -176,8 +173,9 @@ static void setAlternatorPin(const char* pinName) {
  */
 static void setTriggerInputPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr);
-	if (index < 0 || index > 2)
+	if (index < 0 || index > 2) {
 		return;
+	}
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
 	if (pin == Gpio::Invalid) {
 		return;
@@ -189,8 +187,9 @@ static void setTriggerInputPin(const char* indexStr, const char* pinName) {
 
 static void setTriggerSimulatorPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr);
-	if (index < 0 || index >= TRIGGER_SIMULATOR_PIN_COUNT)
+	if (index < 0 || index >= TRIGGER_SIMULATOR_PIN_COUNT) {
 		return;
+	}
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
 	if (pin == Gpio::Invalid) {
 		return;
@@ -381,7 +380,6 @@ const command_i_s commandsI[] = {
 		{"rpm_hard_limit", setRpmHardLimit},
 		{"firing_order", setFiringOrder},
 		{"algorithm", setAlgorithmInt},
-		{"debug_mode", setDebugMode},
 		{"trigger_type", setTriggerType},
 		{"idle_solenoid_freq", setIdleSolenoidFrequency},
 #endif // EFI_ENGINE_CONTROL

@@ -150,8 +150,9 @@ AngleBasedEvent* TriggerScheduler::getElementAtIndexForUnitTest(int index) {
 	AngleBasedEvent* current;
 
 	LL_FOREACH2(m_angleBasedEventsHead, current, next) {
-		if (index == 0)
+		if (index == 0) {
 			return current;
+		}
 		index--;
 	}
 	firmwareError("getElementAtIndexForUnitText: null");

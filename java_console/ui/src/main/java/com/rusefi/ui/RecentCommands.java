@@ -97,7 +97,6 @@ public class RecentCommands {
         add(TSINFO);
         add(CANINFO);
         add(Fields.CMD_WRITECONFIG);
-        add("rewriteconfig");
 
         add(getEnableCommand("injection"));
         add(getDisableCommand("injection"));

@@ -103,8 +103,9 @@ static void write(int values[], int count) {
 }
 
 static void write(int value, int num) {
-	for (int i = 0; i < num; i++)
+	for (int i = 0; i < num; i++) {
 		write(value);
+	}
 }
 
 static void writeId(int i1, int i2) {
@@ -185,8 +186,9 @@ static void writeEdges(int64_t* chDeltas, bool useLongDeltas, int numEdges) {
 		uint64_t d = chDeltas[i];
 
 		// set 16-bit 'sign' flag
-		if (!useLongDeltas && (d & SIGN_FLAG) == SIGN_FLAG)
+		if (!useLongDeltas && (d & SIGN_FLAG) == SIGN_FLAG) {
 			d = (d & 0x7fff) | (SIGN_FLAG >> 16);
+		}
 		writeByte((uint8_t)(d & 0xff));
 		writeByte((uint8_t)((d >> 8) & 0xff));
 		if (useLongDeltas) {
@@ -205,8 +207,9 @@ static void writeRaw(int value, int num) {
 
 static void
 writeChannelData(int ch, int64_t* chDeltas, int chLastState, int lastRecord, bool useLongDeltas, int numEdges) {
-	if (numEdges == 0)
+	if (numEdges == 0) {
 		lastRecord = 0;
+	}
 	write(CHANNEL_BLOCK);
 	// channel#0 is somehow special...
 	if (ch == 0) {
@@ -389,8 +392,9 @@ static int getChannelState(int ch, const CompositeEvent* event) {
 static void writeEvents(const std::vector<CompositeEvent>& events) {
 	size_t count = events.size();
 	// we need at least 2 records
-	if (count < 2)
+	if (count < 2) {
 		return;
+	}
 	uint32_t firstRecordTs = events[1].timestamp;
 	uint32_t lastRecordTs = events[count - 1].timestamp;
 	// we don't know the total duration, so we create a margin after the last record which equals to the duration of the
@@ -423,8 +427,9 @@ static void writeEvents(const std::vector<CompositeEvent>& events) {
 					useLongDeltas = true;
 				}
 				// encode state
-				if (chState == 0)
+				if (chState == 0) {
 					delta |= SIGN_FLAG;
+				}
 
 				chDeltas[deltaCount++] = delta;
 

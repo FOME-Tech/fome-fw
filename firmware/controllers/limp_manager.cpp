@@ -24,6 +24,7 @@ static bool noFiringUntilVvtSync(vvt_mode_e vvtMode) {
 	// Examples include Nissan MR/VQ, Miata NB, etc
 	return operationMode == FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR ||
 		   operationMode == FOUR_STROKE_THREE_TIMES_CRANK_SENSOR ||
+		   operationMode == FOUR_STROKE_FIVE_TIMES_CRANK_SENSOR ||
 		   operationMode == FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR;
 }
 

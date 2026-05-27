@@ -142,55 +142,31 @@ public class ProgramSelector {
         String port;
 
         if (rebootFirst) {
-            String[] portsBefore = LinkManager.getCommPorts();
             rebootToOpenblt(fomePort, callbacks);
 
-            // Give the bootloader a sec to enumerate
-            BinaryProtocol.sleep(3000);
-
-            String[] portsAfter = LinkManager.getCommPorts();
-
-            // Check that the ECU disappeared from the "after" list
-            if (Arrays.asList(portsAfter).contains(fomePort)) {
-                callbacks.log("Looks like your ECU didn't reboot to OpenBLT");
-                callbacks.error();
-                return;
-            }
-
-            // Check that exactly one thing appeared in the "after" list
-            ArrayList<String> newItems = new ArrayList<>();
-            for (String s : portsAfter) {
-                if (Arrays.stream(portsBefore).noneMatch(s::equals)) {
-                    // This item is in the after list but not before list
-                    newItems.add(s);
+            // Poll for the OpenBLT bootloader to appear. On Windows the bootloader typically
+            // enumerates under a new COM number, but on Linux the kernel often reuses the
+            // same /dev/ttyACMx slot that the firmware just vacated, so we can't rely on a
+            // name change — probe every visible serial port for an OpenBLT response instead.
+            port = null;
+            long deadline = System.currentTimeMillis() + 10_000;
+            while (port == null && System.currentTimeMillis() < deadline) {
+                BinaryProtocol.sleep(500);
+                for (String candidate : LinkManager.getCommPorts()) {
+                    if (SerialPortScanner.isPortOpenblt(candidate)) {
+                        port = candidate;
+                        break;
+                    }
                 }
             }
 
-            if (newItems.isEmpty()) {
-                callbacks.log("Looks like your ECU disappeared during the update process. Please try again.");
+            if (port == null) {
+                callbacks.log("Couldn't find the OpenBLT bootloader after rebooting the ECU. Please try again.");
                 callbacks.error();
                 return;
             }
 
-            if (newItems.size() > 1) {
-                // More than one port appeared? whattt?
-                callbacks.log("Unable to find ECU after reboot as multiple serial ports appeared. Before: " + portsBefore.length + " After: " + portsAfter.length);
-                callbacks.error();
-                return;
-            }
-
-            port = newItems.get(0);
-
-            // Check that the one that appeared is indeed OpenBLT
-            boolean isOpenBlt = SerialPortScanner.isPortOpenblt(port);
-
-            if (!isOpenBlt) {
-                callbacks.log("A serial port appeared as it should, but OpenBLT didn't respond.");
-                callbacks.error();
-                return;
-            }
-
-            callbacks.log("Serial port " + port + " appeared and looks like OpenBLT, programming firmware...");
+            callbacks.log("Serial port " + port + " looks like OpenBLT, programming firmware...");
         } else {
             port = fomePort;
         }
@@ -206,7 +182,7 @@ public class ProgramSelector {
                 flasher = OpenBltFlasher.makeSerial(port, new XcpSettings(), cb);
             }
 
-            flasher.flash("../fome_update.srec");
+            flasher.flash(getUpdateFilePath());
 
             callbacks.log("Update completed successfully!");
             callbacks.done();
@@ -242,12 +218,16 @@ public class ProgramSelector {
 
     private static final boolean useNewImpl = true;
 
+    private static String getUpdateFilePath() {
+        return Launcher.INPUT_FILES_PATH + java.io.File.separator + "fome_update.srec";
+    }
+
     private void flashOpenbltTcpJni(String hostname, int port, UpdateOperationCallbacks callbacks) {
         OpenbltCallbacks cb = makeOpenbltCallbacks(callbacks);
 
         try {
             OpenBltFlasher flasher = OpenBltFlasher.makeTcp(hostname, port, new XcpSettings(), cb);
-            flasher.flash("../fome_update.srec");
+            flasher.flash(getUpdateFilePath());
 
             callbacks.log("Update completed successfully!");
             callbacks.done();

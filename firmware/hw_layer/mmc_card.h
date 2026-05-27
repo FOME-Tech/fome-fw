@@ -38,15 +38,4 @@ struct SdLogBufferWriter final : public BufferedWriter<512> {
 
 	size_t writeInternal(const char* buffer, size_t count) override;
 };
-
-#include "ff.h"
-
-// These are to get objects that need to be in memory safe
-// to access with the SD DMA controller
-namespace sd_mem {
-FATFS* getFs();
-FIL* getLogFileFd();
-SdLogBufferWriter& getLogBuffer();
-std::array<uint8_t, 512>& getWifiUpdateBuffer();
-} // namespace sd_mem
 #endif // EFI_PROD_CODE

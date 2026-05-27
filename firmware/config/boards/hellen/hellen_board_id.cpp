@@ -295,8 +295,9 @@ bool HellenBoardIdFinder<NumPins>::measureChargingTimesAveraged(int i, float& Tc
 	for (int tries = 0; tries < numTries; tries++) {
 		// get the charging times
 		float Tc1i_us = 0, Tc2i_us = 0;
-		if (!measureChargingTimes(i, Tc1i_us, Tc2i_us))
+		if (!measureChargingTimes(i, Tc1i_us, Tc2i_us)) {
 			return false;
+		}
 		Tc1_us += Tc1i_us;
 		Tc2_us += Tc2i_us;
 	}
@@ -339,8 +340,9 @@ int detectHellenBoardId() {
 		float Tc1_us = 0, Tc2_us = 0;
 		// We need several measurements for each resistor to increase the presision.
 		// But if any of the measurements fails, then abort!
-		if (!finder.measureChargingTimesAveraged(i, Tc1_us, Tc2_us))
+		if (!finder.measureChargingTimesAveraged(i, Tc1_us, Tc2_us)) {
 			break;
+		}
 
 		// Now roughly estimate the resistor value using the approximate threshold voltage.
 		float Rest = finder.calcEstimatedResistance(Tc1_us, C);

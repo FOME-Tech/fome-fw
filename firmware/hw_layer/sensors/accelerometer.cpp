@@ -34,7 +34,7 @@ static SPIDriver* driver;
  * The slave select line is the pin GPIOE_CS_SPI on the port GPIOE.
  */
 static const SPIConfig accelerometerCfg = {
-		.spi_bus = NULL,
+		.spi_bus = nullptr,
 		/* HW dependent part.*/
 		.ssport = GPIOE,
 		.sspad = GPIOE_PIN3,
@@ -64,14 +64,16 @@ private:
 static BenchController instance;
 
 void initAccelerometer() {
-	if (!isBrainPinValid(engineConfiguration->LIS302DLCsPin))
+	if (!isBrainPinValid(engineConfiguration->LIS302DLCsPin)) {
 		return; // not used
+	}
 
-	if (!engineConfiguration->is_enabled_spi_1)
+	if (!engineConfiguration->is_enabled_spi_1) {
 		return; // temporary
+	}
 #if HAL_USE_SPI
 	driver = getSpiDevice(engineConfiguration->accelerometerSpiDevice);
-	if (driver == NULL) {
+	if (!driver) {
 		// error already reported
 		return;
 	}

@@ -205,14 +205,6 @@ void prepareVoidConfiguration(engine_configuration_s* cfg) {
 	cfg->brakePedalPinMode = PI_PULLUP;
 }
 
-void setDefaultBasePins() {
-#if EFI_PROD_CODE
-	// call overrided board-specific serial configuration setup, if needed (for custom boards only)
-	// needed also by bootloader code
-	setPinConfigurationOverrides();
-#endif /* EFI_PROD_CODE */
-}
-
 // needed also by bootloader code
 // at the moment bootloader does NOT really need SD card, this is a step towards future bootloader SD card usage
 void setDefaultSdCardParameters() {
@@ -304,7 +296,6 @@ static void setDefaultEngineNoiseTable() {
  * This method is invoked only when new configuration is needed:
  *  * recently re-flashed chip
  *  * flash version of configuration failed CRC check or appears to be older then FLASH_DATA_VERSION
- *  * 'rewriteconfig' command
  *  * 'set engine_type X' command
  *
  * This method should only change the state of the configuration data structure but should NOT change the state of
@@ -607,9 +598,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 	 * Let's apply global defaults first
 	 */
 	setDefaultEngineConfiguration();
-
-	// set initial pin groups
-	setDefaultBasePins();
 
 	if (boardCallback != nullptr) {
 		boardCallback(engineConfiguration);

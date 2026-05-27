@@ -91,113 +91,16 @@ constexpr inline const char* getCommand_x14_e(command_x14_e value) {
 			return "COMMAND_X14_UNUSED_5";
 		case COMMAND_X14_UNUSED_9:
 			return "COMMAND_X14_UNUSED_9";
-		case COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE:
-			return "COMMAND_X14_WIDEBAND_FIRMWARE_UPDATE";
+		case COMMAND_X14_WIDEBAND_UPDATE_0:
+			return "COMMAND_X14_WIDEBAND_UPDATE_0";
+		case COMMAND_X14_WIDEBAND_UPDATE_1:
+			return "COMMAND_X14_WIDEBAND_UPDATE_1";
+		case COMMAND_X14_WIDEBAND_UPDATE_2:
+			return "COMMAND_X14_WIDEBAND_UPDATE_2";
+		case COMMAND_X14_WIDEBAND_UPDATE_3:
+			return "COMMAND_X14_WIDEBAND_UPDATE_3";
 		case COMMAND_X14_WRITE_CONFIG:
 			return "COMMAND_X14_WRITE_CONFIG";
-	}
-	return "unknown";
-}
-constexpr inline const char* getDebug_mode_e(debug_mode_e value) {
-	switch (value) {
-		case DBG_0:
-			return "DBG_0";
-		case DBG_1:
-			return "DBG_1";
-		case DBG_10:
-			return "DBG_10";
-		case DBG_11:
-			return "DBG_11";
-		case DBG_12:
-			return "DBG_12";
-		case DBG_13:
-			return "DBG_13";
-		case DBG_14:
-			return "DBG_14";
-		case DBG_15:
-			return "DBG_15";
-		case DBG_16:
-			return "DBG_16";
-		case DBG_19:
-			return "DBG_19";
-		case DBG_2:
-			return "DBG_2";
-		case DBG_20:
-			return "DBG_20";
-		case DBG_21:
-			return "DBG_21";
-		case DBG_22:
-			return "DBG_22";
-		case DBG_23:
-			return "DBG_23";
-		case DBG_24:
-			return "DBG_24";
-		case DBG_25:
-			return "DBG_25";
-		case DBG_26:
-			return "DBG_26";
-		case DBG_27:
-			return "DBG_27";
-		case DBG_29:
-			return "DBG_29";
-		case DBG_30:
-			return "DBG_30";
-		case DBG_32:
-			return "DBG_32";
-		case DBG_33:
-			return "DBG_33";
-		case DBG_34:
-			return "DBG_34";
-		case DBG_35:
-			return "DBG_35";
-		case DBG_36:
-			return "DBG_36";
-		case DBG_37:
-			return "DBG_37";
-		case DBG_38:
-			return "DBG_38";
-		case DBG_4:
-			return "DBG_4";
-		case DBG_40:
-			return "DBG_40";
-		case DBG_41:
-			return "DBG_41";
-		case DBG_42:
-			return "DBG_42";
-		case DBG_43:
-			return "DBG_43";
-		case DBG_44:
-			return "DBG_44";
-		case DBG_46:
-			return "DBG_46";
-		case DBG_5:
-			return "DBG_5";
-		case DBG_6:
-			return "DBG_6";
-		case DBG_7:
-			return "DBG_7";
-		case DBG_8:
-			return "DBG_8";
-		case DBG_9:
-			return "DBG_9";
-		case DBG_ELECTRONIC_THROTTLE_PID:
-			return "DBG_ELECTRONIC_THROTTLE_PID";
-		case DBG_ETB_AUTOTUNE:
-			return "DBG_ETB_AUTOTUNE";
-		case DBG_EXECUTOR:
-			return "DBG_EXECUTOR";
-		case DBG_LOGIC_ANALYZER:
-			return "DBG_LOGIC_ANALYZER";
-		case DBG_LUA:
-			return "DBG_LUA";
-		case DBG_METRICS:
-			return "DBG_METRICS";
-		case DBG_STEPPER_IDLE_CONTROL:
-			return "DBG_STEPPER_IDLE_CONTROL";
-		case DBG_TCU:
-			return "DBG_TCU";
-		case DBG_TLE8888:
-			return "DBG_TLE8888";
 	}
 	return "unknown";
 }
@@ -544,6 +447,8 @@ constexpr inline const char* getTrigger_type_e(trigger_type_e value) {
 			return "TT_UNUSED";
 		case trigger_type_e::TT_UNUSED_17:
 			return "TT_UNUSED_17";
+		case trigger_type_e::TT_VIPER_V10_CRANK:
+			return "TT_VIPER_V10_CRANK";
 		case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:
 			return "TT_VVT_BARRA_3_PLUS_1";
 		case trigger_type_e::TT_VVT_BOSCH_QUICK_START:

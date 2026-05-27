@@ -17,18 +17,20 @@ unsigned int getBrainPinTotalNum(void) {
 
 const char*& getBrainUsedPin(unsigned int idx) {
 	/*if (idx >= getBrainPinTotalNum())
-		return NULL;*/
+		return nullptr;*/
 	return engine->pinRepository.PIN_USED[idx];
 }
 
 /* Common for firmware and unit tests */
 bool isBrainPinValid(brain_pin_e brainPin) {
-	if ((brainPin == Gpio::Unassigned) || (brainPin == Gpio::Invalid))
+	if ((brainPin == Gpio::Unassigned) || (brainPin == Gpio::Invalid)) {
 		return false;
+	}
 
-	if (brainPin > BRAIN_PIN_LAST)
+	if (brainPin > BRAIN_PIN_LAST) {
 		/* something terribly wrong */
 		return false;
+	}
 
 	return true;
 }
@@ -36,13 +38,15 @@ bool isBrainPinValid(brain_pin_e brainPin) {
 int brainPin_to_index(brain_pin_e brainPin) {
 	unsigned int i;
 
-	if (brainPin < Gpio::A0)
+	if (brainPin < Gpio::A0) {
 		return -1;
+	}
 
 	i = brainPin - Gpio::A0;
 
-	if (i >= getBrainPinTotalNum())
+	if (i >= getBrainPinTotalNum()) {
 		return -1;
+	}
 
 	return i;
 }
@@ -52,10 +56,11 @@ int brainPin_to_index(brain_pin_e brainPin) {
  */
 bool brain_pin_markUsed(brain_pin_e brainPin, const char* msg) {
 	int index = brainPin_to_index(brainPin);
-	if (index < 0)
+	if (index < 0) {
 		return true;
+	}
 
-	if (getBrainUsedPin(index) != NULL) {
+	if (getBrainUsedPin(index) != nullptr) {
 		/* TODO: get readable name of brainPin... */
 		firmwareError(
 				ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_1,
@@ -73,8 +78,9 @@ bool brain_pin_markUsed(brain_pin_e brainPin, const char* msg) {
 
 void brain_pin_markUnused(brain_pin_e brainPin) {
 	int index = brainPin_to_index(brainPin);
-	if (index < 0)
+	if (index < 0) {
 		return;
+	}
 
 	getBrainUsedPin(index) = nullptr;
 }
@@ -121,8 +127,9 @@ void pinDiag2string(char* buffer, size_t size, brain_pin_diag_e pin_diag) {
 }
 
 static brain_pin_e index_to_brainPin(unsigned int i) {
-	if (i < getBrainPinTotalNum())
+	if (i < getBrainPinTotalNum()) {
 		return Gpio::A0 + i;
+	}
 
 	return Gpio::Invalid;
 }
@@ -154,20 +161,18 @@ static void reportPins() {
 		static char pin_error[64];
 		brain_pin_e brainPin = index_to_brainPin(i);
 
-		const char* pin_name = gpiochips_getPinName(brainPin);
 		const char* pin_user = getBrainUsedPin(i);
 		brain_pin_diag_e pin_diag = gpiochips_getDiag(brainPin);
 
 		pinDiag2string(pin_error, sizeof(pin_error), pin_diag);
 
-		/* here show all pins, unused too */
-		if (pin_name != NULL) {
+		// here show all pins, unused too
+		if (auto pin_name = gpiochips_getPinName(brainPin)) {
 			// this probably uses a lot of output buffer!
 			efiPrintf("ext %s: %s diagnostic: %s", pin_name, pin_user ? pin_user : "free", pin_error);
 		} else {
-			const char* chip_name = gpiochips_getChipName(brainPin);
-			/* if chip exist */
-			if (chip_name != NULL) {
+			// if chip exist
+			if (auto chip_name = gpiochips_getChipName(brainPin)) {
 				efiPrintf(
 						"ext %s.%d: %s diagnostic: %s",
 						chip_name,
@@ -176,7 +181,7 @@ static void reportPins() {
 						pin_error);
 			}
 		}
-		if (pin_user != NULL) {
+		if (pin_user) {
 			totalPinsUsed++;
 		}
 	}
@@ -241,15 +246,17 @@ void initPinRepository() {
 }
 
 bool brain_pin_is_onchip(brain_pin_e brainPin) {
-	if ((brainPin < Gpio::A0) || (brainPin > BRAIN_PIN_ONCHIP_LAST))
+	if ((brainPin < Gpio::A0) || (brainPin > BRAIN_PIN_ONCHIP_LAST)) {
 		return false;
+	}
 
 	return true;
 }
 
 bool brain_pin_is_ext(brain_pin_e brainPin) {
-	if (brainPin > BRAIN_PIN_ONCHIP_LAST)
+	if (brainPin > BRAIN_PIN_ONCHIP_LAST) {
 		return true;
+	}
 
 	return false;
 }
@@ -262,20 +269,14 @@ bool brain_pin_is_ext(brain_pin_e brainPin) {
 bool gpio_pin_markUsed(ioportid_t port, ioportmask_t pin, const char* msg) {
 	int index = getPortPinIndex(port, pin);
 
-	if (getBrainUsedPin(index) != NULL) {
-		/**
-		 * todo: the problem is that this warning happens before the console is even
-		 * connected, so the warning is never displayed on the console and that's quite a problem!
-		 */
-		//		warning(ObdCode::OBD_PCM_Processor_Fault, "%s%d req by %s used by %s", portname(port), pin, msg,
-		// getBrainUsedPin(index));
+	if (const char* existing = getBrainUsedPin(index)) {
 		firmwareError(
 				ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_1,
 				"%s%d req by %s used by %s",
 				portname(port),
 				(int)pin,
 				msg,
-				getBrainUsedPin(index));
+				existing);
 		return true;
 	}
 	getBrainUsedPin(index) = msg;
@@ -297,8 +298,9 @@ const char* getPinFunction(brain_input_pin_e brainPin) {
 	int index;
 
 	index = brainPin_to_index(brainPin);
-	if (index < 0)
-		return NULL;
+	if (index < 0) {
+		return nullptr;
+	}
 
 	return getBrainUsedPin(index);
 }

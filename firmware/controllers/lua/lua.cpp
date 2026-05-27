@@ -112,10 +112,6 @@ static void printLuaMemoryInfo() {
 }
 
 static void* myAlloc(void* /*ud*/, void* ptr, size_t osize, size_t nsize) {
-	if (engineConfiguration->debugMode == DBG_LUA) {
-		engine->outputChannels.debugIntField1 = userHeap.used();
-	}
-
 	return userHeap.realloc(ptr, osize, nsize);
 }
 #else  // not EFI_PROD_CODE

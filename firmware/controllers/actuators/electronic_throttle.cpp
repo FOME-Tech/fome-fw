@@ -451,20 +451,7 @@ expected<percent_t> EtbController::getClosedLoopAutotune(percent_t target, perce
 				break;
 		}
 
-		// Also output to debug channels if configured
-		if (engineConfiguration->debugMode == DBG_ETB_AUTOTUNE) {
-			// a - amplitude of output (TPS %)
-			engine->outputChannels.debugFloatField1 = m_a;
-			// b - amplitude of input (Duty cycle %)
-			engine->outputChannels.debugFloatField2 = b;
-			// Tu - oscillation period (seconds)
-			engine->outputChannels.debugFloatField3 = m_tu;
-
-			engine->outputChannels.debugFloatField4 = ku;
-			engine->outputChannels.debugFloatField5 = kp;
-			engine->outputChannels.debugFloatField6 = ki;
-			engine->outputChannels.debugFloatField7 = kd;
-		}
+		efiPrintf("ETB autotune: a=%.3f b=%.3f Tu=%.3f Ku=%.3f Kp=%.3f Ki=%.3f Kd=%.3f", m_a, b, m_tu, ku, kp, ki, kd);
 #endif
 	}
 
@@ -490,6 +477,7 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 	}
 
 	if (m_isAutotune) {
+		resetJamTimer();
 		return getClosedLoopAutotune(target, observation);
 	} else {
 		checkJam(target, observation);
@@ -519,6 +507,7 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 		// Otherwise disable the motor.
 		m_motor->disable("setOutput");
 		m_outputDuty = 0;
+		resetJamTimer();
 	}
 }
 
@@ -602,10 +591,16 @@ void EtbController::update() {
 		// If engine is stopped and so configured, skip the ETB update entirely
 		// This is quieter and pulls less power than leaving it on all the time
 		m_motor->disable("etb status");
+		resetJamTimer();
 		return;
 	}
 
 	ClosedLoopController::update();
+}
+
+void EtbController::resetJamTimer() {
+	m_jamDetectTimer.reset();
+	jamDetected = false;
 }
 
 void EtbController::checkJam(percent_t setpoint, percent_t observation) {

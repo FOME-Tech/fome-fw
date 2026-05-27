@@ -213,6 +213,10 @@ typedef enum {
 	// without a missing tooth, plus a single tooth cam channel to resolve the engine phase.
 	FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR = 6,
 
+	// Same pattern repeated five times per crank revolution.
+	// Used by some V10 engines (e.g. Dodge Viper) whose crank trigger has 5-fold symmetry.
+	FOUR_STROKE_FIVE_TIMES_CRANK_SENSOR = 7,
+
 } operation_mode_e;
 
 /**

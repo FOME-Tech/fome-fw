@@ -160,6 +160,7 @@ struct_no_prefix output_channels_s
 
 
 	uint8_t widebandUpdateProgress;;"%", 1, 0, 0, 100, 0
+	uint8_t widebandUpdateState;;"", 1, 0, 0, 0, 0
 	uint8_t orderingErrorCounter;;"",1, 0, 0, 0, 0
 
 	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"deg C",1, 0, 0, 0, 0
@@ -212,20 +213,6 @@ struct_no_prefix output_channels_s
 	uint16_t lastErrorCode;@@GAUGE_NAME_WARNING_LAST@@;"error",1, 0, 0, 0, 0
 
 	uint16_t[8 iterate] recentErrorCode;;"error", 1, 0, 0, 0, 0
-
-	float debugFloatField1;;"val", 1, 0, 0, 0, 3
-	float debugFloatField2;;"val", 1, 0, 0, 0, 3
-	float debugFloatField3;;"val", 1, 0, 0, 0, 3
-	float debugFloatField4;;"val", 1, 0, 0, 0, 3
-	float debugFloatField5;;"val", 1, 0, 0, 0, 3
-	float debugFloatField6;;"val", 1, 0, 0, 0, 3
-	float debugFloatField7;;"val", 1, 0, 0, 0, 3
-
-	uint32_t debugIntField1;;"val", 1, 0, 0, 0, 0
-	uint32_t debugIntField2;;"val", 1, 0, 0, 0, 0
-	uint32_t debugIntField3;;"val", 1, 0, 0, 0, 0
-	int16_t debugIntField4;;"val", 1, 0, 0, 0, 0
-	int16_t debugIntField5;;"val", 1, 0, 0, 0, 0
 
 	uint16_t[EGT_CHANNEL_COUNT iterate] egt;EGT;"deg C", 1, 0, 0, 0, 0
 

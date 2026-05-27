@@ -79,7 +79,3 @@ int tle8888_add(brain_pin_e base, unsigned int index, const struct tle8888_confi
 /* debug */
 void tle8888_req_init();
 void tle8888_dump_regs();
-
-#if EFI_TUNER_STUDIO
-void tle8888PostState();
-#endif /* EFI_TUNER_STUDIO */

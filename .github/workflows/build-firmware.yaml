@@ -72,9 +72,9 @@ jobs:
             folder: config/boards/hellen/hellen64_miataNA6_94
             ini-file: fome_hellenNA6.ini
 
-        #   - build-target: hellen128
-        #     folder: config/boards/hellen/hellen128
-        #     ini-file: fome_hellen128.ini
+          - build-target: hellen128
+            folder: config/boards/hellen/hellen128
+            ini-file: fome_hellen128.ini
 
           # - build-target: hellen121vag
           #   folder: config/boards/hellen/hellen121vag
@@ -166,7 +166,7 @@ jobs:
           echo "full=true" >> $GITHUB_ENV
         fi
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: true
 
@@ -220,20 +220,21 @@ jobs:
 
     # If not uploading the full bundle, at least upload the bin+ini so you can test off a PR
     - name: Upload build bin
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: fome_${{matrix.build-target}}.bin
         path: ./firmware/deliver/fome.bin
 
     - name: Upload ini
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{matrix.ini-file}}
         path: ./firmware/tunerstudio/generated/${{matrix.ini-file}}
 
     - name: Upload bundle
       if: ${{ env.full == 'true' && env.upload == 'true' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: fome_bundle_${{matrix.build-target}}.zip
         path: ./artifacts/fome_bundle_${{matrix.build-target}}.zip
+        archive: false

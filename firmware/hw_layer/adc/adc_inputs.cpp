@@ -29,22 +29,7 @@ float __attribute__((weak)) getAnalogInputDividerCoefficient(adc_channel_e) {
 #if HAL_USE_ADC
 
 #include "adc_subscription.h"
-#include "AdcConfiguration.h"
-#include "mpu_util.h"
-#include "periodic_thread_controller.h"
 #include "protected_gpio.h"
-
-// Board voltage, with divider coefficient accounted for
-float getVoltageDivided(const char* msg, adc_channel_e hwChannel) {
-	return getVoltage(msg, hwChannel) * getAnalogInputDividerCoefficient(hwChannel);
-}
-
-// voltage in MCU universe, from zero to VDD
-float getVoltage(const char* msg, adc_channel_e hwChannel) {
-	return adcToVolts(getSlowAdcValue(msg, hwChannel));
-}
-
-static uint32_t slowAdcCounter = 0;
 
 static float mcuTemperature;
 
@@ -52,14 +37,7 @@ float getMCUInternalTemperature() {
 	return mcuTemperature;
 }
 
-int getSlowAdcValue(const char* msg, adc_channel_e hwChannel) {
-	if (!isAdcChannelValid(hwChannel)) {
-		warning(ObdCode::CUSTOM_OBD_ANALOG_INPUT_NOT_CONFIGURED, "ADC: %s input is not configured", msg);
-		return -1;
-	}
-
-	return getSlowAdcSample(hwChannel);
-}
+static uint32_t slowAdcCounter = 0;
 
 void waitForSlowAdc() {
 	// Wait for a few slow adc updates to happen
@@ -91,15 +69,4 @@ void updateSlowAdc(efitick_t nowNt) {
 	slowAdcCounter++;
 }
 
-#else /* not HAL_USE_ADC */
-
-__attribute__((weak)) float getVoltageDivided(const char*, adc_channel_e) {
-	return 0;
-}
-
-// voltage in MCU universe, from zero to VDD
-__attribute__((weak)) float getVoltage(const char*, adc_channel_e) {
-	return 0;
-}
-
-#endif
+#endif // HAL_USE_ADC

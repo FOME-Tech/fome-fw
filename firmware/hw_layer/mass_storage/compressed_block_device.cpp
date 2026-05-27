@@ -60,7 +60,7 @@ static bool read(void* instance, uint32_t startblk, uint8_t* buffer, uint32_t /*
 
 		cbd->d.source = cbd->source;
 		cbd->d.source_limit = cbd->d.source + cbd->sourceSize;
-		cbd->d.source_read_cb = NULL;
+		cbd->d.source_read_cb = nullptr;
 
 		uzlib_gzip_parse_header(&cbd->d);
 

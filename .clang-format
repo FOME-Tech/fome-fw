@@ -42,6 +42,9 @@ AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortEnumsOnASingleLine: false
 
+# Require braces on all control statements (if, else, for, while, do)
+InsertBraces: true
+
 # Spaces
 SpaceBeforeParens: ControlStatements
 SpaceInEmptyBlock: false

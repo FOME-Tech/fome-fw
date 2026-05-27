@@ -333,26 +333,6 @@ static int lua_getAuxDigital(lua_State* l) {
 	return 1;
 }
 
-static int lua_setDebug(lua_State* l) {
-	// wrong debug mode, ignore
-	if (engineConfiguration->debugMode != DBG_LUA) {
-		return 0;
-	}
-
-	auto idx = luaL_checkinteger(l, 1);
-	auto val = luaL_checknumber(l, 2);
-
-	// invalid index, ignore
-	if (idx < 1 || idx > 7) {
-		return 0;
-	}
-
-	auto firstDebugField = &engine->outputChannels.debugFloatField1;
-	firstDebugField[idx - 1] = val;
-
-	return 0;
-}
-
 static auto lua_getAirmassResolveMode(lua_State* l) {
 	if (lua_gettop(l) == 0) {
 		// zero args, return configured mode
@@ -733,8 +713,9 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "setLuaGauge", [](lua_State* l2) {
 		auto index = luaL_checkinteger(l2, 1) - 1;
 		auto value = luaL_checknumber(l2, 2);
-		if (index < 0 || index >= LUA_GAUGE_COUNT)
+		if (index < 0 || index >= LUA_GAUGE_COUNT) {
 			return 0;
+		}
 		extern StoredValueSensor luaGauges[LUA_GAUGE_COUNT];
 		luaGauges[index].setValidValue(value, getTimeNowNt());
 		return 0;
@@ -944,7 +925,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getFan", lua_fan);
 	lua_register(l, "getDigital", lua_getDigital);
 	lua_register(l, "getAuxDigital", lua_getAuxDigital);
-	lua_register(l, "setDebug", lua_setDebug);
 	lua_register(l, "getAirmass", lua_getAirmass);
 	lua_register(l, "setAirmass", lua_setAirmass);
 

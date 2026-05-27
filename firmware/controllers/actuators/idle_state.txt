@@ -23,6 +23,8 @@ struct_no_prefix idle_state_s
 	uint16_t idleEntryRpm;Entry threshold
 	uint16_t idleExitRpm;Exit threshold
 
+	uint8_t currentPhase;Phase
+
 	! Open loop
 	percent_t luaAdd;Open loop: Lua Adder
 	percent_t iacByTpsTaper;Open loop: iacByTpsTaper

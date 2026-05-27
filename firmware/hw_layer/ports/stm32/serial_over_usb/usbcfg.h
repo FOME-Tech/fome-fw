@@ -16,8 +16,22 @@
 
 #pragma once
 
+// CDC data endpoint (bulk IN/OUT share endpoint index 2)
+#define EFI_USB_CDC_DATA_REQUEST_EP     2
+#define EFI_USB_CDC_DATA_AVAILABLE_EP   2
+#define EFI_USB_CDC_INTERRUPT_EP        3
+
+#if STM32_USB_USE_OTG1
+#define EFI_USB_DRIVER (&USBD1)
+#elif STM32_USB_USE_OTG2
+#define EFI_USB_DRIVER (&USBD2)
+#endif
+
 extern const USBConfig usbcfg;
+
+#if !EFI_USB_SERIAL_DIRECT
 extern const SerialUSBConfig serusbcfg;
 extern SerialUSBDriver SDU1;
+#endif
 
 void usbPopulateSerialNumber(const uint8_t* serialNumber, size_t bytes);

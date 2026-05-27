@@ -37,7 +37,6 @@ void StepperMotorBase::saveStepperPos(int pos) {
 #if EFI_PROD_CODE
 	getBackupSram()->StepperPosition = pos + 1;
 #endif
-	postCurrentPosition();
 }
 
 int StepperMotorBase::loadStepperPos() {
@@ -53,15 +52,6 @@ void StepperMotorBase::changeCurrentPosition(bool positive) {
 		m_currentPosition++;
 	} else {
 		m_currentPosition--;
-	}
-	postCurrentPosition();
-}
-
-void StepperMotorBase::postCurrentPosition() {
-	if (engineConfiguration->debugMode == DBG_STEPPER_IDLE_CONTROL) {
-#if EFI_TUNER_STUDIO
-		engine->outputChannels.debugIntField5 = m_currentPosition;
-#endif /* EFI_TUNER_STUDIO */
 	}
 }
 
@@ -82,8 +72,9 @@ void StepperMotorBase::setInitialPosition() {
 	// now check if stepper motor re-initialization is requested - if the throttle pedal is pressed at startup
 	auto tpsPos = Sensor::getOrZero(SensorType::DriverThrottleIntent);
 	bool forceStepperParking = !isRunning && tpsPos > STEPPER_PARKING_TPS;
-	if (engineConfiguration->stepperForceParkingEveryRestart)
+	if (engineConfiguration->stepperForceParkingEveryRestart) {
 		forceStepperParking = true;
+	}
 	efiPrintf(
 			"Stepper: savedStepperPos=%d forceStepperParking=%d (tps=%.2f)",
 			m_currentPosition,
@@ -178,8 +169,9 @@ void StepDirectionStepper::setDirection(bool isIncrementing) {
 
 bool StepDirectionStepper::pulse() {
 	// we move the motor only of it is powered from the main relay
-	if (!engine->isMainRelayEnabled())
+	if (!engine->isMainRelayEnabled()) {
 		return false;
+	}
 
 	m_enablePin.setValue(false); // enable stepper
 

@@ -81,8 +81,9 @@ static void obdSendValue(int mode, int PID, int numBytes, float value, CanBusInd
 static void obdWriteSupportedPids(uint8_t pid, int bitOffset, const int16_t* supportedPids, CanBusIndex busIndex) {
 	uint32_t value = 0;
 	// gather all 32 bit fields
-	for (int i = 0; i < 32 && supportedPids[i] > 0; i++)
+	for (int i = 0; i < 32 && supportedPids[i] > 0; i++) {
 		value |= 1 << (31 + bitOffset - supportedPids[i]);
+	}
 
 #ifdef MOCK_SUPPORTED_PIDS
 	// for OBD debug

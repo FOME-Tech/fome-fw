@@ -88,7 +88,6 @@ protected:
 	int loadStepperPos();
 
 	void changeCurrentPosition(bool positive);
-	void postCurrentPosition();
 
 	StepperHw* m_hw = nullptr;
 

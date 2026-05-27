@@ -14,7 +14,7 @@ struct trigger_central_s {
 	// Trg: Tooth angle error
 	// deg
 	// offset 6
-	int16_t triggerToothAngleError = (int16_t)0;
+	scaled_channel<int16_t, 100, 1> triggerToothAngleError = (int16_t)0;
 	// Trg: Ignored tooth count
 	// offset 8
 	uint8_t triggerIgnoredToothCount = (uint8_t)0;

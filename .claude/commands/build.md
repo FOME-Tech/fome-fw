@@ -26,4 +26,4 @@ The user invoked this command with: $ARGUMENTS
    ```
    Use `-j12` is already the default per project convention — do not add extra flags unless asked.
 
-4. Report whether the build succeeded or failed. On failure, summarize the first error from the compiler output. If the build fails due to a PCH issue, run `make clean` then retry once. 
+4. Report whether the build succeeded or failed. On failure, summarize the first error from the compiler output. If the build fails due to a PCH issue, run `make clean` in both `firmware/` and `firmware/bootloader/`, then retry once.

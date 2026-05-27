@@ -84,6 +84,8 @@ TEST(idle_v2, testDeterminePhase) {
 	engineConfiguration->idlePidDeactivationTpsThreshold = 5;
 	// Max VSS for idle is 10kph
 	engineConfiguration->maxIdleVss = 10;
+	// Disable inhibit-after-cranking for this test
+	engineConfiguration->inhibitIdleAfterCrankingTime = 0;
 
 	TgtInfo targetInfo;
 	// Phase determination should ignore this!
@@ -100,6 +102,8 @@ TEST(idle_v2, testDeterminePhase) {
 	// Now engine is running!
 	// Controller doesn't need this other than for isCranking()
 	engine->rpmCalculator.setRpmValue(1000);
+	// Advance time so the inhibit-after-cranking timer (set to 0) is satisfied
+	advanceTimeUs(1);
 
 	// Test invalid TPS, but inside the idle window
 	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, unexpected, 0, 10));
@@ -146,6 +150,61 @@ TEST(idle_v2, testDeterminePhase) {
 
 	// Below entry: idling
 	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 10));
+}
+
+TEST(idle_v2, inhibitIdleAfterCranking) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+
+	engineConfiguration->idlePidDeactivationTpsThreshold = 5;
+	engineConfiguration->maxIdleVss = 10;
+	// Inhibit idle for 2 seconds after cranking
+	engineConfiguration->inhibitIdleAfterCrankingTime = 2;
+
+	TgtInfo targetInfo;
+	targetInfo.ClosedLoopTarget = 9999;
+	targetInfo.IdleEntryRpm = 1100;
+	targetInfo.IdleExitRpm = 1100;
+
+	// Start cranking - this resets the timer
+	engine->rpmCalculator.setRpmValue(0);
+	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, unexpected, 0, 10));
+
+	// Now engine is running
+	engine->rpmCalculator.setRpmValue(1000);
+
+	// Shortly after cranking, idle should be inhibited (coasting) even though RPM is in range
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1000, targetInfo, 0, 0, 10));
+
+	// Advance time past the inhibit window
+	advanceTimeUs(3'000'000);
+
+	// Now idle should work normally
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1000, targetInfo, 0, 0, 10));
+}
+
+TEST(idle_v2, inhibitIdleAfterCrankingDisabled) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+
+	engineConfiguration->idlePidDeactivationTpsThreshold = 5;
+	engineConfiguration->maxIdleVss = 10;
+	// Disable the feature
+	engineConfiguration->inhibitIdleAfterCrankingTime = 0;
+
+	TgtInfo targetInfo;
+	targetInfo.ClosedLoopTarget = 9999;
+	targetInfo.IdleEntryRpm = 1100;
+	targetInfo.IdleExitRpm = 1100;
+
+	// Start cranking
+	engine->rpmCalculator.setRpmValue(0);
+	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, unexpected, 0, 10));
+
+	// Now engine is running - idle should work immediately since feature is disabled
+	engine->rpmCalculator.setRpmValue(1000);
+	advanceTimeUs(1);
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1000, targetInfo, 0, 0, 10));
 }
 
 TEST(idle_v2, crankingOpenLoop) {

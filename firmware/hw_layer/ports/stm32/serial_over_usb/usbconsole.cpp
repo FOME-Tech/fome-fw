@@ -31,30 +31,38 @@ void usb_serial_start() {
 	efiSetPadMode("USB DM", EFI_USB_SERIAL_DM, PAL_MODE_ALTERNATE(EFI_USB_AF));
 	efiSetPadMode("USB DP", EFI_USB_SERIAL_DP, PAL_MODE_ALTERNATE(EFI_USB_AF));
 
+#if ! EFI_USB_SERIAL_DIRECT
 	/*
 	 * Initializes a serial-over-USB CDC driver.
 	 */
 	sduObjectInit(&SDU1);
 	sduStart(&SDU1, &serusbcfg);
+#endif
 
 	/*
 	 * Activates the USB driver and then the USB bus pull-up on D+.
 	 * Note, a delay is inserted in order to not have to disconnect the cable
 	 * after a reset.
 	 */
+#if EFI_USB_SERIAL_DIRECT
+	USBDriver* usbp = EFI_USB_DRIVER;
+#else
+	USBDriver* usbp = serusbcfg.usbp;
+#endif
+
 // See also https://github.com/rusefi/rusefi/issues/705
 #ifndef EFI_SKIP_USB_DISCONNECT
-	usbDisconnectBus(serusbcfg.usbp);
+	usbDisconnectBus(usbp);
 	chThdSleepMilliseconds(250);
 #endif /* EFI_SKIP_USB_DISCONNECT */
-	usbStart(serusbcfg.usbp, &usbcfg);
+	usbStart(usbp, &usbcfg);
 
 #if HAL_USE_USB_MSD
 	// Wait for the SD card thread to signal that it's ready
 	usbEnumerationAllowed.wait();
 #endif
 
-	usbConnectBus(serusbcfg.usbp);
+	usbConnectBus(usbp);
 
 	isUsbSerialInitialized = true;
 }
@@ -66,7 +74,11 @@ void allowUsbEnumeration() {
 }
 
 bool is_usb_serial_ready() {
+#if EFI_USB_SERIAL_DIRECT
+	return isUsbSerialInitialized && EFI_USB_DRIVER->state == USB_ACTIVE;
+#else
 	return isUsbSerialInitialized && SDU1.config->usbp->state == USB_ACTIVE;
+#endif
 }
 
 #else

@@ -54,6 +54,7 @@ public:
 	expected<percent_t> getClosedLoopAutotune(percent_t setpoint, percent_t actualThrottlePosition);
 
 	void checkJam(percent_t setpoint, percent_t observation);
+	void resetJamTimer();
 
 	void setOutput(expected<percent_t> outputValue) override;
 

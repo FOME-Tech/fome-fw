@@ -47,6 +47,7 @@ void TriggerDecoderBase::resetState() {
 
 	setArrayValues(toothDurations, 0);
 
+	hasSignal = false;
 	crankSynchronizationCounter = 0;
 	triggerErrorCounter = 0;
 	orderingErrorCounter = 0;
@@ -307,7 +308,6 @@ bool TriggerDecoderBase::validateEventCounters(const TriggerWaveform& triggerSha
 	}
 
 #if EFI_UNIT_TEST
-	printf("validateEventCounters: isDecodingError=%d\n", isDecodingError);
 	if (isDecodingError) {
 		for (int i = 0; i < PWM_PHASE_MAX_WAVE_PER_PWM; i++) {
 			printf("count: cur=%d exp=%d\n",
@@ -327,6 +327,17 @@ void TriggerDecoderBase::onShaftSynchronization(
 
 	if (wasSynchronized) {
 		crankSynchronizationCounter++;
+
+		// Wrap the counter before it overflows, at a multiple of all possible
+		// getCrankDivider() values (LCM of 1, 2, 4, 6, 24 = 24) so that
+		// crankSynchronizationCounter % crankDivider doesn't jump on wrap.
+		using counter_t = decltype(crankSynchronizationCounter);
+		static constexpr counter_t crankDividerLcm = 24;
+		static constexpr counter_t wrapAt =
+				(static_cast<uint64_t>(std::numeric_limits<counter_t>::max()) + 1) / crankDividerLcm * crankDividerLcm;
+		if (crankSynchronizationCounter == wrapAt) {
+			crankSynchronizationCounter = 0;
+		}
 	} else {
 		// We have just synchronized, this is the zeroth revolution
 		crankSynchronizationCounter = 0;
@@ -366,6 +377,10 @@ static bool shouldConsiderEdge(const TriggerWaveform& triggerShape, TriggerWheel
 void TriggerDecoderBase::logEdgeCounters(bool isRising) {
 	if (isRising) {
 		edgeCountRise++;
+
+		if (edgeCountRise > 5) {
+			hasSignal = true;
+		}
 	} else {
 		edgeCountFall++;
 	}

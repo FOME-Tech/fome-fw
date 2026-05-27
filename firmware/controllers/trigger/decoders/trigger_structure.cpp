@@ -96,6 +96,8 @@ angle_t TriggerWaveform::getCycleDuration() const {
 			return FOUR_STROKE_CYCLE_DURATION / SYMMETRICAL_THREE_TIMES_CRANK_SENSOR_DIVIDER;
 		case FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR:
 			return FOUR_STROKE_CYCLE_DURATION / SYMMETRICAL_CRANK_SENSOR_DIVIDER;
+		case FOUR_STROKE_FIVE_TIMES_CRANK_SENSOR:
+			return FOUR_STROKE_CYCLE_DURATION / SYMMETRICAL_FIVE_TIMES_CRANK_SENSOR_DIVIDER;
 		case FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR:
 			return FOUR_STROKE_CYCLE_DURATION / SYMMETRICAL_TWELVE_TIMES_CRANK_SENSOR_DIVIDER;
 		case FOUR_STROKE_CRANK_SENSOR:
@@ -111,6 +113,7 @@ bool TriggerWaveform::needsDisambiguation() const {
 		case FOUR_STROKE_CRANK_SENSOR:
 		case FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR:
 		case FOUR_STROKE_THREE_TIMES_CRANK_SENSOR:
+		case FOUR_STROKE_FIVE_TIMES_CRANK_SENSOR:
 		case FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR:
 			return true;
 		case FOUR_STROKE_CAM_SENSOR:
@@ -131,6 +134,7 @@ bool TriggerWaveform::needsDisambiguation() const {
 size_t TriggerWaveform::getLength() const {
 	/**
 	 * 24 for FOUR_STROKE_TWELVE_TIMES_CRANK_SENSOR
+	 * 10 for FOUR_STROKE_FIVE_TIMES_CRANK_SENSOR
 	 * 6 for FOUR_STROKE_THREE_TIMES_CRANK_SENSOR
 	 * 4 for FOUR_STROKE_SYMMETRICAL_CRANK_SENSOR
 	 * 2 for FOUR_STROKE_CRANK_SENSOR
@@ -463,6 +467,10 @@ void TriggerWaveform::initializeTriggerWaveform(
 
 		case trigger_type_e::TT_MIATA_VVT:
 			initializeMazdaMiataNb2Crank(this);
+			break;
+
+		case trigger_type_e::TT_VIPER_V10_CRANK:
+			initializeViperV10Crank(this);
 			break;
 
 		case trigger_type_e::TT_DODGE_NEON_1995:

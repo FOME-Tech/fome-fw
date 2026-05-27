@@ -43,20 +43,24 @@ bool DfcoController::getState() const {
 	// True if throttle, MAP, CLT, and Clutch are all acceptable for DFCO to occur
 	bool dfcoAllowed = mapActivate && tpsActivate && cltActivate && clutchActivate;
 
-	bool rpmActivate = (rpm > engineConfiguration->coastingFuelCutRpmHigh);
-	bool rpmDeactivate = (rpm < engineConfiguration->coastingFuelCutRpmLow);
+	bool rpmHigh = (rpm > engineConfiguration->coastingFuelCutRpmHigh);
+	bool rpmLow = (rpm < engineConfiguration->coastingFuelCutRpmLow);
 
-	// greater than or equal so that it works if both config params are set to 0
-	bool vssActivate = (vss >= engineConfiguration->coastingFuelCutVssHigh);
-	bool vssDeactivate = (vss < engineConfiguration->coastingFuelCutVssLow);
+	// Ignore if either is set to 0kph
+	bool disableVssCheck =
+			(engineConfiguration->coastingFuelCutVssHigh == 0) || (engineConfiguration->coastingFuelCutVssLow == 0);
+	// true if disabled
+	bool vssHigh = disableVssCheck || (vss >= engineConfiguration->coastingFuelCutVssHigh);
+	// false if disabled
+	bool vssLow = !disableVssCheck && (vss < engineConfiguration->coastingFuelCutVssLow);
 
 	// RPM is high enough, VSS high enough, and DFCO allowed
-	if (dfcoAllowed && rpmActivate && vssActivate) {
+	if (dfcoAllowed && rpmHigh && vssHigh) {
 		return true;
 	}
 
 	// RPM too low, VSS too low, or DFCO not allowed
-	if (!dfcoAllowed || rpmDeactivate || vssDeactivate) {
+	if (!dfcoAllowed || rpmLow || vssLow) {
 		return false;
 	}
 

@@ -129,9 +129,12 @@ void prepareOutputSignals() {
 
 	updateCylinders();
 
-	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine
-	getEngineState()->useOddFireWastedSpark =
-			operationMode != TWO_STROKE && (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
+	// Use odd fire wasted spark logic if not two stroke, and an odd fire or odd cylinder # engine.
+	// Skip when the user has paired wasted spark hardware: that path relies on cam sync and the
+	// standard wasted-spark output mask, not the +360 re-fire trick.
+	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE &&
+											  !engineConfiguration->pairedOddFireWastedSpark &&
+											  (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
 
 #if EFI_SHAFT_POSITION_INPUT
 	engine->triggerCentral.prepareTriggerShape();

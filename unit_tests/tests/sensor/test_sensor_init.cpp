@@ -96,6 +96,128 @@ TEST(SensorInit, TpsValuesTooClose) {
 	EXPECT_NO_FATAL_ERROR(initTps());
 }
 
+TEST(SensorInit, TpsBadCalibrationRawStillAvailable) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Calibration values too close together (bad calibration)
+	engineConfiguration->tpsMin = 200; // 1.00 volt
+	engineConfiguration->tpsMax = 210; // 1.05 volts
+
+	EXPECT_FATAL_ERROR(initTps());
+
+	// Even with bad calibration, the primary sensor should be registered
+	// so that raw voltage is available for user calibration
+	auto s = Sensor::getSensorOfType(SensorType::Tps1Primary);
+	ASSERT_NE(nullptr, s);
+
+	// Post a raw voltage value and confirm it's readable
+	postToFuncSensor(const_cast<Sensor*>(s), 2.5f);
+	EXPECT_NEAR(2.5f, s->getRaw(), EPS2D);
+
+	// But the combined redundant sensor should NOT be registered
+	// (bad calibration means we can't trust the converted value)
+	EXPECT_EQ(nullptr, Sensor::getSensorOfType(SensorType::Tps1));
+
+	deinitTps();
+}
+
+TEST(SensorInit, TpsRedundantWithBothSensors) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Configure both primary and secondary TPS
+	engineConfiguration->tpsMin = 200; // 1 volt
+	engineConfiguration->tpsMax = 800; // 4 volts
+	engineConfiguration->tps1_2AdcChannel = EFI_ADC_1;
+	engineConfiguration->tps1SecondaryMin = 800; // 4 volts (reversed)
+	engineConfiguration->tps1SecondaryMax = 200; // 1 volt
+
+	initTps();
+
+	// Both individual sensors should be registered
+	auto pri = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::Tps1Primary));
+	auto sec = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::Tps1Secondary));
+	ASSERT_NE(nullptr, pri);
+	ASSERT_NE(nullptr, sec);
+
+	// The combined redundant sensor should also be registered
+	ASSERT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+
+	// Post values to both sensors - they should agree at 50%
+	EXPECT_POINT_VALID(pri, 2.5f, 50.0f);
+	EXPECT_POINT_VALID(sec, 2.5f, 50.0f);
+
+	// Combined sensor should return the average
+	EXPECT_NEAR(50.0f, Sensor::get(SensorType::Tps1).value_or(-1), EPS2D);
+}
+
+TEST(SensorInit, TpsPrimaryOnlyNoSecondary) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Only primary configured (secondary channel left as EFI_ADC_NONE)
+	engineConfiguration->tpsMin = 200; // 1 volt
+	engineConfiguration->tpsMax = 800; // 4 volts
+	engineConfiguration->tps1_2AdcChannel = EFI_ADC_NONE;
+
+	initTps();
+
+	// Primary should be registered
+	auto pri = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::Tps1Primary));
+	ASSERT_NE(nullptr, pri);
+
+	// Secondary should NOT be registered
+	EXPECT_EQ(nullptr, Sensor::getSensorOfType(SensorType::Tps1Secondary));
+
+	// Combined sensor should still work (passthrough from primary)
+	ASSERT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+
+	EXPECT_POINT_VALID(pri, 2.5f, 50.0f);
+	EXPECT_NEAR(50.0f, Sensor::get(SensorType::Tps1).value_or(-1), EPS2D);
+}
+
+TEST(SensorInit, TpsIdenticalSensorsRejected) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Configure both primary and secondary with identical calibration
+	engineConfiguration->tpsMin = 200;
+	engineConfiguration->tpsMax = 800;
+	engineConfiguration->tps1_2AdcChannel = EFI_ADC_1;
+	engineConfiguration->tps1SecondaryMin = 200; // same as primary
+	engineConfiguration->tps1SecondaryMax = 800; // same as primary
+
+	// Should trigger firmware error for identical sensors
+	EXPECT_FATAL_ERROR(initTps());
+
+	deinitTps();
+}
+
+TEST(SensorInit, TpsDeinitReinit) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->tpsMin = 200;
+	engineConfiguration->tpsMax = 800;
+
+	initTps();
+
+	// Sensor should exist
+	ASSERT_NE(nullptr, Sensor::getSensorOfType(SensorType::Tps1Primary));
+	ASSERT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+
+	deinitTps();
+
+	// After deinit, sensors should be gone
+	EXPECT_EQ(nullptr, Sensor::getSensorOfType(SensorType::Tps1Primary));
+	EXPECT_FALSE(Sensor::hasSensor(SensorType::Tps1));
+
+	// Reinit should work
+	initTps();
+	ASSERT_NE(nullptr, Sensor::getSensorOfType(SensorType::Tps1Primary));
+	ASSERT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+
+	// And the sensor should still function
+	auto s = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::Tps1Primary));
+	EXPECT_POINT_VALID(s, 2.5f, 50.0f);
+}
+
 TEST(SensorInit, Pedal) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
