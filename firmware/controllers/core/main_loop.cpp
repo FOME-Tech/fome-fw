@@ -5,12 +5,12 @@
 
 #define MAIN_LOOP_RATE 1000
 
-class MainLoop : PeriodicController<1024> {
+class MainLoop final : PeriodicController<1024> {
 public:
 	MainLoop();
 	void PeriodicTask(efitick_t nowNt) override;
 
-	void start() {
+	void startMainLoop() {
 		m_stallTimer.reset();
 		startThread();
 	}
@@ -29,7 +29,7 @@ private:
 static MainLoop mainLoop CCM_OPTIONAL;
 
 void initMainLoop() {
-	mainLoop.start();
+	mainLoop.startMainLoop();
 }
 
 MainLoop::MainLoop()
