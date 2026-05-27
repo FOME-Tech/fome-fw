@@ -5,10 +5,15 @@
 
 #define MAIN_LOOP_RATE 1000
 
-class MainLoop : public PeriodicController<1024> {
+class MainLoop : PeriodicController<1024> {
 public:
 	MainLoop();
 	void PeriodicTask(efitick_t nowNt) override;
+
+	void start() {
+		m_stallTimer.reset();
+		startThread();
+	}
 
 private:
 	template <LoopPeriod TFlag>
@@ -17,12 +22,14 @@ private:
 	LoopPeriod makePeriodFlags();
 
 	int m_cycleCounter = 0;
+
+	Timer m_stallTimer;
 };
 
 static MainLoop mainLoop CCM_OPTIONAL;
 
 void initMainLoop() {
-	mainLoop.startThread();
+	mainLoop.start();
 }
 
 MainLoop::MainLoop()
@@ -30,6 +37,11 @@ MainLoop::MainLoop()
 
 void MainLoop::PeriodicTask(efitick_t nowNt) {
 	ScopePerf perf(PE::MainLoop);
+
+	auto elapsedSinceLastLoop = m_stallTimer.getElapsedSecondsAndReset(nowNt);
+	if (elapsedSinceLastLoop > 0.1) {
+		efiPrintf("Main loop stall of %.3f sec detected", elapsedSinceLastLoop);
+	}
 
 	LoopPeriod p = makePeriodFlags();
 
