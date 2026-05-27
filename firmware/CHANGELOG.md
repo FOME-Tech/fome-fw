@@ -33,6 +33,9 @@ or
 ### Added
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
 
+### Fixed
+ - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
+
 ## May 2026 Release
 
 ### Breaking Changes
