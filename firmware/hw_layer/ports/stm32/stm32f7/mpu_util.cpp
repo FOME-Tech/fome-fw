@@ -51,9 +51,11 @@ static DeviceType determineDevice() {
 }
 
 bool allowFlashWhileRunning() {
-	// Allow flash-while-running if dual bank mode is enabled, and we're a 2MB device (ie, no code located in second
-	// bank)
-	return determineDevice() == DeviceType::DualBank2MB;
+	// Flash-while-running is disabled on F7: erasing one bank stalls the CPU
+	// bus even while executing from the other bank (#685) - the Cortex-M7
+	// speculatively prefetches into the bank being erased. Fall back to
+	// committing configuration to flash when the engine is stopped.
+	return false;
 }
 
 // See ST AN4826
