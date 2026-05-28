@@ -19,9 +19,6 @@
 #define FLASH_SR ((ctlr) ? FLASH->SR2 : FLASH->SR1)
 #define FLASH_KEYR ((ctlr) ? FLASH->KEYR2 : FLASH->KEYR1)
 
-// I have no idea why ST changed the register name from STRT -> START
-#define FLASH_CR_STRT FLASH_CR_START
-
 // QW bit supercedes the older BSY bit
 #define intFlashWaitWithSleep()                                                                                        \
 	do {                                                                                                               \
