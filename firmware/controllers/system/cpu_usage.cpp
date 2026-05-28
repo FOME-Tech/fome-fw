@@ -94,6 +94,8 @@ void cpuUsageOnIdleEnter() {}
 void cpuUsageOnIdleExit() {}
 void cpuUsageOnIsrEnter() {}
 void cpuUsageOnIsrExit() {}
-uint8_t cpuUsageSampleAndReset() { return 0; }
+uint8_t cpuUsageSampleAndReset() {
+	return 0;
+}
 
 #endif // !EFI_UNIT_TEST
