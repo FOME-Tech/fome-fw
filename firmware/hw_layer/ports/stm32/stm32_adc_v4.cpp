@@ -108,9 +108,10 @@ static constexpr ADCConversionGroup convGroupSlow = {
 		.num_channels = slowChannelCount,
 		.end_cb = adc_callback,
 		.error_cb = nullptr,
-		// OVRMOD=1 is required by H7 errata "ADC slave data may be shifted in Dual regular simultaneous mode" -
-		// without it, a single-DMA-channel read of CDR can leave the slave's samples offset from the master's.
-		.cfgr = ADC_CFGR_EXTEN_0 | (4 << ADC_CFGR_EXTSEL_Pos) | ADC_CFGR_OVRMOD, // External trigger ch4, rising edge: TIM3 TRGO
+		.cfgr = ADC_CFGR_EXTEN_0 | (4 << ADC_CFGR_EXTSEL_Pos) | // External trigger ch4, rising edge: TIM3 TRGO
+				ADC_CFGR_OVRMOD, // OVRMOD=1 is required by H7 errata: ES0392 section 2.9.6. If OVRMOD is not set, it is
+								 // possible for the secondary ADC's data to be shifted from where it was supposed to
+								 // be.
 		.cfgr2 = (H7_ADC_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos | // Oversample by Nx (register contains N-1)
 				 H7_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		 // shift the result right log2(N) bits to make a 16 bit
 																 // result out of the internal oversample sum
