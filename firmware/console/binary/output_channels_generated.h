@@ -439,8 +439,10 @@ struct output_channels_s {
 	// deg C
 	// offset 210
 	int8_t internalMcuTemperature = (int8_t)0;
+	// CPU usage
+	// %
 	// offset 211
-	uint8_t alignmentFill_at_211[1];
+	uint8_t cpuUsage = (uint8_t)0;
 	// Fuel: Last inj pulse width
 	// ms
 	// offset 212
@@ -743,6 +745,7 @@ static_assert(offsetof(output_channels_s, widebandUpdateProgress) == 207);
 static_assert(offsetof(output_channels_s, widebandUpdateState) == 208);
 static_assert(offsetof(output_channels_s, orderingErrorCounter) == 209);
 static_assert(offsetof(output_channels_s, internalMcuTemperature) == 210);
+static_assert(offsetof(output_channels_s, cpuUsage) == 211);
 static_assert(offsetof(output_channels_s, actualLastInjection) == 212);
 static_assert(offsetof(output_channels_s, actualLastInjectionStage2) == 214);
 static_assert(offsetof(output_channels_s, injectorDutyCycle) == 216);
