@@ -211,6 +211,11 @@ bool readSlowAnalogInputs() {
 		// Oversampling and right-shift happen in hardware, so we can sample directly to the output buffer
 		// Pass the 32-bit view to the HAL - it will receive slowChannelCount/2 32-bit samples in dual mode
 		adcStartConversionI(&ADCD1, &convGroupSlow, sampleBuffer.samples32, 1);
+
+		// ChibiOS only sets ADSTART on the master. In regular-simultaneous dual mode the slave needs
+		// its own ADSTART set, otherwise its sequencer can come up offset from the master and stay
+		// that way under circular DMA, producing a fixed-offset channel scramble.
+		ADC2->CR |= ADC_CR_ADSTART;
 	}
 
 	constexpr uint32_t samplingRate = H7_ADC_SPEED;
