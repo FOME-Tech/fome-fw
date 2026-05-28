@@ -108,7 +108,9 @@ static constexpr ADCConversionGroup convGroupSlow = {
 		.num_channels = slowChannelCount,
 		.end_cb = adc_callback,
 		.error_cb = nullptr,
-		.cfgr = ADC_CFGR_EXTEN_0 | (4 << ADC_CFGR_EXTSEL_Pos),	 // External trigger ch4, rising edge: TIM3 TRGO
+		// OVRMOD=1 is required by H7 errata "ADC slave data may be shifted in Dual regular simultaneous mode" -
+		// without it, a single-DMA-channel read of CDR can leave the slave's samples offset from the master's.
+		.cfgr = ADC_CFGR_EXTEN_0 | (4 << ADC_CFGR_EXTSEL_Pos) | ADC_CFGR_OVRMOD, // External trigger ch4, rising edge: TIM3 TRGO
 		.cfgr2 = (H7_ADC_OVERSAMPLE - 1) << ADC_CFGR2_OVSR_Pos | // Oversample by Nx (register contains N-1)
 				 H7_ADC_SHIFT_BITS << ADC_CFGR2_OVSS_Pos |		 // shift the result right log2(N) bits to make a 16 bit
 																 // result out of the internal oversample sum
@@ -211,11 +213,6 @@ bool readSlowAnalogInputs() {
 		// Oversampling and right-shift happen in hardware, so we can sample directly to the output buffer
 		// Pass the 32-bit view to the HAL - it will receive slowChannelCount/2 32-bit samples in dual mode
 		adcStartConversionI(&ADCD1, &convGroupSlow, sampleBuffer.samples32, 1);
-
-		// ChibiOS only sets ADSTART on the master. In regular-simultaneous dual mode the slave needs
-		// its own ADSTART set, otherwise its sequencer can come up offset from the master and stay
-		// that way under circular DMA, producing a fixed-offset channel scramble.
-		ADC2->CR |= ADC_CR_ADSTART;
 	}
 
 	constexpr uint32_t samplingRate = H7_ADC_SPEED;
