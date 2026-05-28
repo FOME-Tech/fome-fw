@@ -165,6 +165,8 @@ struct_no_prefix output_channels_s
 
 	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"deg C",1, 0, 0, 0, 0
 
+	uint8_t cpuUsage;CPU usage;"%", 1, 0, 0, 100, 0
+
 	uint16_t autoscale actualLastInjection;@@GAUGE_NAME_FUEL_LAST_INJECTION@@\nActual last injection time - including all compensation and injection mode;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
 	uint16_t autoscale actualLastInjectionStage2;@@GAUGE_NAME_FUEL_LAST_INJECTION_STAGE_2@@;"ms",{1/@@PACK_MULT_MS@@}, 0, 0, 0, 3
 

@@ -33,6 +33,7 @@
 #include "high_pressure_fuel_pump.h"
 #include "malfunction_indicator.h"
 #include "speed_density.h"
+#include "cpu_usage.h"
 #include "local_version_holder.h"
 #include "alternator_controller.h"
 #include "fuel_math.h"
@@ -88,6 +89,15 @@ static void resetAccel() {
 
 void doPeriodicSlowCallback() {
 	ScopePerf perf(PE::EnginePeriodicSlowCallback);
+
+	{
+		// Slow callback runs at 20 Hz; sample CPU usage every 5 ticks (0.25 s).
+		static uint8_t cpuUsageDivider = 0;
+		if (++cpuUsageDivider >= 5) {
+			cpuUsageDivider = 0;
+			engine->outputChannels.cpuUsage = cpuUsageSampleAndReset();
+		}
+	}
 
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 	slowStartStopButtonCallback();

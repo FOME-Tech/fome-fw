@@ -7,6 +7,8 @@
 
 #include "pch.h"
 
+#include "cpu_usage.h"
+
 extern ButtonDebounce startStopButtonDebounce;
 
 static uint8_t nextThreadId = 0;
@@ -16,34 +18,39 @@ void threadInitHook(void* vtp) {
 	tp->threadId = ++nextThreadId;
 }
 
-#if ENABLE_PERF_TRACE
 void irqEnterHook() {
+	cpuUsageOnIsrEnter();
+#if ENABLE_PERF_TRACE
 	perfEventBegin(PE::ISR);
+#endif
 }
 
 void irqExitHook() {
+#if ENABLE_PERF_TRACE
 	perfEventEnd(PE::ISR);
+#endif
+	cpuUsageOnIsrExit();
 }
 
 void contextSwitchHook() {
+#if ENABLE_PERF_TRACE
 	perfEventInstantGlobal(PE::ContextSwitch);
+#endif
 }
 
 void onIdleEnterHook() {
+	cpuUsageOnIdleEnter();
+#if ENABLE_PERF_TRACE
 	perfEventBegin(PE::Idle);
+#endif
 }
 
 void onIdleExitHook() {
+#if ENABLE_PERF_TRACE
 	perfEventEnd(PE::Idle);
+#endif
+	cpuUsageOnIdleExit();
 }
-
-#else
-void irqEnterHook() {}
-void irqExitHook() {}
-void contextSwitchHook() {}
-void onIdleEnterHook() {}
-void onIdleExitHook() {}
-#endif /* ENABLE_PERF_TRACE */
 
 static void onStartStopButtonToggle() {
 	engine->engineState.startStopStateToggleCounter++;
