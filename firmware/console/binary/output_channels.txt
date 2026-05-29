@@ -128,6 +128,10 @@ struct_no_prefix output_channels_s
 
 ! Misc sensors
 	uint16_t autoscale VBatt;@@GAUGE_NAME_VBAT@@;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
+	uint16_t autoscale mainRelayVoltage;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
+	uint16_t autoscale sensorSupplyVoltage;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
+	uint16_t autoscale vboostVoltage;;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 0, 2
+	
 	int16_t autoscale wastegatePositionSensor;@@GAUGE_NAME_WG_POSITION@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 	uint16_t auxSpeed1;Aux speed 1;"s",1, 0, 0, 0, 0
 	uint16_t auxSpeed2;Aux speed 2;"s",1, 0, 0, 0, 0

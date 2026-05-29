@@ -366,6 +366,9 @@ static void updatePressures() {
 
 static void updateMiscSensors() {
 	engine->outputChannels.VBatt = Sensor::getOrZero(SensorType::BatteryVoltage);
+	engine->outputChannels.mainRelayVoltage = Sensor::getOrZero(SensorType::MainRelayVoltage);
+	engine->outputChannels.sensorSupplyVoltage = Sensor::getOrZero(SensorType::Sensor5vVoltage);
+	engine->outputChannels.vboostVoltage = Sensor::getOrZero(SensorType::VboostVoltage);
 
 	engine->outputChannels.wastegatePositionSensor = Sensor::getOrZero(SensorType::WastegatePosition);
 
