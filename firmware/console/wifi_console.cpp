@@ -48,6 +48,11 @@ private:
 	}
 
 	size_t writeChunk(const uint8_t* buffer, size_t size) {
+		// Guard against m_writeSize exceeding buffer capacity (prevents integer underflow)
+		if (m_writeSize >= SOCKET_BUFFER_MAX_LENGTH) {
+			return 0;
+		}
+
 		// Maximum we can fit in the buffer before we have to drain it
 		size_t available = SOCKET_BUFFER_MAX_LENGTH - m_writeSize;
 
