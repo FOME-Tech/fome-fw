@@ -276,4 +276,14 @@ void initSdCardLogger() {
 	chThdCreateStatic(sdCardLoggerStack, sizeof(sdCardLoggerStack), SD_CARD_LOGGER, sdCardLoggerThread, nullptr);
 }
 
+const char* getActiveLogFileName() {
+#if EFI_FILE_LOGGING && EFI_PROD_CODE
+	if (engine->outputChannels.sd_logging_internal) {
+		return logName;
+	}
+#endif
+	return nullptr;
+}
+
 #endif // EFI_FILE_LOGGING
+
