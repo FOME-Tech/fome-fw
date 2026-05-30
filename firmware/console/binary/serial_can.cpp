@@ -38,7 +38,7 @@ static CanTsListener listener;
 int CanStreamerState::sendFrame(
 		const IsoTpFrameHeader& header, const uint8_t* data, int num, can_sysinterval_t timeout) {
 	int dlc = 8; // standard 8 bytes
-	CanTxMessage txmsg(CAN_ECU_SERIAL_TX_ID, dlc, CanBusIndex::Bus0, false);
+	CanTxMessage txmsg(this->txId, dlc, this->busIndex, false);
 
 	// fill the frame data according to the CAN-TP protocol (ISO 15765-2)
 	txmsg[0] = (uint8_t)((header.frameType & 0xf) << 4);
@@ -56,9 +56,8 @@ int CanStreamerState::sendFrame(
 			maxNumBytes = minI(header.numBytes, dlc - offset);
 			break;
 		case ISO_TP_FRAME_CONSECUTIVE:
-			txmsg[0] |= header.index & 0xf;
+			txmsg[0] |= (uint8_t)(header.index & 0xf);
 			offset = 1;
-			// todo: is it correct?
 			maxNumBytes = dlc - offset;
 			break;
 		case ISO_TP_FRAME_FLOW_CONTROL:
@@ -82,7 +81,7 @@ int CanStreamerState::sendFrame(
 	}
 
 	// send the frame!
-	if (streamer->transmit(CAN_ANY_MAILBOX, &txmsg, timeout) == CAN_MSG_OK) {
+	if (streamer->transmit(this->txId, CAN_ANY_MAILBOX, &txmsg, timeout) == CAN_MSG_OK) {
 		return numBytes;
 	}
 	return 0;
@@ -120,36 +119,14 @@ int CanStreamerState::receiveFrame(CANRxFrame* rxmsg, uint8_t* buf, int num, can
 			this->waitingForFrameIndex = (this->waitingForFrameIndex + 1) & 0xf;
 			break;
 		case ISO_TP_FRAME_FLOW_CONTROL:
-			// todo: currently we just ignore the FC frame
+			// Flow control is handled inside sendDataTimeout
 			return 0;
 		default:
 			// bad frame type
 			return 0;
 	}
 
-#if defined(TS_CAN_DEVICE_SHORT_PACKETS_IN_ONE_FRAME)
-	if (frameType == ISO_TP_FRAME_SINGLE) {
-		// restore the CRC on the whole packet
-		uint32_t crc = crc32((void*)srcBuf, numBytesAvailable);
-		// we need a separate buffer for crc because srcBuf may not be word-aligned for direct copy
-		uint8_t crcBuffer[sizeof(uint32_t)];
-		*(uint32_t*)(crcBuffer) = SWAP_UINT32(crc);
 
-		// now set the packet size
-		*(uint16_t*)tmpRxBuf = SWAP_UINT16(numBytesAvailable);
-		// copy the data
-		if (numBytesAvailable > 0) {
-			memcpy(tmpRxBuf + sizeof(uint16_t), srcBuf, numBytesAvailable);
-		}
-		// copy the crc to the end
-		memcpy(tmpRxBuf + sizeof(uint16_t) + numBytesAvailable, crcBuffer, sizeof(crcBuffer));
-
-		// use the reconstructed tmp buffer as a source buffer
-		srcBuf = tmpRxBuf;
-		// we added the 16-bit size & 32-bit crc bytes
-		numBytesAvailable += sizeof(uint16_t) + sizeof(crcBuffer);
-	}
-#endif /* TS_CAN_DEVICE_SHORT_PACKETS_IN_ONE_FRAME */
 
 	int numBytesToCopy = minI(num, numBytesAvailable);
 	if (buf != nullptr) {
@@ -214,9 +191,7 @@ int CanStreamerState::sendDataTimeout(const uint8_t* txbuf, int numBytes, can_sy
 		CANRxFrame rxmsg;
 		for (int numFcReceived = 0;; numFcReceived++) {
 			if (streamer->receive(CAN_ANY_MAILBOX, &rxmsg, timeout) != CAN_MSG_OK) {
-#ifdef SERIAL_CAN_DEBUG
-				PRINT("*** ERROR: CAN Flow Control frame not received" PRINT_EOL);
-#endif /* SERIAL_CAN_DEBUG */
+
 				// warning(ObdCode::CUSTOM_ERR_CAN_COMMUNICATION, "CAN Flow Control frame not received");
 				return 0;
 			}
@@ -228,21 +203,14 @@ int CanStreamerState::sendDataTimeout(const uint8_t* txbuf, int numBytes, can_sy
 				if (flowStatus == CAN_FLOW_STATUS_WAIT_MORE && numFcReceived < 3) {
 					continue;
 				}
-#ifdef SERIAL_CAN_DEBUG
-				efiPrintf("*** ERROR: CAN Flow Control mode not supported");
-#endif /* SERIAL_CAN_DEBUG */
+
 				// warning(ObdCode::CUSTOM_ERR_CAN_COMMUNICATION, "CAN Flow Control mode not supported");
 				return 0;
 			}
 			int blockSize = rxmsg.data8[1];
 			int minSeparationTime = rxmsg.data8[2];
-			if (blockSize != 0 || minSeparationTime != 0) {
-				// todo: process other Flow Control fields (see ISO 15765-2)
-#ifdef SERIAL_CAN_DEBUG
-				efiPrintf("*** ERROR: CAN Flow Control fields not supported");
-#endif			/* SERIAL_CAN_DEBUG */
-				// warning(ObdCode::CUSTOM_ERR_CAN_COMMUNICATION, "CAN Flow Control fields not supported");
-			}
+			(void)blockSize;
+			(void)minSeparationTime;
 			break;
 		}
 #endif /* EFI_UNIT_TEST */
@@ -359,12 +327,7 @@ can_msg_t CanStreamerState::streamReceiveTimeout(size_t* np, uint8_t* rxbuf, can
 	}
 	*np -= availableBufferSpace;
 
-#ifdef SERIAL_CAN_DEBUG
-	efiPrintf("* ret: %d %d (%d)", i, *np, availableBufferSpace);
-	for (int j = 0; j < i; j++) {
-		efiPrintf("* [%d]: %02x", j, rxbuf[j]);
-	}
-#endif /* SERIAL_CAN_DEBUG */
+
 
 	return CAN_MSG_OK;
 }
@@ -387,11 +350,12 @@ void CanTsListener::decodeFrame(const CANRxFrame& frame, efitick_t /*nowNt*/) {
 
 #if HAL_USE_CAN
 
-void CanStreamer::init() {
+void CanStreamer::init(uint32_t rxId) {
+	listener.init(rxId);
 	registerCanListener(listener);
 }
 
-can_msg_t CanStreamer::transmit(canmbx_t /*mailbox*/, const CanTxMessage* /*ctfp*/, can_sysinterval_t /*timeout*/) {
+can_msg_t CanStreamer::transmit(uint32_t /*eid*/, canmbx_t /*mailbox*/, const CanTxMessage* /*ctfp*/, can_sysinterval_t /*timeout*/) {
 	// we do nothing here - see CanTxMessage::~CanTxMessage()
 	return CAN_MSG_OK;
 }
@@ -406,8 +370,9 @@ can_msg_t CanStreamer::receive(canmbx_t /*mailbox*/, CANRxFrame* crfp, can_sysin
 	return CAN_MSG_TIMEOUT;
 }
 
-void canStreamInit(void) {
-	streamer.init();
+void canStreamInit(uint32_t rxId, uint32_t txId, CanBusIndex busIndex) {
+	streamer.init(rxId);
+	state.init(txId, busIndex);
 }
 
 msg_t canStreamAddToTxTimeout(size_t* np, const uint8_t* txbuf, sysinterval_t timeout) {

@@ -101,7 +101,7 @@ static CanTsThread canTsThread;
 
 void startCanConsole() {
 	canTsThread.startThread();
-	canStreamInit();
+	canStreamInit(CAN_ECU_SERIAL_RX_ID, CAN_ECU_SERIAL_TX_ID, CanBusIndex::Bus0);
 }
 
 #endif // EFI_CAN_SERIAL
