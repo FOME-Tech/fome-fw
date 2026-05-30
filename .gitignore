@@ -60,3 +60,21 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+<<<<<<< Updated upstream
+.gradle/
+=======
+
+# Auto-generated files
+firmware/config/boards/**/generated_ts_name_by_pin.cpp
+*_generated.h
+auto_generated_*.h
+firmware/fome_generated.mk
+firmware/tunerstudio/generated/*.ini
+firmware/generated/.gitignore
+java_console/generated/
+fome-can-bridge/src/main/java/com/rusefi/config/generated/FuelComputer.java
+fome-can-bridge/src/main/java/com/rusefi/config/generated/IgnitionState.java
+fome-can-bridge/src/main/java/com/rusefi/config/generated/readme.md
+firmware/generated/
+/firmware/ext
+>>>>>>> Stashed changes

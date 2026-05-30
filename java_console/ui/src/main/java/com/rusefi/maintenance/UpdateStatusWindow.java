@@ -10,7 +10,7 @@ public class UpdateStatusWindow extends StatusWindow implements UpdateOperationC
 
     @Override
     public void log(String message) {
-        append(message);
+        logLine(message);
     }
 
     @Override

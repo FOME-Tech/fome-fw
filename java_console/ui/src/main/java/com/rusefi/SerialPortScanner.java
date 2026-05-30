@@ -10,6 +10,7 @@ import com.rusefi.core.SignatureHelper;
 import com.rusefi.io.IoStream;
 import com.rusefi.io.LinkManager;
 import com.rusefi.io.UpdateOperationCallbacks;
+import com.rusefi.io.can.SocketCANHelper;
 import com.rusefi.io.tcp.TcpConnector;
 import com.rusefi.maintenance.DfuFlasher;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,7 @@ public enum SerialPortScanner {
         FomeEcu("FOME ECU", 20),
         FomeEcuWithOpenblt("FOME ECU w/ BL", 20),
         OpenBlt("OpenBLT Bootloader", 10),
+        SocketCanAdapter("SocketCAN (Linux)", 15),
         Unknown("Unknown", 100),
         ;
 
@@ -86,7 +88,9 @@ public enum SerialPortScanner {
         }
 
         public boolean isEcu() {
-            return type == SerialPortType.FomeEcu || type == SerialPortType.FomeEcuWithOpenblt;
+            return type == SerialPortType.FomeEcu
+                    || type == SerialPortType.FomeEcuWithOpenblt
+                    || type == SerialPortType.SocketCanAdapter;
         }
     }
 
@@ -108,6 +112,11 @@ public enum SerialPortScanner {
     private static PortResult inspectPort(String serialPort) {
         log.info("Determining type of port: " + serialPort);
 
+        // CAN adapters are pre-classified when added to candidatePorts
+        if (serialPort.startsWith(LinkManager.SOCKETCAN_PREFIX)) {
+            return new PortResult(serialPort, SerialPortType.SocketCanAdapter);
+        }
+
         boolean isOpenblt = isPortOpenblt(serialPort);
         log.info("Port " + serialPort + (isOpenblt ? " looks like" : " does not look like") + " an OpenBLT bootloader");
         if (isOpenblt) {
@@ -127,6 +136,34 @@ public enum SerialPortScanner {
             }
         }
     }
+
+    /**
+     * Enumerate SocketCAN interfaces visible to the OS and add them to candidatePorts
+     * using the "socketcan:<device>" prefix format. Linux only.
+     */
+    private static void addSocketCanPorts(List<String> candidatePorts) {
+        if (!SocketCANHelper.isAvailable()) {
+            return;
+        }
+        // Read /sys/class/net to find CAN interfaces (canX, slcanX, vcanX, etc.)
+        java.io.File netDir = new java.io.File("/sys/class/net");
+        if (!netDir.isDirectory()) {
+            return;
+        }
+        String[] ifaces = netDir.list((dir, name) ->
+                name.startsWith("can") || name.startsWith("slcan") || name.startsWith("vcan"));
+        if (ifaces == null) {
+            return;
+        }
+        for (String iface : ifaces) {
+            String portName = LinkManager.SOCKETCAN_PREFIX + iface;
+            if (!candidatePorts.contains(portName)) {
+                log.info("Detected SocketCAN interface: " + iface);
+                candidatePorts.add(portName);
+            }
+        }
+    }
+
 
     private static List<PortResult> inspectPorts(final List<String> ports) {
         if (ports.isEmpty()) {
@@ -195,7 +232,8 @@ public enum SerialPortScanner {
     private final static Map<String, PortResult> portCache = new HashMap<>();
 
     /**
-     * Find all available serial ports and checks if simulator local TCP port is available
+     * Find all available serial ports and checks if simulator local TCP port is available.
+     * Also adds CAN adapter entries (SocketCAN on Linux) when detected.
      */
     private void findAllAvailablePorts(boolean includeSlowLookup) {
         List<PortResult> ports = new ArrayList<>();
@@ -206,6 +244,8 @@ public enum SerialPortScanner {
 
         if (includeSlowLookup) {
             candidatePorts.addAll(TcpConnector.getAvailablePorts());
+            // Add SocketCAN interfaces visible to the OS (Linux only)
+            addSocketCanPorts(candidatePorts);
         }
 
         for (String candidate : candidatePorts) {

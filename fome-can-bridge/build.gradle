@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '8.3.5'
+}
+
+group 'com.fome'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+dependencies {
+    // Serial port access (SLCAN)
+    implementation 'com.fazecast:jSerialComm:2.11.4'
+
+    // SocketCAN (Linux)
+    implementation group: 'tel.schich', name: 'javacan-core', version: '3.2.4'
+    implementation group: 'tel.schich', name: 'javacan-core', version: '3.2.4', classifier: 'x86_64'
+
+    // Annotations 
+    implementation 'org.jetbrains:annotations:16.0.1'
+    implementation 'net.jcip:jcip-annotations:1.0'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+
+    // UI
+    implementation 'com.formdev:flatlaf:3.4.1'
+    implementation 'com.miglayout:miglayout-swing:11.3'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.fome.canbridge.Main'
+        )
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('fome-can-bridge')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+    destinationDirectory.set(file("../current_bridge_output"))
+}

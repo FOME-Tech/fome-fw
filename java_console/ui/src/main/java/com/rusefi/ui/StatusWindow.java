@@ -38,7 +38,7 @@ public class StatusWindow implements StatusConsumer {
         };
         content.add(messagesScroll, BorderLayout.CENTER);
 
-        append("Bundle " + BundleUtil.readBundleFullNameNotNull());
+        logLine("Bundle " + BundleUtil.readBundleFullNameNotNull());
     }
 
     public void setErrorState() {
@@ -58,7 +58,7 @@ public class StatusWindow implements StatusConsumer {
     }
 
     @Override
-    public void append(final String string) {
+    public void logLine(final String string) {
         // todo: check if AWT thread and do not invokeLater if already on AWT thread
         SwingUtilities.invokeLater(() -> {
             String s = string.replaceAll(Character.toString((char) 219), "");
@@ -74,6 +74,6 @@ public class StatusWindow implements StatusConsumer {
         SwingUtilities.invokeLater(() -> Toolkit.getDefaultToolkit().getSystemClipboard()
                 .setContents(new StringSelection(logTextArea.getText()), null));
 
-        append("hint: error state is already in your clipboard, please use PASTE or Ctrl-V while reporting issues");
+        logLine("hint: error state is already in your clipboard, please use PASTE or Ctrl-V while reporting issues");
     }
 }
