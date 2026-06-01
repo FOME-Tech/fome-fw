@@ -14,9 +14,13 @@ public:
 
 class AirmassDispatcher {
 public:
-	void update(float airmassTarget);
+	// targetAirmass is the desired per-cycle airmass [g/cycle]
+	void update(float targetAirmassPerCycle);
 
 	percent_t getThrottleRequest();
+
+private:
+	percent_t m_throttleRequest = 0;
 };
 
 class TorqueModel : public TorqueModelBase {
