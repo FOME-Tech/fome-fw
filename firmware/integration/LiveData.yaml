@@ -51,13 +51,11 @@ Usages:
   - name: torque_reduction_state
     folder: controllers/algo/torque
     constexpr: "engine->torqueReductionController"
-    output_name: Torque reduction
+    output_name: "Torque reduction"
 
   - name: torque_model
     folder: controllers/algo/torque
-    constexpr: "___engine.module<TorqueModel>()"
-    output_name: Torque model
-    isPtr: true
+    output_name: "Torque model"
 
   - name: antilag_system_state
     folder: controllers/algo
