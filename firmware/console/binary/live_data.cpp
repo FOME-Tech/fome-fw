@@ -8,6 +8,7 @@
 #include "knock_controller_generated.h"
 #include "fuel_computer.h"
 #include "antilag_system_state_generated.h"
+#include "torque_reduction_state_generated.h"
 #include "vvt_generated.h"
 
 template <>
@@ -36,6 +37,11 @@ const launch_control_state_s* getLiveData(size_t) {
 #else
 	return nullptr;
 #endif
+}
+
+template <>
+const torque_reduction_state_s* getLiveData(size_t) {
+	return &engine->torqueReductionController;
 }
 
 template <>

@@ -26,6 +26,7 @@
 #include "injector_model.h"
 #include "launch_control.h"
 #include "antilag_system.h"
+#include "torque_reduction_controller.h"
 #include "trigger_scheduler.h"
 #include "main_relay.h"
 #include "ac_control.h"
@@ -238,7 +239,12 @@ public:
 #if EFI_LAUNCH_CONTROL
 	LaunchControlBase launchController;
 	SoftSparkLimiter softSparkLimiter;
+
+	// Cut limiter armed by the torque-reduction controller (spark-only TC / torque coordinator)
+	SoftSparkLimiter torqueReductionSparkLimiter;
 #endif // EFI_LAUNCH_CONTROL
+
+	TorqueReductionController torqueReductionController;
 
 #if EFI_ANTILAG_SYSTEM
 	AntilagSystemBase antilagController;

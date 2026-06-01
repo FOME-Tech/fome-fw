@@ -48,6 +48,11 @@ Usages:
   - name: launch_control_state
     folder: controllers/algo
 
+  - name: torque_reduction_state
+    folder: controllers/algo/torque
+    constexpr: "engine->torqueReductionController"
+    output_name: Torque reduction
+
   - name: antilag_system_state
     folder: controllers/algo
     prepend: integration/fome_config_shared.txt

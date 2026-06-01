@@ -1,0 +1,5 @@
+struct_no_prefix torque_reduction_state_s
+	float reductionRequest;Reduction request;"frac", 1, 0, 0, 1, 2
+	float retardApplied;Timing retard;"deg", 1, 0, 0, 50, 1
+	float cutFraction;Cylinder cut fraction;"frac", 1, 0, 0, 1, 2
+end_struct
