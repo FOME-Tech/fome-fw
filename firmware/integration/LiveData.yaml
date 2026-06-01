@@ -53,6 +53,11 @@ Usages:
     constexpr: "engine->torqueReductionController"
     output_name: Torque reduction
 
+  - name: torque_model
+    folder: controllers/algo/torque
+    constexpr: "___engine.module<TorqueModel>()"
+    output_name: Torque model
+
   - name: antilag_system_state
     folder: controllers/algo
     prepend: integration/fome_config_shared.txt

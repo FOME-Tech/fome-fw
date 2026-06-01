@@ -27,6 +27,7 @@
 #include "launch_control.h"
 #include "antilag_system.h"
 #include "torque_reduction_controller.h"
+#include "torque_model.h"
 #include "trigger_scheduler.h"
 #include "main_relay.h"
 #include "ac_control.h"
@@ -195,6 +196,7 @@ public:
 			HpfpController,
 #endif // EFI_HPFP && EFI_ENGINE_CONTROL
 			Mockable<ThrottleModel>,
+			Mockable<TorqueModel>,
 #if EFI_ALTERNATOR_CONTROL
 			AlternatorController,
 #endif /* EFI_ALTERNATOR_CONTROL */

@@ -1438,12 +1438,12 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	Dtcs dtcControl
 
-	struct TorqueModel
+	struct torque_model_cfg
 		uint16_t engineMaximum;Maximum torque allowed to leave the engine (seen by clutch/input shaft). Use this to avoid clutch explosion or connecting rod space program.;"Nm", 1, 0, 0, 2000, 0
 		uint16_t axleMaximum;Maximum torque allowed at the axle. Requires gear detection to be configured as this uses the current gear and final drive ratio to calculate maximum engine torque in the current gear.;"Nm", 1, 0, 0, 2000, 0
 	end_struct
 
-	TorqueModel torqueModel
+	torque_model_cfg torqueModel
 
 ! end of engine_configuration_s
 end_struct
@@ -1503,6 +1503,10 @@ int16_t[BOOST_LOAD_COUNT] boostClosedLoopYAxisBins;;"", 1, 0, -10000, 10000, 0
 uint8_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] pedalToTpsTable;;"%", 1, 0, 0, 100, 0
 uint8_t[PEDAL_TO_TPS_SIZE] pedalToTpsPedalBins;;"%", 1, 0, 0, 120, 0
 uint8_t[PEDAL_TO_TPS_SIZE] autoscale pedalToTpsRpmBins;;"RPM", 100, 0, 0, 25000, 0
+
+! Driver torque demand: requested brake torque by RPM (X) and pedal (Y). Signed.
+! Reuses pedalToTpsRpmBins / pedalToTpsPedalBins as its axes.
+int16_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] autoscale driverTorqueTable;Driver demand: requested brake engine torque by RPM (X) and pedal (Y);"Nm", 0.1, 0, -2000, 2000, 1
 
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2

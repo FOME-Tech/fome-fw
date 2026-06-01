@@ -9,6 +9,7 @@
 #include "fuel_computer.h"
 #include "antilag_system_state_generated.h"
 #include "torque_reduction_state_generated.h"
+#include "torque_model.h"
 #include "vvt_generated.h"
 
 template <>
@@ -42,6 +43,11 @@ const launch_control_state_s* getLiveData(size_t) {
 template <>
 const torque_reduction_state_s* getLiveData(size_t) {
 	return &engine->torqueReductionController;
+}
+
+template <>
+const torque_model_s* getLiveData(size_t) {
+	return &engine->module<TorqueModel>().unmock();
 }
 
 template <>
