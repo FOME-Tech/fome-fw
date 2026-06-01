@@ -108,9 +108,6 @@ private:
 	Timer m_timeInIdlePhase;
 
 	Pid m_timingPid;
-
-	float m_modeledFlowIdleTiming = 0;
-	Biquad m_timingHpf;
 };
 
 percent_t getIdlePosition();

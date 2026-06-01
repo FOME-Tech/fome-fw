@@ -672,7 +672,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_3
 	bit isSdCardEnabled;enable sd/disable sd
 	bit rusefiVerbose29b,"29 bit","11 bit";Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
-	bit modeledFlowIdle
+	bit unused580b5
 	bit useStepperIdle;This setting should only be used if you have a stepper motor idle valve and a stepper motor driver installed.
 	
 	bit enabledStep1Limiter
@@ -1731,12 +1731,6 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	custom wifi_string_t 24 string, ASCII, @OFFSET@, 24
 	wifi_string_t wifiAccessPointSsid
 	wifi_string_t wifiAccessPointPassword
-
-	uint16_t[8] autoscale idleFlowEstimateFlow;;"kg/h", 0.01, 0, 0, 200, 2
-	uint8_t[8] autoscale idleFlowEstimatePosition;;"%", 0.5, 0, 0, 100, 1
-
-	int8_t[8] airmassToTimingBins;;"mg", 1, 0, -100, 100, 0
-	int8_t[8] airmassToTimingValues;;"deg", 1, 0, -30, 30, 0
 
 	struct VvtOpenLoop
 		int8_t[8] bins;;"deg C", 1, 0, -40, 120, 0
