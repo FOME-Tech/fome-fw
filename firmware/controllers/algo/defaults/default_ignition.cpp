@@ -101,6 +101,12 @@ void setDefaultIgnition() {
 	// IAT correction
 	setDefaultIatTimingCorrection();
 
+	// Torque-reduction controller: spark retard handles the reduction request up to the end
+	// of the table's axis (here, a request of 0.5). Beyond that the retard is held at its
+	// maximum and cylinder cut supplements it, ramping to a full cut at a request of 1.
+	setLinearCurve(config->torqueReductionRetardReqBins, 0, 0.5, 0.01);
+	copyArray(config->torqueReductionRetard, {0, 2, 4, 6, 8, 10, 12, 15});
+
 	// Give default axes for cylinder trim tables
 	copyArray(config->ignTrimRpmBins, {1000, 3000, 5000, 7000});
 	copyArray(config->ignTrimLoadBins, {20, 50, 80, 100});
