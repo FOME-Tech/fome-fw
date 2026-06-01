@@ -16,6 +16,12 @@ void TorqueModel::onFastCallback() {
 
 	// Update outputs
 	airmassDispatcher.update(totalAirmassTarget);
+
+	// Logging
+	airmassTarget = totalAirmassTarget;
+	airmassActual = airmassDispatcher.getActualAirmass();
+	airmassTrim = airmassDispatcher.getAirmassTrim();
+	throttleRequest = airmassDispatcher.getThrottleRequest();
 }
 
 float TorqueModel::driverDemand() {
@@ -40,17 +46,38 @@ percent_t TorqueModel::getThrottleRequest() {
 void AirmassDispatcher::update(float targetAirmassPerCycle) {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
-	// No airflow if the engine isn't turning or nothing is being requested.
+	// Measured airmass for the closed-loop trim - the same speed-density quantity fueling
+	// uses, scaled from per-cylinder up to whole-engine per cycle.
+	m_actualAirmass = engine->fuelComputer.sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
+
+	// No airflow if the engine isn't turning or nothing is being requested. Park the trim
+	// integrator at zero so it can't wind up while the throttle is held closed.
 	if (rpm <= 0 || targetAirmassPerCycle <= 0) {
 		m_throttleRequest = 0;
+		m_airmassTrim = 0;
+		m_trimITerm = 0;
 		return;
 	}
 
+	// Closed-loop trim: a small PI that drives measured airmass to target. The output is a
+	// percent correction on the commanded flow, so the throttle model's inverse provides the
+	// gain scheduling and the PI sees a near-linear plant.
+	auto& trimCfg = engineConfiguration->torqueModel;
+	float error = targetAirmassPerCycle - m_actualAirmass;
+	float dt = FAST_CALLBACK_PERIOD_MS / 1000.0f;
+	float authority = trimCfg.airmassTrimAuthority;
+
+	// Integrate, clamping the accumulator to the trim authority so it can't wind past achievable trim.
+	m_trimITerm = clampF(-authority, m_trimITerm + trimCfg.airmassTrimKi * error * dt, authority);
+	m_airmassTrim = clampF(-authority, trimCfg.airmassTrimKp * error + m_trimITerm, authority);
+
+	float airmassPerCycle = targetAirmassPerCycle * (1 + m_airmassTrim * PERCENT_DIV);
+
 	if (!engineConfiguration->twoStroke) {
 		// 4-stroke engines only induct on half of crank revolutions
-		targetAirmassPerCycle /= 2;
+		airmassPerCycle /= 2;
 	}
-	float targetFlow = targetAirmassPerCycle * rpm / 60;
+	float targetFlow = airmassPerCycle * rpm / 60;
 
 	// Throttle inlet pressure: real TIP sensor, else baro, else standard atmosphere.
 	float tip = Sensor::hasSensor(SensorType::ThrottleInletPressure)
@@ -74,6 +101,14 @@ void AirmassDispatcher::update(float targetAirmassPerCycle) {
 	m_throttleRequest = engine->module<ThrottleModel>()->throttlePositionForFlow(targetFlow, pressureRatio, tip, iat);
 }
 
-percent_t AirmassDispatcher::getThrottleRequest() {
+percent_t AirmassDispatcher::getThrottleRequest() const {
 	return m_throttleRequest;
+}
+
+float AirmassDispatcher::getAirmassTrim() const {
+	return m_airmassTrim;
+}
+
+float AirmassDispatcher::getActualAirmass() const {
+	return m_actualAirmass;
 }
