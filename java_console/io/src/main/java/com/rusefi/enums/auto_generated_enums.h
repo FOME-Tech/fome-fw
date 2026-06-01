@@ -36,6 +36,8 @@ constexpr inline const char* getLive_data_e(live_data_e value) {
 			return "LDS_output_channels";
 		case LDS_throttle_model:
 			return "LDS_throttle_model";
+		case LDS_torque_reduction_state:
+			return "LDS_torque_reduction_state";
 		case LDS_tps_accel_state:
 			return "LDS_tps_accel_state";
 		case LDS_trigger_central:
