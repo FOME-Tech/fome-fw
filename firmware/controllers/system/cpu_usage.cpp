@@ -41,12 +41,12 @@ void cpuUsageOnIsrEnter() {
 		uint32_t now = port_rt_get_counter_value();
 		s_idleAccumNt += (uint32_t)(now - s_idleEnterTs);
 	}
-	s_isrNestDepth++;
+	s_isrNestDepth = s_isrNestDepth + 1;
 }
 
 void cpuUsageOnIsrExit() {
 	if (s_isrNestDepth > 0) {
-		s_isrNestDepth--;
+		s_isrNestDepth = s_isrNestDepth - 1;
 	}
 	if (s_inIdle && s_isrNestDepth == 0) {
 		// Resume the idle timer; the time spent in the ISR is not credited.
