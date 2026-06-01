@@ -291,7 +291,8 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	float pedalTableValue = m_pedalMap->getValue(rpm, sanitizedPedal);
 	m_baseTarget = pedalTableValue;
 
-	float targetPosition = getSetpointEtbNonTorqueModel(pedalTableValue);
+	float targetPosition = engineConfiguration->enableTorqueModel ? getSetpointEtbTorqueModel(pedalTableValue)
+																  : getSetpointEtbNonTorqueModel(pedalTableValue);
 
 	// Apply any adjustment that this throttle alone needs
 	// Clamped to +-10 to prevent anything too wild
@@ -350,6 +351,13 @@ percent_t EtbController::getSetpointEtbNonTorqueModel(percent_t pedalTableValue)
 #endif /* EFI_ANTILAG_SYSTEM */
 
 	return targetPosition;
+}
+
+percent_t EtbController::getSetpointEtbTorqueModel(percent_t pedalTableValue) const {
+	percent_t torqueModelThrottle = engine->module<TorqueModel>()->getThrottleRequest();
+
+	// pedal table becomes maximum allowed throttle (safety device)
+	return std::min(torqueModelThrottle, pedalTableValue);
 }
 
 void EtbController::setLuaAdjustment(float adjustment) {
