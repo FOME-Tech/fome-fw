@@ -14,7 +14,7 @@ void setupAirpath(EngineTestHelper& eth) {
 	for (size_t i = 0; i < efi::size(config->throttleEstimateEffectiveAreaBins); i++) {
 		float tps = i * (100.0f / (efi::size(config->throttleEstimateEffectiveAreaBins) - 1));
 		config->throttleEstimateEffectiveAreaBins[i] = tps;
-		config->throttleEstimateEffectiveAreaValues[i] = tps * 4.0f;  // 400 g/s at 100%
+		config->throttleEstimateEffectiveAreaValues[i] = tps * 4.0f; // 400 g/s at 100%
 	}
 
 	// The forward throttle model (used by the round-trip check) needs charge temperature.
