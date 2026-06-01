@@ -1,5 +1,21 @@
 #include "pch.h"
 
+void TorqueModel::onFastCallback() {
+	if (!engineConfiguration->enableTorqueModel) {
+		return;
+	}
+
+	// Collect demands
+	float driverTorque = driverDemand();
+
+	// TODO the interesting middle bit
+	// for now, 90Nm/gram is an OK hack
+	float totalAirmassTarget = driverTorque / 90;
+
+	// Update outputs
+	airmassDispatcher.update(airmassTarget);
+}
+
 float TorqueModel::driverDemand() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
@@ -13,4 +29,16 @@ float TorqueModel::driverDemand() {
 	driverTorqueDemand = value;
 
 	return value;
+}
+
+percent_t TorqueModel::getThrottleRequest() {
+	return airmassDispatcher.getThrottleRequest();
+}
+
+void AirmassDispatcher::update(float targetAirmass) {
+	// TODO!
+}
+
+percent_t AirmassDispatcher::getThrottleRequest() {
+	return 0;
 }
