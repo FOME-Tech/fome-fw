@@ -1438,6 +1438,13 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	Dtcs dtcControl
 
+	struct TorqueModel
+		uint16_t engineMaximum;Maximum torque allowed to leave the engine (seen by clutch/input shaft). Use this to avoid clutch explosion or connecting rod space program.;"Nm", 1, 0, 0, 2000, 0
+		uint16_t axleMaximum;Maximum torque allowed at the axle. Requires gear detection to be configured as this uses the current gear and final drive ratio to calculate maximum engine torque in the current gear.;"Nm", 1, 0, 0, 2000, 0
+	end_struct
+
+	TorqueModel torqueModel
+
 ! end of engine_configuration_s
 end_struct
 
