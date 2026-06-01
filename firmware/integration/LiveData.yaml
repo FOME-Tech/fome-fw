@@ -57,6 +57,7 @@ Usages:
     folder: controllers/algo/torque
     constexpr: "___engine.module<TorqueModel>()"
     output_name: Torque model
+    isPtr: true
 
   - name: antilag_system_state
     folder: controllers/algo
