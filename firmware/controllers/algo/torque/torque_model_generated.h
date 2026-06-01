@@ -5,19 +5,19 @@ struct torque_model_s {
 	// Nm
 	// offset 0
 	float driverTorqueDemand = (float)0;
-	// Target airmass per engine cycle (whole engine)
+	// Target cycle airmass
 	// g
 	// offset 4
 	float airmassTarget = (float)0;
-	// Measured airmass per engine cycle (whole engine)
+	// Measured cycle airmass
 	// g
 	// offset 8
 	float airmassActual = (float)0;
-	// Closed-loop airmass trim applied to the commanded throttle flow
+	// Target airmass CL trim
 	// %
 	// offset 12
 	float airmassTrim = (float)0;
-	// Torque-model requested throttle position
+	// Requested throttle position
 	// %
 	// offset 16
 	float throttleRequest = (float)0;
