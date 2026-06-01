@@ -13,7 +13,7 @@ void TorqueModel::onFastCallback() {
 	float totalAirmassTarget = driverTorque / 90;
 
 	// Update outputs
-	airmassDispatcher.update(airmassTarget);
+	airmassDispatcher.update(totalAirmassTarget);
 }
 
 float TorqueModel::driverDemand() {
