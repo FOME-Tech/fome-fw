@@ -29,7 +29,7 @@ void cpuUsageOnIdleEnter() {
 void cpuUsageOnIdleExit() {
 	if (s_inIdle) {
 		uint32_t now = port_rt_get_counter_value();
-		s_idleAccumNt += (uint32_t)(now - s_idleEnterTs);
+		s_idleAccumNt = s_idleAccumNt + (uint32_t)(now - s_idleEnterTs);
 		s_inIdle = false;
 	}
 }
@@ -39,7 +39,7 @@ void cpuUsageOnIsrEnter() {
 		// Credit the idle span that ended at the start of this ISR, then
 		// pause the idle timer until the (outermost) ISR returns.
 		uint32_t now = port_rt_get_counter_value();
-		s_idleAccumNt += (uint32_t)(now - s_idleEnterTs);
+		s_idleAccumNt = s_idleAccumNt + (uint32_t)(now - s_idleEnterTs);
 	}
 	s_isrNestDepth = s_isrNestDepth + 1;
 }
