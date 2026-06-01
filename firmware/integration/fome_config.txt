@@ -933,7 +933,7 @@ bit useFixedBaroCorrFromMap
 bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In Constant mode, timing is automatically tapered to running as RPM increases.\nIn Table mode, the "Cranking ignition advance" table is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
 bit flexCranking;Enable a second cranking table to use for E100 flex fuel, interpolating between the two based on flex fuel sensor.
-bit unused1200b19
+bit torqueReductionEnabled;Enable the torque-reduction controller (spark retard + cylinder cut). It maps a torque-reduction request to ignition retard and cut. No producer (e.g. traction control) is wired up yet, so on its own this currently has no effect.
 bit isBoostControlEnabled
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range
 bit isPhaseSyncRequiredForIgnition;Some engines are OK running semi-random sequential while other engine require phase synchronization
@@ -1478,6 +1478,9 @@ engine_configuration_s engineConfiguration;
 
 uint16_t[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvanceBins;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"RPM", 1, 0, 0, 25000, 0
 int16_t[CRANKING_ADVANCE_CURVE_SIZE] autoscale crankingAdvance;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"deg", 0.01, 0, -20, 90, 2
+
+uint8_t[8] autoscale torqueReductionRetardReqBins;Requested torque reduction ratio, 0 is no reduction, 0.5 is deliver half torque.;"frac", 0.01, 0, 0, 1, 2
+int16_t[8] autoscale torqueReductionRetard;Ignition retard applied per torque-reduction request;"deg", 0.1, 0, 0, 50, 1
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoastingRpmBins;RPM-based idle position for coasting;"RPM", 100, 0, 0, 25000, 0
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoasting;    RPM-based idle position for coasting;"%", 0.5, 0, 0, 100, 1
 
