@@ -47,6 +47,7 @@ public:
 
 	expected<percent_t> getSetpoint() override;
 	expected<percent_t> getSetpointEtb();
+	percent_t getSetpointEtbNonTorqueModel(percent_t pedalTableValue) const;
 	expected<percent_t> getSetpointWastegate() const;
 
 	expected<percent_t> getOpenLoop(percent_t target) override;
