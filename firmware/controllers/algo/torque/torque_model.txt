@@ -1,7 +1,9 @@
 struct_no_prefix torque_model_s
 	float driverTorqueDemand;Driver requested torque;"Nm", 1, 0, -2000, 2000, 1
-	float airmassTarget;Target airmass per engine cycle (whole engine);"g", 1, 0, 0, 100, 3
-	float airmassActual;Measured airmass per engine cycle (whole engine);"g", 1, 0, 0, 100, 3
-	float airmassTrim;Closed-loop airmass trim applied to the commanded throttle flow;"%", 1, 0, -100, 100, 1
-	float throttleRequest;Torque-model requested throttle position;"%", 1, 0, 0, 100, 1
+
+	float airmassTarget;Target cycle airmass;"g", 1, 0, 0, 100, 3
+	float airmassActual;Measured cycle airmass;"g", 1, 0, 0, 100, 3
+	float airmassTrim;Target airmass CL trim;"%", 1, 0, -100, 100, 1
+
+	float throttleRequest;Requested throttle position;"%", 1, 0, 0, 100, 1
 end_struct
