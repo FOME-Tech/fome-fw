@@ -201,6 +201,39 @@ TEST(GearDetector, DetermineGear8Speed) {
 	EXPECT_EQ(0, dut.determineGearFromRatio(0.1));
 }
 
+TEST(GearDetector, TotalRatioInCurrentGear) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& dut = engine->module<GearDetector>().unmock();
+
+	engineConfiguration->driveWheelRevPerKm = 600;
+	engineConfiguration->finalGearRatio = 4.0f;
+	engineConfiguration->totalGearsCount = 2;
+	engineConfiguration->gearRatio[0] = 3.0f;
+	engineConfiguration->gearRatio[1] = 1.5f;
+	dut.onConfigurationChange(nullptr);
+
+	// No ratio while stopped / in neutral.
+	Sensor::setMockValue(SensorType::VehicleSpeed, 0);
+	Sensor::setMockValue(SensorType::Rpm, 800);
+	dut.onSlowCallback();
+	EXPECT_FALSE(dut.getTotalRatioInCurrentGear().Valid);
+
+	// wheelRpm = 50 * 600 / 60 = 500; driveshaftRpm = 500 * 4 = 2000.
+	Sensor::setMockValue(SensorType::VehicleSpeed, 50);
+
+	// gearboxRatio = engineRpm / 2000 = 3.0 -> 1st gear; total ratio = 3.0 * 4.0 = 12.
+	Sensor::setMockValue(SensorType::Rpm, 6000);
+	dut.onSlowCallback();
+	ASSERT_TRUE(dut.getTotalRatioInCurrentGear().Valid);
+	EXPECT_NEAR(dut.getTotalRatioInCurrentGear().Value, 12.0f, 1e-3);
+
+	// gearboxRatio = 3000 / 2000 = 1.5 -> 2nd gear; total ratio = 1.5 * 4.0 = 6.
+	Sensor::setMockValue(SensorType::Rpm, 3000);
+	dut.onSlowCallback();
+	ASSERT_TRUE(dut.getTotalRatioInCurrentGear().Valid);
+	EXPECT_NEAR(dut.getTotalRatioInCurrentGear().Value, 6.0f, 1e-3);
+}
+
 TEST(GearDetector, ParameterValidation) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	auto& dut = engine->module<GearDetector>().unmock();
