@@ -6,7 +6,18 @@ struct TorqueModelBase : public EngineModule, public torque_model_s {
 public:
 	using interface_t = TorqueModelBase;
 
+	// Orchestration: collect demand, limit, add loss, convert to an airmass target, and
+	// hand it to the airmass sink. The individual steps are virtual so they can be tested
+	// (and mocked) in isolation - this method is just the wiring between them.
+	void onFastCallback() override final;
+
 	virtual float driverDemand() const = 0;
+	virtual float getTorqueLoss() const = 0;
+	virtual float applyTorqueLimits(float torqueRequested) = 0;
+
+	// Sink for the computed per-cycle airmass target. The real model drives the ETB through
+	// the airmass dispatcher; tests can capture the target without any airpath setup.
+	virtual void commandAirmass(float airmassTarget) = 0;
 
 	// Output to ETB
 	virtual percent_t getThrottleRequest() = 0;
@@ -32,12 +43,10 @@ private:
 
 class TorqueModel : public TorqueModelBase {
 public:
-	void onFastCallback() override;
-
 	float driverDemand() const override;
-	float getTorqueLoss() const;
-
-	float applyTorqueLimits(float torqueRequested);
+	float getTorqueLoss() const override;
+	float applyTorqueLimits(float torqueRequested) override;
+	void commandAirmass(float airmassTarget) override;
 
 	// Outputs
 	percent_t getThrottleRequest() override;

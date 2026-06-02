@@ -4,7 +4,7 @@
 
 #include <algorithm>
 
-void TorqueModel::onFastCallback() {
+void TorqueModelBase::onFastCallback() {
 	if (!engineConfiguration->enableTorqueModel) {
 		return;
 	}
@@ -15,6 +15,7 @@ void TorqueModel::onFastCallback() {
 
 	// TODO: take the max of other demand sources, revmatch, idle, etc
 	float torqueRequested = driverTorqueDemand;
+	m_torqueRequested = torqueRequested;
 
 	// Apply any limiting to the requested torque
 	float torqueRequestedLimited = applyTorqueLimits(torqueRequested);
@@ -28,12 +29,16 @@ void TorqueModel::onFastCallback() {
 
 	// for now, 90Nm/gram is an OK hack
 	float totalAirmassTarget = grossTorque / 90;
+	m_airmassTarget = totalAirmassTarget;
 
-	// Update outputs
+	// Hand the target off to the airmass path (real impl drives the ETB)
+	commandAirmass(totalAirmassTarget);
+}
+
+void TorqueModel::commandAirmass(float totalAirmassTarget) {
 	airmassDispatcher.update(totalAirmassTarget);
 
 	// Logging
-	m_airmassTarget = totalAirmassTarget;
 	m_airmassActual = airmassDispatcher.getActualAirmass();
 	m_airmassTrim = airmassDispatcher.getAirmassTrim();
 	m_throttleRequest = airmassDispatcher.getThrottleRequest();
