@@ -1,17 +1,17 @@
 struct_no_prefix torque_model_s
-	float m_driverTorqueDemand;Driver requested torque;"Nm", 1, 0, -2000, 2000, 1
+	int16_t autoscale m_driverTorqueDemand;Driver requested torque;"Nm", 0.1, 0, -2000, 2000, 1
 
-	float m_torqueRequested;Requested torque;"Nm", 1, 0, -2000, 2000, 1
-	float m_torqueRequestedLimited;Requested torque (limited);"Nm", 1, 0, -2000, 2000, 1
-	float m_torqueLoss;Torque loss;"Nm", 1, 0, -2000, 2000, 1
+	int16_t autoscale m_torqueRequested;Requested torque;"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t autoscale m_torqueRequestedLimited;Requested torque (limited);"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t autoscale m_torqueLoss;Torque loss;"Nm", 0.1, 0, -2000, 2000, 1
 	int16_t m_torqueLossLoadAxisValue;Loss table Y axis value;"", 1, 0, -10000, 10000, 0
-	float m_grossTorque;Gross torque;"Nm", 1, 0, -2000, 2000, 1
+	int16_t autoscale m_grossTorque;Gross torque;"Nm", 0.1, 0, -2000, 2000, 1
 
-	float m_airmassTarget;Target cycle airmass;"g", 1, 0, 0, 100, 3
-	float m_airmassActual;Measured cycle airmass;"g", 1, 0, 0, 100, 3
-	float m_airmassTrim;Target airmass CL trim;"%", 1, 0, -100, 100, 1
+	uint16_t autoscale m_airmassTarget;Target cycle airmass;"g", 0.001, 0, 0, 65, 3
+	uint16_t autoscale m_airmassActual;Measured cycle airmass;"g", 0.001, 0, 0, 65, 3
+	uint16_t autoscale m_airmassTrim;Target airmass CL trim;"%", 0.01, 0, -100, 100, 3
 
-	float m_throttleRequest;Requested throttle position;"%", 1, 0, 0, 100, 1
+	uint16_t autoscale m_throttleRequest;Requested throttle position;"%", 0.01, 0, 0, 100, 1
 
 	int16_t[TORQUE_LIMITER_COUNT iterate] m_limiterXAxisValue;Generic limiter X axis;"", 1, 0, -10000, 10000, 0
 	int16_t[TORQUE_LIMITER_COUNT iterate] m_limiterYAxisValue;Generic limiter Y axis;"", 1, 0, -10000, 10000, 0
