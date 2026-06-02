@@ -285,7 +285,7 @@ float getFastAdc(FastAdcToken token) {
 		return 0;
 	}
 
-	return engineConfiguration->adcVcc / ADC_MAX_VALUE * getSample(token + EFI_ADC_0);
+	return engineConfiguration->adcVcc / ADC_MAX_VALUE * getSample(token - EFI_ADC_0);
 }
 
 #ifdef EFI_SOFTWARE_KNOCK
