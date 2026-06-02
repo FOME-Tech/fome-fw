@@ -24,8 +24,12 @@ public:
 	MOCK_METHOD(percent_t, getThrottleRequest, (), (override));
 
 	// Unused by the ETB tests, but required to make the class concrete.
-	float getTorqueLoss() const override { return 0; }
-	float applyTorqueLimits(float torqueRequested) override { return torqueRequested; }
+	float getTorqueLoss() const override {
+		return 0;
+	}
+	float applyTorqueLimits(float torqueRequested) override {
+		return torqueRequested;
+	}
 	void commandAirmass(float) override {}
 };
 

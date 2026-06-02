@@ -198,16 +198,24 @@ namespace {
 // airmass sink captures whatever target it's handed.
 class FlowMockTorqueModel : public TorqueModelBase {
 public:
-	float driverDemand() const override { return m_demand; }
-	float getTorqueLoss() const override { return m_loss; }
+	float driverDemand() const override {
+		return m_demand;
+	}
+	float getTorqueLoss() const override {
+		return m_loss;
+	}
 
 	float applyTorqueLimits(float torqueRequested) override {
 		m_limiterSawRequest = torqueRequested;
 		return m_limited;
 	}
 
-	void commandAirmass(float airmassTarget) override { m_commandedAirmass = airmassTarget; }
-	percent_t getThrottleRequest() override { return 0; }
+	void commandAirmass(float airmassTarget) override {
+		m_commandedAirmass = airmassTarget;
+	}
+	percent_t getThrottleRequest() override {
+		return 0;
+	}
 
 	// Stubbed leaf outputs
 	float m_demand = 0;
@@ -243,7 +251,7 @@ TEST(TorqueModelFlow, WiresDemandThroughLimiterToAirmass) {
 	engineConfiguration->enableTorqueModel = true;
 
 	FlowMockTorqueModel tm;
-	tm.m_demand = 250;  // driver asks for 250
+	tm.m_demand = 250;	// driver asks for 250
 	tm.m_limited = 250; // limiter passes it unchanged
 	tm.m_loss = 0;
 
@@ -268,9 +276,9 @@ TEST(TorqueModelFlow, UsesLimitedTorqueAndAddsLoss) {
 	engineConfiguration->enableTorqueModel = true;
 
 	FlowMockTorqueModel tm;
-	tm.m_demand = 500;  // driver asks for 500
+	tm.m_demand = 500;	// driver asks for 500
 	tm.m_limited = 300; // limiter clamps to 300
-	tm.m_loss = 20;     // plus 20 Nm of loss
+	tm.m_loss = 20;		// plus 20 Nm of loss
 
 	tm.onFastCallback();
 
