@@ -42,74 +42,88 @@ struct torque_model_s {
 	// %
 	// offset 36
 	float m_throttleRequest = (float)0;
+	// Generic limiter X axis
+	// offset 40
+	int16_t m_limiterXAxisValue[4];
+	// Generic limiter Y axis
+	// offset 48
+	int16_t m_limiterYAxisValue[4];
+	// Generic limiter ceiling
+	// Nm
+	// offset 56
+	uint16_t m_limiterTorque[4];
 	// Limited by engine max
-	// offset 40 bit 0
+	// offset 64 bit 0
 	bool limitedByEngineMax : 1 {};
 	// Limited by axle max
-	// offset 40 bit 1
+	// offset 64 bit 1
 	bool limitedByAxleMax : 1 {};
-	// offset 40 bit 2
-	bool unusedBit_40_2 : 1 {};
-	// offset 40 bit 3
-	bool unusedBit_40_3 : 1 {};
-	// offset 40 bit 4
-	bool unusedBit_40_4 : 1 {};
-	// offset 40 bit 5
-	bool unusedBit_40_5 : 1 {};
-	// offset 40 bit 6
-	bool unusedBit_40_6 : 1 {};
-	// offset 40 bit 7
-	bool unusedBit_40_7 : 1 {};
-	// offset 40 bit 8
-	bool unusedBit_40_8 : 1 {};
-	// offset 40 bit 9
-	bool unusedBit_40_9 : 1 {};
-	// offset 40 bit 10
-	bool unusedBit_40_10 : 1 {};
-	// offset 40 bit 11
-	bool unusedBit_40_11 : 1 {};
-	// offset 40 bit 12
-	bool unusedBit_40_12 : 1 {};
-	// offset 40 bit 13
-	bool unusedBit_40_13 : 1 {};
-	// offset 40 bit 14
-	bool unusedBit_40_14 : 1 {};
-	// offset 40 bit 15
-	bool unusedBit_40_15 : 1 {};
-	// offset 40 bit 16
-	bool unusedBit_40_16 : 1 {};
-	// offset 40 bit 17
-	bool unusedBit_40_17 : 1 {};
-	// offset 40 bit 18
-	bool unusedBit_40_18 : 1 {};
-	// offset 40 bit 19
-	bool unusedBit_40_19 : 1 {};
-	// offset 40 bit 20
-	bool unusedBit_40_20 : 1 {};
-	// offset 40 bit 21
-	bool unusedBit_40_21 : 1 {};
-	// offset 40 bit 22
-	bool unusedBit_40_22 : 1 {};
-	// offset 40 bit 23
-	bool unusedBit_40_23 : 1 {};
-	// offset 40 bit 24
-	bool unusedBit_40_24 : 1 {};
-	// offset 40 bit 25
-	bool unusedBit_40_25 : 1 {};
-	// offset 40 bit 26
-	bool unusedBit_40_26 : 1 {};
-	// offset 40 bit 27
-	bool unusedBit_40_27 : 1 {};
-	// offset 40 bit 28
-	bool unusedBit_40_28 : 1 {};
-	// offset 40 bit 29
-	bool unusedBit_40_29 : 1 {};
-	// offset 40 bit 30
-	bool unusedBit_40_30 : 1 {};
-	// offset 40 bit 31
-	bool unusedBit_40_31 : 1 {};
+	// Limited by generic limiter 1
+	// offset 64 bit 2
+	bool limitedByGenericLimiter1 : 1 {};
+	// Limited by generic limiter 2
+	// offset 64 bit 3
+	bool limitedByGenericLimiter2 : 1 {};
+	// Limited by generic limiter 3
+	// offset 64 bit 4
+	bool limitedByGenericLimiter3 : 1 {};
+	// Limited by generic limiter 4
+	// offset 64 bit 5
+	bool limitedByGenericLimiter4 : 1 {};
+	// offset 64 bit 6
+	bool unusedBit_64_6 : 1 {};
+	// offset 64 bit 7
+	bool unusedBit_64_7 : 1 {};
+	// offset 64 bit 8
+	bool unusedBit_64_8 : 1 {};
+	// offset 64 bit 9
+	bool unusedBit_64_9 : 1 {};
+	// offset 64 bit 10
+	bool unusedBit_64_10 : 1 {};
+	// offset 64 bit 11
+	bool unusedBit_64_11 : 1 {};
+	// offset 64 bit 12
+	bool unusedBit_64_12 : 1 {};
+	// offset 64 bit 13
+	bool unusedBit_64_13 : 1 {};
+	// offset 64 bit 14
+	bool unusedBit_64_14 : 1 {};
+	// offset 64 bit 15
+	bool unusedBit_64_15 : 1 {};
+	// offset 64 bit 16
+	bool unusedBit_64_16 : 1 {};
+	// offset 64 bit 17
+	bool unusedBit_64_17 : 1 {};
+	// offset 64 bit 18
+	bool unusedBit_64_18 : 1 {};
+	// offset 64 bit 19
+	bool unusedBit_64_19 : 1 {};
+	// offset 64 bit 20
+	bool unusedBit_64_20 : 1 {};
+	// offset 64 bit 21
+	bool unusedBit_64_21 : 1 {};
+	// offset 64 bit 22
+	bool unusedBit_64_22 : 1 {};
+	// offset 64 bit 23
+	bool unusedBit_64_23 : 1 {};
+	// offset 64 bit 24
+	bool unusedBit_64_24 : 1 {};
+	// offset 64 bit 25
+	bool unusedBit_64_25 : 1 {};
+	// offset 64 bit 26
+	bool unusedBit_64_26 : 1 {};
+	// offset 64 bit 27
+	bool unusedBit_64_27 : 1 {};
+	// offset 64 bit 28
+	bool unusedBit_64_28 : 1 {};
+	// offset 64 bit 29
+	bool unusedBit_64_29 : 1 {};
+	// offset 64 bit 30
+	bool unusedBit_64_30 : 1 {};
+	// offset 64 bit 31
+	bool unusedBit_64_31 : 1 {};
 };
-static_assert(sizeof(torque_model_s) == 44);
+static_assert(sizeof(torque_model_s) == 68);
 static_assert(offsetof(torque_model_s, m_driverTorqueDemand) == 0);
 static_assert(offsetof(torque_model_s, m_torqueRequested) == 4);
 static_assert(offsetof(torque_model_s, m_torqueRequestedLimited) == 8);
@@ -120,3 +134,6 @@ static_assert(offsetof(torque_model_s, m_airmassTarget) == 24);
 static_assert(offsetof(torque_model_s, m_airmassActual) == 28);
 static_assert(offsetof(torque_model_s, m_airmassTrim) == 32);
 static_assert(offsetof(torque_model_s, m_throttleRequest) == 36);
+static_assert(offsetof(torque_model_s, m_limiterXAxisValue) == 40);
+static_assert(offsetof(torque_model_s, m_limiterYAxisValue) == 48);
+static_assert(offsetof(torque_model_s, m_limiterTorque) == 56);
