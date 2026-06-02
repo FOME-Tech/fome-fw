@@ -1,0 +1,18 @@
+struct_no_prefix idle_target_s
+	custom percent_t 4 scalar, F32, @OFFSET@, "", 1, 0, 0, 100, 2
+
+	bit looksLikeRunning
+	bit looksLikeCoasting
+	bit looksLikeCrankToIdle
+
+	! Target
+	uint16_t targetRpmByClt;Target RPM: Base
+	uint16_t targetRpmAcBump;Target RPM: A/C bump
+	percent_t luaAddRpm;Target RPM: Lua adder
+
+	uint16_t idleTarget;Target RPM
+	uint16_t idleEntryRpm;Entry threshold
+	uint16_t idleExitRpm;Exit threshold
+
+	uint8_t currentPhase;Phase
+end_struct

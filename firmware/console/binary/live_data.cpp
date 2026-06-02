@@ -186,6 +186,15 @@ const idle_state_s* getLiveData(size_t) {
 }
 
 template <>
+const idle_target_s* getLiveData(size_t) {
+#if EFI_IDLE_CONTROL
+	return &engine->module<IdleTargetController>().unmock();
+#else
+	return nullptr;
+#endif
+}
+
+template <>
 const ignition_state_s* getLiveData(size_t) {
 	return &engine->ignitionState;
 }

@@ -127,6 +127,11 @@ Usages:
     prepend: integration/fome_config_shared.txt
     output_name: Idle
 
+  - name: idle_target
+    folder: controllers/actuators
+    prepend: integration/fome_config_shared.txt
+    output_name: Idle
+
   - name: electronic_throttle
     folder: controllers/actuators
     prepend: integration/fome_config_shared.txt

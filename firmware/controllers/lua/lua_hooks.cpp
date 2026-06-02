@@ -765,7 +765,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		return 0;
 	});
 	lua_register(l, "setIdleAddRpm", [](lua_State* l2) {
-		engine->module<IdleController>().unmock().luaAddRpm = luaL_checknumber(l2, 1);
+		engine->module<IdleTargetController>().unmock().luaAddRpm = luaL_checknumber(l2, 1);
 		return 0;
 	});
 	lua_register(l, "getIdlePosition", [](lua_State* l2) {

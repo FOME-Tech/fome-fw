@@ -41,5 +41,8 @@ MockTsChannel::~MockTsChannel() {}
 MockIdleController::MockIdleController() {}
 MockIdleController::~MockIdleController() {}
 
+MockIdleTargetController::MockIdleTargetController() {}
+MockIdleTargetController::~MockIdleTargetController() {}
+
 MockIgnitionController::MockIgnitionController() {}
 MockIgnitionController::~MockIgnitionController() {}

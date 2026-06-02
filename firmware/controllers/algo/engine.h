@@ -189,6 +189,9 @@ public:
 			Mockable<InjectorModelPrimary>,
 			Mockable<InjectorModelSecondary>,
 #if EFI_IDLE_CONTROL
+			// IdleTargetController computes idle target RPM + phase; it must run before IdleController
+			// (and TorqueModel) so they read a fresh cached result.
+			Mockable<IdleTargetController>,
 			Mockable<IdleController>,
 #endif // EFI_IDLE_CONTROL
 			TriggerScheduler,

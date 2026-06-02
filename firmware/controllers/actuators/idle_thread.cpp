@@ -22,7 +22,7 @@
 #include "stepper.h"
 #endif
 
-IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
+IIdleTargetController::TargetInfo IdleTargetController::getTargetRpm(float clt) {
 	// Base target RPM from CLT table
 	targetRpmByClt = interpolate2d(clt, config->cltIdleRpmBins, config->cltIdleRpm);
 
@@ -55,8 +55,12 @@ IIdleController::TargetInfo IdleController::getTargetRpm(float clt) {
 	return {target, entryRpm, exitRpm};
 }
 
-IIdleController::Phase IdleController::determinePhase(
-		float rpm, IIdleController::TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) {
+IIdleTargetController::Phase IdleTargetController::determinePhase(
+		float rpm,
+		IIdleTargetController::TargetInfo targetRpm,
+		SensorResult tps,
+		float vss,
+		float crankingTaperFraction) {
 #if EFI_SHAFT_POSITION_INPUT
 	looksLikeCrankToIdle = crankingTaperFraction < 1;
 
@@ -107,7 +111,7 @@ IIdleController::Phase IdleController::determinePhase(
 	return Phase::Idling;
 }
 
-float IdleController::getCrankingTaperFraction(float clt) const {
+float IdleTargetController::getCrankingTaperFraction(float clt) const {
 	float taperDuration = engineConfiguration->afterCrankingIACtaperDuration;
 
 	if (engineConfiguration->useCrankingIdleTaperTableSetting) {
@@ -115,6 +119,39 @@ float IdleController::getCrankingTaperFraction(float clt) const {
 	}
 
 	return (float)engine->rpmCalculator.getRevolutionCounterSinceStart() / taperDuration;
+}
+
+IIdleTargetController::Output IdleTargetController::getOutput() {
+	// On failed sensor, use 0 deg C - should give a safe highish idle
+	float clt = Sensor::getOrZero(SensorType::Clt);
+	auto tps = Sensor::get(SensorType::DriverThrottleIntent);
+	float rpm = engine->triggerCentral.instantRpm.getInstantRpm();
+	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
+
+	// Compute the target we're shooting for. Note: getTargetRpm() consumes m_timeInIdlePhase, so it
+	// must run before the idle-entry reset below
+	auto target = getTargetRpm(clt);
+
+	// Determine cranking taper
+	float crankingTaper = getCrankingTaperFraction(clt);
+
+	// Determine what operation phase we're in - idling or not
+	auto phase = determinePhase(rpm, target, tps, vehicleSpeed, crankingTaper);
+	currentPhase = static_cast<uint8_t>(phase);
+
+	if (phase != m_lastPhase && phase == Phase::Idling) {
+		// Just entered idle, reset timer
+		m_timeInIdlePhase.reset();
+	}
+
+	m_lastPhase = phase;
+
+	Output result;
+	result.target = target;
+	result.phase = phase;
+	result.crankingTaperFraction = crankingTaper;
+
+	return result;
 }
 
 float IdleController::getCrankingOpenLoop(float clt) const {
@@ -275,22 +312,15 @@ float IdleController::getIdlePosition(float rpm, float rpmRate) {
 	float clt = Sensor::getOrZero(SensorType::Clt);
 	auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 
-	// Compute the target we're shooting for
-	auto targetRpm = getTargetRpm(clt);
+	// Target RPM and idle phase are computed by IdleTargetController (which runs earlier in the
+	// fast callback). Pull the cached result and mirror its diagnostics into idle_state_s for logging.
+	auto idleTargetState = engine->module<IdleTargetController>()->getOutput();
+	const auto& targetRpm = idleTargetState.target;
+
+	auto phase = idleTargetState.phase;
+	float crankingTaper = idleTargetState.crankingTaperFraction;
+
 	m_lastTargetRpm = targetRpm.ClosedLoopTarget;
-
-	// Determine cranking taper
-	float crankingTaper = getCrankingTaperFraction(clt);
-
-	// Determine what operation phase we're in - idling or not
-	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
-	auto phase = determinePhase(rpm, targetRpm, tps, vehicleSpeed, crankingTaper);
-
-	if (phase != m_lastPhase && phase == Phase::Idling) {
-		// Just entered idle, reset timer
-		m_timeInIdlePhase.reset();
-	}
-
 	m_lastPhase = phase;
 
 	finishIdleTestIfNeeded();
