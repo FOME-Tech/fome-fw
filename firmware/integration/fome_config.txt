@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1350
+#define BLOCKING_FACTOR 1400
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -172,6 +172,7 @@ struct_no_prefix engine_configuration_s
 #define BOOST_RPM_COUNT 8
 #define BOOST_LOAD_COUNT 8
 #define PEDAL_TO_TPS_SIZE 8
+#define TORQUE_LOSS_SIZE 6
 #define FUEL_LEVEL_TABLE_COUNT 8
 
 #define STFT_CELL_COUNT 4
@@ -217,6 +218,8 @@ struct_no_prefix engine_configuration_s
 #define GPPWM_RPM_COUNT 8
 #define GPPWM_CHANNELS 4
 #define GPPWM_NOTE_SIZE 16
+
+#define TORQUE_LIMITER_SIZE 8
 
 #define CAN_VIRTUAL_INPUT_PINS_COUNT 8
 
@@ -308,6 +311,16 @@ struct gppwm_channel
 	int16_t[GPPWM_LOAD_COUNT] autoscale loadBins;;"load", 0.1, 0, -1000, 1000, 1
 	int16_t[GPPWM_RPM_COUNT] rpmBins;;"RPM", 1, 0, -30000, 30000, 0
 	uint8_t[GPPWM_RPM_COUNT x GPPWM_LOAD_COUNT] autoscale table;;"duty", 0.5, 0, 0, 100, 1
+end_struct
+
+struct torque_limiter_cfg
+	bit enable;Enable this generic torque limiter.
+	bit applyAtAxle,"Axle","Engine";Domain the table values are in. Axle scales by the current gear ratio - use for chassis-domain limits like drivetrain protection, traction or G-load. Engine applies directly - use for engine protection or pre-transmission hardware limits like clutch capacity. Axle-domain limiters only apply when a gear ratio is known.
+	gppwm_channel_e xAxis;X axis source for this torque limiter table.
+	gppwm_channel_e yAxis;Y axis source for this torque limiter table.
+	int16_t[TORQUE_LIMITER_SIZE] xBins;;"", 1, 0, -30000, 30000, 0
+	int16_t[TORQUE_LIMITER_SIZE] yBins;;"", 1, 0, -30000, 30000, 0
+	uint16_t[TORQUE_LIMITER_SIZE x TORQUE_LIMITER_SIZE] table;Maximum allowed torque at this operating point.;"Nm", 1, 0, 0, 20000, 0
 end_struct
 
 custom air_pressure_sensor_type_e 1 bits, U08, @OFFSET@, [0:4], "Custom", "DENSO183", "MPX4250", "HONDA3BAR", "NEON_2003", "22012AA090", "GM 3 Bar", "MPX4100", "Toyota 89420-02010", "MPX4250A", "Bosch 2.5", "Mazda1Bar", "GM 2 Bar", "GM 1 Bar", "MPXH6400"
@@ -1448,6 +1461,8 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	end_struct
 
 	torque_model_cfg torqueModel
+
+	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
 
 ! end of engine_configuration_s
 end_struct

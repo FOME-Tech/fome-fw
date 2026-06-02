@@ -73,13 +73,54 @@ float TorqueModel::applyTorqueLimits(const float torqueRequested) {
 	LIMITER(tm.engineMaximum, limitedByEngineMax);
 
 	// getTotalRatioInCurrentGear returns unexpected if not configured, in neutral, or stopped
-	if (auto ratio = engine->module<GearDetector>()->getTotalRatioInCurrentGear()) {
+	auto gearRatio = engine->module<GearDetector>()->getTotalRatioInCurrentGear();
+	if (gearRatio) {
 		// For example, 1000Nm axle limit and 8:1 total gear ratio becomes 125Nm engine limit
-		auto axleLimitAtEngine = tm.axleMaximum / ratio.Value;
+		auto axleLimitAtEngine = tm.axleMaximum / gearRatio.Value;
 		LIMITER(axleLimitAtEngine, limitedByAxleMax);
 	} else {
 		limitedByAxleMax = false;
 	}
+
+	auto evalGenericLimit = [&](size_t i) -> float {
+		auto& lim = engineConfiguration->torqueLimiters[i];
+		if (!lim.enable) {
+			m_limiterXAxisValue[i] = 0;
+			m_limiterYAxisValue[i] = 0;
+			m_limiterTorque[i] = 0;
+			return 0;
+		}
+
+		float x = readGppwmChannel(lim.xAxis).value_or(0);
+		float y = readGppwmChannel(lim.yAxis).value_or(0);
+		m_limiterXAxisValue[i] = x;
+		m_limiterYAxisValue[i] = y;
+
+		// Table is indexed [y][x]: y is the row axis, x is the column axis.
+		float limit = interpolate3d(lim.table, lim.yBins, y, lim.xBins, x);
+		m_limiterTorque[i] = limit;
+
+		if (lim.applyAtAxle) {
+			// Axle-domain: scale to the engine using the current gear ratio. If the ratio is
+			// unknown (neutral/stopped/no gear detection), suppress the limit rather than guess.
+			if (!gearRatio) {
+				return 0;
+			}
+			limit /= gearRatio.Value;
+		}
+
+		return limit;
+	};
+
+	// LIMITER evaluates its first arg twice, so cache the per-table lookup first.
+	float limit1 = evalGenericLimit(0);
+	float limit2 = evalGenericLimit(1);
+	float limit3 = evalGenericLimit(2);
+	float limit4 = evalGenericLimit(3);
+	LIMITER(limit1, limitedByGenericLimiter1);
+	LIMITER(limit2, limitedByGenericLimiter2);
+	LIMITER(limit3, limitedByGenericLimiter3);
+	LIMITER(limit4, limitedByGenericLimiter4);
 
 	return result;
 }

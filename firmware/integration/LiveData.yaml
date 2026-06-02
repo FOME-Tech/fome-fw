@@ -55,6 +55,7 @@ Usages:
 
   - name: torque_model
     folder: controllers/algo/torque
+    prepend: integration/fome_config_shared.txt
     output_name: "Torque model"
 
   - name: antilag_system_state

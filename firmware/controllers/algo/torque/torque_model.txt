@@ -13,6 +13,14 @@ struct_no_prefix torque_model_s
 
 	float m_throttleRequest;Requested throttle position;"%", 1, 0, 0, 100, 1
 
+	int16_t[TORQUE_LIMITER_COUNT iterate] m_limiterXAxisValue;Generic limiter X axis;"", 1, 0, -10000, 10000, 0
+	int16_t[TORQUE_LIMITER_COUNT iterate] m_limiterYAxisValue;Generic limiter Y axis;"", 1, 0, -10000, 10000, 0
+	uint16_t[TORQUE_LIMITER_COUNT iterate] m_limiterTorque;Generic limiter ceiling;"Nm", 1, 0, 0, 20000, 0
+
 	bit limitedByEngineMax;Limited by engine max
 	bit limitedByAxleMax;Limited by axle max
+	bit limitedByGenericLimiter1;Limited by generic limiter 1
+	bit limitedByGenericLimiter2;Limited by generic limiter 2
+	bit limitedByGenericLimiter3;Limited by generic limiter 3
+	bit limitedByGenericLimiter4;Limited by generic limiter 4
 end_struct
