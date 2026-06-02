@@ -2,19 +2,21 @@
 #include "rusefi_types.h"
 struct torque_reduction_state_s {
 	// Reduction request
-	// frac
+	// %
 	// offset 0
-	float reductionRequest = (float)0;
+	scaled_channel<uint8_t, 2, 1> reductionRequest = (uint8_t)0;
 	// Timing retard
 	// deg
-	// offset 4
-	float retardApplied = (float)0;
+	// offset 1
+	scaled_channel<uint8_t, 2, 1> retardApplied = (uint8_t)0;
 	// Cylinder cut fraction
-	// frac
-	// offset 8
-	float cutFraction = (float)0;
+	// %
+	// offset 2
+	uint8_t cutFraction = (uint8_t)0;
+	// offset 3
+	uint8_t alignmentFill_at_3[1];
 };
-static_assert(sizeof(torque_reduction_state_s) == 12);
+static_assert(sizeof(torque_reduction_state_s) == 4);
 static_assert(offsetof(torque_reduction_state_s, reductionRequest) == 0);
-static_assert(offsetof(torque_reduction_state_s, retardApplied) == 4);
-static_assert(offsetof(torque_reduction_state_s, cutFraction) == 8);
+static_assert(offsetof(torque_reduction_state_s, retardApplied) == 1);
+static_assert(offsetof(torque_reduction_state_s, cutFraction) == 2);
