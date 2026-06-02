@@ -55,12 +55,14 @@ float TorqueModel::applyTorqueLimits(const float torqueRequested) {
 	const auto& tm = engineConfiguration->torqueModel;
 
 #define LIMITER(limitVal, resultBit)                                                                                   \
-	if (limitVal != 0 && torqueRequested > limitVal) {                                                                 \
-		result = std::min(result, (float)limitVal);                                                                    \
-		resultBit = true;                                                                                              \
-	} else {                                                                                                           \
-		resultBit = false;                                                                                             \
-	}
+	do {                                                                                                               \
+		if (limitVal != 0 && torqueRequested > limitVal) {                                                             \
+			result = std::min(result, (float)limitVal);                                                                \
+			resultBit = true;                                                                                          \
+		} else {                                                                                                       \
+			resultBit = false;                                                                                         \
+		}                                                                                                              \
+	} while (false);
 
 	LIMITER(tm.engineMaximum, limitedByEngineMax);
 
