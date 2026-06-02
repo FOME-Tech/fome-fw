@@ -190,6 +190,129 @@ TEST(TorqueModelLimits, MostRestrictiveLimitWins_EngineBinding) {
 	EXPECT_TRUE(tm.limitedByAxleMax);
 }
 
+// ============================ generic limiter tables ============================
+
+TEST(TorqueModelLimits, GenericLimiterClampsAndPublishesAxes) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	engineConfiguration->torqueModel.engineMaximum = 0;
+	engineConfiguration->torqueModel.axleMaximum = 0;
+
+	auto& lim = engineConfiguration->torqueLimiters[0];
+	lim.enable = true;
+	lim.applyAtAxle = false;
+	lim.xAxis = GPPWM_Rpm;
+	lim.yAxis = GPPWM_Clt;
+	copyArray(lim.xBins, {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000});
+	copyArray(lim.yBins, {0, 20, 40, 60, 80, 100, 120, 140});
+
+	// Flat 200 Nm ceiling across the whole table.
+	for (int y = 0; y < TORQUE_LIMITER_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LIMITER_SIZE; x++) {
+			lim.table[y][x] = 200;
+		}
+	}
+
+	Sensor::setMockValue(SensorType::Rpm, 3000);
+	Sensor::setMockValue(SensorType::Clt, 60);
+
+	// Above the ceiling -> clamps, flag and ceiling get published.
+	EXPECT_FLOAT_EQ(tm.applyTorqueLimits(500), 200);
+	EXPECT_TRUE(tm.limitedByGenericLimiter1);
+	EXPECT_EQ(tm.m_limiterTorque[0], 200);
+	EXPECT_NEAR(tm.m_limiterXAxisValue[0], 3000, 0.5);
+	EXPECT_NEAR(tm.m_limiterYAxisValue[0], 60, 0.5);
+
+	// Below the ceiling -> untouched, flag clears.
+	EXPECT_FLOAT_EQ(tm.applyTorqueLimits(150), 150);
+	EXPECT_FALSE(tm.limitedByGenericLimiter1);
+}
+
+TEST(TorqueModelLimits, GenericLimiterDisabledHasNoEffect) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	engineConfiguration->torqueModel.engineMaximum = 0;
+	engineConfiguration->torqueModel.axleMaximum = 0;
+
+	auto& lim = engineConfiguration->torqueLimiters[0];
+	lim.enable = false; // disabled, table values must be ignored
+	lim.xAxis = GPPWM_Rpm;
+	lim.yAxis = GPPWM_Clt;
+	for (int y = 0; y < TORQUE_LIMITER_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LIMITER_SIZE; x++) {
+			lim.table[y][x] = 100;
+		}
+	}
+
+	Sensor::setMockValue(SensorType::Rpm, 3000);
+	Sensor::setMockValue(SensorType::Clt, 60);
+
+	EXPECT_FLOAT_EQ(tm.applyTorqueLimits(500), 500);
+	EXPECT_FALSE(tm.limitedByGenericLimiter1);
+	EXPECT_EQ(tm.m_limiterTorque[0], 0);
+}
+
+TEST(TorqueModelLimits, GenericLimiterAxleDomainScalesByGearRatio) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	engineConfiguration->torqueModel.engineMaximum = 0;
+	engineConfiguration->torqueModel.axleMaximum = 0;
+
+	auto& lim = engineConfiguration->torqueLimiters[0];
+	lim.enable = true;
+	lim.applyAtAxle = true;
+	lim.xAxis = GPPWM_Rpm;
+	lim.yAxis = GPPWM_Zero;
+	copyArray(lim.xBins, {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000});
+	copyArray(lim.yBins, {0, 20, 40, 60, 80, 100, 120, 140});
+
+	// 1000 Nm flat at the axle.
+	for (int y = 0; y < TORQUE_LIMITER_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LIMITER_SIZE; x++) {
+			lim.table[y][x] = 1000;
+		}
+	}
+
+	// Engaged with an 8:1 total ratio. detectGear sets the RPM mock to match the chosen ratio,
+	// so the lookup happens at whatever column that corresponds to (the table is flat anyway).
+	detectGear(/*gear1*/ 2, /*finalDrive*/ 4);
+
+	// 1000 Nm axle / 8:1 total -> 125 Nm engine ceiling.
+	EXPECT_FLOAT_EQ(tm.applyTorqueLimits(500), 125);
+	EXPECT_TRUE(tm.limitedByGenericLimiter1);
+}
+
+TEST(TorqueModelLimits, GenericLimiterAxleDomainSuppressedInNeutral) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	engineConfiguration->torqueModel.engineMaximum = 0;
+	engineConfiguration->torqueModel.axleMaximum = 0;
+
+	auto& lim = engineConfiguration->torqueLimiters[0];
+	lim.enable = true;
+	lim.applyAtAxle = true;
+	lim.xAxis = GPPWM_Rpm;
+	lim.yAxis = GPPWM_Zero;
+	copyArray(lim.xBins, {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000});
+	copyArray(lim.yBins, {0, 20, 40, 60, 80, 100, 120, 140});
+
+	for (int y = 0; y < TORQUE_LIMITER_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LIMITER_SIZE; x++) {
+			lim.table[y][x] = 100;
+		}
+	}
+
+	// No gear known -> axle-domain limiter cannot be referred to the engine.
+	detectNeutral();
+
+	EXPECT_FLOAT_EQ(tm.applyTorqueLimits(500), 500);
+	EXPECT_FALSE(tm.limitedByGenericLimiter1);
+}
+
 // ============================ onFastCallback flow ============================
 
 namespace {
