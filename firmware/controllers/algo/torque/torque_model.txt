@@ -1,9 +1,17 @@
 struct_no_prefix torque_model_s
-	float driverTorqueDemand;Driver requested torque;"Nm", 1, 0, -2000, 2000, 1
+	float m_driverTorqueDemand;Driver requested torque;"Nm", 1, 0, -2000, 2000, 1
 
-	float airmassTarget;Target cycle airmass;"g", 1, 0, 0, 100, 3
-	float airmassActual;Measured cycle airmass;"g", 1, 0, 0, 100, 3
-	float airmassTrim;Target airmass CL trim;"%", 1, 0, -100, 100, 1
+	float m_torqueRequested;Requested torque;"Nm", 1, 0, -2000, 2000, 1
+	float m_torqueRequestedLimited;Requested torque (limited);"Nm", 1, 0, -2000, 2000, 1
+	float m_torqueLoss;Torque loss;"Nm", 1, 0, -2000, 2000, 1
+	float m_grossTorque;Requested torque (limited);"Nm", 1, 0, -2000, 2000, 1
 
-	float throttleRequest;Requested throttle position;"%", 1, 0, 0, 100, 1
+	float m_airmassTarget;Target cycle airmass;"g", 1, 0, 0, 100, 3
+	float m_airmassActual;Measured cycle airmass;"g", 1, 0, 0, 100, 3
+	float m_airmassTrim;Target airmass CL trim;"%", 1, 0, -100, 100, 1
+
+	float m_throttleRequest;Requested throttle position;"%", 1, 0, 0, 100, 1
+
+	bit limitedByEngineMax;Limited by engine max
+	bit limitedByAxleMax;Limited by axle max
 end_struct

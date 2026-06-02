@@ -1440,7 +1440,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	struct torque_model_cfg
 		uint16_t engineMaximum;Maximum torque allowed to leave the engine (seen by clutch/input shaft). Use this to avoid clutch explosion or connecting rod space program.;"Nm", 1, 0, 0, 2000, 0
-		uint16_t axleMaximum;Maximum torque allowed at the axle. Requires gear detection to be configured as this uses the current gear and final drive ratio to calculate maximum engine torque in the current gear.;"Nm", 1, 0, 0, 2000, 0
+		uint16_t axleMaximum;Maximum torque allowed at the axle. Requires gear detection to be configured as this uses the current gear and final drive ratio to calculate maximum engine torque in the current gear. Does not apply in neutral.;"Nm", 1, 0, 0, 20000, 0
 		float airmassTrimKp;Closed-loop airmass trim proportional gain, in percent of feed-forward flow per gram of airmass error.;"%/g", 1, 0, 0, 1000, 2
 		float airmassTrimKi;Closed-loop airmass trim integral gain.;"%/g/s", 1, 0, 0, 1000, 2
 		uint8_t airmassTrimAuthority;Maximum trim the closed-loop may apply to the commanded flow, plus or minus.;"%", 1, 0, 0, 100, 0

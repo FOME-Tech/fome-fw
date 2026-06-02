@@ -6,7 +6,7 @@ struct TorqueModelBase : public EngineModule, public torque_model_s {
 public:
 	using interface_t = TorqueModelBase;
 
-	virtual float driverDemand() = 0;
+	virtual float driverDemand() const = 0;
 
 	// Output to ETB
 	virtual percent_t getThrottleRequest() = 0;
@@ -34,7 +34,12 @@ class TorqueModel : public TorqueModelBase {
 public:
 	void onFastCallback() override;
 
-	float driverDemand() override;
+	float driverDemand() const override;
+	float getTorqueLoss() const;
+
+	float applyTorqueLimits(float torqueRequested);
+
+	// Outputs
 	percent_t getThrottleRequest() override;
 
 	AirmassDispatcher airmassDispatcher;

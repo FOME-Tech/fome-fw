@@ -2,41 +2,83 @@
 
 #include "throttle_model.h"
 
+#include <algorithm>
+
 void TorqueModel::onFastCallback() {
 	if (!engineConfiguration->enableTorqueModel) {
 		return;
 	}
 
 	// Collect demands
-	float driverTorque = driverDemand();
+	float driverTorqueDemand = driverDemand();
+	m_driverTorqueDemand = driverTorqueDemand;
 
-	// TODO the interesting middle bit
+	// TODO: take the max of other demand sources, revmatch, idle, etc
+	float torqueRequested = driverTorqueDemand;
+
+	// Apply any limiting to the requested torque
+	float torqueRequestedLimited = applyTorqueLimits(torqueRequested);
+	m_torqueRequestedLimited = torqueRequestedLimited;
+
+	// add any torque loss
+	float torqueLoss = getTorqueLoss();
+	m_torqueLoss = torqueLoss;
+	float grossTorque = torqueRequestedLimited + torqueLoss;
+	m_grossTorque = grossTorque;
+
 	// for now, 90Nm/gram is an OK hack
-	float totalAirmassTarget = driverTorque / 90;
+	float totalAirmassTarget = grossTorque / 90;
 
 	// Update outputs
 	airmassDispatcher.update(totalAirmassTarget);
 
 	// Logging
-	airmassTarget = totalAirmassTarget;
-	airmassActual = airmassDispatcher.getActualAirmass();
-	airmassTrim = airmassDispatcher.getAirmassTrim();
-	throttleRequest = airmassDispatcher.getThrottleRequest();
+	m_airmassTarget = totalAirmassTarget;
+	m_airmassActual = airmassDispatcher.getActualAirmass();
+	m_airmassTrim = airmassDispatcher.getAirmassTrim();
+	m_throttleRequest = airmassDispatcher.getThrottleRequest();
 }
 
-float TorqueModel::driverDemand() {
+float TorqueModel::driverDemand() const {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	// Same pedal source and sanitization as the ETB setpoint path.
 	float pedal = clampF(0, Sensor::get(SensorType::AcceleratorPedal).value_or(0), 100);
 
 	// driverTorqueTable is indexed [pedal][rpm], reusing the ETB pedal-table axes.
-	float value = interpolate3d(
-			config->driverTorqueTable, config->pedalToTpsPedalBins, pedal, config->pedalToTpsRpmBins, rpm);
+	return interpolate3d(config->driverTorqueTable, config->pedalToTpsPedalBins, pedal, config->pedalToTpsRpmBins, rpm);
+}
 
-	driverTorqueDemand = value;
+float TorqueModel::applyTorqueLimits(const float torqueRequested) {
+	float result = torqueRequested;
 
-	return value;
+	const auto& tm = engineConfiguration->torqueModel;
+
+#define LIMITER(limitVal, resultBit)                                                                                   \
+	if (limitVal != 0 && torqueRequested > limitVal) {                                                                 \
+		result = std::min(result, (float)limitVal);                                                                    \
+		resultBit = true;                                                                                              \
+	} else {                                                                                                           \
+		resultBit = false;                                                                                             \
+	}
+
+	LIMITER(tm.engineMaximum, limitedByEngineMax);
+
+	// getTotalRatioInCurrentGear returns unexpected if not configured, in neutral, or stopped
+	if (auto ratio = engine->module<GearDetector>()->getTotalRatioInCurrentGear()) {
+		// For example, 1000Nm axle limit and 8:1 total gear ratio becomes 125Nm engine limit
+		auto axleLimitAtEngine = tm.axleMaximum / ratio.Value;
+		LIMITER(axleLimitAtEngine, limitedByAxleMax);
+	} else {
+		limitedByAxleMax = false;
+	}
+
+	return result;
+}
+
+float TorqueModel::getTorqueLoss() const {
+	// TODO!
+	return 0;
 }
 
 percent_t TorqueModel::getThrottleRequest() {
