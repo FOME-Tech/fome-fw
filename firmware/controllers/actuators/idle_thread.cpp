@@ -58,7 +58,7 @@ IIdleTargetController::TargetInfo IdleTargetController::getTargetRpm(float clt) 
 IIdleTargetController::Phase IdleTargetController::determinePhase(
 		float rpm,
 		IIdleTargetController::TargetInfo targetRpm,
-		SensorResult tps,
+		bool tpsIsAboveIdleThreshold,
 		float vss,
 		float crankingTaperFraction) {
 #if EFI_SHAFT_POSITION_INPUT
@@ -70,13 +70,7 @@ IIdleTargetController::Phase IdleTargetController::determinePhase(
 		return Phase::Cranking;
 	}
 
-	if (!tps) {
-		// If the TPS has failed, assume the engine is running
-		return Phase::Running;
-	}
-
-	// if throttle pressed, we're out of the idle corner
-	if (tps.Value > engineConfiguration->idlePidDeactivationTpsThreshold) {
+	if (tpsIsAboveIdleThreshold) {
 		looksLikeCoasting = false;
 		return Phase::Running;
 	}
@@ -121,10 +115,9 @@ float IdleTargetController::getCrankingTaperFraction(float clt) const {
 	return (float)engine->rpmCalculator.getRevolutionCounterSinceStart() / taperDuration;
 }
 
-IIdleTargetController::Output IdleTargetController::getOutput() {
+IIdleTargetController::Output IdleTargetController::getOutput(bool tpsIsAboveIdleThreshold) {
 	// On failed sensor, use 0 deg C - should give a safe highish idle
 	float clt = Sensor::getOrZero(SensorType::Clt);
-	auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 	float rpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
 
@@ -136,7 +129,7 @@ IIdleTargetController::Output IdleTargetController::getOutput() {
 	float crankingTaper = getCrankingTaperFraction(clt);
 
 	// Determine what operation phase we're in - idling or not
-	auto phase = determinePhase(rpm, target, tps, vehicleSpeed, crankingTaper);
+	auto phase = determinePhase(rpm, target, tpsIsAboveIdleThreshold, vehicleSpeed, crankingTaper);
 	currentPhase = static_cast<uint8_t>(phase);
 
 	if (phase != m_lastPhase && phase == Phase::Idling) {
@@ -312,9 +305,12 @@ float IdleController::getIdlePosition(float rpm, float rpmRate) {
 	float clt = Sensor::getOrZero(SensorType::Clt);
 	auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 
+	// Dead TPS counts as not idling so the idle controller doesn't fight you too bad (assume the engine is running)
+	bool tpsIsAboveIdleThreshold = !tps || tps.Value > engineConfiguration->idlePidDeactivationTpsThreshold;
+
 	// Target RPM and idle phase are computed by IdleTargetController (which runs earlier in the
 	// fast callback). Pull the cached result and mirror its diagnostics into idle_state_s for logging.
-	auto idleTargetState = engine->module<IdleTargetController>()->getOutput();
+	auto idleTargetState = engine->module<IdleTargetController>()->getOutput(tpsIsAboveIdleThreshold);
 	const auto& targetRpm = idleTargetState.target;
 
 	auto phase = idleTargetState.phase;

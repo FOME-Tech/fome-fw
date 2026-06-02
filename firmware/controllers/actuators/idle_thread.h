@@ -107,11 +107,11 @@ struct IIdleTargetController {
 	};
 
 	virtual TargetInfo getTargetRpm(float clt) = 0;
-	virtual Phase
-	determinePhase(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) = 0;
+	virtual Phase determinePhase(
+			float rpm, TargetInfo targetRpm, bool tpsIsAboveIdleThreshold, float vss, float crankingTaperFraction) = 0;
 	virtual float getCrankingTaperFraction(float clt) const = 0;
 
-	virtual Output getOutput() = 0;
+	virtual Output getOutput(bool tpsIsAboveThreshold) = 0;
 };
 
 class IdleTargetController : public IIdleTargetController, public EngineModule, public idle_target_s {
@@ -120,11 +120,15 @@ public:
 	using interface_t = IIdleTargetController;
 
 	TargetInfo getTargetRpm(float clt) override;
-	Phase
-	determinePhase(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) override;
+	Phase determinePhase(
+			float rpm,
+			TargetInfo targetRpm,
+			bool tpsIsAboveIdleThreshold,
+			float vss,
+			float crankingTaperFraction) override;
 	float getCrankingTaperFraction(float clt) const override;
 
-	Output getOutput() override;
+	Output getOutput(bool tpsIsAboveIdleThreshold) override;
 
 private:
 	Phase m_lastPhase = Phase::Cranking;

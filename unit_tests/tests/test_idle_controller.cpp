@@ -97,7 +97,7 @@ TEST(idle_v2, testDeterminePhase) {
 
 	// First test stopped engine
 	engine->rpmCalculator.setRpmValue(0);
-	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, unexpected, 0, 10));
+	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, false, 0, 10));
 
 	// Now engine is running!
 	// Controller doesn't need this other than for isCranking()
@@ -106,50 +106,50 @@ TEST(idle_v2, testDeterminePhase) {
 	advanceTimeUs(1);
 
 	// Test invalid TPS, but inside the idle window
-	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, unexpected, 0, 10));
+	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, true, 0, 10));
 
 	// Valid TPS should now be inside the zone
-	EXPECT_EQ(ICP::Idling, dut.determinePhase(1000, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1000, targetInfo, false, 0, 10));
 
 	// Inside the zone, but vehicle speed too fast
-	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, 0, 25, 10));
+	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, false, 25, 10));
 
 	// Check that shortly after cranking, the cranking taper inhibits coasting...
-	EXPECT_EQ(ICP::CrankToIdleTaper, dut.determinePhase(1500, targetInfo, 0, 0, 0.5f));
+	EXPECT_EQ(ICP::CrankToIdleTaper, dut.determinePhase(1500, targetInfo, false, 0, 0.5f));
 	// ...but allows closed loop
-	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 0.5f));
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, false, 0, 0.5f));
 
 	// Above TPS threshold should be outside the zone
-	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, 10, 0, 10));
+	EXPECT_EQ(ICP::Running, dut.determinePhase(1000, targetInfo, true, 0, 10));
 
 	// Above target, below (target + upperLimit) should be in idle zone
-	EXPECT_EQ(ICP::Idling, dut.determinePhase(1099, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1099, targetInfo, false, 0, 10));
 
 	// above upper limit and on throttle should be out of idle zone
-	EXPECT_EQ(ICP::Running, dut.determinePhase(1101, targetInfo, 10, 0, 10));
+	EXPECT_EQ(ICP::Running, dut.determinePhase(1101, targetInfo, true, 0, 10));
 
 	// Below TPS but above RPM should be outside the zone
-	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, targetInfo, 0, 0, 10));
-	EXPECT_EQ(ICP::Coasting, dut.determinePhase(5000, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1101, targetInfo, false, 0, 10));
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(5000, targetInfo, false, 0, 10));
 
 	// Check hysteresis behavior: entry RPM 1100, exit 1200
 	targetInfo.IdleEntryRpm = 1000 + 100;
 	targetInfo.IdleExitRpm = 1000 + 200;
 
 	// Below entry: idling
-	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, false, 0, 10));
 
 	// Between thresholds: still idling
-	EXPECT_EQ(ICP::Idling, dut.determinePhase(1150, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1150, targetInfo, false, 0, 10));
 
 	// Above exit: coasting
-	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1250, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1250, targetInfo, false, 0, 10));
 
 	// Between thresholds: still coasting
-	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1150, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Coasting, dut.determinePhase(1150, targetInfo, false, 0, 10));
 
 	// Below entry: idling
-	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, 0, 0, 10));
+	EXPECT_EQ(ICP::Idling, dut.determinePhase(1050, targetInfo, false, 0, 10));
 }
 
 TEST(idle_v2, inhibitIdleAfterCranking) {
@@ -168,7 +168,7 @@ TEST(idle_v2, inhibitIdleAfterCranking) {
 
 	// Start cranking - this resets the timer
 	engine->rpmCalculator.setRpmValue(0);
-	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, unexpected, 0, 10));
+	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, true, 0, 10));
 
 	// Now engine is running
 	engine->rpmCalculator.setRpmValue(1000);
@@ -199,7 +199,7 @@ TEST(idle_v2, inhibitIdleAfterCrankingDisabled) {
 
 	// Start cranking
 	engine->rpmCalculator.setRpmValue(0);
-	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, unexpected, 0, 10));
+	EXPECT_EQ(ICP::Cranking, dut.determinePhase(0, targetInfo, false, 0, 10));
 
 	// Now engine is running - idle should work immediately since feature is disabled
 	engine->rpmCalculator.setRpmValue(1000);
@@ -588,13 +588,13 @@ struct IntegrationIdleMock : public IdleController {
 };
 
 // Installs a mock IdleTargetController in the module list whose getOutput() returns the given
-// target/phase/taper. This is where getIdlePosition() now sources phase determination from.
+// target/phase/taper. This is where getIdlePosition() sources phase determination from.
 static void mockIdleTarget(MockIdleTargetController& mock, TgtInfo target, ICP phase, float crankingTaperFraction) {
 	IIdleTargetController::Output out;
 	out.target = target;
 	out.phase = phase;
 	out.crankingTaperFraction = crankingTaperFraction;
-	EXPECT_CALL(mock, getOutput()).WillRepeatedly(Return(out));
+	EXPECT_CALL(mock, getOutput(_)).WillRepeatedly(Return(out));
 	engine->engineModules.get<IdleTargetController>().set(&mock);
 }
 

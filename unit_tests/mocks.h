@@ -168,12 +168,12 @@ public:
 			determinePhase,
 			(float rpm,
 			 IIdleTargetController::TargetInfo targetRpm,
-			 SensorResult tps,
+			 bool tpsIsAboveIdleThreshold,
 			 float vss,
 			 float crankingTaperFraction),
 			(override));
 	MOCK_METHOD(float, getCrankingTaperFraction, (float clt), (const, override));
-	MOCK_METHOD(IIdleTargetController::Output, getOutput, (), (override));
+	MOCK_METHOD(IIdleTargetController::Output, getOutput, (bool tpsIsAboveIdleThreshold), (override));
 };
 
 class MockIgnitionController : public IgnitionController {
