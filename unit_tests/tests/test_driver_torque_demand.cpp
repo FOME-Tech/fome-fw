@@ -26,8 +26,6 @@ TEST(DriverTorqueDemand, InterpolatesPositiveDemand) {
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 25);
 
 	EXPECT_NEAR(engine->module<TorqueModel>()->driverDemand(), 250, 0.5);
-	// The logged state mirrors the returned demand.
-	EXPECT_NEAR(engine->module<TorqueModel>()->m_driverTorqueDemand, 250, 0.5);
 }
 
 TEST(DriverTorqueDemand, HandlesSignedDemand) {

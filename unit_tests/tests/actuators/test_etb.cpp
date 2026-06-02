@@ -20,7 +20,7 @@ using ::testing::StrictMock;
 
 class MockTorqueModel : public TorqueModelBase {
 public:
-	MOCK_METHOD(float, driverDemand, (), (override));
+	MOCK_METHOD(float, driverDemand, (), (const, override));
 	MOCK_METHOD(percent_t, getThrottleRequest, (), (override));
 };
 
