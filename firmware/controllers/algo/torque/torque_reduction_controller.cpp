@@ -45,9 +45,9 @@ angle_t TorqueReductionController::update() {
 	auto out = getReduction(request);
 
 	// Publish for logging
-	reductionRequest = request;
+	reductionRequest = 100 * request; // logs in percent
 	retardApplied = out.retardDeg;
-	cutFraction = out.cutFraction;
+	cutFraction = 100 * out.cutFraction; // logs in percent
 
 #if EFI_LAUNCH_CONTROL
 	engine->torqueReductionSparkLimiter.setTargetSkipRatio(out.cutFraction);
