@@ -51,8 +51,8 @@ float TorqueModel::driverDemand() const {
 	// Same pedal source and sanitization as the ETB setpoint path.
 	float pedal = clampF(0, Sensor::get(SensorType::AcceleratorPedal).value_or(0), 100);
 
-	// driverTorqueTable is indexed [pedal][rpm], reusing the ETB pedal-table axes.
-	return interpolate3d(config->driverTorqueTable, config->pedalToTpsPedalBins, pedal, config->pedalToTpsRpmBins, rpm);
+	return interpolate3d(
+			config->driverTorqueTable, config->driverTorquePedalBins, pedal, config->driverTorqueRpmBins, rpm);
 }
 
 float TorqueModel::applyTorqueLimits(const float torqueRequested) {

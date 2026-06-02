@@ -478,6 +478,13 @@ bool validateConfig() {
 		ensureArrayIsAscending("Small PW adder", config->smallPulseAdderBins);
 	}
 
+	if (engineConfiguration->enableTorqueModel) {
+		ensureArrayIsAscending("Driver torque demand pedal", config->driverTorquePedalBins);
+		ensureArrayIsAscending("Driver torque demand RPM", config->driverTorqueRpmBins);
+
+		ensureArrayIsAscending("Torque reduction bins", config->torqueReductionRetardReqBins);
+	}
+
 	return true;
 }
 

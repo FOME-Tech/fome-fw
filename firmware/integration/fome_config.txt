@@ -172,7 +172,6 @@ struct_no_prefix engine_configuration_s
 #define BOOST_RPM_COUNT 8
 #define BOOST_LOAD_COUNT 8
 #define PEDAL_TO_TPS_SIZE 8
-#define TORQUE_LOSS_SIZE 6
 #define FUEL_LEVEL_TABLE_COUNT 8
 
 #define STFT_CELL_COUNT 4
@@ -1509,13 +1508,13 @@ uint8_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] pedalToTpsTable;;"%", 1, 0, 0, 10
 uint8_t[PEDAL_TO_TPS_SIZE] pedalToTpsPedalBins;;"%", 1, 0, 0, 120, 0
 uint8_t[PEDAL_TO_TPS_SIZE] autoscale pedalToTpsRpmBins;;"RPM", 100, 0, 0, 25000, 0
 
-! Driver torque demand: requested brake torque by RPM (X) and pedal (Y). Signed.
-! Reuses pedalToTpsRpmBins / pedalToTpsPedalBins as its axes.
-int16_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] autoscale driverTorqueTable;Driver demand: requested brake engine torque by RPM (X) and pedal (Y);"Nm", 0.1, 0, -2000, 2000, 1
+int16_t[12 x 12] autoscale driverTorqueTable;Driver demand: requested brake engine torque by RPM (X) and pedal (Y);"Nm", 0.1, 0, -2000, 2000, 1
+uint8_t[12] autoscale driverTorquePedalBins;;"%", 0.5, 0, 0, 120, 1
+uint8_t[12] autoscale driverTorqueRpmBins;;"RPM", 100, 0, 0, 25000, 0
 
-int16_t[TORQUE_LOSS_SIZE x TORQUE_LOSS_SIZE] autoscale torqueLossTable;Torque lost to friction and engine accessories.;"Nm", 0.1, 0, -2000, 2000, 1
-int16_t[TORQUE_LOSS_SIZE] torqueLossRpmBins;;"RPM", 1, 0, 0, 25000, 0
-int16_t[TORQUE_LOSS_SIZE] torqueLossLoadBins;;"", 1, 0, -10000, 10000, 0
+int16_t[6 x 6] autoscale torqueLossTable;Torque lost to friction and engine accessories.;"Nm", 0.1, 0, -2000, 2000, 1
+int16_t[6] torqueLossRpmBins;;"RPM", 1, 0, 0, 25000, 0
+int16_t[6] torqueLossLoadBins;;"", 1, 0, -10000, 10000, 0
 
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2
