@@ -4,7 +4,8 @@ struct_no_prefix torque_model_s
 	float m_torqueRequested;Requested torque;"Nm", 1, 0, -2000, 2000, 1
 	float m_torqueRequestedLimited;Requested torque (limited);"Nm", 1, 0, -2000, 2000, 1
 	float m_torqueLoss;Torque loss;"Nm", 1, 0, -2000, 2000, 1
-	float m_grossTorque;Requested torque (limited);"Nm", 1, 0, -2000, 2000, 1
+	int16_t m_torqueLossLoadAxisValue;Loss table Y axis value;"", 1, 0, -10000, 10000, 0
+	float m_grossTorque;Gross torque;"Nm", 1, 0, -2000, 2000, 1
 
 	float m_airmassTarget;Target cycle airmass;"g", 1, 0, 0, 100, 3
 	float m_airmassActual;Measured cycle airmass;"g", 1, 0, 0, 100, 3

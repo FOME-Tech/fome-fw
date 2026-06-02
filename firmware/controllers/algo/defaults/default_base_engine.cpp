@@ -17,6 +17,10 @@ static void setDefaultTorqueModel() {
 	engineConfiguration->torqueModel.airmassTrimKp = 10;
 	engineConfiguration->torqueModel.airmassTrimKi = 20;
 	engineConfiguration->torqueModel.airmassTrimAuthority = 25;
+
+	engineConfiguration->torqueModel.torqueLossLoadAxis = GPPWM_Clt;
+	setLinearCurve(config->torqueLossRpmBins, 800, 7000, 1);
+	setLinearCurve(config->torqueLossLoadBins, -20, 100, 1);
 }
 
 /* Cylinder to bank mapping */

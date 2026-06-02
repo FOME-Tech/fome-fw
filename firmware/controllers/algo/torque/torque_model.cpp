@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "throttle_model.h"
+#include "gppwm_channel.h"
 
 #include <algorithm>
 
@@ -83,9 +84,16 @@ float TorqueModel::applyTorqueLimits(const float torqueRequested) {
 	return result;
 }
 
-float TorqueModel::getTorqueLoss() const {
-	// TODO!
-	return 0;
+float TorqueModel::getTorqueLoss() {
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	// The Y axis is user-selectable (default coolant temperature); fall back to 0 if its
+	// source sensor is unavailable so the lookup still uses the first load column.
+	float loadAxis = readGppwmChannel(engineConfiguration->torqueModel.torqueLossLoadAxis).value_or(0);
+	m_torqueLossLoadAxisValue = loadAxis;
+
+	// torqueLossTable is indexed [load][rpm]: load is the row (Y) axis, rpm the column (X).
+	return interpolate3d(config->torqueLossTable, config->torqueLossLoadBins, loadAxis, config->torqueLossRpmBins, rpm);
 }
 
 percent_t TorqueModel::getThrottleRequest() {

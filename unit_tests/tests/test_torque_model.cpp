@@ -201,7 +201,7 @@ public:
 	float driverDemand() const override {
 		return m_demand;
 	}
-	float getTorqueLoss() const override {
+	float getTorqueLoss() override {
 		return m_loss;
 	}
 
@@ -290,4 +290,84 @@ TEST(TorqueModelFlow, UsesLimitedTorqueAndAddsLoss) {
 	EXPECT_FLOAT_EQ(tm.m_grossTorque, 320);
 	EXPECT_FLOAT_EQ(tm.m_airmassTarget, 320.0f / 90);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, 320.0f / 90);
+}
+
+// ============================ getTorqueLoss ============================
+
+namespace {
+void setupLossAxes() {
+	copyArray(config->torqueLossRpmBins, {0, 1000, 2000, 3000, 4000, 5000});
+	copyArray(config->torqueLossLoadBins, {0, 20, 40, 60, 80, 100});
+}
+} // namespace
+
+TEST(TorqueModelLoss, InterpolatesAcrossRpm) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+	setupLossAxes();
+
+	engineConfiguration->torqueModel.torqueLossLoadAxis = GPPWM_Clt;
+
+	// Loss = 10 Nm per 1000 RPM, flat across the load axis.
+	for (int y = 0; y < TORQUE_LOSS_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LOSS_SIZE; x++) {
+			config->torqueLossTable[y][x] = config->torqueLossRpmBins[x] * 0.01f;
+		}
+	}
+
+	Sensor::setMockValue(SensorType::Clt, 60);
+
+	Sensor::setMockValue(SensorType::Rpm, 2000);
+	EXPECT_NEAR(tm.getTorqueLoss(), 20, 0.1);
+
+	// Halfway between the 2000 and 3000 RPM columns.
+	Sensor::setMockValue(SensorType::Rpm, 2500);
+	EXPECT_NEAR(tm.getTorqueLoss(), 25, 0.1);
+}
+
+TEST(TorqueModelLoss, UsesSelectedLoadAxis) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+	setupLossAxes();
+
+	// Loss depends only on the Y (load) axis here.
+	for (int y = 0; y < TORQUE_LOSS_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LOSS_SIZE; x++) {
+			config->torqueLossTable[y][x] = config->torqueLossLoadBins[y];
+		}
+	}
+
+	Sensor::setMockValue(SensorType::Rpm, 3000);
+	Sensor::setMockValue(SensorType::Clt, 0);
+	Sensor::setMockValue(SensorType::Iat, 80);
+
+	// CLT selected (=0) -> bottom load row.
+	engineConfiguration->torqueModel.torqueLossLoadAxis = GPPWM_Clt;
+	EXPECT_NEAR(tm.getTorqueLoss(), 0, 0.1);
+	// The resolved Y-axis value is logged for the TS table cursor.
+	EXPECT_NEAR(tm.m_torqueLossLoadAxisValue, 0, 0.1);
+
+	// Switching the Y axis to IAT (=80) picks the top load row instead.
+	engineConfiguration->torqueModel.torqueLossLoadAxis = GPPWM_Iat;
+	EXPECT_NEAR(tm.getTorqueLoss(), 80, 0.1);
+	EXPECT_NEAR(tm.m_torqueLossLoadAxisValue, 80, 0.1);
+}
+
+TEST(TorqueModelLoss, SupportsNegativeLoss) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+	setupLossAxes();
+
+	engineConfiguration->torqueModel.torqueLossLoadAxis = GPPWM_Clt;
+
+	for (int y = 0; y < TORQUE_LOSS_SIZE; y++) {
+		for (int x = 0; x < TORQUE_LOSS_SIZE; x++) {
+			config->torqueLossTable[y][x] = -15;
+		}
+	}
+
+	Sensor::setMockValue(SensorType::Clt, 60);
+	Sensor::setMockValue(SensorType::Rpm, 2500);
+
+	EXPECT_NEAR(tm.getTorqueLoss(), -15, 0.1);
 }

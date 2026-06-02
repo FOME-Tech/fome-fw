@@ -172,6 +172,7 @@ struct_no_prefix engine_configuration_s
 #define BOOST_RPM_COUNT 8
 #define BOOST_LOAD_COUNT 8
 #define PEDAL_TO_TPS_SIZE 8
+#define TORQUE_LOSS_SIZE 6
 #define FUEL_LEVEL_TABLE_COUNT 8
 
 #define STFT_CELL_COUNT 4
@@ -1444,6 +1445,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 		float airmassTrimKp;Closed-loop airmass trim proportional gain, in percent of feed-forward flow per gram of airmass error.;"%/g", 1, 0, 0, 1000, 2
 		float airmassTrimKi;Closed-loop airmass trim integral gain.;"%/g/s", 1, 0, 0, 1000, 2
 		uint8_t airmassTrimAuthority;Maximum trim the closed-loop may apply to the commanded flow, plus or minus.;"%", 1, 0, 0, 100, 0
+		gppwm_channel_e torqueLossLoadAxis;Y axis for the torque loss table.;
 	end_struct
 
 	torque_model_cfg torqueModel
@@ -1510,6 +1512,10 @@ uint8_t[PEDAL_TO_TPS_SIZE] autoscale pedalToTpsRpmBins;;"RPM", 100, 0, 0, 25000,
 ! Driver torque demand: requested brake torque by RPM (X) and pedal (Y). Signed.
 ! Reuses pedalToTpsRpmBins / pedalToTpsPedalBins as its axes.
 int16_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] autoscale driverTorqueTable;Driver demand: requested brake engine torque by RPM (X) and pedal (Y);"Nm", 0.1, 0, -2000, 2000, 1
+
+int16_t[TORQUE_LOSS_SIZE x TORQUE_LOSS_SIZE] autoscale torqueLossTable;Torque lost to friction and engine accessories.;"Nm", 0.1, 0, -2000, 2000, 1
+int16_t[TORQUE_LOSS_SIZE] torqueLossRpmBins;;"RPM", 1, 0, 0, 25000, 0
+int16_t[TORQUE_LOSS_SIZE] torqueLossLoadBins;;"", 1, 0, -10000, 10000, 0
 
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2

@@ -12,7 +12,7 @@ public:
 	void onFastCallback() override final;
 
 	virtual float driverDemand() const = 0;
-	virtual float getTorqueLoss() const = 0;
+	virtual float getTorqueLoss() = 0;
 	virtual float applyTorqueLimits(float torqueRequested) = 0;
 
 	// Sink for the computed per-cycle airmass target. The real model drives the ETB through
@@ -44,7 +44,7 @@ private:
 class TorqueModel : public TorqueModelBase {
 public:
 	float driverDemand() const override;
-	float getTorqueLoss() const override;
+	float getTorqueLoss() override;
 	float applyTorqueLimits(float torqueRequested) override;
 	void commandAirmass(float airmassTarget) override;
 
