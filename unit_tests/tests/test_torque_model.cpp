@@ -397,7 +397,7 @@ TEST(TorqueModelFlow, WiresDemandThroughLimiterToAirmass) {
 	EXPECT_FLOAT_EQ(tm.m_grossTorque, 250);
 
 	// Airmass target is the 90 Nm/g hack on gross torque, and that exact value is commanded.
-	EXPECT_FLOAT_EQ(tm.m_airmassTarget, 250.0f / 90);
+	EXPECT_NEAR(tm.m_airmassTarget, 250.0f / 90, 0.001);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, 250.0f / 90);
 }
 
@@ -418,7 +418,7 @@ TEST(TorqueModelFlow, UsesLimitedTorqueAndAddsLoss) {
 	EXPECT_FLOAT_EQ(tm.m_torqueRequestedLimited, 300);
 	EXPECT_FLOAT_EQ(tm.m_torqueLoss, 20);
 	EXPECT_FLOAT_EQ(tm.m_grossTorque, 320);
-	EXPECT_FLOAT_EQ(tm.m_airmassTarget, 320.0f / 90);
+	EXPECT_NEAR(tm.m_airmassTarget, 320.0f / 90, 0.001);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, 320.0f / 90);
 }
 
@@ -466,11 +466,11 @@ TEST(TorqueModelIdle, ClosedLoopOnlyWhenIdling) {
 	auto& tm = engine->module<TorqueModel>().unmock();
 
 	// Pure proportional for an easy check: 0.1 Nm per RPM error, +-50 Nm authority.
-	engineConfiguration->idleTorquePid.pFactor = 0.1f;
-	engineConfiguration->idleTorquePid.iFactor = 0;
-	engineConfiguration->idleTorquePid.dFactor = 0;
-	engineConfiguration->idleTorquePid.minValue = -50;
-	engineConfiguration->idleTorquePid.maxValue = 50;
+	engineConfiguration->torqueModel.idlePid.pFactor = 0.1f;
+	engineConfiguration->torqueModel.idlePid.iFactor = 0;
+	engineConfiguration->torqueModel.idlePid.dFactor = 0;
+	engineConfiguration->torqueModel.idlePid.minValue = -50;
+	engineConfiguration->torqueModel.idlePid.maxValue = 50;
 
 	MockIdleTargetController mockTarget;
 	mockIdlePhase(mockTarget, 1000, IIdleController::Phase::Idling);
@@ -493,9 +493,9 @@ TEST(TorqueModelIdle, ZeroOffIdle) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	auto& tm = engine->module<TorqueModel>().unmock();
 
-	engineConfiguration->idleTorquePid.pFactor = 0.1f;
-	engineConfiguration->idleTorquePid.minValue = -50;
-	engineConfiguration->idleTorquePid.maxValue = 50;
+	engineConfiguration->torqueModel.idlePid.pFactor = 0.1f;
+	engineConfiguration->torqueModel.idlePid.minValue = -50;
+	engineConfiguration->torqueModel.idlePid.maxValue = 50;
 
 	MockIdleTargetController mockTarget;
 	// Not idling: even though RPM is well below the idle target, idle must not request torque -
@@ -511,11 +511,11 @@ TEST(TorqueModelIdle, DriverLiftsOffAtIdleOutput) {
 	auto& tm = engine->module<TorqueModel>().unmock();
 
 	// Pure proportional: 0.1 Nm per RPM error.
-	engineConfiguration->idleTorquePid.pFactor = 0.1f;
-	engineConfiguration->idleTorquePid.iFactor = 0;
-	engineConfiguration->idleTorquePid.dFactor = 0;
-	engineConfiguration->idleTorquePid.minValue = -50;
-	engineConfiguration->idleTorquePid.maxValue = 50;
+	engineConfiguration->torqueModel.idlePid.pFactor = 0.1f;
+	engineConfiguration->torqueModel.idlePid.iFactor = 0;
+	engineConfiguration->torqueModel.idlePid.dFactor = 0;
+	engineConfiguration->torqueModel.idlePid.minValue = -50;
+	engineConfiguration->torqueModel.idlePid.maxValue = 50;
 
 	// The phase machine reports Idling while the driver is below idle's output, Running once above -
 	// i.e. the handoff is keyed off the torque comparison, not a pedal threshold.

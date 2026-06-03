@@ -104,10 +104,10 @@ TEST(TorqueReduction, GatedOffWhenDisabled) {
 	EXPECT_NEAR(dut.reductionRequest, 0, 0.001);
 	EXPECT_NEAR(dut.cutFraction, 0, 0.001);
 
-	// Enabled: the stored request drives retard + cut, and state is published
+	// Enabled: the stored request drives retard + cut, and state is published (request/cut log in percent)
 	engineConfiguration->torqueReductionEnabled = true;
 	EXPECT_NEAR(dut.update(), 14, 0.1);
-	EXPECT_NEAR(dut.reductionRequest, 1.0f, 0.001);
+	EXPECT_NEAR(dut.reductionRequest, 100, 0.5);
 	EXPECT_NEAR(dut.retardApplied, 14, 0.1);
-	EXPECT_NEAR(dut.cutFraction, 1.0f, 0.001);
+	EXPECT_NEAR(dut.cutFraction, 100, 0.5);
 }

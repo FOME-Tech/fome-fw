@@ -1,17 +1,17 @@
 #include "pch.h"
 
 namespace {
-// The driver torque table reuses the ETB pedal-table axes (RPM x pedal).
+// The driver torque table is indexed [pedal][rpm] on its own dedicated axes.
 void setupAxes() {
-	copyArray(config->pedalToTpsRpmBins, {0, 1000, 2000, 3000, 4000, 5000, 6000, 7000});
-	copyArray(config->pedalToTpsPedalBins, {0, 10, 20, 30, 40, 50, 60, 70});
+	copyArray(config->driverTorqueRpmBins, {0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000});
+	copyArray(config->driverTorquePedalBins, {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110});
 }
 
 // Fill the (signed) torque table as torquePerPedal * pedal, flat across RPM.
 void fillTablePedalScaled(int torquePerPedal) {
-	for (int p = 0; p < PEDAL_TO_TPS_SIZE; p++) {
-		for (int r = 0; r < PEDAL_TO_TPS_SIZE; r++) {
-			config->driverTorqueTable[p][r] = torquePerPedal * config->pedalToTpsPedalBins[p];
+	for (size_t p = 0; p < efi::size(config->driverTorquePedalBins); p++) {
+		for (size_t r = 0; r < efi::size(config->driverTorqueRpmBins); r++) {
+			config->driverTorqueTable[p][r] = torquePerPedal * config->driverTorquePedalBins[p];
 		}
 	}
 }
