@@ -14,12 +14,12 @@ void TorqueModelBase::onFastCallback() {
 	float driverTorqueDemand = driverDemand();
 	m_driverTorqueDemand = driverTorqueDemand;
 
-	float idleTorqueDemand = idleDemand(driverTorqueDemand);
-	m_idleTorqueDemand = idleTorqueDemand;
+	auto idleTorqueDemand = idleDemand(driverTorqueDemand);
+	m_idleTorqueDemand = idleTorqueDemand.value_or(0);
 
 	// Arbitrate demands: deliver whatever the highest demand asks for.
 	// TODO: take the max of other demand sources too, revmatch, cruise, etc
-	float torqueRequested = std::max(driverTorqueDemand, idleTorqueDemand);
+	float torqueRequested = std::max(driverTorqueDemand, idleTorqueDemand.value_or(-10000));
 	m_torqueRequested = torqueRequested;
 
 	// Apply any limiting to the requested torque
@@ -59,7 +59,7 @@ float TorqueModel::driverDemand() const {
 			config->driverTorqueTable, config->driverTorquePedalBins, pedal, config->driverTorqueRpmBins, rpm);
 }
 
-float TorqueModel::idleDemand(float driverDemand) {
+expected<float> TorqueModel::idleDemand(float driverDemand) {
 #if EFI_IDLE_CONTROL
 	// Bind the PID to its config on first use / after a config change (mirrors the IAC idle reset).
 	if (!m_idleTorquePid.isSame(&engineConfiguration->torqueModel.idlePid)) {
@@ -76,15 +76,15 @@ float TorqueModel::idleDemand(float driverDemand) {
 	auto idleState = engine->module<IdleTargetController>()->getOutput(driverAboveIdle);
 
 	// Only close the loop while actually idling - same gate as the IAC closed loop. Off-idle we emit
-	// 0 so the driver demand wins the max(). The feed-forward to hold idle is the loss table, which
-	// is added to the arbitrated demand downstream, so the target brake torque here is just 0 Nm.
+	// unexpected so the idle control output is ignored. The feed-forward to hold idle is the loss table, which is added
+	// to the arbitrated demand downstream, so the target brake torque here is just 0 Nm.
 	if (idleState.phase != IIdleController::Phase::Idling) {
 		// Don't carry stale correction into the next idle entry. Keep a positive I-term (it props RPM
 		// up on return to idle); drop a negative one (it would fight the return).
 		if (m_idleTorquePid.getIntegration() <= 0 || engineConfiguration->alwaysResetPidLeavingIdle) {
 			m_idleTorquePid.reset();
 		}
-		return 0;
+		return unexpected;
 	}
 
 	float rpm = engine->triggerCentral.instantRpm.getInstantRpm();

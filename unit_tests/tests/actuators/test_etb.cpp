@@ -24,7 +24,7 @@ public:
 	MOCK_METHOD(percent_t, getThrottleRequest, (), (override));
 
 	// Unused by the ETB tests, but required to make the class concrete.
-	float idleDemand(float /*driverDemand*/) override {
+	expected<float> idleDemand(float /*driverDemand*/) override {
 		return 0;
 	}
 	float getTorqueLoss() override {

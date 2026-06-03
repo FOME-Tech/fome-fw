@@ -13,7 +13,7 @@ public:
 	void onFastCallback() override final;
 
 	virtual float driverDemand() const = 0;
-	virtual float idleDemand(float driverDemand) = 0;
+	virtual expected<float> idleDemand(float driverDemand) = 0;
 	virtual float getTorqueLoss() = 0;
 	virtual float applyTorqueLimits(float torqueRequested) = 0;
 
@@ -46,7 +46,7 @@ private:
 class TorqueModel : public TorqueModelBase {
 public:
 	float driverDemand() const override;
-	float idleDemand(float driverDemand) override;
+	expected<float> idleDemand(float driverDemand) override;
 	float getTorqueLoss() override;
 	float applyTorqueLimits(float torqueRequested) override;
 	void commandAirmass(float airmassTarget) override;

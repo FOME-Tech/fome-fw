@@ -327,7 +327,7 @@ public:
 	float driverDemand() const override {
 		return m_demand;
 	}
-	float idleDemand(float /*driverDemand*/) override {
+	expected<float> idleDemand(float /*driverDemand*/) override {
 		return m_idleDemand;
 	}
 	float getTorqueLoss() override {
