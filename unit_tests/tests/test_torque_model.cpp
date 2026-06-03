@@ -478,15 +478,15 @@ TEST(TorqueModelIdle, ClosedLoopOnlyWhenIdling) {
 	// Driver demand well below idle's output throughout, so idle stays the governor.
 	// Below target -> positive torque demand to bring RPM up: 0.1 * (1000 - 900) = 10.
 	engine->triggerCentral.instantRpm.m_instantRpm = 900;
-	EXPECT_FLOAT_EQ(10, tm.idleDemand(-100));
+	EXPECT_FLOAT_EQ(10, tm.idleDemand(-100).value_or(-1234));
 
 	// Above target -> negative demand: 0.1 * (1000 - 1100) = -10.
 	engine->triggerCentral.instantRpm.m_instantRpm = 1100;
-	EXPECT_FLOAT_EQ(-10, tm.idleDemand(-100));
+	EXPECT_FLOAT_EQ(-10, tm.idleDemand(-100).value_or(-1234));
 
 	// Authority clamp: huge error saturates at minValue/maxValue.
 	engine->triggerCentral.instantRpm.m_instantRpm = 0;
-	EXPECT_FLOAT_EQ(50, tm.idleDemand(-100));
+	EXPECT_FLOAT_EQ(50, tm.idleDemand(-100).value_or(-1234));
 }
 
 TEST(TorqueModelIdle, ZeroOffIdle) {
@@ -503,7 +503,8 @@ TEST(TorqueModelIdle, ZeroOffIdle) {
 	mockIdlePhase(mockTarget, 1000, IIdleController::Phase::Running);
 
 	engine->triggerCentral.instantRpm.m_instantRpm = 900;
-	EXPECT_FLOAT_EQ(0, tm.idleDemand(0));
+
+	EXPECT_EQ(tm.idleDemand(0), unexpected);
 }
 
 TEST(TorqueModelIdle, DriverLiftsOffAtIdleOutput) {
@@ -534,13 +535,13 @@ TEST(TorqueModelIdle, DriverLiftsOffAtIdleOutput) {
 	engine->triggerCentral.instantRpm.m_instantRpm = 900;
 
 	// Governor seeds at 0; driver far below -> idle governs and provides 10.
-	EXPECT_FLOAT_EQ(10, tm.idleDemand(-100));
+	EXPECT_FLOAT_EQ(10, tm.idleDemand(-100).value_or(-1234));
 
 	// Driver still asking for less than idle's 10 Nm -> idle keeps governing (no premature liftoff).
-	EXPECT_FLOAT_EQ(10, tm.idleDemand(5));
+	EXPECT_FLOAT_EQ(10, tm.idleDemand(5).value_or(-1234));
 
 	// Driver now asking for more than idle's 10 Nm -> driver has lifted off, idle abstains.
-	EXPECT_FLOAT_EQ(0, tm.idleDemand(20));
+	EXPECT_EQ(tm.idleDemand(20), unexpected);
 }
 
 // ============================ getTorqueLoss ============================
