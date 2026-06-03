@@ -56,8 +56,15 @@ void updateWidebandFirmware(uint8_t sensorIndex) {
 	}
 
 	if (!waitAck()) {
-		efiPrintf("Wideband Update ERROR: Expected ACK from targeted entry, didn't get one.");
-		setUpdateState(WidebandUpdateState::ErrorTargetedEntry);
+		{
+			// That didn't work, try the legacy request with zero length
+			CanTxMessage m(WB_BL_ENTER, 0, bus, true);
+		}
+
+		if (!waitAck()) {
+			efiPrintf("Wideband Update ERROR: Expected ACK from targeted entry, didn't get one.");
+			setUpdateState(WidebandUpdateState::ErrorTargetedEntry);
+		}
 		return;
 	}
 
