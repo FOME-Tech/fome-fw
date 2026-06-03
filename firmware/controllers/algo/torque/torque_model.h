@@ -1,6 +1,7 @@
 #pragma once
 
 #include "torque_model_generated.h"
+#include "efi_pid.h"
 
 struct TorqueModelBase : public EngineModule, public torque_model_s {
 public:
@@ -12,6 +13,7 @@ public:
 	void onFastCallback() override final;
 
 	virtual float driverDemand() const = 0;
+	virtual float idleDemand(float driverDemand) = 0;
 	virtual float getTorqueLoss() = 0;
 	virtual float applyTorqueLimits(float torqueRequested) = 0;
 
@@ -44,6 +46,7 @@ private:
 class TorqueModel : public TorqueModelBase {
 public:
 	float driverDemand() const override;
+	float idleDemand(float driverDemand) override;
 	float getTorqueLoss() override;
 	float applyTorqueLimits(float torqueRequested) override;
 	void commandAirmass(float airmassTarget) override;
@@ -52,4 +55,12 @@ public:
 	percent_t getThrottleRequest() override;
 
 	AirmassDispatcher airmassDispatcher;
+
+private:
+	// Closed-loop idle: PID on idle RPM error, output is a brake-torque demand in Nm.
+	Pid m_idleTorquePid;
+
+	// Last torque the idle governor was providing. The driver lifts off idle once requesting more
+	// than this, so it's the handoff threshold and must persist even while idle isn't governing.
+	float m_idleGovernorTorque = 0;
 };

@@ -14,8 +14,12 @@ void TorqueModelBase::onFastCallback() {
 	float driverTorqueDemand = driverDemand();
 	m_driverTorqueDemand = driverTorqueDemand;
 
-	// TODO: take the max of other demand sources, revmatch, idle, etc
-	float torqueRequested = driverTorqueDemand;
+	float idleTorqueDemand = idleDemand(driverTorqueDemand);
+	m_idleTorqueDemand = idleTorqueDemand;
+
+	// Arbitrate demands: deliver whatever the highest demand asks for.
+	// TODO: take the max of other demand sources too, revmatch, cruise, etc
+	float torqueRequested = std::max(driverTorqueDemand, idleTorqueDemand);
 	m_torqueRequested = torqueRequested;
 
 	// Apply any limiting to the requested torque
@@ -53,6 +57,54 @@ float TorqueModel::driverDemand() const {
 
 	return interpolate3d(
 			config->driverTorqueTable, config->driverTorquePedalBins, pedal, config->driverTorqueRpmBins, rpm);
+}
+
+float TorqueModel::idleDemand(float driverDemand) {
+#if EFI_IDLE_CONTROL
+	// Bind the PID to its config on first use / after a config change (mirrors the IAC idle reset).
+	if (!m_idleTorquePid.isSame(&engineConfiguration->torqueModel.idlePid)) {
+		m_idleTorquePid.initPidClass(&engineConfiguration->torqueModel.idlePid);
+	}
+
+	// The torque-land analog of "pedal above the idle deactivation threshold": the driver has lifted
+	// off the idle governor once asking for more torque than idle was providing. Feeding that to the
+	// phase machine makes the idle->driver handoff happen exactly where the two demands are equal, so
+	// it's bumpless - there's no sliver of pedal that requests less torque than idle and stalls.
+	bool driverAboveIdle = driverDemand > m_idleGovernorTorque;
+
+	// Idle target RPM and phase come from the shared IdleTargetController (runs earlier this tick).
+	auto idleState = engine->module<IdleTargetController>()->getOutput(driverAboveIdle);
+
+	// Only close the loop while actually idling - same gate as the IAC closed loop. Off-idle we emit
+	// 0 so the driver demand wins the max(). The feed-forward to hold idle is the loss table, which
+	// is added to the arbitrated demand downstream, so the target brake torque here is just 0 Nm.
+	if (idleState.phase != IIdleController::Phase::Idling) {
+		// Don't carry stale correction into the next idle entry. Keep a positive I-term (it props RPM
+		// up on return to idle); drop a negative one (it would fight the return).
+		if (m_idleTorquePid.getIntegration() <= 0 || engineConfiguration->alwaysResetPidLeavingIdle) {
+			m_idleTorquePid.reset();
+		}
+		return 0;
+	}
+
+	float rpm = engine->triggerCentral.instantRpm.getInstantRpm();
+	float rpmRate = engine->rpmCalculator.getRpmAcceleration();
+
+	// Clamp the integrator to the configured output authority so it can't wind up past it.
+	m_idleTorquePid.iTermMin = engineConfiguration->torqueModel.idlePid.minValue;
+	m_idleTorquePid.iTermMax = engineConfiguration->torqueModel.idlePid.maxValue;
+
+	// Override the D term with the measured RPM rate, avoiding derivative kick from quantized RPM.
+	m_idleTorquePid.setDTermOverride(-rpmRate);
+
+	// Remember what idle is providing: this is the threshold the driver has to exceed to lift off, so
+	// it must reflect the governor value even across ticks where idle isn't winning the arbitration.
+	m_idleGovernorTorque =
+			m_idleTorquePid.getOutput(idleState.target.ClosedLoopTarget, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
+	return m_idleGovernorTorque;
+#else
+	return 0;
+#endif // EFI_IDLE_CONTROL
 }
 
 float TorqueModel::applyTorqueLimits(const float torqueRequested) {

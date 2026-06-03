@@ -2,6 +2,9 @@
 
 #include "throttle_model.h"
 
+using ::testing::_;
+using ::testing::Return;
+
 namespace {
 // Drive the real GearDetector into a single, known gear. With these numbers the gearbox ratio
 // works out to exactly `gear1`, so the detector reports 1st gear and the total ratio at the
@@ -324,6 +327,9 @@ public:
 	float driverDemand() const override {
 		return m_demand;
 	}
+	float idleDemand(float /*driverDemand*/) override {
+		return m_idleDemand;
+	}
 	float getTorqueLoss() override {
 		return m_loss;
 	}
@@ -342,6 +348,7 @@ public:
 
 	// Stubbed leaf outputs
 	float m_demand = 0;
+	float m_idleDemand = 0;
 	float m_loss = 0;
 	float m_limited = 0;
 
@@ -413,6 +420,127 @@ TEST(TorqueModelFlow, UsesLimitedTorqueAndAddsLoss) {
 	EXPECT_FLOAT_EQ(tm.m_grossTorque, 320);
 	EXPECT_FLOAT_EQ(tm.m_airmassTarget, 320.0f / 90);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, 320.0f / 90);
+}
+
+TEST(TorqueModelFlow, ArbitratesMaxOfDriverAndIdle) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = true;
+
+	FlowMockTorqueModel tm;
+	// Driver off the pedal (idle corner), idle controller asking for more torque to hold RPM.
+	tm.m_demand = 5;
+	tm.m_idleDemand = 30;
+	tm.m_limited = 30;
+
+	tm.onFastCallback();
+
+	// Both demands are logged; the larger one wins and is what the limiter sees.
+	EXPECT_FLOAT_EQ(tm.m_driverTorqueDemand, 5);
+	EXPECT_FLOAT_EQ(tm.m_idleTorqueDemand, 30);
+	EXPECT_FLOAT_EQ(tm.m_torqueRequested, 30);
+	EXPECT_FLOAT_EQ(tm.m_limiterSawRequest, 30);
+
+	// On throttle: driver demand dominates, idle drops out of the max().
+	tm.m_demand = 400;
+	tm.m_idleDemand = 30;
+	tm.m_limited = 400;
+	tm.onFastCallback();
+	EXPECT_FLOAT_EQ(tm.m_torqueRequested, 400);
+}
+
+// ============================ idleDemand ============================
+
+namespace {
+// Installs a mock IdleTargetController reporting the given idle target RPM and phase.
+void mockIdlePhase(MockIdleTargetController& mock, float targetRpm, IIdleController::Phase phase) {
+	IIdleTargetController::Output out;
+	out.target.ClosedLoopTarget = targetRpm;
+	out.phase = phase;
+	EXPECT_CALL(mock, getOutput(_)).WillRepeatedly(Return(out));
+	engine->engineModules.get<IdleTargetController>().set(&mock);
+}
+} // namespace
+
+TEST(TorqueModelIdle, ClosedLoopOnlyWhenIdling) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	// Pure proportional for an easy check: 0.1 Nm per RPM error, +-50 Nm authority.
+	engineConfiguration->idleTorquePid.pFactor = 0.1f;
+	engineConfiguration->idleTorquePid.iFactor = 0;
+	engineConfiguration->idleTorquePid.dFactor = 0;
+	engineConfiguration->idleTorquePid.minValue = -50;
+	engineConfiguration->idleTorquePid.maxValue = 50;
+
+	MockIdleTargetController mockTarget;
+	mockIdlePhase(mockTarget, 1000, IIdleController::Phase::Idling);
+
+	// Driver demand well below idle's output throughout, so idle stays the governor.
+	// Below target -> positive torque demand to bring RPM up: 0.1 * (1000 - 900) = 10.
+	engine->triggerCentral.instantRpm.m_instantRpm = 900;
+	EXPECT_FLOAT_EQ(10, tm.idleDemand(-100));
+
+	// Above target -> negative demand: 0.1 * (1000 - 1100) = -10.
+	engine->triggerCentral.instantRpm.m_instantRpm = 1100;
+	EXPECT_FLOAT_EQ(-10, tm.idleDemand(-100));
+
+	// Authority clamp: huge error saturates at minValue/maxValue.
+	engine->triggerCentral.instantRpm.m_instantRpm = 0;
+	EXPECT_FLOAT_EQ(50, tm.idleDemand(-100));
+}
+
+TEST(TorqueModelIdle, ZeroOffIdle) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	engineConfiguration->idleTorquePid.pFactor = 0.1f;
+	engineConfiguration->idleTorquePid.minValue = -50;
+	engineConfiguration->idleTorquePid.maxValue = 50;
+
+	MockIdleTargetController mockTarget;
+	// Not idling: even though RPM is well below the idle target, idle must not request torque -
+	// the driver demand owns the throttle off-idle.
+	mockIdlePhase(mockTarget, 1000, IIdleController::Phase::Running);
+
+	engine->triggerCentral.instantRpm.m_instantRpm = 900;
+	EXPECT_FLOAT_EQ(0, tm.idleDemand(0));
+}
+
+TEST(TorqueModelIdle, DriverLiftsOffAtIdleOutput) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	// Pure proportional: 0.1 Nm per RPM error.
+	engineConfiguration->idleTorquePid.pFactor = 0.1f;
+	engineConfiguration->idleTorquePid.iFactor = 0;
+	engineConfiguration->idleTorquePid.dFactor = 0;
+	engineConfiguration->idleTorquePid.minValue = -50;
+	engineConfiguration->idleTorquePid.maxValue = 50;
+
+	// The phase machine reports Idling while the driver is below idle's output, Running once above -
+	// i.e. the handoff is keyed off the torque comparison, not a pedal threshold.
+	MockIdleTargetController mockTarget;
+	IIdleTargetController::Output idling;
+	idling.target.ClosedLoopTarget = 1000;
+	idling.phase = IIdleController::Phase::Idling;
+	IIdleTargetController::Output running;
+	running.target.ClosedLoopTarget = 1000;
+	running.phase = IIdleController::Phase::Running;
+	EXPECT_CALL(mockTarget, getOutput(false)).WillRepeatedly(Return(idling));
+	EXPECT_CALL(mockTarget, getOutput(true)).WillRepeatedly(Return(running));
+	engine->engineModules.get<IdleTargetController>().set(&mockTarget);
+
+	// 100 RPM below target -> idle is providing 0.1 * 100 = 10 Nm.
+	engine->triggerCentral.instantRpm.m_instantRpm = 900;
+
+	// Governor seeds at 0; driver far below -> idle governs and provides 10.
+	EXPECT_FLOAT_EQ(10, tm.idleDemand(-100));
+
+	// Driver still asking for less than idle's 10 Nm -> idle keeps governing (no premature liftoff).
+	EXPECT_FLOAT_EQ(10, tm.idleDemand(5));
+
+	// Driver now asking for more than idle's 10 Nm -> driver has lifted off, idle abstains.
+	EXPECT_FLOAT_EQ(0, tm.idleDemand(20));
 }
 
 // ============================ getTorqueLoss ============================
