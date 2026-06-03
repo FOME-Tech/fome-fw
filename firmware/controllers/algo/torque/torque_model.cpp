@@ -84,6 +84,7 @@ expected<float> TorqueModel::idleDemand(float driverDemand) {
 		if (m_idleTorquePid.getIntegration() <= 0 || engineConfiguration->alwaysResetPidLeavingIdle) {
 			m_idleTorquePid.reset();
 		}
+		m_idleGovernorTorque = 0;
 		return unexpected;
 	}
 
