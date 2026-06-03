@@ -23,14 +23,17 @@
 #define FLASH_CR_STRT FLASH_CR_START
 
 // QW bit supercedes the older BSY bit
-#define intFlashWaitWithSleep()                                                                                        \
-	do {                                                                                                               \
-		chThdSleepMilliseconds(1);                                                                                     \
-	} while (FLASH_SR & FLASH_SR_QW);
-#define intFlashWaitWhileBusy()                                                                                        \
-	do {                                                                                                               \
-		__DSB();                                                                                                       \
-	} while (FLASH_SR & FLASH_SR_QW);
+void intFlashWait(uint8_t ctlr, int waitFirstMs) {
+	if (waitFirstMs) {
+		chThdSleepMilliseconds(waitFirstMs);
+	}
+
+	while (FLASH_SR & FLASH_SR_QW) {
+		chThdSleepMilliseconds(1);
+
+		__DSB();
+	}
+}
 
 flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 	flashaddr_t address = FLASH_BASE;
@@ -147,7 +150,7 @@ int intFlashSectorErase(flashsector_t sector) {
 	} cacheDisabler;
 
 	/* Wait for any busy flags. */
-	intFlashWaitWithSleep();
+	intFlashWait(ctlr, 1);
 
 	/* Clearing error status bits.*/
 	intFlashClearErrors(ctlr);
@@ -168,7 +171,7 @@ int intFlashSectorErase(flashsector_t sector) {
 	FLASH_CR |= (FLASH_CR_SER | FLASH_CR_PSIZE_VALUE | (sectorRegIdx << FLASH_CR_SNB_Pos) | FLASH_CR_START);
 
 	/* Wait until it's finished. */
-	intFlashWaitWithSleep();
+	intFlashWait(ctlr, 1000);
 
 	/* Sector erase flag does not clear automatically. */
 	FLASH_CR &= ~FLASH_CR_SER;
@@ -211,7 +214,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	}
 
 	/* Wait for any busy flags */
-	intFlashWaitWhileBusy();
+	intFlashWait(ctlr, 1);
 
 	/* Setup parallelism before program */
 	FLASH_CR &= ~FLASH_CR_PSIZE_MASK;
@@ -242,7 +245,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		__DSB();
 
 		/* Wait for completion */
-		intFlashWaitWhileBusy();
+		intFlashWait(ctlr, 1);
 
 		/* Exit flash programming mode */
 		FLASH_CR &= ~FLASH_CR_PG;
