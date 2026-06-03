@@ -18,18 +18,18 @@ struct idle_state_s {
 	bool notIdling : 1 {};
 	// offset 0 bit 5
 	bool isBlipping : 1 {};
-	// offset 0 bit 6
-	bool looksLikeRunning : 1 {};
-	// offset 0 bit 7
-	bool looksLikeCoasting : 1 {};
-	// offset 0 bit 8
-	bool looksLikeCrankToIdle : 1 {};
 	// coasting
-	// offset 0 bit 9
+	// offset 0 bit 6
 	bool isIdleCoasting : 1 {};
 	// Closed loop active
-	// offset 0 bit 10
+	// offset 0 bit 7
 	bool isIdleClosedLoop : 1 {};
+	// offset 0 bit 8
+	bool unusedBit_0_8 : 1 {};
+	// offset 0 bit 9
+	bool unusedBit_0_9 : 1 {};
+	// offset 0 bit 10
+	bool unusedBit_0_10 : 1 {};
 	// offset 0 bit 11
 	bool unusedBit_0_11 : 1 {};
 	// offset 0 bit 12
@@ -72,86 +72,56 @@ struct idle_state_s {
 	bool unusedBit_0_30 : 1 {};
 	// offset 0 bit 31
 	bool unusedBit_0_31 : 1 {};
-	// Target RPM: Base
-	// offset 4
-	uint16_t targetRpmByClt = (uint16_t)0;
-	// Target RPM: A/C bump
-	// offset 6
-	uint16_t targetRpmAcBump = (uint16_t)0;
-	// Target RPM: Lua adder
-	// offset 8
-	float luaAddRpm = (float)0;
-	// Target RPM
-	// offset 12
-	uint16_t idleTarget = (uint16_t)0;
-	// Entry threshold
-	// offset 14
-	uint16_t idleEntryRpm = (uint16_t)0;
-	// Exit threshold
-	// offset 16
-	uint16_t idleExitRpm = (uint16_t)0;
-	// Phase
-	// offset 18
-	uint8_t currentPhase = (uint8_t)0;
-	// offset 19
-	uint8_t alignmentFill_at_19[1];
 	// Open loop: Lua Adder
-	// offset 20
+	// offset 4
 	float luaAdd = (float)0;
 	// Open loop: iacByTpsTaper
-	// offset 24
+	// offset 8
 	float iacByTpsTaper = (float)0;
 	// Open loop: iacByRpmTaper
-	// offset 28
+	// offset 12
 	float iacByRpmTaper = (float)0;
 	// Open loop: Base
 	// %
-	// offset 32
+	// offset 16
 	scaled_channel<uint8_t, 2, 1> openLoopBase = (uint8_t)0;
 	// Open loop: AC bump
 	// %
-	// offset 33
+	// offset 17
 	uint8_t openLoopAcBump = (uint8_t)0;
 	// Open loop: Fan bump
 	// %
-	// offset 34
+	// offset 18
 	uint8_t openLoopFanBump = (uint8_t)0;
 	// Open loop
 	// %
-	// offset 35
+	// offset 19
 	scaled_channel<uint8_t, 2, 1> openLoop = (uint8_t)0;
 	// Closed loop
-	// offset 36
+	// offset 20
 	float idleClosedLoop = (float)0;
 	// Position
 	// %
-	// offset 40
+	// offset 24
 	float currentIdlePosition = (float)0;
 	// Target airmass
 	// mg
-	// offset 44
+	// offset 28
 	uint16_t idleTargetAirmass = (uint16_t)0;
 	// Target airflow
 	// kg/h
-	// offset 46
+	// offset 30
 	scaled_channel<uint16_t, 100, 1> idleTargetFlow = (uint16_t)0;
 };
-static_assert(sizeof(idle_state_s) == 48);
-static_assert(offsetof(idle_state_s, targetRpmByClt) == 4);
-static_assert(offsetof(idle_state_s, targetRpmAcBump) == 6);
-static_assert(offsetof(idle_state_s, luaAddRpm) == 8);
-static_assert(offsetof(idle_state_s, idleTarget) == 12);
-static_assert(offsetof(idle_state_s, idleEntryRpm) == 14);
-static_assert(offsetof(idle_state_s, idleExitRpm) == 16);
-static_assert(offsetof(idle_state_s, currentPhase) == 18);
-static_assert(offsetof(idle_state_s, luaAdd) == 20);
-static_assert(offsetof(idle_state_s, iacByTpsTaper) == 24);
-static_assert(offsetof(idle_state_s, iacByRpmTaper) == 28);
-static_assert(offsetof(idle_state_s, openLoopBase) == 32);
-static_assert(offsetof(idle_state_s, openLoopAcBump) == 33);
-static_assert(offsetof(idle_state_s, openLoopFanBump) == 34);
-static_assert(offsetof(idle_state_s, openLoop) == 35);
-static_assert(offsetof(idle_state_s, idleClosedLoop) == 36);
-static_assert(offsetof(idle_state_s, currentIdlePosition) == 40);
-static_assert(offsetof(idle_state_s, idleTargetAirmass) == 44);
-static_assert(offsetof(idle_state_s, idleTargetFlow) == 46);
+static_assert(sizeof(idle_state_s) == 32);
+static_assert(offsetof(idle_state_s, luaAdd) == 4);
+static_assert(offsetof(idle_state_s, iacByTpsTaper) == 8);
+static_assert(offsetof(idle_state_s, iacByRpmTaper) == 12);
+static_assert(offsetof(idle_state_s, openLoopBase) == 16);
+static_assert(offsetof(idle_state_s, openLoopAcBump) == 17);
+static_assert(offsetof(idle_state_s, openLoopFanBump) == 18);
+static_assert(offsetof(idle_state_s, openLoop) == 19);
+static_assert(offsetof(idle_state_s, idleClosedLoop) == 20);
+static_assert(offsetof(idle_state_s, currentIdlePosition) == 24);
+static_assert(offsetof(idle_state_s, idleTargetAirmass) == 28);
+static_assert(offsetof(idle_state_s, idleTargetFlow) == 30);

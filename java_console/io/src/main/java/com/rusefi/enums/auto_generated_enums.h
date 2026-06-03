@@ -20,6 +20,8 @@ constexpr inline const char* getLive_data_e(live_data_e value) {
 			return "LDS_high_pressure_fuel_pump";
 		case LDS_idle_state:
 			return "LDS_idle_state";
+		case LDS_idle_target:
+			return "LDS_idle_target";
 		case LDS_ignition_state:
 			return "LDS_ignition_state";
 		case LDS_injector_model:
