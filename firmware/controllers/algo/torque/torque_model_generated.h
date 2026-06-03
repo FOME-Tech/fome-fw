@@ -39,7 +39,7 @@ struct torque_model_s {
 	// Target airmass CL trim
 	// %
 	// offset 18
-	scaled_channel<uint16_t, 100, 1> m_airmassTrim = (uint16_t)0;
+	scaled_channel<int16_t, 100, 1> m_airmassTrim = (int16_t)0;
 	// Requested throttle position
 	// %
 	// offset 20
