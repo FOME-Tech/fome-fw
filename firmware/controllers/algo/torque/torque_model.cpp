@@ -18,7 +18,20 @@ void TorqueModelBase::onFastCallback() {
 	m_torqueLoss = torqueLoss;
 
 	// Torque management
+	float grossTorqueRequest = calculateGrossTorqueRequest(torqueLoss);
 
+	// Convert to airmass and drive throttle
+	{
+		// for now, 90Nm/gram is an OK hack
+		float totalAirmassTarget = grossTorqueRequest / 90;
+		m_airmassTarget = totalAirmassTarget;
+
+		// Hand the target off to the airmass path (real impl drives the ETB)
+		commandAirmass(totalAirmassTarget, airmassActual);
+	}
+}
+
+float TorqueModel::calculateGrossTorqueRequest(float torqueLoss) {
 	// Collect demands
 	float driverTorqueDemand = driverDemand();
 	m_driverTorqueDemand = driverTorqueDemand;
@@ -39,12 +52,7 @@ void TorqueModelBase::onFastCallback() {
 	float grossTorque = torqueRequestedLimited + torqueLoss;
 	m_grossTorque = grossTorque;
 
-	// for now, 90Nm/gram is an OK hack
-	float totalAirmassTarget = grossTorque / 90;
-	m_airmassTarget = totalAirmassTarget;
-
-	// Hand the target off to the airmass path (real impl drives the ETB)
-	commandAirmass(totalAirmassTarget, airmassActual);
+	return grossTorque;
 }
 
 void TorqueModel::commandAirmass(float totalAirmassTarget, float actualAirmassPerCycle) {

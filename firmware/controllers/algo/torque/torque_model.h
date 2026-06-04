@@ -17,6 +17,8 @@ public:
 	virtual float getTorqueLoss() = 0;
 	virtual float applyTorqueLimits(float torqueRequested) = 0;
 
+	virtual float calculateGrossTorqueRequest(float torqueLoss) = 0;
+
 	// Sink for the computed per-cycle airmass target. The real model drives the ETB through
 	// the airmass dispatcher; tests can capture the target without any airpath setup.
 	virtual void commandAirmass(float airmassTarget, float actualAirmassPerCycle) = 0;
@@ -48,6 +50,8 @@ public:
 	float getTorqueLoss() override;
 	float applyTorqueLimits(float torqueRequested) override;
 	void commandAirmass(float airmassTarget, float actualAirmassPerCycle) override;
+
+	float calculateGrossTorqueRequest(float torqueLoss) override;
 
 	// Outputs
 	percent_t getThrottleRequest() override;
