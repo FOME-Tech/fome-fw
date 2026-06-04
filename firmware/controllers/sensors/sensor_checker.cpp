@@ -372,6 +372,40 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	// Scenario 3: Pile of sync errors (same check as primary trigger)
 	checkTriggerDecoder(decoder, tooManyErrorsCode);
 }
+
+static void checkTriggers() {
+	checkTriggerDecoder(
+			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
+
+	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
+	if (engine->triggerCentral.engineMovedRecently() &&
+		engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
+		checkCamDecoder(
+				0,
+				0,
+				"VVT Bank 1 Intake",
+				ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors);
+		checkCamDecoder(
+				0,
+				1,
+				"VVT Bank 1 Exhaust",
+				ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors);
+		checkCamDecoder(
+				1,
+				0,
+				"VVT Bank 2 Intake",
+				ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors);
+		checkCamDecoder(
+				1,
+				1,
+				"VVT Bank 2 Exhaust",
+				ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors);
+	}
+}
 #endif // EFI_SHAFT_POSITION_INPUT
 
 void SensorChecker::onSlowCallback() {
@@ -463,37 +497,7 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::OilTemperature);
 
 #if EFI_SHAFT_POSITION_INPUT
-	checkTriggerDecoder(
-			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
-
-	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
-	if (engine->triggerCentral.engineMovedRecently() &&
-		engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
-		checkCamDecoder(
-				0,
-				0,
-				"VVT Bank 1 Intake",
-				ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors);
-		checkCamDecoder(
-				0,
-				1,
-				"VVT Bank 1 Exhaust",
-				ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors);
-		checkCamDecoder(
-				1,
-				0,
-				"VVT Bank 2 Intake",
-				ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors);
-		checkCamDecoder(
-				1,
-				1,
-				"VVT Bank 2 Exhaust",
-				ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors);
-	}
+	checkTriggers();
 #endif // EFI_SHAFT_POSITION_INPUT
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
