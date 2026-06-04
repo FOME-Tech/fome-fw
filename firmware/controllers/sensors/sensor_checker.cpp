@@ -373,7 +373,12 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	checkTriggerDecoder(decoder, tooManyErrorsCode);
 }
 
-static void checkTriggers(bool isRunning, float rpm) {
+static void checkTriggers(bool isStopped, bool isRunning, float rpm) {
+	// Nothing to check if the engine is stopped
+	if (isStopped) {
+		return;
+	}
+
 	// If the engine is running but below cranking RPM threshold, disable trigger checking.
 	// It may be about to stop, so don't worry about anything that goes wrong.
 	if (isRunning && rpm < engineConfiguration->cranking.rpm) {
@@ -384,8 +389,7 @@ static void checkTriggers(bool isRunning, float rpm) {
 			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
 
 	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
-	if (engine->triggerCentral.engineMovedRecently() &&
-		engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
+	if (engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
 		checkCamDecoder(
 				0,
 				0,
@@ -502,11 +506,12 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::OilPressure);
 	check(SensorType::OilTemperature);
 
+	bool isStopped = engine->rpmCalculator.isStopped();
 	bool isRunning = engine->rpmCalculator.isRunning();
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 #if EFI_SHAFT_POSITION_INPUT
-	checkTriggers(isRunning, rpm);
+	checkTriggers(isStopped, isRunning, rpm);
 #endif // EFI_SHAFT_POSITION_INPUT
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error

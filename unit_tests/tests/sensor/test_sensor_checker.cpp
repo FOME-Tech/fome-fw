@@ -37,7 +37,9 @@ static void setupSensorCheckerPreconditions() {
 	auto& triggerState = engine->triggerCentral.triggerState;
 	triggerState.crankSynchronizationCounter = 25;
 	triggerState.hasSignal = true;
-	engine->triggerCentral.m_lastEventTimer.reset();
+
+	// Simulate engine running
+	engine->rpmCalculator.setRpmValue(2000);
 }
 
 // Helper: set up a cam decoder that looks fully healthy
@@ -176,8 +178,8 @@ TEST(SensorCheckerCam, SkippedWhenEngineNotMoving) {
 
 	setupSensorCheckerPreconditions();
 
-	// Don't reset m_lastEventTimer — it's stale, so engineMovedRecently() returns false
-	engine->triggerCentral.m_lastEventTimer.init();
+	// Stop the engine
+	engine->rpmCalculator.setStopSpinning();
 
 	ASSERT_FALSE(engine->triggerCentral.vvtState[0][0].hasSignal);
 
