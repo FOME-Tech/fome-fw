@@ -339,8 +339,9 @@ public:
 		return m_limited;
 	}
 
-	void commandAirmass(float airmassTarget) override {
+	void commandAirmass(float airmassTarget, float actualAirmassPerCycle) override {
 		m_commandedAirmass = airmassTarget;
+		m_actualAirmassPerCycle = actualAirmassPerCycle;
 	}
 	percent_t getThrottleRequest() override {
 		return 0;
@@ -355,6 +356,7 @@ public:
 	// Captured inputs to the steps onFastCallback drives
 	float m_limiterSawRequest = -1;
 	float m_commandedAirmass = -1;
+	float m_actualAirmassPerCycle = -1;
 };
 } // namespace
 
@@ -374,6 +376,21 @@ TEST(TorqueModelFlow, DisabledIsANoOp) {
 	EXPECT_FLOAT_EQ(tm.m_driverTorqueDemand, 0);
 	EXPECT_FLOAT_EQ(tm.m_limiterSawRequest, -1);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, -1);
+	EXPECT_FLOAT_EQ(tm.m_actualAirmassPerCycle, -1);
+}
+
+TEST(TorqueModelFlow, WiresThroughActualAirmass) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = true;
+
+	FlowMockTorqueModel tm;
+
+	engine->fuelComputer.sdAirMassInOneCylinder = 0.3f;
+	engineConfiguration->cylindersCount = 5;
+
+	tm.onFastCallback();
+
+	EXPECT_FLOAT_EQ(tm.m_actualAirmassPerCycle, 0.3f * 5);
 }
 
 TEST(TorqueModelFlow, WiresDemandThroughLimiterToAirmass) {
@@ -399,6 +416,7 @@ TEST(TorqueModelFlow, WiresDemandThroughLimiterToAirmass) {
 	// Airmass target is the 90 Nm/g hack on gross torque, and that exact value is commanded.
 	EXPECT_NEAR(tm.m_airmassTarget, 250.0f / 90, 0.001);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, 250.0f / 90);
+	EXPECT_FLOAT_EQ(tm.m_actualAirmassPerCycle, 0);
 }
 
 TEST(TorqueModelFlow, UsesLimitedTorqueAndAddsLoss) {
@@ -420,6 +438,7 @@ TEST(TorqueModelFlow, UsesLimitedTorqueAndAddsLoss) {
 	EXPECT_FLOAT_EQ(tm.m_grossTorque, 320);
 	EXPECT_NEAR(tm.m_airmassTarget, 320.0f / 90, 0.001);
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, 320.0f / 90);
+	EXPECT_FLOAT_EQ(tm.m_actualAirmassPerCycle, 0);
 }
 
 TEST(TorqueModelFlow, ArbitratesMaxOfDriverAndIdle) {

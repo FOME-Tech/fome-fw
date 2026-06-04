@@ -33,7 +33,7 @@ public:
 	float applyTorqueLimits(float torqueRequested) override {
 		return torqueRequested;
 	}
-	void commandAirmass(float) override {}
+	void commandAirmass(float, float) override {}
 };
 
 TEST(etb, initializationNoPedal) {

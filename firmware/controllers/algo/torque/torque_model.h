@@ -19,7 +19,7 @@ public:
 
 	// Sink for the computed per-cycle airmass target. The real model drives the ETB through
 	// the airmass dispatcher; tests can capture the target without any airpath setup.
-	virtual void commandAirmass(float airmassTarget) = 0;
+	virtual void commandAirmass(float airmassTarget, float actualAirmassPerCycle) = 0;
 
 	// Output to ETB
 	virtual percent_t getThrottleRequest() = 0;
@@ -28,16 +28,14 @@ public:
 class AirmassDispatcher {
 public:
 	// targetAirmass is the desired per-cycle airmass [g/cycle]
-	void update(float targetAirmassPerCycle);
+	void update(float targetAirmassPerCycle, float actualAirmassPerCycle);
 
 	percent_t getThrottleRequest() const;
 	float getAirmassTrim() const;
-	float getActualAirmass() const;
 
 private:
 	percent_t m_throttleRequest = 0;
 	float m_airmassTrim = 0;
-	float m_actualAirmass = 0;
 
 	// Integrator accumulator for the hand-rolled airmass-trim PI
 	float m_trimITerm = 0;
@@ -49,7 +47,7 @@ public:
 	expected<float> idleDemand(float driverDemand) override;
 	float getTorqueLoss() override;
 	float applyTorqueLimits(float torqueRequested) override;
-	void commandAirmass(float airmassTarget) override;
+	void commandAirmass(float airmassTarget, float actualAirmassPerCycle) override;
 
 	// Outputs
 	percent_t getThrottleRequest() override;

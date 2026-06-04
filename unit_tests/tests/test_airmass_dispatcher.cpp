@@ -25,7 +25,6 @@ void setupAirpath(EngineTestHelper& eth) {
 	engineConfiguration->torqueModel.airmassTrimKp = 0;
 	engineConfiguration->torqueModel.airmassTrimKi = 0;
 	engineConfiguration->torqueModel.airmassTrimAuthority = 25;
-	engine->fuelComputer.sdAirMassInOneCylinder = 0;
 
 	Sensor::setMockValue(SensorType::Rpm, 3000);
 	Sensor::setMockValue(SensorType::Iat, 20);
@@ -53,7 +52,7 @@ TEST(AirmassDispatcher, RoundTripsThroughThrottleModel) {
 	float targetAirmass = 1.04f;
 	float expectedFlow = flowForAirmass(targetAirmass);
 
-	torqueModel.airmassDispatcher.update(targetAirmass);
+	torqueModel.airmassDispatcher.update(targetAirmass, 0);
 	percent_t throttle = torqueModel.getThrottleRequest();
 
 	// The commanded throttle, run forward through the throttle model at the measured MAP,
@@ -71,10 +70,10 @@ TEST(AirmassDispatcher, MonotonicInAirmass) {
 
 	auto& torqueModel = engine->module<TorqueModel>().unmock();
 
-	torqueModel.airmassDispatcher.update(0.6f);
+	torqueModel.airmassDispatcher.update(0.6f, 0);
 	percent_t low = torqueModel.getThrottleRequest();
 
-	torqueModel.airmassDispatcher.update(1.2f);
+	torqueModel.airmassDispatcher.update(1.2f, 0);
 	percent_t high = torqueModel.getThrottleRequest();
 
 	EXPECT_GT(high, low);
@@ -87,7 +86,7 @@ TEST(AirmassDispatcher, SaturatesToWideOpenWhenDemandExceedsCapacity) {
 	auto& torqueModel = engine->module<TorqueModel>().unmock();
 
 	// Far more air than a wide-open throttle could ever pass -> saturate to 100%.
-	torqueModel.airmassDispatcher.update(50);
+	torqueModel.airmassDispatcher.update(50, 0);
 
 	EXPECT_FLOAT_EQ(torqueModel.getThrottleRequest(), 100);
 }
@@ -103,7 +102,7 @@ TEST(AirmassDispatcher, DoesNotCommandWideOpenAtLowDemandWithAtmosphericManifold
 
 	// Manifold at inlet pressure, but only a trickle of air requested.
 	Sensor::setMockValue(SensorType::Map, 100);
-	torqueModel.airmassDispatcher.update(0.2f);
+	torqueModel.airmassDispatcher.update(0.2f, 0);
 
 	percent_t throttle = torqueModel.getThrottleRequest();
 	EXPECT_GT(throttle, 0);
@@ -117,12 +116,12 @@ TEST(AirmassDispatcher, ClosedWhenStoppedOrIdleDemand) {
 	auto& torqueModel = engine->module<TorqueModel>().unmock();
 
 	// No airflow requested.
-	torqueModel.airmassDispatcher.update(0);
+	torqueModel.airmassDispatcher.update(0, 0);
 	EXPECT_FLOAT_EQ(torqueModel.getThrottleRequest(), 0);
 
 	// Engine not turning.
 	Sensor::setMockValue(SensorType::Rpm, 0);
-	torqueModel.airmassDispatcher.update(0.30f);
+	torqueModel.airmassDispatcher.update(0.30f, 0.0f);
 	EXPECT_FLOAT_EQ(torqueModel.getThrottleRequest(), 0);
 }
 
@@ -144,14 +143,12 @@ TEST(AirmassDispatcher, TrimOpensThrottleWhenStarvedOfAir) {
 	float target = 1.04f;
 
 	// Baseline: feedback exactly matches target -> no trim, pure feed-forward.
-	engine->fuelComputer.sdAirMassInOneCylinder = target / engineConfiguration->cylindersCount;
-	torqueModel.airmassDispatcher.update(target);
+	torqueModel.airmassDispatcher.update(target, target);
 	percent_t baseline = torqueModel.getThrottleRequest();
 	EXPECT_NEAR(torqueModel.airmassDispatcher.getAirmassTrim(), 0, 1e-3);
 
 	// Measured airmass below target -> positive trim -> throttle opens further.
-	engine->fuelComputer.sdAirMassInOneCylinder = 0.5f * target / engineConfiguration->cylindersCount;
-	torqueModel.airmassDispatcher.update(target);
+	torqueModel.airmassDispatcher.update(target, 0.5f * target);
 
 	EXPECT_GT(torqueModel.airmassDispatcher.getAirmassTrim(), 0);
 	EXPECT_GT(torqueModel.getThrottleRequest(), baseline);
@@ -167,8 +164,7 @@ TEST(AirmassDispatcher, TrimClosesThrottleWhenOverAir) {
 	float target = 1.04f;
 
 	// Measured airmass above target -> negative trim -> less commanded flow.
-	engine->fuelComputer.sdAirMassInOneCylinder = 1.5f * target / engineConfiguration->cylindersCount;
-	torqueModel.airmassDispatcher.update(target);
+	torqueModel.airmassDispatcher.update(target, 1.5f * target);
 
 	EXPECT_LT(torqueModel.airmassDispatcher.getAirmassTrim(), 0);
 }
@@ -183,15 +179,14 @@ TEST(AirmassDispatcher, TrimResetsWhenClosed) {
 	auto& torqueModel = engine->module<TorqueModel>().unmock();
 
 	float target = 1.04f;
-	engine->fuelComputer.sdAirMassInOneCylinder = 0.5f * target / engineConfiguration->cylindersCount;
 
 	// Build up some trim over several cycles.
 	for (int i = 0; i < 20; i++) {
-		torqueModel.airmassDispatcher.update(target);
+		torqueModel.airmassDispatcher.update(target, 0.5f * target);
 	}
 	EXPECT_GT(torqueModel.airmassDispatcher.getAirmassTrim(), 0);
 
 	// Demand drops to zero - the integrator must not carry windup into the next tip-in.
-	torqueModel.airmassDispatcher.update(0);
+	torqueModel.airmassDispatcher.update(0, 0.5f * target);
 	EXPECT_FLOAT_EQ(torqueModel.airmassDispatcher.getAirmassTrim(), 0);
 }

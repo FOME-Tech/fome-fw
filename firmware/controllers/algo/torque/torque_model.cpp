@@ -10,6 +10,15 @@ void TorqueModelBase::onFastCallback() {
 		return;
 	}
 
+	// Forward calculation of current torque
+	float airmassActual = engine->fuelComputer.sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
+	m_airmassActual = airmassActual;
+
+	float torqueLoss = getTorqueLoss();
+	m_torqueLoss = torqueLoss;
+
+	// Torque management
+
 	// Collect demands
 	float driverTorqueDemand = driverDemand();
 	m_driverTorqueDemand = driverTorqueDemand;
@@ -27,8 +36,6 @@ void TorqueModelBase::onFastCallback() {
 	m_torqueRequestedLimited = torqueRequestedLimited;
 
 	// add any torque loss
-	float torqueLoss = getTorqueLoss();
-	m_torqueLoss = torqueLoss;
 	float grossTorque = torqueRequestedLimited + torqueLoss;
 	m_grossTorque = grossTorque;
 
@@ -37,14 +44,13 @@ void TorqueModelBase::onFastCallback() {
 	m_airmassTarget = totalAirmassTarget;
 
 	// Hand the target off to the airmass path (real impl drives the ETB)
-	commandAirmass(totalAirmassTarget);
+	commandAirmass(totalAirmassTarget, airmassActual);
 }
 
-void TorqueModel::commandAirmass(float totalAirmassTarget) {
-	airmassDispatcher.update(totalAirmassTarget);
+void TorqueModel::commandAirmass(float totalAirmassTarget, float actualAirmassPerCycle) {
+	airmassDispatcher.update(totalAirmassTarget, actualAirmassPerCycle);
 
 	// Logging
-	m_airmassActual = airmassDispatcher.getActualAirmass();
 	m_airmassTrim = airmassDispatcher.getAirmassTrim();
 	m_throttleRequest = airmassDispatcher.getThrottleRequest();
 }
@@ -194,12 +200,8 @@ percent_t TorqueModel::getThrottleRequest() {
 	return airmassDispatcher.getThrottleRequest();
 }
 
-void AirmassDispatcher::update(float targetAirmassPerCycle) {
+void AirmassDispatcher::update(float targetAirmassPerCycle, float actualAirmassPerCycle) {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-
-	// Measured airmass for the closed-loop trim - the same speed-density quantity fueling
-	// uses, scaled from per-cylinder up to whole-engine per cycle.
-	m_actualAirmass = engine->fuelComputer.sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
 
 	// No airflow if the engine isn't turning or nothing is being requested. Park the trim
 	// integrator at zero so it can't wind up while the throttle is held closed.
@@ -214,7 +216,7 @@ void AirmassDispatcher::update(float targetAirmassPerCycle) {
 	// percent correction on the commanded flow, so the throttle model's inverse provides the
 	// gain scheduling and the PI sees a near-linear plant.
 	auto& trimCfg = engineConfiguration->torqueModel;
-	float error = targetAirmassPerCycle - m_actualAirmass;
+	float error = targetAirmassPerCycle - actualAirmassPerCycle;
 	float dt = FAST_CALLBACK_PERIOD_MS / 1000.0f;
 	float authority = trimCfg.airmassTrimAuthority;
 
@@ -258,8 +260,4 @@ percent_t AirmassDispatcher::getThrottleRequest() const {
 
 float AirmassDispatcher::getAirmassTrim() const {
 	return m_airmassTrim;
-}
-
-float AirmassDispatcher::getActualAirmass() const {
-	return m_actualAirmass;
 }
