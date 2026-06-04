@@ -75,6 +75,11 @@ void Engine::periodicSlowCallback() {
 	for (int camIndex = 0; camIndex < CAMS_PER_BANK; camIndex++) {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
+
+	// If it's been too long since the last trigger event, the engine has stopped.
+	if (!triggerCentral.engineMovedRecently(getTimeNowNt()) && !rpmCalculator.isStopped()) {
+		OnTriggerSynchronizationLost();
+	}
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	efiWatchdog();
@@ -196,7 +201,8 @@ void Engine::OnTriggerStateProperState(efitick_t nowNt) {
 }
 
 void Engine::OnTriggerSynchronizationLost() {
-	// Needed for early instant-RPM detection
+	efiPrintf("engine stopped");
+
 	rpmCalculator.setStopSpinning();
 
 	triggerCentral.triggerState.resetState();
@@ -211,6 +217,9 @@ void Engine::OnTriggerSynchronizationLost() {
 	// Reset injector & ignition scheduling to avoid wrong mode or dwell during restart
 	injectionEvents.invalidate();
 	engine->ignitionEvents.isReady = false;
+
+	// Notify modules that the engine has stopped
+	engineModules.apply_all([](auto& m) { m.onEngineStop(); });
 }
 
 void Engine::OnTriggerSyncronization(bool wasSynchronized, bool isDecodingError) {
@@ -408,10 +417,6 @@ void Engine::periodicFastCallback() {
 	speedoUpdate();
 
 	engineModules.apply_all([](auto& m) { m.onFastCallback(); });
-}
-
-void Engine::onEngineStopped() {
-	engineModules.apply_all([](auto& m) { m.onEngineStop(); });
 }
 
 EngineRotationState* getEngineRotationState() {

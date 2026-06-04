@@ -327,7 +327,6 @@ public:
 
 	void periodicFastCallback();
 	void periodicSlowCallback();
-	void onEngineStopped();
 	void updateSlowSensors();
 	void updateSwitchInputs();
 	void updateTriggerWaveform();
