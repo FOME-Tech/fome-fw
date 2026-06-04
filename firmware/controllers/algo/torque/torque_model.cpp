@@ -31,7 +31,7 @@ void TorqueModelBase::onFastCallback() {
 	}
 }
 
-float TorqueModel::calculateGrossTorqueRequest(float torqueLoss) {
+float TorqueModelBase::calculateGrossTorqueRequest(float torqueLoss) {
 	// Collect demands
 	float driverTorqueDemand = driverDemand();
 	m_driverTorqueDemand = driverTorqueDemand;
