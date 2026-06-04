@@ -373,7 +373,13 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	checkTriggerDecoder(decoder, tooManyErrorsCode);
 }
 
-static void checkTriggers() {
+static void checkTriggers(bool isRunning, float rpm) {
+	// If the engine is running but below cranking RPM threshold, disable trigger checking.
+	// It may be about to stop, so don't worry about anything that goes wrong.
+	if (isRunning && rpm < engineConfiguration->cranking.rpm) {
+		return;
+	}
+
 	checkTriggerDecoder(
 			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
 
@@ -496,8 +502,11 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::OilPressure);
 	check(SensorType::OilTemperature);
 
+	bool isRunning = engine->rpmCalculator.isRunning();
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
 #if EFI_SHAFT_POSITION_INPUT
-	checkTriggers();
+	checkTriggers(isRunning, rpm);
 #endif // EFI_SHAFT_POSITION_INPUT
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
@@ -557,7 +566,7 @@ void SensorChecker::onSlowCallback() {
 	// Check for missing knock sensor (signal too low for too long)
 	// Only check if knock sensing is enabled and engine is running
 	auto knockNoiseTimeout = engineConfiguration->knockNoiseTimeout;
-	if (engineConfiguration->enableSoftwareKnock && knockNoiseTimeout > 0 && engine->rpmCalculator.isRunning()) {
+	if (engineConfiguration->enableSoftwareKnock && knockNoiseTimeout > 0 && isRunning) {
 		for (size_t i = 0; i < efi::size(m_lastGoodKnockSampleTimer); i++) {
 			if (m_hasSeenKnockSensor[i] && m_lastGoodKnockSampleTimer[i].hasElapsedSec(knockNoiseTimeout)) {
 				auto code = i == 0 ? ObdCode::OBD_Knock_Sensor_1_Low : ObdCode::OBD_Knock_Sensor_2_Low;
