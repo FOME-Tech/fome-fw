@@ -49,10 +49,6 @@ public:
 		efiSetPadMode("MAX31855 CS", pin, PAL_STM32_MODE_OUTPUT);
 	}
 
-	bool isEnabled() const override {
-		return true;
-	}
-
 	SPIDriver* spiDriver() const override {
 		return driver;
 	}

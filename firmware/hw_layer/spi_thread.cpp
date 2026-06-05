@@ -11,7 +11,7 @@ constexpr size_t MaxBackgroundSpiDevices = 16;
 constexpr int SpiThreadRateHz = 100;
 
 BackgroundSpiDevice* devices[MaxBackgroundSpiDevices] = {};
-int deviceCount = 0;
+size_t deviceCount = 0;
 efitick_t lastPollTimes[MaxBackgroundSpiDevices] = {};
 
 class BackgroundSpiController final : public PeriodicController<UTILITY_THREAD_STACK_SIZE> {
@@ -21,19 +21,9 @@ public:
 
 private:
 	void PeriodicTask(efitick_t nowNt) override {
-		BackgroundSpiDevice* localDevices[MaxBackgroundSpiDevices];
-		int count;
-
-		chSysLock();
-		count = deviceCount;
-		for (int i = 0; i < count; i++) {
-			localDevices[i] = devices[i];
-		}
-		chSysUnlock();
-
-		for (int i = 0; i < count; i++) {
-			auto* device = localDevices[i];
-			if (!device || !device->isEnabled()) {
+		for (size_t i = 0; i < deviceCount; i++) {
+			auto* device = devices[i];
+			if (!device) {
 				continue;
 			}
 
@@ -65,26 +55,21 @@ BackgroundSpiController backgroundSpiController;
 } // namespace
 
 bool registerBackgroundSpiDevice(BackgroundSpiDevice& device) {
-	chSysLock();
-	const int count = deviceCount;
-
-	for (int i = 0; i < count; i++) {
+	// Avoid double registrations
+	for (size_t i = 0; i < deviceCount; i++) {
 		if (devices[i] == &device) {
-			chSysUnlock();
-			backgroundSpiController.startThread();
 			return true;
 		}
 	}
 
-	if (count >= static_cast<int>(MaxBackgroundSpiDevices)) {
-		chSysUnlock();
+	// Avoid too many registrations
+	if (deviceCount >= MaxBackgroundSpiDevices) {
 		firmwareError(ObdCode::CUSTOM_ERR_UNEXPECTED_SPI, "Too many background SPI devices");
 		return false;
 	}
 
-	devices[count] = &device;
-	deviceCount = count + 1;
-	chSysUnlock();
+	devices[deviceCount] = &device;
+	deviceCount++;
 	backgroundSpiController.startThread();
 	return true;
 }
