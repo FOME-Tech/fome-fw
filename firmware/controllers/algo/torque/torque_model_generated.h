@@ -44,18 +44,22 @@ struct torque_model_s {
 	// %
 	// offset 20
 	scaled_channel<uint16_t, 100, 1> m_throttleRequest = (uint16_t)0;
-	// Generic limiter X axis
+	// Spark torque reduction request
+	// %
 	// offset 22
+	scaled_channel<uint8_t, 2, 1> m_sparkReductionRequest = (uint8_t)0;
+	// offset 23
+	uint8_t alignmentFill_at_23[1];
+	// Generic limiter X axis
+	// offset 24
 	int16_t m_limiterXAxisValue[4];
 	// Generic limiter Y axis
-	// offset 30
+	// offset 32
 	int16_t m_limiterYAxisValue[4];
 	// Generic limiter ceiling
 	// Nm
-	// offset 38
+	// offset 40
 	uint16_t m_limiterTorque[4];
-	// offset 46
-	uint8_t alignmentFill_at_46[2];
 	// Limited by engine max
 	// offset 48 bit 0
 	bool limitedByEngineMax : 1 {};
@@ -139,6 +143,7 @@ static_assert(offsetof(torque_model_s, m_airmassTarget) == 14);
 static_assert(offsetof(torque_model_s, m_airmassActual) == 16);
 static_assert(offsetof(torque_model_s, m_airmassTrim) == 18);
 static_assert(offsetof(torque_model_s, m_throttleRequest) == 20);
-static_assert(offsetof(torque_model_s, m_limiterXAxisValue) == 22);
-static_assert(offsetof(torque_model_s, m_limiterYAxisValue) == 30);
-static_assert(offsetof(torque_model_s, m_limiterTorque) == 38);
+static_assert(offsetof(torque_model_s, m_sparkReductionRequest) == 22);
+static_assert(offsetof(torque_model_s, m_limiterXAxisValue) == 24);
+static_assert(offsetof(torque_model_s, m_limiterYAxisValue) == 32);
+static_assert(offsetof(torque_model_s, m_limiterTorque) == 40);
