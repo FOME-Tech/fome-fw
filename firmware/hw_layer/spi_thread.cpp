@@ -20,9 +20,6 @@ public:
 		: PeriodicController("SpiWorker", PRIO_AUX_SPI, SpiThreadRateHz) {}
 
 private:
-	SPIDriver* m_activeDriver = nullptr;
-	SPIConfig* m_activeConfig = nullptr;
-
 	void PeriodicTask(efitick_t nowNt) override {
 		BackgroundSpiDevice* localDevices[MaxBackgroundSpiDevices];
 		int count;
@@ -36,7 +33,7 @@ private:
 
 		for (int i = 0; i < count; i++) {
 			auto* device = localDevices[i];
-			if (!device || !device->isSpiThreadEnabled()) {
+			if (!device || !device->isEnabled()) {
 				continue;
 			}
 
@@ -48,19 +45,15 @@ private:
 				continue;
 			}
 
-			auto* driver = device->getSpiThreadDriver();
-			auto* config = device->getSpiThreadConfig();
-			if (!driver || !config) {
+			auto* driver = device->spiDriver();
+			if (!driver) {
 				continue;
 			}
 
 			spiAcquireBus(driver);
-			if (driver != m_activeDriver || config != m_activeConfig) {
-				spiStart(driver, config);
-				m_activeDriver = driver;
-				m_activeConfig = config;
-			}
-			device->performSpiTransfer(*driver);
+			spiStart(driver, &device->config());
+			device->performTransfer(*driver);
+			spiStop(driver);
 			spiReleaseBus(driver);
 
 			lastPollTimes[i] = nowNt;

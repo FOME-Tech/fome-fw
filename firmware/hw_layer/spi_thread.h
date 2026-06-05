@@ -13,21 +13,13 @@
 
 class BackgroundSpiDevice {
 public:
-	virtual bool isSpiThreadEnabled() const = 0;
-	virtual SPIDriver* getSpiThreadDriver() const = 0;
-	virtual SPIConfig* getSpiThreadConfig() = 0;
+	virtual bool isEnabled() const = 0;
+	virtual SPIDriver* spiDriver() const = 0;
+	virtual const SPIConfig& config() = 0;
 	virtual int getSpiThreadPeriodMs() const = 0;
-	virtual void performSpiTransfer(SPIDriver& driver) = 0;
+	virtual void performTransfer(SPIDriver& driver) = 0;
 };
 
 bool registerBackgroundSpiDevice(BackgroundSpiDevice& device);
 
-#else
-
-class BackgroundSpiDevice {};
-
-inline bool registerBackgroundSpiDevice(BackgroundSpiDevice&) {
-	return false;
-}
-
-#endif
+#endif // HAL_USE_SPI

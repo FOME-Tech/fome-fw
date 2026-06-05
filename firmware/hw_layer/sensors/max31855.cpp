@@ -145,23 +145,23 @@ public:
 	explicit Max31855Channel(int channel)
 		: m_channel(channel) {}
 
-	bool isSpiThreadEnabled() const override {
+	bool isEnabled() const override {
 		return driver && isChannelConfigured[m_channel];
 	}
 
-	SPIDriver* getSpiThreadDriver() const override {
+	SPIDriver* spiDriver() const override {
 		return driver;
 	}
 
-	SPIConfig* getSpiThreadConfig() override {
-		return &spiConfig;
+	const SPIConfig& config() override {
+		return spiConfig;
 	}
 
 	int getSpiThreadPeriodMs() const override {
 		return 100;
 	}
 
-	void performSpiTransfer(SPIDriver& spi) override {
+	void performTransfer(SPIDriver& spi) override {
 		cachedEgtValues[m_channel].store(decodeEgtValue(readEgtPacket(spi, m_channel)), std::memory_order_relaxed);
 	}
 
