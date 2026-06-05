@@ -17,6 +17,7 @@ HW_LAYER_EMS_CPP = \
 	$(PROJECT_DIR)/hw_layer/hardware.cpp \
 	$(PROJECT_DIR)/hw_layer/dma_buffers.cpp \
 	$(PROJECT_DIR)/hw_layer/spi_devices.cpp \
+	$(PROJECT_DIR)/hw_layer/spi_thread.cpp \
 	$(PROJECT_DIR)/hw_layer/smart_gpio.cpp \
 	$(PROJECT_DIR)/hw_layer/mmc_card_attach.cpp \
 	$(PROJECT_DIR)/hw_layer/mmc_card_mount.cpp \
@@ -40,4 +41,3 @@ endif
 # '-include' is a magic kind of 'include' which would survive if file to be included is not found
 #
 -include $(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER)/hw_ports.mk
-

@@ -16,6 +16,7 @@
 #include "max31855.h"
 
 #include "hardware.h"
+#include "spi_thread.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
@@ -23,23 +24,8 @@
 
 #if EFI_MAX_31855
 
-#define EGT_ERROR_VALUE -1000
-
 static SPIDriver* driver = nullptr;
-
-static SPIConfig spiConfig[EGT_CHANNEL_COUNT];
-
-static void showEgtInfo() {
-#if EFI_PROD_CODE
-	efiPrintf("EGT spi: %d", engineConfiguration->max31855spiDevice);
-
-	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
-		if (isBrainPinValid(engineConfiguration->max31855_cs[i])) {
-			efiPrintf("%d ETG @ %s", i, hwPortname(engineConfiguration->max31855_cs[i]));
-		}
-	}
-#endif
-}
+static SPIConfig spiConfig;
 
 // bits D17 and D3 are always expected to be zero
 #define MC_RESERVED_BITS 0x20008
@@ -47,103 +33,88 @@ static void showEgtInfo() {
 #define MC_GND_BIT 2
 #define MC_VCC_BIT 4
 
-typedef enum {
-	MC_OK = 0,
-	MC_INVALID = 1,
-	MC_OPEN = 2,
-	MC_SHORT_GND = 3,
-	MC_SHORT_VCC = 4,
-} max_32855_code;
-
-static const char* getMcCode(max_32855_code code) {
-	switch (code) {
-		case MC_OK:
-			return "Ok";
-		case MC_OPEN:
-			return "Open";
-		case MC_SHORT_GND:
-			return "short gnd";
-		case MC_SHORT_VCC:
-			return "short VCC";
-		default:
-			return "invalid";
-	}
-}
-
-static max_32855_code getResultCode(uint32_t egtPacket) {
-	if ((egtPacket & MC_RESERVED_BITS) != 0) {
-		return MC_INVALID;
-	} else if ((egtPacket & MC_OPEN_BIT) != 0) {
-		return MC_OPEN;
-	} else if ((egtPacket & MC_GND_BIT) != 0) {
-		return MC_SHORT_GND;
-	} else if ((egtPacket & MC_VCC_BIT) != 0) {
-		return MC_SHORT_VCC;
-	} else {
-		return MC_OK;
-	}
-}
-
-static uint32_t readEgtPacket(int egtChannel) {
-	union {
-		uint32_t egtPacket;
-		uint8_t egtBytes[4];
-	};
-
-	if (!driver) {
-		return 0xFFFFFFFF;
-	}
-
-	spiStart(driver, &spiConfig[egtChannel]);
-	spiSelect(driver);
-
-	for (int i = sizeof(egtBytes) - 1; i >= 0; i--) {
-		egtBytes[i] = spiPolledExchange(driver, 0);
-	}
-
-	spiUnselect(driver);
-	spiStop(driver);
-
-	return egtPacket;
-}
-
 #define GET_TEMPERATURE_C(x) (((x) >> 18) / 4)
 
-uint16_t getMax31855EgtValue(int egtChannel) {
-	uint32_t packet = readEgtPacket(egtChannel);
-	max_32855_code code = getResultCode(packet);
-	if (code != MC_OK) {
-		return EGT_ERROR_VALUE + code;
-	} else {
-		return GET_TEMPERATURE_C(packet);
-	}
-}
+class Max31855Channel final : public BackgroundSpiDevice, public StoredValueSensor {
+public:
+	Max31855Channel(SensorType type)
+		: StoredValueSensor(type, MS2NT(1000)) {}
 
-static void egtRead() {
-	if (!driver) {
-		efiPrintf("No SPI selected for EGT");
-		return;
+	void configure(Gpio pin) {
+		m_csPort = getHwPort("spi", pin);
+		m_csPin = getHwPin("spi", pin);
+
+		// Unselect first so that we don't briefly blip the pin when configured as an output
+		unselect();
+		efiSetPadMode("MAX31855 CS", pin, PAL_STM32_MODE_OUTPUT);
 	}
 
-	efiPrintf("Reading egt");
-
-	uint32_t egtPacket = readEgtPacket(0);
-
-	max_32855_code code = getResultCode(egtPacket);
-
-	efiPrintf("egt %x code=%d %s", (unsigned int)egtPacket, (unsigned int)code, getMcCode(code));
-
-	if (code != MC_INVALID) {
-		int refBits = ((egtPacket & 0xFFFF) / 16); // bits 15:4
-		float refTemp = refBits / 16.0;
-		efiPrintf("reference temperature %.2f", refTemp);
-
-		efiPrintf("EGT temperature %lu", GET_TEMPERATURE_C(egtPacket));
+	SPIDriver* spiDriver() const override {
+		return driver;
 	}
-}
+
+	const SPIConfig& config() override {
+		return spiConfig;
+	}
+
+	int getSpiThreadPeriodMs() const override {
+		return 100;
+	}
+
+	void performTransfer(SPIDriver& spi) override {
+		union {
+			uint32_t egtPacket;
+			uint8_t egtBytes[4];
+		};
+
+		select();
+
+		for (int i = sizeof(egtBytes) - 1; i >= 0; i--) {
+			egtBytes[i] = spiPolledExchange(&spi, 0);
+		}
+
+		unselect();
+
+		if (egtPacket & MC_RESERVED_BITS) {
+			invalidate(UnexpectedCode::Configuration);
+		} else if (egtPacket & MC_OPEN_BIT) {
+			invalidate(UnexpectedCode::Inconsistent);
+		} else if (egtPacket & MC_GND_BIT) {
+			invalidate(UnexpectedCode::Low);
+		} else if (egtPacket & MC_VCC_BIT) {
+			invalidate(UnexpectedCode::High);
+		} else {
+			setValidValue(GET_TEMPERATURE_C(egtPacket), getTimeNowNt());
+		}
+	}
+
+private:
+	ioportid_t m_csPort;
+	ioportmask_t m_csPin;
+
+	void select() {
+		palClearPad(m_csPort, m_csPin);
+	}
+
+	void unselect() {
+		palSetPad(m_csPort, m_csPin);
+	}
+};
+
+static Max31855Channel max31855Channels[EGT_CHANNEL_COUNT] = {
+		Max31855Channel(SensorType::EGT1),
+		Max31855Channel(SensorType::EGT2),
+		Max31855Channel(SensorType::EGT3),
+		Max31855Channel(SensorType::EGT4),
+		Max31855Channel(SensorType::EGT5),
+		Max31855Channel(SensorType::EGT6),
+		Max31855Channel(SensorType::EGT7),
+		Max31855Channel(SensorType::EGT8),
+};
 
 void initMax31855() {
 	if (!engineConfiguration->max31855enable) {
+		driver = nullptr;
 		return;
 	}
 
@@ -153,19 +124,22 @@ void initMax31855() {
 		return;
 	}
 
-	addConsoleAction("egtinfo", (Void)showEgtInfo);
-	addConsoleAction("egtread", (Void)egtRead);
+	spiConfig.end_cb = nullptr;
+	spiConfig.ssport = nullptr;
+	spiConfig.sspad = 0;
+#ifdef STM32H7XX
+	spiConfig.cfg1 = 7 // 8 bits per byte
+				   | SPI_CFG1_MBR_DIV16;
+#else
+	spiConfig.cr1 = getSpiPrescaler(_5MHz, device);
+#endif
 
 	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
 		auto pin = engineConfiguration->max31855_cs[i];
 		if (isBrainPinValid(pin)) {
-			initSpiCs(&spiConfig[i], pin);
-#ifdef STM32H7XX
-			spiConfig[i].cfg1 = 7 // 8 bits per byte
-							  | SPI_CFG1_MBR_DIV16;
-#else
-			spiConfig[i].cr1 = getSpiPrescaler(_5MHz, device);
-#endif
+			max31855Channels[i].configure(pin);
+			registerBackgroundSpiDevice(max31855Channels[i]);
+			max31855Channels[i].Register();
 		}
 	}
 }

@@ -501,10 +501,9 @@ void updateTunerStudioState() {
 	tsOutputChannels->tpsAccelFuel = engine->engineState.tpsAccelEnrich;
 
 #if EFI_MAX_31855
-	for (int i = 0; i < EGT_CHANNEL_COUNT; i++) {
-		if (isBrainPinValid(engineConfiguration->max31855_cs[i])) {
-			tsOutputChannels->egt[i] = getMax31855EgtValue(i);
-		}
+	for (size_t i = 0; i < EGT_CHANNEL_COUNT; i++) {
+		tsOutputChannels->egt[i] =
+				Sensor::getOrZero(static_cast<SensorType>(static_cast<size_t>(SensorType::EGT1) + i));
 	}
 #endif /* EFI_MAX_31855 */
 
