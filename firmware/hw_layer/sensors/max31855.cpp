@@ -35,6 +35,23 @@ static SPIConfig spiConfig;
 
 #define GET_TEMPERATURE_C(x) (((x) >> 18) / 4)
 
+const char* unexpectedToString(UnexpectedCode c) {
+	switch (c) {
+		case UnexpectedCode::Timeout:
+			return "Timeout";
+		case UnexpectedCode::Configuration:
+			return "No MAX31855 detected";
+		case UnexpectedCode::Inconsistent:
+			return "Open circuit";
+		case UnexpectedCode::High:
+			return "Short to VCC";
+		case UnexpectedCode::Low:
+			return "Short to GND";
+		default:
+			return "Unknown";
+	}
+}
+
 class Max31855Channel final : public BackgroundSpiDevice, public StoredValueSensor {
 public:
 	Max31855Channel(SensorType type)
@@ -49,6 +66,17 @@ public:
 		efiSetPadMode("MAX31855 CS", pin, PAL_STM32_MODE_OUTPUT);
 	}
 
+	void showInfo(const char* sensorName) const override {
+		const auto value = get();
+
+		if (value) {
+			efiPrintf("MAX31855 \"%s\": valid, value: %.0f", sensorName, value.Value);
+		} else {
+			efiPrintf("MAX31855 \"%s\": invalid, reason: %s", sensorName, unexpectedToString(value.Code));
+		}
+	}
+
+	// BackgroundSpiDevice implementation
 	SPIDriver* spiDriver() const override {
 		return driver;
 	}
