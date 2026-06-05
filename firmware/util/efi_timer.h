@@ -38,5 +38,17 @@ public:
 	float getElapsedSecondsAndReset(efitick_t nowNt);
 
 private:
-	efitick_t m_lastReset;
+	// Tear-safe storage of reset time. On a 32-bit MCU a 64-bit load is two
+	// 32-bit accesses, so a reader racing the (cross-context) writer can observe
+	// a torn value. The writer updates infrequently relative to instruction
+	// timing, so reading twice and retrying on mismatch reliably yields a
+	// consistent value without any locking (safe from any context, no deadlock).
+	class TearSafeResetTime {
+	public:
+		efitick_t get() const;
+		void set(efitick_t);
+
+	protected:
+		efitick_t m_value;
+	} m_lastReset;
 };
