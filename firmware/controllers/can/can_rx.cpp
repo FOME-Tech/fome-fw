@@ -212,9 +212,30 @@ static void processCanRxImu(const CANRxFrame& frame) {
 	}
 }
 
+static StoredValueSensor canEgts[8] = {
+		{SensorType::EGT1, MS2NT(500)},
+		{SensorType::EGT2, MS2NT(500)},
+		{SensorType::EGT3, MS2NT(500)},
+		{SensorType::EGT4, MS2NT(500)},
+		{SensorType::EGT5, MS2NT(500)},
+		{SensorType::EGT6, MS2NT(500)},
+		{SensorType::EGT7, MS2NT(500)},
+		{SensorType::EGT8, MS2NT(500)},
+};
+
+static bool didRegisterCanEgt = false;
+
 static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 	if (!engineConfiguration->ecumasterEgtToCan) {
 		return;
+	}
+
+	if (didRegisterCanEgt) {
+		didRegisterCanEgt = true;
+
+		for (auto& egt : canEgts) {
+			egt.Register();
+		}
 	}
 
 	size_t offset = 0;
@@ -229,8 +250,10 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 		return;
 	}
 
+	auto now = getTimeNowNt();
+
 	for (int i = 0; i < 4; i++) {
-		engine->outputChannels.egt[i + offset] = frame.data16[i];
+		canEgts[i + offset].setValidValue(frame.data16[i], now);
 	}
 }
 
