@@ -24,6 +24,10 @@ public:
 	// the airmass dispatcher; tests can capture the target without any airpath setup.
 	virtual void commandAirmass(float airmassTarget, float actualAirmassPerCycle) = 0;
 
+	// Sink for the computed spark-reduction request in [0, 1] (0 = full torque, 1 = none). The
+	// real model hands it to the torque-reduction controller; tests can capture it in isolation.
+	virtual void commandSparkReduction(float reductionFraction) = 0;
+
 	// Output to ETB
 	virtual percent_t getThrottleRequest() = 0;
 };
@@ -51,6 +55,7 @@ public:
 	float getTorqueLoss() override;
 	float applyTorqueLimits(float torqueRequested) override;
 	void commandAirmass(float airmassTarget, float actualAirmassPerCycle) override;
+	void commandSparkReduction(float reductionFraction) override;
 
 	// Outputs
 	percent_t getThrottleRequest() override;

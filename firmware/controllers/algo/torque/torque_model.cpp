@@ -10,6 +10,9 @@ void TorqueModelBase::onFastCallback() {
 		return;
 	}
 
+	// for now, 90Nm/gram is an OK hack (phase 4 replaces this scalar with a real model)
+	constexpr float torquePerGramAir = 90;
+
 	// Forward calculation of current torque
 	float airmassActual = engine->fuelComputer.sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
 	m_airmassActual = airmassActual;
@@ -21,14 +24,32 @@ void TorqueModelBase::onFastCallback() {
 	float grossTorqueRequest = calculateGrossTorqueRequest(torqueLoss);
 
 	// Convert to airmass and drive throttle
-	{
-		// for now, 90Nm/gram is an OK hack
-		float totalAirmassTarget = grossTorqueRequest / 90;
-		m_airmassTarget = totalAirmassTarget;
+	float totalAirmassTarget = grossTorqueRequest / torquePerGramAir;
+	m_airmassTarget = totalAirmassTarget;
 
-		// Hand the target off to the airmass path (real impl drives the ETB)
-		commandAirmass(totalAirmassTarget, airmassActual);
+	// Hand the target off to the airmass path (real impl drives the ETB)
+	commandAirmass(totalAirmassTarget, airmassActual);
+
+	// Fast torque limiting via spark. The airmass target above already tracks the limited demand,
+	// but the actual charge lags it while the manifold empties - so the instant a limit engages,
+	// the engine is momentarily making more torque than allowed. Burn that excess off with spark
+	// retard (and cylinder cut, once retard saturates) so delivered torque follows the limit within
+	// a cylinder event instead of waiting for the throttle to catch the manifold down.
+	//
+	// Only do this while a limit is actually biting. On a plain tip-out nothing is limiting, yet the
+	// same air-vs-target gap exists transiently as the manifold drains - there we want the throttle
+	// to handle the drop, not to retard (and needlessly heat the cat) on every lift.
+	float sparkReductionRequest = 0;
+	if (m_torqueRequestedLimited < m_torqueRequested) {
+		// Gross torque the current charge would make at base spark; the request is the limited
+		// target. Their ratio is the fraction of combustion torque spark has to remove.
+		float grossAtCurrentAir = airmassActual * torquePerGramAir;
+		if (grossAtCurrentAir > 0) {
+			sparkReductionRequest = clampF(0, (grossAtCurrentAir - grossTorqueRequest) / grossAtCurrentAir, 1);
+		}
 	}
+	m_sparkReductionRequest = 100 * sparkReductionRequest;
+	commandSparkReduction(sparkReductionRequest);
 }
 
 float TorqueModelBase::calculateGrossTorqueRequest(float torqueLoss) {
@@ -61,6 +82,12 @@ void TorqueModel::commandAirmass(float totalAirmassTarget, float actualAirmassPe
 	// Logging
 	m_airmassTrim = airmassDispatcher.getAirmassTrim();
 	m_throttleRequest = airmassDispatcher.getThrottleRequest();
+}
+
+void TorqueModel::commandSparkReduction(float reductionFraction) {
+	// The reduction controller maps the request to retard + cut (and gates itself on
+	// torqueReductionEnabled); it's evaluated in the ignition pass and applied per cylinder.
+	engine->torqueReductionController.setReductionRequest(reductionFraction);
 }
 
 float TorqueModel::driverDemand() const {

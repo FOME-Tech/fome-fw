@@ -343,6 +343,9 @@ public:
 		m_commandedAirmass = airmassTarget;
 		m_actualAirmassPerCycle = actualAirmassPerCycle;
 	}
+	void commandSparkReduction(float reductionFraction) override {
+		m_commandedSparkReduction = reductionFraction;
+	}
 	percent_t getThrottleRequest() override {
 		return 0;
 	}
@@ -357,6 +360,7 @@ public:
 	float m_limiterSawRequest = -1;
 	float m_commandedAirmass = -1;
 	float m_actualAirmassPerCycle = -1;
+	float m_commandedSparkReduction = -1;
 };
 } // namespace
 
@@ -465,6 +469,64 @@ TEST(TorqueModelFlow, ArbitratesMaxOfDriverAndIdle) {
 	tm.m_limited = 400;
 	tm.onFastCallback();
 	EXPECT_FLOAT_EQ(tm.m_torqueRequested, 400);
+}
+
+TEST(TorqueModelFlow, NoSparkReductionWhenUnlimited) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = true;
+
+	FlowMockTorqueModel tm;
+	// Demand passes the limiter unchanged: nothing is biting, so spark stays out of it even
+	// though the current charge (high airmass) momentarily exceeds the target.
+	tm.m_demand = 250;
+	tm.m_limited = 250;
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 4;
+
+	tm.onFastCallback();
+
+	EXPECT_FLOAT_EQ(tm.m_commandedSparkReduction, 0);
+	EXPECT_FLOAT_EQ(tm.m_sparkReductionRequest, 0); // logged in percent
+}
+
+TEST(TorqueModelFlow, SparkBurnsTheGapWhenLimited) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = true;
+
+	FlowMockTorqueModel tm;
+	// Driver wants 500, limiter clamps to 200. The current charge is 4 g, worth 4 * 90 = 360 Nm
+	// gross at base spark, so spark must remove (360 - 200) / 360 of the combustion torque.
+	tm.m_demand = 500;
+	tm.m_limited = 200;
+	tm.m_loss = 0;
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 4;
+
+	tm.onFastCallback();
+
+	float expected = (360.0f - 200.0f) / 360.0f;
+	EXPECT_NEAR(tm.m_commandedSparkReduction, expected, 0.001);
+	// Logged as a percent (and quantized to 0.5% by the channel).
+	EXPECT_NEAR(tm.m_sparkReductionRequest, 100 * expected, 0.5);
+}
+
+TEST(TorqueModelFlow, SparkReductionClampsToZeroOnceThrottleCatchesDown) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = true;
+
+	FlowMockTorqueModel tm;
+	// Limit is active, but the manifold has already drained below the target (2 g -> 180 Nm gross,
+	// under the 300 Nm limited target). The gap is negative and clamps to zero - spark unwinds and
+	// the throttle now holds the limit on its own.
+	tm.m_demand = 500;
+	tm.m_limited = 300;
+	tm.m_loss = 0;
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 2;
+
+	tm.onFastCallback();
+
+	EXPECT_FLOAT_EQ(tm.m_commandedSparkReduction, 0);
 }
 
 // ============================ idleDemand ============================

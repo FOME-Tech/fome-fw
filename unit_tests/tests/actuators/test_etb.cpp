@@ -34,6 +34,7 @@ public:
 		return torqueRequested;
 	}
 	void commandAirmass(float, float) override {}
+	void commandSparkReduction(float) override {}
 };
 
 TEST(etb, initializationNoPedal) {
