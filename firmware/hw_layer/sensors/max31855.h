@@ -11,4 +11,3 @@
 #include "engine_configuration.h"
 
 void initMax31855();
-uint16_t getMax31855EgtValue(int egtChannel);
