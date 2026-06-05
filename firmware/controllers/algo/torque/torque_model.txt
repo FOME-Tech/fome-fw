@@ -1,0 +1,27 @@
+struct_no_prefix torque_model_s
+	int16_t autoscale m_driverTorqueDemand;Driver requested torque;"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t autoscale m_idleTorqueDemand;Idle requested torque;"Nm", 0.01, 0, -200, 200, 2
+
+	int16_t autoscale m_torqueRequested;Requested torque;"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t autoscale m_torqueRequestedLimited;Requested torque (limited);"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t autoscale m_torqueLoss;Torque loss;"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t m_torqueLossLoadAxisValue;Loss table Y axis value;"", 1, 0, -10000, 10000, 0
+	int16_t autoscale m_grossTorque;Gross torque;"Nm", 0.1, 0, -2000, 2000, 1
+
+	uint16_t autoscale m_airmassTarget;Target cycle airmass;"g", 0.001, 0, 0, 65, 3
+	uint16_t autoscale m_airmassActual;Measured cycle airmass;"g", 0.001, 0, 0, 65, 3
+	int16_t autoscale m_airmassTrim;Target airmass CL trim;"%", 0.01, 0, -100, 100, 3
+
+	uint16_t autoscale m_throttleRequest;Requested throttle position;"%", 0.01, 0, 0, 100, 1
+
+	int16_t[TORQUE_LIMITER_COUNT iterate] m_limiterXAxisValue;Generic limiter X axis;"", 1, 0, -10000, 10000, 0
+	int16_t[TORQUE_LIMITER_COUNT iterate] m_limiterYAxisValue;Generic limiter Y axis;"", 1, 0, -10000, 10000, 0
+	uint16_t[TORQUE_LIMITER_COUNT iterate] m_limiterTorque;Generic limiter ceiling;"Nm", 1, 0, 0, 20000, 0
+
+	bit limitedByEngineMax;Limited by engine max
+	bit limitedByAxleMax;Limited by axle max
+	bit limitedByGenericLimiter1;Limited by generic limiter 1
+	bit limitedByGenericLimiter2;Limited by generic limiter 2
+	bit limitedByGenericLimiter3;Limited by generic limiter 3
+	bit limitedByGenericLimiter4;Limited by generic limiter 4
+end_struct

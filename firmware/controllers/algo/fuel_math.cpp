@@ -160,10 +160,6 @@ AirmassModelBase* getAirmassModel(engine_load_mode_e mode) {
 	}
 }
 
-float getMaxAirflowAtMap(float map) {
-	return sdAirmass.getAirflow(Sensor::getOrZero(SensorType::Rpm), map, false);
-}
-
 // Per-cylinder base fuel mass
 static float getBaseFuelMass(float rpm) {
 	ScopePerf perf(PE::GetBaseFuel);

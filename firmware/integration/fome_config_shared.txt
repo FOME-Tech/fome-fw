@@ -35,6 +35,8 @@
 
 #define STFT_BANK_COUNT 4
 
+#define TORQUE_LIMITER_COUNT 4
+
 #define GAUGE_NAME_VERSION "firmware"
 #define GAUGE_NAME_UPTIME "Uptime"
 

@@ -372,6 +372,50 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	// Scenario 3: Pile of sync errors (same check as primary trigger)
 	checkTriggerDecoder(decoder, tooManyErrorsCode);
 }
+
+static void checkTriggers(bool isStopped, bool isRunning, float rpm) {
+	// Nothing to check if the engine is stopped
+	if (isStopped) {
+		return;
+	}
+
+	// If the engine is running but below cranking RPM threshold, disable trigger checking.
+	// It may be about to stop, so don't worry about anything that goes wrong.
+	if (isRunning && rpm < engineConfiguration->cranking.rpm) {
+		return;
+	}
+
+	checkTriggerDecoder(
+			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
+
+	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
+	if (engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
+		checkCamDecoder(
+				0,
+				0,
+				"VVT Bank 1 Intake",
+				ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors);
+		checkCamDecoder(
+				0,
+				1,
+				"VVT Bank 1 Exhaust",
+				ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors);
+		checkCamDecoder(
+				1,
+				0,
+				"VVT Bank 2 Intake",
+				ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors);
+		checkCamDecoder(
+				1,
+				1,
+				"VVT Bank 2 Exhaust",
+				ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
+				ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors);
+	}
+}
 #endif // EFI_SHAFT_POSITION_INPUT
 
 void SensorChecker::onSlowCallback() {
@@ -462,38 +506,12 @@ void SensorChecker::onSlowCallback() {
 	check(SensorType::OilPressure);
 	check(SensorType::OilTemperature);
 
-#if EFI_SHAFT_POSITION_INPUT
-	checkTriggerDecoder(
-			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
+	bool isStopped = engine->rpmCalculator.isStopped();
+	bool isRunning = engine->rpmCalculator.isRunning();
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
-	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
-	if (engine->triggerCentral.engineMovedRecently() &&
-		engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
-		checkCamDecoder(
-				0,
-				0,
-				"VVT Bank 1 Intake",
-				ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors);
-		checkCamDecoder(
-				0,
-				1,
-				"VVT Bank 1 Exhaust",
-				ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors);
-		checkCamDecoder(
-				1,
-				0,
-				"VVT Bank 2 Intake",
-				ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors);
-		checkCamDecoder(
-				1,
-				1,
-				"VVT Bank 2 Exhaust",
-				ObdCode::OBD_Camshaft_Position_Sensor_B2E_NoSignal,
-				ObdCode::OBD_Camshaft_Position_Sensor_B2E_SyncErrors);
-	}
+#if EFI_SHAFT_POSITION_INPUT
+	checkTriggers(isStopped, isRunning, rpm);
 #endif // EFI_SHAFT_POSITION_INPUT
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
@@ -553,7 +571,7 @@ void SensorChecker::onSlowCallback() {
 	// Check for missing knock sensor (signal too low for too long)
 	// Only check if knock sensing is enabled and engine is running
 	auto knockNoiseTimeout = engineConfiguration->knockNoiseTimeout;
-	if (engineConfiguration->enableSoftwareKnock && knockNoiseTimeout > 0 && engine->rpmCalculator.isRunning()) {
+	if (engineConfiguration->enableSoftwareKnock && knockNoiseTimeout > 0 && isRunning) {
 		for (size_t i = 0; i < efi::size(m_lastGoodKnockSampleTimer); i++) {
 			if (m_hasSeenKnockSensor[i] && m_lastGoodKnockSampleTimer[i].hasElapsedSec(knockNoiseTimeout)) {
 				auto code = i == 0 ? ObdCode::OBD_Knock_Sensor_1_Low : ObdCode::OBD_Knock_Sensor_2_Low;

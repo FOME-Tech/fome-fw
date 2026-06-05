@@ -48,6 +48,16 @@ Usages:
   - name: launch_control_state
     folder: controllers/algo
 
+  - name: torque_reduction_state
+    folder: controllers/algo/torque
+    constexpr: "engine->torqueReductionController"
+    output_name: "Torque reduction"
+
+  - name: torque_model
+    folder: controllers/algo/torque
+    prepend: integration/fome_config_shared.txt
+    output_name: "Torque model"
+
   - name: antilag_system_state
     folder: controllers/algo
     prepend: integration/fome_config_shared.txt
@@ -113,6 +123,11 @@ Usages:
     folder: controllers/algo
 
   - name: idle_state
+    folder: controllers/actuators
+    prepend: integration/fome_config_shared.txt
+    output_name: Idle
+
+  - name: idle_target
     folder: controllers/actuators
     prepend: integration/fome_config_shared.txt
     output_name: Idle

@@ -13,6 +13,7 @@
 #include "efi_pid.h"
 #include "sensor.h"
 #include "idle_state_generated.h"
+#include "idle_target_generated.h"
 #include "biquad.h"
 
 struct IIdleController {
@@ -40,14 +41,10 @@ struct IIdleController {
 		}
 	};
 
-	virtual Phase
-	determinePhase(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) = 0;
-	virtual TargetInfo getTargetRpm(float clt) = 0;
 	virtual float getCrankingOpenLoop(float clt) const = 0;
 	virtual float getRunningOpenLoop(float rpm, float clt, SensorResult tps) = 0;
 	virtual float getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) = 0;
 	virtual float getClosedLoop(Phase phase, float rpm, float rpmRate, float target) = 0;
-	virtual float getCrankingTaperFraction(float clt) const = 0;
 	virtual bool isIdlingOrTaper() const = 0;
 	virtual float getIdleTimingAdjustment(float rpm, float rpmRate) = 0;
 };
@@ -60,14 +57,6 @@ public:
 	void init();
 
 	float getIdlePosition(float rpm, float rpmRate);
-
-	// TARGET DETERMINATION
-	TargetInfo getTargetRpm(float clt) override;
-
-	// PHASE DETERMINATION: what is the driver trying to do right now?
-	Phase
-	determinePhase(float rpm, TargetInfo targetRpm, SensorResult tps, float vss, float crankingTaperFraction) override;
-	float getCrankingTaperFraction(float clt) const override;
 
 	// OPEN LOOP CORRECTIONS
 	percent_t getCrankingOpenLoop(float clt) const override;
@@ -104,13 +93,48 @@ private:
 	int m_lastTargetRpm = 0;
 	efitimeus_t restoreAfterPidResetTimeUs = 0;
 
+	Pid m_timingPid;
+};
+
+struct IIdleTargetController {
+	using Phase = IIdleController::Phase;
+	using TargetInfo = IIdleController::TargetInfo;
+
+	struct Output {
+		TargetInfo target;
+		Phase phase = Phase::Cranking;
+		float crankingTaperFraction = 0;
+	};
+
+	virtual TargetInfo getTargetRpm(float clt) = 0;
+	virtual Phase determinePhase(
+			float rpm, TargetInfo targetRpm, bool tpsIsAboveIdleThreshold, float vss, float crankingTaperFraction) = 0;
+	virtual float getCrankingTaperFraction(float clt) const = 0;
+
+	virtual Output getOutput(bool tpsIsAboveThreshold) = 0;
+};
+
+class IdleTargetController : public IIdleTargetController, public EngineModule, public idle_target_s {
+public:
+	// Mockable<> interface
+	using interface_t = IIdleTargetController;
+
+	TargetInfo getTargetRpm(float clt) override;
+	Phase determinePhase(
+			float rpm,
+			TargetInfo targetRpm,
+			bool tpsIsAboveIdleThreshold,
+			float vss,
+			float crankingTaperFraction) override;
+	float getCrankingTaperFraction(float clt) const override;
+
+	Output getOutput(bool tpsIsAboveIdleThreshold) override;
+
+private:
+	Phase m_lastPhase = Phase::Cranking;
+
 	Timer m_timeSinceCranking;
 	Timer m_timeInIdlePhase;
-
-	Pid m_timingPid;
-
-	float m_modeledFlowIdleTiming = 0;
-	Biquad m_timingHpf;
 };
 
 percent_t getIdlePosition();

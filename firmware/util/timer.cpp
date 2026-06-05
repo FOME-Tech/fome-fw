@@ -2,21 +2,42 @@
 
 #include "efi_timer.h"
 
+#include <atomic>
+
 Timer::Timer() {
 	init();
 }
 
 void Timer::reset() {
-	m_lastReset = getTimeNowNt();
+	m_lastReset.set(getTimeNowNt());
 }
 
 void Timer::init() {
 	// Use not-quite-minimum value to avoid overflow
-	m_lastReset = INT64_MIN / 8;
+	m_lastReset.set(INT64_MIN / 8);
 }
 
 void Timer::reset(efitick_t nowNt) {
-	m_lastReset = nowNt;
+	m_lastReset.set(nowNt);
+}
+
+void Timer::TearSafeResetTime::set(efitick_t value) {
+	m_value = value;
+}
+
+efitick_t Timer::TearSafeResetTime::get() const {
+	// Read twice and retry until two consecutive reads agree, defending against
+	// a writer tearing the 64-bit value mid-store. The compiler barriers prevent
+	// the two reads from being coalesced into one.
+	efitick_t a = m_value;
+	while (true) {
+		std::atomic_signal_fence(std::memory_order_acq_rel);
+		efitick_t b = m_value;
+		if (a == b) {
+			return a;
+		}
+		a = b;
+	}
 }
 
 bool Timer::hasElapsedSec(float seconds) const {
@@ -30,7 +51,7 @@ bool Timer::hasElapsedMs(float milliseconds) const {
 static const efidur_t clock32max = efidur_t{UINT32_MAX - 1};
 
 bool Timer::hasElapsedUs(float microseconds) const {
-	auto delta = getTimeNowNt() - m_lastReset;
+	auto delta = getTimeNowNt() - m_lastReset.get();
 
 	// If larger than 32 bits, timer has certainly expired
 	if (delta >= clock32max) {
@@ -55,7 +76,7 @@ float Timer::getElapsedUs() const {
 }
 
 float Timer::getElapsedUs(efitick_t nowNt) const {
-	auto deltaNt = nowNt - m_lastReset;
+	auto deltaNt = nowNt - m_lastReset.get();
 
 	// Yes, things can happen slightly in the future if we get a lucky interrupt between
 	// the timestamp and this subtraction, that updates m_lastReset to what's now "the future",

@@ -288,26 +288,11 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	float sanitizedPedal = clampF(0, pedalPosition.value_or(0), 100);
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	float baseTarget = m_pedalMap->getValue(rpm, sanitizedPedal);
-	m_baseTarget = baseTarget;
+	float pedalTableValue = m_pedalMap->getValue(rpm, sanitizedPedal);
+	m_baseTarget = pedalTableValue;
 
-	percent_t etbIdlePosition = clampF(0, m_idlePosition, 100);
-	percent_t etbIdleAddition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * etbIdlePosition;
-
-	// Interpolate so that the idle adder just "compresses" the throttle's range upward.
-	// [0, 100] -> [idle, 100]
-	// 0% target from table -> idle position as target
-	// 100% target from table -> 100% target position
-	percent_t targetPosition = interpolateClamped(0, etbIdleAddition, 100, 100, baseTarget);
-
-	// Adjust up/down by Lua adjustment
-	targetPosition += getLuaAdjustment();
-
-#if EFI_ANTILAG_SYSTEM
-	if (engine->antilagController.isAntilagCondition) {
-		targetPosition += engineConfiguration->ALSEtbAdd;
-	}
-#endif /* EFI_ANTILAG_SYSTEM */
+	float targetPosition = engineConfiguration->enableTorqueModel ? getSetpointEtbTorqueModel(pedalTableValue)
+																  : getSetpointEtbNonTorqueModel(pedalTableValue);
 
 	// Apply any adjustment that this throttle alone needs
 	// Clamped to +-10 to prevent anything too wild
@@ -344,6 +329,35 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	m_adjustedTarget = targetPosition;
 
 	return targetPosition;
+}
+
+percent_t EtbController::getSetpointEtbNonTorqueModel(percent_t pedalTableValue) const {
+	percent_t etbIdlePosition = clampF(0, m_idlePosition, 100);
+	percent_t etbIdleAddition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * etbIdlePosition;
+
+	// Interpolate so that the idle adder just "compresses" the throttle's range upward.
+	// [0, 100] -> [idle, 100]
+	// 0% target from table -> idle position as target
+	// 100% target from table -> 100% target position
+	percent_t targetPosition = interpolateClamped(0, etbIdleAddition, 100, 100, pedalTableValue);
+
+	// Adjust up/down by Lua adjustment
+	targetPosition += getLuaAdjustment();
+
+#if EFI_ANTILAG_SYSTEM
+	if (engine->antilagController.isAntilagCondition) {
+		targetPosition += engineConfiguration->ALSEtbAdd;
+	}
+#endif /* EFI_ANTILAG_SYSTEM */
+
+	return targetPosition;
+}
+
+percent_t EtbController::getSetpointEtbTorqueModel(percent_t pedalTableValue) const {
+	percent_t torqueModelThrottle = engine->module<TorqueModel>()->getThrottleRequest();
+
+	// pedal table becomes maximum allowed throttle (safety device)
+	return std::min(torqueModelThrottle, pedalTableValue);
 }
 
 void EtbController::setLuaAdjustment(float adjustment) {

@@ -441,6 +441,10 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 			if (engine->softSparkLimiter.shouldSkip()) {
 				continue;
 			}
+
+			if (engine->torqueReductionSparkLimiter.shouldSkip()) {
+				continue;
+			}
 #endif // EFI_LAUNCH_CONTROL
 
 #if EFI_ANTILAG_SYSTEM && EFI_LAUNCH_CONTROL

@@ -118,6 +118,14 @@ void setDefaultIdleParameters() {
 	engineConfiguration->idleTimingPid.minValue = -10;
 	engineConfiguration->idleTimingPid.maxValue = 10;
 
+	// Closed-loop idle torque demand (torque model). Gains in Nm/RPM; the loss table already supplies
+	// the bulk of the idle airmass, so this only trims. Authority is a modest +-20 Nm around that.
+	engineConfiguration->torqueModel.idlePid.pFactor = 0.02f;
+	engineConfiguration->torqueModel.idlePid.iFactor = 0.05f;
+	engineConfiguration->torqueModel.idlePid.dFactor = 0;
+	engineConfiguration->torqueModel.idlePid.minValue = -20;
+	engineConfiguration->torqueModel.idlePid.maxValue = 20;
+
 	// Idle region is target + 100 RPM
 	engineConfiguration->idlePidRpmUpperLimit = 100;
 

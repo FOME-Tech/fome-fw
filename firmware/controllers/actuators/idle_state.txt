@@ -8,22 +8,9 @@ struct_no_prefix idle_state_s
 	bit isIacTableForCoasting
 	bit notIdling
 	bit isBlipping
-	bit looksLikeRunning
-	bit looksLikeCoasting
-	bit looksLikeCrankToIdle
 	bit isIdleCoasting;coasting
 	bit isIdleClosedLoop;Closed loop active
 
-	! Target
-	uint16_t targetRpmByClt;Target RPM: Base
-	uint16_t targetRpmAcBump;Target RPM: A/C bump
-	percent_t luaAddRpm;Target RPM: Lua adder
-
-	uint16_t idleTarget;Target RPM
-	uint16_t idleEntryRpm;Entry threshold
-	uint16_t idleExitRpm;Exit threshold
-
-	uint8_t currentPhase;Phase
 
 	! Open loop
 	percent_t luaAdd;Open loop: Lua Adder

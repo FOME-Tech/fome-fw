@@ -125,6 +125,18 @@ float GearDetector::getRpmInGear(size_t gear) const {
 	return getDriveshaftRpm() * engineConfiguration->gearRatio[gear - 1];
 }
 
+expected<float> GearDetector::getTotalRatioInCurrentGear() const {
+	auto currentGear = get();
+	// If invalid or in neutral, there is no ratio
+	if (currentGear.value_or(0) <= 0) {
+		return unexpected;
+	}
+
+	size_t gear = currentGear.Value;
+
+	return engineConfiguration->gearRatio[gear - 1] * engineConfiguration->finalGearRatio;
+}
+
 float GearDetector::getGearboxRatio() const {
 	return m_gearboxRatio;
 }

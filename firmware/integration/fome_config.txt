@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1320
+#define BLOCKING_FACTOR 1400
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -172,6 +172,7 @@ struct_no_prefix engine_configuration_s
 #define BOOST_RPM_COUNT 8
 #define BOOST_LOAD_COUNT 8
 #define PEDAL_TO_TPS_SIZE 8
+#define TORQUE_LOSS_SIZE 6
 #define FUEL_LEVEL_TABLE_COUNT 8
 
 #define STFT_CELL_COUNT 4
@@ -217,6 +218,8 @@ struct_no_prefix engine_configuration_s
 #define GPPWM_RPM_COUNT 8
 #define GPPWM_CHANNELS 4
 #define GPPWM_NOTE_SIZE 16
+
+#define TORQUE_LIMITER_SIZE 8
 
 #define CAN_VIRTUAL_INPUT_PINS_COUNT 8
 
@@ -308,6 +311,16 @@ struct gppwm_channel
 	int16_t[GPPWM_LOAD_COUNT] autoscale loadBins;;"load", 0.1, 0, -1000, 1000, 1
 	int16_t[GPPWM_RPM_COUNT] rpmBins;;"RPM", 1, 0, -30000, 30000, 0
 	uint8_t[GPPWM_RPM_COUNT x GPPWM_LOAD_COUNT] autoscale table;;"duty", 0.5, 0, 0, 100, 1
+end_struct
+
+struct torque_limiter_cfg
+	bit enable;Enable this generic torque limiter.
+	bit applyAtAxle,"Axle","Engine";Domain the table values are in. Axle scales by the current gear ratio - use for chassis-domain limits like drivetrain protection, traction or G-load. Engine applies directly - use for engine protection or pre-transmission hardware limits like clutch capacity. Axle-domain limiters only apply when a gear ratio is known.
+	gppwm_channel_e xAxis;X axis source for this torque limiter table.
+	gppwm_channel_e yAxis;Y axis source for this torque limiter table.
+	int16_t[TORQUE_LIMITER_SIZE] xBins;;"", 1, 0, -30000, 30000, 0
+	int16_t[TORQUE_LIMITER_SIZE] yBins;;"", 1, 0, -30000, 30000, 0
+	uint16_t[TORQUE_LIMITER_SIZE x TORQUE_LIMITER_SIZE] table;Maximum allowed torque at this operating point.;"Nm", 1, 0, 0, 20000, 0
 end_struct
 
 custom air_pressure_sensor_type_e 1 bits, U08, @OFFSET@, [0:4], "Custom", "DENSO183", "MPX4250", "HONDA3BAR", "NEON_2003", "22012AA090", "GM 3 Bar", "MPX4100", "Toyota 89420-02010", "MPX4250A", "Bosch 2.5", "Mazda1Bar", "GM 2 Bar", "GM 1 Bar", "MPXH6400"
@@ -418,6 +431,7 @@ bit allowIdenticalPps
 bit is_enabled_spi_5
 bit is_enabled_spi_6
 bit max31855enable
+bit enableTorqueModel
 
 int16_t tpsMin;Closed throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
 int16_t tpsMax;Full throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
@@ -671,7 +685,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_3
 	bit isSdCardEnabled;enable sd/disable sd
 	bit rusefiVerbose29b,"29 bit","11 bit";Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
-	bit modeledFlowIdle
+	bit unused580b5
 	bit useStepperIdle;This setting should only be used if you have a stepper motor idle valve and a stepper motor driver installed.
 	
 	bit enabledStep1Limiter
@@ -933,7 +947,7 @@ bit useFixedBaroCorrFromMap
 bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In Constant mode, timing is automatically tapered to running as RPM increases.\nIn Table mode, the "Cranking ignition advance" table is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
 bit flexCranking;Enable a second cranking table to use for E100 flex fuel, interpolating between the two based on flex fuel sensor.
-bit unused1200b19
+bit torqueReductionEnabled;Enable the torque-reduction controller (spark retard + cylinder cut). It maps a torque-reduction request to ignition retard and cut. No producer (e.g. traction control) is wired up yet, so on its own this currently has no effect.
 bit isBoostControlEnabled
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range
 bit isPhaseSyncRequiredForIgnition;Some engines are OK running semi-random sequential while other engine require phase synchronization
@@ -1437,6 +1451,22 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	Dtcs dtcControl
 
+	struct torque_model_cfg
+		! Idle PID gains, units of Nm/RPM, Nm/RPM/sec, and RPM/sec
+		pid_s idlePid
+
+		uint16_t engineMaximum;Maximum torque allowed to leave the engine (seen by clutch/input shaft). Use this to avoid clutch explosion or connecting rod space program.;"Nm", 1, 0, 0, 2000, 0
+		uint16_t axleMaximum;Maximum torque allowed at the axle. Requires gear detection to be configured as this uses the current gear and final drive ratio to calculate maximum engine torque in the current gear. Does not apply in neutral.;"Nm", 1, 0, 0, 20000, 0
+		float airmassTrimKp;Closed-loop airmass trim proportional gain, in percent of feed-forward flow per gram of airmass error.;"%/g", 1, 0, 0, 1000, 2
+		float airmassTrimKi;Closed-loop airmass trim integral gain.;"%/g/s", 1, 0, 0, 1000, 2
+		uint8_t airmassTrimAuthority;Maximum trim the closed-loop may apply to the commanded flow, plus or minus.;"%", 1, 0, 0, 100, 0
+		gppwm_channel_e torqueLossLoadAxis;Y axis for the torque loss table.;
+	end_struct
+
+	torque_model_cfg torqueModel
+
+	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
+
 ! end of engine_configuration_s
 end_struct
 
@@ -1478,6 +1508,9 @@ engine_configuration_s engineConfiguration;
 
 uint16_t[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvanceBins;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"RPM", 1, 0, 0, 25000, 0
 int16_t[CRANKING_ADVANCE_CURVE_SIZE] autoscale crankingAdvance;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"deg", 0.01, 0, -20, 90, 2
+
+uint8_t[8] autoscale torqueReductionRetardReqBins;Requested torque reduction ratio, 0 is no reduction, 0.5 is deliver half torque.;"frac", 0.01, 0, 0, 1, 2
+int16_t[8] autoscale torqueReductionRetard;Ignition retard applied per torque-reduction request;"deg", 0.1, 0, 0, 50, 1
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoastingRpmBins;RPM-based idle position for coasting;"RPM", 100, 0, 0, 25000, 0
 uint8_t[CLT_CURVE_SIZE] autoscale iacCoasting;    RPM-based idle position for coasting;"%", 0.5, 0, 0, 100, 1
 
@@ -1492,6 +1525,14 @@ int16_t[BOOST_LOAD_COUNT] boostClosedLoopYAxisBins;;"", 1, 0, -10000, 10000, 0
 uint8_t[PEDAL_TO_TPS_SIZE x PEDAL_TO_TPS_SIZE] pedalToTpsTable;;"%", 1, 0, 0, 100, 0
 uint8_t[PEDAL_TO_TPS_SIZE] pedalToTpsPedalBins;;"%", 1, 0, 0, 120, 0
 uint8_t[PEDAL_TO_TPS_SIZE] autoscale pedalToTpsRpmBins;;"RPM", 100, 0, 0, 25000, 0
+
+int16_t[12 x 12] autoscale driverTorqueTable;Driver demand: requested brake engine torque by RPM (X) and pedal (Y);"Nm", 0.1, 0, -2000, 2000, 1
+uint8_t[12] autoscale driverTorquePedalBins;;"%", 0.5, 0, 0, 120, 1
+uint8_t[12] autoscale driverTorqueRpmBins;;"RPM", 100, 0, 0, 25000, 0
+
+int16_t[6 x 6] autoscale torqueLossTable;Torque lost to friction and engine accessories.;"Nm", 0.1, 0, -2000, 2000, 1
+int16_t[6] torqueLossRpmBins;;"RPM", 1, 0, 0, 25000, 0
+int16_t[6] torqueLossLoadBins;;"", 1, 0, -10000, 10000, 0
 
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2
@@ -1713,12 +1754,6 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	custom wifi_string_t 24 string, ASCII, @OFFSET@, 24
 	wifi_string_t wifiAccessPointSsid
 	wifi_string_t wifiAccessPointPassword
-
-	uint16_t[8] autoscale idleFlowEstimateFlow;;"kg/h", 0.01, 0, 0, 200, 2
-	uint8_t[8] autoscale idleFlowEstimatePosition;;"%", 0.5, 0, 0, 100, 1
-
-	int8_t[8] airmassToTimingBins;;"mg", 1, 0, -100, 100, 0
-	int8_t[8] airmassToTimingValues;;"deg", 1, 0, -30, 30, 0
 
 	struct VvtOpenLoop
 		int8_t[8] bins;;"deg C", 1, 0, -40, 120, 0

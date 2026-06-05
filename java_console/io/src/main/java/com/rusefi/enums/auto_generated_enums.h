@@ -20,6 +20,8 @@ constexpr inline const char* getLive_data_e(live_data_e value) {
 			return "LDS_high_pressure_fuel_pump";
 		case LDS_idle_state:
 			return "LDS_idle_state";
+		case LDS_idle_target:
+			return "LDS_idle_target";
 		case LDS_ignition_state:
 			return "LDS_ignition_state";
 		case LDS_injector_model:
@@ -36,6 +38,10 @@ constexpr inline const char* getLive_data_e(live_data_e value) {
 			return "LDS_output_channels";
 		case LDS_throttle_model:
 			return "LDS_throttle_model";
+		case LDS_torque_model:
+			return "LDS_torque_model";
+		case LDS_torque_reduction_state:
+			return "LDS_torque_reduction_state";
 		case LDS_tps_accel_state:
 			return "LDS_tps_accel_state";
 		case LDS_trigger_central:

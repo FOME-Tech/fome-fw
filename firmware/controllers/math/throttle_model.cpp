@@ -2,7 +2,7 @@
 
 #include "throttle_model.h"
 
-#include "fuel_math.h"
+#include "speed_density_base.h"
 
 static const float pressureRatioCorrectionBins[] = {
 		0.53125, 0.546875, 0.5625,	0.578125, 0.59375, 0.609375, 0.625,	  0.640625, 0.65625, 0.671875,
@@ -145,5 +145,22 @@ float ThrottleModel::effectiveArea(float tps) const {
 }
 
 float ThrottleModel::maxEngineFlow(float map) const {
-	return getMaxAirflowAtMap(map);
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	float tChargeK = engine->engineState.sd.tChargeK;
+	if (std::isnan(tChargeK)) {
+		// No charge temperature yet (e.g. before first CLT reading)
+		return 0;
+	}
+
+	// The throttle model only needs a ceiling on how much air the engine could pump
+	// if the throttle weren't restricting. Assume 100% VE rather than reading the VE
+	// table, which may be untuned (e.g. in MAF fuel mode) and isn't trustworthy here.
+	mass_t cycleAir = idealGasLaw(engineConfiguration->displacement, map, tChargeK);
+
+	// 4-stroke engines only induct on half of crank revolutions
+	float massPerCycle = engineConfiguration->twoStroke ? cycleAir : cycleAir / 2;
+
+	// g/cycle -> g/s
+	return massPerCycle * rpm / 60;
 }

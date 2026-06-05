@@ -15,6 +15,9 @@ public:
 
 	float getRpmInGear(size_t gear) const;
 
+	expected<float> getTotalRatioInCurrentGear() const;
+
+	// Sensor implementation
 	SensorResult get() const override;
 	void showInfo(const char* sensorName) const override;
 

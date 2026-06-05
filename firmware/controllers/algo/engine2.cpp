@@ -161,6 +161,10 @@ void EngineState::periodicFastCallback() {
 			engine->ignitionState.getAdvance(rpm, ignitionLoad, isCranking) * engine->ignitionState.luaTimingMult +
 			engine->ignitionState.luaTimingAdd;
 
+	// Torque-reduction controller: pull timing and arm cylinder cut to bring delivered
+	// torque down to the requested reduction.
+	untrimmedAdvance -= engine->torqueReductionController.update();
+
 	// that's weird logic. also seems broken for two stroke?
 	engine->outputChannels.ignitionAdvance =
 			(float)(untrimmedAdvance > FOUR_STROKE_CYCLE_DURATION / 2 ? untrimmedAdvance - FOUR_STROKE_CYCLE_DURATION

@@ -18,6 +18,24 @@ using ::testing::Ne;
 using ::testing::Return;
 using ::testing::StrictMock;
 
+class MockTorqueModel : public TorqueModelBase {
+public:
+	MOCK_METHOD(float, driverDemand, (), (const, override));
+	MOCK_METHOD(percent_t, getThrottleRequest, (), (override));
+
+	// Unused by the ETB tests, but required to make the class concrete.
+	expected<float> idleDemand(float /*driverDemand*/) override {
+		return 0;
+	}
+	float getTorqueLoss() override {
+		return 0;
+	}
+	float applyTorqueLimits(float torqueRequested) override {
+		return torqueRequested;
+	}
+	void commandAirmass(float, float) override {}
+};
+
 TEST(etb, initializationNoPedal) {
 	StrictMock<MockEtb> mocks[ETB_COUNT];
 
@@ -781,6 +799,144 @@ TEST(etb, openLoopThrottle) {
 	EXPECT_NEAR(0, etb.getOpenLoop(50).value_or(-1), EPS4D);
 	EXPECT_NEAR(24.975, etb.getOpenLoop(75).value_or(-1), EPS4D);
 	EXPECT_NEAR(50, etb.getOpenLoop(100).value_or(-1), EPS4D);
+}
+
+// The core safety property of torque-model mode: the pedal table value is the *maximum*
+// allowed throttle. The torque model may ask for less, but never more than the driver's pedal.
+TEST(etb, torqueModelPedalIsSafetyCap) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	StrictMock<MockTorqueModel> tm;
+	engine->module<TorqueModel>().set(&tm);
+
+	EtbController etb;
+
+	float tmRequest = 0;
+	EXPECT_CALL(tm, getThrottleRequest()).WillRepeatedly([&tmRequest]() { return tmRequest; });
+
+	// Torque model asks for less than the pedal cap -> torque model wins
+	tmRequest = 30;
+	EXPECT_FLOAT_EQ(30, etb.getSetpointEtbTorqueModel(80));
+
+	// Torque model asks for exactly the pedal cap -> either, returns the cap
+	tmRequest = 80;
+	EXPECT_FLOAT_EQ(80, etb.getSetpointEtbTorqueModel(80));
+
+	// Torque model asks for MORE than the pedal cap -> clamped to the pedal (safety!)
+	tmRequest = 95;
+	EXPECT_FLOAT_EQ(80, etb.getSetpointEtbTorqueModel(80));
+
+	// Even a wildly out-of-range torque model request can't exceed the pedal cap
+	tmRequest = 1000;
+	EXPECT_FLOAT_EQ(80, etb.getSetpointEtbTorqueModel(80));
+
+	// Pedal closed -> throttle commanded closed no matter what the model wants (driver lift)
+	tmRequest = 100;
+	EXPECT_FLOAT_EQ(0, etb.getSetpointEtbTorqueModel(0));
+}
+
+// With the torque model enabled, getSetpoint() must route through the torque model path
+// and still enforce the pedal-as-maximum safety cap end to end.
+TEST(etb, torqueModelSetpointPedalCap) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->enableTorqueModel = true;
+	// Take idle/min position out of the picture so we can check exact values
+	engineConfiguration->etbMinimumPosition = 0;
+
+	// Must have TPS & PPS initialized for ETB setup
+	Sensor::setMockValue(SensorType::Tps1Primary, 0);
+	Sensor::setMockValue(SensorType::Tps1, 0.0f, true);
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
+
+	StrictMock<MockTorqueModel> tm;
+	engine->module<TorqueModel>().set(&tm);
+
+	// Torque model is pinned to full throttle for the whole test
+	EXPECT_CALL(tm, getThrottleRequest()).WillRepeatedly(Return(100.0f));
+
+	EtbController etb;
+
+	// Pedal map passes the pedal value straight through as the cap
+	StrictMock<MockVp3d> pedalMap;
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float, float pedal) { return pedal; });
+	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
+
+	// Throttle is capped at the pedal even though the model wants 100%
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 0.0f, true);
+	EXPECT_FLOAT_EQ(0, etb.getSetpoint().value_or(-1));
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 40.0f, true);
+	EXPECT_FLOAT_EQ(40, etb.getSetpoint().value_or(-1));
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
+	EXPECT_FLOAT_EQ(99, etb.getSetpoint().value_or(-1));
+
+	// A failed pedal sensor sanitizes to 0 -> throttle forced closed even though model wants 100%
+	Sensor::resetMockValue(SensorType::AcceleratorPedal);
+	EXPECT_FLOAT_EQ(0, etb.getSetpoint().value_or(-1));
+}
+
+// The torque model path must not bypass the existing downstream safety clamps.
+TEST(etb, torqueModelRespectsMaxPosition) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->enableTorqueModel = true;
+	engineConfiguration->etbMaximumPosition = 90;
+
+	Sensor::setMockValue(SensorType::Tps1Primary, 0);
+	Sensor::setMockValue(SensorType::Tps1, 0.0f, true);
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 100.0f, true);
+
+	StrictMock<MockTorqueModel> tm;
+	engine->module<TorqueModel>().set(&tm);
+
+	// Both pedal cap and torque model want full throttle...
+	EXPECT_CALL(tm, getThrottleRequest()).WillRepeatedly(Return(100.0f));
+
+	EtbController etb;
+	StrictMock<MockVp3d> pedalMap;
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float, float pedal) { return pedal; });
+	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
+
+	// ...but the user-configured maximum still clamps to 90%
+	EXPECT_FLOAT_EQ(90, etb.getSetpoint().value_or(-1));
+}
+
+// The ETB rev limiter must still taper the throttle in torque-model mode.
+TEST(etb, torqueModelRespectsRevLimit) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->enableTorqueModel = true;
+	engineConfiguration->etbRevLimitStart = 5000;
+	engineConfiguration->etbRevLimitRange = 750;
+	// Take min position out of the picture so full cut reads as exactly 0
+	engineConfiguration->etbMinimumPosition = 0;
+
+	Sensor::setMockValue(SensorType::Tps1Primary, 0);
+	Sensor::setMockValue(SensorType::Tps1, 0.0f, true);
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 80.0f, true);
+
+	StrictMock<MockTorqueModel> tm;
+	engine->module<TorqueModel>().set(&tm);
+
+	// Pedal cap and torque model both at 80%
+	EXPECT_CALL(tm, getThrottleRequest()).WillRepeatedly(Return(80.0f));
+
+	EtbController etb;
+	StrictMock<MockVp3d> pedalMap;
+	EXPECT_CALL(pedalMap, getValue(_, _)).WillRepeatedly([](float, float pedal) { return pedal; });
+	etb.init(DC_Throttle1, nullptr, nullptr, &pedalMap, true);
+
+	// Below threshold, unadjusted
+	Sensor::setMockValue(SensorType::Rpm, 1000);
+	EXPECT_NEAR(80, etb.getSetpoint().value_or(-1), 1e-4);
+
+	// Middle of taper range, half throttle
+	Sensor::setMockValue(SensorType::Rpm, 5375);
+	EXPECT_NEAR(40, etb.getSetpoint().value_or(-1), 1e-4);
+
+	// Past the limit, throttle driven closed
+	Sensor::setMockValue(SensorType::Rpm, 6000);
+	EXPECT_NEAR(0, etb.getSetpoint().value_or(-1), 1e-4);
 }
 
 TEST(etb, openLoopNonThrottle) {

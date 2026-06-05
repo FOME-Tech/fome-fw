@@ -10,6 +10,19 @@ static void setDefaultAlternatorParameters() {
 	engineConfiguration->alternatorControl.pFactor = 30;
 }
 
+static void setDefaultTorqueModel() {
+	// Closed-loop airmass trim. Output is a percent correction on the feed-forward throttle
+	// flow, so gains are %-per-(gram of airmass error). Conservative defaults: the feed-forward
+	// path already converges on its own, the trim just removes steady-state model error.
+	engineConfiguration->torqueModel.airmassTrimKp = 10;
+	engineConfiguration->torqueModel.airmassTrimKi = 20;
+	engineConfiguration->torqueModel.airmassTrimAuthority = 25;
+
+	engineConfiguration->torqueModel.torqueLossLoadAxis = GPPWM_Clt;
+	setLinearCurve(config->torqueLossRpmBins, 800, 7000, 1);
+	setLinearCurve(config->torqueLossLoadBins, -20, 100, 1);
+}
+
 /* Cylinder to bank mapping */
 void setLeftRightBanksNeedBetterName() {
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
@@ -68,6 +81,8 @@ void setDefaultBaseEngine() {
 #if EFI_ALTERNATOR_CONTROL
 	setDefaultAlternatorParameters();
 #endif /* EFI_ALTERNATOR_CONTROL */
+
+	setDefaultTorqueModel();
 
 	// Fuel pump
 	engineConfiguration->startUpFuelPumpDuration = 4;

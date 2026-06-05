@@ -188,11 +188,6 @@ uint32_t RpmCalculator::getRevolutionCounterM() const {
 }
 
 void RpmCalculator::onSlowCallback() {
-	// Stop the engine if it's been too long since we got a trigger event
-	if (!engine->triggerCentral.engineMovedRecently(getTimeNowNt())) {
-		setStopSpinning();
-	}
-
 	if (engineConfiguration->alwaysInstantRpm) {
 		float rpm;
 		efitick_t lastInstantRpmTime;
@@ -226,11 +221,8 @@ void RpmCalculator::setStopSpinning() {
 
 	if (cachedRpmValue != 0) {
 		assignRpmValue(0);
-		efiPrintf("engine stopped");
 	}
 	state = STOPPED;
-
-	engine->onEngineStopped();
 }
 
 void RpmCalculator::setSpinningUp(efitick_t nowNt) {
@@ -259,12 +251,13 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
 void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo) {
 	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
 
-	RpmCalculator& rpmState = engine->rpmCalculator;
+	auto& rpmState = engine->rpmCalculator;
+	auto& tc = engine->triggerCentral;
 
 	if (trgEventIndex == 0) {
 		bool hadRpmRecently = rpmState.checkIfSpinning(phaseInfo.timestamp);
 
-		float periodSeconds = engine->rpmCalculator.lastTdcTimer.getElapsedSecondsAndReset(phaseInfo.timestamp);
+		float periodSeconds = rpmState.lastTdcTimer.getElapsedSecondsAndReset(phaseInfo.timestamp);
 
 		if (hadRpmRecently) {
 			/**
@@ -291,17 +284,16 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 		} else {
 			// we are here only once trigger is synchronized for the first time
 			// while transitioning  from 'spinning' to 'running'
-			engine->triggerCentral.instantRpm.movePreSynchTimestamps();
+			tc.instantRpm.movePreSynchTimestamps();
 		}
 
 		rpmState.onNewEngineCycle();
 	}
 
 	// Always update instant RPM even when not spinning up
-	engine->triggerCentral.instantRpm.updateInstantRpm(
-			engine->triggerCentral.triggerShape, &engine->triggerCentral.triggerFormDetails, trgEventIndex, phaseInfo);
+	tc.instantRpm.updateInstantRpm(tc.triggerShape, &tc.triggerFormDetails, trgEventIndex, phaseInfo);
 
-	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
+	float instantRpm = tc.instantRpm.getInstantRpm();
 	rpmState.storeInstantRpm(alwaysInstantRpm, instantRpm, phaseInfo.timestamp);
 }
 

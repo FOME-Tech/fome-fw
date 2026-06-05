@@ -37,7 +37,9 @@ static void setupSensorCheckerPreconditions() {
 	auto& triggerState = engine->triggerCentral.triggerState;
 	triggerState.crankSynchronizationCounter = 25;
 	triggerState.hasSignal = true;
-	engine->triggerCentral.m_lastEventTimer.reset();
+
+	// Simulate engine running
+	engine->rpmCalculator.setRpmValue(2000);
 }
 
 // Helper: set up a cam decoder that looks fully healthy
@@ -176,8 +178,8 @@ TEST(SensorCheckerCam, SkippedWhenEngineNotMoving) {
 
 	setupSensorCheckerPreconditions();
 
-	// Don't reset m_lastEventTimer — it's stale, so engineMovedRecently() returns false
-	engine->triggerCentral.m_lastEventTimer.init();
+	// Stop the engine
+	engine->rpmCalculator.setStopSpinning();
 
 	ASSERT_FALSE(engine->triggerCentral.vvtState[0][0].hasSignal);
 
@@ -203,4 +205,107 @@ TEST(SensorCheckerCam, SkippedWhenNotEnoughCrankSyncs) {
 
 	// Cam no-signal should NOT be reported because crank hasn't synced enough
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
+}
+
+// ==================== Spurious errors during state changes ====================
+// These reproduce the conditions around shutdown / restart where the cam position
+// has gone stale but the engine state means we must NOT raise a fault code.
+
+// Shutdown: engine still "running" but coasting down below cranking RPM. The cam
+// position legitimately goes stale faster than the engine turns at low RPM, so we
+// must suppress the check rather than flag a spurious code on the way to stopping.
+TEST(SensorCheckerCam, NoSpuriousNoSignalDuringSpinDown) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->camInputs[0] = Gpio::A0;
+	engineConfiguration->cranking.rpm = 550;
+
+	setupSensorCheckerPreconditions();
+	// Cam has edges but a stale VVT position (scenario 2)
+	engine->triggerCentral.vvtState[0][0].hasSignal = true;
+
+	// Positive control: at running RPM the stale cam IS flagged
+	engine->module<SensorChecker>()->onSlowCallback();
+	ASSERT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
+
+	// Now coast down below cranking RPM (still RUNNING state, about to stop)
+	clearWarnings();
+	engine->rpmCalculator.setRpmValue(100);
+	ASSERT_TRUE(engine->rpmCalculator.isRunning());
+
+	engine->module<SensorChecker>()->onSlowCallback();
+	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
+}
+
+// Restart: engine cranking again after a stop. The primary trigger is still
+// re-syncing so crankSynchronizationCounter is low - the cam check must stay
+// suppressed until the crank has fully re-synced, then engage again.
+TEST(SensorCheckerCam, NoSpuriousNoSignalOnRestartUntilResynced) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->camInputs[0] = Gpio::A0;
+	engineConfiguration->cranking.rpm = 550;
+
+	setupSensorCheckerPreconditions();
+	engine->triggerCentral.vvtState[0][0].hasSignal = true; // edges, but stale position
+
+	// Simulate restart: stop, then begin cranking with the counter freshly reset/low
+	engine->rpmCalculator.setRpmValue(0);
+	engine->rpmCalculator.setRpmValue(300);
+	ASSERT_TRUE(engine->rpmCalculator.isCranking());
+	engine->triggerCentral.triggerState.crankSynchronizationCounter = 5;
+
+	clearWarnings();
+	engine->module<SensorChecker>()->onSlowCallback();
+	// Not yet re-synced -> no spurious code
+	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
+
+	// Once the crank has fully re-synced the check engages again (positive control)
+	engine->triggerCentral.triggerState.crankSynchronizationCounter = 25;
+	clearWarnings();
+	engine->module<SensorChecker>()->onSlowCallback();
+	EXPECT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
+}
+
+// ==================== Engine-stop resets trigger state ====================
+// The stale-counter-on-restart bug: when the engine stops, crankSynchronizationCounter
+// must be cleared so a restart starts from a clean slate (otherwise a stale count keeps
+// the cam checks enabled before the cam has re-synced).
+
+// When no trigger events have arrived recently, periodicSlowCallback() should detect the
+// stop and reset the crank sync counter (via OnTriggerSynchronizationLost).
+TEST(TriggerStateOnStop, EngineStopResetsCrankSyncCounter) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// No trigger events fired -> engine has not moved recently
+	advanceTimeUs(10e6);
+	engine->rpmCalculator.setRpmValue(2000);
+	auto& triggerState = engine->triggerCentral.triggerState;
+	triggerState.crankSynchronizationCounter = 25;
+
+	ASSERT_FALSE(engine->triggerCentral.engineMovedRecently(getTimeNowNt()));
+	ASSERT_FALSE(engine->rpmCalculator.isStopped());
+
+	engine->periodicSlowCallback();
+
+	EXPECT_EQ(0, triggerState.crankSynchronizationCounter);
+	EXPECT_TRUE(engine->rpmCalculator.isStopped());
+}
+
+// Negative control: while the engine is genuinely moving, periodicSlowCallback() must
+// NOT reset the counter.
+TEST(TriggerStateOnStop, RunningEngineKeepsCrankSyncCounter) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Fire trigger events so the engine has moved recently
+	eth.fireTriggerEvents2(/*count*/ 36, /*delayMs*/ 5);
+	engine->rpmCalculator.setRpmValue(2000);
+	auto& triggerState = engine->triggerCentral.triggerState;
+	triggerState.crankSynchronizationCounter = 25;
+
+	ASSERT_TRUE(engine->triggerCentral.engineMovedRecently(getTimeNowNt()));
+	ASSERT_FALSE(engine->rpmCalculator.isStopped());
+
+	engine->periodicSlowCallback();
+
+	EXPECT_EQ(25, triggerState.crankSynchronizationCounter);
+	EXPECT_FALSE(engine->rpmCalculator.isStopped());
 }
