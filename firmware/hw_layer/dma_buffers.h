@@ -27,6 +27,7 @@ uint8_t* sdCardBlockBuffer();
 FATFS* fs();
 FIL* logFileFd();
 SdLogBufferWriter& logBuffer();
+std::array<uint8_t, 512>& wifiUpdateBuffer();
 #endif // EFI_FILE_LOGGING
 
 } // namespace dma_buffers

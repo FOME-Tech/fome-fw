@@ -36,6 +36,7 @@ struct DmaBufferContents {
 	FATFS fs;
 	FIL file;
 	SdLogBufferWriter logBuffer;
+	std::array<uint8_t, 512> wifiUpdateBuffer;
 #endif
 
 #if HAL_USE_USB_MSD
@@ -91,6 +92,10 @@ SdLogBufferWriter& logBuffer() {
 	return dmaBufferRegion.contents.logBuffer;
 }
 #endif // EFI_FILE_LOGGING
+
+std::array<uint8_t, 512>& wifiUpdateBuffer() {
+	return dmaBufferRegion.contents.wifiUpdateBuffer;
+}
 
 } // namespace dma_buffers
 

@@ -11,6 +11,8 @@
 
 #include "buffered_writer.h"
 
+#include <array>
+
 BaseBlockDevice* initializeMmcBlockDevice();
 void stopMmcBlockDevice();
 
