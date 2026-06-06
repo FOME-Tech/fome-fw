@@ -33,11 +33,11 @@ flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 	return address;
 }
 
-static void intFlashClearErrors(void) {
+static void intFlashClearErrors() {
 	FLASH_SR = 0x0000ffff;
 }
 
-static int intFlashCheckErrors(void) {
+static int intFlashCheckErrors() {
 	uint32_t sr = FLASH_SR;
 
 #ifdef FLASH_SR_OPERR
@@ -77,7 +77,7 @@ static int intFlashCheckErrors(void) {
  * @return HAL_SUCCESS  Unlock was successful.
  * @return HAL_FAILED    Unlock failed.
  */
-static bool intFlashUnlock(void) {
+static bool intFlashUnlock() {
 	/* Check if unlock is really needed */
 	if (!(FLASH_CR & FLASH_CR_LOCK)) {
 		return HAL_SUCCESS;
@@ -101,7 +101,7 @@ static bool intFlashUnlock(void) {
 	{ FLASH_CR |= FLASH_CR_LOCK; }
 
 #ifdef STM32F7XX
-static bool isDualBank(void) {
+static bool isDualBank() {
 	// cleared bit indicates dual bank
 	return (FLASH->OPTCR & FLASH_OPTCR_nDBANK) == 0;
 }

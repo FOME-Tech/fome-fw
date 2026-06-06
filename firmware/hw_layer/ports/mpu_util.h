@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 
 // Base MCU
-void baseMCUInit(void);
+void baseMCUInit();
 void jump_to_bootloader();
 #if EFI_USE_OPENBLT
 void jump_to_openblt();
@@ -70,7 +70,7 @@ typedef enum {
 	BOR_Result_Error
 } BOR_Result_t;
 
-BOR_Level_t BOR_Get(void);
+BOR_Level_t BOR_Get();
 BOR_Result_t BOR_Set(BOR_Level_t BORValue);
 
 void assertInterruptPriority(const char* func, uint8_t expectedPrio);

@@ -429,7 +429,7 @@ void jump_to_openblt() {
 
 #if EFI_PROD_CODE
 
-BOR_Level_t BOR_Get(void) {
+BOR_Level_t BOR_Get() {
 	FLASH_OBProgramInitTypeDef FLASH_Handle;
 
 	/* Read option bytes */
@@ -464,7 +464,7 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 	return BOR_Result_Ok;
 }
 
-void baseMCUInit(void) {
+void baseMCUInit() {
 	// looks like this holds a random value on start? Let's set a nice clean zero
 	DWT->CYCCNT = 0;
 

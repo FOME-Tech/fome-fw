@@ -9,6 +9,6 @@
 
 // Since all the time logic in the firmware is centered around this function, we only provide this
 // function in the firmware.  It forces us to exercise the functions that build on this one.
-uint32_t getTimeNowLowerNt(void) {
+uint32_t getTimeNowLowerNt() {
 	return US2NT(chVTGetSystemTimeX() * (1000000 / CH_CFG_ST_FREQUENCY));
 }

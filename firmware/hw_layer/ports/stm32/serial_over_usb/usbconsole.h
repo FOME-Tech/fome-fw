@@ -7,13 +7,5 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-void usb_serial_start(void);
-bool is_usb_serial_ready(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+void usb_serial_start();
+bool is_usb_serial_ready();

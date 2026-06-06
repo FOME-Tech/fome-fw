@@ -34,7 +34,7 @@
 static int consoleActionCount = 0;
 static TokenCallback consoleActions[CONSOLE_MAX_ACTIONS];
 
-void resetConsoleActions(void) {
+void resetConsoleActions() {
 	consoleActionCount = 0;
 }
 
@@ -180,7 +180,7 @@ static int getParameterCount(action_type_e parameterType) {
 /**
  * @brief This function prints out a list of all available commands
  */
-void helpCommand(void) {
+void helpCommand() {
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	efiPrintf("%d actions available", consoleActionCount);
 	for (int i = 0; i < consoleActionCount; i++) {

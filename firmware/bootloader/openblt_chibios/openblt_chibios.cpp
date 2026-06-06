@@ -44,7 +44,7 @@ void CpuMemCopy(blt_addr dest, blt_addr src, blt_int16u len) {
 /** \brief Pointer to the user program's vector table. */
 #define CPU_USER_PROGRAM_VECTABLE_OFFSET ((blt_int32u)NvmGetUserProgBaseAddress())
 
-void CpuStartUserProgram(void) {
+void CpuStartUserProgram() {
 	void (*pProgResetHandler)(void);
 
 	/* check if a user program is present by verifying the checksum */

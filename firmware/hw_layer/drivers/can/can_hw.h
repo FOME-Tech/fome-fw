@@ -16,5 +16,5 @@ void setCanVss(int type);
 #if EFI_CAN_SUPPORT
 const CANConfig* findCanConfig(can_baudrate_e rate);
 
-bool getIsCanEnabled(void);
+bool getIsCanEnabled();
 #endif /* EFI_CAN_SUPPORT */

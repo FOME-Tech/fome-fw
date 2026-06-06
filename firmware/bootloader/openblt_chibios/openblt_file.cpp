@@ -77,7 +77,7 @@ extern "C" void FileFirmwareUpdateStartedHook() {
 	}
 }
 
-extern "C" void FileFirmwareUpdateCompletedHook(void) {
+extern "C" void FileFirmwareUpdateCompletedHook() {
 	/* close the log file */
 	if (logfile.canUse == BLT_TRUE) {
 		f_close(&logfile.handle);
