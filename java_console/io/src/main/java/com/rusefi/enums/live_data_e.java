@@ -13,6 +13,7 @@ public enum live_data_e {
 	LDS_injector_model,
 	LDS_launch_control_state,
 	LDS_torque_reduction_state,
+	LDS_traction_control_state,
 	LDS_torque_model,
 	LDS_antilag_system_state,
 	LDS_boost_control,

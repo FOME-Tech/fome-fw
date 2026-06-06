@@ -66,20 +66,21 @@ struct torque_model_s {
 	// Limited by axle max
 	// offset 48 bit 1
 	bool limitedByAxleMax : 1 {};
-	// Limited by generic limiter 1
+	// Limited by traction control
 	// offset 48 bit 2
+	bool limitedByTraction : 1 {};
+	// Limited by generic limiter 1
+	// offset 48 bit 3
 	bool limitedByGenericLimiter1 : 1 {};
 	// Limited by generic limiter 2
-	// offset 48 bit 3
+	// offset 48 bit 4
 	bool limitedByGenericLimiter2 : 1 {};
 	// Limited by generic limiter 3
-	// offset 48 bit 4
+	// offset 48 bit 5
 	bool limitedByGenericLimiter3 : 1 {};
 	// Limited by generic limiter 4
-	// offset 48 bit 5
-	bool limitedByGenericLimiter4 : 1 {};
 	// offset 48 bit 6
-	bool unusedBit_48_6 : 1 {};
+	bool limitedByGenericLimiter4 : 1 {};
 	// offset 48 bit 7
 	bool unusedBit_48_7 : 1 {};
 	// offset 48 bit 8
