@@ -1454,6 +1454,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	struct traction_control_cfg
 		bit drivenAxleIsFront,"Front","Rear";Which axle the engine drives. The opposite (undriven) axle is used as the slip reference.
+		bit drivenSlipUseFastest,"Fastest wheel","Average";How the two driven wheels form the slip signal. Average suits a locked/LSD/spool axle. Fastest catches one-wheel peel on an open diff, which the average hides.
 
 		! Slip control PID. Error is slip speed (kph), output is permitted axle torque; gains are axle-Nm per kph, axle-Nm per kph/sec, and axle-Nm·sec per kph.
 		pid_s slipPid

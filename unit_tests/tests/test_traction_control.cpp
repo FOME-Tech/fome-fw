@@ -127,6 +127,33 @@ TEST(TractionControl, SlipDisarmsBelowMinimumSpeed) {
 	EXPECT_FALSE(tc.getSlip().Valid);
 }
 
+// One driven wheel (LF) peels to 60 while its mate (RF) stays planted at 50, reference 50.
+// Average reads ((60+50)/2 - 50)/50 = 10%; Fastest reads (60 - 50)/50 = 20%, catching the peel.
+TEST(TractionControl, DrivenAxleCombineModes) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	configureTc(10);
+	Sensor::setMockValue(SensorType::WheelSpeedLF, 60); // peeling
+	Sensor::setMockValue(SensorType::WheelSpeedRF, 50); // planted
+	Sensor::setMockValue(SensorType::WheelSpeedLR, 50);
+	Sensor::setMockValue(SensorType::WheelSpeedRR, 50);
+
+	TractionController tc;
+
+	engineConfiguration->tractionControl.drivenSlipUseFastest = false;
+	auto avg = tc.getSlip();
+	ASSERT_TRUE(avg.Valid);
+	EXPECT_NEAR(avg.Value.slipPercent, 10, 1e-3);
+	EXPECT_NEAR(avg.Value.drivenSpeed, 55, 1e-3);
+
+	engineConfiguration->tractionControl.drivenSlipUseFastest = true;
+	auto fast = tc.getSlip();
+	ASSERT_TRUE(fast.Valid);
+	EXPECT_NEAR(fast.Value.slipPercent, 20, 1e-3);
+	EXPECT_NEAR(fast.Value.drivenSpeed, 60, 1e-3);
+	// Reference axle ignores the mode - still the mean of the (equal) undriven wheels.
+	EXPECT_NEAR(fast.Value.referenceSpeed, 50, 1e-3);
+}
+
 // ============================ target lookup ============================
 
 TEST(TractionControl, TargetInterpolatesAndClamps) {

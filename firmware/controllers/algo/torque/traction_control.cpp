@@ -11,14 +11,18 @@
 
 #include <algorithm>
 
-// Average two wheel-speed sensors, degrading to whichever single wheel is valid (open diff, one
-// dead sensor). unexpected only when neither wheel reads.
-static expected<float> averagePair(SensorType a, SensorType b) {
+// Combine two wheel-speed sensors into one axle speed, degrading to whichever single wheel is valid
+// (one dead sensor). unexpected only when neither wheel reads. useFastest takes the faster wheel
+// instead of the mean: on an open diff a peeling wheel runs away in speed while the planted one
+// stays put, so the mean halves the slip and hides the event - max() catches it. Wheel speed is a
+// velocity (additive), so the mean is the arithmetic mean; a geometric/harmonic mean would bias
+// toward the slower wheel, the wrong direction for peel detection.
+static expected<float> combinePair(SensorType a, SensorType b, bool useFastest) {
 	auto va = Sensor::get(a);
 	auto vb = Sensor::get(b);
 
 	if (va && vb) {
-		return (va.Value + vb.Value) / 2;
+		return useFastest ? std::max(va.Value, vb.Value) : (va.Value + vb.Value) / 2;
 	}
 	if (va) {
 		return va.Value;
@@ -38,8 +42,10 @@ expected<TractionController::SlipInfo> TractionController::getSlip() const {
 	SensorType refL = frontDriven ? SensorType::WheelSpeedLR : SensorType::WheelSpeedLF;
 	SensorType refR = frontDriven ? SensorType::WheelSpeedRR : SensorType::WheelSpeedRF;
 
-	auto driven = averagePair(drivenL, drivenR);
-	auto reference = averagePair(refL, refR);
+	// Driven axle honours the combine mode (Fastest for an open diff); the reference axle is free-
+	// rolling with both wheels near-equal, so it always uses the mean (vehicle-centerline speed).
+	auto driven = combinePair(drivenL, drivenR, engineConfiguration->tractionControl.drivenSlipUseFastest);
+	auto reference = combinePair(refL, refR, false);
 
 	// No ground truth, or too slow to define a meaningful slip ratio: disarm.
 	if (!driven || !reference) {
