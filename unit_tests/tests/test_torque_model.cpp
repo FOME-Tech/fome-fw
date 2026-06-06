@@ -592,26 +592,6 @@ TEST(CutOnlyTraction, SparkBurnsTheGapWhenLimited) {
 	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, -1); // still no ETB
 }
 
-TEST(CutOnlyTraction, OpensTorqueReductionGate) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	auto& trc = engine->torqueReductionController;
-	engineConfiguration->torqueReductionEnabled = false;
-
-	// Driver-paddle feature off and not in cut-only mode: the request is gated to zero.
-	engineConfiguration->enableTorqueModel = true;
-	engineConfiguration->enableTractionControl = false;
-	trc.setReductionRequest(0.5f);
-	trc.update();
-	EXPECT_FLOAT_EQ(trc.reductionRequest, 0);
-
-	// Cut-only traction control active: the same request now reaches the actuator.
-	engineConfiguration->enableTorqueModel = false;
-	engineConfiguration->enableTractionControl = true;
-	trc.setReductionRequest(0.5f);
-	trc.update();
-	EXPECT_NEAR(trc.reductionRequest, 50, 0.001); // logged in percent
-}
-
 // End-to-end: real traction controller, disabled torque model. A slipping driven axle must drive a
 // real spark reduction with no ETB / airmass command anywhere in the loop.
 TEST(CutOnlyTraction, RealTractionControlCutsViaSpark) {

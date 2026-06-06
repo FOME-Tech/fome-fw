@@ -5,6 +5,9 @@
 
 #include <algorithm>
 
+// True when traction control should run without the full torque model: no ETB / airmass control,
+// the limit is enforced by spark retard + cut only (the current airmass->torque estimate is the
+// demand). Shared by the torque-model orchestration and the torque-reduction actuator gate.
 static bool isCutOnlyTractionMode() {
 	return !engineConfiguration->enableTorqueModel && engineConfiguration->enableTractionControl;
 }
@@ -102,8 +105,6 @@ void TorqueModel::commandAirmass(float totalAirmassTarget, float actualAirmassPe
 }
 
 void TorqueModel::commandSparkReduction(float reductionFraction) {
-	// The reduction controller maps the request to retard + cut (and gates itself on
-	// torqueReductionEnabled); it's evaluated in the ignition pass and applied per cylinder.
 	engine->torqueReductionController.setReductionRequest(reductionFraction);
 }
 

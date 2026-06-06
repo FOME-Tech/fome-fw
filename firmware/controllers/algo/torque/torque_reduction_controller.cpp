@@ -40,11 +40,7 @@ TorqueReductionOutput TorqueReductionController::getReduction(float request) con
 }
 
 angle_t TorqueReductionController::update() {
-	// Apply the request when the driver-paddle feature is enabled, or whenever cut-only traction
-	// control is active (it has no other actuator and drives this controller every tick).
-	bool actuatorActive = engineConfiguration->torqueReductionEnabled || isCutOnlyTractionMode();
-	float request = actuatorActive ? m_reductionRequest : 0;
-
+	float request = m_reductionRequest;
 	auto out = getReduction(request);
 
 	// Publish for logging

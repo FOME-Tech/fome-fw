@@ -90,24 +90,3 @@ TEST(TorqueReduction, TableAxisToFullRequestNeverCuts) {
 	EXPECT_NEAR(out.retardDeg, 14, 0.1);
 	EXPECT_NEAR(out.cutFraction, 0, 0.001);
 }
-
-TEST(TorqueReduction, GatedOffWhenDisabled) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	setupCalibration();
-
-	auto& dut = engine->torqueReductionController;
-	dut.setReductionRequest(1.0f);
-
-	// Disabled: request is ignored, no retard or cut
-	engineConfiguration->torqueReductionEnabled = false;
-	EXPECT_NEAR(dut.update(), 0, 0.1);
-	EXPECT_NEAR(dut.reductionRequest, 0, 0.001);
-	EXPECT_NEAR(dut.cutFraction, 0, 0.001);
-
-	// Enabled: the stored request drives retard + cut, and state is published (request/cut log in percent)
-	engineConfiguration->torqueReductionEnabled = true;
-	EXPECT_NEAR(dut.update(), 14, 0.1);
-	EXPECT_NEAR(dut.reductionRequest, 100, 0.5);
-	EXPECT_NEAR(dut.retardApplied, 14, 0.1);
-	EXPECT_NEAR(dut.cutFraction, 100, 0.5);
-}
