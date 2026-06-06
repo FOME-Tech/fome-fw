@@ -30,8 +30,8 @@ struct traction_control_state_s {
 	// Nm
 	// offset 12
 	scaled_channel<int16_t, 10, 1> engineTorqueLimit = (int16_t)0;
-	// Slip rate of change
-	// %/s
+	// Slip speed rate of change
+	// kph/s
 	// offset 14
 	int16_t slipRate = (int16_t)0;
 };
