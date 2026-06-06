@@ -97,8 +97,17 @@ expected<float> TractionController::getTorqueLimit(float torqueRequested) {
 	// axle-domain so we can use it as the upper limit for the traction control output
 	float axleDemand = torqueRequested * ratio.Value;
 
-	float target = getTargetSlip(slip.Value.referenceSpeed);
-	slipTarget = target;
+	// Target a slip *ratio* (peak grip sits at a roughly constant ratio, independent of speed) but
+	// control on slip *speed* in kph. The plant gain from axle torque to slip speed is r / I_eff -
+	// independent of vehicle speed - whereas the gain to slip ratio carries a 1/v from the percent
+	// normalization. Converting the ratio target to a speed setpoint moves that 1/v into the
+	// setpoint, where it cancels exactly, leaving the loop gain speed-independent. So the PID gains
+	// are axle-Nm per kph and need no speed scheduling.
+	float targetPct = getTargetSlip(slip.Value.referenceSpeed);
+	slipTarget = targetPct;
+
+	float slipSpeed = slip.Value.drivenSpeed - slip.Value.referenceSpeed; // kph
+	float targetSpeed = targetPct * slip.Value.referenceSpeed * 0.01f;	  // kph
 
 	if (!m_slipPid.isSame(&cfg.slipPid)) {
 		m_slipPid.initPidClass(&cfg.slipPid);
@@ -110,20 +119,20 @@ expected<float> TractionController::getTorqueLimit(float torqueRequested) {
 	if (!m_armed) {
 		m_released = true;
 		m_prevCut = 0;
-		m_prevSlip = slip.Value.slipPercent;
+		m_prevSlipSpeed = slipSpeed;
 		m_armed = true;
 	}
 
-	float slipRateValue = (slip.Value.slipPercent - m_prevSlip) / dt;
-	m_prevSlip = slip.Value.slipPercent;
+	float slipRateValue = (slipSpeed - m_prevSlipSpeed) / dt; // kph/s
+	m_prevSlipSpeed = slipSpeed;
 	slipRate = slipRateValue;
 
 	// Dynamic anti-windup: the integrator can't wind above the live axle demand (idle-PID pattern).
 	// When the request falls - or an upshift drops the ratio - iTermMax falls with it.
 	m_slipPid.iTermMax = axleDemand;
 	m_slipPid.iTermMin = 0;
-	// error = target - slip. Override D with -slipRate to anticipate fast onset without derivative
-	// kick from quantized wheel speed.
+	// error = targetSpeed - slipSpeed. Override D with -slipRate to anticipate fast onset without
+	// derivative kick from quantized wheel speed.
 	m_slipPid.setDTermOverride(-slipRateValue);
 
 	// Conditional integration. While TC isn't actually limiting (last cycle's output sat at the
@@ -136,7 +145,7 @@ expected<float> TractionController::getTorqueLimit(float torqueRequested) {
 		m_slipPid.iTerm = axleDemand;
 	}
 
-	float rawAxle = m_slipPid.getOutput(target, slip.Value.slipPercent, dt);
+	float rawAxle = m_slipPid.getOutput(targetSpeed, slipSpeed, dt);
 	float rawCeiling = clampF(0, rawAxle, axleDemand);
 
 	// Rate-limit the cut depth (gap below the rail), not the absolute ceiling. Expressed relative to

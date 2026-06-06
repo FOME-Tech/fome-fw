@@ -23,6 +23,36 @@ static void setDefaultTorqueModel() {
 	setLinearCurve(config->torqueLossLoadBins, -20, 100, 1);
 }
 
+static void setDefaultTractionControl() {
+	auto& tc = engineConfiguration->tractionControl;
+
+	// Slip control PID. Error is slip speed (kph), output is permitted axle torque (Nm), so the gains
+	// are axle-Nm per kph and need no speed scheduling (the plant gain to slip speed, r/I_eff, is
+	// speed-independent). These are rough starting points for a ~0.3 m tyre in a mid gear; the real
+	// scaling is the driveline inertia I_eff, which a tuner adjusts via the gains. minValue/maxValue
+	// bound the commandable axle torque; keep maxValue well above any realistic axle demand so the
+	// per-tick dynamic iTermMax (= live axle demand) is what actually rails the output.
+	tc.slipPid.pFactor = 80;  // axle-Nm per kph
+	tc.slipPid.iFactor = 200; // axle-Nm per kph/s
+	tc.slipPid.dFactor = 5;	  // axle-Nm·s per kph
+	tc.slipPid.minValue = 0;
+	tc.slipPid.maxValue = 30000;
+
+	tc.minimumSpeed = 5;
+	tc.engineTorqueFloor = 0;
+	tc.engageRate = 0;	   // unlimited bite by default
+	tc.releaseRate = 2000; // axle Nm/s handback
+	tc.slipTargetMax = 25;
+
+	setLinearCurve(config->slipTargetSpeedBins, 0, 200, 1);
+	setLinearCurve(config->slipTargetTrimBins, 0, 3, 1);
+	for (size_t s = 0; s < efi::size(config->slipTargetSpeedBins); s++) {
+		for (size_t t = 0; t < efi::size(config->slipTargetTrimBins); t++) {
+			config->slipTargetTable[s][t] = 10;
+		}
+	}
+}
+
 /* Cylinder to bank mapping */
 void setLeftRightBanksNeedBetterName() {
 	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
@@ -83,6 +113,7 @@ void setDefaultBaseEngine() {
 #endif /* EFI_ALTERNATOR_CONTROL */
 
 	setDefaultTorqueModel();
+	setDefaultTractionControl();
 
 	// Fuel pump
 	engineConfiguration->startUpFuelPumpDuration = 4;

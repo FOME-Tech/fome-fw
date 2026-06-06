@@ -45,8 +45,8 @@ private:
 	// limit acts on this gap (not the absolute ceiling), so a moving rail tracks instantly and the
 	// limit only ever shapes the slip-driven cut.
 	float m_prevCut = 0;
-	// Previous slip, for the slip-rate (D-term) estimate.
-	float m_prevSlip = 0;
+	// Previous slip speed (kph), for the slip-rate (D-term) estimate.
+	float m_prevSlipSpeed = 0;
 	// Whether TC was armed last tick, to seed state cleanly on the arm transition.
 	bool m_armed = false;
 	// Whether last cycle's output sat at the rail (TC not limiting). While released the integrator is

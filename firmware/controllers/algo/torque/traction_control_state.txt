@@ -8,5 +8,5 @@ struct_no_prefix traction_control_state_s
 
 	uint16_t axleTorqueLimit;Permitted axle torque;"Nm", 1, 0, 0, 60000, 0
 	int16_t autoscale engineTorqueLimit;Permitted engine torque;"Nm", 0.1, 0, -2000, 2000, 1
-	int16_t slipRate;Slip rate of change;"%/s", 1, 0, -30000, 30000, 0
+	int16_t slipRate;Slip speed rate of change;"kph/s", 0.01, 0, -100, 100, 2
 end_struct

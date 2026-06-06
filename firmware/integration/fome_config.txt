@@ -1455,7 +1455,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	struct traction_control_cfg
 		bit drivenAxleIsFront,"Front","Rear";Which axle the engine drives. The opposite (undriven) axle is used as the slip reference.
 
-		! Slip control PID. Output is permitted axle torque; gains are axle-Nm per %slip, axle-Nm per %slip/sec, and axle-Nm·sec per %slip.
+		! Slip control PID. Error is slip speed (kph), output is permitted axle torque; gains are axle-Nm per kph, axle-Nm per kph/sec, and axle-Nm·sec per kph.
 		pid_s slipPid
 
 		uint16_t engineTorqueFloor;Minimum engine torque traction control may command (applied after the gear conversion). Prevents stall and bounds cut depth.;"Nm", 1, 0, 0, 1000, 0
