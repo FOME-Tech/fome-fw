@@ -8,6 +8,7 @@ CONTROLLERS_ALGO_SRC_CPP = $(PROJECT_DIR)/controllers/algo/ignition/ignition_sta
 	$(PROJECT_DIR)/controllers/algo/antilag_system.cpp \
 	$(PROJECT_DIR)/controllers/algo/torque/torque_reduction_controller.cpp \
 	$(PROJECT_DIR)/controllers/algo/torque/torque_model.cpp \
+	$(PROJECT_DIR)/controllers/algo/torque/traction_control.cpp \
 	$(PROJECT_DIR)/controllers/algo/runtime_state.cpp \
 	$(PROJECT_DIR)/controllers/algo/engine_configuration.cpp \
 	$(PROJECT_DIR)/controllers/algo/engine.cpp \

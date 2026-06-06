@@ -1,0 +1,12 @@
+struct_no_prefix traction_control_state_s
+	int16_t autoscale slipMeasured;Measured wheel slip;"%", 0.1, 0, -1000, 1000, 1
+	uint16_t autoscale drivenSpeed;Driven axle speed;"kph", 0.1, 0, 0, 1000, 1
+	uint16_t autoscale referenceSpeed;Reference (undriven) axle speed;"kph", 0.1, 0, 0, 1000, 1
+
+	uint8_t autoscale slipTarget;Target wheel slip;"%", 0.5, 0, 0, 100, 1
+	int16_t slipTargetYAxisValue;Slip target trim axis value;"", 1, 0, -30000, 30000, 0
+
+	uint16_t axleTorqueLimit;Permitted axle torque;"Nm", 1, 0, 0, 60000, 0
+	int16_t autoscale engineTorqueLimit;Permitted engine torque;"Nm", 0.1, 0, -2000, 2000, 1
+	int16_t slipRate;Slip rate of change;"%/s", 1, 0, -30000, 30000, 0
+end_struct

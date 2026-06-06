@@ -432,6 +432,7 @@ bit is_enabled_spi_5
 bit is_enabled_spi_6
 bit max31855enable
 bit enableTorqueModel
+bit enableTractionControl
 
 int16_t tpsMin;Closed throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
 int16_t tpsMax;Full throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
@@ -1451,6 +1452,23 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	Dtcs dtcControl
 
+	struct traction_control_cfg
+		bit drivenAxleIsFront,"Front","Rear";Which axle the engine drives. The opposite (undriven) axle is used as the slip reference.
+
+		! Slip control PID. Output is permitted axle torque; gains are axle-Nm per %slip, axle-Nm per %slip/sec, and axle-Nm·sec per %slip.
+		pid_s slipPid
+
+		uint16_t engineTorqueFloor;Minimum engine torque traction control may command (applied after the gear conversion). Prevents stall and bounds cut depth.;"Nm", 1, 0, 0, 1000, 0
+		uint16_t engageRate;Maximum rate the axle torque ceiling may fall (bite). 0 means unlimited.;"Nm/s", 1, 0, 0, 60000, 0
+		uint16_t releaseRate;Maximum rate the axle torque ceiling may rise (hand torque back). Limits re-light after a wheel hooks up.;"Nm/s", 1, 0, 0, 60000, 0
+
+		uint8_t minimumSpeed;Reference (undriven) axle speed below which traction control is inactive.;"kph", 1, 0, 0, 100, 0
+		uint8_t slipTargetMax;Clamp applied to the final slip target.;"%", 1, 0, 0, 100, 0
+		gppwm_channel_e slipTargetYAxis;Optional X-axis source for the slip target table - e.g. a driver "TC dial". Reads 0 (first column) when unset.;
+	end_struct
+
+	traction_control_cfg tractionControl
+
 	struct torque_model_cfg
 		! Idle PID gains, units of Nm/RPM, Nm/RPM/sec, and RPM/sec
 		pid_s idlePid
@@ -1533,6 +1551,10 @@ uint8_t[12] autoscale driverTorqueRpmBins;;"RPM", 100, 0, 0, 25000, 0
 int16_t[6 x 6] autoscale torqueLossTable;Torque lost to friction and engine accessories.;"Nm", 0.1, 0, -2000, 2000, 1
 int16_t[6] torqueLossRpmBins;;"RPM", 1, 0, 0, 25000, 0
 int16_t[6] torqueLossLoadBins;;"", 1, 0, -10000, 10000, 0
+
+uint8_t[8 x 4] autoscale slipTargetTable;Traction control target wheel slip.;"%", 0.1, 0, 0, 25, 1
+uint8_t[8] slipTargetSpeedBins;;"kph", 1, 0, 0, 250, 0
+int16_t[4] slipTargetTrimBins;Trim-axis (X) values for the slip target table.;"", 1, 0, -1000, 1000, 0
 
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2

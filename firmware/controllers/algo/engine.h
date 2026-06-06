@@ -28,6 +28,7 @@
 #include "antilag_system.h"
 #include "torque_reduction_controller.h"
 #include "torque_model.h"
+#include "traction_control.h"
 #include "trigger_scheduler.h"
 #include "main_relay.h"
 #include "ac_control.h"
@@ -250,6 +251,8 @@ public:
 #endif // EFI_LAUNCH_CONTROL
 
 	TorqueReductionController torqueReductionController;
+
+	TractionController tractionController;
 
 #if EFI_ANTILAG_SYSTEM
 	AntilagSystemBase antilagController;

@@ -62,6 +62,7 @@ TESTS_SRC_CPP = \
 	tests/test_torque_reduction_controller.cpp \
 	tests/test_driver_torque_demand.cpp \
 	tests/test_torque_model.cpp \
+	tests/test_traction_control.cpp \
 	tests/test_airmass_dispatcher.cpp \
 	tests/test_fuel_map.cpp \
 	tests/test_gear_detector.cpp \

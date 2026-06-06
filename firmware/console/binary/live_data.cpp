@@ -10,6 +10,7 @@
 #include "antilag_system_state_generated.h"
 #include "torque_reduction_state_generated.h"
 #include "torque_model.h"
+#include "traction_control.h"
 #include "vvt_generated.h"
 
 template <>
@@ -43,6 +44,11 @@ const launch_control_state_s* getLiveData(size_t) {
 template <>
 const torque_reduction_state_s* getLiveData(size_t) {
 	return &engine->torqueReductionController;
+}
+
+template <>
+const traction_control_state_s* getLiveData(size_t) {
+	return &engine->tractionController;
 }
 
 template <>

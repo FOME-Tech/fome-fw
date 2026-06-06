@@ -53,6 +53,11 @@ Usages:
     constexpr: "engine->torqueReductionController"
     output_name: "Torque reduction"
 
+  - name: traction_control_state
+    folder: controllers/algo/torque
+    constexpr: "engine->tractionController"
+    output_name: "TC"
+
   - name: torque_model
     folder: controllers/algo/torque
     prepend: integration/fome_config_shared.txt

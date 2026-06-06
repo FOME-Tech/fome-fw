@@ -22,6 +22,7 @@ struct_no_prefix torque_model_s
 
 	bit limitedByEngineMax;Limited by engine max
 	bit limitedByAxleMax;Limited by axle max
+	bit limitedByTraction;Limited by traction control
 	bit limitedByGenericLimiter1;Limited by generic limiter 1
 	bit limitedByGenericLimiter2;Limited by generic limiter 2
 	bit limitedByGenericLimiter3;Limited by generic limiter 3

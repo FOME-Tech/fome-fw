@@ -216,6 +216,15 @@ float TorqueModel::applyTorqueLimits(const float torqueRequested) {
 	LIMITER(limit3, limitedByGenericLimiter3);
 	LIMITER(limit4, limitedByGenericLimiter4);
 
+	// Traction control: a closed-loop limit producer. It computes its own ceiling (clamped to the
+	// request it's handed), so it runs every tick to stay primed; unexpected means disarmed.
+	if (auto tractionLimit = engine->tractionController.getTorqueLimit(torqueRequested)) {
+		result = std::min(result, tractionLimit.Value);
+		limitedByTraction = tractionLimit.Value < torqueRequested;
+	} else {
+		limitedByTraction = false;
+	}
+
 	return result;
 }
 
