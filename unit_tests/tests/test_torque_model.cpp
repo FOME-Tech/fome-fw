@@ -529,6 +529,131 @@ TEST(TorqueModelFlow, SparkReductionClampsToZeroOnceThrottleCatchesDown) {
 	EXPECT_FLOAT_EQ(tm.m_commandedSparkReduction, 0);
 }
 
+// ============================ cut-only traction control ============================
+// With the torque model disabled but traction control enabled, onFastCallback runs a "cut-only"
+// path: the current airmass->torque estimate is the demand, traction control limits it, and the
+// limit is enforced by spark reduction only (no ETB / no airmass command).
+
+TEST(CutOnlyTraction, NoOpWhenTractionAlsoDisabled) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = false;
+	engineConfiguration->enableTractionControl = false;
+
+	FlowMockTorqueModel tm;
+	tm.m_limited = 250;
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 4;
+
+	tm.onFastCallback();
+
+	// Neither mode active: nothing ran.
+	EXPECT_FLOAT_EQ(tm.m_limiterSawRequest, -1);
+	EXPECT_FLOAT_EQ(tm.m_commandedSparkReduction, -1);
+	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, -1);
+}
+
+TEST(CutOnlyTraction, CurrentAirmassTorqueIsTheDemand) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = false;
+	engineConfiguration->enableTractionControl = true;
+
+	FlowMockTorqueModel tm;
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 4; // 4 g -> 360 Nm at 90 Nm/g
+	tm.m_limited = 360;						 // traction control not biting: passes the demand through
+	tm.m_demand = 999;						 // the driver table must be ignored in cut-only mode
+
+	tm.onFastCallback();
+
+	// The forward torque is what the limiter (traction control) sees - not the driver demand table.
+	EXPECT_FLOAT_EQ(tm.m_limiterSawRequest, 360);
+	EXPECT_FLOAT_EQ(tm.m_torqueRequested, 360);
+	EXPECT_FLOAT_EQ(tm.m_torqueLoss, 0);
+	// No ETB: airmass is never commanded.
+	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, -1);
+	// Nothing biting -> no spark cut.
+	EXPECT_FLOAT_EQ(tm.m_commandedSparkReduction, 0);
+}
+
+TEST(CutOnlyTraction, SparkBurnsTheGapWhenLimited) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableTorqueModel = false;
+	engineConfiguration->enableTractionControl = true;
+
+	FlowMockTorqueModel tm;
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 4; // 360 Nm gross
+	tm.m_limited = 200;						 // traction control cuts the ceiling to 200
+
+	tm.onFastCallback();
+
+	float expected = (360.0f - 200.0f) / 360.0f;
+	EXPECT_NEAR(tm.m_commandedSparkReduction, expected, 0.001);
+	EXPECT_FLOAT_EQ(tm.m_commandedAirmass, -1); // still no ETB
+}
+
+TEST(CutOnlyTraction, OpensTorqueReductionGate) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& trc = engine->torqueReductionController;
+	engineConfiguration->torqueReductionEnabled = false;
+
+	// Driver-paddle feature off and not in cut-only mode: the request is gated to zero.
+	engineConfiguration->enableTorqueModel = true;
+	engineConfiguration->enableTractionControl = false;
+	trc.setReductionRequest(0.5f);
+	trc.update();
+	EXPECT_FLOAT_EQ(trc.reductionRequest, 0);
+
+	// Cut-only traction control active: the same request now reaches the actuator.
+	engineConfiguration->enableTorqueModel = false;
+	engineConfiguration->enableTractionControl = true;
+	trc.setReductionRequest(0.5f);
+	trc.update();
+	EXPECT_NEAR(trc.reductionRequest, 50, 0.001); // logged in percent
+}
+
+// End-to-end: real traction controller, disabled torque model. A slipping driven axle must drive a
+// real spark reduction with no ETB / airmass command anywhere in the loop.
+TEST(CutOnlyTraction, RealTractionControlCutsViaSpark) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& tm = engine->module<TorqueModel>().unmock();
+
+	engineConfiguration->enableTorqueModel = false;
+	engineConfiguration->enableTractionControl = true;
+	engineConfiguration->torqueModel.engineMaximum = 0; // isolate: only traction control limits
+	engineConfiguration->torqueModel.axleMaximum = 0;
+
+	auto& tc = engineConfiguration->tractionControl;
+	tc.drivenAxleIsFront = true;
+	tc.minimumSpeed = 5;
+	tc.slipTargetMax = 0; // target 0 slip -> any slip drives a cut
+	tc.slipTargetYAxis = GPPWM_Zero;
+	tc.slipPid.pFactor = 50;
+	tc.slipPid.iFactor = 100;
+	tc.slipPid.minValue = 0;
+	tc.slipPid.maxValue = 30000;
+	setLinearCurve(config->slipTargetSpeedBins, 0, 200, 1);
+	setLinearCurve(config->slipTargetTrimBins, 0, 3, 1);
+
+	detectGear(2, 4);
+
+	// Driven (front) axle spinning 40% faster than the undriven reference (rear).
+	Sensor::setMockValue(SensorType::WheelSpeedLF, 70);
+	Sensor::setMockValue(SensorType::WheelSpeedRF, 70);
+	Sensor::setMockValue(SensorType::WheelSpeedLR, 50);
+	Sensor::setMockValue(SensorType::WheelSpeedRR, 50);
+
+	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
+	engineConfiguration->cylindersCount = 4; // 360 Nm gross at base spark
+
+	// Let the slip integrator wind in.
+	for (int i = 0; i < 20; i++) {
+		tm.onFastCallback();
+	}
+
+	EXPECT_GT(tm.m_sparkReductionRequest, 0);
+}
+
 // ============================ idleDemand ============================
 
 namespace {

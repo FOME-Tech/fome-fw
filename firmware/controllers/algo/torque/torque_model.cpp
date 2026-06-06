@@ -5,48 +5,65 @@
 
 #include <algorithm>
 
+static bool isCutOnlyTractionMode() {
+	return !engineConfiguration->enableTorqueModel && engineConfiguration->enableTractionControl;
+}
+
 void TorqueModelBase::onFastCallback() {
-	if (!engineConfiguration->enableTorqueModel) {
+	bool fullModel = engineConfiguration->enableTorqueModel;
+	bool cutOnly = isCutOnlyTractionMode();
+	if (!fullModel && !cutOnly) {
 		return;
 	}
 
 	// for now, 90Nm/gram is an OK hack (phase 4 replaces this scalar with a real model)
 	constexpr float torquePerGramAir = 90;
 
-	// Forward calculation of current torque
+	// Forward calculation of current torque: the gross torque the current charge would make at base
+	// spark. In cut-only mode this doubles as the demand (the throttle, not a torque model, sets it).
 	float airmassActual = engine->fuelComputer.sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
 	m_airmassActual = airmassActual;
+	float grossAtCurrentAir = airmassActual * torquePerGramAir;
 
-	float torqueLoss = getTorqueLoss();
-	m_torqueLoss = torqueLoss;
+	float grossTorqueRequest;
+	if (fullModel) {
+		float torqueLoss = getTorqueLoss();
+		m_torqueLoss = torqueLoss;
 
-	// Torque management
-	float grossTorqueRequest = calculateGrossTorqueRequest(torqueLoss);
+		// Torque management
+		grossTorqueRequest = calculateGrossTorqueRequest(torqueLoss);
 
-	// Convert to airmass and drive throttle
-	float totalAirmassTarget = grossTorqueRequest / torquePerGramAir;
-	m_airmassTarget = totalAirmassTarget;
+		// Convert to airmass and drive throttle
+		float totalAirmassTarget = grossTorqueRequest / torquePerGramAir;
+		m_airmassTarget = totalAirmassTarget;
 
-	// Hand the target off to the airmass path (real impl drives the ETB)
-	commandAirmass(totalAirmassTarget, airmassActual);
+		// Hand the target off to the airmass path (real impl drives the ETB)
+		commandAirmass(totalAirmassTarget, airmassActual);
+	} else {
+		// Cut-only traction control: no ETB and no driver-demand table, so the torque the current
+		// airmass would make *is* the demand. Traction control (via applyTorqueLimits) lowers it,
+		// and the spark path below enforces the cut. No torque-loss term, no airmass command.
+		m_torqueLoss = 0;
+		m_torqueRequested = grossAtCurrentAir;
+		m_torqueRequestedLimited = applyTorqueLimits(grossAtCurrentAir);
+		grossTorqueRequest = m_torqueRequestedLimited;
+	}
 
 	// Fast torque limiting via spark. The airmass target above already tracks the limited demand,
 	// but the actual charge lags it while the manifold empties - so the instant a limit engages,
 	// the engine is momentarily making more torque than allowed. Burn that excess off with spark
 	// retard (and cylinder cut, once retard saturates) so delivered torque follows the limit within
-	// a cylinder event instead of waiting for the throttle to catch the manifold down.
+	// a cylinder event instead of waiting for the throttle to catch the manifold down. In cut-only
+	// mode spark is the *only* actuator, so this is the entire enforcement path.
 	//
 	// Only do this while a limit is actually biting. On a plain tip-out nothing is limiting, yet the
 	// same air-vs-target gap exists transiently as the manifold drains - there we want the throttle
 	// to handle the drop, not to retard (and needlessly heat the cat) on every lift.
 	float sparkReductionRequest = 0;
-	if (m_torqueRequestedLimited < m_torqueRequested) {
-		// Gross torque the current charge would make at base spark; the request is the limited
-		// target. Their ratio is the fraction of combustion torque spark has to remove.
-		float grossAtCurrentAir = airmassActual * torquePerGramAir;
-		if (grossAtCurrentAir > 0) {
-			sparkReductionRequest = clampF(0, (grossAtCurrentAir - grossTorqueRequest) / grossAtCurrentAir, 1);
-		}
+	if (m_torqueRequestedLimited < m_torqueRequested && grossAtCurrentAir > 0) {
+		// The request is the limited target; their ratio is the fraction of combustion torque spark
+		// has to remove.
+		sparkReductionRequest = clampF(0, (grossAtCurrentAir - grossTorqueRequest) / grossAtCurrentAir, 1);
 	}
 	m_sparkReductionRequest = 100 * sparkReductionRequest;
 	commandSparkReduction(sparkReductionRequest);

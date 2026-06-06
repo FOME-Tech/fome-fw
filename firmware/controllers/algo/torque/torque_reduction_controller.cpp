@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include "torque_reduction_controller.h"
+#include "torque_model.h"
 
 void TorqueReductionController::setReductionRequest(float request) {
 	m_reductionRequest = request;
@@ -39,8 +40,10 @@ TorqueReductionOutput TorqueReductionController::getReduction(float request) con
 }
 
 angle_t TorqueReductionController::update() {
-	// No producer is wired up yet, and the feature is gated off by default.
-	float request = engineConfiguration->torqueReductionEnabled ? m_reductionRequest : 0;
+	// Apply the request when the driver-paddle feature is enabled, or whenever cut-only traction
+	// control is active (it has no other actuator and drives this controller every tick).
+	bool actuatorActive = engineConfiguration->torqueReductionEnabled || isCutOnlyTractionMode();
+	float request = actuatorActive ? m_reductionRequest : 0;
 
 	auto out = getReduction(request);
 
