@@ -62,8 +62,6 @@ static char shaft_signal_msg_index[15];
 
 static char WAVE_LOGGING_BUFFER[WAVE_LOGGING_SIZE];
 
-int waveChartUsedSize;
-
 /**
  * We want to skip some engine cycles to skip what was scheduled before parameters were changed
  */
@@ -141,7 +139,6 @@ void WaveChart::publishIfFull() {
 void WaveChart::publish() {
 #if EFI_ENGINE_SNIFFER
 	logging.appendPrintf(LOG_DELIMITER);
-	waveChartUsedSize = logging.loggingSize();
 
 	if (getTriggerCentral()->isEngineSnifferEnabled) {
 		scheduleLogging(&logging);
