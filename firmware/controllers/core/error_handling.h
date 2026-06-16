@@ -52,19 +52,19 @@ const char* getCriticalErrorMessage();
 int getRusEfiVersion();
 
 #define efiAssert(code, condition, message, result)                                                                    \
-	{                                                                                                                  \
+	do {                                                                                                               \
 		if (!(condition)) {                                                                                            \
 			firmwareError(code, message);                                                                              \
 			return result;                                                                                             \
 		}                                                                                                              \
-	}
+	} while (0)
 #define efiAssertVoid(code, condition, message)                                                                        \
-	{                                                                                                                  \
+	do {                                                                                                               \
 		if (!(condition)) {                                                                                            \
 			firmwareError(code, message);                                                                              \
 			return;                                                                                                    \
 		}                                                                                                              \
-	}
+	} while (0)
 
 #if EFI_PROD_CODE
 #include <hal.h>

@@ -28,13 +28,13 @@ void TsChannelBase::copyAndWriteSmallCrcPacket(const uint8_t* buf, size_t size) 
 	efiAssertVoid(
 			ObdCode::OBD_PCM_Processor_Fault,
 			!isBigPacket(size),
-			"copyAndWriteSmallCrcPacket tried to transmit too large a packet")
+			"copyAndWriteSmallCrcPacket tried to transmit too large a packet");
 
-			// If transmitting data, copy it in to place in the scratch buffer
-			// We want to prevent the data changing itself (higher priority threads could write
-			// tsOutputChannels) during the CRC computation.  Instead compute the CRC on our
-			// local buffer that nobody else will write.
-			if (size) {
+	// If transmitting data, copy it in to place in the scratch buffer
+	// We want to prevent the data changing itself (higher priority threads could write
+	// tsOutputChannels) during the CRC computation.  Instead compute the CRC on our
+	// local buffer that nobody else will write.
+	if (size) {
 		memcpy(scratchBuffer, buf, size);
 	}
 

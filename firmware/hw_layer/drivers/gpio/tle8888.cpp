@@ -1219,13 +1219,14 @@ int Tle8888::deinit() {
  * @details Checks for valid config
  * @return return gpio chip base
  */
-
 int tle8888_add(brain_pin_e base, unsigned int index, const tle8888_config* cfg) {
 
-	efiAssert(ObdCode::OBD_PCM_Processor_Fault, cfg != NULL, "8888CFG", 0)
+	efiAssert(ObdCode::OBD_PCM_Processor_Fault, cfg != NULL, "8888CFG", 0);
 
-			/* no config or no such chip */
-			if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_TLE8888_COUNT)) return -1;
+	/* no config or no such chip */
+	if ((!cfg) || (!cfg->spi_bus) || (index >= BOARD_TLE8888_COUNT)) {
+		return -1;
+	}
 
 	/* check for valid chip select.
 	 * TODO: remove this check? CS can be driven by SPI */
