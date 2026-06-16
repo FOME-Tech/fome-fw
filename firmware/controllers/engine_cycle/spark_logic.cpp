@@ -175,17 +175,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	}
 #endif
 
-	uint16_t mask = ctx.outputsMask;
-	size_t idx = 0;
-
-	while (mask) {
-		if (mask & 0x1) {
-			enginePins.coils[idx].setLow();
-		}
-
-		mask = mask >> 1;
-		idx++;
-	}
+	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.coils[idx].setLow(); });
 
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
@@ -232,17 +222,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 void turnSparkPinHigh(IgnitionContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 
-	uint16_t mask = ctx.outputsMask;
-	size_t idx = 0;
-
-	while (mask) {
-		if (mask & 0x1) {
-			enginePins.coils[idx].setHigh();
-		}
-
-		mask = mask >> 1;
-		idx++;
-	}
+	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.coils[idx].setHigh(); });
 
 	auto& event = engine->ignitionEvents.elements[ctx.eventIndex];
 

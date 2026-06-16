@@ -156,6 +156,21 @@ inline constexpr adc_channel_e operator+(size_t a, adc_channel_e b) {
 	return b + a;
 }
 
+// Walk each set bit of mask (low bit = index 0), calling fn(bitIndex) for each.
+// Used to drive the set of output pins selected by an injector/ignition output mask.
+template <typename TCallback>
+static inline void forEachSetBit(uint16_t mask, TCallback fn) {
+	size_t idx = 0;
+	while (mask) {
+		if (mask & 0x1) {
+			fn(idx);
+		}
+
+		mask >>= 1;
+		idx++;
+	}
+}
+
 namespace efi {
 template <class _Ty>
 struct remove_reference {

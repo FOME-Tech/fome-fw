@@ -12,35 +12,17 @@
 extern bool printFuelDebug;
 
 void startInjection(InjectorContext ctx) {
-	uint16_t mask = ctx.outputsMask;
-	size_t idx = 0;
+	forEachSetBit(ctx.outputsMask, [&ctx](size_t idx) {
+		enginePins.injectors[idx].open();
 
-	while (mask) {
-		if (mask & 0x1) {
-			enginePins.injectors[idx].open();
-
-			if (ctx.stage2Active) {
-				enginePins.injectorsStage2[idx].open();
-			}
+		if (ctx.stage2Active) {
+			enginePins.injectorsStage2[idx].open();
 		}
-
-		mask = mask >> 1;
-		idx++;
-	}
+	});
 }
 
 void endInjection(InjectorContext ctx) {
-	uint16_t mask = ctx.outputsMask;
-	size_t idx = 0;
-
-	while (mask) {
-		if (mask & 0x1) {
-			enginePins.injectors[idx].close();
-		}
-
-		mask = mask >> 1;
-		idx++;
-	}
+	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.injectors[idx].close(); });
 
 	if (ctx.splitDurationUs > 0) {
 		efitick_t openTime = getTimeNowNt() + MS2NT(2);
@@ -60,17 +42,7 @@ void endInjection(InjectorContext ctx) {
 }
 
 void endInjectionStage2(InjectorContext ctx) {
-	uint16_t mask = ctx.outputsMask;
-	size_t idx = 0;
-
-	while (mask) {
-		if (mask & 0x1) {
-			enginePins.injectorsStage2[idx].close();
-		}
-
-		mask = mask >> 1;
-		idx++;
-	}
+	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.injectorsStage2[idx].close(); });
 }
 
 uint16_t InjectionEvent::calculateInjectorOutputMask() const {
