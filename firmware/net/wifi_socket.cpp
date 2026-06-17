@@ -33,9 +33,10 @@ void ServerSocket::onAccept(int connectedSocket) {
 
 bool ServerSocket::closeSocket() {
 	bool wasOpen = m_connectedSocket != -1;
-	close(m_connectedSocket);
-
-	m_connectedSocket = -1;
+	if (wasOpen) {
+		close(m_connectedSocket);
+		m_connectedSocket = -1;
+	}
 
 	{
 		chibios_rt::CriticalSectionLocker csl;
