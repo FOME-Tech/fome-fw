@@ -3,6 +3,7 @@
 #if EFI_WIFI
 
 #include "wifi_socket.h"
+#include "http_file_server.h"
 
 #include "socket/include/socket.h"
 
@@ -69,8 +70,16 @@ private:
 	size_t m_writeSize = 0;
 };
 
-static NO_CACHE ServerSocket tsServer;
+static NO_CACHE ServerSocket tsServer("TS");
 static NO_CACHE WifiChannel wifiChannel(tsServer);
+
+static volatile bool s_tsListeningReady = false;
+
+void waitForTsListening() {
+	while (!s_tsListeningReady) {
+		chThdSleepMilliseconds(10);
+	}
+}
 
 static void startTsListening() {
 	// Start listening on the socket
@@ -90,6 +99,7 @@ struct WifiConsoleThread : public TunerstudioThread {
 		waitForWifiInit();
 
 		startTsListening();
+		s_tsListeningReady = true;
 
 		return &wifiChannel;
 	}
@@ -101,6 +111,8 @@ void startWifiConsole() {
 	initWifi();
 
 	wifiThread.startThread();
+
+	startHttpFileServer();
 }
 
 #endif // EFI_WIFI

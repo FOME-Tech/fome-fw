@@ -39,8 +39,9 @@ USBDriver* usb_driver = &USBD2;
 #error MSD needs OTG1 or OTG2 to be enabled
 #endif
 
-// Block buffer for INI ramdisk LUN
-static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
+// One block buffer per LUN
+// dma_buffers::sdCardBlockBuffer() used for LUN 1 (SD Card)
+// dma_buffers::msdIniBlockBuffer() used for LUN 0 (INI Drive)
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -79,6 +80,15 @@ void attachMsdSdCard(BaseBlockDevice* blkdev) {
 #endif
 }
 
+void detachMsdSdCard() {
+	// Swap LUN 1 back to the null device so the MSD thread serves nothing
+	msd.attachLun(1, (BaseBlockDevice*)&ND1, dma_buffers::sdCardBlockBuffer(), &sdCardInquiry, nullptr);
+
+#if EFI_TUNER_STUDIO
+	engine->outputChannels.sd_msd = false;
+#endif
+}
+
 static BaseBlockDevice* getRamdiskDevice() {
 #if EFI_EMBED_INI_MSD
 #ifdef EFI_USE_COMPRESSED_INI_MSD
@@ -108,8 +118,12 @@ static BaseBlockDevice* getRamdiskDevice() {
 }
 
 void initUsbMsd() {
+	// Ensure the DMA buffer region is marked non-cacheable before any DMA-backed
+	// block transfers begin. This is idempotent, so safe to call multiple times.
+	dma_buffers::initMpu();
+
 	// Attach the ini ramdisk
-	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
+	msd.attachLun(0, getRamdiskDevice(), dma_buffers::msdIniBlockBuffer(), &iniDriveInquiry, nullptr);
 
 	// attach a null device in place of the SD card for now - the SD thread may replace it later
 	msd.attachLun(1, (BaseBlockDevice*)&ND1, dma_buffers::sdCardBlockBuffer(), &sdCardInquiry, nullptr);
