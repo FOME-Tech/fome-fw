@@ -100,8 +100,15 @@ void ServerSocket::send(uint8_t* buffer, size_t size) {
 	// Wake the driver to perform the actual send
 	isrSemaphore.signal();
 
-	// Wait for this chunk to complete
-	m_sendDoneSemaphore.wait();
+	// Wait for this chunk to complete; 5s timeout guards against a driver that never
+	// fires SOCKET_MSG_SEND (which would otherwise deadlock this thread forever).
+	msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
+	if (result != MSG_OK) {
+		// Timeout, or the semaphore was reset by closeSocket() without a successful
+		// send — cancel the pending request and close so callers see the failure.
+		m_sendRequest = false;
+		closeSocket();
+	}
 }
 
 void ServerSocket::onSendDone() {
