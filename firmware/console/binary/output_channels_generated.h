@@ -512,13 +512,13 @@ struct output_channels_s {
 	// offset 244
 	uint32_t firmwareVersion = (uint32_t)0;
 	// Accel: Lateral
-	// G
+	// m/s2
 	// offset 248
-	scaled_channel<int16_t, 1000, 1> accelerationLat = (int16_t)0;
+	scaled_channel<int16_t, 500, 1> accelerationLat = (int16_t)0;
 	// Accel: Longitudinal
-	// G
+	// m/s2
 	// offset 250
-	scaled_channel<int16_t, 1000, 1> accelerationLon = (int16_t)0;
+	scaled_channel<int16_t, 500, 1> accelerationLon = (int16_t)0;
 	// offset 252
 	float calibrationValue = (float)0;
 	// offset 256
@@ -547,13 +547,13 @@ struct output_channels_s {
 	// offset 299
 	uint8_t alignmentFill_at_299[1];
 	// Accel: Vertical
-	// G
+	// m/s2
 	// offset 300
-	scaled_channel<int16_t, 1000, 1> accelerationVert = (int16_t)0;
+	scaled_channel<int16_t, 500, 1> accelerationVert = (int16_t)0;
 	// Gyro: Yaw rate
 	// deg/sec
 	// offset 302
-	scaled_channel<int16_t, 1000, 1> gyroYaw = (int16_t)0;
+	scaled_channel<int16_t, 100, 1> gyroYaw = (int16_t)0;
 	// Turbocharger Speed
 	// hz
 	// offset 304
