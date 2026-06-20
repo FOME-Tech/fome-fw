@@ -495,14 +495,14 @@ constexpr inline const char* getImu_type_e(imu_type_e value) {
 			return "IMU_MM5_10";
 		case IMU_NONE:
 			return "IMU_NONE";
+		case IMU_TYPE_1:
+			return "IMU_TYPE_1";
 		case IMU_TYPE_3:
 			return "IMU_TYPE_3";
 		case IMU_TYPE_4:
 			return "IMU_TYPE_4";
 		case IMU_TYPE_MB_A0065422618:
 			return "IMU_TYPE_MB_A0065422618";
-		case IMU_VAG:
-			return "IMU_VAG";
 	}
 	return "unknown";
 }
