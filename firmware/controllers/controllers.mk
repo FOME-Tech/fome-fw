@@ -46,6 +46,7 @@ CONTROLLERS_SRC_CPP = \
 	$(CONTROLLERS_DIR)/can/can_tx.cpp \
 	$(CONTROLLERS_DIR)/can/can_dash.cpp \
 	$(CONTROLLERS_DIR)/can/can_vss.cpp \
+	$(CONTROLLERS_DIR)/can/can_imu.cpp \
  	$(CONTROLLERS_DIR)/engine_controller.cpp \
  	$(CONTROLLERS_DIR)/engine_controller_misc.cpp \
 	$(CONTROLLERS_DIR)/persistent_store.cpp \
