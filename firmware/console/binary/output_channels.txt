@@ -195,8 +195,8 @@ struct_no_prefix output_channels_s
 	uint32_t seconds;@@GAUGE_NAME_UPTIME@@;"sec", 1, 0, 0, 0, 0
 	uint32_t firmwareVersion;@@GAUGE_NAME_VERSION@@;"version_f", 1, 0, 0, 0, 0
 
-	int16_t autoscale accelerationLat;@@GAUGE_NAME_ACCEL_LAT@@;"G",{1/1000}, 0, 0, 0, 0
-	int16_t autoscale accelerationLon;@@GAUGE_NAME_ACCEL_LON@@;"G",{1/1000}, 0, 0, 0, 0
+	int16_t autoscale accelerationLat;@@GAUGE_NAME_ACCEL_LAT@@;"m/s2", {1/500}, 0, 0, 0, 0
+	int16_t autoscale accelerationLon;@@GAUGE_NAME_ACCEL_LON@@;"m/s2", {1/500}, 0, 0, 0, 0
 
 	! These two fields indicate to TS that we'd like to set a particular field to a particular value
 	! We use a maintainConstantValue in TS for each field we'd like to set, like this:
@@ -224,8 +224,8 @@ struct_no_prefix output_channels_s
 
 	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
 
-	int16_t autoscale accelerationVert;@@GAUGE_NAME_ACCEL_VERT@@;"G",{1/1000}, 0, 0, 0, 0
-	int16_t autoscale gyroYaw;@@GAUGE_NAME_GYRO_YAW@@;"deg/sec",{1/1000}, 0, 0, 0, 0
+	int16_t autoscale accelerationVert;@@GAUGE_NAME_ACCEL_VERT@@;"m/s2",{1/500}, 0, 0, 0, 0
+	int16_t autoscale gyroYaw;@@GAUGE_NAME_GYRO_YAW@@;"deg/sec",{1/100}, 0, 0, 0, 0
 
 	uint16_t turboSpeed;@@GAUGE_NAME_TURBO_SPEED@@;"hz",1, 0, 0, 0, 0
 
