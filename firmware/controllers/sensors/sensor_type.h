@@ -109,6 +109,11 @@ enum class SensorType : unsigned char {
 
 	DetectedGear,
 
+	AccelLat,
+	AccelLon,
+	AccelVert,
+	YawRate,
+
 	EGT1,
 	EGT2,
 	EGT3,

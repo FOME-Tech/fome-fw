@@ -13,8 +13,6 @@
 #include "rusefi_lua.h"
 #include "can_bench_test.h"
 
-void processCanRxImu(const CANRxFrame& frame);
-
 typedef float SCRIPT_TABLE_8x8_f32t_linear[SCRIPT_TABLE_8 * SCRIPT_TABLE_8];
 
 bool acceptCanRx(int /*sid*/) {
@@ -58,6 +56,7 @@ bool acceptCanRx(int /*sid*/) {
 #include "can.h"
 #include "obd2.h"
 #include "can_sensor.h"
+#include "can_imu.h"
 #include "can_vss.h"
 #include "rusefi_wideband.h"
 

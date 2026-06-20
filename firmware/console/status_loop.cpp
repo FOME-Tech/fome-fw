@@ -489,10 +489,10 @@ void updateTunerStudioState() {
 
 	tsOutputChannels->firmwareVersion = getRusEfiVersion();
 
-	tsOutputChannels->accelerationLat = engine->sensors.accelerometer.lat;
-	tsOutputChannels->accelerationLon = engine->sensors.accelerometer.lon;
-	tsOutputChannels->accelerationVert = engine->sensors.accelerometer.vert;
-	tsOutputChannels->gyroYaw = engine->sensors.accelerometer.yawRate;
+	tsOutputChannels->accelerationLat = Sensor::getOrZero(SensorType::AccelLat);
+	tsOutputChannels->accelerationLon = Sensor::getOrZero(SensorType::AccelLon);
+	tsOutputChannels->accelerationVert = Sensor::getOrZero(SensorType::AccelVert);
+	tsOutputChannels->gyroYaw = Sensor::getOrZero(SensorType::YawRate);
 
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
 	extern FrequencySensor vehicleSpeedSensor;

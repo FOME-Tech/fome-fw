@@ -1,6 +1,11 @@
 #include "pch.h"
 
-#include "can.h"
+#include "can_imu.h"
+
+static StoredValueSensor accelLat(SensorType::AccelLat, MS2NT(250));
+static StoredValueSensor accelLon(SensorType::AccelLon, MS2NT(250));
+static StoredValueSensor accelVert(SensorType::AccelVert, MS2NT(250));
+static StoredValueSensor yawRate(SensorType::YawRate, MS2NT(250));
 
 /*
  * TODO:
@@ -36,54 +41,57 @@ static void processCanRxImu_BoschM5_10_YawY(const CANRxFrame& frame) {
 	float yaw = getShiftedLSB_intel(frame, 0);
 	float accY = getShiftedLSB_intel(frame, 4);
 
-	efiPrintf("CAN_rx MM5_10_YAW_Y %f %f", yaw, accY);
-	engine->sensors.accelerometer.yawRate = yaw * MM5_10_RATE_QUANT;
-	engine->sensors.accelerometer.lat = accY * MM5_10_ACC_QUANT;
+	auto nowNt = getTimeNowNt();
+	yawRate.setValidValue(yaw * MM5_10_RATE_QUANT, nowNt);
+	accelLat.setValidValue(accY * MM5_10_ACC_QUANT, nowNt);
 }
 
 static void processCanRxImu_BoschM5_10_RollX(const CANRxFrame& frame) {
 	float accX = getShiftedLSB_intel(frame, 4);
-	efiPrintf("CAN_rx MM5_10_ROLL_X %f", accX);
 
-	engine->sensors.accelerometer.lon = accX * MM5_10_ACC_QUANT;
+	accelLon.setValidValue(accX * MM5_10_ACC_QUANT, getTimeNowNt());
 }
 
 static void processCanRxImu_BoschM5_10_Z(const CANRxFrame& frame) {
 	float accZ = getShiftedLSB_intel(frame, 4);
-	efiPrintf("CAN_rx MM5_10_Z %f", accZ);
-	engine->sensors.accelerometer.vert = accZ * MM5_10_ACC_QUANT;
+	accelVert.setValidValue(accZ * MM5_10_ACC_QUANT, getTimeNowNt());
+}
+
+static void tryDecodeCanImuE90(const CANRxFrame& frame) {
+	// todo
 }
 
 void processCanRxImu(const CANRxFrame& frame) {
-	/*
-		if (CAN_SID(frame) == 0x130) {
-			float a = getShiftedLSB_intel(frame, 0);
-			float b = getShiftedLSB_intel(frame, 4);
-			efiPrintf("CAN_rx 130 %f %f", a, b);
-		}
-
-		if (engineConfiguration->imuType == IMU_VAG) {
-			if (CAN_SID(frame) == VAG_YAW_RATE_G_LAT) {
-				efiPrintf("CAN_rx VAG_YAW_RATE_G_LAT");
-			} else if (CAN_SID(frame) == VAG_YAW_ACCEL_G_LONG) {
-				efiPrintf("CAN_rx VAG_YAW_ACCEL_G_LONG");
+	switch (engineConfiguration->imuType) {
+		case IMU_MM5_10:
+			if (CAN_SID(frame) == MM5_10_YAW_Y) {
+				processCanRxImu_BoschM5_10_YawY(frame);
+			} else if (CAN_SID(frame) == MM5_10_ROLL_X) {
+				processCanRxImu_BoschM5_10_RollX(frame);
+			} else if (CAN_SID(frame) == MM5_10_Z) {
+				processCanRxImu_BoschM5_10_Z(frame);
 			}
-		}
-		*/
+			break;
+		case IMU_TYPE_MB_A0065422618:
+			if (CAN_SID(frame) == MM5_10_MB_YAW_Y_CANID) {
+				processCanRxImu_BoschM5_10_YawY(frame);
+			} else if (CAN_SID(frame) == MM5_10_MB_ROLL_X_CANID) {
+				processCanRxImu_BoschM5_10_RollX(frame);
+			}
+			break;
+		default:
+			// if none configured, check if your ABS module might provide it
+			if (engineConfiguration->canVssNbcType == BMW_e90) {
+				tryDecodeCanImuE90(frame);
+			}
+	}
+}
 
-	if (engineConfiguration->imuType == IMU_MM5_10) {
-		if (CAN_SID(frame) == MM5_10_YAW_Y) {
-			processCanRxImu_BoschM5_10_YawY(frame);
-		} else if (CAN_SID(frame) == MM5_10_ROLL_X) {
-			processCanRxImu_BoschM5_10_RollX(frame);
-		} else if (CAN_SID(frame) == MM5_10_Z) {
-			processCanRxImu_BoschM5_10_Z(frame);
-		}
-	} else if (engineConfiguration->imuType == IMU_TYPE_MB_A0065422618) {
-		if (CAN_SID(frame) == MM5_10_MB_YAW_Y_CANID) {
-			processCanRxImu_BoschM5_10_YawY(frame);
-		} else if (CAN_SID(frame) == MM5_10_MB_ROLL_X_CANID) {
-			processCanRxImu_BoschM5_10_RollX(frame);
-		}
+void initCanImu() {
+	if (engineConfiguration->imuType != IMU_NONE || engineConfiguration->enableCanVss) {
+		accelLat.Register();
+		accelLon.Register();
+		accelVert.Register();
+		yawRate.Register();
 	}
 }

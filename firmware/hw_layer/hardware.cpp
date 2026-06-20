@@ -48,6 +48,7 @@
 
 #if EFI_CAN_SUPPORT
 #include "can_vss.h"
+#include "can_imu.h"
 #endif
 
 #if HAL_USE_SPI
@@ -327,6 +328,7 @@ void initHardware() {
 
 #if EFI_CAN_SUPPORT
 	initCan();
+	initCanImu();
 #endif /* EFI_CAN_SUPPORT */
 
 #if EFI_SHAFT_POSITION_INPUT
