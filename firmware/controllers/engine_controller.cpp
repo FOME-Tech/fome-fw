@@ -38,7 +38,6 @@
 #include "alternator_controller.h"
 #include "fuel_math.h"
 #include "spark_logic.h"
-#include "accelerometer.h"
 #include "vvt.h"
 #include "boost_control.h"
 #include "fan_control.h"

@@ -114,10 +114,6 @@
 #define EFI_MAX_31855 TRUE
 #endif
 
-#if !defined(EFI_MEMS)
-#define EFI_MEMS FALSE
-#endif
-
 #define EFI_USE_FAST_ADC TRUE
 
 #ifndef EFI_CAN_SUPPORT
