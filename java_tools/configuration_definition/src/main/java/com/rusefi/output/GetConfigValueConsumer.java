@@ -24,9 +24,7 @@ import static com.rusefi.output.GetOutputValueConsumer.wrapSwitchStatement;
  * @see GetOutputValueConsumer
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public class GetConfigValueConsumer implements ConfigurationConsumer {
-    private static final String CONFIG_ENGINE_CONFIGURATION = "config->engineConfiguration.";
-    private static final String ENGINE_CONFIGURATION = "engineConfiguration.";
+public class GetConfigValueConsumer {
     static final String FILE_HEADER = "#include \"pch.h\"\n" +
             "#include \"value_lookup.h\"\n";
 
@@ -53,7 +51,6 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
         }
     }
 
-    @Override
     public void endFile() throws IOException {
         writeStringToFile(outputFileName, getContent());
         writeStringToFile(mdOutputFileName, getMdContent());

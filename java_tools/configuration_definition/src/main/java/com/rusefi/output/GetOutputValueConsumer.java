@@ -22,11 +22,7 @@ import static com.rusefi.output.GetConfigValueConsumer.getCompareName;
  * @see GetConfigValueConsumer
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public class GetOutputValueConsumer implements ConfigurationConsumer {
-    @Override
-    public void endFile() throws IOException {
-    }
-
+public class GetOutputValueConsumer {
     @NotNull
     static String wrapSwitchStatement(StringBuilder switchBody) {
         return switchBody.isEmpty() ? "" :
@@ -70,5 +66,4 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
         }
         return hashConflicts;
     }
-
 }
