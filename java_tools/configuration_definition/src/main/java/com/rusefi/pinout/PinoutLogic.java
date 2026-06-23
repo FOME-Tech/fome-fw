@@ -20,7 +20,6 @@ import java.util.*;
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.VariableRegistry.ENUM_SUFFIX;
 import static com.rusefi.VariableRegistry.FULL_JAVA_ENUM;
-import static com.rusefi.output.JavaSensorsConsumer.quote;
 
 public class PinoutLogic {
     private static final Logging log = getLogging(PinoutLogic.class);
@@ -37,6 +36,10 @@ public class PinoutLogic {
 
     public PinoutLogic(BoardInputs boardInputs) {
         this.boardInputs = boardInputs;
+    }
+
+    private static String quote(String string) {
+        return "\"" + string + "\"";
     }
 
     private static Map.Entry<String, Value> find(EnumsReader.EnumState enumList, String id) {

@@ -12,7 +12,7 @@ import java.util.*;
  * Andrey Belomutskiy, (c) 2013-2020
  * 12/19/18
  */
-public class ReaderStateImpl implements ReaderState {
+public class ReaderStateImpl {
     // used to update other files
     private final List<String> inputFiles = new ArrayList<>();
     private final Map<String, Integer> tsCustomSize = new HashMap<>();
@@ -57,23 +57,7 @@ public class ReaderStateImpl implements ReaderState {
         inputFiles.add(fileName);
     }
 
-    @Override
     public VariableRegistry getVariableRegistry() {
         return variableRegistry;
-    }
-
-    @Override
-    public Map<String, Integer> getTsCustomSize() {
-        return tsCustomSize;
-    }
-
-    @Override
-    public Map<String, String> getTsCustomLine() {
-        return tsCustomLine;
-    }
-
-    @Override
-    public boolean isStackEmpty() {
-        return true;
     }
 }
