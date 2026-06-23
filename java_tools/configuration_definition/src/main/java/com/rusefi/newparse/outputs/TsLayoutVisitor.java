@@ -38,16 +38,9 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
         ps.print("[0:");
         ps.print(e.endBit);
-        ps.print("], ");
+        ps.print("], $ENUM_");
 
-        writeEnumVal(ps, e.values[0]);
-
-        for (int i = 1; i < e.values.length; i++) {
-            ps.print(", ");
-            writeEnumVal(ps, e.values[i]);
-        }
-
-        ps.println();
+        ps.println(e.enumType);
 
         meta.addComment(name, e.options.comment);
     }

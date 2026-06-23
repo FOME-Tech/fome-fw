@@ -112,6 +112,29 @@ public class TsWriter {
         StructLayout root = new StructLayout(0, "root", parser.getLastStruct());
         TsMetadata meta = new TsMetadata();
 
+        // Write all enums in their "compacted" name form
+        parser.getEnums().forEach((k, v) -> {
+                    ps.print("#define ENUM_" + k + " = ");
+
+                    boolean comma = false;
+
+                    for (var e : v.values.entrySet()) {
+                        if (comma) {
+                            ps.print(", ");
+                            comma = true;
+                        }
+
+                        ps.print(e.getValue().getIntValue());
+                        ps.print("=\"");
+                        ps.print(e.getKey());
+                        ps.print('"');
+                    }
+
+                    ps.println();
+                });
+
+        ps.println();
+
         // Print configuration layout
         int size = root.getSize();
         ps.println("pageSize            = " + size);
