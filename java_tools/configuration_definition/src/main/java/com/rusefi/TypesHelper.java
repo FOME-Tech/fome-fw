@@ -22,7 +22,7 @@ public class TypesHelper {
         if (type == null)
             return 0;
         if (state != null && state.getStructures().containsKey(type))
-            return state.getStructures().get(type).getTotalSize();
+            return 0;
         if (state != null && state.getTsCustomSize().containsKey(type))
             return state.getTsCustomSize().get(type);
         Integer primitiveSize = getPrimitiveSize(type);
