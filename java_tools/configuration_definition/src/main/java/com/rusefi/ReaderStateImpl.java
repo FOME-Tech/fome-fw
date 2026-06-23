@@ -1,8 +1,6 @@
 package com.rusefi;
 
 import com.rusefi.enum_reader.Value;
-import com.rusefi.output.ConfigStructure;
-import com.rusefi.output.ConfigStructureImpl;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -19,7 +17,6 @@ public class ReaderStateImpl implements ReaderState {
     private final List<String> inputFiles = new ArrayList<>();
     private final Map<String, Integer> tsCustomSize = new HashMap<>();
     private final Map<String, String> tsCustomLine = new HashMap<>();
-    private final Map<String, ConfigStructureImpl> structures = new HashMap<>();
     // well, technically those should be a builder for state, not this state class itself
 
     private final EnumsReader enumsReader = new EnumsReader();
@@ -68,11 +65,6 @@ public class ReaderStateImpl implements ReaderState {
     @Override
     public Map<String, Integer> getTsCustomSize() {
         return tsCustomSize;
-    }
-
-    @Override
-    public Map<String, ? extends ConfigStructure> getStructures() {
-        return structures;
     }
 
     @Override
