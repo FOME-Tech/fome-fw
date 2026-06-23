@@ -8,11 +8,12 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.*;
 import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
 import com.rusefi.newparse.parsing.Definition;
+import com.rusefi.util.IoUtils;
+import com.rusefi.util.LazyFile;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -79,10 +80,8 @@ public class LiveDataProcessor {
 
         log.info("TS_TOTAL_OUTPUT_SIZE=" + sensorTsPosition);
         String totalLiveDataFile = "generated/total_live_data_generated.h";
-        try (FileWriter fw = new FileWriter(totalLiveDataFile)) {
-            fw.write(header);
-            fw.write("#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition);
-        }
+        LazyFile.writeIfChanged(totalLiveDataFile,
+                (header + "#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition).getBytes(IoUtils.CHARSET));
         liveDataProcessor.outputFiles.add(totalLiveDataFile);
 
         if (makefileDepsDestination != null) {
@@ -215,20 +214,18 @@ public class LiveDataProcessor {
         sdLogWriter.endFile();
         outputLookupWriter.endFile();
 
-        return outputChannelWriter.getSize();
+        int totalSize = outputChannelWriter.getSize();
+        outputChannelWriter.close();
+        return totalSize;
     }
 
     private void writeFiles() throws IOException {
-        try (FileWriter fw = new FileWriter(enumContentFileName)) {
-            fw.write(enumContent.toString());
-            fw.write(baseAddressCHeader.toString());
-        }
+        LazyFile.writeIfChanged(enumContentFileName,
+                (enumContent.toString() + baseAddressCHeader.toString()).getBytes(IoUtils.CHARSET));
         outputFiles.add(enumContentFileName);
 
         String fragmentsFile = "generated/live_data_fragments.h";
-        try (FileWriter fw = new FileWriter(fragmentsFile)) {
-            fw.write(fragmentsContent.toString());
-        }
+        LazyFile.writeIfChanged(fragmentsFile, fragmentsContent.toString().getBytes(IoUtils.CHARSET));
         outputFiles.add(fragmentsFile);
 
         String outputPath = "../java_console/io/src/main/java/com/rusefi/enums";
@@ -270,7 +267,7 @@ public class LiveDataProcessor {
         Path mkPath = depDir.resolve("generated_live_data_outputs.mk");
         PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(mkPath));
 
-        f.print("GENERATED_FILES +=");
+        f.print("LIVE_DATA_GENERATED_FILES +=");
         for (String output : outputFiles) {
             f.print(" \\\n\t" + output);
         }

@@ -4,10 +4,11 @@ import com.rusefi.ConfigField;
 import com.rusefi.ReaderState;
 import com.rusefi.TypesHelper;
 import com.rusefi.output.variables.VariableRecord;
+import com.rusefi.util.IoUtils;
+import com.rusefi.util.LazyFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,9 +54,7 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
 
     public static void writeStringToFile(@Nullable String fileName, String content) throws IOException {
         if (fileName != null) {
-            FileWriter fw = new FileWriter(fileName);
-            fw.write(content);
-            fw.close();
+            LazyFile.writeIfChanged(fileName, content.getBytes(IoUtils.CHARSET));
         }
     }
 

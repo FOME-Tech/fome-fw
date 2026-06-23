@@ -4,17 +4,16 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Struct;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class SdLogWriter {
     private final PrintStream ps;
 
     public SdLogWriter(String outputFile) throws IOException {
-        this(new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile))));
+        this(new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile)));
     }
 
     public SdLogWriter(PrintStream ps) {
@@ -26,6 +25,7 @@ public class SdLogWriter {
 
     public void endFile() {
         ps.println("};");
+        ps.close();
     }
 
     public void writeSdLogs(ParseState parser, String sourceName) {

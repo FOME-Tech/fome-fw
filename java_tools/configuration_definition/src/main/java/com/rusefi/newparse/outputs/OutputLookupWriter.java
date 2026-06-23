@@ -8,11 +8,10 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Struct;
 import com.rusefi.output.GetOutputValueConsumer;
 import com.rusefi.output.variables.VariableRecord;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class OutputLookupWriter {
     private final List<VariableRecord> getterPairs = new ArrayList<>();
 
     public OutputLookupWriter(final String outputFile, final String functionName) throws IOException {
-        ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
+        ps = new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile));
 
         ps.println("#if !EFI_UNIT_TEST");
         ps.println("#include \"pch.h\"");

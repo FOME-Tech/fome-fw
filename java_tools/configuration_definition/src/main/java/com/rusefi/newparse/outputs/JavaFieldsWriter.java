@@ -5,6 +5,7 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.*;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.newparse.parsing.Struct;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -19,7 +20,7 @@ public class JavaFieldsWriter {
     private final int baseOffset;
 
     public JavaFieldsWriter(final String outputFile, int baseOffset) throws IOException {
-        ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
+        ps = new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile));
         this.baseOffset = baseOffset;
 
         String className = new File(outputFile).getName();

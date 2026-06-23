@@ -292,7 +292,7 @@ public class ConfigDefinition {
         Path mkPath = depDir.resolve("generated_config_outputs.mk");
         PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(mkPath));
 
-        f.print("GENERATED_FILES +=");
+        f.print("CONFIG_GENERATED_FILES +=");
         for (String output : outputFiles) {
             f.print(" \\\n\t" + output);
         }
