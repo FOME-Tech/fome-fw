@@ -1,6 +1,5 @@
 package com.rusefi.output;
 
-import com.rusefi.TypesHelper;
 import com.rusefi.output.variables.VariableRecord;
 import com.rusefi.util.IoUtils;
 import com.rusefi.util.LazyFile;
@@ -100,6 +99,14 @@ public class GetConfigValueConsumer {
                 getterBody + GET_METHOD_FOOTER;
     }
 
+    private static boolean isFloat(String type) {
+        return "float".equals(type) ||
+                // todo: something smarter with dynamic type definition?
+                type.equalsIgnoreCase("floatms_t") ||
+                type.equalsIgnoreCase("percent_t") ||
+                type.equalsIgnoreCase("angle_t");
+    }
+
     public String getSetterBody() {
         StringBuilder switchBody = new StringBuilder();
 
@@ -107,9 +114,7 @@ public class GetConfigValueConsumer {
         HashMap<Integer, AtomicInteger> hashConflicts = getHashConflicts(variables);
 
         for (VariableRecord pair : variables) {
-
-            String cast = TypesHelper.isFloat(pair.type) ? "" : "(int)";
-
+            String cast = isFloat(pair.type) ? "" : "(int)";
 
             int hash = HashUtil.hash(pair.getUserName());
             String str = getAssignment(cast, pair.getFullName());
