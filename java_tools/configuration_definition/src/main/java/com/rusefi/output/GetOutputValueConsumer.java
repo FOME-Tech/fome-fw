@@ -6,14 +6,10 @@ import com.rusefi.TypesHelper;
 import com.rusefi.output.variables.VariableRecord;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.rusefi.output.ConfigStructureImpl.ALIGNMENT_FILL_AT;
-import static com.rusefi.output.GetConfigValueConsumer.FILE_HEADER;
 import static com.rusefi.output.GetConfigValueConsumer.getCompareName;
 
 /**

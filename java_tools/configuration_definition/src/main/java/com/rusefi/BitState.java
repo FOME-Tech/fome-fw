@@ -21,10 +21,6 @@ public class BitState {
         bitIndex++;
     }
 
-    public int get() {
-        return bitIndex;
-    }
-
     public static class TooManyBitsInARow extends RuntimeException {
         public TooManyBitsInARow(String s) {
             super(s);

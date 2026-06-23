@@ -12,8 +12,6 @@ import java.util.List;
  * 1/15/15
  */
 public class ConfigStructureImpl implements ConfigStructure {
-    public static final String ALIGNMENT_FILL_AT = "alignmentFill_at_";
-
     private final List<ConfigField> tsFields = new ArrayList<>();
 
     @Override
