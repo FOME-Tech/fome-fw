@@ -1,6 +1,9 @@
 package com.rusefi.newparse.outputs;
 
-import com.rusefi.newparse.layout.*;
+import com.rusefi.newparse.layout.BitGroupLayout;
+import com.rusefi.newparse.layout.ScalarLayout;
+import com.rusefi.newparse.layout.StructLayout;
+import com.rusefi.newparse.layout.StructNamePrefixer;
 
 import java.io.PrintStream;
 

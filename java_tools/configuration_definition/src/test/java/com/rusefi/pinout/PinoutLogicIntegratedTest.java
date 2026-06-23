@@ -1,6 +1,7 @@
 package com.rusefi.pinout;
 
 import com.rusefi.ReaderStateImpl;
+import com.rusefi.VariableRegistry;
 import com.rusefi.enum_reader.Value;
 import com.rusefi.newparse.ParseState;
 import org.junit.Test;
@@ -99,6 +100,7 @@ public class PinoutLogicIntegratedTest {
         };
 
         ReaderStateImpl state = new ReaderStateImpl();
+        VariableRegistry variableRegistry = new VariableRegistry();
 
         state.getEnumsReader().read(new StringReader("enum class Gpio : uint16_t {\n" +
                                                         "Unassigned = 0,\n" +
@@ -110,7 +112,7 @@ public class PinoutLogicIntegratedTest {
 
         PinoutLogic logic = new PinoutLogic(testBoard);
 
-        logic.registerBoardSpecificPinNames(state.getVariableRegistry(), definitionState, state.getEnumsReader());
+        logic.registerBoardSpecificPinNames(variableRegistry, definitionState, state.getEnumsReader());
 
         assertEquals(expected, testWriter.getBuffer().toString());
     }

@@ -86,7 +86,6 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.println();
     }
 
-
     @Override
     public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         if (arrayDims.length == 0) {
