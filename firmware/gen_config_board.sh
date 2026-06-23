@@ -42,7 +42,6 @@ java \
 	-readfile OUTPUTS_SECTION_FROM_FILE generated/output_channels.ini \
 	-readfile DATALOG_SECTION_FROM_FILE generated/data_logs.ini \
 	-triggerInputFolder ../unit_tests \
-	-with_c_defines false \
 	-field_lookup_file generated/value_lookup_generated.cpp generated/value_lookup_generated.md \
 	-java_destination ../java_console/generated/src/main/java/com/rusefi/config/generated/Fields.java \
 	-initialize_to_zero false \
