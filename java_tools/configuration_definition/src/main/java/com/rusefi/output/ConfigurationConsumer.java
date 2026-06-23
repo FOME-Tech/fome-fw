@@ -5,7 +5,7 @@ import com.rusefi.ReaderState;
 import java.io.IOException;
 
 public interface ConfigurationConsumer {
-    String UNUSED = ConfigStructure.UNUSED_ANYTHING_PREFIX;
+    String UNUSED = "unused";
 
     default void startFile() {
 
