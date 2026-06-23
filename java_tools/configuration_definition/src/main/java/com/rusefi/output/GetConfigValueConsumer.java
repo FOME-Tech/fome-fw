@@ -73,6 +73,19 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
         writeStringToFile(mdOutputFileName, getMdContent());
     }
 
+    /**
+     * Inject a single config value, used by the new-parser driven
+     * {@code com.rusefi.newparse.outputs.ConfigValueLookupWriter}. Mirrors what
+     * {@link #processConfig} records for the legacy parser so the generated getter/setter
+     * (and markdown) are produced by the same code for both parsers.
+     */
+    public void addConfigValue(String userName, String fullName, String cType, String comment) {
+        variables.add(new VariableRecord(userName, fullName, cType, null));
+
+        mdContent.append("### " + userName + "\n");
+        mdContent.append(comment + "\n\n");
+    }
+
     private String processConfig(ConfigField cf, String prefix) {
         if (cf.getName().contains(UNUSED) || cf.getName().contains(ALIGNMENT_FILL_AT))
             return "";

@@ -11,6 +11,13 @@ public class CStructsVisitor extends ILayoutVisitor {
 
         sl.children.forEach(c -> c.visit(this, ps, null, 0, new int[0]));
 
+        // A union member with a non-trivial default constructor (e.g. scaled_channel) deletes the
+        // implicitly-defined default constructor of the enclosing struct. Provide one so the struct
+        // stays default-constructible; non-union members keep their default member initializers.
+        if (sl.children.stream().anyMatch(c -> c instanceof UnionLayout)) {
+            ps.println("\t" + sl.typeName + "() { }");
+        }
+
         ps.println("};");
 
         // Emit an assertion for the size of the whole thing
