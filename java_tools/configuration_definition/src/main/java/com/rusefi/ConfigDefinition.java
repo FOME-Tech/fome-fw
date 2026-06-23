@@ -76,6 +76,7 @@ public class ConfigDefinition {
         PinoutLogic pinoutLogic = null;
         String branchName = null;
         String shortBoardName = null;
+        final List<String> inputFiles = new ArrayList<>();
         final List<String> prependFiles = new ArrayList<>();
 
         ParseState parseState = new ParseState(state.getEnumsReader());
@@ -85,10 +86,11 @@ public class ConfigDefinition {
             switch (key) {
                 case KEY_DEFINITION:
                     definitionFile = args[i + 1];
-                    state.addInputFile(definitionFile);
+                    inputFiles.add(definitionFile);
                     break;
                 case KEY_TS_TEMPLATE:
                     tsTemplateFile = args[i + 1];
+                    inputFiles.add(tsTemplateFile);
                     break;
                 case KEY_C_DESTINATION:
                     cHeaderDestination = args[i + 1];
@@ -117,7 +119,7 @@ public class ConfigDefinition {
                     } catch (RuntimeException e) {
                         throw new IllegalStateException("While processing " + fileName, e);
                     }
-                    state.addInputFile(fileName);
+                    inputFiles.add(fileName);
                     break;
                 case "-triggerInputFolder":
                     triggersInputFolder = args[i + 1];
@@ -125,7 +127,7 @@ public class ConfigDefinition {
                 case KEY_PREPEND: {
                     String prependFile = args[i + 1].trim();
                     prependFiles.add(prependFile);
-                    state.addInputFile(prependFile);
+                    inputFiles.add(prependFile);
                     break;
                 } case EnumToString.KEY_ENUM_INPUT_FILE:
                     enumInputFiles.add(args[i + 1]);
@@ -136,8 +138,9 @@ public class ConfigDefinition {
                 case KEY_BOARD_NAME:
                     String boardName = args[i + 1];
                     pinoutLogic = PinoutLogic.create(boardName);
-                    for (String inputFile : pinoutLogic.getInputFiles())
-                        state.addInputFile(inputFile);
+                    for (String inputFile : pinoutLogic.getInputFiles()) {
+                        inputFiles.add(inputFile);
+                    }
                     break;
                 case "-branch":
                     branchName = args[i + 1];
@@ -154,15 +157,10 @@ public class ConfigDefinition {
             }
         }
 
-        if (tsTemplateFile != null) {
-            // used to update .ini files
-            state.addInputFile(tsTemplateFile);
-        }
-
         if (!enumInputFiles.isEmpty()) {
             for (String ef : enumInputFiles) {
                 state.read(new FileReader(ef));
-                state.addInputFile(ef);
+                inputFiles.add(ef);
             }
 
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
@@ -172,13 +170,13 @@ public class ConfigDefinition {
 
         {
             // Add the variable for the config signature
-            String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(state.getInputFiles())));
+            String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(inputFiles)));
             parseState.addDefinition(state.getVariableRegistry(), "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
             System.out.println("Signature: " + signature);
         }
 
         if (triggersInputFolder != null) {
-            state.addInputFile(triggersInputFolder + File.separator + "triggers.txt");
+            inputFiles.add(triggersInputFolder + File.separator + "triggers.txt");
         }
 
         if (makefileDepsDestination != null) {
@@ -195,7 +193,7 @@ public class ConfigDefinition {
                 if (fieldLookupFile != null) {
                     outputFiles.add(fieldLookupFile);
                 }
-                writeMakefileDependencyFile(state.getInputFiles(), depTarget, makefileDepsDestination, outputFiles);
+                writeMakefileDependencyFile(inputFiles, depTarget, makefileDepsDestination, outputFiles);
             }
         }
 

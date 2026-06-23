@@ -13,10 +13,6 @@ import java.util.*;
  * 12/19/18
  */
 public class ReaderStateImpl {
-    // used to update other files
-    private final List<String> inputFiles = new ArrayList<>();
-    private final Map<String, Integer> tsCustomSize = new HashMap<>();
-    private final Map<String, String> tsCustomLine = new HashMap<>();
     // well, technically those should be a builder for state, not this state class itself
 
     private final EnumsReader enumsReader = new EnumsReader();
@@ -24,10 +20,6 @@ public class ReaderStateImpl {
 
     public EnumsReader getEnumsReader() {
         return enumsReader;
-    }
-
-    public List<String> getInputFiles() {
-        return inputFiles;
     }
 
     public void read(Reader reader) throws IOException {
@@ -51,10 +43,6 @@ public class ReaderStateImpl {
         }
 
         enumsReader.enums.putAll(newEnums);
-    }
-
-    public void addInputFile(String fileName) {
-        inputFiles.add(fileName);
     }
 
     public VariableRegistry getVariableRegistry() {
