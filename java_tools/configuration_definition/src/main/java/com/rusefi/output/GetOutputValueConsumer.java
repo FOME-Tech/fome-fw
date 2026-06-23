@@ -23,63 +23,8 @@ import static com.rusefi.output.GetConfigValueConsumer.getCompareName;
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
 public class GetOutputValueConsumer implements ConfigurationConsumer {
-    private final List<VariableRecord> getterPairs = new ArrayList<>();
-    private final String fileName;
-
-    public final String currentSectionPrefix = "engine->outputChannels";
-    public String conditional;
-    public final Boolean isPtr = false;
-
-    public GetOutputValueConsumer(String fileName) {
-        this.fileName = fileName;
-    }
-
-    @Override
-    public void handleEndStruct(ReaderState state, ConfigStructure structure) {
-        if (state.isStackEmpty()) {
-            PerFieldWithStructuresIterator iterator = new PerFieldWithStructuresIterator(state, structure.getTsFields(), "",
-                    (readerState, cf, prefix) -> processOutput(cf, prefix), ".");
-            iterator.loop();
-        }
-    }
-
-    private String processOutput(ConfigField cf, String prefix) {
-        if (cf.getName().contains(UNUSED) || cf.getName().contains(ALIGNMENT_FILL_AT))
-            return "";
-
-        if (cf.isArray() || cf.isFromIterate() || cf.isDirective())
-            return "";
-        if (!TypesHelper.isPrimitive(cf.getType()) && !TypesHelper.isBoolean(cf.getType())) {
-            return "";
-        }
-
-        String userName = prefix + cf.getName();
-        String javaName = currentSectionPrefix + (isPtr ? "->" : ".") + prefix;
-
-        getterPairs.add(new VariableRecord(userName, javaName + cf.getName(),  null, conditional));
-
-
-        return "";
-    }
-
     @Override
     public void endFile() throws IOException {
-        GetConfigValueConsumer.writeStringToFile(fileName, getContent());
-    }
-
-    public String getContent() {
-        StringBuilder switchBody = new StringBuilder();
-
-        StringBuilder getterBody = getGetters(switchBody, getterPairs);
-
-        String fullSwitch = wrapSwitchStatement(switchBody);
-
-        return  "#if !EFI_UNIT_TEST\n" +
-                FILE_HEADER +
-                "expected<float> getOutputValueByName(const char *name) {\n" +
-                fullSwitch +
-                getterBody + GetConfigValueConsumer.GET_METHOD_FOOTER +
-                "#endif\n";
     }
 
     @NotNull

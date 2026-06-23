@@ -24,10 +24,6 @@ class PerFieldWithStructuresIterator extends FieldIterator {
         this.prefixSeparator = prefixSeparator;
     }
 
-    public PerFieldWithStructuresIterator(ReaderState state, List<ConfigField> fields, String prefix, Strategy strategy) {
-        this(state, fields, prefix, strategy, "_");
-    }
-
     @Override
     public void end() {
         ConfigStructure cs = cf.getState().getStructures().get(cf.getType());
@@ -48,10 +44,6 @@ class PerFieldWithStructuresIterator extends FieldIterator {
         }
         sb.append(content);
         super.end();
-    }
-
-    public String getContent() {
-        return sb.toString();
     }
 
     interface Strategy {

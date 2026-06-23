@@ -42,10 +42,6 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
 
     private final StringBuilder mdContent = new StringBuilder();
 
-    public GetConfigValueConsumer() {
-        this(null, null);
-    }
-
     public GetConfigValueConsumer(String outputFileName, String mdOutputFileName) {
         this.outputFileName = outputFileName;
         this.mdOutputFileName = mdOutputFileName;
@@ -54,15 +50,6 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
     public static void writeStringToFile(@Nullable String fileName, String content) throws IOException {
         if (fileName != null) {
             LazyFile.writeIfChanged(fileName, content.getBytes(IoUtils.CHARSET));
-        }
-    }
-
-    @Override
-    public void handleEndStruct(ReaderState state, ConfigStructure structure) {
-        if (state.isStackEmpty()) {
-            PerFieldWithStructuresIterator iterator = new PerFieldWithStructuresIterator(state, structure.getTsFields(), "",
-                    (readerState, cf, prefix) -> processConfig(cf, prefix), ".");
-            iterator.loop();
         }
     }
 
@@ -83,33 +70,6 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
 
         mdContent.append("### " + userName + "\n");
         mdContent.append(comment + "\n\n");
-    }
-
-    private String processConfig(ConfigField cf, String prefix) {
-        if (cf.getName().contains(UNUSED) || cf.getName().contains(ALIGNMENT_FILL_AT))
-            return "";
-
-        if (cf.isArray() || cf.isFromIterate() || cf.isDirective())
-            return "";
-        if (!TypesHelper.isPrimitive(cf.getType()) && !TypesHelper.isBoolean(cf.getType())) {
-            return "";
-        }
-
-        String userName = prefix + cf.getName();
-        if (userName.startsWith(ENGINE_CONFIGURATION))
-            userName = userName.substring(ENGINE_CONFIGURATION.length());
-
-        String javaName = "config->" + prefix;
-        if (javaName.startsWith(CONFIG_ENGINE_CONFIGURATION))
-            javaName = "engineConfiguration->" + javaName.substring(CONFIG_ENGINE_CONFIGURATION.length());
-
-        variables.add(new VariableRecord(userName, javaName + cf.getName(), cf.getType(), null));
-
-        mdContent.append("### " + userName + "\n");
-        mdContent.append(cf.getComment() + "\n\n");
-
-
-        return "";
     }
 
     @NotNull

@@ -21,10 +21,6 @@ public class BitState {
         bitIndex++;
     }
 
-    public void reset() {
-        bitIndex = 0;
-    }
-
     public int get() {
         return bitIndex;
     }

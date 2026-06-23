@@ -20,13 +20,6 @@ public class FieldIterator {
         this.fields = fields;
     }
 
-    /**
-     * return previous field which is not a directive
-     */
-    public ConfigField getPrev() {
-        return prev;
-    }
-
     public void start(int index) {
         int nextIndex = index + 1;
         while (nextIndex < fields.size() && fields.get(nextIndex).isDirective())

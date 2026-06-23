@@ -3,11 +3,7 @@ package com.rusefi.output;
 import com.rusefi.*;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import static com.rusefi.ConfigFieldImpl.BOOLEAN_T;
 
 /**
  * Mutable representation of a list of related {@link ConfigFieldImpl}
