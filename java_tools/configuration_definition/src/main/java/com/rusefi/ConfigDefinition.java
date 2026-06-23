@@ -23,7 +23,6 @@ public class ConfigDefinition {
     private static final String KEY_TS_TEMPLATE = "-ts_template";
     private static final String KEY_C_DESTINATION = "-c_destination";
     private static final String KEY_C_DEFINES = "-c_defines";
-    public static final String KEY_WITH_C_DEFINES = "-with_c_defines";
     private static final String KEY_JAVA_DESTINATION = "-java_destination";
     public static final String KEY_PREPEND = "-prepend";
     private static final String KEY_ZERO_INIT = "-initialize_to_zero";
@@ -94,9 +93,6 @@ public class ConfigDefinition {
                     break;
                 case KEY_ZERO_INIT:
                     needZeroInit = Boolean.parseBoolean(args[i + 1]);
-                    break;
-                case KEY_WITH_C_DEFINES:
-                    state.setWithC_Defines(Boolean.parseBoolean(args[i + 1]));
                     break;
                 case KEY_C_DEFINES:
                     destCDefinesFileName = args[i + 1];
