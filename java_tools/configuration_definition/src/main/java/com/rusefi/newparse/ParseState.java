@@ -59,7 +59,7 @@ public class ParseState implements DefinitionsState {
     }
 
     public Map<String, EnumsReader.EnumState> getEnums() {
-        return enumsReader.getEnums();
+        return enumsReader != null ? enumsReader.getEnums() : null;
     }
 
     public Map<String, Definition> getDefinitions() {
