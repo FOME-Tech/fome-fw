@@ -20,7 +20,6 @@ public class GetOutputValueConsumer {
     static String wrapSwitchStatement(StringBuilder switchBody) {
         return switchBody.isEmpty() ? "" :
                 ("\tint hash = djb2lowerCase(name);\n" +
-
                         "\tswitch(hash) {\n" + switchBody + "\t}\n");
     }
 

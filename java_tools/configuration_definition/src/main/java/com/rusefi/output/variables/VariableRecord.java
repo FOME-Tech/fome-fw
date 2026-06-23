@@ -6,7 +6,6 @@ public class VariableRecord {
     private final String fullName;
     private final String conditional;
 
-
     public VariableRecord(String humanName, String fullName, String type, String conditional) {
         this.humanName = humanName;
         this.fullName = fullName;
