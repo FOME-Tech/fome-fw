@@ -16,13 +16,12 @@ public class ReaderStateImpl {
     // well, technically those should be a builder for state, not this state class itself
 
     private final EnumsReader enumsReader = new EnumsReader();
-    private final VariableRegistry variableRegistry = new VariableRegistry();
 
     public EnumsReader getEnumsReader() {
         return enumsReader;
     }
 
-    public void read(Reader reader) throws IOException {
+    public void read(VariableRegistry variableRegistry, Reader reader) throws IOException {
         Map<String, EnumsReader.EnumState> newEnums = EnumsReader.readStatic(reader);
 
         for (Map.Entry<String, EnumsReader.EnumState> enumFamily : newEnums.entrySet()) {
@@ -43,9 +42,5 @@ public class ReaderStateImpl {
         }
 
         enumsReader.enums.putAll(newEnums);
-    }
-
-    public VariableRegistry getVariableRegistry() {
-        return variableRegistry;
     }
 }

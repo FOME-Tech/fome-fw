@@ -79,7 +79,8 @@ public class ConfigDefinition {
         final List<String> inputFiles = new ArrayList<>();
         final List<String> prependFiles = new ArrayList<>();
 
-        ParseState parseState = new ParseState(state.getEnumsReader());
+        final VariableRegistry variableRegistry = new VariableRegistry();
+        final ParseState parseState = new ParseState(state.getEnumsReader());
 
         for (int i = 0; i < args.length - 1; i += 2) {
             String key = args[i];
@@ -115,7 +116,7 @@ public class ConfigDefinition {
                     // yes, we take three parameters here thus pre-increment!
                     String fileName = args[++i + 1];
                     try {
-                        parseState.addDefinition(state.getVariableRegistry(), keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
+                        parseState.addDefinition(variableRegistry, keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
                     } catch (RuntimeException e) {
                         throw new IllegalStateException("While processing " + fileName, e);
                     }
@@ -159,7 +160,7 @@ public class ConfigDefinition {
 
         if (!enumInputFiles.isEmpty()) {
             for (String ef : enumInputFiles) {
-                state.read(new FileReader(ef));
+                state.read(variableRegistry, new FileReader(ef));
                 inputFiles.add(ef);
             }
 
@@ -171,7 +172,7 @@ public class ConfigDefinition {
         {
             // Add the variable for the config signature
             String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(inputFiles)));
-            parseState.addDefinition(state.getVariableRegistry(), "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
+            parseState.addDefinition(variableRegistry, "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
             System.out.println("Signature: " + signature);
         }
 
@@ -197,10 +198,10 @@ public class ConfigDefinition {
             }
         }
 
-        new TriggerWheelTSLogic().execute(triggersInputFolder, state.getVariableRegistry());
+        new TriggerWheelTSLogic().execute(triggersInputFolder, variableRegistry);
 
         if (pinoutLogic != null) {
-            pinoutLogic.registerBoardSpecificPinNames(state.getVariableRegistry(), parseState, state.getEnumsReader());
+            pinoutLogic.registerBoardSpecificPinNames(variableRegistry, parseState, state.getEnumsReader());
         }
 
         // Parse the input files
@@ -234,7 +235,7 @@ public class ConfigDefinition {
             // Fields.java (java console). Previously registered by TSProjectConsumer.handleEndStruct,
             // which the new TsWriter replaces.
             int totalConfigSize = new StructLayout(0, "root", parseState.getLastStruct()).getSize();
-            state.getVariableRegistry().register("TOTAL_CONFIG_SIZE", totalConfigSize);
+            variableRegistry.register("TOTAL_CONFIG_SIZE", totalConfigSize);
 
             // Bridge the new parser's #define values into the variable registry, which derives the
             // C defines (rusefi_generated.h) and the Java constants (Fields.java). _char/_hex/_16_hex
@@ -249,14 +250,14 @@ public class ConfigDefinition {
                 if (def.getValue().isMultilineString()) {
                     continue;
                 }
-                state.getVariableRegistry().register(defName, def.getValue().toString());
+                variableRegistry.register(defName, def.getValue().toString());
             }
 
             // Write Java fields: constants from the registry (typed correctly), field offsets from
             // the new layout.
             if (javaFieldsDestination != null) {
                 JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination, 0);
-                javaWriter.writeRawDefinitions(state.getVariableRegistry().getJavaConstants());
+                javaWriter.writeRawDefinitions(variableRegistry.getJavaConstants());
                 javaWriter.writeFields(parseState);
                 javaWriter.finish();
             }
@@ -268,7 +269,7 @@ public class ConfigDefinition {
         }
 
         if (destCDefinesFileName != null) {
-            ExtraUtil.writeDefinesToFile(state.getVariableRegistry(), destCDefinesFileName);
+            ExtraUtil.writeDefinesToFile(variableRegistry, destCDefinesFileName);
         }
     }
 
