@@ -17,7 +17,6 @@ import java.util.*;
 public class ReaderStateImpl implements ReaderState {
     // used to update other files
     private final List<String> inputFiles = new ArrayList<>();
-    private final Stack<ConfigStructureImpl> stack = new Stack<>();
     private final Map<String, Integer> tsCustomSize = new HashMap<>();
     private final Map<String, String> tsCustomLine = new HashMap<>();
     private final Map<String, ConfigStructureImpl> structures = new HashMap<>();
@@ -83,6 +82,6 @@ public class ReaderStateImpl implements ReaderState {
 
     @Override
     public boolean isStackEmpty() {
-        return stack.isEmpty();
+        return true;
     }
 }
