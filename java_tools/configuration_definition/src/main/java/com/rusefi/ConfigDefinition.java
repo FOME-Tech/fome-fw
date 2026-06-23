@@ -1,6 +1,8 @@
 package com.rusefi;
 
 import com.rusefi.newparse.ParseState;
+import com.rusefi.newparse.layout.StructLayout;
+import com.rusefi.newparse.outputs.ConfigValueLookupWriter;
 import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.outputs.JavaFieldsWriter;
 import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
@@ -59,6 +61,7 @@ public class ConfigDefinition {
 
         SystemOut.println(ConfigDefinition.class + " Invoked with " + Arrays.toString(args) + " from " + Paths.get("").toAbsolutePath());
 
+        String definitionFile = null;
         String tsTemplateFile = null;
         String destCDefinesFileName = null;
         String cHeaderDestination = null;
@@ -67,6 +70,7 @@ public class ConfigDefinition {
         String makefileDepsDestination = null;
         String stampFile = null;
         String fieldLookupFile = null;
+        String fieldLookupMdFile = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         List<String> enumInputFiles = new ArrayList<>();
@@ -74,6 +78,7 @@ public class ConfigDefinition {
         PinoutLogic pinoutLogic = null;
         String branchName = null;
         String shortBoardName = null;
+        final List<String> prependFiles = new ArrayList<>();
 
         ParseState parseState = new ParseState(state.getEnumsReader());
 
@@ -81,15 +86,14 @@ public class ConfigDefinition {
             String key = args[i];
             switch (key) {
                 case KEY_DEFINITION:
-                    // lame: order of command line arguments is important, these arguments should be AFTER '-tool' argument
-                    state.setDefinitionInputFile(args[i + 1]);
+                    definitionFile = args[i + 1];
+                    state.addInputFile(definitionFile);
                     break;
                 case KEY_TS_TEMPLATE:
                     tsTemplateFile = args[i + 1];
                     break;
                 case KEY_C_DESTINATION:
                     cHeaderDestination = args[i + 1];
-                    state.addCHeaderDestination(args[i + 1]);
                     break;
                 case KEY_ZERO_INIT:
                     needZeroInit = Boolean.parseBoolean(args[i + 1]);
@@ -99,14 +103,11 @@ public class ConfigDefinition {
                     break;
                 case KEY_JAVA_DESTINATION:
                     javaFieldsDestination = args[i + 1];
-                    state.addJavaDestination(args[i + 1]);
                     break;
                 case "-field_lookup_file": {
-                    String cppFile = args[i + 1];
-                    fieldLookupFile = cppFile;
-                    String mdFile = args[i + 2];
+                    fieldLookupFile = args[i + 1];
+                    fieldLookupMdFile = args[i + 2];
                     i++;
-                    state.addDestination(new GetConfigValueConsumer(cppFile, mdFile));
                 }
                     break;
                 case "-readfile":
@@ -123,15 +124,16 @@ public class ConfigDefinition {
                 case "-triggerInputFolder":
                     triggersInputFolder = args[i + 1];
                     break;
-                case KEY_PREPEND:
-                    state.addPrepend(args[i + 1].trim());
+                case KEY_PREPEND: {
+                    String prependFile = args[i + 1].trim();
+                    prependFiles.add(prependFile);
+                    state.addInputFile(prependFile);
                     break;
-                case EnumToString.KEY_ENUM_INPUT_FILE:
+                } case EnumToString.KEY_ENUM_INPUT_FILE:
                     enumInputFiles.add(args[i + 1]);
                     break;
                 case "-ts_output_name":
                     tsIniDestination = args[i + 1];
-                    state.setTsFileOutputName(args[i + 1]);
                     break;
                 case KEY_BOARD_NAME:
                     String boardName = args[i + 1];
@@ -212,7 +214,7 @@ public class ConfigDefinition {
                 // Ignore duplicates of definitions made during prepend phase
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.IgnoreNew);
 
-                for (String prependFile : state.getPrependFiles()) {
+                for (String prependFile : prependFiles) {
                     RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prependFile);
                 }
             }
@@ -221,32 +223,53 @@ public class ConfigDefinition {
             {
                 // don't allow duplicates in the main file
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
-                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
+                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), definitionFile);
             }
 
-            // Write C structs
+            // Write C structs (new parser is now the source of truth)
             CStructWriter cStructs = new CStructWriter();
-            cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
+            cStructs.writeCStructs(parseState, cHeaderDestination);
 
-            // Write tunerstudio layout
+            // Write tunerstudio layout (new parser is now the source of truth)
             TsWriter writer = new TsWriter();
-            writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination + ".test");
+            writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination);
 
-            // Write Java fields
-            JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination + ".test", 0);
-            javaWriter.writeDefinitions(parseState.getDefinitions());
-            javaWriter.writeFields(parseState);
-            javaWriter.finish();
+            // Total config page size, consumed by rusefi_generated.h (firmware static_assert) and
+            // Fields.java (java console). Previously registered by TSProjectConsumer.handleEndStruct,
+            // which the new TsWriter replaces.
+            int totalConfigSize = new StructLayout(0, "root", parseState.getLastStruct()).getSize();
+            state.getVariableRegistry().register("TOTAL_CONFIG_SIZE", totalConfigSize);
+
+            // Bridge the new parser's #define values into the variable registry, which derives the
+            // C defines (rusefi_generated.h) and the Java constants (Fields.java). _char/_hex/_16_hex
+            // are synthesized by VariableRegistry.register itself, so skip the parser's own copies.
+            for (Map.Entry<String, Definition> def : parseState.getDefinitions().entrySet()) {
+                String defName = def.getKey();
+                if (defName.endsWith("_char")
+                        || defName.endsWith(VariableRegistry._HEX_SUFFIX)
+                        || defName.endsWith(VariableRegistry._16_HEX_SUFFIX)) {
+                    continue;
+                }
+                if (def.getValue().isMultilineString()) {
+                    continue;
+                }
+                state.getVariableRegistry().register(defName, def.getValue().toString());
+            }
+
+            // Write Java fields: constants from the registry (typed correctly), field offsets from
+            // the new layout.
+            if (javaFieldsDestination != null) {
+                JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination, 0);
+                javaWriter.writeRawDefinitions(state.getVariableRegistry().getJavaConstants());
+                javaWriter.writeFields(parseState);
+                javaWriter.finish();
+            }
+
+            // Write the Lua value_lookup (getConfigValueByName / setConfigValueByName)
+            if (fieldLookupFile != null) {
+                new ConfigValueLookupWriter(fieldLookupFile, fieldLookupMdFile).write(parseState);
+            }
         }
-
-        if (tsTemplateFile != null) {
-            state.addDestination(new TSProjectConsumer(tsTemplateFile, state));
-        }
-
-        if (state.isDestinationsEmpty())
-            throw new IllegalArgumentException("No destinations specified");
-
-        state.doJob();
 
         if (destCDefinesFileName != null) {
             ExtraUtil.writeDefinesToFile(state.getVariableRegistry(), destCDefinesFileName);
