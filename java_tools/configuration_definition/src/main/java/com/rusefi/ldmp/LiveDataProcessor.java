@@ -6,7 +6,6 @@ import com.rusefi.InvokeReader;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.*;
-import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.util.IoUtils;
 import com.rusefi.util.LazyFile;

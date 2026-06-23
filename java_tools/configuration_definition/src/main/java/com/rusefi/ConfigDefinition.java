@@ -2,18 +2,16 @@ package com.rusefi;
 
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
-import com.rusefi.newparse.outputs.ConfigValueLookupWriter;
-import com.rusefi.newparse.outputs.CStructWriter;
-import com.rusefi.newparse.outputs.JavaFieldsWriter;
-import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
-import com.rusefi.newparse.outputs.TsWriter;
+import com.rusefi.newparse.outputs.*;
 import com.rusefi.newparse.parsing.Definition;
-import com.rusefi.output.*;
 import com.rusefi.pinout.PinoutLogic;
 import com.rusefi.trigger.TriggerWheelTSLogic;
 import com.rusefi.util.SystemOut;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;

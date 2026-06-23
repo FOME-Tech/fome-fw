@@ -1,7 +1,7 @@
 package com.rusefi.newparse.layout;
 
 import com.rusefi.newparse.outputs.ILayoutVisitor;
-import com.rusefi.newparse.parsing.*;
+import com.rusefi.newparse.parsing.StructField;
 
 import java.io.PrintStream;
 

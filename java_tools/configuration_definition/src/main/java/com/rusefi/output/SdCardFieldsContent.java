@@ -3,8 +3,8 @@ package com.rusefi.output;
 import com.rusefi.ConfigField;
 import com.rusefi.ReaderState;
 
-import static com.rusefi.output.JavaSensorsConsumer.quote;
 import static com.rusefi.VariableRegistry.unquote;
+import static com.rusefi.output.JavaSensorsConsumer.quote;
 
 public class SdCardFieldsContent {
     private final StringBuilder body = new StringBuilder();

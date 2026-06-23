@@ -1,7 +1,10 @@
 package com.rusefi.pinout;
 
 import com.devexperts.logging.Logging;
-import com.rusefi.*;
+import com.rusefi.EnumPair;
+import com.rusefi.EnumsReader;
+import com.rusefi.PinType;
+import com.rusefi.VariableRegistry;
 import com.rusefi.enum_reader.Value;
 import com.rusefi.newparse.DefinitionsState;
 import com.rusefi.newparse.parsing.Definition;
@@ -9,12 +12,14 @@ import com.rusefi.util.SystemOut;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.*;
 
 import static com.devexperts.logging.Logging.getLogging;
-import static com.rusefi.VariableRegistry.FULL_JAVA_ENUM;
 import static com.rusefi.VariableRegistry.ENUM_SUFFIX;
+import static com.rusefi.VariableRegistry.FULL_JAVA_ENUM;
 import static com.rusefi.output.JavaSensorsConsumer.quote;
 
 public class PinoutLogic {

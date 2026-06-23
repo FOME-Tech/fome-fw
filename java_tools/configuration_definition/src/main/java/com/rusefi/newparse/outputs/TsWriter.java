@@ -6,9 +6,10 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.util.LazyOutputStream;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

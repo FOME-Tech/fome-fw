@@ -5,6 +5,7 @@ import com.opensr5.ini.field.EnumIniField;
 import com.rusefi.core.Pair;
 import com.rusefi.output.ConfigStructure;
 import com.rusefi.output.JavaFieldsConsumer;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -13,8 +14,6 @@ import java.util.regex.Pattern;
 
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.output.JavaSensorsConsumer.quote;
-
-import org.jetbrains.annotations.Nullable;
 
 /**
  * This is an immutable model of an individual field

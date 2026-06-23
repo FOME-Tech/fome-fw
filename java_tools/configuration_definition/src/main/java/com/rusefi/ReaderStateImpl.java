@@ -1,23 +1,12 @@
 package com.rusefi;
 
-import com.devexperts.logging.Logging;
-import com.opensr5.ini.RawIniFile;
-import com.opensr5.ini.field.EnumIniField;
 import com.rusefi.enum_reader.Value;
-import com.rusefi.output.*;
-import com.rusefi.util.IoUtils;
-import com.rusefi.util.SystemOut;
-import org.jetbrains.annotations.NotNull;
+import com.rusefi.output.ConfigStructure;
+import com.rusefi.output.ConfigStructureImpl;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.*;
-
-import static com.devexperts.logging.Logging.getLogging;
-import static com.rusefi.ConfigFieldImpl.BOOLEAN_T;
-import static com.rusefi.VariableRegistry.unquote;
-import static com.rusefi.output.JavaSensorsConsumer.quote;
 
 /**
  * We keep state here as we read configuration definition
