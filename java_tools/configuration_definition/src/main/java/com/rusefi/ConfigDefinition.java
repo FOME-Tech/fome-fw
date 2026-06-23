@@ -226,11 +226,11 @@ public class ConfigDefinition {
                 RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), definitionFile);
             }
 
-            // Write C structs (new parser is now the source of truth)
+            // Write C structs
             CStructWriter cStructs = new CStructWriter();
             cStructs.writeCStructs(parseState, cHeaderDestination);
 
-            // Write tunerstudio layout (new parser is now the source of truth)
+            // Write tunerstudio layout
             TsWriter writer = new TsWriter();
             writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination);
 
