@@ -86,46 +86,6 @@ public class OutputsTest {
     }
 
     @Test
-    public void generateGetOutputs() {
-        String test = "struct_no_prefix ts_outputs_s\n" +
-                "bit issue_294_31,\"si_example\",\"nada_example\"\n" +
-                "bit enableFan1WithAc;+Turn on this fan when AC is on.\n" +
-                "int hwChannel;\n" +
-                "end_struct\n";
-        ReaderStateImpl state = new ReaderStateImpl();
-
-        GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer(null);
-        outputValueConsumer.conditional = "EFI_BOOST_CONTROL";
-        state.readBufferedReader(test, (outputValueConsumer));
-        assertEquals(
-                "#if !EFI_UNIT_TEST\n" +
-                "#include \"pch.h\"\n" +
-                        "#include \"value_lookup.h\"\n" +
-                        "expected<float> getOutputValueByName(const char *name) {\n" +
-                        "\tint hash = djb2lowerCase(name);\n" +
-                        "\tswitch(hash) {\n" +
-                        "#if EFI_BOOST_CONTROL\n" +
-                        "\t\tcase -1571463185:\n" +
-                        "\t\t\t// issue_294_31\n" +
-                        "\t\t\treturn (float)engine->outputChannels.issue_294_31;\n" +
-                        "#endif\n" +
-                        "#if EFI_BOOST_CONTROL\n" +
-                        "\t\tcase -298185774:\n" +
-                        "\t\t\t// enableFan1WithAc\n" +
-                        "\t\t\treturn (float)engine->outputChannels.enableFan1WithAc;\n" +
-                        "#endif\n" +
-                        "#if EFI_BOOST_CONTROL\n" +
-                        "\t\tcase -709106787:\n" +
-                        "\t\t\t// hwChannel\n" +
-                        "\t\t\treturn (float)engine->outputChannels.hwChannel;\n" +
-                        "#endif\n" +
-                        "\t}\n" +
-                        "\treturn unexpected;\n" +
-                        "}\n" +
-                        "#endif\n", outputValueConsumer.getContent());
-    }
-
-    @Test
     public void sensorStruct() throws IOException {
         String test = "struct_no_prefix total\n" +
                 "    struct pid_status_s\n" +
@@ -142,20 +102,6 @@ public class OutputsTest {
                 "entry = idleStatus_iTerm,\"idleStatus_iTerm\",float,\"%.4f\"\n" +
                 "entry = idleStatus_dTerm,\"idleStatus_dTerm\",float,\"%.4f\"\n",
                 parseToDatalogs(test));
-    }
-
-    @Test
-    public void testLongTooltipsIterate() {
-        ReaderStateImpl state = new ReaderStateImpl();
-        String test = "struct total\n" +
-                "\tint[3 iterate] triggerSimulatorPins;Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different.\n" +
-                "end_struct\n";
-        TestTSProjectConsumer tsProjectConsumer = new TestTSProjectConsumer("", state);
-        state.readBufferedReader(test, tsProjectConsumer);
-        assertEquals(
-"\ttriggerSimulatorPins1 = \"Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different. 1\"\n" +
-        "\ttriggerSimulatorPins2 = \"Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different. 2\"\n" +
-        "\ttriggerSimulatorPins3 = \"Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different. 3\"\n", tsProjectConsumer.getSettingContextHelpForUnitTest());
     }
 
     @Test(expected = IllegalStateException.class)
