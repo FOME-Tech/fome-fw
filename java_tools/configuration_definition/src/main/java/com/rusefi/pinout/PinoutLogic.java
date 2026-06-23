@@ -125,7 +125,7 @@ public class PinoutLogic {
     }
 
     private static void appendCommaIfNeeded(StringBuilder sb) {
-        if (sb.length() > 0)
+        if (!sb.isEmpty())
             sb.append(",");
     }
 

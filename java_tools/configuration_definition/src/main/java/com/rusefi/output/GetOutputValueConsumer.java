@@ -84,7 +84,7 @@ public class GetOutputValueConsumer implements ConfigurationConsumer {
 
     @NotNull
     static String wrapSwitchStatement(StringBuilder switchBody) {
-        return switchBody.length() == 0 ? "" :
+        return switchBody.isEmpty() ? "" :
                 ("\tint hash = djb2lowerCase(name);\n" +
 
                         "\tswitch(hash) {\n" + switchBody + "\t}\n");
