@@ -483,7 +483,6 @@ void setMazdaMiata2003EngineConfiguration() {
 	// set idle_p 0.05
 	// set idle_i 0
 	// set idle_d 0
-	// set debug_mode 3
 	// set idle_rpm 1700
 	// see setDefaultIdleParameters
 
