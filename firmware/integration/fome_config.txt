@@ -235,7 +235,7 @@ struct stft_s
 	uint8_t minPowerLoad;Above this engine load, the power region is active;"load", 1, 0, 0, 250, 0
 	uint8_t autoscale deadband;When close to correct AFR, pause correction. This can improve stability by not changing the adjustment if the error is extremely small, but is not required.;"%", 0.1, 0, 0, 3, 1
 
-	int8_t minClt;Below this temperature, correction is disabled.;"C", 1, 0, -20, 100, 0
+	int8_t autotemp minClt;Below this temperature, correction is disabled.;"C", 1, 0, -20, 100, 0
 	uint8_t autoscale minAfr;Below this AFR, correction is paused;"afr", 0.1, 0, 10, 20, 1
 	uint8_t autoscale maxAfr;Above this AFR, correction is paused;"afr", 0.1, 0, 10, 20, 1
 	uint8_t startupDelay;Delay after starting the engine before beginning closed loop correction.;"seconds", 1, 0, 0, 250, 0
@@ -1181,7 +1181,7 @@ tChargeMode_e tChargeMode;
 	// This is actually VVT PID, but changing the name will break users.
 	pid_s[CAMS_PER_BANK iterate] auxPid
 	float[8 iterate] injectorCorrectionPolynomial;;"", 1, 0, -1000, 1000, 4
-	int8_t[8] primeBins;;"C", 1, 0, -40, 120, 0
+	int8_t[8] autotemp primeBins;;"C", 1, 0, -40, 120, 0
 
 	linear_sensor_s oilPressure;
 
@@ -1210,7 +1210,7 @@ tChargeMode_e tChargeMode;
 	int16_t coastingFuelCutRpmHigh;This sets the RPM above which fuel cut is active.;"rpm", 1, 0, 0, 5000, 0
 	int16_t coastingFuelCutRpmLow;This sets the RPM below which fuel cut is deactivated, this prevents jerking or issues transitioning to idle;"rpm", 1, 0, 0, 5000, 0
 	int16_t coastingFuelCutTps;Throttle position below which fuel cut is active. With an electronic throttle enabled, this checks against pedal position.;"%", 1, 0, 0, 20, 0
-	int16_t coastingFuelCutClt;Fuel cutoff is disabled when the engine is cold.;"C", 1, 0, -100, 100, 0
+	int16_t autotemp coastingFuelCutClt;Fuel cutoff is disabled when the engine is cold.;"C", 1, 0, -100, 100, 0
 
 	uint8_t triggerSkipPulses;Some trigger hardware may generate noise when the engine starts moving. Set this to ignore the first pulses when the engine starts moving.;"count", 1, 0, 0, 250, 0
 
@@ -1345,8 +1345,8 @@ switch_input_pin_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPins;
 	int16_t ALSMinRPM;;"rpm", 1, 0, 0, 20000, 0
 	int16_t ALSMaxRPM;;"rpm", 1, 0, 0, 20000, 0
 int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
-	int8_t ALSMinCLT;;"C", 1, 0, 0, 90, 0
-	int8_t ALSMaxCLT;;"C", 1, 0, 0, 105, 0
+	int8_t autotemp ALSMinCLT;;"C", 1, 0, 0, 90, 0
+	int8_t autotemp ALSMaxCLT;;"C", 1, 0, 0, 105, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
@@ -1498,9 +1498,9 @@ engine_configuration_s engineConfiguration;
 	uint16_t[DWELL_CURVE_SIZE] sparkDwellRpmBins;On Single Coil or Wasted Spark setups you have to lower dwell at high RPM;"RPM", 1, 0, 0, 25000, 0
 	uint16_t[DWELL_CURVE_SIZE] autoscale sparkDwellValues;;"ms", 0.01, 0, 0, 30, 2
 
-	int8_t[CLT_CURVE_SIZE] autoscale cltIdleRpmBins;CLT-based target RPM for automatic idle controller;"C", 2, 0, -40, 200, 0
+	int8_t[CLT_CURVE_SIZE] autoscale autotemp cltIdleRpmBins;CLT-based target RPM for automatic idle controller;"C", 2, 0, -40, 200, 0
 	uint8_t[CLT_CURVE_SIZE] autoscale cltIdleRpm;Sets the target engine speed that is used for the closed-loop idle air and closed-loop idle timing algorithms.;"RPM", 20, 0, 0, 5000, 0
-	int8_t[CLT_TIMING_CURVE_SIZE] cltTimingBins;CLT-based timing correction;"C", 1, 0, -40, 120, 1
+	int8_t[CLT_TIMING_CURVE_SIZE] autotemp cltTimingBins;CLT-based timing correction;"C", 1, 0, -40, 120, 1
 	int8_t[CLT_TIMING_CURVE_SIZE] autoscale cltTimingExtra;;"degree", 0.1, 0, -30, 30, 1
 
 
@@ -1557,10 +1557,10 @@ uint8_t[8 x 4] autoscale slipTargetTable;Traction control target wheel slip.;"%"
 uint8_t[8] slipTargetSpeedBins;;"kph", 1, 0, 0, 250, 0
 int16_t[4] slipTargetTrimBins;Trim-axis (X) values for the slip target table.;"", 1, 0, -1000, 1000, 0
 
-float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
+float[CLT_CRANKING_CURVE_SIZE] autotemp cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2
 
-int8_t[CLT_CRANKING_CURVE_SIZE] cltCrankingTaperCorrBins;CLT-based taper duration multiplier for simple manual idle controller;"C", 1, 0, -100, 120, 2
+int8_t[CLT_CRANKING_CURVE_SIZE] autotemp cltCrankingTaperCorrBins;CLT-based taper duration multiplier for simple manual idle controller;"C", 1, 0, -100, 120, 2
 uint8_t[CLT_CRANKING_CURVE_SIZE] autoscale cltCrankingTaperCorr    ;CLT-based taper duration multiplier for simple manual idle controller;"%", 0.02, 0, 0, 5, 2
 
 uint8_t[IDLE_ADVANCE_CURVE_SIZE] autoscale idleAdvanceBins;Optional timing advance table for Idle (see useSeparateAdvanceForIdle);"RPM", 50, 0, 0, 12000, 0
@@ -1573,26 +1573,26 @@ uint16_t[IDLE_VE_SIZE x IDLE_VE_SIZE] autoscale idleVeTable;;"%", 0.1, 0, 0, 999
 custom lua_script_t @@LUA_SCRIPT_SIZE@@ string, ASCII, @OFFSET@, @@LUA_SCRIPT_SIZE@@
 lua_script_t luaScript;
 
-float[CLT_CURVE_SIZE] cltFuelCorrBins;;"C", 1, 0, -100, 250, 2
+float[CLT_CURVE_SIZE] autotemp cltFuelCorrBins;;"C", 1, 0, -100, 250, 2
 float[CLT_CURVE_SIZE] cltFuelCorr;;"ratio", 1, 0, 0, 5, 2
 
-float[IAT_CURVE_SIZE] iatFuelCorrBins;;"C", 1, 0, -100, 250, 2
+float[IAT_CURVE_SIZE] autotemp iatFuelCorrBins;;"C", 1, 0, -100, 250, 2
 float[IAT_CURVE_SIZE] iatFuelCorr;;"ratio", 1, 0, 0, 5, 2
 
 	float[CRANKING_CURVE_SIZE] crankingFuelCoef;;"ratio", 1, 0, 0, 50, 2
-	float[CRANKING_CURVE_SIZE] crankingFuelBins;;"C", 1, 0, -80, 170, 2
+	float[CRANKING_CURVE_SIZE] autotemp crankingFuelBins;;"C", 1, 0, -80, 170, 2
 
 	float[CRANKING_CURVE_SIZE] crankingCycleCoef;;"ratio", 1, 0, 0, 5, 2
 	float[CRANKING_CURVE_SIZE] crankingCycleBins;;"counter", 1, 0, -80, 170, 0
 
-float[CLT_CURVE_SIZE] cltIdleCorrBins;CLT-based idle position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
+float[CLT_CURVE_SIZE] autotemp cltIdleCorrBins;CLT-based idle position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
 float[CLT_CURVE_SIZE] cltIdleCorr;    CLT-based idle position multiplier for simple manual idle controller;"ratio", 1, 0, 0, 10, 2
 
 uint32_t[MAF_DECODING_COUNT] autoscale mafDecoding;;"kg/hour", 0.001, 0, 0, 4000, 3
 uint16_t[MAF_DECODING_COUNT] autoscale mafDecodingBins;;"V", 0.01, 0, 0, 20, 2
 
 int8_t[8 x 8] autoscale ignitionIatCorrTable;;"deg", 0.1, 0, -25, 25, 1
-int8_t[8] ignitionIatCorrTempBins;;"C", 1, 0, -40, 120, 0
+int8_t[8] autotemp ignitionIatCorrTempBins;;"C", 1, 0, -40, 120, 0
 uint8_t[8] autoscale ignitionIatCorrLoadBins;;"Load", 5, 0, 0, 1000, 0
 
 int16_t[IGN_RPM_COUNT x IGN_LOAD_COUNT] injectionPhase;;"deg", 1, 0, -720, 720, 0
@@ -1740,7 +1740,7 @@ int8_t[ENGINE_NOISE_CURVE_SIZE] autoscale knockBaseNoise;Knock sensor output kno
 uint8_t[TPS_TPS_ACCEL_CLT_CORR_TABLE] autoscale tpsTspCorrValuesBins;;"RPM", 50, 0, 0, 17500, 0
 uint8_t[TPS_TPS_ACCEL_CLT_CORR_TABLE] autoscale tpsTspCorrValues;Multiplier applied to the output of the TPS/TPS Acceleration Extra Fuel table. In general, engines may need more acceleration enrichment at lower engine speeds than higher engine speeds. A value of 2.0 multiplies the additional acceleration enrichment pulsewidth by 200%, a value of 1.0 does not modify the output.;"multiplier", 0.02, 0, 0, 5, 2
 
-int8_t[CLT_LIMITER_CURVE_SIZE] cltRevLimitRpmBins;;"C", 1, 0, -40, 120, 0
+int8_t[CLT_LIMITER_CURVE_SIZE] autotemp cltRevLimitRpmBins;;"C", 1, 0, -40, 120, 0
 uint16_t[CLT_LIMITER_CURVE_SIZE] cltRevLimitRpm;;"RPM", 1, 0, 0, 20000, 0
 
 uint16_t[FUEL_LEVEL_TABLE_COUNT] autoscale fuelLevelBins;;"volt", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
@@ -1797,13 +1797,13 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	#define FAN_TABLE_SIZE 6
 
 	! Fan 1 PWM tables
-	int8_t[FAN_TABLE_SIZE] fan1CltBins;;"C", 1, 0, -40, 120, 0
+	int8_t[FAN_TABLE_SIZE] autotemp fan1CltBins;;"C", 1, 0, -40, 120, 0
 	int16_t[FAN_TABLE_SIZE] autoscale fan1XAxisBins;;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOff;Fan 1 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOn;Fan 1 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 
 	! Fan 2 PWM tables
-	int8_t[FAN_TABLE_SIZE] fan2CltBins;;"C", 1, 0, -40, 120, 0
+	int8_t[FAN_TABLE_SIZE] autotemp fan2CltBins;;"C", 1, 0, -40, 120, 0
 	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1

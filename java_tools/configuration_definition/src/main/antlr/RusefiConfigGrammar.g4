@@ -25,6 +25,7 @@ Bit: 'bit';
 Array: 'array';
 Scalar: 'scalar';
 Autoscale: 'autoscale';
+Autotemp: 'autotemp';
 Resizable: 'resizable';
 
 ArrayDimensionSeparator: 'x';
@@ -95,8 +96,8 @@ fieldOptionsList
 
 arrayLengthSpec: numexpr (ArrayDimensionSeparator numexpr)?;
 
-scalarField: identifier Autoscale? identifier (fieldOptionsList)?;
-arrayField: identifier '[' arrayLengthSpec Iterate? ']' Autoscale? identifier SemicolonedString? (fieldOptionsList)?;
+scalarField: identifier Autoscale? Autotemp? identifier (fieldOptionsList)?;
+arrayField: identifier '[' arrayLengthSpec Iterate? ']' Autoscale? Autotemp? identifier SemicolonedString? (fieldOptionsList)?;
 bitField: Bit identifier (',' QuotedString ',' QuotedString)? ('(' 'comment' ':' QuotedString ')')? SemicolonedSuffix?;
 
 unionField: 'union' ENDL+ fields 'end_union';

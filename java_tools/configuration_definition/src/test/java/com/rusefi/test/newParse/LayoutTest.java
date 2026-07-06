@@ -153,6 +153,44 @@ public class LayoutTest {
     }
 
     @Test
+    public void autotempScalar() throws IOException {
+        String input = "struct_no_prefix myStruct\n" +
+                "int32_t autotemp fanOnTemperature;my comment;\"deg C\", 1, 0, 0, 150, 0\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "#if USE_FAHRENHEIT\n" +
+                        "fanOnTemperature = scalar, S32, 0, \"F\", 1.8, 17.77777777777778, 32, 302, 0\n" +
+                        "#else\n" +
+                        "fanOnTemperature = scalar, S32, 0, \"deg C\", 1, 0, 0, 150, 0\n" +
+                        "#endif\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n" +
+                        "\tfanOnTemperature = \"my comment\"\n", parseToTs(input));
+    }
+
+    @Test
+    public void autotempArray() throws IOException {
+        String input = "struct_no_prefix myStruct\n" +
+                "int8_t[4] autotemp cltBins;bins;\"C\", 1, 0, -40, 120, 0\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "#if USE_FAHRENHEIT\n" +
+                        "cltBins = array, S08, 0, [4], \"F\", 1.8, 17.77777777777778, -40, 248, 0\n" +
+                        "#else\n" +
+                        "cltBins = array, S08, 0, [4], \"C\", 1, 0, -40, 120, 0\n" +
+                        "#endif\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n" +
+                        "\tcltBins = \"bins\"\n", parseToTs(input));
+    }
+
+    @Test
     public void singleFieldMultiDimArray() throws IOException {
         String ts = parseToTs("struct_no_prefix myStruct\n" +
                 "int8_t[10 x 5] abc;;\"\", 1, 2, 3, 4, 5\n" +

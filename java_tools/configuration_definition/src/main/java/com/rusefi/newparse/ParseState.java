@@ -370,6 +370,7 @@ public class ParseState implements DefinitionsState {
         String type = ctx.identifier(0).getText();
         String name = ctx.identifier(1).getText();
         boolean autoscale = ctx.Autoscale() != null;
+        boolean autotemp = ctx.Autotemp() != null;
 
         // First check if this is an instance of a struct
         if (structs.containsKey(type)) {
@@ -421,7 +422,7 @@ public class ParseState implements DefinitionsState {
         // Merge the read-in options list with the default from the typedef (if exists)
         handleFieldOptionsList(options, ctx.fieldOptionsList());
 
-        scope.addField(new ScalarField(Type.findByCtype(type).get(), name, options, autoscale));
+        scope.addField(new ScalarField(Type.findByCtype(type).get(), name, options, autoscale, autotemp));
     }
 
     @Override
@@ -497,6 +498,7 @@ public class ParseState implements DefinitionsState {
         // check if the iterate token is present
         boolean iterate = ctx.Iterate() != null;
         boolean autoscale = ctx.Autoscale() != null;
+        boolean autotemp = ctx.Autotemp() != null;
 
         if (iterate && length.length != 1) {
             throw new IllegalStateException("Cannot iterate multi dimensional array: " + name);
@@ -560,7 +562,7 @@ public class ParseState implements DefinitionsState {
         // Merge the read-in options list with the default from the typedef (if exists)
         handleFieldOptionsList(options, ctx.fieldOptionsList());
 
-        ScalarField prototype = new ScalarField(Type.findByCtype(type).get(), name, options, autoscale);
+        ScalarField prototype = new ScalarField(Type.findByCtype(type).get(), name, options, autoscale, autotemp);
 
         scope.addField(new ArrayField<>(prototype, length, iterate));
     }

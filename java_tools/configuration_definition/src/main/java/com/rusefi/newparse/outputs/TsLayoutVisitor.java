@@ -1,6 +1,7 @@
 package com.rusefi.newparse.outputs;
 
 import com.rusefi.newparse.layout.*;
+import com.rusefi.newparse.parsing.FieldOptions;
 
 import java.io.PrintStream;
 
@@ -68,7 +69,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         }
     }
 
-    private void printBeforeArrayLength(ScalarLayout scalar, PrintStream ps, TsMetadata meta, StructNamePrefixer prefixer, String fieldType, int offsetAdd) {
+    private void printBeforeArrayLength(ScalarLayout scalar, PrintStream ps, TsMetadata meta, StructNamePrefixer prefixer, String fieldType, int offsetAdd, boolean addComment) {
         String name = prefixer.get(scalar.name);
         ps.print(name);
         ps.print(" = " + fieldType + ", ");
@@ -77,32 +78,41 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.print(scalar.offset + offsetAdd);
         ps.print(", ");
 
-        meta.addComment(name, scalar.options.comment);
+        if (addComment) {
+            meta.addComment(name, scalar.options.comment);
+        }
     }
 
-    private void printAfterArrayLength(ScalarLayout scalar, PrintStream ps) {
-        scalar.options.printTsFormat(ps);
+    private void printAfterArrayLength(FieldOptions options, PrintStream ps) {
+        options.printTsFormat(ps);
 
         ps.println();
     }
 
-    @Override
-    public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+    // Convert a Celsius field's TS options to the equivalent Fahrenheit options, reinterpreting
+    // the same stored (Celsius) bytes. TS computes display = (raw + offset) * scale, so to satisfy
+    // F = 1.8*C + 32 we scale by 9/5 and shift the translate accordingly. See f_vs_c_example.ini.
+    private static FieldOptions celsiusToFahrenheit(FieldOptions c) {
+        FieldOptions f = c.copy();
+
+        f.units = "\"F\"";
+        f.scale = c.scale * 9.0 / 5.0;
+        f.offset = c.offset + 32.0 / f.scale;
+        f.min = c.min * 9.0 / 5.0 + 32.0;
+        f.max = c.max * 9.0 / 5.0 + 32.0;
+        // digits unchanged
+
+        return f;
+    }
+
+    // Emit a single TS field line (plain scalar or array) using the given display options.
+    private void emitField(ScalarLayout scalar, FieldOptions options, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims, boolean addComment) {
         if (arrayDims.length == 0) {
             // plain scalar, not array
-            printBeforeArrayLength(scalar, ps, meta, prefixer, "scalar", offsetAdd);
-            printAfterArrayLength(scalar, ps);
+            printBeforeArrayLength(scalar, ps, meta, prefixer, "scalar", offsetAdd, addComment);
+            printAfterArrayLength(options, ps);
         } else {
-            if (arrayDims[0] == 0) {
-                // Skip zero length arrays, they may be used for dynamic padding but TS doesn't like them
-                return;
-            } else if (arrayDims[0] == 1) {
-                // For 1-length arrays, emit as a plain scalar instead
-                visit(scalar, ps, prefixer, offsetAdd, new int[0]);
-                return;
-            }
-
-            printBeforeArrayLength(scalar, ps, meta, prefixer, "array", offsetAdd);
+            printBeforeArrayLength(scalar, ps, meta, prefixer, "array", offsetAdd, addComment);
             ps.print("[");
             ps.print(arrayDims[0]);
 
@@ -117,7 +127,34 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
             ps.print("], ");
 
-            printAfterArrayLength(scalar, ps);
+            printAfterArrayLength(options, ps);
+        }
+    }
+
+    @Override
+    public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+        if (arrayDims.length != 0) {
+            if (arrayDims[0] == 0) {
+                // Skip zero length arrays, they may be used for dynamic padding but TS doesn't like them
+                return;
+            } else if (arrayDims[0] == 1) {
+                // For 1-length arrays, emit as a plain scalar instead
+                visit(scalar, ps, prefixer, offsetAdd, new int[0]);
+                return;
+            }
+        }
+
+        if (scalar.autotemp) {
+            // Emit both a Fahrenheit and a Celsius variant of the same field, guarded by the
+            // USE_FAHRENHEIT preprocessor symbol. TunerStudio picks one based on the user's unit
+            // choice; Celsius is the default (#else) when USE_FAHRENHEIT is not defined.
+            ps.println("#if USE_FAHRENHEIT");
+            emitField(scalar, celsiusToFahrenheit(scalar.options), ps, prefixer, offsetAdd, arrayDims, false);
+            ps.println("#else");
+            emitField(scalar, scalar.options, ps, prefixer, offsetAdd, arrayDims, true);
+            ps.println("#endif");
+        } else {
+            emitField(scalar, scalar.options, ps, prefixer, offsetAdd, arrayDims, true);
         }
     }
 
