@@ -51,5 +51,3 @@ $(PCHOBJ) : | $(CONFIG_STAMP)
 CLEAN_GENERATED_HOOK:
 	rm -f $(GENERATED_DIR)/*
 	rm -f $(LIVE_DATA_STAMP) $(CONFIG_STAMP)
-	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image.h
-	git checkout -- $(PROJECT_DIR)/hw_layer/mass_storage/ramdisk_image_compressed.h
