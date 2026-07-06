@@ -345,9 +345,9 @@ struct MAP_sensor_config_s
 end_struct
 
 struct_no_prefix thermistor_conf_s
-	int autoscale tempC_1;Temperature 1;"deg C", 0.01, 0, -40, 200, 1
-	int autoscale tempC_2;Temperature 2, must be > Temperature 1;"deg C", 0.01, 0, -40, 200, 1
-	int autoscale tempC_3;Temperature 3, must be > Temperature 2;"deg C", 0.01, 0, -40, 200, 1
+	int autoscale tempC_1;Temperature 1;"C", 0.01, 0, -40, 200, 1
+	int autoscale tempC_2;Temperature 2, must be > Temperature 1;"C", 0.01, 0, -40, 200, 1
+	int autoscale tempC_3;Temperature 3, must be > Temperature 2;"C", 0.01, 0, -40, 200, 1
 	uint32_t autoscale resistance_1;Sensor resistance while at temperature 1;"Ohm", 0.01, 0, 0, 200000, 1
 	uint32_t autoscale resistance_2;Sensor resistance while at temperature 2;"Ohm", 0.01, 0, 0, 200000, 1
 	uint32_t autoscale resistance_3;Sensor resistance while at temperature 3;"Ohm", 0.01, 0, 0, 200000, 1
@@ -378,7 +378,7 @@ uint16_t engineSnifferRpmThreshold;Engine sniffer would be disabled above this r
 	uint8_t autoscale multisparkMaxRpm;Disable multispark above this engine speed.;"rpm", 50, 0, 0, 3000, 0
 	uint8_t autoscale maxAcRpm;Above this RPM, disable A/C. Set to 0 to disable check. 200 rpm deadband. ;"rpm", 50, 0, 0, 10000, 0
 	uint8_t maxAcTps;Above this TPS, disable A/C. Set to 0 to disable check. 5 % deadband.;"%", 1, 0, 0, 100, 0
-	uint8_t maxAcClt;Above this CLT, disable A/C to prevent overheating the engine. Set to 0 to disable check. 5 deg C deadband.;"deg C", 1, 0, 0, 150, 0
+	uint8_t autotemp maxAcClt;Above this CLT, disable A/C to prevent overheating the engine. Set to 0 to disable check. 5 deg C deadband.;"C", 1, 0, 0, 150, 0
 
 	uint8_t multisparkMaxSparkingAngle;This parameter sets the latest that the last multispark can occur after the main ignition event. For example, if the ignition timing is 30 degrees BTDC, and this parameter is set to 45, no multispark will ever be fired after 15 degrees ATDC.;"deg", 1, 0, 0, 60, 0
 	uint8_t multisparkMaxExtraSparkCount;Configures the maximum number of extra sparks to fire (does not include main spark);"count", 1, 0, 1, 5, 0
@@ -512,8 +512,8 @@ angle_t globalTriggerAngleOffset;Angle between Top Dead Center (TDC) and the fir
 float analogInputDividerCoefficient;Ratio/coefficient of input voltage dividers on your PCB. For example, use '2' if your board divides 5v into 2.5v. Use '1.66' if your board divides 5v into 3v.;"coef", 1, 0, 0.01, 10, 2
 float vbattDividerCoeff;This is the ratio of the resistors for the battery voltage, measure the voltage at the battery and then adjust this number until the gauge matches the reading.;"coef", 1, 0, 0.01, 99, 2
 
-uint8_t fanOnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"deg C", 1, 0, 0, 150, 0
-uint8_t fanOffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"deg C", 1, 0, 0, 150, 0
+uint8_t autotemp fanOnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
+uint8_t autotemp fanOffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 
 uint16_t fanPwmFrequency;PWM frequency for cooling fans in PWM mode;"Hz", 1, 0, 10, 500, 0
 gppwm_channel_e fan1PwmXAxis;X axis source for fan 1 PWM table.
@@ -1153,7 +1153,7 @@ custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_mic
 
 	float idlePidActivationTime;;"seconds", 1, 0, 0, 60, 1
 
-	int8_t vvtControlMinClt;Minimum coolant temperature to activate VVT;"deg C", 1, 0, -40, 120, 0
+	int8_t autotemp vvtControlMinClt;Minimum coolant temperature to activate VVT;"C", 1, 0, -40, 120, 0
 
 	uint8_t autoscale minimumInjectionPulseWidth;Minimum allowed pulse width (before adding deadtime). Pulses less than this duration will be extended.;"ms", 0.01, 0, 0, 2, 2
 
@@ -1186,8 +1186,8 @@ tChargeMode_e tChargeMode;
 	linear_sensor_s oilPressure;
 
 	output_pin_e fan2Pin;
-	uint8_t fan2OnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"deg C", 1, 0, 0, 150, 0
-	uint8_t fan2OffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"deg C", 1, 0, 0, 150, 0
+	uint8_t autotemp fan2OnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
+	uint8_t autotemp fan2OffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 
 #define SCRIPT_CURVE_COUNT 6
 #define SCRIPT_TABLE_COUNT 4
@@ -1715,7 +1715,7 @@ uint16_t[6] injectorStagingRpmBins;;"RPM",  1, 0, 0, 18000, 0
 
 #define WWAE_TABLE_SIZE 8
 
-int8_t[WWAE_TABLE_SIZE] wwCltBins;;"deg C", 1, 0, -40, 120, 0
+int8_t[WWAE_TABLE_SIZE] autotemp wwCltBins;;"C", 1, 0, -40, 120, 0
 uint8_t[WWAE_TABLE_SIZE] autoscale wwTauCltValues;;"", 0.01, 0, 0, 2.5, 2
 uint8_t[WWAE_TABLE_SIZE] autoscale wwBetaCltValues;;"", 0.01, 0, 0, 1, 2
 
@@ -1759,7 +1759,7 @@ uint8_t[DFCO_RPM_MAP_TABLE] autoscale dfcoMapRpmValuesBins;;"RPM", 100, 0, 0, 17
 uint8_t[DFCO_RPM_MAP_TABLE] dfcoMapRpmValues;DFCO will activate when operating below this curve. Used to allow a higher threshold at low RPM where less vaccuum is generated;"MAP", 1, 0, 0, 50, 0
 
 uint8_t[8 x 8] autoscale postCrankingEnrichTable;;"ratio", 0.02, 0, 1, 5, 2
-int8_t[8] postCrankingEnrichTempBins;;"deg C", 1, 0, -40, 120, 0
+int8_t[8] autotemp postCrankingEnrichTempBins;;"C", 1, 0, -40, 120, 0
 uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0 
 
 	struct vr_threshold_s
@@ -1776,7 +1776,7 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	wifi_string_t wifiAccessPointPassword
 
 	struct VvtOpenLoop
-		int8_t[8] bins;;"deg C", 1, 0, -40, 120, 0
+		int8_t[8] autotemp bins;;"C", 1, 0, -40, 120, 0
 		uint8_t[8] autoscale values;;"%", 0.5, 0, 0, 100, 0
 	end_struct
 
