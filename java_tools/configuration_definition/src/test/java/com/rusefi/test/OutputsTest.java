@@ -95,50 +95,68 @@ public class OutputsTest {
                 "uint8_t vehicleSpeedKph;;\"kph\", 1, 0, 0, 0, 0\n" +
                 "end_struct\n";
 
-        // The category ("Boost") must prefix each named field, matching the ini datalog's "Category: Name".
+        // Each field is an offset-based descriptor {offset, type, multiplier, label, units, digits}.
+        // The category ("Boost") prefixes each named field, matching the ini datalog's "Category: Name".
         // A field with no comment falls back to its bare name, with no category prefix (same as the datalog).
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{engine->foo.target, \"Boost: Target\", \"kPa\", 1},\n" +
-                "\t{engine->foo.output, \"Boost: Output\", \"percent\", 2},\n" +
-                "\t{engine->foo.vehicleSpeedKph, \"vehicleSpeedKph\", \"kph\", 0},\n",
-                parseToSdLog(test, "engine->foo.", "Boost"));
+                "\t{0, LogField::Type::F32, 1, \"Boost: Target\", \"kPa\", 1},\n" +
+                "\t{4, LogField::Type::F32, 1, \"Boost: Output\", \"percent\", 2},\n" +
+                "\t{8, LogField::Type::U08, 1, \"vehicleSpeedKph\", \"kph\", 0},\n",
+                parseToSdLog(test, 0, "Boost"));
     }
 
     @Test
-    public void generateSdLogNoCategory() throws IOException {
+    public void generateSdLogNoCategoryWithBaseOffset() throws IOException {
         String test =
                 "struct_no_prefix total\n" +
                 "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
                 "end_struct\n";
 
         // With no category, a named field uses its bare comment (no "Category: " prefix).
+        // The base offset (where this struct starts in the output space) is added to every field offset.
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{engine->foo.target, \"Target\", \"kPa\", 1},\n",
-                parseToSdLog(test, "engine->foo.", null));
+                "\t{1000, LogField::Type::F32, 1, \"Target\", \"kPa\", 1},\n",
+                parseToSdLog(test, 1000, null));
     }
 
     @Test
     public void generateSdLogArray() throws IOException {
         String test =
                 "struct_no_prefix total\n" +
-                "uint8_t[2 iterate] autoscale knock;;\"v\", 1, 0, 0, 0, 0\n" +
-                "uint16_t[2 iterate] autoscale withName;MyName;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "uint8_t[2 iterate] knock;;\"v\", 1, 0, 0, 0, 0\n" +
+                "uint16_t[2 iterate] withName;MyName;\"kPa\", 1, 0, 0, 0, 1\n" +
                 "end_struct\n";
 
-        // Array elements get a C++ subscript in the accessor and a " N" (1-based) suffix on the label.
-        // The category prefix still applies to named fields.
+        // Array elements step the offset by the element size and get a " N" (1-based) suffix on the label.
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{e.knock[0], \"knock 1\", \"v\", 0},\n" +
-                "\t{e.knock[1], \"knock 2\", \"v\", 0},\n" +
-                "\t{e.withName[0], \"Cat: MyName 1\", \"kPa\", 1},\n" +
-                "\t{e.withName[1], \"Cat: MyName 2\", \"kPa\", 1},\n",
-                parseToSdLog(test, "e.", "Cat"));
+                "\t{0, LogField::Type::U08, 1, \"knock 1\", \"v\", 0},\n" +
+                "\t{1, LogField::Type::U08, 1, \"knock 2\", \"v\", 0},\n" +
+                "\t{2, LogField::Type::U16, 1, \"Cat: MyName 1\", \"kPa\", 1},\n" +
+                "\t{4, LogField::Type::U16, 1, \"Cat: MyName 2\", \"kPa\", 1},\n",
+                parseToSdLog(test, 0, "Cat"));
+    }
+
+    @Test
+    public void generateSdLogEnum() throws IOException {
+        String test =
+                "#define mode_e_enum \"a\", \"b\", \"c\"\n" +
+                "custom mode_e 1 bits, U08, @OFFSET@, [0:1], @@mode_e_enum@@\n" +
+                "struct_no_prefix total\n" +
+                "mode_e myMode;My mode\n" +
+                "end_struct\n";
+
+        // Enums are logged as plain integers (multiplier 1, no units, 0 digits), with the category prefix.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::U08, 1, \"Cat: My mode\", \"\", 0},\n",
+                parseToSdLog(test, 0, "Cat"));
     }
 
     @Test
@@ -151,12 +169,13 @@ public class OutputsTest {
                 "\tpid_status_s alternatorStatus\n" +
                 "end_struct\n";
 
-        // Nested structs contribute a dotted prefix to the accessor and the fallback label.
+        // Nested structs contribute a dotted prefix to the fallback label; the offset is the field's
+        // absolute offset within the output space.
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{e.alternatorStatus.iTerm, \"alternatorStatus.iTerm\", \"v\", 4},\n",
-                parseToSdLog(test, "e.", "Cat"));
+                "\t{0, LogField::Type::F32, 1, \"alternatorStatus.iTerm\", \"v\", 4},\n",
+                parseToSdLog(test, 0, "Cat"));
     }
 
     @Test
@@ -169,13 +188,13 @@ public class OutputsTest {
                 "\tpid_status_s[2 iterate] statuses\n" +
                 "end_struct\n";
 
-        // Arrays of structs get a C++ subscript on the struct name in the accessor.
+        // Arrays of structs step the offset by the struct size; the label carries the 1-based index.
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{e.statuses[0].iTerm, \"statuses[0].iTerm\", \"v\", 4},\n" +
-                "\t{e.statuses[1].iTerm, \"statuses[1].iTerm\", \"v\", 4},\n",
-                parseToSdLog(test, "e.", null));
+                "\t{0, LogField::Type::F32, 1, \"statuses1.iTerm\", \"v\", 4},\n" +
+                "\t{4, LogField::Type::F32, 1, \"statuses2.iTerm\", \"v\", 4},\n",
+                parseToSdLog(test, 0, null));
     }
 
     @Test
@@ -191,8 +210,8 @@ public class OutputsTest {
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{engine->foo.target, \"Boost: Target\", \"kPa\", 1},\n",
-                parseToSdLog(test, "engine->foo.", "Boost"));
+                "\t{0, LogField::Type::F32, 1, \"Boost: Target\", \"kPa\", 1},\n",
+                parseToSdLog(test, 0, "Boost"));
     }
 
     @Test

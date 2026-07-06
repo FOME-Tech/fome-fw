@@ -56,10 +56,13 @@ void LogField::writeHeader(Writer& outBuffer) const {
 	outBuffer.write(buffer, MLQ_FIELD_HEADER_SIZE);
 }
 
-size_t LogField::writeData(char* buffer) const {
+size_t LogField::writeData(char* buffer, const uint8_t* channels) const {
 	size_t size = m_size;
 
-	memcpy_swapend(buffer, m_addr, size);
+	// Pointer-based fields read from their fixed address; offset-based fields read from the
+	// provided snapshot of the output channel space.
+	const void* src = m_addr ? m_addr : (channels + m_offset);
+	memcpy_swapend(buffer, src, size);
 
 	return size;
 }

@@ -33,6 +33,7 @@ or
 ### Added
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load
+ - SD card logs now contain every output channel (full parity with the TunerStudio log), rather than only a curated subset - previously-missing data like idle, throttle, wideband and wall-fuel state is now logged
  - IMU data (lateral/longitudinal acceleration and yaw rate) from the BMW E90 MK60e1/MK60e5 DSC/ABS module
 
 ### Fixed

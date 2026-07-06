@@ -67,7 +67,7 @@ public class NewParseHelper {
         return baos2.toString(utf8);
     }
 
-    public static String parseToSdLog(String input, String sourceName, String category) throws IOException {
+    public static String parseToSdLog(String input, int baseOffset, String category) throws IOException {
         ParseState state = parse(input);
 
         final String utf8 = StandardCharsets.UTF_8.name();
@@ -76,7 +76,7 @@ public class NewParseHelper {
         PrintStream ps = new PrintStreamAlwaysUnix(baos, true, utf8);
 
         SdLogWriter writer = new SdLogWriter(ps);
-        writer.writeSdLogs(state, sourceName, category);
+        writer.writeSdLogs(state, baseOffset, category);
 
         return baos.toString(utf8);
     }

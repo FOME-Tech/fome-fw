@@ -7,7 +7,42 @@
 struct Writer;
 class LogField {
 public:
-	// Scaled channels, memcpys data directly and describes format in header
+	enum class Type : uint8_t {
+		U08 = 0,
+		S08 = 1,
+		U16 = 2,
+		S16 = 3,
+		U32 = 4,
+		S32 = 5,
+		S64 = 6,
+		F32 = 7,
+	};
+
+	// Offset-based field: reads from a snapshot of the output channel space (see writeData).
+	// This is how generated SD log fields are described - the offset, type and multiplier come
+	// from the same output-channel layout the main TunerStudio log uses, so no compile-time
+	// address (and thus no per-usage constexpr) is required.
+	constexpr LogField(
+			uint16_t offset,
+			Type type,
+			float multiplier,
+			const char* name,
+			const char* units,
+			int8_t digits,
+			const char* category = "none")
+		: m_multiplier(multiplier)
+		, m_addr(nullptr)
+		, m_offset(offset)
+		, m_type(type)
+		, m_digits(digits)
+		, m_size(sizeForType(type))
+		, m_name(name)
+		, m_units(units)
+		, m_category(category) {}
+
+	// Scaled channels, memcpys data directly and describes format in header.
+	// Pointer-based: reads directly from a fixed address, used for fields that live outside the
+	// output channel space (e.g. the log timestamp).
 	template <typename TValue, int TMult, int TDiv>
 	constexpr LogField(
 			const scaled_channel<TValue, TMult, TDiv>& toRead,
@@ -17,6 +52,7 @@ public:
 			const char* category = "none")
 		: m_multiplier(float(TDiv) / TMult)
 		, m_addr(toRead.getFirstByteAddr())
+		, m_offset(0)
 		, m_type(resolveType<TValue>())
 		, m_digits(digits)
 		, m_size(sizeForType(resolveType<TValue>()))
@@ -30,23 +66,13 @@ public:
 			TValue& toRead, const char* name, const char* units, int8_t digits, const char* category = "none")
 		: m_multiplier(1)
 		, m_addr(&toRead)
+		, m_offset(0)
 		, m_type(resolveType<TValue>())
 		, m_digits(digits)
 		, m_size(sizeForType(resolveType<TValue>()))
 		, m_name(name)
 		, m_units(units)
 		, m_category(category) {}
-
-	enum class Type : uint8_t {
-		U08 = 0,
-		S08 = 1,
-		U16 = 2,
-		S16 = 3,
-		U32 = 4,
-		S32 = 5,
-		S64 = 6,
-		F32 = 7,
-	};
 
 	constexpr size_t getSize() const {
 		return m_size;
@@ -55,9 +81,10 @@ public:
 	// Write the header data describing this field.
 	void writeHeader(Writer& outBuffer) const;
 
-	// Write the field's data to the buffer.
+	// Write the field's data to the buffer, reading either from a fixed address (pointer-based
+	// fields) or from `channels` + offset (offset-based fields, snapshot of the output space).
 	// Returns the number of bytes written.
-	size_t writeData(char* buffer) const;
+	size_t writeData(char* buffer, const uint8_t* channels = nullptr) const;
 
 private:
 	template <typename T>
@@ -78,7 +105,10 @@ private:
 	}
 
 	const float m_multiplier;
+	// Non-null for pointer-based fields; null for offset-based fields (which use m_offset).
 	const void* const m_addr;
+	// Offset into the output channel snapshot, used when m_addr is null.
+	const uint16_t m_offset;
 	const Type m_type;
 	const int8_t m_digits;
 	const uint8_t m_size;

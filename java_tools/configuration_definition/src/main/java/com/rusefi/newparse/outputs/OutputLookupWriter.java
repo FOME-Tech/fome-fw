@@ -2,9 +2,11 @@ package com.rusefi.newparse.outputs;
 
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.BitGroupLayout;
+import com.rusefi.newparse.layout.EnumLayout;
 import com.rusefi.newparse.layout.ScalarLayout;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
+import com.rusefi.newparse.parsing.FieldOptions;
 import com.rusefi.newparse.parsing.Struct;
 import com.rusefi.output.GetOutputValueConsumer;
 import com.rusefi.output.variables.VariableRecord;
@@ -46,30 +48,30 @@ public class OutputLookupWriter {
         ps.close();
     }
 
-    public void addOutputLookups(ParseState parser, String name, String conditional) {
+    // baseOffset is the offset of this struct within the whole output channel space, so each field
+    // can be looked up by absolute offset via getOutputChannelValue/getOutputChannelBit at runtime -
+    // no compile-time address (constexpr) required.
+    public void addOutputLookups(ParseState parser, int baseOffset, String conditional) {
         // Assume the last struct is the one we want...
         Struct s = parser.getStructs().get(parser.getStructs().size() - 1);
 
         StructLayout sl = new StructLayout(0, "root", s);
 
-        OutputLookupVisitor visitor = new OutputLookupVisitor(name, conditional);
+        OutputLookupVisitor visitor = new OutputLookupVisitor(conditional);
         StructNamePrefixer prefixer = new StructNamePrefixer('.');
 
-        visitor.visitRoot(sl, ps, prefixer);
+        visitor.visitRoot(sl, ps, prefixer, baseOffset);
     }
 
     private class OutputLookupVisitor extends ILayoutVisitor {
-        private final String prefix;
-
         private final String conditional;
 
-        public OutputLookupVisitor(final String prefix, final String conditional) {
-            this.prefix = prefix;
+        public OutputLookupVisitor(final String conditional) {
             this.conditional = conditional;
         }
 
-        public void visitRoot(StructLayout sl, PrintStream ps, StructNamePrefixer prefixer) {
-            sl.children.forEach(c -> c.visit(this, ps, prefixer, 0, new int[0]));
+        public void visitRoot(StructLayout sl, PrintStream ps, StructNamePrefixer prefixer, int baseOffset) {
+            sl.children.forEach(c -> c.visit(this, ps, prefixer, baseOffset, new int[0]));
         }
 
         public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
@@ -88,7 +90,18 @@ public class OutputLookupWriter {
             }
 
             String userName = prefixer.get(scalar.name);
-            String lookup = prefix + userName;
+            String lookup = "getOutputChannelValue(" + (scalar.offset + offsetAdd) + ", LogField::Type::"
+                    + scalar.type.tsType + ", " + FieldOptions.tryRound(scalar.options.scale) + ")";
+
+            getterPairs.add(new VariableRecord(userName, lookup, null, conditional));
+        }
+
+        @Override
+        public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+            // Enums are read as plain integers (no scaling)
+            String userName = prefixer.get(e.name);
+            String lookup = "getOutputChannelValue(" + (e.offset + offsetAdd) + ", LogField::Type::"
+                    + e.type.tsType + ", 1)";
 
             getterPairs.add(new VariableRecord(userName, lookup, null, conditional));
         }
@@ -100,7 +113,7 @@ public class OutputLookupWriter {
 
             for (int i = 0; i < bitGroup.bits.size(); i++) {
                 String userName = prefixer.get(bitGroup.bits.get(i).name);
-                String lookup = prefix + userName;
+                String lookup = "getOutputChannelBit(" + (bitGroup.offset + offsetAdd) + ", " + i + ")";
 
                 getterPairs.add(new VariableRecord(userName, lookup, null, conditional));
             }
