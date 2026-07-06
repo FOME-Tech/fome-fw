@@ -6,17 +6,6 @@
 # fail on error
 set -euo pipefail
 
-if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ] || [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
-  echo No image on $(uname -s)
-  exit 0
-fi
-
-if [[ "$OSTYPE" == darwin* ]]; then
-  echo "Skipping INI image creation on macOS (missing dosfstools)"
-  exit 0
-fi
-
-
 FULL_INI=$1
 H_OUTPUT=$2
 FS_SIZE=$3
@@ -25,6 +14,28 @@ BOARD_SPECIFIC_URL=$5
 
 IMAGE=ramdisk.image
 ZIP=fome.ini.zip
+
+if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ] || [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
+  echo No image on $(uname -s)
+
+	cat <<EOF > $H_OUTPUT
+#define RAMDISK_INVALID
+EOF
+
+  exit 0
+fi
+
+if [[ "$OSTYPE" == darwin* ]]; then
+  echo "Skipping INI image creation on macOS (missing dosfstools)"
+
+	cat <<EOF > $H_OUTPUT
+#define RAMDISK_INVALID
+EOF
+
+  exit 0
+fi
+
+
 
 # mkfs.fat and fatlabel are privileged on some systems
 PATH="$PATH:/usr/sbin"
