@@ -107,6 +107,95 @@ public class OutputsTest {
     }
 
     @Test
+    public void generateSdLogNoCategory() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "end_struct\n";
+
+        // With no category, a named field uses its bare comment (no "Category: " prefix).
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{engine->foo.target, \"Target\", \"kPa\", 1},\n",
+                parseToSdLog(test, "engine->foo.", null));
+    }
+
+    @Test
+    public void generateSdLogArray() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "uint8_t[2 iterate] autoscale knock;;\"v\", 1, 0, 0, 0, 0\n" +
+                "uint16_t[2 iterate] autoscale withName;MyName;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "end_struct\n";
+
+        // Array elements get a C++ subscript in the accessor and a " N" (1-based) suffix on the label.
+        // The category prefix still applies to named fields.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{e.knock[0], \"knock 1\", \"v\", 0},\n" +
+                "\t{e.knock[1], \"knock 2\", \"v\", 0},\n" +
+                "\t{e.withName[0], \"Cat: MyName 1\", \"kPa\", 1},\n" +
+                "\t{e.withName[1], \"Cat: MyName 2\", \"kPa\", 1},\n",
+                parseToSdLog(test, "e.", "Cat"));
+    }
+
+    @Test
+    public void generateSdLogNestedStruct() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "    struct pid_status_s\n" +
+                "    \tfloat iTerm;;\"v\", 1, 0, 0, 0, 4\n" +
+                "    end_struct\n" +
+                "\tpid_status_s alternatorStatus\n" +
+                "end_struct\n";
+
+        // Nested structs contribute a dotted prefix to the accessor and the fallback label.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{e.alternatorStatus.iTerm, \"alternatorStatus.iTerm\", \"v\", 4},\n",
+                parseToSdLog(test, "e.", "Cat"));
+    }
+
+    @Test
+    public void generateSdLogStructArray() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "    struct pid_status_s\n" +
+                "    \tfloat iTerm;;\"v\", 1, 0, 0, 0, 4\n" +
+                "    end_struct\n" +
+                "\tpid_status_s[2 iterate] statuses\n" +
+                "end_struct\n";
+
+        // Arrays of structs get a C++ subscript on the struct name in the accessor.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{e.statuses[0].iTerm, \"statuses[0].iTerm\", \"v\", 4},\n" +
+                "\t{e.statuses[1].iTerm, \"statuses[1].iTerm\", \"v\", 4},\n",
+                parseToSdLog(test, "e.", null));
+    }
+
+    @Test
+    public void generateSdLogSkipsUnusedAndBits() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "uint8_t unused37;;\"\", 1, 0, 0, 0, 0\n" +
+                "bit someFlag;a flag\n" +
+                "end_struct\n";
+
+        // "unused" scalars and all bit fields are omitted from the SD log.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{engine->foo.target, \"Boost: Target\", \"kPa\", 1},\n",
+                parseToSdLog(test, "engine->foo.", "Boost"));
+    }
+
+    @Test
     public void sensorStruct() throws IOException {
         String test = "struct_no_prefix total\n" +
                 "    struct pid_status_s\n" +
