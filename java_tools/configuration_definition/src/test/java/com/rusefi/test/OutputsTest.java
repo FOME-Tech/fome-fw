@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import static com.rusefi.test.newParse.NewParseHelper.parseToDatalogs;
 import static com.rusefi.test.newParse.NewParseHelper.parseToOutputChannels;
+import static com.rusefi.test.newParse.NewParseHelper.parseToSdLog;
 import static org.junit.Assert.assertEquals;
 
 public class OutputsTest {
@@ -83,6 +84,26 @@ public class OutputsTest {
                         "entry = baseFuel2,\"line1\",int,\"%d\"\n"
                 , parseToDatalogs(test));
 
+    }
+
+    @Test
+    public void generateSdLogWithCategory() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "float output;Output;\"percent\", 1, 0, 0, 0, 2\n" +
+                "uint8_t vehicleSpeedKph;;\"kph\", 1, 0, 0, 0, 0\n" +
+                "end_struct\n";
+
+        // The category ("Boost") must prefix each named field, matching the ini datalog's "Category: Name".
+        // A field with no comment falls back to its bare name, with no category prefix (same as the datalog).
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{engine->foo.target, \"Boost: Target\", \"kPa\", 1},\n" +
+                "\t{engine->foo.output, \"Boost: Output\", \"percent\", 2},\n" +
+                "\t{engine->foo.vehicleSpeedKph, \"vehicleSpeedKph\", \"kph\", 0},\n",
+                parseToSdLog(test, "engine->foo.", "Boost"));
     }
 
     @Test

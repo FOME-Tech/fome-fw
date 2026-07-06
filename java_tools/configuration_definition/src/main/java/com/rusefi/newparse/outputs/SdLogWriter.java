@@ -28,13 +28,13 @@ public class SdLogWriter {
         ps.close();
     }
 
-    public void writeSdLogs(ParseState parser, String sourceName) {
+    public void writeSdLogs(ParseState parser, String sourceName, String category) {
         // Assume the last struct is the one we want...
         Struct s = parser.getStructs().get(parser.getStructs().size() - 1);
 
         StructLayout sl = new StructLayout(0, "root", s);
 
-        SdLogVisitor v = new SdLogVisitor(sourceName);
+        SdLogVisitor v = new SdLogVisitor(sourceName, category);
         StructNamePrefixer prefixer = new StructNamePrefixer('.');
 
         v.visit(sl, ps, prefixer, 0, new int[0]);

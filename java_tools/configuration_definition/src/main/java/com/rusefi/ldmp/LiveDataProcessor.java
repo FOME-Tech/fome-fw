@@ -147,7 +147,10 @@ public class LiveDataProcessor {
                 }
 
                 if (constexpr != null) {
-                    sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
+                    // The SD log has a single instance per usage (via constexpr), so use the first
+                    // category name (if any) to match the "Category: Name" prefixing used in the ini datalog.
+                    String sdLogCategory = outputNames.length > 0 ? outputNames[0] : null;
+                    sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."), sdLogCategory);
 
                     outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
                 }

@@ -5,6 +5,7 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.CStructWriter;
 import com.rusefi.newparse.outputs.OutputChannelWriter;
 import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
+import com.rusefi.newparse.outputs.SdLogWriter;
 import com.rusefi.newparse.outputs.TsWriter;
 
 import java.io.*;
@@ -64,6 +65,20 @@ public class NewParseHelper {
         writer.writeOutputChannels(state, null);
 
         return baos2.toString(utf8);
+    }
+
+    public static String parseToSdLog(String input, String sourceName, String category) throws IOException {
+        ParseState state = parse(input);
+
+        final String utf8 = StandardCharsets.UTF_8.name();
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStreamAlwaysUnix(baos, true, utf8);
+
+        SdLogWriter writer = new SdLogWriter(ps);
+        writer.writeSdLogs(state, sourceName, category);
+
+        return baos.toString(utf8);
     }
 
     public static String parseToC(String input) throws IOException {

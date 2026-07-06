@@ -7,15 +7,19 @@ import com.rusefi.newparse.layout.StructNamePrefixer;
 
 import java.io.PrintStream;
 
-public class SdLogVisitor extends ILayoutVisitor {
+public class SdLogVisitor extends OutputChannelVisitorBase {
     private final String mSourceName;
 
-    public SdLogVisitor(String sourceName) {
+    public SdLogVisitor(String sourceName, String category) {
+        // The category (yaml output_name) drives the "Category: Name" label prefix, shared with the ini datalog.
+        super(category);
         mSourceName = sourceName;
     }
 
     @Override
     public void visit(StructLayout struct, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+        // The SD log emits C++ field-access expressions, so use array subscripts and ignore byte offsets,
+        // rather than the flattened TS names used by the base output-channel visitor.
         if (arrayDims.length == 0) {
             visit(struct, ps, prefixer, offsetAdd, struct.name);
         } else if (arrayDims.length == 1) {
@@ -39,14 +43,8 @@ public class SdLogVisitor extends ILayoutVisitor {
         ps.print(arraySub);
         ps.print(", \"");
 
-        String comment = scalar.options.comment;
-
-        // default to name in case of no comment
-        if (comment == null || comment.isEmpty()) {
-            comment = prefixedName;
-        }
-
-        ps.print(comment.split("\\n")[0]);
+        // Build the label the same way as the ini datalog so the two stay in sync (includes the category prefix).
+        ps.print(buildDatalogName(prefixedName, scalar.options.comment));
         ps.print(commentSuffix);
         ps.print("\", ");
         ps.print(scalar.options.units);
