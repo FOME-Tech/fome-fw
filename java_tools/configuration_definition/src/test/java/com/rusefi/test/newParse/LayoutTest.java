@@ -191,6 +191,19 @@ public class LayoutTest {
     }
 
     @Test
+    public void autotempEitherKeywordOrder() throws IOException {
+        // autoscale and autotemp may appear in either order
+        String scaleFirst = "struct_no_prefix myStruct\n" +
+                "int autoscale autotemp t;;\"C\", 0.01, 0, -40, 200, 1\n" +
+                "end_struct";
+        String tempFirst = "struct_no_prefix myStruct\n" +
+                "int autotemp autoscale t;;\"C\", 0.01, 0, -40, 200, 1\n" +
+                "end_struct";
+
+        Assert.assertEquals(parseToTs(scaleFirst), parseToTs(tempFirst));
+    }
+
+    @Test
     public void singleFieldMultiDimArray() throws IOException {
         String ts = parseToTs("struct_no_prefix myStruct\n" +
                 "int8_t[10 x 5] abc;;\"\", 1, 2, 3, 4, 5\n" +
