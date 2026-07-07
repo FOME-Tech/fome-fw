@@ -36,14 +36,14 @@ struct_no_prefix output_channels_s
 	int16_t rpmAcceleration;dRPM;"RPM acceleration",1, 0, 0, 5, 2
 
 ! Temperature sensors
-	int16_t autoscale coolant;@@GAUGE_NAME_CLT@@;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale intake;@@GAUGE_NAME_IAT@@;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale auxTemp1;Aux temp 1;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale auxTemp2;Aux temp 2;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale oilTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale fuelTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale ambientTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
-	int16_t autoscale compressorDischargeTemp;;"deg C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp coolant;@@GAUGE_NAME_CLT@@;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp intake;@@GAUGE_NAME_IAT@@;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp auxTemp1;Aux temp 1;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp auxTemp2;Aux temp 2;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp oilTemp;;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp fuelTemp;;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp ambientTemp;;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
+	int16_t autoscale autotemp compressorDischargeTemp;;"C",{1/@@PACK_MULT_TEMPERATURE@@}, 0, 0, 0, 1
 
 ! Throttles etc
 	int16_t autoscale TPSValue;@@GAUGE_NAME_TPS@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
@@ -167,7 +167,7 @@ struct_no_prefix output_channels_s
 	uint8_t widebandUpdateState;;"", 1, 0, 0, 0, 0
 	uint8_t orderingErrorCounter;;"",1, 0, 0, 0, 0
 
-	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"deg C",1, 0, 0, 0, 0
+	int8_t internalMcuTemperature;@@GAUGE_NAME_ECU_TEMPERATURE@@;"C",1, 0, 0, 0, 0
 
 	uint8_t cpuUsage;CPU usage;"%", 1, 0, 0, 100, 0
 
@@ -220,7 +220,7 @@ struct_no_prefix output_channels_s
 
 	uint16_t[8 iterate] recentErrorCode;;"error", 1, 0, 0, 0, 0
 
-	uint16_t[EGT_CHANNEL_COUNT iterate] egt;EGT;"deg C", 1, 0, 0, 0, 0
+	uint16_t[EGT_CHANNEL_COUNT iterate] autotemp egt;EGT;"C", 1, 0, 0, 0, 0
 
 	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
 

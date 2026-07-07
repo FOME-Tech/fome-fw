@@ -21,6 +21,22 @@ public class FieldOptions {
         comment = "";
     }
 
+    // Return a copy of these options reinterpreting the same stored (Celsius) value as Fahrenheit.
+    // TS computes display = (raw + offset) * scale, so to satisfy F = 1.8*C + 32 we scale by 9/5
+    // and shift the translate accordingly. See firmware/f_vs_c_example.ini for the reference math.
+    public FieldOptions celsiusToFahrenheit() {
+        FieldOptions f = copy();
+
+        f.units = "\"F\"";
+        f.scale = this.scale * 9.0 / 5.0;
+        f.offset = this.offset + 32.0 / f.scale;
+        f.min = this.min * 9.0 / 5.0 + 32.0;
+        f.max = this.max * 9.0 / 5.0 + 32.0;
+        // digits unchanged
+
+        return f;
+    }
+
     // Produce a deep copy of this object
     public FieldOptions copy() {
         FieldOptions other = new FieldOptions();

@@ -89,22 +89,6 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.println();
     }
 
-    // Convert a Celsius field's TS options to the equivalent Fahrenheit options, reinterpreting
-    // the same stored (Celsius) bytes. TS computes display = (raw + offset) * scale, so to satisfy
-    // F = 1.8*C + 32 we scale by 9/5 and shift the translate accordingly. See f_vs_c_example.ini.
-    private static FieldOptions celsiusToFahrenheit(FieldOptions c) {
-        FieldOptions f = c.copy();
-
-        f.units = "\"F\"";
-        f.scale = c.scale * 9.0 / 5.0;
-        f.offset = c.offset + 32.0 / f.scale;
-        f.min = c.min * 9.0 / 5.0 + 32.0;
-        f.max = c.max * 9.0 / 5.0 + 32.0;
-        // digits unchanged
-
-        return f;
-    }
-
     // Emit a single TS field line (plain scalar or array) using the given display options.
     private void emitField(ScalarLayout scalar, FieldOptions options, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims, boolean addComment) {
         if (arrayDims.length == 0) {
@@ -149,7 +133,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
             // USE_FAHRENHEIT preprocessor symbol. TunerStudio picks one based on the user's unit
             // choice; Celsius is the default (#else) when USE_FAHRENHEIT is not defined.
             ps.println("#if USE_FAHRENHEIT");
-            emitField(scalar, celsiusToFahrenheit(scalar.options), ps, prefixer, offsetAdd, arrayDims, false);
+            emitField(scalar, scalar.options.celsiusToFahrenheit(), ps, prefixer, offsetAdd, arrayDims, false);
             ps.println("#else");
             emitField(scalar, scalar.options, ps, prefixer, offsetAdd, arrayDims, true);
             ps.println("#endif");

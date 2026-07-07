@@ -37,6 +37,22 @@ public class OutputsTest {
     }
 
     @Test
+    public void autotempOutputChannel() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "int16_t autotemp coolant;;\"deg C\", 1, 0, 0, 0, 1\n" +
+                "end_struct\n";
+
+        assertEquals(
+                "#if USE_FAHRENHEIT\n" +
+                        "coolant = scalar, S16, 0, \"F\", 1.8, 17.77777777777778\n" +
+                        "#else\n" +
+                        "coolant = scalar, S16, 0, \"deg C\", 1, 0\n" +
+                        "#endif\n" +
+                        "; total TS size = 4\n", parseToOutputChannels(test));
+    }
+
+    @Test
     public void generateDataLog() throws IOException {
         String test =
                 "#define PACK_MULT_PERCENT 100\n" +

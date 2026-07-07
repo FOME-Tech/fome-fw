@@ -26,7 +26,7 @@ public class OutputChannelVisitor extends OutputChannelVisitorBase {
         throw new IllegalStateException("String layout not supported for output channels");
     }
 
-    private void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int idx) {
+    private void emitLine(ScalarLayout scalar, FieldOptions options, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int idx) {
         String nameWithoutSpace = prefixer.get(idx > 0 ? (scalar.name + idx) : scalar.name);
 
         ps.print(nameWithoutSpace);
@@ -36,12 +36,26 @@ public class OutputChannelVisitor extends OutputChannelVisitorBase {
         ps.print(", ");
         ps.print(scalar.offset + offsetAdd);
         ps.print(", ");
-        ps.print(scalar.options.units);
+        ps.print(options.units);
         ps.print(", ");
-        ps.print(FieldOptions.tryRound(scalar.options.scale));
+        ps.print(FieldOptions.tryRound(options.scale));
         ps.print(", ");
-        ps.print(FieldOptions.tryRound(scalar.options.offset));
+        ps.print(FieldOptions.tryRound(options.offset));
         ps.println();
+    }
+
+    private void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int idx) {
+        if (scalar.autotemp) {
+            // Emit a Fahrenheit and a Celsius variant of the channel, guarded by USE_FAHRENHEIT.
+            // Celsius is the default (#else) when USE_FAHRENHEIT is not defined.
+            ps.println("#if USE_FAHRENHEIT");
+            emitLine(scalar, scalar.options.celsiusToFahrenheit(), ps, prefixer, offsetAdd, idx);
+            ps.println("#else");
+            emitLine(scalar, scalar.options, ps, prefixer, offsetAdd, idx);
+            ps.println("#endif");
+        } else {
+            emitLine(scalar, scalar.options, ps, prefixer, offsetAdd, idx);
+        }
     }
 
     @Override
