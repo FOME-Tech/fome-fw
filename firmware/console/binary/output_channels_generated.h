@@ -115,31 +115,31 @@ struct output_channels_s {
 	// offset 6
 	int16_t rpmAcceleration = (int16_t)0;
 	// CLT
-	// deg C
+	// C
 	// offset 8
 	scaled_channel<int16_t, 100, 1> coolant = (int16_t)0;
 	// IAT
-	// deg C
+	// C
 	// offset 10
 	scaled_channel<int16_t, 100, 1> intake = (int16_t)0;
 	// Aux temp 1
-	// deg C
+	// C
 	// offset 12
 	scaled_channel<int16_t, 100, 1> auxTemp1 = (int16_t)0;
 	// Aux temp 2
-	// deg C
+	// C
 	// offset 14
 	scaled_channel<int16_t, 100, 1> auxTemp2 = (int16_t)0;
-	// deg C
+	// C
 	// offset 16
 	scaled_channel<int16_t, 100, 1> oilTemp = (int16_t)0;
-	// deg C
+	// C
 	// offset 18
 	scaled_channel<int16_t, 100, 1> fuelTemp = (int16_t)0;
-	// deg C
+	// C
 	// offset 20
 	scaled_channel<int16_t, 100, 1> ambientTemp = (int16_t)0;
-	// deg C
+	// C
 	// offset 22
 	scaled_channel<int16_t, 100, 1> compressorDischargeTemp = (int16_t)0;
 	// TPS
@@ -445,7 +445,7 @@ struct output_channels_s {
 	// offset 213
 	uint8_t orderingErrorCounter = (uint8_t)0;
 	// ECU temperature
-	// deg C
+	// C
 	// offset 214
 	int8_t internalMcuTemperature = (int8_t)0;
 	// CPU usage
@@ -539,7 +539,7 @@ struct output_channels_s {
 	// offset 266
 	uint16_t recentErrorCode[8];
 	// EGT
-	// deg C
+	// C
 	// offset 282
 	uint16_t egt[8];
 	// offset 298
