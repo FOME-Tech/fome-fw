@@ -14,6 +14,7 @@
 #include "trigger_central.h"
 #include "fuel_math.h"
 #include "speed_density.h"
+#include "init.h"
 
 #include "perf_trace.h"
 #include "backup_ram.h"
@@ -83,6 +84,7 @@ void Engine::periodicSlowCallback() {
 
 	efiWatchdog();
 	updateSlowSensors();
+	updateWidebandAliveTimers();
 	checkShutdown();
 
 	module<TpsAccelEnrichment>()->onNewValue(Sensor::getOrZero(SensorType::Tps1));

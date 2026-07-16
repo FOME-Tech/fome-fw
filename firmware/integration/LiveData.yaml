@@ -129,7 +129,7 @@ Usages:
 
   - name: wideband_state
     folder: controllers/sensors/
-    output_name: [ "WBO 1", "WBO 2" ]
+    output_name: [ "WBO 1", "WBO 2", "WBO 3", "WBO 4" ]
 
   - name: throttle_model
     folder: controllers/math

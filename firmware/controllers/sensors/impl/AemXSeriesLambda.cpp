@@ -51,6 +51,9 @@ bool AemXSeriesWideband::acceptFrame(CanBusIndex busIndex, const CANRxFrame& fra
 }
 
 void AemXSeriesWideband::decodeFrame(const CANRxFrame& frame, efitick_t nowNt) {
+	// Any frame from this controller counts as "alive", regardless of format or lambda validity
+	m_lastFrameTimer.reset(nowNt);
+
 	uint32_t id = CAN_ID(frame);
 
 	// accept frame has already guaranteed that this message belongs to us
@@ -139,6 +142,10 @@ void AemXSeriesWideband::decodeRusefiDiag(const CANRxFrame& frame) {
 		auto code = m_logicalIndex == 0 ? ObdCode::Wideband_1_Fault : ObdCode::Wideband_2_Fault;
 		warning(code, "Wideband #%d fault: %s", (m_logicalIndex + 1), wbo::describeStatus(data->status));
 	}
+}
+
+void AemXSeriesWideband::updateTimeSinceLastFrame() {
+	timeSinceLastFrame = static_cast<uint8_t>(std::min(m_lastFrameTimer.getElapsedSeconds(), 255.0f));
 }
 
 #endif
