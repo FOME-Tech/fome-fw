@@ -160,3 +160,53 @@ TEST(BinaryLogField, OffsetValue) {
 	EXPECT_EQ(2, lf.writeData(buffer, channels));
 	EXPECT_THAT(buffer, ElementsAre(0x12, 0x34, 0x7F, 0x7F));
 }
+
+TEST(BinaryLogField, BitValue) {
+	// Single-bit field extracts one bit from the output channel snapshot, emitting it as a 0/1 byte.
+	// Bit groups are little-endian words, so bit i lives in byte offset + i/8 at bit position i%8.
+	uint8_t channels[8] = {0};
+	// Word at offset 4: bits 1 and 9 set (byte 4 = 0b0000'0010, byte 5 = 0b0000'0010)
+	channels[4] = 0x02;
+	channels[5] = 0x02;
+
+	char buffer[2];
+
+	// Bit 1 is set -> writes a single 1 byte
+	LogField bit1(uint16_t(4), uint8_t(1), "flag one");
+	memset(buffer, 0x7F, sizeof(buffer));
+	EXPECT_EQ(1, bit1.writeData(buffer, channels));
+	EXPECT_THAT(buffer, ElementsAre(1, 0x7F));
+
+	// Bit 0 is clear -> writes a single 0 byte
+	LogField bit0(uint16_t(4), uint8_t(0), "flag zero");
+	memset(buffer, 0x7F, sizeof(buffer));
+	EXPECT_EQ(1, bit0.writeData(buffer, channels));
+	EXPECT_THAT(buffer, ElementsAre(0, 0x7F));
+
+	// Bit 9 (set) lives in the second byte of the word - exercises the byte-index math
+	LogField bit9(uint16_t(4), uint8_t(9), "flag nine");
+	memset(buffer, 0x7F, sizeof(buffer));
+	EXPECT_EQ(1, bit9.writeData(buffer, channels));
+	EXPECT_THAT(buffer, ElementsAre(1, 0x7F));
+}
+
+TEST(BinaryLogField, BitFieldHeader) {
+	// A single-bit field is described as a U08 with the On/Off (4) display style.
+	LogField field(uint16_t(0), uint8_t(3), "name", "category");
+
+	char buffer[89];
+	StrictMock<MockWriter> bufWriter;
+	EXPECT_CALL(bufWriter, write(_, 89)).WillOnce([&](const char* buf, size_t count) {
+		memcpy(buffer, buf, count);
+		return 0;
+	});
+
+	field.writeHeader(bufWriter);
+
+	// Offset 0: type U08 (0)
+	EXPECT_EQ(0, buffer[0]);
+	// Offset 45: display style On/Off (4)
+	EXPECT_EQ(4, buffer[45]);
+	// Offset 54: digits 0
+	EXPECT_EQ(0, buffer[54]);
+}

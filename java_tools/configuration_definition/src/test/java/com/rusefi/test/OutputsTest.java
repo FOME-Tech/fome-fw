@@ -214,19 +214,22 @@ public class OutputsTest {
     }
 
     @Test
-    public void generateSdLogSkipsUnusedAndBits() throws IOException {
+    public void generateSdLogBitFields() throws IOException {
         String test =
                 "struct_no_prefix total\n" +
                 "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
-                "uint8_t unused37;;\"\", 1, 0, 0, 0, 0\n" +
+                "bit unusedBit\n" +
                 "bit someFlag;a flag\n" +
                 "end_struct\n";
 
-        // "unused" scalars and all bit fields are omitted from the SD log.
+        // "unused" scalars are still skipped; each remaining bit becomes a single-bit field
+        // {wordOffset, bitIndex, label}. The unused bit is not emitted but still advances the bit
+        // index, so someFlag is bit 1. Bits carry the category prefix like other datalog entries.
         assertEquals(
                 "static constexpr LogField fields[] = {\n" +
                 "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
-                "\t{0, LogField::Type::F32, 1, \"Boost: Target\", \"kPa\", 1},\n",
+                "\t{0, LogField::Type::F32, 1, \"Boost: Target\", \"kPa\", 1},\n" +
+                "\t{4, 1, \"Boost: a flag\"},\n",
                 parseToSdLog(test, 0, "Boost"));
     }
 

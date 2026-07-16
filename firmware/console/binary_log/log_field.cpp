@@ -30,8 +30,8 @@ void LogField::writeHeader(Writer& outBuffer) const {
 	strncpy(&buffer[35], m_units, 10);
 
 	// Offset 45, length 1 = Display style
-	// value 0 -> floating point number
-	buffer[45] = 0;
+	// value 0 -> floating point number, value 4 -> On/Off (used for single-bit fields)
+	buffer[45] = (m_bitIndex >= 0) ? 4 : 0;
 
 	// Offset 46, length 4 = Scale
 	copyFloat(buffer + 46, m_multiplier);
@@ -57,6 +57,15 @@ void LogField::writeHeader(Writer& outBuffer) const {
 }
 
 size_t LogField::writeData(char* buffer, const uint8_t* channels) const {
+	// Single-bit fields: extract one bit from the output-channel snapshot and emit it as a 0/1 byte.
+	// Bit groups are little-endian words in the (little-endian ECU) output space, so bit i lives in
+	// byte offset + i/8 at bit position i%8 - no endian swap needed for a single byte.
+	if (m_bitIndex >= 0) {
+		uint8_t byte = channels[m_offset + (m_bitIndex >> 3)];
+		buffer[0] = (byte >> (m_bitIndex & 7)) & 1;
+		return 1;
+	}
+
 	size_t size = m_size;
 
 	// Pointer-based fields read from their fixed address; offset-based fields read from the

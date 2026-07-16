@@ -36,8 +36,24 @@ public:
 		, m_type(type)
 		, m_digits(digits)
 		, m_size(sizeForType(type))
+		, m_bitIndex(-1)
 		, m_name(name)
 		, m_units(units)
+		, m_category(category) {}
+
+	// Offset-based single-bit field: extracts one bit (bitIndex) from the output-channel snapshot and
+	// emits it as a 0/1 U08. Boolean/flag channels are packed into bit groups; spending a whole byte
+	// per bit is wasteful but keeps the writer trivial (no native MLQ bitfield header/names section).
+	constexpr LogField(uint16_t offset, uint8_t bitIndex, const char* name, const char* category = "none")
+		: m_multiplier(1)
+		, m_addr(nullptr)
+		, m_offset(offset)
+		, m_type(Type::U08)
+		, m_digits(0)
+		, m_size(1)
+		, m_bitIndex(static_cast<int8_t>(bitIndex))
+		, m_name(name)
+		, m_units("")
 		, m_category(category) {}
 
 	// Scaled channels, memcpys data directly and describes format in header.
@@ -56,6 +72,7 @@ public:
 		, m_type(resolveType<TValue>())
 		, m_digits(digits)
 		, m_size(sizeForType(resolveType<TValue>()))
+		, m_bitIndex(-1)
 		, m_name(name)
 		, m_units(units)
 		, m_category(category) {}
@@ -70,6 +87,7 @@ public:
 		, m_type(resolveType<TValue>())
 		, m_digits(digits)
 		, m_size(sizeForType(resolveType<TValue>()))
+		, m_bitIndex(-1)
 		, m_name(name)
 		, m_units(units)
 		, m_category(category) {}
@@ -112,6 +130,8 @@ private:
 	const Type m_type;
 	const int8_t m_digits;
 	const uint8_t m_size;
+	// Bit index (0..31) within the byte(s) at m_offset for single-bit fields; -1 for all other fields.
+	const int8_t m_bitIndex;
 
 	const char* const m_name;
 	const char* const m_units;

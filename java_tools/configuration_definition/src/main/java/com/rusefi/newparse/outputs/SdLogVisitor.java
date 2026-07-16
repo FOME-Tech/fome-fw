@@ -12,7 +12,8 @@ import java.io.PrintStream;
 // offset into the output-channel space (the same space the main TunerStudio log uses), its type,
 // scale, label, units and digits. Structurally this mirrors DatalogVisitor (both extend
 // OutputChannelVisitorBase and compute scalar.offset + offsetAdd) so the SD log stays in lockstep
-// with the ini datalog. Bit fields are omitted (the MLQ field format has no sub-bit type).
+// with the ini datalog. Bit fields are emitted one byte per bit (see visit(BitGroupLayout)) since the
+// MLQ scalar field has no sub-bit type - wasteful but keeps the writer simple.
 public class SdLogVisitor extends OutputChannelVisitorBase {
     public SdLogVisitor(String category) {
         // The category (yaml output_name) drives the "Category: Name" label prefix, shared with the ini datalog.
@@ -75,6 +76,27 @@ public class SdLogVisitor extends OutputChannelVisitorBase {
 
     @Override
     public void visit(BitGroupLayout bitGroup, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-        // Bit flags are not logged to the SD card (MLQ has no sub-bit field type).
+        // Emit each bit as its own single-bit field {wordOffset, bitIndex, label}, mirroring the ini
+        // datalog's per-bit entries. The bit index must track every bit's position within the word, so
+        // unused bits still advance the counter even though they aren't emitted.
+        int actualOffset = bitGroup.offset + offsetAdd;
+
+        for (int i = 0; i < bitGroup.bits.size(); i++) {
+            BitGroupLayout.BitLayout bit = bitGroup.bits.get(i);
+
+            if (bit.name.startsWith("unused")) {
+                continue;
+            }
+
+            String name = prefixer.get(bit.name);
+
+            ps.print("\t{");
+            ps.print(actualOffset);
+            ps.print(", ");
+            ps.print(i);
+            ps.print(", \"");
+            ps.print(buildDatalogName(name, bit.comment));
+            ps.println("\"},");
+        }
     }
 }
