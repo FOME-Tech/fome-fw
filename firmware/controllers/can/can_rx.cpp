@@ -145,7 +145,7 @@ static void processEgtCan(CanBusIndex busIndex, const CANRxFrame& frame) {
 		return;
 	}
 
-	if (didRegisterCanEgt) {
+	if (!didRegisterCanEgt) {
 		didRegisterCanEgt = true;
 
 		for (auto& egt : canEgts) {
