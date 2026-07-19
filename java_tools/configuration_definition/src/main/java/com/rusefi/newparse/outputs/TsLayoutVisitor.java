@@ -21,12 +21,6 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         visit(struct, ps, prefixer, offsetAdd, struct.name);
     }
 
-    private static void writeEnumVal(PrintStream ps, String enumVal) {
-        ps.print('"');
-        ps.print(enumVal);
-        ps.print('"');
-    }
-
     @Override
     public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
         String name = prefixer.get(e.name);
@@ -39,16 +33,9 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
         ps.print("[0:");
         ps.print(e.endBit);
-        ps.print("], ");
+        ps.print("], $ENUM_");
 
-        writeEnumVal(ps, e.values[0]);
-
-        for (int i = 1; i < e.values.length; i++) {
-            ps.print(", ");
-            writeEnumVal(ps, e.values[i]);
-        }
-
-        ps.println();
+        ps.println(e.enumType);
 
         meta.addComment(name, e.options.comment);
     }
