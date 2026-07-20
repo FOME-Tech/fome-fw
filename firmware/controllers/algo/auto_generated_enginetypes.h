@@ -363,6 +363,8 @@ constexpr inline const char* getTrigger_type_e(trigger_type_e value) {
 			return "TT_GM_7X";
 		case trigger_type_e::TT_HONDA_CBR_600:
 			return "TT_HONDA_CBR_600";
+		case trigger_type_e::TT_HONDA_K24Z_CAM_3:
+			return "TT_HONDA_K24Z_CAM_3";
 		case trigger_type_e::TT_HONDA_K_CAM_4_1:
 			return "TT_HONDA_K_CAM_4_1";
 		case trigger_type_e::TT_HONDA_K_CRANK_12_1:

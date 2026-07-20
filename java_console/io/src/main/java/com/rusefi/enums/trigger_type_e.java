@@ -83,5 +83,6 @@ public enum trigger_type_e {
 	TT_VVT_MAZDA_L,
 	TT_VVT_MIATA_NA,
 	TT_VIPER_V10_CRANK,
+	TT_HONDA_K24Z_CAM_3,
 	TT_UNUSED,
 }
