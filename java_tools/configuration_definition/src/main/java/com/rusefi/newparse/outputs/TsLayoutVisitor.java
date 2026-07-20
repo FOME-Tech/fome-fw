@@ -1,6 +1,7 @@
 package com.rusefi.newparse.outputs;
 
 import com.rusefi.newparse.layout.*;
+import com.rusefi.newparse.parsing.EnumValues;
 import com.rusefi.newparse.parsing.FieldOptions;
 
 import java.io.PrintStream;
@@ -21,9 +22,16 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         visit(struct, ps, prefixer, offsetAdd, struct.name);
     }
 
-    private static void writeEnumVal(PrintStream ps, String enumVal) {
+    private static void writeEnumVal(PrintStream ps, EnumValues values, int i) {
+        // Compacted enums list the numeric value of each name explicitly, since the names aren't
+        // contiguous - see EnumValues.
+        if (values.indices != null) {
+            ps.print(values.indices[i]);
+            ps.print('=');
+        }
+
         ps.print('"');
-        ps.print(enumVal);
+        ps.print(values.names[i]);
         ps.print('"');
     }
 
@@ -41,11 +49,11 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.print(e.endBit);
         ps.print("], ");
 
-        writeEnumVal(ps, e.values[0]);
+        writeEnumVal(ps, e.values, 0);
 
-        for (int i = 1; i < e.values.length; i++) {
+        for (int i = 1; i < e.values.size(); i++) {
             ps.print(", ");
-            writeEnumVal(ps, e.values[i]);
+            writeEnumVal(ps, e.values, i);
         }
 
         ps.println();

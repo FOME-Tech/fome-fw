@@ -82,9 +82,9 @@ public class ParseState implements DefinitionsState {
         return lastStruct;
     }
 
-    private String[] resolveEnumValues(String enumName) {
+    private EnumValues resolveEnumValues(String enumName) {
         if (this.enumsReader == null) {
-            return new String[0];
+            return new EnumValues(new String[0]);
         }
 
         TreeMap<Integer, String> valueNameById = new TreeMap<>();
@@ -109,7 +109,7 @@ public class ParseState implements DefinitionsState {
             result[i] = valueNameById.getOrDefault(i, "INVALID");
         }
 
-        return result;
+        return new EnumValues(result);
     }
 
     public List<Struct> getStructs() {
@@ -230,7 +230,7 @@ public class ParseState implements DefinitionsState {
 
         String rhs = ctx.enumRhs().getText();
 
-        String[] values = null;
+        EnumValues values = null;
 
         if (rhs.startsWith("@@")) {
             String defName = rhs.replaceAll("@", "");
@@ -257,10 +257,7 @@ public class ParseState implements DefinitionsState {
         }
 
         if (values == null) {
-            values = Arrays.stream(rhs.split(","))                    // Split on commas
-                        .map(String::trim)                                  // trim whitespace
-                        .map(s -> s.replaceAll("\"", ""))   // Remove quotes
-                        .toArray(String[]::new);                            // Convert back to array
+            values = EnumValues.parse(rhs);
         }
 
         typedefs.put(typedefName, new EnumTypedef(typedefName, datatype, endBit, values));

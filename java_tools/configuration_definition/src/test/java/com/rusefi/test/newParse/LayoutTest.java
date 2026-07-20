@@ -358,6 +358,42 @@ public class LayoutTest {
     }
 
     @Test
+    public void denseEnum() throws IOException {
+        String input = "#define my_enum \"one\", \"two\", \"three\"\n" +
+                "custom my_e 1 bits, U08, @OFFSET@, [0:1], @@my_enum@@\n" +
+                "struct_no_prefix myStruct\n" +
+                "my_e myField;\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "myField = bits, U08, 0, [0:1], \"one\", \"two\", \"three\"\n" +
+                        "; unused 3 bytes at offset 1\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n", parseToTs(input));
+    }
+
+    @Test
+    public void compactedEnum() throws IOException {
+        // Compacted enums explicitly pair each name with its numeric value, since only a sparse
+        // subset of the underlying enum's values are listed.
+        String input = "#define my_enum 0=\"NONE\",98=\"Digital 1\",76=\"Digital 3\"\n" +
+                "custom my_e 2 bits, U16, @OFFSET@, [0:7], @@my_enum@@\n" +
+                "struct_no_prefix myStruct\n" +
+                "my_e myField;\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "myField = bits, U16, 0, [0:7], 0=\"NONE\", 98=\"Digital 1\", 76=\"Digital 3\"\n" +
+                        "; unused 2 bytes at offset 2\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n", parseToTs(input));
+    }
+
+    @Test
     public void bigOutputChannels() throws IOException {
         String input = 
                 "#define GAUGE_NAME_FUEL_WALL_CORRECTION \"wall\"\n" +

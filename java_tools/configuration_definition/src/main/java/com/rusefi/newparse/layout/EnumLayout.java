@@ -2,6 +2,7 @@ package com.rusefi.newparse.layout;
 
 import com.rusefi.newparse.outputs.ILayoutVisitor;
 import com.rusefi.newparse.parsing.EnumField;
+import com.rusefi.newparse.parsing.EnumValues;
 import com.rusefi.newparse.parsing.FieldOptions;
 import com.rusefi.newparse.parsing.Type;
 
@@ -12,7 +13,7 @@ public class EnumLayout extends Layout {
     public final Type type;
     public final String enumType;
     public final int endBit;
-    public final String[] values;
+    public final EnumValues values;
     public final FieldOptions options;
 
     public EnumLayout(EnumField field) {

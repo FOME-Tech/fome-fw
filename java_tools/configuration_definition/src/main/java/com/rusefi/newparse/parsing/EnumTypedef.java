@@ -3,9 +3,9 @@ package com.rusefi.newparse.parsing;
 public class EnumTypedef extends Typedef {
     public final Type type;
     public final int endBit;
-    public final String[] values;
+    public final EnumValues values;
 
-    public EnumTypedef(String name, Type type, int endBit, String[] values) {
+    public EnumTypedef(String name, Type type, int endBit, EnumValues values) {
         super(name);
 
         this.type = type;

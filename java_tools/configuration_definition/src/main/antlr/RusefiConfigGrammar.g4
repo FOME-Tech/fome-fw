@@ -124,7 +124,9 @@ fields
 // Indicates X bytes of free space
 unusedField: Unused integer;
 
-enumVal: QuotedString | integer;
+// the "integer '=' QuotedString" form is a compacted enum, where each name is explicitly paired
+// with its numeric value instead of the name's position implying it
+enumVal: integer '=' QuotedString | QuotedString | integer;
 
 enumRhs
     : replacementIdent
