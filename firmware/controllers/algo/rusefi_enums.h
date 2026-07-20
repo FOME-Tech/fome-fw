@@ -102,6 +102,11 @@ typedef enum __attribute__((__packed__)) {
 
 	VVT_MAZDA_L = 19,
 
+	/**
+	 * 3 unevenly spaced teeth
+	 */
+	VVT_HONDA_K24Z_EXHAUST = 20,
+
 } vvt_mode_e;
 
 /**

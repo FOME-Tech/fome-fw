@@ -279,6 +279,8 @@ static trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 			return trigger_type_e::TT_VVT_BOSCH_QUICK_START;
 		case VVT_HONDA_K_EXHAUST:
 			return trigger_type_e::TT_HONDA_K_CAM_4_1;
+		case VVT_HONDA_K24Z_EXHAUST:
+			return trigger_type_e::TT_HONDA_K24Z_CAM_3;
 		case VVT_FORD_ST170:
 			return trigger_type_e::TT_FORD_ST170;
 		case VVT_BARRA_3_PLUS_1:
