@@ -378,7 +378,7 @@ public class LayoutTest {
     public void compactedEnum() throws IOException {
         // Compacted enums explicitly pair each name with its numeric value, since only a sparse
         // subset of the underlying enum's values are listed.
-        String input = "#define my_enum 0=\"NONE\",98=\"Digital 1\",76=\"Digital 3\"\n" +
+        String input = "#define my_enum 0=\"NONE\",98=\"Digital 1\",76=\"Digital 3, or maybe 4\"\n" +
                 "custom my_e 2 bits, U16, @OFFSET@, [0:7], @@my_enum@@\n" +
                 "struct_no_prefix myStruct\n" +
                 "my_e myField;\n" +
@@ -387,7 +387,7 @@ public class LayoutTest {
         Assert.assertEquals(
                 "pageSize            = 4\n" +
                         "page = 1\n" +
-                        "myField = bits, U16, 0, [0:7], 0=\"NONE\", 98=\"Digital 1\", 76=\"Digital 3\"\n" +
+                        "myField = bits, U16, 0, [0:7], 0=\"NONE\", 98=\"Digital 1\", 76=\"Digital 3, or maybe 4\"\n" +
                         "; unused 2 bytes at offset 2\n" +
                         "; total TS size = 4\n" +
                         "[SettingContextHelp]\n", parseToTs(input));

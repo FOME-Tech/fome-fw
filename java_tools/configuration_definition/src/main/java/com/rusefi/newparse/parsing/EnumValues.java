@@ -1,6 +1,8 @@
 package com.rusefi.newparse.parsing;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,9 +38,7 @@ public class EnumValues {
     }
 
     public static EnumValues parse(String rhs) {
-        String[] entries = Arrays.stream(rhs.split(","))
-                    .map(String::trim)
-                    .toArray(String[]::new);
+        String[] entries = splitEntries(rhs);
 
         int compactedCount = 0;
 
@@ -71,6 +71,34 @@ public class EnumValues {
         }
 
         return new EnumValues(names, indices);
+    }
+
+    /**
+     * Split on commas, ignoring any that are inside a quoted name - plenty of names have a comma in
+     * them, like "105 - IDLE rev A,B".
+     */
+    private static String[] splitEntries(String rhs) {
+        List<String> entries = new ArrayList<>();
+        StringBuilder entry = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < rhs.length(); i++) {
+            char c = rhs.charAt(i);
+
+            if (c == '"') {
+                inQuotes = !inQuotes;
+            } else if (c == ',' && !inQuotes) {
+                entries.add(entry.toString().trim());
+                entry.setLength(0);
+                continue;
+            }
+
+            entry.append(c);
+        }
+
+        entries.add(entry.toString().trim());
+
+        return entries.toArray(new String[0]);
     }
 
     private static String unquote(String s) {
