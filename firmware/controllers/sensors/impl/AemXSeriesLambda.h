@@ -1,6 +1,7 @@
 #pragma once
 
 #include "can_sensor.h"
+#include "efi_timer.h"
 
 #include "wideband_state_generated.h"
 
@@ -9,6 +10,9 @@ public:
 	AemXSeriesWideband(uint8_t logicalIndex, SensorType type);
 
 	bool acceptFrame(CanBusIndex busIndex, const CANRxFrame& frame) const override;
+
+	// Refresh timeSinceLastFrame from the alive timer - call periodically, not on frame receipt
+	void updateTimeSinceLastFrame();
 
 protected:
 	// Dispatches to one of the three decoders below
@@ -23,4 +27,8 @@ protected:
 
 private:
 	const uint8_t m_logicalIndex;
+
+	// Reset any time a CAN frame is received from this controller, valid lambda or not,
+	// so TS can show "is this wideband controller alive and talking" independent of lambda validity.
+	Timer m_lastFrameTimer;
 };

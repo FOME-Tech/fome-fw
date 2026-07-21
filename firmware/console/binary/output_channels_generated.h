@@ -115,31 +115,31 @@ struct output_channels_s {
 	// offset 6
 	int16_t rpmAcceleration = (int16_t)0;
 	// CLT
-	// deg C
+	// C
 	// offset 8
 	scaled_channel<int16_t, 100, 1> coolant = (int16_t)0;
 	// IAT
-	// deg C
+	// C
 	// offset 10
 	scaled_channel<int16_t, 100, 1> intake = (int16_t)0;
 	// Aux temp 1
-	// deg C
+	// C
 	// offset 12
 	scaled_channel<int16_t, 100, 1> auxTemp1 = (int16_t)0;
 	// Aux temp 2
-	// deg C
+	// C
 	// offset 14
 	scaled_channel<int16_t, 100, 1> auxTemp2 = (int16_t)0;
-	// deg C
+	// C
 	// offset 16
 	scaled_channel<int16_t, 100, 1> oilTemp = (int16_t)0;
-	// deg C
+	// C
 	// offset 18
 	scaled_channel<int16_t, 100, 1> fuelTemp = (int16_t)0;
-	// deg C
+	// C
 	// offset 20
 	scaled_channel<int16_t, 100, 1> ambientTemp = (int16_t)0;
-	// deg C
+	// C
 	// offset 22
 	scaled_channel<int16_t, 100, 1> compressorDischargeTemp = (int16_t)0;
 	// TPS
@@ -445,7 +445,7 @@ struct output_channels_s {
 	// offset 213
 	uint8_t orderingErrorCounter = (uint8_t)0;
 	// ECU temperature
-	// deg C
+	// C
 	// offset 214
 	int8_t internalMcuTemperature = (int8_t)0;
 	// CPU usage
@@ -512,13 +512,13 @@ struct output_channels_s {
 	// offset 244
 	uint32_t firmwareVersion = (uint32_t)0;
 	// Accel: Lateral
-	// G
+	// m/s2
 	// offset 248
-	scaled_channel<int16_t, 1000, 1> accelerationLat = (int16_t)0;
+	scaled_channel<int16_t, 500, 1> accelerationLat = (int16_t)0;
 	// Accel: Longitudinal
-	// G
+	// m/s2
 	// offset 250
-	scaled_channel<int16_t, 1000, 1> accelerationLon = (int16_t)0;
+	scaled_channel<int16_t, 500, 1> accelerationLon = (int16_t)0;
 	// offset 252
 	float calibrationValue = (float)0;
 	// offset 256
@@ -539,7 +539,7 @@ struct output_channels_s {
 	// offset 266
 	uint16_t recentErrorCode[8];
 	// EGT
-	// deg C
+	// C
 	// offset 282
 	uint16_t egt[8];
 	// offset 298
@@ -547,13 +547,13 @@ struct output_channels_s {
 	// offset 299
 	uint8_t alignmentFill_at_299[1];
 	// Accel: Vertical
-	// G
+	// m/s2
 	// offset 300
-	scaled_channel<int16_t, 1000, 1> accelerationVert = (int16_t)0;
+	scaled_channel<int16_t, 500, 1> accelerationVert = (int16_t)0;
 	// Gyro: Yaw rate
 	// deg/sec
 	// offset 302
-	scaled_channel<int16_t, 1000, 1> gyroYaw = (int16_t)0;
+	scaled_channel<int16_t, 100, 1> gyroYaw = (int16_t)0;
 	// Turbocharger Speed
 	// hz
 	// offset 304

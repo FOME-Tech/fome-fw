@@ -1,21 +1,17 @@
 package com.rusefi.output;
 
-import com.rusefi.ConfigField;
-import com.rusefi.ReaderState;
-import com.rusefi.TypesHelper;
 import com.rusefi.output.variables.VariableRecord;
+import com.rusefi.util.IoUtils;
+import com.rusefi.util.LazyFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.rusefi.output.ConfigStructureImpl.ALIGNMENT_FILL_AT;
-import static com.rusefi.output.ConfigurationConsumer.UNUSED;
 import static com.rusefi.output.GetOutputValueConsumer.getHashConflicts;
 import static com.rusefi.output.GetOutputValueConsumer.wrapSwitchStatement;
 
@@ -24,9 +20,7 @@ import static com.rusefi.output.GetOutputValueConsumer.wrapSwitchStatement;
  * @see GetOutputValueConsumer
  */
 @SuppressWarnings("StringConcatenationInsideStringBufferAppend")
-public class GetConfigValueConsumer implements ConfigurationConsumer {
-    private static final String CONFIG_ENGINE_CONFIGURATION = "config->engineConfiguration.";
-    private static final String ENGINE_CONFIGURATION = "engineConfiguration.";
+public class GetConfigValueConsumer {
     static final String FILE_HEADER = "#include \"pch.h\"\n" +
             "#include \"value_lookup.h\"\n";
 
@@ -42,10 +36,6 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
 
     private final StringBuilder mdContent = new StringBuilder();
 
-    public GetConfigValueConsumer() {
-        this(null, null);
-    }
-
     public GetConfigValueConsumer(String outputFileName, String mdOutputFileName) {
         this.outputFileName = outputFileName;
         this.mdOutputFileName = mdOutputFileName;
@@ -53,52 +43,26 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
 
     public static void writeStringToFile(@Nullable String fileName, String content) throws IOException {
         if (fileName != null) {
-            FileWriter fw = new FileWriter(fileName);
-            fw.write(content);
-            fw.close();
+            LazyFile.writeIfChanged(fileName, content.getBytes(IoUtils.CHARSET));
         }
     }
 
-    @Override
-    public void handleEndStruct(ReaderState state, ConfigStructure structure) {
-        if (state.isStackEmpty()) {
-            PerFieldWithStructuresIterator iterator = new PerFieldWithStructuresIterator(state, structure.getTsFields(), "",
-                    (readerState, cf, prefix) -> processConfig(cf, prefix), ".");
-            iterator.loop();
-        }
-    }
-
-    @Override
     public void endFile() throws IOException {
         writeStringToFile(outputFileName, getContent());
         writeStringToFile(mdOutputFileName, getMdContent());
     }
 
-    private String processConfig(ConfigField cf, String prefix) {
-        if (cf.getName().contains(UNUSED) || cf.getName().contains(ALIGNMENT_FILL_AT))
-            return "";
-
-        if (cf.isArray() || cf.isFromIterate() || cf.isDirective())
-            return "";
-        if (!TypesHelper.isPrimitive(cf.getType()) && !TypesHelper.isBoolean(cf.getType())) {
-            return "";
-        }
-
-        String userName = prefix + cf.getName();
-        if (userName.startsWith(ENGINE_CONFIGURATION))
-            userName = userName.substring(ENGINE_CONFIGURATION.length());
-
-        String javaName = "config->" + prefix;
-        if (javaName.startsWith(CONFIG_ENGINE_CONFIGURATION))
-            javaName = "engineConfiguration->" + javaName.substring(CONFIG_ENGINE_CONFIGURATION.length());
-
-        variables.add(new VariableRecord(userName, javaName + cf.getName(), cf.getType(), null));
+    /**
+     * Inject a single config value, used by the new-parser driven
+     * {@code com.rusefi.newparse.outputs.ConfigValueLookupWriter}. Mirrors what
+     * {@link #processConfig} records for the legacy parser so the generated getter/setter
+     * (and markdown) are produced by the same code for both parsers.
+     */
+    public void addConfigValue(String userName, String fullName, String cType, String comment) {
+        variables.add(new VariableRecord(userName, fullName, cType, null));
 
         mdContent.append("### " + userName + "\n");
-        mdContent.append(cf.getComment() + "\n\n");
-
-
-        return "";
+        mdContent.append(comment + "\n\n");
     }
 
     @NotNull
@@ -135,6 +99,14 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
                 getterBody + GET_METHOD_FOOTER;
     }
 
+    private static boolean isFloat(String type) {
+        return "float".equals(type) ||
+                // todo: something smarter with dynamic type definition?
+                type.equalsIgnoreCase("floatms_t") ||
+                type.equalsIgnoreCase("percent_t") ||
+                type.equalsIgnoreCase("angle_t");
+    }
+
     public String getSetterBody() {
         StringBuilder switchBody = new StringBuilder();
 
@@ -142,9 +114,7 @@ public class GetConfigValueConsumer implements ConfigurationConsumer {
         HashMap<Integer, AtomicInteger> hashConflicts = getHashConflicts(variables);
 
         for (VariableRecord pair : variables) {
-
-            String cast = TypesHelper.isFloat(pair.type) ? "" : "(int)";
-
+            String cast = isFloat(pair.type) ? "" : "(int)";
 
             int hash = HashUtil.hash(pair.getUserName());
             String str = getAssignment(cast, pair.getFullName());

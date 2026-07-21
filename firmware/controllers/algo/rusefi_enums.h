@@ -102,6 +102,11 @@ typedef enum __attribute__((__packed__)) {
 
 	VVT_MAZDA_L = 19,
 
+	/**
+	 * 3 unevenly spaced teeth
+	 */
+	VVT_HONDA_K24Z_EXHAUST = 20,
+
 } vvt_mode_e;
 
 /**
@@ -305,7 +310,7 @@ enum class WssToVssMode : uint8_t {
  */
 typedef enum __attribute__((__packed__)) {
 	IMU_NONE = 0,
-	IMU_VAG = 1,
+	IMU_TYPE_1 = 1,
 	/**
 	 * f037000002
 	 * https://github.com/rusefi/rusefi_documentation/blob/master/OEM-Docs/Bosch/Data%20Sheet_68903691_Acceleration_Sensor_MM5.10.pdf

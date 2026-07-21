@@ -4,11 +4,10 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Struct;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 /**
  * As of Nov 2022 this implementation is not used in prod :(
@@ -18,8 +17,8 @@ public class OutputChannelWriter {
     private final PrintStream psDatalog;
 
     public OutputChannelWriter(String outputFile, String datalogOutputFile) throws IOException {
-        this.ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
-        this.psDatalog = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(datalogOutputFile)));
+        this.ps = new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile));
+        this.psDatalog = new PrintStreamAlwaysUnix(new LazyOutputStream(datalogOutputFile));
     }
 
     public OutputChannelWriter(PrintStream ps, PrintStream psDatalog) {
@@ -53,5 +52,10 @@ public class OutputChannelWriter {
 
     public int getSize() {
         return cumulativeSize;
+    }
+
+    public void close() {
+        ps.close();
+        psDatalog.close();
     }
 }

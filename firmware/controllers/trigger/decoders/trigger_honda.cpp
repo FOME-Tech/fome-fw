@@ -114,3 +114,27 @@ void configureHondaK_4_1(TriggerWaveform* s) {
 	s->addEvent360(353, true, TriggerWheel::T_PRIMARY);
 	s->addEvent360(360, false, TriggerWheel::T_PRIMARY);
 }
+
+/**
+ * Exhaust cam shaft on Honda K24Z, three unevenly spaced teeth.
+ * Gap ratios repeat 1.132 -> 1.644 -> 0.537, which works out to gaps of
+ * 90.2, 102.1 and 167.8 cam degrees.
+ */
+void configureHondaK24Z_exhaust(TriggerWaveform* s) {
+	s->initialize(FOUR_STROKE_CAM_SENSOR, SyncEdge::RiseOnly);
+
+	// Sync on the tooth that follows the largest gap: that tooth sees the
+	// smallest ratio (0.537) preceded by the largest one (1.644).
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 0, 0.35, 0.75); // nominal 0.537
+	s->setTriggerSynchronizationGap3(/*gapIndex*/ 1, 1.20, 2.20); // nominal 1.644
+
+	// Arbitrary phase: the last tooth is parked at the end of the cycle, real world
+	// offset is handled by the usual VVT offset setting.
+	angle_t rise[] = {80.1f, 182.2f, 350};
+
+	for (angle_t r : rise) {
+		// for VR we only handle rises so width does not matter much
+		s->addEvent360(r, true, TriggerWheel::T_PRIMARY);
+		s->addEvent360(r + 10, false, TriggerWheel::T_PRIMARY);
+	}
+}

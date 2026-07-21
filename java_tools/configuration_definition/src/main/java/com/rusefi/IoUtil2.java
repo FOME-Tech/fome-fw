@@ -43,7 +43,6 @@ public class IoUtil2 {
         return c.getValue();
     }
 
-
     static long getCrc32(List<String> inputFileNames) throws IOException {
         // get CRC32 of given input files
         long crc32 = 0;
@@ -55,5 +54,4 @@ public class IoUtil2 {
         SystemOut.println("CRC32 from all input files = " + crc32);
         return crc32;
     }
-
 }

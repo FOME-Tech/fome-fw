@@ -4,17 +4,16 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Struct;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class SdLogWriter {
     private final PrintStream ps;
 
     public SdLogWriter(String outputFile) throws IOException {
-        this(new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile))));
+        this(new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile)));
     }
 
     public SdLogWriter(PrintStream ps) {
@@ -26,17 +25,20 @@ public class SdLogWriter {
 
     public void endFile() {
         ps.println("};");
+        ps.close();
     }
 
-    public void writeSdLogs(ParseState parser, String sourceName) {
+    // baseOffset is where this struct starts within the whole output channel space, so each field's
+    // absolute offset is baseOffset + its offset within the struct.
+    public void writeSdLogs(ParseState parser, int baseOffset, String category) {
         // Assume the last struct is the one we want...
         Struct s = parser.getStructs().get(parser.getStructs().size() - 1);
 
         StructLayout sl = new StructLayout(0, "root", s);
 
-        SdLogVisitor v = new SdLogVisitor(sourceName);
+        SdLogVisitor v = new SdLogVisitor(category);
         StructNamePrefixer prefixer = new StructNamePrefixer('.');
 
-        v.visit(sl, ps, prefixer, 0, new int[0]);
+        v.visit(sl, ps, prefixer, baseOffset, new int[0]);
     }
 }

@@ -1,5 +1,11 @@
 constexpr inline const char* getSensorType(SensorType value) {
 	switch (value) {
+		case SensorType::AccelLat:
+			return "AccelLat";
+		case SensorType::AccelLon:
+			return "AccelLon";
+		case SensorType::AccelVert:
+			return "AccelVert";
 		case SensorType::AcceleratorPedal:
 			return "AcceleratorPedal";
 		case SensorType::AcceleratorPedalPrimary:
@@ -158,6 +164,8 @@ constexpr inline const char* getSensorType(SensorType value) {
 			return "WheelSpeedRF";
 		case SensorType::WheelSpeedRR:
 			return "WheelSpeedRR";
+		case SensorType::YawRate:
+			return "YawRate";
 	}
 	return "unknown";
 }

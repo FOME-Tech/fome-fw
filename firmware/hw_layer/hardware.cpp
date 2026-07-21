@@ -16,7 +16,6 @@
 #include "pin_repository.h"
 #include "max31855.h"
 #include "smart_gpio.h"
-#include "accelerometer.h"
 #include "eficonsole.h"
 #include "console_io.h"
 #include "idle_thread.h"
@@ -49,6 +48,7 @@
 
 #if EFI_CAN_SUPPORT
 #include "can_vss.h"
+#include "can_imu.h"
 #endif
 
 #if HAL_USE_SPI
@@ -328,15 +328,12 @@ void initHardware() {
 
 #if EFI_CAN_SUPPORT
 	initCan();
+	initCanImu();
 #endif /* EFI_CAN_SUPPORT */
 
 #if EFI_SHAFT_POSITION_INPUT
 	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
-
-#if EFI_MEMS
-	initAccelerometer();
-#endif
 
 #if EFI_CAN_SUPPORT
 	initCanVssSupport();

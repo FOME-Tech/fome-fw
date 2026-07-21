@@ -495,14 +495,14 @@ constexpr inline const char* getImu_type_e(imu_type_e value) {
 			return "IMU_MM5_10";
 		case IMU_NONE:
 			return "IMU_NONE";
+		case IMU_TYPE_1:
+			return "IMU_TYPE_1";
 		case IMU_TYPE_3:
 			return "IMU_TYPE_3";
 		case IMU_TYPE_4:
 			return "IMU_TYPE_4";
 		case IMU_TYPE_MB_A0065422618:
 			return "IMU_TYPE_MB_A0065422618";
-		case IMU_VAG:
-			return "IMU_VAG";
 	}
 	return "unknown";
 }
@@ -707,6 +707,8 @@ constexpr inline const char* getVvt_mode_e(vvt_mode_e value) {
 			return "VVT_BOSCH_QUICK_START";
 		case VVT_FORD_ST170:
 			return "VVT_FORD_ST170";
+		case VVT_HONDA_K24Z_EXHAUST:
+			return "VVT_HONDA_K24Z_EXHAUST";
 		case VVT_HONDA_K_EXHAUST:
 			return "VVT_HONDA_K_EXHAUST";
 		case VVT_HONDA_K_INTAKE:

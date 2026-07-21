@@ -626,6 +626,10 @@ void TriggerWaveform::initializeTriggerWaveform(
 			configureHondaK_4_1(this);
 			break;
 
+		case trigger_type_e::TT_HONDA_K24Z_CAM_3:
+			configureHondaK24Z_exhaust(this);
+			break;
+
 		case trigger_type_e::TT_HONDA_K_CRANK_12_1:
 			configureHondaK_12_1(this);
 			break;

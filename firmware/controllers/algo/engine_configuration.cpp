@@ -27,10 +27,6 @@
 
 #include "bench_test.h"
 
-#if EFI_MEMS
-#include "accelerometer.h"
-#endif
-
 #include "defaults.h"
 
 #include "bmw_m73.h"

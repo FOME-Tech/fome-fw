@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import static com.rusefi.test.newParse.NewParseHelper.parseToDatalogs;
 import static com.rusefi.test.newParse.NewParseHelper.parseToOutputChannels;
+import static com.rusefi.test.newParse.NewParseHelper.parseToSdLog;
 import static org.junit.Assert.assertEquals;
 
 public class OutputsTest {
@@ -33,6 +34,22 @@ public class OutputsTest {
                 "root_tCharge = scalar, F32, 16, \"\", 1, 0\n" +
                 "; total TS size = 20\n";
         assertEquals(expected, parseToOutputChannels(test));
+    }
+
+    @Test
+    public void autotempOutputChannel() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "int16_t autotemp coolant;;\"deg C\", 1, 0, 0, 0, 1\n" +
+                "end_struct\n";
+
+        assertEquals(
+                "#if USE_FAHRENHEIT\n" +
+                        "coolant = scalar, S16, 0, \"F\", 1.8, 17.77777777777778\n" +
+                        "#else\n" +
+                        "coolant = scalar, S16, 0, \"deg C\", 1, 0\n" +
+                        "#endif\n" +
+                        "; total TS size = 4\n", parseToOutputChannels(test));
     }
 
     @Test
@@ -86,43 +103,134 @@ public class OutputsTest {
     }
 
     @Test
-    public void generateGetOutputs() {
-        String test = "struct_no_prefix ts_outputs_s\n" +
-                "bit issue_294_31,\"si_example\",\"nada_example\"\n" +
-                "bit enableFan1WithAc;+Turn on this fan when AC is on.\n" +
-                "int hwChannel;\n" +
+    public void generateSdLogWithCategory() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "float output;Output;\"percent\", 1, 0, 0, 0, 2\n" +
+                "uint8_t vehicleSpeedKph;;\"kph\", 1, 0, 0, 0, 0\n" +
                 "end_struct\n";
-        ReaderStateImpl state = new ReaderStateImpl();
 
-        GetOutputValueConsumer outputValueConsumer = new GetOutputValueConsumer(null);
-        outputValueConsumer.conditional = "EFI_BOOST_CONTROL";
-        state.readBufferedReader(test, (outputValueConsumer));
+        // Each field is an offset-based descriptor {offset, type, multiplier, label, units, digits}.
+        // The category ("Boost") prefixes each named field, matching the ini datalog's "Category: Name".
+        // A field with no comment falls back to its bare name, with no category prefix (same as the datalog).
         assertEquals(
-                "#if !EFI_UNIT_TEST\n" +
-                "#include \"pch.h\"\n" +
-                        "#include \"value_lookup.h\"\n" +
-                        "expected<float> getOutputValueByName(const char *name) {\n" +
-                        "\tint hash = djb2lowerCase(name);\n" +
-                        "\tswitch(hash) {\n" +
-                        "#if EFI_BOOST_CONTROL\n" +
-                        "\t\tcase -1571463185:\n" +
-                        "\t\t\t// issue_294_31\n" +
-                        "\t\t\treturn (float)engine->outputChannels.issue_294_31;\n" +
-                        "#endif\n" +
-                        "#if EFI_BOOST_CONTROL\n" +
-                        "\t\tcase -298185774:\n" +
-                        "\t\t\t// enableFan1WithAc\n" +
-                        "\t\t\treturn (float)engine->outputChannels.enableFan1WithAc;\n" +
-                        "#endif\n" +
-                        "#if EFI_BOOST_CONTROL\n" +
-                        "\t\tcase -709106787:\n" +
-                        "\t\t\t// hwChannel\n" +
-                        "\t\t\treturn (float)engine->outputChannels.hwChannel;\n" +
-                        "#endif\n" +
-                        "\t}\n" +
-                        "\treturn unexpected;\n" +
-                        "}\n" +
-                        "#endif\n", outputValueConsumer.getContent());
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::F32, 1, \"Boost: Target\", \"kPa\", 1},\n" +
+                "\t{4, LogField::Type::F32, 1, \"Boost: Output\", \"percent\", 2},\n" +
+                "\t{8, LogField::Type::U08, 1, \"vehicleSpeedKph\", \"kph\", 0},\n",
+                parseToSdLog(test, 0, "Boost"));
+    }
+
+    @Test
+    public void generateSdLogNoCategoryWithBaseOffset() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "end_struct\n";
+
+        // With no category, a named field uses its bare comment (no "Category: " prefix).
+        // The base offset (where this struct starts in the output space) is added to every field offset.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{1000, LogField::Type::F32, 1, \"Target\", \"kPa\", 1},\n",
+                parseToSdLog(test, 1000, null));
+    }
+
+    @Test
+    public void generateSdLogArray() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "uint8_t[2 iterate] knock;;\"v\", 1, 0, 0, 0, 0\n" +
+                "uint16_t[2 iterate] withName;MyName;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "end_struct\n";
+
+        // Array elements step the offset by the element size and get a " N" (1-based) suffix on the label.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::U08, 1, \"knock 1\", \"v\", 0},\n" +
+                "\t{1, LogField::Type::U08, 1, \"knock 2\", \"v\", 0},\n" +
+                "\t{2, LogField::Type::U16, 1, \"Cat: MyName 1\", \"kPa\", 1},\n" +
+                "\t{4, LogField::Type::U16, 1, \"Cat: MyName 2\", \"kPa\", 1},\n",
+                parseToSdLog(test, 0, "Cat"));
+    }
+
+    @Test
+    public void generateSdLogEnum() throws IOException {
+        String test =
+                "#define mode_e_enum \"a\", \"b\", \"c\"\n" +
+                "custom mode_e 1 bits, U08, @OFFSET@, [0:1], @@mode_e_enum@@\n" +
+                "struct_no_prefix total\n" +
+                "mode_e myMode;My mode\n" +
+                "end_struct\n";
+
+        // Enums are logged as plain integers (multiplier 1, no units, 0 digits), with the category prefix.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::U08, 1, \"Cat: My mode\", \"\", 0},\n",
+                parseToSdLog(test, 0, "Cat"));
+    }
+
+    @Test
+    public void generateSdLogNestedStruct() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "    struct pid_status_s\n" +
+                "    \tfloat iTerm;;\"v\", 1, 0, 0, 0, 4\n" +
+                "    end_struct\n" +
+                "\tpid_status_s alternatorStatus\n" +
+                "end_struct\n";
+
+        // Nested structs contribute a dotted prefix to the fallback label; the offset is the field's
+        // absolute offset within the output space.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::F32, 1, \"alternatorStatus.iTerm\", \"v\", 4},\n",
+                parseToSdLog(test, 0, "Cat"));
+    }
+
+    @Test
+    public void generateSdLogStructArray() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "    struct pid_status_s\n" +
+                "    \tfloat iTerm;;\"v\", 1, 0, 0, 0, 4\n" +
+                "    end_struct\n" +
+                "\tpid_status_s[2 iterate] statuses\n" +
+                "end_struct\n";
+
+        // Arrays of structs step the offset by the struct size; the label carries the 1-based index.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::F32, 1, \"statuses1.iTerm\", \"v\", 4},\n" +
+                "\t{4, LogField::Type::F32, 1, \"statuses2.iTerm\", \"v\", 4},\n",
+                parseToSdLog(test, 0, null));
+    }
+
+    @Test
+    public void generateSdLogBitFields() throws IOException {
+        String test =
+                "struct_no_prefix total\n" +
+                "float target;Target;\"kPa\", 1, 0, 0, 0, 1\n" +
+                "bit unusedBit\n" +
+                "bit someFlag;a flag\n" +
+                "end_struct\n";
+
+        // "unused" scalars are still skipped; each remaining bit becomes a single-bit field
+        // {wordOffset, bitIndex, label}. The unused bit is not emitted but still advances the bit
+        // index, so someFlag is bit 1. Bits carry the category prefix like other datalog entries.
+        assertEquals(
+                "static constexpr LogField fields[] = {\n" +
+                "\t{packedTime, GAUGE_NAME_TIME, \"sec\", 0},\n" +
+                "\t{0, LogField::Type::F32, 1, \"Boost: Target\", \"kPa\", 1},\n" +
+                "\t{4, 1, \"Boost: a flag\"},\n",
+                parseToSdLog(test, 0, "Boost"));
     }
 
     @Test
@@ -142,20 +250,6 @@ public class OutputsTest {
                 "entry = idleStatus_iTerm,\"idleStatus_iTerm\",float,\"%.4f\"\n" +
                 "entry = idleStatus_dTerm,\"idleStatus_dTerm\",float,\"%.4f\"\n",
                 parseToDatalogs(test));
-    }
-
-    @Test
-    public void testLongTooltipsIterate() {
-        ReaderStateImpl state = new ReaderStateImpl();
-        String test = "struct total\n" +
-                "\tint[3 iterate] triggerSimulatorPins;Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different.\n" +
-                "end_struct\n";
-        TestTSProjectConsumer tsProjectConsumer = new TestTSProjectConsumer("", state);
-        state.readBufferedReader(test, tsProjectConsumer);
-        assertEquals(
-"\ttriggerSimulatorPins1 = \"Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different. 1\"\n" +
-        "\ttriggerSimulatorPins2 = \"Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different. 2\"\n" +
-        "\ttriggerSimulatorPins3 = \"Each rusEFI piece can provide synthetic trigger signal for external ECU. Sometimes these wires are routed back into trigger inputs of the same rusEFI board.\\nSee also directSelfStimulation which is different. 3\"\n", tsProjectConsumer.getSettingContextHelpForUnitTest());
     }
 
     @Test(expected = IllegalStateException.class)

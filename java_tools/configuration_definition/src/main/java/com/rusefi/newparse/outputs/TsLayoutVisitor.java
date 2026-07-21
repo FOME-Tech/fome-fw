@@ -1,6 +1,8 @@
 package com.rusefi.newparse.outputs;
 
 import com.rusefi.newparse.layout.*;
+import com.rusefi.newparse.parsing.EnumValues;
+import com.rusefi.newparse.parsing.FieldOptions;
 
 import java.io.PrintStream;
 
@@ -20,9 +22,16 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         visit(struct, ps, prefixer, offsetAdd, struct.name);
     }
 
-    private static void writeEnumVal(PrintStream ps, String enumVal) {
+    private static void writeEnumVal(PrintStream ps, EnumValues values, int i) {
+        // Compacted enums list the numeric value of each name explicitly, since the names aren't
+        // contiguous - see EnumValues.
+        if (values.indices != null) {
+            ps.print(values.indices[i]);
+            ps.print('=');
+        }
+
         ps.print('"');
-        ps.print(enumVal);
+        ps.print(values.names[i]);
         ps.print('"');
     }
 
@@ -40,11 +49,11 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.print(e.endBit);
         ps.print("], ");
 
-        writeEnumVal(ps, e.values[0]);
+        writeEnumVal(ps, e.values, 0);
 
-        for (int i = 1; i < e.values.length; i++) {
+        for (int i = 1; i < e.values.size(); i++) {
             ps.print(", ");
-            writeEnumVal(ps, e.values[i]);
+            writeEnumVal(ps, e.values, i);
         }
 
         ps.println();
@@ -68,7 +77,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         }
     }
 
-    private void printBeforeArrayLength(ScalarLayout scalar, PrintStream ps, TsMetadata meta, StructNamePrefixer prefixer, String fieldType, int offsetAdd) {
+    private void printBeforeArrayLength(ScalarLayout scalar, PrintStream ps, TsMetadata meta, StructNamePrefixer prefixer, String fieldType, int offsetAdd, boolean addComment) {
         String name = prefixer.get(scalar.name);
         ps.print(name);
         ps.print(" = " + fieldType + ", ");
@@ -77,33 +86,25 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.print(scalar.offset + offsetAdd);
         ps.print(", ");
 
-        meta.addComment(name, scalar.options.comment);
+        if (addComment) {
+            meta.addComment(name, scalar.options.comment);
+        }
     }
 
-    private void printAfterArrayLength(ScalarLayout scalar, PrintStream ps) {
-        scalar.options.printTsFormat(ps);
+    private void printAfterArrayLength(FieldOptions options, PrintStream ps) {
+        options.printTsFormat(ps);
 
         ps.println();
     }
 
-
-    @Override
-    public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+    // Emit a single TS field line (plain scalar or array) using the given display options.
+    private void emitField(ScalarLayout scalar, FieldOptions options, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims, boolean addComment) {
         if (arrayDims.length == 0) {
             // plain scalar, not array
-            printBeforeArrayLength(scalar, ps, meta, prefixer, "scalar", offsetAdd);
-            printAfterArrayLength(scalar, ps);
+            printBeforeArrayLength(scalar, ps, meta, prefixer, "scalar", offsetAdd, addComment);
+            printAfterArrayLength(options, ps);
         } else {
-            if (arrayDims[0] == 0) {
-                // Skip zero length arrays, they may be used for dynamic padding but TS doesn't like them
-                return;
-            } else if (arrayDims[0] == 1) {
-                // For 1-length arrays, emit as a plain scalar instead
-                visit(scalar, ps, prefixer, offsetAdd, new int[0]);
-                return;
-            }
-
-            printBeforeArrayLength(scalar, ps, meta, prefixer, "array", offsetAdd);
+            printBeforeArrayLength(scalar, ps, meta, prefixer, "array", offsetAdd, addComment);
             ps.print("[");
             ps.print(arrayDims[0]);
 
@@ -118,7 +119,34 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
             ps.print("], ");
 
-            printAfterArrayLength(scalar, ps);
+            printAfterArrayLength(options, ps);
+        }
+    }
+
+    @Override
+    public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+        if (arrayDims.length != 0) {
+            if (arrayDims[0] == 0) {
+                // Skip zero length arrays, they may be used for dynamic padding but TS doesn't like them
+                return;
+            } else if (arrayDims[0] == 1) {
+                // For 1-length arrays, emit as a plain scalar instead
+                visit(scalar, ps, prefixer, offsetAdd, new int[0]);
+                return;
+            }
+        }
+
+        if (scalar.autotemp) {
+            // Emit both a Fahrenheit and a Celsius variant of the same field, guarded by the
+            // USE_FAHRENHEIT preprocessor symbol. TunerStudio picks one based on the user's unit
+            // choice; Celsius is the default (#else) when USE_FAHRENHEIT is not defined.
+            ps.println("#if USE_FAHRENHEIT");
+            emitField(scalar, scalar.options.celsiusToFahrenheit(), ps, prefixer, offsetAdd, arrayDims, false);
+            ps.println("#else");
+            emitField(scalar, scalar.options, ps, prefixer, offsetAdd, arrayDims, true);
+            ps.println("#endif");
+        } else {
+            emitField(scalar, scalar.options, ps, prefixer, offsetAdd, arrayDims, true);
         }
     }
 

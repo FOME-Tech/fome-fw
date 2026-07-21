@@ -12,12 +12,14 @@ public class ScalarLayout extends Layout {
     public final Type type;
     public final FieldOptions options;
     public final boolean autoscale;
+    public final boolean autotemp;
 
     public ScalarLayout(ScalarField field) {
         this.name = field.name;
         this.options = field.options;
         this.type = field.type;
         this.autoscale = field.autoscale;
+        this.autotemp = field.autotemp;
     }
 
     @Override

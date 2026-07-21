@@ -1,17 +1,17 @@
 package com.rusefi;
 
 import com.rusefi.newparse.ParseState;
-import com.rusefi.newparse.outputs.CStructWriter;
-import com.rusefi.newparse.outputs.JavaFieldsWriter;
-import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
-import com.rusefi.newparse.outputs.TsWriter;
+import com.rusefi.newparse.layout.StructLayout;
+import com.rusefi.newparse.outputs.*;
 import com.rusefi.newparse.parsing.Definition;
-import com.rusefi.output.*;
 import com.rusefi.pinout.PinoutLogic;
 import com.rusefi.trigger.TriggerWheelTSLogic;
 import com.rusefi.util.SystemOut;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,7 +23,6 @@ public class ConfigDefinition {
     private static final String KEY_TS_TEMPLATE = "-ts_template";
     private static final String KEY_C_DESTINATION = "-c_destination";
     private static final String KEY_C_DEFINES = "-c_defines";
-    public static final String KEY_WITH_C_DEFINES = "-with_c_defines";
     private static final String KEY_JAVA_DESTINATION = "-java_destination";
     public static final String KEY_PREPEND = "-prepend";
     private static final String KEY_ZERO_INIT = "-initialize_to_zero";
@@ -60,6 +59,7 @@ public class ConfigDefinition {
 
         SystemOut.println(ConfigDefinition.class + " Invoked with " + Arrays.toString(args) + " from " + Paths.get("").toAbsolutePath());
 
+        String definitionFile = null;
         String tsTemplateFile = null;
         String destCDefinesFileName = null;
         String cHeaderDestination = null;
@@ -68,6 +68,7 @@ public class ConfigDefinition {
         String makefileDepsDestination = null;
         String stampFile = null;
         String fieldLookupFile = null;
+        String fieldLookupMdFile = null;
         // we postpone reading so that in case of cache hit we do less work
         String triggersInputFolder = null;
         List<String> enumInputFiles = new ArrayList<>();
@@ -75,42 +76,39 @@ public class ConfigDefinition {
         PinoutLogic pinoutLogic = null;
         String branchName = null;
         String shortBoardName = null;
+        final List<String> inputFiles = new ArrayList<>();
+        final List<String> prependFiles = new ArrayList<>();
 
-        ParseState parseState = new ParseState(state.getEnumsReader());
+        final VariableRegistry variableRegistry = new VariableRegistry();
+        final ParseState parseState = new ParseState(state.getEnumsReader());
 
         for (int i = 0; i < args.length - 1; i += 2) {
             String key = args[i];
             switch (key) {
                 case KEY_DEFINITION:
-                    // lame: order of command line arguments is important, these arguments should be AFTER '-tool' argument
-                    state.setDefinitionInputFile(args[i + 1]);
+                    definitionFile = args[i + 1];
+                    inputFiles.add(definitionFile);
                     break;
                 case KEY_TS_TEMPLATE:
                     tsTemplateFile = args[i + 1];
+                    inputFiles.add(tsTemplateFile);
                     break;
                 case KEY_C_DESTINATION:
                     cHeaderDestination = args[i + 1];
-                    state.addCHeaderDestination(args[i + 1]);
                     break;
                 case KEY_ZERO_INIT:
                     needZeroInit = Boolean.parseBoolean(args[i + 1]);
-                    break;
-                case KEY_WITH_C_DEFINES:
-                    state.setWithC_Defines(Boolean.parseBoolean(args[i + 1]));
                     break;
                 case KEY_C_DEFINES:
                     destCDefinesFileName = args[i + 1];
                     break;
                 case KEY_JAVA_DESTINATION:
                     javaFieldsDestination = args[i + 1];
-                    state.addJavaDestination(args[i + 1]);
                     break;
                 case "-field_lookup_file": {
-                    String cppFile = args[i + 1];
-                    fieldLookupFile = cppFile;
-                    String mdFile = args[i + 2];
+                    fieldLookupFile = args[i + 1];
+                    fieldLookupMdFile = args[i + 2];
                     i++;
-                    state.addDestination(new GetConfigValueConsumer(cppFile, mdFile));
                 }
                     break;
                 case "-readfile":
@@ -118,30 +116,32 @@ public class ConfigDefinition {
                     // yes, we take three parameters here thus pre-increment!
                     String fileName = args[++i + 1];
                     try {
-                        parseState.addDefinition(state.getVariableRegistry(), keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
+                        parseState.addDefinition(variableRegistry, keyName, IoUtil2.readFile(fileName), Definition.OverwritePolicy.NotAllowed);
                     } catch (RuntimeException e) {
                         throw new IllegalStateException("While processing " + fileName, e);
                     }
-                    state.addInputFile(fileName);
+                    inputFiles.add(fileName);
                     break;
                 case "-triggerInputFolder":
                     triggersInputFolder = args[i + 1];
                     break;
-                case KEY_PREPEND:
-                    state.addPrepend(args[i + 1].trim());
+                case KEY_PREPEND: {
+                    String prependFile = args[i + 1].trim();
+                    prependFiles.add(prependFile);
+                    inputFiles.add(prependFile);
                     break;
-                case EnumToString.KEY_ENUM_INPUT_FILE:
+                } case EnumToString.KEY_ENUM_INPUT_FILE:
                     enumInputFiles.add(args[i + 1]);
                     break;
                 case "-ts_output_name":
                     tsIniDestination = args[i + 1];
-                    state.setTsFileOutputName(args[i + 1]);
                     break;
                 case KEY_BOARD_NAME:
                     String boardName = args[i + 1];
                     pinoutLogic = PinoutLogic.create(boardName);
-                    for (String inputFile : pinoutLogic.getInputFiles())
-                        state.addInputFile(inputFile);
+                    for (String inputFile : pinoutLogic.getInputFiles()) {
+                        inputFiles.add(inputFile);
+                    }
                     break;
                 case "-branch":
                     branchName = args[i + 1];
@@ -158,15 +158,10 @@ public class ConfigDefinition {
             }
         }
 
-        if (tsTemplateFile != null) {
-            // used to update .ini files
-            state.addInputFile(tsTemplateFile);
-        }
-
         if (!enumInputFiles.isEmpty()) {
             for (String ef : enumInputFiles) {
-                state.read(new FileReader(ef));
-                state.addInputFile(ef);
+                state.read(variableRegistry, new FileReader(ef));
+                inputFiles.add(ef);
             }
 
             SystemOut.println(state.getEnumsReader().getEnums().size() + " total enumsReader");
@@ -176,13 +171,13 @@ public class ConfigDefinition {
 
         {
             // Add the variable for the config signature
-            String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(state.getInputFiles())));
-            parseState.addDefinition(state.getVariableRegistry(), "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
+            String signature = buildSignature(branchName, shortBoardName, Long.toString(IoUtil2.getCrc32(inputFiles)));
+            parseState.addDefinition(variableRegistry, "TS_SIGNATURE", signature, Definition.OverwritePolicy.NotAllowed);
             System.out.println("Signature: " + signature);
         }
 
         if (triggersInputFolder != null) {
-            state.addInputFile(triggersInputFolder + File.separator + "triggers.txt");
+            inputFiles.add(triggersInputFolder + File.separator + "triggers.txt");
         }
 
         if (makefileDepsDestination != null) {
@@ -199,14 +194,14 @@ public class ConfigDefinition {
                 if (fieldLookupFile != null) {
                     outputFiles.add(fieldLookupFile);
                 }
-                writeMakefileDependencyFile(state.getInputFiles(), depTarget, makefileDepsDestination, outputFiles);
+                writeMakefileDependencyFile(inputFiles, depTarget, makefileDepsDestination, outputFiles);
             }
         }
 
-        new TriggerWheelTSLogic().execute(triggersInputFolder, state.getVariableRegistry());
+        new TriggerWheelTSLogic().execute(triggersInputFolder, variableRegistry);
 
         if (pinoutLogic != null) {
-            pinoutLogic.registerBoardSpecificPinNames(state.getVariableRegistry(), parseState, state.getEnumsReader());
+            pinoutLogic.registerBoardSpecificPinNames(variableRegistry, parseState, state.getEnumsReader());
         }
 
         // Parse the input files
@@ -216,7 +211,7 @@ public class ConfigDefinition {
                 // Ignore duplicates of definitions made during prepend phase
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.IgnoreNew);
 
-                for (String prependFile : state.getPrependFiles()) {
+                for (String prependFile : prependFiles) {
                     RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), prependFile);
                 }
             }
@@ -225,35 +220,56 @@ public class ConfigDefinition {
             {
                 // don't allow duplicates in the main file
                 parseState.setDefinitionPolicy(Definition.OverwritePolicy.NotAllowed);
-                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), state.getDefinitionInputFile());
+                RusefiParseErrorStrategy.parseDefinitionFile(parseState.getListener(), definitionFile);
             }
 
             // Write C structs
             CStructWriter cStructs = new CStructWriter();
-            cStructs.writeCStructs(parseState, cHeaderDestination + ".test");
+            cStructs.writeCStructs(parseState, cHeaderDestination);
 
             // Write tunerstudio layout
             TsWriter writer = new TsWriter();
-            writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination + ".test");
+            writer.writeTunerstudio(parseState, tsTemplateFile, tsIniDestination);
 
-            // Write Java fields
-            JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination + ".test", 0);
-            javaWriter.writeDefinitions(parseState.getDefinitions());
-            javaWriter.writeFields(parseState);
-            javaWriter.finish();
+            // Total config page size, consumed by rusefi_generated.h (firmware static_assert) and
+            // Fields.java (java console). Previously registered by TSProjectConsumer.handleEndStruct,
+            // which the new TsWriter replaces.
+            int totalConfigSize = new StructLayout(0, "root", parseState.getLastStruct()).getSize();
+            variableRegistry.register("TOTAL_CONFIG_SIZE", totalConfigSize);
+
+            // Bridge the new parser's #define values into the variable registry, which derives the
+            // C defines (rusefi_generated.h) and the Java constants (Fields.java). _char/_hex/_16_hex
+            // are synthesized by VariableRegistry.register itself, so skip the parser's own copies.
+            for (Map.Entry<String, Definition> def : parseState.getDefinitions().entrySet()) {
+                String defName = def.getKey();
+                if (defName.endsWith("_char")
+                        || defName.endsWith(VariableRegistry._HEX_SUFFIX)
+                        || defName.endsWith(VariableRegistry._16_HEX_SUFFIX)) {
+                    continue;
+                }
+                if (def.getValue().isMultilineString()) {
+                    continue;
+                }
+                variableRegistry.register(defName, def.getValue().toString());
+            }
+
+            // Write Java fields: constants from the registry (typed correctly), field offsets from
+            // the new layout.
+            if (javaFieldsDestination != null) {
+                JavaFieldsWriter javaWriter = new JavaFieldsWriter(javaFieldsDestination, 0);
+                javaWriter.writeRawDefinitions(variableRegistry.getJavaConstants());
+                javaWriter.writeFields(parseState);
+                javaWriter.finish();
+            }
+
+            // Write the Lua value_lookup (getConfigValueByName / setConfigValueByName)
+            if (fieldLookupFile != null) {
+                new ConfigValueLookupWriter(fieldLookupFile, fieldLookupMdFile).write(parseState);
+            }
         }
-
-        if (tsTemplateFile != null) {
-            state.addDestination(new TSProjectConsumer(tsTemplateFile, state));
-        }
-
-        if (state.isDestinationsEmpty())
-            throw new IllegalArgumentException("No destinations specified");
-
-        state.doJob();
 
         if (destCDefinesFileName != null) {
-            ExtraUtil.writeDefinesToFile(state.getVariableRegistry(), destCDefinesFileName);
+            ExtraUtil.writeDefinesToFile(variableRegistry, destCDefinesFileName);
         }
     }
 
@@ -292,7 +308,7 @@ public class ConfigDefinition {
         Path mkPath = depDir.resolve("generated_config_outputs.mk");
         PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(mkPath));
 
-        f.print("GENERATED_FILES +=");
+        f.print("CONFIG_GENERATED_FILES +=");
         for (String output : outputFiles) {
             f.print(" \\\n\t" + output);
         }

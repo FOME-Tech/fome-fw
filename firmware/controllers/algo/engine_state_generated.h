@@ -78,7 +78,7 @@ static_assert(offsetof(LuaAdjustments, fuelAdd) == 0);
 static_assert(offsetof(LuaAdjustments, fuelMult) == 4);
 struct speed_density_s {
 	// Air: Charge temperature estimate
-	// deg C
+	// C
 	// offset 0
 	scaled_channel<int16_t, 100, 1> tCharge = (int16_t)0;
 	// offset 2

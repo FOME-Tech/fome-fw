@@ -1,6 +1,8 @@
 package com.rusefi.pinout;
 
 import com.devexperts.logging.Logging;
+import com.rusefi.util.IoUtils;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -57,6 +59,7 @@ public class FileSystemBoardInputsImpl implements BoardInputs {
 
     @Override
     public Writer getWriter() throws IOException {
-        return new FileWriter(boardName + PinoutLogic.CONNECTORS + File.separator + "generated_ts_name_by_pin.cpp");
+        String path = boardName + PinoutLogic.CONNECTORS + File.separator + "generated_ts_name_by_pin.cpp";
+        return new OutputStreamWriter(new LazyOutputStream(path), IoUtils.CHARSET);
     }
 }

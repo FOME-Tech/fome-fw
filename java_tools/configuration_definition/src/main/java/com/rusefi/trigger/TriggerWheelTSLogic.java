@@ -56,7 +56,7 @@ public class TriggerWheelTSLogic {
     }
 
     private void appendOrIfNotEmpty(StringBuilder triggerTypesWithSecondWheel) {
-        if (triggerTypesWithSecondWheel.length() > 0)
+        if (!triggerTypesWithSecondWheel.isEmpty())
             triggerTypesWithSecondWheel.append(" || ");
     }
 }

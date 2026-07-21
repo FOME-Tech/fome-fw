@@ -182,6 +182,47 @@ TEST(CanWideband, DecodeRusefiStandard) {
 	EXPECT_FLOAT_EQ(-1, Sensor::get(SensorType::Lambda1).value_or(-1));
 }
 
+TEST(CanWideband, AliveTimerTracksAnyFrame) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;
+
+	AemXSeriesWideband dut(0, SensorType::Lambda1);
+	dut.Register();
+
+	// Nothing received yet - definitely stale
+	dut.updateTimeSinceLastFrame();
+	EXPECT_GT(dut.timeSinceLastFrame, 5);
+
+	CANRxFrame frame;
+	frame.SID = 0x190;
+	frame.IDE = false;
+	frame.DLC = 8;
+
+	for (int i = 0; i < 8; i++) {
+		frame.data8[i] = 0;
+	}
+
+	frame.data8[0] = RUSEFI_WIDEBAND_VERSION;
+	frame.data8[1] = 0; // invalid lambda, but still a real frame from the controller
+
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
+	dut.updateTimeSinceLastFrame();
+	EXPECT_EQ(dut.timeSinceLastFrame, 0);
+
+	// Even though lambda is invalid, the controller is still "alive" right after the frame
+	eth.moveTimeForwardSec(3);
+	dut.updateTimeSinceLastFrame();
+	EXPECT_EQ(dut.timeSinceLastFrame, 3);
+
+	// A diag-only frame (low bit of ID set) doesn't touch lambda, but still counts as "alive"
+	frame.SID = 0x191;
+	dut.processFrame(CanBusIndex::Bus0, frame, getTimeNowNt());
+	dut.updateTimeSinceLastFrame();
+	EXPECT_EQ(dut.timeSinceLastFrame, 0);
+
+	Sensor::resetRegistry();
+}
+
 TEST(CanWideband, DecodeRusefiStandardWrongVersion) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->widebandMode = WidebandMode::FOMEInternal;

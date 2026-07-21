@@ -25,6 +25,7 @@ Bit: 'bit';
 Array: 'array';
 Scalar: 'scalar';
 Autoscale: 'autoscale';
+Autotemp: 'autotemp';
 Resizable: 'resizable';
 
 ArrayDimensionSeparator: 'x';
@@ -95,8 +96,8 @@ fieldOptionsList
 
 arrayLengthSpec: numexpr (ArrayDimensionSeparator numexpr)?;
 
-scalarField: identifier Autoscale? identifier (fieldOptionsList)?;
-arrayField: identifier '[' arrayLengthSpec Iterate? ']' Autoscale? identifier SemicolonedString? (fieldOptionsList)?;
+scalarField: identifier (Autoscale Autotemp? | Autotemp Autoscale?)? identifier (fieldOptionsList)?;
+arrayField: identifier '[' arrayLengthSpec Iterate? ']' (Autoscale Autotemp? | Autotemp Autoscale?)? identifier SemicolonedString? (fieldOptionsList)?;
 bitField: Bit identifier (',' QuotedString ',' QuotedString)? ('(' 'comment' ':' QuotedString ')')? SemicolonedSuffix?;
 
 unionField: 'union' ENDL+ fields 'end_union';
@@ -123,7 +124,9 @@ fields
 // Indicates X bytes of free space
 unusedField: Unused integer;
 
-enumVal: QuotedString | integer;
+// the "integer '=' QuotedString" form is a compacted enum, where each name is explicitly paired
+// with its numeric value instead of the name's position implying it
+enumVal: integer '=' QuotedString | QuotedString | integer;
 
 enumRhs
     : replacementIdent

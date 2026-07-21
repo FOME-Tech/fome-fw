@@ -3,15 +3,14 @@ package com.rusefi.newparse.outputs;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.parsing.Struct;
+import com.rusefi.util.LazyOutputStream;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class CStructWriter {
     public void writeCStructs(ParseState parser, String outputFile) throws IOException {
-        writeCStructs(parser, new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile))));
+        writeCStructs(parser, new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile)));
     }
 
     public void writeCStructs(ParseState parser, PrintStream ps) {

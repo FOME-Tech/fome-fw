@@ -153,6 +153,57 @@ public class LayoutTest {
     }
 
     @Test
+    public void autotempScalar() throws IOException {
+        String input = "struct_no_prefix myStruct\n" +
+                "int32_t autotemp fanOnTemperature;my comment;\"deg C\", 1, 0, 0, 150, 0\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "#if USE_FAHRENHEIT\n" +
+                        "fanOnTemperature = scalar, S32, 0, \"F\", 1.8, 17.77777777777778, 32, 302, 0\n" +
+                        "#else\n" +
+                        "fanOnTemperature = scalar, S32, 0, \"deg C\", 1, 0, 0, 150, 0\n" +
+                        "#endif\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n" +
+                        "\tfanOnTemperature = \"my comment\"\n", parseToTs(input));
+    }
+
+    @Test
+    public void autotempArray() throws IOException {
+        String input = "struct_no_prefix myStruct\n" +
+                "int8_t[4] autotemp cltBins;bins;\"C\", 1, 0, -40, 120, 0\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "#if USE_FAHRENHEIT\n" +
+                        "cltBins = array, S08, 0, [4], \"F\", 1.8, 17.77777777777778, -40, 248, 0\n" +
+                        "#else\n" +
+                        "cltBins = array, S08, 0, [4], \"C\", 1, 0, -40, 120, 0\n" +
+                        "#endif\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n" +
+                        "\tcltBins = \"bins\"\n", parseToTs(input));
+    }
+
+    @Test
+    public void autotempEitherKeywordOrder() throws IOException {
+        // autoscale and autotemp may appear in either order
+        String scaleFirst = "struct_no_prefix myStruct\n" +
+                "int autoscale autotemp t;;\"C\", 0.01, 0, -40, 200, 1\n" +
+                "end_struct";
+        String tempFirst = "struct_no_prefix myStruct\n" +
+                "int autotemp autoscale t;;\"C\", 0.01, 0, -40, 200, 1\n" +
+                "end_struct";
+
+        Assert.assertEquals(parseToTs(scaleFirst), parseToTs(tempFirst));
+    }
+
+    @Test
     public void singleFieldMultiDimArray() throws IOException {
         String ts = parseToTs("struct_no_prefix myStruct\n" +
                 "int8_t[10 x 5] abc;;\"\", 1, 2, 3, 4, 5\n" +
@@ -304,6 +355,42 @@ public class LayoutTest {
                         "withOpt = bits, U32, 0, [2:2]\n" +
                         "; total TS size = 4\n"
                 , parseToOutputChannels(input));
+    }
+
+    @Test
+    public void denseEnum() throws IOException {
+        String input = "#define my_enum \"one\", \"two\", \"three\"\n" +
+                "custom my_e 1 bits, U08, @OFFSET@, [0:1], @@my_enum@@\n" +
+                "struct_no_prefix myStruct\n" +
+                "my_e myField;\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "myField = bits, U08, 0, [0:1], \"one\", \"two\", \"three\"\n" +
+                        "; unused 3 bytes at offset 1\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n", parseToTs(input));
+    }
+
+    @Test
+    public void compactedEnum() throws IOException {
+        // Compacted enums explicitly pair each name with its numeric value, since only a sparse
+        // subset of the underlying enum's values are listed.
+        String input = "#define my_enum 0=\"NONE\",98=\"Digital 1\",76=\"Digital 3, or maybe 4\"\n" +
+                "custom my_e 2 bits, U16, @OFFSET@, [0:7], @@my_enum@@\n" +
+                "struct_no_prefix myStruct\n" +
+                "my_e myField;\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "myField = bits, U16, 0, [0:7], 0=\"NONE\", 98=\"Digital 1\", 76=\"Digital 3, or maybe 4\"\n" +
+                        "; unused 2 bytes at offset 2\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n", parseToTs(input));
     }
 
     @Test

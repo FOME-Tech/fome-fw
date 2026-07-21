@@ -5,10 +5,11 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.*;
 import com.rusefi.newparse.parsing.Definition;
 import com.rusefi.newparse.parsing.Struct;
+import com.rusefi.util.LazyOutputStream;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,7 +20,7 @@ public class JavaFieldsWriter {
     private final int baseOffset;
 
     public JavaFieldsWriter(final String outputFile, int baseOffset) throws IOException {
-        ps = new PrintStreamAlwaysUnix(Files.newOutputStream(Paths.get(outputFile)));
+        ps = new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile));
         this.baseOffset = baseOffset;
 
         String className = new File(outputFile).getName();
@@ -33,6 +34,15 @@ public class JavaFieldsWriter {
     public void finish() {
         ps.println("}");
         ps.close();
+    }
+
+    /**
+     * Write a pre-rendered block of Java constants (as produced by
+     * {@code VariableRegistry.getJavaConstants()}). Used in place of {@link #writeDefinitions}
+     * so the constants are typed by the registry rather than re-derived here.
+     */
+    public void writeRawDefinitions(final String javaConstants) {
+        ps.print(javaConstants);
     }
 
     public void writeDefinitions(final Map<String, Definition> defs) {
@@ -144,12 +154,29 @@ public class JavaFieldsWriter {
             // ignore bits in the java writer
         }
 
+        public void visit(UnionLayout union, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+            // union members all share the same offset
+            union.children.forEach(c -> c.visit(this, ps, prefixer, offsetAdd, new int[0]));
+        }
+
         public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
             // ignore enums in the java writer
         }
 
         public void visit(StringLayout str, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-            // ignore strings in the java writer
+            if (arrayDims.length > 0) {
+                return;
+            }
+            String name = prefixer.get(str.name.toUpperCase());
+            ps.print("\tpublic static final Field ");
+            ps.print(name);
+            ps.print(" = Field.create(\"");
+            ps.print(name);
+            ps.print("\", ");
+            ps.print(str.offset + offsetAdd);
+            ps.print(", FieldType.STRING).setBaseOffset(");
+            ps.print(baseOffset);
+            ps.println(");");
         }
     }
 }

@@ -25,6 +25,8 @@ void initFluidPressure();
 void initThermistors();
 void initCanSensors();
 void initLambda();
+// Refresh each wideband's "time since last CAN frame" - call periodically, not on frame receipt
+void updateWidebandAliveTimers();
 void initFlexSensor();
 void initFuelLevel();
 void initBaro();

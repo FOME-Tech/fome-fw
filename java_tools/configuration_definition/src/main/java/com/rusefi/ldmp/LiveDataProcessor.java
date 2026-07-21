@@ -6,13 +6,13 @@ import com.rusefi.InvokeReader;
 import com.rusefi.RusefiParseErrorStrategy;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.outputs.*;
-import com.rusefi.newparse.outputs.PrintStreamAlwaysUnix;
 import com.rusefi.newparse.parsing.Definition;
+import com.rusefi.util.IoUtils;
+import com.rusefi.util.LazyFile;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -79,10 +79,8 @@ public class LiveDataProcessor {
 
         log.info("TS_TOTAL_OUTPUT_SIZE=" + sensorTsPosition);
         String totalLiveDataFile = "generated/total_live_data_generated.h";
-        try (FileWriter fw = new FileWriter(totalLiveDataFile)) {
-            fw.write(header);
-            fw.write("#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition);
-        }
+        LazyFile.writeIfChanged(totalLiveDataFile,
+                (header + "#define TS_TOTAL_OUTPUT_SIZE " + sensorTsPosition).getBytes(IoUtils.CHARSET));
         liveDataProcessor.outputFiles.add(totalLiveDataFile);
 
         if (makefileDepsDestination != null) {
@@ -91,7 +89,7 @@ public class LiveDataProcessor {
     }
 
     interface EntryHandler {
-        void onEntry(String name, String javaName, String folder, String prepend, String[] outputNames, String constexpr, String conditional, Boolean isPtr) throws IOException;
+        void onEntry(String name, String javaName, String folder, String prepend, String[] outputNames, String conditional) throws IOException;
     }
 
     private int handleYaml(Map<String, Object> data) throws IOException {
@@ -104,7 +102,7 @@ public class LiveDataProcessor {
 
         OutputLookupWriter outputLookupWriter = new OutputLookupWriter("generated/output_lookup_generated.cpp", "getOutputValueByName");
 
-        EntryHandler handler = (name, javaName, folder, prepend, outputNames, constexpr, conditional, isPtr) -> {
+        EntryHandler handler = (name, javaName, folder, prepend, outputNames, conditional) -> {
             int startingPosition = outputChannelWriter.getSize();
             log.info("Starting " + name + " at " + startingPosition + " with [" + conditional + "]");
 
@@ -140,19 +138,27 @@ public class LiveDataProcessor {
                     javaWriter.finish();
                 }
 
+                // Offset of this usage within the whole output channel space, before any instances
+                // are written. Used to address fields by offset in the SD log and value lookup.
+                int usageBaseOffset = outputChannelWriter.getSize();
+
+                // SD log: one set of entries per output_name instance (full parity with the main log),
+                // each at its own offset and with its own category prefix.
                 if (outputNames.length == 0) {
+                    int instanceBase = outputChannelWriter.getSize();
                     outputChannelWriter.writeOutputChannels(parseState, null);
+                    sdLogWriter.writeSdLogs(parseState, instanceBase, null);
                 } else {
                     for (String outputName : outputNames) {
+                        int instanceBase = outputChannelWriter.getSize();
                         outputChannelWriter.writeOutputChannels(parseState, outputName);
+                        sdLogWriter.writeSdLogs(parseState, instanceBase, outputName);
                     }
                 }
 
-                if (constexpr != null) {
-                    sdLogWriter.writeSdLogs(parseState, constexpr + (isPtr ? "->" : "."));
-
-                    outputLookupWriter.addOutputLookups(parseState, constexpr + (isPtr ? "->" : "."), conditional);
-                }
+                // Value lookup (Lua getChannel etc.) is by unprefixed name, so only the first
+                // instance is addressable - generate it once at the usage's base offset.
+                outputLookupWriter.addOutputLookups(parseState, usageBaseOffset, conditional);
             }
 
             log.info("Done with " + name + " at " + outputChannelWriter.getSize());
@@ -166,11 +172,7 @@ public class LiveDataProcessor {
             String java = (String) entry.get("java");
             String folder = (String) entry.get("folder");
             String prepend = (String) entry.get("prepend");
-            String constexpr = (String) entry.get("constexpr");
             String conditional = (String) entry.get("conditional_compilation");
-            Boolean isPtr = (Boolean) entry.get("isPtr");
-            // Defaults to false if not specified
-            isPtr = isPtr != null && isPtr;
 
             Object outputNames = entry.get("output_name");
 
@@ -186,7 +188,7 @@ public class LiveDataProcessor {
                 nameList.toArray(outputNamesArr);
             }
 
-            handler.onEntry(name, java, folder, prepend, outputNamesArr, constexpr, conditional, isPtr);
+            handler.onEntry(name, java, folder, prepend, outputNamesArr, conditional);
 
             String enumName = "LDS_" + name;
             String type = name + "_s"; // convention
@@ -215,20 +217,18 @@ public class LiveDataProcessor {
         sdLogWriter.endFile();
         outputLookupWriter.endFile();
 
-        return outputChannelWriter.getSize();
+        int totalSize = outputChannelWriter.getSize();
+        outputChannelWriter.close();
+        return totalSize;
     }
 
     private void writeFiles() throws IOException {
-        try (FileWriter fw = new FileWriter(enumContentFileName)) {
-            fw.write(enumContent.toString());
-            fw.write(baseAddressCHeader.toString());
-        }
+        LazyFile.writeIfChanged(enumContentFileName,
+                (enumContent.toString() + baseAddressCHeader.toString()).getBytes(IoUtils.CHARSET));
         outputFiles.add(enumContentFileName);
 
         String fragmentsFile = "generated/live_data_fragments.h";
-        try (FileWriter fw = new FileWriter(fragmentsFile)) {
-            fw.write(fragmentsContent.toString());
-        }
+        LazyFile.writeIfChanged(fragmentsFile, fragmentsContent.toString().getBytes(IoUtils.CHARSET));
         outputFiles.add(fragmentsFile);
 
         String outputPath = "../java_console/io/src/main/java/com/rusefi/enums";
@@ -270,7 +270,7 @@ public class LiveDataProcessor {
         Path mkPath = depDir.resolve("generated_live_data_outputs.mk");
         PrintStream f = new PrintStreamAlwaysUnix(Files.newOutputStream(mkPath));
 
-        f.print("GENERATED_FILES +=");
+        f.print("LIVE_DATA_GENERATED_FILES +=");
         for (String output : outputFiles) {
             f.print(" \\\n\t" + output);
         }

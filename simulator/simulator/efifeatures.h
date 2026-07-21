@@ -40,8 +40,6 @@
 
 #define EFI_TEXT_LOGGING TRUE
 
-#define EFI_MEMS FALSE
-
 #ifndef EFI_TOOTH_LOGGER
 #define EFI_TOOTH_LOGGER TRUE
 #endif

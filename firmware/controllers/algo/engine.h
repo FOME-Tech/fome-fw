@@ -352,8 +352,6 @@ public:
 	 */
 	efitimeus_t timeToStopIdleTest = 0;
 
-	SensorsState sensors;
-
 	void efiWatchdog();
 
 	/**

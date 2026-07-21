@@ -32,6 +32,14 @@ const wideband_state_s* getLiveData(size_t idx) {
 	return nullptr;
 }
 
+void updateWidebandAliveTimers() {
+#if EFI_CAN_SUPPORT
+	for (size_t i = 0; i < efi::size(canWidebands); i++) {
+		canWidebands[i].updateTimeSinceLastFrame();
+	}
+#endif
+}
+
 static void initLambdaSensor(FunctionalSensor& sensor, adc_channel_e channel) {
 	if (!isAdcChannelValid(channel)) {
 		return;

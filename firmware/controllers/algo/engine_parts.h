@@ -10,17 +10,6 @@
 #include "static_vector.h"
 #include "efi_timer.h"
 
-struct Accelerometer {
-	float lat = 0; // G value
-	float lon = 0;
-	float vert = 0;
-	float yawRate = 0;
-};
-
-struct SensorsState {
-	Accelerometer accelerometer;
-};
-
 class TransmissionState {
 public:
 	gear_e gearSelectorPosition;
