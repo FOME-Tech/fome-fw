@@ -261,9 +261,32 @@ void LimpManager::updateCutsInjectorDuty(float rpm, efitick_t nowNt, Clearable& 
 }
 
 void LimpManager::updateCutsFloodClear(Clearable& allowFuel) {
-	// If the pedal is pushed while not running, cut fuel to clear a flood condition.
-	if (!engine->rpmCalculator.isRunning() && engineConfiguration->isCylinderCleanupEnabled &&
-		Sensor::getOrZero(SensorType::DriverThrottleIntent) > CLEANUP_MODE_TPS) {
+	bool floodClearRequested = engineConfiguration->isCylinderCleanupEnabled &&
+		Sensor::getOrZero(SensorType::DriverThrottleIntent) > CLEANUP_MODE_TPS;
+
+	// Releasing the pedal (or disabling flood clear) always releases the workshop latch.
+	if (!floodClearRequested) {
+		m_floodClearLatched = false;
+		return;
+	}
+
+	if (!engineConfiguration->isCylinderCleanupLatching) {
+		// Roadside mode intentionally restores fuel if accidental combustion pushes
+		// the engine above the cranking RPM threshold.
+		m_floodClearLatched = false;
+		if (!engine->rpmCalculator.isRunning()) {
+			allowFuel.clear(ClearReason::FloodClear);
+		}
+		return;
+	}
+
+	// Workshop mode may also be used to crank a racing engine for oil pressure.
+	// Arm only while stopped/cranking so selecting this mode cannot cut a running engine.
+	if (!engine->rpmCalculator.isRunning()) {
+		m_floodClearLatched = true;
+	}
+
+	if (m_floodClearLatched) {
 		allowFuel.clear(ClearReason::FloodClear);
 	}
 }
