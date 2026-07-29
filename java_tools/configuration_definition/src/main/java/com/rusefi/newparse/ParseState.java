@@ -20,7 +20,8 @@ public class ParseState implements DefinitionsState {
     private final Map<String, Definition> definitions = new HashMap<>();
     private final Map<String, Struct> structs = new HashMap<>();
     private final List<Struct> structList = new ArrayList<>();
-    private final Map<String, Typedef> typedefs = new HashMap<>();
+    // Insertion ordered so that generated output is stable from one run to the next
+    private final Map<String, Typedef> typedefs = new LinkedHashMap<>();
     private static final Pattern CHAR_LITERAL = Pattern.compile("'.'");
     private static final Pattern AT_SIGN_REPLACEMENT = Pattern.compile("\\@\\@([A-Za-z0-9_]+)\\@\\@");
 
@@ -60,6 +61,22 @@ public class ParseState implements DefinitionsState {
 
     public Map<String, Definition> getDefinitions() {
         return definitions;
+    }
+
+    /**
+     * Every enum typedef seen, keyed by name, in the order they were declared. Any enum field's
+     * {@link com.rusefi.newparse.layout.EnumLayout#enumType} names one of these.
+     */
+    public Map<String, EnumTypedef> getEnumTypedefs() {
+        Map<String, EnumTypedef> result = new LinkedHashMap<>();
+
+        typedefs.forEach((name, typedef) -> {
+            if (typedef instanceof EnumTypedef) {
+                result.put(name, (EnumTypedef)typedef);
+            }
+        });
+
+        return result;
     }
 
     private void handleIntDefinition(String name, int value) {

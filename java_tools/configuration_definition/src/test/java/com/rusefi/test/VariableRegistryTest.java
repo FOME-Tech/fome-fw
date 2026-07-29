@@ -62,16 +62,6 @@ public class VariableRegistryTest {
     }
 
     @Test
-    public void testHumanSorted() {
-        Map<Integer, String> input = new HashMap<>();
-        input.put(0, "NONE");
-        input.put(1, "A");
-        input.put(2, "Z");
-        input.put(3, "N");
-        assertEquals("0=\"NONE\",1=\"A\",3=\"N\",2=\"Z\"", VariableRegistry.getHumanSortedTsKeyValueString(input));
-    }
-
-    @Test
     public void testDefineAndQuotes() throws IOException {
         VariableRegistry registry = new VariableRegistry();
         registry.readPrependValues(new StringReader("#define SINGLE 'L'\n" +

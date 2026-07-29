@@ -1,7 +1,6 @@
 package com.rusefi.pinout;
 
 import com.devexperts.logging.Logging;
-import com.rusefi.EnumPair;
 import com.rusefi.EnumsReader;
 import com.rusefi.PinType;
 import com.rusefi.VariableRegistry;
@@ -19,7 +18,6 @@ import java.util.*;
 
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.VariableRegistry.ENUM_SUFFIX;
-import static com.rusefi.VariableRegistry.FULL_JAVA_ENUM;
 
 public class PinoutLogic {
     private static final Logging log = getLogging(PinoutLogic.class);
@@ -89,42 +87,38 @@ public class PinoutLogic {
             String pinType = namePinType.getPinType();
             String nothingName = namePinType.getNothingName();
             EnumsReader.EnumState enumList = enumsReader.getEnums().get(pinType);
-            EnumPair pair = enumToOptionsList(nothingName, enumList, kv.getValue());
-            if (!pair.getSimpleForm().isEmpty()) {
-                // we seem to be here if specific pin category like switch_inputs has no pins
-                parseState.addDefinition(registry, outputEnumName + ENUM_SUFFIX, pair.getShorterForm(), Definition.OverwritePolicy.IgnoreNew);
+            String options = enumToOptionsList(nothingName, enumList, kv.getValue());
+            if (!options.isEmpty()) {
+                // empty if a specific pin category like switch_inputs has no pins on this board
+                parseState.addDefinition(registry, outputEnumName + ENUM_SUFFIX, options, Definition.OverwritePolicy.IgnoreNew);
             }
-            parseState.addDefinition(registry, outputEnumName + FULL_JAVA_ENUM, pair.getSimpleForm(), Definition.OverwritePolicy.IgnoreNew);
         }
     }
 
+    /**
+     * The list of pin names for one pin category, as a dense TS options list - a name's position in
+     * the list is its {@link com.rusefi.PinType#getPinType} enum value. Values this board doesn't
+     * route anywhere are listed as INVALID, which TunerStudio hides from the dropdown.
+     */
     @NotNull
-    public static EnumPair enumToOptionsList(String nothingName, EnumsReader.EnumState enumList, ArrayList<String> values) {
-        StringBuilder simpleForm = new StringBuilder();
-
-        Map<Integer, String> pinMap = new HashMap<>();
+    public static String enumToOptionsList(String nothingName, EnumsReader.EnumState enumList, ArrayList<String> values) {
+        StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < values.size(); i++) {
-            appendCommaIfNeeded(simpleForm);
+            appendCommaIfNeeded(sb);
             String key = findKey(enumList, i);
 
             String value = values.get(i);
-            if (i == 0) {
-                pinMap.put(i, NONE);
-            } else if (value != null) {
-                pinMap.put(i, value);
-            }
             if (key.equals(nothingName)) {
-                simpleForm.append(QUOTED_NONE);
+                sb.append(QUOTED_NONE);
             } else if (value == null) {
-                simpleForm.append(QUOTED_INVALID);
+                sb.append(QUOTED_INVALID);
             } else {
-                String quotedValue = quote(value);
-                simpleForm.append(quotedValue);
+                sb.append(quote(value));
             }
         }
-        String keyValueForm = VariableRegistry.getHumanSortedTsKeyValueString(pinMap);
-        return new EnumPair(keyValueForm, simpleForm.toString());
+
+        return sb.toString();
     }
 
     private static void appendCommaIfNeeded(StringBuilder sb) {

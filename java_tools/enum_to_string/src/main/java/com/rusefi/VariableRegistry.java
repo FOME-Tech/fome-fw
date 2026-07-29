@@ -30,7 +30,6 @@ public class VariableRegistry {
     public static final String _HEX_SUFFIX = "_hex";
     public static final String CHAR_SUFFIX = "_char";
     public static final String ENUM_SUFFIX = "_enum";
-    public static final String FULL_JAVA_ENUM = "_fullenum";
     public static final char MULT_TOKEN = '*';
     public static final String DEFINE = "#define";
     private static final String HEX_PREFIX = "0x";
@@ -102,69 +101,13 @@ public class VariableRegistry {
         }
     }
 
-    /**
-     * @return value>name map for specified enum name.
-     */
-    @Nullable
-    private TreeMap<Integer, String> resolveEnumValues(@NotNull EnumsReader.EnumState stringValueMap) {
-        TreeMap<Integer, String> valueNameById = new TreeMap<>();
-
-        for (Value value : stringValueMap.values()) {
-            if (isNumeric(value.getValue())) {
-                valueNameById.put(value.getIntValue(), value.getName());
-            } else {
-                String valueFromRegistry = get(value.getValue());
-                if (valueFromRegistry == null)
-                    throw new IllegalStateException("No value for " + value);
-                int intValue = Integer.parseInt(valueFromRegistry);
-                valueNameById.put(intValue, value.getName());
-            }
-        }
-        return valueNameById;
-    }
-
     private static void appendCommaIfNeeded(StringBuilder sb) {
         if (sb.length() > 0)
             sb.append(",");
     }
 
-    public String getEnumOptionsForTunerStudio(EnumsReader enumsReader, String enumName) {
-        EnumsReader.EnumState stringValueMap = enumsReader.getEnums().get(enumName);
-        if (stringValueMap == null)
-            return null;
-
-        TreeMap<Integer, String> valueNameById = resolveEnumValues(stringValueMap);
-        if (valueNameById == null)
-            return null;
-
-        return getHumanSortedTsKeyValueString(valueNameById);
-    }
-
     private static String quote(String string) {
         return "\"" + string + "\"";
-    }
-
-    @NotNull
-    public static String getHumanSortedTsKeyValueString(Map<Integer, String> valueNameById) {
-        TreeMap<Integer, String> humanDropDownSorted = new TreeMap<>((o1, o2) -> {
-            if (o1.intValue() == o2)
-                return 0;
-            if (o1 == 0)
-                return -1; // "None" always go first
-            if (o2 ==0)
-                return 1;
-            return valueNameById.get(o1).compareTo(valueNameById.get(o2));
-        });
-        humanDropDownSorted.putAll(valueNameById);
-
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Integer, String> e : humanDropDownSorted.entrySet()) {
-            appendCommaIfNeeded(sb);
-            sb.append(e.getKey());
-            sb.append('=');
-            sb.append(quote(e.getValue()));
-        }
-        return sb.toString();
     }
 
     /**
@@ -270,8 +213,7 @@ public class VariableRegistry {
         } catch (NumberFormatException e) {
             //SystemOut.println("Not an integer: " + value);
 
-            if (!var.trim().endsWith(ENUM_SUFFIX) &&
-                    !var.trim().endsWith(FULL_JAVA_ENUM)) {
+            if (!var.trim().endsWith(ENUM_SUFFIX)) {
                 if (isQuoted(value, '"')) {
                     // quoted and not with enum suffix means plain string define statement
                     javaDefinitions.put(var, "\tpublic static final String " + var + " = " + value + ";" + ToolUtil.EOL);

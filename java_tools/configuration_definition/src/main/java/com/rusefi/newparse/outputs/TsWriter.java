@@ -4,12 +4,14 @@ import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.StructLayout;
 import com.rusefi.newparse.layout.StructNamePrefixer;
 import com.rusefi.newparse.parsing.Definition;
+import com.rusefi.newparse.parsing.EnumTypedef;
 import com.rusefi.util.LazyOutputStream;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -108,9 +110,32 @@ public class TsWriter {
         } // try
     }
 
+    /**
+     * Name of the TS ini #define holding the list of names for the given enum type.
+     */
+    public static String enumDefineName(String enumType) {
+        return "ENUM_" + enumType;
+    }
+
     public void writeLayoutAndComments(ParseState parser, PrintStream ps) {
         StructLayout root = new StructLayout(0, "root", parser.getLastStruct());
         TsMetadata meta = new TsMetadata();
+
+        // Print each enum's list of names once, up front - fields below refer to them by name
+        // instead of repeating the (sometimes enormous) list.
+        Map<String, EnumTypedef> enums = parser.getEnumTypedefs();
+
+        enums.forEach((name, typedef) -> {
+            ps.print("#define ");
+            ps.print(enumDefineName(name));
+            ps.print(" = ");
+            typedef.values.writeTsList(ps);
+            ps.println();
+        });
+
+        if (!enums.isEmpty()) {
+            ps.println();
+        }
 
         // Print configuration layout
         int size = root.getSize();

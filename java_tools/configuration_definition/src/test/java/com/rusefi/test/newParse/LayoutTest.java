@@ -366,29 +366,59 @@ public class LayoutTest {
                 "end_struct";
 
         Assert.assertEquals(
-                "pageSize            = 4\n" +
+                "#define ENUM_my_e = \"one\", \"two\", \"three\"\n" +
+                        "\n" +
+                        "pageSize            = 4\n" +
                         "page = 1\n" +
-                        "myField = bits, U08, 0, [0:1], \"one\", \"two\", \"three\"\n" +
+                        "myField = bits, U08, 0, [0:1], $ENUM_my_e\n" +
                         "; unused 3 bytes at offset 1\n" +
                         "; total TS size = 4\n" +
                         "[SettingContextHelp]\n", parseToTs(input));
     }
 
     @Test
-    public void compactedEnum() throws IOException {
-        // Compacted enums explicitly pair each name with its numeric value, since only a sparse
-        // subset of the underlying enum's values are listed.
-        String input = "#define my_enum 0=\"NONE\",98=\"Digital 1\",76=\"Digital 3, or maybe 4\"\n" +
+    public void enumNameContainingComma() throws IOException {
+        // Plenty of pin names have a comma in them, so the split has to respect quoting
+        String input = "#define my_enum \"NONE\",\"INVALID\",\"Digital 3, or maybe 4\"\n" +
                 "custom my_e 2 bits, U16, @OFFSET@, [0:7], @@my_enum@@\n" +
                 "struct_no_prefix myStruct\n" +
                 "my_e myField;\n" +
                 "end_struct";
 
         Assert.assertEquals(
-                "pageSize            = 4\n" +
+                "#define ENUM_my_e = \"NONE\", \"INVALID\", \"Digital 3, or maybe 4\"\n" +
+                        "\n" +
+                        "pageSize            = 4\n" +
                         "page = 1\n" +
-                        "myField = bits, U16, 0, [0:7], 0=\"NONE\", 98=\"Digital 1\", 76=\"Digital 3, or maybe 4\"\n" +
+                        "myField = bits, U16, 0, [0:7], $ENUM_my_e\n" +
                         "; unused 2 bytes at offset 2\n" +
+                        "; total TS size = 4\n" +
+                        "[SettingContextHelp]\n", parseToTs(input));
+    }
+
+    @Test
+    public void enumSharedByMultipleFields() throws IOException {
+        // The whole point of hoisting enums to a #define: the list is written once no matter how
+        // many fields use it.
+        String input = "#define my_enum \"one\", \"two\"\n" +
+                "custom my_e 1 bits, U08, @OFFSET@, [0:0], @@my_enum@@\n" +
+                "custom other_e 1 bits, U08, @OFFSET@, [0:0], \"yes\", \"no\"\n" +
+                "struct_no_prefix myStruct\n" +
+                "my_e first;\n" +
+                "my_e second;\n" +
+                "other_e third;\n" +
+                "end_struct";
+
+        Assert.assertEquals(
+                "#define ENUM_my_e = \"one\", \"two\"\n" +
+                        "#define ENUM_other_e = \"yes\", \"no\"\n" +
+                        "\n" +
+                        "pageSize            = 4\n" +
+                        "page = 1\n" +
+                        "first = bits, U08, 0, [0:0], $ENUM_my_e\n" +
+                        "second = bits, U08, 1, [0:0], $ENUM_my_e\n" +
+                        "third = bits, U08, 2, [0:0], $ENUM_other_e\n" +
+                        "; unused 1 bytes at offset 3\n" +
                         "; total TS size = 4\n" +
                         "[SettingContextHelp]\n", parseToTs(input));
     }
