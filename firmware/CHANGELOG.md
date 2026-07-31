@@ -37,6 +37,7 @@ or
  - IMU data (lateral/longitudinal acceleration and yaw rate) from the BMW E90 MK60e1/MK60e5 DSC/ABS module
  - New VVT mode "Honda K24Z Exhaust" for the three-tooth unevenly spaced exhaust cam wheel used on the K24Z, which differs from the 4+1 wheel of earlier K series engines. This pattern is used by K series engines that use a 60-2 crank pattern.
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
+ - Support for Hella PULS ultrasonic oil level sensors (6PR 009 622-041 and 6PR 009 622-051). A decoder for these sensors has existed since 2023 but was never configurable or connected to a sensor channel - it can now be assigned an input pin in TunerStudio and reports both oil level and oil temperature. Oil temperature is only published if no analog oil temperature sender is configured, which continues to take priority.
 
 ### Fixed
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776

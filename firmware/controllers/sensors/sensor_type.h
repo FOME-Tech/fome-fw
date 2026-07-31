@@ -33,6 +33,8 @@ enum class SensorType : unsigned char {
 
 	OilPressure,
 	OilTemperature,
+	// Height of the oil column in the sump, in millimeters
+	OilLevel,
 
 	FuelPressureLow,  // in kPa
 	FuelPressureHigh, // in kPa

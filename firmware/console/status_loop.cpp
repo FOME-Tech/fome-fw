@@ -375,6 +375,8 @@ static void updateMiscSensors() {
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);
 
+	engine->outputChannels.oilLevel = Sensor::getOrZero(SensorType::OilLevel);
+
 #if HAL_USE_ADC
 	engine->outputChannels.internalMcuTemperature =
 			Sensor::get(SensorType::EcuInternalTemperature).value_or(getMCUInternalTemperature());

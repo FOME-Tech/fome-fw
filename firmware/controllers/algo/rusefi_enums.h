@@ -584,6 +584,17 @@ typedef enum __attribute__((__packed__)) {
 	INJ_SmallPulseAdder = 3,
 } InjectorNonlinearMode;
 
+/**
+ * Hella PULS ultrasonic oil level sensors share a signal format, but differ in
+ * measurement range. The level reported at 20%/80% duty depends on the variant.
+ */
+typedef enum __attribute__((__packed__)) {
+	// 6PR 009 622-041: 5v supply, 45mm range, reads 20.9mm to 65.9mm
+	HELLA_OIL_LEVEL_45MM = 0,
+	// 6PR 009 622-051: 12v supply, 129mm static range, reads 18.0mm to 147.0mm
+	HELLA_OIL_LEVEL_129MM = 1,
+} hella_oil_level_variant_e;
+
 typedef enum __attribute__((__packed__)) {
 	HPFP_CAM_NONE = 0,
 	HPFP_CAM_IN1 = 1,

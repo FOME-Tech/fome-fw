@@ -105,6 +105,7 @@ TESTS_SRC_CPP = \
 	tests/test_can_wideband.cpp \
 	tests/test_hellen_board_id.cpp \
 	tests/sensor/test_frequency_sensor.cpp \
+	tests/sensor/test_hella_oil_level.cpp \
 	tests/sensor/test_turbocharger_speed_converter.cpp \
 	tests/sensor/test_vehicle_speed_converter.cpp \
 	tests/actuators/test_antilag.cpp \

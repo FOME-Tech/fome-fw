@@ -293,4 +293,6 @@ struct_no_prefix output_channels_s
 
 	uint16_t[12 iterate] cylinderRpm;;"rpm", 1, 0, 0, 0, 0
 	int8_t[12 iterate] cylinderRpmDelta;;"rpm", 1, 0, 0, 0, 0
+
+	uint16_t autoscale oilLevel;@@GAUGE_NAME_OIL_LEVEL@@;"mm", 0.1, 0, 0, 0, 1
 end_struct

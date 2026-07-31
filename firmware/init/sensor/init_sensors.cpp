@@ -68,6 +68,7 @@ void stopSensors() {
 	deinitTurbochargerSpeedSensor();
 	deinitAuxSpeedSensors();
 	deinitMap();
+	deInitHellaOilLevel();
 }
 
 void reconfigureSensors() {
@@ -81,6 +82,9 @@ void reconfigureSensors() {
 	initAuxSensors();
 	initVehicleSpeedSensor();
 	initTurbochargerSpeedSensor();
+	// Must come after initThermistors() - an analog oil temperature sender takes priority
+	// over the temperature channel of the Hella sensor.
+	initHellaOilLevel();
 }
 
 // Mocking/testing helpers

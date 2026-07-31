@@ -34,6 +34,7 @@ void initAuxSensors();
 void initVehicleSpeedSensor();
 void initTurbochargerSpeedSensor();
 void initAuxSpeedSensors();
+void initHellaOilLevel();
 
 // Sensor reconfiguration
 void deinitVbatt();
@@ -47,3 +48,4 @@ void deInitVehicleSpeedSensor();
 void deinitTurbochargerSpeedSensor();
 void deinitMap();
 void deinitAuxSpeedSensors();
+void deInitHellaOilLevel();

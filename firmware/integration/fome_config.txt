@@ -1486,6 +1486,10 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
 
+	brain_input_pin_e hellaOilLevelPin;Hella PULS ultrasonic oil level/temperature sensor, single wire PWM output. Requires a 1.6-10k pullup to the sensor supply voltage.;
+	custom hella_oil_level_variant_e 1 bits, U08, @OFFSET@, [0:0], "45mm (6PR 009 622-041)", "129mm (6PR 009 622-051)"
+	hella_oil_level_variant_e hellaOilLevelVariant;Which Hella sensor variant is installed - they share a signal format but report different measurement ranges.;
+
 ! end of engine_configuration_s
 end_struct
 
