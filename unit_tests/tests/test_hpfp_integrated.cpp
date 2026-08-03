@@ -12,7 +12,7 @@ TEST(HPFP, IntegratedSchedule) {
 		cfg->hpfpValvePin = Gpio::A2; // arbitrary
 	});
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->hpfpCamLobes = 3;
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
 

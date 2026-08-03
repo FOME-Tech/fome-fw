@@ -10,7 +10,7 @@ TEST(pairedOddFireWastedSpark, defaultMaskSetsBothCompanionBits) {
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{0.1f, 50.0f}));
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 	engineConfiguration->pairedOddFireWastedSpark = false;
@@ -33,7 +33,7 @@ TEST(pairedOddFireWastedSpark, maskUsesSingleBitForPair) {
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{0.1f, 50.0f}));
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 	engineConfiguration->pairedOddFireWastedSpark = true;
@@ -54,7 +54,7 @@ TEST(pairedOddFireWastedSpark, maskUsesSingleBitForPair) {
 // since the second fire of each coil happens via the paired cylinder's own event at its natural angle.
 TEST(pairedOddFireWastedSpark, suppressesUseOddFireWastedSpark) {
 	EngineTestHelper eth(engine_type_e::MINIMAL_PINS);
-	engineConfiguration->cylindersCount = 2;
+	setCylinderCount(2);
 	engineConfiguration->firingOrder = FO_1_2;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 

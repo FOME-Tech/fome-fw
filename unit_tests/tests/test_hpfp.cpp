@@ -56,7 +56,7 @@ TEST(HPFP, Lobe) {
 TEST(HPFP, InjectionReplacementFuel) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->hpfpCamLobes = 4;
 	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
@@ -74,11 +74,11 @@ TEST(HPFP, InjectionReplacementFuel) {
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 50 * 1.333333333f);
 
 	// More cylinders!
-	engineConfiguration->cylindersCount = 6;
+	setCylinderCount(6);
 	EXPECT_FLOAT_EQ(math.calcFuelPercent(1000), 50 * 2.); // Ooops we maxed out
 
 	// Compensation testing
-	engineConfiguration->cylindersCount = engineConfiguration->hpfpCamLobes; // Make math easier
+	setCylinderCount(engineConfiguration->hpfpCamLobes); // Make math easier
 	for (int i = 0; i < HPFP_COMPENSATION_SIZE; i++) {
 		// one bin every 1000 RPM
 		config->hpfpCompensationRpmBins[i] = std::min(i * 1000, 8000);
@@ -108,7 +108,7 @@ TEST(HPFP, InjectionReplacementFuel) {
 TEST(HPFP, PI) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->hpfpCamLobes = 4;
 	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
@@ -165,7 +165,7 @@ TEST(HPFP, PI) {
 TEST(HPFP, Angle) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->hpfpCamLobes = 4;
 	engine->cylinders[0].setInjectionMass(0.05 /* cc/cyl */ * fuelDensity);
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
@@ -213,7 +213,7 @@ TEST(HPFP, Schedule) {
 		cfg->hpfpValvePin = Gpio::A2; // arbitrary
 	});
 
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->hpfpCamLobes = 4;
 	engineConfiguration->hpfpPumpVolume = 0.2; // cc/lobe
 

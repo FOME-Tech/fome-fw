@@ -7,7 +7,7 @@ namespace {
 // with a linear throttle effective-area table topping out at 400 g/s.
 void setupAirpath(EngineTestHelper& eth) {
 	engineConfiguration->displacement = 2.0f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	engineConfiguration->twoStroke = false;
 
 	// Linear effective-area table: 0% -> 0 g/s, 100% -> 400 g/s.
@@ -109,6 +109,23 @@ TEST(AirmassDispatcher, DoesNotCommandWideOpenAtLowDemandWithAtmosphericManifold
 	EXPECT_LT(throttle, 25);
 }
 
+// At wide-open throttle the manifold fills to ~inlet pressure, so opening the blade further
+// recovers no airflow and the throttle-flow inverse goes singular (the solver can settle short of
+// 100%). A high air demand the engine can't meet there must command a true 100%, not the solved
+// angle - the solved angle lands past the crossover, which is what flags the engine-limited regime.
+TEST(AirmassDispatcher, CommandsWideOpenWhenEngineLimited) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupAirpath(eth);
+
+	auto& torqueModel = engine->module<TorqueModel>().unmock();
+
+	// Manifold at inlet pressure, demanding more air than the engine is flowing.
+	Sensor::setMockValue(SensorType::Map, 100);
+	torqueModel.airmassDispatcher.update(3.0f, 2.0f);
+
+	EXPECT_FLOAT_EQ(torqueModel.getThrottleRequest(), 100);
+}
+
 TEST(AirmassDispatcher, ClosedWhenStoppedOrIdleDemand) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	setupAirpath(eth);
@@ -189,4 +206,39 @@ TEST(AirmassDispatcher, TrimResetsWhenClosed) {
 	// Demand drops to zero - the integrator must not carry windup into the next tip-in.
 	torqueModel.airmassDispatcher.update(0, 0.5f * target);
 	EXPECT_FLOAT_EQ(torqueModel.airmassDispatcher.getAirmassTrim(), 0);
+}
+
+// In the engine-limited regime the target is unreachable, so a wound-up trim integrator would
+// otherwise sit pinned and then dump onto a closing throttle when the driver lifts. It must bleed
+// back toward zero while the throttle is pinned wide open.
+TEST(AirmassDispatcher, BleedsTrimWhenEngineLimited) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupAirpath(eth);
+	enableTrim(20);
+	engineConfiguration->torqueModel.airmassTrimKi = 50;
+
+	auto& torqueModel = engine->module<TorqueModel>().unmock();
+	auto& disp = torqueModel.airmassDispatcher;
+
+	// Wind the trim up positive at part throttle (starved of air, manifold in vacuum).
+	Sensor::setMockValue(SensorType::Map, 50);
+	for (int i = 0; i < 50; i++) {
+		disp.update(1.04f, 0.5f * 1.04f);
+	}
+	float windup = disp.getAirmassTrim();
+	EXPECT_GT(windup, 0);
+
+	// Enter the engine-limited regime: manifold at inlet pressure, demand the engine can't meet.
+	// The throttle pins wide open and the trim starts bleeding off the very first tick.
+	Sensor::setMockValue(SensorType::Map, 100);
+	disp.update(3.0f, 2.0f);
+	EXPECT_FLOAT_EQ(torqueModel.getThrottleRequest(), 100);
+	EXPECT_LT(disp.getAirmassTrim(), windup);
+
+	// Held there, it decays toward zero (~400 ms time constant at the 250 Hz fast tick).
+	for (int i = 0; i < 400; i++) {
+		disp.update(3.0f, 2.0f);
+	}
+	EXPECT_FLOAT_EQ(torqueModel.getThrottleRequest(), 100);
+	EXPECT_NEAR(disp.getAirmassTrim(), 0, 0.05f * windup);
 }

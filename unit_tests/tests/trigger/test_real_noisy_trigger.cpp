@@ -10,12 +10,12 @@ static void testNoOverdwell(const char* file, bool instantRpm) {
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
 	engineConfiguration->alwaysInstantRpm = instantRpm;
 
-	engineConfiguration->cylindersCount = 6;
+	setCylinderCount(6);
 	engineConfiguration->firingOrder = FO_1_5_3_6_2_4;
 	engineConfiguration->globalTriggerAngleOffset = 155;
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
 
-	// engineConfiguration->cylindersCount = 1;
+	// setCylinderCount(1);
 	// engineConfiguration->firingOrder = FO_1;
 	// engineConfiguration->globalTriggerAngleOffset = 35;
 

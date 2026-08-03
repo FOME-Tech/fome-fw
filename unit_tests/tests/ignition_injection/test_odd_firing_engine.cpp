@@ -14,7 +14,7 @@ TEST(OddFireRunningMode, hd) {
 	// for now we need non wired camInput to keep TS field enable/disable logic happy
 	// engineConfiguration->camInputs[0] = PROTEUS_DIGITAL_6;
 	engineConfiguration->vvtMode[0] = VVT_MAP_V_TWIN;
-	engineConfiguration->cylindersCount = 2;
+	setCylinderCount(2);
 	engineConfiguration->firingOrder = FO_1_2;
 	engineConfiguration->mapCamDetectionAnglePosition = 50;
 	engineConfiguration->cranking.rpm = 100;

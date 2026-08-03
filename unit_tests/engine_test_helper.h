@@ -115,4 +115,9 @@ private:
 void setupSimpleTestEngineWithMafAndTT_ONE_trigger(EngineTestHelper* eth, injection_mode_e injMode = IM_BATCH);
 void setupSimpleTestEngineWithMaf(EngineTestHelper* eth, injection_mode_e injectionMode, trigger_type_e trigger);
 
+// Cylinder count is derived from the firing order (there is no cylinder count config field).
+// This picks a canonical firing order for the requested count and refreshes the cached
+// EngineState::cylinderCount so tests can configure an N-cylinder engine in one call.
+void setCylinderCount(int cylinderCount);
+
 void setVerboseTrigger(bool isEnabled);

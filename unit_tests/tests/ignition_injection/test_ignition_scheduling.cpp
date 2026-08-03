@@ -53,7 +53,7 @@ TEST(ignition, trailingSpark) {
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{0.1008f, 50.0f}));
 
 	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
-	engineConfiguration->cylindersCount = 1;
+	setCylinderCount(1);
 	engineConfiguration->firingOrder = FO_1;
 	engineConfiguration->isInjectionEnabled = false;
 	engineConfiguration->isIgnitionEnabled = true;
@@ -150,7 +150,7 @@ TEST(ignition, oddCylinderWastedSpark) {
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engine->scheduler.setMockExecutor(&mockExec);
-	engineConfiguration->cylindersCount = 1;
+	setCylinderCount(1);
 	engineConfiguration->firingOrder = FO_1;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
 
