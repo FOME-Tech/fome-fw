@@ -15,24 +15,24 @@ static void fillIdentifiable(size_t rows, size_t cols) {
 }
 
 TEST(ResizableTable, ExactCorners) {
-	const uint8_t rowBins[] = { 0, 10, 20, 30 };
-	const uint8_t colBins[] = { 0, 100, 200 };
+	const uint8_t rowBins[] = {0, 10, 20, 30};
+	const uint8_t colBins[] = {0, 100, 200};
 
 	fillIdentifiable(4, 3);
 
 	// Land exactly on each bin and check we get that cell back untouched
 	for (size_t row = 0; row < 4; row++) {
 		for (size_t col = 0; col < 3; col++) {
-			EXPECT_FLOAT_EQ(10 * row + col,
-					interpolate3dDynamic(storage, rowBins, 4, rowBins[row], colBins, 3, colBins[col]))
-				<< "row " << row << " col " << col;
+			EXPECT_FLOAT_EQ(
+					10 * row + col, interpolate3dDynamic(storage, rowBins, 4, rowBins[row], colBins, 3, colBins[col]))
+					<< "row " << row << " col " << col;
 		}
 	}
 }
 
 TEST(ResizableTable, Interpolates) {
-	const uint8_t rowBins[] = { 0, 10, 20, 30 };
-	const uint8_t colBins[] = { 0, 100, 200 };
+	const uint8_t rowBins[] = {0, 10, 20, 30};
+	const uint8_t colBins[] = {0, 100, 200};
 
 	fillIdentifiable(4, 3);
 
@@ -47,8 +47,8 @@ TEST(ResizableTable, Interpolates) {
 }
 
 TEST(ResizableTable, Clamps) {
-	const uint8_t rowBins[] = { 0, 10, 20, 30 };
-	const uint8_t colBins[] = { 0, 100, 200 };
+	const uint8_t rowBins[] = {0, 10, 20, 30};
+	const uint8_t colBins[] = {0, 100, 200};
 
 	fillIdentifiable(4, 3);
 
@@ -65,8 +65,8 @@ TEST(ResizableTable, Clamps) {
 // The row stride is the *current* column count, so the same values array reads back differently
 // after a reshape. This is the property that makes a resizable table work at all.
 TEST(ResizableTable, StrideFollowsColumnCount) {
-	const uint8_t rowBins[] = { 0, 10, 20, 30, 40, 50 };
-	const uint16_t colBins[] = { 0, 100, 200, 300, 400, 500 };
+	const uint8_t rowBins[] = {0, 10, 20, 30, 40, 50};
+	const uint16_t colBins[] = {0, 100, 200, 300, 400, 500};
 
 	// As a 6-column table, cell (1, 0) is at flat index 6
 	fillIdentifiable(4, 6);
@@ -80,8 +80,8 @@ TEST(ResizableTable, StrideFollowsColumnCount) {
 // A tune that has never been initialized reads back as zeroes. That's not a valid table, but it must
 // not read outside the allocation.
 TEST(ResizableTable, DegenerateSizes) {
-	const uint8_t rowBins[] = { 0, 10, 20, 30 };
-	const uint8_t colBins[] = { 0, 100, 200 };
+	const uint8_t rowBins[] = {0, 10, 20, 30};
+	const uint8_t colBins[] = {0, 100, 200};
 
 	fillIdentifiable(4, 3);
 
@@ -106,8 +106,8 @@ TEST(ResizableTable, SetTable) {
 
 TEST(ResizableTable, CopyTableResizes) {
 	static const uint8_t source[2][3] = {
-		{ 1, 2, 3 },
-		{ 4, 5, 6 },
+			{1, 2, 3},
+			{4, 5, 6},
 	};
 
 	uint8_t rows = 99;
@@ -124,7 +124,7 @@ TEST(ResizableTable, CopyTableResizes) {
 }
 
 TEST(ResizableTable, CopyBinsResizes) {
-	static const uint16_t source[] = { 100, 200, 300, 400, 500 };
+	static const uint16_t source[] = {100, 200, 300, 400, 500};
 
 	uint16_t bins[32];
 	uint8_t count = 99;
@@ -167,12 +167,26 @@ TEST(ResizableTable, VeTableAtNonDefaultShape) {
 	// Poke a single cell and read it back exactly, which only works if the stride is 18
 	config->veTable[5 * 18 + 3] = 88;
 
-	EXPECT_FLOAT_EQ(88, interpolate3dDynamic(config->veTable,
-			config->veLoadBins, config->veTableRows, config->veLoadBins[5],
-			config->veRpmBins, config->veTableCols, config->veRpmBins[3]));
+	EXPECT_FLOAT_EQ(
+			88,
+			interpolate3dDynamic(
+					config->veTable,
+					config->veLoadBins,
+					config->veTableRows,
+					config->veLoadBins[5],
+					config->veRpmBins,
+					config->veTableCols,
+					config->veRpmBins[3]));
 
 	// Everything else still reads the flat 55
-	EXPECT_FLOAT_EQ(55, interpolate3dDynamic(config->veTable,
-			config->veLoadBins, config->veTableRows, config->veLoadBins[20],
-			config->veRpmBins, config->veTableCols, config->veRpmBins[10]));
+	EXPECT_FLOAT_EQ(
+			55,
+			interpolate3dDynamic(
+					config->veTable,
+					config->veLoadBins,
+					config->veTableRows,
+					config->veLoadBins[20],
+					config->veRpmBins,
+					config->veTableCols,
+					config->veRpmBins[10]));
 }
