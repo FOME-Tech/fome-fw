@@ -65,8 +65,7 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 			// fires the injector 360 degrees later in the firing order.
 			mask |=
 					(1 << getCylinderNumberAtIndex(
-							 (ownIndex + (engine->engineState.cylinderCount / 2)) %
-							 engine->engineState.cylinderCount));
+							 (ownIndex + (engine->engineState.cylinderCount / 2)) % engine->engineState.cylinderCount));
 
 			// falls through
 		case IM_SEQUENTIAL:
