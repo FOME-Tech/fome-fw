@@ -42,8 +42,13 @@ static void setDefaultWarmupFuelEnrichment() {
 }
 
 static void setDefaultVETable() {
-	setRpmTableBin(config->veRpmBins);
-	setTable(config->veTable, 80);
+	// The VE table is resizable, so its shape has to be established before anything fills its bins
+	// or cells - every helper that touches it works off the current row/column counts.
+	config->veTableRows = VE_TABLE_DEFAULT_AXIS;
+	config->veTableCols = VE_TABLE_DEFAULT_AXIS;
+
+	setRpmTableBinDynamic(config->veRpmBins, config->veTableCols);
+	setTableDynamic(config->veTable, config->veTableRows, config->veTableCols, 80);
 
 	setRpmTableBin(config->baroCorrRpmBins);
 	setLinearCurve(config->baroCorrPressureBins, 75, 105, 1);

@@ -38,6 +38,7 @@ or
  - New VVT mode "Honda K24Z Exhaust" for the three-tooth unevenly spaced exhaust cam wheel used on the K24Z, which differs from the 4+1 wheel of earlier K series engines. This pattern is used by K series engines that use a 60-2 crank pattern.
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
  - New firing order 1-6-2-5-3-4 (Maserati V6) #789
+ - The VE table is now resizable from within TunerStudio: use "Adjust Table Size & Shape" to insert or delete rows and columns, or set a whole new shape. Either axis can be anywhere from 8 to 32 bins as long as the table stays within 576 cells, so 16x16, 24x24 and lopsided shapes like 32x18 are all valid.
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.

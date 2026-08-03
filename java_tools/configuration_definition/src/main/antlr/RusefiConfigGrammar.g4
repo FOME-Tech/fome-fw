@@ -102,7 +102,9 @@ bitField: Bit identifier (',' QuotedString ',' QuotedString)? ('(' 'comment' ':'
 
 unionField: 'union' ENDL+ fields 'end_union';
 
-tableAxisSpec: ('min' numexpr 'max' numexpr|'num' numexpr);
+// 'num' is a fixed-size axis. 'min/max/default' is a resizable axis: the table is allocated at the
+// max size, and a generated uint8_t config field holds the count in use, which TunerStudio edits.
+tableAxisSpec: ('min' numexpr 'max' numexpr 'default' numexpr|'num' numexpr);
 tableMaxSize: 'maxsize' numexpr;
 tableField: 'begin_table' tableMaxSize? ENDL+
     'table_rows' tableAxisSpec scalarField ENDL+

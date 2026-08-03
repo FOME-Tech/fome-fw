@@ -330,8 +330,11 @@ bool validateConfig() {
 
 	// Fueling
 	{
-		ensureArrayIsAscending("VE load", config->veLoadBins);
-		ensureArrayIsAscending("VE RPM", config->veRpmBins);
+		ensureArrayIsAscendingDynamic("VE load", config->veLoadBins, config->veTableRows);
+		ensureArrayIsAscendingDynamic("VE RPM", config->veRpmBins, config->veTableCols);
+		if (config->veTableRows * config->veTableCols > efi::size(config->veTable)) {
+			firmwareError(ObdCode::CUSTOM_ERR_AXIS_ORDER, "VE table axes too large");
+		}
 
 		ensureArrayIsAscending("Lambda/AFR load", config->lambdaLoadBins);
 		ensureArrayIsAscending("Lambda/AFR RPM", config->lambdaRpmBins);

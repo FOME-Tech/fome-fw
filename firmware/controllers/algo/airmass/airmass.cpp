@@ -76,5 +76,12 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 }
 
 float AirmassVeModelBase::getVeImpl(float rpm, percent_t load) const {
-	return interpolate3d(config->veTable, config->veLoadBins, load, config->veRpmBins, rpm);
+	return interpolate3dDynamic(
+			config->veTable,
+			config->veLoadBins,
+			config->veTableRows,
+			load,
+			config->veRpmBins,
+			config->veTableCols,
+			rpm);
 }

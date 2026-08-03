@@ -2,14 +2,33 @@ package com.rusefi.newparse.outputs;
 
 import com.rusefi.newparse.layout.*;
 import com.rusefi.newparse.parsing.FieldOptions;
+import com.rusefi.newparse.parsing.TsShape;
 
 import java.io.PrintStream;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TsLayoutVisitor extends ILayoutVisitor {
     private final TsMetadata meta;
 
+    // Shape of the array currently being visited, if it overrides the allocated dimensions. Set on
+    // the way in to the array and cleared on the way out - the prototype scalar is what actually
+    // prints the shape, and it has no way to reach back to its array.
+    private TsShape currentShape = null;
+
     public TsLayoutVisitor(TsMetadata meta) {
         this.meta = meta;
+    }
+
+    @Override
+    public void visit(ArrayLayout arr, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
+        currentShape = arr.tsShape;
+
+        try {
+            super.visit(arr, ps, prefixer, offsetAdd, arrayDims);
+        } finally {
+            currentShape = null;
+        }
     }
 
     @Override
@@ -81,10 +100,18 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
     // Emit a single TS field line (plain scalar or array) using the given display options.
     private void emitField(ScalarLayout scalar, FieldOptions options, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims, boolean addComment) {
-        if (arrayDims.length == 0) {
+        if (currentShape != null) {
+            emitDynamicArray(scalar, options, ps, prefixer, offsetAdd, addComment);
+        } else if (arrayDims.length == 0) {
             // plain scalar, not array
             printBeforeArrayLength(scalar, ps, meta, prefixer, "scalar", offsetAdd, addComment);
             printAfterArrayLength(options, ps);
+
+            // addComment marks the canonical emission - an autotemp field is emitted twice (one
+            // Fahrenheit, one Celsius) and must only contribute one extension line.
+            if (scalar.tsDefaultValue != null && addComment) {
+                meta.addConstantsExtension("defaultValue = " + prefixer.get(scalar.name) + ", " + scalar.tsDefaultValue);
+            }
         } else {
             printBeforeArrayLength(scalar, ps, meta, prefixer, "array", offsetAdd, addComment);
             ps.print("[");
@@ -105,9 +132,30 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         }
     }
 
+    /**
+     * Emit an array whose shape is expressions over other constants rather than fixed numbers. This
+     * is what unlocks TunerStudio's table resize tools - see [TableEditor] "Resizable Tables" in the
+     * ini spec.
+     */
+    private void emitDynamicArray(ScalarLayout scalar, FieldOptions options, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, boolean addComment) {
+        printBeforeArrayLength(scalar, ps, meta, prefixer, "array", offsetAdd, addComment);
+
+        ps.print("[");
+        ps.print(Stream.of(currentShape.dimensionFields)
+                .map(f -> "{" + prefixer.get(f) + "}")
+                .collect(Collectors.joining("x")));
+        ps.print("], ");
+
+        printAfterArrayLength(options, ps);
+
+        if (currentShape.maxElements != null && addComment) {
+            meta.addConstantsExtension("maximumElements = " + prefixer.get(scalar.name) + ", " + currentShape.maxElements);
+        }
+    }
+
     @Override
     public void visit(ScalarLayout scalar, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-        if (arrayDims.length != 0) {
+        if (currentShape == null && arrayDims.length != 0) {
             if (arrayDims[0] == 0) {
                 // Skip zero length arrays, they may be used for dynamic padding but TS doesn't like them
                 return;
