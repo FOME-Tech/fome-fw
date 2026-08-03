@@ -274,25 +274,10 @@ void AirmassDispatcher::update(float targetAirmassPerCycle, float actualAirmassP
 		return;
 	}
 
-	// Closed-loop trim: a small PI that drives measured airmass to target. The output is a
-	// percent correction on the commanded flow, so the throttle model's inverse provides the
-	// gain scheduling and the PI sees a near-linear plant.
 	auto& trimCfg = engineConfiguration->torqueModel;
 	float error = targetAirmassPerCycle - actualAirmassPerCycle;
 	float dt = FAST_CALLBACK_PERIOD_MS / 1000.0f;
 	float authority = trimCfg.airmassTrimAuthority;
-
-	// Integrate, clamping the accumulator to the trim authority so it can't wind past achievable trim.
-	m_trimITerm = clampF(-authority, m_trimITerm + trimCfg.airmassTrimKi * error * dt, authority);
-	m_airmassTrim = clampF(-authority, trimCfg.airmassTrimKp * error + m_trimITerm, authority);
-
-	float airmassPerCycle = targetAirmassPerCycle * (1 + m_airmassTrim * PERCENT_DIV);
-
-	if (!engineConfiguration->twoStroke) {
-		// 4-stroke engines only induct on half of crank revolutions
-		airmassPerCycle /= 2;
-	}
-	float targetFlow = airmassPerCycle * rpm / 60;
 
 	// Throttle inlet pressure: real TIP sensor, else baro, else standard atmosphere.
 	float tip = Sensor::hasSensor(SensorType::ThrottleInletPressure)
@@ -300,20 +285,63 @@ void AirmassDispatcher::update(float targetAirmassPerCycle, float actualAirmassP
 					  : Sensor::get(SensorType::BarometricPressure).value_or(101.325f);
 
 	float iat = Sensor::get(SensorType::Iat).value_or(20);
+	float map = Sensor::getOrZero(SensorType::Map);
+	float pressureRatio = map / tip;
+
+	// Closed-loop trim: a small PI that drives measured airmass to target. The output is a
+	// percent correction on the commanded flow, so the throttle model's inverse provides the
+	// gain scheduling and the PI sees a near-linear plant. Integrate tentatively into a local; the
+	// engine-limited branch below may discard this and bleed the integrator instead of committing it.
+	float prevITerm = m_trimITerm;
+	float iTerm = clampF(-authority, prevITerm + trimCfg.airmassTrimKi * error * dt, authority);
+	float trim = clampF(-authority, trimCfg.airmassTrimKp * error + iTerm, authority);
+
+	float airmassPerCycle = targetAirmassPerCycle * (1 + trim * PERCENT_DIV);
+
+	if (!engineConfiguration->twoStroke) {
+		// 4-stroke engines only induct on half of crank revolutions
+		airmassPerCycle /= 2;
+	}
+	float targetFlow = airmassPerCycle * rpm / 60;
 
 	// The throttle's flow for a given angle depends on the pressure ratio across it.
 	// Use the measured MAP rather than inverting VE for a target: it needs no VE table
 	// (not every airmass mode has a credible one), it's exact in steady state, and the
-	// loop converges on its own as the throttle opens and the manifold fills.
-	float map = Sensor::getOrZero(SensorType::Map);
-	float pressureRatio = map / tip;
+	// loop converges on its own as the throttle opens and the manifold fills. The model
+	// returns 100% when the requested flow exceeds wide-open capacity, and clamps the
+	// pressure-ratio correction internally (so map >= tip is safe).
+	float solved = engine->module<ThrottleModel>()->throttlePositionForFlow(targetFlow, pressureRatio, tip, iat);
 
-	// Let the throttle model saturate on its own: it returns 100% when the requested flow
-	// exceeds wide-open capacity, and clamps the pressure-ratio correction internally (so
-	// map >= tip is safe). We deliberately do NOT short-circuit to wide-open when map nears
-	// tip - the manifold also sits near atmospheric at key-on / cranking / closed-throttle
-	// decel, and commanding wide-open throttle in those conditions would be dangerous.
-	m_throttleRequest = engine->module<ThrottleModel>()->throttlePositionForFlow(targetFlow, pressureRatio, tip, iat);
+	// Engine-limited (wide-open) regime. Near MAP == TIP there's almost no pressure drop across the
+	// blade, so the throttle is no longer the restriction: opening further recovers no airflow, and
+	// the flow inverse goes singular (many angles map to the same engine-limited airmass, so the
+	// solver can settle short of 100% and the trim winds up chasing an unreachable target). Detect
+	// it when the solved angle lands past the crossover - the angle above which the engine, not the
+	// throttle, limits flow. There, command the throttle fully open (free, since it isn't
+	// restricting) and bleed the trim toward zero so there's no wound-up correction left to unload
+	// onto a closing throttle when the driver lifts.
+	//
+	// The pressureRatio precheck skips the crossover solve in normal part-throttle operation, and
+	// the error > 0 gate plus the crossover test together keep a low demand at an atmospheric
+	// manifold (key-on, cranking, closed-throttle decel) from being mistaken for WOT: those solve
+	// to a small angle, well below crossover, even though MAP sits near TIP.
+	if (pressureRatio >= 0.95f && error > 0) {
+		float crossover = engine->module<ThrottleModel>()->crossoverAngle(tip, iat);
+		if (crossover > 0 && solved >= crossover) {
+			// Exponential bleed of the integrator toward zero (~400 ms time constant). Bleed from the
+			// pre-integration value so this tick adds no windup.
+			constexpr float trimBleedTau = 0.4f;
+			m_trimITerm = prevITerm * clampF(0, 1 - dt / trimBleedTau, 1);
+			m_airmassTrim = m_trimITerm;
+			m_throttleRequest = 100;
+			return;
+		}
+	}
+
+	// Normal part-throttle operation: commit the trim and command the solved angle.
+	m_trimITerm = iTerm;
+	m_airmassTrim = trim;
+	m_throttleRequest = solved;
 }
 
 percent_t AirmassDispatcher::getThrottleRequest() const {

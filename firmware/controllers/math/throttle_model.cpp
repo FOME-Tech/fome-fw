@@ -90,20 +90,30 @@ float ThrottleModelBase::throttlePositionForFlow(float flow, float pressureRatio
 	return solver.solve(50, 0.1).value_or(0);
 }
 
-float ThrottleModelBase::estimateThrottleFlow(float tip, float tps, float map, float iat) {
+// Pressure ratio at which the throttle effectively stops being the flow restriction - matches the
+// clamp in pressureRatioFlowCorrection above. Beyond it the engine, not the throttle, limits flow.
+static constexpr float crossoverPr = 0.95f;
+
+float ThrottleModelBase::crossoverAngle(float tip, float iat) const {
 	// How much flow would the engine pull at 0.95 PR?
 	// The throttle won't flow much more than this in any scenario, even if the throttle could move more flow.
-	constexpr float crossoverPr = 0.95f;
 	float p95Flow = maxEngineFlow(tip * crossoverPr);
 
-	// What throttle position gives us that flow at 0.95 PR?
-	float throttleAngle95Pr = throttlePositionForFlow(p95Flow, crossoverPr, tip, iat);
+	// What throttle position gives us that flow at 0.95 PR? Above it the engine is the restriction.
+	return throttlePositionForFlow(p95Flow, crossoverPr, tip, iat);
+}
+
+float ThrottleModelBase::estimateThrottleFlow(float tip, float tps, float map, float iat) {
+	float throttleAngle95Pr = crossoverAngle(tip, iat);
 	m_crossoverAngle = throttleAngle95Pr;
 
 	bool useWotModel = tps > throttleAngle95Pr;
 	m_useWotModel = useWotModel;
 
 	if (useWotModel) {
+		// Engine flow at the crossover (0.95 PR) point - the throttle-flow-limited end of the blend.
+		float p95Flow = maxEngineFlow(tip * crossoverPr);
+
 		// Maximum flow if the throttle was removed
 		float maximumPossibleFlow = maxEngineFlow(tip);
 
