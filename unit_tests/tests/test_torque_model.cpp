@@ -560,8 +560,8 @@ TEST(CutOnlyTraction, CurrentAirmassTorqueIsTheDemand) {
 	FlowMockTorqueModel tm;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
 	setCylinderCount(4); // 4 g -> 360 Nm at 90 Nm/g
-	tm.m_limited = 360;						 // traction control not biting: passes the demand through
-	tm.m_demand = 999;						 // the driver table must be ignored in cut-only mode
+	tm.m_limited = 360;	 // traction control not biting: passes the demand through
+	tm.m_demand = 999;	 // the driver table must be ignored in cut-only mode
 
 	tm.onFastCallback();
 
@@ -583,7 +583,7 @@ TEST(CutOnlyTraction, SparkBurnsTheGapWhenLimited) {
 	FlowMockTorqueModel tm;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
 	setCylinderCount(4); // 360 Nm gross
-	tm.m_limited = 200;						 // traction control cuts the ceiling to 200
+	tm.m_limited = 200;	 // traction control cuts the ceiling to 200
 
 	tm.onFastCallback();
 
