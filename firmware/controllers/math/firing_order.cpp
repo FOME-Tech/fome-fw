@@ -55,6 +55,8 @@ static const uint8_t order_1_2_3_4_5_6_7_8_9_10_11_12[] = {1, 2, 3, 4, 5, 6, 7, 
 static const uint8_t order_1_14_9_4_7_12_15_6_13_8_3_16_11_2_5_10[] = {
 		1, 14, 9, 4, 7, 12, 15, 6, 13, 8, 3, 16, 11, 2, 5, 10};
 
+// When adding a firing order, keep this switch, getFiringOrderTable() below, the firing_order_e enum
+// (firing_order.h) and the "cylindersCount" selectExpression in tunerstudio.template.ini all in sync.
 size_t getFiringOrderLength() {
 	switch (engineConfiguration->firingOrder) {
 		case FO_1:
