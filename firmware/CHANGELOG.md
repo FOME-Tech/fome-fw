@@ -37,6 +37,7 @@ or
  - IMU data (lateral/longitudinal acceleration and yaw rate) from the BMW E90 MK60e1/MK60e5 DSC/ABS module
  - New VVT mode "Honda K24Z Exhaust" for the three-tooth unevenly spaced exhaust cam wheel used on the K24Z, which differs from the 4+1 wheel of earlier K series engines. This pattern is used by K series engines that use a 60-2 crank pattern.
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
+ - New firing order 1-6-2-5-3-4 (Maserati V6) #789
 
 ### Fixed
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
