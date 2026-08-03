@@ -198,7 +198,7 @@ public class ConfigDefinition {
             }
         }
 
-        new TriggerWheelTSLogic().execute(triggersInputFolder, variableRegistry);
+        new TriggerWheelTSLogic().execute(triggersInputFolder, variableRegistry, parseState);
 
         if (pinoutLogic != null) {
             pinoutLogic.registerBoardSpecificPinNames(variableRegistry, parseState, state.getEnumsReader());
