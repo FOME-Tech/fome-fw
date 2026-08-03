@@ -19,7 +19,6 @@
  * @brief Default values for persistent properties
  */
 void setFordInline6() {
-	engineConfiguration->cylindersCount = 6;
 
 	setCamOperationMode();
 

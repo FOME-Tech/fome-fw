@@ -21,7 +21,6 @@ void setCitroenBerlingoTU3JPConfiguration() {
 	setCrankOperationMode();
 	engineConfiguration->trigger.type = trigger_type_e::TT_TOOTHED_WHEEL_60_2;
 	engineConfiguration->globalTriggerAngleOffset = 114;
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->displacement = 1.360;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 	engineConfiguration->ignitionMode = IM_WASTED_SPARK;

@@ -91,7 +91,7 @@ ignition_mode_e getCurrentIgnitionMode() {
 static void updateCylinders() {
 	// Update valid cylinders with their position in the firing order
 	uint16_t cylinderUpdateMask = 0;
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		auto cylinderNumber = getCylinderNumberAtIndex(i);
 
 		engine->cylinders[cylinderNumber].updateCylinderNumber(i, cylinderNumber);
@@ -103,11 +103,11 @@ static void updateCylinders() {
 	}
 
 	// Assert that all cylinders were configured
-	uint16_t expectedMask = (1 << (engineConfiguration->cylindersCount)) - 1;
+	uint16_t expectedMask = (1 << (engine->engineState.cylinderCount)) - 1;
 	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, cylinderUpdateMask == expectedMask, "cylinder update err");
 
 	// Invalidate the remaining cylinders
-	for (size_t i = engineConfiguration->cylindersCount; i < efi::size(engine->cylinders); i++) {
+	for (size_t i = engine->engineState.cylinderCount; i < efi::size(engine->cylinders); i++) {
 		engine->cylinders[i].invalidCylinder();
 	}
 }
@@ -119,8 +119,11 @@ void prepareOutputSignals() {
 	auto operationMode = getEngineRotationState()->getOperationMode();
 	getEngineState()->engineCycle = getEngineCycle(operationMode);
 
+	// Cylinder count is derived from the firing order - cache it for cheap access everywhere else.
+	getEngineState()->cylinderCount = getFiringOrderLength();
+
 	bool isOddFire = false;
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		if (engineConfiguration->timing_offset_cylinder[i] != 0) {
 			isOddFire = true;
 			break;
@@ -134,7 +137,7 @@ void prepareOutputSignals() {
 	// standard wasted-spark output mask, not the +360 re-fire trick.
 	getEngineState()->useOddFireWastedSpark = operationMode != TWO_STROKE &&
 											  !engineConfiguration->pairedOddFireWastedSpark &&
-											  (isOddFire | (engineConfiguration->cylindersCount % 2 == 1));
+											  (isOddFire | (engine->engineState.cylinderCount % 2 == 1));
 
 #if EFI_SHAFT_POSITION_INPUT
 	engine->triggerCentral.prepareTriggerShape();
@@ -150,7 +153,7 @@ void OneCylinder::updateCylinderNumber(uint8_t index, uint8_t cylinderNumber) {
 
 	// base = position of this cylinder in the firing order.
 	// We get a cylinder every n-th of an engine cycle where N is the number of cylinders
-	m_baseAngleOffset = engine->engineState.engineCycle * index / engineConfiguration->cylindersCount;
+	m_baseAngleOffset = engine->engineState.engineCycle * index / engine->engineState.cylinderCount;
 
 	m_valid = true;
 }

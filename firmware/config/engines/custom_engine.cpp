@@ -120,7 +120,6 @@ void setFrankensoBoardTestConfiguration() {
 	engineConfiguration->triggerSimulatorRpm = 300;
 	engineConfiguration->cranking.rpm = 100;
 
-	engineConfiguration->cylindersCount = 12;
 	engineConfiguration->firingOrder = FO_1_7_5_11_3_9_6_12_2_8_4_10;
 
 	// set ignition_mode 1
@@ -208,7 +207,6 @@ void setEtbTestConfiguration() {
 // todo: remove this? this was used to play with "secret" red boards prior to MRE reality
 // set engine_type 59
 void setTle8888TestConfiguration() {
-	engineConfiguration->cylindersCount = 8;
 	engineConfiguration->firingOrder = FO_1_8_7_2_6_5_4_3;
 	engineConfiguration->ignitionMode = IM_INDIVIDUAL_COILS;
 	engineConfiguration->crankingInjectionMode = IM_SEQUENTIAL;
@@ -325,7 +323,6 @@ static void mreBoardOldTest() {
 
 	// TPS tps1_1AdcChannel EFI_ADC_13
 
-	engineConfiguration->cylindersCount = 10;
 	engineConfiguration->firingOrder = FO_1_10_9_4_3_6_5_8_7_2;
 
 	// red LED #1
@@ -427,7 +424,6 @@ end
  * set engine_type 42
  */
 void proteusBoardTest() {
-	engineConfiguration->cylindersCount = 12;
 	engineConfiguration->firingOrder = FO_1_2_3_4_5_6_7_8_9_10_11_12;
 	engineConfiguration->triggerSimulatorRpm = 600;
 	engineConfiguration->injector.flow = 4.6; // longer blink
@@ -512,7 +508,6 @@ void mreBCM() {
 void mreBoardNewTest() {
 	mreBoardOldTest();
 
-	engineConfiguration->cylindersCount = 12;
 	engineConfiguration->firingOrder = FO_1_2_3_4_5_6_7_8_9_10_11_12;
 	engineConfiguration->injector.flow = 5; // longer blink
 

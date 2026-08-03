@@ -121,7 +121,7 @@ void InstantRpmCalculator::updateCylinderContribution(
 		uint32_t current_index,
 		uint32_t nowNt32,
 		const EnginePhaseInfo& phaseInfo) {
-	int minTriggerLength = engineConfiguration->cylindersCount * 2;
+	int minTriggerLength = engine->engineState.cylinderCount * 2;
 	if (triggerShape.getLength() < minTriggerLength) {
 		// Not enough teeth to reasonably determine cylinder contribution
 		return;
@@ -134,7 +134,7 @@ void InstantRpmCalculator::updateCylinderContribution(
 		return;
 	}
 
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		auto& cyl = engine->cylinders[i];
 
 		auto measurementAngle = cyl.getAngleOffset() + measurementOffset;

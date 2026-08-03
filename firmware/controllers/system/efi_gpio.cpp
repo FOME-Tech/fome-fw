@@ -289,7 +289,8 @@ void EnginePins::stopInjectionPins() {
 
 void EnginePins::startIgnitionPins() {
 #if EFI_PROD_CODE
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	// Pins are started before prepareOutputSignals() caches the count, so derive from firing order.
+	for (size_t i = 0; i < getFiringOrderLength(); i++) {
 		NamedOutputPin* trailingOutput = &enginePins.trailingCoils[i];
 		if (isPinOrModeChanged(trailingCoilPins[i], ignitionPinMode)) {
 			trailingOutput->initPin(
@@ -310,7 +311,8 @@ void EnginePins::startIgnitionPins() {
 void EnginePins::startInjectionPins() {
 #if EFI_PROD_CODE
 	// todo: should we move this code closer to the injection logic?
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	// Pins are started before prepareOutputSignals() caches the count, so derive from firing order.
+	for (size_t i = 0; i < getFiringOrderLength(); i++) {
 		NamedOutputPin* output = &enginePins.injectors[i];
 		if (isPinOrModeChanged(injectionPins[i], injectionPinMode)) {
 			output->initPin(

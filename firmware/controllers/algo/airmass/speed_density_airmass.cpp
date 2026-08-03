@@ -37,7 +37,7 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 float SpeedDensityAirmass::getAirflow(float rpm, float map, bool postState) {
 	auto airmassResult = getAirmass(rpm, map, postState);
 
-	float massPerCycle = airmassResult.CylinderAirmass * engineConfiguration->cylindersCount;
+	float massPerCycle = airmassResult.CylinderAirmass * engine->engineState.cylinderCount;
 
 	if (!engineConfiguration->twoStroke) {
 		// 4 stroke engines only do a half cycle per rev

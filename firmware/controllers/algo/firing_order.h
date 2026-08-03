@@ -88,3 +88,9 @@ typedef enum __attribute__((__packed__)) {
  * indicating cylinder 4.
  */
 size_t getCylinderNumberAtIndex(size_t cylinderIndex);
+
+/**
+ * The number of cylinders the engine has, derived from the configured firing order.
+ * This is the authoritative source of cylinder count - firing order uniquely determines it.
+ */
+size_t getFiringOrderLength();

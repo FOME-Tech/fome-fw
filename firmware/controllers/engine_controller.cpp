@@ -321,8 +321,8 @@ void commonInitEngineController() {
 
 // Returns false if there's an obvious problem with the loaded configuration
 bool validateConfig() {
-	if (engineConfiguration->cylindersCount > MAX_CYLINDER_COUNT) {
-		firmwareError("Invalid cylinder count: %d", engineConfiguration->cylindersCount);
+	if (getFiringOrderLength() > MAX_CYLINDER_COUNT) {
+		firmwareError("Invalid cylinder count: %d", getFiringOrderLength());
 		return false;
 	}
 

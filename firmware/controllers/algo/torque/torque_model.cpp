@@ -24,7 +24,7 @@ void TorqueModelBase::onFastCallback() {
 
 	// Forward calculation of current torque: the gross torque the current charge would make at base
 	// spark. In cut-only mode this doubles as the demand (the throttle, not a torque model, sets it).
-	float airmassActual = engine->fuelComputer.sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
+	float airmassActual = engine->fuelComputer.sdAirMassInOneCylinder * engine->engineState.cylinderCount;
 	m_airmassActual = airmassActual;
 	float grossAtCurrentAir = airmassActual * torquePerGramAir;
 

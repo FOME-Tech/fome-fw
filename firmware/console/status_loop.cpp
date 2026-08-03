@@ -122,7 +122,7 @@ static void printEngineSnifferPinMappings() {
 		extern const char* vvtNames[];
 		printOutPin(vvtNames[i], engineConfiguration->camInputs[i]);
 	}
-	int cylCount = minI(engineConfiguration->cylindersCount, MAX_CYLINDER_COUNT);
+	int cylCount = minI(engine->engineState.cylinderCount, MAX_CYLINDER_COUNT);
 	for (int i = 0; i < cylCount; i++) {
 		printOutPin(enginePins.coils[i].getShortName(), engineConfiguration->ignitionPins[i]);
 		printOutPin(enginePins.trailingCoils[i].getShortName(), engineConfiguration->trailingCoilPins[i]);

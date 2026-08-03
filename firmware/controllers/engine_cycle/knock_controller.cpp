@@ -117,7 +117,7 @@ void KnockControllerBase::onFastCallback() {
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
 	auto load = getIgnitionLoad();
 
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		m_gain[i] = interpolate3d(
 				config->knockGains[i].table, config->knockGainLoadBins, load, config->knockGainRpmBins, rpm);
 	}

@@ -15,7 +15,6 @@
 void setHellen121nissanQR() {
 	engineConfiguration->trigger.type = trigger_type_e::TT_NISSAN_QR25;
 
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 	engineConfiguration->displacement = 2;
 	strcpy(engineConfiguration->engineCode, "QR");
@@ -37,7 +36,6 @@ void setHellen121nissanVQ() {
 
 	setNissanMAF0031();
 
-	engineConfiguration->cylindersCount = 6;
 	engineConfiguration->firingOrder = FO_1_2_3_4_5_6;
 	engineConfiguration->displacement = 4;
 	strcpy(engineConfiguration->engineCode, "VQ");
