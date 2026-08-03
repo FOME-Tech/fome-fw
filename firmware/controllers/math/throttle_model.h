@@ -16,6 +16,10 @@ public:
 
 	float throttlePositionForFlow(float flow, float pressureRatio, float p_up, float iat) const;
 
+	// Throttle angle above which the engine, not the throttle, limits flow: opening past it
+	// recovers essentially no airflow. Returns 0 when the engine flow ceiling isn't known yet.
+	float crossoverAngle(float tip, float iat) const;
+
 protected:
 	// Given some TPS, what is the normalized choked flow in g/s?
 	virtual float effectiveArea(float tps) const = 0;
