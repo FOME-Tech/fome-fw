@@ -407,4 +407,66 @@ public class ParseStructTest {
         Assert.assertEquals(8, fieldValues2.length[0]);
         Assert.assertEquals(4, fieldValues2.length[1]);
     }
+
+    @Test
+    public void tableSizeFromDefines() {
+        ParseState state = parse(
+                "#define MY_ROWS 4\n" +
+                        "#define MY_COLS 8\n" +
+                        "struct_no_prefix myStruct\n" +
+                        "begin_table\n" +
+                        "table_rows num MY_ROWS uint8_t rowVals\n" +
+                        "table_cols num {MY_COLS / 2} uint16_t colVals\n" +
+                        "table_values float tableVals\n" +
+                        "end_table\n" +
+                        "end_struct\n"
+        );
+
+        List<Field> fields = state.getLastStruct().fields;
+        Assert.assertEquals(3, fields.size());
+
+        ArrayField<ScalarField> fieldRows = (ArrayField<ScalarField>)fields.get(0);
+        Assert.assertEquals(1, fieldRows.length.length);
+        Assert.assertEquals(4, fieldRows.length[0]);
+
+        ArrayField<ScalarField> fieldCols = (ArrayField<ScalarField>)fields.get(1);
+        Assert.assertEquals(1, fieldCols.length.length);
+        Assert.assertEquals(4, fieldCols.length[0]);
+
+        ArrayField<ScalarField> fieldValues = (ArrayField<ScalarField>)fields.get(2);
+        Assert.assertEquals(2, fieldValues.length.length);
+        Assert.assertEquals(4, fieldValues.length[0]);
+        Assert.assertEquals(4, fieldValues.length[1]);
+    }
+
+    // A define on the axis must not be mistaken for one of the value field's options
+    @Test
+    public void tableSizeFromDefinesWithFieldOptions() {
+        ParseState state = parse(
+                "#define MY_ROWS 4\n" +
+                        "struct_no_prefix myStruct\n" +
+                        "begin_table\n" +
+                        "table_rows num MY_ROWS uint16_t rowVals;;\"kPa\", 1, 0, 0, 1000, 0\n" +
+                        "table_cols num 8 uint16_t colVals;;\"RPM\", 1, 0, 0, 18000, 0\n" +
+                        "table_values uint16_t autoscale tableVals;;\"%\", 0.1, 0, 0, 999, 1\n" +
+                        "end_table\n" +
+                        "end_struct\n"
+        );
+
+        List<Field> fields = state.getLastStruct().fields;
+        Assert.assertEquals(3, fields.size());
+
+        ArrayField<ScalarField> fieldRows = (ArrayField<ScalarField>)fields.get(0);
+        Assert.assertEquals(4, fieldRows.length[0]);
+        Assert.assertEquals("\"kPa\"", fieldRows.prototype.options.units);
+        Assert.assertEquals(1.0, fieldRows.prototype.options.scale, 0);
+        Assert.assertEquals(1000.0, fieldRows.prototype.options.max, 0);
+
+        ArrayField<ScalarField> fieldValues = (ArrayField<ScalarField>)fields.get(2);
+        Assert.assertEquals(8, fieldValues.length[0]);
+        Assert.assertEquals(4, fieldValues.length[1]);
+        Assert.assertEquals("\"%\"", fieldValues.prototype.options.units);
+        Assert.assertEquals(0.1, fieldValues.prototype.options.scale, 0);
+        Assert.assertEquals(999.0, fieldValues.prototype.options.max, 0);
+    }
 }

@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20023
+#define FLASH_DATA_VERSION 20024
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -1617,9 +1617,11 @@ uint8_t[8 x 8] autoscale trailingIgnitionTable;;"deg", 0.1, 0, 0, 25, 1
 uint16_t[8] trailingIgnitionLoadBins;;"Load", 1, 0, 0, 1000, 0
 uint16_t[8] trailingIgnitionRpmBins;;"RPM",	   1, 0, 0, 18000, 0
 
-uint16_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale veTable;;"%", 0.1, 0, 0, 999, 1
-uint16_t[FUEL_LOAD_COUNT] veLoadBins;;"kPa",	1, 0, 0, 1000, 0
-uint16_t[FUEL_RPM_COUNT] veRpmBins;;"RPM",	   1, 0, 0, 18000, 0
+begin_table
+	table_rows num FUEL_LOAD_COUNT uint16_t veLoadBins;;"kPa",	1, 0, 0, 1000, 0
+	table_cols num FUEL_RPM_COUNT uint16_t veRpmBins;;"RPM",	   1, 0, 0, 18000, 0
+	table_values uint16_t autoscale veTable;;"%", 0.1, 0, 0, 999, 1
+end_table
 
 union
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale lambdaTable;;"lambda", {1/@@PACK_MULT_LAMBDA_CFG@@}, 0, 0.6, 1.5, 2

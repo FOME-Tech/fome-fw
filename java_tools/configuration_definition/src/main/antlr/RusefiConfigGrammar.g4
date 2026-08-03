@@ -102,8 +102,9 @@ bitField: Bit identifier (',' QuotedString ',' QuotedString)? ('(' 'comment' ':'
 
 unionField: 'union' ENDL+ fields 'end_union';
 
-tableAxisSpec: ('min' integer 'max' integer|'num' integer);
-tableField: 'begin_table' ('maxsize' integer)? ENDL+
+tableAxisSpec: ('min' numexpr 'max' numexpr|'num' numexpr);
+tableMaxSize: 'maxsize' numexpr;
+tableField: 'begin_table' tableMaxSize? ENDL+
     'table_rows' tableAxisSpec scalarField ENDL+
     'table_cols' tableAxisSpec scalarField  ENDL+
     ('table_values' scalarField ENDL+)+

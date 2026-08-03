@@ -594,10 +594,35 @@ public class ParseState implements DefinitionsState {
         }
     }
 
+    // Axis sizes of the table currently being parsed, in declaration order (rows then cols).
+    // Each entry is either {count} or {min, max} for a resizable axis. These are captured as the
+    // axis spec exits so that they don't collide with the numexprs of the field on the same line.
+    private final List<int[]> tableAxisSizes = new ArrayList<>();
+    private Integer tableMaxSize = null;
+
     @Override
     public void enterTableField(RusefiConfigGrammarParser.TableFieldContext ctx) {
+        tableAxisSizes.clear();
+        tableMaxSize = null;
+
         // Make a new scope as if we're a struct, we'll chop it apart later
         enterStruct(null);
+    }
+
+    @Override
+    public void exitTableMaxSize(RusefiConfigGrammarParser.TableMaxSizeContext ctx) {
+        tableMaxSize = evalResults.remove().intValue();
+    }
+
+    @Override
+    public void exitTableAxisSpec(RusefiConfigGrammarParser.TableAxisSpecContext ctx) {
+        int[] sizes = new int[ctx.numexpr().size()];
+
+        for (int i = 0; i < sizes.length; i++) {
+            sizes[i] = evalResults.remove().intValue();
+        }
+
+        tableAxisSizes.add(sizes);
     }
 
     @Override
@@ -616,28 +641,34 @@ public class ParseState implements DefinitionsState {
         int expectedValuesSize = valuesPrototypes.get(0).type.size;
         assert(valuesPrototypes.stream().allMatch(v -> v.type.size == expectedValuesSize));
 
+        int[] rowSpec = tableAxisSizes.get(0);
+        int[] colSpec = tableAxisSizes.get(1);
+
         int maxRows;
         int maxCols;
 
-        boolean isResizable = ctx.integer() != null;
+        boolean isResizable = rowSpec.length == 2 || colSpec.length == 2;
         if (isResizable) {
-            int minRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
-            maxRows = Integer.parseInt(ctx.tableAxisSpec(0).integer(1).getText());
-            int minCols = Integer.parseInt(ctx.tableAxisSpec(1).integer(0).getText());
-            maxCols = Integer.parseInt(ctx.tableAxisSpec(1).integer(1).getText());
+            if (rowSpec.length != 2 || colSpec.length != 2) {
+                throw new IllegalStateException("table must specify min/max on both axes, or neither");
+            }
 
-            int maxValues = Integer.parseInt(ctx.integer().getText());
+            if (tableMaxSize == null) {
+                throw new IllegalStateException("resizable table requires a maxsize");
+            }
+
+            int minRows = rowSpec[0];
+            maxRows = rowSpec[1];
+            int minCols = colSpec[0];
+            maxCols = colSpec[1];
 
             // Check that we can at least fit a minimum size table
-            assert(maxValues >= minRows * minCols);
+            assert(tableMaxSize >= minRows * minCols);
 
             throw new IllegalStateException("resizable table not supported yet");
         } else {
-            int rowCount = Integer.parseInt(ctx.tableAxisSpec(0).integer(0).getText());
-            int colCount = Integer.parseInt(ctx.tableAxisSpec(1).integer(0).getText());
-
-            maxRows = rowCount;
-            maxCols = colCount;
+            maxRows = rowSpec[0];
+            maxCols = colSpec[0];
         }
 
         // Generate bins
