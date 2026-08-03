@@ -12,7 +12,7 @@ TEST(issues, issueOneCylinderSpecialCase968) {
 	engineConfiguration->cranking.rpm = 1100;
 	engineConfiguration->globalTriggerAngleOffset = 45;
 	engineConfiguration->displacement = 0.072; // 72cc
-	engineConfiguration->cylindersCount = 1;
+	setCylinderCount(1);
 	engineConfiguration->firingOrder = FO_1;
 
 	engineConfiguration->injectionMode = IM_SEQUENTIAL;

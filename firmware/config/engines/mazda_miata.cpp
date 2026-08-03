@@ -75,7 +75,6 @@ void common079721_2351() {
 
 	engineConfiguration->engineChartSize = 300;
 
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 
 	engineConfiguration->fuelPumpPin = Gpio::Unassigned; // fuel pump is not controlled by ECU on this engine

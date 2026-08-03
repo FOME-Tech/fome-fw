@@ -39,6 +39,9 @@ or
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
  - New firing order 1-6-2-5-3-4 (Maserati V6) #789
 
+### Changed
+ - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
+
 ### Fixed
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio

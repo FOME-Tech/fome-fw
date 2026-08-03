@@ -39,7 +39,7 @@ float IFuelComputer::getTChargeCoefficient(float rpm, float tps) {
 	constexpr floatms_t gramsPerMsToKgPerHour = (3600.0f * 1000.0f) / 1000.0f;
 	// We're actually using an 'old' airMass calculated for the previous cycle, but it's ok, we're not having any
 	// self-excitaton issues
-	floatms_t airMassForEngine = sdAirMassInOneCylinder * engineConfiguration->cylindersCount;
+	floatms_t airMassForEngine = sdAirMassInOneCylinder * engine->engineState.cylinderCount;
 	// airMass is in grams per 1 cycle for 1 cyl. Convert it to airFlow in kg/h for the engine.
 	// And if the engine is stopped (0 rpm), then airFlow is also zero (avoiding NaN division)
 	floatms_t airFlow = (rpm == 0) ? 0 : airMassForEngine * gramsPerMsToKgPerHour / getEngineCycleDuration(rpm);

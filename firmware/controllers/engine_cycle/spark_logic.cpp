@@ -23,11 +23,11 @@ static int getIgnitionPinForIndex(int cylinderIndex, ignition_mode_e ignitionMod
 		case IM_ONE_COIL:
 			return 0;
 		case IM_WASTED_SPARK: {
-			if (engineConfiguration->cylindersCount == 1) {
+			if (engine->engineState.cylinderCount == 1) {
 				// we do not want to divide by zero
 				return 0;
 			}
-			return cylinderIndex % (engineConfiguration->cylindersCount / 2);
+			return cylinderIndex % (engine->engineState.cylinderCount / 2);
 		}
 		case IM_INDIVIDUAL_COILS:
 			return cylinderIndex;
@@ -81,7 +81,7 @@ uint16_t IgnitionEvent::calculateIgnitionOutputMask() const {
 	// first-half (lower firing-order index) cylinder slot gets a pin assigned and we drive only that one OutputPin from
 	// both events.
 	if (m_ignitionMode == IM_WASTED_SPARK && !engineConfiguration->pairedOddFireWastedSpark) {
-		int secondIndex = index + engineConfiguration->cylindersCount / 2;
+		int secondIndex = index + engine->engineState.cylinderCount / 2;
 		int secondCoilIndex = getCylinderNumberAtIndex(secondIndex);
 		outputsMask |= 1 << secondCoilIndex;
 	}
@@ -309,9 +309,8 @@ void initializeIgnitionActions() {
 		list.isReady = false;
 		return;
 	}
-	efiAssertVoid(ObdCode::CUSTOM_ERR_6592, engineConfiguration->cylindersCount > 0, "cylindersCount");
 
-	for (size_t cylinderIndex = 0; cylinderIndex < engineConfiguration->cylindersCount; cylinderIndex++) {
+	for (size_t cylinderIndex = 0; cylinderIndex < engine->engineState.cylinderCount; cylinderIndex++) {
 		list.elements[cylinderIndex].cylinderIndex = cylinderIndex;
 		prepareCylinderIgnitionSchedule(dwellAngle, sparkDwell, list.elements[cylinderIndex]);
 	}
@@ -332,7 +331,7 @@ static void prepareIgnitionSchedule() {
 	float maxAllowedDwellAngle = (int)(getEngineCycle(operationMode) / 2); // the cast is about making Coverity happy
 
 	if (getCurrentIgnitionMode() == IM_ONE_COIL) {
-		maxAllowedDwellAngle = getEngineCycle(operationMode) / engineConfiguration->cylindersCount / 1.1;
+		maxAllowedDwellAngle = getEngineCycle(operationMode) / engine->engineState.cylinderCount / 1.1;
 	}
 
 	if (engine->ignitionState.dwellAngle == 0) {
@@ -379,7 +378,7 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 			engine->engineState.useOddFireWastedSpark && getCurrentIgnitionMode() == IM_WASTED_SPARK;
 
 	if (engine->ignitionEvents.isReady) {
-		for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+		for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 			auto& event = engine->ignitionEvents.elements[i];
 
 			angle_t dwellAngle = event.dwellAngle;
@@ -447,9 +446,9 @@ void onTriggerEventSparkLogic(const EnginePhaseInfo& phase) {
 int getNumberOfSparks(ignition_mode_e mode) {
 	switch (mode) {
 		case IM_ONE_COIL:
-			return engineConfiguration->cylindersCount;
+			return engine->engineState.cylinderCount;
 		case IM_TWO_COILS:
-			return engineConfiguration->cylindersCount / 2;
+			return engine->engineState.cylinderCount / 2;
 		case IM_INDIVIDUAL_COILS:
 			return 1;
 		case IM_WASTED_SPARK:

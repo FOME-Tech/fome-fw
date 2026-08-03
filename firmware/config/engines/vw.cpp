@@ -30,7 +30,6 @@ void setVwAba() {
 	engineConfiguration->mafAdcChannel = EFI_ADC_1;
 
 	// Base engine setting
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->displacement = 2.0;
 	engineConfiguration->injector.flow = 320; // 30lb/h
 	// set algorithm 3
@@ -58,18 +57,15 @@ void setVwAba() {
 }
 
 void setHellen121Vag_5_cyl() {
-	engineConfiguration->cylindersCount = 5;
 	engineConfiguration->displacement = 2.5;
 	engineConfiguration->firingOrder = FO_1_2_4_5_3;
 }
 
 void setHellen121Vag_vr6_cyl() {
-	engineConfiguration->cylindersCount = 6;
 	engineConfiguration->firingOrder = FO_1_5_3_6_2_4;
 }
 
 void setHellen121Vag_v6_cyl() {
-	engineConfiguration->cylindersCount = 6;
 	engineConfiguration->displacement = 2.7;
 
 	engineConfiguration->camInputs[1 * CAMS_PER_BANK] = Gpio::A7; // 87a
@@ -78,7 +74,6 @@ void setHellen121Vag_v6_cyl() {
 }
 
 void setHellen121Vag_8_cyl() {
-	engineConfiguration->cylindersCount = 8;
 	engineConfiguration->displacement = 4.2;
 	engineConfiguration->firingOrder = FO_1_5_4_8_6_3_7_2;
 }

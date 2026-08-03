@@ -51,7 +51,7 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 	switch (m_injectionMode) {
 		case IM_SIMULTANEOUS:
 			// Simultaneous mode fires all injectors
-			mask = (1 << engineConfiguration->cylindersCount) - 1;
+			mask = (1 << engine->engineState.cylinderCount) - 1;
 			break;
 		case IM_SINGLE_POINT:
 			// Single point only fires injector 1
@@ -65,8 +65,7 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 			// fires the injector 360 degrees later in the firing order.
 			mask |=
 					(1 << getCylinderNumberAtIndex(
-							 (ownIndex + (engineConfiguration->cylindersCount / 2)) %
-							 engineConfiguration->cylindersCount));
+							 (ownIndex + (engine->engineState.cylinderCount / 2)) % engine->engineState.cylinderCount));
 
 			// falls through
 		case IM_SEQUENTIAL:
@@ -326,7 +325,7 @@ bool InjectionEvent::update() {
 }
 
 void FuelSchedule::addFuelEvents() {
-	for (size_t cylinderIndex = 0; cylinderIndex < engineConfiguration->cylindersCount; cylinderIndex++) {
+	for (size_t cylinderIndex = 0; cylinderIndex < engine->engineState.cylinderCount; cylinderIndex++) {
 		bool result = elements[cylinderIndex].update();
 
 		if (!result) {
@@ -345,7 +344,7 @@ void FuelSchedule::onTriggerTooth(const EnginePhaseInfo& phase) {
 		return;
 	}
 
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		elements[i].onTriggerTooth(phase);
 	}
 }

@@ -55,14 +55,15 @@ static void setDefaultTractionControl() {
 
 /* Cylinder to bank mapping */
 void setLeftRightBanksNeedBetterName() {
-	for (size_t i = 0; i < engineConfiguration->cylindersCount; i++) {
+	// Runs at preset-setup time, before the cylinderCount cache is populated, so derive
+	// the count straight from the (already configured) firing order.
+	for (size_t i = 0; i < getFiringOrderLength(); i++) {
 		engineConfiguration->cylinderBankSelect[i] = i % 2;
 	}
 }
 
 void setDefaultBaseEngine() {
 	// Base Engine Settings
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->displacement = 2;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 

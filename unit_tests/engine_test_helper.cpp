@@ -333,9 +333,53 @@ void EngineTestHelper::assertRpm(int expectedRpm, const char* msg) {
 	EXPECT_EQ(expectedRpm, Sensor::getOrZero(SensorType::Rpm)) << msg;
 }
 
+void setCylinderCount(int cylinderCount) {
+	// There is no cylinder count config field - the firmware derives it from the firing order.
+	// Pick a canonical firing order of the requested length so both stay consistent, then refresh
+	// the cached count directly (tests don't necessarily run a full prepareOutputSignals() cycle).
+	firing_order_e firingOrder;
+	switch (cylinderCount) {
+		case 1:
+			firingOrder = FO_1;
+			break;
+		case 2:
+			firingOrder = FO_1_2;
+			break;
+		case 3:
+			firingOrder = FO_1_2_3;
+			break;
+		case 4:
+			firingOrder = FO_1_3_4_2;
+			break;
+		case 5:
+			firingOrder = FO_1_2_4_5_3;
+			break;
+		case 6:
+			firingOrder = FO_1_5_3_6_2_4;
+			break;
+		case 8:
+			firingOrder = FO_1_8_4_3_6_5_7_2;
+			break;
+		case 9:
+			firingOrder = FO_1_2_3_4_5_6_7_8_9;
+			break;
+		case 10:
+			firingOrder = FO_1_10_9_4_3_6_5_8_7_2;
+			break;
+		case 12:
+			firingOrder = FO_1_7_5_11_3_9_6_12_2_8_4_10;
+			break;
+		default:
+			throw std::logic_error("setCylinderCount: no canonical firing order for that count");
+	}
+
+	engineConfiguration->firingOrder = firingOrder;
+	engine->engineState.cylinderCount = cylinderCount;
+}
+
 void setupSimpleTestEngineWithMaf(EngineTestHelper* eth, injection_mode_e injectionMode, trigger_type_e trigger) {
 	engineConfiguration->isIgnitionEnabled = false; // let's focus on injection
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 	// a bit of flexibility - the mode may be changed by some tests
 	engineConfiguration->injectionMode = injectionMode;
 	// set cranking mode (it's used by getCurrentInjectionMode())

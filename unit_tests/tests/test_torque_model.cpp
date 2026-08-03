@@ -390,7 +390,7 @@ TEST(TorqueModelFlow, WiresThroughActualAirmass) {
 	FlowMockTorqueModel tm;
 
 	engine->fuelComputer.sdAirMassInOneCylinder = 0.3f;
-	engineConfiguration->cylindersCount = 5;
+	setCylinderCount(5);
 
 	tm.onFastCallback();
 
@@ -481,7 +481,7 @@ TEST(TorqueModelFlow, NoSparkReductionWhenUnlimited) {
 	tm.m_demand = 250;
 	tm.m_limited = 250;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 
 	tm.onFastCallback();
 
@@ -500,7 +500,7 @@ TEST(TorqueModelFlow, SparkBurnsTheGapWhenLimited) {
 	tm.m_limited = 200;
 	tm.m_loss = 0;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 
 	tm.onFastCallback();
 
@@ -522,7 +522,7 @@ TEST(TorqueModelFlow, SparkReductionClampsToZeroOnceThrottleCatchesDown) {
 	tm.m_limited = 300;
 	tm.m_loss = 0;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 2;
+	setCylinderCount(2);
 
 	tm.onFastCallback();
 
@@ -542,7 +542,7 @@ TEST(CutOnlyTraction, NoOpWhenTractionAlsoDisabled) {
 	FlowMockTorqueModel tm;
 	tm.m_limited = 250;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 
 	tm.onFastCallback();
 
@@ -559,9 +559,9 @@ TEST(CutOnlyTraction, CurrentAirmassTorqueIsTheDemand) {
 
 	FlowMockTorqueModel tm;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 4; // 4 g -> 360 Nm at 90 Nm/g
-	tm.m_limited = 360;						 // traction control not biting: passes the demand through
-	tm.m_demand = 999;						 // the driver table must be ignored in cut-only mode
+	setCylinderCount(4); // 4 g -> 360 Nm at 90 Nm/g
+	tm.m_limited = 360;	 // traction control not biting: passes the demand through
+	tm.m_demand = 999;	 // the driver table must be ignored in cut-only mode
 
 	tm.onFastCallback();
 
@@ -582,8 +582,8 @@ TEST(CutOnlyTraction, SparkBurnsTheGapWhenLimited) {
 
 	FlowMockTorqueModel tm;
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 4; // 360 Nm gross
-	tm.m_limited = 200;						 // traction control cuts the ceiling to 200
+	setCylinderCount(4); // 360 Nm gross
+	tm.m_limited = 200;	 // traction control cuts the ceiling to 200
 
 	tm.onFastCallback();
 
@@ -624,7 +624,7 @@ TEST(CutOnlyTraction, RealTractionControlCutsViaSpark) {
 	Sensor::setMockValue(SensorType::WheelSpeedRR, 50);
 
 	engine->fuelComputer.sdAirMassInOneCylinder = 1.0f;
-	engineConfiguration->cylindersCount = 4; // 360 Nm gross at base spark
+	setCylinderCount(4); // 360 Nm gross at base spark
 
 	// Let the slip integrator wind in.
 	for (int i = 0; i < 20; i++) {

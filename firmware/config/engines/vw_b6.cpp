@@ -25,7 +25,6 @@ static inline void commonPassatB6() {
 	engineConfiguration->etbIdleThrottleRange = 10;
 	engineConfiguration->idleMode = IM_AUTO;
 
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 	engineConfiguration->isPhaseSyncRequiredForIgnition = true;
 

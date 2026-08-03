@@ -23,6 +23,13 @@ public:
 	 */
 	angle_t engineCycle;
 
+	/**
+	 * Number of cylinders the engine has, cached from the configured firing order.
+	 * Recomputed in prepareOutputSignals() on any configuration change.
+	 * @see getFiringOrderLength()
+	 */
+	uint8_t cylinderCount = 1;
+
 	bool useOddFireWastedSpark = false;
 
 	float injectionStage2Fraction = 0;

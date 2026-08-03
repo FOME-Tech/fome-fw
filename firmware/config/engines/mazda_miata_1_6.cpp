@@ -75,7 +75,6 @@ static const uint8_t mapBased16IgnitionTable[16][16] = {
 void miataNAcommonEngineSettings() {
 	// Base engine
 	engineConfiguration->displacement = 1.6;
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 
 	engineConfiguration->rpmHardLimit = 7200;

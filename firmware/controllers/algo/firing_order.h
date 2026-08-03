@@ -12,6 +12,13 @@
 /**
  * thank you
  * https://www.ingenieriaymecanicaautomotriz.com/firing-order-its-purpose-and-order-in-different-numbers-of-cylinders/
+ *
+ * When adding a firing order, THREE places must be kept in sync:
+ *   1. this enum
+ *   2. the switch statements in firing_order.cpp (getFiringOrderLength() and getFiringOrderTable())
+ *   3. the "cylindersCount" selectExpression in tunerstudio.template.ini (indexed by this enum value,
+ *      so its Nth entry must be the cylinder count of firing order N)
+ * plus the firing_order_e dropdown in fome_config.txt.
  */
 typedef enum __attribute__((__packed__)) {
 	FO_1 = 0,
@@ -88,3 +95,9 @@ typedef enum __attribute__((__packed__)) {
  * indicating cylinder 4.
  */
 size_t getCylinderNumberAtIndex(size_t cylinderIndex);
+
+/**
+ * The number of cylinders the engine has, derived from the configured firing order.
+ * This is the authoritative source of cylinder count - firing order uniquely determines it.
+ */
+size_t getFiringOrderLength();

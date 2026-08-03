@@ -12,7 +12,6 @@
 #endif // HW_PROTEUS
 
 void setHondaK() {
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->displacement = 2.4;
 	engineConfiguration->firingOrder = FO_1_3_4_2;
 	engineConfiguration->engineSyncCam = SC_Exhaust_First;

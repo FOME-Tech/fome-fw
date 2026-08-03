@@ -136,7 +136,7 @@ static void cancelBenchTest() {
 /*==========================================================================*/
 
 static void doRunFuelInjBench(size_t humanIndex, float onTime, float offTime, int count) {
-	if (humanIndex < 1 || humanIndex > engineConfiguration->cylindersCount) {
+	if (humanIndex < 1 || humanIndex > engine->engineState.cylinderCount) {
 		efiPrintf("Invalid index: %d", humanIndex);
 		return;
 	}
@@ -144,7 +144,7 @@ static void doRunFuelInjBench(size_t humanIndex, float onTime, float offTime, in
 }
 
 static void doRunSparkBench(size_t humanIndex, float onTime, float offTime, int count) {
-	if (humanIndex < 1 || humanIndex > engineConfiguration->cylindersCount) {
+	if (humanIndex < 1 || humanIndex > engine->engineState.cylinderCount) {
 		efiPrintf("Invalid index: %d", humanIndex);
 		return;
 	}

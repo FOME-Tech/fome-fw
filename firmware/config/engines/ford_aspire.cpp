@@ -58,7 +58,6 @@ void setFordAspireEngineConfiguration() {
 
 	//	engineConfiguration->ignitionPinMode = OM_INVERTED;
 
-	engineConfiguration->cylindersCount = 4;
 	engineConfiguration->displacement = 1.3;
 	// Denso 195500-2110
 	engineConfiguration->injector.flow = 119.8;

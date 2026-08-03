@@ -14,24 +14,24 @@ TEST(FuelMath, getStandardAirCharge) {
 
 	// Miata 1839cc 4cyl
 	engineConfiguration->displacement = 1.839f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 
 	EXPECT_FLOAT_EQ(0.5535934f, getStandardAirCharge());
 
 	// LS 5.3 liter v8
 	engineConfiguration->displacement = 5.327f;
-	engineConfiguration->cylindersCount = 8;
+	setCylinderCount(8);
 
 	EXPECT_FLOAT_EQ(0.80179232f, getStandardAirCharge());
 
 	// Chainsaw - single cylinder 32cc
 	engineConfiguration->displacement = 0.032f;
-	engineConfiguration->cylindersCount = 1;
+	setCylinderCount(1);
 	EXPECT_FLOAT_EQ(0.038531788f, getStandardAirCharge());
 
 	// Leopard 1 47.666 liter v12
 	engineConfiguration->displacement = 47.666f;
-	engineConfiguration->cylindersCount = 12;
+	setCylinderCount(12);
 
 	EXPECT_FLOAT_EQ(4.782959f, getStandardAirCharge());
 }
@@ -40,7 +40,7 @@ TEST(AirmassModes, AlphaNNormal) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	// 4 cylinder 4 liter = easy math
 	engineConfiguration->displacement = 4.0f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 
 	StrictMock<MockVp3d> veTable;
 
@@ -63,7 +63,7 @@ TEST(AirmassModes, AlphaNUseIat) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	// 4 cylinder 4 liter = easy math
 	engineConfiguration->displacement = 4.0f;
-	engineConfiguration->cylindersCount = 4;
+	setCylinderCount(4);
 
 	StrictMock<MockVp3d> veTable;
 

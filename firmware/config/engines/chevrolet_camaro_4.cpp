@@ -19,7 +19,6 @@ void setCamaro4() {
 	setAlgorithm(LM_SPEED_DENSITY);
 
 	engineConfiguration->displacement = 5.7;
-	engineConfiguration->cylindersCount = 8;
 	strcpy(engineConfiguration->engineMake, ENGINE_MAKE_GM);
 
 	engineConfiguration->firingOrder = FO_1_8_7_2_6_5_4_3;
