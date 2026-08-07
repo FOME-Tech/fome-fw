@@ -1619,8 +1619,8 @@ uint8_t[8 x 8] autoscale trailingIgnitionTable;;"deg", 0.1, 0, 0, 25, 1
 uint16_t[8] trailingIgnitionLoadBins;;"Load", 1, 0, 0, 1000, 0
 uint16_t[8] trailingIgnitionRpmBins;;"RPM",	   1, 0, 0, 18000, 0
 
-! 576 cells gets you 24x24 or 32x18
-begin_table maxsize 576
+! 1024 cells gets you the full 32x32
+begin_table maxsize 1024
 	table_rows min 8 max 32 default VE_TABLE_DEFAULT_AXIS uint16_t veLoadBins;;"kPa",	1, 0, 0, 1000, 0
 	table_cols min 8 max 32 default VE_TABLE_DEFAULT_AXIS uint16_t veRpmBins;;"RPM",	   1, 0, 0, 18000, 0
 	table_values uint16_t autoscale veTable;;"%", 0.1, 0, 0, 999, 1
