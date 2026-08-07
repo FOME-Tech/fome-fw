@@ -330,11 +330,33 @@ bool validateConfig() {
 
 	// Fueling
 	{
+		// The VE table's shape lives in the tune, so check it before anything reads through it.
+		// Each axis has to fit its own bin array first: a corrupt count would send the ascending
+		// check below walking off the end of the bins, and the cell budget check can't catch that
+		// on its own (rows=200, cols=2 is 400 cells, but veLoadBins only holds 32).
+		if (config->veTableRows > efi::size(config->veLoadBins)
+				|| config->veTableCols > efi::size(config->veRpmBins)) {
+			firmwareError(
+					ObdCode::CUSTOM_ERR_AXIS_ORDER,
+					"VE table axis too long: %dx%d",
+					config->veTableRows,
+					config->veTableCols);
+			return false;
+		}
+
+		// Both axes can be within range and still ask for more cells than are allocated - the
+		// maxima multiply out to more than the table holds.
+		if (config->veTableRows * config->veTableCols > efi::size(config->veTable)) {
+			firmwareError(
+					ObdCode::CUSTOM_ERR_AXIS_ORDER,
+					"VE table too large: %dx%d",
+					config->veTableRows,
+					config->veTableCols);
+			return false;
+		}
+
 		ensureArrayIsAscendingDynamic("VE load", config->veLoadBins, config->veTableRows);
 		ensureArrayIsAscendingDynamic("VE RPM", config->veRpmBins, config->veTableCols);
-		if (config->veTableRows * config->veTableCols > efi::size(config->veTable)) {
-			firmwareError(ObdCode::CUSTOM_ERR_AXIS_ORDER, "VE table axes too large");
-		}
 
 		ensureArrayIsAscending("Lambda/AFR load", config->lambdaLoadBins);
 		ensureArrayIsAscending("Lambda/AFR RPM", config->lambdaRpmBins);
