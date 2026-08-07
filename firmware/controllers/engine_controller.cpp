@@ -334,8 +334,7 @@ bool validateConfig() {
 		// Each axis has to fit its own bin array first: a corrupt count would send the ascending
 		// check below walking off the end of the bins, and the cell budget check can't catch that
 		// on its own (rows=200, cols=2 is 400 cells, but veLoadBins only holds 32).
-		if (config->veTableRows > efi::size(config->veLoadBins)
-				|| config->veTableCols > efi::size(config->veRpmBins)) {
+		if (config->veTableRows > efi::size(config->veLoadBins) || config->veTableCols > efi::size(config->veRpmBins)) {
 			firmwareError(
 					ObdCode::CUSTOM_ERR_AXIS_ORDER,
 					"VE table axis too long: %dx%d",
