@@ -12,9 +12,32 @@ Default to building with 12 threads unless otherwise specified (-j12 etc).
 
 NEVER attempt to build one file manually, always do it via the board build scripts.
 
+### Just build the thing
+
+Don't probe the environment to decide whether a build is possible - run the build and read the
+error. Everything the build needs is vendored in the repo, so absence from `PATH` proves nothing:
+
+- The ARM toolchain lives in `firmware/ext/build-tools` and is selected by `firmware/use_arm_gcc.mk`
+  based on `uname`. `which arm-none-eabi-gcc` will fail on a perfectly working checkout. The
+  makefile even auto-inits the submodule if the compiler is missing.
+- Toolchains, submodules and generated files are all fetched or built on demand.
+
+### When a build fails weirdly, `make clean` first
+
+Stale objects and stale generated files cause failures that look like something much worse: missing
+headers, "No rule to make target" for paths that plainly exist, link errors against code you didn't
+touch. Before concluding that the environment is broken, the submodules are missing, or a Makefile
+needs fixing, run `make clean` in that directory and build again. This is cheap and it is very often
+the whole answer.
+
+Only after a clean build still fails is it worth investigating the build system itself.
+
 ### Building Firmware
 
-Each board+chip combination has its own compile script in `firmware/config/boards/<board>/`:
+A bare `make` in `firmware/` builds the default board, which is the quickest way to confirm firmware
+still compiles for ARM.
+
+Each board+chip combination also has its own compile script in `firmware/config/boards/<board>/`:
 
 ```bash
 # Example: Build for Proteus F7
@@ -30,7 +53,7 @@ Outputs are placed in `firmware/deliver/`:
 
 ```bash
 cd unit_tests
-make -j$(($(nproc)*1.5))
+make -j12
 ./build/fome_test
 
 # Run a specific test
@@ -43,35 +66,39 @@ Unit tests use Google Test and run on amd64/aarch64, not on the ECU.
 
 Code generation occurs as part of the normal firmware and unit test builds, via `firmware/fome_generated.mk`.
 
-If there is a build failure that looks like generated files are missing, try running `make clean` first. In general, there should be no reason to manually run generated code scripts.
+Build failures that look like generated files are missing are a common case of the stale-build
+problem above - `make clean` first. In general, there should be no reason to manually run generated
+code scripts.
+
+The exception is working *on* the generator itself, where regenerating directly is a much faster
+feedback loop than a full build:
+
+```bash
+cd firmware
+./gen_config_board.sh config/boards/atlas atlas
+```
+
+Diff `firmware/generated/` and `firmware/tunerstudio/generated/*.ini` against a saved copy to see
+exactly what a generator change did to the config layout and the ini.
 
 ### Code Formatting
 
-A `.clang-format` file at the repository root enforces consistent code style:
-- Tabs for indentation (width 4)
-- K&R brace style
-- Left-aligned pointers/references
+`.clang-format` at the repository root: tabs (width 4), K&R braces, left-aligned pointers. VS Code
+formats C/C++ on save via `ms-vscode.cpptools`.
 
-**VS Code integration**: Format-on-save is enabled for C/C++ files via `ms-vscode.cpptools`.
-
-**Using the format script**:
 ```bash
-# Check formatting and show diffs
-./format.sh check
-
-# Apply formatting to all files
-./format.sh
+./format.sh check   # show a diff of what would change
+./format.sh         # apply in place
 ```
 
-The `format.sh` script automatically excludes external code (`firmware/ext/`, `unit_tests/googletest/`) and generated files. When running `check`, it displays a unified diff of formatting changes needed, making it easy to see exactly what would change.
+Directories opt out with their own `.clang-format` carrying `DisableFormat: true` - third-party code
+(`firmware/ext/`, `unit_tests/googletest/`) but also some first-party trees, notably
+`firmware/config/engines/` and various board/port `cfg` directories. Check for one before assuming a
+file should be reformatted.
 
-**Manual formatting**:
-```bash
-# Format a single file
-clang-format -i <file>
-```
-
-**Excluded directories**: `firmware/ext/` and `firmware/ChibiOS/` (third-party code) are automatically excluded from formatting via `DisableFormat: true` markers.
+**`format.sh` only runs on Linux.** It shells out to `firmware/ext/clang-format`, which is an x86-64
+ELF binary, and uses GNU-only `xargs -d`. On macOS both fail, so formatting is CI-enforced only -
+match the surrounding style by hand and let CI confirm.
 
 ## Architecture
 
@@ -88,7 +115,9 @@ clang-format -i <file>
   - `can/` - CAN bus communication
   - `lua/` - Runtime scripting
 - `firmware/hw_layer/` - Hardware abstraction layer
-- `firmware/ext/libfirmware/` - Reusable library code
+- `firmware/ext/` - Third-party code, almost all of it git submodules (ChibiOS, lua, uzlib, openblt,
+  the ARM toolchain in `build-tools`, and `libfirmware`). **Changes here do not belong to this repo** -
+  they need a PR upstream and a submodule bump. New shared utility code goes in `firmware/util/`.
 - `firmware/util/` - Self-contained utilities (no external dependencies)
 - `unit_tests/` - Google Test suite
 - `simulator/` - Windows/Linux firmware simulator. Uses core ECU code, but runs on PC rather than MCU.
@@ -102,13 +131,30 @@ clang-format -i <file>
 
 #### Generated configuration layout
 
-- `firmware/fome_config.txt` defines the parameters stored in persistent configuration (both "configuration", ie which pins do what, and the "calibration" or "tune", like the VE table, timing, etc.)
+- `firmware/integration/fome_config.txt` defines the parameters stored in persistent configuration (both "configuration", ie which pins do what, and the "calibration" or "tune", like the VE table, timing, etc.)
 - That file is processed by the java tool at `java_tools/configuration_definition` to generate several outputs. It is critical that these match, so that each part of the system can communicate and agree about the in-memory config format.
   - C/C++ headers in `firmware/generated`
   - Along with `firmware/tunerstudio/tunerstudio.template.ini`, generates the ini file used by TunerStudio to communicate with the ECU. All tuner-adjustable parameters **MUST** appear in this file to be useful.
 - `firmware/integration/LiveData.yaml` defines objects processed by the same tool to be transmitted from the ECU about the current state of the world. For example sensors, output values, and intermediate calculations useful for logging.
 
 These are all automatically regenerated as part of running `make`, so no direct script invocation is required. Do not attempt to commit any generated files.
+
+Inside `java_tools/configuration_definition`, the pipeline runs:
+
+`RusefiConfigGrammar.g4` (ANTLR) -> `newparse/ParseState.java` (grammar listener; builds the field
+objects in `newparse/parsing/`) -> `newparse/layout/` (assigns offsets and inserts alignment padding)
+-> `newparse/outputs/` (one visitor per artifact: `CStructsVisitor`, `TsLayoutVisitor`,
+`DatalogVisitor`, `OutputChannelVisitor`, ...). `TsWriter` copies `tunerstudio.template.ini` line by
+line, substituting `@@DEFINE@@` references and expanding marker comments like
+`CONFIG_DEFINITION_START`.
+
+Two things that are easy to get wrong here:
+- Numeric literals in the grammar (`numexpr`) are evaluated into a **shared FIFO** on `ParseState`,
+  which the field-options parser drains positionally. A new rule that introduces a numexpr must
+  consume its own result as that rule exits, or it will be silently eaten as the next field's `scale`.
+- Adding a field to a struct shifts every offset after it. `sizeof(persistentState)` changing is what
+  makes an ECU discard its stored tune on update (`flash_main.cpp`), so it's self-protecting, but say
+  so in the changelog.
 
 ### Compiler Flags
 
