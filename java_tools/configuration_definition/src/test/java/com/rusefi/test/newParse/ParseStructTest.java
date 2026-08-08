@@ -469,4 +469,96 @@ public class ParseStructTest {
         Assert.assertEquals(0.1, fieldValues.prototype.options.scale, 0);
         Assert.assertEquals(999.0, fieldValues.prototype.options.max, 0);
     }
+
+    private static ParseState parseResizableTable(String maxSize, String rowSpec, String colSpec) {
+        return parse(
+                "struct_no_prefix myStruct\n" +
+                        "begin_table maxsize " + maxSize + "\n" +
+                        "table_rows " + rowSpec + " uint16_t rowVals\n" +
+                        "table_cols " + colSpec + " uint16_t colVals\n" +
+                        "table_values uint16_t tableVals\n" +
+                        "end_table\n" +
+                        "end_struct\n"
+        );
+    }
+
+    @Test
+    public void tableResizable() {
+        ParseState state = parseResizableTable("576", "min 8 max 32 default 16", "min 8 max 32 default 16");
+
+        List<Field> fields = state.getLastStruct().fields;
+
+        // Two count fields, two bin arrays, one values array
+        Assert.assertEquals(5, fields.size());
+
+        // The count fields come first - TunerStudio requires a constant to be declared before the
+        // shape expression that references it
+        ScalarField rowCount = (ScalarField)fields.get(0);
+        Assert.assertEquals("tableValsRows", rowCount.name);
+        Assert.assertEquals("uint8_t", rowCount.type.cType);
+        Assert.assertEquals(8.0, rowCount.options.min, 0);
+        Assert.assertEquals(32.0, rowCount.options.max, 0);
+        Assert.assertEquals(Integer.valueOf(16), rowCount.tsDefaultValue);
+
+        ScalarField colCount = (ScalarField)fields.get(1);
+        Assert.assertEquals("tableValsCols", colCount.name);
+        Assert.assertEquals(Integer.valueOf(16), colCount.tsDefaultValue);
+
+        // Bins are allocated at their axis' maximum, but sized dynamically for TunerStudio
+        ArrayField<ScalarField> rowBins = (ArrayField<ScalarField>)fields.get(2);
+        Assert.assertArrayEquals(new int[] {32}, rowBins.length);
+        Assert.assertArrayEquals(new String[] {"tableValsRows"}, rowBins.tsShape.dimensionFields);
+        Assert.assertNull(rowBins.tsShape.maxElements);
+
+        ArrayField<ScalarField> colBins = (ArrayField<ScalarField>)fields.get(3);
+        Assert.assertArrayEquals(new int[] {32}, colBins.length);
+        Assert.assertArrayEquals(new String[] {"tableValsCols"}, colBins.tsShape.dimensionFields);
+
+        // Values are flat in C - the row stride is the runtime column count, not the allocated one
+        ArrayField<ScalarField> values = (ArrayField<ScalarField>)fields.get(4);
+        Assert.assertArrayEquals(new int[] {576}, values.length);
+
+        // ...but 2D to TunerStudio, in its [columns x rows] order
+        Assert.assertArrayEquals(new String[] {"tableValsCols", "tableValsRows"}, values.tsShape.dimensionFields);
+        Assert.assertEquals(Integer.valueOf(576), values.tsShape.maxElements);
+    }
+
+    @Test
+    public void tableResizableRejectsMissingMaxSize() {
+        Assert.assertThrows(IllegalStateException.class, () -> parse(
+                "struct_no_prefix myStruct\n" +
+                        "begin_table\n" +
+                        "table_rows min 8 max 32 default 16 uint16_t rowVals\n" +
+                        "table_cols min 8 max 32 default 16 uint16_t colVals\n" +
+                        "table_values uint16_t tableVals\n" +
+                        "end_table\n" +
+                        "end_struct\n"
+        ));
+    }
+
+    @Test
+    public void tableResizableRejectsMixedAxisKinds() {
+        Assert.assertThrows(IllegalStateException.class,
+                () -> parseResizableTable("576", "min 8 max 32 default 16", "num 16"));
+    }
+
+    @Test
+    public void tableResizableRejectsUnreachableMinimum() {
+        // 8x8 is 64 cells, which doesn't fit a 32 cell budget
+        Assert.assertThrows(IllegalStateException.class,
+                () -> parseResizableTable("32", "min 8 max 32 default 8", "min 8 max 32 default 8"));
+    }
+
+    @Test
+    public void tableResizableRejectsDefaultOutsideRange() {
+        Assert.assertThrows(IllegalStateException.class,
+                () -> parseResizableTable("576", "min 8 max 32 default 40", "min 8 max 32 default 16"));
+    }
+
+    @Test
+    public void tableResizableRejectsDefaultOverBudget() {
+        // 24x24 is 576 cells, which doesn't fit a 512 cell budget
+        Assert.assertThrows(IllegalStateException.class,
+                () -> parseResizableTable("512", "min 8 max 32 default 24", "min 8 max 32 default 24"));
+    }
 }

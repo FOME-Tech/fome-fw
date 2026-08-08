@@ -594,8 +594,8 @@ public class ParseState implements DefinitionsState {
         }
     }
 
-    // Axis sizes of the table currently being parsed, in declaration order (rows then cols).
-    // Each entry is either {count} or {min, max} for a resizable axis. These are captured as the
+    // Axis sizes of the table currently being parsed, in declaration order (rows then cols). Each
+    // entry is either {count} or {min, max, default} for a resizable axis. These are captured as the
     // axis spec exits so that they don't collide with the numexprs of the field on the same line.
     private final List<int[]> tableAxisSizes = new ArrayList<>();
     private Integer tableMaxSize = null;
@@ -644,40 +644,99 @@ public class ParseState implements DefinitionsState {
         int[] rowSpec = tableAxisSizes.get(0);
         int[] colSpec = tableAxisSizes.get(1);
 
-        int maxRows;
-        int maxCols;
-
-        boolean isResizable = rowSpec.length == 2 || colSpec.length == 2;
+        boolean isResizable = rowSpec.length == 3 || colSpec.length == 3;
         if (isResizable) {
-            if (rowSpec.length != 2 || colSpec.length != 2) {
-                throw new IllegalStateException("table must specify min/max on both axes, or neither");
+            if (rowSpec.length != 3 || colSpec.length != 3) {
+                throw new IllegalStateException("table must specify min/max/default on both axes, or neither");
             }
 
-            if (tableMaxSize == null) {
-                throw new IllegalStateException("resizable table requires a maxsize");
-            }
-
-            int minRows = rowSpec[0];
-            maxRows = rowSpec[1];
-            int minCols = colSpec[0];
-            maxCols = colSpec[1];
-
-            // Check that we can at least fit a minimum size table
-            assert(tableMaxSize >= minRows * minCols);
-
-            throw new IllegalStateException("resizable table not supported yet");
+            addResizableTable(rowPrototype, colPrototype, valuesPrototypes, rowSpec, colSpec);
         } else {
-            maxRows = rowSpec[0];
-            maxCols = colSpec[0];
+            addFixedTable(rowPrototype, colPrototype, valuesPrototypes, rowSpec[0], colSpec[0]);
         }
+    }
 
+    private void addFixedTable(ScalarField rowPrototype, ScalarField colPrototype,
+                               List<ScalarField> valuesPrototypes, int rows, int cols) {
         // Generate bins
-        scope.addField(new ArrayField<>(rowPrototype, new int[] {maxRows}, false));
-        scope.addField(new ArrayField<>(colPrototype, new int[] {maxCols}, false));
+        scope.addField(new ArrayField<>(rowPrototype, new int[] {rows}, false));
+        scope.addField(new ArrayField<>(colPrototype, new int[] {cols}, false));
 
         // Generate table
-        Function<ScalarField, ArrayField<ScalarField>> converter =
-                prototype -> new ArrayField<>(prototype, new int[]{maxCols, maxRows}, false);
+        addValues(valuesPrototypes, prototype -> new ArrayField<>(prototype, new int[] {cols, rows}, false));
+    }
+
+    /**
+     * A resizable table is allocated at its maximum extents but described to TunerStudio in terms of
+     * two generated uint8_t count fields, so the user can reshape it at runtime.
+     *
+     * The layout is: row count, column count, row bins (max rows), column bins (max cols), then the
+     * values as a flat array of maxsize cells. Values are flat rather than 2D because the row stride
+     * is the current column count, not the allocated one - the firmware indexes it as
+     * {@code values[row * colCount + col]}, matching TunerStudio's row-major packing.
+     *
+     * The count fields come first so that the ini declares them before the arrays whose shape
+     * expressions reference them, which TunerStudio requires.
+     */
+    private void addResizableTable(ScalarField rowPrototype, ScalarField colPrototype,
+                                   List<ScalarField> valuesPrototypes, int[] rowSpec, int[] colSpec) {
+        if (tableMaxSize == null) {
+            throw new IllegalStateException("resizable table requires a maxsize");
+        }
+
+        int minRows = rowSpec[0], maxRows = rowSpec[1], defaultRows = rowSpec[2];
+        int minCols = colSpec[0], maxCols = colSpec[1], defaultCols = colSpec[2];
+
+        // A table smaller than the minimum on both axes could never be represented
+        if (tableMaxSize < minRows * minCols) {
+            throw new IllegalStateException("resizable table maxsize " + tableMaxSize
+                    + " is too small to hold the minimum " + minRows + "x" + minCols + " table");
+        }
+
+        // The default size must itself be legal, or TunerStudio starts out in an invalid state
+        if (defaultRows < minRows || defaultRows > maxRows || defaultCols < minCols || defaultCols > maxCols) {
+            throw new IllegalStateException("resizable table default size " + defaultRows + "x" + defaultCols
+                    + " is outside the allowed range");
+        }
+
+        if (defaultRows * defaultCols > tableMaxSize) {
+            throw new IllegalStateException("resizable table default size " + defaultRows + "x" + defaultCols
+                    + " exceeds maxsize " + tableMaxSize);
+        }
+
+        // Name the count fields after the table they size: veTable -> veTableRows, veTableCols
+        String rowCountName = valuesPrototypes.get(0).name + "Rows";
+        String colCountName = valuesPrototypes.get(0).name + "Cols";
+
+        scope.addField(makeCountField(rowCountName, minRows, maxRows, defaultRows, "row"));
+        scope.addField(makeCountField(colCountName, minCols, maxCols, defaultCols, "column"));
+
+        // Generate bins, sized dynamically by their own axis' count
+        scope.addField(new ArrayField<>(rowPrototype, new int[] {maxRows}, false,
+                new TsShape(new String[] {rowCountName}, null)));
+        scope.addField(new ArrayField<>(colPrototype, new int[] {maxCols}, false,
+                new TsShape(new String[] {colCountName}, null)));
+
+        // Generate table - flat in C, but 2D in TunerStudio's [columns x rows] order
+        TsShape valuesShape = new TsShape(new String[] {colCountName, rowCountName}, tableMaxSize);
+        addValues(valuesPrototypes,
+                prototype -> new ArrayField<>(prototype, new int[] {tableMaxSize}, false, valuesShape));
+    }
+
+    private ScalarField makeCountField(String name, int min, int max, int defaultValue, String what) {
+        FieldOptions options = new FieldOptions();
+        options.min = min;
+        options.max = max;
+        options.comment = "Number of " + what + "s in use by this table.";
+
+        ScalarField field = new ScalarField(Type.findByCtype("uint8_t").get(), name, options, false, false);
+        field.tsDefaultValue = defaultValue;
+
+        return field;
+    }
+
+    /** Adds the table's value array(s), overlapping them in a union if there is more than one. */
+    private void addValues(List<ScalarField> valuesPrototypes, Function<ScalarField, ArrayField<ScalarField>> converter) {
         if (valuesPrototypes.size() > 1) {
             scope.addField(new Union(
                     valuesPrototypes.stream()

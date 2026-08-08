@@ -75,9 +75,9 @@ void setFordEscortGt() {
 	static const uint16_t veRpmBins[] = {
 			800, 1200, 1600, 2000, 2400, 2800, 3200, 3600, 4100, 4500, 4900, 5300, 5700, 6100, 6500, 7000};
 
-	copyArray(config->veRpmBins, veRpmBins);
+	copyBinsDynamic(config->veRpmBins, config->veTableCols, veRpmBins);
 
-	copyTable(config->veTable, racingFestivaVeTable);
+	copyTableDynamic(config->veTable, config->veTableRows, config->veTableCols, racingFestivaVeTable);
 
 	//	engineConfiguration->triggerInputPins[0] = Gpio::C6; // 2G YEL/BLU
 	//	engineConfiguration->triggerInputPins[1] = Gpio::A5; // 2E White CKP
