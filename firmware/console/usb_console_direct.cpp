@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if EFI_USB_SERIAL && EFI_USB_SERIAL_DIRECT
+#if EFI_USB_SERIAL
 
 #include "usbconsole.h"
 #include "usbcfg.h"
@@ -166,4 +166,4 @@ void startUsbConsole() {
 	usbConsole.startThread();
 }
 
-#endif // EFI_USB_SERIAL && EFI_USB_SERIAL_DIRECT
+#endif // EFI_USB_SERIAL

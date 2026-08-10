@@ -13,7 +13,6 @@
 
 // If EFI_USB_SERIAL, enable USB features
 #define HAL_USE_USB EFI_USB_SERIAL
-#define HAL_USE_SERIAL_USB EFI_USB_SERIAL
 
 // If EFI_FILE_LOGGING and SDC, enable SDIO/SDMMC driver
 #if defined(EFI_SDC_DEVICE) && EFI_FILE_LOGGING
