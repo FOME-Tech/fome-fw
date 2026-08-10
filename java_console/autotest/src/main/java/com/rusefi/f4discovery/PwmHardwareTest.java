@@ -57,6 +57,7 @@ public class PwmHardwareTest extends RusefiTestBase {
         assertEquals("totalTriggerErrorCounter", triggerErrors, totalTriggerErrorsNow);
     }
 
+    // TODO:: unignore; https://github.com/FOME-Tech/fome-fw/issues/731 (re-enable VssHardwareLoopTest, ...)
     @Ignore
     @Test
     public void testIdlePin() {
