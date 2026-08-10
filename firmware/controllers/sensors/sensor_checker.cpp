@@ -305,26 +305,58 @@ static bool check(SensorType type) {
 }
 
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
-static ObdCode getCodeForInjector(int idx, brain_pin_diag_e diag) {
-	if (idx < 0 || idx >= 12) {
+// ObdCode values are hex-encoded P-codes, so they don't run contiguously past circuit 9
+// (P0209 is 0x209, but P0210 is 0x210). Look the code up instead of doing arithmetic on it.
+static ObdCode getCodeForInjector(size_t idx, brain_pin_diag_e diag) {
+	static constexpr ObdCode codes[] = {
+			ObdCode::OBD_Injector_Circuit_1,
+			ObdCode::OBD_Injector_Circuit_2,
+			ObdCode::OBD_Injector_Circuit_3,
+			ObdCode::OBD_Injector_Circuit_4,
+			ObdCode::OBD_Injector_Circuit_5,
+			ObdCode::OBD_Injector_Circuit_6,
+			ObdCode::OBD_Injector_Circuit_7,
+			ObdCode::OBD_Injector_Circuit_8,
+			ObdCode::OBD_Injector_Circuit_9,
+			ObdCode::OBD_Injector_Circuit_10,
+			ObdCode::OBD_Injector_Circuit_11,
+			ObdCode::OBD_Injector_Circuit_12,
+	};
+
+	if (idx >= efi::size(codes)) {
 		return ObdCode::None;
 	}
 
 	// TODO: do something more intelligent with `diag`?
 	UNUSED(diag);
 
-	return (ObdCode)((int)ObdCode::OBD_Injector_Circuit_1 + idx);
+	return codes[idx];
 }
 
-static ObdCode getCodeForIgnition(int idx, brain_pin_diag_e diag) {
-	if (idx < 0 || idx >= 12) {
+static ObdCode getCodeForIgnition(size_t idx, brain_pin_diag_e diag) {
+	static constexpr ObdCode codes[] = {
+			ObdCode::OBD_Ignition_Circuit_1,
+			ObdCode::OBD_Ignition_Circuit_2,
+			ObdCode::OBD_Ignition_Circuit_3,
+			ObdCode::OBD_Ignition_Circuit_4,
+			ObdCode::OBD_Ignition_Circuit_5,
+			ObdCode::OBD_Ignition_Circuit_6,
+			ObdCode::OBD_Ignition_Circuit_7,
+			ObdCode::OBD_Ignition_Circuit_8,
+			ObdCode::OBD_Ignition_Circuit_9,
+			ObdCode::OBD_Ignition_Circuit_10,
+			ObdCode::OBD_Ignition_Circuit_11,
+			ObdCode::OBD_Ignition_Circuit_12,
+	};
+
+	if (idx >= efi::size(codes)) {
 		return ObdCode::None;
 	}
 
 	// TODO: do something more intelligent with `diag`?
 	UNUSED(diag);
 
-	return (ObdCode)((int)ObdCode::OBD_Ignition_Circuit_1 + idx);
+	return codes[idx];
 }
 #endif // BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
 
@@ -529,11 +561,11 @@ void SensorChecker::onSlowCallback() {
 
 		auto diag = pin.getDiag();
 		if (diag != PIN_OK && diag != PIN_INVALID) {
-			auto code = getCodeForInjector(i + 1, diag);
+			auto code = getCodeForInjector(i, diag);
 
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
-			warning(code, "Injector %d fault: %s", i, description);
+			warning(code, "Injector %d fault: %s", i + 1, description);
 			setError(true, code);
 
 			anyInjectorHasProblem |= true;
@@ -542,7 +574,7 @@ void SensorChecker::onSlowCallback() {
 
 	// Check ignition
 	bool anyIgnHasProblem = false;
-	for (size_t i = 0; i < efi::size(enginePins.injectors); i++) {
+	for (size_t i = 0; i < efi::size(enginePins.coils); i++) {
 		IgnitionOutputPin& pin = enginePins.coils[i];
 
 		// Skip not-configured pins
@@ -552,11 +584,11 @@ void SensorChecker::onSlowCallback() {
 
 		auto diag = pin.getDiag();
 		if (diag != PIN_OK && diag != PIN_INVALID) {
-			auto code = getCodeForIgnition(i + 1, diag);
+			auto code = getCodeForIgnition(i, diag);
 
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
-			warning(code, "Ignition %d fault: %s", i, description);
+			warning(code, "Ignition %d fault: %s", i + 1, description);
 			setError(true, code);
 
 			anyIgnHasProblem |= true;

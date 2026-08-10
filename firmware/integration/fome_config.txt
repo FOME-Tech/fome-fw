@@ -1410,8 +1410,8 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	struct Dtcs
 		! MAF
-		DtcSeverity p0102;Behavior for P0107: MAF Sensor Circuit Low Input. Triggered when MAF input voltage is less than the configured minimum value.
-		DtcSeverity p0103;Behavior for P0108: MAF Sensor Circuit High Input. Triggered when MAF input voltage is greater than the configured maximum value.
+		DtcSeverity p0102;Behavior for P0102: MAF Sensor Circuit Low Input. Triggered when MAF input voltage is less than the configured minimum value.
+		DtcSeverity p0103;Behavior for P0103: MAF Sensor Circuit High Input. Triggered when MAF input voltage is greater than the configured maximum value.
 
 		! MAP
 		DtcSeverity p0107;Behavior for P0107: MAP Sensor Circuit Low Input. Triggered when MAP voltage is less than the range of pressures allowed above.
@@ -1423,7 +1423,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 		! CLT
 		DtcSeverity p0117;Behavior for P0117: Coolant Temperature Sensor Circuit Low. Triggered when coolant temp sensor voltage is less than 0.05 volts.
-		DtcSeverity p0118;Behavior for P0118: Coolant Temperature Sensor Circuit Low. Triggered when coolant temp sensor voltage is greater than 4.9 volts.
+		DtcSeverity p0118;Behavior for P0118: Coolant Temperature Sensor Circuit High. Triggered when coolant temp sensor voltage is greater than 4.9 volts.
 
 		! Flex
 		DtcSeverity p0176;Behavior for P0176: Fuel Composition Sensor Malfunction. Triggered when the signal from the flex sensor is lost (missing pull-up resistor? unplugged? broken wire?).
@@ -1439,7 +1439,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 		! Cam sensors
 		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the primary trigger signal is present, but cam signal is not.
-		DtcSeverity camSyncErrors;Behavior for P0341/P0346/P0366/P0386: Cam sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
+		DtcSeverity camSyncErrors;Behavior for P0341/P0346/P0366/P0386: Cam sensor sync errors. Triggered when 50 cam trigger errors are registered during a single engine run.
 
 		! Oil pressure
 		DtcSeverity p0522;Behavior for P0522: Engine Oil Pressure Sensor Circuit Low. Triggered when oil pressure sensor voltage is less than allowed limits.
