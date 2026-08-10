@@ -1182,7 +1182,7 @@ enum class ObdCode : uint16_t {
 	// P2228 Barometric Press Circ Low
 	// P2229 Barometric Press Circ High
 	// P2230 Barometric Press Circ Interm
-	OBD_WB_FW_Mismatch = 0x2133, // actually: P2231 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 1
+	// P2231 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 1
 	// P2232 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 2
 	// P2233 O2 Sensor Signal Circ Shorted to Heater Circ Bank1 Sensor 3
 	// P2234 O2 Sensor Signal Circ Shorted to Heater Circ Bank2 Sensor 1
@@ -1596,8 +1596,10 @@ enum class ObdCode : uint16_t {
 	// P2793 Gear Shift Direction Circ
 	// P2794 Gear Shift Direction Circ Low
 	// P2795 Gear Shift Direction Circ High
+	// FOME-specific wideband controller codes - these are not standard OBD codes
 	Wideband_1_Fault = 0x2900,
 	Wideband_2_Fault = 0x2901,
+	Wideband_FW_Mismatch = 0x2902,
 	// P2A00 O2 Sensor Circ Range/Perf Bank1 Sensor 1
 	// P2A01 O2 Sensor Circ Range/Perf Bank1 Sensor 2
 	// P2A02 O2 Sensor Circ Range/Perf Bank1 Sensor 3
@@ -2076,11 +2078,10 @@ enum class ObdCode : uint16_t {
 	CUSTOM_PWM_CYCLE_START = 6697,
 	CUSTOM_ERR_ARRAY_IS_FULL = 6698,
 	CUSTOM_ERR_ARRAY_REMOVE_ERROR = 6699,
-	CUSTOM_ERR_6700 = 6700,
 
-	CUSTOM_CJ125_0 = 6700,
-	CUSTOM_CJ125_1 = 6701,
-	CUSTOM_CJ125_2 = 6702,
+	CUSTOM_ERR_6700 = 6700,
+	CUSTOM_ERR_6701 = 6701,
+	CUSTOM_ERR_6702 = 6702,
 	CUSTOM_ERR_BENCH_PARAM = 6703,
 	CUSTOM_ERR_BOTH_FRONTS_REQUIRED = 6704,
 	CUSTOM_TLE8888 = 6705,

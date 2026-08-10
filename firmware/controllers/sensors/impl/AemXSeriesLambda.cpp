@@ -105,7 +105,7 @@ void AemXSeriesWideband::decodeRusefiStandard(const CANRxFrame& frame, efitick_t
 
 	if (data->Version != RUSEFI_WIDEBAND_VERSION) {
 		firmwareError(
-				ObdCode::OBD_WB_FW_Mismatch,
+				ObdCode::Wideband_FW_Mismatch,
 				"Wideband controller index %d has wrong firmware version, please update!",
 				m_logicalIndex);
 		return;
