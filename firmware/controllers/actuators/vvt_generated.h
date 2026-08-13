@@ -27,7 +27,7 @@ struct vvt_s {
 	// Target
 	// deg
 	// offset 2
-	scaled_channel<uint16_t, 10, 1> vvtTarget = (uint16_t)0;
+	scaled_channel<int16_t, 10, 1> vvtTarget = (int16_t)0;
 	// Output duty
 	// %
 	// offset 4
