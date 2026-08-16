@@ -950,7 +950,7 @@ bit flexCranking;Enable a second cranking table to use for E100 flex fuel, inter
 bit torqueReductionEnabled;Enable the torque-reduction controller (spark retard + cylinder cut). It maps a torque-reduction request to ignition retard and cut. No producer (e.g. traction control) is wired up yet, so on its own this currently has no effect.
 bit isBoostControlEnabled
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range
-bit isPhaseSyncRequiredForIgnition;Some engines are OK running semi-random sequential while other engine require phase synchronization
+bit isPhaseSyncRequiredForIgnition;If enabled, no fuel or spark happens until the cam/VVT sensor has resolved engine phase, so the engine always starts in fully sequential mode.\nIf disabled, the engine begins firing wasted spark and batch fuel as soon as the crank syncs, then switches to sequential once the cam syncs. This starts sooner, but a few engines don't like running that way.\nEngines with a symmetrical crank wheel (where cam sync is required to know engine phase at all) always wait for cam sync regardless of this setting.
 bit useCltBasedRpmLimit,"yes","no";If enabled, use a curve for RPM limit (based on coolant temperature) instead of a constant value.
 bit forceO2Heating,"yes","no";If enabled, don't wait for engine start to heat O2 sensors. WARNING: this will reduce the life of your sensor, as condensation in the exhaust from a cold start can crack the sensing element.
 bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
