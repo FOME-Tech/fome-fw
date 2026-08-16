@@ -83,10 +83,10 @@ static void tryDecodeCanImuE90(const CANRxFrame& frame) {
 		return;
 	}
 
-	// ACLN_VEH_LN_DSC: lateral acceleration, start bit 16, 12-bit signed
-	int16_t accLat = get12BitSigned_intel(frame, 16);
-	// ACLN_VEH_ACRO_DSC: longitudinal acceleration, start bit 28, 12-bit signed
-	int16_t accLon = get12BitSigned_intel(frame, 28);
+	// ACLN_VEH_LN_DSC: longitudinal acceleration, start bit 16, 12-bit signed
+	int16_t accLon = get12BitSigned_intel(frame, 16);
+	// ACLN_VEH_ACRO_DSC: lateral acceleration, start bit 28, 12-bit signed
+	int16_t accLat = get12BitSigned_intel(frame, 28);
 	// ANGV_YAW_DSC: yaw rate, start bit 40, 12-bit signed
 	int16_t yaw = get12BitSigned_intel(frame, 40);
 
