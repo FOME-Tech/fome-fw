@@ -258,15 +258,81 @@ static DtcSeverity getSeverityForCode(ObdCode code) {
 	}
 }
 
-static void handleCodeSeverity(ObdCode code) {
+bool DtcDebouncer::report(ObdCode code) {
+	Entry* freeSlot = nullptr;
+
+	for (size_t i = 0; i < efi::size(m_entries); i++) {
+		Entry& e = m_entries[i];
+
+		if (e.code == code) {
+			e.seenThisCycle = true;
+
+			if (e.count < threshold) {
+				e.count++;
+			}
+
+			return e.count >= threshold;
+		}
+
+		if (e.code == ObdCode::None && !freeSlot) {
+			freeSlot = &e;
+		}
+	}
+
+	if (!freeSlot) {
+		// Out of room to track this one. Report it immediately rather than
+		// silently swallowing what may be a real fault.
+		return true;
+	}
+
+	freeSlot->code = code;
+	freeSlot->count = 1;
+	freeSlot->seenThisCycle = true;
+
+	return freeSlot->count >= threshold;
+}
+
+void DtcDebouncer::endCycle() {
+	for (size_t i = 0; i < efi::size(m_entries); i++) {
+		Entry& e = m_entries[i];
+
+		if (e.code == ObdCode::None) {
+			continue;
+		}
+
+		if (!e.seenThisCycle) {
+			// Not faulted this time around, leak back down
+			e.count--;
+
+			if (e.count == 0) {
+				e.code = ObdCode::None;
+			}
+		}
+
+		e.seenThisCycle = false;
+	}
+}
+
+void DtcDebouncer::reset() {
+	for (size_t i = 0; i < efi::size(m_entries); i++) {
+		m_entries[i] = {};
+	}
+}
+
+static void handleCodeSeverity(DtcDebouncer& debounce, ObdCode code) {
 	// Determine what to do about this particular code
 	auto severity = getSeverityForCode(code);
-	if (severity != DtcSeverity::Ignore) {
+	if (severity == DtcSeverity::Ignore) {
+		return;
+	}
+
+	// Only latch the code once the fault has stuck around long enough to be believable
+	if (debounce.report(code)) {
 		setError(true, code);
 	}
 }
 
-static bool check(SensorResult result, ObdCode code, const char* name) {
+static bool check(DtcDebouncer& debounce, SensorResult result, ObdCode code, const char* name) {
 	// If the sensor is OK, nothing to check.
 	if (result) {
 		return true;
@@ -276,9 +342,7 @@ static bool check(SensorResult result, ObdCode code, const char* name) {
 		warning(code, "Sensor fault: %s %s", name, describeUnexpected(result.Code));
 
 		// Determine what to do about this particular code
-		handleCodeSeverity(code);
-	} else {
-		setError(false, code);
+		handleCodeSeverity(debounce, code);
 	}
 
 	return false;
@@ -286,7 +350,7 @@ static bool check(SensorResult result, ObdCode code, const char* name) {
 
 // Returns true checks on dependent sensors should happen
 // (returns false if broken or not configured)
-static bool check(SensorType type) {
+static bool check(DtcDebouncer& debounce, SensorType type) {
 	// Don't check sensors we don't have
 	if (!Sensor::hasSensor(type)) {
 		return false;
@@ -301,7 +365,7 @@ static bool check(SensorType type) {
 
 	ObdCode code = getCode(type, result.Code);
 
-	return check(result, code, Sensor::getSensorName(type));
+	return check(debounce, result, code, Sensor::getSensorName(type));
 }
 
 #if BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
@@ -361,13 +425,14 @@ static ObdCode getCodeForIgnition(size_t idx, brain_pin_diag_e diag) {
 #endif // BOARD_EXT_GPIOCHIPS > 0 && EFI_PROD_CODE
 
 #if EFI_SHAFT_POSITION_INPUT
-static void checkTriggerDecoder(TriggerDecoderBase& decoder, ObdCode tooManyErrorsCode) {
+static void checkTriggerDecoder(DtcDebouncer& debounce, TriggerDecoderBase& decoder, ObdCode tooManyErrorsCode) {
 	if (decoder.triggerErrorCounter > 50) {
-		handleCodeSeverity(tooManyErrorsCode);
+		handleCodeSeverity(debounce, tooManyErrorsCode);
 	}
 }
 
-static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSignalCode, ObdCode tooManyErrorsCode) {
+static void checkCamDecoder(
+		DtcDebouncer& debounce, int bank, int cam, const char* name, ObdCode noSignalCode, ObdCode tooManyErrorsCode) {
 	{
 		int inputIndex = bank * CAMS_PER_BANK + cam;
 		if (!isBrainPinValid(engineConfiguration->camInputs[inputIndex])) {
@@ -388,7 +453,7 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 
 	// Scenario 1: No signal at all
 	if (!decoder.hasSignal) {
-		handleCodeSeverity(noSignalCode);
+		handleCodeSeverity(debounce, noSignalCode);
 		return;
 	}
 
@@ -396,16 +461,16 @@ static void checkCamDecoder(int bank, int cam, const char* name, ObdCode noSigna
 	{
 		// If there's no valid VVT position, this hasn't decoded in the last second
 		auto vvtResult = engine->triggerCentral.getVVTPosition(bank, cam);
-		if (!check(vvtResult, noSignalCode, name)) {
+		if (!check(debounce, vvtResult, noSignalCode, name)) {
 			return;
 		}
 	}
 
 	// Scenario 3: Pile of sync errors (same check as primary trigger)
-	checkTriggerDecoder(decoder, tooManyErrorsCode);
+	checkTriggerDecoder(debounce, decoder, tooManyErrorsCode);
 }
 
-static void checkTriggers(bool isStopped, bool isRunning, float rpm) {
+static void checkTriggers(DtcDebouncer& debounce, bool isStopped, bool isRunning, float rpm) {
 	// Nothing to check if the engine is stopped
 	if (isStopped) {
 		return;
@@ -418,29 +483,35 @@ static void checkTriggers(bool isStopped, bool isRunning, float rpm) {
 	}
 
 	checkTriggerDecoder(
-			engine->triggerCentral.triggerState, ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
+			debounce,
+			engine->triggerCentral.triggerState,
+			ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors);
 
 	// Only check cams if the engine moved recently, AND the primary trigger has 20 syncs
 	if (engine->triggerCentral.triggerState.crankSynchronizationCounter > 20) {
 		checkCamDecoder(
+				debounce,
 				0,
 				0,
 				"VVT Bank 1 Intake",
 				ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal,
 				ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors);
 		checkCamDecoder(
+				debounce,
 				0,
 				1,
 				"VVT Bank 1 Exhaust",
 				ObdCode::OBD_Camshaft_Position_Sensor_B1E_NoSignal,
 				ObdCode::OBD_Camshaft_Position_Sensor_B1E_SyncErrors);
 		checkCamDecoder(
+				debounce,
 				1,
 				0,
 				"VVT Bank 2 Intake",
 				ObdCode::OBD_Camshaft_Position_Sensor_B2I_NoSignal,
 				ObdCode::OBD_Camshaft_Position_Sensor_B2I_SyncErrors);
 		checkCamDecoder(
+				debounce,
 				1,
 				1,
 				"VVT Bank 2 Exhaust",
@@ -450,11 +521,31 @@ static void checkTriggers(bool isStopped, bool isRunning, float rpm) {
 }
 #endif // EFI_SHAFT_POSITION_INPUT
 
-void SensorChecker::onSlowCallback() {
+bool SensorChecker::shouldCheckSensors() {
 	bool hasBeenRunningOneSecond = getTimeNowNt() > MS2NT(1000);
 	if (!hasBeenRunningOneSecond) {
 		// Don't bother checking ANYTHING for a second to allow power to stabilize
-		return;
+		return false;
+	}
+
+	if (Sensor::getOrZero(SensorType::BatteryVoltage) < 7.0f) {
+		m_timeSinceVbattLow.reset();
+	}
+
+	if (!m_ignitionIsOn) {
+		// timer keeps track of how long since the state was turned to on (ie, how long ago was it last off)
+		m_timeSinceIgnOff.reset();
+	}
+
+	// Don't check when:
+	// - battery voltage is too low for sensors to work (with stabilization time)
+	// - the ignition is off (with stabilization time)
+	// This applies on every board, including those that monitor their own sensor supply: the ECU
+	// can be alive on USB power with the key off, and the sensors it would be checking have no
+	// power at all. Anything they report in that state is meaningless.
+	// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
+	if (!m_timeSinceVbattLow.hasElapsedSec(5) || !m_timeSinceIgnOff.hasElapsedSec(5)) {
+		return false;
 	}
 
 	if (Sensor::hasSensor(SensorType::Sensor5vVoltage)) {
@@ -464,86 +555,80 @@ void SensorChecker::onSlowCallback() {
 		if (sensorSupply > 5.25f) {
 			warning(ObdCode::Sensor5vSupplyHigh, "5V sensor supply high: %.2f", sensorSupply);
 			setError(true, ObdCode::Sensor5vSupplyHigh);
-			m_analogSensorsShouldWork = false;
-			return;
+			return false;
 		} else if (sensorSupply < 4.75f) {
 			warning(ObdCode::Sensor5vSupplyLow, "5V sensor supply low: %.2f", sensorSupply);
 			setError(true, ObdCode::Sensor5vSupplyLow);
-			m_analogSensorsShouldWork = false;
-			return;
+			return false;
 		} else {
 			setError(false, ObdCode::Sensor5vSupplyHigh);
 			setError(false, ObdCode::Sensor5vSupplyLow);
-			m_analogSensorsShouldWork = true;
 		}
-	} else {
-		if (Sensor::getOrZero(SensorType::BatteryVoltage) < 7.0f) {
-			m_timeSinceVbattLow.reset();
-		}
-
-		if (!m_ignitionIsOn) {
-			// timer keeps track of how long since the state was turned to on (ie, how long ago was it last off)
-			m_timeSinceIgnOff.reset();
-		}
-
-		// Don't check when:
-		// - battery voltage is too low for sensors to work (with stabilization time)
-		// - the ignition is off (with stabilization time)
-		// TODO: also inhibit checking if we just did a flash burn, since that blocks the ECU for a few seconds.
-		bool shouldCheck = m_timeSinceVbattLow.hasElapsedSec(5) && m_timeSinceIgnOff.hasElapsedSec(5);
-		m_analogSensorsShouldWork = shouldCheck;
-		if (!shouldCheck) {
-			return;
-		}
-
-#if EFI_PROD_CODE
-		// Perform any special board-specific power supply checks
-		checkBoardPowerSupply();
-#endif
 	}
 
+#if EFI_PROD_CODE
+	// Perform any special board-specific power supply checks
+	checkBoardPowerSupply();
+#endif
+
+	return true;
+}
+
+void SensorChecker::onSlowCallback() {
+	m_analogSensorsShouldWork = shouldCheckSensors();
+
+	if (!m_analogSensorsShouldWork) {
+		// Whatever we'd counted up doesn't mean anything now that we know the sensors
+		// may have been unpowered - start over when checking resumes.
+		m_dtcDebounce.reset();
+		return;
+	}
+
+	auto& debounce = m_dtcDebounce;
+
 	// Check sensors
-	bool tps1DependenciesOk = check(SensorType::Tps1Primary);
+	bool tps1DependenciesOk = check(debounce, SensorType::Tps1Primary);
 	if (Sensor::isRedundant(SensorType::Tps1)) {
-		tps1DependenciesOk &= check(SensorType::Tps1Secondary);
+		tps1DependenciesOk &= check(debounce, SensorType::Tps1Secondary);
 
 		if (tps1DependenciesOk) {
 			// Both pri/sec sensors are OK, check the combined sensor
-			check(SensorType::Tps1);
+			check(debounce, SensorType::Tps1);
 		}
 	}
 
-	bool tps2DependenciesOk = check(SensorType::Tps2Primary);
+	bool tps2DependenciesOk = check(debounce, SensorType::Tps2Primary);
 	if (Sensor::isRedundant(SensorType::Tps2)) {
-		tps2DependenciesOk &= check(SensorType::Tps2Secondary);
+		tps2DependenciesOk &= check(debounce, SensorType::Tps2Secondary);
 
 		if (tps2DependenciesOk) {
 			// Both pri/sec sensors are OK, check the combined sensor
-			check(SensorType::Tps2);
+			check(debounce, SensorType::Tps2);
 		}
 	}
 
-	if (check(SensorType::AcceleratorPedalPrimary) && check(SensorType::AcceleratorPedalSecondary)) {
-		check(SensorType::AcceleratorPedal);
+	if (check(debounce, SensorType::AcceleratorPedalPrimary) &&
+		check(debounce, SensorType::AcceleratorPedalSecondary)) {
+		check(debounce, SensorType::AcceleratorPedal);
 	}
 
-	check(SensorType::MapSlow);
-	check(SensorType::MapSlow2);
+	check(debounce, SensorType::MapSlow);
+	check(debounce, SensorType::MapSlow2);
 
-	check(SensorType::Clt);
-	check(SensorType::Iat);
+	check(debounce, SensorType::Clt);
+	check(debounce, SensorType::Iat);
 
-	check(SensorType::FuelEthanolPercent);
+	check(debounce, SensorType::FuelEthanolPercent);
 
-	check(SensorType::OilPressure);
-	check(SensorType::OilTemperature);
+	check(debounce, SensorType::OilPressure);
+	check(debounce, SensorType::OilTemperature);
 
 	bool isStopped = engine->rpmCalculator.isStopped();
 	bool isRunning = engine->rpmCalculator.isRunning();
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 #if EFI_SHAFT_POSITION_INPUT
-	checkTriggers(isStopped, isRunning, rpm);
+	checkTriggers(debounce, isStopped, isRunning, rpm);
 #endif // EFI_SHAFT_POSITION_INPUT
 
 // only bother checking these if we have GPIO chips actually capable of reporting an error
@@ -566,7 +651,7 @@ void SensorChecker::onSlowCallback() {
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
 			warning(code, "Injector %d fault: %s", i + 1, description);
-			setError(true, code);
+			handleCodeSeverity(debounce, code);
 
 			anyInjectorHasProblem |= true;
 		}
@@ -589,7 +674,7 @@ void SensorChecker::onSlowCallback() {
 			char description[32];
 			pinDiag2string(description, efi::size(description), diag);
 			warning(code, "Ignition %d fault: %s", i + 1, description);
-			setError(true, code);
+			handleCodeSeverity(debounce, code);
 
 			anyIgnHasProblem |= true;
 		}
@@ -608,7 +693,7 @@ void SensorChecker::onSlowCallback() {
 			if (m_hasSeenKnockSensor[i] && m_lastGoodKnockSampleTimer[i].hasElapsedSec(knockNoiseTimeout)) {
 				auto code = i == 0 ? ObdCode::OBD_Knock_Sensor_1_Low : ObdCode::OBD_Knock_Sensor_2_Low;
 
-				handleCodeSeverity(code);
+				handleCodeSeverity(debounce, code);
 			}
 		}
 	} else {
@@ -619,6 +704,9 @@ void SensorChecker::onSlowCallback() {
 		}
 	}
 #endif // EFI_SOFTWARE_KNOCK
+
+	// Age out any code that wasn't reported on this pass
+	debounce.endCycle();
 }
 
 void SensorChecker::onIgnitionStateChanged(bool ignitionOn) {

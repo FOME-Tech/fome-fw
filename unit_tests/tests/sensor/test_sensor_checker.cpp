@@ -42,6 +42,14 @@ static void setupSensorCheckerPreconditions() {
 	engine->rpmCalculator.setRpmValue(2000);
 }
 
+// A fault must persist for ~1 second of slow callbacks before it's allowed to latch a DTC,
+// so a single call isn't enough to observe one. Run enough passes to clear the debounce.
+static void runSensorChecks() {
+	for (int i = 0; i < 25; i++) {
+		engine->module<SensorChecker>()->onSlowCallback();
+	}
+}
+
 // Helper: set up a cam decoder that looks fully healthy
 static void setupHealthyCam(int bank, int cam) {
 	auto& vvtDecoder = engine->triggerCentral.vvtState[bank][cam];
@@ -58,7 +66,7 @@ TEST(SensorCheckerCrank, NoErrorWhenFewSyncErrors) {
 
 	engine->triggerCentral.triggerState.triggerErrorCounter = 10;
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_FALSE(hasError(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors));
 }
@@ -69,7 +77,7 @@ TEST(SensorCheckerCrank, ErrorWhenManySyncErrors) {
 
 	engine->triggerCentral.triggerState.triggerErrorCounter = 51;
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_TRUE(hasError(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors));
 }
@@ -86,7 +94,7 @@ TEST(SensorCheckerCam, NoPinConfiguredSkipsCheck) {
 	// Cam has no signal, but check should be skipped entirely
 	ASSERT_FALSE(engine->triggerCentral.vvtState[0][0].hasSignal);
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors));
@@ -101,7 +109,7 @@ TEST(SensorCheckerCam, NoSignalWhenNoEdges) {
 
 	ASSERT_FALSE(engine->triggerCentral.vvtState[0][0].hasSignal);
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 }
@@ -117,7 +125,7 @@ TEST(SensorCheckerCam, SignalButNoSync) {
 	vvtDecoder.hasSignal = true;
 
 	// Do NOT reset vvtPosition timer — it's stale (>1s), simulating no VVT sync
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 }
@@ -133,7 +141,7 @@ TEST(SensorCheckerCam, TooManySyncErrors) {
 	// Inject many sync errors
 	engine->triggerCentral.vvtState[0][0].triggerErrorCounter = 51;
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors));
 }
@@ -146,7 +154,7 @@ TEST(SensorCheckerCam, AllGoodNoErrors) {
 	setupSensorCheckerPreconditions();
 	setupHealthyCam(0, 0);
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_SyncErrors));
@@ -164,7 +172,7 @@ TEST(SensorCheckerCam, SignalSurvivesCounterRollover) {
 	// Counter has rolled over to 0, but hasSignal is still true
 	engine->triggerCentral.vvtState[0][0].edgeCountRise = 0;
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 }
@@ -183,7 +191,7 @@ TEST(SensorCheckerCam, SkippedWhenEngineNotMoving) {
 
 	ASSERT_FALSE(engine->triggerCentral.vvtState[0][0].hasSignal);
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	// Cam no-signal should NOT be reported because engine isn't moving
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
@@ -201,7 +209,7 @@ TEST(SensorCheckerCam, SkippedWhenNotEnoughCrankSyncs) {
 
 	ASSERT_FALSE(engine->triggerCentral.vvtState[0][0].hasSignal);
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 
 	// Cam no-signal should NOT be reported because crank hasn't synced enough
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
@@ -224,7 +232,7 @@ TEST(SensorCheckerCam, NoSpuriousNoSignalDuringSpinDown) {
 	engine->triggerCentral.vvtState[0][0].hasSignal = true;
 
 	// Positive control: at running RPM the stale cam IS flagged
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 	ASSERT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 
 	// Now coast down below cranking RPM (still RUNNING state, about to stop)
@@ -232,7 +240,7 @@ TEST(SensorCheckerCam, NoSpuriousNoSignalDuringSpinDown) {
 	engine->rpmCalculator.setRpmValue(100);
 	ASSERT_TRUE(engine->rpmCalculator.isRunning());
 
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 }
 
@@ -254,15 +262,129 @@ TEST(SensorCheckerCam, NoSpuriousNoSignalOnRestartUntilResynced) {
 	engine->triggerCentral.triggerState.crankSynchronizationCounter = 5;
 
 	clearWarnings();
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 	// Not yet re-synced -> no spurious code
 	EXPECT_FALSE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
 
 	// Once the crank has fully re-synced the check engages again (positive control)
 	engine->triggerCentral.triggerState.crankSynchronizationCounter = 25;
 	clearWarnings();
-	engine->module<SensorChecker>()->onSlowCallback();
+	runSensorChecks();
 	EXPECT_TRUE(hasError(ObdCode::OBD_Camshaft_Position_Sensor_B1I_NoSignal));
+}
+
+// ==================== Power gating ====================
+// The ECU can be alive while the sensors it checks are not: USB power with the key off keeps
+// the MCU (and on some boards the 5V sensor supply) running, but the switched supply feeding
+// sensors is dead. Faults observed in that state are expected, not diagnosable.
+
+// Reproduces the reported bug: a flex sensor on an Atlas-style board (which has its own
+// Sensor5vVoltage monitor) timing out with the key off must NOT throw P0176.
+TEST(SensorCheckerPower, NoFlexTimeoutWithIgnitionOff) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// The flex sensor is present and has timed out
+	StoredValueSensor flexSensor(SensorType::FuelEthanolPercent, MS2NT(30000));
+	flexSensor.Register();
+	flexSensor.invalidate(UnexpectedCode::Timeout);
+
+	// Board monitors its own 5V sensor supply, and that supply is healthy - it's fed from
+	// the same rail that USB keeps alive
+	Sensor::setMockValue(SensorType::Sensor5vVoltage, 5.0f);
+
+	clearWarnings();
+
+	// Key off: no battery voltage, ignition reported off
+	Sensor::setMockValue(SensorType::BatteryVoltage, 0.0f);
+	engine->module<SensorChecker>()->onIgnitionStateChanged(false);
+	advanceTimeUs(10e6);
+
+	runSensorChecks();
+
+	EXPECT_FALSE(hasError(ObdCode::OBD_FlexSensor_Timeout));
+
+	flexSensor.unregister();
+}
+
+// Positive control for the above: same board, same broken sensor, but the key is on.
+// The fault must still be caught.
+TEST(SensorCheckerPower, FlexTimeoutReportedWithIgnitionOn) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	StoredValueSensor flexSensor(SensorType::FuelEthanolPercent, MS2NT(30000));
+	flexSensor.Register();
+	flexSensor.invalidate(UnexpectedCode::Timeout);
+
+	Sensor::setMockValue(SensorType::Sensor5vVoltage, 5.0f);
+
+	setupSensorCheckerPreconditions();
+
+	runSensorChecks();
+
+	EXPECT_TRUE(hasError(ObdCode::OBD_FlexSensor_Timeout));
+
+	flexSensor.unregister();
+}
+
+// Ignition reported on, but battery voltage is too low for sensors to work.
+// Also on a board with its own healthy 5V supply monitor - that must not override the
+// battery voltage inhibit.
+TEST(SensorCheckerPower, InhibitedWhileVbattLow) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	StoredValueSensor flexSensor(SensorType::FuelEthanolPercent, MS2NT(30000));
+	flexSensor.Register();
+	flexSensor.invalidate(UnexpectedCode::Timeout);
+
+	Sensor::setMockValue(SensorType::Sensor5vVoltage, 5.0f);
+
+	setupSensorCheckerPreconditions();
+
+	// Now drop battery voltage below the 7V threshold
+	clearWarnings();
+	Sensor::setMockValue(SensorType::BatteryVoltage, 5.0f);
+
+	runSensorChecks();
+
+	EXPECT_FALSE(hasError(ObdCode::OBD_FlexSensor_Timeout));
+
+	flexSensor.unregister();
+}
+
+// ==================== DTC debounce ====================
+
+// A fault present for a single check is noise, not a failure
+TEST(SensorCheckerDebounce, SingleGlitchDoesNotLatch) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupSensorCheckerPreconditions();
+
+	auto& triggerState = engine->triggerCentral.triggerState;
+
+	// One bad pass...
+	triggerState.triggerErrorCounter = 51;
+	engine->module<SensorChecker>()->onSlowCallback();
+
+	// ...then the fault goes away
+	triggerState.triggerErrorCounter = 0;
+	runSensorChecks();
+
+	EXPECT_FALSE(hasError(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors));
+}
+
+// A fault that sticks around does eventually latch, but not on the first check
+TEST(SensorCheckerDebounce, PersistentFaultLatches) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupSensorCheckerPreconditions();
+
+	engine->triggerCentral.triggerState.triggerErrorCounter = 51;
+
+	// Not on the first pass
+	engine->module<SensorChecker>()->onSlowCallback();
+	EXPECT_FALSE(hasError(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors));
+
+	// But it does once the fault has persisted
+	runSensorChecks();
+	EXPECT_TRUE(hasError(ObdCode::OBD_Crankshaft_Position_Sensor_A_Circuit_SyncErrors));
 }
 
 // ==================== Engine-stop resets trigger state ====================
