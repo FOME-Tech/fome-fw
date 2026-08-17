@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include "defaults.h"
+
 // A 32x32 cell budget's worth of storage, so tests can freely reshape within it. Real tables are
 // allocated by the config generator at their maxsize.
 static uint8_t storage[1024];
@@ -189,4 +191,75 @@ TEST(ResizableTable, VeTableAtNonDefaultShape) {
 					config->veRpmBins,
 					config->veTableCols,
 					config->veRpmBins[10]));
+}
+
+// The ignition table is signed and scaled, so it also covers negative cells round-tripping through
+// the scaled_channel storage at a reshaped stride.
+TEST(ResizableTable, IgnitionTableAtNonDefaultShape) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// 18 rows x 32 columns - the same 576 cell budget as VE, transposed
+	config->ignitionTableRows = 18;
+	config->ignitionTableCols = 32;
+
+	setLinearCurveDynamic(config->ignitionLoadBins, config->ignitionTableRows, 20, 200, 1);
+	setLinearCurveDynamic(config->ignitionRpmBins, config->ignitionTableCols, 800, 8000, 1);
+	setTableDynamic(config->ignitionTable, config->ignitionTableRows, config->ignitionTableCols, 25);
+
+	// Retard at low load/low rpm, which only lands where intended if the stride is 32
+	config->ignitionTable[2 * 32 + 7] = -12.5f;
+
+	EXPECT_FLOAT_EQ(
+			-12.5f,
+			interpolate3dDynamic(
+					config->ignitionTable,
+					config->ignitionLoadBins,
+					config->ignitionTableRows,
+					config->ignitionLoadBins[2],
+					config->ignitionRpmBins,
+					config->ignitionTableCols,
+					config->ignitionRpmBins[7]));
+
+	EXPECT_FLOAT_EQ(
+			25,
+			interpolate3dDynamic(
+					config->ignitionTable,
+					config->ignitionLoadBins,
+					config->ignitionTableRows,
+					config->ignitionLoadBins[10],
+					config->ignitionRpmBins,
+					config->ignitionTableCols,
+					config->ignitionRpmBins[20]));
+}
+
+// setDefaultIgnition() builds the timing map by walking the shape in use. Poison the whole
+// allocation first, so this checks that every cell of the default shape actually got written - a
+// stride or bound mistake would leave some of them poisoned.
+TEST(ResizableTable, DefaultIgnitionTableIsFullyPopulated) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// buildTimingMap() only runs for MAP-based load, otherwise it warns and leaves the table alone
+	engineConfiguration->fuelAlgorithm = LM_SPEED_DENSITY;
+
+	// Well outside the -20..90 degree range the table can hold, and exactly representable at the
+	// table's 0.1 degree resolution, so it round-trips unchanged if nothing overwrites it
+	static constexpr float poison = -99.9f;
+
+	for (size_t i = 0; i < efi::size(config->ignitionTable); i++) {
+		config->ignitionTable[i] = poison;
+	}
+
+	setDefaultIgnition();
+
+	size_t rows = config->ignitionTableRows;
+	size_t cols = config->ignitionTableCols;
+
+	ASSERT_GE(rows, 2u);
+	ASSERT_GE(cols, 2u);
+
+	for (size_t row = 0; row < rows; row++) {
+		for (size_t col = 0; col < cols; col++) {
+			EXPECT_NE(poison, (float)config->ignitionTable[row * cols + col]) << "row " << row << " col " << col;
+		}
+	}
 }
