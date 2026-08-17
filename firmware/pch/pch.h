@@ -32,6 +32,7 @@
 #include "sensor.h"
 #include "settings.h"
 #include "efi_interpolation.h"
+#include "resizable_table.h"
 #include "perf_trace.h"
 #include "hardware.h"
 #include "thread_priority.h"

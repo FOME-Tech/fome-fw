@@ -25,6 +25,10 @@ public class TsWriter {
 
     private static final Pattern OPTIONAL_LINE = Pattern.compile("@@if_([a-zA-Z0-9_]+)");
 
+    // Populated while writing the config layout, then consumed further down the template by the
+    // [ConstantsExtensions] marker.
+    private TsMetadata meta = null;
+
     public void writeTunerstudio(ParseState parser, String inputFile, String outputFile) throws IOException {
         PrintStream ps = new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile));
         writeTunerstudio(parser, inputFile, ps);
@@ -39,6 +43,16 @@ public class TsWriter {
 
             if (line.contains("CONFIG_DEFINITION_START")) {
                 writeLayoutAndComments(parser, ps);
+                continue;
+            }
+
+            if (line.contains("CONSTANTS_EXTENSIONS_GENERATED")) {
+                // Always downstream of CONFIG_DEFINITION_START in the template, so meta is populated
+                if (meta == null) {
+                    throw new IllegalStateException("CONSTANTS_EXTENSIONS_GENERATED must appear after CONFIG_DEFINITION_START");
+                }
+
+                meta.writeConstantsExtensions(ps);
                 continue;
             }
 
@@ -119,7 +133,7 @@ public class TsWriter {
 
     public void writeLayoutAndComments(ParseState parser, PrintStream ps) {
         StructLayout root = new StructLayout(0, "root", parser.getLastStruct());
-        TsMetadata meta = new TsMetadata();
+        meta = new TsMetadata();
 
         // Print each enum's list of names once, up front - fields below refer to them by name
         // instead of repeating the (sometimes enormous) list.

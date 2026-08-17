@@ -8,10 +8,18 @@ import java.io.PrintStream;
 public class ArrayLayout extends Layout {
     public final int[] length;
 
+    /** Non-null when TunerStudio should see a dynamic shape instead of the allocated length. */
+    public final TsShape tsShape;
+
     public final Layout prototypeLayout;
 
     public ArrayLayout(PrototypeField prototype, int[] length) {
+        this(prototype, length, null);
+    }
+
+    public ArrayLayout(PrototypeField prototype, int[] length, TsShape tsShape) {
         this.length = length;
+        this.tsShape = tsShape;
 
         if (prototype instanceof ScalarField) {
             prototypeLayout = new ScalarLayout((ScalarField)prototype);

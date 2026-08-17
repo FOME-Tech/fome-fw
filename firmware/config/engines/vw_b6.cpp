@@ -111,7 +111,7 @@ static inline void commonPassatB6() {
 
 	engineConfiguration->hpfpPeakPos = 10;
 
-	setTable(config->veTable, 55);
+	setTableDynamic(config->veTable, config->veTableRows, config->veTableCols, 55);
 	setBoschVAGETB();
 
 	// random number just to take position away from zero
