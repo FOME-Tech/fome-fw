@@ -81,6 +81,7 @@ public:
 class HpfpController : public EngineModule, public high_pressure_fuel_pump_s {
 public:
 	void onFastCallback() final;
+	void onEngineStop() final;
 
 #if !EFI_UNIT_TEST
 private:

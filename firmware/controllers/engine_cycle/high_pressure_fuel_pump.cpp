@@ -168,6 +168,13 @@ void HpfpController::onFastCallback() {
 	}
 }
 
+void HpfpController::onEngineStop() {
+	// Our on/off/on chain re-arms itself from pinTurnOff, so it only survives while the engine
+	// is turning. Stopping drops any pending event, which would leave us "running" with nothing
+	// scheduled and no way back - clear the flag so onFastCallback starts a fresh chain.
+	m_running = false;
+}
+
 void HpfpController::pinTurnOn(HpfpController* self) {
 	enginePins.hpfpValve.setValue(true);
 
