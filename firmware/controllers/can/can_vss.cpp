@@ -118,11 +118,42 @@ static expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& fr
 	}
 }
 
+static expected<bool> processBMW_e90Brake(const CANRxFrame& frame) {
+	// E90 MK60e5 brake status frame
+	if (CAN_SID(frame) != 0x19E) {
+		return unexpected;
+	}
+
+	// bit 46: brake pedal switch
+	return (frame.data8[5] & 0x40) != 0;
+}
+
+static expected<bool> tryDecodeBrake(can_vss_nbc_e type, const CANRxFrame& frame) {
+	switch (type) {
+		case BMW_e90:
+			return processBMW_e90Brake(frame);
+		default:
+			return unexpected;
+	}
+}
+
 static StoredValueSensor canSpeed(SensorType::VehicleSpeed, MS2NT(500));
 static StoredValueSensor wssLf(SensorType::WheelSpeedLF, MS2NT(500));
 static StoredValueSensor wssRf(SensorType::WheelSpeedRF, MS2NT(500));
 static StoredValueSensor wssLr(SensorType::WheelSpeedLR, MS2NT(500));
 static StoredValueSensor wssRr(SensorType::WheelSpeedRR, MS2NT(500));
+
+static bool brakeSwitchState = false;
+static Timer brakeSwitchTimer;
+
+expected<bool> getCanBrakePedalState() {
+	// Same timeout as the speed sensors above
+	if (brakeSwitchTimer.hasElapsedMs(500)) {
+		return unexpected;
+	}
+
+	return brakeSwitchState;
+}
 
 void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 	if (!engineConfiguration->enableCanVss || !isInit) {
@@ -134,6 +165,11 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 
 	if (auto speed = tryDecodeVss(type, frame); speed && (wssToVss == WssToVssMode::None)) {
 		canSpeed.setValidValue(speed.Value * engineConfiguration->canVssScaling, nowNt);
+	}
+
+	if (auto brake = tryDecodeBrake(type, frame)) {
+		brakeSwitchState = brake.Value;
+		brakeSwitchTimer.reset(nowNt);
 	}
 
 	if (auto wss = tryDecodeWss(type, frame)) {
