@@ -28,6 +28,7 @@ bool mountSdFilesystem() {
 
 	// if no card, don't try to mount FS
 	if (!cardBlockDevice) {
+		efiPrintf("SD: no card detected");
 		return false;
 	}
 
@@ -40,6 +41,8 @@ bool mountSdFilesystem() {
 	// If we have a device AND USB is connected, mount the card to USB, otherwise
 	// mount the null device and try to mount the filesystem ourselves
 	if (cardBlockDevice && hasUsb) {
+		efiPrintf("SD: USB connected, card handed to mass storage instead of internal logging");
+
 		// Mount the real card to USB
 		attachMsdSdCard(cardBlockDevice);
 
@@ -49,12 +52,15 @@ bool mountSdFilesystem() {
 #endif
 
 	// We were able to connect the SD card, mount the filesystem
-	if (f_mount(dma_buffers::fs(), "/", 1) == FR_OK) {
+	FRESULT err = f_mount(dma_buffers::fs(), "/", 1);
+	if (err == FR_OK) {
 		efiPrintf("SD card mounted!");
 		fs_ready = true;
 		return true;
 	} else {
-		efiPrintf("SD card failed to mount filesystem");
+		// FatFs error number, not just "it didn't work": FR_NO_FILESYSTEM (13) means the card
+		// needs formatting, while FR_DISK_ERR (1) points at the card or the bus instead.
+		efiPrintf("SD card failed to mount filesystem, FatFs error %d", err);
 		return false;
 	}
 }

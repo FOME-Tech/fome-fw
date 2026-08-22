@@ -30,8 +30,13 @@ SPIDriver* getSdCardSpiDevice();
 Gpio getSdCardCsPin();
 #endif // HAL_USE_SPI
 
+// FatFs writes (bytes / 512) sectors per f_write(), so we want as large a buffer as possible
+#ifndef SD_LOG_BUFFER_SIZE
+#define SD_LOG_BUFFER_SIZE 4096
+#endif
+
 #if EFI_PROD_CODE
-struct SdLogBufferWriter final : public BufferedWriter<512> {
+struct SdLogBufferWriter final : public BufferedWriter<SD_LOG_BUFFER_SIZE> {
 	bool failed = false;
 
 	size_t writeInternal(const char* buffer, size_t count) override;
