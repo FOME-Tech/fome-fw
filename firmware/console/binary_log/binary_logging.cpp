@@ -55,6 +55,22 @@ void writeSdLogLine(Writer& bufferedWriter) {
 
 static constexpr uint16_t recordLength = computeFieldsRecordLength();
 
+static constexpr size_t headerSize = MLQ_HEADER_SIZE + efi::size(fields) * MLQ_FIELD_HEADER_SIZE;
+
+// The MLQ "data begin index" field written below is only 16 bits wide in practice (see
+// writeFileHeader), so a header any larger than this silently produces log files that no viewer
+// can read. Every output channel is logged, so the field count - and this header - grows with
+// every channel added.
+static_assert(headerSize <= 0xFFFF, "SD log file header no longer fits in the 16 bit data begin index");
+
+size_t getSdLogFieldCount() {
+	return efi::size(fields);
+}
+
+uint16_t getSdLogRecordLength() {
+	return recordLength;
+}
+
 void writeFileHeader(Writer& outBuffer) {
 	char buffer[MLQ_HEADER_SIZE];
 	// File format: MLVLG\0
@@ -75,8 +91,6 @@ void writeFileHeader(Writer& outBuffer) {
 	buffer[13] = 0;
 	buffer[14] = 0;
 	buffer[15] = 0;
-
-	size_t headerSize = MLQ_HEADER_SIZE + efi::size(fields) * MLQ_FIELD_HEADER_SIZE;
 
 	// Data begin index: begins immediately after the header
 	buffer[16] = 0;
