@@ -72,7 +72,7 @@ public class StructLayout extends Layout {
                     assert(asf.prototype instanceof ScalarField);
 
                     ScalarField prototype = (ScalarField)asf.prototype;
-                    offset = addItem(offset, new ArrayLayout(prototype, asf.length));
+                    offset = addItem(offset, new ArrayLayout(prototype, asf.length, asf.tsShape));
                 }
             } else {
                 offset = addItem(offset, f);

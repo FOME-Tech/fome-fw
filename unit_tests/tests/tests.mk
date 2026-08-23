@@ -49,6 +49,7 @@ TESTS_SRC_CPP = \
 	tests/lua/test_lua_Leiderman_Khlystov.cpp \
 	tests/lua/test_can_filter.cpp \
 	tests/util/test_scaled_channel.cpp \
+	tests/util/test_resizable_table.cpp \
 	tests/util/test_timer.cpp \
 	tests/system/test_periodic_thread_controller.cpp \
 	tests/test_util.cpp \

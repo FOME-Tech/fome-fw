@@ -305,9 +305,9 @@ static void setCommonMazdaNB() {
 	engineConfiguration->tachPulsePerRev = 2;
 
 	// Tables
-	copyArray(config->veRpmBins, mazda_miata_nb2_RpmBins);
-	copyArray(config->veLoadBins, mazda_miata_nb2_LoadBins);
-	copyTable(config->veTable, mapBased18vvtVeTable_NB_fuel_rail);
+	copyTableDynamic(config->veTable, config->veTableRows, config->veTableCols, mapBased18vvtVeTable_NB_fuel_rail);
+	copyBinsDynamic(config->veRpmBins, config->veTableCols, mazda_miata_nb2_RpmBins);
+	copyBinsDynamic(config->veLoadBins, config->veTableRows, mazda_miata_nb2_LoadBins);
 
 	copyArray(config->ignitionRpmBins, ignition18vvtRpmBins);
 	copyArray(config->ignitionLoadBins, ignition18vvtLoadBins);
