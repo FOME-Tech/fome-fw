@@ -51,6 +51,7 @@ or
  - The "wideband controller firmware too old" fault now reports its own code (P2902) instead of P2133, which is also used for "accelerator pedal secondary too high" - the two faults could not be told apart
  - Sensor, trigger, cam, knock and injector/ignition circuit fault codes now require the fault to persist for about a second before they light the check engine light, so a single bad reading no longer latches a code #780
  - Improve STM32H7/Atlas SD card reliability
+ - General SD card logging performance and reliabilty improvements
 
 ## May 2026 Release
 
