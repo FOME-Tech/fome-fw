@@ -38,6 +38,8 @@ or
  - New VVT mode "Honda K24Z Exhaust" for the three-tooth unevenly spaced exhaust cam wheel used on the K24Z, which differs from the 4+1 wheel of earlier K series engines. This pattern is used by K series engines that use a 60-2 crank pattern.
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
  - New firing order 1-6-2-5-3-4 (Maserati V6) #789
+ - Brake pedal switch state is now decoded from CAN when CAN VSS is set to BMW E8x/E9x MK60e5, so no physical brake switch input is required on those cars
+ - New CAN VSS type "AUMOVIO MK 100 UHP" for the Continental/AUMOVIO MK 100 UHP ABS module, decoding vehicle speed, all four wheel speeds, brake pedal state, and IMU data (lateral/longitudinal/vertical acceleration and yaw rate)
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.

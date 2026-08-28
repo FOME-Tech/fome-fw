@@ -293,8 +293,9 @@ typedef enum __attribute__((__packed__)) {
 	W202 = 1,
 	BMW_e90 = 2,
 	Mx5_NC = 3,
+	MK100_UHP = 4,
 
-	CanVssLast = 4,
+	CanVssLast = 5,
 } can_vss_nbc_e;
 
 enum class WssToVssMode : uint8_t {
