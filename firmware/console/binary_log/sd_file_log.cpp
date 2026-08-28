@@ -8,6 +8,18 @@
 
 int totalLoggedBytes = 0;
 
+static int getSdLogFrequency() {
+	int freq = engineConfiguration->sdCardLogFrequency;
+
+	if (freq > 100) {
+		freq = 100;
+	} else if (freq < 1) {
+		freq = 1;
+	}
+
+	return freq;
+}
+
 #if EFI_PROD_CODE
 
 static int totalWritesCounter = 0;
@@ -168,14 +180,11 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 		if (syncTimer.hasElapsedSec(F_SYNC_PERIOD_SEC)) {
 			syncTimer.reset();
 
-			startNt = getTimeNowNt();
 			FRESULT syncErr = f_sync(dma_buffers::logFileFd());
-			recordDuration(recentMaxSyncUs, maxSyncUs, startNt);
 
 			if (syncErr != FR_OK) {
 				// Not fatal on its own, but the card is unhappy and the next write is likely to
 				// fail outright, so this is the earliest warning we get.
-				syncErrorCounter++;
 				warning(ObdCode::CUSTOM_ERR_SD_WRITE_FAILED, "SD: f_sync failed %d", syncErr);
 			}
 
@@ -241,14 +250,7 @@ void mlgLogger() {
 			return;
 		}
 
-		auto freq = engineConfiguration->sdCardLogFrequency;
-		if (freq > 250) {
-			freq = 250;
-		} else if (freq < 1) {
-			freq = 1;
-		}
-
-		systime_t period = CH_CFG_ST_FREQUENCY / freq;
+		systime_t period = CH_CFG_ST_FREQUENCY / getSdLogFrequency();
 		chThdSleepUntilWindowed(before, before + period);
 	}
 }
