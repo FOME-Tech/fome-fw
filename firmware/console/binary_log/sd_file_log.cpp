@@ -56,7 +56,8 @@ static int incLogFileName() {
 	char data[20];
 	UINT fileLength;
 
-	err = f_read(dma_buffers::logFileFd(), (void*)data, sizeof(data), &fileLength);
+	err = f_read(dma_buffers::logFileFd(), (void*)data, sizeof(data) - 1, &fileLength);
+	data[fileLength] = '\0';
 	if (err != FR_OK) {
 		efiPrintf("SD log index file (%s) failed to read: %d", LOG_INDEX_FILENAME, err);
 		goto err;
@@ -83,7 +84,9 @@ err:
 	memset(dma_buffers::logFileFd(), 0, sizeof(FIL));
 	err = f_open(dma_buffers::logFileFd(), LOG_INDEX_FILENAME, FA_OPEN_ALWAYS | FA_WRITE);
 	itoa10(data, logFileIndex);
-	f_write(dma_buffers::logFileFd(), (void*)data, strlen(data), nullptr);
+
+	UINT bytesWritten;
+	f_write(dma_buffers::logFileFd(), (void*)data, strlen(data), &bytesWritten);
 	f_close(dma_buffers::logFileFd());
 	efiPrintf("Done %d", logFileIndex);
 
@@ -116,11 +119,16 @@ static void prepareLogFileName(int index) {
 static bool createLogFile(int logFileIndex) {
 	prepareLogFileName(logFileIndex);
 
+	// Print before the open, not after it. f_open() with FA_CREATE_ALWAYS scans the directory and
+	// frees any existing cluster chain, so it's a card operation that can block for a long time -
+	// if this is the last line in the log, that's where we are.
+	efiPrintf("SD: creating log file %s", logName);
+
 	memset(dma_buffers::logFileFd(), 0, sizeof(FIL));
 	FRESULT err = f_open(dma_buffers::logFileFd(), logName, FA_CREATE_ALWAYS | FA_WRITE);
 	if (err != FR_OK && err != FR_EXIST) {
-		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: mount failed");
-		printFatFsError("FS mount failed", err); // else - show error
+		warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: failed to create log file");
+		printFatFsError("failed to create log file", err);
 		return false;
 	}
 
@@ -135,7 +143,16 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 	FRESULT err = f_write(dma_buffers::logFileFd(), buffer, count, &bytesWritten);
 
 	if (bytesWritten != count) {
+		// This is terminal: the logger thread exits right after this and never retries, so print
+		// everything we know about how we got here. It can't repeat, so it can't spam.
+		warning(ObdCode::CUSTOM_ERR_SD_WRITE_FAILED, "SD: logging stopped, write failed");
 		printFatFsError("write error or disk full", err);
+		efiPrintf(
+				"SD: wrote %d of %d bytes at file offset %d",
+				(int)bytesWritten,
+				(int)count,
+				(int)f_tell(dma_buffers::logFileFd()));
+		printSdLogStats("stopping");
 
 		// Close file and unmount volume (ignore errors, we're already in the shutdown path)
 		f_close(dma_buffers::logFileFd());
@@ -144,16 +161,23 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 		failed = true;
 		return 0;
 	} else {
-		writeCounter++;
 		totalWritesCounter++;
-		if (writeCounter >= F_SYNC_FREQUENCY) {
-			/**
-			 * Performance optimization: not f_sync after each line, f_sync is probably a heavy operation
-			 * todo: one day someone should actually measure the relative cost of f_sync
-			 */
-			f_sync(dma_buffers::logFileFd());
+
+		if (syncTimer.hasElapsedSec(F_SYNC_PERIOD_SEC)) {
+			syncTimer.reset();
+
+			startNt = getTimeNowNt();
+			FRESULT syncErr = f_sync(dma_buffers::logFileFd());
+			recordDuration(recentMaxSyncUs, maxSyncUs, startNt);
+
+			if (syncErr != FR_OK) {
+				// Not fatal on its own, but the card is unhappy and the next write is likely to
+				// fail outright, so this is the earliest warning we get.
+				syncErrorCounter++;
+				warning(ObdCode::CUSTOM_ERR_SD_WRITE_FAILED, "SD: f_sync failed %d", syncErr);
+			}
+
 			totalSyncCounter++;
-			writeCounter = 0;
 		}
 	}
 
@@ -169,7 +193,7 @@ bool mountSdFilesystem() {
 	return true;
 }
 
-class SdLogBufferWriter final : public BufferedWriter<512> {
+class SdLogBufferWriter final : public BufferedWriter<SD_LOG_BUFFER_SIZE> {
 public:
 	bool failed = false;
 
@@ -258,6 +282,23 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 	int logFileIndex = incLogFileName();
 	if (!createLogFile(logFileIndex)) {
 		return;
+	}
+
+	if (engineConfiguration->sdTriggerLog) {
+		efiPrintf("SD: logging trigger data to %s", logName);
+	} else {
+		// Record size scales with the output channel count, so a firmware update can raise the
+		// demanded data rate without the user changing anything. This is the first number to
+		// check when a card that used to keep up no longer does.
+		int bytesPerRecord = getSdLogRecordLength() + MLQ_BLOCK_OVERHEAD;
+		int freq = getSdLogFrequency();
+		efiPrintf(
+				"SD: logging to %s, %d fields, %d bytes/record at %d hz = %d bytes/sec",
+				logName,
+				(int)getSdLogFieldCount(),
+				bytesPerRecord,
+				freq,
+				bytesPerRecord * freq);
 	}
 #endif // EFI_PROD_CODE
 
