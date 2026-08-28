@@ -25,8 +25,11 @@ static int totalSyncCounter = 0;
 #define MIN_FILE_INDEX 10
 static char logName[_MAX_FILLER + 20];
 
-// at about 20Hz we write about 2Kb per second, looks like we flush once every ~2 seconds
-#define F_SYNC_FREQUENCY 10
+// This is the window of log data lost on a power cut: the bytes are already on the card, but
+// the directory entry that gives the file its length is only up to date as of the last sync.
+#define F_SYNC_PERIOD_SEC 2
+
+static Timer syncTimer;
 
 #define LOG_INDEX_FILENAME "index.txt"
 
@@ -152,7 +155,6 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 				(int)bytesWritten,
 				(int)count,
 				(int)f_tell(dma_buffers::logFileFd()));
-		printSdLogStats("stopping");
 
 		// Close file and unmount volume (ignore errors, we're already in the shutdown path)
 		f_close(dma_buffers::logFileFd());
