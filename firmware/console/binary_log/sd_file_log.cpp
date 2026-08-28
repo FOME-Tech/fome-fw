@@ -10,12 +10,12 @@ int totalLoggedBytes = 0;
 
 #if EFI_PROD_CODE
 
-static int writeCounter = 0;
 static int totalWritesCounter = 0;
 static int totalSyncCounter = 0;
 
 #include <stdio.h>
 #include <string.h>
+#include "efi_timer.h"
 #include "ff.h"
 #include "mass_storage_init.h"
 #include "rtc_helper.h"
