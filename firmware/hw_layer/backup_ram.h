@@ -54,6 +54,15 @@ struct BackupSramData {
 
 	// Persisent values stored/read by Lua scripts
 	float LuaPersistentData[64] = {0};
+
+	/**
+	 * Last valid reading from the flex fuel sensor.
+	 * The fuel in the tank can't change while we aren't looking (that takes both refueling and
+	 * enough running to flow new fuel past the sensor), so this is a good guess at ethanol content
+	 * until the sensor wakes up after a restart, or forever if it has failed.
+	 * Negative means we've never seen a valid reading.
+	 */
+	float FlexEthanolPct = -1;
 };
 
 BackupSramData* getBackupSram();

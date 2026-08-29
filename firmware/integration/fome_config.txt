@@ -739,7 +739,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	spi_device_e mc33972spiDevice;
 	uint8_t autoscale stoichRatioSecondary;Stoichiometric ratio for your secondary fuel. This value is used when the Flex Fuel sensor indicates E100, typically 9.0;":1", {1/@@PACK_MULT_AFR_CFG@@}, 0, 5, 25, 1
 	uint8_t etbMaximumPosition;Maximum allowed ETB position. Some throttles go past fully open, so this allows you to limit it to fully open.;"%", 1, 0, 70, 100, 0
-	uint8_t flexFuelFailedEthanol;Ethanol content assumed when the flex fuel sensor has failed or timed out.;"%", 1, 0, 0, 100, 0
+	uint8_t flexFuelFailedEthanol;Ethanol content assumed when the flex fuel sensor has failed, and the ECU has never seen a valid reading to remember. Once the sensor has read successfully, that value is stored in backup RAM and used instead of this one.;"%", 1, 0, 0, 100, 0
 
 
 	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, 250, 0

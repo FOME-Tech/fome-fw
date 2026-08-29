@@ -92,6 +92,10 @@ void Engine::periodicSlowCallback() {
 
 	updateVrPwm();
 
+	// Remember the current ethanol content so we have something sane to use before the flex
+	// sensor wakes up on the next start
+	updateStoredFlexEthanolPercent();
+
 	enginePins.o2heater.setValue(engineConfiguration->forceO2Heating || engine->rpmCalculator.isRunning());
 	enginePins.starterRelayDisable.setValue(Sensor::getOrZero(SensorType::Rpm) < engineConfiguration->cranking.rpm);
 

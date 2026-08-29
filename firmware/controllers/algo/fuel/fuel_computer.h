@@ -37,4 +37,15 @@ public:
 };
 
 float getLoadOverride(float defaultLoad, load_override_e overrideMode);
+
+// Last valid flex fuel sensor reading stored in backup RAM, if there is one
+expected<float> getStoredFlexEthanolPercent();
+
+// Best ethanol content we know of: the live sensor if it's valid, otherwise the last stored
+// reading, otherwise the configured default
+float getFlexEthanolPercent();
+
+// Store the current flex fuel sensor reading in backup RAM, if it's valid
+void updateStoredFlexEthanolPercent();
+
 constexpr float fuelDensity = 0.72; // g/cc

@@ -73,8 +73,7 @@ float getCrankingFuel3(float baseFuel, uint32_t revolutionCounterSinceStart) {
 			alreadyWarned = true;
 		}
 
-		// If failed flex sensor, use the configured fallback ethanol content
-		auto flex = Sensor::get(SensorType::FuelEthanolPercent).value_or(engineConfiguration->flexFuelFailedEthanol);
+		auto flex = getFlexEthanolPercent();
 
 		engine->engineState.crankingFuel.coolantTemperatureCoefficient =
 				interpolateClamped(0, e0Mult, 85, e85Mult, flex);

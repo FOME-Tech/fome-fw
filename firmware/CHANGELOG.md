@@ -40,7 +40,9 @@ or
  - New firing order 1-6-2-5-3-4 (Maserati V6) #789
  - Brake pedal switch state is now decoded from CAN when CAN VSS is set to BMW E8x/E9x MK60e5, so no physical brake switch input is required on those cars
  - New CAN VSS type "AUMOVIO MK 100 UHP" for the Continental/AUMOVIO MK 100 UHP ABS module, decoding vehicle speed, all four wheel speeds, brake pedal state, and IMU data (lateral/longitudinal/vertical acceleration and yaw rate)
- - Configurable ethanol % to assume when the flex fuel sensor fails or is unplugged: "Failed flex sensor ethanol content", defaults to 50%.
+ - Flex fuel ethanol content is now correct immediately at startup, instead of ramping up from 0% over the first second while the sensor's filter settles. The last valid reading is stored in backup RAM, and used to prime the filter at startup as well as any time the sensor is failed - the fuel in the tank can't change while the ECU isn't watching. If no value was stored and the sensor is dead, the fallback is configurable: "Failed flex sensor ethanol content", defaulting to 50%.
+
+
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.

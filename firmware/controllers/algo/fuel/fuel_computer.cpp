@@ -7,6 +7,40 @@
 #include "table_helper.h"
 #include "fuel_math.h"
 #include "fuel_computer.h"
+#include "backup_ram.h"
+
+expected<float> getStoredFlexEthanolPercent() {
+	float stored = getBackupSram()->FlexEthanolPct;
+
+	// Negative means nothing has ever been stored. Anything else outside the sensor's range is
+	// garbage that shouldn't be in backup RAM in the first place, so don't trust it either.
+	if (stored < 0 || stored > 100) {
+		return unexpected;
+	}
+
+	return stored;
+}
+
+float getFlexEthanolPercent() {
+	if (auto flex = Sensor::get(SensorType::FuelEthanolPercent)) {
+		return flex.Value;
+	}
+
+	// The sensor is dead, or hasn't woken up yet after a restart. Either way the fuel in the tank
+	// can't have changed without us seeing it, so the last reading we stored is the best guess.
+	if (auto stored = getStoredFlexEthanolPercent()) {
+		return stored.Value;
+	}
+
+	// Never had a reading at all: first ever start, or backup RAM lost power
+	return engineConfiguration->flexFuelFailedEthanol;
+}
+
+void updateStoredFlexEthanolPercent() {
+	if (auto flex = Sensor::get(SensorType::FuelEthanolPercent)) {
+		getBackupSram()->FlexEthanolPct = flex.Value;
+	}
+}
 
 mass_t FuelComputerBase::getCycleFuel(mass_t airmass, float rpm, float load) {
 	load = getTargetLambdaLoadAxis(load);
@@ -47,11 +81,8 @@ float FuelComputer::getStoichiometricRatio() const {
 		engineConfiguration->stoichRatioSecondary = secondary = 9.0f;
 	}
 
-	// If failed flex sensor, use the configured fallback ethanol content
-	auto flex = Sensor::get(SensorType::FuelEthanolPercent).value_or(engineConfiguration->flexFuelFailedEthanol);
-
 	// Linear interpolate between primary and secondary stoich ratios
-	return interpolateClamped(0, primary, 100, secondary, flex);
+	return interpolateClamped(0, primary, 100, secondary, getFlexEthanolPercent());
 }
 
 float FuelComputer::getTargetLambda(float rpm, float load) const {
