@@ -47,12 +47,11 @@ float FuelComputer::getStoichiometricRatio() const {
 		engineConfiguration->stoichRatioSecondary = secondary = 9.0f;
 	}
 
-	auto flex = Sensor::get(SensorType::FuelEthanolPercent);
-
-	// TODO: what do do if flex sensor fails?
+	// If failed flex sensor, use the configured fallback ethanol content
+	auto flex = Sensor::get(SensorType::FuelEthanolPercent).value_or(engineConfiguration->flexFuelFailedEthanol);
 
 	// Linear interpolate between primary and secondary stoich ratios
-	return interpolateClamped(0, primary, 100, secondary, flex.Value);
+	return interpolateClamped(0, primary, 100, secondary, flex);
 }
 
 float FuelComputer::getTargetLambda(float rpm, float load) const {

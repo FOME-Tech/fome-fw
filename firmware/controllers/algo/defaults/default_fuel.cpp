@@ -229,6 +229,9 @@ void setDefaultFuel() {
 	// 9.0 = E100 pure ethanol
 	engineConfiguration->stoichRatioSecondary = 9.0f;
 
+	// If the flex sensor fails, split the difference between the two fuels
+	engineConfiguration->flexFuelFailedEthanol = 50;
+
 	// Injector deadtime
 	setBosch02880155868(engineConfiguration->injector);
 	setBosch02880155868(engineConfiguration->injectorSecondary);
