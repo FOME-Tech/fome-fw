@@ -20,7 +20,7 @@
 set -euo pipefail
 
 # Ensure submodules got cloned
-git submodule update --init
+git submodule update --init --depth 1
 
 # Update package lists
 sudo apt-get update
