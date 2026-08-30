@@ -4,6 +4,7 @@ CONTROLLERS_ALGO_SRC_CPP = $(PROJECT_DIR)/controllers/algo/ignition/ignition_sta
 	$(PROJECT_DIR)/controllers/algo/fuel_math.cpp \
 	$(PROJECT_DIR)/controllers/algo/accel_enrichment.cpp \
 	$(PROJECT_DIR)/controllers/algo/wall_fuel.cpp \
+	$(PROJECT_DIR)/controllers/algo/wall_fuel_tuner.cpp \
 	$(PROJECT_DIR)/controllers/algo/launch_control.cpp \
 	$(PROJECT_DIR)/controllers/algo/antilag_system.cpp \
 	$(PROJECT_DIR)/controllers/algo/torque/torque_reduction_controller.cpp \
