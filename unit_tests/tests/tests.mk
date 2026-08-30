@@ -96,6 +96,7 @@ TESTS_SRC_CPP = \
 	tests/test_stft.cpp \
 	tests/test_hpfp.cpp \
 	tests/test_hpfp_integrated.cpp \
+	tests/test_trigger_scheduler.cpp \
 	tests/test_fuel_math.cpp \
 	tests/test_binary_log.cpp \
 	tests/test_gpio.cpp \
