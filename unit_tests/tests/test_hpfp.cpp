@@ -312,3 +312,41 @@ TEST(HPFP, Schedule) {
 	// The off event goes directly to scheduleByAngle and is tested by the last EXPECT_CALL
 	// above.
 }
+
+TEST(HPFP, ResumesAfterEngineStop) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) { cfg->hpfpValvePin = Gpio::A2; });
+
+	setCylinderCount(4);
+	engineConfiguration->hpfpCamLobes = 3;
+	engineConfiguration->hpfpPumpVolume = 0.2;
+
+	engineConfiguration->trigger.customTotalToothCount = 16;
+	engineConfiguration->trigger.customSkippedToothCount = 0;
+	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
+	setCamOperationMode();
+	engineConfiguration->isFasterEngineSpinUpEnabled = true;
+
+	eth.smartFireTriggerEvents2(/*count*/ 40, /*delay*/ 4);
+
+	for (int i = 0; i < 50; i++) {
+		eth.smartFireTriggerEvents2(/*count*/ 1, /*delay*/ 4);
+		engine->periodicFastCallback();
+	}
+
+	int beforeStop = enginePins.hpfpValve.unitTestTurnedOnCounter;
+	ASSERT_GT(beforeStop, 0) << "pump should be running before the stop";
+
+	// Stopping clears the queue, which drops the pending link in HPFP's on/off/on chain.
+	// HpfpController has to notice and start a fresh chain rather than sit there thinking it's
+	// still running.
+	engine->OnTriggerSynchronizationLost();
+
+	eth.smartFireTriggerEvents2(/*count*/ 40, /*delay*/ 4);
+
+	for (int i = 0; i < 50; i++) {
+		eth.smartFireTriggerEvents2(/*count*/ 1, /*delay*/ 4);
+		engine->periodicFastCallback();
+	}
+
+	ASSERT_GT(enginePins.hpfpValve.unitTestTurnedOnCounter, beforeStop) << "pump should resume after restart";
+}
