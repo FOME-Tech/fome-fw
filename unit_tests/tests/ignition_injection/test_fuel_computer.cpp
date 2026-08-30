@@ -4,6 +4,8 @@
 #define protected public
 #include "fuel_computer.h"
 
+#include "backup_ram.h"
+
 using ::testing::FloatEq;
 
 class MockFuelComputer : public FuelComputerBase {
@@ -58,4 +60,45 @@ TEST(FuelComputer, FlexFuel) {
 	// E110 -> clamp to secondary
 	Sensor::setMockValue(SensorType::FuelEthanolPercent, 110);
 	EXPECT_FLOAT_EQ(10.0f, dut.getStoichiometricRatio());
+}
+
+TEST(FuelComputer, FlexFuelSensorFailed) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	FuelComputer dut;
+
+	// easier values for testing
+	engineConfiguration->stoichRatioPrimary = 15;
+	engineConfiguration->stoichRatioSecondary = 10;
+	engineConfiguration->flexFuelFailedEthanol = 20;
+
+	// Nothing remembered from a previous run
+	getBackupSram()->FlexEthanolPct = -1;
+
+	// Sensor is configured, but has failed
+	StoredValueSensor flexSensor(SensorType::FuelEthanolPercent, MS2NT(30000));
+	flexSensor.Register();
+	flexSensor.invalidate(UnexpectedCode::Timeout);
+
+	// Nothing better to go on, so use the configured E20
+	EXPECT_FLOAT_EQ(14.0f, dut.getStoichiometricRatio());
+
+	// Garbage in backup RAM is ignored the same way
+	getBackupSram()->FlexEthanolPct = 500;
+	EXPECT_FLOAT_EQ(14.0f, dut.getStoichiometricRatio());
+	getBackupSram()->FlexEthanolPct = -1;
+
+	// Now the sensor wakes up and reads E60, which we store away
+	flexSensor.setValidValue(60, getTimeNowNt());
+	EXPECT_FLOAT_EQ(12.0f, dut.getStoichiometricRatio());
+	updateStoredFlexEthanolPercent();
+
+	// The sensor dies again: the fuel in the tank can't have changed, so keep using E60
+	flexSensor.invalidate(UnexpectedCode::Timeout);
+	EXPECT_FLOAT_EQ(12.0f, dut.getStoichiometricRatio());
+
+	flexSensor.unregister();
+
+	// Don't leak the stored value in to other tests
+	getBackupSram()->FlexEthanolPct = -1;
 }

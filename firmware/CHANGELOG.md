@@ -39,6 +39,11 @@ or
  - New VVT mode "Honda K24Z Exhaust" for the three-tooth unevenly spaced exhaust cam wheel used on the K24Z, which differs from the 4+1 wheel of earlier K series engines. This pattern is used by K series engines that use a 60-2 crank pattern.
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
  - New firing order 1-6-2-5-3-4 (Maserati V6) #789
+ - Brake pedal switch state is now decoded from CAN when CAN VSS is set to BMW E8x/E9x MK60e5, so no physical brake switch input is required on those cars
+ - New CAN VSS type "AUMOVIO MK 100 UHP" for the Continental/AUMOVIO MK 100 UHP ABS module, decoding vehicle speed, all four wheel speeds, brake pedal state, and IMU data (lateral/longitudinal/vertical acceleration and yaw rate)
+ - Flex fuel ethanol content is now correct immediately at startup, instead of ramping up from 0% over the first second while the sensor's filter settles. The last valid reading is stored in backup RAM, and used to prime the filter at startup as well as any time the sensor is failed - the fuel in the tank can't change while the ECU isn't watching. If no value was stored and the sensor is dead, the fallback is configurable: "Failed flex sensor ethanol content", defaulting to 50%.
+
+
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
@@ -49,6 +54,8 @@ or
  - Injector and ignition circuit fault codes now name the correct cylinder on boards with smart driver chips. Cylinder 1 previously reported P0202/P0352 instead of P0201/P0351, cylinders 10-12 reported nonsense codes, and cylinder 12 reported no code at all
  - The "wideband controller firmware too old" fault now reports its own code (P2902) instead of P2133, which is also used for "accelerator pedal secondary too high" - the two faults could not be told apart
  - Sensor, trigger, cam, knock and injector/ignition circuit fault codes now require the fault to persist for about a second before they light the check engine light, so a single bad reading no longer latches a code #780
+ - Improve STM32H7/Atlas SD card reliability
+ - General SD card logging performance and reliabilty improvements
 
 ## May 2026 Release
 

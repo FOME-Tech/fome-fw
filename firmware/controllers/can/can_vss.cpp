@@ -21,6 +21,13 @@ static int getTwoBytesLsb(const CANRxFrame& frame, int index) {
 	return low | (high << 8);
 }
 
+// Extract an unaligned 12-bit little-endian (Intel) unsigned value starting at the given bit offset.
+static uint16_t get12Bit_intel(const CANRxFrame& frame, int startBit) {
+	int byteIndex = startBit / 8;
+	int bitShift = startBit % 8;
+	return ((frame.data8[byteIndex] | (frame.data8[byteIndex + 1] << 8)) >> bitShift) & 0x0FFF;
+}
+
 /* Module specific processing functions */
 /* source: http://z4evconversion.blogspot.com/2016/07/completely-forgot-but-it-does-live-on.html */
 expected<float> processBMW_e46(const CANRxFrame& frame) {
@@ -59,6 +66,33 @@ expected<float> processW202(const CANRxFrame& frame) {
 	return tmp * 0.0625;
 }
 
+/* Continental/AUMOVIO MK 100 UHP ABS module */
+#define UHP_01_CANID 0x340 // wheel speeds and vehicle speed
+#define UHP_04_CANID 0x342 // brake pressures and pedal state
+
+/* Speeds are 12 bit, 0.1 kph per LSB.  0xFFF is invalid for a wheel speed, and the vehicle
+ * speed additionally reserves 0xFFD (undervoltage) and 0xFFE (initializing). */
+#define UHP_SPEED_QUANT 0.1f
+
+expected<float> processMk100UhpVss(const CANRxFrame& frame) {
+	if (CAN_SID(frame) != UHP_01_CANID) {
+		return unexpected;
+	}
+
+	// bit 63: UHP_v_ref_Qf, set means the vehicle speed isn't usable
+	if (frame.data8[7] & 0x80) {
+		return unexpected;
+	}
+
+	// UHP_v_ref, bits 48-59
+	uint16_t vRef = get12Bit_intel(frame, 48);
+	if (vRef >= 0xFFD) {
+		return unexpected;
+	}
+
+	return vRef * UHP_SPEED_QUANT;
+}
+
 /* End of specific processing functions */
 
 expected<float> tryDecodeVss(can_vss_nbc_e type, const CANRxFrame& frame) {
@@ -69,6 +103,8 @@ expected<float> tryDecodeVss(can_vss_nbc_e type, const CANRxFrame& frame) {
 			return processBMW_e90Vss(frame);
 		case W202:
 			return processW202(frame);
+		case MK100_UHP:
+			return processMk100UhpVss(frame);
 		default:
 			return unexpected;
 	}
@@ -107,12 +143,33 @@ static expected<WssResult> processMx5NcWss(const CANRxFrame& frame) {
 	return WssResult{NcWss(frame.data16[0]), NcWss(frame.data16[1]), NcWss(frame.data16[2]), NcWss(frame.data16[3])};
 }
 
+static expected<WssResult> processMk100UhpWss(const CANRxFrame& frame) {
+	if (CAN_SID(frame) != UHP_01_CANID) {
+		return unexpected;
+	}
+
+	// UHP_WhlVel_{FL,FR,RL,RR}, 12 bits each packed back to back from bit 0
+	uint16_t lf = get12Bit_intel(frame, 0);
+	uint16_t rf = get12Bit_intel(frame, 12);
+	uint16_t lr = get12Bit_intel(frame, 24);
+	uint16_t rr = get12Bit_intel(frame, 36);
+
+	// There's no quality flag for the individual wheels, each one signals invalid in-band instead
+	if (lf == 0xFFF || rf == 0xFFF || lr == 0xFFF || rr == 0xFFF) {
+		return unexpected;
+	}
+
+	return WssResult{lf * UHP_SPEED_QUANT, rf * UHP_SPEED_QUANT, lr * UHP_SPEED_QUANT, rr * UHP_SPEED_QUANT};
+}
+
 static expected<WssResult> tryDecodeWss(can_vss_nbc_e type, const CANRxFrame& frame) {
 	switch (type) {
 		case BMW_e90:
 			return processBMW_e90Wss(frame);
 		case Mx5_NC:
 			return processMx5NcWss(frame);
+		case MK100_UHP:
+			return processMk100UhpWss(frame);
 		default:
 			return unexpected;
 	}
@@ -128,10 +185,27 @@ static expected<bool> processBMW_e90Brake(const CANRxFrame& frame) {
 	return (frame.data8[5] & 0x40) != 0;
 }
 
+static expected<bool> processMk100UhpBrake(const CANRxFrame& frame) {
+	// MK 100 UHP brake pressure/pedal frame
+	if (CAN_SID(frame) != UHP_04_CANID) {
+		return unexpected;
+	}
+
+	// bit 6: UHP_DrvBraking_Qf, set means the module can't tell whether the driver is braking
+	if (frame.data8[0] & 0x40) {
+		return unexpected;
+	}
+
+	// bit 0: UHP_DrvBraking
+	return (frame.data8[0] & 0x01) != 0;
+}
+
 static expected<bool> tryDecodeBrake(can_vss_nbc_e type, const CANRxFrame& frame) {
 	switch (type) {
 		case BMW_e90:
 			return processBMW_e90Brake(frame);
+		case MK100_UHP:
+			return processMk100UhpBrake(frame);
 		default:
 			return unexpected;
 	}

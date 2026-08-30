@@ -6,24 +6,24 @@
 
 // Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 enum class ClearReason : uint8_t {
-	None, // 0
-	Fatal,
-	Settings,
-	HardLimit, // 3
-	FaultRevLimit,
-	BoostCut, // 5
-	OilPressure,
-	StopRequested,	   // 7
-	EtbProblem,		   // 8
-	LaunchCut,		   // 9
-	InjectorDutyCycle, // 10
-	FloodClear,		   // 11
-	EnginePhase,	   // 12
-	KickStart,		   // 13
-	IgnitionOff,	   // 14
-	Lua,			   // 15
-	ACR,			   // 16 - Harley Automatic Compression Release
-	LambdaProtection,  // 17
+	None = 0,
+	Fatal = 1,
+	Settings = 2,
+	HardLimit = 3,
+	FaultRevLimit = 4,
+	BoostCut = 5,
+	OilPressure = 6,
+	StopRequested = 7,
+	EtbProblem = 8,
+	LaunchCut = 9,
+	InjectorDutyCycle = 10,
+	FloodClear = 11,
+	EnginePhase = 12,
+	// 13 unused
+	IgnitionOff = 14,
+	Lua = 15,
+	ACR = 16,
+	LambdaProtection = 17,
 
 	// Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 	// todo: add a code generator between ClearReason and fuelIgnCutCodeList in tunerstudio.template.ini

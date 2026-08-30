@@ -64,12 +64,15 @@ static void processCanRxImu_BoschM5_10_Z(const CANRxFrame& frame) {
 #define E90_ACCEL_QUANT 0.025 // m/s2 per LSB
 #define E90_YAW_QUANT 0.05	  // deg/s per LSB
 
-// Extract a 12-bit signed little-endian (Intel) value starting at the given bit offset.
-static int16_t get12BitSigned_intel(const CANRxFrame& frame, int startBit) {
+// Extract a 12-bit little-endian (Intel) value starting at the given bit offset.
+static uint16_t get12Bit_intel(const CANRxFrame& frame, int startBit) {
 	int byteIndex = startBit / 8;
 	int bitShift = startBit % 8;
-	uint16_t raw = (frame.data8[byteIndex] | (frame.data8[byteIndex + 1] << 8)) >> bitShift;
-	raw &= 0x0FFF;
+	return ((frame.data8[byteIndex] | (frame.data8[byteIndex + 1] << 8)) >> bitShift) & 0x0FFF;
+}
+
+static int16_t get12BitSigned_intel(const CANRxFrame& frame, int startBit) {
+	uint16_t raw = get12Bit_intel(frame, startBit);
 
 	// sign extend from 12 bits
 	if (raw & 0x0800) {
@@ -96,6 +99,70 @@ static void tryDecodeCanImuE90(const CANRxFrame& frame) {
 	yawRate.setValidValue(yaw * E90_YAW_QUANT, nowNt);
 }
 
+/* Continental/AUMOVIO MK 100 UHP ABS module IMU frames */
+#define UHP_07_CANID 0x070 // lateral & longitudinal acceleration, yaw rate
+#define UHP_08_CANID 0x080 // vertical acceleration
+
+/* MK 100 UHP quantizations (from UHP_Vehicle_CAN.dbc) */
+#define UHP_ACCEL_QUANT 0.025f	// m/s2 per LSB
+#define UHP_ACCEL_OFFSET -51.2f // m/s2 at a raw value of 0
+#define UHP_YAW_QUANT 0.01f		// deg/s per LSB
+
+// Accelerations are 12 bit unsigned with an offset, reserving 0xFFE (initializing) and 0xFFF (failure).
+static expected<float> uhpAccel(const CANRxFrame& frame, int startBit) {
+	uint16_t raw = get12Bit_intel(frame, startBit);
+
+	if (raw >= 0xFFE) {
+		return unexpected;
+	}
+
+	return raw * UHP_ACCEL_QUANT + UHP_ACCEL_OFFSET;
+}
+
+static void tryDecodeCanImuMk100Uhp(const CANRxFrame& frame) {
+	auto nowNt = getTimeNowNt();
+
+	switch (CAN_SID(frame)) {
+		case UHP_07_CANID:
+			// UHP_LatAcc, bit 0, valid when UHP_LatAcc_Qf (bit 15) is clear
+			if (!(frame.data8[1] & 0x80)) {
+				if (auto lat = uhpAccel(frame, 0)) {
+					accelLat.setValidValue(lat.Value, nowNt);
+				}
+			}
+
+			// UHP_LongAcc, bit 16, valid when UHP_LongAcc_Qf (bit 31) is clear
+			if (!(frame.data8[3] & 0x80)) {
+				if (auto lon = uhpAccel(frame, 16)) {
+					accelLon.setValidValue(lon.Value, nowNt);
+				}
+			}
+
+			// UHP_YawRate, bits 32-45, valid when UHP_YawRate_Qf (bit 47) is clear.  It's an
+			// unsigned magnitude, with UHP_YawRate_sgn (bit 46) set meaning negative.
+			if (!(frame.data8[5] & 0x80)) {
+				uint16_t raw = (frame.data8[4] | (frame.data8[5] << 8)) & 0x3FFF;
+
+				// 0x3FFE (initializing) and 0x3FFF (failure) aren't yaw rates
+				if (raw < 0x3FFE) {
+					float yaw = raw * UHP_YAW_QUANT;
+					yawRate.setValidValue((frame.data8[5] & 0x40) ? -yaw : yaw, nowNt);
+				}
+			}
+
+			break;
+		case UHP_08_CANID:
+			// UHP_VertAcc, bit 0, valid when UHP_VertAcc_Qf (bit 15) is clear
+			if (!(frame.data8[1] & 0x80)) {
+				if (auto vert = uhpAccel(frame, 0)) {
+					accelVert.setValidValue(vert.Value, nowNt);
+				}
+			}
+
+			break;
+	}
+}
+
 void processCanRxImu(const CANRxFrame& frame) {
 	switch (engineConfiguration->imuType) {
 		case IMU_MM5_10:
@@ -116,8 +183,15 @@ void processCanRxImu(const CANRxFrame& frame) {
 			break;
 		default:
 			// if none configured, check if your ABS module might provide it
-			if (engineConfiguration->canVssNbcType == BMW_e90) {
-				tryDecodeCanImuE90(frame);
+			switch (engineConfiguration->canVssNbcType) {
+				case BMW_e90:
+					tryDecodeCanImuE90(frame);
+					break;
+				case MK100_UHP:
+					tryDecodeCanImuMk100Uhp(frame);
+					break;
+				default:
+					break;
 			}
 	}
 }

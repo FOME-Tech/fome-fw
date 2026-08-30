@@ -288,6 +288,8 @@ constexpr inline const char* getCan_vss_nbc_e(can_vss_nbc_e value) {
 			return "BMW_e90";
 		case CanVssLast:
 			return "CanVssLast";
+		case MK100_UHP:
+			return "MK100_UHP";
 		case Mx5_NC:
 			return "Mx5_NC";
 		case W202:
