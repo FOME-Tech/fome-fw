@@ -121,6 +121,10 @@ float getRunningFuel(float baseFuel) {
 	correction *= engine->launchController.getFuelCoefficient();
 #endif
 
+	// Experimental wall-wetting self-identification perturbs commanded fuel here.
+	// Normally a no-op (returns 1.0).
+	correction *= engine->module<WallFuelTuner>()->getFuelMult();
+
 	float runningFuel = baseFuel * correction;
 
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(runningFuel), "NaN runningFuel", 0);

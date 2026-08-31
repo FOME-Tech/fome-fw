@@ -98,6 +98,7 @@ TESTS_SRC_CPP = \
 	tests/test_hpfp_integrated.cpp \
 	tests/test_trigger_scheduler.cpp \
 	tests/test_fuel_math.cpp \
+	tests/ignition_injection/test_wall_fuel_tuner.cpp \
 	tests/test_binary_log.cpp \
 	tests/test_gpio.cpp \
 	tests/test_limp.cpp \

@@ -124,6 +124,13 @@ void WallFuelController::onFastCallback() {
 		return;
 	}
 
+	// While the wall-wetting tuner is perturbing fuel, disable the correction so
+	// it measures the bare open-loop plant rather than the corrected system.
+	if (engine->module<WallFuelTuner>()->isActive()) {
+		m_enable = false;
+		return;
+	}
+
 	float tau = computeTau();
 	float beta = computeBeta();
 

@@ -235,6 +235,18 @@ void LedBlinkingTask::updateErrorLed() {
 	}
 }
 
+#if !EFI_UNIT_TEST && EFI_ENGINE_CONTROL
+// console: 'wwtune <amplitude> <halfPeriodMs> <periods>' - wall-wetting tau/beta self-ID (step)
+static void wallFuelTuneCmd(float amplitude, float halfPeriodMs, float periods) {
+	engine->module<WallFuelTuner>()->start(amplitude, halfPeriodMs, (int)periods);
+}
+
+// console: 'wwtunems <amplitude> <periods>' - same self-ID via multisine excitation
+static void wallFuelTuneMultisineCmd(float amplitude, float periods) {
+	engine->module<WallFuelTuner>()->startMultisine(amplitude, (int)periods);
+}
+#endif // !EFI_UNIT_TEST && EFI_ENGINE_CONTROL
+
 // this method is used by real firmware and simulator and unit test
 void commonInitEngineController() {
 #if EFI_SIMULATOR || EFI_UNIT_TEST
@@ -261,6 +273,8 @@ void commonInitEngineController() {
 
 #if !EFI_UNIT_TEST && EFI_ENGINE_CONTROL
 	initBenchTest();
+	addConsoleActionFFF("wwtune", wallFuelTuneCmd);
+	addConsoleActionFF("wwtunems", wallFuelTuneMultisineCmd);
 #endif /* EFI_PROD_CODE && EFI_ENGINE_CONTROL */
 
 #if EFI_ALTERNATOR_CONTROL
