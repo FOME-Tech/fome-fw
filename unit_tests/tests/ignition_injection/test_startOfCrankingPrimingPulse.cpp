@@ -42,6 +42,17 @@ TEST(priming, startScheduling) {
 	ASSERT_EQ(1, engine->scheduler.size()) << "prime fuel";
 }
 
+TEST(priming, floodClearSkipsPrimeFromDriverIntent) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->isCylinderCleanupEnabled = true;
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 95);
+
+	engine->module<PrimeController>()->onIgnitionStateChanged(true);
+
+	EXPECT_EQ(0, engine->scheduler.size()) << "flood clear must not schedule prime fuel";
+}
+
 TEST(priming, duration) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
