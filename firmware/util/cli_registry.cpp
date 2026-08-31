@@ -26,6 +26,8 @@
 
 #define MAX_CMD_LINE_LENGTH 100
 
+#define MAX_ARGS_COUNT 10
+
 // todo: support \t as well
 #define SPACE_CHAR ' '
 
@@ -103,6 +105,10 @@ void addConsoleActionIF(const char* token, VoidIntFloat callback) {
 	doAddAction(token, INT_FLOAT_PARAMETER, (Void)callback, NULL);
 }
 
+void addConsoleActionRaw(const char* token, VoidCharPtr callback) {
+	doAddAction(token, STRING_RAW_PARAMETER, (Void)callback, NULL);
+}
+
 void addConsoleActionS(const char* token, VoidCharPtr callback) {
 	doAddAction(token, STRING_PARAMETER, (Void)callback, NULL);
 }
@@ -155,6 +161,7 @@ static int getParameterCount(action_type_e parameterType) {
 		case ONE_PARAMETER:
 		case ONE_PARAMETER_P:
 		case FLOAT_PARAMETER:
+		case STRING_RAW_PARAMETER:
 		case STRING_PARAMETER:
 			return 1;
 		case FLOAT_FLOAT_PARAMETER:
@@ -244,7 +251,8 @@ char* unquote(char* line) {
 	return line;
 }
 
-static int setargs(char* args, char** argv, int max_args) {
+static int setargs(char** next_arg, char** argv, int max_args) {
+	char* args = *next_arg;
 	int count = 0;
 
 	while (isspace(*args)) {
@@ -279,6 +287,7 @@ static int setargs(char* args, char** argv, int max_args) {
 		}
 		count++;
 	}
+	*next_arg = args; // storing pointer to next argument
 	return count;
 }
 
@@ -295,6 +304,7 @@ int handleActionWithParameter(TokenCallback* current, char* argv[], int argc) {
 			(*callbackS)(current->param);
 			return 0;
 		}
+		case STRING_RAW_PARAMETER:
 		case STRING_PARAMETER: {
 			VoidCharPtr callbackS = (VoidCharPtr)current->callback;
 			(*callbackS)(argv[0]);
@@ -460,33 +470,48 @@ static int handleConsoleLineInternal(const char* commandLine, int lineLength) {
 
 	strncpy(handleBuffer, commandLine, len);
 	handleBuffer[len] = 0; // we want this to be null-terminated for sure
+	char* nextArg = handleBuffer;
 
-	char* argv[10];
-	int argc = setargs(handleBuffer, argv, 10);
+	char* argv[MAX_ARGS_COUNT];
+	int argc = setargs(&nextArg, argv, 1); // Parsing only command
 
 	if (argc <= 0) {
-		efiPrintf("invalid input");
+		efiPrintf("could not parse command");
 		return -1;
 	}
 
+	TokenCallback* current = NULL;
 	for (int i = 0; i < consoleActionCount; i++) {
-		TokenCallback* current = &consoleActions[i];
-		if (strEqual(argv[0], current->token)) {
-			if ((argc - 1) != getParameterCount(current->parameterType)) {
-				efiPrintf(
-						"Incorrect argument count %d, expected %d",
-						(argc - 1),
-						getParameterCount(current->parameterType));
-				return -1;
-			}
-
-			/* skip commant name */
-			return handleActionWithParameter(current, argv + 1, argc - 1);
+		if (strEqual(argv[0], consoleActions[i].token)) {
+			current = &consoleActions[i];
+			break;
 		}
 	}
 
-	efiPrintf("unknown command [%s]", commandLine);
-	return -1;
+	if (!current) {
+		efiPrintf("unknown command [%s]", commandLine);
+		return -1;
+	}
+
+	if (current->parameterType != STRING_RAW_PARAMETER) {
+		argc = setargs(&nextArg, argv + 1, MAX_ARGS_COUNT - 1); // Parsing remaining args
+		if (argc < 0) {
+			efiPrintf("could not parse arguments");
+			return -1;
+		}
+	} else {
+		//	STRING_RAW_PARAMETER is special parameter which spans the rest of line
+		argv[1] = nextArg;
+	}
+
+	//	Take care, argc contains number of args!
+	if (argc != getParameterCount(current->parameterType)) {
+		efiPrintf("Incorrect argument count %d, expected %d", argc, getParameterCount(current->parameterType));
+		return -1;
+	}
+
+	/* skip commant name */
+	return handleActionWithParameter(current, argv + 1, argc);
 }
 
 /**

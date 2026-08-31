@@ -18,6 +18,7 @@ typedef enum {
 	FLOAT_PARAMETER_NAN_ALLOWED,
 	FLOAT_PARAMETER,
 	FLOAT_PARAMETER_P,
+	STRING_RAW_PARAMETER, // Spans all characters after command
 	STRING_PARAMETER,
 	STRING_PARAMETER_P,
 	STRING2_PARAMETER,
@@ -71,6 +72,7 @@ void addConsoleActionFFF(const char* token, VoidFloatFloatFloat callback);
 void addConsoleActionFFFF(const char* token, VoidFloatFloatFloatFloat callback);
 void addConsoleActionFFP(const char* token, VoidFloatFloatVoidPtr callback, void* param);
 
+void addConsoleActionRaw(const char* token, VoidCharPtr callback);
 void addConsoleActionS(const char* token, VoidCharPtr callback);
 void addConsoleActionSP(const char* token, VoidCharPtrVoidPtr callback, void* param);
 
