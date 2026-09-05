@@ -45,11 +45,6 @@ bool TriggerScheduler::scheduleOrQueue(
 	event->setAngle(angle);
 
 	if (event->shouldSchedule(phase)) {
-		// If a previous cycle left this event sitting in the queue, drop it before scheduling by
-		// time. Otherwise onEnginePhase would later find the stale entry, cancel the timer we're
-		// about to arm, and re-fire whatever stale action the entry still carries.
-		unschedule(event);
-
 		// if we're due now, just schedule the event
 		scheduleByAngle(&event->scheduling, phase.timestamp, event->getAngleFromNow(phase), action);
 
@@ -77,30 +72,6 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
 			LL_APPEND2(m_angleBasedEventsHead, event, next);
 		}
 	}
-}
-
-void TriggerScheduler::unschedule(AngleBasedEvent* event) {
-	chibios_rt::CriticalSectionLocker csl;
-
-	if (!m_angleBasedEventsHead) {
-		// LL_DELETE2 dereferences the head, so an empty list has to be handled here
-		return;
-	}
-
-	// Safe if the event isn't queued - LL_DELETE2 walks to the end and leaves the list alone
-	LL_DELETE2(m_angleBasedEventsHead, event, next);
-}
-
-void TriggerScheduler::flush() {
-	chibios_rt::CriticalSectionLocker csl;
-
-	// The events themselves are statically allocated and get a fresh 'next' when re-appended,
-	// so dropping the head is enough to empty the queue.
-	m_angleBasedEventsHead = nullptr;
-}
-
-void TriggerScheduler::onEngineStop() {
-	flush();
 }
 
 void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
@@ -186,16 +157,5 @@ AngleBasedEvent* TriggerScheduler::getElementAtIndexForUnitTest(int index) {
 	}
 	firmwareError("getElementAtIndexForUnitText: null");
 	return nullptr;
-}
-
-int TriggerScheduler::getQueueSizeForUnitTest() const {
-	int count = 0;
-
-	AngleBasedEvent* current;
-	LL_FOREACH2(m_angleBasedEventsHead, current, next) {
-		count++;
-	}
-
-	return count;
 }
 #endif /* EFI_UNIT_TEST */
