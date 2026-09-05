@@ -345,9 +345,9 @@ struct MAP_sensor_config_s
 end_struct
 
 struct_no_prefix thermistor_conf_s
-	int autoscale autotemp tempC_1;Temperature 1;"C", 0.01, 0, -40, 200, 1
-	int autoscale autotemp tempC_2;Temperature 2, must be > Temperature 1;"C", 0.01, 0, -40, 200, 1
-	int autoscale autotemp tempC_3;Temperature 3, must be > Temperature 2;"C", 0.01, 0, -40, 200, 1
+	int autoscale tempC_1;Temperature 1;"C", 0.01, 0, -40, 200, 1
+	int autoscale tempC_2;Temperature 2, must be > Temperature 1;"C", 0.01, 0, -40, 200, 1
+	int autoscale tempC_3;Temperature 3, must be > Temperature 2;"C", 0.01, 0, -40, 200, 1
 	uint32_t autoscale resistance_1;Sensor resistance while at temperature 1;"Ohm", 0.01, 0, 0, 200000, 1
 	uint32_t autoscale resistance_2;Sensor resistance while at temperature 2;"Ohm", 0.01, 0, 0, 200000, 1
 	uint32_t autoscale resistance_3;Sensor resistance while at temperature 3;"Ohm", 0.01, 0, 0, 200000, 1
