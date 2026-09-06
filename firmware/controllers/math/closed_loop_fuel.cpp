@@ -112,6 +112,11 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		return {};
 	}
 
+	// Don't let closed-loop fueling fight the wall-wetting tuner's perturbation.
+	if (engine->module<WallFuelTuner>()->isActive()) {
+		return {};
+	}
+
 	size_t binIdx = computeStftBin(Sensor::getOrZero(SensorType::Rpm), getFuelingLoad(), engineConfiguration->stft);
 
 #if EFI_TUNER_STUDIO
