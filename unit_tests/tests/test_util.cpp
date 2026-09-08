@@ -276,6 +276,20 @@ TEST(misc, testConsoleLogic) {
 	ASSERT_EQ(1.0, fFirst);
 	ASSERT_EQ(2.0, fSecond);
 	ASSERT_EQ(3.0, fThird);
+
+	printf("\r\addConsoleActionRaw\r\n");
+	addConsoleActionRaw("echoraw", [](const char* s) { lastFirst = s; });
+	strcpy(buffer, "echoraw  1; 2; print(\"meow\");");
+	handleConsoleLine(buffer);
+	EXPECT_STREQ("1; 2; print(\"meow\");", lastFirst);
+	// Testing empty args
+	strcpy(buffer, "echoraw  ");
+	handleConsoleLine(buffer);
+	EXPECT_STREQ("", lastFirst);
+	// Testing empty args
+	strcpy(buffer, "echoraw");
+	handleConsoleLine(buffer);
+	EXPECT_STREQ("", lastFirst);
 }
 
 static char buff[32];
