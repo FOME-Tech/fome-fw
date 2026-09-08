@@ -7,27 +7,12 @@ public:
 	bool scheduleOrQueue(AngleBasedEvent* event, EngPhase angle, action_s action, const EnginePhaseInfo& phase);
 
 	void onEnginePhase(float rpm, const EnginePhaseInfo& phase) override;
-	void onEngineStop() override;
-
-	/**
-	 * Forget every pending angle-based event, because the schedule they belong to is gone -
-	 * the engine stopped, or the trigger configuration changed underneath us. Without this
-	 * the entries would sit in the queue until their angle came around again, which for a
-	 * stopped engine is never.
-	 *
-	 * This only drops the queue entries. Any timer already armed on an event (overdwell
-	 * protection, in particular) is deliberately left running so it can still de-energize
-	 * a coil that is currently charging.
-	 */
-	void flush();
 
 	// For unit tests
 	AngleBasedEvent* getElementAtIndexForUnitTest(int index);
-	int getQueueSizeForUnitTest() const;
 
 private:
 	void schedule(AngleBasedEvent* event, action_s action);
-	void unschedule(AngleBasedEvent* event);
 
 	bool assertNotInList(AngleBasedEvent* head, AngleBasedEvent* element);
 
