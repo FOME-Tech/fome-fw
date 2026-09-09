@@ -57,6 +57,7 @@ or
  - Fix fuel level input
  - Improve STM32H7/Atlas SD card reliability
  - General SD card logging performance and reliabilty improvements
+ - Fix conflict between aux temp 2 and oil temperature sensor configuration
 
 ## May 2026 Release
 
