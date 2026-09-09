@@ -326,6 +326,24 @@ TEST(SensorCheckerPower, FlexTimeoutReportedWithIgnitionOn) {
 	flexSensor.unregister();
 }
 
+TEST(SensorCheckerOil, InconsistentOilSensorsUseRangePerformanceDtcs) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	StoredValueSensor oilPressure(SensorType::OilPressure, MS2NT(500));
+	StoredValueSensor oilTemperature(SensorType::OilTemperature, MS2NT(500));
+	ASSERT_TRUE(oilPressure.Register());
+	ASSERT_TRUE(oilTemperature.Register());
+	oilPressure.invalidate(UnexpectedCode::Inconsistent);
+	oilTemperature.invalidate(UnexpectedCode::Inconsistent);
+
+	setupSensorCheckerPreconditions();
+	runSensorChecks();
+
+	EXPECT_TRUE(hasError(ObdCode::OBD_OilP_Timeout));
+	EXPECT_TRUE(hasError(ObdCode::OBD_OilT_Timeout));
+	oilPressure.unregister();
+	oilTemperature.unregister();
+}
+
 // Ignition reported on, but battery voltage is too low for sensors to work.
 // Also on a board with its own healthy 5V supply monitor - that must not override the
 // battery voltage inhibit.

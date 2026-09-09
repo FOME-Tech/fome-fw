@@ -31,6 +31,7 @@ or
 ## Unreleased
 
 ### Added
+ - Support for the Hella OPS+T (6PR 010 378-207) combined digital oil pressure and temperature sensor
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load

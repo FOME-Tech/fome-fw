@@ -1485,6 +1485,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	torque_model_cfg torqueModel
 
 	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
+	brain_input_pin_e hellaOpsTInput;Hella OPS+T combined oil pressure and temperature sensor input. Existing oil pressure and temperature providers retain priority for their registered channel.
 
 ! end of engine_configuration_s
 end_struct
