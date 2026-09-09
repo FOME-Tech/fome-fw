@@ -16,7 +16,12 @@ void detectGear(float gear1, float finalDrive) {
 
 	Sensor::setMockValue(SensorType::VehicleSpeed, 50);
 	Sensor::setMockValue(SensorType::Rpm, gear1 * 500 * finalDrive);
-	gd.onSlowCallback();
+
+	// The detector wants to see the ratio hold still before it commits to a gear
+	for (int i = 0; i < 5; i++) {
+		advanceTimeUs(MS2US(SLOW_CALLBACK_PERIOD_MS));
+		gd.onSlowCallback();
+	}
 }
 
 void detectNeutral() {
