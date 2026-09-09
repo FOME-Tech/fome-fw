@@ -47,6 +47,7 @@ or
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
+ - Gear detection no longer reports gears the car only passed through during a shift: an over-blipped 4-3 downshift used to log as 4-3-2-3, and an undershot 3-4 upshift as 3-4-5-4. A candidate gear now has to hold still before it's believed, for longer the worse it matches a real gear ratio, and there's hysteresis at the boundary between gears so a ratio sitting on a threshold no longer chatters. A gear the driveline has settled into is still picked up within a few hundred milliseconds, and detection still needs nothing but RPM and VSS
 
 ### Fixed
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
