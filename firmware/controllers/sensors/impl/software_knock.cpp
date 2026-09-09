@@ -80,6 +80,12 @@ void initSoftwareKnock() {
 
 		if (engineConfiguration->knockBandCustom != 0) {
 			freqKhz = engineConfiguration->knockBandCustom;
+
+			// A center frequency this far below the sample rate can't be represented by the filter
+			if (1000 * freqKhz < KNOCK_SAMPLE_RATE / 1000.0f) {
+				firmwareError("Invalid knock band frequency: %.2f khz", freqKhz);
+				return;
+			}
 		} else {
 			float bore = engineConfiguration->cylinderBore;
 

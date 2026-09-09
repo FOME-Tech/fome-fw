@@ -22,7 +22,8 @@ void initFuelLevel() {
 
 	fuelSensor.setFunction(fuelCurve);
 
-	// Filtering with such a small bandwidth helps prevent noisy data from fuel tank slosh
-	AdcSubscription::SubscribeSensor(fuelSensor, channel, /*lowpassCutoff =*/0.05f);
+	// This would ideally be far slower to reject fuel tank slosh, but a biquad this far below the
+	// ADC update rate is numerically degenerate in float32 - see Biquad::configureLowpass.
+	AdcSubscription::SubscribeSensor(fuelSensor, channel, /*lowpassCutoff =*/2);
 	fuelSensor.Register();
 }
