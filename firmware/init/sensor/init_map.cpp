@@ -40,8 +40,8 @@ struct MapCfg {
 	float map2;
 };
 
-static MapCfg getMapCfg(air_pressure_sensor_type_e sensorType) {
-	switch (sensorType) {
+static MapCfg getMapCfg(const air_pressure_sensor_config_s& sensorConfig) {
+	switch (sensorConfig.type) {
 		case MT_DENSO183:
 			return {0, -6.64, 5, 182.78};
 		case MT_MPX4100:
@@ -71,21 +71,19 @@ static MapCfg getMapCfg(air_pressure_sensor_type_e sensorType) {
 		case MT_MPXH6400:
 			return {0.2, 20, 4.8, 400};
 		default:
-			firmwareError(ObdCode::CUSTOM_ERR_MAP_TYPE, "Unknown MAP type: decoder %d", sensorType);
+			firmwareError(ObdCode::CUSTOM_ERR_MAP_TYPE, "Unknown MAP type: decoder %d", sensorConfig.type);
 			// falls through to custom
 			return {};
-		case MT_CUSTOM: {
-			auto& mapConfig = engineConfiguration->map.sensor;
+		case MT_CUSTOM:
 			return {engineConfiguration->mapLowValueVoltage,
-					mapConfig.lowValue,
+					sensorConfig.lowValue,
 					engineConfiguration->mapHighValueVoltage,
-					mapConfig.highValue};
-		}
+					sensorConfig.highValue};
 	}
 }
 
-void configureMapFunction(LinearFunc& converter, air_pressure_sensor_type_e sensorType) {
-	auto cfg = getMapCfg(sensorType);
+void configureMapFunction(LinearFunc& converter, const air_pressure_sensor_config_s& sensorConfig) {
+	auto cfg = getMapCfg(sensorConfig);
 
 	converter.configure(
 			cfg.v1,
@@ -98,7 +96,7 @@ void configureMapFunction(LinearFunc& converter, air_pressure_sensor_type_e sens
 
 void initMap() {
 	// Set up the conversion function
-	configureMapFunction(mapConverter, engineConfiguration->map.sensor.type);
+	configureMapFunction(mapConverter, engineConfiguration->map.sensor);
 
 	slowMapSensor.setFunction(mapConverter);
 	slowMapSensor2.setFunction(mapConverter);
@@ -138,7 +136,7 @@ void initMap() {
 
 	auto baroChannel = engineConfiguration->baroSensor.hwChannel;
 	if (isAdcChannelValid(baroChannel)) {
-		configureMapFunction(baroConverter, engineConfiguration->baroSensor.type);
+		configureMapFunction(baroConverter, engineConfiguration->baroSensor);
 
 		baroSensor.setFunction(baroConverter);
 		baroSensor.Register();
