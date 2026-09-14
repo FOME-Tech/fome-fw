@@ -24,3 +24,21 @@
 #define show_Proteus_presets false
 #define show_Hellen_hyundai_154 false
 
+! Keep in sync with setBoardConfigOverrides() and its helpers.
+! 1 = always fixed; other expressions select the hardware revisions that force the field.
+#define ts_readonly_adcVcc 1
+#define ts_readonly_analogInputDividerCoefficient 1
+#define ts_readonly_camInputs1 1
+#define ts_readonly_camInputs2 1
+#define ts_readonly_clt_bias_resistor 1
+#define ts_readonly_iat_bias_resistor 1
+#define ts_readonly_isSdCardEnabled 1
+#define ts_readonly_is_enabled_spi_1 1
+#define ts_readonly_sdCardCsPin 1
+#define ts_readonly_sdCardSpiDevice 1
+#define ts_readonly_spi1misoPin 1
+#define ts_readonly_spi1mosiPin 1
+#define ts_readonly_spi1sckPin 1
+#define ts_readonly_triggerInputPins1 1
+#define ts_readonly_vbattAdcChannel 1
+#define ts_readonly_vbattDividerCoeff 1

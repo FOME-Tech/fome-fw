@@ -5,6 +5,48 @@
 using ::testing::Return;
 using ::testing::StrictMock;
 
+TEST(VVT, RpmLimitTracksCalibrationWithoutChangingIt) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	StrictMock<MockVp3d> targetMap;
+	StrictMock<MockPwm> pwm;
+	// No setpoint: use setOutput explicitly below to isolate the enable conditions.
+	EXPECT_CALL(targetMap, getValue(::testing::_, ::testing::_)).WillRepeatedly(Return(0));
+	VvtController dut(0, 0, 0);
+	dut.init(&targetMap, &pwm);
+	engineConfiguration->vvtControlMinRpm = 100;
+	engineConfiguration->cranking.rpm = 400;
+	engineConfiguration->vvtControlMinClt = 0;
+	engineConfiguration->vvtActivationDelayMs = 0;
+	engineConfiguration->vvtOutputMin[0] = 0;
+	engineConfiguration->vvtOutputMax[0] = 100;
+	Sensor::setMockValue(SensorType::Clt, 80);
+	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
+	setTimeNowUs(10e6);
+
+	auto checkOutput = [&](float rpm, float expectedDuty) {
+		Sensor::setMockValue(SensorType::Rpm, rpm);
+		EXPECT_CALL(pwm, setSimplePwmDutyCycle(0));
+		dut.onFastCallback();
+		EXPECT_CALL(pwm, setSimplePwmDutyCycle(expectedDuty));
+		dut.setOutput(50);
+		::testing::Mock::VerifyAndClearExpectations(&pwm);
+	};
+
+	checkOutput(300, 0);
+	checkOutput(400, 0);
+	checkOutput(401, 0.5);
+	EXPECT_EQ(engineConfiguration->vvtControlMinRpm, 100);
+
+	// A tune update must take effect without restarting or rewriting either setting.
+	engineConfiguration->vvtControlMinRpm = 800;
+	checkOutput(600, 0);
+	checkOutput(801, 0.5);
+	engineConfiguration->cranking.rpm = 1000;
+	checkOutput(900, 0);
+	checkOutput(1001, 0.5);
+	EXPECT_EQ(engineConfiguration->vvtControlMinRpm, 800);
+}
+
 TEST(VVT, Setpoint) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

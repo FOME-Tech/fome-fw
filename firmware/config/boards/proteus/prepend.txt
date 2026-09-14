@@ -24,3 +24,24 @@
 #define show_polygonus_presets true
 
 #define LUA_SCRIPT_SIZE 12000
+
+! Keep in sync with setBoardConfigOverrides() and its helpers.
+! 1 = always fixed; other expressions select the hardware revisions that force the field.
+#define ts_readonly_adcVcc 1
+#define ts_readonly_analogInputDividerCoefficient 1
+#define ts_readonly_can2RxPin 1
+#define ts_readonly_can2TxPin 1
+#define ts_readonly_canRxPin 1
+#define ts_readonly_canTxPin 1
+#define ts_readonly_clt_bias_resistor 1
+#define ts_readonly_iat_bias_resistor 1
+#define ts_readonly_is_enabled_spi_3 1
+#define ts_readonly_lps25BaroSensorScl 1
+#define ts_readonly_lps25BaroSensorSda 1
+#define ts_readonly_sdCardCsPin 1
+#define ts_readonly_sdCardSpiDevice 1
+#define ts_readonly_spi3misoPin 1
+#define ts_readonly_spi3mosiPin 1
+#define ts_readonly_spi3sckPin 1
+#define ts_readonly_vbattAdcChannel 1
+#define ts_readonly_vbattDividerCoeff 1

@@ -175,9 +175,6 @@ void Pt2001::init() {
 	spiCfg.ssport = getHwPort("hip", engineConfiguration->mc33816_cs);
 	spiCfg.sspad = getHwPin("hip", engineConfiguration->mc33816_cs);
 
-	// hard-coded for now, just resolve the conflict with SD card!
-	engineConfiguration->mc33816spiDevice = SPI_DEVICE_3;
-
 	driver = getSpiDevice(engineConfiguration->mc33816spiDevice);
 	if (driver == NULL) {
 		// error already reported

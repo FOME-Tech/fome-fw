@@ -32,13 +32,20 @@ public class TsWriter {
     }
 
     public void writeTunerstudio(ParseState parser, String inputFile, PrintStream ps) throws IOException {
+        TsConfigProtection protection = new TsConfigProtection(parser);
+        TsMetadata metadata = new TsMetadata();
         try (BufferedReader is = new BufferedReader(new FileReader(inputFile))) {
 
         while (is.ready()) {
             String line = is.readLine();
 
             if (line.contains("CONFIG_DEFINITION_START")) {
-                writeLayoutAndComments(parser, ps);
+                metadata = writeLayoutAndComments(parser, ps);
+                continue;
+            }
+
+            if (line.contains("CONFIG_READ_ONLY")) {
+                protection.writeConstantsExtensions(metadata, ps);
                 continue;
             }
 
@@ -104,7 +111,7 @@ public class TsWriter {
             // TODO: remove extra whitespace from the line
 
             // Copy the line to the output stream
-            ps.println(line);
+            ps.println(protection.protectField(line));
         }
 
         } // try
@@ -117,7 +124,7 @@ public class TsWriter {
         return "ENUM_" + enumType;
     }
 
-    public void writeLayoutAndComments(ParseState parser, PrintStream ps) {
+    public TsMetadata writeLayoutAndComments(ParseState parser, PrintStream ps) {
         StructLayout root = new StructLayout(0, "root", parser.getLastStruct());
         TsMetadata meta = new TsMetadata();
 
@@ -152,5 +159,6 @@ public class TsWriter {
         // Print context help
         ps.println("[SettingContextHelp]");
         meta.writeComments(ps);
+        return meta;
     }
 }
