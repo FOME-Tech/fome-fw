@@ -117,8 +117,11 @@ void MapAverager::stop() {
 }
 
 void MapAverager::onSample(float map, uint8_t cylinderNumber) {
-	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinder)) {
-		engine->engineState.mapPerCylinder[cylinderNumber] = map;
+	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinderFloat)) {
+		engine->engineState.mapPerCylinderFloat[cylinderNumber] = map;
+
+		// Display only: this channel is a uint8_t, so saturate rather than wrapping around to zero
+		engine->engineState.mapPerCylinder[cylinderNumber] = clampF(0, map, 255);
 
 		if (Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->mapAveragingCylinderBalanceMinRpm) {
 			// correct the reading by this cylinder's MAP offset, but only if sufficient RPM
@@ -147,14 +150,14 @@ void EngineState::updateMapCylinderOffsets() {
 
 	float avgMap = 0;
 	for (int i = 0; i < cylCount; i++) {
-		avgMap += mapPerCylinder[i];
+		avgMap += mapPerCylinderFloat[i];
 	}
 
 	avgMap /= cylCount;
 
 	// Second pass: calculate deviation of each cylinder from the average
 	for (int i = 0; i < cylCount; i++) {
-		mapCylinderBalance[i] = mapPerCylinder[i] - avgMap;
+		mapCylinderBalance[i] = mapPerCylinderFloat[i] - avgMap;
 	}
 }
 
