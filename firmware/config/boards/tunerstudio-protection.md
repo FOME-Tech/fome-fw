@@ -52,7 +52,7 @@ write/burn, hardware initialization and configuration-change paths.
 | microRusEFI | Fixed TLE8888/SPI1, SPI2 wiring/enable, SPI3 wiring, ETB, CAN and analog scaling/pullups are protected. SPI3 enable and SD chip select/bus are defaults and remain editable. |
 | Hellen / AlphaX | Fixed SD, analog scaling/pullups and board-specific CAN, trigger/cam or ETB assignments are protected. AlphaX 2chan, Hellen72, Hellen128 and Hellen154 use revision-dependent conditions. Hellen81's inactive SPI3 preprocessor branch is excluded. |
 | Small CAN board / TDG PDM8 | Fixed CAN and analog scaling are protected. The small CAN board also fixes SD, Lua outputs 1–4 and auxiliary ADC inputs 1–8. |
-| MC33816 driver | Initialization forcibly selected SPI3 despite the editable bus setting. It now uses the selected bus; existing MC33816 presets already select SPI3. |
+| MC33816 driver | Initialization forces SPI3 despite the editable bus setting. This behavior is deliberately unchanged: the existing comment refers to an SD-card conflict, which requires a separate investigation of SPI sharing and driver configuration before the restriction can be changed. |
 | VVT initialization | Initialization raised the saved minimum RPM to cranking RPM. The runtime enable condition now checks both thresholds without rewriting the tune, including after live edits. |
 | Other writes | Preset/default loading, explicit console/Lua tuning and calibration commands intentionally change configuration. Burn-time vehicle-string padding normalization remains intentional. Board-change callbacks drive hardware pullups without rewriting configuration. |
 
