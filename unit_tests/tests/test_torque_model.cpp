@@ -22,7 +22,12 @@ void detectGear(float gear1, float finalDrive) {
 	// gearboxRatio = engineRpm / driveshaftRpm = gear1  => engineRpm = gear1 * 500 * finalDrive
 	Sensor::setMockValue(SensorType::VehicleSpeed, 50);
 	Sensor::setMockValue(SensorType::Rpm, gear1 * 500 * finalDrive);
-	gd.onSlowCallback();
+
+	// The detector wants to see the ratio hold still before it commits to a gear
+	for (int i = 0; i < 5; i++) {
+		advanceTimeUs(MS2US(SLOW_CALLBACK_PERIOD_MS));
+		gd.onSlowCallback();
+	}
 }
 
 // Force the gear detector into neutral (vehicle stopped -> no ratio available).
