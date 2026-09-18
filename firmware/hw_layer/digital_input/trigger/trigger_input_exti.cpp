@@ -21,14 +21,8 @@
 #error "PAL_USE_CALLBACKS should be enabled to use HAL_TRIGGER_USE_PAL"
 #endif
 
-static ioline_t shaftLines[TRIGGER_INPUT_PIN_COUNT];
-static ioline_t camLines[CAM_INPUTS_COUNT];
-
-static void shaft_callback(void* arg, efitick_t stamp) {
-	// do the time sensitive things as early as possible!
+static void shaft_callback(void* arg, efitick_t stamp, bool rise) {
 	int index = (int)arg;
-	ioline_t pal_line = shaftLines[index];
-	bool rise = (palReadLine(pal_line) == PAL_HIGH);
 
 	// todo: support for 3rd trigger input channel
 	// todo: start using real event time from HW event, not just software timer?
@@ -36,11 +30,8 @@ static void shaft_callback(void* arg, efitick_t stamp) {
 	hwHandleShaftSignal(index, rise, stamp);
 }
 
-static void cam_callback(void* arg, efitick_t stamp) {
+static void cam_callback(void* arg, efitick_t stamp, bool rise) {
 	int index = (int)arg;
-	ioline_t pal_line = camLines[index];
-
-	bool rise = (palReadLine(pal_line) == PAL_HIGH);
 
 	hwHandleVvtCamSignal(rise, stamp, index);
 }
@@ -58,13 +49,7 @@ int extiTriggerTurnOnInputPin(const char* msg, int index, bool isTriggerShaft) {
 	/* TODO:
 	 * * do not set to both edges if we need only one
 	 * * simplify callback in case of one edge */
-	ioline_t pal_line = PAL_LINE(getHwPort("trg", brainPin), getHwPin("trg", brainPin));
-	if (isTriggerShaft) {
-		shaftLines[index] = pal_line;
-	} else {
-		camLines[index] = pal_line;
-	}
-	efiExtiEnablePin(
+	efiExtiEnablePinWithLevel(
 			msg, brainPin, PAL_EVENT_MODE_BOTH_EDGES, isTriggerShaft ? shaft_callback : cam_callback, (void*)index);
 
 	return 0;
