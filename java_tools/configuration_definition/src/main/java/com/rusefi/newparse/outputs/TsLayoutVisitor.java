@@ -40,7 +40,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.print('$');
         ps.println(TsWriter.enumDefineName(e.enumType));
 
-        meta.addComment(name, e.options.comment);
+        meta.addField(name, e.options.comment);
     }
 
     @Override
@@ -54,9 +54,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
         ps.println();
 
-        if (str.comment != null && !str.comment.isEmpty()) {
-            meta.addComment(name, str.comment);
-        }
+        meta.addField(name, str.comment);
     }
 
     private void printBeforeArrayLength(ScalarLayout scalar, PrintStream ps, TsMetadata meta, StructNamePrefixer prefixer, String fieldType, int offsetAdd, boolean addComment) {
@@ -69,7 +67,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
         ps.print(", ");
 
         if (addComment) {
-            meta.addComment(name, scalar.options.comment);
+            meta.addField(name, scalar.options.comment);
         }
     }
 
@@ -151,7 +149,7 @@ public class TsLayoutVisitor extends ILayoutVisitor {
 
             ps.println();
 
-            meta.addComment(name, bit.comment);
+            meta.addField(name, bit.comment);
         }
     }
 

@@ -4,3 +4,30 @@
 #define ts_show_analog_divider false
 
 #define LUA_SCRIPT_SIZE 25000
+
+! Keep in sync with setBoardConfigOverrides() and its helpers.
+! 1 = always fixed; other expressions select the hardware revisions that force the field.
+#define ts_readonly_analogInputDividerCoefficient 1
+#define ts_readonly_auxAnalogInputs1 1
+#define ts_readonly_auxAnalogInputs2 1
+#define ts_readonly_auxAnalogInputs3 1
+#define ts_readonly_auxAnalogInputs4 1
+#define ts_readonly_auxAnalogInputs5 1
+#define ts_readonly_auxAnalogInputs6 1
+#define ts_readonly_auxAnalogInputs7 1
+#define ts_readonly_auxAnalogInputs8 1
+#define ts_readonly_canRxPin 1
+#define ts_readonly_canTxPin 1
+#define ts_readonly_isSdCardEnabled 1
+#define ts_readonly_is_enabled_spi_1 1
+#define ts_readonly_luaOutputPins1 1
+#define ts_readonly_luaOutputPins2 1
+#define ts_readonly_luaOutputPins3 1
+#define ts_readonly_luaOutputPins4 1
+#define ts_readonly_sdCardCsPin 1
+#define ts_readonly_sdCardSpiDevice 1
+#define ts_readonly_spi1misoPin 1
+#define ts_readonly_spi1mosiPin 1
+#define ts_readonly_spi1sckPin 1
+#define ts_readonly_vbattAdcChannel 1
+#define ts_readonly_vbattDividerCoeff 1

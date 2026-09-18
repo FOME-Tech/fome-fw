@@ -21,3 +21,29 @@
 #define show_microRusEFI_presets false
 #define show_Proteus_presets false
 #define show_HellenNB2_presets true
+
+! Keep in sync with setBoardConfigOverrides() and its helpers.
+! 1 = always fixed; other expressions select the hardware revisions that force the field.
+#define ts_readonly_adcVcc 1
+#define ts_readonly_analogInputDividerCoefficient 1
+#define ts_readonly_canRxPin 1
+#define ts_readonly_canTxPin 1
+#define ts_readonly_clt_bias_resistor 1
+#define ts_readonly_etbIo1_controlPin 1
+#define ts_readonly_etbIo1_directionPin1 1
+#define ts_readonly_etbIo1_directionPin2 1
+#define ts_readonly_etb_use_two_wires 1
+#define ts_readonly_iat_bias_resistor 1
+#define ts_readonly_isSdCardEnabled 1
+#define ts_readonly_is_enabled_spi_2 "hellenBoardId != -1"
+#define ts_readonly_is_enabled_spi_3 "hellenBoardId == -1"
+#define ts_readonly_sdCardCsPin 1
+#define ts_readonly_sdCardSpiDevice 1
+#define ts_readonly_spi2misoPin "hellenBoardId != -1"
+#define ts_readonly_spi2mosiPin "hellenBoardId != -1"
+#define ts_readonly_spi2sckPin "hellenBoardId != -1"
+#define ts_readonly_spi3misoPin "hellenBoardId == -1"
+#define ts_readonly_spi3mosiPin "hellenBoardId == -1"
+#define ts_readonly_spi3sckPin "hellenBoardId == -1"
+#define ts_readonly_vbattAdcChannel 1
+#define ts_readonly_vbattDividerCoeff 1

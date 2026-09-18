@@ -40,7 +40,9 @@ void VvtController::onFastCallback() {
 		return;
 	}
 
-	m_isRpmHighEnough = Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->vvtControlMinRpm;
+	// Keep the calibration unchanged: a runtime limit must not change the tune CRC.
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+	m_isRpmHighEnough = rpm > engineConfiguration->vvtControlMinRpm && rpm > engineConfiguration->cranking.rpm;
 	m_isCltWarmEnough = Sensor::getOrZero(SensorType::Clt) > engineConfiguration->vvtControlMinClt;
 
 	auto nowNt = getTimeNowNt();
@@ -236,10 +238,6 @@ void stopVvtControlPins() {
 }
 
 void initVvtActuators() {
-	if (engineConfiguration->vvtControlMinRpm < engineConfiguration->cranking.rpm) {
-		engineConfiguration->vvtControlMinRpm = engineConfiguration->cranking.rpm;
-	}
-
 	vvtTable1.init(config->vvtTable1, config->vvtTable1LoadBins, config->vvtTable1RpmBins);
 	vvtTable2.init(config->vvtTable2, config->vvtTable2LoadBins, config->vvtTable2RpmBins);
 

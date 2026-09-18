@@ -23,3 +23,34 @@
 #define show_microRusEFI_presets false
 #define show_Proteus_presets false
 #define show_Hellen_hyundai_154 true
+
+! Keep in sync with setBoardConfigOverrides() and its helpers.
+! 1 = always fixed; other expressions select the hardware revisions that force the field.
+! BOARD_ID_154hyundai_c = 10; -1 identifies the original revision.
+#define ts_readonly_adcVcc 1
+#define ts_readonly_analogInputDividerCoefficient 1
+#define ts_readonly_camInputs1 "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_camInputs2 1
+#define ts_readonly_clt_bias_resistor 1
+#define ts_readonly_etbIo1_controlPin "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_etbIo1_directionPin1 "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_etbIo1_directionPin2 "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_etbIo1_disablePin "hellenBoardId == 10"
+#define ts_readonly_etbIo2_controlPin "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_etbIo2_directionPin1 "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_etbIo2_directionPin2 "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_etbIo2_disablePin "hellenBoardId == 10"
+#define ts_readonly_etb_use_two_wires "hellenBoardId == -1"
+#define ts_readonly_iat_bias_resistor 1
+#define ts_readonly_isSdCardEnabled 1
+#define ts_readonly_is_enabled_spi_2 1
+#define ts_readonly_sdCardCsPin 1
+#define ts_readonly_sdCardSpiDevice 1
+#define ts_readonly_spi2misoPin 1
+#define ts_readonly_spi2mosiPin 1
+#define ts_readonly_spi2sckPin 1
+#define ts_readonly_stepperDcInvertedPins "hellenBoardId == 10"
+#define ts_readonly_triggerInputPins1 "hellenBoardId == -1 || hellenBoardId == 10"
+#define ts_readonly_triggerInputPins2 1
+#define ts_readonly_vbattAdcChannel 1
+#define ts_readonly_vbattDividerCoeff 1
