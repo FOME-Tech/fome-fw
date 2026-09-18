@@ -59,6 +59,7 @@ or
  - Improve STM32H7/Atlas SD card reliability
  - General SD card logging performance and reliabilty improvements
  - Fix conflict between aux temp 2 and oil temperature sensor configuration
+ - MAP cylinder balancing no longer corrupts the MAP reading above 255 kPa. Engines running more than ~22 psi of boost could see reported MAP jump anywhere between 60 and 440 kPa while actual manifold pressure was steady, throwing fuel and ignition off badly at high load.
 
 ## May 2026 Release
 

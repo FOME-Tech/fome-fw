@@ -28,6 +28,12 @@
 // not have a real physical pin - it's only used for engine sniffer
 static NamedOutputPin mapAveragingPin("map");
 
+// A cylinder's MAP offset comes from intake runner geometry, so real ones are a few kPa at most.
+// Bound how far apart we'll believe the cylinders are, and how large a correction we'll apply,
+// so that a bad reading can only nudge the load axis instead of throwing it across the table.
+static constexpr float mapCylinderBalanceMaxSpread = 50;
+static constexpr float mapCylinderBalanceMaxOffset = 25;
+
 // allow smoothing up to number of cylinders
 #define MAX_MAP_BUFFER_LENGTH (MAX_CYLINDER_COUNT)
 // in MAP units, not voltage!
@@ -117,8 +123,11 @@ void MapAverager::stop() {
 }
 
 void MapAverager::onSample(float map, uint8_t cylinderNumber) {
-	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinder)) {
-		engine->engineState.mapPerCylinder[cylinderNumber] = map;
+	if (cylinderNumber < efi::size(engine->engineState.mapPerCylinderFloat)) {
+		engine->engineState.mapPerCylinderFloat[cylinderNumber] = map;
+
+		// Display only: this channel is a uint8_t, so saturate rather than wrapping around to zero
+		engine->engineState.mapPerCylinder[cylinderNumber] = clampF(0, map, 255);
 
 		if (Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->mapAveragingCylinderBalanceMinRpm) {
 			// correct the reading by this cylinder's MAP offset, but only if sufficient RPM
@@ -142,19 +151,38 @@ void MapAverager::onSample(float map, uint8_t cylinderNumber) {
 }
 
 void EngineState::updateMapCylinderOffsets() {
-	// First pass: compute average MAP for all cylinders
+	// First pass: compute average MAP for all cylinders, and how far apart they are
 	auto cylCount = engine->engineState.cylinderCount;
 
 	float avgMap = 0;
+	float minMap = mapPerCylinderFloat[0];
+	float maxMap = mapPerCylinderFloat[0];
+
 	for (int i = 0; i < cylCount; i++) {
-		avgMap += mapPerCylinder[i];
+		float cylinderMap = mapPerCylinderFloat[i];
+
+		avgMap += cylinderMap;
+		minMap = minF(minMap, cylinderMap);
+		maxMap = maxF(maxMap, cylinderMap);
 	}
 
 	avgMap /= cylCount;
 
+	// Cylinders spread this far apart aren't telling us about manifold geometry: it's a load
+	// transient, a bad sample, or a cylinder we haven't measured yet. Correcting on that would
+	// inject a larger error than the one we're trying to remove, so don't correct at all.
+	if (maxMap - minMap > mapCylinderBalanceMaxSpread) {
+		for (int i = 0; i < cylCount; i++) {
+			mapCylinderBalance[i] = 0;
+		}
+
+		return;
+	}
+
 	// Second pass: calculate deviation of each cylinder from the average
 	for (int i = 0; i < cylCount; i++) {
-		mapCylinderBalance[i] = mapPerCylinder[i] - avgMap;
+		mapCylinderBalance[i] =
+				clampF(-mapCylinderBalanceMaxOffset, mapPerCylinderFloat[i] - avgMap, mapCylinderBalanceMaxOffset);
 	}
 }
 
