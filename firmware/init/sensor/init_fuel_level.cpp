@@ -27,3 +27,7 @@ void initFuelLevel() {
 	AdcSubscription::SubscribeSensor(fuelSensor, channel, /*lowpassCutoff =*/2);
 	fuelSensor.Register();
 }
+
+void deinitFuelLevel() {
+	AdcSubscription::UnsubscribeSensor(fuelSensor, engineConfiguration->fuelLevelSensor);
+}

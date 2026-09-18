@@ -50,6 +50,7 @@ or
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
 
 ### Fixed
+ - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
  - Injector and ignition circuit fault codes now name the correct cylinder on boards with smart driver chips. Cylinder 1 previously reported P0202/P0352 instead of P0201/P0351, cylinders 10-12 reported nonsense codes, and cylinder 12 reported no code at all

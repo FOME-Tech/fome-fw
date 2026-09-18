@@ -149,6 +149,7 @@ void initMap() {
 
 void deinitMap() {
 	AdcSubscription::UnsubscribeSensor(slowMapSensor, engineConfiguration->map.sensor.hwChannel);
+	AdcSubscription::UnsubscribeSensor(slowMapSensor2, engineConfiguration->map2HwChannel);
 	AdcSubscription::UnsubscribeSensor(baroSensor, engineConfiguration->baroSensor.hwChannel);
 	AdcSubscription::UnsubscribeSensor(throttleInletPress, engineConfiguration->throttleInletPressureChannel);
 	AdcSubscription::UnsubscribeSensor(
