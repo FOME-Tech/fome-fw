@@ -163,6 +163,10 @@ private:
 
 	bool m_hadOilPressureAfterStart = false;
 
+	// Service/workshop flood clear remains active through accidental combustion
+	// until the driver releases the accelerator.
+	bool m_floodClearLatched = false;
+
 	// Ignition switch state
 	bool m_ignitionOn = false;
 

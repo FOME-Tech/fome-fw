@@ -930,7 +930,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 
 	bit isInjectionEnabled
 	bit isIgnitionEnabled
-	bit isCylinderCleanupEnabled;When enabled if TPS is held above 95% no fuel is injected while cranking to clear excess fuel from the cylinders.
+	bit isCylinderCleanupEnabled;When enabled if driver throttle intent is held above 90% no fuel is injected while cranking to clear excess fuel from the cylinders.
 	bit complexWallModel,"Advanced (tables)","Basic (constants)";Should we use tables to vary tau/beta based on CLT/MAP, or just with fixed values?
 	bit alwaysInstantRpm
 	bit isMapAveragingEnabled
@@ -959,6 +959,7 @@ bit invertVvtControlExhaust,"retard","advance";If increased VVT duty cycle incre
 bit useBiQuadOnAuxSpeedSensors
 bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
 bit ALSActivateInverted
+bit isCylinderCleanupLatching,"Service / Workshop","Roadside";Roadside restores fuel if the engine reaches running RPM. Service / Workshop latches the fuel cut until the accelerator is released, so the starter can also be used to build oil pressure without enabling injection.
 
 	uint16_t engineChartSize;;"count", 1, 0, 0, 300, 0
 
