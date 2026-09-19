@@ -518,8 +518,10 @@ uint16_t fanPwmFrequency;PWM frequency for cooling fans in PWM mode;"Hz", 1, 0, 
 gppwm_channel_e fan1PwmXAxis;X axis source for fan 1 PWM table.
 gppwm_channel_e fan2PwmXAxis;X axis source for fan 2 PWM table.
 uint8_t fanPwmSafetyDuty;Fan duty when CLT sensor fails in PWM mode;"%", 1, 0, 0, 100, 0
+uint8_t disableFan1AtSpeed;Turn fan 1 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
 
 output_pin_e acrPin;
+uint8_t disableFan2AtSpeed;Turn fan 2 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
 
 float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your vehicle speed sensor is connected to. Use an online calculator to determine this based on your tire size.;"revs/km", 1, 0, 100, 1000, 1
 
