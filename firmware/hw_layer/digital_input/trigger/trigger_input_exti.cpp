@@ -49,7 +49,7 @@ int extiTriggerTurnOnInputPin(const char* msg, int index, bool isTriggerShaft) {
 	/* TODO:
 	 * * do not set to both edges if we need only one
 	 * * simplify callback in case of one edge */
-	efiExtiEnablePinWithLevel(
+	efiExtiEnablePin(
 			msg, brainPin, PAL_EVENT_MODE_BOTH_EDGES, isTriggerShaft ? shaft_callback : cam_callback, (void*)index);
 
 	return 0;

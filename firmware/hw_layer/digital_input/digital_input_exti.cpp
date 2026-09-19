@@ -25,7 +25,6 @@ void efiExtiInit() {
 
 struct ExtiChannel {
 	ExtiCallback Callback = nullptr;
-	ExtiCallbackWithLevel CallbackWithLevel = nullptr;
 	void* CallbackData;
 	ioline_t Line;
 
@@ -35,9 +34,8 @@ struct ExtiChannel {
 
 static ExtiChannel channels[16];
 
-// Capture the level in the fast ISR for callers that need the edge direction.
-static void enableExtiPin(const char* msg, brain_pin_e brainPin, uint32_t mode,
-		ExtiCallback cb, ExtiCallbackWithLevel cbWithLevel, void* cb_data) {
+// Capture the level in the fast ISR so it corresponds to the event timestamp.
+void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
 	if (!isBrainPinValid(brainPin)) {
@@ -62,7 +60,7 @@ static void enableExtiPin(const char* msg, brain_pin_e brainPin, uint32_t mode,
 	auto& channel = channels[index];
 
 	/* is this index already used? */
-	if (channel.Callback || channel.CallbackWithLevel) {
+	if (channel.Callback) {
 		firmwareError(
 				ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_2,
 				"%s: pin %s/index %d: exti index already used by %s",
@@ -74,7 +72,6 @@ static void enableExtiPin(const char* msg, brain_pin_e brainPin, uint32_t mode,
 	}
 
 	channel.Callback = cb;
-	channel.CallbackWithLevel = cbWithLevel;
 	channel.CallbackData = cb_data;
 	channel.Name = msg;
 
@@ -82,16 +79,6 @@ static void enableExtiPin(const char* msg, brain_pin_e brainPin, uint32_t mode,
 	channel.Line = line;
 	palEnableLineEvent(line, mode);
 }
-
-void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
-	enableExtiPin(msg, brainPin, mode, cb, nullptr, cb_data);
-}
-
-void efiExtiEnablePinWithLevel(const char* msg, brain_pin_e brainPin, uint32_t mode,
-		ExtiCallbackWithLevel cb, void* cb_data) {
-	enableExtiPin(msg, brainPin, mode, nullptr, cb, cb_data);
-}
-
 void efiExtiDisablePin(brain_pin_e brainPin) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
@@ -110,7 +97,7 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	auto& channel = channels[index];
 
 	/* is this index was used? */
-	if (!channel.Callback && !channel.CallbackWithLevel) {
+	if (!channel.Callback) {
 		return;
 	}
 
@@ -120,7 +107,6 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	/* mark unused */
 	channel.Name = nullptr;
 	channel.Callback = nullptr;
-	channel.CallbackWithLevel = nullptr;
 	channel.CallbackData = nullptr;
 }
 
@@ -202,10 +188,8 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 		if (timestamp != 0) {
 			auto& channel = channels[entry.Channel];
 
-			if (channel.CallbackWithLevel) {
-				channel.CallbackWithLevel(channel.CallbackData, timestamp, entry.Level);
-			} else if (channel.Callback) {
-				channel.Callback(channel.CallbackData, timestamp);
+			if (channel.Callback) {
+				channel.Callback(channel.CallbackData, timestamp, entry.Level);
 			}
 		} else {
 			overflowCounter++;
@@ -230,7 +214,7 @@ void handleExtiIsr(uint8_t index) {
 	if (pr & (1 << index)) {
 		auto timestamp = getTimeNowNt();
 		auto& channel = channels[index];
-		bool level = channel.CallbackWithLevel && palReadLine(channel.Line) == PAL_HIGH;
+		bool level = palReadLine(channel.Line) == PAL_HIGH;
 		queue.push({timestamp, index, level});
 
 		triggerInterrupt();

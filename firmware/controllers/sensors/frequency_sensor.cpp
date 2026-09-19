@@ -9,7 +9,7 @@
 #include "digital_input_exti.h"
 
 // Callback adapter since we can't pass a member function to a callback
-static void freqSensorExtiCallback(void* arg, efitick_t nowNt) {
+static void freqSensorExtiCallback(void* arg, efitick_t nowNt, bool) {
 	reinterpret_cast<FrequencySensor*>(arg)->onEdge(nowNt);
 }
 
