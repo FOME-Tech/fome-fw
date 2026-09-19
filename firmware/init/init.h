@@ -28,6 +28,7 @@ void initLambda();
 // Refresh each wideband's "time since last CAN frame" - call periodically, not on frame receipt
 void updateWidebandAliveTimers();
 void initFlexSensor();
+void initHellaOpsT();
 void initFuelLevel();
 void initBaro();
 void initAuxSensors();
@@ -42,6 +43,7 @@ void deinitThermistors();
 void deinitFluidPressure();
 void deinitLambda();
 void deInitFlexSensor();
+void deinitHellaOpsT();
 void deinitAuxSensors();
 void deInitVehicleSpeedSensor();
 void deinitTurbochargerSpeedSensor();
