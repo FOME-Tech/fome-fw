@@ -26,6 +26,7 @@ void efiExtiInit() {
 struct ExtiChannel {
 	ExtiCallback Callback = nullptr;
 	void* CallbackData;
+	ioline_t Line;
 
 	// Name is also used as an enable bit
 	const char* Name = nullptr;
@@ -33,7 +34,7 @@ struct ExtiChannel {
 
 static ExtiChannel channels[16];
 
-// EXT is not able to give you the front direction but you could read the pin in the callback.
+// Capture the level in the fast ISR so it corresponds to the event timestamp.
 void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
@@ -75,9 +76,9 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 	channel.Name = msg;
 
 	ioline_t line = PAL_LINE(port, index);
+	channel.Line = line;
 	palEnableLineEvent(line, mode);
 }
-
 void efiExtiDisablePin(brain_pin_e brainPin) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
@@ -117,6 +118,7 @@ static inline void triggerInterrupt() {
 struct ExtiQueueEntry {
 	efitick_t Timestamp;
 	uint8_t Channel;
+	bool Level;
 };
 
 template <typename T, size_t TSize>
@@ -187,7 +189,7 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 			auto& channel = channels[entry.Channel];
 
 			if (channel.Callback) {
-				channel.Callback(channel.CallbackData, timestamp);
+				channel.Callback(channel.CallbackData, timestamp, entry.Level);
 			}
 		} else {
 			overflowCounter++;
@@ -210,7 +212,10 @@ void handleExtiIsr(uint8_t index) {
 	extiGetAndClearGroup1(1U << index, pr);
 
 	if (pr & (1 << index)) {
-		queue.push({getTimeNowNt(), index});
+		auto timestamp = getTimeNowNt();
+		auto& channel = channels[index];
+		bool level = palReadLine(channel.Line) == PAL_HIGH;
+		queue.push({timestamp, index, level});
 
 		triggerInterrupt();
 	}

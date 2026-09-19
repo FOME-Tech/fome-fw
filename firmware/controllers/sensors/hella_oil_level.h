@@ -9,12 +9,9 @@ public:
 
 	void init(brain_pin_e pin);
 
-	void onEdge(efitick_t nowNt);
 	void onEdge(efitick_t nowNt, bool value);
 
 private:
-	brain_pin_e m_pin = Gpio::Unassigned;
-
 	// Measures the width of positive pulses (rising -> falling)
 	Timer m_pulseTimer;
 
