@@ -14,7 +14,6 @@ static void test(int engineSyncCam, float camOffsetAdd) {
 	reader.open("tests/trigger/resources/nissan_vq40_cranking-1.csv");
 	EngineTestHelper eth(engine_type_e::HELLEN_121_NISSAN_6_CYL);
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
-	engineConfiguration->alwaysInstantRpm = true;
 
 	// Different sync cam may result in different TDC point, so we might need different cam offsets.
 	engineConfiguration->vvtOffsets[0] = engineConfiguration->vvtOffsets[0] + camOffsetAdd;

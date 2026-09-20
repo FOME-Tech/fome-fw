@@ -65,6 +65,7 @@ void TriggerWaveform::initialize(operation_mode_e operationMode, SyncEdge syncEd
 	m_syncEdge = syncEdge;
 	triggerShapeSynchPointIndex = unexpected;
 	setArrayValues(expectedEventCount, 0);
+	primaryTeethPerCycle = 0;
 	wave.reset();
 	wave.waveCount = TRIGGER_INPUT_PIN_COUNT;
 	wave.phaseCount = 0;
@@ -209,6 +210,25 @@ void TriggerWaveform::calculateExpectedEventCounts() {
 			firmwareError("why would you set useOnlyPrimaryForSync with only one trigger wheel?");
 		}
 	}
+
+	primaryTeethPerCycle = calculatePrimaryTeethPerCycle();
+}
+
+size_t TriggerWaveform::calculatePrimaryTeethPerCycle() const {
+	size_t size = getSize();
+
+	if (size == 0) {
+		return 0;
+	}
+
+	// getSize() covers one revolution of the wheel, getLength() the whole engine cycle
+	size_t wheelRevolutionsPerCycle = getLength() / size;
+
+	// Each tooth has both a rising and a falling edge, but only rising edges are counted
+	// if we ignore falling edges
+	size_t edgesPerTooth = useOnlyRisingEdges ? 1 : 2;
+
+	return wheelRevolutionsPerCycle * getExpectedEventCount(TriggerWheel::T_PRIMARY) / edgesPerTooth;
 }
 
 void TriggerWaveform::addEvent720(angle_t angle, bool state, TriggerWheel const channelIndex) {

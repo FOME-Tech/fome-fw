@@ -48,6 +48,7 @@ or
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
+ - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors

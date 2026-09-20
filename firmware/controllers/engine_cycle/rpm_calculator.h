@@ -99,7 +99,7 @@ public:
 	void assignRpmValue(float value);
 	uint32_t getRevolutionCounterSinceStart() const;
 
-	void storeInstantRpm(bool alwaysInstantRpm, float rpm, efitick_t timestamp);
+	void storeInstantRpm(bool useInstantRpm, float rpm, efitick_t timestamp);
 
 	/**
 	 * RPM rate of change between current RPM and RPM measured during previous engine cycle
