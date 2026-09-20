@@ -932,7 +932,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit isIgnitionEnabled
 	bit isCylinderCleanupEnabled;When enabled if TPS is held above 95% no fuel is injected while cranking to clear excess fuel from the cylinders.
 	bit complexWallModel,"Advanced (tables)","Basic (constants)";Should we use tables to vary tau/beta based on CLT/MAP, or just with fixed values?
-	bit alwaysInstantRpm
+	bit alwaysInstantRpm;Instant RPM is measured from the time between nearby trigger teeth instead of a whole engine cycle, which responds much faster to changes in engine speed.\nIt is used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better). Enable this to also use it on triggers with fewer teeth, where it will be less accurate.
 	bit isMapAveragingEnabled
 	bit useCrankingIdleTaperTableSetting; If enabled, use separate temperature multiplier table for cranking taper duration.
 	bit overrideCrankingIacSetting;If enabled, use separate temperature multiplier table for cranking idle position.\nIf disabled, use normal running multiplier table applied to the cranking base position.
