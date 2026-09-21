@@ -7,6 +7,7 @@
 
 #include "pch.h"
 
+#include <cstring>
 #include <stdlib.h>
 
 #include "efi_interpolation.h"
@@ -144,4 +145,43 @@ TEST(misc, testInterpolate3d) {
 	EXPECT_NEAR_M4(1, getValue(-1, -1));
 
 	newTestToComfirmInterpolation();
+}
+
+static uint32_t getFloatBits(float value) {
+	uint32_t result;
+	static_assert(sizeof(result) == sizeof(value));
+	std::memcpy(&result, &value, sizeof(result));
+	return result;
+}
+
+TEST(misc, preparedTable3dInterpolationIsBitwiseEquivalent) {
+	uint16_t rowBins[4] = {0, 25, 100, 300};
+	uint16_t columnBins[4] = {500, 2000, 6000, 12000};
+	scaled_channel<int8_t, 5> tables[12][4][4];
+
+	for (size_t tableIndex = 0; tableIndex < 12; tableIndex++) {
+		for (size_t row = 0; row < 4; row++) {
+			for (size_t column = 0; column < 4; column++) {
+				int rawValue = static_cast<int>((tableIndex * 17 + row * 43 + column * 79) % 256) - 128;
+				tables[tableIndex][row][column] = rawValue / 5.0f;
+			}
+		}
+	}
+
+	const float rowValues[] = {-INFINITY, -1, 0, 25, 62.5f, 300, 301, INFINITY, NAN};
+	const float columnValues[] = {-INFINITY, 499, 500, 2000, 4250, 12000, 12001, INFINITY, NAN};
+
+	for (float rowValue : rowValues) {
+		for (float columnValue : columnValues) {
+			PreparedTable3DInterpolation prepared(rowBins, rowValue, columnBins, columnValue);
+
+			for (const auto& table : tables) {
+				float expected = interpolate3d(table, rowBins, rowValue, columnBins, columnValue);
+				float actual = prepared.getValue(table);
+
+				EXPECT_EQ(getFloatBits(expected), getFloatBits(actual))
+						<< "row=" << rowValue << ", column=" << columnValue;
+			}
+		}
+	}
 }
