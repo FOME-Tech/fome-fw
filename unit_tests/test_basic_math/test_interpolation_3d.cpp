@@ -7,7 +7,7 @@
 
 #include "pch.h"
 
-#include <cstring>
+#include <bit>
 #include <stdlib.h>
 
 #include "efi_interpolation.h"
@@ -147,13 +147,6 @@ TEST(misc, testInterpolate3d) {
 	newTestToComfirmInterpolation();
 }
 
-static uint32_t getFloatBits(float value) {
-	uint32_t result;
-	static_assert(sizeof(result) == sizeof(value));
-	std::memcpy(&result, &value, sizeof(result));
-	return result;
-}
-
 TEST(misc, preparedTable3dInterpolationIsBitwiseEquivalent) {
 	uint16_t rowBins[4] = {0, 25, 100, 300};
 	uint16_t columnBins[4] = {500, 2000, 6000, 12000};
@@ -179,7 +172,7 @@ TEST(misc, preparedTable3dInterpolationIsBitwiseEquivalent) {
 				float expected = interpolate3d(table, rowBins, rowValue, columnBins, columnValue);
 				float actual = prepared.getValue(table);
 
-				EXPECT_EQ(getFloatBits(expected), getFloatBits(actual))
+				EXPECT_EQ(std::bit_cast<uint32_t>(expected), std::bit_cast<uint32_t>(actual))
 						<< "row=" << rowValue << ", column=" << columnValue;
 			}
 		}
