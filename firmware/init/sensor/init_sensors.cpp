@@ -60,6 +60,7 @@ void stopSensors() {
 	deinitThermistors();
 	deinitLambda();
 	deInitFlexSensor();
+	deinitHellaOpsT();
 	deinitAuxSensors();
 	deInitVehicleSpeedSensor();
 	deinitTurbochargerSpeedSensor();
@@ -79,6 +80,7 @@ void reconfigureSensors() {
 	initThermistors();
 	initLambda();
 	initFlexSensor();
+	initHellaOpsT();
 	initAuxSensors();
 	initVehicleSpeedSensor();
 	initTurbochargerSpeedSensor();

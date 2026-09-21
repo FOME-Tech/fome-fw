@@ -152,6 +152,7 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 		case SensorType::OilPressure:
 			switch (code) {
 				case UnexpectedCode::Timeout:
+				case UnexpectedCode::Inconsistent:
 					return ObdCode::OBD_OilP_Timeout;
 				case UnexpectedCode::Low:
 					return ObdCode::OBD_OilP_Low;
@@ -164,6 +165,7 @@ static ObdCode getCode(SensorType type, UnexpectedCode code) {
 		case SensorType::OilTemperature:
 			switch (code) {
 				case UnexpectedCode::Timeout:
+				case UnexpectedCode::Inconsistent:
 					return ObdCode::OBD_OilT_Timeout;
 				case UnexpectedCode::Low:
 					return ObdCode::OBD_OilT_Low;
