@@ -43,6 +43,7 @@
 #include "ignition_state.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
+#include "wall_fuel_tuner.h"
 #include "prime_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
@@ -211,6 +212,7 @@ public:
 			DfcoController,
 			HarleyAcr,
 			Mockable<WallFuelController>,
+			WallFuelTuner,
 			KnockController,
 			SensorChecker,
 			LimpManager,
