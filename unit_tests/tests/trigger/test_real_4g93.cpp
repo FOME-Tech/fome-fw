@@ -63,7 +63,6 @@ TEST(real4g93, crankingOn11) {
 	reader.open("tests/trigger/resources/4g93-cranking.csv");
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
-	engineConfiguration->alwaysInstantRpm = true;
 
 	engineConfiguration->isPhaseSyncRequiredForIgnition = true;
 

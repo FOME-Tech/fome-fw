@@ -709,6 +709,8 @@ constexpr inline const char* getVvt_mode_e(vvt_mode_e value) {
 			return "VVT_BOSCH_QUICK_START";
 		case VVT_FORD_ST170:
 			return "VVT_FORD_ST170";
+		case VVT_HONDA_J_6_2:
+			return "VVT_HONDA_J_6_2";
 		case VVT_HONDA_K24Z_EXHAUST:
 			return "VVT_HONDA_K24Z_EXHAUST";
 		case VVT_HONDA_K_EXHAUST:

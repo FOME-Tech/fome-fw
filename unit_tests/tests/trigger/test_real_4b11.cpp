@@ -12,7 +12,6 @@ TEST(real4b11, running) {
 	reader.open("tests/trigger/resources/4b11-running.csv");
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
-	engineConfiguration->alwaysInstantRpm = true;
 
 	eth.setTriggerType(trigger_type_e::TT_36_2_1);
 
@@ -50,7 +49,6 @@ TEST(real4b11, runningDoubledEdge) {
 	reader.open("tests/trigger/resources/4b11-running-doubled-edge.csv");
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
-	engineConfiguration->alwaysInstantRpm = true;
 
 	eth.setTriggerType(trigger_type_e::TT_36_2_1);
 

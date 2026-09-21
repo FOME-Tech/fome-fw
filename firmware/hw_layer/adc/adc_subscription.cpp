@@ -45,20 +45,23 @@ static AdcSubscriptionEntry* findEntry() {
 	// If you passed the same sensor again, resubscribe it with the new parameters
 	auto entry = findEntry(&sensor);
 
+	const char* name = sensor.getSensorName();
+
 	if (entry) {
 		// If the channel didn't change, we're already set
 		if (entry->Channel == channel) {
 			return;
 		}
 
-		// avoid updates to this while we're mucking with the configuration
-		entry->Sensor = nullptr;
-	} else {
-		// If not already registered, get an empty (new) entry
-		entry = findEntry();
+		// A channel change must go through UnsubscribeSensor during stopSensors() first. Releasing the old
+		// channel here instead would be too late: another sensor may already have acquired that pin during
+		// this reconfigure, and releasing it would knock that sensor's pin out of analog mode.
+		firmwareError(ObdCode::CUSTOM_INVALID_ADC, "%s changed ADC channel without unsubscribing", name);
+		return;
 	}
 
-	const char* name = sensor.getSensorName();
+	// Not already registered, get an empty (new) entry
+	entry = findEntry();
 
 	// Ensure that a free entry was found
 	if (!entry) {
