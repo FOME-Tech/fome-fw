@@ -33,7 +33,7 @@
  */
 uint32_t maxPrecisionCallbackDuration = 0;
 
-static efitick_t lastSetTimerTimeNt;
+static Timer lastSetTimerTimer;
 static bool isTimerPending = false;
 
 static int timerCallbackCounter = 0;
@@ -88,7 +88,7 @@ void setHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 	// Do the actual hardware-specific timer set operation
 	portSetHardwareSchedulerTimer(nowNt, setTimeNt);
 
-	lastSetTimerTimeNt = getTimeNowNt();
+	lastSetTimerTimer.reset();
 	isTimerPending = true;
 	timerRestartCounter++;
 }
@@ -111,9 +111,9 @@ struct MicrosecondTimerWatchdogController : public PeriodicController<256> {
 	MicrosecondTimerWatchdogController()
 		: PeriodicController("MstWatchdog", NORMALPRIO, 2) {}
 
-	void PeriodicTask(efitick_t nowNt) override {
+	void PeriodicTask(efitick_t /*nowNt*/) override {
 		// 2 seconds of inactivity would not look right
-		if (nowNt > lastSetTimerTimeNt + MS2NT(2000)) {
+		if (lastSetTimerTimer.hasElapsedSec(2)) {
 			firmwareError(ObdCode::CUSTOM_TIMER_WATCHDOG, "Watchdog: no events for 2 seconds!");
 		}
 	}
@@ -172,7 +172,7 @@ void initMicrosecondTimer() {
 
 	hwStarted = true;
 
-	lastSetTimerTimeNt = getTimeNowNt();
+	lastSetTimerTimer.reset();
 
 	validateHardwareTimer();
 
