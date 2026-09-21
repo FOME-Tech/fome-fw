@@ -98,6 +98,7 @@ float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, f
 #ifdef __cplusplus
 }
 
+#include <bit>
 #include <cstddef>
 #include <cstring>
 
@@ -161,7 +162,7 @@ inline constexpr adc_channel_e operator+(size_t a, adc_channel_e b) {
 template <typename TCallback>
 static inline void forEachSetBit(uint16_t mask, TCallback fn) {
 	while (mask) {
-		fn(static_cast<size_t>(__builtin_ctz(mask)));
+		fn(static_cast<size_t>(std::countr_zero(mask)));
 		mask &= mask - 1;
 	}
 }
