@@ -9,6 +9,9 @@
 
 #include "rusefi_types.h"
 
+template <unsigned TRowCount, unsigned TColumnCount>
+class PreparedTable3DInterpolation;
+
 void initFuelMap();
 
 /**
@@ -32,7 +35,8 @@ percent_t getInjectorDutyCycleStage2(float rpm);
 float getStage2InjectionFraction(float rpm, float fuelLoad);
 
 float getStandardAirCharge();
-float getCylinderFuelTrim(size_t cylinderNumber, float rpm, float fuelLoad);
+float getCylinderFuelTrim(
+		size_t cylinderNumber, const PreparedTable3DInterpolation<TRIM_SIZE, TRIM_SIZE>& interpolation);
 
 struct AirmassModelBase;
 AirmassModelBase* getAirmassModel(engine_load_mode_e mode);

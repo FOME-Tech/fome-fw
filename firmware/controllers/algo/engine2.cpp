@@ -175,16 +175,22 @@ void EngineState::periodicFastCallback() {
 		engine->stftCorrection[i] = clResult.banks[i];
 	}
 
+	PreparedTable3DInterpolation fuelTrimInterpolation(
+			config->fuelTrimLoadBins, fuelLoad, config->fuelTrimRpmBins, rpm);
+	PreparedTable3DInterpolation ignitionTrimInterpolation(
+			config->ignTrimLoadBins, ignitionLoad, config->ignTrimRpmBins, rpm);
+
 	// Now apply that to per-cylinder fueling and timing
 	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		uint8_t bankIndex = engineConfiguration->cylinderBankSelect[i];
 		auto bankTrim = engine->stftCorrection[bankIndex];
-		auto cylinderTrim = getCylinderFuelTrim(i, rpm, fuelLoad);
+		auto cylinderTrim = getCylinderFuelTrim(i, fuelTrimInterpolation);
 
 		// Apply both per-bank and per-cylinder trims
 		engine->cylinders[i].setInjectionMass(cycleFuelMass * bankTrim * cylinderTrim);
 
-		engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad));
+		engine->cylinders[i].setIgnitionTimingBtdc(
+				untrimmedAdvance + getCylinderIgnitionTrim(i, ignitionTrimInterpolation));
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
