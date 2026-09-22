@@ -90,9 +90,9 @@ static void setDefaultStftSettings() {
 	// 60 second startup delay - some O2 sensors are slow to warm up.
 	cfg.startupDelay = 60;
 
-	// Only correct in [12.0, 17.0]
-	cfg.minAfr = 12;
-	cfg.maxAfr = 17;
+	// Only correct in [0.7, 1.2]
+	cfg.minLambda = 0.7f;
+	cfg.maxLambda = 1.2f;
 
 	// Above 60 deg C
 	cfg.minClt = 60;

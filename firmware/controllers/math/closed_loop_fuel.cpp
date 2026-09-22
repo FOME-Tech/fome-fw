@@ -84,10 +84,10 @@ static bool shouldCorrect() {
 bool shouldUpdateCorrection(SensorType sensor) {
 	const auto& cfg = engineConfiguration->stft;
 
-	// Pause (but don't reset) correction if the AFR is off scale.
-	// It's probably a transient and poorly tuned transient correction
-	auto afr = Sensor::getOrZero(sensor) * STOICH_RATIO;
-	if (!afr || afr < cfg.minAfr || afr > cfg.maxAfr) {
+	// Pause (but don't reset) correction if lambda is off scale.
+	// It's probably a transient and/or poorly tuned transient correction
+	auto lambda = Sensor::getOrZero(sensor);
+	if (lambda < cfg.minLambda || lambda > cfg.maxLambda) {
 		return false;
 	}
 

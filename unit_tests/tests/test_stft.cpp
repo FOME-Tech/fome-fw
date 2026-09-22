@@ -71,18 +71,20 @@ TEST(ClosedLoopFuel, CellSelection) {
 	EXPECT_EQ(3, computeStftBin(10000, 50, cfg));
 }
 
-TEST(ClosedLoopFuel, afrLimits) {
+TEST(ClosedLoopFuel, lambdaLimits) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->stft.minAfr = 10; // 10.0 AFR
-	engineConfiguration->stft.maxAfr = 18; // 18.0 AFR
+	engineConfiguration->stft.minLambda = 0.7f;
+	engineConfiguration->stft.maxLambda = 1.2f;
 
-	Sensor::setMockValue(SensorType::Lambda1, 0.1f);
+	// Lower bound
+	Sensor::setMockValue(SensorType::Lambda1, 0.65f);
 	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
-
-	Sensor::setMockValue(SensorType::Lambda1, 1.0f);
+	Sensor::setMockValue(SensorType::Lambda1, 0.75f);
 	EXPECT_TRUE(shouldUpdateCorrection(SensorType::Lambda1));
 
-	Sensor::setMockValue(SensorType::Lambda1, 2.0f);
+	Sensor::setMockValue(SensorType::Lambda1, 1.15f);
+	EXPECT_TRUE(shouldUpdateCorrection(SensorType::Lambda1));
+	Sensor::setMockValue(SensorType::Lambda1, 1.25f);
 	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
 }
