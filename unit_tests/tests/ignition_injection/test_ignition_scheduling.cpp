@@ -126,7 +126,7 @@ TEST(ignition, CylinderTimingTrim) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	// Base timing 15 degrees
-	setTable(config->ignitionTable, 15);
+	setTableDynamic(config->ignitionTable, config->ignitionTableRows, config->ignitionTableCols, 15);
 
 	// negative numbers retard timing, positive advance
 	setTable(config->ignTrims[0].table, -4);

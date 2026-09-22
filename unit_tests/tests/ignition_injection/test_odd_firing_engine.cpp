@@ -25,7 +25,7 @@ TEST(OddFireRunningMode, hd) {
 	engineConfiguration->timing_offset_cylinder[0] = cylinderOne;
 	engineConfiguration->timing_offset_cylinder[1] = -cylinderTwo;
 	angle_t timing = 1;
-	setTable(config->ignitionTable, timing); // run mode timing
+	setTableDynamic(config->ignitionTable, config->ignitionTableRows, config->ignitionTableCols, timing); // run mode timing
 
 	// we need some fuel duration so let's mock airmass just to have legit fuel, we do not care for amount here at all
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(/*any rpm*/ _, _)).WillRepeatedly(Return(AirmassResult{0.2008f, 50.0f}));
