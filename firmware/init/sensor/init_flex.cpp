@@ -15,7 +15,7 @@ static Biquad flexTempFilter;
 
 static Timer flexFreq, flexPulse;
 
-static void flexCallback(efitick_t nowNt, bool value) {
+static void flexCallback(void*, efitick_t nowNt, bool value) {
 	if (value) {
 		// End pulse timing on rising edge
 		float pulseWidthUs = flexPulse.getElapsedUs(nowNt);
@@ -41,10 +41,6 @@ static void flexCallback(efitick_t nowNt, bool value) {
 }
 
 static Gpio flexPin = Gpio::Unassigned;
-
-static void flexCallback(void*, efitick_t nowNt, bool value) {
-	flexCallback(nowNt, value);
-}
 
 // https://rusefi.com/forum/viewtopic.php?p=37452&sid=829804c90d5b2e1fecd1b900cf1b1811#p37452
 
