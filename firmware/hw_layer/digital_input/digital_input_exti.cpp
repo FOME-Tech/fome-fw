@@ -164,7 +164,7 @@ private:
 
 static CCM_OPTIONAL ExtiQueue<ExtiQueueEntry, 32> queue;
 
-static volatile uint8_t overflowCounter = 0;
+static uint8_t overflowCounter = 0;
 
 CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 	OSAL_IRQ_PROLOGUE();
