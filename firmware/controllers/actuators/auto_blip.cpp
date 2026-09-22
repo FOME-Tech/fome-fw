@@ -97,6 +97,10 @@ bool AutoBlip::requestCut(float rpm) {
 	return cut;
 }
 
+float AutoBlip::getEtbAdjustment() const {
+	return m_etbAdjust.get();
+}
+
 bool AutoBlip::blipAllowed(size_t targetGear, float currentRpm, float targetRpm, float vehicleSpeed) {
 	const auto& cfg = engineConfiguration->autoBlip;
 

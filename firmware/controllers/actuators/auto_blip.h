@@ -45,7 +45,7 @@ private:
 			m_timer.reset();
 		}
 
-		float get() {
+		float get() const {
 			if (!m_timer.hasElapsedSec(0.1f)) {
 				return m_value;
 			}
