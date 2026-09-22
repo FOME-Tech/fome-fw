@@ -24,6 +24,7 @@ enum class ClearReason : uint8_t {
 	Lua = 15,
 	ACR = 16,
 	LambdaProtection = 17,
+	AutoBlip = 18,
 
 	// Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 	// todo: add a code generator between ClearReason and fuelIgnCutCodeList in tunerstudio.template.ini

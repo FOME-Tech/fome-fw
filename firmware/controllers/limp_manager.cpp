@@ -98,6 +98,16 @@ void LimpManager::updateState(float rpm, efitick_t nowNt) {
 	}
 #endif // EFI_LAUNCH_CONTROL
 
+	if (engine->module<AutoBlip>()->requestCut(rpm)) {
+		if (engineConfiguration->autoBlip.cutFuel) {
+			allowFuel.clear(ClearReason::AutoBlip);
+		}
+
+		if (engineConfiguration->autoBlip.cutSpark) {
+			allowSpark.clear(ClearReason::AutoBlip);
+		}
+	}
+
 	m_transientAllowInjection = allowFuel;
 	m_transientAllowIgnition = allowSpark;
 
