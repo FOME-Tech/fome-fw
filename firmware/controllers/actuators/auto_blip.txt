@@ -1,0 +1,12 @@
+struct_no_prefix auto_blip_s
+	uint8_t m_targetGear;Target gear
+	uint16_t m_targetRpm;Target RPM
+
+	bit m_allowBlip;Blip allowed
+	bit m_targetGearTooLow;Target gear too low
+	bit m_currentRpmTooLow;Target RPM too low
+	bit m_targetRpmTooLow;Current RPM too low
+	bit m_vehicleSpeedTooLow;VSS too low
+	bit m_cltTooLow;CLT too low
+	bit m_requestCut;Cut requested
+end_struct

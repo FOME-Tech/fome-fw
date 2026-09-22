@@ -142,3 +142,7 @@ Usages:
 
   - name: lambda_monitor
     folder: controllers/math
+
+  - name: auto_blip
+    folder: controllers/actuators
+    output_name: "AutoBlip"

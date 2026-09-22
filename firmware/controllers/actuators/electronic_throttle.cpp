@@ -350,6 +350,8 @@ percent_t EtbController::getSetpointEtbNonTorqueModel(percent_t pedalTableValue)
 	}
 #endif /* EFI_ANTILAG_SYSTEM */
 
+	targetPosition += engine->module<AutoBlip>()->getEtbAdjustment();
+
 	return targetPosition;
 }
 

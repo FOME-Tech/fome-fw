@@ -863,6 +863,24 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 
 	stft_s stft
 
+	struct auto_blip_cfg_s
+		uint16_t minCurrentRpm;Inhibit blips if the current RPM is less than this value.;"rpm", 1, 0, 0, 20000, 0
+		uint16_t minTargetRpm;Inhibit blips if the target blip RPM is less than this value. This is tested at the beginning of the blip, so deceleration below this speed will not cancel a blip already in progress.;"rpm", 1, 0, 0, 20000, 0
+		uint8_t minTargetGear;Minimum allowed target gear for a blip. For example, set this to 2 if you don't want to auto blip from 2nd gear to 1st.;"", 1, 0, 0, 8, 0
+		uint8_t minVehicleSpeed;Inhibit blips below this vehicle speed. This is tested at the beginning of the blip, so deceleration below this speed will not cancel a blip already in progress.;"kph", 1, 0, 0, 255, 0
+		int8_t autotemp minClt;Inhibit blips on a cold engine.;"C", 1, 0, -40, 120, 0
+
+		uint8_t blipThrottleAdd;How much throttle to apply for a blip.;"%", 1, 0, 0, 100, 0
+		uint8_t autoscale blipTime;How long to apply a blip.;"sec", 0.01, 0, 0, 1, 2
+
+		uint8_t autoscale cutThresholdRpm;How far above blip target to cut fuel/spark;"rpm", 10, 0, 0, 1000, 0
+
+		bit cutFuel;Cut fuel to keep RPM at target during a blip.
+		bit cutSpark;Cut spark to keep RPM at target during a blip.
+	end_struct
+
+	auto_blip_cfg_s autoBlip
+
 	dc_io[DC_PER_STEPPER iterate] stepperDcIo
 
 	vehicle_info_t engineMake;For example, BMW, GM or Chevrolet
