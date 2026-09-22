@@ -4,8 +4,8 @@ struct_no_prefix auto_blip_s
 
 	bit m_allowBlip;Blip allowed
 	bit m_targetGearTooLow;Target gear too low
-	bit m_currentRpmTooLow;Target RPM too low
-	bit m_targetRpmTooLow;Current RPM too low
+	bit m_currentRpmTooLow;Current RPM too low
+	bit m_targetRpmTooLow;Target RPM too low
 	bit m_vehicleSpeedTooLow;VSS too low
 	bit m_cltTooLow;CLT too low
 	bit m_requestCut;Cut requested
