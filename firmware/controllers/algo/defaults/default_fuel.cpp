@@ -97,9 +97,6 @@ static void setDefaultStftSettings() {
 	// Above 60 deg C
 	cfg.minClt = 60;
 
-	// 0.5% deadband
-	cfg.deadband = 0.5f;
-
 	// Sensible region defaults
 	cfg.maxIdleRegionRpm = 1000;
 	cfg.maxOverrunLoad = 35;

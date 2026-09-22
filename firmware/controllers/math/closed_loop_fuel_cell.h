@@ -5,7 +5,7 @@
 class ClosedLoopFuelCellBase {
 public:
 	// Update the cell's internal state - adjusting fuel up/down as appropriate
-	void update(float lambdaDeadband, bool ignoreErrorMagnitude);
+	void update(bool ignoreErrorMagnitude);
 
 	// Get the current adjustment amount, without altering internal state.
 	float getAdjustment() const;

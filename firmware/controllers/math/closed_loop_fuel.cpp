@@ -129,7 +129,7 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		cell.configure(&engineConfiguration->stft.cellCfgs[binIdx], sensor);
 
 		if (shouldUpdateCorrection(sensor)) {
-			cell.update(engineConfiguration->stft.deadband * 0.01f, engineConfiguration->stftIgnoreErrorMagnitude);
+			cell.update(engineConfiguration->stftIgnoreErrorMagnitude);
 		}
 
 		result.banks[i] = cell.getAdjustment();
