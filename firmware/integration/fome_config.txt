@@ -824,6 +824,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	bit knockBankCyl11,"Channel 2","Channel 1"
 	bit knockBankCyl12,"Channel 2","Channel 1"
 	bit tcuEnabled
+	bit brakePedalPinInverted
 canBroadcast_e canBroadcastUseChannelTwo;
 	bit useRawOutputToDriveIdleStepper;If enabled we use four Push-Pull outputs to directly drive stepper idle air valve coilss
 bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bus CAN messages in FOME console
