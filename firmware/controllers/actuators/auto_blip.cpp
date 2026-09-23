@@ -2,8 +2,8 @@
 
 AutoBlip::State AutoBlip::nextState(
 		State currentState, bool brakeDown, bool clutchDown, bool blipAllowed, const auto_blip_cfg_s& cfg) const {
-	// In any state, releasing the brake returns to the idle state
-	if (!brakeDown) {
+	// In any state, releasing the brake (or disabling the feature) returns to the idle state
+	if (!cfg.enabled || !brakeDown) {
 		return State::Idle;
 	}
 

@@ -33,3 +33,82 @@ TEST(AutoBlip, blipAllowed) {
 	Sensor::setMockValue(SensorType::Clt, 55);
 	EXPECT_FALSE(dut.blipAllowed(2, 2100, 3100, 35));
 }
+
+TEST(AutoBlip, disabledNeverBlips) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	auto dut = *engine->module<AutoBlip>();
+	Sensor::setMockValue(SensorType::Clt, 65);
+	engineConfiguration->autoBlip.blipThrottleAdd = 20;
+	engineConfiguration->autoBlip.enabled = false;
+
+	// Brake, then clutch, exactly as a real blip would be triggered - but the feature is off.
+	engine->engineState.brakePedalState = true;
+	engine->engineState.clutchDownState = false;
+	dut.onFastCallback();
+	engine->engineState.clutchDownState = true;
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+}
+
+TEST(AutoBlip, armingRequiresClutchUp) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	auto dut = *engine->module<AutoBlip>();
+	Sensor::setMockValue(SensorType::Clt, 65);
+	engineConfiguration->autoBlip.enabled = true;
+	engineConfiguration->autoBlip.blipThrottleAdd = 20;
+
+	// Clutch is already down when the brake is applied - this should NOT arm/blip, even after
+	// several callbacks, because arming requires the clutch to be up at the moment the brake goes down.
+	engine->engineState.brakePedalState = true;
+	engine->engineState.clutchDownState = true;
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+
+	// Driver releases the clutch while still braking - this arms the system.
+	engine->engineState.clutchDownState = false;
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+
+	// Now pushing the clutch triggers the blip.
+	engine->engineState.clutchDownState = true;
+	dut.onFastCallback();
+	EXPECT_GT(dut.getEtbAdjustment(), 0);
+}
+
+TEST(AutoBlip, armTimeoutPreventsStaleBlip) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	auto dut = *engine->module<AutoBlip>();
+	Sensor::setMockValue(SensorType::Clt, 65);
+	engineConfiguration->autoBlip.enabled = true;
+	engineConfiguration->autoBlip.blipThrottleAdd = 20;
+	engineConfiguration->autoBlip.armTimeout = 0.2f;
+
+	// Brake applied with clutch up - arms.
+	engine->engineState.brakePedalState = true;
+	engine->engineState.clutchDownState = false;
+	dut.onFastCallback();
+
+	// Wait past the arm timeout without ever pressing the clutch.
+	advanceTimeUs(0.3e6);
+	dut.onFastCallback();
+
+	// A clutch press now is stale - it must not fire a blip, even though we're still braking.
+	engine->engineState.clutchDownState = true;
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+
+	// Releasing and reapplying the brake resets everything, so a fresh arm+blip works again.
+	engine->engineState.brakePedalState = false;
+	dut.onFastCallback();
+	engine->engineState.brakePedalState = true;
+	engine->engineState.clutchDownState = false;
+	dut.onFastCallback();
+	engine->engineState.clutchDownState = true;
+	dut.onFastCallback();
+	EXPECT_GT(dut.getEtbAdjustment(), 0);
+}
