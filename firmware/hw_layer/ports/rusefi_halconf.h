@@ -30,14 +30,20 @@
 #define HAL_USE_MMC_SPI FALSE
 #endif
 
-// If USB and File logging, enable USB Mass Storage & community
+// USB mass storage can be enabled independently of SD logging.
 #ifndef HAL_USE_USB_MSD
-#define HAL_USE_USB_MSD (EFI_FILE_LOGGING && EFI_USB_SERIAL)
+#define HAL_USE_USB_MSD (EFI_USB_MSD && EFI_USB_SERIAL)
 #endif // HAL_USE_USB_MSD
-#define USB_MSD_LUN_COUNT 2
 
-// only the MSD driver requires USB_USE_WAIT
-#define USB_USE_WAIT (EFI_FILE_LOGGING && EFI_USB_SERIAL)
+// The SD card LUN exists only when SD support is compiled in.
+#if EFI_FILE_LOGGING
+#define USB_MSD_LUN_COUNT 2
+#else
+#define USB_MSD_LUN_COUNT 1
+#endif
+
+// Both the direct USB console and MSD use blocking usbReceive/usbTransmit.
+#define USB_USE_WAIT (EFI_USB_SERIAL && (EFI_USB_SERIAL_DIRECT || HAL_USE_USB_MSD))
 
 // Ethernet
 #define HAL_USE_MAC MODULE_ETHERNET_CONSOLE
