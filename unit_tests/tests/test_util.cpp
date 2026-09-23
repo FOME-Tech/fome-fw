@@ -91,6 +91,26 @@ TEST(util, cyclicBuffer) {
 	}
 }
 
+TEST(util, forEachSetBit) {
+	for (uint32_t mask = 0; mask <= UINT16_MAX; mask++) {
+		size_t actual[16];
+		size_t actualCount = 0;
+
+		forEachSetBit(static_cast<uint16_t>(mask), [&](size_t idx) { actual[actualCount++] = idx; });
+
+		size_t expectedCount = 0;
+		for (size_t idx = 0; idx < 16; idx++) {
+			if (mask & (1u << idx)) {
+				ASSERT_LT(expectedCount, actualCount) << "mask " << mask;
+				EXPECT_EQ(idx, actual[expectedCount]) << "mask " << mask;
+				expectedCount++;
+			}
+		}
+
+		EXPECT_EQ(expectedCount, actualCount) << "mask " << mask;
+	}
+}
+
 static void testMalfunctionCentralRemoveNonExistent() {
 	clearWarnings();
 
