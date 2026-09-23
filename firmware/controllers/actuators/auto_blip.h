@@ -19,7 +19,11 @@ public:
 		Blip,
 
 		// The blip ran for the allowed time without the driver releasing the clutch
-		BlipTimeout
+		BlipTimeout,
+
+		// The driver held the brake without pressing the clutch for too long - wait for the brake to be
+		// released before arming again, so a stale clutch press later doesn't trigger a surprise blip
+		ArmTimedOut
 	};
 
 	State

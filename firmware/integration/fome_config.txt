@@ -872,6 +872,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 
 		uint8_t blipThrottleAdd;How much throttle to apply for a blip.;"%", 1, 0, 0, 100, 0
 		uint8_t autoscale blipTime;How long to apply a blip.;"sec", 0.01, 0, 0, 1, 2
+		uint8_t autoscale armTimeout;If the clutch isn't pressed within this time of the brake being applied, cancel and require the brake to be released before arming again.;"sec", 0.1, 0, 0, 5, 1
 
 		uint8_t autoscale cutThresholdRpm;How far above blip target to cut fuel/spark;"rpm", 10, 0, 0, 1000, 0
 

@@ -9,7 +9,9 @@ AutoBlip::State AutoBlip::nextState(
 
 	switch (currentState) {
 		case State::Idle:
-			if (brakeDown) {
+			// Only arm if the clutch isn't already down - a blip should be triggered by the driver pushing the
+			// clutch after braking, not by braking while already clutched in.
+			if (!clutchDown) {
 				return State::Armed;
 			}
 			break;
@@ -17,6 +19,13 @@ AutoBlip::State AutoBlip::nextState(
 			if (blipAllowed && clutchDown) {
 				return State::Blip;
 			}
+
+			// The driver took too long to push the clutch after braking - don't fire a stale blip later.
+			// Stay here (rather than Idle) until the brake is released, so we don't just re-arm next cycle.
+			if (m_timeInState.hasElapsedSec(cfg.armTimeout)) {
+				return State::ArmTimedOut;
+			}
+
 			break;
 		case State::Blip:
 			// If still braking but the clutch is released, return to armed (the driver might make another downshift
@@ -34,6 +43,9 @@ AutoBlip::State AutoBlip::nextState(
 			if (!clutchDown) {
 				return State::Armed;
 			}
+			break;
+		case State::ArmTimedOut:
+			// Nothing to do here - only a brake release (handled above) gets us out of this state.
 			break;
 	}
 
