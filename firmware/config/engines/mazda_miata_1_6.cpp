@@ -210,7 +210,6 @@ void miataNAcommonEngineSettings() {
 
 	// Set up closed loop fuel
 	engineConfiguration->fuelClosedLoopCorrectionEnabled = true;
-	engineConfiguration->stft.minAfr = 10;
 	engineConfiguration->stft.cellCfgs[0] = {5, -5, 5};
 	engineConfiguration->stft.cellCfgs[1] = {15, -15, 10};
 	engineConfiguration->stft.cellCfgs[2] = {15, -15, 1};

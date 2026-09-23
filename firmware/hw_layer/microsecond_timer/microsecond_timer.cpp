@@ -33,7 +33,9 @@
  */
 uint32_t maxPrecisionCallbackDuration = 0;
 
-static efitick_t lastSetTimerTimeNt;
+static Timer lastSetTimerTimer;
+// Lower 32 bits of the most recently armed compare target, for watchdog diagnostics
+static uint32_t lastSetTimerTargetNt;
 static bool isTimerPending = false;
 
 static int timerCallbackCounter = 0;
@@ -88,7 +90,8 @@ void setHardwareSchedulerTimer(efitick_t nowNt, efitick_t setTimeNt) {
 	// Do the actual hardware-specific timer set operation
 	portSetHardwareSchedulerTimer(nowNt, setTimeNt);
 
-	lastSetTimerTimeNt = getTimeNowNt();
+	lastSetTimerTimer.reset();
+	lastSetTimerTargetNt = setTimeNt;
 	isTimerPending = true;
 	timerRestartCounter++;
 }
@@ -111,10 +114,17 @@ struct MicrosecondTimerWatchdogController : public PeriodicController<256> {
 	MicrosecondTimerWatchdogController()
 		: PeriodicController("MstWatchdog", NORMALPRIO, 2) {}
 
-	void PeriodicTask(efitick_t nowNt) override {
+	void PeriodicTask(efitick_t /*nowNt*/) override {
 		// 2 seconds of inactivity would not look right
-		if (nowNt > lastSetTimerTimeNt + MS2NT(2000)) {
-			firmwareError(ObdCode::CUSTOM_TIMER_WATCHDOG, "Watchdog: no events for 2 seconds!");
+		if (lastSetTimerTimer.hasElapsedSec(2)) {
+			// pending=1 with a target in the past means the hardware compare was missed.
+			// pending=0 means the callback ran but nothing re-armed the timer.
+			int32_t targetDeltaMs = NT2US((int32_t)(lastSetTimerTargetNt - getTimeNowLowerNt())) / 1000;
+			firmwareError(
+					ObdCode::CUSTOM_TIMER_WATCHDOG,
+					"Watchdog: no events for 2 seconds! pending=%d target=%ldms",
+					isTimerPending,
+					targetDeltaMs);
 		}
 	}
 };
@@ -172,7 +182,7 @@ void initMicrosecondTimer() {
 
 	hwStarted = true;
 
-	lastSetTimerTimeNt = getTimeNowNt();
+	lastSetTimerTimer.reset();
 
 	validateHardwareTimer();
 

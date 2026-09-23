@@ -7,7 +7,6 @@ TEST(Toyota3ToothCam, RealEngineRunning) {
 	reader.open("tests/trigger/resources/toyota_3_tooth_cam.csv");
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
-	engineConfiguration->alwaysInstantRpm = true;
 
 	engineConfiguration->vvtMode[0] = VVT_TOYOTA_3_TOOTH;
 	engineConfiguration->vvtOffsets[0] = 152.58;

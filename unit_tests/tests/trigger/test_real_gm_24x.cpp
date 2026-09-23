@@ -8,7 +8,6 @@ TEST(crankingGm24x, gmRealCrankingFromFile) {
 	reader.open("tests/trigger/resources/gm_24x_cranking.csv");
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
-	engineConfiguration->alwaysInstantRpm = true;
 
 	eth.setTriggerType(trigger_type_e::TT_GM_24x);
 
