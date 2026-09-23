@@ -372,3 +372,28 @@ TEST(SensorInit, Map) {
 	Sensor::resetMockValue(SensorType::MapFast);
 	EXPECT_FLOAT_EQ(75, Sensor::getOrZero(SensorType::Map));
 }
+
+TEST(SensorInit, CustomBaroUsesBaroCalibration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->mapLowValueVoltage = 0.5f;
+	engineConfiguration->mapHighValueVoltage = 4.5f;
+
+	// Use distinct MAP values to catch accidental use of the MAP calibration.
+	engineConfiguration->map.sensor.lowValue = 10;
+	engineConfiguration->map.sensor.highValue = 300;
+
+	engineConfiguration->baroSensor.hwChannel = EFI_ADC_5;
+	engineConfiguration->baroSensor.type = MT_CUSTOM;
+	engineConfiguration->baroSensor.lowValue = 80;
+	engineConfiguration->baroSensor.highValue = 120;
+
+	initMap();
+
+	auto sensor = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::BarometricPressure));
+	ASSERT_NE(nullptr, sensor);
+
+	EXPECT_POINT_VALID(sensor, 0.5f, 80.0f);
+	EXPECT_POINT_VALID(sensor, 2.5f, 100.0f);
+	EXPECT_POINT_VALID(sensor, 4.5f, 120.0f);
+}
