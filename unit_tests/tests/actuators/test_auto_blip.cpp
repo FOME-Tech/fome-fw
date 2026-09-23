@@ -34,11 +34,23 @@ TEST(AutoBlip, blipAllowed) {
 	EXPECT_FALSE(dut.blipAllowed(2, 2100, 3100, 35));
 }
 
+// Zero out the blipAllowed gating thresholds so these state-machine-focused tests aren't coupled to
+// whatever default values ship in engine_configuration.cpp - those are covered by the blipAllowed test.
+static void clearBlipAllowedThresholds() {
+	auto& cfg = engineConfiguration->autoBlip;
+	cfg.minCurrentRpm = 0;
+	cfg.minTargetRpm = 0;
+	cfg.minTargetGear = 0;
+	cfg.minVehicleSpeed = 0;
+	cfg.minClt = 0;
+}
+
 TEST(AutoBlip, disabledNeverBlips) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	auto dut = *engine->module<AutoBlip>();
 	Sensor::setMockValue(SensorType::Clt, 65);
+	clearBlipAllowedThresholds();
 	engineConfiguration->autoBlip.blipThrottleAdd = 20;
 	engineConfiguration->autoBlip.enabled = false;
 
@@ -56,6 +68,7 @@ TEST(AutoBlip, armingRequiresClutchUp) {
 
 	auto dut = *engine->module<AutoBlip>();
 	Sensor::setMockValue(SensorType::Clt, 65);
+	clearBlipAllowedThresholds();
 	engineConfiguration->autoBlip.enabled = true;
 	engineConfiguration->autoBlip.blipThrottleAdd = 20;
 
@@ -84,6 +97,7 @@ TEST(AutoBlip, armTimeoutPreventsStaleBlip) {
 
 	auto dut = *engine->module<AutoBlip>();
 	Sensor::setMockValue(SensorType::Clt, 65);
+	clearBlipAllowedThresholds();
 	engineConfiguration->autoBlip.enabled = true;
 	engineConfiguration->autoBlip.blipThrottleAdd = 20;
 	engineConfiguration->autoBlip.armTimeout = 0.2f;

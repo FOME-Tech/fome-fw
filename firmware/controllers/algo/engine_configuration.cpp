@@ -448,6 +448,21 @@ static void setDefaultEngineConfiguration() {
 
 	engineConfiguration->engineSnifferRpmThreshold = 2500;
 
+	// Auto blip is off (autoBlip.enabled = false) until the user turns it on, but give the gating
+	// thresholds sane values so that enabling it without touching every field doesn't do something
+	// surprising - in particular a nonzero minVehicleSpeed so it can't fire while parking/reversing,
+	// since gear detection has no idea about reverse.
+	engineConfiguration->autoBlip.minCurrentRpm = 1500;
+	engineConfiguration->autoBlip.minTargetRpm = 1500;
+	engineConfiguration->autoBlip.minTargetGear = 2;
+	engineConfiguration->autoBlip.minVehicleSpeed = 30;
+	engineConfiguration->autoBlip.minClt = 60;
+	engineConfiguration->autoBlip.blipThrottleAdd = 25;
+	engineConfiguration->autoBlip.blipTime = 0.5f;
+	engineConfiguration->autoBlip.armTimeout = 2.0f;
+	engineConfiguration->autoBlip.cutThresholdRpm = 300;
+	engineConfiguration->autoBlip.cutFuel = true;
+
 	/**
 	 * Idle control defaults
 	 */
