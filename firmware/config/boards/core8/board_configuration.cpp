@@ -80,7 +80,7 @@ static void setStepperConfig() {
 	engineConfiguration->stepperEnablePin = Gpio::F9;
 }
 
-// PE3 is error LED, configured in board.mk
+// PG11 is the critical error LED, configured in board.mk.
 Gpio getCommsLedPin() {
 	return Gpio::G12;
 }
