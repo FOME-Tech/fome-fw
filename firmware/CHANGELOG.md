@@ -64,6 +64,7 @@ or
  - Fix conflict between aux temp 2 and oil temperature sensor configuration
  - MAP cylinder balancing no longer corrupts the MAP reading above 255 kPa. Engines running more than ~22 psi of boost could see reported MAP jump anywhere between 60 and 440 kPa while actual manifold pressure was steady, throwing fuel and ignition off badly at high load.
  - Fix updating wideband O2 sensor modules with older firmware
+ - "After cut timing ramp-in time" now actually controls how long DFCO timing retard takes to ramp back out after fuel is restored. The ramp was hardcoded to 0.5 seconds regardless of the setting, so values above 0.5s returned timing sooner than asked for, and values below 0.5s stepped the remaining retard away in one jump instead of ramping it out
 
 ## May 2026 Release
 
