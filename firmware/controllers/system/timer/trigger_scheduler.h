@@ -26,19 +26,21 @@ public:
 	// For unit tests
 	AngleBasedEvent* getElementAtIndexForUnitTest(int index);
 	int getQueueSizeForUnitTest() const;
+	bool validateQueuesForUnitTest() const;
 
 private:
+	struct Queue {
+		AngleBasedEvent* head = nullptr;
+		AngleBasedEvent* tail = nullptr;
+	};
+
 	void schedule(AngleBasedEvent* event, action_s action);
+	// Helpers require the scheduler critical section. Timers are managed separately.
+	static void append(Queue& queue, AngleBasedEvent* event, TriggerQueueMembership membership);
+	static void unlink(Queue& queue, AngleBasedEvent* event, AngleBasedEvent* previous);
+	static void clear(Queue& queue);
 
-	bool assertNotInList(AngleBasedEvent* head, AngleBasedEvent* element);
-
-	/**
-	 * That's the linked list of pending events scheduled in relation to trigger
-	 * At the moment we iterate over the whole list while looking for events for specific
-	 * trigger index We can make it an array of lists per trigger index, but that would take
-	 * some RAM and probably not needed yet.
-	 */
-	AngleBasedEvent* m_angleBasedEventsHead = nullptr;
-	// Due events stay visible to cancel() while they are transferred to the time scheduler.
-	AngleBasedEvent* m_dueEventsHead = nullptr;
+	Queue m_waiting;
+	// Keep due events reachable during inline callbacks from timer registration.
+	Queue m_due;
 };

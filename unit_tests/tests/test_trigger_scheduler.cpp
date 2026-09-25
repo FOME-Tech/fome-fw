@@ -280,3 +280,156 @@ TEST(TriggerScheduler, stopDuringPromotionDropsRemainingEvents) {
 	EXPECT_EQ(0, triggerScheduler->getQueueSizeForUnitTest());
 	engine->scheduler.setMockExecutor(nullptr);
 }
+
+TEST(TriggerScheduler, cancelHeadMiddleTailAndAppendAfterLastRemoval) {
+	AngleBasedEvent events[5];
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	int count = 0;
+	for (int index : {0, 1, 2, 3}) {
+		scheduler.schedule(&events[index], EngPhase{125}, {countAction, &count});
+	}
+	for (int index : {0, 2, 3, 1}) {
+		scheduler.cancel(&events[index]);
+		EXPECT_EQ(TriggerQueueMembership::None, events[index].queueMembership);
+		EXPECT_EQ(nullptr, events[index].next);
+		ASSERT_TRUE(scheduler.validateQueuesForUnitTest());
+	}
+	scheduler.schedule(&events[4], EngPhase{125}, {countAction, &count});
+	EXPECT_EQ(&events[4], scheduler.getElementAtIndexForUnitTest(0));
+	EXPECT_EQ(1, scheduler.getQueueSizeForUnitTest());
+	EXPECT_TRUE(scheduler.validateQueuesForUnitTest());
+}
+
+TEST(TriggerScheduler, flushResetsMembershipButPreservesFallbackAssociation) {
+	AngleBasedEvent events[8];
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	int count = 0;
+	for (auto& event : events) {
+		scheduler.schedule(&event, EngPhase{125}, {countAction, &count});
+		event.fallbackIsCurrent = true;
+	}
+	scheduler.flush();
+	for (auto& event : events) {
+		EXPECT_EQ(TriggerQueueMembership::None, event.queueMembership);
+		EXPECT_EQ(nullptr, event.next);
+		EXPECT_TRUE(event.fallbackIsCurrent);
+	}
+	for (int index = 7; index >= 0; index--) {
+		scheduler.schedule(&events[index], EngPhase{125}, {countAction, &count});
+	}
+	ASSERT_TRUE(scheduler.validateQueuesForUnitTest());
+	for (int index = 0; index < 8; index++) {
+		EXPECT_EQ(&events[7 - index], scheduler.getElementAtIndexForUnitTest(index));
+	}
+}
+
+TEST(TriggerScheduler, duplicateInsertionPreservesMembershipAndTail) {
+	AngleBasedEvent events[3];
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	int count = 0;
+	scheduler.schedule(&events[0], EngPhase{125}, {countAction, &count});
+	scheduler.schedule(&events[1], EngPhase{125}, {countAction, &count});
+	scheduler.schedule(&events[0], EngPhase{125}, {countAction, &count});
+	scheduler.schedule(&events[2], EngPhase{125}, {countAction, &count});
+	ASSERT_TRUE(scheduler.validateQueuesForUnitTest());
+	EXPECT_EQ(3, scheduler.getQueueSizeForUnitTest());
+	for (int i = 0; i < 3; i++) {
+		EXPECT_EQ(&events[i], scheduler.getElementAtIndexForUnitTest(i));
+	}
+	EXPECT_EQ(1, eth.getWarningCounter());
+}
+
+TEST(TriggerScheduler, inlineDueCancellationAllowsReuseAndAppend) {
+	InterleavingExecutor executor;
+	AngleBasedEvent events[4];
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	int count = 0;
+	executor.triggerScheduler = &scheduler;
+	executor.victim = &events[2];
+	engine->scheduler.setMockExecutor(&executor);
+	for (int i = 0; i < 3; i++) {
+		scheduler.schedule(&events[i], EngPhase{105}, {countAction, &count});
+	}
+	scheduler.onEnginePhase(1000, phaseAtCurrentTooth());
+	EXPECT_EQ(2u, executor.scheduled.size());
+	ASSERT_TRUE(scheduler.validateQueuesForUnitTest());
+	scheduler.schedule(&events[2], EngPhase{125}, {countAction, &count});
+	scheduler.schedule(&events[3], EngPhase{125}, {countAction, &count});
+	EXPECT_EQ(2, scheduler.getQueueSizeForUnitTest());
+	EXPECT_TRUE(scheduler.validateQueuesForUnitTest());
+	engine->scheduler.setMockExecutor(nullptr);
+}
+
+TEST(TriggerScheduler, inlineFlushClearsWaitingAndDueMembership) {
+	InterleavingExecutor executor;
+	AngleBasedEvent events[4];
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	int count = 0;
+	executor.triggerScheduler = &scheduler;
+	executor.stopOnSchedule = true;
+	engine->scheduler.setMockExecutor(&executor);
+	for (int i = 0; i < 4; i++) {
+		scheduler.schedule(&events[i], EngPhase{i % 2 ? 125.f : 105.f}, {countAction, &count});
+	}
+	scheduler.onEnginePhase(1000, phaseAtCurrentTooth());
+	EXPECT_EQ(1u, executor.scheduled.size());
+	ASSERT_TRUE(scheduler.validateQueuesForUnitTest());
+	for (auto& event : events) {
+		EXPECT_EQ(TriggerQueueMembership::None, event.queueMembership);
+		scheduler.schedule(&event, EngPhase{125}, {countAction, &count});
+	}
+	EXPECT_EQ(4, scheduler.getQueueSizeForUnitTest());
+	EXPECT_TRUE(scheduler.validateQueuesForUnitTest());
+	engine->scheduler.setMockExecutor(nullptr);
+}
+
+TEST(TriggerScheduler, queueOperationsMatchReferenceAcrossRepeatedReuse) {
+	AngleBasedEvent events[16];
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	std::vector<int> expected;
+	uint32_t state = 0x12345678;
+	int count = 0;
+	for (int step = 0; step < 2000; step++) {
+		state = state * 1664525 + 1013904223;
+		int index = (state >> 16) % 16;
+		auto found = std::find(expected.begin(), expected.end(), index);
+		switch ((state >> 24) % 4) {
+			case 0:
+				if (found == expected.end()) {
+					scheduler.schedule(&events[index], EngPhase{125}, {countAction, &count});
+					expected.push_back(index);
+				}
+				break;
+			case 1:
+				scheduler.cancel(&events[index]);
+				if (found != expected.end()) {
+					expected.erase(found);
+				}
+				break;
+			case 2:
+				scheduler.flush();
+				expected.clear();
+				break;
+			case 3:
+				scheduler.onEnginePhase(1000, phaseAtCurrentTooth());
+				break;
+		}
+		ASSERT_TRUE(scheduler.validateQueuesForUnitTest()) << step;
+		ASSERT_EQ(expected.size(), scheduler.getQueueSizeForUnitTest()) << step;
+		for (size_t i = 0; i < expected.size(); i++) {
+			EXPECT_EQ(&events[expected[i]], scheduler.getElementAtIndexForUnitTest(i));
+		}
+		for (int i = 0; i < 16; i++) {
+			bool present = std::find(expected.begin(), expected.end(), i) != expected.end();
+			EXPECT_EQ(
+					present ? TriggerQueueMembership::Waiting : TriggerQueueMembership::None,
+					events[i].queueMembership);
+		}
+	}
+}

@@ -12,6 +12,12 @@
 #include "scheduler.h"
 #include "trigger_structure.h"
 
+enum class TriggerQueueMembership : uint8_t {
+	None,
+	Waiting,
+	Due
+};
+
 struct AngleBasedEvent {
 	scheduling_s scheduling;
 	action_s action;
@@ -21,6 +27,7 @@ struct AngleBasedEvent {
 	AngleBasedEvent* next = nullptr;
 	// An armed fallback can outlive the queued event. Reusing the event breaks that association.
 	bool fallbackIsCurrent = false;
+	TriggerQueueMembership queueMembership = TriggerQueueMembership::None;
 
 	TrgPhase eventPhase;
 
