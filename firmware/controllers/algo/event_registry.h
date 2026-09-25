@@ -19,6 +19,8 @@ struct AngleBasedEvent {
 	 * Trigger-based scheduler maintains a linked list of all pending tooth-based events.
 	 */
 	AngleBasedEvent* next = nullptr;
+	// An armed fallback can outlive the queued event. Reusing the event breaks that association.
+	bool fallbackIsCurrent = false;
 
 	TrgPhase eventPhase;
 

@@ -32,5 +32,7 @@ TEST(HPFP, IntegratedSchedule) {
 	/**
 	 * overall this is a pretty lame test but helps to know that the whole on/off/on dance does in fact happen for HPFP
 	 */
-	ASSERT_EQ(31, enginePins.hpfpValve.unitTestTurnedOnCounter);
+	// The trigger configuration change drops the old angle event and restarts the
+	// HPFP chain. The two openings from the old schedule must not occur.
+	ASSERT_EQ(29, enginePins.hpfpValve.unitTestTurnedOnCounter);
 }
