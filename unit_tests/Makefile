@@ -70,3 +70,11 @@ INCDIR += \
 include $(UNIT_TESTS_DIR)/unit_test_rules.mk
 
 include $(UNIT_TESTS_DIR)/adc_lifecycle/adc_lifecycle.mk
+
+all: $(ADC_LIFECYCLE_BINS)
+
+.PHONY: test
+test: all
+	./$(BINARY_OUTPUT)
+	./build/adc_lifecycle_test
+	./build/adc_lifecycle_v4_test

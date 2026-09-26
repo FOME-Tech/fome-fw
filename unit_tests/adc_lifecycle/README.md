@@ -1,8 +1,12 @@
 # ADC lifecycle regression and diagnostics
 
-Run from `unit_tests`: `make -j12 adc-lifecycle-test`.
-The unit-test CI workflow runs this target on Linux and macOS. The target builds
-separate ADCv2 (F4/F7) and ADCv4 (H7) host binaries with ASan/UBSan by default.
+Run all engine and ADC lifecycle tests from `unit_tests`: `make -j12 test`.
+The default build includes separate ADCv2 (F4/F7) and ADCv4 (H7) host binaries
+with ASan/UBSan by default. The unit-test CI workflow builds all three binaries
+in `Build Tests` and runs them through the common `test` target in `Run Tests`
+on Linux and macOS.
+
+To build and run only the ADC suites: `make -j12 adc-lifecycle-test`.
 
 ## Real callers and HAL
 
