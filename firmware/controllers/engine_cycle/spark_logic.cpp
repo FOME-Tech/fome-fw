@@ -146,6 +146,12 @@ static void fireTrailingSpark(IgnitionOutputPin* pin) {
 void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	efitick_t nowNt = getTimeNowNt();
 	auto& event = engine->ignitionEvents.elements[ctx.eventIndex];
+	const bool staleOverdwell = ctx.isOverdwellProtect && !event.sparkEvent.fallbackIsCurrent;
+	if (ctx.isOverdwellProtect && !staleOverdwell) {
+		// The fallback fired before the expected trigger tooth. Do not later fire
+		// the same spark from the angle-based queue.
+		engine->module<TriggerScheduler>()->cancel(&event.sparkEvent);
+	}
 
 	float actualDwellMs = event.actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
 	float minDwell = 0.8f * event.sparkDwell;
@@ -176,6 +182,10 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 #endif
 
 	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.coils[idx].setLow(); });
+	if (staleOverdwell) {
+		// Still discharge the old outputs, but do not cancel or rebuild a newer cycle.
+		return;
+	}
 
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
@@ -286,6 +296,8 @@ static void scheduleSparkEvent(
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6591, !std::isnan(sparkAngle.angle), "findAngle#4");
 	assertAngleRange(sparkAngle.angle, "findAngle#a5", ObdCode::CUSTOM_ERR_6549);
 
+	// Keep registration of the fallback atomic with the event it protects.
+	chibios_rt::CriticalSectionLocker csl;
 	bool scheduled = engine->module<TriggerScheduler>()->scheduleOrQueue(
 			&event.sparkEvent, sparkAngle, {fireSparkAndPrepareNextSchedule, ctx}, phase);
 
@@ -294,6 +306,9 @@ static void scheduleSparkEvent(
 		// 1.5x nominal dwell, should the trigger disappear before its scheduled for real
 		efitick_t fireTime = chargeTime + (uint32_t)MSF2NT(1.5f * dwellMs);
 		ctx.isOverdwellProtect = true;
+		if (!event.sparkEvent.scheduling.action) {
+			event.sparkEvent.fallbackIsCurrent = true;
+		}
 		engine->scheduler.schedule(
 				"overdwell", &event.sparkEvent.scheduling, fireTime, {fireSparkAndPrepareNextSchedule, ctx});
 	}
