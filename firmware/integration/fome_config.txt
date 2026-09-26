@@ -1045,6 +1045,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	InjectionTimingMode injectionTimingMode;Sets what part of injection's is controlled by the injection phase table.
 
 	uint8_t fan1ExtraIdle;Additional idle % when fan #1 is active;"%", 1, 0, 0, 100, 0
+	uint8_t dfcoStartupDelay;Minimum running time before DFCO is allowed after each start. Independent of after-start enrichment: choose a duration that covers your scalar or table taper. Set 0 to disable this delay. DFCO is always inhibited while stopped or cranking.;"s", 1, 0, 0, 255, 0
 
 	float tpsDecelEnleanmentThreshold;For decel we simply multiply delta of TPS and tFor decel we do not use table?!;"roc", 1, 0, 0, 200, 1
 	float tpsDecelEnleanmentMultiplier;Magic multiplier, we multiply delta of TPS and get fuel squirt duration;"coeff", 1, 0, 0, 200, 2

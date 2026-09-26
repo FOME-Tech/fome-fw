@@ -11,6 +11,17 @@ bool DfcoController::getState() const {
 		return false;
 	}
 
+	// RPM alone cannot distinguish cranking from running when thresholds overlap.
+	if (!engine->rpmCalculator.isRunning()) {
+		return false;
+	}
+
+	// Reset on every transition to RUNNING, including starts without a cranking
+	// callback. The enrichment timer can still contain the previous start's time.
+	if (engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()) < engineConfiguration->dfcoStartupDelay) {
+		return false;
+	}
+
 	const auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 	const auto clt = Sensor::get(SensorType::Clt);
 	const auto map = Sensor::get(SensorType::Map);

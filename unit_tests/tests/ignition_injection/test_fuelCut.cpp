@@ -22,6 +22,7 @@ TEST(fuelCut, coasting) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -42,6 +43,7 @@ TEST(fuelCut, coasting) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
 	// set 'running' RPM - just above RpmHigh threshold
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
@@ -97,6 +99,7 @@ TEST(fuelCut, coasting) {
 
 	// Now set RPM just above RpmHigh threshold
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	eth.engine.periodicFastCallback();
 
 	// Fuel cut-off is active again!
@@ -139,6 +142,7 @@ TEST(fuelCut, delay) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -162,6 +166,7 @@ TEST(fuelCut, delay) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
 	// set 'running' RPM - just above RpmHigh threshold
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
@@ -209,6 +214,7 @@ TEST(fuelCut, mapTable) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -234,6 +240,7 @@ TEST(fuelCut, mapTable) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
 	// set 'running' RPM in the middle of two interpolation values
 	Sensor::setMockValue(SensorType::Rpm, 2500);
+	engine->rpmCalculator.setRpmValue(2500);
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
@@ -266,6 +273,7 @@ TEST(fuelCut, clutch) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -282,6 +290,7 @@ TEST(fuelCut, clutch) {
 	Sensor::setMockValue(SensorType::Clt, hotClt);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	Sensor::setMockValue(SensorType::Map, 0);
 	eth.moveTimeForwardUs(1000);
 
