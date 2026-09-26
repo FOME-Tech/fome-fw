@@ -49,7 +49,10 @@ static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
 // ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
 // BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) __attribute__((aligned(8192))) adcsample_t knockSampleBuffer[2048];
+#if EFI_PROD_CODE
+__attribute__((section(".ram4")))
+#endif
+__attribute__((aligned(8192))) adcsample_t knockSampleBuffer[2048];
 
 void portInitAdc() {
 	initAdcDiagnostics(true);

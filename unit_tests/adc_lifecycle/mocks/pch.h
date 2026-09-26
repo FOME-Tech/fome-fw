@@ -10,6 +10,8 @@
 #include <vector>
 #include <functional>
 
+#define EFI_PROD_CODE 0
+
 #ifdef ADC_TEST_V4
 #define EFI_USE_FAST_ADC 0
 #else
