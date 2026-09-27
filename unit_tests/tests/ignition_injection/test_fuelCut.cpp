@@ -316,3 +316,54 @@ TEST(fuelCut, clutch) {
 	eth.engine.periodicFastCallback();
 	EXPECT_CUT();
 }
+
+// After the cut ends, timing retard ramps back out over the configured duration.
+// This used to be hardcoded to 0.5s, ignoring the setting entirely.
+TEST(fuelCut, timingRetardRampIn) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+
+	// configure coastingFuelCut
+	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->coastingFuelCutRpmLow = 1300;
+	engineConfiguration->coastingFuelCutRpmHigh = 1500;
+	engineConfiguration->coastingFuelCutTps = 2;
+	engineConfiguration->coastingFuelCutClt = 30;
+	engineConfiguration->coastingFuelCutMap = 100;
+	engineConfiguration->cranking.rpm = 999;
+
+	engineConfiguration->dfcoRetardDeg = 10;
+	// ramp out over 1 second - twice the duration that used to be hardcoded
+	engineConfiguration->dfcoRetardRampInTime = 1;
+
+	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
+
+	// all conditions allow fuel cut
+	Sensor::setMockValue(SensorType::Clt, engineConfiguration->coastingFuelCutClt + 1);
+	Sensor::setMockValue(SensorType::Map, 0);
+	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+
+	auto& dfco = engine->module<DfcoController>().unmock();
+
+	// while cut, full retard
+	eth.moveTimeForwardUs(1000);
+	eth.engine.periodicFastCallback();
+	EXPECT_FLOAT_EQ(10, dfco.getTimingRetard());
+
+	// back on the throttle ends the cut and starts the ramp
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
+	eth.engine.periodicFastCallback();
+
+	// a quarter through the ramp, three quarters of the retard remains
+	eth.moveTimeForwardUs(250'000);
+	EXPECT_NEAR(7.5, dfco.getTimingRetard(), 0.01);
+
+	// halfway - where the old hardcoded 0.5s ramp had already reached zero
+	eth.moveTimeForwardUs(250'000);
+	EXPECT_NEAR(5, dfco.getTimingRetard(), 0.01);
+
+	// past the end of the ramp, no retard
+	eth.moveTimeForwardUs(600'000);
+	EXPECT_FLOAT_EQ(0, dfco.getTimingRetard());
+}
