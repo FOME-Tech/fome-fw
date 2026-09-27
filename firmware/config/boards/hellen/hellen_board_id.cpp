@@ -61,7 +61,7 @@
 
 #if EFI_PROD_CODE
 
-static void hellenBoardIdInputCallback(void* arg, efitick_t nowNt) {
+static void hellenBoardIdInputCallback(void* arg, efitick_t nowNt, bool) {
 	UNUSED(arg);
 	HellenBoardIdFinderState* state = (HellenBoardIdFinderState*)arg;
 	// Now start discharging immediately! This should be the first command in the interrupt handler.

@@ -205,9 +205,9 @@ angle_t IgnitionState::getAdvance(float rpm, float engineLoad, bool isCranking) 
 	return angle;
 }
 
-angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad) {
-	return interpolate3d(
-			config->ignTrims[cylinderNumber].table, config->ignTrimLoadBins, ignitionLoad, config->ignTrimRpmBins, rpm);
+angle_t getCylinderIgnitionTrim(
+		size_t cylinderNumber, const PreparedTable3DInterpolation<TRIM_SIZE, TRIM_SIZE>& interpolation) {
+	return interpolation.getValue(config->ignTrims[cylinderNumber].table);
 }
 
 size_t getMultiSparkCount(float rpm) {

@@ -147,6 +147,7 @@ public:
 	bool useOnlyRisingEdges;
 
 	void calculateExpectedEventCounts();
+	size_t calculatePrimaryTeethPerCycle() const;
 
 	size_t getExpectedEventCount(TriggerWheel channelIndex) const;
 
@@ -154,6 +155,12 @@ public:
 	 * This is used for signal validation
 	 */
 	size_t expectedEventCount[PWM_PHASE_MAX_WAVE_PER_PWM];
+
+	/**
+	 * How many teeth the primary wheel has per engine cycle, ie the angular resolution of this trigger.
+	 * For example 24 for a 12 tooth crank wheel on a four stroke engine.
+	 */
+	size_t primaryTeethPerCycle;
 
 #if EFI_UNIT_TEST
 	/**

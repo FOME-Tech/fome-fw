@@ -2,13 +2,12 @@
 #include "logicdata_csv_reader.h"
 #include "spark_logic.h"
 
-static void testNoOverdwell(const char* file, bool instantRpm) {
+static void testNoOverdwell(const char* file) {
 	CsvReader reader(1, /* vvtCount */ 0);
 
 	reader.open(file);
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = true;
-	engineConfiguration->alwaysInstantRpm = instantRpm;
 
 	setCylinderCount(6);
 	engineConfiguration->firingOrder = FO_1_5_3_6_2_4;
@@ -60,18 +59,12 @@ static void testNoOverdwell(const char* file, bool instantRpm) {
 	// nothing to check here, just that no coils got stuck on
 }
 
-TEST(RealNoisyTrigger, AvoidOverdwell1NoInstant) {
-	testNoOverdwell("tests/trigger/resources/noisy-trigger-1.csv", false);
+// This 36-2 wheel has enough teeth that instant RPM is used automatically, there's no
+// longer a non-instant case to compare against
+TEST(RealNoisyTrigger, AvoidOverdwell1) {
+	testNoOverdwell("tests/trigger/resources/noisy-trigger-1.csv");
 }
 
-TEST(RealNoisyTrigger, AvoidOverdwell1WithInstant) {
-	testNoOverdwell("tests/trigger/resources/noisy-trigger-1.csv", true);
-}
-
-TEST(RealNoisyTrigger, AvoidOverdwell2NoInstant) {
-	testNoOverdwell("tests/trigger/resources/noisy-trigger-2.csv", false);
-}
-
-TEST(RealNoisyTrigger, AvoidOverdwell2WithInstant) {
-	testNoOverdwell("tests/trigger/resources/noisy-trigger-2.csv", true);
+TEST(RealNoisyTrigger, AvoidOverdwell2) {
+	testNoOverdwell("tests/trigger/resources/noisy-trigger-2.csv");
 }

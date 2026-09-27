@@ -23,6 +23,42 @@ public:
 };
 
 /**
+ * A prepared location in a 3D table, for sampling multiple tables which share axes.
+ *
+ * This uses the same bin lookup and interpolation operation order as interpolate3d.
+ * Keep it local to one calculation so live axis changes are picked up on the next one.
+ */
+template <unsigned TRowCount, unsigned TColumnCount>
+class PreparedTable3DInterpolation {
+public:
+	template <typename TRow, typename TColumn>
+	PreparedTable3DInterpolation(
+			const TRow (&rowBins)[TRowCount],
+			float rowValue,
+			const TColumn (&columnBins)[TColumnCount],
+			float columnValue)
+		: m_row(priv::getBin(rowValue, rowBins))
+		, m_column(priv::getBin(columnValue, columnBins)) {}
+
+	template <typename TValue>
+	float getValue(const TValue (&table)[TRowCount][TColumnCount]) const {
+		float lowerLeft = table[m_row.Idx][m_column.Idx];
+		float upperLeft = table[m_row.Idx + 1][m_column.Idx];
+		float lowerRight = table[m_row.Idx][m_column.Idx + 1];
+		float upperRight = table[m_row.Idx + 1][m_column.Idx + 1];
+
+		float left = priv::linterp(lowerLeft, upperLeft, m_row.Frac);
+		float right = priv::linterp(lowerRight, upperRight, m_row.Frac);
+
+		return priv::linterp(left, right, m_column.Frac);
+	}
+
+private:
+	priv::BinResult m_row;
+	priv::BinResult m_column;
+};
+
+/**
  * this helper class brings together 3D table with two 2D axis curves
  */
 template <int TColNum, int TRowNum, typename TValue, typename TColumn, typename TRow>

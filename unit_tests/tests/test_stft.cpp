@@ -15,18 +15,6 @@ public:
 	MOCK_METHOD(float, getIntegratorGain, (), (const));
 };
 
-TEST(ClosedLoopCell, TestDeadband) {
-	StrictMock<MockClCell> cl;
-
-	// Error is more than deadtime, so nothing else should be called
-	EXPECT_CALL(cl, getLambdaError()).WillOnce(Return(0.05f));
-
-	cl.update(0.1f, true);
-
-	// Should be zero adjustment
-	EXPECT_FLOAT_EQ(cl.getAdjustment(), 1.0f);
-}
-
 TEST(ClosedLoopFuelCell, AdjustRate) {
 	StrictMock<MockClCell> cl;
 
@@ -35,7 +23,7 @@ TEST(ClosedLoopFuelCell, AdjustRate) {
 	EXPECT_CALL(cl, getMaxAdjustment()).WillOnce(Return(0.2f));
 	EXPECT_CALL(cl, getIntegratorGain()).WillOnce(Return(2.0f));
 
-	cl.update(0.0f, false);
+	cl.update(false);
 
 	// Should have integrated 0.2 * dt
 	// dt = 1000.0f / FAST_CALLBACK_PERIOD_MS
@@ -71,18 +59,20 @@ TEST(ClosedLoopFuel, CellSelection) {
 	EXPECT_EQ(3, computeStftBin(10000, 50, cfg));
 }
 
-TEST(ClosedLoopFuel, afrLimits) {
+TEST(ClosedLoopFuel, lambdaLimits) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->stft.minAfr = 10; // 10.0 AFR
-	engineConfiguration->stft.maxAfr = 18; // 18.0 AFR
+	engineConfiguration->stft.minLambda = 0.7f;
+	engineConfiguration->stft.maxLambda = 1.2f;
 
-	Sensor::setMockValue(SensorType::Lambda1, 0.1f);
+	// Lower bound
+	Sensor::setMockValue(SensorType::Lambda1, 0.65f);
 	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
-
-	Sensor::setMockValue(SensorType::Lambda1, 1.0f);
+	Sensor::setMockValue(SensorType::Lambda1, 0.75f);
 	EXPECT_TRUE(shouldUpdateCorrection(SensorType::Lambda1));
 
-	Sensor::setMockValue(SensorType::Lambda1, 2.0f);
+	Sensor::setMockValue(SensorType::Lambda1, 1.15f);
+	EXPECT_TRUE(shouldUpdateCorrection(SensorType::Lambda1));
+	Sensor::setMockValue(SensorType::Lambda1, 1.25f);
 	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
 }

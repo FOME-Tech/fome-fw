@@ -4,14 +4,9 @@
 
 constexpr float integrator_dt = FAST_CALLBACK_PERIOD_MS * 0.001f;
 
-void ClosedLoopFuelCellBase::update(float lambdaDeadband, bool ignoreErrorMagnitude) {
+void ClosedLoopFuelCellBase::update(bool ignoreErrorMagnitude) {
 	// Compute how far off target we are
 	float lambdaError = getLambdaError();
-
-	// If we're within the deadband, make no adjustment.
-	if (std::abs(lambdaError) < lambdaDeadband) {
-		return;
-	}
 
 	// Fixed magnitude - runs in constant adjustment rate mode
 	if (ignoreErrorMagnitude) {

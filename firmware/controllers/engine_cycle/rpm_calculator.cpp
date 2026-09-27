@@ -24,6 +24,24 @@
 #define NO_RPM_EVENTS_TIMEOUT_SECS 2
 #endif /* NO_RPM_EVENTS_TIMEOUT_SECS */
 
+/**
+ * Instant RPM is only worth using if the trigger wheel has enough teeth to measure it: we want a tooth
+ * at least every 30 degrees, ie a 12 tooth crank wheel (24 teeth per engine cycle) or better.
+ */
+static constexpr size_t minTeethForInstantRpm = 24;
+
+static bool shouldUseInstantRpm() {
+	if (engineConfiguration->alwaysInstantRpm) {
+		return true;
+	}
+
+#if EFI_SHAFT_POSITION_INPUT
+	return engine->triggerCentral.triggerShape.primaryTeethPerCycle >= minTeethForInstantRpm;
+#else
+	return false;
+#endif // EFI_SHAFT_POSITION_INPUT
+}
+
 float RpmCalculator::getRpmAcceleration() const {
 	return rpmRate;
 }
@@ -188,7 +206,7 @@ uint32_t RpmCalculator::getRevolutionCounterM() const {
 }
 
 void RpmCalculator::onSlowCallback() {
-	if (engineConfiguration->alwaysInstantRpm) {
+	if (shouldUseInstantRpm()) {
 		float rpm;
 		efitick_t lastInstantRpmTime;
 
@@ -249,7 +267,7 @@ void RpmCalculator::setSpinningUp(efitick_t nowNt) {
  * This callback is invoked on interrupt thread.
  */
 void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phaseInfo) {
-	bool alwaysInstantRpm = engineConfiguration->alwaysInstantRpm;
+	bool useInstantRpm = shouldUseInstantRpm();
 
 	auto& rpmState = engine->rpmCalculator;
 	auto& tc = engine->triggerCentral;
@@ -267,7 +285,7 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 			 * and each revolution of crankshaft consists of two engine cycles revolutions
 			 *
 			 */
-			if (!alwaysInstantRpm) {
+			if (!useInstantRpm) {
 				if (periodSeconds == 0) {
 					rpmState.setRpmValue(0);
 					rpmState.rpmRate = 0;
@@ -294,11 +312,11 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 	tc.instantRpm.updateInstantRpm(tc.triggerShape, &tc.triggerFormDetails, trgEventIndex, phaseInfo);
 
 	float instantRpm = tc.instantRpm.getInstantRpm();
-	rpmState.storeInstantRpm(alwaysInstantRpm, instantRpm, phaseInfo.timestamp);
+	rpmState.storeInstantRpm(useInstantRpm, instantRpm, phaseInfo.timestamp);
 }
 
-void RpmCalculator::storeInstantRpm(bool alwaysInstantRpm, float instantRpm, efitick_t timestamp) {
-	if (alwaysInstantRpm) {
+void RpmCalculator::storeInstantRpm(bool useInstantRpm, float instantRpm, efitick_t timestamp) {
+	if (useInstantRpm) {
 		setRpmValue(instantRpm);
 	} else if (isSpinningUp()) {
 		assignRpmValue(instantRpm);

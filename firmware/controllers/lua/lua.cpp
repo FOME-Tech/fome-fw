@@ -387,7 +387,7 @@ void startLua() {
 
 	luaThread.startThread();
 
-	addConsoleActionS("lua", [](const char* str) {
+	addConsoleActionRaw("lua", [](const char* str) {
 		if (interactivePending) {
 			return;
 		}

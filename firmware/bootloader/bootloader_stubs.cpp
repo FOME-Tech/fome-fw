@@ -29,16 +29,18 @@ void onIdleEnterHook() {}
 void onIdleExitHook() {}
 
 static ExtiCallback callback;
+static ioline_t callbackLine;
 void extiCallbackThunk(void* data) {
-	callback(data, 0);
+	callback(data, 0, palReadLine(callbackLine) == PAL_HIGH);
 }
 
-// EXT is not able to give you the front direction but you could read the pin in the callback.
+// The bootloader uses the PAL callback directly, so sample the level in its callback thunk.
 void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	ioportid_t port = getHwPort(msg, brainPin);
 	int index = getHwPin(msg, brainPin);
 
 	ioline_t line = PAL_LINE(port, index);
+	callbackLine = line;
 	palEnableLineEvent(line, mode);
 	callback = cb;
 	palSetLineCallback(line, extiCallbackThunk, cb_data);

@@ -5375,3 +5375,24 @@ event 2 0 1 204.20 1.133185
 event 3 0 0 204.20 nan
 event 4 0 1 539.80 1.643487
 event 5 0 0 539.80 nan
+TRIGGERTYPE 79 8 TT_HONDA_J_CAM_6_2 0.00
+knownOperationMode=false
+crankBased=false
+hasSecondChannel=false
+isSecondWheelCam=false
+cycleDuration=720
+gapsCount=2
+isSynchronizationNeeded=1
+gapFrom.0=2.200000
+gapTo.0=3.800000
+gapFrom.1=0.600000
+gapTo.1=1.400000
+# end of meta section
+event 0 0 1 0.00 3.000000
+event 1 0 0 0.00 nan
+event 2 0 1 120.00 0.333333
+event 3 0 0 120.00 nan
+event 4 0 1 240.00 1.000000
+event 5 0 0 240.00 nan
+event 6 0 1 360.00 1.000000
+event 7 0 0 360.00 nan
