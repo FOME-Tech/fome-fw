@@ -8,7 +8,8 @@ protected:
 
 	void SetUp() override {
 		EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
-		setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
+		// RPM is driven directly, so these fuel tests do not need trigger reconfiguration.
+		engineConfiguration->isIgnitionEnabled = false;
 		engineConfiguration->stoichRatioPrimary = 10;
 		engineConfiguration->coastingFuelCutEnabled = true;
 		engineConfiguration->dfcoDelay = 0;
