@@ -47,7 +47,8 @@ static void writeConfiguration(bool requestedOnly);
 #if EFI_FLASH_WRITE_THREAD
 chibios_rt::BinarySemaphore flashWriteSemaphore(/*taken =*/true);
 
-static THD_WORKING_AREA(flashWriteStack, UTILITY_THREAD_STACK_SIZE);
+// CRC readback uses a chunk buffer; allow room for the driver and diagnostics.
+static THD_WORKING_AREA(flashWriteStack, 2 * UTILITY_THREAD_STACK_SIZE);
 
 static void flashWriteThread(void*) {
 	chRegSetThreadName("flash writer");
