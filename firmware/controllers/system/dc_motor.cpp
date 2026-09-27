@@ -23,6 +23,10 @@ void TwoPinDcMotor::configure(IPwm& enable, IPwm& dir1, IPwm& dir2, bool isInver
 }
 
 void TwoPinDcMotor::enable() {
+	chibios_rt::CriticalSectionLocker csl;
+	if (m_flashInhibited) {
+		return;
+	}
 	if (m_disable) {
 		m_disable->setValue(false);
 	}
@@ -31,6 +35,7 @@ void TwoPinDcMotor::enable() {
 }
 
 void TwoPinDcMotor::disable(const char* msg) {
+	chibios_rt::CriticalSectionLocker csl;
 	if (m_disable) {
 		m_disable->setValue(true);
 	}
@@ -39,6 +44,35 @@ void TwoPinDcMotor::disable(const char* msg) {
 
 	// Also set the duty to zero
 	set(0);
+}
+
+void TwoPinDcMotor::setFlashInhibited(bool inhibited) {
+	chibios_rt::CriticalSectionLocker csl;
+	m_flashInhibited = inhibited;
+	if (!inhibited) {
+		// Releasing the latch does not restore any previous output.
+		return;
+	}
+
+	m_msg = "flash";
+	m_value = 0;
+	if (m_disable) {
+		m_disable->setValue(true);
+	}
+
+	// Do not use set(0): it applies battery compensation and, in two-wire
+	// mode, keeps the enable pin high. Stop the gate and both PWM channels
+	// synchronously, including bridges without a dedicated disable pin.
+	if (m_enable) {
+		m_enable->setDutyImmediate(0);
+	}
+	float inactive = m_isInverted ? 1 : 0;
+	if (m_dir1) {
+		m_dir1->setDutyImmediate(inactive);
+	}
+	if (m_dir2) {
+		m_dir2->setDutyImmediate(inactive);
+	}
 }
 
 bool TwoPinDcMotor::isOpenDirection() const {
@@ -53,6 +87,10 @@ float TwoPinDcMotor::get() const {
  * @param duty value between -1.0 and 1.0
  */
 bool TwoPinDcMotor::set(float duty) {
+	chibios_rt::CriticalSectionLocker csl;
+	if (m_flashInhibited) {
+		return false;
+	}
 	m_value = duty;
 
 	// For low voltage, voltageRatio will be >1 to boost duty so that motor current stays the same
@@ -92,7 +130,6 @@ bool TwoPinDcMotor::set(float duty) {
 	// Direction pins get 100% duty unless we're in PwmDirectionPins mode
 	float dirDuty = m_type == ControlType::PwmDirectionPins ? duty : 1;
 
-	m_enable->setSimplePwmDutyCycle(enableDuty);
 	float recipDuty = 0;
 	if (m_isInverted) {
 		dirDuty = 1.0f - dirDuty;
@@ -101,6 +138,8 @@ bool TwoPinDcMotor::set(float duty) {
 
 	m_dir1->setSimplePwmDutyCycle(isPositive ? dirDuty : recipDuty);
 	m_dir2->setSimplePwmDutyCycle(isPositive ? recipDuty : dirDuty);
+	// Establish the direction before reopening a two-wire bridge's gate.
+	m_enable->setSimplePwmDutyCycle(enableDuty);
 
 	// This motor has no fault detection, so always return false (indicate success).
 	return false;

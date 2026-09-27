@@ -24,6 +24,10 @@ public:
 
 	void showInfo(const char* sensorName) const override;
 
+	bool hasUpdatedAfter(efitick_t timestamp) const override {
+		return Sensor::hasUpdatedAfter(m_proxiedSensor, timestamp);
+	}
+
 private:
 	SensorResult get() const override {
 		return Sensor::get(m_proxiedSensor);

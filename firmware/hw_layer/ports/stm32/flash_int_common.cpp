@@ -66,6 +66,11 @@ bool intFlashIsErased(flashaddr_t address, size_t size) {
 }
 
 bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
+#if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
+	// Verification must observe the flash cells, not lines cached before erase/write.
+	SCB_InvalidateDCache_by_Addr((uint32_t*)address, size);
+#endif
+
 	/* For efficiency, compare flashdata_t values as much as possible,
 	 * then, fallback to byte per byte comparison. */
 	while (size >= sizeof(flashdata_t)) {

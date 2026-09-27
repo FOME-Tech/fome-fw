@@ -13,6 +13,11 @@ void RedundantSensor::configure(float maxDifference, bool ignoreSecondSensor, fl
 	m_secondMaximum = secondMaximum;
 }
 
+bool RedundantSensor::hasUpdatedAfter(efitick_t timestamp) const {
+	return Sensor::hasUpdatedAfter(m_first, timestamp) &&
+		   (m_ignoreSecond || Sensor::hasUpdatedAfter(m_second, timestamp));
+}
+
 SensorResult RedundantSensor::get() const {
 	// Sensor 1 is always full range, i.e. 0% -> 100%
 	auto sensor1 = Sensor::get(m_first);

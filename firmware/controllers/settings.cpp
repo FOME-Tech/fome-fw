@@ -543,11 +543,13 @@ void setEngineType(engine_type_e value) {
 		engineConfiguration->engineType = value;
 		resetConfigurationExt(value);
 		engine->resetEngineSnifferIfInTestMode();
+	}
 
 #if EFI_INTERNAL_FLASH
-		writeToFlashNow();
+	// H7 flash operations sleep while the other bank remains executable.
+	// Finish the configuration critical section before entering the driver.
+	writeToFlashNow();
 #endif // EFI_INTERNAL_FLASH
-	}
 
 	incrementGlobalConfigurationVersion();
 #if !EFI_UNIT_TEST

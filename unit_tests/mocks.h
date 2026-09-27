@@ -64,6 +64,7 @@ public:
 	MOCK_METHOD(float, get, (), (const, override));
 	MOCK_METHOD(void, enable, (), (override));
 	MOCK_METHOD(void, disable, (const char* msg), (override));
+	MOCK_METHOD(void, setFlashInhibited, (bool inhibited), (override));
 	MOCK_METHOD(bool, isOpenDirection, (), (const, override));
 };
 
