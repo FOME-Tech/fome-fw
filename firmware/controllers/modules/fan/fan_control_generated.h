@@ -19,8 +19,9 @@ struct fan_control_s {
 	// On
 	// offset 0 bit 5
 	bool m_state : 1 {};
+	// Above disable speed
 	// offset 0 bit 6
-	bool unusedBit_0_6 : 1 {};
+	bool disabledBySpeed : 1 {};
 	// offset 0 bit 7
 	bool unusedBit_0_7 : 1 {};
 	// offset 0 bit 8
