@@ -53,13 +53,13 @@ Outputs are placed in `firmware/deliver/`:
 
 ```bash
 cd unit_tests
-make -j12
-./build/fome_test
+make -j12 test
 
 # Run a specific test
 ./build/fome_test --gtest_filter=TestName
 ```
 
+The `test` target builds and runs the engine suite and both ADC lifecycle suites.
 Unit tests use Google Test and run on amd64/aarch64, not on the ECU.
 
 ### Code Generation

@@ -10,6 +10,8 @@
 
 #if HAL_USE_ADC
 
+#include "adc_diagnostics.h"
+
 /* Depth of the conversion buffer, channels are sampled X times each.*/
 #define SLOW_ADC_OVERSAMPLE 8
 
@@ -23,6 +25,7 @@ static const GPTConfig fast_adc_timer_config = {GPT_FREQ_FAST, fast_adc_timer_ca
 #endif
 
 void portInitAdc() {
+	initAdcDiagnostics(false);
 	// Init slow ADC
 	adcStart(&ADCD1, NULL);
 
@@ -234,18 +237,24 @@ static Stm32AdcV2Provider provider;
 
 static void adc_callback_fast(ADCDriver* adcp) {
 	// State may not be complete if we get a callback for "half done"
-	if (adcp->state == ADC_COMPLETE) {
+	if (adcIsBufferComplete(adcp)) {
+		fastAdcDiagnostics.completed++;
 		onFastAdcComplete(adcp->samples);
 	}
 
 	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
+static void fastAdcErrorCallback(ADCDriver*, adcerror_t error) {
+	fastAdcDiagnostics.errors++;
+	fastAdcDiagnostics.lastError = error;
+}
+
 ADCConversionGroup adcgrpcfgFast = {
 		.circular = FALSE,
 		.num_channels = 0,
 		.end_cb = adc_callback_fast,
-		.error_cb = nullptr,
+		.error_cb = fastAdcErrorCallback,
 		/* HW dependent part.*/
 		.cr1 = 0,
 		.cr2 = ADC_CR2_SWSTART,
@@ -320,18 +329,25 @@ auto& ADC_FAST_DEVICE = ADCD2;
 static void fast_adc_timer_callback(GPTDriver*) {
 	chibios_rt::CriticalSectionLocker csl;
 
-	if (ADC_FAST_DEVICE.state != ADC_READY && ADC_FAST_DEVICE.state != ADC_COMPLETE &&
-		ADC_FAST_DEVICE.state != ADC_ERROR) {
+	// ADC_COMPLETE belongs to the completion callback; the HAL is not ready yet.
+	if (ADC_FAST_DEVICE.state != ADC_READY && ADC_FAST_DEVICE.state != ADC_ERROR) {
+		recordAdcSkippedState(fastAdcDiagnostics, ADC_FAST_DEVICE.state);
 		return;
 	}
 
 	if (adcgrpcfgFast.num_channels == 0 || adcgrpcfgFast.num_channels > maxFastChannels) {
 		// No channels configured (yet), don't attempt to sample
 		// with an invalid configuration
+		if (adcgrpcfgFast.num_channels == 0) {
+			fastAdcDiagnostics.skippedNoChannels++;
+		} else {
+			fastAdcDiagnostics.skippedInvalidChannels++;
+		}
 		return;
 	}
 
 	adcStartConversionI(&ADC_FAST_DEVICE, &adcgrpcfgFast, fastAdcSampleBuf, ADC_BUF_DEPTH_FAST);
+	fastAdcDiagnostics.started++;
 
 	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
@@ -342,14 +358,18 @@ static void fast_adc_timer_callback(GPTDriver*) {
 #include "knock_config.h"
 
 static void knockCompletionCallback(ADCDriver* adcp) {
-	if (adcp->state == ADC_COMPLETE) {
+	if (adcIsBufferComplete(adcp)) {
+		knockAdcDiagnostics.completed++;
 		onKnockSamplingComplete();
 	}
 
 	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
-static void knockErrorCallback(ADCDriver*, adcerror_t) {}
+static void knockErrorCallback(ADCDriver*, adcerror_t error) {
+	knockAdcDiagnostics.errors++;
+	knockAdcDiagnostics.lastError = error;
+}
 
 static const uint32_t smpr1 = ADC_SMPR1_SMP_AN10(KNOCK_SAMPLE_TIME) | ADC_SMPR1_SMP_AN11(KNOCK_SAMPLE_TIME) |
 							  ADC_SMPR1_SMP_AN12(KNOCK_SAMPLE_TIME) | ADC_SMPR1_SMP_AN13(KNOCK_SAMPLE_TIME) |

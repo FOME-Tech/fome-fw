@@ -10,6 +10,8 @@
 
 #if HAL_USE_ADC
 
+#include "adc_diagnostics.h"
+
 #include "mpu_util.h"
 
 // All ADCs should be running at 40MHz
@@ -47,9 +49,13 @@ static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
 // ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
 // BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) __attribute__((aligned(8192))) adcsample_t knockSampleBuffer[2048];
+#if EFI_PROD_CODE
+__attribute__((section(".ram4")))
+#endif
+__attribute__((aligned(8192))) adcsample_t knockSampleBuffer[2048];
 
 void portInitAdc() {
+	initAdcDiagnostics(true);
 	{
 		void* base = &knockSampleBuffer;
 		static_assert(sizeof(knockSampleBuffer) == 8192);
@@ -84,11 +90,17 @@ float getMcuTemperature() {
 
 static void adc_callback(ADCDriver* adcp) {
 	// State may not be complete if we get a callback for "half done"
-	if (adcp->state == ADC_COMPLETE) {
+	if (adcIsBufferComplete(adcp)) {
+		fastAdcDiagnostics.completed++;
 		onFastAdcComplete(adcp->samples);
 	}
 
 	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
+}
+
+static void fastAdcErrorCallback(ADCDriver*, adcerror_t error) {
+	fastAdcDiagnostics.errors++;
+	fastAdcDiagnostics.lastError = error;
 }
 
 // ADC Clock is 25MHz
@@ -107,7 +119,7 @@ static constexpr ADCConversionGroup convGroupSlow = {
 		.circular = true, // Continuous mode means we will auto re-trigger on every timer event
 		.num_channels = slowChannelCount,
 		.end_cb = adc_callback,
-		.error_cb = nullptr,
+		.error_cb = fastAdcErrorCallback,
 		.cfgr = ADC_CFGR_EXTEN_0 | (4 << ADC_CFGR_EXTSEL_Pos) | // External trigger ch4, rising edge: TIM3 TRGO
 				ADC_CFGR_OVRMOD, // OVRMOD=1 is required by H7 errata: ES0392 section 2.9.6. If OVRMOD is not set, it is
 								 // possible for the secondary ADC's data to be shifted from where it was supposed to
@@ -214,6 +226,7 @@ bool readSlowAnalogInputs() {
 		// Oversampling and right-shift happen in hardware, so we can sample directly to the output buffer
 		// Pass the 32-bit view to the HAL - it will receive slowChannelCount/2 32-bit samples in dual mode
 		adcStartConversionI(&ADCD1, &convGroupSlow, sampleBuffer.samples32, 1);
+		fastAdcDiagnostics.started++;
 	}
 
 	constexpr uint32_t samplingRate = H7_ADC_SPEED;
@@ -295,14 +308,18 @@ static_assert((H7_KNOCK_OVERSAMPLE & (H7_KNOCK_OVERSAMPLE - 1)) == 0, "H7_KNOCK_
 static constexpr int H7_KNOCK_ADC_SHIFT_BITS = log2_int(H7_KNOCK_OVERSAMPLE);
 
 static void knockCompletionCallback(ADCDriver* adcp) {
-	if (adcp->state == ADC_COMPLETE) {
+	if (adcIsBufferComplete(adcp)) {
+		knockAdcDiagnostics.completed++;
 		onKnockSamplingComplete();
 	}
 
 	assertInterruptPriority(__func__, EFI_IRQ_ADC_PRIORITY);
 }
 
-static void knockErrorCallback(ADCDriver*, adcerror_t) {}
+static void knockErrorCallback(ADCDriver*, adcerror_t error) {
+	knockAdcDiagnostics.errors++;
+	knockAdcDiagnostics.lastError = error;
+}
 
 static const uint32_t smpr1 = ADC_SMPR1_SMP_AN0(KNOCK_SAMPLE_TIME) | ADC_SMPR1_SMP_AN1(KNOCK_SAMPLE_TIME) |
 							  ADC_SMPR1_SMP_AN2(KNOCK_SAMPLE_TIME) | ADC_SMPR1_SMP_AN3(KNOCK_SAMPLE_TIME) |

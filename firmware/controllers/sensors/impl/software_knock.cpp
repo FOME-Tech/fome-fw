@@ -7,6 +7,8 @@
 
 #if EFI_SOFTWARE_KNOCK
 
+#include "adc_diagnostics.h"
+
 #include "knock_config.h"
 #include "ch.hpp"
 
@@ -35,16 +37,19 @@ void onKnockSamplingComplete() {
 
 void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t channelIdx) {
 	if (!engineConfiguration->enableSoftwareKnock) {
+		knockAdcDiagnostics.skippedDisabled++;
 		return;
 	}
 
-	// Cancel if ADC isn't ready
-	if (!((KNOCK_ADC.state == ADC_READY) || (KNOCK_ADC.state == ADC_COMPLETE) || (KNOCK_ADC.state == ADC_ERROR))) {
+	// ADC_COMPLETE belongs to the completion callback; the HAL is not ready yet.
+	if (!((KNOCK_ADC.state == ADC_READY) || (KNOCK_ADC.state == ADC_ERROR))) {
+		recordAdcSkippedState(knockAdcDiagnostics, KNOCK_ADC.state);
 		return;
 	}
 
 	// If there's pending processing, skip this event
 	if (knockNeedsProcess) {
+		knockAdcDiagnostics.skippedPending++;
 		return;
 	}
 
@@ -61,6 +66,7 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 	currentChannelIdx = channelIdx;
 
 	adcStartConversionI(&KNOCK_ADC, conversionGroup, knockSampleBuffer, sampleCount);
+	knockAdcDiagnostics.started++;
 	lastKnockSampleTime = getTimeNowNt();
 	knockSnifferPin.setHigh();
 }
@@ -159,6 +165,7 @@ static void processLastKnockEvent() {
 
 	engine->module<KnockController>()->onKnockSenseCompleted(
 			currentCylinderNumber, currentChannelIdx, db, lastKnockTime);
+	knockAdcDiagnostics.processed++;
 }
 
 void KnockThread::ThreadTask() {
