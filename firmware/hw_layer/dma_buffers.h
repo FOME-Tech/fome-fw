@@ -19,9 +19,14 @@ struct SdLogBufferWriter;
 
 namespace dma_buffers {
 
+// The embedded INI drive uses 512-byte blocks, independently of SD support.
+inline constexpr uint32_t IniBlockSize = 512;
+
 void initMpu();
 uint8_t* bigBuffer();
+#if HAL_USE_USB_MSD && EFI_FILE_LOGGING
 uint8_t* sdCardBlockBuffer();
+#endif
 
 #if EFI_FILE_LOGGING
 FATFS* fs();

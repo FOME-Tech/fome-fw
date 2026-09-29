@@ -38,7 +38,7 @@ struct DmaBufferContents {
 	SdLogBufferWriter logBuffer;
 #endif
 
-#if HAL_USE_USB_MSD
+#if HAL_USE_USB_MSD && EFI_FILE_LOGGING
 	uint8_t sdBlockBuffer[MMCSD_BLOCK_SIZE];
 #endif
 };
@@ -70,13 +70,11 @@ uint8_t* bigBuffer() {
 	return dmaBufferRegion.contents.bigBuffer;
 }
 
+#if HAL_USE_USB_MSD && EFI_FILE_LOGGING
 uint8_t* sdCardBlockBuffer() {
-#if HAL_USE_USB_MSD
 	return dmaBufferRegion.contents.sdBlockBuffer;
-#else
-	return nullptr;
-#endif
 }
+#endif
 
 #if EFI_FILE_LOGGING
 FATFS* fs() {
