@@ -58,3 +58,9 @@ struct BlendResult {
 };
 
 BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load);
+// Same interpolation with already captured inputs, without sensor reads or fallbacks.
+BlendResult calculateBlend(const blend_table_s& cfg, float rpm, float load, float blendParameter);
+
+inline float applyVeCorrection(float value, float correctionPercent) {
+	return correctionPercent == 0 ? value : value * ((100 + correctionPercent) * 0.01f);
+}

@@ -25,14 +25,12 @@ public:
 
 private:
 	bool m_isPriming = false;
+	uint16_t m_primeOutputsMask = 0;
+	void onPrimeOpen();
 
-	static void onPrimeStartAdapter(PrimeController* instance) {
-		instance->onPrimeStart();
-	}
-
-	static void onPrimeEndAdapter(PrimeController* instance) {
-		instance->onPrimeEnd();
-	}
+	static void onPrimeStartAdapter(PrimeController* instance);
+	static void onPrimeOpenAdapter(PrimeController* instance);
+	static void onPrimeEndAdapter(PrimeController* instance);
 
 	uint32_t getKeyCycleCounter() const;
 	void setKeyCycleCounter(uint32_t count);

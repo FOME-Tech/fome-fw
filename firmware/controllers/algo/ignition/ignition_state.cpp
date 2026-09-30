@@ -108,7 +108,7 @@ static angle_t getRunningAdvance(float rpm, float engineLoad) {
 }
 
 void IgnitionState::updateAdvanceCorrections(float engineLoad) {
-	if (auto iat = Sensor::get(SensorType::Iat)) {
+	if (auto iat = Sensor::get(SensorType::Iat); iat && std::isfinite(engineLoad)) {
 		timingIatCorrection = interpolate3d(
 				config->ignitionIatCorrTable,
 				config->ignitionIatCorrLoadBins,

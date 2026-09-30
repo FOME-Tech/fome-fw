@@ -84,13 +84,15 @@ expected<angle_t> VvtController::observePlant() const {
 
 expected<angle_t> VvtController::getSetpoint() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
-	float load = getFuelingLoad();
 
 	auto yAxisOverride =
 			(m_cam == 0) ? engineConfiguration->vvtIntakeYAxisOverride : engineConfiguration->vvtExhaustYAxisOverride;
 
-	if (yAxisOverride != GPPWM_Zero) {
-		load = readGppwmChannel(yAxisOverride).value_or(0);
+	const float load = readGppwmChannel(yAxisOverride == GPPWM_Zero ? GPPWM_FuelLoad : yAxisOverride).value_or(NAN);
+	if (!std::isfinite(load)) {
+		targetYAxis = 0;
+		vvtTarget = 0;
+		return unexpected;
 	}
 
 	targetYAxis = load;

@@ -278,12 +278,12 @@ void EngineTestHelper::fireTriggerEvents(int count) {
 }
 
 void EngineTestHelper::assertInjectorUpEvent(const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
-	assertEvent(msg, eventIndex, (void*)startInjection, momentX, injectorIndex);
+	assertEvent(msg, eventIndex, (void*)scheduledStartInjection, momentX, injectorIndex);
 }
 
 void EngineTestHelper::assertInjectorDownEvent(
 		const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
-	assertEvent(msg, eventIndex, (void*)endInjection, momentX, injectorIndex);
+	assertEvent(msg, eventIndex, (void*)scheduledEndInjection, momentX, injectorIndex);
 }
 
 scheduling_s*

@@ -43,6 +43,7 @@
 #include "ignition_state.h"
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
+#include "airmass_injection_state.h"
 #include "prime_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
@@ -345,6 +346,7 @@ public:
 	void resetEngineSnifferIfInTestMode();
 
 	EngineState engineState;
+	AirmassInjectionState airmassInjectionState;
 
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of

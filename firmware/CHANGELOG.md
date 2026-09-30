@@ -30,7 +30,15 @@ or
 
 ## Unreleased
 
+### Breaking Changes
+ - The calibration format includes separate airmass maps and independent load selectors. Back up the project, MSQ and matching INI before updating; restore axes, cells and controls manually with the new definition. Existing binary tunes are not migrated.
+
 ### Added
+ - Dedicated Speed Density VE, Alpha-N filling and MAF correction maps retain independent calibrations. SD + Alpha-N combines cylinder air masses with a TPS/RPM contribution map and applies common VE corrections once.
+ - Independent load sources for fuel, ignition, protection and actuator functions allow each table to use its intended coordinate, with separate measured/effective MAP choices and matching diagnostic cursors.
+ - Selectable Tcharge or IAT, standalone Alpha-N MAP multiplication, optional Alpha-N barometric compensation, explicit MAP-estimate permission, and Idle VE ownership and load-source controls make the model's temperature, pressure and idle assumptions configurable.
+ - Validated fuel publication and atomic callback batches tie new injections to a complete current result. The SD/Alpha-N blend can recover on a healthy remaining model; temporary calculation failures recover automatically, and accepted pulse callbacks finish normally.
+ - TunerStudio exposes separate model editors, branch masses, contribution and fallback diagnostics. VE Analyze targets the active standalone map or a qualified whole-session blended endpoint; mixed contributions and enabled Idle VE exclude main-map analysis.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load

@@ -37,6 +37,7 @@
 #include "local_version_holder.h"
 #include "alternator_controller.h"
 #include "fuel_math.h"
+#include "airmass.h"
 #include "spark_logic.h"
 #include "vvt.h"
 #include "boost_control.h"
@@ -321,6 +322,9 @@ void commonInitEngineController() {
 
 // Returns false if there's an obvious problem with the loaded configuration
 bool validateConfig() {
+	if (!validateAirmassConfiguration()) {
+		return false;
+	}
 	if (getFiringOrderLength() > MAX_CYLINDER_COUNT) {
 		firmwareError("Invalid cylinder count: %d", getFiringOrderLength());
 		return false;

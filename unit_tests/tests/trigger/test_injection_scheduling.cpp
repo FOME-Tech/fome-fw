@@ -11,6 +11,28 @@ using ::testing::Not;
 using ::testing::Property;
 using ::testing::Truly;
 
+namespace {
+struct ExpectedScheduledAction {
+	efitick_t time;
+	void (*callback)(void*);
+	void* argument;
+};
+
+void expectBatch(MockExecutor& executor, std::initializer_list<ExpectedScheduledAction> expected) {
+	std::vector<ExpectedScheduledAction> copied(expected);
+	EXPECT_CALL(executor, scheduleBatch(_, copied.size()))
+			.WillOnce([copied](const ScheduledAction* events, size_t count) {
+				EXPECT_EQ(count, copied.size());
+				for (size_t i = 0; i < count; i++) {
+					EXPECT_EQ(events[i].time, copied[i].time);
+					EXPECT_EQ(events[i].action.getCallback(), copied[i].callback);
+					EXPECT_EQ(events[i].action.getArgument(), copied[i].argument);
+				}
+				return true;
+			});
+}
+} // namespace
+
 TEST(injectionScheduling, InjectionIsScheduled) {
 	StrictMock<MockExecutor> mockExec;
 
@@ -35,19 +57,14 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 
 	void* ctxAsPtr = bit_cast<void*>(ctx);
 
-	{
-		InSequence is;
-
-		// Should schedule one normal injection:
-		// rising edge 5 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
-		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-		// falling edge 20ms later
-		efitick_t endTime = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-	}
+	// Should reserve one normal injection as an atomic batch.
+	float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+	efitick_t startTime = nowNt + nt5deg;
+	efitick_t endTime = startTime + MS2NT(20);
+	expectBatch(
+			mockExec,
+			{{startTime, (void (*)(void*))scheduledStartInjection, ctxAsPtr},
+			 {endTime, (void (*)(void*))scheduledEndInjection, ctxAsPtr}});
 
 	// Event scheduled at 125 degrees
 	event.injectionStartAngle = 125;
@@ -90,24 +107,16 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 		EXPECT_CALL(im, getInjectionDuration(10)).WillOnce(Return(10.0f));
 	}
 
-	{
-		InSequence is;
-
-		// Should schedule one normal injection:
-		// rising edge 5 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
-		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-		// falling edge (primary) 20ms later
-		efitick_t endTime1 = startTime + MS2NT(20);
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, endTime1, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-		// falling edge (secondary) 10ms later
-		efitick_t endTime2 = startTime + MS2NT(10);
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, endTime2, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-	}
+	// The two closing edges are sorted chronologically inside the atomic batch.
+	float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+	efitick_t startTime = nowNt + nt5deg;
+	efitick_t stage2EndTime = startTime + MS2NT(10);
+	efitick_t primaryEndTime = startTime + MS2NT(20);
+	expectBatch(
+			mockExec,
+			{{startTime, (void (*)(void*))scheduledStartInjection, ctxAsPtr},
+			 {stage2EndTime, (void (*)(void*))scheduledEndInjectionStage2, ctxAsPtr},
+			 {primaryEndTime, (void (*)(void*))scheduledEndInjection, ctxAsPtr}});
 
 	// Event scheduled at 125 degrees
 	event.injectionStartAngle = 125;
@@ -140,19 +149,13 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
-	{
-		InSequence is;
-
-		// Should schedule one normal injection:
-		// rising edge 5 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
-		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-		// falling edge 20ms later
-		efitick_t endTime = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-	}
+	float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 5);
+	efitick_t startTime = nowNt + nt5deg;
+	efitick_t endTime = startTime + MS2NT(20);
+	expectBatch(
+			mockExec,
+			{{startTime, (void (*)(void*))scheduledStartInjection, ctxAsPtr},
+			 {endTime, (void (*)(void*))scheduledEndInjection, ctxAsPtr}});
 
 	// Event scheduled at 715 degrees
 	event.injectionStartAngle = 715;
@@ -185,19 +188,13 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 
 	engine->rpmCalculator.oneDegreeUs = 100;
 
-	{
-		InSequence is;
-
-		// Should schedule one normal injection:
-		// rising edge 15 degrees from now
-		float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 15);
-		efitick_t startTime = nowNt + nt5deg;
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-		// falling edge 20ms later
-		efitick_t endTime = startTime + MS2NT(20);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-	}
+	float nt5deg = USF2NT(engine->rpmCalculator.oneDegreeUs * 15);
+	efitick_t startTime = nowNt + nt5deg;
+	efitick_t endTime = startTime + MS2NT(20);
+	expectBatch(
+			mockExec,
+			{{startTime, (void (*)(void*))scheduledStartInjection, ctxAsPtr},
+			 {endTime, (void (*)(void*))scheduledEndInjection, ctxAsPtr}});
 
 	// Event scheduled at 5 degrees
 	event.injectionStartAngle = 5;
@@ -254,19 +251,14 @@ TEST(injectionScheduling, SplitInjectionScheduled) {
 	// Split injection events should be called with no remaining split duration
 	ctx.splitDurationUs = 0;
 
-	{
-		InSequence is;
-
-		// Should schedule second half of split injection:
-		// - starts 2ms from now
-		// - duration 10ms (ends 12ms from now)
-		efitick_t nowNt = getTimeNowNt();
-		efitick_t startTime = nowNt + MS2NT(2);
-		EXPECT_CALL(
-				mockExec, schedule(testing::NotNull(), _, startTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-		efitick_t endTime = startTime + MS2NT(10);
-		EXPECT_CALL(mockExec, schedule(testing::NotNull(), _, endTime, Property(&action_s::getArgument, Eq(ctxAsPtr))));
-	}
+	// Should reserve the second half of split injection as a batch.
+	efitick_t nowNt = getTimeNowNt();
+	efitick_t startTime = nowNt + MS2NT(2);
+	efitick_t endTime = startTime + MS2NT(10);
+	expectBatch(
+			mockExec,
+			{{startTime, (void (*)(void*))scheduledStartInjection, ctxAsPtr},
+			 {endTime, (void (*)(void*))scheduledEndInjection, ctxAsPtr}});
 
 	// Split injection duration of 10ms
 	ctx.splitDurationUs = 10000;

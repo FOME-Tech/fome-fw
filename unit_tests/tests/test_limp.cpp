@@ -3,6 +3,7 @@
 #include "limp_manager.h"
 
 TEST(limp, testFatalError) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	LimpManager dut;
 
 	// Everything should work by default

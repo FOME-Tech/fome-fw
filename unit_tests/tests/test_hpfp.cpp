@@ -6,6 +6,30 @@
 using ::testing::_;
 using ::testing::StrictMock;
 
+TEST(HPFP, TargetTableHasIndependentLoadSource) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	Sensor::setMockValue(SensorType::Map, 80);
+	Sensor::setMockValue(SensorType::Tps1, 20);
+	Sensor::setMockValue(SensorType::FuelPressureHigh, 1000);
+	engineConfiguration->afrOverrideMode = AFR_MAP;
+	config->hpfpTargetLoadSource = AFR_Tps;
+	setLinearCurve(config->hpfpTargetLoadBins, 0, 100, 0.1f);
+	for (size_t row = 0; row < efi::size(config->hpfpTarget); row++) {
+		setArrayValues(config->hpfpTarget[row], 1000 + 100 * config->hpfpTargetLoadBins[row]);
+	}
+	HpfpQuantity math;
+	math.calcPI(2000, 0);
+	EXPECT_NEAR(math.m_pressureTarget_kPa, 3000, 1);
+
+	engineConfiguration->afrOverrideMode = AFR_CylFilling;
+	math.calcPI(2000, 0);
+	EXPECT_NEAR(math.m_pressureTarget_kPa, 3000, 1);
+
+	config->hpfpTargetLoadSource = AFR_MAP;
+	math.calcPI(2000, 0);
+	EXPECT_NEAR(math.m_pressureTarget_kPa, 9000, 1);
+}
+
 TEST(HPFP, Lobe) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -212,6 +236,7 @@ TEST(HPFP, Schedule) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
 		cfg->hpfpValvePin = Gpio::A2; // arbitrary
 	});
+	Sensor::setMockValue(SensorType::Map, 40);
 
 	setCylinderCount(4);
 	engineConfiguration->hpfpCamLobes = 4;

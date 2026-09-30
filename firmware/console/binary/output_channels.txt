@@ -293,4 +293,37 @@ struct_no_prefix output_channels_s
 
 	uint16_t[12 iterate] cylinderRpm;;"rpm", 1, 0, 0, 0, 0
 	int8_t[12 iterate] cylinderRpmDelta;;"rpm", 1, 0, 0, 0, 0
+
+	float blendedSdMass;Air blend: SD raw mass;"mg", 1000, 0, 0, 0, 2
+	float blendedAlphaNMass;Air blend: Alpha-N raw mass;"mg", 1000, 0, 0, 0, 2
+	uint16_t autoscale blendedRequestedAuthority;Air blend: Requested Alpha-N;"%", 0.01, 0, 0, 100, 2
+	uint16_t autoscale blendedEffectiveAuthority;Air blend: Effective Alpha-N;"%", 0.01, 0, 0, 100, 2
+	uint16_t autoscale blendedSdLoad;Air blend: SD load;"kPa", 0.1, 0, 0, 0, 2
+	uint16_t autoscale blendedAlphaNLoad;Air blend: Alpha-N load;"% TPS", 0.01, 0, 0, 100, 2
+	uint16_t autoscale blendedSdVe;Air blend: SD VE;"%", 0.1, 0, 0, 0, 1
+	uint16_t autoscale blendedAlphaNVe;Air blend: Alpha-N filling;"%", 0.1, 0, 0, 0, 1
+	float blendedCorrection;Air blend: Common multiplier;"", 1, 0, 0, 0, 3
+	uint8_t blendedStatus;Air blend: Injection state;"code", 1, 0, 0, 0, 0
+	uint8_t blendedFault;Air blend: Current fault or fallback;"code", 1, 0, 0, 0, 0
+	uint16_t blendedFlags;Air blend: Calculation flags;"bits", 1, 0, 0, 0, 0
+	float blendedLambdaLoad;Air blend: Lambda load;"", 1, 0, 0, 0, 2
+	float airmassTemperature;Airmass: Temperature used;"C", 1, 0, 0, 0, 2
+	uint8_t airmassTemperatureSourceUsed;Airmass: Temperature source;"code", 1, 0, 0, 0, 0
+	float alphaNBaroCoefficient;Alpha-N: BARO coefficient;"", 1, 0, 0, 0, 3
+	uint8_t airmassPressureFlags;Airmass: Pressure provenance;"bits", 1, 0, 0, 0, 0
+	uint8_t blendedVeAnalyzeEndpoint;Air blend: Qualified analyze endpoint;"code", 1, 0, 0, 0, 0
+	int16_t autoscale injectionPhaseLoad;Load: injectionPhase;"", 0.1, 0, -3276, 3276, 1
+	int16_t[12 iterate] autoscale fuelTrimLoad;Load: fuelTrim;"", 0.1, 0, -3276, 3276, 1
+	int16_t[12 iterate] autoscale ignitionTrimLoad;Load: ignitionTrim;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale stftLoad;Load: stft;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale stagingLoad;Load: staging;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale lambdaDeviationLoad;Load: lambdaDeviation;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale lambdaMonitorLoad;Load: lambdaMonitor;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale trailingSparkLoad;Load: trailingSpark;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale ignitionIatLoad;Load: ignitionIat;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale knockRetardLoad;Load: knockRetard;"", 0.1, 0, -3276, 3276, 1
+	int16_t[12 iterate] autoscale knockGainLoad;Load: knockGain;"", 0.1, 0, -3276, 3276, 1
+	int16_t autoscale hpfpTargetLoad;Load: hpfpTarget;"", 0.1, 0, -3276, 3276, 1
+	int16_t[BOOST_BLEND_COUNT iterate] boostOpenLoopBlendXAxisValue;Boost correction X;"", 1, 0, -32768, 32767, 0
+	int16_t[BOOST_BLEND_COUNT iterate] boostClosedLoopBlendXAxisValue;Boost correction X;"", 1, 0, -32768, 32767, 0
 end_struct

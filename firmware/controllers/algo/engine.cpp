@@ -77,9 +77,14 @@ void Engine::periodicSlowCallback() {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
 
-	// If it's been too long since the last trigger event, the engine has stopped.
-	if (!triggerCentral.engineMovedRecently(getTimeNowNt()) && !rpmCalculator.isStopped()) {
-		OnTriggerSynchronizationLost();
+	{
+		// Keep a new trigger event from arriving between the timeout check and reset.
+		chibios_rt::CriticalSectionLocker csl;
+		// isStopped() also treats SPINNING_UP with zero RPM as stopped for engine
+		// math. A timed-out start still needs the actual STOPPED state and resets.
+		if (rpmCalculator.getState() != STOPPED && !triggerCentral.engineMovedRecently(getTimeNowNt())) {
+			OnTriggerSynchronizationLost();
+		}
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
 
@@ -218,6 +223,7 @@ void Engine::OnTriggerSynchronizationLost() {
 	efiPrintf("engine stopped");
 
 	rpmCalculator.setStopSpinning();
+	airmassInjectionState.onEngineStop();
 
 	triggerCentral.triggerState.resetState();
 	triggerCentral.instantRpm.resetInstantRpm();

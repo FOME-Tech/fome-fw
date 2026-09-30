@@ -31,11 +31,15 @@ void endInjection(InjectorContext ctx) {
 		// Zero out the split duration so it doesn't repeat
 		ctx.splitDurationUs = 0;
 
-		getScheduler()->schedule("split inj", nullptr, openTime, {&startInjection, ctx});
-		getScheduler()->schedule("split inj", nullptr, closeTime, {endInjection, ctx});
+		ScheduledAction events[] = {
+				{openTime, {scheduledStartInjection, ctx}},
+				{closeTime, {scheduledEndInjection, ctx}},
+		};
+		// A split continuation is new work: only its already accepted first half must drain.
+		scheduleFuelCallbacks(events, efi::size(events));
 	} else {
 		// No splits remaining, prepare for next cycle
-		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
+		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements) && engine->airmassInjectionState.allowInjection()) {
 			getFuelSchedule()->elements[ctx.eventIndex].update();
 		}
 	}
@@ -43,6 +47,24 @@ void endInjection(InjectorContext ctx) {
 
 void endInjectionStage2(InjectorContext ctx) {
 	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.injectorsStage2[idx].close(); });
+}
+
+void scheduledStartInjection(InjectorContext ctx) {
+	chibios_rt::CriticalSectionLocker csl;
+	startInjection(ctx);
+	engine->airmassInjectionState.callbackCompleted();
+}
+
+void scheduledEndInjection(InjectorContext ctx) {
+	chibios_rt::CriticalSectionLocker csl;
+	endInjection(ctx);
+	engine->airmassInjectionState.callbackCompleted();
+}
+
+void scheduledEndInjectionStage2(InjectorContext ctx) {
+	chibios_rt::CriticalSectionLocker csl;
+	endInjectionStage2(ctx);
+	engine->airmassInjectionState.callbackCompleted();
 }
 
 uint16_t InjectionEvent::calculateInjectorOutputMask() const {
@@ -81,7 +103,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	auto eventAngle = injectionStartAngle;
 
 	// Determine whether our angle is going to happen before (or near) the next tooth
-	if (!isPhaseInRange(EngPhase{eventAngle}, phase)) {
+	if (!isPhaseInRange(EngPhase{eventAngle}, phase) || !engine->airmassInjectionState.allowInjection()) {
 		return;
 	}
 
@@ -142,11 +164,13 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 		engine->outputChannels.actualLastInjectionStage2 = injectionDurationStage2;
 	}
 
-	if (std::isnan(injectionDurationStage1) || std::isnan(injectionDurationStage2)) {
-		warning(ObdCode::CUSTOM_OBD_NAN_INJECTION, "NaN injection pulse");
+	if (!std::isfinite(injectionDurationStage1) || !std::isfinite(injectionDurationStage2)) {
+		engine->airmassInjectionState.rejectCalculation(AirmassInjectionFault::Scheduling);
+		warning(ObdCode::CUSTOM_OBD_NAN_INJECTION, "Nonfinite injection pulse");
 		return;
 	}
-	if (injectionDurationStage1 < 0) {
+	if (injectionDurationStage1 < 0 || injectionDurationStage2 < 0) {
+		engine->airmassInjectionState.rejectCalculation(AirmassInjectionFault::Scheduling);
 		warning(ObdCode::CUSTOM_OBD_NEG_INJECTION, "Negative injection pulse %.2f", injectionDurationStage1);
 		return;
 	}
@@ -161,6 +185,13 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 
 	floatus_t durationUsStage1 = MS2US(injectionDurationStage1);
 	floatus_t durationUsStage2 = MS2US(injectionDurationStage2);
+
+	// Bound every float before conversion. Split duration has only 15 bits in InjectorContext.
+	if (durationUsStage1 >= MaximumScheduleDelayUs || durationUsStage2 >= MaximumScheduleDelayUs ||
+		(doSplitInjection && durationUsStage1 > 32767)) {
+		engine->airmassInjectionState.rejectCalculation(AirmassInjectionFault::Scheduling);
+		return;
+	}
 
 	// Only bother with the second stage if it's long enough to be relevant
 	bool hasStage2Injection = durationUsStage2 > 50;
@@ -189,20 +220,35 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 		angleFromNow += getEngineState()->engineCycle;
 	}
 
-	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, {&startInjection, ctx});
-
-	// Schedule closing stage 1
-	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
-	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
-
-	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, {&endInjection, ctx});
-
-	// Schedule closing stage 2 (if applicable)
-	if (hasStage2Injection) {
-		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, {&endInjectionStage2, ctx});
+	float delayUs = engine->rpmCalculator.oneDegreeUs * angleFromNow;
+	if (!std::isfinite(delayUs) || delayUs < 0 || delayUs >= MaximumScheduleDelayUs) {
+		engine->airmassInjectionState.rejectCalculation(AirmassInjectionFault::Scheduling);
+		return;
 	}
+
+	// Keep the historical fractional-microsecond angle conversion, after the finite/range checks.
+	static_assert(static_cast<int64_t>(MaximumScheduleDelayUs) * US_TO_NT_MULTIPLIER < INT32_MAX);
+	int32_t delayNt = static_cast<int32_t>(USF2NT(delayUs));
+	auto maximumDurationNt = US2NT(static_cast<int>(std::max(durationUsStage1, durationUsStage2)));
+	if (phase.timestamp.count > INT64_MAX - delayNt - maximumDurationNt.count()) {
+		engine->airmassInjectionState.rejectCalculation(AirmassInjectionFault::Scheduling);
+		return;
+	}
+	efitick_t startTime = phase.timestamp + efidur_t{delayNt};
+	efitick_t turnOffTimeStage1 = startTime + US2NT(static_cast<int>(durationUsStage1));
+	ScheduledAction events[MaxScheduleBatchSize] = {
+			{startTime, {scheduledStartInjection, ctx}},
+			{turnOffTimeStage1, {scheduledEndInjection, ctx}},
+	};
+	size_t count = 2;
+	if (hasStage2Injection) {
+		events[count++] = {startTime + US2NT(static_cast<int>(durationUsStage2)), {scheduledEndInjectionStage2, ctx}};
+		// Either stage can close first; the executor batch requires chronological ordering.
+		if (events[2].time < events[1].time) {
+			std::swap(events[1], events[2]);
+		}
+	}
+	scheduleFuelCallbacks(events, count);
 
 #if EFI_UNIT_TEST
 	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n",

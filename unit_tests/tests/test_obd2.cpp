@@ -56,6 +56,19 @@ void reqPid(uint8_t pid) {
 	obdOnCanPacketRx(frame, CanBusIndex::Bus0);
 }
 
+TEST_F(Obd2, BlendedEngineLoadUsesPhysicalFillingAndSaturates) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	engine->engineState.fuelingLoad = 180;
+	engine->fuelComputer.normalizedCylinderFilling = 40;
+	EXPECT_CALL(handler, onTx(0x7E8, 8, 3, 0x41, PID_ENGINE_LOAD, 102, 0, 0, 0, 0));
+	reqPid(PID_ENGINE_LOAD);
+
+	engine->fuelComputer.normalizedCylinderFilling = 160;
+	EXPECT_CALL(handler, onTx(0x7E8, 8, 3, 0x41, PID_ENGINE_LOAD, 255, 0, 0, 0, 0));
+	reqPid(PID_ENGINE_LOAD);
+}
+
 TEST_F(Obd2, PidOneByte) {
 	// Coolant temp is single byte, CLT = A - 40
 	Sensor::setMockValue(SensorType::Clt, 75);

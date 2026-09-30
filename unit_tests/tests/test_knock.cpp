@@ -14,6 +14,36 @@ struct MockKnockController : public KnockControllerBase {
 	}
 };
 
+TEST(Knock, EachCylinderGainAndMaximumRetardHaveIndependentSources) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setCylinderCount(2);
+	Sensor::setMockValue(SensorType::Rpm, 2000);
+	Sensor::setMockValue(SensorType::Map, 80);
+	Sensor::setMockValue(SensorType::Tps1, 20);
+	engine->engineState.ignitionLoad = 90;
+	setArrayValues(config->knockBaseNoise, 20);
+	setLinearCurve(config->knockGainLoadBins, 0, 100, 1);
+	setLinearCurve(config->maxKnockRetardLoadBins, 0, 100, 1);
+	for (size_t row = 0; row < efi::size(config->knockGains[0].table); row++) {
+		setArrayValues(config->knockGains[0].table[row], config->knockGainLoadBins[row] / 10);
+		setArrayValues(config->knockGains[1].table[row], config->knockGainLoadBins[row] / 10);
+	}
+	for (size_t row = 0; row < efi::size(config->maxKnockRetardTable); row++) {
+		setArrayValues(config->maxKnockRetardTable[row], config->maxKnockRetardLoadBins[row] / 10);
+	}
+	config->knockGainLoadSource[0] = AFR_Tps;
+	config->knockGainLoadSource[1] = AFR_MAP;
+	config->knockRetardLoadSource = AFR_Tps;
+	KnockController dut;
+	dut.onFastCallback();
+	EXPECT_FALSE(dut.onKnockSenseCompleted(0, 0, 15, 0));
+	EXPECT_TRUE(dut.onKnockSenseCompleted(1, 0, 15, 0));
+	const float tpsLimit = dut.getMaximumRetard();
+	EXPECT_LT(tpsLimit, 3);
+	config->knockRetardLoadSource = AFR_MAP;
+	EXPECT_GT(dut.getMaximumRetard(), 7);
+}
+
 TEST(Knock, Retards) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

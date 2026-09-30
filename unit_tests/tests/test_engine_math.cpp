@@ -9,6 +9,58 @@
 
 #include "speed_density.h"
 #include "maf.h"
+#include "engine_math.h"
+
+TEST(EngineMath, MissingBlendOverrideIsNeutralWithoutZeroCoordinateLookup) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	blend_table_s blend{};
+	blend.blendParameter = GPPWM_Clt;
+	blend.yAxisOverride = GPPWM_Tps;
+	setLinearCurve(blend.rpmBins, 0, 100, 1);
+	setLinearCurve(blend.loadBins, 0, 100, 1);
+	setLinearCurve(blend.blendBins, 0, 100, 1);
+	setArrayValues(blend.blendValues, 100);
+	for (size_t row = 0; row < efi::size(blend.table); row++) {
+		for (size_t column = 0; column < efi::size(blend.table[row]); column++) {
+			blend.table[row][column] = 10 + blend.loadBins[row] * 0.5f + blend.rpmBins[column] * 0.1f;
+		}
+	}
+	Sensor::setMockValue(SensorType::Clt, 70);
+	Sensor::setMockValue(SensorType::Tps1, 40);
+	const auto valid = calculateBlend(blend, 50, 80);
+	EXPECT_NEAR(valid.Value, 35, 0.2f);
+	EXPECT_FLOAT_EQ(valid.BlendParameter, 70);
+	EXPECT_FLOAT_EQ(valid.Bias, 100);
+	EXPECT_FLOAT_EQ(valid.TableYAxis, 40);
+
+	// Looking up the zero row would produce 15, and the parent load would produce 55.
+	// An unavailable selected coordinate must produce a neutral correction and diagnostics.
+	auto expectNeutral = [&] {
+		const auto result = calculateBlend(blend, 50, 80);
+		EXPECT_FLOAT_EQ(result.Value, 0);
+		EXPECT_FLOAT_EQ(result.BlendParameter, 0);
+		EXPECT_FLOAT_EQ(result.Bias, 0);
+		EXPECT_FLOAT_EQ(result.TableYAxis, 0);
+	};
+	Sensor::setInvalidMockValue(SensorType::Tps1);
+	expectNeutral();
+	Sensor::setMockValue(SensorType::Tps1, NAN);
+	expectNeutral();
+	Sensor::setMockValue(SensorType::Tps1, INFINITY);
+	expectNeutral();
+	Sensor::setMockValue(SensorType::Tps1, 40);
+	Sensor::setInvalidMockValue(SensorType::Clt);
+	expectNeutral();
+	Sensor::setMockValue(SensorType::Clt, NAN);
+	expectNeutral();
+	Sensor::setMockValue(SensorType::Clt, INFINITY);
+	expectNeutral();
+
+	// Disabled corrections remain neutral even when their selected inputs are unavailable.
+	blend.blendParameter = GPPWM_Zero;
+	Sensor::setInvalidMockValue(SensorType::Tps1);
+	expectNeutral();
+}
 
 TEST(misc, testEngineMath) {
 	printf("*************************************************** testEngineMath\r\n");

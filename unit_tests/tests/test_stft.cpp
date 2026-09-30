@@ -59,6 +59,30 @@ TEST(ClosedLoopFuel, CellSelection) {
 	EXPECT_EQ(3, computeStftBin(10000, 50, cfg));
 }
 
+TEST(ClosedLoopFuel, SelectedRegionLoadIsIndependentOfFuelAndLambdaLoads) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->rpmCalculator.setRpmValue(2000);
+	engineConfiguration->fuelClosedLoopCorrectionEnabled = true;
+	engineConfiguration->stft.startupDelay = 0;
+	engineConfiguration->stft.minClt = 0;
+	engineConfiguration->stft.maxIdleRegionRpm = 1000;
+	engineConfiguration->stft.maxOverrunLoad = 30;
+	engineConfiguration->stft.minPowerLoad = 70;
+	engine->engineState.fuelingLoad = 80;
+	Sensor::setMockValue(SensorType::Map, 80);
+	Sensor::setMockValue(SensorType::Tps1, 20);
+	config->stftLoadSource = AFR_Tps;
+	fuelClosedLoopCorrection();
+	EXPECT_EQ(engine->outputChannels.fuelClosedLoopBinIdx, 1);
+
+	engineConfiguration->afrOverrideMode = AFR_CylFilling;
+	fuelClosedLoopCorrection();
+	EXPECT_EQ(engine->outputChannels.fuelClosedLoopBinIdx, 1);
+	config->stftLoadSource = AFR_MAP;
+	fuelClosedLoopCorrection();
+	EXPECT_EQ(engine->outputChannels.fuelClosedLoopBinIdx, 2);
+}
+
 TEST(ClosedLoopFuel, lambdaLimits) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

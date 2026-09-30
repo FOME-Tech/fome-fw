@@ -24,7 +24,7 @@ static float validateBaroMap(float mapKPa) {
 void initMapDecoder() {
 	if (engineConfiguration->useFixedBaroCorrFromMap) {
 		// Read initial MAP sensor value and store it for Baro correction.
-		float storedInitialBaroPressure = Sensor::get(SensorType::MapSlow).value_or(101.325);
+		float storedInitialBaroPressure = Sensor::get(SensorType::MapSlow).value_or(NAN);
 		efiPrintf("Get initial baro MAP pressure = %.2fkPa", storedInitialBaroPressure);
 		// validate if it's within a reasonable range (the engine should not be spinning etc.)
 		storedInitialBaroPressure = validateBaroMap(storedInitialBaroPressure);
@@ -34,7 +34,8 @@ void initMapDecoder() {
 			// TODO: do literally anything other than this
 			Sensor::setMockValue(SensorType::BarometricPressure, storedInitialBaroPressure);
 		} else {
-			efiPrintf("The baro pressure is invalid. The fixed baro correction will be disabled!");
+			Sensor::setInvalidMockValue(SensorType::BarometricPressure);
+			efiPrintf("Invalid startup BARO: no reference pressure is substituted.");
 		}
 	}
 }

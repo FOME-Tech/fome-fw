@@ -5,6 +5,29 @@
 using ::testing::Return;
 using ::testing::StrictMock;
 
+TEST(VVT, IntakeAndExhaustSourcesStayIndependentAndInvalidSourceDisables) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	Sensor::setMockValue(SensorType::Rpm, 2000);
+	Sensor::setMockValue(SensorType::Map, 80);
+	Sensor::setMockValue(SensorType::Tps1, 20);
+	engineConfiguration->vvtIntakeYAxisOverride = GPPWM_Tps;
+	engineConfiguration->vvtExhaustYAxisOverride = GPPWM_Map;
+	StrictMock<MockVp3d> intakeMap;
+	StrictMock<MockVp3d> exhaustMap;
+	EXPECT_CALL(intakeMap, getValue(2000, 20)).WillOnce(Return(10));
+	EXPECT_CALL(exhaustMap, getValue(2000, 80)).WillRepeatedly(Return(30));
+	VvtController intake(0, 0, 0);
+	VvtController exhaust(1, 0, 1);
+	intake.init(&intakeMap, nullptr);
+	exhaust.init(&exhaustMap, nullptr);
+	EXPECT_FLOAT_EQ(intake.getSetpoint().value_or(0), 10);
+	EXPECT_FLOAT_EQ(exhaust.getSetpoint().value_or(0), 30);
+
+	Sensor::setInvalidMockValue(SensorType::Tps1);
+	EXPECT_FALSE(intake.getSetpoint().Valid);
+	EXPECT_FLOAT_EQ(exhaust.getSetpoint().value_or(0), 30);
+}
+
 TEST(VVT, Setpoint) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

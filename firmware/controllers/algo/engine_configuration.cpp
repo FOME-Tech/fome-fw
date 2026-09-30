@@ -24,6 +24,7 @@
 
 #include "speed_density.h"
 #include "flash_main.h"
+#include "airmass.h"
 
 #include "bench_test.h"
 
@@ -132,6 +133,9 @@ __attribute__((weak)) void boardOnConfigurationChange(engine_configuration_s* /*
  * this method is NOT currently invoked on ECU start - actual user input has to happen!
  */
 void incrementGlobalConfigurationVersion() {
+	if (!validateAirmassConfiguration()) {
+		return;
+	}
 	engine->globalConfigurationVersion++;
 
 	applyNewHardwareSettings();
