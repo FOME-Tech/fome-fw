@@ -54,6 +54,9 @@ or
 
 ### Fixed
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
+ - ETB and DC wastegate outputs are inhibited during blocking calibration burns, and resume only after fresh sensor samples and a new control cycle #726
+ - Calibration burns now verify the stored bytes and CRC before replacing the remaining valid copy; failed writes keep the burn pending and require a new request to retry
+ - STM32H7 flash writes now clear errors in the correct bank and stop on programming errors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
  - Injector and ignition circuit fault codes now name the correct cylinder on boards with smart driver chips. Cylinder 1 previously reported P0202/P0352 instead of P0201/P0351, cylinders 10-12 reported nonsense codes, and cylinder 12 reported no code at all

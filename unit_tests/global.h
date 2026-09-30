@@ -34,6 +34,9 @@ extern "C" {
 #define CH_FREQUENCY 1000
 #define NO_CACHE
 
+// ChibiOS flash driver success value, used by the configuration storage tests.
+#define HAL_SUCCESS 0
+
 typedef uint32_t systime_t;
 
 void chDbgAssert(int c, char* msg, void* arg);
