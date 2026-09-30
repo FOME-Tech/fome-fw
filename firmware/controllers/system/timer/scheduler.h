@@ -79,6 +79,17 @@ struct scheduling_s {
 };
 #pragma pack(pop)
 
+// A small, all-or-none group of independently owned pool events.
+struct ScheduledAction {
+	efitick_t time;
+	action_s action;
+};
+
+constexpr size_t MaxScheduleBatchSize = 3;
+// Same horizon as the hardware executor. Validate before converting float delays to ticks.
+constexpr int MaximumScheduleDelayUs = 10000000;
+bool isScheduleBatchValid(const ScheduledAction* events, size_t count, efitick_t now);
+
 struct Scheduler {
 	/**
 	 * @brief Schedule an action to be executed in the future.
@@ -99,6 +110,10 @@ struct Scheduler {
 	 * @param scheduling The scheduling_s to cancel.
 	 */
 	virtual void cancel(scheduling_s* scheduling) = 0;
+
+	// Reserve every event before exposing any callback. Failure queues and executes nothing.
+	// May execute due callbacks before returning true. Caller bookkeeping must already be in place.
+	virtual bool scheduleBatch(const ScheduledAction* events, size_t count) = 0;
 };
 
 Scheduler* getScheduler();

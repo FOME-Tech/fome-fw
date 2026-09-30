@@ -65,6 +65,19 @@ void SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, ef
 	}
 }
 
+bool SingleTimerExecutor::scheduleBatch(const ScheduledAction* events, size_t count) {
+	chibios_rt::CriticalSectionLocker csl;
+	if (!isScheduleBatchValid(events, count, getTimeNowNt()) || !queue.insertBatch(events, count)) {
+		return false;
+	}
+
+	if (!reentrantFlag) {
+		executeAllPendingActions();
+		scheduleTimerCallback();
+	}
+	return true;
+}
+
 void SingleTimerExecutor::cancel(scheduling_s* scheduling) {
 	// Lock for queue removal - we may already be locked, but that's ok
 	chibios_rt::CriticalSectionLocker csl;

@@ -26,6 +26,7 @@
 
 #include "scheduler.h"
 #include "main_trigger_callback.h"
+#include <new>
 
 #if EFI_SIGNAL_EXECUTOR_SLEEP
 
@@ -53,6 +54,49 @@ static void timerCallback(CallbackContext* ctx) {
 
 	// Lastly, actually execute the action
 	action.execute();
+}
+
+bool SleepExecutor::scheduleBatch(const ScheduledAction* events, size_t count) {
+	chibios_rt::CriticalSectionLocker csl;
+	if (!isScheduleBatchValid(events, count, getTimeNowNt())) {
+		return false;
+	}
+
+	CallbackContext* contexts[MaxScheduleBatchSize] = {};
+	for (size_t i = 0; i < count; i++) {
+		contexts[i] = new (std::nothrow) CallbackContext;
+		if (contexts[i]) {
+			contexts[i]->scheduling = new (std::nothrow) scheduling_s;
+		}
+		if (!contexts[i] || !contexts[i]->scheduling) {
+			for (size_t j = 0; j <= i; j++) {
+				if (contexts[j]) {
+					delete contexts[j]->scheduling;
+					delete contexts[j];
+				}
+			}
+			return false;
+		}
+		contexts[i]->shouldFree = true;
+		chVTObjectInit(&contexts[i]->scheduling->timer);
+		contexts[i]->scheduling->action = events[i].action;
+	}
+
+	// Arm all future events before executing any already-due action.
+	for (size_t i = 0; i < count; i++) {
+		auto now = getTimeNowNt();
+		int delaySt = events[i].time <= now ? 0 : MY_US2ST(NT2US(events[i].time - now));
+		if (delaySt > 0) {
+			chVTSetI(&contexts[i]->scheduling->timer, delaySt, (vtfunc_t)timerCallback, contexts[i]);
+			contexts[i] = nullptr;
+		}
+	}
+	for (size_t i = 0; i < count; i++) {
+		if (contexts[i]) {
+			timerCallback(contexts[i]);
+		}
+	}
+	return true;
 }
 
 static void doScheduleForLater(scheduling_s* scheduling, int delayUs, action_s action) {
