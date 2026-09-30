@@ -35,7 +35,8 @@ static int totalSyncCounter = 0;
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
-static char logName[_MAX_FILLER + 20];
+#define MAX_LOG_PATH_LEN 80
+static char logName[MAX_LOG_PATH_LEN];
 
 // This is the window of log data lost on a power cut: the bytes are already on the card, but
 // the directory entry that gives the file its length is only up to date as of the last sync.
@@ -108,15 +109,57 @@ err:
 	return logFileIndex;
 }
 
-static void prepareLogFileName(int index) {
-	strcpy(logName, FOME_LOG_PREFIX);
-	char* ptr;
-
-	if (dateToStringShort(&logName[PREFIX_LEN])) {
-		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
-	} else {
-		ptr = itoa10(&logName[PREFIX_LEN], index);
+static bool ensureDirectoryPath(char* path) {
+	char* slash = path;
+	while ((slash = strchr(slash, '/')) != nullptr) {
+		if (slash != path) {
+			*slash = '\0';
+			FRESULT res = f_mkdir(path);
+			*slash = '/';
+			if (res != FR_OK && res != FR_EXIST) {
+				printFatFsError("f_mkdir failed", res);
+				return false;
+			}
+		}
+		slash++;
 	}
+	return true;
+}
+
+static void prepareLogFileName(int index) {
+#if EFI_RTC
+	efidatetime_t dateTime = getRtcDateTime();
+	if (dateTime.year >= 2016 && dateTime.year <= 2030 && dateTime.month >= 1 && dateTime.month <= 12 &&
+		dateTime.day >= 1 && dateTime.day <= 31) {
+		int len = snprintf(
+				logName,
+				sizeof(logName),
+				"%04u/%02u/%02u/" FOME_LOG_PREFIX "%02u%02u%02u_%02u%02u%02u",
+				(unsigned)dateTime.year,
+				(unsigned)dateTime.month,
+				(unsigned)dateTime.day,
+				(unsigned)(dateTime.year % 100),
+				(unsigned)dateTime.month,
+				(unsigned)dateTime.day,
+				(unsigned)dateTime.hour,
+				(unsigned)dateTime.minute,
+				(unsigned)dateTime.second);
+
+		if (len > 0 && len + 8 < (int)sizeof(logName)) {
+			char* ptr = &logName[len];
+			if (engineConfiguration->sdTriggerLog) {
+				strcpy(ptr, ".teeth");
+			} else {
+				strcpy(ptr, ".mlg");
+			}
+			return;
+		}
+	}
+#endif // EFI_RTC
+
+	// Fallback to sequential index in root directory if RTC is unavailable or invalid
+	strcpy(logName, FOME_LOG_PREFIX);
+	char* ptr = itoa10(&logName[PREFIX_LEN], index);
 
 	if (engineConfiguration->sdTriggerLog) {
 		strcat(ptr, ".teeth");
@@ -133,6 +176,16 @@ static void prepareLogFileName(int index) {
  */
 static bool createLogFile(int logFileIndex) {
 	prepareLogFileName(logFileIndex);
+
+	if (strchr(logName, '/') != nullptr) {
+		if (!ensureDirectoryPath(logName)) {
+			warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: failed to create date directories, falling back to root");
+			const char* lastSlash = strrchr(logName, '/');
+			if (lastSlash) {
+				memmove(logName, lastSlash + 1, strlen(lastSlash + 1) + 1);
+			}
+		}
+	}
 
 	// Print before the open, not after it. f_open() with FA_CREATE_ALWAYS scans the directory and
 	// frees any existing cluster chain, so it's a card operation that can block for a long time -
