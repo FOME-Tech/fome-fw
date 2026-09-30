@@ -1,7 +1,9 @@
 #include "log_field.h"
 #include "buffered_writer.h"
+#include "binary_log_header.h"
 
 #include <gmock/gmock.h>
+#include <vector>
 
 using ::testing::_;
 using ::testing::ElementsAre;
@@ -12,6 +14,77 @@ public:
 	MOCK_METHOD(size_t, write, (const char* buffer, size_t count), (override));
 	MOCK_METHOD(size_t, flush, (), (override));
 };
+
+TEST(BinaryLogHeader, DataOffsetLocatesFirstRecordAcross64KiBBoundary) {
+	for (uint16_t count : {1, 736, 737, 768}) {
+		SCOPED_TRACE(count);
+		std::vector<uint8_t> file;
+		StrictMock<MockWriter> writer;
+		EXPECT_CALL(writer, write(_, _)).WillRepeatedly([&](const char* data, size_t size) {
+			file.insert(file.end(), data, data + size);
+			return size;
+		});
+		const uint32_t headerSize = 24u + count * 89u;
+		writeBinaryLogFileHeader(writer, headerSize, count, count);
+		uint8_t value = 0x5a;
+		LogField field(value, "sample", "", 0);
+		for (size_t i = 0; i < count; i++) {
+			field.writeHeader(writer);
+		}
+		ASSERT_EQ(headerSize, file.size());
+		const char blockHeader[] = {0, 7, 0x12, 0x34};
+		writer.write(blockHeader, sizeof(blockHeader));
+		uint8_t checksum = 0;
+		for (size_t i = 0; i < count; i++) {
+			char data;
+			ASSERT_EQ(1, field.writeData(&data));
+			writer.write(&data, 1);
+			checksum += static_cast<uint8_t>(data);
+		}
+		writer.write(reinterpret_cast<const char*>(&checksum), 1);
+
+		// Decode the documented big-endian widths independently of the writer.
+		const uint32_t dataStart =
+				(uint32_t(file[16]) << 24) | (uint32_t(file[17]) << 16) | (uint32_t(file[18]) << 8) | file[19];
+		const uint16_t recordSize = (uint16_t(file[20]) << 8) | file[21];
+		const uint16_t fieldCount = (uint16_t(file[22]) << 8) | file[23];
+		EXPECT_EQ(count, fieldCount);
+		EXPECT_EQ(count, recordSize);
+		ASSERT_EQ(24u + fieldCount * 89u, dataStart);
+		ASSERT_EQ(file.size(), dataStart + 4u + recordSize + 1u);
+		EXPECT_EQ(0, file[dataStart]);
+		EXPECT_EQ(7, file[dataStart + 1]);
+		EXPECT_EQ(0x12, file[dataStart + 2]);
+		EXPECT_EQ(0x34, file[dataStart + 3]);
+		uint8_t decodedChecksum = 0;
+		for (size_t i = 0; i < fieldCount; i++) {
+			EXPECT_EQ(0x5a, file[dataStart + 4 + i]);
+			decodedChecksum += file[dataStart + 4 + i];
+		}
+		EXPECT_EQ(decodedChecksum, file.back());
+	}
+}
+
+TEST(BinaryLogHeader, Full32BitOffsetPreservesOtherHeaderFields) {
+	StrictMock<MockWriter> writer;
+	EXPECT_CALL(writer, write(_, 24)).WillOnce([](const char* data, size_t size) {
+		const auto* bytes = reinterpret_cast<const uint8_t*>(data);
+		EXPECT_EQ(0, memcmp(data, "MLVLG\0\0\2", 8));
+		for (size_t i = 8; i < 16; i++) {
+			EXPECT_EQ(0, bytes[i]);
+		}
+		EXPECT_EQ(0x12, bytes[16]);
+		EXPECT_EQ(0x34, bytes[17]);
+		EXPECT_EQ(0x56, bytes[18]);
+		EXPECT_EQ(0x78, bytes[19]);
+		EXPECT_EQ(0xab, bytes[20]);
+		EXPECT_EQ(0xcd, bytes[21]);
+		EXPECT_EQ(0x01, bytes[22]);
+		EXPECT_EQ(0x02, bytes[23]);
+		return size;
+	});
+	writeBinaryLogFileHeader(writer, 0x12345678, 0xabcd, 0x0102);
+}
 
 TEST(BinaryLogField, FieldHeader) {
 	scaled_channel<int8_t, 10> channel;
