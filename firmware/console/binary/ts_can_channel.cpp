@@ -97,7 +97,13 @@ struct CanTsThread : public TunerstudioThread {
 	}
 };
 
+// Ethernet's buffers need ordinary SRAM on F42x. The CAN thread only uses
+// CPU accesses, so its stack can use the remaining CCM space instead.
+#if defined(EFI_IS_F42x) && MODULE_ETHERNET_CONSOLE
+static CanTsThread canTsThread CCM_OPTIONAL;
+#else
 static CanTsThread canTsThread;
+#endif
 
 void startCanConsole() {
 	canTsThread.startThread();
