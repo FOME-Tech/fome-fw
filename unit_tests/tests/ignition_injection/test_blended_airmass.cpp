@@ -5,6 +5,8 @@
 #include "fuel_math.h"
 #include "speed_density_airmass.h"
 #include "tunerstudio.h"
+#include "airmass_loads.h"
+#include "rusefi_lua.h"
 
 using ::testing::Return;
 using ::testing::StrictMock;
@@ -771,4 +773,259 @@ TEST_F(BlendedAirmassTest, SharedTemperatureBaroAndCorrectionFallbacksRetainUsab
 	Sensor::setMockValue(SensorType::Iat, 20);
 	Sensor::setMockValue(SensorType::BarometricPressure, 100);
 	EXPECT_FALSE(blended.evaluateAirmass(2200).Degraded);
+}
+
+namespace {
+template <typename T>
+void liveCalibrationWrite(T& destination, const T& value) {
+	TunerStudio tunerStudio;
+	::testing::NiceMock<MockTsChannel> channel;
+	const auto offset = reinterpret_cast<uint8_t*>(&destination) - reinterpret_cast<uint8_t*>(config);
+	auto payload = value;
+	tunerStudio.handleWriteChunkCommand(&channel, offset, sizeof(payload), &payload);
+}
+} // namespace
+
+TEST_F(BlendedAirmassTest, LiveValidityCacheHitsAndPublicQueriesSeeDirectEdits) {
+	StrictMock<MockVp3d> estimate;
+	SpeedDensityAirmass sd(nullptr, estimate);
+	AlphaNAirmass alphaN;
+	BlendedAirmass blended(sd, alphaN);
+	setTable(config->airmassBlendTable, 0);
+	ASSERT_TRUE(blended.getAirmassForFuel(2500).Airmass.Valid);
+	const auto scans = engine->airmassCalibration.Scans;
+	ASSERT_EQ(scans, 2u); // Authority and the contributing SD axes only.
+	ASSERT_TRUE(blended.getAirmassForFuel(2500).Airmass.Valid);
+	EXPECT_EQ(engine->airmassCalibration.Scans, scans);
+
+	AirmassInputs inputs;
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	const auto sdBin = config->veLoadBins[1];
+	const auto alphaNBin = config->alphaNTpsBins[1];
+	config->veLoadBins[1] = config->veLoadBins[0];
+	config->alphaNTpsBins[1] = config->alphaNTpsBins[0];
+	EXPECT_FALSE(isAirmassModelConfigurationValid(LM_SPEED_DENSITY));
+	EXPECT_FALSE(isAirmassModelConfigurationValid(LM_ALPHA_N));
+	EXPECT_FALSE(blended.evaluateAirmass(2500).Airmass.Valid);
+	// Public raw queries remain fresh even when handed a live capture.
+	EXPECT_FALSE(sd.evaluateRawAirmass(inputs).Valid);
+	EXPECT_FALSE(alphaN.evaluateRawAirmass(inputs).Valid);
+	EXPECT_EQ(engine->airmassCalibration.Scans, scans);
+	EXPECT_TRUE(engine->engineState.airmassLoads.Valid);
+	config->veLoadBins[1] = sdBin;
+	config->alphaNTpsBins[1] = alphaNBin;
+	EXPECT_TRUE(blended.evaluateAirmass(2500).Airmass.Valid);
+	EXPECT_TRUE(isAirmassModelConfigurationValid(LM_SPEED_DENSITY));
+}
+
+TEST_F(BlendedAirmassTest, LiveTsAxesWritesRefreshValidityWithoutBurnAndKeepUnusedBranchOptional) {
+	StrictMock<MockVp3d> estimate;
+	SpeedDensityAirmass sd(nullptr, estimate);
+	AlphaNAirmass alphaN;
+	BlendedAirmass blended(sd, alphaN);
+	setTable(config->airmassBlendTable, 0);
+	ASSERT_TRUE(blended.getAirmassForFuel(2500).Airmass.Valid);
+	const auto version = engine->getGlobalConfigurationVersion();
+	const auto alphaNBin = config->alphaNTpsBins[1];
+	liveCalibrationWrite(config->alphaNTpsBins[1], config->alphaNTpsBins[0]);
+	auto result = blended.getAirmassForFuel(2500);
+	ASSERT_TRUE(result.Airmass.Valid);
+	EXPECT_FALSE(result.Degraded); // An unused invalid model is not a fault.
+	const auto sdBin = config->veLoadBins[1];
+	liveCalibrationWrite(config->veLoadBins[1], config->veLoadBins[0]);
+	EXPECT_FALSE(blended.getAirmassForFuel(2500).Airmass.Valid);
+	liveCalibrationWrite(config->alphaNTpsBins[1], alphaNBin);
+	result = blended.getAirmassForFuel(2500);
+	ASSERT_TRUE(result.Airmass.Valid);
+	EXPECT_TRUE(result.Degraded); // Healthy Alpha-N recovers the failed SD branch.
+	liveCalibrationWrite(config->veLoadBins[1], sdBin);
+	result = blended.getAirmassForFuel(2500);
+	EXPECT_TRUE(result.Airmass.Valid);
+	EXPECT_FALSE(result.Degraded);
+	EXPECT_EQ(engine->getGlobalConfigurationVersion(), version);
+
+	engineConfiguration->fuelAlgorithm = LM_SPEED_DENSITY;
+	liveCalibrationWrite(config->veLoadBins[1], config->veLoadBins[0]);
+	Sensor::setMockValue(SensorType::Rpm, 2500);
+	engine->periodicFastCallback();
+	EXPECT_EQ(engine->airmassInjectionState.fault(), AirmassInjectionFault::Configuration);
+}
+
+TEST_F(BlendedAirmassTest, AuthorityCellsAndAxesRefreshInLiveCache) {
+	StrictMock<MockVp3d> estimate;
+	SpeedDensityAirmass sd(nullptr, estimate);
+	AlphaNAirmass alphaN;
+	BlendedAirmass blended(sd, alphaN);
+	setTable(config->airmassBlendTable, 0);
+	ASSERT_FALSE(blended.getAirmassForFuel(2500).Degraded);
+	liveCalibrationWrite(config->airmassBlendTable[0][0], uint8_t{101});
+	EXPECT_FALSE(isBlendedAirmassConfigurationValid());
+	EXPECT_TRUE(blended.getAirmassForFuel(2500).Degraded);
+	liveCalibrationWrite(config->airmassBlendTable[0][0], uint8_t{0});
+	EXPECT_FALSE(blended.getAirmassForFuel(2500).Degraded);
+	const auto bin = config->airmassBlendTpsBins[1];
+	liveCalibrationWrite(config->airmassBlendTpsBins[1], config->airmassBlendTpsBins[0]);
+	EXPECT_TRUE(blended.getAirmassForFuel(2500).Degraded);
+	liveCalibrationWrite(config->airmassBlendTpsBins[1], bin);
+	EXPECT_FALSE(blended.getAirmassForFuel(2500).Degraded);
+}
+
+TEST_F(BlendedAirmassTest, MapEstimateCellsAndAxesRefreshWithoutCachingSensors) {
+	config->useMapEstimateTable = true;
+	setTable(config->mapEstimateTable, 50);
+	Sensor::resetMockValue(SensorType::Map);
+	AirmassInputs inputs;
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	ASSERT_TRUE(inputs.EffectiveMap.Valid);
+	const auto scans = engine->airmassCalibration.Scans;
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_EQ(engine->airmassCalibration.Scans, scans);
+	const auto cell = config->mapEstimateTable[0][0];
+	auto invalidCell = cell;
+	invalidCell = 601;
+	liveCalibrationWrite(config->mapEstimateTable[0][0], invalidCell);
+	EXPECT_FALSE(isMapEstimateConfigurationValid());
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_FALSE(inputs.EffectiveMap.Valid);
+	Sensor::setMockValue(SensorType::Map, 72.031f);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_TRUE(inputs.EffectiveMap.Valid);
+	EXPECT_FLOAT_EQ(inputs.EffectiveMap.Map, 72.031f);
+	Sensor::resetMockValue(SensorType::Map);
+	liveCalibrationWrite(config->mapEstimateTable[0][0], cell);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_TRUE(inputs.EffectiveMap.Valid);
+	const auto bin = config->mapEstimateTpsBins[1];
+	liveCalibrationWrite(config->mapEstimateTpsBins[1], config->mapEstimateTpsBins[0]);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_FALSE(inputs.EffectiveMap.Valid);
+	liveCalibrationWrite(config->mapEstimateTpsBins[1], bin);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_TRUE(inputs.EffectiveMap.Valid);
+	// Public and dry map queries detect direct unversioned changes immediately.
+	config->mapEstimateTable[0][0] = 601;
+	EXPECT_FALSE(isMapEstimateConfigurationValid());
+	captureAirmassInputs(2500, inputs);
+	EXPECT_FALSE(inputs.EffectiveMap.Valid);
+}
+
+TEST_F(BlendedAirmassTest, CorrectionAndIdleAxesCacheRefreshAndDryCorrectionStaysFresh) {
+	configureFlatVeBlend(config->veBlends[0], GPPWM_Tps, GPPWM_Zero, 10);
+	setLinearCurve(config->idleVeLoadBins, 0, 100, 1);
+	setLinearCurve(config->idleVeRpmBins, 0, 2500, 1);
+	AirmassInputs inputs;
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	ASSERT_TRUE(isCapturedAirmassCalibrationValid(inputs, AirmassCalibration::Idle));
+	ASSERT_FALSE(evaluateAirmassCorrectionsForFuel(inputs).Fallback);
+	const auto scans = engine->airmassCalibration.Scans;
+	ASSERT_FALSE(evaluateAirmassCorrectionsForFuel(inputs).Fallback);
+	EXPECT_EQ(engine->airmassCalibration.Scans, scans);
+	const auto bin = config->veBlends[0].loadBins[1];
+	config->veBlends[0].loadBins[1] = config->veBlends[0].loadBins[0];
+	EXPECT_TRUE(evaluateAirmassCorrections(inputs).Fallback);
+	EXPECT_EQ(engine->airmassCalibration.Scans, scans);
+	config->veBlends[0].loadBins[1] = bin;
+	liveCalibrationWrite(config->veBlends[0].loadBins[1], config->veBlends[0].loadBins[0]);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_TRUE(evaluateAirmassCorrectionsForFuel(inputs).Fallback);
+	liveCalibrationWrite(config->veBlends[0].loadBins[1], bin);
+	const auto idleBin = config->idleVeLoadBins[1];
+	liveCalibrationWrite(config->idleVeLoadBins[1], config->idleVeLoadBins[0]);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_FALSE(isCapturedAirmassCalibrationValid(inputs, AirmassCalibration::Idle));
+	EXPECT_FALSE(evaluateAirmassCorrectionsForFuel(inputs).Fallback);
+	liveCalibrationWrite(config->idleVeLoadBins[1], idleBin);
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_TRUE(isCapturedAirmassCalibrationValid(inputs, AirmassCalibration::Idle));
+}
+
+TEST_F(BlendedAirmassTest, CalibrationWriteDuringScanCannotPopulateCacheOrPublishOldFuel) {
+	AirmassInputs inputs;
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	bool wrote = false;
+	engine->onAirmassCalibrationScanned = [&] {
+		if (!wrote) {
+			wrote = true;
+			liveCalibrationWrite(config->veLoadBins[1], config->veLoadBins[0]);
+		}
+	};
+	EXPECT_FALSE(isCapturedAirmassModelValid(inputs, LM_SPEED_DENSITY));
+	engine->onAirmassCalibrationScanned = nullptr;
+	ASSERT_TRUE(wrote);
+	EXPECT_EQ(engine->airmassCalibration.Known, 0u);
+	EXPECT_EQ(engine->airmassCalibration.Scans, 0u);
+	EXPECT_FALSE(processAirmassConsumerLoads(inputs, 0.3f, true));
+	captureAirmassInputs(2500, inputs, nullptr, true, true);
+	EXPECT_FALSE(isCapturedAirmassModelValid(inputs, LM_SPEED_DENSITY));
+	EXPECT_EQ(engine->airmassCalibration.Scans, 1u);
+}
+
+TEST_F(BlendedAirmassTest, LuaUnversionedWriteRejectsPreparedFuelAndRefreshesCalibration) {
+	Sensor::setMockValue(SensorType::Rpm, 2500);
+	engine->periodicFastCallback();
+	ASSERT_TRUE(engine->airmassInjectionState.allowInjection());
+	const auto generation = engine->airmassCalibration.Generation;
+	const auto version = engine->getGlobalConfigurationVersion();
+	bool wrote = false;
+	engine->onCylinderFuelPrepared = [&] {
+		if (!wrote) {
+			wrote = true;
+			EXPECT_FLOAT_EQ(
+					testLuaReturnsNumber(R"(
+				function testFunc()
+					setCalibration("displacement", 6, false)
+					return getCalibration("displacement")
+				end
+			)"),
+					6);
+		}
+	};
+	engine->periodicFastCallback();
+	engine->onCylinderFuelPrepared = nullptr;
+	ASSERT_TRUE(wrote);
+	EXPECT_GT(engine->airmassCalibration.Generation, generation);
+	EXPECT_EQ(engine->getGlobalConfigurationVersion(), version);
+	EXPECT_FALSE(engine->airmassInjectionState.allowInjection());
+	EXPECT_FLOAT_EQ(engine->cylinders[0].getInjectionMass(), 0);
+	engine->periodicFastCallback();
+	EXPECT_TRUE(engine->airmassInjectionState.allowInjection());
+	EXPECT_FLOAT_EQ(engine->airmassCalibration.ChargeDisplacement, 6);
+}
+
+TEST(AirmassCalibrationCache, GeometryKeysObserveDirectEditsAndZeroGeometryStartsInvalid) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->displacement = 0;
+	engine->engineState.cylinderCount = 0;
+	EXPECT_TRUE(std::isnan(getStandardAirCharge()));
+	engineConfiguration->displacement = 2;
+	setCylinderCount(4);
+	const float charge = getStandardAirCharge();
+	engineConfiguration->displacement = 3;
+	EXPECT_NEAR(getStandardAirCharge(), 1.5f * charge, EPS4D);
+	setCylinderCount(6);
+	EXPECT_NEAR(getStandardAirCharge(), charge, EPS4D);
+	AirmassInputs inputs;
+	captureAirmassInputs(2500, inputs, nullptr, false, true);
+	const AirmassResolvedLoads loads(inputs, 0.42311f);
+	EXPECT_FLOAT_EQ(loads.strict(AFR_CylFilling).Value, resolveAirmassLoad(inputs, 0.42311f, AFR_CylFilling).Value);
+	// Directly editing an input copy must still affect the public pure resolver.
+	inputs.Displacement = 6;
+	EXPECT_FLOAT_EQ(resolveAirmassLoad(inputs, 0.42311f, AFR_CylFilling).Value, loads.strict(AFR_CylFilling).Value / 2);
+	ASSERT_TRUE(isCapturedAirmassModelValid(inputs, LM_SPEED_DENSITY));
+	ASSERT_NE(engine->airmassCalibration.Known, 0u);
+	resetConfigurationExt(engine_type_e::TEST_ENGINE);
+	EXPECT_EQ(engine->airmassCalibration.Known, 0u);
+}
+
+TEST(AirmassCalibrationCache, BurnValidatesDirectEditsDespiteLiveCacheHit) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_SPEED_DENSITY;
+	AirmassInputs inputs;
+	captureAirmassInputs(2500, inputs, nullptr, false, true);
+	ASSERT_TRUE(isCapturedAirmassModelValid(inputs, LM_SPEED_DENSITY));
+	const auto version = engine->getGlobalConfigurationVersion();
+	config->veLoadBins[1] = config->veLoadBins[0];
+	EXPECT_FATAL_ERROR(incrementGlobalConfigurationVersion());
+	EXPECT_EQ(engine->getGlobalConfigurationVersion(), version);
+	EXPECT_EQ(engine->airmassCalibration.Known, 0u);
 }

@@ -3,6 +3,7 @@
 #include "rusefi_types.h"
 struct blend_table_s;
 #include "engine_math.h"
+#include "airmass_calibration.h"
 #include <rusefi/expected.h>
 
 class ValueProvider3D;
@@ -61,6 +62,9 @@ struct AirmassInputs {
 	int ConfigurationVersion = 0;
 	engine_load_mode_e ActiveStrategy = LM_SPEED_DENSITY;
 	bool HasPublicationContext = false;
+	// Explicit live owner; capture alone never enables cached validation.
+	bool LiveCalibration = false;
+	uint32_t CalibrationGeneration = 0;
 	float Rpm = 0;
 	expected<float> MeasuredMap = unexpected;
 	expected<float> Tps = unexpected;
@@ -84,6 +88,7 @@ struct AirmassInputs {
 	float NativeLoad = 0;
 	float Displacement = 0;
 	float CylinderCount = 0;
+	float StandardAirCharge = 0; // Captured with live geometry; pure APIs recompute.
 	float PreviousFuelingLoad = 0;
 	float PreviousIgnitionLoad = 0;
 	load_override_e LambdaOverride = AFR_None;
@@ -127,6 +132,21 @@ struct AirmassLoad {
 	bool UsesEstimate = false;
 };
 
+// Six physical coordinates resolved once for a final corrected mass. Strict
+// validity and source/unit metadata survive numeric consumer substitution.
+class AirmassResolvedLoads {
+public:
+	AirmassResolvedLoads(const AirmassInputs& inputs, mass_t finalMass);
+	AirmassLoad strict(load_override_e source) const;
+	AirmassLoad consumer(load_override_e source) const;
+
+private:
+	AirmassLoad m_loads[AFR_EffectiveMAP + 1];
+	bool m_massValid;
+};
+
+static_assert(sizeof(AirmassResolvedLoads) <= 52);
+
 // Pure resolution: never re-read sensors or apply legacy numeric failure fallbacks.
 AirmassLoad resolveAirmassLoad(const AirmassInputs& inputs, mass_t finalMass, load_override_e selector);
 // Upstream numeric substitutes for downstream tables; physical resolution stays strict.
@@ -158,10 +178,20 @@ bool isMapEstimateAxesValid();
 bool isRawAirmassConfigurationValid();
 bool isAirmassModelConfigurationValid(engine_load_mode_e model);
 void captureAirmassInputs(
-		float rpm, AirmassInputs& inputs, const ValueProvider3D* estimate = nullptr, bool resolveMap = true);
+		float rpm,
+		AirmassInputs& inputs,
+		const ValueProvider3D* estimate = nullptr,
+		bool resolveMap = true,
+		bool liveCalibration = false);
 void resolveCapturedMap(AirmassInputs& inputs, const ValueProvider3D* estimate = nullptr);
 // Implemented by the live load consumer owner. Dry queries validate without publication.
 bool processAirmassConsumerLoads(const AirmassInputs& inputs, mass_t mass, bool publish, bool* fallbackUsed = nullptr);
+bool processAirmassConsumerLoads(
+		const AirmassInputs& inputs,
+		mass_t mass,
+		const AirmassResolvedLoads& loads,
+		bool publish,
+		bool* fallbackUsed = nullptr);
 
 struct AirmassEvaluation {
 	bool Degraded = false;
@@ -204,7 +234,11 @@ public:
 
 protected:
 	class DiagnosticsTarget;
-	VeEvaluation evaluateRawVe(const AirmassInputs& inputs, float load, RawAirmassDiagnostics* diagnostics) const;
+	VeEvaluation evaluateRawVe(
+			const AirmassInputs& inputs,
+			float load,
+			RawAirmassDiagnostics* diagnostics,
+			bool liveCalibration = false) const;
 	VeEvaluation evaluateVe(const AirmassInputs& inputs, float load, const DiagnosticsTarget& diagnostics) const;
 	virtual float getDedicatedVeImpl(float rpm, float load) const;
 
@@ -216,6 +250,9 @@ protected:
 		explicit DiagnosticsTarget(VeDiagnostics* diagnostics);
 		explicit DiagnosticsTarget(AirmassDiagnostics* diagnostics);
 
+		bool live() const {
+			return m_postState;
+		}
 		void blend(size_t index, const BlendResult& result) const;
 		void ve(const VeEvaluation& result, float load, float idleLoad) const;
 		void map(const MapEvaluation& result) const;

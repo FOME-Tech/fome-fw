@@ -3,6 +3,10 @@
 #include "rusefi_types.h"
 #include "scheduler.h"
 
+namespace chibios_rt {
+class CriticalSectionLocker;
+}
+
 // These values are also exposed in the composite diagnostics.
 enum class AirmassInjectionStatus : uint8_t {
 	Legacy,
@@ -43,15 +47,43 @@ public:
 	AirmassInjectionFault fault() const;
 	uint16_t pendingCallbacks() const;
 
-	// Caller holds the critical section across accounting and scheduleBatch, which can execute immediately.
-	bool callbacksAccepted(size_t count);
-	void callbacksRejected(size_t count);
+	// Access only within the lifetime/scope of the supplied critical section.
+	// This avoids nested save/restore in already guarded publications and admission.
+	class LockedAccess {
+	public:
+		LockedAccess(const LockedAccess&) = delete;
+		LockedAccess& operator=(const LockedAccess&) = delete;
+		bool allowInjection();
+		bool isCalculationCurrent(CalculationToken token);
+		CalculationToken publicationEpoch() const;
+		void completeCalculation(CalculationToken token, bool publicationValid);
+		void rejectCalculation(AirmassInjectionFault fault);
+		bool callbacksAccepted(size_t count);
+		void callbacksRejected(size_t count);
+		void callbackCompleted();
+
+	private:
+		friend class AirmassInjectionState;
+		LockedAccess(AirmassInjectionState& state, chibios_rt::CriticalSectionLocker&)
+			: m_state(state) {}
+		AirmassInjectionState& m_state;
+	};
+	LockedAccess locked(chibios_rt::CriticalSectionLocker& lock) {
+		return LockedAccess(*this, lock);
+	}
 	void callbackCompleted();
 
 private:
 	void observeMode(engine_load_mode_e mode);
 	void failCalculation(AirmassInjectionFault fault);
-	void publishState() const;
+	void setStatus(AirmassInjectionStatus status, AirmassInjectionFault fault);
+	bool allowInjectionLocked();
+	bool isCalculationCurrentLocked(CalculationToken token);
+	void completeCalculationLocked(CalculationToken token, bool publicationValid);
+	void rejectCalculationLocked(AirmassInjectionFault fault);
+	bool callbacksAccepted(size_t count);
+	void callbacksRejected(size_t count);
+	void callbackCompletedLocked();
 	bool physicallyStopped() const;
 
 	uint32_t m_epoch = 0;

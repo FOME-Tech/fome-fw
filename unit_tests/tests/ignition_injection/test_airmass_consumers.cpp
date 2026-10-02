@@ -2,6 +2,7 @@
 
 #include "airmass_loads.h"
 #include "airmass.h"
+#include "fuel_math.h"
 #include "gppwm_channel.h"
 #include "vvt.h"
 
@@ -89,6 +90,72 @@ TEST_F(AirmassConsumers, CylinderTrimsResolveEachSelectedCoordinate) {
 	calculate();
 	EXPECT_FLOAT_EQ(engine->cylinders[0].getInjectionMass(), engine->cylinders[1].getInjectionMass());
 	EXPECT_FLOAT_EQ(engine->cylinders[0].getIgnitionTimingBtdc(), engine->cylinders[1].getIgnitionTimingBtdc());
+}
+
+TEST_F(AirmassConsumers, TwelveCylinderTrimsKeepIndependentMapsWithRepeatedAndMixedLoads) {
+	setCylinderCount(12);
+	Sensor::setMockValue(SensorType::AcceleratorPedal, 40);
+	const load_override_e sources[] = {AFR_Tps, AFR_MAP, AFR_AccPedal, AFR_None, AFR_CylFilling, AFR_EffectiveMAP};
+	for (size_t bin = 0; bin < TRIM_SIZE; bin++) {
+		config->fuelTrimLoadBins[bin] = config->ignTrimLoadBins[bin] = bin * 50;
+		config->fuelTrimRpmBins[bin] = config->ignTrimRpmBins[bin] = 500 + bin * 1500;
+	}
+	for (size_t cylinder = 0; cylinder < 12; cylinder++) {
+		config->fuelTrimLoadSource[cylinder] = sources[cylinder % efi::size(sources)];
+		config->ignitionTrimLoadSource[cylinder] = sources[(cylinder + 1) % efi::size(sources)];
+		for (size_t row = 0; row < TRIM_SIZE; row++) {
+			for (size_t column = 0; column < TRIM_SIZE; column++) {
+				// Cylinder zero is a neutral reference; all other maps differ in both axes.
+				float value = cylinder == 0
+									? 0
+									: (static_cast<int>((cylinder * 13 + row * 31 + column * 47) % 201) - 100) / 5.0f;
+				config->fuelTrims[cylinder].table[row][column] = value;
+				config->ignTrims[cylinder].table[row][column] = value;
+			}
+		}
+	}
+	const auto check = [&] {
+		calculate();
+		ASSERT_TRUE(engine->airmassInjectionState.allowInjection());
+		const float untrimmedMass = engine->cylinders[0].getInjectionMass();
+		const float untrimmedTiming = engine->cylinders[0].getIgnitionTimingBtdc();
+		ASSERT_GT(untrimmedMass, 0);
+		const float rpm = Sensor::getOrZero(SensorType::Rpm);
+		for (size_t cylinder = 0; cylinder < 12; cylinder++) {
+			const float fuelTrim = interpolate3d(
+					config->fuelTrims[cylinder].table,
+					config->fuelTrimLoadBins,
+					getAirmassConsumerLoad(AirmassConsumer::FuelTrim, cylinder),
+					config->fuelTrimRpmBins,
+					rpm);
+			const float ignitionTrim = interpolate3d(
+					config->ignTrims[cylinder].table,
+					config->ignTrimLoadBins,
+					getAirmassConsumerLoad(AirmassConsumer::IgnitionTrim, cylinder),
+					config->ignTrimRpmBins,
+					rpm);
+			EXPECT_FLOAT_EQ(engine->cylinders[cylinder].getInjectionMass(), untrimmedMass * ((100 + fuelTrim) / 100));
+			EXPECT_FLOAT_EQ(engine->cylinders[cylinder].getIgnitionTimingBtdc(), untrimmedTiming + ignitionTrim);
+		}
+	};
+	check();
+	// The next calculation must observe changed axes, selectors, cells and inputs.
+	config->fuelTrimLoadBins[1] = config->ignTrimLoadBins[1] = 35;
+	config->fuelTrimRpmBins[1] = config->ignTrimRpmBins[1] = 2500;
+	config->fuelTrims[7].table[1][1] = 23;
+	config->ignTrims[9].table[2][1] = 19;
+	config->fuelTrimLoadSource[7] = AFR_Tps;
+	config->ignitionTrimLoadSource[9] = AFR_Tps;
+	Sensor::setMockValue(SensorType::Tps1, 35);
+	check();
+	// The common single-coordinate case still samples each cylinder's own map.
+	for (auto& source : config->fuelTrimLoadSource) {
+		source = AFR_MAP;
+	}
+	for (auto& source : config->ignitionTrimLoadSource) {
+		source = AFR_MAP;
+	}
+	check();
 }
 
 TEST_F(AirmassConsumers, PhaseStagingIatAndTrailingUseTheirOwnSources) {
@@ -275,6 +342,158 @@ TEST(AirmassConsumerSnapshot, SelectedSourcesAreIndependentAndUseCapturedFullPre
 	engine->engineState.ignitionLoad = 2;
 	EXPECT_FLOAT_EQ(readGppwmChannel(GPPWM_FuelLoad).value_or(0), 700.125f);
 	EXPECT_FLOAT_EQ(readGppwmChannel(GPPWM_IgnLoad).value_or(0), 40);
+}
+
+TEST(AirmassConsumerSnapshot, GettersHaveNoDiagnosticSideEffects) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	config->fuelTrimLoadSource[0] = AFR_Tps;
+	config->ignitionTrimLoadSource[0] = AFR_MAP;
+	config->knockGainLoadSource[0] = AFR_EffectiveMAP;
+	auto inputs = consumerInputs();
+	inputs.Tps = 20.125f;
+	ASSERT_TRUE(processAirmassConsumerLoads(inputs, 0.3f, true));
+	// A display update must belong to the explicit publisher, even when a
+	// consumer is read after its cursor was changed by another diagnostic user.
+	engine->outputChannels.fuelTrimLoad[0] = 11;
+	engine->outputChannels.ignitionTrimLoad[0] = 12;
+	engine->outputChannels.knockGainLoad[0] = 13;
+	const AirmassConsumerLoadContext loads(AirmassConsumer::FuelTrim, AirmassConsumer::IgnitionTrim);
+	EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::FuelTrim), 20.125f);
+	EXPECT_FLOAT_EQ(loads.get(AirmassConsumer::FuelTrim), 20.125f);
+	EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::IgnitionTrim), 80);
+	EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::KnockGain), 70);
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[0], 11);
+	EXPECT_FLOAT_EQ(engine->outputChannels.ignitionTrimLoad[0], 12);
+	EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[0], 13);
+	invalidateAirmassLoads();
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[0], 0);
+	engine->outputChannels.fuelTrimLoad[0] = 14;
+	EXPECT_TRUE(std::isnan(getAirmassConsumerLoad(AirmassConsumer::FuelTrim)));
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[0], 14);
+}
+
+TEST(AirmassConsumerSnapshot, InvalidationClearsDiagnosticCursorsIncludingInactiveCylinders) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableSoftwareKnock = true;
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	setCylinderCount(12);
+	for (size_t cylinder = 0; cylinder < MAX_CYLINDER_COUNT; cylinder++) {
+		config->fuelTrimLoadSource[cylinder] = AFR_Tps;
+		config->ignitionTrimLoadSource[cylinder] = AFR_MAP;
+		config->knockGainLoadSource[cylinder] = AFR_EffectiveMAP;
+	}
+	ASSERT_TRUE(processAirmassConsumerLoads(consumerInputs(), 0.3f, true));
+	ASSERT_GT(engine->outputChannels.knockGainLoad[11], 0);
+	setCylinderCount(4);
+	invalidateAirmassConsumerLoads();
+	EXPECT_FALSE(engine->engineState.airmassLoads.Valid);
+	for (size_t cylinder = 0; cylinder < MAX_CYLINDER_COUNT; cylinder++) {
+		EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[cylinder], 0);
+		EXPECT_FLOAT_EQ(engine->outputChannels.ignitionTrimLoad[cylinder], 0);
+		EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[cylinder], 0);
+	}
+	EXPECT_FLOAT_EQ(engine->outputChannels.injectionPhaseLoad, 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.hpfpTargetLoad, 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.trailingSparkLoad, 0);
+}
+
+TEST(AirmassConsumerSnapshot, ContextKeepsCoordinatesAndSelectorsCoherentWithinCalculation) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	config->fuelTrimLoadSource[0] = AFR_Tps;
+	config->fuelTrimLoadSource[1] = AFR_MAP;
+	config->ignitionTrimLoadSource[0] = AFR_EffectiveMAP;
+	auto inputs = consumerInputs();
+	inputs.Tps = 20.125f;
+	ASSERT_TRUE(processAirmassConsumerLoads(inputs, 0.3f, true));
+	const AirmassConsumerLoadContext loads(AirmassConsumer::FuelTrim, AirmassConsumer::IgnitionTrim);
+	inputs.Tps = 35;
+	inputs.MeasuredMap = 95;
+	inputs.EffectiveMap.Map = 90;
+	config->fuelTrimLoadSource[0] = AFR_MAP;
+	ASSERT_TRUE(processAirmassConsumerLoads(inputs, 0.3f, true));
+	EXPECT_FLOAT_EQ(loads.get(AirmassConsumer::FuelTrim, 0), 20.125f);
+	EXPECT_FLOAT_EQ(loads.get(AirmassConsumer::FuelTrim, 1), 80);
+	EXPECT_FLOAT_EQ(loads.get(AirmassConsumer::IgnitionTrim, 0), 70);
+	const AirmassConsumerLoadContext next(AirmassConsumer::FuelTrim);
+	EXPECT_FLOAT_EQ(next.get(AirmassConsumer::FuelTrim), 95);
+	EXPECT_TRUE(std::isnan(next.get(AirmassConsumer::IgnitionTrim)));
+	EXPECT_TRUE(std::isnan(next.get(AirmassConsumer::FuelTrim, MAX_CYLINDER_COUNT)));
+	EXPECT_TRUE(std::isnan(next.get(AirmassConsumer::Count)));
+}
+
+TEST(AirmassConsumerSnapshot, NewContextsRejectInvalidatedOrVersionStalePublications) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	config->fuelTrimLoadSource[0] = AFR_Tps;
+	for (const bool tuneWrite : {false, true}) {
+		SCOPED_TRACE(tuneWrite);
+		const auto token = engine->airmassInjectionState.beginCalculation(
+				LM_SD_ALPHA_N, 2000, engine->getGlobalConfigurationVersion());
+		ASSERT_TRUE(processAirmassConsumerLoads(consumerInputs(), 0.3f, true));
+		const AirmassConsumerLoadContext old(AirmassConsumer::FuelTrim);
+		EXPECT_FLOAT_EQ(old.get(AirmassConsumer::FuelTrim), 20);
+		if (tuneWrite) {
+			engine->airmassInjectionState.onConfigurationWrite(LM_SD_ALPHA_N, false);
+		} else {
+			engine->airmassInjectionState.onEngineStop();
+		}
+		const AirmassConsumerLoadContext invalid(AirmassConsumer::FuelTrim);
+		EXPECT_TRUE(std::isnan(invalid.get(AirmassConsumer::FuelTrim)));
+		// A local captured result cannot authorize a fuel commit after invalidation.
+		EXPECT_FALSE(engine->airmassInjectionState.isCalculationCurrent(token));
+		engine->airmassInjectionState.completeCalculation(token, true);
+		EXPECT_FALSE(engine->airmassInjectionState.allowInjection());
+	}
+	ASSERT_TRUE(processAirmassConsumerLoads(consumerInputs(), 0.3f, true));
+	engine->globalConfigurationVersion++;
+	const AirmassConsumerLoadContext stale(AirmassConsumer::FuelTrim);
+	EXPECT_TRUE(std::isnan(stale.get(AirmassConsumer::FuelTrim)));
+}
+
+TEST(AirmassConsumerSnapshot, LegacyPublicationOwnsCursorsAndPreservesPhysicalFallbacks) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) { cfg->hpfpValvePin = Gpio::A2; });
+	engineConfiguration->enableSoftwareKnock = true;
+	engineConfiguration->hpfpCamLobes = 3;
+	engineConfiguration->hpfpPumpVolume = 0.2f;
+	Sensor::setMockValue(SensorType::Rpm, 2000);
+	engineConfiguration->fuelAlgorithm = LM_MOCK;
+	setCylinderCount(12);
+	engine->engineState.fuelingLoad = 60.125f;
+	engine->fuelComputer.normalizedCylinderFilling = 75.125f;
+	Sensor::setMockValue(SensorType::Map, 80.125f);
+	Sensor::setMockValue(SensorType::Tps1, 20.125f);
+	config->injectionPhaseLoadSource = AFR_None;
+	config->fuelTrimLoadSource[11] = AFR_Tps;
+	config->ignitionTrimLoadSource[11] = AFR_CylFilling;
+	config->knockGainLoadSource[11] = AFR_EffectiveMAP;
+	config->hpfpTargetLoadSource = AFR_MAP;
+	engine->outputChannels.injectionPhaseLoad = 12;
+	EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::InjectionPhase), 60.125f);
+	EXPECT_FLOAT_EQ(engine->outputChannels.injectionPhaseLoad, 12);
+	publishLegacyAirmassConsumerLoads();
+	EXPECT_NEAR(engine->outputChannels.injectionPhaseLoad, 60.1f, 0.01f);
+	EXPECT_NEAR(engine->outputChannels.fuelTrimLoad[11], 20.1f, 0.01f);
+	EXPECT_NEAR(engine->outputChannels.ignitionTrimLoad[11], 75.1f, 0.01f);
+	EXPECT_NEAR(engine->outputChannels.knockGainLoad[11], 80.1f, 0.01f);
+	EXPECT_NEAR(engine->outputChannels.hpfpTargetLoad, 80.1f, 0.01f);
+	const AirmassConsumerLoadContext captured(AirmassConsumer::FuelTrim, AirmassConsumer::HpfpTarget);
+	Sensor::setInvalidMockValue(SensorType::Map);
+	Sensor::setInvalidMockValue(SensorType::Tps1);
+	EXPECT_FLOAT_EQ(captured.get(AirmassConsumer::FuelTrim, 11), 20.125f);
+	EXPECT_FLOAT_EQ(captured.get(AirmassConsumer::HpfpTarget), 80.125f);
+	const AirmassConsumerLoadContext missing(AirmassConsumer::FuelTrim, AirmassConsumer::HpfpTarget);
+	EXPECT_FLOAT_EQ(missing.get(AirmassConsumer::FuelTrim, 11), 100);
+	EXPECT_FLOAT_EQ(missing.get(AirmassConsumer::HpfpTarget), 0);
+	publishLegacyAirmassConsumerLoads();
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[11], 100);
+	EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[11], 200);
+	EXPECT_FLOAT_EQ(engine->outputChannels.hpfpTargetLoad, 0);
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	engine->outputChannels.fuelTrimLoad[11] = 15;
+	publishLegacyAirmassConsumerLoads();
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[11], 15);
 }
 
 TEST(AirmassConsumerSnapshot, DryEvaluationPreservesPublicationAndMissingMeasuredMapStaysInvalid) {
@@ -578,4 +797,341 @@ TEST_F(AirmassConsumers, HpfpMeasuredMapRetainsZeroFallbackWithoutChangingFuelOv
 	inputs.MeasuredMap = 40;
 	ASSERT_TRUE(processAirmassConsumerLoads(inputs, 0.2f, true));
 	EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::HpfpTarget), 40);
+}
+
+TEST(AirmassConsumerSnapshot, PackedPublicationPreservesPrecisionAndClearsUnusedSlots) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_SD_ALPHA_N;
+	setCylinderCount(12);
+	config->injectionPhaseLoadSource = AFR_Tps;
+	config->fuelTrimLoadSource[11] = AFR_CylFilling;
+	config->ignitionTrimLoadSource[11] = static_cast<load_override_e>(255);
+	auto inputs = consumerInputs();
+	inputs.Tps = 20.125f;
+	ASSERT_TRUE(processAirmassConsumerLoads(inputs, 100, true));
+	EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::InjectionPhase), 20.125f);
+	EXPECT_NEAR(engine->outputChannels.injectionPhaseLoad, 20.1f, 0.001f);
+	EXPECT_GT(getAirmassConsumerLoad(AirmassConsumer::FuelTrim, 11), 3276);
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[11], 3276);
+	EXPECT_FLOAT_EQ(engine->outputChannels.ignitionTrimLoad[11], 0);
+	setCylinderCount(4);
+	ASSERT_TRUE(processAirmassConsumerLoads(consumerInputs(), 0.3f, true));
+	for (size_t cylinder = 4; cylinder < MAX_CYLINDER_COUNT; cylinder++) {
+		EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[cylinder], 0);
+		EXPECT_FLOAT_EQ(engine->outputChannels.ignitionTrimLoad[cylinder], 0);
+		EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[cylinder], 0);
+	}
+	EXPECT_FALSE(processAirmassConsumerLoads(consumerInputs(), NAN, true));
+	EXPECT_FALSE(engine->engineState.airmassLoads.Valid);
+	EXPECT_FLOAT_EQ(engine->outputChannels.injectionPhaseLoad, 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[0], 0);
+}
+
+TEST(AirmassConsumerSnapshot, LegacyPackingClampsAndHandlesNonfiniteCoordinates) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->fuelAlgorithm = LM_MOCK;
+	config->injectionPhaseLoadSource = AFR_None;
+	const float loads[] = {20.125f, 20.25f, -20.125f, -20.25f, 4000, -4000, INFINITY, -INFINITY, NAN};
+	const float expected[] = {20.1f, 20.3f, -20.1f, -20.3f, 3276, -3276, 0, 0, 0};
+	for (size_t i = 0; i < efi::size(loads); i++) {
+		SCOPED_TRACE(i);
+		engine->engineState.fuelingLoad = loads[i];
+		publishLegacyAirmassConsumerLoads();
+		EXPECT_NEAR(engine->outputChannels.injectionPhaseLoad, expected[i], 0.001f);
+	}
+}
+
+TEST(AirmassConsumerSnapshot, PreparedPhysicalAndLegacyCursorsRejectInterveningInvalidation) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	config->injectionPhaseLoadSource = AFR_Tps;
+	Sensor::setMockValue(SensorType::Tps1, 90);
+	for (const auto strategy : {LM_SD_ALPHA_N, LM_MOCK}) {
+		for (int change = 0; change < 4; change++) {
+			SCOPED_TRACE(strategy);
+			SCOPED_TRACE(change);
+			engineConfiguration->fuelAlgorithm = strategy;
+			engine->airmassInjectionState.beginCalculation(strategy, 2000, engine->getGlobalConfigurationVersion());
+			auto inputs = consumerInputs();
+			inputs.Tps = 90;
+			bool prepared = false;
+			engine->onAirmassConsumerLoadsPrepared = [&] {
+				prepared = true;
+				if (change == 0) {
+					engine->airmassInjectionState.onEngineStop();
+				} else if (change == 1) {
+					engine->globalConfigurationVersion++;
+					engine->airmassInjectionState.onConfigurationWrite(strategy, false);
+				} else if (change == 2) {
+					engineConfiguration->fuelAlgorithm = strategy == LM_MOCK ? LM_SD_ALPHA_N : LM_MOCK;
+				} else {
+					engine->airmassInjectionState.beginCalculation(
+							strategy, 2000, engine->getGlobalConfigurationVersion());
+				}
+				engine->outputChannels.injectionPhaseLoad = 35;
+			};
+			if (strategy == LM_MOCK) {
+				publishLegacyAirmassConsumerLoads();
+			} else {
+				EXPECT_FALSE(processAirmassConsumerLoads(inputs, 0.3f, true));
+			}
+			engine->onAirmassConsumerLoadsPrepared = nullptr;
+			EXPECT_TRUE(prepared);
+			EXPECT_FLOAT_EQ(engine->outputChannels.injectionPhaseLoad, 35);
+		}
+	}
+}
+
+TEST_F(AirmassConsumers, FinalFuelRejectsAllCylindersForInvalidBankOrResult) {
+	for (int failure = 0; failure < 4; failure++) {
+		SCOPED_TRACE(failure);
+		engineConfiguration->cylinderBankSelect[3] = 0;
+		engine->engineState.lua.fuelAdd = 0;
+		calculate();
+		ASSERT_TRUE(engine->airmassInjectionState.allowInjection());
+		float previousMasses[4];
+		for (size_t cylinder = 0; cylinder < 4; cylinder++) {
+			previousMasses[cylinder] = engine->cylinders[cylinder].getInjectionMass();
+			ASSERT_GT(previousMasses[cylinder], 0);
+		}
+		if (failure == 0) {
+			engineConfiguration->cylinderBankSelect[3] = STFT_BANK_COUNT;
+		} else {
+			const float invalid[] = {NAN, INFINITY, -100};
+			engine->engineState.lua.fuelAdd = invalid[failure - 1];
+		}
+		bool prepared = false;
+		engine->onCylinderFuelPrepared = [&] {
+			prepared = true;
+			// Preparation cannot expose even a partial cylinder update.
+			for (size_t cylinder = 0; cylinder < 4; cylinder++) {
+				EXPECT_FLOAT_EQ(engine->cylinders[cylinder].getInjectionMass(), previousMasses[cylinder]);
+			}
+		};
+		calculate();
+		engine->onCylinderFuelPrepared = nullptr;
+		EXPECT_TRUE(prepared);
+		EXPECT_FALSE(engine->airmassInjectionState.allowInjection());
+		EXPECT_FLOAT_EQ(engine->engineState.injectionDuration, 0);
+		EXPECT_FLOAT_EQ(engine->engineState.injectionDurationStage2, 0);
+		for (const auto& cylinder : engine->cylinders) {
+			EXPECT_FLOAT_EQ(cylinder.getInjectionMass(), 0);
+		}
+	}
+}
+
+TEST_F(AirmassConsumers, PreparedFinalFuelAndTimingRejectStopTuneAndNewerCalculation) {
+	for (int change = 0; change < 3; change++) {
+		SCOPED_TRACE(change);
+		calculate();
+		ASSERT_TRUE(engine->airmassInjectionState.allowInjection());
+		bool prepared = false;
+		engine->onCylinderFuelPrepared = [&] {
+			prepared = true;
+			if (change == 0) {
+				engine->airmassInjectionState.onEngineStop();
+			} else if (change == 1) {
+				engine->globalConfigurationVersion++;
+				engine->airmassInjectionState.onConfigurationWrite(LM_SD_ALPHA_N, false);
+			} else {
+				engine->airmassInjectionState.beginCalculation(
+						LM_SD_ALPHA_N, 2000, engine->getGlobalConfigurationVersion());
+			}
+			// Distinguishable newer values must survive every part of a stale commit.
+			engine->engineState.injectionDuration = 123;
+			engine->engineState.shouldUpdateInjectionTiming = false;
+			for (auto& cylinder : engine->cylinders) {
+				cylinder.setInjectionMass(0);
+				cylinder.setIgnitionTimingBtdc(77);
+			}
+		};
+		calculate();
+		engine->onCylinderFuelPrepared = nullptr;
+		EXPECT_TRUE(prepared);
+		EXPECT_FLOAT_EQ(engine->engineState.injectionDuration, 123);
+		EXPECT_FALSE(engine->engineState.shouldUpdateInjectionTiming);
+		for (size_t cylinder = 0; cylinder < 4; cylinder++) {
+			EXPECT_FLOAT_EQ(engine->cylinders[cylinder].getInjectionMass(), 0);
+			EXPECT_FLOAT_EQ(engine->cylinders[cylinder].getIgnitionTimingBtdc(), 77);
+		}
+	}
+}
+
+TEST_F(AirmassConsumers, LegacyInvalidFuelClearsEveryCylinderAndValidCalculationRecovers) {
+	engineConfiguration->fuelAlgorithm = LM_MOCK;
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(testing::_, testing::_))
+			.WillRepeatedly(testing::Return(AirmassResult{0.3f, 70}));
+	calculate();
+	ASSERT_GT(engine->cylinders[0].getInjectionMass(), 0);
+	engineConfiguration->cylinderBankSelect[3] = STFT_BANK_COUNT;
+	calculate();
+	EXPECT_FLOAT_EQ(engine->engineState.injectionDuration, 0);
+	for (const auto& cylinder : engine->cylinders) {
+		EXPECT_FLOAT_EQ(cylinder.getInjectionMass(), 0);
+	}
+	engineConfiguration->cylinderBankSelect[3] = 0;
+	calculate();
+	ASSERT_GT(engine->cylinders[0].getInjectionMass(), 0);
+	engine->engineState.lua.fuelAdd = INFINITY;
+	calculate();
+	EXPECT_FLOAT_EQ(engine->engineState.injectionDuration, 0);
+	for (const auto& cylinder : engine->cylinders) {
+		EXPECT_FLOAT_EQ(cylinder.getInjectionMass(), 0);
+	}
+	engine->engineState.lua.fuelAdd = 0;
+	calculate();
+	EXPECT_GT(engine->cylinders[0].getInjectionMass(), 0);
+}
+
+TEST_F(AirmassConsumers, DisabledInjectionPublishesZeroFuelAndKeepsIndependentSpark) {
+	calculate();
+	ASSERT_GT(engine->cylinders[0].getInjectionMass(), 0);
+	engineConfiguration->isInjectionEnabled = false;
+	calculate();
+	EXPECT_FLOAT_EQ(engine->engineState.injectionDuration, 0);
+	EXPECT_FLOAT_EQ(engine->engineState.injectionDurationStage2, 0);
+	EXPECT_TRUE(engine->engineState.shouldUpdateInjectionTiming);
+	for (size_t cylinder = 0; cylinder < 4; cylinder++) {
+		EXPECT_FLOAT_EQ(engine->cylinders[cylinder].getInjectionMass(), 0);
+		EXPECT_TRUE(std::isfinite(engine->cylinders[cylinder].getIgnitionTimingBtdc()));
+	}
+	EXPECT_GT(engine->cylinders[1].getIgnitionTimingBtdc(), engine->cylinders[0].getIgnitionTimingBtdc() + 5);
+}
+
+TEST_F(AirmassConsumers, InjectionTimingDutyUsesPreparedDurationWithOriginalRounding) {
+	for (const auto mode : {IM_SEQUENTIAL, IM_BATCH, IM_SIMULTANEOUS}) {
+		SCOPED_TRACE(mode);
+		engineConfiguration->injectionMode = mode;
+		engineConfiguration->crankingInjectionMode = mode;
+		for (const float add : {0.0f, 1.0f}) {
+			SCOPED_TRACE(add);
+			engine->engineState.lua.fuelAdd = add;
+			// The previous published duration must have no effect on this calculation's decision.
+			engine->engineState.injectionDuration = 1000;
+			calculate();
+			ASSERT_TRUE(engine->airmassInjectionState.allowInjection());
+			EXPECT_EQ(engine->engineState.shouldUpdateInjectionTiming, getInjectorDutyCycle(2000) < 90);
+		}
+	}
+}
+
+TEST_F(AirmassConsumers, DisabledOptionalFeaturesSkipControlReadsAndClearCursors) {
+	engineConfiguration->enableStagedInjection = true;
+	engineConfiguration->enableSoftwareKnock = true;
+	engineConfiguration->lambdaProtectionEnable = true;
+	calculate();
+	ASSERT_GT(engine->outputChannels.trailingSparkLoad, 0);
+	ASSERT_GT(engine->outputChannels.knockGainLoad[0], 0);
+	engineConfiguration->enableStagedInjection = false;
+	engineConfiguration->enableTrailingSparks = false;
+	engineConfiguration->enableSoftwareKnock = false;
+	engineConfiguration->fuelClosedLoopCorrectionEnabled = false;
+	engineConfiguration->lambdaProtectionEnable = false;
+	config->stagingLoadSource = config->trailingSparkLoadSource = config->lambdaMonitorLoadSource =
+			static_cast<load_override_e>(255);
+	config->injectorStagingRpmBins[1] = config->injectorStagingRpmBins[0];
+	config->trailingIgnitionRpmBins[1] = config->trailingIgnitionRpmBins[0];
+	resetAirmassCursorPreparationCounts();
+	eth.moveTimeForwardMs(1000);
+	calculate();
+	EXPECT_TRUE(engine->engineState.airmassCalculationValid);
+	EXPECT_GT(engine->cylinders[0].getInjectionMass(), 0);
+	EXPECT_FLOAT_EQ(engine->engineState.injectionStage2Fraction, 0);
+	EXPECT_FLOAT_EQ(engine->engineState.trailingSparkAngle, 0);
+	EXPECT_TRUE(engine->lambdaMonitor.lambdaCurrentlyGood);
+	EXPECT_FLOAT_EQ(engine->lambdaMonitor.lambdaTimeSinceGood, 0);
+	for (auto consumer :
+		 {AirmassConsumer::Staging,
+		  AirmassConsumer::TrailingSpark,
+		  AirmassConsumer::LambdaMonitor,
+		  AirmassConsumer::KnockGain,
+		  AirmassConsumer::KnockRetard}) {
+		EXPECT_EQ(getAirmassConsumerReadCount(consumer), 0u);
+		EXPECT_EQ(getAirmassCursorPreparationCount(consumer), 0u);
+	}
+	EXPECT_FLOAT_EQ(engine->outputChannels.stagingLoad, 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.trailingSparkLoad, 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[0], 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.lambdaMonitorLoad, 0);
+	// Both disabled trim families also avoid their selectors and RPM bin work.
+	engineConfiguration->isInjectionEnabled = false;
+	engineConfiguration->isIgnitionEnabled = false;
+	config->fuelTrimLoadSource[0] = config->ignitionTrimLoadSource[0] = static_cast<load_override_e>(255);
+	resetAirmassCursorPreparationCounts();
+	calculate();
+	EXPECT_EQ(getAirmassConsumerReadCount(AirmassConsumer::FuelTrim), 0u);
+	EXPECT_EQ(getAirmassConsumerReadCount(AirmassConsumer::IgnitionTrim), 0u);
+	EXPECT_FLOAT_EQ(engine->outputChannels.fuelTrimLoad[0], 0);
+	EXPECT_FLOAT_EQ(engine->outputChannels.ignitionTrimLoad[0], 0);
+}
+
+TEST_F(AirmassConsumers, DisabledLambdaMonitorRetainsRestoreLoadUntilLatchedCutClears) {
+	engineConfiguration->lambdaProtectionEnable = false;
+	engineConfiguration->lambdaProtectionRestoreRpm = 2500;
+	engineConfiguration->lambdaProtectionRestoreLoad = 50;
+	engineConfiguration->lambdaProtectionRestoreTps = 30;
+	config->lambdaMonitorLoadSource = AFR_MAP;
+	engine->lambdaMonitor.lambdaMonitorCut = true;
+	resetAirmassCursorPreparationCounts();
+	calculate();
+	EXPECT_TRUE(engine->lambdaMonitor.isCut());
+	EXPECT_TRUE(engine->lambdaMonitor.lambdaCurrentlyGood);
+	EXPECT_EQ(getAirmassConsumerReadCount(AirmassConsumer::LambdaMonitor), 1u);
+	EXPECT_EQ(getAirmassCursorPreparationCount(AirmassConsumer::LambdaMonitor), 1u);
+	EXPECT_FLOAT_EQ(engine->outputChannels.lambdaMonitorLoad, 80);
+	Sensor::setMockValue(SensorType::Map, 40);
+	calculate();
+	EXPECT_FALSE(engine->lambdaMonitor.isCut());
+	EXPECT_FLOAT_EQ(engine->outputChannels.lambdaMonitorLoad, 40);
+	resetAirmassCursorPreparationCounts();
+	calculate();
+	EXPECT_EQ(getAirmassConsumerReadCount(AirmassConsumer::LambdaMonitor), 0u);
+	EXPECT_EQ(getAirmassCursorPreparationCount(AirmassConsumer::LambdaMonitor), 0u);
+	EXPECT_FLOAT_EQ(engine->outputChannels.lambdaMonitorLoad, 0);
+}
+
+TEST(AirmassConsumerSnapshot, DisabledV12OptionalCursorsSkipNineteenPreparationsForPhysicalAndLegacyModels) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setCylinderCount(12);
+	engineConfiguration->isInjectionEnabled = true;
+	engineConfiguration->isIgnitionEnabled = true;
+	engineConfiguration->enableStagedInjection = false;
+	engineConfiguration->enableTrailingSparks = false;
+	engineConfiguration->enableSoftwareKnock = false;
+	engineConfiguration->fuelClosedLoopCorrectionEnabled = false;
+	engineConfiguration->lambdaProtectionEnable = false;
+	config->knockRetardLoadSource = AFR_EffectiveMAP;
+	for (auto& source : config->knockGainLoadSource) {
+		source = AFR_EffectiveMAP;
+	}
+	for (auto strategy : {LM_SD_ALPHA_N, LM_MOCK}) {
+		engineConfiguration->fuelAlgorithm = strategy;
+		resetAirmassCursorPreparationCounts();
+		if (strategy == LM_MOCK) {
+			engine->engineState.fuelingLoad = 70;
+			Sensor::setMockValue(SensorType::Map, 70);
+			publishLegacyAirmassConsumerLoads();
+		} else {
+			ASSERT_TRUE(processAirmassConsumerLoads(consumerInputs(), 0.3f, true));
+		}
+		unsigned total = 0;
+		for (unsigned i = 0; i < static_cast<unsigned>(AirmassConsumer::Count); i++) {
+			total += getAirmassCursorPreparationCount(static_cast<AirmassConsumer>(i));
+		}
+		EXPECT_EQ(total, 26u);
+		EXPECT_EQ(getAirmassCursorPreparationCount(AirmassConsumer::KnockGain), 0u);
+		EXPECT_EQ(getAirmassCursorPreparationCount(AirmassConsumer::KnockRetard), 0u);
+		EXPECT_EQ(getAirmassCursorPreparationCount(AirmassConsumer::HpfpTarget), 0u);
+		EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[11], 0);
+		EXPECT_FLOAT_EQ(engine->outputChannels.knockRetardLoad, 0);
+		// Read-only coordinate inspection retains full precision while disabled.
+		EXPECT_FLOAT_EQ(getAirmassConsumerLoad(AirmassConsumer::KnockGain, 11), 70);
+		engineConfiguration->enableSoftwareKnock = true;
+		if (strategy == LM_MOCK) {
+			publishLegacyAirmassConsumerLoads();
+		} else {
+			ASSERT_TRUE(processAirmassConsumerLoads(consumerInputs(), 0.3f, true));
+		}
+		EXPECT_FLOAT_EQ(engine->outputChannels.knockGainLoad[11], 70);
+		engineConfiguration->enableSoftwareKnock = false;
+	}
 }

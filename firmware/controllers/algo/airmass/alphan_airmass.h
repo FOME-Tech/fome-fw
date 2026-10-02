@@ -24,6 +24,12 @@ public:
 			AlphaNPressurePolicy pressurePolicy = AlphaNPressurePolicy::PureReference) const;
 
 private:
+	friend class BlendedAirmass;
+	AirmassEvaluation evaluateRawAirmassImpl(
+			const AirmassInputs& inputs,
+			RawAirmassDiagnostics* diagnostics,
+			AlphaNPressurePolicy pressurePolicy,
+			bool liveCalibration) const;
 	float getDedicatedVeImpl(float rpm, float load) const override;
 	AirmassEvaluation evaluateAirmass(float rpm, const DiagnosticsTarget& diagnostics) const;
 	AirmassEvaluation

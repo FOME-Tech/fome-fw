@@ -40,6 +40,10 @@ public:
 		: m_row(priv::getBin(rowValue, rowBins))
 		, m_column(priv::getBin(columnValue, columnBins)) {}
 
+	PreparedTable3DInterpolation(priv::BinResult row, priv::BinResult column)
+		: m_row(row)
+		, m_column(column) {}
+
 	template <typename TValue>
 	float getValue(const TValue (&table)[TRowCount][TColumnCount]) const {
 		float lowerLeft = table[m_row.Idx][m_column.Idx];
@@ -56,6 +60,52 @@ public:
 private:
 	priv::BinResult m_row;
 	priv::BinResult m_column;
+};
+
+/**
+ * Calculation-local coordinates for a table family sharing axes and column value.
+ * Cache the resolved row value, rather than its selector: independent selectors
+ * can resolve to the same value, and legacy callers can read changing sensors.
+ * Six entries cover the airmass load sources without a per-cylinder allocation.
+ * Do not retain this across calculations without a calibration-generation guard.
+ */
+template <typename TRow, unsigned TRowCount, unsigned TColumnCount, unsigned TCacheSize = 6>
+class Table3DInterpolationCache {
+public:
+	template <typename TColumn>
+	Table3DInterpolationCache(
+			const TRow (&rowBins)[TRowCount],
+			const TColumn (&columnBins)[TColumnCount],
+			float columnValue,
+			bool enabled = true)
+		: m_rowBins(rowBins)
+		// A disabled family never calls prepare, so it needs no RPM bin search.
+		, m_column(enabled ? priv::getBin(columnValue, columnBins) : priv::BinResult{}) {}
+
+	PreparedTable3DInterpolation<TRowCount, TColumnCount> prepare(float rowValue) {
+		for (unsigned i = 0; i < m_count; i++) {
+			if (m_rows[i].value == rowValue) {
+				return {m_rows[i].bin, m_column};
+			}
+		}
+
+		auto row = priv::getBin(rowValue, m_rowBins);
+		// If live legacy inputs exceed the bounded cache, keep using fresh bins.
+		if (m_count < TCacheSize) {
+			m_rows[m_count++] = {rowValue, row};
+		}
+		return {row, m_column};
+	}
+
+private:
+	struct Row {
+		float value;
+		priv::BinResult bin;
+	};
+	const TRow (&m_rowBins)[TRowCount];
+	priv::BinResult m_column;
+	Row m_rows[TCacheSize];
+	unsigned m_count = 0;
 };
 
 /**

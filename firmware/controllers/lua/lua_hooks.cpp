@@ -884,7 +884,13 @@ void configureRusefiLuaHooks(lua_State* l) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto value = luaL_checknumber(l2, 2);
 		auto incrementVersion = lua_toboolean(l2, 3);
-		setConfigValueByName(propertyName, value);
+		{
+			chibios_rt::CriticalSectionLocker csl;
+			// The generated setter has no success return or pre-write callback.
+			// Conservatively invalidate even an unknown property, before mutation.
+			engine->airmassInjectionState.onConfigurationWrite(engineConfiguration->fuelAlgorithm, false);
+			setConfigValueByName(propertyName, value);
+		}
 		if (incrementVersion) {
 			incrementGlobalConfigurationVersion();
 		}

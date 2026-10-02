@@ -161,7 +161,7 @@ void RpmCalculator::assignRpmValue(float floatRpmValue) {
 			 * this would make sure that we have good numbers for first cranking revolution
 			 * #275 cranking could be improved
 			 */
-			engine->periodicFastCallback();
+			engine->prepareForTrigger();
 		}
 	}
 }

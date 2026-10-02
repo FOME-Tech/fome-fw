@@ -20,7 +20,14 @@ void* action_s::getArgument() const {
 	return m_param;
 }
 
+#if EFI_UNIT_TEST
+size_t scheduleBatchValidationCount = 0;
+#endif
+
 bool isScheduleBatchValid(const ScheduledAction* events, size_t count, efitick_t now) {
+#if EFI_UNIT_TEST
+	++scheduleBatchValidationCount;
+#endif
 	if (!events || count == 0 || count > MaxScheduleBatchSize) {
 		return false;
 	}

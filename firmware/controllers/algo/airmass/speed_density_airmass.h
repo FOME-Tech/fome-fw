@@ -18,11 +18,14 @@ public:
 
 	float getMap(float rpm, bool postState) const;
 	MapEvaluation evaluateMap(float rpm) const;
-	void captureInputs(float rpm, AirmassInputs& inputs) const;
+	void captureInputs(float rpm, AirmassInputs& inputs, bool liveCalibration = false) const;
 	AirmassEvaluation
 	evaluateRawAirmass(const AirmassInputs& inputs, RawAirmassDiagnostics* diagnostics = nullptr) const;
 
 private:
+	friend class BlendedAirmass;
+	AirmassEvaluation
+	evaluateRawAirmassImpl(const AirmassInputs& inputs, RawAirmassDiagnostics* diagnostics, bool liveCalibration) const;
 	AirmassEvaluation evaluateAirmass(AirmassInputs& inputs, const DiagnosticsTarget& diagnostics) const;
 	AirmassEvaluation evaluateAirmass(float rpm, const DiagnosticsTarget& diagnostics) const;
 	AirmassEvaluation evaluateAirmass(float rpm, float map, const DiagnosticsTarget& diagnostics) const;

@@ -133,6 +133,7 @@ __attribute__((weak)) void boardOnConfigurationChange(engine_configuration_s* /*
  * this method is NOT currently invoked on ECU start - actual user input has to happen!
  */
 void incrementGlobalConfigurationVersion() {
+	invalidateAirmassCalibration();
 	if (!validateAirmassConfiguration()) {
 		return;
 	}
@@ -568,6 +569,7 @@ static void setDefaultEngineConfiguration() {
 #endif
 
 void loadConfiguration() {
+	invalidateAirmassCalibration();
 	// Clear the active configuration so that registered output pins (etc) detect the change on startup and init
 	// properly
 	prepareVoidConfiguration(&activeConfiguration);
@@ -593,6 +595,7 @@ void loadConfiguration() {
 }
 
 void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e engineType) {
+	invalidateAirmassCalibration();
 	enginePins.reset(); // that's mostly important for functional tests
 	/**
 	 * Let's apply global defaults first

@@ -192,7 +192,7 @@ static float getBlendedBaseFuelMass(float rpm) {
 		engine->engineState.ignitionLoad = 0;
 		engine->engineState.airflowEstimate = 0;
 		engine->engineState.baseFuel = 0;
-		engine->engineState.airmassLoads.Valid = false;
+		invalidateAirmassConsumerLoads();
 		engine->airmassInjectionState.rejectCalculation(evaluation.Fault);
 		return 0;
 	}
@@ -261,14 +261,15 @@ static float getBaseFuelMass(float rpm) {
 	const auto calculationToken = engine->airmassInjectionState.publicationEpoch();
 	const auto rejectStandalone = [revisedStandalone, calculationToken](AirmassInjectionFault fault) {
 		chibios_rt::CriticalSectionLocker csl;
-		if (revisedStandalone && engine->airmassInjectionState.isCalculationCurrent(calculationToken)) {
+		auto admission = engine->airmassInjectionState.locked(csl);
+		if (revisedStandalone && admission.isCalculationCurrent(calculationToken)) {
 			// Retaining completed fuel during evaluation must not retain it after
 			// an input/result has actually failed. A stale evaluation cannot close
 			// admission for a newer completed publication.
-			engine->airmassInjectionState.rejectCalculation(fault);
+			admission.rejectCalculation(fault);
 		}
 	};
-	if (!isAirmassConfigurationValid()) {
+	if (!revisedStandalone && !isAirmassConfigurationValid()) {
 		rejectStandalone(AirmassInjectionFault::Configuration);
 		return 0;
 	}
@@ -287,8 +288,11 @@ static float getBaseFuelMass(float rpm) {
 			return 0;
 		}
 		if (!evaluation.Valid) {
-			rejectStandalone(AirmassInjectionFault::Result);
-			engine->engineState.airmassLoads.Valid = false;
+			rejectStandalone(
+					isAirmassModelConfigurationValid(engineConfiguration->fuelAlgorithm)
+							? AirmassInjectionFault::Result
+							: AirmassInjectionFault::Configuration);
+			invalidateAirmassConsumerLoads();
 			engine->engineState.fuelingLoad = 0;
 			engine->engineState.ignitionLoad = 0;
 			engine->fuelComputer.sdAirMassInOneCylinder = 0;
@@ -306,7 +310,8 @@ static float getBaseFuelMass(float rpm) {
 	}
 
 	// Plop some state for others to read
-	float normalizedCylinderFilling = 100 * airmass.CylinderAirmass / getStandardAirCharge();
+	float normalizedCylinderFilling = revisedStandalone ? getAirmassSelectedLoad(AFR_CylFilling, NAN)
+														: 100 * airmass.CylinderAirmass / getStandardAirCharge();
 	engine->fuelComputer.sdAirMassInOneCylinder = airmass.CylinderAirmass;
 	engine->fuelComputer.normalizedCylinderFilling = normalizedCylinderFilling;
 	engine->engineState.fuelingLoad = getAirmassSelectedLoad(AFR_None, airmass.EngineLoadPercent);
@@ -568,18 +573,18 @@ float getCrankingFuel(float baseFuel) {
 	return getCrankingFuel3(baseFuel, engine->rpmCalculator.getRevolutionCounterSinceStart());
 }
 
-/**
- * Standard cylinder air charge - 100% VE at standard temperature, grams per cylinder
- *
- * Should we bother caching 'getStandardAirCharge' result or can we afford to run the math every time we calculate fuel?
- */
+// Cache by actual geometry, including direct edits without a burn version.
 float getStandardAirCharge() {
-	float totalDisplacement = engineConfiguration->displacement;
-	float cylDisplacement = totalDisplacement / engine->engineState.cylinderCount;
-
-	// Calculation of 100% VE air mass in g/cyl - 1 cylinder filling at 1.204/L
-	// 101.325kpa, 20C
-	return idealGasLaw(cylDisplacement, 101.325f, 273.15f + 20.0f);
+	chibios_rt::CriticalSectionLocker csl;
+	auto& cache = engine->airmassCalibration;
+	const float displacement = engineConfiguration->displacement;
+	const float cylinders = engine->engineState.cylinderCount;
+	if (cache.ChargeDisplacement != displacement || cache.ChargeCylinderCount != cylinders) {
+		cache.StandardCharge = idealGasLaw(displacement / cylinders, 101.325f, 293.15f);
+		cache.ChargeDisplacement = displacement;
+		cache.ChargeCylinderCount = cylinders;
+	}
+	return cache.StandardCharge;
 }
 
 float getCylinderFuelTrim(

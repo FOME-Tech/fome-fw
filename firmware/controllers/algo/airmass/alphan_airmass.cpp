@@ -65,7 +65,7 @@ AirmassEvaluation AlphaNAirmass::evaluateAirmass(float rpm, const DiagnosticsTar
 AirmassEvaluation
 AlphaNAirmass::evaluateAirmass(float rpm, AlphaNPressurePolicy policy, const DiagnosticsTarget& diagnostics) const {
 	AirmassInputs inputs;
-	captureAirmassInputs(rpm, inputs);
+	captureAirmassInputs(rpm, inputs, nullptr, true, diagnostics.live());
 	const auto tps = normalizeAirmassPercent(inputs, inputs.Tps);
 	inputs.NativeLoad = tps.value_or(0);
 	inputs.Model = LM_ALPHA_N;
@@ -107,6 +107,14 @@ float AlphaNAirmass::getDedicatedVeImpl(float rpm, float load) const {
 
 AirmassEvaluation AlphaNAirmass::evaluateRawAirmass(
 		const AirmassInputs& inputs, RawAirmassDiagnostics* diagnostics, AlphaNPressurePolicy pressurePolicy) const {
+	return evaluateRawAirmassImpl(inputs, diagnostics, pressurePolicy, false);
+}
+
+AirmassEvaluation AlphaNAirmass::evaluateRawAirmassImpl(
+		const AirmassInputs& inputs,
+		RawAirmassDiagnostics* diagnostics,
+		AlphaNPressurePolicy pressurePolicy,
+		bool liveCalibration) const {
 	if (diagnostics) {
 		*diagnostics = {};
 	}
@@ -125,7 +133,7 @@ AirmassEvaluation AlphaNAirmass::evaluateRawAirmass(
 	if (!pressure) {
 		return evaluation;
 	}
-	const auto ve = evaluateRawVe(inputs, tps.Value, diagnostics);
+	const auto ve = evaluateRawVe(inputs, tps.Value, diagnostics, liveCalibration);
 	const float mass = getAirmassImpl(
 			ve.Ve * PERCENT_DIV, pressure.Value, inputs.TemperatureK, inputs.Displacement, inputs.CylinderCount);
 	evaluation.Result = {mass, tps.Value};

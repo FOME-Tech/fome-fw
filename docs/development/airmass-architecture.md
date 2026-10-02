@@ -1,6 +1,6 @@
 # Airmass models, load coordinates, and injection admission
 
-Documentation revision 3 · 2026-10-01
+Documentation revision 4 · 2026-10-02
 
 This branch separates the calculation of cylinder air mass, the load coordinate used by each consumer, and permission to schedule new fuel pulses. Dedicated Speed Density (SD), Alpha-N, and MAF maps preserve each model's calibration. The combined SD/Alpha-N strategy evaluates both contributions from shared inputs, blends their masses, and applies common corrections once. Injection admission follows a complete validated fuel result.
 
@@ -193,11 +193,19 @@ Current fault or fallback categories cover configuration, sensor, correction, re
 
 Readiness follows validation of final fuel quantities, bank selection, per-cylinder trims and masses, staging fraction, injection durations, and injection offset. Epoch/version checks prevent an obsolete calculation from publishing after a stop, fault, or tune change. The final per-cylinder publication and readiness transition share a critical section; model and table evaluation remain outside it.
 
-`scheduleFuelCallbacks()` admits an ordered batch containing the applicable opening and closing actions. Queue insertion reserves all required entries before inserting any. Invalid actions, timestamps, pulse durations, counter overflow, or allocation failure reject the batch. Admission, callback accounting, and insertion share a critical section, including when callbacks can execute immediately.
+`scheduleFuelCallbacks()` admits an ordered batch containing the applicable opening and closing actions. Queue insertion reserves all required entries before inserting any. Invalid actions, timestamps, pulse durations, counter overflow, or allocation failure reject the batch. Admission, callback accounting, and insertion share a critical section, including when callbacks can execute immediately. Each scheduler executor validates the batch once before insertion; fuel admission registers its callback count first and rolls it back on rejection. Public scheduler calls retain that validation. State access within an existing critical section uses a lock-bound accessor, including publication epoch checks and accepted callback completion. Status diagnostics are written when the status or fault changes.
 
 Already accepted opening and closing callbacks retain ownership and run to completion after admission closes; each acknowledges completion once. A split-pulse continuation is new work and requires current admission. Priming remains available in blended operation under the same normal upstream conditions and callback accounting as other strategies.
 
 See [airmass_injection_state.cpp](../../firmware/controllers/engine_cycle/airmass_injection_state.cpp), [fuel_schedule.cpp](../../firmware/controllers/engine_cycle/fuel_schedule.cpp), [prime_injection.cpp](../../firmware/controllers/engine_cycle/prime_injection.cpp), and `EventQueue::insertBatch()` in [event_queue.cpp](../../firmware/controllers/system/timer/event_queue.cpp).
+
+### First-cycle preparation
+
+The first zero-to-positive RPM transition and the index-zero trigger-configuration update call `Engine::prepareForTrigger()` synchronously. Fuel publication, dwell and advance, DFCO, lambda protection, torque reduction, launch and antilag state are ready before that tooth schedules outputs. The existing module order is retained for wall fuel, high-pressure fuel pump, MAP averaging windows, knock calibration/retard, torque requests and all LimpManager cuts; these remain current before engine-phase callbacks.
+
+The regular 250 Hz fast callback keeps its original order and behavior. Synchronous preparation skips speedometer updates and defers VVT, boost, alternator and tachometer regulation to that thread. Idle control refreshes its target and phase synchronously for timing and torque dependencies, while its IAC PID and actuator update wait for the regular callback. `EngineModule::onSynchronousFastCallback()` defaults to the full module fast callback, so a new module keeps conservative first-cycle behavior until its dependencies are reviewed.
+
+Physical model and per-cylinder calculations remain synchronous when needed for the first output. Preparation is not deduplicated across the first RPM transition and trigger configuration update: their different state/configuration observations can require fresh results. There is no global ISR detection or persistent preparation cache.
 
 ### Stop and configuration invalidation
 

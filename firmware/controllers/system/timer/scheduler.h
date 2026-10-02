@@ -89,6 +89,9 @@ constexpr size_t MaxScheduleBatchSize = 3;
 // Same horizon as the hardware executor. Validate before converting float delays to ticks.
 constexpr int MaximumScheduleDelayUs = 10000000;
 bool isScheduleBatchValid(const ScheduledAction* events, size_t count, efitick_t now);
+#if EFI_UNIT_TEST
+extern size_t scheduleBatchValidationCount;
+#endif
 
 struct Scheduler {
 	/**
@@ -111,7 +114,9 @@ struct Scheduler {
 	 */
 	virtual void cancel(scheduling_s* scheduling) = 0;
 
-	// Reserve every event before exposing any callback. Failure queues and executes nothing.
+	// Every executor validates the batch (shape, actions, order and time horizon)
+	// before insertion. Reserve every event before exposing any callback.
+	// Failure queues and executes nothing.
 	// May execute due callbacks before returning true. Caller bookkeeping must already be in place.
 	virtual bool scheduleBatch(const ScheduledAction* events, size_t count) = 0;
 };

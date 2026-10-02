@@ -76,6 +76,58 @@ bool WarningCodeState::isWarningNow(ObdCode code) const {
 	return !warn->LastTriggered.hasElapsedSec(maxI(3, engineConfiguration->warningPeriod));
 }
 
+#if EFI_ENGINE_CONTROL
+// Keep trim caches/read context out of the core frame while the deeper airmass
+// calculation runs. This boundary must survive LTO; outputs use caller storage.
+static __attribute__((noinline)) void prepareCylinderTrims(
+		float rpm,
+		float cycleFuelMass,
+		float untrimmedAdvance,
+		size_t calculationCylinderCount,
+		const float* bankCorrections,
+		float* cylinderFuelMasses,
+		float* cylinderTiming,
+		bool& fuelPublicationValid) {
+	const AirmassConsumerLoadContext trimLoads(
+			engineConfiguration->isInjectionEnabled ? AirmassConsumer::FuelTrim : AirmassConsumer::Count,
+			engineConfiguration->isIgnitionEnabled ? AirmassConsumer::IgnitionTrim : AirmassConsumer::Count);
+	Table3DInterpolationCache fuelTrimInterpolation(
+			config->fuelTrimLoadBins, config->fuelTrimRpmBins, rpm, engineConfiguration->isInjectionEnabled);
+	Table3DInterpolationCache ignitionTrimInterpolation(
+			config->ignTrimLoadBins, config->ignTrimRpmBins, rpm, engineConfiguration->isIgnitionEnabled);
+	for (size_t i = 0; i < calculationCylinderCount && i < MAX_CYLINDER_COUNT; i++) {
+		float fuelTrim = 1;
+		float ignitionTrim = 0;
+		if (engineConfiguration->isInjectionEnabled) {
+			const float load = trimLoads.get(AirmassConsumer::FuelTrim, i);
+			fuelPublicationValid &= std::isfinite(load);
+			if (std::isfinite(load)) {
+				auto interpolation = fuelTrimInterpolation.prepare(load);
+				fuelTrim = getCylinderFuelTrim(i, interpolation);
+			}
+		}
+		if (engineConfiguration->isIgnitionEnabled) {
+			const float load = trimLoads.get(AirmassConsumer::IgnitionTrim, i);
+			// An unavailable ignition trim uses its neutral value locally.
+			if (std::isfinite(load)) {
+				auto interpolation = ignitionTrimInterpolation.prepare(load);
+				ignitionTrim = getCylinderIgnitionTrim(i, interpolation);
+			}
+		}
+		cylinderTiming[i] = untrimmedAdvance + ignitionTrim;
+		const uint8_t bankIndex = engineConfiguration->cylinderBankSelect[i];
+		if (bankIndex >= STFT_BANK_COUNT) {
+			fuelPublicationValid = false;
+			continue;
+		}
+		// Use this calculation's bank result consistently with its cylinder trims.
+		const float mass = cycleFuelMass * bankCorrections[bankIndex] * fuelTrim;
+		fuelPublicationValid &= std::isfinite(mass) && mass >= 0;
+		cylinderFuelMasses[i] = mass;
+	}
+}
+#endif
+
 EngineState::EngineState() {
 	timeSinceLastTChargeK.reset(getTimeNowNt());
 }
@@ -145,6 +197,7 @@ void EngineState::periodicFastCallback() {
 	if (!airmassCalculationValid || !engineConfiguration->isInjectionEnabled) {
 		cycleFuelMass = 0;
 	}
+	publishLegacyAirmassConsumerLoads();
 	auto clResult = fuelClosedLoopCorrection();
 
 	float nextStage2Fraction;
@@ -153,7 +206,7 @@ void EngineState::periodicFastCallback() {
 	{
 		float injectionFuelMass = cycleFuelMass * getInjectionModeDurationMultiplier(getCurrentInjectionMode());
 
-		nextStage2Fraction = engineConfiguration->isInjectionEnabled
+		nextStage2Fraction = engineConfiguration->isInjectionEnabled && engineConfiguration->enableStagedInjection
 								   ? getStage2InjectionFraction(rpm, getAirmassConsumerLoad(AirmassConsumer::Staging))
 								   : 0;
 		float stage2InjectionMass = injectionFuelMass * nextStage2Fraction;
@@ -174,7 +227,11 @@ void EngineState::periodicFastCallback() {
 	float nextInjectionOffset = engineConfiguration->isInjectionEnabled
 									  ? getInjectionOffset(rpm, getAirmassConsumerLoad(AirmassConsumer::InjectionPhase))
 									  : 0;
-	engine->lambdaMonitor.update(rpm, getAirmassConsumerLoad(AirmassConsumer::LambdaMonitor));
+	// A disabled monitor still resets its timer and can restore a latched cut.
+	const float lambdaMonitorLoad = engineConfiguration->lambdaProtectionEnable || engine->lambdaMonitor.isCut()
+										  ? getAirmassConsumerLoad(AirmassConsumer::LambdaMonitor)
+										  : 0;
+	engine->lambdaMonitor.update(rpm, lambdaMonitorLoad);
 
 	// Keep torque requests and cut state current even when spark outputs are disabled.
 	const float torqueRetard = engine->torqueReductionController.update();
@@ -207,73 +264,78 @@ void EngineState::periodicFastCallback() {
 		engine->stftCorrection[i] = clResult.banks[i];
 	}
 
+	const size_t calculationCylinderCount = engine->engineState.cylinderCount;
 	bool fuelPublicationValid = airmassCalculationValid && std::isfinite(cycleFuelMass) && cycleFuelMass >= 0 &&
 								std::isfinite(nextStage2Fraction) && nextStage2Fraction >= 0 &&
 								nextStage2Fraction <= 1 && std::isfinite(nextInjectionDuration) &&
 								nextInjectionDuration >= 0 && std::isfinite(nextInjectionDurationStage2) &&
 								nextInjectionDurationStage2 >= 0 && std::isfinite(nextInjectionOffset) &&
-								engine->engineState.cylinderCount > 0 &&
-								engine->engineState.cylinderCount <= MAX_CYLINDER_COUNT;
-	float cylinderFuelTrims[MAX_CYLINDER_COUNT]{};
-	float cylinderIgnitionTrims[MAX_CYLINDER_COUNT]{};
-	for (size_t i = 0; i < engine->engineState.cylinderCount && i < MAX_CYLINDER_COUNT; i++) {
-		cylinderFuelTrims[i] = 1;
-		if (engineConfiguration->isInjectionEnabled) {
-			const float load = getAirmassConsumerLoad(AirmassConsumer::FuelTrim, i);
-			fuelPublicationValid &= std::isfinite(load);
-			if (std::isfinite(load)) {
-				PreparedTable3DInterpolation interpolation(
-						config->fuelTrimLoadBins, load, config->fuelTrimRpmBins, rpm);
-				cylinderFuelTrims[i] = getCylinderFuelTrim(i, interpolation);
-			}
-		}
-		if (engineConfiguration->isIgnitionEnabled) {
-			const float load = getAirmassConsumerLoad(AirmassConsumer::IgnitionTrim, i);
-			// An unavailable ignition trim uses its neutral value locally.
-			if (std::isfinite(load)) {
-				PreparedTable3DInterpolation interpolation(config->ignTrimLoadBins, load, config->ignTrimRpmBins, rpm);
-				cylinderIgnitionTrims[i] = getCylinderIgnitionTrim(i, interpolation);
-			}
-		}
+								calculationCylinderCount > 0 && calculationCylinderCount <= MAX_CYLINDER_COUNT;
+	// These scratch arrays hold final values, avoiding a second pair of V12 arrays.
+	float cylinderFuelMasses[MAX_CYLINDER_COUNT]{};
+	float cylinderTiming[MAX_CYLINDER_COUNT]{};
+	prepareCylinderTrims(
+			rpm,
+			cycleFuelMass,
+			untrimmedAdvance,
+			calculationCylinderCount,
+			clResult.banks,
+			cylinderFuelMasses,
+			cylinderTiming,
+			fuelPublicationValid);
+	// Evaluate duty against the durations about to be published, outside the lock.
+	const float totalInjectionTime = nextInjectionDuration * getNumberOfInjections(getCurrentInjectionMode());
+	const float cycleDuration = getEngineCycleDuration(rpm);
+	const bool nextShouldUpdateInjectionTiming = 100 * totalInjectionTime / cycleDuration < 90;
+	const bool clearedShouldUpdateInjectionTiming = 0.0f / cycleDuration < 90;
+#if EFI_UNIT_TEST
+	if (engine->onCylinderFuelPrepared) {
+		engine->onCylinderFuelPrepared();
 	}
-
+#endif
 	{
-		// Keep a stale/reentrant calculation from publishing after a stop, fault, or tune write.
-		// Only the small final per-cylinder publication is locked; table/model evaluation stays outside.
+		// A stop, fault or tune write must reject the entire prepared publication.
 		chibios_rt::CriticalSectionLocker csl;
-		if (engine->airmassInjectionState.isCalculationCurrent(fuelCalculation)) {
-			injectionStage2Fraction = nextStage2Fraction;
-			injectionDuration = nextInjectionDuration;
-			injectionDurationStage2 = nextInjectionDurationStage2;
-			injectionOffset = nextInjectionOffset;
-			for (size_t i = 0; i < engine->engineState.cylinderCount && i < MAX_CYLINDER_COUNT; i++) {
-				uint8_t bankIndex = engineConfiguration->cylinderBankSelect[i];
-				if (bankIndex >= STFT_BANK_COUNT) {
-					fuelPublicationValid = false;
-					continue;
+		auto admission = engine->airmassInjectionState.locked(csl);
+		if (admission.isCalculationCurrent(fuelCalculation)) {
+			fuelPublicationValid &= calculationCylinderCount == engine->engineState.cylinderCount;
+			if (fuelPublicationValid) {
+				injectionStage2Fraction = nextStage2Fraction;
+				injectionDuration = nextInjectionDuration;
+				injectionDurationStage2 = nextInjectionDurationStage2;
+				injectionOffset = nextInjectionOffset;
+				for (size_t i = 0; i < calculationCylinderCount; i++) {
+					engine->cylinders[i].setInjectionMass(cylinderFuelMasses[i]);
 				}
-				auto bankTrim = engine->stftCorrection[bankIndex];
-
-				// Apply both per-bank and per-cylinder trims.
-				auto cylinderFuelMass = cycleFuelMass * bankTrim * cylinderFuelTrims[i];
-				fuelPublicationValid &= std::isfinite(cylinderFuelMass) && cylinderFuelMass >= 0;
-				engine->cylinders[i].setInjectionMass(cylinderFuelMass);
-				engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + cylinderIgnitionTrims[i]);
+				shouldUpdateInjectionTiming = nextShouldUpdateInjectionTiming;
+			} else {
+				// Reject every fuel value together, including external legacy models.
+				injectionStage2Fraction = 0;
+				injectionDuration = 0;
+				injectionDurationStage2 = 0;
+				injectionOffset = 0;
+				for (auto& cylinder : engine->cylinders) {
+					cylinder.setInjectionMass(0);
+				}
+				shouldUpdateInjectionTiming = clearedShouldUpdateInjectionTiming;
 			}
+			for (size_t i = 0; i < calculationCylinderCount && i < MAX_CYLINDER_COUNT; i++) {
+				engine->cylinders[i].setIgnitionTimingBtdc(cylinderTiming[i]);
+			}
+			admission.completeCalculation(fuelCalculation, fuelPublicationValid);
 		}
-		shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
-		engine->airmassInjectionState.completeCalculation(fuelCalculation, fuelPublicationValid);
 	}
 
-	const float trailingLoad = getAirmassConsumerLoad(AirmassConsumer::TrailingSpark);
-	trailingSparkAngle = engineConfiguration->isIgnitionEnabled && std::isfinite(trailingLoad)
-							   ? interpolate3d(
-										 config->trailingIgnitionTable,
-										 config->trailingIgnitionLoadBins,
-										 trailingLoad,
-										 config->trailingIgnitionRpmBins,
-										 rpm)
-							   : 0;
+	const float trailingLoad = engineConfiguration->isIgnitionEnabled && engineConfiguration->enableTrailingSparks
+									 ? getAirmassConsumerLoad(AirmassConsumer::TrailingSpark)
+									 : NAN;
+	trailingSparkAngle = std::isfinite(trailingLoad) ? interpolate3d(
+															   config->trailingIgnitionTable,
+															   config->trailingIgnitionLoadBins,
+															   trailingLoad,
+															   config->trailingIgnitionRpmBins,
+															   rpm)
+													 : 0;
 
 	multispark.count = engineConfiguration->isIgnitionEnabled ? getMultiSparkCount(rpm) : 0;
 #if EFI_TUNER_STUDIO

@@ -191,6 +191,9 @@ int Engine::getGlobalConfigurationVersion() const {
 }
 
 void Engine::reset() {
+	++airmassCalibration.Generation;
+	airmassCalibration.Known = 0;
+	airmassCalibration.ConfigurationVersion = -1;
 	/**
 	 * it's important for wrapAngle() that engineCycle field never has zero
 	 */
@@ -437,6 +440,15 @@ void Engine::periodicFastCallback() {
 	speedoUpdate();
 
 	engineModules.apply_all([](auto& m) { m.onFastCallback(); });
+}
+
+void Engine::prepareForTrigger() {
+	ScopePerf pc(PE::EnginePeriodicFastCallback);
+
+	// Fuel, dwell, advance, DFCO, lambda, torque, launch and antilag must be ready
+	// before this tooth schedules its first injection or spark.
+	engineState.periodicFastCallback();
+	engineModules.apply_all([](auto& m) { m.onSynchronousFastCallback(); });
 }
 
 EngineRotationState* getEngineRotationState() {

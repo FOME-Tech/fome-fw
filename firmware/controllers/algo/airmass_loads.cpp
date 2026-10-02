@@ -164,73 +164,146 @@ float consumerFromSnapshot(const AirmassLoadSnapshot& s, AirmassConsumer consume
 	}
 	return consumerFromSnapshot(s, source);
 }
-void publishCursor(AirmassConsumer consumer, size_t index, float value) {
+// Diagnostics follow feature enablement, not dependency qualification. Public
+// coordinate getters remain usable regardless of these flags. Capture once per
+// publication, including the restore coordinate of a disabled, latched monitor.
+using ConsumerMask = uint16_t;
+static_assert(static_cast<unsigned>(AirmassConsumer::Count) <= 16);
+constexpr ConsumerMask consumerBit(AirmassConsumer consumer) {
+	return ConsumerMask{1} << static_cast<unsigned>(consumer);
+}
+ConsumerMask enabledConsumerMask(float rpm) {
+	ConsumerMask result = 0;
+	const auto include = [&](AirmassConsumer consumer, bool enabled) {
+		if (enabled) {
+			result |= consumerBit(consumer);
+		}
+	};
+	include(AirmassConsumer::InjectionPhase, engineConfiguration->isInjectionEnabled);
+	include(AirmassConsumer::FuelTrim, engineConfiguration->isInjectionEnabled);
+	include(AirmassConsumer::IgnitionTrim, engineConfiguration->isIgnitionEnabled);
+	include(AirmassConsumer::Stft, engineConfiguration->fuelClosedLoopCorrectionEnabled);
+	include(AirmassConsumer::Staging,
+			engineConfiguration->isInjectionEnabled && engineConfiguration->enableStagedInjection);
+	include(AirmassConsumer::LambdaDeviation, engineConfiguration->lambdaProtectionEnable);
+	include(AirmassConsumer::LambdaMonitor,
+			engineConfiguration->lambdaProtectionEnable || engine->lambdaMonitor.isCut());
+	include(AirmassConsumer::TrailingSpark,
+			engineConfiguration->isIgnitionEnabled && engineConfiguration->enableTrailingSparks);
+	include(AirmassConsumer::IgnitionIat, engineConfiguration->isIgnitionEnabled);
+	include(AirmassConsumer::KnockRetard, engineConfiguration->enableSoftwareKnock);
+	include(AirmassConsumer::KnockGain, engineConfiguration->enableSoftwareKnock);
+	include(AirmassConsumer::HpfpTarget,
+			rpm >= 60 && enginePins.hpfpValve.isInitialized() && engineConfiguration->hpfpCamLobes &&
+					engineConfiguration->hpfpPumpVolume > 0);
+	return result;
+}
+#if EFI_UNIT_TEST
+uint32_t cursorPreparationCounts[static_cast<unsigned>(AirmassConsumer::Count)]{};
+uint32_t consumerReadCounts[static_cast<unsigned>(AirmassConsumer::Count)]{};
+#endif
+// All diagnostic load fields use the same scaled type. Keep the actual packed
+// type here so publication is a copy, without another rounding conversion.
+using PackedLoad = decltype(output_channels_s::injectionPhaseLoad);
+template <typename T>
+struct ConsumerCursors {
+	T injectionPhaseLoad{};
+	T fuelTrimLoad[MAX_CYLINDER_COUNT]{};
+	T ignitionTrimLoad[MAX_CYLINDER_COUNT]{};
+	T stftLoad{};
+	T stagingLoad{};
+	T lambdaDeviationLoad{};
+	T lambdaMonitorLoad{};
+	T trailingSparkLoad{};
+	T ignitionIatLoad{};
+	T knockRetardLoad{};
+	T knockGainLoad[MAX_CYLINDER_COUNT]{};
+	T hpfpTargetLoad{};
+};
+using PackedConsumerCursors = ConsumerCursors<PackedLoad>;
+static_assert(sizeof(PackedConsumerCursors) == 90);
+
+template <typename T, typename Reader>
+void prepareConsumerCursors(
+		ConsumerCursors<T>& result, const Reader& read, size_t cylinderCount, ConsumerMask enabled) {
+	const auto readEnabled = [&](AirmassConsumer consumer, size_t index) {
+		return enabled & consumerBit(consumer) ? read(consumer, index) : T{};
+	};
+	result.injectionPhaseLoad = readEnabled(AirmassConsumer::InjectionPhase, 0);
+	result.stftLoad = readEnabled(AirmassConsumer::Stft, 0);
+	result.stagingLoad = readEnabled(AirmassConsumer::Staging, 0);
+	result.lambdaDeviationLoad = readEnabled(AirmassConsumer::LambdaDeviation, 0);
+	result.lambdaMonitorLoad = readEnabled(AirmassConsumer::LambdaMonitor, 0);
+	result.trailingSparkLoad = readEnabled(AirmassConsumer::TrailingSpark, 0);
+	result.ignitionIatLoad = readEnabled(AirmassConsumer::IgnitionIat, 0);
+	result.knockRetardLoad = readEnabled(AirmassConsumer::KnockRetard, 0);
+	result.hpfpTargetLoad = readEnabled(AirmassConsumer::HpfpTarget, 0);
+	for (size_t i = 0; i < cylinderCount && i < MAX_CYLINDER_COUNT; i++) {
+		result.fuelTrimLoad[i] = readEnabled(AirmassConsumer::FuelTrim, i);
+		result.ignitionTrimLoad[i] = readEnabled(AirmassConsumer::IgnitionTrim, i);
+		result.knockGainLoad[i] = readEnabled(AirmassConsumer::KnockGain, i);
+	}
+}
+PackedLoad packCursor(float value, AirmassConsumer consumer) {
+#if EFI_UNIT_TEST
+	cursorPreparationCounts[static_cast<unsigned>(consumer)]++;
+#else
+	UNUSED(consumer);
+#endif
 	// Never cast NaN into the packed representation. Validity remains in the
 	// full precision snapshot and injection state, not encoded as a fake load.
-	value = std::isfinite(value) ? clampF(-3276, value, 3276) : 0;
+	return std::isfinite(value) ? clampF(-3276, value, 3276) : 0;
+}
+void publishConsumerCursors(const PackedConsumerCursors& cursors) {
 	auto& out = engine->outputChannels;
-	switch (consumer) {
-		case AirmassConsumer::InjectionPhase:
-			out.injectionPhaseLoad = value;
-			break;
-		case AirmassConsumer::FuelTrim:
-			out.fuelTrimLoad[index] = value;
-			break;
-		case AirmassConsumer::IgnitionTrim:
-			out.ignitionTrimLoad[index] = value;
-			break;
-		case AirmassConsumer::Stft:
-			out.stftLoad = value;
-			break;
-		case AirmassConsumer::Staging:
-			out.stagingLoad = value;
-			break;
-		case AirmassConsumer::LambdaDeviation:
-			out.lambdaDeviationLoad = value;
-			break;
-		case AirmassConsumer::LambdaMonitor:
-			out.lambdaMonitorLoad = value;
-			break;
-		case AirmassConsumer::TrailingSpark:
-			out.trailingSparkLoad = value;
-			break;
-		case AirmassConsumer::IgnitionIat:
-			out.ignitionIatLoad = value;
-			break;
-		case AirmassConsumer::KnockRetard:
-			out.knockRetardLoad = value;
-			break;
-		case AirmassConsumer::KnockGain:
-			out.knockGainLoad[index] = value;
-			break;
-		case AirmassConsumer::HpfpTarget:
-			out.hpfpTargetLoad = value;
-			break;
-		default:
-			break;
-	}
+	// Compile-time checks prevent a changed output scale from silently adding
+	// numeric conversion back into this interrupt-masked copy.
+#define COPY_CURSOR(field)                                                                                             \
+	static_assert(std::is_same_v<decltype(out.field), decltype(cursors.field)>);                                       \
+	out.field = cursors.field
+	COPY_CURSOR(injectionPhaseLoad);
+	COPY_CURSOR(stftLoad);
+	COPY_CURSOR(stagingLoad);
+	COPY_CURSOR(lambdaDeviationLoad);
+	COPY_CURSOR(lambdaMonitorLoad);
+	COPY_CURSOR(trailingSparkLoad);
+	COPY_CURSOR(ignitionIatLoad);
+	COPY_CURSOR(knockRetardLoad);
+	COPY_CURSOR(hpfpTargetLoad);
+#undef COPY_CURSOR
+	static_assert(std::is_same_v<decltype(out.fuelTrimLoad), decltype(cursors.fuelTrimLoad)>);
+	static_assert(std::is_same_v<decltype(out.ignitionTrimLoad), decltype(cursors.ignitionTrimLoad)>);
+	static_assert(std::is_same_v<decltype(out.knockGainLoad), decltype(cursors.knockGainLoad)>);
+	std::copy_n(cursors.fuelTrimLoad, MAX_CYLINDER_COUNT, out.fuelTrimLoad);
+	std::copy_n(cursors.ignitionTrimLoad, MAX_CYLINDER_COUNT, out.ignitionTrimLoad);
+	std::copy_n(cursors.knockGainLoad, MAX_CYLINDER_COUNT, out.knockGainLoad);
 }
 } // namespace
 
 bool processAirmassConsumerLoads(const AirmassInputs& inputs, mass_t mass, bool publish, bool* fallbackUsed) {
+	const AirmassResolvedLoads loads(inputs, mass);
+	return processAirmassConsumerLoads(inputs, mass, loads, publish, fallbackUsed);
+}
+
+bool processAirmassConsumerLoads(
+		const AirmassInputs& inputs, mass_t mass, const AirmassResolvedLoads& loads, bool publish, bool* fallbackUsed) {
 	AirmassLoadSnapshot snapshot;
 	snapshot.Map = inputs.MeasuredMap.value_or(NAN);
-	snapshot.EffectiveMap = inputs.EffectiveMap.Valid ? inputs.EffectiveMap.Map : NAN;
-	snapshot.Tps = normalizeAirmassPercent(inputs, inputs.Tps).value_or(NAN);
-	snapshot.Pedal = normalizeAirmassPercent(inputs, inputs.Pedal).value_or(NAN);
-	const auto native = resolveAirmassConsumerLoad(inputs, mass, AFR_None);
-	snapshot.Native = native.Value;
-	snapshot.Filling = resolveAirmassLoad(inputs, mass, AFR_CylFilling).Value;
+	snapshot.EffectiveMap = inputs.EffectiveMap.Valid ? loads.strict(AFR_EffectiveMAP).Value : NAN;
+	snapshot.Tps = loads.strict(AFR_Tps).Valid ? loads.strict(AFR_Tps).Value : NAN;
+	snapshot.Pedal = loads.strict(AFR_AccPedal).Valid ? loads.strict(AFR_AccPedal).Value : NAN;
+	snapshot.Native = loads.consumer(AFR_None).Value;
+	snapshot.Filling = loads.strict(AFR_CylFilling).Value;
 	snapshot.UsesEstimate = inputs.EffectiveMap.UsesEstimate;
 	snapshot.ConfigurationVersion = inputs.ConfigurationVersion;
 	for (uint8_t i = 0; i <= AFR_EffectiveMAP; i++) {
-		if (resolveAirmassLoad(inputs, mass, static_cast<load_override_e>(i)).Valid) {
+		if (loads.strict(static_cast<load_override_e>(i)).Valid) {
 			snapshot.ValidSources |= 1u << i;
 		}
 	}
 	// Optional controllers own their sensor failure policy. A missing coordinate
 	// must not turn an otherwise valid air charge into a global fuel cut.
-	const bool valid = std::isfinite(mass) && mass >= 0 && resolveAirmassLoad(inputs, mass, AFR_CylFilling).Valid;
+	const bool valid = std::isfinite(mass) && mass >= 0 && loads.strict(AFR_CylFilling).Valid;
 	// STFT and protection can read the target even when injection is disabled.
 	snapshot.LambdaTargetRequired = lambdaTargetRequired(inputs, snapshot);
 	const auto usesFallback = [&](load_override_e source) {
@@ -258,24 +331,31 @@ bool processAirmassConsumerLoads(const AirmassInputs& inputs, mass_t mass, bool 
 	}
 	snapshot.Valid = valid;
 	if (publish) {
+		PackedConsumerCursors cursors;
+		prepareConsumerCursors(
+				cursors,
+				[&](AirmassConsumer consumer, size_t index) {
+					return packCursor(
+							valid ? consumerFromSnapshot(snapshot, consumer, selector(consumer, index)) : NAN,
+							consumer);
+				},
+				engine->engineState.cylinderCount,
+				enabledConsumerMask(inputs.Rpm));
+#if EFI_UNIT_TEST
+		if (engine->onAirmassConsumerLoadsPrepared) {
+			engine->onAirmassConsumerLoadsPrepared();
+		}
+#endif
 		chibios_rt::CriticalSectionLocker csl;
 		if (!inputs.HasPublicationContext ||
-			inputs.PublicationEpoch != engine->airmassInjectionState.publicationEpoch() ||
+			inputs.PublicationEpoch != engine->airmassInjectionState.locked(csl).publicationEpoch() ||
+			inputs.CalibrationGeneration != engine->airmassCalibration.Generation ||
 			inputs.ConfigurationVersion != engine->getGlobalConfigurationVersion() ||
 			inputs.ActiveStrategy != engineConfiguration->fuelAlgorithm) {
 			return false;
 		}
 		engine->engineState.airmassLoads = snapshot;
-		for (size_t i = 0; i < static_cast<size_t>(AirmassConsumer::Count); i++) {
-			const auto consumer = static_cast<AirmassConsumer>(i);
-			const size_t count = cylinderConsumer(consumer) ? engine->engineState.cylinderCount : 1;
-			for (size_t cylinder = 0; cylinder < count && cylinder < MAX_CYLINDER_COUNT; cylinder++) {
-				publishCursor(
-						consumer,
-						cylinder,
-						valid ? consumerFromSnapshot(snapshot, consumer, selector(consumer, cylinder)) : NAN);
-			}
-		}
+		publishConsumerCursors(cursors);
 	}
 	return valid;
 }
@@ -295,8 +375,8 @@ bool isAirmassLambdaTargetRequired() {
 		   snapshot.LambdaTargetRequired;
 }
 
-float getAirmassSelectedLoad(load_override_e source, float legacyDefault) {
-	chibios_rt::CriticalSectionLocker csl;
+namespace {
+float readSelectedLoad(load_override_e source, float legacyDefault) {
 	const auto& snapshot = engine->engineState.airmassLoads;
 	if (snapshot.Valid && snapshot.ConfigurationVersion == engine->getGlobalConfigurationVersion()) {
 		return consumerFromSnapshot(snapshot, source);
@@ -323,8 +403,7 @@ float getAirmassSelectedLoad(load_override_e source, float legacyDefault) {
 			return NAN;
 	}
 }
-float getAirmassConsumerLoad(AirmassConsumer consumer, size_t index) {
-	chibios_rt::CriticalSectionLocker csl;
+float readConsumerLoad(AirmassConsumer consumer, size_t index) {
 	if (index >= MAX_CYLINDER_COUNT) {
 		return NAN;
 	}
@@ -336,10 +415,189 @@ float getAirmassConsumerLoad(AirmassConsumer consumer, size_t index) {
 	} else if (!revisedModel() && consumer == AirmassConsumer::HpfpTarget && source == AFR_MAP) {
 		value = Sensor::getOrZero(SensorType::Map);
 	} else {
-		value = getAirmassSelectedLoad(source, getFuelingLoad());
+		value = readSelectedLoad(source, getFuelingLoad());
 	}
-	publishCursor(consumer, index, value);
 	return value;
+}
+void captureConsumerCoordinates(
+		float (&loads)[AFR_EffectiveMAP + 1], float& hpfpMap, uint8_t sources = (1u << (AFR_EffectiveMAP + 1)) - 1) {
+	const auto& snapshot = engine->engineState.airmassLoads;
+	if (snapshot.Valid && snapshot.ConfigurationVersion == engine->getGlobalConfigurationVersion()) {
+		for (size_t i = 0; i <= AFR_EffectiveMAP; i++) {
+			loads[i] = sources & (1u << i) ? consumerFromSnapshot(snapshot, static_cast<load_override_e>(i)) : NAN;
+		}
+		hpfpMap =
+				sources & (1u << AFR_MAP) ? consumerFromSnapshot(snapshot, AirmassConsumer::HpfpTarget, AFR_MAP) : NAN;
+		return;
+	}
+	if (revisedModel()) {
+		for (auto& load : loads) {
+			load = NAN;
+		}
+		hpfpMap = NAN;
+		return;
+	}
+	// Sample each physical source once for external-model cylinder loops too.
+	const auto map = sources & ((1u << AFR_MAP) | (1u << AFR_EffectiveMAP)) ? Sensor::get(SensorType::Map) : unexpected;
+	loads[AFR_None] = sources & (1u << AFR_None) ? getFuelingLoad() : NAN;
+	loads[AFR_MAP] = loads[AFR_EffectiveMAP] = map.value_or(200);
+	loads[AFR_Tps] = sources & (1u << AFR_Tps) ? Sensor::get(SensorType::Tps1).value_or(100) : NAN;
+	loads[AFR_AccPedal] =
+			sources & (1u << AFR_AccPedal) ? Sensor::get(SensorType::AcceleratorPedal).value_or(100) : NAN;
+	loads[AFR_CylFilling] = sources & (1u << AFR_CylFilling) ? engine->fuelComputer.normalizedCylinderFilling : NAN;
+	hpfpMap = map.value_or(0);
+}
+float coordinate(
+		const float (&loads)[AFR_EffectiveMAP + 1], float hpfpMap, AirmassConsumer consumer, load_override_e source) {
+	if (source > AFR_EffectiveMAP) {
+		return NAN;
+	}
+	return consumer == AirmassConsumer::HpfpTarget && source == AFR_MAP ? hpfpMap : loads[source];
+}
+} // namespace
+
+float getAirmassSelectedLoad(load_override_e source, float legacyDefault) {
+	chibios_rt::CriticalSectionLocker csl;
+	return readSelectedLoad(source, legacyDefault);
+}
+float getAirmassConsumerLoad(AirmassConsumer consumer, size_t index) {
+#if EFI_UNIT_TEST
+	if (consumer < AirmassConsumer::Count) {
+		consumerReadCounts[static_cast<unsigned>(consumer)]++;
+	}
+#endif
+	chibios_rt::CriticalSectionLocker csl;
+	return readConsumerLoad(consumer, index);
+}
+AirmassConsumerLoadContext::AirmassConsumerLoadContext(AirmassConsumer first, AirmassConsumer second)
+	: m_first(first)
+	, m_second(second) {
+	if (first == AirmassConsumer::Count && second == AirmassConsumer::Count) {
+		return;
+	}
+	chibios_rt::CriticalSectionLocker csl;
+	captureConsumerCoordinates(m_loads, m_hpfpMap);
+	for (size_t i = 0; i < MAX_CYLINDER_COUNT; i++) {
+		if (first != AirmassConsumer::Count) {
+			m_sources[0][i] = selector(first, i);
+		}
+		if (second != AirmassConsumer::Count) {
+			m_sources[1][i] = selector(second, i);
+		}
+	}
+}
+float AirmassConsumerLoadContext::get(AirmassConsumer consumer, size_t index) const {
+	if (index >= MAX_CYLINDER_COUNT || consumer == AirmassConsumer::Count) {
+		return NAN;
+	}
+	const size_t group = consumer == m_first ? 0 : 1;
+	if (group == 1 && consumer != m_second) {
+		return NAN;
+	}
+#if EFI_UNIT_TEST
+	consumerReadCounts[static_cast<unsigned>(consumer)]++;
+#endif
+	return coordinate(m_loads, m_hpfpMap, consumer, m_sources[group][index]);
+}
+void publishLegacyAirmassConsumerLoads() {
+	if (revisedModel()) {
+		return;
+	}
+	float loads[AFR_EffectiveMAP + 1];
+	float hpfpMap;
+	ConsumerCursors<load_override_e> sources;
+	AirmassInjectionState::CalculationToken epoch;
+	int configurationVersion;
+	engine_load_mode_e strategy;
+	size_t cylinderCount;
+	ConsumerMask enabled;
+	{
+		chibios_rt::CriticalSectionLocker csl;
+		if (revisedModel()) {
+			return;
+		}
+		epoch = engine->airmassInjectionState.locked(csl).publicationEpoch();
+		configurationVersion = engine->getGlobalConfigurationVersion();
+		strategy = engineConfiguration->fuelAlgorithm;
+		cylinderCount = engine->engineState.cylinderCount;
+		enabled = enabledConsumerMask(Sensor::getOrZero(SensorType::Rpm));
+		uint8_t requiredSources = 0;
+		prepareConsumerCursors(
+				sources,
+				[&](AirmassConsumer consumer, size_t index) {
+					const auto source = selector(consumer, index);
+					if (source <= AFR_EffectiveMAP) {
+						requiredSources |= 1u << source;
+					}
+					return source;
+				},
+				cylinderCount,
+				enabled);
+		captureConsumerCoordinates(loads, hpfpMap, requiredSources);
+	}
+	PackedConsumerCursors cursors;
+	prepareConsumerCursors(
+			cursors,
+			[&](AirmassConsumer consumer, size_t index) {
+				// Selector resolution happens outside the publication lock too.
+				load_override_e source;
+				switch (consumer) {
+					case AirmassConsumer::InjectionPhase:
+						source = sources.injectionPhaseLoad;
+						break;
+					case AirmassConsumer::FuelTrim:
+						source = sources.fuelTrimLoad[index];
+						break;
+					case AirmassConsumer::IgnitionTrim:
+						source = sources.ignitionTrimLoad[index];
+						break;
+					case AirmassConsumer::Stft:
+						source = sources.stftLoad;
+						break;
+					case AirmassConsumer::Staging:
+						source = sources.stagingLoad;
+						break;
+					case AirmassConsumer::LambdaDeviation:
+						source = sources.lambdaDeviationLoad;
+						break;
+					case AirmassConsumer::LambdaMonitor:
+						source = sources.lambdaMonitorLoad;
+						break;
+					case AirmassConsumer::TrailingSpark:
+						source = sources.trailingSparkLoad;
+						break;
+					case AirmassConsumer::IgnitionIat:
+						source = sources.ignitionIatLoad;
+						break;
+					case AirmassConsumer::KnockRetard:
+						source = sources.knockRetardLoad;
+						break;
+					case AirmassConsumer::KnockGain:
+						source = sources.knockGainLoad[index];
+						break;
+					case AirmassConsumer::HpfpTarget:
+						source = sources.hpfpTargetLoad;
+						break;
+					default:
+						source = static_cast<load_override_e>(255);
+						break;
+				}
+				return packCursor(coordinate(loads, hpfpMap, consumer, source), consumer);
+			},
+			cylinderCount,
+			enabled);
+#if EFI_UNIT_TEST
+	if (engine->onAirmassConsumerLoadsPrepared) {
+		engine->onAirmassConsumerLoadsPrepared();
+	}
+#endif
+	chibios_rt::CriticalSectionLocker csl;
+	if (epoch != engine->airmassInjectionState.locked(csl).publicationEpoch() ||
+		configurationVersion != engine->getGlobalConfigurationVersion() ||
+		strategy != engineConfiguration->fuelAlgorithm) {
+		return;
+	}
+	publishConsumerCursors(cursors);
 }
 expected<float> getEffectiveAirmassMap() {
 	chibios_rt::CriticalSectionLocker csl;
@@ -350,10 +608,16 @@ expected<float> getEffectiveAirmassMap() {
 	const float value = fromSnapshot(snapshot, AFR_EffectiveMAP);
 	return std::isfinite(value) ? expected<float>(value) : unexpected;
 }
+void invalidateAirmassConsumerLoads() {
+	chibios_rt::CriticalSectionLocker csl;
+	engine->engineState.airmassLoads.Valid = false;
+	// Clear unused cylinder slots too, including after a cylinder-count write.
+	publishConsumerCursors(PackedConsumerCursors{});
+}
 void invalidateAirmassLoads(bool engineStopped) {
 	chibios_rt::CriticalSectionLocker csl;
 	auto& state = engine->engineState;
-	state.airmassLoads.Valid = false;
+	invalidateAirmassConsumerLoads();
 	state.airmassCalculationValid = false;
 	state.injectionDuration = 0;
 	state.injectionDurationStage2 = 0;
@@ -396,3 +660,16 @@ void updateBlendedVeAnalyzeQualification(float rpm) {
 					? 0
 					: state.veAnalyzeEndpoint;
 }
+
+#if EFI_UNIT_TEST
+void resetAirmassCursorPreparationCounts() {
+	std::fill_n(cursorPreparationCounts, static_cast<unsigned>(AirmassConsumer::Count), 0);
+	std::fill_n(consumerReadCounts, static_cast<unsigned>(AirmassConsumer::Count), 0);
+}
+uint32_t getAirmassCursorPreparationCount(AirmassConsumer consumer) {
+	return cursorPreparationCounts[static_cast<unsigned>(consumer)];
+}
+uint32_t getAirmassConsumerReadCount(AirmassConsumer consumer) {
+	return consumerReadCounts[static_cast<unsigned>(consumer)];
+}
+#endif

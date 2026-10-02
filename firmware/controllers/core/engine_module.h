@@ -18,8 +18,15 @@ public:
 	// Called approx 20Hz
 	virtual void onSlowCallback() {}
 
-	// Called approx 200Hz
+	// Called approx 250Hz
 	virtual void onFastCallback() {}
+
+	// First RPM / changed trigger configuration: prepare synchronous outputs before
+	// the next engine phase. New modules conservatively retain their fast work.
+	// Only modules with no first-cycle scheduling/protection dependency may opt out.
+	virtual void onSynchronousFastCallback() {
+		onFastCallback();
+	}
 
 	// Called when the engine stops. Reset your state, etc to prepare for the next start.
 	virtual void onEngineStop() {}

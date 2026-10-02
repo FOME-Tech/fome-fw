@@ -45,11 +45,11 @@ void TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t
 }
 
 bool TestExecutor::scheduleBatch(const ScheduledAction* events, size_t count) {
-	if (m_mockExecutor) {
-		return m_mockExecutor->scheduleBatch(events, count);
-	}
 	if (!isScheduleBatchValid(events, count, getTimeNowNt())) {
 		return false;
+	}
+	if (m_mockExecutor) {
+		return m_mockExecutor->scheduleBatch(events, count);
 	}
 	ScheduledAction converted[MaxScheduleBatchSize];
 	for (size_t i = 0; i < count; i++) {

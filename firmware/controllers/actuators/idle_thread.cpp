@@ -364,6 +364,18 @@ void IdleController::onFastCallback() {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
+void IdleController::onSynchronousFastCallback() {
+#if EFI_SHAFT_POSITION_INPUT
+	// Retain the idle phase used by fuel/timing and torque demand, without
+	// advancing the IAC PID or driving its actuator in the trigger callback.
+	auto tps = Sensor::get(SensorType::DriverThrottleIntent);
+	bool aboveIdle = !tps || tps.Value > engineConfiguration->idlePidDeactivationTpsThreshold;
+	auto state = engine->module<IdleTargetController>()->getOutput(aboveIdle);
+	m_lastTargetRpm = state.target.ClosedLoopTarget;
+	m_lastPhase = state.phase;
+#endif
+}
+
 void IdleController::onEngineStop() {
 	m_pid.reset();
 }

@@ -52,19 +52,19 @@ void endInjectionStage2(InjectorContext ctx) {
 void scheduledStartInjection(InjectorContext ctx) {
 	chibios_rt::CriticalSectionLocker csl;
 	startInjection(ctx);
-	engine->airmassInjectionState.callbackCompleted();
+	engine->airmassInjectionState.locked(csl).callbackCompleted();
 }
 
 void scheduledEndInjection(InjectorContext ctx) {
 	chibios_rt::CriticalSectionLocker csl;
 	endInjection(ctx);
-	engine->airmassInjectionState.callbackCompleted();
+	engine->airmassInjectionState.locked(csl).callbackCompleted();
 }
 
 void scheduledEndInjectionStage2(InjectorContext ctx) {
 	chibios_rt::CriticalSectionLocker csl;
 	endInjectionStage2(ctx);
-	engine->airmassInjectionState.callbackCompleted();
+	engine->airmassInjectionState.locked(csl).callbackCompleted();
 }
 
 uint16_t InjectionEvent::calculateInjectorOutputMask() const {

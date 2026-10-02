@@ -3,6 +3,7 @@
 #include "maf_airmass.h"
 #include "maf.h"
 #include "fuel_math.h"
+#include "speed_density_base.h"
 
 float MafAirmass::getMaf(bool& valid) const {
 	auto maf = Sensor::get(SensorType::Maf);
@@ -81,6 +82,9 @@ MafAirmass::evaluateAirmassImpl(float massAirFlow, float rpm, const DiagnosticsT
 		return evaluation;
 	}
 
+	AirmassInputs inputs;
+	captureAirmassInputs(rpm, inputs, nullptr, true, diagnostics.live());
+
 	// kg/hr -> g/s
 	float gramPerSecond = massAirFlow / 3.6f;
 
@@ -90,19 +94,20 @@ MafAirmass::evaluateAirmassImpl(float massAirFlow, float rpm, const DiagnosticsT
 
 	// Now we have to divide among cylinders - on a 4 stroke, half of the cylinders happen every revolution
 	// This math is floating point to work properly on engines with odd cylinder count
-	float halfCylCount = engine->engineState.cylinderCount / 2.0f;
+	float halfCylCount = inputs.CylinderCount / 2.0f;
 
 	mass_t cylinderAirmass = airPerRevolution / halfCylCount;
 
 	// Create % load for fuel table using relative naturally aspirated cylinder filling
-	float airChargeLoad = 100 * cylinderAirmass / getStandardAirCharge();
+	const float standardCharge = diagnostics.live()
+									   ? inputs.StandardAirCharge
+									   : idealGasLaw(inputs.Displacement / inputs.CylinderCount, 101.325f, 293.15f);
+	float airChargeLoad = 100 * cylinderAirmass / standardCharge;
 	if (!std::isfinite(cylinderAirmass) || !std::isfinite(airChargeLoad)) {
 		return evaluation;
 	}
 
 	// Correct air mass by VE table
-	AirmassInputs inputs;
-	captureAirmassInputs(rpm, inputs);
 	inputs.NativeLoad = airChargeLoad;
 	inputs.Model = LM_REAL_MAF;
 	auto ve = evaluateVe(inputs, airChargeLoad, diagnostics);

@@ -131,9 +131,13 @@ public:
 		}
 	}
 
-	bool consumers(const AirmassInputs& inputs, mass_t mass) {
+	bool live() const {
+		return m_postState;
+	}
+
+	bool consumers(const AirmassInputs& inputs, mass_t mass, const AirmassResolvedLoads& loads) {
 		bool fallbackUsed = false;
-		const bool valid = processAirmassConsumerLoads(inputs, mass, m_postState, &fallbackUsed);
+		const bool valid = processAirmassConsumerLoads(inputs, mass, loads, m_postState, &fallbackUsed);
 		m_flags |= fallbackUsed ? BlendedLoadFallback : 0;
 		return valid;
 	}
@@ -273,13 +277,14 @@ BlendedAirmassEvaluation BlendedAirmass::evaluateAirmass(float rpm, DiagnosticsT
 		return fail(AirmassInjectionFault::Sensor);
 	}
 	AirmassInputs inputs;
-	m_sd.captureInputs(rpm, inputs);
+	m_sd.captureInputs(rpm, inputs, diagnostics.live());
 	inputs.Composite = true;
 	inputs.Model = LM_SD_ALPHA_N;
 	inputs.NativeLoad = inputs.EffectiveMap.Map;
 	diagnostics.inputs(inputs);
 	diagnostics.map(inputs.EffectiveMap);
-	const bool authorityConfigurationValid = isBlendedAirmassConfigurationValid();
+	const bool authorityConfigurationValid = isRawAirmassConfigurationValid() &&
+											 isCapturedAirmassCalibrationValid(inputs, AirmassCalibration::Authority);
 	const auto normalizedTps = normalizeAirmassPercent(inputs, inputs.Tps);
 	const bool authorityAvailable = authorityConfigurationValid && normalizedTps;
 	const float interpolatedAuthority = authorityAvailable ? interpolateAuthority(normalizedTps.Value, inputs.Rpm) : 0;
@@ -298,11 +303,12 @@ BlendedAirmassEvaluation BlendedAirmass::evaluateAirmass(float rpm, DiagnosticsT
 			authorityConfigurationValid ? AirmassInjectionFault::Sensor : AirmassInjectionFault::Configuration;
 	const auto evaluateBranch = [&](bool speedDensity) {
 		RawAirmassDiagnostics raw;
-		auto value = speedDensity ? m_sd.evaluateRawAirmass(inputs, &raw)
-								  : m_alphaN.evaluateRawAirmass(inputs, &raw, AlphaNPressurePolicy::PureReference);
+		auto value = speedDensity ? m_sd.evaluateRawAirmassImpl(inputs, &raw, diagnostics.live())
+								  : m_alphaN.evaluateRawAirmassImpl(
+											inputs, &raw, AlphaNPressurePolicy::PureReference, diagnostics.live());
 		diagnostics.branch(speedDensity, value, raw);
 		if (!value.Valid) {
-			if (!isAirmassModelConfigurationValid(speedDensity ? LM_SPEED_DENSITY : LM_ALPHA_N)) {
+			if (!isCapturedAirmassModelValid(inputs, speedDensity ? LM_SPEED_DENSITY : LM_ALPHA_N)) {
 				branchFault = AirmassInjectionFault::Configuration;
 			} else if (raw.HasValue && branchFault != AirmassInjectionFault::Configuration) {
 				branchFault = AirmassInjectionFault::Result;
@@ -348,14 +354,15 @@ BlendedAirmassEvaluation BlendedAirmass::evaluateAirmass(float rpm, DiagnosticsT
 	if (!std::isfinite(mass) || mass < 0) {
 		return fail(AirmassInjectionFault::Result);
 	}
-	const auto filling = resolveAirmassLoad(inputs, mass, AFR_CylFilling);
+	const AirmassResolvedLoads loads(inputs, mass);
+	const auto filling = loads.strict(AFR_CylFilling);
 	if (!filling.Valid) {
 		return fail(AirmassInjectionFault::Result);
 	}
 	evaluation.NormalizedFilling = filling.Value;
-	evaluation.LambdaLoad = resolveAirmassConsumerLoad(inputs, mass, inputs.LambdaOverride);
-	evaluation.IgnitionLoad = resolveAirmassConsumerLoad(inputs, mass, inputs.IgnitionOverride);
-	if (!diagnostics.consumers(inputs, mass)) {
+	evaluation.LambdaLoad = loads.consumer(inputs.LambdaOverride);
+	evaluation.IgnitionLoad = loads.consumer(inputs.IgnitionOverride);
+	if (!diagnostics.consumers(inputs, mass, loads)) {
 		return fail(AirmassInjectionFault::Load);
 	}
 	evaluation.Airmass.Result = {mass, inputs.EffectiveMap.Valid ? inputs.EffectiveMap.Map : 0};

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "speed_density_airmass.h"
 #include "idle_thread.h"
+#include "fuel_math.h"
 
 AirmassResult SpeedDensityAirmass::getAirmass(float rpm, bool postState) {
 	ScopePerf perf(PE::GetSpeedDensityFuel);
@@ -22,7 +23,7 @@ AirmassEvaluation SpeedDensityAirmass::getAirmassForFuel(float rpm) const {
 
 AirmassEvaluation SpeedDensityAirmass::evaluateAirmass(float rpm, const DiagnosticsTarget& diagnostics) const {
 	AirmassInputs inputs;
-	captureInputs(rpm, inputs);
+	captureInputs(rpm, inputs, diagnostics.live());
 	return evaluateAirmass(inputs, diagnostics);
 }
 
@@ -33,7 +34,7 @@ AirmassEvaluation SpeedDensityAirmass::evaluateAirmass(float rpm, float map, Air
 AirmassEvaluation
 SpeedDensityAirmass::evaluateAirmass(float rpm, float map, const DiagnosticsTarget& diagnostics) const {
 	AirmassInputs inputs;
-	captureAirmassInputs(rpm, inputs, nullptr, false);
+	captureAirmassInputs(rpm, inputs, nullptr, false, diagnostics.live());
 	inputs.EffectiveMap = {map, 0, false, std::isfinite(map) && map >= 0 && map <= 1000, false};
 	return evaluateAirmass(inputs, diagnostics);
 }
@@ -94,13 +95,21 @@ MapEvaluation SpeedDensityAirmass::evaluateMap(float rpm) const {
 	return inputs.EffectiveMap;
 }
 
-void captureAirmassInputs(float rpm, AirmassInputs& inputs, const ValueProvider3D* estimate, bool resolveMap) {
+static void resolveCapturedMapImpl(AirmassInputs& inputs, const ValueProvider3D* estimate, bool liveCalibration);
+
+void captureAirmassInputs(
+		float rpm, AirmassInputs& inputs, const ValueProvider3D* estimate, bool resolveMap, bool liveCalibration) {
 	{
 		chibios_rt::CriticalSectionLocker csl;
-		inputs.PublicationEpoch = engine->airmassInjectionState.publicationEpoch();
+		inputs.LiveCalibration = liveCalibration;
+		inputs.CalibrationGeneration = engine->airmassCalibration.Generation;
+		inputs.PublicationEpoch = engine->airmassInjectionState.locked(csl).publicationEpoch();
 		inputs.ConfigurationVersion = engine->getGlobalConfigurationVersion();
 		inputs.ActiveStrategy = engineConfiguration->fuelAlgorithm;
 		inputs.HasPublicationContext = true;
+		inputs.Displacement = engineConfiguration->displacement;
+		inputs.CylinderCount = engine->engineState.cylinderCount;
+		inputs.StandardAirCharge = liveCalibration ? getStandardAirCharge() : 0;
 	}
 	inputs.Rpm = rpm;
 	inputs.Tps = Sensor::get(SensorType::Tps1);
@@ -143,18 +152,16 @@ void captureAirmassInputs(float rpm, AirmassInputs& inputs, const ValueProvider3
 		inputs.TemperatureValid = true;
 		inputs.TemperatureFallback = true;
 	}
-	inputs.Displacement = engineConfiguration->displacement;
-	inputs.CylinderCount = engine->engineState.cylinderCount;
 	inputs.PreviousFuelingLoad = getFuelingLoad();
 	inputs.PreviousIgnitionLoad = getIgnitionLoad();
 	inputs.LambdaOverride = engineConfiguration->afrOverrideMode;
 	inputs.IgnitionOverride = engineConfiguration->ignOverrideMode;
 	if (resolveMap) {
-		resolveCapturedMap(inputs, estimate);
+		resolveCapturedMapImpl(inputs, estimate, liveCalibration);
 	}
 }
 
-void resolveCapturedMap(AirmassInputs& inputs, const ValueProvider3D* estimate) {
+static void resolveCapturedMapImpl(AirmassInputs& inputs, const ValueProvider3D* estimate, bool liveCalibration) {
 	auto& map = inputs.EffectiveMap;
 	map = {};
 	map.Map = inputs.MeasuredMap.value_or(0);
@@ -166,7 +173,9 @@ void resolveCapturedMap(AirmassInputs& inputs, const ValueProvider3D* estimate) 
 	if (!config->useMapEstimateTable || (measuredValid && !transient)) {
 		return;
 	}
-	if (!std::isfinite(inputs.Rpm) || inputs.Rpm < 0 || !isMapEstimateConfigurationValid()) {
+	if (!std::isfinite(inputs.Rpm) || inputs.Rpm < 0 ||
+		!(liveCalibration ? isCapturedAirmassCalibrationValid(inputs, AirmassCalibration::MapEstimate)
+						  : isMapEstimateConfigurationValid())) {
 		map.Fallback = true;
 		return;
 	}
@@ -190,12 +199,21 @@ void resolveCapturedMap(AirmassInputs& inputs, const ValueProvider3D* estimate) 
 	map.Fallback = !measuredValid || !estimateValid || !normalizedTps;
 }
 
-void SpeedDensityAirmass::captureInputs(float rpm, AirmassInputs& inputs) const {
-	captureAirmassInputs(rpm, inputs, m_mapEstimationTable);
+void resolveCapturedMap(AirmassInputs& inputs, const ValueProvider3D* estimate) {
+	resolveCapturedMapImpl(inputs, estimate, false);
+}
+
+void SpeedDensityAirmass::captureInputs(float rpm, AirmassInputs& inputs, bool liveCalibration) const {
+	captureAirmassInputs(rpm, inputs, m_mapEstimationTable, true, liveCalibration);
 }
 
 AirmassEvaluation
 SpeedDensityAirmass::evaluateRawAirmass(const AirmassInputs& inputs, RawAirmassDiagnostics* diagnostics) const {
+	return evaluateRawAirmassImpl(inputs, diagnostics, false);
+}
+
+AirmassEvaluation SpeedDensityAirmass::evaluateRawAirmassImpl(
+		const AirmassInputs& inputs, RawAirmassDiagnostics* diagnostics, bool liveCalibration) const {
 	if (diagnostics) {
 		*diagnostics = {};
 	}
@@ -207,7 +225,7 @@ SpeedDensityAirmass::evaluateRawAirmass(const AirmassInputs& inputs, RawAirmassD
 		inputs.CylinderCount <= 0) {
 		return evaluation;
 	}
-	auto ve = evaluateRawVe(inputs, inputs.EffectiveMap.Map, diagnostics);
+	auto ve = evaluateRawVe(inputs, inputs.EffectiveMap.Map, diagnostics, liveCalibration);
 	const float mass = getAirmassImpl(
 			ve.Ve * PERCENT_DIV,
 			inputs.EffectiveMap.Map,

@@ -486,3 +486,66 @@ TEST(airmassInjectionGate, CompositeVersionChangeRequiresFreshPublication) {
 	makeReady();
 	EXPECT_TRUE(gate().allowInjection());
 }
+
+TEST(airmassInjectionGate, ExecutorValidatesEachAdmittedBatchOnceAndRollsBackInvalidWork) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	selectComposite();
+	makeReady();
+	const auto validations = scheduleBatchValidationCount;
+	ASSERT_TRUE(queuePulse(100, 200));
+	EXPECT_EQ(scheduleBatchValidationCount, validations + 1);
+	ASSERT_EQ(gate().pendingCallbacks(), 2);
+	const auto now = getTimeNowNt();
+	ScheduledAction valid[] = {{now + US2NT(100), {+[](void*) {}, nullptr}}};
+	ScheduledAction missingAction[] = {{now, {}}};
+	ScheduledAction unsorted[] = {{now + 2, valid[0].action}, {now + 1, valid[0].action}};
+	ScheduledAction tooFar[] = {{now + US2NT(MaximumScheduleDelayUs), valid[0].action}};
+	ScheduledAction overflow[] = {{efitick_t{INT64_MAX}, valid[0].action}};
+
+	const auto reject = [&](const ScheduledAction* events, size_t count) {
+		makeReady();
+		const auto before = scheduleBatchValidationCount;
+		EXPECT_FALSE(scheduleFuelCallbacks(events, count));
+		EXPECT_EQ(scheduleBatchValidationCount, before + 1);
+		EXPECT_EQ(gate().pendingCallbacks(), 2);
+		EXPECT_EQ(engine->scheduler.size(), 2);
+		EXPECT_EQ(gate().fault(), Fault::Scheduling);
+		EXPECT_FALSE(gate().allowInjection());
+		EXPECT_EQ(engine->outputChannels.blendedStatus, static_cast<uint8_t>(Status::Faulted));
+		EXPECT_EQ(engine->outputChannels.blendedFault, static_cast<uint8_t>(Fault::Scheduling));
+	};
+	reject(nullptr, 1);
+	reject(valid, 0);
+	reject(valid, MaxScheduleBatchSize + 1);
+	reject(missingAction, efi::size(missingAction));
+	reject(unsorted, efi::size(unsorted));
+	reject(tooFar, efi::size(tooFar));
+	reject(overflow, efi::size(overflow));
+
+	// The previously accepted open/close drain even after every new batch faults.
+	eth.moveTimeForwardAndInvokeEventsUs(200);
+	EXPECT_EQ(gate().pendingCallbacks(), 0);
+	EXPECT_EQ(enginePins.injectors[0].getOverlappingCounter(), 0);
+	makeReady();
+	ASSERT_TRUE(queuePulse(100, 200));
+	eth.moveTimeForwardAndInvokeEventsUs(200);
+	EXPECT_EQ(gate().pendingCallbacks(), 0);
+}
+
+TEST(airmassInjectionGate, CallbackCounterOverflowRejectsBeforeInsertionWithoutLosingPendingWork) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	selectComposite();
+	makeReady();
+	{
+		chibios_rt::CriticalSectionLocker csl;
+		ASSERT_TRUE(gate().locked(csl).callbacksAccepted(UINT16_MAX - 1));
+	}
+	EXPECT_FALSE(queuePulse(100, 200));
+	EXPECT_EQ(gate().pendingCallbacks(), UINT16_MAX - 1);
+	EXPECT_EQ(engine->scheduler.size(), 0);
+	EXPECT_EQ(gate().fault(), Fault::Scheduling);
+	{
+		chibios_rt::CriticalSectionLocker csl;
+		gate().locked(csl).callbacksRejected(UINT16_MAX - 1);
+	}
+}

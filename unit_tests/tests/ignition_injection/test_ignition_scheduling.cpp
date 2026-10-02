@@ -89,8 +89,11 @@ TEST(ignition, trailingSpark) {
 	EXPECT_EQ(enginePins.coils[0].getLogicValue(), false);
 	EXPECT_EQ(enginePins.trailingCoils[0].getLogicValue(), false);
 
-	// Now enable trailing sparks
+	// Disabled Fast calculations clear the unused trailing angle.
+	EXPECT_FLOAT_EQ(engine->engineState.trailingSparkAngle, 0);
+	// Enable trailing sparks, then supply this scheduling test's 10-degree delay.
 	engineConfiguration->enableTrailingSparks = true;
+	engine->engineState.trailingSparkAngle = 10;
 
 	// Fire trigger fall - should schedule ignition chargings (rising edges)
 	eth.fireFall(20);

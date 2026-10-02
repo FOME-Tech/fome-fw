@@ -44,6 +44,7 @@
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "airmass_injection_state.h"
+#include "airmass_calibration.h"
 #include "prime_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
@@ -296,6 +297,9 @@ public:
 	TestExecutor scheduler;
 
 	std::function<void(const IgnitionContext&, bool)> onIgnitionEvent;
+	std::function<void()> onAirmassConsumerLoadsPrepared;
+	std::function<void()> onAirmassCalibrationScanned;
+	std::function<void()> onCylinderFuelPrepared;
 #endif // EFI_UNIT_TEST
 
 #if EFI_ENGINE_CONTROL
@@ -330,6 +334,8 @@ public:
 	float stftCorrection[STFT_BANK_COUNT] = {0};
 
 	void periodicFastCallback();
+	// Minimal synchronous preparation for the first tooth with RPM / changed trigger shape.
+	void prepareForTrigger();
 	void periodicSlowCallback();
 	void updateSlowSensors();
 	void updateSwitchInputs();
@@ -347,6 +353,7 @@ public:
 
 	EngineState engineState;
 	AirmassInjectionState airmassInjectionState;
+	AirmassCalibrationCache airmassCalibration;
 
 	/**
 	 * idle blip is a development tool: alternator PID research for instance have benefited from a repetitive change of

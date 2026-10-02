@@ -112,15 +112,22 @@ void KnockControllerBase::onFastCallback() {
 	hasKnockRecently = !m_lastKnockTimer.hasElapsedSec(0.5f);
 	hasKnockRetardNow = m_knockRetard > 0;
 
+	// Keep decay and status current while disabled. Retain the last calibration
+	// for sampling already accepted before disable and still completing.
+	if (!engineConfiguration->enableSoftwareKnock) {
+		return;
+	}
+
 	m_knockThreshold = getKnockThreshold();
 	m_maximumRetard = getMaximumRetard();
 
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
+	const AirmassConsumerLoadContext gainLoads(AirmassConsumer::KnockGain);
+	Table3DInterpolationCache gainInterpolation(config->knockGainLoadBins, config->knockGainRpmBins, rpm);
 	for (size_t i = 0; i < engine->engineState.cylinderCount && i < MAX_CYLINDER_COUNT; i++) {
-		const float load = getAirmassConsumerLoad(AirmassConsumer::KnockGain, i);
+		const float load = gainLoads.get(AirmassConsumer::KnockGain, i);
 		if (std::isfinite(load)) {
-			m_gain[i] = interpolate3d(
-					config->knockGains[i].table, config->knockGainLoadBins, load, config->knockGainRpmBins, rpm);
+			m_gain[i] = gainInterpolation.prepare(load).getValue(config->knockGains[i].table);
 		}
 	}
 }

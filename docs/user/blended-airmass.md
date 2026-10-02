@@ -270,6 +270,9 @@ consumers offers:
 | **Effective MAP** | MAP in kPa, with a permitted valid estimate when required. |
 
 The table editor displays the selected units and its matching live cursor.
+Optional consumer cursors clear to zero while their function is disabled. A
+latched lambda-protection cut keeps the load cursor used to check restore
+conditions until the cut clears, even if protection has been disabled.
 Changing a source never converts breakpoints, cells, or thresholds. For
 example, selecting TPS for a table whose bins contain kPa values produces an
 incorrect calibration until those bins and values are rebuilt.

@@ -71,6 +71,7 @@ public:
 
 	void onConfigurationChange(engine_configuration_s const* previousConfig) override final;
 	void onFastCallback() override final;
+	void onSynchronousFastCallback() override final;
 	void onEngineStop() override final;
 
 	// Allow querying state from outside
