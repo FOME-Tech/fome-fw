@@ -39,8 +39,7 @@ TriggerEmulatorHelper::TriggerEmulatorHelper() {}
 static OutputPin emulatorOutputs[PWM_PHASE_MAX_WAVE_PER_PWM];
 
 void TriggerEmulatorHelper::handleEmulatorCallback(
-		const MultiChannelStateSequence& multiChannelStateSequence, int stateIndex) {
-	efitick_t stamp = getTimeNowNt();
+		const MultiChannelStateSequence& multiChannelStateSequence, int stateIndex, efitick_t timestamp) {
 
 	// todo: code duplication with TriggerStimulatorHelper::feedSimulatedEvent?
 #if EFI_SHAFT_POSITION_INPUT
@@ -51,7 +50,7 @@ void TriggerEmulatorHelper::handleEmulatorCallback(
 			isRise ^= (i == 0 && engineConfiguration->invertPrimaryTriggerSignal);
 			isRise ^= (i == 1 && engineConfiguration->invertSecondaryTriggerSignal);
 
-			handleShaftSignal(i, isRise, stamp);
+			handleShaftSignal(i, isRise, timestamp);
 		}
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
@@ -121,18 +120,19 @@ static bool hasInitTriggerEmulator = false;
 
 #if !EFI_UNIT_TEST
 
-static void emulatorApplyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */ {
+static void emulatorApplyPinState(int stateIndex, PwmConfig* state, efitick_t phaseTimestamp) /* pwm_gen_callback */ {
 	if (engine->triggerCentral.directSelfStimulation) {
 		/**
 		 * this callback would invoke the input signal handlers directly
 		 */
-		helper.handleEmulatorCallback(*state->multiChannelStateSequence, stateIndex);
+		// Timer latency must not change the tooth spacing seen by the internal decoder.
+		helper.handleEmulatorCallback(*state->multiChannelStateSequence, stateIndex, phaseTimestamp);
 	}
 
 #if EFI_PROD_CODE
 	// Only set pins if they're configured - no need to waste the cycles otherwise
 	else if (hasStimPins) {
-		applyPinState(stateIndex, state);
+		applyPinState(stateIndex, state, phaseTimestamp);
 	}
 #endif /* EFI_PROD_CODE */
 }
@@ -145,7 +145,7 @@ static void startSimulatedTriggerSignal() {
 
 	TriggerWaveform* s = &engine->triggerCentral.triggerShape;
 	setTriggerEmulatorRPM(engineConfiguration->triggerSimulatorRpm);
-	triggerSignal.weComplexInit(&s->wave, updateTriggerWaveformIfNeeded, (pwm_gen_callback*)emulatorApplyPinState);
+	triggerSignal.weComplexInit(&s->wave, updateTriggerWaveformIfNeeded, emulatorApplyPinState);
 
 	hasInitTriggerEmulator = true;
 }
