@@ -411,7 +411,6 @@ public:
 			if (!ServerSocket::checkSend()) {
 				isrSemaphore.wait(TIME_MS2I(10));
 			}
-
 		}
 	}
 

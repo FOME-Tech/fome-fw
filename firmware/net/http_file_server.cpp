@@ -90,7 +90,9 @@ static THD_WORKING_AREA(httpServerStack, 5120);
 
 class BufferedSender {
 public:
-	BufferedSender(ServerSocket& server) : m_server(server), m_pos(0) {}
+	BufferedSender(ServerSocket& server)
+		: m_server(server)
+		, m_pos(0) {}
 	~BufferedSender() {
 		flush();
 	}
@@ -100,7 +102,9 @@ public:
 		while (size > 0 && m_server.hasConnectedSocket()) {
 			size_t space = sizeof(m_buf) - m_pos;
 			if (space == 0) {
-				if (!flush()) return false;
+				if (!flush()) {
+					return false;
+				}
 				space = sizeof(m_buf);
 			}
 			size_t chunk = size < space ? size : space;
@@ -129,7 +133,6 @@ private:
 	uint8_t m_buf[SOCKET_BUFFER_MAX_LENGTH];
 	size_t m_pos;
 };
-
 
 static bool sendChunk(BufferedSender& sender, const void* data, size_t size) {
 	if (!sender.hasConnectedSocket() || size == 0) {
@@ -507,8 +510,7 @@ static void handleDirectoryListing(BufferedSender& sender, const char* path) {
 			"</div>");
 
 	sendString(
-			sender,
-			"<table><tr><th style='width:30px'></th><th>Name</th><th style='text-align:right'>Size</th></tr>");
+			sender, "<table><tr><th style='width:30px'></th><th>Name</th><th style='text-align:right'>Size</th></tr>");
 
 	// Parent directory link if not root
 	if (strcmp(path, "/") != 0 && strcmp(path, "") != 0) {
@@ -660,12 +662,11 @@ static void handleClient(ServerSocket& server) {
 
 	// Respond to keepalive ping from web UI
 	if (strcmp(cleanPath, "/ping") == 0) {
-		static const char pingResp[] =
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Type: text/plain\r\n"
-				"Content-Length: 2\r\n"
-				"Connection: close\r\n\r\n"
-				"OK";
+		static const char pingResp[] = "HTTP/1.1 200 OK\r\n"
+									   "Content-Type: text/plain\r\n"
+									   "Content-Length: 2\r\n"
+									   "Connection: close\r\n\r\n"
+									   "OK";
 		sendString(sender, pingResp);
 		return;
 	}

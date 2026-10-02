@@ -32,7 +32,9 @@ public:
 	// Block until a client connects, or timeout ms elapses. Returns true if connected.
 	bool waitForConnection(int timeoutMs);
 
-	int getBacklog() const { return m_backlog; }
+	int getBacklog() const {
+		return m_backlog;
+	}
 
 	static ServerSocket* findListener(int sock);
 	static ServerSocket* findConnected(int sock);
