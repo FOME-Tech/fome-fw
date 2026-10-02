@@ -20,6 +20,55 @@ TEST(limp, testFatalError) {
 	EXPECT_FALSE(dut.allowTriggerInput());
 }
 
+TEST(limp, floodClearRoadsideAllowsAccidentalStart) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	LimpManager dut;
+
+	engineConfiguration->isCylinderCleanupEnabled = true;
+	engineConfiguration->isCylinderCleanupLatching = false;
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 95);
+
+	engine->rpmCalculator.setRpmValue(300);
+	dut.updateState(300, getTimeNowNt());
+	ASSERT_FALSE(dut.allowInjection());
+	EXPECT_EQ(ClearReason::FloodClear, dut.allowInjection().reason);
+
+	// Roadside mode restores fuel when residual fuel causes the engine to cross
+	// the configured cranking RPM threshold.
+	engine->rpmCalculator.setRpmValue(engineConfiguration->cranking.rpm);
+	dut.updateState(engineConfiguration->cranking.rpm, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+}
+
+TEST(limp, floodClearWorkshopLatchesUntilPedalRelease) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	LimpManager dut;
+
+	engineConfiguration->isCylinderCleanupEnabled = true;
+	engineConfiguration->isCylinderCleanupLatching = true;
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 95);
+
+	engine->rpmCalculator.setRpmValue(300);
+	dut.updateState(300, getTimeNowNt());
+	ASSERT_FALSE(dut.allowInjection());
+	EXPECT_EQ(ClearReason::FloodClear, dut.allowInjection().reason);
+
+	// Accidental combustion must not restore fuel in workshop mode.
+	engine->rpmCalculator.setRpmValue(engineConfiguration->cranking.rpm);
+	dut.updateState(engineConfiguration->cranking.rpm, getTimeNowNt());
+	ASSERT_FALSE(dut.allowInjection());
+	EXPECT_EQ(ClearReason::FloodClear, dut.allowInjection().reason);
+
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+	dut.updateState(engineConfiguration->cranking.rpm, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// Workshop mode cannot arm while the engine is already running.
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 95);
+	dut.updateState(engineConfiguration->cranking.rpm, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+}
+
 TEST(limp, revLimit) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
