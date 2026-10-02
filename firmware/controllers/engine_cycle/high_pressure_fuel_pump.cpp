@@ -29,6 +29,7 @@
 #include "high_pressure_fuel_pump.h"
 #include "spark_logic.h"
 #include "fuel_computer.h"
+#include "airmass_loads.h"
 
 #if EFI_HPFP
 
@@ -84,14 +85,14 @@ float HpfpQuantity::calcFuelPercent(float rpm) {
 }
 
 float HpfpQuantity::calcPI(float rpm, float calc_fuel_percent) {
+	const float load = getAirmassConsumerLoad(AirmassConsumer::HpfpTarget);
+	if (!std::isfinite(load)) {
+		reset();
+		return 0;
+	}
 	m_pressureTarget_kPa = std::max<float>(
 			m_pressureTarget_kPa - (engineConfiguration->hpfpTargetDecay * (FAST_CALLBACK_PERIOD_MS / 1000.)),
-			interpolate3d(
-					config->hpfpTarget,
-					config->hpfpTargetLoadBins,
-					Sensor::getOrZero(SensorType::Map), // TODO: allow other load axis, like we claim to
-					config->hpfpTargetRpmBins,
-					rpm));
+			interpolate3d(config->hpfpTarget, config->hpfpTargetLoadBins, load, config->hpfpTargetRpmBins, rpm));
 
 	auto fuelPressure = Sensor::get(SensorType::FuelPressureHigh);
 	if (!fuelPressure) {
@@ -137,7 +138,8 @@ void HpfpController::onFastCallback() {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	isHpfpInactive = rpm < rpm_spinning_cutoff || engineConfiguration->hpfpCamLobes == 0 ||
-					 engineConfiguration->hpfpPumpVolume == 0 || !enginePins.hpfpValve.isInitialized();
+					 engineConfiguration->hpfpPumpVolume == 0 || !enginePins.hpfpValve.isInitialized() ||
+					 !std::isfinite(getAirmassConsumerLoad(AirmassConsumer::HpfpTarget));
 	// What conditions can we not handle?
 	if (isHpfpInactive) {
 		m_quantity.reset();

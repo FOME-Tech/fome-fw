@@ -98,3 +98,24 @@ TEST(GpPwm, TestGetOutput) {
 	Sensor::setMockValue(SensorType::Rpm, 1200);
 	EXPECT_FLOAT_EQ(35.0f, ch.getOutput().Result);
 }
+
+TEST(GpPwm, InvalidNumericInputOrTableUsesErrorDutyAndRecovers) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	GppwmChannel ch;
+	gppwm_channel cfg{};
+	cfg.loadAxis = GPPWM_Tps;
+	cfg.rpmAxis = GPPWM_Rpm;
+	cfg.dutyIfError = 21;
+	StrictMock<MockVp3d> table;
+	ch.init(false, nullptr, nullptr, &table, &cfg);
+	Sensor::setMockValue(SensorType::Rpm, 1200);
+	Sensor::setMockValue(SensorType::Tps1, NAN);
+	const auto invalid = ch.getOutput();
+	EXPECT_FLOAT_EQ(invalid.Result, 21);
+	EXPECT_FLOAT_EQ(invalid.Y, 0);
+
+	Sensor::setMockValue(SensorType::Tps1, 35);
+	EXPECT_CALL(table, getValue(1200, 35)).WillOnce(::testing::Return(NAN)).WillOnce(::testing::Return(45));
+	EXPECT_FLOAT_EQ(ch.getOutput().Result, 21);
+	EXPECT_FLOAT_EQ(ch.getOutput().Result, 45);
+}

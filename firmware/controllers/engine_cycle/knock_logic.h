@@ -37,7 +37,7 @@ private:
 
 	Timer m_lastKnockTimer;
 
-	int8_t m_gain[MAX_CYLINDER_COUNT];
+	int8_t m_gain[MAX_CYLINDER_COUNT]{};
 };
 
 class KnockController : public KnockControllerBase {

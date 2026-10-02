@@ -11,9 +11,15 @@
 #include "global.h"
 #include "engine_parts.h"
 #include "engine_state_generated.h"
+#include "airmass_loads.h"
 
 class EngineState : public engine_state_s {
 public:
+	AirmassLoadSnapshot airmassLoads;
+	bool airmassCalculationValid = false;
+	bool veAnalyzeSessionStarted = false;
+	bool veAnalyzeSessionInvalid = false;
+	uint8_t veAnalyzeEndpoint = 0;
 	EngineState();
 	void periodicFastCallback();
 	void updateTChargeK(float rpm, float tps);

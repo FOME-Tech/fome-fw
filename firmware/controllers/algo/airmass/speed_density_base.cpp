@@ -24,6 +24,12 @@ mass_t idealGasLaw(float volume, float pressure, float temperature) {
 }
 
 /*static*/ mass_t SpeedDensityBase::getAirmassImpl(float ve, float manifoldPressure, float temperature) {
-	mass_t cycleAir = ve * idealGasLaw(engineConfiguration->displacement, manifoldPressure, temperature);
-	return cycleAir / engine->engineState.cylinderCount;
+	return getAirmassImpl(
+			ve, manifoldPressure, temperature, engineConfiguration->displacement, engine->engineState.cylinderCount);
+}
+
+/*static*/ mass_t SpeedDensityBase::getAirmassImpl(
+		float ve, float manifoldPressure, float temperature, float displacement, float cylinderCount) {
+	mass_t cycleAir = ve * idealGasLaw(displacement, manifoldPressure, temperature);
+	return cycleAir / cylinderCount;
 }

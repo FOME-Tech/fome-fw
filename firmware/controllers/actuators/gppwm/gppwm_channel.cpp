@@ -2,6 +2,7 @@
 #include "pch.h"
 
 #include "gppwm_channel.h"
+#include "airmass_loads.h"
 
 #include "ac_control.h"
 #include "table_helper.h"
@@ -15,6 +16,8 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 			return Sensor::get(SensorType::Rpm);
 		case GPPWM_Tps:
 			return Sensor::get(SensorType::Tps1);
+		case GPPWM_EffectiveMap:
+			return getEffectiveAirmassMap();
 		case GPPWM_Map:
 			return Sensor::get(SensorType::Map);
 		case GPPWM_Clt:
@@ -26,9 +29,25 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 		case GPPWM_LuaGauge2:
 			return Sensor::get(SensorType::LuaGauge2);
 		case GPPWM_FuelLoad:
-			return getFuelingLoad();
-		case GPPWM_IgnLoad:
-			return getIgnitionLoad();
+		case GPPWM_IgnLoad: {
+			chibios_rt::CriticalSectionLocker csl;
+			const bool revised = engineConfiguration->fuelAlgorithm == LM_SPEED_DENSITY ||
+								 engineConfiguration->fuelAlgorithm == LM_ALPHA_N ||
+								 engineConfiguration->fuelAlgorithm == LM_REAL_MAF ||
+								 engineConfiguration->fuelAlgorithm == LM_SD_ALPHA_N;
+			const auto& snapshot = engine->engineState.airmassLoads;
+			if (revised &&
+				(!snapshot.Valid || snapshot.ConfigurationVersion != engine->getGlobalConfigurationVersion())) {
+				return unexpected;
+			}
+			const float legacyLoad = channel == GPPWM_FuelLoad ? getFuelingLoad() : getIgnitionLoad();
+			const float load =
+					revised ? getAirmassSelectedLoad(
+									  channel == GPPWM_FuelLoad ? AFR_None : engineConfiguration->ignOverrideMode,
+									  legacyLoad)
+							: legacyLoad;
+			return std::isfinite(load) ? expected<float>(load) : unexpected;
+		}
 		case GPPWM_AuxTemp1:
 			return Sensor::get(SensorType::AuxTemp1);
 		case GPPWM_AuxTemp2:
@@ -139,16 +158,19 @@ GppwmResult GppwmChannel::getOutput() const {
 	expected<float> xAxisValue = readGppwmChannel(m_config->rpmAxis);
 	expected<float> yAxisValue = readGppwmChannel(m_config->loadAxis);
 
-	GppwmResult result{(float)m_config->dutyIfError, xAxisValue.value_or(0), yAxisValue.value_or(0)};
+	const bool xValid = xAxisValue && std::isfinite(xAxisValue.Value);
+	const bool yValid = yAxisValue && std::isfinite(yAxisValue.Value);
+	// Invalid axes must not cast NaN into the packed display cursors either.
+	GppwmResult result{(float)m_config->dutyIfError, xValid ? xAxisValue.Value : 0, yValid ? yAxisValue.Value : 0};
 
 	// If we couldn't get load axis value, fall back on error value
-	if (!xAxisValue || !yAxisValue) {
+	if (!xValid || !yValid) {
 		return result;
 	}
 
 	float resultVal = m_table->getValue(xAxisValue.Value, yAxisValue.Value);
 
-	if (std::isnan(result.Result)) {
+	if (!std::isfinite(resultVal)) {
 		return result;
 	}
 

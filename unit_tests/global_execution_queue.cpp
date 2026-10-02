@@ -44,6 +44,20 @@ void TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t
 	schedulingQueue.insertTask(scheduling, NT2US(timeNt), action);
 }
 
+bool TestExecutor::scheduleBatch(const ScheduledAction* events, size_t count) {
+	if (!isScheduleBatchValid(events, count, getTimeNowNt())) {
+		return false;
+	}
+	if (m_mockExecutor) {
+		return m_mockExecutor->scheduleBatch(events, count);
+	}
+	ScheduledAction converted[MaxScheduleBatchSize];
+	for (size_t i = 0; i < count; i++) {
+		converted[i] = {NT2US(events[i].time), events[i].action};
+	}
+	return schedulingQueue.insertBatch(converted, count);
+}
+
 void TestExecutor::cancel(scheduling_s* s) {
 	if (m_mockExecutor) {
 		m_mockExecutor->cancel(s);

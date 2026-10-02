@@ -53,6 +53,23 @@ static SensorResult getAxisValue(gppwm_channel_e channel) {
 	return readGppwmChannel(channel);
 }
 
+static expected<BlendResult> calculateBoostBlend(const blend_table_s& blend, expected<float> xAxis, float parentYAxis) {
+	if (blend.blendParameter == GPPWM_Zero) {
+		return BlendResult{};
+	}
+	const auto parameter = readGppwmChannel(blend.blendParameter);
+	const auto yAxis =
+			blend.yAxisOverride == GPPWM_Zero ? expected<float>(parentYAxis) : readGppwmChannel(blend.yAxisOverride);
+	if (!xAxis || !yAxis || !parameter || !std::isfinite(xAxis.Value) || !std::isfinite(yAxis.Value) ||
+		!std::isfinite(parameter.Value)) {
+		return unexpected;
+	}
+	// Pass the validated captured values to interpolation. The generic live
+	// helper substitutes zero for a failed Y axis, which is unsuitable here.
+	const auto result = calculateBlend(blend, xAxis.Value, yAxis.Value, parameter.Value);
+	return std::isfinite(result.Value) ? expected<BlendResult>(result) : unexpected;
+}
+
 expected<float> BoostController::getSetpoint() {
 	// If we're in open loop only mode, disregard any target computation.
 	// Open loop needs to work even in case of invalid closed loop config
@@ -80,7 +97,19 @@ expected<float> BoostController::getSetpoint() {
 
 	// Add any blends if configured
 	for (size_t i = 0; i < efi::size(config->boostClosedLoopBlends); i++) {
-		auto result = calculateBlend(config->boostClosedLoopBlends[i], xAxis.Value, yAxis.Value);
+		auto correctionX = config->boostClosedLoopBlendXAxis[i] == GPPWM_Zero
+								 ? xAxis
+								 : getAxisValue(config->boostClosedLoopBlendXAxis[i]);
+		if (config->boostClosedLoopBlends[i].blendParameter != GPPWM_Zero &&
+			(!correctionX || !std::isfinite(correctionX.Value))) {
+			return unexpected;
+		}
+		engine->outputChannels.boostClosedLoopBlendXAxisValue[i] = correctionX.value_or(0);
+		const auto evaluated = calculateBoostBlend(config->boostClosedLoopBlends[i], correctionX, yAxis.Value);
+		if (!evaluated) {
+			return unexpected;
+		}
+		const auto& result = evaluated.Value;
 
 		boostClosedLoopBlendParameter[i] = result.BlendParameter;
 		boostClosedLoopBlendBias[i] = result.Bias;
@@ -116,7 +145,19 @@ expected<percent_t> BoostController::getOpenLoop(float target) {
 
 	// Add any blends if configured
 	for (size_t i = 0; i < efi::size(config->boostOpenLoopBlends); i++) {
-		auto result = calculateBlend(config->boostOpenLoopBlends[i], xAxis.Value, yAxis.Value);
+		auto correctionX = config->boostOpenLoopBlendXAxis[i] == GPPWM_Zero
+								 ? xAxis
+								 : getAxisValue(config->boostOpenLoopBlendXAxis[i]);
+		if (config->boostOpenLoopBlends[i].blendParameter != GPPWM_Zero &&
+			(!correctionX || !std::isfinite(correctionX.Value))) {
+			return unexpected;
+		}
+		engine->outputChannels.boostOpenLoopBlendXAxisValue[i] = correctionX.value_or(0);
+		const auto evaluated = calculateBoostBlend(config->boostOpenLoopBlends[i], correctionX, yAxis.Value);
+		if (!evaluated) {
+			return unexpected;
+		}
+		const auto& result = evaluated.Value;
 
 		boostOpenLoopBlendParameter[i] = result.BlendParameter;
 		boostOpenLoopBlendBias[i] = result.Bias;

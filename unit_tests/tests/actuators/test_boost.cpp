@@ -135,3 +135,71 @@ TEST(BoostControl, SetOutput) {
 
 	bc.setOutput(25.0f);
 }
+
+TEST(BoostControl, IndependentCorrectionAxesPreserveDriverIntentAndMissingSourcesUseSafeDuty) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->isBoostControlEnabled = true;
+	engineConfiguration->boostType = CLOSED_LOOP;
+	engineConfiguration->boostControlSafeDutyCycle = 17;
+	Sensor::setMockValue(SensorType::Rpm, 2000);
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 35);
+	Sensor::setMockValue(SensorType::Tps1, 20);
+	Sensor::setMockValue(SensorType::Map, 80);
+	Sensor::setMockValue(SensorType::Clt, 70);
+	StrictMock<MockVp3d> parentTable;
+	EXPECT_CALL(parentTable, getValue(2000, 35)).WillRepeatedly(Return(40));
+	StrictMock<MockPwm> pwm;
+	BoostController bc;
+	bc.init(&pwm, &parentTable, &parentTable, nullptr);
+	config->boostOpenLoopBlendXAxis[0] = GPPWM_Tps;
+	config->boostClosedLoopBlendXAxis[0] = GPPWM_Tps;
+	for (auto* blend : {&config->boostOpenLoopBlends[0], &config->boostClosedLoopBlends[0]}) {
+		blend->blendParameter = GPPWM_Clt;
+		blend->yAxisOverride = GPPWM_Tps;
+		setLinearCurve(blend->rpmBins, 0, 100, 1);
+		setLinearCurve(blend->loadBins, 0, 100, 1);
+		setLinearCurve(blend->blendBins, 0, 100, 1);
+		setArrayValues(blend->blendValues, 100);
+		for (size_t row = 0; row < efi::size(blend->table); row++) {
+			for (size_t column = 0; column < efi::size(blend->table[row]); column++) {
+				blend->table[row][column] = (blend->loadBins[row] + blend->rpmBins[column]) * 0.1f;
+			}
+		}
+	}
+	EXPECT_NEAR(bc.getOpenLoop(0).value_or(0), 45.5f, 0.2f);
+	EXPECT_NEAR(bc.getSetpoint().value_or(0), 45.5f, 0.2f);
+	EXPECT_FLOAT_EQ(engine->outputChannels.boostOpenLoopBlendXAxisValue[0], 35);
+	EXPECT_FLOAT_EQ(bc.boostOpenLoopBlendYAxis[0], 20);
+
+	// The parent coordinates still work, but the selected correction Y fails.
+	config->boostOpenLoopBlends[0].yAxisOverride = GPPWM_EffectiveMap;
+	config->boostClosedLoopBlends[0].yAxisOverride = GPPWM_EffectiveMap;
+	const auto failedDuty = bc.getOpenLoop(0);
+	EXPECT_FALSE(failedDuty.Valid);
+	EXPECT_FALSE(bc.getSetpoint().Valid);
+	EXPECT_CALL(pwm, setSimplePwmDutyCycle(0.17f));
+	bc.setOutput(failedDuty);
+
+	config->boostOpenLoopBlends[0].yAxisOverride = GPPWM_Tps;
+	config->boostClosedLoopBlends[0].yAxisOverride = GPPWM_Tps;
+	config->boostOpenLoopBlendXAxis[0] = GPPWM_EffectiveMap;
+	config->boostClosedLoopBlendXAxis[0] = GPPWM_EffectiveMap;
+	EXPECT_FALSE(bc.getOpenLoop(0).Valid);
+	EXPECT_FALSE(bc.getSetpoint().Valid);
+
+	config->boostOpenLoopBlendXAxis[0] = GPPWM_Tps;
+	config->boostClosedLoopBlendXAxis[0] = GPPWM_Tps;
+	Sensor::setInvalidMockValue(SensorType::Clt);
+	EXPECT_FALSE(bc.getOpenLoop(0).Valid);
+	EXPECT_FALSE(bc.getSetpoint().Valid);
+
+	// Disabled corrections require none of their configured inputs.
+	config->boostOpenLoopBlends[0].blendParameter = GPPWM_Zero;
+	config->boostClosedLoopBlends[0].blendParameter = GPPWM_Zero;
+	config->boostOpenLoopBlendXAxis[0] = GPPWM_EffectiveMap;
+	config->boostClosedLoopBlendXAxis[0] = GPPWM_EffectiveMap;
+	config->boostOpenLoopBlends[0].yAxisOverride = GPPWM_EffectiveMap;
+	config->boostClosedLoopBlends[0].yAxisOverride = GPPWM_EffectiveMap;
+	EXPECT_FLOAT_EQ(bc.getOpenLoop(0).value_or(0), 40);
+	EXPECT_FLOAT_EQ(bc.getSetpoint().value_or(0), 40);
+}

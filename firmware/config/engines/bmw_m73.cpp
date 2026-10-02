@@ -107,7 +107,7 @@ void m73engine() {
 	engineConfiguration->cranking.baseFuel = 27;
 
 	engineConfiguration->crankingTimingAngle = 15;
-	setTable(config->veTable, 45);
+	setTable(config->alphaNTable, 45);
 
 	engineConfiguration->cylinderBore = 85.0;
 }

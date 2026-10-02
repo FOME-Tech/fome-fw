@@ -28,6 +28,52 @@ TEST(FuelComputer, getCycleFuel) {
 	EXPECT_FLOAT_EQ(result, 7.0f / (5 * 3));
 }
 
+TEST(FuelComputer, ResolvedLoadConversionRejectsInvalidLambdaAndStoich) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	struct TestCase {
+		float lambda;
+		float stoich;
+	};
+
+	for (const auto test : {
+				 TestCase{0, 14.7f},
+				 TestCase{NAN, 14.7f},
+				 TestCase{INFINITY, 14.7f},
+				 TestCase{1, 0},
+				 TestCase{1, NAN},
+				 TestCase{1, INFINITY},
+		 }) {
+		MockFuelComputer dut;
+		EXPECT_CALL(dut, getStoichiometricRatio()).WillOnce(Return(test.stoich));
+		EXPECT_CALL(dut, getTargetLambda(1000, FloatEq(700))).WillOnce(Return(test.lambda));
+
+		EXPECT_TRUE(std::isnan(dut.getCycleFuelWithResolvedLoad(7, 1000, 700)));
+		EXPECT_FLOAT_EQ(dut.getResolvedLambdaLoad(), 0);
+		EXPECT_FLOAT_EQ(dut.afrTableYAxis, 0);
+		EXPECT_FLOAT_EQ(dut.targetLambda, 0);
+		EXPECT_FLOAT_EQ(dut.targetAFR, 0);
+		EXPECT_FLOAT_EQ(dut.stoichiometricRatio, 0);
+	}
+}
+
+TEST(FuelComputer, LegacyConversionRetainsPermissiveBehavior) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	MockFuelComputer dut;
+	EXPECT_CALL(dut, getTargetLambdaLoadAxis(FloatEq(700))).WillOnce(Return(700));
+	EXPECT_CALL(dut, getStoichiometricRatio()).WillOnce(Return(14.7f));
+	EXPECT_CALL(dut, getTargetLambda(1000, FloatEq(700))).WillOnce(Return(0));
+
+	EXPECT_TRUE(std::isinf(dut.getCycleFuel(7, 1000, 700)));
+	// The legacy packed channel still wraps an out-of-range load instead of
+	// applying the strict path's saturation and validation.
+	EXPECT_FLOAT_EQ(dut.afrTableYAxis, 44.64f);
+	EXPECT_FLOAT_EQ(dut.targetLambda, 0);
+	EXPECT_FLOAT_EQ(dut.targetAFR, 0);
+	EXPECT_FLOAT_EQ(dut.stoichiometricRatio, 14.7f);
+}
+
 TEST(FuelComputer, FlexFuel) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

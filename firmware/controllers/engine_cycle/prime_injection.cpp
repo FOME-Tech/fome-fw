@@ -61,10 +61,12 @@ void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
 	if (ignSwitchCounter == 0) {
 		// Give sensors long enough to wake up before priming
 		constexpr float minimumPrimeDelayMs = 100;
-		uint32_t primeDelayNt = MSF2NT(engineConfiguration->primingDelay * 1000 + minimumPrimeDelayMs);
-
-		auto startTime = getTimeNowNt() + primeDelayNt;
-		getScheduler()->schedule("prime start", nullptr, startTime, {PrimeController::onPrimeStartAdapter, this});
+		float delayMs = engineConfiguration->primingDelay * 1000 + minimumPrimeDelayMs;
+		if (std::isfinite(delayMs) && delayMs >= 0 && delayMs < MaximumScheduleDelayUs / 1000) {
+			auto startTime = getTimeNowNt() + US2NT(static_cast<int>(MS2US(delayMs)));
+			ScheduledAction request{startTime, {PrimeController::onPrimeStartAdapter, this}};
+			scheduleFuelCallbacks(&request, 1, true);
+		}
 	} else {
 		efiPrintf("Skipped priming pulse since ignSwitchCounter = %lu", ignSwitchCounter);
 	}
@@ -89,34 +91,59 @@ uint32_t PrimeController::getKeyCycleCounter() const {
 void PrimeController::setKeyCycleCounter(uint32_t) {}
 #endif
 
-void PrimeController::onPrimeStart() {
-	auto durationMs = getPrimeDuration();
+void PrimeController::onPrimeStartAdapter(PrimeController* instance) {
+	instance->onPrimeStart();
+	engine->airmassInjectionState.callbackCompleted();
+}
 
-	// Don't prime a zero-duration pulse
-	if (durationMs <= 0) {
-		efiPrintf("Skipped zero-duration priming pulse.");
+void PrimeController::onPrimeOpenAdapter(PrimeController* instance) {
+	instance->onPrimeOpen();
+	engine->airmassInjectionState.callbackCompleted();
+}
+
+void PrimeController::onPrimeEndAdapter(PrimeController* instance) {
+	instance->onPrimeEnd();
+	engine->airmassInjectionState.callbackCompleted();
+}
+
+void PrimeController::onPrimeStart() {
+	chibios_rt::CriticalSectionLocker csl;
+	// A delayed request may have been accepted under another strategy. Check at actual start.
+	if (!engine->airmassInjectionState.allowPrime() || m_isPriming || isPrimeInjectionPulseSkipped()) {
+		return;
+	}
+	auto durationMs = getPrimeDuration();
+	if (!std::isfinite(durationMs) || durationMs < 0.050f || durationMs >= MaximumScheduleDelayUs / 1000) {
 		return;
 	}
 
-	efiPrintf("Firing priming pulse of %.2f ms", durationMs);
-
-	auto endTime = getTimeNowNt() + (uint32_t)MSF2NT(durationMs);
-
-	// Open all injectors, schedule closing later
+	auto startTime = getTimeNowNt();
+	auto endTime = startTime + US2NT(static_cast<int>(MS2US(durationMs)));
+	if (engine->engineState.cylinderCount == 0 || engine->engineState.cylinderCount > MAX_CYLINDER_COUNT) {
+		return;
+	}
+	m_primeOutputsMask = (1 << engine->engineState.cylinderCount) - 1;
 	m_isPriming = true;
+	ScheduledAction events[] = {
+			{startTime, {onPrimeOpenAdapter, this}},
+			{endTime, {onPrimeEndAdapter, this}},
+	};
+	if (!scheduleFuelCallbacks(events, efi::size(events), true)) {
+		m_isPriming = false;
+	}
+}
 
+void PrimeController::onPrimeOpen() {
 	InjectorContext ctx;
-	ctx.outputsMask = (1 << engine->engineState.cylinderCount) - 1;
-
+	ctx.outputsMask = m_primeOutputsMask;
 	startInjection(ctx);
-	getScheduler()->schedule("prime end", nullptr, endTime, {onPrimeEndAdapter, this});
 }
 
 void PrimeController::onPrimeEnd() {
 	InjectorContext ctx;
-	ctx.outputsMask = (1 << engine->engineState.cylinderCount) - 1;
+	// Match the mask accepted at start even if the tune has changed since then.
+	ctx.outputsMask = m_primeOutputsMask;
 	endInjection(ctx);
-
 	m_isPriming = false;
 }
 

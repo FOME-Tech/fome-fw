@@ -20,6 +20,31 @@ struct MockAc : public AcController {
 	}
 };
 
+TEST(Actuators, FanAcTablesHaveIndependentSourcesAndCursors) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	Sensor::setMockValue(SensorType::Map, 80);
+	Sensor::setMockValue(SensorType::Tps1, 20);
+	engineConfiguration->fan1PwmXAxis = GPPWM_Map;
+	config->fan1PwmAcOnXAxis = GPPWM_Tps;
+	engineConfiguration->fanPwmSafetyDuty = 90;
+	setLinearCurve(config->fan1XAxisBins, 0, 100, 1);
+	for (auto& row : config->fan1DutyAcOff) {
+		for (size_t column = 0; column < efi::size(row); column++) {
+			row[column] = static_cast<float>(config->fan1XAxisBins[column]);
+		}
+	}
+	copyArray(config->fan1DutyAcOn, config->fan1DutyAcOff);
+	FanControl1 fan;
+	EXPECT_NEAR(fan.getAcOffDuty(80), 80, 0.1f);
+	EXPECT_NEAR(fan.getAcOnDuty(80), 20, 0.1f);
+	EXPECT_FLOAT_EQ(fan.fanXAxisValue, 80);
+	EXPECT_FLOAT_EQ(fan.fanAcOnXAxisValue, 20);
+
+	Sensor::setInvalidMockValue(SensorType::Tps1);
+	EXPECT_FLOAT_EQ(fan.getAcOnDuty(80), 90);
+	EXPECT_NEAR(fan.getAcOffDuty(80), 80, 0.1f);
+}
+
 TEST(Actuators, Fan) {
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);

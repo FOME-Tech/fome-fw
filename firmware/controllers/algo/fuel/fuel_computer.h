@@ -22,10 +22,23 @@ private:
 class FuelComputerBase : public IFuelComputer {
 public:
 	mass_t getCycleFuel(mass_t airmass, float rpm, float load) override;
+	// The composite owner has already resolved and validated this coordinate.
+	// Do not re-read an override sensor or reuse a previously published filling.
+	mass_t getCycleFuelWithResolvedLoad(mass_t airmass, float rpm, float load);
+	float getResolvedLambdaLoad() const {
+		return m_resolvedLambdaLoad;
+	}
+	void resetResolvedLambdaLoad() {
+		m_resolvedLambdaLoad = 0;
+	}
 
 	virtual float getStoichiometricRatio() const = 0;
 	virtual float getTargetLambda(float rpm, float load) const = 0;
 	virtual float getTargetLambdaLoadAxis(float defaultLoad) const = 0;
+
+private:
+	mass_t calculateCycleFuel(mass_t airmass, float rpm, float load, bool strict);
+	float m_resolvedLambdaLoad = 0;
 };
 
 // This class is a usable implementation of a fuel model that reads real configuration

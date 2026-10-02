@@ -13,6 +13,8 @@ class TachometerModule : public EngineModule {
 public:
 	// TODO: can/should this be slow callback instead?
 	void onFastCallback() override;
+	// Actuator regulation resumes on the regular fast thread.
+	void onSynchronousFastCallback() override {}
 	void onIgnitionStateChanged(bool ignitionOn) override;
 
 private:

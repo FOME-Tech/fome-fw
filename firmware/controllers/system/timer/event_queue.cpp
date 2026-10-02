@@ -79,6 +79,31 @@ bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s 
 	}
 }
 
+bool EventQueue::insertBatch(const ScheduledAction* events, size_t count) {
+	if (!events || count == 0 || count > MaxScheduleBatchSize) {
+		return false;
+	}
+
+	scheduling_s* reserved[MaxScheduleBatchSize];
+	for (size_t i = 0; i < count; i++) {
+		reserved[i] = events[i].action ? m_schedulingPool.get() : nullptr;
+		if (!reserved[i]) {
+			for (size_t j = 0; j < i; j++) {
+				m_schedulingPool.tryReturn(reserved[j]);
+			}
+			return false;
+		}
+	}
+
+	for (size_t i = 0; i < count; i++) {
+		insertTask(reserved[i], events[i].time, events[i].action);
+	}
+#if EFI_PROD_CODE
+	getTunerStudioOutputChannels()->schedulingUsedCount = m_schedulingPool.used();
+#endif
+	return true;
+}
+
 void EventQueue::remove(scheduling_s* scheduling) {
 	assertListIsSorted();
 

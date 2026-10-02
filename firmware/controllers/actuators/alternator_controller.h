@@ -18,6 +18,8 @@ void initAlternatorCtrl();
 class AlternatorController : public EngineModule, public ClosedLoopController<float, percent_t> {
 public:
 	void onFastCallback() override;
+	// Actuator regulation resumes on the regular fast thread.
+	void onSynchronousFastCallback() override {}
 	void onConfigurationChange(engine_configuration_s const* previousConfiguration) override;
 
 protected:

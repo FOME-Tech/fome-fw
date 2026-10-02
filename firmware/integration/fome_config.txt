@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20024
+#define FLASH_DATA_VERSION 260930
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1400
+#define BLOCKING_FACTOR 1536
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -168,6 +168,11 @@ struct_no_prefix engine_configuration_s
 
 #define FUEL_RPM_COUNT 16
 #define FUEL_LOAD_COUNT 16
+
+#define ALPHA_N_RPM_COUNT 16
+#define ALPHA_N_LOAD_COUNT 16
+#define MAF_RPM_COUNT 16
+#define MAF_LOAD_COUNT 16
 
 #define BOOST_RPM_COUNT 8
 #define BOOST_LOAD_COUNT 8
@@ -291,7 +296,7 @@ custom pin_output_mode_e 1 bits, U08, @OFFSET@, [0:1], @@pin_output_mode_e_enum@
 #define pin_input_mode_e_enum "DEFAULT", "PULLUP", "PULLDOWN"
 custom pin_input_mode_e 1 bits, U08,	@OFFSET@,	[0:1], @@pin_input_mode_e_enum@@
 
-#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
+#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State", "Effective MAP"
 custom gppwm_channel_e 1 bits, U08, @OFFSET@, [0:5], @@gppwm_channel_e_enum@@
 
 custom canBroadcast_e 1 bits, U08, @OFFSET@, [0:1], "none", "first", "second", "both"
@@ -464,7 +469,7 @@ uint16_t autoscale benchTestOnTime;Duration of each test pulse;"ms", 0.01, 0, 0,
 
 float cylinderBore;Cylinder diameter in mm.;"mm", 1, 0, 0, 20000, 2
 
-#define engine_load_mode_e_enum "Speed Density", "MAF Air Charge", "Alpha-N", "Lua"
+#define engine_load_mode_e_enum "Speed Density", "MAF Air Charge", "Alpha-N", "Lua", "SD + Alpha-N"
 
 
 custom engine_load_mode_e 1 bits, U08, @OFFSET@, [0:2], @@engine_load_mode_e_enum@@
@@ -1062,7 +1067,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 
 	can_baudrate_e can2BaudRate;
 
-	#define load_override_e_enum "None", "MAP", "TPS", "Acc Pedal", "Cyl Filling %"
+	#define load_override_e_enum "Model default", "Measured MAP", "TPS", "Acc Pedal", "Cyl Filling %", "Effective MAP", "INVALID", "INVALID"
 	custom load_override_e 1 bits, U08, @OFFSET@, [0:2], @@load_override_e_enum@@
 	load_override_e afrOverrideMode;Override the Y axis (load) value used for the AFR table.\nAdvanced users only: If you aren't sure you need this, you probably don't need this.
 
@@ -1811,6 +1816,60 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
+
+! Keep new strategy maps at the end so all legacy calibration offsets remain unchanged.
+begin_table
+	table_rows num ALPHA_N_LOAD_COUNT uint16_t autoscale alphaNTpsBins;;"% TPS", {1/@@TPS_2_BYTE_PACKING_MULT@@}, 0, 0, 100, 2
+	table_cols num ALPHA_N_RPM_COUNT uint16_t alphaNRpmBins;;"RPM", 1, 0, 0, 18000, 0
+	table_values uint16_t autoscale alphaNTable;Alpha-N cylinder filling at the model reference pressure and temperature. Requires calibration for this engine.;"%", 0.1, 0, 0, 999, 1
+end_table
+
+begin_table
+	table_rows num MAF_LOAD_COUNT uint16_t mafLoadBins;;"% filling", 1, 0, 0, 1000, 0
+	table_cols num MAF_RPM_COUNT uint16_t mafRpmBins;;"RPM", 1, 0, 0, 18000, 0
+	table_values uint16_t autoscale mafTable;Correction applied to measured MAF air mass. 100 percent is neutral.;"%", 0.1, 0, 0, 999, 1
+end_table
+
+#define AIRMASS_BLEND_LOAD_COUNT 8
+#define AIRMASS_BLEND_RPM_COUNT 8
+begin_table
+	table_rows num AIRMASS_BLEND_LOAD_COUNT uint16_t autoscale airmassBlendTpsBins;;"% TPS", {1/@@TPS_2_BYTE_PACKING_MULT@@}, 0, 0, 100, 2
+	table_cols num AIRMASS_BLEND_RPM_COUNT uint16_t airmassBlendRpmBins;;"RPM", 1, 0, 0, 18000, 0
+	table_values uint8_t airmassBlendTable;Alpha-N contribution to calculated air mass. 0 percent uses SD only. 100 percent uses Alpha-N only. Default fueling load remains effective MAP at every weight.;"% Alpha-N", 1, 0, 0, 100, 0
+end_table
+
+	! Reserved policy bits. Calibration validity is checked automatically.
+	bit unusedAirmassPolicy0
+	bit unusedAirmassPolicy1
+	bit useMapEstimateTable;Allow the calibrated MAP estimate table for fallback and, when enabled separately, transients.
+	bit alphaNMultiplyMap;Standalone Alpha-N only: multiply reference filling by effective MAP / 101.325. Ignored in blending.
+	bit alphaNBaroCompensation;Apply measured or valid startup BARO / reference pressure to pure Alpha-N before blending. Inactive with standalone Multiply MAP.
+	#define AirmassTemperatureSource_enum "Tcharge", "IAT"
+	custom AirmassTemperatureSource 1 bits, U08, @OFFSET@, [0:0], @@AirmassTemperatureSource_enum@@
+	AirmassTemperatureSource airmassTemperatureSource;One temperature source for active models, including both blended contributions.
+	#define IdleVeModel_enum "Speed Density", "Alpha-N"
+	custom IdleVeModel 1 bits, U08, @OFFSET@, [0:0], @@IdleVeModel_enum@@
+	IdleVeModel idleVeModel;Model receiving the single Idle VE overlay in blended operation.
+	#define IdleVeLoadSource_enum "Model default", "Measured MAP", "TPS", "Effective MAP"
+	custom IdleVeLoadSource 1 bits, U08, @OFFSET@, [0:1], @@IdleVeLoadSource_enum@@
+	IdleVeLoadSource idleVeLoadSource;Independent Idle VE coordinate. Model default uses the owning model's native load.
+	float alphaNBaroReferencePressure;Fixed pressure at which the Alpha-N map was calibrated. Never reset at startup.;"kPa", 1, 0, 20, 120, 3
+	load_override_e injectionPhaseLoadSource;Independent injection phase coordinate.
+	load_override_e[MAX_CYLINDER_COUNT iterate] fuelTrimLoadSource;Independent cylinder fuel trim coordinate.
+	load_override_e[MAX_CYLINDER_COUNT iterate] ignitionTrimLoadSource;Independent cylinder ignition trim coordinate.
+	load_override_e stftLoadSource;Coordinate and units for STFT load region thresholds.
+	load_override_e stagingLoadSource;Independent injector staging table coordinate.
+	load_override_e lambdaDeviationLoadSource;Independent allowed lambda deviation table coordinate.
+	load_override_e lambdaMonitorLoadSource;Coordinate and units for lambda protection load thresholds.
+	load_override_e trailingSparkLoadSource;Independent trailing spark table coordinate.
+	load_override_e ignitionIatLoadSource;Independent IAT ignition correction coordinate.
+	load_override_e knockRetardLoadSource;Independent maximum knock retard coordinate.
+	load_override_e[MAX_CYLINDER_COUNT iterate] knockGainLoadSource;Independent cylinder knock gain coordinate.
+	load_override_e hpfpTargetLoadSource;HPFP pressure target table coordinate. Table output and pressure feedback remain kPa.
+	gppwm_channel_e fan1PwmAcOnXAxis;Independent fan 1 AC-on table X coordinate.
+	gppwm_channel_e fan2PwmAcOnXAxis;Independent fan 2 AC-on table X coordinate.
+	gppwm_channel_e[BOOST_BLEND_COUNT iterate] boostOpenLoopBlendXAxis;Independent boost open-loop correction X coordinate. Zero inherits parent X coordinate.
+	gppwm_channel_e[BOOST_BLEND_COUNT iterate] boostClosedLoopBlendXAxis;Independent boost closed-loop correction X coordinate. Zero inherits parent X coordinate.
 end_struct
 
 ! Pedal Position Sensor

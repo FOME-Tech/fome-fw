@@ -27,6 +27,8 @@ public:
 
 	// EngineModule implementation
 	void onFastCallback() override;
+	// Actuator regulation resumes on the regular fast thread.
+	void onSynchronousFastCallback() override {}
 	void onConfigurationChange(engine_configuration_s const* previousConfig) override;
 
 	// ClosedLoopController implementation

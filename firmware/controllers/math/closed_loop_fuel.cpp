@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "closed_loop_fuel.h"
+#include "airmass_loads.h"
 #include "closed_loop_fuel_cell.h"
 #include "deadband.h"
 
@@ -112,7 +113,11 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		return {};
 	}
 
-	size_t binIdx = computeStftBin(Sensor::getOrZero(SensorType::Rpm), getFuelingLoad(), engineConfiguration->stft);
+	const float load = getAirmassConsumerLoad(AirmassConsumer::Stft);
+	if (!std::isfinite(load)) {
+		return {};
+	}
+	size_t binIdx = computeStftBin(Sensor::getOrZero(SensorType::Rpm), load, engineConfiguration->stft);
 
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.fuelClosedLoopBinIdx = binIdx;
