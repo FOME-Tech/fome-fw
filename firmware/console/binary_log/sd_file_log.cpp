@@ -127,39 +127,25 @@ static bool ensureDirectoryPath(char* path) {
 }
 
 static void prepareLogFileName(int index) {
-#if EFI_RTC
-	efidatetime_t dateTime = getRtcDateTime();
-	if (dateTime.year >= 2016 && dateTime.year <= 2030 && dateTime.month >= 1 && dateTime.month <= 12 &&
-		dateTime.day >= 1 && dateTime.day <= 31) {
-		int len = snprintf(
+	char stamp[SHORT_TIME_LEN + 1];
+	char* ptr;
+
+	if (dateToStringShort(stamp)) {
+		// stamp is YYMMDD_HHMMSS, valid years are 2016-2030, so the folders are 20YY/MM/DD
+		snprintf(
 				logName,
 				sizeof(logName),
-				"%04u/%02u/%02u/" FOME_LOG_PREFIX "%02u%02u%02u_%02u%02u%02u",
-				(unsigned)dateTime.year,
-				(unsigned)dateTime.month,
-				(unsigned)dateTime.day,
-				(unsigned)(dateTime.year % 100),
-				(unsigned)dateTime.month,
-				(unsigned)dateTime.day,
-				(unsigned)dateTime.hour,
-				(unsigned)dateTime.minute,
-				(unsigned)dateTime.second);
-
-		if (len > 0 && len + 8 < (int)sizeof(logName)) {
-			char* ptr = &logName[len];
-			if (engineConfiguration->sdTriggerLog) {
-				strcpy(ptr, ".teeth");
-			} else {
-				strcpy(ptr, ".mlg");
-			}
-			return;
-		}
+				"20%.2s/%.2s/%.2s/" FOME_LOG_PREFIX "%s",
+				&stamp[0],
+				&stamp[2],
+				&stamp[4],
+				stamp);
+		ptr = &logName[strlen(logName)];
+	} else {
+		// No valid RTC: sequential index in the root directory
+		strcpy(logName, FOME_LOG_PREFIX);
+		ptr = itoa10(&logName[PREFIX_LEN], index);
 	}
-#endif // EFI_RTC
-
-	// Fallback to sequential index in root directory if RTC is unavailable or invalid
-	strcpy(logName, FOME_LOG_PREFIX);
-	char* ptr = itoa10(&logName[PREFIX_LEN], index);
 
 	if (engineConfiguration->sdTriggerLog) {
 		strcat(ptr, ".teeth");
@@ -179,7 +165,7 @@ static bool createLogFile(int logFileIndex) {
 
 	if (strchr(logName, '/') != nullptr) {
 		if (!ensureDirectoryPath(logName)) {
-			warning(ObdCode::CUSTOM_ERR_SD_MOUNT_FAILED, "SD: failed to create date directories, falling back to root");
+			efiPrintf("SD: failed to create date directories, logging to root");
 			const char* lastSlash = strrchr(logName, '/');
 			if (lastSlash) {
 				memmove(logName, lastSlash + 1, strlen(lastSlash + 1) + 1);
