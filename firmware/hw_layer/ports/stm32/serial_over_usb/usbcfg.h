@@ -29,9 +29,4 @@
 
 extern const USBConfig usbcfg;
 
-#if !EFI_USB_SERIAL_DIRECT
-extern const SerialUSBConfig serusbcfg;
-extern SerialUSBDriver SDU1;
-#endif
-
 void usbPopulateSerialNumber(const uint8_t* serialNumber, size_t bytes);
