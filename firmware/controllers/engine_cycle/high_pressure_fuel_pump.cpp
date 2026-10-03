@@ -161,7 +161,10 @@ void HpfpController::onFastCallback() {
 		// determines whether we do anything or not.
 		m_requested_pump = m_quantity.pumpAngleFuel(rpm, this);
 
-		if (!m_running) {
+		chibios_rt::CriticalSectionLocker csl;
+		// A timer from before the stop may still need to close the valve. Let it finish before
+		// reusing the shared event, otherwise it would re-arm the old chain alongside the new one.
+		if (!m_running && !m_event.scheduling.action) {
 			m_running = true;
 			scheduleNextCycle();
 		}
@@ -176,6 +179,11 @@ void HpfpController::onEngineStop() {
 }
 
 void HpfpController::pinTurnOn(HpfpController* self) {
+	if (!self->m_running) {
+		// This opening was promoted to a timer before the engine stopped, don't open the valve
+		return;
+	}
+
 	enginePins.hpfpValve.setValue(true);
 
 	// By scheduling the close after we already open, we don't have to worry if the engine
@@ -190,7 +198,10 @@ void HpfpController::pinTurnOn(HpfpController* self) {
 void HpfpController::pinTurnOff(HpfpController* self) {
 	enginePins.hpfpValve.setValue(false);
 
-	self->scheduleNextCycle();
+	// After an engine stop the chain is dead, only close the valve
+	if (self->m_running) {
+		self->scheduleNextCycle();
+	}
 }
 
 void HpfpController::scheduleNextCycle() {
