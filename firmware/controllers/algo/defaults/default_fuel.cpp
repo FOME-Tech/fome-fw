@@ -68,6 +68,7 @@ static void setDefaultVETable() {
 
 static void setDefaultFuelCutParameters() {
 	engineConfiguration->coastingFuelCutEnabled = false;
+	engineConfiguration->dfcoStartupDelay = 10;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
