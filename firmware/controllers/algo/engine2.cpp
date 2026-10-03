@@ -175,16 +175,22 @@ void EngineState::periodicFastCallback() {
 		engine->stftCorrection[i] = clResult.banks[i];
 	}
 
+	PreparedTable3DInterpolation fuelTrimInterpolation(
+			config->fuelTrimLoadBins, fuelLoad, config->fuelTrimRpmBins, rpm);
+	PreparedTable3DInterpolation ignitionTrimInterpolation(
+			config->ignTrimLoadBins, ignitionLoad, config->ignTrimRpmBins, rpm);
+
 	// Now apply that to per-cylinder fueling and timing
 	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
 		uint8_t bankIndex = engineConfiguration->cylinderBankSelect[i];
 		auto bankTrim = engine->stftCorrection[bankIndex];
-		auto cylinderTrim = getCylinderFuelTrim(i, rpm, fuelLoad);
+		auto cylinderTrim = getCylinderFuelTrim(i, fuelTrimInterpolation);
 
 		// Apply both per-bank and per-cylinder trims
 		engine->cylinders[i].setInjectionMass(cycleFuelMass * bankTrim * cylinderTrim);
 
-		engine->cylinders[i].setIgnitionTimingBtdc(untrimmedAdvance + getCylinderIgnitionTrim(i, rpm, ignitionLoad));
+		engine->cylinders[i].setIgnitionTimingBtdc(
+				untrimmedAdvance + getCylinderIgnitionTrim(i, ignitionTrimInterpolation));
 	}
 
 	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
@@ -302,6 +308,8 @@ static trigger_type_e getVvtTriggerType(vvt_mode_e vvtMode) {
 			return trigger_type_e::TT_MITSU_4G9x_CAM;
 		case VVT_MITSUBISHI_4G63:
 			return trigger_type_e::TT_MITSU_4G63_CAM;
+		case VVT_HONDA_J_6_2:
+			return trigger_type_e::TT_HONDA_J_CAM_6_2;
 		default:
 			firmwareError("getVvtTriggerType for %s", getVvt_mode_e(vvtMode));
 			return trigger_type_e::TT_ONE; // we have to return something for the sake of -Werror=return-type

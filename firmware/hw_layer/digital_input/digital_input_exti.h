@@ -9,7 +9,7 @@
 
 #if HAL_USE_PAL
 
-using ExtiCallback = void (*)(void*, efitick_t);
+using ExtiCallback = void (*)(void*, efitick_t, bool);
 
 void efiExtiInit();
 void efiExtiEnablePin(const char* msg, brain_pin_e pin, uint32_t mode, ExtiCallback cb, void* cb_data);

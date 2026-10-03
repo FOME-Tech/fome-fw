@@ -80,6 +80,13 @@ public:
 	bool requestSplitInjection = false;
 
 	void updateMapCylinderOffsets();
+
+	/**
+	 * Per-cylinder MAP window averages at full precision.
+	 * The mapPerCylinder[] live data channel is a uint8_t for display only - it saturates at 255 kPa,
+	 * so it must never be read back in to the cylinder balance math.
+	 */
+	float mapPerCylinderFloat[MAX_CYLINDER_COUNT] = {0};
 	float mapCylinderBalance[MAX_CYLINDER_COUNT] = {0};
 };
 

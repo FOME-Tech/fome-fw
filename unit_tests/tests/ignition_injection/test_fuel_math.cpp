@@ -262,6 +262,81 @@ TEST(FuelMath, CylinderFuelTrim) {
 	EXPECT_NEAR(engine->cylinders[3].getInjectionMass(), unadjusted * 1.04, EPS4D);
 }
 
+TEST(FuelMath, CylinderTrimsUseSeparateAxesAndLiveUpdates) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1, 65.0f}));
+	Sensor::setMockValue(SensorType::Rpm, 3500);
+	Sensor::setMockValue(SensorType::Map, 35);
+	engineConfiguration->ignOverrideMode = AFR_MAP;
+
+	const uint16_t fuelLoadBins[4] = {0, 50, 100, 150};
+	const uint16_t fuelRpmBins[4] = {0, 3000, 6000, 9000};
+	const uint16_t ignitionLoadBins[4] = {0, 20, 40, 60};
+	const uint16_t ignitionRpmBins[4] = {0, 2000, 4000, 8000};
+	copyArray(config->fuelTrimLoadBins, fuelLoadBins);
+	copyArray(config->fuelTrimRpmBins, fuelRpmBins);
+	copyArray(config->ignTrimLoadBins, ignitionLoadBins);
+	copyArray(config->ignTrimRpmBins, ignitionRpmBins);
+
+	for (size_t cylinder = 0; cylinder < 12; cylinder++) {
+		for (size_t row = 0; row < 4; row++) {
+			for (size_t column = 0; column < 4; column++) {
+				config->fuelTrims[cylinder].table[row][column] = static_cast<float>(
+						-20 + static_cast<int>(cylinder) * 2 + static_cast<int>(row) * 2 + static_cast<int>(column));
+				config->ignTrims[cylinder].table[row][column] = static_cast<float>(
+						20 - static_cast<int>(cylinder) * 2 - static_cast<int>(row) - static_cast<int>(column) * 2);
+			}
+		}
+	}
+
+	auto checkTrims = [&] {
+		float expectedFuelTrims[12];
+		float expectedIgnitionTrims[12];
+		for (size_t cylinder = 0; cylinder < engine->engineState.cylinderCount; cylinder++) {
+			expectedFuelTrims[cylinder] = (100 + interpolate3d(
+														 config->fuelTrims[cylinder].table,
+														 config->fuelTrimLoadBins,
+														 65.0f,
+														 config->fuelTrimRpmBins,
+														 3500)) /
+										  100;
+			expectedIgnitionTrims[cylinder] = interpolate3d(
+					config->ignTrims[cylinder].table, config->ignTrimLoadBins, 35.0f, config->ignTrimRpmBins, 3500);
+		}
+
+		engine->periodicFastCallback();
+
+		float untrimmedFuel = engine->cylinders[0].getInjectionMass() / expectedFuelTrims[0];
+		float untrimmedIgnition = engine->cylinders[0].getIgnitionTimingBtdc() - expectedIgnitionTrims[0];
+		for (size_t cylinder = 0; cylinder < engine->engineState.cylinderCount; cylinder++) {
+			EXPECT_NEAR(
+					engine->cylinders[cylinder].getInjectionMass(), untrimmedFuel * expectedFuelTrims[cylinder], EPS4D);
+			EXPECT_FLOAT_EQ(
+					engine->cylinders[cylinder].getIgnitionTimingBtdc(),
+					untrimmedIgnition + expectedIgnitionTrims[cylinder]);
+		}
+	};
+
+	// The callback's cylinder loop supports every count up to the configured maximum.
+	for (size_t cylinderCount = 1; cylinderCount <= 12; cylinderCount++) {
+		engine->engineState.cylinderCount = cylinderCount;
+		checkTrims();
+	}
+
+	float previousFuel = engine->cylinders[1].getInjectionMass();
+	float previousIgnition = engine->cylinders[1].getIgnitionTimingBtdc();
+	config->fuelTrimLoadBins[1] = 60;
+	checkTrims();
+	EXPECT_NE(previousFuel, engine->cylinders[1].getInjectionMass());
+	EXPECT_FLOAT_EQ(previousIgnition, engine->cylinders[1].getIgnitionTimingBtdc());
+
+	previousIgnition = engine->cylinders[1].getIgnitionTimingBtdc();
+	config->ignTrimRpmBins[2] = 5000;
+	checkTrims();
+	EXPECT_NE(previousIgnition, engine->cylinders[1].getIgnitionTimingBtdc());
+}
+
 struct MockIdle : public MockIdleController {
 	bool isIdling = false;
 

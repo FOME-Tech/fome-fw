@@ -34,7 +34,7 @@ After making a user-facing change to the firmware, update `firmware/CHANGELOG.md
    - `### Fixed` - bug fixes
    - `### Removed` - removed features or settings
 3. Match the style of existing entries: start with a capital letter, be concise but descriptive, include issue/PR numbers if known (e.g. `#578`).
-4. Write from the user's perspective, not the developer's. Describe what changed for them, not what code was modified.
+4. Write from the user's perspective, not the developer's. Describe what changed for them, not what code was modified. Keep changelog entries concise: they are intended for ordinary users, so don't write a huge essay explaining the full picture, just enough that they can know if this release fixes their bug.
 
 ### Examples
 

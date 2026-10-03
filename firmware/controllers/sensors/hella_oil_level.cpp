@@ -4,8 +4,8 @@
 
 #include "digital_input_exti.h"
 
-static void hellaSensorExtiCallback(void* arg, efitick_t nowNt) {
-	reinterpret_cast<HellaOilLevelSensor*>(arg)->onEdge(nowNt);
+static void hellaSensorExtiCallback(void* arg, efitick_t nowNt, bool level) {
+	reinterpret_cast<HellaOilLevelSensor*>(arg)->onEdge(nowNt, level);
 }
 
 void HellaOilLevelSensor::init(brain_pin_e pin) {
@@ -13,20 +13,12 @@ void HellaOilLevelSensor::init(brain_pin_e pin) {
 		return;
 	}
 
-	m_pin = pin;
-
 #if EFI_PROD_CODE
 	efiExtiEnablePin(
 			getSensorName(), pin, PAL_EVENT_MODE_BOTH_EDGES, hellaSensorExtiCallback, reinterpret_cast<void*>(this));
 #endif // EFI_PROD_CODE
 
 	Register();
-}
-
-void HellaOilLevelSensor::onEdge(efitick_t nowNt) {
-#if EFI_PROD_CODE
-	onEdge(nowNt, efiReadPin(m_pin));
-#endif
 }
 
 void HellaOilLevelSensor::onEdge(efitick_t nowNt, bool value) {

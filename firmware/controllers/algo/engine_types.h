@@ -416,6 +416,9 @@ enum class trigger_type_e : uint32_t {
 	// Honda K24Z exhaust cam shaft, three unevenly spaced teeth
 	TT_HONDA_K24Z_CAM_3 = 78,
 
+	// Honda J-series (V6) intake cam: 6 tooth slots with 2 missing, one distinct big gap per 720 degree cycle.
+	TT_HONDA_J_CAM_6_2 = 79,
+
 	// do not forget to edit "#define trigger_type_e_enum" line in integration/fome_config.txt file to propogate new
 	// value to rusefi.ini TS project do not forget to invoke "gen_config.bat" once you make changes to
 	// integration/fome_config.txt todo: one day a hero would integrate some of these things into Makefile in order to
@@ -424,7 +427,7 @@ enum class trigger_type_e : uint32_t {
 	// Another point: once you add a new trigger, run get_trigger_images.bat which would run fome_test.exe from
 	// unit_tests
 	//
-	TT_UNUSED = 79, // this is used if we want to iterate over all trigger types
+	TT_UNUSED = 80, // this is used if we want to iterate over all trigger types
 };
 
 typedef enum {

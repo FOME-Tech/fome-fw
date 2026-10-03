@@ -137,7 +137,7 @@ static bool getClutchUpState() {
 
 static bool getBrakePedalState() {
 	if (isBrainPinValid(engineConfiguration->brakePedalPin)) {
-		return efiReadPin(engineConfiguration->brakePedalPin);
+		return engineConfiguration->brakePedalPinInverted ^ efiReadPin(engineConfiguration->brakePedalPin);
 	}
 
 #if EFI_CAN_SUPPORT

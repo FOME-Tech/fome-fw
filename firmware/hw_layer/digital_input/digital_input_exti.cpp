@@ -26,6 +26,7 @@ void efiExtiInit() {
 struct ExtiChannel {
 	ExtiCallback Callback = nullptr;
 	void* CallbackData;
+	ioline_t Line;
 
 	// Name is also used as an enable bit
 	const char* Name = nullptr;
@@ -33,7 +34,7 @@ struct ExtiChannel {
 
 static ExtiChannel channels[16];
 
-// EXT is not able to give you the front direction but you could read the pin in the callback.
+// Capture the level in the fast ISR so it corresponds to the event timestamp.
 void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
@@ -75,9 +76,11 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 	channel.Name = msg;
 
 	ioline_t line = PAL_LINE(port, index);
+	channel.Line = line;
+
+	palSetLineMode(line, PAL_MODE_INPUT);
 	palEnableLineEvent(line, mode);
 }
-
 void efiExtiDisablePin(brain_pin_e brainPin) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
@@ -117,15 +120,16 @@ static inline void triggerInterrupt() {
 struct ExtiQueueEntry {
 	efitick_t Timestamp;
 	uint8_t Channel;
+	bool Level;
 };
 
 template <typename T, size_t TSize>
 class ExtiQueue {
 public:
-	void push(const T& val) {
+	bool push(const T& val) {
 		if ((m_write == m_read - 1) || (m_write == TSize - 1 && m_read == 0)) {
 			// queue full, drop
-			return;
+			return false;
 		}
 
 		arr[m_write] = val;
@@ -135,6 +139,7 @@ public:
 		if (m_write == TSize) {
 			m_write = 0;
 		}
+		return true;
 	}
 
 	expected<T> pop() {
@@ -187,10 +192,8 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 			auto& channel = channels[entry.Channel];
 
 			if (channel.Callback) {
-				channel.Callback(channel.CallbackData, timestamp);
+				channel.Callback(channel.CallbackData, timestamp, entry.Level);
 			}
-		} else {
-			overflowCounter++;
 		}
 	}
 
@@ -210,9 +213,16 @@ void handleExtiIsr(uint8_t index) {
 	extiGetAndClearGroup1(1U << index, pr);
 
 	if (pr & (1 << index)) {
-		queue.push({getTimeNowNt(), index});
+		auto timestamp = getTimeNowNt();
+		auto& channel = channels[index];
+		bool level = palReadLine(channel.Line) == PAL_HIGH;
 
-		triggerInterrupt();
+		if (queue.push({timestamp, index, level})) {
+			triggerInterrupt();
+		} else if (overflowCounter < 255) {
+			// Saturate so a busy input cannot wrap the diagnostic back to zero.
+			overflowCounter++;
+		}
 	}
 }
 

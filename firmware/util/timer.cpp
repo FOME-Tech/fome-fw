@@ -53,6 +53,12 @@ static const efidur_t clock32max = efidur_t{UINT32_MAX - 1};
 bool Timer::hasElapsedUs(float microseconds) const {
 	auto delta = getTimeNowNt() - m_lastReset.get();
 
+	// An interrupt can reset the timer between sampling now and reading m_lastReset,
+	// making the delta slightly negative. It was just reset, so it hasn't elapsed.
+	if (delta < 0) {
+		return false;
+	}
+
 	// If larger than 32 bits, timer has certainly expired
 	if (delta >= clock32max) {
 		return true;

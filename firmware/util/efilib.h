@@ -98,6 +98,7 @@ float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, f
 #ifdef __cplusplus
 }
 
+#include <bit>
 #include <cstddef>
 #include <cstring>
 
@@ -160,14 +161,9 @@ inline constexpr adc_channel_e operator+(size_t a, adc_channel_e b) {
 // Used to drive the set of output pins selected by an injector/ignition output mask.
 template <typename TCallback>
 static inline void forEachSetBit(uint16_t mask, TCallback fn) {
-	size_t idx = 0;
 	while (mask) {
-		if (mask & 0x1) {
-			fn(idx);
-		}
-
-		mask >>= 1;
-		idx++;
+		fn(static_cast<size_t>(std::countr_zero(mask)));
+		mask &= mask - 1;
 	}
 }
 

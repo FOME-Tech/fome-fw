@@ -106,7 +106,7 @@ void initThermistors() {
 			engineConfiguration->useLinearIatSensor,
 			engineConfiguration->iatSensorPulldown);
 
-	configureTempSensor("oil temp", oilTempSensor, faux2, engineConfiguration->oilTempSensor, false);
+	configureTempSensor("oil temp", oilTempSensor, foil, engineConfiguration->oilTempSensor, false);
 
 	configureTempSensor("fuel temp", fuelTempSensor, ffuel, engineConfiguration->fuelTempSensor, false);
 

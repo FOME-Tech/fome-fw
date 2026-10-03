@@ -64,8 +64,8 @@ void updateWidebandFirmware(uint8_t sensorIndex) {
 		if (!waitAck()) {
 			efiPrintf("Wideband Update ERROR: Expected ACK from targeted entry, didn't get one.");
 			setUpdateState(WidebandUpdateState::ErrorTargetedEntry);
+			return;
 		}
-		return;
 	}
 
 	// Let the controller reboot into the bootloader

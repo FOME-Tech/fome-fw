@@ -7,7 +7,11 @@
 
 #pragma once
 
-angle_t getCylinderIgnitionTrim(size_t cylinderNumber, float rpm, float ignitionLoad);
+template <unsigned TRowCount, unsigned TColumnCount>
+class PreparedTable3DInterpolation;
+
+angle_t
+getCylinderIgnitionTrim(size_t cylinderNumber, const PreparedTable3DInterpolation<TRIM_SIZE, TRIM_SIZE>& interpolation);
 /**
  * this method is used to build default advance map
  */
