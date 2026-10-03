@@ -341,6 +341,12 @@ static void updateRawSensors() {
 
 	engine->outputChannels.luaGauges[0] = Sensor::getOrZero(SensorType::LuaGauge1);
 	engine->outputChannels.luaGauges[1] = Sensor::getOrZero(SensorType::LuaGauge2);
+	engine->outputChannels.luaGauges[2] = Sensor::getOrZero(SensorType::LuaGauge3);
+	engine->outputChannels.luaGauges[3] = Sensor::getOrZero(SensorType::LuaGauge4);
+	engine->outputChannels.luaGauges[4] = Sensor::getOrZero(SensorType::LuaGauge5);
+	engine->outputChannels.luaGauges[5] = Sensor::getOrZero(SensorType::LuaGauge6);
+	engine->outputChannels.luaGauges[6] = Sensor::getOrZero(SensorType::LuaGauge7);
+	engine->outputChannels.luaGauges[7] = Sensor::getOrZero(SensorType::LuaGauge8);
 
 	for (size_t i = 0; i < efi::size(engine->outputChannels.rawAnalogInput); i++) {
 		engine->outputChannels.rawAnalogInput[i] =
