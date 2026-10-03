@@ -40,7 +40,7 @@ USBDriver* usb_driver = &USBD2;
 #endif
 
 // Block buffer for INI ramdisk LUN
-static NO_CACHE uint8_t blkbufIni[MMCSD_BLOCK_SIZE];
+static NO_CACHE uint8_t blkbufIni[dma_buffers::IniBlockSize];
 
 static CCM_OPTIONAL MassStorageController msd(usb_driver);
 
@@ -57,6 +57,7 @@ static const scsi_inquiry_response_t iniDriveInquiry = {
 		"INI Drive",
 		{'v', CH_KERNEL_MAJOR + '0', '.', CH_KERNEL_MINOR + '0'}};
 
+#if EFI_FILE_LOGGING
 static const scsi_inquiry_response_t sdCardInquiry = {
 		0x00,								 /* direct access block device     */
 		0x80,								 /* removable                      */
@@ -78,6 +79,7 @@ void attachMsdSdCard(BaseBlockDevice* blkdev) {
 	engine->outputChannels.sd_msd = true;
 #endif
 }
+#endif // EFI_FILE_LOGGING
 
 static BaseBlockDevice* getRamdiskDevice() {
 #if EFI_EMBED_INI_MSD
@@ -91,7 +93,7 @@ static BaseBlockDevice* getRamdiskDevice() {
 	ramdiskObjectInit(&ramdisk);
 
 	constexpr size_t ramdiskSize = sizeof(ramdisk_image);
-	constexpr size_t blockSize = 512;
+	constexpr size_t blockSize = dma_buffers::IniBlockSize;
 	constexpr size_t blockCount = ramdiskSize / blockSize;
 
 	// Ramdisk should be a round number of blocks
@@ -111,8 +113,10 @@ void initUsbMsd() {
 	// Attach the ini ramdisk
 	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
 
-	// attach a null device in place of the SD card for now - the SD thread may replace it later
+#if EFI_FILE_LOGGING
+	// Attach a null device in place of the SD card until the SD thread replaces it.
 	msd.attachLun(1, (BaseBlockDevice*)&ND1, dma_buffers::sdCardBlockBuffer(), &sdCardInquiry, nullptr);
+#endif
 
 	// start the mass storage thread
 	msd.startThread();
