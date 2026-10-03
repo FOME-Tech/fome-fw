@@ -39,6 +39,12 @@ TESTS_SRC_CPP = \
 	tests/ignition_injection/test_injector_model.cpp \
 	tests/ignition_injection/test_odd_firing_engine.cpp \
 	tests/ignition_injection/test_paired_wasted_spark.cpp \
+	tests/ignition_injection/test_airmass_evaluation.cpp \
+	tests/ignition_injection/test_airmass_context.cpp \
+	tests/ignition_injection/test_airmass_consumers.cpp \
+	tests/ignition_injection/test_airmass_injection_gate.cpp \
+	tests/ignition_injection/test_blended_airmass.cpp \
+	tests/ignition_injection/test_dedicated_airmass_tables.cpp \
 	tests/lua/test_lua_basic.cpp \
 	tests/lua/test_lookup.cpp \
 	tests/lua/test_lua_e38.cpp \
@@ -76,6 +82,7 @@ TESTS_SRC_CPP = \
 	tests/test_pwm_generator.cpp \
 	tests/test_log_buffer.cpp \
 	tests/test_signal_executor.cpp \
+	tests/test_scheduler_batch.cpp \
 	tests/test_cpp_memory_layout.cpp \
 	tests/test_pid.cpp \
 	tests/test_accel_enrichment.cpp \

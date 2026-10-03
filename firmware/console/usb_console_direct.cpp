@@ -90,7 +90,13 @@ private:
 	size_t m_bytesSinceEop = 0;
 };
 
+// F42x boards without Ethernet need the CCM space for the expanded calibration.
+// Ethernet uses the ordinary SRAM budget, so keep its USB channel in CCM.
+#if defined(EFI_IS_F42x) && !MODULE_ETHERNET_CONSOLE
+static UsbDirectChannel usbChannel;
+#else
 static CCM_OPTIONAL UsbDirectChannel usbChannel;
+#endif
 
 class UsbRxPumpThread : public ThreadController<512> {
 public:

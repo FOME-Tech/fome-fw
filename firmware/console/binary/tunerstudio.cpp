@@ -126,6 +126,19 @@ void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t off
 	// Skip the write if a preset was just loaded - we don't want to overwrite it
 	if (!rebootForPresetPending) {
 		uint8_t* addr = (uint8_t*)(getWorkingPageAddr() + offset);
+		chibios_rt::CriticalSectionLocker csl;
+#if EFI_ENGINE_CONTROL
+		// Live writes do not advance the burn version. Invalidate any in-flight
+		// composite calculation before changing its calibration, including a mode
+		// changed away and back between fast-loop samples.
+		auto proposedMode = engineConfiguration->fuelAlgorithm;
+		constexpr size_t modeOffset = offsetof(engine_configuration_s, fuelAlgorithm);
+		if (offset <= modeOffset && modeOffset < size_t(offset) + count) {
+			proposedMode = static_cast<engine_load_mode_e>(static_cast<const uint8_t*>(content)[modeOffset - offset]);
+		}
+		engine->airmassInjectionState.onConfigurationWrite(
+				proposedMode, proposedMode != engineConfiguration->fuelAlgorithm);
+#endif
 		memcpy(addr, content, count);
 	}
 	// Force any board configuration options that humans shouldn't be able to change

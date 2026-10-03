@@ -36,6 +36,7 @@ CONTROLLERS_SRC_CPP = \
 	$(CONTROLLERS_DIR)/engine_cycle/main_trigger_callback.cpp \
 	$(CONTROLLERS_DIR)/engine_cycle/prime_injection.cpp \
 	$(CONTROLLERS_DIR)/engine_cycle/fuel_schedule.cpp \
+	$(CONTROLLERS_DIR)/engine_cycle/airmass_injection_state.cpp \
 	$(CONTROLLERS_DIR)/flash_main.cpp \
 	$(CONTROLLERS_DIR)/bench_test.cpp \
 	$(CONTROLLERS_DIR)/can/obd2.cpp \

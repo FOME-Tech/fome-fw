@@ -145,9 +145,17 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 					(2 << 8) | (0),
 					busIndex); // 2 = "Closed loop, using oxygen sensor feedback to determine fuel mix"
 			break;
-		case PID_ENGINE_LOAD:
-			obdSendValue(_1_MODE, pid, 1, getFuelingLoad() * ODB_TPS_BYTE_PERCENT, busIndex);
+		case PID_ENGINE_LOAD: {
+			// Blended table coordinates can be pressure or throttle position. Report
+			// bounded physical filling instead. This is an approximation of PID 04
+			// calculated load, not a calibrated maximum-available-airflow model.
+			const float load = engineConfiguration->fuelAlgorithm == LM_SD_ALPHA_N
+									 ? engine->fuelComputer.normalizedCylinderFilling
+									 : getFuelingLoad();
+			const float percent = std::isfinite(load) ? clampF(0, load, 100) : 0;
+			obdSendValue(_1_MODE, pid, 1, percent * ODB_TPS_BYTE_PERCENT, busIndex);
 			break;
+		}
 		case PID_COOLANT_TEMP:
 			obdSendValue(_1_MODE, pid, 1, Sensor::getOrZero(SensorType::Clt) + ODB_TEMP_EXTRA, busIndex);
 			break;

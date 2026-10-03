@@ -28,6 +28,8 @@ public:
 	 */
 	bool insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
 	void remove(scheduling_s* scheduling);
+	// Caller holds the executor lock. All pool records are reserved before inserting any.
+	bool insertBatch(const ScheduledAction* events, size_t count);
 
 	int executeAll(efitick_t now);
 	bool executeOne(efitick_t now);

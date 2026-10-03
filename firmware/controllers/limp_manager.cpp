@@ -311,6 +311,9 @@ LimpState LimpManager::allowInjection() const {
 	if (!m_allowInjection) {
 		return {false, m_allowInjection.why()};
 	}
+	if (!engine->airmassInjectionState.allowInjection()) {
+		return {false, ClearReason::Airmass};
+	}
 	if (!m_transientAllowInjection) {
 		return {false, m_transientAllowInjection.why()};
 	}

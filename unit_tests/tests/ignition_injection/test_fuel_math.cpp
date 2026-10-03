@@ -38,6 +38,7 @@ TEST(FuelMath, getStandardAirCharge) {
 
 TEST(AirmassModes, AlphaNNormal) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->engineState.sd.tChargeK = 293.15f;
 	// 4 cylinder 4 liter = easy math
 	engineConfiguration->displacement = 4.0f;
 	setCylinderCount(4);
@@ -52,7 +53,7 @@ TEST(AirmassModes, AlphaNNormal) {
 	Sensor::setMockValue(SensorType::Tps1, 0.71f);
 
 	// Mass of 1 liter of air * VE
-	mass_t expectedAirmass = 1.2047f * 0.35f;
+	mass_t expectedAirmass = (101.325f / (0.28705f * 293.15f)) * 0.35f;
 
 	auto result = dut.getAirmass(1200, false);
 	EXPECT_NEAR(result.CylinderAirmass, expectedAirmass, EPS4D);
@@ -61,6 +62,7 @@ TEST(AirmassModes, AlphaNNormal) {
 
 TEST(AirmassModes, AlphaNUseIat) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engine->engineState.sd.tChargeK = 293.15f;
 	// 4 cylinder 4 liter = easy math
 	engineConfiguration->displacement = 4.0f;
 	setCylinderCount(4);
@@ -75,19 +77,19 @@ TEST(AirmassModes, AlphaNUseIat) {
 	Sensor::setMockValue(SensorType::Tps1, 0.71f);
 
 	// Mass of 1 liter of air * VE
-	mass_t expectedAirmass = 1.2047f * 0.35f;
+	mass_t expectedAirmass = (101.325f / (0.28705f * 293.15f)) * 0.35f;
 
 	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmass, EPS4D);
 
-	engineConfiguration->alphaNUseIat = true;
+	config->airmassTemperatureSource = AirmassTemperatureSource::Iat;
 
 	// Cold we get more airmass
-	float expectedAirmassCold = expectedAirmass * (273.0f + 20) / (273.0f + 0);
+	float expectedAirmassCold = expectedAirmass * (273.15f + 20) / (273.15f + 0);
 	Sensor::setMockValue(SensorType::Iat, 0);
 	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassCold, EPS4D);
 
 	// Hot we get less airmass
-	float expectedAirmassHot = expectedAirmass * (273.0f + 20) / (273.0f + 40);
+	float expectedAirmassHot = expectedAirmass * (273.15f + 20) / (273.15f + 40);
 	Sensor::setMockValue(SensorType::Iat, 40);
 	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassHot, EPS4D);
 }
@@ -127,7 +129,7 @@ TEST(AirmassModes, MafNormal) {
 	EXPECT_NEAR(70.9814f, airmass.EngineLoadPercent, EPS4D);
 }
 
-TEST(AirmassModes, VeOverride) {
+TEST(AirmassModes, MainVeKeepsModelNativeAxis) {
 	StrictMock<MockVp3d> veTable;
 
 	{
@@ -135,8 +137,8 @@ TEST(AirmassModes, VeOverride) {
 
 		// Default
 		EXPECT_CALL(veTable, getValue(_, 10.0f)).WillOnce(Return(0));
-		// TPS
-		EXPECT_CALL(veTable, getValue(_, 30.0f)).WillOnce(Return(0));
+		// TPS does not replace the model-owned main axis
+		EXPECT_CALL(veTable, getValue(_, 10.0f)).WillOnce(Return(0));
 	}
 
 	struct DummyAirmassModel : public AirmassVeModelBase {
@@ -144,7 +146,7 @@ TEST(AirmassModes, VeOverride) {
 			: AirmassVeModelBase(veTable) {}
 
 		AirmassResult getAirmass(float rpm, bool postState) override {
-			// Default load value 10, will be overriden
+			// Model-owned load value 10
 			getVe(rpm, 10.0f, postState);
 
 			return {};
@@ -158,11 +160,11 @@ TEST(AirmassModes, VeOverride) {
 	dut.getAirmass(0, true);
 	EXPECT_FLOAT_EQ(engine->engineState.veTableYAxis, 10.0f);
 
-	// Override to TPS
+	// The retired main VE override is ignored.
 	engineConfiguration->veOverrideMode = VE_TPS;
 	Sensor::setMockValue(SensorType::Tps1, 30.0f);
 	dut.getAirmass(0, true);
-	EXPECT_FLOAT_EQ(engine->engineState.veTableYAxis, 30.0f);
+	EXPECT_FLOAT_EQ(engine->engineState.veTableYAxis, 10.0f);
 }
 
 TEST(AirmassModes, FallbackMap) {
@@ -173,15 +175,13 @@ TEST(AirmassModes, FallbackMap) {
 	{
 		InSequence is;
 
-		// Working map -> return 33 (should be unused)
-		EXPECT_CALL(mapFallback, getValue(1234, 20)).WillOnce(Return(33));
-
 		// Failed map -> use 75
 		EXPECT_CALL(mapFallback, getValue(5678, 20)).WillOnce(Return(75));
 	}
 
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
+	config->useMapEstimateTable = true;
 	SpeedDensityAirmass dut(&veTable, mapFallback);
 
 	// TPS at 20%
@@ -357,7 +357,10 @@ TEST(FuelMath, IdleVeTable) {
 	// Main VE table returns 50
 	EXPECT_CALL(dut.veTable, getValue(_, _)).WillRepeatedly(Return(50));
 
-	// Idle VE table returns 40
+	// Idle VE table returns 40 on its explicitly selected native axis.
+	config->idleVeLoadSource = IdleVeLoadSource::ModelDefault;
+	setLinearCurve(config->idleVeLoadBins, 0, 100, 1);
+	setLinearCurve(config->idleVeRpmBins, 0, 2500, 1);
 	setTable(config->idleVeTable, 40);
 
 	// Enable separate idle VE table

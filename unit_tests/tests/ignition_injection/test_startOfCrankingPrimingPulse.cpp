@@ -26,9 +26,9 @@ TEST(engine, testPlainCrankingWithoutAdvancedFeatures) {
 	// two simultaneous injections
 	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
 
-	eth.assertEvent5("sim start", 0, (void*)startInjection, 100000 - 1625);
+	eth.assertEvent5("sim start", 0, (void*)scheduledStartInjection, 100000 - 1625);
 	// -1 because ugh floating point math
-	eth.assertEvent5("sim end", 1, (void*)endInjection, 100000 - 1);
+	eth.assertEvent5("sim end", 1, (void*)scheduledEndInjection, 100000 - 1);
 }
 
 TEST(priming, startScheduling) {

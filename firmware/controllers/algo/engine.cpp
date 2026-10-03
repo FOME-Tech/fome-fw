@@ -77,9 +77,14 @@ void Engine::periodicSlowCallback() {
 		triggerCentral.vvtTriggerConfiguration[camIndex].update();
 	}
 
-	// If it's been too long since the last trigger event, the engine has stopped.
-	if (!triggerCentral.engineMovedRecently(getTimeNowNt()) && !rpmCalculator.isStopped()) {
-		OnTriggerSynchronizationLost();
+	{
+		// Keep a new trigger event from arriving between the timeout check and reset.
+		chibios_rt::CriticalSectionLocker csl;
+		// isStopped() also treats SPINNING_UP with zero RPM as stopped for engine
+		// math. A timed-out start still needs the actual STOPPED state and resets.
+		if (rpmCalculator.getState() != STOPPED && !triggerCentral.engineMovedRecently(getTimeNowNt())) {
+			OnTriggerSynchronizationLost();
+		}
 	}
 #endif // EFI_SHAFT_POSITION_INPUT
 
@@ -186,6 +191,9 @@ int Engine::getGlobalConfigurationVersion() const {
 }
 
 void Engine::reset() {
+	++airmassCalibration.Generation;
+	airmassCalibration.Known = 0;
+	airmassCalibration.ConfigurationVersion = -1;
 	/**
 	 * it's important for wrapAngle() that engineCycle field never has zero
 	 */
@@ -218,6 +226,7 @@ void Engine::OnTriggerSynchronizationLost() {
 	efiPrintf("engine stopped");
 
 	rpmCalculator.setStopSpinning();
+	airmassInjectionState.onEngineStop();
 
 	triggerCentral.triggerState.resetState();
 	triggerCentral.instantRpm.resetInstantRpm();
@@ -431,6 +440,15 @@ void Engine::periodicFastCallback() {
 	speedoUpdate();
 
 	engineModules.apply_all([](auto& m) { m.onFastCallback(); });
+}
+
+void Engine::prepareForTrigger() {
+	ScopePerf pc(PE::EnginePeriodicFastCallback);
+
+	// Fuel, dwell, advance, DFCO, lambda, torque, launch and antilag must be ready
+	// before this tooth schedules its first injection or spark.
+	engineState.periodicFastCallback();
+	engineModules.apply_all([](auto& m) { m.onSynchronousFastCallback(); });
 }
 
 EngineRotationState* getEngineRotationState() {

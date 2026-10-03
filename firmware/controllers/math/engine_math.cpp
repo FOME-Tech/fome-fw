@@ -185,6 +185,8 @@ void setTimingRpmBin(float from, float to) {
  * this method sets algorithm and ignition table scale
  */
 void setAlgorithm(engine_load_mode_e algo) {
+	chibios_rt::CriticalSectionLocker csl;
+	engine->airmassInjectionState.onConfigurationWrite(algo, algo != engineConfiguration->fuelAlgorithm);
 	engineConfiguration->fuelAlgorithm = algo;
 }
 
@@ -200,21 +202,28 @@ BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load) {
 
 	auto value = readGppwmChannel(cfg.blendParameter);
 
-	if (!value) {
+	if (!value || !std::isfinite(value.Value)) {
 		return {0, 0, 0, 0};
 	}
 
 	// Override Y axis value (if necessary)
 	if (cfg.yAxisOverride != GPPWM_Zero) {
-		// TODO: is this value_or(0) correct or even reasonable?
-		load = readGppwmChannel(cfg.yAxisOverride).value_or(0);
+		auto selectedLoad = readGppwmChannel(cfg.yAxisOverride);
+		if (!selectedLoad || !std::isfinite(selectedLoad.Value)) {
+			return {0, 0, 0, 0};
+		}
+		load = selectedLoad.Value;
 	}
 
+	return calculateBlend(cfg, rpm, load, value.Value);
+}
+
+BlendResult calculateBlend(const blend_table_s& cfg, float rpm, float load, float blendParameter) {
 	float tableValue = interpolate3d(cfg.table, cfg.loadBins, load, cfg.rpmBins, rpm);
 
-	float blendFactor = interpolate2d(value.Value, cfg.blendBins, cfg.blendValues);
+	float blendFactor = interpolate2d(blendParameter, cfg.blendBins, cfg.blendValues);
 
-	return {value.Value, blendFactor, 0.01f * blendFactor * tableValue, load};
+	return {blendParameter, blendFactor, 0.01f * blendFactor * tableValue, load};
 }
 
 #endif /* EFI_ENGINE_CONTROL */

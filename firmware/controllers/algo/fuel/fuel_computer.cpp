@@ -8,6 +8,7 @@
 #include "fuel_math.h"
 #include "fuel_computer.h"
 #include "backup_ram.h"
+#include "airmass_loads.h"
 
 expected<float> getStoredFlexEthanolPercent() {
 	float stored = getBackupSram()->FlexEthanolPct;
@@ -43,16 +44,49 @@ void updateStoredFlexEthanolPercent() {
 }
 
 mass_t FuelComputerBase::getCycleFuel(mass_t airmass, float rpm, float load) {
-	load = getTargetLambdaLoadAxis(load);
+	return calculateCycleFuel(airmass, rpm, getTargetLambdaLoadAxis(load), false);
+}
 
+mass_t FuelComputerBase::getCycleFuelWithResolvedLoad(mass_t airmass, float rpm, float load) {
+	return calculateCycleFuel(airmass, rpm, load, true);
+}
+
+mass_t FuelComputerBase::calculateCycleFuel(mass_t airmass, float rpm, float load, bool strict) {
+	if (strict) {
+		m_resolvedLambdaLoad = 0;
+		afrTableYAxis = 0;
+		targetLambda = 0;
+		targetAFR = 0;
+		stoichiometricRatio = 0;
+		if (!std::isfinite(airmass) || airmass < 0 || !std::isfinite(rpm) || rpm <= 0 || !std::isfinite(load) ||
+			load < 0) {
+			return NAN;
+		}
+	}
 	float stoich = getStoichiometricRatio();
 	float lambda = getTargetLambda(rpm, load);
 	float afr = stoich * lambda;
 
-	afrTableYAxis = load;
-	targetLambda = lambda;
-	targetAFR = afr;
-	stoichiometricRatio = stoich;
+	if (strict) {
+		// Validate the floating-point conversion inputs before publishing packed
+		// diagnostics. A finite zero mass must not hide invalid stoich/target AFR.
+		if (!std::isfinite(stoich) || stoich <= 0 || !std::isfinite(lambda) || lambda <= 0 || !std::isfinite(afr) ||
+			afr <= 0) {
+			return NAN;
+		}
+		m_resolvedLambdaLoad = load;
+		// Keep the full coordinate for staging. Saturation affects only legacy
+		// packed diagnostics; the composite float channel reports the full load.
+		afrTableYAxis = std::min(load, 65535.0f / 100);
+		targetLambda = std::min(lambda, 65535.0f / PACK_MULT_LAMBDA);
+		targetAFR = std::min(afr, 65535.0f / PACK_MULT_AFR);
+		stoichiometricRatio = std::min(stoich, 65535.0f / PACK_MULT_AFR);
+	} else {
+		afrTableYAxis = load;
+		targetLambda = lambda;
+		targetAFR = afr;
+		stoichiometricRatio = stoich;
+	}
 
 	return airmass / afr;
 }
@@ -94,6 +128,9 @@ float FuelComputer::getTargetLambdaLoadAxis(float defaultLoad) const {
 }
 
 float IFuelComputer::getLoadOverride(float defaultLoad, load_override_e overrideMode) const {
+	if (engine->engineState.airmassLoads.Valid || overrideMode == AFR_EffectiveMAP) {
+		return getAirmassSelectedLoad(overrideMode, defaultLoad);
+	}
 	switch (overrideMode) {
 		case AFR_None:
 			return defaultLoad;

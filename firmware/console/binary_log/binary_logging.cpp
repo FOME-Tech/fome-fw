@@ -6,6 +6,7 @@
 #include "pch.h"
 
 #include "binary_logging.h"
+#include "binary_log_header.h"
 #include "log_field.h"
 #include "buffered_writer.h"
 #include "tunerstudio.h"
@@ -25,8 +26,8 @@ static scaled_channel<uint32_t, TimestampCountsPerSec> packedTime;
 // The list of logged fields lives in a separate file so it can eventually be tool-generated
 #include "log_fields_generated.h"
 
-static constexpr uint16_t computeFieldsRecordLength() {
-	uint16_t recLength = 0;
+static constexpr size_t computeFieldsRecordLength() {
+	size_t recLength = 0;
 	for (size_t i = 0; i < efi::size(fields); i++) {
 		recLength += fields[i].getSize();
 	}
@@ -53,15 +54,14 @@ void writeSdLogLine(Writer& bufferedWriter) {
 	binaryLogCount++;
 }
 
-static constexpr uint16_t recordLength = computeFieldsRecordLength();
+static constexpr size_t recordLength = computeFieldsRecordLength();
 
 static constexpr size_t headerSize = MLQ_HEADER_SIZE + efi::size(fields) * MLQ_FIELD_HEADER_SIZE;
 
-// The MLQ "data begin index" field written below is only 16 bits wide in practice (see
-// writeFileHeader), so a header any larger than this silently produces log files that no viewer
-// can read. Every output channel is logged, so the field count - and this header - grows with
-// every channel added.
-static_assert(headerSize <= 0xFFFF, "SD log file header no longer fits in the 16 bit data begin index");
+static_assert(MLQ_HEADER_SIZE == 24, "MLG v2 requires a 24 byte file header");
+static_assert(headerSize <= UINT32_MAX, "SD log header exceeds the 32 bit data begin index");
+static_assert(recordLength <= UINT16_MAX, "SD log record length exceeds its 16 bit field");
+static_assert(efi::size(fields) <= UINT16_MAX, "SD log field count exceeds its 16 bit field");
 
 size_t getSdLogFieldCount() {
 	return efi::size(fields);
@@ -72,44 +72,9 @@ uint16_t getSdLogRecordLength() {
 }
 
 void writeFileHeader(Writer& outBuffer) {
-	char buffer[MLQ_HEADER_SIZE];
-	// File format: MLVLG\0
-	strncpy(buffer, "MLVLG", 6);
+	writeBinaryLogFileHeader(outBuffer, headerSize, recordLength, efi::size(fields));
 
-	// Format version = 02
-	buffer[6] = 0;
-	buffer[7] = 2;
-
-	// Timestamp
-	buffer[8] = 0;
-	buffer[9] = 0;
-	buffer[10] = 0;
-	buffer[11] = 0;
-
-	// Info data start
-	buffer[12] = 0;
-	buffer[13] = 0;
-	buffer[14] = 0;
-	buffer[15] = 0;
-
-	// Data begin index: begins immediately after the header
-	buffer[16] = 0;
-	buffer[17] = 0;
-	buffer[18] = (headerSize >> 8) & 0xFF;
-	buffer[19] = headerSize & 0xFF;
-
-	// Record length - length of a single data record: sum size of all fields
-	buffer[20] = recordLength >> 8;
-	buffer[21] = recordLength & 0xFF;
-
-	// Number of logger fields
-	int fieldsCount = efi::size(fields);
-	buffer[22] = fieldsCount >> 8;
-	buffer[23] = fieldsCount;
-
-	outBuffer.write(buffer, MLQ_HEADER_SIZE);
-
-	// Write the actual logger fields, offset 22
+	// Write the actual logger fields, offset 24
 	for (size_t i = 0; i < efi::size(fields); i++) {
 		fields[i].writeHeader(outBuffer);
 	}

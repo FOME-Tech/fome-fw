@@ -30,7 +30,15 @@ or
 
 ## Unreleased
 
+### Breaking Changes
+ - The calibration format includes separate airmass maps and independent load selectors. Back up the project, MSQ and matching INI before updating; restore axes, cells and controls manually with the new definition. Existing binary tunes are not migrated.
+
 ### Added
+ - Dedicated Speed Density VE, Alpha-N filling and MAF correction maps retain independent calibrations. SD + Alpha-N combines cylinder air masses with a TPS/RPM contribution map and applies common VE corrections once. See the [capability and upstream comparison guide](../docs/user/blended-airmass.md).
+ - Independent load sources for fuel, ignition, protection and actuator functions allow each table to use its intended coordinate, with separate measured/effective MAP choices and matching diagnostic cursors. Load cursors clear when a physical-model calculation is invalidated.
+ - Selectable Tcharge or IAT, standalone Alpha-N MAP multiplication, optional Alpha-N barometric compensation, explicit MAP-estimate permission, and Idle VE ownership and load-source controls make the model's temperature, pressure and idle assumptions configurable.
+ - Validated fuel publication and atomic callback batches tie new injections to a complete current result. The SD/Alpha-N blend can recover on a healthy remaining model; temporary calculation failures recover automatically, and accepted pulse callbacks finish normally.
+ - TunerStudio exposes separate model editors, branch masses, contribution and fallback diagnostics. VE Analyze targets the active standalone map or a qualified whole-session blended endpoint; mixed contributions and enabled Idle VE exclude main-map analysis.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load
@@ -49,10 +57,16 @@ or
 
 
 ### Changed
+ - First-cycle fuel, spark and protection preparation now avoids unrelated speedometer and actuator regulation work in the trigger callback; regular fast updates retain those controls.
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Lua calibration writes invalidate fuel calculated from the previous tune, including writes that do not advance the configuration version. Live airmass validation reuses unchanged calibration checks.
+ - Load cursors and per-cylinder fuel results are prepared before their atomic publication, reducing interrupt blocking. Invalid cylinder banks or fuel results clear fuel for every cylinder together.
+ - Disabled optional functions skip their table and load-cursor calculations, and their diagnostic cursors clear to zero. Knock retard still decays, and a latched lambda-protection cut retains its restore coordinate until the cut clears.
+ - STM32F429 builds with the expanded airmass calibration fit their RAM regions by placing USB packet buffers in ordinary SRAM on boards without Ethernet and the CAN console thread in CCM on Ethernet boards.
+ - SD binary logs encode the full 32-bit MLG data offset, including telemetry headers larger than 64 KiB.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio

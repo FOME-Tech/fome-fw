@@ -13,4 +13,5 @@ class SleepExecutor : public Scheduler {
 public:
 	void schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) override;
 	void cancel(scheduling_s* s) override;
+	bool scheduleBatch(const ScheduledAction* events, size_t count) override;
 };

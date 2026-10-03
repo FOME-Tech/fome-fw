@@ -18,6 +18,8 @@ public:
 	init(IPwm* pmw, const ValueProvider3D* openLoopMap, const ValueProvider3D* closedLoopTargetMap, pid_s* pidParams);
 
 	void onFastCallback() override;
+	// Actuator regulation resumes on the regular fast thread.
+	void onSynchronousFastCallback() override {}
 	void resetLua();
 
 	// Called when the configuration may have changed.  Controller will

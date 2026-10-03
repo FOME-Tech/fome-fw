@@ -333,6 +333,8 @@ static int lua_getAuxDigital(lua_State* l) {
 	return 1;
 }
 
+#endif // !EFI_UNIT_TEST
+
 static auto lua_getAirmassResolveMode(lua_State* l) {
 	if (lua_gettop(l) == 0) {
 		// zero args, return configured mode
@@ -357,6 +359,7 @@ static int lua_getAirmass(lua_State* l) {
 	return 1;
 }
 
+#if !EFI_UNIT_TEST
 static int lua_setAirmass(lua_State* l) {
 	float airmass = luaL_checknumber(l, 1);
 	float engineLoadPercent = luaL_checknumber(l, 2);
@@ -881,7 +884,13 @@ void configureRusefiLuaHooks(lua_State* l) {
 		auto propertyName = luaL_checklstring(l2, 1, nullptr);
 		auto value = luaL_checknumber(l2, 2);
 		auto incrementVersion = lua_toboolean(l2, 3);
-		setConfigValueByName(propertyName, value);
+		{
+			chibios_rt::CriticalSectionLocker csl;
+			// The generated setter has no success return or pre-write callback.
+			// Conservatively invalidate even an unknown property, before mutation.
+			engine->airmassInjectionState.onConfigurationWrite(engineConfiguration->fuelAlgorithm, false);
+			setConfigValueByName(propertyName, value);
+		}
 		if (incrementVersion) {
 			incrementGlobalConfigurationVersion();
 		}
@@ -917,6 +926,8 @@ void configureRusefiLuaHooks(lua_State* l) {
 	});
 #endif // MODULE_GEAR_DETECT
 
+	lua_register(l, "getAirmass", lua_getAirmass);
+
 #if !EFI_UNIT_TEST
 	lua_register(l, "startPwm", lua_startPwm);
 	lua_register(l, "setPwmDuty", lua_setPwmDuty);
@@ -925,7 +936,6 @@ void configureRusefiLuaHooks(lua_State* l) {
 	lua_register(l, "getFan", lua_fan);
 	lua_register(l, "getDigital", lua_getDigital);
 	lua_register(l, "getAuxDigital", lua_getAuxDigital);
-	lua_register(l, "getAirmass", lua_getAirmass);
 	lua_register(l, "setAirmass", lua_setAirmass);
 
 	lua_register(l, "stopEngine", [](lua_State*) {

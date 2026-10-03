@@ -178,3 +178,58 @@ TEST(misc, preparedTable3dInterpolationIsBitwiseEquivalent) {
 		}
 	}
 }
+
+TEST(misc, cachedTable3dInterpolationIsBitwiseEquivalentAtBinEdges) {
+	uint16_t rowBins[4] = {0, 25, 100, 300};
+	scaled_channel<uint16_t, 1, 50> columnBins[4] = {500, 2000, 6000, 12000};
+	scaled_channel<int8_t, 5> tables[12][4][4];
+	for (size_t cylinder = 0; cylinder < 12; cylinder++) {
+		for (size_t row = 0; row < 4; row++) {
+			for (size_t column = 0; column < 4; column++) {
+				tables[cylinder][row][column] =
+						(static_cast<int>((cylinder * 17 + row * 43 + column * 79) % 256) - 128) / 5.0f;
+			}
+		}
+	}
+
+	const float rows[] = {
+			-INFINITY,
+			-1,
+			0,
+			std::nextafter(25.0f, 0.0f),
+			25,
+			std::nextafter(25.0f, INFINITY),
+			62.5f,
+			100,
+			300,
+			301,
+			INFINITY,
+			NAN};
+	const float columns[] = {
+			-INFINITY,
+			499,
+			500,
+			std::nextafter(2000.0f, 0.0f),
+			2000,
+			std::nextafter(2000.0f, INFINITY),
+			4250,
+			12000,
+			12001,
+			INFINITY,
+			NAN};
+	for (float column : columns) {
+		Table3DInterpolationCache cache(rowBins, columnBins, column);
+		// Repeated loads sample independent tables; more than six distinct loads
+		// also exercise the bounded cache's uncached path.
+		for (unsigned pass = 0; pass < 2; pass++) {
+			for (float row : rows) {
+				for (const auto& table : tables) {
+					float expected = interpolate3d(table, rowBins, row, columnBins, column);
+					float actual = cache.prepare(row).getValue(table);
+					EXPECT_EQ(std::bit_cast<uint32_t>(expected), std::bit_cast<uint32_t>(actual))
+							<< "row=" << row << ", column=" << column;
+				}
+			}
+		}
+	}
+}
