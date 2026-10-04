@@ -86,6 +86,16 @@ public:
 	 * Open question if we have any cases where this opimization is needed.
 	 */
 	float getCachedRpm() const;
+
+	struct CycleRpm {
+		float rpm = 0;
+		float rpmRate = 0;
+	};
+
+	// Full engine-cycle speed and acceleration, independent of instant RPM selection.
+	// Zero until a complete cycle has been measured, and after an engine stop.
+	CycleRpm getCycleRpm() const;
+	void updateCycleRpm(float periodSeconds);
 	/**
 	 * This method is invoked once per engine cycle right after we calculate new RPM value
 	 */
@@ -141,6 +151,7 @@ private:
 	 * Open question is when do we need it for performance reasons.
 	 */
 	float cachedRpmValue = 0;
+	CycleRpm m_cycleRpm;
 
 	/**
 	 * This counter is incremented with each revolution of one of the shafts. Could be

@@ -68,6 +68,26 @@ float RpmCalculator::getCachedRpm() const {
 	return cachedRpmValue;
 }
 
+RpmCalculator::CycleRpm RpmCalculator::getCycleRpm() const {
+	// The trigger callback publishes both values while fast control reads them.
+	chibios_rt::CriticalSectionLocker csl;
+	return m_cycleRpm;
+}
+
+void RpmCalculator::updateCycleRpm(float periodSeconds) {
+	chibios_rt::CriticalSectionLocker csl;
+	CycleRpm next;
+	if (periodSeconds > 0) {
+		float mult = getEngineCycle(getOperationMode()) / 360;
+		float rpm = 60 * mult / periodSeconds;
+		if (rpm > 0 && rpm <= MAX_ALLOWED_RPM) {
+			next.rpm = rpm;
+			next.rpmRate = m_cycleRpm.rpm > 0 ? (rpm - m_cycleRpm.rpm) / periodSeconds : 0;
+		}
+	}
+	m_cycleRpm = next;
+}
+
 operation_mode_e lookupOperationMode() {
 	if (engineConfiguration->twoStroke) {
 		return TWO_STROKE;
@@ -236,6 +256,10 @@ void RpmCalculator::setStopSpinning() {
 	isSpinning = false;
 	revolutionCounterSinceStart = 0;
 	rpmRate = 0;
+	{
+		chibios_rt::CriticalSectionLocker csl;
+		m_cycleRpm = {};
+	}
 
 	if (cachedRpmValue != 0) {
 		assignRpmValue(0);
@@ -276,6 +300,9 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 		bool hadRpmRecently = rpmState.checkIfSpinning(phaseInfo.timestamp);
 
 		float periodSeconds = rpmState.lastTdcTimer.getElapsedSecondsAndReset(phaseInfo.timestamp);
+		// Keep a cycle measurement even when the general RPM sensor follows tooth speed.
+		// A previous cycle is required so startup/restart cannot include the stopped interval.
+		rpmState.updateCycleRpm(hadRpmRecently && rpmState.getRevolutionCounterSinceStart() > 0 ? periodSeconds : 0);
 
 		if (hadRpmRecently) {
 			/**

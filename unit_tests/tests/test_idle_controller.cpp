@@ -58,6 +58,55 @@ TEST(idle_v2, timingPid) {
 	EXPECT_FLOAT_EQ(-3, dut.getIdleTimingAdjustment(1000, 100, 1000, ICP::Idling));
 }
 
+TEST(idle_v2, timingPidResetsOnStop) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	engineConfiguration->useIdleTimingPidControl = true;
+	engineConfiguration->idleTimingPid = {};
+	engineConfiguration->idleTimingPid.iFactor = 1;
+	engineConfiguration->idleTimingPid.minValue = -10;
+	engineConfiguration->idleTimingPid.maxValue = 10;
+	dut.init();
+	float correction = 0;
+	for (int i = 0; i < 10; i++) {
+		correction = dut.getIdleTimingAdjustment(900, 0, 1000, ICP::Idling);
+	}
+	EXPECT_GT(correction, 0);
+	dut.onEngineStop();
+	EXPECT_EQ(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
+}
+
+TEST(idle_v2, timingPidResetsOnFeedbackModeChange) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	engineConfiguration->useIdleTimingPidControl = true;
+	engineConfiguration->idleTimingPid = {};
+	engineConfiguration->idleTimingPid.iFactor = 1;
+	engineConfiguration->idleTimingPid.minValue = -10;
+	engineConfiguration->idleTimingPid.maxValue = 10;
+	dut.init();
+	for (bool useCycleRpm : {true, false}) {
+		float correction = 0;
+		for (int i = 0; i < 10; i++) {
+			correction = dut.getIdleTimingAdjustment(900, 0, 1000, ICP::Idling);
+		}
+		EXPECT_GT(correction, 0);
+		auto previousConfiguration = *engineConfiguration;
+		// An unrelated configuration update must preserve the timing integrator.
+		dut.onConfigurationChange(&previousConfiguration);
+		EXPECT_EQ(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), correction);
+		engineConfiguration->idleTimingUseCycleRpm = useCycleRpm;
+		dut.onConfigurationChange(&previousConfiguration);
+		EXPECT_EQ(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
+	}
+	// A gain change also invalidates the stored timing correction.
+	EXPECT_GT(dut.getIdleTimingAdjustment(900, 0, 1000, ICP::Idling), 0);
+	auto previousConfiguration = *engineConfiguration;
+	engineConfiguration->idleTimingPid.iFactor = 2;
+	dut.onConfigurationChange(&previousConfiguration);
+	EXPECT_EQ(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
+}
+
 TEST(idle_v2, testTargetRpm) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	IdleTargetController dut;

@@ -366,6 +366,7 @@ void IdleController::onFastCallback() {
 
 void IdleController::onEngineStop() {
 	m_pid.reset();
+	m_timingPid.reset();
 }
 
 void IdleController::onConfigurationChange(engine_configuration_s const* previousConfiguration) {
@@ -374,6 +375,11 @@ void IdleController::onConfigurationChange(engine_configuration_s const* previou
 		m_pid.reset();
 	}
 #endif
+	if (!previousConfiguration ||
+		previousConfiguration->idleTimingUseCycleRpm != engineConfiguration->idleTimingUseCycleRpm ||
+		!m_timingPid.isSame(&previousConfiguration->idleTimingPid)) {
+		m_timingPid.reset();
+	}
 }
 
 void IdleController::init() {

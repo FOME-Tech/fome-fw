@@ -17,6 +17,8 @@ static void runRpmTest(bool isTwoStroke, bool isCam, int expected) {
 
 	eth.smartFireTriggerEvents2(/*count*/ 200, /*delay*/ 40);
 	ASSERT_EQ(expected, Sensor::getOrZero(SensorType::Rpm));
+	EXPECT_NEAR(expected, engine->rpmCalculator.getCycleRpm().rpm, 0.01);
+	EXPECT_NEAR(0, engine->rpmCalculator.getCycleRpm().rpmRate, 0.01);
 }
 
 // todo: google test profiles one day?

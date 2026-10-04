@@ -126,9 +126,17 @@ void IgnitionState::updateAdvanceCorrections(float engineLoad) {
 	}
 
 #if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
-	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
-	float rpmRate = engine->rpmCalculator.getRpmAcceleration();
-	timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm, rpmRate);
+	if (engineConfiguration->idleTimingUseCycleRpm) {
+		// Full-cycle feedback rejects combustion ripple at the cost of slower load response.
+		auto cycle = engine->rpmCalculator.getCycleRpm();
+		timingPidCorrection =
+				cycle.rpm > 0 ? engine->module<IdleController>()->getIdleTimingAdjustment(cycle.rpm, cycle.rpmRate) : 0;
+	} else {
+		// Preserve the existing fast feedback, including its acceleration input.
+		float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
+		float rpmRate = engine->rpmCalculator.getRpmAcceleration();
+		timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm, rpmRate);
+	}
 #endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 
 	dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();

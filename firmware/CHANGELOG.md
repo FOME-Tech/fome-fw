@@ -47,6 +47,7 @@ or
  - Cooling fans can be turned off above a set vehicle speed ("Disable above speed") #827
  - Flex fuel ethanol content is now correct immediately at startup, instead of ramping up from 0% over the first second while the sensor's filter settles. The last valid reading is stored in backup RAM, and used to prime the filter at startup as well as any time the sensor is failed - the fuel in the tank can't change while the ECU isn't watching. If no value was stored and the sensor is dead, the fallback is configurable: "Failed flex sensor ethanol content", defaulting to 50%.
  - Added gauges for EGT channels 3-8 in TunerStudio
+ - Idle ignition PID now offers selectable RPM feedback: Instantaneous remains the default, while Full cycle uses cycle-averaged speed and acceleration to reduce cylinder-dependent corrections from cyclic speed ripple. Full cycle responds more slowly to load changes and waits for a complete cycle after startup or restart; PID gains may need retuning.
 
 
 ### Changed
@@ -54,6 +55,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Idle ignition timing PID now resets on engine stop and feedback-mode or gain changes.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
