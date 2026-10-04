@@ -42,40 +42,32 @@ flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 }
 
 static void intFlashClearErrors(uint8_t ctlr) {
-	ctlr ? FLASH->CCR2 : FLASH->CCR1 = 0xffffffff;
+	// Both banks use write-one-to-clear registers. Parenthesize the selected
+	// register so bank 2 receives the write as well.
+	(ctlr ? FLASH->CCR2 : FLASH->CCR1) = FLASH_CCR_CLR_EOP | FLASH_CCR_CLR_WRPERR | FLASH_CCR_CLR_PGSERR |
+										 FLASH_CCR_CLR_STRBERR | FLASH_CCR_CLR_INCERR | FLASH_CCR_CLR_OPERR |
+										 FLASH_CCR_CLR_RDPERR | FLASH_CCR_CLR_RDSERR | FLASH_CCR_CLR_SNECCERR |
+										 FLASH_CCR_CLR_DBECCERR | FLASH_CCR_CLR_CRCEND | FLASH_CCR_CLR_CRCRDERR;
 }
 
 static int intFlashCheckErrors(uint8_t ctlr) {
 	uint32_t sr = FLASH_SR;
 
-#ifdef FLASH_SR_OPERR
-	if (sr & FLASH_SR_OPERR) {
+	if (sr & (FLASH_SR_OPERR | FLASH_SR_CRCRDERR)) {
 		return FLASH_RETURN_OPERROR;
 	}
-#endif
-	if (sr & FLASH_SR_WRPERR) {
+	if (sr & (FLASH_SR_WRPERR | FLASH_SR_RDPERR | FLASH_SR_RDSERR)) {
 		return FLASH_RETURN_WPERROR;
 	}
-#ifdef FLASH_SR_PGAERR
-	if (sr & FLASH_SR_PGAERR) {
-		return FLASH_RETURN_ALIGNERROR;
-	}
-#endif
-#ifdef FLASH_SR_PGPERR
-	if (sr & FLASH_SR_PGPERR) {
+	if (sr & FLASH_SR_STRBERR) {
 		return FLASH_RETURN_PPARALLERROR;
 	}
-#endif
-#ifdef FLASH_SR_ERSERR
-	if (sr & FLASH_SR_ERSERR) {
-		return FLASH_RETURN_ESEQERROR;
-	}
-#endif
-#ifdef FLASH_SR_PGSERR
-	if (sr & FLASH_SR_PGSERR) {
+	if (sr & (FLASH_SR_PGSERR | FLASH_SR_INCERR)) {
 		return FLASH_RETURN_PSEQERROR;
 	}
-#endif
+	if (sr & (FLASH_SR_SNECCERR | FLASH_SR_DBECCERR)) {
+		return FLASH_RETURN_BAD_FLASH;
+	}
 
 	return FLASH_RETURN_SUCCESS;
 }
@@ -195,6 +187,22 @@ int intFlashSectorErase(flashsector_t sector) {
 }
 
 int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
+	constexpr size_t flashWordSize = 32;
+	if (size == 0) {
+		return FLASH_RETURN_SUCCESS;
+	}
+	if (address % flashWordSize != 0) {
+		return FLASH_RETURN_ALIGNERROR;
+	}
+	if (!buffer || address < FLASH_BASE || address > FLASH_END) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
+	// A transaction belongs to one bank controller. Validate the range before
+	// adding addresses or rounding, including a partial final flash word.
+	flashaddr_t bankEnd = address < FLASH_BANK2_BASE ? FLASH_BANK2_BASE - 1 : FLASH_END;
+	if (size > bankEnd - address + 1) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
 #ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: write %d bytes at 0x%08x", size, address);
 	Timer writeTimer;
@@ -217,14 +225,16 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	FLASH_CR &= ~FLASH_CR_PSIZE_MASK;
 	FLASH_CR |= FLASH_CR_PSIZE_VALUE;
 
-	// Round up to the next number of full 32 byte words
-	size_t flashWordCount = (size - 1) / 32 + 1;
-
-	// Read units of flashdata_t from the buffer, writing to flash
-	const flashdata_t* pRead = (const flashdata_t*)buffer;
-	flashdata_t* pWrite = (flashdata_t*)address;
-
-	for (size_t word = 0; word < flashWordCount; word++) {
+	int result = FLASH_RETURN_SUCCESS;
+	volatile uint32_t* pWrite = reinterpret_cast<volatile uint32_t*>(address);
+	while (size != 0) {
+		// H7 requires a whole 256-bit flash word. Copy only the caller's bytes
+		// and pad the rest with erased data; the source need not be aligned.
+		alignas(32) uint32_t flashWord[flashWordSize / sizeof(uint32_t)];
+		memset(flashWord, 0xff, sizeof(flashWord));
+		size_t count = size < flashWordSize ? size : flashWordSize;
+		memcpy(flashWord, buffer, count);
+		intFlashClearErrors(ctlr);
 		/* Enter flash programming mode */
 		FLASH_CR |= FLASH_CR_PG;
 
@@ -233,8 +243,8 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		__DSB();
 
 		// Write 32 bytes
-		for (size_t i = 0; i < 8; i++) {
-			*pWrite++ = *pRead++;
+		for (size_t i = 0; i < flashWordSize / sizeof(uint32_t); i++) {
+			*pWrite++ = flashWord[i];
 		}
 
 		// Flush pipelines
@@ -250,6 +260,13 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		// Flush pipelines
 		__ISB();
 		__DSB();
+
+		result = intFlashCheckErrors(ctlr);
+		if (result != FLASH_RETURN_SUCCESS) {
+			break;
+		}
+		buffer += count;
+		size -= count;
 	}
 
 	/* Lock flash again */
@@ -259,7 +276,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	efiPrintf("Flash: write done in %.2f sec", writeTimer.getElapsedSeconds());
 #endif
 
-	return FLASH_RETURN_SUCCESS;
+	return result;
 }
 
 #endif /* EFI_INTERNAL_FLASH */

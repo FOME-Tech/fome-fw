@@ -34,6 +34,7 @@ public:
 	void setIdlePosition(percent_t pos) override;
 	void setWastegatePosition(percent_t pos) override;
 	void reset() override;
+	void deinit() override;
 
 	// Update the controller's state: read sensors, send output, etc
 	void update() override;

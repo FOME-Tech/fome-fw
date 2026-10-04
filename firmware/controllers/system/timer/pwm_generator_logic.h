@@ -106,6 +106,10 @@ struct hardware_pwm;
 
 struct IPwm {
 	virtual void setSimplePwmDutyCycle(float dutyCycle) = 0;
+	// A terminal duty (0 or 1) must reach the output before this call returns.
+	virtual void setDutyImmediate(float dutyCycle) {
+		setSimplePwmDutyCycle(dutyCycle);
+	}
 };
 
 class SimplePwm : public PwmConfig, public IPwm {
@@ -113,6 +117,7 @@ public:
 	SimplePwm();
 	SimplePwm(const char* name);
 	void setSimplePwmDutyCycle(float dutyCycle) override;
+	void setDutyImmediate(float dutyCycle) override;
 	MultiChannelStateSequenceWithData<2> seq;
 	hardware_pwm* hardPwm = nullptr;
 };

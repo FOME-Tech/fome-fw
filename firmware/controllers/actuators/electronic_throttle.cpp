@@ -162,17 +162,18 @@ static TsCalMode functionToCalModeSecMax(dc_function_e func) {
 
 bool EtbController::init(
 		dc_function_e function, DcMotor* motor, pid_s* pidParameters, const ValueProvider3D* pedalMap, bool hasPedal) {
+	chibios_rt::CriticalSectionLocker csl;
+	deinit();
 	if (function == DC_None) {
 		// if not configured, don't init.
 		etbErrorCode = (int8_t)TpsState::None;
 		return false;
 	}
 
-	m_function = function;
-	m_positionSensor = functionToPositionSensor(function);
+	auto positionSensor = functionToPositionSensor(function);
 
 	// If we are a throttle, require redundant TPS sensor
-	if (isEtbMode()) {
+	if (function == DC_Throttle1 || function == DC_Throttle2) {
 		// We don't need to init throttles, so nothing to do here.
 		if (!hasPedal) {
 			etbErrorCode = (int8_t)TpsState::None;
@@ -185,11 +186,11 @@ bool EtbController::init(
 			return false;
 		}
 
-		if (!Sensor::isRedundant(m_positionSensor)) {
+		if (!Sensor::isRedundant(positionSensor)) {
 			firmwareError(
 					ObdCode::OBD_TPS_Configuration,
 					"Use of electronic throttle requires %s to be redundant.",
-					Sensor::getSensorName(m_positionSensor));
+					Sensor::getSensorName(positionSensor));
 
 			etbErrorCode = (int8_t)TpsState::Redundancy;
 			return false;
@@ -204,11 +205,27 @@ bool EtbController::init(
 		}
 	}
 
+	m_function = function;
+	m_positionSensor = positionSensor;
 	m_motor = motor;
 	m_pid.initPidClass(pidParameters);
 	m_pedalMap = pedalMap;
 
 	return true;
+}
+
+void EtbController::deinit() {
+	chibios_rt::CriticalSectionLocker csl;
+	if (m_motor) {
+		m_motor->stop("deinit");
+	}
+	m_motor = nullptr;
+	m_function = DC_None;
+	m_positionSensor = SensorType::Invalid;
+	m_pedalMap = nullptr;
+	m_outputDuty = 0;
+	m_shouldResetPid = true;
+	resetJamTimer();
 }
 
 void EtbController::reset() {
@@ -506,6 +523,7 @@ expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t obs
 }
 
 void EtbController::setOutput(expected<percent_t> outputValue) {
+	chibios_rt::CriticalSectionLocker csl;
 	if (!m_motor) {
 		return;
 	}
@@ -514,8 +532,9 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 
 	// All actuators require a valid output. Throttles also require limp permission and unpaused control.
 	if (outputValue && (!isEtbMode() || (limpAllowThrottle && !engineConfiguration->pauseEtbControl))) {
-		m_motor->enable();
+		// Program the new command before releasing a dedicated disable GPIO.
 		m_motor->set(ETB_PERCENT_TO_DUTY(outputValue.Value));
+		m_motor->enable();
 		m_outputDuty = outputValue.Value;
 	} else {
 		// Otherwise disable the motor.
@@ -672,23 +691,31 @@ public:
 
 	void update() override {
 #if EFI_TUNER_STUDIO
-		if (m_autocalPhase != ACPhase::Stopped) {
-			ACPhase nextPhase = doAutocal(m_autocalPhase);
-
-			// if we changed phase, reset the phase timer
-			if (m_autocalPhase != nextPhase) {
-				m_autocalTimer.reset();
-				m_autocalPhase = nextPhase;
-			}
-		} else
-#endif /* EFI_TUNER_STUDIO */
-
 		{
-			TBase::update();
+			chibios_rt::CriticalSectionLocker csl;
+			if (m_autocalPhase != ACPhase::Stopped) {
+				ACPhase nextPhase = doAutocal(m_autocalPhase);
+
+				// if we changed phase, reset the phase timer
+				if (m_autocalPhase != nextPhase) {
+					m_autocalTimer.reset();
+					m_autocalPhase = nextPhase;
+				}
+				return;
+			}
 		}
+#endif /* EFI_TUNER_STUDIO */
+		TBase::update();
+	}
+
+	void deinit() override {
+		chibios_rt::CriticalSectionLocker csl;
+		m_autocalPhase = ACPhase::Stopped;
+		TBase::deinit();
 	}
 
 	void autoCalibrateTps() override {
+		chibios_rt::CriticalSectionLocker csl;
 		// Only auto calibrate throttles
 		if (TBase::getFunction() == DC_Throttle1 || TBase::getFunction() == DC_Throttle2) {
 			m_autocalPhase = ACPhase::Start;
@@ -913,7 +940,10 @@ void doInitElectronicThrottle() {
 	for (int i = 0; i < ETB_COUNT; i++) {
 		auto func = engineConfiguration->etbFunctions[i];
 		if (func == DC_None) {
-			// do not touch HW pins if function not selected, this way Lua can use DC motor hardware pins directly
+			if (auto controller = engine->etbControllers[i]) {
+				controller->deinit();
+			}
+			// Do not initialize pins for an unused slot; Lua may use them directly.
 			continue;
 		}
 		auto motor = initDcMotor(engineConfiguration->etbIo[i], i, engineConfiguration->etb_use_two_wires);

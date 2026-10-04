@@ -6,6 +6,19 @@
 
 #include "flash_int.h"
 
+#if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
+static void invalidateFlashCache(flashaddr_t address, size_t size) {
+	if (!size) {
+		return;
+	}
+	// The vendored CMSIS helper expects a cache-line-aligned address. Include
+	// the original offset so chunked reads also invalidate their final line.
+	constexpr flashaddr_t cacheLineSize = 32;
+	auto offset = address % cacheLineSize;
+	SCB_InvalidateDCache_by_Addr(reinterpret_cast<uint32_t*>(address - offset), size + offset);
+}
+#endif
+
 flashaddr_t intFlashSectorEnd(flashsector_t sector) {
 	return intFlashSectorBegin(sector + 1);
 }
@@ -38,10 +51,7 @@ int intFlashErase(flashaddr_t address, size_t size) {
 
 bool intFlashIsErased(flashaddr_t address, size_t size) {
 #if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
-	// If we have a cache, invalidate the relevant cache lines.
-	// They may still contain old data, leading us to believe that the
-	// flash erase failed.
-	SCB_InvalidateDCache_by_Addr((uint32_t*)address, size);
+	invalidateFlashCache(address, size);
 #endif
 
 	/* Check for default set bits in the flash memory
@@ -66,6 +76,10 @@ bool intFlashIsErased(flashaddr_t address, size_t size) {
 }
 
 bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
+#if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
+	invalidateFlashCache(address, size);
+#endif
+
 	/* For efficiency, compare flashdata_t values as much as possible,
 	 * then, fallback to byte per byte comparison. */
 	while (size >= sizeof(flashdata_t)) {
@@ -90,9 +104,7 @@ bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
 
 int intFlashRead(flashaddr_t source, char* destination, size_t size) {
 #if CORTEX_MODEL == 7 && !defined(EFI_BOOTLOADER)
-	// If we have a cache, invalidate the relevant cache lines.
-	// They may still contain old data, leading us to read invalid data.
-	SCB_InvalidateDCache_by_Addr((uint32_t*)source, size);
+	invalidateFlashCache(source, size);
 #endif
 
 	memcpy(destination, (char*)source, size);
