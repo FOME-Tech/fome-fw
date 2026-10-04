@@ -27,7 +27,7 @@ TEST(ClosedLoopFuelCell, getLambdaError) {
 	engine->fuelComputer.targetLambda = 0.9f;
 
 	// lean -> need to add fuel -> positive error
-	EXPECT_NEAR(dut.getLambdaError(), 0.02, 1e-4);
+	EXPECT_NEAR(dut.getLambdaError(), 0.02222, 1e-4);
 
 	// Dead lambda sensor -> zero lambda error
 	Sensor::resetMockValue(SensorType::Lambda1);

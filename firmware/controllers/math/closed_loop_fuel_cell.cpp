@@ -46,7 +46,7 @@ float ClosedLoopFuelCellImpl::getLambdaError() const {
 		return 0;
 	}
 
-	return lambda.Value - engine->fuelComputer.targetLambda;
+	return (lambda.Value / engine->fuelComputer.targetLambda) - 1;
 }
 
 #define MAX_ADJ (0.25f)
