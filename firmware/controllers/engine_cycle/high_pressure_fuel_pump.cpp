@@ -114,7 +114,7 @@ float HpfpQuantity::calcPI(float rpm, float calc_fuel_percent) {
 	// That way the I term can override any fuel calculations over the long term.
 	// The P term is still allowed to drive the total output over 100% or under 0% to react to
 	// short term errors.
-	i_control_percent = clampF(-calc_fuel_percent, i_control_percent, 100.f - calc_fuel_percent);
+	i_control_percent = std::clamp<float>(i_control_percent, -calc_fuel_percent, 100.f - calc_fuel_percent);
 	m_I_sum_percent = i_control_percent;
 	return p_control_percent + i_control_percent;
 }

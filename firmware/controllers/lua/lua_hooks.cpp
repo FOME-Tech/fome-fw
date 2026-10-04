@@ -228,7 +228,7 @@ static int lua_startPwm(lua_State* l) {
 	auto duty = luaL_checknumber(l, 3);
 
 	// clamp to 1..1000 hz
-	freq = clampF(1, freq, 1000);
+	freq = std::clamp<float>(freq, 1, 1000);
 
 	startSimplePwmExt(
 			&p.pwm, "lua", engineConfiguration->luaOutputPins[p.idx], &enginePins.luaOutputPins[p.idx], freq, duty);
@@ -248,7 +248,7 @@ static int lua_setPwmDuty(lua_State* l) {
 	auto duty = luaL_checknumber(l, 2);
 
 	// clamp to 0..1
-	duty = clampF(0, duty, 1);
+	duty = std::clamp<float>(duty, 0, 1);
 
 	p.pwm.setSimplePwmDutyCycle(duty);
 
@@ -260,7 +260,7 @@ static int lua_setPwmFreq(lua_State* l) {
 	auto freq = luaL_checknumber(l, 2);
 
 	// clamp to 1..1000 hz
-	freq = clampF(1, freq, 1000);
+	freq = std::clamp<float>(freq, 1, 1000);
 
 	p.pwm.setFrequency(freq);
 
@@ -361,8 +361,8 @@ static int lua_setAirmass(lua_State* l) {
 	float airmass = luaL_checknumber(l, 1);
 	float engineLoadPercent = luaL_checknumber(l, 2);
 
-	airmass = clampF(0, airmass, 10);
-	engineLoadPercent = clampF(0, engineLoadPercent, 1000);
+	airmass = std::clamp<float>(airmass, 0, 10);
+	engineLoadPercent = std::clamp<float>(engineLoadPercent, 0, 1000);
 
 	luaAirmass.setAirmass({airmass, engineLoadPercent});
 

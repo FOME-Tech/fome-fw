@@ -197,7 +197,7 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 					busIndex); // (A*100/255)
 			break;
 		case PID_FUEL_AIR_RATIO_1: {
-			float lambda = clampF(0, Sensor::getOrZero(SensorType::Lambda1), 1.99f);
+			float lambda = std::clamp(Sensor::getOrZero(SensorType::Lambda1), 0.f, 1.99f);
 
 			uint16_t scaled = lambda * 32768;
 

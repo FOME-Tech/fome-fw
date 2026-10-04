@@ -100,7 +100,7 @@ float GppwmChannel::setOutput(float result) {
 
 	if (m_usePwm) {
 		efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_usePwm, "m_usePwm null", 0);
-		m_pwm->setSimplePwmDutyCycle(clampF(0, result / 100.0f, 1));
+		m_pwm->setSimplePwmDutyCycle(std::clamp<float>(result * 0.01f, 0, 1));
 
 		return result;
 	} else {

@@ -201,7 +201,7 @@ percent_t IdleController::getRunningOpenLoop(float rpm, float clt, SensorResult 
 
 	running += iacByRpmTaper;
 
-	return clampF(0, running, 100);
+	return std::clamp<float>(running, 0, 100);
 }
 
 percent_t

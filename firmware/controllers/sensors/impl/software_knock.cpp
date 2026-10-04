@@ -51,7 +51,8 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 	// Convert sampling time to number of samples
 	constexpr int sampleRate = KNOCK_SAMPLE_RATE;
 	sampleCount =
-			0xFFFFFFFE & static_cast<size_t>(clampF(100, samplingSeconds * sampleRate, efi::size(knockSampleBuffer)));
+			0xFFFFFFFE &
+			static_cast<size_t>(std::clamp<float>(samplingSeconds * sampleRate, 100, efi::size(knockSampleBuffer)));
 
 	// Select the appropriate conversion group - it will differ depending on which sensor this cylinder should listen on
 	auto conversionGroup = getKnockConversionGroup(channelIdx);
@@ -155,7 +156,7 @@ static void processLastKnockEvent() {
 	float db = 10 * log10(meanSquares);
 
 	// clamp to reasonable range
-	db = clampF(-100, db, 100);
+	db = std::clamp<float>(db, -100, 100);
 
 	engine->module<KnockController>()->onKnockSenseCompleted(
 			currentCylinderNumber, currentChannelIdx, db, lastKnockTime);

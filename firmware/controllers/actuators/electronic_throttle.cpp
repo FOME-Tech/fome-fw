@@ -156,10 +156,6 @@ static TsCalMode functionToCalModeSecMax(dc_function_e func) {
 }
 #endif // EFI_TUNER_STUDIO
 
-#define ETB_DUTY_LIMIT 0.9
-// this macro clamps both positive and negative percentages from about -100% to 100%
-#define ETB_PERCENT_TO_DUTY(x) (clampF(-ETB_DUTY_LIMIT, 0.01f * (x), ETB_DUTY_LIMIT))
-
 bool EtbController::init(
 		dc_function_e function, DcMotor* motor, pid_s* pidParameters, const ValueProvider3D* pedalMap, bool hasPedal) {
 	if (function == DC_None) {
@@ -261,7 +257,7 @@ expected<percent_t> EtbController::getSetpoint() {
 }
 
 expected<percent_t> EtbController::getSetpointWastegate() const {
-	return clampF(0, m_wastegatePosition, 100);
+	return std::clamp<percent_t>(m_wastegatePosition, 0, 100);
 }
 
 expected<percent_t> EtbController::getSetpointEtb() {
@@ -285,7 +281,7 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	// If the pedal has failed, just use 0 position.
 	// This is safer than disabling throttle control - we can at least push the throttle closed
 	// and let the engine idle.
-	float sanitizedPedal = clampF(0, pedalPosition.value_or(0), 100);
+	float sanitizedPedal = std::clamp<float>(pedalPosition.value_or(0), 0, 100);
 
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 	float pedalTableValue = m_pedalMap->getValue(rpm, sanitizedPedal);
@@ -296,12 +292,12 @@ expected<percent_t> EtbController::getSetpointEtb() {
 
 	// Apply any adjustment that this throttle alone needs
 	// Clamped to +-10 to prevent anything too wild
-	float trim = clampF(-10, getThrottleTrim(rpm, targetPosition), 10);
+	float trim = std::clamp<float>(getThrottleTrim(rpm, targetPosition), -10, 10);
 	m_trim = trim;
 	targetPosition += trim;
 
 	// Clamp before rev limiter to avoid ineffective rev limit due to crazy out of range position target
-	targetPosition = clampF(0, targetPosition, 100);
+	targetPosition = std::clamp<float>(targetPosition, 0, 100);
 
 	// Lastly, apply ETB rev limiter
 	auto etbRpmLimit = engineConfiguration->etbRevLimitStart;
@@ -325,14 +321,14 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	// Don't allow max position over 100
 	maxPosition = std::min(maxPosition, 100.0f);
 
-	targetPosition = clampF(minPosition, targetPosition, maxPosition);
+	targetPosition = std::clamp(targetPosition, minPosition, maxPosition);
 	m_adjustedTarget = targetPosition;
 
 	return targetPosition;
 }
 
 percent_t EtbController::getSetpointEtbNonTorqueModel(percent_t pedalTableValue) const {
-	percent_t etbIdlePosition = clampF(0, m_idlePosition, 100);
+	percent_t etbIdlePosition = std::clamp<float>(m_idlePosition, 0, 100);
 	percent_t etbIdleAddition = PERCENT_DIV * engineConfiguration->etbIdleThrottleRange * etbIdlePosition;
 
 	// Interpolate so that the idle adder just "compresses" the throttle's range upward.
@@ -515,7 +511,11 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 	// All actuators require a valid output. Throttles also require limp permission and unpaused control.
 	if (outputValue && (!isEtbMode() || (limpAllowThrottle && !engineConfiguration->pauseEtbControl))) {
 		m_motor->enable();
-		m_motor->set(ETB_PERCENT_TO_DUTY(outputValue.Value));
+
+		const float etbDutyLimit = 0.9;
+		float duty = 0.01f * outputValue.Value;
+		m_motor->set(std::clamp(duty, -etbDutyLimit, etbDutyLimit));
+
 		m_outputDuty = outputValue.Value;
 	} else {
 		// Otherwise disable the motor.

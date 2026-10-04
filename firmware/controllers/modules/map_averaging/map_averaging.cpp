@@ -182,7 +182,7 @@ void EngineState::updateMapCylinderOffsets() {
 	// Second pass: calculate deviation of each cylinder from the average
 	for (int i = 0; i < cylCount; i++) {
 		mapCylinderBalance[i] =
-				clampF(-mapCylinderBalanceMaxOffset, mapPerCylinderFloat[i] - avgMap, mapCylinderBalanceMaxOffset);
+				std::clamp(mapPerCylinderFloat[i] - avgMap, -mapCylinderBalanceMaxOffset, mapCylinderBalanceMaxOffset);
 	}
 }
 
