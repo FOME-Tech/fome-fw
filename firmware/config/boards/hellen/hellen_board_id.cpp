@@ -169,7 +169,7 @@ float HellenBoardIdFinderBase::calc(
 	// solve the equation for C (1% precision)
 	*newC = cSolver.solve(Tc1_us, Tc2_us, Cmin, R + Rinternal, 0.01f);
 	// in case something went wrong, we must be in the allowed range
-	*newC = clampF(Cmin, *newC, Cmax);
+	*newC = std::clamp(*newC, Cmin, Cmax);
 
 	return R;
 }

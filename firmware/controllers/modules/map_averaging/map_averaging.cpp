@@ -238,7 +238,7 @@ void MapAveragingModule::onFastCallback() {
 
 	// Clamp the duration to slightly less than one cylinder period
 	float cylinderPeriod = engine->engineState.engineCycle / engine->engineState.cylinderCount;
-	engine->engineState.mapAveragingDuration = clampF(10, duration, cylinderPeriod - 10);
+	engine->engineState.mapAveragingDuration = std::clamp<float>(duration, 10, cylinderPeriod - 10);
 }
 
 // Callback to schedule the start of map averaging for each cylinder

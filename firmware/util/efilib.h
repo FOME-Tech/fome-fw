@@ -85,11 +85,6 @@ float efiRound(float value, float precision);
 // sometimes known as 'itoa'
 char* itoa10(char* p, int num);
 
-/**
- * clamps value into the [0, 100] range
- */
-#define clampPercentValue(x) (clampF(0, x, 100))
-
 bool strEqualCaseInsensitive(const char* str1, const char* str2);
 bool strEqual(const char* str1, const char* str2);
 

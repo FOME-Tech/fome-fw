@@ -66,7 +66,7 @@ float TractionController::getTargetSlip(float refSpeed) {
 	float target = interpolate3d(
 			config->slipTargetTable, config->slipTargetSpeedBins, refSpeed, config->slipTargetTrimBins, trim);
 
-	return clampF(0, target, engineConfiguration->tractionControl.slipTargetMax);
+	return std::clamp<float>(target, 0, engineConfiguration->tractionControl.slipTargetMax);
 }
 
 expected<float> TractionController::disarm() {
@@ -150,7 +150,7 @@ expected<float> TractionController::getTorqueLimit(float torqueRequested) {
 	}
 
 	float rawAxle = m_slipPid.getOutput(targetSpeed, slipSpeed, dt);
-	float rawCeiling = clampF(0, rawAxle, axleDemand);
+	float rawCeiling = std::clamp<float>(rawAxle, 0, axleDemand);
 
 	// Rate-limit the cut depth (gap below the rail), not the absolute ceiling. Expressed relative to
 	// the rail, a moving rail (tip-in / upshift) produces no artificial motion, so the limit only
