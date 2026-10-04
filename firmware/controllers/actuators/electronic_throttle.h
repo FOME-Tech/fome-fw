@@ -30,6 +30,11 @@ void setProteusHitachiEtbDefaults();
 
 void etbAutocal(size_t throttleIndex);
 
+// Used around blocking configuration writes. Ending a write leaves motors
+// inhibited until a new control cycle consumes valid samples acquired later.
+void beginBlockingFlash();
+void endBlockingFlash();
+
 class DcMotor;
 struct pid_s;
 class ValueProvider3D;
@@ -46,10 +51,13 @@ public:
 		 const ValueProvider3D* pedalMap,
 		 bool initializeThrottles = true) = 0;
 	virtual void reset() = 0;
+	virtual void deinit() = 0;
 	virtual void setIdlePosition(percent_t pos) = 0;
 	virtual void setWastegatePosition(percent_t pos) = 0;
 	virtual void update() = 0;
 	virtual void autoCalibrateTps() {}
+	virtual void onBlockingFlashStart() {}
+	virtual void onBlockingFlashEnd(efitick_t /*finishedAt*/) {}
 	virtual bool isEtbMode() const = 0;
 
 	virtual const pid_state_s& getPidState() const = 0;

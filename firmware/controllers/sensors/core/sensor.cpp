@@ -17,10 +17,19 @@ public:
 	}
 
 	void setMockValue(float value, bool mockRedundant) {
+		chibios_rt::CriticalSectionLocker csl;
 		m_mockValue = value;
 		m_useMock = true;
 		m_valid = true;
 		m_mockRedundant = mockRedundant;
+		m_mockTimestamp = getTimeNowNt();
+	}
+
+	bool hasUpdatedAfter(efitick_t timestamp) const {
+		if (m_useMock) {
+			return m_valid && m_mockTimestamp > timestamp;
+		}
+		return m_sensor && m_sensor->hasSensor() && m_sensor->hasUpdatedAfter(timestamp);
 	}
 
 	void resetMock() {
@@ -123,6 +132,7 @@ private:
 	bool m_valid = false;
 	bool m_mockRedundant = false;
 	float m_mockValue;
+	efitick_t m_mockTimestamp = 0;
 	Sensor* m_sensor = nullptr;
 };
 
@@ -175,6 +185,12 @@ void Sensor::unregister() {
 	}
 
 	return entry->get();
+}
+
+/*static*/ bool Sensor::hasUpdatedAfter(SensorType type, efitick_t timestamp) {
+	chibios_rt::CriticalSectionLocker csl;
+	const auto entry = getEntryForType(type);
+	return entry && entry->hasUpdatedAfter(timestamp);
 }
 
 /*static*/ float Sensor::getRaw(SensorType type) {

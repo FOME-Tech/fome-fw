@@ -19,6 +19,7 @@ or
  -
 
 ### Fixed
+ - Electronic throttle and DC wastegate outputs stop immediately when disabled in configuration or when reinitialization fails.
  - 
 
 ### Removed
@@ -54,6 +55,10 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Physically stop electronic throttle and DC wastegate outputs during blocking calibration burns, then require fresh valid feedback and a new control cycle before recovery.
+ - STM32H7 flash programming now reports hardware errors, stops at the failed flash word, and safely handles partial or unaligned source buffers.
+ - Applying an engine preset no longer performs the flash burn while holding the configuration critical section, preventing a fault on STM32H7 ECUs when the flash driver sleeps.
+ - Configuration burns now serialize direct, scheduled, and background writes with configuration reads. Requests made during a burn are preserved, and a failed burn stays pending until a new request. The `flash_status` console command reports the last result and completed driver writes.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio

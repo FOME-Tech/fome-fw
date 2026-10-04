@@ -54,6 +54,9 @@ TESTS_SRC_CPP = \
 	tests/util/test_scaled_channel.cpp \
 	tests/util/test_timer.cpp \
 	tests/system/test_periodic_thread_controller.cpp \
+	tests/system/test_flash_h7.cpp \
+	tests/system/test_flash_write_lifecycle.cpp \
+	tests/system/test_configuration_write.cpp \
 	tests/test_util.cpp \
 	tests/test_start_stop.cpp \
 	tests/test_hardware_reinit.cpp \
@@ -114,6 +117,8 @@ TESTS_SRC_CPP = \
 	tests/actuators/test_antilag.cpp \
 	tests/actuators/test_boost.cpp \
 	tests/actuators/test_dc_motor.cpp \
+	tests/actuators/test_dc_reconfiguration.cpp \
+	tests/actuators/test_flash_actuator_safety.cpp \
 	tests/actuators/test_etb.cpp \
 	tests/actuators/test_etb_integrated.cpp \
 	tests/actuators/test_fan_control.cpp \

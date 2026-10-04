@@ -68,9 +68,14 @@ public:
 
 	// A new reading is available: set and validate a new value for the sensor.
 	void setValidValue(float value, efitick_t timestamp) {
+		chibios_rt::CriticalSectionLocker csl;
 		// Set value before valid - so we don't briefly have the valid bit set on an invalid value
 		m_result = value;
 		m_lastUpdate = timestamp;
+	}
+
+	bool hasUpdatedAfter(efitick_t timestamp) const override {
+		return m_result.Valid && m_lastUpdate > timestamp;
 	}
 
 	void showInfo(const char*) const override {}
@@ -83,5 +88,5 @@ private:
 	SensorResult m_result;
 
 	efidur_t m_timeoutPeriod;
-	efitick_t m_lastUpdate;
+	efitick_t m_lastUpdate = 0;
 };

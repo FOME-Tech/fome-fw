@@ -11,12 +11,16 @@
 
 #if EFI_INTERNAL_FLASH
 
+#if !EFI_UNIT_TEST
 #include "mpu_util.h"
+#endif
 #include "flash_main.h"
 #include "eficonsole.h"
 
 #include "flash_int.h"
 #include "crc_accelerator.h"
+#include "configuration_write.h"
+#include "electronic_throttle.h"
 
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
@@ -24,7 +28,8 @@
 
 #include "runtime_state.h"
 
-static bool needToWriteConfiguration = false;
+static ConfigurationWriteState configurationWriteState;
+static ConfigurationWriteResult lastWriteResult{ConfigurationWritePhase::Complete, 0, FLASH_RETURN_SUCCESS, 0};
 
 /**
  * https://sourceforge.net/p/rusefi/tickets/335/
@@ -36,6 +41,8 @@ static bool needToWriteConfiguration = false;
 static uint32_t flashStateCrc(const persistent_config_container_s& state) {
 	return singleCrc(&state.persistentConfiguration, sizeof(persistent_config_s));
 }
+
+static void writeConfiguration(bool requestedOnly);
 
 #if EFI_FLASH_WRITE_THREAD
 chibios_rt::BinarySemaphore flashWriteSemaphore(/*taken =*/true);
@@ -49,106 +56,178 @@ static void flashWriteThread(void*) {
 		// Wait for a request to come in
 		flashWriteSemaphore.wait();
 
-		// Do the actual flash write operation
-		writeToFlashNow();
+		// Claim a pending request atomically; a direct write may have consumed it.
+		writeConfiguration(true);
 	}
 }
 #endif // EFI_FLASH_WRITE_THREAD
+
+static void wakeFlashWriter() {
+#if EFI_FLASH_WRITE_THREAD
+	if (allowFlashWhileRunning()) {
+		flashWriteSemaphore.signal();
+	}
+#endif
+}
 
 void setNeedToWriteConfiguration() {
 	efiPrintf("Scheduling configuration write");
-	needToWriteConfiguration = true;
-
-#if EFI_FLASH_WRITE_THREAD
-	if (allowFlashWhileRunning()) {
-		// Signal the flash writer thread to wake up and write at its leisure
-		flashWriteSemaphore.signal();
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		configurationWriteState.request();
 	}
-#endif // EFI_FLASH_WRITE_THREAD
+	wakeFlashWriter();
 }
 
 bool getNeedToWriteConfiguration() {
-	return needToWriteConfiguration;
+	chibios_rt::CriticalSectionLocker lock;
+	return configurationWriteState.pending();
+}
+
+static bool shouldWriteConfiguration() {
+	chibios_rt::CriticalSectionLocker lock;
+	return configurationWriteState.shouldWrite();
 }
 
 void writeToFlashIfPending() {
-	// with a flash write thread, the schedule happens directly from
-	// setNeedToWriteConfiguration, so there's nothing to do here
-	if (allowFlashWhileRunning() || !getNeedToWriteConfiguration()) {
-		// Allow sensor timeouts again now that we're done (and a little time has passed)
-		Sensor::inhibitTimeouts(false);
-		return;
+	// A failed attempt stays visible as pending, but requires a fresh request.
+	if (!allowFlashWhileRunning()) {
+		writeConfiguration(true);
 	}
-
-	// Prevent sensor timeouts while flashing
-	Sensor::inhibitTimeouts(true);
-	writeToFlashNow();
-	// we do not want to allow sensor timeouts right away, we re-enable next time method is invoked
 }
 
-// Erase and write a copy of the configuration at the specified address
+class BlockingFlashGuard {
+public:
+	BlockingFlashGuard()
+		: m_blocking(!allowFlashWhileRunning()) {
+		if (m_blocking) {
+			Sensor::inhibitTimeouts(true);
+			beginBlockingFlash();
+		}
+	}
+
+	~BlockingFlashGuard() {
+		if (m_blocking) {
+			endBlockingFlash();
+			Sensor::inhibitTimeouts(false);
+		}
+	}
+
+private:
+	const bool m_blocking;
+};
+
+// Keep storage operations here until the integrity/verification change.
 template <typename TStorage>
-int eraseAndFlashCopy(flashaddr_t storageAddress, const TStorage& data) {
-	// error already reported, return
+static ConfigurationWriteResult
+eraseAndFlashCopy(flashaddr_t storageAddress, const TStorage& data, unsigned completedCopies) {
 	if (!storageAddress) {
-		return FLASH_RETURN_SUCCESS;
+		return {ConfigurationWritePhase::Layout, storageAddress, FLASH_RETURN_NO_PERMISSION, completedCopies};
 	}
 
 	auto err = intFlashErase(storageAddress, sizeof(TStorage));
-	if (FLASH_RETURN_SUCCESS != err) {
-		firmwareError("Failed to erase flash at 0x%08x: %d", storageAddress, err);
-		return err;
+	if (err != FLASH_RETURN_SUCCESS) {
+		return {ConfigurationWritePhase::Erase, storageAddress, err, completedCopies};
 	}
 
 	err = intFlashWrite(storageAddress, reinterpret_cast<const char*>(&data), sizeof(TStorage));
-	if (FLASH_RETURN_SUCCESS != err) {
-		firmwareError("Failed to write flash at 0x%08x: %d", storageAddress, err);
-		return err;
+	if (err != FLASH_RETURN_SUCCESS) {
+		return {ConfigurationWritePhase::Program, storageAddress, err, completedCopies};
 	}
 
-	return err;
+	return {ConfigurationWritePhase::Complete, 0, FLASH_RETURN_SUCCESS, completedCopies + 1};
 }
 
 bool burnWithoutFlash = false;
 
 void writeToFlashNow() {
-	engine->configBurnTimer.reset();
-	bool isSuccess = false;
+	writeConfiguration(false);
+}
 
-	if (burnWithoutFlash) {
-		needToWriteConfiguration = false;
-		return;
+static void writeConfiguration(bool requestedOnly) {
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		if (!configurationWriteState.begin(requestedOnly)) {
+			// Preserve direct requests that arrive during another flash operation.
+			if (!requestedOnly) {
+				configurationWriteState.request();
+			}
+			return;
+		}
 	}
-	efiPrintf("Writing pending configuration...");
 
-	// Set up the container
-	persistentState.size = sizeof(persistentState);
-	persistentState.version = FLASH_DATA_VERSION;
-	persistentState.value = flashStateCrc(persistentState);
+	engine->configBurnTimer.reset();
+	ConfigurationWriteResult result{ConfigurationWritePhase::Complete, 0, FLASH_RETURN_SUCCESS, 0};
+
+	if (!burnWithoutFlash) {
+		efiPrintf("Writing pending configuration...");
+		// No system lock is held while the driver erases, programs or sleeps.
+		BlockingFlashGuard guard;
+
+		persistentState.size = sizeof(persistentState);
+		persistentState.version = FLASH_DATA_VERSION;
+		persistentState.value = flashStateCrc(persistentState);
 
 #if EFI_STORAGE_INT_FLASH == TRUE
-	// Flash two copies
-	int result1 = eraseAndFlashCopy(getFlashAddrFirstCopy(), persistentState);
-	int result2 = FLASH_RETURN_SUCCESS;
-	/* Only if second copy is supported */
-	if (getFlashAddrSecondCopy()) {
-		result2 = eraseAndFlashCopy(getFlashAddrSecondCopy(), persistentState);
-	}
-
-	// handle success/failure
-	isSuccess = (result1 == FLASH_RETURN_SUCCESS) && (result2 == FLASH_RETURN_SUCCESS);
+		result = eraseAndFlashCopy(getFlashAddrFirstCopy(), persistentState, 0);
+		// A known failure of the first copy must leave the backup untouched.
+		if (result.success() && getFlashAddrSecondCopy()) {
+			result = eraseAndFlashCopy(getFlashAddrSecondCopy(), persistentState, result.completedCopies);
+		}
+#else
+		result = {ConfigurationWritePhase::Layout, 0, FLASH_RETURN_NO_PERMISSION, 0};
 #endif
-
-	if (isSuccess) {
-		efiPrintf("FLASH_SUCCESS");
-	} else {
-		efiPrintf("Flashing failed");
+		resetMaxValues();
+		{
+			chibios_rt::CriticalSectionLocker lock;
+			lastWriteResult = result;
+		}
+		if (result.success()) {
+			efiPrintf("FLASH_SUCCESS");
+		} else {
+			// Set the fatal inhibit before ending the actuator guard. Keep write
+			// ownership through error reporting and guard teardown: both can reenter.
+			firmwareError(
+					"Configuration flash failed: phase %d address 0x%08x error %d copies %u",
+					static_cast<int>(result.phase),
+					result.address,
+					result.error,
+					result.completedCopies);
+		}
+	}
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		lastWriteResult = result;
+		configurationWriteState.complete(result.success());
 	}
 
-	resetMaxValues();
+	// A new request may have arrived while the low-priority H7 writer was busy.
+	if (shouldWriteConfiguration()) {
+		wakeFlashWriter();
+	}
+}
 
-	// Write complete, clear the flag
-	needToWriteConfiguration = false;
+static void printFlashStatus() {
+	ConfigurationWriteResult result;
+	bool pending;
+	bool writing;
+	bool reading;
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		result = lastWriteResult;
+		pending = configurationWriteState.pending();
+		writing = configurationWriteState.writing();
+		reading = configurationWriteState.reading();
+	}
+	efiPrintf(
+			"flash_status pending=%d writing=%d reading=%d phase=%d address=0x%08x error=%d copies=%u",
+			pending,
+			writing,
+			reading,
+			static_cast<int>(result.phase),
+			result.address,
+			result.error,
+			result.completedCopies);
 }
 
 static void doResetConfiguration() {
@@ -225,6 +304,15 @@ static FlashState readConfiguration() {
 }
 
 void readFromFlash() {
+	bool canRead;
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		canRead = configurationWriteState.beginRead();
+	}
+	if (!canRead) {
+		efiPrintf("Cannot read configuration while another flash operation is active");
+		return;
+	}
 	FlashState result = readConfiguration();
 
 	switch (result) {
@@ -253,10 +341,18 @@ void readFromFlash() {
 	// we can only change the state after the CRC check
 	engineConfiguration->byFirmwareVersion = getRusEfiVersion();
 	validateConfiguration();
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		configurationWriteState.endRead();
+	}
+	if (shouldWriteConfiguration()) {
+		wakeFlashWriter();
+	}
 }
 
 void initFlash() {
 	addConsoleAction("readconfig", readFromFlash);
+	addConsoleAction("flash_status", printFlashStatus);
 	/**
 	 * This would write NOW (you should not be doing this while connected to real engine)
 	 */

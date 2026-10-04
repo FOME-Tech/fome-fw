@@ -9,6 +9,7 @@ public:
 	void configure(float maxDifference, bool ignoreSecondSensor, float secondaryMaximum = 100);
 
 	SensorResult get() const override;
+	bool hasUpdatedAfter(efitick_t timestamp) const override;
 
 	bool isRedundant() const override {
 		// This sensor is redundant when not ignoring the second channel

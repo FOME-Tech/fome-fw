@@ -39,6 +39,7 @@
 #pragma once
 
 #include "sensor_type.h"
+#include "efitime.h"
 #include <rusefi/expected.h>
 
 #include <cstddef>
@@ -76,6 +77,13 @@ public:
 	 * Get a reading from the specified sensor.
 	 */
 	static SensorResult get(SensorType type);
+
+	// True only when this sensor and its required inputs have a valid sample
+	// newer than timestamp. Providers without sample timestamps fail closed.
+	static bool hasUpdatedAfter(SensorType type, efitick_t timestamp);
+	virtual bool hasUpdatedAfter(efitick_t /*timestamp*/) const {
+		return false;
+	}
 
 	/*
 	 * Get a reading from the specified sensor, or zero if unavailable.
