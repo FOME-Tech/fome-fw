@@ -24,6 +24,9 @@ void TwoPinDcMotor::configure(IPwm& enable, IPwm& dir1, IPwm& dir2, bool isInver
 
 void TwoPinDcMotor::enable() {
 	chibios_rt::CriticalSectionLocker csl;
+	if (m_flashInhibited) {
+		return;
+	}
 	if (m_disable) {
 		m_disable->setValue(false);
 	}
@@ -65,6 +68,15 @@ void TwoPinDcMotor::stop(const char* msg) {
 	}
 }
 
+void TwoPinDcMotor::setFlashInhibited(bool inhibited) {
+	chibios_rt::CriticalSectionLocker csl;
+	m_flashInhibited = inhibited;
+	if (inhibited) {
+		stop("flash");
+	}
+	// Releasing the latch does not restore any previous output.
+}
+
 bool TwoPinDcMotor::isOpenDirection() const {
 	return m_value >= 0;
 }
@@ -78,6 +90,9 @@ float TwoPinDcMotor::get() const {
  */
 bool TwoPinDcMotor::set(float duty) {
 	chibios_rt::CriticalSectionLocker csl;
+	if (m_flashInhibited) {
+		return false;
+	}
 	m_value = duty;
 
 	// For low voltage, voltageRatio will be >1 to boost duty so that motor current stays the same

@@ -20,6 +20,7 @@
 #include "flash_int.h"
 #include "crc_accelerator.h"
 #include "configuration_write.h"
+#include "electronic_throttle.h"
 
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
@@ -89,16 +90,32 @@ static bool shouldWriteConfiguration() {
 }
 
 void writeToFlashIfPending() {
-	// Keep failures visible, but require a new request before an automatic retry.
-	if (allowFlashWhileRunning() || !shouldWriteConfiguration()) {
-		Sensor::inhibitTimeouts(false);
-		return;
+	// A failed attempt stays visible as pending, but requires a fresh request.
+	if (!allowFlashWhileRunning()) {
+		writeConfiguration(true);
+	}
+}
+
+class BlockingFlashGuard {
+public:
+	BlockingFlashGuard()
+		: m_blocking(!allowFlashWhileRunning()) {
+		if (m_blocking) {
+			Sensor::inhibitTimeouts(true);
+			beginBlockingFlash();
+		}
 	}
 
-	Sensor::inhibitTimeouts(true);
-	writeConfiguration(true);
-	// Re-enable timeouts on the next invocation, after sensors have had time to update.
-}
+	~BlockingFlashGuard() {
+		if (m_blocking) {
+			endBlockingFlash();
+			Sensor::inhibitTimeouts(false);
+		}
+	}
+
+private:
+	const bool m_blocking;
+};
 
 // Keep storage operations here until the integrity/verification change.
 template <typename TStorage>
@@ -145,6 +162,7 @@ static void writeConfiguration(bool requestedOnly) {
 	if (!burnWithoutFlash) {
 		efiPrintf("Writing pending configuration...");
 		// No system lock is held while the driver erases, programs or sleeps.
+		BlockingFlashGuard guard;
 
 		persistentState.size = sizeof(persistentState);
 		persistentState.version = FLASH_DATA_VERSION;
@@ -160,18 +178,15 @@ static void writeConfiguration(bool requestedOnly) {
 		result = {ConfigurationWritePhase::Layout, 0, FLASH_RETURN_NO_PERMISSION, 0};
 #endif
 		resetMaxValues();
-	}
-
-	{
-		chibios_rt::CriticalSectionLocker lock;
-		lastWriteResult = result;
-		configurationWriteState.complete(result.success());
-	}
-	if (!burnWithoutFlash) {
+		{
+			chibios_rt::CriticalSectionLocker lock;
+			lastWriteResult = result;
+		}
 		if (result.success()) {
 			efiPrintf("FLASH_SUCCESS");
 		} else {
-			// Publish completion before reporting an error: production firmwareError can return.
+			// Set the fatal inhibit before ending the actuator guard. Keep write
+			// ownership through error reporting and guard teardown: both can reenter.
 			firmwareError(
 					"Configuration flash failed: phase %d address 0x%08x error %d copies %u",
 					static_cast<int>(result.phase),
@@ -179,6 +194,11 @@ static void writeConfiguration(bool requestedOnly) {
 					result.error,
 					result.completedCopies);
 		}
+	}
+	{
+		chibios_rt::CriticalSectionLocker lock;
+		lastWriteResult = result;
+		configurationWriteState.complete(result.success());
 	}
 
 	// A new request may have arrived while the low-priority H7 writer was busy.

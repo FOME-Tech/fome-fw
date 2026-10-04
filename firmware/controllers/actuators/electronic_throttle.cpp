@@ -208,6 +208,11 @@ bool EtbController::init(
 	m_function = function;
 	m_positionSensor = positionSensor;
 	m_motor = motor;
+	if (m_motor && flashRecoveryRequired()) {
+		m_motor->setFlashInhibited(true);
+		// Reconfiguration may also have changed the sensor calibration/source.
+		m_flashFinishedAt = getTimeNowNt();
+	}
 	m_pid.initPidClass(pidParameters);
 	m_pedalMap = pedalMap;
 
@@ -225,6 +230,7 @@ void EtbController::deinit() {
 	m_pedalMap = nullptr;
 	m_outputDuty = 0;
 	m_shouldResetPid = true;
+	++m_flashGeneration;
 	resetJamTimer();
 }
 
@@ -232,6 +238,27 @@ void EtbController::reset() {
 	m_shouldResetPid = true;
 	etbTpsErrorCounter = 0;
 	etbPpsErrorCounter = 0;
+}
+
+void EtbController::onBlockingFlashStart() {
+	chibios_rt::CriticalSectionLocker csl;
+	++m_flashGeneration;
+	m_flashSuspended = true;
+	m_flashResumePending = true;
+	m_shouldResetPid = true;
+	m_outputDuty = 0;
+	resetJamTimer();
+	if (m_motor) {
+		m_motor->setFlashInhibited(true);
+	}
+}
+
+void EtbController::onBlockingFlashEnd(efitick_t finishedAt) {
+	chibios_rt::CriticalSectionLocker csl;
+	m_flashFinishedAt = finishedAt;
+	m_flashSuspended = false;
+	// Keep the hardware latch set. Only setOutput from a new, valid control
+	// cycle can release it; an old sample may still be valid during timeout inhibition.
 }
 
 static pid_s* getPidForDcFunction(engine_configuration_s* cfg, dc_function_e function) {
@@ -502,6 +529,9 @@ expected<percent_t> EtbController::getClosedLoopAutotune(percent_t target, perce
 }
 
 expected<percent_t> EtbController::getClosedLoop(percent_t target, percent_t observation) {
+	if (m_flashSuspended || (m_controlCycleActive && m_controlGeneration != m_flashGeneration)) {
+		return unexpected;
+	}
 	if (m_shouldResetPid) {
 		m_pid.reset();
 		m_shouldResetPid = false;
@@ -528,10 +558,27 @@ void EtbController::setOutput(expected<percent_t> outputValue) {
 		return;
 	}
 
+	if (m_flashSuspended ||
+		(m_flashResumePending && (!m_controlCycleActive || m_controlGeneration != m_flashGeneration)) ||
+		(m_controlCycleActive && m_controlGeneration != m_flashGeneration)) {
+		// Discard work that started before this burn, even if the burn completed
+		// while that control calculation was suspended.
+		m_shouldResetPid = true;
+		m_outputDuty = 0;
+		return;
+	}
+
 	bool limpAllowThrottle = getLimpManager()->allowElectronicThrottle() || engine->etbIgnoreJamProtection;
 
 	// All actuators require a valid output. Throttles also require limp permission and unpaused control.
 	if (outputValue && (!isEtbMode() || (limpAllowThrottle && !engineConfiguration->pauseEtbControl))) {
+		if (m_flashResumePending) {
+			if (hasFirmwareError()) {
+				return;
+			}
+			m_motor->setFlashInhibited(false);
+			m_flashResumePending = false;
+		}
 		// Program the new command before releasing a dedicated disable GPIO.
 		m_motor->set(ETB_PERCENT_TO_DUTY(outputValue.Value));
 		m_motor->enable();
@@ -618,6 +665,29 @@ void EtbController::update() {
 	}
 #endif // EFI_UNIT_TEST
 
+	{
+		chibios_rt::CriticalSectionLocker csl;
+		if (m_flashSuspended) {
+			return;
+		}
+		if (m_flashResumePending) {
+			bool positionReady =
+					Sensor::hasUpdatedAfter(m_positionSensor, m_flashFinishedAt) && Sensor::get(m_positionSensor).Valid;
+			bool pedalReady =
+					!isEtbMode() || (Sensor::hasUpdatedAfter(SensorType::AcceleratorPedal, m_flashFinishedAt) &&
+									 Sensor::get(SensorType::AcceleratorPedal).Valid);
+			if (!positionReady || !pedalReady) {
+				return;
+			}
+			// Discard the pre-stall integral and derivative history. Pid::reset
+			// also suppresses derivative kick on the first fresh observation.
+			m_shouldResetPid = true;
+			resetJamTimer();
+		}
+		m_controlGeneration = m_flashGeneration;
+		m_controlCycleActive = true;
+	}
+
 	bool isOk = checkStatus();
 
 	if (!isOk) {
@@ -625,10 +695,12 @@ void EtbController::update() {
 		// This is quieter and pulls less power than leaving it on all the time
 		m_motor->disable("etb status");
 		resetJamTimer();
+		m_controlCycleActive = false;
 		return;
 	}
 
 	ClosedLoopController::update();
+	m_controlCycleActive = false;
 }
 
 void EtbController::resetJamTimer() {
@@ -693,6 +765,9 @@ public:
 #if EFI_TUNER_STUDIO
 		{
 			chibios_rt::CriticalSectionLocker csl;
+			if (TBase::flashRecoveryRequired()) {
+				m_autocalPhase = ACPhase::Stopped;
+			}
 			if (m_autocalPhase != ACPhase::Stopped) {
 				ACPhase nextPhase = doAutocal(m_autocalPhase);
 
@@ -708,6 +783,12 @@ public:
 		TBase::update();
 	}
 
+	void onBlockingFlashStart() override {
+		chibios_rt::CriticalSectionLocker csl;
+		m_autocalPhase = ACPhase::Stopped;
+		TBase::onBlockingFlashStart();
+	}
+
 	void deinit() override {
 		chibios_rt::CriticalSectionLocker csl;
 		m_autocalPhase = ACPhase::Stopped;
@@ -716,6 +797,9 @@ public:
 
 	void autoCalibrateTps() override {
 		chibios_rt::CriticalSectionLocker csl;
+		if (TBase::flashRecoveryRequired()) {
+			return;
+		}
 		// Only auto calibrate throttles
 		if (TBase::getFunction() == DC_Throttle1 || TBase::getFunction() == DC_Throttle2) {
 			m_autocalPhase = ACPhase::Start;
@@ -1063,6 +1147,30 @@ void setProteusHitachiEtbDefaults() {
 }
 
 #endif /* EFI_ELECTRONIC_THROTTLE_BODY */
+
+void beginBlockingFlash() {
+#if EFI_ELECTRONIC_THROTTLE_BODY
+	chibios_rt::CriticalSectionLocker csl;
+	engine->etbAutoTune = false;
+	for (auto controller : engine->etbControllers) {
+		if (controller) {
+			controller->onBlockingFlashStart();
+		}
+	}
+#endif
+}
+
+void endBlockingFlash() {
+#if EFI_ELECTRONIC_THROTTLE_BODY
+	chibios_rt::CriticalSectionLocker csl;
+	auto finishedAt = getTimeNowNt();
+	for (auto controller : engine->etbControllers) {
+		if (controller) {
+			controller->onBlockingFlashEnd(finishedAt);
+		}
+	}
+#endif
+}
 
 template <>
 const electronic_throttle_s* getLiveData(size_t idx) {

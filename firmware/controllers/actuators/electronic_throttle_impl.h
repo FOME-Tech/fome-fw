@@ -35,6 +35,8 @@ public:
 	void setWastegatePosition(percent_t pos) override;
 	void reset() override;
 	void deinit() override;
+	void onBlockingFlashStart() override;
+	void onBlockingFlashEnd(efitick_t finishedAt) override;
 
 	// Update the controller's state: read sensors, send output, etc
 	void update() override;
@@ -78,6 +80,9 @@ public:
 	float prevOutput = 0;
 
 protected:
+	bool flashRecoveryRequired() const {
+		return m_flashSuspended || m_flashResumePending;
+	}
 	bool hadTpsError = false;
 	bool hadPpsError = false;
 
@@ -94,6 +99,12 @@ private:
 	DcMotor* m_motor = nullptr;
 	Pid m_pid;
 	bool m_shouldResetPid = false;
+	bool m_flashSuspended = false;
+	bool m_flashResumePending = false;
+	bool m_controlCycleActive = false;
+	uint32_t m_flashGeneration = 0;
+	uint32_t m_controlGeneration = 0;
+	efitick_t m_flashFinishedAt = 0;
 
 	/**
 	 * @return true if OK, false if should be disabled

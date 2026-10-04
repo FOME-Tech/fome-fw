@@ -36,6 +36,8 @@ public:
 	virtual void enable() = 0;
 	// Physically stop all bridge outputs before returning. A new command may resume the motor.
 	virtual void stop(const char* msg) = 0;
+	// Inhibit commands until a fresh control cycle explicitly releases the latch.
+	virtual void setFlashInhibited(bool inhibited) = 0;
 
 	virtual bool isOpenDirection() const = 0;
 
@@ -84,6 +86,7 @@ private:
 	OutputPin* const m_disable;
 	float m_value = 0;
 	bool m_isInverted = false;
+	bool m_flashInhibited = false;
 
 	ControlType m_type = ControlType::PwmDirectionPins;
 
@@ -104,6 +107,7 @@ public:
 	void enable() override;
 	void disable(const char* msg) override;
 	void stop(const char* msg) override;
+	void setFlashInhibited(bool inhibited) override;
 
 	void setType(ControlType type) {
 		m_type = type;
