@@ -86,8 +86,8 @@ bool shouldUpdateCorrection(SensorType sensor) {
 
 	// Pause (but don't reset) correction if lambda is off scale.
 	// It's probably a transient and/or poorly tuned transient correction
-	auto lambda = Sensor::getOrZero(sensor);
-	if (lambda < cfg.minLambda || lambda > cfg.maxLambda) {
+	auto lambda = Sensor::get(sensor);
+	if (!lambda || lambda.Value < cfg.minLambda || lambda.Value > cfg.maxLambda) {
 		return false;
 	}
 
