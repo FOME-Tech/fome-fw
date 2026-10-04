@@ -55,6 +55,7 @@ or
 
 ### Fixed
  - STM32H7 flash programming now reports hardware errors, stops at the failed flash word, and safely handles partial or unaligned source buffers.
+ - Applying an engine preset no longer performs the flash burn while holding the configuration critical section, preventing a fault on STM32H7 ECUs when the flash driver sleeps.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
