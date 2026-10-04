@@ -739,7 +739,7 @@ void configureRusefiLuaHooks(lua_State* l) {
 		uint8_t data[8];
 		uint32_t length = getArray(l2, 1, data, sizeof(data));
 		auto trimLength = luaL_checkinteger(l2, 2);
-		int crc = crc8(data, minI(length, trimLength));
+		int crc = crc8(data, std::min<int>(length, trimLength));
 
 		lua_pushnumber(l2, crc);
 		return 1;

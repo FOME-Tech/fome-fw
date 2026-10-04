@@ -162,8 +162,8 @@ void EngineState::updateMapCylinderOffsets() {
 		float cylinderMap = mapPerCylinderFloat[i];
 
 		avgMap += cylinderMap;
-		minMap = minF(minMap, cylinderMap);
-		maxMap = maxF(maxMap, cylinderMap);
+		minMap = std::min(minMap, cylinderMap);
+		maxMap = std::max(maxMap, cylinderMap);
 	}
 
 	avgMap /= cylCount;
@@ -208,7 +208,7 @@ static void endAveraging(MapAverager* arg) {
 
 static void applyMapMinBufferLength() {
 	// check range
-	mapMinBufferLength = maxI(minI(engineConfiguration->mapMinBufferLength, MAX_MAP_BUFFER_LENGTH), 1);
+	mapMinBufferLength = std::clamp<int>(engineConfiguration->mapMinBufferLength, 1, MAX_MAP_BUFFER_LENGTH);
 	// reset index
 	averagedMapBufIdx = 0;
 	// fill with maximum values
