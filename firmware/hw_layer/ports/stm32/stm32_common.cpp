@@ -241,13 +241,47 @@ public:
 			return;
 		}
 
+		chibios_rt::CriticalSectionLocker csl;
+		if (m_forced) {
+			auto& mode = m_channel < 2 ? m_driver->tim->CCMR1 : m_driver->tim->CCMR2;
+			uint32_t shift = 8 * (m_channel % 2);
+			uint32_t modeMask = STM32_TIM_CCMR1_OC1M_MASK << shift;
+			uint32_t savedMode = mode;
+			// Frozen retains the forced level while the new active CCR is set.
+			// The frozen -> PWM transition then recomputes OCREF from that new
+			// command (RM0090/RM0410, OCxM description).
+			mode = savedMode & ~(modeMask | (STM32_TIM_CCMR1_OC1PE << shift));
+			pwm_lld_enable_channel(m_driver, m_channel, getHighTime(duty));
+			mode = (savedMode & ~modeMask) | (STM32_TIM_CCMR1_OC1M(6) << shift);
+			m_forced = false;
+			return;
+		}
+
 		pwm_lld_enable_channel(m_driver, m_channel, getHighTime(duty));
+	}
+
+	void setDutyImmediate(float duty) override {
+		if (!m_driver) {
+			return;
+		}
+
+		chibios_rt::CriticalSectionLocker csl;
+		// RM0090, "Forced output mode": OCxM=100/101 overrides OCREF
+		// independently of CNT/CCR. PWMConfig sets CR2=0, so CCPC is clear
+		// and this mode change is not held for a later commutation event.
+		auto& mode = m_channel < 2 ? m_driver->tim->CCMR1 : m_driver->tim->CCMR2;
+		uint32_t shift = 8 * (m_channel % 2);
+		uint32_t forcedMode = duty > 0.5f ? 5 : 4;
+		mode = (mode & ~(STM32_TIM_CCMR1_OC1M_MASK << shift)) | (STM32_TIM_CCMR1_OC1M(forcedMode) << shift);
+		m_forced = true;
+		__DSB();
 	}
 
 private:
 	PWMDriver* m_driver = nullptr;
 	uint8_t m_channel = 0;
 	uint32_t m_period = 0;
+	bool m_forced = false;
 
 	pwmcnt_t getHighTime(float duty) const {
 		return m_period * duty;

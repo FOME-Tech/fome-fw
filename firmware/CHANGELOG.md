@@ -19,6 +19,7 @@ or
  -
 
 ### Fixed
+ - Electronic throttle and DC wastegate outputs stop immediately when disabled in configuration or when reinitialization fails.
  - 
 
 ### Removed

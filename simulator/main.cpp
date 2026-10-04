@@ -26,6 +26,14 @@
 
 #define CONSOLE_WA_SIZE THD_WORKING_AREA_SIZE(4096)
 
+// SIMIA32 starts with interrupts enabled even before the kernel exists. Global
+// constructors use critical sections, whose unlock would otherwise reschedule
+// through an uninitialized thread. Match the disabled state at MCU startup;
+// chSysInit initializes the port and enables scheduling later.
+__attribute__((constructor(101))) static void disableInterruptsBeforeConstructors() {
+	port_disable();
+}
+
 bool main_loop_started = false;
 
 static thread_t* cdtp;

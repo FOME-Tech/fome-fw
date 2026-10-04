@@ -140,3 +140,46 @@ TEST(PWM, testPwmGenerator) {
 
 	assertNextEvent("exec@6", LOW_VALUE /* pin value */, &executor, pin);
 }
+
+TEST(PWM, ImmediateTerminalDutyPrecedesQueuedCallback) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	TestExecutor executor;
+	engine->scheduler.setMockExecutor(&executor);
+	OutputPin pin;
+	SimplePwm pwm;
+	startSimplePwm(&pwm, "immediate PWM", &pin, 800, 0.6f);
+	ASSERT_TRUE(pin.getLogicValue());
+	auto executeNext = [&]() {
+		ASSERT_EQ(executor.size(), 1u);
+		auto next = executor.getForUnitTest(0)->momentX;
+		setTimeNowUs(next);
+		EXPECT_EQ(executor.executeAll(next), 1u);
+	};
+
+	pwm.setDutyImmediate(0);
+	EXPECT_FALSE(pin.getLogicValue());
+	executeNext();
+	EXPECT_FALSE(pin.getLogicValue());
+	pwm.setDutyImmediate(1);
+	EXPECT_TRUE(pin.getLogicValue());
+	executeNext();
+	EXPECT_TRUE(pin.getLogicValue());
+
+	// A normal command can resume PWM after forcing a terminal duty.
+	pwm.setSimplePwmDutyCycle(0.6f);
+	executeNext();
+	EXPECT_TRUE(pin.getLogicValue());
+	executeNext();
+	EXPECT_FALSE(pin.getLogicValue());
+	executeNext();
+	EXPECT_TRUE(pin.getLogicValue());
+
+	// stop() only cancels at the queued callback. Immediate duty must still
+	// reach the pin while that cancellation is pending.
+	pwm.stop();
+	pwm.setDutyImmediate(0);
+	EXPECT_FALSE(pin.getLogicValue());
+	executeNext();
+	EXPECT_FALSE(pin.getLogicValue());
+	EXPECT_EQ(executor.size(), 0u);
+}

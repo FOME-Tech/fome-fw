@@ -34,6 +34,8 @@ public:
 
 	virtual void disable(const char* msg) = 0;
 	virtual void enable() = 0;
+	// Physically stop all bridge outputs before returning. A new command may resume the motor.
+	virtual void stop(const char* msg) = 0;
 
 	virtual bool isOpenDirection() const = 0;
 
@@ -101,6 +103,7 @@ public:
 
 	void enable() override;
 	void disable(const char* msg) override;
+	void stop(const char* msg) override;
 
 	void setType(ControlType type) {
 		m_type = type;

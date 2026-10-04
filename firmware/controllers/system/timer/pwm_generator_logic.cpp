@@ -88,6 +88,21 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
 	}
 }
 
+void SimplePwm::setDutyImmediate(float dutyCycle) {
+#if EFI_PROD_CODE
+	if (hardPwm) {
+		hardPwm->setDutyImmediate(dutyCycle);
+		return;
+	}
+#endif
+	// Also force the pin when stop() was already requested: waiting for its
+	// queued callback would leave the current level applied during the stall.
+	mode = dutyCycle > 0.5f ? PM_FULL : PM_ZERO;
+	if (m_stateChangeCallback) {
+		m_stateChangeCallback(dutyCycle > 0.5f ? 1 : 0, this);
+	}
+}
+
 /**
  * returns absolute timestamp of state change
  */
