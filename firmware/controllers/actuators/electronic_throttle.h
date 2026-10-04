@@ -46,6 +46,7 @@ public:
 		 const ValueProvider3D* pedalMap,
 		 bool initializeThrottles = true) = 0;
 	virtual void reset() = 0;
+	virtual void deinit() = 0;
 	virtual void setIdlePosition(percent_t pos) = 0;
 	virtual void setWastegatePosition(percent_t pos) = 0;
 	virtual void update() = 0;
