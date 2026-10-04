@@ -56,6 +56,8 @@ TESTS_SRC_CPP = \
 	tests/system/test_periodic_thread_controller.cpp \
 	tests/system/test_flash_h7.cpp \
 	tests/system/test_flash_write_lifecycle.cpp \
+	tests/system/test_configuration_storage.cpp \
+	tests/system/test_flash_cache.cpp \
 	tests/system/test_configuration_write.cpp \
 	tests/test_util.cpp \
 	tests/test_start_stop.cpp \

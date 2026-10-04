@@ -202,56 +202,74 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
+// Each file represents a distinct sector. Configuration verification also reads
+// headers, CRC chunks and trailers at offsets within that sector.
+static constexpr size_t simulatedFlashSectorSize = 64 * 1024;
+static_assert(sizeof(persistent_config_container_s) <= simulatedFlashSectorSize);
+
 uintptr_t getFlashAddrFirstCopy() {
-	return 1;
+	return simulatedFlashSectorSize;
 }
 
 uintptr_t getFlashAddrSecondCopy() {
-	return 2;
+	return 2 * simulatedFlashSectorSize;
 }
 
-#include "flash_int.h"
+flashsector_t intFlashSectorAt(flashaddr_t address) {
+	return address / simulatedFlashSectorSize;
+}
+
+static bool validFlashRange(flashaddr_t address, size_t size) {
+	return address >= getFlashAddrFirstCopy() && address < 3 * simulatedFlashSectorSize &&
+		   size <= simulatedFlashSectorSize - address % simulatedFlashSectorSize;
+}
 
 static std::string makeFileName(flashaddr_t addr) {
 	std::stringstream ss;
 
-	ss << "flash" << addr << ".bin";
+	// Keep existing simulator calibration filenames.
+	ss << "flash" << unsigned(intFlashSectorAt(addr)) << ".bin";
 
 	return ss.str();
 }
 
-int intFlashErase(flashaddr_t address, size_t) {
-	// Try to delete the file, swallow any errors (we can overwrite it anyway)
-	try {
-		std::filesystem::remove(makeFileName(address));
-	} catch (...) {}
-
-	return FLASH_RETURN_SUCCESS;
+int intFlashErase(flashaddr_t address, size_t size) {
+	if (!validFlashRange(address, size)) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
+	std::error_code error;
+	std::filesystem::remove(makeFileName(address), error);
+	return error ? FLASH_RETURN_OPERROR : FLASH_RETURN_SUCCESS;
 }
 
 int intFlashRead(flashaddr_t address, char* buffer, size_t size) {
+	if (!validFlashRange(address, size)) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
 	auto fileName = makeFileName(address);
-
-	printf("Simulator: reading config from %s\n", fileName.c_str());
-
-	std::ifstream flash;
-	flash.open(fileName, std::ios::binary);
-
-	if (!flash.is_open()) {
-		// no file, nothing to read
-		// setting ot all 1s emulates real erased flash behavior
+	std::error_code error;
+	bool exists = std::filesystem::exists(fileName, error);
+	if (error) {
+		return FLASH_RETURN_OPERROR;
+	}
+	if (!exists) {
+		// Only a missing file represents erased flash. An unreadable or
+		// truncated copy must not be treated as safe to overwrite.
 		memset(buffer, 0xFF, size);
-		return HAL_SUCCESS;
+		return FLASH_RETURN_SUCCESS;
 	}
 
+	std::ifstream flash(fileName, std::ios::binary);
+	flash.seekg(address % simulatedFlashSectorSize);
 	flash.read(buffer, size);
-
-	flash.close();
-
-	return HAL_SUCCESS;
+	return flash ? FLASH_RETURN_SUCCESS : FLASH_RETURN_OPERROR;
 }
 
 int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
+	// Calibration writes replace the complete image from the start of a sector.
+	if (!validFlashRange(address, size) || address % simulatedFlashSectorSize) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
 	auto fileName = makeFileName(address);
 	printf("Simulator: writing config to %s\n", fileName.c_str());
 
@@ -262,7 +280,34 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 
 	flash.close();
 
-	return HAL_SUCCESS;
+	return flash ? FLASH_RETURN_SUCCESS : FLASH_RETURN_OPERROR;
+}
+
+static bool compareFlash(flashaddr_t address, const char* expected, size_t size) {
+	if (!validFlashRange(address, size)) {
+		return false;
+	}
+	char buffer[128];
+	for (size_t offset = 0; offset < size; offset += sizeof(buffer)) {
+		size_t count = std::min(sizeof(buffer), size - offset);
+		if (intFlashRead(address + offset, buffer, count) != FLASH_RETURN_SUCCESS) {
+			return false;
+		}
+		for (size_t i = 0; i < count; i++) {
+			if (buffer[i] != (expected ? expected[offset + i] : char(0xFF))) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool intFlashIsErased(flashaddr_t address, size_t size) {
+	return compareFlash(address, nullptr, size);
+}
+
+bool intFlashCompare(flashaddr_t address, const char* buffer, size_t size) {
+	return compareFlash(address, buffer, size);
 }
 
 // Write from file in to memory

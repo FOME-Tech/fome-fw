@@ -3,7 +3,7 @@
 #include "eficonsole.h"
 #include "flash_int.h"
 #include "crc_accelerator.h"
-#include "configuration_write.h"
+#include "configuration_storage.h"
 #include "tunerstudio.h"
 #include "runtime_state.h"
 #include "stored_value_sensor.h"
@@ -79,6 +79,35 @@ int intFlashRead(flashaddr_t, char* destination, size_t size) {
 	persistentState.value = singleCrc(&persistentState.persistentConfiguration, sizeof(persistent_config_s));
 	return FLASH_RETURN_SUCCESS;
 }
+// Keep lifecycle callbacks at the storage boundary; storage fault behavior is
+// exercised separately against the real implementation.
+auto writeConfigurationCopies = [](flashaddr_t first,
+								   flashaddr_t second,
+								   const persistent_config_container_s& data) -> ConfigurationWriteResult {
+	if (!first) {
+		return {ConfigurationWritePhase::Layout, first, FLASH_RETURN_NO_PERMISSION, 0};
+	}
+	unsigned completedCopies = 0;
+	for (auto address : {first, second}) {
+		if (!address) {
+			continue;
+		}
+		auto error = intFlashErase(address, sizeof(data));
+		if (error != FLASH_RETURN_SUCCESS) {
+			return {ConfigurationWritePhase::Erase, address, error, completedCopies};
+		}
+		error = intFlashWrite(address, reinterpret_cast<const char*>(&data), sizeof(data));
+		if (error != FLASH_RETURN_SUCCESS) {
+			return {ConfigurationWritePhase::Program, address, error, completedCopies};
+		}
+		++completedCopies;
+	}
+	return {ConfigurationWritePhase::Complete, 0, FLASH_RETURN_SUCCESS, completedCopies};
+};
+auto readConfigurationCopies = [](flashaddr_t, flashaddr_t, persistent_config_container_s& destination) {
+	intFlashRead(0, reinterpret_cast<char*>(&destination), sizeof(destination));
+	return ConfigurationFlashState::Ok;
+};
 void writeToFlashNow();
 
 #undef EFI_INTERNAL_FLASH

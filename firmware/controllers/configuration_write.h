@@ -14,7 +14,7 @@ struct ConfigurationWriteResult {
 	ConfigurationWritePhase phase;
 	flashaddr_t address;
 	int error;
-	// Copies whose erase and program operations completed successfully.
+	// Copies whose erase, program, and readback verification completed successfully.
 	unsigned completedCopies;
 
 	bool success() const {
