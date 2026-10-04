@@ -8,9 +8,6 @@
 
 #include "big_buffer.h"
 
-#include <cstdint>
-#include <cstddef>
-
 // Defines different events we want to trace.  These can be an interval (begin -> end), or an
 // instant.  Instants can be global, or specific to one thread.  You probably don't want to use
 // each element in PE more than once, as they should each indicate that a specific thing began,

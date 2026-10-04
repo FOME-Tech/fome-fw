@@ -642,8 +642,6 @@ void EtbController::checkJam(percent_t setpoint, percent_t observation) {
 	}
 }
 
-#include <utility>
-
 template <typename TBase>
 class EtbImpl final : public TBase {
 private:

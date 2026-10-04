@@ -127,7 +127,7 @@ void MapAverager::onSample(float map, uint8_t cylinderNumber) {
 		engine->engineState.mapPerCylinderFloat[cylinderNumber] = map;
 
 		// Display only: this channel is a uint8_t, so saturate rather than wrapping around to zero
-		engine->engineState.mapPerCylinder[cylinderNumber] = clampF(0, map, 255);
+		engine->engineState.mapPerCylinder[cylinderNumber] = std::clamp<float>(map, 0, 255);
 
 		if (Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->mapAveragingCylinderBalanceMinRpm) {
 			// correct the reading by this cylinder's MAP offset, but only if sufficient RPM

@@ -9,8 +9,6 @@
 #include "traction_control.h"
 #include "gppwm_channel.h"
 
-#include <algorithm>
-
 // Combine two wheel-speed sensors into one axle speed, degrading to whichever single wheel is valid
 // (one dead sensor). unexpected only when neither wheel reads. useFastest takes the faster wheel
 // instead of the mean: on an open diff a peeling wheel runs away in speed while the planted one

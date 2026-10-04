@@ -1,7 +1,7 @@
+#include "pch.h"
+
 #include "log_field.h"
 #include "buffered_writer.h"
-
-#include <cstring>
 
 static void memcpy_swapend(void* dest, const void* src, size_t num) {
 	const char* src2 = reinterpret_cast<const char*>(src);

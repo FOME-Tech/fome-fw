@@ -3,8 +3,6 @@
 #include "throttle_model.h"
 #include "gppwm_channel.h"
 
-#include <algorithm>
-
 // True when traction control should run without the full torque model: no ETB / airmass control,
 // the limit is enforced by spark retard + cut only (the current airmass->torque estimate is the
 // demand). Shared by the torque-model orchestration and the torque-reduction actuator gate.

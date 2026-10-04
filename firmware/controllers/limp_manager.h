@@ -2,8 +2,6 @@
 
 #include "shutdown_controller.h"
 
-#include <cstdint>
-
 // Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 enum class ClearReason : uint8_t {
 	None = 0,

@@ -8,8 +8,6 @@
 #pragma once
 
 #include "obd_error_codes.h"
-#include "rusefi_generated.h"
-#include <cstdint>
 
 #ifdef __cplusplus
 extern "C" {

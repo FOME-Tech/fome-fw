@@ -9,9 +9,6 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-
 #include "can.h"
 
 /**

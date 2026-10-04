@@ -10,8 +10,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 enum class ObdCode : uint16_t {
 	None = 0,
 	// P0001 Fuel Volume Regulator Control Circuit/Open

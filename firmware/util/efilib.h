@@ -99,8 +99,6 @@ float limitRateOfChange(float newValue, float oldValue, float incrLimitPerSec, f
 }
 
 #include <bit>
-#include <cstddef>
-#include <cstring>
 
 #define IS_NEGATIVE_ZERO(value) (__builtin_signbit(value) && value == 0)
 #define fixNegativeZero(value) (IS_NEGATIVE_ZERO(value) ? 0 : value)

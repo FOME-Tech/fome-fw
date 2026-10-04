@@ -599,9 +599,6 @@ typedef enum __attribute__((__packed__)) {
 	HPFP_CAM_EX2 = 4,
 } hpfp_cam_e;
 
-#if __cplusplus
-#include <cstdint>
-
 enum class TsCalMode : uint8_t {
 	None = 0,
 	Tps1Max = 1,
@@ -673,5 +670,3 @@ typedef enum __attribute__((__packed__)) {
 } canBroadcast_e;
 
 #define SC_Exhaust_First 1
-
-#endif // __cplusplus
