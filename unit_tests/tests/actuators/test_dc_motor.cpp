@@ -120,3 +120,26 @@ TEST(DcMotor, PwmDirectionPinsModeNegative) {
 	dut.configure(enable, dir1, dir2, false);
 	dut.set(-0.5f);
 }
+
+TEST(DcMotor, DirectionIsProgrammedBeforeGateOnResume) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	StrictMock<MockOutputPin> disable;
+	EXPECT_CALL(disable, setValue(true)).Times(2);
+	TwoPinDcMotor motor(disable);
+	StrictMock<MockPwm> enable, dir1, dir2;
+	motor.configure(enable, dir1, dir2, false);
+
+	::testing::InSequence sequence;
+	EXPECT_CALL(disable, setValue(true));
+	EXPECT_CALL(enable, setSimplePwmDutyCycle(0));
+	EXPECT_CALL(dir1, setSimplePwmDutyCycle(0));
+	EXPECT_CALL(dir2, setSimplePwmDutyCycle(0));
+	motor.stop("test");
+
+	EXPECT_CALL(dir1, setSimplePwmDutyCycle(0));
+	EXPECT_CALL(dir2, setSimplePwmDutyCycle(0.4f));
+	EXPECT_CALL(enable, setSimplePwmDutyCycle(1));
+	EXPECT_CALL(disable, setValue(false));
+	motor.set(-0.4f);
+	motor.enable();
+}

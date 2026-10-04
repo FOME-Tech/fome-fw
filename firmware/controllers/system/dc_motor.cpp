@@ -23,6 +23,7 @@ void TwoPinDcMotor::configure(IPwm& enable, IPwm& dir1, IPwm& dir2, bool isInver
 }
 
 void TwoPinDcMotor::enable() {
+	chibios_rt::CriticalSectionLocker csl;
 	if (m_disable) {
 		m_disable->setValue(false);
 	}
@@ -31,6 +32,7 @@ void TwoPinDcMotor::enable() {
 }
 
 void TwoPinDcMotor::disable(const char* msg) {
+	chibios_rt::CriticalSectionLocker csl;
 	if (m_disable) {
 		m_disable->setValue(true);
 	}
@@ -39,6 +41,28 @@ void TwoPinDcMotor::disable(const char* msg) {
 
 	// Also set the duty to zero
 	set(0);
+}
+
+void TwoPinDcMotor::stop(const char* msg) {
+	chibios_rt::CriticalSectionLocker csl;
+	m_msg = msg;
+	m_value = 0;
+	if (m_disable) {
+		m_disable->setValue(true);
+	}
+
+	// Bypass battery compensation and stop the gate and both direction
+	// channels synchronously, including bridges without a disable GPIO.
+	if (m_enable) {
+		m_enable->setDutyImmediate(0);
+	}
+	float inactive = m_isInverted ? 1 : 0;
+	if (m_dir1) {
+		m_dir1->setDutyImmediate(inactive);
+	}
+	if (m_dir2) {
+		m_dir2->setDutyImmediate(inactive);
+	}
 }
 
 bool TwoPinDcMotor::isOpenDirection() const {
@@ -53,6 +77,7 @@ float TwoPinDcMotor::get() const {
  * @param duty value between -1.0 and 1.0
  */
 bool TwoPinDcMotor::set(float duty) {
+	chibios_rt::CriticalSectionLocker csl;
 	m_value = duty;
 
 	// For low voltage, voltageRatio will be >1 to boost duty so that motor current stays the same
@@ -92,7 +117,6 @@ bool TwoPinDcMotor::set(float duty) {
 	// Direction pins get 100% duty unless we're in PwmDirectionPins mode
 	float dirDuty = m_type == ControlType::PwmDirectionPins ? duty : 1;
 
-	m_enable->setSimplePwmDutyCycle(enableDuty);
 	float recipDuty = 0;
 	if (m_isInverted) {
 		dirDuty = 1.0f - dirDuty;
@@ -101,6 +125,8 @@ bool TwoPinDcMotor::set(float duty) {
 
 	m_dir1->setSimplePwmDutyCycle(isPositive ? dirDuty : recipDuty);
 	m_dir2->setSimplePwmDutyCycle(isPositive ? recipDuty : dirDuty);
+	// Establish direction before reopening a two-wire bridge's gate.
+	m_enable->setSimplePwmDutyCycle(enableDuty);
 
 	// This motor has no fault detection, so always return false (indicate success).
 	return false;
