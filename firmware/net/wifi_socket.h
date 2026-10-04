@@ -30,12 +30,16 @@ public:
 
 	static ServerSocket* findListener(int sock);
 	static ServerSocket* findConnected(int sock);
+	static void closeAllConnectedSockets();
+	static void restartAllListeners();
+	void restartListener();
 
 private:
 	bool trySendImpl();
 
 	int m_listenerSocket = -1;
 	int m_connectedSocket = -1;
+	uint16_t m_listenPort = 0;
 
 	// TX helper data
 	const uint8_t* m_sendBuffer;

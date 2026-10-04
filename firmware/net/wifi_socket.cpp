@@ -21,11 +21,39 @@ ServerSocket::ServerSocket() {
 }
 
 void ServerSocket::startListening(const sockaddr_in& addr) {
+	m_listenPort = addr.sin_port;
+	m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
+	bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
+}
+
+void ServerSocket::restartListener() {
+	if (m_listenerSocket != -1) {
+		close(m_listenerSocket);
+		m_listenerSocket = -1;
+	}
+	sockaddr_in addr;
+	addr.sin_family = AF_INET;
+	addr.sin_port = m_listenPort;
+	addr.sin_addr.s_addr = 0;
 	m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
 	bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
 }
 
 void ServerSocket::onAccept(int connectedSocket) {
+	if (m_connectedSocket != -1) {
+		// We have an old connection that is still active in the WINC1500.
+		// DO NOT call closeSocket() / close() here!
+		// The WINC1500 has a fatal firmware bug where calling close() on a socket with
+		// pending TX data crashes the chip or permanently leaks the TX buffer.
+		// We orphan the old socket. The keep-alive will eventually kill it internally,
+		// at which point our onClose() fallback in socketCallback will free the socket ID.
+
+		chibios_rt::CriticalSectionLocker csl;
+		iqResetI(&m_recvQueue);
+
+		m_sendRequest = false;
+		m_sendDoneSemaphore.resetI(true);
+	}
 	m_connectedSocket = connectedSocket;
 
 	recv(m_connectedSocket, &m_recvBuf, 1, 0);
@@ -51,6 +79,18 @@ bool ServerSocket::closeSocket() {
 	}
 
 	return wasOpen;
+}
+
+void ServerSocket::closeAllConnectedSockets() {
+	for (ServerSocket* current = s_serverList; current; current = current->m_nextServer) {
+		current->closeSocket();
+	}
+}
+
+void ServerSocket::restartAllListeners() {
+	for (ServerSocket* current = s_serverList; current; current = current->m_nextServer) {
+		current->restartListener();
+	}
 }
 
 void ServerSocket::onClose() {
@@ -189,6 +229,15 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 			uint8_t* addr = reinterpret_cast<uint8_t*>(&dhcpInfo.u32StaticIP);
 			efiPrintf("WiFi client connected DHCP IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
 		} break;
+		case M2M_WIFI_RESP_CON_STATE_CHANGED: {
+			auto stateMsg = reinterpret_cast<tstrM2mWifiStateChanged*>(pvMsg);
+			efiPrintf("WiFi connection state changed to: %d", stateMsg->u8CurrState);
+			if (stateMsg->u8CurrState == M2M_WIFI_DISCONNECTED) {
+				efiPrintf("WiFi client disconnected. Force closing all sockets and restarting listeners.");
+				ServerSocket::closeAllConnectedSockets();
+				ServerSocket::restartAllListeners();
+			}
+		} break;
 		default:
 			efiPrintf("WifiCallback: %d", (int)u8MsgType);
 			break;
@@ -241,6 +290,11 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			} else {
 				if (auto server = ServerSocket::findConnected(sock)) {
 					server->onClose();
+				} else {
+					// This was an orphaned socket that was kept alive waiting for a clean
+					// disconnect. The WINC1500 has now aborted it cleanly (e.g. via keep-alive).
+					// We MUST call close() to free the socket ID in the hardware.
+					close(sock);
 				}
 			}
 		} break;
