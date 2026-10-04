@@ -126,7 +126,7 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		SensorType sensor = getSensorForBankIndex(i);
 
 		// todo: push configuration at startup
-		cell.configure(&engineConfiguration->stft.cellCfgs[binIdx], sensor);
+		cell.configure(engineConfiguration->stft.cellCfgs[binIdx], sensor);
 
 		if (shouldUpdateCorrection(sensor)) {
 			cell.update(engineConfiguration->stftIgnoreErrorMagnitude);

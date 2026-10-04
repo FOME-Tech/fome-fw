@@ -15,6 +15,26 @@ public:
 	MOCK_METHOD(float, getIntegratorGain, (), (const));
 };
 
+TEST(ClosedLoopFuelCell, getLambdaError) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	ClosedLoopFuelCellImpl dut;
+	stft_cell_cfg_s cellCfg;
+	dut.configure(cellCfg, SensorType::Lambda1);
+
+	// We are slightly lean of target
+	Sensor::setMockValue(SensorType::Lambda1, 0.92f);
+	engine->fuelComputer.targetLambda = 0.9f;
+
+	// lean -> need to add fuel -> positive error
+	EXPECT_NEAR(dut.getLambdaError(), 0.02, 1e-4);
+
+	// Dead lambda sensor -> zero lambda error
+	Sensor::resetMockValue(SensorType::Lambda1);
+	ASSERT_FALSE(Sensor::get(SensorType::Lambda1).Valid);
+	EXPECT_EQ(dut.getLambdaError(), 0);
+}
+
 TEST(ClosedLoopFuelCell, AdjustRate) {
 	StrictMock<MockClCell> cl;
 
