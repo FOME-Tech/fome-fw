@@ -17,9 +17,10 @@
 #include "flash_main.h"
 #include "eficonsole.h"
 
+#include "configuration_storage.h"
 #include "flash_int.h"
 #include "crc_accelerator.h"
-#include "configuration_storage.h"
+#include "configuration_write.h"
 
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
