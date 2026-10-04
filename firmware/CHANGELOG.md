@@ -32,6 +32,7 @@ or
 
 ### Breaking Changes
  - Removed the explicit threshold for the closed loop fuel idle region. Instead, the idle region is used whenever the idle controller decides the engine is idling, as this better matches behaviors like idle-up when cold, return to idle, etc.
+ - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
 
 ### Added
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.

@@ -60,8 +60,10 @@ AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool post
 	// Create % load for fuel table using relative naturally aspirated cylinder filling
 	float airChargeLoad = 100 * cylinderAirmass / getStandardAirCharge();
 
-	// Correct air mass by VE table
-	mass_t correctedAirmass = cylinderAirmass * getVe(rpm, airChargeLoad, postState);
+	// Correct air mass by MAF trim table
+	mass_t correctedAirmass =
+			cylinderAirmass *
+			interpolate3d(config->mafTrimTable, config->mafTrimLoadBins, airChargeLoad, config->mafTrimRpmBins, rpm);
 
 	return {
 			correctedAirmass,
