@@ -98,7 +98,6 @@ static void setDefaultStftSettings() {
 	cfg.minClt = 60;
 
 	// Sensible region defaults
-	cfg.maxIdleRegionRpm = 1000;
 	cfg.maxOverrunLoad = 35;
 	cfg.minPowerLoad = 85;
 

@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20024
+#define FLASH_DATA_VERSION 20025
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -230,7 +230,6 @@ struct stft_cell_cfg_s
 end_struct
 
 struct stft_s
-	uint8_t autoscale maxIdleRegionRpm;Below this RPM, the idle region is active;"RPM", 50, 0, 0, 12000, 0
 	uint8_t maxOverrunLoad;Below this engine load, the overrun region is active;"load", 1, 0, 0, 250, 0
 	uint8_t minPowerLoad;Above this engine load, the power region is active;"load", 1, 0, 0, 250, 0
 

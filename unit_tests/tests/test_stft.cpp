@@ -31,17 +31,30 @@ TEST(ClosedLoopFuelCell, AdjustRate) {
 }
 
 TEST(ClosedLoopFuel, CellSelection) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	struct : public MockIdleController {
+		bool isIdling = false;
+
+		bool isIdlingOrTaper() const override {
+			return isIdling;
+		}
+	} idleController;
+
+	engine->engineModules.get<IdleController>().set(&idleController);
+
 	stft_s cfg;
 
 	// Sensible region config
-	cfg.maxIdleRegionRpm = 1500;
 	cfg.minPowerLoad = 80;
 	cfg.maxOverrunLoad = 30;
 
 	// Test idle
+	idleController.isIdling = true;
 	EXPECT_EQ(0, computeStftBin(1000, 10, cfg));
 	EXPECT_EQ(0, computeStftBin(1000, 50, cfg));
 	EXPECT_EQ(0, computeStftBin(1000, 90, cfg));
+	idleController.isIdling = false;
 
 	// Test overrun
 	EXPECT_EQ(1, computeStftBin(2000, 10, cfg));
