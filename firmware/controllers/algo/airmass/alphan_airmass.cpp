@@ -11,7 +11,7 @@ AirmassResult AlphaNAirmass::getAirmass(float rpm, bool postState) {
 	}
 
 	// In this case, VE directly describes the cylinder filling relative to the ideal
-	float ve = getVe(rpm, tps.Value, postState);
+	float ve = getVe(rpm, tps.Value, postState, VeTableType::AlphaN);
 
 	// optionally use real IAT instead of fixed air temperature
 	constexpr float standardIat = 20.0f; // std atmosphere temperature

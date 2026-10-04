@@ -17,7 +17,7 @@ public:
 	explicit AirmassVeModelBase(const ValueProvider3D* veTable);
 
 	// Retrieve the user-calibrated volumetric efficiency from the table
-	float getVe(float rpm, percent_t load, bool postState) const;
+	float getVe(float rpm, percent_t load, bool postState, VeTableType consumer) const;
 
 	virtual float getVeImpl(float /*rpm*/, percent_t /*load*/) const;
 

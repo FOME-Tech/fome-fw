@@ -662,6 +662,11 @@ enum class DtcSeverity : uint8_t {
 	LimpLevel2 = 3,
 };
 
+enum class VeTableType : uint8_t {
+	SpeedDensity = 0,
+	AlphaN = 1,
+};
+
 typedef enum __attribute__((__packed__)) {
 	none = 0,
 	first,

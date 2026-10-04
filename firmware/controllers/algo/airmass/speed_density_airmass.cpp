@@ -20,7 +20,7 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 		return {};
 	}
 
-	float ve = getVe(rpm, map, postState);
+	float ve = getVe(rpm, map, postState, VeTableType::SpeedDensity);
 
 	float airMass = getAirmassImpl(ve, map, tChargeK);
 	if (std::isnan(airMass)) {
