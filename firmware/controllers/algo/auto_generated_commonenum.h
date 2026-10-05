@@ -119,6 +119,15 @@ constexpr inline const char* getTsCalMode(TsCalMode value) {
 	}
 	return "unknown";
 }
+constexpr inline const char* getVeTableType(VeTableType value) {
+	switch (value) {
+		case VeTableType::AlphaN:
+			return "AlphaN";
+		case VeTableType::SpeedDensity:
+			return "SpeedDensity";
+	}
+	return "unknown";
+}
 constexpr inline const char* getWidebandMode(WidebandMode value) {
 	switch (value) {
 		case WidebandMode::AemXSeries:
