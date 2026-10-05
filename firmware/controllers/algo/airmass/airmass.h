@@ -9,7 +9,7 @@ struct AirmassResult {
 };
 
 struct AirmassModelBase {
-	virtual AirmassResult getAirmass(float rpm, bool postState) = 0;
+	virtual expected<AirmassResult> getAirmass(float rpm, bool postState) = 0;
 };
 
 class AirmassVeModelBase : public AirmassModelBase {

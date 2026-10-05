@@ -344,14 +344,15 @@ static auto lua_getAirmassResolveMode(lua_State* l) {
 
 static int lua_getAirmass(lua_State* l) {
 	auto airmassMode = lua_getAirmassResolveMode(l);
-	auto airmass = getAirmassModel(airmassMode);
+	auto airmassModel = getAirmassModel(airmassMode);
 
-	if (!airmass) {
-		return luaL_error(l, "null airmass");
+	if (!airmassModel) {
+		return luaL_error(l, "null airmassModel");
 	}
 
 	auto rpm = Sensor::getOrZero(SensorType::Rpm);
-	auto result = airmass->getAirmass(rpm, false).CylinderAirmass;
+	auto airmass = airmassModel->getAirmass(rpm, false);
+	auto result = airmass.Valid ? airmass.Value.CylinderAirmass : 0;
 
 	lua_pushnumber(l, result);
 	return 1;

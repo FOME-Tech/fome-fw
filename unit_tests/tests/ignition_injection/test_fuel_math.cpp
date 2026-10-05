@@ -54,7 +54,7 @@ TEST(AirmassModes, AlphaNNormal) {
 	// Mass of 1 liter of air * VE
 	mass_t expectedAirmass = 1.2047f * 0.35f;
 
-	auto result = dut.getAirmass(1200, false);
+	auto result = dut.getAirmass(1200, false).value_or({});
 	EXPECT_NEAR(result.CylinderAirmass, expectedAirmass, EPS4D);
 	EXPECT_NEAR(result.EngineLoadPercent, 0.71f, EPS4D);
 }
@@ -77,19 +77,19 @@ TEST(AirmassModes, AlphaNUseIat) {
 	// Mass of 1 liter of air * VE
 	mass_t expectedAirmass = 1.2047f * 0.35f;
 
-	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmass, EPS4D);
+	EXPECT_NEAR(dut.getAirmass(1200, false).value_or({}).CylinderAirmass, expectedAirmass, EPS4D);
 
 	engineConfiguration->alphaNUseIat = true;
 
 	// Cold we get more airmass
 	float expectedAirmassCold = expectedAirmass * (273.0f + 20) / (273.0f + 0);
 	Sensor::setMockValue(SensorType::Iat, 0);
-	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassCold, EPS4D);
+	EXPECT_NEAR(dut.getAirmass(1200, false).value_or({}).CylinderAirmass, expectedAirmassCold, EPS4D);
 
 	// Hot we get less airmass
 	float expectedAirmassHot = expectedAirmass * (273.0f + 20) / (273.0f + 40);
 	Sensor::setMockValue(SensorType::Iat, 40);
-	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassHot, EPS4D);
+	EXPECT_NEAR(dut.getAirmass(1200, false).value_or({}).CylinderAirmass, expectedAirmassHot, EPS4D);
 }
 
 TEST(AirmassModes, AlphaNFailedTps) {
@@ -106,7 +106,7 @@ TEST(AirmassModes, AlphaNFailedTps) {
 	ASSERT_FALSE(Sensor::get(SensorType::Tps1).Valid);
 
 	auto result = dut.getAirmass(1200, false);
-	EXPECT_EQ(result.CylinderAirmass, 0);
+	EXPECT_FALSE(result.Valid);
 }
 
 TEST(AirmassModes, MafNormal) {
@@ -120,7 +120,7 @@ TEST(AirmassModes, MafNormal) {
 
 	MafAirmass dut(&veTable);
 
-	auto airmass = dut.getAirmassImpl(200, 6000, false);
+	auto airmass = dut.getAirmassImpl(200, 6000, false).value_or({});
 
 	// Check results
 	EXPECT_NEAR(0.277777f * 0.75f, airmass.CylinderAirmass, EPS4D);
@@ -143,11 +143,11 @@ TEST(AirmassModes, VeOverride) {
 		DummyAirmassModel(const ValueProvider3D* veTable)
 			: AirmassVeModelBase(veTable) {}
 
-		AirmassResult getAirmass(float rpm, bool postState) override {
+		expected<AirmassResult> getAirmass(float rpm, bool postState) override {
 			// Default load value 10, will be overriden
 			getVe(rpm, 10.0f, postState, VeTableType::SpeedDensity);
 
-			return {};
+			return AirmassResult{};
 		}
 	};
 

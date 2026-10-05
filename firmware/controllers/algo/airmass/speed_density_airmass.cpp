@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "speed_density_airmass.h"
 
-AirmassResult SpeedDensityAirmass::getAirmass(float rpm, bool postState) {
+expected<AirmassResult> SpeedDensityAirmass::getAirmass(float rpm, bool postState) {
 	ScopePerf perf(PE::GetSpeedDensityFuel);
 
 	auto map = getMap(rpm, postState);
@@ -9,7 +9,7 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, bool postState) {
 	return getAirmass(rpm, map, postState);
 }
 
-AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postState) {
+expected<AirmassResult> SpeedDensityAirmass::getAirmass(float rpm, float map, bool postState) {
 	/**
 	 * most of the values are pre-calculated for performance reasons
 	 */
@@ -17,7 +17,7 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 	if (std::isnan(tChargeK)) {
 		warning(ObdCode::CUSTOM_ERR_TCHARGE_NOT_READY2,
 				"tChargeK not ready"); // this would happen before we have CLT reading for example
-		return {};
+		return unexpected;
 	}
 
 	float ve = getVe(rpm, map, postState, VeTableType::SpeedDensity);
@@ -25,10 +25,10 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 	float airMass = getAirmassImpl(ve, map, tChargeK);
 	if (std::isnan(airMass)) {
 		warning(ObdCode::CUSTOM_ERR_6685, "NaN airMass");
-		return {};
+		return unexpected;
 	}
 
-	return {
+	return AirmassResult{
 			airMass,
 			map, // AFR/VE table Y axis
 	};
@@ -36,8 +36,11 @@ AirmassResult SpeedDensityAirmass::getAirmass(float rpm, float map, bool postSta
 
 float SpeedDensityAirmass::getAirflow(float rpm, float map, bool postState) {
 	auto airmassResult = getAirmass(rpm, map, postState);
+	if (!airmassResult) {
+		return 0;
+	}
 
-	float massPerCycle = airmassResult.CylinderAirmass * engine->engineState.cylinderCount;
+	float massPerCycle = airmassResult.Value.CylinderAirmass * engine->engineState.cylinderCount;
 
 	if (!engineConfiguration->twoStroke) {
 		// 4 stroke engines only do a half cycle per rev
