@@ -82,7 +82,7 @@ struct ZipRecord {
 	uint16_t date;
 };
 
-#define MAX_ZIP_FILES 128
+#define MAX_ZIP_FILES 64
 static ZipRecord zipRecords[MAX_ZIP_FILES];
 
 static NO_CACHE ServerSocket httpServer;
@@ -116,6 +116,18 @@ public:
 		return m_server.hasConnectedSocket();
 	}
 
+	// For large payloads (>= one full socket buffer) flush the internal buffer first
+	// and then pass data directly to the socket, avoiding an extra memcpy through m_buf.
+	bool sendDirect(const void* data, size_t size) {
+		if (!flush()) {
+			return false;
+		}
+		if (size > 0 && m_server.hasConnectedSocket()) {
+			m_server.send(data, size);
+		}
+		return m_server.hasConnectedSocket();
+	}
+
 	bool flush() {
 		if (m_pos > 0 && m_server.hasConnectedSocket()) {
 			m_server.send(m_buf, m_pos);
@@ -138,7 +150,12 @@ static bool sendChunk(BufferedSender& sender, const void* data, size_t size) {
 	if (!sender.hasConnectedSocket() || size == 0) {
 		return false;
 	}
-	sender.send(data, size);
+	// For large payloads, bypass the intermediate buffer to avoid a redundant memcpy.
+	if (size >= SOCKET_BUFFER_MAX_LENGTH) {
+		sender.sendDirect(data, size);
+	} else {
+		sender.send(data, size);
+	}
 	return sender.hasConnectedSocket();
 }
 
@@ -162,10 +179,14 @@ static void sendHttpError(BufferedSender& sender, int code, const char* message)
 	sendString(sender, buffer);
 }
 
+static bool isHexDigit(char c) {
+	return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
 static void urlDecode(char* dst, const char* src, size_t maxLen) {
 	size_t i = 0;
 	while (*src && i + 1 < maxLen) {
-		if (*src == '%' && src[1] && src[2]) {
+		if (*src == '%' && isHexDigit(src[1]) && isHexDigit(src[2])) {
 			char hex[3] = {src[1], src[2], 0};
 			*dst++ = static_cast<char>(strtol(hex, nullptr, 16));
 			src += 3;
@@ -465,34 +486,57 @@ static void handleDirectoryListing(BufferedSender& sender, const char* path) {
 		return;
 	}
 
+	static const char* HTML_HEADER = R"HTML(<!DOCTYPE html><html><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>FOME SD Logs</title>
+<style>
+body { font-family: system-ui, -apple-system, sans-serif; background: #18181b; color: #f4f4f5; margin: 0; padding: 20px; line-height: 1.5; }
+.card { max-width: 850px; margin: 0 auto; background: #27272a; border-radius: 10px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+h1 { font-size: 1.5rem; margin: 0 0 16px; color: #38bdf8; border-bottom: 1px solid #3f3f46; padding-bottom: 12px; }
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.btn { display: inline-block; padding: 8px 16px; background: #2563eb; color: #fff; border-radius: 6px; font-weight: 600; margin: 4px 4px 4px 0; transition: 0.2s; cursor: pointer; border: none; font-size: 0.9rem; }
+.btn:hover { background: #1d4ed8; text-decoration: none; }
+.btn:disabled { background: #3f3f46; color: #71717a; cursor: default; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #3f3f46; }
+th { background: #3f3f46; color: #d4d4d8; }
+tr:hover { background: #323238; }
+.dir { color: #facc15; font-weight: 600; }
+.size { color: #a1a1aa; text-align: right; }
+input[type=checkbox] { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
+</style></head><body><div class='card'>)HTML";
+
+	static const char* HTML_FOOTER = R"HTML(</table></div>
+<script>
+function gc() { return document.querySelectorAll('.sel'); }
+function upd() {
+    var c = gc(), n = 0;
+    c.forEach(function(x) { if (x.checked) n++; });
+    document.getElementById('dlsel').disabled = (n === 0);
+}
+gc().forEach(function(x) { x.onchange = upd; });
+function dlAll() { location.href = '?zip=all'; }
+function dlSel() {
+    var c = gc(), s = [];
+    c.forEach(function(x) { if (x.checked) s.push(x.value); });
+    if (s.length) location.href = '?zip=items&names=' + s.join(',');
+}
+function togAll() {
+    var c = gc(), a = true;
+    c.forEach(function(x) { if (!x.checked) a = false; });
+    c.forEach(function(x) { x.checked = !a; });
+    upd();
+}
+setInterval(function() { fetch('/ping').catch(function(){}) }, 15000);
+</script></body></html>)HTML";
+
 	sendString(
 			sender,
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/html\r\n"
-			"Connection: close\r\n\r\n"
-			"<!DOCTYPE html><html><head><meta charset='utf-8'>"
-			"<meta name='viewport' content='width=device-width,initial-scale=1'>"
-			"<title>FOME SD Logs</title><style>"
-			"body{font-family:system-ui,-apple-system,sans-serif;background:#18181b;color:#f4f4f5;margin:0;padding:"
-			"20px;line-height:1.5}"
-			".card{max-width:850px;margin:0 auto;background:#27272a;border-radius:10px;padding:24px;box-shadow:0 4px "
-			"6px rgba(0,0,0,0.3)}"
-			"h1{font-size:1.5rem;margin:0 0 16px;color:#38bdf8;border-bottom:1px solid #3f3f46;padding-bottom:12px}"
-			"a{color:#60a5fa;text-decoration:none}"
-			"a:hover{text-decoration:underline}"
-			".btn{display:inline-block;padding:8px "
-			"16px;background:#2563eb;color:#fff;border-radius:6px;font-weight:600;margin:4px 4px 4px 0;"
-			"transition:0.2s;cursor:pointer;border:none;font-size:0.9rem}"
-			".btn:hover{background:#1d4ed8;text-decoration:none}"
-			".btn:disabled{background:#3f3f46;color:#71717a;cursor:default}"
-			"table{width:100%;border-collapse:collapse;margin-top:12px}"
-			"th,td{text-align:left;padding:10px 12px;border-bottom:1px solid #3f3f46}"
-			"th{background:#3f3f46;color:#d4d4d8}"
-			"tr:hover{background:#323238}"
-			".dir{color:#facc15;font-weight:600}"
-			".size{color:#a1a1aa;text-align:right}"
-			"input[type=checkbox]{width:16px;height:16px;accent-color:#2563eb;cursor:pointer}"
-			"</style></head><body><div class='card'>");
+			"Connection: close\r\n\r\n");
+	sendString(sender, HTML_HEADER);
 
 	char titleBuf[128];
 	snprintf(titleBuf, sizeof(titleBuf), "<h1>\xf0\x9f\x93\x81 Index of %s</h1>", path);
@@ -570,24 +614,7 @@ static void handleDirectoryListing(BufferedSender& sender, const char* path) {
 
 	f_closedir(&dir);
 
-	// JavaScript for checkbox handling and download actions
-	sendString(
-			sender,
-			"</table></div>"
-			"<script>"
-			"function gc(){return document.querySelectorAll('.sel')}"
-			"function upd(){var c=gc(),n=0;c.forEach(function(x){if(x.checked)n++});"
-			"document.getElementById('dlsel').disabled=n==0}"
-			"gc().forEach(function(x){x.onchange=upd});"
-			"function dlAll(){location.href='?zip=all'}"
-			"function dlSel(){var c=gc(),s=[];"
-			"c.forEach(function(x){if(x.checked)s.push(x.value)});"
-			"if(s.length)location.href='?zip=items&names='+s.join(',')}"
-			"function togAll(){var c=gc(),a=true;"
-			"c.forEach(function(x){if(!x.checked)a=false});"
-			"c.forEach(function(x){x.checked=!a});upd()}"
-			"setInterval(function(){fetch('/ping').catch(function(){})},15000);"
-			"</script></body></html>\r\n");
+	sendString(sender, HTML_FOOTER);
 }
 
 static void handleClient(ServerSocket& server) {
@@ -608,6 +635,17 @@ static void handleClient(ServerSocket& server) {
 		return;
 	}
 	reqBuf[n] = '\0';
+
+	// Drain remaining HTTP headers so they don't accumulate in the 512-byte recv queue.
+	// Browsers typically send all headers in one TCP segment; the ATWINC delivers everything
+	// to onRecv() at once, pushing it all into the queue. Leaving it unread wastes queue space
+	// and can cause silent overflow (iqPutI drops bytes when full).
+	{
+		uint8_t drain;
+		while (server.recvTimeout(&drain, 1, TIME_MS2I(50)) == 1) {
+			// discard
+		}
+	}
 
 	if (!isSdCardLogging()) {
 		sendHttpError(sender, 503, "SD Card Logging Inactive");

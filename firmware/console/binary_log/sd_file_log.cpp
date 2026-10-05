@@ -35,6 +35,9 @@ static int totalSyncCounter = 0;
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
+// NOTE: logName is written once during boot (in createLogFile, before the HTTP file server starts).
+// getActiveSdLogFileName() returns a pointer to this buffer and is called from the HTTP server thread.
+// If log rotation is ever added, this must be protected with a mutex or copied atomically.
 static char logName[_MAX_FILLER + 20];
 
 // This is the window of log data lost on a power cut: the bytes are already on the card, but
