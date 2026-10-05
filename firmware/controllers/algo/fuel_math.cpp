@@ -182,7 +182,6 @@ static float getBaseFuelMass(float rpm) {
 
 	// convert g/s -> kg/h
 	engine->engineState.airflowEstimate = gramPerMs * 3600000 /* milliseconds per hour */ / 1000 /* grams per kg */;
-	;
 
 	float baseFuelMass = engine->fuelComputer.getCycleFuel(airmass.CylinderAirmass, rpm, airmass.EngineLoadPercent);
 
