@@ -127,7 +127,7 @@ TEST(AirmassModes, MafNormal) {
 	}
 
 	// Trim table that varies differently along each axis, to check that the correct cell is read
-	setLinearCurve(config->mafTrimLoadBins, 0, 140, 1); // 0, 20, 40 ... 140
+	setLinearCurve(config->mafTrimLoadBins, 0, 140, 1);	   // 0, 20, 40 ... 140
 	setLinearCurve(config->mafTrimRpmBins, 1000, 8000, 1); // 1000, 2000, 3000 ... 8000
 	for (size_t loadIdx = 0; loadIdx < efi::size(config->mafTrimLoadBins); loadIdx++) {
 		for (size_t rpmIdx = 0; rpmIdx < efi::size(config->mafTrimRpmBins); rpmIdx++) {
