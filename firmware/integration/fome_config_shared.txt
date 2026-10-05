@@ -115,8 +115,6 @@
 
 #define GAUGE_NAME_AIR_FLOW_MEASURED "MAF"
 #define GAUGE_NAME_AIR_FLOW_MEASURED_2 "MAF #2"
-#define GAUGE_NAME_AIR_FLOW_ESTIMATE "Air: Flow estimate"
-#define GAUGE_NAME_AIR_MASS "Air: Cylinder airmass"
 
 #define GAUGE_NAME_WARNING_LAST "Warning: last"
 #define GAUGE_NAME_WARNING_COUNTER "Warning: counter"
