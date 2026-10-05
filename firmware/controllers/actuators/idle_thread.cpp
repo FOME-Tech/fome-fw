@@ -367,6 +367,7 @@ void IdleController::onFastCallback() {
 
 void IdleController::onEngineStop() {
 	m_pid.reset();
+	m_timingPid.reset();
 }
 
 void IdleController::onConfigurationChange(engine_configuration_s const* previousConfiguration) {
@@ -375,6 +376,16 @@ void IdleController::onConfigurationChange(engine_configuration_s const* previou
 		m_pid.reset();
 	}
 #endif
+	bool modeChanged = !previousConfiguration ||
+					   previousConfiguration->idleTimingUseRollingRpm != engineConfiguration->idleTimingUseRollingRpm;
+#if EFI_SHAFT_POSITION_INPUT
+	if (modeChanged) {
+		engine->rpmCalculator.resetRollingCycleRpm();
+	}
+#endif
+	if (modeChanged || !m_timingPid.isSame(&previousConfiguration->idleTimingPid)) {
+		m_timingPid.reset();
+	}
 }
 
 void IdleController::init() {

@@ -707,6 +707,7 @@ bit is_enabled_spi_2
 	bit alignEngineSnifferAtTDC
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
+	bit idleTimingUseRollingRpm,"Rolling cycle","Instantaneous";Instantaneous preserves the fast idle ignition response. Rolling cycle compares each decoded trigger position with the same position one complete engine cycle earlier to reject cyclic RPM ripple.\nThe measurement updates at each decoded event, but the delay of a full-cycle window remains (100 ms at 1200 RPM on a four-stroke). A complete cycle is required after startup or reset. PID gains, especially D, may need retuning.\nOnly affects closed-loop idle ignition timing.
 
 	! 536870911 = 2^29-1, the maximum valid extended ID
 	uint32_t verboseCanBaseAddress;The ECU base CAN address (ID).\n\nValue is specified as a decimal number e.g. 512 is 0x200 in HEX.;"dec", 1, 0, 0, 536870911, 0
