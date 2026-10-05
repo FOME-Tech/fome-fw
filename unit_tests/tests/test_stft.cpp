@@ -71,25 +71,19 @@ TEST(ClosedLoopFuel, CellSelection) {
 
 	// Test idle
 	idleController.isIdling = true;
-	EXPECT_EQ(0, computeStftBin(1000, 10, cfg));
-	EXPECT_EQ(0, computeStftBin(1000, 50, cfg));
-	EXPECT_EQ(0, computeStftBin(1000, 90, cfg));
+	EXPECT_EQ(0, computeStftBin(10, cfg));
+	EXPECT_EQ(0, computeStftBin(50, cfg));
+	EXPECT_EQ(0, computeStftBin(90, cfg));
 	idleController.isIdling = false;
 
 	// Test overrun
-	EXPECT_EQ(1, computeStftBin(2000, 10, cfg));
-	EXPECT_EQ(1, computeStftBin(4000, 10, cfg));
-	EXPECT_EQ(1, computeStftBin(10000, 10, cfg));
+	EXPECT_EQ(1, computeStftBin(10, cfg));
 
 	// Test load
-	EXPECT_EQ(2, computeStftBin(2000, 90, cfg));
-	EXPECT_EQ(2, computeStftBin(4000, 90, cfg));
-	EXPECT_EQ(2, computeStftBin(10000, 90, cfg));
+	EXPECT_EQ(2, computeStftBin(90, cfg));
 
 	// Main cell
-	EXPECT_EQ(3, computeStftBin(2000, 50, cfg));
-	EXPECT_EQ(3, computeStftBin(4000, 50, cfg));
-	EXPECT_EQ(3, computeStftBin(10000, 50, cfg));
+	EXPECT_EQ(3, computeStftBin(50, cfg));
 }
 
 TEST(ClosedLoopFuel, lambdaLimits) {
@@ -107,5 +101,27 @@ TEST(ClosedLoopFuel, lambdaLimits) {
 	Sensor::setMockValue(SensorType::Lambda1, 1.15f);
 	EXPECT_TRUE(shouldUpdateCorrection(SensorType::Lambda1));
 	Sensor::setMockValue(SensorType::Lambda1, 1.25f);
+	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
+}
+
+TEST(ClosedLoopFuel, deadLambdaSensorWithZeroMinLambda) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// With min lambda 0, a dead sensor reading as 0 would pass the range check
+	engineConfiguration->stft.minLambda = 0;
+	engineConfiguration->stft.maxLambda = 1.2f;
+
+	// Working sensor -> correct
+	Sensor::setMockValue(SensorType::Lambda1, 1.0f);
+	EXPECT_TRUE(shouldUpdateCorrection(SensorType::Lambda1));
+
+	// Dead sensor -> don't correct
+	Sensor::setInvalidMockValue(SensorType::Lambda1);
+	ASSERT_FALSE(Sensor::get(SensorType::Lambda1).Valid);
+	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
+
+	// Missing sensor -> don't correct
+	Sensor::resetMockValue(SensorType::Lambda1);
+	ASSERT_FALSE(Sensor::get(SensorType::Lambda1).Valid);
 	EXPECT_FALSE(shouldUpdateCorrection(SensorType::Lambda1));
 }
