@@ -48,7 +48,7 @@ static void setDefaultVETable() {
 	setRpmTableBin(config->baroCorrRpmBins);
 	setLinearCurve(config->baroCorrPressureBins, 75, 105, 1);
 
-	setTable(config->mafTrimTable, 1);
+	setTable(config->mafTrimTable, 100);
 	setRpmTableBin(config->mafTrimRpmBins);
 	setLinearCurve(config->mafTrimLoadBins, 0, 140);
 

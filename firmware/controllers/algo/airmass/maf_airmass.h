@@ -10,7 +10,7 @@ public:
 	expected<AirmassResult> getAirmass(float rpm, bool postState) override;
 
 	// Compute airmass based on flow & engine speed
-	expected<AirmassResult> getAirmassImpl(float massAirFlow, float rpm, bool postState) const;
+	expected<AirmassResult> getAirmassImpl(float massAirFlow, float rpm) const;
 
 private:
 	expected<float> getMaf() const;

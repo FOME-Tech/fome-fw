@@ -1628,7 +1628,7 @@ end_table
 begin_table
 	table_rows num 8 uint16_t mafTrimLoadBins;;"%", 1, 0, 0, 1000, 0
 	table_cols num 8 uint16_t mafTrimRpmBins;;"RPM", 1, 0, 0, 18000, 0
-	table_values uint8_t autoscale mafTrimTable;;"%", 0.01, 0, 0, 2, 2
+	table_values uint8_t mafTrimTable;;"%", 1, 0, 0, 200, 0
 end_table
 
 union
