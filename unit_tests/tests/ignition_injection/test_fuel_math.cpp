@@ -491,3 +491,77 @@ TEST(FuelMath, IdleVeTable) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 10);
 	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f);
 }
+
+static void setupVeBlend(blend_table_s& blend, VeTableType consumer, float bias) {
+	blend.blendParameter = GPPWM_Clt;
+	blend.yAxisOverride = GPPWM_Zero;
+	blend.veTableSelect = consumer;
+
+	setLinearCurve(blend.loadBins, 0, 140, 1);
+	setLinearCurve(blend.rpmBins, 1000, 8000, 1);
+	setTable(blend.table, bias);
+
+	// Blend percent equals CLT, from 0 to 70
+	setLinearCurve(blend.blendBins, 0, 70, 1);
+	setLinearCurve(blend.blendValues, 0, 70, 1);
+}
+
+TEST(FuelMath, VeBlends) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	MockAirmass dut;
+
+	// Main VE table returns 50
+	EXPECT_CALL(dut.veTable, getValue(_, _)).WillRepeatedly(Return(50));
+
+	engineConfiguration->veOverrideMode = VE_None;
+	engineConfiguration->useSeparateVeForIdle = false;
+
+	for (auto& blend : config->veBlends) {
+		blend.blendParameter = GPPWM_Zero;
+	}
+
+	Sensor::setMockValue(SensorType::Clt, 50);
+
+	// No blends enabled, plain VE
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Blend 1 adds 10% to speed density, blend 2 removes 20% from alpha-N
+	setupVeBlend(config->veBlends[0], VeTableType::SpeedDensity, 10);
+	setupVeBlend(config->veBlends[1], VeTableType::AlphaN, -20);
+
+	// CLT 50 -> 50% blend, so +5% for SD and -10% for alpha-N
+	EXPECT_NEAR(dut.getVe(1000, 50, true, VeTableType::SpeedDensity), 0.5f * 1.05f, EPS4D);
+	EXPECT_NEAR(engine->engineState.currentVe, 50 * 1.05f, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendParameter[0], 50, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendBias[0], 50, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendOutput[0], 5, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendYAxis[0], 50, EPS2D);
+
+	EXPECT_NEAR(dut.getVe(1000, 50, true, VeTableType::AlphaN), 0.5f * 0.9f, EPS4D);
+	EXPECT_NEAR(engine->engineState.currentVe, 50 * 0.9f, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendOutput[1], -10, EPS2D);
+
+	// CLT 0 -> 0% blend, no effect
+	Sensor::setMockValue(SensorType::Clt, 0);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Dead blend parameter sensor -> no effect
+	Sensor::setInvalidMockValue(SensorType::Clt);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Both blends applied to speed density: they stack multiplicatively, alpha-N gets neither
+	Sensor::setMockValue(SensorType::Clt, 50);
+	config->veBlends[1].veTableSelect = VeTableType::SpeedDensity;
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f * 1.05f * 0.9f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Both blends applied to alpha-N
+	config->veBlends[0].veTableSelect = VeTableType::AlphaN;
+	config->veBlends[1].veTableSelect = VeTableType::AlphaN;
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f * 1.05f * 0.9f, EPS4D);
+}
