@@ -114,17 +114,116 @@ TEST(AirmassModes, MafNormal) {
 	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
 	engineConfiguration->injector.flow = 200;
 
-	MockVp3d veTable;
-	// Ensure that the correct cell is read from the VE table
-	EXPECT_CALL(veTable, getValue(6000, FloatNear(70.9814f, EPS4D))).WillOnce(Return(75.0f));
-
+	// MAF uses its own trim table, the VE table should never be read
+	StrictMock<MockVp3d> veTable;
 	MafAirmass dut(&veTable);
 
-	auto airmass = dut.getAirmassImpl(200, 6000, false).value_or({});
+	// Default trim table is all 100%, aka no correction
+	{
+		auto airmass = dut.getAirmassImpl(200, 6000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(0.277777f, airmass.Value.CylinderAirmass, EPS4D);
+		EXPECT_NEAR(70.9814f, airmass.Value.EngineLoadPercent, EPS4D);
+	}
 
-	// Check results
-	EXPECT_NEAR(0.277777f * 0.75f, airmass.CylinderAirmass, EPS4D);
-	EXPECT_NEAR(70.9814f, airmass.EngineLoadPercent, EPS4D);
+	// Trim table that varies differently along each axis, to check that the correct cell is read
+	setLinearCurve(config->mafTrimLoadBins, 0, 140, 1); // 0, 20, 40 ... 140
+	setLinearCurve(config->mafTrimRpmBins, 1000, 8000, 1); // 1000, 2000, 3000 ... 8000
+	for (size_t loadIdx = 0; loadIdx < efi::size(config->mafTrimLoadBins); loadIdx++) {
+		for (size_t rpmIdx = 0; rpmIdx < efi::size(config->mafTrimRpmBins); rpmIdx++) {
+			config->mafTrimTable[loadIdx][rpmIdx] = 50 + 5 * loadIdx + 10 * rpmIdx;
+		}
+	}
+
+	{
+		auto airmass = dut.getAirmassImpl(200, 6000);
+		ASSERT_TRUE(airmass.Valid);
+
+		// Load 70.98 is load index 3.549, 6000 RPM is RPM index 5
+		float expectedTrim = (50 + 5 * (70.9814f / 20) + 10 * 5) / 100;
+		EXPECT_NEAR(0.277777f * expectedTrim, airmass.Value.CylinderAirmass, EPS4D);
+
+		// Trim doesn't affect load
+		EXPECT_NEAR(70.9814f, airmass.Value.EngineLoadPercent, EPS4D);
+	}
+}
+
+TEST(AirmassModes, MafFailed) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+
+	MafAirmass dut;
+
+	ASSERT_FALSE(Sensor::hasSensor(SensorType::Maf2));
+
+	// Working MAF
+	Sensor::setMockValue(SensorType::Maf, 200);
+	EXPECT_TRUE(dut.getAirmass(6000, false).Valid);
+
+	// Engine stopped -> fail
+	EXPECT_FALSE(dut.getAirmass(0, false).Valid);
+
+	// Dead MAF -> fail
+	Sensor::setInvalidMockValue(SensorType::Maf);
+	EXPECT_FALSE(dut.getAirmass(6000, false).Valid);
+}
+
+TEST(AirmassModes, MafDual) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+
+	MafAirmass dut;
+
+	// Each case should total 200kg/h, same as MafNormal
+	auto checkValid = [&]() {
+		auto airmass = dut.getAirmass(6000, false);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(0.277777f, airmass.Value.CylinderAirmass, EPS4D);
+	};
+
+	// Both working -> sum
+	Sensor::setMockValue(SensorType::Maf, 100);
+	Sensor::setMockValue(SensorType::Maf2, 100);
+	checkValid();
+
+	// MAF 2 dead -> double MAF 1
+	Sensor::setInvalidMockValue(SensorType::Maf2);
+	checkValid();
+
+	// MAF 1 dead -> double MAF 2
+	Sensor::setInvalidMockValue(SensorType::Maf);
+	Sensor::setMockValue(SensorType::Maf2, 100);
+	checkValid();
+
+	// Both dead -> fail
+	Sensor::setInvalidMockValue(SensorType::Maf2);
+	EXPECT_FALSE(dut.getAirmass(6000, false).Valid);
+}
+
+TEST(AirmassModes, SpeedDensityFailed) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	MockVp3d veTable;
+	StrictMock<MockVp3d> mapFallback;
+	SpeedDensityAirmass dut(&veTable, mapFallback);
+
+	EXPECT_CALL(veTable, getValue(_, _)).WillRepeatedly(Return(80.0f));
+
+	// Working case
+	engine->engineState.sd.tChargeK = 273.15f + 20;
+	EXPECT_TRUE(dut.getAirmass(3000, 100, false).Valid);
+	EXPECT_GT(dut.getAirflow(3000, 100, false), 0);
+
+	// tCharge not ready -> fail
+	engine->engineState.sd.tChargeK = NAN;
+	EXPECT_FALSE(dut.getAirmass(3000, 100, false).Valid);
+	EXPECT_EQ(0, dut.getAirflow(3000, 100, false));
+
+	// NaN airmass -> fail
+	engine->engineState.sd.tChargeK = 273.15f + 20;
+	EXPECT_CALL(veTable, getValue(_, _)).WillRepeatedly(Return(NAN));
+	EXPECT_FALSE(dut.getAirmass(3000, 100, false).Valid);
+	EXPECT_EQ(0, dut.getAirflow(3000, 100, false));
 }
 
 TEST(AirmassModes, VeOverride) {
