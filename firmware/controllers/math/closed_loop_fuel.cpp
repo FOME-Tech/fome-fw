@@ -10,7 +10,6 @@ struct FuelingBank {
 
 static FuelingBank banks[STFT_BANK_COUNT];
 
-static Deadband<25> idleDeadband;
 static Deadband<2> overrunDeadband;
 static Deadband<2> loadDeadband;
 
@@ -29,8 +28,8 @@ static SensorType getSensorForBankIndex(size_t index) {
 	}
 }
 
-size_t computeStftBin(float rpm, float load, stft_s& cfg) {
-	// Low RPM -> idle
+size_t computeStftBin(float load, stft_s& cfg) {
+	// Idle controller says we're idling -> idle
 	if (engine->module<IdleController>()->isIdlingOrTaper()) {
 		return 0;
 	}
@@ -112,7 +111,7 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		return {};
 	}
 
-	size_t binIdx = computeStftBin(Sensor::getOrZero(SensorType::Rpm), getFuelingLoad(), engineConfiguration->stft);
+	size_t binIdx = computeStftBin(getFuelingLoad(), engineConfiguration->stft);
 
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.fuelClosedLoopBinIdx = binIdx;
