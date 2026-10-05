@@ -427,6 +427,18 @@ constexpr inline const char* getGppwm_channel_e(gppwm_channel_e value) {
 			return "GPPWM_LuaGauge1";
 		case GPPWM_LuaGauge2:
 			return "GPPWM_LuaGauge2";
+		case GPPWM_LuaGauge3:
+			return "GPPWM_LuaGauge3";
+		case GPPWM_LuaGauge4:
+			return "GPPWM_LuaGauge4";
+		case GPPWM_LuaGauge5:
+			return "GPPWM_LuaGauge5";
+		case GPPWM_LuaGauge6:
+			return "GPPWM_LuaGauge6";
+		case GPPWM_LuaGauge7:
+			return "GPPWM_LuaGauge7";
+		case GPPWM_LuaGauge8:
+			return "GPPWM_LuaGauge8";
 		case GPPWM_Map:
 			return "GPPWM_Map";
 		case GPPWM_OilPressure:
