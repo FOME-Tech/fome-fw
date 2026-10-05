@@ -6,6 +6,8 @@
  */
 #pragma once
 
+#include <cstddef>
+
 #include "rusefi_generated.h"
 
 class Logging;
