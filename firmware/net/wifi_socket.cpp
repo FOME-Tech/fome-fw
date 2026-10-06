@@ -428,7 +428,7 @@ private:
 			return false;
 		}
 
-		// Disable power save to prevent the AP from freezing after long periods of inactivity
+		// Disable power save to prevent the AP from freezing or dropping out after periods of inactivity
 		m2m_wifi_set_sleep_mode(M2M_NO_PS, 1);
 
 #ifdef WIFI_OFFSET_MAC

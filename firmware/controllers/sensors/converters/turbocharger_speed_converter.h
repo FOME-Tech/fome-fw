@@ -2,7 +2,6 @@
  *	Frequency to RPM converter for turbocharger pin
  */
 
-#include "pch.h"
 #include "sensor_converter_func.h"
 
 class TurbochargerSpeedConverter : public SensorConverter {

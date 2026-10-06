@@ -8,13 +8,10 @@
 
 #pragma once
 
-#include <rusefi/isnan.h>
 #include <math.h>
 #include "datalogging.h"
 #include "obd_error_codes.h"
 #include "error_handling.h"
-
-#include <type_traits>
 
 #define INTERPOLATION_A(x1, y1, x2, y2) ((y1 - y2) / (x1 - x2))
 

@@ -362,7 +362,7 @@ void TriggerWaveform::setTriggerSynchronizationGap3(int gapIndex, float syncRati
 		// we have a special case here - only sync with one gap has this feature
 		this->syncRatioAvg = (int)efiRound((syncRatioFrom + syncRatioTo) * 0.5f, 1.0f);
 	}
-	gapTrackingLength = maxI(1 + gapIndex, gapTrackingLength);
+	gapTrackingLength = std::max(1 + gapIndex, gapTrackingLength);
 
 #if EFI_UNIT_TEST
 	if (printTriggerDebug) {

@@ -35,10 +35,8 @@ static int totalSyncCounter = 0;
 
 // 10 because we want at least 4 character name
 #define MIN_FILE_INDEX 10
-// NOTE: logName is written once during boot (in createLogFile, before the HTTP file server starts).
-// getActiveSdLogFileName() returns a pointer to this buffer and is called from the HTTP server thread.
-// If log rotation is ever added, this must be protected with a mutex or copied atomically.
-static char logName[_MAX_FILLER + 20];
+#define MAX_LOG_PATH_LEN 80
+static char logName[MAX_LOG_PATH_LEN];
 
 // This is the window of log data lost on a power cut: the bytes are already on the card, but
 // the directory entry that gives the file its length is only up to date as of the last sync.
@@ -111,13 +109,41 @@ err:
 	return logFileIndex;
 }
 
+static bool ensureDirectoryPath(char* path) {
+	char* slash = path;
+	while ((slash = strchr(slash, '/')) != nullptr) {
+		if (slash != path) {
+			*slash = '\0';
+			FRESULT res = f_mkdir(path);
+			*slash = '/';
+			if (res != FR_OK && res != FR_EXIST) {
+				printFatFsError("f_mkdir failed", res);
+				return false;
+			}
+		}
+		slash++;
+	}
+	return true;
+}
+
 static void prepareLogFileName(int index) {
-	strcpy(logName, FOME_LOG_PREFIX);
+	char stamp[SHORT_TIME_LEN + 1];
 	char* ptr;
 
-	if (dateToStringShort(&logName[PREFIX_LEN])) {
-		ptr = &logName[PREFIX_LEN + SHORT_TIME_LEN];
+	if (dateToStringShort(stamp)) {
+		// stamp is YYMMDD_HHMMSS, valid years are 2016-2030, so the folders are 20YY/MM/DD
+		snprintf(
+				logName,
+				sizeof(logName),
+				"20%.2s/%.2s/%.2s/" FOME_LOG_PREFIX "%s",
+				&stamp[0],
+				&stamp[2],
+				&stamp[4],
+				stamp);
+		ptr = &logName[strlen(logName)];
 	} else {
+		// No valid RTC: sequential index in the root directory
+		strcpy(logName, FOME_LOG_PREFIX);
 		ptr = itoa10(&logName[PREFIX_LEN], index);
 	}
 
@@ -136,6 +162,16 @@ static void prepareLogFileName(int index) {
  */
 static bool createLogFile(int logFileIndex) {
 	prepareLogFileName(logFileIndex);
+
+	if (strchr(logName, '/') != nullptr) {
+		if (!ensureDirectoryPath(logName)) {
+			efiPrintf("SD: failed to create date directories, logging to root");
+			const char* lastSlash = strrchr(logName, '/');
+			if (lastSlash) {
+				memmove(logName, lastSlash + 1, strlen(lastSlash + 1) + 1);
+			}
+		}
+	}
 
 	// Print before the open, not after it. f_open() with FA_CREATE_ALWAYS scans the directory and
 	// frees any existing cluster chain, so it's a card operation that can block for a long time -

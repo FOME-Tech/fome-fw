@@ -2,8 +2,6 @@
 
 #include "shutdown_controller.h"
 
-#include <cstdint>
-
 // Keep this list in sync with fuelIgnCutCodeList in tunerstudio.template.ini!
 enum class ClearReason : uint8_t {
 	None = 0,
@@ -134,7 +132,7 @@ public:
 private:
 	bool isHardRevLimit(float rpm);
 
-	void setFaultRevLimit(int limit);
+	void setFaultRevLimit(uint32_t limit);
 
 	void updateCutsHarleyAcr(Clearable& allowFuel);
 	void updateCutsHardRevLimit(float rpm, Clearable& allowFuel, Clearable& allowSpark);
@@ -151,7 +149,7 @@ private:
 	float m_hardRevLimit = 0;
 
 	// Start with no fault rev limit
-	int32_t m_faultRevLimit = INT32_MAX;
+	uint32_t m_faultRevLimit = UINT32_MAX;
 
 	Clearable m_allowEtb;
 	Clearable m_allowInjection;

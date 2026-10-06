@@ -10,7 +10,6 @@ public:
 	// Get the current adjustment amount, without altering internal state.
 	float getAdjustment() const;
 
-protected:
 	// Helpers - virtual for mocking
 	virtual float getLambdaError() const = 0;
 	virtual float getMaxAdjustment() const = 0;
@@ -28,18 +27,17 @@ struct stft_cell_cfg_s;
 
 class ClosedLoopFuelCellImpl final : public ClosedLoopFuelCellBase {
 public:
-	void configure(const stft_cell_cfg_s* configuration, SensorType lambdaSensor) {
-		m_config = configuration;
+	void configure(const stft_cell_cfg_s& configuration, SensorType lambdaSensor) {
+		m_config = &configuration;
 		m_lambdaSensor = lambdaSensor;
 	}
 
-private:
-	const stft_cell_cfg_s* m_config = nullptr;
-	SensorType m_lambdaSensor = SensorType::Invalid;
-
-protected:
 	float getLambdaError() const override;
 	float getMaxAdjustment() const override;
 	float getMinAdjustment() const override;
 	float getIntegratorGain() const override;
+
+private:
+	const stft_cell_cfg_s* m_config = nullptr;
+	SensorType m_lambdaSensor = SensorType::Invalid;
 };

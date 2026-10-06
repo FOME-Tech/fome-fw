@@ -54,7 +54,7 @@ TEST(AirmassModes, AlphaNNormal) {
 	// Mass of 1 liter of air * VE
 	mass_t expectedAirmass = 1.2047f * 0.35f;
 
-	auto result = dut.getAirmass(1200, false);
+	auto result = dut.getAirmass(1200, false).value_or({});
 	EXPECT_NEAR(result.CylinderAirmass, expectedAirmass, EPS4D);
 	EXPECT_NEAR(result.EngineLoadPercent, 0.71f, EPS4D);
 }
@@ -77,19 +77,19 @@ TEST(AirmassModes, AlphaNUseIat) {
 	// Mass of 1 liter of air * VE
 	mass_t expectedAirmass = 1.2047f * 0.35f;
 
-	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmass, EPS4D);
+	EXPECT_NEAR(dut.getAirmass(1200, false).value_or({}).CylinderAirmass, expectedAirmass, EPS4D);
 
 	engineConfiguration->alphaNUseIat = true;
 
 	// Cold we get more airmass
 	float expectedAirmassCold = expectedAirmass * (273.0f + 20) / (273.0f + 0);
 	Sensor::setMockValue(SensorType::Iat, 0);
-	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassCold, EPS4D);
+	EXPECT_NEAR(dut.getAirmass(1200, false).value_or({}).CylinderAirmass, expectedAirmassCold, EPS4D);
 
 	// Hot we get less airmass
 	float expectedAirmassHot = expectedAirmass * (273.0f + 20) / (273.0f + 40);
 	Sensor::setMockValue(SensorType::Iat, 40);
-	EXPECT_NEAR(dut.getAirmass(1200, false).CylinderAirmass, expectedAirmassHot, EPS4D);
+	EXPECT_NEAR(dut.getAirmass(1200, false).value_or({}).CylinderAirmass, expectedAirmassHot, EPS4D);
 }
 
 TEST(AirmassModes, AlphaNFailedTps) {
@@ -106,7 +106,7 @@ TEST(AirmassModes, AlphaNFailedTps) {
 	ASSERT_FALSE(Sensor::get(SensorType::Tps1).Valid);
 
 	auto result = dut.getAirmass(1200, false);
-	EXPECT_EQ(result.CylinderAirmass, 0);
+	EXPECT_FALSE(result.Valid);
 }
 
 TEST(AirmassModes, MafNormal) {
@@ -114,17 +114,116 @@ TEST(AirmassModes, MafNormal) {
 	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
 	engineConfiguration->injector.flow = 200;
 
-	MockVp3d veTable;
-	// Ensure that the correct cell is read from the VE table
-	EXPECT_CALL(veTable, getValue(6000, FloatNear(70.9814f, EPS4D))).WillOnce(Return(75.0f));
-
+	// MAF uses its own trim table, the VE table should never be read
+	StrictMock<MockVp3d> veTable;
 	MafAirmass dut(&veTable);
 
-	auto airmass = dut.getAirmassImpl(200, 6000, false);
+	// Default trim table is all 100%, aka no correction
+	{
+		auto airmass = dut.getAirmassImpl(200, 6000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(0.277777f, airmass.Value.CylinderAirmass, EPS4D);
+		EXPECT_NEAR(70.9814f, airmass.Value.EngineLoadPercent, EPS4D);
+	}
 
-	// Check results
-	EXPECT_NEAR(0.277777f * 0.75f, airmass.CylinderAirmass, EPS4D);
-	EXPECT_NEAR(70.9814f, airmass.EngineLoadPercent, EPS4D);
+	// Trim table that varies differently along each axis, to check that the correct cell is read
+	setLinearCurve(config->mafTrimLoadBins, 0, 140, 1);	   // 0, 20, 40 ... 140
+	setLinearCurve(config->mafTrimRpmBins, 1000, 8000, 1); // 1000, 2000, 3000 ... 8000
+	for (size_t loadIdx = 0; loadIdx < efi::size(config->mafTrimLoadBins); loadIdx++) {
+		for (size_t rpmIdx = 0; rpmIdx < efi::size(config->mafTrimRpmBins); rpmIdx++) {
+			config->mafTrimTable[loadIdx][rpmIdx] = 50 + 5 * loadIdx + 10 * rpmIdx;
+		}
+	}
+
+	{
+		auto airmass = dut.getAirmassImpl(200, 6000);
+		ASSERT_TRUE(airmass.Valid);
+
+		// Load 70.98 is load index 3.549, 6000 RPM is RPM index 5
+		float expectedTrim = (50 + 5 * (70.9814f / 20) + 10 * 5) / 100;
+		EXPECT_NEAR(0.277777f * expectedTrim, airmass.Value.CylinderAirmass, EPS4D);
+
+		// Trim doesn't affect load
+		EXPECT_NEAR(70.9814f, airmass.Value.EngineLoadPercent, EPS4D);
+	}
+}
+
+TEST(AirmassModes, MafFailed) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+
+	MafAirmass dut;
+
+	ASSERT_FALSE(Sensor::hasSensor(SensorType::Maf2));
+
+	// Working MAF
+	Sensor::setMockValue(SensorType::Maf, 200);
+	EXPECT_TRUE(dut.getAirmass(6000, false).Valid);
+
+	// Engine stopped -> fail
+	EXPECT_FALSE(dut.getAirmass(0, false).Valid);
+
+	// Dead MAF -> fail
+	Sensor::setInvalidMockValue(SensorType::Maf);
+	EXPECT_FALSE(dut.getAirmass(6000, false).Valid);
+}
+
+TEST(AirmassModes, MafDual) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+
+	MafAirmass dut;
+
+	// Each case should total 200kg/h, same as MafNormal
+	auto checkValid = [&]() {
+		auto airmass = dut.getAirmass(6000, false);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(0.277777f, airmass.Value.CylinderAirmass, EPS4D);
+	};
+
+	// Both working -> sum
+	Sensor::setMockValue(SensorType::Maf, 100);
+	Sensor::setMockValue(SensorType::Maf2, 100);
+	checkValid();
+
+	// MAF 2 dead -> double MAF 1
+	Sensor::setInvalidMockValue(SensorType::Maf2);
+	checkValid();
+
+	// MAF 1 dead -> double MAF 2
+	Sensor::setInvalidMockValue(SensorType::Maf);
+	Sensor::setMockValue(SensorType::Maf2, 100);
+	checkValid();
+
+	// Both dead -> fail
+	Sensor::setInvalidMockValue(SensorType::Maf2);
+	EXPECT_FALSE(dut.getAirmass(6000, false).Valid);
+}
+
+TEST(AirmassModes, SpeedDensityFailed) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	MockVp3d veTable;
+	StrictMock<MockVp3d> mapFallback;
+	SpeedDensityAirmass dut(&veTable, mapFallback);
+
+	EXPECT_CALL(veTable, getValue(_, _)).WillRepeatedly(Return(80.0f));
+
+	// Working case
+	engine->engineState.sd.tChargeK = 273.15f + 20;
+	EXPECT_TRUE(dut.getAirmass(3000, 100, false).Valid);
+	EXPECT_GT(dut.getAirflow(3000, 100, false), 0);
+
+	// tCharge not ready -> fail
+	engine->engineState.sd.tChargeK = NAN;
+	EXPECT_FALSE(dut.getAirmass(3000, 100, false).Valid);
+	EXPECT_EQ(0, dut.getAirflow(3000, 100, false));
+
+	// NaN airmass -> fail
+	engine->engineState.sd.tChargeK = 273.15f + 20;
+	EXPECT_CALL(veTable, getValue(_, _)).WillRepeatedly(Return(NAN));
+	EXPECT_FALSE(dut.getAirmass(3000, 100, false).Valid);
+	EXPECT_EQ(0, dut.getAirflow(3000, 100, false));
 }
 
 TEST(AirmassModes, VeOverride) {
@@ -143,11 +242,11 @@ TEST(AirmassModes, VeOverride) {
 		DummyAirmassModel(const ValueProvider3D* veTable)
 			: AirmassVeModelBase(veTable) {}
 
-		AirmassResult getAirmass(float rpm, bool postState) override {
+		expected<AirmassResult> getAirmass(float rpm, bool postState) override {
 			// Default load value 10, will be overriden
-			getVe(rpm, 10.0f, postState);
+			getVe(rpm, 10.0f, postState, VeTableType::SpeedDensity);
 
-			return {};
+			return AirmassResult{};
 		}
 	};
 
@@ -369,26 +468,100 @@ TEST(FuelMath, IdleVeTable) {
 
 	// Gets normal VE table
 	idler.isIdling = false;
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.5f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f);
 
 	// Gets idle VE table
 	idler.isIdling = true;
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.4f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.4f);
 
 	// Below half threshold, fully use idle VE table
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.4f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.4f);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 2);
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.4f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.4f);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 5);
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.4f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.4f);
 
 	// As TPS approaches idle threshold, phase-out the idle VE table
 
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 6);
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.42f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.42f);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 8);
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.46f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.46f);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 10);
-	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false), 0.5f);
+	EXPECT_FLOAT_EQ(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f);
+}
+
+static void setupVeBlend(blend_table_s& blend, VeTableType consumer, float bias) {
+	blend.blendParameter = GPPWM_Clt;
+	blend.yAxisOverride = GPPWM_Zero;
+	blend.veTableSelect = consumer;
+
+	setLinearCurve(blend.loadBins, 0, 140, 1);
+	setLinearCurve(blend.rpmBins, 1000, 8000, 1);
+	setTable(blend.table, bias);
+
+	// Blend percent equals CLT, from 0 to 70
+	setLinearCurve(blend.blendBins, 0, 70, 1);
+	setLinearCurve(blend.blendValues, 0, 70, 1);
+}
+
+TEST(FuelMath, VeBlends) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	MockAirmass dut;
+
+	// Main VE table returns 50
+	EXPECT_CALL(dut.veTable, getValue(_, _)).WillRepeatedly(Return(50));
+
+	engineConfiguration->veOverrideMode = VE_None;
+	engineConfiguration->useSeparateVeForIdle = false;
+
+	for (auto& blend : config->veBlends) {
+		blend.blendParameter = GPPWM_Zero;
+	}
+
+	Sensor::setMockValue(SensorType::Clt, 50);
+
+	// No blends enabled, plain VE
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Blend 1 adds 10% to speed density, blend 2 removes 20% from alpha-N
+	setupVeBlend(config->veBlends[0], VeTableType::SpeedDensity, 10);
+	setupVeBlend(config->veBlends[1], VeTableType::AlphaN, -20);
+
+	// CLT 50 -> 50% blend, so +5% for SD and -10% for alpha-N
+	EXPECT_NEAR(dut.getVe(1000, 50, true, VeTableType::SpeedDensity), 0.5f * 1.05f, EPS4D);
+	EXPECT_NEAR(engine->engineState.currentVe, 50 * 1.05f, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendParameter[0], 50, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendBias[0], 50, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendOutput[0], 5, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendYAxis[0], 50, EPS2D);
+
+	EXPECT_NEAR(dut.getVe(1000, 50, true, VeTableType::AlphaN), 0.5f * 0.9f, EPS4D);
+	EXPECT_NEAR(engine->engineState.currentVe, 50 * 0.9f, EPS2D);
+	EXPECT_NEAR(engine->outputChannels.veBlendOutput[1], -10, EPS2D);
+
+	// CLT 0 -> 0% blend, no effect
+	Sensor::setMockValue(SensorType::Clt, 0);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Dead blend parameter sensor -> no effect
+	Sensor::setInvalidMockValue(SensorType::Clt);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Both blends applied to speed density: they stack multiplicatively, alpha-N gets neither
+	Sensor::setMockValue(SensorType::Clt, 50);
+	config->veBlends[1].veTableSelect = VeTableType::SpeedDensity;
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f * 1.05f * 0.9f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f, EPS4D);
+
+	// Both blends applied to alpha-N
+	config->veBlends[0].veTableSelect = VeTableType::AlphaN;
+	config->veBlends[1].veTableSelect = VeTableType::AlphaN;
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::SpeedDensity), 0.5f, EPS4D);
+	EXPECT_NEAR(dut.getVe(1000, 50, false, VeTableType::AlphaN), 0.5f * 1.05f * 0.9f, EPS4D);
 }

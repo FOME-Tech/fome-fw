@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstddef>
-
 struct AdcProvider {
 	static float getVoltage(adc_channel_e channel);
 	static bool acquire(adc_channel_e channel);
