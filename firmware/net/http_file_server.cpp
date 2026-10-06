@@ -271,47 +271,7 @@ static bool strEqualCi(const char* s1, const char* s2) {
 	return *s1 == *s2;
 }
 
-static bool isFileActiveLog(const char* dirPath, const char* fileName) {
-	const char* active = getActiveSdLogFileName();
-	if (!active || active[0] == '\0') {
-		return false;
-	}
 
-	// 1. Direct filename comparison
-	if (fileName && strEqualCi(fileName, active)) {
-		return true;
-	}
-
-	// 2. Active log name might have directory prefix (e.g. "2026/10/01/fome_001.mlg")
-	const char* activeBase = strrchr(active, '/');
-	if (activeBase) {
-		activeBase++;
-	} else {
-		activeBase = active;
-	}
-
-	if (fileName && strEqualCi(fileName, activeBase)) {
-		return true;
-	}
-
-	// 3. Full path comparison
-	if (dirPath) {
-		char fullBuf[128];
-		if (strcmp(dirPath, "/") == 0) {
-			snprintf(fullBuf, sizeof(fullBuf), "%s", fileName ? fileName : "");
-		} else {
-			const char* dp = (dirPath[0] == '/') ? dirPath + 1 : dirPath;
-			snprintf(fullBuf, sizeof(fullBuf), "%s/%s", dp, fileName ? fileName : "");
-		}
-
-		const char* act = (active[0] == '/') ? active + 1 : active;
-		if (strEqualCi(fullBuf, act)) {
-			return true;
-		}
-	}
-
-	return false;
-}
 
 // Check if a filename appears in a comma-separated filter list.
 // If filter is null, all files are included ("download all" mode).
@@ -335,6 +295,100 @@ static bool isNameSelected(const char* name, const char* filter) {
 	return false;
 }
 
+static void addFileToZip(BufferedSender& sender, const char* fullPath, const char* zipPath, FILINFO& fno, uint32_t& streamOffset, uint16_t& fileCount) {
+	if (fileCount >= MAX_ZIP_FILES) return;
+
+	FIL* file = dma_buffers::httpFileFd();
+	uint8_t* ioBuf = dma_buffers::httpFileIoBuffer();
+	memset(file, 0, sizeof(FIL));
+	if (f_open(file, fullPath, FA_READ) != FR_OK) {
+		return;
+	}
+
+	uint16_t nameLen = strlen(zipPath);
+
+	// Record metadata for writing the Central Directory at the end
+	strncpy(zipRecords[fileCount].name, zipPath, sizeof(zipRecords[fileCount].name) - 1);
+	zipRecords[fileCount].name[sizeof(zipRecords[fileCount].name) - 1] = '\0';
+	zipRecords[fileCount].size = fno.fsize;
+	zipRecords[fileCount].offset = streamOffset;
+	zipRecords[fileCount].time = fno.ftime;
+	zipRecords[fileCount].date = fno.fdate;
+
+	// 1. Send Local File Header
+	ZipLocalHeader lh;
+	lh.name_length = nameLen;
+	lh.mod_time = fno.ftime;
+	lh.mod_date = fno.fdate;
+
+	sendChunk(sender, &lh, sizeof(lh));
+	sendChunk(sender, zipPath, nameLen);
+	streamOffset += sizeof(lh) + nameLen;
+
+	// 2. Stream file content and compute CRC32
+	uint32_t crc = 0;
+	UINT bytesRead = 0;
+	while (sender.hasConnectedSocket()) {
+		if (f_read(file, ioBuf, dma_buffers::HTTP_FILE_IO_BUFFER_SIZE, &bytesRead) != FR_OK || bytesRead == 0) {
+			break;
+		}
+		crc = crc32inc(ioBuf, crc, bytesRead);
+		sendChunk(sender, ioBuf, bytesRead);
+		streamOffset += bytesRead;
+	}
+	f_close(file);
+	zipRecords[fileCount].crc = crc;
+
+	// 3. Send Data Descriptor
+	ZipDataDescriptor dd;
+	dd.crc32 = crc;
+	dd.comp_size = fno.fsize;
+	dd.uncomp_size = fno.fsize;
+
+	sendChunk(sender, &dd, sizeof(dd));
+	streamOffset += sizeof(dd);
+
+	fileCount++;
+}
+
+static void addDirectoryToZip(BufferedSender& sender, const char* dirPath, const char* zipPrefix, const char* nameFilter, uint32_t& streamOffset, uint16_t& fileCount) {
+	DIR dir;
+	if (f_opendir(&dir, dirPath) != FR_OK) return;
+
+	FILINFO fno;
+	while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0 && fileCount < MAX_ZIP_FILES) {
+		if (fno.fname[0] == '.' || strEqualCi(fno.fname, "System Volume Information")) {
+			continue;
+		}
+
+		bool selected = isNameSelected(fno.fname, nameFilter);
+		if (!selected && nameFilter != nullptr) {
+			continue;
+		}
+
+		char fullPath[128];
+		if (strcmp(dirPath, "/") == 0) {
+			snprintf(fullPath, sizeof(fullPath), "/%s", fno.fname);
+		} else {
+			snprintf(fullPath, sizeof(fullPath), "%s/%s", dirPath, fno.fname);
+		}
+
+		char zipPath[128];
+		if (zipPrefix && zipPrefix[0] != '\0') {
+			snprintf(zipPath, sizeof(zipPath), "%s/%s", zipPrefix, fno.fname);
+		} else {
+			snprintf(zipPath, sizeof(zipPath), "%s", fno.fname);
+		}
+
+		if (fno.fattrib & AM_DIR) {
+			addDirectoryToZip(sender, fullPath, zipPath, nullptr, streamOffset, fileCount);
+		} else {
+			addFileToZip(sender, fullPath, zipPath, fno, streamOffset, fileCount);
+		}
+	}
+	f_closedir(&dir);
+}
+
 static void streamDirectoryAsZip(BufferedSender& sender, const char* dirPath, const char* nameFilter) {
 	DIR dir;
 	FRESULT res = f_opendir(&dir, dirPath);
@@ -342,6 +396,7 @@ static void streamDirectoryAsZip(BufferedSender& sender, const char* dirPath, co
 		sendHttpError(sender, 404, "Directory Not Found");
 		return;
 	}
+	f_closedir(&dir);
 
 	// Create a friendly zip filename from path, e.g. /2026/09/29 -> logs_2026_09_29.zip
 	char zipName[64];
@@ -373,82 +428,8 @@ static void streamDirectoryAsZip(BufferedSender& sender, const char* dirPath, co
 
 	uint32_t streamOffset = 0;
 	uint16_t fileCount = 0;
-	FILINFO fno;
 
-	while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0 && fileCount < MAX_ZIP_FILES) {
-		if (fno.fname[0] == '.' || (fno.fattrib & AM_DIR)) {
-			continue;
-		}
-
-		if (isFileActiveLog(dirPath, fno.fname)) {
-			continue;
-		}
-
-		if (!isNameSelected(fno.fname, nameFilter)) {
-			continue;
-		}
-
-		char fullPath[128];
-		if (strcmp(dirPath, "/") == 0) {
-			snprintf(fullPath, sizeof(fullPath), "/%s", fno.fname);
-		} else {
-			snprintf(fullPath, sizeof(fullPath), "%s/%s", dirPath, fno.fname);
-		}
-
-		FIL* file = dma_buffers::httpFileFd();
-		uint8_t* ioBuf = dma_buffers::httpFileIoBuffer();
-		memset(file, 0, sizeof(FIL));
-		if (f_open(file, fullPath, FA_READ) != FR_OK) {
-			continue;
-		}
-
-		uint16_t nameLen = strlen(fno.fname);
-
-		// Record metadata for writing the Central Directory at the end
-		strncpy(zipRecords[fileCount].name, fno.fname, sizeof(zipRecords[fileCount].name) - 1);
-		zipRecords[fileCount].name[sizeof(zipRecords[fileCount].name) - 1] = '\0';
-		zipRecords[fileCount].size = fno.fsize;
-		zipRecords[fileCount].offset = streamOffset;
-		zipRecords[fileCount].time = fno.ftime;
-		zipRecords[fileCount].date = fno.fdate;
-
-		// 1. Send Local File Header
-		ZipLocalHeader lh;
-		lh.name_length = nameLen;
-		lh.mod_time = fno.ftime;
-		lh.mod_date = fno.fdate;
-
-		sendChunk(sender, &lh, sizeof(lh));
-		sendChunk(sender, fno.fname, nameLen);
-		streamOffset += sizeof(lh) + nameLen;
-
-		// 2. Stream file content and compute CRC32
-		uint32_t crc = 0;
-		UINT bytesRead = 0;
-		while (sender.hasConnectedSocket()) {
-			if (f_read(file, ioBuf, dma_buffers::HTTP_FILE_IO_BUFFER_SIZE, &bytesRead) != FR_OK || bytesRead == 0) {
-				break;
-			}
-			crc = crc32inc(ioBuf, crc, bytesRead);
-			sendChunk(sender, ioBuf, bytesRead);
-			streamOffset += bytesRead;
-		}
-		f_close(file);
-		zipRecords[fileCount].crc = crc;
-
-		// 3. Send Data Descriptor
-		ZipDataDescriptor dd;
-		dd.crc32 = crc;
-		dd.comp_size = fno.fsize;
-		dd.uncomp_size = fno.fsize;
-
-		sendChunk(sender, &dd, sizeof(dd));
-		streamOffset += sizeof(dd);
-
-		fileCount++;
-	}
-
-	f_closedir(&dir);
+	addDirectoryToZip(sender, dirPath, "", nameFilter, streamOffset, fileCount);
 
 	// 4. Send Central Directory
 	uint32_t cdStart = streamOffset;
@@ -491,8 +472,9 @@ static void handleDirectoryListing(BufferedSender& sender, const char* path) {
 <title>FOME SD Logs</title>
 <style>
 body { font-family: system-ui, -apple-system, sans-serif; background: #18181b; color: #f4f4f5; margin: 0; padding: 20px; line-height: 1.5; }
-.card { max-width: 850px; margin: 0 auto; background: #27272a; border-radius: 10px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+.card { max-width: 850px; margin: 0 auto; background: #27272a; border-radius: 10px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
 h1 { font-size: 1.5rem; margin: 0 0 16px; color: #38bdf8; border-bottom: 1px solid #3f3f46; padding-bottom: 12px; }
+.disclaimer { background: #3f3f46; color: #facc15; padding: 10px; border-radius: 6px; margin-bottom: 16px; font-weight: 500; font-size: 0.9rem; }
 a { color: #60a5fa; text-decoration: none; }
 a:hover { text-decoration: underline; }
 .btn { display: inline-block; padding: 8px 16px; background: #2563eb; color: #fff; border-radius: 6px; font-weight: 600; margin: 4px 4px 4px 0; transition: 0.2s; cursor: pointer; border: none; font-size: 0.9rem; }
@@ -538,8 +520,12 @@ setInterval(function() { fetch('/ping').catch(function(){}) }, 15000);
 			"Connection: close\r\n\r\n");
 	sendString(sender, HTML_HEADER);
 
+	if (isSdCardLogging()) {
+		sendString(sender, "<div class='disclaimer'>\xe2\x9a\xa0\xef\xb8\x8f Logging is in progress. The currently logged file is not displayed.</div>");
+	}
+
 	char titleBuf[128];
-	snprintf(titleBuf, sizeof(titleBuf), "<h1>\xf0\x9f\x93\x81 Index of %s</h1>", path);
+	snprintf(titleBuf, sizeof(titleBuf), "<h1>\xf0\x9f\x93\x81 FOME SD Card %s</h1>", path);
 	sendString(sender, titleBuf);
 
 	// Action buttons
@@ -569,7 +555,7 @@ setInterval(function() { fetch('/ping').catch(function(){}) }, 15000);
 	char sizeBuf[32];
 
 	while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0) {
-		if (fno.fname[0] == '.') {
+		if (fno.fname[0] == '.' || strEqualCi(fno.fname, "System Volume Information")) {
 			continue;
 		}
 
@@ -585,29 +571,16 @@ setInterval(function() { fetch('/ping').catch(function(){}) }, 15000);
 					fno.fname);
 		} else {
 			formatSize(sizeBuf, sizeof(sizeBuf), fno.fsize);
-			if (isFileActiveLog(path, fno.fname)) {
-				snprintf(
-						rowBuf,
-						sizeof(rowBuf),
-						"<tr style='color:#a1a1aa'><td></td>"
-						"<td>\xe2\x8f\xba\xef\xb8\x8f %s <span "
-						"style='color:#38bdf8;font-size:0.85em;font-weight:600'>[Recording - In "
-						"Progress]</span></td><td "
-						"class='size'>%s</td></tr>",
-						fno.fname,
-						sizeBuf);
-			} else {
-				snprintf(
-						rowBuf,
-						sizeof(rowBuf),
-						"<tr><td><input type='checkbox' class='sel' value='%s'></td>"
-						"<td><a href='%s'>\xf0\x9f\x93\x84 %s</a></td>"
-						"<td class='size'>%s</td></tr>",
-						fno.fname,
-						fno.fname,
-						fno.fname,
-						sizeBuf);
-			}
+			snprintf(
+					rowBuf,
+					sizeof(rowBuf),
+					"<tr><td><input type='checkbox' class='sel' value='%s'></td>"
+					"<td><a href='%s'>\xf0\x9f\x93\x84 %s</a></td>"
+					"<td class='size'>%s</td></tr>",
+					fno.fname,
+					fno.fname,
+					fno.fname,
+					sizeBuf);
 		}
 		sendString(sender, rowBuf);
 	}
