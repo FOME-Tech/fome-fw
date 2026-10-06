@@ -271,8 +271,6 @@ static bool strEqualCi(const char* s1, const char* s2) {
 	return *s1 == *s2;
 }
 
-
-
 // Check if a filename appears in a comma-separated filter list.
 // If filter is null, all files are included ("download all" mode).
 static bool isNameSelected(const char* name, const char* filter) {
@@ -295,8 +293,16 @@ static bool isNameSelected(const char* name, const char* filter) {
 	return false;
 }
 
-static void addFileToZip(BufferedSender& sender, const char* fullPath, const char* zipPath, FILINFO& fno, uint32_t& streamOffset, uint16_t& fileCount) {
-	if (fileCount >= MAX_ZIP_FILES) return;
+static void addFileToZip(
+		BufferedSender& sender,
+		const char* fullPath,
+		const char* zipPath,
+		FILINFO& fno,
+		uint32_t& streamOffset,
+		uint16_t& fileCount) {
+	if (fileCount >= MAX_ZIP_FILES) {
+		return;
+	}
 
 	FIL* file = dma_buffers::httpFileFd();
 	uint8_t* ioBuf = dma_buffers::httpFileIoBuffer();
@@ -351,9 +357,17 @@ static void addFileToZip(BufferedSender& sender, const char* fullPath, const cha
 	fileCount++;
 }
 
-static void addDirectoryToZip(BufferedSender& sender, const char* dirPath, const char* zipPrefix, const char* nameFilter, uint32_t& streamOffset, uint16_t& fileCount) {
+static void addDirectoryToZip(
+		BufferedSender& sender,
+		const char* dirPath,
+		const char* zipPrefix,
+		const char* nameFilter,
+		uint32_t& streamOffset,
+		uint16_t& fileCount) {
 	DIR dir;
-	if (f_opendir(&dir, dirPath) != FR_OK) return;
+	if (f_opendir(&dir, dirPath) != FR_OK) {
+		return;
+	}
 
 	FILINFO fno;
 	while (f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0 && fileCount < MAX_ZIP_FILES) {
@@ -521,7 +535,10 @@ setInterval(function() { fetch('/ping').catch(function(){}) }, 15000);
 	sendString(sender, HTML_HEADER);
 
 	if (isSdCardLogging()) {
-		sendString(sender, "<div class='disclaimer'>\xe2\x9a\xa0\xef\xb8\x8f Logging is in progress. The currently logged file is not displayed.</div>");
+		sendString(
+				sender,
+				"<div class='disclaimer'>\xe2\x9a\xa0\xef\xb8\x8f Logging is in progress. The currently logged file is "
+				"not displayed.</div>");
 	}
 
 	char titleBuf[128];
