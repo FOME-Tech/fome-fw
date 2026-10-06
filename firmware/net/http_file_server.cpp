@@ -753,11 +753,6 @@ static void handleClient(ServerSocket& server) {
 			filename = statPath;
 		}
 
-		if (isFileActiveLog(statPath, filename)) {
-			sendHttpError(sender, 403, "Forbidden - File is currently being recorded");
-			return;
-		}
-
 		handleFileDownload(sender, statPath, filename, fno.fsize);
 	}
 }
