@@ -475,6 +475,12 @@ void updateTunerStudioState() {
 	tsOutputChannels->RPMValue = rpm;
 	auto instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	tsOutputChannels->instantRpm = instantRpm;
+	// Expose the rolling measurement used by idle timing feedback.
+	// Keep it distinct from the instantaneous fallback used before a valid cycle.
+	tsOutputChannels->rollingCycleRpm =
+			engineConfiguration->idleTimingUseRollingRpm
+					? engine->rpmCalculator.getRollingCycleRpm().rpm
+					: 0;
 
 	updateSensors();
 	updateFuelInfo();
