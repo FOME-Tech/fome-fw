@@ -426,8 +426,10 @@ TEST(idleTimingRolling, ignitionFeedbackIsIndependentOfAirFeedback) {
 			float feedbackRpm = timingRolling ? rolling.rpm : engine->triggerCentral.instantRpm.getInstantRpm();
 			float feedbackRate = timingRolling ? rolling.rpmRate : engine->rpmCalculator.getRpmAcceleration();
 			engine->ignitionState.updateAdvanceCorrections(50);
-			EXPECT_NEAR(float(engine->ignitionState.timingPidCorrection),
-						0.01f * (1000 - feedbackRpm) - 0.003f * feedbackRate, 0.02);
+			EXPECT_NEAR(
+					float(engine->ignitionState.timingPidCorrection),
+					0.01f * (1000 - feedbackRpm) - 0.003f * feedbackRate,
+					0.02);
 			engine->engineModules.get<IdleTargetController>().set(nullptr);
 		}
 	}
