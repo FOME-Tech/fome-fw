@@ -35,6 +35,7 @@ or
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
 
 ### Added
+ - Rolling cycle RPM feedback now also feeds the closed-loop idle air PID, including its derivative, and is selectable in the Closed Loop Idle panel. The feedback setting is shared with idle ignition timing. Air control uses instantaneous feedback until a complete rolling cycle is valid; changing feedback mode resets both idle PID integrators.
  - Add the `rollingCycleRpm` output channel and "RPM - rolling cycle" gauge for rolling idle timing RPM feedback. The channel reports zero when disabled or until a complete cycle is valid, including after stop or resynchronization.
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
