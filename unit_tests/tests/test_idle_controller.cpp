@@ -727,7 +727,7 @@ TEST(idle_v2, IntegrationClamping) {
 	EXPECT_EQ(100, dut.getIdlePosition(950, 100));
 }
 
-TEST(idle_v2, feedbackModeChangesResetTimingAndIacIntegrators) {
+TEST(idle_v2, feedbackModeChangesResetOnlyTheirOwnIntegrator) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	IdleController dut;
 	engineConfiguration->useIdleTimingPidControl = true;
@@ -737,62 +737,76 @@ TEST(idle_v2, feedbackModeChangesResetTimingAndIacIntegrators) {
 	engineConfiguration->idleTimingPid.maxValue = 10;
 	engineConfiguration->idleRpmPid = engineConfiguration->idleTimingPid;
 	dut.init();
-	for (bool rolling : {true, false}) {
-		for (int i = 0; i < 10; i++) {
-			dut.getIdleTimingAdjustment(900, 0, 1000, ICP::Idling);
-			dut.getClosedLoop(ICP::Idling, 900, 0, 1000);
+	for (bool changeAirMode : {false, true}) {
+		for (bool rolling : {true, false}) {
+			for (int i = 0; i < 10; i++) {
+				dut.getIdleTimingAdjustment(900, 0, 1000, ICP::Idling);
+				dut.getClosedLoop(ICP::Idling, 900, 0, 1000);
+			}
+			auto previous = *engineConfiguration;
+			dut.onConfigurationChange(&previous);
+			EXPECT_GT(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
+			EXPECT_GT(dut.getClosedLoop(ICP::Idling, 1000, 0, 1000), 0);
+			if (changeAirMode) {
+				engineConfiguration->idleAirUseRollingRpm = rolling;
+			} else {
+				engineConfiguration->idleTimingUseRollingRpm = rolling;
+			}
+			dut.onConfigurationChange(&previous);
+			float timingCorrection = dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling);
+			float airCorrection = dut.getClosedLoop(ICP::Idling, 1000, 0, 1000);
+			if (changeAirMode) {
+				EXPECT_GT(timingCorrection, 0);
+				EXPECT_EQ(airCorrection, 0);
+			} else {
+				EXPECT_EQ(timingCorrection, 0);
+				EXPECT_GT(airCorrection, 0);
+			}
 		}
-		EXPECT_GT(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
-		EXPECT_GT(dut.getClosedLoop(ICP::Idling, 1000, 0, 1000), 0);
-		auto previous = *engineConfiguration;
-		dut.onConfigurationChange(&previous);
-		EXPECT_GT(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
-		EXPECT_GT(dut.getClosedLoop(ICP::Idling, 1000, 0, 1000), 0);
-		engineConfiguration->idleTimingUseRollingRpm = rolling;
-		dut.onConfigurationChange(&previous);
-		EXPECT_EQ(dut.getIdleTimingAdjustment(1000, 0, 1000, ICP::Idling), 0);
-		EXPECT_EQ(dut.getClosedLoop(ICP::Idling, 1000, 0, 1000), 0);
 	}
 }
 
 TEST(idle_v2, localRollingFeedbackUsesMatchedRpmAndDerivativeOnlyForClosedLoop) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	engineConfiguration->isIgnitionEnabled = false;
-	engineConfiguration->isInjectionEnabled = false;
-	engineConfiguration->idleMode = IM_AUTO;
-	engineConfiguration->idleTimingUseRollingRpm = true;
-	engineConfiguration->skippedWheelOnCam = true;
-	engineConfiguration->trigger.customTotalToothCount = 24;
-	engineConfiguration->trigger.customSkippedToothCount = 0;
-	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
-	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
-	Sensor::setMockValue(SensorType::Clt, 37);
+	for (bool timingRolling : {false, true}) {
+		EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+		engineConfiguration->idleTimingUseRollingRpm = timingRolling;
+		engineConfiguration->isIgnitionEnabled = false;
+		engineConfiguration->isInjectionEnabled = false;
+		engineConfiguration->idleMode = IM_AUTO;
+		engineConfiguration->idleAirUseRollingRpm = true;
+		engineConfiguration->skippedWheelOnCam = true;
+		engineConfiguration->trigger.customTotalToothCount = 24;
+		engineConfiguration->trigger.customSkippedToothCount = 0;
+		eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
+		Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+		Sensor::setMockValue(SensorType::Clt, 37);
 
-	StrictMock<IntegrationIdleMock> dut;
-	MockIdleTargetController mockTarget;
-	mockIdleTarget(mockTarget, {1000, 1100, 1150}, ICP::Idling, 1);
-	auto checkFeedback = [&](float expectedRpm, float expectedRate) {
-		EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, 37, SensorResult(0), 1)).WillOnce(Return(13));
-		EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedRpm, expectedRate, 1000)).WillOnce(Return(7));
-		EXPECT_EQ(20, dut.getIdlePosition(950, 100));
-	};
+		StrictMock<IntegrationIdleMock> dut;
+		MockIdleTargetController mockTarget;
+		mockIdleTarget(mockTarget, {1000, 1100, 1150}, ICP::Idling, 1);
+		auto checkFeedback = [&](float expectedRpm, float expectedRate) {
+			EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, 37, SensorResult(0), 1)).WillOnce(Return(13));
+			EXPECT_CALL(dut, getClosedLoop(ICP::Idling, expectedRpm, expectedRate, 1000)).WillOnce(Return(7));
+			EXPECT_EQ(20, dut.getIdlePosition(950, 100));
+		};
 
-	// Before one full cycle, air control retains instantaneous feedback.
-	EXPECT_EQ(0, engine->rpmCalculator.getRollingCycleRpm().rpm);
-	checkFeedback(950, 100);
-	for (int i = 0; i < 24 * 4; i++) {
-		eth.smartFireRise(5);
+		// Before one full cycle, air control retains instantaneous feedback.
+		EXPECT_EQ(0, engine->rpmCalculator.getRollingCycleRpm().rpm);
+		checkFeedback(950, 100);
+		for (int i = 0; i < 24 * 4; i++) {
+			eth.smartFireRise(5);
+		}
+		eth.smartFireRise(6.25f);
+		auto rolling = engine->rpmCalculator.getRollingCycleRpm();
+		ASSERT_GT(rolling.rpm, 0);
+		ASSERT_LT(rolling.rpmRate, 0);
+		checkFeedback(rolling.rpm, rolling.rpmRate);
+
+		engineConfiguration->idleAirUseRollingRpm = false;
+		checkFeedback(950, 100);
+		engineConfiguration->idleAirUseRollingRpm = true;
+		engine->rpmCalculator.resetRollingCycleRpm();
+		checkFeedback(950, 100);
+		engine->engineModules.get<IdleTargetController>().set(nullptr);
 	}
-	eth.smartFireRise(6.25f);
-	auto rolling = engine->rpmCalculator.getRollingCycleRpm();
-	ASSERT_GT(rolling.rpm, 0);
-	ASSERT_LT(rolling.rpmRate, 0);
-	checkFeedback(rolling.rpm, rolling.rpmRate);
-
-	engineConfiguration->idleTimingUseRollingRpm = false;
-	checkFeedback(950, 100);
-	engineConfiguration->idleTimingUseRollingRpm = true;
-	engine->rpmCalculator.resetRollingCycleRpm();
-	checkFeedback(950, 100);
-	engine->engineModules.get<IdleTargetController>().set(nullptr);
 }

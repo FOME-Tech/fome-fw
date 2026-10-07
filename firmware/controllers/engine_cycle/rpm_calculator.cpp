@@ -101,7 +101,7 @@ void RpmCalculator::resetRollingCycleRpm() {
 
 #if EFI_SHAFT_POSITION_INPUT
 void RpmCalculator::updateRollingCycleRpm(uint32_t index, const EnginePhaseInfo& phaseInfo) {
-	if (!engineConfiguration->idleTimingUseRollingRpm) {
+	if (!engineConfiguration->idleTimingUseRollingRpm && !engineConfiguration->idleAirUseRollingRpm) {
 		return;
 	}
 	chibios_rt::CriticalSectionLocker csl;
@@ -408,7 +408,7 @@ void rpmShaftPositionCallback(uint32_t trgEventIndex, const EnginePhaseInfo& pha
 	}
 
 	// Consume the previous cycle timestamp before instant RPM overwrites it.
-	if (engineConfiguration->idleTimingUseRollingRpm) {
+	if (engineConfiguration->idleTimingUseRollingRpm || engineConfiguration->idleAirUseRollingRpm) {
 		rpmState.updateRollingCycleRpm(trgEventIndex, phaseInfo);
 	}
 

@@ -386,3 +386,93 @@ TEST(idleTimingRolling, repeatedReadsAndCoincidentEventsPreserveDerivative) {
 	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 1000, 0.01);
 	EXPECT_EQ(rpm.getRollingCycleRpm().rpmRate, 0);
 }
+
+TEST(idleTimingRolling, ignitionFeedbackIsIndependentOfAirFeedback) {
+	for (bool timingRolling : {false, true}) {
+		for (bool airRolling : {false, true}) {
+			SCOPED_TRACE(::testing::Message() << "timing=" << timingRolling << ", air=" << airRolling);
+			EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+			EXPECT_FALSE(engineConfiguration->idleAirUseRollingRpm);
+			configureRollingTrigger(eth);
+			engineConfiguration->idleTimingUseRollingRpm = timingRolling;
+			engineConfiguration->idleAirUseRollingRpm = airRolling;
+			for (int i = 0; i < 24 * 4 + 1; i++) {
+				eth.smartFireRise(5);
+			}
+			eth.smartFireRise(6.25f);
+			auto rolling = engine->rpmCalculator.getRollingCycleRpm();
+			if (timingRolling || airRolling) {
+				ASSERT_GT(rolling.rpm, 0);
+				ASSERT_LT(rolling.rpmRate, 0);
+			} else {
+				EXPECT_EQ(rolling.rpm, 0);
+			}
+			MockIdleTargetController target;
+			IIdleTargetController::Output idle;
+			idle.target = {1000, 1500, 1650};
+			idle.phase = IIdleController::Phase::Idling;
+			EXPECT_CALL(target, getOutput(_)).WillRepeatedly(Return(idle));
+			engine->engineModules.get<IdleTargetController>().set(&target);
+			engineConfiguration->useIdleTimingPidControl = true;
+			engineConfiguration->idleTimingPid = {};
+			engineConfiguration->idleTimingPid.pFactor = 0.01f;
+			engineConfiguration->idleTimingPid.dFactor = 0.003f;
+			engineConfiguration->idleTimingPid.minValue = -30;
+			engineConfiguration->idleTimingPid.maxValue = 30;
+			auto& controller = engine->module<IdleController>().unmock();
+			controller.init();
+			controller.getIdlePosition(1000, 0);
+			engine->rpmCalculator.rpmRate = -100;
+			float feedbackRpm = timingRolling ? rolling.rpm : engine->triggerCentral.instantRpm.getInstantRpm();
+			float feedbackRate = timingRolling ? rolling.rpmRate : engine->rpmCalculator.getRpmAcceleration();
+			engine->ignitionState.updateAdvanceCorrections(50);
+			EXPECT_NEAR(float(engine->ignitionState.timingPidCorrection),
+						0.01f * (1000 - feedbackRpm) - 0.003f * feedbackRate, 0.02);
+			engine->engineModules.get<IdleTargetController>().set(nullptr);
+		}
+	}
+}
+
+TEST(idleTimingRolling, changingOneConsumerPreservesTheOtherRollingWindow) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	configureRollingTrigger(eth);
+	for (int i = 0; i < 24 * 4 + 1; i++) {
+		eth.smartFireRise(5);
+	}
+	auto& rpm = engine->rpmCalculator;
+	auto& controller = engine->module<IdleController>().unmock();
+	auto previous = *engineConfiguration;
+	engineConfiguration->idleAirUseRollingRpm = true;
+	controller.onConfigurationChange(&previous);
+	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 1000, 0.01);
+	previous = *engineConfiguration;
+	engineConfiguration->idleTimingUseRollingRpm = false;
+	controller.onConfigurationChange(&previous);
+	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 1000, 0.01);
+	// Air alone must continue updating the measurement at trigger events.
+	for (int i = 0; i < 24; i++) {
+		eth.smartFireRise(6.25f);
+	}
+	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 800, 0.01);
+	previous = *engineConfiguration;
+	engineConfiguration->idleTimingUseRollingRpm = true;
+	controller.onConfigurationChange(&previous);
+	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 800, 0.01);
+	previous = *engineConfiguration;
+	engineConfiguration->idleAirUseRollingRpm = false;
+	controller.onConfigurationChange(&previous);
+	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 800, 0.01);
+	previous = *engineConfiguration;
+	engineConfiguration->idleTimingUseRollingRpm = false;
+	controller.onConfigurationChange(&previous);
+	EXPECT_EQ(rpm.getRollingCycleRpm().rpm, 0);
+	previous = *engineConfiguration;
+	engineConfiguration->idleAirUseRollingRpm = true;
+	controller.onConfigurationChange(&previous);
+	for (int i = 0; i < 24; i++) {
+		eth.smartFireRise(6.25f);
+		EXPECT_EQ(rpm.getRollingCycleRpm().rpm, 0);
+	}
+	eth.smartFireRise(6.25f);
+	EXPECT_NEAR(rpm.getRollingCycleRpm().rpm, 800, 0.01);
+}

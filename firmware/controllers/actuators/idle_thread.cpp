@@ -331,7 +331,7 @@ float IdleController::getIdlePosition(float rpm, float rpmRate) {
 	if (tps.Valid && idleMode == IM_AUTO) {
 		float feedbackRpm = rpm;
 		float feedbackRate = rpmRate;
-		if (engineConfiguration->idleTimingUseRollingRpm) {
+		if (engineConfiguration->idleAirUseRollingRpm) {
 			auto rolling = engine->rpmCalculator.getRollingCycleRpm();
 			// Keep air control responsive during startup/resync until a full cycle is available.
 			if (rolling.rpm > 0) {
@@ -386,17 +386,23 @@ void IdleController::onConfigurationChange(engine_configuration_s const* previou
 		m_pid.reset();
 	}
 #endif
-	bool modeChanged = !previousConfiguration ||
-					   previousConfiguration->idleTimingUseRollingRpm != engineConfiguration->idleTimingUseRollingRpm;
-	if (modeChanged) {
+	bool timingModeChanged = !previousConfiguration || previousConfiguration->idleTimingUseRollingRpm !=
+															   engineConfiguration->idleTimingUseRollingRpm;
+	bool airModeChanged = !previousConfiguration ||
+						  previousConfiguration->idleAirUseRollingRpm != engineConfiguration->idleAirUseRollingRpm;
+	if (airModeChanged) {
 		m_pid.reset();
 	}
 #if EFI_SHAFT_POSITION_INPUT
-	if (modeChanged) {
+	bool rollingEnabled = engineConfiguration->idleTimingUseRollingRpm || engineConfiguration->idleAirUseRollingRpm;
+	bool rollingWasEnabled = previousConfiguration && (previousConfiguration->idleTimingUseRollingRpm ||
+													   previousConfiguration->idleAirUseRollingRpm);
+	// Preserve the valid window for the other controller when changing just one consumer.
+	if (!previousConfiguration || rollingEnabled != rollingWasEnabled) {
 		engine->rpmCalculator.resetRollingCycleRpm();
 	}
 #endif
-	if (modeChanged || !m_timingPid.isSame(&previousConfiguration->idleTimingPid)) {
+	if (timingModeChanged || !m_timingPid.isSame(&previousConfiguration->idleTimingPid)) {
 		m_timingPid.reset();
 	}
 }

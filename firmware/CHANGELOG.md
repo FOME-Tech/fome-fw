@@ -35,8 +35,8 @@ or
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
 
 ### Added
- - Rolling cycle RPM feedback now also feeds the closed-loop idle air PID, including its derivative, and is selectable in the Closed Loop Idle panel. The feedback setting is shared with idle ignition timing. Air control uses instantaneous feedback until a complete rolling cycle is valid; changing feedback mode resets both idle PID integrators.
- - Add the `rollingCycleRpm` output channel and "RPM - rolling cycle" gauge for rolling idle timing RPM feedback. The channel reports zero when disabled or until a complete cycle is valid, including after stop or resynchronization.
+ - Independently select Instantaneous or Rolling cycle RPM feedback for closed-loop idle air and idle ignition timing in their respective TunerStudio panels. Both default to Instantaneous. Air control uses instantaneous feedback until a complete rolling cycle is valid; changing either mode resets only its own PID integrator and preserves a valid rolling window for the other controller. Users of the former shared setting must select the new air feedback option separately.
+ - Add the `rollingCycleRpm` output channel and "RPM - rolling cycle" gauge for rolling idle air or ignition timing RPM feedback. The channel reports zero when disabled or until a complete cycle is valid, including after stop or resynchronization.
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
@@ -60,7 +60,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
- - Add optional rolling engine-cycle RPM feedback to prevent cyclic speed ripple from biasing idle ignition timing between cylinders. Instantaneous feedback remains the default. Only the idle timing PID uses the rolling measurement; its gains may need retuning.
+ - Add optional rolling engine-cycle RPM feedback to prevent cyclic speed ripple from biasing idle ignition timing between cylinders. Instantaneous feedback remains the default. Idle air and idle timing can select rolling feedback independently; their gains may need retuning.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
