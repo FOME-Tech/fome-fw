@@ -37,7 +37,7 @@ public class ProgramSelector {
 
     public static final boolean IS_WIN = System.getProperty("os.name").toLowerCase().contains("win");
 
-    private static final String HELP = "https://github.com/rusefi/rusefi/wiki/HOWTO-Update-Firmware";
+    private static final String HELP = "https://wiki.fome.tech/Intro-Start-Here/HT-Updating-The-Firmware/";
 
     private final JPanel content = new JPanel(new BorderLayout());
     private final JLabel noHardware = new JLabel("Nothing detected");

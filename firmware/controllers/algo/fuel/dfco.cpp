@@ -11,6 +11,11 @@ bool DfcoController::getState() const {
 		return false;
 	}
 
+	// RPM alone cannot distinguish cranking from running when thresholds overlap.
+	if (!engine->rpmCalculator.isRunning()) {
+		return false;
+	}
+
 	const auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 	const auto clt = Sensor::get(SensorType::Clt);
 	const auto map = Sensor::get(SensorType::Map);

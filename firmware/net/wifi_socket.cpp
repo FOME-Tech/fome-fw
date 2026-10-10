@@ -29,23 +29,21 @@ ServerSocket::ServerSocket() {
 }
 
 void ServerSocket::startListening(const sockaddr_in& addr, int backlog) {
-	m_listenAddr = addr;
+	// Only the WiFi thread may call in to the driver, so stash the address and let it do the bind
+	m_listenPort = addr.sin_port;
+	m_listenAddress = addr.sin_addr.s_addr;
 	m_backlog = backlog;
+	m_listenRequest = true;
 
-	m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
-	if (m_listenerSocket >= 0) {
-		bind(m_listenerSocket, (sockaddr*)&m_listenAddr, sizeof(m_listenAddr));
-	}
+	isrSemaphore.signal();
 }
 
 void ServerSocket::onAccept(int connectedSocket) {
 	noteSocketActivity();
 
-	if (m_connectedSocket != -1) {
-		efiPrintf("WiFi: Rejecting parallel sock %d (active sock %d)", connectedSocket, (int)m_connectedSocket);
-		close(connectedSocket);
-		return;
-	}
+	// A new connection replaces any existing one: the old peer may have vanished without closing
+	// (laptop went to sleep, etc), and if we just forgot about its socket it would never be closed.
+	closeSocketImpl();
 
 	m_connectedSocket = connectedSocket;
 	m_connectedTime = chVTGetSystemTimeX();
@@ -57,11 +55,27 @@ void ServerSocket::onAccept(int connectedSocket) {
 }
 
 bool ServerSocket::closeSocket() {
-	bool wasOpen = m_connectedSocket != -1;
-	if (wasOpen) {
-		m_pendingCloseSocket = m_connectedSocket;
+	if (!hasConnectedSocket()) {
+		return false;
+	}
+
+	// Only the WiFi thread may call in to the driver, so ask it to do the close
+	m_closeRequest = true;
+	isrSemaphore.signal();
+
+	// Wait for the close to happen so the caller sees the socket as closed when we return.
+	// Bounded so that a stuck WiFi thread can't take the caller down with it.
+	for (size_t i = 0; m_closeRequest && i < 1000; i++) {
+		chThdSleepMilliseconds(1);
+	}
+
+	return true;
+}
+
+void ServerSocket::closeSocketImpl() {
+	if (m_connectedSocket != -1) {
+		close(m_connectedSocket);
 		m_connectedSocket = -1;
-		isrSemaphore.signal();
 	}
 
 	{
@@ -72,12 +86,65 @@ bool ServerSocket::closeSocket() {
 		m_sendDoneSemaphore.resetI(true);
 		m_acceptSemaphore.resetI(true);
 	}
-
-	return wasOpen;
 }
 
 void ServerSocket::onClose() {
-	closeSocket();
+	closeSocketImpl();
+}
+
+void ServerSocket::onLinkDown() {
+	// The client dropped off the network, so nothing using the old link is coming back: drop the
+	// connection, and rebuild the listener so the client can connect again when it returns.
+	// Called from inside the driver's event handler, so only request it here.
+	m_closeRequest = true;
+
+	if (m_listenerSocket != -1) {
+		m_listenRequest = true;
+	}
+}
+
+/*static*/ void ServerSocket::onLinkDownAll() {
+	auto current = s_serverList;
+
+	while (current) {
+		current->onLinkDown();
+		current = current->m_nextServer;
+	}
+}
+
+/*static*/ void ServerSocket::handleRequests() {
+	auto current = s_serverList;
+
+	while (current) {
+		current->handleRequestsImpl();
+		current = current->m_nextServer;
+	}
+}
+
+void ServerSocket::handleRequestsImpl() {
+	if (m_closeRequest) {
+		closeSocketImpl();
+
+		// Clear only once the close is done, closeSocket() is waiting on this
+		m_closeRequest = false;
+	}
+
+	if (m_listenRequest) {
+		m_listenRequest = false;
+
+		// Replacing an existing listener
+		if (m_listenerSocket != -1) {
+			close(m_listenerSocket);
+		}
+
+		sockaddr_in addr;
+		addr.sin_family = AF_INET;
+		addr.sin_port = m_listenPort;
+		addr.sin_addr.s_addr = m_listenAddress;
+
+		m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
+		bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
+	}
 }
 
 void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
@@ -163,14 +230,18 @@ void ServerSocket::send(const void* buffer, size_t size) {
 		// Wake the driver to perform the actual send
 		isrSemaphore.signal();
 
-		// Wait for this chunk to complete over the air.
-		// 5s timeout guards against a driver that never fires SOCKET_MSG_SEND.
+		// Wait for this chunk to complete; 5s timeout guards against a driver that never
+		// fires SOCKET_MSG_SEND (which would otherwise deadlock this thread forever).
 		msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
-		if (result != MSG_OK) {
-			// Timeout, or the semaphore was reset by closeSocket() without a successful
-			// send — cancel the pending request and close so callers see the failure.
+		if (result == MSG_TIMEOUT) {
+			// The driver never confirmed the send — cancel the pending request and close
+			// so callers see the failure.
 			m_sendRequest = false;
 			closeSocket();
+			break;
+		} else if (result != MSG_OK) {
+			// The semaphore was reset because the WiFi thread already closed the socket
+			// underneath us: nothing left to clean up, but the rest of the data has nowhere to go.
 			break;
 		}
 
@@ -217,29 +288,6 @@ size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
 	return current;
 }
 
-/*static*/ void ServerSocket::closeAllConnected() {
-	auto current = s_serverList;
-	while (current) {
-		current->closeSocket();
-		current = current->m_nextServer;
-	}
-}
-
-void ServerSocket::tryCloseImpl() {
-	if (m_pendingCloseSocket != -1) {
-		close(m_pendingCloseSocket);
-		m_pendingCloseSocket = -1;
-	}
-}
-
-/*static*/ void ServerSocket::checkClose() {
-	auto current = s_serverList;
-	while (current) {
-		current->tryCloseImpl();
-		current = current->m_nextServer;
-	}
-}
-
 /*static*/ bool ServerSocket::hasAnyConnectedSocket() {
 	auto current = s_serverList;
 	while (current) {
@@ -265,8 +313,7 @@ bool ServerSocket::trySendImpl() {
 			// Permanent error: wake the caller so it isn't deadlocked waiting for a
 			// send-done that will never arrive. It detects the error on next operation.
 			efiPrintf("WiFi: send error %d on sock %d", (int)result, m_connectedSocket);
-			m_sendRequest = false;
-			closeSocket();
+			closeSocketImpl();
 			return true;
 		}
 	}
@@ -280,6 +327,19 @@ void os_hook_isr() {
 
 static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	switch (u8MsgType) {
+		case M2M_WIFI_RESP_CON_STATE_CHANGED: {
+			auto& state = *reinterpret_cast<tstrM2mWifiStateChanged*>(pvMsg);
+
+			if (state.u8CurrState == M2M_WIFI_DISCONNECTED) {
+				efiPrintf("WiFi client disconnected");
+				ServerSocket::onLinkDownAll();
+				s_clientConnected = false;
+				s_lastDhcpEvent = 0;
+				s_lastSocketActivity = 0;
+			} else {
+				efiPrintf("WiFi client state %d", (int)state.u8CurrState);
+			}
+		} break;
 		case M2M_WIFI_REQ_DHCP_CONF: {
 			auto& dhcpInfo = *reinterpret_cast<tstrM2MIPConfig*>(pvMsg);
 			uint8_t* addr = reinterpret_cast<uint8_t*>(&dhcpInfo.u32StaticIP);
@@ -287,18 +347,6 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 			s_clientConnected = true;
 			s_lastDhcpEvent = chVTGetSystemTimeX();
 			s_lastSocketActivity = s_lastDhcpEvent;
-		} break;
-		case M2M_WIFI_RESP_CON_STATE_CHANGED: {
-			auto* pstrWifiState = reinterpret_cast<tstrM2mWifiStateChanged*>(pvMsg);
-			if (pstrWifiState->u8CurrState == M2M_WIFI_DISCONNECTED) {
-				efiPrintf("WiFi: Client disconnected (err %d)", (int)pstrWifiState->u8ErrCode);
-				ServerSocket::closeAllConnected();
-				s_clientConnected = false;
-				s_lastDhcpEvent = 0;
-				s_lastSocketActivity = 0;
-			} else if (pstrWifiState->u8CurrState == M2M_WIFI_CONNECTED) {
-				efiPrintf("WiFi: Client connected");
-			}
 		} break;
 		default:
 			efiPrintf("WifiCallback: %d", (int)u8MsgType);
@@ -370,7 +418,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			if (sentBytes && *sentBytes < 0) {
 				efiPrintf("WiFi: Send failed with %d on sock %d", (int)*sentBytes, (int)sock);
 				if (auto server = ServerSocket::findConnected(sock)) {
-					server->closeSocket();
+					server->onClose();
 				}
 			} else {
 				if (auto server = ServerSocket::findConnected(sock)) {
@@ -394,23 +442,39 @@ public:
 	WifiHelperThread()
 		: ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
 	void ThreadTask() override {
-		if (!initWifi()) {
-			return;
+		if (initWifi()) {
+			m_initDone = true;
+
+			while (!m_stopRequest) {
+				// The driver is not thread safe: this thread is the only one that may call in to it.
+				// Anything other threads need from the driver is requested via a flag and done here.
+				ServerSocket::handleRequests();
+
+				{
+					ScopePerf perf(PE::WifiHandleEvents);
+					m2m_wifi_handle_events(nullptr);
+				}
+
+				if (!ServerSocket::checkSend()) {
+					isrSemaphore.wait(TIME_MS2I(10));
+				}
+			}
+
+			m2m_wifi_disable_ap();
+			chThdSleepMilliseconds(500);
+			m2m_wifi_deinit(nullptr);
 		}
 
-		m_initDone = true;
+		m_exited = true;
+	}
 
-		while (true) {
-			{
-				ScopePerf perf(PE::WifiHandleEvents);
-				m2m_wifi_handle_events(nullptr);
-			}
+	// Shut down WiFi on the WiFi thread, and wait for it to finish
+	void stop() {
+		m_stopRequest = true;
+		isrSemaphore.signal();
 
-			ServerSocket::checkClose();
-
-			if (!ServerSocket::checkSend()) {
-				isrSemaphore.wait(TIME_MS2I(10));
-			}
+		while (!m_exited) {
+			chThdSleepMilliseconds(10);
 		}
 	}
 
@@ -442,17 +506,32 @@ private:
 
 		static tstrM2MAPConfig apConfig;
 		const wifi_string_t& ssid = getWifiSsid();
-		strncpy(apConfig.au8SSID, ssid, std::min(sizeof(apConfig.au8SSID), sizeof(ssid)));
+		if (ssid[0] != '\0') {
+			strncpy(apConfig.au8SSID, ssid, std::min(sizeof(apConfig.au8SSID), sizeof(ssid)));
+		} else {
+			// The driver refuses to start the AP with an empty SSID, so use the default name instead
+			efiPrintf("WiFi: SSID is blank, using default");
+			strcpy(apConfig.au8SSID, "FOME EFI");
+		}
 		apConfig.u8ListenChannel = 1;
 		apConfig.u8SsidHide = 0;
 
 		const wifi_string_t& password = getWifiPassword();
-		size_t keyLength = strlen(password);
-		if (keyLength > 0) {
+		// strnlen isn't declared in the bootloader build
+		size_t keyLength = std::find(std::begin(password), std::end(password), '\0') - std::begin(password);
+		// WPA requires at least 8 characters, the driver refuses to start the AP with anything shorter
+		constexpr size_t minKeyLength = M2M_MIN_PSK_LEN - 1;
+		if (keyLength >= minKeyLength) {
 			apConfig.u8SecType = M2M_WIFI_SEC_WPA_PSK;
 			apConfig.u8KeySz = keyLength;
 			strncpy((char*)apConfig.au8Key, password, std::min(sizeof(apConfig.au8Key), sizeof(password)));
 		} else {
+			if (keyLength > 0) {
+				// An unusable password would otherwise mean no AP at all, leaving USB as the only
+				// way back in to fix it. Come up open instead, same as if no password were set.
+				efiPrintf("WiFi: password shorter than %d characters, starting open AP", (int)minKeyLength);
+			}
+
 			apConfig.u8SecType = M2M_WIFI_SEC_OPEN;
 		}
 
@@ -475,11 +554,15 @@ private:
 	}
 
 	bool m_initDone = false;
+	volatile bool m_stopRequest = false;
+	volatile bool m_exited = false;
 };
 
 static NO_CACHE WifiHelperThread wifiHelper;
+static bool wifiStarted = false;
 
 void initWifi() {
+	wifiStarted = true;
 	wifiHelper.startThread();
 }
 
@@ -490,9 +573,11 @@ void waitForWifiInit() {
 }
 
 void stopWifi() {
-	m2m_wifi_disable_ap();
-	chThdSleepMilliseconds(500);
-	m2m_wifi_deinit(nullptr);
+	if (!wifiStarted) {
+		return;
+	}
+
+	wifiHelper.stop();
 }
 
 #endif
