@@ -14,17 +14,20 @@ public:
 	ServerSocket();
 
 	// User functions: listen, recv, send, close
+	// These may be called from any thread. The WiFi driver is not thread safe, so anything here that
+	// needs the driver is handed off to the WiFi thread rather than done on the caller's thread.
 	void startListening(const sockaddr_in& addr);
 	size_t recvTimeout(uint8_t* buffer, size_t size, int timeout);
 	void send(uint8_t* buffer, size_t size);
 	bool closeSocket();
 
-	// Calls up from the driver to notify of a change
+	// Calls up from the driver to notify of a change (WiFi thread only)
 	void onAccept(int connectedSocket);
 	void onClose();
 	void onRecv(uint8_t* buffer, size_t recvSize, size_t remaining);
 	void onSendDone();
 	static bool checkSend();
+	static void handleRequests();
 
 	bool hasConnectedSocket() const;
 
@@ -32,10 +35,19 @@ public:
 	static ServerSocket* findConnected(int sock);
 
 private:
+	// WiFi thread only: these call in to the driver
 	bool trySendImpl();
+	void handleRequestsImpl();
+	void closeSocketImpl();
 
 	int m_listenerSocket = -1;
 	int m_connectedSocket = -1;
+
+	// Requests from other threads for the WiFi thread to service
+	bool m_listenRequest = false;
+	uint16_t m_listenPort = 0;
+	uint32_t m_listenAddress = 0;
+	volatile bool m_closeRequest = false;
 
 	// TX helper data
 	const uint8_t* m_sendBuffer;

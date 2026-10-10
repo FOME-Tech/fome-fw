@@ -21,8 +21,12 @@ ServerSocket::ServerSocket() {
 }
 
 void ServerSocket::startListening(const sockaddr_in& addr) {
-	m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
-	bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
+	// Only the WiFi thread may call in to the driver, so stash the address and let it do the bind
+	m_listenPort = addr.sin_port;
+	m_listenAddress = addr.sin_addr.s_addr;
+	m_listenRequest = true;
+
+	isrSemaphore.signal();
 }
 
 void ServerSocket::onAccept(int connectedSocket) {
@@ -32,8 +36,25 @@ void ServerSocket::onAccept(int connectedSocket) {
 }
 
 bool ServerSocket::closeSocket() {
-	bool wasOpen = m_connectedSocket != -1;
-	if (wasOpen) {
+	if (!hasConnectedSocket()) {
+		return false;
+	}
+
+	// Only the WiFi thread may call in to the driver, so ask it to do the close
+	m_closeRequest = true;
+	isrSemaphore.signal();
+
+	// Wait for the close to happen so the caller sees the socket as closed when we return.
+	// Bounded so that a stuck WiFi thread can't take the caller down with it.
+	for (size_t i = 0; m_closeRequest && i < 1000; i++) {
+		chThdSleepMilliseconds(1);
+	}
+
+	return true;
+}
+
+void ServerSocket::closeSocketImpl() {
+	if (m_connectedSocket != -1) {
 		close(m_connectedSocket);
 		m_connectedSocket = -1;
 	}
@@ -49,12 +70,40 @@ bool ServerSocket::closeSocket() {
 		m_sendRequest = false;
 		m_sendDoneSemaphore.resetI(true);
 	}
-
-	return wasOpen;
 }
 
 void ServerSocket::onClose() {
-	closeSocket();
+	closeSocketImpl();
+}
+
+/*static*/ void ServerSocket::handleRequests() {
+	auto current = s_serverList;
+
+	while (current) {
+		current->handleRequestsImpl();
+		current = current->m_nextServer;
+	}
+}
+
+void ServerSocket::handleRequestsImpl() {
+	if (m_listenRequest) {
+		m_listenRequest = false;
+
+		sockaddr_in addr;
+		addr.sin_family = AF_INET;
+		addr.sin_port = m_listenPort;
+		addr.sin_addr.s_addr = m_listenAddress;
+
+		m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
+		bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
+	}
+
+	if (m_closeRequest) {
+		closeSocketImpl();
+
+		// Clear only once the close is done, closeSocket() is waiting on this
+		m_closeRequest = false;
+	}
 }
 
 void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
@@ -110,12 +159,15 @@ void ServerSocket::send(uint8_t* buffer, size_t size) {
 	// Wait for this chunk to complete; 5s timeout guards against a driver that never
 	// fires SOCKET_MSG_SEND (which would otherwise deadlock this thread forever).
 	msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
-	if (result != MSG_OK) {
-		// Timeout, or the semaphore was reset by closeSocket() without a successful
-		// send — cancel the pending request and close so callers see the failure.
+	if (result == MSG_TIMEOUT) {
+		// The driver never confirmed the send — cancel the pending request and close
+		// so callers see the failure.
 		m_sendRequest = false;
 		closeSocket();
 	}
+
+	// Otherwise it either worked, or the semaphore was reset because the WiFi thread
+	// already closed the socket underneath us: nothing left to clean up in that case.
 }
 
 void ServerSocket::onSendDone() {
@@ -170,7 +222,7 @@ bool ServerSocket::trySendImpl() {
 			// Permanent error: wake the caller so it isn't deadlocked waiting for a
 			// send-done that will never arrive. It detects the error on next operation.
 			efiPrintf("WiFi: send error %d on sock %d", (int)result, m_connectedSocket);
-			closeSocket();
+			closeSocketImpl();
 			return true;
 		}
 	}
@@ -265,21 +317,39 @@ public:
 	WifiHelperThread()
 		: ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
 	void ThreadTask() override {
-		if (!initWifi()) {
-			return;
+		if (initWifi()) {
+			m_initDone = true;
+
+			while (!m_stopRequest) {
+				// The driver is not thread safe: this thread is the only one that may call in to it.
+				// Anything other threads need from the driver is requested via a flag and done here.
+				ServerSocket::handleRequests();
+
+				{
+					ScopePerf perf(PE::WifiHandleEvents);
+					m2m_wifi_handle_events(nullptr);
+				}
+
+				if (!ServerSocket::checkSend()) {
+					isrSemaphore.wait(TIME_MS2I(10));
+				}
+			}
+
+			m2m_wifi_disable_ap();
+			chThdSleepMilliseconds(500);
+			m2m_wifi_deinit(nullptr);
 		}
 
-		m_initDone = true;
+		m_exited = true;
+	}
 
-		while (true) {
-			{
-				ScopePerf perf(PE::WifiHandleEvents);
-				m2m_wifi_handle_events(nullptr);
-			}
+	// Shut down WiFi on the WiFi thread, and wait for it to finish
+	void stop() {
+		m_stopRequest = true;
+		isrSemaphore.signal();
 
-			if (!ServerSocket::checkSend()) {
-				isrSemaphore.wait(TIME_MS2I(10));
-			}
+		while (!m_exited) {
+			chThdSleepMilliseconds(10);
 		}
 	}
 
@@ -358,11 +428,15 @@ private:
 	}
 
 	bool m_initDone = false;
+	volatile bool m_stopRequest = false;
+	volatile bool m_exited = false;
 };
 
 static NO_CACHE WifiHelperThread wifiHelper;
+static bool wifiStarted = false;
 
 void initWifi() {
+	wifiStarted = true;
 	wifiHelper.startThread();
 }
 
@@ -373,9 +447,11 @@ void waitForWifiInit() {
 }
 
 void stopWifi() {
-	m2m_wifi_disable_ap();
-	chThdSleepMilliseconds(500);
-	m2m_wifi_deinit(nullptr);
+	if (!wifiStarted) {
+		return;
+	}
+
+	wifiHelper.stop();
 }
 
 #endif
