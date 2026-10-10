@@ -748,7 +748,7 @@ static void handleClient(ServerSocket& server) {
 		} else {
 			// Ensure directory URLs end with '/' for relative links to resolve properly
 			if (cleanPath[len - 1] != '/') {
-				char redirBuf[192];
+				char redirBuf[256];
 				snprintf(
 						redirBuf,
 						sizeof(redirBuf),
