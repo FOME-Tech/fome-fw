@@ -392,7 +392,8 @@ private:
 		apConfig.u8SsidHide = 0;
 
 		const wifi_string_t& password = getWifiPassword();
-		size_t keyLength = strnlen(password, sizeof(password));
+		// strnlen isn't declared in the bootloader build
+		size_t keyLength = std::find(std::begin(password), std::end(password), '\0') - std::begin(password);
 		// WPA requires at least 8 characters, the driver refuses to start the AP with anything shorter
 		constexpr size_t minKeyLength = M2M_MIN_PSK_LEN - 1;
 		if (keyLength >= minKeyLength) {
