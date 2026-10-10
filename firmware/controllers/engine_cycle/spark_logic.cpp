@@ -56,10 +56,10 @@ angle_t OneCylinder::getSparkAngle(angle_t lateAdjustment) const {
 	// finalIgnitionTiming is deg BTDC
 	// minimumIgnitionTiming limits maximium retard
 	// maximumIgnitionTiming limits maximum advance
-	finalIgnitionTiming =
-			clampF(engineConfiguration->minimumIgnitionTiming,
-				   finalIgnitionTiming,
-				   engineConfiguration->maximumIgnitionTiming);
+	finalIgnitionTiming = std::clamp<float>(
+			finalIgnitionTiming,
+			engineConfiguration->minimumIgnitionTiming,
+			engineConfiguration->maximumIgnitionTiming);
 
 	engine->outputChannels.ignitionAdvanceCyl[m_cylinderNumber] = finalIgnitionTiming;
 

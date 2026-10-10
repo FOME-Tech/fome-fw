@@ -1,7 +1,7 @@
+#include "pch.h"
+
 #include "log_field.h"
 #include "buffered_writer.h"
-
-#include <gmock/gmock.h>
 
 using ::testing::_;
 using ::testing::ElementsAre;

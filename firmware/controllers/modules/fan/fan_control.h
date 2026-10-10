@@ -31,6 +31,7 @@ protected:
 	virtual float getFanOffTemp() = 0;
 	virtual bool enableWithAc() = 0;
 	virtual bool disableWhenStopped() = 0;
+	virtual uint8_t disableAtSpeed() = 0;
 
 	// PWM mode methods
 	virtual bool usePwmMode() = 0;
@@ -61,6 +62,10 @@ struct FanControl1 : public FanController {
 		return engineConfiguration->disableFan1WhenStopped;
 	}
 
+	uint8_t disableAtSpeed() override {
+		return engineConfiguration->disableFan1AtSpeed;
+	}
+
 	// PWM mode methods
 	bool usePwmMode() override {
 		return engineConfiguration->fan1UsePwmMode;
@@ -89,6 +94,10 @@ struct FanControl2 : public FanController {
 
 	bool disableWhenStopped() override {
 		return engineConfiguration->disableFan2WhenStopped;
+	}
+
+	uint8_t disableAtSpeed() override {
+		return engineConfiguration->disableFan2AtSpeed;
 	}
 
 	// PWM mode methods

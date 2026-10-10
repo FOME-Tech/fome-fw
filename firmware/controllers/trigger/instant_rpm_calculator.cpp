@@ -9,7 +9,7 @@ void InstantRpmCalculator::movePreSynchTimestamps() {
 	// at appropriate locations
 	auto triggerSize = getTriggerCentral()->triggerShape.getLength();
 
-	size_t eventsToCopy = minI(spinningEventIndex, triggerSize);
+	size_t eventsToCopy = std::min(spinningEventIndex, triggerSize);
 
 	size_t firstSrc;
 	size_t firstDst;

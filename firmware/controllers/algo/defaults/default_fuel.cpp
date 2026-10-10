@@ -48,6 +48,10 @@ static void setDefaultVETable() {
 	setRpmTableBin(config->baroCorrRpmBins);
 	setLinearCurve(config->baroCorrPressureBins, 75, 105, 1);
 
+	setTable(config->mafTrimTable, 100);
+	setRpmTableBin(config->mafTrimRpmBins);
+	setLinearCurve(config->mafTrimLoadBins, 0, 140);
+
 	// Default baro table is all 1.0, we can't recommend a reasonable default here
 	setTable(config->baroCorrTable, 1);
 
@@ -99,7 +103,6 @@ static void setDefaultStftSettings() {
 	cfg.minClt = 60;
 
 	// Sensible region defaults
-	cfg.maxIdleRegionRpm = 1000;
 	cfg.maxOverrunLoad = 35;
 	cfg.minPowerLoad = 85;
 

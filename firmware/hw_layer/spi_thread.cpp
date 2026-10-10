@@ -27,7 +27,7 @@ private:
 				continue;
 			}
 
-			const int periodMs = maxI(1, device->getSpiThreadPeriodMs());
+			const int periodMs = std::max(1, device->getSpiThreadPeriodMs());
 			const auto periodNt = MS2NT(periodMs);
 			const auto lastPoll = lastPollTimes[i];
 

@@ -10,8 +10,6 @@
 #include "converters/sensor_converter_func.h"
 #include "stored_value_sensor.h"
 
-#include <type_traits>
-
 /**
  * @brief Class for sensors that convert from some raw floating point
  * value (ex: voltage, frequency, pulse width) to a sensor reading.

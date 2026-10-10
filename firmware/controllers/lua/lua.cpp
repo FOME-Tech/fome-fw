@@ -137,7 +137,7 @@ static int lua_setTickRate(lua_State* l) {
 
 	// For instance BMW does 100 CAN messages per second on some IDs, let's allow at least twice that speed
 	// Limit to 1..200 hz
-	freq = clampF(1, freq, 200);
+	freq = std::clamp<float>(freq, 1, 200);
 
 	luaTickPeriodUs = 1000000.0f / freq;
 	return 0;

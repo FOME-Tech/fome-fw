@@ -293,10 +293,10 @@ void LimpManager::fatalError() {
 	setFaultRevLimit(/*rpm*/ 0);
 }
 
-void LimpManager::setFaultRevLimit(int limit) {
+void LimpManager::setFaultRevLimit(uint32_t limit) {
 	// Only allow decreasing the limit
 	// aka uses the limit of the worst fault to yet occur
-	m_faultRevLimit = minI(m_faultRevLimit, limit);
+	m_faultRevLimit = std::min(m_faultRevLimit, limit);
 }
 
 bool LimpManager::allowElectronicThrottle() const {

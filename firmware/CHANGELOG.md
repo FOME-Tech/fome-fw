@@ -30,7 +30,12 @@ or
 
 ## Unreleased
 
+### Breaking Changes
+ - Removed the explicit threshold for the closed loop fuel idle region. Instead, the idle region is used whenever the idle controller decides the engine is idling, as this better matches behaviors like idle-up when cold, return to idle, etc.
+ - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
+
 ### Added
+ - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load
@@ -43,8 +48,9 @@ or
  - Brake pedal switch input can now be inverted, for vehicles where the brake switch pulls the input low when the pedal is pressed
  - New CAN VSS type "AUMOVIO MK 100 UHP" for the Continental/AUMOVIO MK 100 UHP ABS module, decoding vehicle speed, all four wheel speeds, brake pedal state, and IMU data (lateral/longitudinal/vertical acceleration and yaw rate)
  - New VVT mode "Honda J 6-2" for the Honda J-series V6 intake cam, which has six evenly spaced tooth slots with two of them missing, giving one distinct wide gap per cam revolution.
+ - Cooling fans can be turned off above a set vehicle speed ("Disable above speed") #827
  - Flex fuel ethanol content is now correct immediately at startup, instead of ramping up from 0% over the first second while the sensor's filter settles. The last valid reading is stored in backup RAM, and used to prime the filter at startup as well as any time the sensor is failed - the fuel in the tank can't change while the ECU isn't watching. If no value was stored and the sensor is dead, the fallback is configurable: "Failed flex sensor ethanol content", defaulting to 50%.
-
+ - Added gauges for EGT channels 3-8 in TunerStudio
 
 
 ### Changed
@@ -63,8 +69,11 @@ or
  - Improve STM32H7/Atlas SD card reliability
  - General SD card logging performance and reliabilty improvements
  - Fix conflict between aux temp 2 and oil temperature sensor configuration
+ - DC wastegate control now disables the motor bridge when position feedback or the requested output is invalid, instead of trying to drive the motor with an invalid value.
  - MAP cylinder balancing no longer corrupts the MAP reading above 255 kPa. Engines running more than ~22 psi of boost could see reported MAP jump anywhere between 60 and 440 kPa while actual manifold pressure was steady, throwing fuel and ignition off badly at high load.
  - Fix updating wideband O2 sensor modules with older firmware
+ - DFCO "After cut timing ramp-in time" is now actually respected, rather than ignored and using 0.5s. #819
+ - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
 
 ## May 2026 Release
 

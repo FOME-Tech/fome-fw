@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 // ChibiOS hook callbacks. Safe to call from ISR prologue/epilogue and from
 // the idle thread's critical-section enter/leave hooks.
 void cpuUsageOnIdleEnter();

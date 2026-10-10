@@ -171,11 +171,12 @@ void VvtController::setOutput(expected<percent_t> outputValue) {
 
 		// Compensate for battery voltage so that the % output is actually % solenoid current normalized
 		// to a 14v supply (boost duty when battery is low, etc)
-		float voltageRatio = 14 / clampF(10, Sensor::get(SensorType::BatteryVoltage).value_or(14), 24);
+		float voltageRatio = 14 / std::clamp<float>(Sensor::get(SensorType::BatteryVoltage).value_or(14), 10, 24);
 		vvtPct *= voltageRatio;
 
 		// Clamp final output min/max
-		vvtPct = clampF(engineConfiguration->vvtOutputMin[m_cam], vvtPct, engineConfiguration->vvtOutputMax[m_cam]);
+		vvtPct = std::clamp<float>(
+				vvtPct, engineConfiguration->vvtOutputMin[m_cam], engineConfiguration->vvtOutputMax[m_cam]);
 
 		vvtOutput = vvtPct;
 

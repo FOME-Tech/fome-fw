@@ -2,6 +2,8 @@
  * @author Matthew Kennedy, (c) 2019
  */
 
+#include "pch.h"
+
 #include "resistance_func.h"
 
 void ResistanceFunc::configure(float supplyVoltage, float pullupResistor, bool isPulldown) {

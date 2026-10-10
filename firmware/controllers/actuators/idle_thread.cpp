@@ -201,7 +201,7 @@ percent_t IdleController::getRunningOpenLoop(float rpm, float clt, SensorResult 
 
 	running += iacByRpmTaper;
 
-	return clampF(0, running, 100);
+	return std::clamp<float>(running, 0, 100);
 }
 
 percent_t
@@ -336,7 +336,8 @@ float IdleController::getIdlePosition(float rpm, float rpmRate) {
 		idleClosedLoop = 0;
 	}
 
-	iacPosition = clampPercentValue(iacPosition);
+	// Don't try and command position outside [0, 100]
+	iacPosition = std::clamp<float>(iacPosition, 0, 100);
 
 #if EFI_TUNER_STUDIO && (EFI_PROD_CODE || EFI_SIMULATOR)
 	if (idleMode == IM_AUTO) {
