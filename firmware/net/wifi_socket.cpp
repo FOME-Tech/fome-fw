@@ -311,7 +311,13 @@ private:
 
 		static tstrM2MAPConfig apConfig;
 		const wifi_string_t& ssid = getWifiSsid();
-		strncpy(apConfig.au8SSID, ssid, std::min(sizeof(apConfig.au8SSID), sizeof(ssid)));
+		if (ssid[0] != '\0') {
+			strncpy(apConfig.au8SSID, ssid, std::min(sizeof(apConfig.au8SSID), sizeof(ssid)));
+		} else {
+			// The driver refuses to start the AP with an empty SSID, so use the default name instead
+			efiPrintf("WiFi: SSID is blank, using default");
+			strcpy(apConfig.au8SSID, "FOME EFI");
+		}
 		apConfig.u8ListenChannel = 1;
 		apConfig.u8SsidHide = 0;
 
