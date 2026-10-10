@@ -73,6 +73,7 @@ or
  - Fix updating wideband O2 sensor modules with older firmware
  - DFCO "After cut timing ramp-in time" is now actually respected, rather than ignored and using 0.5s. #819
  - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
+ - Improve WiFi reconnection reliability after your laptop goes to sleep/drops off the network while connected #713
 
 ## May 2026 Release
 
