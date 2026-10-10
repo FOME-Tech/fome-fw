@@ -24,6 +24,8 @@ public:
 	// Calls up from the driver to notify of a change (WiFi thread only)
 	void onAccept(int connectedSocket);
 	void onClose();
+	void onLinkDown();
+	static void onLinkDownAll();
 	void onRecv(uint8_t* buffer, size_t recvSize, size_t remaining);
 	void onSendDone();
 	static bool checkSend();

@@ -30,6 +30,10 @@ void ServerSocket::startListening(const sockaddr_in& addr) {
 }
 
 void ServerSocket::onAccept(int connectedSocket) {
+	// A new connection replaces any existing one: the old peer may have vanished without closing
+	// (laptop went to sleep, etc), and if we just forgot about its socket it would never be closed.
+	closeSocketImpl();
+
 	m_connectedSocket = connectedSocket;
 
 	recv(m_connectedSocket, &m_recvBuf, 1, 0);
@@ -76,6 +80,26 @@ void ServerSocket::onClose() {
 	closeSocketImpl();
 }
 
+void ServerSocket::onLinkDown() {
+	// The client dropped off the network, so nothing using the old link is coming back: drop the
+	// connection, and rebuild the listener so the client can connect again when it returns.
+	// Called from inside the driver's event handler, so only request it here.
+	m_closeRequest = true;
+
+	if (m_listenerSocket != -1) {
+		m_listenRequest = true;
+	}
+}
+
+/*static*/ void ServerSocket::onLinkDownAll() {
+	auto current = s_serverList;
+
+	while (current) {
+		current->onLinkDown();
+		current = current->m_nextServer;
+	}
+}
+
 /*static*/ void ServerSocket::handleRequests() {
 	auto current = s_serverList;
 
@@ -86,8 +110,20 @@ void ServerSocket::onClose() {
 }
 
 void ServerSocket::handleRequestsImpl() {
+	if (m_closeRequest) {
+		closeSocketImpl();
+
+		// Clear only once the close is done, closeSocket() is waiting on this
+		m_closeRequest = false;
+	}
+
 	if (m_listenRequest) {
 		m_listenRequest = false;
+
+		// Replacing an existing listener
+		if (m_listenerSocket != -1) {
+			close(m_listenerSocket);
+		}
 
 		sockaddr_in addr;
 		addr.sin_family = AF_INET;
@@ -96,13 +132,6 @@ void ServerSocket::handleRequestsImpl() {
 
 		m_listenerSocket = socket(AF_INET, SOCK_STREAM, SOCKET_CONFIG_SSL_OFF);
 		bind(m_listenerSocket, (sockaddr*)&addr, sizeof(addr));
-	}
-
-	if (m_closeRequest) {
-		closeSocketImpl();
-
-		// Clear only once the close is done, closeSocket() is waiting on this
-		m_closeRequest = false;
 	}
 }
 
@@ -236,6 +265,16 @@ void os_hook_isr() {
 
 static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	switch (u8MsgType) {
+		case M2M_WIFI_RESP_CON_STATE_CHANGED: {
+			auto& state = *reinterpret_cast<tstrM2mWifiStateChanged*>(pvMsg);
+
+			if (state.u8CurrState == M2M_WIFI_DISCONNECTED) {
+				efiPrintf("WiFi client disconnected");
+				ServerSocket::onLinkDownAll();
+			} else {
+				efiPrintf("WiFi client state %d", (int)state.u8CurrState);
+			}
+		} break;
 		case M2M_WIFI_REQ_DHCP_CONF: {
 			auto& dhcpInfo = *reinterpret_cast<tstrM2MIPConfig*>(pvMsg);
 			uint8_t* addr = reinterpret_cast<uint8_t*>(&dhcpInfo.u32StaticIP);
@@ -255,6 +294,8 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				// Socket bind complete, now listen!
 				// A backlog of 3 helps handle rapid discovery from Tunerstudio's port scanner.
 				listen(sock, 3);
+			} else {
+				efiPrintf("WiFi: Bind failed on sock %d with %d", (int)sock, bindMsg ? (int)bindMsg->status : -1);
 			}
 		} break;
 		case SOCKET_MSG_LISTEN: {
