@@ -36,6 +36,11 @@ struct DmaBufferContents {
 	FATFS fs;
 	FIL file;
 	SdLogBufferWriter logBuffer;
+
+#if EFI_WIFI
+	FIL httpFile;
+	alignas(32) uint8_t httpFileIoBuffer[dma_buffers::HTTP_FILE_IO_BUFFER_SIZE];
+#endif
 #endif
 
 #if HAL_USE_USB_MSD
@@ -90,6 +95,16 @@ FIL* logFileFd() {
 SdLogBufferWriter& logBuffer() {
 	return dmaBufferRegion.contents.logBuffer;
 }
+
+#if EFI_WIFI
+FIL* httpFileFd() {
+	return &dmaBufferRegion.contents.httpFile;
+}
+
+uint8_t* httpFileIoBuffer() {
+	return dmaBufferRegion.contents.httpFileIoBuffer;
+}
+#endif // EFI_WIFI
 #endif // EFI_FILE_LOGGING
 
 } // namespace dma_buffers

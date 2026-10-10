@@ -211,6 +211,9 @@ size_t SdLogBufferWriter::writeInternal(const char* buffer, size_t count) {
 		f_close(dma_buffers::logFileFd());
 
 		unmountSdFilesystem();
+#if EFI_TUNER_STUDIO
+		engine->outputChannels.sd_logging_internal = false;
+#endif
 		failed = true;
 		return 0;
 	} else {
@@ -318,12 +321,18 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 
 	if (!mountSdFilesystem()) {
 		// no card present (or mounted via USB), don't do internal logging
+#if EFI_TUNER_STUDIO
+		engine->outputChannels.sd_logging_internal = false;
+#endif
 		return;
 	}
 
 #if EFI_PROD_CODE
 	int logFileIndex = incLogFileName();
 	if (!createLogFile(logFileIndex)) {
+#if EFI_TUNER_STUDIO
+		engine->outputChannels.sd_logging_internal = false;
+#endif
 		return;
 	}
 
@@ -354,6 +363,29 @@ static THD_FUNCTION(sdCardLoggerThread, arg) {
 	} else {
 		mlgLogger();
 	}
+
+#if EFI_TUNER_STUDIO
+	engine->outputChannels.sd_logging_internal = false;
+#endif
+}
+
+bool isSdCardLogging() {
+#if EFI_TUNER_STUDIO
+	return engine->outputChannels.sd_logging_internal;
+#else
+	return false;
+#endif
+}
+
+const char* getActiveSdLogFileName() {
+#if EFI_PROD_CODE
+	if (!isSdCardLogging()) {
+		return nullptr;
+	}
+	return logName;
+#else
+	return nullptr;
+#endif
 }
 
 void initSdCardLogger() {
