@@ -157,12 +157,12 @@ static void loadLibraries(LuaHandle& ls) {
 }
 
 static LuaHandle setupLuaState(lua_Alloc alloc) {
-	LuaHandle ls = lua_newstate(alloc, NULL);
+	LuaHandle ls{lua_newstate(alloc, NULL)};
 
 	if (!ls) {
 		firmwareError("Failed to start Lua interpreter");
 
-		return nullptr;
+		return ls;
 	}
 
 	lua_atpanic(ls, [](lua_State* l) {
