@@ -293,4 +293,7 @@ struct_no_prefix output_channels_s
 
 	uint16_t[12 iterate] cylinderRpm;;"rpm", 1, 0, 0, 0, 0
 	int8_t[12 iterate] cylinderRpmDelta;;"rpm", 1, 0, 0, 0, 0
+
+! Rolling engine-cycle RPM. Zero when disabled or no complete cycle is valid.
+	uint16_t rollingCycleRpm;RPM: Rolling cycle;"RPM", 1, 0, 0, 8000, 0
 end_struct

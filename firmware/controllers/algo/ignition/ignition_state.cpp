@@ -126,9 +126,17 @@ void IgnitionState::updateAdvanceCorrections(float engineLoad) {
 	}
 
 #if EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
-	float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
-	float rpmRate = engine->rpmCalculator.getRpmAcceleration();
-	timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm, rpmRate);
+	if (engineConfiguration->idleTimingUseRollingRpm) {
+		auto rolling = engine->rpmCalculator.getRollingCycleRpm();
+		timingPidCorrection =
+				rolling.rpm > 0
+						? engine->module<IdleController>()->getIdleTimingAdjustment(rolling.rpm, rolling.rpmRate)
+						: 0;
+	} else {
+		float instantRpm = engine->triggerCentral.instantRpm.getInstantRpm();
+		float rpmRate = engine->rpmCalculator.getRpmAcceleration();
+		timingPidCorrection = engine->module<IdleController>()->getIdleTimingAdjustment(instantRpm, rpmRate);
+	}
 #endif // EFI_SHAFT_POSITION_INPUT && EFI_IDLE_CONTROL
 
 	dfcoTimingRetard = engine->module<DfcoController>()->getTimingRetard();
