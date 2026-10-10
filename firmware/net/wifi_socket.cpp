@@ -316,12 +316,20 @@ private:
 		apConfig.u8SsidHide = 0;
 
 		const wifi_string_t& password = getWifiPassword();
-		size_t keyLength = strlen(password);
-		if (keyLength > 0) {
+		size_t keyLength = strnlen(password, sizeof(password));
+		// WPA requires at least 8 characters, the driver refuses to start the AP with anything shorter
+		constexpr size_t minKeyLength = M2M_MIN_PSK_LEN - 1;
+		if (keyLength >= minKeyLength) {
 			apConfig.u8SecType = M2M_WIFI_SEC_WPA_PSK;
 			apConfig.u8KeySz = keyLength;
 			strncpy((char*)apConfig.au8Key, password, std::min(sizeof(apConfig.au8Key), sizeof(password)));
 		} else {
+			if (keyLength > 0) {
+				// An unusable password would otherwise mean no AP at all, leaving USB as the only
+				// way back in to fix it. Come up open instead, same as if no password were set.
+				efiPrintf("WiFi: password shorter than %d characters, starting open AP", (int)minKeyLength);
+			}
+
 			apConfig.u8SecType = M2M_WIFI_SEC_OPEN;
 		}
 
