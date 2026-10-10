@@ -48,34 +48,21 @@ static void intFlashClearErrors(uint8_t ctlr) {
 static int intFlashCheckErrors(uint8_t ctlr) {
 	uint32_t sr = FLASH_SR;
 
-#ifdef FLASH_SR_OPERR
-	if (sr & FLASH_SR_OPERR) {
+	if (sr & (FLASH_SR_OPERR | FLASH_SR_CRCRDERR)) {
 		return FLASH_RETURN_OPERROR;
 	}
-#endif
-	if (sr & FLASH_SR_WRPERR) {
+	if (sr & (FLASH_SR_WRPERR | FLASH_SR_RDPERR | FLASH_SR_RDSERR)) {
 		return FLASH_RETURN_WPERROR;
 	}
-#ifdef FLASH_SR_PGAERR
-	if (sr & FLASH_SR_PGAERR) {
-		return FLASH_RETURN_ALIGNERROR;
-	}
-#endif
-#ifdef FLASH_SR_PGPERR
-	if (sr & FLASH_SR_PGPERR) {
+	if (sr & FLASH_SR_STRBERR) {
 		return FLASH_RETURN_PPARALLERROR;
 	}
-#endif
-#ifdef FLASH_SR_ERSERR
-	if (sr & FLASH_SR_ERSERR) {
-		return FLASH_RETURN_ESEQERROR;
-	}
-#endif
-#ifdef FLASH_SR_PGSERR
-	if (sr & FLASH_SR_PGSERR) {
+	if (sr & (FLASH_SR_PGSERR | FLASH_SR_INCERR)) {
 		return FLASH_RETURN_PSEQERROR;
 	}
-#endif
+	if (sr & (FLASH_SR_SNECCERR | FLASH_SR_DBECCERR)) {
+		return FLASH_RETURN_BAD_FLASH;
+	}
 
 	return FLASH_RETURN_SUCCESS;
 }
