@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20024
+#define FLASH_DATA_VERSION 20025
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -230,7 +230,6 @@ struct stft_cell_cfg_s
 end_struct
 
 struct stft_s
-	uint8_t autoscale maxIdleRegionRpm;Below this RPM, the idle region is active;"RPM", 50, 0, 0, 12000, 0
 	uint8_t maxOverrunLoad;Below this engine load, the overrun region is active;"load", 1, 0, 0, 250, 0
 	uint8_t minPowerLoad;Above this engine load, the power region is active;"load", 1, 0, 0, 250, 0
 
@@ -291,7 +290,7 @@ custom pin_output_mode_e 1 bits, U08, @OFFSET@, [0:1], @@pin_output_mode_e_enum@
 #define pin_input_mode_e_enum "DEFAULT", "PULLUP", "PULLDOWN"
 custom pin_input_mode_e 1 bits, U08,	@OFFSET@,	[0:1], @@pin_input_mode_e_enum@@
 
-#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
+#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "Lua Gauge 3", "Lua Gauge 4", "Lua Gauge 5", "Lua Gauge 6", "Lua Gauge 7", "Lua Gauge 8", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
 custom gppwm_channel_e 1 bits, U08, @OFFSET@, [0:5], @@gppwm_channel_e_enum@@
 
 custom canBroadcast_e 1 bits, U08, @OFFSET@, [0:1], "none", "first", "second", "both"
@@ -1256,7 +1255,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 
 
-	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 15, 0
+	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 30, 0
 
 	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 4, 0
 
@@ -1626,6 +1625,12 @@ begin_table
 	table_values uint16_t autoscale veTable;;"%", 0.1, 0, 0, 999, 1
 end_table
 
+begin_table
+	table_rows num 8 uint16_t mafTrimLoadBins;;"%", 1, 0, 0, 1000, 0
+	table_cols num 8 uint16_t mafTrimRpmBins;;"RPM", 1, 0, 0, 18000, 0
+	table_values uint8_t mafTrimTable;;"%", 1, 0, 0, 200, 0
+end_table
+
 union
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale lambdaTable;;"lambda", {1/@@PACK_MULT_LAMBDA_CFG@@}, 0, 0.6, 1.5, 2
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale afrTable;;"afr", {1/@@PACK_MULT_AFR_CFG@@}, 0, 0, 25, 1
@@ -1688,6 +1693,8 @@ int16_t[4 x 4] autoscale ALSFuelAdjustment;;"percent", 0.1, 0, 0, 500, 1
 uint16_t[4] alsFuelAdjustmentLoadBins;;"TPS", 1, 0, 0, 100, 0
 uint16_t[4] alsFuelAdjustmentrpmBins;;"RPM",	1, 0, 0, 25000, 0
 
+custom VeTableType 1 bits, S08, @OFFSET@, [0:0], "Speed density (MAP)", "Alpha-N"
+
 struct blend_table_s
 	int16_t[8 x 8] autoscale table;;"", 0.1, 0, -100, 100, 1
 	uint16_t[8] loadBins;;"Load", 1, 0, 0, 1000, 0
@@ -1698,6 +1705,8 @@ struct blend_table_s
 
 	int16_t[8] autoscale blendBins;;"", 0.1, 0, -1000, 1000, 1
 	uint8_t[8] autoscale blendValues;;"%", 0.5, 0, 0, 100, 1
+
+	VeTableType veTableSelect;Select which fuel model/VE table this blend will be applied to
 end_struct
 
 blend_table_s[IGN_BLEND_COUNT iterate] ignBlends

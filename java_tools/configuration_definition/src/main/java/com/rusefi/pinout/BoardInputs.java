@@ -11,6 +11,13 @@ public interface BoardInputs {
 
     Reader getReader(Object yamlKey) throws FileNotFoundException;
 
+    /**
+     * Name of a yaml source as written into generated headers, so it must not depend on who ran the generator.
+     */
+    default String getDisplayName(Object yamlKey) {
+        return yamlKey.toString();
+    }
+
     String getName();
 
     List<String> getInputFiles();

@@ -2,9 +2,6 @@
  * @file binary_logging.h
  */
 
-#include <cstddef>
-#include <cstdint>
-
 struct Writer;
 void writeFileHeader(Writer& buffer);
 void writeSdLogLine(Writer& buffer);

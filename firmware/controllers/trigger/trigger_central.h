@@ -120,7 +120,7 @@ public:
 		auto maxAllowedGap = maxAverageToothTime * 10;
 
 		// Clamp between 0.1 seconds ("instant" for a human) and worst case of one engine cycle on low tooth count wheel
-		maxAllowedGap = clampF(0.1f, maxAllowedGap, oneRevolutionLimitInSeconds);
+		maxAllowedGap = std::clamp(maxAllowedGap, 0.1f, oneRevolutionLimitInSeconds);
 
 		return getSecondsSinceTriggerEvent(nowNt) < maxAllowedGap;
 	}

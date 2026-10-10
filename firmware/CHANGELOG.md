@@ -30,6 +30,10 @@ or
 
 ## Unreleased
 
+### Breaking Changes
+ - Removed the explicit threshold for the closed loop fuel idle region. Instead, the idle region is used whenever the idle controller decides the engine is idling, as this better matches behaviors like idle-up when cold, return to idle, etc.
+ - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
+
 ### Added
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
@@ -69,6 +73,7 @@ or
  - MAP cylinder balancing no longer corrupts the MAP reading above 255 kPa. Engines running more than ~22 psi of boost could see reported MAP jump anywhere between 60 and 440 kPa while actual manifold pressure was steady, throwing fuel and ignition off badly at high load.
  - Fix updating wideband O2 sensor modules with older firmware
  - DFCO "After cut timing ramp-in time" is now actually respected, rather than ignored and using 0.5s. #819
+ - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
 
 ## May 2026 Release
 

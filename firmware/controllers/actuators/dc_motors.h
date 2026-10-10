@@ -9,8 +9,6 @@
 
 #include "dc_motor.h"
 
-#include <cstddef>
-
 DcMotor* initDcMotor(const dc_io& io, size_t index, bool useTwoWires);
 DcMotor* initDcMotor(brain_pin_e coil_p, brain_pin_e coil_m, size_t index);
 

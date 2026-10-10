@@ -429,7 +429,7 @@ void handleShaftSignal(int signalIndex, bool isRising, efitick_t timestamp) {
 
 	triggerReentrant--;
 	triggerDuration = getTimeNowLowerNt() - triggerHandlerEntryTime;
-	triggerMaxDuration = maxI(triggerMaxDuration, triggerDuration);
+	triggerMaxDuration = std::max(triggerMaxDuration, triggerDuration);
 }
 
 void TriggerCentral::resetCounters() {

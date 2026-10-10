@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 #if EFI_PROD_CODE
 
 #if EFI_FILE_LOGGING

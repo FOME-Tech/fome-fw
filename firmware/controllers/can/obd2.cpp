@@ -72,7 +72,7 @@ static void obdSendValue(int mode, int PID, int numBytes, float value, CanBusInd
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6662, numBytes <= 2, "invalid numBytes");
 	int iValue = (int)efiRound(value, 1.0f);
 	// clamp to uint8_t (0..255) or uint16_t (0..65535)
-	iValue = maxI(minI(iValue, (numBytes == 1) ? 255 : 65535), 0);
+	iValue = std::clamp<int>(iValue, 0, (numBytes == 1) ? 255 : 65535);
 	obdSendPacket(mode, PID, numBytes, iValue, busIndex);
 }
 
@@ -197,7 +197,7 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 					busIndex); // (A*100/255)
 			break;
 		case PID_FUEL_AIR_RATIO_1: {
-			float lambda = clampF(0, Sensor::getOrZero(SensorType::Lambda1), 1.99f);
+			float lambda = std::clamp(Sensor::getOrZero(SensorType::Lambda1), 0.f, 1.99f);
 
 			uint16_t scaled = lambda * 32768;
 

@@ -41,8 +41,6 @@
 #include "sensor_type.h"
 #include <rusefi/expected.h>
 
-#include <cstddef>
-
 using SensorResult = expected<float>;
 
 // Fwd declare - nobody outside of Sensor.cpp needs to see inside this type

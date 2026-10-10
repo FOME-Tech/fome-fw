@@ -1,7 +1,7 @@
+#include "pch.h"
+
 #include "log_field.h"
 #include "buffered_writer.h"
-
-#include <cstring>
 
 static void memcpy_swapend(void* dest, const void* src, size_t num) {
 	const char* src2 = reinterpret_cast<const char*>(src);
@@ -61,8 +61,8 @@ size_t LogField::writeData(char* buffer, const uint8_t* channels) const {
 	// Bit groups are little-endian words in the (little-endian ECU) output space, so bit i lives in
 	// byte offset + i/8 at bit position i%8 - no endian swap needed for a single byte.
 	if (m_bitIndex >= 0) {
-		uint8_t byte = channels[m_offset + (m_bitIndex >> 3)];
-		buffer[0] = (byte >> (m_bitIndex & 7)) & 1;
+		uint8_t b = channels[m_offset + (m_bitIndex >> 3)];
+		buffer[0] = (b >> (m_bitIndex & 7)) & 1;
 		return 1;
 	}
 

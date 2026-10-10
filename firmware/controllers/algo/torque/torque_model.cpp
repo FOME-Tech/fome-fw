@@ -3,8 +3,6 @@
 #include "throttle_model.h"
 #include "gppwm_channel.h"
 
-#include <algorithm>
-
 // True when traction control should run without the full torque model: no ETB / airmass control,
 // the limit is enforced by spark retard + cut only (the current airmass->torque estimate is the
 // demand). Shared by the torque-model orchestration and the torque-reduction actuator gate.
@@ -66,7 +64,7 @@ void TorqueModelBase::onFastCallback() {
 	if (m_torqueRequestedLimited < m_torqueRequested && grossAtCurrentAir > 0) {
 		// The request is the limited target; their ratio is the fraction of combustion torque spark
 		// has to remove.
-		sparkReductionRequest = clampF(0, (grossAtCurrentAir - grossTorqueRequest) / grossAtCurrentAir, 1);
+		sparkReductionRequest = std::clamp<float>((grossAtCurrentAir - grossTorqueRequest) / grossAtCurrentAir, 0, 1);
 	}
 	m_sparkReductionRequest = 100 * sparkReductionRequest;
 	commandSparkReduction(sparkReductionRequest);
@@ -112,7 +110,7 @@ float TorqueModel::driverDemand() const {
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
 	// Same pedal source and sanitization as the ETB setpoint path.
-	float pedal = clampF(0, Sensor::get(SensorType::AcceleratorPedal).value_or(0), 100);
+	float pedal = std::clamp<float>(Sensor::get(SensorType::AcceleratorPedal).value_or(0), 0, 100);
 
 	return interpolate3d(
 			config->driverTorqueTable, config->driverTorquePedalBins, pedal, config->driverTorqueRpmBins, rpm);
@@ -293,8 +291,8 @@ void AirmassDispatcher::update(float targetAirmassPerCycle, float actualAirmassP
 	// gain scheduling and the PI sees a near-linear plant. Integrate tentatively into a local; the
 	// engine-limited branch below may discard this and bleed the integrator instead of committing it.
 	float prevITerm = m_trimITerm;
-	float iTerm = clampF(-authority, prevITerm + trimCfg.airmassTrimKi * error * dt, authority);
-	float trim = clampF(-authority, trimCfg.airmassTrimKp * error + iTerm, authority);
+	float iTerm = std::clamp(prevITerm + trimCfg.airmassTrimKi * error * dt, -authority, authority);
+	float trim = std::clamp(trimCfg.airmassTrimKp * error + iTerm, -authority, authority);
 
 	float airmassPerCycle = targetAirmassPerCycle * (1 + trim * PERCENT_DIV);
 
@@ -331,7 +329,7 @@ void AirmassDispatcher::update(float targetAirmassPerCycle, float actualAirmassP
 			// Exponential bleed of the integrator toward zero (~400 ms time constant). Bleed from the
 			// pre-integration value so this tick adds no windup.
 			constexpr float trimBleedTau = 0.4f;
-			m_trimITerm = prevITerm * clampF(0, 1 - dt / trimBleedTau, 1);
+			m_trimITerm = prevITerm * std::clamp<float>(1 - dt / trimBleedTau, 0, 1);
 			m_airmassTrim = m_trimITerm;
 			m_throttleRequest = 100;
 			return;

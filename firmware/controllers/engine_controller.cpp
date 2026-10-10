@@ -386,6 +386,9 @@ bool validateConfig() {
 
 	if (isAdcChannelValid(engineConfiguration->mafAdcChannel)) {
 		ensureArrayIsAscending("MAF transfer function", config->mafDecodingBins);
+
+		ensureArrayIsAscending("MAF trim load", config->mafTrimLoadBins);
+		ensureArrayIsAscending("MAF trim RPM", config->mafTrimRpmBins);
 	}
 
 	if (isAdcChannelValid(engineConfiguration->fuelLevelSensor)) {

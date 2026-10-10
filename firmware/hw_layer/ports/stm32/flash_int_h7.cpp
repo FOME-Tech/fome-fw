@@ -42,12 +42,7 @@ flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 }
 
 static void intFlashClearErrors(uint8_t ctlr) {
-	// Both banks use write-one-to-clear registers. Parenthesize the selected
-	// register so bank 2 receives the write as well.
-	(ctlr ? FLASH->CCR2 : FLASH->CCR1) = FLASH_CCR_CLR_EOP | FLASH_CCR_CLR_WRPERR | FLASH_CCR_CLR_PGSERR |
-										 FLASH_CCR_CLR_STRBERR | FLASH_CCR_CLR_INCERR | FLASH_CCR_CLR_OPERR |
-										 FLASH_CCR_CLR_RDPERR | FLASH_CCR_CLR_RDSERR | FLASH_CCR_CLR_SNECCERR |
-										 FLASH_CCR_CLR_DBECCERR | FLASH_CCR_CLR_CRCEND | FLASH_CCR_CLR_CRCRDERR;
+	(ctlr ? FLASH->CCR2 : FLASH->CCR1) = 0xffffffff;
 }
 
 static int intFlashCheckErrors(uint8_t ctlr) {
@@ -191,18 +186,22 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	if (size == 0) {
 		return FLASH_RETURN_SUCCESS;
 	}
+
 	if (address % flashWordSize != 0) {
 		return FLASH_RETURN_ALIGNERROR;
 	}
+
 	if (!buffer || address < FLASH_BASE || address > FLASH_END) {
 		return FLASH_RETURN_NO_PERMISSION;
 	}
+
 	// A transaction belongs to one bank controller. Validate the range before
 	// adding addresses or rounding, including a partial final flash word.
 	flashaddr_t bankEnd = address < FLASH_BANK2_BASE ? FLASH_BANK2_BASE - 1 : FLASH_END;
 	if (size > bankEnd - address + 1) {
 		return FLASH_RETURN_NO_PERMISSION;
 	}
+
 #ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: write %d bytes at 0x%08x", size, address);
 	Timer writeTimer;
@@ -243,7 +242,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		__DSB();
 
 		// Write 32 bytes
-		for (size_t i = 0; i < flashWordSize / sizeof(uint32_t); i++) {
+		for (size_t i = 0; i < flashWordSize / sizeof(flashdata_t); i++) {
 			*pWrite++ = flashWord[i];
 		}
 
