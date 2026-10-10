@@ -230,11 +230,11 @@ void ServerSocket::send(const void* buffer, size_t size) {
 		// Wake the driver to perform the actual send
 		isrSemaphore.signal();
 
-		// Wait for this chunk to complete; 5s timeout guards against a driver that never
-		// fires SOCKET_MSG_SEND (which would otherwise deadlock this thread forever).
+		// Wait for the WiFi thread to hand this chunk to the module; 5s timeout guards against
+		// a module that never has room for it (which would otherwise deadlock this thread forever).
 		msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
 		if (result == MSG_TIMEOUT) {
-			// The driver never confirmed the send — cancel the pending request and close
+			// The module never accepted the data — cancel the pending request and close
 			// so callers see the failure.
 			m_sendRequest = false;
 			closeSocket();
@@ -252,8 +252,6 @@ void ServerSocket::send(const void* buffer, size_t size) {
 
 void ServerSocket::onSendDone() {
 	noteSocketActivity();
-	chibios_rt::CriticalSectionLocker csl;
-	m_sendDoneSemaphore.signalI();
 }
 
 size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
@@ -305,6 +303,12 @@ bool ServerSocket::trySendImpl() {
 
 		if (result == SOCK_ERR_NO_ERROR) {
 			m_sendRequest = false;
+
+			// The driver has copied the data out to the module, so the caller can queue its next
+			// chunk right away. Don't wait for SOCKET_MSG_SEND: the module only reports that once
+			// the peer has ACKed, and a peer that sees a single segment at a time sits on its
+			// delayed ACK timer for each one. The module pushes back with SOCK_ERR_BUFFER_FULL.
+			m_sendDoneSemaphore.signal();
 			return true;
 		} else if (result == SOCK_ERR_BUFFER_FULL) {
 			// Driver buffers are full, retry on the next helper tick
