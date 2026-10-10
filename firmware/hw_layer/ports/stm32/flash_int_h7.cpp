@@ -182,6 +182,26 @@ int intFlashSectorErase(flashsector_t sector) {
 }
 
 int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
+	constexpr size_t flashWordSize = 32;
+	if (size == 0) {
+		return FLASH_RETURN_SUCCESS;
+	}
+
+	if (address % flashWordSize != 0) {
+		return FLASH_RETURN_ALIGNERROR;
+	}
+
+	if (!buffer || address < FLASH_BASE || address > FLASH_END) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
+
+	// A transaction belongs to one bank controller. Validate the range before
+	// adding addresses or rounding, including a partial final flash word.
+	flashaddr_t bankEnd = address < FLASH_BANK2_BASE ? FLASH_BANK2_BASE - 1 : FLASH_END;
+	if (size > bankEnd - address + 1) {
+		return FLASH_RETURN_NO_PERMISSION;
+	}
+
 #ifndef EFI_BOOTLOADER
 	efiPrintf("Flash: write %d bytes at 0x%08x", size, address);
 	Timer writeTimer;
@@ -205,7 +225,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	FLASH_CR |= FLASH_CR_PSIZE_VALUE;
 
 	// Round up to the next number of full 32 byte words
-	size_t flashWordCount = (size - 1) / 32 + 1;
+	size_t flashWordCount = (size - 1) / flashWordSize + 1;
 
 	// Read units of flashdata_t from the buffer, writing to flash
 	const flashdata_t* pRead = (const flashdata_t*)buffer;
@@ -220,7 +240,7 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		__DSB();
 
 		// Write 32 bytes
-		for (size_t i = 0; i < 8; i++) {
+		for (size_t i = 0; i < flashWordSize / sizeof(flashdata_t); i++) {
 			*pWrite++ = *pRead++;
 		}
 
