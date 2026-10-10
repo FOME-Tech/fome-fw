@@ -317,8 +317,6 @@ TEST(fuelCut, clutch) {
 	EXPECT_CUT();
 }
 
-// After the cut ends, timing retard ramps back out over the configured duration.
-// This used to be hardcoded to 0.5s, ignoring the setting entirely.
 TEST(fuelCut, timingRetardRampIn) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
