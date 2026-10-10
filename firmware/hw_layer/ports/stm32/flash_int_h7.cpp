@@ -42,7 +42,7 @@ flashaddr_t intFlashSectorBegin(flashsector_t sector) {
 }
 
 static void intFlashClearErrors(uint8_t ctlr) {
-	ctlr ? FLASH->CCR2 : FLASH->CCR1 = 0xffffffff;
+	(ctlr ? FLASH->CCR2 : FLASH->CCR1) = 0xffffffff;
 }
 
 static int intFlashCheckErrors(uint8_t ctlr) {
