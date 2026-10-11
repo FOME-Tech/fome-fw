@@ -11,14 +11,6 @@ static chibios_rt::BinarySemaphore isrSemaphore(/* taken =*/true);
 
 /*static*/ ServerSocket* ServerSocket::s_serverList = nullptr;
 
-static bool s_clientConnected = false;
-static systime_t s_lastDhcpEvent = 0;
-static systime_t s_lastSocketActivity = 0;
-
-static void noteSocketActivity() {
-	s_lastSocketActivity = chVTGetSystemTimeX();
-}
-
 ServerSocket::ServerSocket() {
 	// Add server to linked list
 	m_nextServer = s_serverList;
@@ -39,14 +31,11 @@ void ServerSocket::startListening(const sockaddr_in& addr, int backlog) {
 }
 
 void ServerSocket::onAccept(int connectedSocket) {
-	noteSocketActivity();
-
 	// A new connection replaces any existing one: the old peer may have vanished without closing
 	// (laptop went to sleep, etc), and if we just forgot about its socket it would never be closed.
 	closeSocketImpl();
 
 	m_connectedSocket = connectedSocket;
-	m_connectedTime = chVTGetSystemTimeX();
 
 	recv(m_connectedSocket, &m_recvBuf, 1, 0);
 
@@ -148,8 +137,6 @@ void ServerSocket::handleRequestsImpl() {
 }
 
 void ServerSocket::onRecv(uint8_t* buffer, size_t recvSize, size_t remaining) {
-	noteSocketActivity();
-
 	{
 		chibios_rt::CriticalSectionLocker csl;
 
@@ -216,8 +203,6 @@ void ServerSocket::send(const void* buffer, size_t size) {
 		return;
 	}
 
-	noteSocketActivity();
-
 	const uint8_t* ptr = reinterpret_cast<const uint8_t*>(buffer);
 	while (size > 0 && hasConnectedSocket()) {
 		size_t toSend = std::min(size, static_cast<size_t>(SOCKET_BUFFER_MAX_LENGTH));
@@ -250,9 +235,7 @@ void ServerSocket::send(const void* buffer, size_t size) {
 	}
 }
 
-void ServerSocket::onSendDone() {
-	noteSocketActivity();
-}
+void ServerSocket::onSendDone() {}
 
 size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
 	return iqReadTimeout(&m_recvQueue, buffer, size, timeout);
@@ -337,9 +320,6 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 			if (state.u8CurrState == M2M_WIFI_DISCONNECTED) {
 				efiPrintf("WiFi client disconnected");
 				ServerSocket::onLinkDownAll();
-				s_clientConnected = false;
-				s_lastDhcpEvent = 0;
-				s_lastSocketActivity = 0;
 			} else {
 				efiPrintf("WiFi client state %d", (int)state.u8CurrState);
 			}
@@ -348,9 +328,6 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 			auto& dhcpInfo = *reinterpret_cast<tstrM2MIPConfig*>(pvMsg);
 			uint8_t* addr = reinterpret_cast<uint8_t*>(&dhcpInfo.u32StaticIP);
 			efiPrintf("WiFi client connected DHCP IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
-			s_clientConnected = true;
-			s_lastDhcpEvent = chVTGetSystemTimeX();
-			s_lastSocketActivity = s_lastDhcpEvent;
 		} break;
 		default:
 			efiPrintf("WifiCallback: %d", (int)u8MsgType);
@@ -407,7 +384,6 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 		case SOCKET_MSG_RECV: {
 			auto recvMsg = reinterpret_cast<tstrSocketRecvMsg*>(pvMsg);
 			if (recvMsg && (recvMsg->s16BufferSize > 0)) {
-				noteSocketActivity();
 				if (auto server = ServerSocket::findConnected(sock)) {
 					server->onRecv(recvMsg->pu8Buffer, recvMsg->s16BufferSize, recvMsg->u16RemainingSize);
 				}

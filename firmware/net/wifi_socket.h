@@ -54,7 +54,6 @@ private:
 
 	int m_listenerSocket = -1;
 	int m_connectedSocket = -1;
-	systime_t m_connectedTime = 0;
 
 	// Requests from other threads for the WiFi thread to service
 	bool m_listenRequest = false;
