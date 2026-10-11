@@ -6,6 +6,7 @@ extern "C" {
 }
 
 #include "mmc_card.h"
+#include "fatfs_drives.h"
 
 static const blt_char firmwareFilename[] = "/fome_update.srec";
 
@@ -24,10 +25,13 @@ static struct {
 ****************************************************************************************/
 extern "C" blt_bool FileIsFirmwareUpdateRequestedHook() {
 	// First, try to attach the SD card
-	if (!initializeMmcBlockDevice()) {
+	BaseBlockDevice* cardBlockDevice = initializeMmcBlockDevice();
+	if (!cardBlockDevice) {
 		// No SD card present, no update to be done
 		return BLT_FALSE;
 	}
+
+	fatfsAttachDrive(FATFS_DRIVE_SD, cardBlockDevice);
 
 	// needs to be zeroed according to f_stat docs
 	FILINFO fileInfoObject;

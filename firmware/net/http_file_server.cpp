@@ -8,6 +8,8 @@
 #include "ff.h"
 #include "thread_priority.h"
 #include "mmc_card.h"
+#include "mass_storage_init.h"
+#include "fatfs_drives.h"
 #include "dma_buffers.h"
 #include <rusefi/crc.h>
 #include <stdio.h>
@@ -86,6 +88,9 @@ struct ZipRecord {
 static ZipRecord zipRecords[MAX_ZIP_FILES];
 
 static NO_CACHE ServerSocket httpServer;
+
+// Filesystem of the read-only ini image
+static FATFS iniFs;
 static THD_WORKING_AREA(httpServerStack, 5120);
 
 class BufferedSender {
@@ -253,6 +258,18 @@ tr:hover { background: #323238; }
 input[type=checkbox] { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
 </style></head><body><div class='card'>)HTML";
 
+#define INI_DOWNLOAD_PATH "/fome.ini"
+
+// Link to the ini download, for pages to include if this build has an ini to offer.
+static const char* iniLinkHtml() {
+	if (!getIniBlockDevice()) {
+		return "";
+	}
+
+	return "<a class='btn' href='" INI_DOWNLOAD_PATH "' style='background:#3f3f46'>"
+		   "\xf0\x9f\x93\x84 Download TunerStudio INI</a>";
+}
+
 // Served for every request while the card isn't ours to read, explaining why and what to do about it.
 static void sendSdStatusPage(BufferedSender& sender, SdCardState state) {
 	const char* title;
@@ -286,10 +303,12 @@ static void sendSdStatusPage(BufferedSender& sender, SdCardState state) {
 
 	static const char TITLE_OPEN[] = "<h1>";
 	static const char TITLE_CLOSE[] = "</h1><p>";
-	static const char PAGE_CLOSE[] = "</p></div></body></html>";
+	static const char DETAIL_CLOSE[] = "</p>";
+	static const char PAGE_CLOSE[] = "</div></body></html>";
+	const char* iniLink = iniLinkHtml();
 
 	size_t bodyLen = strlen(HTML_HEADER) + strlen(TITLE_OPEN) + strlen(title) + strlen(TITLE_CLOSE) + strlen(detail) +
-					 strlen(PAGE_CLOSE);
+					 strlen(DETAIL_CLOSE) + strlen(iniLink) + strlen(PAGE_CLOSE);
 
 	char header[192];
 	snprintf(
@@ -309,6 +328,8 @@ static void sendSdStatusPage(BufferedSender& sender, SdCardState state) {
 	sendString(sender, title);
 	sendString(sender, TITLE_CLOSE);
 	sendString(sender, detail);
+	sendString(sender, DETAIL_CLOSE);
+	sendString(sender, iniLink);
 	sendString(sender, PAGE_CLOSE);
 }
 
@@ -402,6 +423,37 @@ static bool strEqualCi(const char* s1, const char* s2) {
 		s2++;
 	}
 	return *s1 == *s2;
+}
+
+// The ini lives in flash, inside the small read-only FAT image that USB mass storage presents as
+// the "INI Drive". It's mounted as a second FatFS drive, so find the ini in there and send it like
+// any other file. Boards with an uncompressed image store the ini zipped instead.
+static void handleIniDownload(BufferedSender& sender) {
+	static const char INI_DRIVE[] = "1:/";
+	static_assert(FATFS_DRIVE_INI == 1);
+
+	DIR dir;
+	if (f_opendir(&dir, INI_DRIVE) != FR_OK) {
+		sendHttpError(sender, 404, "INI Not Available");
+		return;
+	}
+
+	FILINFO fno;
+	bool found = false;
+	while (!found && f_readdir(&dir, &fno) == FR_OK && fno.fname[0] != 0) {
+		const char* ext = strrchr(fno.fname, '.');
+		found = !(fno.fattrib & AM_DIR) && ext && (strEqualCi(ext, ".ini") || strEqualCi(ext, ".zip"));
+	}
+	f_closedir(&dir);
+
+	if (!found) {
+		sendHttpError(sender, 404, "INI Not Available");
+		return;
+	}
+
+	char path[sizeof(INI_DRIVE) + sizeof(fno.fname)];
+	snprintf(path, sizeof(path), "%s%s", INI_DRIVE, fno.fname);
+	handleFileDownload(sender, path, fno.fname, fno.fsize);
 }
 
 // Check if a filename appears in a comma-separated filter list.
@@ -661,8 +713,9 @@ function togAll() {
 			"<button class='btn' id='dlsel' onclick='dlSel()' disabled>"
 			"\xf0\x9f\x93\xa5 Download Selected as .ZIP</button>"
 			"<button class='btn' onclick='togAll()' style='background:#3f3f46'>"
-			"\xe2\x98\x91 Toggle All</button>"
-			"</div>");
+			"\xe2\x98\x91 Toggle All</button>");
+	sendString(sender, iniLinkHtml());
+	sendString(sender, "</div>");
 
 	sendString(
 			sender, "<table><tr><th style='width:30px'></th><th>Name</th><th style='text-align:right'>Size</th></tr>");
@@ -798,6 +851,12 @@ static void handleClient(ServerSocket& server) {
 		return;
 	}
 
+	// The ini comes from flash, not the SD card, so it's available whatever state the card is in
+	if (strcmp(cleanPath, INI_DOWNLOAD_PATH) == 0) {
+		handleIniDownload(sender);
+		return;
+	}
+
 	// Without a filesystem of our own there are no files to serve: explain why instead
 	SdCardState sdState = getSdCardState();
 	if (sdState != SdCardState::Mounted) {
@@ -878,6 +937,12 @@ static void handleClient(ServerSocket& server) {
 static THD_FUNCTION(httpServerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("HTTP Server");
+
+	// Mount the ini image, if there is one. Nothing is read until the first access.
+	if (BaseBlockDevice* iniDevice = getIniBlockDevice()) {
+		fatfsAttachDrive(FATFS_DRIVE_INI, iniDevice);
+		f_mount(&iniFs, "1:", 0);
+	}
 
 	// Allow Wi-Fi stack and TS console to settle before binding port 80
 	chThdSleepMilliseconds(500);

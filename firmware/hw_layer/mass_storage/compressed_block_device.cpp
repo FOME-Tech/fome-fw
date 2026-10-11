@@ -51,9 +51,8 @@ static bool disconnect(void* instance) {
 	return HAL_SUCCESS;
 }
 
-static bool read(void* instance, uint32_t startblk, uint8_t* buffer, uint32_t /*n*/) {
-	CompressedBlockDevice* cbd = reinterpret_cast<CompressedBlockDevice*>(instance);
-
+// Decompress a single block. Caller must hold the mutex.
+static void readBlock(CompressedBlockDevice* cbd, uint32_t startblk, uint8_t* buffer) {
 	// If we just initialized, or trying to seek backwards, (re)initialize the decompressor
 	if (cbd->lastBlock == -1 || (int32_t)startblk <= cbd->lastBlock) {
 		uzlib_uncompress_init(&cbd->d, cbd->dictionary, sizeof(cbd->dictionary));
@@ -81,6 +80,18 @@ static bool read(void* instance, uint32_t startblk, uint8_t* buffer, uint32_t /*
 
 	// Save the current position in the stream so we can efficiently seek forward later
 	cbd->lastBlock = startblk;
+}
+
+static bool read(void* instance, uint32_t startblk, uint8_t* buffer, uint32_t n) {
+	CompressedBlockDevice* cbd = reinterpret_cast<CompressedBlockDevice*>(instance);
+
+	chMtxLock(&cbd->mutex);
+
+	for (uint32_t i = 0; i < n; i++) {
+		readBlock(cbd, startblk + i, buffer + i * BLOCK_SIZE);
+	}
+
+	chMtxUnlock(&cbd->mutex);
 
 	return HAL_SUCCESS;
 }
@@ -136,6 +147,7 @@ static const BaseBlockDeviceVMT cbdVmt = {
 
 void compressedBlockDeviceObjectInit(CompressedBlockDevice* cbd) {
 	cbd->vmt = &cbdVmt;
+	chMtxObjectInit(&cbd->mutex);
 	memset(cbd->dictionary, 0, sizeof(cbd->dictionary));
 	cbd->state = BLK_STOP;
 }

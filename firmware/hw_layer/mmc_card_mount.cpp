@@ -6,6 +6,7 @@
 #include "dma_buffers.h"
 
 #include "ff.h"
+#include "fatfs_drives.h"
 #include "mass_storage_init.h"
 
 static SdCardState sdCardState = SdCardState::Initializing;
@@ -58,6 +59,7 @@ bool mountSdFilesystem() {
 #endif
 
 	// We were able to connect the SD card, mount the filesystem
+	fatfsAttachDrive(FATFS_DRIVE_SD, cardBlockDevice);
 	FRESULT err = f_mount(dma_buffers::fs(), "/", 1);
 	if (err == FR_OK) {
 		efiPrintf("SD card mounted!");
@@ -82,6 +84,7 @@ void unmountSdFilesystem() {
 
 	// Unmount the volume
 	f_mount(nullptr, nullptr, 0); // FatFs: Unregister work area prior to discard it
+	fatfsAttachDrive(FATFS_DRIVE_SD, nullptr);
 
 	stopMmcBlockDevice();
 

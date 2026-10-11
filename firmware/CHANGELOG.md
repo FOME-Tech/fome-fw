@@ -52,6 +52,7 @@ or
  - Flex fuel ethanol content is now correct immediately at startup, instead of ramping up from 0% over the first second while the sensor's filter settles. The last valid reading is stored in backup RAM, and used to prime the filter at startup as well as any time the sensor is failed - the fuel in the tank can't change while the ECU isn't watching. If no value was stored and the sensor is dead, the fallback is configurable: "Failed flex sensor ethanol content", defaulting to 50%.
  - Added gauges for EGT channels 3-8 in TunerStudio
  - ECUs with WiFi (Atlas) can download logs over WiFi connection in addition to USB #842
+ - ECUs with WiFi (Atlas) can download the TunerStudio ini matching the installed firmware over WiFi, from the same page as the logs. The page is available even with no SD card inserted.
 
 
 ### Changed
