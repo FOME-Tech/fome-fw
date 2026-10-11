@@ -44,8 +44,6 @@ public:
 	static ServerSocket* findListener(int sock);
 	static ServerSocket* findConnected(int sock);
 
-	static bool hasAnyConnectedSocket();
-
 private:
 	// WiFi thread only: these call in to the driver
 	bool trySendImpl();

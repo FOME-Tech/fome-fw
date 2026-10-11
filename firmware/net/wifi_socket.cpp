@@ -235,8 +235,6 @@ void ServerSocket::send(const void* buffer, size_t size) {
 	}
 }
 
-void ServerSocket::onSendDone() {}
-
 size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
 	return iqReadTimeout(&m_recvQueue, buffer, size, timeout);
 }
@@ -267,17 +265,6 @@ size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
 	}
 
 	return current;
-}
-
-/*static*/ bool ServerSocket::hasAnyConnectedSocket() {
-	auto current = s_serverList;
-	while (current) {
-		if (current->hasConnectedSocket()) {
-			return true;
-		}
-		current = current->m_nextServer;
-	}
-	return false;
 }
 
 bool ServerSocket::trySendImpl() {
@@ -399,10 +386,6 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				efiPrintf("WiFi: Send failed with %d on sock %d", (int)*sentBytes, (int)sock);
 				if (auto server = ServerSocket::findConnected(sock)) {
 					server->onClose();
-				}
-			} else {
-				if (auto server = ServerSocket::findConnected(sock)) {
-					server->onSendDone();
 				}
 			}
 		} break;
