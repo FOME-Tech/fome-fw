@@ -524,7 +524,6 @@ function togAll() {
     c.forEach(function(x) { x.checked = !a; });
     upd();
 }
-setInterval(function() { fetch('/ping').catch(function(){}) }, 15000);
 </script></body></html>)HTML";
 
 	sendString(
@@ -687,17 +686,6 @@ static void handleClient(ServerSocket& server) {
 	// URL decode
 	char cleanPath[128];
 	urlDecode(cleanPath, rawPath, sizeof(cleanPath));
-
-	// Respond to keepalive ping from web UI
-	if (strcmp(cleanPath, "/ping") == 0) {
-		static const char pingResp[] = "HTTP/1.1 200 OK\r\n"
-									   "Content-Type: text/plain\r\n"
-									   "Content-Length: 2\r\n"
-									   "Connection: close\r\n\r\n"
-									   "OK";
-		sendString(sender, pingResp);
-		return;
-	}
 
 	// Fast 404 for browser favicon
 	if (strcmp(cleanPath, "/favicon.ico") == 0) {
