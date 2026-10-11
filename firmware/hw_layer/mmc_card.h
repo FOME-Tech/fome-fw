@@ -19,6 +19,21 @@ void stopMmcBlockDevice();
 bool mountSdFilesystem();
 void unmountSdFilesystem();
 
+enum class SdCardState : uint8_t {
+	// Still starting up: haven't yet decided who gets the card
+	Initializing,
+	// No card detected, or SD card disabled in the configuration
+	NotPresent,
+	// Card handed to the PC as a USB mass storage device, we can't touch it
+	UsbMassStorage,
+	// Filesystem mounted by the ECU
+	Mounted,
+	// Card detected, but the filesystem failed to mount, or was unmounted after a write error
+	Failed,
+};
+
+SdCardState getSdCardState();
+
 void onUsbConnectedNotifyMmcI();
 
 // Implemented in firmware by reading from engineConfiguration

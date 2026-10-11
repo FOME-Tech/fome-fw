@@ -8,7 +8,11 @@
 #include "ff.h"
 #include "mass_storage_init.h"
 
-static bool fs_ready = false;
+static SdCardState sdCardState = SdCardState::Initializing;
+
+SdCardState getSdCardState() {
+	return sdCardState;
+}
 
 #if HAL_USE_USB_MSD
 static chibios_rt::BinarySemaphore usbConnectedSemaphore(/* taken =*/true);
@@ -29,6 +33,7 @@ bool mountSdFilesystem() {
 	// if no card, don't try to mount FS
 	if (!cardBlockDevice) {
 		efiPrintf("SD: no card detected");
+		sdCardState = SdCardState::NotPresent;
 		return false;
 	}
 
@@ -45,6 +50,7 @@ bool mountSdFilesystem() {
 
 		// Mount the real card to USB
 		attachMsdSdCard(cardBlockDevice);
+		sdCardState = SdCardState::UsbMassStorage;
 
 		// At this point we're done: don't try to write files ourselves
 		return false;
@@ -55,23 +61,24 @@ bool mountSdFilesystem() {
 	FRESULT err = f_mount(dma_buffers::fs(), "/", 1);
 	if (err == FR_OK) {
 		efiPrintf("SD card mounted!");
-		fs_ready = true;
+		sdCardState = SdCardState::Mounted;
 		return true;
 	} else {
 		// FatFs error number, not just "it didn't work": FR_NO_FILESYSTEM (13) means the card
 		// needs formatting, while FR_DISK_ERR (1) points at the card or the bus instead.
 		efiPrintf("SD card failed to mount filesystem, FatFs error %d", err);
+		sdCardState = SdCardState::Failed;
 		return false;
 	}
 }
 
 void unmountSdFilesystem() {
-	if (!fs_ready) {
+	if (sdCardState != SdCardState::Mounted) {
 		efiPrintf("Error: No File system is mounted. \"mountsd\" first");
 		return;
 	}
 
-	fs_ready = false;
+	sdCardState = SdCardState::Failed;
 
 	// Unmount the volume
 	f_mount(nullptr, nullptr, 0); // FatFs: Unregister work area prior to discard it

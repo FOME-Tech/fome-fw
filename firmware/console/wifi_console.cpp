@@ -7,6 +7,7 @@
 #include "socket/include/socket.h"
 
 #include "tunerstudio.h"
+#include "http_file_server.h"
 
 class WifiChannel final : public TsChannelBase {
 public:
@@ -79,7 +80,7 @@ static void startTsListening() {
 	address.sin_port = _htons(29000);
 	address.sin_addr.s_addr = 0;
 
-	tsServer.startListening(address);
+	tsServer.startListening(address, 2);
 }
 
 struct WifiConsoleThread : public TunerstudioThread {
@@ -90,6 +91,10 @@ struct WifiConsoleThread : public TunerstudioThread {
 		waitForWifiInit();
 
 		startTsListening();
+
+#if EFI_FILE_LOGGING
+		startHttpFileServer();
+#endif
 
 		return &wifiChannel;
 	}

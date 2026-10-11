@@ -20,10 +20,11 @@ ServerSocket::ServerSocket() {
 	iqObjectInit(&m_recvQueue, m_recvQueueBuffer, sizeof(m_recvQueueBuffer), nullptr, nullptr);
 }
 
-void ServerSocket::startListening(const sockaddr_in& addr) {
+void ServerSocket::startListening(const sockaddr_in& addr, int backlog) {
 	// Only the WiFi thread may call in to the driver, so stash the address and let it do the bind
 	m_listenPort = addr.sin_port;
 	m_listenAddress = addr.sin_addr.s_addr;
+	m_backlog = backlog;
 	m_listenRequest = true;
 
 	isrSemaphore.signal();
@@ -37,6 +38,9 @@ void ServerSocket::onAccept(int connectedSocket) {
 	m_connectedSocket = connectedSocket;
 
 	recv(m_connectedSocket, &m_recvBuf, 1, 0);
+
+	// Wake any thread that is waiting for a connection
+	m_acceptSemaphore.signal();
 }
 
 bool ServerSocket::closeSocket() {
@@ -67,12 +71,9 @@ void ServerSocket::closeSocketImpl() {
 		chibios_rt::CriticalSectionLocker csl;
 		iqResetI(&m_recvQueue);
 
-		// Any thread waiting on m_sendDoneSemaphore (in send()) needs to be woken up,
-		// otherwise it will deadlock forever waiting for a hardware confirmation that
-		// will never come for a closed socket. resetI(true) wakes it with MSG_RESET
-		// and leaves the semaphore 'taken' for the next connection.
 		m_sendRequest = false;
 		m_sendDoneSemaphore.resetI(true);
+		m_acceptSemaphore.resetI(true);
 	}
 }
 
@@ -164,45 +165,74 @@ bool ServerSocket::hasConnectedSocket() const {
 	return m_connectedSocket != -1;
 }
 
+bool ServerSocket::waitForConnection(int timeoutMs) {
+	// Fast-path: already connected before going to sleep
+	if (m_connectedSocket != -1) {
+		return true;
+	}
+	return m_acceptSemaphore.wait(TIME_MS2I(timeoutMs)) == MSG_OK;
+}
+
 /*static*/ bool ServerSocket::checkSend() {
 	bool result = false;
+	static ServerSocket* s_lastServiced = nullptr;
 
-	auto current = s_serverList;
-
-	while (current) {
-		result |= current->trySendImpl();
-		current = current->m_nextServer;
+	ServerSocket* start = s_lastServiced ? s_lastServiced->m_nextServer : nullptr;
+	if (!start) {
+		start = s_serverList;
 	}
+
+	ServerSocket* current = start;
+	do {
+		if (current && current->trySendImpl()) {
+			result = true;
+			s_lastServiced = current;
+			break;
+		}
+		current = current ? current->m_nextServer : nullptr;
+		if (!current) {
+			current = s_serverList;
+		}
+	} while (current != start);
 
 	return result;
 }
 
-void ServerSocket::send(uint8_t* buffer, size_t size) {
-	m_sendBuffer = buffer;
-	m_sendSize = size;
-	m_sendRequest = true;
-
-	// Wake the driver to perform the actual send
-	isrSemaphore.signal();
-
-	// Wait for this chunk to complete; 5s timeout guards against a driver that never
-	// fires SOCKET_MSG_SEND (which would otherwise deadlock this thread forever).
-	msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
-	if (result == MSG_TIMEOUT) {
-		// The driver never confirmed the send — cancel the pending request and close
-		// so callers see the failure.
-		m_sendRequest = false;
-		closeSocket();
+void ServerSocket::send(const void* buffer, size_t size) {
+	if (!hasConnectedSocket() || buffer == nullptr || size == 0) {
+		return;
 	}
 
-	// Otherwise it either worked, or the semaphore was reset because the WiFi thread
-	// already closed the socket underneath us: nothing left to clean up in that case.
-}
+	const uint8_t* ptr = reinterpret_cast<const uint8_t*>(buffer);
+	while (size > 0 && hasConnectedSocket()) {
+		size_t toSend = std::min(size, static_cast<size_t>(SOCKET_BUFFER_MAX_LENGTH));
+		memcpy(m_txBuf, ptr, toSend);
 
-void ServerSocket::onSendDone() {
-	// Send completed, notify caller!
-	chibios_rt::CriticalSectionLocker csl;
-	m_sendDoneSemaphore.signalI();
+		m_sendBuffer = m_txBuf;
+		m_sendSize = toSend;
+		m_sendRequest = true;
+
+		// Wake the driver to perform the actual send
+		isrSemaphore.signal();
+
+		// Wait for the WiFi thread to hand this chunk to the module; 5s timeout guards against
+		// a module that never has room for it (which would otherwise deadlock this thread forever).
+		msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
+		if (result == MSG_TIMEOUT) {
+			// The module never accepted the data — cancel the pending request and close
+			// so callers see the failure.
+			m_sendRequest = false;
+			closeSocket();
+			break;
+		} else if (result != MSG_OK) {
+			// The semaphore was reset because the WiFi thread already closed the socket
+			// underneath us: nothing left to clean up, but the rest of the data has nowhere to go.
+			break;
+		}
+
+		ptr += toSend;
+		size -= toSend;
+	}
 }
 
 size_t ServerSocket::recvTimeout(uint8_t* buffer, size_t size, int timeout) {
@@ -243,6 +273,12 @@ bool ServerSocket::trySendImpl() {
 
 		if (result == SOCK_ERR_NO_ERROR) {
 			m_sendRequest = false;
+
+			// The driver has copied the data out to the module, so the caller can queue its next
+			// chunk right away. Don't wait for SOCKET_MSG_SEND: the module only reports that once
+			// the peer has ACKed, and a peer that sees a single segment at a time sits on its
+			// delayed ACK timer for each one. The module pushes back with SOCK_ERR_BUFFER_FULL.
+			m_sendDoneSemaphore.signal();
 			return true;
 		} else if (result == SOCK_ERR_BUFFER_FULL) {
 			// Driver buffers are full, retry on the next helper tick
@@ -291,18 +327,25 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 		case SOCKET_MSG_BIND: {
 			auto bindMsg = reinterpret_cast<tstrSocketBindMsg*>(pvMsg);
 			if (bindMsg && bindMsg->status == 0) {
-				// Socket bind complete, now listen!
-				// A backlog of 3 helps handle rapid discovery from Tunerstudio's port scanner.
-				listen(sock, 3);
+				if (auto server = ServerSocket::findListener(sock)) {
+					int backlog = server->getBacklog();
+					efiPrintf("WiFi: Bind ok on sock %d, listening with backlog %d", (int)sock, backlog);
+					listen(sock, backlog);
+				} else {
+					efiPrintf("WiFi: Bind ok on unknown sock %d", (int)sock);
+				}
 			} else {
-				efiPrintf("WiFi: Bind failed on sock %d with %d", (int)sock, bindMsg ? (int)bindMsg->status : -1);
+				efiPrintf("WiFi: Bind failed on sock %d with %d", (int)sock, bindMsg ? (int)bindMsg->status : -99);
 			}
 		} break;
 		case SOCKET_MSG_LISTEN: {
 			// accept() is implicit; just surface a failure if listen didn't take
 			auto listenMsg = reinterpret_cast<tstrSocketListenMsg*>(pvMsg);
-			if (listenMsg && listenMsg->status != 0) {
-				efiPrintf("WiFi: Listen failed on sock %d with %d", (int)sock, (int)listenMsg->status);
+			if (listenMsg && listenMsg->status == 0) {
+				efiPrintf("WiFi: Listening ok on sock %d", (int)sock);
+			} else {
+				efiPrintf(
+						"WiFi: Listen failed on sock %d with %d", (int)sock, listenMsg ? (int)listenMsg->status : -99);
 			}
 		} break;
 		case SOCKET_MSG_ACCEPT: {
@@ -312,8 +355,8 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				int keepAlive = 1;
 				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPALIVE, &keepAlive, sizeof(keepAlive));
 
-				// Use a shorter idle time before keep-alive starts (10 seconds instead of default 60)
-				int keepIdle = 20; // units of 500ms
+				// Detect dead peers: 10s idle
+				int keepIdle = 20; // units of 500ms (10s)
 				setsockopt(acceptMsg->sock, SOL_SOCKET, SO_TCP_KEEPIDLE, &keepIdle, sizeof(keepIdle));
 
 				if (auto server = ServerSocket::findListener(sock)) {
@@ -338,8 +381,12 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 			}
 		} break;
 		case SOCKET_MSG_SEND: {
-			if (auto server = ServerSocket::findConnected(sock)) {
-				server->onSendDone();
+			auto sentBytes = reinterpret_cast<sint16*>(pvMsg);
+			if (sentBytes && *sentBytes < 0) {
+				efiPrintf("WiFi: Send failed with %d on sock %d", (int)*sentBytes, (int)sock);
+				if (auto server = ServerSocket::findConnected(sock)) {
+					server->onClose();
+				}
 			}
 		} break;
 	}
