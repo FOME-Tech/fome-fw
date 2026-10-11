@@ -7,7 +7,7 @@
 #include "socket/include/socket.h"
 #include "ff.h"
 #include "thread_priority.h"
-#include "sd_file_log.h"
+#include "mmc_card.h"
 #include "dma_buffers.h"
 #include <rusefi/crc.h>
 #include <stdio.h>
@@ -229,6 +229,87 @@ static void sendHttpError(BufferedSender& sender, int code, const char* message)
 			bodyLen);
 	sendString(sender, header);
 	sendString(sender, body);
+}
+
+// Shared <head> and styling for every page we serve; leaves the card <div> open.
+static const char* const HTML_HEADER = R"HTML(<!DOCTYPE html><html><head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<title>FOME SD Logs</title>
+<style>
+body { font-family: system-ui, -apple-system, sans-serif; background: #18181b; color: #f4f4f5; margin: 0; padding: 20px; line-height: 1.5; }
+.card { max-width: 850px; margin: 0 auto; background: #27272a; border-radius: 10px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
+h1 { font-size: 1.5rem; margin: 0 0 16px; color: #38bdf8; border-bottom: 1px solid #3f3f46; padding-bottom: 12px; }
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.btn { display: inline-block; padding: 8px 16px; background: #2563eb; color: #fff; border-radius: 6px; font-weight: 600; margin: 4px 4px 4px 0; transition: 0.2s; cursor: pointer; border: none; font-size: 0.9rem; }
+.btn:hover { background: #1d4ed8; text-decoration: none; }
+.btn:disabled { background: #3f3f46; color: #71717a; cursor: default; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #3f3f46; }
+th { background: #3f3f46; color: #d4d4d8; }
+tr:hover { background: #323238; }
+.dir { color: #facc15; font-weight: 600; }
+.size { color: #a1a1aa; text-align: right; }
+input[type=checkbox] { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
+</style></head><body><div class='card'>)HTML";
+
+// Served for every request while the card isn't ours to read, explaining why and what to do about it.
+static void sendSdStatusPage(BufferedSender& sender, SdCardState state) {
+	const char* title;
+	const char* detail;
+	bool refresh = false;
+
+	switch (state) {
+		case SdCardState::NotPresent:
+			title = "No SD card detected";
+			detail = "Insert an SD card and restart the ECU to log and browse files here. If a card is inserted, check "
+					 "that the SD card is enabled in the ECU configuration.";
+			break;
+		case SdCardState::UsbMassStorage:
+			title = "SD card is connected to the PC over USB";
+			detail = "USB was connected when the ECU powered up, so the card was handed to the PC as a USB drive and "
+					 "the ECU is not logging. To log and browse files here instead, unplug the USB cable and power "
+					 "cycle the ECU.";
+			break;
+		case SdCardState::Failed:
+			title = "SD card could not be used";
+			detail = "A card was detected, but its filesystem could not be mounted, or writing to it failed. Check "
+					 "that the card is formatted as FAT32 or exFAT, then restart the ECU.";
+			break;
+		case SdCardState::Initializing:
+		default:
+			title = "SD card starting up";
+			detail = "The ECU is still checking for an SD card. This page will refresh automatically.";
+			refresh = true;
+			break;
+	}
+
+	static const char TITLE_OPEN[] = "<h1>";
+	static const char TITLE_CLOSE[] = "</h1><p>";
+	static const char PAGE_CLOSE[] = "</p></div></body></html>";
+
+	size_t bodyLen = strlen(HTML_HEADER) + strlen(TITLE_OPEN) + strlen(title) + strlen(TITLE_CLOSE) + strlen(detail) +
+					 strlen(PAGE_CLOSE);
+
+	char header[192];
+	snprintf(
+			header,
+			sizeof(header),
+			"HTTP/1.1 503 Service Unavailable\r\n"
+			"Content-Type: text/html\r\n"
+			"Content-Length: %u\r\n"
+			"Cache-Control: no-store\r\n"
+			"%s"
+			"Connection: close\r\n\r\n",
+			(unsigned)bodyLen,
+			refresh ? "Refresh: 3\r\n" : "");
+	sendString(sender, header);
+	sendString(sender, HTML_HEADER);
+	sendString(sender, TITLE_OPEN);
+	sendString(sender, title);
+	sendString(sender, TITLE_CLOSE);
+	sendString(sender, detail);
+	sendString(sender, PAGE_CLOSE);
 }
 
 static bool isHexDigit(char c) {
@@ -536,28 +617,6 @@ static void handleDirectoryListing(BufferedSender& sender, const char* path) {
 		return;
 	}
 
-	static const char* HTML_HEADER = R"HTML(<!DOCTYPE html><html><head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width,initial-scale=1'>
-<title>FOME SD Logs</title>
-<style>
-body { font-family: system-ui, -apple-system, sans-serif; background: #18181b; color: #f4f4f5; margin: 0; padding: 20px; line-height: 1.5; }
-.card { max-width: 850px; margin: 0 auto; background: #27272a; border-radius: 10px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); position: relative; }
-h1 { font-size: 1.5rem; margin: 0 0 16px; color: #38bdf8; border-bottom: 1px solid #3f3f46; padding-bottom: 12px; }
-.disclaimer { background: #3f3f46; color: #facc15; padding: 10px; border-radius: 6px; margin-bottom: 16px; font-weight: 500; font-size: 0.9rem; }
-a { color: #60a5fa; text-decoration: none; }
-a:hover { text-decoration: underline; }
-.btn { display: inline-block; padding: 8px 16px; background: #2563eb; color: #fff; border-radius: 6px; font-weight: 600; margin: 4px 4px 4px 0; transition: 0.2s; cursor: pointer; border: none; font-size: 0.9rem; }
-.btn:hover { background: #1d4ed8; text-decoration: none; }
-.btn:disabled { background: #3f3f46; color: #71717a; cursor: default; }
-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #3f3f46; }
-th { background: #3f3f46; color: #d4d4d8; }
-tr:hover { background: #323238; }
-.dir { color: #facc15; font-weight: 600; }
-.size { color: #a1a1aa; text-align: right; }
-input[type=checkbox] { width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer; }
-</style></head><body><div class='card'>)HTML";
-
 	static const char* HTML_FOOTER = R"HTML(</table></div>
 <script>
 function gc() { return document.querySelectorAll('.sel'); }
@@ -589,13 +648,6 @@ function togAll() {
 			"Connection: close\r\n\r\n");
 	sender.beginChunked();
 	sendString(sender, HTML_HEADER);
-
-	if (isSdCardLogging()) {
-		sendString(
-				sender,
-				"<div class='disclaimer'>\xe2\x9a\xa0\xef\xb8\x8f Logging is in progress. The currently logged file is "
-				"not displayed.</div>");
-	}
 
 	char titleBuf[128];
 	snprintf(titleBuf, sizeof(titleBuf), "<h1>\xf0\x9f\x93\x81 FOME SD Card %s</h1>", path);
@@ -694,11 +746,6 @@ static void handleClient(ServerSocket& server) {
 		}
 	}
 
-	if (!isSdCardLogging()) {
-		sendHttpError(sender, 503, "SD Card Logging Inactive");
-		return;
-	}
-
 	// Extract GET path
 	const char* get = strstr(reqBuf, "GET ");
 	if (!get) {
@@ -748,6 +795,13 @@ static void handleClient(ServerSocket& server) {
 	// Fast 404 for browser favicon
 	if (strcmp(cleanPath, "/favicon.ico") == 0) {
 		sendHttpError(sender, 404, "Not Found");
+		return;
+	}
+
+	// Without a filesystem of our own there are no files to serve: explain why instead
+	SdCardState sdState = getSdCardState();
+	if (sdState != SdCardState::Mounted) {
+		sendSdStatusPage(sender, sdState);
 		return;
 	}
 
@@ -825,13 +879,6 @@ static THD_FUNCTION(httpServerThread, arg) {
 	(void)arg;
 	chRegSetThreadName("HTTP Server");
 
-	// Wait until SD card logging is active before attempting to bind port 80.
-	// When the ECU is connected to a PC via USB, the SD card is handed to PC
-	// as mass storage and internal logging will not run. The web server must not run then.
-	while (!isSdCardLogging()) {
-		chThdSleepMilliseconds(500);
-	}
-
 	// Allow Wi-Fi stack and TS console to settle before binding port 80
 	chThdSleepMilliseconds(500);
 
@@ -841,20 +888,13 @@ static THD_FUNCTION(httpServerThread, arg) {
 	address.sin_addr.s_addr = 0;
 	httpServer.startListening(address, 1);
 
-	efiPrintf("HTTP: SD logging active, server listening on port 80");
+	efiPrintf("HTTP: server listening on port 80");
 
 	while (true) {
 		// Block efficiently until a client connects (up to 1s), then handle it.
 		// Using a semaphore rather than polling means we respond in microseconds
 		// instead of up to 50ms, which matters for browsers with short connection timeouts.
 		if (!httpServer.waitForConnection(1000)) {
-			continue;
-		}
-
-		if (!isSdCardLogging()) {
-			BufferedSender sender(httpServer);
-			sendHttpError(sender, 503, "SD Logging Inactive");
-			httpServer.closeSocket();
 			continue;
 		}
 
