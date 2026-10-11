@@ -100,15 +100,15 @@ public:
 	bool send(const void* data, size_t size) {
 		const uint8_t* ptr = static_cast<const uint8_t*>(data);
 		while (size > 0 && m_server.hasConnectedSocket()) {
-			size_t space = sizeof(m_buf) - m_pos;
+			size_t space = capacity() - m_pos;
 			if (space == 0) {
 				if (!flush()) {
 					return false;
 				}
-				space = sizeof(m_buf);
+				space = capacity();
 			}
 			size_t chunk = size < space ? size : space;
-			memcpy(m_buf + m_pos, ptr, chunk);
+			memcpy(payload() + m_pos, ptr, chunk);
 			m_pos += chunk;
 			ptr += chunk;
 			size -= chunk;
@@ -119,6 +119,10 @@ public:
 	// For large payloads (>= one full socket buffer) flush the internal buffer first
 	// and then pass data directly to the socket, avoiding an extra memcpy through m_buf.
 	bool sendDirect(const void* data, size_t size) {
+		// Chunk framing is built around the payload in m_buf, so chunked bodies always go through it.
+		if (m_chunked) {
+			return send(data, size);
+		}
 		if (!flush()) {
 			return false;
 		}
@@ -130,10 +134,37 @@ public:
 
 	bool flush() {
 		if (m_pos > 0 && m_server.hasConnectedSocket()) {
-			m_server.send(m_buf, m_pos);
-			m_pos = 0;
+			if (m_chunked) {
+				// Frame the payload as one chunk: fixed-width hex size, CRLF, payload, CRLF.
+				static const char hex[] = "0123456789ABCDEF";
+				m_buf[0] = hex[(m_pos >> 8) & 0xF];
+				m_buf[1] = hex[(m_pos >> 4) & 0xF];
+				m_buf[2] = hex[m_pos & 0xF];
+				m_buf[3] = '\r';
+				m_buf[4] = '\n';
+				m_buf[CHUNK_PREFIX + m_pos] = '\r';
+				m_buf[CHUNK_PREFIX + m_pos + 1] = '\n';
+				m_server.send(m_buf, CHUNK_PREFIX + m_pos + CHUNK_SUFFIX);
+			} else {
+				m_server.send(m_buf, m_pos);
+			}
 		}
+		m_pos = 0;
 		return m_server.hasConnectedSocket();
+	}
+
+	// Switch to chunked transfer encoding for a body of unknown length. Call once the response
+	// headers (including "Transfer-Encoding: chunked") have been queued.
+	void beginChunked() {
+		flush();
+		m_chunked = true;
+	}
+
+	// Send the terminating zero-length chunk, which tells the client the body is complete.
+	void endChunked() {
+		flush();
+		m_chunked = false;
+		send("0\r\n\r\n", 5);
 	}
 
 	bool hasConnectedSocket() const {
@@ -141,10 +172,25 @@ public:
 	}
 
 private:
+	// Space reserved around the payload in chunked mode, so that a whole chunk goes out in one send.
+	static constexpr size_t CHUNK_PREFIX = 5; // 3 hex digits + CRLF
+	static constexpr size_t CHUNK_SUFFIX = 2; // CRLF
+
+	uint8_t* payload() {
+		return m_chunked ? m_buf + CHUNK_PREFIX : m_buf;
+	}
+
+	size_t capacity() const {
+		return m_chunked ? sizeof(m_buf) - CHUNK_PREFIX - CHUNK_SUFFIX : sizeof(m_buf);
+	}
+
 	ServerSocket& m_server;
 	uint8_t m_buf[SOCKET_BUFFER_MAX_LENGTH];
 	size_t m_pos;
+	bool m_chunked = false;
 };
+
+static_assert(SOCKET_BUFFER_MAX_LENGTH <= 0xFFF, "chunk size must fit in 3 hex digits");
 
 static bool sendChunk(BufferedSender& sender, const void* data, size_t size) {
 	if (!sender.hasConnectedSocket() || size == 0) {
@@ -164,19 +210,25 @@ static bool sendString(BufferedSender& sender, const char* str) {
 }
 
 static void sendHttpError(BufferedSender& sender, int code, const char* message) {
-	char buffer[256];
+	char body[128];
+	int bodyLen = snprintf(body, sizeof(body), "<html><body><h1>%d %s</h1></body></html>\r\n", code, message);
+	if (bodyLen >= static_cast<int>(sizeof(body))) {
+		bodyLen = sizeof(body) - 1;
+	}
+
+	char header[160];
 	snprintf(
-			buffer,
-			sizeof(buffer),
+			header,
+			sizeof(header),
 			"HTTP/1.1 %d %s\r\n"
 			"Content-Type: text/html\r\n"
-			"Connection: close\r\n\r\n"
-			"<html><body><h1>%d %s</h1></body></html>\r\n",
+			"Content-Length: %d\r\n"
+			"Connection: close\r\n\r\n",
 			code,
 			message,
-			code,
-			message);
-	sendString(sender, buffer);
+			bodyLen);
+	sendString(sender, header);
+	sendString(sender, body);
 }
 
 static bool isHexDigit(char c) {
@@ -436,9 +488,11 @@ static void streamDirectoryAsZip(BufferedSender& sender, const char* dirPath, co
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: application/zip\r\n"
 			"Content-Disposition: attachment; filename=\"%s\"\r\n"
+			"Transfer-Encoding: chunked\r\n"
 			"Connection: close\r\n\r\n",
 			zipName);
 	sendString(sender, header);
+	sender.beginChunked();
 
 	uint32_t streamOffset = 0;
 	uint16_t fileCount = 0;
@@ -471,6 +525,7 @@ static void streamDirectoryAsZip(BufferedSender& sender, const char* dirPath, co
 	eocd.cd_offset = cdStart;
 
 	sendChunk(sender, &eocd, sizeof(eocd));
+	sender.endChunked();
 }
 
 static void handleDirectoryListing(BufferedSender& sender, const char* path) {
@@ -530,7 +585,9 @@ function togAll() {
 			sender,
 			"HTTP/1.1 200 OK\r\n"
 			"Content-Type: text/html\r\n"
+			"Transfer-Encoding: chunked\r\n"
 			"Connection: close\r\n\r\n");
+	sender.beginChunked();
 	sendString(sender, HTML_HEADER);
 
 	if (isSdCardLogging()) {
@@ -604,6 +661,7 @@ function togAll() {
 	f_closedir(&dir);
 
 	sendString(sender, HTML_FOOTER);
+	sender.endChunked();
 }
 
 static void handleClient(ServerSocket& server) {
@@ -742,6 +800,7 @@ static void handleClient(ServerSocket& server) {
 						sizeof(redirBuf),
 						"HTTP/1.1 301 Moved Permanently\r\n"
 						"Location: %s/\r\n"
+						"Content-Length: 0\r\n"
 						"Connection: close\r\n\r\n",
 						cleanPath);
 				sendString(sender, redirBuf);
