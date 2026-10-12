@@ -50,7 +50,7 @@ expected<float> processBMW_e90Vss(const CANRxFrame& frame) {
 	}
 
 	uint8_t low = frame.data8[0];
-	uint8_t high = frame.data8[1] * 0x0F;
+	uint8_t high = frame.data8[1] & 0x0F;
 
 	return 0.1f * (low | (high << 8));
 }
