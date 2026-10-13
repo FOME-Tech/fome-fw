@@ -102,6 +102,8 @@ void startIdleBench() {
 #if EFI_IDLE_CONTROL
 
 void setDefaultIdleParameters() {
+	engineConfiguration->idleTimingUseRollingRpm = false;
+	engineConfiguration->idleAirUseRollingRpm = false;
 	engineConfiguration->idleRpmPid.pFactor = 0.01f;
 	engineConfiguration->idleRpmPid.iFactor = 0.05f;
 	engineConfiguration->idleRpmPid.dFactor = 0.0f;

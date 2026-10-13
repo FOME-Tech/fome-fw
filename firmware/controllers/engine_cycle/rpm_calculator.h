@@ -86,6 +86,17 @@ public:
 	 * Open question if we have any cases where this opimization is needed.
 	 */
 	float getCachedRpm() const;
+
+	struct RpmSample {
+		float rpm = 0;
+		float rpmRate = 0;
+	};
+
+	// A complete engine-cycle window, updated at each decoded trigger event.
+	// Reuses the instantaneous RPM tooth timestamps before they are overwritten.
+	RpmSample getRollingCycleRpm() const;
+	void updateRollingCycleRpm(uint32_t index, const EnginePhaseInfo& phaseInfo);
+	void resetRollingCycleRpm();
 	/**
 	 * This method is invoked once per engine cycle right after we calculate new RPM value
 	 */
@@ -141,6 +152,19 @@ private:
 	 * Open question is when do we need it for performance reasons.
 	 */
 	float cachedRpmValue = 0;
+	struct RollingCycleTiming {
+		uint32_t period = 0;
+		uint32_t ratePeriod = 0;
+		uint32_t previousPeriod = 0;
+		uint32_t rateDt = 0;
+	};
+	RollingCycleTiming m_rollingCycleTiming;
+	uint32_t m_rollingLastTime = 0;
+	uint32_t m_rollingNextIndex = UINT32_MAX;
+	uint32_t m_rollingHistoryCount = 0;
+	int m_rollingShapeVersion = -1;
+	uint8_t m_rollingCamResyncCounter = 0;
+	uint8_t m_rollingCycleMultiplier = 0;
 
 	/**
 	 * This counter is incremented with each revolution of one of the shafts. Could be
