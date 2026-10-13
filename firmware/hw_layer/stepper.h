@@ -11,6 +11,7 @@
 #include "efi_gpio.h"
 #include "backup_ram.h"
 #include "thread_controller.h"
+#include "efi_timer.h"
 
 class StepperHw {
 public:
@@ -19,9 +20,12 @@ public:
 	void pause(int divisor = 1) const;
 	// pause and enter the idle mode (less current consumption)
 	virtual void sleep();
+	// Release the driver when motor power is unavailable.
+	virtual void disable() {}
 
 protected:
 	void setReactionTime(float ms);
+	void waitMicroseconds(int us) const;
 
 private:
 	float m_reactionTime = 5.0f;
@@ -38,12 +42,15 @@ public:
 			pin_output_mode_e enablePinMode);
 
 	bool step(bool positive) override;
+	void sleep() override;
+	void disable() override;
 
 private:
 	bool pulse();
 	void setDirection(bool isIncrementing);
 
 	bool m_currentDirection = false;
+	Timer m_lastStep;
 
 	OutputPin m_directionPin, m_stepPin, m_enablePin;
 };
