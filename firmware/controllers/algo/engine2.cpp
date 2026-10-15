@@ -100,8 +100,6 @@ void EngineState::periodicFastCallback() {
 	// todo: move this into slow callback, no reason for CLT corr to be here
 	engine->fuelComputer.running.coolantTemperatureCoefficient = getCltFuelCorrection();
 
-	engine->module<DfcoController>()->update();
-
 	// post-cranking fuel enrichment.
 	if (engineConfiguration->postCrankingFuelUseTable) {
 		float postCrankingCorr = interpolate3d(
@@ -126,6 +124,9 @@ void EngineState::periodicFastCallback() {
 			engine->fuelComputer.running.postCrankingFuelCorrection = 1.0f;
 		}
 	}
+
+	// After post-cranking enrichment, since DFCO is inhibited while that enrichment is active
+	engine->module<DfcoController>()->update();
 
 	baroCorrection = getBaroCorrection();
 
