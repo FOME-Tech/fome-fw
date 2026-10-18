@@ -32,6 +32,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 #define CH_FREQUENCY 1000
+#define HAL_SUCCESS 0
 #define NO_CACHE
 
 typedef uint32_t systime_t;
