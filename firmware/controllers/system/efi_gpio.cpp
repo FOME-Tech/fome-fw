@@ -270,6 +270,7 @@ void EnginePins::startPins() {
 void EnginePins::reset() {
 	for (int i = 0; i < MAX_CYLINDER_COUNT; i++) {
 		injectors[i].reset();
+		injectorsStage2[i].reset();
 	}
 }
 
