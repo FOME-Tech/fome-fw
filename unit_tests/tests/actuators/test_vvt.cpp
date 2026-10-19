@@ -178,3 +178,71 @@ TEST(VVT, ClosedLoopInverted) {
 	// Target of -30 with position -20 should yield positive duty, P=1.5 means 15% duty for 10% error
 	EXPECT_EQ(dut.getClosedLoop(-30, -20).value_or(0), 15);
 }
+
+TEST(VVT, ActivationDelayAndRamp) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->vvtActivationDelayMs = 500;
+	engineConfiguration->vvtControlMinRpm = 0;
+	engineConfiguration->vvtControlMinClt = 0;
+	engineConfiguration->vvtOutputMin[0] = 0;
+	engineConfiguration->vvtOutputMax[0] = 100;
+
+	// Open loop only, so output is constant whenever control is enabled
+	setArrayValues(config->vvtOpenLoop[0].values, 30);
+	engineConfiguration->auxPid[0].pFactor = 0;
+	engineConfiguration->auxPid[0].iFactor = 0;
+	engineConfiguration->auxPid[0].dFactor = 0;
+	engineConfiguration->auxPid[0].offset = 0;
+	engineConfiguration->auxPid[0].minValue = -50;
+	engineConfiguration->auxPid[0].maxValue = 50;
+
+	Sensor::setMockValue(SensorType::Rpm, 1000);
+	Sensor::setMockValue(SensorType::Clt, 70);
+	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
+
+	FakeMap targetMap;
+	targetMap.setpoint = 40;
+
+	::testing::NiceMock<MockPwm> pwm;
+	VvtController dut(0, 0, 0);
+	dut.init(&targetMap, &pwm);
+
+	// Engine starts at t=1s
+	setTimeNowUs(1e6);
+	engine->rpmCalculator.setRpmValue(1000);
+	ASSERT_TRUE(engine->rpmCalculator.isRunning());
+
+	auto updateAtMs = [&](int msSinceStart) {
+		setTimeNowUs(1e6 + 1000 * msSinceStart);
+		// Keep the cam position fresh so the controller doesn't time it out
+		engine->triggerCentral.vvtPosition[0][0].angle = 0;
+		engine->triggerCentral.vvtPosition[0][0].t.reset();
+		dut.onFastCallback();
+	};
+
+	// Before the activation delay, no control. A fractional-second delay
+	// must not truncate to zero.
+	updateAtMs(250);
+	EXPECT_EQ(0, dut.vvtTarget);
+	EXPECT_EQ(0, dut.vvtOutput);
+	updateAtMs(499);
+	EXPECT_EQ(0, dut.vvtTarget);
+	EXPECT_EQ(0, dut.vvtOutput);
+
+	// Past the delay, the target ramps in linearly over 2 seconds from the
+	// last disabled update (t=499ms)
+	updateAtMs(999);
+	EXPECT_NEAR(10, dut.vvtTarget, 0.1);
+	EXPECT_EQ(30, dut.vvtOutput);
+	updateAtMs(1499);
+	EXPECT_NEAR(20, dut.vvtTarget, 0.1);
+	EXPECT_EQ(30, dut.vvtOutput);
+
+	// Ramp complete, full target
+	updateAtMs(2499);
+	EXPECT_NEAR(40, dut.vvtTarget, 0.1);
+	updateAtMs(4000);
+	EXPECT_NEAR(40, dut.vvtTarget, 0.1);
+	EXPECT_EQ(30, dut.vvtOutput);
+}
