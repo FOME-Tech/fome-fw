@@ -128,6 +128,8 @@ int efiPow10(int param) {
 			return 10000000;
 		case 8:
 			return 100000000;
+		default:
+			break;
 	}
 	return 10 * efiPow10(10 - 1);
 }

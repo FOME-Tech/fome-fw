@@ -325,6 +325,9 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 			// We don't support pending or permanent DTCs.
 			handleDtcRequest(service, 0, nullptr, busIndex);
 			break;
+		default:
+			efiPrintf("Unhandled CAN service ID: %d", service);
+			break;
 	}
 }
 // #endif /* HAL_USE_CAN */
