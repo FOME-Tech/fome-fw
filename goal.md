@@ -26,4 +26,4 @@ Inspect this FOME firmware revision for defects that can affect engine control. 
 
 ## Review output
 
-The review has yielded five reproduced findings and seven focused tests so far. See [order_by_severity.md](order_by_severity.md) for ranking, evidence and validation results.
+The review traced anti-lag/ETB, boost protection, injector duty, ignition scheduling, prime injection, fuel-pump and VVT paths. It has yielded eight reproduced findings and ten focused tests. See [order_by_severity.md](order_by_severity.md) for ranking, evidence and validation results.

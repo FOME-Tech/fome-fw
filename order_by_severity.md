@@ -1,6 +1,6 @@
 # Engine-control findings, ordered by severity
 
-Reviewed against FOME revision `6b31ebaec8` (`master`). The [rusEFI review in PR #10416](https://github.com/rusefi/rusefi/pull/10416/changes) supplied the presentation pattern, not the findings. The reproductions use this fork's production controllers. They assert the **observed faulty behavior** and therefore pass until that behavior is fixed.
+Reviewed against FOME firmware sources at `f990e0fa5f` (`master`; production controller code is unchanged from `6b31ebaec8`). The [rusEFI review in PR #10416](https://github.com/rusefi/rusefi/pull/10416/changes) supplied the presentation pattern. Every conclusion below was checked against this fork's source and focused host tests. The tests assert the **observed faulty behavior** and therefore pass until that behavior is fixed.
 
 ## Ranking and evidence
 
@@ -11,8 +11,11 @@ Severity describes plausible operational consequence; confidence describes the e
 | 1 | FOME-001 | S1 — Critical | Reproduced | Pedal failure can arm anti-lag and command ETB open |
 | 2 | FOME-005 | S2 — High | Reproduced | Anti-lag spark skip remains active while anti-lag is disabled |
 | 3 | FOME-002 | S2 — High | Reproduced | MAP failure releases an active boost fuel cut |
-| 4 | FOME-003 | S2 — High | Reproduced | Anti-lag ignores its configured maximum duration |
-| 5 | FOME-004 | S3 — Moderate | Reproduced | Fuel-pump relay remains commanded on after ignition off |
+| 4 | FOME-007 | S2 — High | Reproduced | Injector-duty fuel protection ignores secondary injectors |
+| 5 | FOME-003 | S2 — High | Reproduced | Anti-lag ignores its configured maximum duration |
+| 6 | FOME-008 | S3 — Moderate | Reproduced | VVT activation drops fractional seconds from its delay |
+| 7 | FOME-006 | S3 — Moderate | Reproduced | A queued prime pulse opens injectors after ignition off |
+| 8 | FOME-004 | S3 — Moderate | Reproduced | Fuel-pump relay remains commanded on after ignition off |
 
 ## FOME-001 — Pedal failure can arm anti-lag and command ETB open
 
@@ -44,6 +47,16 @@ Severity describes plausible operational consequence; confidence describes the e
 - **Validation:** `EngineControlReview.FailedMapReleasesActiveBoostFuelCut` in [test_engine_control_review.cpp](unit_tests/tests/test_engine_control_review.cpp) exercises trip, valid hysteresis retention, invalid-sensor release and valid-sensor retrip.
 - **Fix direction:** Make boost-cut hysteresis validity aware. Preserve the cut across invalid feedback or explicitly enter a fault state with a defined safe recovery condition.
 
+## FOME-007 — Injector-duty fuel protection ignores secondary injectors
+
+- **Source:** [engine2.cpp](firmware/controllers/algo/engine2.cpp) calculates `injectionDuration` and `injectionDurationStage2` separately. [fuel_math.cpp](firmware/controllers/algo/fuel_math.cpp) exposes both `getInjectorDutyCycle()` and `getInjectorDutyCycleStage2()`. `LimpManager::updateCutsInjectorDuty()` in [limp_manager.cpp](firmware/controllers/limp_manager.cpp) checks only the primary result against the instant and sustained duty limits. [fuel_schedule.cpp](firmware/controllers/engine_cycle/fuel_schedule.cpp) independently schedules secondary injector pulses when staging is active.
+- **Trigger:** Staged injection is enabled and a secondary injector pulse exceeds the configured duty limit while the primary pulse remains below it. This can occur with a smaller secondary injector, unequal stage flows or a high stage-2 fraction.
+- **Actual:** At 3000 RPM with sequential injection, a 35 ms secondary pulse is 87.5% duty and a 2 ms primary pulse is 5%. With a 60% instant limit, the limiter still permits injection. Moving the same 35 ms pulse to the primary stage trips the cut.
+- **Expected:** Injector-duty protection should consider the greatest duty of every active injector stage, using durations representative of scheduled output.
+- **Impact:** Secondary injectors can saturate without the configured protection acting, potentially causing a lean mixture under load and engine damage. The host test proves the duty calculation and fuel-permission result; it does not establish physical injector flow or mixture.
+- **Validation:** `EngineControlReview.SecondaryInjectorDutyDoesNotTripFuelCut` in [test_engine_control_review.cpp](unit_tests/tests/test_engine_control_review.cpp) compares the secondary over-limit state with an otherwise equivalent primary over-limit control through the production `LimpManager`.
+- **Fix direction:** Apply instant and sustained limits to both active stages, with coverage for stage transitions, trims and actual scheduled pulse durations.
+
 ## FOME-003 — Anti-lag ignores its configured maximum duration
 
 - **Source:** The user-facing `ALSMaxDuration` setting appears in [fome_config.txt](firmware/integration/fome_config.txt) and is assigned a default in [default_base_engine.cpp](firmware/controllers/algo/defaults/default_base_engine.cpp). `AntilagSystemBase::update()` in [antilag_system.cpp](firmware/controllers/algo/antilag_system.cpp) tests only enable, RPM, CLT, throttle intent and switch conditions. No production controller reads `ALSMaxDuration`; `ALSTimerCondition` is exposed but never set. The active condition feeds ETB, fueling and ignition corrections.
@@ -53,6 +66,26 @@ Severity describes plausible operational consequence; confidence describes the e
 - **Impact:** Prolonged anti-lag can sustain enrichment, timing changes and ETB addition beyond the calibrated limit, plausibly increasing exhaust/turbo heat and engine stress. The host test establishes persistent software activation, not component temperature or damage.
 - **Validation:** `EngineControlReview.AntiLagContinuesPastConfiguredTimeout` in [test_engine_control_review.cpp](unit_tests/tests/test_engine_control_review.cpp) runs the production anti-lag state machine before and after the configured timeout.
 - **Fix direction:** Track continuous anti-lag activation time, enforce `ALSMaxDuration`, and test timeout, deactivation and re-arm behavior.
+
+## FOME-008 — VVT activation drops fractional seconds from its delay
+
+- **Source:** `VvtController::onFastCallback()` in [vvt.cpp](firmware/controllers/actuators/vvt.cpp) compares elapsed seconds with `vvtActivationDelayMs / MS_PER_SECOND`. Both operands are integers, so the configured millisecond delay is truncated to whole seconds before the comparison. The setting in [fome_config.txt](firmware/integration/fome_config.txt) describes this delay as time for oil pressure to build before VVT diverts flow.
+- **Trigger:** VVT control is configured with a non-whole-second activation delay, such as 500 ms, and its other RPM/temperature and feedback conditions are satisfied.
+- **Actual:** A 500 ms setting becomes zero seconds. At 250 ms after entering the running state, the controller permits a nonzero VVT output. At the same runtime, a 1000 ms setting still blocks the output.
+- **Expected:** VVT output should remain inhibited until the configured millisecond delay has elapsed.
+- **Impact:** The VVT solenoid may begin consuming oil flow before the intended pressure-build interval has finished, and cam timing can change earlier than calibrated. The host test establishes the output gate; it does not measure oil pressure or cam motion.
+- **Validation:** `EngineControlReview.VvtActivationDelayDropsFractionalSeconds` in [test_engine_control_review.cpp](unit_tests/tests/test_engine_control_review.cpp) uses the production VVT callback and output path at 250 ms after engine start, with 500 ms and 1000 ms configurations as controls.
+- **Fix direction:** Compare elapsed time in milliseconds or convert the configured duration to floating-point seconds before division. Test fractional and whole-second settings near their boundaries.
+
+## FOME-006 — A queued prime pulse opens injectors after ignition off
+
+- **Source:** `PrimeController::onIgnitionStateChanged(true)` in [prime_injection.cpp](firmware/controllers/engine_cycle/prime_injection.cpp) queues the priming callback after the configured delay. Its ignition-off branch returns without canceling the queued action. `onPrimeStart()` checks only pulse duration, then calls `startInjection()` directly. The callback does not recheck ignition state or `LimpManager` injection permission.
+- **Trigger:** A nonzero priming delay leaves a queued prime start when ignition-off notification is delivered. The reproduced setting uses a one-second configured delay and ignition off after 250 ms, allowing for the normal 200 ms low-voltage debounce in [ignition_controller.cpp](firmware/controllers/ignition_controller.cpp).
+- **Actual:** The queued callback fires at 1.1 seconds after the original ignition-on notification and opens the injector output despite the intervening ignition-off notification. The matching end callback closes the output 10 ms later.
+- **Expected:** Ignition off should cancel the pending prime or cause its callback to decline injection. A prime that has already started should still receive a matching close.
+- **Impact:** A delayed prime can deliver an unrequested all-cylinder fuel pulse after key-off, with possible fuel accumulation during repeated attempts. The host test proves injector output state, not physical fuel flow. Exposure requires a delayed prime and a key-off interval before the callback.
+- **Validation:** `EngineControlReview.IgnitionOffDoesNotCancelQueuedPrimeInjection` in [test_engine_control_review.cpp](unit_tests/tests/test_engine_control_review.cpp) uses the real scheduler and prime controller with a mocked injector-duration model. It confirms the queued event survives ignition off, opens injector 1 and subsequently closes it.
+- **Fix direction:** Track ignition state in the prime controller, cancel or guard the queued start on ignition off, and preserve a close callback for any pulse already open.
 
 ## FOME-004 — Fuel-pump relay remains commanded on after ignition off
 
@@ -74,6 +107,6 @@ build/fome_test --gtest_filter='EngineControlReview.*'
 build/fome_test
 ```
 
-The seven new tests passed **7/7**. The full host suite and related existing tests should be rerun after this latest addition. The test file is registered in [tests.mk](unit_tests/tests/tests.mk). The pre-existing local changes in `injection_mode_transition.cpp` were left untouched.
+The ten new tests passed **10/10**, and the full host suite passed **758/758** after the latest addition. The test file is registered in [tests.mk](unit_tests/tests/tests.mk). The pre-existing `injection_mode_transition.cpp` work was left untouched.
 
-This is a focused review of reachable anti-lag/ETB, boost-cut and fuel-pump paths, not an exhaustive proof that the remaining firmware is defect-free. Hardware integration and board-specific power paths were not exercised.
+This review traced anti-lag/ETB, boost protection, injector duty, ignition scheduling, prime injection, fuel-pump and VVT paths. It does not establish that the remaining firmware is defect-free. Hardware integration and board-specific power paths were not exercised.

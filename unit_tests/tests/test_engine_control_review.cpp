@@ -1,8 +1,11 @@
 #include "pch.h"
 
 #include "electronic_throttle_impl.h"
+#include "fuel_math.h"
 #include "limp_manager.h"
+#include "prime_injection.h"
 #include "spark_logic.h"
+#include "vvt.h"
 
 using ::testing::_;
 using ::testing::Gt;
@@ -32,6 +35,68 @@ TEST(EngineControlReview, FailedMapReleasesActiveBoostFuelCut) {
 	Sensor::setMockValue(SensorType::Map, 105);
 	dut.updateState(2000, getTimeNowNt());
 	EXPECT_FALSE(dut.allowInjection());
+}
+
+TEST(EngineControlReview, SecondaryInjectorDutyDoesNotTripFuelCut) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->enableStagedInjection = true;
+	engineConfiguration->injectionMode = IM_SEQUENTIAL;
+	engineConfiguration->maxInjectorDutyInstant = 60;
+	engineConfiguration->maxInjectorDutySustained = 100;
+	engine->rpmCalculator.setRpmValue(3000);
+	ASSERT_TRUE(engine->rpmCalculator.isRunning());
+
+	// At 3000 RPM a four-stroke cycle is 40 ms. Stage 2 is at 87.5%.
+	engine->engineState.injectionDuration = 2;
+	engine->engineState.injectionDurationStage2 = 35;
+	ASSERT_LT(getInjectorDutyCycle(3000), 20);
+	ASSERT_GT(getInjectorDutyCycleStage2(3000), 60);
+	LimpManager secondaryDuty;
+	secondaryDuty.updateState(3000, getTimeNowNt());
+	EXPECT_TRUE(secondaryDuty.allowInjection());
+
+	// The same excessive duration on stage 1 does trip the configured cut.
+	engine->engineState.injectionDuration = 35;
+	engine->engineState.injectionDurationStage2 = 0;
+	LimpManager primaryDuty;
+	primaryDuty.updateState(3000, getTimeNowNt());
+	EXPECT_FALSE(primaryDuty.allowInjection());
+}
+
+TEST(EngineControlReview, VvtActivationDelayDropsFractionalSeconds) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setTimeNowUs(1e6);
+	engineConfiguration->vvtControlMinRpm = 0;
+	engineConfiguration->vvtControlMinClt = 0;
+	engineConfiguration->vvtOutputMin[0] = 0;
+	engineConfiguration->vvtOutputMax[0] = 100;
+	Sensor::setMockValue(SensorType::Rpm, 1000);
+	Sensor::setMockValue(SensorType::Clt, 70);
+	Sensor::setMockValue(SensorType::BatteryVoltage, 14);
+	engine->rpmCalculator.setRpmValue(1000);
+	ASSERT_TRUE(engine->rpmCalculator.isRunning());
+	engine->triggerCentral.vvtPosition[0][0].angle = 10;
+	engine->triggerCentral.vvtPosition[0][0].t.reset();
+
+	MockVp3d targetMap;
+	EXPECT_CALL(targetMap, getValue(_, _)).WillRepeatedly(::testing::Return(20));
+	::testing::NiceMock<MockPwm> pwm;
+	engineConfiguration->vvtActivationDelayMs = 500;
+	VvtController early(0, 0, 0);
+	early.init(&targetMap, &pwm);
+	advanceTimeUs(250000);
+	ASSERT_LT(engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()), 0.5f);
+	early.onFastCallback();
+	early.setOutput(20);
+	EXPECT_GT(early.vvtOutput, 0);
+
+	// A whole-second delay remains effective at the same elapsed runtime.
+	engineConfiguration->vvtActivationDelayMs = 1000;
+	VvtController control(0, 0, 0);
+	control.init(&targetMap, &pwm);
+	control.onFastCallback();
+	control.setOutput(20);
+	EXPECT_EQ(control.vvtOutput, 0);
 }
 
 TEST(EngineControlReview, FailedPedalArmsAntiLagAndRaisesEtbFallback) {
@@ -150,6 +215,31 @@ TEST(EngineControlReview, ZeroAntiLagSkipRatioSchedulesBothSparks) {
 	EXPECT_CALL(executor, schedule(_, _, _, _)).Times(4);
 	onTriggerEventSparkLogic({1000000, 10, 30, 10, 30});
 	onTriggerEventSparkLogic({2000000, 10, 30, 10, 30});
+}
+
+TEST(EngineControlReview, IgnitionOffDoesNotCancelQueuedPrimeInjection) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setTimeNowUs(1e6);
+	// A delayed prime leaves time for the ignition-off debounce to complete.
+	engineConfiguration->primingDelay = 1;
+	setArrayValues(engineConfiguration->primeValues, 50);
+	Sensor::setMockValue(SensorType::Clt, 50);
+	MockInjectorModel2 injectorModel;
+	engine->module<InjectorModelPrimary>().set(&injectorModel);
+	EXPECT_CALL(injectorModel, getInjectionDuration(_)).WillRepeatedly(::testing::Return(10.0f));
+	auto& prime = engine->module<PrimeController>().unmock();
+
+	prime.onIgnitionStateChanged(true);
+	ASSERT_EQ(1, engine->scheduler.size());
+	eth.moveTimeForwardAndInvokeEventsUs(250000);
+	prime.onIgnitionStateChanged(false);
+	eth.moveTimeForwardAndInvokeEventsUs(851000);
+	EXPECT_TRUE(prime.isPriming());
+	EXPECT_TRUE(enginePins.injectors[0].getLogicValue());
+
+	eth.moveTimeForwardAndInvokeEventsUs(10000);
+	EXPECT_FALSE(prime.isPriming());
+	EXPECT_FALSE(enginePins.injectors[0].getLogicValue());
 }
 
 TEST(EngineControlReview, FuelPumpRemainsOnAfterIgnitionOffWhileTriggerRecent) {
