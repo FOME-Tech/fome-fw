@@ -53,6 +53,7 @@ or
  - Added gauges for EGT channels 3-8 in TunerStudio
  - ECUs with WiFi (Atlas) can download logs over WiFi connection in addition to USB #842
  - ECUs with WiFi (Atlas) can download the TunerStudio ini matching the installed firmware over WiFi, from the same page as the logs. The page is available even with no SD card inserted.
+ - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
 
 
 ### Changed
