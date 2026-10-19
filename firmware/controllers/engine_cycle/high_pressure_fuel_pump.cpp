@@ -66,7 +66,7 @@ angle_t HpfpLobe::findNextLobe() {
 					  .value_or(0); // Cam
 	}
 
-	return engineConfiguration->hpfpPeakPos + vvt + next_index * 720 / lobes;
+	return engineConfiguration->hpfpPeakPos + vvt + next_index * 720.0f / lobes;
 }
 
 // As a percent of the full pump stroke
