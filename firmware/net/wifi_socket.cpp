@@ -219,7 +219,7 @@ void ServerSocket::send(const void* buffer, size_t size) {
 		// a module that never has room for it (which would otherwise deadlock this thread forever).
 		msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
 		if (result == MSG_TIMEOUT) {
-			// The module never accepted the data — cancel the pending request and close
+			// The module never accepted the data -- cancel the pending request and close
 			// so callers see the failure.
 			m_sendRequest = false;
 			closeSocket();
@@ -299,23 +299,73 @@ void os_hook_isr() {
 	isrSemaphore.signalI();
 }
 
+// ---------------------------------------------------------------------------
+// STA mode state -- only accessed from the WiFi thread
+// ---------------------------------------------------------------------------
+
+// Written by wifiCallback, read by tryOneStaConnect -- both on the WiFi thread
+static volatile bool s_staConnectResult = false; // true = M2M_WIFI_CONNECTED
+static volatile bool s_staConnectDone = false;	 // set when a terminal connect event arrives
+static bool s_connectingSta = false;			 // true while tryOneStaConnect() is active
+
+// Runtime state flags
+static bool s_inStaMode = false;				// true while operating as STA (not AP)
+static volatile bool s_staDisconnected = false; // set by callback when STA link drops at runtime
+
 static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	switch (u8MsgType) {
 		case M2M_WIFI_RESP_CON_STATE_CHANGED: {
 			auto& state = *reinterpret_cast<tstrM2mWifiStateChanged*>(pvMsg);
 
 			if (state.u8CurrState == M2M_WIFI_DISCONNECTED) {
-				efiPrintf("WiFi client disconnected");
-				ServerSocket::onLinkDownAll();
+				if (s_connectingSta) {
+					// Connect attempt failed -- signal tryOneStaConnect immediately
+					efiPrintf("WiFi STA: connect failed (err %d)", (int)state.u8ErrCode);
+					s_staConnectResult = false;
+					s_staConnectDone = true;
+				} else if (s_inStaMode) {
+					// Runtime link loss while operating in STA mode
+					efiPrintf("WiFi STA: disconnected (err %d)", (int)state.u8ErrCode);
+					s_staDisconnected = true;
+					ServerSocket::onLinkDownAll();
+				} else {
+					// AP mode: a client disconnected from our AP
+					efiPrintf("WiFi client disconnected");
+					ServerSocket::onLinkDownAll();
+				}
+			} else if (state.u8CurrState == M2M_WIFI_CONNECTED) {
+				if (s_connectingSta) {
+					efiPrintf("WiFi STA: associated with AP (waiting for DHCP)");
+					s_staConnectResult = true;
+					s_staConnectDone = true;
+				} else if (s_inStaMode) {
+					efiPrintf("WiFi STA: reassociated");
+				} else {
+					efiPrintf("WiFi AP: client connected");
+				}
 			} else {
-				efiPrintf("WiFi client state %d", (int)state.u8CurrState);
+				efiPrintf("WiFi con state changed: %d", (int)state.u8CurrState);
 			}
 		} break;
+
 		case M2M_WIFI_REQ_DHCP_CONF: {
-			auto& dhcpInfo = *reinterpret_cast<tstrM2MIPConfig*>(pvMsg);
-			uint8_t* addr = reinterpret_cast<uint8_t*>(&dhcpInfo.u32StaticIP);
-			efiPrintf("WiFi client connected DHCP IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
+			auto& ipConfig = *reinterpret_cast<tstrM2MIPConfig*>(pvMsg);
+			uint8_t* addr = reinterpret_cast<uint8_t*>(&ipConfig.u32StaticIP);
+			if (s_inStaMode) {
+				efiPrintf("WiFi STA: connected, board IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
+			} else {
+				efiPrintf("WiFi AP: client connected, client IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
+			}
 		} break;
+
+		case M2M_WIFI_REQ_DHCP_FAILURE: {
+			if (s_inStaMode) {
+				efiPrintf("WiFi STA: DHCP failed");
+				s_staDisconnected = true;
+				ServerSocket::onLinkDownAll();
+			}
+		} break;
+
 		default:
 			efiPrintf("WifiCallback: %d", (int)u8MsgType);
 			break;
@@ -362,7 +412,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				if (auto server = ServerSocket::findListener(sock)) {
 					server->onAccept(acceptMsg->sock);
 				} else {
-					// No server owns this listener — don't leak the accepted socket
+					// No server owns this listener -- don't leak the accepted socket
 					efiPrintf("WiFi: No listener for sock %d", (int)sock);
 					close(acceptMsg->sock);
 				}
@@ -400,10 +450,161 @@ __attribute__((weak)) const wifi_string_t& getWifiPassword() {
 	return config->wifiAccessPointPassword;
 }
 
+#ifndef EFI_BOOTLOADER
+
+// ---------------------------------------------------------------------------
+// STA mode connection logic -- runs on the WiFi thread only
+// ---------------------------------------------------------------------------
+
+// Credentials of the currently-connected STA network (for reconnection)
+// Sized +1 so a maximum-length (24 char) wifi_string_t retains its null terminator.
+static char s_connectedSsid[sizeof(wifi_string_t) + 1] = {};
+static char s_connectedPassword[sizeof(wifi_string_t) + 1] = {};
+
+// How long to wait for each network to connect (scan + WPA handshake + DHCP)
+static constexpr int STA_CONNECT_TIMEOUT_MS = 10000;
+// How many times to retry the primary connected network before cycling
+static constexpr int STA_RECONNECT_RETRIES = 3;
+
+/**
+ * Attempt to connect to a single SSID. Pumps the driver event loop while waiting.
+ * Returns true when M2M_WIFI_CONNECTED arrives, false on disconnect or timeout.
+ * Must only be called from the WiFi thread.
+ */
+static bool tryOneStaConnect(const char* ssid, const char* password) {
+	s_connectingSta = true;
+	s_staConnectDone = false;
+	s_staConnectResult = false;
+
+	size_t ssidLen = std::find(ssid, ssid + sizeof(wifi_string_t), '\0') - ssid;
+	size_t passwordLen = std::find(password, password + sizeof(wifi_string_t), '\0') - password;
+
+	tstrNetworkId networkId = {};
+	networkId.pu8Bssid = nullptr;
+	networkId.pu8Ssid = reinterpret_cast<uint8*>(const_cast<char*>(ssid));
+	networkId.u8SsidLen = static_cast<uint8>(ssidLen);
+	networkId.enuChannel = M2M_WIFI_CH_ALL;
+
+	sint8 ret;
+
+	if (passwordLen == 0) {
+		ret = m2m_wifi_connect_open(WIFI_CRED_DONTSAVE, &networkId);
+	} else {
+		tstrAuthPsk authPsk = {};
+		authPsk.pu8Psk = nullptr;
+		authPsk.pu8Passphrase = reinterpret_cast<uint8*>(const_cast<char*>(password));
+		authPsk.u8PassphraseLen = static_cast<uint8>(passwordLen);
+		ret = m2m_wifi_connect_psk(WIFI_CRED_DONTSAVE, &networkId, &authPsk);
+	}
+
+	if (ret != M2M_SUCCESS) {
+		efiPrintf("WiFi STA: connect request for \"%s\" failed (ret=%d)", ssid, (int)ret);
+		s_connectingSta = false;
+		return false;
+	}
+
+	// Pump events until we get a definitive result or the timeout expires
+	int elapsed = 0;
+	while (!s_staConnectDone && elapsed < STA_CONNECT_TIMEOUT_MS) {
+		m2m_wifi_handle_events(nullptr);
+		chThdSleepMilliseconds(10);
+		elapsed += 10;
+	}
+
+	if (!s_staConnectDone) {
+		efiPrintf("WiFi STA: timeout waiting for \"%s\"", ssid);
+		m2m_wifi_disconnect();
+		// Drain pending disconnect event while s_connectingSta is still true
+		// so it is consumed as part of this attempt and does not trigger s_staDisconnected
+		for (int i = 0; i < 20; i++) {
+			m2m_wifi_handle_events(nullptr);
+			chThdSleepMilliseconds(10);
+		}
+		s_connectingSta = false;
+		return false;
+	}
+
+	s_connectingSta = false;
+	return s_staConnectResult;
+}
+
+/**
+ * Iterate configured STA networks. Returns true when one succeeds and
+ * populates s_connectedSsid / s_connectedPassword / s_inStaMode.
+ */
+static bool tryStaConnect() {
+	bool anyAttempted = false;
+	for (size_t i = 0; i < std::size(config->wifiStaNetworks); i++) {
+		const auto& net = config->wifiStaNetworks[i];
+		if (net.ssid[0] == '\0') {
+			continue;
+		}
+
+		anyAttempted = true;
+		efiPrintf("WiFi STA: trying network %zu \"%s\"", i + 1, net.ssid);
+
+		if (tryOneStaConnect(net.ssid, net.password)) {
+			strncpy(s_connectedSsid, net.ssid, sizeof(s_connectedSsid) - 1);
+			s_connectedSsid[sizeof(s_connectedSsid) - 1] = '\0';
+			strncpy(s_connectedPassword, net.password, sizeof(s_connectedPassword) - 1);
+			s_connectedPassword[sizeof(s_connectedPassword) - 1] = '\0';
+			s_inStaMode = true;
+			return true;
+		}
+	}
+
+	if (anyAttempted) {
+		efiPrintf("WiFi STA: all configured networks failed, falling back to AP");
+	}
+	return false;
+}
+
+/**
+ * Called from the main WiFi thread loop when s_staDisconnected is set.
+ * Tries to reconnect: STA_RECONNECT_RETRIES on the same network, then all
+ * configured networks, then starts AP as a last resort.
+ * Returns true if STA reconnection succeeded.
+ */
+static bool handleStaReconnect(tstrM2MAPConfig& apConfig) {
+	efiPrintf("WiFi STA: link lost, attempting reconnect...");
+
+	// Phase 1: retry the previously-connected network
+	for (int attempt = 0; attempt < STA_RECONNECT_RETRIES; attempt++) {
+		efiPrintf("WiFi STA: reconnect attempt %d/%d to \"%s\"", attempt + 1, STA_RECONNECT_RETRIES, s_connectedSsid);
+		if (tryOneStaConnect(s_connectedSsid, s_connectedPassword)) {
+			efiPrintf("WiFi STA: reconnected to \"%s\"", s_connectedSsid);
+			s_staDisconnected = false;
+			return true;
+		}
+	}
+
+	// Phase 2: primary network unreachable -- cycle all configured slots
+	efiPrintf("WiFi STA: primary unreachable, cycling all configured networks...");
+	if (tryStaConnect()) {
+		s_staDisconnected = false;
+		return true;
+	}
+
+	// Phase 3: all options exhausted -- fall back to AP
+	efiPrintf("WiFi STA: reconnect failed, falling back to AP mode");
+	s_inStaMode = false;
+	s_staDisconnected = false;
+	m2m_wifi_disconnect();
+	for (int i = 0; i < 10; i++) {
+		m2m_wifi_handle_events(nullptr);
+		chThdSleepMilliseconds(10);
+	}
+	m2m_wifi_enable_ap(&apConfig);
+	return false;
+}
+
+#endif // !EFI_BOOTLOADER
+
 class WifiHelperThread : public ThreadController<4096> {
 public:
 	WifiHelperThread()
 		: ThreadController("WiFi", WIFI_THREAD_PRIORITY) {}
+
 	void ThreadTask() override {
 		if (initWifi()) {
 			m_initDone = true;
@@ -417,6 +618,13 @@ public:
 					ScopePerf perf(PE::WifiHandleEvents);
 					m2m_wifi_handle_events(nullptr);
 				}
+
+#ifndef EFI_BOOTLOADER
+				// Handle runtime STA disconnection: attempt reconnect or fall back to AP
+				if (s_inStaMode && s_staDisconnected) {
+					handleStaReconnect(m_apConfig);
+				}
+#endif // !EFI_BOOTLOADER
 
 				if (!ServerSocket::checkSend()) {
 					isrSemaphore.wait(TIME_MS2I(10));
@@ -504,7 +712,31 @@ private:
 		apConfig.au8DHCPServerIP[2] = 10;
 		apConfig.au8DHCPServerIP[3] = 1;
 
-		// Trigger AP
+		m_apConfig = apConfig;
+
+#ifndef EFI_BOOTLOADER
+		if (config->wifiHostname[0] != '\0') {
+			size_t hostLen = std::find(std::begin(config->wifiHostname), std::end(config->wifiHostname), '\0') -
+							 std::begin(config->wifiHostname);
+			if (hostLen > 0) {
+				if (hostLen >= M2M_DEVICE_NAME_MAX) {
+					hostLen = M2M_DEVICE_NAME_MAX - 1;
+				}
+				efiPrintf("WiFi: setting hostname to \"%.*s\"", (int)hostLen, config->wifiHostname);
+				m2m_wifi_set_device_name(reinterpret_cast<uint8*>(config->wifiHostname), static_cast<uint8>(hostLen));
+			}
+		}
+
+		// Try to join configured STA networks first; fall through to AP if all fail or none configured
+		if (tryStaConnect()) {
+			// Running in STA mode -- socket layer is all we need
+			socketInit();
+			registerSocketCallback(socketCallback, nullptr);
+			return true;
+		}
+#endif // !EFI_BOOTLOADER
+
+		// Start AP mode (original behaviour, and STA fallback)
 		if (M2M_SUCCESS != m2m_wifi_enable_ap(&apConfig)) {
 			return false;
 		}
@@ -519,6 +751,7 @@ private:
 	bool m_initDone = false;
 	volatile bool m_stopRequest = false;
 	volatile bool m_exited = false;
+	tstrM2MAPConfig m_apConfig = {};
 };
 
 static NO_CACHE WifiHelperThread wifiHelper;

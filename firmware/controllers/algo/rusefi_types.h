@@ -127,6 +127,7 @@ using vehicle_info_t = char[VEHICLE_INFO_SIZE];
 using gppwm_note_t = char[GPPWM_NOTE_SIZE];
 
 using wifi_string_t = char[24];
+using wifi_hostname_t = char[48]; // matches M2M_DEVICE_NAME_MAX (47 usable + null)
 
 using brain_pin_e = Gpio;
 

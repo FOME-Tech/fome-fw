@@ -1788,6 +1788,22 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	wifi_string_t wifiAccessPointSsid
 	wifi_string_t wifiAccessPointPassword
 
+	! Station mode networks (board joins existing network instead of creating its own AP)
+	! Tried in order 1-3 on boot; falls back to AP if none connect within timeout.
+	struct wifi_sta_network_s
+		wifi_string_t ssid
+		wifi_string_t password
+	end_struct
+
+	#define WIFI_STA_NETWORK_COUNT 3
+	wifi_sta_network_s[WIFI_STA_NETWORK_COUNT iterate] wifiStaNetworks;
+
+	! DHCP client hostname (option 12) advertised to the router in STA mode.
+	! Allows connecting to the board by name (e.g. fome-efi.local on mDNS-aware routers)
+	! instead of by IP address. Max 47 usable characters. Leave blank for the default name.
+	custom wifi_hostname_t 48 string, ASCII, @OFFSET@, 48
+	wifi_hostname_t wifiHostname
+
 	struct VvtOpenLoop
 		int8_t[8] autotemp bins;;"C", 1, 0, -40, 120, 0
 		uint8_t[8] autoscale values;;"%", 0.5, 0, 0, 100, 0
