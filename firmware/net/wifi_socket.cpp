@@ -312,6 +312,226 @@ static bool s_connectingSta = false;			 // true while tryOneStaConnect() is acti
 static bool s_inStaMode = false;				// true while operating as STA (not AP)
 static volatile bool s_staDisconnected = false; // set by callback when STA link drops at runtime
 
+#ifndef EFI_BOOTLOADER
+
+// ---------------------------------------------------------------------------
+// Lightweight mDNS responder (RFC 6762) for <wifiHostname>.local / fome.local
+// Listens on UDP port 5353 (multicast 224.0.0.251) and responds with IPv4 A-record.
+// ---------------------------------------------------------------------------
+static constexpr uint32_t MDNS_MCAST_ADDR = (224u) | (251u << 24);						   // 224.0.0.251
+static constexpr uint32_t AP_DEFAULT_IP = (192u) | (168u << 8) | (10u << 16) | (1u << 24); // 192.168.10.1
+
+static SOCKET s_mdnsSock = -1;
+static uint32_t s_mdnsLocalIp = 0;
+alignas(4) static uint8_t s_mdnsRxBuf[256];
+
+static bool ciEqual(const char* a, const char* b, size_t n) {
+	for (size_t i = 0; i < n; i++) {
+		char ca = a[i];
+		char cb = b[i];
+		if (ca >= 'A' && ca <= 'Z') {
+			ca += ('a' - 'A');
+		}
+		if (cb >= 'A' && cb <= 'Z') {
+			cb += ('a' - 'A');
+		}
+		if (ca != cb) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static const char* getMdnsHostname(size_t& len) {
+	if (config->wifiHostname[0] != '\0') {
+		len = std::find(std::begin(config->wifiHostname), std::end(config->wifiHostname), '\0') -
+			  std::begin(config->wifiHostname);
+		if (len >= M2M_DEVICE_NAME_MAX) {
+			len = M2M_DEVICE_NAME_MAX - 1;
+		}
+		return config->wifiHostname;
+	}
+	len = 4;
+	return "fome";
+}
+
+static const char* getMdnsHostname() {
+	size_t dummy = 0;
+	return getMdnsHostname(dummy);
+}
+
+static void stopMdns() {
+	if (s_mdnsSock >= 0) {
+		close(s_mdnsSock);
+		s_mdnsSock = -1;
+	}
+}
+
+static void startMdns(uint32_t ip) {
+	s_mdnsLocalIp = ip;
+	if (s_mdnsSock >= 0) {
+		return;
+	}
+
+	s_mdnsSock = socket(AF_INET, SOCK_DGRAM, 0);
+	if (s_mdnsSock < 0) {
+		efiPrintf("mDNS: socket() failed (%d)", s_mdnsSock);
+		return;
+	}
+
+	sockaddr_in addr = {};
+	addr.sin_family = AF_INET;
+	addr.sin_port = _htons(5353);
+	addr.sin_addr.s_addr = 0; // INADDR_ANY
+	if (bind(s_mdnsSock, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) != SOCK_ERR_NO_ERROR) {
+		efiPrintf("mDNS: bind() request failed");
+		close(s_mdnsSock);
+		s_mdnsSock = -1;
+	}
+}
+
+static void onMdnsBindOk() {
+	efiPrintf("mDNS: listening on port 5353 for %s.local", getMdnsHostname());
+
+	// Join IPv4 multicast group 224.0.0.251
+	uint32 mcastIp = MDNS_MCAST_ADDR;
+	setsockopt(s_mdnsSock, SOL_SOCKET, IP_ADD_MEMBERSHIP, &mcastIp, sizeof(uint32));
+
+	// Arm receive buffer
+	recvfrom(s_mdnsSock, s_mdnsRxBuf, sizeof(s_mdnsRxBuf), 0);
+}
+
+static void onMdnsRecvFrom(tstrSocketRecvMsg* rx) {
+	if (s_mdnsSock < 0 || !rx || rx->s16BufferSize <= 0) {
+		return;
+	}
+
+	const uint8_t* buf = rx->pu8Buffer;
+	size_t rxLen = static_cast<size_t>(rx->s16BufferSize);
+
+	// DNS header is 12 bytes; verify QR bit is 0 (query)
+	if (rxLen > 12 && (buf[2] & 0x80) == 0) {
+		size_t hlen = 0;
+		const char* hostname = getMdnsHostname(hlen);
+
+		uint16_t qdcount = (static_cast<uint16_t>(buf[4]) << 8) | buf[5];
+		size_t offset = 12;
+		const char* matchedName = nullptr;
+		size_t matchedLen = 0;
+
+		for (uint16_t q = 0; q < qdcount && offset < rxLen; q++) {
+			uint8_t l1 = buf[offset];
+			if (l1 == 0 || (l1 & 0xC0) != 0) {
+				break;
+			}
+			if (offset + 1 + l1 >= rxLen) {
+				break;
+			}
+
+			bool nameMatch = (l1 == hlen && ciEqual(reinterpret_cast<const char*>(&buf[offset + 1]), hostname, hlen));
+			if (nameMatch) {
+				matchedName = hostname;
+				matchedLen = hlen;
+			} else if (l1 == 4 && ciEqual(reinterpret_cast<const char*>(&buf[offset + 1]), "fome", 4)) {
+				// Fallback: also respond to "fome.local"
+				matchedName = "fome";
+				matchedLen = 4;
+				nameMatch = true;
+			}
+			offset += 1 + l1;
+
+			if (offset >= rxLen) {
+				break;
+			}
+			uint8_t l2 = buf[offset];
+			if (offset + 1 + l2 >= rxLen) {
+				break;
+			}
+
+			bool localMatch = (l2 == 5 && ciEqual(reinterpret_cast<const char*>(&buf[offset + 1]), "local", 5));
+			offset += 1 + l2;
+
+			if (offset >= rxLen || buf[offset] != 0) {
+				break;
+			}
+			offset += 1; // skip null terminator
+
+			if (offset + 4 > rxLen) {
+				break;
+			}
+			uint16_t qtype = (static_cast<uint16_t>(buf[offset]) << 8) | buf[offset + 1];
+			uint16_t qclass = (static_cast<uint16_t>(buf[offset + 2]) << 8) | buf[offset + 3];
+			offset += 4;
+
+			// Match A record (1) or ANY (255) with IN class (1)
+			if (nameMatch && localMatch && (qtype == 1 || qtype == 255) && ((qclass & 0x7FFF) == 1)) {
+				break;
+			}
+			matchedName = nullptr;
+		}
+
+		if (matchedName != nullptr) {
+			efiPrintf("mDNS: answering query for %.*s.local", (int)matchedLen, matchedName);
+
+			uint8_t resp[96];
+			memset(resp, 0, 12);
+			bool isUnicast = (rx->strRemoteAddr.sin_port != _htons(5353));
+			resp[0] = isUnicast ? buf[0] : 0; // RFC 6762 §6: Query ID MUST be 0 in multicast responses
+			resp[1] = isUnicast ? buf[1] : 0;
+			resp[2] = 0x84; // Response (0x80) | Authoritative (0x04)
+			resp[7] = 0x01; // ANCOUNT = 1
+
+			size_t rOff = 12;
+			resp[rOff++] = static_cast<uint8_t>(matchedLen);
+			memcpy(&resp[rOff], matchedName, matchedLen);
+			rOff += matchedLen;
+			resp[rOff++] = 5;
+			memcpy(&resp[rOff], "local", 5);
+			rOff += 5;
+			resp[rOff++] = 0;
+
+			// TYPE = A (1), CLASS = IN (1) | Flush (0x8000) -> 0x8001
+			resp[rOff++] = 0x00;
+			resp[rOff++] = 0x01;
+			resp[rOff++] = 0x80;
+			resp[rOff++] = 0x01;
+
+			// TTL = 120s (0x00000078)
+			resp[rOff++] = 0x00;
+			resp[rOff++] = 0x00;
+			resp[rOff++] = 0x00;
+			resp[rOff++] = 0x78;
+
+			// RDLENGTH = 4
+			resp[rOff++] = 0x00;
+			resp[rOff++] = 0x04;
+
+			// RDATA = s_mdnsLocalIp
+			memcpy(&resp[rOff], &s_mdnsLocalIp, 4);
+			rOff += 4;
+
+			sockaddr_in dest = {};
+			dest.sin_family = AF_INET;
+			if (isUnicast) {
+				dest.sin_port = rx->strRemoteAddr.sin_port;
+				dest.sin_addr.s_addr = rx->strRemoteAddr.sin_addr.s_addr;
+			} else {
+				dest.sin_port = _htons(5353);
+				dest.sin_addr.s_addr = MDNS_MCAST_ADDR;
+			}
+
+			sendto(s_mdnsSock, resp, static_cast<uint16>(rOff), 0, reinterpret_cast<sockaddr*>(&dest), sizeof(dest));
+		}
+	}
+
+	// Re-arm receive buffer for next datagram
+	if (s_mdnsSock >= 0) {
+		recvfrom(s_mdnsSock, s_mdnsRxBuf, sizeof(s_mdnsRxBuf), 0);
+	}
+}
+
+#endif // !EFI_BOOTLOADER
+
 static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 	switch (u8MsgType) {
 		case M2M_WIFI_RESP_CON_STATE_CHANGED: {
@@ -327,6 +547,9 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 					// Runtime link loss while operating in STA mode
 					efiPrintf("WiFi STA: disconnected (err %d)", (int)state.u8ErrCode);
 					s_staDisconnected = true;
+#ifndef EFI_BOOTLOADER
+					stopMdns();
+#endif
 					ServerSocket::onLinkDownAll();
 				} else {
 					// AP mode: a client disconnected from our AP
@@ -353,6 +576,9 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 			uint8_t* addr = reinterpret_cast<uint8_t*>(&ipConfig.u32StaticIP);
 			if (s_inStaMode) {
 				efiPrintf("WiFi STA: connected, board IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
+#ifndef EFI_BOOTLOADER
+				startMdns(ipConfig.u32StaticIP);
+#endif
 			} else {
 				efiPrintf("WiFi AP: client connected, client IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
 			}
@@ -376,6 +602,18 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 	switch (u8Msg) {
 		case SOCKET_MSG_BIND: {
 			auto bindMsg = reinterpret_cast<tstrSocketBindMsg*>(pvMsg);
+#ifndef EFI_BOOTLOADER
+			if (sock == s_mdnsSock) {
+				if (bindMsg && bindMsg->status == 0) {
+					onMdnsBindOk();
+				} else {
+					efiPrintf("mDNS: Bind failed on sock %d with %d", (int)sock, bindMsg ? (int)bindMsg->status : -99);
+					close(s_mdnsSock);
+					s_mdnsSock = -1;
+				}
+				break;
+			}
+#endif // !EFI_BOOTLOADER
 			if (bindMsg && bindMsg->status == 0) {
 				if (auto server = ServerSocket::findListener(sock)) {
 					int backlog = server->getBacklog();
@@ -430,6 +668,13 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				}
 			}
 		} break;
+#ifndef EFI_BOOTLOADER
+		case SOCKET_MSG_RECVFROM: {
+			if (sock == s_mdnsSock) {
+				onMdnsRecvFrom(reinterpret_cast<tstrSocketRecvMsg*>(pvMsg));
+			}
+		} break;
+#endif // !EFI_BOOTLOADER
 		case SOCKET_MSG_SEND: {
 			auto sentBytes = reinterpret_cast<sint16*>(pvMsg);
 			if (sentBytes && *sentBytes < 0) {
@@ -589,12 +834,14 @@ static bool handleStaReconnect(tstrM2MAPConfig& apConfig) {
 	efiPrintf("WiFi STA: reconnect failed, falling back to AP mode");
 	s_inStaMode = false;
 	s_staDisconnected = false;
+	stopMdns();
 	m2m_wifi_disconnect();
 	for (int i = 0; i < 10; i++) {
 		m2m_wifi_handle_events(nullptr);
 		chThdSleepMilliseconds(10);
 	}
 	m2m_wifi_enable_ap(&apConfig);
+	startMdns(AP_DEFAULT_IP);
 	return false;
 }
 
@@ -631,6 +878,9 @@ public:
 				}
 			}
 
+#ifndef EFI_BOOTLOADER
+			stopMdns();
+#endif
 			m2m_wifi_disable_ap();
 			chThdSleepMilliseconds(500);
 			m2m_wifi_deinit(nullptr);
@@ -744,6 +994,10 @@ private:
 		// Set up the socket APIs
 		socketInit();
 		registerSocketCallback(socketCallback, nullptr);
+
+#ifndef EFI_BOOTLOADER
+		startMdns(AP_DEFAULT_IP);
+#endif
 
 		return true;
 	}
