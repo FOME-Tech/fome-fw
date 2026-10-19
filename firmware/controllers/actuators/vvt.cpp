@@ -46,7 +46,7 @@ void VvtController::onFastCallback() {
 
 	auto nowNt = getTimeNowNt();
 	m_engineRunningLongEnough = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) >
-								engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
+								(float)engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
 	if (!m_engineRunningLongEnough) {
 		m_timeSinceEnabled.reset();
 	}
