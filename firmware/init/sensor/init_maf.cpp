@@ -6,8 +6,8 @@
 #include "table_func.h"
 #include "func_chain.h"
 
-static FunctionalSensor maf(SensorType::Maf, /* timeout = */ MS2NT(50));
-static FunctionalSensor maf2(SensorType::Maf2, /* timeout = */ MS2NT(50));
+static FunctionalSensor maf(SensorType::Maf, /* timeoutPeriod = */ MS2NT(50));
+static FunctionalSensor maf2(SensorType::Maf2, /* timeoutPeriod = */ MS2NT(50));
 
 // Just check min/max allowed voltage
 struct MafVoltageCheck : public SensorConverter {

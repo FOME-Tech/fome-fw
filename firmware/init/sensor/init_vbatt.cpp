@@ -6,7 +6,7 @@
 #include "linear_func.h"
 
 static LinearFunc vbattFunc;
-static FunctionalSensor vbattSensor(SensorType::BatteryVoltage, /* timeout = */ MS2NT(100));
+static FunctionalSensor vbattSensor(SensorType::BatteryVoltage, /* timeoutPeriod = */ MS2NT(100));
 
 void initVbatt() {
 	vbattFunc.configure(0, 0, 1, engineConfiguration->vbattDividerCoeff, 0, 50);
@@ -16,9 +16,9 @@ void initVbatt() {
 		return;
 	}
 
-	// adcVoltsPerVolt is set to 1.0 because vbatt doesn't go thru the analog input divider
+	// voltsPerAdcVolt is set to 1.0 because vbatt doesn't go thru the analog input divider
 	AdcSubscription::SubscribeSensor(
-			vbattSensor, engineConfiguration->vbattAdcChannel, /* filter HZ = */ 20, /* adcVoltsPerVolt = */ 1.0f);
+			vbattSensor, engineConfiguration->vbattAdcChannel, /* filter HZ = */ 20, /* voltsPerAdcVolt = */ 1.0f);
 
 	vbattSensor.Register();
 }

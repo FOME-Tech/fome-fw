@@ -5,7 +5,7 @@
 #include "functional_sensor.h"
 #include "table_func.h"
 
-static FunctionalSensor fuelSensor(SensorType::FuelLevel, /* timeout = */ MS2NT(500));
+static FunctionalSensor fuelSensor(SensorType::FuelLevel, /* timeoutPeriod = */ MS2NT(500));
 
 // extract the type of the elements in the bin/value arrays
 using BinType = std::remove_extent_t<decltype(config->fuelLevelBins)>;
