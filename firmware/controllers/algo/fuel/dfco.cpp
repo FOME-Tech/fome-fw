@@ -16,6 +16,11 @@ bool DfcoController::getState() const {
 		return false;
 	}
 
+	// Don't throw away after-start enrichment while it's still adding fuel
+	if (engine->fuelComputer.running.postCrankingFuelCorrection > 1.0f) {
+		return false;
+	}
+
 	const auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 	const auto clt = Sensor::get(SensorType::Clt);
 	const auto map = Sensor::get(SensorType::Map);

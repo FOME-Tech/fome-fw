@@ -78,6 +78,7 @@ or
  - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
  - Improve WiFi reconnection reliability after your laptop goes to sleep/drops off the network while connected #713
  - Fix vehicle speed indication while using a BMW E90/Mk60e5 ABS controller as the speed source
+ - DFCO no longer cuts fuel while after-start enrichment is still active #820
 
 ## May 2026 Release
 
