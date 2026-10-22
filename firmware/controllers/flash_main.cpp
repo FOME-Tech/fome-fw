@@ -40,7 +40,7 @@ static uint32_t flashStateCrc(const persistent_config_container_s& state) {
 #if EFI_FLASH_WRITE_THREAD
 chibios_rt::BinarySemaphore flashWriteSemaphore(/*taken =*/true);
 
-static THD_WORKING_AREA(flashWriteStack, UTILITY_THREAD_STACK_SIZE);
+static THD_WORKING_AREA(flashWriteStack, 4 * UTILITY_THREAD_STACK_SIZE);
 
 static void flashWriteThread(void*) {
 	chRegSetThreadName("flash writer");
