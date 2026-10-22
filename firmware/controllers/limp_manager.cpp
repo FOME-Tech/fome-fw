@@ -3,6 +3,7 @@
 #include "limp_manager.h"
 #include "fuel_math.h"
 #include "main_trigger_callback.h"
+#include "gppwm_channel.h"
 
 #define CLEANUP_MODE_TPS 90
 
@@ -220,13 +221,33 @@ void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& a
 }
 
 void LimpManager::updateCutsBoostCut(Clearable& allowFuel) {
-	// Limit fuel only on boost pressure (limiting spark bends valves)
-	float mapCut = engineConfiguration->boostCutPressure;
-	if (mapCut != 0) {
-		// require drop of 20kPa to resume fuel
-		if (m_boostCutHysteresis.test(Sensor::getOrZero(SensorType::Map), mapCut, mapCut - 20)) {
-			allowFuel.clear(ClearReason::BoostCut);
+	float mapCut;
+
+	if (engineConfiguration->boostCutUseTable) {
+		float x = readGppwmChannel(engineConfiguration->boostCutXAxis).value_or(0);
+		float y = readGppwmChannel(engineConfiguration->boostCutYAxis).value_or(0);
+		engine->outputChannels.boostCutXAxisValue = x;
+		engine->outputChannels.boostCutYAxisValue = y;
+
+		// Table is indexed [y][x]: y is the row axis, x is the column axis.
+		// The table has no disable value, it's always active.
+		mapCut = interpolate3d(config->boostCutTable, config->boostCutYBins, y, config->boostCutXBins, x);
+	} else {
+		mapCut = engineConfiguration->boostCutPressure;
+
+		// Fixed pressure of 0 disables boost cut
+		if (mapCut == 0) {
+			engine->outputChannels.boostCutTarget = 0;
+			return;
 		}
+	}
+
+	engine->outputChannels.boostCutTarget = mapCut;
+
+	// Limit fuel only on boost pressure (limiting spark bends valves)
+	// require drop of 20kPa to resume fuel
+	if (m_boostCutHysteresis.test(Sensor::getOrZero(SensorType::Map), mapCut, mapCut - 20)) {
+		allowFuel.clear(ClearReason::BoostCut);
 	}
 }
 

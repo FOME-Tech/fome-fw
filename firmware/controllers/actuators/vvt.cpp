@@ -46,7 +46,7 @@ void VvtController::onFastCallback() {
 
 	auto nowNt = getTimeNowNt();
 	m_engineRunningLongEnough = engine->rpmCalculator.getSecondsSinceEngineStart(nowNt) >
-								engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
+								(float)engineConfiguration->vvtActivationDelayMs / MS_PER_SECOND;
 	if (!m_engineRunningLongEnough) {
 		m_timeSinceEnabled.reset();
 	}
@@ -66,13 +66,12 @@ void VvtController::onConfigurationChange(engine_configuration_s const* previous
 static bool shouldInvertVvt(int camIndex) {
 	// grumble grumble, can't do an array of bits in c++
 	switch (camIndex) {
+		default:
 		case 0:
 			return engineConfiguration->invertVvtControlIntake;
 		case 1:
 			return engineConfiguration->invertVvtControlExhaust;
 	}
-
-	return false;
 }
 
 expected<angle_t> VvtController::observePlant() const {

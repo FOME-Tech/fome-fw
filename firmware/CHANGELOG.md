@@ -56,6 +56,7 @@ or
  - ECUs with WiFi (Atlas) can download the TunerStudio ini matching the installed firmware over WiFi, from the same page as the logs. The page is available even with no SD card inserted.
  - Wi-Fi station mode: the ECU can join up to three existing Wi-Fi networks instead of creating its own access point, falling back to AP mode if none of them can be reached. This lets the ECU sit on your home/shop network, so you can connect to it from anywhere on that network rather than having to join its AP.
  - Wi-Fi DHCP hostname setting, so the ECU is reachable by name instead of by IP address on networks where the router maps hostnames to addresses
+ - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
 
 
 ### Changed

@@ -7,27 +7,27 @@
 #include "linear_func.h"
 
 static LinearFunc oilpSensorFunc;
-static FunctionalSensor oilpSensor(SensorType::OilPressure, /* timeout = */ MS2NT(50));
+static FunctionalSensor oilpSensor(SensorType::OilPressure, /* timeoutPeriod = */ MS2NT(50));
 
 static LinearFunc fuelPressureFuncLow;
-static FunctionalSensor fuelPressureSensorLow(SensorType::FuelPressureLow, /* timeout = */ MS2NT(50));
+static FunctionalSensor fuelPressureSensorLow(SensorType::FuelPressureLow, /* timeoutPeriod = */ MS2NT(50));
 
 static LinearFunc fuelPressureFuncHigh;
-static FunctionalSensor fuelPressureSensorHigh(SensorType::FuelPressureHigh, /* timeout = */ MS2NT(50));
+static FunctionalSensor fuelPressureSensorHigh(SensorType::FuelPressureHigh, /* timeoutPeriod = */ MS2NT(50));
 
 static ProxySensor injectorPressure(SensorType::FuelPressureInjector);
 
 static LinearFunc auxLinear1Func;
-static FunctionalSensor auxLinear1Sensor(SensorType::AuxLinear1, /* timeout = */ MS2NT(50));
+static FunctionalSensor auxLinear1Sensor(SensorType::AuxLinear1, /* timeoutPeriod = */ MS2NT(50));
 
 static LinearFunc auxLinear2Func;
-static FunctionalSensor auxLinear2Sensor(SensorType::AuxLinear2, /* timeout = */ MS2NT(50));
+static FunctionalSensor auxLinear2Sensor(SensorType::AuxLinear2, /* timeoutPeriod = */ MS2NT(50));
 
 static LinearFunc auxLinear3Func;
-static FunctionalSensor auxLinear3Sensor(SensorType::AuxLinear3, /* timeout = */ MS2NT(50));
+static FunctionalSensor auxLinear3Sensor(SensorType::AuxLinear3, /* timeoutPeriod = */ MS2NT(50));
 
 static LinearFunc auxLinear4Func;
-static FunctionalSensor auxLinear4Sensor(SensorType::AuxLinear4, /* timeout = */ MS2NT(50));
+static FunctionalSensor auxLinear4Sensor(SensorType::AuxLinear4, /* timeoutPeriod = */ MS2NT(50));
 
 /**
  * @param bandwidth Hertz, used by low pass filter in to analog subscribers

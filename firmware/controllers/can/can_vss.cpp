@@ -49,10 +49,19 @@ expected<float> processBMW_e90Vss(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	uint8_t low = frame.data8[0];
-	uint8_t high = frame.data8[1] & 0x0F;
+	// ST_VEH_DVCO, bits 12-14: 7 means the speed signal is invalid
+	if (((frame.data8[1] >> 4) & 0x07) == 0x07) {
+		return unexpected;
+	}
 
-	return 0.1f * (low | (high << 8));
+	// V_VEH, bits 0-11, 0.1 kph per LSB. The DBC tops out at 350kph, anything above that
+	// (ie 0xFFF) isn't a real speed.
+	uint16_t vVeh = get12Bit_intel(frame, 0);
+	if (vVeh > 3500) {
+		return unexpected;
+	}
+
+	return 0.1f * vVeh;
 }
 
 expected<float> processW202(const CANRxFrame& frame) {
@@ -117,8 +126,8 @@ struct WssResult {
 	float rr;
 };
 
-static float E90Wss(const uint8_t& data) {
-	return (*reinterpret_cast<const int16_t*>(&data)) * 0.0625f;
+static int16_t E90WssRaw(const CANRxFrame& frame, int index) {
+	return static_cast<int16_t>(frame.data8[index] | (frame.data8[index + 1] << 8));
 }
 
 static expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
@@ -127,7 +136,18 @@ static expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	return WssResult{E90Wss(frame.data8[0]), E90Wss(frame.data8[2]), E90Wss(frame.data8[4]), E90Wss(frame.data8[6])};
+	// V_WHL_{FLH,FRH,RLH,RRH}, signed 16 bit, 0.0625 kph per LSB
+	int16_t raw[4];
+	for (int i = 0; i < 4; i++) {
+		raw[i] = E90WssRaw(frame, 2 * i);
+
+		// The DBC range is +-300kph, anything outside that (ie 0x8000) signals an invalid wheel
+		if (raw[i] > 4800 || raw[i] < -4800) {
+			return unexpected;
+		}
+	}
+
+	return WssResult{raw[0] * 0.0625f, raw[1] * 0.0625f, raw[2] * 0.0625f, raw[3] * 0.0625f};
 }
 
 static constexpr float NcWss(uint16_t data) {
@@ -181,8 +201,23 @@ static expected<bool> processBMW_e90Brake(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	// bit 46: brake pedal switch
-	return (frame.data8[5] & 0x40) != 0;
+	// BrakeApplied, bits 46-47: the module's combined brake light switch + wheel pressure verdict
+	//   0 = BLS off, pressures valid and none > 6 bar
+	//   1 = BLS on, or any valid wheel pressure > 6 bar
+	//   2 = BLS invalid
+	//   3 = BLS off, but no wheel pressure valid
+	// The separate BrakeSwitch signal (bits 40-41) is the raw BLS, so it can't help when this one
+	// says the BLS is invalid.
+	switch ((frame.data8[5] >> 6) & 0x03) {
+		case 1:
+			return true;
+		case 0:
+		case 3:
+			// The switch is valid and off, which is all a hardwired brake switch would tell us
+			return false;
+		default:
+			return unexpected;
+	}
 }
 
 static expected<bool> processMk100UhpBrake(const CANRxFrame& frame) {

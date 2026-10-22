@@ -293,4 +293,8 @@ struct_no_prefix output_channels_s
 
 	uint16_t[12 iterate] cylinderRpm;;"rpm", 1, 0, 0, 0, 0
 	int8_t[12 iterate] cylinderRpmDelta;;"rpm", 1, 0, 0, 0, 0
+
+	int16_t autoscale boostCutXAxisValue;Boost cut: X axis;"", 0.1, 0, -3000, 3000, 1
+	int16_t autoscale boostCutYAxisValue;Boost cut: Y axis;"", 0.1, 0, -3000, 3000, 1
+	uint16_t boostCutTarget;Boost cut: target;"kPa", 1, 0, 0, 1000, 0
 end_struct

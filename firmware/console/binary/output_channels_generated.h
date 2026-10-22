@@ -658,10 +658,18 @@ struct output_channels_s {
 	// rpm
 	// offset 542
 	int8_t cylinderRpmDelta[12];
+	// Boost cut: X axis
 	// offset 554
-	uint8_t alignmentFill_at_554[2];
+	scaled_channel<int16_t, 10, 1> boostCutXAxisValue = (int16_t)0;
+	// Boost cut: Y axis
+	// offset 556
+	scaled_channel<int16_t, 10, 1> boostCutYAxisValue = (int16_t)0;
+	// Boost cut: target
+	// kPa
+	// offset 558
+	uint16_t boostCutTarget = (uint16_t)0;
 };
-static_assert(sizeof(output_channels_s) == 556);
+static_assert(sizeof(output_channels_s) == 560);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, coolant) == 8);
@@ -818,3 +826,6 @@ static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 514);
 static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 516);
 static_assert(offsetof(output_channels_s, cylinderRpm) == 518);
 static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 542);
+static_assert(offsetof(output_channels_s, boostCutXAxisValue) == 554);
+static_assert(offsetof(output_channels_s, boostCutYAxisValue) == 556);
+static_assert(offsetof(output_channels_s, boostCutTarget) == 558);

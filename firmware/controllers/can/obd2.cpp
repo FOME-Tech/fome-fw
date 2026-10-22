@@ -125,13 +125,13 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 
 	switch (pid) {
 		case PID_SUPPORTED_PIDS_REQUEST_01_20:
-			obdWriteSupportedPids(pid, 1, supportedPids0120, busIndex);
+			obdWriteSupportedPids(pid, 0x01, supportedPids0120, busIndex);
 			break;
 		case PID_SUPPORTED_PIDS_REQUEST_21_40:
-			obdWriteSupportedPids(pid, 21, supportedPids2140, busIndex);
+			obdWriteSupportedPids(pid, 0x21, supportedPids2140, busIndex);
 			break;
 		case PID_SUPPORTED_PIDS_REQUEST_41_60:
-			obdWriteSupportedPids(pid, 41, supportedPids4160, busIndex);
+			obdWriteSupportedPids(pid, 0x41, supportedPids4160, busIndex);
 			break;
 		case PID_MONITOR_STATUS:
 			obdStatusQuery(pid, busIndex);
@@ -324,6 +324,9 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 		case OBD_PERMANENT_DTC:
 			// We don't support pending or permanent DTCs.
 			handleDtcRequest(service, 0, nullptr, busIndex);
+			break;
+		default:
+			efiPrintf("Unhandled CAN service ID: %d", service);
 			break;
 	}
 }

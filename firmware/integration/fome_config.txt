@@ -686,7 +686,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_3
 	bit isSdCardEnabled;enable sd/disable sd
 	bit rusefiVerbose29b,"29 bit","11 bit";Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
-	bit unused580b5
+	bit boostCutUseTable,"Table","Fixed";Fixed uses a single boost cut pressure. Table looks up the boost cut pressure from a table with selectable axes, for example to raise the cut with ethanol content.
 	bit useStepperIdle;This setting should only be used if you have a stepper motor idle valve and a stepper motor driver installed.
 	
 	bit enabledStep1Limiter
@@ -1096,6 +1096,8 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	spi_device_e accelerometerSpiDevice;
 
 	float boostCutPressure;MAP value above which fuel is cut in case of overboost.\nSet to 0 to disable overboost cut.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	gppwm_channel_e boostCutXAxis;X axis source for the boost cut table.
+	gppwm_channel_e boostCutYAxis;Y axis source for the boost cut table.
 
 	uint8_t[16] autoscale tchargeBins;;"kg/h", 5, 0, 0, 1200, 0
 	uint8_t[16] autoscale tchargeValues;;"ratio", 0.01, 0, 0, 1, 2
@@ -1836,6 +1838,13 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	! instead of by IP address. Max 47 usable characters. Leave blank for the default name.
 	custom wifi_hostname_t 48 string, ASCII, @OFFSET@, 48
 	wifi_hostname_t wifiHostname
+	#define BOOST_CUT_SIZE 4
+
+	begin_table
+		table_rows num BOOST_CUT_SIZE int16_t autoscale boostCutYBins;;"", 0.1, 0, -3000, 3000, 1
+		table_cols num BOOST_CUT_SIZE int16_t autoscale boostCutXBins;;"", 0.1, 0, -3000, 3000, 1
+		table_values uint16_t boostCutTable;MAP value above which fuel is cut in case of overboost. There is no disable value: to allow unlimited boost in a region, set a value above the range of the MAP sensor.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	end_table
 end_struct
 
 ! Pedal Position Sensor
