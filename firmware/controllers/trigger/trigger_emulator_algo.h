@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "rusefi_types.h"
+
 class PwmConfig;
 class MultiChannelStateSequence;
 
@@ -24,7 +26,7 @@ void disableTriggerStimulator();
 class TriggerEmulatorHelper {
 public:
 	TriggerEmulatorHelper();
-	void handleEmulatorCallback(const MultiChannelStateSequence& mcss, int stateIndex);
+	void handleEmulatorCallback(const MultiChannelStateSequence& mcss, int stateIndex, efitick_t timestamp);
 };
 
 void initTriggerEmulatorLogic();
