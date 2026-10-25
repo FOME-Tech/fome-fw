@@ -11,6 +11,7 @@
 #if HAL_USE_ADC
 
 #include "mpu_util.h"
+#include "software_knock.h"
 
 // All ADCs should be running at 40MHz
 static_assert(STM32_ADC12_CLOCK == 40000000);
@@ -47,13 +48,15 @@ static constexpr int H7_ADC_SHIFT_BITS = log2_int(H7_ADC_OVERSAMPLE);
 
 // ADC3 is in the AHB4 domain, which is only accessible by the BDMA controller
 // BDMA can only access AHB4, which means we have to put the buffers in SRAM4
-__attribute__((section(".ram4"))) __attribute__((aligned(8192))) adcsample_t knockSampleBuffer[2048];
+// knocksample_t is 16-bit on H7, see software_knock.h for why. That only holds while dual mode is on.
+static_assert(STM32_ADC_DUAL_MODE && STM32_ADC_SAMPLES_SIZE == 32, "knocksample_t must match ADC3 BDMA width");
+__attribute__((section(".ram4"))) __attribute__((aligned(4096))) knocksample_t knockSampleBuffer[2048];
 
 void portInitAdc() {
 	{
 		void* base = &knockSampleBuffer;
-		static_assert(sizeof(knockSampleBuffer) == 8192);
-		uint32_t size = MPU_RASR_SIZE_8K;
+		static_assert(sizeof(knockSampleBuffer) == 4096);
+		uint32_t size = MPU_RASR_SIZE_4K;
 
 		mpuConfigureRegion(
 				MPU_REGION_3,

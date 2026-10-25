@@ -61,7 +61,8 @@ void onStartKnockSampling(uint8_t cylinderNumber, float samplingSeconds, uint8_t
 	currentCylinderNumber = cylinderNumber;
 	currentChannelIdx = channelIdx;
 
-	adcStartConversionI(&KNOCK_ADC, conversionGroup, knockSampleBuffer, sampleCount);
+	// knocksample_t may be narrower than adcsample_t, see software_knock.h
+	adcStartConversionI(&KNOCK_ADC, conversionGroup, reinterpret_cast<adcsample_t*>(knockSampleBuffer), sampleCount);
 	lastKnockSampleTime = getTimeNowNt();
 	knockSnifferPin.setHigh();
 }
