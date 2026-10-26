@@ -501,8 +501,6 @@ void updateTunerStudioState() {
 	tsOutputChannels->gyroYaw = Sensor::getOrZero(SensorType::YawRate);
 
 	tsOutputChannels->turboSpeed = Sensor::getOrZero(SensorType::TurbochargerSpeed);
-	extern FrequencySensor vehicleSpeedSensor;
-	tsOutputChannels->vssEdgeCounter = vehicleSpeedSensor.eventCounter;
 
 	tsOutputChannels->tpsAccelFuel = engine->engineState.tpsAccelEnrich;
 

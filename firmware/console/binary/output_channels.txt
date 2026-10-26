@@ -248,8 +248,6 @@ struct_no_prefix output_channels_s
 
 	uint16_t testBenchIter;;"count",1, 0, 0, 0, 0
 
-	uint8_t vssEdgeCounter
-
 	uint16_t autoscale fallbackMap;;"kPa", 0.1, 0, 0, 1000, 1
 
 	uint16_t autoscale instantMAPValue;Instant MAP;"kPa",{1/@@PACK_MULT_PRESSURE@@}, 0, 0, 655, 2
