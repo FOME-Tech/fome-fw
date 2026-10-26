@@ -63,7 +63,7 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 	auto& channel = channels[index];
 
 	/* is this index already used? */
-	if (channel.Callback) {
+	if (channel.Name) {
 		firmwareError(
 				ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_2,
 				"%s: pin %s/index %d: exti index already used by %s",
@@ -102,7 +102,7 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	auto& channel = channels[index];
 
 	/* is this index was used? */
-	if (!channel.Callback) {
+	if (!channel.Name) {
 		return;
 	}
 
@@ -113,6 +113,32 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	channel.Name = nullptr;
 	channel.Callback = nullptr;
 	channel.CallbackData = nullptr;
+}
+
+ExtiEdgeCounter efiExtiGetCounter(brain_pin_e brainPin) {
+	if (!isBrainPinValid(brainPin)) {
+		return {};
+	}
+
+	ioportid_t port = getHwPort("exti", brainPin);
+	if (port == NULL) {
+		return {};
+	}
+
+	int index = getHwPin("exti", brainPin);
+	auto& channel = channels[index];
+
+	// Not enabled, or this index belongs to the same pin number on another port
+	if (!channel.Name || channel.Line != PAL_LINE(port, index)) {
+		return {};
+	}
+
+	// The fast ISR runs above the kernel, so chSysLock() doesn't keep it out
+	__disable_irq();
+	ExtiEdgeCounter result = {channel.Count, channel.LastEdgeTimestamp};
+	__enable_irq();
+
+	return result;
 }
 
 static inline void triggerInterrupt() {
@@ -285,6 +311,10 @@ void efiExtiInit() {
 
 void efiExtiEnablePin(const char*, brain_pin_e, uint32_t, ExtiCallback, void*) {}
 void efiExtiDisablePin(brain_pin_e) {}
+
+ExtiEdgeCounter efiExtiGetCounter(brain_pin_e) {
+	return {};
+}
 
 uint8_t getExtiOverflowCounter() {
 	return 0;
