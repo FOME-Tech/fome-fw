@@ -238,69 +238,69 @@ uint8_t getExtiOverflowCounter() {
 	return overflowCounter;
 }
 
-void handleExtiIsr(uint8_t index) {
-	// No need to lock anything, we're already the highest-pri interrupt!
+// The fast path must never touch the FPU: one FP instruction makes the core lazily stack the
+// interrupted thread's FP registers. This turns any float use into a compile error, and stops GCC
+// from using FP registers for plain copies.
+#define EXTI_NO_FPU __attribute__((target("general-regs-only")))
 
-	uint32_t pr;
-	extiGetAndClearGroup1(1U << index, pr);
+// noinline: inlined into handleExti's loop, GCC hoists the queue and NVIC state into callee-saved
+// registers, so every entry pays a 9-register push/pop. Out of line is cheaper for the usual single
+// edge per entry.
+__attribute__((noinline)) EXTI_NO_FPU static void handleExtiEdge(uint8_t index, uint32_t timestamp) {
+	auto& channel = channels[index];
 
-	if (pr & (1 << index)) {
-		uint32_t timestamp = getTimeNowLowerNt();
-		auto& channel = channels[index];
+	channel.LastEdgeTimestamp = timestamp;
+	channel.Count++;
 
-		channel.LastEdgeTimestamp = timestamp;
-		channel.Count++;
+	if (!channel.Callback) {
+		return;
+	}
 
-		if (!channel.Callback) {
-			return;
-		}
-
-		bool level = palReadLine(channel.Line) == PAL_HIGH;
-		if (queue.push({timestamp, index, level})) {
-			triggerInterrupt();
-		} else if (overflowCounter < 255) {
-			// Saturate so a busy input cannot wrap the diagnostic back to zero.
-			overflowCounter++;
-		}
+	bool level = palReadLine(channel.Line) == PAL_HIGH;
+	if (queue.push({timestamp, index, level})) {
+		triggerInterrupt();
+	} else if (overflowCounter < 255) {
+		// Saturate so a busy input cannot wrap the diagnostic back to zero.
+		overflowCounter++;
 	}
 }
 
-CH_FAST_IRQ_HANDLER(Vector58) {
-	handleExtiIsr(0);
+// One handler serves every EXTI vector: it services all 16 lines each time, so it doesn't need to
+// know which vector fired. If it services a line belonging to another vector, that vector still
+// enters once more afterwards, finds nothing pending, and returns.
+// The handler macro expands to an extern "C" definition, which can't carry the attribute itself
+extern "C" EXTI_NO_FPU void handleExti(void);
+
+CH_FAST_IRQ_HANDLER(handleExti) {
+	// No need to lock anything, we're already the highest-pri interrupt!
+
+	// Stamp before touching EXTI so the slow peripheral accesses don't delay it
+	uint32_t timestamp = getTimeNowLowerNt();
+
+	// One read and clear for all lines, then only visit the lines that fired. Edges that arrive
+	// after this read leave their bit pending and re-enter the ISR.
+	uint32_t pr;
+	extiGetAndClearGroup1(0xFFFF, pr);
+
+	while (pr) {
+		uint8_t index = __builtin_ctz(pr);
+		pr &= pr - 1;
+
+		handleExtiEdge(index, timestamp);
+	}
 }
 
-CH_FAST_IRQ_HANDLER(Vector5C) {
-	handleExtiIsr(1);
-}
+// Point each EXTI vector table entry straight at handleExti. These override the weak defaults in
+// ChibiOS vectors.S.
+#define EXTI_VECTOR(name) extern "C" void name(void) __attribute__((alias("handleExti")))
 
-CH_FAST_IRQ_HANDLER(Vector60) {
-	handleExtiIsr(2);
-}
-
-CH_FAST_IRQ_HANDLER(Vector64) {
-	handleExtiIsr(3);
-}
-
-CH_FAST_IRQ_HANDLER(Vector68) {
-	handleExtiIsr(4);
-}
-
-CH_FAST_IRQ_HANDLER(Vector9C) {
-	handleExtiIsr(5);
-	handleExtiIsr(6);
-	handleExtiIsr(7);
-	handleExtiIsr(8);
-	handleExtiIsr(9);
-}
-
-CH_FAST_IRQ_HANDLER(VectorE0) {
-	handleExtiIsr(10);
-	handleExtiIsr(11);
-	handleExtiIsr(12);
-	handleExtiIsr(13);
-	handleExtiIsr(14);
-	handleExtiIsr(15);
-}
+EXTI_VECTOR(Vector58); // Line 0
+EXTI_VECTOR(Vector5C); // Line 1
+EXTI_VECTOR(Vector60); // Line 2
+EXTI_VECTOR(Vector64); // Line 3
+EXTI_VECTOR(Vector68); // Line 4
+EXTI_VECTOR(Vector9C); // Lines 5-9
+EXTI_VECTOR(VectorE0); // Lines 10-15
 
 #else // not STM32
 
