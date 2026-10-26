@@ -12,11 +12,10 @@ static FrequencySensor turbochargerSpeedSensor(SensorType::TurbochargerSpeed, MS
 static TurbochargerSpeedConverter turbochargerSpeedConverter;
 
 void initTurbochargerSpeedSensor() {
-	// Filter parameter of 0.01 filters over roughly 100 teeth
 	turbochargerSpeedSensor.initIfValid(
 			engineConfiguration->turboSpeedSensorInputPin,
 			turbochargerSpeedConverter,
-			engineConfiguration->turbochargerFilter);
+			engineConfiguration->turboSpeedWindowMs);
 }
 
 void deinitTurbochargerSpeedSensor() {

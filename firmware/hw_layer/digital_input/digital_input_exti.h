@@ -20,7 +20,8 @@ struct ExtiEdgeCounter {
 
 void efiExtiInit();
 // cb may be null: the pin then only counts edges, see efiExtiGetCounter
-void efiExtiEnablePin(const char* msg, brain_pin_e pin, uint32_t mode, ExtiCallback cb, void* cb_data);
+// Returns false if the pin couldn't be enabled (invalid, or already in use)
+bool efiExtiEnablePin(const char* msg, brain_pin_e pin, uint32_t mode, ExtiCallback cb, void* cb_data);
 void efiExtiDisablePin(brain_pin_e brainPin);
 // Consistent snapshot of a pin's edge counter, or all zero if that pin isn't enabled.
 // Call from thread context only: interrupts are briefly masked, then unconditionally unmasked.
