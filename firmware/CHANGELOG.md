@@ -33,6 +33,7 @@ or
 ### Breaking Changes
  - Removed the explicit threshold for the closed loop fuel idle region. Instead, the idle region is used whenever the idle controller decides the engine is idling, as this better matches behaviors like idle-up when cold, return to idle, etc.
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
+ - The persistent configuration layout changed (new Wi-Fi station-mode settings), so a firmware update discards the stored tune and reverts to defaults. Save your tune before updating.
 
 ### Added
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
@@ -53,6 +54,8 @@ or
  - Added gauges for EGT channels 3-8 in TunerStudio
  - ECUs with WiFi (Atlas) can download logs over WiFi connection in addition to USB #842
  - ECUs with WiFi (Atlas) can download the TunerStudio ini matching the installed firmware over WiFi, from the same page as the logs. The page is available even with no SD card inserted.
+ - Wi-Fi station mode: the ECU can join up to three existing Wi-Fi networks instead of creating its own access point, falling back to AP mode if none of them can be reached. This lets the ECU sit on your home/shop network, so you can connect to it from anywhere on that network rather than having to join its AP.
+ - Wi-Fi DHCP hostname setting, so the ECU is reachable by name instead of by IP address on networks where the router maps hostnames to addresses
  - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
 
 
@@ -78,6 +81,7 @@ or
  - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
  - Improve WiFi reconnection reliability after your laptop goes to sleep/drops off the network while connected #713
  - Fix vehicle speed indication while using a BMW E90/Mk60e5 ABS controller as the speed source
+ - Wi-Fi station mode no longer reports a connection when the access point never hands out an address, which previously left the ECU unreachable until the next power cycle instead of falling back to AP mode
 
 ## May 2026 Release
 
