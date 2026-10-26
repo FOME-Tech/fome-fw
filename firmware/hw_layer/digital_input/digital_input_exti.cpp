@@ -118,7 +118,8 @@ static inline void triggerInterrupt() {
 }
 
 struct ExtiQueueEntry {
-	efitick_t Timestamp;
+	// Lower 32 bits only, extended to 64 bits in the handoff to keep the fast ISR short
+	uint32_t Timestamp;
 	uint8_t Channel;
 	bool Level;
 };
@@ -173,6 +174,10 @@ static uint8_t overflowCounter = 0;
 CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 	OSAL_IRQ_PROLOGUE();
 
+	// Reference for extending the queued 32-bit timestamps. Entries may be stamped before or
+	// after this point, so this is correct as long as each is within 2^31 ticks (~9 minutes).
+	efitick_t nowNt = getTimeNowNt();
+
 	while (true) {
 		// get the timestamp out under lock
 		// todo: lock freeeeee!
@@ -186,14 +191,12 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 		}
 
 		auto& entry = result.Value;
-		auto& timestamp = entry.Timestamp;
+		efitick_t timestamp = nowNt + (int32_t)(entry.Timestamp - (uint32_t)nowNt);
 
-		if (timestamp != 0) {
-			auto& channel = channels[entry.Channel];
+		auto& channel = channels[entry.Channel];
 
-			if (channel.Callback) {
-				channel.Callback(channel.CallbackData, timestamp, entry.Level);
-			}
+		if (channel.Callback) {
+			channel.Callback(channel.CallbackData, timestamp, entry.Level);
 		}
 	}
 
@@ -213,7 +216,7 @@ void handleExtiIsr(uint8_t index) {
 	extiGetAndClearGroup1(1U << index, pr);
 
 	if (pr & (1 << index)) {
-		auto timestamp = getTimeNowNt();
+		uint32_t timestamp = getTimeNowLowerNt();
 		auto& channel = channels[index];
 		bool level = palReadLine(channel.Line) == PAL_HIGH;
 
