@@ -28,6 +28,9 @@ struct ExtiChannel {
 	void* CallbackData;
 	ioline_t Line;
 
+	uint32_t LastEdgeTimestamp;
+	uint32_t Count;
+
 	// Name is also used as an enable bit
 	const char* Name = nullptr;
 };
@@ -218,8 +221,15 @@ void handleExtiIsr(uint8_t index) {
 	if (pr & (1 << index)) {
 		uint32_t timestamp = getTimeNowLowerNt();
 		auto& channel = channels[index];
-		bool level = palReadLine(channel.Line) == PAL_HIGH;
 
+		channel.LastEdgeTimestamp = timestamp;
+		channel.Count++;
+
+		if (!channel.Callback) {
+			return;
+		}
+
+		bool level = palReadLine(channel.Line) == PAL_HIGH;
 		if (queue.push({timestamp, index, level})) {
 			triggerInterrupt();
 		} else if (overflowCounter < 255) {
