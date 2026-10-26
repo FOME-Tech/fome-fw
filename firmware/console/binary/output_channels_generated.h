@@ -576,35 +576,33 @@ struct output_channels_s {
 	// count
 	// offset 358
 	uint16_t testBenchIter = (uint16_t)0;
-	// offset 360
-	uint8_t vssEdgeCounter = (uint8_t)0;
-	// offset 361
-	uint8_t alignmentFill_at_361[1];
 	// kPa
-	// offset 362
+	// offset 360
 	scaled_channel<uint16_t, 10, 1> fallbackMap = (uint16_t)0;
 	// Instant MAP
 	// kPa
-	// offset 364
+	// offset 362
 	scaled_channel<uint16_t, 30, 1> instantMAPValue = (uint16_t)0;
 	// us
-	// offset 366
+	// offset 364
 	uint16_t maxLockedDuration = (uint16_t)0;
 	// CAN: Tx OK
-	// offset 368
+	// offset 366
 	uint16_t canWriteOk = (uint16_t)0;
 	// CAN: Tx err
-	// offset 370
+	// offset 368
 	uint16_t canWriteNotOk = (uint16_t)0;
-	// offset 372
+	// offset 370
 	uint8_t starterState = (uint8_t)0;
-	// offset 373
+	// offset 371
 	uint8_t starterRelayDisable = (uint8_t)0;
 	// Ign: Multispark count
-	// offset 374
+	// offset 372
 	uint8_t multiSparkCounter = (uint8_t)0;
-	// offset 375
+	// offset 373
 	uint8_t extiOverflowCount = (uint8_t)0;
+	// offset 374
+	uint8_t alignmentFill_at_374[2];
 	// offset 376
 	pid_status_s alternatorStatus;
 	// offset 388
@@ -800,16 +798,15 @@ static_assert(offsetof(output_channels_s, sparkCutReason) == 354);
 static_assert(offsetof(output_channels_s, fuelCutReason) == 355);
 static_assert(offsetof(output_channels_s, instantRpm) == 356);
 static_assert(offsetof(output_channels_s, testBenchIter) == 358);
-static_assert(offsetof(output_channels_s, vssEdgeCounter) == 360);
-static_assert(offsetof(output_channels_s, fallbackMap) == 362);
-static_assert(offsetof(output_channels_s, instantMAPValue) == 364);
-static_assert(offsetof(output_channels_s, maxLockedDuration) == 366);
-static_assert(offsetof(output_channels_s, canWriteOk) == 368);
-static_assert(offsetof(output_channels_s, canWriteNotOk) == 370);
-static_assert(offsetof(output_channels_s, starterState) == 372);
-static_assert(offsetof(output_channels_s, starterRelayDisable) == 373);
-static_assert(offsetof(output_channels_s, multiSparkCounter) == 374);
-static_assert(offsetof(output_channels_s, extiOverflowCount) == 375);
+static_assert(offsetof(output_channels_s, fallbackMap) == 360);
+static_assert(offsetof(output_channels_s, instantMAPValue) == 362);
+static_assert(offsetof(output_channels_s, maxLockedDuration) == 364);
+static_assert(offsetof(output_channels_s, canWriteOk) == 366);
+static_assert(offsetof(output_channels_s, canWriteNotOk) == 368);
+static_assert(offsetof(output_channels_s, starterState) == 370);
+static_assert(offsetof(output_channels_s, starterRelayDisable) == 371);
+static_assert(offsetof(output_channels_s, multiSparkCounter) == 372);
+static_assert(offsetof(output_channels_s, extiOverflowCount) == 373);
 static_assert(offsetof(output_channels_s, gppwmOutput) == 436);
 static_assert(offsetof(output_channels_s, gppwmXAxis) == 440);
 static_assert(offsetof(output_channels_s, gppwmYAxis) == 448);
