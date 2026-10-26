@@ -57,12 +57,21 @@ static void processCanRxImu_BoschM5_10_Z(const CANRxFrame& frame) {
 	accelVert.setValidValue(accZ * MM5_10_ACC_QUANT, getTimeNowNt());
 }
 
-/* BMW E90 MK60e5 DSC "SPEED" message containing IMU data */
-#define E90_DSC_IMU_CANID 416
+/* BMW E8x/E9x MK60e5 DSC frames containing IMU data */
+#define E90_DSC_DYNAMICS_CANID 0x1A0		// lateral acceleration, yaw rate
+#define E90_DSC_ACCEL_LON_CANID 0x1A3		// longitudinal accelerometer, M3 only
+#define E90_DSC_ACCEL_LON_LORES_CANID 0x2B3 // longitudinal accelerometer, low resolution, M3 and non-M
 
 /* MK60e5 quantizations (from MK60e5_CAN.dbc) */
-#define E90_ACCEL_QUANT 0.025 // m/s2 per LSB
-#define E90_YAW_QUANT 0.05	  // deg/s per LSB
+#define E90_ACCEL_LAT_QUANT 0.02501f	 // m/s2 per LSB
+#define E90_YAW_QUANT 0.05f				 // deg/s per LSB
+#define E90_ACCEL_LON_QUANT 0.01f		 // m/s2 per LSB, 0x1A3
+#define E90_ACCEL_LON_LORES_QUANT 0.025f // m/s2 per LSB, 0x2B3
+
+// The signed 12 bit signals use the most negative value to mean invalid
+#define E90_INVALID_12BIT_SIGNED -2048
+// The unsigned (offset binary) 12 bit signals use all ones to mean invalid
+#define E90_INVALID_12BIT_UNSIGNED 0xFFF
 
 // Extract a 12-bit little-endian (Intel) value starting at the given bit offset.
 static uint16_t get12Bit_intel(const CANRxFrame& frame, int startBit) {
@@ -81,22 +90,93 @@ static int16_t get12BitSigned_intel(const CANRxFrame& frame, int startBit) {
 	return (int16_t)raw;
 }
 
-static void tryDecodeCanImuE90(const CANRxFrame& frame) {
-	if (CAN_SID(frame) != E90_DSC_IMU_CANID) {
+// 0x1A3 and 0x2B3 carry the same accelerometer reading, but 0x1A3 is finer and faster. It's only
+// sent by the M3, so fall back to 0x2B3 if we haven't recently seen a good 0x1A3.
+static Timer e90AccelLonTimer;
+
+static void decodeE90Dynamics(const CANRxFrame& frame, efitick_t nowNt) {
+	// AccelLat, start bit 28, 12-bit signed
+	int16_t accLat = get12BitSigned_intel(frame, 28);
+	if (accLat != E90_INVALID_12BIT_SIGNED) {
+		accelLat.setValidValue(accLat * E90_ACCEL_LAT_QUANT, nowNt);
+	}
+
+	// YawRate, start bit 40, 12-bit signed
+	int16_t yaw = get12BitSigned_intel(frame, 40);
+	if (yaw != E90_INVALID_12BIT_SIGNED) {
+		yawRate.setValidValue(yaw * E90_YAW_QUANT, nowNt);
+	}
+
+	// AccelLongWheel (start bit 16) is ignored: it's derived from the front wheel speeds rather
+	// than the accelerometer, heavily filtered, and wrong under front wheel slip/lock.
+}
+
+static void decodeE90AccelLon(const CANRxFrame& frame, efitick_t nowNt) {
+	// AccelLongRawStatus, bits 24-25: 0 = valid
+	if ((frame.data8[3] & 0x03) != 0) {
 		return;
 	}
 
-	// ACLN_VEH_LN_DSC: longitudinal acceleration, start bit 16, 12-bit signed
-	int16_t accLon = get12BitSigned_intel(frame, 16);
-	// ACLN_VEH_ACRO_DSC: lateral acceleration, start bit 28, 12-bit signed
-	int16_t accLat = get12BitSigned_intel(frame, 28);
-	// ANGV_YAW_DSC: yaw rate, start bit 40, 12-bit signed
-	int16_t yaw = get12BitSigned_intel(frame, 40);
+	// AccelLongRaw, start bit 0, 12-bit signed
+	int16_t raw = get12BitSigned_intel(frame, 0);
+	if (raw == E90_INVALID_12BIT_SIGNED) {
+		return;
+	}
 
+	// The raw value has no zero offset correction, so subtract the module's learned offset.
+	// AccelLongOffset, start bit 12, 12-bit signed. AccelLongOffsetStatus, bits 26-27:
+	// 0 = valid, 1 = not learned yet (still usable), 2 = invalid
+	int16_t offset = get12BitSigned_intel(frame, 12);
+	uint8_t offsetStatus = (frame.data8[3] >> 2) & 0x03;
+	if (offsetStatus > 1 || offset == E90_INVALID_12BIT_SIGNED) {
+		offset = 0;
+	}
+
+	accelLon.setValidValue((raw - offset) * E90_ACCEL_LON_QUANT, nowNt);
+	e90AccelLonTimer.reset(nowNt);
+}
+
+static void decodeE90AccelLonLowRes(const CANRxFrame& frame, efitick_t nowNt) {
+	// Five missed 0x1A3 frames before falling back
+	if (!e90AccelLonTimer.hasElapsedMs(100)) {
+		return;
+	}
+
+	// AccelLongStatus, bits 36-37: 0 = valid
+	if (((frame.data8[4] >> 4) & 0x03) != 0) {
+		return;
+	}
+
+	// AccelLongRaw, start bit 12, and AccelLongOffset, start bit 24: 12-bit offset binary, 2048 = 0
+	int raw = get12Bit_intel(frame, 12);
+	int offset = get12Bit_intel(frame, 24);
+
+	if (raw == E90_INVALID_12BIT_UNSIGNED) {
+		return;
+	}
+
+	if (offset == E90_INVALID_12BIT_UNSIGNED) {
+		offset = 2048;
+	}
+
+	// Both share the same binary offset, so it cancels when subtracting
+	accelLon.setValidValue((raw - offset) * E90_ACCEL_LON_LORES_QUANT, nowNt);
+}
+
+static void tryDecodeCanImuE90(const CANRxFrame& frame) {
 	auto nowNt = getTimeNowNt();
-	accelLat.setValidValue(accLat * E90_ACCEL_QUANT, nowNt);
-	accelLon.setValidValue(accLon * E90_ACCEL_QUANT, nowNt);
-	yawRate.setValidValue(yaw * E90_YAW_QUANT, nowNt);
+
+	switch (CAN_SID(frame)) {
+		case E90_DSC_DYNAMICS_CANID:
+			decodeE90Dynamics(frame, nowNt);
+			break;
+		case E90_DSC_ACCEL_LON_CANID:
+			decodeE90AccelLon(frame, nowNt);
+			break;
+		case E90_DSC_ACCEL_LON_LORES_CANID:
+			decodeE90AccelLonLowRes(frame, nowNt);
+			break;
+	}
 }
 
 /* Continental/AUMOVIO MK 100 UHP ABS module IMU frames */
