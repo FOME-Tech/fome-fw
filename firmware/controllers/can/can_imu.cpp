@@ -8,6 +8,8 @@ static StoredValueSensor accelVert(SensorType::AccelVert, MS2NT(250));
 static StoredValueSensor yawRate(SensorType::YawRate, MS2NT(250));
 
 /*
+ * Every decoder here must output the ISO 8855 sign convention documented on SensorType.
+ *
  * TODO:
  *  - convert to CanListener
  *  - move to hw_layer/sensors/yaw_rate_sensor.cpp | accelerometer.cpp ?
@@ -90,8 +92,11 @@ static int16_t get12BitSigned_intel(const CANRxFrame& frame, int startBit) {
 	return (int16_t)raw;
 }
 
-// 0x1A3 and 0x2B3 carry the same accelerometer reading, but 0x1A3 is finer and faster. It's only
-// sent by the M3, so fall back to 0x2B3 if we haven't recently seen a good 0x1A3.
+// The MK60e5 already uses the ISO 8855 convention for all of these, so no sign flips are needed
+// (confirmed from a log).
+
+// 0x1A3 and 0x2B3 carry the same accelerometer reading, but 0x1A3 is finer and faster. It's only sent by the M3, so
+// fall back to 0x2B3 if we haven't recently seen a good 0x1A3.
 static Timer e90AccelLonTimer;
 
 static void decodeE90Dynamics(const CANRxFrame& frame, efitick_t nowNt) {

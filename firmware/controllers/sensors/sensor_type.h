@@ -109,10 +109,12 @@ enum class SensorType : unsigned char {
 
 	DetectedGear,
 
-	AccelLat,
-	AccelLon,
-	AccelVert,
-	YawRate,
+	// IMU signals follow ISO 8855 / DIN 70000: x forward, y left, z up. Any IMU decoder whose
+	// source uses another convention must convert to this one.
+	AccelLat,  // m/s2, positive = acceleration to the left (left turn)
+	AccelLon,  // m/s2, positive = accelerating, negative = braking
+	AccelVert, // m/s2, positive = up
+	YawRate,   // deg/s, positive = anticlockwise seen from above (left turn)
 
 	EGT1,
 	EGT2,
