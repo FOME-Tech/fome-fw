@@ -35,7 +35,7 @@ void extiCallbackThunk(void* data) {
 }
 
 // The bootloader uses the PAL callback directly, so sample the level in its callback thunk.
-void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
+bool efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	ioportid_t port = getHwPort(msg, brainPin);
 	int index = getHwPin(msg, brainPin);
 
@@ -44,6 +44,8 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 	palEnableLineEvent(line, mode);
 	callback = cb;
 	palSetLineCallback(line, extiCallbackThunk, cb_data);
+
+	return true;
 }
 
 void efiExtiDisablePin(brain_pin_e brainPin) {
