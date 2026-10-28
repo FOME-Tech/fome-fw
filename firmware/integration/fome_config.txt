@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1400
+#define BLOCKING_FACTOR 1408
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -131,6 +131,7 @@ struct_no_prefix engine_configuration_s
 #define TORQUE_CURVE_SIZE 6
 #define CLT_CURVE_SIZE 16
 #define CLT_LIMITER_CURVE_SIZE 4
+#define REV_LIMIT_TABLE_SIZE 4
 #define CRANKING_CLT_IDLE_CURVE_SIZE 8
 #define CLT_CRANKING_CURVE_SIZE 8
 #define IDLE_ADVANCE_CURVE_SIZE 8
@@ -892,7 +893,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
 	uint16_t tps2SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
 
-	bit unused_widebandOnSecondBus
+	bit revLimitUseTable,"yes","no";If enabled, look up the RPM limit from a table with selectable axes instead of a constant value. When the CLT curve is also enabled, the lower limit applies. Invalid axis readings use 0.
 	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
 	bit useOilPressureSwitch,"Switch","Sensor"
 	bit boardUseTachPullUp,"12v","5v"
@@ -1829,6 +1830,15 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 		table_rows num BOOST_CUT_SIZE int16_t autoscale boostCutYBins;;"", 0.1, 0, -3000, 3000, 1
 		table_cols num BOOST_CUT_SIZE int16_t autoscale boostCutXBins;;"", 0.1, 0, -3000, 3000, 1
 		table_values uint16_t boostCutTable;MAP value above which fuel is cut in case of overboost. There is no disable value: to allow unlimited boost in a region, set a value above the range of the MAP sensor.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	end_table
+
+	gppwm_channel_e revLimitXAxis;X axis source for the rev limit table.
+	gppwm_channel_e revLimitYAxis;Y axis source for the rev limit table.
+
+	begin_table
+		table_rows num REV_LIMIT_TABLE_SIZE int16_t autoscale revLimitYBins;;"", 0.1, 0, -3000, 3000, 1
+		table_cols num REV_LIMIT_TABLE_SIZE int16_t autoscale revLimitXBins;;"", 0.1, 0, -3000, 3000, 1
+		table_values uint16_t revLimitTable;RPM limit for the selected axis values. When the CLT curve is enabled, the lower limit applies.;"RPM", 1, 0, 0, 20000, 0
 	end_table
 end_struct
 

@@ -16,6 +16,7 @@ or
  - 
 
 ### Added
+ - Rev limiter table with selectable X and Y inputs, including oil temperature, ethanol content, and gear. When used with the CLT-based limiter, the lower RPM limit applies.
  -
 
 ### Fixed
