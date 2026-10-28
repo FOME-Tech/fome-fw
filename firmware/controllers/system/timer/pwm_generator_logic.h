@@ -30,13 +30,16 @@ typedef struct {
 	 * Start time of current iteration
 	 */
 	efitick_t startNt;
+	// Deadline of the next phase in native ticks, independent of executor bookkeeping.
+	efitick_t phaseTimeNt;
 	int phaseIndex;
 } pwm_config_safe_state_s;
 
 class PwmConfig;
 
 typedef void(pwm_cycle_callback)(PwmConfig* state);
-typedef void(pwm_gen_callback)(int stateIndex, PwmConfig* pwm);
+// Scheduled time of the phase, which may precede callback execution when the timer is late.
+typedef void(pwm_gen_callback)(int stateIndex, PwmConfig* pwm, efitick_t phaseTimestamp);
 
 typedef enum {
 	PM_ZERO,
@@ -65,14 +68,14 @@ public:
 	 */
 	void setFrequency(float frequency);
 
-	void handleCycleStart();
+	void handleCycleStart(efitick_t phaseTimestamp);
 	const char* m_name;
 
 	// todo: 'outputPins' should be extracted away from here since technically one can want PWM scheduler without actual
 	// pin output
 	OutputPin* outputPins[PWM_PHASE_MAX_WAVE_PER_PWM];
 	MultiChannelStateSequence const* multiChannelStateSequence = nullptr;
-	efitick_t togglePwmState();
+	efitick_t togglePwmState(efitick_t phaseTimestamp);
 	void stop();
 
 	int dbgNestingLevel;
@@ -121,7 +124,7 @@ public:
  * default implementation of pwm_gen_callback which simply toggles the pins
  *
  */
-void applyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */;
+void applyPinState(int stateIndex, PwmConfig* state, efitick_t phaseTimestamp) /* pwm_gen_callback */;
 
 /**
  * Start a one-channel software PWM driver.
