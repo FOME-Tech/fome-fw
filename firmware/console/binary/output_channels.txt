@@ -295,4 +295,7 @@ struct_no_prefix output_channels_s
 	int16_t autoscale boostCutXAxisValue;Boost cut: X axis;"", 0.1, 0, -3000, 3000, 1
 	int16_t autoscale boostCutYAxisValue;Boost cut: Y axis;"", 0.1, 0, -3000, 3000, 1
 	uint16_t boostCutTarget;Boost cut: target;"kPa", 1, 0, 0, 1000, 0
+	int16_t autoscale revLimitXAxisValue;Rev limit: X axis;"", 0.1, 0, -3000, 3000, 1
+	int16_t autoscale revLimitYAxisValue;Rev limit: Y axis;"", 0.1, 0, -3000, 3000, 1
+	uint16_t revLimitTarget;Rev limit: target;"RPM", 1, 0, 0, 20000, 0
 end_struct

@@ -120,12 +120,25 @@ void LimpManager::updateCutsHarleyAcr(Clearable& allowFuel) {
 }
 
 void LimpManager::updateCutsHardRevLimit(float rpm, Clearable& allowFuel, Clearable& allowSpark) {
-	// User-configured hard RPM limit, either constant or CLT-lookup
+	// User-configured hard RPM limit, from a constant, CLT curve, or configurable table
 	m_hardRevLimit =
 			engineConfiguration->useCltBasedRpmLimit
 					? interpolate2d(
 							  Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
 					: (float)engineConfiguration->rpmHardLimit;
+
+	if (engineConfiguration->revLimitUseTable) {
+		float x = readGppwmChannel(config->revLimitXAxis).value_or(0);
+		float y = readGppwmChannel(config->revLimitYAxis).value_or(0);
+		engine->outputChannels.revLimitXAxisValue = x;
+		engine->outputChannels.revLimitYAxisValue = y;
+
+		// Table is indexed [y][x]: y is the row axis, x is the column axis.
+		float tableLimit = interpolate3d(config->revLimitTable, config->revLimitYBins, y, config->revLimitXBins, x);
+		m_hardRevLimit = engineConfiguration->useCltBasedRpmLimit ? minF(m_hardRevLimit, tableLimit) : tableLimit;
+	}
+
+	engine->outputChannels.revLimitTarget = m_hardRevLimit;
 
 	if (isHardRevLimit(rpm)) {
 		if (engineConfiguration->cutFuelOnHardLimit) {

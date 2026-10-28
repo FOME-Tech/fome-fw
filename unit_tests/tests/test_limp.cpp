@@ -96,6 +96,155 @@ TEST(limp, revLimitCltBased) {
 	EXPECT_TRUE(dut.allowInjection());
 }
 
+TEST(limp, revLimitTable) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->rpmHardLimit = 2500;
+	engineConfiguration->rpmHardLimitHyst = 100;
+	engineConfiguration->cutFuelOnHardLimit = true;
+	engineConfiguration->cutSparkOnHardLimit = true;
+	engineConfiguration->revLimitUseTable = true;
+	config->revLimitXAxis = GPPWM_OilTemp;
+	config->revLimitYAxis = GPPWM_Zero;
+	copyArray(config->revLimitXBins, {0, 40, 100, 160});
+	copyArray(config->revLimitYBins, {0, 1, 2, 3});
+	for (auto& row : config->revLimitTable) {
+		copyArray(row, {1000, 3000, 6000, 2000});
+	}
+
+	LimpManager dut;
+	Sensor::setMockValue(SensorType::OilTemperature, -20);
+	dut.updateState(900, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_TRUE(dut.allowInjection());
+	dut.updateState(1100, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+	// Remain cut inside the hysteresis band, then recover below it.
+	dut.updateState(950, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+	dut.updateState(850, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// Interpolate to 4500 RPM, replacing the fixed 2500 RPM limit.
+	Sensor::setMockValue(SensorType::OilTemperature, 70);
+	dut.updateState(4400, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_TRUE(dut.allowInjection());
+	dut.updateState(4600, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+
+	// High temperatures use the last bin and honor the selected cut outputs.
+	Sensor::setMockValue(SensorType::OilTemperature, 180);
+	engineConfiguration->cutSparkOnHardLimit = false;
+	dut.updateState(2100, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+	engineConfiguration->cutSparkOnHardLimit = true;
+	engineConfiguration->cutFuelOnHardLimit = false;
+	dut.updateState(2100, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// A missing sensor uses zero degrees, matching the CLT limiter fallback.
+	Sensor::resetMockValue(SensorType::OilTemperature);
+	dut.updateState(1100, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+
+	// Disabling the table restores the fixed limit.
+	engineConfiguration->revLimitUseTable = false;
+	dut.updateState(2100, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+}
+
+TEST(limp, revLimitSelectableAxes) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->rpmHardLimit = 2500;
+	engineConfiguration->cutFuelOnHardLimit = true;
+	engineConfiguration->cutSparkOnHardLimit = true;
+	engineConfiguration->revLimitUseTable = true;
+	config->revLimitXAxis = GPPWM_EthanolPercent;
+	config->revLimitYAxis = GPPWM_Map;
+	copyArray(config->revLimitXBins, {0, 50, 75, 100});
+	copyArray(config->revLimitYBins, {0, 100, 200, 300});
+	for (size_t y = 0; y < efi::size(config->revLimitYBins); y++) {
+		for (size_t x = 0; x < efi::size(config->revLimitXBins); x++) {
+			config->revLimitTable[y][x] = 2000 + 20 * config->revLimitXBins[x] + 1000 * y;
+		}
+	}
+
+	LimpManager dut;
+	Sensor::setMockValue(SensorType::FuelEthanolPercent, 25);
+	Sensor::setMockValue(SensorType::Map, 50);
+	// Interpolate both axes: 2000 + 500 from ethanol + 500 from MAP.
+	dut.updateState(2900, 0);
+	EXPECT_TRUE(dut.allowInjection());
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_EQ(25, engine->outputChannels.revLimitXAxisValue);
+	EXPECT_EQ(50, engine->outputChannels.revLimitYAxisValue);
+	EXPECT_EQ(3000, engine->outputChannels.revLimitTarget);
+	dut.updateState(3100, 0);
+	EXPECT_FALSE(dut.allowInjection());
+	EXPECT_FALSE(dut.allowIgnition());
+
+	// Select a different X input without modifying the table.
+	config->revLimitXAxis = GPPWM_Clt;
+	Sensor::setMockValue(SensorType::Clt, 75);
+	dut.updateState(3900, 0);
+	EXPECT_TRUE(dut.allowInjection());
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_EQ(75, engine->outputChannels.revLimitXAxisValue);
+	EXPECT_EQ(4000, engine->outputChannels.revLimitTarget);
+
+	// An unavailable input falls back to the zero bin.
+	Sensor::resetMockValue(SensorType::Clt);
+	dut.updateState(2600, 0);
+	EXPECT_FALSE(dut.allowInjection());
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_EQ(0, engine->outputChannels.revLimitXAxisValue);
+	EXPECT_EQ(2500, engine->outputChannels.revLimitTarget);
+}
+
+TEST(limp, revLimitTableWithClt) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->cutFuelOnHardLimit = true;
+	engineConfiguration->cutSparkOnHardLimit = true;
+	engineConfiguration->useCltBasedRpmLimit = true;
+	engineConfiguration->revLimitUseTable = true;
+	copyArray(config->cltRevLimitRpmBins, {0, 40, 80, 120});
+	copyArray(config->cltRevLimitRpm, {1000, 3000, 5000, 7000});
+	config->revLimitXAxis = GPPWM_OilTemp;
+	config->revLimitYAxis = GPPWM_Zero;
+	copyArray(config->revLimitXBins, {0, 40, 100, 160});
+	copyArray(config->revLimitYBins, {0, 1, 2, 3});
+	for (auto& row : config->revLimitTable) {
+		copyArray(row, {1000, 3000, 6000, 2000});
+	}
+	LimpManager dut;
+
+	// CLT is the lower limit.
+	Sensor::setMockValue(SensorType::Clt, 40);
+	Sensor::setMockValue(SensorType::OilTemperature, 100);
+	dut.updateState(3100, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+	dut.updateState(2900, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// Oil temperature is now the lower limit.
+	Sensor::setMockValue(SensorType::Clt, 120);
+	Sensor::setMockValue(SensorType::OilTemperature, 160);
+	dut.updateState(2100, 0);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+	dut.updateState(1900, 0);
+	EXPECT_TRUE(dut.allowIgnition());
+	EXPECT_TRUE(dut.allowInjection());
+}
+
 TEST(limp, boostCut) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

@@ -87,6 +87,13 @@ void setDefaultBaseEngine() {
 	// CLT RPM limit table - just the X axis
 	copyArray(config->cltRevLimitRpmBins, {-20, 0, 40, 80});
 
+	engineConfiguration->revLimitUseTable = false;
+	config->revLimitXAxis = GPPWM_OilTemp;
+	config->revLimitYAxis = GPPWM_Zero;
+	copyArray(config->revLimitXBins, {-20, 0, 60, 100});
+	setLinearCurve(config->revLimitYBins, 0, 100, 1);
+	setTable(config->revLimitTable, 7000);
+
 	engineConfiguration->ALSMinRPM = 400;
 	engineConfiguration->ALSMaxRPM = 3200;
 	engineConfiguration->ALSMaxDuration = 3.5;
