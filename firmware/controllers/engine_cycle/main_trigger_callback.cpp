@@ -72,6 +72,12 @@ void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 
 	if (trgEventIndex == 0) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
+			// Pending angle events refer to the previous trigger waveform.
+			engine->module<TriggerScheduler>()->flush();
+#if EFI_HPFP
+			// The HPFP chain owns an angle event and must start again after it is dropped.
+			engine->module<HpfpController>()->onEngineStop();
+#endif
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
 			getFuelSchedule()->invalidate();
 			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about
