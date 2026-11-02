@@ -12,7 +12,7 @@ struct pid_status_s {
 	// offset 8
 	scaled_channel<int16_t, 100, 1> error = (int16_t)0;
 	// offset 10
-	uint16_t resetCounter = (uint16_t)0;
+	uint8_t alignmentFill_at_10[2];
 };
 static_assert(sizeof(pid_status_s) == 12);
 static_assert(offsetof(pid_status_s, pTerm) == 0);
@@ -20,7 +20,6 @@ static_assert(offsetof(pid_status_s, iTerm) == 2);
 static_assert(offsetof(pid_status_s, dTerm) == 4);
 static_assert(offsetof(pid_status_s, output) == 6);
 static_assert(offsetof(pid_status_s, error) == 8);
-static_assert(offsetof(pid_status_s, resetCounter) == 10);
 struct output_channels_s {
 	// SD: Present
 	// offset 0 bit 0
