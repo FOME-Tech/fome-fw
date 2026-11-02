@@ -1,6 +1,8 @@
 #pragma once
 
 #include "auto_blip_generated.h"
+#include "gear_detector.h"
+#include "clutch_state.h"
 
 class AutoBlip : public EngineModule, public auto_blip_s {
 public:
@@ -26,8 +28,8 @@ public:
 		ArmTimedOut
 	};
 
-	State
-	nextState(State currentState, bool brakeDown, bool clutchDown, bool blipAllowed, const auto_blip_cfg_s& cfg) const;
+	State nextState(
+			State currentState, bool brakeDown, ClutchState clutch, bool blipAllowed, const auto_blip_cfg_s& cfg) const;
 
 	// Returns true if a blip is allowed for the given conditions
 	bool blipAllowed(size_t targetGear, float currentRpm, float targetRpm, float vehicleSpeed);
@@ -39,8 +41,6 @@ private:
 
 	State m_state = State::Idle;
 	Timer m_timeInState;
-
-	size_t m_targetGear = 0;
 
 	class {
 	public:
