@@ -26,6 +26,7 @@
 #include "ac_control.h"
 #include "vr_pwm.h"
 #include "can_vss.h"
+#include "frequency_sensor.h"
 #if EFI_MC33816
 #include "mc33816.h"
 #endif // EFI_MC33816
@@ -425,6 +426,9 @@ injection_mode_e getCurrentInjectionMode() {
  */
 void Engine::periodicFastCallback() {
 	ScopePerf pc(PE::EnginePeriodicFastCallback);
+
+	// Before anything that consumes frequency sensors, so they see this tick's value
+	FrequencySensor::updateAll(getTimeNowNt());
 
 	engineState.periodicFastCallback();
 

@@ -49,7 +49,7 @@ void RedundantSensor::showInfo(const char* sensorName) const {
 }
 
 void FrequencySensor::showInfo(const char* sensorName) const {
-	efiPrintf("FrequencySensor \"%s\" counter %d", sensorName, eventCounter);
+	efiPrintf("FrequencySensor \"%s\" counter %lu", sensorName, (unsigned long)getEdgeCount());
 }
 
 void FallbackSensor::showInfo(const char* sensorName) const {
