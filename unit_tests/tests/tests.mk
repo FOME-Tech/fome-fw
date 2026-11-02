@@ -103,6 +103,7 @@ TESTS_SRC_CPP = \
 	tests/test_binary_log.cpp \
 	tests/test_gpio.cpp \
 	tests/test_limp.cpp \
+	tests/test_engine_control_review.cpp \
 	tests/test_can_rx.cpp \
 	tests/test_can_serial.cpp \
 	tests/test_can_wideband.cpp \
