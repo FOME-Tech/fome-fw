@@ -10,9 +10,6 @@
 
 #include "sensor_converter_func.h"
 
-#include <type_traits>
-#include <utility>
-
 namespace priv {
 template <class... _Types>
 class FuncChain;

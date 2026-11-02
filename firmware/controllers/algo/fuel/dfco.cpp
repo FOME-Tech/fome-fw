@@ -11,6 +11,11 @@ bool DfcoController::getState() const {
 		return false;
 	}
 
+	// RPM alone cannot distinguish cranking from running when thresholds overlap.
+	if (!engine->rpmCalculator.isRunning()) {
+		return false;
+	}
+
 	const auto tps = Sensor::get(SensorType::DriverThrottleIntent);
 	const auto clt = Sensor::get(SensorType::Clt);
 	const auto map = Sensor::get(SensorType::Map);
@@ -97,7 +102,7 @@ float DfcoController::getTimeSinceCut() const {
 }
 
 float DfcoController::getTimingRetard() const {
-	float cutTiming = clampF(0, engineConfiguration->dfcoRetardDeg, 30);
+	float cutTiming = std::clamp<float>(engineConfiguration->dfcoRetardDeg, 0, 30);
 
 	if (m_isDfco) {
 		// While cut, always retard timing
@@ -110,7 +115,7 @@ float DfcoController::getTimingRetard() const {
 			// Normal operation, no retard
 			return 0;
 		} else {
-			return interpolateClamped(0, cutTiming, 0.5, 0, timeSinceCut);
+			return interpolateClamped(0, cutTiming, rampInTime, 0, timeSinceCut);
 		}
 	}
 }

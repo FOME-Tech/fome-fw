@@ -25,6 +25,18 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 			return Sensor::get(SensorType::LuaGauge1);
 		case GPPWM_LuaGauge2:
 			return Sensor::get(SensorType::LuaGauge2);
+		case GPPWM_LuaGauge3:
+			return Sensor::get(SensorType::LuaGauge3);
+		case GPPWM_LuaGauge4:
+			return Sensor::get(SensorType::LuaGauge4);
+		case GPPWM_LuaGauge5:
+			return Sensor::get(SensorType::LuaGauge5);
+		case GPPWM_LuaGauge6:
+			return Sensor::get(SensorType::LuaGauge6);
+		case GPPWM_LuaGauge7:
+			return Sensor::get(SensorType::LuaGauge7);
+		case GPPWM_LuaGauge8:
+			return Sensor::get(SensorType::LuaGauge8);
 		case GPPWM_FuelLoad:
 			return getFuelingLoad();
 		case GPPWM_IgnLoad:
@@ -100,7 +112,7 @@ float GppwmChannel::setOutput(float result) {
 
 	if (m_usePwm) {
 		efiAssert(ObdCode::OBD_PCM_Processor_Fault, m_usePwm, "m_usePwm null", 0);
-		m_pwm->setSimplePwmDutyCycle(clampF(0, result / 100.0f, 1));
+		m_pwm->setSimplePwmDutyCycle(std::clamp<float>(result * 0.01f, 0, 1));
 
 		return result;
 	} else {

@@ -7,8 +7,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 #if EFI_PROD_CODE
 
 #if EFI_FILE_LOGGING
@@ -27,6 +25,12 @@ uint8_t* sdCardBlockBuffer();
 FATFS* fs();
 FIL* logFileFd();
 SdLogBufferWriter& logBuffer();
+
+#if EFI_WIFI
+FIL* httpFileFd();
+uint8_t* httpFileIoBuffer();
+static constexpr size_t HTTP_FILE_IO_BUFFER_SIZE = 4200;
+#endif // EFI_WIFI
 #endif // EFI_FILE_LOGGING
 
 } // namespace dma_buffers

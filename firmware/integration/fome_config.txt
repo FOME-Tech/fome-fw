@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20024
+#define FLASH_DATA_VERSION 20025
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1400
+#define BLOCKING_FACTOR 1410
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -230,7 +230,6 @@ struct stft_cell_cfg_s
 end_struct
 
 struct stft_s
-	uint8_t autoscale maxIdleRegionRpm;Below this RPM, the idle region is active;"RPM", 50, 0, 0, 12000, 0
 	uint8_t maxOverrunLoad;Below this engine load, the overrun region is active;"load", 1, 0, 0, 250, 0
 	uint8_t minPowerLoad;Above this engine load, the power region is active;"load", 1, 0, 0, 250, 0
 
@@ -291,7 +290,7 @@ custom pin_output_mode_e 1 bits, U08, @OFFSET@, [0:1], @@pin_output_mode_e_enum@
 #define pin_input_mode_e_enum "DEFAULT", "PULLUP", "PULLDOWN"
 custom pin_input_mode_e 1 bits, U08,	@OFFSET@,	[0:1], @@pin_input_mode_e_enum@@
 
-#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
+#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "Lua Gauge 3", "Lua Gauge 4", "Lua Gauge 5", "Lua Gauge 6", "Lua Gauge 7", "Lua Gauge 8", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
 custom gppwm_channel_e 1 bits, U08, @OFFSET@, [0:5], @@gppwm_channel_e_enum@@
 
 custom canBroadcast_e 1 bits, U08, @OFFSET@, [0:1], "none", "first", "second", "both"
@@ -518,8 +517,10 @@ uint16_t fanPwmFrequency;PWM frequency for cooling fans in PWM mode;"Hz", 1, 0, 
 gppwm_channel_e fan1PwmXAxis;X axis source for fan 1 PWM table.
 gppwm_channel_e fan2PwmXAxis;X axis source for fan 2 PWM table.
 uint8_t fanPwmSafetyDuty;Fan duty when CLT sensor fails in PWM mode;"%", 1, 0, 0, 100, 0
+uint8_t disableFan1AtSpeed;Turn fan 1 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
 
 output_pin_e acrPin;
+uint8_t disableFan2AtSpeed;Turn fan 2 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
 
 float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your vehicle speed sensor is connected to. Use an online calculator to determine this based on your tire size.;"revs/km", 1, 0, 100, 1000, 1
 
@@ -685,7 +686,7 @@ bit is_enabled_spi_2
 	bit is_enabled_spi_3
 	bit isSdCardEnabled;enable sd/disable sd
 	bit rusefiVerbose29b,"29 bit","11 bit";Use 11 bit (standard) or 29 bit (extended) IDs for FOME verbose CAN format.
-	bit unused580b5
+	bit boostCutUseTable,"Table","Fixed";Fixed uses a single boost cut pressure. Table looks up the boost cut pressure from a table with selectable axes, for example to raise the cut with ethanol content.
 	bit useStepperIdle;This setting should only be used if you have a stepper motor idle valve and a stepper motor driver installed.
 	
 	bit enabledStep1Limiter
@@ -1115,6 +1116,8 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	spi_device_e accelerometerSpiDevice;
 
 	float boostCutPressure;MAP value above which fuel is cut in case of overboost.\nSet to 0 to disable overboost cut.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	gppwm_channel_e boostCutXAxis;X axis source for the boost cut table.
+	gppwm_channel_e boostCutYAxis;Y axis source for the boost cut table.
 
 	uint8_t[16] autoscale tchargeBins;;"kg/h", 5, 0, 0, 1200, 0
 	uint8_t[16] autoscale tchargeValues;;"ratio", 0.01, 0, 0, 1, 2
@@ -1274,7 +1277,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 
 
-	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 15, 0
+	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 30, 0
 
 	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 4, 0
 
@@ -1506,6 +1509,12 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
 
+	adc_channel_e clutchPositionSensor;Analog clutch pedal position sensor input.
+	uint16_t autoscale clutchPositionUpVoltage;Sensor voltage with the clutch released (pedal up). Reads 0%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint16_t autoscale clutchPositionDownVoltage;Sensor voltage with the clutch pedal on the floor. Reads 100%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint8_t clutchAppliedBelow;Clutch pedal position below which the clutch is fully applied (engaged, not slipping).;"%", 1, 0, 0, 100, 0
+	uint8_t clutchReleasedAbove;Clutch pedal position above which the clutch is fully released (disengaged, engine decoupled from the wheels).;"%", 1, 0, 0, 100, 0
+
 ! end of engine_configuration_s
 end_struct
 
@@ -1644,6 +1653,12 @@ begin_table
 	table_values uint16_t autoscale veTable;;"%", 0.1, 0, 0, 999, 1
 end_table
 
+begin_table
+	table_rows num 8 uint16_t mafTrimLoadBins;;"%", 1, 0, 0, 1000, 0
+	table_cols num 8 uint16_t mafTrimRpmBins;;"RPM", 1, 0, 0, 18000, 0
+	table_values uint8_t mafTrimTable;;"%", 1, 0, 0, 200, 0
+end_table
+
 union
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale lambdaTable;;"lambda", {1/@@PACK_MULT_LAMBDA_CFG@@}, 0, 0.6, 1.5, 2
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale afrTable;;"afr", {1/@@PACK_MULT_AFR_CFG@@}, 0, 0, 25, 1
@@ -1706,6 +1721,8 @@ int16_t[4 x 4] autoscale ALSFuelAdjustment;;"percent", 0.1, 0, 0, 500, 1
 uint16_t[4] alsFuelAdjustmentLoadBins;;"TPS", 1, 0, 0, 100, 0
 uint16_t[4] alsFuelAdjustmentrpmBins;;"RPM",	1, 0, 0, 25000, 0
 
+custom VeTableType 1 bits, S08, @OFFSET@, [0:0], "Speed density (MAP)", "Alpha-N"
+
 struct blend_table_s
 	int16_t[8 x 8] autoscale table;;"", 0.1, 0, -100, 100, 1
 	uint16_t[8] loadBins;;"Load", 1, 0, 0, 1000, 0
@@ -1716,6 +1733,8 @@ struct blend_table_s
 
 	int16_t[8] autoscale blendBins;;"", 0.1, 0, -1000, 1000, 1
 	uint8_t[8] autoscale blendValues;;"%", 0.5, 0, 0, 100, 1
+
+	VeTableType veTableSelect;Select which fuel model/VE table this blend will be applied to
 end_struct
 
 blend_table_s[IGN_BLEND_COUNT iterate] ignBlends
@@ -1829,6 +1848,14 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
+
+	#define BOOST_CUT_SIZE 4
+
+	begin_table
+		table_rows num BOOST_CUT_SIZE int16_t autoscale boostCutYBins;;"", 0.1, 0, -3000, 3000, 1
+		table_cols num BOOST_CUT_SIZE int16_t autoscale boostCutXBins;;"", 0.1, 0, -3000, 3000, 1
+		table_values uint16_t boostCutTable;MAP value above which fuel is cut in case of overboost. There is no disable value: to allow unlimited boost in a region, set a value above the range of the MAP sensor.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	end_table
 end_struct
 
 ! Pedal Position Sensor

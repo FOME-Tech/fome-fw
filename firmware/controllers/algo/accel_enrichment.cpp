@@ -114,7 +114,7 @@ void TpsAccelEnrichment::onEngineCycleTps() {
 }
 
 int TpsAccelEnrichment::getMaxDeltaIndex() {
-	int len = minI(cb.getSize(), cb.getCount());
+	int len = std::min(cb.getSize(), cb.getCount());
 	tooShort = len < 2;
 	if (tooShort) {
 		return 0;

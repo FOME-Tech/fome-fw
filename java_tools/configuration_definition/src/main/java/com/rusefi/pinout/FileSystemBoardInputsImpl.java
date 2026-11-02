@@ -5,6 +5,8 @@ import com.rusefi.util.IoUtils;
 import com.rusefi.util.LazyOutputStream;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,6 +43,17 @@ public class FileSystemBoardInputsImpl implements BoardInputs {
     @Override
     public Reader getReader(Object yamlKey) throws FileNotFoundException {
         return new FileReader((File)yamlKey);
+    }
+
+    @Override
+    public String getDisplayName(Object yamlKey) {
+        // Relative to the working directory, so a local (absolute board dir) and CI (relative) run agree
+        Path path = ((File) yamlKey).toPath().toAbsolutePath().normalize();
+        Path cwd = Paths.get("").toAbsolutePath().normalize();
+        if (path.startsWith(cwd)) {
+            path = cwd.relativize(path);
+        }
+        return path.toString().replace(File.separatorChar, '/');
     }
 
     @Override

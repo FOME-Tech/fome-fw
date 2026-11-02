@@ -35,6 +35,8 @@
 /* Fixed settings mandated by the ChibiOS integration.*/
 #include "static_lwipopts.h"
 
+#define LWIP_ERRNO_STDINCLUDE
+
 #define DEFAULT_TCP_RECVMBOX_SIZE 40
 #define DEFAULT_ACCEPTMBOX_SIZE 4
 

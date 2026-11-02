@@ -113,7 +113,7 @@ float WallFuelController::computeBeta() const {
 	}
 
 	// Clamp to 0..1 (you can't have more than 100% of the fuel hit the wall!)
-	return clampF(0, beta, 1);
+	return std::clamp<float>(beta, 0, 1);
 }
 
 void WallFuelController::onFastCallback() {

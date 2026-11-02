@@ -19,7 +19,7 @@ static float getVeLoadAxis(ve_override_e mode, float passedLoad) {
 	}
 }
 
-float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
+float AirmassVeModelBase::getVe(float rpm, float load, bool postState, VeTableType consumer) const {
 	// Override the load value if necessary
 	load = getVeLoadAxis(engineConfiguration->veOverrideMode, load);
 
@@ -47,7 +47,13 @@ float AirmassVeModelBase::getVe(float rpm, float load, bool postState) const {
 
 	// Add any adjustments if configured
 	for (size_t i = 0; i < efi::size(config->veBlends); i++) {
-		auto result = calculateBlend(config->veBlends[i], rpm, load);
+		const auto& blend = config->veBlends[i];
+		if (blend.veTableSelect != consumer) {
+			// This blend doesn't apply to this table, skip it
+			continue;
+		}
+
+		auto result = calculateBlend(blend, rpm, load);
 
 		if (postState) {
 			engine->outputChannels.veBlendParameter[i] = result.BlendParameter;

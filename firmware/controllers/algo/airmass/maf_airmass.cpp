@@ -4,7 +4,7 @@
 #include "maf.h"
 #include "fuel_math.h"
 
-float MafAirmass::getMaf() const {
+expected<float> MafAirmass::getMaf() const {
 	auto maf = Sensor::get(SensorType::Maf);
 
 	if (Sensor::hasSensor(SensorType::Maf2)) {
@@ -21,27 +21,31 @@ float MafAirmass::getMaf() const {
 			return 2 * maf2.Value;
 		} else {
 			// Both MAFs are broken, give up.
-			return 0;
+			return unexpected;
 		}
 	} else {
-		return maf.value_or(0);
+		return maf;
 	}
 }
 
-AirmassResult MafAirmass::getAirmass(float rpm, bool postState) {
-	float maf = getMaf();
+expected<AirmassResult> MafAirmass::getAirmass(float rpm, bool /*postState*/) {
+	auto maf = getMaf();
 
-	return getAirmassImpl(maf, rpm, postState);
+	if (!maf) {
+		return unexpected;
+	}
+
+	return getAirmassImpl(maf.Value, rpm);
 }
 
 /**
  * Function block now works to create a standardised load from the cylinder filling as well as tune fuel via VE table.
  * @return total duration of fuel injection per engine cycle, in milliseconds
  */
-AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool postState) const {
+expected<AirmassResult> MafAirmass::getAirmassImpl(float massAirFlow, float rpm) const {
 	// If the engine is stopped, MAF is meaningless
 	if (rpm == 0) {
-		return {};
+		return unexpected;
 	}
 
 	// kg/hr -> g/s
@@ -60,10 +64,13 @@ AirmassResult MafAirmass::getAirmassImpl(float massAirFlow, float rpm, bool post
 	// Create % load for fuel table using relative naturally aspirated cylinder filling
 	float airChargeLoad = 100 * cylinderAirmass / getStandardAirCharge();
 
-	// Correct air mass by VE table
-	mass_t correctedAirmass = cylinderAirmass * getVe(rpm, airChargeLoad, postState);
+	// Correct air mass by MAF trim table
+	mass_t correctedAirmass =
+			cylinderAirmass *
+			interpolate3d(config->mafTrimTable, config->mafTrimLoadBins, airChargeLoad, config->mafTrimRpmBins, rpm) *
+			PERCENT_DIV;
 
-	return {
+	return AirmassResult{
 			correctedAirmass,
 			airChargeLoad, // AFR/VE/ignition table Y axis
 	};

@@ -8,10 +8,6 @@
 
 #pragma once
 
-#include <cstdarg>
-#include <cstdint>
-#include <cstddef>
-
 class Logging {
 public:
 	Logging() = delete;

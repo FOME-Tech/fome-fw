@@ -131,6 +131,49 @@ TEST(limp, boostCut) {
 	EXPECT_TRUE(dut.allowInjection());
 }
 
+TEST(limp, boostCutTable) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Fixed pressure is ignored in table mode
+	engineConfiguration->boostCutPressure = 0;
+	engineConfiguration->boostCutUseTable = true;
+	engineConfiguration->boostCutXAxis = GPPWM_EthanolPercent;
+	engineConfiguration->boostCutYAxis = GPPWM_Zero;
+
+	// Cut at 200kPa on E0, 300kPa on E100
+	copyArray(config->boostCutXBins, {0, 50, 75, 100});
+	copyArray(config->boostCutYBins, {0, 1, 2, 3});
+	for (size_t y = 0; y < efi::size(config->boostCutYBins); y++) {
+		copyArray(config->boostCutTable[y], {200, 250, 275, 300});
+	}
+
+	LimpManager dut;
+
+	// E0: 210kPa cuts
+	Sensor::setMockValue(SensorType::FuelEthanolPercent, 0);
+	Sensor::setMockValue(SensorType::Map, 210);
+	dut.updateState(1000, 0);
+	EXPECT_FALSE(dut.allowInjection());
+	EXPECT_EQ(200, engine->outputChannels.boostCutTarget);
+
+	// Below falling threshold, fuel restored
+	Sensor::setMockValue(SensorType::Map, 175);
+	dut.updateState(1000, 0);
+	EXPECT_TRUE(dut.allowInjection());
+
+	// E100: 290kPa is fine
+	Sensor::setMockValue(SensorType::FuelEthanolPercent, 100);
+	Sensor::setMockValue(SensorType::Map, 290);
+	dut.updateState(1000, 0);
+	EXPECT_TRUE(dut.allowInjection());
+	EXPECT_EQ(300, engine->outputChannels.boostCutTarget);
+
+	// E100: 310kPa cuts
+	Sensor::setMockValue(SensorType::Map, 310);
+	dut.updateState(1000, 0);
+	EXPECT_FALSE(dut.allowInjection());
+}
+
 TEST(limp, oilPressureStartupFailureCase) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->minOilPressureAfterStart = 200;

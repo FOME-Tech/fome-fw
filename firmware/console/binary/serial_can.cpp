@@ -46,14 +46,14 @@ int CanStreamerState::sendFrame(
 	switch (header.frameType) {
 		case ISO_TP_FRAME_SINGLE:
 			offset = 1;
-			maxNumBytes = minI(header.numBytes, dlc - offset);
+			maxNumBytes = std::min(header.numBytes, dlc - offset);
 			txmsg[0] |= maxNumBytes;
 			break;
 		case ISO_TP_FRAME_FIRST:
 			txmsg[0] |= (header.numBytes >> 8) & 0xf;
 			txmsg[1] = (uint8_t)(header.numBytes & 0xff);
 			offset = 2;
-			maxNumBytes = minI(header.numBytes, dlc - offset);
+			maxNumBytes = std::min(header.numBytes, dlc - offset);
 			break;
 		case ISO_TP_FRAME_CONSECUTIVE:
 			txmsg[0] |= header.index & 0xf;

@@ -72,7 +72,7 @@ static void obdSendValue(int mode, int PID, int numBytes, float value, CanBusInd
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6662, numBytes <= 2, "invalid numBytes");
 	int iValue = (int)efiRound(value, 1.0f);
 	// clamp to uint8_t (0..255) or uint16_t (0..65535)
-	iValue = maxI(minI(iValue, (numBytes == 1) ? 255 : 65535), 0);
+	iValue = std::clamp<int>(iValue, 0, (numBytes == 1) ? 255 : 65535);
 	obdSendPacket(mode, PID, numBytes, iValue, busIndex);
 }
 
@@ -125,13 +125,13 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 
 	switch (pid) {
 		case PID_SUPPORTED_PIDS_REQUEST_01_20:
-			obdWriteSupportedPids(pid, 1, supportedPids0120, busIndex);
+			obdWriteSupportedPids(pid, 0x01, supportedPids0120, busIndex);
 			break;
 		case PID_SUPPORTED_PIDS_REQUEST_21_40:
-			obdWriteSupportedPids(pid, 21, supportedPids2140, busIndex);
+			obdWriteSupportedPids(pid, 0x21, supportedPids2140, busIndex);
 			break;
 		case PID_SUPPORTED_PIDS_REQUEST_41_60:
-			obdWriteSupportedPids(pid, 41, supportedPids4160, busIndex);
+			obdWriteSupportedPids(pid, 0x41, supportedPids4160, busIndex);
 			break;
 		case PID_MONITOR_STATUS:
 			obdStatusQuery(pid, busIndex);
@@ -197,7 +197,7 @@ static void handleGetDataRequest(uint8_t length, const CANRxFrame& rx, CanBusInd
 					busIndex); // (A*100/255)
 			break;
 		case PID_FUEL_AIR_RATIO_1: {
-			float lambda = clampF(0, Sensor::getOrZero(SensorType::Lambda1), 1.99f);
+			float lambda = std::clamp(Sensor::getOrZero(SensorType::Lambda1), 0.f, 1.99f);
 
 			uint16_t scaled = lambda * 32768;
 
@@ -324,6 +324,9 @@ void obdOnCanPacketRx(const CANRxFrame& rx, CanBusIndex busIndex) {
 		case OBD_PERMANENT_DTC:
 			// We don't support pending or permanent DTCs.
 			handleDtcRequest(service, 0, nullptr, busIndex);
+			break;
+		default:
+			efiPrintf("Unhandled CAN service ID: %d", service);
 			break;
 	}
 }

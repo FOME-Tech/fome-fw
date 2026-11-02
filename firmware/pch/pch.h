@@ -9,10 +9,17 @@
  * this file.
  */
 
+#include <algorithm>
+#include <atomic>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <type_traits>
+#include <utility>
+
 #include <rusefi/arrays.h>
 #include <rusefi/fragments.h>
 #include <rusefi/interpolation.h>
-#include <rusefi/isnan.h>
 #include <rusefi/math.h>
 #include <rusefi/pt2001.h>
 
@@ -48,5 +55,3 @@
 #else
 #include "chprintf.h"
 #endif
-
-#include <atomic>

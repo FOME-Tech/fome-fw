@@ -28,6 +28,9 @@ struct ExtiChannel {
 	void* CallbackData;
 	ioline_t Line;
 
+	uint32_t LastEdgeTimestamp;
+	uint32_t Count;
+
 	// Name is also used as an enable bit
 	const char* Name = nullptr;
 };
@@ -60,7 +63,7 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 	auto& channel = channels[index];
 
 	/* is this index already used? */
-	if (channel.Callback) {
+	if (channel.Name) {
 		firmwareError(
 				ObdCode::CUSTOM_ERR_PIN_ALREADY_USED_2,
 				"%s: pin %s/index %d: exti index already used by %s",
@@ -99,7 +102,7 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	auto& channel = channels[index];
 
 	/* is this index was used? */
-	if (!channel.Callback) {
+	if (!channel.Name) {
 		return;
 	}
 
@@ -112,13 +115,40 @@ void efiExtiDisablePin(brain_pin_e brainPin) {
 	channel.CallbackData = nullptr;
 }
 
+ExtiEdgeCounter efiExtiGetCounter(brain_pin_e brainPin) {
+	if (!isBrainPinValid(brainPin)) {
+		return {};
+	}
+
+	ioportid_t port = getHwPort("exti", brainPin);
+	if (port == NULL) {
+		return {};
+	}
+
+	int index = getHwPin("exti", brainPin);
+	auto& channel = channels[index];
+
+	// Not enabled, or this index belongs to the same pin number on another port
+	if (!channel.Name || channel.Line != PAL_LINE(port, index)) {
+		return {};
+	}
+
+	// The fast ISR runs above the kernel, so chSysLock() doesn't keep it out
+	__disable_irq();
+	ExtiEdgeCounter result = {channel.Count, channel.LastEdgeTimestamp};
+	__enable_irq();
+
+	return result;
+}
+
 static inline void triggerInterrupt() {
 	// Manually fire the I2C1_EV interrupt, it will be queued after this interrupt returns
 	NVIC->STIR = I2C1_EV_IRQn;
 }
 
 struct ExtiQueueEntry {
-	efitick_t Timestamp;
+	// Lower 32 bits only, extended to 64 bits in the handoff to keep the fast ISR short
+	uint32_t Timestamp;
 	uint8_t Channel;
 	bool Level;
 };
@@ -173,6 +203,10 @@ static uint8_t overflowCounter = 0;
 CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 	OSAL_IRQ_PROLOGUE();
 
+	// Reference for extending the queued 32-bit timestamps. Entries may be stamped before or
+	// after this point, so this is correct as long as each is within 2^31 ticks (~9 minutes).
+	efitick_t nowNt = getTimeNowNt();
+
 	while (true) {
 		// get the timestamp out under lock
 		// todo: lock freeeeee!
@@ -186,14 +220,12 @@ CH_IRQ_HANDLER(STM32_I2C1_EVENT_HANDLER) {
 		}
 
 		auto& entry = result.Value;
-		auto& timestamp = entry.Timestamp;
+		efitick_t timestamp = nowNt + (int32_t)(entry.Timestamp - (uint32_t)nowNt);
 
-		if (timestamp != 0) {
-			auto& channel = channels[entry.Channel];
+		auto& channel = channels[entry.Channel];
 
-			if (channel.Callback) {
-				channel.Callback(channel.CallbackData, timestamp, entry.Level);
-			}
+		if (channel.Callback) {
+			channel.Callback(channel.CallbackData, timestamp, entry.Level);
 		}
 	}
 
@@ -206,62 +238,69 @@ uint8_t getExtiOverflowCounter() {
 	return overflowCounter;
 }
 
-void handleExtiIsr(uint8_t index) {
-	// No need to lock anything, we're already the highest-pri interrupt!
+// The fast path must never touch the FPU: one FP instruction makes the core lazily stack the
+// interrupted thread's FP registers. This turns any float use into a compile error, and stops GCC
+// from using FP registers for plain copies.
+#define EXTI_NO_FPU __attribute__((target("general-regs-only")))
 
-	uint32_t pr;
-	extiGetAndClearGroup1(1U << index, pr);
+// noinline: inlined into handleExti's loop, GCC hoists the queue and NVIC state into callee-saved
+// registers, so every entry pays a 9-register push/pop. Out of line is cheaper for the usual single
+// edge per entry.
+__attribute__((noinline)) EXTI_NO_FPU static void handleExtiEdge(uint8_t index, uint32_t timestamp) {
+	auto& channel = channels[index];
 
-	if (pr & (1 << index)) {
-		auto timestamp = getTimeNowNt();
-		auto& channel = channels[index];
-		bool level = palReadLine(channel.Line) == PAL_HIGH;
+	channel.LastEdgeTimestamp = timestamp;
+	channel.Count++;
 
-		if (queue.push({timestamp, index, level})) {
-			triggerInterrupt();
-		} else if (overflowCounter < 255) {
-			// Saturate so a busy input cannot wrap the diagnostic back to zero.
-			overflowCounter++;
-		}
+	if (!channel.Callback) {
+		return;
+	}
+
+	bool level = palReadLine(channel.Line) == PAL_HIGH;
+	if (queue.push({timestamp, index, level})) {
+		triggerInterrupt();
+	} else if (overflowCounter < 255) {
+		// Saturate so a busy input cannot wrap the diagnostic back to zero.
+		overflowCounter++;
 	}
 }
 
-CH_FAST_IRQ_HANDLER(Vector58) {
-	handleExtiIsr(0);
+// One handler serves every EXTI vector: it services all 16 lines each time, so it doesn't need to
+// know which vector fired. If it services a line belonging to another vector, that vector still
+// enters once more afterwards, finds nothing pending, and returns.
+// The handler macro expands to an extern "C" definition, which can't carry the attribute itself
+extern "C" EXTI_NO_FPU void handleExti(void);
+
+CH_FAST_IRQ_HANDLER(handleExti) {
+	// No need to lock anything, we're already the highest-pri interrupt!
+
+	// Stamp before touching EXTI so the slow peripheral accesses don't delay it
+	uint32_t timestamp = getTimeNowLowerNt();
+
+	// One read and clear for all lines, then only visit the lines that fired. Edges that arrive
+	// after this read leave their bit pending and re-enter the ISR.
+	uint32_t pr;
+	extiGetAndClearGroup1(0xFFFF, pr);
+
+	while (pr) {
+		uint8_t index = __builtin_ctz(pr);
+		pr &= pr - 1;
+
+		handleExtiEdge(index, timestamp);
+	}
 }
 
-CH_FAST_IRQ_HANDLER(Vector5C) {
-	handleExtiIsr(1);
-}
+// Point each EXTI vector table entry straight at handleExti. These override the weak defaults in
+// ChibiOS vectors.S.
+#define EXTI_VECTOR(name) extern "C" void name(void) __attribute__((alias("handleExti")))
 
-CH_FAST_IRQ_HANDLER(Vector60) {
-	handleExtiIsr(2);
-}
-
-CH_FAST_IRQ_HANDLER(Vector64) {
-	handleExtiIsr(3);
-}
-
-CH_FAST_IRQ_HANDLER(Vector68) {
-	handleExtiIsr(4);
-}
-
-CH_FAST_IRQ_HANDLER(Vector9C) {
-	handleExtiIsr(5);
-	handleExtiIsr(6);
-	handleExtiIsr(7);
-	handleExtiIsr(8);
-	handleExtiIsr(9);
-}
-
-CH_FAST_IRQ_HANDLER(VectorE0) {
-	handleExtiIsr(10);
-	handleExtiIsr(11);
-	handleExtiIsr(12);
-	handleExtiIsr(13);
-	handleExtiIsr(14);
-	handleExtiIsr(15);
-}
+EXTI_VECTOR(Vector58); // Line 0
+EXTI_VECTOR(Vector5C); // Line 1
+EXTI_VECTOR(Vector60); // Line 2
+EXTI_VECTOR(Vector64); // Line 3
+EXTI_VECTOR(Vector68); // Line 4
+EXTI_VECTOR(Vector9C); // Lines 5-9
+EXTI_VECTOR(VectorE0); // Lines 10-15
 
 #else // not STM32
 
@@ -272,6 +311,10 @@ void efiExtiInit() {
 
 void efiExtiEnablePin(const char*, brain_pin_e, uint32_t, ExtiCallback, void*) {}
 void efiExtiDisablePin(brain_pin_e) {}
+
+ExtiEdgeCounter efiExtiGetCounter(brain_pin_e) {
+	return {};
+}
 
 uint8_t getExtiOverflowCounter() {
 	return 0;

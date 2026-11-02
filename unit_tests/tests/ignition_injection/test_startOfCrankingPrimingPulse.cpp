@@ -63,3 +63,69 @@ TEST(priming, duration) {
 	Sensor::resetMockValue(SensorType::Clt);
 	EXPECT_EQ(0, engine->module<PrimeController>()->getPrimeDuration());
 }
+
+static void setupPrimeTest(MockInjectorModel2& injectorModel) {
+	engine->module<InjectorModelPrimary>().set(&injectorModel);
+	EXPECT_CALL(injectorModel, getInjectionDuration(::testing::_)).WillRepeatedly(Return(20.0f));
+
+	Sensor::setMockValue(SensorType::Clt, 20);
+
+	// 0.5s configured + 100ms minimum = 600ms total delay
+	engineConfiguration->primingDelay = 0.5f;
+}
+
+TEST(priming, firesAfterDelay) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	MockInjectorModel2 injectorModel;
+	setupPrimeTest(injectorModel);
+
+	auto prime = engine->module<PrimeController>();
+
+	prime->onIgnitionStateChanged(true);
+	ASSERT_EQ(1, engine->scheduler.size());
+
+	// Not yet time to prime
+	eth.moveTimeForwardMs(590);
+	EXPECT_EQ(0, eth.executeActions());
+	EXPECT_FALSE(prime->isPriming());
+
+	// Delay elapsed, injectors open
+	eth.moveTimeForwardMs(20);
+	EXPECT_EQ(1, eth.executeActions());
+	EXPECT_TRUE(prime->isPriming());
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
+		EXPECT_TRUE(enginePins.injectors[i].getLogicValue()) << i;
+	}
+
+	// Pulse ends after 20ms
+	eth.moveTimeForwardMs(25);
+	EXPECT_EQ(1, eth.executeActions());
+	EXPECT_FALSE(prime->isPriming());
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
+		EXPECT_FALSE(enginePins.injectors[i].getLogicValue()) << i;
+	}
+}
+
+TEST(priming, cancelledIfIgnitionOffDuringDelay) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	MockInjectorModel2 injectorModel;
+	setupPrimeTest(injectorModel);
+
+	auto prime = engine->module<PrimeController>();
+
+	prime->onIgnitionStateChanged(true);
+	ASSERT_EQ(1, engine->scheduler.size());
+
+	// Key turned back off before the prime fires
+	eth.moveTimeForwardMs(300);
+	prime->onIgnitionStateChanged(false);
+
+	// The scheduled prime start runs, but must not open the injectors
+	eth.moveTimeForwardMs(500);
+	EXPECT_EQ(1, eth.executeActions());
+	EXPECT_FALSE(prime->isPriming());
+	EXPECT_EQ(0, engine->scheduler.size());
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
+		EXPECT_FALSE(enginePins.injectors[i].getLogicValue()) << i;
+	}
+}

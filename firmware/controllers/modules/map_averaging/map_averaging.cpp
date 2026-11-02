@@ -127,7 +127,7 @@ void MapAverager::onSample(float map, uint8_t cylinderNumber) {
 		engine->engineState.mapPerCylinderFloat[cylinderNumber] = map;
 
 		// Display only: this channel is a uint8_t, so saturate rather than wrapping around to zero
-		engine->engineState.mapPerCylinder[cylinderNumber] = clampF(0, map, 255);
+		engine->engineState.mapPerCylinder[cylinderNumber] = std::clamp<float>(map, 0, 255);
 
 		if (Sensor::getOrZero(SensorType::Rpm) > engineConfiguration->mapAveragingCylinderBalanceMinRpm) {
 			// correct the reading by this cylinder's MAP offset, but only if sufficient RPM
@@ -162,8 +162,8 @@ void EngineState::updateMapCylinderOffsets() {
 		float cylinderMap = mapPerCylinderFloat[i];
 
 		avgMap += cylinderMap;
-		minMap = minF(minMap, cylinderMap);
-		maxMap = maxF(maxMap, cylinderMap);
+		minMap = std::min(minMap, cylinderMap);
+		maxMap = std::max(maxMap, cylinderMap);
 	}
 
 	avgMap /= cylCount;
@@ -182,7 +182,7 @@ void EngineState::updateMapCylinderOffsets() {
 	// Second pass: calculate deviation of each cylinder from the average
 	for (int i = 0; i < cylCount; i++) {
 		mapCylinderBalance[i] =
-				clampF(-mapCylinderBalanceMaxOffset, mapPerCylinderFloat[i] - avgMap, mapCylinderBalanceMaxOffset);
+				std::clamp(mapPerCylinderFloat[i] - avgMap, -mapCylinderBalanceMaxOffset, mapCylinderBalanceMaxOffset);
 	}
 }
 
@@ -208,7 +208,7 @@ static void endAveraging(MapAverager* arg) {
 
 static void applyMapMinBufferLength() {
 	// check range
-	mapMinBufferLength = maxI(minI(engineConfiguration->mapMinBufferLength, MAX_MAP_BUFFER_LENGTH), 1);
+	mapMinBufferLength = std::clamp<int>(engineConfiguration->mapMinBufferLength, 1, MAX_MAP_BUFFER_LENGTH);
 	// reset index
 	averagedMapBufIdx = 0;
 	// fill with maximum values
@@ -238,7 +238,7 @@ void MapAveragingModule::onFastCallback() {
 
 	// Clamp the duration to slightly less than one cylinder period
 	float cylinderPeriod = engine->engineState.engineCycle / engine->engineState.cylinderCount;
-	engine->engineState.mapAveragingDuration = clampF(10, duration, cylinderPeriod - 10);
+	engine->engineState.mapAveragingDuration = std::clamp<float>(duration, 10, cylinderPeriod - 10);
 }
 
 // Callback to schedule the start of map averaging for each cylinder

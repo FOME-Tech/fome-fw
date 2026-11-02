@@ -241,7 +241,7 @@ size_t getMultiSparkCount(float rpm) {
 		uint32_t floored = sparksFitInTime;
 
 		// Allow no more than the maximum number of extra sparks
-		return minI(floored, engineConfiguration->multisparkMaxExtraSparkCount);
+		return std::min<uint32_t>(floored, engineConfiguration->multisparkMaxExtraSparkCount);
 	} else {
 		return 0;
 	}

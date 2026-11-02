@@ -10,7 +10,6 @@ struct FuelingBank {
 
 static FuelingBank banks[STFT_BANK_COUNT];
 
-static Deadband<25> idleDeadband;
 static Deadband<2> overrunDeadband;
 static Deadband<2> loadDeadband;
 
@@ -29,9 +28,9 @@ static SensorType getSensorForBankIndex(size_t index) {
 	}
 }
 
-size_t computeStftBin(float rpm, float load, stft_s& cfg) {
-	// Low RPM -> idle
-	if (idleDeadband.lt(rpm, cfg.maxIdleRegionRpm)) {
+size_t computeStftBin(float load, stft_s& cfg) {
+	// Idle controller says we're idling -> idle
+	if (engine->module<IdleController>()->isIdlingOrTaper()) {
 		return 0;
 	}
 
@@ -86,8 +85,8 @@ bool shouldUpdateCorrection(SensorType sensor) {
 
 	// Pause (but don't reset) correction if lambda is off scale.
 	// It's probably a transient and/or poorly tuned transient correction
-	auto lambda = Sensor::getOrZero(sensor);
-	if (lambda < cfg.minLambda || lambda > cfg.maxLambda) {
+	auto lambda = Sensor::get(sensor);
+	if (!lambda || lambda.Value < cfg.minLambda || lambda.Value > cfg.maxLambda) {
 		return false;
 	}
 
@@ -112,7 +111,7 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		return {};
 	}
 
-	size_t binIdx = computeStftBin(Sensor::getOrZero(SensorType::Rpm), getFuelingLoad(), engineConfiguration->stft);
+	size_t binIdx = computeStftBin(getFuelingLoad(), engineConfiguration->stft);
 
 #if EFI_TUNER_STUDIO
 	engine->outputChannels.fuelClosedLoopBinIdx = binIdx;
@@ -126,7 +125,7 @@ ClosedLoopFuelResult fuelClosedLoopCorrection() {
 		SensorType sensor = getSensorForBankIndex(i);
 
 		// todo: push configuration at startup
-		cell.configure(&engineConfiguration->stft.cellCfgs[binIdx], sensor);
+		cell.configure(engineConfiguration->stft.cellCfgs[binIdx], sensor);
 
 		if (shouldUpdateCorrection(sensor)) {
 			cell.update(engineConfiguration->stftIgnoreErrorMagnitude);

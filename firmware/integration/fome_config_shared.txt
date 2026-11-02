@@ -31,7 +31,7 @@
 #define IGN_BLEND_COUNT 4
 #define VE_BLEND_COUNT 4
 #define BOOST_BLEND_COUNT 2
-#define LUA_GAUGE_COUNT 2
+#define LUA_GAUGE_COUNT 8
 
 #define STFT_BANK_COUNT 4
 
@@ -78,6 +78,7 @@
 #define GAUGE_NAME_MAF "MAF"
 #define GAUGE_NAME_ETB_TARGET "ETB: position target"
 #define GAUGE_NAME_WG_POSITION "Wastegate position sensor"
+#define GAUGE_NAME_CLUTCH_POSITION "Clutch position"
 #define GAUGE_NAME_ETB_ERROR "ETB: position error"
 #define GAUGE_NAME_ETB_DUTY "ETB: Duty"
 #define GAUGE_NAME_LAST_ERROR "Last error"
@@ -115,8 +116,6 @@
 
 #define GAUGE_NAME_AIR_FLOW_MEASURED "MAF"
 #define GAUGE_NAME_AIR_FLOW_MEASURED_2 "MAF #2"
-#define GAUGE_NAME_AIR_FLOW_ESTIMATE "Air: Flow estimate"
-#define GAUGE_NAME_AIR_MASS "Air: Cylinder airmass"
 
 #define GAUGE_NAME_WARNING_LAST "Warning: last"
 #define GAUGE_NAME_WARNING_COUNTER "Warning: counter"

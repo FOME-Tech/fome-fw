@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include <cstdint>
-
 class TsChannelBase;
 
 typedef enum {

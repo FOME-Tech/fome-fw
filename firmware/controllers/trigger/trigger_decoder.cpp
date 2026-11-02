@@ -406,7 +406,7 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	// Timeout below approximately 12 rpm, but a maximum of 1 second timeout
 	// Trigger shape length is ~4x tooth count (rise + fall / doubled for 4 stroke),
 	// so extra multiply by 4 then 5 second maximum revolution
-	float triggerTimeoutPeriod = clampF(0.1f, 20.0f / triggerShape.getLength(), 1.0f);
+	float triggerTimeoutPeriod = std::clamp(20.0f / triggerShape.getLength(), 0.1f, 1.0f);
 	float previousEventTime = previousEventTimer.getElapsedSecondsAndReset(nowNt);
 	if (previousEventTime > triggerTimeoutPeriod) {
 		efiPrintf(

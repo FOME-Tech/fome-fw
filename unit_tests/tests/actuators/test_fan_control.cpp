@@ -213,3 +213,135 @@ TEST(Actuators, FanPwmSafetyDuty) {
 	updateFan1();
 	EXPECT_NEAR(0.50, testPwm.lastDuty, 0.01);
 }
+
+TEST(Actuators, FanDisableAtSpeed) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	MockAc mockAc;
+	engine->module<AcController>().set(&mockAc);
+
+	engine->module<FanControl1>()->onIgnitionStateChanged(true);
+	engine->rpmCalculator.setRpmValue(1000);
+
+	engineConfiguration->fanOnTemperature = 90;
+	engineConfiguration->fanOffTemperature = 80;
+	engineConfiguration->enableFan1WithAc = false;
+
+	// Hot, so the fan wants to run
+	Sensor::setMockValue(SensorType::Clt, 95);
+
+	// Threshold of 0 disables the feature: fan runs at any speed
+	engineConfiguration->disableFan1AtSpeed = 0;
+	Sensor::setMockValue(SensorType::VehicleSpeed, 150);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+	EXPECT_FALSE(engine->module<FanControl1>()->disabledBySpeed);
+
+	// Above the threshold, fan is off even though hot
+	engineConfiguration->disableFan1AtSpeed = 60;
+	Sensor::setMockValue(SensorType::VehicleSpeed, 100);
+	updateFan1();
+	EXPECT_EQ(false, enginePins.fanRelay.getLogicValue());
+	EXPECT_TRUE(engine->module<FanControl1>()->disabledBySpeed);
+
+	// Below the threshold, fan runs again
+	Sensor::setMockValue(SensorType::VehicleSpeed, 50);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+
+	// Exactly at the threshold is not above it
+	Sensor::setMockValue(SensorType::VehicleSpeed, 60);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+
+	// A failed speed sensor must never turn the fan off
+	Sensor::setInvalidMockValue(SensorType::VehicleSpeed);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+	EXPECT_FALSE(engine->module<FanControl1>()->disabledBySpeed);
+
+	// ...and neither must a missing one
+	Sensor::resetMockValue(SensorType::VehicleSpeed);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+
+	// Speed overrides the AC request
+	engineConfiguration->enableFan1WithAc = true;
+	mockAc.acState = true;
+	Sensor::setMockValue(SensorType::Clt, 75);
+	Sensor::setMockValue(SensorType::VehicleSpeed, 100);
+	updateFan1();
+	EXPECT_EQ(false, enginePins.fanRelay.getLogicValue());
+
+	Sensor::setMockValue(SensorType::VehicleSpeed, 30);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+
+	// But a broken CLT still forces the fan on at speed
+	engineConfiguration->enableFan1WithAc = false;
+	mockAc.acState = false;
+	Sensor::setInvalidMockValue(SensorType::Clt);
+	Sensor::setMockValue(SensorType::VehicleSpeed, 100);
+	updateFan1();
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+}
+
+TEST(Actuators, FanDisableAtSpeedPwm) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	MockAc mockAc;
+	engine->module<AcController>().set(&mockAc);
+
+	TestPwm testPwm;
+
+	engineConfiguration->fan1UsePwmMode = true;
+	engineConfiguration->fan1PwmXAxis = GPPWM_Zero;
+	engineConfiguration->fanOnTemperature = 90;
+	engineConfiguration->fanOffTemperature = 80;
+	engineConfiguration->disableFan1AtSpeed = 60;
+
+	setLinearCurve(config->fan1CltBins, 0, 100);
+	setArrayValues(config->fan1XAxisBins, 0);
+	setTable(config->fan1DutyAcOff, 50);
+	setTable(config->fan1DutyAcOn, 75);
+
+	engine->module<FanControl1>()->setMockPwm(&testPwm);
+	engine->module<FanControl1>()->onIgnitionStateChanged(true);
+	engine->rpmCalculator.setRpmValue(1000);
+
+	// Hot and slow: table duty
+	Sensor::setMockValue(SensorType::Clt, 95);
+	Sensor::setMockValue(SensorType::VehicleSpeed, 30);
+	updateFan1();
+	EXPECT_NEAR(0.50, testPwm.lastDuty, 0.01);
+
+	// Hot and fast: no duty
+	Sensor::setMockValue(SensorType::VehicleSpeed, 100);
+	updateFan1();
+	EXPECT_NEAR(0, testPwm.lastDuty, 0.01);
+}
+
+TEST(Actuators, FanDisableAtSpeedPerFan) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	MockAc mockAc;
+	engine->module<AcController>().set(&mockAc);
+
+	engine->module<FanControl1>()->onIgnitionStateChanged(true);
+	engine->module<FanControl2>()->onIgnitionStateChanged(true);
+	engine->rpmCalculator.setRpmValue(1000);
+
+	engineConfiguration->fanOnTemperature = 90;
+	engineConfiguration->fanOffTemperature = 80;
+	engineConfiguration->fan2OnTemperature = 90;
+	engineConfiguration->fan2OffTemperature = 80;
+
+	// Only fan 2 has a speed limit
+	engineConfiguration->disableFan1AtSpeed = 0;
+	engineConfiguration->disableFan2AtSpeed = 60;
+
+	Sensor::setMockValue(SensorType::Clt, 95);
+	Sensor::setMockValue(SensorType::VehicleSpeed, 100);
+	updateFan1();
+	engine->module<FanControl2>()->onSlowCallback();
+
+	EXPECT_EQ(true, enginePins.fanRelay.getLogicValue());
+	EXPECT_EQ(false, enginePins.fanRelay2.getLogicValue());
+}

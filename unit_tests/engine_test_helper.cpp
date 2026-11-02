@@ -120,6 +120,8 @@ EngineTestHelper::EngineTestHelper(
 
 		mockAirmass = std::make_unique<::testing::NiceMock<MockAirmass>>();
 		engine.mockAirmassModel = mockAirmass.get();
+
+		EXPECT_CALL(*mockAirmass, getAirmass(::testing::_, ::testing::_)).WillRepeatedly(Return(AirmassResult{}));
 	}
 
 	memset(mockPinStates, 0, sizeof(mockPinStates));

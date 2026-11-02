@@ -57,4 +57,4 @@ struct BlendResult {
 	float TableYAxis;
 };
 
-BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load);
+BlendResult calculateBlend(const blend_table_s& cfg, float rpm, float load);

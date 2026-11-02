@@ -8,8 +8,8 @@ public:
 		: SpeedDensityBase(veTable)
 		, m_mapEstimationTable(&mapEstimationTable) {}
 
-	AirmassResult getAirmass(float rpm, bool postState) override;
-	AirmassResult getAirmass(float rpm, float map, bool postState);
+	expected<AirmassResult> getAirmass(float rpm, bool postState) override;
+	expected<AirmassResult> getAirmass(float rpm, float map, bool postState);
 	float getAirflow(float rpm, float map, bool postState);
 
 	float getMap(float rpm, bool postState) const;

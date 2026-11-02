@@ -26,7 +26,7 @@ public:
 			return UnexpectedCode::High;
 		}
 
-		float flexPct = clampF(0, frequency - 50, 100);
+		float flexPct = std::clamp<float>(frequency - 50, 0, 100);
 
 		// Nothing preloaded the filter, so start it out at whatever the sensor says right now
 		if (!m_hasUpdated) {

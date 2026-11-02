@@ -167,7 +167,7 @@ static float getBaseFuelMass(float rpm) {
 	auto model = getAirmassModel(engineConfiguration->fuelAlgorithm);
 	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, model != nullptr, "Invalid airmass mode", 0.0f);
 
-	auto airmass = model->getAirmass(rpm, true);
+	auto airmass = model->getAirmass(rpm, true).value_or(AirmassResult{});
 
 	// Plop some state for others to read
 	float normalizedCylinderFilling = 100 * airmass.CylinderAirmass / getStandardAirCharge();
@@ -182,7 +182,6 @@ static float getBaseFuelMass(float rpm) {
 
 	// convert g/s -> kg/h
 	engine->engineState.airflowEstimate = gramPerMs * 3600000 /* milliseconds per hour */ / 1000 /* grams per kg */;
-	;
 
 	float baseFuelMass = engine->fuelComputer.getCycleFuel(airmass.CylinderAirmass, rpm, airmass.EngineLoadPercent);
 

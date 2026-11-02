@@ -24,7 +24,7 @@ void StepperMotorBase::setTargetPosition(float targetPositionSteps) {
 }
 
 void StepperMotorBase::initialize(StepperHw* hardware, int totalSteps) {
-	m_totalSteps = maxI(3, totalSteps);
+	m_totalSteps = std::max(3, totalSteps);
 
 	m_hw = hardware;
 }
@@ -192,7 +192,7 @@ void StepperHw::sleep() {
 
 void StepperHw::pause(int divisor) const {
 	// currently we can't sleep less than 1ms (see #3214)
-	chThdSleepMicroseconds(maxI(MS2US(1), (int)(MS2US(m_reactionTime)) / divisor));
+	chThdSleepMicroseconds(std::max(MS2US(1), (int)(MS2US(m_reactionTime)) / divisor));
 }
 
 void StepperHw::setReactionTime(float ms) {

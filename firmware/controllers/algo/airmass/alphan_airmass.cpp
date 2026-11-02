@@ -2,16 +2,16 @@
 
 #include "alphan_airmass.h"
 
-AirmassResult AlphaNAirmass::getAirmass(float rpm, bool postState) {
+expected<AirmassResult> AlphaNAirmass::getAirmass(float rpm, bool postState) {
 	auto tps = Sensor::get(SensorType::Tps1);
 
 	if (!tps.Valid) {
 		// We are fully reliant on TPS - if the TPS fails, stop the engine.
-		return {};
+		return unexpected;
 	}
 
 	// In this case, VE directly describes the cylinder filling relative to the ideal
-	float ve = getVe(rpm, tps.Value, postState);
+	float ve = getVe(rpm, tps.Value, postState, VeTableType::AlphaN);
 
 	// optionally use real IAT instead of fixed air temperature
 	constexpr float standardIat = 20.0f; // std atmosphere temperature
@@ -25,5 +25,5 @@ AirmassResult AlphaNAirmass::getAirmass(float rpm, bool postState) {
 			101.325f, // std atmosphere pressure
 			iatK);
 
-	return {airmass, tps.Value};
+	return AirmassResult{airmass, tps.Value};
 }

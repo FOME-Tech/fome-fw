@@ -192,7 +192,7 @@ void setFlatInjectorLag(float value) {
 	setArrayValues(engineConfiguration->injector.battLagCorr, value);
 }
 
-BlendResult calculateBlend(blend_table_s& cfg, float rpm, float load) {
+BlendResult calculateBlend(const blend_table_s& cfg, float rpm, float load) {
 	// If set to 0, skip the math as its disabled
 	if (cfg.blendParameter == GPPWM_Zero) {
 		return {0, 0, 0, 0};

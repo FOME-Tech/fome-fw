@@ -71,6 +71,11 @@ Usages:
     prepend: integration/fome_config_shared.txt
     output_name: AC
 
+  - name: gear_detector_state
+    folder: controllers/modules/gear_detector
+    prepend: integration/fome_config_shared.txt
+    output_name: Gear
+
   - name: fan_control
     folder: controllers/modules/fan
     output_name: [ "Fan 1", "Fan 2" ]

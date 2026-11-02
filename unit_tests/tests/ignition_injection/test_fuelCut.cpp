@@ -42,6 +42,7 @@ TEST(fuelCut, coasting) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
 	// set 'running' RPM - just above RpmHigh threshold
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
@@ -97,6 +98,7 @@ TEST(fuelCut, coasting) {
 
 	// Now set RPM just above RpmHigh threshold
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	eth.engine.periodicFastCallback();
 
 	// Fuel cut-off is active again!
@@ -162,6 +164,7 @@ TEST(fuelCut, delay) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
 	// set 'running' RPM - just above RpmHigh threshold
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
@@ -234,6 +237,7 @@ TEST(fuelCut, mapTable) {
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
 	// set 'running' RPM in the middle of two interpolation values
 	Sensor::setMockValue(SensorType::Rpm, 2500);
+	engine->rpmCalculator.setRpmValue(2500);
 	// 'advance' time (amount doesn't matter)
 	eth.moveTimeForwardUs(1000);
 
@@ -282,6 +286,7 @@ TEST(fuelCut, clutch) {
 	Sensor::setMockValue(SensorType::Clt, hotClt);
 	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
 	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
 	Sensor::setMockValue(SensorType::Map, 0);
 	eth.moveTimeForwardUs(1000);
 
@@ -315,4 +320,54 @@ TEST(fuelCut, clutch) {
 	engine->updateSwitchInputs();
 	eth.engine.periodicFastCallback();
 	EXPECT_CUT();
+}
+
+TEST(fuelCut, timingRetardRampIn) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+
+	// configure coastingFuelCut
+	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->coastingFuelCutRpmLow = 1300;
+	engineConfiguration->coastingFuelCutRpmHigh = 1500;
+	engineConfiguration->coastingFuelCutTps = 2;
+	engineConfiguration->coastingFuelCutClt = 30;
+	engineConfiguration->coastingFuelCutMap = 100;
+	engineConfiguration->cranking.rpm = 999;
+
+	engineConfiguration->dfcoRetardDeg = 10;
+	// ramp out over 1 second - twice the duration that used to be hardcoded
+	engineConfiguration->dfcoRetardRampInTime = 1;
+
+	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
+
+	// all conditions allow fuel cut
+	Sensor::setMockValue(SensorType::Clt, engineConfiguration->coastingFuelCutClt + 1);
+	Sensor::setMockValue(SensorType::Map, 0);
+	Sensor::setMockValue(SensorType::Rpm, engineConfiguration->coastingFuelCutRpmHigh + 1);
+	engine->rpmCalculator.setRpmValue(engineConfiguration->coastingFuelCutRpmHigh + 1);
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+
+	auto& dfco = engine->module<DfcoController>().unmock();
+
+	// while cut, full retard
+	eth.moveTimeForwardUs(1000);
+	eth.engine.periodicFastCallback();
+	EXPECT_FLOAT_EQ(10, dfco.getTimingRetard());
+
+	// back on the throttle ends the cut and starts the ramp
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
+	eth.engine.periodicFastCallback();
+
+	// a quarter through the ramp, three quarters of the retard remains
+	eth.moveTimeForwardUs(250'000);
+	EXPECT_NEAR(7.5, dfco.getTimingRetard(), 0.01);
+
+	// halfway - where the old hardcoded 0.5s ramp had already reached zero
+	eth.moveTimeForwardUs(250'000);
+	EXPECT_NEAR(5, dfco.getTimingRetard(), 0.01);
+
+	// past the end of the ramp, no retard
+	eth.moveTimeForwardUs(600'000);
+	EXPECT_FLOAT_EQ(0, dfco.getTimingRetard());
 }

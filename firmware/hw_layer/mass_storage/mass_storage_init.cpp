@@ -107,9 +107,21 @@ static BaseBlockDevice* getRamdiskDevice() {
 #endif
 }
 
+static BaseBlockDevice* iniBlockDevice = nullptr;
+
+BaseBlockDevice* getIniBlockDevice() {
+	return iniBlockDevice;
+}
+
 void initUsbMsd() {
+	BaseBlockDevice* ramdiskDevice = getRamdiskDevice();
+
+#if EFI_EMBED_INI_MSD
+	iniBlockDevice = ramdiskDevice;
+#endif
+
 	// Attach the ini ramdisk
-	msd.attachLun(0, getRamdiskDevice(), blkbufIni, &iniDriveInquiry, nullptr);
+	msd.attachLun(0, ramdiskDevice, blkbufIni, &iniDriveInquiry, nullptr);
 
 	// attach a null device in place of the SD card for now - the SD thread may replace it later
 	msd.attachLun(1, (BaseBlockDevice*)&ND1, dma_buffers::sdCardBlockBuffer(), &sdCardInquiry, nullptr);

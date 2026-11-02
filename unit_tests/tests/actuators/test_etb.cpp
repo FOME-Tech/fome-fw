@@ -567,23 +567,115 @@ TEST(etb, etbTpsSensor) {
 	}
 }
 
-TEST(etb, setOutputInvalid) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-
-	// Redundant TPS & accelerator pedal required for init
-	Sensor::setMockValue(SensorType::Tps1Primary, 0);
-	Sensor::setMockValue(SensorType::Tps1, 0, true);
-	Sensor::setMockValue(SensorType::AcceleratorPedal, 0, true);
-
+class EtbOutput : public ::testing::TestWithParam<dc_function_e> {
+protected:
+	EngineTestHelper eth{engine_type_e::TEST_ENGINE};
 	StrictMock<MockMotor> motor;
+	EtbController controller;
 
-	EtbController etb;
-	etb.init(DC_Throttle1, &motor, nullptr, nullptr, true);
+	void SetUp() override {
+		Sensor::setMockValue(SensorType::Tps1Primary, 0);
+		Sensor::setMockValue(SensorType::Tps2Primary, 0);
+		Sensor::setMockValue(SensorType::Tps1, 0, true);
+		Sensor::setMockValue(SensorType::Tps2, 0, true);
+		Sensor::setMockValue(SensorType::AcceleratorPedal, 0, true);
+		ASSERT_TRUE(controller.init(GetParam(), &motor, nullptr, nullptr, true));
+	}
+};
 
-	// Should be disabled in case of unexpected
+TEST_P(EtbOutput, invalidDisablesPreviouslyActiveMotor) {
+	::testing::InSequence sequence;
+	EXPECT_CALL(motor, enable());
+	EXPECT_CALL(motor, set(0.25f));
+	EXPECT_CALL(motor, disable(_)).Times(2);
+
+	controller.setOutput(25.0f);
+	EXPECT_FLOAT_EQ(25, controller.m_outputDuty);
+	controller.setOutput(unexpected);
+	EXPECT_FLOAT_EQ(0, controller.m_outputDuty);
+	controller.setOutput(UnexpectedCode::Timeout);
+	EXPECT_FLOAT_EQ(0, controller.m_outputDuty);
+}
+
+TEST_P(EtbOutput, validOutputPreservesDirectionAndLimits) {
+	::testing::InSequence sequence;
+	const float outputs[] = {-110, -25, 0, 25, 110};
+	const float duties[] = {-0.9f, -0.25f, 0, 0.25f, 0.9f};
+	for (size_t i = 0; i < efi::size(outputs); i++) {
+		EXPECT_CALL(motor, enable());
+		EXPECT_CALL(motor, set(duties[i]));
+		controller.setOutput(outputs[i]);
+	}
+}
+
+TEST_P(EtbOutput, pauseAppliesOnlyToThrottles) {
+	engineConfiguration->pauseEtbControl = true;
+	if (GetParam() == DC_Wastegate) {
+		EXPECT_CALL(motor, enable());
+		EXPECT_CALL(motor, set(0.25f));
+	} else {
+		EXPECT_CALL(motor, disable(_));
+	}
+	controller.setOutput(25.0f);
+}
+
+TEST_P(EtbOutput, throttleLimpDoesNotInhibitWastegate) {
+	getLimpManager()->fatalError();
+	if (GetParam() == DC_Wastegate) {
+		EXPECT_CALL(motor, enable());
+		EXPECT_CALL(motor, set(0.25f));
+	} else {
+		EXPECT_CALL(motor, disable(_));
+	}
+	controller.setOutput(25.0f);
+}
+
+TEST_P(EtbOutput, limpOverrideDoesNotAllowInvalidOutput) {
+	getLimpManager()->fatalError();
+	engine->etbIgnoreJamProtection = true;
 	EXPECT_CALL(motor, disable(_));
+	controller.setOutput(unexpected);
+}
 
-	etb.setOutput(unexpected);
+INSTANTIATE_TEST_SUITE_P(ActuatorModes, EtbOutput, ::testing::Values(DC_Throttle1, DC_Throttle2, DC_Wastegate));
+
+TEST(etb, wastegateFeedbackLossAndRecovery) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	StrictMock<MockMotor> motor;
+	pid_s pid = {};
+	pid.pFactor = 1;
+	pid.minValue = -100;
+	pid.maxValue = 100;
+	EtbController controller;
+	ASSERT_TRUE(controller.init(DC_Wastegate, &motor, &pid, nullptr, false));
+	controller.setWastegatePosition(50);
+
+	::testing::InSequence sequence;
+	// A missing sensor must keep the bridge disabled even before the first valid sample.
+	EXPECT_CALL(motor, disable(_));
+	Sensor::setInvalidMockValue(SensorType::WastegatePosition);
+	controller.update();
+	EXPECT_FLOAT_EQ(0, controller.m_outputDuty);
+
+	EXPECT_CALL(motor, enable());
+	EXPECT_CALL(motor, set(0.25f));
+	Sensor::setMockValue(SensorType::WastegatePosition, 25);
+	controller.update();
+	EXPECT_FLOAT_EQ(25, controller.m_outputDuty);
+
+	// Losing feedback must stop the active motor and keep it disabled on subsequent updates.
+	EXPECT_CALL(motor, disable(_)).Times(2);
+	Sensor::setInvalidMockValue(SensorType::WastegatePosition);
+	controller.update();
+	controller.update();
+	EXPECT_FLOAT_EQ(0, controller.m_outputDuty);
+
+	// Valid feedback restores closed-loop control, including the opposite direction.
+	EXPECT_CALL(motor, enable());
+	EXPECT_CALL(motor, set(-0.25f));
+	Sensor::setMockValue(SensorType::WastegatePosition, 75);
+	controller.update();
+	EXPECT_FLOAT_EQ(-25, controller.m_outputDuty);
 }
 
 TEST(etb, setOutputValid) {

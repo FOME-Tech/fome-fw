@@ -151,7 +151,12 @@
 / Drive/Volume Configurations
 /---------------------------------------------------------------------------*/
 
+#ifdef EFI_BOOTLOADER
 #define FF_VOLUMES		1
+#else
+// SD card, plus the read-only image holding the TunerStudio ini
+#define FF_VOLUMES		2
+#endif
 /* Number of volumes (logical drives) to be used. (1-10) */
 
 

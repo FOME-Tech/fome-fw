@@ -111,7 +111,7 @@ void EngineState::periodicFastCallback() {
 				config->postCrankingEnrichRuntimeBins,
 				engine->fuelComputer.running.timeSinceCrankingInSecs);
 
-		engine->fuelComputer.running.postCrankingFuelCorrection = clampF(1, postCrankingCorr, 5);
+		engine->fuelComputer.running.postCrankingFuelCorrection = std::clamp<float>(postCrankingCorr, 1, 5);
 	} else {
 		// for compatibility reasons, apply only if the factor is greater than unity (only allow adding fuel)
 		if (engineConfiguration->postCrankingFactor > 1.0f) {

@@ -36,6 +36,7 @@ static bool isPrimeInjectionPulseSkipped() {
 }
 
 void PrimeController::onIgnitionStateChanged(bool ignitionOn) {
+	m_ignitionOn = ignitionOn;
 	if (!ignitionOn) {
 		// don't prime on ignition-off
 		return;
@@ -90,6 +91,11 @@ void PrimeController::setKeyCycleCounter(uint32_t) {}
 #endif
 
 void PrimeController::onPrimeStart() {
+	// Skip if the ignition was turned off during the prime delay
+	if (!m_ignitionOn) {
+		return;
+	}
+
 	auto durationMs = getPrimeDuration();
 
 	// Don't prime a zero-duration pulse

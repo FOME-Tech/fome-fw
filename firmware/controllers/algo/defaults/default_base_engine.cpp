@@ -155,6 +155,13 @@ void setDefaultBaseEngine() {
 	engineConfiguration->minimumOilPressureTimeout = 0.5f;
 	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;
 	setLinearCurve(config->minimumOilPressureBins, 0, 7000);
+
+	// Boost cut table, only used if boostCutUseTable is set
+	engineConfiguration->boostCutXAxis = GPPWM_Zero;
+	engineConfiguration->boostCutYAxis = GPPWM_Zero;
+	setLinearCurve(config->boostCutXBins, 0, 100, 1);
+	setLinearCurve(config->boostCutYBins, 0, 100, 1);
+	setTable(config->boostCutTable, 300);
 }
 
 void setPPSInputs(adc_channel_e pps1, adc_channel_e pps2) {

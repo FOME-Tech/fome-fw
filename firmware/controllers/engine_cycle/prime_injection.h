@@ -24,6 +24,7 @@ public:
 	}
 
 private:
+	bool m_ignitionOn = false;
 	bool m_isPriming = false;
 
 	static void onPrimeStartAdapter(PrimeController* instance) {

@@ -17,7 +17,7 @@ TorqueReductionOutput TorqueReductionController::getReduction(float request) con
 	TorqueReductionOutput result;
 
 	// A request outside [0, 1] is meaningless - clamp it.
-	request = clampF(0, request, 1);
+	request = std::clamp<float>(request, 0, 1);
 
 	auto& reqBins = config->torqueReductionRetardReqBins;
 
@@ -33,7 +33,7 @@ TorqueReductionOutput TorqueReductionController::getReduction(float request) con
 	if (request <= cutStart || cutStart >= 1) {
 		result.cutFraction = 0;
 	} else {
-		result.cutFraction = clampF(0, (request - cutStart) / (1 - cutStart), 1);
+		result.cutFraction = std::clamp<float>((request - cutStart) / (1 - cutStart), 0, 1);
 	}
 
 	return result;

@@ -468,7 +468,7 @@ void baseMCUInit() {
 	// looks like this holds a random value on start? Let's set a nice clean zero
 	DWT->CYCCNT = 0;
 
-	BOR_Set(BOR_Level_1); // one step above default value
+	BOR_Set(BOR_Level_3); // Previously level 1, lets try level 3 and chceck if it helps with random flash corruptionq
 }
 
 extern uint32_t __main_stack_base__;

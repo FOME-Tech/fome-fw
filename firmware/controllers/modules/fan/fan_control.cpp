@@ -64,6 +64,11 @@ bool FanController::getState(bool acActive, bool lastState) {
 	hot = clt.value_or(0) > getFanOnTemp();
 	cold = clt.value_or(0) < getFanOffTemp();
 
+	// A missing or failed speed sensor must never turn the fan off
+	auto vss = Sensor::get(SensorType::VehicleSpeed);
+	uint8_t disableSpeed = disableAtSpeed();
+	disabledBySpeed = disableSpeed > 0 && vss && vss.Value > disableSpeed;
+
 	if (!m_benchTestTimer.hasElapsedSec(3)) {
 		// Run the fan when bench test is active
 		return true;
@@ -79,6 +84,9 @@ bool FanController::getState(bool acActive, bool lastState) {
 	} else if (brokenClt) {
 		// If CLT is broken, turn the fan on
 		return true;
+	} else if (disabledBySpeed) {
+		// Ram air is cooling the radiator, the fan isn't needed
+		return false;
 	} else if (enabledForAc) {
 		return true;
 	} else if (hot) {
