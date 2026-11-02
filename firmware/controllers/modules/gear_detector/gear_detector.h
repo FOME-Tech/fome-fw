@@ -1,6 +1,6 @@
 #pragma once
 
-class GearDetector : public EngineModule, public Sensor {
+class GearDetector : public EngineModule, public Sensor, public gear_detector_state_s {
 public:
 	GearDetector();
 	~GearDetector();

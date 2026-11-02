@@ -1,0 +1,3 @@
+struct_no_prefix gear_detector_state_s
+
+end_struct
