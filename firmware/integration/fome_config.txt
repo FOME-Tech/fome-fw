@@ -1489,6 +1489,10 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
 
+	adc_channel_e clutchPositionSensor;Analog clutch pedal position sensor input.
+	uint16_t autoscale clutchPositionUpVoltage;Sensor voltage with the clutch released (pedal up). Reads 0%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint16_t autoscale clutchPositionDownVoltage;Sensor voltage with the clutch pedal on the floor. Reads 100%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+
 ! end of engine_configuration_s
 end_struct
 
