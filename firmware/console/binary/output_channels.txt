@@ -103,6 +103,9 @@ struct_no_prefix output_channels_s
 ! VVT
 	int16_t autoscale vvtPositionB1I;@@GAUGE_NAME_VVT_B1I@@;"deg",{1/@@PACK_MULT_ANGLE@@}, 0, 0, 0, 1
 
+	uint8_t maxTriggerReentrant;;"", 1, 0, 0, 100, 0
+	uint8_t autoscale veValue;@@GAUGE_NAME_FUEL_VE@@;"ratio",{1/2}, 0, 0, 100, 2
+
 ! todo: this not needed in light of TS_SIGNATURE but rusEFI console still uses it. Need to migrate
 ! rusEFI console from TS_FILE_VERSION to TS_SIGNATURE :(
 	uint32_t tsConfigVersion;;"", 1, 0, 0, 0, 0
@@ -150,9 +153,6 @@ struct_no_prefix output_channels_s
 
 	uint16_t autoscale wallFuelAmount;Fuel: Wall amount;"mg",{1/@@PACK_MULT_FUEL_MASS@@}, 0, 0, 0, 3
 	int16_t autoscale wallFuelCorrectionValue;Fuel: Wall correction;"mg",{1/@@PACK_MULT_FUEL_MASS@@}, 0, 0, 0, 3
-	uint8_t autoscale veValue;@@GAUGE_NAME_FUEL_VE@@;"ratio",{1/2}, 0, 0, 100, 2
-
-	uint8_t maxTriggerReentrant;;"", 1, 0, 0, 100, 0
 
 ! Lua
 	float[LUA_GAUGE_COUNT iterate] luaGauges;Lua: Gauge;"value",1, 0, 0, 50000, 3
@@ -186,7 +186,11 @@ struct_no_prefix output_channels_s
 	uint8_t currentInjectionMode;@@GAUGE_NAME_INJECTION_MODE@@
 	uint8_t idleStepperTargetPosition;Idle: Stepper target position;"", 1, 0, 0, 0, 0
 
+	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
+
 	uint16_t autoscale coilDutyCycle;@@GAUGE_NAME_DWELL_DUTY@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 100, 1
+
+	uint16_t mapAveragingSamples
 
 ! integration magic: TS requires exact 'seconds' name
 	uint32_t seconds;@@GAUGE_NAME_UPTIME@@;"sec", 1, 0, 0, 0, 0
@@ -218,8 +222,6 @@ struct_no_prefix output_channels_s
 	uint16_t[8 iterate] recentErrorCode;;"error", 1, 0, 0, 0, 0
 
 	uint16_t[EGT_CHANNEL_COUNT iterate] autotemp egt;EGT;"C", 1, 0, 0, 0, 0
-
-	uint8_t fuelClosedLoopBinIdx;;"", 1, 0, 0, 0, 0
 
 	int16_t autoscale accelerationVert;@@GAUGE_NAME_ACCEL_VERT@@;"m/s2",{1/500}, 0, 0, 0, 0
 	int16_t autoscale gyroYaw;@@GAUGE_NAME_GYRO_YAW@@;"deg/sec",{1/100}, 0, 0, 0, 0
@@ -279,8 +281,6 @@ struct_no_prefix output_channels_s
 	uint8_t[VE_BLEND_COUNT iterate] autoscale veBlendBias;;"%", 0.5, 0, 0, 100, 1
 	int16_t[VE_BLEND_COUNT iterate] autoscale veBlendOutput;;"%", 0.01, 0, -50, 50, 2
 	int16_t[VE_BLEND_COUNT iterate] autoscale veBlendYAxis;;"", 0.1, 0, -1000, 1000, 1
-
-	uint16_t mapAveragingSamples
 
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
 
