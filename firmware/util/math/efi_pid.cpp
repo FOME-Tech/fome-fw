@@ -22,7 +22,6 @@ Pid::Pid(pid_s* parameters) {
 
 void Pid::initPidClass(pid_s* parameters) {
 	m_parameters = parameters;
-	resetCounter = 0;
 
 	reset();
 }
@@ -86,7 +85,6 @@ void Pid::reset() {
 	lastOutput = lastInput = lastTarget = 0;
 	m_hasPreviousError = false;
 	errorAmplificationCoef = 1.0f;
-	resetCounter++;
 }
 
 float Pid::getIntegration() const {
