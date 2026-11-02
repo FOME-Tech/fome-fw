@@ -283,26 +283,24 @@ struct output_channels_s {
 	// kph
 	// offset 115
 	uint8_t vehicleSpeedKph = (uint8_t)0;
-	// Gearbox Ratio
-	// value
-	// offset 116
-	scaled_channel<uint16_t, 100, 1> speedToRpmRatio = (uint16_t)0;
 	// Wheel speed: LF
-	// offset 118
+	// offset 116
 	uint8_t wheelSpeedLf = (uint8_t)0;
 	// Wheel speed: RF
-	// offset 119
+	// offset 117
 	uint8_t wheelSpeedRf = (uint8_t)0;
 	// Wheel speed: LR
-	// offset 120
+	// offset 118
 	uint8_t wheelSpeedLr = (uint8_t)0;
 	// Wheel speed: RR
-	// offset 121
+	// offset 119
 	uint8_t wheelSpeedRr = (uint8_t)0;
 	// VVT: bank 1 intake
 	// deg
-	// offset 122
+	// offset 120
 	scaled_channel<int16_t, 50, 1> vvtPositionB1I = (int16_t)0;
+	// offset 122
+	uint8_t alignmentFill_at_122[2];
 	// offset 124
 	uint32_t tsConfigVersion = (uint32_t)0;
 	// VVT: bank 1 exhaust
@@ -418,13 +416,10 @@ struct output_channels_s {
 	// ratio
 	// offset 196
 	scaled_channel<uint8_t, 2, 1> veValue = (uint8_t)0;
-	// Detected Gear
 	// offset 197
-	uint8_t detectedGear = (uint8_t)0;
-	// offset 198
 	uint8_t maxTriggerReentrant = (uint8_t)0;
-	// offset 199
-	uint8_t alignmentFill_at_199[1];
+	// offset 198
+	uint8_t alignmentFill_at_198[2];
 	// Lua: Gauge
 	// value
 	// offset 200
@@ -666,8 +661,16 @@ struct output_channels_s {
 	// kPa
 	// offset 558
 	uint16_t boostCutTarget = (uint16_t)0;
+	// Clutch position
+	// %
+	// offset 560
+	scaled_channel<int16_t, 100, 1> clutchPosition = (int16_t)0;
+	// Raw: Clutch position
+	// V
+	// offset 562
+	scaled_channel<int16_t, 1000, 1> rawClutchPosition = (int16_t)0;
 };
-static_assert(sizeof(output_channels_s) == 560);
+static_assert(sizeof(output_channels_s) == 564);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, coolant) == 8);
@@ -715,12 +718,11 @@ static_assert(offsetof(output_channels_s, highFuelPressure) == 110);
 static_assert(offsetof(output_channels_s, fuelTankLevel) == 112);
 static_assert(offsetof(output_channels_s, flexPercent) == 114);
 static_assert(offsetof(output_channels_s, vehicleSpeedKph) == 115);
-static_assert(offsetof(output_channels_s, speedToRpmRatio) == 116);
-static_assert(offsetof(output_channels_s, wheelSpeedLf) == 118);
-static_assert(offsetof(output_channels_s, wheelSpeedRf) == 119);
-static_assert(offsetof(output_channels_s, wheelSpeedLr) == 120);
-static_assert(offsetof(output_channels_s, wheelSpeedRr) == 121);
-static_assert(offsetof(output_channels_s, vvtPositionB1I) == 122);
+static_assert(offsetof(output_channels_s, wheelSpeedLf) == 116);
+static_assert(offsetof(output_channels_s, wheelSpeedRf) == 117);
+static_assert(offsetof(output_channels_s, wheelSpeedLr) == 118);
+static_assert(offsetof(output_channels_s, wheelSpeedRr) == 119);
+static_assert(offsetof(output_channels_s, vvtPositionB1I) == 120);
 static_assert(offsetof(output_channels_s, tsConfigVersion) == 124);
 static_assert(offsetof(output_channels_s, vvtPositionB1E) == 128);
 static_assert(offsetof(output_channels_s, vvtPositionB2I) == 130);
@@ -754,8 +756,7 @@ static_assert(offsetof(output_channels_s, distanceTraveled) == 190);
 static_assert(offsetof(output_channels_s, wallFuelAmount) == 192);
 static_assert(offsetof(output_channels_s, wallFuelCorrectionValue) == 194);
 static_assert(offsetof(output_channels_s, veValue) == 196);
-static_assert(offsetof(output_channels_s, detectedGear) == 197);
-static_assert(offsetof(output_channels_s, maxTriggerReentrant) == 198);
+static_assert(offsetof(output_channels_s, maxTriggerReentrant) == 197);
 static_assert(offsetof(output_channels_s, luaGauges) == 200);
 static_assert(offsetof(output_channels_s, luaLastCycleDuration) == 232);
 static_assert(offsetof(output_channels_s, luaInvocationCounter) == 234);
@@ -826,3 +827,5 @@ static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 542);
 static_assert(offsetof(output_channels_s, boostCutXAxisValue) == 554);
 static_assert(offsetof(output_channels_s, boostCutYAxisValue) == 556);
 static_assert(offsetof(output_channels_s, boostCutTarget) == 558);
+static_assert(offsetof(output_channels_s, clutchPosition) == 560);
+static_assert(offsetof(output_channels_s, rawClutchPosition) == 562);
