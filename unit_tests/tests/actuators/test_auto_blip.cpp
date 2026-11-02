@@ -34,6 +34,22 @@ TEST(AutoBlip, blipAllowed) {
 	EXPECT_FALSE(dut.blipAllowed(2, 2100, 3100, 35));
 }
 
+static constexpr float kClutchUp = 0;
+static constexpr float kClutchMiddle = 40;
+static constexpr float kClutchDown = 100;
+
+static void setClutch(float position) {
+	Sensor::setMockValue(SensorType::ClutchPosition, position);
+}
+
+// Configure the clutch sensor thresholds and force gear detection's clutch trust, since these tests
+// don't run gear detection.
+static void setupClutch(bool trusted = true) {
+	engineConfiguration->clutchAppliedBelow = 15;
+	engineConfiguration->clutchReleasedAbove = 60;
+	engine->module<GearDetector>().unmock().clutchTrusted = trusted;
+}
+
 // Zero out the blipAllowed gating thresholds so these state-machine-focused tests aren't coupled to
 // whatever default values ship in engine_configuration.cpp - those are covered by the blipAllowed test.
 static void clearBlipAllowedThresholds() {
@@ -51,14 +67,15 @@ TEST(AutoBlip, disabledNeverBlips) {
 	auto dut = *engine->module<AutoBlip>();
 	Sensor::setMockValue(SensorType::Clt, 65);
 	clearBlipAllowedThresholds();
+	setupClutch();
 	engineConfiguration->autoBlip.blipThrottleAdd = 20;
 	engineConfiguration->autoBlip.enabled = false;
 
 	// Brake, then clutch, exactly as a real blip would be triggered - but the feature is off.
 	engine->engineState.brakePedalState = true;
-	engine->engineState.clutchDownState = false;
+	setClutch(kClutchUp);
 	dut.onFastCallback();
-	engine->engineState.clutchDownState = true;
+	setClutch(kClutchDown);
 	dut.onFastCallback();
 	EXPECT_EQ(dut.getEtbAdjustment(), 0);
 }
@@ -69,25 +86,26 @@ TEST(AutoBlip, armingRequiresClutchUp) {
 	auto dut = *engine->module<AutoBlip>();
 	Sensor::setMockValue(SensorType::Clt, 65);
 	clearBlipAllowedThresholds();
+	setupClutch();
 	engineConfiguration->autoBlip.enabled = true;
 	engineConfiguration->autoBlip.blipThrottleAdd = 20;
 
 	// Clutch is already down when the brake is applied - this should NOT arm/blip, even after
 	// several callbacks, because arming requires the clutch to be up at the moment the brake goes down.
 	engine->engineState.brakePedalState = true;
-	engine->engineState.clutchDownState = true;
+	setClutch(kClutchDown);
 	dut.onFastCallback();
 	EXPECT_EQ(dut.getEtbAdjustment(), 0);
 	dut.onFastCallback();
 	EXPECT_EQ(dut.getEtbAdjustment(), 0);
 
 	// Driver releases the clutch while still braking - this arms the system.
-	engine->engineState.clutchDownState = false;
+	setClutch(kClutchUp);
 	dut.onFastCallback();
 	EXPECT_EQ(dut.getEtbAdjustment(), 0);
 
 	// Now pushing the clutch triggers the blip.
-	engine->engineState.clutchDownState = true;
+	setClutch(kClutchDown);
 	dut.onFastCallback();
 	EXPECT_GT(dut.getEtbAdjustment(), 0);
 }
@@ -98,13 +116,14 @@ TEST(AutoBlip, armTimeoutPreventsStaleBlip) {
 	auto dut = *engine->module<AutoBlip>();
 	Sensor::setMockValue(SensorType::Clt, 65);
 	clearBlipAllowedThresholds();
+	setupClutch();
 	engineConfiguration->autoBlip.enabled = true;
 	engineConfiguration->autoBlip.blipThrottleAdd = 20;
 	engineConfiguration->autoBlip.armTimeout = 0.2f;
 
 	// Brake applied with clutch up - arms.
 	engine->engineState.brakePedalState = true;
-	engine->engineState.clutchDownState = false;
+	setClutch(kClutchUp);
 	dut.onFastCallback();
 
 	// Wait past the arm timeout without ever pressing the clutch.
@@ -112,7 +131,7 @@ TEST(AutoBlip, armTimeoutPreventsStaleBlip) {
 	dut.onFastCallback();
 
 	// A clutch press now is stale - it must not fire a blip, even though we're still braking.
-	engine->engineState.clutchDownState = true;
+	setClutch(kClutchDown);
 	dut.onFastCallback();
 	EXPECT_EQ(dut.getEtbAdjustment(), 0);
 
@@ -120,9 +139,102 @@ TEST(AutoBlip, armTimeoutPreventsStaleBlip) {
 	engine->engineState.brakePedalState = false;
 	dut.onFastCallback();
 	engine->engineState.brakePedalState = true;
-	engine->engineState.clutchDownState = false;
+	setClutch(kClutchUp);
 	dut.onFastCallback();
-	engine->engineState.clutchDownState = true;
+	setClutch(kClutchDown);
 	dut.onFastCallback();
 	EXPECT_GT(dut.getEtbAdjustment(), 0);
+}
+
+TEST(AutoBlip, untrustedClutchNeverBlips) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	auto dut = *engine->module<AutoBlip>();
+	Sensor::setMockValue(SensorType::Clt, 65);
+	clearBlipAllowedThresholds();
+	setupClutch(/*trusted=*/false);
+	engineConfiguration->autoBlip.enabled = true;
+	engineConfiguration->autoBlip.blipThrottleAdd = 20;
+
+	engine->engineState.brakePedalState = true;
+	setClutch(kClutchUp);
+	dut.onFastCallback();
+	setClutch(kClutchDown);
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+
+	// Losing trust mid-blip ends the blip
+	setupClutch(/*trusted=*/true);
+	setClutch(kClutchUp);
+	dut.onFastCallback();
+	setClutch(kClutchDown);
+	dut.onFastCallback();
+	EXPECT_GT(dut.getEtbAdjustment(), 0);
+
+	setupClutch(/*trusted=*/false);
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+}
+
+TEST(AutoBlip, blipEndsWhenClutchBites) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	auto dut = *engine->module<AutoBlip>();
+	Sensor::setMockValue(SensorType::Clt, 65);
+	clearBlipAllowedThresholds();
+	setupClutch();
+	engineConfiguration->autoBlip.enabled = true;
+	engineConfiguration->autoBlip.blipThrottleAdd = 20;
+
+	// Arm, then press through the middle: no blip until fully disengaged
+	engine->engineState.brakePedalState = true;
+	setClutch(kClutchUp);
+	dut.onFastCallback();
+	setClutch(kClutchMiddle);
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+	setClutch(kClutchDown);
+	dut.onFastCallback();
+	EXPECT_GT(dut.getEtbAdjustment(), 0);
+
+	// The clutch starts to bite: blip over
+	setClutch(kClutchMiddle);
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+
+	// Back down without fully releasing first: no second blip
+	setClutch(kClutchDown);
+	dut.onFastCallback();
+	EXPECT_EQ(dut.getEtbAdjustment(), 0);
+
+	// Fully release, then press again (another downshift under the same braking event): blips again
+	setClutch(kClutchUp);
+	dut.onFastCallback();
+	setClutch(kClutchDown);
+	dut.onFastCallback();
+	EXPECT_GT(dut.getEtbAdjustment(), 0);
+}
+
+TEST(AutoBlip, targetGearIsOneBelowDetected) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	auto dut = *engine->module<AutoBlip>();
+	setupClutch();
+
+	Sensor::setMockValue(SensorType::DetectedGear, 4);
+	dut.onFastCallback();
+	EXPECT_EQ(3, dut.m_targetGear);
+
+	Sensor::setMockValue(SensorType::DetectedGear, 2);
+	dut.onFastCallback();
+	EXPECT_EQ(1, dut.m_targetGear);
+
+	// No blip target from 1st or neutral
+	Sensor::setMockValue(SensorType::DetectedGear, 1);
+	dut.onFastCallback();
+	EXPECT_EQ(0, dut.m_targetGear);
+
+	Sensor::setMockValue(SensorType::DetectedGear, 0);
+	dut.onFastCallback();
+	EXPECT_EQ(0, dut.m_targetGear);
 }
