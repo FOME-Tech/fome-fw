@@ -1,4 +1,8 @@
 struct_no_prefix gear_detector_state_s
 	uint16_t autoscale speedToRpmRatio;@@GAUGE_NAME_GEAR_RATIO@@;"value",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
 	uint8_t detectedGear;@@GAUGE_NAME_DETECTED_GEAR@@;"", 1, 0, 0, @@GEARS_COUNT@@, 0
+	uint8_t rawGear;Gear: Raw from ratio;"", 1, 0, 0, @@GEARS_COUNT@@, 0
+	uint8_t lockedGear;Gear: Ratio locked to;"", 1, 0, 0, @@GEARS_COUNT@@, 0
+	uint8_t clutchState;Clutch state;"", 1, 0, 0, 3, 0
+	bit clutchTrusted;Clutch sensor trusted
 end_struct

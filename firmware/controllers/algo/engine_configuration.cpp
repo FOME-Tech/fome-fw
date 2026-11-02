@@ -496,6 +496,8 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->wastegatePositionMax = PACK_MULT_VOLTAGE * 5;
 	engineConfiguration->clutchPositionUpVoltage = 0;
 	engineConfiguration->clutchPositionDownVoltage = 5;
+	engineConfiguration->clutchAppliedBelow = 15;
+	engineConfiguration->clutchReleasedAbove = 80;
 	engineConfiguration->tpsErrorDetectionTooLow = -10;	 // -10% open
 	engineConfiguration->tpsErrorDetectionTooHigh = 110; // 110% open
 
