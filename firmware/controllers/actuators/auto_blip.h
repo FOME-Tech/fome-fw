@@ -2,7 +2,6 @@
 
 #include "auto_blip_generated.h"
 #include "gear_detector.h"
-#include "clutch_state.h"
 
 class AutoBlip : public EngineModule, public auto_blip_s {
 public:
