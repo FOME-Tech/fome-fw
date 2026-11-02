@@ -1,5 +1,8 @@
 #pragma once
 
+#include "gear_detector_state_generated.h"
+
+
 class GearDetector : public EngineModule, public Sensor, public gear_detector_state_s {
 public:
 	GearDetector();
