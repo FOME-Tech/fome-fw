@@ -1,3 +1,4 @@
 struct_no_prefix gear_detector_state_s
-
+	uint16_t autoscale speedToRpmRatio;@@GAUGE_NAME_GEAR_RATIO@@;"value",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 0, 2
+	uint8_t detectedGear;@@GAUGE_NAME_DETECTED_GEAR@@;"", 1, 0, 0, @@GEARS_COUNT@@, 0
 end_struct

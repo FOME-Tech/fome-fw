@@ -313,11 +313,6 @@ static void updateVehicleSpeed() {
 	engine->outputChannels.wheelSpeedLr = Sensor::getOrZero(SensorType::WheelSpeedLR);
 	engine->outputChannels.wheelSpeedRr = Sensor::getOrZero(SensorType::WheelSpeedRR);
 #endif // EFI_VEHICLE_SPEED
-
-#ifdef MODULE_GEAR_DETECT
-	engine->outputChannels.speedToRpmRatio = engine->module<GearDetector>()->getGearboxRatio();
-	engine->outputChannels.detectedGear = Sensor::getOrZero(SensorType::DetectedGear);
-#endif // MODULE_GEAR_DETECT
 }
 
 static void updateRawSensors() {
