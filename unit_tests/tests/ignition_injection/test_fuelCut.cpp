@@ -371,3 +371,130 @@ TEST(fuelCut, timingRetardRampIn) {
 	eth.moveTimeForwardUs(600'000);
 	EXPECT_FLOAT_EQ(0, dfco.getTimingRetard());
 }
+
+// DFCO enabled, with every cut condition met except the engine's running state
+static void configureDfcoReadyToCut(EngineTestHelper& eth) {
+	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->coastingFuelCutRpmLow = 1300;
+	engineConfiguration->coastingFuelCutRpmHigh = 1500;
+	engineConfiguration->coastingFuelCutTps = 2;
+	engineConfiguration->coastingFuelCutClt = 30;
+	engineConfiguration->coastingFuelCutMap = 100;
+	engineConfiguration->cranking.rpm = 999;
+
+	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth);
+
+	Sensor::setMockValue(SensorType::Clt, engineConfiguration->coastingFuelCutClt + 1);
+	Sensor::setMockValue(SensorType::Map, 0);
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+	Sensor::setMockValue(SensorType::Rpm, 2000);
+}
+
+// Crank, then catch and run - post-cranking enrichment starts tapering from here.
+// A macro rather than a function so a failed assertion reports the calling test's line,
+// and an ASSERT failure stops the test instead of just returning from a helper.
+#define CRANK_AND_START(eth)                                                                                           \
+	do {                                                                                                               \
+		engine->rpmCalculator.setRpmValue(200);                                                                        \
+		ASSERT_TRUE(engine->rpmCalculator.isCranking());                                                               \
+		(eth).engine.periodicFastCallback();                                                                           \
+                                                                                                                       \
+		engine->rpmCalculator.setRpmValue(2000);                                                                       \
+		ASSERT_TRUE(engine->rpmCalculator.isRunning());                                                                \
+		(eth).engine.periodicFastCallback();                                                                           \
+	} while (0)
+
+TEST(fuelCut, noCutWhileCranking) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	configureDfcoReadyToCut(eth);
+	auto& dfco = engine->module<DfcoController>().unmock();
+
+	// Cranking threshold above the DFCO RPM threshold, so RPM alone looks like a coasting engine
+	engineConfiguration->cranking.rpm = 2500;
+	engine->rpmCalculator.setRpmValue(2000);
+	ASSERT_TRUE(engine->rpmCalculator.isCranking());
+	eth.engine.periodicFastCallback();
+	EXPECT_FALSE(dfco.cutFuel());
+
+	// Once running, the same conditions cut
+	engine->rpmCalculator.setRpmValue(2600);
+	Sensor::setMockValue(SensorType::Rpm, 2600);
+	eth.engine.periodicFastCallback();
+	EXPECT_TRUE(dfco.cutFuel());
+}
+
+TEST(fuelCut, heldOffDuringAfterStartEnrichment) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	configureDfcoReadyToCut(eth);
+	engineConfiguration->postCrankingFactor = 1.5;
+	engineConfiguration->postCrankingDurationSec = 10;
+	auto& dfco = engine->module<DfcoController>().unmock();
+
+	CRANK_AND_START(eth);
+	EXPECT_NEAR(1.5, engine->fuelComputer.running.postCrankingFuelCorrection, 0.01);
+	EXPECT_FALSE(dfco.cutFuel());
+
+	// Halfway through the taper, still enriching
+	eth.moveTimeForwardUs(5'000'000);
+	eth.engine.periodicFastCallback();
+	EXPECT_FALSE(dfco.cutFuel());
+
+	// Taper finished, DFCO allowed
+	eth.moveTimeForwardUs(5'100'000);
+	eth.engine.periodicFastCallback();
+	EXPECT_FLOAT_EQ(1, engine->fuelComputer.running.postCrankingFuelCorrection);
+	EXPECT_TRUE(dfco.cutFuel());
+}
+
+TEST(fuelCut, heldOffDuringAfterStartEnrichmentTable) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	configureDfcoReadyToCut(eth);
+	engineConfiguration->postCrankingFuelUseTable = true;
+	// Every temperature row tapers 1.5 -> 1.0 by 20 seconds (runtime bins 0, 10, 20, 40...)
+	for (size_t row = 0; row < efi::size(config->postCrankingEnrichTable); row++) {
+		config->postCrankingEnrichTable[row][0] = 1.5f;
+		config->postCrankingEnrichTable[row][1] = 1.2f;
+		for (size_t col = 2; col < efi::size(config->postCrankingEnrichTable[row]); col++) {
+			config->postCrankingEnrichTable[row][col] = 1.0f;
+		}
+	}
+	auto& dfco = engine->module<DfcoController>().unmock();
+
+	CRANK_AND_START(eth);
+	EXPECT_FALSE(dfco.cutFuel());
+
+	eth.moveTimeForwardUs(5'000'000);
+	eth.engine.periodicFastCallback();
+	EXPECT_FALSE(dfco.cutFuel());
+
+	// Tapered out, read between table cells (CLT 31 is between temperature bins, 25s between runtime
+	// bins) - interpolating between cells of 1.0 must still give exactly 1.0, or DFCO would never run
+	eth.moveTimeForwardUs(20'000'000);
+	eth.engine.periodicFastCallback();
+	EXPECT_FLOAT_EQ(1, engine->fuelComputer.running.postCrankingFuelCorrection);
+	EXPECT_TRUE(dfco.cutFuel());
+}
+
+TEST(fuelCut, heldOffAgainAfterRestart) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly(Return(AirmassResult{1.0f, 50.0f}));
+	configureDfcoReadyToCut(eth);
+	engineConfiguration->postCrankingFactor = 1.5;
+	engineConfiguration->postCrankingDurationSec = 10;
+	auto& dfco = engine->module<DfcoController>().unmock();
+
+	// First start, run long enough for the taper to finish
+	CRANK_AND_START(eth);
+	eth.moveTimeForwardUs(11'000'000);
+	eth.engine.periodicFastCallback();
+	EXPECT_TRUE(dfco.cutFuel());
+
+	// Stall, then a hot restart: enrichment applies again, so DFCO is held off again
+	engine->rpmCalculator.setRpmValue(0);
+	eth.engine.periodicFastCallback();
+	CRANK_AND_START(eth);
+	EXPECT_FALSE(dfco.cutFuel());
+}
