@@ -6,6 +6,71 @@
 using ::testing::_;
 using ::testing::StrictMock;
 
+TEST(HPFP, ConfigResetWaitsForArmedCloseBeforeRestarting) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) { cfg->hpfpValvePin = Gpio::A2; });
+	engineConfiguration->hpfpCamLobes = 3;
+	engineConfiguration->hpfpPumpVolume = 0.2;
+	engineConfiguration->hpfpActivationAngle = 30;
+	engine->rpmCalculator.setRpmValue(1000);
+	auto& hpfp = *engine->module<HpfpController>();
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	scheduler.cancel(&hpfp.m_event);
+	hpfp.m_event.scheduling.momentX = getTimeNowNt();
+	HpfpController::pinTurnOn(&hpfp);
+	ASSERT_TRUE(bool(hpfp.m_event.scheduling.action));
+	ASSERT_TRUE(enginePins.hpfpValve.getLogicValue());
+	const auto warningsBefore = eth.getWarningCounter();
+
+	// Same lifecycle sequence as mainTriggerCallback on a trigger configuration change.
+	scheduler.flush();
+	hpfp.onEngineStop();
+	hpfp.onFastCallback();
+	hpfp.onFastCallback();
+	EXPECT_FALSE(hpfp.m_running);
+	EXPECT_EQ(0, scheduler.getQueueSizeForUnitTest());
+	EXPECT_TRUE(enginePins.hpfpValve.getLogicValue());
+	eth.moveTimeForwardAndInvokeEventsUs(10000);
+	EXPECT_FALSE(enginePins.hpfpValve.getLogicValue());
+	EXPECT_EQ(0, scheduler.getQueueSizeForUnitTest());
+	EXPECT_FALSE(hpfp.m_running);
+
+	hpfp.onFastCallback();
+	EXPECT_TRUE(hpfp.m_running);
+	ASSERT_EQ(1, scheduler.getQueueSizeForUnitTest());
+	const auto nextPhase = hpfp.m_event.eventPhase.angle;
+	hpfp.onFastCallback();
+	EXPECT_EQ(1, scheduler.getQueueSizeForUnitTest());
+	EXPECT_FLOAT_EQ(nextPhase, hpfp.m_event.eventPhase.angle);
+	EXPECT_EQ(warningsBefore, eth.getWarningCounter());
+}
+
+TEST(HPFP, StopSuppressesArmedOpeningBeforeRestarting) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) { cfg->hpfpValvePin = Gpio::A2; });
+	engineConfiguration->hpfpCamLobes = 3;
+	engineConfiguration->hpfpPumpVolume = 0.2;
+	engine->rpmCalculator.setRpmValue(1000);
+	auto& hpfp = *engine->module<HpfpController>();
+	auto& scheduler = *engine->module<TriggerScheduler>();
+	scheduler.cancel(&hpfp.m_event);
+	engine->scheduler.schedule(
+			"old opening", &hpfp.m_event.scheduling, getTimeNowNt() + US2NT(1000), {HpfpController::pinTurnOn, &hpfp});
+	const auto openingsBefore = enginePins.hpfpValve.unitTestTurnedOnCounter;
+
+	engine->OnTriggerSynchronizationLost();
+	eth.moveTimeForwardAndInvokeEventsUs(2000);
+	EXPECT_FALSE(enginePins.hpfpValve.getLogicValue());
+	EXPECT_EQ(openingsBefore, enginePins.hpfpValve.unitTestTurnedOnCounter);
+	EXPECT_EQ(0, scheduler.getQueueSizeForUnitTest());
+	EXPECT_FALSE(bool(hpfp.m_event.scheduling.action));
+	hpfp.onFastCallback();
+	EXPECT_FALSE(hpfp.m_running);
+
+	engine->rpmCalculator.setRpmValue(1000);
+	hpfp.onFastCallback();
+	EXPECT_TRUE(hpfp.m_running);
+	EXPECT_EQ(1, scheduler.getQueueSizeForUnitTest());
+}
+
 TEST(HPFP, Lobe) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -311,4 +376,42 @@ TEST(HPFP, Schedule) {
 
 	// The off event goes directly to scheduleByAngle and is tested by the last EXPECT_CALL
 	// above.
+}
+
+TEST(HPFP, ResumesAfterEngineStop) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) { cfg->hpfpValvePin = Gpio::A2; });
+
+	setCylinderCount(4);
+	engineConfiguration->hpfpCamLobes = 3;
+	engineConfiguration->hpfpPumpVolume = 0.2;
+
+	engineConfiguration->trigger.customTotalToothCount = 16;
+	engineConfiguration->trigger.customSkippedToothCount = 0;
+	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
+	setCamOperationMode();
+	engineConfiguration->isFasterEngineSpinUpEnabled = true;
+
+	eth.smartFireTriggerEvents2(/*count*/ 40, /*delay*/ 4);
+
+	for (int i = 0; i < 50; i++) {
+		eth.smartFireTriggerEvents2(/*count*/ 1, /*delay*/ 4);
+		engine->periodicFastCallback();
+	}
+
+	int beforeStop = enginePins.hpfpValve.unitTestTurnedOnCounter;
+	ASSERT_GT(beforeStop, 0) << "pump should be running before the stop";
+
+	// Stopping clears the queue, which drops the pending link in HPFP's on/off/on chain.
+	// HpfpController has to notice and start a fresh chain rather than sit there thinking it's
+	// still running.
+	engine->OnTriggerSynchronizationLost();
+
+	eth.smartFireTriggerEvents2(/*count*/ 40, /*delay*/ 4);
+
+	for (int i = 0; i < 50; i++) {
+		eth.smartFireTriggerEvents2(/*count*/ 1, /*delay*/ 4);
+		engine->periodicFastCallback();
+	}
+
+	ASSERT_GT(enginePins.hpfpValve.unitTestTurnedOnCounter, beforeStop) << "pump should resume after restart";
 }
