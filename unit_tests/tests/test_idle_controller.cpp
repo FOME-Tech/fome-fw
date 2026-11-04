@@ -76,6 +76,196 @@ TEST(idle_v2, testTargetRpm) {
 	EXPECT_EQ((TgtInfo{500, 573, 609.5}), dut.getTargetRpm(50));
 }
 
+class PowerSteeringIdleTest : public ::testing::Test {
+protected:
+	EngineTestHelper eth{engine_type_e::TEST_ENGINE};
+	IdleTargetController dut;
+
+	void SetUp() override {
+		setArrayValues(config->cltIdleRpm, 900);
+		engineConfiguration->idleReturnTargetRamp = false;
+		engineConfiguration->idlePidRpmUpperLimit = 100;
+		engineConfiguration->powerSteeringIdleRpmBump = 150;
+	}
+
+	void expectBump(bool active) {
+		float target = active ? 1050 : 900;
+		EXPECT_EQ((TgtInfo{target, target + 100, target + 150}), dut.getTargetRpm(80));
+		EXPECT_EQ(active ? 150 : 0, dut.targetRpmPowerSteeringBump);
+	}
+
+	void configurePressure() {
+		engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Pressure;
+		engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_0;
+	}
+
+	void checkPressure(float pressure, bool active) {
+		Sensor::setMockValue(SensorType::PowerSteeringPressure, pressure);
+		expectBump(active);
+	}
+};
+
+TEST_F(PowerSteeringIdleTest, DisabledAndUnconfiguredInputs) {
+	engineConfiguration->powerSteeringSwitch = Gpio::A0;
+	engineConfiguration->powerSteeringSwitchInverted = false;
+	setMockState(Gpio::A0, true);
+	Sensor::setMockValue(SensorType::PowerSteeringPressure, 10000);
+	// Defaults leave the feature disabled, even with active inputs.
+	EXPECT_EQ(PowerSteeringIdleMode::Disabled, engineConfiguration->powerSteeringIdleMode);
+	expectBump(false);
+
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Switch;
+	engineConfiguration->powerSteeringSwitch = Gpio::Unassigned;
+	engineConfiguration->powerSteeringSwitchInverted = true;
+	expectBump(false);
+
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Pressure;
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_NONE;
+	expectBump(false);
+
+	engineConfiguration->powerSteeringIdleMode = static_cast<PowerSteeringIdleMode>(4);
+	expectBump(false);
+}
+
+TEST_F(PowerSteeringIdleTest, DigitalSwitchPolarityAndRpmAmount) {
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Switch;
+	engineConfiguration->powerSteeringSwitch = Gpio::A0;
+	engineConfiguration->powerSteeringSwitchInverted = false;
+	setMockState(Gpio::A0, false);
+	expectBump(false);
+	setMockState(Gpio::A0, true);
+	expectBump(true);
+
+	engineConfiguration->powerSteeringSwitchInverted = true;
+	expectBump(false);
+	setMockState(Gpio::A0, false);
+	expectBump(true);
+
+	engineConfiguration->powerSteeringIdleRpmBump = 325;
+	EXPECT_EQ((TgtInfo{1225, 1325, 1375}), dut.getTargetRpm(80));
+	engineConfiguration->powerSteeringIdleRpmBump = 0;
+	expectBump(false);
+}
+
+TEST_F(PowerSteeringIdleTest, CanVirtualSwitchInputs) {
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Can;
+	for (size_t i = 0; i < CAN_VIRTUAL_INPUT_PINS_COUNT; i++) {
+		engineConfiguration->powerSteeringCanInput = i + 1;
+		engineConfiguration->powerSteeringSwitchInverted = false;
+		setCanVirtualInput(i, false);
+		expectBump(false);
+		setCanVirtualInput(i, true);
+		expectBump(true);
+		engineConfiguration->powerSteeringSwitchInverted = true;
+		expectBump(false);
+		setCanVirtualInput(i, false);
+		expectBump(true);
+	}
+	engineConfiguration->powerSteeringCanInput = 0;
+	expectBump(false);
+	engineConfiguration->powerSteeringCanInput = CAN_VIRTUAL_INPUT_PINS_COUNT + 1;
+	expectBump(false);
+}
+
+TEST_F(PowerSteeringIdleTest, PressureHysteresis) {
+	configurePressure();
+	// The unused switch must not influence pressure sensor mode.
+	engineConfiguration->powerSteeringSwitch = Gpio::A0;
+	engineConfiguration->powerSteeringSwitchInverted = false;
+	setMockState(Gpio::A0, true);
+	checkPressure(4500, false);
+	checkPressure(4999, false);
+	checkPressure(5000, true);
+	checkPressure(4500, true);
+	checkPressure(4001, true);
+	checkPressure(4000, false);
+	checkPressure(4500, false);
+	checkPressure(10000, true);
+	checkPressure(0, false);
+}
+
+TEST_F(PowerSteeringIdleTest, ConfigurablePressureThresholds) {
+	configurePressure();
+	engineConfiguration->powerSteeringOnPressure = 7500;
+	engineConfiguration->powerSteeringOffPressure = 6000;
+	checkPressure(6500, false);
+	checkPressure(7499, false);
+	checkPressure(7500, true);
+	checkPressure(6500, true);
+	checkPressure(6001, true);
+	checkPressure(6000, false);
+	checkPressure(6500, false);
+}
+
+TEST_F(PowerSteeringIdleTest, InvalidPressureClearsRequest) {
+	configurePressure();
+	// Missing sensor cannot activate the adder.
+	expectBump(false);
+	checkPressure(6000, true);
+	Sensor::setInvalidMockValue(SensorType::PowerSteeringPressure);
+	expectBump(false);
+	checkPressure(4500, false);
+
+	for (float invalidPressure :
+		 {-6.0f, std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()}) {
+		checkPressure(6000, true);
+		checkPressure(invalidPressure, false);
+		checkPressure(4500, false);
+	}
+
+	// Release pressure must be lower than activation pressure.
+	checkPressure(6000, true);
+	engineConfiguration->powerSteeringOffPressure = engineConfiguration->powerSteeringOnPressure;
+	expectBump(false);
+	engineConfiguration->powerSteeringOffPressure = engineConfiguration->powerSteeringOnPressure + 100;
+	expectBump(false);
+}
+
+TEST_F(PowerSteeringIdleTest, ConfigurationChangesClearPressureLatch) {
+	configurePressure();
+	checkPressure(6000, true);
+	checkPressure(4500, true);
+	engine_configuration_s previous = *engineConfiguration;
+	dut.onConfigurationChange(&previous);
+	expectBump(true);
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_1;
+	dut.onConfigurationChange(&previous);
+	expectBump(false);
+
+	checkPressure(6000, true);
+	checkPressure(4500, true);
+	previous = *engineConfiguration;
+	engineConfiguration->powerSteeringOnPressure = 5500;
+	dut.onConfigurationChange(&previous);
+	expectBump(false);
+
+	checkPressure(6000, true);
+	checkPressure(4500, true);
+	previous = *engineConfiguration;
+	engineConfiguration->powerSteeringPressure.value2 = 15000;
+	dut.onConfigurationChange(&previous);
+	expectBump(false);
+
+	checkPressure(6000, true);
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Disabled;
+	expectBump(false);
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Pressure;
+	checkPressure(4500, false);
+}
+
+TEST_F(PowerSteeringIdleTest, AddsToAcAndLuaTargets) {
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Switch;
+	engineConfiguration->powerSteeringSwitch = Gpio::A0;
+	engineConfiguration->powerSteeringSwitchInverted = false;
+	setMockState(Gpio::A0, true);
+	engineConfiguration->acIdleRpmBump = 200;
+	engine->module<AcController>().unmock().acButtonState = true;
+	dut.luaAddRpm = 30;
+	EXPECT_EQ((TgtInfo{1280, 1380, 1430}), dut.getTargetRpm(80));
+	engine->module<AcController>().unmock().acButtonState = false;
+	EXPECT_EQ((TgtInfo{1080, 1180, 1230}), dut.getTargetRpm(80));
+}
+
 TEST(idle_v2, testDeterminePhase) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	IdleTargetController dut;
@@ -648,6 +838,32 @@ TEST(idle_v2, IntegrationAutomatic) {
 
 	// Result should be open + closed
 	EXPECT_EQ(13 + 7, dut.getIdlePosition(950, 100));
+}
+
+TEST(idle_v2, PowerSteeringTargetReachesClosedLoop) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	StrictMock<IntegrationIdleMock> dut;
+	engineConfiguration->idleMode = IM_AUTO;
+	engineConfiguration->idleReturnTargetRamp = false;
+	engineConfiguration->inhibitIdleAfterCrankingTime = 0;
+	setArrayValues(config->cltIdleRpm, 900);
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Switch;
+	engineConfiguration->powerSteeringSwitch = Gpio::A0;
+	engineConfiguration->powerSteeringSwitchInverted = false;
+	engineConfiguration->powerSteeringIdleRpmBump = 150;
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+	Sensor::setMockValue(SensorType::Clt, 80);
+	engine->rpmCalculator.setRpmValue(950);
+	advanceTimeUs(1);
+
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, 80, _, _)).WillRepeatedly(Return(13));
+	setMockState(Gpio::A0, true);
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 0, 1050)).WillOnce(Return(7));
+	EXPECT_EQ(20, dut.getIdlePosition(950, 0));
+
+	setMockState(Gpio::A0, false);
+	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 0, 900)).WillOnce(Return(0));
+	EXPECT_EQ(13, dut.getIdlePosition(950, 0));
 }
 
 TEST(idle_v2, IntegrationClamping) {

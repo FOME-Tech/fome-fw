@@ -162,6 +162,13 @@ typedef enum __attribute__((__packed__)) {
 
 } idle_mode_e;
 
+enum class PowerSteeringIdleMode : uint8_t {
+	Disabled,
+	Switch,
+	Pressure,
+	Can,
+};
+
 typedef enum __attribute__((__packed__)) {
 	/**
 	 * GND for logical OFF, VCC for logical ON
