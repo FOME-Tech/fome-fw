@@ -49,15 +49,15 @@ expected<float> processBMW_e90Vss(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	// ST_VEH_DVCO, bits 12-14: 7 means the speed signal is invalid
+	// DriveDirection, bits 12-14: 7 means the speed signal is invalid
 	if (((frame.data8[1] >> 4) & 0x07) == 0x07) {
 		return unexpected;
 	}
 
-	// V_VEH, bits 0-11, 0.1 kph per LSB. The DBC tops out at 350kph, anything above that
-	// (ie 0xFFF) isn't a real speed.
+	// VehicleSpeed, bits 0-11, 0.1 kph per LSB. The module clamps it to 300kph, anything above
+	// that (ie 0xFFF) isn't a real speed.
 	uint16_t vVeh = get12Bit_intel(frame, 0);
-	if (vVeh > 3500) {
+	if (vVeh > 3000) {
 		return unexpected;
 	}
 
@@ -136,7 +136,7 @@ static expected<WssResult> processBMW_e90Wss(const CANRxFrame& frame) {
 		return unexpected;
 	}
 
-	// V_WHL_{FLH,FRH,RLH,RRH}, signed 16 bit, 0.0625 kph per LSB
+	// WheelSpeed{FL,FR,RL,RR}, signed 16 bit, 0.0625 kph per LSB
 	int16_t raw[4];
 	for (int i = 0; i < 4; i++) {
 		raw[i] = E90WssRaw(frame, 2 * i);

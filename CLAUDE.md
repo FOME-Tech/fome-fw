@@ -148,13 +148,19 @@ objects in `newparse/parsing/`) -> `newparse/layout/` (assigns offsets and inser
 line, substituting `@@DEFINE@@` references and expanding marker comments like
 `CONFIG_DEFINITION_START`.
 
+Avoid `float` fields in `fome_config.txt` wherever possible - use a scaled integer instead, e.g.
+`uint16_t autoscale fooVoltage;;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3`. The generated
+`scaled_channel` reads back in engineering units, so C++ code using it doesn't change.
+
 Two things that are easy to get wrong here:
 - Numeric literals in the grammar (`numexpr`) are evaluated into a **shared FIFO** on `ParseState`,
   which the field-options parser drains positionally. A new rule that introduces a numexpr must
   consume its own result as that rule exits, or it will be silently eaten as the next field's `scale`.
 - Adding a field to a struct shifts every offset after it. `sizeof(persistentState)` changing is what
-  makes an ECU discard its stored tune on update (`flash_main.cpp`), so it's self-protecting, but say
-  so in the changelog.
+  makes an ECU discard its stored tune on update (`flash_main.cpp`), so it's self-protecting.
+  **Never** mention this in the changelog, PR descriptions or summaries ("this will reset the tune
+  because the config size changed"). Users are expected to re-load their tune from the copy saved on
+  their PC after every update, so it isn't news.
 
 ### Compiler Flags
 
