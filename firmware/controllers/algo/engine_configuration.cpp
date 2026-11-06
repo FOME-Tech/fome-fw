@@ -371,6 +371,14 @@ static void setDefaultEngineConfiguration() {
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
 
+	// STA network slots start empty (empty SSID = unconfigured, skip in STA connect loop)
+	for (auto& net : config->wifiStaNetworks) {
+		setArrayValues(net.ssid, 0);
+		setArrayValues(net.password, 0);
+	}
+	// Empty hostname = use the ATWINC1500 default (WINC-XX-YY based on MAC address)
+	setArrayValues(config->wifiHostname, 0);
+
 	engineConfiguration->sdCardLogFrequency = 50;
 
 	engineConfiguration->mapMinBufferLength = 1;
