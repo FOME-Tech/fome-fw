@@ -219,7 +219,7 @@ void ServerSocket::send(const void* buffer, size_t size) {
 		// a module that never has room for it (which would otherwise deadlock this thread forever).
 		msg_t result = m_sendDoneSemaphore.wait(TIME_MS2I(5000));
 		if (result == MSG_TIMEOUT) {
-			// The module never accepted the data -- cancel the pending request and close
+			// The module never accepted the data — cancel the pending request and close
 			// so callers see the failure.
 			m_sendRequest = false;
 			closeSocket();
@@ -366,7 +366,8 @@ static void wifiCallback(uint8 u8MsgType, void* pvMsg) {
 				s_staConnectDone = true;
 			}
 
-			if (s_inStaMode) {
+			// s_inStaMode isn't set until the first connect succeeds, so check s_connectingSta too
+			if (s_connectingSta || s_inStaMode) {
 				efiPrintf("WiFi STA: connected, board IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
 			} else {
 				efiPrintf("WiFi AP: client connected, client IP is %d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
@@ -433,7 +434,7 @@ static void socketCallback(SOCKET sock, uint8_t u8Msg, void* pvMsg) {
 				if (auto server = ServerSocket::findListener(sock)) {
 					server->onAccept(acceptMsg->sock);
 				} else {
-					// No server owns this listener -- don't leak the accepted socket
+					// No server owns this listener — don't leak the accepted socket
 					efiPrintf("WiFi: No listener for sock %d", (int)sock);
 					close(acceptMsg->sock);
 				}
@@ -522,7 +523,7 @@ static void disconnectSta() {
  * association alone leaves us without an address, which is useless.
  * Must only be called from the WiFi thread.
  */
-static bool tryOneStaConnect(const wifi_string_t& ssid, const wifi_string_t& password) {
+static bool tryOneStaConnect(const wifi_ssid_t& ssid, const wifi_password_t& password) {
 	s_connectingSta = true;
 	s_staAssociated = false;
 	s_staConnectDone = false;
@@ -778,11 +779,9 @@ private:
 
 #ifndef EFI_BOOTLOADER
 		// The DHCP client hostname; must be set before joining a network
+		static_assert(sizeof(wifi_hostname_t) < M2M_DEVICE_NAME_MAX, "hostname must fit the driver's buffer");
 		size_t hostLen = wifiStringLength(config->wifiHostname);
 		if (hostLen > 0) {
-			if (hostLen >= M2M_DEVICE_NAME_MAX) {
-				hostLen = M2M_DEVICE_NAME_MAX - 1;
-			}
 			efiPrintf("WiFi: setting hostname to \"%.*s\"", (int)hostLen, config->wifiHostname);
 			m2m_wifi_set_device_name(reinterpret_cast<uint8*>(config->wifiHostname), static_cast<uint8>(hostLen));
 		}
