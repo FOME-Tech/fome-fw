@@ -127,7 +127,11 @@ using vehicle_info_t = char[VEHICLE_INFO_SIZE];
 using gppwm_note_t = char[GPPWM_NOTE_SIZE];
 
 using wifi_string_t = char[24];
-using wifi_hostname_t = char[48]; // matches M2M_DEVICE_NAME_MAX (47 usable + null)
+// Station mode strings use the full 802.11/WPA lengths, as they must match networks we don't control.
+// No room is reserved for a terminator: the strings may fill the field edge to edge.
+using wifi_ssid_t = char[32];	  // 802.11 SSID: up to 32 bytes
+using wifi_password_t = char[64]; // WPA passphrase: 8-63 characters, or 64 hex digits for a raw PSK
+using wifi_hostname_t = char[32];
 
 using brain_pin_e = Gpio;
 
