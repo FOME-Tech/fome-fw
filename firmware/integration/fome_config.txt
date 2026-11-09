@@ -1844,7 +1844,7 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 
 	! DHCP client hostname (option 12) advertised to the router in STA mode.
 	! Allows connecting to the board by name instead of by IP address, on networks where the router
-	! registers DHCP hostnames in its local DNS. Leave blank for the default name.
+	! registers DHCP hostnames in its local DNS. Leave blank to use the WiFi module's own name (WINC-XX-YY).
 	custom wifi_hostname_t 32 string, ASCII, @OFFSET@, 32
 	wifi_hostname_t wifiHostname
 
