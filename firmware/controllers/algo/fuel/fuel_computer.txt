@@ -1,8 +1,8 @@
 struct_no_prefix fuel_computer_s
 	struct running_fuel_s
-		float postCrankingFuelCorrection;Fuel: Post cranking mult
-		float intakeTemperatureCoefficient;@@GAUGE_NAME_FUEL_IAT_CORR@@
-		float coolantTemperatureCoefficient;@@GAUGE_NAME_FUEL_CLT_CORR@@
+		float postCrankingFuelCorrection;Fuel: Post cranking mult;"mult", 1, 0, 0, 5, 3
+		float intakeTemperatureCoefficient;@@GAUGE_NAME_FUEL_IAT_CORR@@;"mult", 1, 0, 0, 3, 3
+		float coolantTemperatureCoefficient;@@GAUGE_NAME_FUEL_CLT_CORR@@;"mult", 1, 0, 0, 3, 3
 		float timeSinceCrankingInSecs;;"secs", 1, 0, 0, 600000, 0
 
 		uint16_t autoscale baseFuel;@@GAUGE_NAME_FUEL_BASE@@\nThis is the raw value we take from the fuel map or base fuel algorithm, before the corrections;"mg",{1/@@PACK_MULT_FUEL_MASS@@}, 0, 0, 0, 3
