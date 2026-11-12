@@ -394,14 +394,11 @@ bool Engine::isMainRelayEnabled() const {
 }
 
 injection_mode_e getCurrentInjectionMode() {
-	if (getEngineRotationState()->isCranking()) {
-		return engineConfiguration->crankingInjectionMode;
-	}
-
-	auto runningMode = engineConfiguration->injectionMode;
+	auto mode = getEngineRotationState()->isCranking() ? engineConfiguration->crankingInjectionMode
+													   : engineConfiguration->injectionMode;
 
 #if EFI_SHAFT_POSITION_INPUT
-	if (runningMode == IM_SEQUENTIAL) {
+	if (mode == IM_SEQUENTIAL) {
 		bool missingPhaseInfoForSequential = !engine->triggerCentral.triggerState.hasSynchronizedPhase();
 
 		bool willGetSequentialInfoLater = engine->triggerCentral.triggerState.expectDisambiguation();
@@ -409,14 +406,18 @@ injection_mode_e getCurrentInjectionMode() {
 		// IF
 		// - We do not currently have full sync
 		// - AND we expect to get it later (ie, once the cam syncs)
-		// THEN hold off on sequential, and stay in batch fueling for now
+		// THEN hold off on sequential, and stay in batch fueling for now.
+		// This applies while cranking too: sequential pulses timed off a guessed phase land 360
+		// degrees away from where they were intended about half the time, then get skipped or
+		// doubled when the phase corrects. Batch fires each 360 degree pair together, so it
+		// delivers the same fuel to every cylinder regardless of which way the phase guess went.
 		if (missingPhaseInfoForSequential && willGetSequentialInfoLater) {
 			return IM_BATCH;
 		}
 	}
 #endif /* EFI_SHAFT_POSITION_INPUT */
 
-	return runningMode;
+	return mode;
 }
 
 /**

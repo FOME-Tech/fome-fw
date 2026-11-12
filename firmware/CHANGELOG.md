@@ -82,6 +82,7 @@ or
  - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
  - Improve WiFi reconnection reliability after your laptop goes to sleep/drops off the network while connected #713
  - Fix vehicle speed indication while using a BMW E90/Mk60e5 ABS controller as the speed source
+ - Sequential cranking injection now waits for cam sync, cranking in batch until then. Previously the first cranking pulses were timed off a guessed engine phase, which is wrong by 360 degrees about half the time, so cylinders could get skipped or doubled pulses and start unevenly. Same behavior running mode already had.
  - Fuel correction multipliers (CLT, IAT, barometric, post-cranking, cranking CLT/TPS/duration, and Lua fuel mult) are now logged with three decimal places. Previously they were rounded to whole numbers, so a 1.06 CLT correction showed up in the log as 1
 
 ## May 2026 Release
