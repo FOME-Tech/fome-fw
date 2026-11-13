@@ -175,6 +175,7 @@ static ProxySensor driverIntent(SensorType::DriverThrottleIntent);
 
 // These sensors are TPS-like, so handle them in here too
 static FuncSensPair wastegate(PACK_MULT_VOLTAGE, SensorType::WastegatePosition);
+static FuncSensPair clutch(1, SensorType::ClutchPosition);
 
 void initTps() {
 	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, engineConfiguration != nullptr, "null engineConfiguration");
@@ -233,6 +234,13 @@ void initTps() {
 			 min,
 			 max});
 
+	clutch.init(
+			{engineConfiguration->clutchPositionSensor,
+			 engineConfiguration->clutchPositionUpVoltage,
+			 engineConfiguration->clutchPositionDownVoltage,
+			 /*min=*/-10,
+			 /*max=*/110});
+
 	// Route the pedal or TPS to driverIntent as appropriate
 	if (isAdcChannelValid(engineConfiguration->throttlePedalPositionAdcChannel)) {
 		driverIntent.setProxiedSensor(SensorType::AcceleratorPedal);
@@ -250,4 +258,5 @@ void deinitTps() {
 	pedal.deinit();
 
 	wastegate.deinit();
+	clutch.deinit();
 }

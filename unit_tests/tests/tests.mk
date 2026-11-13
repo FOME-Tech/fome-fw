@@ -31,6 +31,7 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_override_gaps.cpp \
 	tests/trigger/test_injection_scheduling.cpp \
 	tests/ignition_injection/injection_mode_transition.cpp \
+	tests/ignition_injection/test_injection_mode_transition_fueling.cpp \
 	tests/ignition_injection/test_startOfCrankingPrimingPulse.cpp \
 	tests/ignition_injection/test_multispark.cpp \
 	tests/ignition_injection/test_ignition_scheduling.cpp \
