@@ -28,3 +28,6 @@ USE_WIFI = yes
 SD_BOOTLOADER = yes
 
 SHORT_BOARD_NAME = atlas
+
+# Build only when the expansion board is fitted.
+G0_EXTENSION ?= no
