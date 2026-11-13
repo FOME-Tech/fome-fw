@@ -1,9 +1,11 @@
-G0 expansion support is opt-in (`G0_EXTENSION=yes`). It targets the version 8,
+Atlas enables G0 expansion support and bundles its companion firmware by default.
+Set `G0_EXTENSION=no` for hardware without the expansion. The integration targets
+the version 8,
 36-byte SPI application protocol from dynfer/g0-extension commit `19f0c4c`.
-The protocol header preserves the wire layout; runtime support has no firmware-image
-or extension submodule dependency.
+The protocol header preserves the wire layout. The I/O modules can also run with
+`G0_FIRMWARE_UPDATE=no`, which removes the companion image and its build dependency.
 
-The integration is supplied as six ordered commits:
+The integration is split into six ordered parts:
 
 | Part | Responsibility | Existing fome-fw interface |
 | --- | --- | --- |
@@ -12,7 +14,7 @@ The integration is supplied as six ordered commits:
 | 3 | Twelve analog inputs; 250 ms expiry and recovery | `AdcProvider` |
 | 4 | Four digital inputs; acknowledged mode configuration | `GpioChip` |
 | 5 | Four static lowsides and local 1..500 Hz PWM | `GpioChip`, `SimplePwm` |
-| 6 | Optional startup firmware programming and readback | STM32 ROM bootloader |
+| 6 | Automatic image bundling, startup firmware programming and readback | STM32 ROM bootloader |
 
 ```mermaid
 flowchart LR
@@ -71,26 +73,36 @@ Build Atlas using its normal script:
 
 ```sh
 cd firmware/config/boards/atlas
-G0_EXTENSION=yes bash ./compile_atlas.sh
+bash ./compile_atlas.sh
 ```
 
-The updater is separate and disabled unless `G0_FIRMWARE_UPDATE=yes` is also set.
-Build a deliberately selected extension revision in the extension repository,
-then generate the bundled header before building Atlas:
+The updater defaults to enabled whenever G0 support is enabled. Every normal
+Atlas build initializes the pinned `firmware/ext/g0_firmware` submodule, including
+its ChibiOS dependency, and builds it with fome-fw's selected ARM compiler.
+The build generates `firmware/generated/g0_firmware_image.h` from that binary and
+reads the application version from the pinned SPI implementation. This header is
+included by the updater, so the complete image becomes immutable data in the ECU
+firmware's flash, just as the wideband image is bundled with its updater.
+
+The build uses the recorded submodule commits; it never updates a moving branch.
+G0 objects and binaries live in `firmware/build/g0_firmware`, outside the source
+submodule. After `make clean`, the next normal build recreates both the binary and
+the generated header. An unchanged image preserves the header's timestamp so it
+does not unnecessarily rebuild the updater. Generation replaces changed headers
+atomically and rejects invalid G071 vectors or images beyond 128 KiB.
+
+To build the normal runtime without bundling or programming a companion image:
 
 ```sh
-make -C /path/to/g0-extension -j12
-python3 firmware/hw_layer/g0_extension/make_image.py \
-  --input /path/to/g0-extension/build/g0-extension.bin \
-  --output firmware/generated/g0_firmware_image.h --version 8
-cd firmware/config/boards/atlas
-G0_EXTENSION=yes G0_FIRMWARE_UPDATE=yes bash ./compile_atlas.sh
+G0_FIRMWARE_UPDATE=no bash ./compile_atlas.sh
 ```
 
-Run the generator again after `make clean`, which removes generated headers.
-No build step fetches a moving extension branch. The generated image is immutable
-flash data with a SHA256 provenance comment, not a tracked source file. The image
-generator and updater reject invalid G071 vectors and images beyond 128 KiB.
+To disable the expansion entirely, use `G0_EXTENSION=no`. Both options skip the
+G0 image dependency; the ECU bootloader, other board configurations without G0,
+simulator, and native tests do not build the companion. For custom G0 source
+releases, update the pinned submodule commit and maintain the application version
+expected by the host protocol.
+
 Programming runs before the runtime device and remote GPIOs are registered;
 it has no live console update command. It skips programming if the app version
 matches, otherwise resets through BOOT into ROM, writes padded 256-byte blocks,
@@ -102,7 +114,7 @@ The byte-level updater follows [ST AN4286](https://www.st.com/resource/en/applic
 including byte spacing, ACK handshakes, packet checksums, and readback. It requires
 working G071 ROM SPI boot support and BOOT option bytes configured for the board.
 
-Run the dependency-free host suites with sanitizers:
+Run the host protocol and image-generator suites with sanitizers:
 
 ```sh
 cmake -S firmware/hw_layer/g0_extension/tests -B /tmp/g0-tests -DG0_SANITIZE=ON
@@ -114,8 +126,10 @@ Seven suites cover protocol validation, version/pipeline/reconnect behavior,
 fair scheduling and stale in-flight replies, analog freshness and timestamp
 wraparound, digital configuration, output updates during in-flight ACKs, and
 scripted ROM programming including padding, readback corruption, NACK, and timeout.
-Leak detection is disabled in the example because LeakSanitizer cannot run under
-ptrace; AddressSanitizer and UndefinedBehaviorSanitizer remain enabled.
+Five additional Python tests cover version extraction, unchanged-header timestamps,
+image replacement, invalid inputs, and disabled build dependencies. Leak detection
+is disabled in the example because LeakSanitizer cannot run under ptrace;
+AddressSanitizer and UndefinedBehaviorSanitizer remain enabled.
 
 Hardware verification is still required. The current extension has no SPI-frame
 CRC or transaction sequence number, and it keeps its last output setpoints when
