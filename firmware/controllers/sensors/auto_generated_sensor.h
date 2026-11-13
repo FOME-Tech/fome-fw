@@ -52,6 +52,8 @@ constexpr inline const char* getSensorType(SensorType value) {
 			return "BatteryVoltage";
 		case SensorType::Clt:
 			return "Clt";
+		case SensorType::ClutchPosition:
+			return "ClutchPosition";
 		case SensorType::CompressorDischargePressure:
 			return "CompressorDischargePressure";
 		case SensorType::CompressorDischargeTemperature:

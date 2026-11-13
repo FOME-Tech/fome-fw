@@ -1,5 +1,7 @@
 #include "pch.h"
 
+#include <set>
+
 float GetGearRatioFor(float revPerKm, float axle, float kph, float rpm) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
@@ -263,4 +265,300 @@ TEST(GearDetector, ParameterValidation) {
 	// No gears at all is a valid configuration
 	engineConfiguration->totalGearsCount = 0;
 	EXPECT_NO_FATAL_ERROR(dut.onConfigurationChange(nullptr));
+}
+
+TEST(GearDetector, DecideClutchPosition) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->clutchAppliedBelow = 15;
+	engineConfiguration->clutchReleasedAbove = 60;
+
+	Sensor::setInvalidMockValue(SensorType::ClutchPosition);
+	EXPECT_EQ(ClutchState::Indeterminate, decideClutchPosition());
+
+	Sensor::setMockValue(SensorType::ClutchPosition, 0);
+	EXPECT_EQ(ClutchState::Engaged, decideClutchPosition());
+	Sensor::setMockValue(SensorType::ClutchPosition, 14.9f);
+	EXPECT_EQ(ClutchState::Engaged, decideClutchPosition());
+	Sensor::setMockValue(SensorType::ClutchPosition, 15);
+	EXPECT_EQ(ClutchState::Middle, decideClutchPosition());
+	Sensor::setMockValue(SensorType::ClutchPosition, 60);
+	EXPECT_EQ(ClutchState::Middle, decideClutchPosition());
+	Sensor::setMockValue(SensorType::ClutchPosition, 60.1f);
+	EXPECT_EQ(ClutchState::Disengaged, decideClutchPosition());
+	Sensor::setMockValue(SensorType::ClutchPosition, 100);
+	EXPECT_EQ(ClutchState::Disengaged, decideClutchPosition());
+
+	// Thresholds the wrong way round are unusable
+	engineConfiguration->clutchAppliedBelow = 60;
+	engineConfiguration->clutchReleasedAbove = 15;
+	EXPECT_EQ(ClutchState::Indeterminate, decideClutchPosition());
+}
+
+TEST(GearDetector, LockedGearTolerance) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& dut = engine->module<GearDetector>().unmock();
+
+	// Widely spaced gears: 4% tolerance
+	engineConfiguration->totalGearsCount = 2;
+	engineConfiguration->gearRatio[0] = 3.0f;
+	engineConfiguration->gearRatio[1] = 2.0f;
+	dut.onConfigurationChange(nullptr);
+
+	EXPECT_EQ(1, dut.determineLockedGear(3.0f));
+	EXPECT_EQ(1, dut.determineLockedGear(3.1f));
+	EXPECT_EQ(0, dut.determineLockedGear(3.15f));
+	EXPECT_EQ(2, dut.determineLockedGear(1.95f));
+	EXPECT_EQ(0, dut.determineLockedGear(2.5f));
+	EXPECT_EQ(0, dut.determineLockedGear(0));
+
+	// Close ratio gears 10% apart: tolerance shrinks to 2.5%
+	engineConfiguration->gearRatio[0] = 1.10f;
+	engineConfiguration->gearRatio[1] = 1.00f;
+	dut.onConfigurationChange(nullptr);
+
+	EXPECT_EQ(1, dut.determineLockedGear(1.12f));
+	EXPECT_EQ(0, dut.determineLockedGear(1.13f));
+	EXPECT_EQ(2, dut.determineLockedGear(1.02f));
+	EXPECT_EQ(0, dut.determineLockedGear(1.03f));
+}
+
+namespace {
+// Ratios chosen so that driveshaft RPM = 40 * kph
+// Gears: 3.0, 2.0, 1.5, 1.2, 1.0
+struct ClutchGearHarness {
+	EngineTestHelper eth{engine_type_e::TEST_ENGINE};
+	GearDetector& dut;
+
+	ClutchGearHarness()
+		: dut(engine->module<GearDetector>().unmock()) {
+		engineConfiguration->driveWheelRevPerKm = 600;
+		engineConfiguration->finalGearRatio = 4.0f;
+		engineConfiguration->totalGearsCount = 5;
+		engineConfiguration->gearRatio[0] = 3.0f;
+		engineConfiguration->gearRatio[1] = 2.0f;
+		engineConfiguration->gearRatio[2] = 1.5f;
+		engineConfiguration->gearRatio[3] = 1.2f;
+		engineConfiguration->gearRatio[4] = 1.0f;
+		engineConfiguration->clutchAppliedBelow = 15;
+		engineConfiguration->clutchReleasedAbove = 60;
+		dut.onConfigurationChange(nullptr);
+	}
+
+	// One 50ms slow callback tick
+	size_t step(float rpm, float kph, float clutch) {
+		Sensor::setMockValue(SensorType::Rpm, rpm);
+		Sensor::setMockValue(SensorType::VehicleSpeed, kph);
+		Sensor::setMockValue(SensorType::ClutchPosition, clutch);
+
+		advanceTimeUs(50'000);
+		dut.onSlowCallback();
+
+		return dut.get().Value;
+	}
+
+	// Sweep the gearbox ratio linearly at constant speed, returning every gear reported
+	std::set<size_t> sweep(float fromRatio, float toRatio, float clutch, float seconds, float kph = 50) {
+		std::set<size_t> seen;
+		int ticks = std::max(1, static_cast<int>(std::round(seconds / 0.05f)));
+
+		for (int i = 0; i < ticks; i++) {
+			float ratio = ticks == 1 ? toRatio : fromRatio + (toRatio - fromRatio) * i / (ticks - 1);
+			seen.insert(step(ratio * 40 * kph, kph, clutch));
+		}
+
+		return seen;
+	}
+
+	std::set<size_t> hold(float ratio, float clutch, float seconds, float kph = 50) {
+		return sweep(ratio, ratio, clutch, seconds, kph);
+	}
+
+	// Drive one full clutch cycle into the gear with this ratio: pedal down with the engine
+	// free-revving, then pedal up in gear.
+	void establishTrust(float ratio) {
+		hold(5.0f, 100, 0.3f);
+		hold(ratio, 0, 0.3f);
+	}
+};
+} // namespace
+
+using Gears = std::set<size_t>;
+
+TEST(GearDetector, ClutchNoSensorIsRatioOnly) {
+	ClutchGearHarness h;
+	Sensor::setInvalidMockValue(SensorType::ClutchPosition);
+
+	// Same late-reapply as the upshift test below, but with no clutch sensor every transient
+	// gear shows up.
+	Sensor::setMockValue(SensorType::Rpm, 1.0f * 40 * 50);
+	Sensor::setMockValue(SensorType::VehicleSpeed, 50);
+	advanceTimeUs(50'000);
+	h.dut.onSlowCallback();
+
+	EXPECT_EQ(5, h.dut.get().Value);
+	EXPECT_FALSE(h.dut.clutchTrusted);
+	EXPECT_EQ(static_cast<uint8_t>(ClutchState::Indeterminate), h.dut.clutchState);
+}
+
+TEST(GearDetector, ClutchUntrustedUntilFullCycle) {
+	ClutchGearHarness h;
+
+	// Pedal up, in 3rd: no cycle seen yet, so ratio-only
+	EXPECT_EQ(Gears({3}), h.hold(1.5f, 0, 0.5f));
+	EXPECT_FALSE(h.dut.clutchTrusted);
+
+	// A transient is reported as-is while untrusted
+	EXPECT_EQ(Gears({4}), h.hold(1.2f, 0, 0.05f));
+
+	h.establishTrust(1.5f);
+	EXPECT_TRUE(h.dut.clutchTrusted);
+	EXPECT_EQ(3, h.dut.get().Value);
+}
+
+TEST(GearDetector, ClutchUpshiftLateReapply) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	EXPECT_EQ(Gears({3}), h.hold(1.5f, 0, 0.5f));
+
+	// Clutch in, revs fall through both 4th and 5th: hold 3rd
+	EXPECT_EQ(Gears({3}), h.sweep(1.5f, 0.9f, 100, 0.4f));
+
+	// Coming back up through the middle, still slipping
+	EXPECT_EQ(Gears({3}), h.sweep(0.9f, 1.0f, 40, 0.2f));
+
+	// Pedal fully up but the clutch is still catching up: briefly at the 5th gear ratio
+	EXPECT_EQ(Gears({3}), h.hold(1.0f, 0, 0.1f));
+	EXPECT_EQ(Gears({3}), h.sweep(1.05f, 1.15f, 0, 0.1f));
+
+	// Locks into 4th: 3 -> 4 with no 5 in between
+	EXPECT_EQ(Gears({3, 4}), h.hold(1.2f, 0, 0.3f));
+	EXPECT_EQ(4, h.dut.get().Value);
+	EXPECT_TRUE(h.dut.clutchTrusted);
+}
+
+TEST(GearDetector, ClutchDownshiftOverBlip) {
+	ClutchGearHarness h;
+	h.establishTrust(1.2f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+	EXPECT_EQ(4, h.dut.get().Value);
+
+	// Clutch in and blip way past 3rd, through 2nd: hold 4th (the gear autoblip shifts down from)
+	EXPECT_EQ(Gears({4}), h.sweep(1.2f, 2.2f, 100, 0.3f));
+	EXPECT_EQ(Gears({4}), h.hold(2.0f, 100, 0.2f));
+
+	// Pedal up with revs still too high
+	EXPECT_EQ(Gears({4}), h.hold(2.0f, 0, 0.1f));
+	EXPECT_EQ(Gears({4}), h.sweep(1.9f, 1.6f, 0, 0.1f));
+
+	// Settles into 3rd
+	EXPECT_EQ(Gears({3, 4}), h.hold(1.5f, 0, 0.3f));
+	EXPECT_EQ(3, h.dut.get().Value);
+}
+
+TEST(GearDetector, ClutchNeutral) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	// Pedal up, not in any gear: hold briefly, then neutral
+	EXPECT_EQ(Gears({3}), h.hold(1.35f, 0, 0.5f));
+	EXPECT_EQ(Gears({0, 3}), h.hold(1.35f, 0, 1.0f));
+	EXPECT_EQ(0, h.dut.get().Value);
+
+	// Back into gear
+	EXPECT_EQ(Gears({0, 4}), h.hold(1.2f, 0, 0.3f));
+	EXPECT_EQ(4, h.dut.get().Value);
+}
+
+TEST(GearDetector, ClutchStopped) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	EXPECT_EQ(0, h.step(800, 0, 100));
+	EXPECT_EQ(0, h.step(800, 0, 0));
+}
+
+TEST(GearDetector, ClutchInCoastingDoesNotDistrust) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	// Clutch in, engine idling, slowing from 50 to 20 kph over 10 seconds. Ratio slowly passes
+	// through 5th and dwells there for a while, but engine speed is steady so it isn't a real lock.
+	Gears seen;
+	for (int i = 0; i < 200; i++) {
+		float kph = 50 - 30 * i / 200.0f;
+		seen.insert(h.step(900, kph, 100));
+	}
+
+	EXPECT_EQ(Gears({3}), seen);
+	EXPECT_TRUE(h.dut.clutchTrusted);
+}
+
+TEST(GearDetector, ClutchStuckPressed) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	// The sensor says pressed, but the car accelerates in 3rd with engine speed tracking road
+	// speed: the clutch is clearly engaged.
+	for (int i = 0; i < 20; i++) {
+		float kph = 50 + i;
+		h.step(1.5f * 40 * kph, kph, 100);
+	}
+
+	EXPECT_FALSE(h.dut.clutchTrusted);
+	EXPECT_EQ(3, h.dut.get().Value);
+
+	// Untrusted: ratio-only, shifts show up immediately
+	EXPECT_EQ(Gears({4}), h.hold(1.2f, 100, 0.05f));
+}
+
+TEST(GearDetector, ClutchStuckMiddle) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	// Pedal stuck partway. A short lock isn't believed...
+	EXPECT_EQ(Gears({3}), h.hold(1.2f, 40, 0.5f));
+
+	// ...but one that holds for a while is a real shift
+	EXPECT_EQ(Gears({3, 4}), h.hold(1.2f, 40, 1.0f));
+	EXPECT_EQ(4, h.dut.get().Value);
+}
+
+TEST(GearDetector, ClutchTrustRegained) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	// Lose trust: pressed but coupled
+	for (int i = 0; i < 20; i++) {
+		float kph = 50 + i;
+		h.step(1.5f * 40 * kph, kph, 100);
+	}
+	ASSERT_FALSE(h.dut.clutchTrusted);
+
+	// Sensor starts behaving again
+	h.establishTrust(1.2f);
+	EXPECT_TRUE(h.dut.clutchTrusted);
+	EXPECT_EQ(4, h.dut.get().Value);
+}
+
+TEST(GearDetector, ClutchSensorFault) {
+	ClutchGearHarness h;
+	h.establishTrust(1.5f);
+	ASSERT_TRUE(h.dut.clutchTrusted);
+
+	Sensor::setMockValue(SensorType::Rpm, 1.2f * 40 * 50);
+	Sensor::setInvalidMockValue(SensorType::ClutchPosition);
+	advanceTimeUs(50'000);
+	h.dut.onSlowCallback();
+
+	EXPECT_FALSE(h.dut.clutchTrusted);
+	EXPECT_EQ(4, h.dut.get().Value);
 }
