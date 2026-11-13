@@ -4,6 +4,7 @@
 
 #if EFI_G0_EXTENSION && !EFI_BOOTLOADER
 #include "g0_extension/service.h"
+#include "g0_extension/analog.h"
 #include "mpu_util.h"
 
 void initG0Extension() {
@@ -22,6 +23,7 @@ void initG0Extension() {
 			.cfg2 = 0};
 	initSpiCs(&g0SpiConfig, Gpio::F6);
 	palSetPad(g0SpiConfig.ssport, g0SpiConfig.sspad);
+	g0::registerAnalog(EFI_ADC_20 - EFI_ADC_0);
 	g0::start(*getSpiDevice(SPI_DEVICE_5), g0SpiConfig);
 }
 #endif
