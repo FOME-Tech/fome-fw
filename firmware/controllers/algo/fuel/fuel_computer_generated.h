@@ -2,12 +2,15 @@
 #include "rusefi_types.h"
 struct running_fuel_s {
 	// Fuel: Post cranking mult
+	// mult
 	// offset 0
 	float postCrankingFuelCorrection = (float)0;
 	// Fuel: IAT correction
+	// mult
 	// offset 4
 	float intakeTemperatureCoefficient = (float)0;
 	// Fuel: CLT correction
+	// mult
 	// offset 8
 	float coolantTemperatureCoefficient = (float)0;
 	// secs
