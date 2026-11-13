@@ -466,7 +466,7 @@ void OutputPin::setValue(int logicValue) {
 		setOnchipValue(electricalValue);
 	} else {
 		/* external pin */
-		gpiochips_writePad(m_brainPin, logicValue);
+		gpiochips_writePad(m_brainPin, electricalValue);
 		/* TODO: check return value */
 	}
 #else

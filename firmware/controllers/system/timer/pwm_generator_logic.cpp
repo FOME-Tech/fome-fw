@@ -9,6 +9,9 @@
  */
 
 #include "pch.h"
+#if EFI_G0_EXTENSION
+#include "g0_extension/output_gpio.h"
+#endif
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
@@ -319,6 +322,22 @@ void startSimplePwm(SimplePwm* state, const char* msg, OutputPin* output, float 
 		warning(ObdCode::OBD_PCM_Processor_Fault, "low frequency %.2f %s", frequency, msg);
 		return;
 	}
+
+	// Let the expansion MCU generate edges locally; SPI only carries setpoints.
+#if EFI_G0_EXTENSION
+	if (g0::isOutput(output->m_brainPin)) {
+		chibios_rt::CriticalSectionLocker lock;
+		engine->scheduler.cancel(&state->scheduling);
+		state->m_stateChangeCallback = nullptr;
+		state->isStopRequested = false;
+		state->outputPins[0] = output;
+		state->hardPwm =
+				g0::startPwm(output->m_brainPin, frequency, dutyCycle, getElectricalValue0(output->getOutputMode()));
+		efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, state->hardPwm, "G0 PWM range (1..500 Hz)");
+		return;
+	}
+	state->hardPwm = nullptr;
+#endif
 
 	state->seq.setSwitchTime(0, dutyCycle);
 	state->seq.setSwitchTime(1, 1);

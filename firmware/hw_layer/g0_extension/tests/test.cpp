@@ -1,6 +1,7 @@
 #include "../link.h"
 #include "../analog.h"
 #include "../digital.h"
+#include "../outputs.h"
 #include <cassert>
 #include <cstdio>
 
@@ -153,6 +154,38 @@ static void testDigital() {
 	assert(!digital.setMode(0, InputMode(2)));
 }
 
+static void testOutputs() {
+	Outputs outputs;
+	wire::AppFrame tx = {};
+	assert(!outputs.set(4, 0, 0));
+	assert(!outputs.set(0, 501, 0));
+	assert(!outputs.set(0, 1, 10001));
+	// Acknowledge startup off commands.
+	for (unsigned i = 0; i < wire::outputCount; i++) {
+		assert(outputs.request(tx, 0));
+		assert(tx.bytes[0] == wire::cmdDisableOutput);
+		outputs.response(tx, {}, 0);
+	}
+	assert(!outputs.request(tx, 10));
+	assert(outputs.set(0, 100, 5000));
+	assert(outputs.request(tx, 20));
+	assert(tx.setOutputRequest.frequencyHz == 100);
+	assert(!outputs.request(tx, 20));  // Same output cannot have two requests in flight.
+	assert(outputs.set(0, 200, 2500)); // Producer changes while ACK is in flight.
+	wire::AppFrame rx = {};
+	rx.outputResponse.frequencyHz = 100;
+	rx.outputResponse.duty = 5000;
+	outputs.response(tx, rx, 30);
+	assert(outputs.request(tx, 40));
+	assert(tx.setOutputRequest.frequencyHz == 200 && tx.setOutputRequest.duty == 2500);
+	rx.outputResponse.frequencyHz = 200;
+	rx.outputResponse.duty = 2500;
+	outputs.response(tx, rx, 50);
+	assert(!outputs.request(tx, 60));
+	outputs.disconnected();
+	assert(outputs.request(tx, 70));
+}
+
 static void testFairnessAndStall() {
 	Link link;
 	TestModule modules[3];
@@ -192,6 +225,7 @@ static void testFairnessAndStall() {
 
 int main() {
 	testFairnessAndStall();
+	testOutputs();
 	testDigital();
 	testAnalog();
 	testLink();
