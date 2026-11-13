@@ -103,6 +103,68 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	eth.assertEvent5("inj end#3", 1, (void*)endInjection, -28702);
 }
 
+static void setupSequentialCranking(EngineTestHelper& eth, bool expectCamSync) {
+	setTable(config->injectionPhase, -180.0f);
+	engine->tdcMarkEnabled = false;
+	engineConfiguration->isFasterEngineSpinUpEnabled = true;
+	engineConfiguration->cranking.baseFuel = 12;
+	// stay in cranking for the whole test
+	engineConfiguration->cranking.rpm = 999;
+
+	setupSimpleTestEngineWithMafAndTT_ONE_trigger(&eth, IM_SEQUENTIAL);
+	engineConfiguration->crankingInjectionMode = IM_SEQUENTIAL;
+
+	// Crank-only wheel that needs a cam for phase
+	engine->triggerCentral.triggerState.setNeedsDisambiguation(true, expectCamSync);
+
+	eth.fireRise(1000 /*ms*/);
+	// Faster spin up gives us RPM on the second tooth, which counts as cranking
+	eth.fireRise(200);
+	ASSERT_TRUE(engine->rpmCalculator.isCranking());
+}
+
+// Sequential cranking before the cam has synced would time pulses off a guessed engine phase,
+// which is wrong by 360 degrees about half the time. Until phase is known, crank in batch instead.
+TEST(cranking, sequentialCrankingUsesBatchUntilPhaseSync) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupSequentialCranking(eth, /*expectCamSync=*/true);
+
+	EXPECT_EQ(IM_BATCH, getCurrentInjectionMode());
+
+	// Every cranking pulse scheduled so far fires a 360 degree pair of injectors
+	ASSERT_GT(engine->scheduler.size(), 0);
+	for (int i = 0; i < engine->scheduler.size(); i++) {
+		auto ctx = bit_cast<InjectorContext>(engine->scheduler.getForUnitTest(i)->action.getArgument());
+		EXPECT_EQ(2, __builtin_popcount(ctx.outputsMask)) << "scheduled event " << i;
+	}
+
+	// Cam syncs while still cranking: switch to sequential right away
+	engine->triggerCentral.syncAndReport(2, 0);
+	ASSERT_TRUE(engine->rpmCalculator.isCranking());
+	EXPECT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
+}
+
+// With no cam sync on the way, waiting for phase would mean batch forever, so honor sequential as
+// configured (same rule as running mode)
+TEST(cranking, sequentialCrankingWithoutCamStaysSequential) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupSequentialCranking(eth, /*expectCamSync=*/false);
+
+	EXPECT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
+}
+
+// Non-sequential cranking modes are not affected by phase sync
+TEST(cranking, nonSequentialCrankingModeUnchangedBeforePhaseSync) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setupSequentialCranking(eth, /*expectCamSync=*/true);
+
+	engineConfiguration->crankingInjectionMode = IM_SIMULTANEOUS;
+	EXPECT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode());
+
+	engineConfiguration->crankingInjectionMode = IM_BATCH;
+	EXPECT_EQ(IM_BATCH, getCurrentInjectionMode());
+}
+
 static void doTestFasterEngineSpinningUp60_2(int startUpDelayMs, int rpm1, int expectedRpm) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	// turn on FasterEngineSpinUp mode
