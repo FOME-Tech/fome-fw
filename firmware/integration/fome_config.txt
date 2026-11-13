@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20025
+#define FLASH_DATA_VERSION 20026
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1400
+#define BLOCKING_FACTOR 1410
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -1489,6 +1489,12 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
 
+	adc_channel_e clutchPositionSensor;Analog clutch pedal position sensor input.
+	uint16_t autoscale clutchPositionUpVoltage;Sensor voltage with the clutch released (pedal up). Reads 0%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint16_t autoscale clutchPositionDownVoltage;Sensor voltage with the clutch pedal on the floor. Reads 100%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint8_t clutchAppliedBelow;Clutch pedal position below which the clutch is fully applied (engaged, not slipping).;"%", 1, 0, 0, 100, 0
+	uint8_t clutchReleasedAbove;Clutch pedal position above which the clutch is fully released (disengaged, engine decoupled from the wheels).;"%", 1, 0, 0, 100, 0
+
 ! end of engine_configuration_s
 end_struct
 
@@ -1822,6 +1828,25 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
+
+	! Station mode networks (board joins existing network instead of creating its own AP)
+	! Tried in order 1-3 on boot; falls back to AP if none connect within timeout.
+	custom wifi_ssid_t 32 string, ASCII, @OFFSET@, 32
+	custom wifi_password_t 64 string, ASCII, @OFFSET@, 64
+
+	struct wifi_sta_network_s
+		wifi_ssid_t ssid
+		wifi_password_t password
+	end_struct
+
+	#define WIFI_STA_NETWORK_COUNT 3
+	wifi_sta_network_s[WIFI_STA_NETWORK_COUNT iterate] wifiStaNetworks;
+
+	! DHCP client hostname (option 12) advertised to the router in STA mode.
+	! Allows connecting to the board by name instead of by IP address, on networks where the router
+	! registers DHCP hostnames in its local DNS. Leave blank to use the WiFi module's own name (WINC-XX-YY).
+	custom wifi_hostname_t 32 string, ASCII, @OFFSET@, 32
+	wifi_hostname_t wifiHostname
 
 	#define BOOST_CUT_SIZE 4
 
