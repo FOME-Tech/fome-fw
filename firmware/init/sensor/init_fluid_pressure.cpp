@@ -9,6 +9,9 @@
 static LinearFunc oilpSensorFunc;
 static FunctionalSensor oilpSensor(SensorType::OilPressure, /* timeoutPeriod = */ MS2NT(50));
 
+static LinearFunc powerSteeringPressureFunc;
+static FunctionalSensor powerSteeringPressureSensor(SensorType::PowerSteeringPressure, MS2NT(50));
+
 static LinearFunc fuelPressureFuncLow;
 static FunctionalSensor fuelPressureSensorLow(SensorType::FuelPressureLow, /* timeoutPeriod = */ MS2NT(50));
 
@@ -59,6 +62,12 @@ static void initFluidPressure(LinearFunc& func, FunctionalSensor& sensor, const 
 }
 
 void initFluidPressure() {
+	if (engineConfiguration->powerSteeringIdleMode == PowerSteeringIdleMode::Pressure) {
+		powerSteeringPressureSensor.invalidate();
+		initFluidPressure(
+				powerSteeringPressureFunc, powerSteeringPressureSensor, engineConfiguration->powerSteeringPressure, 10);
+	}
+
 	initFluidPressure(oilpSensorFunc, oilpSensor, engineConfiguration->oilPressure, 10);
 	initFluidPressure(fuelPressureFuncLow, fuelPressureSensorLow, engineConfiguration->lowPressureFuel, 10);
 	initFluidPressure(fuelPressureFuncHigh, fuelPressureSensorHigh, engineConfiguration->highPressureFuel, 100);
@@ -75,6 +84,10 @@ void initFluidPressure() {
 }
 
 void deinitFluidPressure() {
+	AdcSubscription::UnsubscribeSensor(powerSteeringPressureSensor);
+	powerSteeringPressureSensor.unregister();
+	powerSteeringPressureSensor.invalidate();
+
 	AdcSubscription::UnsubscribeSensor(oilpSensor, engineConfiguration->oilPressure.hwChannel);
 	AdcSubscription::UnsubscribeSensor(fuelPressureSensorLow, engineConfiguration->lowPressureFuel.hwChannel);
 	AdcSubscription::UnsubscribeSensor(fuelPressureSensorHigh, engineConfiguration->highPressureFuel.hwChannel);
