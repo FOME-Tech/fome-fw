@@ -6,4 +6,10 @@ HW_LAYER_EMS_CPP += \
 	$(PROJECT_DIR)/hw_layer/g0_extension/analog_provider.cpp \
 	$(PROJECT_DIR)/hw_layer/g0_extension/digital_gpio.cpp \
 	$(PROJECT_DIR)/hw_layer/g0_extension/output_gpio.cpp
+ifeq ($(G0_FIRMWARE_UPDATE),yes)
+DDEFS += -DEFI_G0_FIRMWARE_UPDATE=TRUE
+HW_LAYER_EMS_CPP += \
+	$(PROJECT_DIR)/hw_layer/g0_extension/bootloader.cpp \
+	$(PROJECT_DIR)/hw_layer/g0_extension/updater.cpp
+endif
 endif

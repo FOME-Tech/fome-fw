@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(g0_tests LANGUAGES CXX)
 enable_testing()
-add_executable(g0_tests test.cpp ../link.cpp)
+add_executable(g0_tests test.cpp test_bootloader.cpp ../link.cpp ../bootloader.cpp)
 target_compile_features(g0_tests PRIVATE cxx_std_17)
 target_compile_options(g0_tests PRIVATE -Wall -Wextra -Werror -UNDEBUG)
 option(G0_SANITIZE "Enable host sanitizers" OFF)

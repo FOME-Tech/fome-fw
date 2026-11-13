@@ -223,8 +223,11 @@ static void testFairnessAndStall() {
 	assert(tx.bytes[0] == wire::cmdReadVersion);
 }
 
+void testBootloader();
+
 int main() {
 	testFairnessAndStall();
+	testBootloader();
 	testOutputs();
 	testDigital();
 	testAnalog();
