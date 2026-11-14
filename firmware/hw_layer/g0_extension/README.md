@@ -3,6 +3,10 @@ A reply belongs to the previous exchange. The link checks CRC, command, status,
 payload size, channel and protocol version, then dispatches it to its module.
 Modules rotate fairly; reconnect discards the old pipeline.
 
+Enable Atlas with `G0_EXTENSION=yes`. SPI5 uses PF7/PF8/PF9 and PF6 for CS.
+Only the 10 ms background worker transfers data. DMA buffers are noncached on H7.
+State locks cover module callbacks and readers/writers, never SPI transfers.
+
 Run standalone tests with sanitizers:
 
 ```sh
