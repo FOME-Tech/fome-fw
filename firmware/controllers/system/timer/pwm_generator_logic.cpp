@@ -73,14 +73,14 @@ void SimplePwm::setSimplePwmDutyCycle(float dutyCycle) {
 
 		if (m_stateChangeCallback) {
 			// Manually fire falling edge
-			m_stateChangeCallback(0, this);
+			m_stateChangeCallback(0, this, getTimeNowNt());
 		}
 	} else if (dutyCycle > FULL_PWM_THRESHOLD) {
 		mode = PM_FULL;
 
 		if (m_stateChangeCallback) {
 			// Manually fire rising edge
-			m_stateChangeCallback(1, this);
+			m_stateChangeCallback(1, this, getTimeNowNt());
 		}
 	} else {
 		mode = PM_NORMAL;
@@ -131,7 +131,7 @@ void PwmConfig::stop() {
 	isStopRequested = true;
 }
 
-void PwmConfig::handleCycleStart() {
+void PwmConfig::handleCycleStart(efitick_t phaseTimestamp) {
 	if (safe.phaseIndex != 0) {
 		// https://github.com/rusefi/rusefi/issues/1030
 		firmwareError(ObdCode::CUSTOM_PWM_CYCLE_START, "handleCycleStart %d", safe.phaseIndex);
@@ -158,7 +158,8 @@ void PwmConfig::handleCycleStart() {
 		/**
 		 * period length has changed - we need to reset internal state
 		 */
-		safe.startNt = getTimeNowNt();
+		// Frequency changes and precision resets must preserve the scheduled cycle boundary.
+		safe.startNt = phaseTimestamp;
 		safe.iteration = 0;
 		safe.periodNt = periodNt;
 
@@ -172,7 +173,7 @@ void PwmConfig::handleCycleStart() {
 /**
  * @return Next time for signal toggle
  */
-efitick_t PwmConfig::togglePwmState() {
+efitick_t PwmConfig::togglePwmState(efitick_t phaseTimestamp) {
 	if (isStopRequested) {
 		return 0;
 	}
@@ -185,7 +186,7 @@ efitick_t PwmConfig::togglePwmState() {
 	if (cisnan(periodNt)) {
 		// NaN period means PWM is paused, we also set the pin low
 		if (m_stateChangeCallback) {
-			m_stateChangeCallback(0, this);
+			m_stateChangeCallback(0, this, phaseTimestamp);
 		}
 
 		return getTimeNowNt() + MS2NT(NAN_FREQUENCY_SLEEP_PERIOD_MS);
@@ -196,7 +197,11 @@ efitick_t PwmConfig::togglePwmState() {
 	}
 
 	if (safe.phaseIndex == 0) {
-		handleCycleStart();
+		if (forceCycleStart) {
+			// After a long stall, abandon the old timeline along with the skipped phases.
+			phaseTimestamp = getTimeNowNt();
+		}
+		handleCycleStart(phaseTimestamp);
 	}
 
 	/**
@@ -215,7 +220,7 @@ efitick_t PwmConfig::togglePwmState() {
 	{
 		ScopePerf perf(PE::PwmConfigStateChangeCallback);
 		if (m_stateChangeCallback) {
-			m_stateChangeCallback(cbStateIndex, this);
+			m_stateChangeCallback(cbStateIndex, this, phaseTimestamp);
 		}
 	}
 
@@ -257,12 +262,13 @@ static void timerCallback(PwmConfig* state) {
 	state->dbgNestingLevel++;
 	efiAssertVoid(ObdCode::CUSTOM_ERR_6581, state->dbgNestingLevel < 25, "PWM nesting issue");
 
-	efitick_t switchTimeNt = state->togglePwmState();
+	efitick_t switchTimeNt = state->togglePwmState(state->safe.phaseTimeNt);
 	if (switchTimeNt == 0) {
 		// we are here when PWM gets stopped
 		return;
 	}
 
+	state->safe.phaseTimeNt = switchTimeNt;
 	engine->scheduler.schedule(state->m_name, &state->scheduling, switchTimeNt, {timerCallback, state});
 	state->dbgNestingLevel--;
 }
@@ -309,6 +315,8 @@ void PwmConfig::weComplexInit(
 	safe.iteration = -1;
 
 	// let's start the indefinite callback loop of PWM generation
+	// The first callback runs synchronously and has no queued deadline yet.
+	safe.phaseTimeNt = getTimeNowNt();
 	timerCallback(this);
 }
 
@@ -361,7 +369,7 @@ void startSimplePwmHard(
 /**
  * This method controls the actual hardware pins
  */
-void applyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */ {
+void applyPinState(int stateIndex, PwmConfig* state, efitick_t /*phaseTimestamp*/) /* pwm_gen_callback */ {
 #if EFI_PROD_CODE
 	if (!engine->isPwmEnabled) {
 		for (int channelIndex = 0; channelIndex < state->multiChannelStateSequence->waveCount; channelIndex++) {
