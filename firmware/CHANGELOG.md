@@ -35,6 +35,9 @@ or
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
 
 ### Added
+ - Optional G0 expansion ADC support on Atlas (build with G0_EXTENSION=yes).
+ - Four digital switch inputs on the optional G0 expansion.
+ - Four asynchronous lowside outputs with local 1..500 Hz PWM on the G0 expansion.
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels.
