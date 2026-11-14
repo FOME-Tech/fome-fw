@@ -7,6 +7,10 @@ Enable Atlas with `G0_EXTENSION=yes`. SPI5 uses PF7/PF8/PF9 and PF6 for CS.
 Only the 10 ms background worker transfers data. DMA buffers are noncached on H7.
 State locks cover module callbacks and readers/writers, never SPI transfers.
 
+ADC inputs EFI_ADC_20..EFI_ADC_31 correspond to G0 channels 0..9, 17 and 18.
+Values are volts at the G0 pin; board divider calibration still applies.
+Unavailable or 250 ms old samples invalidate sensors. Filters reload on recovery.
+
 Run standalone tests with sanitizers:
 
 ```sh

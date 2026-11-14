@@ -1,4 +1,5 @@
 #include "../link.h"
+#include "../analog.h"
 #include <cassert>
 #include <cstdio>
 
@@ -178,10 +179,37 @@ static void testFairnessAndStall() {
 	assert(tx.bytes[0] == wire::cmdReadVersion);
 }
 
+static void testAnalog() {
+	Analog analog;
+	assert(std::isnan(analog.voltage(0, 0)));
+	auto rx = reply(wire::cmdReadAnalog, wire::analogPayloadLength);
+	rx.analogResponse.ready = 1;
+	rx.analogResponse.channelCount = wire::analogChannelCount;
+	for (unsigned i = 0; i < wire::analogChannelCount; i++) {
+		rx.analogResponse.millivolts[i] = 1234;
+	}
+	analog.response({}, rx, UINT32_MAX - 100);
+	assert(std::fabs(analog.voltage(11, 0) - 1.234f) < 0.0001f);
+	assert(std::isnan(analog.voltage(12, 0)));
+	assert(std::isnan(analog.voltage(0, 150)));
+	rx.analogResponse.channelCount--;
+	analog.response({}, rx, 200);
+	assert(std::isnan(analog.voltage(0, 200)));
+	rx.analogResponse.channelCount++;
+	rx.analogResponse.millivolts[11] = 3301;
+	analog.response({}, rx, 210);
+	assert(std::isnan(analog.voltage(0, 210)));
+	rx.analogResponse.millivolts[11] = 0;
+	analog.response({}, rx, 220);
+	analog.disconnected();
+	assert(std::isnan(analog.voltage(0, 220)));
+}
+
 int main() {
 	testLink();
 	testValidation();
 	testVersionAndIdle();
 	testFairnessAndStall();
+	testAnalog();
 	std::puts("G0 tests passed");
 }
