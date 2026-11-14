@@ -128,6 +128,13 @@ void AdcSubscription::UpdateSubscribers(efitick_t nowNt) {
 		}
 
 		float mcuVolts = AdcProvider::getVoltage(entry.Channel);
+		// External providers can be unavailable at startup or after link loss.
+		// Keep invalid values out of the IIR filter so it can recover.
+		if (!std::isfinite(mcuVolts)) {
+			entry.HasUpdated = false;
+			entry.Sensor->invalidate(UnexpectedCode::Timeout);
+			continue;
+		}
 		float sensorVolts = mcuVolts * entry.VoltsPerAdcVolt;
 
 		// On the very first update, preload the filter as if we've been
