@@ -2,6 +2,25 @@
 
 #include "adc_subscription.h"
 
+#if EFI_G0_EXTENSION && !EFI_BOOTLOADER
+#include "g0_extension/service.h"
+#include "g0_extension/analog.h"
+#include "g0_extension/digital.h"
+#include "mpu_util.h"
+
+void initG0Extension() {
+	turnOnSpi(SPI_DEVICE_5);
+	SPIConfig g0SpiConfig = {};
+	g0SpiConfig.cfg1 = 7 | SPI_CFG1_MBR_2 | SPI_CFG1_MBR_1 | SPI_CFG1_MBR_0;
+	auto& spi = *getSpiDevice(SPI_DEVICE_5);
+	initSpiCs(&g0SpiConfig, Gpio::F6);
+	palSetPad(g0SpiConfig.ssport, g0SpiConfig.sspad);
+	g0::registerDigital();
+	g0::registerAnalog(EFI_ADC_20 - EFI_ADC_0);
+	efiAssertVoid(ObdCode::CUSTOM_ERR_ASSERT, g0::start(spi, g0SpiConfig), "G0 SPI worker full");
+}
+#endif
+
 #ifndef EFI_BOOTLOADER
 #include "functional_sensor.h"
 #include "linear_func.h"
@@ -136,6 +155,13 @@ void setBoardConfigOverrides() {
 	engineConfiguration->spi4sckPin = Gpio::E2;
 	engineConfiguration->spi4misoPin = Gpio::E5;
 	engineConfiguration->spi4mosiPin = Gpio::E6;
+
+#if EFI_G0_EXTENSION
+	engineConfiguration->is_enabled_spi_5 = true;
+	engineConfiguration->spi5sckPin = Gpio::F7;
+	engineConfiguration->spi5misoPin = Gpio::F8;
+	engineConfiguration->spi5mosiPin = Gpio::F9;
+#endif
 
 	// Clear SPI SD card pins in case it's enabled from porting a Proteus tune
 	if (engineConfiguration->sdCardSpiDevice || isBrainPinValid(engineConfiguration->sdCardCsPin)) {

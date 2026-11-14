@@ -139,15 +139,15 @@ bool efiReadPin(Gpio pin) {
 		return palReadPad(getHwPort("readPin", pin), getHwPin("readPin", pin));
 	}
 
+	if (pin >= Gpio::CAN_INPUT_0 && pin <= Gpio::CAN_INPUT_7) {
+		return readCanVirtualInput(pin - Gpio::CAN_INPUT_0);
+	}
+
 #if (BOARD_EXT_GPIOCHIPS > 0)
 	if (brain_pin_is_ext(pin)) {
 		return (gpiochips_readPad(pin) > 0);
 	}
 #endif
-
-	if (pin >= Gpio::CAN_INPUT_0 && pin <= Gpio::CAN_INPUT_7) {
-		return readCanVirtualInput(pin - Gpio::CAN_INPUT_0);
-	}
 
 	/* incorrect pin */
 	return false;
