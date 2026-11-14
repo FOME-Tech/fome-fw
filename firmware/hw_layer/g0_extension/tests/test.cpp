@@ -1,5 +1,6 @@
 #include "../link.h"
 #include "../analog.h"
+#include "../digital.h"
 #include <cassert>
 #include <cstdio>
 
@@ -205,11 +206,62 @@ static void testAnalog() {
 	assert(std::isnan(analog.voltage(0, 220)));
 }
 
+static void testDigital() {
+	Digital digital;
+	wire::AppFrame tx = {};
+	wire::DigitalAllState value;
+	assert(!digital.sample(0, 0, value));
+	for (unsigned i = 0; i < wire::digitalInputCount; i++) {
+		assert(digital.request(tx, 0));
+		assert(tx.setInputModeRequest.input == i + 1);
+		auto rx = reply(wire::cmdSetInputMode, wire::digitalPayloadLength);
+		rx.digitalResponse.mode = wire::digitalMode;
+		digital.response(tx, rx, 0);
+	}
+	digital.request(tx, 10);
+	assert(tx.bytes[0] == wire::cmdReadDigitalAll);
+	auto rx = reply(wire::cmdReadDigitalAll, wire::digitalAllPayloadLength);
+	rx.digitalAllResponse.inputCount = wire::digitalInputCount;
+	rx.digitalAllResponse.inputs[3].flags = 3;
+	digital.response(tx, rx, 20);
+	assert(digital.sample(3, 20, value) && value.flags == 3);
+	assert(!digital.sample(4, 20, value));
+	assert(!digital.sample(3, 270, value));
+	rx.digitalAllResponse.inputCount--;
+	digital.response(tx, rx, 30);
+	assert(!digital.sample(3, 30, value));
+	digital.disconnected();
+	digital.request(tx, 40);
+	assert(tx.bytes[0] == wire::cmdSetInputMode);
+	assert(!digital.setMode(4, InputMode::Digital));
+	assert(!digital.setMode(0, InputMode(2)));
+}
+
+static void testModeChangeDuringAck() {
+	Digital digital;
+	wire::AppFrame tx = {};
+	assert(digital.setMode(0, InputMode::Frequency));
+	assert(digital.request(tx, 0));
+	assert(tx.setInputModeRequest.mode == 1);
+	assert(digital.setMode(0, InputMode::Digital));
+	auto rx = reply(wire::cmdSetInputMode, wire::digitalPayloadLength);
+	rx.digitalResponse.mode = 1;
+	digital.response(tx, rx, 10);
+	assert(digital.request(tx, 20));
+	assert(tx.setInputModeRequest.input == 1 && tx.setInputModeRequest.mode == 0);
+	rx.digitalResponse.mode = 0;
+	digital.response(tx, rx, 30);
+	digital.request(tx, 40);
+	assert(tx.setInputModeRequest.input == 2);
+}
+
 int main() {
 	testLink();
 	testValidation();
 	testVersionAndIdle();
 	testFairnessAndStall();
 	testAnalog();
+	testDigital();
+	testModeChangeDuringAck();
 	std::puts("G0 tests passed");
 }

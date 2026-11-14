@@ -11,6 +11,9 @@ ADC inputs EFI_ADC_20..EFI_ADC_31 correspond to G0 channels 0..9, 17 and 18.
 Values are volts at the G0 pin; board divider calibration still applies.
 Unavailable or 250 ms old samples invalidate sensors. Filters reload on recovery.
 
+G0_DIGITAL_1..G0_DIGITAL_4 use the GPIO interface. Configuration is acknowledged
+before polling. Reads return false when unavailable. SENT is unsupported.
+
 Run standalone tests with sanitizers:
 
 ```sh
