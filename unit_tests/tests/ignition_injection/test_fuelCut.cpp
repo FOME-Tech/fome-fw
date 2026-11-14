@@ -22,6 +22,7 @@ TEST(fuelCut, coasting) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -141,6 +142,7 @@ TEST(fuelCut, delay) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -212,6 +214,7 @@ TEST(fuelCut, mapTable) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
@@ -270,6 +273,7 @@ TEST(fuelCut, clutch) {
 
 	// configure coastingFuelCut
 	engineConfiguration->coastingFuelCutEnabled = true;
+	engineConfiguration->dfcoStartupDelay = 0;
 	engineConfiguration->coastingFuelCutRpmLow = 1300;
 	engineConfiguration->coastingFuelCutRpmHigh = 1500;
 	engineConfiguration->coastingFuelCutTps = 2;
