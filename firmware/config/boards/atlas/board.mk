@@ -29,5 +29,6 @@ SD_BOOTLOADER = yes
 
 SHORT_BOARD_NAME = atlas
 
-# Enable when the expansion board is fitted.
-G0_EXTENSION ?= no
+# Atlas bundles and manages its G0 companion by default.
+# Set G0_EXTENSION=no for hardware without the expansion.
+G0_EXTENSION ?= yes

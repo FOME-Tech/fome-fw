@@ -7,6 +7,9 @@
 #include "g0_extension/analog.h"
 #include "g0_extension/digital.h"
 #include "g0_extension/output_gpio.h"
+#if EFI_G0_FIRMWARE_UPDATE
+#include "g0_extension/updater.h"
+#endif
 #include "mpu_util.h"
 
 void initG0Extension() {
@@ -16,6 +19,12 @@ void initG0Extension() {
 	auto& spi = *getSpiDevice(SPI_DEVICE_5);
 	initSpiCs(&g0SpiConfig, Gpio::F6);
 	palSetPad(g0SpiConfig.ssport, g0SpiConfig.sspad);
+#if EFI_G0_FIRMWARE_UPDATE
+	if (!g0::updateFirmware(spi, g0SpiConfig, Gpio::B14, Gpio::B15)) {
+		firmwareError(ObdCode::CUSTOM_ERR_ASSERT, "G0 firmware update failed");
+		return;
+	}
+#endif
 	g0::registerOutputs();
 	g0::registerDigital();
 	g0::registerAnalog(EFI_ADC_20 - EFI_ADC_0);

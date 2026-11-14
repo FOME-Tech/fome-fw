@@ -289,6 +289,8 @@ static void testOutputs() {
 	assert(outputs.request(tx, 70));
 }
 
+void testBootloader();
+
 int main() {
 	testLink();
 	testValidation();
@@ -298,5 +300,6 @@ int main() {
 	testDigital();
 	testModeChangeDuringAck();
 	testOutputs();
+	testBootloader();
 	std::puts("G0 tests passed");
 }
