@@ -35,6 +35,7 @@ or
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
 
 ### Added
+ - Factory-blank G071 expansion modules can be provisioned over SPI: the updater enables BOOT0 pin selection while preserving the remaining option bytes.
  - Optional G0 expansion ADC support on Atlas (build with G0_EXTENSION=yes).
  - Four digital switch inputs on the optional G0 expansion.
  - Four asynchronous lowside outputs with local 1..500 Hz PWM on the G0 expansion.

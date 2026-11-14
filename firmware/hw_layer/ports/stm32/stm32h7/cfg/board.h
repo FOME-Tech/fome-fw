@@ -253,7 +253,12 @@
                                      EFI_PIN_MODE_DEFAULT(15))
 #define VAL_GPIOB_OTYPER            VAL_GPIO_OTYPER_ALL_DEFAULT
 #define VAL_GPIOB_OSPEEDR           VAL_GPIO_OSPEEDR_ALL_DEFAULT
+#if defined(ATLAS_G0_BOOT_CONTROL)
+/* Keep G0 NRST released throughout both the ECU bootloader and main firmware startup. */
+#define VAL_GPIOB_PUPDR             ((VAL_GPIO_PUPDR_ALL_DEFAULT & ~(3U << 28U)) | PIN_PUPDR_PULLUP(14U))
+#else
 #define VAL_GPIOB_PUPDR             VAL_GPIO_PUPDR_ALL_DEFAULT
+#endif
 #define VAL_GPIOB_ODR               VAL_GPIO_ODR_ALL_DEFAULT
 #define VAL_GPIOB_AFRL              (PIN_AFIO_AF(0, 0U) |          \
                                      PIN_AFIO_AF(1, 0U) |          \

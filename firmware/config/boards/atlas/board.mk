@@ -32,3 +32,7 @@ SHORT_BOARD_NAME = atlas
 # Atlas bundles and manages its G0 companion by default.
 # Set G0_EXTENSION=no for hardware without the expansion.
 G0_EXTENSION ?= yes
+
+ifeq ($(G0_EXTENSION),yes)
+DDEFS += -DATLAS_G0_BOOT_CONTROL=TRUE
+endif

@@ -55,6 +55,11 @@ public:
 	void sleepMs(uint32_t delay) override {
 		chThdSleepMilliseconds(delay);
 	}
+	void reconnect() override {
+		spiUnselect(&m_spi);
+		chThdSleepMilliseconds(100);
+		spiSelect(&m_spi);
+	}
 
 private:
 	SPIDriver& m_spi;
@@ -66,23 +71,40 @@ bool updateFirmware(SPIDriver& spi, const SPIConfig& spiSettings, brain_pin_e re
 	if (!Bootloader::validImage(g0_image::data, sizeof(g0_image::data))) {
 		return false;
 	}
+	// Preserve the factory ROM session: NRST must never briefly go low during GPIO setup.
+	pin(resetPin, true);
+	pin(bootPin, true);
 	efiSetPadMode("G0 BOOT", bootPin, PAL_MODE_OUTPUT_PUSHPULL);
 	efiSetPadMode("G0 RESET", resetPin, PAL_MODE_OUTPUT_PUSHPULL);
 	spiAcquireBus(&spi);
 	spiStart(&spi, &spiSettings);
-	reset(resetPin, bootPin, false);
-	bool ok = versionMatches(spi);
-	if (!ok) {
-		efiPrintf("G0: programming bundled firmware");
-		reset(resetPin, bootPin, true);
-		spiSelect(&spi);
-		Transport transport(spi);
-		Bootloader loader(transport);
-		ok = loader.flash(g0_image::data, sizeof(g0_image::data));
+	chThdSleepMilliseconds(100);
+	Transport transport(spi);
+	Bootloader loader(transport);
+	spiSelect(&spi);
+	bool inRom = loader.connect();
+	bool ok = false;
+	if (!inRom) {
 		spiUnselect(&spi);
 		reset(resetPin, bootPin, false);
+		ok = versionMatches(spi);
+		if (!ok) {
+			reset(resetPin, bootPin, true);
+			spiSelect(&spi);
+			inRom = loader.connect();
+		}
+	}
+	if (inRom) {
+		efiPrintf("G0: provisioning and programming bundled firmware");
+		ok = loader.flash(g0_image::data, sizeof(g0_image::data));
+		pin(bootPin, false);
+		// Go bypasses the latched EMPTY flag on first programming, including older ROMs.
+		ok = ok && loader.go();
+		spiUnselect(&spi);
+		chThdSleepMilliseconds(100);
 		ok = ok && versionMatches(spi);
 	}
+	spiUnselect(&spi);
 	spiStop(&spi);
 	spiReleaseBus(&spi);
 	// Retain ownership: these are dedicated expansion control pins.
