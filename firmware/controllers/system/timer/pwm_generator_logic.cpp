@@ -117,6 +117,16 @@ static efitick_t getNextSwitchTimeNt(PwmConfig* state) {
 	return state->safe.startNt + timeToSwitchNt;
 }
 
+void SimplePwm::setFrequency(float frequency) {
+#if EFI_PROD_CODE
+	if (hardPwm) {
+		hardPwm->setFrequency(frequency);
+		return;
+	}
+#endif
+	PwmConfig::setFrequency(frequency);
+}
+
 void PwmConfig::setFrequency(float frequency) {
 	if (std::isnan(frequency)) {
 		// explicit code just to be sure

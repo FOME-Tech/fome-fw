@@ -11,8 +11,9 @@ static constexpr uint16_t outputDutyMax = 10000U;
 
 static constexpr uint8_t appFrameSize = 36U;
 static constexpr uint8_t appHeaderSize = 4U;
+static constexpr uint32_t protocolVersion = 9U;
 
-static constexpr uint8_t versionPayloadLength = 4U;
+static constexpr uint8_t versionPayloadLength = 8U;
 static constexpr uint8_t analogPayloadLength = 26U;
 static constexpr uint8_t digitalPayloadLength = 17U;
 static constexpr uint8_t digitalAllPayloadLength = 25U;
@@ -79,6 +80,7 @@ struct G0_SPI_PROTOCOL_PACKED SetOutputRequest {
 struct G0_SPI_PROTOCOL_PACKED VersionResponse {
 	ResponseHeader header;
 	uint32_t version;
+	uint32_t protocolVersion;
 };
 
 struct G0_SPI_PROTOCOL_PACKED AnalogResponse {
@@ -144,6 +146,28 @@ union AppFrame {
 	SentResponse sentResponse;
 	OutputResponse outputResponse;
 };
+
+inline uint16_t crc16(const uint8_t* bytes, uint8_t size) {
+	uint16_t crc = 0xFFFFU;
+	for (uint8_t i = 0; i < size; i++) {
+		crc ^= static_cast<uint16_t>(bytes[i]) << 8U;
+		for (uint8_t bit = 0; bit < 8U; bit++) {
+			crc = (crc & 0x8000U) ? (crc << 1U) ^ 0x1021U : crc << 1U;
+		}
+	}
+	return crc;
+}
+
+inline void seal(AppFrame& frame) {
+	const uint16_t crc = crc16(frame.bytes, appFrameSize - 2U);
+	frame.bytes[appFrameSize - 2U] = crc & 0xFFU;
+	frame.bytes[appFrameSize - 1U] = crc >> 8U;
+}
+
+inline bool validFrame(const AppFrame& frame) {
+	return crc16(frame.bytes, appFrameSize - 2U) ==
+		   (frame.bytes[appFrameSize - 2U] | (frame.bytes[appFrameSize - 1U] << 8U));
+}
 
 static_assert(sizeof(ResponseHeader) == appHeaderSize, "Unexpected G0 SPI response header size");
 static_assert(sizeof(VersionResponse) - appHeaderSize == versionPayloadLength, "Unexpected G0 version payload size");

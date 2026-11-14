@@ -2,6 +2,9 @@
 
 namespace g0 {
 bool validResponse(const wire::AppFrame& tx, const wire::AppFrame& rx) {
+	if (!wire::validFrame(rx)) {
+		return false;
+	}
 	const auto& h = rx.responseHeader;
 	if (h.status != wire::statusReady || h.result != wire::resultOk || h.command != tx.bytes[0]) {
 		return false;
@@ -81,6 +84,7 @@ void Link::prepare(wire::AppFrame& tx, uint32_t nowMs) {
 			tx.bytes[0] = wire::cmdReadVersion;
 		}
 	}
+	wire::seal(tx);
 	m_sending = tx;
 }
 
@@ -108,7 +112,7 @@ void Link::complete(const wire::AppFrame& rx, bool transferred, uint32_t nowMs) 
 			return;
 		}
 		if (m_pending.bytes[0] == wire::cmdReadVersion) {
-			if (rx.versionResponse.version != AppVersion) {
+			if (rx.versionResponse.protocolVersion != wire::protocolVersion || rx.versionResponse.version == 0) {
 				m_errors++;
 				disconnect();
 				return;

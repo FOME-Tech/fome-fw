@@ -21,8 +21,8 @@ class ImageTests(unittest.TestCase):
         self.root = Path(self.directory.name)
         self.binary = self.root / "firmware.bin"
         self.binary.write_bytes(struct.pack("<II", 0x20009000, 0x08000009) + bytes(16))
-        self.source = self.root / "spi_app_protocol.cpp"
-        self.source.write_text("static constexpr uint32_t appVersion = 8U;\n")
+        self.source = self.root / "g0_firmware_version.h"
+        self.source.write_text("#define G0_FIRMWARE_VERSION 0x12345678U\n")
         self.header = self.root / "generated" / "g0_firmware_image.h"
 
     def generate(self, *options):
@@ -31,42 +31,42 @@ class ImageTests(unittest.TestCase):
             generator.main()
 
     def test_source_version_and_incremental_header(self):
-        self.generate("--version-source", str(self.source))
-        self.assertIn("version = 8;", self.header.read_text())
+        self.generate("--version-header", str(self.source))
+        self.assertIn("version = 305419896;", self.header.read_text())
         self.assertIn("static const unsigned char data[]", self.header.read_text())
         before = self.header.stat().st_mtime_ns
-        self.generate("--version-source", str(self.source))
+        self.generate("--version-header", str(self.source))
         self.assertEqual(before, self.header.stat().st_mtime_ns)
         image = bytearray(self.binary.read_bytes())
         image[-1] = 1
         self.binary.write_bytes(image)
         original = self.header.read_text()
-        self.generate("--version-source", str(self.source))
+        self.generate("--version-header", str(self.source))
         self.assertNotEqual(original, self.header.read_text())
         self.assertFalse(self.header.with_suffix(".h.tmp").exists())
 
     def test_explicit_version(self):
-        self.generate("--version", "8")
+        self.generate("--version", "9")
         self.assertTrue(self.header.exists())
 
     def test_missing_ambiguous_or_unsupported_source_version(self):
-        for text in ["", "static constexpr uint32_t appVersion = 9U;",
-                     "static constexpr uint32_t appVersion = 8U;\n" * 2]:
+        for text in ["", "#define G0_FIRMWARE_VERSION 0U", "#define G0_FIRMWARE_VERSION 0x100000000U",
+                     "#define G0_FIRMWARE_VERSION 0x12345678U\n" * 2]:
             with self.subTest(source=text):
                 self.source.write_text(text)
                 with self.assertRaises(SystemExit):
-                    self.generate("--version-source", str(self.source))
+                    self.generate("--version-header", str(self.source))
                 self.assertFalse(self.header.exists())
 
     def test_invalid_binary_does_not_replace_previous_image(self):
-        self.generate("--version-source", str(self.source))
+        self.generate("--version-header", str(self.source))
         original = self.header.read_bytes()
         for image in [b"short", bytes(128 * 1024 + 1),
                       struct.pack("<II", 0x20009000, 0x08000008) + bytes(16)]:
             with self.subTest(size=len(image)):
                 self.binary.write_bytes(image)
                 with self.assertRaises(SystemExit):
-                    self.generate("--version-source", str(self.source))
+                    self.generate("--version-header", str(self.source))
                 self.assertEqual(original, self.header.read_bytes())
 
     def test_disabled_build_skips_companion_dependency(self):

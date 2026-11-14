@@ -23,7 +23,7 @@ g0-firmware:
 $(G0_FIRMWARE_HEADER): g0-firmware $(G0_IMAGE_GENERATOR)
 	$(PYTHON) "$(G0_IMAGE_GENERATOR)" \
 		--input "$(G0_FIRMWARE_IMAGE)" --output "$@" \
-		--version-source "$(G0_FIRMWARE_DIR)/spi_app_protocol.cpp"
+		--version-header "$(G0_FIRMWARE_BUILD)/g0_firmware_version.h"
 
 # Missing headers after clean and fresh parallel builds take the same path.
 # make_image.py preserves the mtime when the image has not changed, so the normal

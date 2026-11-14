@@ -1,6 +1,6 @@
-#include "../link.h"
 #include "../analog.h"
 #include "../digital.h"
+#include "../link.h"
 #include "../outputs.h"
 #include <cassert>
 #include <cstdio>
@@ -11,6 +11,11 @@ static wire::AppFrame reply(uint8_t command, uint8_t length) {
 	wire::AppFrame rx = {};
 	rx.responseHeader.command = command;
 	rx.responseHeader.payloadLength = length;
+	if (command == wire::cmdReadVersion) {
+		rx.versionResponse.version = 0x12345678;
+		rx.versionResponse.protocolVersion = wire::protocolVersion;
+	}
+	wire::seal(rx);
 	return rx;
 }
 
@@ -20,7 +25,7 @@ struct TestModule : Module {
 	int disconnects = 0;
 	bool request(wire::AppFrame& tx, uint32_t) override {
 		tx.bytes[0] = wire::cmdReadAnalog;
-		tx.bytes[35] = tag;
+		tx.bytes[33] = tag;
 		return true;
 	}
 	void response(const wire::AppFrame&, const wire::AppFrame&, uint32_t) override {
@@ -38,8 +43,8 @@ static void testLink() {
 	assert(link.attach(module));
 	wire::AppFrame tx;
 	auto rx = reply(wire::cmdReadVersion, wire::versionPayloadLength);
-	rx.versionResponse.version = AppVersion;
 	link.prepare(tx, 0);
+	assert(wire::validFrame(tx));
 	link.complete(rx, true, 0); // Initial slave frame is unsolicited.
 	assert(!link.online());
 	link.prepare(tx, 10);
@@ -62,10 +67,12 @@ static void testLink() {
 	link.prepare(tx, 60);
 	link.complete(rx, true, 60);
 	link.prepare(tx, 70);
-	rx.versionResponse.version = AppVersion - 1;
+	rx.versionResponse.protocolVersion--;
+	wire::seal(rx);
 	link.complete(rx, true, 70);
 	assert(!link.online());
-	rx.versionResponse.version = AppVersion;
+	rx.versionResponse.protocolVersion = wire::protocolVersion;
+	wire::seal(rx);
 	link.prepare(tx, 80);
 	link.complete(rx, true, 80);
 	link.prepare(tx, 90);
@@ -83,17 +90,27 @@ static void testValidation() {
 	tx.indexedRequest = {wire::cmdReadOutput, 2};
 	auto rx = reply(wire::cmdReadOutput, wire::outputPayloadLength);
 	rx.outputResponse.output = 2;
+	wire::seal(rx);
 	assert(validResponse(tx, rx));
+	for (unsigned bit = 0; bit < wire::appFrameSize * 8; bit++) {
+		auto corrupt = rx;
+		corrupt.bytes[bit / 8] ^= 1U << (bit % 8);
+		assert(!validResponse(tx, corrupt));
+	}
 	rx.outputResponse.output = 1;
+	wire::seal(rx);
 	assert(!validResponse(tx, rx));
 	rx.outputResponse.output = 2;
 	rx.responseHeader.payloadLength++;
+	wire::seal(rx);
 	assert(!validResponse(tx, rx));
 	rx.responseHeader.payloadLength--;
 	rx.responseHeader.status = wire::statusUpdateMode;
+	wire::seal(rx);
 	assert(!validResponse(tx, rx));
 	rx.responseHeader.status = wire::statusReady;
 	rx.responseHeader.result = wire::resultBusy;
+	wire::seal(rx);
 	assert(!validResponse(tx, rx));
 }
 
@@ -195,14 +212,14 @@ static void testFairnessAndStall() {
 	}
 	wire::AppFrame tx;
 	auto rx = reply(wire::cmdReadVersion, wire::versionPayloadLength);
-	rx.versionResponse.version = AppVersion;
 	link.prepare(tx, 0);
+	assert(wire::validFrame(tx));
 	link.complete(rx, true, 0);
 	link.prepare(tx, 10);
 	link.complete(rx, true, 10);
 	for (uint32_t tick = 2; tick < 11; tick++) {
 		link.prepare(tx, tick * 10);
-		assert(tx.bytes[35] == (tick - 2) % 3);
+		assert(tx.bytes[33] == (tick - 2) % 3);
 		link.complete(rx, true, tick * 10);
 		rx = reply(wire::cmdReadAnalog, wire::analogPayloadLength);
 	}
@@ -214,9 +231,8 @@ static void testFairnessAndStall() {
 	}
 	Link idle;
 	idle.prepare(tx, 0);
-	idle.complete(reply(wire::cmdReadVersion, 4), true, 0);
-	rx = reply(wire::cmdReadVersion, 4);
-	rx.versionResponse.version = AppVersion;
+	idle.complete(reply(wire::cmdReadVersion, wire::versionPayloadLength), true, 0);
+	rx = reply(wire::cmdReadVersion, wire::versionPayloadLength);
 	idle.prepare(tx, 10);
 	idle.complete(rx, true, 10);
 	idle.prepare(tx, 20);

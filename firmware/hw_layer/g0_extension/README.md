@@ -1,8 +1,7 @@
 Atlas enables G0 expansion support and bundles its companion firmware by default.
 Set `G0_EXTENSION=no` for hardware without the expansion. The integration targets
-the version 8,
-36-byte SPI application protocol from dynfer/g0-extension commit `19f0c4c`.
-The protocol header preserves the wire layout. The I/O modules can also run with
+protocol version 9: 36-byte SPI frames with CRC16/CCITT-FALSE in the last
+two bytes. Firmware identity is independent of the protocol version. The I/O modules can also run with
 `G0_FIRMWARE_UPDATE=no`, which removes the companion image and its build dependency.
 
 The integration is split into six ordered parts:
@@ -34,7 +33,8 @@ Only the worker accesses the link. The production adapters protect state with
 short critical sections; no SPI operation occurs in a critical section. Modules
 must be registered before starting the worker. The slave returns the preceding
 request's response, so the first unsolicited frame is discarded. A response must
-match its command, exact payload length, status, result, and indexed channel.
+pass its CRC and match its command, exact payload length, status, result, and
+indexed channel.
 Version mismatches, invalid frames, and worker stalls trigger resynchronization.
 The scheduler rotates between modules and between output channels.
 
@@ -63,8 +63,10 @@ the extension decoder validates its checksum and frame length.
 Outputs start disabled. Callers change desired state without performing SPI I/O.
 An acknowledgement only clears a request if its channel, applied frequency, and
 duty match the sent state and no newer desired state superseded it. Outputs are
-refreshed every second and reasserted after reconnect. PWM frequency is selected
-when starting `SimplePwm`; duty updates and inversion are supported. Deinitializing
+refreshed every second and reasserted after reconnect. PWM frequency and
+duty can both change through `SimplePwm`, including Lua `setPwmFreq`; inversion is
+preserved. The G0 applies duty updates at cycle boundaries and disables all
+outputs after 500 ms without a checksum-valid request. Deinitializing
 the output pin disables the remote output. This interface is for asynchronous
 auxiliary loads: the 10 ms shared worker tick gives roughly 20..30 ms between
 sensor polls once configured, and remote edges cannot follow an ECU trigger.
@@ -80,7 +82,8 @@ The updater defaults to enabled whenever G0 support is enabled. Every normal
 Atlas build initializes the pinned `firmware/ext/g0_firmware` submodule, including
 its ChibiOS dependency, and builds it with fome-fw's selected ARM compiler.
 The build generates `firmware/generated/g0_firmware_image.h` from that binary and
-reads the application version from the pinned SPI implementation. This header is
+reads the firmware identity generated from the G0 sources, configuration, pinned
+ChibiOS revision, compiler version and build options. This header is
 included by the updater, so the complete image becomes immutable data in the ECU
 firmware's flash, just as the wideband image is bundled with its updater.
 
@@ -100,15 +103,14 @@ G0_FIRMWARE_UPDATE=no bash ./compile_atlas.sh
 To disable the expansion entirely, use `G0_EXTENSION=no`. Both options skip the
 G0 image dependency; the ECU bootloader, other board configurations without G0,
 simulator, and native tests do not build the companion. For custom G0 source
-releases, update the pinned submodule commit and maintain the application version
-expected by the host protocol.
+releases, update the pinned submodule commit; the build changes its firmware
+identity automatically.
 
 Programming runs before the runtime device and remote GPIOs are registered;
-it has no live console update command. It skips programming if the app version
-matches, otherwise resets through BOOT into ROM, writes padded 256-byte blocks,
-reads every block back, resets to the application, and checks the app version.
-Image version must be increased with future firmware changes; two different
-images labelled version 8 cannot be distinguished by the current wire protocol.
+it has no live console update command. It skips programming if the protocol and bundled firmware identity
+match, otherwise resets through BOOT into ROM, writes padded 256-byte blocks,
+reads every block back, resets to the application, and checks both versions.
+Older protocol-8 firmware is upgraded through the same ROM path.
 
 The byte-level updater follows [ST AN4286](https://www.st.com/resource/en/application_note/an4286-how-to-use-spi-protocol-in-bootloader-on-stm32-mcus-stmicroelectronics.pdf),
 including byte spacing, ACK handshakes, packet checksums, and readback. It requires
@@ -131,10 +133,15 @@ image replacement, invalid inputs, and disabled build dependencies. Leak detecti
 is disabled in the example because LeakSanitizer cannot run under ptrace;
 AddressSanitizer and UndefinedBehaviorSanitizer remain enabled.
 
-Hardware verification is still required. The current extension has no SPI-frame
-CRC or transaction sequence number, and it keeps its last output setpoints when
-communication stops. Host validation cannot detect every plausible bit flip or
-turn off a disconnected slave. Add a slave-side command watchdog before relying
-on link loss to shut off a load. Also verify real SPI timing, digital capture,
-PWM frequency/duty resolution, BOOT option bytes, reset wiring, and flash recovery
-on the intended Atlas/expansion hardware.
+The companion suite in `firmware/ext/g0_firmware/tests` compiles the actual slave
+sources against HAL fixtures. It covers PWM updates, startup levels, link-loss
+shutdown, corrupted commands, partial-transfer recovery, ADC errors/expiry, and
+all four GPIO edge capture channels, including timer rollover. The build identity
+has separate Python tests. Run both repositories' suites from the G0 checkout
+with `bash for_fome/test.sh`.
+
+Hardware verification is still required for SPI recovery timing, input interrupt
+latency at the intended signal rate, PWM resolution, BOOT option bytes, reset
+wiring and flash recovery. Frequency capture uses GPIO interrupts and a shared
+1 MHz timer because TIM14/16/17 lack the capture pair required by the ICU driver.
+SENT mode and reads return an error until a validated decoder is available.

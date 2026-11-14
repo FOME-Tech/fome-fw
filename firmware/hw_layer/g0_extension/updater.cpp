@@ -1,13 +1,12 @@
 #include "pch.h"
 #include "updater.h"
 #include "bootloader.h"
+#include "g0_firmware_image.h"
 #include "link.h"
 #include "mpu_util.h"
-#include "g0_firmware_image.h"
 
 namespace g0 {
 namespace {
-static_assert(g0_image::version == AppVersion, "G0 image must match the protocol version");
 NO_CACHE wire::AppFrame tx;
 NO_CACHE wire::AppFrame rx;
 
@@ -28,6 +27,7 @@ void appExchange(SPIDriver& spi, uint8_t command) {
 	tx = {};
 	rx = {};
 	tx.bytes[0] = command;
+	wire::seal(tx);
 	spiSelect(&spi);
 	spiExchange(&spi, wire::appFrameSize, tx.bytes, rx.bytes);
 	spiUnselect(&spi);
@@ -39,7 +39,8 @@ bool versionMatches(SPIDriver& spi) {
 	appExchange(spi, wire::cmdNop);
 	wire::AppFrame request = {};
 	request.bytes[0] = wire::cmdReadVersion;
-	return validResponse(request, rx) && rx.versionResponse.version == g0_image::version;
+	return validResponse(request, rx) && rx.versionResponse.protocolVersion == wire::protocolVersion &&
+		   rx.versionResponse.version == g0_image::version;
 }
 
 class Transport final : public BootTransport {

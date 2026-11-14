@@ -1,9 +1,9 @@
 #include "pch.h"
-#include "outputs.h"
 #include "output_gpio.h"
-#include "service.h"
 #include "drivers/gpio/gpio_ext.h"
 #include "mpu_util.h"
+#include "outputs.h"
+#include "service.h"
 #include <cmath>
 
 namespace g0 {
@@ -13,14 +13,28 @@ class Pwm final : public hardware_pwm {
 public:
 	size_t index = 0;
 	uint32_t frequency = 0;
+	float duty = 0;
 	bool active = false;
 	bool inverted = false;
-	void setDuty(float duty) override {
+	void setDuty(float value) override {
 		chibios_rt::CriticalSectionLocker lock;
-		if (!active || !std::isfinite(duty) || duty < 0 || duty > 1) {
+		if (!active || !std::isfinite(value) || value < 0 || value > 1) {
 			return;
 		}
+		duty = value;
 		outputs.state.set(index, frequency, uint16_t((inverted ? 1 - duty : duty) * wire::outputDutyMax + 0.5f));
+	}
+	void setFrequency(float value) override {
+		chibios_rt::CriticalSectionLocker lock;
+		if (!active) {
+			return;
+		}
+		if (!std::isfinite(value) || value < 1 || value > 500) {
+			warning(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, "G0 PWM range (1..500 Hz)");
+			return;
+		}
+		frequency = uint32_t(value + 0.5f);
+		setDuty(duty);
 	}
 };
 Pwm pwms[wire::outputCount];

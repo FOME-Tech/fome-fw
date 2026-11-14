@@ -7,7 +7,6 @@
 namespace g0 {
 namespace wire = g0_spi_protocol;
 
-constexpr uint32_t AppVersion = 8;
 constexpr uint32_t SampleTimeoutMs = 250;
 
 // All module callbacks run on the SPI worker. Adapters must lock shared state
