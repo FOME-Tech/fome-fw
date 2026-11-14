@@ -8,6 +8,10 @@
 
 #include "pch.h"
 
+#if EFI_G0_EXTENSION
+#include "g0_extension/service.h"
+#endif
+
 #include "trigger_input.h"
 #include "can_hw.h"
 #include "hardware.h"
@@ -304,6 +308,9 @@ void initHardware() {
 
 #if HAL_USE_SPI
 	initSpiModules();
+#if EFI_G0_EXTENSION
+	initG0Extension();
+#endif
 #endif /* HAL_USE_SPI */
 
 #if EFI_PROD_CODE && (BOARD_EXT_GPIOCHIPS > 0)
