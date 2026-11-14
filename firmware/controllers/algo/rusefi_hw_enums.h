@@ -239,6 +239,11 @@ enum class Gpio : uint16_t {
 	G0_DIGITAL_3 = 217,
 	G0_DIGITAL_4 = 218,
 
+	G0_OUT_1 = 219,
+	G0_OUT_2 = 220,
+	G0_OUT_3 = 221,
+	G0_OUT_4 = 222,
+
 	CAN_INPUT_0 = 249,
 	CAN_INPUT_1 = 250,
 	CAN_INPUT_2 = 251,

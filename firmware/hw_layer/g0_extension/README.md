@@ -14,6 +14,12 @@ Unavailable or 250 ms old samples invalidate sensors. Filters reload on recovery
 G0_DIGITAL_1..G0_DIGITAL_4 use the GPIO interface. Configuration is acknowledged
 before polling. Reads return false when unavailable. SENT is unsupported.
 
+G0_OUT_1..G0_OUT_4 queue static or local 1..500 Hz PWM setpoints, including
+inversion and Lua duty/frequency changes. ACKs verify the sent setpoint; newer
+changes stay pending. Outputs start off and refresh every second or on reconnect.
+The slave shuts outputs off after 500 ms without a valid request. Use these for
+asynchronous auxiliary loads; crank/cam timing cannot follow SPI polling.
+
 Run standalone tests with sanitizers:
 
 ```sh

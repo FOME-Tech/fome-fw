@@ -1,6 +1,7 @@
 #include "../link.h"
 #include "../analog.h"
 #include "../digital.h"
+#include "../outputs.h"
 #include <cassert>
 #include <cstdio>
 
@@ -255,6 +256,39 @@ static void testModeChangeDuringAck() {
 	assert(tx.setInputModeRequest.input == 2);
 }
 
+static void testOutputs() {
+	Outputs outputs;
+	wire::AppFrame tx = {};
+	assert(!outputs.set(4, 0, 0));
+	assert(!outputs.set(0, 501, 0));
+	assert(!outputs.set(0, 1, 10001));
+	// Acknowledge startup off commands.
+	for (unsigned i = 0; i < wire::outputCount; i++) {
+		assert(outputs.request(tx, 0));
+		assert(tx.bytes[0] == wire::cmdSetOutput);
+		assert(tx.setOutputRequest.frequencyHz == 0 && tx.setOutputRequest.duty == 0);
+		outputs.response(tx, {}, 0);
+	}
+	assert(!outputs.request(tx, 10));
+	assert(outputs.set(0, 100, 5000));
+	assert(outputs.request(tx, 20));
+	assert(tx.setOutputRequest.frequencyHz == 100);
+	assert(!outputs.request(tx, 20));  // Same output cannot have two requests in flight.
+	assert(outputs.set(0, 200, 2500)); // Producer changes while ACK is in flight.
+	wire::AppFrame rx = {};
+	rx.outputResponse.frequencyHz = 100;
+	rx.outputResponse.duty = 5000;
+	outputs.response(tx, rx, 30);
+	assert(outputs.request(tx, 40));
+	assert(tx.setOutputRequest.frequencyHz == 200 && tx.setOutputRequest.duty == 2500);
+	rx.outputResponse.frequencyHz = 200;
+	rx.outputResponse.duty = 2500;
+	outputs.response(tx, rx, 50);
+	assert(!outputs.request(tx, 60));
+	outputs.disconnected();
+	assert(outputs.request(tx, 70));
+}
+
 int main() {
 	testLink();
 	testValidation();
@@ -263,5 +297,6 @@ int main() {
 	testAnalog();
 	testDigital();
 	testModeChangeDuringAck();
+	testOutputs();
 	std::puts("G0 tests passed");
 }

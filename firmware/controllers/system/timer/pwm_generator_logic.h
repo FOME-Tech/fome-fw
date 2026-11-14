@@ -113,6 +113,7 @@ public:
 	SimplePwm();
 	SimplePwm(const char* name);
 	void setSimplePwmDutyCycle(float dutyCycle) override;
+	void setFrequency(float frequency);
 	MultiChannelStateSequenceWithData<2> seq;
 	hardware_pwm* hardPwm = nullptr;
 };
