@@ -1,9 +1,9 @@
+#include "pch.h"
 #include "updater.h"
 #include "bootloader.h"
 #include "g0_firmware_image.h"
 #include "link.h"
 #include "mpu_util.h"
-#include "pch.h"
 
 namespace g0 {
 namespace {
