@@ -371,6 +371,8 @@ static void setDefaultEngineConfiguration() {
 	strcpy(config->wifiAccessPointSsid, "FOME EFI");
 	setArrayValues(config->wifiAccessPointPassword, 0);
 
+	strcpy(config->wifiHostname, "fome-efi");
+
 	engineConfiguration->sdCardLogFrequency = 50;
 
 	engineConfiguration->mapMinBufferLength = 1;

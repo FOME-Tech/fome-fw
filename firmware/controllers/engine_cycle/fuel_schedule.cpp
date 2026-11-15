@@ -45,28 +45,47 @@ void endInjectionStage2(InjectorContext ctx) {
 	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.injectorsStage2[idx].close(); });
 }
 
+// Whether a non-sequential pulse from this event should also fire the injector belonging to the event
+// at otherIndex (in firing order).
+//
+// Each event switches mode at the end of its own pulse, so a switch to sequential rolls through the
+// cylinders one at a time. Once a cylinder's own event has gone sequential, its next intake should
+// get only its own full pulse. A batch/simultaneous pulse from another event that hasn't switched yet
+// would add to that, so it must leave this injector out. Up to that point everything fires as
+// normal, so the last non-sequential intake is still complete. The result is every cylinder gets
+// exactly one cycle of fuel per intake through the transition.
+bool InjectionEvent::shouldFireInjectorAtIndex(size_t otherIndex) const {
+	return engine->injectionEvents.elements[otherIndex].m_injectionMode != IM_SEQUENTIAL;
+}
+
 uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 	uint16_t mask = 0;
 
 	switch (m_injectionMode) {
 		case IM_SIMULTANEOUS:
 			// Simultaneous mode fires all injectors
-			mask = (1 << engine->engineState.cylinderCount) - 1;
+			for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
+				if (i == ownIndex || shouldFireInjectorAtIndex(i)) {
+					mask |= 1 << getCylinderNumberAtIndex(i);
+				}
+			}
 			break;
 		case IM_SINGLE_POINT:
 			// Single point only fires injector 1
 			mask = 1;
 			break;
-		case IM_BATCH:
+		case IM_BATCH: {
 			// In batch mode, also fire the cylinder 360 degrees out to support "two-wire batch" mode
 
 			// Compute the position of this cylinder's twin in the firing order
 			// Each injector gets fired as a primary (the same as sequential), but also
 			// fires the injector 360 degrees later in the firing order.
-			mask |=
-					(1 << getCylinderNumberAtIndex(
-							 (ownIndex + (engine->engineState.cylinderCount / 2)) % engine->engineState.cylinderCount));
+			size_t twinIndex = (ownIndex + (engine->engineState.cylinderCount / 2)) % engine->engineState.cylinderCount;
 
+			if (shouldFireInjectorAtIndex(twinIndex)) {
+				mask |= 1 << getCylinderNumberAtIndex(twinIndex);
+			}
+		}
 			// falls through
 		case IM_SEQUENTIAL:
 			// In batch+sequential, fire this cylinder's injector

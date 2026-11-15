@@ -26,6 +26,7 @@ public:
 	}
 
 	uint16_t calculateInjectorOutputMask() const;
+	bool shouldFireInjectorAtIndex(size_t otherIndex) const;
 
 private:
 	// Update the injection start angle
