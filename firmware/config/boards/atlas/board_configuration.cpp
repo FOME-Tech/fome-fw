@@ -13,6 +13,17 @@
 #include "mpu_util.h"
 
 void initG0Extension() {
+#if EFI_MAX_31855
+	if (engineConfiguration->max31855spiDevice == SPI_DEVICE_5) {
+		for (auto cs : engineConfiguration->max31855_cs) {
+			if (isBrainPinValid(cs) && brain_pin_is_onchip(cs)) {
+				palSetPad(getHwPort("MAX31855 CS", cs), getHwPin("MAX31855 CS", cs));
+				// The thermocouple driver claims these pins later in initMax31855().
+				efiSetPadModeWithoutOwnershipAcquisition("MAX31855 CS", cs, PAL_STM32_MODE_OUTPUT);
+			}
+		}
+	}
+#endif
 	turnOnSpi(SPI_DEVICE_5);
 	SPIConfig g0SpiConfig = {};
 	g0SpiConfig.cfg1 = 7 | SPI_CFG1_MBR_2 | SPI_CFG1_MBR_1 | SPI_CFG1_MBR_0;

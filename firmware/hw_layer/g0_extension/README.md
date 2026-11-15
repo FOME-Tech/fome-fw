@@ -105,3 +105,10 @@ and during ACK polling, allowing other runnable threads to execute. The running
 LED toggles during upload because the normal LED callback starts after hardware
 initialization. Startup still waits for a verified companion before registering
 remote pins; engine control is not started against an unready expansion.
+
+Before initializing the G0, Atlas drives all configured on-chip MAX31855 chip
+selects HIGH when the thermocouples are assigned to SPI5. The output latch is
+set before enabling the driver, and pin ownership remains with the later
+thermocouple initialization. This also applies when thermocouple polling is
+disabled. Unassigned pins and expansion GPIO pins are skipped; thermocouple CS
+must use local GPIO for this startup protection.
