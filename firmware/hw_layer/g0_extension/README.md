@@ -66,7 +66,8 @@ accepted only when the readback proves the intended configuration was stored.
 
 It then programs padded 256-byte blocks and reads every block back. BOOT0 is
 lowered before the ROM Go command starts the application, avoiding dependence on
-the latched EMPTY flag. The application protocol and image identity must match
+the latched EMPTY flag. After 100 ms of application startup, the updater pulses NRST with BOOT0 low to
+reset peripherals left configured by ROM. The application protocol and image identity must match
 before runtime I/O is registered. Invalid vectors or images beyond G071 flash
 bounds are rejected before changing hardware. Firmware identity is generated
 from companion build inputs independently of the wire protocol version.
@@ -97,3 +98,10 @@ ASAN_OPTIONS=detect_leaks=0 ctest --test-dir /tmp/g0-tests --output-on-failure
 Physical SPI timing/recovery, input latency, PWM resolution, BOOT option bytes,
 reset wiring and interrupted programming still need bench verification. Nothing
 in the host tests establishes those hardware properties.
+
+The ROM adapter uses a real 20 us byte gap rather than an RTOS microsecond sleep
+(which rounds to a scheduler tick on Atlas). It sleeps for 1 ms every 32 bytes
+and during ACK polling, allowing other runnable threads to execute. The running
+LED toggles during upload because the normal LED callback starts after hardware
+initialization. Startup still waits for a verified companion before registering
+remote pins; engine control is not started against an unready expansion.

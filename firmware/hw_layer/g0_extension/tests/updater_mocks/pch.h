@@ -19,10 +19,31 @@ inline bool testSelected = false;
 inline bool testBusLocked = false;
 inline bool testStarted = false;
 inline uint32_t testWaited = 0;
+inline unsigned testShortSleeps = 0;
 inline void chThdSleepMilliseconds(uint32_t ms) {
 	testWaited += ms;
+	testShortSleeps += ms == 1;
 }
-inline void chThdSleepMicroseconds(uint32_t) {}
+inline uint32_t chVTGetSystemTimeX() {
+	return testWaited;
+}
+#define TIME_I2MS(ticks) (ticks)
+inline uint32_t testPolledUs = 0;
+constexpr uint32_t SystemCoreClock = 480000000;
+#define US2RTC(clock, us) ((clock) / 1000000 * (us))
+inline void chSysPolledDelayX(uint32_t cycles) {
+	testPolledUs += cycles / (SystemCoreClock / 1000000);
+}
+struct TestLed {
+	unsigned toggles = 0;
+	void toggle() {
+		toggles++;
+	}
+	void setValue(int) {}
+};
+inline struct {
+	TestLed runningLedPin;
+} enginePins;
 inline void efiPrintf(const char*, ...) {}
 inline unsigned getHwPort(const char*, Gpio) {
 	return 0;
@@ -32,7 +53,8 @@ inline unsigned getHwPin(const char*, Gpio pin) {
 }
 void palWritePad(unsigned, unsigned pin, bool high);
 inline void efiSetPadMode(const char*, Gpio pin, unsigned) {
-	assert(testPins[pin]); // Preload both latches HIGH before enabling either output driver.
+	assert(testPins[pin]); // Preload both latches HIGH before enabling either
+						   // output driver.
 	testPinOutputs[pin] = true;
 }
 inline void spiAcquireBus(SPIDriver*) {

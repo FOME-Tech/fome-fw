@@ -1,14 +1,23 @@
-#include "pch.h"
 #include "updater.h"
 #include "bootloader.h"
 #include "g0_firmware_image.h"
 #include "link.h"
 #include "mpu_util.h"
+#include "pch.h"
 
 namespace g0 {
 namespace {
 NO_CACHE wire::AppFrame tx;
 NO_CACHE wire::AppFrame rx;
+
+void heartbeat() {
+	static uint32_t previous = 0;
+	const uint32_t now = TIME_I2MS(chVTGetSystemTimeX());
+	if (now - previous >= 250) {
+		enginePins.runningLedPin.toggle();
+		previous = now;
+	}
+}
 
 void pin(brain_pin_e line, bool high) {
 	palWritePad(getHwPort("G0", line), getHwPin("G0", line), high);
@@ -49,11 +58,17 @@ public:
 	uint8_t byte(uint8_t value) override {
 		tx.bytes[0] = value;
 		spiExchange(&m_spi, 1, tx.bytes, rx.bytes);
-		chThdSleepMicroseconds(20);
+		// RTOS microsecond sleeps round up to a millisecond on Atlas.
+		chSysPolledDelayX(US2RTC(SystemCoreClock, 20));
+		if (++m_bytes == 32) {
+			m_bytes = 0;
+			sleepMs(1); // Let lower-priority threads run even during long data packets.
+		}
 		return rx.bytes[0];
 	}
 	void sleepMs(uint32_t delay) override {
 		chThdSleepMilliseconds(delay);
+		heartbeat();
 	}
 	void reconnect() override {
 		spiUnselect(&m_spi);
@@ -63,6 +78,7 @@ public:
 
 private:
 	SPIDriver& m_spi;
+	unsigned m_bytes = 0;
 };
 } // namespace
 
@@ -71,7 +87,8 @@ bool updateFirmware(SPIDriver& spi, const SPIConfig& spiSettings, brain_pin_e re
 	if (!Bootloader::validImage(g0_image::data, sizeof(g0_image::data))) {
 		return false;
 	}
-	// Preserve the factory ROM session: NRST must never briefly go low during GPIO setup.
+	// Preserve the factory ROM session: NRST must never briefly go low during
+	// GPIO setup.
 	pin(resetPin, true);
 	pin(bootPin, true);
 	efiSetPadMode("G0 BOOT", bootPin, PAL_MODE_OUTPUT_PUSHPULL);
@@ -98,11 +115,17 @@ bool updateFirmware(SPIDriver& spi, const SPIConfig& spiSettings, brain_pin_e re
 		efiPrintf("G0: provisioning and programming bundled firmware");
 		ok = loader.flash(g0_image::data, sizeof(g0_image::data));
 		pin(bootPin, false);
-		// Go bypasses the latched EMPTY flag on first programming, including older ROMs.
+		// Go bypasses the latched EMPTY flag on first programming, including older
+		// ROMs.
 		ok = ok && loader.go();
 		spiUnselect(&spi);
 		chThdSleepMilliseconds(100);
-		ok = ok && versionMatches(spi);
+		if (ok) {
+			// Go lets G071 startup clear EMPTY; then reset peripherals out of ROM
+			// state.
+			reset(resetPin, bootPin, false);
+			ok = versionMatches(spi);
+		}
 	}
 	spiUnselect(&spi);
 	spiStop(&spi);
@@ -110,6 +133,7 @@ bool updateFirmware(SPIDriver& spi, const SPIConfig& spiSettings, brain_pin_e re
 	// Retain ownership: these are dedicated expansion control pins.
 	pin(bootPin, false);
 	pin(resetPin, true);
+	enginePins.runningLedPin.setValue(0);
 	efiPrintf("G0 firmware %s", ok ? "ready" : "failed");
 	return ok;
 }

@@ -15,6 +15,9 @@ unsigned romBytes;
 void palWritePad(unsigned, unsigned pin, bool high) {
 	if (pin == Gpio::B14 && testPinOutputs[pin] && !high) {
 		testResetPulses.push_back(Gpio::B14);
+		if (romBytes && !missingDevice && !appRunning) {
+			assert(rom->offset == rom->bytes.size()); // Never reset a factory ROM before Go.
+		}
 	}
 	if (pin == Gpio::B14 && !testPins[pin] && high) {
 		appRunning = hasApplication && !testPins[Gpio::B15];
@@ -64,6 +67,8 @@ static void init(boot_test::Script& script, bool running) {
 	testPins[Gpio::B15] = false;
 	testPinOutputs[Gpio::B14] = testPinOutputs[Gpio::B15] = false;
 	testResetPulses.clear();
+	testWaited = testPolledUs = testShortSleeps = 0;
+	enginePins.runningLedPin.toggles = 0;
 	assert(!testSelected && !testStarted && !testBusLocked);
 }
 
@@ -82,7 +87,10 @@ int main() {
 	factory.go();
 	init(factory, false);
 	assert(g0::updateFirmware(spi, config, Gpio::B14, Gpio::B15));
-	assert(testResetPulses.empty()); // No NRST pulse before provisioning, or after first programming.
+	assert(testResetPulses.size() == 1); // Reset after successful Go, never before factory provisioning.
+	assert(testPolledUs == romBytes * 20);
+	assert(testShortSleeps == romBytes / 32);
+	assert(testWaited < 1500); // No scheduler-tick delay per byte.
 	assert(factory.offset == factory.bytes.size() && appExchanges == 2);
 	finished();
 
@@ -100,7 +108,7 @@ int main() {
 	init(older, true);
 	appVersion--;
 	assert(g0::updateFirmware(spi, config, Gpio::B14, Gpio::B15));
-	assert(older.offset == older.bytes.size() && testResetPulses.size() == 2);
+	assert(older.offset == older.bytes.size() && testResetPulses.size() == 3);
 	finished();
 
 	boot_test::Script invalidOptions;
@@ -115,6 +123,24 @@ int main() {
 	assert(invalidOptions.offset == invalidOptions.bytes.size() && testResetPulses.empty());
 	assert(!hasApplication);
 	finished();
+
+	boot_test::Script failedGo;
+	failedGo.connect();
+	failedGo.provision(boot_test::options(true));
+	failedGo.flash(g0_image::data, sizeof(g0_image::data));
+	failedGo.go();
+	failedGo.bytes.pop_back(); // Go address phase NACK: never reset into
+							   // unconfirmed startup.
+	failedGo.bytes.back().second = 0x1f;
+	init(failedGo, false);
+	romStartsApp = false;
+	assert(!g0::updateFirmware(spi, config, Gpio::B14, Gpio::B15));
+	assert(failedGo.offset == failedGo.bytes.size() && testResetPulses.empty());
+	finished();
+
+	g0::Transport transport(spi);
+	transport.sleepMs(250);
+	assert(enginePins.runningLedPin.toggles > 0);
 
 	boot_test::Script absent;
 	init(absent, false);
