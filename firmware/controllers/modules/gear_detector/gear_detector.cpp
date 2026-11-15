@@ -301,6 +301,14 @@ expected<float> GearDetector::getTotalRatioInCurrentGear() const {
 	return engineConfiguration->gearRatio[gear - 1] * engineConfiguration->finalGearRatio;
 }
 
+ClutchState GearDetector::getTrustedClutchState() const {
+	if (!clutchTrusted) {
+		return ClutchState::Indeterminate;
+	}
+
+	return decideClutchPosition();
+}
+
 float GearDetector::getGearboxRatio() const {
 	return m_gearboxRatio;
 }

@@ -47,6 +47,7 @@
 #include "throttle_model.h"
 #include "lambda_monitor.h"
 #include "vvt.h"
+#include "auto_blip.h"
 
 #ifndef EFI_BOOTLOADER
 #include "engine_modules_generated.h"
@@ -199,6 +200,7 @@ public:
 #if EFI_HPFP && EFI_ENGINE_CONTROL
 			HpfpController,
 #endif // EFI_HPFP && EFI_ENGINE_CONTROL
+			AutoBlip,
 			Mockable<ThrottleModel>,
 			Mockable<TorqueModel>,
 #if EFI_ALTERNATOR_CONTROL
