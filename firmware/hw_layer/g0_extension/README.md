@@ -31,7 +31,12 @@ SENT is unsupported.
 Outputs start off. Callers queue setpoints, and only a matching acknowledgement
 clears them; changes while an ACK is in flight stay pending. Setpoints refresh
 every second and after reconnect. `SimplePwm` supports duty, frequency and
-inversion, including Lua frequency changes. Deinitializing a pin turns it off.
+inversion, including Lua frequency changes. Zero, sub-1 Hz and NaN frequencies
+pause PWM at its logical inactive level, retaining duty for the next valid
+frequency. Negative, infinite and over-500 Hz frequencies remain invalid.
+The worker applies FOME's global PWM enable state on every poll, including when
+no controller update occurs; re-enabling restores the latest active PWM setpoints.
+Static GPIO outputs are independent of that flag. Deinitializing a pin turns it off.
 The companion preserves PWM cycles during duty updates and disables outputs after
 500 ms without a checksum-valid frame. These outputs are for asynchronous
 auxiliary loads: they cannot follow crank/cam timing through SPI.

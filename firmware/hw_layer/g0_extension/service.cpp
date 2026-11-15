@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "service.h"
+#include "output_gpio.h"
 #include "spi_thread.h"
 #include "mpu_util.h"
 
@@ -24,6 +25,7 @@ public:
 		return 10;
 	}
 	void performTransfer(SPIDriver& spi) override {
+		updatePwmOutputs();
 		instance.prepare(txBuffer, nowMs());
 		rxBuffer = {};
 		spiSelect(&spi);

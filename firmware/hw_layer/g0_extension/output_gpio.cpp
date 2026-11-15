@@ -9,6 +9,10 @@
 namespace g0 {
 namespace {
 LockedModule<Outputs> outputs;
+
+bool validFrequency(float value) {
+	return std::isnan(value) || (std::isfinite(value) && value >= 0 && value <= 500);
+}
 class Pwm final : public hardware_pwm {
 public:
 	size_t index = 0;
@@ -22,19 +26,25 @@ public:
 			return;
 		}
 		duty = value;
-		outputs.state.set(index, frequency, uint16_t((inverted ? 1 - duty : duty) * wire::outputDutyMax + 0.5f));
+		apply();
 	}
 	void setFrequency(float value) override {
 		chibios_rt::CriticalSectionLocker lock;
 		if (!active) {
 			return;
 		}
-		if (!std::isfinite(value) || value < 1 || value > 500) {
+		if (!validFrequency(value)) {
 			warning(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, "G0 PWM range (1..500 Hz)");
 			return;
 		}
-		frequency = uint32_t(value + 0.5f);
-		setDuty(duty);
+		frequency = std::isnan(value) || value < 1 ? 0 : uint32_t(value + 0.5f);
+		apply();
+	}
+	void apply() {
+		const bool running = engine->isPwmEnabled && frequency != 0;
+		const float value = running ? duty : 0;
+		outputs.state.set(
+				index, running ? frequency : 0, uint16_t((inverted ? 1 - value : value) * wire::outputDutyMax + 0.5f));
 	}
 };
 Pwm pwms[wire::outputCount];
@@ -70,18 +80,26 @@ bool isOutput(brain_pin_e pin) {
 }
 
 hardware_pwm* startPwm(brain_pin_e pin, float frequency, float duty, bool inverted) {
-	if (!isOutput(pin) || !std::isfinite(frequency) || frequency < 1 || frequency > 500 || !std::isfinite(duty) ||
-		duty < 0 || duty > 1) {
+	if (!isOutput(pin) || !validFrequency(frequency) || !std::isfinite(duty) || duty < 0 || duty > 1) {
 		return nullptr;
 	}
 	chibios_rt::CriticalSectionLocker lock;
 	auto& pwm = pwms[pin - Gpio::G0_OUT_1];
 	pwm.index = pin - Gpio::G0_OUT_1;
-	pwm.frequency = uint32_t(frequency + 0.5f);
 	pwm.active = true;
 	pwm.inverted = inverted;
-	pwm.setDuty(duty);
+	pwm.duty = duty;
+	pwm.setFrequency(frequency);
 	return &pwm;
+}
+
+void updatePwmOutputs() {
+	chibios_rt::CriticalSectionLocker lock;
+	for (auto& pwm : pwms) {
+		if (pwm.active) {
+			pwm.apply();
+		}
+	}
 }
 
 void registerOutputs() {

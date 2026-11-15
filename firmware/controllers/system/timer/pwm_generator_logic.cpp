@@ -328,11 +328,6 @@ void PwmConfig::weComplexInit(
 void startSimplePwm(SimplePwm* state, const char* msg, OutputPin* output, float frequency, float dutyCycle) {
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_STATE_ASSERT, state != NULL, "state");
 	efiAssertVoid(ObdCode::CUSTOM_ERR_PWM_DUTY_ASSERT, dutyCycle >= 0 && dutyCycle <= 1, "dutyCycle");
-	if (frequency < 1) {
-		warning(ObdCode::OBD_PCM_Processor_Fault, "low frequency %.2f %s", frequency, msg);
-		return;
-	}
-
 	// Let the expansion MCU generate edges locally; SPI only carries setpoints.
 #if EFI_G0_EXTENSION
 	if (g0::isOutput(output->m_brainPin)) {
@@ -348,6 +343,11 @@ void startSimplePwm(SimplePwm* state, const char* msg, OutputPin* output, float 
 	}
 	state->hardPwm = nullptr;
 #endif
+
+	if (frequency < 1) {
+		warning(ObdCode::OBD_PCM_Processor_Fault, "low frequency %.2f %s", frequency, msg);
+		return;
+	}
 
 	state->seq.setSwitchTime(0, dutyCycle);
 	state->seq.setSwitchTime(1, 1);

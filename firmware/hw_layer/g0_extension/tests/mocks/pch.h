@@ -36,3 +36,9 @@ struct CriticalSectionLocker {
 	}
 };
 } // namespace chibios_rt
+
+struct TestEngine {
+	bool isPwmEnabled = true;
+};
+inline TestEngine testEngine;
+inline auto* engine = &testEngine;

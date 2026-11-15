@@ -70,6 +70,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - G0 PWM accepts paused frequency values used by tachometer/speedometer outputs and follows the global PWM enable setting.
  - Keep configured SPI5 thermocouples deselected during G0 initialization and firmware upload on Atlas.
  - Reset G0 after firmware upload, avoid scheduler-tick delays per SPI byte, and show upload activity while yielding to other threads.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
