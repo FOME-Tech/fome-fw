@@ -194,3 +194,29 @@ TEST(ignition, oddCylinderWastedSpark) {
 	// expect to schedule second events, the out-of-phase dwell and spark (the wasted spark copy)
 	onTriggerEventSparkLogic({nowNt2, 360 + 10, 360 + 30, 360 + 10, 360 + 30});
 }
+
+TEST(ignition, coilDutyCycleIssue977) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+
+	int rpm = 2000;
+	engine->rpmCalculator.setRpmValue(rpm);
+	engine->ignitionState.updateDwell(rpm, false);
+	ASSERT_EQ(4, engine->ignitionState.getDwell()) << "running dwell";
+
+	ASSERT_NEAR(26.66666, getCoilDutyCycle(rpm), 0.0001);
+}
+
+TEST(ignition, dwellFollowsRpm) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+
+	engineConfiguration->crankingTimingAngle = 31;
+
+	int rpm = 2000;
+	engine->rpmCalculator.setRpmValue(rpm);
+	engine->ignitionState.updateDwell(rpm, false);
+	EXPECT_NEAR_M4(4, engine->ignitionState.getDwell());
+
+	engine->rpmCalculator.setRpmValue(6000);
+	engine->ignitionState.updateDwell(6000, false);
+	EXPECT_NEAR_M4(3.25, engine->ignitionState.getDwell());
+}
