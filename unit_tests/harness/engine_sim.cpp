@@ -99,6 +99,21 @@ EngineSim::~EngineSim() {
 	if (m_recorder) {
 		m_recorder->setAngleSource(nullptr);
 	}
+
+	// Output pins are global and outlive the test: a test that ends with the engine still running
+	// would otherwise leave a coil or injector on for whichever test runs next. (stopPins() skips pins
+	// that were never initialized, which in unit tests is all of them.)
+	for (size_t i = 0; i < MAX_CYLINDER_COUNT; i++) {
+		for (OutputPin* pin :
+			 {static_cast<OutputPin*>(&enginePins.coils[i]),
+			  static_cast<OutputPin*>(&enginePins.trailingCoils[i]),
+			  static_cast<OutputPin*>(&enginePins.injectors[i]),
+			  static_cast<OutputPin*>(&enginePins.injectorsStage2[i])}) {
+			if (pin->getLogicValue()) {
+				pin->setValue(false);
+			}
+		}
+	}
 }
 
 // ---- Speed ----
