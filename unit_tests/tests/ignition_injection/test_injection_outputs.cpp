@@ -294,7 +294,7 @@ TEST(InjectionOutputs, SequentialFuelFollowsPulseWidthChanges) {
 	stopAndCheckNothingLeftOpen(rig);
 }
 
-// trigger_review I5: an injection is scheduled from the last tooth before it starts. This trigger has
+// An injection is scheduled from the last tooth before it starts. This trigger has
 // a tooth edge only every 360 degrees, and at high duty the gap between one pulse ending and the next
 // starting is shorter than that. When the pulse gets longer its start moves earlier, in to a tooth's
 // window that has already been handled, and that cylinder's next injection is skipped entirely.
@@ -306,7 +306,7 @@ TEST(InjectionOutputs, DISABLED_SequentialFuelFollowsPulseWidthChangesAtHighDuty
 	stopAndCheckNothingLeftOpen(rig);
 }
 
-// trigger_review I5: the same thing in batch mode takes a bigger step. This is the 1.5 ms to 12.5 ms
+// The same thing in batch mode takes a bigger step. This is the 1.5 ms to 12.5 ms
 // pulse width change of the original issue 299 tests: one pair of cylinders gets a cycle about half
 // short of fuel.
 TEST(InjectionOutputs, DISABLED_BatchFuelFollowsLargePulseWidthStep) {

@@ -2,7 +2,8 @@
  * @file test_trigger_error_recovery.cpp
  *
  * What happens when trigger sync is lost to a decode error and then regained, while the engine
- * keeps turning. See trigger_review/02-trigger-error-recovery.md.
+ * keeps turning: RPM, ignition and injection modes, cam sync, the Miata NB tooth counter, and which
+ * trigger errors get reported.
  *
  * Tests named DISABLED_ reproduce known firmware bugs. They are written to pass once the bug is fixed:
  * enable them as part of the fix. Run them today with --gtest_also_run_disabled_tests.
@@ -140,61 +141,6 @@ int misplacedSparks(
 	return count;
 }
 
-// Number of times a cylinder's compression stroke went by with no spark from its coil
-int missedCompressionSparks(
-		const OutputRecorder& recorder,
-		const EngineSim& sim,
-		const std::map<int, double>& reference,
-		int64_t fromUs,
-		int64_t toUs,
-		float tolerance = 20) {
-	auto pulses = recorder.pulses(OutputKind::Coil);
-
-	// Find the angle range covered by [fromUs, toUs]
-	double fromAngle = NAN;
-	double toAngle = NAN;
-	for (const auto& s : sim.samples()) {
-		if (s.timeUs >= fromUs && std::isnan(fromAngle)) {
-			fromAngle = s.angle;
-		}
-		if (s.timeUs <= toUs) {
-			toAngle = s.angle;
-		}
-	}
-
-	int missed = 0;
-	for (const auto& [coil, refPhase] : reference) {
-		// Every compression TDC (well, spark point) of this cylinder in the range
-		double first = fromAngle - wrap720(fromAngle - refPhase) + 720;
-		for (double sparkAt = first; sparkAt < toAngle - tolerance; sparkAt += 720) {
-			bool found = false;
-			for (const auto& p : pulses) {
-				if (p.index == coil && !p.stillActive && std::abs(p.endAngle - sparkAt) < tolerance) {
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				missed++;
-			}
-		}
-	}
-
-	return missed;
-}
-
-int64_t firstErrorAfter(const EngineSim& sim, int64_t fromUs) {
-	uint32_t before = 0;
-	for (const auto& s : sim.samples()) {
-		if (s.timeUs < fromUs) {
-			before = s.triggerErrors;
-		} else if (s.triggerErrors != before) {
-			return s.timeUs;
-		}
-	}
-	return -1;
-}
-
 // Crank-speed 36-1 wheel plus a single tooth cam, running sequential.
 std::unique_ptr<EngineSim> crankWheelWithSingleToothCam(EngineTestHelper& eth, OutputRecorder& recorder) {
 	configureSparkOnly(IM_INDIVIDUAL_COILS);
@@ -211,13 +157,13 @@ std::unique_ptr<EngineSim> crankWheelWithSingleToothCam(EngineTestHelper& eth, O
 } // namespace
 
 // ---------------------------------------------------------------------------------------------
-// R1: RPM must not read zero after a trigger error
+// RPM must not read zero after a trigger error
 // ---------------------------------------------------------------------------------------------
 
-// R1 is EngineInvariants.DISABLED_RpmSurvivesTriggerError (36-1, instant RPM).
+// The instant RPM case is EngineInvariants.DISABLED_RpmSurvivesTriggerError (36-1).
 // This is the same thing on a wheel with too few teeth for instant RPM, which takes the per-revolution
-// RPM path instead. It passes today: that path holds the last value until a full revolution has been
-// timed, which is the behaviour R1's fix should give the instant RPM path too.
+// RPM path instead. It passes: that path holds the last value until a full revolution has been timed,
+// which is what the instant RPM path should do too.
 TEST(TriggerErrorRecovery, RpmSurvivesTriggerErrorWithoutInstantRpm) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	configureSparkOnly(IM_WASTED_SPARK);
@@ -244,8 +190,9 @@ TEST(TriggerErrorRecovery, RpmSurvivesTriggerErrorWithoutInstantRpm) {
 	EXPECT_GT(engine->rpmCalculator.getSecondsSinceEngineStart(getTimeNowNt()), startedSecondsAgo);
 }
 
-// R1, measured at the outputs: a single noise pulse should cost at most the spark that was due while
-// the decoder was actually unsynchronized, not the extra ones dropped while RPM reads zero afterwards.
+// RPM reading zero after a trigger error, measured at the outputs: a single noise pulse should cost at
+// most the spark that was due while the decoder was actually unsynchronized, not the extra ones dropped
+// while RPM reads zero afterwards.
 TEST(TriggerErrorRecovery, DISABLED_SparksLostToOneGlitch) {
 	int alignmentsThatLostSparks = 0;
 
@@ -275,7 +222,7 @@ TEST(TriggerErrorRecovery, DISABLED_SparksLostToOneGlitch) {
 		// 4 cylinders, wasted spark on a crank wheel: 4 coil pulses per revolution, 8 per cycle
 		int expected = 4 * 8;
 		int lost = expected - (int)(after - before);
-		printf("R1 offset %3d: %d of %d coil pulses lost to one glitch, rpm zero: %s\n",
+		printf("offset %3d: %d of %d coil pulses lost to one glitch, rpm zero: %s\n",
 			   offset,
 			   lost,
 			   expected,
@@ -292,7 +239,7 @@ TEST(TriggerErrorRecovery, DISABLED_SparksLostToOneGlitch) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// R2: ignition and injection mode must fall back as soon as full sync is lost
+// Ignition and injection mode must fall back as soon as full sync is lost
 // ---------------------------------------------------------------------------------------------
 
 // Run with the glitch in each of the two revolutions of the cycle: losing sync restarts the crank
@@ -322,15 +269,11 @@ TEST(TriggerErrorRecovery, IndividualCoilsFallBackToWastedOnSyncLoss) {
 		EXPECT_TRUE(sim->samples().back().fullSync);
 
 		EXPECT_TRUE(noLoneExhaustStrokeSpark(recorder, reference, from)) << "extraRevs " << extraRevs;
-		printf("R2 extraRevs=%d: missed compression sparks %d, cam resyncs %d\n",
-			   extraRevs,
-			   missedCompressionSparks(recorder, *sim, reference, from, sim->nowUs()),
-			   (int)sim->samples().back().camResyncs);
 	}
 }
 
-// Injection side of R2. Each event keeps the mode it latched at the end of its last pulse.
-// Measures fuel per cylinder per cycle through the glitch.
+// The injection side of the same thing. Each event keeps the mode it latched at the end of its last
+// pulse. Measures fuel per cylinder per cycle through the glitch.
 TEST(TriggerErrorRecovery, SequentialFuelThroughSyncLoss) {
 	for (int extraRevs = 0; extraRevs < 2; extraRevs++) {
 		EngineTestHelper eth(engine_type_e::TEST_ENGINE);
@@ -363,12 +306,9 @@ TEST(TriggerErrorRecovery, SequentialFuelThroughSyncLoss) {
 		for (int inj = 0; inj < 4; inj++) {
 			auto perCycle = activeTimePerWindow(recorder, OutputKind::Injector, inj, windowStart, cycleUs, 4);
 			float total = 0;
-			printf("R2 fuel extraRevs=%d inj %d, pulses per cycle:", extraRevs, inj);
 			for (float ms : perCycle) {
-				printf(" %.2f", ms / pulseMs);
 				total += ms / pulseMs;
 			}
-			printf("  total %.2f\n", total);
 
 			// Batch fallback moves half pulses between cycles, and each half pulse carries its own
 			// dead time, so individual cycles don't come out at exactly one pulse. But over the four
@@ -380,7 +320,7 @@ TEST(TriggerErrorRecovery, SequentialFuelThroughSyncLoss) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// R3: the cam decoder must keep decoding while the crank is resyncing
+// The cam decoder must keep decoding while the crank is resyncing
 // ---------------------------------------------------------------------------------------------
 
 TEST(TriggerErrorRecovery, CamDecoderKeepsSyncThroughCrankResync) {
@@ -440,11 +380,6 @@ TEST(TriggerErrorRecovery, CamDecoderKeepsSyncThroughCrankResync) {
 
 		ASSERT_GT(crankBackUs, 0);
 		ASSERT_GT(fullSyncBackUs, 0);
-		printf("R3 extraRevs=%d: full sync back %.0f crank degrees after crank sync, cam errors %u\n",
-			   extraRevs,
-			   fullBackAngle - crankBackAngle,
-			   (unsigned)camDecoder.triggerErrorCounter);
-
 		// The cam never missed a tooth, so it has no reason to report an error...
 		EXPECT_EQ(0u, camDecoder.triggerErrorCounter) << "extraRevs " << extraRevs;
 		// ...and should give full sync at the first cam sync point after the crank is back
@@ -453,7 +388,7 @@ TEST(TriggerErrorRecovery, CamDecoderKeepsSyncThroughCrankResync) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// R4: Miata NB tooth counting drops sync without the error path
+// Miata NB: below 1000 rpm the crank decoder counts teeth instead of checking gaps
 // ---------------------------------------------------------------------------------------------
 
 namespace {
@@ -472,12 +407,12 @@ struct NbGlitchResult {
 
 // Miata NB2 crank and cam, one noise pulse glitchAfter degrees after a crank sync point.
 //
-// Below 1000 rpm the decoder counts teeth instead of checking gaps, but (since R5) only while it needs
-// to: cranking and the first miataNbToothCountingCyclesAfterStart (20) engine cycles after start. The default
+// Below 1000 rpm the decoder counts teeth instead of checking gaps, but only while it needs to: cranking
+// and the first miataNbToothCountingCyclesAfterStart (20) engine cycles after start. The default
 // warmupCycles puts the glitch inside that window, so tooth counting is in use.
 //
 // The cam is moved 30 degrees from where addCamFromShape puts it, which would otherwise be right on a
-// crank sync point (see trigger_review V4).
+// crank sync point, where a cam tooth can flip engine phase on its own.
 NbGlitchResult
 miataNbGlitch(float glitchAfter, float rpm = 800, int cyclesAfter = 4, float camOffset = 30, int warmupCycles = 10) {
 	EngineTestHelper eth(engine_type_e::HELLEN_NB2);
@@ -528,9 +463,9 @@ miataNbGlitch(float glitchAfter, float rpm = 800, int cyclesAfter = 4, float cam
 
 } // namespace
 
-// R4: a glitch the tooth counter does notice (gap ratio outside 0.4 - 2.0) used to drop sync without
-// going through onTriggerError. The glitch is in the first cycles after start, where tooth counting is
-// in use.
+// A glitch the tooth counter does notice (gap ratio outside 0.4 - 2.0) used to drop sync without going
+// through onTriggerError: no error counted, and full sync kept with a phase that no longer matched. The
+// glitch is in the first cycles after start, where tooth counting is in use.
 TEST(TriggerErrorRecovery, MiataNbLostSyncBelow1000RpmIsATriggerError) {
 	// Just after a tooth: a tiny gap, far below 0.4 of the previous one
 	auto r = miataNbGlitch(/*glitchAfter*/ 5);
@@ -541,35 +476,27 @@ TEST(TriggerErrorRecovery, MiataNbLostSyncBelow1000RpmIsATriggerError) {
 	EXPECT_TRUE(r.errorCounted);
 	EXPECT_FALSE(r.fullSyncWhileUnsynced);
 
-	// Sparks after the glitch are not checked here. With full sync correctly dropped, the next full sync
-	// comes from the cam decoder, which missed edges while the crank was resyncing and can come back on
-	// the wrong tooth (R3). See DISABLED_MiataNbGlitchRecoversOnCorrectPhase.
+	// No spark may land on the wrong cylinder. (This also needs the cam decoder to have kept going while
+	// the crank resynced: the next full sync comes from it.)
+	EXPECT_EQ(0, r.sparksOffPhase);
 }
 
-// R5: a glitch with a plausible gap ratio is counted as a real tooth, and the decoder used to carry on
-// synchronized, one tooth off (timing 110 degrees out), for as long as the engine stayed below 1000 rpm.
-// Now tooth counting is only used while the engine needs it, so once it has been running a while the gap
-// check is used and catches the glitch as a trigger error.
+// A glitch with a plausible gap ratio is counted as a real tooth by the tooth counter, and the decoder
+// used to carry on synchronized, one tooth off (timing 110 degrees out), for as long as the engine stayed
+// below 1000 rpm. Now tooth counting is only used while the engine needs it, so once it has been running
+// a while the gap check is used and catches the glitch as a trigger error.
 TEST(TriggerErrorRecovery, MiataNbGlitchAtIdleDoesNotShiftTiming) {
 	for (float glitchAfter = 5; glitchAfter < 180; glitchAfter += 10) {
 		auto r = miataNbGlitch(glitchAfter, /*rpm*/ 800, /*cyclesAfter*/ 8, /*camOffset*/ 30, /*warmupCycles*/ 25);
-		printf("R5 glitch %3.0f deg after sync: lostSync=%d error=%d misplaced=%d misplacedAtEnd=%d (%.0f deg)\n",
-			   glitchAfter,
-			   r.lostSync,
-			   r.errorCounted,
-			   r.sparksOffPhase,
-			   r.sparksOffPhaseAtEnd,
-			   r.offsetAtEnd);
-
 		// Whatever the glitch did, a few cycles later timing must be right again
 		EXPECT_EQ(0, r.sparksOffPhaseAtEnd) << "glitch " << glitchAfter << " deg after sync";
 	}
 }
 
-// R5 is still possible where tooth counting is still used: cranking and the first 20 engine cycles after
-// start. This glitch is in that window. It would need option D in
-// 02-trigger-error-recovery.md (a cam cross-check that catches the crank position jumping), which would
-// cover this above cranking rpm but not cranking itself.
+// The same glitch is still taken as a tooth where tooth counting is still used: cranking and the first 20
+// engine cycles after start. This glitch is in that window. Catching it would need something else, such
+// as a cam cross-check that notices the crank position jumping by a tooth, which would cover this above
+// cranking rpm but not cranking itself.
 TEST(TriggerErrorRecovery, DISABLED_MiataNbGlitchJustAfterStartDoesNotShiftTiming) {
 	for (float glitchAfter = 5; glitchAfter < 180; glitchAfter += 10) {
 		auto r = miataNbGlitch(glitchAfter, /*rpm*/ 800, /*cyclesAfter*/ 8, /*camOffset*/ 30, /*warmupCycles*/ 10);
@@ -577,9 +504,10 @@ TEST(TriggerErrorRecovery, DISABLED_MiataNbGlitchJustAfterStartDoesNotShiftTimin
 	}
 }
 
-// An idling engine that sags almost to a stall, lumpy, and recovers. Since R5 this is decoded with the
-// gap check rather than by counting teeth, and must not lose sync. (At 40% speed ripple it does, where
-// tooth counting rode through: that's the price of R5's fix, for an engine running that badly.)
+// An idling engine that sags almost to a stall, lumpy, and recovers. This is decoded with the gap check
+// rather than by counting teeth, and must not lose sync. (At 40% speed ripple it does, where tooth
+// counting rode through: that's the price of only counting teeth after start, for an engine running
+// that badly.)
 TEST(TriggerErrorRecovery, MiataNbNearStallKeepsSync) {
 	EngineTestHelper eth(engine_type_e::HELLEN_NB2);
 	configureSparkOnly(IM_INDIVIDUAL_COILS);
@@ -606,45 +534,40 @@ TEST(TriggerErrorRecovery, MiataNbNearStallKeepsSync) {
 	EXPECT_TRUE(sim.samples().back().fullSync);
 }
 
-// R3 on an engine that needs the cam before it may fire at all. The crank error goes through
-// onTriggerError and drops full sync (with R4, also below 1000 rpm). But the cam decoder misses its edges
-// while the crank resyncs, and its first sync point after that can be the wrong tooth: full sync comes
-// back with the wrong phase, and sparks land on the wrong cylinders until the next good cam sync point.
+// The cam decoder keeping going through a crank resync, on an engine that needs the cam before it may
+// fire at all. The crank error goes through onTriggerError and drops full sync. If the cam decoder
+// missed its edges while the crank resynced, its first sync point after that could be the wrong tooth:
+// full sync would come back with the wrong phase, and sparks land on the wrong cylinders until the next
+// good cam sync point.
 TEST(TriggerErrorRecovery, MiataNbGlitchRecoversOnCorrectPhase) {
 	for (float rpm : {800.0f, 1500.0f}) {
 		for (float glitchAfter = 5; glitchAfter < 180; glitchAfter += 10) {
 			auto r = miataNbGlitch(glitchAfter, rpm);
-			printf("R3 NB @%.0f glitch %3.0f: lostSync=%d error=%d misplaced=%d camResyncs=%d\n",
-				   rpm,
-				   glitchAfter,
-				   r.lostSync,
-				   r.errorCounted,
-				   r.sparksOffPhase,
-				   r.camResyncs);
-
 			if (!r.lostSync) {
-				// Below 1000 rpm some glitch positions are accepted as a real tooth: that's R5, see
-				// DISABLED_MiataNbGlitchBelow1000RpmDoesNotShiftTiming
+				// In the first cycles after start, some glitch positions are accepted as a real tooth, see
+				// DISABLED_MiataNbGlitchJustAfterStartDoesNotShiftTiming
 				continue;
 			}
 
 			EXPECT_TRUE(r.errorCounted) << rpm << " rpm, glitch " << glitchAfter;
 			EXPECT_FALSE(r.fullSyncWhileUnsynced) << rpm << " rpm, glitch " << glitchAfter;
 			// The revolution with the glitch in it is decoded a tooth off until the decoder notices: up to
-			// two sparks from that are unavoidable. Today 5 to 10 sparks land on the wrong cylinder.
+			// two sparks from that are unavoidable. With a cam decoder that missed edges, 5 to 10 landed on
+			// the wrong cylinder.
 			EXPECT_LE(r.sparksOffPhase, 2) << rpm << " rpm, glitch " << glitchAfter;
 		}
 	}
 }
 
-// R1 under hard acceleration, 1000 to 7000 rpm in a second, glitch at several points on the way.
-// Today RPM reads zero after every glitch. It also checks that a fix which holds the last RPM doesn't
-// leave a coil charging (C1) while the speed changes.
+// RPM after a trigger error, under hard acceleration: 1000 to 7000 rpm in a second, glitch at several
+// points on the way. RPM reads zero after every glitch. It also checks that a fix which holds the last
+// RPM doesn't leave a coil charging while the speed changes (a stale RPM can make the spark fire before
+// its coil was charged).
 //
-// Before R2 was fixed, one case here (offset 60, glitch at 0.5 s) also left a coil charging for a whole
-// revolution: the fast callback ran while RPM was 0 and computed a dwell angle of 0, and the overdwell
-// backup fire latched that in to the event (C2). Rebuilding the events after a trigger error (R2) now
-// replaces it before it is used.
+// Before ignition events were rebuilt after a trigger error, one case here (offset 60, glitch at 0.5 s)
+// also left a coil charging for a whole revolution: the fast callback ran while RPM was 0 and computed a
+// dwell angle of 0, and the overdwell backup fire latched that in to the event. The rebuild now replaces
+// it before it is used.
 TEST(TriggerErrorRecovery, DISABLED_GlitchDuringHardAccelerationKeepsRpmAndNoOverdwell) {
 	for (int offset = 0; offset < 180; offset += 30) {
 		for (float glitchAt : {0.1f, 0.3f, 0.5f, 0.7f}) {
@@ -672,8 +595,8 @@ TEST(TriggerErrorRecovery, DISABLED_GlitchDuringHardAccelerationKeepsRpmAndNoOve
 }
 
 // ---------------------------------------------------------------------------------------------
-// R3: the cam decoder now runs before the crank is synchronized. Check that a cam that finds its own
-// sync point first doesn't hurt anything.
+// The cam decoder runs before the crank is synchronized. Check that a cam that finds its own sync point
+// first doesn't hurt anything.
 // ---------------------------------------------------------------------------------------------
 
 namespace {
@@ -712,19 +635,6 @@ std::unique_ptr<EngineTestHelper> camPatternEngine(const CamPattern& pattern) {
 	EXPECT_TRUE(engine->triggerCentral.vvtTriggerConfiguration[0].needsTriggerDecoder()) << pattern.name;
 
 	return eth;
-}
-
-bool isTriggerErrorWarning(ObdCode code) {
-	switch (code) {
-		case ObdCode::CUSTOM_PRIMARY_TOO_MANY_TEETH:
-		case ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH:
-		case ObdCode::CUSTOM_CAM_TOO_MANY_TEETH:
-		case ObdCode::CUSTOM_CAM_NOT_ENOUGH_TEETH:
-		case ObdCode::CUSTOM_VVT_SYNC_POSITION:
-			return true;
-		default:
-			return false;
-	}
 }
 
 } // namespace
@@ -795,7 +705,8 @@ StartResult startEngine(const CamPattern& pattern, float camOffset, double start
 
 	for (size_t i = 0; i < eth->recentWarnings()->getCount(); i++) {
 		if (eth->recentWarnings()->get(i).Code == ObdCode::CUSTOM_VVT_SYNC_POSITION) {
-			// Cam sync tooth right on a crank sync point: that's trigger_review V4, not this
+			// Cam sync tooth right on a crank sync point, where it can flip engine phase on its own: not
+			// what this is about
 			r.skipped = true;
 			return r;
 		}
@@ -849,7 +760,7 @@ StartResult startEngine(const CamPattern& pattern, float camOffset, double start
 // phase (where each coil fires) and the VVT reading must come out the same both times.
 //
 // Checks phase, not spark timing accuracy while cranking: with a sparse crank wheel and the engine
-// catching, sparks can land late (C1 family), and that's not what this test is about.
+// catching, sparks can land late, and that's not what this test is about.
 TEST(TriggerErrorRecovery, CamSyncBeforeCrankSyncStartsCleanly) {
 	for (const auto& pattern : camPatterns) {
 		int compared = 0;
@@ -889,7 +800,7 @@ TEST(TriggerErrorRecovery, CamSyncBeforeCrankSyncStartsCleanly) {
 	}
 }
 
-// Where R3 actually puts the cam ahead of the crank: running, a crank tooth is lost, and while the crank
+// Where the cam really gets ahead of the crank: running, a crank tooth is lost, and while the crank
 // decoder is resyncing (up to a revolution) the cam decoder keeps going and passes its own sync point.
 // The tooth is lost at 24 positions round the cycle, so that this happens in some of them. Whatever the
 // order, the cam must not set engine phase while the crank is unsynchronized, and once both are back,
@@ -961,9 +872,6 @@ TEST(TriggerErrorRecovery, CamSyncWhileCrankResyncsAfterError) {
 			}
 		}
 
-		printf("%s: cam passed its sync point while the crank was resyncing in %d of 24 cases\n",
-			   pattern.name,
-			   camSyncDuringCrankResync);
 		// Make sure the case this test is about actually happened
 		EXPECT_GE(camSyncDuringCrankResync, 2) << pattern.name;
 	}
@@ -1069,7 +977,6 @@ TEST(TriggerErrorRecovery, StartReportsNoTriggerErrorsOnAnyPattern) {
 		EXPECT_FALSE(anyTriggerErrorWarning(eth));
 	}
 
-	printf("%d of %d patterns lost sync during the start\n", lostSyncDuringStart, patterns);
 	// Make sure the case this test is about actually happened
 	EXPECT_GE(lostSyncDuringStart, 5);
 }
