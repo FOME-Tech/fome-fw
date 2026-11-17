@@ -14,6 +14,9 @@ public:
 	void open();
 	void close();
 
+	// Force the injector closed, and forget any opens it was counting
+	bool stop();
+
 	int8_t getOverlappingCounter() const {
 		return m_overlappingCounter;
 	}
