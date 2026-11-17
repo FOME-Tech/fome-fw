@@ -260,13 +260,11 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		return;
 	}
 
-	// If the main trigger is not synchronized, don't decode VVT yet
-	if (!tc->triggerState.getShaftSynchronized()) {
-		return;
-	}
-
 	TriggerDecoderBase& vvtDecoder = tc->vvtState[bankIndex][camIndex];
 
+	// The cam decoder doesn't need the crank, so feed it every edge, including while the crank is
+	// unsynchronized (cranking, or resyncing after a crank trigger error). If it missed edges it would
+	// lose its own sync, or worse, find a false sync point and give the crank the wrong phase.
 	if (isVvtWithRealDecoder) {
 		vvtDecoder.decodeTriggerEvent(
 				"vvt",
@@ -277,6 +275,11 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 				nowNt);
 	} else {
 		vvtDecoder.logEdgeCounters(isRising);
+	}
+
+	// Everything from here on compares the cam against crank position, which needs crank sync
+	if (!tc->triggerState.getShaftSynchronized()) {
+		return;
 	}
 
 	auto currentTrgPhase = tc->getCurrentEnginePhase(nowNt);

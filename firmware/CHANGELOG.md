@@ -85,6 +85,10 @@ or
  - Every cylinder now gets the right amount of fuel when switching from batch or simultaneous injection to sequential, for example at the end of cranking or when the cam syncs. Previously some cylinders got 25-75% extra fuel for one cycle during the switch.
  - Sequential cranking injection now waits for cam sync, cranking in batch until then. Previously the first cranking pulses were timed off a guessed engine phase, which is wrong by 360 degrees about half the time, so cylinders could get skipped or doubled pulses and start unevenly. Same behavior running mode already had.
  - Fuel correction multipliers (CLT, IAT, barometric, post-cranking, cranking CLT/TPS/duration, and Lua fuel mult) are now logged with three decimal places. Previously they were rounded to whole numbers, so a 1.06 CLT correction showed up in the log as 1
+ - After a trigger error on an engine running sequential ignition or injection, the ECU now immediately falls back to wasted spark and batch fuel until the cam sync is regained. Previously each cylinder could fire once more in sequential mode on a guessed engine phase, sparking on the exhaust stroke instead of compression and skipping that cylinder's injection.
+ - "Miata NB" crank trigger below 1000 RPM: an impossible gap between crank teeth is now counted as a trigger error and waits for the cam before firing again. Previously the ECU kept firing on a stale engine phase, so several sparks could land on the wrong cylinders after a single noise pulse.
+ - After a crank trigger error, the cam decoder no longer loses its own sync, so full sync comes back sooner. On engines that need the cam before they may fire at all (such as the Miata NB), it also no longer comes back on the wrong engine phase, which put sparks on the wrong cylinders for a cycle.
+ - "Miata NB" crank trigger: a single noise pulse at idle could shift all ignition timing by 110 degrees with no trigger error, usually stalling the engine. Once the engine has been running for a few seconds, such a pulse is now caught as a trigger error and the ECU resyncs.
 
 ## May 2026 Release
 

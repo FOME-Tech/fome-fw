@@ -248,6 +248,12 @@ void PrimaryTriggerDecoder::onTriggerError() {
 		// Instant RPM data is now also probably trash, discard it
 		engine->triggerCentral.instantRpm.resetInstantRpm();
 		engine->rpmCalculator.lastTdcTimer.init();
+
+		// Each ignition and injection event keeps the mode it chose when it was last scheduled, and only
+		// chooses again after it next fires. Engine phase is no longer known, so make them all choose
+		// again now, otherwise each one fires once more in sequential mode on a phase that is now a guess.
+		engine->ignitionEvents.isReady = false;
+		engine->injectionEvents.invalidate();
 	}
 #pragma GCC diagnostic pop
 }
@@ -672,6 +678,33 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	}
 }
 
+// Miata NB tooth counting rides through the huge speed changes of cranking and the engine catching, where
+// the gap check would lose sync. But it can't tell a noise pulse with a plausible gap from a real tooth:
+// one such pulse shifts the decoder by a tooth, and it carries on "synchronized" with all timing 110
+// degrees out. So only count teeth while the engine needs it: cranking and the first few seconds after it
+// starts. The rest of the time the gap check catches a noise pulse as a trigger error.
+static constexpr uint32_t miataNbToothCountingCyclesAfterStart = 20;
+
+static bool miataNbNeedsToothCounting() {
+// Ignore the warning that engine is never null - it might be in unit tests
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+	if (!engine) {
+		return true;
+	}
+#pragma GCC diagnostic pop
+
+	const auto& rpmCalculator = engine->rpmCalculator;
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	if (rpm >= 1000) {
+		return false;
+	}
+
+	return !rpmCalculator.isRunning() ||
+		   rpmCalculator.getRevolutionCounterSinceStart() < miataNbToothCountingCyclesAfterStart;
+}
+
 bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) {
 	// Miata NB needs a special decoder.
 	// The problem is that the crank wheel only has 4 teeth, also symmetrical, so the pattern
@@ -684,9 +717,9 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 	// Instead of detecting short/long, this logic first checks for "maybe short" and "maybe long",
 	// then simply tests longer vs. shorter instead of absolute value.
 	if (triggerType == trigger_type_e::TT_MIATA_VVT) {
-		bool useToothCounting = getShaftSynchronized() && (Sensor::getOrZero(SensorType::Rpm) < 1000);
+		bool useToothCounting = getShaftSynchronized() && miataNbNeedsToothCounting();
 
-		// If we got reasonable sync and we're spinning slowly, just count teeth. This is necessary
+		// If we got reasonable sync and we're cranking or just started, just count teeth. This is necessary
 		// because a large jump in speed can cause the "long gap" to actually be shorter than the previous
 		// "short gap", but the engine sped up a bunch.
 		if (useToothCounting) {
@@ -695,6 +728,12 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 				// If the last tooth wasn't a sync point, this one is
 				return getCurrentIndex() != 0;
 			} else {
+				// An impossible gap: this is a decoding error like any other
+				setTriggerErrorState();
+				warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING,
+						"primary trigger error: gap ratio %.2f out of range while counting teeth",
+						(float)triggerSyncGapRatio);
+				onTriggerError();
 				setShaftSynchronized(false);
 				return false;
 			}
