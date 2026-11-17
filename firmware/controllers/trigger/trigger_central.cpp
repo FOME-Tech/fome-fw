@@ -575,9 +575,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 
 			// Absolute error from last tooth
 			float absError = std::abs(angleError);
-			float isRpmEnough = Sensor::getOrZero(SensorType::Rpm) > 1000;
-			// TODO: configurable threshold
-			if (isRpmEnough && absError > 10 && absError < 180) {
+			if (absError > 10 && absError < 180) {
 				// This tooth came at a very unexpected time, ignore it
 				warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING,
 						"tooth #%lu error of %.1f",
