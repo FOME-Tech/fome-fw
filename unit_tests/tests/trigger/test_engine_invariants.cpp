@@ -463,12 +463,12 @@ vvtPositionsWithin(const std::vector<std::pair<int64_t, float>>& log, float expe
 										 << worstUs * 1e-3 << " ms";
 }
 
-// When a cam event changes engine phase while already fully synced, the VVT
-// position from that same event is worked out against the old phase and published 360 degrees wrong.
+// When a cam event changes engine phase while already fully synced, the VVT position from that same
+// event must be measured against the new phase, not the old one (which would put it 360 degrees out).
 //
 // The legitimate way to get there: the first thing the cam input sees is a noise pulse a revolution
 // away from the real tooth, so the first phase decision is wrong. The next real tooth corrects it.
-TEST(EngineInvariants, DISABLED_VvtPositionRightWhenCamCorrectsPhase) {
+TEST(EngineInvariants, VvtPositionRightWhenCamCorrectsPhase) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	configureSparkOnly(IM_INDIVIDUAL_COILS);
 	setCrankOperationMode();
@@ -583,8 +583,9 @@ TEST(EngineInvariants, VvtPositionSteadyWhileAccelerating36m1) {
 	}
 }
 
-// The "VVT sync position too close to trigger sync" warning only looks at one of the
-// phase decision boundaries, and only on one side of it.
+// The "VVT sync position too close to trigger sync" warning: the phase decision changes at every crank
+// sync point, so a cam tooth within a few degrees either side of any of them is warned about. Whether
+// it warns mustn't depend on which crank revolution happened to be the first one synced.
 static bool syncPositionWarned(float camToothAfterSync) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	OutputRecorder recorder;
@@ -599,9 +600,10 @@ static bool syncPositionWarned(float camToothAfterSync) {
 	return unitTestWarningCodeState.recentWarnings.find(ObdCode::CUSTOM_VVT_SYNC_POSITION) != nullptr;
 }
 
-TEST(EngineInvariants, DISABLED_VvtSyncPositionWarningNearAnyBoundary) {
-	// 36-1 crank: the boundaries are the crank sync points, every 360 degrees. The cam tooth comes
-	// once per 720, so one of these is "near trigger phase 0" and the other is "near 360".
+TEST(EngineInvariants, VvtSyncPositionWarningNearAnyBoundary) {
+	// 36-1 crank: the boundaries are the crank sync points, every 360 degrees. The sim always starts
+	// in the same place, so 3 and 363 (and -3 and 357) are the same engine with the crank first syncing
+	// in the other revolution.
 	for (float after : {3.0f, -3.0f, 363.0f, 357.0f}) {
 		EXPECT_TRUE(syncPositionWarned(after)) << "cam tooth " << after << " deg after a crank sync point";
 	}
@@ -609,6 +611,32 @@ TEST(EngineInvariants, DISABLED_VvtSyncPositionWarningNearAnyBoundary) {
 	// Well away from both, no warning
 	EXPECT_FALSE(syncPositionWarned(180));
 	EXPECT_FALSE(syncPositionWarned(540));
+}
+
+TEST(EngineInvariants, VvtSyncPositionWarningNearAnyBoundarySymmetricalCrank) {
+	// Miata NB2: the crank pattern repeats every 180 degrees, so there are four boundaries per cycle.
+	// The cam's own definition puts its sync tooth on one of them.
+	auto warned = [](float camOffset) {
+		EngineTestHelper eth(engine_type_e::HELLEN_NB2);
+		configureSparkOnly(IM_INDIVIDUAL_COILS);
+		OutputRecorder recorder;
+		EngineSim sim(eth, &recorder);
+		sim.setCamOffset(sim.addCamFromShape(0), camOffset);
+
+		sim.setRpm(1500);
+		sim.runCycles(10);
+		EXPECT_TRUE(sim.samples().back().fullSync) << camOffset;
+
+		return unitTestWarningCodeState.recentWarnings.find(ObdCode::CUSTOM_VVT_SYNC_POSITION) != nullptr;
+	};
+
+	for (float camOffset : {3.0f, -3.0f, 183.0f, 177.0f, 363.0f, 537.0f}) {
+		EXPECT_TRUE(warned(camOffset)) << "cam offset " << camOffset;
+	}
+
+	for (float camOffset : {30.0f, 90.0f, 150.0f, 270.0f}) {
+		EXPECT_FALSE(warned(camOffset)) << "cam offset " << camOffset;
+	}
 }
 
 // On a cam without a decoder, any noise pulse is taken as the tooth, and its VVT position published until

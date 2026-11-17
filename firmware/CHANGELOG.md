@@ -90,6 +90,8 @@ or
  - After a crank trigger error, the cam decoder no longer loses its own sync, so full sync comes back sooner. On engines that need the cam before they may fire at all (such as the Miata NB), it also no longer comes back on the wrong engine phase, which put sparks on the wrong cylinders for a cycle.
  - "Miata NB" crank trigger: a single noise pulse at idle could shift all ignition timing by 110 degrees with no trigger error, usually stalling the engine. Once the engine has been running for a few seconds, such a pulse is now caught as a trigger error and the ECU resyncs.
  - Starting the engine no longer reports trigger errors that aren't errors. On many trigger and cam patterns the first sync point found while cranking can be the wrong one, and the next one corrects it; that used to show up as a trigger warning in TunerStudio and on the trigger error count after a perfectly normal start. Errors are now reported once the trigger has been in sync for a full cycle, as before.
+ - When the cam sync corrects engine phase while the engine is running, the VVT position from that cam tooth is now right. Previously it read 360 degrees out until the cam came round again, which the VVT closed loop reacted to.
+ - The "VVT sync position too close to trigger sync" warning now catches every cam position that's within a few degrees of a crank sync point, on either side, every time. Previously it only checked one of the crank sync points and only just after it, so whether it warned depended on which crank revolution the engine happened to sync on first. It also no longer warns on setups where the cam isn't used for engine phase.
 
 ## May 2026 Release
 

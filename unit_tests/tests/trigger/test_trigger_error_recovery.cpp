@@ -783,7 +783,9 @@ TEST(TriggerErrorRecovery, CamSyncBeforeCrankSyncStartsCleanly) {
 			}
 		}
 
-		EXPECT_GE(compared, 9) << pattern.name;
+		// Starts with the cam tooth right on a phase decision point are skipped. Miata NB2 has one every
+		// 180 degrees, so 4 of the 12 positions here are skipped for it, and Bosch Quick Start loses 2.
+		EXPECT_GE(compared, 8) << pattern.name;
 	}
 
 	// The one start where the cam really does sync before the crank
