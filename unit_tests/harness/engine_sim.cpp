@@ -434,7 +434,7 @@ void EngineSim::takeSample() {
 			.synced = decoder.getShaftSynchronized(),
 			.fullSync = decoder.hasSynchronizedPhase(),
 			.triggerErrors = decoder.triggerErrorCounter,
-			.phaseAdjustment = decoder.m_phaseAdjustment,
+			.phaseAdjustment = (float)decoder.m_phaseAdjustment,
 			.camResyncs = decoder.m_camResyncCounter,
 	});
 
