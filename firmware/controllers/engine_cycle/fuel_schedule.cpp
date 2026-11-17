@@ -11,6 +11,10 @@
 
 extern bool printFuelDebug;
 
+// Durations under 50us-ish aren't safe for the scheduler as their order may be swapped, resulting in a stuck open
+// injector, see https://github.com/rusefi/rusefi/pull/596 for more details
+static constexpr floatms_t minInjectionDurationMs = 0.050f;
+
 void startInjection(InjectorContext ctx) {
 	forEachSetBit(ctx.outputsMask, [&ctx](size_t idx) {
 		enginePins.injectors[idx].open();
@@ -171,10 +175,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 	// If somebody commanded an impossibly short injection, do nothing.
-	// Durations under 50us-ish aren't safe for the scheduler
-	// as their order may be swapped, resulting in a stuck open injector
-	// see https://github.com/rusefi/rusefi/pull/596 for more details
-	if (injectionDurationStage1 < 0.050f) {
+	if (injectionDurationStage1 < minInjectionDurationMs) {
 		return;
 	}
 
