@@ -159,6 +159,12 @@ public:
 		return !m_timeSinceDecodeError.hasElapsedSec(1);
 	}
 
+	// True once two consecutive sync points were the right number of teeth apart, until sync is lost.
+	// Decoding errors are only reported (counted, warned) while this is true.
+	bool isSyncConfirmed() const {
+		return m_syncConfirmed;
+	}
+
 protected:
 	// Called when some problem is detected with trigger decoding.
 	// That means either:
@@ -181,6 +187,8 @@ private:
 	int64_t totalEventCountBase;
 
 	bool isFirstEvent;
+
+	bool m_syncConfirmed = false;
 
 	Timer m_timeSinceDecodeError;
 };

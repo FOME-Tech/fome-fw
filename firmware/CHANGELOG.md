@@ -89,6 +89,7 @@ or
  - "Miata NB" crank trigger below 1000 RPM: an impossible gap between crank teeth is now counted as a trigger error and waits for the cam before firing again. Previously the ECU kept firing on a stale engine phase, so several sparks could land on the wrong cylinders after a single noise pulse.
  - After a crank trigger error, the cam decoder no longer loses its own sync, so full sync comes back sooner. On engines that need the cam before they may fire at all (such as the Miata NB), it also no longer comes back on the wrong engine phase, which put sparks on the wrong cylinders for a cycle.
  - "Miata NB" crank trigger: a single noise pulse at idle could shift all ignition timing by 110 degrees with no trigger error, usually stalling the engine. Once the engine has been running for a few seconds, such a pulse is now caught as a trigger error and the ECU resyncs.
+ - Starting the engine no longer reports trigger errors that aren't errors. On many trigger and cam patterns the first sync point found while cranking can be the wrong one, and the next one corrects it; that used to show up as a trigger warning in TunerStudio and on the trigger error count after a perfectly normal start. Errors are now reported once the trigger has been in sync for a full cycle, as before.
 
 ## May 2026 Release
 

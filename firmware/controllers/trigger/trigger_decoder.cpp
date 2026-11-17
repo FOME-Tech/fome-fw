@@ -39,6 +39,10 @@ bool TriggerDecoderBase::getShaftSynchronized() const {
 
 void TriggerDecoderBase::setShaftSynchronized(bool value) {
 	shaft_is_synchronized = value;
+
+	if (!value) {
+		m_syncConfirmed = false;
+	}
 }
 
 void TriggerDecoderBase::resetState() {
@@ -609,8 +613,13 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			// In either case, we should wait for another sync point before doing anything to try and run an engine,
 			// so we clear the synchronized flag.
 			if (wasSynchronized && isDecodingError) {
-				setTriggerErrorState();
-				onNotEnoughTeeth(currentCycle.current_index, triggerShape.getSize());
+				// Only report it if the sync point before this one had been confirmed. If it hadn't (it was
+				// the first one after starting, or after a previous error), this most likely means that one
+				// was wrong, not that something went wrong since: a start, especially a hard one, does this.
+				if (m_syncConfirmed) {
+					setTriggerErrorState();
+					onNotEnoughTeeth(currentCycle.current_index, triggerShape.getSize());
+				}
 
 				// Something wrong, no longer synchronized
 				setShaftSynchronized(false);
@@ -620,6 +629,11 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			} else {
 				// If this was the first sync point OR no decode error, we're synchronized!
 				setShaftSynchronized(true);
+
+				// Two sync points the right number of teeth apart: now we can be sure of this one
+				if (wasSynchronized) {
+					m_syncConfirmed = true;
+				}
 			}
 
 			// this call would update duty cycle values
@@ -651,8 +665,9 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		// We've had too many events since the last sync point, we should have seen a sync point by now.
 		// This is a trigger error.
 
-		// let's not show a warning if we are just starting to spin
-		if (Sensor::getOrZero(SensorType::Rpm) != 0) {
+		// Only report it if the last sync point had been confirmed, as above: the first sync point found
+		// while starting to spin may well have been a wrong one
+		if (m_syncConfirmed) {
 			setTriggerErrorState();
 			onTooManyTeeth(currentCycle.current_index, triggerShape.getSize());
 		}
@@ -729,10 +744,12 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 				return getCurrentIndex() != 0;
 			} else {
 				// An impossible gap: this is a decoding error like any other
-				setTriggerErrorState();
-				warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING,
-						"primary trigger error: gap ratio %.2f out of range while counting teeth",
-						(float)triggerSyncGapRatio);
+				if (m_syncConfirmed) {
+					setTriggerErrorState();
+					warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING,
+							"primary trigger error: gap ratio %.2f out of range while counting teeth",
+							(float)triggerSyncGapRatio);
+				}
 				onTriggerError();
 				setShaftSynchronized(false);
 				return false;

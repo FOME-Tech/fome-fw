@@ -13,6 +13,7 @@
 #include "harness/engine_invariants.h"
 
 #include <map>
+#include <set>
 #include <sstream>
 
 namespace {
@@ -987,4 +988,144 @@ TEST(TriggerErrorRecovery, CamNoiseWhileCrankStoppedIsHarmless) {
 			EXPECT_NEAR(0, diff, 3) << "coil " << coil;
 		}
 	}
+}
+
+// ---------------------------------------------------------------------------------------------
+// Expected trigger errors: a start shouldn't report any
+// ---------------------------------------------------------------------------------------------
+
+namespace {
+
+// A normal start: cranking with the speed pulsing on every compression stroke, then the engine catches
+void crankAndCatch(EngineSim& sim) {
+	sim.setRpm(200);
+	sim.setSpeedRipple(0.2f, 2);
+	sim.runSeconds(1);
+	sim.setSpeedRipple(0.05f, 2);
+	sim.rampRpm(900, 0.5f);
+	sim.runSeconds(1.5);
+}
+
+bool anyTriggerErrorWarning(EngineTestHelper& eth) {
+	for (size_t i = 0; i < eth.recentWarnings()->getCount(); i++) {
+		switch (eth.recentWarnings()->get(i).Code) {
+			case ObdCode::CUSTOM_PRIMARY_TOO_MANY_TEETH:
+			case ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH:
+			case ObdCode::CUSTOM_CAM_TOO_MANY_TEETH:
+			case ObdCode::CUSTOM_CAM_NOT_ENOUGH_TEETH:
+				return true;
+			default:
+				break;
+		}
+	}
+	return false;
+}
+
+} // namespace
+
+// Several patterns lose sync once during a start: the first sync point is taken on trust, and the speed
+// changes of cranking and catching make the next one fail. That's not a trigger problem, so it isn't
+// reported (counted, warned) as one. Sync is still dropped and found again as always.
+TEST(TriggerErrorRecovery, StartReportsNoTriggerErrorsOnAnyPattern) {
+	static const std::set<trigger_type_e> skipped = {
+			// see skippedTriggers in test_engine_invariants.cpp
+			trigger_type_e::TT_TRI_TACH,
+			trigger_type_e::TT_RENIX_44_2_2,
+			trigger_type_e::TT_RENIX_66_2_2_2,
+	};
+
+	int patterns = 0;
+	int lostSyncDuringStart = 0;
+
+	for (int t = 1; t < (int)trigger_type_e::TT_UNUSED; t++) {
+		auto type = (trigger_type_e)t;
+		if (skipped.count(type)) {
+			continue;
+		}
+
+		EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+		configureSparkOnly(IM_WASTED_SPARK);
+		engineConfiguration->trigger.type = type;
+		eth.applyTriggerWaveform();
+		if (engine->triggerCentral.triggerShape.shapeDefinitionError) {
+			continue;
+		}
+		SCOPED_TRACE(getTrigger_type_e(type));
+		patterns++;
+
+		EngineSim sim(eth);
+		crankAndCatch(sim);
+
+		bool synced = false;
+		bool lostSync = false;
+		for (const auto& s : sim.samples()) {
+			lostSync |= synced && !s.synced;
+			synced = s.synced;
+		}
+		lostSyncDuringStart += lostSync;
+
+		EXPECT_TRUE(sim.samples().back().synced);
+		EXPECT_TRUE(noTriggerErrors(sim));
+		EXPECT_FALSE(anyTriggerErrorWarning(eth));
+	}
+
+	printf("%d of %d patterns lost sync during the start\n", lostSyncDuringStart, patterns);
+	// Make sure the case this test is about actually happened
+	EXPECT_GE(lostSyncDuringStart, 5);
+}
+
+// The same for the cam decoders: several patterns lose cam sync once during a start (the first, partial,
+// cam cycle)
+TEST(TriggerErrorRecovery, StartReportsNoCamErrors) {
+	int lostCamSync = 0;
+
+	for (const auto& pattern : camPatterns) {
+		auto eth = camPatternEngine(pattern);
+		SCOPED_TRACE(pattern.name);
+
+		EngineSim sim(*eth);
+		auto cam = sim.addCamFromShape(0);
+		sim.setCamOffset(cam, 30);
+
+		const auto& camDecoder = engine->triggerCentral.vvtState[0][0];
+		bool camSynced = false;
+		bool camLost = false;
+		sim.onCrankEdge = [&](const SimSample&) {
+			camLost |= camSynced && !camDecoder.getShaftSynchronized();
+			camSynced = camDecoder.getShaftSynchronized();
+		};
+
+		crankAndCatch(sim);
+		lostCamSync += camLost;
+
+		EXPECT_TRUE(sim.samples().back().fullSync);
+		EXPECT_EQ(0u, camDecoder.triggerErrorCounter);
+		EXPECT_TRUE(noTriggerErrors(sim));
+		EXPECT_FALSE(anyTriggerErrorWarning(*eth));
+	}
+
+	EXPECT_GE(lostCamSync, 2);
+}
+
+// Once sync has been confirmed, a real error while cranking is still reported: that's what someone
+// chasing a hard start needs to see
+TEST(TriggerErrorRecovery, GlitchWhileCrankingIsStillReported) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	configureSparkOnly(IM_WASTED_SPARK);
+	setToothedWheel(eth, 36, 1);
+
+	EngineSim sim(eth);
+	sim.setRpm(200);
+	sim.setSpeedRipple(0.1f, 2);
+	sim.runCycles(3);
+	ASSERT_TRUE(engine->triggerCentral.triggerState.isSyncConfirmed());
+	ASSERT_TRUE(noTriggerErrors(sim));
+	ASSERT_FALSE(engine->rpmCalculator.isRunning());
+
+	auto from = sim.nowUs();
+	sim.injectCrankGlitch(/*afterDegrees*/ 105, /*widthDegrees*/ 2);
+	sim.runCycles(2);
+
+	EXPECT_FALSE(noTriggerErrors(sim, from));
+	EXPECT_TRUE(anyTriggerErrorWarning(eth));
 }
