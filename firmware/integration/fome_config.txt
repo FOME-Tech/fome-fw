@@ -607,7 +607,7 @@ uint8_t knockNoiseTimeout;Duration the knock sensor signal must be too low befor
 custom engineSyncCam_e 1 bits, S08, @OFFSET@, [0:1], @@engineSyncCam_enum@@
 engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other cams will be used only for VVT measurement, but not engine sync.
 
-	uint8_t vssFilterReciprocal;Set this so your vehicle speed signal is responsive, but not noisy. Larger value give smoother but slower response.;"", 1, 0, 2, 200, 0
+	uint8_t vssWindowMs;Vehicle speed is averaged over this long. Longer is smoother but slower to respond. At low speed, where the sensor's edges are further apart than this, the average covers the time since the previous edge instead.;"ms", 1, 0, 0, 255, 0
 
 	uint16_t autoscale vssGearRatio;Number of turns of your vehicle speed sensor per turn of the wheels. For example if your sensor is on the transmission output, enter your axle/differential ratio. If you are using a hub-mounted sensor, enter a value of 1.0.;"ratio", 0.001, 0, 0, 60, 3
 	uint8_t vssToothCount;Number of pulses output per revolution of the shaft where your VSS is mounted. For example, GM applications of the T56 output 17 pulses per revolution of the transmission output shaft.;"count", 1, 0, 1, 100, 0
@@ -858,7 +858,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
     int launchFuelAdded;Extra Fuel Added;"%", 1, 0, 0, 100, 0
     int launchBoostDuty;Duty Cycle for the Boost Solenoid;"%", 1, 0, 0, 100, 0
 	int hardCutRpmRange;Range from Launch RPM to activate Hard Cut;"RPM", 1, 0, 0, 3000, 0
-	float turbochargerFilter;;"", 1, 0, 0, 50, 0
+	uint8_t turboSpeedWindowMs;Turbocharger speed is averaged over this long. Longer is smoother but slower to respond.;"ms", 1, 0, 0, 255, 0
 	int launchTpsThreshold;;"", 1, 0, 0, 20000, 0
 	float launchActivateDelay;;"", 1, 0, 0, 20000, 0
 
@@ -957,7 +957,6 @@ bit useCltBasedRpmLimit,"yes","no";If enabled, use a curve for RPM limit (based 
 bit forceO2Heating,"yes","no";If enabled, don't wait for engine start to heat O2 sensors. WARNING: this will reduce the life of your sensor, as condensation in the exhaust from a cold start can crack the sensing element.
 bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
 bit invertVvtControlExhaust,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
-bit useBiQuadOnAuxSpeedSensors
 bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
 bit ALSActivateInverted
 
@@ -1204,7 +1203,7 @@ tChargeMode_e tChargeMode;
 	custom can_vss_nbc_e 2 bits, U08, @OFFSET@, [0:2], "BMW_e46", "W202", "BMW E8x/E9x MK60e5", "MX-5 NC", "AUMOVIO MK 100 UHP"
 	can_vss_nbc_e canVssNbcType
 
-	float auxFrequencyFilter;;"hz", 1, 0, 0, 100, 1
+	uint8_t auxSpeedWindowMs;Aux speed sensors are averaged over this long. Longer is smoother but slower to respond.;"ms", 1, 0, 0, 255, 0
 	int16_t vvtControlMinRpm;;"RPM", 1, 0, 0, 3000, 0
 
 	int8_t launchFuelAdderPercent;;"%", 1, 0, 0, 100, 0

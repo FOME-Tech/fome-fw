@@ -73,7 +73,10 @@ void setDefaultBaseEngine() {
 
 	engineConfiguration->compressionRatio = 9;
 
-	engineConfiguration->turbochargerFilter = 0.01f;
+	engineConfiguration->vssWindowMs = 50;
+	// Shorter window for aux inputs, which may carry fast signals like a frequency MAF (via Lua)
+	engineConfiguration->auxSpeedWindowMs = 20;
+	engineConfiguration->turboSpeedWindowMs = 50;
 
 	engineConfiguration->fuelAlgorithm = LM_SPEED_DENSITY;
 

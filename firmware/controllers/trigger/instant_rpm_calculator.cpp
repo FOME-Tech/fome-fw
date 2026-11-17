@@ -144,7 +144,8 @@ void InstantRpmCalculator::updateCylinderContribution(
 			if (auto rpm = calculateInstantRpm(
 						triggerShape, triggerFormDetails, current_index, nowNt32, measurementWindow)) {
 				engine->outputChannels.cylinderRpm[i] = rpm.Value;
-				engine->outputChannels.cylinderRpmDelta[i] = rpm.Value - m_lastCylRpm;
+				// Clamp to fit int8_t output channel, out of range float -> int8 conversion is UB (wraps on ARM)
+				engine->outputChannels.cylinderRpmDelta[i] = std::clamp(rpm.Value - m_lastCylRpm, -127.0f, 127.0f);
 				m_lastCylRpm = rpm.Value;
 			}
 		}
