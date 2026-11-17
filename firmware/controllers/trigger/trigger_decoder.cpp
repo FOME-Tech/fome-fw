@@ -339,7 +339,7 @@ void TriggerDecoderBase::onShaftSynchronization(
 		crankSynchronizationCounter++;
 
 		// Wrap the counter before it overflows, at a multiple of all possible
-		// getCrankDivider() values (LCM of 1, 2, 4, 6, 24 = 24) so that
+		// getCrankDivider() values (LCM of 1, 2, 4, 6, 10, 24 = 120) so that
 		// crankSynchronizationCounter % crankDivider doesn't jump on wrap.
 		using counter_t = decltype(crankSynchronizationCounter);
 		static constexpr counter_t crankDividerLcm = 24;
