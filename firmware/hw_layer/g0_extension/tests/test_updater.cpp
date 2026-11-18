@@ -14,6 +14,7 @@ unsigned romBytes;
 
 void palWritePad(unsigned, unsigned pin, bool high) {
 	if (pin == Gpio::B14 && testPinOutputs[pin] && !high) {
+		assert(testPinOutputs[Gpio::B15]); // Drive BOOT0 throughout reset selection.
 		testResetPulses.push_back(Gpio::B14);
 		if (romBytes && !missingDevice && !appRunning) {
 			assert(rom->offset == rom->bytes.size()); // Never reset a factory ROM before Go.
@@ -27,6 +28,7 @@ void palWritePad(unsigned, unsigned pin, bool high) {
 
 void spiExchange(SPIDriver*, size_t size, const void* tx, void* rx) {
 	assert(testSelected && testStarted && testBusLocked);
+	assert(testPinOutputs[Gpio::B15]); // Release SWCLK only after initialization finishes.
 	if (size == g0::wire::appFrameSize) {
 		appExchanges++;
 		auto& reply = *static_cast<g0::wire::AppFrame*>(rx);
@@ -75,6 +77,7 @@ static void init(boot_test::Script& script, bool running) {
 static void finished() {
 	assert(!testSelected && !testStarted && !testBusLocked);
 	assert(!testPins[Gpio::B15] && testPins[Gpio::B14]);
+	assert(!testPinOutputs[Gpio::B15] && testPinOutputs[Gpio::B14]);
 }
 
 int main() {

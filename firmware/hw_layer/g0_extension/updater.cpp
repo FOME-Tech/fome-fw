@@ -130,8 +130,9 @@ bool updateFirmware(SPIDriver& spi, const SPIConfig& spiSettings, brain_pin_e re
 	spiUnselect(&spi);
 	spiStop(&spi);
 	spiReleaseBus(&spi);
-	// Retain ownership: these are dedicated expansion control pins.
 	pin(bootPin, false);
+	// G071 BOOT0 shares SWCLK: release the line so an attached debugger can drive it.
+	efiSetPadModeWithoutOwnershipAcquisition("G0 BOOT", bootPin, PAL_MODE_INPUT_PULLDOWN);
 	pin(resetPin, true);
 	enginePins.runningLedPin.setValue(0);
 	efiPrintf("G0 firmware %s", ok ? "ready" : "failed");

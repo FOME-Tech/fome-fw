@@ -57,7 +57,10 @@ No prepared binary/header is needed. Update the submodule pin for a new release.
 Before registering remote I/O, the updater first probes an existing G071 ROM
 session without pulsing NRST. This preserves factory-blank entry on ROM versions
 that clear the EMPTY flag during startup. RESET and BOOT output latches are
-preloaded high before enabling their GPIO drivers. Atlas also keeps PB14/NRST
+preloaded high before enabling their GPIO drivers. At updater completion, BOOT
+is released to input mode with a weak pull-down on both success and failure:
+G071 BOOT0 shares PA14/SWCLK and must not be driven during normal debugging.
+Atlas also keeps PB14/NRST
 pulled up during both ECU bootloader and main-firmware GPIO initialization. A running application follows
 the normal reset/version-check path; a matching image skips programming.
 

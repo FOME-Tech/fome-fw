@@ -12,6 +12,7 @@ using brain_pin_e = Gpio;
 struct SPIDriver {};
 struct SPIConfig {};
 constexpr unsigned PAL_MODE_OUTPUT_PUSHPULL = 1;
+constexpr unsigned PAL_MODE_INPUT_PULLDOWN = 2;
 inline bool testPins[] = {true, false};
 inline bool testPinOutputs[2] = {};
 inline std::vector<Gpio> testResetPulses;
@@ -56,6 +57,12 @@ inline void efiSetPadMode(const char*, Gpio pin, unsigned) {
 	assert(testPins[pin]); // Preload both latches HIGH before enabling either
 						   // output driver.
 	testPinOutputs[pin] = true;
+}
+inline void efiSetPadModeWithoutOwnershipAcquisition(const char*, Gpio pin, unsigned mode) {
+	assert(pin == Gpio::B15 && mode == PAL_MODE_INPUT_PULLDOWN);
+	assert(!testPins[pin] && testPinOutputs[pin]);
+	assert(!testSelected && !testStarted && !testBusLocked);
+	testPinOutputs[pin] = false;
 }
 inline void spiAcquireBus(SPIDriver*) {
 	assert(!testBusLocked);
