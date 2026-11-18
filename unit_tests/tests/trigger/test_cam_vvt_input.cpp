@@ -30,29 +30,30 @@ TEST(trigger, testNoStartUpWarnings) {
 	engineConfiguration->trigger.customTotalToothCount = 3;
 	engineConfiguration->trigger.customSkippedToothCount = 1;
 	eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
+	// Run the scheduled injections as time passes: left queued, they would use up the scheduler's pool
 	ASSERT_EQ(0, round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
 
 	for (int i = 0; i < 10; i++) {
-		eth.fireRise(50);
-		eth.fireFall(50);
-		eth.fireRise(50);
-		eth.fireFall(150);
+		eth.smartFireRise(50);
+		eth.smartFireFall(50);
+		eth.smartFireRise(50);
+		eth.smartFireFall(150);
 	}
 
 	ASSERT_EQ(400, round(Sensor::getOrZero(SensorType::Rpm))) << "testNoStartUpWarnings RPM";
 	ASSERT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount()) << "warningCounter#testNoStartUpWarnings";
 	// now let's post something unneeded
-	eth.fireRise(50);
-	eth.fireFall(50);
-	eth.fireRise(50); // this is noise
-	eth.fireFall(50); // this is noise
-	eth.fireRise(50);
-	eth.fireFall(150);
+	eth.smartFireRise(50);
+	eth.smartFireFall(50);
+	eth.smartFireRise(50); // this is noise
+	eth.smartFireFall(50); // this is noise
+	eth.smartFireRise(50);
+	eth.smartFireFall(150);
 	for (int i = 0; i < 1; i++) {
-		eth.fireRise(50);
-		eth.fireFall(50);
-		eth.fireRise(50);
-		eth.fireFall(150);
+		eth.smartFireRise(50);
+		eth.smartFireFall(50);
+		eth.smartFireRise(50);
+		eth.smartFireFall(150);
 	}
 	EXPECT_EQ(1, unitTestWarningCodeState.recentWarnings.getCount())
 			<< "warningCounter#testNoStartUpWarnings CUSTOM_SYNC_COUNT_MISMATCH expected";
@@ -74,8 +75,12 @@ TEST(trigger, testNoisyInput) {
 	eth.firePrimaryTriggerFall();
 	ASSERT_EQ(0, Sensor::getOrZero(SensorType::Rpm));
 
-	EXPECT_EQ(1, unitTestWarningCodeState.recentWarnings.getCount());
-	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_NOT_ENOUGH_TEETH, unitTestWarningCodeState.recentWarnings.get(0).Code);
+	// The decoder never had a confirmed sync (two sync points the right number of teeth apart), so this
+	// isn't reported as a trigger error: before that, a "wrong" sync point is as likely to be the first
+	// one found while starting to spin as anything else
+	EXPECT_FALSE(engine->triggerCentral.triggerState.isSyncConfirmed());
+	EXPECT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount());
+	EXPECT_EQ(0u, engine->triggerCentral.triggerState.triggerErrorCounter);
 }
 
 TEST(trigger, testCamInput) {

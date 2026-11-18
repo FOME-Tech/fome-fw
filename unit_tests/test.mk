@@ -3,6 +3,9 @@ FRAMEWORK_SRC_CPP = unit_test_framework.cpp \
 	logicdata_csv_reader.cpp \
 	boards.cpp \
 	global_execution_queue.cpp \
+	harness/output_recorder.cpp \
+	harness/engine_sim.cpp \
+	harness/engine_invariants.cpp \
 	test_basic_math/test_find_index.cpp \
 	test_basic_math/test_interpolation_3d.cpp \
 

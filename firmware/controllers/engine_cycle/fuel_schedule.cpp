@@ -11,6 +11,10 @@
 
 extern bool printFuelDebug;
 
+// Durations under 50us-ish aren't safe for the scheduler as their order may be swapped, resulting in a stuck open
+// injector, see https://github.com/rusefi/rusefi/pull/596 for more details
+static constexpr floatms_t minInjectionDurationMs = 0.050f;
+
 void startInjection(InjectorContext ctx) {
 	forEachSetBit(ctx.outputsMask, [&ctx](size_t idx) {
 		enginePins.injectors[idx].open();
@@ -171,10 +175,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 	// If somebody commanded an impossibly short injection, do nothing.
-	// Durations under 50us-ish aren't safe for the scheduler
-	// as their order may be swapped, resulting in a stuck open injector
-	// see https://github.com/rusefi/rusefi/pull/596 for more details
-	if (injectionDurationStage1 < 0.050f) {
+	if (injectionDurationStage1 < minInjectionDurationMs) {
 		return;
 	}
 
@@ -244,6 +245,10 @@ WallFuel& InjectionEvent::getWallFuel() {
 
 void FuelSchedule::invalidate() {
 	isReady = false;
+
+	for (auto& element : elements) {
+		element.forgetStartAngle();
+	}
 }
 
 // Determines how much to adjust injection opening angle based on the injection's duration and the current phasing mode
@@ -314,8 +319,15 @@ bool InjectionEvent::updateInjectionAngle(injection_mode_e mode) {
 	if (auto result = engine->cylinders[cylinderNumber].computeInjectionAngle(mode)) {
 		// If injector duty cycle is high, lock injection SOI so that we
 		// don't miss injections at or above 100% duty
-		if (getEngineState()->shouldUpdateInjectionTiming) {
+		bool lockForHighDuty = !getEngineState()->shouldUpdateInjectionTiming;
+
+		// With no fuel (fuel cut), the angle would be worked out for a pulse of no length, so the first pulse
+		// after the cut would end a whole pulse late. Keep the angle from the last real pulse instead.
+		bool noFuel = getEngineState()->injectionDuration < minInjectionDurationMs;
+
+		if (!m_hasStartAngle || !(lockForHighDuty || noFuel)) {
 			injectionStartAngle = result.Value;
+			m_hasStartAngle = true;
 		}
 
 		return true;

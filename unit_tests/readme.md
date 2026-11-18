@@ -10,6 +10,19 @@ Unit tests are not aware of ChibiOS or ARM or else, they are just plain C/C++ wh
 
 
 
+# Simulated engine harness
+
+For tests of anything that depends on the engine turning (trigger decoding, RPM, spark and injection
+scheduling), prefer the harness in [harness](harness) to hand-firing teeth with delays:
+
+- `EngineSim` spins a model engine at whatever speed profile you describe and feeds the firmware
+  correctly timed crank and cam edges, with glitches, missing teeth or a moving cam on request.
+- `OutputRecorder` records what the coils and injectors really did, with the true crank angle.
+- `engine_invariants.h` has ready-made checks such as `noOverdwell`, `sparkTimingWithin` and
+  `rpmNeverZero`.
+
+See [tests/trigger/test_engine_invariants.cpp](tests/trigger/test_engine_invariants.cpp) for examples.
+
 [Code Coverage Report](https://rusefi.com/docs/unit_tests_coverage/)
 
 See also [https://github.com/rusefi/rusefi/wiki/Build-Server-and-Automation](https://github.com/rusefi/rusefi/wiki/Build-Server-and-Automation)
