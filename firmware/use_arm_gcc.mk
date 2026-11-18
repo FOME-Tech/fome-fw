@@ -28,3 +28,10 @@ endif
 
 $(info COMPILER_PLATFORM: $(COMPILER_PLATFORM))
 $(info TRGT:              $(TRGT))
+
+# Packaging scripts query the same toolchain selection without loading a board build.
+ifneq ($(filter print-arm-toolchain,$(MAKECMDGOALS)),)
+.PHONY: print-arm-toolchain
+print-arm-toolchain:
+	@printf '%s\n' "$(abspath $(TRGT))"
+endif
