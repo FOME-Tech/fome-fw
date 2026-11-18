@@ -70,6 +70,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Regenerate enum names and missing generated headers before compilation when cached generation stamps survive a pull or another build directory is cleaned.
  - Release G0 BOOT0 after initialization so its shared SWCLK pin remains available to a debugger while the ECU runs.
  - G0 PWM accepts paused frequency values used by tachometer/speedometer outputs and follows the global PWM enable setting.
  - Keep configured SPI5 thermocouples deselected during G0 initialization and firmware upload on Atlas.
