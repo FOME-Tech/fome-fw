@@ -35,13 +35,27 @@ scheduling_s* TestExecutor::getForUnitTest(int index) {
 	return schedulingQueue.getElementAtIndexForUnitText(index);
 }
 
-void TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
+bool TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
 	if (m_mockExecutor) {
-		m_mockExecutor->schedule(msg, scheduling, timeNt, action);
-		return;
+		return m_mockExecutor->schedule(msg, scheduling, timeNt, action);
 	}
 
-	schedulingQueue.insertTask(scheduling, NT2US(timeNt), action);
+	return schedulingQueue.insertTask(scheduling, NT2US(timeNt), action) != EventQueue::InsertResult::Failed;
+}
+
+bool TestExecutor::scheduleTogether(const char* msg, const TimedAction* actions, size_t count) {
+	if (m_mockExecutor) {
+		// One at a time, so that tests can expect each one
+		return Scheduler::scheduleTogether(msg, actions, count);
+	}
+
+	// This queue keeps time in microseconds
+	std::vector<TimedAction> converted(actions, actions + count);
+	for (auto& action : converted) {
+		action.time = NT2US(action.time);
+	}
+
+	return schedulingQueue.insertTogether(converted.data(), count) != EventQueue::InsertResult::Failed;
 }
 
 void TestExecutor::cancel(scheduling_s* s) {

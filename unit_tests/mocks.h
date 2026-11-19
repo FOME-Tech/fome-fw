@@ -97,7 +97,7 @@ public:
 	virtual ~MockExecutor();
 
 	MOCK_METHOD(
-			void, schedule, (const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action), (override));
+			bool, schedule, (const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action), (override));
 	MOCK_METHOD(void, cancel, (scheduling_s*), (override));
 };
 

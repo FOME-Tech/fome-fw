@@ -36,8 +36,9 @@ struct CallbackContext {
 
 static void doScheduleForLater(scheduling_s* scheduling, int delayUs, action_s action);
 
-void SleepExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
+bool SleepExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
 	doScheduleForLater(scheduling, NT2US(timeNt) - getTimeNowUs(), action);
+	return true;
 }
 
 static void timerCallback(CallbackContext* ctx) {

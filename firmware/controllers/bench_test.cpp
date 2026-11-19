@@ -100,9 +100,12 @@ static void runBench(BenchParams& params) {
 		efitick_t startTime = nowNt + US2NT(50);
 		efitick_t endTime = startTime + US2NT(onTimeUs);
 
-		// Schedule both events
-		engine->scheduler.schedule("bstart", nullptr, startTime, {benchOn, params.Pin});
-		engine->scheduler.schedule("bend", nullptr, endTime, {benchOff, params.Pin});
+		// Schedule both events, or neither: an output turned on with nothing to turn it off would stay on
+		TimedAction pulse[] = {
+				{startTime, {benchOn, params.Pin}},
+				{endTime, {benchOff, params.Pin}},
+		};
+		engine->scheduler.scheduleTogether("bench", pulse, efi::size(pulse));
 
 		// Wait one full cycle time for the event + delay to happen
 		chThdSleepMicroseconds(onTimeUs + offTimeUs);
