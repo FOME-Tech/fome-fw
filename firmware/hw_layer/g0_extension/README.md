@@ -58,6 +58,8 @@ protocol version and frame definitions follow the checked-out companion source.
 The companion build requires ChibiOS to be clean and at its pinned revision.
 Commit driver changes and update that pin before building a modified driver.
 
+The application does not implement an update-mode command; ROM entry uses BOOT0/NRST.
+
 Before registering remote I/O, the updater first probes an existing G071 ROM
 session without pulsing NRST. This preserves factory-blank entry on ROM versions
 that clear the EMPTY flag during startup. RESET and BOOT output latches are

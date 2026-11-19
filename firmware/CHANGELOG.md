@@ -70,6 +70,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Remove the unused G0 application update mode; programming continues through BOOT0/NRST.
  - Drive G0 NRST as open drain so the companion and debugger can assert reset without contention.
  - Reject unpinned or locally modified G0 ChibiOS sources so driver changes cannot retain an old firmware identity.
  - Derive the G0 wire protocol from the companion submodule so FOME and its bundled firmware use the same version and frame definitions.
