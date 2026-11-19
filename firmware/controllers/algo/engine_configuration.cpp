@@ -325,6 +325,7 @@ static void setDefaultEngineConfiguration() {
 	engineConfiguration->vvtOutputFrequency = 300; // VVT solenoid control
 
 	engineConfiguration->isCylinderCleanupEnabled = true;
+	engineConfiguration->isCylinderCleanupLatching = false;
 
 	engineConfiguration->auxPid[1].minValue = -50;
 	engineConfiguration->auxPid[1].maxValue = 50;
