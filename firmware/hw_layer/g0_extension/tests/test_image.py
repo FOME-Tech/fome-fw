@@ -70,7 +70,7 @@ class ImageTests(unittest.TestCase):
                     self.generate("--version-header", str(self.source))
                 self.assertEqual(original, self.header.read_bytes())
 
-    def test_disabled_build_skips_companion_dependency(self):
+    def test_disabled_build_skips_image_dependency(self):
         makefile = self.root / "Makefile"
         image_rules = GENERATOR.with_name("image.mk")
         firmware = self.root / "firmware"
@@ -87,9 +87,16 @@ class ImageTests(unittest.TestCase):
         for options in [["G0_EXTENSION=no", "G0_FIRMWARE_UPDATE=yes"],
                         ["G0_EXTENSION=yes", "G0_FIRMWARE_UPDATE=no"]]:
             with self.subTest(options=options):
+                if "G0_EXTENSION=yes" in options:
+                    planned = subprocess.check_output(
+                        ["make", "-n", "-f", str(makefile), *options, "all"], text=True)
+                    self.assertIn("submodule update", planned)
+                    protocol = firmware / "ext/g0_firmware/for_fome/g0_spi_protocol.h"
+                    protocol.parent.mkdir(parents=True)
+                    protocol.write_text("// companion protocol\n")
                 subprocess.run(["make", "-f", str(makefile), "-j12", *options, "all"],
                                cwd=self.root, check=True, capture_output=True)
-                self.assertFalse(firmware.exists())
+                self.assertEqual(firmware.exists(), "G0_EXTENSION=yes" in options)
                 self.assertFalse(self.header.exists())
 
 

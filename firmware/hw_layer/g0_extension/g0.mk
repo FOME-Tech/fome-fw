@@ -1,5 +1,6 @@
 ifeq ($(G0_EXTENSION),yes)
 G0_FIRMWARE_UPDATE ?= yes
+HW_LAYER_INC += $(PROJECT_DIR)/ext/g0_firmware
 DDEFS += -DEFI_G0_EXTENSION=TRUE -DBOARD_G0_GPIOCHIP_COUNT=2
 HW_LAYER_EMS_CPP += \
 	$(PROJECT_DIR)/hw_layer/g0_extension/link.cpp \

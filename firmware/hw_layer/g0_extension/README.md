@@ -53,6 +53,8 @@ pinned `firmware/ext/g0_firmware` submodule, builds it with fome-fw's ARM compil
 and generates `g0_firmware_image.h` containing the complete immutable image and
 build identity. Clean builds recreate it; unchanged inputs preserve timestamps.
 No prepared binary/header is needed. Update the submodule pin for a new release.
+FOME includes the wire protocol directly from that submodule, so its expected
+protocol version and frame definitions follow the checked-out companion source.
 
 Before registering remote I/O, the updater first probes an existing G071 ROM
 session without pulsing NRST. This preserves factory-blank entry on ROM versions
@@ -92,8 +94,8 @@ The option layout and boot sequence follow
 and [AN4286](https://www.st.com/resource/en/application_note/an4286-spi-protocol-used-in-the-stm32-bootloader-stmicroelectronics.pdf).
 
 `G0_FIRMWARE_UPDATE=no` builds runtime I/O without an image or updater.
-`G0_EXTENSION=no` disables the expansion. These flags also skip the companion
-build dependency. Other boards need their own `initG0Extension` wiring.
+`G0_EXTENSION=no` disables the expansion. Runtime-only builds still need the companion source for its protocol header;
+disabling the expansion skips that dependency too. Other boards need their own `initG0Extension` wiring.
 
 Run the standalone tests:
 
