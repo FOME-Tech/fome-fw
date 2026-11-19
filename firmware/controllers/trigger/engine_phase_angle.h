@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 struct TriggerPhase {};
 struct EnginePhase {};
 
@@ -40,7 +42,40 @@ struct EnginePhaseInfo {
 	// Where is the engine, in engine space?
 	EngPhase currentEngPhase;
 	EngPhase nextEngPhase;
+
+	// Physical crank rotation at this tooth, see TriggerCentral::getRotationCounter()
+	uint32_t rotation = 0;
+	// How many times the engine phase has been relabeled so far, see TriggerCentral::phaseLabelJumpCount
+	uint16_t phaseLabelJumpCount = 0;
 };
+
+// Units of the rotation counter per degree
+constexpr float rotationUnitsPerDegree = 100;
+
+// Degrees of crank rotation from one rotation counter value to a later one (negative if it's earlier).
+// The counter wraps, so only nearby values can be compared, which is all that's ever needed.
+inline float rotationDegreesBetween(uint32_t from, uint32_t to) {
+	return static_cast<int32_t>(to - from) / rotationUnitsPerDegree;
+}
+
+// Wrap an angle in to [0, period). Cheap for an angle already within one period of that range, as almost
+// every angle on the tooth path is; anything further out falls back to fmod.
+inline float wrapToPeriod(float angle, float period) {
+	if (angle < 0) {
+		angle += period;
+	} else if (angle >= period) {
+		angle -= period;
+	}
+
+	if (angle < 0 || angle >= period) {
+		angle = std::fmod(angle, period);
+		if (angle < 0) {
+			angle += period;
+		}
+	}
+
+	return angle;
+}
 
 bool isPhaseInRange(float test, float current, float next);
 

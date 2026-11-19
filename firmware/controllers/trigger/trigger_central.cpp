@@ -635,6 +635,9 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 		expectedNextPhase = unexpected;
 
+		// Teeth can't be counted until decoding resumes
+		m_hasRotationReference = false;
+
 		return;
 	}
 
@@ -683,7 +686,7 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 		engine->module<TpsAccelEnrichment>()->onEngineCycleTps();
 	}
 
-	const EnginePhaseInfo phaseInfo{
+	EnginePhaseInfo phaseInfo{
 			.timestamp = timestamp,
 
 			.currentTrgPhase = currentTrgPhase,
@@ -696,6 +699,11 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 	// Update engine RPM
 	rpmShaftPositionCallback(triggerIndexForListeners, phaseInfo);
 
+	// After the RPM update, so that a gap in decoding is estimated with the speed now as well as before
+	updateRotation(timestamp, phaseInfo.currentEngPhase, phaseInfo.nextEngPhase);
+	phaseInfo.rotation = m_rotation;
+	phaseInfo.phaseLabelJumpCount = phaseLabelJumpCount;
+
 	// Schedule the TDC mark
 	tdcMarkCallback(triggerIndexForListeners, timestamp);
 
@@ -704,6 +712,56 @@ void TriggerCentral::handleShaftSignal(TriggerEvent signal, efitick_t timestamp)
 
 	// Decode the MAP based "cam" sensor
 	decodeMapCam(timestamp, currentEnginePhase);
+}
+
+void TriggerCentral::updateRotation(efitick_t timestamp, EngPhase currentPhase, EngPhase nextPhase) {
+	float cycle = engine->engineState.engineCycle;
+	floatus_t oneDegreeUs = engine->rpmCalculator.oneDegreeUs;
+
+	float advance;
+
+	if (m_hasRotationReference) {
+		// The previous tooth said how far away this one would be. Tooth spacing comes from the trigger shape,
+		// so it's right even if the engine phase was relabeled in between.
+		advance = m_predictedSpacing;
+
+		// Did the label move? It does when the cam syncs or corrects the engine phase.
+		float labelError = wrapToPeriod(currentPhase.angle - m_predictedPhase.angle + cycle / 2, cycle) - cycle / 2;
+		if (std::abs(labelError) > 0.5f) {
+			phaseLabelJumpCount++;
+		}
+	} else if (m_hasCountedTooth) {
+		// Teeth went uncounted while decoding was lost: estimate how far the engine turned from the time
+		// that passed. Using the slower of the speeds before and after biases the estimate low, which
+		// errs towards missing an event rather than repeating one. Either speed may be unknown (RPM can
+		// read zero after a trigger error), in which case use the other.
+		bool knownBefore = m_lastCountedOneDegreeUs > 0;
+		bool knownAfter = oneDegreeUs > 0;
+		floatus_t slower = knownBefore && knownAfter ? std::max(oneDegreeUs, m_lastCountedOneDegreeUs)
+						 : knownBefore				 ? m_lastCountedOneDegreeUs
+													 : oneDegreeUs;
+		float elapsedUs = NT2US(timestamp - m_lastCountedToothTime);
+
+		// Without a speed, treat it as long ago: two cycles is enough for anything counting on this to start
+		// over
+		advance = 2 * cycle;
+		if (knownBefore || knownAfter) {
+			advance = std::min(advance, elapsedUs / slower);
+		}
+	} else {
+		// First tooth ever: nothing to measure from
+		advance = 2 * cycle;
+	}
+
+	m_rotation += static_cast<uint32_t>(advance * rotationUnitsPerDegree + 0.5f);
+
+	m_predictedPhase = nextPhase;
+	m_predictedSpacing = wrapToPeriod(nextPhase.angle - currentPhase.angle, cycle);
+	m_hasRotationReference = true;
+
+	m_lastCountedToothTime = timestamp;
+	m_lastCountedOneDegreeUs = oneDegreeUs;
+	m_hasCountedTooth = true;
 }
 
 static void triggerShapeInfo() {

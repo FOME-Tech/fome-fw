@@ -43,6 +43,8 @@ public:
 	InstantRpmCalculator instantRpm;
 
 	void prepareTriggerShape() {
+		resetRotationReference();
+
 #if EFI_ENGINE_CONTROL && EFI_SHAFT_POSITION_INPUT
 		if (triggerShape.shapeDefinitionError) {
 			// Nothing to do here if there's a problem with the trigger shape
@@ -183,7 +185,38 @@ public:
 	EngPhase toEngPhase(const TrgPhase& trgPhase) const;
 	TrgPhase toTrgPhase(const EngPhase& engPhase) const;
 
+	// Physical crank rotation, in rotationUnitsPerDegree, counted from the spacing between decoded teeth.
+	// Unlike the engine phase, it doesn't jump when the phase is relabeled (the cam syncing or correcting
+	// it). While decoding is lost, teeth can't be counted, so the first tooth after that adds an estimate
+	// from the time that passed. The value itself means nothing: compare values with
+	// rotationDegreesBetween().
+	uint32_t getRotationCounter() const {
+		return m_rotation;
+	}
+
+	// The engine stopped, or the trigger shape or engine cycle changed: the last counted tooth is no
+	// reference for the next one. The counter carries on from where it was, as if from the first tooth.
+	void resetRotationReference() {
+		m_hasRotationReference = false;
+		m_hasCountedTooth = false;
+	}
+
 private:
+	// Advance the rotation counter for a decoded tooth, and notice the engine phase being relabeled
+	void updateRotation(efitick_t timestamp, EngPhase currentPhase, EngPhase nextPhase);
+
+	uint32_t m_rotation = 0;
+	// Whether the previous decoded tooth is a valid reference for this one: false at start and after
+	// decoding is lost
+	bool m_hasRotationReference = false;
+	// Degrees from the previous decoded tooth to the one after it, and the phase that one would have
+	EngPhase m_predictedPhase;
+	float m_predictedSpacing = 0;
+	// When the last tooth was counted, and the speed then
+	efitick_t m_lastCountedToothTime = 0;
+	floatus_t m_lastCountedOneDegreeUs = NAN;
+	bool m_hasCountedTooth = false;
+
 	void decodeMapCam(efitick_t nowNt, EngPhase currentPhase);
 
 	bool isToothExpectedNow(efitick_t timestamp);
