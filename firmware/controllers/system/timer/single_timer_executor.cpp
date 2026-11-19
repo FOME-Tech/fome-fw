@@ -41,28 +41,43 @@ SingleTimerExecutor::SingleTimerExecutor()
 	// 8us is roughly the cost of the interrupt + overhead of a single timer event
 	: queue(US2NT(8)) {}
 
-void SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
-	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
-
+bool SingleTimerExecutor::isTooFarIntoFuture(const char* msg, efitick_t nt) const {
 	efidur_t deltaTimeNt = nt - getTimeNowNt();
 
 	if (deltaTimeNt >= TOO_FAR_INTO_FUTURE_NT) {
 		// we are trying to set callback for too far into the future. This does not look right at all
 		int32_t intDeltaTimeNt = (int32_t)deltaTimeNt;
 		firmwareError(ObdCode::CUSTOM_ERR_TASK_TIMER_OVERFLOW, "schedule() too far: %ld %s", intDeltaTimeNt, msg);
-		return;
+		return true;
+	}
+
+	return false;
+}
+
+// Call under lock, straight after inserting
+void SingleTimerExecutor::onInserted(EventQueue::InsertResult result) {
+	if (!reentrantFlag) {
+		executeAllPendingActions();
+		if (result == EventQueue::InsertResult::InsertedAtHead) {
+			scheduleTimerCallback();
+		}
+	}
+}
+
+bool SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t nt, action_s action) {
+	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
+
+	if (isTooFarIntoFuture(msg, nt)) {
+		return false;
 	}
 
 	// Lock for queue insertion - we may already be locked, but that's ok
 	chibios_rt::CriticalSectionLocker csl;
 
-	bool needToResetTimer = queue.insertTask(scheduling, nt, action);
-	if (!reentrantFlag) {
-		executeAllPendingActions();
-		if (needToResetTimer) {
-			scheduleTimerCallback();
-		}
-	}
+	auto result = queue.insertTask(scheduling, nt, action);
+	onInserted(result);
+
+	return result != EventQueue::InsertResult::Failed;
 }
 
 void SingleTimerExecutor::cancel(scheduling_s* scheduling) {

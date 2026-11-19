@@ -14,7 +14,7 @@ class TestExecutor : public Scheduler {
 public:
 	~TestExecutor();
 
-	void schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) override;
+	bool schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) override;
 	void cancel(scheduling_s* scheduling) override;
 
 	void clear();

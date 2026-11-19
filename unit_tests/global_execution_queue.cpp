@@ -35,13 +35,12 @@ scheduling_s* TestExecutor::getForUnitTest(int index) {
 	return schedulingQueue.getElementAtIndexForUnitText(index);
 }
 
-void TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
+bool TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) {
 	if (m_mockExecutor) {
-		m_mockExecutor->schedule(msg, scheduling, timeNt, action);
-		return;
+		return m_mockExecutor->schedule(msg, scheduling, timeNt, action);
 	}
 
-	schedulingQueue.insertTask(scheduling, NT2US(timeNt), action);
+	return schedulingQueue.insertTask(scheduling, NT2US(timeNt), action) != EventQueue::InsertResult::Failed;
 }
 
 void TestExecutor::cancel(scheduling_s* s) {

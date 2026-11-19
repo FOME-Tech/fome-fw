@@ -39,6 +39,10 @@ public:
 		return m_used;
 	}
 
+	size_t available() const {
+		return TSize - m_used;
+	}
+
 private:
 	T* m_freelist = nullptr;
 	T m_pool[TSize];

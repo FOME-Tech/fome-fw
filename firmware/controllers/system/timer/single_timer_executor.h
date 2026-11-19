@@ -13,7 +13,7 @@
 class SingleTimerExecutor final : public Scheduler {
 public:
 	SingleTimerExecutor();
-	void schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) override;
+	bool schedule(const char* msg, scheduling_s* scheduling, efitick_t timeNt, action_s action) override;
 	void cancel(scheduling_s* scheduling) override;
 
 	void onTimerCallback();
@@ -25,6 +25,8 @@ private:
 	bool reentrantFlag = false;
 	void executeAllPendingActions();
 	void scheduleTimerCallback();
+	bool isTooFarIntoFuture(const char* msg, efitick_t nt) const;
+	void onInserted(EventQueue::InsertResult result);
 };
 
 void initSingleTimerExecutorHardware();

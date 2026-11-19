@@ -23,10 +23,17 @@ public:
 	// event in a group of events near one another.
 	explicit EventQueue(efidur_t lateDelay = {});
 
+	enum class InsertResult {
+		Failed,
+		Inserted,
+		// The new event is the next one due, so the timer needs setting again
+		InsertedAtHead,
+	};
+
 	/**
 	 * O(size) - linear search in sorted linked list
 	 */
-	bool insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
+	InsertResult insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
 	void remove(scheduling_s* scheduling);
 
 	int executeAll(efitick_t now);
