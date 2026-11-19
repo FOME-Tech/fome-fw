@@ -43,6 +43,21 @@ bool TestExecutor::schedule(const char* msg, scheduling_s* scheduling, efitick_t
 	return schedulingQueue.insertTask(scheduling, NT2US(timeNt), action) != EventQueue::InsertResult::Failed;
 }
 
+bool TestExecutor::scheduleTogether(const char* msg, const TimedAction* actions, size_t count) {
+	if (m_mockExecutor) {
+		// One at a time, so that tests can expect each one
+		return Scheduler::scheduleTogether(msg, actions, count);
+	}
+
+	// This queue keeps time in microseconds
+	std::vector<TimedAction> converted(actions, actions + count);
+	for (auto& action : converted) {
+		action.time = NT2US(action.time);
+	}
+
+	return schedulingQueue.insertTogether(converted.data(), count) != EventQueue::InsertResult::Failed;
+}
+
 void TestExecutor::cancel(scheduling_s* s) {
 	if (m_mockExecutor) {
 		m_mockExecutor->cancel(s);

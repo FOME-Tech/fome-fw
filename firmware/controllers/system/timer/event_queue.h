@@ -34,6 +34,9 @@ public:
 	 * O(size) - linear search in sorted linked list
 	 */
 	InsertResult insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
+
+	// Insert several events with storage from the pool: all of them, or none if there isn't room
+	InsertResult insertTogether(const TimedAction* actions, size_t count);
 	void remove(scheduling_s* scheduling);
 
 	int executeAll(efitick_t now);
@@ -44,9 +47,6 @@ public:
 	int size() const;
 	scheduling_s* getElementAtIndexForUnitText(int index);
 	scheduling_s* getHead();
-
-	scheduling_s* getFreeScheduling();
-	void tryReturnScheduling(scheduling_s* sched);
 
 private:
 	void assertListIsSorted() const;

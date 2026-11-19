@@ -35,13 +35,22 @@ void endInjection(InjectorContext ctx) {
 		// Zero out the split duration so it doesn't repeat
 		ctx.splitDurationUs = 0;
 
-		getScheduler()->schedule("split inj", nullptr, openTime, {&startInjection, ctx});
-		getScheduler()->schedule("split inj", nullptr, closeTime, {endInjection, ctx});
-	} else {
-		// No splits remaining, prepare for next cycle
-		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
-			getFuelSchedule()->elements[ctx.eventIndex].update();
+		TimedAction secondHalf[] = {
+				{openTime, {&startInjection, ctx}},
+				{closeTime, {&endInjection, ctx}},
+		};
+
+		if (getScheduler()->scheduleTogether("split inj", secondHalf, efi::size(secondHalf))) {
+			// The second half's end prepares for the next cycle
+			return;
 		}
+
+		// Couldn't schedule the second half: carry on as if it was done
+	}
+
+	// No splits remaining, prepare for next cycle
+	if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
+		getFuelSchedule()->elements[ctx.eventIndex].update();
 	}
 }
 
@@ -209,19 +218,23 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 		angleFromNow += getEngineState()->engineCycle;
 	}
 
-	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, {&startInjection, ctx});
+	// Opening (stage 1 + stage 2 open together), closing stage 1, and closing stage 2 if applicable.
+	// These are scheduled all together or not at all: an opening without its closing would leave the
+	// injector open.
+	efitick_t startTime = getTimeAfterAngle(phase.timestamp, angleFromNow);
 
-	// Schedule closing stage 1
-	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
-	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
+	TimedAction actions[3] = {
+			{startTime, {&startInjection, ctx}},
+			{startTime + US2NT((int)durationUsStage1), {&endInjection, ctx}},
+	};
+	size_t actionCount = 2;
 
-	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, {&endInjection, ctx});
-
-	// Schedule closing stage 2 (if applicable)
 	if (hasStage2Injection) {
-		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, {&endInjectionStage2, ctx});
+		actions[actionCount++] = {startTime + US2NT((int)durationUsStage2), {&endInjectionStage2, ctx}};
+	}
+
+	if (!getScheduler()->scheduleTogether("inj", actions, actionCount)) {
+		return;
 	}
 
 #if EFI_UNIT_TEST

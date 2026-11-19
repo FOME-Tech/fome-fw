@@ -115,7 +115,11 @@ void PrimeController::onPrimeStart() {
 	ctx.outputsMask = (1 << engine->engineState.cylinderCount) - 1;
 
 	startInjection(ctx);
-	getScheduler()->schedule("prime end", nullptr, endTime, {onPrimeEndAdapter, this});
+
+	if (!getScheduler()->schedule("prime end", nullptr, endTime, {onPrimeEndAdapter, this})) {
+		// Nothing will close the injectors, so don't leave them open
+		onPrimeEnd();
+	}
 }
 
 void PrimeController::onPrimeEnd() {

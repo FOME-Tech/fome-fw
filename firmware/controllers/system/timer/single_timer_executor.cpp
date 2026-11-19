@@ -80,6 +80,25 @@ bool SingleTimerExecutor::schedule(const char* msg, scheduling_s* scheduling, ef
 	return result != EventQueue::InsertResult::Failed;
 }
 
+bool SingleTimerExecutor::scheduleTogether(const char* msg, const TimedAction* actions, size_t count) {
+	ScopePerf perf(PE::SingleTimerExecutorScheduleByTimestamp);
+
+	for (size_t i = 0; i < count; i++) {
+		if (isTooFarIntoFuture(msg, actions[i].time)) {
+			return false;
+		}
+	}
+
+	// Lock for queue insertion - we may already be locked, but that's ok
+	chibios_rt::CriticalSectionLocker csl;
+
+	// Insert them all before running anything that's due, so that none can run before its partners are in
+	auto result = queue.insertTogether(actions, count);
+	onInserted(result);
+
+	return result != EventQueue::InsertResult::Failed;
+}
+
 void SingleTimerExecutor::cancel(scheduling_s* scheduling) {
 	// Lock for queue removal - we may already be locked, but that's ok
 	chibios_rt::CriticalSectionLocker csl;
