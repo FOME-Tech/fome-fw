@@ -46,15 +46,18 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	ASSERT_EQ(SPINNING_UP, engine->rpmCalculator.getState());
 	// due to isFasterEngineSpinUp=true, we should have already detected RPM!
 	ASSERT_EQ(300, round(Sensor::getOrZero(SensorType::Rpm))) << "spinning-RPM#1";
-	// two simultaneous injections
-	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
+	// Three simultaneous injections: two whose starts come before the next tooth, and one whose start has
+	// only just gone by, which opens straight away rather than waiting a whole cycle
+	ASSERT_EQ(6, engine->scheduler.size()) << "plain#2";
 	// test if they are simultaneous
 	ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode());
 	// test if ignition mode is temporary changed to wasted spark, if set to individual coils
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
 	// check real events
-	eth.assertEvent5("inj start#1", 0, (void*)startInjection, 97500);
-	eth.assertEvent5("inj end#1", 1, (void*)endInjection, 100000);
+	eth.assertEvent5("inj start#1, late", 0, (void*)startInjection, 0);
+	eth.assertEvent5("inj end#1, late", 1, (void*)endInjection, 2500);
+	eth.assertEvent5("inj start#1", 2, (void*)startInjection, 97500);
+	eth.assertEvent5("inj end#1", 3, (void*)endInjection, 100000);
 
 	// skip the rest of the cycle
 	eth.moveTimeForwardUs(MS2US(200));
@@ -72,11 +75,13 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode());
 	// Should still be in wasted spark since we don't have cam sync yet
 	ASSERT_EQ(IM_WASTED_SPARK, getCurrentIgnitionMode());
-	// two simultaneous injections
-	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
+	// Again three, one of them straight away
+	ASSERT_EQ(6, engine->scheduler.size()) << "plain#2";
 	// check real events
-	eth.assertEvent5("inj start#2", 0, (void*)startInjection, 148375);
-	eth.assertEvent5("inj end#2", 1, (void*)endInjection, 149999);
+	eth.assertEvent5("inj start#2, late", 0, (void*)startInjection, 0);
+	eth.assertEvent5("inj end#2, late", 1, (void*)endInjection, 1624);
+	eth.assertEvent5("inj start#2", 2, (void*)startInjection, 148375);
+	eth.assertEvent5("inj end#2", 3, (void*)endInjection, 149999);
 
 	// Now perform a fake VVT sync and check that ignition mode changes to sequential
 	engine->triggerCentral.syncAndReport(2, 0);
@@ -97,10 +102,10 @@ TEST(cranking, testFasterEngineSpinningUp) {
 	// 4 sequential injections for the full cycle
 	ASSERT_EQ(8, engine->scheduler.size()) << "plain#3";
 
-	// check real events for sequential injection
-	// Note: See addFuelEvents() fix inside setRpmValue()!
-	eth.assertEvent5("inj start#3", 0, (void*)startInjection, -30326);
-	eth.assertEvent5("inj end#3", 1, (void*)endInjection, -28702);
+	// check real events for sequential injection. Each pulse is placed from the duration actually injected,
+	// so it ends exactly at its end of injection angle.
+	eth.assertEvent5("inj start#3", 0, (void*)startInjection, -31625);
+	eth.assertEvent5("inj end#3", 1, (void*)endInjection, -30001);
 }
 
 static void setupSequentialCranking(EngineTestHelper& eth, bool expectCamSync) {

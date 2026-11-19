@@ -46,6 +46,11 @@ struct_no_prefix engine_state_s
 	uint16_t fuelInjectionCounter;Fuel: Injection counter
 	uint16_t sparkCounter;Ign: Spark counter
 
+	uint16_t injectionLateCount;Fuel: Injections started late
+	uint16_t injectionSkippedLateCount;Fuel: Injections skipped, too late
+	uint16_t injectionSkippedPhaseJumpCount;Fuel: Injections skipped, phase relabeled
+	uint16_t injectionSkippedPoolCount;Fuel: Injections skipped, scheduler full
+
 	! Values used for load axes for fuel/ign tables
 	! These may or may not be the same value, depending on mode
 	float fuelingLoad;@@GAUGE_NAME_FUEL_LOAD@@

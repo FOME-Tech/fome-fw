@@ -145,6 +145,7 @@ void prepareOutputSignals() {
 
 	// Fuel schedule may now be completely wrong, force a reset
 	engine->injectionEvents.invalidate();
+	engine->injectionEvents.resetTrackers();
 }
 
 void OneCylinder::updateCylinderNumber(uint8_t index, uint8_t cylinderNumber) {

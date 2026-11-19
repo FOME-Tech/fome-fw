@@ -9,15 +9,39 @@
 #include "scheduler.h"
 #include "trigger_structure.h"
 #include "wall_fuel.h"
+#include "cycle_event_tracker.h"
 
 #define MAX_WIRES_COUNT 2
 
 class InjectionEvent {
 public:
+	// Choose the injection mode for the next pulse. Returns false if injections can't be placed yet.
 	bool update();
 
-	// Call this every decoded trigger tooth.  It will schedule any relevant events for this injector.
+	// FuelSchedule::onTriggerTooth calls these on every decoded trigger tooth. pollDue says whether this
+	// event's next pulse has to start before the next tooth. If it does, the instance must then be passed to
+	// skipIfNotToInject and, if that didn't skip it, to injectInstance, which schedules it. If that fails,
+	// the instance has been skipped, and the caller must call update() once it has put together every pulse
+	// on this tooth.
+	expected<CycleEventInstance> pollDue(const EnginePhaseInfo& phase, float leadFraction, floatus_t oneDegreeUs);
+
+#if EFI_UNIT_TEST
+	// For tests: what FuelSchedule::onTriggerTooth does, for this event on its own and without waiting for
+	// the schedule to be ready
 	void onTriggerTooth(const EnginePhaseInfo& phase);
+#endif
+
+	bool skipIfNotToInject(const CycleEventInstance& instance, const EnginePhaseInfo& phase);
+	bool injectInstance(
+			const CycleEventInstance& instance,
+			const EnginePhaseInfo& phase,
+			float leadFraction,
+			floatus_t oneDegreeUs);
+
+	// Forget which cycles have had their pulse: engine stop or configuration change
+	void resetTracker() {
+		m_tracker.reset();
+	}
 
 	WallFuel& getWallFuel();
 
@@ -39,34 +63,30 @@ public:
 		return m_durationEstimateMs;
 	}
 
-	// Work out the start angle from scratch at the next update
-	void forgetStartAngle() {
-		m_hasStartAngle = false;
-	}
-
 private:
-	// Update the injection start angle
-	bool updateInjectionAngle(injection_mode_e mode);
+	// Work out and schedule the pulse for an instance. Returns false if there's nothing to inject, or it
+	// couldn't be scheduled.
+	bool scheduleInstance(
+			const CycleEventInstance& instance,
+			const EnginePhaseInfo& phase,
+			float leadFraction,
+			floatus_t oneDegreeUs);
+	void skipInstance(const CycleEventInstance& instance, const EnginePhaseInfo& phase);
 
-	// Whether injectionStartAngle has been worked out since the schedule was last invalidated
-	bool m_hasStartAngle = false;
+	// Which cycles have had their pulse
+	CycleEventTracker m_tracker;
 
-	/**
-	 * This is a performance optimization for IM_SIMULTANEOUS fuel strategy.
-	 * It's more efficient to handle all injectors together if that's the case
-	 */
-	bool isSimultaneous = false;
 	floatms_t m_durationEstimateMs = 0;
 	uint8_t ownIndex = 0;
 	uint8_t cylinderNumber = 0;
 	injection_mode_e m_injectionMode = IM_SEQUENTIAL;
 
 	WallFuel wallFuel;
-
-public:
-	// TODO: this should be private
-	float injectionStartAngle = 0;
 };
+
+// How much of a pulse comes before its anchor, the angle the injection phase table sets: all of it when the
+// table sets the end of injection, half for the middle, none for the start
+float getInjectionLeadFraction();
 
 union InjectorContext {
 	constexpr InjectorContext() {
@@ -102,8 +122,13 @@ class FuelSchedule {
 public:
 	FuelSchedule();
 
-	// Call this function if something happens that requires a rebuild, like a change to the trigger pattern
+	// Call this function if something happens that requires a rebuild, like a change to the trigger pattern.
+	// Each event chooses its injection mode again.
 	void invalidate();
+
+	// Forget which cycles have had their pulse: engine stop or configuration change. Not for losing trigger
+	// sync, which leaves that history valid.
+	void resetTrackers();
 
 	// Call this every trigger tooth.  It will schedule all required injector events.
 	void onTriggerTooth(const EnginePhaseInfo& phase);

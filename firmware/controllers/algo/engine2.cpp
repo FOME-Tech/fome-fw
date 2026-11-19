@@ -154,6 +154,16 @@ void EngineState::periodicFastCallback() {
 
 	float fuelLoad = getFuelingLoad();
 	injectionOffset = getInjectionOffset(rpm, fuelLoad);
+
+#if EFI_ENGINE_CONTROL
+	// For the injection timing gauge: where injection starts, relative to each cylinder's own TDC
+	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
+	if (!std::isnan(oneDegreeUs) && !std::isnan(injectionOffset)) {
+		angle_t start = injectionOffset - getInjectionLeadFraction() * MS2US(injectionDuration) / oneDegreeUs;
+		start = std::fmod(start, engineCycle);
+		engine->outputChannels.injectionOffset = start < 0 ? start + engineCycle : start;
+	}
+#endif // EFI_ENGINE_CONTROL
 	engine->lambdaMonitor.update(rpm, fuelLoad);
 
 	engine->ignitionState.updateAdvanceCorrections(ignitionLoad);
@@ -193,7 +203,6 @@ void EngineState::periodicFastCallback() {
 				untrimmedAdvance + getCylinderIgnitionTrim(i, ignitionTrimInterpolation));
 	}
 
-	shouldUpdateInjectionTiming = getInjectorDutyCycle(rpm) < 90;
 	trailingSparkAngle = interpolate3d(
 			config->trailingIgnitionTable,
 			config->trailingIgnitionLoadBins,

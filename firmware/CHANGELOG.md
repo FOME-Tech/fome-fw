@@ -58,6 +58,7 @@ or
  - Wi-Fi station mode: the ECU can join up to three existing Wi-Fi networks instead of creating its own access point, falling back to AP mode if none of them can be reached. This lets the ECU sit on your home/shop network, so you can connect to it from anywhere on that network rather than having to join its AP.
  - Wi-Fi DHCP hostname setting (default `fome-efi`), so the ECU is reachable by name instead of by IP address on networks where the router maps hostnames to addresses
  - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
+ - New log channels counting injections that started late or were skipped, and how often the engine phase was corrected (for example when the cam first syncs), to help diagnose fuelling problems
 
 
 ### Changed
@@ -94,6 +95,9 @@ or
  - The "VVT sync position too close to trigger sync" warning now catches every cam position that's within a few degrees of a crank sync point, on either side, every time. Previously it only checked one of the crank sync points and only just after it, so whether it warned depended on which crank revolution the engine happened to sync on first. It also no longer warns on setups where the cam isn't used for engine phase.
  - An injector can no longer be left stuck open if the ECU runs short of internal timer slots (only possible with extremely high injector duty). That injection is now skipped and a warning raised. Also, an injector that the stopped-engine safety had to turn off now works normally on the next start, instead of staying dead until a reboot.
  - The first injection after a fuel cut (such as decel fuel cut) is now timed correctly. Previously, with injection timed by end or centre of injection, it could end a whole pulse late.
+ - Injections are no longer skipped or doubled when the fuel amount or the injection timing table changes quickly. Previously a large step (for example a hard tip-in at high injector duty, especially on trigger wheels with few teeth) could leave one cylinder without fuel for a cycle, or give it two pulses in one cycle. An injection that can no longer start on time now starts late instead of being skipped.
+ - Injection timing now follows the injection phase table at all injector duty cycles. Previously it was frozen above 90% duty.
+ - When the engine first syncs while cranking, an injection whose start has only just gone by is now delivered straight away instead of waiting for the next cycle. This adds some fuel on the first engine revolution, on top of the priming pulse, so cranking fuel tuned against the old behaviour may need a small trim.
 
 ## May 2026 Release
 

@@ -158,6 +158,48 @@ bool openTogether(const InjectionRig& rig, int a, int b, int64_t fromUs) {
 	return ::testing::AssertionSuccess();
 }
 
+// Sequential mode only: every intake got fuel. An intake is the cycle up to its cylinder's end of injection
+// (180 degrees before TDC); each must have had the injector open for at least minDeg of it.
+//
+// Unlike onePulsePerIntake this doesn't count pulses, so it also accepts a late pulse that ran in to the
+// next one and merged with it at the pin. It only fails when an intake is skipped altogether.
+::testing::AssertionResult fuelInEveryIntake(const InjectionRig& rig, int64_t fromUs, double minDeg) {
+	constexpr double endOfInjection = 720 - 180;
+
+	std::stringstream problems;
+	int problemCount = 0;
+
+	for (int cyl = 0; cyl < 4; cyl++) {
+		auto pulses = rig.pulsesSince(cyl, fromUs);
+		if (pulses.size() < 3) {
+			return ::testing::AssertionFailure() << "injector " << cyl << " barely fired";
+		}
+
+		// The first end of injection after the first pulse starts, then every cycle until the last pulse
+		double phase = rig.sim->enginePhase(pulses.front().startAngle) - engine->cylinders[cyl].getAngleOffset();
+		double firstAnchor = pulses.front().startAngle + std::fmod(endOfInjection - phase + 4 * 720, 720.0);
+
+		// Leave out the last intake, which may still be in progress
+		for (double anchor = firstAnchor + 720; anchor < pulses.back().startAngle; anchor += 720) {
+			double open = 0;
+			for (const auto& pulse : pulses) {
+				open += std::max(0.0, std::min(pulse.endAngle, anchor) - std::max(pulse.startAngle, anchor - 720));
+			}
+
+			if (open < minDeg && problemCount++ < 10) {
+				problems << "\n  injector " << cyl << ", intake ending at " << anchor << ": open " << open
+						 << " degrees";
+			}
+		}
+	}
+
+	if (problemCount) {
+		return ::testing::AssertionFailure() << problemCount << " intakes got too little fuel:" << problems.str();
+	}
+
+	return ::testing::AssertionSuccess();
+}
+
 void doNothing(void*) {}
 
 // Crank degrees between the starts of consecutive pulses of one injector, from fromUs on
@@ -403,11 +445,9 @@ TEST(InjectionOutputs, SequentialFuelFollowsPulseWidthChanges) {
 	stopAndCheckNothingLeftOpen(rig);
 }
 
-// An injection is scheduled from the last tooth before it starts. This trigger has
-// a tooth edge only every 360 degrees, and at high duty the gap between one pulse ending and the next
-// starting is shorter than that. When the pulse gets longer its start moves earlier, in to a tooth's
-// window that has already been handled, and that cylinder's next injection is skipped entirely.
-TEST(InjectionOutputs, DISABLED_SequentialFuelFollowsPulseWidthChangesAtHighDuty) {
+// The same at high duty on a trigger with a tooth edge only every 360 degrees: when the pulse gets longer,
+// its start can move back past the last tooth, and it must start late rather than be skipped
+TEST(InjectionOutputs, SequentialFuelFollowsPulseWidthChangesAtHighDuty) {
 	InjectionRig rig(IM_SEQUENTIAL);
 
 	stepFuelThrough(rig, {6, 12, 25, 35, 25, 12});
@@ -415,10 +455,8 @@ TEST(InjectionOutputs, DISABLED_SequentialFuelFollowsPulseWidthChangesAtHighDuty
 	stopAndCheckNothingLeftOpen(rig);
 }
 
-// The same thing in batch mode takes a bigger step. This is the 1.5 ms to 12.5 ms
-// pulse width change of the original issue 299 tests: one pair of cylinders gets a cycle about half
-// short of fuel.
-TEST(InjectionOutputs, DISABLED_BatchFuelFollowsLargePulseWidthStep) {
+// The same in batch mode, with the 1.5 ms to 12.5 ms pulse width change of the original issue 299 tests
+TEST(InjectionOutputs, BatchFuelFollowsLargePulseWidthStep) {
 	InjectionRig rig(IM_BATCH);
 
 	stepFuelThrough(rig, {25});
@@ -426,12 +464,11 @@ TEST(InjectionOutputs, DISABLED_BatchFuelFollowsLargePulseWidthStep) {
 	stopAndCheckNothingLeftOpen(rig);
 }
 
-// On a fine wheel it takes a bigger step to skip an injection, but it doesn't take a pulse near 100%.
-// When a pulse is lengthened at the last moment, it runs from the start angle worked out for the old
-// duration, so it ends late. The new start angle, worked out as it ends, can then be behind where the
-// engine already is, which a tooth will never see again until next cycle. Here: 25 to 35 ms, 62% to 87%
-// duty, on a 60-2 wheel on the cam (a tooth every 12 degrees of crank).
-TEST(InjectionOutputs, DISABLED_EveryIntakeGetsOnePulseWhenDutyJumpsOnFineWheel) {
+// A big step up in fuel: 25 to 35 ms, 62% to 87% duty, on a 60-2 wheel on the cam (a tooth every 12 degrees
+// of crank), at every point in the cycle. The pulse that should have started before the change has to start
+// late, but no intake may be skipped. At this duty a late pulse can still be open when the next one starts,
+// and they merge at the pin, so this checks that every intake got fuel rather than counting pulses.
+TEST(InjectionOutputs, EveryIntakeGetsFuelWhenDutyJumpsOnFineWheel) {
 	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
 	rig.setPulseMs(25);
 	rig.run(4);
@@ -447,13 +484,14 @@ TEST(InjectionOutputs, DISABLED_EveryIntakeGetsOnePulseWhenDutyJumpsOnFineWheel)
 		rig.run(3);
 	}
 
-	EXPECT_TRUE(onePulsePerIntake(rig, from));
+	// The shortest pulse is 25 ms, 450 degrees
+	EXPECT_TRUE(fuelInEveryIntake(rig, from, 400));
 }
 
-// The other way: when a pulse more than halves at the last moment, it runs from the earlier start angle
-// worked out for the old duration and finishes early. The new, later start angle is then still ahead in
-// the same cycle, and the same intake gets a second pulse.
-TEST(InjectionOutputs, DISABLED_EveryIntakeGetsOnePulseWhenPulseHalvesOnFineWheel) {
+// The other way: the pulse more than halving, at every point in the cycle. The pulse already committed with
+// the longer duration's earlier start mustn't be followed by a second one in the same cycle at the shorter
+// duration's later start.
+TEST(InjectionOutputs, EveryIntakeGetsOnePulseWhenPulseHalvesOnFineWheel) {
 	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
 	rig.setPulseMs(25);
 	rig.run(4);
@@ -560,12 +598,14 @@ TEST(InjectionOutputs, InjectorWorksAfterRestartFollowingLostClose) {
 	}
 }
 
-// An injection event works out its next start angle as each pulse ends. The last pulse before a fuel cut
-// (zero fuel mass, as in decel fuel cut) ends after the duration has already gone to zero, and an angle
-// worked out for a pulse of no length would make the first pulse after the cut start at the end of
-// injection angle, and so end a whole pulse late. It must keep the angle it had.
+// While fuel is cut (zero fuel mass, as in decel fuel cut) there are no pulses to place. The first pulse
+// after the cut must be placed from the fuel then, not from a pulse of no length during the cut, which would
+// make it start at the end of injection angle and so end a whole pulse late.
+//
+// On a fine wheel it may still end up to a tooth late: if fuel comes back just after the tooth on which the
+// pulse would have had to start, it starts late on the next one rather than not at all.
 TEST(InjectionOutputs, FirstPulseAfterFuelCutEndsOnTime) {
-	InjectionRig rig(IM_SEQUENTIAL);
+	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
 	rig.setPulseMs(6);
 	rig.run(4);
 
@@ -581,9 +621,16 @@ TEST(InjectionOutputs, FirstPulseAfterFuelCutEndsOnTime) {
 		ASSERT_GE(pulses.size(), 2u) << "injector " << cyl;
 
 		for (const auto& pulse : pulses) {
+			if (pulse.stillActive) {
+				// Hasn't ended yet
+				continue;
+			}
+
 			double endPhase = rig.sim->enginePhase(pulse.endAngle) - engine->cylinders[cyl].getAngleOffset();
-			EXPECT_NEAR(-180, std::remainder(endPhase, 720.0), 1)
-					<< "injector " << cyl << " pulse at " << pulse.startUs;
+			double late = std::remainder(endPhase, 720.0) + 180;
+			EXPECT_GE(late, -1) << "injector " << cyl << " pulse at " << pulse.startUs;
+			// A tooth is 12 degrees
+			EXPECT_LE(late, 13) << "injector " << cyl << " pulse at " << pulse.startUs;
 		}
 	}
 }
@@ -662,7 +709,8 @@ TEST(InjectionOutputs, StartCrossingTheCycleStartKeepsOnePulsePerIntake) {
 }
 
 // The injection phase table crossing the 0/720 boundary between its cells while the engine is running:
-// each injector still fires once per cycle, its timing moving smoothly
+// each injector still fires once per cycle, its timing moving smoothly. A table change between a pulse being
+// committed and starting moves the following one, so allow a tooth (12 degrees) more than the change.
 TEST(InjectionOutputs, PhaseTableCrossingZeroKeepsOnePulsePerCycle) {
 	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
 	rig.setPulseMs(6);
@@ -677,12 +725,12 @@ TEST(InjectionOutputs, PhaseTableCrossingZeroKeepsOnePulsePerCycle) {
 	}
 	rig.run(2);
 
-	EXPECT_TRUE(startSpacingsWithin(rig, from, 720 - 5, 720 + 5));
+	EXPECT_TRUE(startSpacingsWithin(rig, from, 720 - 4 - 12, 720 + 4 + 12));
 }
 
 // Start of injection timing, with the table moving the start later by a lot at once: the start can land
 // later in the same cycle as the pulse that just fired, but that cycle mustn't get a second pulse
-TEST(InjectionOutputs, DISABLED_PhaseTableStepLaterNeverDoublesInStartTimingMode) {
+TEST(InjectionOutputs, PhaseTableStepLaterNeverDoublesInStartTimingMode) {
 	for (int toothOffset = 0; toothOffset < 60; toothOffset += 7) {
 		InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2, [](EngineTestHelper&) {
 			engineConfiguration->injectionTimingMode = InjectionTimingMode::Start;
@@ -693,7 +741,7 @@ TEST(InjectionOutputs, DISABLED_PhaseTableStepLaterNeverDoublesInStartTimingMode
 
 		rig.sim->runDegrees(toothOffset * 12);
 		setTable(config->injectionPhase, -180.0f + 300);
-		rig.run(4);
+		rig.run(6);
 
 		EXPECT_TRUE(startSpacingsWithin(rig, from, 720 - 1, 720 + 300 + 1)) << "step at tooth " << toothOffset;
 	}
@@ -807,4 +855,83 @@ TEST(InjectionOutputs, DutyBeyond100PercentAndBack) {
 	EXPECT_TRUE(injectedPerWindowWithin(rig.recorder, from + 3 * cycleUs, cycleUs, 3, 0.99f * 12, 1.01f * 12));
 	EXPECT_TRUE(noStuckInjector(rig.recorder, 13, from + 3 * cycleUs));
 	stopAndCheckNothingLeftOpen(rig);
+}
+
+// Wall wetting changes every pulse for a while after a change in fuel. The estimate the pulses are placed
+// by includes it, so once the change itself has gone through, none of those pulses starts late.
+TEST(InjectionOutputs, WallWettingDoesNotMakePulsesLate) {
+	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
+	engineConfiguration->complexWallModel = false;
+	engineConfiguration->wwaeTau = 0.3f;
+	engineConfiguration->wwaeBeta = 0.4f;
+	rig.run(5);
+
+	rig.setPulseMs(12);
+	// The pulses that were due when the fuel changed may start late
+	rig.run(2);
+
+	auto lateBefore = engine->engineState.injectionLateCount;
+	auto from = rig.run(8);
+
+	EXPECT_EQ(lateBefore, engine->engineState.injectionLateCount);
+
+	// And wall wetting really was changing the pulses meanwhile
+	auto pulses = rig.pulsesSince(0, from);
+	ASSERT_GE(pulses.size(), 4u);
+	EXPECT_GT(std::abs(pulses.front().durationMs() - pulses.back().durationMs()), 0.1f);
+}
+
+// Starting the engine, on a crank wheel that needs the cam for engine phase: nothing has been injected
+// yet, so nothing can be late, and no injection is counted as skipped for being too late
+TEST(InjectionOutputs, EngineStartCountsNoSkips) {
+	for (float camRevolution : {0.0f, 360.0f}) {
+		InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_ONE, [](EngineTestHelper& eth) {
+			setCrankOperationMode();
+			engineConfiguration->vvtMode[0] = VVT_SINGLE_TOOTH;
+			engineConfiguration->camInputs[0] = Gpio::A10;
+			engineConfiguration->trigger.customTotalToothCount = 36;
+			engineConfiguration->trigger.customSkippedToothCount = 1;
+			eth.setTriggerType(trigger_type_e::TT_TOOTHED_WHEEL);
+		});
+		rig.sim->addCam(0, {{(float)rig.sim->syncAngle() + 180 + camRevolution, 20}});
+		rig.run(6);
+
+		ASSERT_TRUE(getTriggerCentral()->triggerState.hasSynchronizedPhase());
+		EXPECT_EQ(0, engine->engineState.injectionSkippedLateCount) << "cam on revolution " << camRevolution;
+		EXPECT_EQ(0, engine->engineState.injectionSkippedPoolCount) << "cam on revolution " << camRevolution;
+	}
+}
+
+// Start of injection timing, with the table moving the start earlier by a lot at once. Each injector's
+// next pulse starts earlier. If the new start is already behind the engine it starts late, as long as the
+// pulse can still run (until a pulse length after its start), and otherwise that cycle's injection is lost,
+// but then it's counted. It never fires twice in a cycle.
+TEST(InjectionOutputs, PhaseTableStepEarlierInStartTimingModeCountsAnyLoss) {
+	for (int toothOffset = 0; toothOffset < 60; toothOffset += 7) {
+		InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2, [](EngineTestHelper&) {
+			engineConfiguration->injectionTimingMode = InjectionTimingMode::Start;
+		});
+		rig.setPulseMs(6);
+		// Include the last pulses before the step
+		auto from = rig.run(4);
+		auto skippedBefore = engine->engineState.injectionSkippedLateCount;
+
+		rig.sim->runDegrees(toothOffset * 12);
+		setTable(config->injectionPhase, -180.0f - 300);
+		rig.run(6);
+
+		int lost = 0;
+		for (int cyl = 0; cyl < 4; cyl++) {
+			for (double spacing : startSpacings(rig, cyl, from)) {
+				// 300 earlier at the soonest, or a whole cycle and 300 earlier if that cycle was lost
+				EXPECT_GE(spacing, 720 - 300 - 1) << "step at tooth " << toothOffset;
+				EXPECT_LE(spacing, 2 * 720 - 300 + 1) << "step at tooth " << toothOffset;
+				// More than the latest a late pulse could have started (a pulse is 108 degrees) means lost
+				lost += spacing > 720 + 108 + 1;
+			}
+		}
+
+		EXPECT_EQ(lost, engine->engineState.injectionSkippedLateCount - skippedBefore)
+				<< "step at tooth " << toothOffset;
+	}
 }
