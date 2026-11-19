@@ -55,6 +55,8 @@ build identity. Clean builds recreate it; unchanged inputs preserve timestamps.
 No prepared binary/header is needed. Update the submodule pin for a new release.
 FOME includes the wire protocol directly from that submodule, so its expected
 protocol version and frame definitions follow the checked-out companion source.
+The companion build requires ChibiOS to be clean and at its pinned revision.
+Commit driver changes and update that pin before building a modified driver.
 
 Before registering remote I/O, the updater first probes an existing G071 ROM
 session without pulsing NRST. This preserves factory-blank entry on ROM versions
