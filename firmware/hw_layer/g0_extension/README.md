@@ -1,4 +1,6 @@
-G0 uses protocol 9: 36-byte SPI frames with CRC16/CCITT-FALSE in bytes 34..35.
+FOME uses the wire contract from the checked-out `firmware/ext/g0_firmware`
+submodule, sharing its protocol version and frame definitions with the companion.
+SPI frames contain 36 bytes, with CRC16/CCITT-FALSE in bytes 34..35.
 A reply belongs to the previous exchange. The link checks CRC, command, status,
 payload size, channel and protocol version, then dispatches it to its module.
 Modules rotate fairly; reconnect discards the old pipeline.
@@ -17,6 +19,7 @@ before polling. Reads return false when unavailable. SENT is unsupported.
 Run standalone tests with sanitizers:
 
 ```sh
+git submodule update --init -- firmware/ext/g0_firmware
 cmake -S firmware/hw_layer/g0_extension/tests -B /tmp/g0-tests -DG0_SANITIZE=ON
 cmake --build /tmp/g0-tests -j12
 ASAN_OPTIONS=detect_leaks=0 ctest --test-dir /tmp/g0-tests --output-on-failure
