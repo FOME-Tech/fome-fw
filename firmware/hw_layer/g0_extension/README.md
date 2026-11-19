@@ -3,7 +3,8 @@ ADC, digital inputs, outputs/PWM, and firmware bundling/updater. Each part
 includes its tests and only depends on the preceding parts. The updater branch
 also contains the factory-provisioning follow-up.
 
-The link uses the shared protocol-9 header from dynfer/g0-extension: 36-byte frames,
+The link includes the wire contract directly from the checked-out
+`firmware/ext/g0_firmware` submodule: 36-byte frames,
 CRC16/CCITT-FALSE in bytes 34..35, and a response delayed by one exchange. It
 validates CRC, command, payload length, status, channel and protocol version before
 publishing data. Reconnect discards the old pipeline. Module and output scheduling
@@ -53,8 +54,6 @@ pinned `firmware/ext/g0_firmware` submodule, builds it with fome-fw's ARM compil
 and generates `g0_firmware_image.h` containing the complete immutable image and
 build identity. Clean builds recreate it; unchanged inputs preserve timestamps.
 No prepared binary/header is needed. Update the submodule pin for a new release.
-FOME includes the wire protocol directly from that submodule, so its expected
-protocol version and frame definitions follow the checked-out companion source.
 The companion build requires ChibiOS to be clean and at its pinned revision.
 Commit driver changes and update that pin before building a modified driver.
 
@@ -105,6 +104,7 @@ disabling the expansion skips that dependency too. Other boards need their own `
 Run the standalone tests:
 
 ```sh
+git submodule update --init -- firmware/ext/g0_firmware
 cmake -S firmware/hw_layer/g0_extension/tests -B /tmp/g0-tests -DG0_SANITIZE=ON
 cmake --build /tmp/g0-tests -j12
 ASAN_OPTIONS=detect_leaks=0 ctest --test-dir /tmp/g0-tests --output-on-failure
