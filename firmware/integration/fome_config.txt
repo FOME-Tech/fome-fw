@@ -1495,6 +1495,17 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 	uint8_t clutchAppliedBelow;Clutch pedal position below which the clutch is fully applied (engaged, not slipping).;"%", 1, 0, 0, 100, 0
 	uint8_t clutchReleasedAbove;Clutch pedal position above which the clutch is fully released (disengaged, engine decoupled from the wheels).;"%", 1, 0, 0, 100, 0
 
+custom PowerSteeringIdleMode 1 bits, U08, @OFFSET@, [0:1], "Disabled", "Digital switch", "Pressure sensor", "CAN switch"
+	PowerSteeringIdleMode powerSteeringIdleMode;Source of the power steering idle RPM request.
+	pin_input_mode_e powerSteeringSwitchMode;Electrical input mode for the power steering switch.
+	switch_input_pin_e powerSteeringSwitch;Power steering load switch input. CAN virtual inputs use the CAN input settings for decoding and timeout.
+	linear_sensor_s powerSteeringPressure;Power steering pressure sensor calibration.
+	uint8_t powerSteeringCanInput;CAN virtual input number. Configure its decoding, timeout, and default state under CAN Virtual Input Pins.;"", 1, 0, 1, 8, 0
+	uint16_t powerSteeringIdleRpmBump;Extra idle target RPM while power steering load is active.;"RPM", 1, 0, 0, 1000, 0
+	uint16_t powerSteeringOnPressure;Activate the RPM adder at or above this power steering pressure. Must exceed the release pressure.;"kPa", 1, 0, 0, 20000, 0
+	uint16_t powerSteeringOffPressure;Release the RPM adder at or below this pressure. Set below the activation pressure to provide hysteresis.;"kPa", 1, 0, 0, 20000, 0
+	bit powerSteeringSwitchInverted,"Active low","Active high";Invert the switch input when the power steering switch is active low. Applies to digital and CAN inputs.
+
 ! end of engine_configuration_s
 end_struct
 

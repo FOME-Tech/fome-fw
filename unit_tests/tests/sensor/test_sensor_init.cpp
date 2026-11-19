@@ -3,6 +3,7 @@
 #include "unit_test_framework.h"
 #include "init.h"
 #include "functional_sensor.h"
+#include "idle_thread.h"
 
 static void postToFuncSensor(Sensor* s, float value) {
 	static_cast<FunctionalSensor*>(s)->postRawValue(value, getTimeNowNt());
@@ -22,6 +23,68 @@ static void postToFuncSensor(Sensor* s, float value) {
 		auto res = s->get();                                                                                           \
 		EXPECT_FALSE(res.Valid);                                                                                       \
 	}
+
+TEST(SensorInit, PowerSteeringPressure) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_0;
+	initFluidPressure();
+	EXPECT_FALSE(Sensor::hasSensor(SensorType::PowerSteeringPressure));
+
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Pressure;
+	initFluidPressure();
+	auto s = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::PowerSteeringPressure));
+	ASSERT_NE(nullptr, s);
+	EXPECT_FALSE(s->get().Valid);
+	EXPECT_POINT_VALID(s, 0.5f, 0);
+	EXPECT_POINT_VALID(s, 2.5f, 5000);
+	EXPECT_POINT_VALID(s, 4.5f, 10000);
+	EXPECT_POINT_INVALID(s, 0);
+	EXPECT_POINT_INVALID(s, 5);
+	EXPECT_POINT_VALID(s, 2.75f, 5625);
+	advanceTimeUs(51'000);
+	EXPECT_FALSE(s->get().Valid);
+
+	deinitFluidPressure();
+	EXPECT_FALSE(Sensor::hasSensor(SensorType::PowerSteeringPressure));
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_1;
+	initFluidPressure();
+	EXPECT_FALSE(s->get().Valid);
+	EXPECT_POINT_VALID(s, 1.5f, 2500);
+	deinitFluidPressure();
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_NONE;
+	initFluidPressure();
+	EXPECT_FALSE(Sensor::hasSensor(SensorType::PowerSteeringPressure));
+}
+
+TEST(SensorInit, PowerSteeringPressureInvertedCalibration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	engineConfiguration->idleReturnTargetRamp = false;
+	setArrayValues(config->cltIdleRpm, 900);
+	engineConfiguration->powerSteeringIdleRpmBump = 150;
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Pressure;
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_0;
+	engineConfiguration->powerSteeringPressure.v1 = 4.5f;
+	engineConfiguration->powerSteeringPressure.v2 = 0.5f;
+	initFluidPressure();
+	auto s = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::PowerSteeringPressure));
+	ASSERT_NE(nullptr, s);
+	EXPECT_POINT_VALID(s, 4.5f, 0);
+	EXPECT_EQ(900, dut.getTargetRpm(80).ClosedLoopTarget);
+	EXPECT_POINT_VALID(s, 2.5f, 5000);
+	EXPECT_EQ(1050, dut.getTargetRpm(80).ClosedLoopTarget);
+	EXPECT_POINT_VALID(s, 2.7f, 4500);
+	EXPECT_EQ(1050, dut.getTargetRpm(80).ClosedLoopTarget);
+	EXPECT_POINT_VALID(s, 2.9f, 4000);
+	EXPECT_EQ(900, dut.getTargetRpm(80).ClosedLoopTarget);
+	EXPECT_POINT_VALID(s, 0.5f, 10000);
+	EXPECT_EQ(1050, dut.getTargetRpm(80).ClosedLoopTarget);
+	advanceTimeUs(51'000);
+	EXPECT_EQ(900, dut.getTargetRpm(80).ClosedLoopTarget);
+	EXPECT_POINT_INVALID(s, 0);
+	EXPECT_POINT_INVALID(s, 5);
+	deinitFluidPressure();
+}
 
 TEST(SensorInit, Tps) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);

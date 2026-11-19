@@ -129,8 +129,12 @@ public:
 	float getCrankingTaperFraction(float clt) const override;
 
 	Output getOutput(bool tpsIsAboveIdleThreshold) override;
+	void onConfigurationChange(engine_configuration_s const* previousConfig) override;
 
 private:
+	bool getPowerSteeringActive() const;
+	bool m_powerSteeringActive = false;
+
 	Phase m_lastPhase = Phase::Cranking;
 
 	Timer m_timeSinceCranking;
