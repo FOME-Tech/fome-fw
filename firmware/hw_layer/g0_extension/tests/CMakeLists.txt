@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(g0_tests LANGUAGES CXX)
 enable_testing()
+find_path(G0_FIRMWARE_DIR for_fome/g0_spi_protocol.h
+  PATHS "${CMAKE_CURRENT_SOURCE_DIR}/../../../ext/g0_firmware"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../.."
+  NO_DEFAULT_PATH REQUIRED)
+include_directories("${G0_FIRMWARE_DIR}")
 add_compile_options(-Wall -Wextra -Werror -UNDEBUG)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
