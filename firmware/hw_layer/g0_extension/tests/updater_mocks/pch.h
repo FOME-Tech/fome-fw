@@ -13,6 +13,8 @@ struct SPIDriver {};
 struct SPIConfig {};
 constexpr unsigned PAL_MODE_OUTPUT_PUSHPULL = 1;
 constexpr unsigned PAL_MODE_INPUT_PULLDOWN = 2;
+constexpr unsigned PAL_MODE_OUTPUT_OPENDRAIN = 4;
+constexpr unsigned PAL_STM32_PUPDR_PULLUP = 8;
 inline bool testPins[] = {true, false};
 inline bool testPinOutputs[2] = {};
 inline std::vector<Gpio> testResetPulses;
@@ -53,7 +55,9 @@ inline unsigned getHwPin(const char*, Gpio pin) {
 	return pin;
 }
 void palWritePad(unsigned, unsigned pin, bool high);
-inline void efiSetPadMode(const char*, Gpio pin, unsigned) {
+inline void efiSetPadMode(const char*, Gpio pin, unsigned mode) {
+	assert(mode == (pin == Gpio::B14 ? PAL_MODE_OUTPUT_OPENDRAIN | PAL_STM32_PUPDR_PULLUP
+								  : PAL_MODE_OUTPUT_PUSHPULL));
 	assert(testPins[pin]); // Preload both latches HIGH before enabling either
 						   // output driver.
 	testPinOutputs[pin] = true;

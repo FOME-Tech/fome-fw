@@ -61,7 +61,8 @@ Commit driver changes and update that pin before building a modified driver.
 Before registering remote I/O, the updater first probes an existing G071 ROM
 session without pulsing NRST. This preserves factory-blank entry on ROM versions
 that clear the EMPTY flag during startup. RESET and BOOT output latches are
-preloaded high before enabling their GPIO drivers. At updater completion, BOOT
+preloaded high before enabling their GPIO drivers. RESET uses open drain with
+a pull-up so the G0 or a debugger can assert reset while FOME releases it. At updater completion, BOOT
 is released to input mode with a weak pull-down on both success and failure:
 G071 BOOT0 shares PA14/SWCLK and must not be driven during normal debugging.
 Atlas also keeps PB14/NRST

@@ -92,7 +92,8 @@ bool updateFirmware(SPIDriver& spi, const SPIConfig& spiSettings, brain_pin_e re
 	pin(resetPin, true);
 	pin(bootPin, true);
 	efiSetPadMode("G0 BOOT", bootPin, PAL_MODE_OUTPUT_PUSHPULL);
-	efiSetPadMode("G0 RESET", resetPin, PAL_MODE_OUTPUT_PUSHPULL);
+	// Release NRST when HIGH so the G0 and debugger can also assert reset.
+	efiSetPadMode("G0 RESET", resetPin, PAL_MODE_OUTPUT_OPENDRAIN | PAL_STM32_PUPDR_PULLUP);
 	spiAcquireBus(&spi);
 	spiStart(&spi, &spiSettings);
 	chThdSleepMilliseconds(100);
