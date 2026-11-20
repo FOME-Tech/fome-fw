@@ -2,33 +2,9 @@
 
 #include "event_queue.h"
 
-#include "utlist.h"
-
-bool TriggerScheduler::assertNotInList(AngleBasedEvent* head, AngleBasedEvent* element) {
-	/* this code is just to validate state, no functional load*/
-	decltype(head) current;
-	int counter = 0;
-	LL_FOREACH2(head, current, next) {
-		if (++counter > QUEUE_LENGTH_LIMIT) {
-			firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Looped queue?");
-			return false;
-		}
-
-		if (current == element) {
-			/**
-			 * for example, this might happen in case of sudden RPM change if event
-			 * was not scheduled by angle but was scheduled by time. In case of scheduling
-			 * by time with slow RPM the whole next fast revolution might be within the wait
-			 */
-			warning(ObdCode::CUSTOM_RE_ADDING_INTO_EXECUTION_QUEUE, "re-adding element into event_queue");
-			return true;
-		}
-	}
-
-	return false;
-}
-
 void TriggerScheduler::schedule(AngleBasedEvent* event, EngPhase angle, action_s action) {
+	chibios_rt::CriticalSectionLocker csl;
+	event->fallbackIsCurrent = false;
 	event->setAngle(angle);
 
 	schedule(event, action);
@@ -42,9 +18,18 @@ void TriggerScheduler::schedule(AngleBasedEvent* event, EngPhase angle, action_s
  */
 bool TriggerScheduler::scheduleOrQueue(
 		AngleBasedEvent* event, EngPhase angle, action_s action, const EnginePhaseInfo& phase) {
+	chibios_rt::CriticalSectionLocker csl;
+	event->fallbackIsCurrent = false;
 	event->setAngle(angle);
 
 	if (event->shouldSchedule(phase)) {
+		// A previous cycle may have left this event waiting for a tooth, with an
+		// overdwell timer armed on the same scheduling record. Replace both.
+		cancel(event);
+		if (event->scheduling.action) {
+			engine->scheduler.cancel(&event->scheduling);
+		}
+
 		// if we're due now, just schedule the event
 		scheduleByAngle(&event->scheduling, phase.timestamp, event->getAngleFromNow(phase), action);
 
@@ -57,21 +42,84 @@ bool TriggerScheduler::scheduleOrQueue(
 	}
 }
 
-void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
-	event->action = action;
-
-	{
-		chibios_rt::CriticalSectionLocker csl;
-
-		// TODO: This is O(n), consider some other way of detecting if in a list,
-		// and consider doubly linked or other list tricks.
-
-		if (!assertNotInList(m_angleBasedEventsHead, event)) {
-			// Use Append to retain some semblance of event ordering in case of
-			// time skew.  Thus on events are always followed by off events.
-			LL_APPEND2(m_angleBasedEventsHead, event, next);
-		}
+void TriggerScheduler::append(Queue& queue, AngleBasedEvent* event, TriggerQueueMembership membership) {
+	event->next = nullptr;
+	if (queue.tail) {
+		queue.tail->next = event;
+	} else {
+		queue.head = event;
 	}
+	queue.tail = event;
+	event->queueMembership = membership;
+}
+
+void TriggerScheduler::unlink(Queue& queue, AngleBasedEvent* event, AngleBasedEvent* previous) {
+	if (previous) {
+		previous->next = event->next;
+	} else {
+		queue.head = event->next;
+	}
+	if (queue.tail == event) {
+		queue.tail = previous;
+	}
+	event->next = nullptr;
+	event->queueMembership = TriggerQueueMembership::None;
+}
+
+void TriggerScheduler::schedule(AngleBasedEvent* event, action_s action) {
+	// Both public entry points hold the lock while updating the event.
+	event->action = action;
+	if (event->queueMembership != TriggerQueueMembership::None) {
+		warning(ObdCode::CUSTOM_RE_ADDING_INTO_EXECUTION_QUEUE, "re-adding element into event_queue");
+		return;
+	}
+	append(m_waiting, event, TriggerQueueMembership::Waiting);
+}
+
+void TriggerScheduler::cancel(AngleBasedEvent* event) {
+	chibios_rt::CriticalSectionLocker csl;
+	if (event->queueMembership == TriggerQueueMembership::None) {
+		return;
+	}
+	auto& queue = event->queueMembership == TriggerQueueMembership::Waiting ? m_waiting : m_due;
+	AngleBasedEvent* previous = nullptr;
+	auto* current = queue.head;
+	int count = 0;
+	while (current && current != event) {
+		if (++count > QUEUE_LENGTH_LIMIT) {
+			firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Looped trigger queue");
+			return;
+		}
+		previous = current;
+		current = current->next;
+	}
+	if (!current) {
+		firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Trigger queue membership mismatch");
+		return;
+	}
+	unlink(queue, event, previous);
+}
+
+void TriggerScheduler::clear(Queue& queue) {
+	int count = 0;
+	while (auto* event = queue.head) {
+		if (++count > QUEUE_LENGTH_LIMIT) {
+			firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Looped trigger queue");
+			return;
+		}
+		unlink(queue, event, nullptr);
+	}
+}
+
+void TriggerScheduler::flush() {
+	chibios_rt::CriticalSectionLocker csl;
+	// Reset membership before events can be reused. Preserve armed timers and their fallback association.
+	clear(m_waiting);
+	clear(m_due);
+}
+
+void TriggerScheduler::onEngineStop() {
+	flush();
 }
 
 void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
@@ -80,50 +128,47 @@ void TriggerScheduler::onEnginePhase(float rpm, const EnginePhaseInfo& phase) {
 		return;
 	}
 
-	AngleBasedEvent* keephead = nullptr;
-
 	{
 		chibios_rt::CriticalSectionLocker csl;
 
-		keephead = m_angleBasedEventsHead;
-		m_angleBasedEventsHead = nullptr;
-	}
+		AngleBasedEvent* previous = nullptr;
+		auto* current = m_waiting.head;
+		int count = 0;
+		while (current) {
+			if (++count > QUEUE_LENGTH_LIMIT) {
+				firmwareError(ObdCode::CUSTOM_ERR_LOOPED_QUEUE, "Looped trigger queue");
+				return;
+			}
+			auto* next = current->next;
+			if (current->shouldSchedule(phase)) {
+				unlink(m_waiting, current, previous);
+				append(m_due, current, TriggerQueueMembership::Due);
+			} else {
+				previous = current;
+			}
+			current = next;
+		}
 
-	AngleBasedEvent* current = nullptr;
-	AngleBasedEvent* tmp = nullptr;
-	AngleBasedEvent* keeptail = nullptr;
-
-	LL_FOREACH_SAFE2(keephead, current, tmp, next) {
-		if (current->shouldSchedule(phase)) {
-			// time to fire a spark which was scheduled previously
-
-			// Yes this looks like O(n^2), but that's only over the entire engine
-			// cycle.  It's really O(mn + nn) where m = # of teeth and n = # events
-			// fired per cycle.  The number of teeth outweigh the number of events, at
-			// least for 60-2....  So odds are we're only firing an event or two per
-			// tooth, which means the outer loop is really only O(n).  And if we are
-			// firing many events per teeth, then it's likely the events before this
-			// one also fired and thus the call to LL_DELETE2 is closer to O(1).
-			LL_DELETE2(keephead, current, next);
-
-			scheduling_s* sDown = &current->scheduling;
-
-			// In case this event was scheduled by overdwell protection, cancel it so
-			// we can re-schedule at the correct time
-			engine->scheduler.cancel(sDown);
-
-			scheduleByAngle(sDown, phase.timestamp, current->getAngleFromNow(phase), current->action);
-		} else {
-			keeptail = current; // Used for fast list concatenation
+		// Avoid another lock/unlock on the common empty or not-yet-due path.
+		if (!m_due.head) {
+			return;
 		}
 	}
 
-	if (keephead) {
+	// A timer callback may run while scheduleByAngle() is called. Keep every other
+	// due event in a member list so cancel() and flush() can still find it.
+	while (true) {
 		chibios_rt::CriticalSectionLocker csl;
+		auto* current = m_due.head;
+		if (!current) {
+			break;
+		}
+		unlink(m_due, current, nullptr);
 
-		// Put any new entries onto the end of the keep list
-		keeptail->next = m_angleBasedEventsHead;
-		m_angleBasedEventsHead = keephead;
+		// Keep promotion atomic with engine stop and cancellation on another thread.
+		// Replace a possible overdwell timer with the actual event time.
+		engine->scheduler.cancel(&current->scheduling);
+		scheduleByAngle(&current->scheduling, phase.timestamp, current->getAngleFromNow(phase), current->action);
 	}
 }
 
@@ -145,17 +190,43 @@ float AngleBasedEvent::getAngleFromNow(const EnginePhaseInfo& phase) const {
 }
 
 #if EFI_UNIT_TEST
-// todo: reduce code duplication with another 'getElementAtIndexForUnitText'
 AngleBasedEvent* TriggerScheduler::getElementAtIndexForUnitTest(int index) {
-	AngleBasedEvent* current;
-
-	LL_FOREACH2(m_angleBasedEventsHead, current, next) {
-		if (index == 0) {
+	for (auto* current = m_waiting.head; current; current = current->next) {
+		if (index-- == 0) {
 			return current;
 		}
-		index--;
 	}
-	firmwareError("getElementAtIndexForUnitText: null");
+	firmwareError("getElementAtIndexForUnitTest: null");
 	return nullptr;
 }
-#endif /* EFI_UNIT_TEST */
+
+int TriggerScheduler::getQueueSizeForUnitTest() const {
+	int count = 0;
+	for (const auto* queue : {&m_waiting, &m_due}) {
+		for (auto* current = queue->head; current; current = current->next) {
+			if (++count > QUEUE_LENGTH_LIMIT) {
+				return -1;
+			}
+		}
+	}
+	return count;
+}
+
+bool TriggerScheduler::validateQueuesForUnitTest() const {
+	for (const auto* queue : {&m_waiting, &m_due}) {
+		auto membership = queue == &m_waiting ? TriggerQueueMembership::Waiting : TriggerQueueMembership::Due;
+		AngleBasedEvent* previous = nullptr;
+		int count = 0;
+		for (auto* current = queue->head; current; current = current->next) {
+			if (++count > QUEUE_LENGTH_LIMIT || current->queueMembership != membership) {
+				return false;
+			}
+			previous = current;
+		}
+		if (previous != queue->tail) {
+			return false;
+		}
+	}
+	return true;
+}
+#endif
