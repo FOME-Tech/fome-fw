@@ -21,7 +21,7 @@ TEST(miata, miata_na_tdc) {
 		int time = getSimulatedEventTime(shape, i);
 		eth.setTimeAndInvokeEventsUs(time);
 
-		emulatorHelper.handleEmulatorCallback(shape.wave, i % shape.getSize());
+		emulatorHelper.handleEmulatorCallback(shape.wave, i % shape.getSize(), getTimeNowNt());
 	}
 
 	ASSERT_EQ(167, round(Sensor::getOrZero(SensorType::Rpm))) << "miata_na_tdc RPM";
