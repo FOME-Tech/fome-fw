@@ -231,6 +231,7 @@ void Engine::OnTriggerSynchronizationLost() {
 
 	// Reset injector & ignition scheduling to avoid wrong mode or dwell during restart
 	injectionEvents.invalidate();
+	injectionEvents.resetTrackers();
 	engine->ignitionEvents.isReady = false;
 
 	// Notify modules that the engine has stopped

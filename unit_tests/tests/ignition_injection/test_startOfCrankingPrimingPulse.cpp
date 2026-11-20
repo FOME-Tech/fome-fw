@@ -23,12 +23,15 @@ TEST(engine, testPlainCrankingWithoutAdvancedFeatures) {
 
 	eth.fireRise(/* delayMs */ 200);
 	ASSERT_EQ(300, Sensor::getOrZero(SensorType::Rpm)) << "RPM#2";
-	// two simultaneous injections
-	ASSERT_EQ(4, engine->scheduler.size()) << "plain#2";
+	// Three simultaneous injections: the two whose starts come before the next tooth, and one whose start
+	// has only just gone by, which opens straight away rather than waiting a whole cycle
+	ASSERT_EQ(6, engine->scheduler.size()) << "plain#2";
 
-	eth.assertEvent5("sim start", 0, (void*)startInjection, 100000 - 1625);
+	eth.assertEvent5("sim start, late", 0, (void*)startInjection, 0);
+	eth.assertEvent5("sim end, late", 1, (void*)endInjection, 1625 - 1);
+	eth.assertEvent5("sim start", 2, (void*)startInjection, 100000 - 1625);
 	// -1 because ugh floating point math
-	eth.assertEvent5("sim end", 1, (void*)endInjection, 100000 - 1);
+	eth.assertEvent5("sim end", 3, (void*)endInjection, 100000 - 1);
 }
 
 TEST(priming, startScheduling) {

@@ -247,6 +247,100 @@ TEST_P(EngineInvariantsAllTriggers, SteadyThenAccelerate) {
 	}
 }
 
+// Crank degrees between consecutive pulses of each of the first four injectors, from fromUs on, all within
+// minDeg to maxDeg
+static ::testing::AssertionResult
+injectorSpacingWithin(const OutputRecorder& recorder, int64_t fromUs, double minDeg, double maxDeg) {
+	std::ostringstream problems;
+	int count = 0;
+
+	for (int inj = 0; inj < 4; inj++) {
+		std::vector<OutputPulse> pulses;
+		for (const auto& p : recorder.pulses(OutputKind::Injector, inj)) {
+			if (p.startUs >= fromUs) {
+				pulses.push_back(p);
+			}
+		}
+
+		if (pulses.size() < 4) {
+			return ::testing::AssertionFailure() << "injector " << inj << " barely fired";
+		}
+
+		for (size_t i = 1; i < pulses.size(); i++) {
+			double spacing = pulses[i].startAngle - pulses[i - 1].startAngle;
+			if ((spacing < minDeg || spacing > maxDeg) && count++ < 5) {
+				problems << "\n  injector " << inj << ": " << spacing << " degrees between pulses at "
+						 << pulses[i - 1].startUs * 1e-3 << " ms";
+			}
+		}
+	}
+
+	if (count) {
+		return ::testing::AssertionFailure()
+			<< count << " injector pulse spacings outside " << minDeg << " to " << maxDeg << problems.str();
+	}
+
+	return ::testing::AssertionSuccess();
+}
+
+// The same for fuel, in batch mode, which needs no cam: each injector fires once per revolution, steady
+// and through the acceleration, never skipped or doubled, and never left open
+TEST_P(EngineInvariantsAllTriggers, BatchFuelSteadyThenAccelerate) {
+	auto triggerType = (trigger_type_e)GetParam();
+
+	if (skippedTriggers.count(triggerType)) {
+		GTEST_SKIP() << "known problem, see skippedTriggers";
+	}
+
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	EXPECT_CALL(*eth.mockAirmass, getAirmass(::testing::_, ::testing::_))
+			.WillRepeatedly(::testing::Return(AirmassResult{0.1008f, 50.0f}));
+
+	engineConfiguration->isIgnitionEnabled = false;
+	engineConfiguration->isInjectionEnabled = true;
+	setCylinderCount(4);
+	engineConfiguration->injectionMode = IM_BATCH;
+	engineConfiguration->crankingInjectionMode = IM_BATCH;
+	setTable(config->injectionPhase, -180.0f);
+	setArrayValues(config->cltFuelCorrBins, 1.0f);
+	setArrayValues(engineConfiguration->injector.battLagCorr, 0.0f);
+	engine->updateSlowSensors();
+
+	// Not setTriggerType(): that insists the type is different to the test engine's default
+	engineConfiguration->trigger.type = triggerType;
+	eth.applyTriggerWaveform();
+
+	if (engine->triggerCentral.triggerShape.shapeDefinitionError) {
+		GTEST_SKIP() << "no usable trigger shape";
+	}
+
+	OutputRecorder recorder;
+	EngineSim sim(eth, &recorder);
+
+	// Wheels that repeat more than once per revolution can't fire anything without a cam
+	if (sim.wheelPeriod() < 360) {
+		GTEST_SKIP() << "can't fire without a cam";
+	}
+
+	sim.setRpm(1000);
+	sim.runCycles(10);
+	auto steady = sim.nowUs();
+	sim.runCycles(10);
+
+	EXPECT_TRUE(injectorSpacingWithin(recorder, steady, 360 - 2, 360 + 2));
+
+	auto accelerating = sim.nowUs();
+	sim.rampRpm(5000, 1);
+	sim.runSeconds(1.5);
+
+	// Each pulse is timed from the last tooth before it at the speed then, which on a wheel with only one
+	// or two teeth can be most of a cycle earlier, so timing wanders while accelerating. A skipped or
+	// doubled pulse is still unmistakable: twice the spacing, or hardly any.
+	EXPECT_TRUE(injectorSpacingWithin(recorder, accelerating, 180, 540));
+	// Pulses are 1.5 ms
+	EXPECT_TRUE(noStuckInjector(recorder, 2, steady));
+}
+
 // ---------------------------------------------------------------------------------------------
 // Fuel and spark together
 // ---------------------------------------------------------------------------------------------

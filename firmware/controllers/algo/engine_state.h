@@ -72,8 +72,6 @@ public:
 
 	multispark_state multispark;
 
-	bool shouldUpdateInjectionTiming = true;
-
 	void updateSplitInjection();
 
 	Timer splitInjectionTimer;

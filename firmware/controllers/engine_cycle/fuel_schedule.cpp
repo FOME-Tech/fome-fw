@@ -109,16 +109,83 @@ uint16_t InjectionEvent::calculateInjectorOutputMask() const {
 	return mask;
 }
 
-void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
-	auto eventAngle = injectionStartAngle;
+float getInjectionLeadFraction() {
+	switch (engineConfiguration->injectionTimingMode) {
+		case InjectionTimingMode::Start:
+			return 0;
+		case InjectionTimingMode::Center:
+			return 0.5f;
+		case InjectionTimingMode::End:
+		default:
+			return 1;
+	}
+}
 
-	// Determine whether our angle is going to happen before (or near) the next tooth
-	if (!isPhaseInRange(EngPhase{eventAngle}, phase)) {
-		return;
+expected<CycleEventInstance>
+InjectionEvent::pollDue(const EnginePhaseInfo& phase, float leadFraction, floatus_t oneDegreeUs) {
+	angle_t engineCycle = getEngineState()->engineCycle;
+	angle_t tableAngle = getEngineState()->injectionOffset;
+
+	// Where the next pulse goes around its anchor, from the fast callback's estimate of how long it will be
+	angle_t estimatedDurationAngle = MS2US(m_durationEstimateMs) / oneDegreeUs;
+	if (!(estimatedDurationAngle >= 0)) {
+		// NaN or negative: there's nothing to place. The instance still comes due at its anchor, where the
+		// actual duration is checked (and warned about).
+		estimatedDurationAngle = 0;
 	}
 
-	// don't allow split inj in simultaneous mode
-	bool doSplitInjection = engine->engineState.doSplitInjection && !isSimultaneous;
+	OutputShape shape{
+			.anchorPhase = wrapToPeriod(tableAngle + engine->cylinders[cylinderNumber].getAngleOffset(), engineCycle),
+			.leadDeg = leadFraction * estimatedDurationAngle,
+			.tailDeg = (1 - leadFraction) * estimatedDurationAngle,
+	};
+
+	return m_tracker.poll(shape, phase, engineCycle);
+}
+
+bool InjectionEvent::skipIfNotToInject(const CycleEventInstance& instance, const EnginePhaseInfo& phase) {
+	auto& state = *getEngineState();
+	bool skip = false;
+
+	if (instance.afterLabelJump && instance.startFromNow < 0) {
+		// Only late because the engine phase was just relabeled, so this cycle may already have had its fuel
+		// under the old phase
+		state.injectionSkippedPhaseJumpCount++;
+		skip = true;
+	} else if (!instance.servable) {
+		// The end of injection it was aiming for has gone by
+		state.injectionSkippedLateCount++;
+		skip = true;
+	} else if (!getLimpManager()->allowInjection().value) {
+		skip = true;
+	}
+
+	if (skip) {
+		skipInstance(instance, phase);
+	}
+
+	return skip;
+}
+
+void InjectionEvent::skipInstance(const CycleEventInstance& instance, const EnginePhaseInfo& phase) {
+	// No pulse, so no pulse end to choose the injection mode for the next one: do it now
+	update();
+	m_tracker.resolve(instance, phase);
+}
+
+bool InjectionEvent::injectInstance(
+		const CycleEventInstance& instance, const EnginePhaseInfo& phase, float leadFraction, floatus_t oneDegreeUs) {
+	// Resolved either way. If it couldn't be scheduled, it's a skip, but choosing the injection mode for the
+	// next pulse is left to the caller (see FuelSchedule's handleTooth).
+	m_tracker.resolve(instance, phase);
+	return scheduleInstance(instance, phase, leadFraction, oneDegreeUs);
+}
+
+bool InjectionEvent::scheduleInstance(
+		const CycleEventInstance& instance, const EnginePhaseInfo& phase, float leadFraction, floatus_t oneDegreeUs) {
+	auto& state = *getEngineState();
+
+	bool doSplitInjection = engine->engineState.doSplitInjection;
 
 	// Select fuel mass from the correct cylinder
 	auto cycleMassGrams = engine->cylinders[this->cylinderNumber].getInjectionMass();
@@ -130,8 +197,8 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	// TODO: is it correct to wall wet on both pulses?
 	injectionMassGrams = wallFuel.adjust(injectionMassGrams);
 
-	// Disable staging in simultaneous mode or split injection mode
-	float stage2Fraction = (isSimultaneous || doSplitInjection) ? 0 : getEngineState()->injectionStage2Fraction;
+	// Disable staging in split injection mode
+	float stage2Fraction = doSplitInjection ? 0 : getEngineState()->injectionStage2Fraction;
 
 	// Compute fraction of fuel on stage 2, remainder goes on stage 1
 	const float injectionMassStage2 = stage2Fraction * injectionMassGrams;
@@ -148,6 +215,9 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 		engine->module<TripOdometer>()->consumeFuel(actualInjectedMass, phase.timestamp);
 #endif // MODULE_TRIP_ODO
 	}
+
+	// The pulse is placed by the whole of stage 1. With split injection that's both halves together.
+	float leadMassGrams = injectionMassStage1;
 
 	if (doSplitInjection) {
 		// If in split mode, do the injection in two halves
@@ -176,16 +246,16 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 
 	if (std::isnan(injectionDurationStage1) || std::isnan(injectionDurationStage2)) {
 		warning(ObdCode::CUSTOM_OBD_NAN_INJECTION, "NaN injection pulse");
-		return;
+		return false;
 	}
 	if (injectionDurationStage1 < 0) {
 		warning(ObdCode::CUSTOM_OBD_NEG_INJECTION, "Negative injection pulse %.2f", injectionDurationStage1);
-		return;
+		return false;
 	}
 
 	// If somebody commanded an impossibly short injection, do nothing.
 	if (injectionDurationStage1 < minInjectionDurationMs) {
-		return;
+		return false;
 	}
 
 	floatus_t durationUsStage1 = MS2US(injectionDurationStage1);
@@ -212,16 +282,21 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 #endif /*EFI_PRINTF_FUEL_DETAILS */
 
-	// Correctly wrap injection start angle
-	float angleFromNow = eventAngle - phase.currentEngPhase.angle;
-	if (angleFromNow < 0) {
-		angleFromNow += getEngineState()->engineCycle;
+	// Start so that the pulse sits around its anchor as the table says, by the duration actually being
+	// injected. If that's already gone by, start now.
+	floatms_t leadDurationMs = doSplitInjection
+									 ? engine->module<InjectorModelPrimary>()->getInjectionDuration(leadMassGrams)
+									 : injectionDurationStage1;
+	float startFromNow = instance.anchorFromNow - leadFraction * MS2US(leadDurationMs) / oneDegreeUs;
+	bool isLate = startFromNow < 0;
+	if (isLate) {
+		startFromNow = 0;
 	}
 
 	// Opening (stage 1 + stage 2 open together), closing stage 1, and closing stage 2 if applicable.
 	// These are scheduled all together or not at all: an opening without its closing would leave the
 	// injector open.
-	efitick_t startTime = getTimeAfterAngle(phase.timestamp, angleFromNow);
+	efitick_t startTime = getTimeAfterAngle(phase.timestamp, startFromNow);
 
 	TimedAction actions[3] = {
 			{startTime, {&startInjection, ctx}},
@@ -234,16 +309,23 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 	if (!getScheduler()->scheduleTogether("inj", actions, actionCount)) {
-		return;
+		state.injectionSkippedPoolCount++;
+		return false;
+	}
+
+	if (isLate) {
+		state.injectionLateCount++;
 	}
 
 #if EFI_UNIT_TEST
 	printf("scheduling injection angle=%.2f/delay=%d injectionDuration=%d %d\r\n",
-		   angleFromNow,
+		   startFromNow,
 		   (int)NT2US(startTime - phase.timestamp),
 		   (int)durationUsStage1,
 		   (int)durationUsStage2);
 #endif
+
+	return true;
 }
 
 FuelSchedule::FuelSchedule() {
@@ -258,114 +340,30 @@ WallFuel& InjectionEvent::getWallFuel() {
 
 void FuelSchedule::invalidate() {
 	isReady = false;
+}
 
+void FuelSchedule::resetTrackers() {
 	for (auto& element : elements) {
-		element.forgetStartAngle();
-	}
-}
-
-// Determines how much to adjust injection opening angle based on the injection's duration and the current phasing mode
-static float getInjectionAngleCorrection(float fuelMs, float oneDegreeUs) {
-	auto mode = engineConfiguration->injectionTimingMode;
-	if (mode == InjectionTimingMode::Start) {
-		// Start of injection gets no correction for duration
-		return 0;
-	}
-
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(fuelMs), "NaN fuelMs", false);
-
-	angle_t injectionDurationAngle = MS2US(fuelMs) / oneDegreeUs;
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(injectionDurationAngle), "NaN injectionDurationAngle", false);
-	assertAngleRange(injectionDurationAngle, "injectionDuration_r", ObdCode::CUSTOM_INJ_DURATION);
-
-	if (mode == InjectionTimingMode::Center) {
-		// Center of injection is half-corrected for duration
-		return injectionDurationAngle * 0.5f;
-	} else {
-		// End of injection gets "full correction" so we advance opening by the full duration
-		return injectionDurationAngle;
-	}
-}
-
-// Returns the start angle of this injector in engine coordinates (0-720 for a 4 stroke),
-// or unexpected if unable to calculate the start angle due to missing information.
-expected<angle_t> OneCylinder::computeInjectionAngle(injection_mode_e mode) const {
-	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
-	if (std::isnan(oneDegreeUs)) {
-		// in order to have fuel schedule we need to have current RPM
-		return unexpected;
-	}
-
-	// injection phase may be scheduled by injection end, so we need to step the angle back
-	// for the duration of the injection
-	angle_t injectionDurationAngle = getInjectionAngleCorrection(getEngineState()->injectionDuration, oneDegreeUs);
-
-	// User configured offset - degrees after TDC combustion
-	floatus_t injectionOffset = getEngineState()->injectionOffset;
-	if (std::isnan(injectionOffset)) {
-		// injection offset map not ready - we are not ready to schedule fuel events
-		return unexpected;
-	}
-
-	angle_t openingAngle = injectionOffset - injectionDurationAngle;
-	assertAngleRange(openingAngle, "openingAngle_r", ObdCode::CUSTOM_ERR_6554);
-	wrapAngle(openingAngle, "addFuel#1", ObdCode::CUSTOM_ERR_6555);
-	// TODO: should we log per-cylinder injection timing? #76
-	getTunerStudioOutputChannels()->injectionOffset = openingAngle;
-
-	// Convert from cylinder-relative to cylinder-1-relative
-	openingAngle += getAngleOffset();
-
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, !std::isnan(openingAngle), "findAngle#3", false);
-	assertAngleRange(openingAngle, "findAngle#a33", ObdCode::CUSTOM_ERR_6544);
-
-	wrapAngle(openingAngle, "addFuel#2", ObdCode::CUSTOM_ERR_6555);
-
-#if EFI_UNIT_TEST
-	printf("registerInjectionEvent openingAngle=%.2f inj %d\r\n", openingAngle, m_cylinderNumber);
-#endif
-
-	return openingAngle;
-}
-
-bool InjectionEvent::updateInjectionAngle(injection_mode_e mode) {
-	if (auto result = engine->cylinders[cylinderNumber].computeInjectionAngle(mode)) {
-		// If injector duty cycle is high, lock injection SOI so that we
-		// don't miss injections at or above 100% duty
-		bool lockForHighDuty = !getEngineState()->shouldUpdateInjectionTiming;
-
-		// With no fuel (fuel cut), the angle would be worked out for a pulse of no length, so the first pulse
-		// after the cut would end a whole pulse late. Keep the angle from the last real pulse instead.
-		bool noFuel = getEngineState()->injectionDuration < minInjectionDurationMs;
-
-		if (!m_hasStartAngle || !(lockForHighDuty || noFuel)) {
-			injectionStartAngle = result.Value;
-			m_hasStartAngle = true;
-		}
-
-		return true;
-	} else {
-		return false;
+		element.resetTracker();
 	}
 }
 
 /**
- * @returns false in case of error, true if success
+ * @returns false if injections can't be placed yet (no engine speed, or no injection phase), true if success
  */
 bool InjectionEvent::update() {
 	cylinderNumber = getCylinderNumberAtIndex(ownIndex);
 
-	injection_mode_e mode = getCurrentInjectionMode();
-
-	if (updateInjectionAngle(mode)) {
-		m_injectionMode = mode;
-
-		engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
-
-		return true;
-	} else {
+	if (std::isnan(getEngineRotationState()->getOneDegreeUs()) || std::isnan(getEngineState()->injectionOffset)) {
 		return false;
 	}
+
+	injection_mode_e mode = getCurrentInjectionMode();
+	m_injectionMode = mode;
+
+	engine->outputChannels.currentInjectionMode = static_cast<uint8_t>(mode);
+
+	return true;
 }
 
 void FuelSchedule::addFuelEvents() {
@@ -385,13 +383,13 @@ void FuelSchedule::addFuelEvents() {
 void InjectionEvent::updateDurationEstimate() {
 	// The same fuel calculation as onTriggerTooth, but without committing anything (wall wetting is only
 	// previewed). With split injection this is both halves together.
-	bool doSplitInjection = engine->engineState.doSplitInjection && !isSimultaneous;
+	bool doSplitInjection = engine->engineState.doSplitInjection;
 
 	float massGrams =
 			engine->cylinders[cylinderNumber].getInjectionMass() * getInjectionModeDurationMultiplier(m_injectionMode);
 	massGrams = wallFuel.preview(massGrams);
 
-	float stage2Fraction = (isSimultaneous || doSplitInjection) ? 0 : getEngineState()->injectionStage2Fraction;
+	float stage2Fraction = doSplitInjection ? 0 : getEngineState()->injectionStage2Fraction;
 	float stage1MassGrams = massGrams * (1 - stage2Fraction);
 
 	m_durationEstimateMs = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1MassGrams);
@@ -403,15 +401,65 @@ void FuelSchedule::updateDurationEstimates() {
 	}
 }
 
+// Everything a tooth does for a set of events
+static void handleTooth(InjectionEvent* events, size_t count, const EnginePhaseInfo& phase) {
+	floatus_t oneDegreeUs = getEngineRotationState()->getOneDegreeUs();
+	if (std::isnan(oneDegreeUs) || std::isnan(getEngineState()->injectionOffset)) {
+		// Not enough is known yet to place an injection
+		return;
+	}
+
+	float leadFraction = getInjectionLeadFraction();
+
+	// Which events have a pulse due on this tooth
+	CycleEventInstance instances[MAX_CYLINDER_COUNT];
+	bool isDue[MAX_CYLINDER_COUNT] = {};
+	for (size_t i = 0; i < count; i++) {
+		if (auto due = events[i].pollDue(phase, leadFraction, oneDegreeUs)) {
+			instances[i] = due.Value;
+			isDue[i] = true;
+		}
+	}
+
+	// Skips first: an event that skips chooses its injection mode for the next pulse straight away, and
+	// whether other events' batch pulses include its injector depends on that (see
+	// shouldFireInjectorAtIndex). Deciding all of them before any pulse is put together means every pulse
+	// on this tooth sees the same modes.
+	for (size_t i = 0; i < count; i++) {
+		if (isDue[i] && events[i].skipIfNotToInject(instances[i], phase)) {
+			isDue[i] = false;
+		}
+	}
+
+	// A pulse can still fail to be scheduled. Its event chooses its next injection mode only once every
+	// pulse on this tooth has been put together, for the same reason.
+	bool failed[MAX_CYLINDER_COUNT] = {};
+	for (size_t i = 0; i < count; i++) {
+		if (isDue[i]) {
+			failed[i] = !events[i].injectInstance(instances[i], phase, leadFraction, oneDegreeUs);
+		}
+	}
+
+	for (size_t i = 0; i < count; i++) {
+		if (failed[i]) {
+			events[i].update();
+		}
+	}
+}
+
+#if EFI_UNIT_TEST
+void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
+	handleTooth(this, 1, phase);
+}
+#endif // EFI_UNIT_TEST
+
 void FuelSchedule::onTriggerTooth(const EnginePhaseInfo& phase) {
 	// Wait for schedule to be built - this happens the first time we get RPM
 	if (!isReady) {
 		return;
 	}
 
-	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
-		elements[i].onTriggerTooth(phase);
-	}
+	handleTooth(elements, engine->engineState.cylinderCount, phase);
 }
 
 #endif // EFI_ENGINE_CONTROL

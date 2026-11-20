@@ -11,6 +11,13 @@ using ::testing::Not;
 using ::testing::Property;
 using ::testing::Truly;
 
+// With start of injection timing, the pulse starts at the injection phase table's angle (plus the
+// cylinder's own offset, which is 0 for the first cylinder)
+static void injectionStartsAt(float angle) {
+	engineConfiguration->injectionTimingMode = InjectionTimingMode::Start;
+	engine->engineState.injectionOffset = angle;
+}
+
 TEST(injectionScheduling, InjectionIsScheduled) {
 	StrictMock<MockExecutor> mockExec;
 
@@ -50,7 +57,7 @@ TEST(injectionScheduling, InjectionIsScheduled) {
 	}
 
 	// Event scheduled at 125 degrees
-	event.injectionStartAngle = 125;
+	injectionStartsAt(125);
 
 	// We are at 120 degrees now, next tooth 130
 	event.onTriggerTooth({nowNt, 0, 0, 120, 130});
@@ -110,7 +117,7 @@ TEST(injectionScheduling, InjectionIsScheduledDualStage) {
 	}
 
 	// Event scheduled at 125 degrees
-	event.injectionStartAngle = 125;
+	injectionStartsAt(125);
 
 	// We are at 120 degrees now, next tooth 130
 	event.onTriggerTooth({nowNt, 0, 0, 120, 130});
@@ -155,7 +162,7 @@ TEST(injectionScheduling, InjectionIsScheduledBeforeWraparound) {
 	}
 
 	// Event scheduled at 715 degrees
-	event.injectionStartAngle = 715;
+	injectionStartsAt(715);
 
 	// We are at 710 degrees now, next tooth 010
 	event.onTriggerTooth({nowNt, 0, 0, 710, 010});
@@ -200,7 +207,7 @@ TEST(injectionScheduling, InjectionIsScheduledAfterWraparound) {
 	}
 
 	// Event scheduled at 5 degrees
-	event.injectionStartAngle = 5;
+	injectionStartsAt(5);
 
 	// We are at 710 degrees now, next tooth 010
 	event.onTriggerTooth({nowNt, 0, 0, 710, 010});
@@ -230,7 +237,7 @@ TEST(injectionScheduling, InjectionNotScheduled) {
 	}
 
 	// Event scheduled at 125 degrees
-	event.injectionStartAngle = 125;
+	injectionStartsAt(125);
 
 	// We are at 130 degrees now, next tooth 140
 	event.onTriggerTooth({nowNt, 0, 0, 130, 140});

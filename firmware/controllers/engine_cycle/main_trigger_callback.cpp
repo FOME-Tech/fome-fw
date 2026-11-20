@@ -34,12 +34,9 @@ bool printFuelDebug = false;
 static void handleFuel(const EnginePhaseInfo& phase) {
 	ScopePerf perf(PE::HandleFuel);
 
-	if (!getLimpManager()->allowInjection().value) {
-		return;
-	}
-
-	// This is called in the fast callback already, but since we may have just achieved engine sync (and RPM)
-	// for the first time, force update the schedule so that we can inject immediately if necessary
+	// We may have just achieved engine sync (and RPM) for the first time: build the schedule now so that we
+	// can inject immediately if necessary. A fuel cut doesn't stop here: each injection that comes due during
+	// it is skipped, so that none is mistaken for one still owed once fuel is allowed again.
 	FuelSchedule* fs = getFuelSchedule();
 	if (!fs->isReady) {
 		fs->addFuelEvents();
@@ -74,6 +71,7 @@ void mainTriggerCallback(uint32_t trgEventIndex, const EnginePhaseInfo& phase) {
 		if (getTriggerCentral()->checkIfTriggerConfigChanged()) {
 			getIgnitionEvents()->isReady = false; // we need to rebuild complete ignition schedule
 			getFuelSchedule()->invalidate();
+			getFuelSchedule()->resetTrackers();
 			// moved 'triggerIndexByAngle' into trigger initialization (why was it invoked from here if it's only about
 			// trigger shape & optimization?) see updateTriggerWaveform() -> prepareOutputSignals()
 
