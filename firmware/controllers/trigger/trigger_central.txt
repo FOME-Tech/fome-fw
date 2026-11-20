@@ -7,4 +7,6 @@ struct_no_prefix trigger_central_s
 	int16_t autoscale triggerToothAngleError;Trg: Tooth angle error;"deg", 0.01, 0, -30, 30, 2
 
 	uint8_t triggerIgnoredToothCount;Trg: Ignored tooth count
+
+	uint16_t phaseLabelJumpCount;Trg: Phase label jumps;"", 1, 0, 0, 65535, 0
 end_struct
