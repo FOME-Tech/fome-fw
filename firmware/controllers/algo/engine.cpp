@@ -433,6 +433,11 @@ void Engine::periodicFastCallback() {
 	speedoUpdate();
 
 	engineModules.apply_all([](auto& m) { m.onFastCallback(); });
+
+#if EFI_ENGINE_CONTROL
+	// Last, once everything an injection depends on (fuel mass, injector model, wall wetting) is up to date
+	injectionEvents.updateDurationEstimates();
+#endif // EFI_ENGINE_CONTROL
 }
 
 EngineRotationState* getEngineRotationState() {

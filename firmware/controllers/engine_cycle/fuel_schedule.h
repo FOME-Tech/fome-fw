@@ -28,6 +28,17 @@ public:
 	uint16_t calculateInjectorOutputMask() const;
 	bool shouldFireInjectorAtIndex(size_t otherIndex) const;
 
+	// Work out how long this event's next pulse would be if it were scheduled now: this cylinder's fuel,
+	// this event's own injection mode, wall wetting as it stands, staging. Called at the end of the fast
+	// callback, once everything that goes in to it is up to date, so it matches what is actually injected
+	// unless something changes in between.
+	void updateDurationEstimate();
+
+	// Stage 1 duration, in ms, from the last updateDurationEstimate()
+	floatms_t getDurationEstimate() const {
+		return m_durationEstimateMs;
+	}
+
 	// Work out the start angle from scratch at the next update
 	void forgetStartAngle() {
 		m_hasStartAngle = false;
@@ -45,6 +56,7 @@ private:
 	 * It's more efficient to handle all injectors together if that's the case
 	 */
 	bool isSimultaneous = false;
+	floatms_t m_durationEstimateMs = 0;
 	uint8_t ownIndex = 0;
 	uint8_t cylinderNumber = 0;
 	injection_mode_e m_injectionMode = IM_SEQUENTIAL;
@@ -98,6 +110,9 @@ public:
 
 	// Calculate injector opening angle, pins, and mode for all injectors
 	void addFuelEvents();
+
+	// See InjectionEvent::updateDurationEstimate
+	void updateDurationEstimates();
 
 	/**
 	 * injection events, per cylinder

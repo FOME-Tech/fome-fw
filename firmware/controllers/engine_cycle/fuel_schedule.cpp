@@ -382,6 +382,27 @@ void FuelSchedule::addFuelEvents() {
 	isReady = true;
 }
 
+void InjectionEvent::updateDurationEstimate() {
+	// The same fuel calculation as onTriggerTooth, but without committing anything (wall wetting is only
+	// previewed). With split injection this is both halves together.
+	bool doSplitInjection = engine->engineState.doSplitInjection && !isSimultaneous;
+
+	float massGrams =
+			engine->cylinders[cylinderNumber].getInjectionMass() * getInjectionModeDurationMultiplier(m_injectionMode);
+	massGrams = wallFuel.preview(massGrams);
+
+	float stage2Fraction = (isSimultaneous || doSplitInjection) ? 0 : getEngineState()->injectionStage2Fraction;
+	float stage1MassGrams = massGrams * (1 - stage2Fraction);
+
+	m_durationEstimateMs = engine->module<InjectorModelPrimary>()->getInjectionDuration(stage1MassGrams);
+}
+
+void FuelSchedule::updateDurationEstimates() {
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
+		elements[i].updateDurationEstimate();
+	}
+}
+
 void FuelSchedule::onTriggerTooth(const EnginePhaseInfo& phase) {
 	// Wait for schedule to be built - this happens the first time we get RPM
 	if (!isReady) {
