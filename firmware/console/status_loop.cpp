@@ -313,11 +313,6 @@ static void updateVehicleSpeed() {
 	engine->outputChannels.wheelSpeedLr = Sensor::getOrZero(SensorType::WheelSpeedLR);
 	engine->outputChannels.wheelSpeedRr = Sensor::getOrZero(SensorType::WheelSpeedRR);
 #endif // EFI_VEHICLE_SPEED
-
-#ifdef MODULE_GEAR_DETECT
-	engine->outputChannels.speedToRpmRatio = engine->module<GearDetector>()->getGearboxRatio();
-	engine->outputChannels.detectedGear = Sensor::getOrZero(SensorType::DetectedGear);
-#endif // MODULE_GEAR_DETECT
 }
 
 static void updateRawSensors() {
@@ -338,6 +333,7 @@ static void updateRawSensors() {
 	engine->outputChannels.rawMap = Sensor::getRaw(SensorType::MapSlow);
 	engine->outputChannels.rawWastegatePosition = Sensor::getRaw(SensorType::WastegatePosition);
 	engine->outputChannels.rawFuelTankLevel = Sensor::getRaw(SensorType::FuelLevel);
+	engine->outputChannels.rawClutchPosition = Sensor::getRaw(SensorType::ClutchPosition);
 
 	engine->outputChannels.luaGauges[0] = Sensor::getOrZero(SensorType::LuaGauge1);
 	engine->outputChannels.luaGauges[1] = Sensor::getOrZero(SensorType::LuaGauge2);
@@ -377,6 +373,7 @@ static void updateMiscSensors() {
 	engine->outputChannels.vboostVoltage = Sensor::getOrZero(SensorType::VboostVoltage);
 
 	engine->outputChannels.wastegatePositionSensor = Sensor::getOrZero(SensorType::WastegatePosition);
+	engine->outputChannels.clutchPosition = Sensor::getOrZero(SensorType::ClutchPosition);
 
 	engine->outputChannels.auxSpeed1 = Sensor::getOrZero(SensorType::AuxSpeed1);
 	engine->outputChannels.auxSpeed2 = Sensor::getOrZero(SensorType::AuxSpeed2);

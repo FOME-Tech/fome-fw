@@ -15,6 +15,16 @@
 #define TEST_VIRTUAL
 #endif
 
+#if EFI_UNIT_TEST
+#include <functional>
+
+class OutputPin;
+
+// If set, called on every OutputPin::setValue (before the new value is stored), so tests can record
+// output activity without each output type needing its own hook.
+extern std::function<void(OutputPin& pin, bool logicValue)> unitTestOutputPinObserver;
+#endif
+
 /**
  * @brief   Single output pin reference and state
  */

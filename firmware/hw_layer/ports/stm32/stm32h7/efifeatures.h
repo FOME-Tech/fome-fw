@@ -32,6 +32,6 @@
 #define ADC_UPDATE_RATE LoopPeriod::Period1000hz
 
 #undef LUA_USER_HEAP
-#define LUA_USER_HEAP 100000
+#define LUA_USER_HEAP 150000
 
 #define ADC_SUBSCRIPTION_SLOTS 20

@@ -38,10 +38,12 @@ or
 ### Added
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
+ - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels.
+ - Gear detection uses the clutch position sensor, if fitted, to hold the current gear through a shift instead of flickering through other gears while the clutch slips. Set the "clutch applied below" and "clutch released above" pedal positions on the clutch sensor page. If the clutch sensor reading doesn't match what the car is doing, gear detection falls back to its previous behavior.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load
  - SD card logs now contain every output channel (full parity with the TunerStudio log), rather than only a curated subset - previously-missing data like idle, throttle, wideband and wall-fuel state is now logged
- - IMU data (lateral/longitudinal acceleration and yaw rate) from the BMW E90 MK60e1/MK60e5 DSC/ABS module
+ - IMU data (lateral/longitudinal acceleration and yaw rate) from the BMW E90 MK60e1/MK60e5 DSC/ABS module. Longitudinal acceleration comes from the module's accelerometer, using the high resolution frame sent by the M3 when it's present, and the low resolution frame sent by all cars otherwise.
  - New VVT mode "Honda K24Z Exhaust" for the three-tooth unevenly spaced exhaust cam wheel used on the K24Z, which differs from the 4+1 wheel of earlier K series engines. This pattern is used by K series engines that use a 60-2 crank pattern.
  - CAN wideband controllers now report "time since last CAN frame received" and a TunerStudio alive indicator for all 4 wideband channels (previously only 2 had live data at all), so a dead/disconnected controller can be spotted even when its lambda reading is invalid
  - New firing order 1-6-2-5-3-4 (Maserati V6) #789
@@ -49,12 +51,17 @@ or
  - Brake pedal switch input can now be inverted, for vehicles where the brake switch pulls the input low when the pedal is pressed
  - New CAN VSS type "AUMOVIO MK 100 UHP" for the Continental/AUMOVIO MK 100 UHP ABS module, decoding vehicle speed, all four wheel speeds, brake pedal state, and IMU data (lateral/longitudinal/vertical acceleration and yaw rate)
  - New VVT mode "Honda J 6-2" for the Honda J-series V6 intake cam, which has six evenly spaced tooth slots with two of them missing, giving one distinct wide gap per cam revolution.
+ - More axis options for GPPWM, boost, blend, torque limiter, fan and other configurable-axis tables: clutch position, fuel temperature, fuel level, ECU temperature, aux speed 1/2, lateral/longitudinal acceleration, boost target, boost error (target minus MAP, positive when under target), fuel pressure (low side) and turbo speed (in thousands of RPM). Boost target and error read as invalid unless closed loop boost control is enabled. #801
+ - The boost target gauge now keeps following the target table while boost control is held off below its minimum RPM/TPS/MAP, instead of freezing at the last value
  - Cooling fans can be turned off above a set vehicle speed ("Disable above speed") #827
  - Flex fuel ethanol content is now correct immediately at startup, instead of ramping up from 0% over the first second while the sensor's filter settles. The last valid reading is stored in backup RAM, and used to prime the filter at startup as well as any time the sensor is failed - the fuel in the tank can't change while the ECU isn't watching. If no value was stored and the sensor is dead, the fallback is configurable: "Failed flex sensor ethanol content", defaulting to 50%.
  - Added gauges for EGT channels 3-8 in TunerStudio
  - ECUs with WiFi (Atlas) can download logs over WiFi connection in addition to USB #842
  - ECUs with WiFi (Atlas) can download the TunerStudio ini matching the installed firmware over WiFi, from the same page as the logs. The page is available even with no SD card inserted.
+ - Wi-Fi station mode: the ECU can join up to three existing Wi-Fi networks instead of creating its own access point, falling back to AP mode if none of them can be reached. This lets the ECU sit on your home/shop network, so you can connect to it from anywhere on that network rather than having to join its AP.
+ - Wi-Fi DHCP hostname setting (default `fome-efi`), so the ECU is reachable by name instead of by IP address on networks where the router maps hostnames to addresses
  - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
+ - Rev limiter table with selectable X and Y inputs, including oil temperature, ethanol content, and gear. When used with the CLT-based limiter, the lower RPM limit applies.
 
 
 ### Changed
@@ -79,6 +86,18 @@ or
  - Fix an issue where STM32H7-based ECUs can freeze while applying an engine preset #834
  - Improve WiFi reconnection reliability after your laptop goes to sleep/drops off the network while connected #713
  - Fix vehicle speed indication while using a BMW E90/Mk60e5 ABS controller as the speed source
+ - Every cylinder now gets the right amount of fuel when switching from batch or simultaneous injection to sequential, for example at the end of cranking or when the cam syncs. Previously some cylinders got 25-75% extra fuel for one cycle during the switch.
+ - Sequential cranking injection now waits for cam sync, cranking in batch until then. Previously the first cranking pulses were timed off a guessed engine phase, which is wrong by 360 degrees about half the time, so cylinders could get skipped or doubled pulses and start unevenly. Same behavior running mode already had.
+ - Fuel correction multipliers (CLT, IAT, barometric, post-cranking, cranking CLT/TPS/duration, and Lua fuel mult) are now logged with three decimal places. Previously they were rounded to whole numbers, so a 1.06 CLT correction showed up in the log as 1
+ - After a trigger error on an engine running sequential ignition or injection, the ECU now immediately falls back to wasted spark and batch fuel until the cam sync is regained. Previously each cylinder could fire once more in sequential mode on a guessed engine phase, sparking on the exhaust stroke instead of compression and skipping that cylinder's injection.
+ - "Miata NB" crank trigger below 1000 RPM: an impossible gap between crank teeth is now counted as a trigger error and waits for the cam before firing again. Previously the ECU kept firing on a stale engine phase, so several sparks could land on the wrong cylinders after a single noise pulse.
+ - After a crank trigger error, the cam decoder no longer loses its own sync, so full sync comes back sooner. On engines that need the cam before they may fire at all (such as the Miata NB), it also no longer comes back on the wrong engine phase, which put sparks on the wrong cylinders for a cycle.
+ - "Miata NB" crank trigger: a single noise pulse at idle could shift all ignition timing by 110 degrees with no trigger error, usually stalling the engine. Once the engine has been running for a few seconds, such a pulse is now caught as a trigger error and the ECU resyncs.
+ - Starting the engine no longer reports trigger errors that aren't errors. On many trigger and cam patterns the first sync point found while cranking can be the wrong one, and the next one corrects it; that used to show up as a trigger warning in TunerStudio and on the trigger error count after a perfectly normal start. Errors are now reported once the trigger has been in sync for a full cycle, as before.
+ - When the cam sync corrects engine phase while the engine is running, the VVT position from that cam tooth is now right. Previously it read 360 degrees out until the cam came round again, which the VVT closed loop reacted to.
+ - The "VVT sync position too close to trigger sync" warning now catches every cam position that's within a few degrees of a crank sync point, on either side, every time. Previously it only checked one of the crank sync points and only just after it, so whether it warned depended on which crank revolution the engine happened to sync on first. It also no longer warns on setups where the cam isn't used for engine phase.
+ - An injector can no longer be left stuck open if the ECU runs short of internal timer slots (only possible with extremely high injector duty). That injection is now skipped and a warning raised. Also, an injector that the stopped-engine safety had to turn off now works normally on the next start, instead of staying dead until a reboot.
+ - The first injection after a fuel cut (such as decel fuel cut) is now timed correctly. Previously, with injection timed by end or centre of injection, it could end a whole pulse late.
 
 ## May 2026 Release
 

@@ -23,10 +23,20 @@ public:
 	// event in a group of events near one another.
 	explicit EventQueue(efidur_t lateDelay = {});
 
+	enum class InsertResult {
+		Failed,
+		Inserted,
+		// The new event is the next one due, so the timer needs setting again
+		InsertedAtHead,
+	};
+
 	/**
 	 * O(size) - linear search in sorted linked list
 	 */
-	bool insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
+	InsertResult insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action);
+
+	// Insert several events with storage from the pool: all of them, or none if there isn't room
+	InsertResult insertTogether(const TimedAction* actions, size_t count);
 	void remove(scheduling_s* scheduling);
 
 	int executeAll(efitick_t now);
@@ -37,9 +47,6 @@ public:
 	int size() const;
 	scheduling_s* getElementAtIndexForUnitText(int index);
 	scheduling_s* getHead();
-
-	scheduling_s* getFreeScheduling();
-	void tryReturnScheduling(scheduling_s* sched);
 
 private:
 	void assertListIsSorted() const;

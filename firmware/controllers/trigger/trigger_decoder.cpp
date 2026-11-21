@@ -39,6 +39,10 @@ bool TriggerDecoderBase::getShaftSynchronized() const {
 
 void TriggerDecoderBase::setShaftSynchronized(bool value) {
 	shaft_is_synchronized = value;
+
+	if (!value) {
+		m_syncConfirmed = false;
+	}
 }
 
 void TriggerDecoderBase::resetState() {
@@ -248,6 +252,12 @@ void PrimaryTriggerDecoder::onTriggerError() {
 		// Instant RPM data is now also probably trash, discard it
 		engine->triggerCentral.instantRpm.resetInstantRpm();
 		engine->rpmCalculator.lastTdcTimer.init();
+
+		// Each ignition and injection event keeps the mode it chose when it was last scheduled, and only
+		// chooses again after it next fires. Engine phase is no longer known, so make them all choose
+		// again now, otherwise each one fires once more in sequential mode on a phase that is now a guess.
+		engine->ignitionEvents.isReady = false;
+		engine->injectionEvents.invalidate();
 	}
 #pragma GCC diagnostic pop
 }
@@ -329,7 +339,7 @@ void TriggerDecoderBase::onShaftSynchronization(
 		crankSynchronizationCounter++;
 
 		// Wrap the counter before it overflows, at a multiple of all possible
-		// getCrankDivider() values (LCM of 1, 2, 4, 6, 24 = 24) so that
+		// getCrankDivider() values (LCM of 1, 2, 4, 6, 10, 24 = 120) so that
 		// crankSynchronizationCounter % crankDivider doesn't jump on wrap.
 		using counter_t = decltype(crankSynchronizationCounter);
 		static constexpr counter_t crankDividerLcm = 24;
@@ -603,8 +613,13 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			// In either case, we should wait for another sync point before doing anything to try and run an engine,
 			// so we clear the synchronized flag.
 			if (wasSynchronized && isDecodingError) {
-				setTriggerErrorState();
-				onNotEnoughTeeth(currentCycle.current_index, triggerShape.getSize());
+				// Only report it if the sync point before this one had been confirmed. If it hadn't (it was
+				// the first one after starting, or after a previous error), this most likely means that one
+				// was wrong, not that something went wrong since: a start, especially a hard one, does this.
+				if (m_syncConfirmed) {
+					setTriggerErrorState();
+					onNotEnoughTeeth(currentCycle.current_index, triggerShape.getSize());
+				}
 
 				// Something wrong, no longer synchronized
 				setShaftSynchronized(false);
@@ -614,6 +629,11 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 			} else {
 				// If this was the first sync point OR no decode error, we're synchronized!
 				setShaftSynchronized(true);
+
+				// Two sync points the right number of teeth apart: now we can be sure of this one
+				if (wasSynchronized) {
+					m_syncConfirmed = true;
+				}
 			}
 
 			// this call would update duty cycle values
@@ -645,8 +665,9 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 		// We've had too many events since the last sync point, we should have seen a sync point by now.
 		// This is a trigger error.
 
-		// let's not show a warning if we are just starting to spin
-		if (Sensor::getOrZero(SensorType::Rpm) != 0) {
+		// Only report it if the last sync point had been confirmed, as above: the first sync point found
+		// while starting to spin may well have been a wrong one
+		if (m_syncConfirmed) {
 			setTriggerErrorState();
 			onTooManyTeeth(currentCycle.current_index, triggerShape.getSize());
 		}
@@ -672,6 +693,33 @@ expected<TriggerDecodeResult> TriggerDecoderBase::decodeTriggerEvent(
 	}
 }
 
+// Miata NB tooth counting rides through the huge speed changes of cranking and the engine catching, where
+// the gap check would lose sync. But it can't tell a noise pulse with a plausible gap from a real tooth:
+// one such pulse shifts the decoder by a tooth, and it carries on "synchronized" with all timing 110
+// degrees out. So only count teeth while the engine needs it: cranking and the first few seconds after it
+// starts. The rest of the time the gap check catches a noise pulse as a trigger error.
+static constexpr uint32_t miataNbToothCountingCyclesAfterStart = 20;
+
+static bool miataNbNeedsToothCounting() {
+// Ignore the warning that engine is never null - it might be in unit tests
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress"
+	if (!engine) {
+		return true;
+	}
+#pragma GCC diagnostic pop
+
+	const auto& rpmCalculator = engine->rpmCalculator;
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	if (rpm >= 1000) {
+		return false;
+	}
+
+	return !rpmCalculator.isRunning() ||
+		   rpmCalculator.getRevolutionCounterSinceStart() < miataNbToothCountingCyclesAfterStart;
+}
+
 bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigger_type_e triggerType) {
 	// Miata NB needs a special decoder.
 	// The problem is that the crank wheel only has 4 teeth, also symmetrical, so the pattern
@@ -684,9 +732,9 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 	// Instead of detecting short/long, this logic first checks for "maybe short" and "maybe long",
 	// then simply tests longer vs. shorter instead of absolute value.
 	if (triggerType == trigger_type_e::TT_MIATA_VVT) {
-		bool useToothCounting = getShaftSynchronized() && (Sensor::getOrZero(SensorType::Rpm) < 1000);
+		bool useToothCounting = getShaftSynchronized() && miataNbNeedsToothCounting();
 
-		// If we got reasonable sync and we're spinning slowly, just count teeth. This is necessary
+		// If we got reasonable sync and we're cranking or just started, just count teeth. This is necessary
 		// because a large jump in speed can cause the "long gap" to actually be shorter than the previous
 		// "short gap", but the engine sped up a bunch.
 		if (useToothCounting) {
@@ -695,6 +743,14 @@ bool TriggerDecoderBase::isSyncPoint(const TriggerWaveform& triggerShape, trigge
 				// If the last tooth wasn't a sync point, this one is
 				return getCurrentIndex() != 0;
 			} else {
+				// An impossible gap: this is a decoding error like any other
+				if (m_syncConfirmed) {
+					setTriggerErrorState();
+					warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING,
+							"primary trigger error: gap ratio %.2f out of range while counting teeth",
+							(float)triggerSyncGapRatio);
+				}
+				onTriggerError();
 				setShaftSynchronized(false);
 				return false;
 			}

@@ -78,6 +78,7 @@
 #define GAUGE_NAME_MAF "MAF"
 #define GAUGE_NAME_ETB_TARGET "ETB: position target"
 #define GAUGE_NAME_WG_POSITION "Wastegate position sensor"
+#define GAUGE_NAME_CLUTCH_POSITION "Clutch position"
 #define GAUGE_NAME_ETB_ERROR "ETB: position error"
 #define GAUGE_NAME_ETB_DUTY "ETB: Duty"
 #define GAUGE_NAME_LAST_ERROR "Last error"

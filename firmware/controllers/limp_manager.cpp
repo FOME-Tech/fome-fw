@@ -120,12 +120,27 @@ void LimpManager::updateCutsHarleyAcr(Clearable& allowFuel) {
 }
 
 void LimpManager::updateCutsHardRevLimit(float rpm, Clearable& allowFuel, Clearable& allowSpark) {
-	// User-configured hard RPM limit, either constant or CLT-lookup
-	m_hardRevLimit =
-			engineConfiguration->useCltBasedRpmLimit
-					? interpolate2d(
-							  Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm)
-					: (float)engineConfiguration->rpmHardLimit;
+	// Calculate each rev limit if enabled, taking the minimum of each
+	m_hardRevLimit = engineConfiguration->rpmHardLimit;
+
+	if (engineConfiguration->revLimitUseTable) {
+		float x = readGppwmChannel(config->revLimitXAxis).value_or(0);
+		float y = readGppwmChannel(config->revLimitYAxis).value_or(0);
+		engine->outputChannels.revLimitXAxisValue = x;
+		engine->outputChannels.revLimitYAxisValue = y;
+
+		float tableLimit = interpolate3d(config->revLimitTable, config->revLimitYBins, y, config->revLimitXBins, x);
+		m_hardRevLimit = std::min(m_hardRevLimit, tableLimit);
+	}
+
+	if (engineConfiguration->useCltBasedRpmLimit) {
+		float cltRevLimit =
+				interpolate2d(Sensor::getOrZero(SensorType::Clt), config->cltRevLimitRpmBins, config->cltRevLimitRpm);
+
+		m_hardRevLimit = std::min(m_hardRevLimit, cltRevLimit);
+	}
+
+	engine->outputChannels.revLimitTarget = m_hardRevLimit;
 
 	if (isHardRevLimit(rpm)) {
 		if (engineConfiguration->cutFuelOnHardLimit) {

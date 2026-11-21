@@ -179,4 +179,6 @@ operation_mode_e lookupOperationMode();
 
 #define getRevolutionCounter() (engine->rpmCalculator.getRevolutionCounterM())
 
+// When the engine will have turned this far past edgeTimestamp, at the current speed
+efitick_t getTimeAfterAngle(efitick_t edgeTimestamp, angle_t angle);
 efitick_t scheduleByAngle(scheduling_s* timer, efitick_t edgeTimestamp, angle_t angle, action_s action);

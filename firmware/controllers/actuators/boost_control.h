@@ -33,7 +33,17 @@ public:
 
 	void setOutput(expected<percent_t> outputValue) override;
 
+	// Most recently computed closed loop target. Kept current even while the
+	// RPM/TPS/MAP thresholds hold the controller at its safe duty.
+	expected<float> getLastTarget() const {
+		return m_lastTarget;
+	}
+
 private:
+	expected<float> getSetpointImpl();
+
+	expected<float> m_lastTarget = unexpected;
+
 	bool m_hasInitBoost = false;
 	bool m_shouldResetPid = false;
 

@@ -2,6 +2,8 @@
 #include "logicdata_csv_reader.h"
 #include "spark_logic.h"
 
+#include "harness/engine_invariants.h"
+
 static void testNoOverdwell(const char* file) {
 	CsvReader reader(1, /* vvtCount */ 0);
 
@@ -28,35 +30,18 @@ static void testNoOverdwell(const char* file) {
 	engineConfiguration->isIgnitionEnabled = true;
 	engineConfiguration->isInjectionEnabled = false;
 
-	std::vector<efitick_t> coilStartTimes(12);
-
-	engine->onIgnitionEvent = [&](const IgnitionContext& ctx, bool state) {
-		auto nowNt = getTimeNowNt();
-
-		int cyl = 0;
-		uint16_t mask = ctx.outputsMask;
-		while (mask) {
-			if (mask & 0x1) {
-				if (state) {
-					coilStartTimes[cyl] = nowNt;
-				} else {
-					auto actualDwell = 1e-3 * NT2USF(nowNt - coilStartTimes[cyl]);
-
-					EXPECT_LT(actualDwell, 50)
-							<< "Overdwell on cylinder " << (int)cyl << " of " << actualDwell << " ms";
-				}
-			}
-
-			mask = mask >> 1;
-			cyl++;
-		}
-	};
+	OutputRecorder recorder;
 
 	while (reader.haveMore()) {
 		reader.processLine(&eth);
 	}
 
-	// nothing to check here, just that no coils got stuck on
+	// The engine did fire (these logs are short, a couple of dozen sparks)
+	EXPECT_GT(recorder.pulses(OutputKind::Coil).size(), 10u);
+
+	// However bad the trigger signal got, no coil was left charging: neither between two
+	// sparks, nor still on at the end of the log
+	EXPECT_TRUE(noOverdwell(recorder, 50));
 }
 
 // This 36-2 wheel has enough teeth that instant RPM is used automatically, there's no

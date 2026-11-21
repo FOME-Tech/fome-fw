@@ -92,7 +92,7 @@
 ! Any time an incompatible change is made to the configuration format stored in flash,
 ! update this string to the current date! It is required to also update TS_SIGNATURE above
 ! when this happens.
-#define FLASH_DATA_VERSION 20025
+#define FLASH_DATA_VERSION 20026
 
 ! this offset is part of console compatibility mechanism, please DO NOT change this offset
 #define TS_FILE_VERSION_OFFSET 124
@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1400
+#define BLOCKING_FACTOR 1408
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -131,6 +131,7 @@ struct_no_prefix engine_configuration_s
 #define TORQUE_CURVE_SIZE 6
 #define CLT_CURVE_SIZE 16
 #define CLT_LIMITER_CURVE_SIZE 4
+#define REV_LIMIT_TABLE_SIZE 4
 #define CRANKING_CLT_IDLE_CURVE_SIZE 8
 #define CLT_CRANKING_CURVE_SIZE 8
 #define IDLE_ADVANCE_CURVE_SIZE 8
@@ -290,7 +291,7 @@ custom pin_output_mode_e 1 bits, U08, @OFFSET@, [0:1], @@pin_output_mode_e_enum@
 #define pin_input_mode_e_enum "DEFAULT", "PULLUP", "PULLDOWN"
 custom pin_input_mode_e 1 bits, U08,	@OFFSET@,	[0:1], @@pin_input_mode_e_enum@@
 
-#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "Lua Gauge 3", "Lua Gauge 4", "Lua Gauge 5", "Lua Gauge 6", "Lua Gauge 7", "Lua Gauge 8", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
+#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "Lua Gauge 3", "Lua Gauge 4", "Lua Gauge 5", "Lua Gauge 6", "Lua Gauge 7", "Lua Gauge 8", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State", "Clutch position", "Fuel temp", "Fuel level", "ECU temp", "Aux speed 1", "Aux speed 2", "Lateral accel", "Longitudinal accel", "Boost target", "Boost error", "Fuel pressure", "Turbo speed"
 custom gppwm_channel_e 1 bits, U08, @OFFSET@, [0:5], @@gppwm_channel_e_enum@@
 
 custom canBroadcast_e 1 bits, U08, @OFFSET@, [0:1], "none", "first", "second", "both"
@@ -892,7 +893,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
 	uint16_t tps2SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
 
-	bit unused_widebandOnSecondBus
+	bit revLimitUseTable,"yes","no";If enabled, look up the RPM limit from a table with selectable axes instead of a constant value. When the CLT curve is also enabled, the lower limit applies. Invalid axis readings use 0.
 	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
 	bit useOilPressureSwitch,"Switch","Sensor"
 	bit boardUseTachPullUp,"12v","5v"
@@ -1488,6 +1489,12 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	torque_limiter_cfg[TORQUE_LIMITER_COUNT iterate] torqueLimiters;
 
+	adc_channel_e clutchPositionSensor;Analog clutch pedal position sensor input.
+	uint16_t autoscale clutchPositionUpVoltage;Sensor voltage with the clutch released (pedal up). Reads 0%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint16_t autoscale clutchPositionDownVoltage;Sensor voltage with the clutch pedal on the floor. Reads 100%.;"volts", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+	uint8_t clutchAppliedBelow;Clutch pedal position below which the clutch is fully applied (engaged, not slipping).;"%", 1, 0, 0, 100, 0
+	uint8_t clutchReleasedAbove;Clutch pedal position above which the clutch is fully released (disengaged, engine decoupled from the wheels).;"%", 1, 0, 0, 100, 0
+
 ! end of engine_configuration_s
 end_struct
 
@@ -1822,12 +1829,40 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 
+	! Station mode networks (board joins existing network instead of creating its own AP)
+	! Tried in order 1-3 on boot; falls back to AP if none connect within timeout.
+	custom wifi_ssid_t 32 string, ASCII, @OFFSET@, 32
+	custom wifi_password_t 64 string, ASCII, @OFFSET@, 64
+
+	struct wifi_sta_network_s
+		wifi_ssid_t ssid
+		wifi_password_t password
+	end_struct
+
+	#define WIFI_STA_NETWORK_COUNT 3
+	wifi_sta_network_s[WIFI_STA_NETWORK_COUNT iterate] wifiStaNetworks;
+
+	! DHCP client hostname (option 12) advertised to the router in STA mode.
+	! Allows connecting to the board by name instead of by IP address, on networks where the router
+	! registers DHCP hostnames in its local DNS. Leave blank to use the WiFi module's own name (WINC-XX-YY).
+	custom wifi_hostname_t 32 string, ASCII, @OFFSET@, 32
+	wifi_hostname_t wifiHostname
+
 	#define BOOST_CUT_SIZE 4
 
 	begin_table
 		table_rows num BOOST_CUT_SIZE int16_t autoscale boostCutYBins;;"", 0.1, 0, -3000, 3000, 1
 		table_cols num BOOST_CUT_SIZE int16_t autoscale boostCutXBins;;"", 0.1, 0, -3000, 3000, 1
 		table_values uint16_t boostCutTable;MAP value above which fuel is cut in case of overboost. There is no disable value: to allow unlimited boost in a region, set a value above the range of the MAP sensor.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	end_table
+
+	gppwm_channel_e revLimitXAxis;X axis source for the rev limit table.
+	gppwm_channel_e revLimitYAxis;Y axis source for the rev limit table.
+
+	begin_table
+		table_rows num REV_LIMIT_TABLE_SIZE int16_t autoscale revLimitYBins;;"", 0.1, 0, -3000, 3000, 1
+		table_cols num REV_LIMIT_TABLE_SIZE int16_t autoscale revLimitXBins;;"", 0.1, 0, -3000, 3000, 1
+		table_values uint16_t revLimitTable;RPM limit for the selected axis values. When the CLT curve is enabled, the lower limit applies.;"RPM", 1, 0, 0, 20000, 0
 	end_table
 end_struct
 

@@ -58,6 +58,7 @@ MEMORY
     ram5    : org = 0x40024000, len = 4k        /* BCKP SRAM */
     ram6    : org = 0x00000000, len = 0
     ram7    : org = 0xD0000000, len = SDRAM_SIZE    /* SDRAM */
+    heap    : org = 0x00000000, len = 0             /* empty: we don't use the default heap, see below */
 }
 
 __backup_sram_addr__ = ORIGIN(ram5);
@@ -103,8 +104,12 @@ REGION_ALIAS("DATA_RAM_LMA", flash0);
 /* RAM region to be used for BSS segment.*/
 REGION_ALIAS("BSS_RAM", ram0);
 
-/* RAM region to be used for the default heap.*/
-REGION_ALIAS("HEAP_RAM", ram0);
+/* RAM region to be used for the default heap.
+   Nothing uses the ChibiOS default heap (or newlib malloc), so give it an empty
+   region rather than letting it soak up the unused remainder of a RAM bank.
+   This keeps the linker memory usage report honest, and means any stray
+   allocation fails (returns NULL) rather than quietly eating RAM. */
+REGION_ALIAS("HEAP_RAM", heap);
 
 /* RAM region to be used for SDRAM segment.*/
 REGION_ALIAS("SDRAM_RAM", ram7);

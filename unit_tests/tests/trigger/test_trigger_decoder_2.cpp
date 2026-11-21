@@ -1,6 +1,7 @@
 #include "pch.h"
 
 using ::testing::_;
+using ::testing::NiceMock;
 using ::testing::StrictMock;
 
 class MockTriggerConfiguration : public TriggerConfiguration {
@@ -164,8 +165,15 @@ TEST(TriggerDecoder, TooManyTeeth_CausesError) {
 	EXPECT_TRUE(dut.getShaftSynchronized());
 	EXPECT_EQ(0, dut.currentCycle.current_index);
 
-	// Fake that we have RPM so that all trigger error detection is enabled
-	Sensor::setMockValue(SensorType::Rpm, 1000);
+	// One good revolution, so that the sync point is confirmed and errors are reported
+	t += MS2NT(1);
+	doTooth(dut, shape, cfg, t);
+	t += MS2NT(1);
+	doTooth(dut, shape, cfg, t);
+	t += MS2NT(2);
+	doTooth(dut, shape, cfg, t);
+	EXPECT_TRUE(dut.isSyncConfirmed());
+	EXPECT_EQ(0, dut.currentCycle.current_index);
 
 	t += MS2NT(1);
 	doTooth(dut, shape, cfg, t);
@@ -206,8 +214,6 @@ TEST(TriggerDecoder, TooManyTeeth_CausesError) {
 
 	// Should now have sync again
 	EXPECT_TRUE(dut.getShaftSynchronized());
-
-	Sensor::resetAllMocks();
 }
 
 TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
@@ -242,8 +248,15 @@ TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
 	EXPECT_TRUE(dut.getShaftSynchronized());
 	EXPECT_EQ(0, dut.currentCycle.current_index);
 
-	// Fake that we have RPM so that all trigger error detection is enabled
-	Sensor::setMockValue(SensorType::Rpm, 1000);
+	// One good revolution, so that the sync point is confirmed and errors are reported
+	t += MS2NT(1);
+	doTooth(dut, shape, cfg, t);
+	t += MS2NT(1);
+	doTooth(dut, shape, cfg, t);
+	t += MS2NT(2);
+	doTooth(dut, shape, cfg, t);
+	EXPECT_TRUE(dut.isSyncConfirmed());
+	EXPECT_EQ(0, dut.currentCycle.current_index);
 
 	t += MS2NT(1);
 	doTooth(dut, shape, cfg, t);
@@ -283,8 +296,131 @@ TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
 
 	// Should now have sync again
 	EXPECT_TRUE(dut.getShaftSynchronized());
+}
 
-	Sensor::resetAllMocks();
+// The first sync point after starting to spin isn't checked against anything: if the next one comes too
+// early or too late, it's most likely that the first one was wrong, as happens during cranking, rather than
+// that something went wrong since. Sync is dropped as always, but it's not reported as a trigger error.
+TEST(TriggerDecoder, TooManyTeethBeforeSyncConfirmed_NotReported) {
+	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
+	cfg.update();
+
+	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+
+	efitick_t t = 0;
+
+	StrictMock<MockTriggerDecoder> dut;
+	// Sync is lost, but no onTooManyTeeth()
+	EXPECT_CALL(dut, onTriggerError());
+
+	for (int i = 0; i < 3; i++) {
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+	}
+
+	// Missing tooth: the first sync point
+	t += MS2NT(2);
+	doTooth(dut, shape, cfg, t);
+	EXPECT_TRUE(dut.getShaftSynchronized());
+	EXPECT_FALSE(dut.isSyncConfirmed());
+
+	// Three teeth: one too many
+	for (int i = 0; i < 3; i++) {
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+	}
+
+	EXPECT_FALSE(dut.getShaftSynchronized());
+	EXPECT_EQ(0, dut.triggerErrorCounter);
+	EXPECT_FALSE(dut.someSortOfTriggerError());
+
+	// Normal from here on: sync comes back and is confirmed
+	for (int i = 0; i < 2; i++) {
+		t += MS2NT(2);
+		doTooth(dut, shape, cfg, t);
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+	}
+	t += MS2NT(2);
+	doTooth(dut, shape, cfg, t);
+	EXPECT_TRUE(dut.getShaftSynchronized());
+	EXPECT_TRUE(dut.isSyncConfirmed());
+	EXPECT_EQ(0, dut.triggerErrorCounter);
+}
+
+TEST(TriggerDecoder, NotEnoughTeethBeforeSyncConfirmed_NotReported) {
+	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
+	cfg.update();
+
+	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+
+	efitick_t t = 0;
+
+	StrictMock<MockTriggerDecoder> dut;
+	// Sync is lost, but no onNotEnoughTeeth()
+	EXPECT_CALL(dut, onTriggerError());
+
+	for (int i = 0; i < 3; i++) {
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+	}
+
+	// Missing tooth: the first sync point
+	t += MS2NT(2);
+	doTooth(dut, shape, cfg, t);
+	EXPECT_TRUE(dut.getShaftSynchronized());
+	EXPECT_FALSE(dut.isSyncConfirmed());
+
+	// One tooth, then a gap that looks like the sync point, but too early
+	t += MS2NT(1);
+	doTooth(dut, shape, cfg, t);
+	t += MS2NT(2);
+	doTooth(dut, shape, cfg, t);
+
+	EXPECT_FALSE(dut.getShaftSynchronized());
+	EXPECT_EQ(0, dut.triggerErrorCounter);
+	EXPECT_FALSE(dut.someSortOfTriggerError());
+}
+
+// Once confirmed, losing sync and getting it back starts over: the first sync point after an error isn't
+// confirmed either, so errors are reported again only after a good revolution
+TEST(TriggerDecoder, SyncConfirmationStartsOverAfterError) {
+	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
+	cfg.update();
+
+	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+
+	efitick_t t = 0;
+
+	NiceMock<MockTriggerDecoder> dut;
+
+	auto goodRevolution = [&]() {
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+		t += MS2NT(1);
+		doTooth(dut, shape, cfg, t);
+		t += MS2NT(2);
+		doTooth(dut, shape, cfg, t);
+	};
+
+	goodRevolution();
+	EXPECT_FALSE(dut.isSyncConfirmed());
+	goodRevolution();
+	EXPECT_TRUE(dut.isSyncConfirmed());
+
+	// An extra tooth
+	t += MS2NT(1);
+	doTooth(dut, shape, cfg, t);
+	goodRevolution();
+	EXPECT_EQ(1, dut.triggerErrorCounter);
+	EXPECT_FALSE(dut.isSyncConfirmed());
+
+	goodRevolution();
+	EXPECT_TRUE(dut.getShaftSynchronized());
+	EXPECT_TRUE(dut.isSyncConfirmed());
+	EXPECT_EQ(1, dut.triggerErrorCounter);
 }
 
 TEST(TriggerDecoder, PrimaryDecoderNoDisambiguation) {

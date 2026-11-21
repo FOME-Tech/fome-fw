@@ -59,6 +59,7 @@ public enum SensorType {
 	CompressorDischargeTemperature,
 	ThrottleInletPressure,
 	DetectedGear,
+	ClutchPosition,
 	AccelLat,
 	AccelLon,
 	AccelVert,

@@ -18,6 +18,7 @@ public enum live_data_e {
 	LDS_antilag_system_state,
 	LDS_boost_control,
 	LDS_ac_control,
+	LDS_gear_detector_state,
 	LDS_fan_control,
 	LDS_fuel_pump_control,
 	LDS_main_relay,
