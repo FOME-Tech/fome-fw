@@ -50,6 +50,7 @@ private:
 	void updateClutchTrust(ClutchState clutch, size_t locked);
 	size_t determineGearWithClutch(ClutchState clutch, size_t locked) const;
 	bool isLockCoupled() const;
+	void updateRatioMismatch(float ratio, size_t raw, size_t locked, ClutchState clutch);
 
 	float m_gearboxRatio = 0;
 	size_t m_currentGear = 0;
@@ -65,4 +66,11 @@ private:
 	// Set when the clutch was seen disengaged with the engine decoupled from the wheels, cleared
 	// once the clutch is engaged in a gear again. That full cycle is what earns clutch trust.
 	bool m_sawDecoupled = false;
+
+	// Steady-ratio tracking for the gear ratio mismatch check. A ratio that holds steady for a
+	// while means the engine is driving the wheels in some gear, so it should match one of them.
+	Timer m_steadyTimer;
+	float m_steadyRatio = 0;
+	float m_steadyLockedSec = 0;
+	float m_steadyUnlockedSec = 0;
 };

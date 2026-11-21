@@ -5,4 +5,5 @@ struct_no_prefix gear_detector_state_s
 	uint8_t lockedGear;Gear: Ratio locked to;"", 1, 0, 0, @@GEARS_COUNT@@, 0
 	uint8_t clutchState;Clutch state;"", 1, 0, 0, 3, 0
 	bit clutchTrusted;Clutch sensor trusted
+	bit ratioMismatch;Ratio doesn't match any gear
 end_struct

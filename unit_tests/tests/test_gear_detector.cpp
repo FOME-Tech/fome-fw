@@ -562,3 +562,83 @@ TEST(GearDetector, ClutchSensorFault) {
 	EXPECT_FALSE(h.dut.clutchTrusted);
 	EXPECT_EQ(4, h.dut.get().Value);
 }
+
+namespace {
+bool hasWarning(EngineTestHelper& eth, ObdCode code) {
+	auto* warnings = eth.recentWarnings();
+	for (size_t i = 0; i < warnings->getCount(); i++) {
+		if (warnings->get(i).Code == code) {
+			return true;
+		}
+	}
+
+	return false;
+}
+} // namespace
+
+TEST(GearDetector, RatioMismatchMiscalibratedSpeed) {
+	ClutchGearHarness h;
+
+	// Speed reads ~9% low, so cruising in 5th measures 1.09: between 4th and 5th, near neither
+	h.hold(1.09f, 0, 11, 80);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+	EXPECT_FALSE(hasWarning(h.eth, ObdCode::CUSTOM_GEAR_RATIO_MISMATCH));
+
+	// 2s to settle, then 10s unlocked
+	h.hold(1.09f, 0, 1.5f, 80);
+	EXPECT_TRUE(h.dut.ratioMismatch);
+	EXPECT_TRUE(hasWarning(h.eth, ObdCode::CUSTOM_GEAR_RATIO_MISMATCH));
+
+	// Fixing the calibration starts the check over
+	h.dut.onConfigurationChange(nullptr);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+	h.hold(1.0f, 0, 30, 80);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+}
+
+TEST(GearDetector, RatioMismatchNoClutchSensor) {
+	ClutchGearHarness h;
+	// Unusable thresholds: clutch state is indeterminate, as with no sensor fitted
+	engineConfiguration->clutchAppliedBelow = 0;
+	engineConfiguration->clutchReleasedAbove = 0;
+
+	h.hold(1.09f, 0, 13, 80);
+	EXPECT_EQ(static_cast<uint8_t>(ClutchState::Indeterminate), h.dut.clutchState);
+	EXPECT_TRUE(h.dut.ratioMismatch);
+}
+
+TEST(GearDetector, RatioMismatchCorrectCalibration) {
+	ClutchGearHarness h;
+
+	// Lots of normal cruising in gear
+	h.hold(1.0f, 0, 20, 80);
+	h.hold(1.2f, 0, 20, 70);
+
+	// Some odd steady stretch longer than the threshold, but outweighed by the time in gear
+	h.hold(1.09f, 0, 15, 80);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+	EXPECT_FALSE(hasWarning(h.eth, ObdCode::CUSTOM_GEAR_RATIO_MISMATCH));
+}
+
+TEST(GearDetector, RatioMismatchIgnoresUnsteadyOrDecoupled) {
+	ClutchGearHarness h;
+
+	// Too slow to judge
+	h.hold(1.09f, 0, 30, 25);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+
+	// Clutch pressed or slipping: the engine isn't necessarily driving the wheels
+	h.hold(1.09f, 100, 30, 80);
+	h.hold(1.09f, 40, 30, 80);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+
+	// Ratio never steady for long, ie shifting or slipping
+	for (int i = 0; i < 20; i++) {
+		h.sweep(1.05f, 1.15f, 0, 1, 80);
+	}
+	EXPECT_FALSE(h.dut.ratioMismatch);
+
+	// Outside the plausible range of any gear: neutral or a stopped engine
+	h.hold(0.5f, 0, 30, 80);
+	EXPECT_FALSE(h.dut.ratioMismatch);
+}
