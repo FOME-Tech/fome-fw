@@ -48,7 +48,8 @@ TEST(limp, revLimit) {
 TEST(limp, revLimitCltBased) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
-	engineConfiguration->rpmHardLimit = 2500;
+	// Fixed limit above the curve so the curve sets the limit
+	engineConfiguration->rpmHardLimit = 10000;
 	engineConfiguration->cutFuelOnHardLimit = true;
 	engineConfiguration->cutSparkOnHardLimit = true;
 
@@ -98,7 +99,8 @@ TEST(limp, revLimitCltBased) {
 
 TEST(limp, revLimitTable) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	engineConfiguration->rpmHardLimit = 2500;
+	// Fixed limit above the table so the table sets the limit
+	engineConfiguration->rpmHardLimit = 10000;
 	engineConfiguration->rpmHardLimitHyst = 100;
 	engineConfiguration->cutFuelOnHardLimit = true;
 	engineConfiguration->cutSparkOnHardLimit = true;
@@ -127,7 +129,7 @@ TEST(limp, revLimitTable) {
 	EXPECT_TRUE(dut.allowIgnition());
 	EXPECT_TRUE(dut.allowInjection());
 
-	// Interpolate to 4500 RPM, replacing the fixed 2500 RPM limit.
+	// Interpolate to 4500 RPM.
 	Sensor::setMockValue(SensorType::OilTemperature, 70);
 	dut.updateState(4400, 0);
 	EXPECT_TRUE(dut.allowIgnition());
@@ -135,6 +137,14 @@ TEST(limp, revLimitTable) {
 	dut.updateState(4600, 0);
 	EXPECT_FALSE(dut.allowIgnition());
 	EXPECT_FALSE(dut.allowInjection());
+
+	// The fixed limit still caps the table when it is lower.
+	engineConfiguration->rpmHardLimit = 4000;
+	dut.updateState(4100, 0);
+	EXPECT_EQ(4000, engine->outputChannels.revLimitTarget);
+	EXPECT_FALSE(dut.allowIgnition());
+	EXPECT_FALSE(dut.allowInjection());
+	engineConfiguration->rpmHardLimit = 10000;
 
 	// High temperatures use the last bin and honor the selected cut outputs.
 	Sensor::setMockValue(SensorType::OilTemperature, 180);
@@ -161,7 +171,8 @@ TEST(limp, revLimitTable) {
 
 TEST(limp, revLimitSelectableAxes) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	engineConfiguration->rpmHardLimit = 2500;
+	// Fixed limit above the table so the table sets the limit
+	engineConfiguration->rpmHardLimit = 10000;
 	engineConfiguration->cutFuelOnHardLimit = true;
 	engineConfiguration->cutSparkOnHardLimit = true;
 	engineConfiguration->revLimitUseTable = true;
