@@ -135,3 +135,38 @@ TEST(BoostControl, SetOutput) {
 
 	bc.setOutput(25.0f);
 }
+
+TEST(BoostControl, TargetTrackedWhileInactive) {
+	MockVp3d targetMap;
+
+	// Just pass TPS input to output
+	EXPECT_CALL(targetMap, getValue(_, _)).WillRepeatedly([](float xRpm, float tps) { return tps; });
+
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->boostType = CLOSED_LOOP;
+	engineConfiguration->boostControlMinRpm = 2000;
+
+	BoostController bc;
+
+	// No target computed yet
+	EXPECT_EQ(bc.getLastTarget(), unexpected);
+
+	bc.init(nullptr, nullptr, &targetMap, nullptr);
+
+	// Below min RPM: controller sits at safe duty, but the target still follows the table
+	Sensor::setMockValue(SensorType::Rpm, 1000);
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 40);
+	bc.onFastCallback();
+	EXPECT_FLOAT_EQ(40, bc.getLastTarget().value_or(-1));
+	EXPECT_NEAR(40, bc.boostControlTarget, 0.1f);
+
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 60);
+	bc.onFastCallback();
+	EXPECT_FLOAT_EQ(60, bc.getLastTarget().value_or(-1));
+	EXPECT_NEAR(60, bc.boostControlTarget, 0.1f);
+
+	// Target lookup fails -> target invalid, not stale
+	Sensor::resetMockValue(SensorType::DriverThrottleIntent);
+	bc.onFastCallback();
+	EXPECT_EQ(bc.getLastTarget(), unexpected);
+}

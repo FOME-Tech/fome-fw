@@ -4,8 +4,22 @@
 #include "gppwm_channel.h"
 
 #include "ac_control.h"
+#include "boost_control.h"
 #include "table_helper.h"
 #include <rusefi/expected.h>
+
+static expected<float> readBoostTarget() {
+#if EFI_ENGINE_CONTROL
+	// Only closed loop boost control has a target
+	if (!engineConfiguration->isBoostControlEnabled || engineConfiguration->boostType != CLOSED_LOOP) {
+		return unexpected;
+	}
+
+	return engine->module<BoostController>()->getLastTarget();
+#else
+	return unexpected;
+#endif
+}
 
 expected<float> readGppwmChannel(gppwm_channel_e channel) {
 	switch (channel) {
@@ -99,6 +113,45 @@ expected<float> readGppwmChannel(gppwm_channel_e channel) {
 			return Sensor::get(SensorType::OilTemperature);
 		case GPPWM_AcState:
 			return 100.0f * engine->module<AcController>()->acCompressorState;
+		case GPPWM_ClutchPosition:
+			return Sensor::get(SensorType::ClutchPosition);
+		case GPPWM_FuelTemp:
+			return Sensor::get(SensorType::FuelTemperature);
+		case GPPWM_FuelLevel:
+			return Sensor::get(SensorType::FuelLevel);
+		case GPPWM_EcuTemp:
+			return Sensor::get(SensorType::EcuInternalTemperature);
+		case GPPWM_AuxSpeed1:
+			return Sensor::get(SensorType::AuxSpeed1);
+		case GPPWM_AuxSpeed2:
+			return Sensor::get(SensorType::AuxSpeed2);
+		case GPPWM_AccelLat:
+			return Sensor::get(SensorType::AccelLat);
+		case GPPWM_AccelLon:
+			return Sensor::get(SensorType::AccelLon);
+		case GPPWM_BoostTarget:
+			return readBoostTarget();
+		case GPPWM_BoostError: {
+			// Positive when below target, same sign as the boost PID error
+			auto target = readBoostTarget();
+			auto map = Sensor::get(SensorType::Map);
+			if (!target || !map) {
+				return unexpected;
+			}
+
+			return target.Value - map.Value;
+		}
+		case GPPWM_FuelPressure:
+			return Sensor::get(SensorType::FuelPressureLow);
+		case GPPWM_TurboSpeed: {
+			// In thousands of RPM, raw RPM would overflow the axis bins
+			auto rpm = Sensor::get(SensorType::TurbochargerSpeed);
+			if (!rpm) {
+				return unexpected;
+			}
+
+			return rpm.Value / 1000.0f;
+		}
 	}
 
 	return unexpected;

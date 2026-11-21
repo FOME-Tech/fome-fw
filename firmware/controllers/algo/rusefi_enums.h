@@ -527,6 +527,18 @@ typedef enum __attribute__((__packed__)) {
 	GPPWM_OilPressure = 38,
 	GPPWM_OilTemp = 39,
 	GPPWM_AcState = 40,
+	GPPWM_ClutchPosition = 41,
+	GPPWM_FuelTemp = 42,
+	GPPWM_FuelLevel = 43,
+	GPPWM_EcuTemp = 44,
+	GPPWM_AuxSpeed1 = 45,
+	GPPWM_AuxSpeed2 = 46,
+	GPPWM_AccelLat = 47,
+	GPPWM_AccelLon = 48,
+	GPPWM_BoostTarget = 49,
+	GPPWM_BoostError = 50,
+	GPPWM_FuelPressure = 51,
+	GPPWM_TurboSpeed = 52,
 } gppwm_channel_e; // TODO Keep pwmAxisLabels in tunerstudio.template.ini in sync when adding additional options to this
 				   // enum
 

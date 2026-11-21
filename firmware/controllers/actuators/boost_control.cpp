@@ -54,6 +54,12 @@ static SensorResult getAxisValue(gppwm_channel_e channel) {
 }
 
 expected<float> BoostController::getSetpoint() {
+	m_lastTarget = getSetpointImpl();
+	boostControlTarget = m_lastTarget.value_or(0);
+	return m_lastTarget;
+}
+
+expected<float> BoostController::getSetpointImpl() {
 	// If we're in open loop only mode, disregard any target computation.
 	// Open loop needs to work even in case of invalid closed loop config
 	if (engineConfiguration->boostType != CLOSED_LOOP) {
@@ -166,8 +172,6 @@ expected<percent_t> BoostController::getClosedLoop(float target, float manifoldP
 
 	m_pid.postState(engine->outputChannels.boostStatus);
 
-	boostControlTarget = target;
-
 	return (float)boostControllerClosedLoopPart;
 }
 
@@ -203,6 +207,9 @@ void BoostController::onFastCallback() {
 	mapTooLow = Sensor::getOrZero(SensorType::Map) < engineConfiguration->boostControlMinMap;
 
 	if (rpmTooLow || tpsTooLow || mapTooLow) {
+		// Keep the target current for anything that reads it while we're inactive
+		getSetpoint();
+
 		// Passing unexpected will use the safe duty cycle configured by the user
 		setOutput(unexpected);
 	} else {
