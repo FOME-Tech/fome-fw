@@ -86,6 +86,15 @@ const fuel_computer_s* getLiveData(size_t) {
 }
 
 template <>
+const gear_detector_state_s* getLiveData(size_t) {
+#ifdef MODULE_GEAR_DETECT
+	return &engine->module<GearDetector>().unmock();
+#else
+	return nullptr;
+#endif // MODULE_GEAR_DETECT
+}
+
+template <>
 const fan_control_s* getLiveData(size_t idx) {
 	switch (idx) {
 		case 0:

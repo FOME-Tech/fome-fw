@@ -6,6 +6,7 @@ struct LuaAdjustments {
 	// offset 0
 	float fuelAdd = (float)0;
 	// Lua: Fuel mult
+	// mult
 	// offset 4
 	float fuelMult = (float)0;
 	// offset 8 bit 0
@@ -92,12 +93,15 @@ static_assert(offsetof(speed_density_s, tCharge) == 0);
 static_assert(offsetof(speed_density_s, tChargeK) == 4);
 struct cranking_fuel_s {
 	// Fuel: cranking CLT mult
+	// mult
 	// offset 0
 	float coolantTemperatureCoefficient = (float)0;
 	// Fuel: cranking TPS mult
+	// mult
 	// offset 4
 	float tpsCoefficient = (float)0;
 	// Fuel: cranking duration mult
+	// mult
 	// offset 8
 	float durationCoefficient = (float)0;
 	// Fuel: Cranking cycle mass
@@ -120,6 +124,7 @@ struct engine_state_s {
 	// offset 20
 	cranking_fuel_s crankingFuel;
 	// Fuel: Barometric pressure mult
+	// mult
 	// offset 36
 	float baroCorrection = (float)0;
 	// Detected Board ID

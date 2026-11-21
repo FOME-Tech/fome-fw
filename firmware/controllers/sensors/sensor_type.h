@@ -109,6 +109,9 @@ enum class SensorType : unsigned char {
 
 	DetectedGear,
 
+	// 0% = clutch released (pedal up), 100% = clutch pedal on the floor
+	ClutchPosition,
+
 	// IMU signals follow ISO 8855 / DIN 70000: x forward, y left, z up. Any IMU decoder whose
 	// source uses another convention must convert to this one.
 	AccelLat,  // m/s2, positive = acceleration to the left (left turn)

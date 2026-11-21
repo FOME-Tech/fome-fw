@@ -295,7 +295,10 @@ TEST(AirmassModes, FallbackMap) {
 	EXPECT_FLOAT_EQ(dut.getMap(5678, false), 75);
 }
 
-void setInjectionMode(int value);
+static void setInjectionMode(int value) {
+	engineConfiguration->injectionMode = (injection_mode_e)value;
+	incrementGlobalConfigurationVersion();
+}
 
 TEST(FuelMath, testDifferentInjectionModes) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);

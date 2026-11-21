@@ -26,10 +26,19 @@ public:
 	}
 
 	uint16_t calculateInjectorOutputMask() const;
+	bool shouldFireInjectorAtIndex(size_t otherIndex) const;
+
+	// Work out the start angle from scratch at the next update
+	void forgetStartAngle() {
+		m_hasStartAngle = false;
+	}
 
 private:
 	// Update the injection start angle
 	bool updateInjectionAngle(injection_mode_e mode);
+
+	// Whether injectionStartAngle has been worked out since the schedule was last invalidated
+	bool m_hasStartAngle = false;
 
 	/**
 	 * This is a performance optimization for IM_SIMULTANEOUS fuel strategy.

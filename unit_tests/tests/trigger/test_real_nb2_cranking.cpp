@@ -49,6 +49,9 @@ TEST(realCrankingNB2, crankingMissingInjector) {
 
 	ASSERT_EQ(316, round(Sensor::getOrZero(SensorType::Rpm)));
 
-	EXPECT_EQ(1, eth.recentWarnings()->getCount());
+	EXPECT_EQ(2, eth.recentWarnings()->getCount());
 	EXPECT_EQ(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH, eth.recentWarnings()->get(0).Code);
+	// The engine dies at the end of the log: the last gap is far too long for the tooth counter to
+	// follow, and that is a decoding error
+	EXPECT_EQ(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING, eth.recentWarnings()->get(1).Code);
 }

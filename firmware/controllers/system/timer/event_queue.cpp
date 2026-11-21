@@ -25,10 +25,11 @@ extern bool verboseMode;
 EventQueue::EventQueue(efidur_t lateDelay)
 	: m_lateDelay(lateDelay) {}
 
-/**
- * @return true if inserted into the head of the list
- */
-bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action) {
+static void warnPoolEmpty() {
+	warning(ObdCode::CUSTOM_ERR_SCHEDULING_ERROR, "Scheduler pool empty, event dropped");
+}
+
+EventQueue::InsertResult EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s action) {
 	ScopePerf perf(PE::EventQueueInsertTask);
 
 	if (!scheduling) {
@@ -38,14 +39,13 @@ bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s 
 #endif
 		// If still null, the free list is empty and all schedulings in the pool have been expended.
 		if (!scheduling) {
-			// TODO: should we warn or error here?
-
-			return false;
+			warnPoolEmpty();
+			return InsertResult::Failed;
 		}
 	}
 
 	assertListIsSorted();
-	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, action.getCallback() != nullptr, "NULL callback", false);
+	efiAssert(ObdCode::CUSTOM_ERR_ASSERT, action.getCallback() != nullptr, "NULL callback", InsertResult::Failed);
 
 	if (scheduling->action) {
 #if EFI_UNIT_TEST
@@ -54,7 +54,7 @@ bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s 
 			printf("Already scheduled now %d\r\n", (int)timeX);
 		}
 #endif /* EFI_UNIT_TEST */
-		return false;
+		return InsertResult::Failed;
 	}
 
 	scheduling->momentX = timeX;
@@ -64,7 +64,7 @@ bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s 
 		// here we insert into head of the linked list
 		LL_PREPEND2(m_head, scheduling, next);
 		assertListIsSorted();
-		return true;
+		return InsertResult::InsertedAtHead;
 	} else {
 		// here we know we are not in the head of the list, let's find the position - linear search
 		scheduling_s* insertPosition = m_head;
@@ -75,8 +75,33 @@ bool EventQueue::insertTask(scheduling_s* scheduling, efitick_t timeX, action_s 
 		scheduling->next = insertPosition->next;
 		insertPosition->next = scheduling;
 		assertListIsSorted();
-		return false;
+		return InsertResult::Inserted;
 	}
+}
+
+EventQueue::InsertResult EventQueue::insertTogether(const TimedAction* actions, size_t count) {
+	if (m_schedulingPool.available() < count) {
+		warnPoolEmpty();
+		return InsertResult::Failed;
+	}
+
+	InsertResult result = InsertResult::Inserted;
+
+	for (size_t i = 0; i < count; i++) {
+		switch (insertTask(nullptr, actions[i].time, actions[i].action)) {
+			case InsertResult::InsertedAtHead:
+				result = InsertResult::InsertedAtHead;
+				break;
+			case InsertResult::Inserted:
+				break;
+			case InsertResult::Failed:
+				// Can't happen: there was room for all of them, and pool storage is never already scheduled
+				firmwareError(ObdCode::CUSTOM_ERR_SCHEDULING_ERROR, "insertTogether failed part way");
+				return InsertResult::Failed;
+		}
+	}
+
+	return result;
 }
 
 void EventQueue::remove(scheduling_s* scheduling) {

@@ -16,6 +16,8 @@ constexpr inline const char* getLive_data_e(live_data_e value) {
 			return "LDS_fuel_computer";
 		case LDS_fuel_pump_control:
 			return "LDS_fuel_pump_control";
+		case LDS_gear_detector_state:
+			return "LDS_gear_detector_state";
 		case LDS_high_pressure_fuel_pump:
 			return "LDS_high_pressure_fuel_pump";
 		case LDS_idle_state:

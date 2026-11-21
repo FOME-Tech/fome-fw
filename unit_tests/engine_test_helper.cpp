@@ -134,8 +134,12 @@ EngineTestHelper::~EngineTestHelper() {
 	// Write history to file
 	extern bool hasInitGtest;
 	if (hasInitGtest) {
+		// Parameterized tests are named "name/index", which isn't a usable file name
+		std::string testName = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+		std::replace(testName.begin(), testName.end(), '/', '_');
+
 		std::stringstream filePath;
-		filePath << "unittest_" << ::testing::UnitTest::GetInstance()->current_test_info()->name() << ".logicdata";
+		filePath << "unittest_" << testName << ".logicdata";
 		writeEvents(filePath.str().c_str());
 	}
 
@@ -279,15 +283,6 @@ void EngineTestHelper::fireTriggerEvents(int count) {
 	fireTriggerEvents2(count, 5); // 5ms
 }
 
-void EngineTestHelper::assertInjectorUpEvent(const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
-	assertEvent(msg, eventIndex, (void*)startInjection, momentX, injectorIndex);
-}
-
-void EngineTestHelper::assertInjectorDownEvent(
-		const char* msg, int eventIndex, efitimeus_t momentX, int injectorIndex) {
-	assertEvent(msg, eventIndex, (void*)endInjection, momentX, injectorIndex);
-}
-
 scheduling_s*
 EngineTestHelper::assertEvent5(const char* msg, int index, void* callback, efitimeus_t expectedTimestamp) {
 	TestExecutor* executor = &engine.scheduler;
@@ -317,22 +312,10 @@ scheduling_s* EngineTestHelper::assertScheduling(
 	return actual;
 }
 
-void EngineTestHelper::assertEvent(const char* msg, int index, void* callback, efitimeus_t momentX, int injectorIndex) {
-	scheduling_s* event = assertEvent5(msg, index, callback, momentX);
-
-	InjectorContext ctx = bit_cast<InjectorContext>(event->action.getArgument());
-	ASSERT_EQ(ctx.eventIndex, injectorIndex);
-}
-
 void EngineTestHelper::applyTriggerWaveform() {
 	engine.updateTriggerWaveform();
 
 	incrementGlobalConfigurationVersion();
-}
-
-// todo: open question if this is worth a helper method or should be inlined?
-void EngineTestHelper::assertRpm(int expectedRpm, const char* msg) {
-	EXPECT_EQ(expectedRpm, Sensor::getOrZero(SensorType::Rpm)) << msg;
 }
 
 void setCylinderCount(int cylinderCount) {

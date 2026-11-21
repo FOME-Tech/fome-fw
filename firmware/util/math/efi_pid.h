@@ -35,7 +35,7 @@ public:
 #if EFI_TUNER_STUDIO
 	void postState(pid_status_s& pidStatus) const;
 #endif /* EFI_TUNER_STUDIO */
-	int resetCounter;
+
 	// todo: move this to pid_s one day
 	float iTermMin = -1000000.0;
 	float iTermMax = 1000000.0;

@@ -659,45 +659,40 @@ sint8 m2m_wifi_connect_psk(
 
         if(ret == M2M_SUCCESS)
         {
-            tstrM2mWifiPsk  *pstrPsk = (tstrM2mWifiPsk *)malloc(sizeof(tstrM2mWifiPsk));
-            if(pstrPsk != NULL)
+            tstrM2mWifiPsk  strPsk;
+            tstrM2mWifiPsk  *pstrPsk = &strPsk;
+            m2m_memset((uint8 *)pstrPsk, 0, sizeof(tstrM2mWifiPsk));
+            if(pstrAuthPsk->pu8Psk != NULL)
             {
-                m2m_memset((uint8 *)pstrPsk, 0, sizeof(tstrM2mWifiPsk));
-                if(pstrAuthPsk->pu8Psk != NULL)
-                {
-                    if(pstrAuthPsk->pu8Passphrase != NULL)
-                        ret = M2M_ERR_INVALID_ARG;
-                    else
-                    {
-                        pstrPsk->u8PassphraseLen = M2M_MAX_PSK_LEN-1;
-                        /* Use hexstr_2_bytes to verify pu8Psk input. */
-                        if(M2M_SUCCESS != hexstr_2_bytes(pstrPsk->au8Passphrase, pstrAuthPsk->pu8Psk, pstrPsk->u8PassphraseLen/2))
-                            ret = M2M_ERR_INVALID_ARG;
-                        m2m_memcpy(pstrPsk->au8Passphrase, pstrAuthPsk->pu8Psk, pstrPsk->u8PassphraseLen);
-                    }
-                }
-                else if(pstrAuthPsk->pu8Passphrase != NULL)
-                {
-                    if(pstrAuthPsk->u8PassphraseLen > M2M_MAX_PSK_LEN-1)
-                        ret = M2M_ERR_INVALID_ARG;
-                    else
-                    {
-                        pstrPsk->u8PassphraseLen = pstrAuthPsk->u8PassphraseLen;
-                        m2m_memcpy(pstrPsk->au8Passphrase, pstrAuthPsk->pu8Passphrase, pstrPsk->u8PassphraseLen);
-                    }
-                }
-                else
+                if(pstrAuthPsk->pu8Passphrase != NULL)
                     ret = M2M_ERR_INVALID_ARG;
-                if(ret == M2M_SUCCESS)
+                else
                 {
-                    ret = hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_CONN | M2M_REQ_DATA_PKT,
-                                   (uint8 *)&strConnHdr, sizeof(tstrM2mWifiConnHdr),
-                                   (uint8 *)pstrPsk, sizeof(tstrM2mWifiPsk), sizeof(tstrM2mWifiConnHdr));
+                    pstrPsk->u8PassphraseLen = M2M_MAX_PSK_LEN-1;
+                    /* Use hexstr_2_bytes to verify pu8Psk input. */
+                    if(M2M_SUCCESS != hexstr_2_bytes(pstrPsk->au8Passphrase, pstrAuthPsk->pu8Psk, pstrPsk->u8PassphraseLen/2))
+                        ret = M2M_ERR_INVALID_ARG;
+                    m2m_memcpy(pstrPsk->au8Passphrase, pstrAuthPsk->pu8Psk, pstrPsk->u8PassphraseLen);
                 }
-                free(pstrPsk);
+            }
+            else if(pstrAuthPsk->pu8Passphrase != NULL)
+            {
+                if(pstrAuthPsk->u8PassphraseLen > M2M_MAX_PSK_LEN-1)
+                    ret = M2M_ERR_INVALID_ARG;
+                else
+                {
+                    pstrPsk->u8PassphraseLen = pstrAuthPsk->u8PassphraseLen;
+                    m2m_memcpy(pstrPsk->au8Passphrase, pstrAuthPsk->pu8Passphrase, pstrPsk->u8PassphraseLen);
+                }
             }
             else
-                ret = M2M_ERR_MEM_ALLOC;
+                ret = M2M_ERR_INVALID_ARG;
+            if(ret == M2M_SUCCESS)
+            {
+                ret = hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_CONN | M2M_REQ_DATA_PKT,
+                               (uint8 *)&strConnHdr, sizeof(tstrM2mWifiConnHdr),
+                               (uint8 *)pstrPsk, sizeof(tstrM2mWifiPsk), sizeof(tstrM2mWifiConnHdr));
+            }
         }
     }
     return ret;
@@ -1618,13 +1613,16 @@ sint8 m2m_wifi_request_sleep(uint32 u32SlpReqTime)
 sint8 m2m_wifi_set_device_name(uint8 *pu8DeviceName, uint8 u8DeviceNameLength)
 {
     tstrM2MDeviceNameConfig strDeviceName;
+    m2m_memset((uint8 *)&strDeviceName, 0, sizeof(strDeviceName));
     if(u8DeviceNameLength >= M2M_DEVICE_NAME_MAX)
     {
-        u8DeviceNameLength = M2M_DEVICE_NAME_MAX;
+        u8DeviceNameLength = M2M_DEVICE_NAME_MAX - 1;
     }
-    //pu8DeviceName[u8DeviceNameLength] = '\0';
-    u8DeviceNameLength ++;
-    m2m_memcpy(strDeviceName.au8DeviceName, pu8DeviceName, u8DeviceNameLength);
+    if(pu8DeviceName != NULL && u8DeviceNameLength > 0)
+    {
+        m2m_memcpy(strDeviceName.au8DeviceName, pu8DeviceName, u8DeviceNameLength);
+    }
+    strDeviceName.au8DeviceName[u8DeviceNameLength] = '\0';
     return hif_send(M2M_REQ_GROUP_WIFI, M2M_WIFI_REQ_SET_DEVICE_NAME,
                     (uint8 *)&strDeviceName, sizeof(tstrM2MDeviceNameConfig), NULL, 0, 0);
 }

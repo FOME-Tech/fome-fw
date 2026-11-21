@@ -245,6 +245,54 @@ TEST(SensorInit, Pedal) {
 	EXPECT_NEAR(50.0f, Sensor::get(SensorType::AcceleratorPedal).value_or(-1), EPS2D);
 }
 
+TEST(SensorInit, ClutchPosition) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->clutchPositionSensor = EFI_ADC_0;
+	engineConfiguration->clutchPositionUpVoltage = 1;
+	engineConfiguration->clutchPositionDownVoltage = 4;
+
+	initTps();
+
+	auto s = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::ClutchPosition));
+	ASSERT_NE(nullptr, s);
+
+	// In range
+	EXPECT_POINT_VALID(s, 1.0f, 0.0f);	 // released
+	EXPECT_POINT_VALID(s, 2.5f, 50.0f);	 // half
+	EXPECT_POINT_VALID(s, 4.0f, 100.0f); // on the floor
+
+	// Just inside the fault limits
+	EXPECT_POINT_VALID(s, 0.71f, -9.666f);
+	EXPECT_POINT_VALID(s, 4.29f, 109.666f);
+
+	// Beyond -10% / +110%
+	EXPECT_POINT_INVALID(s, 0.69f);
+	EXPECT_POINT_INVALID(s, 4.31f);
+
+	// Raw voltage still reported
+	EXPECT_NEAR(4.31f, Sensor::getRaw(SensorType::ClutchPosition), EPS4D);
+}
+
+TEST(SensorInit, ClutchPositionInverted) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	// Voltage falls as the pedal is pressed
+	engineConfiguration->clutchPositionSensor = EFI_ADC_0;
+	engineConfiguration->clutchPositionUpVoltage = 4;
+	engineConfiguration->clutchPositionDownVoltage = 1;
+
+	initTps();
+
+	auto s = const_cast<Sensor*>(Sensor::getSensorOfType(SensorType::ClutchPosition));
+	ASSERT_NE(nullptr, s);
+
+	EXPECT_POINT_VALID(s, 4.0f, 0.0f);
+	EXPECT_POINT_VALID(s, 1.0f, 100.0f);
+	EXPECT_POINT_INVALID(s, 4.31f);
+	EXPECT_POINT_INVALID(s, 0.69f);
+}
+
 TEST(SensorInit, DriverIntentNoPedal) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 

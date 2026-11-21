@@ -1,0 +1,540 @@
+/**
+ * @file test_injection_outputs.cpp
+ *
+ * What the injectors really do in each injection mode, and while the amount of fuel changes, checked
+ * at the injector pins with a simulated engine (see harness/engine_sim.h).
+ */
+
+#include "pch.h"
+
+#include "harness/engine_invariants.h"
+
+using ::testing::_;
+
+extern WarningCodeState unitTestWarningCodeState;
+
+namespace {
+
+constexpr float testRpm = 3000;
+// One engine cycle at testRpm
+constexpr int64_t cycleUs = 40000;
+
+// A four cylinder engine running steadily in the given injection mode, with a trigger that knows
+// engine phase by itself
+struct InjectionRig {
+	explicit InjectionRig(injection_mode_e mode, trigger_type_e trigger = trigger_type_e::TT_ONE) {
+		EXPECT_CALL(*eth.mockAirmass, getAirmass(_, _)).WillRepeatedly([this](float, bool) {
+			return AirmassResult{airmass, 50.0f};
+		});
+
+		// End of injection half a revolution before each cylinder's own TDC
+		setTable(config->injectionPhase, -180.0f);
+		// The trigger wheel is on the cam, so it knows engine phase by itself
+		setCamOperationMode();
+		setupSimpleTestEngineWithMaf(&eth, mode, trigger);
+
+		sim = std::make_unique<EngineSim>(eth, &recorder);
+		sim->setRpm(testRpm);
+		sim->runCycles(10);
+	}
+
+	// Run some more cycles, returning when they started
+	int64_t run(int cycles) {
+		auto from = sim->nowUs();
+		sim->runCycles(cycles);
+		return from;
+	}
+
+	// Set the fuel so that each sequential pulse is this long
+	void setPulseMs(float ms) {
+		airmass = airmassFor3ms * ms / 3;
+	}
+
+	// Pulses of one injector that started at or after a point in time
+	std::vector<OutputPulse> pulsesSince(int injector, int64_t fromUs) const {
+		std::vector<OutputPulse> result;
+
+		for (const auto& pulse : recorder.pulses(OutputKind::Injector, injector)) {
+			if (pulse.startUs >= fromUs) {
+				result.push_back(pulse);
+			}
+		}
+
+		return result;
+	}
+
+	// Fuel each injector delivers per engine cycle, as open time, checking that it's steady
+	float openTimePerCycle(int injector, int64_t fromUs, int cycles) const {
+		auto windows = activeTimePerWindow(recorder, OutputKind::Injector, injector, fromUs, cycleUs, cycles);
+
+		for (float window : windows) {
+			EXPECT_NEAR(windows[0], window, 0.01f) << "injector " << injector << " isn't steady";
+		}
+
+		return windows[0];
+	}
+
+	EngineTestHelper eth{engine_type_e::TEST_ENGINE};
+	// Air mass per cylinder that makes a 3 ms sequential pulse (there's no deadtime)
+	static constexpr float airmassFor3ms = 0.1008f;
+	float airmass = airmassFor3ms;
+	OutputRecorder recorder;
+	std::unique_ptr<EngineSim> sim;
+};
+
+// Whether two injectors open at the same moments
+bool openTogether(const InjectionRig& rig, int a, int b, int64_t fromUs) {
+	auto pulsesA = rig.pulsesSince(a, fromUs);
+	auto pulsesB = rig.pulsesSince(b, fromUs);
+
+	if (pulsesA.empty() || pulsesA.size() != pulsesB.size()) {
+		return false;
+	}
+
+	for (size_t i = 0; i < pulsesA.size(); i++) {
+		if (pulsesA[i].startUs != pulsesB[i].startUs || pulsesA[i].endUs != pulsesB[i].endUs) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// Sequential mode only: how many pulses each injector's intakes got, checking that it was one each.
+//
+// A pulse counts towards the first intake that ends at or after it starts, where an intake "ends" at
+// the configured end of injection, 180 degrees before that cylinder's TDC. That way a pulse that started
+// from an out of date angle still counts towards the intake it was meant for. The first and last intakes
+// seen are left out, since they may be only partly inside the time recorded.
+::testing::AssertionResult onePulsePerIntake(const InjectionRig& rig, int64_t fromUs) {
+	constexpr double endOfInjection = 720 - 180;
+
+	std::stringstream problems;
+	int problemCount = 0;
+
+	for (int cyl = 0; cyl < 4; cyl++) {
+		std::map<int64_t, int> pulsesByIntake;
+		std::optional<double> firstIntake;
+
+		for (const auto& pulse : rig.pulsesSince(cyl, fromUs)) {
+			double phase = rig.sim->enginePhase(pulse.startAngle) - engine->cylinders[cyl].getAngleOffset();
+			double toIntake = std::fmod(endOfInjection - phase + 4 * 720, 720.0);
+			double intake = pulse.startAngle + toIntake;
+
+			if (!firstIntake) {
+				firstIntake = intake;
+			}
+
+			pulsesByIntake[std::llround((intake - *firstIntake) / 720)]++;
+		}
+
+		if (pulsesByIntake.size() < 3) {
+			return ::testing::AssertionFailure() << "injector " << cyl << " barely fired";
+		}
+
+		int64_t last = pulsesByIntake.rbegin()->first;
+		for (int64_t intake = 1; intake < last; intake++) {
+			int count = pulsesByIntake[intake];
+			if (count != 1 && problemCount++ < 10) {
+				problems << "\n  injector " << cyl << ", intake " << intake << " got " << count << " pulses";
+			}
+		}
+	}
+
+	if (problemCount) {
+		return ::testing::AssertionFailure()
+			<< problemCount << " intakes didn't get exactly one pulse:" << problems.str();
+	}
+
+	return ::testing::AssertionSuccess();
+}
+
+void doNothing(void*) {}
+
+} // namespace
+
+TEST(InjectionOutputs, Sequential) {
+	InjectionRig rig(IM_SEQUENTIAL);
+	const int cycles = 5;
+	auto from = rig.run(cycles);
+
+	EXPECT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
+
+	float pulseMs = engine->engineState.injectionDuration;
+	EXPECT_GT(pulseMs, 1);
+
+	for (int cyl = 0; cyl < 4; cyl++) {
+		// One pulse per cycle, of the duration the firmware says it's injecting
+		auto pulses = rig.pulsesSince(cyl, from);
+		ASSERT_EQ(pulses.size(), (size_t)cycles) << "injector " << cyl;
+
+		for (const auto& pulse : pulses) {
+			EXPECT_NEAR(pulseMs, pulse.durationMs(), 0.01f) << "injector " << cyl;
+
+			// Each cylinder's injection ends at the same point in its own cycle: the configured
+			// 180 degrees before its own TDC
+			double endPhase = rig.sim->enginePhase(pulse.endAngle) - engine->cylinders[cyl].getAngleOffset();
+			EXPECT_NEAR(-180, std::remainder(endPhase, 720.0), 0.5) << "injector " << cyl;
+		}
+
+		EXPECT_NEAR(pulseMs, rig.openTimePerCycle(cyl, from, cycles), 0.01f) << "injector " << cyl;
+	}
+
+	// No injector shares its timing with another
+	for (int other = 1; other < 4; other++) {
+		EXPECT_FALSE(openTogether(rig, 0, other, from)) << "injectors 0 and " << other;
+	}
+}
+
+// Batch mode fires each injector together with the one a revolution away from it in the firing order,
+// which is also what makes it work with injectors wired in pairs ("two wire batch")
+TEST(InjectionOutputs, Batch) {
+	InjectionRig rig(IM_BATCH);
+	const int cycles = 5;
+	auto from = rig.run(cycles);
+
+	EXPECT_EQ(IM_BATCH, getCurrentInjectionMode());
+
+	// Firing order is 1-3-4-2: cylinders 1 and 4 are a pair, and so are 2 and 3
+	EXPECT_TRUE(openTogether(rig, 0, 3, from));
+	EXPECT_TRUE(openTogether(rig, 1, 2, from));
+	EXPECT_FALSE(openTogether(rig, 0, 1, from));
+
+	float pulseMs = engine->engineState.injectionDuration;
+
+	for (int cyl = 0; cyl < 4; cyl++) {
+		// Two pulses per cycle
+		auto pulses = rig.pulsesSince(cyl, from);
+		ASSERT_EQ(pulses.size(), (size_t)2 * cycles) << "injector " << cyl;
+
+		for (const auto& pulse : pulses) {
+			EXPECT_NEAR(pulseMs, pulse.durationMs(), 0.01f) << "injector " << cyl;
+		}
+
+		EXPECT_NEAR(2 * pulseMs, rig.openTimePerCycle(cyl, from, cycles), 0.01f) << "injector " << cyl;
+	}
+}
+
+TEST(InjectionOutputs, Simultaneous) {
+	InjectionRig rig(IM_SIMULTANEOUS);
+	const int cycles = 5;
+	auto from = rig.run(cycles);
+
+	EXPECT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode());
+
+	// Everything fires together, once per cylinder's worth of rotation
+	for (int cyl = 1; cyl < 4; cyl++) {
+		EXPECT_TRUE(openTogether(rig, 0, cyl, from)) << "injectors 0 and " << cyl;
+	}
+
+	EXPECT_EQ(rig.pulsesSince(0, from).size(), (size_t)4 * cycles);
+}
+
+TEST(InjectionOutputs, SinglePoint) {
+	InjectionRig rig(IM_SINGLE_POINT);
+	const int cycles = 5;
+	auto from = rig.run(cycles);
+
+	EXPECT_EQ(IM_SINGLE_POINT, getCurrentInjectionMode());
+
+	// The one injector fires for every cylinder...
+	EXPECT_EQ(rig.pulsesSince(0, from).size(), (size_t)4 * cycles);
+
+	// ...and the others not at all
+	for (int cyl = 1; cyl < 4; cyl++) {
+		EXPECT_TRUE(rig.pulsesSince(cyl, from).empty()) << "injector " << cyl;
+	}
+}
+
+// However the fuel is divided up in to pulses, each cylinder gets the same amount per cycle
+TEST(InjectionOutputs, SameFuelInEveryMode) {
+	const int cycles = 5;
+
+	float expected;
+	{
+		InjectionRig sequential(IM_SEQUENTIAL);
+		expected = sequential.openTimePerCycle(0, sequential.run(cycles), cycles);
+	}
+	EXPECT_GT(expected, 1);
+
+	for (auto mode : {IM_BATCH, IM_SIMULTANEOUS}) {
+		InjectionRig rig(mode);
+		auto from = rig.run(cycles);
+
+		for (int cyl = 0; cyl < 4; cyl++) {
+			EXPECT_NEAR(expected, rig.openTimePerCycle(cyl, from, cycles), 0.01f * expected)
+					<< "injector " << cyl << " in mode " << (int)mode;
+		}
+	}
+
+	// Single point feeds all four cylinders from one injector
+	InjectionRig singlePoint(IM_SINGLE_POINT);
+	EXPECT_NEAR(4 * expected, singlePoint.openTimePerCycle(0, singlePoint.run(cycles), cycles), 0.04f * expected);
+}
+
+// Change the fuel per cycle (as ms of injector open time) and check that every injector delivers
+// the right amount on the way there and once it has settled.
+//
+// On the way, each injector fires at most one more old-sized cycle before switching, so over a number
+// of cycles it delivers between "one old cycle then all new" and "all new". This is checked as a
+// total, not cycle by cycle, because the start of injection moves when the duration changes, which
+// shifts fuel between one cycle's window and the next without changing how much there is.
+static void stepFuel(InjectionRig& rig, float baseAirmass, float basePerCycle, float fromPerCycle, float toPerCycle) {
+	rig.airmass = baseAirmass * toPerCycle / basePerCycle;
+
+	const int cycles = 6;
+	auto changing = rig.run(cycles);
+
+	float allNew = cycles * toPerCycle;
+	float oneOld = fromPerCycle + (cycles - 1) * toPerCycle;
+
+	for (int cyl = 0; cyl < 4; cyl++) {
+		float total = 0;
+		for (float window : activeTimePerWindow(rig.recorder, OutputKind::Injector, cyl, changing, cycleUs, cycles)) {
+			total += window;
+		}
+
+		EXPECT_GE(total, 0.99f * std::min(allNew, oneOld))
+				<< "injector " << cyl << " changing from " << fromPerCycle << " to " << toPerCycle << " ms per cycle";
+		EXPECT_LE(total, 1.01f * std::max(allNew, oneOld))
+				<< "injector " << cyl << " changing from " << fromPerCycle << " to " << toPerCycle << " ms per cycle";
+	}
+
+	auto settled = rig.run(4);
+	EXPECT_TRUE(injectedPerWindowWithin(rig.recorder, settled, cycleUs, 4, 0.99f * toPerCycle, 1.01f * toPerCycle))
+			<< "settled at " << toPerCycle << " ms per cycle";
+}
+
+static void stopAndCheckNothingLeftOpen(InjectionRig& rig) {
+	rig.sim->setRpm(0);
+	rig.sim->runSeconds(1);
+
+	EXPECT_TRUE(allOutputsOff());
+	for (int cyl = 0; cyl < 4; cyl++) {
+		EXPECT_EQ(0, enginePins.injectors[cyl].getOverlappingCounter()) << "injector " << cyl;
+	}
+
+	EXPECT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount());
+}
+
+// Run through a series of fuel amounts, starting from wherever the rig is now
+static void stepFuelThrough(InjectionRig& rig, std::initializer_list<float> steps) {
+	const float basePerCycle = rig.openTimePerCycle(0, rig.run(4), 4);
+	const float baseAirmass = rig.airmass;
+
+	float previous = basePerCycle;
+	for (float perCycle : steps) {
+		stepFuel(rig, baseAirmass, basePerCycle, previous, perCycle);
+		previous = perCycle;
+	}
+
+	// ...and back to where it started
+	stepFuel(rig, baseAirmass, basePerCycle, previous, basePerCycle);
+}
+
+// Pulse width stepping up and down, through to 87.5% duty where one batch pulse runs in to the next.
+// However the pulses overlap or merge, every injector must deliver what was asked for, and none may
+// be left open.
+// https://github.com/rusefi/rusefi/issues/299
+TEST(InjectionOutputs, BatchFuelFollowsPulseWidthChanges) {
+	InjectionRig rig(IM_BATCH);
+
+	stepFuelThrough(rig, {6, 12, 25, 35, 25, 12, 4});
+
+	EXPECT_TRUE(noStuckInjector(rig.recorder, 36));
+	stopAndCheckNothingLeftOpen(rig);
+}
+
+TEST(InjectionOutputs, SequentialFuelFollowsPulseWidthChanges) {
+	InjectionRig rig(IM_SEQUENTIAL);
+
+	stepFuelThrough(rig, {6, 12, 6, 4});
+
+	EXPECT_TRUE(noStuckInjector(rig.recorder, 13));
+	stopAndCheckNothingLeftOpen(rig);
+}
+
+// An injection is scheduled from the last tooth before it starts. This trigger has
+// a tooth edge only every 360 degrees, and at high duty the gap between one pulse ending and the next
+// starting is shorter than that. When the pulse gets longer its start moves earlier, in to a tooth's
+// window that has already been handled, and that cylinder's next injection is skipped entirely.
+TEST(InjectionOutputs, DISABLED_SequentialFuelFollowsPulseWidthChangesAtHighDuty) {
+	InjectionRig rig(IM_SEQUENTIAL);
+
+	stepFuelThrough(rig, {6, 12, 25, 35, 25, 12});
+
+	stopAndCheckNothingLeftOpen(rig);
+}
+
+// The same thing in batch mode takes a bigger step. This is the 1.5 ms to 12.5 ms
+// pulse width change of the original issue 299 tests: one pair of cylinders gets a cycle about half
+// short of fuel.
+TEST(InjectionOutputs, DISABLED_BatchFuelFollowsLargePulseWidthStep) {
+	InjectionRig rig(IM_BATCH);
+
+	stepFuelThrough(rig, {25});
+
+	stopAndCheckNothingLeftOpen(rig);
+}
+
+// On a fine wheel it takes a bigger step to skip an injection, but it doesn't take a pulse near 100%.
+// When a pulse is lengthened at the last moment, it runs from the start angle worked out for the old
+// duration, so it ends late. The new start angle, worked out as it ends, can then be behind where the
+// engine already is, which a tooth will never see again until next cycle. Here: 25 to 35 ms, 62% to 87%
+// duty, on a 60-2 wheel on the cam (a tooth every 12 degrees of crank).
+TEST(InjectionOutputs, DISABLED_EveryIntakeGetsOnePulseWhenDutyJumpsOnFineWheel) {
+	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
+	rig.setPulseMs(25);
+	rig.run(4);
+	auto from = rig.sim->nowUs();
+
+	// Make the change at different points in the cycle, so it catches each cylinder at each stage
+	for (int k = 0; k < 8; k++) {
+		// Coming back down from 87% to 62% is fine
+		rig.setPulseMs(25);
+		rig.run(3);
+		rig.sim->runDegrees(37 + 90 * k);
+		rig.setPulseMs(35);
+		rig.run(3);
+	}
+
+	EXPECT_TRUE(onePulsePerIntake(rig, from));
+}
+
+// The other way: when a pulse more than halves at the last moment, it runs from the earlier start angle
+// worked out for the old duration and finishes early. The new, later start angle is then still ahead in
+// the same cycle, and the same intake gets a second pulse.
+TEST(InjectionOutputs, DISABLED_EveryIntakeGetsOnePulseWhenPulseHalvesOnFineWheel) {
+	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
+	rig.setPulseMs(25);
+	rig.run(4);
+	auto from = rig.sim->nowUs();
+
+	for (int k = 0; k < 8; k++) {
+		// Back up in steps small enough not to skip anything
+		for (float pulseMs : {12, 20, 25}) {
+			rig.setPulseMs(pulseMs);
+			rig.run(2);
+		}
+		rig.sim->runDegrees(37 + 90 * k);
+		rig.setPulseMs(6);
+		rig.run(3);
+	}
+
+	EXPECT_TRUE(onePulsePerIntake(rig, from));
+}
+
+// Smaller steps, the same way, are fine: 30% to 50% duty and back
+TEST(InjectionOutputs, EveryIntakeGetsOnePulseThroughModerateStepsOnFineWheel) {
+	InjectionRig rig(IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_60_2);
+	rig.setPulseMs(12);
+	rig.run(4);
+	auto from = rig.sim->nowUs();
+
+	for (int k = 0; k < 8; k++) {
+		rig.setPulseMs(12);
+		rig.run(3);
+		rig.sim->runDegrees(37 + 90 * k);
+		rig.setPulseMs(20);
+		rig.run(3);
+	}
+
+	EXPECT_TRUE(onePulsePerIntake(rig, from));
+	stopAndCheckNothingLeftOpen(rig);
+}
+
+// Injection takes its timer slots from a pool shared by everything that schedules without its own
+// storage. The open, the close and the stage 2 close each take one. If there aren't enough left for all
+// of a pulse's events, the pulse must be skipped: an open that got the last slot without its close would
+// leave the injector open with nothing to close it.
+TEST(InjectionOutputs, InjectorNotLeftOpenWhenSchedulerRunsOutOfSlots) {
+	InjectionRig rig(IM_SEQUENTIAL);
+	float pulseMs = engine->engineState.injectionDuration;
+
+	// Wait for a moment when nothing is scheduled, so every slot in the pool is free
+	while (engine->scheduler.size() != 0) {
+		rig.sim->runDegrees(1);
+	}
+
+	// Take all but one of the 64 slots for the next 100 ms
+	for (int i = 0; i < 63; i++) {
+		engine->scheduler.schedule("test", nullptr, getTimeNowNt() + MS2NT(100), {doNothing});
+	}
+	ASSERT_EQ(63, engine->scheduler.size());
+
+	auto from = rig.run(10);
+
+	// A pulse is 3 ms. Skipping some is better than leaving one open.
+	EXPECT_TRUE(noStuckInjector(rig.recorder, 4, from));
+
+	// Running out is reported
+	EXPECT_GT(unitTestWarningCodeState.recentWarnings.getCount(), 0);
+
+	// Once the slots are free again, every injector is back to normal
+	auto after = rig.run(4);
+	for (int cyl = 0; cyl < 4; cyl++) {
+		EXPECT_NEAR(pulseMs, rig.openTimePerCycle(cyl, after, 4), 0.01f) << "injector " << cyl;
+	}
+}
+
+// The injector output counts opens and closes so that overlapping pulses merge, and only goes low when the
+// count gets back to zero. If a close were ever lost (here the injector is opened once more than the
+// scheduler does), the injector would stay open until the engine stopped. When the watchdog then forces it
+// off, it must forget the count too: otherwise, on the next start, every open would just move the count
+// from one to two and that injector would never open at all.
+TEST(InjectionOutputs, InjectorWorksAfterRestartFollowingLostClose) {
+	InjectionRig rig(IM_SEQUENTIAL);
+	float pulseMs = engine->engineState.injectionDuration;
+
+	// Unit tests don't normally assign the injectors to pins, and the watchdog only turns off outputs
+	// that have one
+	const brain_pin_e pins[] = {Gpio::E0, Gpio::E1, Gpio::E2, Gpio::E3};
+	for (int cyl = 0; cyl < 4; cyl++) {
+		enginePins.injectors[cyl].initPin("injector", pins[cyl]);
+	}
+
+	enginePins.injectors[0].open();
+	rig.run(2);
+
+	// With so few teeth it takes the watchdog a couple of seconds to decide the engine has stopped
+	rig.sim->setRpm(0);
+	rig.sim->runSeconds(3);
+	EXPECT_TRUE(allOutputsOff());
+	EXPECT_EQ(0, enginePins.injectors[0].getOverlappingCounter());
+
+	rig.sim->setRpm(testRpm);
+	rig.run(10);
+
+	auto from = rig.run(4);
+	for (int cyl = 0; cyl < 4; cyl++) {
+		EXPECT_NEAR(pulseMs, rig.openTimePerCycle(cyl, from, 4), 0.01f) << "injector " << cyl;
+	}
+}
+
+// An injection event works out its next start angle as each pulse ends. The last pulse before a fuel cut
+// (zero fuel mass, as in decel fuel cut) ends after the duration has already gone to zero, and an angle
+// worked out for a pulse of no length would make the first pulse after the cut start at the end of
+// injection angle, and so end a whole pulse late. It must keep the angle it had.
+TEST(InjectionOutputs, FirstPulseAfterFuelCutEndsOnTime) {
+	InjectionRig rig(IM_SEQUENTIAL);
+	rig.setPulseMs(6);
+	rig.run(4);
+
+	rig.setPulseMs(0);
+	rig.run(3);
+
+	// Back to the same fuel as before
+	rig.setPulseMs(6);
+	auto from = rig.run(3);
+
+	for (int cyl = 0; cyl < 4; cyl++) {
+		auto pulses = rig.pulsesSince(cyl, from);
+		ASSERT_GE(pulses.size(), 2u) << "injector " << cyl;
+
+		for (const auto& pulse : pulses) {
+			double endPhase = rig.sim->enginePhase(pulse.endAngle) - engine->cylinders[cyl].getAngleOffset();
+			EXPECT_NEAR(-180, std::remainder(endPhase, 720.0), 1)
+					<< "injector " << cyl << " pulse at " << pulse.startUs;
+		}
+	}
+}

@@ -386,12 +386,16 @@ void tdcMarkCallback(uint32_t trgEventIndex, efitick_t edgeTimestamp) {
  * The callback would be executed once after the duration of time which
  * it takes the crankshaft to rotate to the specified angle.
  */
-efitick_t scheduleByAngle(scheduling_s* timer, efitick_t edgeTimestamp, angle_t angle, action_s action) {
+efitick_t getTimeAfterAngle(efitick_t edgeTimestamp, angle_t angle) {
 	float delayUs = engine->rpmCalculator.oneDegreeUs * angle;
 
 	// 'delayNt' is below 10 seconds here so we use 32 bit type for performance reasons
 	int32_t delayNt = USF2NT(delayUs);
-	efitick_t delayedTime = edgeTimestamp + efidur_t{delayNt};
+	return edgeTimestamp + efidur_t{delayNt};
+}
+
+efitick_t scheduleByAngle(scheduling_s* timer, efitick_t edgeTimestamp, angle_t angle, action_s action) {
+	efitick_t delayedTime = getTimeAfterAngle(edgeTimestamp, angle);
 
 	engine->scheduler.schedule("angle", timer, delayedTime, action);
 
