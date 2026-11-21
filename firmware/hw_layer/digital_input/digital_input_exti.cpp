@@ -38,24 +38,24 @@ struct ExtiChannel {
 static ExtiChannel channels[16];
 
 // Capture the level in the fast ISR so it corresponds to the event timestamp.
-void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
+bool efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, ExtiCallback cb, void* cb_data) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
 	 * and we will fail on next check */
 	if (!isBrainPinValid(brainPin)) {
-		return;
+		return false;
 	}
 
-	efiAssertVoid(ObdCode::OBD_PCM_Processor_Fault, msg, "efiExtiEnablePin msg must not be null");
+	efiAssert(ObdCode::OBD_PCM_Processor_Fault, msg, "efiExtiEnablePin msg must not be null", false);
 
 	ioportid_t port = getHwPort(msg, brainPin);
 	if (port == NULL) {
-		return;
+		return false;
 	}
 
 	bool wasUsed = brain_pin_markUsed(brainPin, msg);
 	if (wasUsed) {
 		// error condition we shall bail
-		return;
+		return false;
 	}
 
 	int index = getHwPin(msg, brainPin);
@@ -71,7 +71,7 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 				hwPortname(brainPin),
 				index,
 				channel.Name);
-		return;
+		return false;
 	}
 
 	channel.Callback = cb;
@@ -83,6 +83,8 @@ void efiExtiEnablePin(const char* msg, brain_pin_e brainPin, uint32_t mode, Exti
 
 	palSetLineMode(line, PAL_MODE_INPUT);
 	palEnableLineEvent(line, mode);
+
+	return true;
 }
 void efiExtiDisablePin(brain_pin_e brainPin) {
 	/* paranoid check, in case of Gpio::Unassigned getHwPort will return NULL
@@ -309,7 +311,9 @@ void efiExtiInit() {
 	firmwareError("exti not supported");
 }
 
-void efiExtiEnablePin(const char*, brain_pin_e, uint32_t, ExtiCallback, void*) {}
+bool efiExtiEnablePin(const char*, brain_pin_e, uint32_t, ExtiCallback, void*) {
+	return false;
+}
 void efiExtiDisablePin(brain_pin_e) {}
 
 ExtiEdgeCounter efiExtiGetCounter(brain_pin_e) {
