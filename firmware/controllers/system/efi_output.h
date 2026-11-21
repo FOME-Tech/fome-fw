@@ -46,6 +46,9 @@ public:
 	TEST_VIRTUAL void setValue(int logicValue);
 	void toggle();
 	bool getLogicValue() const;
+	pin_output_mode_e getOutputMode() const {
+		return m_mode;
+	}
 
 	brain_pin_diag_e getDiag() const;
 

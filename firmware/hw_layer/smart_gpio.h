@@ -15,11 +15,16 @@
 #include "drivers/gpio/drv8860.h"
 #endif /* EFI_PROD_CODE */
 
+#ifndef BOARD_G0_GPIOCHIP_COUNT
+#define BOARD_G0_GPIOCHIP_COUNT 0
+#endif
+
 #if EFI_UNIT_TEST
 #define BOARD_EXT_GPIOCHIPS 3
 #else
 #define BOARD_EXT_GPIOCHIPS                                                                                            \
-	(BOARD_TLE6240_COUNT + BOARD_MC33972_COUNT + BOARD_TLE8888_COUNT + BOARD_DRV8860_COUNT + BOARD_MC33810_COUNT + 0)
+	(BOARD_TLE6240_COUNT + BOARD_MC33972_COUNT + BOARD_TLE8888_COUNT + BOARD_DRV8860_COUNT + BOARD_MC33810_COUNT +     \
+	 BOARD_G0_GPIOCHIP_COUNT + 0)
 #endif
 
 void initSmartGpio();
