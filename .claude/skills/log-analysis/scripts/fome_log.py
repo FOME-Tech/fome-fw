@@ -318,7 +318,9 @@ def select_rows(log, args):
 def fmt(v):
 	if v is None or (isinstance(v, float) and math.isnan(v)):
 		return "-"
-	if v == int(v) and abs(v) < 1e9:
+	if math.isinf(v):
+		return str(v)
+	if abs(v) < 1e9 and v == int(v):
 		return str(int(v))
 	a = abs(v)
 	if a >= 100:
