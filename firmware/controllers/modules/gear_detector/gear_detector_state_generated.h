@@ -22,8 +22,9 @@ struct gear_detector_state_s {
 	// Clutch sensor trusted
 	// offset 8 bit 0
 	bool clutchTrusted : 1 {};
+	// Ratio doesn't match any gear
 	// offset 8 bit 1
-	bool unusedBit_8_1 : 1 {};
+	bool ratioMismatch : 1 {};
 	// offset 8 bit 2
 	bool unusedBit_8_2 : 1 {};
 	// offset 8 bit 3
