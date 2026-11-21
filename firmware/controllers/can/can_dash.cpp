@@ -606,11 +606,11 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* MAP */
-			tmp = (((uint16_t)(Sensor::getOrZero(SensorType::Map))) * 10);
+			tmp = ((static_cast<uint16_t>(Sensor::getOrZero(SensorType::Map))) * 10);
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* TPS  y = x/10 */
-			tmp = (uint16_t)((float)(Sensor::getOrZero(SensorType::Tps1)) * 10);
+			tmp = static_cast<uint16_t>((float)(Sensor::getOrZero(SensorType::Tps1)) * 10);
 			msg[4] = (tmp >> 8);
 			msg[5] = (tmp & 0x00ff);
 			/* Coolant pressure */
@@ -622,15 +622,15 @@ void canDashboardHaltech(CanCycle cycle) {
 		{
 			CanTxMessage msg(0x361, 8);
 			/* Fuel pressure */
-			tmp = (uint16_t)((Sensor::getOrZero(SensorType::FuelPressureLow) + 101.3) * 10);
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::FuelPressureLow) + 101.3) * 10);
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* Oil pressure */
-			tmp = (uint16_t)((Sensor::getOrZero(SensorType::OilPressure) + 101.3) * 10);
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::OilPressure) + 101.3) * 10);
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* Engine Demand */
-			tmp = (uint16_t)(Sensor::getOrZero(SensorType::Map));
+			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::Map));
 			msg[4] = (tmp >> 8);
 			msg[5] = (tmp & 0x00ff);
 			/* Wastegate Pressure */
@@ -643,7 +643,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			CanTxMessage msg(0x362, 6);
 			/* Injection Stage 1 Duty Cycle - y = x/10 */
 			uint16_t rpm = Sensor::getOrZero(SensorType::Rpm);
-			tmp = (uint16_t)(getInjectorDutyCycle(rpm) * 10);
+			tmp = static_cast<uint16_t>(getInjectorDutyCycle(rpm) * 10);
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* Injcetion Stage 2 Duty Cycle */
@@ -742,11 +742,11 @@ void canDashboardHaltech(CanCycle cycle) {
 		{
 			CanTxMessage msg(0x368, 8);
 			/* Wideband Sensor 1 */
-			tmp = (uint16_t)(Sensor::getOrZero(SensorType::Lambda1) * 1000 * 14.7);
+			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::Lambda1) * 1000 * 14.7);
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* Wideband Sensor 2 */
-			tmp = (uint16_t)(Sensor::getOrZero(SensorType::Lambda2) * 1000);
+			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::Lambda2) * 1000);
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* Wideband Sensor 3 */
@@ -812,17 +812,19 @@ void canDashboardHaltech(CanCycle cycle) {
 		{
 			CanTxMessage msg(0x36C, 8);
 			/* Wheel Speed Front Left */
-			auto vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
-			tmp = (vehicleSpeed * 10);
+			tmp = (Sensor::getOrZero(SensorType::WheelSpeedLF) * 10);
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* Wheel Speed Front Right */
+			tmp = (Sensor::getOrZero(SensorType::WheelSpeedRF) * 10);
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* Wheel Speed Read Left */
+			tmp = (Sensor::getOrZero(SensorType::WheelSpeedLR) * 10);
 			msg[4] = (tmp >> 8);
 			msg[5] = (tmp & 0x00ff);
 			/* Wheel Speed Read Right */
+			tmp = (Sensor::getOrZero(SensorType::WheelSpeedRR) * 10);
 			msg[6] = (tmp >> 8);
 			msg[7] = (tmp & 0x00ff);
 		}
@@ -1000,9 +1002,13 @@ void canDashboardHaltech(CanCycle cycle) {
 		/* 0x371 = 10Hz rate */
 		{
 			CanTxMessage msg(0x371, 4);
-			/* Fuel Flow */
-			msg[0] = 0x00;
-			msg[1] = 0x00;
+			/* Fuel Flow, cc/min (gasoline density ~0.74 g/cc) */
+			constexpr float gasolineDensityGramPerCc = 0.74f;
+			float fuelFlowCcPerMinute =
+					engine->module<TripOdometer>()->getConsumptionGramPerSecond() * 60.0f / gasolineDensityGramPerCc;
+			tmp = static_cast<uint16_t>(fuelFlowCcPerMinute * 10.0f);
+			msg[0] = (tmp >> 8);
+			msg[1] = (tmp & 0x00ff);
 			/* Fuel Flow Return */
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -1012,7 +1018,7 @@ void canDashboardHaltech(CanCycle cycle) {
 		{
 			CanTxMessage msg(0x372, 8);
 			/* Battery Voltage */
-			tmp = (uint16_t)(Sensor::getOrZero(SensorType::BatteryVoltage) * 10);
+			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::BatteryVoltage) * 10);
 			msg[0] = (tmp >> 8);
 			msg[1] = (tmp & 0x00ff);
 			/* unused */
@@ -1022,7 +1028,7 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[4] = 0x00;
 			msg[5] = 0x00;
 			/* Barometric pressure */
-			tmp = (uint16_t)(Sensor::getOrZero(SensorType::BarometricPressure) * 10);
+			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::BarometricPressure) * 10);
 			msg[6] = (tmp >> 8);
 			msg[7] = (tmp & 0x00ff);
 		}
@@ -1031,34 +1037,42 @@ void canDashboardHaltech(CanCycle cycle) {
 		{
 			CanTxMessage msg(0x373, 8);
 			/* EGT1 */
-			msg[0] = 0x00;
-			msg[1] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT1) + 273.15) * 10);
+			msg[0] = (tmp >> 8);
+			msg[1] = (tmp & 0x00ff);
 			/* EGT2 */
-			msg[2] = 0x00;
-			msg[3] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT2) + 273.15) * 10);
+			msg[2] = (tmp >> 8);
+			msg[3] = (tmp & 0x00ff);
 			/* EGT3 */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT3) + 273.15) * 10);
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
 			/* EGT4 */
-			msg[6] = 0x00;
-			msg[7] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT4) + 273.15) * 10);
+			msg[6] = (tmp >> 8);
+			msg[7] = (tmp & 0x00ff);
 		}
 
 		/* 0x374 = 10Hz rate */
 		{
 			CanTxMessage msg(0x374, 8);
 			/* EGT5 */
-			msg[0] = 0x00;
-			msg[1] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT5) + 273.15) * 10);
+			msg[0] = (tmp >> 8);
+			msg[1] = (tmp & 0x00ff);
 			/* EGT6 */
-			msg[2] = 0x00;
-			msg[3] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT6) + 273.15) * 10);
+			msg[2] = (tmp >> 8);
+			msg[3] = (tmp & 0x00ff);
 			/* EGT7 */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT7) + 273.15) * 10);
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
 			/* EGT8 */
-			msg[6] = 0x00;
-			msg[7] = 0x00;
+			tmp = static_cast<uint16_t>((Sensor::getOrZero(SensorType::EGT8) + 273.15) * 10);
+			msg[6] = (tmp >> 8);
+			msg[7] = (tmp & 0x00ff);
 		}
 
 		/* 0x375 = 10Hz rate */
@@ -1082,8 +1096,9 @@ void canDashboardHaltech(CanCycle cycle) {
 		{
 			CanTxMessage msg(0x376, 8);
 			/* Ambient Air Temperature */
-			msg[0] = 0x00;
-			msg[1] = 0x00;
+			tmp = ((Sensor::getOrZero(SensorType::AmbientTemperature) + 273.15) * 10);
+			msg[0] = (tmp >> 8);
+			msg[1] = (tmp & 0x00ff);
 			/* Relative Humidity */
 			msg[2] = 0x00;
 			msg[3] = 0x00;
@@ -1109,11 +1124,13 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[2] = (tmp >> 8);
 			msg[3] = (tmp & 0x00ff);
 			/* Fuel Temperature */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
+			tmp = ((Sensor::getOrZero(SensorType::FuelTemperature) + 273.15) * 10);
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
 			/* Oil Temperature */
-			msg[6] = 0x00;
-			msg[7] = 0x00;
+			tmp = ((Sensor::getOrZero(SensorType::OilTemperature) + 273.15) * 10);
+			msg[6] = (tmp >> 8);
+			msg[7] = (tmp & 0x00ff);
 		}
 
 		/* 0x3E1 = 5Hz rate */
@@ -1126,8 +1143,9 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[2] = 0x00;
 			msg[3] = 0x00;
 			/* Fuel Composition */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
+			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::FuelEthanolPercent) * 10);
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
 		}
 
 		/* 0x3E2 = 5Hz rate */
