@@ -837,12 +837,20 @@ void canDashboardHaltech(CanCycle cycle) {
 			msg[1] = 0x00;
 			msg[2] = 0x00;
 			msg[3] = 0x00;
-			/* Exhaust Cam Angle 1 */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
-			/* Exhaust Cam Angle 2 */
-			msg[6] = 0x00;
-			msg[7] = 0x00;
+			/* Exhaust Cam Angle 1, signed 0.1 degrees */
+			tmp = 0;
+#if EFI_SHAFT_POSITION_INPUT
+			tmp = static_cast<int16_t>(engine->triggerCentral.getVVTPosition(0, 1).value_or(0) * 10);
+#endif
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
+			/* Exhaust Cam Angle 2, signed 0.1 degrees */
+			tmp = 0;
+#if EFI_SHAFT_POSITION_INPUT
+			tmp = static_cast<int16_t>(engine->triggerCentral.getVVTPosition(1, 1).value_or(0) * 10);
+#endif
+			msg[6] = (tmp >> 8);
+			msg[7] = (tmp & 0x00ff);
 		}
 
 		/* 0x36E = 20Hz rate */
@@ -868,9 +876,13 @@ void canDashboardHaltech(CanCycle cycle) {
 			/* Generic Output 1 Duty Cycle */
 			msg[0] = 0x00;
 			msg[1] = 0x00;
-			/* Boost Control Output */
-			msg[2] = 0x00;
-			msg[3] = 0x00;
+			/* Boost Control Output, 0.1 percent */
+			tmp = 0;
+#if EFI_ENGINE_CONTROL
+			tmp = static_cast<uint16_t>(engine->module<BoostController>()->boostOutput * 10);
+#endif
+			msg[2] = (tmp >> 8);
+			msg[3] = (tmp & 0x00ff);
 		}
 
 		/* 0x370 = 20Hz rate */
@@ -884,12 +896,20 @@ void canDashboardHaltech(CanCycle cycle) {
 			/* unused */
 			msg[2] = 0x00;
 			msg[3] = 0x00;
-			/* Intake Cam Angle 1 */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
-			/* Intake Cam Angle 2 */
-			msg[6] = 0x00;
-			msg[7] = 0x00;
+			/* Intake Cam Angle 1, signed 0.1 degrees */
+			tmp = 0;
+#if EFI_SHAFT_POSITION_INPUT
+			tmp = static_cast<int16_t>(engine->triggerCentral.getVVTPosition(0, 0).value_or(0) * 10);
+#endif
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
+			/* Intake Cam Angle 2, signed 0.1 degrees */
+			tmp = 0;
+#if EFI_SHAFT_POSITION_INPUT
+			tmp = static_cast<int16_t>(engine->triggerCentral.getVVTPosition(1, 0).value_or(0) * 10);
+#endif
+			msg[6] = (tmp >> 8);
+			msg[7] = (tmp & 0x00ff);
 		}
 
 		/* todo: 0x3E6 = 20Hz rate */
@@ -1024,9 +1044,13 @@ void canDashboardHaltech(CanCycle cycle) {
 			/* unused */
 			msg[2] = 0x00;
 			msg[3] = 0x00;
-			/* Target Boost Level todo */
-			msg[4] = 0x00;
-			msg[5] = 0x00;
+			/* Target Boost Level, 0.1 kPa */
+			tmp = 0;
+#if EFI_ENGINE_CONTROL
+			tmp = static_cast<uint16_t>(engine->module<BoostController>()->boostControlTarget * 10);
+#endif
+			msg[4] = (tmp >> 8);
+			msg[5] = (tmp & 0x00ff);
 			/* Barometric pressure */
 			tmp = static_cast<uint16_t>(Sensor::getOrZero(SensorType::BarometricPressure) * 10);
 			msg[6] = (tmp >> 8);
