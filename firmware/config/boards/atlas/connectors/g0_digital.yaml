@@ -1,0 +1,16 @@
+pins:
+  - id: G0_DIGITAL_1
+    class: switch_inputs
+    ts_name: G0 Digital 1
+
+  - id: G0_DIGITAL_2
+    class: switch_inputs
+    ts_name: G0 Digital 2
+
+  - id: G0_DIGITAL_3
+    class: switch_inputs
+    ts_name: G0 Digital 3
+
+  - id: G0_DIGITAL_4
+    class: switch_inputs
+    ts_name: G0 Digital 4
