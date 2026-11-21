@@ -656,10 +656,18 @@ struct output_channels_s {
 	// V
 	// offset 552
 	scaled_channel<int16_t, 1000, 1> rawClutchPosition = (int16_t)0;
+	// Rev limit: X axis
 	// offset 554
-	uint8_t alignmentFill_at_554[2];
+	scaled_channel<int16_t, 10, 1> revLimitXAxisValue = (int16_t)0;
+	// Rev limit: Y axis
+	// offset 556
+	scaled_channel<int16_t, 10, 1> revLimitYAxisValue = (int16_t)0;
+	// Rev limit: target
+	// RPM
+	// offset 558
+	uint16_t revLimitTarget = (uint16_t)0;
 };
-static_assert(sizeof(output_channels_s) == 556);
+static_assert(sizeof(output_channels_s) == 560);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, coolant) == 8);
@@ -818,3 +826,6 @@ static_assert(offsetof(output_channels_s, boostCutYAxisValue) == 546);
 static_assert(offsetof(output_channels_s, boostCutTarget) == 548);
 static_assert(offsetof(output_channels_s, clutchPosition) == 550);
 static_assert(offsetof(output_channels_s, rawClutchPosition) == 552);
+static_assert(offsetof(output_channels_s, revLimitXAxisValue) == 554);
+static_assert(offsetof(output_channels_s, revLimitYAxisValue) == 556);
+static_assert(offsetof(output_channels_s, revLimitTarget) == 558);
