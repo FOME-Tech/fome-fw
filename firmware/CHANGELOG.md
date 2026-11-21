@@ -35,6 +35,8 @@ or
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
 
 ### Added
+ - Optional G0 expansion ADC support on Atlas (build with G0_EXTENSION=yes).
+ - Four digital switch inputs on the optional G0 expansion.
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels.
@@ -65,6 +67,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Derive the G0 wire protocol from the companion submodule so FOME and its bundled firmware use the same version and frame definitions.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
