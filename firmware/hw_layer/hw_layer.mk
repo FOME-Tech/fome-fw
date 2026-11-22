@@ -41,3 +41,5 @@ endif
 # '-include' is a magic kind of 'include' which would survive if file to be included is not found
 #
 -include $(PROJECT_DIR)/hw_layer/$(CPU_HWLAYER)/hw_ports.mk
+
+include $(PROJECT_DIR)/hw_layer/g0_extension/g0.mk

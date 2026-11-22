@@ -360,6 +360,7 @@ include $(PROJECT_DIR)/rusefi_pch.mk
 include $(PROJECT_DIR)/fome_generated.mk
 include $(PROJECT_DIR)/gitversion.mk
 include $(PROJECT_DIR)/controllers/modules/modules_header_gen.mk
+include $(PROJECT_DIR)/hw_layer/g0_extension/image.mk
 
 .PHONY: CLEAN_RULE_HOOK CLEAN_PCH_HOOK CLEAN_BUNDLE_HOOK
 
