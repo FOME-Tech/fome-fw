@@ -89,8 +89,9 @@ struct output_channels_s {
 	// DFCO: Active
 	// offset 0 bit 23
 	bool dfcoActive : 1 {};
+	// Air: MAF airmass limited
 	// offset 0 bit 24
-	bool unusedBit_0_24 : 1 {};
+	bool mafAirmassLimited : 1 {};
 	// offset 0 bit 25
 	bool unusedBit_0_25 : 1 {};
 	// offset 0 bit 26
