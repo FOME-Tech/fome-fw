@@ -221,6 +221,7 @@ void Engine::OnTriggerSynchronizationLost() {
 
 	triggerCentral.triggerState.resetState();
 	triggerCentral.instantRpm.resetInstantRpm();
+	triggerCentral.resetRotationReference();
 
 	for (size_t i = 0; i < efi::size(triggerCentral.vvtState); i++) {
 		for (size_t j = 0; j < efi::size(triggerCentral.vvtState[0]); j++) {

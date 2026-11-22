@@ -25,6 +25,7 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_real_noisy_trigger.cpp \
 	tests/trigger/test_engine_invariants.cpp \
 	tests/trigger/test_trigger_error_recovery.cpp \
+	tests/trigger/test_rotation_counter.cpp \
 	tests/trigger/test_map_cam.cpp \
 	tests/trigger/test_rpm_multiplier.cpp \
 	tests/trigger/test_instant_rpm_auto.cpp \
