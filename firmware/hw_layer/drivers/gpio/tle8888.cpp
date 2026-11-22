@@ -192,7 +192,7 @@ struct Tle8888 : public GpioChip {
 	int fwd_feed();
 	int wd_get_status();
 	int wd_feed();
-	int calc_sleep_interval();
+	sysinterval_t calc_sleep_interval();
 
 	brain_pin_diag_e getOutputDiag(size_t pin);
 	brain_pin_diag_e getInputDiag(size_t pin);
@@ -731,17 +731,30 @@ int Tle8888::wd_get_status() {
 	return 0;
 }
 
-int Tle8888::wd_feed() {
-	bool update_status;
+// System time wraps, so deadlines must be compared by signed difference rather than
+// with < or <=. Valid while deadlines are within half the system time range of now.
+static bool deadlineReached(systime_t deadline, systime_t now) {
+	return (int32_t)chTimeDiffX(deadline, now) >= 0;
+}
 
-	if (wwd_ts <= chVTGetSystemTimeX()) {
+static sysinterval_t timeUntil(systime_t deadline, systime_t now) {
+	int32_t remaining = (int32_t)chTimeDiffX(now, deadline);
+
+	// An overdue deadline means the last attempt failed: retry soon, but don't spin
+	return remaining > 0 ? (sysinterval_t)remaining : TIME_MS2I(1);
+}
+
+int Tle8888::wd_feed() {
+	bool update_status = false;
+
+	if (deadlineReached(wwd_ts, chVTGetSystemTimeX())) {
 		update_status = true;
 		if (wwd_feed() == 0) {
 			wwd_ts = chTimeAddX(chVTGetSystemTimeX(), TIME_MS2I(WWD_PERIOD_MS));
 		}
 	}
 
-	if (fwd_ts <= chVTGetSystemTimeX()) {
+	if (deadlineReached(fwd_ts, chVTGetSystemTimeX())) {
 		update_status = true;
 		if (fwd_feed() == 0) {
 			fwd_ts = chTimeAddX(chVTGetSystemTimeX(), TIME_MS2I(FWD_PERIOD_MS));
@@ -768,12 +781,12 @@ int Tle8888::wd_feed() {
 	}
 }
 
-int Tle8888::calc_sleep_interval() {
+sysinterval_t Tle8888::calc_sleep_interval() {
 	systime_t now = chVTGetSystemTimeX();
 
-	sysinterval_t wwd_delay = chTimeDiffX(now, wwd_ts);
-	sysinterval_t fwd_delay = chTimeDiffX(now, fwd_ts);
-	sysinterval_t diag_delay = chTimeDiffX(now, diag_ts);
+	sysinterval_t wwd_delay = timeUntil(wwd_ts, now);
+	sysinterval_t fwd_delay = timeUntil(fwd_ts, now);
+	sysinterval_t diag_delay = timeUntil(diag_ts, now);
 
 	if ((diag_delay <= wwd_delay) && (diag_delay <= fwd_delay)) {
 		return diag_delay;
@@ -793,6 +806,13 @@ static THD_FUNCTION(tle8888_driver_thread, p) {
 	sysinterval_t poll_interval = 0;
 
 	chRegSetThreadName(DRIVER_NAME);
+
+	// Everything is due immediately. Start from the current time rather than zero, which
+	// would read as far in the future if the driver starts more than ~12 hours after boot.
+	systime_t now = chVTGetSystemTimeX();
+	chip->wwd_ts = now;
+	chip->fwd_ts = now;
+	chip->diag_ts = now;
 
 	while (1) {
 		int ret;
@@ -837,7 +857,7 @@ static THD_FUNCTION(tle8888_driver_thread, p) {
 			chip->update_output();
 		}
 
-		if (chip->diag_ts <= chVTGetSystemTimeX()) {
+		if (deadlineReached(chip->diag_ts, chVTGetSystemTimeX())) {
 			/* this is expensive call, will do a lot of spi transfers... */
 			ret = chip->update_status_and_diag();
 			if (ret) {

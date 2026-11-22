@@ -48,7 +48,7 @@
 #define HONDA_SPEED_158 0x158
 #define HONDA_TACH_1DC 0x1DC
 
-static time_msecs_t mph_timer;
+static Timer mph_timer;
 static time_msecs_t mph_ctr;
 
 /**
@@ -544,7 +544,8 @@ void canDashboardBMWE90(CanCycle cycle) {
 		{ // E90_SPEED
 			auto vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
 			float mph = vehicleSpeed * 0.6213712;
-			mph_ctr = ((TIME_I2MS(chVTGetSystemTime()) - mph_timer) / 50);
+			// number of elapsed 50ms periods since the last message
+			mph_ctr = (time_msecs_t)(mph_timer.getElapsedSecondsAndReset(getTimeNowNt()) * 20);
 			mph_a = (mph_ctr * mph / 2);
 			mph_2a = mph_a + mph_last;
 			mph_last = mph_2a;
@@ -552,7 +553,6 @@ void canDashboardBMWE90(CanCycle cycle) {
 			if (mph_counter >= 0xFFF0) {
 				mph_counter = 0xF000;
 			}
-			mph_timer = TIME_I2MS(chVTGetSystemTime());
 			CanTxMessage msg(E90_SPEED, 8);
 			msg[0] = mph_2a & 0xFF;
 			msg[1] = mph_2a >> 8;
