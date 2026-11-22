@@ -8,7 +8,9 @@ class LuaHandle final {
 public:
 	LuaHandle()
 		: LuaHandle(nullptr) {}
-	LuaHandle(lua_State* ptr)
+
+	// Explicit avoids unnecessary capturing
+	explicit LuaHandle(lua_State* ptr)
 		: m_ptr(ptr) {}
 
 	// Don't allow copying!
@@ -23,9 +25,12 @@ public:
 
 	// Move assignment operator
 	LuaHandle& operator=(LuaHandle&& rhs) {
-		m_ptr = rhs.m_ptr;
-		rhs.m_ptr = nullptr;
-
+		if (this != &rhs) {
+			// Swapping pointer is neccessary, otherwise leak
+			auto temp = m_ptr;
+			m_ptr = rhs.m_ptr;
+			rhs.m_ptr = temp;
+		}
 		return *this;
 	}
 
