@@ -62,6 +62,7 @@ or
  - Wi-Fi DHCP hostname setting (default `fome-efi`), so the ECU is reachable by name instead of by IP address on networks where the router maps hostnames to addresses
  - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
  - Rev limiter table with selectable X and Y inputs, including oil temperature, ethanol content, and gear. When used with the CLT-based limiter, the lower RPM limit applies.
+ - Cranking fuel can start as soon as the engine starts to turn, instead of waiting for trigger sync: enable "Start fuel on first motion" in the cranking fuel settings. The first cranking cycle's fuel goes in on all injectors at once a few trigger teeth after the engine starts moving, so it's already in the ports for the first intake strokes, and the cranking injections after sync carry on from the second value of the cranking duration multiplier. This can take a few tenths of a second off a start. The "Fuel: First motion pulse" datalog channel shows when it fired.
  - "MAF maximum load" curve: the most cylinder filling the MAF is allowed to read, against RPM, as % of an ideal cylinder at baro pressure and IAT. MAF/RPM can read far more air than the engine can hold on a sharp tip-in or when a start dies, which over-fuels or floods it. The default never limits. The "Air: MAF airmass limited" datalog channel shows when it's active.
 
 

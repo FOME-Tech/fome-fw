@@ -44,6 +44,7 @@
 #include "sensor_checker.h"
 #include "fuel_schedule.h"
 #include "prime_injection.h"
+#include "first_motion_injection.h"
 #include "throttle_model.h"
 #include "lambda_monitor.h"
 #include "vvt.h"
@@ -208,6 +209,7 @@ public:
 			Mockable<IgnitionController>,
 			Mockable<AcController>,
 			PrimeController,
+			FirstMotionInjection,
 			DfcoController,
 			HarleyAcr,
 			Mockable<WallFuelController>,

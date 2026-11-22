@@ -434,6 +434,7 @@ bit is_enabled_spi_6
 bit max31855enable
 bit enableTorqueModel
 bit enableTractionControl
+bit crankingFuelOnFirstMotion;Start cranking fuel as soon as the engine starts to turn, instead of waiting for trigger sync. The first cranking cycle's fuel (the first value of the cranking duration multiplier) is injected on all injectors at once a few trigger teeth after the engine starts moving. The cranking injections after trigger sync then use the following values of the cranking duration multiplier.
 
 int16_t tpsMin;Closed throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
 int16_t tpsMax;Full throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0

@@ -402,7 +402,11 @@ percent_t getFuelALSCorrection(float rpm) {
  * @return Duration of fuel injection while craning
  */
 float getCrankingFuel(float baseFuel) {
-	return getCrankingFuel3(baseFuel, engine->rpmCalculator.getRevolutionCounterSinceStart());
+	// If the first cranking cycle was already injected when the engine started to move, carry on from the next one
+	uint32_t cycle = engine->rpmCalculator.getRevolutionCounterSinceStart() +
+					 engine->module<FirstMotionInjection>()->getCrankingCycleOffset();
+
+	return getCrankingFuel3(baseFuel, cycle);
 }
 
 /**

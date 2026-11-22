@@ -34,6 +34,7 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_injection_scheduling.cpp \
 	tests/ignition_injection/injection_mode_transition.cpp \
 	tests/ignition_injection/test_injection_mode_transition_fueling.cpp \
+	tests/ignition_injection/test_first_motion_injection.cpp \
 	tests/ignition_injection/test_injection_outputs.cpp \
 	tests/ignition_injection/test_spark_outputs.cpp \
 	tests/ignition_injection/test_startOfCrankingPrimingPulse.cpp \

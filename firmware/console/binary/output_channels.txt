@@ -30,6 +30,7 @@ struct_no_prefix output_channels_s
 	bit isUsbConnected;isUsbConnected\nOriginal reason for this is to check if USB is connected from Lua
 	bit dfcoActive;DFCO: Active
 	bit mafAirmassLimited;Air: MAF airmass limited
+	bit crankingFirstMotionPulse;Fuel: First motion pulse\nThe first cranking cycle was injected when the engine started to turn
 
 
 	uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0

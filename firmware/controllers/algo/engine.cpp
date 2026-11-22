@@ -212,6 +212,10 @@ void Engine::resetLua() {
 #if EFI_SHAFT_POSITION_INPUT
 void Engine::OnTriggerStateProperState(efitick_t nowNt) {
 	rpmCalculator.setSpinningUp(nowNt);
+
+#if EFI_ENGINE_CONTROL
+	module<FirstMotionInjection>()->onTriggerTooth();
+#endif // EFI_ENGINE_CONTROL
 }
 
 void Engine::OnTriggerSynchronizationLost() {
