@@ -239,6 +239,222 @@ TEST(AirmassModes, MafMaxLoadDefaultDoesNotLimit) {
 	EXPECT_FALSE(engine->outputChannels.mafAirmassLimited);
 }
 
+// Intake manifold filter tests: 2.0L 4 cylinder, time constant 600 / RPM seconds
+class MafAirmassFilter : public ::testing::Test {
+protected:
+	void SetUp() override {
+		engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+		engineConfiguration->displacement = 2.0f;
+		setCylinderCount(4);
+		engineConfiguration->mafFilterParameter = 600;
+	}
+
+	// MAF flow (kg/h) that reads as this per-cylinder airmass (g) at this RPM
+	static float flowFor(float airmass, float rpm) {
+		return airmass * 2 * (rpm / 60) * 3.6f;
+	}
+
+	// Run the fuel calculation's update of the airmass model for this long, at the fast callback rate
+	float runFor(float seconds, float rpm, float flow) {
+		Sensor::setMockValue(SensorType::Maf, flow);
+
+		float result = 0;
+		int steps = seconds * 1000 / FAST_CALLBACK_PERIOD_MS;
+		for (int i = 0; i < steps; i++) {
+			advanceTimeUs(FAST_CALLBACK_PERIOD_MS * 1000);
+			result = dut.getAirmass(rpm, true).value_or(AirmassResult{-1, 0}).CylinderAirmass;
+		}
+
+		return result;
+	}
+
+	EngineTestHelper eth{engine_type_e::FORD_ASPIRE_1996};
+	MafAirmass dut;
+};
+
+TEST_F(MafAirmassFilter, StartsFromFirstMeasurement) {
+	Sensor::setMockValue(SensorType::Maf, flowFor(0.3f, 200));
+	EXPECT_NEAR(0.3f, dut.getAirmass(200, true).value_or(AirmassResult{}).CylinderAirmass, 1e-4);
+}
+
+TEST_F(MafAirmassFilter, TimeConstantIsParameterOverRpm) {
+	runFor(0.1f, 600, flowFor(0.2f, 600));
+
+	// Step to 0.4g at 600 rpm: 1 second time constant, so 1 - 1/e of the way after 1 second
+	float expected = 0.2f + 0.2f * (1 - expf(-1));
+	EXPECT_NEAR(expected, runFor(1, 600, flowFor(0.4f, 600)), 0.002f);
+
+	// Settles on the measurement
+	EXPECT_NEAR(0.4f, runFor(10, 600, flowFor(0.4f, 600)), 1e-4);
+}
+
+TEST_F(MafAirmassFilter, RpmRiseHoldsAirmass) {
+	// Cranking at 200 rpm, manifold full: 0.3g per cylinder
+	runFor(1, 200, flowFor(0.3f, 200));
+
+	// The engine catches: RPM jumps 6x, but the flow past the throttle hasn't changed, so the
+	// MAF alone says 0.05g per cylinder. The manifold is still full, so the airmass can't drop
+	// that fast.
+	float flow = flowFor(0.3f, 200);
+	EXPECT_NEAR(0.05f, dut.getAirmassImpl(flow, 1200).value_or(AirmassResult{}).CylinderAirmass, 1e-4);
+
+	float afterOneStep = runFor(FAST_CALLBACK_PERIOD_MS / 1000, 1200, flow);
+	EXPECT_NEAR(0.3f, afterOneStep, 0.003f);
+
+	// ...then it empties with a 600 / 1200 = 0.5 second time constant
+	float expected = 0.05f + 0.25f * expf(-1);
+	EXPECT_NEAR(expected, runFor(0.5f, 1200, flow), 0.003f);
+}
+
+TEST_F(MafAirmassFilter, RpmDropDoesntOverRead) {
+	// Running at 1000 rpm, 0.1g per cylinder
+	runFor(5, 1000, flowFor(0.1f, 1000));
+
+	// The engine dies to 50 rpm while the MAF still reads the old flow: MAF alone says 2g
+	float flow = flowFor(0.1f, 1000);
+	EXPECT_NEAR(2.0f, dut.getAirmassImpl(flow, 50).value_or(AirmassResult{}).CylinderAirmass, 1e-3);
+
+	// The filter barely moves at 50 rpm (12 second time constant)
+	EXPECT_NEAR(0.1f + 1.9f * (1 - expf(-0.1f / 12)), runFor(0.1f, 50, flow), 0.002f);
+}
+
+TEST_F(MafAirmassFilter, ResetWhenStopped) {
+	runFor(1, 600, flowFor(0.2f, 600));
+
+	Sensor::setMockValue(SensorType::Maf, flowFor(0.2f, 600));
+	EXPECT_FALSE(dut.getAirmass(0, true).Valid);
+
+	// Starts over from the next measurement
+	Sensor::setMockValue(SensorType::Maf, flowFor(0.5f, 200));
+	advanceTimeUs(FAST_CALLBACK_PERIOD_MS * 1000);
+	EXPECT_NEAR(0.5f, dut.getAirmass(200, true).value_or(AirmassResult{}).CylinderAirmass, 1e-4);
+}
+
+TEST_F(MafAirmassFilter, OtherCallersDontAdvanceFilter) {
+	runFor(1, 600, flowFor(0.2f, 600));
+
+	// Lua asking for airmass sees the filtered value, and doesn't move the filter
+	Sensor::setMockValue(SensorType::Maf, flowFor(0.4f, 600));
+	for (int i = 0; i < 100; i++) {
+		advanceTimeUs(FAST_CALLBACK_PERIOD_MS * 1000);
+		EXPECT_NEAR(0.2f, dut.getAirmass(600, false).value_or(AirmassResult{}).CylinderAirmass, 1e-4);
+	}
+
+	// The next fuel calculation catches up for all the time since the last one
+	advanceTimeUs(FAST_CALLBACK_PERIOD_MS * 1000);
+	float elapsed = 101 * FAST_CALLBACK_PERIOD_MS / 1000;
+	float alpha = elapsed * 600 / 600;
+	EXPECT_NEAR(0.2f + 0.2f * alpha, dut.getAirmass(600, true).value_or(AirmassResult{}).CylinderAirmass, 1e-4);
+}
+
+TEST_F(MafAirmassFilter, ZeroParameterDisablesFilter) {
+	engineConfiguration->mafFilterParameter = 0;
+
+	runFor(1, 600, flowFor(0.2f, 600));
+	EXPECT_NEAR(0.4f, runFor(FAST_CALLBACK_PERIOD_MS / 1000, 600, flowFor(0.4f, 600)), 1e-4);
+}
+
+TEST_F(MafAirmassFilter, MaxLoadLimitsFilterInput) {
+	setArrayValues(config->mafMaxLoad, 100);
+	Sensor::setMockValue(SensorType::BarometricPressure, 100);
+	Sensor::setMockValue(SensorType::Iat, 20);
+	float maxAirmass = idealGasLaw(0.5f, 100, 273.15f + 20);
+
+	runFor(1, 3000, flowFor(0.2f, 3000));
+
+	// A long spike well over the limit only pulls the filter up to the limit
+	EXPECT_NEAR(maxAirmass, runFor(10, 3000, flowFor(5.0f, 3000)), 1e-4);
+	EXPECT_TRUE(engine->outputChannels.mafAirmassLimited);
+}
+
+// Logged starts, 2.5L 4 cylinder E85, CLT 5.6C: RPM and unfiltered MAF (kg/h) every 40ms
+struct MafLogSample {
+	float rpm;
+	float maf;
+};
+
+// Cranking, then the engine catches and flares to 2250 rpm
+static const MafLogSample mafLogCatch[] = {
+		{162, 7.8f},   {214, 7.6f},	  {256, 7.6f},	 {200, 9.2f},	{221, 9.0f},   {248, 8.0f},	  {212, 8.8f},
+		{184, 9.7f},   {227, 8.8f},	  {225, 8.4f},	 {194, 9.6f},	{205, 9.5f},   {252, 8.3f},	  {217, 9.0f},
+		{188, 9.7f},   {450, 9.1f},	  {394, 10.4f},	 {602, 11.1f},	{600, 12.2f},  {716, 13.8f},  {874, 15.2f},
+		{999, 17.2f},  {1230, 20.2f}, {1353, 21.8f}, {1520, 24.1f}, {1681, 25.2f}, {1832, 26.2f}, {1943, 26.8f},
+		{2033, 27.3f}, {2112, 27.8f}, {2173, 28.1f}, {2214, 28.3f}, {2246, 28.4f}, {2263, 28.4f}, {2255, 28.4f},
+		{2252, 28.9f}, {2231, 28.8f}, {2208, 28.8f}, {2164, 29.2f}, {2136, 29.3f}, {2080, 29.3f}, {2015, 29.4f},
+		{1943, 29.8f}, {1900, 29.9f}, {1807, 30.3f}, {1746, 30.3f}};
+
+// A weak catch that dies: RPM falls to 55 while the MAF reading lags
+static const MafLogSample mafLogStall[] = {
+		{296, 7.4f},  {263, 8.3f},	{223, 9.1f},  {452, 9.1f},	{388, 10.3f}, {368, 11.1f}, {276, 12.5f},
+		{418, 12.2f}, {368, 13.4f}, {587, 13.9f}, {551, 14.3f}, {492, 15.5f}, {427, 16.5f}, {571, 16.7f},
+		{525, 17.3f}, {451, 17.7f}, {454, 17.7f}, {345, 18.6f}, {347, 17.8f}, {288, 17.6f}, {176, 18.2f},
+		{174, 16.5f}, {262, 14.4f}, {188, 14.9f}, {145, 14.8f}, {128, 10.5f}, {169, 6.9f},	{149, 5.6f},
+		{133, 4.6f},  {126, 5.2f},	{126, 6.5f},  {126, 6.7f},	{65, 5.5f},	  {64, 6.0f},	{55, 7.1f},
+		{55, 7.6f},	  {55, 7.4f},	{55, 10.2f},  {55, 7.9f},	{55, 6.6f},	  {55, 6.2f}};
+
+class MafAirmassLogReplay : public MafAirmassFilter {
+protected:
+	void SetUp() override {
+		MafAirmassFilter::SetUp();
+		engineConfiguration->displacement = 2.494f;
+		engineConfiguration->mafFilterParameter = 160;
+	}
+
+	struct Result {
+		float filtered;
+		float unfiltered;
+	};
+
+	// Hold each 40ms log sample for 10 fast callbacks
+	template <size_t N>
+	std::vector<Result> replay(const MafLogSample (&log)[N]) {
+		std::vector<Result> results;
+		for (auto& sample : log) {
+			float filtered = runFor(0.04f, sample.rpm, sample.maf);
+			float unfiltered = dut.getAirmassImpl(sample.maf, sample.rpm).value_or(AirmassResult{}).CylinderAirmass;
+			results.push_back({filtered, unfiltered});
+		}
+		return results;
+	}
+};
+
+TEST_F(MafAirmassLogReplay, Catch) {
+	auto results = replay(mafLogCatch);
+
+	float crankingAirmass = results[0].filtered;
+
+	for (size_t i = 0; i < results.size(); i++) {
+		// Never more than the cylinder held while cranking, with the manifold full
+		EXPECT_LE(results[i].filtered, crankingAirmass * 1.05f) << i;
+	}
+
+	// The first 0.2 seconds after reaching 600 rpm: the manifold is still emptying, so the MAF
+	// alone reads under half the airmass
+	for (size_t i = 17; i <= 22; i++) {
+		EXPECT_GT(results[i].filtered, 1.4f * results[i].unfiltered) << i;
+	}
+
+	// Settled at 2000 rpm: filter has caught up with the MAF
+	EXPECT_NEAR(results.back().unfiltered, results.back().filtered, 0.1f * results.back().unfiltered);
+}
+
+TEST_F(MafAirmassLogReplay, Stall) {
+	auto results = replay(mafLogStall);
+
+	float maxFiltered = 0;
+	float maxUnfiltered = 0;
+	for (auto& r : results) {
+		maxFiltered = std::max(maxFiltered, r.filtered);
+		maxUnfiltered = std::max(maxUnfiltered, r.unfiltered);
+	}
+
+	// The MAF alone says over 1g per cylinder at 55 rpm, more than the cylinder can hold
+	EXPECT_GT(maxUnfiltered, 1.0f);
+
+	// The filtered airmass stays around what the cylinder held while running
+	EXPECT_LT(maxFiltered, 0.5f);
+}
+
 TEST(AirmassModes, MafFailed) {
 	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
 	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;

@@ -116,7 +116,6 @@ TESTS_SRC_CPP = \
 	tests/sensor/test_turbocharger_speed_converter.cpp \
 	tests/sensor/test_vehicle_speed_converter.cpp \
 	tests/sensor/test_flex_sensor_converter.cpp \
-	tests/sensor/test_maf_filter.cpp \
 	tests/actuators/test_antilag.cpp \
 	tests/actuators/test_boost.cpp \
 	tests/actuators/test_dc_motor.cpp \
