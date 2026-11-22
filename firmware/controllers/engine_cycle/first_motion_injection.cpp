@@ -58,7 +58,7 @@ void FirstMotionInjection::fire() {
 	// Open and close are scheduled together or not at all, so the injectors can't be left open
 	TimedAction actions[] = {
 			{startTime, {&startInjection, ctx}},
-			{startTime + MSF2NT(durationMs), {&endInjection, ctx}},
+			{startTime + (uint32_t)MSF2NT(durationMs), {&endInjection, ctx}},
 	};
 
 	if (getScheduler()->scheduleTogether("first motion inj", actions, efi::size(actions))) {
