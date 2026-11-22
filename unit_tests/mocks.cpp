@@ -21,7 +21,10 @@ MockPwm::~MockPwm() {}
 MockOutputPin::MockOutputPin() {}
 MockOutputPin::~MockOutputPin() {}
 
-MockExecutor::MockExecutor() {}
+MockExecutor::MockExecutor() {
+	// Scheduling succeeds unless a test says otherwise
+	ON_CALL(*this, schedule).WillByDefault(::testing::Return(true));
+}
 MockExecutor::~MockExecutor() {}
 
 MockAirmass::MockAirmass()

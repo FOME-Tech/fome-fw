@@ -11,6 +11,10 @@
 
 extern bool printFuelDebug;
 
+// Durations under 50us-ish aren't safe for the scheduler as their order may be swapped, resulting in a stuck open
+// injector, see https://github.com/rusefi/rusefi/pull/596 for more details
+static constexpr floatms_t minInjectionDurationMs = 0.050f;
+
 void startInjection(InjectorContext ctx) {
 	forEachSetBit(ctx.outputsMask, [&ctx](size_t idx) {
 		enginePins.injectors[idx].open();
@@ -31,13 +35,22 @@ void endInjection(InjectorContext ctx) {
 		// Zero out the split duration so it doesn't repeat
 		ctx.splitDurationUs = 0;
 
-		getScheduler()->schedule("split inj", nullptr, openTime, {&startInjection, ctx});
-		getScheduler()->schedule("split inj", nullptr, closeTime, {endInjection, ctx});
-	} else {
-		// No splits remaining, prepare for next cycle
-		if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
-			getFuelSchedule()->elements[ctx.eventIndex].update();
+		TimedAction secondHalf[] = {
+				{openTime, {&startInjection, ctx}},
+				{closeTime, {&endInjection, ctx}},
+		};
+
+		if (getScheduler()->scheduleTogether("split inj", secondHalf, efi::size(secondHalf))) {
+			// The second half's end prepares for the next cycle
+			return;
 		}
+
+		// Couldn't schedule the second half: carry on as if it was done
+	}
+
+	// No splits remaining, prepare for next cycle
+	if (ctx.eventIndex < efi::size(getFuelSchedule()->elements)) {
+		getFuelSchedule()->elements[ctx.eventIndex].update();
 	}
 }
 
@@ -171,10 +184,7 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 	}
 
 	// If somebody commanded an impossibly short injection, do nothing.
-	// Durations under 50us-ish aren't safe for the scheduler
-	// as their order may be swapped, resulting in a stuck open injector
-	// see https://github.com/rusefi/rusefi/pull/596 for more details
-	if (injectionDurationStage1 < 0.050f) {
+	if (injectionDurationStage1 < minInjectionDurationMs) {
 		return;
 	}
 
@@ -208,19 +218,23 @@ void InjectionEvent::onTriggerTooth(const EnginePhaseInfo& phase) {
 		angleFromNow += getEngineState()->engineCycle;
 	}
 
-	// Schedule opening (stage 1 + stage 2 open together)
-	efitick_t startTime = scheduleByAngle(nullptr, phase.timestamp, angleFromNow, {&startInjection, ctx});
+	// Opening (stage 1 + stage 2 open together), closing stage 1, and closing stage 2 if applicable.
+	// These are scheduled all together or not at all: an opening without its closing would leave the
+	// injector open.
+	efitick_t startTime = getTimeAfterAngle(phase.timestamp, angleFromNow);
 
-	// Schedule closing stage 1
-	efidur_t durationStage1Nt = US2NT((int)durationUsStage1);
-	efitick_t turnOffTimeStage1 = startTime + durationStage1Nt;
+	TimedAction actions[3] = {
+			{startTime, {&startInjection, ctx}},
+			{startTime + US2NT((int)durationUsStage1), {&endInjection, ctx}},
+	};
+	size_t actionCount = 2;
 
-	getScheduler()->schedule("inj", nullptr, turnOffTimeStage1, {&endInjection, ctx});
-
-	// Schedule closing stage 2 (if applicable)
 	if (hasStage2Injection) {
-		efitick_t turnOffTimeStage2 = startTime + US2NT((int)durationUsStage2);
-		getScheduler()->schedule("inj stage 2", nullptr, turnOffTimeStage2, {&endInjectionStage2, ctx});
+		actions[actionCount++] = {startTime + US2NT((int)durationUsStage2), {&endInjectionStage2, ctx}};
+	}
+
+	if (!getScheduler()->scheduleTogether("inj", actions, actionCount)) {
+		return;
 	}
 
 #if EFI_UNIT_TEST
@@ -244,6 +258,10 @@ WallFuel& InjectionEvent::getWallFuel() {
 
 void FuelSchedule::invalidate() {
 	isReady = false;
+
+	for (auto& element : elements) {
+		element.forgetStartAngle();
+	}
 }
 
 // Determines how much to adjust injection opening angle based on the injection's duration and the current phasing mode
@@ -314,8 +332,15 @@ bool InjectionEvent::updateInjectionAngle(injection_mode_e mode) {
 	if (auto result = engine->cylinders[cylinderNumber].computeInjectionAngle(mode)) {
 		// If injector duty cycle is high, lock injection SOI so that we
 		// don't miss injections at or above 100% duty
-		if (getEngineState()->shouldUpdateInjectionTiming) {
+		bool lockForHighDuty = !getEngineState()->shouldUpdateInjectionTiming;
+
+		// With no fuel (fuel cut), the angle would be worked out for a pulse of no length, so the first pulse
+		// after the cut would end a whole pulse late. Keep the angle from the last real pulse instead.
+		bool noFuel = getEngineState()->injectionDuration < minInjectionDurationMs;
+
+		if (!m_hasStartAngle || !(lockForHighDuty || noFuel)) {
 			injectionStartAngle = result.Value;
+			m_hasStartAngle = true;
 		}
 
 		return true;

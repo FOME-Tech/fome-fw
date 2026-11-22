@@ -319,10 +319,13 @@ void DtcDebouncer::reset() {
 	}
 }
 
+// A code set to "Ignore" is suppressed entirely: no warning, and no DTC.
+static bool isIgnored(ObdCode code) {
+	return getSeverityForCode(code) == DtcSeverity::Ignore;
+}
+
 static void handleCodeSeverity(DtcDebouncer& debounce, ObdCode code) {
-	// Determine what to do about this particular code
-	auto severity = getSeverityForCode(code);
-	if (severity == DtcSeverity::Ignore) {
+	if (isIgnored(code)) {
 		return;
 	}
 
@@ -338,7 +341,7 @@ static bool check(DtcDebouncer& debounce, SensorResult result, ObdCode code, con
 		return true;
 	}
 
-	if (code != ObdCode::None) {
+	if (code != ObdCode::None && !isIgnored(code)) {
 		warning(code, "Sensor fault: %s %s", name, describeUnexpected(result.Code));
 
 		// Determine what to do about this particular code
@@ -648,10 +651,12 @@ void SensorChecker::onSlowCallback() {
 		if (diag != PIN_OK && diag != PIN_INVALID) {
 			auto code = getCodeForInjector(i, diag);
 
-			char description[32];
-			pinDiag2string(description, efi::size(description), diag);
-			warning(code, "Injector %d fault: %s", i + 1, description);
-			handleCodeSeverity(debounce, code);
+			if (!isIgnored(code)) {
+				char description[32];
+				pinDiag2string(description, efi::size(description), diag);
+				warning(code, "Injector %d fault: %s", i + 1, description);
+				handleCodeSeverity(debounce, code);
+			}
 
 			anyInjectorHasProblem |= true;
 		}
@@ -671,10 +676,12 @@ void SensorChecker::onSlowCallback() {
 		if (diag != PIN_OK && diag != PIN_INVALID) {
 			auto code = getCodeForIgnition(i, diag);
 
-			char description[32];
-			pinDiag2string(description, efi::size(description), diag);
-			warning(code, "Ignition %d fault: %s", i + 1, description);
-			handleCodeSeverity(debounce, code);
+			if (!isIgnored(code)) {
+				char description[32];
+				pinDiag2string(description, efi::size(description), diag);
+				warning(code, "Ignition %d fault: %s", i + 1, description);
+				handleCodeSeverity(debounce, code);
+			}
 
 			anyIgnHasProblem |= true;
 		}

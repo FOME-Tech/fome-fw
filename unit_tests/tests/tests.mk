@@ -23,6 +23,8 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_real_k20.cpp \
 	tests/trigger/test_toyota_3_tooth_cam.cpp \
 	tests/trigger/test_real_noisy_trigger.cpp \
+	tests/trigger/test_engine_invariants.cpp \
+	tests/trigger/test_trigger_error_recovery.cpp \
 	tests/trigger/test_map_cam.cpp \
 	tests/trigger/test_rpm_multiplier.cpp \
 	tests/trigger/test_instant_rpm_auto.cpp \
@@ -32,6 +34,8 @@ TESTS_SRC_CPP = \
 	tests/trigger/test_injection_scheduling.cpp \
 	tests/ignition_injection/injection_mode_transition.cpp \
 	tests/ignition_injection/test_injection_mode_transition_fueling.cpp \
+	tests/ignition_injection/test_injection_outputs.cpp \
+	tests/ignition_injection/test_spark_outputs.cpp \
 	tests/ignition_injection/test_startOfCrankingPrimingPulse.cpp \
 	tests/ignition_injection/test_multispark.cpp \
 	tests/ignition_injection/test_ignition_scheduling.cpp \

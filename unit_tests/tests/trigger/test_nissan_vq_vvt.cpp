@@ -50,6 +50,12 @@ static void scheduleTriggerEvents(
 		for (size_t i = 0; i < shape->getSize(); i++) {
 			float angle = vvtOffset + shape->getAngle(totalIndex);
 
+			if (angle < 0) {
+				// Before the start of the test: a real engine can't deliver an edge before time zero
+				totalIndex++;
+				continue;
+			}
+
 			std::shared_ptr<TriggerCallback> param = std::make_shared<TriggerCallback>();
 			ptrs.push_back(param);
 

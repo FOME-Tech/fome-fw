@@ -355,6 +355,8 @@ const char* NamedOutputPin::getShortName() const {
 
 #if EFI_UNIT_TEST
 extern bool verboseMode;
+
+std::function<void(OutputPin& pin, bool logicValue)> unitTestOutputPinObserver;
 #endif // EFI_UNIT_TEST
 
 void NamedOutputPin::setHigh() {
@@ -442,6 +444,10 @@ void OutputPin::setValue(int logicValue) {
 
 #if EFI_UNIT_TEST
 	unitTestTurnedOnCounter++;
+
+	if (unitTestOutputPinObserver) {
+		unitTestOutputPinObserver(*this, logicValue != 0);
+	}
 
 	if (verboseMode) {
 		efiPrintf("pin goes %d", logicValue);

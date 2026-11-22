@@ -89,8 +89,9 @@ struct output_channels_s {
 	// DFCO: Active
 	// offset 0 bit 23
 	bool dfcoActive : 1 {};
+	// Air: MAF airmass limited
 	// offset 0 bit 24
-	bool unusedBit_0_24 : 1 {};
+	bool mafAirmassLimited : 1 {};
 	// offset 0 bit 25
 	bool unusedBit_0_25 : 1 {};
 	// offset 0 bit 26
@@ -628,38 +629,44 @@ struct output_channels_s {
 	// ratio
 	// offset 504
 	scaled_channel<uint16_t, 1000, 1> dwellAccuracyRatio = (uint16_t)0;
-	// MAF: Pre-filter
-	// kg/h
-	// offset 506
-	scaled_channel<uint16_t, 10, 1> mafMeasured_preFilter = (uint16_t)0;
 	// rpm
-	// offset 508
+	// offset 506
 	uint16_t cylinderRpm[12];
 	// rpm
-	// offset 532
+	// offset 530
 	int8_t cylinderRpmDelta[12];
 	// Boost cut: X axis
-	// offset 544
+	// offset 542
 	scaled_channel<int16_t, 10, 1> boostCutXAxisValue = (int16_t)0;
 	// Boost cut: Y axis
-	// offset 546
+	// offset 544
 	scaled_channel<int16_t, 10, 1> boostCutYAxisValue = (int16_t)0;
 	// Boost cut: target
 	// kPa
-	// offset 548
+	// offset 546
 	uint16_t boostCutTarget = (uint16_t)0;
 	// Clutch position
 	// %
-	// offset 550
+	// offset 548
 	scaled_channel<int16_t, 100, 1> clutchPosition = (int16_t)0;
 	// Raw: Clutch position
 	// V
-	// offset 552
+	// offset 550
 	scaled_channel<int16_t, 1000, 1> rawClutchPosition = (int16_t)0;
+	// Rev limit: X axis
+	// offset 552
+	scaled_channel<int16_t, 10, 1> revLimitXAxisValue = (int16_t)0;
+	// Rev limit: Y axis
 	// offset 554
-	uint8_t alignmentFill_at_554[2];
+	scaled_channel<int16_t, 10, 1> revLimitYAxisValue = (int16_t)0;
+	// Rev limit: target
+	// RPM
+	// offset 556
+	uint16_t revLimitTarget = (uint16_t)0;
+	// offset 558
+	uint8_t alignmentFill_at_558[2];
 };
-static_assert(sizeof(output_channels_s) == 556);
+static_assert(sizeof(output_channels_s) == 560);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
 static_assert(offsetof(output_channels_s, rpmAcceleration) == 6);
 static_assert(offsetof(output_channels_s, coolant) == 8);
@@ -810,11 +817,13 @@ static_assert(offsetof(output_channels_s, veBlendBias) == 484);
 static_assert(offsetof(output_channels_s, veBlendOutput) == 488);
 static_assert(offsetof(output_channels_s, veBlendYAxis) == 496);
 static_assert(offsetof(output_channels_s, dwellAccuracyRatio) == 504);
-static_assert(offsetof(output_channels_s, mafMeasured_preFilter) == 506);
-static_assert(offsetof(output_channels_s, cylinderRpm) == 508);
-static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 532);
-static_assert(offsetof(output_channels_s, boostCutXAxisValue) == 544);
-static_assert(offsetof(output_channels_s, boostCutYAxisValue) == 546);
-static_assert(offsetof(output_channels_s, boostCutTarget) == 548);
-static_assert(offsetof(output_channels_s, clutchPosition) == 550);
-static_assert(offsetof(output_channels_s, rawClutchPosition) == 552);
+static_assert(offsetof(output_channels_s, cylinderRpm) == 506);
+static_assert(offsetof(output_channels_s, cylinderRpmDelta) == 530);
+static_assert(offsetof(output_channels_s, boostCutXAxisValue) == 542);
+static_assert(offsetof(output_channels_s, boostCutYAxisValue) == 544);
+static_assert(offsetof(output_channels_s, boostCutTarget) == 546);
+static_assert(offsetof(output_channels_s, clutchPosition) == 548);
+static_assert(offsetof(output_channels_s, rawClutchPosition) == 550);
+static_assert(offsetof(output_channels_s, revLimitXAxisValue) == 552);
+static_assert(offsetof(output_channels_s, revLimitYAxisValue) == 554);
+static_assert(offsetof(output_channels_s, revLimitTarget) == 556);

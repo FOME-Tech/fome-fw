@@ -21,6 +21,15 @@ static constexpr float kNeutralTimeSec = 1.0f;
 static constexpr float kCoupledTimeSec = 0.5f;
 static constexpr float kCoupledRpmSpan = 0.1f;
 
+// Mismatch check: the ratio counts as steady while it stays within this fraction of where it
+// started, for at least this long, above this speed.
+static constexpr float kSteadyRatioBand = 0.015f;
+static constexpr float kSteadyTimeSec = 2.0f;
+static constexpr float kSteadyMinKph = 30.0f;
+// Flag a mismatch once steady driving has spent this long not locked to any gear, and more time
+// unlocked than locked.
+static constexpr float kMismatchUnlockedSec = 10.0f;
+
 ClutchState decideClutchPosition() {
 	auto position = Sensor::get(SensorType::ClutchPosition);
 	if (!position) {
@@ -54,6 +63,12 @@ GearDetector::~GearDetector() {
 }
 
 void GearDetector::onConfigurationChange(engine_configuration_s const* /*previousConfig*/) {
+	// Any of tire size, final drive, gear ratios or VSS may have changed: start the mismatch check over
+	m_steadyRatio = 0;
+	m_steadyLockedSec = 0;
+	m_steadyUnlockedSec = 0;
+	ratioMismatch = false;
+
 	// Compute gear thresholds between gears
 
 	uint8_t gearCount = engineConfiguration->totalGearsCount;
@@ -122,6 +137,7 @@ void GearDetector::onSlowCallback() {
 	clutchState = static_cast<uint8_t>(clutch);
 
 	updateClutchTrust(clutch, locked);
+	updateRatioMismatch(ratio, raw, locked, clutch);
 
 	if (clutchTrusted) {
 		m_currentGear = determineGearWithClutch(clutch, locked);
@@ -172,6 +188,37 @@ void GearDetector::updateClutchTrust(ClutchState clutch, size_t locked) {
 		case ClutchState::Middle:
 			// Could be slipping or not, tells us nothing.
 			break;
+	}
+}
+
+void GearDetector::updateRatioMismatch(float ratio, size_t raw, size_t locked, ClutchState clutch) {
+	bool clutchMayBeOpen = clutch == ClutchState::Middle || clutch == ClutchState::Disengaged;
+	bool eligible = raw != 0 && !clutchMayBeOpen && Sensor::getOrZero(SensorType::VehicleSpeed) >= kSteadyMinKph;
+
+	if (!eligible) {
+		m_steadyRatio = 0;
+	} else if (m_steadyRatio == 0 || std::abs(ratio / m_steadyRatio - 1) > kSteadyRatioBand) {
+		// Ratio moved: start a new steady span from here
+		m_steadyRatio = ratio;
+		m_steadyTimer.reset();
+	} else if (m_steadyTimer.hasElapsedSec(kSteadyTimeSec)) {
+		constexpr float tickSec = SLOW_CALLBACK_PERIOD_MS / 1000.0f;
+
+		if (locked) {
+			m_steadyLockedSec += tickSec;
+		} else {
+			m_steadyUnlockedSec += tickSec;
+		}
+	}
+
+	ratioMismatch = m_steadyUnlockedSec >= kMismatchUnlockedSec && m_steadyUnlockedSec > m_steadyLockedSec;
+
+	if (ratioMismatch) {
+		// Repeated calls are rate limited, and keep the warning active while the condition holds
+		warning(ObdCode::CUSTOM_GEAR_RATIO_MISMATCH,
+				"Gear detection questionable: ratio %.3f matches no gear. Check tire size, final drive, VSS, "
+				"gear ratios",
+				ratio);
 	}
 }
 

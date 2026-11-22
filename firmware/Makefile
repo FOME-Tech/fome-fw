@@ -190,6 +190,10 @@ endif
 
 ifeq ($(LWIP),yes)
   include $(CHIBIOS)/os/various/lwip_bindings/lwip.mk
+  # ChibiOS' sys_arch.c is replaced by a wrapper with a wrap-safe sys_now(), see net/lwip_sys_arch.c
+  LWIP_REPLACED_CSRC = %/lwip_bindings/arch/sys_arch.c
+  ALLCSRC += $(PROJECT_DIR)/net/lwip_sys_arch.c
+  ALLCPPSRC += $(PROJECT_DIR)/net/lwip_sys_now.cpp
 endif
 
 include $(PROJECT_DIR)/hw_layer/mass_storage/mass_storage.mk
@@ -216,7 +220,7 @@ $(info MODULES_INC:   $(MODULES_INC))
 # setting.
 # gcc_version_check.c goes first to throw error as soon as possible
 CSRC =  gcc_version_check.c \
-  $(ALLCSRC) \
+  $(filter-out $(LWIP_REPLACED_CSRC),$(ALLCSRC)) \
   $(BOARDSRC) \
   $(CHIBIOS_CONTRIB)/os/various/ramdisk.c \
   $(CHIBIOS)/os/various/evtimer.c \
@@ -302,7 +306,7 @@ CPPC = $(TRGT)g++
 # Enable loading with g++ only if you need C++ runtime support.
 # NOTE: You can use C++ even without C++ support if you are careful. C++
 #       runtime support makes code size explode.
-LD   = $(CC)
+LD   = $(PROJECT_DIR)/link_with_memory_report.sh $(CC)
 #LD   = $(CPPC)
 CP   = $(TRGT)objcopy
 AS   = $(CC) -x assembler-with-cpp

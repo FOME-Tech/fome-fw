@@ -12,13 +12,14 @@
 
 #include "pch.h"
 
-#include <set>
+#include "harness/engine_invariants.h"
+
+#include <cmath>
 #include <vector>
 
 namespace {
 
 constexpr float testRpm = 300;
-constexpr int teethPerRev = 36;
 
 enum class Scenario {
 	// Sequential cranking, batch until cam sync, cam syncs while cranking
@@ -27,56 +28,6 @@ enum class Scenario {
 	BatchToSeqRunning,
 	// Simultaneous cranking, sequential running, transition at the end of cranking
 	SimultaneousToSeq,
-};
-
-// Times are as stored by the unit test executor, which keeps scheduled events in microseconds
-struct Pulse {
-	efitick_t start;
-	efitick_t end;
-	uint16_t mask;
-};
-
-class PulseRecorder {
-public:
-	// Record any injections scheduled since the last scan
-	void scan() {
-		auto& sched = engine->scheduler;
-
-		for (int i = 0; i < sched.size(); i++) {
-			auto open = sched.getForUnitTest(i);
-			if (open->action.getCallback() != (void (*)(void*))startInjection) {
-				continue;
-			}
-
-			void* arg = open->action.getArgument();
-			auto key = std::make_pair(open->momentX, (uintptr_t)arg);
-			if (m_seen.count(key)) {
-				continue;
-			}
-			m_seen.insert(key);
-
-			// Find the matching close
-			efitick_t closeTime = 0;
-			for (int j = 0; j < sched.size(); j++) {
-				auto close = sched.getForUnitTest(j);
-				if (close->action.getCallback() == (void (*)(void*))endInjection &&
-					close->action.getArgument() == arg && close->momentX > open->momentX) {
-					if (closeTime == 0 || close->momentX < closeTime) {
-						closeTime = close->momentX;
-					}
-				}
-			}
-			ASSERT_NE(closeTime, 0) << "injection without matching close";
-
-			auto ctx = bit_cast<InjectorContext>(arg);
-			pulses.push_back({open->momentX, closeTime, ctx.outputsMask});
-		}
-	}
-
-	std::vector<Pulse> pulses;
-
-private:
-	std::set<std::pair<efitick_t, uintptr_t>> m_seen;
 };
 
 class TransitionSim {
@@ -126,119 +77,123 @@ public:
 				engineConfiguration->cranking.rpm = 999;
 				break;
 		}
+
+		m_sim = std::make_unique<EngineSim>(eth, &recorder);
 	}
 
-	// Fire one crank revolution: 35 teeth 10 degrees apart, then the missing tooth gap
-	void fireRevolution(int syncAfterTooth = -1, bool wrongGuess = false) {
-		float msPerDegree = 60000.0f / testRpm / 360;
-		float halfTooth = 5 * msPerDegree;
+	// Fit a cam whose tooth arrives camToothAfterSync degrees after a crank sync point, on whichever
+	// of the two crank revolutions makes the firmware's pre-sync guess of engine phase right or wrong
+	void fitCam(float camToothAfterSync, bool wrongGuess) {
+		auto& sim = *m_sim;
 
-		for (int tooth = 0; tooth < teethPerRev - 1; tooth++) {
-			// first tooth after the gap is 15 degrees after the previous fall
-			eth.smartFireRise(tooth == 0 ? 3 * halfTooth : halfTooth);
-			recorder.scan();
-			eth.smartFireFall(halfTooth);
-			recorder.scan();
+		// Stop just after a crank sync point, so the revolution counter isn't about to change under us
+		double sinceSync = std::fmod(sim.angle() - sim.syncAngle(), 360.0);
+		sim.runDegrees(360 - sinceSync + 1);
 
-			if (tooth == syncAfterTooth) {
-				// Pretend the cam just gave us phase. Choose the remainder so the pre-sync guess
-				// was right (no shift) or wrong (360 degree shift).
-				int current = engine->triggerCentral.triggerState.getCrankSynchronizationCounter() % 2;
-				int remainder = wrongGuess ? (1 - current) : current;
-				phaseShift = engine->triggerCentral.syncAndReport(2, remainder);
-			}
+		// The guess is right if the cam tooth lands on an even-numbered revolution
+		bool evenRevolutionNow = engine->triggerCentral.triggerState.getCrankSynchronizationCounter() % 2 == 0;
+		bool wantEvenRevolution = !wrongGuess;
+
+		double revolutionStart = sim.angle() - 1;
+		if (evenRevolutionNow != wantEvenRevolution) {
+			revolutionStart += 360;
 		}
+
+		// The revolution that's already under way has had its chance if the tooth position is behind us
+		if (revolutionStart + camToothAfterSync <= sim.angle()) {
+			revolutionStart += 720;
+		}
+
+		sim.addCam(0, {{(float)std::fmod(revolutionStart + camToothAfterSync, 720.0), 20}});
 	}
 
-	void run(int syncAfterTooth, bool wrongGuess) {
+	void run(float camToothAfterSync, bool wrongGuess) {
+		auto& sim = *m_sim;
+		const auto& decoder = engine->triggerCentral.triggerState;
+
 		// Spin up and run for a while without phase info
-		for (int rev = 0; rev < 6; rev++) {
-			fireRevolution();
-		}
+		sim.setRpm(testRpm);
+		sim.runRevolutions(7);
 
-		ASSERT_TRUE(engine->triggerCentral.triggerState.expectDisambiguation());
-
-		// Sanity check the crank wheel decodes cleanly: one crank sync per revolution
-		{
-			int before = engine->triggerCentral.triggerState.getCrankSynchronizationCounter();
-			fireRevolution();
-			ASSERT_EQ(before + 1, engine->triggerCentral.triggerState.getCrankSynchronizationCounter());
-			ASSERT_NEAR(testRpm, Sensor::getOrZero(SensorType::Rpm), 1);
-		}
+		ASSERT_TRUE(decoder.expectDisambiguation());
+		ASSERT_FALSE(decoder.hasSynchronizedPhase());
+		ASSERT_TRUE(noTriggerErrors(sim));
+		ASSERT_NEAR(testRpm, Sensor::getOrZero(SensorType::Rpm), 1);
 
 		if (m_scenario == Scenario::SimultaneousToSeq) {
 			// Get phase early, then crank for a while before ending cranking
-			fireRevolution(syncAfterTooth, wrongGuess);
-			for (int rev = 0; rev < 4; rev++) {
-				fireRevolution();
-			}
+			fitCam(camToothAfterSync, wrongGuess);
+			sim.runRevolutions(6);
 
+			ASSERT_TRUE(decoder.hasSynchronizedPhase());
 			ASSERT_TRUE(engine->rpmCalculator.isCranking());
 			ASSERT_EQ(IM_SIMULTANEOUS, getCurrentInjectionMode());
-			transitionTime = getTimeNowUs();
+			transitionTime = sim.nowUs();
 
 			// End cranking: next RPM update takes us to running
 			engineConfiguration->cranking.rpm = 100;
 		} else {
 			ASSERT_EQ(IM_BATCH, getCurrentInjectionMode());
-			transitionTime = getTimeNowUs();
+			transitionTime = sim.nowUs();
 
-			// Cam syncs part way through this revolution
-			fireRevolution(syncAfterTooth, wrongGuess);
+			// Cam syncs part way through one of the next revolutions
+			fitCam(camToothAfterSync, wrongGuess);
 		}
 
-		for (int rev = 0; rev < 12; rev++) {
-			fireRevolution();
-		}
+		sim.runRevolutions(16);
+
+		ASSERT_TRUE(decoder.hasSynchronizedPhase());
+		phaseShift = decoder.m_phaseAdjustment;
 
 		ASSERT_EQ(IM_SEQUENTIAL, getCurrentInjectionMode());
 		ASSERT_EQ(m_scenario == Scenario::BatchToSeqCranking, engine->rpmCalculator.isCranking());
+		ASSERT_TRUE(noTriggerErrors(sim));
 
-		// Let the last pulses finish, then make sure nothing is stuck open
-		eth.moveTimeForwardAndInvokeEventsUs(MS2US(1000));
+		// Stop, let the last pulses finish, then make sure nothing is stuck open
+		sim.setRpm(0);
+		sim.runSeconds(1);
+
+		EXPECT_TRUE(allOutputsOff());
 		for (size_t i = 0; i < 4; i++) {
 			EXPECT_EQ(0, enginePins.injectors[i].getOverlappingCounter()) << "injector " << i;
 		}
 	}
 
-	// Fuel (injector open time, in scheduler ticks) received by each injector in each intake window,
+	// Fuel (injector open time, in microseconds) received by each injector in each intake window,
 	// from two cycles before its first sequential pulse to three cycles after
 	std::vector<std::vector<float>> fuelPerWindow(float& fullPulse) const {
 		std::vector<std::vector<float>> result;
 		fullPulse = 0;
 
 		for (int inj = 0; inj < 4; inj++) {
-			uint16_t ownMask = 1 << inj;
+			// What this injector really did, as seen at its pin
+			auto pulses = recorder.pulses(OutputKind::Injector, inj);
 
 			// The last two pulses are steady-state sequential: they give the size of a full cycle of
 			// fuel, and the length of an engine cycle
-			const Pulse* lastSeq = nullptr;
-			const Pulse* prevSeq = nullptr;
-			for (auto& p : recorder.pulses) {
-				if (p.mask == ownMask) {
-					prevSeq = lastSeq;
-					lastSeq = &p;
-				}
-			}
-			EXPECT_NE(prevSeq, nullptr) << "injector " << inj << " never went sequential";
-			if (!prevSeq) {
+			EXPECT_GE(pulses.size(), 2u) << "injector " << inj << " hardly fired";
+			if (pulses.size() < 2) {
 				result.push_back({});
 				continue;
 			}
-			fullPulse = lastSeq->end - lastSeq->start;
-			efidur_t cycle = lastSeq->end - prevSeq->end;
 
-			// First full-size sequential pulse after the transition. A non-sequential pulse can also
-			// drive only this injector, but it will be a fraction of the size.
-			const Pulse* firstSeq = nullptr;
-			for (auto& p : recorder.pulses) {
-				if (p.start > transitionTime && p.mask == ownMask &&
-					std::abs((float)(p.end - p.start) - fullPulse) < 0.02f * fullPulse) {
+			const auto& lastSeq = pulses[pulses.size() - 1];
+			const auto& prevSeq = pulses[pulses.size() - 2];
+
+			fullPulse = lastSeq.endUs - lastSeq.startUs;
+			int64_t cycle = lastSeq.endUs - prevSeq.endUs;
+
+			// First full-size pulse after the transition is the first sequential one: non-sequential
+			// pulses are a fraction of the size
+			const OutputPulse* firstSeq = nullptr;
+			for (const auto& p : pulses) {
+				if (p.startUs > transitionTime &&
+					std::abs((float)(p.endUs - p.startUs) - fullPulse) < 0.02f * fullPulse) {
 					firstSeq = &p;
 					break;
 				}
 			}
-			EXPECT_NE(firstSeq, nullptr);
+			EXPECT_NE(firstSeq, nullptr) << "injector " << inj << " never went sequential";
 			if (!firstSeq) {
 				result.push_back({});
 				continue;
@@ -246,17 +201,17 @@ public:
 
 			// Window boundaries 90 degrees after this injector's own end of injection, so no pulse
 			// lands on a boundary
-			efitick_t anchor = firstSeq->end + cycle / 8;
+			int64_t anchor = firstSeq->endUs + cycle / 8;
 
 			std::vector<float> windows;
 			for (int k = -2; k <= 3; k++) {
-				efitick_t windowStart = anchor + (k - 1) * cycle;
-				efitick_t windowEnd = anchor + k * cycle;
+				int64_t windowStart = anchor + (k - 1) * cycle;
+				int64_t windowEnd = anchor + k * cycle;
 
 				float fuel = 0;
-				for (auto& p : recorder.pulses) {
-					if ((p.mask & ownMask) && p.end > windowStart && p.end <= windowEnd) {
-						fuel += p.end - p.start;
+				for (const auto& p : pulses) {
+					if (p.endUs > windowStart && p.endUs <= windowEnd) {
+						fuel += p.endUs - p.startUs;
 					}
 				}
 				windows.push_back(fuel);
@@ -269,17 +224,18 @@ public:
 	}
 
 	EngineTestHelper eth{engine_type_e::TEST_ENGINE};
-	PulseRecorder recorder;
+	OutputRecorder recorder;
 	angle_t phaseShift = -1;
-	efitick_t transitionTime = 0;
+	int64_t transitionTime = 0;
 
 private:
 	Scenario m_scenario;
+	std::unique_ptr<EngineSim> m_sim;
 };
 
-std::vector<std::vector<float>> runTransition(Scenario scenario, int syncAfterTooth, bool wrongGuess) {
+std::vector<std::vector<float>> runTransition(Scenario scenario, float camToothAfterSync, bool wrongGuess) {
 	TransitionSim sim(scenario);
-	sim.run(syncAfterTooth, wrongGuess);
+	sim.run(camToothAfterSync, wrongGuess);
 
 	EXPECT_FLOAT_EQ(wrongGuess ? 360 : 0, sim.phaseShift) << "phase guess wasn't the case under test";
 
@@ -292,8 +248,8 @@ std::vector<std::vector<float>> runTransition(Scenario scenario, int syncAfterTo
 		for (size_t k = 0; k < windows[inj].size(); k++) {
 			EXPECT_NEAR(fullPulse, windows[inj][k], 0.02f * fullPulse)
 					<< "injector " << inj << " window " << (int)k - 2 << " (0 = first sequential intake)"
-					<< (wrongGuess ? ", wrong phase guess" : ", right phase guess") << ", sync after tooth "
-					<< syncAfterTooth;
+					<< (wrongGuess ? ", wrong phase guess" : ", right phase guess") << ", cam tooth "
+					<< camToothAfterSync << " deg after crank sync";
 		}
 	}
 
@@ -302,16 +258,17 @@ std::vector<std::vector<float>> runTransition(Scenario scenario, int syncAfterTo
 
 void checkRightAndWrongGuessMatch(Scenario scenario) {
 	// Vary where in the cycle phase sync lands relative to the injection events
-	for (int syncAfterTooth : {3, 12, 21, 30}) {
-		auto right = runTransition(scenario, syncAfterTooth, /*wrongGuess=*/false);
-		auto wrong = runTransition(scenario, syncAfterTooth, /*wrongGuess=*/true);
+	for (float camToothAfterSync : {37, 127, 217, 307}) {
+		auto right = runTransition(scenario, camToothAfterSync, /*wrongGuess=*/false);
+		auto wrong = runTransition(scenario, camToothAfterSync, /*wrongGuess=*/true);
 
 		ASSERT_EQ(right.size(), wrong.size());
 		for (size_t inj = 0; inj < right.size(); inj++) {
 			ASSERT_EQ(right[inj].size(), wrong[inj].size());
 			for (size_t k = 0; k < right[inj].size(); k++) {
 				EXPECT_NEAR(right[inj][k], wrong[inj][k], 0.02f * right[inj][k])
-						<< "injector " << inj << " window " << (int)k - 2 << ", sync after tooth " << syncAfterTooth;
+						<< "injector " << inj << " window " << (int)k - 2 << ", cam tooth " << camToothAfterSync
+						<< " deg after crank sync";
 			}
 		}
 	}

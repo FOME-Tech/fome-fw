@@ -29,6 +29,7 @@ struct_no_prefix output_channels_s
 	bit ignitionFault;Error: Ignition Fault
 	bit isUsbConnected;isUsbConnected\nOriginal reason for this is to check if USB is connected from Lua
 	bit dfcoActive;DFCO: Active
+	bit mafAirmassLimited;Air: MAF airmass limited
 
 
 	uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0
@@ -283,7 +284,6 @@ struct_no_prefix output_channels_s
 
 	uint16_t autoscale dwellAccuracyRatio;;"ratio", 0.001, 0, 0, 0, 3
 
-	uint16_t autoscale mafMeasured_preFilter;MAF: Pre-filter;"kg/h",{1/@@PACK_MULT_MASS_FLOW@@}, 0, 0, 0, 1
 
 	uint16_t[12 iterate] cylinderRpm;;"rpm", 1, 0, 0, 0, 0
 	int8_t[12 iterate] cylinderRpmDelta;;"rpm", 1, 0, 0, 0, 0
@@ -291,7 +291,10 @@ struct_no_prefix output_channels_s
 	int16_t autoscale boostCutXAxisValue;Boost cut: X axis;"", 0.1, 0, -3000, 3000, 1
 	int16_t autoscale boostCutYAxisValue;Boost cut: Y axis;"", 0.1, 0, -3000, 3000, 1
 	uint16_t boostCutTarget;Boost cut: target;"kPa", 1, 0, 0, 1000, 0
-
 	int16_t autoscale clutchPosition;@@GAUGE_NAME_CLUTCH_POSITION@@;"%",{1/@@PACK_MULT_PERCENT@@}, 0, 0, 100, 1
 	int16_t autoscale rawClutchPosition;Raw: Clutch position;"V",{1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+
+	int16_t autoscale revLimitXAxisValue;Rev limit: X axis;"", 0.1, 0, -3000, 3000, 1
+	int16_t autoscale revLimitYAxisValue;Rev limit: Y axis;"", 0.1, 0, -3000, 3000, 1
+	uint16_t revLimitTarget;Rev limit: target;"RPM", 1, 0, 0, 20000, 0
 end_struct

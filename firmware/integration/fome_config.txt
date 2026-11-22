@@ -106,7 +106,7 @@ struct_no_prefix persistent_config_s
 
 struct_no_prefix engine_configuration_s
 
-#define BLOCKING_FACTOR 1410
+#define BLOCKING_FACTOR 1408
 
 #define LUA_PWM_COUNT 8
 #define LUA_DIGITAL_INPUT_COUNT 8
@@ -131,6 +131,7 @@ struct_no_prefix engine_configuration_s
 #define TORQUE_CURVE_SIZE 6
 #define CLT_CURVE_SIZE 16
 #define CLT_LIMITER_CURVE_SIZE 4
+#define REV_LIMIT_TABLE_SIZE 4
 #define CRANKING_CLT_IDLE_CURVE_SIZE 8
 #define CLT_CRANKING_CURVE_SIZE 8
 #define IDLE_ADVANCE_CURVE_SIZE 8
@@ -223,6 +224,8 @@ struct_no_prefix engine_configuration_s
 
 #define CAN_VIRTUAL_INPUT_PINS_COUNT 8
 
+#define MAX_SD_LOG_RATE 100
+
 struct stft_cell_cfg_s
 	int8_t maxAdd;Maximum % of fuel possible for fuel trim to add while in this region.;"%", 1, 0, 0, 25, 0
 	int8_t maxRemove;Maximum % of fuel possible for fuel trim to remove while in this region.;"%", 1, 0, -25, 0, 0
@@ -290,7 +293,7 @@ custom pin_output_mode_e 1 bits, U08, @OFFSET@, [0:1], @@pin_output_mode_e_enum@
 #define pin_input_mode_e_enum "DEFAULT", "PULLUP", "PULLDOWN"
 custom pin_input_mode_e 1 bits, U08,	@OFFSET@,	[0:1], @@pin_input_mode_e_enum@@
 
-#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "Lua Gauge 3", "Lua Gauge 4", "Lua Gauge 5", "Lua Gauge 6", "Lua Gauge 7", "Lua Gauge 8", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State"
+#define gppwm_channel_e_enum "Zero", "TPS", "MAP", "CLT", "IAT", "Fuel Load", "Ignition Load", "Aux Temp 1", "Aux Temp 2", "Accel Pedal", "Battery Voltage", "VVT 1 I", "VVT 1 E", "VVT 2 I", "VVT 2 E", "Ethanol (Flex) %", "Aux Linear 1", "Aux Linear 2", "GPPWM Output 1", "GPPWM Output 2", "GPPWM Output 3", "GPPWM Output 4", "Lua Gauge 1", "Lua Gauge 2", "Lua Gauge 3", "Lua Gauge 4", "Lua Gauge 5", "Lua Gauge 6", "Lua Gauge 7", "Lua Gauge 8", "RPM", "Gear (detected)", "Baro pressure", "EGT 1", "EGT 2", "Aux Linear 3", "Aux Linear 4", "Vehicle speed", "Oil pressure", "Oil temp", "AC State", "Clutch position", "Fuel temp", "Fuel level", "ECU temp", "Aux speed 1", "Aux speed 2", "Lateral accel", "Longitudinal accel", "Boost target", "Boost error", "Fuel pressure", "Turbo speed"
 custom gppwm_channel_e 1 bits, U08, @OFFSET@, [0:5], @@gppwm_channel_e_enum@@
 
 custom canBroadcast_e 1 bits, U08, @OFFSET@, [0:1], "none", "first", "second", "both"
@@ -742,7 +745,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	uint8_t flexFuelFailedEthanol;Ethanol content assumed when the flex fuel sensor has failed, and the ECU has never seen a valid reading to remember. Once the sensor has read successfully, that value is stored in backup RAM and used instead of this one.;"%", 1, 0, 0, 100, 0
 
 
-	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, 250, 0
+	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, @@MAX_SD_LOG_RATE@@, 0
 	Gpio debugMapAveraging;
 	output_pin_e starterRelayDisablePin;
 	pin_output_mode_e starterRelayDisablePinMode;On some vehicles we can disable starter once engine is already running
@@ -912,7 +915,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
 	uint16_t tps2SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
 
-	bit unused_widebandOnSecondBus
+	bit revLimitUseTable,"yes","no";If enabled, look up the RPM limit from a table with selectable axes instead of a constant value. When the CLT curve is also enabled, the lower limit applies. Invalid axis readings use 0.
 	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
 	bit useOilPressureSwitch,"Switch","Sensor"
 	bit boardUseTachPullUp,"12v","5v"
@@ -1032,7 +1035,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	
 	int16_t startUpFuelPumpDuration;When ignition is turned on, turn fuel pump on to build fuel pressure;"seconds", 1, 0, 0, 6000, 0
 
-	uint16_t mafFilterParameter;larger value = larger intake manifold volume;"", 1, 0, 0, 10000, 0
+	uint16_t mafFilterParameter;Intake manifold filter for the MAF airmass, time constant is this value divided by RPM, in seconds. Larger value = larger intake manifold volume. Physically, about 120 x manifold volume / (VE x engine displacement). 0 disables the filter.;"", 1, 0, 0, 10000, 0
 
 	float targetVBatt;This is the target battery voltage the alternator PID control will attempt to maintain;"volts", 1, 0, 0, 30, 1
 	uint8_t dfcoRetardDeg;Retard timing by this amount during DFCO. Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"deg", 1, 0, 0, 30, 0
@@ -1659,6 +1662,9 @@ begin_table
 	table_values uint8_t mafTrimTable;;"%", 1, 0, 0, 200, 0
 end_table
 
+uint16_t[8] mafMaxLoadRpmBins;;"RPM", 1, 0, 0, 18000, 0
+uint16_t[8] mafMaxLoad;Maximum cylinder filling the MAF airmass is allowed to read, as % of an ideal cylinder filled at baro pressure (101.325kPa without a baro sensor) and IAT. MAF/RPM can read far more than the cylinder can hold while the intake manifold fills (tip-in) and when RPM falls quickly (a start that dies). Applied before the MAF trim table.;"%", 1, 0, 0, 1000, 0
+
 union
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale lambdaTable;;"lambda", {1/@@PACK_MULT_LAMBDA_CFG@@}, 0, 0.6, 1.5, 2
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale afrTable;;"afr", {1/@@PACK_MULT_AFR_CFG@@}, 0, 0, 25, 1
@@ -1874,6 +1880,15 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 		table_rows num BOOST_CUT_SIZE int16_t autoscale boostCutYBins;;"", 0.1, 0, -3000, 3000, 1
 		table_cols num BOOST_CUT_SIZE int16_t autoscale boostCutXBins;;"", 0.1, 0, -3000, 3000, 1
 		table_values uint16_t boostCutTable;MAP value above which fuel is cut in case of overboost. There is no disable value: to allow unlimited boost in a region, set a value above the range of the MAP sensor.;"kPa (absolute)", 1, 0, 0, 1000, 0
+	end_table
+
+	gppwm_channel_e revLimitXAxis;X axis source for the rev limit table.
+	gppwm_channel_e revLimitYAxis;Y axis source for the rev limit table.
+
+	begin_table
+		table_rows num REV_LIMIT_TABLE_SIZE int16_t autoscale revLimitYBins;;"", 0.1, 0, -3000, 3000, 1
+		table_cols num REV_LIMIT_TABLE_SIZE int16_t autoscale revLimitXBins;;"", 0.1, 0, -3000, 3000, 1
+		table_values uint16_t revLimitTable;RPM limit for the selected axis values. When the CLT curve is enabled, the lower limit applies.;"RPM", 1, 0, 0, 20000, 0
 	end_table
 end_struct
 

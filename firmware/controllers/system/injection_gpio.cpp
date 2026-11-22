@@ -66,3 +66,11 @@ void InjectorOutputPin::close() {
 		m_overlappingCounter = 0;
 	}
 }
+
+bool InjectorOutputPin::stop() {
+	// Any opens still being counted are void once the pin has been forced low. If one of them had lost its
+	// close, keeping the count would leave the injector unable to open ever again.
+	m_overlappingCounter = 0;
+
+	return NamedOutputPin::stop();
+}

@@ -26,6 +26,13 @@ extern "C" {
 };
 #endif
 
+#if STM32_ST_USE_TIMER == 2
+// ChibiOS computes the system timer prescaler with integer division, so a timer clock that
+// isn't an exact multiple of the tick rate would silently make the OS clock run fast.
+static_assert(STM32_TIMCLK1 % CH_CFG_ST_FREQUENCY == 0, "TIM2 clock must be a multiple of CH_CFG_ST_FREQUENCY");
+static_assert(STM32_TIMCLK1 / CH_CFG_ST_FREQUENCY <= 65536, "TIM2 prescaler doesn't fit in 16 bits");
+#endif
+
 #define _2_MHZ 2'000'000
 
 #if EFI_PROD_CODE

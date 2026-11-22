@@ -129,40 +129,36 @@ angle_t TriggerCentral::syncAndReport(int divider, int remainder) {
 	return triggerState.syncEnginePhase(divider, remainder, engineCycle);
 }
 
-static angle_t adjustCrankPhase(int camIndex) {
-	{
-		float rpm = Sensor::getOrZero(SensorType::Rpm);
+/**
+ * Which crank revolution a cam sync event belongs to is decided by which crank revolution it arrives in,
+ * so the decision changes at every crank sync point. A cam tooth close to one of those can land on
+ * either side of it from one cycle to the next (belt flex, a cam phaser moving, or the order the two
+ * events are processed in), and engine phase is then wrong by a crank revolution.
+ * https://github.com/rusefi/rusefi/issues/3269
+ */
+static void checkCamSyncPosition(TrgPhase camPhase, int crankDivider, angle_t engineCycle) {
+	float boundarySpacing = engineCycle / crankDivider;
 
-		float minSyncThreshold = engineConfiguration->minCamPhaseResolveRpm;
-		bool isBelowMinSync = minSyncThreshold != 0 && rpm < minSyncThreshold;
-
-		float maxSyncThreshold = engineConfiguration->maxCamPhaseResolveRpm;
-		bool isAboveMaxSync = maxSyncThreshold != 0 && rpm > maxSyncThreshold;
-
-		if (isBelowMinSync || isAboveMaxSync) {
-			// The user has elected to stop trying to resolve crank phase above/below some RPM.
-			// Maybe their cam sensor only works at low RPM, high RPM, or something.
-			// Anyway, don't try to change crank phase at all, and return that we made no change.
-			return 0;
-		}
+	float sinceBoundary = std::fmod(camPhase.angle, boundarySpacing);
+	if (sinceBoundary < 0) {
+		sinceBoundary += boundarySpacing;
 	}
 
-	operation_mode_e operationMode = getEngineRotationState()->getOperationMode();
+	float fromNearestBoundary = std::min(sinceBoundary, boundarySpacing - sinceBoundary);
 
-	auto crankDivider = getCrankDivider(operationMode);
-	if (crankDivider == 1) {
-		// Crank divider of 1 means there's no ambiguity, so don't try to resolve it
-		return 0;
+	if (fromNearestBoundary < 7) {
+		warning(ObdCode::CUSTOM_VVT_SYNC_POSITION, "VVT sync position too close to trigger sync");
 	}
+}
 
-	TriggerCentral* tc = getTriggerCentral();
-
-	vvt_mode_e vvtMode = engineConfiguration->vvtMode[camIndex];
+// Which crank revolution (modulo the crank divider) the cam sync event is in, or -1 if this cam mode
+// doesn't give engine phase
+static int camSyncRemainder(vvt_mode_e vvtMode) {
 	switch (vvtMode) {
 		case VVT_MAP_V_TWIN:
 		case VVT_MITSUBISHI_4G63:
 		case VVT_MITSUBISHI_4G9x:
-			return tc->syncAndReport(crankDivider, 1);
+			return 1;
 		case VVT_SINGLE_TOOTH:
 		case VVT_NISSAN_VQ:
 		case VVT_BOSCH_QUICK_START:
@@ -180,13 +176,50 @@ static angle_t adjustCrankPhase(int camIndex) {
 		case VVT_HONDA_K_EXHAUST:
 		case VVT_HONDA_K24Z_EXHAUST:
 		case VVT_HONDA_J_6_2:
-			return tc->syncAndReport(crankDivider, 0);
+			return 0;
 		case VVT_HONDA_K_INTAKE:
 		case VVT_INACTIVE:
-			// do nothing
-			return 0;
+			return -1;
 	}
-	return 0;
+
+	return -1;
+}
+
+// camPhase is where the cam sync event happened, in trigger phase
+static void adjustCrankPhase(int camIndex, TrgPhase camPhase) {
+	{
+		float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+		float minSyncThreshold = engineConfiguration->minCamPhaseResolveRpm;
+		bool isBelowMinSync = minSyncThreshold != 0 && rpm < minSyncThreshold;
+
+		float maxSyncThreshold = engineConfiguration->maxCamPhaseResolveRpm;
+		bool isAboveMaxSync = maxSyncThreshold != 0 && rpm > maxSyncThreshold;
+
+		if (isBelowMinSync || isAboveMaxSync) {
+			// The user has elected to stop trying to resolve crank phase above/below some RPM.
+			// Maybe their cam sensor only works at low RPM, high RPM, or something.
+			// Anyway, don't try to change crank phase at all.
+			return;
+		}
+	}
+
+	operation_mode_e operationMode = getEngineRotationState()->getOperationMode();
+
+	auto crankDivider = getCrankDivider(operationMode);
+	if (crankDivider == 1) {
+		// Crank divider of 1 means there's no ambiguity, so don't try to resolve it
+		return;
+	}
+
+	int remainder = camSyncRemainder(engineConfiguration->vvtMode[camIndex]);
+	if (remainder < 0) {
+		return;
+	}
+
+	checkCamSyncPosition(camPhase, crankDivider, getEngineCycle(operationMode));
+
+	getTriggerCentral()->syncAndReport(crankDivider, remainder);
 }
 
 /**
@@ -260,13 +293,11 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 		return;
 	}
 
-	// If the main trigger is not synchronized, don't decode VVT yet
-	if (!tc->triggerState.getShaftSynchronized()) {
-		return;
-	}
-
 	TriggerDecoderBase& vvtDecoder = tc->vvtState[bankIndex][camIndex];
 
+	// The cam decoder doesn't need the crank, so feed it every edge, including while the crank is
+	// unsynchronized (cranking, or resyncing after a crank trigger error). If it missed edges it would
+	// lose its own sync, or worse, find a false sync point and give the crank the wrong phase.
 	if (isVvtWithRealDecoder) {
 		vvtDecoder.decodeTriggerEvent(
 				"vvt",
@@ -277,6 +308,11 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 				nowNt);
 	} else {
 		vvtDecoder.logEdgeCounters(isRising);
+	}
+
+	// Everything from here on compares the cam against crank position, which needs crank sync
+	if (!tc->triggerState.getShaftSynchronized()) {
+		return;
 	}
 
 	auto currentTrgPhase = tc->getCurrentEnginePhase(nowNt);
@@ -326,23 +362,13 @@ void hwHandleVvtCamSignal(bool isRising, efitick_t nowNt, int index) {
 
 	// Only do engine sync using one cam, other cams just provide VVT position.
 	if (index == engineConfiguration->engineSyncCam) {
-		bool hadFullSyncBefore = tc->triggerState.hasSynchronizedPhase();
-		angle_t crankOffset = adjustCrankPhase(camIndex);
-		bool hadFullSyncAfter = tc->triggerState.hasSynchronizedPhase();
+		angle_t phaseAdjustmentBefore = tc->triggerState.m_phaseAdjustment;
+		adjustCrankPhase(camIndex, currentTrgPhase.Value);
+		angle_t phaseAdjustmentAfter = tc->triggerState.m_phaseAdjustment;
 
-		if (!hadFullSyncBefore && hadFullSyncAfter) {
-			// vvtPosition was calculated against wrong crank zero position. Now that we have adjusted crank position we
-			// shall adjust vvt position as well
-			vvtPosition -= crankOffset;
-		}
-
-		if (std::abs(currentTrgPhase.Value.angle) < 7) {
-			/**
-			 * we prefer not to have VVT sync right at trigger sync so that we do not have phase detection error if
-			 * things happen a bit in wrong order due to belt flex or else https://github.com/rusefi/rusefi/issues/3269
-			 */
-			warning(ObdCode::CUSTOM_VVT_SYNC_POSITION, "VVT sync position too close to trigger sync");
-		}
+		// vvtPosition was measured against the engine phase from before this event. If this event changed
+		// it (the first sync, or a correction), measure against the new one instead.
+		vvtPosition -= phaseAdjustmentAfter - phaseAdjustmentBefore;
 	}
 
 	// Wrap the vvt position back in to the reasonable range
@@ -549,9 +575,7 @@ bool TriggerCentral::isToothExpectedNow(efitick_t timestamp) {
 
 			// Absolute error from last tooth
 			float absError = std::abs(angleError);
-			float isRpmEnough = Sensor::getOrZero(SensorType::Rpm) > 1000;
-			// TODO: configurable threshold
-			if (isRpmEnough && absError > 10 && absError < 180) {
+			if (absError > 10 && absError < 180) {
 				// This tooth came at a very unexpected time, ignore it
 				warning(ObdCode::CUSTOM_PRIMARY_BAD_TOOTH_TIMING,
 						"tooth #%lu error of %.1f",

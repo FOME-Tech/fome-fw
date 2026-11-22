@@ -129,3 +129,35 @@ TEST(priming, cancelledIfIgnitionOffDuringDelay) {
 		EXPECT_FALSE(enginePins.injectors[i].getLogicValue()) << i;
 	}
 }
+
+static void doNothing(void*) {}
+
+// The end of the priming pulse is scheduled from the callback that starts it, which has just given its
+// own timer slot back to the pool, so the end always gets a slot even when every other one is taken.
+TEST(priming, endsEvenWhenSchedulerIsFull) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	MockInjectorModel2 injectorModel;
+	setupPrimeTest(injectorModel);
+
+	auto prime = engine->module<PrimeController>();
+
+	prime->onIgnitionStateChanged(true);
+	ASSERT_EQ(1, engine->scheduler.size());
+
+	// Try to take more slots than there are, for longer than the test runs
+	for (int i = 0; i < 100; i++) {
+		engine->scheduler.schedule("test", nullptr, getTimeNowNt() + MS2NT(5000), {doNothing});
+	}
+	ASSERT_EQ(64, engine->scheduler.size()) << "pool should be full";
+
+	eth.moveTimeForwardMs(610);
+	eth.executeActions();
+	EXPECT_TRUE(prime->isPriming());
+
+	eth.moveTimeForwardMs(25);
+	eth.executeActions();
+	EXPECT_FALSE(prime->isPriming());
+	for (size_t i = 0; i < engine->engineState.cylinderCount; i++) {
+		EXPECT_FALSE(enginePins.injectors[i].getLogicValue()) << i;
+	}
+}
