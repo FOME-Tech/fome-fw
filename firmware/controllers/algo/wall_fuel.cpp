@@ -19,6 +19,29 @@ float WallFuel::adjust(float desiredMassGrams) {
 
 	ScopePerf perf(PE::WallFuelAdjust);
 
+	// If disabled, pass value through
+	if (!engine->module<WallFuelController>()->getEnable()) {
+		return desiredMassGrams;
+	}
+
+	float fuelFilmMassNext;
+	float M_cmd = commandedMass(desiredMassGrams, fuelFilmMassNext);
+
+	wallFuel = fuelFilmMassNext;
+	wallFuelCorrection = M_cmd - desiredMassGrams;
+	return M_cmd;
+}
+
+float WallFuel::preview(float desiredMassGrams) const {
+	if (std::isnan(desiredMassGrams) || !engine->module<WallFuelController>()->getEnable()) {
+		return desiredMassGrams;
+	}
+
+	float unused;
+	return commandedMass(desiredMassGrams, unused);
+}
+
+float WallFuel::commandedMass(float desiredMassGrams, float& nextFilmMass) const {
 	/*
 		this math is based on
 				SAE 810494 by C. F. Aquino
@@ -43,11 +66,6 @@ float WallFuel::adjust(float desiredMassGrams) {
 		beta describes the amount of fuel that hits the wall.
 	*/
 
-	// If disabled, pass value through
-	if (!engine->module<WallFuelController>()->getEnable()) {
-		return desiredMassGrams;
-	}
-
 	float alpha = engine->module<WallFuelController>()->getAlpha();
 	float beta = engine->module<WallFuelController>()->getBeta();
 
@@ -62,10 +80,8 @@ float WallFuel::adjust(float desiredMassGrams) {
 	}
 
 	// remainder on walls from last time + new from this time
-	float fuelFilmMassNext = alpha * fuelFilmMass + beta * M_cmd;
+	nextFilmMass = alpha * fuelFilmMass + beta * M_cmd;
 
-	wallFuel = fuelFilmMassNext;
-	wallFuelCorrection = M_cmd - desiredMassGrams;
 	return M_cmd;
 }
 

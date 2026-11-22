@@ -93,3 +93,41 @@ TEST(fuel, testWallWettingEnrichmentScheduling) {
 	// Cylinder 5 doesn't exist - shouldn't have been called!
 	ASSERT_EQ(0, engine->injectionEvents.elements[5].getWallFuel().invocationCounter);
 }
+
+// preview() says what adjust() would return, without changing anything, so an injection can be estimated
+// before it happens
+TEST(fuel, wallWettingPreviewMatchesAdjust) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+
+	MockWallController wallController;
+	EXPECT_CALL(wallController, getEnable()).WillRepeatedly(Return(true));
+	EXPECT_CALL(wallController, getAlpha()).WillRepeatedly(Return(0.5f));
+	EXPECT_CALL(wallController, getBeta()).WillRepeatedly(Return(0.25f));
+	engine->engineModules.get<WallFuelController>().set(&wallController);
+
+	WallFuel wallFuel;
+
+	for (float desired : {1.0f, 1.0f, 1.0f, 0.5f, 0.5f, 2.0f, 0.0f, 0.0f, 1.0f}) {
+		float film = wallFuel.getWallFuel();
+
+		// Asking twice changes nothing
+		float previewed = wallFuel.preview(desired);
+		EXPECT_EQ(previewed, wallFuel.preview(desired));
+		EXPECT_EQ(film, wallFuel.getWallFuel());
+
+		EXPECT_EQ(previewed, wallFuel.adjust(desired)) << "desired " << desired;
+	}
+}
+
+// With wall wetting disabled, both pass the mass straight through
+TEST(fuel, wallWettingPreviewWhenDisabled) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+
+	MockWallController wallController;
+	EXPECT_CALL(wallController, getEnable()).WillRepeatedly(Return(false));
+	engine->engineModules.get<WallFuelController>().set(&wallController);
+
+	WallFuel wallFuel;
+	EXPECT_EQ(0.7f, wallFuel.preview(0.7f));
+	EXPECT_EQ(0.7f, wallFuel.adjust(0.7f));
+}

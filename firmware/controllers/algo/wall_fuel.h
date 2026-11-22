@@ -19,9 +19,18 @@ public:
 	 * @return total adjusted fuel squirt mass in grams once wall wetting is taken into effect
 	 */
 	float adjust(float desiredMassGrams);
+
+	// What adjust() would return right now, without changing the film: for estimating an injection
+	// before it happens
+	float preview(float desiredMassGrams) const;
+
 	float getWallFuel() const;
 	void resetWF();
 	int invocationCounter = 0;
+
+private:
+	// The mass to command for this desired mass, and how much fuel that leaves on the wall
+	float commandedMass(float desiredMassGrams, float& nextFilmMass) const;
 };
 
 struct IWallFuelController {
