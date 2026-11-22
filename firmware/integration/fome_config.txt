@@ -1642,6 +1642,9 @@ begin_table
 	table_values uint8_t mafTrimTable;;"%", 1, 0, 0, 200, 0
 end_table
 
+uint16_t[8] mafMaxLoadRpmBins;;"RPM", 1, 0, 0, 18000, 0
+uint16_t[8] mafMaxLoad;Maximum cylinder filling the MAF airmass is allowed to read, as % of an ideal cylinder filled at baro pressure (101.325kPa without a baro sensor) and IAT. MAF/RPM can read far more than the cylinder can hold while the intake manifold fills (tip-in) and when RPM falls quickly (a start that dies). Applied before the MAF trim table.;"%", 1, 0, 0, 1000, 0
+
 union
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale lambdaTable;;"lambda", {1/@@PACK_MULT_LAMBDA_CFG@@}, 0, 0.6, 1.5, 2
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale afrTable;;"afr", {1/@@PACK_MULT_AFR_CFG@@}, 0, 0, 25, 1

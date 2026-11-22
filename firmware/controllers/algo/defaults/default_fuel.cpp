@@ -52,6 +52,10 @@ static void setDefaultVETable() {
 	setRpmTableBin(config->mafTrimRpmBins);
 	setLinearCurve(config->mafTrimLoadBins, 0, 140);
 
+	// Default MAF airmass limit is high enough to never apply, even on a boosted engine
+	setRpmTableBin(config->mafMaxLoadRpmBins);
+	setArrayValues(config->mafMaxLoad, 500);
+
 	// Default baro table is all 1.0, we can't recommend a reasonable default here
 	setTable(config->baroCorrTable, 1);
 

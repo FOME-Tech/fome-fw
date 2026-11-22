@@ -3,6 +3,7 @@
 #include "maf_airmass.h"
 #include "maf.h"
 #include "fuel_math.h"
+#include "speed_density_base.h"
 
 expected<float> MafAirmass::getMaf() const {
 	auto maf = Sensor::get(SensorType::Maf);
@@ -38,6 +39,19 @@ expected<AirmassResult> MafAirmass::getAirmass(float rpm, bool /*postState*/) {
 	return getAirmassImpl(maf.Value, rpm);
 }
 
+// The most air a cylinder can hold at this RPM: the configured max load, as % of an ideal
+// cylinder filled at baro pressure and intake air temperature.
+static mass_t getMaxCylinderAirmass(float rpm) {
+	float maxLoad = interpolate2d(rpm, config->mafMaxLoadRpmBins, config->mafMaxLoad);
+
+	float baro = Sensor::get(SensorType::BarometricPressure).value_or(101.325f);
+	float iat = Sensor::get(SensorType::Iat).value_or(20);
+
+	float cylDisplacement = engineConfiguration->displacement / engine->engineState.cylinderCount;
+
+	return maxLoad / 100 * idealGasLaw(cylDisplacement, baro, 273.15f + iat);
+}
+
 /**
  * Function block now works to create a standardised load from the cylinder filling as well as tune fuel via VE table.
  * @return total duration of fuel injection per engine cycle, in milliseconds
@@ -60,6 +74,15 @@ expected<AirmassResult> MafAirmass::getAirmassImpl(float massAirFlow, float rpm)
 	float halfCylCount = engine->engineState.cylinderCount / 2.0f;
 
 	mass_t cylinderAirmass = airPerRevolution / halfCylCount;
+
+	// MAF/RPM can read far more than the cylinder can physically hold: while the intake manifold
+	// is filling (tip-in), and when RPM drops faster than the MAF reading does (a start that dies)
+	mass_t maxAirmass = getMaxCylinderAirmass(rpm);
+	bool limited = cylinderAirmass > maxAirmass;
+	engine->outputChannels.mafAirmassLimited = limited;
+	if (limited) {
+		cylinderAirmass = maxAirmass;
+	}
 
 	// Create % load for fuel table using relative naturally aspirated cylinder filling
 	float airChargeLoad = 100 * cylinderAirmass / getStandardAirCharge();

@@ -3,6 +3,7 @@
 #include "alphan_airmass.h"
 #include "maf_airmass.h"
 #include "speed_density_airmass.h"
+#include "speed_density_base.h"
 
 using ::testing::_;
 using ::testing::FloatNear;
@@ -146,6 +147,96 @@ TEST(AirmassModes, MafNormal) {
 		// Trim doesn't affect load
 		EXPECT_NEAR(70.9814f, airmass.Value.EngineLoadPercent, EPS4D);
 	}
+}
+
+TEST(AirmassModes, MafMaxLoad) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+	engineConfiguration->displacement = 2.0f;
+	setCylinderCount(4);
+
+	MafAirmass dut;
+
+	copyArray(config->mafMaxLoadRpmBins, {500, 1000, 2000, 3000, 4000, 5000, 6000, 7000});
+	copyArray(config->mafMaxLoad, {200, 100, 100, 100, 100, 100, 100, 100});
+
+	Sensor::setMockValue(SensorType::BarometricPressure, 100);
+	Sensor::setMockValue(SensorType::Iat, 20);
+
+	// Ideal 0.5L cylinder at 100kPa, 20C
+	float idealAirmass = idealGasLaw(0.5f, 100, 273.15f + 20);
+
+	// 240 kg/h at 2000 rpm is 1g per cylinder
+	auto flowForAirmass = [](float airmass, float rpm) { return airmass * 2 * (rpm / 60) * 3.6f; };
+
+	// Below the limit: unchanged
+	{
+		auto airmass = dut.getAirmassImpl(flowForAirmass(0.5f, 2000), 2000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(0.5f, airmass.Value.CylinderAirmass, EPS4D);
+		EXPECT_FALSE(engine->outputChannels.mafAirmassLimited);
+	}
+
+	// Above the limit: clamped to 100% of an ideal cylinder at baro and IAT, and so is the load
+	{
+		auto airmass = dut.getAirmassImpl(flowForAirmass(1.0f, 2000), 2000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(idealAirmass, airmass.Value.CylinderAirmass, EPS4D);
+		EXPECT_NEAR(100 * idealAirmass / getStandardAirCharge(), airmass.Value.EngineLoadPercent, EPS4D);
+		EXPECT_TRUE(engine->outputChannels.mafAirmassLimited);
+	}
+
+	// Limit follows baro and IAT
+	{
+		Sensor::setMockValue(SensorType::BarometricPressure, 80);
+		Sensor::setMockValue(SensorType::Iat, 50);
+
+		auto airmass = dut.getAirmassImpl(flowForAirmass(1.0f, 2000), 2000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(idealGasLaw(0.5f, 80, 273.15f + 50), airmass.Value.CylinderAirmass, EPS4D);
+	}
+
+	// No baro sensor: assume 101.325kPa
+	{
+		Sensor::setInvalidMockValue(SensorType::BarometricPressure);
+		Sensor::setMockValue(SensorType::Iat, 20);
+
+		auto airmass = dut.getAirmassImpl(flowForAirmass(1.0f, 2000), 2000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(idealGasLaw(0.5f, 101.325f, 273.15f + 20), airmass.Value.CylinderAirmass, EPS4D);
+	}
+
+	// Limit is interpolated by RPM: 750 rpm is halfway between 200% and 100%
+	{
+		auto airmass = dut.getAirmassImpl(flowForAirmass(2.0f, 750), 750);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(1.5f * idealGasLaw(0.5f, 101.325f, 273.15f + 20), airmass.Value.CylinderAirmass, EPS4D);
+	}
+
+	// Limit applies before the MAF trim
+	{
+		setTable(config->mafTrimTable, 110);
+
+		auto airmass = dut.getAirmassImpl(flowForAirmass(1.0f, 2000), 2000);
+		ASSERT_TRUE(airmass.Valid);
+		EXPECT_NEAR(1.1f * idealGasLaw(0.5f, 101.325f, 273.15f + 20), airmass.Value.CylinderAirmass, EPS4D);
+	}
+}
+
+TEST(AirmassModes, MafMaxLoadDefaultDoesNotLimit) {
+	EngineTestHelper eth(engine_type_e::FORD_ASPIRE_1996);
+	engineConfiguration->fuelAlgorithm = LM_REAL_MAF;
+	engineConfiguration->displacement = 2.0f;
+	setCylinderCount(4);
+
+	MafAirmass dut;
+
+	// 3x an ideal cylinder, e.g. a boosted engine
+	float airmass = 3 * idealGasLaw(0.5f, 101.325f, 273.15f + 20);
+	auto result = dut.getAirmassImpl(airmass * 2 * (3000.0f / 60) * 3.6f, 3000);
+	ASSERT_TRUE(result.Valid);
+	EXPECT_NEAR(airmass, result.Value.CylinderAirmass, EPS4D);
+	EXPECT_FALSE(engine->outputChannels.mafAirmassLimited);
 }
 
 TEST(AirmassModes, MafFailed) {

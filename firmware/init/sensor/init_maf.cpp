@@ -5,6 +5,7 @@
 #include "functional_sensor.h"
 #include "table_func.h"
 #include "func_chain.h"
+#include "maf_filter.h"
 
 static FunctionalSensor maf(SensorType::Maf, /* timeoutPeriod = */ MS2NT(50));
 static FunctionalSensor maf2(SensorType::Maf2, /* timeoutPeriod = */ MS2NT(50));
@@ -34,42 +35,41 @@ struct MafTable : public SensorConverter {
 	}
 };
 
-struct MafFilter final : public SensorConverter {
-	SensorResult convert(float input) const override {
-		engine->outputChannels.mafMeasured_preFilter = input;
+SensorResult MafFilter::convert(float input) const {
+	engine->outputChannels.mafMeasured_preFilter = input;
 
-		float param = engineConfiguration->mafFilterParameter;
-		if (param == 0) {
-			return input;
-		}
-
-		float rpm = Sensor::getOrZero(SensorType::Rpm);
-
-		if (rpm == 0) {
-			m_lastValue = input;
-			return input;
-		}
-
-		float invTimeConstant = rpm / param;
-		float alpha = (1e-3 * FAST_CALLBACK_PERIOD_MS) * invTimeConstant;
-
-		if (alpha < 0.001f) {
-			// Limit to 0.001 to avoid numerical issues
-			alpha = 0.001f;
-		} else if (alpha > 0.98f) {
-			// alpha > 0.98 (engine very fast and/or small manifold)
-			//     -> disable filtering entirely
-			m_lastValue = input;
-			return input;
-		}
-
-		m_lastValue = alpha * input + (1 - alpha) * m_lastValue;
-
-		return m_lastValue;
+	float param = engineConfiguration->mafFilterParameter;
+	if (param == 0) {
+		return input;
 	}
 
-	mutable float m_lastValue = 0;
-};
+	float rpm = Sensor::getOrZero(SensorType::Rpm);
+
+	if (rpm == 0) {
+		m_lastValue = input;
+		return input;
+	}
+
+	// This runs once per ADC update, not on the fast callback
+	constexpr float updatePeriodSec = 1e-3 * loopPeriodMs(ADC_UPDATE_RATE);
+
+	float invTimeConstant = rpm / param;
+	float alpha = updatePeriodSec * invTimeConstant;
+
+	if (alpha < 0.001f) {
+		// Limit to 0.001 to avoid numerical issues
+		alpha = 0.001f;
+	} else if (alpha > 0.98f) {
+		// alpha > 0.98 (engine very fast and/or small manifold)
+		//     -> disable filtering entirely
+		m_lastValue = input;
+		return input;
+	}
+
+	m_lastValue = alpha * input + (1 - alpha) * m_lastValue;
+
+	return m_lastValue;
+}
 
 static FuncChain<MafVoltageCheck, MafTable, MafFilter> mafFunction;
 
