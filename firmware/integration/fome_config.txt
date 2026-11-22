@@ -224,6 +224,8 @@ struct_no_prefix engine_configuration_s
 
 #define CAN_VIRTUAL_INPUT_PINS_COUNT 8
 
+#define MAX_SD_LOG_RATE 100
+
 struct stft_cell_cfg_s
 	int8_t maxAdd;Maximum % of fuel possible for fuel trim to add while in this region.;"%", 1, 0, 0, 25, 0
 	int8_t maxRemove;Maximum % of fuel possible for fuel trim to remove while in this region.;"%", 1, 0, -25, 0, 0

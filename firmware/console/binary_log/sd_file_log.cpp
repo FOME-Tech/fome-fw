@@ -11,8 +11,8 @@ int totalLoggedBytes = 0;
 static int getSdLogFrequency() {
 	int freq = engineConfiguration->sdCardLogFrequency;
 
-	if (freq > 100) {
-		freq = 100;
+	if (freq > MAX_SD_LOG_RATE) {
+		freq = MAX_SD_LOG_RATE;
 	} else if (freq < 1) {
 		freq = 1;
 	}
