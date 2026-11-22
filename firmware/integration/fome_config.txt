@@ -745,7 +745,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	uint8_t flexFuelFailedEthanol;Ethanol content assumed when the flex fuel sensor has failed, and the ECU has never seen a valid reading to remember. Once the sensor has read successfully, that value is stored in backup RAM and used instead of this one.;"%", 1, 0, 0, 100, 0
 
 
-	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, 250, 0
+	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, @@MAX_SD_LOG_RATE@@, 0
 	Gpio debugMapAveraging;
 	output_pin_e starterRelayDisablePin;
 	pin_output_mode_e starterRelayDisablePinMode;On some vehicles we can disable starter once engine is already running
