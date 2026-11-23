@@ -99,6 +99,7 @@ TESTS_SRC_CPP = \
 	tests/sensor/redundant.cpp \
 	tests/sensor/test_sensor_init.cpp \
 	tests/sensor/test_sensor_checker.cpp \
+	tests/sensor/test_fixed_baro.cpp \
 	tests/sensor/table_func.cpp \
 	tests/util/test_closed_loop_controller.cpp \
 	tests/test_stft.cpp \

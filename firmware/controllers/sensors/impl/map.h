@@ -9,6 +9,8 @@
 struct air_pressure_sensor_config_s;
 
 void initMapDecoder();
+// Capture MAP as fixed baro (if enabled) on the first valid reading after power-up
+void updateFixedBaroFromMap();
 
 #define KPA_PER_PSI 6.89475728f
 

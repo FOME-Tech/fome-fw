@@ -121,6 +121,7 @@ void Engine::periodicSlowCallback() {
  */
 void Engine::updateSlowSensors() {
 	updateSwitchInputs();
+	updateFixedBaroFromMap();
 
 #if EFI_SHAFT_POSITION_INPUT
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
