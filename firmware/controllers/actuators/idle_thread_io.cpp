@@ -59,6 +59,13 @@ percent_t getIdlePosition() {
 
 void startPedalPins() {
 #if EFI_PROD_CODE
+	if (engineConfiguration->powerSteeringIdleMode == PowerSteeringIdleMode::Switch) {
+		startInputPinIfValid(
+				"power steering switch",
+				engineConfiguration->powerSteeringSwitch,
+				engineConfiguration->powerSteeringSwitchMode);
+	}
+
 	// this is neutral/no gear switch input. on Miata it's wired both to clutch pedal and neutral in gearbox
 	// this switch is not used yet
 	startInputPinIfValid(
@@ -76,6 +83,9 @@ void startPedalPins() {
 }
 
 void stopPedalPins() {
+	if (activeConfiguration.powerSteeringIdleMode == PowerSteeringIdleMode::Switch) {
+		brain_pin_markUnused(activeConfiguration.powerSteeringSwitch);
+	}
 	brain_pin_markUnused(activeConfiguration.clutchUpPin);
 	brain_pin_markUnused(activeConfiguration.clutchDownPin);
 	brain_pin_markUnused(activeConfiguration.brakePedalPin);
@@ -102,6 +112,20 @@ void startIdleBench() {
 #if EFI_IDLE_CONTROL
 
 void setDefaultIdleParameters() {
+	engineConfiguration->powerSteeringIdleMode = PowerSteeringIdleMode::Disabled;
+	engineConfiguration->powerSteeringSwitch = Gpio::Unassigned;
+	engineConfiguration->powerSteeringSwitchMode = PI_PULLUP;
+	engineConfiguration->powerSteeringSwitchInverted = true;
+	engineConfiguration->powerSteeringPressure.hwChannel = EFI_ADC_NONE;
+	engineConfiguration->powerSteeringCanInput = 1;
+	engineConfiguration->powerSteeringIdleRpmBump = 100;
+	engineConfiguration->powerSteeringPressure.v1 = 0.5f;
+	engineConfiguration->powerSteeringPressure.value1 = 0;
+	engineConfiguration->powerSteeringPressure.v2 = 4.5f;
+	engineConfiguration->powerSteeringPressure.value2 = 10000;
+	engineConfiguration->powerSteeringOnPressure = 5000;
+	engineConfiguration->powerSteeringOffPressure = 4000;
+
 	engineConfiguration->idleRpmPid.pFactor = 0.01f;
 	engineConfiguration->idleRpmPid.iFactor = 0.05f;
 	engineConfiguration->idleRpmPid.dFactor = 0.0f;

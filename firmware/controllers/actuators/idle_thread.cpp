@@ -11,6 +11,7 @@
  */
 
 #include "pch.h"
+#include <cmath>
 
 #if EFI_IDLE_CONTROL
 #include "idle_thread.h"
@@ -21,6 +22,54 @@
 #if EFI_TUNER_STUDIO
 #include "stepper.h"
 #endif
+
+bool IdleTargetController::getPowerSteeringActive() const {
+	switch (engineConfiguration->powerSteeringIdleMode) {
+		case PowerSteeringIdleMode::Switch:
+			return isBrainPinValid(engineConfiguration->powerSteeringSwitch) &&
+				   (efiReadPin(engineConfiguration->powerSteeringSwitch) !=
+					engineConfiguration->powerSteeringSwitchInverted);
+		case PowerSteeringIdleMode::Can: {
+			auto input = engineConfiguration->powerSteeringCanInput;
+			if (input < 1 || input > CAN_VIRTUAL_INPUT_PINS_COUNT) {
+				return false;
+			}
+			auto pin = static_cast<Gpio>(static_cast<int>(Gpio::CAN_INPUT_0) + input - 1);
+			return efiReadPin(pin) != engineConfiguration->powerSteeringSwitchInverted;
+		}
+		case PowerSteeringIdleMode::Pressure: {
+			if (!isAdcChannelValid(engineConfiguration->powerSteeringPressure.hwChannel)) {
+				return false;
+			}
+
+			auto pressure = Sensor::get(SensorType::PowerSteeringPressure);
+			float on = engineConfiguration->powerSteeringOnPressure;
+			float off = engineConfiguration->powerSteeringOffPressure;
+			// Calibration handles either voltage direction. The idle request always follows increasing pressure.
+			// Reject invalid readings (including NaN/infinity) and invalid hysteresis settings.
+			if (!pressure || !std::isfinite(pressure.Value) || pressure.Value < -5 || on <= off) {
+				return false;
+			}
+
+			return m_powerSteeringActive ? pressure.Value > off : pressure.Value >= on;
+		}
+		default:
+			return false;
+	}
+}
+
+void IdleTargetController::onConfigurationChange(engine_configuration_s const* previousConfig) {
+	if (!previousConfig || previousConfig->powerSteeringIdleMode != engineConfiguration->powerSteeringIdleMode ||
+		previousConfig->powerSteeringPressure.hwChannel != engineConfiguration->powerSteeringPressure.hwChannel ||
+		previousConfig->powerSteeringPressure.v1 != engineConfiguration->powerSteeringPressure.v1 ||
+		previousConfig->powerSteeringPressure.v2 != engineConfiguration->powerSteeringPressure.v2 ||
+		previousConfig->powerSteeringPressure.value1 != engineConfiguration->powerSteeringPressure.value1 ||
+		previousConfig->powerSteeringPressure.value2 != engineConfiguration->powerSteeringPressure.value2 ||
+		previousConfig->powerSteeringOnPressure != engineConfiguration->powerSteeringOnPressure ||
+		previousConfig->powerSteeringOffPressure != engineConfiguration->powerSteeringOffPressure) {
+		m_powerSteeringActive = false;
+	}
+}
 
 IIdleTargetController::TargetInfo IdleTargetController::getTargetRpm(float clt) {
 	// Base target RPM from CLT table
@@ -35,7 +84,10 @@ IIdleTargetController::TargetInfo IdleTargetController::getTargetRpm(float clt) 
 							? engineConfiguration->acIdleRpmBump
 							: 0;
 
-	auto target = targetRpmByClt + targetRpmAcBump + luaAddRpm;
+	m_powerSteeringActive = getPowerSteeringActive();
+	targetRpmPowerSteeringBump = m_powerSteeringActive ? engineConfiguration->powerSteeringIdleRpmBump : 0;
+
+	auto target = targetRpmByClt + targetRpmAcBump + targetRpmPowerSteeringBump + luaAddRpm;
 
 	float rpmUpperLimit = engineConfiguration->idlePidRpmUpperLimit;
 	float entryRpm = target + rpmUpperLimit;
