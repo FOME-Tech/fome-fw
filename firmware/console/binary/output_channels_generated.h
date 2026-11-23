@@ -542,9 +542,9 @@ struct output_channels_s {
 	// offset 320
 	scaled_channel<int16_t, 100, 1> gyroYaw = (int16_t)0;
 	// Turbocharger Speed
-	// hz
+	// rpm
 	// offset 322
-	uint16_t turboSpeed = (uint16_t)0;
+	scaled_channel<uint16_t, 1, 10> turboSpeed = (uint16_t)0;
 	// Ign: Timing Cyl
 	// deg
 	// offset 324
