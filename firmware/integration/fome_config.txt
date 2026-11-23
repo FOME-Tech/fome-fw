@@ -402,10 +402,10 @@ end_struct
 injector_s injector
 injector_s injectorSecondary
 
-bit isForcedInduction;Does the vehicle have a turbo or supercharger?
+bit isForcedInduction;Does the vehicle have a turbo or supercharger? For reference, not used by the ECU.
 bit useMapEstimateDuringTransient;During the TPS AE period, use the MAP estimate table value instead of true MAP (if greater than real MAP). This basically briefly runs in alpha-n during a transient, then returns to normal speed-density mode.
 bit lambdaProtectionEnable
-bit overrideTriggerGaps
+bit overrideTriggerGaps;Replace the sync gap ratios of the selected trigger with the ones below. A last resort for debugging an unusual wheel.
 bit enableFan1WithAc;Turn on this fan when AC is on.
 bit enableFan2WithAc;Turn on this fan when AC is on.
 bit disableFan1WhenStopped;Inhibit operation of this fan while the engine is not running.
@@ -454,12 +454,12 @@ MAP_sensor_config_s map
 	int launchTimingRetard;;"deg", 1, 0, -180, 180, 2
 	float knockBandCustom;Knock filter center frequency override. By default, this is calculated from your cylinder bore. Set this to non-zero to override.;"kHz", 1, 0, 0, 20, 2
 
-uint16_t autoscale displacement;Engine displacement in litres;"L", 0.001, 0, 0, 65, 3
+uint16_t autoscale displacement;Total engine displacement in litres, for all cylinders combined. Scales the air mass calculation, so changing it shifts fueling.;"L", 0.001, 0, 0, 65, 3
 
 uint16_t triggerSimulatorRpm;;"RPM", 1, 0, 0, 30000, 0
 
 custom firing_order_e 1 bits, U08, @OFFSET@, [0:5], "One Cylinder", "1-3-4-2", "1-2-4-3", "1-3-2-4", "1-5-3-6-2-4", "1-8-4-3-6-5-7-2", "1-2-4-5-3", "1-4-2-5-3-6", "1-2", "1-2-3-4-5-6", "1-2-3", "1-8-7-2-6-5-4-3", "1-5-4-2-6-3-7-8", "1-6-3-2-5-4", "1-10-9-4-3-6-5-8-7_2", "1-7-5-11-3-9-6-12-2-8-4-10", "1-7-4-10-2-8-6-12-3-9-5-11", "1-4-3-2", "1-12-5-8-3-10-6-7-2-11-4-9", "1-2-7-8-4-5-6-3", "1-3-7-2-6-5-4-8", "1-2-3-4-5-6-7-8-9", "INVALID", "1-2-3-4-5-6-7-8-9-10-11-12", "1-3-2", "1-2-3-4-5-6-7-8", "1-5-4-8-6-3-7-2", "1-4-3-6-2-5", "1-8-7-3-6-5-4-2", "1-6-2-4-3-5", "1-6-5-4-3-2", "1-4-5-2-3-6", "1-5-4-8-3-7-2-6", "1-6-5-10-2-7-3-8-4-9", "1-6-2-5-3-4"
-firing_order_e firingOrder;
+firing_order_e firingOrder;Order in which the cylinders fire. The cylinder count is taken from the selected order. Also sets which cylinder each injection and ignition event belongs to.
 
 uint8_t vvtBumpAmount;;"deg", 1, 0, -30, 30, 0
 uint16_t autoscale benchTestOnTime;Duration of each test pulse;"ms", 0.01, 0, 0, 500, 2
@@ -470,7 +470,7 @@ float cylinderBore;Cylinder diameter in mm.;"mm", 1, 0, 0, 20000, 2
 
 
 custom engine_load_mode_e 1 bits, U08, @OFFSET@, [0:2], @@engine_load_mode_e_enum@@
-engine_load_mode_e fuelAlgorithm;This setting controls which fuel quantity control algorithm is used.\nAlpha-N means drive by TPS commonly only used for NA engines\nSpeed Density requires MAP sensor and is the default choice for may installs\nMAF air charge is a cylinder filling based method that uses a mass air flow sensor.;
+engine_load_mode_e fuelAlgorithm;This setting controls which fuel quantity control algorithm is used.\nAlpha-N means drive by TPS commonly only used for NA engines\nSpeed Density requires MAP sensor and is the default choice for many installs\nMAF air charge is a cylinder filling based method that uses a mass air flow sensor.\nLua lets a script supply the air mass.;
 uint8_t ALSMaxTPS;;"%", 1, 0, 0, 10, 0
 
 custom injection_mode_e 1 bits, U08, @OFFSET@, [0:1], "Simultaneous", "Sequential", "Batch", "Single Point"
@@ -488,7 +488,7 @@ gppwm_channel_e boostClosedLoopXAxis;Select the parameter to use for the X axis 
 gppwm_channel_e boostClosedLoopYAxis;Select the parameter to use for the Y axis of the closed loop boost table.
 
 custom timing_mode_e 1 bits, U08, @OFFSET@, [0:0], "dynamic", "fixed"
-timing_mode_e timingMode;Dynamic uses the timing map to decide the ignition timing, Static timing fixes the timing to the value set below (only use for checking static timing with a timing light).
+timing_mode_e timingMode;'dynamic' uses the ignition table and corrections. 'fixed' holds the timing at 'Fixed Timing' once the engine is running, for checking base timing with a timing light.
 
 adc_channel_e mafAdcChannel
 
@@ -496,7 +496,7 @@ uint16_t benchTestCount;How many test bench pulses do you want;"", 1, 0, 0, 1000
 
 angle_t crankingTimingAngle;Ignition advance angle used during engine cranking, 5-10 degrees will work as a base setting for most engines.\nThis angle is held up to half the cranking RPM, then tapered to running timing at the cranking RPM;"deg", 1, 0, -30, 30, 0
 
-int8_t gapTrackingLengthOverride;How many consecutive gap rations have to match expected ranges for sync to happen;"count", 1, 0, 1, @@GAP_TRACKING_LENGTH@@, 0
+int8_t gapTrackingLengthOverride;How many consecutive gap ratios have to match their ranges for sync to happen. Only that many gap ranges are used.;"count", 1, 0, 1, @@GAP_TRACKING_LENGTH@@, 0
  uint8_t maxIdleVss;Above this speed, disable closed loop idle control. Set to 0 to disable (allow closed loop idle at any speed).;"kph", 1, 0, 0, 100, 0
  uint16_t minOilPressureAfterStart;Expected oil pressure after starting the engine. If oil pressure does not reach this level within 5 seconds of engine start, fuel will be cut. Set to 0 to disable and always allow starting.;"kPa", 1, 0, 0, 1000, 0
  switch_input_pin_e oilPressureSwitch
@@ -507,7 +507,7 @@ uint8_t autoscale idleReturnRampDuration;How long the return to idle ramp takes.
 
 angle_t fixedModeTiming;This value is the ignition timing used when in 'fixed timing' mode, i.e. constant timing\nThis mode is useful when adjusting distributor location.;"RPM", 1, 0, 0, 3000, 0
 
-angle_t globalTriggerAngleOffset;Angle between Top Dead Center (TDC) and the first trigger event.\nPositive value in case of synchronization point before TDC and negative in case of synchronization point after TDC\n.Knowing this angle allows us to control timing and other angles in reference to TDC.;"deg btdc", 1, 0, -720, 720, 0
+angle_t globalTriggerAngleOffset;Angle from the trigger sync point to TDC of cylinder 1 on its compression stroke. Positive if the sync point is before TDC.\nAlways confirm it with a timing light using fixed timing.;"deg btdc", 1, 0, -720, 720, 0
 
 
 
@@ -543,9 +543,9 @@ adc_channel_e fuelLevelSensor;Analog input the fuel level sender is wired to. Mo
 		#define trigger_type_e_enum "custom toothed wheel", "Ford Aspire", "Dodge Neon 1995", "Miata NA", "Mitsubishi Mess 4", "GM_7X", "Cooper R50", "Mazda SOHC 4", "60/2", "36/1", "Mercedes Two Segment", "Mitsubishi 4G93 11", "EZ30", "INVALID", "Dodge Neon 2003", "Mazda DOHC 1+4", "1+1", "INVALID", "Single Tooth", "Dodge Ram 1+16", "60/2 VW", "Benelli Tre", "Dodge Stratus", "36_2_2_2", "Nissan Primera", "dev 2JZ 3/34 simulator", "Rover K", "GM 24x 5 degree", "Honda CBR 600", "Mitsubishi 4G92/93/94 Cam 29", "Honda CBR 600 custom", "3/1 skipped", "Dodge Neon 2003 crank", "Miata NB", "Mitsubishi 4G63 Cam 34", "INVALID", "Subaru 7+6", "Jeep 18-2-2-2", "12 tooth crank", "Dodge Neon 1995 crank only", "Jeep XJ 4 cyl", "FiatIAQ_P8", "Mazda Z5", "INVALID", "Renix 44-2-2", "Renix 66-2-2-2", "Honda K 12+1", "INVALID", "36/2", "Subaru SVX", "1+16", "Subaru 7 without 6", "INVALID", "TriTach", "GM 60/2/2/2", "Skoda Favorit", "Barra 3+1 Cam", "Kawa KX450F", "Nissan VQ35", "INVALID", "Nissan VQ30", "Nissan QR25", "Mitsubishi 3A92", "Subaru SVX Crank 1", "Subaru SVX Cam VVT", "Ford PIP", "Suzuki G13B", "Honda K 4+1", "Nissan MR18 Crank", "32/2", "36-2-1", "36-2-1-1", "INVALID", "INVALID", "GM 24x 3 degree", "INVALID", "INVALID", "1996-2006 Viper", "INVALID", "INVALID"
 
 		custom trigger_type_e 4 bits, U32, @OFFSET@, [0:6], @@trigger_type_e_enum@@
-		trigger_type_e type;https://github.com/rusefi/rusefi/wiki/All-Supported-Triggers
-		uint16_t customTotalToothCount;;"number", 1, 0, 1, 60, 0
-		uint16_t customSkippedToothCount;;"number", 1, 0, 0, 10, 0
+		trigger_type_e type;Crank or cam wheel pattern your engine has. Pick the OEM name if it is listed, otherwise use 'custom toothed wheel' for a plain missing-tooth wheel.
+		uint16_t customTotalToothCount;Tooth count of a 'custom toothed wheel' including the missing teeth. A 36-1 wheel is 36.;"number", 1, 0, 1, 60, 0
+		uint16_t customSkippedToothCount;Number of missing teeth in the gap of a 'custom toothed wheel'. A 36-1 wheel is 1.;"number", 1, 0, 0, 10, 0
 	end_struct
 
 	trigger_config_s trigger;
@@ -561,8 +561,8 @@ adc_channel_e throttlePedalPositionAdcChannel;Analog input for the primary accel
 float globalFuelCorrection;;"coef", 1, 0, 0, 1000, 2
 
 	float adcVcc;;"volts", 1, 0, 0, 6, 3
-	float mapCamDetectionAnglePosition;;"Deg", 1, 0, 0, 360, 0
-	brain_input_pin_e[CAM_INPUTS_COUNT iterate] camInputs;Camshaft input could be used either just for engine phase detection if your trigger shape does not include cam sensor as 'primary' channel, or it could be used for Variable Valve timing on one of the camshafts.
+	float mapCamDetectionAnglePosition;For 'VTwin by MAP' only. Engine angle within each crank revolution at which MAP is compared with the previous revolution to find engine phase while cranking.;"Deg", 1, 0, 0, 360, 0
+	brain_input_pin_e[CAM_INPUTS_COUNT iterate] camInputs;Input pin for this cam sensor. A cam input can find engine phase, measure cam position for VVT, or both.
 	
 struct afr_sensor_s
 	adc_channel_e hwChannel;
@@ -645,15 +645,15 @@ switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch
 
 	pin_output_mode_e electronicThrottlePin1Mode;
 	spi_device_e max31855spiDevice;
-	Gpio debugTriggerSync;
+	Gpio debugTriggerSync;Output pin that toggles each time the trigger decoder finds its sync gap. Connect an oscilloscope to see where the ECU thinks sync is.
 	Gpio mc33972_cs;
 	pin_output_mode_e mc33972_csPinMode;
 
-	uint8_t autoscale minCamPhaseResolveRpm;Above this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at low RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
+	uint8_t autoscale minCamPhaseResolveRpm;Only use the cam to find engine phase above this RPM, for a cam sensor that is unreliable at low speed. Phase already found is kept. Set to 0 for no limit.;"rpm", 50, 0, 0, 12500, 0
 	adc_channel_e tps1_2AdcChannel;First throttle body, second sensor.
 	adc_channel_e tps2_2AdcChannel;Second throttle body, second sensor.
 
-	brain_input_pin_e[TRIGGER_INPUT_PIN_COUNT iterate] triggerInputPins;
+	brain_input_pin_e[TRIGGER_INPUT_PIN_COUNT iterate] triggerInputPins;Trigger input pin. The secondary input is only used by trigger types with a second wheel.
 	uint16_t mc33_t_min_boost;Minimum allowed time for the boost phase. If the boost target current is reached before this time elapses, it is assumed that the injector has failed short circuit.;"us", 1, 0, 0, 10000, 0
 	output_pin_e tachOutputPin;Output that drives the tachometer signal. Leave unassigned to disable the tach output.
 	pin_output_mode_e tachOutputPinMode;Output polarity and drive type for the tach signal.
@@ -810,8 +810,8 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	bit enableOilPressureProtect
 	bit stftIgnoreErrorMagnitude;If enabled, the trim adds or removes fuel at a constant rate (10% of fuel per 'Time const'), depending only on whether lambda is lean or rich of target, instead of at a rate proportional to the lambda error. More tolerant of sensor noise, but never settles completely.
 	bit enableSoftwareKnock
-	bit verboseVVTDecoding;Verbose info in console below engineSnifferRpmThreshold\nenable vvt_details
-	bit invertCamVVTSignal;get invertCamVVTSignal
+	bit verboseVVTDecoding;Print each cam/VVT sync gap check to the console, with the measured and expected gap. Only active below 'Engine Sniffer Threshold' RPM.
+	bit invertCamVVTSignal;Use the opposite edge of the signal from all cam sensors. VR sensor with a MAX9924 or MAX9926 conditioner: off. Hall sensor: depends on the sensor, check the Trigger Logger. Recheck the VVT offsets after changing this.
 	bit alphaNUseIat;In Alpha-N mode, compensate for air temperature.
 	bit knockBankCyl1,"Channel 2","Channel 1"
 	bit knockBankCyl2,"Channel 2","Channel 1"
@@ -887,7 +887,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
 	output_pin_e[LUA_PWM_COUNT iterate] luaOutputPins
 
-	int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Angle between cam sensor and VVT zero position. Adjust this so that your VVT indication reads 0 while running with the control solenoid disabled.;"value", 0.1, 0, -720, 1000, 1
+	int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Adjust so this cam's VVT reading is 0 at its rest position, running with VVT control off. Subtract the current reading from this value. Set 'Trigger Angle Advance' first.;"deg", 0.1, 0, -720, 1000, 1
 
     gppwm_note_t[GPPWM_CHANNELS iterate] gpPwmNote;
 
@@ -899,7 +899,7 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	bit useOilPressureSwitch,"Switch","Sensor"
 	bit boardUseTachPullUp,"12v","5v"
 	bit boardUseTempPullUp,"With Pull Ups","Piggyback Mode"
-	bit silentTriggerError;Sometimes we have a performance issue while printing error
+	bit silentTriggerError;Do not print trigger sync error messages to the console. Printing can slow the ECU down on wheels with many teeth.
 	bit useLinearCltSensor;Treat the CLT input as a linear voltage sensor instead of a thermistor. The resistance fields at the lowest and middle temperatures are read as volts, and the highest point is ignored.
 	bit canReadEnabled;enable can_read/disable can_read
 	bit canWriteEnabled;enable can_write/disable can_write
@@ -907,8 +907,8 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 	bit boardUse2stepPullDown,"With Pull Down","With Pull Up"
 	bit tachPulseDurationAsDutyCycle,"Duty cycle","Constant time";'Duty cycle' mode treats 'Pulse duration' as a fraction of each period, so 0.5 gives 50%. 'Constant time' mode treats it as the high time in ms
 	bit isAlternatorControlEnabled;This enables smart alternator control and activates the extra alternator settings.
-	bit invertPrimaryTriggerSignal;Invert the signal from the primary trigger sensor.
-	bit invertSecondaryTriggerSignal;Invert the signal from the secondary trigger sensor.
+	bit invertPrimaryTriggerSignal;Use the opposite edge of the primary trigger signal. VR sensor with a MAX9924 or MAX9926 conditioner: off. Hall sensor: depends on the sensor, check the Trigger Logger. A reversed VR sensor is fixed by swapping its wires, not with this.
+	bit invertSecondaryTriggerSignal;Use the opposite edge of the secondary trigger signal. VR sensor with a MAX9924 or MAX9926 conditioner: off. Hall sensor: depends on the sensor, check the Trigger Logger.
 	
 bit cutFuelOnHardLimit,"yes","no";Cut fuel above the hard RPM limit.
 bit cutSparkOnHardLimit,"yes","no";Cut spark above the hard RPM limit. WARNING: some engines are known to self-disassemble their valvetrain with a spark cut. Fuel cut is much safer. Use with extreme caution.
@@ -923,8 +923,8 @@ bit launchSparkCutEnable;This is the Cut Mode normally used
 	bit boardUseD5PullDown,"With Pull Down","With Pull Up"
 bit verboseIsoTp
 bit launchActivateInverted
-bit twoStroke,"Two Stroke","Four Stroke"
-bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skipped wheel located?
+bit twoStroke,"Two Stroke","Four Stroke";Select Two Stroke for a two-stroke engine, where the engine cycle is one crank revolution (360 degrees).
+bit skippedWheelOnCam,"On camshaft","On crankshaft";Whether the primary trigger wheel turns at camshaft speed (once per engine cycle) or crankshaft speed. Only used for wheels where the location is not implied by the trigger type.
 
 	switch_input_pin_e acSwitch;A/C button input;
 	switch_input_pin_e acPressureSwitch;A/C pressure switch input;
@@ -942,11 +942,11 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit useSeparateAdvanceForIdle;This activates a separate ignition timing table for idle conditions, this can help idle stability by using ignition retard and advance either side of the desired idle speed. Extra retard at low idle speeds will prevent stalling and extra advance at high idle speeds can help reduce engine power and slow the idle speed.
 	bit isWaveAnalyzerEnabled
 	bit useSeparateVeForIdle;This activates a separate fuel table for Idle, this allows fine tuning of the idle fuelling.
-	bit verboseTriggerSynchDetails;Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
+	bit verboseTriggerSynchDetails;Print each crank sync gap check to the console, with the measured and expected gap. Only active below 'Engine Sniffer Threshold' RPM.
 	bit alwaysResetPidLeavingIdle;Reset the closed loop idle I-term every time the engine leaves idle. When off, a positive I-term (adding air) is kept for the next return to idle, and a negative one is reset.
 	bit canBroadcastEgt;Disable to skip cam data frame (base + 9) if you have no EGT sensing.
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
-	bit pairedOddFireWastedSpark
+	bit pairedOddFireWastedSpark;For engines with uneven firing intervals where one coil fires a pair of companion cylinders, such as the Viper V10. Only the lower firing order cylinder of each pair needs an ignition output.
 bit useFixedBaroCorrFromMap;At power-up, read MAP once and use it as the barometric pressure until the next restart. Only applies if the reading is between 60 and 110 kPa. Overrides any baro sensor.
 bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In 'Fixed (auto taper)' mode, timing is held at 'Fixed cranking advance' up to half the cranking RPM, then tapered to running timing at the cranking RPM.\nIn 'Table' mode, the 'Cranking ignition advance' curve is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
@@ -954,7 +954,7 @@ bit flexCranking;Enable a second cranking table to use for E100 flex fuel, inter
 bit torqueReductionEnabled;Enable the torque-reduction controller (spark retard + cylinder cut). It maps a torque-reduction request to ignition retard and cut. No producer (e.g. traction control) is wired up yet, so on its own this currently has no effect.
 bit isBoostControlEnabled
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range
-bit isPhaseSyncRequiredForIgnition;If enabled, no fuel or spark happens until the cam/VVT sensor has resolved engine phase, so the engine always starts in fully sequential mode.\nIf disabled, the engine begins firing wasted spark and batch fuel as soon as the crank syncs, then switches to sequential once the cam syncs. This starts sooner, but a few engines don't like running that way.\nEngines with a symmetrical crank wheel (where cam sync is required to know engine phase at all) always wait for cam sync regardless of this setting.
+bit isPhaseSyncRequiredForIgnition;If enabled, no fuel or spark happens until the cam/VVT sensor has resolved engine phase, so the engine always starts in fully sequential mode. Don't enable it without a working cam sensor.\nIf disabled, the engine begins firing wasted spark and batch fuel as soon as the crank syncs, then switches to sequential once the cam syncs. This starts sooner, but a few engines don't like running that way.\nEngines with a symmetrical crank wheel (where cam sync is required to know engine phase at all) always wait for cam sync regardless of this setting.
 bit useCltBasedRpmLimit,"yes","no";If enabled, use a curve for RPM limit (based on coolant temperature) instead of a constant value.
 bit forceO2Heating,"yes","no";If enabled, don't wait for engine start to heat O2 sensors. WARNING: this will reduce the life of your sensor, as condensation in the exhaust from a cold start can crack the sensing element.
 bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
@@ -1103,7 +1103,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint8_t[16] autoscale tchargeBins;;"kg/h", 5, 0, 0, 1200, 0
 	uint8_t[16] autoscale tchargeValues;;"ratio", 0.01, 0, 0, 1, 2
 
-	float fixedTiming;Fixed timing, useful for TDC testing;"deg", 1, 0, -720, 720, 2
+	float fixedTiming;Ignition timing held in 'fixed' timing mode, once the engine is running. Use it to check 'Trigger Angle Advance' with a timing light.;"deg", 1, 0, -720, 720, 2
 	float mapLowValueVoltage;Sensor voltage at the low pressure point of a 'Custom' sensor. Also used by a 'Custom' baro sensor.;"v", 1, 0, 0, 10, 2
 	float mapHighValueVoltage;Sensor voltage at the high pressure point of a 'Custom' sensor. Also used by a 'Custom' baro sensor.;"v", 1, 0, 0, 10, 2
 	float egoValueShift;EGO value correction;"value", 1, 0, -10, 10, 2
@@ -1125,7 +1125,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint16_t alternatorPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
 
-	vvt_mode_e[CAMS_PER_BANK iterate] vvtMode
+	vvt_mode_e[CAMS_PER_BANK iterate] vvtMode;Pattern of the cam sensor wheel, shared by both banks. 'Inactive' if there is no cam sensor on this cam.
 	uint8_t fan2ExtraIdle;Additional idle % when fan #2 is active;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale primingDelay;Delay to allow fuel pressure to build before firing the priming pulse.;"sec", 0.01, 0, 0, 1, 2
 ! todo: rename to luaAnalogInputs
@@ -1276,10 +1276,10 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	uint16_t mc33_t_hold_off;;"us", 1, 0, 0, 10000, 0
 	uint16_t mc33_t_hold_tot;Hold phase duration;"us", 1, 0, 0, 10000, 0
 
-	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideFrom;;"ratio", 0.001, 0, 0, 20, 3
-	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideTo;;"ratio", 0.001, 0, 0, 20, 3
+	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideFrom;Lowest accepted ratio of a tooth period to the one before it. Gap #1 is the newest tooth and later gaps look further back.;"ratio", 0.001, 0, 0, 20, 3
+	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideTo;Highest accepted ratio of a tooth period to the one before it. Gap #1 is the newest tooth and later gaps look further back.;"ratio", 0.001, 0, 0, 20, 3
 
-	uint8_t autoscale maxCamPhaseResolveRpm;Below this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at high RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
+	uint8_t autoscale maxCamPhaseResolveRpm;Only use the cam to find engine phase below this RPM, for a cam sensor that is unreliable at high speed. Phase already found is kept. Set to 0 for no limit.;"rpm", 50, 0, 0, 12500, 0
 
 	uint8_t autoscale dfcoDelay;Delay before cutting fuel. Set to 0 to cut immediately with no delay. May cause rumbles and pops out of your exhaust...;"sec", 0.1, 0, 0, 10, 1
 	uint8_t autoscale acDelay;Delay before engaging the AC compressor. Set to 0 to engage immediately with no delay. Use this to prevent bogging at idle when AC engages.;"sec", 0.1, 0, 0, 10, 1
@@ -1353,7 +1353,7 @@ int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
 	int8_t autotemp ALSMaxCLT;;"C", 1, 0, 0, 105, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
-	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
+	uint8_t instantRpmRange;Crank angle that instant RPM is measured over, back from the current tooth.;"deg", 1, 0, 0, 250, 0
 	uint8_t widebandPumpGain;;"%", 1, 0, 0, 200, 0
 
 	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
@@ -1443,7 +1443,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 		DtcSeverity p0336;Behavior for P0336: Crank sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
 
 		! Cam sensors
-		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the primary trigger signal is present, but cam signal is not.
+		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the crank is turning but a configured cam input has no signal, or gives no valid cam position.
 		DtcSeverity camSyncErrors;Behavior for P0341/P0346/P0366/P0386: Cam sensor sync errors. Triggered when 50 cam trigger errors are registered during a single engine run.
 
 		! Oil pressure
