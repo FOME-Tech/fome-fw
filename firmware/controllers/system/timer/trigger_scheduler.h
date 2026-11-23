@@ -33,7 +33,6 @@ public:
 
 private:
 	void schedule(AngleBasedEvent* event, action_s action);
-	void unschedule(AngleBasedEvent* event);
 
 	bool assertNotInList(AngleBasedEvent* head, AngleBasedEvent* element);
 
