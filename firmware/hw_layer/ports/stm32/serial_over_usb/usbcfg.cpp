@@ -403,7 +403,7 @@ static void usb_event(USBDriver *usbp, usbevent_t event) {
 		sduConfigureHookI(&SDU1);
 #endif
 
-		#if HAL_USE_USB_MSD
+		#if HAL_USE_USB_MSD && EFI_FILE_LOGGING
 			// Tell the MMC thread to wake up and mount the card as a USB device
 			onUsbConnectedNotifyMmcI();
 		#endif
