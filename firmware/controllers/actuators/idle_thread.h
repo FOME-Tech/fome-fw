@@ -42,8 +42,8 @@ struct IIdleController {
 	};
 
 	virtual float getCrankingOpenLoop(float clt) const = 0;
-	virtual float getRunningOpenLoop(float rpm, float clt, SensorResult tps) = 0;
-	virtual float getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) = 0;
+	virtual float getRunningOpenLoop(float clt) = 0;
+	virtual float getOpenLoop(Phase phase, float rpm, float clt, float crankingTaperFraction) = 0;
 	virtual float getClosedLoop(Phase phase, float rpm, float rpmRate, float target) = 0;
 	virtual bool isIdlingOrTaper() const = 0;
 	virtual float getIdleTimingAdjustment(float rpm, float rpmRate) = 0;
@@ -60,8 +60,11 @@ public:
 
 	// OPEN LOOP CORRECTIONS
 	percent_t getCrankingOpenLoop(float clt) const override;
-	percent_t getRunningOpenLoop(float rpm, float clt, SensorResult tps) override;
-	percent_t getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) override;
+	percent_t getRunningOpenLoop(float clt) override;
+	percent_t getOpenLoop(Phase phase, float rpm, float clt, float crankingTaperFraction) override;
+
+	// Extra air carried over from before idle entry, ramped out on return to idle
+	percent_t getReturnToIdleAir(Phase phase, percent_t idleOpenLoop, float returnRampFraction);
 
 	float getIdleTimingAdjustment(float rpm, float rpmRate) override;
 	float getIdleTimingAdjustment(float rpm, float rpmRate, float targetRpm, Phase phase);
@@ -91,6 +94,10 @@ private:
 	// These are stored by getIdlePosition() and used by getIdleTimingAdjustment()
 	Phase m_lastPhase = Phase::Cranking;
 	int m_lastTargetRpm = 0;
+
+	// Open loop position commanded on the last tick, and the extra air latched at idle entry
+	percent_t m_lastOpenLoop = 0;
+	percent_t m_returnAirStart = 0;
 	efitimeus_t restoreAfterPidResetTimeUs = 0;
 
 	Pid m_timingPid;
@@ -104,6 +111,10 @@ struct IIdleTargetController {
 		TargetInfo target;
 		Phase phase = Phase::Cranking;
 		float crankingTaperFraction = 0;
+
+		// How much of the return to idle ramp is left: 1 = just entered idle from the entry threshold,
+		// 0 = ramp finished or disabled. Already scaled down if the engine entered idle near target.
+		float returnRampFraction = 0;
 	};
 
 	virtual TargetInfo getTargetRpm(float clt) = 0;
@@ -130,11 +141,17 @@ public:
 
 	Output getOutput(bool tpsIsAboveIdleThreshold) override;
 
+	float getReturnRampFraction() const;
+
 private:
 	Phase m_lastPhase = Phase::Cranking;
 
 	Timer m_timeSinceCranking;
 	Timer m_timeInIdlePhase;
+
+	// Where the return to idle ramp starts, as a fraction of the way from the normal target to the
+	// entry threshold, latched at idle entry
+	float m_rampStartFraction = 0;
 };
 
 percent_t getIdlePosition();

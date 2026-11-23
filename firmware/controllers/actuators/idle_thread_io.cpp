@@ -133,6 +133,7 @@ void setDefaultIdleParameters() {
 	engineConfiguration->inhibitIdleAfterCrankingTime = 1;
 
 	engineConfiguration->idleReturnTargetRamp = true;
+	engineConfiguration->idleReturnRampDuration = 3;
 }
 
 void startIdleThread() {

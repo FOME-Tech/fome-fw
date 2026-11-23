@@ -43,16 +43,23 @@ IIdleTargetController::TargetInfo IdleTargetController::getTargetRpm(float clt) 
 	// Higher exit than entry to add some hysteresis to avoid bouncing around upper threshold
 	float exitRpm = target + 1.5 * rpmUpperLimit;
 
-	if (engineConfiguration->idleReturnTargetRamp) {
-		// Ramp the target down from the transition RPM to normal over a few seconds
-		float timeSinceIdleEntry = m_timeInIdlePhase.getElapsedSeconds();
-		target += interpolateClamped(0, rpmUpperLimit, 3, 0, timeSinceIdleEntry);
-	}
+	// Ramp the target down from the RPM at idle entry to normal
+	target += rpmUpperLimit * getReturnRampFraction();
 
 	idleTarget = target;
 	idleEntryRpm = entryRpm;
 	idleExitRpm = exitRpm;
 	return {target, entryRpm, exitRpm};
+}
+
+float IdleTargetController::getReturnRampFraction() const {
+	float rampDuration = engineConfiguration->idleReturnRampDuration;
+	if (!engineConfiguration->idleReturnTargetRamp || rampDuration <= 0) {
+		return 0;
+	}
+
+	float timeSinceIdleEntry = m_timeInIdlePhase.getElapsedSeconds();
+	return m_rampStartFraction * interpolateClamped(0, 1, rampDuration, 0, timeSinceIdleEntry);
 }
 
 IIdleTargetController::Phase IdleTargetController::determinePhase(
@@ -121,8 +128,7 @@ IIdleTargetController::Output IdleTargetController::getOutput(bool tpsIsAboveIdl
 	float rpm = engine->triggerCentral.instantRpm.getInstantRpm();
 	float vehicleSpeed = Sensor::getOrZero(SensorType::VehicleSpeed);
 
-	// Compute the target we're shooting for. Note: getTargetRpm() consumes m_timeInIdlePhase, so it
-	// must run before the idle-entry reset below
+	// Compute the target we're shooting for
 	auto target = getTargetRpm(clt);
 
 	// Determine cranking taper
@@ -133,8 +139,16 @@ IIdleTargetController::Output IdleTargetController::getOutput(bool tpsIsAboveIdl
 	currentPhase = static_cast<uint8_t>(phase);
 
 	if (phase != m_lastPhase && phase == Phase::Idling) {
-		// Just entered idle, reset timer
+		// Just entered idle: start the return ramp from where the engine is now, so the target never
+		// starts above the engine (e.g. lifting off at an RPM already near idle). It never starts above
+		// the entry threshold, nor below the normal target.
+		float rpmUpperLimit = engineConfiguration->idlePidRpmUpperLimit;
+		float baseTarget = target.IdleEntryRpm - rpmUpperLimit;
+		m_rampStartFraction = rpmUpperLimit > 0 ? std::clamp<float>((rpm - baseTarget) / rpmUpperLimit, 0, 1) : 0;
 		m_timeInIdlePhase.reset();
+
+		// Recompute so the ramp applies from this tick
+		target = getTargetRpm(clt);
 	}
 
 	m_lastPhase = phase;
@@ -143,6 +157,7 @@ IIdleTargetController::Output IdleTargetController::getOutput(bool tpsIsAboveIdl
 	result.target = target;
 	result.phase = phase;
 	result.crankingTaperFraction = crankingTaper;
+	result.returnRampFraction = getReturnRampFraction();
 
 	return result;
 }
@@ -157,7 +172,7 @@ float IdleController::getCrankingOpenLoop(float clt) const {
 	return engineConfiguration->crankingIACposition * mult;
 }
 
-percent_t IdleController::getRunningOpenLoop(float rpm, float clt, SensorResult tps) {
+percent_t IdleController::getRunningOpenLoop(float clt) {
 	float running = engineConfiguration->manIdlePosition // Base idle position (slider)
 				  * interpolate2d(clt, config->cltIdleCorrBins, config->cltIdleCorr);
 	openLoopBase = running;
@@ -180,33 +195,12 @@ percent_t IdleController::getRunningOpenLoop(float rpm, float clt, SensorResult 
 	}
 #endif /* EFI_ANTILAG_SYSTEM */
 
-	// Now bump it by the specified amount when the throttle is opened (if configured)
-	// nb: invalid tps will make no change, no explicit check required
-	iacByTpsTaper = interpolateClamped(
-			0,
-			0,
-			engineConfiguration->idlePidDeactivationTpsThreshold,
-			engineConfiguration->iacByTpsTaper,
-			tps.value_or(0));
-
-	running += iacByTpsTaper;
-
-	float airTaperRpmUpperLimit = engineConfiguration->idlePidRpmUpperLimit + engineConfiguration->airTaperRpmRange;
-	iacByRpmTaper = interpolateClamped(
-			engineConfiguration->idlePidRpmUpperLimit,
-			0,
-			airTaperRpmUpperLimit,
-			engineConfiguration->airByRpmTaper,
-			rpm);
-
-	running += iacByRpmTaper;
-
 	return std::clamp<float>(running, 0, 100);
 }
 
-percent_t
-IdleController::getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction) {
+percent_t IdleController::getOpenLoop(Phase phase, float rpm, float clt, float crankingTaperFraction) {
 	percent_t crankingValvePosition = getCrankingOpenLoop(clt);
+	dashpotAir = 0;
 
 	isCranking = phase == Phase::Cranking;
 	isIdleCoasting = phase == Phase::Coasting;
@@ -222,7 +216,14 @@ IdleController::getOpenLoop(Phase phase, float rpm, float clt, SensorResult tps,
 		return interpolate2d(rpm, config->iacCoastingRpmBins, config->iacCoasting);
 	}
 
-	percent_t running = getRunningOpenLoop(rpm, clt, tps);
+	percent_t running = getRunningOpenLoop(clt);
+
+	// Dashpot: extra air while off idle, so that it's already in the intake on return to idle. The coasting
+	// table (above) sets the whole position while coasting, so this isn't added on top of it.
+	if (phase == Phase::Running || phase == Phase::Coasting) {
+		dashpotAir = engineConfiguration->idleDashpotAir;
+		running = std::clamp<float>(running + dashpotAir, 0, 100);
+	}
 
 	// Interpolate between cranking and running over a short time
 	// This clamps once you fall off the end, so no explicit check for >1 required
@@ -248,6 +249,24 @@ float IdleController::getIdleTimingAdjustment(float rpm, float rpmRate, float ta
 	// We're now in the idle mode, and RPM is inside the Timing-PID regulator work zone!
 	m_timingPid.setDTermOverride(-rpmRate);
 	return m_timingPid.getOutput(targetRpm, rpm, FAST_CALLBACK_PERIOD_MS / 1000.0f);
+}
+
+percent_t IdleController::getReturnToIdleAir(Phase phase, percent_t idleOpenLoop, float returnRampFraction) {
+	if (phase != Phase::Idling) {
+		m_returnAirStart = 0;
+		returnToIdleAir = 0;
+		return 0;
+	}
+
+	if (m_lastPhase == Phase::Running || m_lastPhase == Phase::Coasting) {
+		// Just returned to idle: carry over the extra air commanded until now (dashpot air or the coasting
+		// table) so the position doesn't step down, then ramp it out along with the target. Entry from
+		// cranking is left alone, as the cranking taper already handles that.
+		m_returnAirStart = std::max<float>(0, m_lastOpenLoop - idleOpenLoop);
+	}
+
+	returnToIdleAir = m_returnAirStart * returnRampFraction;
+	return returnToIdleAir;
 }
 
 static void finishIdleTestIfNeeded() {
@@ -317,13 +336,16 @@ float IdleController::getIdlePosition(float rpm, float rpmRate) {
 	float crankingTaper = idleTargetState.crankingTaperFraction;
 
 	m_lastTargetRpm = targetRpm.ClosedLoopTarget;
-	m_lastPhase = phase;
 
 	finishIdleTestIfNeeded();
 
 	// Always apply open loop correction
-	percent_t iacPosition = getOpenLoop(phase, rpm, clt, tps, crankingTaper);
+	percent_t iacPosition = getOpenLoop(phase, rpm, clt, crankingTaper);
+	iacPosition += getReturnToIdleAir(phase, iacPosition, idleTargetState.returnRampFraction);
 	openLoop = iacPosition;
+
+	m_lastOpenLoop = iacPosition;
+	m_lastPhase = phase;
 
 	auto idleMode = engineConfiguration->idleMode;
 

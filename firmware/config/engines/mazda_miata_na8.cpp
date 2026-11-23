@@ -34,7 +34,7 @@ static void commonNA8() {
 	engineConfiguration->acIdleExtraOffset = 15;
 	engineConfiguration->idlePidRpmUpperLimit = 350;
 
-	engineConfiguration->iacByTpsTaper = 6;
+	engineConfiguration->idleDashpotAir = 6;
 	engineConfiguration->useIdleTimingPidControl = true;
 	engineConfiguration->engineChartSize = 300;
 
