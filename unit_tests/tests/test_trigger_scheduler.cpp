@@ -26,9 +26,9 @@ TEST(TriggerScheduler, engineStopEmptiesQueue) {
 }
 
 TEST(TriggerScheduler, scheduleByTimeRemovesStaleQueueEntry) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-
 	AngleBasedEvent event;
+
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 
 	// A previous cycle left this event queued
 	engine->module<TriggerScheduler>()->schedule(&event, EngPhase{123}, {doNothing, nullptr});

@@ -21,6 +21,12 @@ public:
 	 */
 	void flush();
 
+	/**
+	 * Take one event out of the queue, if it's there. For when the event's action has run some
+	 * other way, so its angle shouldn't run it again.
+	 */
+	void unschedule(AngleBasedEvent* event);
+
 	// For unit tests
 	AngleBasedEvent* getElementAtIndexForUnitTest(int index);
 	int getQueueSizeForUnitTest() const;

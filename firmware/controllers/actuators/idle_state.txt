@@ -14,8 +14,8 @@ struct_no_prefix idle_state_s
 
 	! Open loop
 	percent_t luaAdd;Open loop: Lua Adder
-	percent_t iacByTpsTaper;Open loop: iacByTpsTaper
-	percent_t iacByRpmTaper;Open loop: iacByRpmTaper
+	percent_t dashpotAir;Open loop: Dashpot air
+	percent_t returnToIdleAir;Open loop: Return to idle air
 
 	uint8_t autoscale openLoopBase;Open loop: Base;"%", 0.5, 0, 0, 100, 1
 	uint8_t openLoopAcBump;Open loop: AC bump;"%", 1, 0, 0, 100, 0

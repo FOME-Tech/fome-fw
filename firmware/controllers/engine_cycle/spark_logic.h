@@ -22,6 +22,7 @@ union IgnitionContext {
 		eventIndex = 0xF;
 		sparksRemaining = 0;
 		isOverdwellProtect = false;
+		isExtraSpark = false;
 	}
 
 	struct {
@@ -33,6 +34,9 @@ union IgnitionContext {
 		uint8_t sparksRemaining;
 
 		bool isOverdwellProtect : 1;
+
+		// This is one of multispark's extra sparks, charged for the multispark dwell rather than the main dwell
+		bool isExtraSpark : 1;
 	};
 	void* _pad;
 };

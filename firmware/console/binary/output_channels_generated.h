@@ -542,9 +542,9 @@ struct output_channels_s {
 	// offset 320
 	scaled_channel<int16_t, 100, 1> gyroYaw = (int16_t)0;
 	// Turbocharger Speed
-	// hz
+	// rpm
 	// offset 322
-	uint16_t turboSpeed = (uint16_t)0;
+	scaled_channel<uint16_t, 1, 10> turboSpeed = (uint16_t)0;
 	// Ign: Timing Cyl
 	// deg
 	// offset 324
@@ -663,8 +663,11 @@ struct output_channels_s {
 	// RPM
 	// offset 556
 	uint16_t revLimitTarget = (uint16_t)0;
+	// Ign: Overdwell sparks
+	// Sparks fired by the overdwell backup rather than at their timing angle, because the trigger tooth they were waiting for didn't come in time, or the spark angle moved behind the coil charge
+	// count
 	// offset 558
-	uint8_t alignmentFill_at_558[2];
+	uint16_t overdwellSparkCounter = (uint16_t)0;
 };
 static_assert(sizeof(output_channels_s) == 560);
 static_assert(offsetof(output_channels_s, RPMValue) == 4);
@@ -827,3 +830,4 @@ static_assert(offsetof(output_channels_s, rawClutchPosition) == 550);
 static_assert(offsetof(output_channels_s, revLimitXAxisValue) == 552);
 static_assert(offsetof(output_channels_s, revLimitYAxisValue) == 554);
 static_assert(offsetof(output_channels_s, revLimitTarget) == 556);
+static_assert(offsetof(output_channels_s, overdwellSparkCounter) == 558);

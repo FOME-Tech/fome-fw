@@ -207,6 +207,171 @@ TEST(idle_v2, inhibitIdleAfterCrankingDisabled) {
 	EXPECT_EQ(ICP::Idling, dut.determinePhase(1000, targetInfo, 0, 0, 10));
 }
 
+// Return-to-idle target ramp: idle target 940, entry threshold 940 + 500 = 1440, exit 1690
+static void setupReturnRamp() {
+	for (size_t i = 0; i < efi::size(config->cltIdleRpmBins); i++) {
+		config->cltIdleRpmBins[i] = i * 10;
+		config->cltIdleRpm[i] = 940;
+	}
+
+	engineConfiguration->idlePidRpmUpperLimit = 500;
+	engineConfiguration->idleReturnTargetRamp = true;
+	engineConfiguration->idleReturnRampDuration = 3;
+	engineConfiguration->inhibitIdleAfterCrankingTime = 0;
+	engineConfiguration->maxIdleVss = 0;
+
+	// Finish the cranking taper so coasting reads as Coasting
+	engineConfiguration->afterCrankingIACtaperDuration = 1;
+	engine->rpmCalculator.onNewEngineCycle();
+	engine->rpmCalculator.onNewEngineCycle();
+
+	// Engine running
+	engine->rpmCalculator.setRpmValue(1000);
+	advanceTimeUs(1);
+}
+
+static IIdleTargetController::Output idleTargetStep(IdleTargetController& dut, float instantRpm, bool onThrottle) {
+	engine->triggerCentral.instantRpm.m_instantRpm = instantRpm;
+	return dut.getOutput(onThrottle);
+}
+
+TEST(idle_v2, returnRampFromCoasting) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+
+	// Coasting down, off throttle
+	auto out = idleTargetStep(dut, 2000, false);
+	EXPECT_EQ(ICP::Coasting, out.phase);
+	EXPECT_FLOAT_EQ(940, out.target.ClosedLoopTarget);
+	out = idleTargetStep(dut, 1500, false);
+	EXPECT_EQ(ICP::Coasting, out.phase);
+
+	// Drops below the entry threshold: the ramp starts where the engine is, from this very tick
+	out = idleTargetStep(dut, 1430, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(1430, out.target.ClosedLoopTarget, 0.1);
+	EXPECT_NEAR(490.0f / 500, out.returnRampFraction, 1e-4);
+
+	// Halfway through the ramp
+	advanceTimeUs(1'500'000);
+	out = idleTargetStep(dut, 1100, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(940 + 490 / 2, out.target.ClosedLoopTarget, 0.1);
+	EXPECT_NEAR(490.0f / 500 / 2, out.returnRampFraction, 1e-4);
+
+	// Ramp complete, and stays there
+	advanceTimeUs(1'500'000);
+	out = idleTargetStep(dut, 950, false);
+	EXPECT_NEAR(940, out.target.ClosedLoopTarget, 0.1);
+	EXPECT_FLOAT_EQ(0, out.returnRampFraction);
+	advanceTimeUs(10'000'000);
+	EXPECT_NEAR(940, idleTargetStep(dut, 950, false).target.ClosedLoopTarget, 0.1);
+}
+
+TEST(idle_v2, returnRampLiftOffNearIdle) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+
+	// Creeping on a little throttle, then lift off at 968 RPM. The target must start at the engine,
+	// not at the 1440 RPM entry threshold.
+	EXPECT_EQ(ICP::Running, idleTargetStep(dut, 968, true).phase);
+
+	auto out = idleTargetStep(dut, 968, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(968, out.target.ClosedLoopTarget, 0.1);
+	// Only a small fraction of the full ramp, so carried-over air is mostly removed at once
+	EXPECT_NEAR(28.0f / 500, out.returnRampFraction, 1e-4);
+
+	advanceTimeUs(1'500'000);
+	EXPECT_NEAR(954, idleTargetStep(dut, 960, false).target.ClosedLoopTarget, 0.1);
+
+	advanceTimeUs(1'500'000);
+	EXPECT_NEAR(940, idleTargetStep(dut, 945, false).target.ClosedLoopTarget, 0.1);
+}
+
+TEST(idle_v2, returnRampLiftOffBelowTarget) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+
+	// Lift off below the idle target: no ramp at all
+	idleTargetStep(dut, 900, true);
+	auto out = idleTargetStep(dut, 900, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(940, out.target.ClosedLoopTarget, 0.1);
+	EXPECT_FLOAT_EQ(0, out.returnRampFraction);
+}
+
+TEST(idle_v2, returnRampStartClampedToEntryThreshold) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+
+	// Lift off between the entry (1440) and exit (1690) thresholds goes straight to Idling (the
+	// coasting latch was cleared by Running). The ramp starts no higher than the entry threshold.
+	idleTargetStep(dut, 1600, true);
+	auto out = idleTargetStep(dut, 1600, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(1440, out.target.ClosedLoopTarget, 0.1);
+}
+
+TEST(idle_v2, returnRampDuration) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+	engineConfiguration->idleReturnRampDuration = 1;
+
+	idleTargetStep(dut, 2000, false);
+	EXPECT_NEAR(1439, idleTargetStep(dut, 1439, false).target.ClosedLoopTarget, 0.1);
+
+	advanceTimeUs(500'000);
+	EXPECT_NEAR(940 + 499 / 2.0, idleTargetStep(dut, 1200, false).target.ClosedLoopTarget, 0.1);
+
+	advanceTimeUs(500'000);
+	EXPECT_NEAR(940, idleTargetStep(dut, 1000, false).target.ClosedLoopTarget, 0.1);
+}
+
+TEST(idle_v2, returnRampRestartsOnEachEntry) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+
+	// First return from coasting, part way down the ramp...
+	idleTargetStep(dut, 2000, false);
+	idleTargetStep(dut, 1439, false);
+	advanceTimeUs(1'000'000);
+	EXPECT_EQ(ICP::Idling, idleTargetStep(dut, 1200, false).phase);
+
+	// ...then a quick blip, lifting off at 1100: the new ramp starts at 1100, not where the old one was
+	EXPECT_EQ(ICP::Running, idleTargetStep(dut, 1100, true).phase);
+	auto out = idleTargetStep(dut, 1100, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(1100, out.target.ClosedLoopTarget, 0.1);
+}
+
+TEST(idle_v2, returnRampDisabled) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleTargetController dut;
+	setupReturnRamp();
+	engineConfiguration->idleReturnTargetRamp = false;
+
+	idleTargetStep(dut, 2000, false);
+	auto out = idleTargetStep(dut, 1430, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(940, out.target.ClosedLoopTarget, 0.1);
+	EXPECT_FLOAT_EQ(0, out.returnRampFraction);
+
+	// A zero duration also means no ramp
+	engineConfiguration->idleReturnTargetRamp = true;
+	engineConfiguration->idleReturnRampDuration = 0;
+	idleTargetStep(dut, 1100, true);
+	out = idleTargetStep(dut, 1100, false);
+	EXPECT_EQ(ICP::Idling, out.phase);
+	EXPECT_NEAR(940, out.target.ClosedLoopTarget, 0.1);
+}
+
 TEST(idle_v2, crankingOpenLoop) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	IdleController dut;
@@ -243,8 +408,8 @@ TEST(idle_v2, runningOpenLoopBasic) {
 		config->cltIdleCorr[i] = i * 0.1f;
 	}
 
-	EXPECT_FLOAT_EQ(5, dut.getRunningOpenLoop(0, 10, 0));
-	EXPECT_FLOAT_EQ(25, dut.getRunningOpenLoop(0, 50, 0));
+	EXPECT_FLOAT_EQ(5, dut.getRunningOpenLoop(10));
+	EXPECT_FLOAT_EQ(25, dut.getRunningOpenLoop(50));
 }
 
 TEST(idle_v2, runningFanAcBump) {
@@ -262,11 +427,11 @@ TEST(idle_v2, runningFanAcBump) {
 	enginePins.fanRelay.setValue(0);
 
 	// Should be base position
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(10));
 
 	// Turn on A/C!
 	engine->module<AcController>()->acButtonState = true;
-	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(10));
 	engine->module<AcController>()->acButtonState = false;
 
 	// Begin A/C Pressure Switch testing
@@ -275,19 +440,19 @@ TEST(idle_v2, runningFanAcBump) {
 	// setMockState(engineConfiguration->acSwitch, false);
 	// setMockState(engineConfiguration->acPressureSwitch, false);
 	engine->module<AcController>()->acPressureSwitchState = false;
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(10));
 
 	// setMockState(engineConfiguration->acSwitch, true);
 	engine->module<AcController>()->acButtonState = true;
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(10));
 
 	// setMockState(engineConfiguration->acPressureSwitch, true);
 	engine->module<AcController>()->acPressureSwitchState = true;
-	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50 + 9, dut.getRunningOpenLoop(10));
 
 	// setMockState(engineConfiguration->acSwitch, false);
 	engine->module<AcController>()->acButtonState = false;
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(10));
 
 	// engineConfiguration->acSwitch = Gpio::Unassigned;
 	// setMockState(engineConfiguration->acPressureSwitch, false);
@@ -297,68 +462,23 @@ TEST(idle_v2, runningFanAcBump) {
 
 	// Turn the fan on!
 	enginePins.fanRelay.setValue(1);
-	EXPECT_FLOAT_EQ(50 + 7, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50 + 7, dut.getRunningOpenLoop(10));
 	enginePins.fanRelay.setValue(0);
 
 	// Turn on the other fan!
 	enginePins.fanRelay2.setValue(1);
-	EXPECT_FLOAT_EQ(50 + 3, dut.getRunningOpenLoop(0, 10, 0));
+	EXPECT_FLOAT_EQ(50 + 3, dut.getRunningOpenLoop(10));
 
 	// Turn on everything!
 	engine->module<AcController>()->acButtonState = true;
 	enginePins.fanRelay.setValue(1);
 	enginePins.fanRelay2.setValue(1);
-	EXPECT_FLOAT_EQ(50 + 9 + 7 + 3, dut.getRunningOpenLoop(0, 10, 0));
-}
-
-TEST(idle_v2, runningOpenLoopTpsTaper) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	IdleController dut;
-
-	// Zero out base tempco table
-	setArrayValues(config->cltIdleCorr, 0.0f);
-
-	// Add 50% idle position
-	engineConfiguration->iacByTpsTaper = 50;
-	// At 10% TPS
-	engineConfiguration->idlePidDeactivationTpsThreshold = 10;
-
-	// Check in-bounds points
-	EXPECT_FLOAT_EQ(0, dut.getRunningOpenLoop(0, 0, 0));
-	EXPECT_FLOAT_EQ(25, dut.getRunningOpenLoop(0, 0, 5));
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 0, 10));
-
-	// Check out of bounds - shouldn't leave the interval [0, 10]
-	EXPECT_FLOAT_EQ(0, dut.getRunningOpenLoop(0, 0, -5));
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(0, 0, 20));
-}
-
-TEST(idle_v2, runningOpenLoopRpmTaper) {
-	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	IdleController dut;
-
-	// Zero out base tempco table
-	setArrayValues(config->cltIdleCorr, 0.0f);
-
-	// Add 50% idle position
-	engineConfiguration->airByRpmTaper = 50;
-	// At 2000 RPM
-	engineConfiguration->airTaperRpmRange = 500;
-	engineConfiguration->idlePidRpmUpperLimit = 1500;
-
-	// Check in-bounds points
-	EXPECT_FLOAT_EQ(0, dut.getRunningOpenLoop(1500, 0, 0));
-	EXPECT_FLOAT_EQ(25, dut.getRunningOpenLoop(1750, 0, 0));
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(2000, 0, 0));
-
-	// Check out of bounds - shouldn't leave the interval [1500, 2000]
-	EXPECT_FLOAT_EQ(0, dut.getRunningOpenLoop(200, 0, 0));
-	EXPECT_FLOAT_EQ(50, dut.getRunningOpenLoop(3000, 0, 0));
+	EXPECT_FLOAT_EQ(50 + 9 + 7 + 3, dut.getRunningOpenLoop(10));
 }
 
 struct MockOpenLoopIdler : public IdleController {
 	MOCK_METHOD(float, getCrankingOpenLoop, (float clt), (const, override));
-	MOCK_METHOD(float, getRunningOpenLoop, (float rpm, float clt, SensorResult tps), (override));
+	MOCK_METHOD(float, getRunningOpenLoop, (float clt), (override));
 };
 
 TEST(idle_v2, testOpenLoopCranking) {
@@ -370,31 +490,31 @@ TEST(idle_v2, testOpenLoopCranking) {
 	EXPECT_CALL(dut, getCrankingOpenLoop(30)).WillOnce(Return(44));
 
 	// Should return the value from getCrankingOpenLoop, and ignore running numbers
-	EXPECT_FLOAT_EQ(44, dut.getOpenLoop(ICP::Cranking, 0, 30, 0, 0));
+	EXPECT_FLOAT_EQ(44, dut.getOpenLoop(ICP::Cranking, 0, 30, 0));
 }
 
 TEST(idle_v2, openLoopRunningTaper) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	StrictMock<MockOpenLoopIdler> dut;
 
-	EXPECT_CALL(dut, getRunningOpenLoop(0, 30, SensorResult(0))).WillRepeatedly(Return(25));
+	EXPECT_CALL(dut, getRunningOpenLoop(30)).WillRepeatedly(Return(25));
 	EXPECT_CALL(dut, getCrankingOpenLoop(30)).WillRepeatedly(Return(75));
 
 	// 0 cycles - no taper yet, pure cranking value
-	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::Running, 0, 30, 0, 0));
-	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 0, 0));
+	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::Running, 0, 30, 0));
+	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 0));
 
 	// 1/2 taper - half way, 50% each value -> outputs 50
-	EXPECT_FLOAT_EQ(50, dut.getOpenLoop(ICP::Running, 0, 30, 0, 0.5f));
-	EXPECT_FLOAT_EQ(50, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 0, 0.5f));
+	EXPECT_FLOAT_EQ(50, dut.getOpenLoop(ICP::Running, 0, 30, 0.5f));
+	EXPECT_FLOAT_EQ(50, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 0.5f));
 
 	// 1x taper - fully tapered, should be running value
-	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::Running, 0, 30, 0, 1.0f));
-	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 0, 1.0f));
+	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::Running, 0, 30, 1.0f));
+	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 1.0f));
 
 	// 2x taper - still fully tapered, should be running value
-	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::Running, 0, 30, 0, 2.0f));
-	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 0, 2.0f));
+	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::Running, 0, 30, 2.0f));
+	EXPECT_FLOAT_EQ(25, dut.getOpenLoop(ICP::CrankToIdleTaper, 0, 30, 2.0f));
 }
 
 TEST(idle_v2, getCrankingTaperFraction) {
@@ -485,8 +605,32 @@ TEST(idle_v2, openLoopCoastingTable) {
 		config->iacCoasting[i] = 5 * i;
 	}
 
-	EXPECT_FLOAT_EQ(40, dut.getOpenLoop(ICP::Coasting, 800, 0, 0, 2));
-	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::Coasting, 1500, 0, 0, 2));
+	EXPECT_FLOAT_EQ(40, dut.getOpenLoop(ICP::Coasting, 800, 0, 2));
+	EXPECT_FLOAT_EQ(75, dut.getOpenLoop(ICP::Coasting, 1500, 0, 2));
+}
+
+TEST(idle_v2, openLoopDashpotAir) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+
+	engineConfiguration->manIdlePosition = 30;
+	setArrayValues(config->cltIdleCorr, 1.0f);
+	engineConfiguration->idleDashpotAir = 10;
+	engineConfiguration->useIacTableForCoasting = false;
+
+	// Added while off idle...
+	EXPECT_FLOAT_EQ(40, dut.getOpenLoop(ICP::Running, 1500, 0, 2));
+	EXPECT_FLOAT_EQ(40, dut.getOpenLoop(ICP::Coasting, 1500, 0, 2));
+
+	// ...but not while idling, or in the cranking taper
+	EXPECT_FLOAT_EQ(30, dut.getOpenLoop(ICP::Idling, 900, 0, 2));
+	EXPECT_FLOAT_EQ(30, dut.getOpenLoop(ICP::CrankToIdleTaper, 1500, 0, 2));
+
+	// The coasting table sets the whole position while coasting: no dashpot air on top
+	engineConfiguration->useIacTableForCoasting = true;
+	setArrayValues(config->iacCoasting, 45);
+	EXPECT_FLOAT_EQ(45, dut.getOpenLoop(ICP::Coasting, 1500, 0, 2));
+	EXPECT_FLOAT_EQ(40, dut.getOpenLoop(ICP::Running, 1500, 0, 2));
 }
 
 TEST(idle_v2, closedLoopBasic) {
@@ -579,21 +723,23 @@ TEST(idle_v2, RunningToIdleTransition) {
 }
 
 struct IntegrationIdleMock : public IdleController {
-	MOCK_METHOD(
-			float,
-			getOpenLoop,
-			(ICP phase, float rpm, float clt, SensorResult tps, float crankingTaperFraction),
-			(override));
+	MOCK_METHOD(float, getOpenLoop, (ICP phase, float rpm, float clt, float crankingTaperFraction), (override));
 	MOCK_METHOD(float, getClosedLoop, (ICP phase, float rpm, float rpmRate, float target), (override));
 };
 
 // Installs a mock IdleTargetController in the module list whose getOutput() returns the given
 // target/phase/taper. This is where getIdlePosition() sources phase determination from.
-static void mockIdleTarget(MockIdleTargetController& mock, TgtInfo target, ICP phase, float crankingTaperFraction) {
+static void mockIdleTarget(
+		MockIdleTargetController& mock,
+		TgtInfo target,
+		ICP phase,
+		float crankingTaperFraction,
+		float returnRampFraction = 0) {
 	IIdleTargetController::Output out;
 	out.target = target;
 	out.phase = phase;
 	out.crankingTaperFraction = crankingTaperFraction;
+	out.returnRampFraction = returnRampFraction;
 	EXPECT_CALL(mock, getOutput(_)).WillRepeatedly(Return(out));
 	engine->engineModules.get<IdleTargetController>().set(&mock);
 }
@@ -615,7 +761,7 @@ TEST(idle_v2, IntegrationManual) {
 	mockIdleTarget(mockTarget, target, ICP::Idling, 0.3f);
 
 	// Open loop should be asked for an open loop position
-	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.3f)).WillOnce(Return(13));
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, 0.3f)).WillOnce(Return(13));
 
 	// getClosedLoop() should not be called!
 
@@ -641,7 +787,7 @@ TEST(idle_v2, IntegrationAutomatic) {
 	mockIdleTarget(mockTarget, target, ICP::Idling, 0.4f);
 
 	// Open loop should be asked for an open loop position
-	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.4f)).WillOnce(Return(13));
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, 0.4f)).WillOnce(Return(13));
 
 	// Closed loop should get called
 	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000)).WillOnce(Return(7));
@@ -669,11 +815,132 @@ TEST(idle_v2, IntegrationClamping) {
 	mockIdleTarget(mockTarget, target, ICP::Idling, 0.5f);
 
 	// Open loop should be asked for an open loop position
-	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, expectedTps, 0.5f)).WillOnce(Return(75));
+	EXPECT_CALL(dut, getOpenLoop(ICP::Idling, 950, expectedClt, 0.5f)).WillOnce(Return(75));
 
 	// Closed loop should get called
 	EXPECT_CALL(dut, getClosedLoop(ICP::Idling, 950, 100, 1000)).WillOnce(Return(75));
 
 	// Result would be 75 + 75 = 150, but it should clamp to 100
 	EXPECT_EQ(100, dut.getIdlePosition(950, 100));
+}
+
+// Open loop idle at 30%, open loop mode so the position is just the open loop
+static void setupReturnToIdleAir() {
+	engineConfiguration->idleMode = IM_MANUAL;
+	engineConfiguration->manIdlePosition = 30;
+	setArrayValues(config->cltIdleCorr, 1.0f);
+	engineConfiguration->useIacTableForCoasting = false;
+	engineConfiguration->idleDashpotAir = 10;
+
+	Sensor::setMockValue(SensorType::DriverThrottleIntent, 0);
+	Sensor::setMockValue(SensorType::Clt, 37);
+}
+
+static float returnToIdleStep(
+		IdleController& dut,
+		MockIdleTargetController& mock,
+		ICP phase,
+		float returnRampFraction,
+		float crankingTaper = 2) {
+	mockIdleTarget(mock, TgtInfo{940, 1440, 1690}, phase, crankingTaper, returnRampFraction);
+	return dut.getIdlePosition(1000, 0);
+}
+
+TEST(idle_v2, returnToIdleAirDashpot) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+	setupReturnToIdleAir();
+	MockIdleTargetController mock;
+
+	// Dashpot air while on throttle
+	EXPECT_FLOAT_EQ(40, returnToIdleStep(dut, mock, ICP::Running, 0));
+
+	// Returning to idle at the top of the ramp: no step down, then it ramps out with the ramp
+	EXPECT_FLOAT_EQ(40, returnToIdleStep(dut, mock, ICP::Idling, 1));
+	EXPECT_FLOAT_EQ(40, dut.openLoop);
+	EXPECT_FLOAT_EQ(35, returnToIdleStep(dut, mock, ICP::Idling, 0.5f));
+	EXPECT_FLOAT_EQ(30, returnToIdleStep(dut, mock, ICP::Idling, 0));
+	EXPECT_FLOAT_EQ(30, returnToIdleStep(dut, mock, ICP::Idling, 0));
+
+	// Throttle again, then lift off near idle speed: the ramp is mostly gone, and so is the air
+	EXPECT_FLOAT_EQ(40, returnToIdleStep(dut, mock, ICP::Running, 0));
+	EXPECT_FLOAT_EQ(31, returnToIdleStep(dut, mock, ICP::Idling, 0.1f));
+
+	// Ramp disabled (fraction 0): the dashpot air is removed at once
+	EXPECT_FLOAT_EQ(40, returnToIdleStep(dut, mock, ICP::Running, 0));
+	EXPECT_FLOAT_EQ(30, returnToIdleStep(dut, mock, ICP::Idling, 0));
+}
+
+TEST(idle_v2, returnToIdleAirCoastingTable) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+	setupReturnToIdleAir();
+	MockIdleTargetController mock;
+
+	engineConfiguration->useIacTableForCoasting = true;
+	setArrayValues(config->iacCoasting, 45);
+
+	// Coasting table position, without dashpot air on top
+	EXPECT_FLOAT_EQ(45, returnToIdleStep(dut, mock, ICP::Coasting, 0));
+
+	// Ramps out from the coasting table position, not from idle + dashpot air
+	EXPECT_FLOAT_EQ(45, returnToIdleStep(dut, mock, ICP::Idling, 1));
+	EXPECT_FLOAT_EQ(37.5f, returnToIdleStep(dut, mock, ICP::Idling, 0.5f));
+	EXPECT_FLOAT_EQ(30, returnToIdleStep(dut, mock, ICP::Idling, 0));
+
+	// A coasting table below the idle position is not carried over (never takes air away)
+	setArrayValues(config->iacCoasting, 20);
+	EXPECT_FLOAT_EQ(20, returnToIdleStep(dut, mock, ICP::Coasting, 0));
+	EXPECT_FLOAT_EQ(30, returnToIdleStep(dut, mock, ICP::Idling, 1));
+}
+
+TEST(idle_v2, returnToIdleAirNotAfterCranking) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+	setupReturnToIdleAir();
+	MockIdleTargetController mock;
+
+	engineConfiguration->overrideCrankingIacSetting = false;
+	engineConfiguration->crankingIACposition = 70;
+
+	// Half way through the cranking taper: 70 -> 30
+	EXPECT_FLOAT_EQ(50, returnToIdleStep(dut, mock, ICP::CrankToIdleTaper, 1, 0.5f));
+
+	// Entering idle from the cranking taper carries nothing over: the cranking taper continues on its own
+	EXPECT_FLOAT_EQ(46, returnToIdleStep(dut, mock, ICP::Idling, 1, 0.6f));
+	EXPECT_FLOAT_EQ(0, dut.returnToIdleAir);
+}
+
+// Whole chain: real target controller deciding phase and ramp, coasting table, return to idle
+TEST(idle_v2, returnToIdleCoastDown) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	IdleController dut;
+	dut.init();
+	setupReturnRamp();
+	setupReturnToIdleAir();
+
+	engineConfiguration->useIacTableForCoasting = true;
+	setArrayValues(config->iacCoasting, 45);
+
+	auto step = [&](float rpm) {
+		engine->triggerCentral.instantRpm.m_instantRpm = rpm;
+		return dut.getIdlePosition(rpm, 0);
+	};
+
+	EXPECT_FLOAT_EQ(45, step(2000));
+	EXPECT_FLOAT_EQ(45, step(1500));
+
+	// Enters idle at 1439: 499/500 of the full ramp, so almost all of the extra 15% is carried over
+	EXPECT_NEAR(30 + 15 * 499.0f / 500, step(1439), 1e-3);
+	EXPECT_NEAR(940 + 499, engine->module<IdleTargetController>().unmock().idleTarget, 1);
+
+	advanceTimeUs(1'500'000);
+	EXPECT_NEAR(30 + 15 * 499.0f / 500 / 2, step(1150), 1e-3);
+
+	advanceTimeUs(1'500'000);
+	EXPECT_FLOAT_EQ(30, step(960));
+	EXPECT_EQ(940, engine->module<IdleTargetController>().unmock().idleTarget);
 }

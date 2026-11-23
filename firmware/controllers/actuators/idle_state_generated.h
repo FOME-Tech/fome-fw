@@ -75,12 +75,12 @@ struct idle_state_s {
 	// Open loop: Lua Adder
 	// offset 4
 	float luaAdd = (float)0;
-	// Open loop: iacByTpsTaper
+	// Open loop: Dashpot air
 	// offset 8
-	float iacByTpsTaper = (float)0;
-	// Open loop: iacByRpmTaper
+	float dashpotAir = (float)0;
+	// Open loop: Return to idle air
 	// offset 12
-	float iacByRpmTaper = (float)0;
+	float returnToIdleAir = (float)0;
 	// Open loop: Base
 	// %
 	// offset 16
@@ -115,8 +115,8 @@ struct idle_state_s {
 };
 static_assert(sizeof(idle_state_s) == 32);
 static_assert(offsetof(idle_state_s, luaAdd) == 4);
-static_assert(offsetof(idle_state_s, iacByTpsTaper) == 8);
-static_assert(offsetof(idle_state_s, iacByRpmTaper) == 12);
+static_assert(offsetof(idle_state_s, dashpotAir) == 8);
+static_assert(offsetof(idle_state_s, returnToIdleAir) == 12);
 static_assert(offsetof(idle_state_s, openLoopBase) == 16);
 static_assert(offsetof(idle_state_s, openLoopAcBump) == 17);
 static_assert(offsetof(idle_state_s, openLoopFanBump) == 18);
