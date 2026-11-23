@@ -148,7 +148,10 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	auto& event = engine->ignitionEvents.elements[ctx.eventIndex];
 
 	float actualDwellMs = event.actualDwellTimer.getElapsedSeconds(nowNt) * 1e3;
-	float minDwell = 0.8f * event.sparkDwell;
+	// Compare against the dwell this spark was charged for: the main spark's from the dwell table,
+	// or the (usually much shorter) multispark dwell for an extra spark
+	float intendedDwellMs = ctx.isExtraSpark ? engine->engineState.multispark.dwellMs : event.sparkDwell;
+	float minDwell = 0.8f * intendedDwellMs;
 	if (!ctx.isOverdwellProtect && actualDwellMs < minDwell) {
 		float extraTimeUs = (minDwell - actualDwellMs) * 1e3;
 
@@ -187,7 +190,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
-	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event.sparkDwell;
+	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / intendedDwellMs;
 #endif
 
 	// now that we've just fired a coil let's prepare the new schedule for the next engine revolution
@@ -202,6 +205,7 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 	// If there are more sparks to fire, schedule them
 	if (ctx.sparksRemaining > 0 && !ctx.isOverdwellProtect) {
 		ctx.sparksRemaining--;
+		ctx.isExtraSpark = true;
 
 		efitick_t nextDwellStart = nowNt + engine->engineState.multispark.delay;
 		efitick_t nextFiring = nextDwellStart + engine->engineState.multispark.dwell;

@@ -56,5 +56,7 @@ public:
 struct multispark_state {
 	efidur_t delay;
 	efidur_t dwell;
+	// Same as dwell, for comparing against the measured dwell of an extra spark
+	floatms_t dwellMs = 0;
 	uint8_t count = 0;
 };

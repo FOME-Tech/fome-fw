@@ -106,6 +106,8 @@ or
  - The "VVT sync position too close to trigger sync" warning now catches every cam position that's within a few degrees of a crank sync point, on either side, every time. Previously it only checked one of the crank sync points and only just after it, so whether it warned depended on which crank revolution the engine happened to sync on first. It also no longer warns on setups where the cam isn't used for engine phase.
  - An injector can no longer be left stuck open if the ECU runs short of internal timer slots (only possible with extremely high injector duty). That injection is now skipped and a warning raised. Also, an injector that the stopped-engine safety had to turn off now works normally on the next start, instead of staying dead until a reboot.
  - The first injection after a fuel cut (such as decel fuel cut) is now timed correctly. Previously, with injection timed by end or centre of injection, it could end a whole pulse late.
+ - Multispark now fires all of its extra sparks, each with the configured multispark dwell. Previously the first extra spark was held back until it had charged for most of the main spark's dwell, and the rest were dropped, so at most one extra spark fired.
+ - "Minimum oil pressure after start" no longer cuts fuel 5 seconds after every start when the oil pressure sensor has failed (for example a broken wire). It now only cuts when a working sensor shows no oil pressure. The failed sensor is still reported by its own fault code.
 
 ## May 2026 Release
 
