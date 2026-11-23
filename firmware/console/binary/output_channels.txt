@@ -297,4 +297,5 @@ struct_no_prefix output_channels_s
 	int16_t autoscale revLimitXAxisValue;Rev limit: X axis;"", 0.1, 0, -3000, 3000, 1
 	int16_t autoscale revLimitYAxisValue;Rev limit: Y axis;"", 0.1, 0, -3000, 3000, 1
 	uint16_t revLimitTarget;Rev limit: target;"RPM", 1, 0, 0, 20000, 0
+	uint16_t overdwellSparkCounter;Ign: Overdwell sparks\nSparks fired by the overdwell backup rather than at their timing angle, because the trigger tooth they were waiting for didn't come in time, or the spark angle moved behind the coil charge;"count", 1, 0, 0, 0, 0
 end_struct

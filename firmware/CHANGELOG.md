@@ -63,13 +63,14 @@ or
  - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
  - Rev limiter table with selectable X and Y inputs, including oil temperature, ethanol content, and gear. When used with the CLT-based limiter, the lower RPM limit applies.
  - "MAF maximum load" curve: the most cylinder filling the MAF is allowed to read, against RPM, as % of an ideal cylinder at baro pressure and IAT. MAF/RPM can read far more air than the engine can hold on a sharp tip-in or when a start dies, which over-fuels or floods it. The default never limits. The "Air: MAF airmass limited" datalog channel shows when it's active.
-
+ - New "Ign: Overdwell sparks" datalog channel, counting sparks fired by the overdwell backup instead of at their timing angle (when timing advances by more than the dwell angle in one step, or a trigger tooth comes late)
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - Fix "re-adding element into event_queue" warnings (9011) after a spark is fired by the overdwell backup, for example when idle timing control steps timing up on entering idle. The queued spark event could also fire a second time.
  - The MAF filter was 4x faster than set on STM32H7 ECUs (Atlas) and 2x faster on all others. MAF setups that use the filter should divide "MAF filter parameter" by 4 (Atlas) or 2 (other ECUs) to keep the same behavior.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776

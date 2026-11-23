@@ -177,6 +177,14 @@ void fireSparkAndPrepareNextSchedule(IgnitionContext ctx) {
 
 	forEachSetBit(ctx.outputsMask, [](size_t idx) { enginePins.coils[idx].setLow(); });
 
+	if (ctx.isOverdwellProtect) {
+		// The overdwell backup fired this spark before the spark event's angle came round. The spark
+		// event is still queued for that angle: take it out, or it would fire again there (with this
+		// spark's context) and then still be queued when the next cycle schedules it.
+		engine->module<TriggerScheduler>()->unschedule(&event.sparkEvent);
+		engine->outputChannels.overdwellSparkCounter++;
+	}
+
 #if EFI_TUNER_STUDIO
 	// ratio of desired dwell duration to actual dwell duration gives us some idea of how good is input trigger jitter
 	engine->outputChannels.dwellAccuracyRatio = actualDwellMs / event.sparkDwell;
