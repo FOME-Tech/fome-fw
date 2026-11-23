@@ -39,6 +39,10 @@ public:
 
 	expected<float> getTotalRatioInCurrentGear() const;
 
+	// Current clutch state, read live (not at the gear detector's update rate) for fast consumers.
+	// Indeterminate unless the clutch sensor is currently trusted.
+	ClutchState getTrustedClutchState() const;
+
 	// Sensor implementation
 	SensorResult get() const override;
 	void showInfo(const char* sensorName) const override;
