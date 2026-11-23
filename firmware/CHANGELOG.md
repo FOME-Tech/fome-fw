@@ -80,6 +80,7 @@ or
  - Sensor, trigger, cam, knock and injector/ignition circuit fault codes now require the fault to persist for about a second before they light the check engine light, so a single bad reading no longer latches a code #780
  - Sensor fault codes set to "Ignore" no longer show up as a warning. Previously "Ignore" only stopped the code from being stored, so the warning still appeared in TunerStudio and datalogs
  - Fix fuel level input
+ - DFCO no longer cuts fuel while cranking or spinning up. A new "Minimum running time before cut" setting can protect after-start enrichment on each restart, including starts that skip the cranking state. It defaults to 10 seconds for new tunes; existing tunes with zero in the reused padding byte retain a zero delay and should set a value appropriate for their enrichment taper. Configuration size and existing offsets are unchanged. #820
  - Improve STM32H7/Atlas SD card reliability
  - General SD card logging performance and reliabilty improvements
  - Fix conflict between aux temp 2 and oil temperature sensor configuration
