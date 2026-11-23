@@ -417,7 +417,7 @@ bit etb_use_two_wires;TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT us
 bit isDoubleSolenoidIdle;Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 bit enableStagedInjection
 bit useTLE8888_cranking_hack;
-bit useSeparateIdleTablesForCrankingTaper;This uses separate ignition timing and VE tables not only for idle conditions, also during the postcranking-to-idle taper transition (See also afterCrankingIACtaperDuration).
+bit useSeparateIdleTablesForCrankingTaper;Treat the after-cranking taper as idle as well (see afterCrankingIACtaperDuration): the idle ignition table, idle VE table and the closed loop fuel idle region are used during the taper, not only once idling.
 bit launchControlEnabled;
 bit doNotFilterTriggerEdgeNoise,"without filter","with filter";"Detect double trigger edges"
 bit antiLagEnabled;
@@ -502,7 +502,7 @@ int8_t gapTrackingLengthOverride;How many consecutive gap rations have to match 
  switch_input_pin_e oilPressureSwitch
  pin_input_mode_e oilPressureSwitchMode
 
-uint8_t autoscale inhibitIdleAfterCrankingTime;Inhibit closed loop idle for this duration after cranking.;"sec", 0.1, 0, 0, 10, 1
+uint8_t autoscale inhibitIdleAfterCrankingTime;For this long after cranking, the idle controller does not consider the engine idling: closed loop idle and closed loop idle timing stay off. Applies in open loop idle mode too.;"sec", 0.1, 0, 0, 10, 1
 uint8_t autoscale idleReturnRampDuration;How long the return to idle ramp takes. Longer catches the engine earlier, higher above the idle target, but too long can leave the idle hanging high before it settles.;"sec", 0.1, 0, 0.1, 10, 1
 
 angle_t fixedModeTiming;This value is the ignition timing used when in 'fixed timing' mode, i.e. constant timing\nThis mode is useful when adjusting distributor location.;"RPM", 1, 0, 0, 3000, 0
@@ -702,7 +702,7 @@ bit is_enabled_spi_2
 	bit coastingFuelCutEnabled;This setting disables fuel injection while the engine is in overrun, this is useful as a fuel saving measure and to prevent back firing.
 	bit disableFuelCutOnClutch;True: Inhibits DFCO from activating when the clutch is pressed. This helps prevent transient knock during shifts\nFalse: Do not take clutch state into account.
 	bit useIacTableForCoasting;Override the IAC position during overrun conditions to help reduce engine breaking, this can be helpful for large engines in light weight cars or engines that have trouble returning to idle.
-	bit useIdleTimingPidControl
+	bit useIdleTimingPidControl;Adjust ignition timing to hold the idle target RPM. Timing changes torque much faster than idle air, so this catches RPM changes the air control is too slow for. Only active while idling.
 	bit disableEtbWhenEngineStopped;Allows disabling the ETB when the engine is stopped. You may not like the power draw or PWM noise from the motor, so this lets you turn it off until it's necessary.
 	bit is_enabled_spi_4
 	bit pauseEtbControl;Disable the electronic throttle motor and DC idle motor for testing.\nThis mode is for testing ETB/DC idle position sensors, etc without actually driving the throttle.
@@ -943,7 +943,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit isWaveAnalyzerEnabled
 	bit useSeparateVeForIdle;This activates a separate fuel table for Idle, this allows fine tuning of the idle fuelling.
 	bit verboseTriggerSynchDetails;Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
-	bit alwaysResetPidLeavingIdle
+	bit alwaysResetPidLeavingIdle;Reset the closed loop idle I-term every time the engine leaves idle. When off, a positive I-term (adding air) is kept for the next return to idle, and a negative one is reset.
 	bit canBroadcastEgt;Disable to skip cam data frame (base + 9) if you have no EGT sensing.
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
 	bit pairedOddFireWastedSpark
