@@ -26,9 +26,6 @@
 
 #if EFI_ENGINE_CONTROL
 
-// todo: reset this between cranking attempts?! #2735
-float minCrankingRpm = 0;
-
 /**
  * @return ignition timing angle advance before TDC
  */
@@ -163,17 +160,15 @@ static angle_t getCrankingAdvance(float rpm, float engineLoad) {
 		return interpolate2d(rpm, config->crankingAdvanceBins, config->crankingAdvance);
 	}
 
-	// Interpolate the cranking timing angle to the earlier running angle for faster engine start
-	angle_t crankingToRunningTransitionAngle = getRunningAdvance(engineConfiguration->cranking.rpm, engineLoad);
-	// interpolate not from zero, but starting from min. possible rpm detected
-	if (rpm < minCrankingRpm || minCrankingRpm == 0) {
-		minCrankingRpm = rpm;
-	}
+	// Hold the fixed cranking angle up to half the cranking RPM threshold, then taper to running
+	// timing at the threshold so there's no step when cranking ends
+	float crankingRpm = engineConfiguration->cranking.rpm;
+	angle_t crankingToRunningTransitionAngle = getRunningAdvance(crankingRpm, engineLoad);
 
 	return interpolateClamped(
-			minCrankingRpm,
+			crankingRpm / 2,
 			engineConfiguration->crankingTimingAngle,
-			engineConfiguration->cranking.rpm,
+			crankingRpm,
 			crankingToRunningTransitionAngle,
 			rpm);
 }

@@ -494,7 +494,7 @@ adc_channel_e mafAdcChannel
 
 uint16_t benchTestCount;How many test bench pulses do you want;"", 1, 0, 0, 10000, 0
 
-angle_t crankingTimingAngle;Ignition advance angle used during engine cranking, 5-10 degrees will work as a base setting for most engines.\nThere is tapering towards running timing advance;"deg", 1, 0, -30, 30, 0
+angle_t crankingTimingAngle;Ignition advance angle used during engine cranking, 5-10 degrees will work as a base setting for most engines.\nThis angle is held up to half the cranking RPM, then tapered to running timing at the cranking RPM;"deg", 1, 0, -30, 30, 0
 
 int8_t gapTrackingLengthOverride;How many consecutive gap rations have to match expected ranges for sync to happen;"count", 1, 0, 1, @@GAP_TRACKING_LENGTH@@, 0
  uint8_t maxIdleVss;Above this speed, disable closed loop idle control. Set to 0 to disable (allow closed loop idle at any speed).;"kph", 1, 0, 0, 100, 0
@@ -948,7 +948,7 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skippe
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
 	bit pairedOddFireWastedSpark
 bit useFixedBaroCorrFromMap;At power-up, read MAP once and use it as the barometric pressure until the next restart. Only applies if the reading is between 60 and 110 kPa. Overrides any baro sensor.
-bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In 'Fixed (auto taper)' mode, timing starts at 'Fixed cranking advance' and is automatically tapered to running timing as RPM increases.\nIn 'Table' mode, the 'Cranking ignition advance' curve is used directly.
+bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In 'Fixed (auto taper)' mode, timing is held at 'Fixed cranking advance' up to half the cranking RPM, then tapered to running timing at the cranking RPM.\nIn 'Table' mode, the 'Cranking ignition advance' curve is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
 bit flexCranking;Enable a second cranking table to use for E100 flex fuel, interpolating between the two based on flex fuel sensor.
 bit torqueReductionEnabled;Enable the torque-reduction controller (spark retard + cylinder cut). It maps a torque-reduction request to ignition retard and cut. No producer (e.g. traction control) is wired up yet, so on its own this currently has no effect.

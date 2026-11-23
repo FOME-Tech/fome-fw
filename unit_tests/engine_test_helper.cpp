@@ -24,12 +24,10 @@ extern engine_configuration_s activeConfiguration;
 extern bool printTriggerDebug;
 extern bool printTriggerTrace;
 extern bool printFuelDebug;
-extern int minCrankingRpm;
 
 EngineTestHelperBase::EngineTestHelperBase(Engine* eng, engine_configuration_s* econfig, persistent_config_s* pers) {
 	// todo: make this not a global variable, we need currentTimeProvider interface on engine
 	setTimeNowUs(0);
-	minCrankingRpm = 0;
 	EnableToothLogger();
 	if (engine || engineConfiguration || config) {
 		firmwareError(ObdCode::OBD_PCM_Processor_Fault, "Engine configuration not cleaned up by previous test");

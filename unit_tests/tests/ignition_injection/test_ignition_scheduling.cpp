@@ -220,3 +220,28 @@ TEST(ignition, dwellFollowsRpm) {
 	engine->ignitionState.updateDwell(6000, false);
 	EXPECT_NEAR_M4(3.25, engine->ignitionState.getDwell());
 }
+
+TEST(ignition, crankingAdvanceAutoTaper) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	engineConfiguration->useSeparateAdvanceForCranking = false;
+	engineConfiguration->timingMode = TM_FIXED;
+	engineConfiguration->fixedTiming = 20;
+	engineConfiguration->crankingTimingAngle = 10;
+	engineConfiguration->cranking.rpm = 400;
+
+	auto& ign = engine->ignitionState;
+
+	// Held at the cranking angle up to half the cranking RPM
+	EXPECT_NEAR(10, ign.getAdvance(50, 100, true), EPS4D);
+	EXPECT_NEAR(10, ign.getAdvance(200, 100, true), EPS4D);
+
+	// Tapers linearly to running timing at the cranking RPM
+	EXPECT_NEAR(15, ign.getAdvance(300, 100, true), EPS4D);
+	EXPECT_NEAR(20, ign.getAdvance(400, 100, true), EPS4D);
+
+	// A low RPM reading earlier on doesn't change the taper later
+	EXPECT_NEAR(10, ign.getAdvance(20, 100, true), EPS4D);
+	EXPECT_NEAR(10, ign.getAdvance(200, 100, true), EPS4D);
+	EXPECT_NEAR(15, ign.getAdvance(300, 100, true), EPS4D);
+}
