@@ -929,7 +929,6 @@ bit skippedWheelOnCam,"On camshaft","On crankshaft";Whether the primary trigger 
 	switch_input_pin_e acSwitch;A/C button input;
 	switch_input_pin_e acPressureSwitch;A/C pressure switch input;
 	adc_channel_e vRefAdcChannel;
-	uint8_t etbNeutralPosition;Expected neutral position;"%", 1, 0, 0, 100, 0
 
 	bit isInjectionEnabled
 	bit isIgnitionEnabled

@@ -73,8 +73,6 @@ static pedal2tps_t pedal2tpsMap;
 
 constexpr float etbPeriodSeconds = 1.0f / ETB_LOOP_FREQUENCY;
 
-static bool startupPositionError = false;
-
 #define STARTUP_NEUTRAL_POSITION_ERROR_THRESHOLD 5
 
 static const float hardCodedetbHitachiBiasBins[8] = {0.0, 19.0, 21.0, 22.0, 23.0, 25.0, 30.0, 100.0};
@@ -264,11 +262,6 @@ expected<percent_t> EtbController::getSetpointEtb() {
 	// Autotune runs with 50% target position
 	if (m_isAutotune) {
 		return 50.0f;
-	}
-
-	// A few extra preconditions if throttle control is invalid
-	if (startupPositionError) {
-		return unexpected;
 	}
 
 	// If the pedal map hasn't been set, we can't provide a setpoint.
@@ -938,19 +931,6 @@ void doInitElectronicThrottle() {
 		validateParam(engineConfiguration->etb.minValue < 0, "ETB PID min must be negative");
 		validateParam(engineConfiguration->etb.maxValue > 0, "ETB PID max must be positive");
 	}
-
-#if 0 && !EFI_UNIT_TEST
-	percent_t startupThrottlePosition = getTPS();
-	if (std::abs(startupThrottlePosition - engineConfiguration->etbNeutralPosition) > STARTUP_NEUTRAL_POSITION_ERROR_THRESHOLD) {
-		/**
-		 * Unexpected electronic throttle start-up position is worth a critical error
-		 */
-		firmwareError(ObdCode::OBD_Throttle_Actuator_Control_Range_Performance_Bank_1, "startup ETB position %.2f not %d",
-				startupThrottlePosition,
-				engineConfiguration->etbNeutralPosition);
-		startupPositionError = true;
-	}
-#endif /* EFI_UNIT_TEST */
 }
 
 void initElectronicThrottle() {
