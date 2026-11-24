@@ -80,7 +80,7 @@ static void sayHello() {
 	chThdSleepMilliseconds(5);
 }
 
-#if CH_DBG_FILL_THREADS
+#if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 int CountFreeStackSpace(const void* wabase) {
 	const uint8_t* stackBase = reinterpret_cast<const uint8_t*>(wabase) + PORT_GUARD_PAGE_SIZE;
 	const uint8_t* stackUsage = stackBase;
@@ -96,18 +96,25 @@ int CountFreeStackSpace(const void* wabase) {
 #endif
 
 /**
- * This methods prints all threads and their stack usage
+ * This methods prints all threads, their stack usage, and their total times
  */
 static void cmd_threads() {
-#if CH_DBG_FILL_THREADS
+#if CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 
 	thread_t* tp = chRegFirstThread();
 
-	efiPrintf("id\tname\twabase\tfree stack\tprio");
+	efiPrintf("id\tname\twabase\ttime\tfree stack\tprio");
 
 	while (tp) {
 		int freeBytes = CountFreeStackSpace(tp->wabase);
-		efiPrintf("%d: %s\t%08x\t%d\t%ld", tp->threadId, tp->name, (unsigned int)tp->wabase, freeBytes, tp->realprio);
+		efiPrintf(
+				"%d: %s\t%08x\t%lu\t%d\t%ld",
+				tp->threadId,
+				tp->name,
+				(unsigned int)tp->wabase,
+				tp->time,
+				freeBytes,
+				tp->realprio);
 
 		if (freeBytes < 64) {
 			firmwareError("Ran out of stack on thread %s, %d bytes remain", tp->name, freeBytes);
@@ -119,9 +126,9 @@ static void cmd_threads() {
 	int isrSpace = CountFreeStackSpace(reinterpret_cast<void*>(0x20000000));
 	efiPrintf("isr\t0\t0\t%d", isrSpace);
 
-#else // CH_DBG_FILL_THREADS
+#else // CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS
 
-	efiPrintf("CH_DBG_FILL_THREADS is not enabled");
+	efiPrintf("CH_DBG_THREADS_PROFILING && CH_DBG_FILL_THREADS is not enabled");
 
 #endif
 }

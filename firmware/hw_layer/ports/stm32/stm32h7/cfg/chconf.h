@@ -54,11 +54,7 @@
  *          setting also defines the system tick time unit.
  */
 #if !defined(CH_CFG_ST_FREQUENCY)
-// Tickless mode on TIM2 (see STM32_ST_USE_TIMER): 20us resolution, and the
-// 32-bit system time wraps every ~23.9 hours. Code comparing systime_t values
-// must use wrap-safe helpers (chTimeDiffX, chVTTimeElapsedSinceX, ...), never
-// plain < or <=.
-#define CH_CFG_ST_FREQUENCY                 50000
+#define CH_CFG_ST_FREQUENCY                 1000
 #endif
 
 /**
@@ -86,7 +82,7 @@
  *          this value.
  */
 #if !defined(CH_CFG_ST_TIMEDELTA)
-#define CH_CFG_ST_TIMEDELTA                 2
+#define CH_CFG_ST_TIMEDELTA                 0
 #endif
 
 /** @} */
@@ -621,8 +617,7 @@
  *          tickless mode.
  */
 #if !defined(CH_DBG_THREADS_PROFILING)
-// Not supported in tickless mode
-#define CH_DBG_THREADS_PROFILING            FALSE
+#define CH_DBG_THREADS_PROFILING            TRUE
 #endif
 
 /** @} */
