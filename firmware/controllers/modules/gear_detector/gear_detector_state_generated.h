@@ -14,11 +14,8 @@ struct gear_detector_state_s {
 	// Gear: Ratio locked to
 	// offset 4
 	uint8_t lockedGear = (uint8_t)0;
-	// Clutch state
 	// offset 5
-	uint8_t clutchState = (uint8_t)0;
-	// offset 6
-	uint8_t alignmentFill_at_6[2];
+	uint8_t alignmentFill_at_5[3];
 	// Clutch sensor trusted
 	// offset 8 bit 0
 	bool clutchTrusted : 1 {};
@@ -91,4 +88,3 @@ static_assert(offsetof(gear_detector_state_s, speedToRpmRatio) == 0);
 static_assert(offsetof(gear_detector_state_s, detectedGear) == 2);
 static_assert(offsetof(gear_detector_state_s, rawGear) == 3);
 static_assert(offsetof(gear_detector_state_s, lockedGear) == 4);
-static_assert(offsetof(gear_detector_state_s, clutchState) == 5);
