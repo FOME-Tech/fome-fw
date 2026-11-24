@@ -521,10 +521,10 @@ uint16_t fanPwmFrequency;PWM frequency for cooling fans in PWM mode;"Hz", 1, 0, 
 gppwm_channel_e fan1PwmXAxis;X axis source for fan 1 PWM table.
 gppwm_channel_e fan2PwmXAxis;X axis source for fan 2 PWM table.
 uint8_t fanPwmSafetyDuty;Fan duty when CLT sensor fails in PWM mode;"%", 1, 0, 0, 100, 0
-uint8_t disableFan1AtSpeed;Turn fan 1 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
+uint8_t disableFan1AtSpeed;Turn fan 1 off above this vehicle speed. Set to 0 to disable. Has no effect if the vehicle speed sensor fails.;"kph", 1, 0, 0, 255, 0
 
 output_pin_e acrPin;
-uint8_t disableFan2AtSpeed;Turn fan 2 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
+uint8_t disableFan2AtSpeed;Turn fan 2 off above this vehicle speed. Set to 0 to disable. Has no effect if the vehicle speed sensor fails.;"kph", 1, 0, 0, 255, 0
 
 float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your vehicle speed sensor is connected to. Use an online calculator to determine this based on your tire size.;"revs/km", 1, 0, 100, 1000, 1
 
@@ -635,8 +635,8 @@ engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other ca
 
 	output_pin_e malfunctionIndicatorPin;Check engine light, also malfunction indicator light. Always blinks once on boot.
 	pin_output_mode_e malfunctionIndicatorPinMode;
-	pin_output_mode_e fanPinMode;
-	output_pin_e fanPin;
+	pin_output_mode_e fanPinMode;Output mode for the fan 1 pin. Used in on/off mode only.
+	output_pin_e fanPin;Output pin that drives the fan 1 relay or fan.
 
 switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch pedal is all the way down
 	output_pin_e alternatorControlPin;
@@ -980,7 +980,7 @@ bit ALSActivateInverted
 	custom injector_compensation_mode_e 1 bits, U08, @OFFSET@, [0:1], "None", "Fixed rail pressure", "Sensed Rail Pressure"
 	injector_compensation_mode_e injectorCompensationMode;None = I have a MAP-referenced fuel pressure regulator\nFixed rail pressure = I have an atmosphere-referenced fuel pressure regulator (returnless, typically)\nSensed rail pressure = I have a fuel pressure sensor;
 
-	pin_output_mode_e fan2PinMode;
+	pin_output_mode_e fan2PinMode;Output mode for the fan 2 pin. Used in on/off mode only.
 
 	#define pin_mode_e_enum "default", "INVALID", "INVALID", "INVALID", "opendrain", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PULLUP", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PULLDOWN"
 custom pin_mode_e 1 bits, U08, @OFFSET@, [0:6], @@pin_mode_e_enum@@
@@ -1188,7 +1188,7 @@ tChargeMode_e tChargeMode;
 
 	linear_sensor_s oilPressure;
 
-	output_pin_e fan2Pin;
+	output_pin_e fan2Pin;Output pin that drives the fan 2 relay or fan.
 	uint8_t autotemp fan2OnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 	uint8_t autotemp fan2OffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 
@@ -1821,14 +1821,14 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	#define FAN_TABLE_SIZE 6
 
 	! Fan 1 PWM tables
-	int8_t[FAN_TABLE_SIZE] autotemp fan1CltBins;;"C", 1, 0, -40, 120, 0
-	int16_t[FAN_TABLE_SIZE] autoscale fan1XAxisBins;;"", 0.1, 0, -10000, 10000, 1
+	int8_t[FAN_TABLE_SIZE] autotemp fan1CltBins;Coolant temperature axis for the fan 1 PWM tables.;"C", 1, 0, -40, 120, 0
+	int16_t[FAN_TABLE_SIZE] autoscale fan1XAxisBins;Axis values for the source selected in 'PWM table X axis' for fan 1.;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOff;Fan 1 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOn;Fan 1 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 
 	! Fan 2 PWM tables
-	int8_t[FAN_TABLE_SIZE] autotemp fan2CltBins;;"C", 1, 0, -40, 120, 0
-	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
+	int8_t[FAN_TABLE_SIZE] autotemp fan2CltBins;Coolant temperature axis for the fan 2 PWM tables.;"C", 1, 0, -40, 120, 0
+	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;Axis values for the source selected in 'PWM table X axis' for fan 2.;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 
