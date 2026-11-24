@@ -21,20 +21,58 @@ static float validateBaroMap(float mapKPa) {
 	return mapKPa;
 }
 
-void initMapDecoder() {
-	if (engineConfiguration->useFixedBaroCorrFromMap) {
-		// Read initial MAP sensor value and store it for Baro correction.
-		float storedInitialBaroPressure = Sensor::get(SensorType::MapSlow).value_or(101.325);
-		efiPrintf("Get initial baro MAP pressure = %.2fkPa", storedInitialBaroPressure);
-		// validate if it's within a reasonable range (the engine should not be spinning etc.)
-		storedInitialBaroPressure = validateBaroMap(storedInitialBaroPressure);
-		if (!std::isnan(storedInitialBaroPressure)) {
-			efiPrintf("Using this fixed MAP pressure to override the baro correction!");
+// Set once the power-up MAP reading has been taken (or rejected), so it's only attempted once.
+static bool fixedBaroDone = false;
 
-			// TODO: do literally anything other than this
-			Sensor::setMockValue(SensorType::BarometricPressure, storedInitialBaroPressure);
-		} else {
-			efiPrintf("The baro pressure is invalid. The fixed baro correction will be disabled!");
-		}
+void initMapDecoder() {
+	// The slow ADC hasn't produced a sample yet at init, so the capture itself happens in
+	// updateFixedBaroFromMap() once MAP is valid.
+	fixedBaroDone = false;
+}
+
+static bool isEngineTurning() {
+#if EFI_SHAFT_POSITION_INPUT
+	if (engine->triggerCentral.engineMovedRecently()) {
+		return true;
+	}
+#endif // EFI_SHAFT_POSITION_INPUT
+
+	return Sensor::getOrZero(SensorType::Rpm) > 0;
+}
+
+void updateFixedBaroFromMap() {
+	if (fixedBaroDone || !engineConfiguration->useFixedBaroCorrFromMap) {
+		return;
+	}
+
+	auto map = Sensor::get(SensorType::MapSlow);
+	if (!map) {
+		// No MAP reading yet, keep waiting. Baro meanwhile comes from any other baro sensor, or
+		// is absent so consumers fall back to standard atmosphere.
+		return;
+	}
+
+	// One shot: whatever happens below, don't try again until the next restart.
+	fixedBaroDone = true;
+
+	if (isEngineTurning()) {
+		// Manifold isn't at atmospheric pressure if the engine is turning
+		warning(ObdCode::OBD_Barometric_Press_Circ, "Engine turning at start-up, MAP not used as baro");
+		efiPrintf("Engine already turning, the fixed baro correction will be disabled!");
+		return;
+	}
+
+	efiPrintf("Get initial baro MAP pressure = %.2fkPa", map.Value);
+	// validate if it's within a reasonable range
+	float storedInitialBaroPressure = validateBaroMap(map.Value);
+
+	if (!std::isnan(storedInitialBaroPressure)) {
+		efiPrintf("Using this fixed MAP pressure to override the baro correction!");
+
+		// A mock overrides whatever baro sensor (analog or onboard) is registered, which is exactly
+		// what this option is documented to do.
+		Sensor::setMockValue(SensorType::BarometricPressure, storedInitialBaroPressure);
+	} else {
+		efiPrintf("The baro pressure is invalid. The fixed baro correction will be disabled!");
 	}
 }

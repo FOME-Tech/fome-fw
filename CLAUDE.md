@@ -189,6 +189,12 @@ Key preprocessor flags that control compilation:
 
 When you make a user-facing change (new feature, bug fix, breaking change, removal), update `firmware/CHANGELOG.md` under the `## Unreleased` section. See `/changelog` for details on what counts and how to write entries.
 
+## Wiki docs
+
+The same user-facing changes usually need the FOME wiki updating too, as do renamed or added TunerStudio
+fields, dialogs and labels. The wiki is a separate repo, normally checked out at `../wiki`. See `/wiki` for how to find
+the affected pages and the page conventions.
+
 ## Development Notes
 
 - Supported IDE: Visual Studio Code

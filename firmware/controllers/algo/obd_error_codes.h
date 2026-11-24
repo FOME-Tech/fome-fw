@@ -277,7 +277,7 @@ enum class ObdCode : uint16_t {
 	// P0241 Turbocharger Boost Sensor B Circuit Low
 	// P0242 Turbocharger Boost Sensor B Circuit High
 	// P0243 Turbocharger Wastegate Solenoid A Malfunction
-	// P0244 Turbocharger Wastegate Solenoid A Range/Performance
+	OBD_Wastegate_Solenoid_A_Range_Performance = 0x0244,
 	// P0245 Turbocharger Wastegate Solenoid A Low
 	// P0246 Turbocharger Wastegate Solenoid A High
 	// P0247 Turbocharger Wastegate Solenoid B Malfunction
@@ -736,7 +736,7 @@ enum class ObdCode : uint16_t {
 	// P0701 Transmission Control System Range/Performance
 	// P0702 Transmission Control System Electrical
 	// P0703 Torque Converter/Brake Switch B Circuit Malfunction
-	// P0704 Clutch Switch Input Circuit Malfunction
+	OBD_Clutch_Switch_Input = 0x0704,
 	// P0705 Transmission Range Sensor Circuit malfunction (PRNDL Input)
 	// P0706 Transmission Range Sensor Circuit Range/Performance
 	// P0707 Transmission Range Sensor Circuit Low Input
@@ -1051,7 +1051,7 @@ enum class ObdCode : uint16_t {
 	// P2116 Throttle/Pedal Pos Sensor E Minimum Stop Perf
 	// P2117 Throttle/Pedal Pos Sensor F Minimum Stop Perf
 	// P2118 Throttle Actuator Ctrl Motor Current Range/Perf
-	// P2119 Throttle Actuator Ctrl Throttle Body Range/Perf
+	OBD_Throttle_Actuator_Control_Throttle_Body_Range_Performance = 0x2119,
 
 	OBD_TPS2_Secondary_Timeout = 0x2120,
 	OBD_TPS2_Secondary_Low = 0x2122,
@@ -2102,7 +2102,7 @@ enum class ObdCode : uint16_t {
 	// not used CUSTOM_6723 = 6723,
 	CUSTOM_ERR_TLE8888_RESPONSE = 6724,
 	CUSTOM_ERR_CJ125_DIAG = 6725,
-	// not used CUSTOM_6726 = 6726,
+	CUSTOM_GEAR_RATIO_MISMATCH = 6726,
 	CUSTOM_VVT_MODE_NOT_SELECTED = 6727,
 	CUSTOM_ERR_6728 = 6728,
 	CUSTOM_ERR_6729 = 6729,

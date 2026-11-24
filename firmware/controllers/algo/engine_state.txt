@@ -5,6 +5,7 @@ struct_no_prefix engine_state_s
 		float fuelMult;Lua: Fuel mult;"mult", 1, 0, 0, 5, 3
 
 		bit clutchUpState
+		bit clutchUpStateSet
 		bit brakePedalState
 		bit acRequestState
 		bit luaDisableEtb
@@ -37,6 +38,10 @@ struct_no_prefix engine_state_s
 
 	bit clutchUpState;@@INDICATOR_NAME_CLUTCH_UP@@
 	bit clutchDownState;@@INDICATOR_NAME_CLUTCH_DOWN@@
+	! Decided clutch state, as the set of positions it may be in. All three set means unknown.
+	bit clutchMayBeEngaged;Clutch: may be engaged
+	bit clutchMayBeMiddle;Clutch: may be middle
+	bit clutchMayBeDisengaged;Clutch: may be disengaged
 	bit brakePedalState;@@INDICATOR_NAME_BRAKE_DOWN@@
 	bit startStopState
 	bit doSplitInjection;Split injection active

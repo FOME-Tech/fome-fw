@@ -37,6 +37,32 @@ TEST(VVT, Setpoint) {
 	EXPECT_EQ(20, dut.getSetpoint().value_or(0));
 }
 
+TEST(VVT, SetpointNegativeBump) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+
+	StrictMock<MockVp3d> targetMap;
+	EXPECT_CALL(targetMap, getValue(4321, 55)).WillRepeatedly(Return(20));
+
+	engine->engineState.fuelingLoad = 55;
+	Sensor::setMockValue(SensorType::Rpm, 4321);
+
+	VvtController dut(0, 0, 0);
+	dut.init(&targetMap, nullptr);
+
+	setTimeNowUs(0);
+	EXPECT_EQ(20, dut.getSetpoint().value_or(0));
+
+	// Negative bump lowers the target
+	dut.setTargetOffset(-10);
+	EXPECT_EQ(20 - 10, dut.getSetpoint().value_or(0));
+
+	setTimeNowUs(1.9e6);
+	EXPECT_EQ(20 - 10, dut.getSetpoint().value_or(0));
+
+	setTimeNowUs(2.1e6);
+	EXPECT_EQ(20, dut.getSetpoint().value_or(0));
+}
+
 struct FakeMap : public ValueProvider3D {
 	float setpoint;
 

@@ -224,20 +224,22 @@ struct_no_prefix engine_configuration_s
 
 #define CAN_VIRTUAL_INPUT_PINS_COUNT 8
 
+#define MAX_SD_LOG_RATE 100
+
 struct stft_cell_cfg_s
-	int8_t maxAdd;Maximum % of fuel possible for fuel trim to add while in this region.;"%", 1, 0, 0, 25, 0
-	int8_t maxRemove;Maximum % of fuel possible for fuel trim to remove while in this region.;"%", 1, 0, -25, 0, 0
-	uint16_t autoscale timeConstant;Time constant for correction while in this cell: this sets responsiveness of the closed loop correction. A value of 5.0 means it will try to make most of the correction within 5 seconds, and a value of 1.0 will try to correct within 1 second.;"sec", 0.1, 0, 0.1, 100, 2
+	int8_t maxAdd;Most fuel the trim can add while in this region, as a percent of the calculated fuel. Set 'Max add' and 'Max remove' both to 0 to disable correction in this region.;"%", 1, 0, 0, 25, 0
+	int8_t maxRemove;Most fuel the trim can remove while in this region, as a percent of the calculated fuel. Enter as a negative number.;"%", 1, 0, -25, 0, 0
+	uint16_t autoscale timeConstant;Responsiveness of the correction in this region. A steady error is mostly corrected within about this many seconds. Smaller is faster, but too small will oscillate.;"sec", 0.1, 0, 0.1, 100, 2
 end_struct
 
 struct stft_s
-	uint8_t maxOverrunLoad;Below this engine load, the overrun region is active;"load", 1, 0, 0, 250, 0
-	uint8_t minPowerLoad;Above this engine load, the power region is active;"load", 1, 0, 0, 250, 0
+	uint8_t maxOverrunLoad;Below this fuel load the overrun region is used, unless the engine is idling. Same units as the fuel load, for example kPa with speed density.;"load", 1, 0, 0, 250, 0
+	uint8_t minPowerLoad;Above this fuel load the power region is used, unless the engine is idling or in the overrun region. Same units as the fuel load.;"load", 1, 0, 0, 250, 0
 
-	int8_t autotemp minClt;Below this temperature, correction is disabled.;"C", 1, 0, -20, 100, 0
-	uint8_t autoscale minLambda;Below this lambda value, correction is paused;"lambda", 0.01, 0, 0, 2, 2
-	uint8_t autoscale maxLambda;Above this lambda value, correction is paused;"lambda", 0.01, 0, 0, 2, 2
-	uint8_t startupDelay;Delay after starting the engine before beginning closed loop correction.;"seconds", 1, 0, 0, 250, 0
+	int8_t autotemp minClt;Below this coolant temperature, or if the CLT sensor has failed, correction is disabled and no trim is applied.;"C", 1, 0, -20, 100, 0
+	uint8_t autoscale minLambda;Below this measured lambda, correction is paused. The trim already reached stays applied.;"lambda", 0.01, 0, 0, 2, 2
+	uint8_t autoscale maxLambda;Above this measured lambda, correction is paused. The trim already reached stays applied.;"lambda", 0.01, 0, 0, 2, 2
+	uint8_t startupDelay;Time after the engine finishes cranking before closed loop correction starts, to let the lambda sensor warm up.;"seconds", 1, 0, 0, 250, 0
 
 	stft_cell_cfg_s[STFT_CELL_COUNT iterate] cellCfgs;
 end_struct
@@ -330,8 +332,8 @@ custom adc_channel_e 1 bits, U08, @OFFSET@, [0:5], @@adc_channel_e_enum@@
 struct air_pressure_sensor_config_s
 float lowValue;kPa value at low volts;"kpa", 1, 0, -400, 800, 2
 float highValue;kPa value at high volts;"kpa", 1, 0, -400, 800, 2
-air_pressure_sensor_type_e type;
-adc_channel_e hwChannel;
+air_pressure_sensor_type_e type;Pressure sensor preset. 'Custom' uses the low and high points instead.
+adc_channel_e hwChannel;Analog input the pressure sensor is wired to.
 
 end_struct
 
@@ -347,28 +349,28 @@ struct_no_prefix thermistor_conf_s
 	int autoscale tempC_1;Temperature 1;"C", 0.01, 0, -40, 200, 1
 	int autoscale tempC_2;Temperature 2, must be > Temperature 1;"C", 0.01, 0, -40, 200, 1
 	int autoscale tempC_3;Temperature 3, must be > Temperature 2;"C", 0.01, 0, -40, 200, 1
-	uint32_t autoscale resistance_1;Sensor resistance while at temperature 1;"Ohm", 0.01, 0, 0, 200000, 1
-	uint32_t autoscale resistance_2;Sensor resistance while at temperature 2;"Ohm", 0.01, 0, 0, 200000, 1
-	uint32_t autoscale resistance_3;Sensor resistance while at temperature 3;"Ohm", 0.01, 0, 0, 200000, 1
+	uint32_t autoscale resistance_1;Sensor resistance while at temperature 1. For a sensor set to 'Linear characteristic', enter the sensor output voltage instead.;"Ohm", 0.01, 0, 0, 200000, 1
+	uint32_t autoscale resistance_2;Sensor resistance while at temperature 2. For a sensor set to 'Linear characteristic', enter the sensor output voltage instead.;"Ohm", 0.01, 0, 0, 200000, 1
+	uint32_t autoscale resistance_3;Sensor resistance while at temperature 3. Not used for a sensor set to 'Linear characteristic'.;"Ohm", 0.01, 0, 0, 200000, 1
 
 	uint32_t autoscale bias_resistor;Pull-up resistor value on your board;"Ohm", 0.1, 0, 0, 200000, 1
 end_struct
 
 struct linear_sensor_s
 	adc_channel_e hwChannel;
-	float v1;;"volts", 1, 0, 0, 10, 2
-	float value1;;"kPa", 1, 0, -100000, 100000, 2
-	float v2;;"volts", 1, 0, 0, 10, 2
-	float value2;;"kPa", 1, 0, -100000, 100000, 2
+	float v1;Sensor output voltage at the low calibration point.;"volts", 1, 0, 0, 10, 2
+	float value1;Pressure at the low calibration voltage.;"kPa", 1, 0, -100000, 100000, 2
+	float v2;Sensor output voltage at the high calibration point.;"volts", 1, 0, 0, 10, 2
+	float value2;Pressure at the high calibration voltage.;"kPa", 1, 0, -100000, 100000, 2
 end_struct
 
 struct ThermistorConf
 	thermistor_conf_s config;
-	adc_channel_e adcChannel;
+	adc_channel_e adcChannel;Analog input the sensor is wired to.
 end_struct
 
 custom engine_type_e 4 bits, S32, @OFFSET@, [0:6], @@engine_type_e_auto_enum@@
-engine_type_e engineType;http://rusefi.com/wiki/index.php?title=Manual:Engine_Type
+engine_type_e engineType;Which vehicle preset these settings were loaded from. Set by the 'Popular vehicles' buttons, which overwrite the settings with that vehicle's defaults.
 
 uint16_t launchRpm;A secondary Rev limit engaged by the driver to help launch the vehicle faster;"rpm", 1, 0, 0, 20000, 0
 uint16_t rpmHardLimit;Hard cut above this RPM. Set slightly lower than absolute maximum RPM - may overshoot slightly.;"rpm", 1, 0, 0, 20000, 0
@@ -400,10 +402,10 @@ end_struct
 injector_s injector
 injector_s injectorSecondary
 
-bit isForcedInduction;Does the vehicle have a turbo or supercharger?
+bit isForcedInduction;Does the vehicle have a turbo or supercharger? For reference, not used by the ECU.
 bit useMapEstimateDuringTransient;During the TPS AE period, use the MAP estimate table value instead of true MAP (if greater than real MAP). This basically briefly runs in alpha-n during a transient, then returns to normal speed-density mode.
 bit lambdaProtectionEnable
-bit overrideTriggerGaps
+bit overrideTriggerGaps;Replace the sync gap ratios of the selected trigger with the ones below. A last resort for debugging an unusual wheel.
 bit enableFan1WithAc;Turn on this fan when AC is on.
 bit enableFan2WithAc;Turn on this fan when AC is on.
 bit disableFan1WhenStopped;Inhibit operation of this fan while the engine is not running.
@@ -411,11 +413,11 @@ bit disableFan2WhenStopped;Inhibit operation of this fan while the engine is not
 bit fan1UsePwmMode,"PWM","On/Off";Use PWM mode for fan 1 instead of on/off.
 bit fan2UsePwmMode,"PWM","On/Off";Use PWM mode for fan 2 instead of on/off.
 bit enableTrailingSparks;Enable secondary spark outputs that fire after the primary (rotaries, twin plug engines).
-bit etb_use_two_wires;TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT use two wire mode.
+bit etb_use_two_wires;Two-wire mode: both direction pins carry the PWM, one to open and one to close, and the control pin is an on/off enable. TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do not.
 bit isDoubleSolenoidIdle;Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 bit enableStagedInjection
 bit useTLE8888_cranking_hack;
-bit useSeparateIdleTablesForCrankingTaper;This uses separate ignition timing and VE tables not only for idle conditions, also during the postcranking-to-idle taper transition (See also afterCrankingIACtaperDuration).
+bit useSeparateIdleTablesForCrankingTaper;Treat the after-cranking taper as idle as well (see afterCrankingIACtaperDuration): the idle ignition table, idle VE table and the closed loop fuel idle region are used during the taper, not only once idling.
 bit launchControlEnabled;
 bit doNotFilterTriggerEdgeNoise,"without filter","with filter";"Detect double trigger edges"
 bit antiLagEnabled;
@@ -424,9 +426,9 @@ bit useTLE8888_stepper
 bit usescriptTableForCanSniffingFiltering
 bit verboseCan,"Print all","Do not print";Print incoming and outgoing first bus CAN messages in FOME console
 bit fakeFullSyncForStimulation;In internal trigger stimulation mode, control whether we pretend a cam is present to resolve full sync. When set to true, sequential fuel/spark will work as if a cam signal was detected.
-bit cltSensorPulldown
-bit iatSensorPulldown
-bit allowIdenticalPps
+bit cltSensorPulldown;The CLT sensor is wired between the input and 5V, with the fixed resistor pulling down to ground. Almost all installs use a pull-up, so leave this off.
+bit iatSensorPulldown;The IAT sensor is wired between the input and 5V, with the fixed resistor pulling down to ground. Almost all installs use a pull-up, so leave this off.
+bit allowIdenticalPps;Skip the safety check that rejects primary and secondary pedal calibrations that are nearly identical. Needed for pedals like the BRZ/FRS/GT86 one, whose two tracks have the same voltage range.
 bit is_enabled_spi_5
 bit is_enabled_spi_6
 bit max31855enable
@@ -440,7 +442,7 @@ int16_t tpsErrorDetectionTooLow;Minimum allowed position for throttle and accele
 int16_t tpsErrorDetectionTooHigh;Maximum allowed position for throttle and accelerator position sensors. Beyond this value, the sensor will register an error.;"%", 1, 0, 100, 110, 0
 
 cranking_parameters_s cranking
-	float ignitionDwellForCrankingMs;Dwell duration while cranking;"ms", 1, 0, 0, 200, 1
+	float ignitionDwellForCrankingMs;Coil dwell time used while cranking, instead of the running dwell table.;"ms", 1, 0, 0, 200, 1
 	uint16_t etbRevLimitStart;Once engine speed passes this value, start reducing ETB angle.;"rpm", 1, 0, 0, 15000, 0
 	uint16_t etbRevLimitRange;This far above 'Soft limiter start', fully close the throttle. At the bottom of the range, throttle control is normal. At the top of the range, the throttle is fully closed.;"rpm", 1, 0, 0, 2000, 0
 
@@ -452,14 +454,14 @@ MAP_sensor_config_s map
 	int launchTimingRetard;;"deg", 1, 0, -180, 180, 2
 	float knockBandCustom;Knock filter center frequency override. By default, this is calculated from your cylinder bore. Set this to non-zero to override.;"kHz", 1, 0, 0, 20, 2
 
-uint16_t autoscale displacement;Engine displacement in litres;"L", 0.001, 0, 0, 65, 3
+uint16_t autoscale displacement;Total engine displacement in litres, for all cylinders combined. Scales the air mass calculation, so changing it shifts fueling.;"L", 0.001, 0, 0, 65, 3
 
 uint16_t triggerSimulatorRpm;;"RPM", 1, 0, 0, 30000, 0
 
 custom firing_order_e 1 bits, U08, @OFFSET@, [0:5], "One Cylinder", "1-3-4-2", "1-2-4-3", "1-3-2-4", "1-5-3-6-2-4", "1-8-4-3-6-5-7-2", "1-2-4-5-3", "1-4-2-5-3-6", "1-2", "1-2-3-4-5-6", "1-2-3", "1-8-7-2-6-5-4-3", "1-5-4-2-6-3-7-8", "1-6-3-2-5-4", "1-10-9-4-3-6-5-8-7_2", "1-7-5-11-3-9-6-12-2-8-4-10", "1-7-4-10-2-8-6-12-3-9-5-11", "1-4-3-2", "1-12-5-8-3-10-6-7-2-11-4-9", "1-2-7-8-4-5-6-3", "1-3-7-2-6-5-4-8", "1-2-3-4-5-6-7-8-9", "INVALID", "1-2-3-4-5-6-7-8-9-10-11-12", "1-3-2", "1-2-3-4-5-6-7-8", "1-5-4-8-6-3-7-2", "1-4-3-6-2-5", "1-8-7-3-6-5-4-2", "1-6-2-4-3-5", "1-6-5-4-3-2", "1-4-5-2-3-6", "1-5-4-8-3-7-2-6", "1-6-5-10-2-7-3-8-4-9", "1-6-2-5-3-4"
-firing_order_e firingOrder;
+firing_order_e firingOrder;Order in which the cylinders fire. The cylinder count is taken from the selected order. Also sets which cylinder each injection and ignition event belongs to.
 
-uint8_t vvtBumpAmount;;"deg", 1, 0, -30, 30, 0
+int8_t vvtBumpAmount;Degrees added to the cam target for 2 seconds when a 'VVT target bump' button is pressed. For testing and PID tuning. Use a negative value to move the target the other way, for example for exhaust cams that retard.;"deg", 1, 0, -30, 30, 0
 uint16_t autoscale benchTestOnTime;Duration of each test pulse;"ms", 0.01, 0, 0, 500, 2
 
 float cylinderBore;Cylinder diameter in mm.;"mm", 1, 0, 0, 20000, 2
@@ -468,7 +470,7 @@ float cylinderBore;Cylinder diameter in mm.;"mm", 1, 0, 0, 20000, 2
 
 
 custom engine_load_mode_e 1 bits, U08, @OFFSET@, [0:2], @@engine_load_mode_e_enum@@
-engine_load_mode_e fuelAlgorithm;This setting controls which fuel quantity control algorithm is used.\nAlpha-N means drive by TPS commonly only used for NA engines\nSpeed Density requires MAP sensor and is the default choice for may installs\nMAF air charge is a cylinder filling based method that uses a mass air flow sensor.;
+engine_load_mode_e fuelAlgorithm;This setting controls which fuel quantity control algorithm is used.\nAlpha-N means drive by TPS commonly only used for NA engines\nSpeed Density requires MAP sensor and is the default choice for many installs\nMAF air charge is a cylinder filling based method that uses a mass air flow sensor.\nLua lets a script supply the air mass.;
 uint8_t ALSMaxTPS;;"%", 1, 0, 0, 10, 0
 
 custom injection_mode_e 1 bits, U08, @OFFSET@, [0:1], "Simultaneous", "Sequential", "Batch", "Single Point"
@@ -486,30 +488,31 @@ gppwm_channel_e boostClosedLoopXAxis;Select the parameter to use for the X axis 
 gppwm_channel_e boostClosedLoopYAxis;Select the parameter to use for the Y axis of the closed loop boost table.
 
 custom timing_mode_e 1 bits, U08, @OFFSET@, [0:0], "dynamic", "fixed"
-timing_mode_e timingMode;Dynamic uses the timing map to decide the ignition timing, Static timing fixes the timing to the value set below (only use for checking static timing with a timing light).
+timing_mode_e timingMode;'dynamic' uses the ignition table and corrections. 'fixed' holds the timing at 'Fixed Timing' once the engine is running, for checking base timing with a timing light.
 
 adc_channel_e mafAdcChannel
 
 uint16_t benchTestCount;How many test bench pulses do you want;"", 1, 0, 0, 10000, 0
 
-angle_t crankingTimingAngle;Ignition advance angle used during engine cranking, 5-10 degrees will work as a base setting for most engines.\nThere is tapering towards running timing advance;"deg", 1, 0, -30, 30, 0
+angle_t crankingTimingAngle;Ignition advance angle used during engine cranking, 5-10 degrees will work as a base setting for most engines.\nThis angle is held up to half the cranking RPM, then tapered to running timing at the cranking RPM;"deg", 1, 0, -30, 30, 0
 
-int8_t gapTrackingLengthOverride;How many consecutive gap rations have to match expected ranges for sync to happen;"count", 1, 0, 1, @@GAP_TRACKING_LENGTH@@, 0
- uint8_t maxIdleVss;Above this speed, disable closed loop idle control. Set to 0 to disable (allow closed loop idle at any speed).;"kph", 1, 0, 0, 100, 0
+int8_t gapTrackingLengthOverride;How many consecutive gap ratios have to match their ranges for sync to happen. Only that many gap ranges are used.;"count", 1, 0, 1, @@GAP_TRACKING_LENGTH@@, 0
+ uint8_t maxIdleVss;Above this vehicle speed, the engine does not count as idling even off throttle at idle RPM, so closed loop idle and the other idle-only features stay off and dashpot air is added. Set to 0 to disable this check.;"kph", 1, 0, 0, 100, 0
  uint16_t minOilPressureAfterStart;Expected oil pressure after starting the engine. If oil pressure does not reach this level within 5 seconds of engine start, fuel will be cut. Set to 0 to disable and always allow starting.;"kPa", 1, 0, 0, 1000, 0
  switch_input_pin_e oilPressureSwitch
  pin_input_mode_e oilPressureSwitchMode
 
-uint8_t autoscale inhibitIdleAfterCrankingTime;Inhibit closed loop idle for this duration after cranking.;"sec", 0.1, 0, 0, 10, 1
+uint8_t autoscale inhibitIdleAfterCrankingTime;For this long after cranking, the idle controller does not consider the engine idling: closed loop idle and closed loop idle timing stay off. Applies in open loop idle mode too.;"sec", 0.1, 0, 0, 10, 1
+uint8_t autoscale idleReturnRampDuration;How long the return to idle ramp takes. Longer catches the engine earlier, higher above the idle target, but too long can leave the idle hanging high before it settles.;"sec", 0.1, 0, 0.1, 10, 1
 
 angle_t fixedModeTiming;This value is the ignition timing used when in 'fixed timing' mode, i.e. constant timing\nThis mode is useful when adjusting distributor location.;"RPM", 1, 0, 0, 3000, 0
 
-angle_t globalTriggerAngleOffset;Angle between Top Dead Center (TDC) and the first trigger event.\nPositive value in case of synchronization point before TDC and negative in case of synchronization point after TDC\n.Knowing this angle allows us to control timing and other angles in reference to TDC.;"deg btdc", 1, 0, -720, 720, 0
+angle_t globalTriggerAngleOffset;Angle from the trigger sync point to TDC of cylinder 1 on its compression stroke. Positive if the sync point is before TDC.\nAlways confirm it with a timing light using fixed timing.;"deg btdc", 1, 0, -720, 720, 0
 
 
 
 float analogInputDividerCoefficient;Ratio/coefficient of input voltage dividers on your PCB. For example, use '2' if your board divides 5v into 2.5v. Use '1.66' if your board divides 5v into 3v.;"coef", 1, 0, 0.01, 10, 2
-float vbattDividerCoeff;This is the ratio of the resistors for the battery voltage, measure the voltage at the battery and then adjust this number until the gauge matches the reading.;"coef", 1, 0, 0.01, 99, 2
+float vbattDividerCoeff;Multiplier from the voltage at the ADC input to battery voltage. Measure the voltage at the battery and adjust this until the 'Battery' gauge matches.;"coef", 1, 0, 0.01, 99, 2
 
 uint8_t autotemp fanOnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 uint8_t autotemp fanOffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
@@ -518,10 +521,10 @@ uint16_t fanPwmFrequency;PWM frequency for cooling fans in PWM mode;"Hz", 1, 0, 
 gppwm_channel_e fan1PwmXAxis;X axis source for fan 1 PWM table.
 gppwm_channel_e fan2PwmXAxis;X axis source for fan 2 PWM table.
 uint8_t fanPwmSafetyDuty;Fan duty when CLT sensor fails in PWM mode;"%", 1, 0, 0, 100, 0
-uint8_t disableFan1AtSpeed;Turn fan 1 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
+uint8_t disableFan1AtSpeed;Turn fan 1 off above this vehicle speed. Set to 0 to disable. Has no effect if the vehicle speed sensor fails.;"kph", 1, 0, 0, 255, 0
 
 output_pin_e acrPin;
-uint8_t disableFan2AtSpeed;Turn fan 2 off above this vehicle speed, Set to 0 to disable.;"kph", 1, 0, 0, 255, 0
+uint8_t disableFan2AtSpeed;Turn fan 2 off above this vehicle speed. Set to 0 to disable. Has no effect if the vehicle speed sensor fails.;"kph", 1, 0, 0, 255, 0
 
 float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your vehicle speed sensor is connected to. Use an online calculator to determine this based on your tire size.;"revs/km", 1, 0, 100, 1000, 1
 
@@ -529,30 +532,28 @@ float driveWheelRevPerKm;Number of revolutions per kilometer for the wheels your
 
 	adc_channel_e tps1_1AdcChannel;First throttle body, first sensor
 adc_channel_e vbattAdcChannel;This is the processor input pin that the battery voltage circuit is connected to, if you are unsure of what pin to use, check the schematic that corresponds to your PCB.
-adc_channel_e fuelLevelSensor;This is the processor pin that your fuel level sensor in connected to. This is a non standard input so will need to be user defined.
+adc_channel_e fuelLevelSensor;Analog input the fuel level sender is wired to. Most boards have no dedicated input for this, so pick a spare analog input.
 	adc_channel_e tps2_1AdcChannel;Second throttle body, first sensor
 
 	uint8_t acIdleExtraOffset;Additional idle % while A/C is active;"%", 1, 0, 0, 100, 0
 
-	uint16_t autoscale finalGearRatio;Ratio between the wheels and your transmission output. ;"ratio", 0.01, 0, 0, 10, 2
+	uint16_t autoscale finalGearRatio;Final drive (differential) ratio: driveshaft turns per wheel turn. Used by gear detection.;"ratio", 0.01, 0, 0, 10, 2
 
 	struct trigger_config_s
 		#define trigger_type_e_enum "custom toothed wheel", "Ford Aspire", "Dodge Neon 1995", "Miata NA", "Mitsubishi Mess 4", "GM_7X", "Cooper R50", "Mazda SOHC 4", "60/2", "36/1", "Mercedes Two Segment", "Mitsubishi 4G93 11", "EZ30", "INVALID", "Dodge Neon 2003", "Mazda DOHC 1+4", "1+1", "INVALID", "Single Tooth", "Dodge Ram 1+16", "60/2 VW", "Benelli Tre", "Dodge Stratus", "36_2_2_2", "Nissan Primera", "dev 2JZ 3/34 simulator", "Rover K", "GM 24x 5 degree", "Honda CBR 600", "Mitsubishi 4G92/93/94 Cam 29", "Honda CBR 600 custom", "3/1 skipped", "Dodge Neon 2003 crank", "Miata NB", "Mitsubishi 4G63 Cam 34", "INVALID", "Subaru 7+6", "Jeep 18-2-2-2", "12 tooth crank", "Dodge Neon 1995 crank only", "Jeep XJ 4 cyl", "FiatIAQ_P8", "Mazda Z5", "INVALID", "Renix 44-2-2", "Renix 66-2-2-2", "Honda K 12+1", "INVALID", "36/2", "Subaru SVX", "1+16", "Subaru 7 without 6", "INVALID", "TriTach", "GM 60/2/2/2", "Skoda Favorit", "Barra 3+1 Cam", "Kawa KX450F", "Nissan VQ35", "INVALID", "Nissan VQ30", "Nissan QR25", "Mitsubishi 3A92", "Subaru SVX Crank 1", "Subaru SVX Cam VVT", "Ford PIP", "Suzuki G13B", "Honda K 4+1", "Nissan MR18 Crank", "32/2", "36-2-1", "36-2-1-1", "INVALID", "INVALID", "GM 24x 3 degree", "INVALID", "INVALID", "1996-2006 Viper", "INVALID", "INVALID"
 
 		custom trigger_type_e 4 bits, U32, @OFFSET@, [0:6], @@trigger_type_e_enum@@
-		trigger_type_e type;https://github.com/rusefi/rusefi/wiki/All-Supported-Triggers
-		uint16_t customTotalToothCount;;"number", 1, 0, 1, 60, 0
-		uint16_t customSkippedToothCount;;"number", 1, 0, 0, 10, 0
+		trigger_type_e type;Crank or cam wheel pattern your engine has. Pick the OEM name if it is listed, otherwise use 'custom toothed wheel' for a plain missing-tooth wheel.
+		uint16_t customTotalToothCount;Tooth count of a 'custom toothed wheel' including the missing teeth. A 36-1 wheel is 36.;"number", 1, 0, 1, 60, 0
+		uint16_t customSkippedToothCount;Number of missing teeth in the gap of a 'custom toothed wheel'. A 36-1 wheel is 1.;"number", 1, 0, 0, 10, 0
 	end_struct
 
 	trigger_config_s trigger;
 
-	float airByRpmTaper;Extra air taper amount;"%", 1, 0, 0, 50, 1
-
 custom spi_device_e 1 bits, U08, @OFFSET@, [0:2], "Off", "SPI1", "SPI2", "SPI3", "SPI4", "SPI5", "SPI6"
 	uint8_t boostControlSafeDutyCycle;Duty cycle to use in case of a sensor failure. This duty cycle should produce the minimum possible amount of boost. This duty is also used in case any of the minimum RPM/TPS/MAP conditions are not met.;"%", 1, 0, 0, 100, 0
 
-adc_channel_e throttlePedalPositionAdcChannel;Throttle pedal position first channel
+adc_channel_e throttlePedalPositionAdcChannel;Analog input for the primary accelerator pedal sensor. Leave as 'NONE' if the car has no pedal sensor.
 	pin_output_mode_e tle6240_csPinMode;
 
 	uint8_t acrRevolutions;;"", 1, 0, 0, 10, 0
@@ -560,8 +561,8 @@ adc_channel_e throttlePedalPositionAdcChannel;Throttle pedal position first chan
 float globalFuelCorrection;;"coef", 1, 0, 0, 1000, 2
 
 	float adcVcc;;"volts", 1, 0, 0, 6, 3
-	float mapCamDetectionAnglePosition;;"Deg", 1, 0, 0, 360, 0
-	brain_input_pin_e[CAM_INPUTS_COUNT iterate] camInputs;Camshaft input could be used either just for engine phase detection if your trigger shape does not include cam sensor as 'primary' channel, or it could be used for Variable Valve timing on one of the camshafts.
+	float mapCamDetectionAnglePosition;For 'VTwin by MAP' only. Engine angle within each crank revolution at which MAP is compared with the previous revolution to find engine phase while cranking.;"Deg", 1, 0, 0, 360, 0
+	brain_input_pin_e[CAM_INPUTS_COUNT iterate] camInputs;Input pin for this cam sensor. A cam input can find engine phase, measure cam position for VVT, or both.
 	
 struct afr_sensor_s
 	adc_channel_e hwChannel;
@@ -580,19 +581,19 @@ afr_sensor_s afr
 	air_pressure_sensor_config_s baroSensor
 
 struct idle_hardware_s
-	uint16_t solenoidFrequency;;"Hz", 1, 0, 0, 3000, 0
+	uint16_t solenoidFrequency;PWM frequency for the idle solenoid outputs.;"Hz", 1, 0, 0, 3000, 0
 
-	output_pin_e solenoidPin
-	Gpio stepperDirectionPin
-	Gpio stepperStepPin
-	pin_output_mode_e solenoidPinMode
+	output_pin_e solenoidPin;Output for the idle solenoid valve, or its opening coil in double solenoid mode.
+	Gpio stepperDirectionPin;Direction output to the idle stepper driver. High in default mode moves the valve towards 100%.
+	Gpio stepperStepPin;Step output to the idle stepper driver.
+	pin_output_mode_e solenoidPinMode;Output mode for both idle solenoid outputs.
 end_struct
 
 struct dc_io
-	Gpio directionPin1;
-	Gpio directionPin2;
-	Gpio controlPin;Acts as EN pin in two-wire mode
-	Gpio disablePin;
+	Gpio directionPin1;H-bridge direction input 1. Switched on or off to set which way the motor turns, or carries the PWM in two-wire mode.
+	Gpio directionPin2;H-bridge direction input 2. Works the same way as direction input 1, for the other direction.
+	Gpio controlPin;H-bridge PWM input. In two-wire mode it is a plain on/off enable instead.
+	Gpio disablePin;Optional H-bridge disable output. Driven high while the motor is off, and low while it is being driven.
 end_struct
 	
 	idle_hardware_s idle;
@@ -627,51 +628,51 @@ engineSyncCam_e engineSyncCam;Select which cam is used for engine sync. Other ca
 	pin_output_mode_e injectionPinMode;
 	pin_output_mode_e ignitionPinMode;
 
-	output_pin_e fuelPumpPin;
-	pin_output_mode_e fuelPumpPinMode;
+	output_pin_e fuelPumpPin;Output that drives the fuel pump relay. Leave unassigned if the pump is not controlled by the ECU.
+	pin_output_mode_e fuelPumpPinMode;Output polarity and drive type for the fuel pump relay.
 
-	adc_channel_e throttlePedalPositionSecondAdcChannel;Throttle pedal, secondary channel.
+	adc_channel_e throttlePedalPositionSecondAdcChannel;Analog input for the secondary (redundant) accelerator pedal sensor. Electronic throttle control requires this.
 
 	output_pin_e malfunctionIndicatorPin;Check engine light, also malfunction indicator light. Always blinks once on boot.
 	pin_output_mode_e malfunctionIndicatorPinMode;
-	pin_output_mode_e fanPinMode;
-	output_pin_e fanPin;
+	pin_output_mode_e fanPinMode;Output mode for the fan 1 pin. Used in on/off mode only.
+	output_pin_e fanPin;Output pin that drives the fan 1 relay or fan.
 
 switch_input_pin_e clutchDownPin;Some cars have a switch to indicate that clutch pedal is all the way down
 	output_pin_e alternatorControlPin;
 	pin_output_mode_e alternatorControlPinMode;
-	pin_input_mode_e clutchDownPinMode;
+	pin_input_mode_e clutchDownPinMode;Input pull resistor for the clutch down switch. Use 'PULLUP' for a switch that connects to ground when pressed.
 
 	pin_output_mode_e electronicThrottlePin1Mode;
 	spi_device_e max31855spiDevice;
-	Gpio debugTriggerSync;
+	Gpio debugTriggerSync;Output pin that toggles each time the trigger decoder finds its sync gap. Connect an oscilloscope to see where the ECU thinks sync is.
 	Gpio mc33972_cs;
 	pin_output_mode_e mc33972_csPinMode;
 
-	uint8_t autoscale minCamPhaseResolveRpm;Above this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at low RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
+	uint8_t autoscale minCamPhaseResolveRpm;Only use the cam to find engine phase above this RPM, for a cam sensor that is unreliable at low speed. Phase already found is kept. Set to 0 for no limit.;"rpm", 50, 0, 0, 12500, 0
 	adc_channel_e tps1_2AdcChannel;First throttle body, second sensor.
 	adc_channel_e tps2_2AdcChannel;Second throttle body, second sensor.
 
-	brain_input_pin_e[TRIGGER_INPUT_PIN_COUNT iterate] triggerInputPins;
+	brain_input_pin_e[TRIGGER_INPUT_PIN_COUNT iterate] triggerInputPins;Trigger input pin. The secondary input is only used by trigger types with a second wheel.
 	uint16_t mc33_t_min_boost;Minimum allowed time for the boost phase. If the boost target current is reached before this time elapses, it is assumed that the injector has failed short circuit.;"us", 1, 0, 0, 10000, 0
-	output_pin_e tachOutputPin;
-	pin_output_mode_e tachOutputPinMode;
+	output_pin_e tachOutputPin;Output that drives the tachometer signal. Leave unassigned to disable the tach output.
+	pin_output_mode_e tachOutputPinMode;Output polarity and drive type for the tach signal.
 
 	adc_channel_e maf2AdcChannel
 
-	output_pin_e mainRelayPin;
+	output_pin_e mainRelayPin;Output that drives the main relay coil. Only used on boards where the ECU controls the main relay.
 	Gpio sdCardCsPin;
 	Gpio canTxPin;set_can_tx_pin X
 	Gpio canRxPin;set_can_rx_pin X
 
-	pin_output_mode_e mainRelayPinMode;
+	pin_output_mode_e mainRelayPinMode;Output polarity and drive type for the main relay.
 
 	uint16_t wastegatePositionMin;Voltage when the wastegate is closed.\nYou probably don't have one of these!;"mv", 1, 0, 0, 5000, 0
 	uint16_t wastegatePositionMax;Voltage when the wastegate is fully open.\nYou probably don't have one of these!\n1 volt = 1000 units;"mv", 1, 0, 0, 5000, 0
 
 	output_pin_e secondSolenoidPin;Some Subaru and some Mazda use double-solenoid idle air valve
 
-	uint16_t autoscale tachPulsePerRev;;"", 0.001, 0, 1, 15, 3
+	uint16_t autoscale tachPulsePerRev;Tach output pulses per crankshaft revolution. Must be 10 or less or the ECU raises a fatal error.;"", 0.001, 0, 1, 15, 3
 
 	float compressionRatio;For reference, not used by the ECU.;"CR", 1, 0, 0, 300, 1
 
@@ -693,18 +694,18 @@ bit is_enabled_spi_2
 	bit enabledStep1Limiter
 	bit verboseTLE8888
 	bit enableVerboseCanTx;CAN broadcast using custom FOME protocol\nenable can_broadcast/disable can_broadcast
-	bit idleReturnTargetRamp;Ramp the idle target down from the entry threshold over 3 seconds when returning to idle. Helps prevent overshooting (below) the idle target while returning to idle from coasting.
+	bit idleReturnTargetRamp;Smooth the return to idle: ramp the idle target, and any extra air commanded just before idling (dashpot air or the coasting table), down to normal over the return to idle duration. The ramp starts from the RPM the engine was at when it entered idle (no higher than the entry threshold), and is scaled down when the engine was already near the idle target. Helps prevent undershooting the idle target while returning to idle from coasting.
 	bit ecumasterEgtToCan;Read EcuMaster EGT to CAN. Expects little endian (Intel), and the CAN IDs specified below.
-	bit measureMapOnlyInOneCylinder;Useful for individual intakes
-	bit stepperForceParkingEveryRestart
+	bit measureMapOnlyInOneCylinder;Take one MAP sampling window per engine cycle (at the first cylinder) instead of one per cylinder.
+	bit stepperForceParkingEveryRestart;Park the idle stepper every time the ECU starts, not only when its stored position is unknown.
 	bit isFasterEngineSpinUpEnabled;If enabled, try to fire the engine before a full engine cycle has been completed using RPM estimated from the last 90 degrees of engine rotation. As soon as the trigger syncs plus 90 degrees rotation, fuel and ignition events will occur. If disabled, worst case may require up to 4 full crank rotations before any events are scheduled.
 	bit coastingFuelCutEnabled;This setting disables fuel injection while the engine is in overrun, this is useful as a fuel saving measure and to prevent back firing.
-	bit disableFuelCutOnClutch;True: Inhibits DFCO from activating when the clutch is pressed. This helps prevent transient knock during shifts\nFalse: Do not take clutch state into account.
-	bit useIacTableForCoasting;Override the IAC position during overrun conditions to help reduce engine breaking, this can be helpful for large engines in light weight cars or engines that have trouble returning to idle.
-	bit useIdleTimingPidControl
-	bit disableEtbWhenEngineStopped;Allows disabling the ETB when the engine is stopped. You may not like the power draw or PWM noise from the motor, so this lets you turn it off until it's necessary.
+	bit disableFuelCutOnClutch;True: Inhibits DFCO from activating when the clutch is pressed. This helps prevent transient knock during shifts. Uses the clutch position sensor if fitted, otherwise the clutch up and down switches.\nFalse: Do not take clutch state into account.
+	bit useIacTableForCoasting;Override the IAC position during overrun conditions to help reduce engine braking, this can be helpful for large engines in light weight cars or engines that have trouble returning to idle.
+	bit useIdleTimingPidControl;Adjust ignition timing to hold the idle target RPM. Timing changes torque much faster than idle air, so this catches RPM changes the air control is too slow for. Only active while idling.
+	bit disableEtbWhenEngineStopped;Turn the throttle motor off while the engine isn't turning, to save power and stop motor noise. PID autotune can't run while this is on.
 	bit is_enabled_spi_4
-	bit pauseEtbControl;Disable the electronic throttle motor and DC idle motor for testing.\nThis mode is for testing ETB/DC idle position sensors, etc without actually driving the throttle.
+	bit pauseEtbControl;Never drive the electronic throttle motors, for testing the throttle position sensors without the throttle moving. Doesn't affect an electric wastegate. Auto calibrate still moves the throttle.
 	bit alignEngineSnifferAtTDC
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
@@ -719,7 +720,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	pin_output_mode_e acFanPinMode;
 
 	uint16_t vehicleWeight;For reference, not used by the ECU.;"kg", 1, 0, 0, 10000, 0
-	int16_t idlePidRpmUpperLimit;How far above idle speed do we consider idling?\nFor example, if target = 800, this param = 200, then anything below 1000 RPM is considered idle.;"RPM", 1, 0, 0, 500, 0
+	int16_t idlePidRpmUpperLimit;How far above the idle target RPM the engine must drop to before it counts as idling. Off throttle, it counts as coasting above 1.5 times this above the target.\nFor example, with a target of 800 and 200 here, idle starts below 1000 RPM and coasting above 1100 RPM.;"RPM", 1, 0, 0, 500, 0
 
 	uint16_t autoscale applyNonlinearBelowPulse;Apply nonlinearity correction below a pulse of this duration. Pulses longer than this duration will receive no adjustment.;"ms", {1/1000}, 0, 0, 30, 3
 	Gpio lps25BaroSensorScl
@@ -729,13 +730,13 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	switch_input_pin_e clutchUpPin;Some vehicles have a switch to indicate that clutch pedal is all the way up
 	custom InjectorNonlinearMode 1 bits, U08, @OFFSET@, [0:1], "None", "Polynomial", "Ford (dual slope)", "Adder Table"
 	InjectorNonlinearMode injectorNonlinearMode
-	pin_input_mode_e clutchUpPinMode;
+	pin_input_mode_e clutchUpPinMode;Input pull resistor for the clutch up switch. Use 'PULLUP' for a switch that connects to ground when pressed.
 
 	Gpio[EGT_CHANNEL_COUNT iterate] max31855_cs;
 	brain_input_pin_e flexSensorPin;Continental/GM flex fuel sensor, 50-150hz type;
 	uint8_t autoscale tachSweepTime;Total time for the tach to sweep up then back down at startup. Set to 0 to disable sweep.;"s", 0.1, 0, 0, 10, 1
 	uint8_t autoscale tachSweepMax;Maximum RPM for the startup tach sweep.;"rpm", 50, 0, 0, 12500, 0
-	pin_output_mode_e stepperDirectionPinMode;
+	pin_output_mode_e stepperDirectionPinMode;Output mode for the idle stepper direction pin. Inverting it reverses the valve direction.
 
 	spi_device_e mc33972spiDevice;
 	uint8_t autoscale stoichRatioSecondary;Stoichiometric ratio for your secondary fuel. This value is used when the Flex Fuel sensor indicates E100, typically 9.0;":1", {1/@@PACK_MULT_AFR_CFG@@}, 0, 5, 25, 1
@@ -743,7 +744,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	uint8_t flexFuelFailedEthanol;Ethanol content assumed when the flex fuel sensor has failed, and the ECU has never seen a valid reading to remember. Once the sensor has read successfully, that value is stored in backup RAM and used instead of this one.;"%", 1, 0, 0, 100, 0
 
 
-	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, 250, 0
+	uint16_t sdCardLogFrequency;Rate the ECU will log to the SD card, in hz (log lines per second).;"hz", 1, 0, 1, @@MAX_SD_LOG_RATE@@, 0
 	Gpio debugMapAveraging;
 	output_pin_e starterRelayDisablePin;
 	pin_output_mode_e starterRelayDisablePinMode;On some vehicles we can disable starter once engine is already running
@@ -754,10 +755,10 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	switch_input_pin_e startStopButtonPin
 	
 	uint8_t mapMinBufferLength;This many MAP samples are used to estimate the current MAP. This many samples are considered, and the minimum taken. Recommended value is 1 for single-throttle engines, and your number of cylinders for individual throttle bodies.;"count", 1, 0, 1, 24, 0
-	int16_t idlePidDeactivationTpsThreshold;Below this throttle position, the engine is considered idling. If you have an electronic throttle, this checks accelerator pedal position instead of throttle position, and should be set to 1-2%.;"%", 1, 0, 0, 50, 0
-	int16_t stepperParkingExtraSteps;;"%", 1, 0, 0, 3000, 0
-	uint16_t tps1SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
-	uint16_t tps1SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
+	int16_t idlePidDeactivationTpsThreshold;Above this throttle position, the engine never counts as idling. If you have an electronic throttle, this checks accelerator pedal position instead of throttle position, and should be set to 1-2%.;"%", 1, 0, 0, 50, 0
+	int16_t stepperParkingExtraSteps;Extra steps to drive past the end of travel when parking the idle stepper, as a percentage of 'Stepper total steps'.;"%", 1, 0, 0, 3000, 0
+	uint16_t tps1SecondaryMin;Second sensor reading with the throttle closed, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps1SecondaryMax;Second sensor reading with the throttle wide open, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
 	int16_t antiLagRpmTreshold;;"rpm", 1, 0, 0, 20000, 0
 	uint16_t startCrankingDuration;Maximum time to crank starter when start/stop button is pressed;"Seconds", 1, 0, 0, 30, 0
 
@@ -800,17 +801,17 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	custom vehicle_info_t @@VEHICLE_INFO_SIZE@@ string, ASCII, @OFFSET@, @@VEHICLE_INFO_SIZE@@
 	custom gppwm_note_t @@GPPWM_NOTE_SIZE@@ string, ASCII, @OFFSET@, @@GPPWM_NOTE_SIZE@@
 
-	bit clutchUpPinInverted
-	bit clutchDownPinInverted
+	bit clutchUpPinInverted;Reverses the clutch up switch logic. Tick this if the switch pulls the input to ground when the pedal is up.
+	bit clutchDownPinInverted;Reverses the clutch down switch logic. Tick this if the switch pulls the input to ground when the pedal is down.
 	bit useHbridgesToDriveIdleStepper;If enabled we use two H-bridges to drive stepper idle air valve
 	bit multisparkEnable
 	bit enableLaunchRetard
 	bit enableCanVss;Read VSS from OEM CAN bus according to selected CAN vehicle configuration.
 	bit enableOilPressureProtect
-	bit stftIgnoreErrorMagnitude;If enabled, adjust at a constant rate instead of a rate proportional to the current lambda error. This mode may be easier to tune, and more tolerant of sensor noise.
+	bit stftIgnoreErrorMagnitude;If enabled, the trim adds or removes fuel at a constant rate (10% of fuel per 'Time const'), depending only on whether lambda is lean or rich of target, instead of at a rate proportional to the lambda error. More tolerant of sensor noise, but never settles completely.
 	bit enableSoftwareKnock
-	bit verboseVVTDecoding;Verbose info in console below engineSnifferRpmThreshold\nenable vvt_details
-	bit invertCamVVTSignal;get invertCamVVTSignal
+	bit verboseVVTDecoding;Print each cam/VVT sync gap check to the console, with the measured and expected gap. Only active below 'Engine Sniffer Threshold' RPM.
+	bit invertCamVVTSignal;Use the opposite edge of the signal from all cam sensors. VR sensor with a MAX9924 or MAX9926 conditioner: off. Hall sensor: depends on the sensor, check the Trigger Logger. Recheck the VVT offsets after changing this.
 	bit alphaNUseIat;In Alpha-N mode, compensate for air temperature.
 	bit knockBankCyl1,"Channel 2","Channel 1"
 	bit knockBankCyl2,"Channel 2","Channel 1"
@@ -825,7 +826,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	bit knockBankCyl11,"Channel 2","Channel 1"
 	bit knockBankCyl12,"Channel 2","Channel 1"
 	bit tcuEnabled
-	bit brakePedalPinInverted
+	bit brakePedalPinInverted;Reverses the brake switch logic. Tick this if the switch pulls the input to ground when the brake is pressed.
 canBroadcast_e canBroadcastUseChannelTwo;
 	bit useRawOutputToDriveIdleStepper;If enabled we use four Push-Pull outputs to directly drive stepper idle air valve coilss
 bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bus CAN messages in FOME console
@@ -846,7 +847,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 	pid_s boostPid;
 	uint16_t boostPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
-	#define launchActivationMode_e_enum "Launch Button", "Clutch Down Switch", "Always Active(Disabled By Speed)"
+	#define launchActivationMode_e_enum "Launch Button", "Clutch pressed", "Always Active(Disabled By Speed)"
     custom launchActivationMode_e  1 bits, S08, @OFFSET@, [0:1], @@launchActivationMode_e_enum@@
     launchActivationMode_e launchActivationMode;
 
@@ -872,7 +873,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 	vehicle_info_t vehicleName;For example, Hunchback or Orange Miata\nVehicle name has to be unique between your vehicles.
 
 	custom dc_function_e 1 bits, U08, @OFFSET@, [0:1], "None", "Throttle 1", "Throttle 2", "Wastegate"
-	dc_function_e[ETB_COUNT iterate] etbFunctions
+	dc_function_e[ETB_COUNT iterate] etbFunctions;What this H-bridge drives: an electronic throttle or an electric wastegate. 'None' leaves its pins untouched, for example for Lua.
 
 	Gpio       drv8860_cs;
 	pin_output_mode_e drv8860_csPinMode;
@@ -880,34 +881,34 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 
 ! todo: convert this into a bit setting no need for 4 bytes and we do not expect a third option any day soon
 custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Open Loop"
-	idle_mode_e idleMode
+	idle_mode_e idleMode;'Open Loop' uses the open loop idle position only. 'Open Loop + Closed Loop' adds a PID correction that holds the target RPM while idling.
 
 	Gpio       drv8860_miso;
 
 	output_pin_e[LUA_PWM_COUNT iterate] luaOutputPins
 
-	int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Angle between cam sensor and VVT zero position. Adjust this so that your VVT indication reads 0 while running with the control solenoid disabled.;"value", 0.1, 0, -720, 1000, 1
+	int16_t[CAM_INPUTS_COUNT iterate] autoscale vvtOffsets;Adjust so this cam's VVT reading is 0 at its rest position, running with VVT control off. Subtract the current reading from this value. Set 'Trigger Angle Advance' first.;"deg", 0.1, 0, -720, 1000, 1
 
     gppwm_note_t[GPPWM_CHANNELS iterate] gpPwmNote;
 
-	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
-	uint16_t tps2SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps2SecondaryMin;Second throttle body, second sensor reading with the throttle closed, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps2SecondaryMax;Second throttle body, second sensor reading with the throttle wide open, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
 
 	bit revLimitUseTable,"yes","no";If enabled, look up the RPM limit from a table with selectable axes instead of a constant value. When the CLT curve is also enabled, the lower limit applies. Invalid axis readings use 0.
-	bit fuelClosedLoopCorrectionEnabled;Enables lambda sensor closed loop feedback for fuelling.
+	bit fuelClosedLoopCorrectionEnabled;Enables short term fuel trim, which corrects fuelling towards the target lambda using lambda sensor feedback.
 	bit useOilPressureSwitch,"Switch","Sensor"
 	bit boardUseTachPullUp,"12v","5v"
 	bit boardUseTempPullUp,"With Pull Ups","Piggyback Mode"
-	bit silentTriggerError;Sometimes we have a performance issue while printing error
-	bit useLinearCltSensor
+	bit silentTriggerError;Do not print trigger sync error messages to the console. Printing can slow the ECU down on wheels with many teeth.
+	bit useLinearCltSensor;Treat the CLT input as a linear voltage sensor instead of a thermistor. The resistance fields at the lowest and middle temperatures are read as volts, and the highest point is ignored.
 	bit canReadEnabled;enable can_read/disable can_read
 	bit canWriteEnabled;enable can_write/disable can_write
-	bit useLinearIatSensor
+	bit useLinearIatSensor;Treat the IAT input as a linear voltage sensor instead of a thermistor. The resistance fields at the lowest and middle temperatures are read as volts, and the highest point is ignored.
 	bit boardUse2stepPullDown,"With Pull Down","With Pull Up"
-	bit tachPulseDurationAsDutyCycle,"Duty cycle","Constant time";Treat milliseconds value as duty cycle value, i.e. 0.5ms would become 50%
+	bit tachPulseDurationAsDutyCycle,"Duty cycle","Constant time";'Duty cycle' mode treats 'Pulse duration' as a fraction of each period, so 0.5 gives 50%. 'Constant time' mode treats it as the high time in ms
 	bit isAlternatorControlEnabled;This enables smart alternator control and activates the extra alternator settings.
-	bit invertPrimaryTriggerSignal;Invert the signal from the primary trigger sensor.
-	bit invertSecondaryTriggerSignal;Invert the signal from the secondary trigger sensor.
+	bit invertPrimaryTriggerSignal;Use the opposite edge of the primary trigger signal. VR sensor with a MAX9924 or MAX9926 conditioner: off. Hall sensor: depends on the sensor, check the Trigger Logger. A reversed VR sensor is fixed by swapping its wires, not with this.
+	bit invertSecondaryTriggerSignal;Use the opposite edge of the secondary trigger signal. VR sensor with a MAX9924 or MAX9926 conditioner: off. Hall sensor: depends on the sensor, check the Trigger Logger.
 	
 bit cutFuelOnHardLimit,"yes","no";Cut fuel above the hard RPM limit.
 bit cutSparkOnHardLimit,"yes","no";Cut spark above the hard RPM limit. WARNING: some engines are known to self-disassemble their valvetrain with a spark cut. Fuel cut is much safer. Use with extreme caution.
@@ -922,42 +923,41 @@ bit launchSparkCutEnable;This is the Cut Mode normally used
 	bit boardUseD5PullDown,"With Pull Down","With Pull Up"
 bit verboseIsoTp
 bit launchActivateInverted
-bit twoStroke,"Two Stroke","Four Stroke"
-bit skippedWheelOnCam,"On camshaft","On crankshaft";Where is your primary skipped wheel located?
+bit twoStroke,"Two Stroke","Four Stroke";Select Two Stroke for a two-stroke engine, where the engine cycle is one crank revolution (360 degrees).
+bit skippedWheelOnCam,"On camshaft","On crankshaft";Whether the primary trigger wheel turns at camshaft speed (once per engine cycle) or crankshaft speed. Only used for wheels where the location is not implied by the trigger type.
 
 	switch_input_pin_e acSwitch;A/C button input;
 	switch_input_pin_e acPressureSwitch;A/C pressure switch input;
 	adc_channel_e vRefAdcChannel;
-	uint8_t etbNeutralPosition;Expected neutral position;"%", 1, 0, 0, 100, 0
 
 	bit isInjectionEnabled
 	bit isIgnitionEnabled
 	bit isCylinderCleanupEnabled;When enabled if TPS is held above 95% no fuel is injected while cranking to clear excess fuel from the cylinders.
 	bit complexWallModel,"Advanced (tables)","Basic (constants)";Should we use tables to vary tau/beta based on CLT/MAP, or just with fixed values?
 	bit alwaysInstantRpm;Instant RPM is measured from the time between nearby trigger teeth instead of a whole engine cycle, which responds much faster to changes in engine speed.\nIt is used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better). Enable this to also use it on triggers with fewer teeth, where it will be less accurate.
-	bit isMapAveragingEnabled
+	bit isMapAveragingEnabled;Enable the crank-angle MAP sampling that produces the fast MAP value. When off, only the slow MAP value is available.
 	bit useCrankingIdleTaperTableSetting; If enabled, use separate temperature multiplier table for cranking taper duration.
 	bit overrideCrankingIacSetting;If enabled, use separate temperature multiplier table for cranking idle position.\nIf disabled, use normal running multiplier table applied to the cranking base position.
-	bit useSeparateAdvanceForIdle;This activates a separate ignition timing table for idle conditions, this can help idle stability by using ignition retard and advance either side of the desired idle speed. Extra retard at low idle speeds will prevent stalling and extra advance at high idle speeds can help reduce engine power and slow the idle speed.
+	bit useSeparateAdvanceForIdle;This activates a separate ignition timing table for idle conditions, this can help idle stability by using ignition retard and advance either side of the desired idle speed. Extra advance at low idle speeds helps prevent stalling, and extra retard at high idle speeds reduces engine power and slows the idle speed.
 	bit isWaveAnalyzerEnabled
 	bit useSeparateVeForIdle;This activates a separate fuel table for Idle, this allows fine tuning of the idle fuelling.
-	bit verboseTriggerSynchDetails;Verbose info in console below engineSnifferRpmThreshold\nenable trigger_details
-	bit alwaysResetPidLeavingIdle
+	bit verboseTriggerSynchDetails;Print each crank sync gap check to the console, with the measured and expected gap. Only active below 'Engine Sniffer Threshold' RPM.
+	bit alwaysResetPidLeavingIdle;Reset the closed loop idle I-term every time the engine leaves idle. When off, a positive I-term (adding air) is kept for the next return to idle, and a negative one is reset.
 	bit canBroadcastEgt;Disable to skip cam data frame (base + 9) if you have no EGT sensing.
 	bit canBroadcastCams;Disable to skip cam data frame (base + 8) if you have no VVT.
-	bit pairedOddFireWastedSpark
-bit useFixedBaroCorrFromMap
-bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In Constant mode, timing is automatically tapered to running as RPM increases.\nIn Table mode, the "Cranking ignition advance" table is used directly.
+	bit pairedOddFireWastedSpark;For engines with uneven firing intervals where one coil fires a pair of companion cylinders, such as the Viper V10. Only the lower firing order cylinder of each pair needs an ignition output.
+bit useFixedBaroCorrFromMap;At power-up, read MAP once and use it as the barometric pressure until the next restart. Only applies if the reading is between 60 and 110 kPa. Overrides any baro sensor.
+bit useSeparateAdvanceForCranking,"Table","Fixed (auto taper)";In 'Fixed (auto taper)' mode, timing is held at 'Fixed cranking advance' up to half the cranking RPM, then tapered to running timing at the cranking RPM.\nIn 'Table' mode, the 'Cranking ignition advance' curve is used directly.
 bit useAdvanceCorrectionsForCranking;This enables the various ignition corrections during cranking (IAT, CLT, FSIO and PID idle).\nYou probably don't need this.
 bit flexCranking;Enable a second cranking table to use for E100 flex fuel, interpolating between the two based on flex fuel sensor.
 bit torqueReductionEnabled;Enable the torque-reduction controller (spark retard + cylinder cut). It maps a torque-reduction request to ignition retard and cut. No producer (e.g. traction control) is wired up yet, so on its own this currently has no effect.
 bit isBoostControlEnabled
 bit launchSmoothRetard;Interpolates the Ignition Retard from 0 to 100% within the RPM Range
-bit isPhaseSyncRequiredForIgnition;If enabled, no fuel or spark happens until the cam/VVT sensor has resolved engine phase, so the engine always starts in fully sequential mode.\nIf disabled, the engine begins firing wasted spark and batch fuel as soon as the crank syncs, then switches to sequential once the cam syncs. This starts sooner, but a few engines don't like running that way.\nEngines with a symmetrical crank wheel (where cam sync is required to know engine phase at all) always wait for cam sync regardless of this setting.
+bit isPhaseSyncRequiredForIgnition;If enabled, no fuel or spark happens until the cam/VVT sensor has resolved engine phase, so the engine always starts in fully sequential mode. Don't enable it without a working cam sensor.\nIf disabled, the engine begins firing wasted spark and batch fuel as soon as the crank syncs, then switches to sequential once the cam syncs. This starts sooner, but a few engines don't like running that way.\nEngines with a symmetrical crank wheel (where cam sync is required to know engine phase at all) always wait for cam sync regardless of this setting.
 bit useCltBasedRpmLimit,"yes","no";If enabled, use a curve for RPM limit (based on coolant temperature) instead of a constant value.
 bit forceO2Heating,"yes","no";If enabled, don't wait for engine start to heat O2 sensors. WARNING: this will reduce the life of your sensor, as condensation in the exhaust from a cold start can crack the sensing element.
-bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
-bit invertVvtControlExhaust,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'.
+bit invertVvtControlIntake,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'. With 'retard', the intake target table values must be negative.
+bit invertVvtControlExhaust,"retard","advance";If increased VVT duty cycle increases the indicated VVT angle, set this to 'advance'. If it decreases, set this to 'retard'. Most intake cams use 'advance', and most exhaust cams use 'retard'. With 'retard', the exhaust target table values must be negative.
 bit sdTriggerLog,"trigger","normal";'Trigger' mode will write a high speed log of trigger events (warning: uses lots of space!). 'Normal' mode will write a standard MLG of sensors, engine function, etc. similar to the one captured in TunerStudio.
 bit ALSActivateInverted
 
@@ -965,54 +965,53 @@ bit ALSActivateInverted
 
 
 
-	float turboSpeedSensorMultiplier;;"mult", 1, 0, 0, 7000, 3
+	float turboSpeedSensorMultiplier;Turbocharger shaft revolutions per input pulse. For example 0.25 for a sensor that gives 4 pulses per revolution.;"mult", 1, 0, 0, 7000, 3
 
 	int16_t acIdleRpmBump;Extra idle target speed when A/C is enabled. Some cars need the extra speed to keep the AC efficient while idling.;"RPM", 1, 0, 0, 1000, 0
 
 	int16_t warningPeriod;;"seconds", 1, 0, 0, 60, 0
 
-float idleStepperReactionTime;;"ms", 1, 0, 1, 300, 0
+	float idleStepperReactionTime;Pause for each idle stepper step. Too short and the motor misses steps and loses its position.;"ms", 1, 0, 1, 300, 0
 
 
-	uint16_t idleStepperTotalSteps;;"count", 1, 0, 5, 3000, 0
+	uint16_t idleStepperTotalSteps;Number of steps from the parked position to 100% idle position.;"count", 1, 0, 5, 3000, 0
 
 	custom injector_compensation_mode_e 1 bits, U08, @OFFSET@, [0:1], "None", "Fixed rail pressure", "Sensed Rail Pressure"
 	injector_compensation_mode_e injectorCompensationMode;None = I have a MAP-referenced fuel pressure regulator\nFixed rail pressure = I have an atmosphere-referenced fuel pressure regulator (returnless, typically)\nSensed rail pressure = I have a fuel pressure sensor;
 
-	pin_output_mode_e fan2PinMode;
+	pin_output_mode_e fan2PinMode;Output mode for the fan 2 pin. Used in on/off mode only.
 
 	#define pin_mode_e_enum "default", "INVALID", "INVALID", "INVALID", "opendrain", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PULLUP", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PULLDOWN"
 custom pin_mode_e 1 bits, U08, @OFFSET@, [0:6], @@pin_mode_e_enum@@
 	
 
 ! todo: rename field remove 'ms', also fix typo in name should be 'tachPulseDuration' and that would be an incompatible breaking change for users :(
-	float tachPulseDuractionMs;Duration in ms or duty cycle depending on selected mode;"", 1, 0, 0, 100, 2
+	float tachPulseDuractionMs;Tach pulse high time in ms, or duty cycle as a fraction (0.5 = 50%) in 'Duty cycle' mode.;"", 1, 0, 0, 100, 2
 
 	
 	float wwaeTau;Length of time the deposited wall fuel takes to dissipate after the start of acceleration. ;"Seconds", 1, 0, 0, 3, 2
 	pid_s alternatorControl;
 	pid_s etb;
-	int16_t airTaperRpmRange;RPM range above upper limit for extra air taper;"RPM", 1, 0, 0, 1500, 0
 	brain_input_pin_e turboSpeedSensorInputPin;
-int16_t tps2Min;;"ADC", 1, 0, 0, 1023, 0
-int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
+int16_t tps2Min;Second throttle body, closed throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
+int16_t tps2Max;Second throttle body, full throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
 	output_pin_e starterControlPin
 	pin_input_mode_e startStopButtonMode;
 
 ! todo: mapErrorDetectionIdleTooLow? 30kPa is usually lowest on idle	
-	float mapErrorDetectionTooLow;kPa value which is too low to be true;"kPa", 1, 0, -100, 100, 2
-	float mapErrorDetectionTooHigh;kPa value which is too high to be true;"kPa", 1, 0, -100, 800, 2
+	float mapErrorDetectionTooLow;A pressure reading below this is treated as a sensor fault (P0107 for MAP). Also applies to the baro sensor.;"kPa", 1, 0, -100, 100, 2
+	float mapErrorDetectionTooHigh;A pressure reading above this is treated as a sensor fault (P0108 for MAP). Also applies to the baro sensor.;"kPa", 1, 0, -100, 800, 2
 	uint16_t autoscale multisparkSparkDuration;How long to wait for the spark to fire before recharging the coil for another spark.;"ms", 0.001, 0, 0, 3, 2
 	uint16_t autoscale multisparkDwell;This sets the dwell time for subsequent sparks. The main spark's dwell is set by the dwell table.;"ms", 0.001, 0, 0, 3, 2
 	pid_s idleRpmPid
 	float wwaeBeta;0 = No fuel settling on port walls 1 = All the fuel settling on port walls setting this to 0 disables the wall wetting enrichment. ;"Fraction", 1, 0, 0, 1, 2
 
-	float throttlePedalUpVoltage;;"volts", 1, 0, -6, 6, 2
-	float throttlePedalWOTVoltage;Pedal in the floor;"volts", 1, 0, -6, 6, 2
+	float throttlePedalUpVoltage;Primary pedal sensor voltage with the pedal released.;"volts", 1, 0, -6, 6, 2
+	float throttlePedalWOTVoltage;Primary pedal sensor voltage with the pedal fully pressed.;"volts", 1, 0, -6, 6, 2
 	
 	int16_t startUpFuelPumpDuration;When ignition is turned on, turn fuel pump on to build fuel pressure;"seconds", 1, 0, 0, 6000, 0
 
-	uint16_t mafFilterParameter;larger value = larger intake manifold volume;"", 1, 0, 0, 10000, 0
+	uint16_t mafFilterParameter;Intake manifold filter for the MAF airmass, time constant is this value divided by RPM, in seconds. Larger value = larger intake manifold volume. Physically, about 120 x manifold volume / (VE x engine displacement). 0 disables the filter.;"", 1, 0, 0, 10000, 0
 
 	float targetVBatt;This is the target battery voltage the alternator PID control will attempt to maintain;"volts", 1, 0, 0, 30, 1
 	uint8_t dfcoRetardDeg;Retard timing by this amount during DFCO. Smooths the transition back from fuel cut. After fuel is restored, ramp timing back in over the period specified.;"deg", 1, 0, 0, 30, 0
@@ -1020,10 +1019,10 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 
 	uint8_t autoscale idleMaximumAirmass;Maximum commanded airmass for the idle controller.;"mg", 2, 0, 0, 500, 1
 
-	adc_channel_e map2HwChannel
-	int16_t afterCrankingIACtaperDuration;This is the duration in cycles that the IAC will take to reach its normal idle position, it can be used to hold the idle higher for a few seconds after cranking to improve startup.;"cycles", 1, 0, 0, 5000, 0
+	adc_channel_e map2HwChannel;Optional second MAP sensor. It uses the same calibration as the first MAP sensor. Nothing in the fuel or ignition calculations uses it, it is only available for logging and Lua scripts.
+	int16_t afterCrankingIACtaperDuration;This is the duration in cycles that the IAC will take to reach its normal idle position, it can be used to hold the idle higher for a few seconds after cranking to improve startup. Counted from the start of cranking, so cranking cycles count towards it.;"cycles", 1, 0, 0, 5000, 0
 	
-	int16_t iacByTpsTaper;Extra IAC, in percent between 0 and 100, tapered between zero and idle deactivation TPS value;"percent", 1, 0, 0, 500, 0
+	uint8_t idleDashpotAir;Extra idle air added while the throttle is pressed, and while coasting unless the coasting table is used, so that air is already in the intake on return to idle. With 'Ramp on return to idle' enabled it is ramped out over the return to idle duration, otherwise it is removed as soon as the engine is idling.;"%", 1, 0, 0, 100, 0
 
 	Gpio LIS302DLCsPin;
 
@@ -1040,7 +1039,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	float tpsAccelEnrichmentThreshold;Maximum change delta of TPS percentage over the 'length'. Actual TPS change has to be above this value in order for TPS/TPS acceleration to kick in.;"roc", 1, 0, 0, 200, 1
 
     brain_input_pin_e[2 iterate] auxSpeedSensorInputPin;
-	uint8_t totalGearsCount;;"", 1, 0, 1, @@GEARS_COUNT@@, 0
+	uint8_t totalGearsCount;Number of forward gears in the transmission. Set to match how many gear ratios you fill in.;"", 1, 0, 1, @@GEARS_COUNT@@, 0
 
 	custom InjectionTimingMode 1 bits, U08, @OFFSET@, [0:1], "End of injection", "Start of injection", "Center of injection"
 	InjectionTimingMode injectionTimingMode;Sets what part of injection's is controlled by the injection phase table.
@@ -1050,8 +1049,8 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	float tpsDecelEnleanmentThreshold;For decel we simply multiply delta of TPS and tFor decel we do not use table?!;"roc", 1, 0, 0, 200, 1
 	float tpsDecelEnleanmentMultiplier;Magic multiplier, we multiply delta of TPS and get fuel squirt duration;"coeff", 1, 0, 0, 200, 2
 
-	float throttlePedalSecondaryUpVoltage;;"voltage", 1, 0, -6, 6, 2
-	float throttlePedalSecondaryWOTVoltage;Pedal in the floor;"voltage", 1, 0, -6, 6, 2
+	float throttlePedalSecondaryUpVoltage;Secondary pedal sensor voltage with the pedal released.;"voltage", 1, 0, -6, 6, 2
+	float throttlePedalSecondaryWOTVoltage;Secondary pedal sensor voltage with the pedal fully pressed.;"voltage", 1, 0, -6, 6, 2
 
 	#define can_baudrate_e_enum "50kbps", "83.33kbps", "100kbps", "125kbps", "250kbps", "500kbps", "1Mbps"
 	custom can_baudrate_e 1 bits, U08, @OFFSET@, [0:2], @@can_baudrate_e_enum@@
@@ -1070,7 +1069,7 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint8_t mc33_hpfp_i_hold_off;How long to deactivate power when hold current is reached before applying power again;"us", 1, 0, 0, 255, 0
 	uint8_t mc33_hpfp_max_hold;Maximum amount of time the solenoid can be active before assuming a programming error;"ms", 1, 0, 0, 255, 0
 
-	bit stepperDcInvertedPins;Enable if DC-motor driver (H-bridge) inverts the signals (eg. RZ7899 on Hellen boards)
+	bit stepperDcInvertedPins;Enable if DC-motor driver (H-bridge) inverts the signals (eg. RZ7899 on Hellen boards). Applies to the electronic throttle H-bridges as well as the idle stepper.
 	bit canOpenBLT; Allow OpenBLT on Primary CAN
 	bit can2OpenBLT; Allow OpenBLT on Secondary CAN
 	bit injectorFlowAsMassFlow,"mass flow","volumetric flow";Select whether to configure injector flow in volumetric flow (default, cc/min) or mass flow (g/s).
@@ -1102,29 +1101,29 @@ int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
 	uint8_t[16] autoscale tchargeBins;;"kg/h", 5, 0, 0, 1200, 0
 	uint8_t[16] autoscale tchargeValues;;"ratio", 0.01, 0, 0, 1, 2
 
-	float fixedTiming;Fixed timing, useful for TDC testing;"deg", 1, 0, -720, 720, 2
-	float mapLowValueVoltage;MAP voltage for low point;"v", 1, 0, 0, 10, 2
-	float mapHighValueVoltage;MAP voltage for low point;"v", 1, 0, 0, 10, 2
+	float fixedTiming;Ignition timing held in 'fixed' timing mode, once the engine is running. Use it to check 'Trigger Angle Advance' with a timing light.;"deg", 1, 0, -720, 720, 2
+	float mapLowValueVoltage;Sensor voltage at the low pressure point of a 'Custom' sensor. Also used by a 'Custom' baro sensor.;"v", 1, 0, 0, 10, 2
+	float mapHighValueVoltage;Sensor voltage at the high pressure point of a 'Custom' sensor. Also used by a 'Custom' baro sensor.;"v", 1, 0, 0, 10, 2
 	float egoValueShift;EGO value correction;"value", 1, 0, -10, 10, 2
 
-	output_pin_e[CAM_INPUTS_COUNT iterate] vvtPins;VVT output solenoid pin for this cam
+	output_pin_e[CAM_INPUTS_COUNT iterate] vvtPins;Output pin driving the VVT solenoid for this cam. Bank 2 uses the same target table, PID and hold duty as bank 1 for the same cam.
 
 	uint8_t autoscale tChargeMinRpmMinTps;;"", 0.005, 0, 0, 1, 3
 	uint8_t autoscale tChargeMinRpmMaxTps;;"", 0.005, 0, 0, 1, 3
 	uint8_t autoscale tChargeMaxRpmMinTps;;"", 0.005, 0, 0, 1, 3
 	uint8_t autoscale tChargeMaxRpmMaxTps;;"", 0.005, 0, 0, 1, 3
 
-	uint16_t vvtOutputFrequency;;"Hz", 1, 0, 100, 1000, 0
-	int8_t[CAMS_PER_BANK iterate] vvtItermMin;;"", 1, 0, -100, 100, 0
-	int8_t[CAMS_PER_BANK iterate] vvtItermMax;;"", 1, 0, -100, 100, 0
-	int8_t[CAMS_PER_BANK iterate] vvtOutputMin;;"", 1, 0, 0, 100, 0
-	int8_t[CAMS_PER_BANK iterate] vvtOutputMax;;"", 1, 0, 0, 100, 0
+	uint16_t vvtOutputFrequency;PWM frequency for all VVT solenoid outputs. Use the factory ECU's frequency if you know it.;"Hz", 1, 0, 100, 1000, 0
+	int8_t[CAMS_PER_BANK iterate] vvtItermMin;Lower limit of the PID integral (I) term, in % duty.;"%", 1, 0, -100, 100, 0
+	int8_t[CAMS_PER_BANK iterate] vvtItermMax;Upper limit of the PID integral (I) term, in % duty.;"%", 1, 0, -100, 100, 0
+	int8_t[CAMS_PER_BANK iterate] vvtOutputMin;Lowest duty sent to the solenoid while VVT control is active. Applied last, after the hold duty curve and battery voltage compensation.;"%", 1, 0, 0, 100, 0
+	int8_t[CAMS_PER_BANK iterate] vvtOutputMax;Highest duty sent to the solenoid while VVT control is active. Applied last, after the hold duty curve and battery voltage compensation.;"%", 1, 0, 0, 100, 0
 	int8_t minimumIgnitionTiming;Minimim timing advance allowed. No spark on any cylinder will ever fire after this angle BTDC. For example, setting -10 here means no spark ever fires later than 10 deg ATDC. Note that this only concerns the primary spark: any trailing sparks or multispark may violate this constraint.;"deg BTDC", 1, 0, -90, 90, 0
 	int8_t maximumIgnitionTiming;Maximum timing advance allowed. No spark on any cylinder will ever fire before this angle BTDC. For example, setting 45 here means no spark ever fires earlier than 45 deg BTDC;"deg BTDC", 1, 0, -90, 90, 0
 	uint16_t alternatorPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
 
-	vvt_mode_e[CAMS_PER_BANK iterate] vvtMode
+	vvt_mode_e[CAMS_PER_BANK iterate] vvtMode;Pattern of the cam sensor wheel, shared by both banks. 'Inactive' if there is no cam sensor on this cam.
 	uint8_t fan2ExtraIdle;Additional idle % when fan #2 is active;"%", 1, 0, 0, 100, 0
 	uint8_t autoscale primingDelay;Delay to allow fuel pressure to build before firing the priming pulse.;"sec", 0.01, 0, 0, 1, 2
 ! todo: rename to luaAnalogInputs
@@ -1142,40 +1141,40 @@ tle8888_mode_e tle8888mode;
 	ThermistorConf auxTempSensor1
 	ThermistorConf auxTempSensor2
 	int16_t knockSamplingDuration;;"Deg", 1, 0, 0, 720, 0
-	int16_t etbFreq;;"Hz", 1, 0, 0, @@ETB_HW_MAX_FREQUENCY@@, 0
+	int16_t etbFreq;PWM frequency of the electronic throttle H-bridges, also used by an idle stepper driven from H-bridges. Values below 100 Hz are raised to 100 Hz.;"Hz", 1, 0, 0, @@ETB_HW_MAX_FREQUENCY@@, 0
 	pid_s etbWastegatePid;
 
 #define stepper_num_micro_steps_e_enum "Full-Step (Default)", "INVALID", "Half-Step", "INVALID", "1/4 Micro-Step", "INVALID", "INVALID", "INVALID", "1/8 Micro-Step"
 custom stepper_num_micro_steps_e 1 bits, U08,	@OFFSET@,	[0:3], @@stepper_num_micro_steps_e_enum@@
-	stepper_num_micro_steps_e stepperNumMicroSteps;For micro-stepping, make sure that PWM frequency (etbFreq) is high enough;
+	stepper_num_micro_steps_e stepperNumMicroSteps;For micro-stepping, make sure that the electronic throttle 'PWM Frequency' is high enough;
 	uint8_t stepperMinDutyCycle;Use to limit the current when the stepper motor is idle, not moving (100% = no limit);"%", 1, 0, 0, 100, 0
 	uint8_t stepperMaxDutyCycle;Use to limit the max.current through the stepper motor (100% = no limit);"%", 1, 0, 0, 100, 0
 	spi_device_e sdCardSpiDevice;
 
-	angle_t[MAX_CYLINDER_COUNT iterate] timing_offset_cylinder;per-cylinder timing correction;"deg", 1, 0, -720, 720, 1
+	angle_t[MAX_CYLINDER_COUNT iterate] timing_offset_cylinder;Shifts all events for this cylinder (spark and injection) from its evenly spaced position in the firing order. Positive values retard, negative values advance. Only needed for odd-fire engines.;"deg", 1, 0, -720, 720, 1
 
 	float idlePidActivationTime;;"seconds", 1, 0, 0, 60, 1
 
-	int8_t autotemp vvtControlMinClt;Minimum coolant temperature to activate VVT;"C", 1, 0, -40, 120, 0
+	int8_t autotemp vvtControlMinClt;VVT control stays off until coolant temperature is above this. A failed CLT sensor counts as 0 C here.;"C", 1, 0, -40, 120, 0
 
 	uint8_t autoscale minimumInjectionPulseWidth;Minimum allowed pulse width (before adding deadtime). Pulses less than this duration will be extended.;"ms", 0.01, 0, 0, 2, 2
 
 	uint8_t autoscale mafMinVoltage;Minimum allowed MAF input voltage. Less than this triggers P0102.;"volts",0.02, 0, 0, 5, 2
 	uint8_t autoscale mafMaxVoltage;Maximum allowed MAF input voltage. More than this triggers P0103.;"volts",0.02, 0, 0, 5, 2
 
-	gppwm_channel_e vvtIntakeYAxisOverride;
-	gppwm_channel_e vvtExhaustYAxisOverride;
+	gppwm_channel_e vvtIntakeYAxisOverride;Value used for the load axis of the intake VVT target table. 'Zero' uses fuel load.
+	gppwm_channel_e vvtExhaustYAxisOverride;Value used for the load axis of the exhaust VVT target table. 'Zero' uses fuel load.
 
 	uint16_t ecumasterEgtToCanBaseId;Default 1552 for EMU Classic, 1632 for EMU Black.
 
 	uint8_t autoscale minStepperVoltage;Minimum voltage to attempt to move the idle stepper. Maybe your motor doesn't work below this voltage and will lose its position.;"V", 0.1, 0, 0, 20, 1
 
-	pin_output_mode_e stepperEnablePinMode;
+	pin_output_mode_e stepperEnablePinMode;Output mode for the idle stepper enable pin.
 	Gpio mc33816_rstb;ResetB
 	Gpio mc33816_driven
 
-	switch_input_pin_e brakePedalPin;Brake pedal switch
-	pin_input_mode_e brakePedalPinMode;
+	switch_input_pin_e brakePedalPin;Input for a brake pedal switch. Used for the 'Brake down' indicator and Lua scripts.
+	pin_input_mode_e brakePedalPinMode;Input pull resistor for the brake pedal switch. Use 'PULLUP' for a switch that connects to ground when pressed.
 
 #define tChargeMode_e_enum "RPM+TPS (Default)", "Air Mass Interpolation", "Table"
 custom tChargeMode_e 1 bits, U08, @OFFSET@, [0:1], @@tChargeMode_e_enum@@
@@ -1188,14 +1187,14 @@ tChargeMode_e tChargeMode;
 
 	linear_sensor_s oilPressure;
 
-	output_pin_e fan2Pin;
+	output_pin_e fan2Pin;Output pin that drives the fan 2 relay or fan.
 	uint8_t autotemp fan2OnTemperature;Cooling fan turn-on temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 	uint8_t autotemp fan2OffTemperature;Cooling fan turn-off temperature threshold, in Celsius;"C", 1, 0, 0, 150, 0
 
 #define SCRIPT_CURVE_COUNT 6
 #define SCRIPT_TABLE_COUNT 4
 
-	Gpio stepperEnablePin;
+	Gpio stepperEnablePin;Optional enable output to the idle stepper driver. It is driven active, low in default mode, only while a step is made.
 	Gpio tle8888_cs;
 	pin_output_mode_e tle8888_csPinMode;
 
@@ -1205,10 +1204,10 @@ tChargeMode_e tChargeMode;
 	can_vss_nbc_e canVssNbcType
 
 	uint8_t auxSpeedWindowMs;Aux speed sensors are averaged over this long. Longer is smoother but slower to respond.;"ms", 1, 0, 0, 255, 0
-	int16_t vvtControlMinRpm;;"RPM", 1, 0, 0, 3000, 0
+	int16_t vvtControlMinRpm;VVT control stays off until RPM is above this.;"RPM", 1, 0, 0, 3000, 0
 
 	int8_t launchFuelAdderPercent;;"%", 1, 0, 0, 100, 0
-	uint8_t autoscale etbJamTimeout;Time after which the throttle is considered jammed.;"sec", 0.02, 0, 0, 5, 2
+	uint8_t autoscale etbJamTimeout;How long the position error must stay above 'Jam detection error max' before the throttle counts as jammed. 0 disables jam detection.;"sec", 0.02, 0, 0, 5, 2
 
 	int16_t coastingFuelCutRpmHigh;This sets the RPM above which fuel cut is active.;"rpm", 1, 0, 0, 5000, 0
 	int16_t coastingFuelCutRpmLow;This sets the RPM below which fuel cut is deactivated, this prevents jerking or issues transitioning to idle;"rpm", 1, 0, 0, 5000, 0
@@ -1235,8 +1234,8 @@ float tChargeAirFlowMax;High flow point for heat transfer estimation.\nSet this 
 float tChargeAirIncrLimit;Maximum allowed rate of increase allowed for the estimated charge temperature;"deg/sec", 1, 0, 0, 100, 1
 float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estimated charge temperature;"deg/sec", 1, 0, 0, 100, 1
 
-	int16_t etb_iTermMin;iTerm min value;"", 1, 0, -30000, 30000, 0
-	int16_t etb_iTermMax;iTerm max value;"", 1, 0, -30000, 30000, 0
+	int16_t etb_iTermMin;Lower limit of the ETB PID integral (I) term, in % duty.;"", 1, 0, -30000, 30000, 0
+	int16_t etb_iTermMax;Upper limit of the ETB PID integral (I) term, in % duty.;"", 1, 0, -30000, 30000, 0
 
 	pid_s idleTimingPid
 
@@ -1257,7 +1256,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 
 
-	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 30, 0
+	float etbIdleThrottleRange;Throttle opening added at 100% idle position, scaled down in proportion at lower idle positions. Not used with the torque model.;"%", 1, 0, 0, 30, 0
 
 	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 4, 0
 
@@ -1275,10 +1274,10 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	uint16_t mc33_t_hold_off;;"us", 1, 0, 0, 10000, 0
 	uint16_t mc33_t_hold_tot;Hold phase duration;"us", 1, 0, 0, 10000, 0
 
-	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideFrom;;"ratio", 0.001, 0, 0, 20, 3
-	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideTo;;"ratio", 0.001, 0, 0, 20, 3
+	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideFrom;Lowest accepted ratio of a tooth period to the one before it. Gap #1 is the newest tooth and later gaps look further back.;"ratio", 0.001, 0, 0, 20, 3
+	uint16_t[GAP_TRACKING_LENGTH iterate] autoscale triggerGapOverrideTo;Highest accepted ratio of a tooth period to the one before it. Gap #1 is the newest tooth and later gaps look further back.;"ratio", 0.001, 0, 0, 20, 3
 
-	uint8_t autoscale maxCamPhaseResolveRpm;Below this RPM, use camshaft information to synchronize the crank's position for full sequential operation. Use this if your cam sensor does weird things at high RPM. Set to 0 to disable, and always use cam to help sync crank.;"rpm", 50, 0, 0, 12500, 0
+	uint8_t autoscale maxCamPhaseResolveRpm;Only use the cam to find engine phase below this RPM, for a cam sensor that is unreliable at high speed. Phase already found is kept. Set to 0 for no limit.;"rpm", 50, 0, 0, 12500, 0
 
 	uint8_t autoscale dfcoDelay;Delay before cutting fuel. Set to 0 to cut immediately with no delay. May cause rumbles and pops out of your exhaust...;"sec", 0.1, 0, 0, 10, 1
 	uint8_t autoscale acDelay;Delay before engaging the AC compressor. Set to 0 to engage immediately with no delay. Use this to prevent bogging at idle when AC engages.;"sec", 0.1, 0, 0, 10, 1
@@ -1289,7 +1288,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 	uint16_t autoscale fordInjectorSmallPulseBreakPoint;;"mg", 0.001, 0, 0, 65, 3
 
-	uint8_t etbJamDetectThreshold;Threshold in ETB error (target vs. actual) above which the jam timer is started. If the timer reaches the time specified in the jam detection timeout period, the throttle is considered jammed, and engine operation limited.;"%", 1, 0, 0, 50, 0
+	uint8_t etbJamDetectThreshold;Position error (target vs. actual) above which the jam timer runs. If it runs for the jam detection timeout period, the throttle motors are turned off, fuel is cut above 1500 RPM and P2119 is set, until the ECU restarts. A jammed DC wastegate only turns off the wastegate motor and sets P0244. 0 disables jam detection.;"%", 1, 0, 0, 50, 0
 
 ! Someday there will be a 6th option for BMW S55 that uses a separate shaft just for HPFP
 #define hpfp_cam_e_enum "NONE", "Intake 1", "Exhaust 1", "Intake 2", "Exhaust 2"
@@ -1312,20 +1311,20 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 	uint16_t hpfpTargetDecay;The fastest rate the target pressure can be reduced by. This is because HPFP have no way to bleed off pressure other than injecting fuel.;"kPa/s", 1, 0, 0, 65000, 0
 
 
-	output_pin_e[4 iterate] stepper_raw_output;
+	output_pin_e[4 iterate] stepper_raw_output;Outputs driving the idle stepper coils directly, in the order A+, A-, B+, B-.
 
-	uint16_t[GEARS_COUNT iterate] autoscale gearRatio;;"ratio", 0.01, 0, 0, 10, 2
+	uint16_t[GEARS_COUNT iterate] autoscale gearRatio;Transmission ratio in this gear (input shaft turns per output shaft turn). Must decrease with each higher gear.;"ratio", 0.01, 0, 0, 10, 2
 
-	uint16_t vvtActivationDelayMs;We need to give engine time to build oil pressure without diverting it to VVT;"ms", 1, 0, 0, 65000, 0
+	uint16_t vvtActivationDelayMs;Time after the engine starts before VVT control begins, to let oil pressure build. The target then ramps in over 2 seconds.;"ms", 1, 0, 0, 65000, 0
 
 	uint16_t acrDisablePhase;;"deg", 1, 0, 0, 720, 0
 
 	struct aux_linear_sensor_s
-		adc_channel_e hwChannel;
-		float v1;;"volts", 1, 0, 0, 10, 2
-		float value1;;"", 1, 0, -100000, 100000, 2
-		float v2;;"volts", 1, 0, 0, 10, 2
-		float value2;;"", 1, 0, -100000, 100000, 2
+		adc_channel_e hwChannel;Analog input the sensor is wired to. Leave unset to disable.
+		float v1;Sensor output voltage at the low calibration point.;"volts", 1, 0, 0, 10, 2
+		float value1;Value the sensor reads at the low calibration voltage, in whatever units you want to see.;"", 1, 0, -100000, 100000, 2
+		float v2;Sensor output voltage at the high calibration point.;"volts", 1, 0, 0, 10, 2
+		float value2;Value the sensor reads at the high calibration voltage.;"", 1, 0, -100000, 100000, 2
 	end_struct
 
 	aux_linear_sensor_s auxLinear1
@@ -1340,7 +1339,7 @@ output_pin_e acrPin2;
 
 	#define fuel_pressure_sensor_mode_e_enum "Absolute", "Gauge", "Differential", "INVALID"
 	custom fuel_pressure_sensor_mode_e 1 bits, U08, @OFFSET@, [0:1], @@fuel_pressure_sensor_mode_e_enum@@
-	fuel_pressure_sensor_mode_e fuelPressureSensorMode
+	fuel_pressure_sensor_mode_e fuelPressureSensorMode;What the fuel pressure sensor measures. Absolute is relative to vacuum, Gauge is relative to atmosphere, Differential is relative to intake manifold pressure. Used only for sensed rail pressure injector compensation.
 	uint8_t crankingIACposition;This is the IAC position during cranking, some engines start better if given more air during cranking to improve cylinder filling.;"percent", 1, 0, 0, 100, 0
 
 
@@ -1352,7 +1351,7 @@ int16_t ALSMaxDuration;;"sec", 1, 0, 0, 10, 0
 	int8_t autotemp ALSMaxCLT;;"C", 1, 0, 0, 105, 0
 uint8_t alsMinTimeBetween;;"", 1, 0, 0, 20000, 0
 uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
-	uint8_t instantRpmRange;;"deg", 1, 0, 0, 250, 0
+	uint8_t instantRpmRange;Crank angle that instant RPM is measured over, back from the current tooth.;"deg", 1, 0, 0, 250, 0
 	uint8_t widebandPumpGain;;"%", 1, 0, 0, 200, 0
 
 	uint16_t autoscale canVssScaling;Scale the reported vehicle speed value from CAN. Example: Parameter set to 1.1, CAN VSS reports 50kph, ECU will report 55kph instead.;"ratio", 0.0001, 0, 0.5, 1.5, 4
@@ -1366,8 +1365,8 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	custom WidebandMode 1 bits, S08, @OFFSET@, [0:1], "Analog", "FOME Internal (CAN)", "AEM X-Series (CAN)"
 	WidebandMode widebandMode;Select which type of wideband O2 controller you're using.
 
-	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
-	uint8_t autoscale ppsSecondaryMaximum;For Toyota ETCS-i, use ~69%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale tpsSecondaryMaximum;Partial redundancy: first throttle sensor position at which the secondary sensor reaches its maximum. For Ford, use about 53. For Toyota ETCS-i, use about 65. 0 or 100 means both sensors travel the full range. Values under 20 are raised to 20.;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale ppsSecondaryMaximum;Partial redundancy: how far the secondary pedal sensor travels as a percent of the primary. For Toyota ETCS-i, use about 69. 0 or 100 means both sensors travel the full range. Values under 20 are raised to 20.;"%", 0.5, 0, 0, 100, 1
 pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 
 	ThermistorConf oilTempSensor
@@ -1442,7 +1441,7 @@ pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 		DtcSeverity p0336;Behavior for P0336: Crank sensor sync errors. Triggered when 50 crank trigger errors are registered during a single engine run.
 
 		! Cam sensors
-		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the primary trigger signal is present, but cam signal is not.
+		DtcSeverity camNoSignal;Behavior for P0340/P0345/P0365/P0385: Cam sensor missing. Triggered if the crank is turning but a configured cam input has no signal, or gives no valid cam position.
 		DtcSeverity camSyncErrors;Behavior for P0341/P0346/P0366/P0386: Cam sensor sync errors. Triggered when 50 cam trigger errors are registered during a single engine run.
 
 		! Oil pressure
@@ -1507,7 +1506,7 @@ engine_configuration_s engineConfiguration;
 	uint16_t[DWELL_CURVE_SIZE] sparkDwellRpmBins;On Single Coil or Wasted Spark setups you have to lower dwell at high RPM;"RPM", 1, 0, 0, 25000, 0
 	uint16_t[DWELL_CURVE_SIZE] autoscale sparkDwellValues;;"ms", 0.01, 0, 0, 30, 2
 
-	int8_t[CLT_CURVE_SIZE] autoscale autotemp cltIdleRpmBins;CLT-based target RPM for automatic idle controller;"C", 2, 0, -40, 200, 0
+	int8_t[CLT_CURVE_SIZE] autoscale autotemp cltIdleRpmBins;CLT-based idle target RPM;"C", 2, 0, -40, 200, 0
 	uint8_t[CLT_CURVE_SIZE] autoscale cltIdleRpm;Sets the target engine speed that is used for the closed-loop idle air and closed-loop idle timing algorithms.;"RPM", 20, 0, 0, 5000, 0
 	int8_t[CLT_TIMING_CURVE_SIZE] autotemp cltTimingBins;CLT-based timing correction;"C", 1, 0, -40, 120, 1
 	int8_t[CLT_TIMING_CURVE_SIZE] autoscale cltTimingExtra;;"degree", 0.1, 0, -30, 30, 1
@@ -1526,16 +1525,16 @@ engine_configuration_s engineConfiguration;
 	int16_t[SCRIPT_CURVE_8] autoscale scriptCurve6Bins;;"x", 0.1, 0, -3270, 3270, 2
 	int16_t[SCRIPT_CURVE_8] autoscale scriptCurve6;;"y", 0.1, 0, -3270, 3270, 2
 
-	uint16_t[BARO_CORR_SIZE] autoscale baroCorrPressureBins;;"kPa", 0.1, 0, 0, 200, 1
-	uint16_t[BARO_CORR_SIZE] baroCorrRpmBins;;"RPM", 1, 0, 0, 65000, 0
+	uint16_t[BARO_CORR_SIZE] autoscale baroCorrPressureBins;Barometric pressure axis of the barometric pressure correction table.;"kPa", 0.1, 0, 0, 200, 1
+	uint16_t[BARO_CORR_SIZE] baroCorrRpmBins;RPM axis of the barometric pressure correction table.;"RPM", 1, 0, 0, 65000, 0
 
-	uint16_t[BARO_CORR_SIZE x BARO_CORR_SIZE] autoscale baroCorrTable;;"ratio", 0.001, 0, 0, 2, 3
+	uint16_t[BARO_CORR_SIZE x BARO_CORR_SIZE] autoscale baroCorrTable;Fuel multiplier for the current barometric pressure and RPM. 1.00 means no correction.;"ratio", 0.001, 0, 0, 2, 3
 
 	float[CRANKING_CURVE_SIZE] crankingTpsCoef;Cranking fuel correction coefficient based on TPS;"Ratio", 1, 0, 0, 700, 2
 	float[CRANKING_CURVE_SIZE] crankingTpsBins;;"%", 1, 0, 0, 100, 2
 
-uint16_t[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvanceBins;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"RPM", 1, 0, 0, 25000, 0
-int16_t[CRANKING_ADVANCE_CURVE_SIZE] autoscale crankingAdvance;Optional timing advance table for Cranking (see useSeparateAdvanceForCranking);"deg", 0.01, 0, -20, 90, 2
+uint16_t[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvanceBins;Cranking ignition advance by RPM. Only used when 'Timing Advance mode' is 'Table';"RPM", 1, 0, 0, 25000, 0
+int16_t[CRANKING_ADVANCE_CURVE_SIZE] autoscale crankingAdvance;Cranking ignition advance by RPM. Only used when 'Timing Advance mode' is 'Table';"deg", 0.01, 0, -20, 90, 2
 
 uint8_t[8] autoscale torqueReductionRetardReqBins;Requested torque reduction ratio, 0 is no reduction, 0.5 is deliver half torque.;"frac", 0.01, 0, 0, 1, 2
 int16_t[8] autoscale torqueReductionRetard;Ignition retard applied per torque-reduction request;"deg", 0.1, 0, 0, 50, 1
@@ -1566,11 +1565,11 @@ uint8_t[8 x 4] autoscale slipTargetTable;Traction control target wheel slip.;"%"
 uint8_t[8] slipTargetSpeedBins;;"kph", 1, 0, 0, 250, 0
 int16_t[4] slipTargetTrimBins;Trim-axis (X) values for the slip target table.;"", 1, 0, -1000, 1000, 0
 
-float[CLT_CRANKING_CURVE_SIZE] autotemp cltCrankingCorrBins;CLT-based cranking position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
-float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking position multiplier for simple manual idle controller;"%", 1, 0, 0, 500, 2
+float[CLT_CRANKING_CURVE_SIZE] autotemp cltCrankingCorrBins;CLT-based cranking idle position multiplier;"C", 1, 0, -100, 250, 2
+float[CLT_CRANKING_CURVE_SIZE] cltCrankingCorr    ;CLT-based cranking idle position multiplier;"%", 1, 0, 0, 500, 2
 
-int8_t[CLT_CRANKING_CURVE_SIZE] autotemp cltCrankingTaperCorrBins;CLT-based taper duration multiplier for simple manual idle controller;"C", 1, 0, -100, 120, 2
-uint8_t[CLT_CRANKING_CURVE_SIZE] autoscale cltCrankingTaperCorr    ;CLT-based taper duration multiplier for simple manual idle controller;"%", 0.02, 0, 0, 5, 2
+int8_t[CLT_CRANKING_CURVE_SIZE] autotemp cltCrankingTaperCorrBins;CLT-based after-cranking IAC taper duration multiplier;"C", 1, 0, -100, 120, 2
+uint8_t[CLT_CRANKING_CURVE_SIZE] autoscale cltCrankingTaperCorr    ;CLT-based after-cranking IAC taper duration multiplier;"%", 0.02, 0, 0, 5, 2
 
 uint8_t[IDLE_ADVANCE_CURVE_SIZE] autoscale idleAdvanceBins;Optional timing advance table for Idle (see useSeparateAdvanceForIdle);"RPM", 50, 0, 0, 12000, 0
 float[IDLE_ADVANCE_CURVE_SIZE] idleAdvance    ;Optional timing advance table for Idle (see useSeparateAdvanceForIdle);"deg", 1, 0, -20, 90, 1
@@ -1582,11 +1581,11 @@ uint16_t[IDLE_VE_SIZE x IDLE_VE_SIZE] autoscale idleVeTable;;"%", 0.1, 0, 0, 999
 custom lua_script_t @@LUA_SCRIPT_SIZE@@ string, ASCII, @OFFSET@, @@LUA_SCRIPT_SIZE@@
 lua_script_t luaScript;
 
-float[CLT_CURVE_SIZE] autotemp cltFuelCorrBins;;"C", 1, 0, -100, 250, 2
-float[CLT_CURVE_SIZE] cltFuelCorr;;"ratio", 1, 0, 0, 5, 2
+float[CLT_CURVE_SIZE] autotemp cltFuelCorrBins;Coolant temperature axis of the 'CLT multiplier' curve.;"C", 1, 0, -100, 250, 2
+float[CLT_CURVE_SIZE] cltFuelCorr;Fuel multiplier applied while running at each coolant temperature. 1.00 means no correction. Not used while cranking.;"ratio", 1, 0, 0, 5, 2
 
-float[IAT_CURVE_SIZE] autotemp iatFuelCorrBins;;"C", 1, 0, -100, 250, 2
-float[IAT_CURVE_SIZE] iatFuelCorr;;"ratio", 1, 0, 0, 5, 2
+float[IAT_CURVE_SIZE] autotemp iatFuelCorrBins;Intake air temperature axis of the 'IAT multiplier' curve.;"C", 1, 0, -100, 250, 2
+float[IAT_CURVE_SIZE] iatFuelCorr;Fuel multiplier applied while running at each intake air temperature. 1.00 means no correction. Stacks on top of any air density correction already made by the fuel algorithm.;"ratio", 1, 0, 0, 5, 2
 
 	float[CRANKING_CURVE_SIZE] crankingFuelCoef;;"ratio", 1, 0, 0, 50, 2
 	float[CRANKING_CURVE_SIZE] autotemp crankingFuelBins;;"C", 1, 0, -80, 170, 2
@@ -1594,8 +1593,8 @@ float[IAT_CURVE_SIZE] iatFuelCorr;;"ratio", 1, 0, 0, 5, 2
 	float[CRANKING_CURVE_SIZE] crankingCycleCoef;;"ratio", 1, 0, 0, 5, 2
 	float[CRANKING_CURVE_SIZE] crankingCycleBins;;"counter", 1, 0, -80, 170, 0
 
-float[CLT_CURVE_SIZE] autotemp cltIdleCorrBins;CLT-based idle position multiplier for simple manual idle controller;"C", 1, 0, -100, 250, 2
-float[CLT_CURVE_SIZE] cltIdleCorr;    CLT-based idle position multiplier for simple manual idle controller;"ratio", 1, 0, 0, 10, 2
+float[CLT_CURVE_SIZE] autotemp cltIdleCorrBins;CLT-based open loop idle position multiplier;"C", 1, 0, -100, 250, 2
+float[CLT_CURVE_SIZE] cltIdleCorr;    CLT-based open loop idle position multiplier;"ratio", 1, 0, 0, 10, 2
 
 uint32_t[MAF_DECODING_COUNT] autoscale mafDecoding;;"kg/hour", 0.001, 0, 0, 4000, 3
 uint16_t[MAF_DECODING_COUNT] autoscale mafDecodingBins;;"V", 0.01, 0, 0, 20, 2
@@ -1612,12 +1611,12 @@ uint16_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale mapEstimateTable;This table
 uint16_t[FUEL_LOAD_COUNT] autoscale mapEstimateTpsBins;;"% TPS", {1/@@TPS_2_BYTE_PACKING_MULT@@}, 0, 0, 100, 1
 uint16_t[FUEL_RPM_COUNT] mapEstimateRpmBins;;"RPM", 1, 0, 0, 18000, 0
 
-int8_t[SCRIPT_TABLE_8 x SCRIPT_TABLE_8] vvtTable1;;"value", 1, 0, -125, 125, 0
-uint16_t[SCRIPT_TABLE_8] vvtTable1LoadBins;;"L", 1, 0, 0, 1000, 0
+int8_t[SCRIPT_TABLE_8 x SCRIPT_TABLE_8] vvtTable1;Intake cam target, in degrees from the rest position. Targets within a few degrees of 0 switch the solenoid off.;"deg", 1, 0, -125, 125, 0
+uint16_t[SCRIPT_TABLE_8] vvtTable1LoadBins;Load axis. Fuel load, unless 'Intake target Y axis override' is set.;"L", 1, 0, 0, 1000, 0
 uint16_t[SCRIPT_TABLE_8] vvtTable1RpmBins;;"RPM", 1, 0, 0, 18000, 0
 
-int8_t[SCRIPT_TABLE_8 x SCRIPT_TABLE_8] vvtTable2;;"value", 1, 0, -125, 125, 0
-uint16_t[SCRIPT_TABLE_8] vvtTable2LoadBins;;"L", 1, 0, 0, 1000, 0
+int8_t[SCRIPT_TABLE_8 x SCRIPT_TABLE_8] vvtTable2;Exhaust cam target, in degrees from the rest position. Targets within a few degrees of 0 switch the solenoid off.;"deg", 1, 0, -125, 125, 0
+uint16_t[SCRIPT_TABLE_8] vvtTable2LoadBins;Load axis. Fuel load, unless 'Exhaust target Y axis override' is set.;"L", 1, 0, 0, 1000, 0
 uint16_t[SCRIPT_TABLE_8] vvtTable2RpmBins;;"RPM", 1, 0, 0, 18000, 0
 
 int16_t[IGN_RPM_COUNT x IGN_LOAD_COUNT] autoscale ignitionTable;;"deg", 0.1, 0, -20, 90, 1
@@ -1638,6 +1637,9 @@ begin_table
 	table_cols num 8 uint16_t mafTrimRpmBins;;"RPM", 1, 0, 0, 18000, 0
 	table_values uint8_t mafTrimTable;;"%", 1, 0, 0, 200, 0
 end_table
+
+uint16_t[8] mafMaxLoadRpmBins;;"RPM", 1, 0, 0, 18000, 0
+uint16_t[8] mafMaxLoad;Maximum cylinder filling the MAF airmass is allowed to read, as % of an ideal cylinder filled at baro pressure (101.325kPa without a baro sensor) and IAT. MAF/RPM can read far more than the cylinder can hold while the intake manifold fills (tip-in) and when RPM falls quickly (a start that dies). Applied before the MAF trim table.;"%", 1, 0, 0, 1000, 0
 
 union
 	uint8_t[FUEL_RPM_COUNT x FUEL_LOAD_COUNT] autoscale lambdaTable;;"lambda", {1/@@PACK_MULT_LAMBDA_CFG@@}, 0, 0.6, 1.5, 2
@@ -1764,8 +1766,8 @@ uint8_t[TPS_TPS_ACCEL_CLT_CORR_TABLE] autoscale tpsTspCorrValues;Multiplier appl
 int8_t[CLT_LIMITER_CURVE_SIZE] autotemp cltRevLimitRpmBins;;"C", 1, 0, -40, 120, 0
 uint16_t[CLT_LIMITER_CURVE_SIZE] cltRevLimitRpm;;"RPM", 1, 0, 0, 20000, 0
 
-uint16_t[FUEL_LEVEL_TABLE_COUNT] autoscale fuelLevelBins;;"volt", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
-uint8_t[FUEL_LEVEL_TABLE_COUNT] fuelLevelValues;;"%", 1, 0, 0, 100, 0
+uint16_t[FUEL_LEVEL_TABLE_COUNT] autoscale fuelLevelBins;Sender voltage points for the fuel level curve. Must be in ascending order.;"volt", {1/@@PACK_MULT_VOLTAGE@@}, 0, 0, 5, 3
+uint8_t[FUEL_LEVEL_TABLE_COUNT] fuelLevelValues;Fuel level in percent at each sender voltage.;"%", 1, 0, 0, 100, 0
 
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrVoltBins;;"volts", 0.1, 0, 0, 20, 1
 uint8_t[DWELL_CURVE_SIZE] autoscale dwellVoltageCorrValues;;"multiplier", 0.02, 0, 0, 5, 2
@@ -1784,9 +1786,9 @@ int8_t[8] autotemp postCrankingEnrichTempBins;;"C", 1, 0, -40, 120, 0
 uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0 
 
 	struct vr_threshold_s
-		uint8_t[6] autoscale rpmBins;;"rpm", 50, 0, 0, 12000, 0
-		uint8_t[6] autoscale values;;"volts", {1/@@PACK_PERCENT_BYTE_MULT@@}, 0, 0, 2.5, 2
-		Gpio pin;
+		uint8_t[6] autoscale rpmBins;Engine speed of each point on the threshold curve.;"rpm", 50, 0, 0, 12000, 0
+		uint8_t[6] autoscale values;VR conditioner threshold voltage at each RPM. Higher rejects more noise but needs a stronger signal.;"volts", {1/@@PACK_PERCENT_BYTE_MULT@@}, 0, 0, 2.5, 2
+		Gpio pin;Hardware PWM output that sets the VR conditioner threshold. Leave unassigned if your board has no such circuit.
 	end_struct
 
 	#define VR_THRESHOLD_COUNT 2
@@ -1797,8 +1799,8 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	wifi_string_t wifiAccessPointPassword
 
 	struct VvtOpenLoop
-		int8_t[8] autotemp bins;;"C", 1, 0, -40, 120, 0
-		uint8_t[8] autoscale values;;"%", 0.5, 0, 0, 100, 0
+		int8_t[8] autotemp bins;Oil temperature, or coolant temperature if there is no oil temperature sensor.;"C", 1, 0, -40, 120, 0
+		uint8_t[8] autoscale values;Duty added to the PID output to hold the cam still, at 14 V.;"%", 0.5, 0, 0, 100, 0
 	end_struct
 
 	VvtOpenLoop[2 iterate] vvtOpenLoop
@@ -1818,14 +1820,14 @@ uint8_t[8] postCrankingEnrichRuntimeBins;;"sec", 1, 0, 0, 180, 0
 	#define FAN_TABLE_SIZE 6
 
 	! Fan 1 PWM tables
-	int8_t[FAN_TABLE_SIZE] autotemp fan1CltBins;;"C", 1, 0, -40, 120, 0
-	int16_t[FAN_TABLE_SIZE] autoscale fan1XAxisBins;;"", 0.1, 0, -10000, 10000, 1
+	int8_t[FAN_TABLE_SIZE] autotemp fan1CltBins;Coolant temperature axis for the fan 1 PWM tables.;"C", 1, 0, -40, 120, 0
+	int16_t[FAN_TABLE_SIZE] autoscale fan1XAxisBins;Axis values for the source selected in 'PWM table X axis' for fan 1.;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOff;Fan 1 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan1DutyAcOn;Fan 1 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 
 	! Fan 2 PWM tables
-	int8_t[FAN_TABLE_SIZE] autotemp fan2CltBins;;"C", 1, 0, -40, 120, 0
-	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;;"", 0.1, 0, -10000, 10000, 1
+	int8_t[FAN_TABLE_SIZE] autotemp fan2CltBins;Coolant temperature axis for the fan 2 PWM tables.;"C", 1, 0, -40, 120, 0
+	int16_t[FAN_TABLE_SIZE] autoscale fan2XAxisBins;Axis values for the source selected in 'PWM table X axis' for fan 2.;"", 0.1, 0, -10000, 10000, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOff;Fan 2 duty cycle when AC is off;"%", 0.5, 0, 0, 100, 1
 	uint8_t[FAN_TABLE_SIZE x FAN_TABLE_SIZE] autoscale fan2DutyAcOn;Fan 2 duty cycle when AC is on;"%", 0.5, 0, 0, 100, 1
 

@@ -19,6 +19,7 @@
 #include "eficonsole.h"
 #include "console_io.h"
 #include "idle_thread.h"
+#include "clutch_state.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
@@ -176,11 +177,6 @@ void applyNewHardwareSettings() {
 		stopSpi(SPI_DEVICE_6);
 	}
 
-	if (isPinOrModeChanged(clutchUpPin, clutchUpPinMode)) {
-		// bug? duplication with stopPedalPins?
-		efiSetPadUnused(activeConfiguration.clutchUpPin);
-	}
-
 	enginePins.unregisterPins();
 
 #if EFI_PROD_CODE
@@ -268,6 +264,7 @@ void initHardwareNoConfig() {
 
 void stopHardware() {
 	stopPedalPins();
+	stopClutchPins();
 
 #if EFI_EMULATE_POSITION_SENSORS
 	stopTriggerEmulatorPins();
@@ -287,6 +284,7 @@ void startHardware() {
 #endif // EFI_SHAFT_POSITION_INPUT
 
 	startPedalPins();
+	startClutchPins();
 }
 
 void initHardware() {

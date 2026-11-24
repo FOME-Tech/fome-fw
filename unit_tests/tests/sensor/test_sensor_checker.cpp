@@ -351,6 +351,55 @@ TEST(SensorCheckerPower, InhibitedWhileVbattLow) {
 	flexSensor.unregister();
 }
 
+// ==================== DTC severity ====================
+
+static bool hasWarning(EngineTestHelper& eth, ObdCode code) {
+	auto* warnings = eth.recentWarnings();
+	for (size_t i = 0; i < warnings->getCount(); i++) {
+		if (warnings->get(i).Code == code) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// A code set to "Ignore" must not raise a warning, not just skip latching the DTC
+TEST(SensorCheckerSeverity, IgnoredCodeRaisesNothing) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->dtcControl.p0523 = DtcSeverity::Ignore;
+
+	StoredValueSensor oilp(SensorType::OilPressure, MS2NT(30000));
+	oilp.Register();
+	oilp.invalidate(UnexpectedCode::High);
+
+	setupSensorCheckerPreconditions();
+	runSensorChecks();
+
+	EXPECT_FALSE(hasWarning(eth, ObdCode::OBD_OilP_High));
+	EXPECT_FALSE(hasError(ObdCode::OBD_OilP_High));
+
+	oilp.unregister();
+}
+
+// Positive control: the same fault with the default severity warns and latches
+TEST(SensorCheckerSeverity, WarningOnlyCodeWarnsAndLatches) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->dtcControl.p0523 = DtcSeverity::WarningOnly;
+
+	StoredValueSensor oilp(SensorType::OilPressure, MS2NT(30000));
+	oilp.Register();
+	oilp.invalidate(UnexpectedCode::High);
+
+	setupSensorCheckerPreconditions();
+	runSensorChecks();
+
+	EXPECT_TRUE(hasWarning(eth, ObdCode::OBD_OilP_High));
+	EXPECT_TRUE(hasError(ObdCode::OBD_OilP_High));
+
+	oilp.unregister();
+}
+
 // ==================== DTC debounce ====================
 
 // A fault present for a single check is noise, not a failure

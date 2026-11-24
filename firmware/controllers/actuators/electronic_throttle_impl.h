@@ -57,6 +57,7 @@ public:
 
 	void checkJam(percent_t setpoint, percent_t observation);
 	void resetJamTimer();
+	void onJamDetected();
 
 	void setOutput(expected<percent_t> outputValue) override;
 

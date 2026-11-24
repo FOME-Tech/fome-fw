@@ -11,6 +11,7 @@
 #include "global.h"
 #include "engine_parts.h"
 #include "engine_state_generated.h"
+#include "clutch_state.h"
 
 class EngineState : public engine_state_s {
 public:
@@ -31,6 +32,9 @@ public:
 	uint8_t cylinderCount = 1;
 
 	bool useOddFireWastedSpark = false;
+
+	// Decided from the clutch inputs on every slow callback, see getClutchState()
+	ClutchState clutchState = ClutchState::Indeterminate;
 
 	float injectionStage2Fraction = 0;
 

@@ -74,6 +74,7 @@ TESTS_SRC_CPP = \
 	tests/test_traction_control.cpp \
 	tests/test_airmass_dispatcher.cpp \
 	tests/test_fuel_map.cpp \
+	tests/test_clutch_state.cpp \
 	tests/test_gear_detector.cpp \
 	tests/ignition_injection/test_fuel_wall_wetting.cpp \
 	tests/test_one_cylinder_logic.cpp \
@@ -99,11 +100,13 @@ TESTS_SRC_CPP = \
 	tests/sensor/redundant.cpp \
 	tests/sensor/test_sensor_init.cpp \
 	tests/sensor/test_sensor_checker.cpp \
+	tests/sensor/test_fixed_baro.cpp \
 	tests/sensor/table_func.cpp \
 	tests/util/test_closed_loop_controller.cpp \
 	tests/test_stft.cpp \
 	tests/test_hpfp.cpp \
 	tests/test_hpfp_integrated.cpp \
+	tests/test_trigger_scheduler.cpp \
 	tests/test_fuel_math.cpp \
 	tests/test_binary_log.cpp \
 	tests/test_gpio.cpp \

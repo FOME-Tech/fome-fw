@@ -185,18 +185,21 @@ void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& a
 			// Has it been long enough we should have pressure?
 			bool isTimedOut = engineRunTime > 5.0f;
 
-			// Only check before timed out
 			if (!isTimedOut) {
-				if (oilp) {
+				if (oilp && oilp.Value > minOilPressure) {
 					// We had oil pressure! Set the flag.
-					if (oilp.Value > minOilPressure) {
-						m_hadOilPressureAfterStart = true;
-					}
+					m_hadOilPressureAfterStart = true;
 				}
+			} else if (!m_checkedOilPressureAfterStart) {
+				// Decide once, when time is up: if the sensor works and there was no pressure, kill the engine.
+				// If the sensor isn't working right now, assume things are fine (sensor error is separately
+				// handled), even if it read low before it failed: pressure is expected to be low while it
+				// builds, and a broken wire would otherwise stop the engine after every start.
+				m_checkedOilPressureAfterStart = true;
+				m_noOilPressureAfterStart = !m_hadOilPressureAfterStart && oilp.Valid;
 			}
 
-			// If time is up, the sensor works, and no pressure, kill the engine.
-			if (isTimedOut && !m_hadOilPressureAfterStart) {
+			if (m_noOilPressureAfterStart) {
 				allowFuel.clear(ClearReason::OilPressure);
 			}
 		}
@@ -231,6 +234,8 @@ void LimpManager::updateCutsOilPressure(float rpm, efitick_t nowNt, Clearable& a
 	} else {
 		// reset state in case of stalled engine
 		m_hadOilPressureAfterStart = false;
+		m_checkedOilPressureAfterStart = false;
+		m_noOilPressureAfterStart = false;
 		m_lowOilPressureTimer.reset(nowNt);
 	}
 }

@@ -21,29 +21,27 @@ static constexpr float kNeutralTimeSec = 1.0f;
 static constexpr float kCoupledTimeSec = 0.5f;
 static constexpr float kCoupledRpmSpan = 0.1f;
 
-ClutchState decideClutchPosition() {
-	auto position = Sensor::get(SensorType::ClutchPosition);
-	if (!position) {
-		return ClutchState::Indeterminate;
+// Mismatch check: the ratio counts as steady while it stays within this fraction of where it
+// started, for at least this long, above this speed.
+static constexpr float kSteadyRatioBand = 0.015f;
+static constexpr float kSteadyTimeSec = 2.0f;
+static constexpr float kSteadyMinKph = 30.0f;
+// Flag a mismatch once steady driving has spent this long not locked to any gear, and more time
+// unlocked than locked.
+static constexpr float kMismatchUnlockedSec = 10.0f;
+
+// A single switch can't tell all three clutch positions apart. Assume it trips at the bite point,
+// so the clutch-aware logic still runs at full speed. If the switch actually trips somewhere else,
+// the clutch loses trust and we fall back to the ratio alone.
+static ClutchState forGearDetection(ClutchState state) {
+	switch (state) {
+		case ClutchState::EngagedOrMiddle:
+			return ClutchState::Engaged;
+		case ClutchState::MiddleOrDisengaged:
+			return ClutchState::Disengaged;
+		default:
+			return state;
 	}
-
-	float appliedBelow = engineConfiguration->clutchAppliedBelow;
-	float releasedAbove = engineConfiguration->clutchReleasedAbove;
-
-	if (appliedBelow >= releasedAbove) {
-		// Misconfigured (or not configured at all)
-		return ClutchState::Indeterminate;
-	}
-
-	if (position.Value < appliedBelow) {
-		return ClutchState::Engaged;
-	}
-
-	if (position.Value > releasedAbove) {
-		return ClutchState::Disengaged;
-	}
-
-	return ClutchState::Middle;
 }
 
 GearDetector::GearDetector()
@@ -54,6 +52,12 @@ GearDetector::~GearDetector() {
 }
 
 void GearDetector::onConfigurationChange(engine_configuration_s const* /*previousConfig*/) {
+	// Any of tire size, final drive, gear ratios or VSS may have changed: start the mismatch check over
+	m_steadyRatio = 0;
+	m_steadyLockedSec = 0;
+	m_steadyUnlockedSec = 0;
+	ratioMismatch = false;
+
 	// Compute gear thresholds between gears
 
 	uint8_t gearCount = engineConfiguration->totalGearsCount;
@@ -104,10 +108,10 @@ void GearDetector::onSlowCallback() {
 
 	size_t raw = determineGearFromRatio(ratio);
 	size_t locked = determineLockedGear(ratio);
-	ClutchState clutch = decideClutchPosition();
+	ClutchState clutch = forGearDetection(getClutchState());
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
-	if (locked != lockedGear || clutch != static_cast<ClutchState>(clutchState)) {
+	if (locked != lockedGear || clutch != m_lastClutch) {
 		// Start a new episode
 		m_episodeTimer.reset();
 		m_episodeRpmMin = rpm;
@@ -119,9 +123,10 @@ void GearDetector::onSlowCallback() {
 
 	rawGear = raw;
 	lockedGear = locked;
-	clutchState = static_cast<uint8_t>(clutch);
+	m_lastClutch = clutch;
 
 	updateClutchTrust(clutch, locked);
+	updateRatioMismatch(ratio, raw, locked, clutch);
 
 	if (clutchTrusted) {
 		m_currentGear = determineGearWithClutch(clutch, locked);
@@ -172,6 +177,41 @@ void GearDetector::updateClutchTrust(ClutchState clutch, size_t locked) {
 		case ClutchState::Middle:
 			// Could be slipping or not, tells us nothing.
 			break;
+		case ClutchState::EngagedOrMiddle:
+		case ClutchState::MiddleOrDisengaged:
+			// Never seen here, forGearDetection() maps these away
+			break;
+	}
+}
+
+void GearDetector::updateRatioMismatch(float ratio, size_t raw, size_t locked, ClutchState clutch) {
+	bool clutchMayBeOpen = clutch == ClutchState::Middle || clutch == ClutchState::Disengaged;
+	bool eligible = raw != 0 && !clutchMayBeOpen && Sensor::getOrZero(SensorType::VehicleSpeed) >= kSteadyMinKph;
+
+	if (!eligible) {
+		m_steadyRatio = 0;
+	} else if (m_steadyRatio == 0 || std::abs(ratio / m_steadyRatio - 1) > kSteadyRatioBand) {
+		// Ratio moved: start a new steady span from here
+		m_steadyRatio = ratio;
+		m_steadyTimer.reset();
+	} else if (m_steadyTimer.hasElapsedSec(kSteadyTimeSec)) {
+		constexpr float tickSec = SLOW_CALLBACK_PERIOD_MS / 1000.0f;
+
+		if (locked) {
+			m_steadyLockedSec += tickSec;
+		} else {
+			m_steadyUnlockedSec += tickSec;
+		}
+	}
+
+	ratioMismatch = m_steadyUnlockedSec >= kMismatchUnlockedSec && m_steadyUnlockedSec > m_steadyLockedSec;
+
+	if (ratioMismatch) {
+		// Repeated calls are rate limited, and keep the warning active while the condition holds
+		warning(ObdCode::CUSTOM_GEAR_RATIO_MISMATCH,
+				"Gear detection questionable: ratio %.3f matches no gear. Check tire size, final drive, VSS, "
+				"gear ratios",
+				ratio);
 	}
 }
 
@@ -201,6 +241,10 @@ size_t GearDetector::determineGearWithClutch(ClutchState clutch, size_t locked) 
 		case ClutchState::Indeterminate:
 			// Mid-shift: hold the gear we're shifting out of
 			return m_currentGear;
+		case ClutchState::EngagedOrMiddle:
+		case ClutchState::MiddleOrDisengaged:
+			// Never seen here, forGearDetection() maps these away
+			break;
 	}
 
 	return m_currentGear;
@@ -314,5 +358,5 @@ void GearDetector::showInfo(const char* sensorName) const {
 	efiPrintf("    Gearbox ratio: %.3f", m_gearboxRatio);
 	efiPrintf("    Detected gear: %d", m_currentGear);
 	efiPrintf("    Raw gear: %d locked gear: %d", rawGear, lockedGear);
-	efiPrintf("    Clutch state: %d trusted: %d", clutchState, clutchTrusted);
+	efiPrintf("    Clutch state: %d trusted: %d", static_cast<int>(m_lastClutch), clutchTrusted);
 }

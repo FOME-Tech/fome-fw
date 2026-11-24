@@ -33,13 +33,15 @@ or
 ### Breaking Changes
  - Removed the explicit threshold for the closed loop fuel idle region. Instead, the idle region is used whenever the idle controller decides the engine is idling, as this better matches behaviors like idle-up when cold, return to idle, etc.
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
+ - "Extra idle air if throttle pressed" is replaced by "Dashpot air". The extra air is now also held while coasting (unless the coasting table is used), and is ramped out on return to idle instead of being removed at once. If you used it, re-enter the value under the new name. The hidden "air by RPM taper" settings are removed.
  - Improved filtering of vehicle speed, aux speed and turbo speed sensors: smoother readings that respond equally fast at any speed, and a stopped sensor reads 0 instead of an error. The old filter settings are replaced by an averaging window in milliseconds, so check them if you had changed them from the defaults.
 
 ### Added
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
- - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels.
- - Gear detection uses the clutch position sensor, if fitted, to hold the current gear through a shift instead of flickering through other gears while the clutch slips. Set the "clutch applied below" and "clutch released above" pedal positions on the clutch sensor page. If the clutch sensor reading doesn't match what the car is doing, gear detection falls back to its previous behavior.
+ - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels. Everything that uses the clutch up and/or down switches now supports the analog sensor as virtual up/down switches too.
+ - Gear detection uses the clutch position sensor or clutch up/down switches, if fitted, to hold the current gear through a shift instead of flickering through other gears while the clutch slips. Set the "clutch applied below" and "clutch released above" pedal positions on the clutch sensor page. If the clutch reading doesn't match what the car is doing, gear detection falls back to its previous behavior.
+ - Warning when the measured gearbox ratio doesn't match any configured gear during steady driving, which usually means the tire size, final drive, vehicle speed scaling or gear ratios are wrong. Previously this made the detected gear flicker between neighboring gears. The "Gear: Ratio doesn't match any gear" datalog channel shows when it's active.
  - Add mode for "true" wasted spark on odd fire engines (Viper V10) where companion cylinders are not exactly 360 degrees apart. Requires cam sync.
  - New `CPU usage` output channel showing approximate firmware CPU load
  - SD card logs now contain every output channel (full parity with the TunerStudio log), rather than only a curated subset - previously-missing data like idle, throttle, wideband and wall-fuel state is now logged
@@ -62,19 +64,26 @@ or
  - Wi-Fi DHCP hostname setting (default `fome-efi`), so the ECU is reachable by name instead of by IP address on networks where the router maps hostnames to addresses
  - Boost cut can now use a 4x4 table with selectable X and Y axes instead of a single fixed pressure, for example to allow more boost with higher ethanol content. Select "Table" for "Boost cut mode" in the boost cut settings. #847
  - Rev limiter table with selectable X and Y inputs, including oil temperature, ethanol content, and gear. When used with the CLT-based limiter, the lower RPM limit applies.
-
+ - "MAF maximum load" curve: the most cylinder filling the MAF is allowed to read, against RPM, as % of an ideal cylinder at baro pressure and IAT. MAF/RPM can read far more air than the engine can hold on a sharp tip-in or when a start dies, which over-fuels or floods it. The default never limits. The "Air: MAF airmass limited" datalog channel shows when it's active.
+ - New "Ign: Overdwell sparks" datalog channel, counting sparks fired by the overdwell backup instead of at their timing angle (when timing advances by more than the dwell angle in one step, or a trigger tooth comes late)
+ - "Ramp on return to idle" (previously "Ramp target on return to idle") now also ramps out the extra idle air commanded just before idling - dashpot air or the coasting table - instead of the idle position stepping down the moment the engine starts idling. Its length is adjustable with "Return to idle duration" (previously fixed at 3 seconds).
 
 ### Changed
  - Cylinder count is now derived automatically from the firing order instead of being a separate setting, so the two can no longer disagree.
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - "Use fixed baro corr from MAP" now actually uses the MAP reading taken at power-up. Previously it always used 101.3 kPa, which is wrong at altitude. If the engine is already turning when the ECU starts, MAP is not used as baro.
+ - "Ramp on return to idle" now starts the ramp from the RPM the engine is at when it returns to idle, instead of always from the idle entry threshold. Lifting off the throttle near idle speed no longer briefly raises the idle target several hundred RPM, which made the idle bounce.
+ - Fix "re-adding element into event_queue" warnings (9011) after a spark is fired by the overdwell backup, for example when idle timing control steps timing up on entering idle. The queued spark event could also fire a second time.
+ - The MAF filter was 4x faster than set on STM32H7 ECUs (Atlas) and 2x faster on all others. MAF setups that use the filter should divide "MAF filter parameter" by 4 (Atlas) or 2 (other ECUs) to keep the same behavior.
  - Changing or clearing the MAP 2, MAF, MAF 2 or fuel level sensor input no longer leaves the sensor reading its old pin (and the pin claimed) until the ECU is rebooted. MAF and fuel level input changes now take effect immediately, like other analog sensors
  - STM32F7 dual-bank ECUs no longer stall (potentially stopping the engine) when burning configuration with the engine running - configuration is now committed to flash when the engine is stopped #776
  - SD card log field names now include their category prefix (e.g. `Boost: Target` instead of just `Target`), matching the names shown in TunerStudio
  - Injector and ignition circuit fault codes now name the correct cylinder on boards with smart driver chips. Cylinder 1 previously reported P0202/P0352 instead of P0201/P0351, cylinders 10-12 reported nonsense codes, and cylinder 12 reported no code at all
  - The "wideband controller firmware too old" fault now reports its own code (P2902) instead of P2133, which is also used for "accelerator pedal secondary too high" - the two faults could not be told apart
  - Sensor, trigger, cam, knock and injector/ignition circuit fault codes now require the fault to persist for about a second before they light the check engine light, so a single bad reading no longer latches a code #780
+ - Sensor fault codes set to "Ignore" no longer show up as a warning. Previously "Ignore" only stopped the code from being stored, so the warning still appeared in TunerStudio and datalogs
  - Fix fuel level input
  - Improve STM32H7/Atlas SD card reliability
  - General SD card logging performance and reliabilty improvements
@@ -98,6 +107,9 @@ or
  - The "VVT sync position too close to trigger sync" warning now catches every cam position that's within a few degrees of a crank sync point, on either side, every time. Previously it only checked one of the crank sync points and only just after it, so whether it warned depended on which crank revolution the engine happened to sync on first. It also no longer warns on setups where the cam isn't used for engine phase.
  - An injector can no longer be left stuck open if the ECU runs short of internal timer slots (only possible with extremely high injector duty). That injection is now skipped and a warning raised. Also, an injector that the stopped-engine safety had to turn off now works normally on the next start, instead of staying dead until a reboot.
  - The first injection after a fuel cut (such as decel fuel cut) is now timed correctly. Previously, with injection timed by end or centre of injection, it could end a whole pulse late.
+ - Multispark now fires all of its extra sparks, each with the configured multispark dwell. Previously the first extra spark was held back until it had charged for most of the main spark's dwell, and the rest were dropped, so at most one extra spark fired.
+ - "Minimum oil pressure after start" no longer cuts fuel 5 seconds after every start when the oil pressure sensor has failed (for example a broken wire). It now only cuts when a working sensor shows no oil pressure. The failed sensor is still reported by its own fault code.
+ - A jammed electronic throttle now stays visible until the ECU restarts
 
 ## May 2026 Release
 

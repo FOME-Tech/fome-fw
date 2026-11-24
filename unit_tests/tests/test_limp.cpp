@@ -407,6 +407,93 @@ TEST(limp, oilPressureStartupSuccessCase) {
 	ASSERT_TRUE(dut.allowInjection());
 }
 
+// A configured oil pressure sensor that has failed (eg a broken wire) can't show that there's no
+// pressure, so it doesn't cut fuel after start. Its own fault is reported separately.
+TEST(limp, oilPressureStartupFailedSensor) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->minOilPressureAfterStart = 200;
+
+	LimpManager dut;
+
+	Sensor::setInvalidMockValue(SensorType::OilPressure);
+
+	// Start the engine
+	engine->rpmCalculator.setRpmValue(1000);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// Past the 5 second timeout
+	advanceTimeUs(5.5e6);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// The sensor comes back showing low pressure: the after start check has been and gone
+	// (low pressure while running is the job of the running oil pressure protection)
+	advanceTimeUs(1e6);
+	Sensor::setMockValue(SensorType::OilPressure, 50);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+}
+
+// The sensor reads low while pressure builds, then fails before the timeout: there's no reading at
+// the timeout to say there's no pressure, so no cut
+TEST(limp, oilPressureStartupSensorFailsDuringWindow) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->minOilPressureAfterStart = 200;
+
+	LimpManager dut;
+
+	Sensor::setMockValue(SensorType::OilPressure, 50);
+
+	engine->rpmCalculator.setRpmValue(1000);
+	dut.updateState(1000, getTimeNowNt());
+
+	advanceTimeUs(3e6);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// Sensor fails
+	Sensor::setInvalidMockValue(SensorType::OilPressure);
+	advanceTimeUs(1e6);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// 6 seconds since start
+	advanceTimeUs(2e6);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+}
+
+// After a stall the check runs again on the next start, and a working sensor with no pressure cuts
+TEST(limp, oilPressureStartupCheckRepeatsAfterStall) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	engineConfiguration->minOilPressureAfterStart = 200;
+
+	LimpManager dut;
+
+	// First start: sensor failed, no cut
+	Sensor::setInvalidMockValue(SensorType::OilPressure);
+	engine->rpmCalculator.setRpmValue(1000);
+	dut.updateState(1000, getTimeNowNt());
+	advanceTimeUs(5.5e6);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	// Stall
+	engine->rpmCalculator.setRpmValue(0);
+	dut.updateState(0, getTimeNowNt());
+
+	// Second start: sensor working, but no pressure
+	Sensor::setMockValue(SensorType::OilPressure, 50);
+	engine->rpmCalculator.setRpmValue(1000);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_TRUE(dut.allowInjection());
+
+	advanceTimeUs(5.5e6);
+	dut.updateState(1000, getTimeNowNt());
+	EXPECT_FALSE(dut.allowInjection());
+}
+
 TEST(limp, oilPressureRunning) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->oilPressureProtectionStartDelay = 2.0f;

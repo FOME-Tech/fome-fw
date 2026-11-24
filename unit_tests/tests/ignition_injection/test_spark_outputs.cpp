@@ -139,3 +139,57 @@ TEST(SparkOutputs, TimingChangesMissNoSparks) {
 
 	EXPECT_EQ(0, unitTestWarningCodeState.recentWarnings.getCount());
 }
+
+// Advance jumping by more than the dwell angle in one step, as when the idle timing controller
+// switches from its lower to its upper limit on entering idle (seen at 1450 RPM: 12 to 35 degrees
+// with about 16 degrees of dwell). The charge for the next spark still starts at the old dwell
+// angle, but the new spark angle has already gone by, so that spark is fired by the overdwell
+// backup instead. Its real fire must not stay queued behind it.
+TEST(SparkOutputs, AdvanceStepLargerThanDwellAngle) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	setCrankOperationMode();
+	setupSimpleTestEngineWithMaf(&eth, IM_SEQUENTIAL, trigger_type_e::TT_TOOTHED_WHEEL_36_2);
+	engineConfiguration->ignitionMode = IM_WASTED_SPARK;
+	engineConfiguration->isIgnitionEnabled = true;
+	engineConfiguration->isInjectionEnabled = false;
+	setArrayValues(config->sparkDwellValues, 1.9f);
+
+	OutputRecorder recorder;
+	EngineSim sim(eth, &recorder);
+
+	const float rpm = 1450;
+	sim.setRpm(rpm);
+	setWholeTimingTable(12);
+	sim.runCycles(10);
+
+	const float dwellMs = engine->ignitionState.getDwell();
+	const float dwellAngle = dwellMs * rpm * 360 / 60e3;
+	ASSERT_LT(dwellAngle, 35 - 12) << "the step has to be bigger than the dwell angle";
+
+	ASSERT_NEAR(rpm, Sensor::getOrZero(SensorType::Rpm), 1);
+
+	auto from = sim.nowUs();
+	auto backupSparksBefore = engine->outputChannels.overdwellSparkCounter;
+
+	setWholeTimingTable(35);
+	sim.runCycles(2);
+	auto settled = sim.nowUs();
+	sim.runCycles(4);
+
+	// This is the step that's too big: the backup fires at least one spark
+	EXPECT_GT(engine->outputChannels.overdwellSparkCounter, backupSparksBefore);
+
+	// Nothing re-added to the angle queue, and nothing fired twice
+	EXPECT_EQ(nullptr, unitTestWarningCodeState.recentWarnings.find(ObdCode::CUSTOM_RE_ADDING_INTO_EXECUTION_QUEUE));
+	for (int coil = 0; coil < 4; coil++) {
+		EXPECT_NEAR(2 * 6, sparksSince(recorder, coil, from), 1) << "coil " << coil;
+	}
+
+	EXPECT_TRUE(noTriggerErrors(sim));
+	EXPECT_TRUE(staysSynced(sim, from));
+
+	// Once the step has gone through, every spark is where it was asked for
+	EXPECT_TRUE(sparkTimingWithin(recorder, sim, 35, 0.5f, settled, /*periodDegrees*/ 360));
+	EXPECT_TRUE(noSparkWithoutCharge(recorder));
+	EXPECT_TRUE(dwellWithin(recorder, 0.75f * dwellMs, 1.8f * dwellMs, from));
+}

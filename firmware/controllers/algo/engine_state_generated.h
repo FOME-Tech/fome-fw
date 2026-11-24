@@ -12,15 +12,15 @@ struct LuaAdjustments {
 	// offset 8 bit 0
 	bool clutchUpState : 1 {};
 	// offset 8 bit 1
-	bool brakePedalState : 1 {};
+	bool clutchUpStateSet : 1 {};
 	// offset 8 bit 2
-	bool acRequestState : 1 {};
+	bool brakePedalState : 1 {};
 	// offset 8 bit 3
-	bool luaDisableEtb : 1 {};
+	bool acRequestState : 1 {};
 	// offset 8 bit 4
-	bool luaIgnCut : 1 {};
+	bool luaDisableEtb : 1 {};
 	// offset 8 bit 5
-	bool unusedBit_8_5 : 1 {};
+	bool luaIgnCut : 1 {};
 	// offset 8 bit 6
 	bool unusedBit_8_6 : 1 {};
 	// offset 8 bit 7
@@ -140,24 +140,27 @@ struct engine_state_s {
 	// Clutch: down
 	// offset 44 bit 1
 	bool clutchDownState : 1 {};
-	// Brake switch
+	// Clutch: may be engaged
 	// offset 44 bit 2
-	bool brakePedalState : 1 {};
+	bool clutchMayBeEngaged : 1 {};
+	// Clutch: may be middle
 	// offset 44 bit 3
+	bool clutchMayBeMiddle : 1 {};
+	// Clutch: may be disengaged
+	// offset 44 bit 4
+	bool clutchMayBeDisengaged : 1 {};
+	// Brake switch
+	// offset 44 bit 5
+	bool brakePedalState : 1 {};
+	// offset 44 bit 6
 	bool startStopState : 1 {};
 	// Split injection active
-	// offset 44 bit 4
-	bool doSplitInjection : 1 {};
-	// offset 44 bit 5
-	bool pgState : 1 {};
-	// offset 44 bit 6
-	bool pgState2 : 1 {};
 	// offset 44 bit 7
-	bool unusedBit_44_7 : 1 {};
+	bool doSplitInjection : 1 {};
 	// offset 44 bit 8
-	bool unusedBit_44_8 : 1 {};
+	bool pgState : 1 {};
 	// offset 44 bit 9
-	bool unusedBit_44_9 : 1 {};
+	bool pgState2 : 1 {};
 	// offset 44 bit 10
 	bool unusedBit_44_10 : 1 {};
 	// offset 44 bit 11

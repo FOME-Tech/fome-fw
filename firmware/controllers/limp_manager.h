@@ -39,6 +39,8 @@ enum class TpsState : uint8_t {
 	NotConfigured,
 	Redundancy, // 9
 	IntermittentPps,
+	Jammed, // 11
+	Limp,
 	// keep this list in sync with etbCutCodeList in tunerstudio.template.ini!
 };
 
@@ -160,6 +162,10 @@ private:
 	Clearable m_transientAllowIgnition = true;
 
 	bool m_hadOilPressureAfterStart = false;
+	// The after start oil pressure check has been made (once, at the timeout)
+	bool m_checkedOilPressureAfterStart = false;
+	// ...and it failed: cut fuel until the engine stops
+	bool m_noOilPressureAfterStart = false;
 
 	// Ignition switch state
 	bool m_ignitionOn = false;
