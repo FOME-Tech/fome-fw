@@ -320,6 +320,46 @@ TEST(fuelCut, clutch) {
 	engine->updateSwitchInputs();
 	eth.engine.periodicFastCallback();
 	EXPECT_CUT();
+
+	// down switch only: fuel cut is inhibited only with the pedal on the floor
+	engineConfiguration->clutchUpPin = Gpio::Unassigned;
+	engineConfiguration->clutchDownPin = Gpio::G3;
+	setMockState(engineConfiguration->clutchDownPin, false);
+	engine->updateSwitchInputs();
+	eth.engine.periodicFastCallback();
+	EXPECT_CUT();
+
+	setMockState(engineConfiguration->clutchDownPin, true);
+	engine->updateSwitchInputs();
+	eth.engine.periodicFastCallback();
+	EXPECT_NORMAL();
+
+	// clutch position sensor: inhibited as soon as the clutch leaves fully applied
+	engineConfiguration->clutchDownPin = Gpio::Unassigned;
+	engineConfiguration->clutchAppliedBelow = 15;
+	engineConfiguration->clutchReleasedAbove = 80;
+	Sensor::setMockValue(SensorType::ClutchPosition, 5);
+	engine->updateSwitchInputs();
+	eth.engine.periodicFastCallback();
+	EXPECT_CUT();
+
+	Sensor::setMockValue(SensorType::ClutchPosition, 40);
+	engine->updateSwitchInputs();
+	eth.engine.periodicFastCallback();
+	EXPECT_NORMAL();
+
+	// clutch up state from Lua
+	Sensor::setInvalidMockValue(SensorType::ClutchPosition);
+	engine->engineState.lua.clutchUpStateSet = true;
+	engine->engineState.lua.clutchUpState = false;
+	engine->updateSwitchInputs();
+	eth.engine.periodicFastCallback();
+	EXPECT_NORMAL();
+
+	engine->engineState.lua.clutchUpState = true;
+	engine->updateSwitchInputs();
+	eth.engine.periodicFastCallback();
+	EXPECT_CUT();
 }
 
 TEST(fuelCut, timingRetardRampIn) {

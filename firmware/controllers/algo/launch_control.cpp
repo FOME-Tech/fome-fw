@@ -11,6 +11,7 @@
 #include "boost_control.h"
 #include "launch_control.h"
 #include "engine_state.h"
+#include "clutch_state.h"
 #include "tinymt32.h"
 
 /**
@@ -30,11 +31,7 @@ bool LaunchControlBase::isInsideSwitchCondition() {
 #endif // EFI_PROD_CODE
 		return launchActivatePinState;
 	} else if (isClutchActivated) {
-		if (isBrainPinValid(engineConfiguration->clutchDownPin)) {
-			return engine->engineState.clutchDownState;
-		} else {
-			return false;
-		}
+		return isClutchKnownDisengaged(getClutchState());
 	} else {
 		// ALWAYS_ACTIVE_LAUNCH
 		return true;

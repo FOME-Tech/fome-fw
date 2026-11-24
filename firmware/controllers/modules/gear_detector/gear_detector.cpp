@@ -30,29 +30,18 @@ static constexpr float kSteadyMinKph = 30.0f;
 // unlocked than locked.
 static constexpr float kMismatchUnlockedSec = 10.0f;
 
-ClutchState decideClutchPosition() {
-	auto position = Sensor::get(SensorType::ClutchPosition);
-	if (!position) {
-		return ClutchState::Indeterminate;
+// A single switch can't tell all three clutch positions apart. Assume it trips at the bite point,
+// so the clutch-aware logic still runs at full speed. If the switch actually trips somewhere else,
+// the clutch loses trust and we fall back to the ratio alone.
+static ClutchState forGearDetection(ClutchState state) {
+	switch (state) {
+		case ClutchState::EngagedOrMiddle:
+			return ClutchState::Engaged;
+		case ClutchState::MiddleOrDisengaged:
+			return ClutchState::Disengaged;
+		default:
+			return state;
 	}
-
-	float appliedBelow = engineConfiguration->clutchAppliedBelow;
-	float releasedAbove = engineConfiguration->clutchReleasedAbove;
-
-	if (appliedBelow >= releasedAbove) {
-		// Misconfigured (or not configured at all)
-		return ClutchState::Indeterminate;
-	}
-
-	if (position.Value < appliedBelow) {
-		return ClutchState::Engaged;
-	}
-
-	if (position.Value > releasedAbove) {
-		return ClutchState::Disengaged;
-	}
-
-	return ClutchState::Middle;
 }
 
 GearDetector::GearDetector()
@@ -119,10 +108,10 @@ void GearDetector::onSlowCallback() {
 
 	size_t raw = determineGearFromRatio(ratio);
 	size_t locked = determineLockedGear(ratio);
-	ClutchState clutch = decideClutchPosition();
+	ClutchState clutch = forGearDetection(getClutchState());
 	float rpm = Sensor::getOrZero(SensorType::Rpm);
 
-	if (locked != lockedGear || clutch != static_cast<ClutchState>(clutchState)) {
+	if (locked != lockedGear || clutch != m_lastClutch) {
 		// Start a new episode
 		m_episodeTimer.reset();
 		m_episodeRpmMin = rpm;
@@ -134,7 +123,7 @@ void GearDetector::onSlowCallback() {
 
 	rawGear = raw;
 	lockedGear = locked;
-	clutchState = static_cast<uint8_t>(clutch);
+	m_lastClutch = clutch;
 
 	updateClutchTrust(clutch, locked);
 	updateRatioMismatch(ratio, raw, locked, clutch);
@@ -187,6 +176,10 @@ void GearDetector::updateClutchTrust(ClutchState clutch, size_t locked) {
 			break;
 		case ClutchState::Middle:
 			// Could be slipping or not, tells us nothing.
+			break;
+		case ClutchState::EngagedOrMiddle:
+		case ClutchState::MiddleOrDisengaged:
+			// Never seen here, forGearDetection() maps these away
 			break;
 	}
 }
@@ -248,6 +241,10 @@ size_t GearDetector::determineGearWithClutch(ClutchState clutch, size_t locked) 
 		case ClutchState::Indeterminate:
 			// Mid-shift: hold the gear we're shifting out of
 			return m_currentGear;
+		case ClutchState::EngagedOrMiddle:
+		case ClutchState::MiddleOrDisengaged:
+			// Never seen here, forGearDetection() maps these away
+			break;
 	}
 
 	return m_currentGear;
@@ -361,5 +358,5 @@ void GearDetector::showInfo(const char* sensorName) const {
 	efiPrintf("    Gearbox ratio: %.3f", m_gearboxRatio);
 	efiPrintf("    Detected gear: %d", m_currentGear);
 	efiPrintf("    Raw gear: %d locked gear: %d", rawGear, lockedGear);
-	efiPrintf("    Clutch state: %d trusted: %d", clutchState, clutchTrusted);
+	efiPrintf("    Clutch state: %d trusted: %d", static_cast<int>(m_lastClutch), clutchTrusted);
 }

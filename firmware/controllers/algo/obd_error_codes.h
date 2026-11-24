@@ -736,7 +736,7 @@ enum class ObdCode : uint16_t {
 	// P0701 Transmission Control System Range/Performance
 	// P0702 Transmission Control System Electrical
 	// P0703 Torque Converter/Brake Switch B Circuit Malfunction
-	// P0704 Clutch Switch Input Circuit Malfunction
+	OBD_Clutch_Switch_Input = 0x0704,
 	// P0705 Transmission Range Sensor Circuit malfunction (PRNDL Input)
 	// P0706 Transmission Range Sensor Circuit Range/Performance
 	// P0707 Transmission Range Sensor Circuit Low Input

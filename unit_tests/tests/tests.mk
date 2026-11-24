@@ -74,6 +74,7 @@ TESTS_SRC_CPP = \
 	tests/test_traction_control.cpp \
 	tests/test_airmass_dispatcher.cpp \
 	tests/test_fuel_map.cpp \
+	tests/test_clutch_state.cpp \
 	tests/test_gear_detector.cpp \
 	tests/ignition_injection/test_fuel_wall_wetting.cpp \
 	tests/test_one_cylinder_logic.cpp \

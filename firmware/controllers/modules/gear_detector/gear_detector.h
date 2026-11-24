@@ -1,22 +1,7 @@
 #pragma once
 
 #include "gear_detector_state_generated.h"
-
-enum class ClutchState : uint8_t {
-	// No usable clutch information: no sensor, sensor fault, or misconfigured thresholds
-	Indeterminate = 0,
-	// Clutch fully applied, engine is driving the wheels
-	Engaged = 1,
-	// Somewhere between applied and released, may be slipping
-	Middle = 2,
-	// Clutch fully released, engine is decoupled from the wheels
-	Disengaged = 3,
-};
-
-// Decide what the clutch is doing from whatever clutch inputs are configured. Currently only the
-// analog position sensor is used. Future sources (clutch up and/or down switches) also map onto
-// this enum: for example an up switch alone can only distinguish Engaged from Middle.
-ClutchState decideClutchPosition();
+#include "clutch_state.h"
 
 class GearDetector : public EngineModule, public Sensor, public gear_detector_state_s {
 public:
@@ -54,6 +39,9 @@ private:
 
 	float m_gearboxRatio = 0;
 	size_t m_currentGear = 0;
+
+	// Clutch state as seen by the gear detector on the last update
+	ClutchState m_lastClutch = ClutchState::Indeterminate;
 
 	float m_gearThresholds[GEARS_COUNT - 1];
 	float m_lockTolerance = 0.04f;

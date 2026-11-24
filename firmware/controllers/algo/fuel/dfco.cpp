@@ -5,6 +5,7 @@
 #include "rusefi/interpolation.h"
 
 #include "dfco.h"
+#include "clutch_state.h"
 
 bool DfcoController::getState() const {
 	if (!engineConfiguration->coastingFuelCutEnabled) {
@@ -35,8 +36,7 @@ bool DfcoController::getState() const {
 	float vss = Sensor::getOrZero(SensorType::VehicleSpeed);
 
 	// Setting to allow clutch to block DFCO activation
-	bool clutchActivate = !engineConfiguration->disableFuelCutOnClutch ||
-						  !isBrainPinValid(engineConfiguration->clutchUpPin) || engine->engineState.clutchUpState;
+	bool clutchActivate = !engineConfiguration->disableFuelCutOnClutch || !isClutchKnownNotEngaged(getClutchState());
 
 	float mapThreshold = engineConfiguration->useTableForDfcoMap
 							   ? interpolate2d(rpm, config->dfcoMapRpmValuesBins, config->dfcoMapRpmValues)

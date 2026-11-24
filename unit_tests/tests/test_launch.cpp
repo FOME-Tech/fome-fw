@@ -89,6 +89,25 @@ TEST(LaunchControl, SwitchInputCondition) {
 	setMockState(engineConfiguration->clutchDownPin, true);
 	engine->updateSwitchInputs();
 	EXPECT_FALSE(dut.isInsideSwitchCondition());
+
+	// by clutch position sensor, which wins over the switch
+	engineConfiguration->clutchAppliedBelow = 15;
+	engineConfiguration->clutchReleasedAbove = 80;
+	setMockState(engineConfiguration->clutchDownPin, false);
+	Sensor::setMockValue(SensorType::ClutchPosition, 90);
+	engine->updateSwitchInputs();
+	EXPECT_TRUE(dut.isInsideSwitchCondition());
+
+	// Partway down isn't pressed
+	Sensor::setMockValue(SensorType::ClutchPosition, 50);
+	engine->updateSwitchInputs();
+	EXPECT_FALSE(dut.isInsideSwitchCondition());
+
+	// Sensor only, no switch
+	engineConfiguration->clutchDownPin = Gpio::Unassigned;
+	Sensor::setMockValue(SensorType::ClutchPosition, 90);
+	engine->updateSwitchInputs();
+	EXPECT_TRUE(dut.isInsideSwitchCondition());
 }
 
 TEST(LaunchControl, CombinedCondition) {

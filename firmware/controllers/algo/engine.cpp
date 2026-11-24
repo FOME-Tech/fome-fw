@@ -17,6 +17,7 @@
 #include "init.h"
 
 #include "perf_trace.h"
+#include "clutch_state.h"
 #include "backup_ram.h"
 #include "idle_thread.h"
 #include "idle_hardware.h"
@@ -129,11 +130,44 @@ void Engine::updateSlowSensors() {
 #endif // EFI_SHAFT_POSITION_INPUT
 }
 
-static bool getClutchUpState() {
+static expected<bool> getClutchUpSwitch() {
 	if (isBrainPinValid(engineConfiguration->clutchUpPin)) {
 		return engineConfiguration->clutchUpPinInverted ^ efiReadPin(engineConfiguration->clutchUpPin);
 	}
-	return engine->engineState.lua.clutchUpState;
+
+	// Lua can stand in for the up switch, but only once a script has actually set it
+	if (engine->engineState.lua.clutchUpStateSet) {
+		return static_cast<bool>(engine->engineState.lua.clutchUpState);
+	}
+
+	return unexpected;
+}
+
+static expected<bool> getClutchDownSwitch() {
+	if (isBrainPinValid(engineConfiguration->clutchDownPin)) {
+		return engineConfiguration->clutchDownPinInverted ^ efiReadPin(engineConfiguration->clutchDownPin);
+	}
+
+	return unexpected;
+}
+
+static void updateClutchState() {
+	auto up = getClutchUpSwitch();
+	auto down = getClutchDownSwitch();
+
+	engine->engineState.clutchUpState = up.value_or(false);
+	engine->engineState.clutchDownState = down.value_or(false);
+
+	auto state = decideClutchState(Sensor::get(SensorType::ClutchPosition), up, down);
+	auto& es = engine->engineState;
+	es.clutchState = state;
+
+	// Logged as the set of positions the clutch may be in
+	bool unknown = state == ClutchState::Indeterminate;
+	es.clutchMayBeEngaged = unknown || state == ClutchState::Engaged || state == ClutchState::EngagedOrMiddle;
+	es.clutchMayBeMiddle = unknown || state == ClutchState::Middle || state == ClutchState::EngagedOrMiddle ||
+						   state == ClutchState::MiddleOrDisengaged;
+	es.clutchMayBeDisengaged = unknown || state == ClutchState::Disengaged || state == ClutchState::MiddleOrDisengaged;
 }
 
 static bool getBrakePedalState() {
@@ -152,11 +186,8 @@ static bool getBrakePedalState() {
 }
 
 void Engine::updateSwitchInputs() {
-	// this value is not used yet
-	if (isBrainPinValid(engineConfiguration->clutchDownPin)) {
-		engine->engineState.clutchDownState =
-				engineConfiguration->clutchDownPinInverted ^ efiReadPin(engineConfiguration->clutchDownPin);
-	}
+	updateClutchState();
+
 	{
 		bool currentState;
 		if (hasAcToggle()) {
@@ -174,7 +205,6 @@ void Engine::updateSwitchInputs() {
 		}
 	}
 
-	engine->engineState.clutchUpState = getClutchUpState();
 	engine->engineState.brakePedalState = getBrakePedalState();
 }
 

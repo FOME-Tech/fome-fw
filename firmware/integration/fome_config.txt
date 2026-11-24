@@ -700,7 +700,7 @@ bit is_enabled_spi_2
 	bit stepperForceParkingEveryRestart;Park the idle stepper every time the ECU starts, not only when its stored position is unknown.
 	bit isFasterEngineSpinUpEnabled;If enabled, try to fire the engine before a full engine cycle has been completed using RPM estimated from the last 90 degrees of engine rotation. As soon as the trigger syncs plus 90 degrees rotation, fuel and ignition events will occur. If disabled, worst case may require up to 4 full crank rotations before any events are scheduled.
 	bit coastingFuelCutEnabled;This setting disables fuel injection while the engine is in overrun, this is useful as a fuel saving measure and to prevent back firing.
-	bit disableFuelCutOnClutch;True: Inhibits DFCO from activating when the clutch is pressed. This helps prevent transient knock during shifts\nFalse: Do not take clutch state into account.
+	bit disableFuelCutOnClutch;True: Inhibits DFCO from activating when the clutch is pressed. This helps prevent transient knock during shifts. Uses the clutch position sensor if fitted, otherwise the clutch up and down switches.\nFalse: Do not take clutch state into account.
 	bit useIacTableForCoasting;Override the IAC position during overrun conditions to help reduce engine braking, this can be helpful for large engines in light weight cars or engines that have trouble returning to idle.
 	bit useIdleTimingPidControl;Adjust ignition timing to hold the idle target RPM. Timing changes torque much faster than idle air, so this catches RPM changes the air control is too slow for. Only active while idling.
 	bit disableEtbWhenEngineStopped;Allows disabling the ETB when the engine is stopped. You may not like the power draw or PWM noise from the motor, so this lets you turn it off until it's necessary.
@@ -720,7 +720,7 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	pin_output_mode_e acFanPinMode;
 
 	uint16_t vehicleWeight;For reference, not used by the ECU.;"kg", 1, 0, 0, 10000, 0
-	int16_t idlePidRpmUpperLimit;How far above idle speed do we consider idling?\nFor example, if target = 800, this param = 200, then anything below 1000 RPM is considered idle.;"RPM", 1, 0, 0, 500, 0
+	int16_t idlePidRpmUpperLimit;How far above the idle target RPM the engine must drop to before it counts as idling. Off throttle, it counts as coasting above 1.5 times this above the target.\nFor example, with a target of 800 and 200 here, idle starts below 1000 RPM and coasting above 1100 RPM.;"RPM", 1, 0, 0, 500, 0
 
 	uint16_t autoscale applyNonlinearBelowPulse;Apply nonlinearity correction below a pulse of this duration. Pulses longer than this duration will receive no adjustment.;"ms", {1/1000}, 0, 0, 30, 3
 	Gpio lps25BaroSensorScl
@@ -847,7 +847,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 	pid_s boostPid;
 	uint16_t boostPwmFrequency;;"Hz", 1, 0, 0, 3000, 0
 
-	#define launchActivationMode_e_enum "Launch Button", "Clutch Down Switch", "Always Active(Disabled By Speed)"
+	#define launchActivationMode_e_enum "Launch Button", "Clutch pressed", "Always Active(Disabled By Speed)"
     custom launchActivationMode_e  1 bits, S08, @OFFSET@, [0:1], @@launchActivationMode_e_enum@@
     launchActivationMode_e launchActivationMode;
 

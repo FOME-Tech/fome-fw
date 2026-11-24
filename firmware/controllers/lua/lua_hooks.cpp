@@ -28,6 +28,7 @@ using namespace luaaa;
 
 #if EFI_PROD_CODE
 #include "electronic_throttle.h"
+#include "clutch_state.h"
 #endif // EFI_PROD_CODE
 
 static int lua_readpin(lua_State* l) {
@@ -810,7 +811,13 @@ void configureRusefiLuaHooks(lua_State* l) {
 
 	lua_register(l, "setClutchUpState", [](lua_State* l2) {
 		engine->engineState.lua.clutchUpState = lua_toboolean(l2, 1);
+		engine->engineState.lua.clutchUpStateSet = true;
 		return 0;
+	});
+
+	lua_register(l, "getClutchState", [](lua_State* l2) {
+		lua_pushinteger(l2, static_cast<int>(getClutchState()));
+		return 1;
 	});
 
 	lua_register(l, "setBrakePedalState", [](lua_State* l2) {
