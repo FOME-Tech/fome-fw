@@ -39,7 +39,7 @@ There's no mapping file, so work it out from the change:
   Then wire up any short links or TS help links it reports, and build once at the end.
   Otherwise, follow the page conventions below by hand.
 
-Page conventions (the full version is under "Feature page conventions" in the wiki's `docs/13-How-to-edit-wiki.md`):
+Page conventions (the full version is under "Feature page conventions" in the wiki's `docs/98-How-to-edit-wiki.md`):
 
 - Describe behaviour for a tuner. No file, function or variable names, except TS output channel and gauge names.
 - Quote TS labels exactly, in bold. Write menu paths as `**Menu > Item**`.

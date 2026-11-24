@@ -20,7 +20,7 @@ statement about what the ECU does is worse than leaving the statement out.
 
 ## Before writing, read these
 
-1. The "Feature page conventions" section of `<wiki>/docs/13-How-to-edit-wiki.md`. Follow it exactly.
+1. The "Feature page conventions" section of `<wiki>/docs/98-How-to-edit-wiki.md`. Follow it exactly.
 2. The example page it names (the Coolant Temperature page). Match its tone, depth and structure.
 3. The current text of your target page(s), and any notes your dispatcher points you to.
 
