@@ -39,6 +39,8 @@ enum class TpsState : uint8_t {
 	NotConfigured,
 	Redundancy, // 9
 	IntermittentPps,
+	Jammed, // 11
+	Limp,
 	// keep this list in sync with etbCutCodeList in tunerstudio.template.ini!
 };
 

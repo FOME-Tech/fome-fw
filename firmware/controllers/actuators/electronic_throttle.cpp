@@ -60,6 +60,7 @@
 #include "dc_motor.h"
 #include "dc_motors.h"
 #include "defaults.h"
+#include "malfunction_central.h"
 
 #if HW_PROTEUS
 #include "proteus_meta.h"
@@ -164,6 +165,10 @@ bool EtbController::init(
 
 	m_function = function;
 	m_positionSensor = functionToPositionSensor(function);
+
+	// A new timer reads as reset long ago, which would trip a jam on the first loop
+	// with a large error (e.g. pedal held down at key-on).
+	m_jamDetectTimer.reset();
 
 	// If we are a throttle, require redundant TPS sensor
 	if (isEtbMode()) {
@@ -529,8 +534,11 @@ bool EtbController::checkStatus() {
 #endif /* EFI_TUNER_STUDIO */
 
 	if (!isEtbMode()) {
-		// no validation for h-bridge or idle mode
-		return true;
+		// A jammed wastegate stays off until restart (see onJamDetected), unless
+		// 'Temporarily disable jam detection' overrides it, as it does the throttle limp.
+		bool jamOff = jamDetected && !engine->etbIgnoreJamProtection;
+		etbErrorCode = (int8_t)(jamOff ? TpsState::Jammed : TpsState::None);
+		return !jamOff;
 	}
 	// ETB-specific code below. The whole mix-up between DC and ETB is shameful :(
 
@@ -579,6 +587,12 @@ bool EtbController::checkStatus() {
 		localReason = TpsState::Lua;
 	}
 
+	// The limp manager keeps the throttles off until restart after a jam (or a fatal error).
+	// Report that over any other reason, since it outlasts all of them.
+	if (!getLimpManager()->allowElectronicThrottle() && !engine->etbIgnoreJamProtection) {
+		localReason = jamDetected ? TpsState::Jammed : TpsState::Limp;
+	}
+
 	etbErrorCode = (int8_t)localReason;
 
 	return localReason == TpsState::None;
@@ -606,11 +620,45 @@ void EtbController::update() {
 }
 
 void EtbController::resetJamTimer() {
+	// Only restarts the timer: jamDetected is latched until restart, like the shutdown it causes
 	m_jamDetectTimer.reset();
-	jamDetected = false;
+}
+
+void EtbController::onJamDetected() {
+	jamDetected = true;
+
+	if (m_function == DC_Wastegate) {
+		// A jammed wastegate only turns off its own motor (checkStatus), never the throttle.
+		// That matches what this controller does when wastegate position feedback is lost.
+		// An unpowered actuator rests wherever its spring puts it. If that is closed, boost
+		// rises to whatever the turbo makes, and boost cut is the protection against that.
+		// Driving a stuck actuator can't move it, but stalls the motor at up to 90% duty.
+		warning(ObdCode::OBD_Wastegate_Solenoid_A_Range_Performance, "Wastegate jammed, wastegate motor disabled");
+		setError(true, ObdCode::OBD_Wastegate_Solenoid_A_Range_Performance);
+	} else {
+		warning(ObdCode::OBD_Throttle_Actuator_Control_Throttle_Body_Range_Performance,
+				"ETB jammed, throttle disabled and fault RPM limit set");
+		setError(true, ObdCode::OBD_Throttle_Actuator_Control_Throttle_Body_Range_Performance);
+
+		getLimpManager()->reportEtbProblem();
+	}
 }
 
 void EtbController::checkJam(percent_t setpoint, percent_t observation) {
+	// Already tripped: the indication and the shutdown it caused stay until restart.
+	// jamTimer keeps the value it tripped at.
+	if (jamDetected) {
+		return;
+	}
+
+	// 'Temporarily disable jam detection' turns detection off entirely, so testing
+	// with it can't latch the throttle off or set the fault RPM limit.
+	if (engine->etbIgnoreJamProtection) {
+		m_jamDetectTimer.reset();
+		jamTimer = 0;
+		return;
+	}
+
 	float absError = std::abs(setpoint - observation);
 
 	auto jamDetectThreshold = engineConfiguration->etbJamDetectThreshold;
@@ -621,14 +669,10 @@ void EtbController::checkJam(percent_t setpoint, percent_t observation) {
 
 		if (absError > jamDetectThreshold && engine->module<IgnitionController>()->getIgnState()) {
 			if (m_jamDetectTimer.hasElapsedSec(jamTimeout)) {
-				// ETB is jammed!
-				jamDetected = true;
-
-				getLimpManager()->reportEtbProblem();
+				onJamDetected();
 			}
 		} else {
 			m_jamDetectTimer.reset(nowNt);
-			jamDetected = false;
 		}
 
 		jamTimer = m_jamDetectTimer.getElapsedSeconds(nowNt);

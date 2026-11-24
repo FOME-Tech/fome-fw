@@ -10,6 +10,7 @@
 #include "electronic_throttle_impl.h"
 #include "dc_motor.h"
 #include "idle_thread.h"
+#include "malfunction_central.h"
 
 #include "mocks.h"
 
@@ -1053,4 +1054,216 @@ TEST(etb, openLoopNonThrottle) {
 	EXPECT_EQ(0, etb.getOpenLoop(50).value_or(-1));
 	EXPECT_EQ(0, etb.getOpenLoop(75).value_or(-1));
 	EXPECT_EQ(0, etb.getOpenLoop(100).value_or(-1));
+}
+
+static bool hasStoredDtc(ObdCode code) {
+	error_codes_set_s errors;
+	getErrorCodes(&errors);
+
+	for (int i = 0; i < errors.count; i++) {
+		if (errors.error_codes[i] == code) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static constexpr ObdCode throttleJamCode = ObdCode::OBD_Throttle_Actuator_Control_Throttle_Body_Range_Performance;
+static constexpr ObdCode wastegateJamCode = ObdCode::OBD_Wastegate_Solenoid_A_Range_Performance;
+
+// Runs a controller through its full update() loop, as the ETB thread does
+class EtbJam : public ::testing::Test {
+protected:
+	EngineTestHelper eth{engine_type_e::TEST_ENGINE};
+	MockIgnitionController ignController;
+	::testing::NiceMock<MockMotor> motor;
+	::testing::NiceMock<MockVp3d> pedalMap;
+	pid_s pid = {};
+	EtbController etb;
+
+	void SetUp() override {
+		clearWarnings();
+
+		EXPECT_CALL(ignController, getIgnState).WillRepeatedly(Return(true));
+		engine->module<IgnitionController>().set(&ignController);
+		getLimpManager()->onIgnitionStateChanged(true);
+
+		Sensor::setMockValue(SensorType::Tps1Primary, 0);
+		Sensor::setMockValue(SensorType::Tps1, 50, true);
+		Sensor::setMockValue(SensorType::AcceleratorPedal, 50, true);
+		Sensor::setMockValue(SensorType::WastegatePosition, 50);
+		ON_CALL(pedalMap, getValue).WillByDefault(Return(50));
+
+		engineConfiguration->etbJamDetectThreshold = 5;
+		engineConfiguration->etbJamTimeout = 1;
+		engineConfiguration->disableEtbWhenEngineStopped = false;
+		engine->etbAutoTune = false;
+
+		pid.pFactor = 1;
+		pid.minValue = -100;
+		pid.maxValue = 100;
+
+		setTimeNowUs(0);
+	}
+
+	// Steps the loop in 10ms increments from the current time
+	void runFor(float seconds) {
+		int steps = seconds * 100;
+		for (int i = 0; i < steps; i++) {
+			advanceTimeUs(10'000);
+			etb.update();
+		}
+	}
+
+	// Is fuel cut at this RPM because of the fault RPM limit?
+	bool faultRevLimitAt(float rpm) {
+		getLimpManager()->updateState(rpm, getTimeNowNt());
+		auto inj = getLimpManager()->allowInjection();
+		return !inj && inj.reason == ClearReason::FaultRevLimit;
+	}
+};
+
+TEST_F(EtbJam, throttleJamDisablesAndLatches) {
+	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &pid, &pedalMap, true));
+
+	// Tracking the 50% target, motor running
+	EXPECT_CALL(motor, enable()).Times(::testing::AtLeast(1));
+	runFor(0.5);
+	EXPECT_NEAR(etb.m_adjustedTarget, 50, 0.1);
+	::testing::Mock::VerifyAndClearExpectations(&motor);
+
+	// Throttle sticks at 20%: just under the timeout, nothing yet
+	Sensor::setMockValue(SensorType::Tps1, 20, true);
+	runFor(0.95);
+	EXPECT_FALSE(etb.jamDetected);
+	EXPECT_TRUE(getLimpManager()->allowElectronicThrottle());
+	EXPECT_EQ(etb.etbErrorCode, (int8_t)TpsState::None);
+	EXPECT_FALSE(hasStoredDtc(throttleJamCode));
+	::testing::Mock::VerifyAndClearExpectations(&motor);
+
+	// Past the timeout it trips, then stays off
+	EXPECT_CALL(motor, disable(_)).Times(::testing::AtLeast(1));
+	runFor(0.1);
+	EXPECT_TRUE(etb.jamDetected);
+	EXPECT_FALSE(getLimpManager()->allowElectronicThrottle());
+	EXPECT_TRUE(hasStoredDtc(throttleJamCode));
+	::testing::Mock::VerifyAndClearExpectations(&motor);
+
+	// Even once the throttle reads OK again, the motor stays off and the indication stays up
+	Sensor::setMockValue(SensorType::Tps1, 50, true);
+	EXPECT_CALL(motor, enable()).Times(0);
+	EXPECT_CALL(motor, disable(_)).Times(500);
+	runFor(5);
+	EXPECT_TRUE(etb.jamDetected);
+	EXPECT_EQ(etb.etbErrorCode, (int8_t)TpsState::Jammed);
+	// The timer holds what it tripped at
+	EXPECT_NEAR(etb.jamTimer, 1, 0.02);
+	EXPECT_FALSE(getLimpManager()->allowElectronicThrottle());
+	EXPECT_TRUE(hasStoredDtc(throttleJamCode));
+
+	// Fault RPM limit cuts fuel above 1500 RPM
+	EXPECT_TRUE(faultRevLimitAt(2000));
+	EXPECT_FALSE(faultRevLimitAt(1000));
+}
+
+TEST_F(EtbJam, throttleJamShowsLimpOnOtherThrottle) {
+	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &pid, &pedalMap, true));
+
+	Sensor::setMockValue(SensorType::Tps2Primary, 0);
+	Sensor::setMockValue(SensorType::Tps2, 50, true);
+	::testing::NiceMock<MockMotor> motor2;
+	EtbController etb2;
+	ASSERT_TRUE(etb2.init(DC_Throttle2, &motor2, &pid, &pedalMap, true));
+
+	Sensor::setMockValue(SensorType::Tps1, 20, true);
+	runFor(1.1);
+	ASSERT_TRUE(etb.jamDetected);
+
+	EXPECT_CALL(motor2, enable()).Times(0);
+	etb2.update();
+	EXPECT_FALSE(etb2.jamDetected);
+	EXPECT_EQ(etb2.etbErrorCode, (int8_t)TpsState::Limp);
+}
+
+TEST_F(EtbJam, wastegateJamDoesNotDisableThrottle) {
+	ASSERT_TRUE(etb.init(DC_Wastegate, &motor, &pid, nullptr, false));
+	etb.setWastegatePosition(50);
+
+	// Wastegate sticks at 20% of a 50% target
+	Sensor::setMockValue(SensorType::WastegatePosition, 20);
+	runFor(1.1);
+	EXPECT_TRUE(etb.jamDetected);
+	EXPECT_TRUE(hasStoredDtc(wastegateJamCode));
+	EXPECT_FALSE(hasStoredDtc(throttleJamCode));
+
+	// Wastegate motor latched off, even once it reads OK
+	Sensor::setMockValue(SensorType::WastegatePosition, 50);
+	EXPECT_CALL(motor, enable()).Times(0);
+	EXPECT_CALL(motor, disable(_)).Times(100);
+	runFor(1);
+	EXPECT_TRUE(etb.jamDetected);
+	EXPECT_EQ(etb.etbErrorCode, (int8_t)TpsState::Jammed);
+
+	// Throttle not inhibited, no fault RPM limit
+	EXPECT_TRUE(getLimpManager()->allowElectronicThrottle());
+	EXPECT_FALSE(faultRevLimitAt(2000));
+
+	StrictMock<MockMotor> throttleMotor;
+	EtbController throttle;
+	ASSERT_TRUE(throttle.init(DC_Throttle1, &throttleMotor, &pid, &pedalMap, true));
+	EXPECT_CALL(throttleMotor, enable());
+	EXPECT_CALL(throttleMotor, set(_));
+	throttle.update();
+	EXPECT_EQ(throttle.etbErrorCode, (int8_t)TpsState::None);
+}
+
+TEST_F(EtbJam, noFalseTripInNormalOperation) {
+	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &pid, &pedalMap, true));
+
+	EXPECT_CALL(motor, disable(_)).Times(0);
+
+	// Tracking within the threshold
+	Sensor::setMockValue(SensorType::Tps1, 46, true);
+	runFor(3);
+
+	// Repeated transients over the threshold, each shorter than the timeout
+	for (int i = 0; i < 5; i++) {
+		Sensor::setMockValue(SensorType::Tps1, 20, true);
+		runFor(0.8);
+		Sensor::setMockValue(SensorType::Tps1, 50, true);
+		runFor(0.1);
+	}
+
+	EXPECT_FALSE(etb.jamDetected);
+	EXPECT_EQ(etb.etbErrorCode, (int8_t)TpsState::None);
+	EXPECT_TRUE(getLimpManager()->allowElectronicThrottle());
+	EXPECT_FALSE(hasStoredDtc(throttleJamCode));
+	EXPECT_FALSE(faultRevLimitAt(2000));
+}
+
+TEST_F(EtbJam, noTripOnFirstLoopWithLargeError) {
+	// Pedal held down at key-on: the throttle hasn't moved yet on the first loop
+	Sensor::setMockValue(SensorType::Tps1, 0, true);
+	setTimeNowUs(100'000'000);
+	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &pid, &pedalMap, true));
+
+	etb.update();
+	EXPECT_FALSE(etb.jamDetected);
+	EXPECT_TRUE(getLimpManager()->allowElectronicThrottle());
+}
+
+TEST_F(EtbJam, ignoreJamProtectionDisablesDetection) {
+	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &pid, &pedalMap, true));
+	engine->etbIgnoreJamProtection = true;
+
+	EXPECT_CALL(motor, disable(_)).Times(0);
+	Sensor::setMockValue(SensorType::Tps1, 20, true);
+	runFor(3);
+
+	EXPECT_FALSE(etb.jamDetected);
+	EXPECT_EQ(etb.jamTimer, 0);
+	EXPECT_TRUE(getLimpManager()->allowElectronicThrottle());
+	EXPECT_FALSE(hasStoredDtc(throttleJamCode));
+	EXPECT_FALSE(faultRevLimitAt(2000));
 }

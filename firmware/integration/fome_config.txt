@@ -413,7 +413,7 @@ bit disableFan2WhenStopped;Inhibit operation of this fan while the engine is not
 bit fan1UsePwmMode,"PWM","On/Off";Use PWM mode for fan 1 instead of on/off.
 bit fan2UsePwmMode,"PWM","On/Off";Use PWM mode for fan 2 instead of on/off.
 bit enableTrailingSparks;Enable secondary spark outputs that fire after the primary (rotaries, twin plug engines).
-bit etb_use_two_wires;TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do NOT use two wire mode.
+bit etb_use_two_wires;Two-wire mode: both direction pins carry the PWM, one to open and one to close, and the control pin is an on/off enable. TLE7209 uses two-wire mode. TLE9201 and VNH2SP30 do not.
 bit isDoubleSolenoidIdle;Subaru/BMW style where default valve position is somewhere in the middle. First solenoid opens it more while second can close it more than default position.
 bit enableStagedInjection
 bit useTLE8888_cranking_hack;
@@ -590,10 +590,10 @@ struct idle_hardware_s
 end_struct
 
 struct dc_io
-	Gpio directionPin1;
-	Gpio directionPin2;
-	Gpio controlPin;Acts as EN pin in two-wire mode
-	Gpio disablePin;
+	Gpio directionPin1;H-bridge direction input 1. Switched on or off to set which way the motor turns, or carries the PWM in two-wire mode.
+	Gpio directionPin2;H-bridge direction input 2. Works the same way as direction input 1, for the other direction.
+	Gpio controlPin;H-bridge PWM input. In two-wire mode it is a plain on/off enable instead.
+	Gpio disablePin;Optional H-bridge disable output. Driven high while the motor is off, and low while it is being driven.
 end_struct
 	
 	idle_hardware_s idle;
@@ -703,9 +703,9 @@ bit is_enabled_spi_2
 	bit disableFuelCutOnClutch;True: Inhibits DFCO from activating when the clutch is pressed. This helps prevent transient knock during shifts. Uses the clutch position sensor if fitted, otherwise the clutch up and down switches.\nFalse: Do not take clutch state into account.
 	bit useIacTableForCoasting;Override the IAC position during overrun conditions to help reduce engine braking, this can be helpful for large engines in light weight cars or engines that have trouble returning to idle.
 	bit useIdleTimingPidControl;Adjust ignition timing to hold the idle target RPM. Timing changes torque much faster than idle air, so this catches RPM changes the air control is too slow for. Only active while idling.
-	bit disableEtbWhenEngineStopped;Allows disabling the ETB when the engine is stopped. You may not like the power draw or PWM noise from the motor, so this lets you turn it off until it's necessary.
+	bit disableEtbWhenEngineStopped;Turn the throttle motor off while the engine isn't turning, to save power and stop motor noise. PID autotune can't run while this is on.
 	bit is_enabled_spi_4
-	bit pauseEtbControl;Disable the electronic throttle motor and DC idle motor for testing.\nThis mode is for testing ETB/DC idle position sensors, etc without actually driving the throttle.
+	bit pauseEtbControl;Never drive the electronic throttle motors, for testing the throttle position sensors without the throttle moving. Doesn't affect an electric wastegate. Auto calibrate still moves the throttle.
 	bit alignEngineSnifferAtTDC
 	bit useTableForDfcoMap,"Table","Fixed";Fixed: MAP threshold cut fuel when conditions are met\nTable: Use a curve to vary the MAP threshold based on engine RPM
 	bit postCrankingFuelUseTable,"Table","Basic";Basic: Add a fixed percent of added fuel and taper over time\nTable: Use a 3d map to set the added fuel multiplier by CLT and Runtime
@@ -757,8 +757,8 @@ output_pin_e acFanPin;Optional Radiator Fan used with A/C
 	uint8_t mapMinBufferLength;This many MAP samples are used to estimate the current MAP. This many samples are considered, and the minimum taken. Recommended value is 1 for single-throttle engines, and your number of cylinders for individual throttle bodies.;"count", 1, 0, 1, 24, 0
 	int16_t idlePidDeactivationTpsThreshold;Above this throttle position, the engine never counts as idling. If you have an electronic throttle, this checks accelerator pedal position instead of throttle position, and should be set to 1-2%.;"%", 1, 0, 0, 50, 0
 	int16_t stepperParkingExtraSteps;Extra steps to drive past the end of travel when parking the idle stepper, as a percentage of 'Stepper total steps'.;"%", 1, 0, 0, 3000, 0
-	uint16_t tps1SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
-	uint16_t tps1SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps1SecondaryMin;Second sensor reading with the throttle closed, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps1SecondaryMax;Second sensor reading with the throttle wide open, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
 	int16_t antiLagRpmTreshold;;"rpm", 1, 0, 0, 20000, 0
 	uint16_t startCrankingDuration;Maximum time to crank starter when start/stop button is pressed;"Seconds", 1, 0, 0, 30, 0
 
@@ -873,7 +873,7 @@ bit verboseCan2,"Print all","Do not print";Print incoming and outgoing second bu
 	vehicle_info_t vehicleName;For example, Hunchback or Orange Miata\nVehicle name has to be unique between your vehicles.
 
 	custom dc_function_e 1 bits, U08, @OFFSET@, [0:1], "None", "Throttle 1", "Throttle 2", "Wastegate"
-	dc_function_e[ETB_COUNT iterate] etbFunctions
+	dc_function_e[ETB_COUNT iterate] etbFunctions;What this H-bridge drives: an electronic throttle or an electric wastegate. 'None' leaves its pins untouched, for example for Lua.
 
 	Gpio       drv8860_cs;
 	pin_output_mode_e drv8860_csPinMode;
@@ -891,8 +891,8 @@ custom idle_mode_e 1 bits, U08, @OFFSET@, [0:0], "Open Loop + Closed Loop", "Ope
 
     gppwm_note_t[GPPWM_CHANNELS iterate] gpPwmNote;
 
-	uint16_t tps2SecondaryMin;;"ADC", 1, 0, 0, 1000, 0
-	uint16_t tps2SecondaryMax;;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps2SecondaryMin;Second throttle body, second sensor reading with the throttle closed, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
+	uint16_t tps2SecondaryMax;Second throttle body, second sensor reading with the throttle wide open, 1 volt = 200 units;"ADC", 1, 0, 0, 1000, 0
 
 	bit revLimitUseTable,"yes","no";If enabled, look up the RPM limit from a table with selectable axes instead of a constant value. When the CLT curve is also enabled, the lower limit applies. Invalid axis readings use 0.
 	bit fuelClosedLoopCorrectionEnabled;Enables short term fuel trim, which corrects fuelling towards the target lambda using lambda sensor feedback.
@@ -994,8 +994,8 @@ custom pin_mode_e 1 bits, U08, @OFFSET@, [0:6], @@pin_mode_e_enum@@
 	pid_s alternatorControl;
 	pid_s etb;
 	brain_input_pin_e turboSpeedSensorInputPin;
-int16_t tps2Min;;"ADC", 1, 0, 0, 1023, 0
-int16_t tps2Max;;"ADC", 1, 0, 0, 1023, 0
+int16_t tps2Min;Second throttle body, closed throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
+int16_t tps2Max;Second throttle body, full throttle, 1 volt = 200 units;"ADC", 1, 0, 0, 1023, 0
 	output_pin_e starterControlPin
 	pin_input_mode_e startStopButtonMode;
 
@@ -1142,7 +1142,7 @@ tle8888_mode_e tle8888mode;
 	ThermistorConf auxTempSensor1
 	ThermistorConf auxTempSensor2
 	int16_t knockSamplingDuration;;"Deg", 1, 0, 0, 720, 0
-	int16_t etbFreq;;"Hz", 1, 0, 0, @@ETB_HW_MAX_FREQUENCY@@, 0
+	int16_t etbFreq;PWM frequency of the electronic throttle H-bridges, also used by an idle stepper driven from H-bridges. Values below 100 Hz are raised to 100 Hz.;"Hz", 1, 0, 0, @@ETB_HW_MAX_FREQUENCY@@, 0
 	pid_s etbWastegatePid;
 
 #define stepper_num_micro_steps_e_enum "Full-Step (Default)", "INVALID", "Half-Step", "INVALID", "1/4 Micro-Step", "INVALID", "INVALID", "INVALID", "1/8 Micro-Step"
@@ -1208,7 +1208,7 @@ tChargeMode_e tChargeMode;
 	int16_t vvtControlMinRpm;VVT control stays off until RPM is above this.;"RPM", 1, 0, 0, 3000, 0
 
 	int8_t launchFuelAdderPercent;;"%", 1, 0, 0, 100, 0
-	uint8_t autoscale etbJamTimeout;Time after which the throttle is considered jammed.;"sec", 0.02, 0, 0, 5, 2
+	uint8_t autoscale etbJamTimeout;How long the position error must stay above 'Jam detection error max' before the throttle counts as jammed. 0 disables jam detection.;"sec", 0.02, 0, 0, 5, 2
 
 	int16_t coastingFuelCutRpmHigh;This sets the RPM above which fuel cut is active.;"rpm", 1, 0, 0, 5000, 0
 	int16_t coastingFuelCutRpmLow;This sets the RPM below which fuel cut is deactivated, this prevents jerking or issues transitioning to idle;"rpm", 1, 0, 0, 5000, 0
@@ -1235,8 +1235,8 @@ float tChargeAirFlowMax;High flow point for heat transfer estimation.\nSet this 
 float tChargeAirIncrLimit;Maximum allowed rate of increase allowed for the estimated charge temperature;"deg/sec", 1, 0, 0, 100, 1
 float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estimated charge temperature;"deg/sec", 1, 0, 0, 100, 1
 
-	int16_t etb_iTermMin;iTerm min value;"", 1, 0, -30000, 30000, 0
-	int16_t etb_iTermMax;iTerm max value;"", 1, 0, -30000, 30000, 0
+	int16_t etb_iTermMin;Lower limit of the ETB PID integral (I) term, in % duty.;"", 1, 0, -30000, 30000, 0
+	int16_t etb_iTermMax;Upper limit of the ETB PID integral (I) term, in % duty.;"", 1, 0, -30000, 30000, 0
 
 	pid_s idleTimingPid
 
@@ -1257,7 +1257,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 
 
-	float etbIdleThrottleRange;This sets the range of the idle control on the ETB. At 100% idle position, the value specified here sets the base ETB position.;"%", 1, 0, 0, 30, 0
+	float etbIdleThrottleRange;Throttle opening added at 100% idle position, scaled down in proportion at lower idle positions. Not used with the torque model.;"%", 1, 0, 0, 30, 0
 
 	uint8_t[MAX_CYLINDER_COUNT iterate] cylinderBankSelect;Select which fuel correction bank this cylinder belongs to. Group cylinders that share the same O2 sensor;"", 1, 1, 1, 4, 0
 
@@ -1289,7 +1289,7 @@ float tChargeAirDecrLimit;Maximum allowed rate of decrease allowed for the estim
 
 	uint16_t autoscale fordInjectorSmallPulseBreakPoint;;"mg", 0.001, 0, 0, 65, 3
 
-	uint8_t etbJamDetectThreshold;Threshold in ETB error (target vs. actual) above which the jam timer is started. If the timer reaches the time specified in the jam detection timeout period, the throttle is considered jammed, and engine operation limited.;"%", 1, 0, 0, 50, 0
+	uint8_t etbJamDetectThreshold;Position error (target vs. actual) above which the jam timer runs. If it runs for the jam detection timeout period, the throttle motors are turned off, fuel is cut above 1500 RPM and P2119 is set, until the ECU restarts. A jammed DC wastegate only turns off the wastegate motor and sets P0244. 0 disables jam detection.;"%", 1, 0, 0, 50, 0
 
 ! Someday there will be a 6th option for BMW S55 that uses a separate shaft just for HPFP
 #define hpfp_cam_e_enum "NONE", "Intake 1", "Exhaust 1", "Intake 2", "Exhaust 2"
@@ -1366,7 +1366,7 @@ uint8_t alsEtbPosition;;"", 1, 0, 0, 20000, 0
 	custom WidebandMode 1 bits, S08, @OFFSET@, [0:1], "Analog", "FOME Internal (CAN)", "AEM X-Series (CAN)"
 	WidebandMode widebandMode;Select which type of wideband O2 controller you're using.
 
-	uint8_t autoscale tpsSecondaryMaximum;For Ford TPS, use 53%. For Toyota ETCS-i, use ~65%. 0 and 100 disable, <20 invalid, rest will avoid sensor averaging.;"%", 0.5, 0, 0, 100, 1
+	uint8_t autoscale tpsSecondaryMaximum;Partial redundancy: first throttle sensor position at which the secondary sensor reaches its maximum. For Ford, use about 53. For Toyota ETCS-i, use about 65. 0 or 100 means both sensors travel the full range. Values under 20 are raised to 20.;"%", 0.5, 0, 0, 100, 1
 	uint8_t autoscale ppsSecondaryMaximum;Partial redundancy: how far the secondary pedal sensor travels as a percent of the primary. For Toyota ETCS-i, use about 69. 0 or 100 means both sensors travel the full range. Values under 20 are raised to 20.;"%", 0.5, 0, 0, 100, 1
 pin_input_mode_e[LUA_DIGITAL_INPUT_COUNT iterate] luaDigitalInputPinModes;
 

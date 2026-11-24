@@ -108,6 +108,7 @@ or
  - The first injection after a fuel cut (such as decel fuel cut) is now timed correctly. Previously, with injection timed by end or centre of injection, it could end a whole pulse late.
  - Multispark now fires all of its extra sparks, each with the configured multispark dwell. Previously the first extra spark was held back until it had charged for most of the main spark's dwell, and the rest were dropped, so at most one extra spark fired.
  - "Minimum oil pressure after start" no longer cuts fuel 5 seconds after every start when the oil pressure sensor has failed (for example a broken wire). It now only cuts when a working sensor shows no oil pressure. The failed sensor is still reported by its own fault code.
+ - A jammed electronic throttle now stays visible until the ECU restarts
 
 ## May 2026 Release
 
