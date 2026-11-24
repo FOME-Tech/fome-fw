@@ -34,6 +34,7 @@ or
  - Removed the explicit threshold for the closed loop fuel idle region. Instead, the idle region is used whenever the idle controller decides the engine is idling, as this better matches behaviors like idle-up when cold, return to idle, etc.
  - MAF trim is split out as its own table, rather than sharing the VE table. Most setups should have this table set to all 100, but if yours isn't, just copy values over from the VE table.
  - "Extra idle air if throttle pressed" is replaced by "Dashpot air". The extra air is now also held while coasting (unless the coasting table is used), and is ramped out on return to idle instead of being removed at once. If you used it, re-enter the value under the new name. The hidden "air by RPM taper" settings are removed.
+ - Improved filtering of vehicle speed, aux speed and turbo speed sensors: smoother readings that respond equally fast at any speed, and a stopped sensor reads 0 instead of an error. The old filter settings are replaced by an averaging window in milliseconds, so check them if you had changed them from the defaults.
 
 ### Added
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
