@@ -69,6 +69,27 @@ TEST_F(SensorBasic, DoubleRegisterSameSensor) {
 	EXPECT_EQ(shouldBeDut, &dut);
 }
 
+TEST_F(SensorBasic, Unregister) {
+	MockSensor dut1(SensorType::Tps1);
+	MockSensor dut2(SensorType::Tps1);
+
+	EXPECT_FALSE(Sensor::hasSensor(SensorType::Tps1));
+
+	EXPECT_TRUE(dut1.Register());
+	EXPECT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+	EXPECT_EQ(Sensor::getSensorOfType(SensorType::Tps1), &dut1);
+
+	// unregister() on an unregistered sensor does nothing
+	dut2.unregister();
+	EXPECT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+	EXPECT_EQ(Sensor::getSensorOfType(SensorType::Tps1), &dut1);
+
+	// unregister() on a registered sensor removes it
+	dut1.unregister();
+	EXPECT_FALSE(Sensor::hasSensor(SensorType::Tps1));
+	EXPECT_EQ(Sensor::getSensorOfType(SensorType::Tps1), nullptr);
+}
+
 TEST_F(SensorBasic, SensorNotInitialized) {
 	auto result = Sensor::get(SensorType::Clt);
 

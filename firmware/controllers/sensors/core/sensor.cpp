@@ -133,7 +133,11 @@ bool Sensor::Register() {
 }
 
 void Sensor::unregister() {
-	s_sensorRegistry[getIndex()].unregister();
+	auto& entry = s_sensorRegistry[getIndex()];
+
+	if (entry.getSensor() == this) {
+		entry.unregister();
+	}
 }
 
 /*static*/ void Sensor::resetRegistry() {
