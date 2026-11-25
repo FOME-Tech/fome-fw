@@ -175,6 +175,8 @@ EnginePins::EnginePins()
 	, fuelPumpRelay("Fuel pump Relay", CONFIG_PIN_OFFSETS(fuelPump))
 	, harleyAcr("Harley ACR", CONFIG_OFFSET(acrPin))
 	, harleyAcr2("Harley ACR 2", CONFIG_OFFSET(acrPin2))
+	, o2heater("O2 heater", CONFIG_OFFSET(o2heaterPin))
+	, debugTriggerSync("debug: sync", CONFIG_OFFSET(debugTriggerSync))
 	, boostPin("Boost", CONFIG_PIN_OFFSETS(boostControl))
 	, idleSolenoidPin("Idle Valve", CONFIG_OFFSET2(idle, solenoidPin), CONFIG_OFFSET2(idle, solenoidPinMode))
 	, secondIdleSolenoidPin("Idle Valve#2", CONFIG_OFFSET(secondSolenoidPin), CONFIG_OFFSET2(idle, solenoidPinMode))
@@ -507,13 +509,6 @@ void initOutputPins() {
 #if HAL_USE_SPI
 	enginePins.sdCsPin.initPin("SD CS", engineConfiguration->sdCardCsPin);
 #endif /* HAL_USE_SPI */
-
-#if EFI_SHAFT_POSITION_INPUT
-	// todo: migrate remaining OutputPin to RegisteredOutputPin in order to get consistent dynamic pin init/deinit
-	enginePins.debugTriggerSync.initPin("debug: sync", engineConfiguration->debugTriggerSync);
-#endif // EFI_SHAFT_POSITION_INPUT
-
-	enginePins.o2heater.initPin("O2 heater", engineConfiguration->o2heaterPin);
 }
 
 void OutputPin::initPin(const char* msg, brain_pin_e brainPin) {

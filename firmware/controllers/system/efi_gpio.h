@@ -69,7 +69,7 @@ public:
 	RegisteredOutputPin fuelPumpRelay;
 	RegisteredOutputPin harleyAcr;
 	RegisteredOutputPin harleyAcr2;
-	OutputPin o2heater;
+	RegisteredOutputPin o2heater;
 	OutputPin luaOutputPins[LUA_PWM_COUNT];
 
 	/**
@@ -80,7 +80,7 @@ public:
 	OutputPin warningLedPin;	   // orange LED on brain board by default
 	OutputPin runningLedPin;	   // green LED on brain board by default
 
-	OutputPin debugTriggerSync;
+	RegisteredOutputPin debugTriggerSync;
 	RegisteredOutputPin boostPin;
 	RegisteredOutputPin idleSolenoidPin;
 	RegisteredOutputPin secondIdleSolenoidPin;
