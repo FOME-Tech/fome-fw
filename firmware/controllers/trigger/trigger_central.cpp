@@ -880,6 +880,15 @@ static void calculateTriggerSynchPoint(
 		return;
 	}
 
+	if (shape.getLength() > TRIGGER_CYCLE_MAX_EVENTS) {
+		firmwareError(
+				ObdCode::CUSTOM_ERR_TRIGGER_WAVEFORM_TOO_LONG,
+				"Trigger cycle length above maximum: %d",
+				shape.getLength());
+		shape.setShapeDefinitionError(true);
+		return;
+	}
+
 	if (shape.getSize() == 0) {
 		firmwareError(ObdCode::CUSTOM_ERR_TRIGGER_ZERO, "triggerShape size is zero");
 	}

@@ -315,8 +315,6 @@ constexpr inline const char* getTrigger_type_e(trigger_type_e value) {
 			return "TT_12_TOOTH_CRANK";
 		case trigger_type_e::TT_1_16:
 			return "TT_1_16";
-		case trigger_type_e::TT_2JZ_3_34:
-			return "TT_2JZ_3_34";
 		case trigger_type_e::TT_36_2_1:
 			return "TT_36_2_1";
 		case trigger_type_e::TT_36_2_1_1:
@@ -445,12 +443,14 @@ constexpr inline const char* getTrigger_type_e(trigger_type_e value) {
 			return "TT_TOOTHED_WHEEL_36_2";
 		case trigger_type_e::TT_TOOTHED_WHEEL_60_2:
 			return "TT_TOOTHED_WHEEL_60_2";
-		case trigger_type_e::TT_TRI_TACH:
-			return "TT_TRI_TACH";
 		case trigger_type_e::TT_UNUSED:
 			return "TT_UNUSED";
 		case trigger_type_e::TT_UNUSED_17:
 			return "TT_UNUSED_17";
+		case trigger_type_e::TT_UNUSED_25:
+			return "TT_UNUSED_25";
+		case trigger_type_e::TT_UNUSED_53:
+			return "TT_UNUSED_53";
 		case trigger_type_e::TT_VIPER_V10_CRANK:
 			return "TT_VIPER_V10_CRANK";
 		case trigger_type_e::TT_VVT_BARRA_3_PLUS_1:

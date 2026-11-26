@@ -29,7 +29,6 @@
 #include "trigger_subaru.h"
 #include "trigger_suzuki.h"
 #include "trigger_structure.h"
-#include "trigger_toyota.h"
 #include "trigger_renix.h"
 #include "trigger_rover.h"
 #include "trigger_honda.h"
@@ -584,6 +583,8 @@ void TriggerWaveform::initializeTriggerWaveform(
 
 		case trigger_type_e::TT_ONE:
 		case trigger_type_e::TT_UNUSED_17:
+		case trigger_type_e::TT_UNUSED_25:
+		case trigger_type_e::TT_UNUSED_53:
 			initializeSkippedToothTrigger(this, 1, 0, triggerOperationMode, SyncEdge::Rise);
 			break;
 
@@ -718,10 +719,6 @@ void TriggerWaveform::initializeTriggerWaveform(
 			initialize36_2_2_2(this);
 			break;
 
-		case trigger_type_e::TT_2JZ_3_34:
-			initialize2jzGE3_34_simulation_shape(this);
-			break;
-
 		case trigger_type_e::TT_12_TOOTH_CRANK:
 			configure12ToothCrank(this);
 			break;
@@ -736,10 +733,6 @@ void TriggerWaveform::initializeTriggerWaveform(
 
 		case trigger_type_e::TT_FIAT_IAW_P8:
 			configureFiatIAQ_P8(this);
-			break;
-
-		case trigger_type_e::TT_TRI_TACH:
-			configureTriTach(this);
 			break;
 
 		case trigger_type_e::TT_GM_24x:

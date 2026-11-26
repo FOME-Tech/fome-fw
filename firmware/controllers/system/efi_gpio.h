@@ -24,22 +24,27 @@ class IgnitionOutputPin : public NamedOutputPin {};
 /**
  * OutputPin with semi-automated init/deinit on configuration change
  */
-class RegisteredOutputPin : public virtual OutputPin {
+class RegisteredOutputPin : public OutputPin {
 public:
 	RegisteredOutputPin(const char* registrationName, size_t pinOffset, size_t pinModeOffset);
 	RegisteredOutputPin(const char* registrationName, size_t pinOffset);
 	void init();
 	void unregister();
-	RegisteredOutputPin* const next;
 	const char* getRegistrationName() const {
 		return m_registrationName;
 	}
 
 private:
-	const char* const m_registrationName;
+	// Small fields first so they pack into OutputPin's tail padding
 	const uint16_t m_pinOffset;
-	const bool m_hasPinMode;
 	const uint16_t m_pinModeOffset;
+	const bool m_hasPinMode;
+
+public:
+	RegisteredOutputPin* const next;
+
+private:
+	const char* const m_registrationName;
 	bool isPinConfigurationChanged();
 };
 class EnginePins {

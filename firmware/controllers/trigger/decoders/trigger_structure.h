@@ -14,6 +14,10 @@
 #include "engine_configuration_generated_structures.h"
 #include "engine_state.h"
 
+// Maximum events in one engine cycle, which may be several revolutions of the wheel (see getLength()).
+// The largest built-in pattern is Renix 66-2-2-2 at 252, and a 60 tooth custom wheel on the crank is 240.
+#define TRIGGER_CYCLE_MAX_EVENTS (2 * PWM_PHASE_MAX_COUNT)
+
 #define FOUR_STROKE_ENGINE_CYCLE 720
 
 #define TRIGGER_GAP_DEVIATION 0.25f
@@ -280,5 +284,5 @@ public:
 	 * These angles are in event coordinates - with synchronization point located at angle zero.
 	 * These values are pre-calculated for performance reasons.
 	 */
-	angle_t eventAngles[2 * PWM_PHASE_MAX_COUNT];
+	angle_t eventAngles[TRIGGER_CYCLE_MAX_EVENTS];
 };
