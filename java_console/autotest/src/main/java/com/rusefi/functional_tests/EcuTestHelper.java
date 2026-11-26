@@ -39,6 +39,7 @@ public class EcuTestHelper {
     };
     private static final Logging log = getLogging(EcuTestHelper.class);
     private static final int BURN_FLASH_TIMEOUT_SEC = 10;
+    private static final int TEXT_TIMEOUT_SEC = 5;
     private static final int COMMUNICATION_TIMEOUT_SEC = 60;
 
     public static int currentEngineType;
@@ -173,6 +174,25 @@ public class EcuTestHelper {
     }
 
     /**
+     * Write an enum field by the name TunerStudio shows for the value, e.g. a pin by its connector name
+     * ({@link com.rusefi.Rig#CRANK_OUT}), without burning
+     */
+    public void setField(Field field, String enumValueName) {
+        setField(field, field.enumIndex(enumValueName));
+    }
+
+    /**
+     * The TunerStudio name of an enum field's value in our copy of the tune
+     */
+    public String getFieldName(Field field) {
+        int value = (int) getField(field);
+        String name = field.enumName(value);
+        if (name == null)
+            throw new IllegalStateException(field.getName() + " has value " + value + ", outside its list");
+        return name;
+    }
+
+    /**
      * Write a raw (unscaled) value to one field and burn it
      */
     public void setFieldAndBurn(Field field, double rawValue) {
@@ -216,6 +236,34 @@ public class EcuTestHelper {
         }
         if (!flashResult.get().contains("FLASH_SUCCESS"))
             throw new IllegalStateException("ECU failed to burn: " + flashResult.get());
+    }
+
+    /**
+     * A config value as the firmware sees it, by its C name (e.g. "tractionControl.drivenAxleIsFront"), using the
+     * console's 'get' command. That lookup is generated from the C layout, so comparing it with a field written by
+     * offset checks the Java and C layouts agree. Covers scalars and bits, not enums.
+     */
+    public double getFirmwareValue(String cName) {
+        String prefix = cName + " value: ";
+        CountDownLatch received = new CountDownLatch(1);
+        AtomicReference<String> value = new AtomicReference<>();
+        MessagesCentral.MessageListener listener = (clazz, message) -> {
+            if (message.startsWith(prefix)) {
+                value.set(message.substring(prefix.length()).trim());
+                received.countDown();
+            }
+        };
+        MessagesCentral.getInstance().addListener(listener);
+        try {
+            sendCommand("get " + cName);
+            if (!received.await(TEXT_TIMEOUT_SEC, TimeUnit.SECONDS))
+                throw new IllegalStateException("No value for [" + cName + "] in " + TEXT_TIMEOUT_SEC + "s");
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        } finally {
+            MessagesCentral.getInstance().removeListener(listener);
+        }
+        return Double.parseDouble(value.get());
     }
 
     /**

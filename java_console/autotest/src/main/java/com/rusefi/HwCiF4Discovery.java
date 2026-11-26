@@ -1,5 +1,6 @@
 package com.rusefi;
 
+import com.rusefi.common.ConfigFieldsTest;
 import com.rusefi.common.MiscTest;
 import com.rusefi.f4discovery.HighRevTest;
 import com.rusefi.f4discovery.PwmHardwareTest;
@@ -20,7 +21,7 @@ import com.rusefi.io.CommandQueue;
  * 2/22/2015
  */
 public class HwCiF4Discovery {
-    private final static Class[] tests = {MiscTest.class,
+    private final static Class[] tests = {MiscTest.class, ConfigFieldsTest.class,
             PwmHardwareTest.class,
             VssHardwareLoopTest.class,
             HighRevTest.class};

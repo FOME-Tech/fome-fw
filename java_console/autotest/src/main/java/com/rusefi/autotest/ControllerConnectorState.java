@@ -117,6 +117,33 @@ public class ControllerConnectorState {
         }
         if (failure.get() != null)
             throw new IllegalStateException("Connection to " + port + " failed: " + failure.get());
+
+        checkSignature(linkManager.getCurrentStreamState().signature);
+    }
+
+    /**
+     * Tests write the tune by the offsets and pin lists in our generated Fields, which are per board and per
+     * config layout. Refuse to go on against an ECU built for another board or layout, e.g. a jar left over from a
+     * different board's build.
+     */
+    private static void checkSignature(String ecuSignature) {
+        String expected = signatureBoardAndHash(Fields.TS_SIGNATURE);
+        String actual = ecuSignature == null ? null : signatureBoardAndHash(ecuSignature);
+        if (!expected.equals(actual)) {
+            throw new IllegalStateException("ECU signature [" + ecuSignature + "] doesn't match these tests' ["
+                    + Fields.TS_SIGNATURE + "]: rebuild the autotest jar after building this board's firmware");
+        }
+    }
+
+    /**
+     * "rusEFI (FOME) master.2026.11.26.atlas.3912171442" -> "atlas.3912171442": ignore the build date, so firmware
+     * and tests built from the same layout on different days still match
+     */
+    private static String signatureBoardAndHash(String signature) {
+        String[] parts = signature.trim().split("\\.");
+        if (parts.length < 2)
+            return signature.trim();
+        return parts[parts.length - 2] + "." + parts[parts.length - 1];
     }
 
     /**

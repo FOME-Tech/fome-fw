@@ -4,12 +4,15 @@ import com.rusefi.VariableRegistry;
 import com.rusefi.newparse.ParseState;
 import com.rusefi.newparse.layout.*;
 import com.rusefi.newparse.parsing.Definition;
+import com.rusefi.newparse.parsing.EnumValues;
 import com.rusefi.newparse.parsing.Struct;
 import com.rusefi.util.LazyOutputStream;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,15 +23,23 @@ public class JavaFieldsWriter {
     private final int baseOffset;
 
     public JavaFieldsWriter(final String outputFile, int baseOffset) throws IOException {
-        ps = new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile));
+        this(new PrintStreamAlwaysUnix(new LazyOutputStream(outputFile)), classNameOf(outputFile), baseOffset);
+    }
+
+    public JavaFieldsWriter(PrintStream ps, String className, int baseOffset) {
+        this.ps = ps;
         this.baseOffset = baseOffset;
 
-        String className = new File(outputFile).getName();
         ps.println("package com.rusefi.config.generated;");
         ps.println();
         ps.println("import com.rusefi.config.*;");
         ps.println();
-        ps.println("public class " + className.substring(0, className.indexOf('.')) + " {");
+        ps.println("public class " + className + " {");
+    }
+
+    private static String classNameOf(String outputFile) {
+        String fileName = new File(outputFile).getName();
+        return fileName.substring(0, fileName.indexOf('.'));
     }
 
     public void finish() {
@@ -83,10 +94,40 @@ public class JavaFieldsWriter {
         JavaFieldVisitor visitor = new JavaFieldVisitor();
         StructNamePrefixer prefixer = new StructNamePrefixer('_');
 
-        visitor.visitRoot(sl, ps, prefixer);
+        // Fields refer to the enum value lists, which have to be declared first, so buffer the fields
+        ByteArrayOutputStream fields = new ByteArrayOutputStream();
+        PrintStream fieldsPs = new PrintStreamAlwaysUnix(fields);
+        visitor.visitRoot(sl, fieldsPs, prefixer);
+        fieldsPs.flush();
+
+        visitor.enumValues.forEach((enumType, values) -> {
+            ps.print("\tpublic static final String ");
+            ps.print(enumValuesConstant(enumType));
+            ps.print(" = \"");
+            ps.print(javaEscape(String.join("\n", values.names)));
+            ps.println("\";");
+        });
+        ps.print(fields.toString());
+    }
+
+    /**
+     * An enum's value names, newline separated so each list is one string constant: a String[] literal per
+     * enum costs bytecode in the static initializer, which Java caps at 64KB, and pin lists run to hundreds
+     */
+    public static String enumValuesConstant(String enumType) {
+        return "ENUM_VALUES_" + enumType;
+    }
+
+    private static String javaEscape(String s) {
+        return s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
     }
 
     private class JavaFieldVisitor extends ILayoutVisitor {
+        /**
+         * Value lists of the enum types used by the fields written so far, in order of first use
+         */
+        final Map<String, EnumValues> enumValues = new LinkedHashMap<>();
+
         public void visitRoot(StructLayout sl, PrintStream ps, StructNamePrefixer prefixer) {
             sl.children.forEach(c -> c.visit(this, ps, prefixer, 0, new int[0]));
         }
@@ -151,7 +192,29 @@ public class JavaFieldsWriter {
         }
 
         public void visit(BitGroupLayout bitGroup, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-            // ignore bits in the java writer
+            if (arrayDims.length != 0) {
+                throw new IllegalStateException("Java fields don't support arrays of bit groups");
+            }
+
+            for (int i = 0; i < bitGroup.bits.size(); i++) {
+                BitGroupLayout.BitLayout bit = bitGroup.bits.get(i);
+                if (bit.name.contains("unused")) {
+                    continue;
+                }
+
+                String name = prefixer.get(bit.name.toUpperCase());
+                ps.print("\tpublic static final Field ");
+                ps.print(name);
+                ps.print(" = Field.create(\"");
+                ps.print(name);
+                ps.print("\", ");
+                ps.print(bitGroup.offset + offsetAdd);
+                ps.print(", FieldType.BIT, ");
+                ps.print(i);
+                ps.print(").setBaseOffset(");
+                ps.print(baseOffset);
+                ps.println(");");
+            }
         }
 
         public void visit(UnionLayout union, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
@@ -160,7 +223,42 @@ public class JavaFieldsWriter {
         }
 
         public void visit(EnumLayout e, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {
-            // ignore enums in the java writer
+            int count = 1;
+            if (arrayDims.length != 0) {
+                // 1-D arrays only, like pin lists: ignitionPins1..n, numbered like arrays of structs
+                for (int i = 1; i < arrayDims.length; i++) {
+                    if (arrayDims[i] != 1) {
+                        return;
+                    }
+                }
+                count = arrayDims[0];
+            }
+
+            if (e.values != null) {
+                enumValues.putIfAbsent(e.enumType, e.values);
+            }
+
+            String baseName = prefixer.get(e.name.toUpperCase());
+            for (int i = 0; i < count; i++) {
+                String name = arrayDims.length == 0 ? baseName : baseName + (i + 1);
+                ps.print("\tpublic static final Field ");
+                ps.print(name);
+                ps.print(" = Field.create(\"");
+                ps.print(name);
+                ps.print("\", ");
+                ps.print(e.offset + offsetAdd + i * e.getSize());
+                ps.print(", FieldType.");
+                ps.print(toJavaType(e.type.tsType));
+                ps.print(").setBaseOffset(");
+                ps.print(baseOffset);
+                ps.print(")");
+                if (e.values != null) {
+                    ps.print(".setEnumValues(");
+                    ps.print(enumValuesConstant(e.enumType));
+                    ps.print(")");
+                }
+                ps.println(";");
+            }
         }
 
         public void visit(StringLayout str, PrintStream ps, StructNamePrefixer prefixer, int offsetAdd, int[] arrayDims) {

@@ -22,6 +22,11 @@ public class Field {
      * LiveData fragments go one after another in the overall "outputs" region
      */
     private int baseOffset;
+    /**
+     * For an enum field, its value names newline separated (as generated), position = value
+     */
+    private String enumValuesList;
+    private String[] enumValues;
 
     public Field(String name, int offset, FieldType type) {
         this(name, offset, type, NO_BIT_OFFSET);
@@ -158,6 +163,57 @@ public class Field {
 
     public String getName() {
         return name;
+    }
+
+    public Field setEnumValues(String newlineSeparatedNames) {
+        this.enumValuesList = newlineSeparatedNames;
+        this.enumValues = null;
+        return this;
+    }
+
+    public boolean isEnum() {
+        return enumValuesList != null;
+    }
+
+    /**
+     * The names of an enum field's values, as TunerStudio shows them: position = value. Values that mean nothing,
+     * like a pin this board doesn't route anywhere, are named {@link #INVALID_ENUM_NAME}.
+     */
+    public String[] getEnumValues() {
+        if (enumValuesList == null)
+            throw new IllegalStateException(name + " is not an enum field");
+        if (enumValues == null)
+            enumValues = enumValuesList.split("\n", -1);
+        return enumValues;
+    }
+
+    public static final String INVALID_ENUM_NAME = "INVALID";
+
+    /**
+     * @return the value of the enum name, e.g. a pin's TunerStudio name ("Ign 11") to its pin number
+     * @throws IllegalArgumentException if the name is not exactly one of this field's values
+     */
+    public int enumIndex(String valueName) {
+        String[] values = getEnumValues();
+        int found = -1;
+        for (int i = 0; i < values.length; i++) {
+            if (!values[i].equals(valueName))
+                continue;
+            if (found != -1)
+                throw new IllegalArgumentException(name + ": [" + valueName + "] is ambiguous, values " + found + " and " + i);
+            found = i;
+        }
+        if (found == -1 || INVALID_ENUM_NAME.equals(valueName))
+            throw new IllegalArgumentException(name + ": no value named [" + valueName + "]");
+        return found;
+    }
+
+    /**
+     * @return the name of an enum value, or null if it's outside the list
+     */
+    public String enumName(int value) {
+        String[] values = getEnumValues();
+        return value >= 0 && value < values.length ? values[value] : null;
     }
 
     public static Field create(String name, int offset, FieldType type, int bitOffset) {

@@ -27,7 +27,8 @@
 #
 # WSL: the ECU re-enumerates on every reset and on the jump to/from OpenBLT, so it has to be
 # attached with 'usbipd attach --auto-attach --busid <id> --wsl' on the Windows side, or it drops
-# out of WSL at the first reboot.
+# out of WSL at the first reboot. Auto-attach occasionally sticks ("Attach Request ... failed - Device
+# not found"); pressing the ECU's reset button makes it re-enumerate and get picked up.
 
 set -euo pipefail
 
@@ -91,6 +92,8 @@ wait_for_ecu() {
 		if grep -qi microsoft /proc/version; then
 			echo "WSL: if the ECU isn't in lsusb either, usbipd dropped it when it re-enumerated." >&2
 			echo "On Windows: 'usbipd list', then 'usbipd attach --wsl --auto-attach --busid <id>'." >&2
+			echo "If auto-attach is already running but stuck on 'Device not found', press the ECU's" >&2
+			echo "reset button: it re-enumerates and auto-attach picks it up." >&2
 			echo "Then carry on with: $0 $BOARD --no-build --no-flash" >&2
 		fi
 		exit 1
