@@ -268,8 +268,6 @@ enum class trigger_type_e : uint32_t {
 	 */
 	TT_NISSAN_SR20VE = 24,
 
-	TT_2JZ_3_34 = 25,
-
 	TT_ROVER_K = 26,
 
 	TT_HONDA_CBR_600 = 28,

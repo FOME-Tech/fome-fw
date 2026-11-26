@@ -29,7 +29,6 @@
 #include "trigger_subaru.h"
 #include "trigger_suzuki.h"
 #include "trigger_structure.h"
-#include "trigger_toyota.h"
 #include "trigger_renix.h"
 #include "trigger_rover.h"
 #include "trigger_honda.h"
@@ -716,10 +715,6 @@ void TriggerWaveform::initializeTriggerWaveform(
 
 		case trigger_type_e::TT_36_2_2_2:
 			initialize36_2_2_2(this);
-			break;
-
-		case trigger_type_e::TT_2JZ_3_34:
-			initialize2jzGE3_34_simulation_shape(this);
 			break;
 
 		case trigger_type_e::TT_12_TOOTH_CRANK:
