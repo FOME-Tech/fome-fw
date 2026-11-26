@@ -36,7 +36,11 @@
 #include "trigger_universal.h"
 #include "trigger_mercedes.h"
 
-TriggerWaveform::TriggerWaveform() {
+TriggerWaveform::TriggerWaveform(
+		float* switchTimesStorage, uint8_t* waveFormStorage, bool* isRiseEventStorage, size_t capacity)
+	: wave(switchTimesStorage, waveFormStorage)
+	, isRiseEvent(isRiseEventStorage)
+	, m_capacity(capacity) {
 	initialize(OM_NONE, SyncEdge::Rise);
 }
 
@@ -69,7 +73,7 @@ void TriggerWaveform::initialize(operation_mode_e operationMode, SyncEdge syncEd
 	wave.waveCount = TRIGGER_INPUT_PIN_COUNT;
 	wave.phaseCount = 0;
 	previousAngle = 0;
-	setArrayValues(isRiseEvent, 0);
+	memset(isRiseEvent, 0, m_capacity * sizeof(*isRiseEvent));
 #if EFI_UNIT_TEST
 	memset(triggerSignalIndeces, 0, sizeof(triggerSignalIndeces));
 	setArrayValues(triggerSignalStates, 0);
@@ -248,6 +252,15 @@ void TriggerWaveform::addEventAngle(angle_t angle, bool state, TriggerWheel cons
 
 void TriggerWaveform::addEvent(angle_t angle, bool state, TriggerWheel const channelIndex) {
 	efiAssertVoid(ObdCode::CUSTOM_OMODE_UNDEF, m_operationMode != OM_NONE, "operationMode not set");
+
+	if (wave.phaseCount >= m_capacity) {
+		firmwareError(
+				ObdCode::CUSTOM_ERR_TRIGGER_WAVEFORM_TOO_LONG,
+				"Trigger shape has more than %d events",
+				(int)m_capacity);
+		setShapeDefinitionError(true);
+		return;
+	}
 
 	if (channelIndex == TriggerWheel::T_SECONDARY) {
 		needSecondTriggerInput = true;

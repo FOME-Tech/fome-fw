@@ -140,7 +140,8 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform* shape) {
 						ObdCode::OBD_PCM_Processor_Fault,
 						triggerDefinitionIndex < triggerShapeLength,
 						"trigger shape fail");
-				assertIsInBounds(triggerDefinitionIndex, shape->isRiseEvent, "isRise");
+				efiAssertVoid(
+						ObdCode::OBD_PCM_Processor_Fault, triggerDefinitionIndex < shape->getCapacity(), "isRise");
 
 				// In case this is a rising event, replace the following fall event with the rising as well
 				if (shape->isRiseEvent[triggerDefinitionIndex]) {

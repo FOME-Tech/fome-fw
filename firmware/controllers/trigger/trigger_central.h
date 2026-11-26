@@ -147,7 +147,7 @@ public:
 	PrimaryTriggerDecoder triggerState;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-	TriggerWaveform triggerShape;
+	PrimaryTriggerWaveform triggerShape;
 
 	VvtTriggerDecoder vvtState[BANKS_COUNT][CAMS_PER_BANK] = {
 			{"VVT B1 Int",
@@ -164,7 +164,7 @@ public:
 #endif
 	};
 
-	TriggerWaveform vvtShape[CAMS_PER_BANK];
+	CamTriggerWaveform vvtShape[CAMS_PER_BANK];
 
 	TriggerFormDetails triggerFormDetails;
 

@@ -85,7 +85,7 @@ TEST(nissan, vq_vvt) {
 	int cyclesCount = 48;
 
 	{
-		static TriggerWaveform crank;
+		static PrimaryTriggerWaveform crank;
 		initializeNissanVQ35crank(&crank);
 
 		scheduleTriggerEvents(
@@ -102,7 +102,7 @@ TEST(nissan, vq_vvt) {
 	angle_t testVvtOffset = 13;
 
 	{
-		static TriggerWaveform vvt;
+		static PrimaryTriggerWaveform vvt;
 		initializeNissanVQvvt(&vvt);
 
 		scheduleTriggerEvents(
@@ -116,7 +116,7 @@ TEST(nissan, vq_vvt) {
 	}
 
 	{
-		static TriggerWaveform vvt;
+		static PrimaryTriggerWaveform vvt;
 		initializeNissanVQvvt(&vvt);
 
 		scheduleTriggerEvents(
