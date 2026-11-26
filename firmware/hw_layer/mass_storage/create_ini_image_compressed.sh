@@ -62,8 +62,13 @@ mcopy -i $IMAGE hw_layer/mass_storage/filesystem_contents/FOME\ Wiki.url ::
 mcopy -i $IMAGE hw_layer/mass_storage/filesystem_contents/FOME\ Discord.url ::
 mcopy -i $IMAGE hw_layer/mass_storage/filesystem_contents/FOME\ Releases.url ::
 
-# Compress the image as DEFLATE with gzip
-gzip $IMAGE
+# Compress the image as gzip with a 4 KB DEFLATE window. CompressedBlockDevice's dictionary must be at
+# least the window size, and the gzip tool always uses 32 KB.
+python3 -c 'import sys, zlib
+c = zlib.compressobj(9, zlib.DEFLATED, 16 + 12, 9)
+data = open(sys.argv[1], "rb").read()
+open(sys.argv[1] + ".gz", "wb").write(c.compress(data) + c.flush())' $IMAGE
+rm $IMAGE
 
 # write out as a C array, with "static const" tacked on the front
 xxd -i $IMAGE.gz \

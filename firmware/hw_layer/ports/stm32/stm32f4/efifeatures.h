@@ -176,7 +176,7 @@
 #define LUA_USER_HEAP (1 * 1024 * 1024)
 #elif defined(EFI_IS_F42x)
 // F42x has more memory, so we can:
-//  - use compressed USB MSD image (requires 32k of memory)
+//  - use compressed USB MSD image (requires ~7k of memory: decompressor state and dictionary, and a bigger MSD thread stack)
 //  - use perf trace (requires ~16k of memory)
 #define EFI_USE_COMPRESSED_INI_MSD
 #define ENABLE_PERF_TRACE TRUE
