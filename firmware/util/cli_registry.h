@@ -52,7 +52,12 @@ extern "C" {
 void resetConsoleActions(void);
 void helpCommand(void);
 void initConsoleLogic();
-void handleConsoleLine(char* line);
+bool handleConsoleLine(char* line);
+/**
+ * Call from a console command handler to report that it couldn't do what was asked (unknown
+ * setting name, bad value), so that handleConsoleLine() reports the command as failed.
+ */
+void failConsoleCommand();
 void addConsoleAction(const char* token, Void callback);
 void addConsoleActionP(const char* token, VoidPtr callback, void* param);
 

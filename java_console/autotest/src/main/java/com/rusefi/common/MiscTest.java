@@ -10,6 +10,7 @@ import org.junit.Test;
 import static com.devexperts.util.TimeUtil.SECOND;
 import static com.rusefi.IoUtil.sleepSeconds;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class MiscTest extends RusefiTestBase {
     @Test
@@ -39,6 +40,33 @@ public class MiscTest extends RusefiTestBase {
         assertTrue(message, mcuTemp > 10);
         // wow sometimes my utility closet is pretty warm?
         assertTrue(message, mcuTemp < 52);
+    }
+
+    /**
+     * A command the ECU doesn't know, or one whose arguments it rejects, has to fail the test
+     * rather than pass silently
+     */
+    @Test
+    public void testRejectedCommandsFail() {
+        assertRejected("no_such_command");
+        assertRejected("set no_such_setting 1");
+        assertRejected("enable no_such_setting");
+        assertRejected("get no_such_setting");
+        assertRejected("set_idle_pin xyz");
+        assertRejected("set_trigger_input_pin 7 none");
+
+        // and a good command after them still works
+        ecu.sendCommand("set date 2022-12-07T11:14:22");
+    }
+
+    private void assertRejected(String command) {
+        try {
+            ecu.sendCommand(command);
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("rejected"));
+            return;
+        }
+        fail("Expected the ECU to reject [" + command + "]");
     }
 
     @Test

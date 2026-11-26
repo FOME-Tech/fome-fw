@@ -76,16 +76,20 @@ public class BinaryProtocol {
         }
     }
 
+    /**
+     * @throws CommandFailedException if the ECU reported that the command failed
+     */
     public void doSend(final String command, boolean fireEvent) throws InterruptedException {
         log.info("Sending [" + command + "]");
         if (fireEvent && LinkManager.LOG_LEVEL.isDebugEnabled()) {
             communicationLoggingListener.onPortHolderMessage(BinaryProtocol.class, "Sending [" + command + "]");
         }
 
+        final boolean[] rejected = {false};
         Future f = linkManager.submit(new Runnable() {
             @Override
             public void run() {
-                sendTextCommand(command);
+                rejected[0] = !sendTextCommand(command);
             }
 
             @Override
@@ -102,6 +106,8 @@ public class BinaryProtocol {
             log.error("timeout sending [" + command + "] giving up: " + e);
             return;
         }
+        if (rejected[0])
+            throw new CommandFailedException(command);
         /**
          * this here to make CommandQueue happy
          */
@@ -388,18 +394,27 @@ public class BinaryProtocol {
 
     /**
      * This method blocks until a confirmation is received or {@link Timeouts#BINARY_IO_TIMEOUT} is reached
+     *
+     * @return false if the ECU ran the command and reported that it failed. A transport error
+     * (no response, CRC failure etc.) means the command didn't arrive, so that is retried instead.
      */
-    private void sendTextCommand(String text) {
+    private boolean sendTextCommand(String text) {
         byte[] command = getTextCommandBytesOnlyText(text);
 
         long start = System.currentTimeMillis();
         while (!isClosed && (System.currentTimeMillis() - start < Timeouts.BINARY_IO_TIMEOUT)) {
             byte[] response = executeCommand(Fields.TS_EXECUTE, command, "execute");
+            if (response != null && response.length == 1 && extractCode(response) == TS_RESPONSE_UNRECOGNIZED_COMMAND) {
+                log.error("ECU rejected command [" + text + "]");
+                return false;
+            }
             if (!checkResponseCode(response, (byte) Fields.TS_RESPONSE_OK) || response.length != 1) {
                 continue;
             }
-            return;
+            return true;
         }
+        // Gave up; the caller notices the missing confirmation
+        return true;
     }
 
     public static byte[] getTextCommandBytes(String text) {

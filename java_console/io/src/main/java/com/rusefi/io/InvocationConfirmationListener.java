@@ -12,4 +12,10 @@ public interface InvocationConfirmationListener {
     };
 
     void onCommandConfirmation();
+
+    /**
+     * The ECU received the command and reported that it failed, see {@link CommandFailedException}
+     */
+    default void onCommandFailure() {
+    }
 }

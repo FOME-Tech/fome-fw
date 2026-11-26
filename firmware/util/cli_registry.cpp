@@ -514,29 +514,42 @@ static int handleConsoleLineInternal(const char* commandLine, int lineLength) {
 	return handleActionWithParameter(current, argv + 1, argc);
 }
 
+// Set by a handler that found its arguments invalid, see failConsoleCommand().
+// Commands aren't handled concurrently (handleBuffer is shared too), so one flag is enough.
+static bool currentCommandFailed = false;
+
+void failConsoleCommand() {
+	currentCommandFailed = true;
+}
+
 /**
  * @brief This function takes care of one command line once we have it
+ * @return true if the command was found and ran, false if it was unknown, malformed, or
+ * its handler called failConsoleCommand()
  */
-void handleConsoleLine(char* line) {
+bool handleConsoleLine(char* line) {
 	if (!line) {
-		return; // error detected
+		return false; // error detected
 	}
 
 	int lineLength = strlen(line);
 	if (lineLength > MAX_CMD_LINE_LENGTH) {
 		// todo: better reaction to excessive line
 		efiPrintf("Long line?");
-		return;
+		return false;
 	}
 
+	currentCommandFailed = false;
 	int ret = handleConsoleLineInternal(line, lineLength);
 
-	if (ret < 0) {
+	if (ret < 0 || currentCommandFailed) {
 		efiPrintf("failed to handle command [%s]", line);
-		return;
+		return false;
 	}
 
 #if EFI_PROD_CODE || EFI_SIMULATOR
 	efiPrintf("confirmation_%s:%d", line, lineLength);
 #endif
+
+	return true;
 }
