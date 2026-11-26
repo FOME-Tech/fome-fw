@@ -20,6 +20,10 @@ public:
 	void onFastCallback() override;
 	void resetLua();
 
+	bool hasInit() const {
+		return m_hasInitBoost;
+	}
+
 	// Called when the configuration may have changed.  Controller will
 	// reset if necessary.
 	void onConfigurationChange(engine_configuration_s const* previousConfig) override;
@@ -56,6 +60,7 @@ private:
 	IPwm* m_pwm = nullptr;
 };
 
-void startBoostPin();
-void initBoostCtrl();
+// Configuration sequence step, see config_steps.cpp: the controller and its output pin
+void stopBoostControl(const engine_configuration_s* prev);
+void startBoostControl(const engine_configuration_s* prev);
 void setDefaultBoostParameters();

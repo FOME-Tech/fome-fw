@@ -24,6 +24,8 @@
 #include "fan_control.h"
 #include "start_stop.h"
 #include "gppwm.h"
+#include "boost_control.h"
+#include "vvt.h"
 
 static constexpr ConfigStep configSteps[] = {
 // Hardware phase: initHardware()
@@ -77,6 +79,14 @@ static constexpr ConfigStep configSteps[] = {
 // Unit tests give the fan controllers a mock PWM instead
 #if EFI_ENGINE_CONTROL && !EFI_UNIT_TEST
 		{"fan PWM", BootPhase::Controller, ApplyWhen::Immediately, stopFanPwm, startFanPwm, nullptr},
+#endif
+
+#if EFI_ENGINE_CONTROL
+		{"boost control", BootPhase::Controller, ApplyWhen::Immediately, stopBoostControl, startBoostControl, nullptr},
+#endif
+
+#if EFI_VVT_PID
+		{"VVT outputs", BootPhase::Controller, ApplyWhen::Immediately, stopVvtOutputs, startVvtOutputs, nullptr},
 #endif
 
 		{"start/stop button", BootPhase::Controller, ApplyWhen::Immediately, nullptr, startStartStopButton, nullptr},
