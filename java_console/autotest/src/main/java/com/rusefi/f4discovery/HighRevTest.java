@@ -24,9 +24,9 @@ public class HighRevTest extends RusefiTestBase {
         ecu.setEngineType(engine_type_e.FRANKENSO_BMW_M73_F);
         ecu.changeRpm(700);
         // first let's get to expected RPM
-        EcuTestHelper.assertRpmDoesNotJump(6000, 5, 40, FAIL, ecu.commandQueue);
+        EcuTestHelper.assertRpmDoesNotJump(6000, 5, 30, FAIL, ecu.commandQueue);
 
         // tests bug 1873
-        EcuTestHelper.assertRpmDoesNotJump(60, 5, 110, FAIL, ecu.commandQueue);
+        EcuTestHelper.assertRpmDoesNotJump(60, 5, 30, FAIL, ecu.commandQueue);
     }
 }
