@@ -246,6 +246,8 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "HELLEN_NB2";
 		case engine_type_e::HELLEN_NB2_36:
 			return "HELLEN_NB2_36";
+		case engine_type_e::HW_CI_RIG:
+			return "HW_CI_RIG";
 		case engine_type_e::MAZDA_MIATA_2003_BOARD_TEST:
 			return "MAZDA_MIATA_2003_BOARD_TEST";
 		case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
@@ -268,8 +270,6 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "POLYGONUS_MIATA_NB1";
 		case engine_type_e::POLYGONUS_MIATA_NB2:
 			return "POLYGONUS_MIATA_NB2";
-		case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
-			return "PROTEUS_ANALOG_PWM_TEST";
 		case engine_type_e::PROTEUS_BMW_M73:
 			return "PROTEUS_BMW_M73";
 		case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
