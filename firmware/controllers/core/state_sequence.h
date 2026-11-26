@@ -27,11 +27,9 @@ enum class TriggerEvent {
  * Looks like 252 is explained by 60 tooth * 2 (number of fronts) * 2 (number of crank rotations within engine cycle)
  */
 #ifndef PWM_PHASE_MAX_COUNT
-// as of April 2020, trigger which requires most array length is REMIX_66_2_2_2
-// we can probably reduce RAM usage if we have more custom logic of triggers with large number of tooth while
-// pretty easy logic. like we do not need to REALLY have an array to remember the shape of evenly spaces 360 or 60/2
-// trigger :) todo https://github.com/rusefi/rusefi/issues/3003
-#define PWM_PHASE_MAX_COUNT 280
+// Maximum events in one revolution of a trigger wheel. The largest built-in pattern is 60-2 at 116
+// events, and a custom toothed wheel tops out at 60 teeth (120 events).
+#define PWM_PHASE_MAX_COUNT 128
 #endif /* PWM_PHASE_MAX_COUNT */
 #define PWM_PHASE_MAX_WAVE_PER_PWM 2
 

@@ -35,7 +35,8 @@ public:
 	/**
 	 * timestamp of each trigger wheel tooth
 	 */
-	uint32_t timeOfLastEvent[PWM_PHASE_MAX_COUNT] = {};
+	// Indexed by event index within the engine cycle, not the wheel revolution
+	uint32_t timeOfLastEvent[TRIGGER_CYCLE_MAX_EVENTS] = {};
 
 	size_t spinningEventIndex = 0;
 
