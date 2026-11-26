@@ -700,7 +700,7 @@ TEST(etb, wastegateFeedbackLossAndRecovery) {
 // A throttle that was configured and then isn't must stop driving its motor
 TEST(etb, reconfiguredAwayStopsDrivingMotor) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	// Strict: any call to the motor after the throttle is removed fails the test
+	// Strict: each time the throttle can't initialize, the motor is disabled once and any other call fails the test
 	StrictMock<MockMotor> motor;
 
 	Sensor::setMockValue(SensorType::Tps1Primary, 0);
@@ -711,11 +711,13 @@ TEST(etb, reconfiguredAwayStopsDrivingMotor) {
 	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &engineConfiguration->etb, nullptr, true));
 
 	// Throttle function removed
+	EXPECT_CALL(motor, disable(_));
 	EXPECT_FALSE(etb.init(DC_None, nullptr, nullptr, nullptr, true));
 	etb.setOutput(25.0f);
 
 	// Throttle still selected, but the pedal is gone so it can't initialize
 	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &engineConfiguration->etb, nullptr, true));
+	EXPECT_CALL(motor, disable(_));
 	EXPECT_FALSE(etb.init(DC_Throttle1, &motor, &engineConfiguration->etb, nullptr, false));
 	etb.setOutput(25.0f);
 }

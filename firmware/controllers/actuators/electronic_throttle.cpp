@@ -157,9 +157,8 @@ static TsCalMode functionToCalModeSecMax(dc_function_e func) {
 
 bool EtbController::init(
 		dc_function_e function, DcMotor* motor, pid_s* pidParameters, const ValueProvider3D* pedalMap, bool hasPedal) {
-	// Forget the motor from any previous configuration: if this one doesn't initialize, nothing may drive it
-	m_motor = nullptr;
-
+	// Every path that doesn't initialize goes through releaseMotor(), so nothing keeps driving a motor
+	// from a previous configuration
 	if (function == DC_None) {
 		// if not configured, don't init. If a burn just unassigned it, stop what it was doing.
 		releaseMotor();
