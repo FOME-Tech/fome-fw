@@ -116,6 +116,30 @@ public class EcuTestHelper {
         IoUtil.changeRpm(commandQueue, rpm);
     }
 
+    /**
+     * Stop the trigger stimulator and wait until the ECU considers the engine stopped (RPM 0)
+     */
+    public void stopEngine() {
+        sendCommand(getDisableCommand(Fields.CMD_SELF_STIMULATION));
+
+        // The ECU declares the engine stopped a couple of seconds after the last trigger event
+        long start = System.currentTimeMillis();
+        while (SensorCentral.getInstance().getValue(Sensor.RPMValue) != 0) {
+            if (System.currentTimeMillis() - start > 10 * Timeouts.SECOND)
+                throw new IllegalStateException("Engine did not stop, RPM "
+                        + SensorCentral.getInstance().getValue(Sensor.RPMValue));
+            sleepSeconds(1);
+        }
+    }
+
+    /**
+     * Restart the trigger stimulator at the given RPM
+     */
+    public void startEngine(final int rpm) {
+        sendCommand(getEnableCommand(Fields.CMD_SELF_STIMULATION));
+        changeRpm(rpm);
+    }
+
     public void setEngineType(engine_type_e engine_type_e) {
         int type = engine_type_e.ordinal();
         log.info("AUTOTEST setEngineType " + type);
