@@ -95,21 +95,21 @@ static const char* const injectorStage2ShortNames[] = {
 static RegisteredOutputPin* registeredOutputHead = nullptr;
 
 RegisteredOutputPin::RegisteredOutputPin(const char* registrationName, size_t pinOffset, size_t pinModeOffset)
-	: next(registeredOutputHead)
-	, m_registrationName(registrationName)
-	, m_pinOffset(static_cast<uint16_t>(pinOffset))
+	: m_pinOffset(static_cast<uint16_t>(pinOffset))
+	, m_pinModeOffset(static_cast<uint16_t>(pinModeOffset))
 	, m_hasPinMode(true)
-	, m_pinModeOffset(static_cast<uint16_t>(pinModeOffset)) {
+	, next(registeredOutputHead)
+	, m_registrationName(registrationName) {
 	// adding into head of the list is so easy and since we do not care about order that's what we shall do
 	registeredOutputHead = this;
 }
 
 RegisteredOutputPin::RegisteredOutputPin(const char* registrationName, size_t pinOffset)
-	: next(registeredOutputHead)
-	, m_registrationName(registrationName)
-	, m_pinOffset(static_cast<uint16_t>(pinOffset))
+	: m_pinOffset(static_cast<uint16_t>(pinOffset))
+	, m_pinModeOffset(-1)
 	, m_hasPinMode(false)
-	, m_pinModeOffset(-1) {
+	, next(registeredOutputHead)
+	, m_registrationName(registrationName) {
 	// adding into head of the list is so easy and since we do not care about order that's what we shall do
 	registeredOutputHead = this;
 }

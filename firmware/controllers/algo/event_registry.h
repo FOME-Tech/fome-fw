@@ -42,22 +42,22 @@ public:
 	scheduling_s trailingSparkCharge;
 	scheduling_s trailingSparkFire;
 
-	// Track whether coil charge was intentionally skipped (spark limiter)
-	bool wasSparkLimited = false;
-
 	floatms_t sparkDwell = 0;
+	float dwellAngle = 0;
 
 	// this timer allows us to measure actual dwell time
 	Timer actualDwellTimer;
-
-	float dwellAngle = 0;
 
 	/**
 	 * [0, cylindersCount)
 	 */
 	int cylinderIndex = 0;
-	int8_t cylinderNumber = 0;
 	char* name = nullptr;
+
+	int8_t cylinderNumber = 0;
+
+	// Track whether coil charge was intentionally skipped (spark limiter)
+	bool wasSparkLimited = false;
 
 	ignition_mode_e m_ignitionMode = IM_INDIVIDUAL_COILS;
 };
