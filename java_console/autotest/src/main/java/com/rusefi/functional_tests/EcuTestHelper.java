@@ -122,7 +122,11 @@ public class EcuTestHelper {
     public void stopEngine() {
         sendCommand(getDisableCommand(Fields.CMD_SELF_STIMULATION));
 
-        // The ECU declares the engine stopped a couple of seconds after the last trigger event
+        // RPM also reads 0 before a just-started engine has spun up, so wait out the ECU's stop
+        // detection (2 s after the last trigger event) and 'engine moved recently' (up to 2.4 s,
+        // which keeps outputs like the idle valve driving) before trusting it
+        sleepSeconds(3);
+
         long start = System.currentTimeMillis();
         while (SensorCentral.getInstance().getValue(Sensor.RPMValue) != 0) {
             if (System.currentTimeMillis() - start > 10 * Timeouts.SECOND)

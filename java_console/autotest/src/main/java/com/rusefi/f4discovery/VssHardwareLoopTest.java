@@ -40,13 +40,15 @@ public class VssHardwareLoopTest extends RusefiTestBase {
         ecu.sendCommand(CMD_IDLE_PIN + " PD2");
         ecu.sendCommand("set idle_solenoid_freq 100");
 
+        EcuTestHelper.assertSomewhatClose("VSS no pin", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
+
         // VSS on the other end of the PD2<>PA5 jumper
         ecu.sendCommand("set " + CMD_VSS_PIN + " " + "pa5");
 
         sleep(2 * Timeouts.SECOND);
 
-        // The idle valve doesn't drive while the engine is stopped
-        EcuTestHelper.assertSomewhatClose("VSS no input", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
+        // The idle valve doesn't drive while the engine is stopped, so the reading below comes through the jumper
+        EcuTestHelper.assertSomewhatClose("VSS engine stopped", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
 
         ecu.startEngine(1000);
 
