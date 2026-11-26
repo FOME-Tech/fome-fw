@@ -28,9 +28,6 @@ public class VssHardwareLoopTest extends RusefiTestBase {
     public void test() {
         ecu.setEngineType(engine_type_e.FRANKENSO_MIATA_NA6_MAP);
 
-        // A burn only applies sensor changes (here the VSS pin) while the engine is stopped
-        ecu.stopEngine();
-
         // making output pins available
         ecu.sendCommand(CMD_TRIGGER_SIMULATOR_PIN + " 0 none");
         ecu.sendCommand(CMD_TRIGGER_SIMULATOR_PIN + " 1 none");
@@ -39,6 +36,11 @@ public class VssHardwareLoopTest extends RusefiTestBase {
         // 100 Hz idle valve on the formerly-trigger-stim pin
         ecu.sendCommand(CMD_IDLE_PIN + " PD2");
         ecu.sendCommand("set idle_solenoid_freq 100");
+
+        // A burn only applies sensor changes (here the VSS pin) while the engine is stopped.
+        // Stop only after the pin changes above: a released pin goes to pull-up, and that edge on a
+        // jumpered trigger input counts as the engine moving, which keeps the idle valve driving.
+        ecu.stopEngine();
 
         EcuTestHelper.assertSomewhatClose("VSS no pin", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
 
