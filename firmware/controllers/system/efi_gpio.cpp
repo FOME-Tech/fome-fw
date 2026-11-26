@@ -204,17 +204,6 @@ EnginePins::EnginePins()
 	}
 }
 
-/**
- * Sets the value of the pin. On this layer the value is assigned as is, without any conversion.
- */
-
-#define unregisterOutputIfPinChanged(output, pin)                                                                      \
-	{                                                                                                                  \
-		if (isConfigurationChanged(pin)) {                                                                             \
-			(output).deInit();                                                                                         \
-		}                                                                                                              \
-	}
-
 #define unregisterOutputIfPinOrModeChanged(output, pin, mode)                                                          \
 	{                                                                                                                  \
 		if (isPinOrModeChanged(pin, mode)) {                                                                           \
