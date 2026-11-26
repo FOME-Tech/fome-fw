@@ -36,6 +36,7 @@ or
  - "Extra idle air if throttle pressed" is replaced by "Dashpot air". The extra air is now also held while coasting (unless the coasting table is used), and is ramped out on return to idle instead of being removed at once. If you used it, re-enter the value under the new name. The hidden "air by RPM taper" settings are removed.
 
 ### Added
+ - "Reboot required" indicator in TunerStudio, shown when a burned setting only takes effect after the ECU restarts. For now that's the CAN bus settings (enables, pins, baud rates) and software knock (enable, filter frequency, cylinder bore).
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels. Everything that uses the clutch up and/or down switches now supports the analog sensor as virtual up/down switches too.
@@ -72,6 +73,25 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - More settings now take effect when burned instead of only after the ECU is power cycled. Previously, writing a tune from TunerStudio could leave the tachometer output, CAN vehicle speed, wheel speeds and brake switch, and MAP averaging not working until the next power cycle. Specifically:
+   - Assigning a tachometer output pin starts the tach output.
+   - Enabling CAN VSS or changing its type starts decoding vehicle speed, wheel speeds and the brake switch.
+   - Changing the MAP sensor input also moves MAP averaging and instant MAP to the new input.
+   - Aux speed sensors and Lua digital inputs no longer stop working after a burn with the engine stopped.
+   - Assigning a speedometer output pin starts the speedometer output.
+   - The alternator control output starts when its pin is assigned, and follows changes to its PWM frequency, which no longer asks for a power cycle.
+   - Turning on fan PWM mode, or changing the fan PWM frequency, takes effect.
+   - Changing the start/stop button's cranking time takes effect.
+   - CAN IMU data (acceleration, yaw rate) starts when the IMU type or CAN VSS is set.
+   - Changing the O2 heater or debug trigger sync output pin moves the output to the new pin.
+   - GPPWM outputs follow changes to their pin, frequency and on-off/PWM mode. Previously a channel whose pin was changed or removed kept driving the old pin until a power cycle (which also blocked using that pin for anything else), and a newly assigned channel did nothing until then.
+   - Aux analog inputs no longer ask for a power cycle; a burn already applies them.
+   - Sensor settings take effect as soon as they're burned, also while the engine is running. Previously a sensor change burned while the engine was running was ignored until the next burn with the engine stopped, or a power cycle.
+   - Burning no longer briefly drops sensors whose settings didn't change (TPS, pedal, flex and others), and the flex fuel and vehicle speed filters keep their state.
+   - Unassigning the vehicle speed sensor input (or another frequency input) clears its reading instead of leaving the last value until it times out.
+   - Adding an analog baro sensor while the onboard baro sensor is in use no longer causes a "Duplicate registration" error, and removing it switches back to the onboard sensor.
+ - Turning an SPI bus off, or changing the SD card or accelerometer chip select pin, no longer cuts off the devices still running on it until the next power cycle. These settings, and the other onboard hardware settings that only apply at startup (SPI pins, smart GPIO chips, MAX31855, onboard baro pins, VR threshold outputs, MC33816 pins and injector drive settings), now ask for a power cycle in TunerStudio.
+ - Changing the firing order or the per-cylinder timing offsets now takes effect as soon as it's burned. Previously the ECU kept using the old cylinder count and cylinder angles until it was rebooted (unless the trigger settings changed at the same time), which put fuel and spark events at the wrong angles.
  - "Use fixed baro corr from MAP" now actually uses the MAP reading taken at power-up. Previously it always used 101.3 kPa, which is wrong at altitude. If the engine is already turning when the ECU starts, MAP is not used as baro.
  - "Ramp on return to idle" now starts the ramp from the RPM the engine is at when it returns to idle, instead of always from the idle entry threshold. Lifting off the throttle near idle speed no longer briefly raises the idle target several hundred RPM, which made the idle bounce.
  - Fix "re-adding element into event_queue" warnings (9011) after a spark is fired by the overdwell backup, for example when idle timing control steps timing up on entering idle. The queued spark event could also fire a second time.

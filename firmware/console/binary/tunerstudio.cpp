@@ -64,6 +64,7 @@
 #include "bench_test.h"
 #include "gitversion.h"
 #include "status_loop.h"
+#include "config_steps.h"
 
 #include "signature.h"
 
@@ -123,13 +124,19 @@ void TunerStudio::handleWriteChunkCommand(TsChannelBase* tsChannel, uint16_t off
 		return;
 	}
 
-	// Skip the write if a preset was just loaded - we don't want to overwrite it
-	if (!rebootForPresetPending) {
-		uint8_t* addr = (uint8_t*)(getWorkingPageAddr() + offset);
-		memcpy(addr, content, count);
+	{
+		// Not while a configuration change is being applied (a Lua or console burn runs on another thread), so
+		// it never reads a half-written field
+		ConfigChangeLock lock;
+
+		// Skip the write if a preset was just loaded - we don't want to overwrite it
+		if (!rebootForPresetPending) {
+			uint8_t* addr = (uint8_t*)(getWorkingPageAddr() + offset);
+			memcpy(addr, content, count);
+		}
+		// Force any board configuration options that humans shouldn't be able to change
+		setBoardConfigOverrides();
 	}
-	// Force any board configuration options that humans shouldn't be able to change
-	setBoardConfigOverrides();
 
 	sendOkResponse(tsChannel);
 }

@@ -183,7 +183,14 @@ EnginePins::EnginePins()
 	, alternatorPin("Alternator control", CONFIG_PIN_OFFSETS(alternatorControl))
 	, checkEnginePin("checkEnginePin", CONFIG_PIN_OFFSETS(malfunctionIndicator))
 	, tachOut("tachOut", CONFIG_PIN_OFFSETS(tachOutput))
-	, speedoOut("speedoOut", CONFIG_OFFSET(speedometerOutputPin)) {
+	, speedoOut("speedoOut", CONFIG_OFFSET(speedometerOutputPin))
+	, gppwmPins{
+			  {"GPPWM#1", CONFIG_OFFSET(gppwm[0].pin)},
+			  {"GPPWM#2", CONFIG_OFFSET(gppwm[1].pin)},
+			  {"GPPWM#3", CONFIG_OFFSET(gppwm[2].pin)},
+			  {"GPPWM#4", CONFIG_OFFSET(gppwm[3].pin)},
+	  } {
+	static_assert(GPPWM_CHANNELS == 4, "Add a pin for each GPPWM channel");
 	static_assert(efi::size(sparkNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");

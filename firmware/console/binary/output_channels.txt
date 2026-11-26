@@ -30,6 +30,7 @@ struct_no_prefix output_channels_s
 	bit isUsbConnected;isUsbConnected\nOriginal reason for this is to check if USB is connected from Lua
 	bit dfcoActive;DFCO: Active
 	bit mafAirmassLimited;Air: MAF airmass limited
+	bit rebootRequired;Reboot required\nA setting burned since the ECU started only takes effect after it restarts
 
 
 	uint16_t RPMValue;@@GAUGE_NAME_RPM@@;"RPM",1, 0, 0, 8000, 0

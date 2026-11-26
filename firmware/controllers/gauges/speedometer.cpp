@@ -4,10 +4,10 @@
 
 static SimplePwm speedoPwm("speedo");
 
-static bool hasSpeedoInit = false;
+static ConfiguredPwm speedoOutput(speedoPwm);
 
 void speedoUpdate() {
-	if (!hasSpeedoInit) {
+	if (!speedoOutput.isRunning()) {
 		return;
 	}
 
@@ -22,14 +22,17 @@ void speedoUpdate() {
 	speedoPwm.setFrequency(freq);
 }
 
-void initSpeedometer() {
-	hasSpeedoInit = false;
+void stopSpeedometer(const engine_configuration_s* /*prev*/) {
+	speedoOutput.stopIfUnwanted(isBrainPinValid(engineConfiguration->speedometerOutputPin));
+}
 
-	if (!isBrainPinValid(engineConfiguration->speedometerOutputPin)) {
-		return;
-	}
-
-	startSimplePwm(&speedoPwm, "Speedometer", &enginePins.speedoOut, NAN, 0.5f);
-
-	hasSpeedoInit = true;
+void startSpeedometer(const engine_configuration_s* prev) {
+	// Frequency is set by speedoUpdate
+	speedoOutput.startIfWanted(
+			prev,
+			isBrainPinValid(engineConfiguration->speedometerOutputPin),
+			"Speedometer",
+			&enginePins.speedoOut,
+			NAN,
+			0.5f);
 }

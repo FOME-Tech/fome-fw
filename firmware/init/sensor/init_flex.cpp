@@ -44,41 +44,56 @@ static Gpio flexPin = Gpio::Unassigned;
 
 // https://rusefi.com/forum/viewtopic.php?p=37452&sid=829804c90d5b2e1fecd1b900cf1b1811#p37452
 
+static bool hasAnalogFuelTemp() {
+	return isAdcChannelValid(engineConfiguration->fuelTempSensor.adcChannel);
+}
+
 void initFlexSensor() {
-	flexPin = engineConfiguration->flexSensorPin;
-	if (!isBrainPinValid(flexPin)) {
+	auto pin = engineConfiguration->flexSensorPin;
+	if (!isBrainPinValid(pin)) {
 		return;
 	}
 
-	// 0.01 means filter bandwidth of ~1hz with ~100hz sensor
-	flexTempFilter.configureLowpass(1, 0.01f);
-	flexSensor.setFunction(converter);
+	// Already running on this pin: carry on with the filters as they are
+	if (pin != flexPin) {
+		flexPin = pin;
 
-	// Start the flex filter out at the last ethanol content we saw, so that fueling is correct
-	// immediately at startup instead of ramping up as the filter settles
-	if (auto storedFlex = getStoredFlexEthanolPercent()) {
-		converter.preloadFilter(storedFlex.Value);
-	}
+		// 0.01 means filter bandwidth of ~1hz with ~100hz sensor
+		flexTempFilter.configureLowpass(1, 0.01f);
+		flexSensor.setFunction(converter);
+
+		// Start the flex filter out at the last ethanol content we saw, so that fueling is correct
+		// immediately at startup instead of ramping up as the filter settles
+		if (auto storedFlex = getStoredFlexEthanolPercent()) {
+			converter.preloadFilter(storedFlex.Value);
+		}
 
 #if EFI_PROD_CODE
-	efiExtiEnablePin("flex", flexPin, PAL_EVENT_MODE_BOTH_EDGES, flexCallback, nullptr);
+		efiExtiEnablePin("flex", flexPin, PAL_EVENT_MODE_BOTH_EDGES, flexCallback, nullptr);
 #endif // EFI_PROD_CODE
+	}
 
 	flexSensor.Register();
 
 	// If an analog fuel temp sensor is configured, don't use the flex sensor for fuel temp
-	if (!isAdcChannelValid(engineConfiguration->fuelTempSensor.adcChannel)) {
+	if (!hasAnalogFuelTemp()) {
 		flexFuelTemp.Register();
 	}
 }
 
 void deInitFlexSensor() {
-	flexSensor.unregister();
-	flexFuelTemp.unregister();
+	auto newPin = engineConfiguration->flexSensorPin;
 
-	if (!isBrainPinValid(flexPin)) {
+	// Make way for an analog fuel temperature sensor
+	if (newPin != flexPin || hasAnalogFuelTemp()) {
+		flexFuelTemp.unregister();
+	}
+
+	if (!isBrainPinValid(flexPin) || newPin == flexPin) {
 		return;
 	}
+
+	flexSensor.unregister();
 
 #if EFI_PROD_CODE
 	efiExtiDisablePin(flexPin);

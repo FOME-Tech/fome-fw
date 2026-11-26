@@ -131,7 +131,67 @@ static void startCanPins() {
 #endif // EFI_PROD_CODE
 }
 
-void initCan() {
+// One CAN peripheral's settings, as far as starting it goes
+struct CanBusStartedConfig {
+	Gpio txPin;
+	Gpio rxPin;
+	can_baudrate_e baudRate;
+
+	// detectCanDevice() needs both pins to pick a peripheral
+	bool isUsed() const {
+		return isBrainPinValid(txPin) && isBrainPinValid(rxPin);
+	}
+
+	bool startsDifferently(const CanBusStartedConfig& other) const {
+		// Unused before and after: its baud rate doesn't matter
+		if (!isUsed() && !other.isUsed()) {
+			return false;
+		}
+
+		return txPin != other.txPin || rxPin != other.rxPin || baudRate != other.baudRate;
+	}
+};
+
+// What the CAN peripherals and threads were started with, see canNeedsReboot()
+struct CanStartedConfig {
+	bool readEnabled;
+	bool writeEnabled;
+	CanBusStartedConfig bus1;
+	CanBusStartedConfig bus2;
+
+	static CanStartedConfig current() {
+		return {
+				engineConfiguration->canReadEnabled,
+				engineConfiguration->canWriteEnabled,
+				{engineConfiguration->canTxPin, engineConfiguration->canRxPin, engineConfiguration->canBaudRate},
+				{engineConfiguration->can2TxPin, engineConfiguration->can2RxPin, engineConfiguration->can2BaudRate},
+		};
+	}
+
+	bool isEnabled() const {
+		return readEnabled || writeEnabled;
+	}
+
+	bool startsDifferently(const CanStartedConfig& other) const {
+		// Off before and after: nothing was started, so the rest doesn't matter
+		if (!isEnabled() && !other.isEnabled()) {
+			return false;
+		}
+
+		return readEnabled != other.readEnabled || writeEnabled != other.writeEnabled ||
+			   bus1.startsDifferently(other.bus1) || bus2.startsDifferently(other.bus2);
+	}
+};
+
+static CanStartedConfig canStartedConfig;
+
+bool canNeedsReboot() {
+	return canStartedConfig.startsDifferently(CanStartedConfig::current());
+}
+
+void startCan(const engine_configuration_s* /*prev*/) {
+	canStartedConfig = CanStartedConfig::current();
+
 	addConsoleAction("caninfo", canInfo);
 
 	isCanEnabled = false;

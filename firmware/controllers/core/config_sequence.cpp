@@ -13,9 +13,8 @@ void ConfigSequence::boot(BootPhase phase) {
 		}
 	}
 
-	m_bootedPhases |= 1 << static_cast<uint8_t>(phase);
-
-	updateRebootRequired();
+	// Everything just started with the current configuration
+	m_rebootRequired = false;
 }
 
 void ConfigSequence::beginChange(const engine_configuration_s* prev) {
@@ -46,7 +45,7 @@ void ConfigSequence::updateRebootRequired() {
 	for (size_t i = 0; i < m_count; i++) {
 		const auto& step = m_steps[i];
 
-		if (isBooted(step) && step.when == ApplyWhen::RebootOnly && step.needsReboot) {
+		if (step.when == ApplyWhen::RebootOnly && step.needsReboot) {
 			required |= step.needsReboot();
 		}
 	}

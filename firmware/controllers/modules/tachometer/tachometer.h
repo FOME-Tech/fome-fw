@@ -7,7 +7,9 @@
 
 #pragma once
 
-void initTachometer();
+// Configuration sequence step, see config_steps.cpp
+void stopTachometer(const engine_configuration_s* prev);
+void startTachometer(const engine_configuration_s* prev);
 
 class TachometerModule : public EngineModule {
 public:

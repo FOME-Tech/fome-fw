@@ -57,3 +57,19 @@ TEST_F(FrequencySensorTest, testValidWithPwm) {
 		EXPECT_NEAR(s.Value, 10, 1e-3);
 	}
 }
+
+// A burn that leaves the pin alone keeps the sensor; moving or removing the pin releases it
+TEST_F(FrequencySensorTest, deInitOnlyWhenPinChanges) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	ASSERT_TRUE(dut.Register());
+
+	dut.deInit(Gpio::A0);
+	EXPECT_EQ(&dut, Sensor::getSensorOfType(SensorType::FuelEthanolPercent));
+
+	// Still on the same pin, nothing to restart
+	dut.initIfValid(Gpio::A0, identityFunction, 0.1f);
+	EXPECT_EQ(&dut, Sensor::getSensorOfType(SensorType::FuelEthanolPercent));
+
+	dut.deInit(Gpio::Unassigned);
+	EXPECT_EQ(nullptr, Sensor::getSensorOfType(SensorType::FuelEthanolPercent));
+}

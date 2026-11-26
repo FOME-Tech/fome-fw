@@ -9,7 +9,13 @@
 
 #include "efifeatures.h"
 
-void initCan();
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp. The peripherals and threads are only started at
+// startup, so a change needs a reboot.
+void startCan(const engine_configuration_s* prev);
+bool canNeedsReboot();
+
 void setCanType(int type);
 void setCanVss(int type);
 

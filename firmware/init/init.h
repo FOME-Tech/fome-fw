@@ -4,16 +4,17 @@
 
 #pragma once
 
-// Call this once at startup to initialize, configure, and subscribe sensors
-void initNewSensors();
+// Call this once at startup for the sensors that don't depend on the configuration (built in to the
+// board). The configured ones are started by the configuration sequence step below.
+void initFixedSensors();
 
-void stopSensors();
+struct engine_configuration_s;
 
-// Call this whenever the configuration may have changed, so any sensors
-// can be reconfigured with the new settings.
-// Note: this may not be necessarily possible for all sensors, so some may
-// do nothing when this is called.
-void reconfigureSensors();
+// Configuration sequence step, see config_steps.cpp: every sensor whose inputs come from the
+// configuration, including the aux speed sensors and Lua digital inputs. Some sensors may not
+// support every change and ignore it.
+void stopConfiguredSensors(const engine_configuration_s* prev);
+void startConfiguredSensors(const engine_configuration_s* prev);
 
 // Internal init functions for individual systems
 // Sensor init/config
@@ -49,3 +50,4 @@ void deinitMap();
 void deinitMaf();
 void deinitFuelLevel();
 void deinitAuxSpeedSensors();
+void deinitBaro();

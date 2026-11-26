@@ -97,50 +97,6 @@ TEST_F(ConfigSequenceTest, RebootRequiredFollowsTheStep) {
 	EXPECT_FALSE(dut.isRebootRequired());
 }
 
-// The simulator burns (enabling its trigger stimulator) before engine control has started
-TEST_F(ConfigSequenceTest, BurnBeforeBootLeavesThatPhaseAlone) {
-	dut.boot(BootPhase::Hardware);
-	calls.clear();
-
-	rebootStepDiffers = true;
-	burn();
-
-	// Only the booted hardware phase is touched
-	EXPECT_EQ(calls, (std::vector<std::string>{"stop hw", "legacy", "start hw"}));
-	EXPECT_TRUE(dut.isRebootRequired());
-
-	// They start normally, with the configuration current by then
-	calls.clear();
-	dut.boot(BootPhase::Controller);
-	EXPECT_EQ(calls, (std::vector<std::string>{"start a (scratch)", "start b (scratch)"}));
-}
-
-// ...and a reboot-only step that hasn't started can't need a reboot
-TEST_F(ConfigSequenceTest, UnbootedRebootOnlyStepDoesNotRequireReboot) {
-	dut.boot(BootPhase::Controller);
-
-	rebootStepDiffers = true;
-	burn();
-
-	EXPECT_FALSE(dut.isRebootRequired());
-}
-
-TEST_F(ConfigSequenceTest, ResetForgetsBootedPhases) {
-	boot();
-
-	rebootStepDiffers = true;
-	burn();
-	ASSERT_TRUE(dut.isRebootRequired());
-
-	dut.reset();
-	EXPECT_FALSE(dut.isRebootRequired());
-
-	// Nothing has booted any more, so a burn leaves every step alone
-	calls.clear();
-	burn();
-	EXPECT_EQ(calls, (std::vector<std::string>{"legacy"}));
-}
-
 TEST_F(ConfigSequenceTest, RebootClearsRebootRequired) {
 	boot();
 

@@ -1,6 +1,11 @@
 #pragma once
 
-void initSoftwareKnock();
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp. The filter and sampling thread are only set up at
+// startup, so a change needs a reboot.
+void startSoftwareKnock(const engine_configuration_s* prev);
+bool softwareKnockNeedsReboot();
 void knockSamplingCallback(uint8_t cylinderIndex, efitick_t nowNt);
 
 #ifdef STM32H7XX

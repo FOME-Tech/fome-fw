@@ -83,6 +83,8 @@
 #include "trigger_emulator_algo.h"
 #endif /* EFI_EMULATE_POSITION_SENSORS */
 
+#include "config_steps.h"
+
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
 #endif
@@ -132,7 +134,19 @@ __attribute__((weak)) void boardOnConfigurationChange(engine_configuration_s* /*
  * this method is NOT currently invoked on ECU start - actual user input has to happen!
  */
 void incrementGlobalConfigurationVersion() {
+	ConfigChangeLock lock;
+
 	engine->globalConfigurationVersion++;
+
+	// Startup holds the lock until it has finished, so this is only false if it stopped short: engine
+	// control isn't running, and the new configuration applies at the next reboot
+	if (!isStartupFinished()) {
+		return;
+	}
+
+	// The configuration sequence (config_steps.cpp) stops what's changing before anything below starts,
+	// and starts again after it, so pins can move between it and what isn't in it yet
+	configStepsBeginChange(&activeConfiguration);
 
 	applyNewHardwareSettings();
 
@@ -149,9 +163,12 @@ void incrementGlobalConfigurationVersion() {
 #if EFI_SHAFT_POSITION_INPUT
 	onConfigurationChangeTriggerCallback();
 #endif /* EFI_SHAFT_POSITION_INPUT */
+
 #if EFI_EMULATE_POSITION_SENSORS && !EFI_UNIT_TEST
 	onConfigurationChangeRpmEmulatorCallback(&activeConfiguration);
 #endif /* EFI_EMULATE_POSITION_SENSORS */
+
+	configStepsFinishChange(&activeConfiguration);
 
 	engine->engineModules.apply_all([](auto& m) { m.onConfigurationChange(&activeConfiguration); });
 	rememberCurrentConfiguration();

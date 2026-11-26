@@ -24,11 +24,11 @@ float getTachDuty() {
 }
 #endif
 
-static bool tachHasInit = false;
+static ConfiguredPwm tachOutput(tachControl);
 
 void TachometerModule::onFastCallback() {
 	// Only do anything if tach enabled
-	if (!tachHasInit) {
+	if (!tachOutput.isRunning()) {
 		return;
 	}
 
@@ -93,14 +93,12 @@ void TachometerModule::onIgnitionStateChanged(bool ignitionOn) {
 	}
 }
 
-void initTachometer() {
-	tachHasInit = false;
+void stopTachometer(const engine_configuration_s* /*prev*/) {
+	tachOutput.stopIfUnwanted(isBrainPinValid(engineConfiguration->tachOutputPin));
+}
 
-	if (!isBrainPinValid(engineConfiguration->tachOutputPin)) {
-		return;
-	}
-
-	startSimplePwm(&tachControl, "Tachometer", &enginePins.tachOut, NAN, 0.1f);
-
-	tachHasInit = true;
+void startTachometer(const engine_configuration_s* prev) {
+	// Frequency and duty are set by onFastCallback
+	tachOutput.startIfWanted(
+			prev, isBrainPinValid(engineConfiguration->tachOutputPin), "Tachometer", &enginePins.tachOut, NAN, 0.1f);
 }

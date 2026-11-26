@@ -38,7 +38,8 @@ protected:
 	virtual float getAcOffDuty(float clt) = 0;
 	virtual float getAcOnDuty(float clt) = 0;
 
-	friend void initFanControl();
+	friend void stopFanPwm(const engine_configuration_s* prev);
+	friend void startFanPwm(const engine_configuration_s* prev);
 };
 
 struct FanControl1 : public FanController {
@@ -109,4 +110,6 @@ struct FanControl2 : public FanController {
 	float getAcOnDuty(float clt) override;
 };
 
-void initFanControl();
+// Configuration sequence step, see config_steps.cpp. Not in unit tests, which mock the fan PWM instead.
+void stopFanPwm(const engine_configuration_s* prev);
+void startFanPwm(const engine_configuration_s* prev);

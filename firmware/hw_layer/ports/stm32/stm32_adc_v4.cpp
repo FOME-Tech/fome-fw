@@ -283,6 +283,10 @@ FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
 	return static_cast<FastAdcToken>(channel);
 }
 
+void resetFastAdcChannels() {
+	// Nothing to undo, see enableFastAdcChannel()
+}
+
 float getFastAdc(FastAdcToken token) {
 	if (token == invalidToken) {
 		return 0;

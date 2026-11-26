@@ -66,14 +66,9 @@ public:
 	// Start every step of this phase, from scratch
 	void boot(BootPhase phase);
 
-	// Forget everything, as if the firmware had just started. For unit tests, which boot once per test.
-	void reset() {
-		m_rebootRequired = false;
-		m_bootedPhases = 0;
-	}
-
 	// A burn is beginChange(), the configuration changes that aren't in this sequence yet, then
-	// finishChange(). prev is the configuration before the burn.
+	// finishChange(). prev is the configuration before the burn. Only once every phase has booted: the
+	// caller makes sure of that (see configStepsStartupFinished()).
 	void beginChange(const engine_configuration_s* prev);
 	void finishChange(const engine_configuration_s* prev);
 
@@ -83,13 +78,9 @@ public:
 	}
 
 private:
-	bool isBooted(const ConfigStep& step) const {
-		return m_bootedPhases & (1 << static_cast<uint8_t>(step.phase));
-	}
-
 	// Whether a burn stops and starts this step
-	bool appliesChanges(const ConfigStep& step) const {
-		return isBooted(step) && step.when == ApplyWhen::Immediately;
+	static bool appliesChanges(const ConfigStep& step) {
+		return step.when == ApplyWhen::Immediately;
 	}
 
 	void updateRebootRequired();
@@ -98,10 +89,4 @@ private:
 	const size_t m_count;
 
 	bool m_rebootRequired = false;
-
-	// Phases whose steps have started. A burn before then (the simulator enables its trigger
-	// stimulator before engine control starts) leaves their steps alone: they start with whatever
-	// configuration is current when they do. Boot and burn both hold ConfigChangeLock, so this can't
-	// change between a burn's beginChange() and finishChange().
-	uint8_t m_bootedPhases = 0;
 };

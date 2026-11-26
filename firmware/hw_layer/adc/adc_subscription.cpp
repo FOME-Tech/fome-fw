@@ -53,7 +53,7 @@ static AdcSubscriptionEntry* findEntry() {
 			return;
 		}
 
-		// A channel change must go through UnsubscribeSensor during stopSensors() first. Releasing the old
+		// A channel change must go through UnsubscribeSensor in the sensors' stop first. Releasing the old
 		// channel here instead would be too late: another sensor may already have acquired that pin during
 		// this reconfigure, and releasing it would knock that sensor's pin out of analog mode.
 		firmwareError(ObdCode::CUSTOM_INVALID_ADC, "%s changed ADC channel without unsubscribing", name);

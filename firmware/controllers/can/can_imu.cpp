@@ -281,11 +281,35 @@ void processCanRxImu(const CANRxFrame& frame) {
 	}
 }
 
-void initCanImu() {
-	if (engineConfiguration->imuType != IMU_NONE || engineConfiguration->enableCanVss) {
-		accelLat.Register();
-		accelLon.Register();
-		accelVert.Register();
-		yawRate.Register();
+static bool imuRegistered = false;
+
+// The IMU type is read for every frame, so changing it needs no restart
+static bool isCanImuWanted() {
+	return engineConfiguration->imuType != IMU_NONE || engineConfiguration->enableCanVss;
+}
+
+void stopCanImu(const engine_configuration_s* /*prev*/) {
+	if (!imuRegistered || isCanImuWanted()) {
+		return;
 	}
+
+	accelLat.unregister();
+	accelLon.unregister();
+	accelVert.unregister();
+	yawRate.unregister();
+
+	imuRegistered = false;
+}
+
+void startCanImu(const engine_configuration_s* /*prev*/) {
+	if (imuRegistered || !isCanImuWanted()) {
+		return;
+	}
+
+	accelLat.Register();
+	accelLon.Register();
+	accelVert.Register();
+	yawRate.Register();
+
+	imuRegistered = true;
 }

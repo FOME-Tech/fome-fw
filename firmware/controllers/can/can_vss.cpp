@@ -310,22 +310,46 @@ void processCanRxVss(const CANRxFrame& frame, efitick_t nowNt) {
 	}
 }
 
-void initCanVssSupport() {
-	isInit = false;
+// The DBC type is read for every frame, so changing it needs no restart
+static bool isCanVssWanted() {
+	return engineConfiguration->enableCanVss && engineConfiguration->canVssNbcType < CanVssLast;
+}
 
-	if (engineConfiguration->enableCanVss) {
-		auto type = engineConfiguration->canVssNbcType;
-		if (type < CanVssLast) {
-			canSpeed.Register();
-			wssLf.Register();
-			wssRf.Register();
-			wssLr.Register();
-			wssRr.Register();
-			isInit = true;
-		} else {
-			firmwareError(ObdCode::OBD_Vehicle_Speed_SensorB, "Wrong Can DBC selected: %d", type);
-		}
+void stopCanVss(const engine_configuration_s* /*prev*/) {
+	if (!isInit || isCanVssWanted()) {
+		return;
 	}
+
+	canSpeed.unregister();
+	wssLf.unregister();
+	wssRf.unregister();
+	wssLr.unregister();
+	wssRr.unregister();
+
+	isInit = false;
+}
+
+void startCanVss(const engine_configuration_s* /*prev*/) {
+	if (!engineConfiguration->enableCanVss) {
+		return;
+	}
+
+	if (!isCanVssWanted()) {
+		firmwareError(
+				ObdCode::OBD_Vehicle_Speed_SensorB, "Wrong Can DBC selected: %d", engineConfiguration->canVssNbcType);
+		return;
+	}
+
+	if (isInit) {
+		return;
+	}
+
+	canSpeed.Register();
+	wssLf.Register();
+	wssRf.Register();
+	wssLr.Register();
+	wssRr.Register();
+	isInit = true;
 }
 
 void setCanVss(int type) {

@@ -20,6 +20,7 @@
 #include "console_io.h"
 #include "idle_thread.h"
 #include "clutch_state.h"
+#include "config_steps.h"
 
 #if EFI_PROD_CODE
 #include "mpu_util.h"
@@ -46,11 +47,6 @@
 #if HAL_USE_PAL && EFI_PROD_CODE
 #include "digital_input_exti.h"
 #endif // HAL_USE_PAL
-
-#if EFI_CAN_SUPPORT
-#include "can_vss.h"
-#include "can_imu.h"
-#endif
 
 #if HAL_USE_SPI
 static void initSpiModules() {
@@ -79,6 +75,10 @@ static void initSpiModules() {
 #if HAL_USE_ADC
 
 #ifdef MODULE_MAP_AVERAGING
+// What the fast ADC samples for MAP averaging, and where to find it. The fast ADC callback reads these, so
+// they're only changed with the system locked, see setFastMapChannels().
+static adc_channel_e fastMapChannel = EFI_ADC_NONE;
+static adc_channel_e fastMapChannel2 = EFI_ADC_NONE;
 // Until the configuration sequence sets them: the fast ADC callback runs from early in startup on some chips
 static FastAdcToken fastMapSampleIndex = InvalidFastAdcToken;
 static FastAdcToken fastMapSampleIndex2 = InvalidFastAdcToken;
@@ -92,18 +92,40 @@ void onFastAdcComplete(adcsample_t*) {
 	ScopePerf perf(PE::AdcCallbackFast);
 
 #ifdef MODULE_MAP_AVERAGING
+	// The channels actually sampled, not the configured ones: TunerStudio writes a new MAP input before
+	// the burn that moves sampling to it
 	engine->module<MapAveragingModule>()->submitSample(
-			getFastAdc(fastMapSampleIndex) *
-					getAnalogInputDividerCoefficient(engineConfiguration->map.sensor.hwChannel),
-			getFastAdc(fastMapSampleIndex2) * getAnalogInputDividerCoefficient(engineConfiguration->map2HwChannel));
+			getFastAdc(fastMapSampleIndex) * getAnalogInputDividerCoefficient(fastMapChannel),
+			getFastAdc(fastMapSampleIndex2) * getAnalogInputDividerCoefficient(fastMapChannel2));
 #endif // MODULE_MAP_AVERAGING
 }
 #endif /* HAL_USE_ADC */
 
-static void calcFastAdcIndexes() {
 #ifdef MODULE_MAP_AVERAGING
-	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", engineConfiguration->map.sensor.hwChannel);
-	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", engineConfiguration->map2HwChannel);
+// Rebuild the fast ADC list from scratch: enableFastAdcChannel() only ever adds a channel
+static void setFastMapChannels(adc_channel_e channel, adc_channel_e channel2) {
+	chibios_rt::CriticalSectionLocker csl;
+
+	resetFastAdcChannels();
+
+	fastMapSampleIndex = enableFastAdcChannel("Fast MAP 1", channel);
+	fastMapSampleIndex2 = enableFastAdcChannel("Fast MAP 2", channel2);
+	fastMapChannel = channel;
+	fastMapChannel2 = channel2;
+}
+#endif /* MODULE_MAP_AVERAGING */
+
+void startFastAdcChannels(const engine_configuration_s* prev) {
+#ifdef MODULE_MAP_AVERAGING
+	auto channel = engineConfiguration->map.sensor.hwChannel;
+	auto channel2 = engineConfiguration->map2HwChannel;
+
+	// Leave the fast ADC alone unless a MAP input moved
+	if (!prev || channel != fastMapChannel || channel2 != fastMapChannel2) {
+		setFastMapChannels(channel, channel2);
+	}
+#else
+	(void)prev;
 #endif /* MODULE_MAP_AVERAGING */
 }
 
@@ -114,14 +136,6 @@ static void calcFastAdcIndexes() {
  */
 
 void applyNewHardwareSettings() {
-#if EFI_PROD_CODE
-#if EFI_SHAFT_POSITION_INPUT
-	bool allowDangerousHardwareUpdates = !engine->rpmCalculator.isRunning();
-#else  // not EFI_SHAFT_POSITION_INPUT
-	bool allowDangerousHardwareUpdates = true;
-#endif // EFI_SHAFT_POSITION_INPUT
-#endif
-
 	/**
 	 * All 'stop' methods need to go before we begin starting pins.
 	 *
@@ -131,12 +145,6 @@ void applyNewHardwareSettings() {
 	 *
 	 */
 	ButtonDebounce::stopConfigurationList();
-
-#if EFI_PROD_CODE
-	if (allowDangerousHardwareUpdates) {
-		stopSensors();
-	}
-#endif // EFI_PROD_CODE
 
 	stopHardware();
 
@@ -249,10 +257,6 @@ void initHardware() {
 		return;
 	}
 
-#if EFI_SOFTWARE_KNOCK
-	initSoftwareKnock();
-#endif /* EFI_SOFTWARE_KNOCK */
-
 #ifdef TRIGGER_SCOPE
 	initTriggerScope();
 #endif // TRIGGER_SCOPE
@@ -282,20 +286,12 @@ void initHardware() {
 	initMax31855();
 #endif /* EFI_MAX_31855 */
 
-#if EFI_CAN_SUPPORT
-	initCan();
-	initCanImu();
-#endif /* EFI_CAN_SUPPORT */
+	// Software knock, CAN, CAN VSS and IMU: see config_steps.cpp
+	configStepsBoot(BootPhase::Hardware);
 
 #if EFI_SHAFT_POSITION_INPUT
 	updateTriggerInputPins();
 #endif /* EFI_SHAFT_POSITION_INPUT */
-
-#if EFI_CAN_SUPPORT
-	initCanVssSupport();
-#endif // EFI_CAN_SUPPORT
-
-	calcFastAdcIndexes();
 
 	startHardware();
 

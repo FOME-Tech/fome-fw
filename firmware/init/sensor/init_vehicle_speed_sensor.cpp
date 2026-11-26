@@ -22,5 +22,5 @@ void initVehicleSpeedSensor() {
 }
 
 void deInitVehicleSpeedSensor() {
-	vehicleSpeedSensor.deInit();
+	vehicleSpeedSensor.deInit(engineConfiguration->vehicleSpeedSensorInputPin);
 }

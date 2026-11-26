@@ -138,3 +138,37 @@ void startSimplePwmHard(
 		SimplePwm* state, const char* msg, brain_pin_e brainPin, OutputPin* output, float frequency, float dutyCycle);
 
 void copyPwmParameters(PwmConfig* state, MultiChannelStateSequence const* seq);
+
+struct engine_configuration_s;
+
+/**
+ * A SimplePwm that a configuration step (config_steps.cpp) starts and stops as the configuration wants
+ * it. Its output pin is re-initialized by every burn on its own, so the PWM only has to start the first
+ * time it's wanted and stop when it isn't any more. Frequency and duty can be changed while it runs.
+ */
+class ConfiguredPwm {
+public:
+	explicit ConfiguredPwm(SimplePwm& pwm)
+		: m_pwm(pwm) {}
+
+	// For a step's stop: stop the PWM if it's running and no longer wanted
+	void stopIfUnwanted(bool wanted);
+
+	// For a step's start: start the PWM if it's wanted and not running. prev == nullptr starts from
+	// scratch, forgetting whether a previous start left it running.
+	void startIfWanted(
+			const engine_configuration_s* prev,
+			bool wanted,
+			const char* msg,
+			OutputPin* output,
+			float frequency,
+			float dutyCycle);
+
+	bool isRunning() const {
+		return m_running;
+	}
+
+private:
+	SimplePwm& m_pwm;
+	bool m_running = false;
+};

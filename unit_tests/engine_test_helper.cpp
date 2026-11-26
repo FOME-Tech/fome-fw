@@ -13,6 +13,7 @@
 #include "accel_enrichment.h"
 #include "logicdata.h"
 #include "hardware.h"
+#include "config_steps.h"
 
 #if EFI_ENGINE_SNIFFER
 #include "engine_sniffer.h"
@@ -76,6 +77,9 @@ EngineTestHelper::EngineTestHelper(
 
 	unitTestWarningCodeState.clear();
 
+	// Start from nothing, like the firmware does: no burn applies until startup has finished
+	configStepsReset();
+
 	efi::clear(activeConfiguration);
 
 	enginePins.reset();
@@ -126,6 +130,8 @@ EngineTestHelper::EngineTestHelper(
 
 	initHardware();
 	rememberCurrentConfiguration();
+
+	configStepsStartupFinished();
 }
 
 EngineTestHelper::~EngineTestHelper() {

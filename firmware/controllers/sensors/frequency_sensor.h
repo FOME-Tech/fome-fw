@@ -10,8 +10,10 @@ public:
 	FrequencySensor(SensorType type, efidur_t timeoutPeriod)
 		: FunctionalSensor(type, timeoutPeriod) {}
 
+	// Starts on the pin, or carries on if it's already running on it (updating the filter)
 	void initIfValid(brain_pin_e pin, SensorConverter& converter, float filterParameter);
-	void deInit();
+	// Releases the pin and unregisters, unless it's running on keepPin
+	void deInit(brain_pin_e keepPin = Gpio::Unassigned);
 
 	// sad workaround: we are not good at BiQuad configuring
 	bool useBiQuad = true;
@@ -27,4 +29,5 @@ private:
 	brain_pin_e m_pin = Gpio::Unassigned;
 
 	Biquad m_filter;
+	float m_filterParameter = 0;
 };

@@ -76,7 +76,27 @@ public:
 
 static CCM_OPTIONAL KnockThread kt;
 
-void initSoftwareKnock() {
+// What the knock filter and thread were set up with, see softwareKnockNeedsReboot()
+static bool startedEnabled;
+static float startedBandCustom;
+static float startedBore;
+
+bool softwareKnockNeedsReboot() {
+	if (!startedEnabled && !engineConfiguration->enableSoftwareKnock) {
+		// Off before and after, the filter settings don't matter
+		return false;
+	}
+
+	return startedEnabled != engineConfiguration->enableSoftwareKnock ||
+		   startedBandCustom != engineConfiguration->knockBandCustom ||
+		   startedBore != engineConfiguration->cylinderBore;
+}
+
+void startSoftwareKnock(const engine_configuration_s* /*prev*/) {
+	startedEnabled = engineConfiguration->enableSoftwareKnock;
+	startedBandCustom = engineConfiguration->knockBandCustom;
+	startedBore = engineConfiguration->cylinderBore;
+
 	if (engineConfiguration->enableSoftwareKnock) {
 		float freqKhz;
 

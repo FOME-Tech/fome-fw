@@ -202,13 +202,24 @@ TEST(SensorInit, TpsDeinitReinit) {
 	ASSERT_NE(nullptr, Sensor::getSensorOfType(SensorType::Tps1Primary));
 	ASSERT_TRUE(Sensor::hasSensor(SensorType::Tps1));
 
-	deinitTps();
+	auto tps1Primary = Sensor::getSensorOfType(SensorType::Tps1Primary);
 
-	// After deinit, sensors should be gone
+	// Nothing changed: the sensors stay as they are
+	deinitTps();
+	EXPECT_EQ(tps1Primary, Sensor::getSensorOfType(SensorType::Tps1Primary));
+	EXPECT_TRUE(Sensor::hasSensor(SensorType::Tps1));
+	initTps();
+	EXPECT_EQ(tps1Primary, Sensor::getSensorOfType(SensorType::Tps1Primary));
+
+	// Unassigned: the sensors are released
+	auto channel = engineConfiguration->tps1_1AdcChannel;
+	engineConfiguration->tps1_1AdcChannel = EFI_ADC_NONE;
+	deinitTps();
 	EXPECT_EQ(nullptr, Sensor::getSensorOfType(SensorType::Tps1Primary));
 	EXPECT_FALSE(Sensor::hasSensor(SensorType::Tps1));
 
-	// Reinit should work
+	// Assigned again: reinit should work
+	engineConfiguration->tps1_1AdcChannel = channel;
 	initTps();
 	ASSERT_NE(nullptr, Sensor::getSensorOfType(SensorType::Tps1Primary));
 	ASSERT_TRUE(Sensor::hasSensor(SensorType::Tps1));

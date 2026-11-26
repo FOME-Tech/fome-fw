@@ -13,7 +13,9 @@
 #include "engine_module.h"
 #include "closed_loop_controller.h"
 
-void initAlternatorCtrl();
+// Configuration sequence step, see config_steps.cpp
+void stopAlternatorOutput(const engine_configuration_s* prev);
+void startAlternatorOutput(const engine_configuration_s* prev);
 
 class AlternatorController : public EngineModule, public ClosedLoopController<float, percent_t> {
 public:

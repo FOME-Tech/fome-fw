@@ -48,6 +48,7 @@
 #include "start_stop.h"
 #include "vr_pwm.h"
 #include "adc_subscription.h"
+#include "config_steps.h"
 
 #if EFI_TUNER_STUDIO
 #include "tunerstudio.h"
@@ -241,13 +242,14 @@ void commonInitEngineController() {
 	printf("commonInitEngineController\n");
 #endif
 
-#if EFI_ENGINE_CONTROL
 	/**
-	 * This has to go after 'enginePins.startPins()' in order to
-	 * properly detect un-assigned output pins
+	 * The configuration sequence: cylinder layout, configured sensors, tachometer, ... (config_steps.cpp).
+	 * A burn restarts these the same way. This has to go after 'enginePins.startPins()' in order to
+	 * properly detect un-assigned output pins.
 	 */
-	prepareOutputSignals();
+	configStepsBoot(BootPhase::Controller);
 
+#if EFI_ENGINE_CONTROL
 	engine->injectionEvents.addFuelEvents();
 #endif // EFI_ENGINE_CONTROL
 
@@ -263,10 +265,6 @@ void commonInitEngineController() {
 	initBenchTest();
 #endif /* EFI_PROD_CODE && EFI_ENGINE_CONTROL */
 
-#if EFI_ALTERNATOR_CONTROL
-	initAlternatorCtrl();
-#endif /* EFI_ALTERNATOR_CONTROL */
-
 #if EFI_VVT_PID
 	initVvtActuators();
 #endif /* EFI_VVT_PID */
@@ -276,9 +274,9 @@ void commonInitEngineController() {
 #endif /* EFI_MALFUNCTION_INDICATOR */
 
 #if !EFI_UNIT_TEST
-	// This is tested independently - don't configure sensors for tests.
+	// Sensors built in to the board. This is tested independently - don't configure sensors for tests.
 	// This lets us selectively mock them for each test.
-	initNewSensors();
+	initFixedSensors();
 #endif /* EFI_UNIT_TEST */
 
 	initSensors();
@@ -287,14 +285,11 @@ void commonInitEngineController() {
 
 	initScriptImpl();
 
-	initGpPwm();
-
 #if EFI_IDLE_CONTROL
 	startIdleThread();
 #endif /* EFI_IDLE_CONTROL */
 
 	initButtonDebounce();
-	initStartStopButton();
 
 #if EFI_ELECTRONIC_THROTTLE_BODY
 	initElectronicThrottle();
@@ -306,7 +301,6 @@ void commonInitEngineController() {
 
 #if EFI_ENGINE_CONTROL
 	initBoostCtrl();
-	initFanControl();
 #endif /* EFI_ENGINE_CONTROL */
 
 #if EFI_LAUNCH_CONTROL
@@ -314,9 +308,6 @@ void commonInitEngineController() {
 #endif
 
 	engine->rpmCalculator.Register();
-
-	initTachometer();
-	initSpeedometer();
 }
 
 // Returns false if there's an obvious problem with the loaded configuration

@@ -92,6 +92,8 @@ public:
 	RegisteredOutputPin tachOut;
 	RegisteredOutputPin speedoOut;
 
+	RegisteredOutputPin gppwmPins[GPPWM_CHANNELS];
+
 	OutputPin sdCsPin;
 	OutputPin accelerometerCs;
 

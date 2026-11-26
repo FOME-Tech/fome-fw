@@ -45,6 +45,11 @@ brain_pin_e getSckPin(spi_device_e device);
 
 void applyNewHardwareSettings();
 
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp: the ADC channels sampled at the fast rate for MAP
+void startFastAdcChannels(const engine_configuration_s* prev);
+
 // Initialize hardware that doesn't require configuration to be loaded
 void initHardwareNoConfig();
 
