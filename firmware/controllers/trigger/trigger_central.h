@@ -57,7 +57,9 @@ public:
 	// GND input pins instead of leaving them floating
 	bool hwTriggerInputEnabled = true;
 
-	cyclic_buffer<int> triggerErrorDetection;
+	// Whether each recent primary sync point (reached while synchronized) had the wrong number of teeth
+	// since the last one. Only the last 6 are ever looked at, see isTriggerDecoderError()
+	cyclic_buffer<uint8_t, 6> triggerErrorDetection;
 
 	/**
 	 * See also triggerSimulatorRpm
