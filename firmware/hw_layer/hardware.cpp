@@ -79,8 +79,9 @@ static void initSpiModules() {
 #if HAL_USE_ADC
 
 #ifdef MODULE_MAP_AVERAGING
-static FastAdcToken fastMapSampleIndex;
-static FastAdcToken fastMapSampleIndex2;
+// Until the configuration sequence sets them: the fast ADC callback runs from early in startup on some chips
+static FastAdcToken fastMapSampleIndex = InvalidFastAdcToken;
+static FastAdcToken fastMapSampleIndex2 = InvalidFastAdcToken;
 #endif
 
 /**

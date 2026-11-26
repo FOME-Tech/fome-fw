@@ -272,7 +272,7 @@ struct Stm32AdcV4Provider final : public Stm32AdcProviderBase {
 
 static Stm32AdcV4Provider provider;
 
-static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
+static constexpr FastAdcToken invalidToken = InvalidFastAdcToken;
 
 FastAdcToken enableFastAdcChannel(const char*, adc_channel_e channel) {
 	if (!isAdcChannelValid(channel)) {

@@ -270,7 +270,7 @@ ADCConversionGroup adcgrpcfgFast = {
 static const size_t maxFastChannels = 8;
 static size_t fastAdcChannelCount = 0;
 
-static constexpr FastAdcToken invalidToken = (FastAdcToken)(-1);
+static constexpr FastAdcToken invalidToken = InvalidFastAdcToken;
 
 FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	if (!isAdcChannelValid(channel)) {

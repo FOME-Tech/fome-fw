@@ -72,6 +72,10 @@ void onFastAdcComplete(adcsample_t* samples);
 
 using FastAdcToken = size_t;
 
+// What enableFastAdcChannel() returns for no channel. getFastAdc() reads it as 0.
+inline constexpr FastAdcToken InvalidFastAdcToken = static_cast<FastAdcToken>(-1);
+
+// Add a channel to the fast ADC sampling list. Each call adds one: to change the list, reset it first.
 FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel);
 float getFastAdc(FastAdcToken token);
 const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx);
