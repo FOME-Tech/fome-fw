@@ -15,10 +15,12 @@ import static com.rusefi.IoUtil.*;
 import static org.junit.Assert.*;
 
 /*
- This test requires a particular hardware setup connected to a Proteus board.
+ This test requires a particular hardware setup connected to a Proteus (or Atlas) board.
     - External power supplied to the 12v_IGN pin, nominal 12 volts (but 11-13 will work, see testVbatt).
         Go buy some cheapie $8 12v power supply, cut the barrel jack off, and crimp pins on.
     - A jumper wire with a 1k resistor in series from Ignition output 10 to Analog volt 2 (TPS, see testTpsAnalogInput) and 100uF capacitor from AV2 to GND.
+ The rest of the HW CI loopback rig (trigger and frequency loops, CAN) is described in com.rusefi.Rig and the
+ HW_CI_RIG preset (setHwCiRig() in firmware/config/engines/test_engine.cpp).
  */
 public class ProteusAnalogTest extends RusefiTestBase {
     @Test

@@ -2,6 +2,7 @@ package com.rusefi;
 
 import com.rusefi.common.ConfigFieldsTest;
 import com.rusefi.common.MiscTest;
+import com.rusefi.proteus.FlexLoopTest;
 import com.rusefi.proteus.ProteusAnalogTest;
 import com.rusefi.proteus.RigPresetTest;
 
@@ -11,6 +12,7 @@ public class HwCiF4Proteus {
                 MiscTest.class,
                 ConfigFieldsTest.class,
                 RigPresetTest.class,
+                FlexLoopTest.class,
                 ProteusAnalogTest.class,
         });
     }
