@@ -107,20 +107,6 @@ static void calcFastAdcIndexes() {
 #endif /* MODULE_MAP_AVERAGING */
 }
 
-extern bool isSpiInitialized[6];
-
-void stopSpi(spi_device_e device) {
-#if HAL_USE_SPI
-	if (!isSpiInitialized[device]) {
-		return; // not turned on
-	}
-	isSpiInitialized[device] = false;
-	efiSetPadUnused(getSckPin(device));
-	efiSetPadUnused(getMisoPin(device));
-	efiSetPadUnused(getMosiPin(device));
-#endif /* HAL_USE_SPI */
-}
-
 /**
  * this method is NOT currently invoked on ECU start
  * todo: maybe start invoking this method on ECU start so that peripheral start-up initialization and restart are
@@ -154,37 +140,7 @@ void applyNewHardwareSettings() {
 
 	stopHardware();
 
-	if (isConfigurationChanged(is_enabled_spi_1)) {
-		stopSpi(SPI_DEVICE_1);
-	}
-
-	if (isConfigurationChanged(is_enabled_spi_2)) {
-		stopSpi(SPI_DEVICE_2);
-	}
-
-	if (isConfigurationChanged(is_enabled_spi_3)) {
-		stopSpi(SPI_DEVICE_3);
-	}
-
-	if (isConfigurationChanged(is_enabled_spi_4)) {
-		stopSpi(SPI_DEVICE_4);
-	}
-
-	if (isConfigurationChanged(is_enabled_spi_5)) {
-		stopSpi(SPI_DEVICE_5);
-	}
-
-	if (isConfigurationChanged(is_enabled_spi_6)) {
-		stopSpi(SPI_DEVICE_6);
-	}
-
 	enginePins.unregisterPins();
-
-#if EFI_PROD_CODE
-	if (allowDangerousHardwareUpdates) {
-		reconfigureSensors();
-	}
-#endif /* EFI_PROD_CODE */
 
 	ButtonDebounce::startConfigurationList();
 
@@ -310,8 +266,9 @@ void initHardware() {
 	initSmartGpio();
 #endif
 
-	// output pins potentially depend on 'initSmartGpio'
-	initOutputPins();
+#if HAL_USE_SPI
+	enginePins.sdCsPin.initPin("SD CS", engineConfiguration->sdCardCsPin);
+#endif /* HAL_USE_SPI */
 
 #if EFI_ENGINE_CONTROL
 	enginePins.startPins();

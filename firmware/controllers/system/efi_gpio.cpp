@@ -237,10 +237,6 @@ void EnginePins::unregisterPins() {
 	stopInjectionPins();
 	stopIgnitionPins();
 
-	// todo: add pinMode
-	unregisterOutputIfPinChanged(sdCsPin, sdCardCsPin);
-	unregisterOutputIfPinChanged(accelerometerCs, LIS302DLCsPin);
-
 	RegisteredOutputPin* pin = registeredOutputHead;
 	while (pin != nullptr) {
 		pin->unregister();
@@ -503,12 +499,6 @@ brain_pin_diag_e OutputPin::getDiag() const {
 #else
 	return PIN_OK;
 #endif
-}
-
-void initOutputPins() {
-#if HAL_USE_SPI
-	enginePins.sdCsPin.initPin("SD CS", engineConfiguration->sdCardCsPin);
-#endif /* HAL_USE_SPI */
 }
 
 void OutputPin::initPin(const char* msg, brain_pin_e brainPin) {

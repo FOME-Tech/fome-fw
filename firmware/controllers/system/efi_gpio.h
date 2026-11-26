@@ -15,7 +15,6 @@
 #include "injection_gpio.h"
 
 void initPrimaryPins();
-void initOutputPins();
 void turnAllPinsOff();
 
 #ifdef __cplusplus
