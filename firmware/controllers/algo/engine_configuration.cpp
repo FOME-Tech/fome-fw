@@ -668,12 +668,12 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
 			setEngineProteusGearboxManInTheMiddle();
 			break;
-#ifdef HARDWARE_CI
-		case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
-			setProteusAnalogPwmTest();
-			break;
-#endif // HARDWARE_CI
 #endif // HW_PROTEUS
+#if defined(HARDWARE_CI) && (HW_PROTEUS || HW_ATLAS)
+		case engine_type_e::HW_CI_RIG:
+			setHwCiRig();
+			break;
+#endif
 #if HW_POLYGONUS_PRESETS
 		case engine_type_e::POLYGONUS_MIATA_NA6:
 			setMiataNa6_Polygonus();

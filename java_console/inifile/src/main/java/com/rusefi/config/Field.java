@@ -25,6 +25,7 @@ public class Field {
     /**
      * For an enum field, its value names newline separated (as generated), position = value
      */
+    private String enumType;
     private String enumValuesList;
     private String[] enumValues;
 
@@ -165,10 +166,19 @@ public class Field {
         return name;
     }
 
-    public Field setEnumValues(String newlineSeparatedNames) {
+    /**
+     * @param enumType the C type, e.g. "output_pin_e". Fields of a pin type (output_pin_e, brain_input_pin_e,
+     *                 switch_input_pin_e, Gpio) all hold a Gpio value, but each type names a different set of pins.
+     */
+    public Field setEnumValues(String enumType, String newlineSeparatedNames) {
+        this.enumType = enumType;
         this.enumValuesList = newlineSeparatedNames;
         this.enumValues = null;
         return this;
+    }
+
+    public String getEnumType() {
+        return enumType;
     }
 
     public boolean isEnum() {

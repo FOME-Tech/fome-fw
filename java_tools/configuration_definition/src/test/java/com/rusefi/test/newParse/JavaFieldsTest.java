@@ -80,9 +80,9 @@ public class JavaFieldsTest {
         Assert.assertEquals(HEADER +
                 "\tpublic static final String ENUM_VALUES_pin_e = \"NONE\\nINVALID\\nIgn 1\\nDigital 3, or 4\";\n" +
                 "\tpublic static final String ENUM_VALUES_mode_e = \"off\\non\";\n" +
-                "\tpublic static final Field FIRSTPIN = Field.create(\"FIRSTPIN\", 0, FieldType.INT16).setBaseOffset(0).setEnumValues(ENUM_VALUES_pin_e);\n" +
-                "\tpublic static final Field MODE = Field.create(\"MODE\", 2, FieldType.INT8).setBaseOffset(0).setEnumValues(ENUM_VALUES_mode_e);\n" +
-                "\tpublic static final Field SECONDPIN = Field.create(\"SECONDPIN\", 4, FieldType.INT16).setBaseOffset(0).setEnumValues(ENUM_VALUES_pin_e);\n" +
+                "\tpublic static final Field FIRSTPIN = Field.create(\"FIRSTPIN\", 0, FieldType.INT16).setBaseOffset(0).setEnumValues(\"pin_e\", ENUM_VALUES_pin_e);\n" +
+                "\tpublic static final Field MODE = Field.create(\"MODE\", 2, FieldType.INT8).setBaseOffset(0).setEnumValues(\"mode_e\", ENUM_VALUES_mode_e);\n" +
+                "\tpublic static final Field SECONDPIN = Field.create(\"SECONDPIN\", 4, FieldType.INT16).setBaseOffset(0).setEnumValues(\"pin_e\", ENUM_VALUES_pin_e);\n" +
                 "}\n", parseToJavaFields(input));
     }
 
@@ -98,9 +98,9 @@ public class JavaFieldsTest {
         Assert.assertEquals(HEADER +
                 "\tpublic static final String ENUM_VALUES_pin_e = \"NONE\\nIgn 1\";\n" +
                 "\tpublic static final Field BEFORE = Field.create(\"BEFORE\", 0, FieldType.INT16).setBaseOffset(0);\n" +
-                "\tpublic static final Field PINS1 = Field.create(\"PINS1\", 2, FieldType.INT16).setBaseOffset(0).setEnumValues(ENUM_VALUES_pin_e);\n" +
-                "\tpublic static final Field PINS2 = Field.create(\"PINS2\", 4, FieldType.INT16).setBaseOffset(0).setEnumValues(ENUM_VALUES_pin_e);\n" +
-                "\tpublic static final Field PINS3 = Field.create(\"PINS3\", 6, FieldType.INT16).setBaseOffset(0).setEnumValues(ENUM_VALUES_pin_e);\n" +
+                "\tpublic static final Field PINS1 = Field.create(\"PINS1\", 2, FieldType.INT16).setBaseOffset(0).setEnumValues(\"pin_e\", ENUM_VALUES_pin_e);\n" +
+                "\tpublic static final Field PINS2 = Field.create(\"PINS2\", 4, FieldType.INT16).setBaseOffset(0).setEnumValues(\"pin_e\", ENUM_VALUES_pin_e);\n" +
+                "\tpublic static final Field PINS3 = Field.create(\"PINS3\", 6, FieldType.INT16).setBaseOffset(0).setEnumValues(\"pin_e\", ENUM_VALUES_pin_e);\n" +
                 "}\n", parseToJavaFields(input));
     }
 
@@ -117,7 +117,7 @@ public class JavaFieldsTest {
 
         Assert.assertEquals(HEADER +
                 "\tpublic static final String ENUM_VALUES_mode_e = \"off\\non\";\n" +
-                "\tpublic static final Field IDLE_MODE = Field.create(\"IDLE_MODE\", 0, FieldType.INT8).setBaseOffset(0).setEnumValues(ENUM_VALUES_mode_e);\n" +
+                "\tpublic static final Field IDLE_MODE = Field.create(\"IDLE_MODE\", 0, FieldType.INT8).setBaseOffset(0).setEnumValues(\"mode_e\", ENUM_VALUES_mode_e);\n" +
                 "\tpublic static final Field IDLE_FLAG = Field.create(\"IDLE_FLAG\", 4, FieldType.BIT, 0).setBaseOffset(0);\n" +
                 "}\n", parseToJavaFields(input));
     }

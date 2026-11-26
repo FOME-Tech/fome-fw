@@ -89,7 +89,7 @@ public class FieldTest {
 
     @Test
     public void testEnumValues() {
-        Field pin = Field.create("PIN", 0, FieldType.INT16).setEnumValues("NONE\nINVALID\nIgn 1\nINVALID\nDigital 1");
+        Field pin = Field.create("PIN", 0, FieldType.INT16).setEnumValues("test_e", "NONE\nINVALID\nIgn 1\nINVALID\nDigital 1");
         assertTrue(pin.isEnum());
         assertEquals(5, pin.getEnumValues().length);
         assertEquals(2, pin.enumIndex("Ign 1"));
@@ -105,17 +105,17 @@ public class FieldTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testEnumUnknownName() {
-        Field.create("PIN", 0, FieldType.INT16).setEnumValues("NONE\nIgn 1").enumIndex("Ign 2");
+        Field.create("PIN", 0, FieldType.INT16).setEnumValues("test_e", "NONE\nIgn 1").enumIndex("Ign 2");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testEnumInvalidIsNotAValue() {
-        Field.create("PIN", 0, FieldType.INT16).setEnumValues("NONE\nINVALID\nIgn 1").enumIndex("INVALID");
+        Field.create("PIN", 0, FieldType.INT16).setEnumValues("test_e", "NONE\nINVALID\nIgn 1").enumIndex("INVALID");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testEnumAmbiguousName() {
-        Field.create("E", 0, FieldType.INT8).setEnumValues("A\nB\nA").enumIndex("A");
+        Field.create("E", 0, FieldType.INT8).setEnumValues("test_e", "A\nB\nA").enumIndex("A");
     }
 
     @Test(expected = IllegalArgumentException.class)

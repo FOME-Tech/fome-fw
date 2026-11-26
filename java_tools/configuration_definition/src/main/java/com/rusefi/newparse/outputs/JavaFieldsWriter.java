@@ -253,7 +253,9 @@ public class JavaFieldsWriter {
                 ps.print(baseOffset);
                 ps.print(")");
                 if (e.values != null) {
-                    ps.print(".setEnumValues(");
+                    ps.print(".setEnumValues(\"");
+                    ps.print(e.enumType);
+                    ps.print("\", ");
                     ps.print(enumValuesConstant(e.enumType));
                     ps.print(")");
                 }

@@ -62,7 +62,7 @@ public class ProteusAnalogTest extends RusefiTestBase {
 
     @Test
     public void testTpsAnalogInput() {
-        ecu.setEngineType(engine_type_e.PROTEUS_ANALOG_PWM_TEST); // proteus analog input PWM tester
+        ecu.setEngineType(engine_type_e.HW_CI_RIG); // IGN10 RC loop into AV2 as TPS1
         ecu.changeRpm(1000);
         // engine has to be spinning for idle valve to work
         ecu.sendCommand(getEnableCommand(CMD_SELF_STIMULATION));

@@ -106,17 +106,41 @@ void setTestEngineIssue366rise() {
 }
 #endif /* EFI_UNIT_TEST */
 
-#ifdef HARDWARE_CI
-void setProteusAnalogPwmTest() {
-	// lowest cpu trigger possible
+#if defined(HARDWARE_CI) && (HW_PROTEUS || HW_ATLAS)
+#include "polygonus_meta.h"
+
+/**
+ * The HW CI loopback rig, the same on Proteus and Atlas since it's built from their shared
+ * connector names. The ECU's outputs are jumpered back to its own inputs:
+ *  - Ign 10 -> 1k -> Analog Volt 2 (100uF to ground): output duty shows up as voltage, read as TPS1
+ *  - Ign 11 -> Digital 1, Ign 12 -> Digital 2: trigger simulator into the crank and cam inputs
+ *  - Ign 9 -> Digital 3, Ign 8 -> Digital 5: frequency loops, left free for tests to assign
+ *  - CAN1 <-> CAN2: both buses are on at 500k by default, nothing to set
+ */
+void setHwCiRig() {
+	// 4 cylinders: only coils 1..cylinder count are initialized
+	engineConfiguration->firingOrder = FO_1_3_4_2;
+
+	// The rig's outputs aren't coils, even if a test raises the cylinder count
+	static const Gpio rigOutputs[] = { PROTEUS_IGN_8, PROTEUS_IGN_9, PROTEUS_IGN_10, PROTEUS_IGN_11, PROTEUS_IGN_12 };
+	for (auto& pin : engineConfiguration->ignitionPins) {
+		for (Gpio rigOutput : rigOutputs) {
+			if (pin == rigOutput) {
+				pin = Gpio::Unassigned;
+			}
+		}
+	}
+
+	// Lowest CPU trigger possible: the analog test only runs the stimulator to make the idle valve work.
+	// Tests that need a real trigger pattern set their own.
 	engineConfiguration->trigger.type = trigger_type_e::TT_ONE;
+	engineConfiguration->triggerSimulatorPins[0] = PROTEUS_IGN_11;
+	engineConfiguration->triggerSimulatorPins[1] = PROTEUS_IGN_12;
+	engineConfiguration->triggerInputPins[0] = PROTEUS_DIGITAL_1;
 
-	// Disable trigger stim
-	engineConfiguration->triggerSimulatorPins[0] = Gpio::Unassigned;
-	engineConfiguration->triggerSimulatorPins[1] = Gpio::Unassigned;
-
-	// The idle control pin is connected to the default TPS input, analog volt 2
-	engineConfiguration->idle.solenoidPin = Gpio::G4;
+	// The idle valve output is the analog loop's source, read back as TPS1
+	engineConfiguration->idle.solenoidPin = PROTEUS_IGN_10;
+	engineConfiguration->tps1_1AdcChannel = PROTEUS_IN_ANALOG_VOLT_2;
 
 	// 5893hz is coprime with the analog sample rate, 500hz, so hopefully we get less aliasing
 	engineConfiguration->idle.solenoidFrequency = 5893;

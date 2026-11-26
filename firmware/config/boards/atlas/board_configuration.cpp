@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "adc_subscription.h"
+#include "atlas_meta.h"
 
 #ifndef EFI_BOOTLOADER
 #include "functional_sensor.h"
@@ -175,6 +176,12 @@ void setBoardDefaultConfiguration() {
 	engineConfiguration->isSdCardEnabled = true;
 
 	engineConfiguration->enableSoftwareKnock = true;
+
+	// If we're running as hardware CI, borrow a few extra pins for that
+#ifdef HARDWARE_CI
+	engineConfiguration->triggerSimulatorPins[0] = PROTEUS_IGN_11;
+	engineConfiguration->triggerSimulatorPins[1] = PROTEUS_IGN_12;
+#endif
 }
 
 void preHalInit() {

@@ -51,7 +51,10 @@ enum class engine_type_e : uint32_t {
 
 	TEST_CRANK_ENGINE = 28,
 
-	PROTEUS_ANALOG_PWM_TEST = 30,
+	/**
+	 * Hardware CI loopback rig, Proteus and Atlas, HARDWARE_CI builds only. See setHwCiRig()
+	 */
+	HW_CI_RIG = 30,
 
 	MRE_BOARD_NEW_TEST = 31,
 

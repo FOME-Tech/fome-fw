@@ -170,8 +170,8 @@ void setBoardDefaultConfiguration() {
 
 	// If we're running as hardware CI, borrow a few extra pins for that
 #ifdef HARDWARE_CI
-	engineConfiguration->triggerSimulatorPins[0] = Gpio::G3;
-	engineConfiguration->triggerSimulatorPins[1] = Gpio::G2;
+	engineConfiguration->triggerSimulatorPins[0] = PROTEUS_IGN_11;
+	engineConfiguration->triggerSimulatorPins[1] = PROTEUS_IGN_12;
 #endif
 }
 
