@@ -16,6 +16,13 @@ public enum Sensor {
     // RPM, vss
     RPMValue(GAUGE_NAME_RPM, FieldType.UINT16, TsOutputs.RPMVALUE, 1, "RPM"),
     vehicleSpeedKph("Vehicle Speed", FieldType.UINT8, TsOutputs.VEHICLESPEEDKPH, 1, "kph"),
+    // Frequency, Hz
+    auxSpeed1("Aux Speed 1", FieldType.UINT16, TsOutputs.AUXSPEED1, 1, "Hz"),
+    auxSpeed2("Aux Speed 2", FieldType.UINT16, TsOutputs.AUXSPEED2, 1, "Hz"),
+
+    // Flex fuel sensor
+    flexPercent("Flex Ethanol", FieldType.UINT8, TsOutputs.FLEXPERCENT, 0.5, "%"),
+    fuelTemp("Fuel Temperature", FieldType.INT16, TsOutputs.FUELTEMP, 1.0 / TsOutputs.PACK_MULT_TEMPERATURE, "C"),
 
     // Temperatures
     INT_TEMP(GAUGE_NAME_ECU_TEMPERATURE, FieldType.INT8, TsOutputs.INTERNALMCUTEMPERATURE, 1, "C"),

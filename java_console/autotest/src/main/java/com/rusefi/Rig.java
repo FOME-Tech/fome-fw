@@ -24,7 +24,7 @@ public class Rig {
     public static final String FREQUENCY_A_IN = "Digital 3";
 
     public static final String FREQUENCY_B_OUT = "Ign 8";
-    public static final String FREQUENCY_B_IN = "Digital 5";
+    public static final String FREQUENCY_B_IN = "Digital 4";
 
     public static final String NONE = "NONE";
 }

@@ -114,7 +114,7 @@ void setTestEngineIssue366rise() {
  * connector names. The ECU's outputs are jumpered back to its own inputs:
  *  - Ign 10 -> 1k -> Analog Volt 2 (100uF to ground): output duty shows up as voltage, read as TPS1
  *  - Ign 11 -> Digital 1, Ign 12 -> Digital 2: trigger simulator into the crank and cam inputs
- *  - Ign 9 -> Digital 3, Ign 8 -> Digital 5: frequency loops, left free for tests to assign
+ *  - Ign 9 -> Digital 3, Ign 8 -> Digital 4: frequency loops, left free for tests to assign
  *  - CAN1 <-> CAN2: both buses are on at 500k by default, nothing to set
  */
 void setHwCiRig() {

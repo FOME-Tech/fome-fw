@@ -63,7 +63,13 @@ public class ControllerConnectorState {
         }
 
         linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_OUTPIN, (s) -> { });
-        connect(linkManager, port);
+        try {
+            connect(linkManager, port);
+        } catch (RuntimeException e) {
+            // Let go of the port, or every later test waits out the connect timeout on a port we still hold
+            linkManager.close();
+            throw e;
+        }
         ControllerConnectorState.port = port;
         ControllerConnectorState.linkManager = linkManager;
         return linkManager;

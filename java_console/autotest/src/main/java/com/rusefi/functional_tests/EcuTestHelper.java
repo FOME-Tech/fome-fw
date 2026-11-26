@@ -267,6 +267,37 @@ public class EcuTestHelper {
     }
 
     /**
+     * Burn a change nothing on the rig depends on, to see what a burn does to everything else
+     */
+    public void burnUnrelatedChange() {
+        double threshold = getField(Fields.ENGINESNIFFERRPMTHRESHOLD);
+        setFieldAndBurn(Fields.ENGINESNIFFERRPMTHRESHOLD, threshold == 2500 ? 2600 : 2500);
+    }
+
+    /**
+     * Wait up to 5 seconds for a reading to arrive, then require it to hold for a second, so a reading that's only on
+     * its way out (a frequency sensor times out 500ms after its last edge) doesn't pass
+     */
+    public static void assertSensorSettles(String what, Sensor sensor, double expected, double tolerance) {
+        long deadline = System.currentTimeMillis() + 5 * Timeouts.SECOND;
+        double value = SensorCentral.getInstance().getValue(sensor);
+        while (Math.abs(value - expected) > tolerance) {
+            if (System.currentTimeMillis() > deadline)
+                throw new AssertionError(what + ": expected " + expected + " but read " + value);
+            BinaryProtocol.sleep(100);
+            value = SensorCentral.getInstance().getValue(sensor);
+        }
+
+        long holdUntil = System.currentTimeMillis() + Timeouts.SECOND;
+        while (System.currentTimeMillis() < holdUntil) {
+            BinaryProtocol.sleep(100);
+            value = SensorCentral.getInstance().getValue(sensor);
+            if (Math.abs(value - expected) > tolerance)
+                throw new AssertionError(what + ": reached " + expected + " but then read " + value);
+        }
+    }
+
+    /**
      * Read the whole tune back from the ECU into our copy, e.g. to check that a write really landed
      */
     public void readConfigurationFromEcu() {
