@@ -83,7 +83,7 @@ static BaseBlockDevice* getRamdiskDevice() {
 	compressedBlockDeviceStart(&cbd, ramdisk_image_gz, sizeof(ramdisk_image_gz));
 
 	return (BaseBlockDevice*)&cbd;
-#else  // not EFI_EMBED_INI_MSD
+#else // not EFI_EMBED_INI_MSD
 	// No embedded ini file, just mount the null device instead
 	return (BaseBlockDevice*)&ND1;
 #endif
