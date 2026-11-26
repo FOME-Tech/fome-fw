@@ -19,7 +19,6 @@ public class MiscTest extends RusefiTestBase {
         bp.burn();
     }
 
-    @Ignore
     @Test
     public void testMcuTemperature() throws InterruptedException {
         double mcuTemp = Double.NaN;
