@@ -157,8 +157,12 @@ static TsCalMode functionToCalModeSecMax(dc_function_e func) {
 
 bool EtbController::init(
 		dc_function_e function, DcMotor* motor, pid_s* pidParameters, const ValueProvider3D* pedalMap, bool hasPedal) {
+	// Forget the motor from any previous configuration: if this one doesn't initialize, nothing may drive it
+	m_motor = nullptr;
+
 	if (function == DC_None) {
 		// if not configured, don't init.
+		m_function = DC_None;
 		etbErrorCode = (int8_t)TpsState::None;
 		return false;
 	}
@@ -947,13 +951,18 @@ void doInitElectronicThrottle() {
 	// todo: rename etbFunctions to something-without-etb for same reason?
 	for (int i = 0; i < ETB_COUNT; i++) {
 		auto func = engineConfiguration->etbFunctions[i];
+		auto controller = engine->etbControllers[i];
+
 		if (func == DC_None) {
-			// do not touch HW pins if function not selected, this way Lua can use DC motor hardware pins directly
+			// do not touch HW pins if function not selected, this way Lua can use DC motor hardware pins directly.
+			// The controller still has to drop whatever it was doing before.
+			if (controller) {
+				controller->init(DC_None, nullptr, nullptr, &pedal2tpsMap, hasPedal);
+			}
 			continue;
 		}
 		auto motor = initDcMotor(engineConfiguration->etbIo[i], i, engineConfiguration->etb_use_two_wires);
 
-		auto controller = engine->etbControllers[i];
 		if (!controller) {
 			continue;
 		}
