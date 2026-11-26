@@ -7,7 +7,6 @@ import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.trigger_type_e;
 import com.rusefi.io.CommandQueue;
 import com.rusefi.io.InvocationConfirmationListener;
-import com.rusefi.io.LinkManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CountDownLatch;
@@ -123,16 +122,6 @@ public class IoUtil {
             Thread.sleep(seconds * 1000L);
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    public static void realHardwareConnect(LinkManager linkManager, String port) {
-        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_OUTPIN, (s) -> { });
-
-        try {
-            linkManager.connect(port).await(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new IllegalStateException("Not connected in time");
         }
     }
 

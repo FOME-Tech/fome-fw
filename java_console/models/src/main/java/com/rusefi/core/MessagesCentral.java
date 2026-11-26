@@ -31,6 +31,10 @@ public class MessagesCentral {
         listeners.add(listener);
     }
 
+    public void removeListener(MessageListener listener) {
+        listeners.remove(listener);
+    }
+
     public void postMessage(final Class clazz, final String message) {
         log.info("postMessage " + clazz.getSimpleName() + ": " + message);
         SwingUtilities.invokeLater(new Runnable() {

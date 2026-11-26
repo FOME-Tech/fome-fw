@@ -107,6 +107,59 @@ public class Field {
         return value.doubleValue() * multiplier;
     }
 
+    /**
+     * Write a raw (storage, unscaled) value into the image, the reverse of {@link #getValue(ConfigurationImage, double)}
+     *
+     * @throws IllegalArgumentException if the value doesn't fit the field's storage
+     */
+    public void setValue(ConfigurationImage ci, double rawValue) {
+        Objects.requireNonNull(ci, "ConfigurationImage");
+        ByteBuffer wrapped = ci.getByteBuffer(getOffset(), type.getStorageSize());
+        if (bitOffset != NO_BIT_OFFSET) {
+            if (rawValue != 0 && rawValue != 1)
+                throw new IllegalArgumentException(name + ": bit value must be 0 or 1, got " + rawValue);
+            wrapped.mark();
+            int packed = wrapped.getInt();
+            packed = rawValue == 1 ? packed | (1 << bitOffset) : packed & ~(1 << bitOffset);
+            wrapped.reset();
+            wrapped.putInt(packed);
+            return;
+        }
+        if (type == FLOAT) {
+            wrapped.putFloat((float) rawValue);
+            return;
+        }
+
+        long value = (long) rawValue;
+        if (value != rawValue)
+            throw new IllegalArgumentException(name + ": integer field, got " + rawValue);
+        // The generated Fields don't say whether an integer is signed (U16 and S16 are both INT16),
+        // so accept anything that fits the width either way
+        int bits = 8 * type.getStorageSize();
+        long min = -(1L << (bits - 1));
+        long max = (1L << bits) - 1;
+        if (value < min || value > max)
+            throw new IllegalArgumentException(name + ": " + value + " doesn't fit in " + bits + " bits");
+
+        switch (type.getStorageSize()) {
+            case 1:
+                wrapped.put((byte) value);
+                break;
+            case 2:
+                wrapped.putShort((short) value);
+                break;
+            case 4:
+                wrapped.putInt((int) value);
+                break;
+            default:
+                throw new IllegalArgumentException(name + ": can't write " + type);
+        }
+    }
+
+    public String getName() {
+        return name;
+    }
+
     public static Field create(String name, int offset, FieldType type, int bitOffset) {
         return new Field(name, offset, type, bitOffset);
     }

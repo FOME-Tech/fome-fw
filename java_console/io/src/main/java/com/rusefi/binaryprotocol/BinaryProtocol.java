@@ -340,6 +340,12 @@ public class BinaryProtocol {
         stream.close();
     }
 
+    /**
+     * Write one chunk (at most {@link Fields#BLOCKING_FACTOR} bytes) of the tune to the ECU's RAM, and to our copy
+     * of it ({@link #getControllerConfiguration()}). Takes effect at once; {@link #burn()} makes it persistent.
+     *
+     * @throws IllegalStateException if the ECU didn't accept the write
+     */
     public void writeData(byte[] content, int contentOffset, int ecuOffset, int size) {
         isBurnPending = true;
 
@@ -355,26 +361,45 @@ public class BinaryProtocol {
                 log.error("writeData: Something is wrong, retrying...");
                 continue;
             }
-            break;
+
+            ConfigurationImage image = state.getControllerConfiguration();
+            if (image != null) {
+                System.arraycopy(content, contentOffset, image.getContent(), ecuOffset, size);
+                state.setController(image);
+            }
+            return;
         }
+        throw new IllegalStateException("writeData failed at offset " + ecuOffset + " size " + size
+                + (isClosed ? ": connection closed" : ": no OK response in " + Timeouts.BINARY_IO_TIMEOUT + "ms"));
     }
 
+    public boolean isBurnPending() {
+        return isBurnPending;
+    }
+
+    /**
+     * Ask the ECU to save its tune to flash, if anything was written since the last burn. The ECU acknowledges at
+     * once and writes the flash afterwards.
+     *
+     * @throws IllegalStateException if the ECU didn't acknowledge the burn
+     */
     public void burn() {
         if (!isBurnPending)
             return;
         log.info("Need to burn");
 
-        while (true) {
-            if (isClosed)
-                return;
+        long start = System.currentTimeMillis();
+        while (!isClosed && (System.currentTimeMillis() - start < Timeouts.BINARY_IO_TIMEOUT)) {
             byte[] response = executeCommand(Fields.TS_BURN_COMMAND, "burn");
             if (!checkResponseCode(response, (byte) Fields.TS_RESPONSE_BURN_OK) || response.length != 1) {
                 continue;
             }
-            break;
+            log.info("DONE");
+            isBurnPending = false;
+            return;
         }
-        log.info("DONE");
-        isBurnPending = false;
+        throw new IllegalStateException("burn failed"
+                + (isClosed ? ": connection closed" : ": no BURN_OK response in " + Timeouts.BINARY_IO_TIMEOUT + "ms"));
     }
 
     public void setController(ConfigurationImage controller) {

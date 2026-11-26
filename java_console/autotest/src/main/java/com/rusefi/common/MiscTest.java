@@ -2,6 +2,8 @@ package com.rusefi.common;
 
 import com.rusefi.RusefiTestBase;
 import com.rusefi.binaryprotocol.BinaryProtocol;
+import com.rusefi.config.Field;
+import com.rusefi.config.generated.Fields;
 import com.rusefi.core.Sensor;
 import com.rusefi.core.SensorCentral;
 import org.junit.Ignore;
@@ -9,17 +11,38 @@ import org.junit.Test;
 
 import static com.devexperts.util.TimeUtil.SECOND;
 import static com.rusefi.IoUtil.sleepSeconds;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class MiscTest extends RusefiTestBase {
+    /**
+     * A burned value survives a reboot, and one written but not burned doesn't
+     */
     @Test
-    public void burn() {
-        BinaryProtocol bp = ecu.getLinkManager().getCurrentStreamState();
-        // let's make sure 'burn' command works since sometimes it does not
-        bp.burn();
+    public void testBurnSurvivesReboot() {
+        // Harmless with no engine, and a plain uint16
+        Field field = Fields.ENGINESNIFFERRPMTHRESHOLD;
+        double original = ecu.getField(field);
+        double burned = original == 2345 ? 2346 : 2345;
+        double notBurned = burned + 1;
+
+        try {
+            ecu.setFieldAndBurn(field, burned);
+            ecu.setField(field, notBurned);
+
+            // The unburned write did reach the ECU's RAM
+            ecu.readConfigurationFromEcu();
+            assertEquals(notBurned, ecu.getField(field), 0);
+
+            ecu.reboot();
+            assertEquals("burned value after reboot", burned, ecu.getField(field), 0);
+        } finally {
+            ecu.setFieldAndBurn(field, original);
+        }
     }
 
+    // Reads 63 C on the F4 Discovery, but a believable 35 C on Atlas: suspect that Discovery board
     @Ignore
     @Test
     public void testMcuTemperature() throws InterruptedException {
