@@ -142,6 +142,12 @@ void applyNewHardwareSettings() {
 
 	enginePins.unregisterPins();
 
+#if EFI_PROD_CODE
+	if (allowDangerousHardwareUpdates) {
+		reconfigureSensors();
+	}
+#endif /* EFI_PROD_CODE */
+
 	ButtonDebounce::startConfigurationList();
 
 	/*******************************************
