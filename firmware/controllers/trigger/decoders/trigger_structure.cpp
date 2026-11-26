@@ -733,10 +733,6 @@ void TriggerWaveform::initializeTriggerWaveform(
 			configureFiatIAQ_P8(this);
 			break;
 
-		case trigger_type_e::TT_TRI_TACH:
-			configureTriTach(this);
-			break;
-
 		case trigger_type_e::TT_GM_24x:
 			initGmLS24_5deg(this);
 			break;

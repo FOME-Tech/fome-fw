@@ -173,9 +173,6 @@ INSTANTIATE_TEST_SUITE_P(
 
 // Trigger definitions that can't run at all in this harness, each for a known reason
 static const std::set<trigger_type_e> skippedTriggers = {
-		// 270 edges per crank revolution is 540 per cycle, which overflows
-		// InstantRpmCalculator::timeOfLastEvent[PWM_PHASE_MAX_COUNT]
-		trigger_type_e::TT_TRI_TACH,
 		// The sync gap is exactly 1.5x, which is also exactly the lower edge of the
 		// accepted range, so whether a real sync gap is accepted comes down to timestamp rounding
 		trigger_type_e::TT_RENIX_44_2_2,

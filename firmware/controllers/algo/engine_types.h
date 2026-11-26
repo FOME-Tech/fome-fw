@@ -241,8 +241,6 @@ enum class trigger_type_e : uint32_t {
 	 */
 	TT_ONE_PLUS_ONE = 16,
 
-	TT_UNUSED_17 = 17,
-
 	// just one channel with just one tooth
 	TT_ONE = 18,
 
@@ -340,9 +338,6 @@ enum class trigger_type_e : uint32_t {
 
 	TT_NISSAN_MR18_CAM_VVT = 52,
 
-	// https://rusefi.com/forum/viewtopic.php?f=5&t=1912
-	TT_TRI_TACH = 53,
-
 	TT_GM_60_2_2_2 = 54,
 
 	/**
@@ -416,6 +411,10 @@ enum class trigger_type_e : uint32_t {
 
 	// Honda J-series (V6) intake cam: 6 tooth slots with 2 missing, one distinct big gap per 720 degree cycle.
 	TT_HONDA_J_CAM_6_2 = 79,
+
+	TT_UNUSED_17 = 17,
+	TT_UNUSED_25 = 25,
+	TT_UNUSED_53 = 53,
 
 	// do not forget to edit "#define trigger_type_e_enum" line in integration/fome_config.txt file to propogate new
 	// value to rusefi.ini TS project do not forget to invoke "gen_config.bat" once you make changes to

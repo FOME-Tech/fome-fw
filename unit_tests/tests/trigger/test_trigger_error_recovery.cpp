@@ -939,7 +939,6 @@ bool anyTriggerErrorWarning(EngineTestHelper& eth) {
 TEST(TriggerErrorRecovery, StartReportsNoTriggerErrorsOnAnyPattern) {
 	static const std::set<trigger_type_e> skipped = {
 			// see skippedTriggers in test_engine_invariants.cpp
-			trigger_type_e::TT_TRI_TACH,
 			trigger_type_e::TT_RENIX_44_2_2,
 			trigger_type_e::TT_RENIX_66_2_2_2,
 	};
