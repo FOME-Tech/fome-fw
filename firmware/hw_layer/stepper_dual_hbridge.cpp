@@ -30,6 +30,24 @@ void DualHBridgeStepper::initialize(DcMotor* motorPhaseA, DcMotor* motorPhaseB, 
 			"stepperNumMicroSteps");
 }
 
+void DualHBridgeStepper::enable() {
+	m_enabled = true;
+
+	if (m_motorPhaseA && m_motorPhaseB) {
+		m_motorPhaseA->enable();
+		m_motorPhaseB->enable();
+	}
+}
+
+void DualHBridgeStepper::disable() {
+	m_enabled = false;
+
+	if (m_motorPhaseA && m_motorPhaseB) {
+		m_motorPhaseA->disable("idle stepper off");
+		m_motorPhaseB->disable("idle stepper off");
+	}
+}
+
 bool DualHBridgeStepper::step(bool positive) {
 	// Check that we've been initialized
 	if (!m_motorPhaseA || !m_motorPhaseB) {
@@ -69,7 +87,7 @@ bool DualHBridgeStepper::step(bool positive) {
 }
 
 bool DualHBridgeStepper::update(float dutyMult) {
-	if (!m_motorPhaseA || !m_motorPhaseB) {
+	if (!m_enabled || !m_motorPhaseA || !m_motorPhaseB) {
 		return false;
 	}
 

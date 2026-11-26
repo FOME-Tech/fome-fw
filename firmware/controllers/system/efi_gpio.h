@@ -93,6 +93,7 @@ public:
 	RegisteredOutputPin speedoOut;
 
 	RegisteredOutputPin gppwmPins[GPPWM_CHANNELS];
+	RegisteredOutputPin vvtPins[CAM_INPUTS_COUNT];
 
 	OutputPin sdCsPin;
 	OutputPin accelerometerCs;

@@ -89,6 +89,8 @@ protected:
 	}
 
 private:
+	void releaseMotor();
+
 	dc_function_e m_function = DC_None;
 	SensorType m_positionSensor = SensorType::Invalid;
 	DcMotor* m_motor = nullptr;

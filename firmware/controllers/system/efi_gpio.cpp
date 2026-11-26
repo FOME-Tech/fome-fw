@@ -189,8 +189,15 @@ EnginePins::EnginePins()
 			  {"GPPWM#2", CONFIG_OFFSET(gppwm[1].pin)},
 			  {"GPPWM#3", CONFIG_OFFSET(gppwm[2].pin)},
 			  {"GPPWM#4", CONFIG_OFFSET(gppwm[3].pin)},
+	  }
+	, vvtPins{
+			  {"VVT B1I", CONFIG_OFFSET(vvtPins[0])},
+			  {"VVT B1E", CONFIG_OFFSET(vvtPins[1])},
+			  {"VVT B2I", CONFIG_OFFSET(vvtPins[2])},
+			  {"VVT B2E", CONFIG_OFFSET(vvtPins[3])},
 	  } {
 	static_assert(GPPWM_CHANNELS == 4, "Add a pin for each GPPWM channel");
+	static_assert(CAM_INPUTS_COUNT == 4, "Add a pin for each VVT output");
 	static_assert(efi::size(sparkNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(trailNames) >= MAX_CYLINDER_COUNT, "Too many ignition pins");
 	static_assert(efi::size(injectorNames) >= MAX_CYLINDER_COUNT, "Too many injection pins");

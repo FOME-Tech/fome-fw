@@ -26,16 +26,12 @@
 #include "gppwm.h"
 #include "boost_control.h"
 #include "vvt.h"
+#include "idle_hardware.h"
 
 static constexpr ConfigStep configSteps[] = {
 // Hardware phase: initHardware()
 #if EFI_SOFTWARE_KNOCK
-		{"software knock",
-		 BootPhase::Hardware,
-		 ApplyWhen::RebootOnly,
-		 nullptr,
-		 startSoftwareKnock,
-		 softwareKnockNeedsReboot},
+		{"software knock", BootPhase::Hardware, ApplyWhen::Immediately, nullptr, startSoftwareKnock, nullptr},
 #endif // EFI_SOFTWARE_KNOCK
 
 #if EFI_CAN_SUPPORT
@@ -87,6 +83,11 @@ static constexpr ConfigStep configSteps[] = {
 
 #if EFI_VVT_PID
 		{"VVT outputs", BootPhase::Controller, ApplyWhen::Immediately, stopVvtOutputs, startVvtOutputs, nullptr},
+#endif
+
+// The idle valve hardware doesn't exist in unit tests
+#if EFI_IDLE_CONTROL && !EFI_UNIT_TEST
+		{"idle hardware", BootPhase::Controller, ApplyWhen::Immediately, stopIdleHardware, startIdleHardware, nullptr},
 #endif
 
 		{"start/stop button", BootPhase::Controller, ApplyWhen::Immediately, nullptr, startStartStopButton, nullptr},

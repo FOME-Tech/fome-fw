@@ -66,8 +66,9 @@ TEST(etb, initializationMissingThrottle) {
 		engine->etbControllers[i] = &mocks[i];
 	}
 
-	EXPECT_CALL(mocks[0], init(DC_None, _, _, _, true)).Times(0);
-	EXPECT_CALL(mocks[1], init(DC_None, _, _, _, true)).Times(0);
+	// Each still hears that it's unassigned, so one unassigned by a burn stops (no motor hardware touched)
+	EXPECT_CALL(mocks[0], init(DC_None, nullptr, nullptr, _, true)).WillOnce(Return(false));
+	EXPECT_CALL(mocks[1], init(DC_None, nullptr, nullptr, _, true)).WillOnce(Return(false));
 
 	// Must have a sensor configured before init
 	Sensor::setMockValue(SensorType::AcceleratorPedal, 0, true);
@@ -99,7 +100,7 @@ TEST(etb, initializationSingleThrottle) {
 	EXPECT_CALL(mocks[0], init(DC_Throttle1, _, &engineConfiguration->etb, Ne(nullptr), true)).WillOnce(Return(true));
 
 	// Expect mock1 to be init as none
-	EXPECT_CALL(mocks[1], init(DC_None, _, _, _, true)).Times(0);
+	EXPECT_CALL(mocks[1], init(DC_None, nullptr, nullptr, _, true)).WillOnce(Return(false));
 
 	doInitElectronicThrottle();
 }
@@ -123,7 +124,7 @@ TEST(etb, initializationSingleThrottleInSecondSlot) {
 	Sensor::setMockValue(SensorType::AcceleratorPedalPrimary, 0, false);
 
 	// Expect mock0 to be init as none
-	EXPECT_CALL(mocks[0], init(DC_None, _, _, _, true)).Times(0);
+	EXPECT_CALL(mocks[0], init(DC_None, nullptr, nullptr, _, true)).WillOnce(Return(false));
 
 	// Expect mock1 to be init as throttle 1, and PID params
 	EXPECT_CALL(mocks[1], init(DC_Throttle1, _, &engineConfiguration->etb, Ne(nullptr), true)).WillOnce(Return(true));
@@ -181,7 +182,7 @@ TEST(etb, initializationWastegate) {
 			.WillOnce(Return(true));
 
 	// Expect mock1 to be init as none
-	EXPECT_CALL(mocks[1], init(DC_None, _, _, _, false)).Times(0);
+	EXPECT_CALL(mocks[1], init(DC_None, nullptr, nullptr, _, false)).WillOnce(Return(false));
 
 	doInitElectronicThrottle();
 }
@@ -195,6 +196,23 @@ TEST(etb, initializationNoFunction) {
 	EXPECT_FALSE(dut.init(DC_None, &motor, nullptr, nullptr, false));
 
 	// This should no-op, it shouldn't call motor.set(float duty)
+	dut.setOutput(0.5f);
+}
+
+// A burn that unassigns a running DC motor function stops driving its motor
+TEST(etb, unassignedByBurnReleasesMotor) {
+	StrictMock<MockMotor> motor;
+
+	EtbController dut;
+	pid_s pid = {};
+
+	// A wastegate needs no pedal or redundant sensors
+	EXPECT_TRUE(dut.init(DC_Wastegate, &motor, &pid, nullptr, false));
+
+	EXPECT_CALL(motor, disable(_));
+	EXPECT_FALSE(dut.init(DC_None, nullptr, nullptr, nullptr, false));
+
+	// No more output to the motor: the strict mock fails on any call
 	dut.setOutput(0.5f);
 }
 

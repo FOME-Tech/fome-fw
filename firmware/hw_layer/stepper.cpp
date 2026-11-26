@@ -55,7 +55,7 @@ void StepperMotorBase::changeCurrentPosition(bool positive) {
 	}
 }
 
-void StepperMotorBase::setInitialPosition() {
+void StepperMotorBase::setInitialPosition(StepperHw* hw) {
 	// try to get saved stepper position (-1 for no data)
 	m_currentPosition = loadStepperPos();
 
@@ -97,7 +97,7 @@ void StepperMotorBase::setInitialPosition() {
 		int numParkingSteps = (int)efiRound(
 				(1.0f + (float)engineConfiguration->stepperParkingExtraSteps / PERCENT_MULT) * m_totalSteps, 1.0f);
 		for (int i = 0; i < numParkingSteps; i++) {
-			if (!m_hw->step(false)) {
+			if (!hw->step(false)) {
 				initialPositionSet = false;
 				return;
 			}
@@ -118,23 +118,32 @@ void StepperMotorBase::setInitialPosition() {
 }
 
 void StepperMotorBase::doIteration() {
+	// A burn can take the hardware away (the idle valve isn't a stepper any more) while this thread sleeps
+	// inside a step: use one copy for the whole iteration
+	StepperHw* hw = m_hw;
+
+	if (!hw) {
+		chThdSleepMilliseconds(20);
+		return;
+	}
+
 	int targetPosition = efiRound(getTargetPosition(), 1);
 	int currentPosition = m_currentPosition;
 
 	// the stepper does not work if the main relay is turned off (it requires +12V)
 	if (!engine->isMainRelayEnabled() ||
 		Sensor::getOrZero(SensorType::BatteryVoltage) < engineConfiguration->minStepperVoltage) {
-		m_hw->pause();
+		hw->pause();
 		return;
 	}
 
 	if (!initialPositionSet) {
-		setInitialPosition();
+		setInitialPosition(hw);
 		return;
 	}
 
 	if (targetPosition == currentPosition) {
-		m_hw->sleep();
+		hw->sleep();
 		m_isBusy = false;
 		return;
 	}
@@ -143,7 +152,7 @@ void StepperMotorBase::doIteration() {
 
 	bool isIncrementing = targetPosition > currentPosition;
 
-	if (m_hw->step(isIncrementing)) {
+	if (hw->step(isIncrementing)) {
 		changeCurrentPosition(isIncrementing);
 	}
 

@@ -191,3 +191,53 @@ TEST(ConfigChange, GppwmPwmToOnOff) {
 
 	EXPECT_TRUE(pin.getLogicValue());
 }
+
+// Boost control enabled at boot without a pin did nothing: assigning the pin by burn must start it
+TEST(ConfigChange, BoostPinAssigned) {
+	EngineTestHelper eth(
+			engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) { cfg->isBoostControlEnabled = true; });
+	auto& controller = engine->module<BoostController>().unmock();
+	ASSERT_FALSE(controller.hasInit());
+
+	engineConfiguration->boostControlPin = Gpio::G2;
+	incrementGlobalConfigurationVersion();
+
+	EXPECT_TRUE(controller.hasInit());
+	EXPECT_TRUE(enginePins.boostPin.isInitialized());
+}
+
+// Enabling boost control by burn starts it too
+TEST(ConfigChange, BoostEnabled) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE, [](engine_configuration_s* cfg) {
+		cfg->isBoostControlEnabled = false;
+		cfg->boostControlPin = Gpio::G2;
+	});
+	auto& controller = engine->module<BoostController>().unmock();
+	ASSERT_FALSE(controller.hasInit());
+
+	engineConfiguration->isBoostControlEnabled = true;
+	incrementGlobalConfigurationVersion();
+
+	EXPECT_TRUE(controller.hasInit());
+}
+
+TEST(ConfigChange, VvtPinAssignedMovedRemoved) {
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+	auto& pin = enginePins.vvtPins[0];
+	ASSERT_FALSE(pin.isInitialized());
+
+	engineConfiguration->vvtPins[0] = Gpio::G3;
+	incrementGlobalConfigurationVersion();
+	EXPECT_TRUE(pin.isInitialized());
+
+	// Moved: the old pin is free for something else
+	engineConfiguration->vvtPins[0] = Gpio::G4;
+	engineConfiguration->gppwm[0].pin = Gpio::G3;
+	incrementGlobalConfigurationVersion();
+	EXPECT_TRUE(pin.isInitialized());
+	EXPECT_TRUE(enginePins.gppwmPins[0].isInitialized());
+
+	engineConfiguration->vvtPins[0] = Gpio::Unassigned;
+	incrementGlobalConfigurationVersion();
+	EXPECT_FALSE(pin.isInitialized());
+}

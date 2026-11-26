@@ -299,10 +299,6 @@ void commonInitEngineController() {
 	initMapAveraging();
 #endif /* MODULE_MAP_AVERAGING */
 
-#if EFI_ENGINE_CONTROL
-	initBoostCtrl();
-#endif /* EFI_ENGINE_CONTROL */
-
 #if EFI_LAUNCH_CONTROL
 	initLaunchControl();
 #endif

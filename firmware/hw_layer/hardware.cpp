@@ -26,12 +26,9 @@
 #include "mpu_util.h"
 #endif /* EFI_PROD_CODE */
 
-#include "idle_hardware.h"
 #include "trigger_central.h"
 #include "gitversion.h"
-#include "vvt.h"
 #include "trigger_emulator_algo.h"
-#include "boost_control.h"
 #include "software_knock.h"
 #include "trigger_scope.h"
 #include "init.h"
@@ -164,21 +161,9 @@ void applyNewHardwareSettings() {
 
 	enginePins.startPins();
 
-#if EFI_PROD_CODE && EFI_IDLE_CONTROL
-	if (isIdleHardwareRestartNeeded()) {
-		initIdleHardware();
-	}
-#endif
-
-#if EFI_ENGINE_CONTROL
-	startBoostPin();
-#endif // EFI_ENGINE_CONTROL
 #if EFI_EMULATE_POSITION_SENSORS
 	startTriggerEmulatorPins();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
-#if EFI_VVT_PID
-	startVvtControlPins();
-#endif /* EFI_VVT_PID */
 }
 
 // Weak link a stub so that every board doesn't have to implement this function
@@ -234,10 +219,6 @@ void stopHardware() {
 #if EFI_EMULATE_POSITION_SENSORS
 	stopTriggerEmulatorPins();
 #endif /* EFI_EMULATE_POSITION_SENSORS */
-
-#if EFI_VVT_PID
-	stopVvtControlPins();
-#endif /* EFI_VVT_PID */
 }
 
 /**

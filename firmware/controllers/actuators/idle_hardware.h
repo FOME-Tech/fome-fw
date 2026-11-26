@@ -9,6 +9,10 @@
 
 #pragma once
 
-void initIdleHardware();
-bool isIdleHardwareRestartNeeded();
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp: the idle valve (solenoid or stepper) hardware
+void stopIdleHardware(const engine_configuration_s* prev);
+void startIdleHardware(const engine_configuration_s* prev);
+
 bool isIdleMotorBusy();

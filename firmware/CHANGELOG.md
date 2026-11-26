@@ -36,7 +36,7 @@ or
  - "Extra idle air if throttle pressed" is replaced by "Dashpot air". The extra air is now also held while coasting (unless the coasting table is used), and is ramped out on return to idle instead of being removed at once. If you used it, re-enter the value under the new name. The hidden "air by RPM taper" settings are removed.
 
 ### Added
- - "Reboot required" indicator in TunerStudio, shown when a burned setting only takes effect after the ECU restarts. For now that's the CAN bus settings (enables, pins, baud rates) and software knock (enable, filter frequency, cylinder bore).
+ - "Reboot required" indicator in TunerStudio, shown when a burned setting only takes effect after the ECU restarts. For now that's the CAN bus settings (enables, pins, baud rates).
  - SD card logs are now organized into `YYYY/MM/DD` folders when the real-time clock is set. If the clock is not set, logs are still written to the root of the card with a sequential name.
  - Fahrenheit temperature support: pick "Fahrenheit" under Settings > Temperature Units in TunerStudio and all temperature gauges, datalogs, sensor adjustments, and thermistor calibration points display in °F. The stored tune is unchanged (always Celsius internally), so switching units never resets your configuration and works on every supported board.
  - Clutch position sensor: an analog clutch pedal sensor reading 0% (released) to 100% (on the floor), with configurable voltages, gauges and datalog channels. Everything that uses the clutch up and/or down switches now supports the analog sensor as virtual up/down switches too.
@@ -82,6 +82,11 @@ or
    - The alternator control output starts when its pin is assigned, and follows changes to its PWM frequency, which no longer asks for a power cycle.
    - Turning on fan PWM mode, or changing the fan PWM frequency, takes effect.
    - Changing the start/stop button's cranking time takes effect.
+   - Boost control starts when it's enabled or its output pin is assigned, turning it off stops the boost output, and its PWM frequency follows changes without asking for a power cycle.
+   - Turning on software knock, or changing the knock band or cylinder bore, takes effect.
+   - VVT outputs no longer briefly drop on every burn, and changing their pins or frequency no longer asks for a power cycle.
+   - The idle valve follows changes to its type (solenoid, double solenoid, stepper), pins and solenoid frequency, without asking for a power cycle. Previously switching valve type could leave the old one driven. Steppers on H-bridge or raw DC outputs still need a power cycle, and now ask for one.
+   - Unassigning an electronic throttle or other DC motor function (or removing the sensors it needs) stops that motor, instead of it carrying on with its old function until a power cycle. Function changes no longer ask for a power cycle; the H-bridge pins now do.
    - CAN IMU data (acceleration, yaw rate) starts when the IMU type or CAN VSS is set.
    - Changing the O2 heater or debug trigger sync output pin moves the output to the new pin.
    - GPPWM outputs follow changes to their pin, frequency and on-off/PWM mode. Previously a channel whose pin was changed or removed kept driving the old pin until a power cycle (which also blocked using that pin for anything else), and a newly assigned channel did nothing until then.
