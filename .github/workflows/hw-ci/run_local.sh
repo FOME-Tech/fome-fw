@@ -86,18 +86,25 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-# Waits for the ECU's port; on WSL a missing ECU is nearly always usbipd not re-attaching it
+# Waits for the ECU's port; on WSL a missing ECU is nearly always usbipd not re-attaching it.
+# A reset makes it re-enumerate, which gets auto-attach going again, so try one over SWD first.
 wait_for_ecu() {
-	if ! .github/workflows/hw-ci/resolve_ecu_port.sh "$ECU_SERIAL" "${1:-30}" > /dev/null; then
-		if grep -qi microsoft /proc/version; then
-			echo "WSL: if the ECU isn't in lsusb either, usbipd dropped it when it re-enumerated." >&2
-			echo "On Windows: 'usbipd list', then 'usbipd attach --wsl --auto-attach --busid <id>'." >&2
-			echo "If auto-attach is already running but stuck on 'Device not found', press the ECU's" >&2
-			echo "reset button: it re-enumerates and auto-attach picks it up." >&2
-			echo "Then carry on with: $0 $BOARD --no-build --no-flash" >&2
-		fi
-		exit 1
+	if .github/workflows/hw-ci/resolve_ecu_port.sh "$ECU_SERIAL" "${1:-30}" > /dev/null; then
+		return
 	fi
+	if grep -qi microsoft /proc/version; then
+		echo "ECU didn't come back; resetting it over SWD to re-trigger usbipd auto-attach" >&2
+		swd_reset > /dev/null 2>&1 || echo "SWD reset failed" >&2
+		if .github/workflows/hw-ci/resolve_ecu_port.sh "$ECU_SERIAL" 30 > /dev/null; then
+			return
+		fi
+		echo "WSL: if the ECU isn't in lsusb either, usbipd dropped it when it re-enumerated." >&2
+		echo "On Windows: 'usbipd list', then 'usbipd attach --wsl --auto-attach --busid <id>'." >&2
+		echo "If auto-attach is already running but stuck on 'Device not found', press the ECU's" >&2
+		echo "reset button: it re-enumerates and auto-attach picks it up." >&2
+		echo "Then carry on with: $0 $BOARD --no-build --no-flash" >&2
+	fi
+	exit 1
 }
 
 step() {
@@ -123,7 +130,19 @@ if [ $DO_BUILD = yes ]; then
 	# A unit test build in this tree leaves a host-gcc PCH variant behind, which the ARM build
 	# rejects (-Werror=invalid-pch). CI runners never build unit tests, so only we need this.
 	rm -rf firmware/pch/pch.h.gch
+	# The firmware 'make clean' leaves the bootloader's objects, so switching boards in one tree
+	# links one board's OpenBLT with another's (undefined FileTask/NetTransmitPacket). CI runners
+	# only ever build their own board.
+	rm -rf firmware/bootloader/blbuild
 	.github/workflows/hw-ci/build_for_hw_ci.sh "$FOLDER" "$TARGET"
+fi
+
+if [ $DO_BUILD = no ]; then
+	# The tests' Fields.java comes from whichever board's config was generated last, and a unit test
+	# build regenerates it for the default board. Regenerate it for this one (same sources, same
+	# signature as the firmware built from them).
+	step "Generate config for $TARGET"
+	(cd firmware && ./gen_config_board.sh "$FOLDER" "$TARGET" > /dev/null)
 fi
 
 step "Build autotest jar"
@@ -138,6 +157,14 @@ openocd_run() {
 		-c init -c targets -c "reset halt" \
 		"$@" \
 		-c "reset run" -c shutdown
+}
+
+swd_reset() {
+	openocd -f interface/stlink.cfg \
+		-c "transport select hla_swd" \
+		-f "$OPENOCD_TARGET" \
+		-c "reset_config none separate" \
+		-c init -c "reset run" -c shutdown
 }
 
 if [ $DO_FLASH = yes ]; then
