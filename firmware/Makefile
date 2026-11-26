@@ -222,7 +222,6 @@ $(info MODULES_INC:   $(MODULES_INC))
 CSRC =  gcc_version_check.c \
   $(filter-out $(LWIP_REPLACED_CSRC),$(ALLCSRC)) \
   $(BOARDSRC) \
-  $(CHIBIOS_CONTRIB)/os/various/ramdisk.c \
   $(CHIBIOS)/os/various/evtimer.c \
   ${HW_MASS_STORAGE_SRC_C} \
   $(HW_LAYER_EMS) \

@@ -175,10 +175,7 @@
 #define ENABLE_PERF_TRACE TRUE
 #define LUA_USER_HEAP (1 * 1024 * 1024)
 #elif defined(EFI_IS_F42x)
-// F42x has more memory, so we can:
-//  - use compressed USB MSD image (requires ~7k of memory: decompressor state and dictionary, and a bigger MSD thread stack)
-//  - use perf trace (requires ~16k of memory)
-#define EFI_USE_COMPRESSED_INI_MSD
+// F42x has more memory, so we can use perf trace (requires ~16k of memory)
 #define ENABLE_PERF_TRACE TRUE
 
 #if MODULE_ETHERNET_CONSOLE

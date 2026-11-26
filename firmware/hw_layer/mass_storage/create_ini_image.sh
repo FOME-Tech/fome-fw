@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # from firmware folder:
-# hw_layer/mass_storage/create_ini_image.sh tunerstudio/generated/rusefi.ini generated/ramdisk_image.h  112 test https://rusefi.com/s/test
+# hw_layer/mass_storage/create_ini_image.sh tunerstudio/generated/fome.ini generated/ramdisk_image.h 1088 test https://wiki.fome.tech
 
 # fail on error
 set -euo pipefail
@@ -12,48 +12,37 @@ FS_SIZE=$3
 SHORT_BOARDNAME=$4
 BOARD_SPECIFIC_URL=$5
 
-IMAGE=ramdisk.image
-ZIP=fome.ini.zip
-
+# Where the image can't be built, write a header that tells the firmware not to embed one
 if [ "$(expr substr $(uname -s) 1 6)" == "CYGWIN" ] || [ "$(expr substr $(uname -s) 1 5)" == "MINGW" ]; then
   echo No image on $(uname -s)
-
-	cat <<EOF > $H_OUTPUT
-#define RAMDISK_INVALID
-EOF
-
+  echo "#define RAMDISK_INVALID" > $H_OUTPUT
   exit 0
 fi
 
 if [[ "$OSTYPE" == darwin* ]]; then
   echo "Skipping INI image creation on macOS (missing dosfstools)"
-
-	cat <<EOF > $H_OUTPUT
-#define RAMDISK_INVALID
-EOF
-
+  echo "#define RAMDISK_INVALID" > $H_OUTPUT
   exit 0
 fi
 
-
+IMAGE=ramdisk.image
 
 # mkfs.fat and fatlabel are privileged on some systems
 PATH="$PATH:/usr/sbin"
 
 echo "create_ini_image: ini $FULL_INI to $H_OUTPUT size $FS_SIZE for $SHORT_BOARDNAME [$BOARD_SPECIFIC_URL]"
 
-rm -f $ZIP $IMAGE
+rm -f $IMAGE $IMAGE.gz
 
 # copy *FS_SIZE*KB of zeroes
 dd if=/dev/zero of=$IMAGE bs=1024 count=$FS_SIZE
 
 # create a FAT filesystem inside, name it "FOME EFI"
-mkfs.fat -v -r 64 $IMAGE
+mkfs.fat $IMAGE
 # labels can be no longer than 11 characters
 fatlabel $IMAGE "FOME EFI"
 
-# -j option dumps all files in the root of the zip (instead of inside directories)
-zip -j $ZIP $FULL_INI
+
 
 cp hw_layer/mass_storage/filesystem_contents/README.template.txt hw_layer/mass_storage/readme.temp
 echo ${BOARD_SPECIFIC_URL}       >> hw_layer/mass_storage/readme.temp
@@ -69,20 +58,25 @@ else
 fi
 
 # Put the zip inside the filesystem
-mcopy -i $IMAGE $ZIP ::
+mcopy -i $IMAGE $FULL_INI ::
 # Put a readme text file in there too
 mcopy -i $IMAGE hw_layer/mass_storage/readme.temp ::README-${current_date}.txt
 mcopy -i $IMAGE hw_layer/mass_storage/filesystem_contents/FOME\ Wiki.url ::
 mcopy -i $IMAGE hw_layer/mass_storage/filesystem_contents/FOME\ Discord.url ::
 mcopy -i $IMAGE hw_layer/mass_storage/filesystem_contents/FOME\ Releases.url ::
 
-
-
+# Compress the image as gzip with a 4 KB DEFLATE window. CompressedBlockDevice's dictionary must be at
+# least the window size, and the gzip tool always uses 32 KB.
+python3 -c 'import sys, zlib
+c = zlib.compressobj(9, zlib.DEFLATED, 16 + 12, 9)
+data = open(sys.argv[1], "rb").read()
+open(sys.argv[1] + ".gz", "wb").write(c.compress(data) + c.flush())' $IMAGE
+rm $IMAGE
 
 # write out as a C array, with "static const" tacked on the front
-xxd -i $IMAGE \
+xxd -i $IMAGE.gz \
     | cat <(echo -n "static const ") - \
     > $H_OUTPUT
 
-rm $ZIP $IMAGE
+rm $IMAGE.gz
 exit 0

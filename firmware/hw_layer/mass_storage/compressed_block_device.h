@@ -18,7 +18,7 @@ struct CompressedBlockDevice {
 	mutex_t mutex;
 	uzlib_uncomp d;
 	// Must be at least the DEFLATE window size the image was compressed with, see
-	// create_ini_image_compressed.sh. A smaller window costs a few KB of flash but saves RAM.
+	// create_ini_image.sh. A smaller window costs a few KB of flash but saves RAM.
 	uint8_t dictionary[4096];
 	const uint8_t* source;
 	size_t sourceSize;

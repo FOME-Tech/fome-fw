@@ -8,13 +8,8 @@
 #if HAL_USE_USB_MSD
 
 #if EFI_EMBED_INI_MSD
-#ifdef EFI_USE_COMPRESSED_INI_MSD
 #include "compressed_block_device.h"
-#include "ramdisk_image_compressed.h"
-#else
-#include "ramdisk.h"
 #include "ramdisk_image.h"
-#endif
 
 // If the ramdisk image told us not to use it, don't use it.
 #ifdef RAMDISK_INVALID
@@ -24,10 +19,12 @@
 #endif
 
 #if EFI_EMBED_INI_MSD
-#ifdef EFI_USE_COMPRESSED_INI_MSD
-static CompressedBlockDevice cbd;
+#if defined(STM32F4XX) && !defined(EFI_IS_F42x)
+// F40x doesn't have the main RAM to spare, but it does have CCM. Only the CPU touches the
+// decompressor (the MSD block buffer is separate), so it doesn't need DMA-capable memory.
+static CCM_OPTIONAL CompressedBlockDevice cbd;
 #else
-static RamDisk ramdisk;
+static CompressedBlockDevice cbd;
 #endif
 #endif
 
@@ -81,26 +78,11 @@ void attachMsdSdCard(BaseBlockDevice* blkdev) {
 
 static BaseBlockDevice* getRamdiskDevice() {
 #if EFI_EMBED_INI_MSD
-#ifdef EFI_USE_COMPRESSED_INI_MSD
 	uzlib_init();
 	compressedBlockDeviceObjectInit(&cbd);
 	compressedBlockDeviceStart(&cbd, ramdisk_image_gz, sizeof(ramdisk_image_gz));
 
 	return (BaseBlockDevice*)&cbd;
-#else  // not EFI_USE_COMPRESSED_INI_MSD
-	ramdiskObjectInit(&ramdisk);
-
-	constexpr size_t ramdiskSize = sizeof(ramdisk_image);
-	constexpr size_t blockSize = 512;
-	constexpr size_t blockCount = ramdiskSize / blockSize;
-
-	// Ramdisk should be a round number of blocks
-	static_assert(ramdiskSize % blockSize == 0);
-
-	ramdiskStart(&ramdisk, const_cast<uint8_t*>(ramdisk_image), blockSize, blockCount, /*readonly =*/true);
-
-	return (BaseBlockDevice*)&ramdisk;
-#endif // EFI_USE_COMPRESSED_INI_MSD
 #else  // not EFI_EMBED_INI_MSD
 	// No embedded ini file, just mount the null device instead
 	return (BaseBlockDevice*)&ND1;
