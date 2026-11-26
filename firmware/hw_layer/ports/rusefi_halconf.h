@@ -75,8 +75,12 @@
 #define PAL_USE_CALLBACKS TRUE
 
 // USB Serial
-// Round up to the next multiple of 64 bytes from BLOCKING_FACTOR+10 to allow space for header/checksum
-#define SERIAL_USB_BUFFERS_SIZE (((BLOCKING_FACTOR + 10) / 64) + 1) * 64
+// Only the bootloader uses ChibiOS's serial-over-USB driver (the firmware has its own, see
+// usb_console_direct.cpp). It finishes a receive only on a short packet or a full buffer, and hosts
+// don't send a zero-length packet after a write that's an exact multiple of 64 bytes, so with a
+// bigger buffer such a write sits unseen and the OpenBLT session times out. One packet per buffer
+// makes every packet visible as it arrives.
+#define SERIAL_USB_BUFFERS_SIZE 64
 #define SERIAL_USB_BUFFERS_NUMBER 2
 
 // USB Mass Storage
