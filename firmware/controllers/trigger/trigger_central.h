@@ -57,7 +57,9 @@ public:
 	// GND input pins instead of leaving them floating
 	bool hwTriggerInputEnabled = true;
 
-	cyclic_buffer<int> triggerErrorDetection;
+	// Whether each recent primary sync point (reached while synchronized) had the wrong number of teeth
+	// since the last one. Only the last 6 are ever looked at, see isTriggerDecoderError()
+	cyclic_buffer<uint8_t, 6> triggerErrorDetection;
 
 	/**
 	 * See also triggerSimulatorRpm
@@ -147,7 +149,7 @@ public:
 	PrimaryTriggerDecoder triggerState;
 #endif // EFI_SHAFT_POSITION_INPUT
 
-	TriggerWaveform triggerShape;
+	PrimaryTriggerWaveform triggerShape;
 
 	VvtTriggerDecoder vvtState[BANKS_COUNT][CAMS_PER_BANK] = {
 			{"VVT B1 Int",
@@ -164,7 +166,7 @@ public:
 #endif
 	};
 
-	TriggerWaveform vvtShape[CAMS_PER_BANK];
+	CamTriggerWaveform vvtShape[CAMS_PER_BANK];
 
 	TriggerFormDetails triggerFormDetails;
 

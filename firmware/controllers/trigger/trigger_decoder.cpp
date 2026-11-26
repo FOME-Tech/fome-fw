@@ -140,7 +140,8 @@ void TriggerFormDetails::prepareEventAngles(TriggerWaveform* shape) {
 						ObdCode::OBD_PCM_Processor_Fault,
 						triggerDefinitionIndex < triggerShapeLength,
 						"trigger shape fail");
-				assertIsInBounds(triggerDefinitionIndex, shape->isRiseEvent, "isRise");
+				efiAssertVoid(
+						ObdCode::OBD_PCM_Processor_Fault, triggerDefinitionIndex < shape->getCapacity(), "isRise");
 
 				// In case this is a rising event, replace the following fall event with the rising as well
 				if (shape->isRiseEvent[triggerDefinitionIndex]) {
@@ -271,13 +272,14 @@ void PrimaryTriggerDecoder::onNotEnoughTeeth(int /*actual*/, int /*expected*/) {
 			currentCycle.eventCount[1]);
 }
 
-void PrimaryTriggerDecoder::onTooManyTeeth(int /*actual*/, int /*expected*/) {
+// The per-wheel event counts are still at their expected values when the overflow is caught, so
+// report how far past the end of the pattern the decoder got instead. 'actual' is the 0-based index
+// of the event that overflowed, so it's one less than the number of events seen.
+void PrimaryTriggerDecoder::onTooManyTeeth(int actual, int expected) {
 	warning(ObdCode::CUSTOM_PRIMARY_TOO_MANY_TEETH,
-			"primary trigger error: too many teeth between sync points: expected %d/%d got %d/%d",
-			getTriggerCentral()->triggerShape.getExpectedEventCount(TriggerWheel::T_PRIMARY),
-			getTriggerCentral()->triggerShape.getExpectedEventCount(TriggerWheel::T_SECONDARY),
-			currentCycle.eventCount[0],
-			currentCycle.eventCount[1]);
+			"primary trigger error: too many teeth between sync points: no sync gap after %d events, pattern has %d",
+			actual + 1,
+			expected);
 }
 
 const char* getTriggerEvent(TriggerEvent value) {
@@ -304,9 +306,9 @@ void VvtTriggerDecoder::onNotEnoughTeeth(int actual, int expected) {
 
 void VvtTriggerDecoder::onTooManyTeeth(int actual, int expected) {
 	warning(ObdCode::CUSTOM_CAM_TOO_MANY_TEETH,
-			"cam %s trigger error: too many teeth between sync points: %d > %d",
+			"cam %s trigger error: too many teeth between sync points: no sync gap after %d events, pattern has %d",
 			m_name,
-			actual,
+			actual + 1,
 			expected);
 }
 

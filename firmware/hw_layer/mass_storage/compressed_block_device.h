@@ -17,7 +17,9 @@ struct CompressedBlockDevice {
 	// The decompressor is one shared forward-only stream, and more than one thread reads from us
 	mutex_t mutex;
 	uzlib_uncomp d;
-	uint8_t dictionary[32768];
+	// Must be at least the DEFLATE window size the image was compressed with, see
+	// create_ini_image.sh. A smaller window costs a few KB of flash but saves RAM.
+	uint8_t dictionary[4096];
 	const uint8_t* source;
 	size_t sourceSize;
 };

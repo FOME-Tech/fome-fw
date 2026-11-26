@@ -872,14 +872,8 @@ static void calculateTriggerSynchPoint(
 
 	shape.initializeSyncPoint(initState, primaryTriggerConfiguration);
 
-	if (shape.getSize() >= PWM_PHASE_MAX_COUNT) {
-		// todo: by the time we are here we had already modified a lot of RAM out of bounds!
-		firmwareError(
-				ObdCode::CUSTOM_ERR_TRIGGER_WAVEFORM_TOO_LONG, "Trigger length above maximum: %d", shape.getSize());
-		shape.setShapeDefinitionError(true);
-		return;
-	}
-
+	// TriggerWaveform::addEvent has already checked the shape fits its capacity for one revolution, but
+	// the per-cycle arrays are indexed across the whole engine cycle
 	if (shape.getLength() > TRIGGER_CYCLE_MAX_EVENTS) {
 		firmwareError(
 				ObdCode::CUSTOM_ERR_TRIGGER_WAVEFORM_TOO_LONG,

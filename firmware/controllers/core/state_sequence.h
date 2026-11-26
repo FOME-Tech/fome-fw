@@ -62,6 +62,42 @@ public:
 	uint16_t waveCount = 0;	 // Number of waveforms
 };
 
+/**
+ * A sequence whose arrays belong to someone else, so that sequences of different capacities can share
+ * one type. The owner provides the arrays and is responsible for the bounds.
+ */
+class ExternalMultiChannelStateSequence : public MultiChannelStateSequence {
+public:
+	ExternalMultiChannelStateSequence(float* switchTimes, uint8_t* waveForm)
+		: m_switchTimes(switchTimes)
+		, m_waveForm(waveForm) {}
+
+	float getSwitchTime(int phaseIndex) const override {
+		return m_switchTimes[phaseIndex];
+	}
+
+	bool getChannelState(int channelIndex, int phaseIndex) const override {
+		return (m_waveForm[phaseIndex] >> channelIndex) & 1;
+	}
+
+	void reset() {
+		waveCount = 0;
+	}
+
+	void setSwitchTime(const int phaseIndex, const float value) {
+		m_switchTimes[phaseIndex] = value;
+	}
+
+	void setChannelState(const int channelIndex, const int phaseIndex, bool state) {
+		uint8_t& ref = m_waveForm[phaseIndex];
+		ref = (ref & ~(1U << channelIndex)) | ((state ? 1 : 0) << channelIndex);
+	}
+
+private:
+	float* const m_switchTimes;
+	uint8_t* const m_waveForm;
+};
+
 template <unsigned max_phase>
 class MultiChannelStateSequenceWithData : public MultiChannelStateSequence {
 public:

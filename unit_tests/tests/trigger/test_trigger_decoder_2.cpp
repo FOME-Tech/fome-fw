@@ -32,11 +32,8 @@ struct MockTriggerDecoder : public TriggerDecoderBase {
 	MOCK_METHOD(void, onTooManyTeeth, (int actual, int expected), (override));
 };
 
-static auto makeTriggerShape(operation_mode_e mode, const TriggerConfiguration& cfg) {
-	TriggerWaveform shape;
+static void makeTriggerShape(TriggerWaveform& shape, operation_mode_e mode, const TriggerConfiguration& cfg) {
 	shape.initializeTriggerWaveform(mode, cfg);
-
-	return shape;
 }
 
 #define doTooth(dut, shape, cfg, t) dut.decodeTriggerEvent("", shape, nullptr, cfg, TriggerEvent::PrimaryRising, t)
@@ -45,7 +42,8 @@ TEST(TriggerDecoder, FindsFirstSyncPoint) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -87,7 +85,8 @@ TEST(TriggerDecoder, FindsSyncPointMultipleRevolutions) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -137,7 +136,8 @@ TEST(TriggerDecoder, TooManyTeeth_CausesError) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -220,7 +220,8 @@ TEST(TriggerDecoder, NotEnoughTeeth_CausesError) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -305,7 +306,8 @@ TEST(TriggerDecoder, TooManyTeethBeforeSyncConfirmed_NotReported) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -354,7 +356,8 @@ TEST(TriggerDecoder, NotEnoughTeethBeforeSyncConfirmed_NotReported) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -390,7 +393,8 @@ TEST(TriggerDecoder, SyncConfirmationStartsOverAfterError) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -427,7 +431,8 @@ TEST(TriggerDecoder, PrimaryDecoderNoDisambiguation) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CAM_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CAM_SENSOR, cfg);
 
 	efitick_t t = 0;
 
@@ -458,7 +463,8 @@ TEST(TriggerDecoder, PrimaryDecoderNeedsDisambiguation) {
 	MockTriggerConfiguration cfg({trigger_type_e::TT_TOOTHED_WHEEL, 4, 1});
 	cfg.update();
 
-	auto shape = makeTriggerShape(FOUR_STROKE_CRANK_SENSOR, cfg);
+	PrimaryTriggerWaveform shape;
+	makeTriggerShape(shape, FOUR_STROKE_CRANK_SENSOR, cfg);
 
 	efitick_t t = 0;
 

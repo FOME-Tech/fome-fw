@@ -48,12 +48,20 @@ struct DmaBufferContents {
 #endif
 };
 
+#if defined(STM32F7XX) || defined(STM32H7XX)
+// The MPU region covering this needs a power of 2 size, aligned to its size
 static constexpr size_t DMA_REGION_SIZE = nextPowerOf2(sizeof(DmaBufferContents));
 
 static struct {
 	DmaBufferContents contents;
 	uint8_t padding[DMA_REGION_SIZE - sizeof(DmaBufferContents)];
 } dmaBufferRegion DMA_BUFFER_MEMORY(DMA_REGION_SIZE);
+#else
+// No cache and no MPU region, so no padding needed
+static struct {
+	DmaBufferContents contents;
+} dmaBufferRegion;
+#endif
 
 namespace dma_buffers {
 

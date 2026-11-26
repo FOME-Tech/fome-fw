@@ -71,10 +71,24 @@ enum class TriggerWheel : uint8_t {
 /**
  * @brief Trigger shape has all the fields needed to describe and decode trigger signal.
  * @see TriggerState for trigger decoder state which works based on this trigger shape model
+ *
+ * The per-event arrays are owned by TriggerWaveformWithCapacity, so that cam shapes can be smaller than
+ * the primary trigger shape while every shape is still a TriggerWaveform.
  */
 class TriggerWaveform {
+protected:
+	TriggerWaveform(float* switchTimesStorage, uint8_t* waveFormStorage, bool* isRiseEventStorage, size_t capacity);
+
 public:
-	TriggerWaveform();
+	// The arrays live in the derived object, so a copy would point at someone else's
+	TriggerWaveform(const TriggerWaveform&) = delete;
+	TriggerWaveform& operator=(const TriggerWaveform&) = delete;
+
+	// The most events this shape can hold
+	size_t getCapacity() const {
+		return m_capacity;
+	}
+
 	void initializeTriggerWaveform(operation_mode_e triggerOperationMode, const TriggerConfiguration& triggerConfig);
 	void setShapeDefinitionError(bool value);
 
@@ -182,9 +196,9 @@ public:
 	 * but name is supposed to hint at the fact that decoders should not be assigning to it
 	 * Please use "getSize()" function to read this value
 	 */
-	MultiChannelStateSequenceWithData<PWM_PHASE_MAX_COUNT> wave;
+	ExternalMultiChannelStateSequence wave;
 
-	bool isRiseEvent[PWM_PHASE_MAX_COUNT];
+	bool* const isRiseEvent;
 
 	/**
 	 * @param angle (0..1]
@@ -271,7 +285,32 @@ private:
 	 * this is part of performance optimization
 	 */
 	operation_mode_e m_operationMode;
+
+	const size_t m_capacity;
 };
+
+// A separate base so that the arrays exist before the TriggerWaveform constructor initializes them
+template <size_t TCapacity>
+struct TriggerWaveformStorage {
+	float m_switchTimes[TCapacity];
+	uint8_t m_waveForm[TCapacity];
+	bool m_isRiseEvent[TCapacity];
+};
+
+template <size_t TCapacity>
+class TriggerWaveformWithCapacity : private TriggerWaveformStorage<TCapacity>, public TriggerWaveform {
+public:
+	TriggerWaveformWithCapacity()
+		: TriggerWaveform(this->m_switchTimes, this->m_waveForm, this->m_isRiseEvent, TCapacity) {}
+};
+
+// The primary (crank or cam) trigger, which can be any pattern including a custom toothed wheel
+using PrimaryTriggerWaveform = TriggerWaveformWithCapacity<PWM_PHASE_MAX_COUNT>;
+
+// Maximum events in a VVT cam shape. These are only ever the built-in cam patterns (see
+// getVvtTriggerType()), the largest of which is the Nissan MR18 cam.
+#define CAM_TRIGGER_MAX_EVENTS 32
+using CamTriggerWaveform = TriggerWaveformWithCapacity<CAM_TRIGGER_MAX_EVENTS>;
 
 /**
  * Misc values calculated from TriggerWaveform

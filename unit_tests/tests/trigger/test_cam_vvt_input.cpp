@@ -189,3 +189,23 @@ TEST(trigger, testNB2CamInput) {
 
 	EXPECT_EQ(39, waveChart.getSize());
 }
+
+// Cam shapes have less room than the primary trigger shape, so check every cam pattern fits
+TEST(trigger, everyVvtModeFitsCamShape) {
+	for (int i = 0; i < 256; i++) {
+		auto mode = static_cast<vvt_mode_e>(i);
+		auto name = getVvt_mode_e(mode);
+		if (strcmp(name, "unknown") == 0) {
+			continue;
+		}
+
+		EngineTestHelper eth(engine_type_e::TEST_ENGINE);
+		engineConfiguration->vvtMode[0] = mode;
+		// Building a shape that doesn't fit is a firmware error, which throws here
+		ASSERT_NO_THROW(engine->updateTriggerWaveform()) << name;
+
+		const auto& shape = engine->triggerCentral.vvtShape[0];
+		EXPECT_FALSE(shape.shapeDefinitionError) << name;
+		EXPECT_LE(shape.getSize(), shape.getCapacity()) << name;
+	}
+}
