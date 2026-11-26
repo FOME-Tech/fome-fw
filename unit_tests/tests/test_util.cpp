@@ -249,15 +249,26 @@ TEST(misc, testConsoleLogic) {
 
 	ASSERT_EQ(10, tokenLength(UNKNOWN_COMMAND));
 
-	// handling invalid token should work
+	// handling invalid token should work, and report failure
 	strcpy(buffer, "sdasdafasd asd");
-	handleConsoleLine(buffer);
+	EXPECT_FALSE(handleConsoleLine(buffer));
 
 	printf("\r\naddConsoleActionI\r\n");
 	addConsoleActionI("echoi", testEchoI);
 	strcpy(buffer, "echoi 239");
-	handleConsoleLine(buffer);
+	EXPECT_TRUE(handleConsoleLine(buffer));
 	ASSERT_EQ(239, lastInteger);
+
+	// wrong argument count fails
+	strcpy(buffer, "echoi 1 2");
+	EXPECT_FALSE(handleConsoleLine(buffer));
+
+	// a handler can reject its arguments, and that doesn't stick to the next command
+	addConsoleActionI("echoi_reject", [](int) { failConsoleCommand(); });
+	strcpy(buffer, "echoi_reject 1");
+	EXPECT_FALSE(handleConsoleLine(buffer));
+	strcpy(buffer, "echoi 239");
+	EXPECT_TRUE(handleConsoleLine(buffer));
 
 	printf("\r\naddConsoleActionI 240 with two spaces\r\n");
 	strcpy(buffer, "echoi  240");

@@ -6,8 +6,7 @@
 #include "pch.h"
 
 TEST(trigger, testQuadCam) {
-	// setting some weird engine
-	EngineTestHelper eth(engine_type_e::FORD_ESCORT_GT);
+	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
 	engineConfiguration->isFasterEngineSpinUpEnabled = false;
 	engineConfiguration->alwaysInstantRpm = true;
 
@@ -65,7 +64,7 @@ TEST(trigger, testQuadCam) {
 	hwHandleVvtCamSignal(true, getTimeNowNt(), firstCamSecondBank);
 	hwHandleVvtCamSignal(true, getTimeNowNt(), secondCamSecondBank);
 
-	float basePos = -80.2f;
+	float basePos = -43.2f;
 
 	// All four cams should now have the same position
 	EXPECT_NEAR_M3(basePos, engine->triggerCentral.getVVTPosition(firstBank, firstCam).value_or(0));

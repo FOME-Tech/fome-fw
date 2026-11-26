@@ -61,7 +61,6 @@ TESTS_SRC_CPP = \
 	tests/system/test_periodic_thread_controller.cpp \
 	tests/test_util.cpp \
 	tests/test_start_stop.cpp \
-	tests/test_hardware_reinit.cpp \
 	tests/test_engine_math.cpp \
 	tests/test_throttle_model.cpp \
 	tests/test_fasterEngineSpinningUp.cpp \

@@ -83,7 +83,14 @@ public class CommandQueue {
         commandListeners.add(listener);
 
         // Actually send the command now that we're listening
-        linkManager.send(command, commandRequest.isFireEvent());
+        try {
+            linkManager.send(command, commandRequest.isFireEvent());
+        } catch (CommandFailedException e) {
+            commandListeners.remove(listener);
+            linkManager.messageListener.postMessage(CommandQueue.class, e.getMessage());
+            commandRequest.getListener().onCommandFailure();
+            return;
+        }
 
         // Wait for a reply
         int timeoutMs = commandRequest.getTimeout();

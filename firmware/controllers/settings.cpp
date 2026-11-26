@@ -116,6 +116,7 @@ static brain_pin_e parseBrainPinWithErrorMessage(const char* pinName) {
 	brain_pin_e pin = parseBrainPin(pinName);
 	if (pin == Gpio::Invalid) {
 		efiPrintf("invalid pin name [%s]", pinName);
+		failConsoleCommand();
 	}
 	return pin;
 }
@@ -129,6 +130,8 @@ static brain_pin_e parseBrainPinWithErrorMessage(const char* pinName) {
 static void setIgnitionPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr) - 1; // convert from human index into software index
 	if (index < 0 || index >= MAX_CYLINDER_COUNT) {
+		efiPrintf("invalid ignition pin index [%s]", indexStr);
+		failConsoleCommand();
 		return;
 	}
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
@@ -173,6 +176,8 @@ static void setAlternatorPin(const char* pinName) {
 static void setTriggerInputPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr);
 	if (index < 0 || index > 2) {
+		efiPrintf("invalid trigger input index [%s]", indexStr);
+		failConsoleCommand();
 		return;
 	}
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
@@ -187,6 +192,8 @@ static void setTriggerInputPin(const char* indexStr, const char* pinName) {
 static void setTriggerSimulatorPin(const char* indexStr, const char* pinName) {
 	int index = atoi(indexStr);
 	if (index < 0 || index >= TRIGGER_SIMULATOR_PIN_COUNT) {
+		efiPrintf("invalid trigger simulator index [%s]", indexStr);
+		failConsoleCommand();
 		return;
 	}
 	brain_pin_e pin = parseBrainPinWithErrorMessage(pinName);
@@ -209,6 +216,7 @@ static void setAnalogInputPin(const char* sensorStr, const char* pinName) {
 	adc_channel_e channel = getAdcChannel(pin);
 	if (channel == EFI_ADC_ERROR) {
 		efiPrintf("Error with [%s]", pinName);
+		failConsoleCommand();
 		return;
 	}
 	if (strEqual("map", sensorStr)) {
@@ -232,6 +240,10 @@ static void setAnalogInputPin(const char* sensorStr, const char* pinName) {
 	} else if (strEqual("tps2", sensorStr)) {
 		engineConfiguration->tps2_1AdcChannel = channel;
 		efiPrintf("setting TPS2 to %s/%d", pinName, channel);
+	} else {
+		efiPrintf("unknown analog sensor [%s]", sensorStr);
+		failConsoleCommand();
+		return;
 	}
 	incrementGlobalConfigurationVersion();
 }
@@ -314,6 +326,7 @@ static void enableOrDisable(const char* param, bool isEnabled) {
 		engineConfiguration->isCylinderCleanupEnabled = isEnabled;
 	} else {
 		efiPrintf("unexpected [%s]", param);
+		failConsoleCommand();
 		return;
 	}
 	efiPrintf("[%s] %s", param, isEnabled ? "enabled" : "disabled");
@@ -347,6 +360,7 @@ static void getValue(const char* paramStr) {
 		printDateTime();
 	} else {
 		efiPrintf("Invalid Parameter: %s", paramStr);
+		failConsoleCommand();
 	}
 }
 
@@ -438,6 +452,10 @@ static void setValue(const char* paramStr, const char* valueStr) {
 	} else if (strEqualCaseInsensitive(paramStr, CMD_DATE)) {
 		// rusEfi console invokes this method with timestamp in local timezone
 		setDateTime(valueStr);
+	} else {
+		efiPrintf("unknown setting [%s]", paramStr);
+		failConsoleCommand();
+		return;
 	}
 
 	engine->resetEngineSnifferIfInTestMode();

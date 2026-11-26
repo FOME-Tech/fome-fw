@@ -8,7 +8,6 @@ import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.engine_type_e;
 import com.rusefi.functional_tests.EcuTestHelper;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import static com.rusefi.binaryprotocol.BinaryProtocol.sleep;
 import static com.rusefi.config.generated.Fields.*;
@@ -25,28 +24,39 @@ public class VssHardwareLoopTest extends RusefiTestBase {
         return true;
     }
 
-    @Ignore
     @Test
     public void test() {
         ecu.setEngineType(engine_type_e.FRANKENSO_MIATA_NA6_MAP);
-        ecu.changeRpm(1000);
 
         // making output pins available
         ecu.sendCommand(CMD_TRIGGER_SIMULATOR_PIN + " 0 none");
         ecu.sendCommand(CMD_TRIGGER_SIMULATOR_PIN + " 1 none");
         ecu.sendCommand(CMD_TRIGGER_PIN + " 1 none");
 
-        // Hook up 1khz idle on formerly-trigger-stim pin
+        // 100 Hz idle valve on the formerly-trigger-stim pin
         ecu.sendCommand(CMD_IDLE_PIN + " PD2");
         ecu.sendCommand("set idle_solenoid_freq 100");
 
-        EcuTestHelper.assertSomewhatClose("VSS no input", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
+        // A burn only applies sensor changes (here the VSS pin) while the engine is stopped.
+        // Stop only after the pin changes above: a released pin goes to pull-up, and that edge on a
+        // jumpered trigger input counts as the engine moving, which keeps the idle valve driving.
+        ecu.stopEngine();
 
-        // attaching VSS to idle output since there is a jumper on test discovery
+        EcuTestHelper.assertSomewhatClose("VSS no pin", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
+
+        // VSS on the other end of the PD2<>PA5 jumper
         ecu.sendCommand("set " + CMD_VSS_PIN + " " + "pa5");
 
         sleep(2 * Timeouts.SECOND);
 
+        // The idle valve doesn't drive while the engine is stopped, so the reading below comes through the jumper
+        EcuTestHelper.assertSomewhatClose("VSS engine stopped", 0, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
+
+        ecu.startEngine(1000);
+
+        sleep(2 * Timeouts.SECOND);
+
+        // 100 Hz with this preset's drive wheel revs per km, VSS gear ratio and tooth count is ~145.6 km/h
         EcuTestHelper.assertSomewhatClose("VSS with input", 145, SensorCentral.getInstance().getValue(Sensor.vehicleSpeedKph));
 
         // not related to VSS test, just need to validate this somewhere, so this random test is as good as any

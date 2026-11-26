@@ -32,9 +32,7 @@
 #include "bmw_m73.h"
 #include "bmw_n73.h"
 
-#include "citroenBerlingoTU3JP.h"
 #include "custom_engine.h"
-#include "dodge_neon.h"
 
 #include "engine_template.h"
 
@@ -54,12 +52,10 @@
 
 #include "gm_ls_4.h"
 #include "test_engine.h"
-#include "sachs.h"
 #include "vw.h"
 #include "vw_b6.h"
 #include "chevrolet_camaro_4.h"
 #include "toyota_jzs147.h"
-#include "ford_festiva.h"
 #include "boost_control.h"
 #if EFI_IDLE_CONTROL
 #include "idle_thread.h"
@@ -689,12 +685,12 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
 			setEngineProteusGearboxManInTheMiddle();
 			break;
-#ifdef HARDWARE_CI
-		case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
-			setProteusAnalogPwmTest();
-			break;
-#endif // HARDWARE_CI
 #endif // HW_PROTEUS
+#if defined(HARDWARE_CI) && (HW_PROTEUS || HW_ATLAS)
+		case engine_type_e::HW_CI_RIG:
+			setHwCiRig();
+			break;
+#endif
 #if HW_POLYGONUS_PRESETS
 		case engine_type_e::POLYGONUS_MIATA_NA6:
 			setMiataNa6_Polygonus();
@@ -787,12 +783,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		case engine_type_e::BMW_M73_M:
 			setEngineBMW_M73_Manhattan();
 			break;
-		case engine_type_e::DODGE_NEON_1995:
-			setDodgeNeon1995EngineConfiguration();
-			break;
-		case engine_type_e::DODGE_NEON_2003_CRANK:
-			setDodgeNeonNGCEngineConfiguration();
-			break;
 		case engine_type_e::FORD_ASPIRE_1996:
 			setFordAspireEngineConfiguration();
 			break;
@@ -811,12 +801,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 		case engine_type_e::FORD_INLINE_6_1995:
 			setFordInline6();
 			break;
-		case engine_type_e::FORD_ESCORT_GT:
-			setFordEscortGt();
-			break;
-		case engine_type_e::CITROEN_TU3JP:
-			setCitroenBerlingoTU3JPConfiguration();
-			break;
 		case engine_type_e::VW_ABA:
 			setVwAba();
 			break;
@@ -834,9 +818,6 @@ void resetConfigurationExt(configuration_callback_t boardCallback, engine_type_e
 			break;
 		case engine_type_e::TEST_DC_WASTEGATE_DISCOVERY:
 			setTestDcWastegateConfiguration();
-			break;
-		case engine_type_e::SACHS:
-			setSachs();
 			break;
 		case engine_type_e::CAMARO_4:
 			setCamaro4();

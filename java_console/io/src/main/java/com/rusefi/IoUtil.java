@@ -6,11 +6,12 @@ import com.rusefi.core.Sensor;
 import com.rusefi.core.SensorCentral;
 import com.rusefi.enums.trigger_type_e;
 import com.rusefi.io.CommandQueue;
-import com.rusefi.io.LinkManager;
+import com.rusefi.io.InvocationConfirmationListener;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.devexperts.logging.Logging.getLogging;
 import static com.rusefi.config.generated.Fields.CMD_RPM;
@@ -45,21 +46,35 @@ public class IoUtil {
     }
 
     /**
-     * blocking method which would for confirmation from rusEFI
+     * Send a command and block until the ECU confirms it
+     *
+     * @throws IllegalStateException if the ECU rejected the command (unknown command or setting,
+     * bad argument) or didn't confirm it within timeoutMs
      */
     public static void sendBlockingCommand(String command, int timeoutMs, CommandQueue commandQueue) {
         final CountDownLatch responseLatch = new CountDownLatch(1);
-        long time = System.currentTimeMillis();
+        final AtomicBoolean failed = new AtomicBoolean();
         log.info("Sending command [" + command + "]");
         final long begin = System.currentTimeMillis();
-        commandQueue.write(command, timeoutMs, () -> {
-            responseLatch.countDown();
-            log.info("Got confirmation in " + (System.currentTimeMillis() - begin) + "ms");
+        commandQueue.write(command, timeoutMs, new InvocationConfirmationListener() {
+            @Override
+            public void onCommandConfirmation() {
+                responseLatch.countDown();
+                log.info("Got confirmation in " + (System.currentTimeMillis() - begin) + "ms");
+            }
+
+            @Override
+            public void onCommandFailure() {
+                failed.set(true);
+                responseLatch.countDown();
+            }
         });
         wait(responseLatch, timeoutMs);
+        if (failed.get())
+            throw new IllegalStateException("ECU rejected command [" + command + "], see the ECU's text output for why");
         if (responseLatch.getCount() > 0)
-            log.info("No confirmation in " + timeoutMs);
-        log.info("Command [" + command + "] executed in " + (System.currentTimeMillis() - time));
+            throw new IllegalStateException("No confirmation for command [" + command + "] in " + timeoutMs + "ms");
+        log.info("Command [" + command + "] executed in " + (System.currentTimeMillis() - begin));
     }
 
     static void wait(CountDownLatch responseLatch, int milliseconds) {
@@ -107,16 +122,6 @@ public class IoUtil {
             Thread.sleep(seconds * 1000L);
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);
-        }
-    }
-
-    public static void realHardwareConnect(LinkManager linkManager, String port) {
-        linkManager.getEngineState().registerStringValueAction(Fields.PROTOCOL_OUTPIN, (s) -> { });
-
-        try {
-            linkManager.connect(port).await(60, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new IllegalStateException("Not connected in time");
         }
     }
 

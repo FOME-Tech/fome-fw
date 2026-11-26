@@ -114,20 +114,16 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "BMW_M73_MRE_SLAVE";
 		case engine_type_e::CAMARO_4:
 			return "CAMARO_4";
-		case engine_type_e::CITROEN_TU3JP:
-			return "CITROEN_TU3JP";
 		case engine_type_e::DEFAULT_FRANKENSO:
 			return "DEFAULT_FRANKENSO";
-		case engine_type_e::DODGE_NEON_1995:
-			return "DODGE_NEON_1995";
-		case engine_type_e::DODGE_NEON_2003_CRANK:
-			return "DODGE_NEON_2003_CRANK";
 		case engine_type_e::ETB_BENCH_ENGINE:
 			return "ETB_BENCH_ENGINE";
 		case engine_type_e::ET_UNUSED_1:
 			return "ET_UNUSED_1";
 		case engine_type_e::ET_UNUSED_13:
 			return "ET_UNUSED_13";
+		case engine_type_e::ET_UNUSED_14:
+			return "ET_UNUSED_14";
 		case engine_type_e::ET_UNUSED_15:
 			return "ET_UNUSED_15";
 		case engine_type_e::ET_UNUSED_16:
@@ -136,12 +132,16 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "ET_UNUSED_17";
 		case engine_type_e::ET_UNUSED_19:
 			return "ET_UNUSED_19";
+		case engine_type_e::ET_UNUSED_2:
+			return "ET_UNUSED_2";
 		case engine_type_e::ET_UNUSED_20:
 			return "ET_UNUSED_20";
 		case engine_type_e::ET_UNUSED_21:
 			return "ET_UNUSED_21";
 		case engine_type_e::ET_UNUSED_22:
 			return "ET_UNUSED_22";
+		case engine_type_e::ET_UNUSED_29:
+			return "ET_UNUSED_29";
 		case engine_type_e::ET_UNUSED_33:
 			return "ET_UNUSED_33";
 		case engine_type_e::ET_UNUSED_37:
@@ -150,6 +150,8 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "ET_UNUSED_38";
 		case engine_type_e::ET_UNUSED_43:
 			return "ET_UNUSED_43";
+		case engine_type_e::ET_UNUSED_46:
+			return "ET_UNUSED_46";
 		case engine_type_e::ET_UNUSED_5:
 			return "ET_UNUSED_5";
 		case engine_type_e::ET_UNUSED_57:
@@ -162,6 +164,8 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "ET_UNUSED_61";
 		case engine_type_e::ET_UNUSED_64:
 			return "ET_UNUSED_64";
+		case engine_type_e::ET_UNUSED_65:
+			return "ET_UNUSED_65";
 		case engine_type_e::ET_UNUSED_66:
 			return "ET_UNUSED_66";
 		case engine_type_e::ET_UNUSED_70:
@@ -180,8 +184,6 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "ET_UNUSED_98";
 		case engine_type_e::FORD_ASPIRE_1996:
 			return "FORD_ASPIRE_1996";
-		case engine_type_e::FORD_ESCORT_GT:
-			return "FORD_ESCORT_GT";
 		case engine_type_e::FORD_INLINE_6_1995:
 			return "FORD_INLINE_6_1995";
 		case engine_type_e::FRANKENSO_BMW_M73_F:
@@ -244,6 +246,8 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "HELLEN_NB2";
 		case engine_type_e::HELLEN_NB2_36:
 			return "HELLEN_NB2_36";
+		case engine_type_e::HW_CI_RIG:
+			return "HW_CI_RIG";
 		case engine_type_e::MAZDA_MIATA_2003_BOARD_TEST:
 			return "MAZDA_MIATA_2003_BOARD_TEST";
 		case engine_type_e::MAZDA_MIATA_2003_NA_RAIL:
@@ -266,8 +270,6 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "POLYGONUS_MIATA_NB1";
 		case engine_type_e::POLYGONUS_MIATA_NB2:
 			return "POLYGONUS_MIATA_NB2";
-		case engine_type_e::PROTEUS_ANALOG_PWM_TEST:
-			return "PROTEUS_ANALOG_PWM_TEST";
 		case engine_type_e::PROTEUS_BMW_M73:
 			return "PROTEUS_BMW_M73";
 		case engine_type_e::PROTEUS_E65_6H_MAN_IN_THE_MIDDLE:
@@ -282,8 +284,6 @@ constexpr inline const char* getEngine_type_e(engine_type_e value) {
 			return "PROTEUS_QC_TEST_BOARD";
 		case engine_type_e::PROTEUS_VW_B6:
 			return "PROTEUS_VW_B6";
-		case engine_type_e::SACHS:
-			return "SACHS";
 		case engine_type_e::TEST_33816:
 			return "TEST_33816";
 		case engine_type_e::TEST_CRANK_ENGINE:

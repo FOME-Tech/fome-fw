@@ -16,4 +16,4 @@ void setTestDcWastegateConfiguration();
 
 void setTestEngineIssue366both();
 void setTestEngineIssue366rise();
-void setProteusAnalogPwmTest();
+void setHwCiRig();

@@ -7,14 +7,15 @@
 #include "thread_controller.h"
 #include "tunerstudio.h"
 
-static_assert(SERIAL_USB_BUFFERS_SIZE >= BLOCKING_FACTOR + 10);
-
 #define CDC_PACKET_SIZE 64
+
+// Room for a whole TS packet (BLOCKING_FACTOR of data plus header and CRC), rounded up to whole USB packets
+#define RX_QUEUE_SIZE ((((BLOCKING_FACTOR + 10) / CDC_PACKET_SIZE) + 1) * CDC_PACKET_SIZE)
 
 // RX staging + queue. The pump thread receives into s_rxStaging, then copies
 // into s_rxQueue which is drained by UsbDirectChannel::readTimeout.
 static input_queue_t s_rxQueue;
-static uint8_t s_rxQueueBuf[SERIAL_USB_BUFFERS_SIZE];
+static uint8_t s_rxQueueBuf[RX_QUEUE_SIZE];
 static uint8_t s_rxStaging[CDC_PACKET_SIZE];
 
 static volatile bool s_configured = false;

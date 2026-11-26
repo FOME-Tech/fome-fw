@@ -103,8 +103,6 @@ TEST(trigger, syncPointsOfEngineTypes) {
 
 	expectSyncPoint("Ford inline 6", engine_type_e::FORD_INLINE_6_1995, 0);
 
-	expectSyncPoint("Dodge Neon 1995", engine_type_e::DODGE_NEON_1995, 0);
-
 	expectSyncPoint("ford aspire", engine_type_e::FORD_ASPIRE_1996, 4);
 
 	expectSyncPoint("Miata NB2", engine_type_e::HELLEN_NB2, 3);
@@ -114,25 +112,9 @@ TEST(trigger, syncPointsOfEngineTypes) {
 
 	expectSyncPoint("test engine", engine_type_e::TEST_ENGINE, 0);
 
-	expectSyncPoint("testFordEscortGt", engine_type_e::FORD_ESCORT_GT, 0);
-
 	expectSyncPoint("test1+1", engine_type_e::DEFAULT_FRANKENSO, 0);
 
-	expectSyncPoint("testCitroen", engine_type_e::CITROEN_TU3JP, 0);
-	expectSyncPoint("citroen", engine_type_e::CITROEN_TU3JP, 0, 2.9994);
-
 	expectSyncPoint("CAMARO_4", engine_type_e::CAMARO_4, 40);
-
-	expectSyncPoint("neon NGC4", engine_type_e::DODGE_NEON_2003_CRANK, 6, CHRYSLER_NGC4_GAP);
-
-	{
-		EngineTestHelper eth(engine_type_e::DODGE_NEON_2003_CRANK);
-
-		applyNonPersistentConfiguration();
-		prepareOutputSignals();
-	}
-
-	expectSyncPoint("sachs", engine_type_e::SACHS, 0);
 
 	expectSyncPoint("vw ABA", engine_type_e::VW_ABA, 0);
 }

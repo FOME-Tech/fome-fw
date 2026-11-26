@@ -472,9 +472,12 @@ void TunerStudio::handleExecuteCommand(TsChannelBase* tsChannel, char* data, int
 #if EFI_SIMULATOR
 	logMsg("execute [%s]\r\n", trimmed);
 #endif
-	(console_line_callback)(trimmed);
-
-	tsChannel->writeCrcResponse(TS_RESPONSE_OK);
+	if (console_line_callback(trimmed)) {
+		tsChannel->writeCrcResponse(TS_RESPONSE_OK);
+	} else {
+		// Unknown command, bad arguments, or the handler rejected them
+		sendErrorCode(tsChannel, TS_RESPONSE_UNRECOGNIZED_COMMAND);
+	}
 }
 
 int TunerStudio::handleCrcCommand(TsChannelBase* tsChannel, uint8_t* data, int incomingPacketSize) {

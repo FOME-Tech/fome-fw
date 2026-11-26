@@ -19,11 +19,6 @@ enum class engine_type_e : uint32_t {
 	DEFAULT_FRANKENSO = 0,
 
 	/**
-	 * 1995 Dodge Neon
-	 * http://rusefi.com/forum/viewtopic.php?t=360
-	 */
-	DODGE_NEON_1995 = 2,
-	/**
 	 * 1996 1.3 Ford Aspire
 	 * http://rusefi.com/forum/viewtopic.php?t=375
 	 */
@@ -39,8 +34,6 @@ enum class engine_type_e : uint32_t {
 	FRANKENSO_MIATA_NA6_MAP = 41,
 	ET_UNUSED_20 = 20,
 	ET_UNUSED_21 = 21,
-
-	FORD_ESCORT_GT = 14,
 
 	TEST_33816 = 18,
 
@@ -58,9 +51,10 @@ enum class engine_type_e : uint32_t {
 
 	TEST_CRANK_ENGINE = 28,
 
-	SACHS = 29,
-
-	PROTEUS_ANALOG_PWM_TEST = 30,
+	/**
+	 * Hardware CI loopback rig, Proteus and Atlas, HARDWARE_CI builds only. See setHwCiRig()
+	 */
+	HW_CI_RIG = 30,
 
 	MRE_BOARD_NEW_TEST = 31,
 
@@ -81,8 +75,6 @@ enum class engine_type_e : uint32_t {
 	TOYOTA_2JZ_GTE_VVTi = 44,
 
 	TEST_ENGINE_VVT = 45,
-
-	DODGE_NEON_2003_CRANK = 46,
 
 	/**
 	 * proper NB2 setup, 2003 red test mule car
@@ -118,8 +110,6 @@ enum class engine_type_e : uint32_t {
 	MRE_VW_B6 = 62,
 
 	PROTEUS_BMW_M73 = 63,
-
-	CITROEN_TU3JP = 65,
 
 	MRE_M111 = 68,
 
@@ -174,9 +164,11 @@ enum class engine_type_e : uint32_t {
 	POLYGONUS_MIATA_MSM = 12,
 
 	ET_UNUSED_1 = 1,
+	ET_UNUSED_2 = 2,
 	ET_UNUSED_5 = 5,
 	ET_UNUSED_6 = 6,
 	ET_UNUSED_8 = 8,
+	ET_UNUSED_14 = 14,
 	ET_UNUSED_19 = 19,
 	ET_UNUSED_97 = 97,
 	ET_UNUSED_98 = 98,
@@ -185,14 +177,17 @@ enum class engine_type_e : uint32_t {
 	ET_UNUSED_15 = 15,
 	ET_UNUSED_16 = 16,
 	ET_UNUSED_22 = 22,
+	ET_UNUSED_29 = 29,
 	ET_UNUSED_33 = 33,
 	ET_UNUSED_37 = 37,
 	ET_UNUSED_38 = 38,
 	ET_UNUSED_43 = 43,
+	ET_UNUSED_46 = 46,
 	ET_UNUSED_57 = 57,
 	ET_UNUSED_60 = 60,
 	ET_UNUSED_61 = 61,
 	ET_UNUSED_64 = 64,
+	ET_UNUSED_65 = 65,
 	ET_UNUSED_70 = 70,
 	ET_UNUSED_91 = 91,
 
