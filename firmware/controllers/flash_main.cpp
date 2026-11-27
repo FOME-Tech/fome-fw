@@ -111,7 +111,14 @@ int eraseAndFlashCopy(flashaddr_t storageAddress, const TStorage& data) {
 
 bool burnWithoutFlash = false;
 
+// writeToFlashNow() runs on the flash writer thread, and directly from the console, presets and
+// config resets. Two at once interleave erases and writes of the same sectors, and the second erase
+// fails.
+static chibios_rt::Mutex flashWriteMutex;
+
 void writeToFlashNow() {
+	chibios_rt::MutexLocker lock(flashWriteMutex);
+
 	engine->configBurnTimer.reset();
 	bool isSuccess = false;
 
