@@ -709,6 +709,15 @@
 #define PORT_ENABLE_GUARD_PAGES TRUE
 #define PORT_USE_GUARD_MPU_REGION       MPU_REGION_7
 
+/**
+ * @brief   Stack size for the idle thread, on top of what ChibiOS adds for context and interrupts.
+ * @details The port default (16) leaves too little: an interrupt that preempts idle and reschedules,
+ *          with the FPU in use, can push two FPU frames plus the saved context onto idle's stack. HW
+ *          CI saw 16 bytes left on H7, one interrupt away from the MPU guard page. Same on every
+ *          port.
+ */
+#define PORT_IDLE_THREAD_STACK_SIZE 256
+
 #endif  /* CHCONF_H */
 
 /** @} */
