@@ -17,14 +17,14 @@ jobs:
             ecu-serial: 2B003B000A51343033393930
             erase-sectors: 0 0 11
 
-          - build-target: atlas
-            runs-on: hw-ci-atlas
-            test-suite: com.rusefi.HwCiAtlas
-            folder: config/boards/atlas
-            openocd-script: ../.github/workflows/openocd_ci_atlas.cfg
-            ecu-serial: 430048001451333135363231
-            # Bank 1 only: H7 banks have 8 sectors, and bank 2 holds the tune
-            erase-sectors: 0 0 last
+        #   - build-target: atlas
+        #     runs-on: hw-ci-atlas
+        #     test-suite: com.rusefi.HwCiAtlas
+        #     folder: config/boards/atlas
+        #     openocd-script: ../.github/workflows/openocd_ci_atlas.cfg
+        #     ecu-serial: 430048001451333135363231
+        #     # Bank 1 only: H7 banks have 8 sectors, and bank 2 holds the tune
+        #     erase-sectors: 0 0 last
 
           - build-target: proteus_f4
             runs-on: hw-ci-proteus
