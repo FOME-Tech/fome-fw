@@ -41,6 +41,15 @@ uintptr_t getFlashAddrSecondCopy() {
 	}
 	return 0x080C0000;
 }
+
+FlashConfigRegion getFlashConfigRegion() {
+	if (TM_ID_GetFlashSize() <= 512) {
+		// The one copy's 128K sector
+		return {0x08060000, 128 * 1024};
+	}
+	// The last two 128K sectors, both copies
+	return {0x080C0000, 256 * 1024};
+}
 /*
 STOP mode for F7 is needed for wakeup from multiple EXTI pins. For example PD0, which is CAN rx.
 However, for F40X & F42X this may be useless. STOP in itself eats more current than standby.

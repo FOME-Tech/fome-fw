@@ -8,7 +8,8 @@
  *   2     The tune copies in flash: strongly ordered, XN, no access except inside a ScopeFlashAccess
  *         (flash_int_common.cpp). All chips.
  *   3     Fast ADC (knock) sample buffer, non-cacheable. H7.
- *   4     System memory (ST bootloader, UID): strongly ordered, XN, read-only. H7.
+ *   4     System memory (ST bootloader, OTP, UID, option bytes): strongly ordered, XN, read-only. All
+ *         chips.
  *   5     DMA buffers, non-cacheable (dma_buffers.cpp). F7, H7.
  *   6, 7  ChibiOS, set per chip:
  *         F4: 6 stack guard pages (PORT_USE_GUARD_MPU_REGION, cfg/chconf.h), 7 free

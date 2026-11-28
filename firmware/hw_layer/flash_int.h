@@ -89,6 +89,46 @@ typedef uintptr_t flashaddr_t;
 typedef uint8_t flashsector_t;
 
 /**
+ * @brief The flash holding the tune copies, kept behind its own MPU region (mpu_regions.h):
+ * [base, base + size), size a power of two, base aligned to it. Size 0 if there's none.
+ * @details Strongly ordered and XN, so the core never reads it speculatively (a read of flash that's
+ * erasing, or of a dual-bank chip's bank that's erasing, holds the bus until the erase ends), and no
+ * access except inside a ScopeFlashAccess, so a stray read faults and says where.
+ */
+struct FlashConfigRegion {
+	uintptr_t base;
+	size_t size;
+};
+
+FlashConfigRegion getFlashConfigRegion();
+
+/**
+ * @brief Set up the MPU regions over flash the core never runs from: system memory (read-only) and
+ * getFlashConfigRegion() (no access).
+ */
+void intFlashInitMpu();
+
+enum class FlashAccess : uint8_t {
+	None,
+	Read,
+	ReadWrite,
+};
+
+/**
+ * @brief CPU access to the flash at [address, address + size) for the life of this object, then
+ * back to what it was before. Only does anything where that overlaps getFlashConfigRegion().
+ */
+class ScopeFlashAccess {
+public:
+	ScopeFlashAccess(flashaddr_t address, size_t size, FlashAccess access);
+	~ScopeFlashAccess();
+
+private:
+	const bool m_active;
+	uint32_t m_previousAp = 0;
+};
+
+/**
  * @brief Get the size of @p sector.
  * @return @p sector size in bytes.
  */
