@@ -24,3 +24,9 @@ void setNeedToWriteConfiguration();
  */
 bool getNeedToWriteConfiguration();
 void writeToFlashIfPending();
+
+/**
+ * @return a count bumped as each write of the tune to flash starts and again as it ends, so odd while
+ * one is in progress
+ */
+uint32_t getFlashWriteSequence();
