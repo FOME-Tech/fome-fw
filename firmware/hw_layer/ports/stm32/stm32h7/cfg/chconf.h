@@ -707,6 +707,7 @@
 #define CORTEX_ENABLE_WFI_IDLE FALSE
 
 #define PORT_ENABLE_GUARD_PAGES TRUE
+// Region numbers for every chip: hw_layer/ports/stm32/mpu_regions.h
 #define PORT_USE_GUARD_MPU_REGION       MPU_REGION_7
 
 /**

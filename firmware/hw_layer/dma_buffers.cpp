@@ -5,6 +5,10 @@
 #include "dma_buffers.h"
 #include "big_buffer.h"
 
+#if defined(STM32F7XX) || defined(STM32H7XX)
+#include "mpu_regions.h"
+#endif
+
 #if EFI_FILE_LOGGING
 #include "mmc_card.h"
 #endif
@@ -70,7 +74,7 @@ void initMpu() {
 	static constexpr uint32_t mpuRasrSize = (computeLog2(DMA_REGION_SIZE) - 1) << 1;
 
 	mpuConfigureRegion(
-			MPU_REGION_5,
+			MPU_REGION_DMA_BUFFERS,
 			&dmaBufferRegion,
 			MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | mpuRasrSize | MPU_RASR_ENABLE);
 	mpuEnable(MPU_CTRL_PRIVDEFENA);

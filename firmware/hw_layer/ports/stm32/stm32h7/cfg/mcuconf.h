@@ -55,6 +55,7 @@
 /*
  * Memory attributes settings.
  */
+// Region numbers for every chip: hw_layer/ports/stm32/mpu_regions.h
 #define STM32_NOCACHE_MPU_REGION            MPU_REGION_6
 #ifndef STM32_NOCACHE_SRAM1_SRAM2
 #define STM32_NOCACHE_SRAM1_SRAM2           FALSE
