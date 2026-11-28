@@ -19,6 +19,9 @@
 #include "stm32h7xx_hal_flash.h"
 #endif
 
+#include "flash_int.h"
+#include "mpu_regions.h"
+
 #if EFI_USE_OPENBLT
 /* communication with OpenBLT that is plain C, not to modify external file */
 extern "C" {

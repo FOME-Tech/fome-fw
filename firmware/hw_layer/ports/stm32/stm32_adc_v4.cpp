@@ -11,6 +11,7 @@
 #if HAL_USE_ADC
 
 #include "mpu_util.h"
+#include "mpu_regions.h"
 #include "software_knock.h"
 
 // All ADCs should be running at 40MHz
@@ -59,7 +60,7 @@ void portInitAdc() {
 		uint32_t size = MPU_RASR_SIZE_4K;
 
 		mpuConfigureRegion(
-				MPU_REGION_3,
+				MPU_REGION_FAST_ADC,
 				base,
 				MPU_RASR_ATTR_AP_RW_RW | MPU_RASR_ATTR_NON_CACHEABLE | MPU_RASR_ATTR_S | size | MPU_RASR_ENABLE);
 		mpuEnable(MPU_CTRL_PRIVDEFENA);
