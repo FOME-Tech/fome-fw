@@ -72,6 +72,7 @@ or
  - Instant RPM is now used automatically on triggers with 24 or more teeth per engine cycle (a 12 tooth crank wheel or better), instead of only when "Always use instant RPM" was enabled. RPM, and everything derived from it, now responds within a fraction of an engine cycle instead of once per cycle. The setting remains, and now forces instant RPM on triggers with fewer teeth than that.
 
 ### Fixed
+ - On STM32H7-based boards like Atlas, burning a tune could freeze the ECU for up to a second, missing ignition and injection with the engine running, or fail with a flash error. Fixed in #884
  - "Use fixed baro corr from MAP" now actually uses the MAP reading taken at power-up. Previously it always used 101.3 kPa, which is wrong at altitude. If the engine is already turning when the ECU starts, MAP is not used as baro.
  - "Ramp on return to idle" now starts the ramp from the RPM the engine is at when it returns to idle, instead of always from the idle entry threshold. Lifting off the throttle near idle speed no longer briefly raises the idle target several hundred RPM, which made the idle bounce.
  - Fix "re-adding element into event_queue" warnings (9011) after a spark is fired by the overdwell backup, for example when idle timing control steps timing up on entering idle. The queued spark event could also fire a second time.
