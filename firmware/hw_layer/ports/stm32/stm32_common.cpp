@@ -19,6 +19,8 @@
 #include "stm32h7xx_hal_flash.h"
 #endif
 
+#include "flash_int.h"
+
 #if EFI_USE_OPENBLT
 /* communication with OpenBLT that is plain C, not to modify external file */
 extern "C" {
@@ -474,6 +476,12 @@ BOR_Result_t BOR_Set(BOR_Level_t BORValue) {
 void baseMCUInit() {
 	// looks like this holds a random value on start? Let's set a nice clean zero
 	DWT->CYCCNT = 0;
+
+#if EFI_INTERNAL_FLASH
+	// Keep the core out of flash it never runs from: the M7 reads Normal memory speculatively, at
+	// whatever address a register holds on a mispredicted path (a timestamp, for instance)
+	intFlashInitMpu();
+#endif
 
 	BOR_Set(BOR_Level_3); // Previously level 1, lets try level 3 and chceck if it helps with random flash corruptionq
 }

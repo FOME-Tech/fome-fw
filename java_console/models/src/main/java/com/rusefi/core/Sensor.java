@@ -32,8 +32,11 @@ public enum Sensor {
     // air flow/mass measurement
     MAF(GAUGE_NAME_MAF, FieldType.UINT16, TsOutputs.MAFMEASURED, 1.0 / PACK_MULT_MASS_FLOW, "Volts"),
     MAP(GAUGE_NAME_MAP, FieldType.UINT16, TsOutputs.MAPVALUE, 1.0 / PACK_MULT_PRESSURE, "kPa"),
+    BARO("Baro", FieldType.UINT16, TsOutputs.BAROPRESSURE, 1.0 / PACK_MULT_PRESSURE, "kPa"),
 
     VBATT(GAUGE_NAME_VBAT, FieldType.UINT16, TsOutputs.VBATT, 1.0 / PACK_MULT_VOLTAGE, "Volts"),
+    SENSOR_SUPPLY("Sensor 5V supply", FieldType.UINT16, TsOutputs.SENSORSUPPLYVOLTAGE, 1.0 / PACK_MULT_VOLTAGE, "Volts"),
+    VBOOST("Vboost", FieldType.UINT16, TsOutputs.VBOOSTVOLTAGE, 1.0 / PACK_MULT_VOLTAGE, "Volts"),
     // Mode, firmware, protocol, run time
     TIME_SECONDS(GAUGE_NAME_TIME, FieldType.INT, TsOutputs.SECONDS, 1, ""),
 

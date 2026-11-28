@@ -124,6 +124,7 @@
 #define STM32_CK48MSEL                      STM32_CK48MSEL_PLL
 #define STM32_SDMMCSEL                      STM32_SDMMCSEL_PLL48CLK
 
+// ChibiOS puts this on MPU region 7, see hw_layer/ports/stm32/mpu_regions.h
 #ifndef STM32_SRAM2_NOCACHE
 #define STM32_SRAM2_NOCACHE                 TRUE
 #endif

@@ -15,13 +15,16 @@ jobs:
             folder: config/boards/f407-discovery
             openocd-script: ../.github/workflows/openocd_ci_f4_discovery.cfg
             ecu-serial: 2B003B000A51343033393930
+            erase-sectors: 0 0 11
 
-        #   - build-target: atlas
-        #     runs-on: hw-ci-atlas
-        #     test-suite: com.rusefi.HwCiAtlas
-        #     folder: config/boards/atlas
-        #     openocd-script: ../.github/workflows/openocd_ci_atlas.cfg
-        #     ecu-serial: TODO
+          - build-target: atlas
+            runs-on: hw-ci-atlas
+            test-suite: com.rusefi.HwCiAtlas
+            folder: config/boards/atlas
+            openocd-script: ../.github/workflows/openocd_ci_atlas.cfg
+            ecu-serial: 430048001451333135363231
+            # Bank 1 only: H7 banks have 8 sectors, and bank 2 holds the tune
+            erase-sectors: 0 0 last
 
           - build-target: proteus_f4
             runs-on: hw-ci-proteus
@@ -29,6 +32,7 @@ jobs:
             folder: config/boards/proteus
             openocd-script: ../.github/workflows/openocd_ci_proteus.cfg
             ecu-serial: 41003D000451383037343335
+            erase-sectors: 0 0 11
 
     runs-on: ${{matrix.runs-on}}
 
@@ -56,7 +60,7 @@ jobs:
       # chip stays in OpenBLT regardless of the SharedParams handoff path.
       # This lets the OpenBLT update step exercise the bootloader's flash path
       # in isolation while we investigate the reboot-to-OpenBLT issue.
-      run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector 0 0 11" -c "flash write_image "bootloader/blbuild/fome_bl.bin" 0x08000000" -c "reset run" -c "shutdown"
+      run: openocd -f "${{matrix.openocd-script}}" -c init -c targets -c "reset halt" -c "flash erase_sector ${{matrix.erase-sectors}}" -c "flash write_image "bootloader/blbuild/fome_bl.bin" 0x08000000" -c "reset run" -c "shutdown"
 
     - name: Build Autotest jar
       working-directory: ./java_tools

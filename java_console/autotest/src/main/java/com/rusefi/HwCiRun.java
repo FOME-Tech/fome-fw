@@ -16,6 +16,7 @@ public class HwCiRun {
     private static final String[] PACKAGES = {
             "com.rusefi.common.",
             "com.rusefi.proteus.",
+            "com.rusefi.atlas.",
             "com.rusefi.f4discovery.",
             "com.rusefi.",
     };
