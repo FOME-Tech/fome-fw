@@ -3,6 +3,11 @@
 #include "periodic_thread_controller.h"
 #include "electronic_throttle.h"
 
+#if EFI_INTERNAL_FLASH && defined(HARDWARE_CI)
+#include "flash_main.h"
+#include "mpu_util.h"
+#endif
+
 #define MAIN_LOOP_RATE 1000
 
 class MainLoop final : PeriodicController<1024> {
@@ -24,6 +29,10 @@ private:
 	int m_cycleCounter = 0;
 
 	Timer m_stallTimer;
+
+#if EFI_INTERNAL_FLASH && defined(HARDWARE_CI)
+	uint32_t m_flashWriteSequence = 0;
+#endif
 };
 
 static MainLoop mainLoop CCM_OPTIONAL;
@@ -41,7 +50,19 @@ void MainLoop::PeriodicTask(efitick_t nowNt) {
 	auto elapsedSinceLastLoop = m_stallTimer.getElapsedSecondsAndReset(nowNt);
 	if (elapsedSinceLastLoop > 0.1) {
 		efiPrintf("Main loop stall of %.3f sec detected", elapsedSinceLastLoop);
+
+#if EFI_INTERNAL_FLASH && defined(HARDWARE_CI)
+		// A chip that writes flash while running (from its own thread) must never stall for it. If
+		// the sequence moved, or is odd, a flash write overlapped this stall. HW CI fails on this.
+		uint32_t sequence = getFlashWriteSequence();
+		if (allowFlashWhileRunning() && (sequence != m_flashWriteSequence || (sequence & 1))) {
+			efiPrintf("HW CI: unexpected main loop stall of %.3f sec during a flash write", elapsedSinceLastLoop);
+		}
+#endif
 	}
+#if EFI_INTERNAL_FLASH && defined(HARDWARE_CI)
+	m_flashWriteSequence = getFlashWriteSequence();
+#endif
 
 	LoopPeriod p = makePeriodFlags();
 

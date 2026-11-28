@@ -55,6 +55,13 @@ static void flashWriteThread(void*) {
 }
 #endif // EFI_FLASH_WRITE_THREAD
 
+// Only writeToFlashNow() changes it, under flashWriteMutex
+static volatile uint32_t flashWriteSequence = 0;
+
+uint32_t getFlashWriteSequence() {
+	return flashWriteSequence;
+}
+
 void setNeedToWriteConfiguration() {
 	efiPrintf("Scheduling configuration write");
 	needToWriteConfiguration = true;
@@ -96,13 +103,13 @@ int eraseAndFlashCopy(flashaddr_t storageAddress, const TStorage& data) {
 
 	auto err = intFlashErase(storageAddress, sizeof(TStorage));
 	if (FLASH_RETURN_SUCCESS != err) {
-		firmwareError("Failed to erase flash at 0x%08x: %d", storageAddress, err);
+		efiPrintf("Failed to erase flash at 0x%08x: %d", storageAddress, err);
 		return err;
 	}
 
 	err = intFlashWrite(storageAddress, reinterpret_cast<const char*>(&data), sizeof(TStorage));
 	if (FLASH_RETURN_SUCCESS != err) {
-		firmwareError("Failed to write flash at 0x%08x: %d", storageAddress, err);
+		efiPrintf("Failed to write flash at 0x%08x: %d", storageAddress, err);
 		return err;
 	}
 
@@ -134,13 +141,26 @@ void writeToFlashNow() {
 	persistentState.value = flashStateCrc(persistentState);
 
 #if EFI_STORAGE_INT_FLASH == TRUE
-	// Flash two copies
+	flashWriteSequence = flashWriteSequence + 1;
+
+	// Flash two copies. A failed write isn't fatal: the tune in RAM is still good, and stopping a
+	// running engine wouldn't fix the flash. Booting falls back to the second copy when the first
+	// fails its CRC, so never risk the second copy once the first has failed.
 	int result1 = eraseAndFlashCopy(getFlashAddrFirstCopy(), persistentState);
 	int result2 = FLASH_RETURN_SUCCESS;
-	/* Only if second copy is supported */
-	if (getFlashAddrSecondCopy()) {
+	if (result1 != FLASH_RETURN_SUCCESS) {
+		warning(ObdCode::CUSTOM_ERR_FLASH_WRITE_FAILED, "Flash write failed (first copy: %d), burn again", result1);
+	} else if (getFlashAddrSecondCopy()) {
+		/* Only if second copy is supported */
 		result2 = eraseAndFlashCopy(getFlashAddrSecondCopy(), persistentState);
+		if (result2 != FLASH_RETURN_SUCCESS) {
+			warning(ObdCode::CUSTOM_ERR_FLASH_WRITE_FAILED,
+					"Flash write failed (second copy: %d), burn again",
+					result2);
+		}
 	}
+
+	flashWriteSequence = flashWriteSequence + 1;
 
 	// handle success/failure
 	isSuccess = (result1 == FLASH_RETURN_SUCCESS) && (result2 == FLASH_RETURN_SUCCESS);
