@@ -127,6 +127,26 @@ uintptr_t getFlashAddrSecondCopy() {
 	}
 }
 
+FlashConfigRegion getFlashConfigRegion() {
+	// The image ends below 0x080C0000 (STM32F7.ld), so nothing but the tune lives above it. Not
+	// determineDevice(): this runs from baseMCUInit(), and an unsupported layout is reported when the
+	// tune is read.
+	switch (flashSize()) {
+		case 1024:
+			// Dual bank: sectors 18 and 19, both copies. Single bank: sector 7, the only copy
+			return {0x080C0000, 256 * 1024};
+		case 2048:
+			if (isDualBank()) {
+				// All of bank 2: an erase holds every read of the bank it's erasing
+				return {0x08100000, 1024 * 1024};
+			}
+			// Sectors 8 and 9, both copies
+			return {0x08100000, 512 * 1024};
+		default:
+			return {0, 0};
+	}
+}
+
 #define FLASH_ACR (*(volatile uint32_t*)(FLASH_BASE + 0x00))
 #define FLASH_KEYR (*(volatile uint32_t*)(FLASH_BASE + 0x04))
 #define FLASH_OPTKEYR (*(volatile uint32_t*)(FLASH_BASE + 0x08))
