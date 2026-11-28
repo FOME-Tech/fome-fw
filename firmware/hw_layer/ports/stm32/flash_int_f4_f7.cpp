@@ -212,6 +212,9 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 		return FLASH_RETURN_NO_PERMISSION;
 	}
 
+	// Writes, and reads to merge partial words with what's already there
+	ScopeFlashAccess readWrite(address, size, FlashAccess::ReadWrite);
+
 	/* Wait for any busy flags */
 	intFlashWaitWhileBusy();
 

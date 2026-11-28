@@ -67,6 +67,27 @@ static int intFlashCheckErrors(uint8_t ctlr) {
 	return FLASH_RETURN_SUCCESS;
 }
 
+#ifndef EFI_BOOTLOADER
+// Everything that can explain a failed erase or write: which error bit fired, and the bank's
+// protection state (write protection, PCROP and secure areas), which a WPERROR could come from
+static void intFlashDumpState(uint8_t ctlr, const char* what, uint32_t sr) {
+	efiPrintf(
+			"Flash: %s failed, bank %d SR=0x%08lx CR=0x%08lx OPTSR_CUR=0x%08lx",
+			what,
+			ctlr ? 2 : 1,
+			sr,
+			FLASH_CR,
+			FLASH->OPTSR_CUR);
+	efiPrintf(
+			"Flash: bank %d WPSN_CUR=0x%08lx PRAR_CUR=0x%08lx SCAR_CUR=0x%08lx ECC_FA=0x%08lx",
+			ctlr ? 2 : 1,
+			ctlr ? FLASH->WPSN_CUR2 : FLASH->WPSN_CUR1,
+			ctlr ? FLASH->PRAR_CUR2 : FLASH->PRAR_CUR1,
+			ctlr ? FLASH->SCAR_CUR2 : FLASH->SCAR_CUR1,
+			ctlr ? FLASH->ECC_FA2 : FLASH->ECC_FA1);
+}
+#endif
+
 /**
  * @brief Unlock the flash memory for write access.
  * @return HAL_SUCCESS  Unlock was successful.
@@ -121,18 +142,6 @@ int intFlashSectorErase(flashsector_t sector) {
 		return FLASH_RETURN_NO_PERMISSION;
 	}
 
-	// Mitigation for https://github.com/FOME-Tech/fome-fw/issues/685
-	struct ScopeCacheDisabler {
-		ScopeCacheDisabler() {
-			SCB_DisableICache();
-			SCB_InvalidateICache();
-		}
-
-		~ScopeCacheDisabler() {
-			SCB_EnableICache();
-		}
-	} cacheDisabler;
-
 	/* Wait for any busy flags. */
 	intFlashWait(ctlr, 1);
 
@@ -165,11 +174,26 @@ int intFlashSectorErase(flashsector_t sector) {
 
 	ret = intFlashCheckErrors(ctlr);
 	if (ret != FLASH_RETURN_SUCCESS) {
+#ifndef EFI_BOOTLOADER
+		intFlashDumpState(ctlr, "erase", FLASH_SR);
+#endif
 		return ret;
 	}
 
 	/* Check deleted sector for errors */
 	if (intFlashIsErased(intFlashSectorBegin(sector), flashSectorSize(sector)) == FALSE) {
+#ifndef EFI_BOOTLOADER
+		intFlashDumpState(ctlr, "erase blank check", FLASH_SR);
+		flashaddr_t base = intFlashSectorBegin(sector);
+		ScopeFlashAccess read(base, flashSectorSize(sector), FlashAccess::Read);
+		for (size_t i = 0; i < flashSectorSize(sector); i += sizeof(uint32_t)) {
+			uint32_t value = *reinterpret_cast<volatile uint32_t*>(base + i);
+			if (value != 0xFFFFFFFF) {
+				efiPrintf("Flash: sector %d first non-blank word at 0x%08x: 0x%08lx", sector, base + i, value);
+				break;
+			}
+		}
+#endif
 		return FLASH_RETURN_BAD_FLASH; /* Sector is not empty despite the erase cycle! */
 	}
 
@@ -224,6 +248,9 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 	FLASH_CR &= ~FLASH_CR_PSIZE_MASK;
 	FLASH_CR |= FLASH_CR_PSIZE_VALUE;
 
+	// The tune is behind an MPU region with no access (intFlashInitMpu())
+	ScopeFlashAccess readWrite(address, size, FlashAccess::ReadWrite);
+
 	volatile flashdata_t* pWrite = reinterpret_cast<volatile flashdata_t*>(address);
 	int result = FLASH_RETURN_SUCCESS;
 
@@ -265,6 +292,10 @@ int intFlashWrite(flashaddr_t address, const char* buffer, size_t size) {
 
 		result = intFlashCheckErrors(ctlr);
 		if (result != FLASH_RETURN_SUCCESS) {
+#ifndef EFI_BOOTLOADER
+			intFlashDumpState(ctlr, "write", FLASH_SR);
+			efiPrintf("Flash: write failed at flash word 0x%08x", reinterpret_cast<uintptr_t>(pWrite) - flashWordSize);
+#endif
 			break;
 		}
 

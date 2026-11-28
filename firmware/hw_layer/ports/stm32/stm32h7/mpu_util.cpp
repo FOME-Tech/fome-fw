@@ -65,3 +65,9 @@ uintptr_t getFlashAddrSecondCopy() {
 	// Second copy is one sector past the first
 	return getFlashAddrFirstCopy() + 128 * 1024;
 }
+
+FlashConfigRegion getFlashConfigRegion() {
+	// All of bank 2: an erase holds every read of the bank it's erasing, and the image (and so all
+	// code) is in bank 1 (STM32H743xI.ld)
+	return {0x08100000, 1024 * 1024};
+}
