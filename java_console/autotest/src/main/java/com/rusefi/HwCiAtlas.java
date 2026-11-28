@@ -1,5 +1,6 @@
 package com.rusefi;
 
+import com.rusefi.atlas.OnboardSensorsTest;
 import com.rusefi.common.ConfigFieldsTest;
 import com.rusefi.common.MiscTest;
 import com.rusefi.proteus.FlexLoopTest;
@@ -12,6 +13,7 @@ public class HwCiAtlas {
                 ConfigFieldsTest.class,
                 RigPresetTest.class,
                 FlexLoopTest.class,
+                OnboardSensorsTest.class,
         });
     }
 }
