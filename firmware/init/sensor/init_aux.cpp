@@ -56,7 +56,14 @@ void initAuxSensors() {
 
 void deinitAuxSensors() {
 	for (size_t i = 0; i < efi::size(engineConfiguration->auxAnalogInputs); i++) {
-		AdcSubscription::UnsubscribeSensor(auxSensors[i]);
-		auxSensors[i].unregister();
+		auto channel = engineConfiguration->auxAnalogInputs[i];
+
+		// Releases it only if the channel changed
+		AdcSubscription::UnsubscribeSensor(auxSensors[i], channel);
+
+		if (!isAdcChannelValid(channel)) {
+			AdcSubscription::UnsubscribeSensor(auxSensors[i]);
+			auxSensors[i].unregister();
+		}
 	}
 }

@@ -207,32 +207,37 @@ static const char* vvtOutputNames[CAM_INPUTS_COUNT] = {
 #endif
 };
 
-static OutputPin vvtPins[CAM_INPUTS_COUNT];
 static SimplePwm vvtPwms[CAM_INPUTS_COUNT] = {"VVT1", "VVT2", "VVT3", "VVT4"};
 
-static void turnVvtPidOn(int index) {
-	if (!isBrainPinValid(engineConfiguration->vvtPins[index])) {
-		return;
-	}
+// The pins themselves are EnginePins RegisteredOutputPins, claimed and moved by every burn
+static ConfiguredPwm vvtOutputs[CAM_INPUTS_COUNT] = {
+		ConfiguredPwm{vvtPwms[0]},
+		ConfiguredPwm{vvtPwms[1]},
+		ConfiguredPwm{vvtPwms[2]},
+		ConfiguredPwm{vvtPwms[3]},
+};
 
-	startSimplePwmExt(
-			&vvtPwms[index],
-			vvtOutputNames[index],
-			engineConfiguration->vvtPins[index],
-			&vvtPins[index],
-			engineConfiguration->vvtOutputFrequency,
-			0);
+static bool isVvtOutputWanted(size_t index) {
+	return isBrainPinValid(engineConfiguration->vvtPins[index]) && engineConfiguration->vvtOutputFrequency >= 1;
 }
 
-void startVvtControlPins() {
-	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
-		turnVvtPidOn(i);
+void stopVvtOutputs(const engine_configuration_s* /*prev*/) {
+	for (size_t i = 0; i < efi::size(vvtOutputs); i++) {
+		vvtOutputs[i].stopIfUnwanted(isVvtOutputWanted(i));
 	}
 }
 
-void stopVvtControlPins() {
-	for (int i = 0; i < CAM_INPUTS_COUNT; i++) {
-		vvtPins[i].deInit();
+void startVvtOutputs(const engine_configuration_s* prev) {
+	float frequency = engineConfiguration->vvtOutputFrequency;
+
+	for (size_t i = 0; i < efi::size(vvtOutputs); i++) {
+		vvtOutputs[i].startIfWanted(
+				prev, isVvtOutputWanted(i), vvtOutputNames[i], &enginePins.vvtPins[i], frequency, 0);
+
+		if (vvtOutputs[i].isRunning()) {
+			// Already running: follow a frequency change
+			vvtPwms[i].setFrequency(frequency);
+		}
 	}
 }
 
@@ -244,8 +249,6 @@ void initVvtActuators() {
 	engine->module<VvtController2>()->init(&vvtTable2, &vvtPwms[1]);
 	engine->module<VvtController3>()->init(&vvtTable1, &vvtPwms[2]);
 	engine->module<VvtController4>()->init(&vvtTable2, &vvtPwms[3]);
-
-	startVvtControlPins();
 }
 
 #endif

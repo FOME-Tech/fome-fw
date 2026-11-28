@@ -116,6 +116,7 @@
 #include "trigger_emulator_algo.h"
 #include "rusefi_lua.h"
 #include "bootloader_updater.h"
+#include "config_steps.h"
 
 #include <setjmp.h>
 
@@ -198,19 +199,25 @@ void runRusEfi() {
 	initUsbMsd();
 #endif
 
-	/**
-	 * Next we should initialize serial port console, it's important to know what's going on
-	 */
-	initializeConsole();
+	{
+		// Burns from the console, TunerStudio and Lua wait until startup has finished (or stopped short),
+		// so a burn always meets a fully started ECU
+		ConfigChangeLock lock;
 
-	// Read configuration from flash memory
-	loadConfiguration();
+		/**
+		 * Next we should initialize serial port console, it's important to know what's going on
+		 */
+		initializeConsole();
+
+		// Read configuration from flash memory
+		loadConfiguration();
 
 #if EFI_TUNER_STUDIO
-	startTunerStudioConnectivity();
+		startTunerStudioConnectivity();
 #endif /* EFI_TUNER_STUDIO */
 
-	runRusEfiWithConfig();
+		runRusEfiWithConfig();
+	}
 
 	// periodic events need to be initialized after fuel&spark pins to avoid a warning
 	initMainLoop();
@@ -275,6 +282,8 @@ void runRusEfiWithConfig() {
 		// This has to happen after RegisteredOutputPins are init'd: otherwise no change will be detected, and no init
 		// will happen
 		rememberCurrentConfiguration();
+
+		configStepsStartupFinished();
 	}
 }
 

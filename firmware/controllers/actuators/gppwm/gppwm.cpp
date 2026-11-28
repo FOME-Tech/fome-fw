@@ -4,8 +4,13 @@
 #include "gppwm_channel.h"
 
 static GppwmChannel channels[GPPWM_CHANNELS];
-static OutputPin pins[GPPWM_CHANNELS];
 static SimplePwm outputs[GPPWM_CHANNELS];
+static ConfiguredPwm pwms[GPPWM_CHANNELS] = {
+		ConfiguredPwm{outputs[0]},
+		ConfiguredPwm{outputs[1]},
+		ConfiguredPwm{outputs[2]},
+		ConfiguredPwm{outputs[3]},
+};
 
 using gppwm_Map3D_t = Map3D<GPPWM_RPM_COUNT, GPPWM_LOAD_COUNT, uint8_t, int16_t, int16_t>;
 
@@ -28,30 +33,49 @@ static const char* channelNames[GPPWM_CHANNELS] = {
 		"GPPWM#4",
 };
 
-void initGpPwm() {
-	for (size_t i = 0; i < efi::size(channels); i++) {
-		auto& cfg = engineConfiguration->gppwm[i];
+// The pin itself is an EnginePins RegisteredOutputPin, claimed and moved by every burn
 
-		// If no pin, don't enable this channel.
-		if (!isBrainPinValid(cfg.pin)) {
+static bool isChannelWanted(size_t i) {
+	return isBrainPinValid(engineConfiguration->gppwm[i].pin);
+}
+
+// A frequency of 0 means on-off mode
+static bool isPwmWanted(size_t i) {
+	return isChannelWanted(i) && engineConfiguration->gppwm[i].pwmFrequency >= 1;
+}
+
+void stopGpPwm(const engine_configuration_s* /*prev*/) {
+	for (size_t i = 0; i < efi::size(channels); i++) {
+		// Stop updating first: updateGppwm() runs on a higher priority thread, and could otherwise catch the
+		// channel half reconfigured. The output holds its state until startGpPwm() attaches it again.
+		channels[i].detach();
+
+		pwms[i].stopIfUnwanted(isPwmWanted(i));
+	}
+}
+
+void startGpPwm(const engine_configuration_s* prev) {
+	for (size_t i = 0; i < efi::size(channels); i++) {
+		if (!isChannelWanted(i)) {
 			continue;
 		}
 
-		// Determine frequency and whether PWM is enabled
-		float freq = cfg.pwmFrequency;
-		bool usePwm = freq > 0;
+		auto& cfg = engineConfiguration->gppwm[i];
+		auto& pin = enginePins.gppwmPins[i];
+		float frequency = cfg.pwmFrequency;
 
-		// Setup pin & pwm
-		pins[i].initPin("gp pwm", cfg.pin);
-		if (usePwm) {
-			startSimplePwm(&outputs[i], channelNames[i], &pins[i], freq, 0);
+		pwms[i].startIfWanted(prev, isPwmWanted(i), channelNames[i], &pin, frequency, 0);
+
+		if (pwms[i].isRunning()) {
+			// Already running: follow a frequency change
+			outputs[i].setFrequency(frequency);
 		}
 
 		// Set up this channel's lookup table
 		tables[i]->init(cfg.table, cfg.loadBins, cfg.rpmBins);
 
 		// Finally configure the channel
-		channels[i].init(usePwm, &outputs[i], &pins[i], tables[i], &cfg);
+		channels[i].init(pwms[i].isRunning(), &outputs[i], &pin, tables[i], &cfg);
 	}
 }
 

@@ -77,6 +77,9 @@ inline constexpr FastAdcToken InvalidFastAdcToken = static_cast<FastAdcToken>(-1
 
 // Add a channel to the fast ADC sampling list. Each call adds one: to change the list, reset it first.
 FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel);
+// Empty the fast ADC sampling list, invalidating every token. Call with the system locked, together with
+// the enableFastAdcChannel() calls that rebuild it, so the fast ADC never samples a half-built list.
+void resetFastAdcChannels();
 float getFastAdc(FastAdcToken token);
 const ADCConversionGroup* getKnockConversionGroup(uint8_t channelIdx);
 void onKnockSamplingComplete();

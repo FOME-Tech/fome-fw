@@ -66,7 +66,7 @@ TEST(etb, initializationMissingThrottle) {
 		engine->etbControllers[i] = &mocks[i];
 	}
 
-	// Unused throttles are still told so, so they drop any previous configuration
+	// Each still hears that it's unassigned, so one unassigned by a burn stops (no motor hardware touched)
 	EXPECT_CALL(mocks[0], init(DC_None, nullptr, nullptr, _, true)).WillOnce(Return(false));
 	EXPECT_CALL(mocks[1], init(DC_None, nullptr, nullptr, _, true)).WillOnce(Return(false));
 
@@ -196,6 +196,23 @@ TEST(etb, initializationNoFunction) {
 	EXPECT_FALSE(dut.init(DC_None, &motor, nullptr, nullptr, false));
 
 	// This should no-op, it shouldn't call motor.set(float duty)
+	dut.setOutput(0.5f);
+}
+
+// A burn that unassigns a running DC motor function stops driving its motor
+TEST(etb, unassignedByBurnReleasesMotor) {
+	StrictMock<MockMotor> motor;
+
+	EtbController dut;
+	pid_s pid = {};
+
+	// A wastegate needs no pedal or redundant sensors
+	EXPECT_TRUE(dut.init(DC_Wastegate, &motor, &pid, nullptr, false));
+
+	EXPECT_CALL(motor, disable(_));
+	EXPECT_FALSE(dut.init(DC_None, nullptr, nullptr, nullptr, false));
+
+	// No more output to the motor: the strict mock fails on any call
 	dut.setOutput(0.5f);
 }
 
@@ -683,7 +700,7 @@ TEST(etb, wastegateFeedbackLossAndRecovery) {
 // A throttle that was configured and then isn't must stop driving its motor
 TEST(etb, reconfiguredAwayStopsDrivingMotor) {
 	EngineTestHelper eth(engine_type_e::TEST_ENGINE);
-	// Strict: any call to the motor after the throttle is removed fails the test
+	// Strict: each time the throttle can't initialize, the motor is disabled once and any other call fails the test
 	StrictMock<MockMotor> motor;
 
 	Sensor::setMockValue(SensorType::Tps1Primary, 0);
@@ -694,11 +711,13 @@ TEST(etb, reconfiguredAwayStopsDrivingMotor) {
 	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &engineConfiguration->etb, nullptr, true));
 
 	// Throttle function removed
+	EXPECT_CALL(motor, disable(_));
 	EXPECT_FALSE(etb.init(DC_None, nullptr, nullptr, nullptr, true));
 	etb.setOutput(25.0f);
 
 	// Throttle still selected, but the pedal is gone so it can't initialize
 	ASSERT_TRUE(etb.init(DC_Throttle1, &motor, &engineConfiguration->etb, nullptr, true));
+	EXPECT_CALL(motor, disable(_));
 	EXPECT_FALSE(etb.init(DC_Throttle1, &motor, &engineConfiguration->etb, nullptr, false));
 	etb.setOutput(25.0f);
 }

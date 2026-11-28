@@ -143,8 +143,28 @@ void prepareOutputSignals() {
 	engine->triggerCentral.prepareTriggerShape();
 #endif // EFI_SHAFT_POSITION_INPUT
 
-	// Fuel schedule may now be completely wrong, force a reset
+	// Fuel and ignition schedules may now be completely wrong, force a rebuild. The ignition events
+	// are only rebuilt when not ready, and a higher cylinder count would otherwise use elements that
+	// were never set up.
 	engine->injectionEvents.invalidate();
+	engine->ignitionEvents.isReady = false;
+}
+
+void startCylinderLayout(const engine_configuration_s* prev) {
+	// A trigger change rebuilds this as well (via updateTriggerWaveform), but these don't affect the trigger
+	bool changed = !prev || prev->firingOrder != engineConfiguration->firingOrder ||
+				   prev->pairedOddFireWastedSpark != engineConfiguration->pairedOddFireWastedSpark;
+
+	for (size_t i = 0; prev && i < efi::size(engineConfiguration->timing_offset_cylinder); i++) {
+		changed |= prev->timing_offset_cylinder[i] != engineConfiguration->timing_offset_cylinder[i];
+	}
+
+	if (changed) {
+		// Same locking as Engine::updateTriggerWaveform, the trigger may be running
+		chibios_rt::CriticalSectionLocker csl;
+
+		prepareOutputSignals();
+	}
 }
 
 void OneCylinder::updateCylinderNumber(uint8_t index, uint8_t cylinderNumber) {

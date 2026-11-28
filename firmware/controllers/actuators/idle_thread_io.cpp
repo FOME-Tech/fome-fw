@@ -135,12 +135,6 @@ void startIdleThread() {
 
 	controller->init();
 
-#if !EFI_UNIT_TEST
-	// todo: we still have to explicitly init all hardware on start in addition to handling configuration change via
-	// 'applyNewHardwareSettings' todo: maybe unify these two use-cases?
-	initIdleHardware();
-#endif /* EFI_UNIT_TEST */
-
 	controller->openLoop = -100.0f;
 	controller->currentIdlePosition = -100.0f;
 

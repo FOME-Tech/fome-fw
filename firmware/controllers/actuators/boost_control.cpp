@@ -247,47 +247,54 @@ void setDefaultBoostParameters() {
 	engineConfiguration->etbWastegatePid.maxValue = 60;
 }
 
-void startBoostPin() {
-#if !EFI_UNIT_TEST
-	// Only init if a pin is set, no need to start PWM without a pin
-	if (!engineConfiguration->isBoostControlEnabled || !isBrainPinValid(engineConfiguration->boostControlPin)) {
-		return;
-	}
+static ConfiguredPwm boostOutput(boostPwmControl);
 
-	startSimplePwm(&boostPwmControl, "Boost", &enginePins.boostPin, engineConfiguration->boostPwmFrequency, 0);
-#endif /* EFI_UNIT_TEST */
+static bool isBoostPwmWanted() {
+	return engineConfiguration->isBoostControlEnabled && isBrainPinValid(engineConfiguration->boostControlPin) &&
+		   engineConfiguration->boostPwmFrequency >= 1;
 }
 
-void initBoostCtrl() {
+static bool hasEtbWastegate() {
+	for (size_t i = 0; i < efi::size(engineConfiguration->etbFunctions); i++) {
+		if (engineConfiguration->etbFunctions[i] == DC_Wastegate) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void stopBoostControl(const engine_configuration_s* /*prev*/) {
+	boostOutput.stopIfUnwanted(isBoostPwmWanted());
+}
+
+void startBoostControl(const engine_configuration_s* prev) {
+	float frequency = engineConfiguration->boostPwmFrequency;
+
+	boostOutput.startIfWanted(prev, isBoostPwmWanted(), "Boost", &enginePins.boostPin, frequency, 0);
+
+	if (boostOutput.isRunning()) {
+		// Already running: follow a frequency change
+		boostPwmControl.setFrequency(frequency);
+	}
+
 	// todo: why do we have 'isBoostControlEnabled' setting exactly?
 	// 'initVvtActuators' is an example of a subsystem without explicit enable
-	if (!engineConfiguration->isBoostControlEnabled) {
-		return;
+	bool controllerWanted = engineConfiguration->isBoostControlEnabled &&
+							(isBrainPinValid(engineConfiguration->boostControlPin) || hasEtbWastegate());
+
+	auto& controller = engine->module<BoostController>().unmock();
+
+	// The first time it's wanted. What it's given never changes, and it reads the enable on every update
+	// (zero output when off), so after that there's nothing to redo.
+	if (controllerWanted && !controller.hasInit()) {
+		// Set up open & closed loop tables
+		boostMapOpen.init(config->boostTableOpenLoop, config->boostTpsBins, config->boostRpmBins);
+		boostMapClosed.init(
+				config->boostTableClosedLoop, config->boostClosedLoopYAxisBins, config->boostClosedLoopXAxisBins);
+
+		controller.init(&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
 	}
-
-	bool hasAnyEtbWastegate = false;
-
-	for (size_t i = 0; i < efi::size(engineConfiguration->etbFunctions); i++) {
-		hasAnyEtbWastegate |= engineConfiguration->etbFunctions[i] == DC_Wastegate;
-	}
-
-	// If we have neither a boost PWM pin nor ETB wastegate, nothing more to do
-	if (!isBrainPinValid(engineConfiguration->boostControlPin) && !hasAnyEtbWastegate) {
-		return;
-	}
-
-	// Set up open & closed loop tables
-	boostMapOpen.init(config->boostTableOpenLoop, config->boostTpsBins, config->boostRpmBins);
-	boostMapClosed.init(
-			config->boostTableClosedLoop, config->boostClosedLoopYAxisBins, config->boostClosedLoopXAxisBins);
-
-	// Set up boost controller instance
-	engine->module<BoostController>().unmock().init(
-			&boostPwmControl, &boostMapOpen, &boostMapClosed, &engineConfiguration->boostPid);
-
-#if !EFI_UNIT_TEST
-	startBoostPin();
-#endif
 }
 
 #endif // EFI_ENGINE_CONTROL

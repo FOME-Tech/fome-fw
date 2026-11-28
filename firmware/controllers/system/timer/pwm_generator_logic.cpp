@@ -383,3 +383,31 @@ void applyPinState(int stateIndex, PwmConfig* state) /* pwm_gen_callback */ {
 		output->setValue(value);
 	}
 }
+
+void ConfiguredPwm::stopIfUnwanted(bool wanted) {
+	if (m_running && !wanted) {
+		m_pwm.stop();
+		m_running = false;
+	}
+}
+
+void ConfiguredPwm::startIfWanted(
+		const engine_configuration_s* prev,
+		bool wanted,
+		const char* msg,
+		OutputPin* output,
+		float frequency,
+		float dutyCycle) {
+	if (!prev) {
+		m_running = false;
+	}
+
+	if (m_running || !wanted) {
+		return;
+	}
+
+	startSimplePwm(&m_pwm, msg, output, frequency, dutyCycle);
+
+	// startSimplePwm refuses a frequency below 1 Hz (with a warning). NAN is fine: it starts paused.
+	m_running = !(frequency < 1);
+}

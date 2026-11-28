@@ -41,9 +41,14 @@ public:
 		return configure(cfg);
 	}
 
-	void deinit() {
-		AdcSubscription::UnsubscribeSensor(m_sens);
-		m_sens.unregister();
+	// Releases the sensor, unless it stays on the same channel
+	void deinit(adc_channel_e newChannel) {
+		AdcSubscription::UnsubscribeSensor(m_sens, newChannel);
+
+		if (!isAdcChannelValid(newChannel)) {
+			AdcSubscription::UnsubscribeSensor(m_sens);
+			m_sens.unregister();
+		}
 	}
 
 	SensorType type() const {
@@ -102,6 +107,7 @@ public:
 
 		if (!hasFirst) {
 			// no input if we have no first channel
+			m_redund.unregister();
 			return;
 		}
 
@@ -119,6 +125,7 @@ public:
 						"inputs...?",
 						m_pri.name(),
 						m_sec.name());
+				m_redund.unregister();
 				return;
 			}
 		}
@@ -142,11 +149,14 @@ public:
 		m_redund.Register();
 	}
 
-	void deinit() {
-		m_pri.deinit();
-		m_sec.deinit();
+	void deinit(adc_channel_e newPrimary, adc_channel_e newSecondary) {
+		m_pri.deinit(newPrimary);
+		m_sec.deinit(newSecondary);
 
-		m_redund.unregister();
+		// Without a primary there's no redundant sensor. Otherwise init() reconfigures it in place.
+		if (!isAdcChannelValid(newPrimary)) {
+			m_redund.unregister();
+		}
 	}
 
 private:
@@ -252,11 +262,13 @@ void initTps() {
 }
 
 void deinitTps() {
-	tps1.deinit();
-	tps2.deinit();
+	tps1.deinit(engineConfiguration->tps1_1AdcChannel, engineConfiguration->tps1_2AdcChannel);
+	tps2.deinit(engineConfiguration->tps2_1AdcChannel, engineConfiguration->tps2_2AdcChannel);
 
-	pedal.deinit();
+	pedal.deinit(
+			engineConfiguration->throttlePedalPositionAdcChannel,
+			engineConfiguration->throttlePedalPositionSecondAdcChannel);
 
-	wastegate.deinit();
-	clutch.deinit();
+	wastegate.deinit(engineConfiguration->wastegatePositionSensor);
+	clutch.deinit(engineConfiguration->clutchPositionSensor);
 }

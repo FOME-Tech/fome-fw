@@ -75,6 +75,8 @@ TESTS_SRC_CPP = \
 	tests/test_fuel_map.cpp \
 	tests/test_clutch_state.cpp \
 	tests/test_gear_detector.cpp \
+	tests/test_config_change.cpp \
+	tests/test_config_sequence.cpp \
 	tests/ignition_injection/test_fuel_wall_wetting.cpp \
 	tests/test_one_cylinder_logic.cpp \
 	tests/test_tunerstudio.cpp \

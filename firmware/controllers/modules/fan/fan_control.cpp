@@ -154,18 +154,50 @@ void FanController::benchTest() {
 	m_benchTestTimer.reset();
 }
 
-void initFanControl() {
 #if !EFI_UNIT_TEST
-	// Fan 1 PWM
-	if (engineConfiguration->fan1UsePwmMode && isBrainPinValid(engineConfiguration->fanPin)) {
-		startSimplePwm(&fan1Pwm, "Fan1", &enginePins.fanRelay, engineConfiguration->fanPwmFrequency, 0);
-		engine->module<FanControl1>().unmock().m_pwm = &fan1Pwm;
+static ConfiguredPwm fan1Output(fan1Pwm);
+static ConfiguredPwm fan2Output(fan2Pwm);
+
+static bool isFan1PwmWanted() {
+	return engineConfiguration->fan1UsePwmMode && isBrainPinValid(engineConfiguration->fanPin) &&
+		   engineConfiguration->fanPwmFrequency >= 1;
+}
+
+static bool isFan2PwmWanted() {
+	return engineConfiguration->fan2UsePwmMode && isBrainPinValid(engineConfiguration->fan2Pin) &&
+		   engineConfiguration->fanPwmFrequency >= 1;
+}
+
+void stopFanPwm(const engine_configuration_s* /*prev*/) {
+	fan1Output.stopIfUnwanted(isFan1PwmWanted());
+	fan2Output.stopIfUnwanted(isFan2PwmWanted());
+
+	// Without a PWM, the fan controller drives the relay on/off itself
+	if (!fan1Output.isRunning()) {
+		engine->module<FanControl1>().unmock().m_pwm = nullptr;
 	}
 
-	// Fan 2 PWM
-	if (engineConfiguration->fan2UsePwmMode && isBrainPinValid(engineConfiguration->fan2Pin)) {
-		startSimplePwm(&fan2Pwm, "Fan2", &enginePins.fanRelay2, engineConfiguration->fanPwmFrequency, 0);
-		engine->module<FanControl2>().unmock().m_pwm = &fan2Pwm;
+	if (!fan2Output.isRunning()) {
+		engine->module<FanControl2>().unmock().m_pwm = nullptr;
 	}
-#endif
 }
+
+void startFanPwm(const engine_configuration_s* prev) {
+	float frequency = engineConfiguration->fanPwmFrequency;
+
+	fan1Output.startIfWanted(prev, isFan1PwmWanted(), "Fan1", &enginePins.fanRelay, frequency, 0);
+	fan2Output.startIfWanted(prev, isFan2PwmWanted(), "Fan2", &enginePins.fanRelay2, frequency, 0);
+
+	// Already running: follow a frequency change
+	if (fan1Output.isRunning()) {
+		fan1Pwm.setFrequency(frequency);
+	}
+
+	if (fan2Output.isRunning()) {
+		fan2Pwm.setFrequency(frequency);
+	}
+
+	engine->module<FanControl1>().unmock().m_pwm = fan1Output.isRunning() ? &fan1Pwm : nullptr;
+	engine->module<FanControl2>().unmock().m_pwm = fan2Output.isRunning() ? &fan2Pwm : nullptr;
+}
+#endif // EFI_UNIT_TEST

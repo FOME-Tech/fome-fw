@@ -18,6 +18,8 @@ struct GppwmResult {
 class GppwmChannel {
 public:
 	void init(bool usePwm, IPwm* pwm, OutputPin* outputPin, const ValueProvider3D* table, const gppwm_channel* cfg);
+	// Stop updating the output, until init() again. Call before changing anything init() was given.
+	void detach();
 	GppwmResult update();
 	GppwmResult getOutput() const;
 

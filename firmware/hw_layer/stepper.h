@@ -20,7 +20,6 @@ public:
 	// pause and enter the idle mode (less current consumption)
 	virtual void sleep();
 
-protected:
 	void setReactionTime(float ms);
 
 private:
@@ -54,6 +53,11 @@ class DualHBridgeStepper final : public StepperHw {
 public:
 	void initialize(DcMotor* motorPhaseA, DcMotor* motorPhaseB, float reactionTime);
 
+	// Drive the motors again after disable()
+	void enable();
+	// De-energize both phases and stop driving them, including from a step in progress
+	void disable();
+
 	bool step(bool positive) override;
 
 	void sleep() override;
@@ -64,6 +68,8 @@ protected:
 private:
 	DcMotor* m_motorPhaseA = nullptr;
 	DcMotor* m_motorPhaseB = nullptr;
+
+	bool m_enabled = true;
 
 	uint8_t m_phase = 0;
 };
@@ -82,7 +88,7 @@ public:
 	int m_totalSteps = 0;
 
 protected:
-	void setInitialPosition();
+	void setInitialPosition(StepperHw* hw);
 
 	void saveStepperPos(int pos);
 	int loadStepperPos();

@@ -1,6 +1,10 @@
 #pragma once
 
-void initSoftwareKnock();
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp: the knock filter frequency (from the band or the bore)
+// and the processing thread
+void startSoftwareKnock(const engine_configuration_s* prev);
 void knockSamplingCallback(uint8_t cylinderIndex, efitick_t nowNt);
 
 #ifdef STM32H7XX

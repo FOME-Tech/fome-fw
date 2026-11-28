@@ -3,6 +3,9 @@ package com.rusefi;
 import com.rusefi.common.ConfigFieldsTest;
 import com.rusefi.common.MiscTest;
 import com.rusefi.proteus.FlexLoopTest;
+import com.rusefi.proteus.FrequencyLoopTest;
+import com.rusefi.proteus.HardwareTriggerTest;
+import com.rusefi.proteus.OutputFrequencyTest;
 import com.rusefi.proteus.ProteusAnalogTest;
 import com.rusefi.proteus.RigPresetTest;
 
@@ -13,6 +16,9 @@ public class HwCiF4Proteus {
                 ConfigFieldsTest.class,
                 RigPresetTest.class,
                 FlexLoopTest.class,
+                FrequencyLoopTest.class,
+                OutputFrequencyTest.class,
+                HardwareTriggerTest.class,
                 ProteusAnalogTest.class,
         });
     }

@@ -10,33 +10,45 @@
 
 static void initSensorCli();
 
+// The pins initAuxDigital() claimed and their modes, so a burn only touches the ones that changed
+static switch_input_pin_e auxDigitalPins[LUA_DIGITAL_INPUT_COUNT];
+static pin_input_mode_e auxDigitalModes[LUA_DIGITAL_INPUT_COUNT];
+
 static void initAuxDigital() {
+	for (size_t i = 0; i < efi::size(auxDigitalPins); i++) {
+		auto pin = engineConfiguration->luaDigitalInputPins[i];
+
+		if (pin == auxDigitalPins[i]) {
+			// Already set up like this (or still unassigned)
+			continue;
+		}
+
+		auxDigitalPins[i] = pin;
+		auxDigitalModes[i] = engineConfiguration->luaDigitalInputPinModes[i];
+
 #if EFI_PROD_CODE
-	for (size_t i = 0; i < efi::size(engineConfiguration->luaDigitalInputPins); i++) {
-		efiSetPadMode(
-				"Lua Digital",
-				engineConfiguration->luaDigitalInputPins[i],
-				engineConfiguration->luaDigitalInputPinModes[i]);
-	}
+		efiSetPadMode("Lua Digital", pin, auxDigitalModes[i]);
 #endif // EFI_PROD_CODE
+	}
 }
 
 static void deInitAuxDigital() {
-	for (size_t i = 0; i < efi::size(activeConfiguration.luaDigitalInputPins); i++) {
-		brain_pin_markUnused(activeConfiguration.luaDigitalInputPins[i]);
+	for (size_t i = 0; i < efi::size(auxDigitalPins); i++) {
+		bool unchanged = auxDigitalPins[i] == engineConfiguration->luaDigitalInputPins[i] &&
+						 auxDigitalModes[i] == engineConfiguration->luaDigitalInputPinModes[i];
+
+		if (unchanged) {
+			continue;
+		}
+
+		brain_pin_markUnused(auxDigitalPins[i]);
+		auxDigitalPins[i] = Gpio::Unassigned;
 	}
 }
 
-void initNewSensors() {
-	// First (optionally) init any sensors built in to the board that don't need config
+void initFixedSensors() {
+	// Sensors built in to the board that don't need config
 	initBoardSensors();
-
-	reconfigureSensors();
-
-	initBaro();
-	initAuxSpeedSensors();
-
-	initAuxDigital();
 
 	// Init CLI functionality for sensors (mocking)
 	initSensorCli();
@@ -51,9 +63,8 @@ void initNewSensors() {
 #endif
 }
 
-void stopSensors() {
-	deInitAuxDigital();
-
+void stopConfiguredSensors(const engine_configuration_s* /*prev*/) {
+	deinitBaro();
 	deinitTps();
 	deinitFluidPressure();
 	deinitVbatt();
@@ -63,13 +74,14 @@ void stopSensors() {
 	deinitAuxSensors();
 	deInitVehicleSpeedSensor();
 	deinitTurbochargerSpeedSensor();
-	deinitAuxSpeedSensors();
 	deinitMap();
 	deinitMaf();
 	deinitFuelLevel();
+	deinitAuxSpeedSensors();
+	deInitAuxDigital();
 }
 
-void reconfigureSensors() {
+void startConfiguredSensors(const engine_configuration_s* /*prev*/) {
 	initVbatt();
 	initMap();
 	initMaf();
@@ -82,6 +94,11 @@ void reconfigureSensors() {
 	initAuxSensors();
 	initVehicleSpeedSensor();
 	initTurbochargerSpeedSensor();
+	initAuxSpeedSensors();
+	initAuxDigital();
+
+	// Only if no other baro sensor was configured
+	initBaro();
 }
 
 // Mocking/testing helpers

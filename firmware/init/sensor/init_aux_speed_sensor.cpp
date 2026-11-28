@@ -25,6 +25,6 @@ void initAuxSpeedSensors() {
 }
 
 void deinitAuxSpeedSensors() {
-	auxSpeed1.deInit();
-	auxSpeed2.deInit();
+	auxSpeed1.deInit(engineConfiguration->auxSpeedSensorInputPin[0]);
+	auxSpeed2.deInit(engineConfiguration->auxSpeedSensorInputPin[1]);
 }

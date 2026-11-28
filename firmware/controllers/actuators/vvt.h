@@ -15,8 +15,12 @@
 class ValueProvider3D;
 
 void initVvtActuators();
-void startVvtControlPins();
-void stopVvtControlPins();
+
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp: the solenoid outputs
+void stopVvtOutputs(const engine_configuration_s* prev);
+void startVvtOutputs(const engine_configuration_s* prev);
 
 class VvtController : public EngineModule, public ClosedLoopController<angle_t, percent_t>, public vvt_s {
 public:

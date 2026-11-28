@@ -76,45 +76,77 @@ public:
 
 static CCM_OPTIONAL KnockThread kt;
 
-void initSoftwareKnock() {
-	if (engineConfiguration->enableSoftwareKnock) {
-		float freqKhz;
+// Knock filter center frequency the configuration wants, 0 for none. The knock thread applies it at the
+// start of an event (appliedFilterHz), so the coefficients never change in the middle of filtering.
+static float wantedFilterHz = 0;
+static float appliedFilterHz = 0;
+static bool knockPinsSet = false;
 
-		if (engineConfiguration->knockBandCustom != 0) {
-			freqKhz = engineConfiguration->knockBandCustom;
+static float getWantedFilterHz() {
+	if (!engineConfiguration->enableSoftwareKnock) {
+		return 0;
+	}
 
-			// A center frequency this far below the sample rate can't be represented by the filter
-			if (1000 * freqKhz < KNOCK_SAMPLE_RATE / 1000.0f) {
-				firmwareError("Invalid knock band frequency: %.2f khz", freqKhz);
-				return;
-			}
-		} else {
-			float bore = engineConfiguration->cylinderBore;
+	float freqKhz;
 
-			if (bore == 0) {
-				efiPrintf("Knock sense disabled due to invalid freq/bore");
-				return;
-			}
+	if (engineConfiguration->knockBandCustom != 0) {
+		freqKhz = engineConfiguration->knockBandCustom;
 
-			if (bore < 10 || bore > 200) {
-				firmwareError("Invalid knock cylinder bore: %.1f", bore);
-				return;
-			}
+		// A center frequency this far below the sample rate can't be represented by the filter
+		if (1000 * freqKhz < KNOCK_SAMPLE_RATE / 1000.0f) {
+			firmwareError("Invalid knock band frequency: %.2f khz", freqKhz);
+			return 0;
+		}
+	} else {
+		float bore = engineConfiguration->cylinderBore;
 
-			// derived from https://phormula.com/knock-frequency-calculator/
-			freqKhz = 1140.0f / bore;
+		if (bore == 0) {
+			efiPrintf("Knock sense disabled due to invalid freq/bore");
+			return 0;
 		}
 
-		efiPrintf("Knock sense configuring filter with frequency %.2f khz", freqKhz);
+		if (bore < 10 || bore > 200) {
+			firmwareError("Invalid knock cylinder bore: %.1f", bore);
+			return 0;
+		}
 
-		knockFilter.configureBandpass(KNOCK_SAMPLE_RATE, 1000 * freqKhz, 3);
+		// derived from https://phormula.com/knock-frequency-calculator/
+		freqKhz = 1140.0f / bore;
+	}
 
+	return 1000 * freqKhz;
+}
+
+void startSoftwareKnock(const engine_configuration_s* prev) {
+	bool changed = !prev || prev->enableSoftwareKnock != engineConfiguration->enableSoftwareKnock ||
+				   prev->knockBandCustom != engineConfiguration->knockBandCustom ||
+				   prev->cylinderBore != engineConfiguration->cylinderBore;
+
+	if (!changed) {
+		return;
+	}
+
+	float filterHz = getWantedFilterHz();
+	wantedFilterHz = filterHz;
+
+	// Sampling checks enableSoftwareKnock itself, so turning it off needs nothing more here
+	if (filterHz == 0) {
+		return;
+	}
+
+	efiPrintf("Knock sense configuring filter with frequency %.2f khz", filterHz / 1000);
+
+	// The knock inputs are fixed by the board: set them up once, and keep them
+	if (!knockPinsSet) {
 		efiSetPadMode("knock ch1", KNOCK_PIN_CH1, PAL_MODE_INPUT_ANALOG);
 #if KNOCK_HAS_CH2
 		efiSetPadMode("knock ch2", KNOCK_PIN_CH2, PAL_MODE_INPUT_ANALOG);
 #endif
-		kt.startThread();
+		knockPinsSet = true;
 	}
+
+	// Only starts it the first time
+	kt.startThread();
 }
 
 static void processLastKnockEvent() {
@@ -130,6 +162,20 @@ static void processLastKnockEvent() {
 	float ratio = vcc / ADC_MAX_VALUE;
 
 	size_t localCount = sampleCount;
+
+	// Follow a filter frequency change from a burn, between events
+	float filterHz = wantedFilterHz;
+
+	if (filterHz == 0) {
+		// Knock sense was turned off, or has no valid frequency
+		knockNeedsProcess = false;
+		return;
+	}
+
+	if (filterHz != appliedFilterHz) {
+		knockFilter.configureBandpass(KNOCK_SAMPLE_RATE, filterHz, 3);
+		appliedFilterHz = filterHz;
+	}
 
 	// Prepare the steady state at vcc/2 so that there isn't a step
 	// when samples begin

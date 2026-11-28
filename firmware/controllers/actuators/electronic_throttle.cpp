@@ -157,11 +157,11 @@ static TsCalMode functionToCalModeSecMax(dc_function_e func) {
 
 bool EtbController::init(
 		dc_function_e function, DcMotor* motor, pid_s* pidParameters, const ValueProvider3D* pedalMap, bool hasPedal) {
-	// Forget the motor from any previous configuration: if this one doesn't initialize, nothing may drive it
-	m_motor = nullptr;
-
+	// Every path that doesn't initialize goes through releaseMotor(), so nothing keeps driving a motor
+	// from a previous configuration
 	if (function == DC_None) {
-		// if not configured, don't init.
+		// if not configured, don't init. If a burn just unassigned it, stop what it was doing.
+		releaseMotor();
 		m_function = DC_None;
 		etbErrorCode = (int8_t)TpsState::None;
 		return false;
@@ -178,12 +178,14 @@ bool EtbController::init(
 	if (isEtbMode()) {
 		// We don't need to init throttles, so nothing to do here.
 		if (!hasPedal) {
+			releaseMotor();
 			etbErrorCode = (int8_t)TpsState::None;
 			return false;
 		}
 
 		// If no sensor is configured for this throttle, skip initialization.
 		if (!Sensor::hasSensor(functionToTpsSensorPrimary(function))) {
+			releaseMotor();
 			etbErrorCode = (int8_t)TpsState::TpsError;
 			return false;
 		}
@@ -194,6 +196,7 @@ bool EtbController::init(
 					"Use of electronic throttle requires %s to be redundant.",
 					Sensor::getSensorName(m_positionSensor));
 
+			releaseMotor();
 			etbErrorCode = (int8_t)TpsState::Redundancy;
 			return false;
 		}
@@ -202,6 +205,7 @@ bool EtbController::init(
 			firmwareError(
 					ObdCode::OBD_TPS_Configuration,
 					"Use of electronic throttle requires accelerator pedal to be redundant.");
+			releaseMotor();
 			etbErrorCode = (int8_t)TpsState::Redundancy;
 			return false;
 		}
@@ -212,6 +216,16 @@ bool EtbController::init(
 	m_pedalMap = pedalMap;
 
 	return true;
+}
+
+// A burn can leave a controller that was running without a valid configuration (function unassigned, or
+// its sensors gone): stop driving the motor rather than carry on with the old setup
+void EtbController::releaseMotor() {
+	if (m_motor) {
+		m_motor->disable("ETB unconfigured");
+	}
+
+	m_motor = nullptr;
 }
 
 void EtbController::reset() {
@@ -955,7 +969,7 @@ void doInitElectronicThrottle() {
 
 		if (func == DC_None) {
 			// do not touch HW pins if function not selected, this way Lua can use DC motor hardware pins directly.
-			// The controller still has to drop whatever it was doing before.
+			// The controller still hears about it, so one unassigned by a burn stops.
 			if (controller) {
 				controller->init(DC_None, nullptr, nullptr, &pedal2tpsMap, hasPedal);
 			}

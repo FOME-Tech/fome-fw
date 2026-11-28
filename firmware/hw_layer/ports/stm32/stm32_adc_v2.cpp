@@ -300,6 +300,15 @@ FastAdcToken enableFastAdcChannel(const char* msg, adc_channel_e channel) {
 	return adcIndex;
 }
 
+void resetFastAdcChannels() {
+	fastAdcChannelCount = 0;
+
+	adcgrpcfgFast.num_channels = 0;
+	adcgrpcfgFast.sqr1 = 0;
+	adcgrpcfgFast.sqr2 = 0;
+	adcgrpcfgFast.sqr3 = 0;
+}
+
 static NO_CACHE adcsample_t fastAdcSampleBuf[ADC_BUF_DEPTH_FAST * maxFastChannels];
 
 float getFastAdc(FastAdcToken token) {

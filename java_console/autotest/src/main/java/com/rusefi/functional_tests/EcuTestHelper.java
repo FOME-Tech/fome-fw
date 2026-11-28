@@ -267,11 +267,27 @@ public class EcuTestHelper {
     }
 
     /**
+     * Burn the way TunerStudio does, without waiting for the flash write: the ECU applies the change at once, and on
+     * F4 only writes the flash once the engine stops (unless it's self-stimulated)
+     */
+    public void burnWithoutWaitingForFlash() {
+        onCommunicationThread(() -> linkManager.getCurrentStreamState().burn());
+    }
+
+    /**
+     * Write a change nothing on the rig depends on, as a raw value: then burn it either way
+     */
+    public void setUnrelatedChange() {
+        double threshold = getField(Fields.ENGINESNIFFERRPMTHRESHOLD);
+        setField(Fields.ENGINESNIFFERRPMTHRESHOLD, threshold == 2500 ? 2600 : 2500);
+    }
+
+    /**
      * Burn a change nothing on the rig depends on, to see what a burn does to everything else
      */
     public void burnUnrelatedChange() {
-        double threshold = getField(Fields.ENGINESNIFFERRPMTHRESHOLD);
-        setFieldAndBurn(Fields.ENGINESNIFFERRPMTHRESHOLD, threshold == 2500 ? 2600 : 2500);
+        setUnrelatedChange();
+        burn();
     }
 
     /**

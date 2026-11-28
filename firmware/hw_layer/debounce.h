@@ -16,6 +16,10 @@ class ButtonDebounce {
 public:
 	explicit ButtonDebounce(const char* name);
 	void init(efidur_t threshold, brain_pin_e& pin, pin_input_mode_e& mode);
+	// Change the debounce time of an initialized instance
+	void setThreshold(efidur_t threshold) {
+		m_threshold = threshold;
+	}
 	void stopConfiguration();
 	void startConfiguration();
 	bool readPinEvent();

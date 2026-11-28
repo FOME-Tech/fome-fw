@@ -20,5 +20,5 @@ void initTurbochargerSpeedSensor() {
 }
 
 void deinitTurbochargerSpeedSensor() {
-	turbochargerSpeedSensor.deInit();
+	turbochargerSpeedSensor.deInit(engineConfiguration->turboSpeedSensorInputPin);
 }

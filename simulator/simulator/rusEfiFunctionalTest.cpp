@@ -24,6 +24,7 @@
 #include <chprintf.h>
 #include "rusefi_lua.h"
 #include "can_hw.h"
+#include "config_steps.h"
 #include "flash_main.h"
 
 #define DEFAULT_SIM_RPM 1200
@@ -80,50 +81,60 @@ void rusEfiFunctionalTest(void) {
 
 	engine->setConfig();
 
-	initializeConsole();
+	{
+		// Like the firmware: burns from the console and TunerStudio wait until startup has finished
+		ConfigChangeLock lock;
 
-	initDataStructures();
+		initializeConsole();
 
-	// todo: reduce code duplication with initEngineController
+		initDataStructures();
 
-	initFlash();
-	loadConfiguration();
+		// todo: reduce code duplication with initEngineController
 
-	enableTriggerStimulator();
-
-	commonInitEngineController();
-
-	initTriggerCentral();
-
-	initTriggerEmulator();
-
-	startStatusThreads();
-
-	startLoggingProcessor();
-
-#if EFI_FILE_LOGGING
-	initSdCardLogger();
-#endif // EFI_FILE_LOGGING
-
-	runChprintfTest();
-
-	initMainLoop();
-
-	setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
-
-	engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
-
-	void startSerialChannels();
-	startSerialChannels();
-
-	engineConfiguration->enableVerboseCanTx = true;
+		initFlash();
+		loadConfiguration();
 
 #if HAL_USE_CAN
-	// Set CAN device name
-	CAND1.deviceName = "can0";
-
-	initCan();
+		// Set CAN device name
+		CAND1.deviceName = "can0";
 #endif // HAL_USE_CAN
+
+		// There's no initHardware() here: start the hardware part of the configuration sequence (CAN, ...)
+		// where the firmware does, before engine control
+		configStepsBoot(BootPhase::Hardware);
+
+		commonInitEngineController();
+
+		initTriggerCentral();
+
+		initTriggerEmulator();
+
+		startStatusThreads();
+
+		startLoggingProcessor();
+
+#if EFI_FILE_LOGGING
+		initSdCardLogger();
+#endif // EFI_FILE_LOGGING
+
+		runChprintfTest();
+
+		initMainLoop();
+
+		setTriggerEmulatorRPM(DEFAULT_SIM_RPM);
+
+		engineConfiguration->engineSnifferRpmThreshold = DEFAULT_SNIFFER_THR;
+
+		void startSerialChannels();
+		startSerialChannels();
+
+		engineConfiguration->enableVerboseCanTx = true;
+
+		configStepsStartupFinished();
+	}
+
+	// An ordinary burn, now that everything is running
+	enableTriggerStimulator();
 
 	startLua();
 

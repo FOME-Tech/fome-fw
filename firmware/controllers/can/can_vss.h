@@ -7,7 +7,12 @@
 
 #pragma once
 
-void initCanVssSupport();
+struct engine_configuration_s;
+
+// Configuration sequence step, see config_steps.cpp
+void stopCanVss(const engine_configuration_s* prev);
+void startCanVss(const engine_configuration_s* prev);
+
 void setCanVss(int type);
 
 #if EFI_CAN_SUPPORT

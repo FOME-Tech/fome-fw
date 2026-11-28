@@ -7,6 +7,7 @@
 #include "boost_control.h"
 #include "table_helper.h"
 #include <rusefi/expected.h>
+#include <atomic>
 
 static expected<float> readBoostTarget() {
 #if EFI_ENGINE_CONTROL
@@ -193,11 +194,20 @@ float GppwmChannel::setOutput(float result) {
 
 void GppwmChannel::init(
 		bool usePwm, IPwm* pwm, OutputPin* outputPin, const ValueProvider3D* table, const gppwm_channel* cfg) {
+	// update() runs on a higher priority thread and only uses the rest once m_config is set, so set that
+	// last. The fence keeps the compiler from moving the other stores after it.
 	m_usePwm = usePwm;
 	m_pwm = pwm;
 	m_output = outputPin;
 	m_table = table;
+	std::atomic_signal_fence(std::memory_order_release);
 	m_config = cfg;
+}
+
+void GppwmChannel::detach() {
+	m_config = nullptr;
+	// Before whatever the caller changes next
+	std::atomic_signal_fence(std::memory_order_seq_cst);
 }
 
 GppwmResult GppwmChannel::getOutput() const {

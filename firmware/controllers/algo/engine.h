@@ -387,6 +387,9 @@ private:
 
 void applyNonPersistentConfiguration();
 void prepareOutputSignals();
+// Configuration sequence step, see config_steps.cpp: run prepareOutputSignals() at startup, and when
+// something it derives the cylinder layout from changes
+void startCylinderLayout(const engine_configuration_s* prev);
 
 // todo: huh we also have validateConfig()?!
 void validateConfiguration();

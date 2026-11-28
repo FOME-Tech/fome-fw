@@ -30,23 +30,33 @@ void FrequencySensor::initIfValid(brain_pin_e pin, SensorConverter& converter, f
 		filterParameter = 0.001f;
 	}
 
-	m_filter.configureLowpass(1, filterParameter);
+	// The edge interrupt uses the filter, so only touch it when it actually changes
+	if (filterParameter != m_filterParameter) {
+		m_filter.configureLowpass(1, filterParameter);
+		m_filterParameter = filterParameter;
+	}
 
 	setFunction(converter);
 
-	m_pin = pin;
+	if (m_pin != pin) {
+		m_pin = pin;
 
 #if EFI_PROD_CODE
-	// todo: refactor https://github.com/rusefi/rusefi/issues/2123
-	efiExtiEnablePin(
-			getSensorName(), pin, PAL_EVENT_MODE_FALLING_EDGE, freqSensorExtiCallback, reinterpret_cast<void*>(this));
+		// todo: refactor https://github.com/rusefi/rusefi/issues/2123
+		efiExtiEnablePin(
+				getSensorName(),
+				pin,
+				PAL_EVENT_MODE_FALLING_EDGE,
+				freqSensorExtiCallback,
+				reinterpret_cast<void*>(this));
 #endif // EFI_PROD_CODE
+	}
 
 	Register();
 }
 
-void FrequencySensor::deInit() {
-	if (!isBrainPinValid(m_pin)) {
+void FrequencySensor::deInit(brain_pin_e keepPin) {
+	if (!isBrainPinValid(m_pin) || m_pin == keepPin) {
 		return;
 	}
 
@@ -55,6 +65,8 @@ void FrequencySensor::deInit() {
 #endif
 
 	m_pin = Gpio::Unassigned;
+
+	unregister();
 }
 
 void FrequencySensor::onEdge(efitick_t nowNt) {

@@ -70,17 +70,27 @@ void AlternatorController::onConfigurationChange(engine_configuration_s const* p
 	}
 }
 
-void initAlternatorCtrl() {
-	if (!isBrainPinValid(engineConfiguration->alternatorControlPin)) {
-		return;
-	}
+static ConfiguredPwm alternatorOutput(alternatorControl);
 
-	startSimplePwm(
-			&alternatorControl,
-			"Alternator control",
-			&enginePins.alternatorPin,
-			engineConfiguration->alternatorPwmFrequency,
-			0);
+static bool isAlternatorOutputWanted() {
+	return isBrainPinValid(engineConfiguration->alternatorControlPin) &&
+		   engineConfiguration->alternatorPwmFrequency >= 1;
+}
+
+void stopAlternatorOutput(const engine_configuration_s* /*prev*/) {
+	alternatorOutput.stopIfUnwanted(isAlternatorOutputWanted());
+}
+
+void startAlternatorOutput(const engine_configuration_s* prev) {
+	float frequency = engineConfiguration->alternatorPwmFrequency;
+
+	alternatorOutput.startIfWanted(
+			prev, isAlternatorOutputWanted(), "Alternator control", &enginePins.alternatorPin, frequency, 0);
+
+	if (alternatorOutput.isRunning()) {
+		// Already running: follow a frequency change
+		alternatorControl.setFrequency(frequency);
+	}
 }
 
 #endif /* EFI_ALTERNATOR_CONTROL */
